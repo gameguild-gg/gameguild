@@ -18,6 +18,7 @@ import { validateAssetFile } from "../core/file-validation";
 import { AssetPreview } from "./asset-preview";
 import { useAssetLibrary, useAssetUpload } from "./use-assets";
 import { AssetStorageStatus } from "./asset-storage-status";
+import { useAssetScope } from "./assets-provider";
 
 export interface AssetPickerDialogProps {
   open: boolean;
@@ -50,8 +51,11 @@ export function AssetPickerDialog({
   multiple = false,
   scope,
   maxSizeBytes,
-  includeRemote = false,
+  includeRemote,
 }: AssetPickerDialogProps) {
+  const providerScope = useAssetScope();
+  const resolvedScope = scope ?? providerScope;
+  const resolvedIncludeRemote = includeRemote ?? Boolean(resolvedScope);
   const [search, setSearch] = React.useState("");
   const [selected, setSelected] = React.useState<AssetRecord[]>([]);
   const inputRef = React.useRef<HTMLInputElement>(null);
@@ -62,8 +66,8 @@ export function AssetPickerDialog({
   const { items, loading, error: listError } = useAssetLibrary({
     search,
     kinds,
-    scope,
-    includeRemote,
+    scope: resolvedScope,
+    includeRemote: resolvedIncludeRemote,
     limit: 200,
   });
 
@@ -91,7 +95,7 @@ export function AssetPickerDialog({
     const controller = new AbortController();
     uploadController.current = controller;
     try {
-      const records = await importFiles(candidates, { scope, signal: controller.signal });
+      const records = await importFiles(candidates, { scope: resolvedScope, signal: controller.signal });
       setSelected(multiple ? records : records.slice(0, 1));
     } catch (reason) {
       if (reason instanceof DOMException && reason.name === "AbortError") setValidationError(null);

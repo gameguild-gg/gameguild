@@ -3,6 +3,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ImgHTMLAttributes, ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
+import type { CourseShowcase } from "@/lib/courses/public-programs";
 import { CourseLandingPage } from "./course-landing-page";
 
 type MockImageProps = ImgHTMLAttributes<HTMLImageElement> & {
@@ -64,12 +65,142 @@ vi.mock("./course-checkout-button", () => ({
   ),
 }));
 
+// The live catalog only serves showcases for courses that exist in production
+// (ai4games, intro2gpro), and neither has projects/journey data. The gallery
+// and journey rendering paths are covered through this fixture showcase, keyed
+// to the advancedAiCourse slug below ("advanced-ai-fixture").
+vi.mock("@/lib/courses/public-programs", async () => {
+  const actual =
+    await vi.importActual<typeof import("@/lib/courses/public-programs")>(
+      "@/lib/courses/public-programs",
+    );
+
+  const advancedAiShowcase: CourseShowcase = {
+    slug: "advanced-ai-fixture",
+    programSlug: "game-ai-systems",
+    headline:
+      "Push beyond fundamentals into tactical AI, influence maps, and production-minded behavior systems.",
+    studioPrompt:
+      "A deeper AI sequence for students ready to reason about spatial data, tactical choices, and advanced systems.",
+    projectResult:
+      "A tactical AI prototype using influence, scoring, or advanced decision-making techniques.",
+    instructorModel:
+      "Advanced technical walkthroughs with implementation details and portfolio framing.",
+    portfolioProof:
+      "A stronger systems artifact for gameplay programming and technical design portfolios.",
+    outcomes: [
+      "Design influence-map data that helps agents evaluate danger, pressure, and opportunity.",
+      "Build tactical scoring rules that choose actions from readable gameplay constraints.",
+      "Combine advanced agent behaviors into a prototype that feels intentional instead of scripted.",
+      "Document systems clearly enough for a portfolio review or technical interview.",
+    ],
+    prerequisites: [
+      "Prior game programming practice",
+      "Basic AI/pathfinding familiarity",
+      "Comfort debugging systems",
+    ],
+    projects: [
+      {
+        title: "Influence-map arena",
+        summary:
+          "Build a tactical top-down scenario where agents read pressure, danger, cover, and opportunity from a spatial influence layer.",
+        image:
+          "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=1400&h=900&fit=crop",
+        skills: ["Influence maps", "Spatial reasoning", "Debug overlays"],
+        deliverable:
+          "A playable arena with visualized influence values and a written note explaining how the map changes agent behavior.",
+        moduleLabel: "Project 01",
+      },
+      {
+        title: "Decision scoring encounter",
+        summary:
+          "Prototype an encounter where AI chooses movement, attack, retreat, or support behaviors from transparent utility scores.",
+        image:
+          "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1400&h=900&fit=crop",
+        skills: ["Utility AI", "Tactical scoring", "Behavior debugging"],
+        deliverable:
+          "A score-driven behavior loop with inspector output that makes each action choice reviewable.",
+        moduleLabel: "Project 02",
+      },
+      {
+        title: "Prototype polish pass",
+        summary:
+          "Package the final AI prototype with readable tuning controls, gameplay framing, and a portfolio-ready implementation breakdown.",
+        image:
+          "https://images.unsplash.com/photo-1518770660439-4636190af475?w=1400&h=900&fit=crop",
+        skills: ["Tuning controls", "Portfolio framing", "Technical writing"],
+        deliverable:
+          "A short technical case study and recorded walkthrough that show the system, constraints, and tradeoffs.",
+        moduleLabel: "Project 03",
+      },
+    ],
+    journey: [
+      {
+        label: "01",
+        title: "Spatial reasoning map",
+        body: "Model the tactical space, decide which signals matter, and create a readable influence-map debug view.",
+        checkpoint:
+          "A map overlay that exposes danger, pressure, and opportunity values.",
+        projectTitle: "Influence-map arena",
+      },
+      {
+        label: "02",
+        title: "Action scoring rules",
+        body: "Turn tactical context into weighted scores that explain why an agent moves, attacks, retreats, or waits.",
+        checkpoint: "A scoring table that can be inspected while the encounter runs.",
+        projectTitle: "Decision scoring encounter",
+      },
+      {
+        label: "03",
+        title: "Behavior composition",
+        body: "Combine movement, targeting, and tactical preferences into an encounter that reads as intentional play.",
+        checkpoint:
+          "A playable prototype with at least two distinct agent responses.",
+        projectTitle: "Decision scoring encounter",
+      },
+      {
+        label: "04",
+        title: "Stress test and tune",
+        body: "Change scenario conditions, test failure cases, and tune weights so the AI remains legible under pressure.",
+        checkpoint: "A tuning pass with notes on what changed and why.",
+        projectTitle: "Prototype polish pass",
+      },
+      {
+        label: "05",
+        title: "Portfolio-ready AI breakdown",
+        body: "Package the final build with diagrams, implementation notes, and a concise explanation of design tradeoffs.",
+        checkpoint:
+          "A publishable case-study outline plus final prototype walkthrough.",
+        projectTitle: "Prototype polish pass",
+      },
+    ],
+    faq: [
+      {
+        question: "Should I take AI for Games first?",
+        answer:
+          "It is recommended unless you already have implementation experience with game AI fundamentals.",
+      },
+      {
+        question: "What makes this advanced?",
+        answer:
+          "The work emphasizes layered decision systems, spatial reasoning, and technical tradeoffs.",
+      },
+    ],
+  };
+
+  return {
+    ...actual,
+    getCourseShowcase: (courseSlug: string | null | undefined) =>
+      courseSlug === advancedAiShowcase.slug ? advancedAiShowcase : null,
+  };
+});
+
 const advancedAiCourse = {
-  id: "ai4games2-program-1",
+  id: "advanced-ai-fixture-program-1",
   title: "Advanced Game AI",
   description:
     "Master advanced AI techniques for game development, including finite state machines, behavior trees, utility AI, minimax search, Monte Carlo methods, and production AI patterns.",
-  slug: "ai4games2",
+  slug: "advanced-ai-fixture",
   thumbnail:
     "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1400&h=900&fit=crop",
   estimatedHours: 60,
@@ -224,7 +355,7 @@ describe("CourseLandingPage", () => {
         course={{
           ...advancedAiCourse,
           title: "Portfolio Presentation",
-          slug: "portfolio",
+          slug: "portfolio-fixture",
           category: "Portfolio",
           description: "Turn a project into a clear professional case study.",
         }}
@@ -235,7 +366,7 @@ describe("CourseLandingPage", () => {
     expect(screen.queryByText(/build tactical ai/i)).not.toBeInTheDocument();
     expect(
       screen.getByRole("heading", {
-        name: /turn projects into a portfolio story/i,
+        name: /build a portfolio project that proves what you can do/i,
       }),
     ).toBeInTheDocument();
   });
@@ -347,7 +478,7 @@ describe("CourseLandingPage", () => {
     for (const link of continueLinks) {
       expect(link).toHaveAttribute(
         "href",
-        "/learn/courses/ai4games2/content",
+        "/learn/courses/advanced-ai-fixture/content",
       );
     }
   });
@@ -369,8 +500,12 @@ describe("CourseLandingPage", () => {
     );
 
     expect(
-      screen.getAllByText("Checkout ai4games2 with Advanced AI Course Access"),
+      screen.getAllByText(
+        "Checkout advanced-ai-fixture with Advanced AI Course Access",
+      ),
     ).toHaveLength(2);
-    expect(screen.queryByText("Enroll in ai4games2")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Enroll in advanced-ai-fixture"),
+    ).not.toBeInTheDocument();
   });
 });

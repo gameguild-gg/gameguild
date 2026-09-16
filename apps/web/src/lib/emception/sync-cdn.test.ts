@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 // `src/**` include pattern (include only governs test discovery).
 import {
   ensureCanonicalRelease,
+  extractPackageArchive,
   manifestsMatch,
   SOURCE_CANONICAL,
   syncEmceptionCdn,
@@ -59,6 +60,18 @@ describe('manifestsMatch', () => {
     await fs.mkdir(path.dirname(src), { recursive: true });
     await fs.writeFile(src, canonicalManifest());
     await expect(manifestsMatch(src, tgt)).resolves.toBe(false);
+  });
+});
+
+describe('extractPackageArchive', () => {
+  it('passes Windows paths directly to the portable tar library', async () => {
+    const calls: unknown[] = [];
+    const archivePath = 'C:\\Temp\\gameguild-emception\\emception-4.3.0.tgz';
+    const destination = 'C:\\Temp\\gameguild-emception';
+
+    await extractPackageArchive(archivePath, destination, async (options) => { calls.push(options); });
+
+    expect(calls).toEqual([{ cwd: destination, file: archivePath, strict: true }]);
   });
 });
 

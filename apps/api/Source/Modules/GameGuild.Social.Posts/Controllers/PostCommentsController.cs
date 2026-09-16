@@ -1,6 +1,9 @@
+using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
+using GameGuild.Social.Posts.Commands;
 using GameGuild.Social.Posts.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameGuild.Social.Posts.Controllers;
@@ -10,7 +13,10 @@ namespace GameGuild.Social.Posts.Controllers;
 /// </summary>
 [Route("api/v1/posts")]
 [Authorize]
-public class PostCommentsController(IPostService postService, IActorContextAccessor actorContextAccessor)
+public class PostCommentsController(
+    IPostService postService,
+    IActorContextAccessor actorContextAccessor,
+    ISender sender)
     : BaseApiController
 {
     private Guid GetCurrentUserId()
@@ -24,9 +30,9 @@ public class PostCommentsController(IPostService postService, IActorContextAcces
     /// <summary>Get comments for a post</summary>
     [HttpGet("{postId:guid}/comments")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetComments(Guid postId, [FromQuery] int skip = 0, [FromQuery] int take = 50, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetComments(Guid postId, [FromQuery] int skip = 0, [FromQuery] int take = 50, [FromQuery] Guid? parentCommentId = null, CancellationToken cancellationToken = default)
     {
-        var result = await postService.GetPostCommentsAsync(postId, skip, take, cancellationToken).ConfigureAwait(false);
+        var result = await postService.GetPostCommentsAsync(postId, skip, take, parentCommentId, cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(result.Value!.Select(PostMappings.MapCommentToDto))
             : BadRequest(result.Error);
@@ -40,7 +46,9 @@ public class PostCommentsController(IPostService postService, IActorContextAcces
         if (userId == Guid.Empty)
             return Unauthorized();
 
-        var result = await postService.AddCommentAsync(postId, userId, request.Content, request.ParentCommentId, cancellationToken).ConfigureAwait(false);
+        var result = await sender.Send(
+            new AddPostCommentEndpointCommand(postId, userId, request.Content, request.ParentCommentId),
+            cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? Created($"/api/v1/posts/{postId}/comments/{result.Value!.Id}", PostMappings.MapCommentToDto(result.Value))
             : BadRequest(result.Error);
@@ -54,17 +62,12 @@ public class PostCommentsController(IPostService postService, IActorContextAcces
         if (userId == Guid.Empty)
             return Unauthorized();
 
-        // Verify comment ownership before allowing update
-        var commentResult = await postService.GetCommentByIdAsync(commentId, cancellationToken).ConfigureAwait(false);
-        if (!commentResult.IsSuccess)
-            return NotFound(commentResult.Error);
-        if (commentResult.Value!.AuthorId != userId)
-            return Forbid();
-
-        var result = await postService.UpdateCommentAsync(commentId, request.Content, cancellationToken).ConfigureAwait(false);
+        var result = await sender.Send(
+            new UpdatePostCommentEndpointCommand(commentId, userId, request.Content),
+            cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(PostMappings.MapCommentToDto(result.Value!))
-            : BadRequest(result.Error);
+            : MapMutationFailure(result.Error);
     }
 
     /// <summary>Delete a comment</summary>
@@ -75,17 +78,12 @@ public class PostCommentsController(IPostService postService, IActorContextAcces
         if (userId == Guid.Empty)
             return Unauthorized();
 
-        // Verify comment ownership before allowing delete
-        var commentResult = await postService.GetCommentByIdAsync(commentId, cancellationToken).ConfigureAwait(false);
-        if (!commentResult.IsSuccess)
-            return NotFound(commentResult.Error);
-        if (commentResult.Value!.AuthorId != userId)
-            return Forbid();
-
-        var result = await postService.DeleteCommentAsync(commentId, cancellationToken).ConfigureAwait(false);
+        var result = await sender.Send(
+            new DeletePostCommentEndpointCommand(commentId, userId),
+            cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? NoContent()
-            : BadRequest(result.Error);
+            : MapMutationFailure(result.Error);
     }
 
     #endregion
@@ -126,6 +124,13 @@ public class PostCommentsController(IPostService postService, IActorContextAcces
     }
 
     #endregion
+
+    private IActionResult MapMutationFailure(Error error) => error.Type switch
+    {
+        ErrorType.NotFound => NotFound(error),
+        ErrorType.Forbidden => StatusCode(StatusCodes.Status403Forbidden, error),
+        _ => BadRequest(error)
+    };
 }
 
 #region Request DTOs

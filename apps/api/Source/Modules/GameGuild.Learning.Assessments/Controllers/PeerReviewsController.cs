@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Learning.Courses;
@@ -27,6 +28,7 @@ public class PeerReviewsController : BaseApiController
     private readonly IProgramCrudService _programService;
     private readonly IPermissionQueryService _permissionQueryService;
     private readonly ILogger<PeerReviewsController> _logger;
+    private readonly ISender _sender;
 
     public PeerReviewsController(
         IPeerReviewAssignmentService peerReviewService,
@@ -35,7 +37,8 @@ public class PeerReviewsController : BaseApiController
         IActorContextAccessor actorContextAccessor,
         IProgramCrudService programService,
         IPermissionQueryService permissionQueryService,
-        ILogger<PeerReviewsController> logger)
+        ILogger<PeerReviewsController> logger,
+        ISender sender)
     {
         _peerReviewService = peerReviewService;
         _assessmentService = assessmentService;
@@ -44,6 +47,7 @@ public class PeerReviewsController : BaseApiController
         _programService = programService;
         _permissionQueryService = permissionQueryService;
         _logger = logger;
+        _sender = sender;
     }
 
     /// <summary>
@@ -62,8 +66,8 @@ public class PeerReviewsController : BaseApiController
         if (assessment == null) return NotFound();
         if (!await IsActorInProgramTenantAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
 
-        var result = await _peerReviewService
-            .ClaimAsync(assessmentId, actor.SubjectIdAsGuid.Value)
+        var result = await _sender
+            .Send(new ClaimPeerReviewEndpointCommand(assessmentId, actor.SubjectIdAsGuid.Value))
             .ConfigureAwait(false);
         if (!result.IsSuccess)
         {
@@ -187,8 +191,8 @@ public class PeerReviewsController : BaseApiController
             });
         }
 
-        var result = await _peerReviewService
-            .SubmitReviewAsync(review, score, request.Feedback.Trim(), request.RubricScores)
+        var result = await _sender
+            .Send(new SubmitPeerReviewEndpointCommand(review, score, request.Feedback.Trim(), request.RubricScores))
             .ConfigureAwait(false);
         if (!result.IsSuccess)
         {

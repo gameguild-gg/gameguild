@@ -6,12 +6,13 @@ using GameGuild.API.HostedServices;
 using GameGuild.Commerce.Billing;
 using GameGuild.Commerce.Payments;
 using GameGuild.Compliance.FERPA;
-using GameGuild.Economy;
-using GameGuild.Economy.AdRewards;
-using GameGuild.Economy.Bounties;
-using GameGuild.Economy.Marketplace;
-using GameGuild.Economy.Payouts;
-using GameGuild.Economy.Treasury;
+using GameGuild.Compliance.KYC;
+using GameGuild.Finance.Economy;
+using GameGuild.Finance.Economy.AdRewards;
+using GameGuild.Finance.Economy.Bounties;
+using GameGuild.Finance.Economy.Marketplace;
+using GameGuild.Finance.Economy.Payouts;
+using GameGuild.Finance.Economy.Treasury;
 using GameGuild.GameJams;
 using GameGuild.Identity.Authorization;
 using GameGuild.LaunchPad;
@@ -25,6 +26,7 @@ using GameGuild.Learning.Experience.Discovery;
 using GameGuild.Learning.Experience.LearningPaths;
 using GameGuild.Learning.Experience.Recommendations;
 using GameGuild.Learning.Workspaces;
+using GameGuild.Learning.Lti;
 using GameGuild.ProjectWork;
 using GameGuild.Projects;
 using GameGuild.Social.Blog;
@@ -52,12 +54,12 @@ internal sealed class ApiProductComposition : IApiProductComposition
     public IReadOnlyList<string> EnabledModules { get; } =
     [
         "Compliance.FERPA",
-        "Economy",
-        "Economy.AdRewards",
-        "Economy.Bounties",
-        "Economy.Marketplace",
-        "Economy.Payouts",
-        "Economy.Treasury",
+        "Finance.Economy",
+        "Finance.Economy.AdRewards",
+        "Finance.Economy.Bounties",
+        "Finance.Economy.Marketplace",
+        "Finance.Economy.Payouts",
+        "Finance.Economy.Treasury",
         "GameJams",
         "LaunchPad",
         "Learning.Assessments",
@@ -71,11 +73,13 @@ internal sealed class ApiProductComposition : IApiProductComposition
         "Learning.Experience.Social",
         "Learning.TestingLab",
         "Learning.Workspaces",
+        "Learning.Lti",
         "Projects",
         "ProjectWork",
         "Social.Announcements",
         "Social.Blog",
         "Social.Feed",
+        "Social.Follows",
         "Social.Groups",
         "Social.Posts",
         "Social.Profiles",
@@ -87,14 +91,17 @@ internal sealed class ApiProductComposition : IApiProductComposition
     public IReadOnlyList<string> DisabledModules { get; } =
     [
         "Compliance.FinancialCrime",
+        "Finance.Ledgers",
         "TrustSafety"
     ];
 
     public void ConfigureServices(WebApplicationBuilder builder)
     {
         builder.Services.AddFerpaModule();
+        builder.Services.AddKycComposition(builder.Configuration);
         builder.Services.AddEconomyCapabilityComposition(builder.Configuration);
         builder.Services.AddEconomyCoreComposition(builder.Configuration);
+        builder.Services.AddScoped<global::GameGuild.Compliance.KYC.IKycEvidenceStore, global::GameGuild.API.Core.Integration.EconomyKycEvidenceStore>();
         builder.Services.AddScoped<IEconomyStepUpExecutor, EconomyStepUpExecutor>();
         builder.Services.AddScoped<IAdRewardRequestRiskContextResolver, AdRewardRequestRiskContextResolver>();
         builder.Services.AddAdRewardsComposition(builder.Configuration);
@@ -115,6 +122,7 @@ internal sealed class ApiProductComposition : IApiProductComposition
         builder.Services.AddCohortsModule();
         builder.Services.AddCertificatesModule();
         builder.Services.AddLearningWorkspacesModule();
+        builder.Services.AddLtiModule();
         builder.Services.AddDiscoveryModule();
         builder.Services.AddLearningPathsModule();
         builder.Services.AddRecommendationsModule();

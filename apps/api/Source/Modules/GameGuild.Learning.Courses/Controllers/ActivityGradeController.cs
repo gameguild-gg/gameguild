@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
@@ -9,7 +10,7 @@ namespace GameGuild.Learning.Courses;
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/courses/{programId}/activity-grades")]
 [Authorize]
-public class ActivityGradeController(IActivityGradeService activityGradeService) : BaseApiController {
+public class ActivityGradeController(IActivityGradeService activityGradeService, ISender sender) : BaseApiController {
   /// <summary> Grade a content interaction (Program-level Edit permission required) </summary>
   [HttpPost]
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Edit, "programId")]
@@ -17,13 +18,13 @@ public class ActivityGradeController(IActivityGradeService activityGradeService)
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
     try {
-      var grade = await activityGradeService.GradeActivityAsync(
+      var grade = await sender.Send(new GradeActivityEndpointCommand(
         gradeDto.ContentInteractionId,
         gradeDto.GraderProgramUserId,
         gradeDto.Points,
         gradeDto.MaxPoints,
         gradeDto.Feedback,
-        gradeDto.GradingDetails).ConfigureAwait(false);
+        gradeDto.GradingDetails)).ConfigureAwait(false);
 
       // Verify the grade belongs to the specified program
       await ValidateGradeBelongsToProgram(grade.Id, programId).ConfigureAwait(false);
@@ -81,12 +82,12 @@ public class ActivityGradeController(IActivityGradeService activityGradeService)
     // Verify the grade belongs to the specified program
     await ValidateGradeBelongsToProgram(gradeId, programId).ConfigureAwait(false);
 
-    var updatedGrade = await activityGradeService.UpdateGradeAsync(
+    var updatedGrade = await sender.Send(new UpdateActivityGradeEndpointCommand(
       gradeId,
       updateDto.Points,
       updateDto.MaxPoints,
       updateDto.Feedback,
-      updateDto.GradingDetails).ConfigureAwait(false);
+      updateDto.GradingDetails)).ConfigureAwait(false);
 
     if (updatedGrade == null) return NotFound("Grade not found");
 
@@ -100,7 +101,7 @@ public class ActivityGradeController(IActivityGradeService activityGradeService)
     // Verify the grade belongs to the specified program
     await ValidateGradeBelongsToProgram(gradeId, programId).ConfigureAwait(false);
 
-    var deleted = await activityGradeService.DeleteGradeAsync(gradeId).ConfigureAwait(false);
+    var deleted = await sender.Send(new DeleteActivityGradeEndpointCommand(gradeId)).ConfigureAwait(false);
 
     if (!deleted) return NotFound("Grade not found");
 

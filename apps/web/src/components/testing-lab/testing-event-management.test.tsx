@@ -1,5 +1,20 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import type { TestingLabTestingEventTemplateProjection } from "@game-guild/client";
 import { describe, expect, it, vi } from "vitest";
+
+global.ResizeObserver = class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
+Element.prototype.scrollIntoView = vi.fn();
 
 const mocks = vi.hoisted(() => ({
   beginReview: vi.fn(),
@@ -38,6 +53,7 @@ import {
   EditTestingEventDialog,
   ManageTestingEventSlotDialog,
   TestingEventApplications,
+  TestingEventLifecycleActions,
 } from "./testing-event-management";
 
 describe("TestingEventApplications", () => {
@@ -159,8 +175,8 @@ describe("TestingEventApplications", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("uses a guarded drawer and keeps the shadcn date-time schedule chronological", () => {
-    render(<CreateTestingEventDialog />);
+  it("uses range calendars and keeps the event schedule chronological", () => {
+    render(<CreateTestingEventDialog defaultTimeZone="America/Sao_Paulo" />);
 
     fireEvent.click(screen.getByRole("button", { name: "New event" }));
     const field = (name: string) =>
@@ -187,15 +203,22 @@ describe("TestingEventApplications", () => {
       new Date(startsAt.value).valueOf(),
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Event starts" }));
+    fireEvent.click(screen.getByRole("combobox", { name: "Time zone" }));
+    fireEvent.change(screen.getByPlaceholderText("Search time zones…"), {
+      target: { value: "America/New_York" },
+    });
+    fireEvent.click(screen.getByText("America/New_York"));
+    expect(field("timeZoneId").value).toBe("America/New_York");
+
+    fireEvent.click(screen.getByRole("button", { name: "Event schedule" }));
     const nextMinute = String(
       new Date(startsAt.value).getMinutes() + 1,
     ).padStart(2, "0");
-    fireEvent.change(screen.getByLabelText("Minute"), {
-      target: { value: nextMinute },
+    fireEvent.change(screen.getByLabelText("Start time"), {
+      target: { value: `22:${nextMinute}` },
     });
     fireEvent.click(
-      screen.getByRole("button", { name: "Apply date and time" }),
+      screen.getByRole("button", { name: "Apply event schedule" }),
     );
 
     expect(
@@ -213,7 +236,173 @@ describe("TestingEventApplications", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Keep editing" }));
 
-    expect(screen.getByText("Create testing event")).toBeInTheDocument();
+    expect(screen.getByText("New testing event")).toBeInTheDocument();
+  });
+
+  it("uses the user's browser timezone when the lab still uses UTC", () => {
+    const resolvedOptions = Intl.DateTimeFormat.prototype.resolvedOptions;
+    const timeZone = vi
+      .spyOn(Intl.DateTimeFormat.prototype, "resolvedOptions")
+      .mockImplementation(function (this: Intl.DateTimeFormat) {
+        return {
+          ...resolvedOptions.call(this),
+          timeZone: "America/Sao_Paulo",
+        };
+      });
+
+    try {
+      render(<CreateTestingEventDialog defaultTimeZone="UTC" />);
+      fireEvent.click(screen.getByRole("button", { name: "New event" }));
+
+    expect(
+      screen.getByRole("combobox", { name: "Time zone" }),
+    ).toHaveTextContent("Sao Paulo");
+      expect(
+        document.querySelector<HTMLInputElement>('input[name="timeZoneId"]')
+          ?.value,
+      ).toBe("America/Sao_Paulo");
+    } finally {
+      timeZone.mockRestore();
+    }
+  });
+
+  it("keeps the quick-create dialog focused on event identity and schedule", () => {
+    render(<CreateTestingEventDialog />);
+
+    fireEvent.click(screen.getByRole("button", { name: "New event" }));
+
+    expect(screen.getByRole("textbox", { name: "Event name" })).toBeRequired();
+    expect(
+      screen.queryByText("Rules and instructions"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("textbox", { name: "Purpose and tester brief" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Require tester feedback"),
+    ).not.toBeInTheDocument();
+    expect(
+      document.querySelector<HTMLInputElement>('input[name="requiresFeedback"]')
+        ?.value,
+    ).toBe("true");
+  });
+
+  it("uses an event calendar template when one is available", () => {
+    const templates = [
+      {
+        id: "template-1",
+        name: "Community playtests",
+        currentRevision: { id: "revision-1" },
+      },
+    ] as TestingLabTestingEventTemplateProjection[];
+
+    render(<CreateTestingEventDialog templates={templates} />);
+    fireEvent.click(screen.getByRole("button", { name: "New event" }));
+
+    expect(
+      screen.getByRole("combobox", { name: "Event calendar" }),
+    ).toHaveTextContent("Community playtests");
+    expect(
+      document.querySelector<HTMLInputElement>(
+        'input[name="templateRevisionId"]',
+      )?.value,
+    ).toBe("revision-1");
+  });
+
+  it("presents the event decisions first and groups its two time windows", () => {
+    render(<CreateTestingEventDialog defaultTimeZone="America/Sao_Paulo" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "New event" }));
+
+    const eventName = screen.getByRole("textbox", { name: "Event name" });
+    const eventFormat = screen.getByRole("combobox", {
+      name: "Event format",
+    });
+    const projectReview = screen.getByRole("combobox", {
+      name: "Project review",
+    });
+    expect(
+      eventName.compareDocumentPosition(eventFormat) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      eventFormat.compareDocumentPosition(projectReview) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(eventFormat.closest("div")).toHaveClass(
+      "sm:grid-cols-[7rem_minmax(0,1fr)]",
+    );
+    expect(projectReview.closest("div")).toHaveClass(
+      "sm:grid-cols-[7rem_minmax(0,1fr)]",
+    );
+
+    const timeline = screen.getByRole("region", { name: "Schedule" });
+    expect(
+      within(timeline).getByRole("button", { name: "Application window" }),
+    ).toHaveTextContent(
+      /\d{2}\/\d{2}\/\d{4} · \d{2}:\d{2}(?:–\d{2}:\d{2}| → \d{2}\/\d{2}\/\d{4} · \d{2}:\d{2})/,
+    );
+    expect(
+      within(timeline).getByRole("button", { name: "Event schedule" }),
+    ).toHaveTextContent(
+      /\d{2}\/\d{2}\/\d{4} · \d{2}:\d{2}(?:–\d{2}:\d{2}| → \d{2}\/\d{2}\/\d{4} · \d{2}:\d{2})/,
+    );
+    expect(within(timeline).getByText("Applications")).toBeInTheDocument();
+    expect(within(timeline).getByText("Testing session")).toBeInTheDocument();
+    expect(
+      within(timeline).getByRole("combobox", { name: "Time zone" }),
+    ).toHaveTextContent("Sao Paulo");
+
+    expect(
+      screen.getByRole("combobox", { name: "Repeats" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Start from")).not.toBeInTheDocument();
+    expect(screen.getByRole("dialog")).toHaveClass("sm:max-w-lg");
+    expect(screen.getByRole("dialog")).toHaveAttribute(
+      "data-slot",
+      "dialog-content",
+    );
+  });
+
+  it("uses calendar-style repeat presets and keeps custom controls collapsed", async () => {
+    const user = userEvent.setup();
+    render(<CreateTestingEventDialog initialDate={new Date(2030, 7, 19)} />);
+
+    await user.click(screen.getByRole("button", { name: "New event" }));
+
+    const repeats = screen.getByRole("combobox", { name: "Repeats" });
+    expect(repeats).toHaveTextContent("Does not repeat");
+    expect(screen.queryByLabelText("Repeat every")).not.toBeInTheDocument();
+
+    await user.click(repeats);
+    expect(
+      screen.getByRole("option", { name: "Weekly on Monday" }),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("option", { name: "Custom…" }));
+
+    expect(screen.getByLabelText("Repeat every")).toBeInTheDocument();
+    expect(
+      screen.getByRole("combobox", { name: "Repeat unit" }),
+    ).toHaveTextContent("Week(s)");
+    expect(screen.getByLabelText("Number of events")).toHaveValue(4);
+  });
+
+  it("replaces the open action with a setup link while a draft is incomplete", () => {
+    render(
+      <TestingEventLifecycleActions
+        event={{ id: "event-1", status: "Draft", configuration: undefined }}
+      />,
+    );
+
+    expect(
+      screen.getByRole("link", { name: "Complete setup" }),
+    ).toHaveAttribute(
+      "href",
+      "/workspace/testing-lab/events/event-1/overview#event-configuration-heading",
+    );
+    expect(
+      screen.queryByRole("button", { name: "Open applications" }),
+    ).not.toBeInTheDocument();
   });
   it("opens as a controlled sheet with the calendar day prefilled", () => {
     render(
@@ -233,10 +422,7 @@ describe("TestingEventApplications", () => {
     ).toMatch(/^2030-08-19T/);
   });
 
-  it("preserves API wall-clock values when editing an event", () => {
-    const timezoneOffset = vi
-      .spyOn(Date.prototype, "getTimezoneOffset")
-      .mockReturnValue(180);
+  it("shows API instants in the event timezone when editing an event", () => {
     render(
       <EditTestingEventDialog
         event={{
@@ -250,6 +436,7 @@ describe("TestingEventApplications", () => {
           approvalMode: "ManagerOnly",
           status: "Draft",
           requiresFeedback: true,
+          timeZoneId: "America/Sao_Paulo",
         }}
       />,
     );
@@ -257,22 +444,29 @@ describe("TestingEventApplications", () => {
     fireEvent.click(screen.getByRole("button", { name: "Edit" }));
 
     expect(
+      screen.getByRole("textbox", { name: "Purpose and tester brief" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Require tester feedback")).toBeInTheDocument();
+    expect(
       document.querySelector<HTMLInputElement>(
         'input[name="applicationsOpenAt"]',
       )?.value,
-    ).toBe("2026-08-11T17:00");
+    ).toBe("2026-08-11T14:00");
     expect(
       document.querySelector<HTMLInputElement>(
         'input[name="applicationsCloseAt"]',
       )?.value,
-    ).toBe("2026-08-13T16:00");
+    ).toBe("2026-08-13T13:00");
     expect(
       document.querySelector<HTMLInputElement>('input[name="startsAt"]')?.value,
-    ).toBe("2026-08-13T17:00");
+    ).toBe("2026-08-13T14:00");
     expect(
       document.querySelector<HTMLInputElement>('input[name="endsAt"]')?.value,
-    ).toBe("2026-08-13T19:00");
-    timezoneOffset.mockRestore();
+    ).toBe("2026-08-13T16:00");
+    expect(
+      document.querySelector<HTMLInputElement>('input[name="timeZoneId"]')
+        ?.value,
+    ).toBe("America/Sao_Paulo");
   });
 
   it("preserves API wall-clock values when editing a slot", () => {

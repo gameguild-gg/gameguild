@@ -56,6 +56,12 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
         CreateTestingEventRequest request,
         CancellationToken cancellationToken = default)
     {
+        if (request.TemplateRevisionId != null && request.Configuration != null)
+            return UnprocessableEntity(new
+            {
+                code = "TestingLab.EventConfigurationSourceConflict",
+                message = "Choose either a template or a custom event configuration."
+            });
         var result = await mediator.Send(new CreateTestingEventCommand(
             request.Name,
             request.Description,
@@ -67,7 +73,9 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
             request.EndsAt,
             request.RequiresFeedback,
             request.Recurrence,
-            request.TemplateRevisionId), cancellationToken).ConfigureAwait(false);
+            request.TemplateRevisionId,
+            request.Configuration,
+            request.TimeZoneId), cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? CreatedAtAction(nameof(GetEvent), new { eventId = result.Value.Id }, result.Value)
             : ToActionResult(result);
@@ -103,7 +111,8 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
             request.ApplicationsCloseAt,
             request.StartsAt,
             request.EndsAt,
-            request.RequiresFeedback), cancellationToken).ConfigureAwait(false));
+            request.RequiresFeedback,
+            request.TimeZoneId), cancellationToken).ConfigureAwait(false));
 
     [HttpDelete("{eventId:guid}")]
     [RequireTestingLabPermission(TestingLabActions.Delete, TestingLabResourceTypes.Event, "eventId")]

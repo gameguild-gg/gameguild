@@ -16,7 +16,7 @@ const acceptableAiUses = [
 const unacceptableAiUses = [
   'You cannot copy the question, prompt an AI to answer it, and use the answer as your own.',
   'You cannot ask AI to code a solution for you.',
-  'You cannot use any AI while coding (e.g., GitHub Copilot); use a plain IDE instead.',
+  'You cannot use any AI while coding (e.g., GitHub Copilot); use an IDE instead without advanced autocomplete features.',
   'You cannot use AI assistance to solve quizzes or exams under any circumstances.',
   'Even in accepted cases, using AI assistance without citing it is considered plagiarism: it will be reported and zeroed.',
 ];
@@ -114,7 +114,7 @@ export default async function Page({}: PageProps<'/[locale]/legal/academic-hones
         <h2 className="text-xl font-semibold">Late submissions</h2>
         <div className="space-y-3 text-sm text-muted-foreground">
           <p>
-            If you submit an assignment late, you will receive a flat 20% deduction on your grade.
+            If you submit an assignment late, you will receive a 1% deduction per day on your grade up to 25%.
           </p>
           <p>
             If you have accommodations, send a message on every submission stating that, and the instructor will try to accommodate you.

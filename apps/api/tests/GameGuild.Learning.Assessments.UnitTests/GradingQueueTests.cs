@@ -222,10 +222,11 @@ public class GradingQueueTests
             _permissions.Object,
             new GradingQueueService(
                 db,
-                new RubricService(db, NullLogger<RubricService>.Instance),
-                NullLogger<GradingQueueService>.Instance),
-            Mock.Of<IAssessmentAuthoringService>(),
-            _log.Object);
+                 new RubricService(db, NullLogger<RubricService>.Instance),
+                 NullLogger<GradingQueueService>.Instance),
+             Mock.Of<IAssessmentAuthoringService>(),
+             _log.Object,
+             new AssessmentEndpointTestSender(assessmentService: _assessments.Object));
     }
 
     // ===== FIXTURE =====

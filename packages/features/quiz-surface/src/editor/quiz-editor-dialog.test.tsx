@@ -17,8 +17,11 @@ class ResizeObserverMock {
   disconnect() {}
 }
 
+class PointerEventMock extends MouseEvent {}
+
 beforeAll(() => {
   vi.stubGlobal("ResizeObserver", ResizeObserverMock);
+  vi.stubGlobal("PointerEvent", PointerEventMock);
 });
 
 afterAll(() => {
@@ -42,7 +45,9 @@ describe("QuizEditorDialog", () => {
     const dialog = screen.getByRole("dialog", { name: "Quiz Builder" });
     expect(container).toBeEmptyDOMElement();
     expect(document.body).toContainElement(dialog);
-    expect(dialog).toHaveStyle({ width: "100vw", height: "100dvh" });
+    // jsdom 30 resolves vw against its 1024px viewport in computed styles, so assert authored inline styles.
+    expect(dialog.style.width).toBe("100vw");
+    expect(dialog.style.height).toBe("100dvh");
     expect(screen.getByText("Configuration")).toBeInTheDocument();
     expect(screen.getByText("Live preview")).toBeInTheDocument();
     expect(

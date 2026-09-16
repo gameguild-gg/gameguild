@@ -147,7 +147,7 @@ public class PostCommentServiceTests
         SetupDbSets();
 
         // Act
-        var result = await _service.UpdateCommentAsync(comment.Id, "Updated content");
+        var result = await _service.UpdateCommentAsync(comment.Id, comment.AuthorId, "Updated content");
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -162,7 +162,7 @@ public class PostCommentServiceTests
         SetupDbSets();
 
         // Act
-        var result = await _service.UpdateCommentAsync(Guid.NewGuid(), "Updated content");
+        var result = await _service.UpdateCommentAsync(Guid.NewGuid(), Guid.NewGuid(), "Updated content");
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -180,10 +180,24 @@ public class PostCommentServiceTests
         SetupDbSets();
 
         // Act
-        var result = await _service.UpdateCommentAsync(comment.Id, "Updated content");
+        var result = await _service.UpdateCommentAsync(comment.Id, comment.AuthorId, "Updated content");
 
         // Assert
         result.IsSuccess.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task UpdateCommentAsync_WhenActorIsNotAuthor_ShouldReturnForbiddenWithoutMutation()
+    {
+        var comment = PostComment.Create(Guid.NewGuid(), Guid.NewGuid(), "Original");
+        _comments.Add(comment);
+        SetupDbSets();
+
+        var result = await _service.UpdateCommentAsync(comment.Id, Guid.NewGuid(), "Hijacked");
+
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Code.Should().Be("Comment.Forbidden");
+        comment.Content.Should().Be("Original");
     }
 
     #endregion
@@ -203,7 +217,7 @@ public class PostCommentServiceTests
         SetupDbSets();
 
         // Act
-        var result = await _service.DeleteCommentAsync(comment.Id);
+        var result = await _service.DeleteCommentAsync(comment.Id, comment.AuthorId);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -217,11 +231,45 @@ public class PostCommentServiceTests
         SetupDbSets();
 
         // Act
-        var result = await _service.DeleteCommentAsync(Guid.NewGuid());
+        var result = await _service.DeleteCommentAsync(Guid.NewGuid(), Guid.NewGuid());
 
         // Assert
         result.IsSuccess.Should().BeFalse();
         result.Error.Code.Should().Be("Comment.NotFound");
+    }
+
+    [Fact]
+    public async Task DeleteCommentAsync_WhenActorIsNotAuthor_ShouldReturnForbiddenWithoutMutation()
+    {
+        var comment = PostComment.Create(Guid.NewGuid(), Guid.NewGuid(), "Protected");
+        SimulatePersisted(comment);
+        _comments.Add(comment);
+        SetupDbSets();
+
+        var result = await _service.DeleteCommentAsync(comment.Id, Guid.NewGuid());
+
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Code.Should().Be("Comment.Forbidden");
+        comment.IsDeleted.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task DeleteCommentAsync_WhenAlreadyDeleted_DoesNotDecrementCounterAgain()
+    {
+        var post = Post.Create(Guid.NewGuid(), "Post", PostVisibility.Public);
+        var comment = PostComment.Create(post.Id, Guid.NewGuid(), "Comment");
+        post.IncrementComments();
+        SimulatePersisted(comment);
+        comment.Delete();
+        _posts.Add(post);
+        _comments.Add(comment);
+        SetupDbSets();
+
+        var result = await _service.DeleteCommentAsync(comment.Id, comment.AuthorId);
+
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Code.Should().Be("Comment.NotFound");
+        post.CommentsCount.Should().Be(1);
     }
 
     #endregion
@@ -283,6 +331,25 @@ public class PostCommentServiceTests
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Count().Should().Be(5);
+    }
+
+    [Fact]
+    public async Task GetPostCommentsAsync_WithParentCommentId_ShouldFilterBeforePagination()
+    {
+        var postId = Guid.NewGuid();
+        var parentId = Guid.NewGuid();
+        var otherParentId = Guid.NewGuid();
+        _comments.Add(PostComment.Create(postId, Guid.NewGuid(), "Child 1", parentId));
+        _comments.Add(PostComment.Create(postId, Guid.NewGuid(), "Other child", otherParentId));
+        _comments.Add(PostComment.Create(postId, Guid.NewGuid(), "Child 2", parentId));
+        _comments.Add(PostComment.Create(postId, Guid.NewGuid(), "Child 3", parentId));
+        SetupDbSets();
+
+        var result = await _service.GetPostCommentsAsync(postId, skip: 1, take: 2, parentCommentId: parentId);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().OnlyContain(comment => comment.ParentCommentId == parentId);
+        result.Value.Select(comment => comment.Content).Should().Equal("Child 2", "Child 3");
     }
 
     #endregion

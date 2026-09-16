@@ -1,6 +1,9 @@
+using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
+using GameGuild.Social.Posts.Commands;
 using GameGuild.Social.Posts.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameGuild.Social.Posts.Controllers;
@@ -10,7 +13,10 @@ namespace GameGuild.Social.Posts.Controllers;
 /// </summary>
 [Route("api/v1/posts")]
 [Authorize]
-public class PostInteractionsController(IPostService postService, IActorContextAccessor actorContextAccessor)
+public class PostInteractionsController(
+    IPostService postService,
+    IActorContextAccessor actorContextAccessor,
+    ISender sender)
     : BaseApiController
 {
     private Guid GetCurrentUserId()
@@ -29,7 +35,9 @@ public class PostInteractionsController(IPostService postService, IActorContextA
         if (userId == Guid.Empty)
             return Unauthorized();
 
-        var result = await postService.TogglePostLikeAsync(postId, userId, reactionType, cancellationToken).ConfigureAwait(false);
+        var result = await sender.Send(
+            new TogglePostLikeEndpointCommand(postId, userId, reactionType),
+            cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(new { Liked = result.Value })
             : BadRequest(result.Error);
@@ -43,14 +51,32 @@ public class PostInteractionsController(IPostService postService, IActorContextA
         if (userId == Guid.Empty)
             return Unauthorized();
 
-        var canPerform = await postService.CanUserPerformActionAsync(postId, userId, "pin", cancellationToken).ConfigureAwait(false);
-        if (!canPerform.IsSuccess || !canPerform.Value)
-            return Forbid();
-
-        var result = await postService.TogglePostPinAsync(postId, cancellationToken).ConfigureAwait(false);
+        var result = await sender.Send(
+            new TogglePostPinEndpointCommand(postId, userId),
+            cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(new { Pinned = result.Value })
-            : BadRequest(result.Error);
+            : MapMutationFailure(result.Error);
+    }
+
+    /// <summary>Repost a public post once for the current user</summary>
+    [HttpPost("{postId:guid}/reposts")]
+    public async Task<IActionResult> CreateRepost(
+        Guid postId,
+        [FromBody] CreateRepostRequest? request = null,
+        CancellationToken cancellationToken = default)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == Guid.Empty)
+            return Unauthorized();
+
+        var result = await sender.Send(
+            new CreateRepostEndpointCommand(postId, userId, request?.Content),
+            cancellationToken).ConfigureAwait(false);
+
+        return result.IsSuccess
+            ? Created($"/api/v1/posts/{result.Value!.Id}", PostMappings.MapToDto(result.Value))
+            : MapMutationFailure(result.Error);
     }
 
     /// <summary>Record a share of the post</summary>
@@ -58,7 +84,9 @@ public class PostInteractionsController(IPostService postService, IActorContextA
     [AllowAnonymous]
     public async Task<IActionResult> Share(Guid postId, CancellationToken cancellationToken = default)
     {
-        var result = await postService.SharePostAsync(postId, cancellationToken).ConfigureAwait(false);
+        var result = await sender.Send(
+            new SharePostEndpointCommand(postId),
+            cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok()
             : BadRequest(result.Error);
@@ -75,13 +103,12 @@ public class PostInteractionsController(IPostService postService, IActorContextA
         CancellationToken cancellationToken = default)
     {
         var userId = GetCurrentUserId();
-        var result = await postService.RecordPostViewAsync(
+        var result = await sender.Send(new RecordPostViewEndpointCommand(
             postId,
             userId == Guid.Empty ? null : userId,
             ipAddress,
             userAgent,
-            referrer,
-            cancellationToken).ConfigureAwait(false);
+            referrer), cancellationToken).ConfigureAwait(false);
 
         return result.IsSuccess
             ? Ok()
@@ -111,14 +138,13 @@ public class PostInteractionsController(IPostService postService, IActorContextA
         if (userId == Guid.Empty)
             return Unauthorized();
 
-        var result = await postService.FollowPostAsync(
+        var result = await sender.Send(new FollowPostEndpointCommand(
             postId,
             userId,
             request?.NotifyOnComments ?? true,
             request?.NotifyOnLikes ?? false,
             request?.NotifyOnShares ?? false,
-            request?.NotifyOnUpdates ?? true,
-            cancellationToken).ConfigureAwait(false);
+            request?.NotifyOnUpdates ?? true), cancellationToken).ConfigureAwait(false);
 
         return result.IsSuccess
             ? Ok(PostMappings.MapFollowerToDto(result.Value!))
@@ -133,7 +159,9 @@ public class PostInteractionsController(IPostService postService, IActorContextA
         if (userId == Guid.Empty)
             return Unauthorized();
 
-        var result = await postService.UnfollowPostAsync(postId, userId, cancellationToken).ConfigureAwait(false);
+        var result = await sender.Send(
+            new UnfollowPostEndpointCommand(postId, userId),
+            cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? NoContent()
             : BadRequest(result.Error);
@@ -154,6 +182,13 @@ public class PostInteractionsController(IPostService postService, IActorContextA
     }
 
     #endregion
+
+    private IActionResult MapMutationFailure(Error error) => error.Type switch
+    {
+        ErrorType.NotFound => NotFound(error),
+        ErrorType.Forbidden => StatusCode(StatusCodes.Status403Forbidden, error),
+        _ => BadRequest(error)
+    };
 }
 
 #region Request DTOs
@@ -165,5 +200,7 @@ public sealed record FollowPostRequest
     public bool NotifyOnShares { get; init; } = false;
     public bool NotifyOnUpdates { get; init; } = true;
 }
+
+public sealed record CreateRepostRequest(string? Content);
 
 #endregion

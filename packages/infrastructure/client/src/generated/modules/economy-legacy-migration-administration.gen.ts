@@ -18,10 +18,10 @@ export class EconomyLegacyMigrationAdministrationModule {
   /**
    */
   async getAdminEconomyLegacyMigrationBatchesForGetAdminEconomyLegacyMigrationBatches(query?: {
-    state?: Types.EconomyOperationsLegacyEconomyShadowState;
+    state?: Types.FinanceEconomyOperationsLegacyEconomyShadowState;
     limit?: number;
     cursor?: string;
-  }): Promise<Result<Types.EconomyOperationsEconomyOperationalPageOfEconomyOperationsLegacyEconomyShadowBatchSummary, ApiError>> {
+  }): Promise<Result<Types.FinanceEconomyOperationsEconomyOperationalPageLegacyEconomyShadowBatchSummary, ApiError>> {
     const url = '/api/v1/admin/economy/legacy-migration/batches';
 
     const result = await this.client.request({
@@ -33,11 +33,7 @@ export class EconomyLegacyMigrationAdministrationModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.EconomyOperationsEconomyOperationalPageOfEconomyOperationsLegacyEconomyShadowBatchSummarySchema,
-        result.data,
-        'response',
-      );
+      const validatedData = safeParse(Types.FinanceEconomyOperationsEconomyOperationalPageLegacyEconomyShadowBatchSummarySchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -48,7 +44,7 @@ export class EconomyLegacyMigrationAdministrationModule {
    */
   async postAdminEconomyLegacyMigrationBatches(
     body: Types.APIControllersCaptureLegacyEconomyMigrationInput,
-  ): Promise<Result<Types.EconomyOperationsLegacyEconomyShadowBatchView, ApiError>> {
+  ): Promise<Result<Types.FinanceEconomyOperationsLegacyEconomyShadowBatchView, ApiError>> {
     const url = '/api/v1/admin/economy/legacy-migration/batches';
 
     // Validate request body
@@ -63,7 +59,7 @@ export class EconomyLegacyMigrationAdministrationModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.EconomyOperationsLegacyEconomyShadowBatchViewSchema, result.data, 'response');
+      const validatedData = safeParse(Types.FinanceEconomyOperationsLegacyEconomyShadowBatchViewSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -74,7 +70,7 @@ export class EconomyLegacyMigrationAdministrationModule {
    */
   async getAdminEconomyLegacyMigrationBatchesForGetAdminEconomyLegacyMigrationBatchesByBatchId(
     batchId: string,
-  ): Promise<Result<Types.EconomyOperationsLegacyEconomyShadowBatchView, ApiError>> {
+  ): Promise<Result<Types.FinanceEconomyOperationsLegacyEconomyShadowBatchView, ApiError>> {
     const url = `/api/v1/admin/economy/legacy-migration/batches/${batchId}`;
 
     const result = await this.client.request({
@@ -85,7 +81,7 @@ export class EconomyLegacyMigrationAdministrationModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.EconomyOperationsLegacyEconomyShadowBatchViewSchema, result.data, 'response');
+      const validatedData = safeParse(Types.FinanceEconomyOperationsLegacyEconomyShadowBatchViewSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -94,7 +90,9 @@ export class EconomyLegacyMigrationAdministrationModule {
 
   /**
    */
-  async postAdminEconomyLegacyMigrationBatchesReconcile(batchId: string): Promise<Result<Types.EconomyOperationsLegacyEconomyShadowBatchView, ApiError>> {
+  async postAdminEconomyLegacyMigrationBatchesReconcile(
+    batchId: string,
+  ): Promise<Result<Types.FinanceEconomyOperationsLegacyEconomyShadowBatchView, ApiError>> {
     const url = `/api/v1/admin/economy/legacy-migration/batches/${batchId}:reconcile`;
 
     const result = await this.client.request({
@@ -105,7 +103,7 @@ export class EconomyLegacyMigrationAdministrationModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.EconomyOperationsLegacyEconomyShadowBatchViewSchema, result.data, 'response');
+      const validatedData = safeParse(Types.FinanceEconomyOperationsLegacyEconomyShadowBatchViewSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -117,7 +115,7 @@ export class EconomyLegacyMigrationAdministrationModule {
   async postAdminEconomyLegacyMigrationBatchesCutoverApprove(
     batchId: string,
     body: Types.APIControllersApproveLegacyEconomyCutoverInput,
-  ): Promise<Result<Types.EconomyOperationsLegacyEconomyShadowBatchView, ApiError>> {
+  ): Promise<Result<Types.FinanceEconomyOperationsLegacyEconomyShadowBatchView, ApiError>> {
     const url = `/api/v1/admin/economy/legacy-migration/batches/${batchId}/cutover:approve`;
 
     // Validate request body
@@ -132,7 +130,7 @@ export class EconomyLegacyMigrationAdministrationModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.EconomyOperationsLegacyEconomyShadowBatchViewSchema, result.data, 'response');
+      const validatedData = safeParse(Types.FinanceEconomyOperationsLegacyEconomyShadowBatchViewSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -144,7 +142,7 @@ export class EconomyLegacyMigrationAdministrationModule {
   async postAdminEconomyLegacyMigrationBatchesCutoverPropose(
     batchId: string,
     body: Types.APIControllersProposeLegacyEconomyCutoverInput,
-  ): Promise<Result<Types.EconomyOperationsLegacyEconomyShadowBatchView, ApiError>> {
+  ): Promise<Result<Types.FinanceEconomyOperationsLegacyEconomyShadowBatchView, ApiError>> {
     const url = `/api/v1/admin/economy/legacy-migration/batches/${batchId}/cutover:propose`;
 
     // Validate request body
@@ -159,7 +157,7 @@ export class EconomyLegacyMigrationAdministrationModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.EconomyOperationsLegacyEconomyShadowBatchViewSchema, result.data, 'response');
+      const validatedData = safeParse(Types.FinanceEconomyOperationsLegacyEconomyShadowBatchViewSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -171,7 +169,7 @@ export class EconomyLegacyMigrationAdministrationModule {
   async postAdminEconomyLegacyMigrationBatchesCutoverRollback(
     batchId: string,
     body: Types.APIControllersRollbackLegacyEconomyCutoverInput,
-  ): Promise<Result<Types.EconomyOperationsLegacyEconomyShadowBatchView, ApiError>> {
+  ): Promise<Result<Types.FinanceEconomyOperationsLegacyEconomyShadowBatchView, ApiError>> {
     const url = `/api/v1/admin/economy/legacy-migration/batches/${batchId}/cutover:rollback`;
 
     // Validate request body
@@ -186,7 +184,7 @@ export class EconomyLegacyMigrationAdministrationModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.EconomyOperationsLegacyEconomyShadowBatchViewSchema, result.data, 'response');
+      const validatedData = safeParse(Types.FinanceEconomyOperationsLegacyEconomyShadowBatchViewSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -198,7 +196,7 @@ export class EconomyLegacyMigrationAdministrationModule {
   async postAdminEconomyLegacyMigrationBatchesWalletsBackfill(
     batchId: string,
     body: Types.APIControllersBackfillLegacyEconomyWalletInput,
-  ): Promise<Result<Types.EconomyOperationsLegacyEconomyShadowBatchView, ApiError>> {
+  ): Promise<Result<Types.FinanceEconomyOperationsLegacyEconomyShadowBatchView, ApiError>> {
     const url = `/api/v1/admin/economy/legacy-migration/batches/${batchId}/wallets:backfill`;
 
     // Validate request body
@@ -213,7 +211,7 @@ export class EconomyLegacyMigrationAdministrationModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.EconomyOperationsLegacyEconomyShadowBatchViewSchema, result.data, 'response');
+      const validatedData = safeParse(Types.FinanceEconomyOperationsLegacyEconomyShadowBatchViewSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 

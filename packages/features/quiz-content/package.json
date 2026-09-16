@@ -21,8 +21,8 @@
   },
   "devDependencies": {
     "@game-guild/typescript-config": "workspace:*",
-    "@types/node": "^20",
-    "typescript": "^5.8.3",
+    "@types/node": "^26",
+    "typescript": "^6.0.3",
     "vitest": "^4.1.10"
   }
 }

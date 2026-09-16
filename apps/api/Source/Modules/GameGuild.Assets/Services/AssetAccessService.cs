@@ -260,6 +260,30 @@ public class AssetAccessService : IAssetAccessService
                     return new AssetAccessValidation(true, null);
                 }
 
+                // Parent-scoped private assets are draft attachments. Other users who can
+                // manage the parent (for example, a co-author of a lesson) must be able to
+                // render the shared draft without making the asset visible to learners.
+                if (!string.IsNullOrWhiteSpace(reference.ParentResourceType) &&
+                    reference.ParentResourceId.HasValue)
+                {
+                    var privateParentResolver = _parentAuthorizationResolvers.FirstOrDefault(resolver =>
+                        resolver.Supports(reference.ParentResourceType));
+                    if (privateParentResolver != null &&
+                        await privateParentResolver.CanManageAsync(
+                            reference.ParentResourceId.Value,
+                            userId.Value,
+                            tenantId,
+                            ct).ConfigureAwait(false) &&
+                        await _folderAuthorizationService.CanReadAsync(
+                            reference,
+                            userId.Value,
+                            tenantId,
+                            ct).ConfigureAwait(false))
+                    {
+                        return new AssetAccessValidation(true, null);
+                    }
+                }
+
                 return new AssetAccessValidation(false, AssetAccessDeniedReason.OwnershipRequired);
 
             case AssetAccessPolicy.Public:
@@ -341,6 +365,20 @@ public class AssetAccessService : IAssetAccessService
         Guid? tenantId)
     {
         var payload = _tokenService.ValidateToken(token, assetReferenceId, tenantId ?? Guid.Empty);
+        return payload != null;
+    }
+
+    public bool ValidateToken(
+        string token,
+        Guid assetReferenceId,
+        Guid? tenantId,
+        TransformationSpec? transformation)
+    {
+        var payload = _tokenService.ValidateToken(
+            token,
+            assetReferenceId,
+            tenantId ?? Guid.Empty,
+            transformation);
         return payload != null;
     }
 

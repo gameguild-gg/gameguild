@@ -1,12 +1,12 @@
 "use client"
 
 import type { CodeFile } from "./types"
-import { registerFileSystemOverlay, RegisteredFileSystemProvider } from '@codingame/monaco-vscode-files-service-override'
+import type { RegisteredFileSystemProvider as MonacoFileSystemProvider } from '@codingame/monaco-vscode-files-service-override'
 import { URI } from 'vscode-uri'
 import type { Monaco } from "@monaco-editor/react"
 
-let fileSystemProvider: RegisteredFileSystemProvider | null = null
-let disposable: ReturnType<typeof registerFileSystemOverlay> | null = null
+let fileSystemProvider: MonacoFileSystemProvider | null = null
+let disposable: { dispose: () => void } | null = null
 let isInitialized = false
 let currentFiles: CodeFile[] = []
 let completionDisposables: Array<{ dispose: () => void }> = []
@@ -18,10 +18,16 @@ export function setMonacoInstance(monaco: Monaco) {
 }
 
 export async function initializeMonacoFileSystem() {
+  if (typeof window === "undefined") return null
+
   fsConsumerCount++
   if (isInitialized) return fileSystemProvider
 
   try {
+    const { registerFileSystemOverlay, RegisteredFileSystemProvider } = await import(
+      "@codingame/monaco-vscode-files-service-override"
+    )
+
     // Criar o provider em memória
     fileSystemProvider = new RegisteredFileSystemProvider(false) // false = read-write
     

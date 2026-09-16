@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
+import { extract } from 'tar';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const execFileAsync = promisify(execFile);
@@ -99,6 +100,10 @@ async function validatePublishedRelease(srcDir, version) {
   return manifest;
 }
 
+export async function extractPackageArchive(archivePath, destination, extractArchive = extract) {
+  await extractArchive({ cwd: destination, file: archivePath, strict: true });
+}
+
 async function hydratePublishedRelease({ srcDir, version, log }) {
   if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(version)) {
     throw new Error(`invalid Toolchain package version: ${version}`);
@@ -121,7 +126,7 @@ async function hydratePublishedRelease({ srcDir, version, log }) {
     if (!filename) throw new Error('npm pack did not return a Toolchain archive filename');
 
     const archivePath = path.join(tempDir, filename);
-    await execFileAsync('tar', ['-xzf', archivePath, '-C', tempDir]);
+    await extractPackageArchive(archivePath, tempDir);
     const publishedCdn = path.join(tempDir, 'package', 'cdn');
     const manifest = await validatePublishedRelease(publishedCdn, version);
 

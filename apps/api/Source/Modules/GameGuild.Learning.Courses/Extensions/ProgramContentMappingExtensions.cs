@@ -24,6 +24,7 @@ public static class ProgramContentMappingExtensions
     return new ProgramContentDto
     {
       Id = content.Id,
+      Version = content.Version,
       ProgramId = content.ProgramId,
       ParentId = content.ParentId,
       Title = content.Title,
@@ -41,7 +42,6 @@ public static class ProgramContentMappingExtensions
       Visibility = content.Visibility,
       CreatedAt = content.CreatedAt,
       UpdatedAt = content.UpdatedAt,
-      Version = content.Version,
       ProgramTitle = content.Program?.Title,
       ParentTitle = content.Parent?.Title,
       ChildrenCount = content.Children?.Count(c => c.DeletedAt == null) ?? 0,

@@ -13,6 +13,32 @@ namespace GameGuild.Learning.Courses.UnitTests;
 
 public sealed class ProgramWriteServiceTests
 {
+    [Fact]
+    public async Task CreateProgramAndContent_ShouldStampTheAuthoritativeTenant()
+    {
+        await using var context = CreateContext();
+        var tenantId = Guid.NewGuid();
+        var creatorId = Guid.NewGuid();
+        var service = new ProgramWriteService(
+            context,
+            requestContextAccessor: new TestRequestContextAccessor(creatorId, tenantId));
+
+        var program = await service.CreateProgramAsync(new CreateProgramDto(
+            "Tenant course",
+            "Course used by tenant-scoped learning assets.",
+            $"tenant-course-{Guid.NewGuid():N}",
+            CreatorId: creatorId));
+        var content = await service.AddContentAsync(program.Id, new CreateContentDto(
+            "Portable media lesson",
+            "The lesson must inherit its course tenant.",
+            ProgramContentType.Lesson,
+            "Initial body"));
+
+        program.TenantId.Should().Be(tenantId);
+        content.Should().NotBeNull();
+        content!.TenantId.Should().Be(tenantId);
+    }
+
     [Theory]
     [InlineData(true, 1)]
     [InlineData(false, 2)]
@@ -93,7 +119,11 @@ public sealed class ProgramWriteServiceTests
         var contentService = new Mock<IProgramContentService>();
         contentService.Setup(service => service.GetContentByIdAsync(contentId))
             .ReturnsAsync(new ProgramContent { Id = contentId, ProgramId = programId, Type = ProgramContentType.Survey });
-        var controller = new ContentInteractionController(interactions.Object, contentService.Object, NullLogger<ContentInteractionController>.Instance);
+        var controller = new ContentInteractionController(
+            interactions.Object,
+            contentService.Object,
+            NullLogger<ContentInteractionController>.Instance,
+            Mock.Of<ISender>());
 
         var result = await controller.GetSurveyResults(contentId, programId);
 

@@ -358,7 +358,8 @@ public class GroupSetServiceTests
             _actor.Object,
             _programs.Object,
             _permissions.Object,
-            _log.Object);
+            _log.Object,
+            new AssessmentEndpointTestSender(groupSetService: _svc.Object));
     }
 
     [Fact]

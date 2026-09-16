@@ -5,6 +5,7 @@ import { Label } from "@game-guild/ui/components/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { type LexicalSurfaceFeatures } from "@game-guild/lexical-surface";
 import type { SerializedEditorState } from "lexical";
+import { getLearningAssetRepository } from "@/lib/learning/assets/learning-asset-repository";
 
 const LexicalSurface = lazy(async () => {
   const mod = await import("@game-guild/lexical-surface");
@@ -63,6 +64,7 @@ export function LessonContentEditor({
   initialState,
   onChange,
 }: LessonContentEditorProps) {
+  const assetRepository = getLearningAssetRepository();
   const handleEditorChange = useCallback(
     (state: SerializedEditorState) => {
       onChange(state);
@@ -88,6 +90,8 @@ export function LessonContentEditor({
             contentStyle={{ minHeight: "400px" }}
             contentClassName="max-w-none"
             features={LESSON_EDITOR_FEATURES}
+            assetsRepository={assetRepository}
+            assetScope={{ type: "ProgramContent", id: itemId }}
           />
         </Suspense>
       </div>

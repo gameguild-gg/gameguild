@@ -1,9 +1,9 @@
 using FluentAssertions;
 using GameGuild.API.Controllers;
-using GameGuild.Economy.AdRewards;
-using GameGuild.Economy.Contracts;
-using GameGuild.Economy.Ledger;
-using GameGuild.Economy.Risk;
+using GameGuild.Finance.Economy.AdRewards;
+using GameGuild.Finance.Economy.Contracts;
+using GameGuild.Finance.Economy.Ledger;
+using GameGuild.Finance.Economy.Risk;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
@@ -56,8 +56,7 @@ public sealed class EconomyAdRewardsControllerContractTests
             .Returns(ValueTask.FromException<DurableAdRewardCompletionResult>(
                 new EconomyProtectedOperationException(state, reviewId, ["not-ready"])));
         var controller = new EconomyAdRewardsController(
-            Mock.Of<IDurableAdRewardSessionService>(),
-            completions.Object,
+            EconomyHandlerSenders.Public(adRewardCompletions: completions.Object),
             Mock.Of<IDurableAdRewardSessionReader>(),
             Mock.Of<IEconomyWalletDirectory>(),
             Mock.Of<IAdRewardRequestRiskContextResolver>(),
@@ -121,8 +120,7 @@ public sealed class EconomyAdRewardsControllerContractTests
                     request.IdempotencyKey == new IdempotencyKey("session-1")), default))
             .ReturnsAsync((DurableAdRewardSessionResult)null!);
         var controller = new EconomyAdRewardsController(
-            sessions.Object,
-            Mock.Of<IDurableAdRewardCompletionService>(),
+            EconomyHandlerSenders.Public(adRewardSessions: sessions.Object),
             Mock.Of<IDurableAdRewardSessionReader>(),
             wallets.Object,
             risks.Object,
@@ -162,8 +160,7 @@ public sealed class EconomyAdRewardsControllerContractTests
             .ThrowsAsync(new AdRewardRiskContextUnavailableException("secret internal detail"));
         var sessions = new Mock<IDurableAdRewardSessionService>(MockBehavior.Strict);
         var controller = new EconomyAdRewardsController(
-            sessions.Object,
-            Mock.Of<IDurableAdRewardCompletionService>(),
+            EconomyHandlerSenders.Public(adRewardSessions: sessions.Object),
             Mock.Of<IDurableAdRewardSessionReader>(),
             wallets.Object,
             risks.Object,

@@ -140,9 +140,13 @@ export function validateDbmlOutput(dbml) {
 // in whole regions, so paired lines locate divergences cheaply. `null` marks a
 // line that does not exist on that side (one string is a strict line-prefix
 // of the other).
+function normalizeDbmlLineEndings(value) {
+  return value.replace(/\r\n?/g, '\n');
+}
+
 function divergentLines(actual, expected, limit) {
-  const actualLines = actual.split('\n');
-  const expectedLines = expected.split('\n');
+  const actualLines = normalizeDbmlLineEndings(actual).split('\n');
+  const expectedLines = normalizeDbmlLineEndings(expected).split('\n');
   const divergences = [];
   const lineCount = Math.max(actualLines.length, expectedLines.length);
   for (let index = 0; index < lineCount && divergences.length < limit; index += 1) {
@@ -157,12 +161,11 @@ function divergentLines(actual, expected, limit) {
   return divergences;
 }
 
-// Byte equality on the whole string; when they differ, report the FIRST
-// divergent line (1-based) with both line contents. Generate is deterministic
-// (T3 double-run proof), so string equality is the staleness contract —
-// never timestamps.
+// Compare deterministic content while ignoring platform line endings. When
+// content differs, report the FIRST divergent line (1-based) from normalized
+// text. Timestamps are never part of the staleness contract.
 export function compareDbml(actual, expected) {
-  if (actual === expected) {
+  if (normalizeDbmlLineEndings(actual) === normalizeDbmlLineEndings(expected)) {
     return { ok: true };
   }
   const [firstDivergence] = divergentLines(actual, expected, 1);

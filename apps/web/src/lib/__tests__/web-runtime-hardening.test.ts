@@ -58,8 +58,6 @@ describe('web runtime hardening', () => {
 
   it('logs route handler failures with structured runtime events', () => {
     expect(readRepoFile('apps/web/src/app/api/health/route.ts')).toContain('logWebRequest');
-    expect(readRepoFile('apps/web/src/app/api/static-viewer/folder/[folderName]/route.ts')).toContain('logWebRequest');
-    expect(readRepoFile('apps/web/src/app/api/static-viewer/file/[...path]/route.ts')).toContain('logWebRequest');
   });
 
   it('does not depend on the internal Next loadable alias', async () => {

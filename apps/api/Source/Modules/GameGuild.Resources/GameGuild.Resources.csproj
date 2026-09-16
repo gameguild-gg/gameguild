@@ -13,10 +13,14 @@
         <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+        <PackageReference Include="AWSSDK.Pricing" />
+        <PackageReference Include="AWSSDK.CostExplorer" />
+        <PackageReference Include="AWSSDK.S3" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
+        <ProjectReference Include="..\GameGuild.Finance.Contracts\GameGuild.Finance.Contracts.csproj" />
         <ProjectReference Include="..\GameGuild.Identity.Authorization\GameGuild.Identity.Authorization.csproj" />
         <ProjectReference Include="..\GameGuild.Identity.Context\GameGuild.Identity.Context.csproj" />
     </ItemGroup>

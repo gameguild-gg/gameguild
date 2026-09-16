@@ -1,13 +1,19 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import type { AnchorHTMLAttributes, ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { authMock, getTokenMock, requestMock, getPublishedProjectsMock, getVisibleProjectMock } = vi.hoisted(() => ({
+const { authMock, getTokenMock, requestMock, getPublishedProjectsMock, getVisibleProjectMock, publicQueriesMocks } = vi.hoisted(() => ({
   authMock: vi.fn(),
   getTokenMock: vi.fn(),
   requestMock: vi.fn(),
   getPublishedProjectsMock: vi.fn(),
   getVisibleProjectMock: vi.fn(),
+  publicQueriesMocks: {
+    getPublicPlaytests: vi.fn(),
+    getPublicMemberSpotlights: vi.fn(),
+    getPublicActivities: vi.fn(),
+    getPublicCommunityGroups: vi.fn(),
+  },
 }));
 
 vi.mock('@/auth', () => ({
@@ -48,6 +54,8 @@ vi.mock('@/lib/projects/public-projects', () => ({
   getVisibleProject: getVisibleProjectMock,
 }));
 
+vi.mock('@/lib/community/public-community-queries', () => publicQueriesMocks);
+
 import { PublicWebsiteHeader } from '@/components/app/app-shell';
 import CommunityPage from './[locale]/(public)/community/page';
 import JobsPage from './[locale]/(public)/jobs/page';
@@ -84,6 +92,35 @@ describe('public community website UX', () => {
     vi.clearAllMocks();
     getPublishedProjectsMock.mockResolvedValue([publishedProject]);
     getVisibleProjectMock.mockResolvedValue(publishedProject);
+    publicQueriesMocks.getPublicPlaytests.mockResolvedValue([
+      {
+        title: 'Real API Playtest',
+        date: 'Tuesday, 7:00 PM UTC',
+        format: 'Online session',
+        seats: '8 open seats',
+        href: '/testing-lab/events/event-1',
+      },
+    ]);
+    publicQueriesMocks.getPublicMemberSpotlights.mockResolvedValue([
+      {
+        name: 'Ada Builder',
+        handle: '@adabuilder',
+        role: 'Game creator',
+        focus: 'Independent project',
+        contribution: 'A real published project returned by the Projects API.',
+      },
+    ]);
+    publicQueriesMocks.getPublicActivities.mockResolvedValue([
+      {
+        actor: 'Ada Builder',
+        action: 'recently updated the project',
+        target: 'Real API Project',
+        href: '/projects/real-api-project',
+      },
+    ]);
+    publicQueriesMocks.getPublicCommunityGroups.mockResolvedValue([
+      { name: 'Independent project', description: '1 published community project.', projectCount: 1 },
+    ]);
     requestMock.mockImplementation(async ({ path }: { path: string }) =>
       path === '/v1/access/capabilities'
         ? { ok: true, data: { capabilities: [] } }
@@ -91,22 +128,87 @@ describe('public community website UX', () => {
     );
   });
 
-  it('exposes the learning-to-community information architecture in the header', async () => {
+  it('exposes a compact community-first information architecture in the header', async () => {
     authMock.mockResolvedValueOnce(null);
 
     render(await PublicWebsiteHeader());
 
     const nav = screen.getByRole('navigation', { name: /main navigation/i });
     expect(within(nav).getAllByRole('link').map((link) => link.textContent)).toEqual([
-      'Courses',
-      'Programs',
+      'Community',
+      'Projects',
       'Testing Lab',
       'Launch Pad',
-      'Projects',
-      'Community',
-      'Jobs',
-      'About',
     ]);
+    expect(within(nav).getAllByRole('button').map((button) => button.textContent)).toEqual(['Learn', 'More']);
+
+    fireEvent.click(within(nav).getByRole('button', { name: /learn/i }));
+    expect((await screen.findAllByRole('menuitem')).map((item) => item.textContent)).toEqual(['Courses', 'Programs']);
+  });
+
+  it('groups the authenticated social header around learning, building, and release', async () => {
+    authMock.mockResolvedValueOnce({
+      user: {
+        id: 'member-1',
+        name: 'Maya Torres',
+        email: 'maya@gameguild.gg',
+        image: null,
+      },
+      expires: '2026-12-31T00:00:00.000Z',
+    });
+
+    render(await PublicWebsiteHeader({ embedded: true }));
+
+    const nav = screen.getByRole('navigation', { name: /main navigation/i });
+    expect(within(nav).getAllByRole('link').map((link) => link.textContent)).toEqual(['Community']);
+    expect(within(nav).getAllByRole('button').map((button) => button.textContent)).toEqual([
+      'Learn',
+      'Build',
+      'Test & Launch',
+    ]);
+
+    fireEvent.click(within(nav).getByRole('button', { name: 'Build' }));
+    expect((await screen.findAllByRole('menuitem')).map((item) => item.textContent)).toEqual([
+      'Workspace',
+      'Projects',
+    ]);
+
+    fireEvent.click(within(nav).getByRole('button', { name: 'Build' }));
+    fireEvent.click(within(nav).getByRole('button', { name: 'Test & Launch' }));
+    expect((await screen.findAllByRole('menuitem')).map((item) => item.textContent)).toEqual([
+      'Testing Lab',
+      'Launch Pad',
+    ]);
+  });
+
+  it('keeps Workspace, Notifications, and a non-duplicated user profile in social header actions', async () => {
+    authMock.mockResolvedValueOnce({
+      user: {
+        id: 'member-1',
+        name: 'Maya Torres',
+        email: 'maya@gameguild.gg',
+        image: null,
+      },
+      expires: '2026-12-31T00:00:00.000Z',
+    });
+    render(await PublicWebsiteHeader({ embedded: true }));
+
+    expect(screen.getByRole('link', { name: 'Open Workspace' })).toHaveAttribute('href', '/workspace');
+    expect(screen.getByRole('link', { name: 'Notification settings' })).toHaveAttribute(
+      'href',
+      '/workspace/settings/notifications',
+    );
+    expect(screen.queryByRole('link', { name: 'Explore community' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Create post' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Open community navigation' })).not.toBeInTheDocument();
+    const profile = screen.getByRole('button', { name: 'Open Maya Torres account menu' });
+    expect(profile).toHaveTextContent('Maya Torres');
+    expect(profile).toHaveTextContent('maya@gameguild.gg');
+    expect(profile.querySelector('svg.lucide-chevrons-up-down')).toBeInTheDocument();
+    fireEvent.click(profile);
+    await screen.findByRole('menu');
+    expect(screen.getAllByText('Maya Torres')).toHaveLength(1);
+    expect(screen.getAllByText('maya@gameguild.gg')).toHaveLength(1);
   });
 
   it('shows the authenticated member profile instead of sign-in calls to action', async () => {
@@ -134,7 +236,12 @@ describe('public community website UX', () => {
     render(await HomePage({ params: Promise.resolve({ locale: 'en-US' }) } as PageProps<'/[locale]'>));
 
     expect(screen.getByRole('heading', { name: /learn, build & connect/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /featured community projects/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /latest projects/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Real API Project' })).toBeInTheDocument();
+    expect(getPublishedProjectsMock).toHaveBeenCalledOnce();
+    expect(screen.getByRole('link', { name: /real api playtest/i })).toBeInTheDocument();
+    expect(screen.getAllByText('Ada Builder').length).toBeGreaterThan(0);
+    expect(screen.getByText(/recently updated the project/i)).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /active members/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /upcoming playtests/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /community activity/i })).toBeInTheDocument();

@@ -8,7 +8,7 @@ namespace GameGuild.Assets.Commands;
 public sealed record DeleteAssetCommand(
     Guid AssetReferenceId,
     Guid UserId,
-    bool ForceDelete = false) : IRequest<DeleteAssetResponse>;
+    bool ForceDelete = false) : ICommand<DeleteAssetResponse>;
 
 public sealed record DeleteAssetResponse(
     bool Success,
@@ -23,17 +23,23 @@ public sealed class DeleteAssetValidator : AbstractValidator<DeleteAssetCommand>
     }
 }
 
-public sealed class DeleteAssetHandler : IRequestHandler<DeleteAssetCommand, DeleteAssetResponse>
+public sealed class DeleteAssetHandler : ICommandHandler<DeleteAssetCommand, DeleteAssetResponse>
 {
     private readonly IAssetReferenceRepository _referenceRepository;
     private readonly IAssetContentRepository _contentRepository;
+    private readonly IReadOnlyList<IAssetUsageGuard> _usageGuards;
+    private readonly IUseCaseOperationContextAccessor? _operationContextAccessor;
 
     public DeleteAssetHandler(
         IAssetReferenceRepository referenceRepository,
-        IAssetContentRepository contentRepository)
+        IAssetContentRepository contentRepository,
+        IEnumerable<IAssetUsageGuard>? usageGuards = null,
+        IUseCaseOperationContextAccessor? operationContextAccessor = null)
     {
         _referenceRepository = referenceRepository;
         _contentRepository = contentRepository;
+        _usageGuards = usageGuards?.ToArray() ?? [];
+        _operationContextAccessor = operationContextAccessor;
     }
 
     public async Task<DeleteAssetResponse> Handle(
@@ -53,7 +59,27 @@ public sealed class DeleteAssetHandler : IRequestHandler<DeleteAssetCommand, Del
             return new DeleteAssetResponse(false, false);
         }
 
+        if (!request.ForceDelete)
+        {
+            foreach (var guard in _usageGuards)
+            {
+                if (await guard.IsInUseAsync(request.AssetReferenceId, ct).ConfigureAwait(false))
+                    return new DeleteAssetResponse(false, false);
+            }
+        }
+
         var contentId = reference.AssetContentId;
+
+        var operation = _operationContextAccessor?.Current;
+        reference.AddIntegrationEvent(new AssetReferenceRemovedEvent(reference.Id, contentId)
+        {
+            TenantId = reference.TenantId ?? DurableIntegrationEventTenants.Platform,
+            ActorId = request.UserId,
+            AggregateType = nameof(AssetReference),
+            AggregateId = reference.Id.ToString(),
+            CorrelationId = operation?.CorrelationId ?? Guid.NewGuid(),
+            CausationId = operation?.CausationId,
+        });
 
         // Soft delete the reference
         await _referenceRepository.DeleteAsync(request.AssetReferenceId, ct).ConfigureAwait(false);
