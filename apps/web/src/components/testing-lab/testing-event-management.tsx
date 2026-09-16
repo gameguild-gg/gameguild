@@ -8,7 +8,7 @@ import {
   beginTestingEventApplicationReview,
   configureTestingEventLearning,
   createTestingEvent,
-  createTestingEventSlot,
+  createTestingEventSlots,
   deleteTestingEvent,
   deleteTestingEventSlot,
   rejectTestingEventApplication,
@@ -92,6 +92,7 @@ import {
 import { useRouter } from "next/navigation";
 import {
   useRef,
+  useMemo,
   useState,
   useTransition,
   type FormEvent,
@@ -257,6 +258,7 @@ function EventActionDialog({
   children,
   destructive = false,
   successHref,
+  submitDisabled = false,
 }: {
   trigger: ReactNode;
   title: string;
@@ -266,6 +268,7 @@ function EventActionDialog({
   children: ReactNode;
   destructive?: boolean;
   successHref?: string;
+  submitDisabled?: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -322,7 +325,7 @@ function EventActionDialog({
             <Button
               type="submit"
               variant={destructive ? "destructive" : "default"}
-              disabled={pending}
+              disabled={pending || submitDisabled}
             >
               {pending ? "Working..." : submitLabel}
             </Button>
@@ -407,13 +410,13 @@ function EventIdentityFields({
             </SelectTrigger>
             <SelectContent>
               {availableTemplates.map((template) => (
-                  <SelectItem
-                    key={template.id}
-                    value={template.currentRevision!.id!}
-                  >
-                    {template.name?.trim() || "Untitled calendar"}
-                  </SelectItem>
-                ))}
+                <SelectItem
+                  key={template.id}
+                  value={template.currentRevision!.id!}
+                >
+                  {template.name?.trim() || "Untitled calendar"}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -568,7 +571,10 @@ function EventTimelineFields({
                 ? { start: applicationsOpenAt, end: applicationsCloseAt }
                 : undefined
             }
-            defaultValue={{ start: applicationsOpenAt, end: applicationsCloseAt }}
+            defaultValue={{
+              start: applicationsOpenAt,
+              end: applicationsCloseAt,
+            }}
             onValueChange={(next) =>
               changeRange(
                 "applicationsOpenAt",
@@ -647,10 +653,7 @@ function EventFields({
       <input type="hidden" name="eventId" value={event.id} />
       <input type="hidden" name="timeZoneId" value={timeZoneId} />
       <EventIdentityFields event={event} />
-      <EventTimelineFields
-        event={event}
-        timeZoneId={timeZoneId}
-      />
+      <EventTimelineFields event={event} timeZoneId={timeZoneId} />
       <EventFeedbackField event={event} />
     </div>
   );
@@ -669,7 +672,10 @@ export function testingEventRecurrenceStart(startDate: string) {
   const parsedStart = new Date(startDate);
   return Number.isNaN(parsedStart.valueOf())
     ? { day: "Monday", dayOfMonth: 1 }
-    : { day: allDays[parsedStart.getDay()]!, dayOfMonth: parsedStart.getDate() };
+    : {
+        day: allDays[parsedStart.getDay()]!,
+        dayOfMonth: parsedStart.getDate(),
+      };
 }
 
 function EventRecurrenceFields({
@@ -711,13 +717,8 @@ function EventRecurrenceFields({
   }
 
   return (
-    <section
-      aria-labelledby="event-recurrence-heading"
-      className="space-y-2.5"
-    >
-      <div
-        className="grid gap-1.5 sm:grid-cols-[7rem_minmax(0,1fr)] sm:items-center sm:gap-3"
-      >
+    <section aria-labelledby="event-recurrence-heading" className="space-y-2.5">
+      <div className="grid gap-1.5 sm:grid-cols-[7rem_minmax(0,1fr)] sm:items-center sm:gap-3">
         <Label
           id="event-recurrence-heading"
           className="text-xs text-muted-foreground"
@@ -761,9 +762,7 @@ function EventRecurrenceFields({
       </div>
 
       {frequency ? (
-        <div
-          className="space-y-3 rounded-md bg-muted/30 p-3 sm:ml-[7.75rem]"
-        >
+        <div className="space-y-3 rounded-md bg-muted/30 p-3 sm:ml-[7.75rem]">
           {repeatOption === "custom" ? (
             <div className="space-y-2">
               <Label htmlFor="recurrence-interval">Repeat every</Label>
@@ -1000,10 +999,7 @@ export function CreateTestingEventDialog({
           New event
         </Button>
       ) : null}
-      <Dialog
-        open={open}
-        onOpenChange={requestClose}
-      >
+      <Dialog open={open} onOpenChange={requestClose}>
         <DialogContent className="flex max-h-[calc(100dvh-2rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
           <form
             ref={formRef}
@@ -1119,78 +1115,336 @@ export function EditTestingEventDialog({
   );
 }
 
-export function CreateTestingEventSlotDialog({ eventId }: { eventId: string }) {
+export function CreateTestingEventSlotDialog({
+  event,
+  existingSlots = [],
+}: {
+  event: TestingLabTestingEventProjection;
+  existingSlots?: TestingLabTestingEventSlotProjection[];
+}) {
+  const eventId = event.id ?? "";
+  const timeZoneId = event.timeZoneId ?? "UTC";
+  const eventStartsAt = apiDatetimeLocal(event.startsAt, timeZoneId);
+  const eventEndsAt = apiDatetimeLocal(event.endsAt, timeZoneId);
+
   return (
-    <EventActionDialog
-      trigger={
-        <Button size="sm">
-          <Plus className="mr-2 size-4" />
-          Add slot
-        </Button>
+    <TestingTimeSlotBuilder
+      event={event}
+      eventId={eventId}
+      eventStartsAt={eventStartsAt}
+      eventEndsAt={eventEndsAt}
+      timeZoneId={timeZoneId}
+      existingSlots={existingSlots}
+      presentation="dialog"
+    />
+  );
+}
+
+export function TestingTimeSlotPlanner({
+  event,
+  existingSlots = [],
+}: {
+  event: TestingLabTestingEventProjection;
+  existingSlots?: TestingLabTestingEventSlotProjection[];
+}) {
+  const eventId = event.id ?? "";
+  const timeZoneId = event.timeZoneId ?? "UTC";
+
+  return (
+    <TestingTimeSlotBuilder
+      event={event}
+      eventId={eventId}
+      eventStartsAt={apiDatetimeLocal(event.startsAt, timeZoneId)}
+      eventEndsAt={apiDatetimeLocal(event.endsAt, timeZoneId)}
+      timeZoneId={timeZoneId}
+      existingSlots={existingSlots}
+      presentation="inline"
+    />
+  );
+}
+
+export interface TestingTimeSlotSchedule {
+  startsAt: string;
+  endsAt: string;
+}
+
+const wallClockPattern = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/;
+
+function wallClockMilliseconds(value: string) {
+  const match = wallClockPattern.exec(value);
+  if (!match) return null;
+  const [, year, month, day, hour, minute] = match;
+  const result = Date.UTC(
+    Number(year),
+    Number(month) - 1,
+    Number(day),
+    Number(hour),
+    Number(minute),
+  );
+  const date = new Date(result);
+  if (
+    date.getUTCFullYear() !== Number(year) ||
+    date.getUTCMonth() !== Number(month) - 1 ||
+    date.getUTCDate() !== Number(day) ||
+    date.getUTCHours() !== Number(hour) ||
+    date.getUTCMinutes() !== Number(minute)
+  )
+    return null;
+  return result;
+}
+
+function wallClockFromMilliseconds(value: number) {
+  const date = new Date(value);
+  const pad = (part: number) => String(part).padStart(2, "0");
+  return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}T${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}`;
+}
+
+export function defaultTestingSessionEnd(
+  eventStartsAt: string,
+  eventEndsAt: string,
+) {
+  const start = wallClockMilliseconds(eventStartsAt);
+  const end = wallClockMilliseconds(eventEndsAt);
+  if (start == null || end == null || end <= start) return eventEndsAt;
+
+  const startsOn = eventStartsAt.slice(0, 10);
+  const endsOn = eventEndsAt.slice(0, 10);
+  if (startsOn === endsOn) return eventEndsAt;
+
+  return wallClockFromMilliseconds(Math.min(start + 4 * 60 * 60_000, end));
+}
+
+export function buildTestingTimeSlots(
+  startsAt: string,
+  endsAt: string,
+  durationMinutes: number,
+  breakMinutes: number,
+): TestingTimeSlotSchedule[] {
+  const rangeStart = wallClockMilliseconds(startsAt);
+  const rangeEnd = wallClockMilliseconds(endsAt);
+  if (
+    rangeStart == null ||
+    rangeEnd == null ||
+    rangeEnd <= rangeStart ||
+    !Number.isInteger(durationMinutes) ||
+    durationMinutes < 1 ||
+    !Number.isInteger(breakMinutes) ||
+    breakMinutes < 0
+  )
+    return [];
+
+  const duration = durationMinutes * 60_000;
+  const step = (durationMinutes + breakMinutes) * 60_000;
+  const slots: TestingTimeSlotSchedule[] = [];
+  for (
+    let cursor = rangeStart;
+    cursor + duration <= rangeEnd && slots.length < 200;
+    cursor += step
+  ) {
+    slots.push({
+      startsAt: wallClockFromMilliseconds(cursor),
+      endsAt: wallClockFromMilliseconds(cursor + duration),
+    });
+  }
+  return slots;
+}
+
+function timeSlotLabel(slot: TestingTimeSlotSchedule) {
+  const date = wallClockMilliseconds(slot.startsAt);
+  const day =
+    date == null
+      ? slot.startsAt.slice(0, 10)
+    : new Intl.DateTimeFormat("en-US", {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+          timeZone: "UTC",
+        }).format(new Date(date));
+  return `${day} · ${slot.startsAt.slice(11)}–${slot.endsAt.slice(11)}`;
+}
+
+function wallClockDateTimeLabel(value: string) {
+  const date = wallClockMilliseconds(value);
+  if (date == null) return value;
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "UTC",
+  }).format(new Date(date));
+}
+
+function TestingTimeSlotBuilder({
+  event,
+  eventId,
+  eventStartsAt,
+  eventEndsAt,
+  timeZoneId,
+  existingSlots,
+  presentation,
+}: {
+  event: TestingLabTestingEventProjection;
+  eventId: string;
+  eventStartsAt: string;
+  eventEndsAt: string;
+  timeZoneId: string;
+  existingSlots: TestingLabTestingEventSlotProjection[];
+  presentation: "dialog" | "inline";
+}) {
+  const [startsAt, setStartsAt] = useState(eventStartsAt);
+  const [endsAt, setEndsAt] = useState(() =>
+    defaultTestingSessionEnd(eventStartsAt, eventEndsAt),
+  );
+  const [durationMinutes, setDurationMinutes] = useState(45);
+  const [breakMinutes, setBreakMinutes] = useState(15);
+  const [mode, setMode] = useState<
+    NonNullable<TestingLabTestingEventProjection["mode"]>
+  >(event.mode ?? "Online");
+  const plannedSlots = useMemo(
+    () =>
+      buildTestingTimeSlots(startsAt, endsAt, durationMinutes, breakMinutes),
+    [breakMinutes, durationMinutes, endsAt, startsAt],
+  );
+  const existingKeys = useMemo(
+    () =>
+      new Set(
+        existingSlots.map(
+          (slot) =>
+            `${apiDatetimeLocal(slot.startsAt, timeZoneId)}|${apiDatetimeLocal(slot.endsAt, timeZoneId)}`,
+        ),
+      ),
+    [existingSlots, timeZoneId],
+  );
+  const slots = useMemo(
+    () =>
+      plannedSlots.filter(
+        (slot) => !existingKeys.has(`${slot.startsAt}|${slot.endsAt}`),
+      ),
+    [existingKeys, plannedSlots],
+  );
+  const duplicateCount = plannedSlots.length - slots.length;
+  const rangeEnd = wallClockMilliseconds(endsAt);
+  const lastPlannedEnd = plannedSlots.at(-1)?.endsAt;
+  const unusedMinutes =
+    rangeEnd != null && lastPlannedEnd
+      ? Math.max(
+          0,
+          Math.round(
+            (rangeEnd - (wallClockMilliseconds(lastPlannedEnd) ?? rangeEnd)) /
+              60_000,
+          ),
+        )
+      : 0;
+
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [result, setResult] =
+    useState<TestingEventActionResult<unknown> | null>(null);
+
+  function submitInline(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    startTransition(async () => {
+      try {
+        const next = await createTestingEventSlots(data);
+        setResult(next);
+        if (next.success) router.refresh();
+      } catch (error) {
+        setResult(actionFailure(error));
       }
-      title="Add testing slot"
-      description="A slot defines one test window and its independent tester and approved-project capacity."
-      submitLabel="Create slot"
-      action={createTestingEventSlot}
-    >
+    });
+  }
+
+  const hiddenFields = (
+    <>
       <input type="hidden" name="eventId" value={eventId} />
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label>Mode</Label>
-          <Select name="mode" defaultValue="InPerson">
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="InPerson">In person</SelectItem>
-              <SelectItem value="Online">Online</SelectItem>
-              <SelectItem value="Hybrid">Hybrid</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="slot-location">Saved location id</Label>
-          <Input
-            id="slot-location"
-            name="locationId"
-            placeholder="Optional location UUID"
+      <input type="hidden" name="timeZoneId" value={timeZoneId} />
+      <input type="hidden" name="slotsJson" value={JSON.stringify(slots)} />
+    </>
+  );
+
+  const windowFields = (
+    <section aria-labelledby="slot-window-heading" className="space-y-4">
+      <div>
+        <h3 id="slot-window-heading" className="text-sm font-semibold">
+          Session window
+        </h3>
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          Choose when testing runs. The range cannot leave the event window.
+        </p>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="slot-plan-start">Starts</Label>
+          <DateTimePicker
+            id="slot-plan-start"
+            name="planStartsAt"
+            value={startsAt}
+            onValueChange={setStartsAt}
+            required
+            minValue={eventStartsAt || undefined}
+            maxValue={eventEndsAt || undefined}
+            timezoneLabel={timeZoneId}
+            displayFormat="MMM d, HH:mm"
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="slot-start">Starts</Label>
-          <DateTimePicker id="slot-start" name="startsAt" required />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="slot-end">Ends</Label>
-          <DateTimePicker id="slot-end" name="endsAt" required />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="slot-campus">Campus</Label>
-          <Input
-            id="slot-campus"
-            name="campusName"
-            placeholder="Required in person"
+        <div className="space-y-1.5">
+          <Label htmlFor="slot-plan-end">Ends</Label>
+          <DateTimePicker
+            id="slot-plan-end"
+            name="planEndsAt"
+            value={endsAt}
+            onValueChange={setEndsAt}
+            required
+            minValue={eventStartsAt || undefined}
+            maxValue={eventEndsAt || undefined}
+            timezoneLabel={timeZoneId}
+            displayFormat="MMM d, HH:mm"
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="slot-room">Room</Label>
-          <Input
-            id="slot-room"
-            name="roomName"
-            placeholder="Required in person"
-          />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="slot-duration">Testing per slot</Label>
+          <div className="relative">
+            <Input
+              id="slot-duration"
+              type="number"
+              min="1"
+              max="1440"
+              value={durationMinutes}
+              onChange={(event) =>
+                setDurationMinutes(Number(event.target.value))
+              }
+              className="pr-12"
+            />
+            <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-muted-foreground">
+              min
+            </span>
+          </div>
         </div>
-        <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="slot-url">Meeting URL</Label>
-          <Input
-            id="slot-url"
-            name="meetingUrl"
-            type="url"
-            placeholder="Required online"
-          />
+        <div className="space-y-1.5">
+          <Label htmlFor="slot-break">Reset between slots</Label>
+          <div className="relative">
+            <Input
+              id="slot-break"
+              type="number"
+              min="0"
+              max="1440"
+              value={breakMinutes}
+              onChange={(event) => setBreakMinutes(Number(event.target.value))}
+              className="pr-12"
+            />
+            <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-muted-foreground">
+              min
+            </span>
+          </div>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="slot-testers">Tester capacity</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="slot-testers">Testers per slot</Label>
           <Input
             id="slot-testers"
             name="maxTesters"
@@ -1199,8 +1453,8 @@ export function CreateTestingEventSlotDialog({ eventId }: { eventId: string }) {
             placeholder="Unlimited"
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="slot-projects">Approved project capacity</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="slot-projects">Projects per slot</Label>
           <Input
             id="slot-projects"
             name="maxProjects"
@@ -1210,6 +1464,225 @@ export function CreateTestingEventSlotDialog({ eventId }: { eventId: string }) {
           />
         </div>
       </div>
+    </section>
+  );
+
+  const deliveryFields = (
+    <section aria-labelledby="slot-delivery-heading" className="space-y-4">
+      <div>
+        <h3 id="slot-delivery-heading" className="text-sm font-semibold">
+          Where testing happens
+        </h3>
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          This delivery setup is applied to every slot in this batch.
+        </p>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="session-mode">Format</Label>
+          <Select
+            name="mode"
+            value={mode}
+            onValueChange={(value) =>
+              setMode(
+                value as NonNullable<TestingLabTestingEventProjection["mode"]>,
+              )
+            }
+          >
+            <SelectTrigger id="session-mode">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="InPerson">In person</SelectItem>
+              <SelectItem value="Online">Online</SelectItem>
+              <SelectItem value="Hybrid">Hybrid</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {mode !== "InPerson" ? (
+          <div className="space-y-1.5">
+            <Label htmlFor="slot-url">Meeting URL</Label>
+            <Input
+              id="slot-url"
+              name="meetingUrl"
+              type="url"
+              placeholder="https://"
+              required={mode === "Online"}
+            />
+          </div>
+        ) : null}
+        {mode !== "Online" ? (
+          <>
+            <div className="space-y-1.5">
+              <Label htmlFor="slot-campus">Campus</Label>
+              <Input id="slot-campus" name="campusName" required />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="slot-room">Room</Label>
+              <Input id="slot-room" name="roomName" required />
+            </div>
+          </>
+        ) : null}
+      </div>
+    </section>
+  );
+
+  const preview = (
+    <section aria-labelledby="slot-preview-heading">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-medium text-muted-foreground">
+            Schedule preview
+          </p>
+          <h3 id="slot-preview-heading" className="mt-1 text-xl font-semibold">
+            {slots.length} slot{slots.length === 1 ? "" : "s"} ready
+          </h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {durationMinutes || 0} min testing, {breakMinutes || 0} min reset
+          </p>
+        </div>
+        <span className="text-xs text-muted-foreground">{timeZoneId}</span>
+      </div>
+
+      {slots.length > 0 ? (
+        <ol className="mt-5 max-h-[22rem] space-y-1 overflow-y-auto pr-1">
+          {slots.map((slot, index) => (
+            <li
+              key={`${slot.startsAt}-${slot.endsAt}`}
+              className="grid grid-cols-[2rem_minmax(0,1fr)] gap-3 rounded-md px-2 py-2.5 hover:bg-background/70"
+            >
+              <span className="flex size-8 items-center justify-center rounded-full bg-background text-xs font-semibold tabular-nums ring-1 ring-border">
+                {index + 1}
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-medium tabular-nums">
+                  {timeSlotLabel(slot)}
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {mode === "InPerson"
+                    ? "In-person testing"
+                    : mode === "Hybrid"
+                      ? "Hybrid testing"
+                      : "Online testing"}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <div className="mt-5 rounded-md border border-dashed px-4 py-8 text-center">
+          <Clock3 className="mx-auto size-5 text-muted-foreground" />
+          <p className="mt-2 text-sm font-medium">No complete slot fits</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Increase the session window or shorten the testing time.
+          </p>
+        </div>
+      )}
+
+      <div className="mt-4 space-y-1 text-xs text-muted-foreground">
+        {unusedMinutes > 0 ? (
+          <p>{unusedMinutes} min remain after the last complete slot.</p>
+        ) : null}
+        {duplicateCount > 0 ? (
+          <p>
+            {duplicateCount} existing slot
+            {duplicateCount === 1 ? " was" : "s were"} skipped.
+          </p>
+        ) : null}
+        {plannedSlots.length === 200 ? (
+          <p className="text-amber-600 dark:text-amber-400">
+            Preview limited to 200 slots. Shorten the range or increase the
+            testing time.
+          </p>
+        ) : null}
+      </div>
+
+      {presentation === "inline" ? (
+        <div className="mt-5 border-t pt-4">
+          <ActionMessage result={result} />
+          <Button
+            type="submit"
+            disabled={pending || slots.length === 0 || !eventId}
+            className="w-full"
+          >
+            {pending
+              ? "Creating slots..."
+              : `Create ${slots.length} time slot${slots.length === 1 ? "" : "s"}`}
+          </Button>
+          <p className="mt-2 text-center text-xs text-muted-foreground">
+            You can edit individual slots after creation.
+          </p>
+        </div>
+      ) : null}
+    </section>
+  );
+
+  if (presentation === "inline") {
+    return (
+      <div className="overflow-hidden rounded-lg border bg-card/30">
+        <div className="flex flex-col gap-3 border-b bg-muted/20 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="font-semibold">Plan a testing session</h2>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              Set one timebox and preview every bookable slot before saving.
+            </p>
+          </div>
+          <div className="text-sm sm:text-right">
+            <p className="font-medium">Event window</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {wallClockDateTimeLabel(eventStartsAt)} to{" "}
+              {wallClockDateTimeLabel(eventEndsAt)} · {timeZoneId}
+            </p>
+          </div>
+        </div>
+
+        <form onSubmit={submitInline}>
+          {hiddenFields}
+          <div className="grid lg:grid-cols-[minmax(0,1.15fr)_minmax(20rem,0.85fr)]">
+            <div className="space-y-6 p-5 lg:p-6">
+              {windowFields}
+              <div className="border-t pt-6">{deliveryFields}</div>
+            </div>
+            <aside className="border-t bg-muted/20 p-5 lg:border-l lg:border-t-0 lg:p-6">
+              {preview}
+            </aside>
+          </div>
+        </form>
+      </div>
+    );
+  }
+
+  return (
+    <EventActionDialog
+      trigger={
+        <Button size="sm" disabled={!eventId}>
+          <Plus className="mr-2 size-4" />
+          Build time slots
+        </Button>
+      }
+      title="Build testing time slots"
+      description="Choose one test timebox and let Testing Lab divide the session into bookable blocks."
+      submitLabel={`Create ${slots.length} time slot${slots.length === 1 ? "" : "s"}`}
+      action={createTestingEventSlots}
+      submitDisabled={slots.length === 0}
+    >
+      {hiddenFields}
+      <div className="space-y-4">
+        <div className="flex gap-2 rounded-md bg-muted/50 px-3 py-2.5 text-sm">
+          <Clock3 className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+          <div>
+            <p className="font-medium">Event window</p>
+            <p className="text-muted-foreground">
+              {formatEventDateTime(event.startsAt, timeZoneId)} to{" "}
+              {formatEventDateTime(event.endsAt, timeZoneId)} · {timeZoneId}
+            </p>
+          </div>
+        </div>
+
+        {windowFields}
+        {deliveryFields}
+        <div className="rounded-md bg-muted/35 p-3">{preview}</div>
+      </div>
     </EventActionDialog>
   );
 }
@@ -1217,31 +1690,50 @@ export function CreateTestingEventSlotDialog({ eventId }: { eventId: string }) {
 export function ManageTestingEventSlotDialog({
   eventId,
   slot,
+  eventStartsAt,
+  eventEndsAt,
+  timeZoneId = "UTC",
 }: {
   eventId: string;
   slot: TestingLabTestingEventSlotProjection;
+  eventStartsAt?: string | null;
+  eventEndsAt?: string | null;
+  timeZoneId?: string;
 }) {
   if (!slot.id) return null;
+  const minimumValue = apiDatetimeLocal(eventStartsAt, timeZoneId);
+  const maximumValue = apiDatetimeLocal(eventEndsAt, timeZoneId);
   return (
     <EventActionDialog
       trigger={
         <Button size="sm" variant="outline">
           <Pencil className="mr-2 size-4" />
-          Edit slot
+          Edit time slot
         </Button>
       }
-      title="Edit testing slot"
-      description="Change this slot without affecting the schedules and capacity of other slots."
-      submitLabel="Save slot"
+      title="Edit testing time slot"
+      description="Change this bookable block without affecting the other time slots in the event."
+      submitLabel="Save time slot"
       action={updateTestingEventSlot}
     >
       <input type="hidden" name="eventId" value={eventId} />
       <input type="hidden" name="slotId" value={slot.id} />
+      <input type="hidden" name="timeZoneId" value={timeZoneId} />
       <div className="grid gap-4 sm:grid-cols-2">
+        {minimumValue && maximumValue ? (
+          <div className="flex gap-2 rounded-md bg-muted/50 px-3 py-2.5 text-sm sm:col-span-2">
+            <Clock3 className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+            <p>
+              This time slot must stay within the event period:{" "}
+              {formatEventDateTime(eventStartsAt, timeZoneId)} to{" "}
+              {formatEventDateTime(eventEndsAt, timeZoneId)} ({timeZoneId}).
+            </p>
+          </div>
+        ) : null}
         <div className="space-y-2">
-          <Label>Mode</Label>
+          <Label htmlFor={`slot-mode-${slot.id}`}>Format</Label>
           <Select name="mode" defaultValue={slot.mode ?? "Online"}>
-            <SelectTrigger>
+            <SelectTrigger id={`slot-mode-${slot.id}`}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -1260,21 +1752,27 @@ export function ManageTestingEventSlotDialog({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor={`slot-start-${slot.id}`}>Starts</Label>
+          <Label htmlFor={`slot-start-${slot.id}`}>Slot starts</Label>
           <DateTimePicker
             id={`slot-start-${slot.id}`}
             name="startsAt"
             required
-            defaultValue={apiDatetimeLocal(slot.startsAt)}
+            defaultValue={apiDatetimeLocal(slot.startsAt, timeZoneId)}
+            minValue={minimumValue || undefined}
+            maxValue={maximumValue || undefined}
+            timezoneLabel={timeZoneId}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor={`slot-end-${slot.id}`}>Ends</Label>
+          <Label htmlFor={`slot-end-${slot.id}`}>Slot ends</Label>
           <DateTimePicker
             id={`slot-end-${slot.id}`}
             name="endsAt"
             required
-            defaultValue={apiDatetimeLocal(slot.endsAt)}
+            defaultValue={apiDatetimeLocal(slot.endsAt, timeZoneId)}
+            minValue={minimumValue || undefined}
+            maxValue={maximumValue || undefined}
+            timezoneLabel={timeZoneId}
           />
         </div>
         <div className="space-y-2">
@@ -1330,12 +1828,12 @@ export function ManageTestingEventSlotDialog({
           trigger={
             <Button type="button" size="sm" variant="destructive">
               <Trash2 className="mr-2 size-4" />
-              Delete slot
+              Delete time slot
             </Button>
           }
-          title="Delete this testing slot?"
-          description="A slot with approved projects or tester registrations cannot be deleted."
-          submitLabel="Delete slot"
+          title="Delete this testing time slot?"
+          description="A time slot with approved projects or tester registrations cannot be deleted."
+          submitLabel="Delete time slot"
           action={deleteTestingEventSlot}
           destructive
         >
@@ -1670,7 +2168,9 @@ export function TestingEventApplications({
           : "Member details unavailable";
         return (
           <div
-            key={application.id ?? `${application.projectId ?? "unknown"}:${index}`}
+            key={
+              application.id ?? `${application.projectId ?? "unknown"}:${index}`
+            }
             className="flex flex-col gap-3 p-4 lg:flex-row lg:items-center lg:justify-between"
           >
             <div className="min-w-0">
@@ -1957,7 +2457,9 @@ export function TestingSlotRegistrations({
 
         return (
           <div
-            key={registration.id ?? `${registration.userId ?? "unknown"}:${index}`}
+            key={
+              registration.id ?? `${registration.userId ?? "unknown"}:${index}`
+            }
             className="flex flex-col gap-3 py-3 lg:flex-row lg:items-center lg:justify-between"
           >
             <div className="min-w-0">

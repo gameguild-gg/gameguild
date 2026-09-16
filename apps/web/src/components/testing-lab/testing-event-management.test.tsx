@@ -22,6 +22,7 @@ const mocks = vi.hoisted(() => ({
   beginReview: vi.fn(),
   createEvent: vi.fn(),
   createSlot: vi.fn(),
+  createSlots: vi.fn(),
   deleteEvent: vi.fn(),
   push: vi.fn(),
   refresh: vi.fn(),
@@ -44,6 +45,7 @@ vi.mock("@/lib/testing-lab/events-actions", () => ({
   configureTestingEventLearning: vi.fn(),
   createTestingEvent: mocks.createEvent,
   createTestingEventSlot: mocks.createSlot,
+  createTestingEventSlots: mocks.createSlots,
   archiveTestingEvent: vi.fn(),
   deleteTestingEvent: mocks.deleteEvent,
   deleteTestingEventSlot: vi.fn(),
@@ -60,9 +62,11 @@ vi.mock("@/lib/testing-lab/events-actions", () => ({
 
 import {
   apiDatetimeLocal,
+  buildTestingTimeSlots,
   createTestingEventSchedule,
   CreateTestingEventDialog,
   CreateTestingEventSlotDialog,
+  defaultTestingSessionEnd,
   EditTestingEventDialog,
   ManageTestingEventSlotDialog,
   preferredNewEventTimeZone,
@@ -70,6 +74,7 @@ import {
   testingEventRecurrenceStart,
   TestingEventApplications,
   TestingEventLifecycleActions,
+  TestingTimeSlotPlanner,
   updateTestingEventSchedule,
 } from "./testing-event-management";
 
@@ -85,6 +90,11 @@ describe("TestingEventApplications", () => {
       success: true,
       data: { id: "slot-created" },
       message: "Slot created.",
+    });
+    mocks.createSlots.mockResolvedValue({
+      success: true,
+      data: [{ id: "slot-created" }],
+      message: "Time slots created.",
     });
     mocks.deleteEvent.mockResolvedValue({
       success: true,
@@ -142,7 +152,8 @@ describe("TestingEventApplications", () => {
       new Date(schedule.applicationsCloseAt).valueOf(),
     );
     expect(
-      new Date(schedule.endsAt).valueOf() - new Date(schedule.startsAt).valueOf(),
+      new Date(schedule.endsAt).valueOf() -
+        new Date(schedule.startsAt).valueOf(),
     ).toBe(2 * 60 * 60 * 1000);
   });
 
@@ -386,9 +397,9 @@ describe("TestingEventApplications", () => {
       render(<CreateTestingEventDialog defaultTimeZone="UTC" />);
       fireEvent.click(screen.getByRole("button", { name: "New event" }));
 
-    expect(
-      screen.getByRole("combobox", { name: "Time zone" }),
-    ).toHaveTextContent("Sao Paulo");
+      expect(
+        screen.getByRole("combobox", { name: "Time zone" }),
+      ).toHaveTextContent("Sao Paulo");
       expect(
         document.querySelector<HTMLInputElement>('input[name="timeZoneId"]')
           ?.value,
@@ -446,9 +457,13 @@ describe("TestingEventApplications", () => {
       )?.value,
     ).toBe("revision-1");
     await user.click(screen.getByRole("combobox", { name: "Event calendar" }));
-    await user.click(await screen.findByRole("option", { name: "Untitled calendar" }));
+    await user.click(
+      await screen.findByRole("option", { name: "Untitled calendar" }),
+    );
     expect(
-      document.querySelector<HTMLInputElement>('input[name="templateRevisionId"]'),
+      document.querySelector<HTMLInputElement>(
+        'input[name="templateRevisionId"]',
+      ),
     ).toHaveValue("revision-2");
   });
 
@@ -551,20 +566,28 @@ describe("TestingEventApplications", () => {
       name: "Application window",
     });
     await user.click(applicationWindow);
-    await user.click(screen.getByRole("button", { name: "Apply application window" }));
+    await user.click(
+      screen.getByRole("button", { name: "Apply application window" }),
+    );
 
     const currentEnd = document.querySelector<HTMLInputElement>(
       'input[name="applicationsCloseAt"]',
     )!.value;
     await user.click(applicationWindow);
-    const nextHour = String((Number(currentEnd.slice(11, 13)) + 1) % 24).padStart(2, "0");
+    const nextHour = String(
+      (Number(currentEnd.slice(11, 13)) + 1) % 24,
+    ).padStart(2, "0");
     fireEvent.change(screen.getByLabelText("End time"), {
       target: { value: `${nextHour}:${currentEnd.slice(14, 16)}` },
     });
-    await user.click(screen.getByRole("button", { name: "Apply application window" }));
+    await user.click(
+      screen.getByRole("button", { name: "Apply application window" }),
+    );
 
     expect(
-      document.querySelector<HTMLInputElement>('input[name="applicationsCloseAt"]')?.value,
+      document.querySelector<HTMLInputElement>(
+        'input[name="applicationsCloseAt"]',
+      )?.value,
     ).not.toBe(currentEnd);
   });
 
@@ -578,7 +601,9 @@ describe("TestingEventApplications", () => {
       await user.click(repeats);
       await user.click(await screen.findByRole("option", { name: option }));
       expect(
-        document.querySelector<HTMLInputElement>('input[name="recurrenceFrequency"]')?.value,
+        document.querySelector<HTMLInputElement>(
+          'input[name="recurrenceFrequency"]',
+        )?.value,
       ).not.toBe("");
     }
 
@@ -648,7 +673,9 @@ describe("TestingEventApplications", () => {
         slots={[]}
       />,
     );
-    expect(screen.getByText("No project applications yet.")).toBeInTheDocument();
+    expect(
+      screen.getByText("No project applications yet."),
+    ).toBeInTheDocument();
 
     rerender(
       <TestingEventApplications
@@ -696,12 +723,16 @@ describe("TestingEventApplications", () => {
       />,
     );
     await user.click(screen.getByRole("button", { name: "Review" }));
-    expect(await screen.findByText("Review cannot start yet.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Review cannot start yet."),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Review" })).toBeEnabled();
     expect(mocks.refresh).not.toHaveBeenCalled();
     unmount();
 
-    mocks.beginReview.mockRejectedValueOnce(new Error("Review API unavailable"));
+    mocks.beginReview.mockRejectedValueOnce(
+      new Error("Review API unavailable"),
+    );
     render(
       <TestingEventApplications
         eventId="event-1"
@@ -711,7 +742,9 @@ describe("TestingEventApplications", () => {
       />,
     );
     await user.click(screen.getByRole("button", { name: "Review" }));
-    expect(await screen.findByText("Review API unavailable")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Review API unavailable"),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Review" })).toBeEnabled();
   });
 
@@ -753,7 +786,9 @@ describe("TestingEventApplications", () => {
     await user.click(screen.getByRole("button", { name: "Approve" }));
     await user.click(screen.getByRole("combobox", { name: "Testing slot" }));
     expect(await screen.findByText(/Campus A/)).toBeInTheDocument();
-    expect(screen.getByText(/https:\/\/meet\.example\.test/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/https:\/\/meet\.example\.test/),
+    ).toBeInTheDocument();
     expect(screen.getByText(/Hybrid/)).toBeInTheDocument();
     const approveForm = screen.getByRole("dialog").querySelector("form")!;
     const selectedSlot = document.createElement("input");
@@ -761,21 +796,31 @@ describe("TestingEventApplications", () => {
     selectedSlot.value = "slot-campus";
     approveForm.appendChild(selectedSlot);
     fireEvent.submit(approveForm);
-    await waitFor(() => expect(mocks.approveApplication).toHaveBeenCalledOnce());
     await waitFor(() =>
-      expect(screen.queryByRole("dialog", { name: "Approve project application" })).not.toBeInTheDocument(),
+      expect(mocks.approveApplication).toHaveBeenCalledOnce(),
+    );
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("dialog", { name: "Approve project application" }),
+      ).not.toBeInTheDocument(),
     );
 
     await user.click(screen.getByRole("button", { name: "Waitlist" }));
     await user.click(screen.getByRole("button", { name: "Add to waitlist" }));
-    await waitFor(() => expect(mocks.waitlistApplication).toHaveBeenCalledOnce());
-    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(mocks.waitlistApplication).toHaveBeenCalledOnce(),
+    );
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
 
     await user.click(screen.getByRole("button", { name: "Reject" }));
     await user.type(screen.getByLabelText("Rejection rationale"), "Not ready");
     await user.click(screen.getByRole("button", { name: "Reject project" }));
     await waitFor(() => expect(mocks.rejectApplication).toHaveBeenCalledOnce());
-    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
 
     await user.click(screen.getByRole("button", { name: "Vote" }));
     fireEvent.submit(screen.getByRole("dialog").querySelector("form")!);
@@ -858,15 +903,25 @@ describe("TestingEventApplications", () => {
       document.querySelector<HTMLInputElement>('input[name="timeZoneId"]')
         ?.value,
     ).toBe("America/Sao_Paulo");
-    expect(document.querySelector<HTMLInputElement>('input[name="requiresFeedback"]')).not.toBeChecked();
+    expect(
+      document.querySelector<HTMLInputElement>(
+        'input[name="requiresFeedback"]',
+      ),
+    ).not.toBeChecked();
   });
 
   it("defaults an edited event without timezone to UTC", async () => {
     const user = userEvent.setup();
     render(<EditTestingEventDialog event={{ id: "event-1", name: "Draft" }} />);
     await user.click(screen.getByRole("button", { name: "Edit" }));
-    expect(document.querySelector<HTMLInputElement>('input[name="timeZoneId"]')).toHaveValue("UTC");
-    expect(document.querySelector<HTMLInputElement>('input[name="requiresFeedback"]')).toBeChecked();
+    expect(
+      document.querySelector<HTMLInputElement>('input[name="timeZoneId"]'),
+    ).toHaveValue("UTC");
+    expect(
+      document.querySelector<HTMLInputElement>(
+        'input[name="requiresFeedback"]',
+      ),
+    ).toBeChecked();
   });
 
   it("preserves API wall-clock values when editing a slot", () => {
@@ -888,7 +943,7 @@ describe("TestingEventApplications", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Edit slot" }));
+    fireEvent.click(screen.getByRole("button", { name: "Edit time slot" }));
 
     expect(
       document.querySelector<HTMLInputElement>('input[name="startsAt"]')?.value,
@@ -899,12 +954,110 @@ describe("TestingEventApplications", () => {
     timezoneOffset.mockRestore();
   });
 
+  it("preconfigures the timebox builder from the event schedule and timezone", async () => {
+    const user = userEvent.setup();
+    render(
+      <CreateTestingEventSlotDialog
+        event={{
+          id: "event-1",
+          mode: "Online",
+          startsAt: "2026-08-13T17:00:00Z",
+          endsAt: "2026-08-13T19:00:00Z",
+          timeZoneId: "America/Sao_Paulo",
+        }}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Build time slots" }));
+
+    expect(
+      screen.getByRole("dialog", { name: "Build testing time slots" }),
+    ).toBeInTheDocument();
+    expect(
+      document.querySelector<HTMLInputElement>('input[name="planStartsAt"]'),
+    ).toHaveValue("2026-08-13T14:00");
+    expect(
+      document.querySelector<HTMLInputElement>('input[name="planEndsAt"]'),
+    ).toHaveValue("2026-08-13T16:00");
+    expect(
+      document.querySelector<HTMLInputElement>('input[name="timeZoneId"]'),
+    ).toHaveValue("America/Sao_Paulo");
+    expect(screen.getByText("Event window").parentElement).toHaveTextContent(
+      "America/Sao_Paulo",
+    );
+    expect(
+      JSON.parse(
+        document.querySelector<HTMLInputElement>('input[name="slotsJson"]')!
+          .value,
+      ),
+    ).toHaveLength(2);
+  });
+
+  it("shows the schedule planner inline and creates the previewed slots", async () => {
+    const user = userEvent.setup();
+    render(
+      <TestingTimeSlotPlanner
+        event={{
+          id: "event-inline",
+          mode: "Online",
+          startsAt: "2026-08-13T17:00:00Z",
+          endsAt: "2026-08-13T19:00:00Z",
+          timeZoneId: "America/Sao_Paulo",
+        }}
+      />,
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "Plan a testing session" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "2 slots ready" }),
+    ).toBeInTheDocument();
+
+    await user.type(
+      screen.getByRole("textbox", { name: "Meeting URL" }),
+      "https://meet.example/session",
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Create 2 time slots" }),
+    );
+
+    await waitFor(() => expect(mocks.createSlots).toHaveBeenCalledOnce());
+    expect(mocks.refresh).toHaveBeenCalledOnce();
+  });
+
+  it("splits a session into full timeboxes and leaves partial time unused", () => {
+    expect(
+      buildTestingTimeSlots("2026-09-03T14:00", "2026-09-03T18:00", 45, 15),
+    ).toEqual([
+      { startsAt: "2026-09-03T14:00", endsAt: "2026-09-03T14:45" },
+      { startsAt: "2026-09-03T15:00", endsAt: "2026-09-03T15:45" },
+      { startsAt: "2026-09-03T16:00", endsAt: "2026-09-03T16:45" },
+      { startsAt: "2026-09-03T17:00", endsAt: "2026-09-03T17:45" },
+    ]);
+    expect(
+      buildTestingTimeSlots("2026-09-03T14:00", "2026-09-03T14:30", 45, 15),
+    ).toEqual([]);
+  });
+
+  it("starts multi-day events with one practical four-hour session window", () => {
+    expect(
+      defaultTestingSessionEnd("2026-09-18T18:00", "2026-09-20T20:00"),
+    ).toBe("2026-09-18T22:00");
+    expect(
+      defaultTestingSessionEnd("2026-09-18T18:00", "2026-09-18T20:00"),
+    ).toBe("2026-09-18T20:00");
+  });
+
   it("omits malformed slots and safely defaults optional slot fields", async () => {
     const user = userEvent.setup();
     const { rerender } = render(
       <ManageTestingEventSlotDialog eventId="event-1" slot={{}} />,
     );
-    expect(screen.queryByRole("button", { name: "Edit slot" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Edit time slot" }),
+    ).not.toBeInTheDocument();
 
     rerender(
       <ManageTestingEventSlotDialog
@@ -912,20 +1065,35 @@ describe("TestingEventApplications", () => {
         slot={{ id: "slot-empty", eventId: "event-1" }}
       />,
     );
-    await user.click(screen.getByRole("button", { name: "Edit slot" }));
-    expect(document.querySelector<HTMLInputElement>('input[name="locationId"]')).toHaveValue("");
-    expect(document.querySelector<HTMLInputElement>('input[name="campusName"]')).toHaveValue("");
-    expect(document.querySelector<HTMLInputElement>('input[name="roomName"]')).toHaveValue("");
-    expect(document.querySelector<HTMLInputElement>('input[name="meetingUrl"]')).toHaveValue("");
-    expect(document.querySelector<HTMLInputElement>('input[name="maxTesters"]')).toHaveValue(null);
-    expect(document.querySelector<HTMLInputElement>('input[name="maxProjects"]')).toHaveValue(null);
+    await user.click(screen.getByRole("button", { name: "Edit time slot" }));
+    expect(
+      document.querySelector<HTMLInputElement>('input[name="locationId"]'),
+    ).toHaveValue("");
+    expect(
+      document.querySelector<HTMLInputElement>('input[name="campusName"]'),
+    ).toHaveValue("");
+    expect(
+      document.querySelector<HTMLInputElement>('input[name="roomName"]'),
+    ).toHaveValue("");
+    expect(
+      document.querySelector<HTMLInputElement>('input[name="meetingUrl"]'),
+    ).toHaveValue("");
+    expect(
+      document.querySelector<HTMLInputElement>('input[name="maxTesters"]'),
+    ).toHaveValue(null);
+    expect(
+      document.querySelector<HTMLInputElement>('input[name="maxProjects"]'),
+    ).toHaveValue(null);
   });
 
   it("submits a new event, closes the dialog, and refreshes the route", async () => {
     const user = userEvent.setup();
     render(<CreateTestingEventDialog />);
     await user.click(screen.getByRole("button", { name: "New event" }));
-    await user.type(screen.getByRole("textbox", { name: "Event name" }), "Ship night");
+    await user.type(
+      screen.getByRole("textbox", { name: "Event name" }),
+      "Ship night",
+    );
     await user.click(screen.getByRole("button", { name: "Create event" }));
 
     await waitFor(() => expect(mocks.createEvent).toHaveBeenCalledOnce());
@@ -941,15 +1109,23 @@ describe("TestingEventApplications", () => {
     });
     const { unmount } = render(<CreateTestingEventDialog />);
     await user.click(screen.getByRole("button", { name: "New event" }));
-    await user.type(screen.getByRole("textbox", { name: "Event name" }), "Duplicate");
+    await user.type(
+      screen.getByRole("textbox", { name: "Event name" }),
+      "Duplicate",
+    );
     await user.click(screen.getByRole("button", { name: "Create event" }));
-    expect(await screen.findByText("Event name is already in use.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Event name is already in use."),
+    ).toBeInTheDocument();
     unmount();
 
     mocks.createEvent.mockRejectedValueOnce("offline");
     render(<CreateTestingEventDialog />);
     await user.click(screen.getByRole("button", { name: "New event" }));
-    await user.type(screen.getByRole("textbox", { name: "Event name" }), "Offline event");
+    await user.type(
+      screen.getByRole("textbox", { name: "Event name" }),
+      "Offline event",
+    );
     await user.click(screen.getByRole("button", { name: "Create event" }));
     expect(
       await screen.findByText("The Testing Lab operation failed."),
@@ -958,10 +1134,18 @@ describe("TestingEventApplications", () => {
 
   it("runs generic event dialogs and reports action exceptions", async () => {
     const user = userEvent.setup();
-    mocks.createSlot.mockRejectedValueOnce(new Error("Slot API unavailable"));
-    const { unmount } = render(<CreateTestingEventSlotDialog eventId="event-1" />);
-    await user.click(screen.getByRole("button", { name: "Add slot" }));
-    const dialog = screen.getByRole("dialog", { name: "Add testing slot" });
+    mocks.createSlots.mockRejectedValueOnce(new Error("Slot API unavailable"));
+    const event = {
+      id: "event-1",
+      startsAt: "2026-08-13T17:00:00Z",
+      endsAt: "2026-08-13T19:00:00Z",
+      mode: "Online" as const,
+    };
+    const { unmount } = render(<CreateTestingEventSlotDialog event={event} />);
+    await user.click(screen.getByRole("button", { name: "Build time slots" }));
+    const dialog = screen.getByRole("dialog", {
+      name: "Build testing time slots",
+    });
     fireEvent.submit(dialog.querySelector("form")!);
 
     expect(await screen.findByText("Slot API unavailable")).toBeInTheDocument();
@@ -969,27 +1153,52 @@ describe("TestingEventApplications", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     unmount();
 
-    mocks.createSlot.mockResolvedValueOnce({ success: false, error: "Slot rejected" });
-    render(<CreateTestingEventSlotDialog eventId="event-2" />);
-    await user.click(screen.getByRole("button", { name: "Add slot" }));
+    mocks.createSlots.mockResolvedValueOnce({
+      success: false,
+      error: "Slot rejected",
+    });
+    render(
+      <CreateTestingEventSlotDialog event={{ ...event, id: "event-2" }} />,
+    );
+    await user.click(screen.getByRole("button", { name: "Build time slots" }));
     fireEvent.submit(screen.getByRole("dialog").querySelector("form")!);
     expect(await screen.findByText("Slot rejected")).toBeInTheDocument();
   });
 
   it("does not close quick create while its request is pending", async () => {
     const user = userEvent.setup();
-    let finish!: (value: { success: true; data: { id: string }; message: string }) => void;
+    let finish!: (value: {
+      success: true;
+      data: { id: string };
+      message: string;
+    }) => void;
     mocks.createEvent.mockImplementationOnce(
-      () => new Promise((resolve) => { finish = resolve; }),
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
     );
     render(<CreateTestingEventDialog />);
     await user.click(screen.getByRole("button", { name: "New event" }));
-    await user.type(screen.getByRole("textbox", { name: "Event name" }), "Pending event");
+    await user.type(
+      screen.getByRole("textbox", { name: "Event name" }),
+      "Pending event",
+    );
     await user.click(screen.getByRole("button", { name: "Create event" }));
-    await waitFor(() => expect(screen.getByRole("button", { name: "Creating event..." })).toBeDisabled());
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: "Creating event..." }),
+      ).toBeDisabled(),
+    );
     await user.click(screen.getByRole("button", { name: "Close" }));
-    expect(screen.getByRole("dialog", { name: "New testing event" })).toBeInTheDocument();
-    finish({ success: true, data: { id: "event-created" }, message: "Created" });
+    expect(
+      screen.getByRole("dialog", { name: "New testing event" }),
+    ).toBeInTheDocument();
+    finish({
+      success: true,
+      data: { id: "event-created" },
+      message: "Created",
+    });
     await waitFor(() => expect(mocks.createEvent).toHaveBeenCalledOnce());
   });
 
@@ -1001,8 +1210,12 @@ describe("TestingEventApplications", () => {
       />,
     );
     await user.click(screen.getByRole("button", { name: "Delete draft" }));
-    const dialog = screen.getByRole("dialog", { name: "Delete this draft event?" });
-    await user.click(within(dialog).getByRole("button", { name: "Delete draft" }));
+    const dialog = screen.getByRole("dialog", {
+      name: "Delete this draft event?",
+    });
+    await user.click(
+      within(dialog).getByRole("button", { name: "Delete draft" }),
+    );
 
     await waitFor(() => expect(mocks.deleteEvent).toHaveBeenCalledOnce());
     await waitFor(() =>
@@ -1040,13 +1253,17 @@ describe("TestingEventApplications", () => {
       await waitFor(() => expect(mocks.transitionEvent).toHaveBeenCalledOnce());
       const data = mocks.transitionEvent.mock.calls[0]?.[0] as FormData;
       expect(data.get("transition")).toBe(transition);
-      expect(await screen.findByText("Event transitioned.")).toBeInTheDocument();
+      expect(
+        await screen.findByText("Event transitioned."),
+      ).toBeInTheDocument();
     },
   );
 
   it("reports lifecycle failures and omits actions for events without identity", async () => {
     const user = userEvent.setup();
-    mocks.transitionEvent.mockRejectedValueOnce(new Error("Transition unavailable"));
+    mocks.transitionEvent.mockRejectedValueOnce(
+      new Error("Transition unavailable"),
+    );
     const { rerender } = render(
       <TestingEventLifecycleActions
         event={{
@@ -1057,7 +1274,9 @@ describe("TestingEventApplications", () => {
       />,
     );
     await user.click(screen.getByRole("button", { name: "Start event" }));
-    expect(await screen.findByText("Transition unavailable")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Transition unavailable"),
+    ).toBeInTheDocument();
 
     rerender(<TestingEventLifecycleActions event={{ status: "Draft" }} />);
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
@@ -1078,8 +1297,14 @@ describe("TestingEventApplications", () => {
         }}
       />,
     );
-    expect(screen.getByRole("button", { name: "Open applications" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Cancel event" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Archive event" })).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Open applications" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Cancel event" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Archive event" }),
+    ).not.toBeInTheDocument();
   });
 });

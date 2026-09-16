@@ -217,6 +217,31 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
             : ToActionResult(result);
     }
 
+    // A schedule plan is persisted in one transaction so a failed timebox never leaves a partial calendar.
+    [HttpPost("{eventId:guid}/slots/batch")]
+    [RequireTestingLabPermission(TestingLabActions.Edit, TestingLabResourceTypes.Event, "eventId")]
+    public async Task<ActionResult<IReadOnlyList<TestingEventSlotProjection>>> CreateSlots(
+        Guid eventId,
+        CreateTestingEventSlotsRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await mediator.Send(new CreateTestingEventSlotsCommand(
+            eventId,
+            request.Slots.Select(slot => new TestingEventSlotInput(
+                slot.Mode,
+                slot.StartsAt,
+                slot.EndsAt,
+                slot.MaxTesters,
+                slot.MaxProjects,
+                slot.CampusName,
+                slot.RoomName,
+                slot.MeetingUrl,
+                slot.LocationId)).ToArray()), cancellationToken).ConfigureAwait(false);
+        return result.IsSuccess
+            ? CreatedAtAction(nameof(GetSlots), new { eventId }, result.Value)
+            : ToActionResult(result);
+    }
+
     [HttpPut("{eventId:guid}/slots/{slotId:guid}")]
     [RequireTestingLabPermission(TestingLabActions.Edit, TestingLabResourceTypes.Event, "eventId")]
     public async Task<ActionResult<TestingEventSlotProjection>> UpdateSlot(

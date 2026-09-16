@@ -18536,6 +18536,19 @@ export const deleteTestingEventsSlotsEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface PostTestingEventsSlotsBatchInput {
+  eventId: string;
+  body?: Types.TestingLabCreateTestingEventSlotsInput;
+}
+export type PostTestingEventsSlotsBatchOutput = Array<Types.TestingLabTestingEventSlotProjection>;
+export const postTestingEventsSlotsBatchEndpoint = {
+  operationId: 'postTestingEventsSlotsBatch' as const,
+  method: 'POST' as const,
+  path: '/v1/testing/events/{eventId}/slots/batch' as const,
+  tags: ['TestingLabTestingEvents'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetTestingEventsApplicationsForGetTestingEventsApplicationsByApplicationIdInput {
   applicationId: string;
 }
@@ -22649,6 +22662,7 @@ export const endpoints = {
   postTestingEventsSlots: postTestingEventsSlotsEndpoint,
   putTestingEventsSlots: putTestingEventsSlotsEndpoint,
   deleteTestingEventsSlots: deleteTestingEventsSlotsEndpoint,
+  postTestingEventsSlotsBatch: postTestingEventsSlotsBatchEndpoint,
   getTestingEventsApplicationsForGetTestingEventsApplicationsByApplicationId:
     getTestingEventsApplicationsForGetTestingEventsApplicationsByApplicationIdEndpoint,
   putTestingEventsApplications: putTestingEventsApplicationsEndpoint,
