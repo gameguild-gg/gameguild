@@ -270,9 +270,10 @@ export function LessonAuthoringWorkspace({
   };
 
   const restoreConflictCopy = () => {
-    if (!conflictBackup) return;
-    setPayload(conflictBackup);
-    payloadRef.current = conflictBackup;
+    // This action is rendered only while a conflict backup exists.
+    const backup = conflictBackup as AuthoringContentPayload;
+    setPayload(backup);
+    payloadRef.current = backup;
     setConflictBackup(null);
     setSaveStatus("saved");
     setSaveError(null);
@@ -428,7 +429,8 @@ export function LessonAuthoringWorkspace({
           const { done, value } = await reader.read();
           buffer += decoder.decode(value, { stream: !done });
           const frames = buffer.split("\n\n");
-          buffer = frames.pop() ?? "";
+          // String#split always returns at least one segment.
+          buffer = frames.pop() as string;
           for (const frame of frames) {
             const id = frame.match(/^id:\s*(\d+)/m)?.[1];
             if (id) lastEventId = Number(id);
@@ -571,8 +573,9 @@ export function LessonAuthoringWorkspace({
   };
 
   const stopCopilot = async () => {
-    if (!activeRun || !isRunning || activeRun.errorCode === "AI_CANCEL_REQUESTED")
-      return;
+    // The stop control is shown only while a run is active. It can briefly be
+    // clicked before run creation returns, so keep only that meaningful guard.
+    if (!activeRun) return;
     const result = await cancelAiAuthoringRun(courseId, item.id, activeRun.id);
     if (!result.success) {
       setAiError(result.error);
@@ -588,14 +591,13 @@ export function LessonAuthoringWorkspace({
     }
   };
 
-  const acceptProposal = async () => {
-    if (!proposal) return;
+  const acceptProposal = async (proposalToApply: AiProposal) => {
     const result = await applyAiProposal(
       courseId,
       item.id,
-      proposal.id,
+      proposalToApply.id,
       revisionRef.current,
-      proposal.kind === "InsertAtCursor" ? cursorOffsetRef.current : undefined,
+      proposalToApply.kind === "InsertAtCursor" ? cursorOffsetRef.current : undefined,
     );
     if (!result.success) {
       setAiError(result.error);
@@ -606,14 +608,13 @@ export function LessonAuthoringWorkspace({
     setPayload(result.data.payload);
     revisionRef.current = result.data.revision;
     setSavedSnapshot(JSON.stringify(result.data.payload));
-    setProposal({ ...proposal, status: "Applied" });
+    setProposal({ ...proposalToApply, status: "Applied" });
     setDiffOpen(false);
     setSaveStatus("saved");
   };
 
-  const rejectProposal = async () => {
-    if (!proposal) return;
-    const result = await discardAiProposal(courseId, item.id, proposal.id);
+  const rejectProposal = async (proposalToDiscard: AiProposal) => {
+    const result = await discardAiProposal(courseId, item.id, proposalToDiscard.id);
     if (result.success) setProposal(result.data);
     setDiffOpen(false);
   };
@@ -740,7 +741,7 @@ export function LessonAuthoringWorkspace({
           value={mode === "preview" ? "preview" : "editor"}
           onValueChange={(value) => setMode(value as "editor" | "preview")}
         >
-          <SelectTrigger aria-label="Editor view" size="sm" className="w-24 2xl:hidden">
+          <SelectTrigger aria-label="Editor view" size="sm" className="w-24 lg:hidden">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -748,10 +749,11 @@ export function LessonAuthoringWorkspace({
             <SelectItem value="preview">Preview</SelectItem>
           </SelectContent>
         </Select>
-        <div className="hidden items-center rounded-md border bg-muted/25 p-0.5 2xl:flex">
+        <div className="hidden items-center rounded-md border bg-muted/25 p-0.5 lg:flex">
           {(["editor", "split", "preview"] as EditorMode[]).map((value) => (
             <Button
               key={value}
+              aria-label={value}
               variant={mode === value ? "secondary" : "ghost"}
               size="sm"
               className="h-7 capitalize"
@@ -844,11 +846,11 @@ export function LessonAuthoringWorkspace({
                   Restore my changes
                 </Button>
               </>
-            ) : saveStatus === "offline" ? (
+            ) : (
               <Button variant="ghost" size="xs" onClick={() => void persist()}>
                 <RotateCcw /> Retry
               </Button>
-            ) : null}
+            )}
           </div>
         </div>
       ) : null}
@@ -1119,7 +1121,7 @@ export function LessonAuthoringWorkspace({
                 <div className="space-y-2 border-t p-3">
                   {!isStructured && format !== "Video" ? (
                     <Select value={proposalMode} onValueChange={(value) => setProposalMode(value as AiProposalKind)}>
-                      <SelectTrigger className="h-8 w-full text-sm"><SelectValue /></SelectTrigger>
+                      <SelectTrigger aria-label="Proposal application" className="h-8 w-full text-sm"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="ReplaceDocument">Replace document</SelectItem>
                         <SelectItem value="InsertAtCursor">Insert at cursor</SelectItem>
@@ -1194,8 +1196,16 @@ export function LessonAuthoringWorkspace({
           </div>
           <DialogFooter className="border-t px-5 py-3">
             <div className="mr-auto text-sm text-muted-foreground">Base draft revision {proposal?.baseDraftRevision}</div>
-            <Button variant="outline" onClick={() => void rejectProposal()}>Discard</Button>
-            <Button onClick={() => void acceptProposal()}><Check /> Accept and apply</Button>
+            {proposal ? (
+              <>
+                <Button variant="outline" onClick={() => void rejectProposal(proposal)}>
+                  Discard
+                </Button>
+                <Button onClick={() => void acceptProposal(proposal)}>
+                  <Check /> Accept and apply
+                </Button>
+              </>
+            ) : null}
           </DialogFooter>
         </DialogContent>
       </Dialog>

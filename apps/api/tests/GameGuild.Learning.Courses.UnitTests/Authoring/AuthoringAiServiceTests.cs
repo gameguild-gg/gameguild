@@ -355,6 +355,640 @@ public sealed class AuthoringAiServiceTests
         fixture.Queue.Items.Should().BeEmpty();
     }
 
+    [Fact]
+    public async Task GetEntitlement_RequiresTenantScopedActorAndReturnsThatActorsWallet()
+    {
+        await using var fixture = CreateFixture();
+
+        var entitlement = await fixture.Service.GetEntitlement(
+            fixture.TenantId,
+            fixture.ActorId,
+            CancellationToken.None);
+
+        entitlement.AvailableSoftCredits.Should().Be(1_000);
+        entitlement.Currency.Should().Be("SoftCoin");
+        await FluentActions.Invoking(() => fixture.Service.GetEntitlement(
+                Guid.Empty,
+                fixture.ActorId,
+                CancellationToken.None))
+            .Should().ThrowAsync<UnauthorizedAccessException>();
+        await FluentActions.Invoking(() => fixture.Service.GetEntitlement(
+                fixture.TenantId,
+                Guid.Empty,
+                CancellationToken.None))
+            .Should().ThrowAsync<UnauthorizedAccessException>();
+    }
+
+    [Fact]
+    public async Task GetConversations_WhenAuthorHasNoHistory_ReturnsEmptyCollection()
+    {
+        await using var fixture = CreateFixture();
+
+        var conversations = await fixture.Service.GetConversations(
+            fixture.TenantId,
+            fixture.ActorId,
+            fixture.ProgramId,
+            fixture.ContentId,
+            CancellationToken.None);
+
+        conversations.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task CreateRun_ReusesRequestedConversationAndNormalizesBlankSelection()
+    {
+        await using var fixture = CreateFixture();
+        var first = await fixture.Service.CreateRun(
+            fixture.TenantId,
+            fixture.ActorId,
+            fixture.ProgramId,
+            fixture.ContentId,
+            Request("conversation-first") with { Selection = "   " },
+            CancellationToken.None);
+
+        var second = await fixture.Service.CreateRun(
+            fixture.TenantId,
+            fixture.ActorId,
+            fixture.ProgramId,
+            fixture.ContentId,
+            Request("conversation-second") with { ConversationId = first.ConversationId },
+            CancellationToken.None);
+
+        second.ConversationId.Should().Be(first.ConversationId);
+        (await fixture.Db.Set<AiAuthoringConversation>().CountAsync()).Should().Be(1);
+        (await fixture.Db.Set<AiAuthoringRun>().SingleAsync(item => item.Id == first.Id))
+            .Selection.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task CreateRun_IdempotentReplayPreservesNonBlankSelection()
+    {
+        await using var fixture = CreateFixture();
+        var request = Request("selected-replay") with { Selection = "Keep this paragraph" };
+
+        var first = await fixture.Service.CreateRun(
+            fixture.TenantId,
+            fixture.ActorId,
+            fixture.ProgramId,
+            fixture.ContentId,
+            request,
+            CancellationToken.None);
+        var replay = await fixture.Service.CreateRun(
+            fixture.TenantId,
+            fixture.ActorId,
+            fixture.ProgramId,
+            fixture.ContentId,
+            request,
+            CancellationToken.None);
+
+        replay.Id.Should().Be(first.Id);
+        (await fixture.Db.Set<AiAuthoringRun>().SingleAsync()).Selection
+            .Should().Be("Keep this paragraph");
+    }
+
+    [Fact]
+    public async Task CreateRun_WithUnknownConversationFailsBeforeCharging()
+    {
+        await using var fixture = CreateFixture();
+
+        var act = () => fixture.Service.CreateRun(
+            fixture.TenantId,
+            fixture.ActorId,
+            fixture.ProgramId,
+            fixture.ContentId,
+            Request("unknown-conversation") with { ConversationId = Guid.NewGuid() },
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<KeyNotFoundException>();
+        fixture.Credits.ReserveCalls.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task CreateRun_WithStaleDraftRevisionFailsBeforeCallingProvider()
+    {
+        await using var fixture = CreateFixture();
+
+        var act = () => fixture.Service.CreateRun(
+            fixture.TenantId,
+            fixture.ActorId,
+            fixture.ProgramId,
+            fixture.ContentId,
+            Request("stale-draft") with { DraftRevision = 9 },
+            CancellationToken.None);
+
+        var exception = await act.Should().ThrowAsync<AuthoringRevisionConflictException>();
+        exception.Which.CurrentRevision.Should().Be(1);
+        fixture.Ai.DescribeCalls.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task CreateRun_WhenTokenQuotaIsExceededReleasesRequestQuotaAndDoesNotCharge()
+    {
+        await using var fixture = CreateFixture(quotaExceeded: ResourceUsageType.AiTokens);
+
+        var act = () => fixture.Service.CreateRun(
+            fixture.TenantId,
+            fixture.ActorId,
+            fixture.ProgramId,
+            fixture.ContentId,
+            Request("token-quota-exceeded"),
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<AiAuthoringExecutionException>()
+            .WithMessage("*token quota*");
+        fixture.Credits.ReserveCalls.Should().Be(0);
+        fixture.Quota.Verify(service => service.DecrementUsageAsync(
+            fixture.TenantId,
+            ResourceUsageType.AiRequests,
+            1,
+            fixture.ActorId,
+            "lesson-authoring",
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Theory]
+    [InlineData(ProgramContentType.Lesson, LessonContentFormat.Markdown, AiProposalKind.ReplaceDocument, "complete replacement body")]
+    [InlineData(ProgramContentType.Lesson, LessonContentFormat.Markdown, AiProposalKind.InsertAtCursor, "text to insert")]
+    [InlineData(ProgramContentType.Lesson, LessonContentFormat.Markdown, AiProposalKind.MetadataPatch, "AuthoringContentPayload")]
+    [InlineData(ProgramContentType.Lesson, LessonContentFormat.Lexical, AiProposalKind.LexicalPatch, "JSON Pointer")]
+    [InlineData(ProgramContentType.Questionnaire, null, AiProposalKind.QuizPatch, "quiz fields")]
+    public async Task CreateRun_BuildsFormatSpecificProviderContract(
+        ProgramContentType contentType,
+        LessonContentFormat? lessonFormat,
+        AiProposalKind kind,
+        string expectedContract)
+    {
+        await using var fixture = CreateFixture(
+            contentType: contentType,
+            lessonFormat: lessonFormat,
+            jsonBody: StructuredBody(contentType, lessonFormat));
+
+        _ = await fixture.Service.CreateRun(
+            fixture.TenantId,
+            fixture.ActorId,
+            fixture.ProgramId,
+            fixture.ContentId,
+            Request($"contract-{kind}") with { ProposalKind = kind, Selection = "Selected text" },
+            CancellationToken.None);
+
+        fixture.Ai.LastDescribeRequest.Should().NotBeNull();
+        fixture.Ai.LastDescribeRequest!.Prompt.Should().Contain(expectedContract);
+        fixture.Ai.LastDescribeRequest.Prompt.Should().Contain("Selected text");
+    }
+
+    [Theory]
+    [InlineData(ProgramContentType.Lesson, LessonContentFormat.Video, AiProposalKind.InsertAtCursor)]
+    [InlineData(ProgramContentType.Lesson, LessonContentFormat.Lexical, AiProposalKind.ReplaceDocument)]
+    [InlineData(ProgramContentType.Questionnaire, null, AiProposalKind.LexicalPatch)]
+    [InlineData(ProgramContentType.Lesson, LessonContentFormat.Markdown, AiProposalKind.QuizPatch)]
+    public async Task CreateRun_RejectsProposalKindsThatCannotSafelyModifyFormat(
+        ProgramContentType contentType,
+        LessonContentFormat? lessonFormat,
+        AiProposalKind kind)
+    {
+        await using var fixture = CreateFixture(
+            contentType: contentType,
+            lessonFormat: lessonFormat,
+            jsonBody: StructuredBody(contentType, lessonFormat));
+
+        var act = () => fixture.Service.CreateRun(
+            fixture.TenantId,
+            fixture.ActorId,
+            fixture.ProgramId,
+            fixture.ContentId,
+            Request($"rejected-{kind}") with { ProposalKind = kind },
+            CancellationToken.None);
+
+        var exception = await act.Should().ThrowAsync<AiProposalKindNotAllowedException>();
+        exception.Which.Kind.Should().Be(kind);
+        fixture.Credits.ReserveCalls.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task StreamRun_ReplaysPersistedDeltasAndTerminalPayloadAfterCursor()
+    {
+        await using var fixture = CreateFixture();
+        var created = await fixture.Service.CreateRun(
+            fixture.TenantId,
+            fixture.ActorId,
+            fixture.ProgramId,
+            fixture.ContentId,
+            Request("replay-stream"),
+            CancellationToken.None);
+        await fixture.Service.ProcessRun(created.Id, CancellationToken.None);
+
+        var events = await Collect(fixture.Service.StreamRun(
+            fixture.TenantId,
+            fixture.ActorId,
+            fixture.ProgramId,
+            fixture.ContentId,
+            created.Id,
+            -1,
+            CancellationToken.None));
+
+        events.Select(item => item.Type).Should().Equal("status", "status", "delta", "delta", "completed");
+        events[^1].Proposal.Should().NotBeNull();
+        events[^1].Usage!.SettledCost.Should().Be(17);
+    }
+
+    [Fact]
+    public async Task StreamRun_WithNullTerminalPayloadRejectsCorruptPersistedEvent()
+    {
+        await using var fixture = CreateFixture();
+        var created = await fixture.Service.CreateRun(
+            fixture.TenantId,
+            fixture.ActorId,
+            fixture.ProgramId,
+            fixture.ContentId,
+            Request("corrupt-stream"),
+            CancellationToken.None);
+        await fixture.Service.ProcessRun(created.Id, CancellationToken.None);
+        fixture.Db.Set<AiAuthoringStreamEvent>().Add(AiAuthoringStreamEvent.Create(
+            created.Id,
+            6,
+            "completed",
+            AiAuthoringRunStatus.Completed.ToString(),
+            null,
+            "null",
+            DateTimeOffset.UtcNow));
+        await fixture.Db.SaveChangesAsync();
+
+        var act = async () => await Collect(fixture.Service.StreamRun(
+            fixture.TenantId,
+            fixture.ActorId,
+            fixture.ProgramId,
+            fixture.ContentId,
+            created.Id,
+            5,
+            CancellationToken.None));
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*stream event is invalid*");
+    }
+
+    [Fact]
+    public async Task ProcessRun_StructuredDraftWithoutJsonFailsClosedFromEmptyDocumentFallback()
+    {
+        await using var fixture = CreateFixture(
+            lessonFormat: LessonContentFormat.Lexical,
+            jsonBody: null,
+            providerOutput: "{\"operations\":[]}");
+
+        var completed = await CompleteRun(fixture, AiProposalKind.LexicalPatch, "empty-structured-body");
+
+        completed.Status.Should().Be(AiAuthoringRunStatus.Failed);
+        completed.ErrorCode.Should().Be("AI_EXECUTION_FAILED");
+        completed.Proposal.Should().BeNull();
+        fixture.Credits.ReleaseCalls.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task ProcessAndApplyInsert_NullBodyUsesEmptyOriginalContent()
+    {
+        await using var fixture = CreateFixture(nullBody: true);
+
+        var completed = await CompleteRun(fixture, AiProposalKind.InsertAtCursor, "empty-text-body");
+        var draft = await fixture.Service.ApplyProposal(
+            fixture.TenantId,
+            fixture.ActorId,
+            fixture.ProgramId,
+            fixture.ContentId,
+            completed.Proposal!.Id,
+            new ApplyAiProposalRequest(1, null),
+            CancellationToken.None);
+
+        completed.Status.Should().Be(AiAuthoringRunStatus.Completed);
+        completed.Proposal.OriginalContent.Should().BeEmpty();
+        draft.Payload.Body.Should().Be("# Improved lesson");
+    }
+
+    [Fact]
+    public async Task ProcessRun_MetadataProviderReturningNullFailsClosed()
+    {
+        await using var fixture = CreateFixture(providerOutput: "null");
+        var created = await fixture.Service.CreateRun(
+            fixture.TenantId,
+            fixture.ActorId,
+            fixture.ProgramId,
+            fixture.ContentId,
+            Request("null-metadata") with { ProposalKind = AiProposalKind.MetadataPatch },
+            CancellationToken.None);
+
+        await fixture.Service.ProcessRun(created.Id, CancellationToken.None);
+        var failed = await fixture.Service.GetRun(
+            fixture.TenantId,
+            fixture.ActorId,
+            fixture.ProgramId,
+            fixture.ContentId,
+            created.Id,
+            CancellationToken.None);
+
+        failed.Status.Should().Be(AiAuthoringRunStatus.Failed);
+        failed.ErrorCode.Should().Be("AI_EXECUTION_FAILED");
+        fixture.Credits.ReleaseCalls.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task CreateRun_NullDraftPayloadFailsClosedBeforeCharging()
+    {
+        await using var fixture = CreateFixture(rawPayloadJson: "null");
+
+        var act = () => fixture.Service.CreateRun(
+            fixture.TenantId,
+            fixture.ActorId,
+            fixture.ProgramId,
+            fixture.ContentId,
+            Request("null-draft"),
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*draft payload is invalid*");
+        fixture.Credits.ReserveCalls.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task ProcessRun_ReservedRunWithoutOutputLimitUsesProviderDefault()
+    {
+        await using var fixture = CreateFixture();
+        var draft = await fixture.Db.Set<ProgramContentDraft>().SingleAsync();
+        var conversation = AiAuthoringConversation.Create(
+            fixture.TenantId,
+            fixture.ProgramId,
+            fixture.ContentId,
+            fixture.ActorId,
+            DateTimeOffset.UtcNow);
+        var run = AiAuthoringRun.Create(
+            fixture.TenantId,
+            fixture.ActorId,
+            fixture.ProgramId,
+            fixture.ContentId,
+            draft.Id,
+            conversation.Id,
+            draft.Revision,
+            AiProposalKind.ReplaceDocument,
+            "Improve the lesson",
+            null,
+            "provider-default-output-limit",
+            DateTimeOffset.UtcNow);
+        run.Reserve("OpenAi", "gpt-test", 2_000, 0, 100, DateTimeOffset.UtcNow);
+        fixture.Db.Set<AiAuthoringConversation>().Add(conversation);
+        fixture.Db.Set<AiAuthoringRun>().Add(run);
+        await fixture.Credits.ReserveAsync(
+            run.Id,
+            fixture.TenantId,
+            fixture.ActorId,
+            "lesson-authoring",
+            new AiCreditQuote("test-v1", "OpenAi", "gpt-test", 2_000, 0, 100, 1_000_000, 1_000_000),
+            "direct-reservation",
+            CancellationToken.None);
+        await fixture.Db.SaveChangesAsync();
+
+        await fixture.Service.ProcessRun(run.Id, CancellationToken.None);
+
+        fixture.Ai.LastStreamRequest!.MaxTokens.Should().BeNull();
+        run.Status.Should().Be(AiAuthoringRunStatus.Completed);
+    }
+
+    [Theory]
+    [InlineData(null, "abcdX")]
+    [InlineData(-10, "Xabcd")]
+    [InlineData(2, "abXcd")]
+    [InlineData(99, "abcdX")]
+    public async Task ApplyProposal_InsertAtCursorClampsOffset(int? cursorOffset, string expected)
+    {
+        await using var fixture = CreateFixture(body: "abcd", providerOutput: "X");
+        var completed = await CompleteRun(fixture, AiProposalKind.InsertAtCursor, $"insert-{cursorOffset}");
+
+        var draft = await fixture.Service.ApplyProposal(
+            fixture.TenantId,
+            fixture.ActorId,
+            fixture.ProgramId,
+            fixture.ContentId,
+            completed.Proposal!.Id,
+            new ApplyAiProposalRequest(1, cursorOffset),
+            CancellationToken.None);
+
+        draft.Revision.Should().Be(2);
+        draft.Payload.Body.Should().Be(expected);
+        completed.Proposal.Status.Should().Be(AiProposalStatus.Pending);
+        (await fixture.Db.Set<AiAuthoringProposal>().SingleAsync()).Status.Should().Be(AiProposalStatus.Applied);
+    }
+
+    [Fact]
+    public async Task ApplyProposal_ReplaceDocumentUpdatesDraftWithoutPublishing()
+    {
+        await using var fixture = CreateFixture(providerOutput: "# Replacement");
+        var completed = await CompleteRun(fixture, AiProposalKind.ReplaceDocument, "replace-document");
+
+        var draft = await fixture.Service.ApplyProposal(
+            fixture.TenantId,
+            fixture.ActorId,
+            fixture.ProgramId,
+            fixture.ContentId,
+            completed.Proposal!.Id,
+            new ApplyAiProposalRequest(1, null),
+            CancellationToken.None);
+
+        draft.Payload.Body.Should().Be("# Replacement");
+        draft.LastEditedBy.Should().Be(fixture.ActorId);
+    }
+
+    [Fact]
+    public async Task ApplyProposal_UnknownPersistedKindFailsWithoutChangingDraft()
+    {
+        await using var fixture = CreateFixture();
+        var created = await fixture.Service.CreateRun(
+            fixture.TenantId,
+            fixture.ActorId,
+            fixture.ProgramId,
+            fixture.ContentId,
+            Request("unknown-persisted-kind"),
+            CancellationToken.None);
+        var proposal = AiAuthoringProposal.Create(
+            created.Id,
+            fixture.ContentId,
+            1,
+            (AiProposalKind)999,
+            "original",
+            "proposed",
+            DateTimeOffset.UtcNow);
+        proposal.TenantId = fixture.TenantId;
+        fixture.Db.Set<AiAuthoringProposal>().Add(proposal);
+        await fixture.Db.SaveChangesAsync();
+
+        var act = () => fixture.Service.ApplyProposal(
+            fixture.TenantId,
+            fixture.ActorId,
+            fixture.ProgramId,
+            fixture.ContentId,
+            proposal.Id,
+            new ApplyAiProposalRequest(1, null),
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<ArgumentOutOfRangeException>();
+        (await fixture.Db.Set<ProgramContentDraft>().SingleAsync()).Revision.Should().Be(1);
+    }
+
+    [Theory]
+    [InlineData(ProgramContentType.Lesson, LessonContentFormat.Lexical, AiProposalKind.LexicalPatch, "/root/children/0/children/0/text", "New", "New")]
+    [InlineData(ProgramContentType.Questionnaire, null, AiProposalKind.QuizPatch, "/questions/0/prompt", "New question", "New question")]
+    public async Task ProcessAndApplyStructuredProposalPreservesJsonDocument(
+        ProgramContentType contentType,
+        LessonContentFormat? lessonFormat,
+        AiProposalKind kind,
+        string path,
+        string replacement,
+        string expected)
+    {
+        var patch = JsonSerializer.Serialize(new
+        {
+            operations = new[] { new { op = "replace", path, value = replacement } },
+        });
+        await using var fixture = CreateFixture(
+            contentType: contentType,
+            lessonFormat: lessonFormat,
+            jsonBody: StructuredBody(contentType, lessonFormat),
+            providerOutput: patch);
+        var completed = await CompleteRun(fixture, kind, $"structured-{kind}");
+
+        var draft = await fixture.Service.ApplyProposal(
+            fixture.TenantId,
+            fixture.ActorId,
+            fixture.ProgramId,
+            fixture.ContentId,
+            completed.Proposal!.Id,
+            new ApplyAiProposalRequest(1, null),
+            CancellationToken.None);
+
+        draft.Payload.JsonBody.Should().NotBeNull();
+        draft.Payload.JsonBody!.Value.GetRawText().Should().Contain(expected);
+    }
+
+    [Fact]
+    public async Task ApplyProposal_MetadataChangesOnlyEditableMetadata()
+    {
+        var providerPayload = new AuthoringContentPayload(
+            "Renamed lesson",
+            "renamed-lesson",
+            "Updated description",
+            ProgramContentType.Questionnaire,
+            "malicious body",
+            JsonDocument.Parse("{\"questions\":[]}").RootElement.Clone(),
+            LessonContentFormat.Lexical,
+            null,
+            false,
+            42,
+            EstimatedMinutesSource.Manual,
+            Visibility.Public);
+        await using var fixture = CreateFixture(providerOutput: JsonSerializer.Serialize(
+            providerPayload,
+            new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+        var completed = await CompleteRun(fixture, AiProposalKind.MetadataPatch, "metadata-apply");
+
+        var draft = await fixture.Service.ApplyProposal(
+            fixture.TenantId,
+            fixture.ActorId,
+            fixture.ProgramId,
+            fixture.ContentId,
+            completed.Proposal!.Id,
+            new ApplyAiProposalRequest(1, null),
+            CancellationToken.None);
+
+        draft.Payload.Title.Should().Be("Renamed lesson");
+        draft.Payload.Body.Should().Be("# Original lesson");
+        draft.Payload.Type.Should().Be(ProgramContentType.Lesson);
+        draft.Payload.LessonFormat.Should().Be(LessonContentFormat.Markdown);
+        draft.Payload.Visibility.Should().Be(Visibility.Public);
+    }
+
+    [Fact]
+    public async Task DiscardProposal_MarksPendingProposalWithoutChangingDraft()
+    {
+        await using var fixture = CreateFixture();
+        var completed = await CompleteRun(fixture, AiProposalKind.ReplaceDocument, "discard-proposal");
+
+        var discarded = await fixture.Service.DiscardProposal(
+            fixture.TenantId,
+            fixture.ActorId,
+            fixture.ProgramId,
+            fixture.ContentId,
+            completed.Proposal!.Id,
+            CancellationToken.None);
+
+        discarded.Status.Should().Be(AiProposalStatus.Discarded);
+        (await fixture.Db.Set<ProgramContentDraft>().SingleAsync()).Revision.Should().Be(1);
+        await FluentActions.Invoking(() => fixture.Service.DiscardProposal(
+                fixture.TenantId,
+                fixture.ActorId,
+                fixture.ProgramId,
+                fixture.ContentId,
+                completed.Proposal.Id,
+                CancellationToken.None))
+            .Should().ThrowAsync<AiProposalStateConflictException>();
+    }
+
+    [Fact]
+    public async Task AuthoringAiRunQueue_DeliversEnqueuedRunsInOrder()
+    {
+        var queue = new AuthoringAiRunQueue();
+        var first = Guid.NewGuid();
+        var second = Guid.NewGuid();
+        await queue.Enqueue(first);
+        await queue.Enqueue(second);
+        using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        var received = new List<Guid>();
+
+        await foreach (var runId in queue.ReadAll(cancellation.Token))
+        {
+            received.Add(runId);
+            if (received.Count == 2)
+                break;
+        }
+
+        received.Should().Equal(first, second);
+    }
+
+    private static async Task<AiAuthoringRunDto> CompleteRun(
+        Fixture fixture,
+        AiProposalKind kind,
+        string idempotencyKey)
+    {
+        var created = await fixture.Service.CreateRun(
+            fixture.TenantId,
+            fixture.ActorId,
+            fixture.ProgramId,
+            fixture.ContentId,
+            Request(idempotencyKey) with { ProposalKind = kind },
+            CancellationToken.None);
+        await fixture.Service.ProcessRun(created.Id, CancellationToken.None);
+        return await fixture.Service.GetRun(
+            fixture.TenantId,
+            fixture.ActorId,
+            fixture.ProgramId,
+            fixture.ContentId,
+            created.Id,
+            CancellationToken.None);
+    }
+
+    private static async Task<List<AiStreamEvent>> Collect(IAsyncEnumerable<AiStreamEvent> stream)
+    {
+        var items = new List<AiStreamEvent>();
+        await foreach (var item in stream)
+            items.Add(item);
+        return items;
+    }
+
+    private static JsonElement? StructuredBody(
+        ProgramContentType contentType,
+        LessonContentFormat? lessonFormat)
+    {
+        if (contentType == ProgramContentType.Questionnaire)
+            return JsonDocument.Parse("{\"questions\":[{\"id\":\"q1\",\"prompt\":\"Old question\"}]}").RootElement.Clone();
+        if (lessonFormat == LessonContentFormat.Lexical)
+            return JsonDocument.Parse("{\"root\":{\"type\":\"root\",\"version\":1,\"children\":[{\"type\":\"paragraph\",\"version\":1,\"children\":[{\"type\":\"text\",\"version\":1,\"text\":\"Old\"}]}]}}").RootElement.Clone();
+        return null;
+    }
+
     private static AiAuthoringRunRequest Request(string idempotencyKey) => new(
         null,
         1,
@@ -366,8 +1000,13 @@ public sealed class AuthoringAiServiceTests
     private static Fixture CreateFixture(
         bool failGeneration = false,
         ResourceUsageType? quotaExceeded = null,
-        LessonContentFormat lessonFormat = LessonContentFormat.Markdown,
-        string? providerOutput = null)
+        LessonContentFormat? lessonFormat = LessonContentFormat.Markdown,
+        string? providerOutput = null,
+        ProgramContentType contentType = ProgramContentType.Lesson,
+        JsonElement? jsonBody = null,
+        string? body = null,
+        bool nullBody = false,
+        string? rawPayloadJson = null)
     {
         var db = new AuthoringAiTestDbContext(
             new DbContextOptionsBuilder<AuthoringAiTestDbContext>()
@@ -381,11 +1020,11 @@ public sealed class AuthoringAiServiceTests
             "Lesson",
             "lesson",
             "Description",
-            ProgramContentType.Lesson,
-            lessonFormat == LessonContentFormat.Video
+            contentType,
+            nullBody ? null : body ?? (lessonFormat == LessonContentFormat.Video
                 ? "https://cdn.example.test/original.mp4"
-                : "# Original lesson",
-            null,
+                : "# Original lesson"),
+            jsonBody,
             lessonFormat,
             null,
             true,
@@ -398,7 +1037,7 @@ public sealed class AuthoringAiServiceTests
             contentId,
             actorId,
             1,
-            JsonSerializer.Serialize(payload, new JsonSerializerOptions(JsonSerializerDefaults.Web)),
+            rawPayloadJson ?? JsonSerializer.Serialize(payload, new JsonSerializerOptions(JsonSerializerDefaults.Web)),
             DateTimeOffset.UtcNow);
         draft.TenantId = tenantId;
         db.Set<ProgramContentDraft>().Add(draft);
@@ -452,13 +1091,20 @@ public sealed class AuthoringAiServiceTests
 
     private sealed class RecordingAiOrchestrator(bool failGeneration, string providerOutput) : IAiOrchestrator
     {
+        public int DescribeCalls { get; private set; }
         public int StreamCalls { get; private set; }
+        public AiGenerateRequest? LastDescribeRequest { get; private set; }
+        public AiGenerateRequest? LastStreamRequest { get; private set; }
 
         public Task<Result<AiResolvedModelDto>> DescribeGenerateAsync(
             AiExecutionActor actor,
             AiGenerateRequest request,
-            CancellationToken cancellationToken = default) =>
-            Task.FromResult(Result.Success(new AiResolvedModelDto("OpenAi", "gpt-test", 64)));
+            CancellationToken cancellationToken = default)
+        {
+            DescribeCalls++;
+            LastDescribeRequest = request;
+            return Task.FromResult(Result.Success(new AiResolvedModelDto("OpenAi", "gpt-test", 64)));
+        }
 
         public async Task<Result<AiCompletionResponse>> GenerateForActorStreamingAsync(
             AiExecutionActor actor,
@@ -467,7 +1113,7 @@ public sealed class AuthoringAiServiceTests
             CancellationToken cancellationToken = default)
         {
             StreamCalls++;
-            request.MaxTokens.Should().Be(64);
+            LastStreamRequest = request;
             if (failGeneration)
                 return Result.Failure<AiCompletionResponse>(Error.Problem("AI.ProviderFailed", "Provider failed."));
             if (providerOutput == "# Improved lesson")

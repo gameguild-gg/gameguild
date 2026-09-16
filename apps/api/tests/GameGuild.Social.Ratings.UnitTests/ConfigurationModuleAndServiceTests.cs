@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Social.Ratings;
 using GameGuild.Social.Ratings.Configuration;
@@ -54,7 +55,7 @@ public class ConfigurationModuleAndServiceTests
     public void RatingsController_Ctor()
     {
         var svc = Mock.Of<IRatingService>();
-        new RatingsController(svc).Should().NotBeNull();
+        new RatingsController(svc, Mock.Of<ISender>()).Should().NotBeNull();
     }
 
     // --- RatingCrudService ---

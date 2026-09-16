@@ -14,6 +14,7 @@ public interface IDiscussionService
         string title,
         string content,
         Guid? contentId = null,
+        Guid? tenantId = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>

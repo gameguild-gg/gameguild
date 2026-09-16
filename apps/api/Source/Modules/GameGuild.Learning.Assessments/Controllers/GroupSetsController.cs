@@ -215,7 +215,6 @@ public class GroupSetsController : BaseApiController
 
         var actor = _actorContextAccessor.ActorContext;
         if (!actor.SubjectIdAsGuid.HasValue) return false;
-        if (!await IsActorInProgramTenantAsync(courseId).ConfigureAwait(false)) return false;
 
         return await _groupSetService.HasActiveEnrollmentAsync(courseId, actor.SubjectIdAsGuid.Value)
             .ConfigureAwait(false);
@@ -248,16 +247,6 @@ public class GroupSetsController : BaseApiController
         return false;
     }
 
-    private async Task<bool> IsActorInProgramTenantAsync(Guid courseId)
-    {
-        var actor = _actorContextAccessor.ActorContext;
-        var program = await _programService.GetProgramByIdAsync(courseId).ConfigureAwait(false);
-        if (program == null) return false;
-        if (actor.IsSystemAdmin) return true;
-
-        return actor.TenantId.HasValue &&
-               (!program.TenantId.HasValue || program.TenantId == actor.TenantId);
-    }
 }
 
 // ===== DTOs =====

@@ -11,7 +11,7 @@ import {
   getTestingEventTemplates,
   getTestingEventsDirectory,
 } from "@/lib/testing-lab/events-queries";
-import { Button } from "@game-guild/ui/components/button";
+import { buttonVariants } from "@game-guild/ui/components/button-variants";
 import {
   ClipboardCheck,
   ExternalLink,
@@ -110,15 +110,14 @@ export default async function TestingLabPage() {
           }
           toolbarEnd={
             <>
-              <Button asChild variant="outline" size="icon">
-                <Link
+              <Link
                 href="/testing-lab"
                 aria-label="Open public Testing Lab"
                 title="Open public Testing Lab"
+                className={buttonVariants({ variant: "outline", size: "icon" })}
               >
-                  <ExternalLink aria-hidden="true" />
-                </Link>
-              </Button>
+                <ExternalLink aria-hidden="true" />
+              </Link>
               <CreateTestingEventDialog
                 defaultTimeZone={labSettings.settings?.timezone ?? "UTC"}
                 templates={templates.templates}

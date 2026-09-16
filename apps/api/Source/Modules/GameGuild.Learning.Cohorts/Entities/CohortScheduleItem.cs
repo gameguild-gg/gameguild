@@ -122,12 +122,12 @@ public sealed class CohortScheduleItem : EntityBase
         CohortScheduleItemStatus status,
         CohortVisibilityOverride visibilityOverride)
     {
-        if (startsAt.HasValue && endsAt.HasValue && endsAt <= startsAt)
+        if (startsAt.HasValue && endsAt.HasValue && endsAt.Value <= startsAt.Value)
         {
             throw new ArgumentException("The end time must be later than the start time.", nameof(endsAt));
         }
 
-        if (availableFrom.HasValue && availableUntil.HasValue && availableUntil < availableFrom)
+        if (availableFrom.HasValue && availableUntil.HasValue && availableUntil.Value < availableFrom.Value)
         {
             throw new ArgumentException("The availability end must not precede its start.", nameof(availableUntil));
         }

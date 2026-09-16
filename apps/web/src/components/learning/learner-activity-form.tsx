@@ -167,7 +167,11 @@ export function LearnerActivityForm({
         <>
           <input type="hidden" name="courseId" value={courseId} />
           <input type="hidden" name="contentId" value={activity.contentId} />
-          <input type="hidden" name="kind" value={contentKind || ""} />
+          <input
+            type="hidden"
+            name="kind"
+            value={activity.contentType.toLowerCase()}
+          />
         </>
       )}
       <input type="hidden" name="enrollmentId" value={enrollmentId} />

@@ -43,6 +43,7 @@ interface RegistrationProjection extends Identified {
 interface FeedbackObligationProjection extends Identified {
   status?: string;
   applicationId?: string;
+  questionnaireRevisionId?: string | null;
 }
 
 interface RoleTemplateProjection extends Identified {
@@ -283,10 +284,18 @@ describe('Testing Lab event workflow E2E', () => {
       await manager.request<Identified>({
         method: 'POST',
         path: `/v1/projects/${project.id}/versions`,
-        body: { versionNumber: '1.0.0-e2e', status: 'ready', releaseNotes: 'Testing Lab E2E build.' },
+        body: { versionNumber: '1.0.0-e2e', status: 'Draft', releaseNotes: 'Testing Lab E2E build.' },
         requiresAuth: true,
       }),
       'Create event project version',
+    );
+    unwrap(
+      await manager.request<unknown>({
+        method: 'POST',
+        path: `/v1/projects/${project.id}/versions/${projectVersion.id}:ready`,
+        requiresAuth: true,
+      }),
+      'Mark event project version ready for testing',
     );
 
     const now = Date.now();
@@ -304,6 +313,13 @@ describe('Testing Lab event workflow E2E', () => {
           startsAt: new Date(now + 2 * 60 * 60_000).toISOString(),
           endsAt: new Date(now + 5 * 60 * 60_000).toISOString(),
           requiresFeedback: true,
+          configuration: {
+            generalRules: 'Respect the testing agreement and protect confidential builds.',
+            candidateInstructions: 'Submit a ready project version and confirm availability.',
+            testerInstructions: 'Complete the assigned session and submit actionable feedback.',
+            projectApplicationSchema: { title: 'Project application', questions: [] },
+            testerRegistrationSchema: { title: 'Tester registration', questions: [] },
+          },
         },
         requiresAuth: true,
       }),
@@ -368,6 +384,27 @@ describe('Testing Lab event workflow E2E', () => {
           projectId: project.id,
           projectVersionId: projectVersion.id,
           preferredAvailability: 'The first campus slot works.',
+          brief: {
+            testObjective: 'Validate the primary gameplay loop and onboarding flow.',
+            installationAndAccess: 'Download the build and use the supplied test account.',
+            testTasks: ['Complete onboarding', 'Finish one gameplay round'],
+            controls: 'Keyboard and mouse.',
+            knownLimitations: 'Progress is reset between builds.',
+            links: ['https://example.com/asterion/testing-guide'],
+          },
+          feedbackQuestionnaire: {
+            title: 'Playtest feedback',
+            questions: [
+              {
+                id: 'core-loop-feedback',
+                prompt: 'What should the project team improve in the core loop?',
+                type: 'FreeText',
+                required: true,
+              },
+            ],
+          },
+          eventApplicationResponse: { answers: [] },
+          acceptedRules: true,
         },
         requiresAuth: true,
       }),
@@ -444,16 +481,49 @@ describe('Testing Lab event workflow E2E', () => {
       await manager.request<Identified>({
         method: 'POST',
         path: `/v1/projects/${rejectedProject.id}/versions`,
-        body: { versionNumber: '0.1.0-e2e', status: 'ready', releaseNotes: 'Deliberately unready E2E build.' },
+        body: { versionNumber: '0.1.0-e2e', status: 'Draft', releaseNotes: 'Deliberately unready E2E build.' },
         requiresAuth: true,
       }),
       'Create rejection project version',
+    );
+    unwrap(
+      await manager.request<Identified>({
+        method: 'POST',
+        path: `/v1/projects/${rejectedProject.id}/versions/${rejectedProjectVersion.id}:ready`,
+        requiresAuth: true,
+      }),
+      'Mark rejection project version ready for testing',
     );
     const rejectedApplication = unwrap(
       await manager.request<ApplicationProjection>({
         method: 'POST',
         path: `/v1/testing/events/${event.id}/applications`,
-        body: { projectId: rejectedProject.id, projectVersionId: rejectedProjectVersion.id, preferredAvailability: 'Any slot.' },
+        body: {
+          projectId: rejectedProject.id,
+          projectVersionId: rejectedProjectVersion.id,
+          preferredAvailability: 'Any slot.',
+          brief: {
+            testObjective: 'Validate whether the incomplete onboarding can be evaluated safely.',
+            installationAndAccess: 'Download the candidate build and use the supplied test account.',
+            testTasks: ['Attempt to complete onboarding'],
+            controls: 'Keyboard and mouse.',
+            knownLimitations: 'The onboarding flow is known to be incomplete.',
+            links: ['https://example.com/asterion/rejection-testing-guide'],
+          },
+          feedbackQuestionnaire: {
+            title: 'Playtest feedback',
+            questions: [
+              {
+                id: 'onboarding-feedback',
+                prompt: 'Where did the onboarding flow prevent progress?',
+                type: 'FreeText',
+                required: true,
+              },
+            ],
+          },
+          eventApplicationResponse: { answers: [] },
+          acceptedRules: true,
+        },
         requiresAuth: true,
       }),
       'Submit rejection candidacy',
@@ -508,7 +578,11 @@ describe('Testing Lab event workflow E2E', () => {
       await manager.request<RegistrationProjection>({
         method: 'POST',
         path: `/v1/testing/events/slots/${slot.id}/registrations`,
-        body: { notes: 'Initial tester occupying the only seat.' },
+        body: {
+          notes: 'Initial tester occupying the only seat.',
+          registrationResponse: { answers: [] },
+          acceptedRules: true,
+        },
         requiresAuth: true,
       }),
       'Register first tester',
@@ -536,7 +610,11 @@ describe('Testing Lab event workflow E2E', () => {
       await tester.request<RegistrationProjection>({
         method: 'POST',
         path: `/v1/testing/events/slots/${slot.id}/registrations`,
-        body: { notes: 'Join if a seat becomes available.' },
+        body: {
+          notes: 'Join if a seat becomes available.',
+          registrationResponse: { answers: [] },
+          acceptedRules: true,
+        },
         requiresAuth: true,
       }),
       'Join tester waitlist',
@@ -599,6 +677,7 @@ describe('Testing Lab event workflow E2E', () => {
       'Read tester feedback obligations',
     );
     expect(obligations.find((candidate) => candidate.id === obligation.id)?.status).toBe('Pending');
+    expect(obligation.questionnaireRevisionId).toBeTruthy();
     unwrap(
       await tester.request<Identified>({
         method: 'POST',
@@ -608,6 +687,15 @@ describe('Testing Lab event workflow E2E', () => {
           overallRating: 8,
           wouldRecommend: true,
           additionalNotes: 'Retest the onboarding after the next build.',
+          questionnaireRevisionId: obligation.questionnaireRevisionId,
+          responses: {
+            answers: [
+              {
+                questionId: 'core-loop-feedback',
+                textValue: 'Strengthen the first-checkpoint feedback and clarify the onboarding objective.',
+              },
+            ],
+          },
         },
         requiresAuth: true,
       }),
