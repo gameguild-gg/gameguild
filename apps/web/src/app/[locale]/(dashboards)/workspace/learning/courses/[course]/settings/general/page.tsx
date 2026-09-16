@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation';
+import { redirect } from '@/i18n/navigation';
 
 /**
  * Settings/General now redirects to Course Info/Info.
@@ -7,5 +7,8 @@ import { redirect } from 'next/navigation';
  */
 export default async function GeneralSettingsPage({ params }: { params: Promise<{ locale: string; course: string }> }) {
   const { locale, course: courseId } = await params;
-  redirect(`/${locale}/workspace/learning/courses/${courseId}/listing/info`);
+  redirect({
+    href: `/workspace/learning/courses/${encodeURIComponent(courseId)}/listing/info`,
+    locale,
+  });
 }

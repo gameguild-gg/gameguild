@@ -23,6 +23,7 @@ const ideMock = vi.hoisted(() => {
 });
 
 const putMock = vi.hoisted(() => vi.fn());
+const ideLifecycle = vi.hoisted(() => ({ notifyReady: true }));
 
 const assignmentSamplesMock = vi.hoisted(() => ({
   cpp: {
@@ -130,10 +131,12 @@ vi.mock("@game-guild/emception-ui", async () => {
     };
     const { onReady } = props;
     React.useEffect(() => {
-      onReady?.({
-        getFiles: ideMock.getFiles,
-        replaceFiles: ideMock.replaceFiles,
-      });
+      if (ideLifecycle.notifyReady) {
+        onReady?.({
+          getFiles: ideMock.getFiles,
+          replaceFiles: ideMock.replaceFiles,
+        });
+      }
     }, [onReady]);
     return React.createElement(
       "div",
@@ -191,6 +194,7 @@ import type { CodingAssignmentContent } from "@/lib/coding-assignment/client";
 const baseProps = {
   courseId: "course-1",
   assessmentId: "assessment-1",
+  assessmentSlug: "echo-assignment",
   programId: "course-1",
   contentId: "content-1",
   assessmentTitle: "Echo Assignment",
@@ -201,6 +205,7 @@ describe("CodingDefinitionEditor", () => {
   beforeEach(() => {
     lastAssessmentEditorProps = null;
     vi.clearAllMocks();
+    ideLifecycle.notifyReady = true;
     lastIdeProps = {};
     ideMock.getFiles.mockReset();
     ideMock.getFiles.mockResolvedValue([
@@ -597,6 +602,288 @@ describe("CodingDefinitionEditor", () => {
       expect(putCodingAssignmentAction).toHaveBeenCalledTimes(1);
       const payloadArg = putCodingAssignmentAction.mock.calls[0][2] as CodingAssignmentContent;
       expect(payloadArg.Environment.AllowStudentCreateFiles).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("navigates back to the assessment through the learning base", async () => {
+    const user = userEvent.setup();
+    render(<CodingDefinitionEditor {...baseProps} />);
+
+    await user.click(screen.getByRole("button", { name: "Back" }));
+
+    expect(routerMocks.push).toHaveBeenCalledWith(
+      "/workspace/learning/courses/course-1/assessments/echo-assignment",
+    );
+  });
+
+  it("reports missing content without calling the API", async () => {
+    const user = userEvent.setup();
+    render(
+      <CodingDefinitionEditor {...baseProps} contentId={null} />,
+    );
+
+    await user.click(screen.getByTestId("save-button"));
+    expect(
+      await screen.findByText("No content item linked to this assessment."),
+    ).toBeInTheDocument();
+    expect(putCodingAssignmentAction).not.toHaveBeenCalled();
+  });
+
+  it("removes only the selected test row", async () => {
+    const user = userEvent.setup();
+    render(<CodingDefinitionEditor {...baseProps} />);
+
+    await user.click(screen.getByTestId("add-standard"));
+    await user.click(screen.getByTestId("add-standard"));
+    expect(screen.getAllByTestId(/^standard-test-/)).toHaveLength(2);
+
+    await user.click(screen.getByTestId("standard-remove-0"));
+
+    expect(screen.getAllByTestId(/^standard-test-/)).toHaveLength(1);
+    expect(screen.getByTestId("standard-test-0")).toBeInTheDocument();
+  });
+
+  it("handles an unavailable IDE controller and still saves the host-owned definition", async () => {
+    ideLifecycle.notifyReady = false;
+    const user = userEvent.setup();
+    render(<CodingDefinitionEditor {...baseProps} />);
+
+    await user.click(await screen.findByTestId("sync-file-policies"));
+    expect(
+      screen.getByText("Editor is still loading. Try again shortly."),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByTestId("save-button"));
+    await waitFor(() => expect(putCodingAssignmentAction).toHaveBeenCalledTimes(1));
+    expect(await screen.findByText("Saved.")).toBeInTheDocument();
+  });
+
+  it("hides the IDE when a selected preset has no assignment sample", async () => {
+    const user = userEvent.setup();
+    render(<CodingDefinitionEditor {...baseProps} />);
+
+    await user.selectOptions(await screen.findByTestId("preset-picker"), "c");
+
+    expect(await screen.findByText("c")).toBeInTheDocument();
+    expect(screen.queryByTestId("ide-mount")).not.toBeInTheDocument();
+  });
+
+  it.each([
+    [new Error("replace failed"), "Could not switch editor workspace: replace failed"],
+    ["replace failed", "Could not switch editor workspace."],
+  ])("reports workspace replacement failures", async (failure, message) => {
+    ideMock.replaceFiles.mockRejectedValueOnce(failure);
+    const user = userEvent.setup();
+    render(<CodingDefinitionEditor {...baseProps} />);
+
+    await user.selectOptions(await screen.findByTestId("preset-picker"), "allegro-cpp");
+
+    expect(await screen.findByText(message)).toBeInTheDocument();
+  });
+
+  it.each([
+    [new Error("sync failed"), "Could not read editor files: sync failed"],
+    ["sync failed", "Could not read editor files."],
+  ])("reports file policy synchronization failures", async (failure, message) => {
+    ideMock.getFiles.mockRejectedValueOnce(failure);
+    const user = userEvent.setup();
+    render(<CodingDefinitionEditor {...baseProps} />);
+
+    await user.click(await screen.findByTestId("sync-file-policies"));
+
+    expect(await screen.findByText(message)).toBeInTheDocument();
+  });
+
+  it.each([
+    [new Error("read failed"), "Could not read editor files: read failed"],
+    ["read failed", "Could not read editor files."],
+  ])("aborts a save when reading live IDE files fails", async (failure, message) => {
+    ideMock.getFiles.mockRejectedValueOnce(failure);
+    const user = userEvent.setup();
+    render(<CodingDefinitionEditor {...baseProps} />);
+
+    await user.click(screen.getByTestId("save-button"));
+
+    expect(await screen.findByText(message)).toBeInTheDocument();
+    expect(putCodingAssignmentAction).not.toHaveBeenCalled();
+  });
+
+  it("shows API failures and prevents a concurrent duplicate save", async () => {
+    vi.useFakeTimers();
+    try {
+      ideLifecycle.notifyReady = false;
+      let resolvePut!: (value: { success: false; error: string }) => void;
+      putMock.mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolvePut = resolve;
+        }),
+      );
+      render(<CodingDefinitionEditor {...baseProps} />);
+
+      fireEvent.click(screen.getByTestId("save-button"));
+      fireEvent.click(screen.getByTestId("allow-student-create"));
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(30_000);
+      });
+      expect(putCodingAssignmentAction).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        resolvePut({ success: false, error: "Definition was rejected." });
+      });
+      expect(screen.getByText("Definition was rejected.")).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("rejects definitions larger than the backend 10MB budget", async () => {
+    const oversizedContent: CodingAssignmentContent = {
+      Type: "coding-assignment",
+      Version: 1,
+      Environment: {
+        Language: "cpp",
+        Tools: "clang",
+        LibBundle: null,
+        AllowStudentCreateFiles: false,
+      },
+      Data: {
+        Files: {
+          "/asset.bin": {
+            Content: "x".repeat(10_000_001),
+            Encoding: "base64",
+            Visibility: "Private",
+            Modifiable: false,
+          },
+        },
+      },
+      Tests: { Public: [], Private: [] },
+      Grading: { MaxScore: 100 },
+    };
+    const user = userEvent.setup();
+    render(
+      <CodingDefinitionEditor {...baseProps} initialContent={oversizedContent} />,
+    );
+
+    await user.click(screen.getByTestId("save-button"));
+
+    expect(
+      await screen.findByText(
+        "Assignment exceeds 10MB total (texts+images+tests). Remove some files.",
+      ),
+    ).toBeInTheDocument();
+    expect(putCodingAssignmentAction).not.toHaveBeenCalled();
+  });
+
+  it("preserves binary files and edits policies across multiple file rows", async () => {
+    const initialContent = {
+      Type: "coding-assignment",
+      Version: 1,
+      Environment: {
+        Language: "cpp",
+        Tools: "clang",
+        LibBundle: null,
+        AllowStudentCreateFiles: false,
+      },
+      Data: {
+        Files: {
+          "/user/main.cpp": {
+            Content: "old source",
+            Visibility: "Public",
+            Modifiable: true,
+          },
+          "/asset.bin": {
+            Content: "binary-data",
+            Encoding: "base64",
+            Visibility: "Private",
+            Modifiable: false,
+          },
+        },
+      },
+      Tests: { Public: [], Private: [] },
+      Grading: { MaxScore: 100 },
+    } as CodingAssignmentContent;
+    const user = userEvent.setup();
+    render(
+      <CodingDefinitionEditor {...baseProps} initialContent={initialContent} />,
+    );
+
+    await user.click(screen.getByLabelText("Student can edit /user/main.cpp"));
+    await user.click(screen.getByTestId("save-button"));
+    await waitFor(() => expect(putCodingAssignmentAction).toHaveBeenCalledTimes(1));
+
+    const payload = putCodingAssignmentAction.mock.calls[0][2] as CodingAssignmentContent;
+    expect(payload.Data.Files["/user/main.cpp"]).toMatchObject({
+      Content: "// edited starter",
+      Encoding: "text",
+      Modifiable: false,
+    });
+    expect(payload.Data.Files["/asset.bin"]).toMatchObject({
+      Content: "binary-data",
+      Encoding: "base64",
+      Visibility: "Private",
+    });
+  });
+
+  it("rejects unsupported functional parameter and return types", async () => {
+    const malformedContent = {
+      Type: "coding-assignment",
+      Version: 1,
+      Environment: {
+        Language: "cpp",
+        Tools: "clang",
+        LibBundle: null,
+        AllowStudentCreateFiles: false,
+      },
+      Data: { Files: {} },
+      Tests: {
+        Public: [
+          {
+            kind: "functional",
+            Name: "Malformed types",
+            Weight: 1,
+            Function: {
+              FunctionName: "solve",
+              Parameters: [{ Name: "items", Type: "array" }],
+              ReturnType: { Type: "object" },
+            },
+            Cases: [
+              {
+                Inputs: [{ Type: "array", Content: "[]" }],
+                Expected: { Type: "object", Content: "{}" },
+              },
+            ],
+          },
+        ],
+        Private: [],
+      },
+      Grading: { MaxScore: 100 },
+    } as unknown as CodingAssignmentContent;
+    render(
+      <CodingDefinitionEditor {...baseProps} initialContent={malformedContent} />,
+    );
+
+    expect(
+      await screen.findAllByText(/Parameter type "array" is not supported in v1/i),
+    ).not.toHaveLength(0);
+    expect(
+      await screen.findAllByText(/Return type "object" is not supported in v1/i),
+    ).not.toHaveLength(0);
+    expect(screen.getByTestId("save-button")).toBeDisabled();
+  });
+
+  it("does not autosave when the content link is missing", async () => {
+    vi.useFakeTimers();
+    try {
+      render(<CodingDefinitionEditor {...baseProps} contentId={null} />);
+
+      fireEvent.click(screen.getByTestId("allow-student-create"));
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(30_000);
+      });
+
+      expect(putCodingAssignmentAction).not.toHaveBeenCalled();
     } finally {
       vi.useRealTimers();
     }

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Button } from '@game-guild/ui/components/button';
 import { Input } from '@game-guild/ui/components/input';
@@ -17,7 +17,6 @@ export default function DangerPage({ params }: { params: Promise<{ locale: strin
   const [course, setCourse] = useState<CourseDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [courseId, setCourseId] = useState('');
-  const [locale, setLocale] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -29,7 +28,6 @@ export default function DangerPage({ params }: { params: Promise<{ locale: strin
 
   useEffect(() => {
     params.then(async (p) => {
-      setLocale(p.locale);
       try {
         const data = await fetchCourse(p.course);
         if (data) {
@@ -71,7 +69,7 @@ export default function DangerPage({ params }: { params: Promise<{ locale: strin
     try {
       const result = await deleteCourse(courseId);
       if (result.success) {
-        router.push(`/${locale}/console/learning/courses`);
+        router.push('/console/learning/courses');
       } else {
         setError(result.error);
       }

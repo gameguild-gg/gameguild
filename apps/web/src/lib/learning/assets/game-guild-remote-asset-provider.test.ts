@@ -30,6 +30,19 @@ function apiAsset() {
 describe("GameGuildRemoteAssetProvider", () => {
   afterEach(() => vi.unstubAllGlobals());
 
+  it("requires a complete learning scope", async () => {
+    const provider = new GameGuildRemoteAssetProvider();
+    await expect(provider.upload([], {})).rejects.toThrow(
+      "A learning content scope is required for remote assets",
+    );
+    await expect(
+      provider.list({}, { scope: { type: "", id: scope.id } }),
+    ).rejects.toThrow("A learning content scope is required for remote assets");
+    await expect(
+      provider.list({}, { scope: { type: scope.type, id: "" } }),
+    ).rejects.toThrow("A learning content scope is required for remote assets");
+  });
+
   it("uploads into the learning-content scope while preserving the portable asset URI", async () => {
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(new Response(null, { status: 404 }))
@@ -72,5 +85,161 @@ describe("GameGuildRemoteAssetProvider", () => {
 
     expect(page.items).toHaveLength(1);
     expect(new URL(resolved.url).pathname).toBe(`/api/assets/${assetId}/content`);
+    expect(resolved.release()).toBeUndefined();
+  });
+
+  it("reuses an existing asset only inside the requested scope", async () => {
+    const provider = new GameGuildRemoteAssetProvider();
+    const input = {
+      id: assetId,
+      uri: createAssetUri(assetId),
+      blob: new Blob(["diagram"], { type: "image/png" }),
+      name: "diagram.png",
+      mimeType: "image/png",
+    };
+
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(
+      new Response(JSON.stringify(apiAsset()), { status: 200 }),
+    ));
+    await expect(provider.upload([input], { scope })).resolves.toHaveLength(1);
+
+    for (const existing of [
+      { ...apiAsset(), parentResourceType: "OtherResource" },
+      { ...apiAsset(), parentResourceId: "cccccccc-cccc-4ccc-8ccc-cccccccccccc" },
+    ]) {
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(
+        new Response(JSON.stringify(existing), { status: 200 }),
+      ));
+      await expect(provider.upload([input], { scope })).rejects.toThrow(
+        "The asset identifier belongs to another scope",
+      );
+    }
+  });
+
+  it("rejects failed lookups, uploads, changed identifiers, and missing uploaded assets", async () => {
+    const provider = new GameGuildRemoteAssetProvider();
+    const input = {
+      id: assetId,
+      uri: createAssetUri(assetId),
+      blob: new Blob(["diagram"], { type: "image/png" }),
+      name: "diagram.png",
+      mimeType: "image/png",
+    };
+
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(new Response(null, { status: 401 })));
+    await expect(provider.upload([input], { scope })).rejects.toThrow("The asset lookup failed");
+
+    vi.stubGlobal("fetch", vi.fn()
+      .mockResolvedValueOnce(new Response(null, { status: 404 }))
+      .mockResolvedValueOnce(new Response(null, { status: 500 })));
+    await expect(provider.upload([input], { scope })).rejects.toThrow("The asset upload failed");
+
+    vi.stubGlobal("fetch", vi.fn()
+      .mockResolvedValueOnce(new Response(null, { status: 404 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ assetReferenceId: "changed" }), { status: 201 })));
+    await expect(provider.upload([input], { scope })).rejects.toThrow(
+      "The asset service changed the portable identifier",
+    );
+
+    vi.stubGlobal("fetch", vi.fn()
+      .mockResolvedValueOnce(new Response(null, { status: 404 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ assetReferenceId: assetId }), { status: 201 }))
+      .mockResolvedValueOnce(new Response(null, { status: 404 })));
+    await expect(provider.upload([input], { scope })).rejects.toThrow("The asset request failed");
+  });
+
+  it("maps blocked, unnamed, unscoped, and corrupt API assets safely", async () => {
+    const infected = {
+      ...apiAsset(),
+      displayName: "   ",
+      parentResourceType: null,
+      parentResourceId: scope.id,
+      updatedAt: null,
+      content: { ...apiAsset().content, virusScanStatus: "Infected" },
+    };
+    const moderated = {
+      ...apiAsset(),
+      displayName: null,
+      parentResourceId: null,
+      content: { ...apiAsset().content, virusScanStatus: "Clean", moderationStatus: "Blocked" },
+    };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ items: [infected, moderated] }), { status: 200 }),
+    ));
+    const provider = new GameGuildRemoteAssetProvider();
+    const page = await provider.list({ search: "diagram", limit: 2 }, { scope });
+
+    expect(page.items[0]).toMatchObject({
+      name: assetId,
+      availability: "unavailable",
+      updatedAt: infected.createdAt,
+    });
+    expect(page.items[0]).not.toHaveProperty("scope");
+    expect(page.items[1]).toMatchObject({ availability: "unavailable" });
+    expect(page.items[1]).not.toHaveProperty("scope");
+    const requestUrl = new URL(String(vi.mocked(fetch).mock.calls[0]?.[0]), "http://localhost");
+    expect(requestUrl.searchParams.get("search")).toBe("diagram");
+    expect(requestUrl.searchParams.get("limit")).toBe("2");
+
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(
+      new Response(JSON.stringify({ ...apiAsset(), content: null }), { status: 200 }),
+    ));
+    await expect(provider.get(createAssetUri(assetId), { scope })).rejects.toThrow(
+      "Asset metadata has no content details",
+    );
+  });
+
+  it("gets, lists, and downloads through authenticated asset endpoints", async () => {
+    const provider = new GameGuildRemoteAssetProvider();
+    vi.stubGlobal("fetch", vi.fn()
+      .mockResolvedValueOnce(new Response(null, { status: 404 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify(apiAsset()), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ items: [] }), { status: 200 }))
+      .mockResolvedValueOnce(new Response("binary", { status: 200 })));
+
+    await expect(
+      provider.get(createAssetUri("dddddddd-dddd-4ddd-8ddd-dddddddddddd"), { scope }),
+    ).resolves.toBeNull();
+    const record = await provider.get(createAssetUri(assetId), { scope });
+    expect(record?.id).toBe(assetId);
+    await expect(provider.list({ scope }, {})).resolves.toEqual({ items: [] });
+    const download = await provider.download(record!, { scope });
+    await expect(download.blob.text()).resolves.toBe("binary");
+    expect(download.record).toBe(record);
+
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(new Response(null, { status: 403 })));
+    await expect(provider.download(record!, { scope })).rejects.toThrow("The asset download failed");
+  });
+
+  it("surfaces failed reads and library requests", async () => {
+    const provider = new GameGuildRemoteAssetProvider();
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(new Response(null, { status: 500 })));
+    await expect(provider.get(createAssetUri(assetId), { scope })).rejects.toThrow("The asset request failed");
+
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(new Response(null, { status: 404 })));
+    await expect(provider.list({ scope }, {})).rejects.toThrow("The asset library request failed");
+  });
+
+  it("resolves server-side URLs and treats deletion as idempotent", async () => {
+    const provider = new GameGuildRemoteAssetProvider();
+    const record = {
+      id: assetId,
+      uri: createAssetUri(assetId),
+    } as Parameters<GameGuildRemoteAssetProvider["delete"]>[0];
+
+    vi.stubGlobal("window", undefined);
+    await expect(provider.resolveUrl(record)).resolves.toMatchObject({
+      url: `http://localhost/api/assets/${assetId}/content`,
+    });
+    vi.unstubAllGlobals();
+
+    vi.stubGlobal("fetch", vi.fn()
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockResolvedValueOnce(new Response(null, { status: 404 })));
+    await expect(provider.delete(record, { scope })).resolves.toBeUndefined();
+    await expect(provider.delete(record, { scope })).resolves.toBeUndefined();
+
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(new Response(null, { status: 500 })));
+    await expect(provider.delete(record, { scope })).rejects.toThrow("The asset delete failed");
   });
 });

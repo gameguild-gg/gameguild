@@ -129,13 +129,17 @@ public static class LearningActivityContract
         }
     }
 
-    public static bool AllowsMultipleResponses(ProgramContent content) =>
-        content.Type == ProgramContentType.Survey &&
-        content.GetActivitySettings() is SurveyActivitySettings { AllowMultipleResponses: true };
+    public static bool AllowsMultipleResponses(ProgramContent content)
+    {
+        if (content.Type != ProgramContentType.Survey) return false;
+        return ((SurveyActivitySettings)content.GetActivitySettings()!).AllowMultipleResponses;
+    }
 
-    public static bool IsAnonymousSurvey(ProgramContent content) =>
-        content.Type == ProgramContentType.Survey &&
-        content.GetActivitySettings() is SurveyActivitySettings { IsAnonymous: true };
+    public static bool IsAnonymousSurvey(ProgramContent content)
+    {
+        if (content.Type != ProgramContentType.Survey) return false;
+        return ((SurveyActivitySettings)content.GetActivitySettings()!).IsAnonymous;
+    }
 
     private static bool ValidateDiscussion(DiscussionActivitySettings settings)
     {
@@ -261,7 +265,7 @@ public static class ActivityResponseContract
             throw new InvalidOperationException("Activity response must include a body.");
         }
 
-        var body = bodyElement.GetString()?.Trim();
+        var body = bodyElement.GetString()!.Trim();
         if (string.IsNullOrEmpty(body) || body.Length < minimumLength || body.Length > maximumLength)
         {
             throw new InvalidOperationException("Activity response body does not satisfy the configured length policy.");

@@ -13,6 +13,7 @@ public interface IWishlistService
         Guid userId,
         bool notifyOnSale = true,
         bool notifyOnUpdate = false,
+        Guid? tenantId = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>

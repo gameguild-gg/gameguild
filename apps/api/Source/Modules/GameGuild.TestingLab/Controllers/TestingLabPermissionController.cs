@@ -35,7 +35,7 @@ public class TestingLabPermissionController : BaseApiController {
     effectiveTenantId = null;
     if (!currentTenantId.HasValue) return false;
 
-    if (!requestedTenantId.HasValue || currentTenantId == requestedTenantId) {
+    if (!requestedTenantId.HasValue || currentTenantId.Value == requestedTenantId.Value) {
       effectiveTenantId = currentTenantId;
       return true;
     }

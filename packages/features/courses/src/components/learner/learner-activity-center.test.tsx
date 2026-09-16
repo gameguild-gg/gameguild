@@ -97,4 +97,18 @@ describe("LearnerActivityCenter", () => {
     expect(screen.getByText("Playable build")).toBeInTheDocument();
     expect(screen.getByText("Game loop knowledge check")).toBeInTheDocument();
   });
+
+  it("builds serializable activity links from the course base path", () => {
+    render(
+      <LearnerActivityCenter
+        records={records}
+        courseBasePath="/en-US/learn/courses"
+      />,
+    );
+
+    expect(screen.getAllByRole("link", { name: "Open" })[0]).toHaveAttribute(
+      "href",
+      "/en-US/learn/courses/game-production/activities/assessment-quiz-1",
+    );
+  });
 });

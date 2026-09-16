@@ -1,23 +1,71 @@
-'use client';
+"use client";
 
-import React, { useEffect, useMemo, useState, useTransition } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { manualEnrollStudent, removeCourseStudents, sendCourseStudentMessage } from '@/lib/learning/actions';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
-import { Input } from '@game-guild/ui/components/input';
-import { Textarea } from '@game-guild/ui/components/textarea';
-import { Label } from '@game-guild/ui/components/label';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@game-guild/ui/components/dialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@game-guild/ui/components/table';
-import { Progress } from '@game-guild/ui/components/progress';
-import { Avatar, AvatarFallback } from '@game-guild/ui/components/avatar';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
-import { Checkbox } from '@game-guild/ui/components/checkbox';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@game-guild/ui/components/dropdown-menu';
-import { Download, Eye, Loader2, Mail, MoreHorizontal, Search, TrendingUp, UserMinus, UserPlus, Users } from 'lucide-react';
+import React, { useEffect, useMemo, useState, useTransition } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  manualEnrollStudent,
+  removeCourseStudents,
+  sendCourseStudentMessage,
+} from "@/lib/learning/actions";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@game-guild/ui/components/card";
+import { Badge } from "@game-guild/ui/components/badge";
+import { Button } from "@game-guild/ui/components/button";
+import { Input } from "@game-guild/ui/components/input";
+import { Textarea } from "@game-guild/ui/components/textarea";
+import { Label } from "@game-guild/ui/components/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@game-guild/ui/components/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@game-guild/ui/components/table";
+import { Progress } from "@game-guild/ui/components/progress";
+import { Avatar, AvatarFallback } from "@game-guild/ui/components/avatar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@game-guild/ui/components/select";
+import { Checkbox } from "@game-guild/ui/components/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@game-guild/ui/components/dropdown-menu";
+import {
+  Download,
+  Eye,
+  Loader2,
+  Mail,
+  MoreHorizontal,
+  Search,
+  TrendingUp,
+  UserMinus,
+  UserPlus,
+  Users,
+} from "lucide-react";
 
 interface Student {
   id: string;
@@ -31,45 +79,54 @@ interface Student {
 }
 
 function progressColor(value: number) {
-  if (value >= 80) return 'text-green-600';
-  if (value >= 40) return 'text-yellow-600';
-  return 'text-red-600';
+  if (value >= 80) return "text-green-600";
+  if (value >= 40) return "text-yellow-600";
+  return "text-red-600";
 }
 
 function getStatusLabel(student: Student) {
-  if (student.completionPercent >= 100) return 'completed';
-  if (student.isActive) return 'active';
-  return 'inactive';
+  if (student.completionPercent >= 100) return "completed";
+  if (student.isActive) return "active";
+  return "inactive";
 }
 
 function StatusBadge({ student }: { student: Student }) {
   const status = getStatusLabel(student);
   const config = {
-    completed: { variant: 'default' as const, label: 'Completed' },
-    active: { variant: 'secondary' as const, label: 'Active' },
-    inactive: { variant: 'outline' as const, label: 'Inactive' },
+    completed: { variant: "default" as const, label: "Completed" },
+    active: { variant: "secondary" as const, label: "Active" },
+    inactive: { variant: "outline" as const, label: "Inactive" },
   };
   const c = config[status];
   return <Badge variant={c.variant}>{c.label}</Badge>;
 }
 
-export function StudentTable({ courseId, students }: { courseId: string; students: Student[]; total: number }) {
+export function StudentTable({
+  courseId,
+  students,
+}: {
+  courseId: string;
+  students: Student[];
+  total: number;
+}) {
   const router = useRouter();
   const [items, setItems] = useState(students);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isPending, startTransition] = useTransition();
   const [manualEnrollOpen, setManualEnrollOpen] = useState(false);
-  const [manualUserId, setManualUserId] = useState('');
-  const [manualCohortId, setManualCohortId] = useState('');
-  const [manualEnrollError, setManualEnrollError] = useState<string | null>(null);
+  const [manualUserId, setManualUserId] = useState("");
+  const [manualCohortId, setManualCohortId] = useState("");
+  const [manualEnrollError, setManualEnrollError] = useState<string | null>(
+    null,
+  );
   const [removeOpen, setRemoveOpen] = useState(false);
   const [removeTargets, setRemoveTargets] = useState<Student[]>([]);
   const [messageOpen, setMessageOpen] = useState(false);
   const [messageTargets, setMessageTargets] = useState<Student[]>([]);
-  const [messageSubject, setMessageSubject] = useState('');
-  const [messageBody, setMessageBody] = useState('');
+  const [messageSubject, setMessageSubject] = useState("");
+  const [messageBody, setMessageBody] = useState("");
   const [progressStudent, setProgressStudent] = useState<Student | null>(null);
   const [operationError, setOperationError] = useState<string | null>(null);
   const [operationStatus, setOperationStatus] = useState<string | null>(null);
@@ -77,7 +134,9 @@ export function StudentTable({ courseId, students }: { courseId: string; student
   useEffect(() => {
     const availableIds = new Set(students.map((student) => student.id));
     setItems(students);
-    setSelectedIds((current) => new Set([...current].filter((id) => availableIds.has(id))));
+    setSelectedIds(
+      (current) => new Set([...current].filter((id) => availableIds.has(id))),
+    );
   }, [students]);
 
   const submitManualEnrollment = (event: React.FormEvent<HTMLFormElement>) => {
@@ -94,9 +153,9 @@ export function StudentTable({ courseId, students }: { courseId: string; student
 
       if (result.success) {
         setManualEnrollOpen(false);
-        setManualUserId('');
-        setManualCohortId('');
-        setOperationStatus('Student enrolled successfully.');
+        setManualUserId("");
+        setManualCohortId("");
+        setOperationStatus("Student enrolled successfully.");
         router.refresh();
         return;
       }
@@ -111,11 +170,12 @@ export function StudentTable({ courseId, students }: { courseId: string; student
     if (search) {
       const q = search.toLowerCase();
       result = result.filter(
-        (s) => s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q),
+        (s) =>
+          s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q),
       );
     }
 
-    if (statusFilter !== 'all') {
+    if (statusFilter !== "all") {
       result = result.filter((s) => getStatusLabel(s) === statusFilter);
     }
 
@@ -152,17 +212,24 @@ export function StudentTable({ courseId, students }: { courseId: string; student
 
   const confirmRemoval = () => {
     startTransition(async () => {
-      const result = await removeCourseStudents(courseId, removeTargets.map((student) => student.userId));
+      const result = await removeCourseStudents(
+        courseId,
+        removeTargets.map((student) => student.userId),
+      );
       if (!result.success) {
         setOperationError(result.error);
         return;
       }
 
       const removedIds = new Set(removeTargets.map((student) => student.id));
-      setItems((current) => current.filter((student) => !removedIds.has(student.id)));
+      setItems((current) =>
+        current.filter((student) => !removedIds.has(student.id)),
+      );
       setSelectedIds(new Set());
       setRemoveOpen(false);
-      setOperationStatus(`${result.data.removed} ${result.data.removed === 1 ? 'student' : 'students'} removed.`);
+      setOperationStatus(
+        `${result.data.removed} ${result.data.removed === 1 ? "student" : "students"} removed.`,
+      );
     });
   };
 
@@ -188,16 +255,19 @@ export function StudentTable({ courseId, students }: { courseId: string; student
       }
 
       setMessageOpen(false);
-      setMessageSubject('');
-      setMessageBody('');
-      setOperationStatus(`Message sent to ${result.data.sent} ${result.data.sent === 1 ? 'student' : 'students'}.`);
+      setMessageSubject("");
+      setMessageBody("");
+      setOperationStatus(
+        `Message sent to ${result.data.sent} ${result.data.sent === 1 ? "student" : "students"}.`,
+      );
     });
   };
 
   const exportStudents = () => {
-    const escape = (value: string | number) => `"${String(value).replaceAll('"', '""')}"`;
+    const escape = (value: string | number) =>
+      `"${String(value).replaceAll('"', '""')}"`;
     const rows = [
-      ['Name', 'Email', 'Status', 'Progress', 'Enrolled', 'Last active'],
+      ["Name", "Email", "Status", "Progress", "Enrolled", "Last active"],
       ...filtered.map((student) => [
         student.name,
         student.email,
@@ -207,8 +277,12 @@ export function StudentTable({ courseId, students }: { courseId: string; student
         student.lastActivity,
       ]),
     ];
-    const url = URL.createObjectURL(new Blob([rows.map((row) => row.map(escape).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' }));
-    const anchor = document.createElement('a');
+    const url = URL.createObjectURL(
+      new Blob([rows.map((row) => row.map(escape).join(",")).join("\n")], {
+        type: "text/csv;charset=utf-8",
+      }),
+    );
+    const anchor = document.createElement("a");
     anchor.href = url;
     anchor.download = `course-${courseId}-students.csv`;
     anchor.click();
@@ -222,7 +296,9 @@ export function StudentTable({ courseId, students }: { courseId: string; student
           <div>
             <CardTitle>Enrolled Students</CardTitle>
             <CardDescription>
-              {items.length > 0 ? `${items.length} ${items.length === 1 ? 'student' : 'students'} enrolled` : 'No students enrolled yet'}
+              {items.length > 0
+                ? `${items.length} ${items.length === 1 ? "student" : "students"} enrolled`
+                : "No students enrolled yet"}
             </CardDescription>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -238,17 +314,20 @@ export function StudentTable({ courseId, students }: { courseId: string; student
                   <DialogHeader>
                     <DialogTitle>Enroll student manually</DialogTitle>
                     <DialogDescription>
-                    Add an existing GameGuild user to this course by email, username, or canonical user ID.
+                      Add an existing GameGuild user to this course by email,
+                      username, or canonical user ID.
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4">
                     <div className="space-y-2">
-                    <Label htmlFor="manual-user-id">Student</Label>
+                      <Label htmlFor="manual-user-id">Student</Label>
                       <Input
                         id="manual-user-id"
                         value={manualUserId}
-                        onChange={(event) => setManualUserId(event.target.value)}
-                      placeholder="student@example.com, username, or user ID"
+                        onChange={(event) =>
+                          setManualUserId(event.target.value)
+                        }
+                        placeholder="student@example.com, username, or user ID"
                         required
                       />
                     </div>
@@ -257,19 +336,37 @@ export function StudentTable({ courseId, students }: { courseId: string; student
                       <Input
                         id="manual-cohort-id"
                         value={manualCohortId}
-                        onChange={(event) => setManualCohortId(event.target.value)}
+                        onChange={(event) =>
+                          setManualCohortId(event.target.value)
+                        }
                         placeholder="Optional"
                       />
-                      <p className="text-xs text-muted-foreground">Leave blank to enroll the student directly in the course.</p>
+                      <p className="text-xs text-muted-foreground">
+                        Leave blank to enroll the student directly in the
+                        course.
+                      </p>
                     </div>
-                    {manualEnrollError && <p className="text-sm text-destructive">{manualEnrollError}</p>}
+                    {manualEnrollError && (
+                      <p className="text-sm text-destructive">
+                        {manualEnrollError}
+                      </p>
+                    )}
                   </div>
                   <DialogFooter>
-                    <Button type="button" variant="outline" onClick={() => setManualEnrollOpen(false)}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setManualEnrollOpen(false)}
+                    >
                       Cancel
                     </Button>
-                    <Button type="submit" disabled={isPending || !manualUserId.trim()}>
-                      {isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
+                    <Button
+                      type="submit"
+                      disabled={isPending || !manualUserId.trim()}
+                    >
+                      {isPending && (
+                        <Loader2 className="mr-2 size-4 animate-spin" />
+                      )}
                       Enroll student
                     </Button>
                   </DialogFooter>
@@ -311,13 +408,24 @@ export function StudentTable({ courseId, students }: { courseId: string; student
         {/* Bulk Actions */}
         {selectedIds.size > 0 && (
           <div className="mb-4 flex items-center justify-between rounded-lg bg-muted/50 p-3">
-            <span className="text-sm">{selectedIds.size} student(s) selected</span>
+            <span className="text-sm">
+              {selectedIds.size} student(s) selected
+            </span>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => openMessageDialog(selectedStudents)}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => openMessageDialog(selectedStudents)}
+              >
                 <Mail className="mr-2 size-4" />
                 Send Message
               </Button>
-              <Button variant="outline" size="sm" className="text-destructive" onClick={() => requestRemoval(selectedStudents)}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-destructive"
+                onClick={() => requestRemoval(selectedStudents)}
+              >
                 <UserMinus className="mr-2 size-4" />
                 Remove
               </Button>
@@ -330,9 +438,9 @@ export function StudentTable({ courseId, students }: { courseId: string; student
             <Users className="mb-4 size-12 text-muted-foreground" />
             <h3 className="text-lg font-semibold">No students found</h3>
             <p className="text-sm text-muted-foreground">
-              {search || statusFilter !== 'all'
-                ? 'Try adjusting your search or filter criteria.'
-                : 'Students will appear here once they enroll in this course.'}
+              {search || statusFilter !== "all"
+                ? "Try adjusting your search or filter criteria."
+                : "Students will appear here once they enroll in this course."}
             </p>
           </div>
         ) : (
@@ -343,24 +451,31 @@ export function StudentTable({ courseId, students }: { courseId: string; student
                   <TableRow>
                     <TableHead className="w-12">
                       <Checkbox
-                        checked={selectedIds.size === filtered.length && filtered.length > 0}
+                        checked={
+                          selectedIds.size === filtered.length &&
+                          filtered.length > 0
+                        }
                         onCheckedChange={toggleAll}
                       />
                     </TableHead>
                     <TableHead>Student</TableHead>
                     <TableHead>Progress</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className="hidden md:table-cell">Enrolled</TableHead>
-                    <TableHead className="hidden lg:table-cell">Last Active</TableHead>
+                    <TableHead className="hidden md:table-cell">
+                      Enrolled
+                    </TableHead>
+                    <TableHead className="hidden lg:table-cell">
+                      Last Active
+                    </TableHead>
                     <TableHead className="w-12" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filtered.map((student) => {
                     const initials = student.name
-                      .split(' ')
+                      .split(" ")
                       .map((n) => n[0])
-                      .join('')
+                      .join("")
                       .toUpperCase()
                       .slice(0, 2);
                     return (
@@ -374,18 +489,29 @@ export function StudentTable({ courseId, students }: { courseId: string; student
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <Avatar className="size-8">
-                              <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+                              <AvatarFallback className="text-xs">
+                                {initials}
+                              </AvatarFallback>
                             </Avatar>
                             <div className="flex flex-col">
-                              <span className="font-medium">{student.name}</span>
-                              <span className="text-xs text-muted-foreground">{student.email}</span>
+                              <span className="font-medium">
+                                {student.name}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {student.email}
+                              </span>
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <Progress value={student.completionPercent} className="w-20" />
-                            <span className={`text-sm font-medium ${progressColor(student.completionPercent)}`}>
+                            <Progress
+                              value={student.completionPercent}
+                              className="w-20"
+                            />
+                            <span
+                              className={`text-sm font-medium ${progressColor(student.completionPercent)}`}
+                            >
                               {student.completionPercent}%
                             </span>
                           </div>
@@ -402,23 +528,35 @@ export function StudentTable({ courseId, students }: { courseId: string; student
                         <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="size-8" aria-label={`Actions for ${student.name}`}>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="size-8"
+                                aria-label={`Actions for ${student.name}`}
+                              >
                                 <MoreHorizontal className="size-4" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem asChild>
-                                <Link href={`/console/community/members/users/${student.userId}`}>
+                                <Link
+                                  href={`/console/community/members/users/${student.userId}`}
+                                >
                                   <Eye className="mr-2 size-4" />
                                   View profile
                                 </Link>
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => setProgressStudent(student)}>
+                              <DropdownMenuItem
+                                onClick={() => setProgressStudent(student)}
+                              >
                                 <TrendingUp className="mr-2 size-4" />
                                 View progress
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-destructive" onClick={() => requestRemoval([student])}>
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={() => requestRemoval([student])}
+                              >
                                 <UserMinus className="mr-2 size-4" />
                                 Remove from Course
                               </DropdownMenuItem>
@@ -441,20 +579,36 @@ export function StudentTable({ courseId, students }: { courseId: string; student
         )}
       </CardContent>
 
-      {operationStatus && <p role="status" className="sr-only">{operationStatus}</p>}
-      {operationError && <p role="alert" className="px-6 pb-4 text-sm text-destructive">{operationError}</p>}
+      {operationStatus && (
+        <p role="status" className="sr-only">
+          {operationStatus}
+        </p>
+      )}
+      {operationError && (
+        <p role="alert" className="px-6 pb-4 text-sm text-destructive">
+          {operationError}
+        </p>
+      )}
 
       <Dialog open={removeOpen} onOpenChange={setRemoveOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Remove students</DialogTitle>
             <DialogDescription>
-              Remove {removeTargets.length} selected {removeTargets.length === 1 ? 'student' : 'students'} from this course. Their course access will end immediately.
+              Remove {removeTargets.length} selected{" "}
+              {removeTargets.length === 1 ? "student" : "students"} from this
+              course. Their course access will end immediately.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRemoveOpen(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={confirmRemoval} disabled={isPending}>
+            <Button variant="outline" onClick={() => setRemoveOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmRemoval}
+              disabled={isPending}
+            >
               {isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
               Confirm removal
             </Button>
@@ -467,21 +621,48 @@ export function StudentTable({ courseId, students }: { courseId: string; student
           <form onSubmit={submitMessage} className="space-y-5">
             <DialogHeader>
               <DialogTitle>Message students</DialogTitle>
-              <DialogDescription>Send an in-app notification to {messageTargets.length} selected {messageTargets.length === 1 ? 'student' : 'students'}.</DialogDescription>
+              <DialogDescription>
+                Send an in-app notification to {messageTargets.length} selected{" "}
+                {messageTargets.length === 1 ? "student" : "students"}.
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="student-message-subject">Subject</Label>
-                <Input id="student-message-subject" value={messageSubject} onChange={(event) => setMessageSubject(event.target.value)} required minLength={3} />
+                <Input
+                  id="student-message-subject"
+                  value={messageSubject}
+                  onChange={(event) => setMessageSubject(event.target.value)}
+                  required
+                  minLength={3}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="student-message-body">Message</Label>
-                <Textarea id="student-message-body" value={messageBody} onChange={(event) => setMessageBody(event.target.value)} required />
+                <Textarea
+                  id="student-message-body"
+                  value={messageBody}
+                  onChange={(event) => setMessageBody(event.target.value)}
+                  required
+                />
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setMessageOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={isPending || messageSubject.trim().length < 3 || !messageBody.trim()}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setMessageOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={
+                  isPending ||
+                  messageSubject.trim().length < 3 ||
+                  !messageBody.trim()
+                }
+              >
                 {isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
                 Send message
               </Button>
@@ -490,19 +671,39 @@ export function StudentTable({ courseId, students }: { courseId: string; student
         </DialogContent>
       </Dialog>
 
-      <Dialog open={Boolean(progressStudent)} onOpenChange={(open) => !open && setProgressStudent(null)}>
+      <Dialog
+        open={Boolean(progressStudent)}
+        onOpenChange={() => setProgressStudent(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{progressStudent?.name} progress</DialogTitle>
-            <DialogDescription>Current completion and activity for this course enrollment.</DialogDescription>
+            <DialogDescription>
+              Current completion and activity for this course enrollment.
+            </DialogDescription>
           </DialogHeader>
           {progressStudent && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between"><span>Completion</span><strong>{progressStudent.completionPercent}% complete</strong></div>
+              <div className="flex items-center justify-between">
+                <span>Completion</span>
+                <strong>{progressStudent.completionPercent}% complete</strong>
+              </div>
               <Progress value={progressStudent.completionPercent} />
               <div className="grid gap-3 text-sm sm:grid-cols-2">
-                <div><p className="text-muted-foreground">Enrolled</p><p>{new Date(progressStudent.enrolledAt).toLocaleDateString()}</p></div>
-                <div><p className="text-muted-foreground">Last active</p><p>{new Date(progressStudent.lastActivity).toLocaleDateString()}</p></div>
+                <div>
+                  <p className="text-muted-foreground">Enrolled</p>
+                  <p>
+                    {new Date(progressStudent.enrolledAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Last active</p>
+                  <p>
+                    {new Date(
+                      progressStudent.lastActivity,
+                    ).toLocaleDateString()}
+                  </p>
+                </div>
               </div>
             </div>
           )}

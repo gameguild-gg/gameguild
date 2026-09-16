@@ -84,12 +84,12 @@ async function read<T>(operation: Promise<Result<T, ApiError>>, label: string) {
     };
   } catch (error) {
     const message =
-      typeof error === "object" &&
-      error !== null &&
-      "message" in error &&
-      typeof error.message === "string"
+      error instanceof Error
         ? error.message
-        : error instanceof Error
+        : typeof error === "object" &&
+            error !== null &&
+            "message" in error &&
+            typeof error.message === "string"
           ? error.message
           : "Unknown error";
     return {
