@@ -157,8 +157,9 @@ export function calendarEventSegments(
         }));
     })
     .sort((left, right) => {
-      const leftStart = eventDate(left.event.startsAt)?.valueOf() ?? 0;
-      const rightStart = eventDate(right.event.startsAt)?.valueOf() ?? 0;
+      // Segments are emitted only after validating the event start above.
+      const leftStart = eventDate(left.event.startsAt)!.valueOf();
+      const rightStart = eventDate(right.event.startsAt)!.valueOf();
       return left.day.valueOf() - right.day.valueOf() || leftStart - rightStart;
     });
 }

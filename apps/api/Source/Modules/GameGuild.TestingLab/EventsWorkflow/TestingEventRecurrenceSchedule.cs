@@ -35,12 +35,7 @@ internal static class TestingEventRecurrenceSchedule
                     timeZone,
                     index => localStartsAt.AddMonths(index * recurrence.Interval));
                 break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(recurrence), "Unsupported recurrence frequency.");
         }
-
-        if (occurrences.Count == 0)
-            throw new ArgumentException("The recurrence window does not include the event start.", nameof(recurrence));
 
         if (recurrence.OccurrenceCount == null &&
             occurrences.Count == MaxOccurrences &&
@@ -146,5 +141,7 @@ internal static class TestingEventRecurrenceSchedule
             throw new ArgumentException("Recurrence end must not precede the event start.", nameof(recurrence));
         if (recurrence.DaysOfWeek != null && recurrence.DaysOfWeek.Any(day => !Enum.IsDefined(day)))
             throw new ArgumentOutOfRangeException(nameof(recurrence), "Every recurrence day must be valid.");
+        if (recurrence.Frequency == TestingEventRecurrenceFrequency.Weekly && recurrence.DaysOfWeek is { Count: 0 })
+            throw new ArgumentException("A weekly recurrence requires at least one day of the week.", nameof(recurrence));
     }
 }

@@ -823,8 +823,11 @@ internal sealed class AuthoringAiService(
         // One token cannot encode less than one byte of the UTF-8 provider input.
         // Reserving by byte count is intentionally conservative and prevents a
         // tokenizer-specific input count from exceeding the financial envelope.
+        // BuildGenerationRequest always supplies the authoring system prompt.
+        // Keeping that invariant explicit avoids silently under-reserving input
+        // credits if the private request builder is changed later.
         var byteCount = Encoding.UTF8.GetByteCount(request.Prompt) +
-                        (request.SystemPrompt is null ? 0 : Encoding.UTF8.GetByteCount(request.SystemPrompt));
+                        Encoding.UTF8.GetByteCount(request.SystemPrompt!);
         return Math.Max(1, byteCount);
     }
 

@@ -34,7 +34,7 @@ public class ReplyService : IReplyService
             return Result.Failure<DiscussionReply>(Error.NotFound("Discussion.NotFound", $"Discussion with ID {discussionId} not found"));
         }
 
-        var reply = DiscussionReply.Create(discussionId, authorId, content, parentReplyId);
+        var reply = DiscussionReply.Create(discussionId, authorId, content, parentReplyId, discussion.TenantId);
         _context.Set<DiscussionReply>().Add(reply);
 
         discussion.IncrementReplies();

@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Learning.Certificates;
 using Microsoft.AspNetCore.Mvc;
@@ -14,6 +15,7 @@ public class ControllerTests
     private readonly Mock<ICertificateTemplateService> _tmplSvc = new();
     private readonly Mock<IActorContextAccessor> _actor = new();
     private readonly Mock<ILogger<CertificatesController>> _log = new();
+    private readonly Mock<ISender> _sender = new();
 
     private CertificatesController CreateController(Guid? userId = null, Guid? tenantId = null)
     {
@@ -26,7 +28,7 @@ public class ControllerTests
             Roles = new HashSet<string>(),
             Permissions = new HashSet<string>()
         });
-        return new CertificatesController(_certSvc.Object, _tmplSvc.Object, _actor.Object, _log.Object);
+        return new CertificatesController(_certSvc.Object, _tmplSvc.Object, _actor.Object, _log.Object, _sender.Object);
     }
 
     [Fact] public void Ctor_Creates() => CreateController().Should().NotBeNull();
@@ -89,8 +91,16 @@ public class ControllerTests
     {
         var tid = Guid.NewGuid();
         var req = new IssueCertificateRequest(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
-        _certSvc.Setup(s => s.IssueCertificateAsync(req.TemplateId, req.EnrollmentId, req.UserId, req.CourseId, tid))
-            .ReturnsAsync(Result.Success(Certificate.Issue(req.TemplateId, req.EnrollmentId, req.UserId, req.CourseId, "U", "C")));
+        var certificate = Certificate.Issue(req.TemplateId, req.EnrollmentId, req.UserId, req.CourseId, "U", "C");
+        _sender.Setup(s => s.Send(
+                It.Is<IssueCertificateEndpointCommand>(command =>
+                    command.TemplateId == req.TemplateId &&
+                    command.EnrollmentId == req.EnrollmentId &&
+                    command.UserId == req.UserId &&
+                    command.CourseId == req.CourseId &&
+                    command.TenantId == tid),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(certificate));
         var r = await CreateController(tenantId: tid).IssueCertificate(req);
         r.Result.Should().BeOfType<CreatedAtActionResult>();
     }
@@ -99,7 +109,10 @@ public class ControllerTests
     public async Task RevokeCertificate_Success_Returns204()
     {
         var id = Guid.NewGuid();
-        _certSvc.Setup(s => s.RevokeCertificateAsync(id, "V")).ReturnsAsync(Result.Success());
+        _sender.Setup(s => s.Send(
+                It.Is<RevokeCertificateEndpointCommand>(command => command.CertificateId == id && command.Reason == "V"),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success());
         var r = await CreateController().RevokeCertificate(id, new RevokeCertificateRequest("V"));
         r.Should().BeOfType<NoContentResult>();
     }
@@ -115,29 +128,49 @@ public class ControllerTests
             "main { color: navy; }",
             true,
             true);
-        _tmplSvc.Setup(service => service.GetTemplateByIdAsync(template.Id)).ReturnsAsync(template);
-        _tmplSvc.Setup(service => service.UpdateTemplateAsync(template)).ReturnsAsync(Result.Success(template));
-        _tmplSvc.Setup(service => service.SetDefaultTemplateAsync(template.CourseId, template.Id)).ReturnsAsync(Result.Success(template));
+        template.Update(
+            request.Name,
+            request.Description,
+            request.TemplateHtml,
+            request.TemplateStyles,
+            request.IsActive);
+        template.SetDefault(request.IsDefault);
+        _sender.Setup(sender => sender.Send(
+                It.Is<UpdateCertificateTemplateEndpointCommand>(command =>
+                    command.TemplateId == template.Id &&
+                    command.Name == request.Name &&
+                    command.Description == request.Description &&
+                    command.TemplateHtml == request.TemplateHtml &&
+                    command.TemplateStyles == request.TemplateStyles &&
+                    command.IsDefault == request.IsDefault &&
+                    command.IsActive == request.IsActive),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(template));
 
         var result = await CreateController().UpdateCertificateTemplate(template.Id, request);
 
-        result.Result.Should().BeOfType<OkObjectResult>();
-        template.Name.Should().Be("Completion");
-        template.Description.Should().Be("Awarded after completion");
-        template.IsDefault.Should().BeTrue();
-        _tmplSvc.Verify(service => service.SetDefaultTemplateAsync(template.CourseId, template.Id), Times.Once);
+        var ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        ok.Value.Should().BeOfType<CertificateTemplateDetailDto>()
+            .Which.Name.Should().Be("Completion");
+        _sender.Verify(sender => sender.Send(
+            It.IsAny<UpdateCertificateTemplateEndpointCommand>(),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task UpdateCertificateTemplate_MissingTemplate_Returns404()
     {
         var templateId = Guid.NewGuid();
-        _tmplSvc.Setup(service => service.GetTemplateByIdAsync(templateId)).ReturnsAsync((CertificateTemplate?)null);
+        _sender.Setup(sender => sender.Send(
+                It.Is<UpdateCertificateTemplateEndpointCommand>(command => command.TemplateId == templateId),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Failure<CertificateTemplate>(
+                Error.NotFound("CertificateTemplate", "Certificate template not found")));
 
         var result = await CreateController().UpdateCertificateTemplate(
             templateId,
             new UpdateCertificateTemplateRequest("Completion", null, "<main>Certificate</main>", null, false, true));
 
-        result.Result.Should().BeOfType<NotFoundResult>();
+        result.Result.Should().BeOfType<NotFoundObjectResult>();
     }
 }

@@ -61,8 +61,27 @@ vi.mock("@/lib/emception/put-coding-definition", () => ({
 }));
 
 vi.mock("@game-guild/lexical-surface", () => ({
-  LexicalSurface: ({ accessibleLabel }: { accessibleLabel?: string }) => (
-    <textarea aria-label={accessibleLabel ?? "Body"} readOnly />
+  LexicalSurface: ({
+    accessibleLabel,
+    onChange,
+  }: {
+    accessibleLabel?: string;
+    onChange?: (value: Record<string, unknown>) => void;
+  }) => (
+    <button
+      type="button"
+      aria-label={accessibleLabel ?? "Body"}
+      onClick={() =>
+        onChange?.({
+          root: {
+            type: "root",
+            children: [{ type: "paragraph", children: [{ type: "text", text: "Changed" }] }],
+          },
+        })
+      }
+    >
+      Change rich text
+    </button>
   ),
 }));
 
@@ -201,6 +220,55 @@ const lessonItemLexical = {
   updatedAt: "2026-01-02T00:00:00.000Z",
 } satisfies ContentItemDetail;
 
+const gradedQuizItem = {
+  ...item,
+  description: null,
+  jsonBody: {
+    schemaVersion: 1,
+    order: [],
+    blocks: {},
+    grading: {
+      enabled: true,
+      schemaVersion: 1,
+      score: { maxScore: 10 },
+      attempts: {},
+      feedback: {},
+      presentation: { mode: "single-step" },
+      items: {},
+    },
+  },
+} satisfies ContentItemDetail;
+
+const lessonItemHtml = {
+  ...lessonItemMarkdownBody,
+  id: "lesson-html",
+  title: "HTML lesson",
+  slug: "html-lesson",
+  description: "Has an HTML body.",
+  content: "<h1>Existing HTML</h1>",
+  lessonFormat: "Html",
+} satisfies ContentItemDetail;
+
+const lessonItemVideo = {
+  ...lessonItemMarkdownBody,
+  id: "lesson-video",
+  title: "Video lesson",
+  slug: "video-lesson",
+  description: "Has a video URL.",
+  content: "https://video.example.test/original.mp4",
+  lessonFormat: "Video",
+} satisfies ContentItemDetail;
+
+const lessonItemExternalLink = {
+  ...lessonItemMarkdownBody,
+  id: "lesson-link",
+  title: "External resource",
+  slug: "external-resource",
+  description: "Links to a resource.",
+  content: "https://example.test/original",
+  lessonFormat: "ExternalLink",
+} satisfies ContentItemDetail;
+
 // ── Task 10: reading-time estimation (auto hint / manual pin) ──
 
 // 400 words at 200 wpm → ~2 min auto estimate.
@@ -309,6 +377,24 @@ describe("ContentItemEditor", () => {
     expect(screen.getByText("True / false")).toBeInTheDocument();
   });
 
+  it("creates an empty quiz document when legacy quiz JSON is absent", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={{ ...item, jsonBody: null }}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+    await waitFor(() => {
+      expect(updateContent).toHaveBeenCalledWith(
+        expect.objectContaining({ jsonBody: undefined }),
+      );
+    });
+  });
+
   it("validates title before updating lesson content", async () => {
     const user = userEvent.setup();
     render(
@@ -324,6 +410,37 @@ describe("ContentItemEditor", () => {
 
     expect(await screen.findByText("Title is required.")).toBeInTheDocument();
     expect(updateContent).not.toHaveBeenCalled();
+  });
+
+  it("normalizes legacy items whose title and slug are absent", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={
+          {
+            ...lessonItemMarkdownEmpty,
+            title: undefined,
+            slug: undefined,
+          } as unknown as ContentItemDetail
+        }
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    expect(screen.getByLabelText(/^title$/i)).toHaveValue("");
+    expect(screen.getByLabelText(/url slug/i)).toHaveValue("");
+    await user.type(screen.getByLabelText(/^title$/i), "Recovered lesson");
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "Recovered lesson",
+          slug: "recovered-lesson",
+        }),
+      );
+    });
   });
 
   it("saves edited quiz metadata and structured jsonBody, then refreshes the dashboard route", async () => {
@@ -664,6 +781,159 @@ describe("ContentItemEditor", () => {
     expect(formatInput).toHaveAttribute("readonly");
   });
 
+  it("infers Lexical for legacy structured lessons and tolerates missing optional metadata", async () => {
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={
+          {
+            ...lessonItemLexical,
+            lessonFormat: null,
+            description: null,
+            settings: null,
+            updatedAt: "",
+          } as ContentItemDetail
+        }
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    expect(screen.getByLabelText(/lesson format/i)).toHaveValue(
+      "Rich text (Lexical)",
+    );
+    expect(screen.getByRole("switch", { name: /required/i })).toBeChecked();
+    expect(screen.queryByTestId("last-saved-at")).not.toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Body" })).toBeInTheDocument();
+  });
+
+  it("updates publication controls and resets a manual duration to Auto", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={lessonItemManualDuration}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    await user.click(screen.getByRole("combobox", { name: /visibility/i }));
+    await user.click(screen.getByRole("option", { name: "Private" }));
+    await user.click(screen.getByRole("switch", { name: /required/i }));
+    await user.click(screen.getByRole("button", { name: "Auto" }));
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          visibility: "Private",
+          isRequired: false,
+          estimatedMinutes: null,
+          estimatedMinutesSource: "Auto",
+        }),
+      );
+    });
+  });
+
+  it("reports a failed quiz assessment creation after saving the content", async () => {
+    const user = userEvent.setup();
+    vi.mocked(createAssessment).mockResolvedValueOnce({
+      success: false,
+      error: "Assessment creation failed",
+    });
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={item}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    await user.click(screen.getByRole("switch", { name: /grading/i }));
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    expect(
+      await screen.findByText(
+        /quiz content was saved, but its assessment could not be synchronized: assessment creation failed/i,
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("reports a failed linked quiz assessment update and maps single-step settings", async () => {
+    const user = userEvent.setup();
+    vi.mocked(updateAssessment).mockResolvedValueOnce({
+      success: false,
+      error: "Assessment update failed",
+    });
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={gradedQuizItem}
+        courseTitle="Advanced Game AI"
+        linkedAssessmentId="asmnt-quiz"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateAssessment).toHaveBeenCalledWith(
+        expect.objectContaining({
+          assessmentId: "asmnt-quiz",
+          description: undefined,
+          timeLimitMinutes: null,
+          maxAttempts: null,
+          presentationMode: "SingleStep",
+        }),
+      );
+    });
+    expect(await screen.findByText(/assessment update failed/i)).toBeInTheDocument();
+  });
+
+  it("reports a failed linked quiz assessment removal", async () => {
+    const user = userEvent.setup();
+    vi.mocked(deleteAssessment).mockResolvedValueOnce({
+      success: false,
+      error: "Assessment removal failed",
+    });
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={item}
+        courseTitle="Advanced Game AI"
+        linkedAssessmentId="asmnt-quiz"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    expect(await screen.findByText(/assessment removal failed/i)).toBeInTheDocument();
+  });
+
+  it("fails closed for an unknown lesson format without persisting the body", async () => {
+    const user = userEvent.setup();
+    const unknownFormatItem = {
+      ...lessonItemMarkdownBody,
+      lessonFormat: "UnknownFormat",
+    } as unknown as ContentItemDetail;
+
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={unknownFormatItem}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /preview/i }));
+    expect(screen.getByText("This lesson has no published content.")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+    await waitFor(() => {
+      expect(updateContent).toHaveBeenCalledWith(
+        expect.objectContaining({ body: undefined, jsonBody: undefined }),
+      );
+    });
+  });
+
   it("does not offer lesson format changes after creation", () => {
     const confirmSpy = vi.spyOn(window, "confirm");
     render(
@@ -755,6 +1025,165 @@ describe("ContentItemEditor", () => {
     expect(screen.getByText("Saved successfully.")).toBeInTheDocument();
   });
 
+  it("persists rich-text changes emitted by the Lexical editor", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={lessonItemLexical}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Body" }));
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          contentId: "lesson-3",
+          body: undefined,
+          lessonFormat: "Lexical",
+          jsonBody: {
+            root: {
+              type: "root",
+              children: [
+                {
+                  type: "paragraph",
+                  children: [{ type: "text", text: "Changed" }],
+                },
+              ],
+            },
+          },
+        }),
+      );
+    });
+  });
+
+  it("saves an explicitly empty Lexical lesson without fabricating document state", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={{ ...lessonItemLexical, jsonBody: null }}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+    await waitFor(() => {
+      expect(updateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          body: undefined,
+          jsonBody: undefined,
+          lessonFormat: "Lexical",
+        }),
+      );
+    });
+  });
+
+  it("edits, previews, and saves an HTML lesson body", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={lessonItemHtml}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText("Body"), {
+      target: { value: "<h1>Updated HTML</h1>" },
+    });
+    await user.click(screen.getByRole("button", { name: /preview/i }));
+    expect(screen.getByTitle("HTML lesson")).toHaveAttribute(
+      "srcdoc",
+      "<h1>Updated HTML</h1>",
+    );
+    await user.click(screen.getByRole("button", { name: /^edit$/i }));
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          contentId: "lesson-html",
+          body: "<h1>Updated HTML</h1>",
+          lessonFormat: "Html",
+        }),
+      );
+    });
+  });
+
+  it("edits, previews, and saves a video lesson URL", async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={lessonItemVideo}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    await user.clear(screen.getByLabelText("Video URL"));
+    await user.type(
+      screen.getByLabelText("Video URL"),
+      "https://video.example.test/updated.mp4",
+    );
+    await user.click(screen.getByRole("button", { name: /preview/i }));
+    await waitFor(() => {
+      expect(container.querySelector("video")).toHaveAttribute(
+        "src",
+        "https://video.example.test/updated.mp4",
+      );
+    });
+    await user.click(screen.getByRole("button", { name: /^edit$/i }));
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          contentId: "lesson-video",
+          body: "https://video.example.test/updated.mp4",
+          lessonFormat: "Video",
+        }),
+      );
+    });
+  });
+
+  it("edits, previews, and saves a safe external lesson link", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={lessonItemExternalLink}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    await user.clear(screen.getByLabelText("External link URL"));
+    await user.type(
+      screen.getByLabelText("External link URL"),
+      "https://example.test/updated",
+    );
+    await user.click(screen.getByRole("button", { name: /preview/i }));
+    expect(screen.getByRole("link", { name: /open lesson resource/i })).toHaveAttribute(
+      "href",
+      "https://example.test/updated",
+    );
+    await user.click(screen.getByRole("button", { name: /^edit$/i }));
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          contentId: "lesson-link",
+          body: "https://example.test/updated",
+          lessonFormat: "ExternalLink",
+        }),
+      );
+    });
+  });
+
   it("shows the markdown body and preview side by side without a toggle", () => {
     render(
       <ContentItemEditor
@@ -840,6 +1269,58 @@ describe("ContentItemEditor", () => {
     }
   });
 
+  it("queues the newest edit while a slower autosave is still in flight", async () => {
+    vi.useFakeTimers();
+    let resolveFirstSave!: (value: { success: true; data: null }) => void;
+    vi.mocked(updateContent)
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveFirstSave = resolve;
+          }),
+      )
+      .mockResolvedValue({ success: true, data: null });
+
+    try {
+      render(
+        <ContentItemEditor
+          courseId="course-1"
+          item={lessonItemMarkdownBody}
+          courseTitle="Advanced Game AI"
+        />,
+      );
+
+      fireEvent.change(screen.getByLabelText("Body"), {
+        target: { value: "# first edit" },
+      });
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3000);
+      });
+      expect(updateContent).toHaveBeenCalledTimes(1);
+
+      fireEvent.change(screen.getByLabelText("Body"), {
+        target: { value: "# newest edit" },
+      });
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3000);
+      });
+      expect(updateContent).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        resolveFirstSave({ success: true, data: null });
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+
+      expect(updateContent).toHaveBeenCalledTimes(2);
+      expect(updateContent).toHaveBeenLastCalledWith(
+        expect.objectContaining({ body: "# newest edit" }),
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("does not show a Preview toggle on non-lesson items", () => {
     render(
       <ContentItemEditor
@@ -883,30 +1364,44 @@ describe("ContentItemEditor", () => {
     });
   });
 
-  it("shows Edit Coding Tests summary when an existing coding definition is provided", () => {
+  it("shows every coding-test kind and edits through the stable assessment slug", async () => {
+    const user = userEvent.setup();
     render(
       <ContentItemEditor
         courseId="course-1"
         item={codeItem}
         courseTitle="Advanced Game AI"
         linkedAssessmentId="asmnt-1"
+        linkedAssessmentSlug="sum-two-numbers"
         linkedAssessmentGradingMethods="AutoGraded"
         initialCodingDefinition={{
           kind: "coding",
           language: "cpp",
           workspaceConfig: { id: "x" },
-          testPlan: { cases: [{ kind: "stdio" }, { kind: "stdio" }] },
+          testPlan: {
+            cases: [
+              { kind: "stdio" },
+              { kind: "stdio-file" },
+              { kind: "doctest" },
+              { kind: "clang-query" },
+              { kind: "custom" },
+            ],
+          },
           maxScore: 100,
           passingScore: 60,
         }}
       />,
     );
 
-    expect(
-      screen.getByRole("button", { name: /edit coding tests/i }),
-    ).toBeInTheDocument();
+    const edit = screen.getByRole("button", { name: /edit coding tests/i });
     expect(screen.getByText(/language: cpp/i)).toBeInTheDocument();
-    expect(screen.getByText(/test cases: 2/i)).toBeInTheDocument();
+    expect(screen.getByText(/test cases: 5/i)).toBeInTheDocument();
+    expect(screen.getByText(/types: 2 stdin\/stdout · 2 functional/i)).toBeInTheDocument();
+
+    await user.click(edit);
+    expect(routerMocks.push).toHaveBeenCalledWith(
+      "/workspace/learning/courses/course-1/assessments/sum-two-numbers/coding-definition",
+    );
   });
 
   it("still shows the 'not yet available' fallback for other unhandled types (Discussion)", () => {
@@ -1081,6 +1576,88 @@ describe("ContentItemEditor — Graded toggle (Task 7)", () => {
     expect(routerMocks.refresh).toHaveBeenCalled();
   });
 
+  it("can remove an assessment immediately after creating it", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={codeItem}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    const gradedSwitch = screen.getByRole("switch", { name: /^graded$/i });
+    await user.click(gradedSwitch);
+    await waitFor(() => {
+      expect(createAssessment).toHaveBeenCalledOnce();
+      expect(gradedSwitch).not.toBeDisabled();
+      expect(gradedSwitch).toBeChecked();
+    });
+
+    await user.click(gradedSwitch);
+    const dialog = await screen.findByRole("alertdialog");
+    await user.click(
+      within(dialog).getByRole("button", { name: /remove grading/i }),
+    );
+
+    await waitFor(() => {
+      expect(deleteAssessment).toHaveBeenCalledWith("course-1", "new-asmnt");
+    });
+  });
+
+  it("enables coding-test navigation with the assessment returned by creation", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={codeItem}
+        courseTitle="Advanced Game AI"
+        linkedAssessmentGradingMethods="AutoGraded"
+      />,
+    );
+
+    await user.click(screen.getByRole("switch", { name: /^graded$/i }));
+    const configure = await screen.findByRole("button", {
+      name: /configure coding tests/i,
+    });
+    await waitFor(() => expect(configure).not.toBeDisabled());
+    await user.click(configure);
+
+    expect(routerMocks.push).toHaveBeenCalledWith(
+      "/workspace/learning/courses/course-1/assessments/new-asmnt/coding-definition",
+    );
+  });
+
+  it("shows assessment creation errors and keeps non-code projects unlinked", async () => {
+    const user = userEvent.setup();
+    vi.mocked(createAssessment).mockResolvedValueOnce({
+      success: false,
+      error: "Could not create gradebook item",
+    });
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={projectItem}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    const gradedSwitch = screen.getByRole("switch", { name: /^graded$/i });
+    await user.click(gradedSwitch);
+
+    await waitFor(() => {
+      expect(createAssessment).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "Project",
+          submissionModalities: undefined,
+          gradingMethods: "InstructorGraded",
+        }),
+      );
+      expect(gradedSwitch).not.toBeChecked();
+    });
+    expect(await screen.findByText("Could not create gradebook item")).toBeInTheDocument();
+  });
+
   it("restores a recently soft-deleted assessment when toggled back ON", async () => {
     const user = userEvent.setup();
     render(
@@ -1124,6 +1701,37 @@ describe("ContentItemEditor — Graded toggle (Task 7)", () => {
     expect(createAssessment).not.toHaveBeenCalled();
   });
 
+  it("shows restore failures and leaves grading disabled", async () => {
+    const user = userEvent.setup();
+    vi.mocked(restoreAssessment).mockResolvedValueOnce({
+      success: false,
+      error: "Could not restore gradebook item",
+    });
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={assignmentItem}
+        courseTitle="Advanced Game AI"
+        linkedAssessmentId="asmnt-existing"
+      />,
+    );
+
+    const gradedSwitch = screen.getByRole("switch", { name: /^graded$/i });
+    await user.click(gradedSwitch);
+    await user.click(
+      within(await screen.findByRole("alertdialog")).getByRole("button", {
+        name: /remove grading/i,
+      }),
+    );
+    await waitFor(() => expect(gradedSwitch).not.toBeChecked());
+
+    await user.click(gradedSwitch);
+    expect(
+      await screen.findByText("Could not restore gradebook item"),
+    ).toBeInTheDocument();
+    expect(gradedSwitch).not.toBeChecked();
+  });
+
   it("soft-deletes the linked assessment on confirm after toggling OFF", async () => {
     const user = userEvent.setup();
     render(
@@ -1145,6 +1753,33 @@ describe("ContentItemEditor — Graded toggle (Task 7)", () => {
       expect(deleteAssessment).toHaveBeenCalledWith("course-1", "asmnt-2");
     });
     expect(routerMocks.refresh).toHaveBeenCalled();
+  });
+
+  it("shows removal failures and keeps grading enabled", async () => {
+    const user = userEvent.setup();
+    vi.mocked(deleteAssessment).mockResolvedValueOnce({
+      success: false,
+      error: "Could not remove gradebook item",
+    });
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={assignmentItem}
+        courseTitle="Advanced Game AI"
+        linkedAssessmentId="asmnt-2"
+      />,
+    );
+
+    const gradedSwitch = screen.getByRole("switch", { name: /^graded$/i });
+    await user.click(gradedSwitch);
+    await user.click(
+      within(await screen.findByRole("alertdialog")).getByRole("button", {
+        name: /remove grading/i,
+      }),
+    );
+
+    expect(await screen.findByText("Could not remove gradebook item")).toBeInTheDocument();
+    expect(gradedSwitch).toBeChecked();
   });
 
   it("does not soft-delete when the OFF confirm is cancelled", async () => {

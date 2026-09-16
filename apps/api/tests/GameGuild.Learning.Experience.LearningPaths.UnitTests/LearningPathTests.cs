@@ -249,6 +249,7 @@ public class CreateLearningPathCommandValidatorTests
         var cmd = new CreateLearningPathCommand(Guid.NewGuid(), "Path", EstimatedHours: -1);
         _validator.Validate(cmd).IsValid.Should().BeFalse();
     }
+
 }
 
 public class UpdateLearningPathCommandValidatorTests
@@ -287,6 +288,20 @@ public class UpdateLearningPathCommandValidatorTests
     public void NegativeEstimatedHours_ShouldFail()
     {
         var cmd = new UpdateLearningPathCommand(Guid.NewGuid(), EstimatedHours: -1);
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void EmptyOptionalTitle_ShouldFail()
+    {
+        var cmd = new UpdateLearningPathCommand(Guid.NewGuid(), Title: "");
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void ImageUrlTooLong_ShouldFail()
+    {
+        var cmd = new UpdateLearningPathCommand(Guid.NewGuid(), ImageUrl: new string('x', 1001));
         _validator.Validate(cmd).IsValid.Should().BeFalse();
     }
 }
@@ -402,5 +417,19 @@ public class ReorderPathCoursesCommandValidatorTests
         var cmd = new ReorderPathCoursesCommand(Guid.NewGuid(),
             Array.Empty<CourseOrderDto>());
         _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void InvalidOrDuplicateCourseOrders_ShouldFail()
+    {
+        var courseId = Guid.NewGuid();
+        var command = new ReorderPathCoursesCommand(Guid.NewGuid(),
+        [
+            new CourseOrderDto(Guid.Empty, -1),
+            new CourseOrderDto(courseId, 0),
+            new CourseOrderDto(courseId, 0)
+        ]);
+
+        _validator.Validate(command).IsValid.Should().BeFalse();
     }
 }

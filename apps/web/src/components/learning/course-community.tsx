@@ -43,16 +43,24 @@ export function CourseCommunity({
     event.preventDefault();
     setPending(true);
     setError(null);
-    const result = await createCourseDiscussion(new FormData(event.currentTarget));
-    setPending(false);
+    try {
+      const result = await createCourseDiscussion(new FormData(event.currentTarget));
+      if (!result.success) {
+        setError(result.error || 'The discussion could not be published.');
+        return;
+      }
 
-    if (!result.success) {
-      setError(result.error || 'The discussion could not be published.');
-      return;
+      setSuccess(true);
+      router.refresh();
+    } catch (submissionError) {
+      setError(
+        submissionError instanceof Error
+          ? submissionError.message
+          : 'The discussion could not be published.',
+      );
+    } finally {
+      setPending(false);
     }
-
-    setSuccess(true);
-    router.refresh();
   }
 
   return (

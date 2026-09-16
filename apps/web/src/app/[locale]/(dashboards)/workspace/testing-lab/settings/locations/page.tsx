@@ -21,6 +21,7 @@ import {
 } from "@/lib/testing-lab";
 import { Badge } from "@game-guild/ui/components/badge";
 import { Button } from "@game-guild/ui/components/button";
+import { buttonVariants } from "@game-guild/ui/components/button-variants";
 import { Input } from "@game-guild/ui/components/input";
 import {
   Select,
@@ -193,9 +194,12 @@ export default async function TestingLabLocationsPage({
           <SlidersHorizontal aria-hidden="true" className="mr-2 size-4" />
           Apply
         </Button>
-        <Button asChild type="button" variant="ghost">
-          <Link href="/workspace/testing-lab/settings/locations">Reset</Link>
-        </Button>
+        <Link
+          href="/workspace/testing-lab/settings/locations"
+          className={buttonVariants({ variant: "ghost" })}
+        >
+          Reset
+        </Link>
       </form>
 
       {locations.length === 0 ? (

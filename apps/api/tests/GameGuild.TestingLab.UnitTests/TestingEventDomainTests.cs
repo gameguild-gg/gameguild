@@ -7,6 +7,98 @@ namespace GameGuild.TestingLab.UnitTests;
 
 public sealed class TestingEventDomainTests
 {
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    public void ApplicationVote_RequiresBothApplicationAndReviewer(bool emptyApplication, bool emptyReviewer)
+    {
+        var act = () => TestingApplicationVote.Cast(
+            emptyApplication ? Guid.Empty : Guid.NewGuid(),
+            emptyReviewer ? Guid.Empty : Guid.NewGuid(),
+            TestingApplicationVoteDecision.Approve,
+            null,
+            Guid.NewGuid());
+
+        act.Should().Throw<ArgumentException>();
+    }
+
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    public void CommitteeMember_RequiresBothEventAndReviewer(bool emptyEvent, bool emptyReviewer)
+    {
+        var act = () => TestingCommitteeMember.Create(
+            emptyEvent ? Guid.Empty : Guid.NewGuid(),
+            emptyReviewer ? Guid.Empty : Guid.NewGuid(),
+            false,
+            Guid.NewGuid());
+
+        act.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void CommitteeMember_Deactivate_IsIdempotent()
+    {
+        var member = TestingCommitteeMember.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            false,
+            Guid.NewGuid());
+
+        member.Deactivate();
+        var firstUpdatedAt = member.UpdatedAt;
+        member.Deactivate();
+
+        member.IsActive.Should().BeFalse();
+        member.UpdatedAt.Should().Be(firstUpdatedAt);
+    }
+
+    [Fact]
+    public void TemplateRevision_RejectsMissingCreatorAndInvalidRevisionNumber()
+    {
+        var schema = new QuestionnaireSchema("Basic", []);
+        var template = TestingEventTemplate.Create(
+            Guid.NewGuid(), "Template", "Rules", "Candidates", "Testers",
+            schema, schema, TestingEventMode.Online, TestingEventApprovalMode.ManagerOnly,
+            true, Guid.NewGuid());
+
+        var missingCreator = () => template.CreateRevision(
+            "Rules", "Candidates", "Testers", schema, schema,
+            TestingEventMode.Online, TestingEventApprovalMode.ManagerOnly, true, Guid.Empty);
+        missingCreator.Should().Throw<ArgumentException>();
+
+        var createRevision = typeof(TestingEventTemplateRevision).GetMethod(
+            "Create",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!;
+        var invalidRevision = () => createRevision.Invoke(null,
+        [
+            template.Id, template.TenantId!.Value, 0,
+            "Rules", "Candidates", "Testers", schema, schema,
+            TestingEventMode.Online, TestingEventApprovalMode.ManagerOnly, true, Guid.NewGuid()
+        ]);
+        invalidRevision.Should().Throw<System.Reflection.TargetInvocationException>()
+            .WithInnerException<ArgumentOutOfRangeException>();
+    }
+
+    [Fact]
+    public void TimeZoneValidation_MapsCorruptZoneDataToAStableDomainError()
+    {
+        var validate = typeof(TestingEvent).GetMethod(
+            "ValidateTimeZoneId",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static,
+            binder: null,
+            types: [typeof(string), typeof(Func<string, TimeZoneInfo>)],
+            modifiers: null);
+        validate.Should().NotBeNull();
+        Func<string, TimeZoneInfo> corruptResolver = _ => throw new InvalidTimeZoneException("corrupt zone");
+
+        var act = () => validate!.Invoke(null, ["America/Sao_Paulo", corruptResolver]);
+
+        act.Should().Throw<System.Reflection.TargetInvocationException>()
+            .WithInnerException<ArgumentException>()
+            .WithMessage("*valid time zone*");
+    }
+
     [Fact]
     public void InPersonSlot_RequiresCampusAndRoom()
     {

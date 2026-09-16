@@ -220,12 +220,12 @@ export async function getRecentActivity(): Promise<{
                   student.lastAccessedAt !== student.startedAt &&
                   student.lastAccessedAt !== student.completedAt;
 
-                if (hasDistinctLastActivity && student.lastAccessedAt) {
+                if (hasDistinctLastActivity) {
                   activities.push({
                     type: 'activity',
                     studentName,
                     courseName,
-                    timestamp: student.lastAccessedAt,
+                    timestamp: student.lastAccessedAt!,
                   });
                 }
 

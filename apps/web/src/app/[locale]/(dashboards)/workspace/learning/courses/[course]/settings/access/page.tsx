@@ -1,11 +1,14 @@
+import { redirect } from '@/i18n/navigation';
 import { getCourse } from '@/lib/learning';
 import { getCourseRouteParam } from '@/lib/learning/course-route';
-import { redirect } from 'next/navigation';
 
-export default async function Page({ params }: PageProps<'/[locale]/workspace/learning/courses/[course]/settings/access'>): Promise<never> {
+export default async function Page({ params }: PageProps<'/[locale]/workspace/learning/courses/[course]/settings/access'>): Promise<void> {
   const { locale, course: courseIdentifier } = await params;
   const course = await getCourse(courseIdentifier);
   const courseRouteParam = course ? getCourseRouteParam(course) : courseIdentifier;
 
-  redirect(`/${locale}/workspace/learning/courses/${encodeURIComponent(courseRouteParam)}/listing/access`);
+  return redirect({
+    href: `/workspace/learning/courses/${encodeURIComponent(courseRouteParam)}/listing/access`,
+    locale,
+  });
 }
