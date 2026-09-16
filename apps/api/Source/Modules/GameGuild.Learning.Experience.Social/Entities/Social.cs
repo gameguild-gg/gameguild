@@ -25,7 +25,8 @@ public class CourseReview : EntityBase
         int rating,
         string? title = null,
         string? content = null,
-        Guid? enrollmentId = null)
+        Guid? enrollmentId = null,
+        Guid? tenantId = null)
     {
         return new CourseReview
         {
@@ -33,6 +34,7 @@ public class CourseReview : EntityBase
             CourseId = courseId,
             UserId = userId,
             EnrollmentId = enrollmentId,
+            TenantId = tenantId,
             Rating = Math.Clamp(rating, 1, 5),
             Title = title,
             Content = content,
@@ -67,16 +69,29 @@ public class CourseWishlist : EntityBase
 
     private CourseWishlist() { } // EF Core
 
-    public static CourseWishlist Create(Guid courseId, Guid userId)
+    public static CourseWishlist Create(
+        Guid courseId,
+        Guid userId,
+        bool notifyOnSale = true,
+        bool notifyOnUpdate = false,
+        Guid? tenantId = null)
     {
         return new CourseWishlist
         {
             Id = Guid.NewGuid(),
             CourseId = courseId,
             UserId = userId,
-            NotifyOnSale = true,
-            NotifyOnUpdate = false
+            TenantId = tenantId,
+            NotifyOnSale = notifyOnSale,
+            NotifyOnUpdate = notifyOnUpdate
         };
+    }
+
+    public void UpdatePreferences(bool notifyOnSale, bool notifyOnUpdate)
+    {
+        NotifyOnSale = notifyOnSale;
+        NotifyOnUpdate = notifyOnUpdate;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }
 
@@ -103,13 +118,15 @@ public class CourseDiscussion : EntityBase
         Guid authorId,
         string title,
         string content,
-        Guid? contentId = null)
+        Guid? contentId = null,
+        Guid? tenantId = null)
     {
         return new CourseDiscussion
         {
             Id = Guid.NewGuid(),
             CourseId = courseId,
             ContentId = contentId,
+            TenantId = tenantId,
             AuthorId = authorId,
             Title = title,
             Content = content,
@@ -142,7 +159,12 @@ public class DiscussionReply : EntityBase
 
     private DiscussionReply() { } // EF Core
 
-    public static DiscussionReply Create(Guid discussionId, Guid authorId, string content, Guid? parentReplyId = null)
+    public static DiscussionReply Create(
+        Guid discussionId,
+        Guid authorId,
+        string content,
+        Guid? parentReplyId = null,
+        Guid? tenantId = null)
     {
         return new DiscussionReply
         {
@@ -150,6 +172,7 @@ public class DiscussionReply : EntityBase
             DiscussionId = discussionId,
             AuthorId = authorId,
             ParentReplyId = parentReplyId,
+            TenantId = tenantId,
             Content = content,
             IsAcceptedAnswer = false,
             UpvoteCount = 0
@@ -167,7 +190,6 @@ public class CourseLike : EntityBase
 {
     public Guid CourseId { get; private set; }
     public Guid UserId { get; private set; }
-    public new Guid? TenantId { get; private set; }
 
     private CourseLike() { } // EF Core
 
@@ -189,7 +211,6 @@ public class CourseLike : EntityBase
 public class PersonalizedFeedItem : EntityBase
 {
     public Guid UserId { get; private set; }
-    public new Guid? TenantId { get; private set; }
     public FeedItemType ItemType { get; private set; }
     public Guid? CourseId { get; private set; }
     public Guid? DiscussionId { get; private set; }

@@ -109,19 +109,86 @@ public sealed class LearningAssetParentAuthorizationResolverTests
         result.Should().BeFalse();
     }
 
+    [Fact]
+    public async Task CanReadAsync_RejectsUnauthenticatedActor()
+    {
+        var tenantId = Guid.NewGuid();
+        var actorId = Guid.NewGuid();
+        await using var context = CreateContext();
+        var resolver = CreateResolver(
+            context,
+            actorId,
+            tenantId,
+            isAuthenticated: false);
+
+        var result = await resolver.CanReadAsync(Guid.NewGuid(), actorId, tenantId);
+
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task CanReadAsync_RejectsMissingRequestedTenant()
+    {
+        var tenantId = Guid.NewGuid();
+        var actorId = Guid.NewGuid();
+        await using var context = CreateContext();
+        var resolver = CreateResolver(context, actorId, tenantId);
+
+        var result = await resolver.CanReadAsync(Guid.NewGuid(), actorId, null);
+
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task CanReadAsync_RejectsActorWithoutGuidSubject()
+    {
+        var tenantId = Guid.NewGuid();
+        var actorId = Guid.NewGuid();
+        await using var context = CreateContext();
+        var resolver = CreateResolver(
+            context,
+            actorId,
+            tenantId,
+            actorSubjectId: "not-a-guid");
+
+        var result = await resolver.CanReadAsync(Guid.NewGuid(), actorId, tenantId);
+
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task CanReadAsync_RejectsActorWithoutTenantContext()
+    {
+        var tenantId = Guid.NewGuid();
+        var actorId = Guid.NewGuid();
+        await using var context = CreateContext();
+        var resolver = CreateResolver(
+            context,
+            actorId,
+            tenantId,
+            hasActorTenant: false);
+
+        var result = await resolver.CanReadAsync(Guid.NewGuid(), actorId, tenantId);
+
+        result.Should().BeFalse();
+    }
+
     private static LearningAssetParentAuthorizationResolver CreateResolver(
         TestDbContext context,
         Guid actorId,
         Guid tenantId,
-        Mock<IPermissionQueryService>? permissions = null)
+        Mock<IPermissionQueryService>? permissions = null,
+        bool isAuthenticated = true,
+        string? actorSubjectId = null,
+        bool hasActorTenant = true)
     {
         var actor = new Mock<IActorContextAccessor>();
         actor.SetupGet(accessor => accessor.ActorContext).Returns(new ActorContext
         {
             ActorKind = ActorKind.User,
-            SubjectId = actorId.ToString(),
-            TenantId = tenantId,
-            IsAuthenticated = true,
+            SubjectId = actorSubjectId ?? actorId.ToString(),
+            TenantId = hasActorTenant ? tenantId : null,
+            IsAuthenticated = isAuthenticated,
             Roles = new HashSet<string>(),
             Permissions = new HashSet<string>(),
         });

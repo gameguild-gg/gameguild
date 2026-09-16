@@ -496,6 +496,92 @@ describe('AssessmentsList weighted groups', () => {
     expect(await screen.findByText('Cannot delete a locked grade group.')).toBeInTheDocument();
   });
 
+  it('closes each assessment-group dialog without mutating data', async () => {
+    const user = userEvent.setup();
+    render(
+      <AssessmentsList
+        courseId="course-1"
+        assessments={groupedAssessments}
+        total={groupedAssessments.length}
+        assessmentGroups={assessmentGroups}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: /add group/i }));
+    await user.click(screen.getByRole('button', { name: /cancel/i }));
+    expect(screen.queryByRole('dialog', { name: /create assessment group/i })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /edit group weekly quizzes/i }));
+    await user.click(screen.getByRole('button', { name: /cancel/i }));
+    expect(screen.queryByRole('dialog', { name: /edit assessment group/i })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /delete group final project/i }));
+    await user.click(screen.getByRole('button', { name: /cancel/i }));
+    expect(screen.queryByRole('dialog', { name: /delete assessment group/i })).not.toBeInTheDocument();
+
+    expect(createAssessmentGroup).not.toHaveBeenCalled();
+    expect(updateAssessmentGroup).not.toHaveBeenCalled();
+    expect(deleteAssessmentGroup).not.toHaveBeenCalled();
+  });
+
+  it('closes controlled group dialogs through their dismiss interaction', async () => {
+    const user = userEvent.setup();
+    render(
+      <AssessmentsList
+        courseId="course-1"
+        assessments={groupedAssessments}
+        total={groupedAssessments.length}
+        assessmentGroups={assessmentGroups}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: /edit group weekly quizzes/i }));
+    await user.keyboard('{Escape}');
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: /edit assessment group/i })).not.toBeInTheDocument(),
+    );
+
+    await user.click(screen.getByRole('button', { name: /delete group final project/i }));
+    await user.keyboard('{Escape}');
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: /delete assessment group/i })).not.toBeInTheDocument(),
+    );
+  });
+
+  it('sorts tied groups and assessments and recovers orphaned assignments', () => {
+    const tiedGroups = [
+      { id: 'group-z', courseId: 'course-1', name: 'Zulu', description: null, weightPercent: 66.7, order: 1 },
+      { id: 'group-a', courseId: 'course-1', name: 'Alpha', description: null, weightPercent: 33.3, order: 1 },
+    ] satisfies AssessmentGroup[];
+    const tiedAssessments = [
+      { ...assignmentAssessment, id: 'zulu-assessment', title: 'Zulu task', order: 1, assessmentGroupId: 'group-a' },
+      { ...assignmentAssessment, id: 'alpha-assessment', title: 'Alpha task', order: 1, assessmentGroupId: 'group-a' },
+      { ...assignmentAssessment, id: 'orphan-assessment', title: 'Recovered task', assessmentGroupId: 'removed-group' },
+    ] as Assessment[];
+
+    render(
+      <AssessmentsList
+        courseId="course-1"
+        assessments={tiedAssessments}
+        total={tiedAssessments.length}
+        assessmentGroups={tiedGroups}
+      />,
+    );
+
+    const sections = screen.getAllByTestId(/^assessment-group-/);
+    expect(sections.map((section) => section.getAttribute('data-testid'))).toEqual([
+      'assessment-group-group-a',
+      'assessment-group-group-z',
+      'assessment-group-ungrouped',
+    ]);
+    expect(within(sections[0]!).getAllByRole('link').map((link) => link.textContent)).toEqual([
+      expect.stringContaining('Alpha task'),
+      expect.stringContaining('Zulu task'),
+    ]);
+    expect(within(screen.getByTestId('assessment-group-ungrouped')).getByText('Recovered task')).toBeInTheDocument();
+    expect(screen.getByText('33.3% of Total')).toBeInTheDocument();
+  });
+
   describe('AssessmentsList instructor grade links', () => {
   it('renders a grade link per assessment for instructors', () => {
     render(
@@ -679,6 +765,30 @@ describe('Create Assessment dialog', () => {
       expect(slugInput).toHaveValue('final-exam');
     });
 
+    it('preserves a custom slug when the title changes again', async () => {
+      const user = userEvent.setup();
+      render(
+        <AssessmentsList
+          courseId="course-1"
+          assessments={groupedAssessments}
+          total={groupedAssessments.length}
+          assessmentGroups={assessmentGroups}
+        />,
+      );
+
+      await user.click(screen.getByRole('button', { name: /create assessment/i }));
+      const dialog = await screen.findByRole('dialog', { name: /create assessment/i });
+      const titleInput = within(dialog).getByLabelText(/^title$/i);
+      const slugInput = within(dialog).getByLabelText(/url slug/i);
+      await user.type(titleInput, 'Initial title');
+      await user.clear(slugInput);
+      await user.type(slugInput, 'stable-url');
+      await user.clear(titleInput);
+      await user.type(titleInput, 'Changed title');
+
+      expect(slugInput).toHaveValue('stable-url');
+    });
+
     it('keeps the create button disabled while the title is empty', async () => {
       const user = userEvent.setup();
       render(
@@ -702,6 +812,78 @@ describe('Create Assessment dialog', () => {
       await user.clear(within(dialog).getByLabelText(/title/i));
       expect(saveButton).toBeDisabled();
       expect(createAssessment).not.toHaveBeenCalled();
+    });
+
+    it('creates a project in a selected group after validating grading methods and a server retry', async () => {
+      const user = userEvent.setup();
+      vi.mocked(createAssessment)
+        .mockResolvedValueOnce({ success: false, error: 'Assessment quota reached.' })
+        .mockResolvedValueOnce({ success: true, data: { id: 'assessment-new' } });
+      render(
+        <AssessmentsList
+          courseId="course-1"
+          assessments={groupedAssessments}
+          total={groupedAssessments.length}
+          assessmentGroups={assessmentGroups}
+        />,
+      );
+
+      await user.click(screen.getByRole('button', { name: /create assessment/i }));
+      const dialog = await screen.findByRole('dialog', { name: /create assessment/i });
+      await user.type(within(dialog).getByLabelText(/^title$/i), 'Capstone');
+      await user.clear(within(dialog).getByLabelText(/url slug/i));
+
+      await user.click(within(dialog).getByLabelText(/^type$/i));
+      await user.click(await screen.findByRole('option', { name: 'Project' }));
+      await user.click(within(dialog).getByLabelText(/grade group/i));
+      await user.click(await screen.findByRole('option', { name: 'Final project' }));
+
+      await user.click(within(dialog).getByLabelText('InstructorGraded'));
+      await user.click(within(dialog).getByRole('button', { name: /create assessment/i }));
+      expect(await screen.findByText('Select at least one grading method.')).toBeInTheDocument();
+      expect(createAssessment).not.toHaveBeenCalled();
+
+      await user.click(within(dialog).getByLabelText('PeerReview'));
+      await user.click(within(dialog).getByRole('button', { name: /create assessment/i }));
+      expect(await screen.findByText('Assessment quota reached.')).toBeInTheDocument();
+      expect(createAssessment).toHaveBeenLastCalledWith({
+        courseId: 'course-1',
+        title: 'Capstone',
+        type: 'Project',
+        assessmentGroupId: 'group-project',
+        gradingMethods: 'PeerReview',
+      });
+
+      const createButton = within(dialog).getByRole('button', { name: /create assessment/i });
+      await waitFor(() => expect(createButton).toBeEnabled());
+      await user.click(createButton);
+      await waitFor(() =>
+        expect(screen.queryByRole('dialog', { name: /create assessment/i })).not.toBeInTheDocument(),
+      );
+    });
+
+    it('cancels and dismisses creation while resetting the draft', async () => {
+      const user = userEvent.setup();
+      render(
+        <AssessmentsList
+          courseId="course-1"
+          assessments={groupedAssessments}
+          total={groupedAssessments.length}
+          assessmentGroups={assessmentGroups}
+        />,
+      );
+
+      await user.click(screen.getByRole('button', { name: /create assessment/i }));
+      await user.type(screen.getByLabelText(/^title$/i), 'Discard me');
+      await user.click(screen.getByRole('button', { name: /cancel/i }));
+      expect(screen.queryByRole('dialog', { name: /create assessment/i })).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: /create assessment/i }));
+      expect(screen.getByLabelText(/^title$/i)).toHaveValue('');
+      await user.keyboard('{Escape}');
+      await waitFor(() =>
+        expect(screen.queryByRole('dialog', { name: /create assessment/i })).not.toBeInTheDocument(),
+      );
     });
   });
 });

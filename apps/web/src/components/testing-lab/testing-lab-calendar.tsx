@@ -16,6 +16,7 @@ import type {
 } from "@game-guild/client";
 import { Badge } from "@game-guild/ui/components/badge";
 import { Button } from "@game-guild/ui/components/button";
+import { buttonVariants } from "@game-guild/ui/components/button-variants";
 import { Calendar } from "@game-guild/ui/components/calendar";
 import {
   HoverCard,
@@ -191,7 +192,7 @@ function getMobileCalendarSnapshot() {
   );
 }
 
-function getServerMobileCalendarSnapshot() {
+export function getServerMobileCalendarSnapshot() {
   return false;
 }
 
@@ -293,8 +294,7 @@ function EventLink({
   onSelect: (event: TestingLabTestingEventProjection) => void;
   compact?: boolean;
 }) {
-  if (!event.id) return null;
-  const startsAt = eventStart(event);
+  const startsAt = eventStart(event)!;
   const endsAt = eventEnd(event);
   const { label: modeLabel, Icon: ModeIcon } = eventMode(event.mode);
   const capacity = capacityState(analytics);
@@ -310,14 +310,12 @@ function EventLink({
             eventCalendar.eventClassName,
             eventStatusClass(event.status),
           )}
-          aria-label={`${event.name ?? "Untitled event"}${startsAt ? `, ${format(startsAt, "PPp")}` : ""}`}
+          aria-label={`${event.name ?? "Untitled event"}, ${format(startsAt, "PPp")}`}
         >
           <span className="flex min-w-0 items-baseline gap-1.5">
-            {startsAt ? (
-              <span className="shrink-0 tabular-nums opacity-70">
-                {format(startsAt, "p")}
-              </span>
-            ) : null}
+            <span className="shrink-0 tabular-nums opacity-70">
+              {format(startsAt, "p")}
+            </span>
             <span className="min-w-0 flex-1 truncate font-medium">
               {event.name ?? "Untitled event"}
             </span>
@@ -371,7 +369,7 @@ function EventLink({
             <div>
               <dt className="sr-only">Schedule</dt>
               <dd>
-                {startsAt ? format(startsAt, "PPp") : "Schedule pending"}
+                {format(startsAt, "PPp")}
                 {endsAt ? ` - ${format(endsAt, "p")}` : ""}
               </dd>
             </div>
@@ -417,14 +415,12 @@ function ScheduleView({
     })
     .sort(
       (left, right) =>
-        (eventStart(left)?.valueOf() ?? 0) -
-        (eventStart(right)?.valueOf() ?? 0),
+        eventStart(left)!.valueOf() - eventStart(right)!.valueOf(),
     );
   const scheduledByDay = scheduled.reduce<
     Map<string, TestingLabTestingEventProjection[]>
   >((groups, event) => {
-    const startsAt = eventStart(event);
-    if (!startsAt) return groups;
+    const startsAt = eventStart(event)!;
     const dayKey = format(startsAt, "yyyy-MM-dd");
     groups.set(dayKey, [...(groups.get(dayKey) ?? []), event]);
     return groups;
@@ -454,21 +450,21 @@ function ScheduleView({
       ) : (
         <ol className="divide-y">
           {[...scheduledByDay.entries()].map(([dayKey, dayEvents]) => {
-            const day = eventStart(dayEvents[0]);
+            const day = eventStart(dayEvents[0]!)!;
             return (
               <li
                 key={dayKey}
                 className="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-3 px-4 py-4 sm:grid-cols-[6rem_minmax(0,1fr)] sm:gap-6"
               >
-                <time className="text-center" dateTime={day?.toISOString()}>
+                <time className="text-center" dateTime={day.toISOString()}>
                   <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                    {day ? format(day, "EEE") : ""}
+                    {format(day, "EEE")}
                   </span>
                   <span className="mt-1 block text-2xl font-medium tabular-nums">
-                    {day ? format(day, "d") : ""}
+                    {format(day, "d")}
                   </span>
                   <span className="block text-xs text-muted-foreground">
-                    {day ? format(day, "MMM") : ""}
+                    {format(day, "MMM")}
                   </span>
                 </time>
                 <div className="space-y-2">
@@ -480,16 +476,9 @@ function ScheduleView({
                       <div className="min-w-0 flex-1">
                         <EventLink
                           event={event}
-                          eventCalendar={
-                            calendarsById.get(eventCalendarId(event)) ??
-                            defaultEventCalendar
-                          }
+                          eventCalendar={calendarsById.get(eventCalendarId(event))!}
                           onSelect={onSelectEvent}
-                          analytics={
-                            event.id
-                              ? analyticsByEvent.get(event.id)
-                              : undefined
-                          }
+                          analytics={analyticsByEvent.get(event.id!)}
                           compact
                         />
                       </div>
@@ -550,14 +539,9 @@ function YearView({
                   <EventLink
                     key={event.id}
                     event={event}
-                    eventCalendar={
-                      calendarsById.get(eventCalendarId(event)) ??
-                      defaultEventCalendar
-                    }
+                    eventCalendar={calendarsById.get(eventCalendarId(event))!}
                     onSelect={onSelectEvent}
-                    analytics={
-                      event.id ? analyticsByEvent.get(event.id) : undefined
-                    }
+                    analytics={analyticsByEvent.get(event.id!)}
                   />
                 ))}
                 {monthEvents.length > 4 ? (
@@ -580,7 +564,6 @@ function GridView({
   calendarsById,
   anchor,
   view,
-  showWeekends,
   onCreateEvent,
   onSelectEvent,
 }: {
@@ -589,14 +572,13 @@ function GridView({
   calendarsById: Map<string, TestingLabEventCalendar>;
   anchor: Date;
   view: Exclude<CalendarView, "year" | "schedule">;
-  showWeekends: boolean;
   onCreateEvent: (date: Date) => void;
   onSelectEvent: (event: TestingLabTestingEventProjection) => void;
 }) {
   const [expandedDays, setExpandedDays] = useState<Set<string>>(
     () => new Set(),
   );
-  const range = calendarRange(anchor, view, showWeekends);
+  const range = calendarRange(anchor, view, true);
   const segmentsByDay = useMemo(() => {
     const segments = calendarEventSegments(events, range);
     return segments.reduce<Map<string, typeof segments>>((byDay, segment) => {
@@ -606,9 +588,7 @@ function GridView({
       return byDay;
     }, new Map());
   }, [events, range]);
-  const weekdays = showWeekends
-    ? ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-    : ["Mon", "Tue", "Wed", "Thu", "Fri"];
+  const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const monthStart = startOfMonth(anchor);
   const showWeekNumbers = view === "month";
   const gridTemplateColumns = showWeekNumbers
@@ -698,16 +678,9 @@ function GridView({
                       <EventLink
                         key={`${segment.event.id}-${segment.dayKey}`}
                         event={segment.event}
-                        eventCalendar={
-                          calendarsById.get(eventCalendarId(segment.event)) ??
-                          defaultEventCalendar
-                        }
+                        eventCalendar={calendarsById.get(eventCalendarId(segment.event))!}
                         onSelect={onSelectEvent}
-                        analytics={
-                          segment.event.id
-                            ? analyticsByEvent.get(segment.event.id)
-                            : undefined
-                        }
+                        analytics={analyticsByEvent.get(segment.event.id!)}
                         compact
                       />
                     ))}
@@ -761,7 +734,7 @@ function TestingLabPlanningSidebar({
   }, 0);
   const capacity = events.reduce(
     (totals, event) => {
-      const analytics = event.id ? analyticsByEvent.get(event.id) : undefined;
+      const analytics = analyticsByEvent.get(event.id!);
       if (!analytics || analytics.capacity <= 0) return totals;
       totals.registered += Math.min(
         analytics.registeredTesters,
@@ -786,12 +759,11 @@ function TestingLabPlanningSidebar({
         </h2>
         <Calendar
           mode="single"
+          required
           month={anchor}
           selected={anchor}
           onMonthChange={onAnchorChange}
-          onSelect={(date) => {
-            if (date) onAnchorChange(date);
-          }}
+          onSelect={onAnchorChange}
           showOutsideDays={false}
           showWeekNumber
           className="w-full bg-transparent p-0 [--cell-size:--spacing(8)]"
@@ -815,15 +787,14 @@ function TestingLabPlanningSidebar({
               Grouped by event template.
             </p>
           </div>
-          <Button asChild variant="ghost" size="icon-sm">
-            <Link
-              href="/workspace/testing-lab/settings/templates"
-              aria-label="Manage event calendars"
-              title="Manage event calendars"
-            >
-              <Settings2 aria-hidden="true" />
-            </Link>
-          </Button>
+          <Link
+            href="/workspace/testing-lab/settings/templates"
+            aria-label="Manage event calendars"
+            title="Manage event calendars"
+            className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
+          >
+            <Settings2 aria-hidden="true" />
+          </Link>
         </div>
         <div className="mt-3 space-y-1">
           {eventCalendars.map((eventCalendar) => {
@@ -921,11 +892,12 @@ function TestingLabPlanningSidebar({
             )}
           </div>
         )}
-        <Button asChild variant="link" size="sm" className="mt-3 h-auto px-0">
-          <Link href="/workspace/testing-lab/settings/analytics">
-            View analytics
-          </Link>
-        </Button>
+        <Link
+          href="/workspace/testing-lab/settings/analytics"
+          className={buttonVariants({ variant: "link", size: "sm", className: "mt-3 h-auto px-0" })}
+        >
+          View analytics
+        </Link>
       </section>
     </aside>
   );
@@ -997,6 +969,7 @@ export function TestingLabCalendar({
   const visibleEvents = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase();
     return events.filter((event) => {
+      if (!event.id) return false;
       const matchesStatus =
         statusFilter === "all" || event.status === statusFilter;
       const matchesCalendar = visibleCalendarIds.has(eventCalendarId(event));
@@ -1183,7 +1156,6 @@ export function TestingLabCalendar({
                 calendarsById={calendarsById}
                 anchor={anchor}
                 view={view}
-                showWeekends
                 onCreateEvent={(date) => openCreateEvent(date)}
                 onSelectEvent={setSelectedEvent}
               />
@@ -1220,9 +1192,7 @@ export function TestingLabCalendar({
 
       <Dialog
         open={Boolean(selectedEvent)}
-        onOpenChange={(open) => {
-          if (!open) setSelectedEvent(null);
-        }}
+        onOpenChange={() => setSelectedEvent(null)}
       >
         <DialogContent className="sm:max-w-md">
           {selectedEvent ? (
@@ -1232,8 +1202,8 @@ export function TestingLabCalendar({
                   <span
                     className={cn(
                       "size-2.5 rounded-full",
-                      (calendarsById.get(eventCalendarId(selectedEvent)) ??
-                        defaultEventCalendar).dotClassName,
+                      calendarsById.get(eventCalendarId(selectedEvent))!
+                        .dotClassName,
                     )}
                     aria-hidden="true"
                   />
@@ -1242,8 +1212,7 @@ export function TestingLabCalendar({
                   </DialogTitle>
                 </div>
                 <DialogDescription>
-                  {(calendarsById.get(eventCalendarId(selectedEvent)) ??
-                    defaultEventCalendar).label}
+                  {calendarsById.get(eventCalendarId(selectedEvent))!.label}
                 </DialogDescription>
               </DialogHeader>
               <dl className="space-y-3 text-sm">
@@ -1252,9 +1221,7 @@ export function TestingLabCalendar({
                   <div>
                     <dt className="sr-only">Event schedule</dt>
                     <dd>
-                      {eventStart(selectedEvent)
-                        ? format(eventStart(selectedEvent)!, "PPp")
-                        : "Schedule pending"}
+                      {format(eventStart(selectedEvent)!, "PPp")}
                       {eventEnd(selectedEvent)
                         ? ` to ${format(eventEnd(selectedEvent)!, "p")}`
                         : ""}
@@ -1267,9 +1234,7 @@ export function TestingLabCalendar({
                     <dt className="sr-only">Capacity</dt>
                     <dd>
                       {capacityState(
-                        selectedEvent.id
-                          ? analyticsByEvent.get(selectedEvent.id)
-                          : undefined,
+                        analyticsByEvent.get(selectedEvent.id!),
                       ).detail}
                     </dd>
                   </div>
@@ -1281,13 +1246,12 @@ export function TestingLabCalendar({
                 </p>
               ) : null}
               <DialogFooter>
-                <Button asChild>
-                  <Link
-                    href={`/workspace/testing-lab/events/${selectedEvent.id}`}
-                  >
-                    Open event
-                  </Link>
-                </Button>
+                <Link
+                  href={`/workspace/testing-lab/events/${selectedEvent.id}`}
+                  className={buttonVariants()}
+                >
+                  Open event
+                </Link>
               </DialogFooter>
             </>
           ) : null}

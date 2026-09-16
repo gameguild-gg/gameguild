@@ -183,6 +183,14 @@ describe('last-submission restore (server page)', () => {
     mocks.getMySubmissions.mockResolvedValue({ ok: true, data: [] });
   });
 
+  it('renders the activity back action as a styled link without a Radix Slot boundary', async () => {
+    await renderActivityPage();
+
+    const backLink = screen.getByRole('link', { name: 'All activities' });
+    expect(backLink).toHaveAttribute('href', '/learn/courses/test-course/activities');
+    expect(backLink).not.toHaveAttribute('data-slot', 'button');
+  });
+
   it('fetches my submissions with the enrollment id and passes userId + restored files', async () => {
     mocks.getMySubmissions.mockResolvedValue({
       ok: true,

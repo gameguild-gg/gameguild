@@ -43,6 +43,35 @@ public class FeaturedContent : EntityBase
         };
     }
 
+    public void Update(
+        string? title = null,
+        string? subtitle = null,
+        string? imageUrl = null,
+        string? linkUrl = null,
+        int? displayOrder = null,
+        DateTime? startsAt = null,
+        DateTime? endsAt = null,
+        bool? isActive = null,
+        string? targetAudience = null)
+    {
+        if (title is not null) Title = title;
+        if (subtitle is not null) Subtitle = subtitle;
+        if (imageUrl is not null) ImageUrl = imageUrl;
+        if (linkUrl is not null) LinkUrl = linkUrl;
+        if (displayOrder.HasValue) DisplayOrder = displayOrder.Value;
+        if (startsAt.HasValue) StartsAt = startsAt.Value;
+        if (endsAt.HasValue) EndsAt = endsAt.Value;
+        if (isActive.HasValue) IsActive = isActive.Value;
+        if (targetAudience is not null) TargetAudience = targetAudience;
+        UpdatedAt = SystemClock.UtcNow;
+    }
+
+    public void SetActive(bool isActive)
+    {
+        IsActive = isActive;
+        UpdatedAt = SystemClock.UtcNow;
+    }
+
     public bool IsCurrentlyActive()
     {
         if (!IsActive) return false;
@@ -90,6 +119,31 @@ public class CourseCollection : EntityBase
             IsFeatured = false,
             CourseCount = 0
         };
+    }
+
+    public void Update(
+        string? title = null,
+        string? description = null,
+        string? imageUrl = null,
+        bool? isFeatured = null)
+    {
+        if (title is not null) Title = title;
+        if (description is not null) Description = description;
+        if (imageUrl is not null) ImageUrl = imageUrl;
+        if (isFeatured.HasValue) IsFeatured = isFeatured.Value;
+        UpdatedAt = SystemClock.UtcNow;
+    }
+
+    public void Publish()
+    {
+        IsPublished = true;
+        UpdatedAt = SystemClock.UtcNow;
+    }
+
+    public void Unpublish()
+    {
+        IsPublished = false;
+        UpdatedAt = SystemClock.UtcNow;
     }
 }
 
