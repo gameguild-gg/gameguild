@@ -13,6 +13,7 @@ public interface IFeedService
         int skip = 0,
         int take = 20,
         FeedItemType? filterByType = null,
+        Guid? tenantId = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -23,7 +24,10 @@ public interface IFeedService
     /// <summary>
     /// Marks a feed item as viewed
     /// </summary>
-    Task<Result<PersonalizedFeedItem>> MarkFeedItemViewedAsync(Guid feedItemId, CancellationToken cancellationToken = default);
+    Task<Result<PersonalizedFeedItem>> MarkFeedItemViewedAsync(
+        Guid feedItemId,
+        Guid userId,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Dismisses a feed item

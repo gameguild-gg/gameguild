@@ -94,6 +94,8 @@ describe('lesson page edit shortcut', () => {
       'href',
       '/console/learning/courses/test-course/content/setup',
     );
+    expect(editLink).not.toHaveAttribute('data-slot', 'button');
+    expect(screen.getByRole('link', { name: 'Course content' })).not.toHaveAttribute('data-slot', 'button');
     expect(mocks.canEditCourse).toHaveBeenCalledWith('course-1');
   });
 

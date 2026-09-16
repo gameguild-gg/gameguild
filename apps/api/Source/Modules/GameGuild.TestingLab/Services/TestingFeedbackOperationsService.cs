@@ -13,8 +13,15 @@ public class TestingFeedbackOperationsService(
     private Guid TenantId => actorContextAccessor.ActorContext.TenantId
         ?? throw new UnauthorizedAccessException("A selected tenant is required for Testing Lab feedback.");
 
-    private IQueryable<TestingFeedback> TenantFeedback => context.Set<TestingFeedback>()
-        .Where(feedback => feedback.TenantId == TenantId && feedback.DeletedAt == null);
+    private IQueryable<TestingFeedback> TenantFeedback
+    {
+        get
+        {
+            var tenantId = TenantId;
+            return context.Set<TestingFeedback>()
+                .Where(feedback => feedback.TenantId == tenantId && feedback.DeletedAt == null);
+        }
+    }
 
     #region Feedback CRUD
 
@@ -153,10 +160,11 @@ public class TestingFeedbackOperationsService(
     public async Task SubmitFeedbackAsync(SubmitFeedbackDto feedbackDto, Guid userId)
     {
         await EnsureParticipantCanSubmitAsync(feedbackDto.TestingRequestId, userId).ConfigureAwait(false);
+        var tenantId = TenantId;
         var existingForm = await context.Set<TestingFeedbackForm>()
             .FirstOrDefaultAsync(f =>
                 f.TestingRequestId == feedbackDto.TestingRequestId &&
-                f.TenantId == TenantId &&
+                f.TenantId == tenantId &&
                 f.DeletedAt == null);
 
         Guid feedbackFormId;
@@ -170,7 +178,7 @@ public class TestingFeedbackOperationsService(
                 FormSchema = "{ \"type\": \"simple\", \"questions\": [] }",
                 IsForOnline = true,
                 IsForSessions = true,
-                TenantId = TenantId,
+                TenantId = tenantId,
             };
 
             context.Set<TestingFeedbackForm>().Add(feedbackForm);
@@ -194,7 +202,7 @@ public class TestingFeedbackOperationsService(
             OverallRating = feedbackDto.OverallRating,
             WouldRecommend = feedbackDto.WouldRecommend,
             AdditionalNotes = feedbackDto.AdditionalNotes,
-            TenantId = TenantId,
+            TenantId = tenantId,
         };
 
         context.Set<TestingFeedback>().Add(feedback);
@@ -202,7 +210,7 @@ public class TestingFeedbackOperationsService(
         var testingRequest = await context.Set<TestingRequest>()
             .FirstAsync(request =>
                 request.Id == feedbackDto.TestingRequestId &&
-                request.TenantId == TenantId &&
+                request.TenantId == tenantId &&
                 request.DeletedAt == null)
             .ConfigureAwait(false);
 
@@ -222,10 +230,11 @@ public class TestingFeedbackOperationsService(
     public async Task<object> GetTestingRequestStatisticsAsync(Guid testingRequestId)
     {
         await EnsureRequestExistsAsync(testingRequestId, includeArchived: true).ConfigureAwait(false);
-        var participantCount = await context.Set<TestingParticipant>().CountAsync(tp => tp.TestingRequestId == testingRequestId && tp.TenantId == TenantId);
-        var sessionCount = await context.Set<TestingSession>().CountAsync(ts => ts.TestingRequestId == testingRequestId && ts.TenantId == TenantId && ts.DeletedAt == null);
+        var tenantId = TenantId;
+        var participantCount = await context.Set<TestingParticipant>().CountAsync(tp => tp.TestingRequestId == testingRequestId && tp.TenantId == tenantId);
+        var sessionCount = await context.Set<TestingSession>().CountAsync(ts => ts.TestingRequestId == testingRequestId && ts.TenantId == tenantId && ts.DeletedAt == null);
         var feedbackCount = await TenantFeedback.CountAsync(tf => tf.TestingRequestId == testingRequestId);
-        var completedSessionCount = await context.Set<TestingSession>().CountAsync(ts => ts.TestingRequestId == testingRequestId && ts.TenantId == TenantId && ts.Status == SessionStatus.Completed && ts.DeletedAt == null);
+        var completedSessionCount = await context.Set<TestingSession>().CountAsync(ts => ts.TestingRequestId == testingRequestId && ts.TenantId == tenantId && ts.Status == SessionStatus.Completed && ts.DeletedAt == null);
 
         return new
         {
@@ -267,13 +276,14 @@ public class TestingFeedbackOperationsService(
 
     private async Task EnsureRequestExistsAsync(Guid testingRequestId, bool includeArchived = false)
     {
+        var tenantId = TenantId;
         var requests = context.Set<TestingRequest>().AsQueryable();
         if (includeArchived)
             requests = requests.IgnoreQueryFilters();
 
         var exists = await requests.AnyAsync(request =>
             request.Id == testingRequestId &&
-            request.TenantId == TenantId &&
+            request.TenantId == tenantId &&
             (includeArchived || request.DeletedAt == null)).ConfigureAwait(false);
         if (!exists)
             throw new ArgumentException("Testing request not found.", nameof(testingRequestId));
@@ -282,10 +292,11 @@ public class TestingFeedbackOperationsService(
     private async Task EnsureParticipantCanSubmitAsync(Guid testingRequestId, Guid userId)
     {
         await EnsureRequestExistsAsync(testingRequestId).ConfigureAwait(false);
+        var tenantId = TenantId;
         var isParticipant = await context.Set<TestingParticipant>().AnyAsync(participant =>
             participant.TestingRequestId == testingRequestId &&
             participant.UserId == userId &&
-            participant.TenantId == TenantId &&
+            participant.TenantId == tenantId &&
             participant.DeletedAt == null &&
             participant.Status == ParticipationStatus.Active).ConfigureAwait(false);
         if (!isParticipant)

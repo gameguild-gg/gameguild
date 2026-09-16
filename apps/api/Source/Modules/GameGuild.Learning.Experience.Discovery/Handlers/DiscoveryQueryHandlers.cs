@@ -259,7 +259,7 @@ public sealed class DiscoveryQueryHandlers(IApplicationDbContext context, ILogge
             Query: g.Query,
             SearchCount: g.SearchCount,
             TotalClicks: g.TotalClicks,
-            ClickThroughRate: g.SearchCount > 0 ? (double)g.TotalClicks / g.SearchCount : 0
+            ClickThroughRate: (double)g.TotalClicks / g.SearchCount
         ));
     }
 }

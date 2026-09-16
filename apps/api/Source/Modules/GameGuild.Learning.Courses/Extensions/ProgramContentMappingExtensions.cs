@@ -20,6 +20,20 @@ public static class ProgramContentMappingExtensions
   {
     var normalizedType = NormalizeProfessorFacingType(content.Type);
     var isLesson = normalizedType == ProgramContentType.Lesson;
+    var description = content.Description ?? string.Empty;
+    var jsonBody = content.JsonBody is null
+      ? (JsonElement?)null
+      : JsonDocument.Parse(content.JsonBody).RootElement.Clone();
+    LessonContentFormat? lessonFormat = isLesson
+      ? content.LessonFormat ?? LessonContentFormatInference.FromBody(content.Body)
+      : null;
+    var programTitle = content.Program?.Title;
+    var parentTitle = content.Parent?.Title;
+    var childrenCount = content.Children?.Count(c => c.DeletedAt == null) ?? 0;
+    var children = content.Children?
+      .Where(c => c.DeletedAt == null)
+      .Select(c => c.ToDto())
+      .ToList() ?? [];
 
     return new ProgramContentDto
     {
@@ -29,11 +43,11 @@ public static class ProgramContentMappingExtensions
       ParentId = content.ParentId,
       Title = content.Title,
       Slug = content.Slug,
-      Description = content.Description ?? string.Empty,
+      Description = description,
       Type = normalizedType,
       Body = FormatBody(content.Body),
-      JsonBody = content.JsonBody is null ? null : JsonDocument.Parse(content.JsonBody).RootElement.Clone(),
-      LessonFormat = isLesson ? content.LessonFormat ?? LessonContentFormatInference.FromBody(content.Body) : null,
+      JsonBody = jsonBody,
+      LessonFormat = lessonFormat,
       ActivitySettings = content.GetActivitySettings(),
       SortOrder = content.SortOrder,
       IsRequired = content.IsRequired,
@@ -42,10 +56,10 @@ public static class ProgramContentMappingExtensions
       Visibility = content.Visibility,
       CreatedAt = content.CreatedAt,
       UpdatedAt = content.UpdatedAt,
-      ProgramTitle = content.Program?.Title,
-      ParentTitle = content.Parent?.Title,
-      ChildrenCount = content.Children?.Count(c => c.DeletedAt == null) ?? 0,
-      Children = content.Children?.Where(c => c.DeletedAt == null).Select(c => c.ToDto()).ToList() ?? new List<ProgramContentDto>(),
+      ProgramTitle = programTitle,
+      ParentTitle = parentTitle,
+      ChildrenCount = childrenCount,
+      Children = children,
     };
   }
 
@@ -97,7 +111,10 @@ public static class ProgramContentMappingExtensions
       SortOrder = dto.SortOrder,
       IsRequired = dto.IsRequired,
       EstimatedMinutes = dto.EstimatedMinutes,
-      EstimatedMinutesSource = dto.EstimatedMinutesSource ?? EstimatedMinutesSource.Auto,
+      EstimatedMinutesSource = dto.EstimatedMinutesSource ??
+                               (dto.EstimatedMinutes.HasValue
+                                 ? EstimatedMinutesSource.Manual
+                                 : EstimatedMinutesSource.Auto),
       Visibility = dto.Visibility,
     };
 

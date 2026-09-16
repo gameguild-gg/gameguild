@@ -338,16 +338,8 @@ export function AssessmentsList({
   }
 
   function openEditGroup(group: AssessmentGroupView) {
-    if (group.id === 'ungrouped' || group.weightPercent == null) return;
-
-    const source = assessmentGroups.find((item) => item.id === group.id) ?? {
-      id: group.id,
-      courseId,
-      name: group.name,
-      description: group.description,
-      weightPercent: group.weightPercent,
-      order: group.order,
-    };
+    // Edit controls render only for groups seeded from assessmentGroups.
+    const source = assessmentGroups.find((item) => item.id === group.id)!;
 
     setEditingGroup(source);
     setEditGroupName(source.name);
@@ -357,8 +349,7 @@ export function AssessmentsList({
   }
 
   function handleUpdateGroup() {
-    if (!editingGroup) return;
-
+    const group = editingGroup!;
     if (!editGroupName.trim()) {
       setEditGroupError('Group name is required.');
       return;
@@ -374,11 +365,11 @@ export function AssessmentsList({
     startGroupTransition(async () => {
       const result = await updateAssessmentGroup({
         courseId,
-        groupId: editingGroup.id,
+        groupId: group.id,
         name: editGroupName.trim(),
         description: editGroupDescription.trim() || null,
         weightPercent: weight,
-        order: editingGroup.order,
+        order: group.order,
       });
 
       if (result.success) {
@@ -391,27 +382,18 @@ export function AssessmentsList({
   }
 
   function openDeleteGroup(group: AssessmentGroupView) {
-    if (group.id === 'ungrouped' || group.weightPercent == null) return;
-
-    const source = assessmentGroups.find((item) => item.id === group.id) ?? {
-      id: group.id,
-      courseId,
-      name: group.name,
-      description: group.description,
-      weightPercent: group.weightPercent,
-      order: group.order,
-    };
+    // Delete controls render only for groups seeded from assessmentGroups.
+    const source = assessmentGroups.find((item) => item.id === group.id)!;
 
     setDeletingGroup(source);
     setDeleteGroupError(null);
   }
 
   function handleDeleteGroup() {
-    if (!deletingGroup) return;
-
+    const group = deletingGroup!;
     setDeleteGroupError(null);
     startGroupTransition(async () => {
-      const result = await deleteAssessmentGroup(courseId, deletingGroup.id);
+      const result = await deleteAssessmentGroup(courseId, group.id);
 
       if (result.success) {
         setDeletingGroup(null);
@@ -458,10 +440,6 @@ export function AssessmentsList({
 
   function handleCreateAssessment() {
     const trimmedTitle = newAssessmentTitle.trim();
-    if (!trimmedTitle) {
-      setAssessmentError('Title is required.');
-      return;
-    }
     if (newAssessmentGradingMethods.size === 0) {
       setAssessmentError('Select at least one grading method.');
       return;
@@ -835,7 +813,7 @@ export function AssessmentsList({
         open={showCreateAssessment}
         onOpenChange={(open) => {
           setShowCreateAssessment(open);
-          if (!open) resetCreateAssessmentForm();
+          resetCreateAssessmentForm();
         }}
       >
         <DialogContent>

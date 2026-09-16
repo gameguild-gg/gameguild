@@ -193,7 +193,7 @@ export function CodingDefinitionEditor({
   const savingRef = useRef(false);
   const hydratedRef = useRef(false);
   const seededRef = useRef(false);
-  const performSaveRef = useRef<() => Promise<void>>(async () => {});
+  const performSaveRef = useRef<() => Promise<void>>(null!);
 
   // ── WorkspaceConfig for the IDE — derive from language preset + files ──
   const workspaceConfig = useMemo(() => {
@@ -333,8 +333,8 @@ export function CodingDefinitionEditor({
 
   async function performSave() {
     if (savingRef.current) return;
-    if (!isValid || !contentId) {
-      setError(contentId ? "Resolve validation errors before saving." : "No content item linked to this assessment.");
+    if (!contentId) {
+      setError("No content item linked to this assessment.");
       return;
     }
     savingRef.current = true;
@@ -714,7 +714,7 @@ function validateAll(state: ValidationState): ValidationErr[] {
           message: "Standard test requires non-empty Stdout.",
         });
       }
-    } else if (t.kind === "functional") {
+    } else {
       const fn = t as FunctionalTestGroup;
       if (!FUNCTION_NAME_RE.test(fn.Function.FunctionName)) {
         errors.push({

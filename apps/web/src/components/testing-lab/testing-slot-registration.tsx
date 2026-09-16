@@ -8,6 +8,7 @@ import {
 import { Alert, AlertDescription } from '@game-guild/ui/components/alert';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
+import { buttonVariants } from '@game-guild/ui/components/button-variants';
 import { AlertCircle, CalendarDays, CheckCircle2, Loader2, MapPin, UsersRound } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
@@ -71,26 +72,41 @@ export function TestingSlotRegistration({
   const [acceptedRules, setAcceptedRules] = useState(false);
   const isFull = (slot.availableTesterCount ?? 0) <= 0;
   const location = [slot.campusName, slot.roomName].filter(Boolean).join(' · ');
+  const registrationId = registration?.id ?? null;
 
   function register() {
     const formData = new FormData();
     formData.set('eventId', eventId);
-    formData.set('slotId', slot.id ?? '');
+    formData.set('slotId', slot.id!);
     formData.set('registrationResponseJson', JSON.stringify(responses));
     formData.set('acceptedRules', String(acceptedRules));
     startTransition(async () => {
-      const next = await registerForTestingEventSlot(formData);
-      setResult(next);
+      try {
+        const next = await registerForTestingEventSlot(formData);
+        setResult(next);
+      } catch (error) {
+        setResult({
+          success: false,
+          error: error instanceof Error ? error.message : 'The Testing Lab operation failed.',
+        });
+      }
     });
   }
 
   function cancel() {
     const formData = new FormData();
     formData.set('eventId', eventId);
-    formData.set('registrationId', registration?.id ?? '');
+    formData.set('registrationId', registrationId!);
     startTransition(async () => {
-      const next = await cancelTestingEventRegistration(formData);
-      setResult(next);
+      try {
+        const next = await cancelTestingEventRegistration(formData);
+        setResult(next);
+      } catch (error) {
+        setResult({
+          success: false,
+          error: error instanceof Error ? error.message : 'The Testing Lab operation failed.',
+        });
+      }
     });
   }
 
@@ -125,9 +141,7 @@ export function TestingSlotRegistration({
       </div>
 
       {!isAuthenticated ? (
-        <Button asChild className="w-full">
-          <Link href="/sign-in">Sign in to register</Link>
-        </Button>
+        <Link href="/sign-in" className={buttonVariants({ className: 'w-full' })}>Sign in to register</Link>
       ) : registration && registration.status !== 'Cancelled' ? (
         <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
           <div>
@@ -136,7 +150,7 @@ export function TestingSlotRegistration({
               <p className="text-sm text-muted-foreground">Waitlist position {registration.waitlistPosition}</p>
             ) : null}
           </div>
-          {!['Cancelled', 'Completed', 'NoShow'].includes(registration.status ?? '') ? (
+          {registration.id && !['Cancelled', 'Completed', 'NoShow'].includes(registration.status ?? '') ? (
             <Button type="button" variant="outline" disabled={pending} onClick={cancel}>
               {pending ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
               Cancel registration

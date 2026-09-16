@@ -4,6 +4,7 @@ namespace GameGuild.TestingLab;
 /// <summary> GraphQL type definition for TestingLocation entity </summary>
 public class TestingLocationType : ObjectType<TestingLocation> {
   protected override void Configure(IObjectTypeDescriptor<TestingLocation> descriptor) {
+    descriptor.BindFieldsExplicitly();
     descriptor.Name("TestingLocation");
     descriptor.Description("Represents a testing location in the TestingLab system.");
 
