@@ -59,4 +59,34 @@ describe('DateTimePicker', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Required date' }));
     expect(screen.queryByRole('button', { name: 'Clear date and time' })).not.toBeInTheDocument();
   });
+
+  it('prevents applying a wall-clock value outside the allowed range', () => {
+    const { container } = render(
+      <form>
+        <label htmlFor="session-start">Session starts</label>
+        <DateTimePicker
+          id="session-start"
+          name="startsAt"
+          defaultValue="2026-08-20T15:00"
+          minValue="2026-08-20T14:00"
+          maxValue="2026-08-20T16:00"
+          timezoneLabel="America/Sao_Paulo"
+        />
+      </form>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /session starts/i }));
+    fireEvent.change(screen.getByLabelText('Hour'), {
+      target: { value: '13' },
+    });
+
+    expect(screen.getByRole('button', { name: 'Apply date and time' })).toBeDisabled();
+    expect(screen.getByRole('alert')).toHaveTextContent(/between/i);
+    expect(container.querySelector<HTMLInputElement>('input[name="startsAt"]')?.value).toBe('2026-08-20T15:00');
+
+    fireEvent.change(screen.getByLabelText('Hour'), {
+      target: { value: '15' },
+    });
+    expect(screen.getByRole('button', { name: 'Apply date and time' })).toBeEnabled();
+  });
 });

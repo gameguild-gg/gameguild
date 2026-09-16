@@ -12060,6 +12060,10 @@ export interface TestingLabCreateTestingEventInput {
   timeZoneId?: string | null;
 }
 
+export interface TestingLabCreateTestingEventSlotsInput {
+  slots?: Array<TestingLabUpsertTestingEventSlotInput> | null;
+}
+
 export interface TestingLabCreateTestingLabRoleInput {
   description?: string | null;
   name?: string | null;
@@ -14795,6 +14799,7 @@ export let TestingLabConfigureTestingEventInputSchema: z.ZodType<TestingLabConfi
 export let TestingLabConfigureTestingEventLearningInputSchema: z.ZodType<TestingLabConfigureTestingEventLearningInput>;
 export let TestingLabCreateSimpleTestingRequestDtoSchema: z.ZodType<TestingLabCreateSimpleTestingRequestDto>;
 export let TestingLabCreateTestingEventInputSchema: z.ZodType<TestingLabCreateTestingEventInput>;
+export let TestingLabCreateTestingEventSlotsInputSchema: z.ZodType<TestingLabCreateTestingEventSlotsInput>;
 export let TestingLabCreateTestingLabRoleInputSchema: z.ZodType<TestingLabCreateTestingLabRoleInput>;
 export let TestingLabCreateTestingLabSettingsDtoSchema: z.ZodType<TestingLabCreateTestingLabSettingsDto>;
 export let TestingLabCreateTestingLocationDtoSchema: z.ZodType<TestingLabCreateTestingLocationDto>;
@@ -29425,6 +29430,14 @@ TestingLabCreateTestingEventInputSchema = z.object({
   startsAt: z.string().datetime().optional(),
   templateRevisionId: z.string().uuid().nullable().optional(),
   timeZoneId: z.string().nullable().optional(),
+});
+
+/** Zod schema for TestingLabCreateTestingEventSlotsInput */
+TestingLabCreateTestingEventSlotsInputSchema = z.object({
+  slots: z
+    .array(z.lazy(() => TestingLabUpsertTestingEventSlotInputSchema))
+    .nullable()
+    .optional(),
 });
 
 /** Zod schema for TestingLabCreateTestingLabRoleInput */

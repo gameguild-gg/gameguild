@@ -26,6 +26,7 @@ public sealed class TestingEventHandlers(
     ICommandHandler<CancelTestingEventCommand, Result<TestingEventProjection>>,
     ICommandHandler<ConfigureTestingEventLearningCommand, Result<TestingEventProjection>>,
     ICommandHandler<CreateTestingEventSlotCommand, Result<TestingEventSlotProjection>>,
+    ICommandHandler<CreateTestingEventSlotsCommand, Result<IReadOnlyList<TestingEventSlotProjection>>>,
     ICommandHandler<UpdateTestingEventSlotCommand, Result<TestingEventSlotProjection>>,
     ICommandHandler<DeleteTestingEventSlotCommand, Result<bool>>,
     ICommandHandler<AddTestingEventCommitteeMemberCommand, Result<TestingEventCommitteeMemberProjection>>,
@@ -324,6 +325,52 @@ public sealed class TestingEventHandlers(
         catch (ArgumentException exception)
         {
             return Result.Failure<TestingEventSlotProjection>(Validation(exception.Message));
+        }
+    }
+
+    public async Task<Result<IReadOnlyList<TestingEventSlotProjection>>> Handle(
+        CreateTestingEventSlotsCommand request,
+        CancellationToken cancellationToken)
+    {
+        if (request.Slots.Count is < 1 or > 200)
+            return Result.Failure<IReadOnlyList<TestingEventSlotProjection>>(
+                Validation("Create between 1 and 200 time slots at once."));
+
+        var authorization = await GetManagedEventAsync(request.EventId, cancellationToken).ConfigureAwait(false);
+        if (authorization.Error != null)
+            return Result.Failure<IReadOnlyList<TestingEventSlotProjection>>(authorization.Error);
+
+        try
+        {
+            var slots = new List<TestingEventSlot>(request.Slots.Count);
+            foreach (var input in request.Slots)
+            {
+                if (!IsWithinEvent(authorization.Event!, input.StartsAt, input.EndsAt))
+                    return Result.Failure<IReadOnlyList<TestingEventSlotProjection>>(
+                        Validation("Every time slot must be inside the event schedule."));
+
+                slots.Add(TestingEventSlot.Create(
+                    request.EventId,
+                    input.Mode,
+                    input.StartsAt,
+                    input.EndsAt,
+                    input.MaxTesters,
+                    input.MaxProjects,
+                    input.CampusName,
+                    input.RoomName,
+                    input.MeetingUrl,
+                    authorization.Event!.TenantId,
+                    input.LocationId));
+            }
+
+            context.Set<TestingEventSlot>().AddRange(slots);
+            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return Result.Success<IReadOnlyList<TestingEventSlotProjection>>(
+                slots.Select(ToProjection).ToArray());
+        }
+        catch (ArgumentException exception)
+        {
+            return Result.Failure<IReadOnlyList<TestingEventSlotProjection>>(Validation(exception.Message));
         }
     }
 

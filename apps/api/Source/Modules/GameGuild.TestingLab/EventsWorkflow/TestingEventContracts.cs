@@ -193,6 +193,22 @@ public sealed record CreateTestingEventSlotCommand(
     string? MeetingUrl,
     Guid? LocationId = null) : ICommand<Result<TestingEventSlotProjection>>;
 
+public sealed record TestingEventSlotInput(
+    TestingEventMode Mode,
+    DateTime StartsAt,
+    DateTime EndsAt,
+    int? MaxTesters,
+    int? MaxProjects,
+    string? CampusName,
+    string? RoomName,
+    string? MeetingUrl,
+    Guid? LocationId = null);
+
+public sealed record CreateTestingEventSlotsCommand(
+    Guid EventId,
+    IReadOnlyList<TestingEventSlotInput> Slots)
+    : ICommand<Result<IReadOnlyList<TestingEventSlotProjection>>>;
+
 public sealed record UpdateTestingEventSlotCommand(
     Guid EventId,
     Guid SlotId,
@@ -292,6 +308,9 @@ public sealed record UpsertTestingEventSlotRequest(
     string? RoomName,
     string? MeetingUrl,
     Guid? LocationId = null);
+
+public sealed record CreateTestingEventSlotsRequest(
+    IReadOnlyList<UpsertTestingEventSlotRequest> Slots);
 public sealed record CancelTestingEventRequest(string Reason);
 
 public sealed record AddTestingEventCommitteeMemberRequest(Guid UserId, bool IsChair);

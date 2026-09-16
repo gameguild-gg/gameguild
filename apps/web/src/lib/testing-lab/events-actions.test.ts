@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
     putTestingEvents: vi.fn(),
     deleteTestingEvents: vi.fn(),
     postTestingEventsSlots: vi.fn(),
+    postTestingEventsSlotsBatch: vi.fn(),
     putTestingEventsSlots: vi.fn(),
     deleteTestingEventsSlots: vi.fn(),
     postTestingEventsApplicationsReject: vi.fn(),
@@ -95,6 +96,7 @@ import {
   configureTestingEvent,
   createTestingEvent,
   createTestingEventSlot,
+  createTestingEventSlots,
   deleteTestingEvent,
   deleteTestingEventSlot,
   rejectTestingEventApplication,
@@ -406,6 +408,68 @@ describe("Testing Lab event actions", () => {
       error: "Campus and room are required for in-person slots.",
     });
     expect(mocks.events.postTestingEventsSlots).not.toHaveBeenCalled();
+  });
+
+  it("converts a session schedule from the event timezone before calling the API", async () => {
+    mocks.events.postTestingEventsSlots.mockResolvedValueOnce({
+      ok: true,
+      data: { id: "slot-1" },
+    });
+
+    await createTestingEventSlot(
+      form({
+        eventId: "event-1",
+        mode: "Online",
+        meetingUrl: "https://meet.example.test/playtest",
+        timeZoneId: "America/Sao_Paulo",
+        startsAt: "2026-10-03T09:00",
+        endsAt: "2026-10-03T10:00",
+      }),
+    );
+
+    expect(mocks.events.postTestingEventsSlots).toHaveBeenCalledWith(
+      "event-1",
+      expect.objectContaining({
+        startsAt: "2026-10-03T12:00:00.000Z",
+        endsAt: "2026-10-03T13:00:00.000Z",
+      }),
+    );
+  });
+
+  it("creates a complete timebox plan through the atomic batch endpoint", async () => {
+    mocks.events.postTestingEventsSlotsBatch.mockResolvedValueOnce({
+      ok: true,
+      data: [{ id: "slot-1" }, { id: "slot-2" }],
+    });
+    const data = form({
+      eventId: "event-1",
+      mode: "Online",
+      meetingUrl: "https://meet.example.test/playtest",
+      timeZoneId: "America/Sao_Paulo",
+      slotsJson: JSON.stringify([
+        { startsAt: "2026-10-03T09:00", endsAt: "2026-10-03T09:45" },
+        { startsAt: "2026-10-03T10:00", endsAt: "2026-10-03T10:45" },
+      ]),
+    });
+
+    const result = await createTestingEventSlots(data);
+
+    expect(result.success).toBe(true);
+    expect(mocks.events.postTestingEventsSlotsBatch).toHaveBeenCalledWith(
+      "event-1",
+      {
+        slots: [
+          expect.objectContaining({
+            startsAt: "2026-10-03T12:00:00.000Z",
+            endsAt: "2026-10-03T12:45:00.000Z",
+          }),
+          expect.objectContaining({
+            startsAt: "2026-10-03T13:00:00.000Z",
+            endsAt: "2026-10-03T13:45:00.000Z",
+          }),
+        ],
+      },
+    );
   });
 
   it("requires a rationale to reject a project application", async () => {
