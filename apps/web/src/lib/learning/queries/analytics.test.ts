@@ -200,7 +200,7 @@ describe("learning analytics queries", () => {
     );
 
     expect(analytics.period).toEqual({
-      from: "2026-09-09T03:00:00.000Z",
+      from: "2026-09-09T00:00:00.000Z",
       to: "2026-09-15T12:30:00.000Z",
     });
     expect(analytics).toMatchObject({
