@@ -58,12 +58,19 @@ public sealed class CoreGradingCapabilityRegistration : IReviewCapabilityRegistr
             ReviewExecutionContext.OfficialSubmission,
         };
 
-    public void Register(IReviewCapabilityRegistry registry) =>
+    public void Register(IReviewCapabilityRegistry registry)
+    {
         registry.Register(new ExecutableComponentDescriptor(
             ExecutableComponentKind.ExecutionPolicy,
             AssessmentExecutionPolicyCapability.Key,
             AssessmentExecutionPolicyCapability.Version,
             Contexts));
+        registry.Register(new ReviewCapabilityDescriptor(
+            ReviewMethod.InstructorReview,
+            "instructor-review",
+            "1",
+            Contexts));
+    }
 }
 
 public sealed class ReviewCapabilityRegistry : IReviewCapabilityRegistry

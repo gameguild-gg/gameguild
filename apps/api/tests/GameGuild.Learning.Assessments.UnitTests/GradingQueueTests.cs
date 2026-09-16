@@ -16,9 +16,8 @@ using Xunit;
 namespace GameGuild.Learning.Assessments.Tests;
 
 /// <summary>
-/// SpeedGrader navigation bundle: instructor-only queue with ONE item per student/group
-/// (the target's LATEST attempt; InProgress-only targets excluded), canonical Min(Id) group
-/// rows, assignment-level grade persisted across resubmissions, counts, and sort.
+/// SpeedGrader navigation bundle: instructor-only queue with one item per student or
+/// collective submission, latest attempt semantics, frozen member names, counts, and sort.
 /// </summary>
 public class GradingQueueTests
 {
@@ -69,27 +68,22 @@ public class GradingQueueTests
     }
 
     [Fact]
-    public async Task Group_Assessment_CollapsesGroupAttemptIntoOneItem_WithCanonicalMinIdAndMemberNames()
+    public async Task CollectiveAssessment_ReturnsSingleSubmissionWithFrozenMemberNames()
     {
         await using var db = CreateContext();
         var assessment = await SeedAssessmentAsync(db);
         var group = await SeedGroupAsync(db, assessment, "Alice", "Bob", "Carol");
-        var rows = new List<AssessmentSubmission>();
-        foreach (var (userId, _) in group.Members)
-        {
-            rows.Add(await SeedGroupRowAsync(
-                db, assessment.Id, userId, 1, SubmissionStatus.Submitted, group.GroupId));
-        }
+        var collective = await SeedCollectiveRowAsync(
+            db, assessment.Id, group, 1, SubmissionStatus.Submitted);
 
         var result = await CreateController(db, instructorId: Guid.NewGuid()).GetGradingQueue(assessment.Id);
 
         var ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         var queue = ok.Value.Should().BeOfType<GradingQueueDto>().Subject;
-        queue.Items.Should().ContainSingle("three member rows of one group attempt collapse into one item");
+        queue.Items.Should().ContainSingle("one group attempt is persisted as one collective submission");
         var item = queue.Items[0];
-        var canonicalId = rows.Min(r => r.Id);
-        item.CanonicalSubmissionId.Should().Be(canonicalId);
-        item.SubmissionId.Should().Be(canonicalId);
+        item.CanonicalSubmissionId.Should().Be(collective.Id);
+        item.SubmissionId.Should().Be(collective.Id);
         item.GroupId.Should().Be(group.GroupId);
         item.GroupName.Should().Be(group.GroupName);
         item.MemberNames.Should().BeEquivalentTo(["Alice", "Bob", "Carol"]);
@@ -108,23 +102,17 @@ public class GradingQueueTests
         await using var db = CreateContext();
         var assessment = await SeedAssessmentAsync(db);
         var group = await SeedGroupAsync(db, assessment, "Alice", "Bob");
-        var attempt1Rows = new List<AssessmentSubmission>();
-        var attempt2Rows = new List<AssessmentSubmission>();
-        foreach (var (userId, _) in group.Members)
-        {
-            attempt1Rows.Add(await SeedGroupRowAsync(db, assessment.Id, userId, 1, SubmissionStatus.Graded, group.GroupId, score: 88));
-            attempt2Rows.Add(await SeedGroupRowAsync(db, assessment.Id, userId, 2, SubmissionStatus.Submitted, group.GroupId));
-        }
+        await SeedCollectiveRowAsync(db, assessment.Id, group, 1, SubmissionStatus.Graded, score: 88);
+        var attempt2 = await SeedCollectiveRowAsync(db, assessment.Id, group, 2, SubmissionStatus.Submitted);
 
         var result = await CreateController(db, instructorId: Guid.NewGuid()).GetGradingQueue(assessment.Id);
 
         var ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         var queue = ok.Value.Should().BeOfType<GradingQueueDto>().Subject;
-        queue.Items.Should().ContainSingle("both group attempts collapse into ONE item — the latest");
+        queue.Items.Should().ContainSingle("both group attempts collapse into one latest item");
         var item = queue.Items[0];
-        var canonicalId = attempt2Rows.Min(r => r.Id);
-        item.CanonicalSubmissionId.Should().Be(canonicalId, "canonical = Min(Id) among the LATEST attempt's rows");
-        item.SubmissionId.Should().Be(canonicalId);
+        item.CanonicalSubmissionId.Should().Be(attempt2.Id);
+        item.SubmissionId.Should().Be(attempt2.Id);
         item.AttemptNumber.Should().Be(2);
         item.AttemptCount.Should().Be(2);
         item.Status.Should().Be(SubmissionStatus.Submitted);
@@ -319,16 +307,46 @@ public class GradingQueueTests
         bool isLate = false) =>
         BuildRowAsync(db, assessmentId, userId, attempt, status, null, score, isLate);
 
-    private static async Task<AssessmentSubmission> SeedGroupRowAsync(
+    private static async Task<AssessmentSubmission> SeedCollectiveRowAsync(
         TestGradingQueueDbContext db,
         Guid assessmentId,
-        Guid userId,
+        QueueGroupFixture group,
         int attempt,
         SubmissionStatus status,
-        Guid groupId,
         int? score = null,
-        bool isLate = false) =>
-        await BuildRowAsync(db, assessmentId, userId, attempt, status, groupId, score, isLate);
+        bool isLate = false)
+    {
+        var startedBy = group.Members[0].UserId;
+        var row = AssessmentSubmission.StartCollective(
+            tenantId: null,
+            assessmentId,
+            Guid.NewGuid(),
+            group.GroupId,
+            startedBy,
+            attempt);
+        if (status != SubmissionStatus.InProgress)
+        {
+            row.SetPayload(new SubmitAssessmentRequest(TextPayload: "work"), SubmissionModality.Text);
+            row.Submit(isLate, DateTime.UtcNow, startedBy);
+            if (status == SubmissionStatus.Graded)
+            {
+                row.Grade(Score(score ?? 0), Score(60), Score(100), Guid.NewGuid(), "graded");
+            }
+        }
+
+        db.Add(row);
+        foreach (var member in group.Members)
+        {
+            db.Add(Grading.Persistence.AssessmentSubmissionParticipant.Create(
+                null,
+                row.Id,
+                Guid.NewGuid(),
+                member.UserId));
+        }
+
+        await db.SaveChangesAsync();
+        return row;
+    }
 
     private static async Task<AssessmentSubmission> BuildRowAsync(
         TestGradingQueueDbContext db,
@@ -386,6 +404,7 @@ public class GradingQueueTests
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             new AssessmentsModelConfiguration().Configure(modelBuilder);
+            new Grading.Persistence.GradingPersistenceModelConfiguration().Configure(modelBuilder);
             // ponytail: minimal cross-module mapping for display names; full mapping lives in ApplicationDbContext.
             modelBuilder.Entity<User>(b =>
             {

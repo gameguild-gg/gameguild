@@ -19,6 +19,14 @@ public sealed class QuizItemProjector
                 ? units
                 : throw new JsonException("Quiz points must be a JSON integer."))
             : ScoreValue.FromUnits(100);
+        var partialCreditAlgorithm = itemType switch
+        {
+            "MATCHING" when authoringItem.TryGetProperty("allowPartialCredit", out var matching) && matching.GetBoolean() =>
+                QuizAdapterContracts.MatchingPartialCreditAlgorithm,
+            "ORDERING" when authoringItem.TryGetProperty("allowPartialCredit", out var ordering) && ordering.GetBoolean() =>
+                QuizAdapterContracts.OrderingPartialCreditAlgorithm,
+            _ => null,
+        };
 
         return JsonSerializer.SerializeToElement(new
         {
@@ -26,8 +34,9 @@ public sealed class QuizItemProjector
             itemId,
             itemType,
             maxScore,
+            partialCreditAlgorithm,
             source = new { contentType = QuizAdapterContracts.ContentType, itemId },
             authoringEntry = authoringItem.Clone(),
-        });
+        }, GradingJson.Options);
     }
 }

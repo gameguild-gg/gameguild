@@ -3,9 +3,10 @@ import {
   canonicalizeJson,
   hashAssessmentExecutionDelivery,
 } from "@game-guild/grading";
-import { parseQuizPoints, QuizEntryType } from "@game-guild/quiz";
+import { parseQuizAnswer, parseQuizEntry, parseQuizPoints, QuizEntryType } from "@game-guild/quiz";
 import { describe, expect, it } from "vitest";
 import sharedAnswerEnvelope from "../fixtures/quiz-answer-envelope-v1.json";
+import partialCreditFixture from "../fixtures/quiz-partial-credit-v1.json";
 import {
   classifyQuizReviewCapability,
   createQuizAnswerEnvelope,
@@ -85,6 +86,44 @@ describe("quiz grading adapter contracts", () => {
     expect(result.items[2]?.state).toBe("pending");
   });
 
+  it("matches the shared versioned partial-credit and invalid-answer vectors", () => {
+    expect(partialCreditFixture.schemaVersion).toBe(1);
+    const inputs = partialCreditFixture.items.map(({ itemId, entry }) => ({
+      itemId,
+      entry: parseQuizEntry(entry),
+    }));
+    const projections = projectQuizGradingItems(inputs);
+    const projectionById = new Map(projections.map((projection) => [projection.itemId, projection]));
+
+    expect(projectionById.get("matching-partial")?.partialCreditAlgorithm)
+      .toBe("matching-position-v1");
+    expect(projectionById.get("ordering-partial")?.partialCreditAlgorithm)
+      .toBe("ordering-position-v1");
+    expect(projectionById.get("matching-all-or-nothing")?.partialCreditAlgorithm)
+      .toBeUndefined();
+
+    for (const testCase of partialCreditFixture.scoreCases) {
+      const projection = projectionById.get(testCase.itemId)!;
+      const envelope = createQuizAnswerEnvelope({
+        [testCase.itemId]: parseQuizAnswer(testCase.answer),
+      });
+      const decoded = decodeQuizAnswerEnvelope(envelope, [projection]);
+      const result = evaluateDeterministicQuiz([projection], decoded);
+      expect(result.score, testCase.name).toBe(testCase.expectedScore);
+    }
+
+    for (const testCase of partialCreditFixture.invalidCases) {
+      const projection = projectionById.get(testCase.itemId)!;
+      const envelope = createQuizAnswerEnvelope({
+        [testCase.itemId]: parseQuizAnswer(testCase.answer),
+      });
+      expect(
+        () => decodeQuizAnswerEnvelope(envelope, [projection]),
+        testCase.name,
+      ).toThrow();
+    }
+  });
+
   it("keeps delivery concrete, learner-safe and hash-sensitive to order", async () => {
     const projected = projectQuizGradingItems(deterministicQuizItemsV1);
     const first = createQuizExecutionDelivery("revision-1", "snapshot", projected);
@@ -100,7 +139,7 @@ describe("quiz grading adapter contracts", () => {
     expect(JSON.stringify(first)).not.toContain('"right"');
   });
 
-  it("registers author-test capabilities without implying official readiness", () => {
+  it("registers the exact runtime capabilities in both execution contexts", () => {
     const registry = new ReviewCapabilityRegistry();
     registerQuizGradingCapabilities(registry);
     const manifest = {
@@ -114,7 +153,7 @@ describe("quiz grading adapter contracts", () => {
       policies: [],
     };
     expect(registry.validateManifest(manifest, "author-test")).toEqual([]);
-    expect(registry.validateManifest(manifest, "official-submission").length).toBeGreaterThan(0);
+    expect(registry.validateManifest(manifest, "official-submission")).toEqual([]);
   });
 
   it("exposes projection, delivery, decoding and evaluation as one versioned adapter", () => {

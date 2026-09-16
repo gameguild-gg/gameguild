@@ -75,18 +75,19 @@ public class GradingQueueService : IGradingQueueService
             targets.Add((groupRows.ToList(), groupRows.Key));
         }
 
-        // Group members are resolved at query time (active membership), matching GroupSetService.
-        var members = groupIds.Count == 0
+        var submissionIds = rows.Select(row => row.Id).ToArray();
+        var participants = submissionIds.Length == 0
             ? []
-            : await _context.Set<CourseGroupMember>()
-                .Where(m => groupIds.Contains(m.GroupId) && m.DeletedAt == null)
+            : await _context.Set<Grading.Persistence.AssessmentSubmissionParticipant>()
+                .AsNoTracking()
+                .Where(participant => submissionIds.Contains(participant.SubmissionId))
                 .ToListAsync().ConfigureAwait(false);
 
         // Batched display-name lookup for every user the queue can name (GroupSetService pattern).
         var userIds = targets
             .Where(t => t.GroupId == null)
-            .SelectMany(t => t.TargetRows.Select(r => r.UserId))
-            .Concat(members.Select(m => m.UserId))
+            .SelectMany(t => t.TargetRows.Where(r => r.UserId.HasValue).Select(r => r.UserId!.Value))
+            .Concat(participants.Select(participant => participant.UserId))
             .Distinct()
             .ToList();
         var namesById = (await _context.Set<User>()
@@ -116,15 +117,13 @@ public class GradingQueueService : IGradingQueueService
                 .Where(r => r.Status != SubmissionStatus.InProgress)
                 .ToList();
 
-            // Assignment-level grade: canonical row of the target's LATEST GRADED attempt.
-            // It persists across resubmissions until a newer attempt is graded.
+            // Assignment-level grade is read from the one submission that owns the execution.
             var gradedRows = targetRows.Where(r => r.Status == SubmissionStatus.Graded).ToList();
             AssessmentSubmission? gradedMeta = null;
             if (gradedRows.Count > 0)
             {
                 var gradedAttempt = gradedRows.Max(r => r.AttemptNumber);
-                gradedMeta = PeerReviewAssignmentService.CanonicalRow(
-                    gradedRows.Where(r => r.AttemptNumber == gradedAttempt));
+                gradedMeta = gradedRows.Single(r => r.AttemptNumber == gradedAttempt);
             }
 
             var attemptCount = targetRows.Select(r => r.AttemptNumber).Distinct().Count();
@@ -143,18 +142,15 @@ public class GradingQueueService : IGradingQueueService
                     gradedMeta?.Passed,
                     IsGroup: false,
                     UserId: row.UserId,
-                    DisplayName: DisplayName(row.UserId)));
+                    DisplayName: DisplayName(row.UserId ?? throw new InvalidOperationException("Individual submission is missing its user."))));
             }
             else
             {
-                // Canonical row rule shared with peer-review assignment: Min(Id) among the rows
-                // sharing (CourseGroupId, AttemptNumber) — clones share timestamps, so Id is the
-                // only deterministic tiebreak.
-                var canonical = PeerReviewAssignmentService.CanonicalRow(latestRows);
+                var collective = latestRows.Single();
                 var group = groups.GetValueOrDefault(groupId.Value);
                 items.Add(new GradingQueueItemDto(
-                    canonical.Id,
-                    canonical.Id,
+                    collective.Id,
+                    collective.Id,
                     latestAttempt,
                     attemptCount,
                     AggregateStatus(latestRows),
@@ -165,9 +161,9 @@ public class GradingQueueService : IGradingQueueService
                     IsGroup: true,
                     GroupId: groupId,
                     GroupName: group?.Name ?? groupId.Value.ToString(),
-                    MemberNames: members
-                        .Where(m => m.GroupId == groupId)
-                        .Select(m => m.UserId)
+                    MemberNames: participants
+                        .Where(participant => participant.SubmissionId == collective.Id)
+                        .Select(participant => participant.UserId)
                         .Distinct()
                         .Select(DisplayName)
                         .ToList()));

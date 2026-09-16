@@ -1,18 +1,13 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
-import { getToken } from '@/auth';
-import { createServerClient, GeneratedApi, type LearningAssessmentsGradingQueue } from '@game-guild/client';
+import type { LearningAssessmentsGradingQueue } from '@game-guild/client';
 import { Link } from '@/i18n/navigation';
-import { getCodingAssignmentFull } from '@/lib/coding-assignment/client';
-import type { CodingAssignmentContent } from '@/lib/coding-assignment/client';
 import { fetchGradingQueue } from './grading-queue';
-import { parseSubmittedModalities } from './submitted-modalities';
 import { SpeedgraderWorkspace } from './speedgrader-workspace';
 
 /**
- * SpeedGrader page — server-fetches the grading queue bundle (plus the coding
- * assignment for code-modality assessments) and hands everything to the
- * client workspace as props (no client-side fetching of queue data).
+ * SpeedGrader page: server-fetches the grading queue and lets each panel read
+ * the immutable runtime execution for the selected submission.
  *
  * Route: `/[locale]/speedgrader/assessments/[assessmentId]?course=<slug>&nav=<index>`
  *
@@ -56,10 +51,15 @@ export default async function SpeedgraderAssessmentPage({
   }
 
   const data = queue.data;
-  const navParam = typeof query.nav === 'string' ? Number.parseInt(query.nav, 10) : Number.NaN;
-  const initialIndex = Number.isFinite(navParam) ? navParam : 0;
-
-  const codingAssignment = await fetchCodingAssignment(assessmentId);
+  const requestedSubmission =
+    typeof query.submission === 'string' ? query.submission : null;
+  const submissionIndex = requestedSubmission
+    ? data.items?.findIndex((item) => item.submissionId === requestedSubmission) ?? -1
+    : -1;
+  const navParam =
+    typeof query.nav === 'string' ? Number.parseInt(query.nav, 10) : Number.NaN;
+  const initialIndex =
+    submissionIndex >= 0 ? submissionIndex : Number.isFinite(navParam) ? navParam : 0;
 
   return (
     <SpeedgraderWorkspace
@@ -70,35 +70,6 @@ export default async function SpeedgraderAssessmentPage({
       assessmentId={assessmentId}
       courseSlug={courseParam}
       initialIndex={initialIndex}
-      codingAssignment={codingAssignment}
-      manifestUrl={process.env.NEXT_PUBLIC_EMCEPTION_MANIFEST_URL ?? '/emception/manifest.json'}
     />
   );
-}
-
-/**
- * Load the full coding assignment when the assessment accepts Code
- * submissions — the IDE code viewer needs the instructor workspace (Public +
- * Private tests + all files). Any other shape (or a failed fetch) yields null
- * and the viewer falls back to a raw file listing.
- */
-async function fetchCodingAssignment(assessmentId: string): Promise<CodingAssignmentContent | null> {
-  const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-  const client = createServerClient({
-    baseUrl: apiUrl,
-    auth: { getAccessToken: () => getToken() },
-  });
-  try {
-    const result = await new GeneratedApi.LearningAssessmentsModule(client).getAssessments(assessmentId);
-    if (!result.ok) return null;
-    const assessment = result.data;
-    if (!assessment?.contentId || !assessment.courseId) return null;
-    if (!parseSubmittedModalities(assessment.submissionModalities).has('Code')) {
-      return null;
-    }
-    return await getCodingAssignmentFull(assessment.courseId, assessment.contentId);
-  } catch (err) {
-    console.error('Error fetching coding assignment for speedgrader:', err);
-    return null;
-  }
 }

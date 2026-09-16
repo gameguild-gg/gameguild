@@ -6,8 +6,12 @@ namespace GameGuild.Learning.Assessments.QuizAdapter;
 
 public sealed class QuizCapabilityRegistration : IReviewCapabilityRegistration
 {
-    private static readonly IReadOnlySet<ReviewExecutionContext> AuthorTestOnly =
-        new HashSet<ReviewExecutionContext> { ReviewExecutionContext.AuthorTest };
+    private static readonly IReadOnlySet<ReviewExecutionContext> SupportedContexts =
+        new HashSet<ReviewExecutionContext>
+        {
+            ReviewExecutionContext.AuthorTest,
+            ReviewExecutionContext.OfficialSubmission,
+        };
 
     public void Register(IReviewCapabilityRegistry registry)
     {
@@ -15,6 +19,11 @@ public sealed class QuizCapabilityRegistration : IReviewCapabilityRegistration
             ExecutableComponentKind.AssessmentTypeAdapter,
             QuizAdapterContracts.AdapterKey,
             QuizAdapterContracts.Version,
-            AuthorTestOnly));
+            SupportedContexts));
+        registry.Register(new ReviewCapabilityDescriptor(
+            ReviewMethod.AutomatedReview,
+            QuizAdapterContracts.AutomatedReviewHandlerKey,
+            QuizAdapterContracts.Version,
+            SupportedContexts));
     }
 }

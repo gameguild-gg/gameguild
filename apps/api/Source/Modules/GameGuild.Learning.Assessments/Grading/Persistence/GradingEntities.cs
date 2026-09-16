@@ -66,6 +66,11 @@ public enum AcademicOutboxDeliveryStatus
     Failed,
 }
 
+public enum GradeResultReleaseStatus
+{
+    Released,
+}
+
 /// <summary>An immutable, executable assessment definition prepared by the server.</summary>
 public sealed class AssessmentDefinitionRevision
 {
@@ -133,6 +138,7 @@ public sealed class AssessmentTestRun : EntityBase
 
         var run = new AssessmentTestRun
         {
+            Id = Guid.NewGuid(),
             AssessmentId = assessmentId,
             DefinitionRevisionId = revisionId,
             CreatedByUserId = actorId,
@@ -140,6 +146,35 @@ public sealed class AssessmentTestRun : EntityBase
         };
         run.TenantId = tenantId;
         return run;
+    }
+
+    public void Start()
+    {
+        if (Status == AssessmentTestRunStatus.Running) return;
+        if (Status != AssessmentTestRunStatus.Draft)
+            throw new InvalidOperationException("Only a draft test run can be started.");
+        Status = AssessmentTestRunStatus.Running;
+        Touch();
+    }
+
+    public void Complete(DateTime completedAt)
+    {
+        if (Status == AssessmentTestRunStatus.Completed) return;
+        if (Status != AssessmentTestRunStatus.Running)
+            throw new InvalidOperationException("Only a running test run can be completed.");
+        Status = AssessmentTestRunStatus.Completed;
+        CompletedAt = completedAt.ToUniversalTime();
+        Touch();
+    }
+
+    public void Cancel(DateTime completedAt)
+    {
+        if (Status == AssessmentTestRunStatus.Cancelled) return;
+        if (Status == AssessmentTestRunStatus.Completed)
+            throw new InvalidOperationException("A completed test run cannot be cancelled.");
+        Status = AssessmentTestRunStatus.Cancelled;
+        CompletedAt = completedAt.ToUniversalTime();
+        Touch();
     }
 }
 
@@ -159,6 +194,7 @@ public sealed class AssessmentTestRunSubject : EntityBase
 
         var subject = new AssessmentTestRunSubject
         {
+            Id = Guid.NewGuid(),
             TestRunId = testRunId,
             PersonaKey = personaKey.Trim(),
             DisplayName = displayName.Trim(),
@@ -251,6 +287,46 @@ public sealed class GradingExecution : EntityBase
         Touch();
     }
 
+    public void BeginRegrade(Guid roundId)
+    {
+        if (!SubmittedAt.HasValue)
+            throw new InvalidOperationException("An execution must be submitted before regrade.");
+        if (roundId == Guid.Empty) throw new ArgumentException("Round ID is required.", nameof(roundId));
+        ActiveGradeRoundId = roundId;
+        Status = PersistedGradingExecutionStatus.Running;
+        FinalizedAt = null;
+        Touch();
+    }
+
+    public void AwaitReview()
+    {
+        if (Status == PersistedGradingExecutionStatus.Completed)
+            throw new InvalidOperationException("A completed execution cannot await review.");
+        Status = PersistedGradingExecutionStatus.AwaitingReview;
+        Touch();
+    }
+
+    public void Complete(DateTime finalizedAt)
+    {
+        if (Status == PersistedGradingExecutionStatus.Completed) return;
+        if (!SubmittedAt.HasValue)
+            throw new InvalidOperationException("An execution must be submitted before it can complete.");
+        Status = PersistedGradingExecutionStatus.Completed;
+        FinalizedAt = finalizedAt.ToUniversalTime();
+        Touch();
+    }
+
+    public void Fail(DateTime finalizedAt)
+    {
+        if (Status == PersistedGradingExecutionStatus.Completed)
+            throw new InvalidOperationException("A completed execution cannot fail.");
+        if (!SubmittedAt.HasValue)
+            throw new InvalidOperationException("An execution must be submitted before it can fail.");
+        Status = PersistedGradingExecutionStatus.Failed;
+        FinalizedAt = finalizedAt.ToUniversalTime();
+        Touch();
+    }
+
     private static GradingExecution Create(
         Guid? tenantId,
         Guid revisionId,
@@ -265,6 +341,7 @@ public sealed class GradingExecution : EntityBase
 
         var execution = new GradingExecution
         {
+            Id = Guid.NewGuid(),
             DefinitionRevisionId = revisionId,
             ExecutionContext = context,
             TestRunSubjectId = testRunSubjectId,
@@ -287,6 +364,8 @@ public sealed class GradeRound : EntityBase
     public int RoundNumber { get; private set; }
     public Guid? SupersedesGradeRoundId { get; private set; }
     public string Reason { get; private set; } = string.Empty;
+    public string? ReasonDetail { get; private set; }
+    public Guid? InitiatedByActorId { get; private set; }
     public PersistedGradeRoundStatus Status { get; private set; }
     public int ResultSchemaVersion { get; private set; }
     public string? ResultState { get; private set; }
@@ -302,7 +381,9 @@ public sealed class GradeRound : EntityBase
         int number,
         ScoreValue maxScore,
         string reason,
-        Guid? supersedesId = null)
+        Guid? supersedesId = null,
+        Guid? initiatedByActorId = null,
+        string? reasonDetail = null)
     {
         if (executionId == Guid.Empty) throw new ArgumentException("Execution ID is required.", nameof(executionId));
         if (number < 1) throw new ArgumentOutOfRangeException(nameof(number));
@@ -310,10 +391,13 @@ public sealed class GradeRound : EntityBase
 
         var round = new GradeRound
         {
+            Id = Guid.NewGuid(),
             GradingExecutionId = executionId,
             RoundNumber = number,
             SupersedesGradeRoundId = supersedesId,
             Reason = reason,
+            ReasonDetail = string.IsNullOrWhiteSpace(reasonDetail) ? null : reasonDetail.Trim(),
+            InitiatedByActorId = initiatedByActorId,
             Status = PersistedGradeRoundStatus.Pending,
             ResultSchemaVersion = GradingContractVersions.GradeResult,
             MaxScore = maxScore,
@@ -321,6 +405,57 @@ public sealed class GradeRound : EntityBase
         };
         round.TenantId = tenantId;
         return round;
+    }
+
+    public void Start()
+    {
+        if (Status == PersistedGradeRoundStatus.Running) return;
+        if (Status != PersistedGradeRoundStatus.Pending)
+            throw new InvalidOperationException("Only a pending grade round can be started.");
+        Status = PersistedGradeRoundStatus.Running;
+        Touch();
+    }
+
+    public void AwaitInstructorResolution()
+    {
+        if (Status is PersistedGradeRoundStatus.Finalized or PersistedGradeRoundStatus.Failed)
+            throw new InvalidOperationException("A terminal grade round cannot await instructor resolution.");
+        Status = PersistedGradeRoundStatus.AwaitingInstructorResolution;
+        ResultState = "partial";
+        Score = null;
+        Touch();
+    }
+
+    public void AwaitEvidence()
+    {
+        if (Status is PersistedGradeRoundStatus.Finalized or PersistedGradeRoundStatus.Failed)
+            throw new InvalidOperationException("A terminal grade round cannot await evidence.");
+        Status = PersistedGradeRoundStatus.AwaitingEvidence;
+        ResultState = "partial";
+        Score = null;
+        Touch();
+    }
+
+    public void Finalize(GradeResultV1 result, DateTime finalizedAt)
+    {
+        GradingContractValidator.Validate(result);
+        if (!string.Equals(result.State, "final", StringComparison.Ordinal) || !result.Score.HasValue)
+            throw new InvalidOperationException("Only a final grade result can finalize a round.");
+        if (result.MaxScore != MaxScore)
+            throw new InvalidOperationException("The final result maximum score must match the round snapshot.");
+        if (Status == PersistedGradeRoundStatus.Finalized)
+        {
+            if (Score != result.Score || !string.Equals(Feedback, result.Feedback, StringComparison.Ordinal))
+                throw new InvalidOperationException("A finalized grade round is immutable.");
+            return;
+        }
+
+        ResultState = "final";
+        Score = result.Score;
+        Feedback = result.Feedback;
+        Status = PersistedGradeRoundStatus.Finalized;
+        FinalizedAt = finalizedAt.ToUniversalTime();
+        Touch();
     }
 }
 
@@ -345,6 +480,7 @@ public sealed class ReviewStage : EntityBase
         if (sequence < 1) throw new ArgumentOutOfRangeException(nameof(sequence));
         var stage = new ReviewStage
         {
+            Id = Guid.NewGuid(),
             GradeRoundId = roundId,
             Sequence = sequence,
             ReviewMethod = manifest.Method,
@@ -356,6 +492,55 @@ public sealed class ReviewStage : EntityBase
         };
         stage.TenantId = tenantId;
         return stage;
+    }
+
+    public void Start(DateTime startedAt)
+    {
+        if (Status == PersistedReviewStageStatus.Running) return;
+        if (Status != PersistedReviewStageStatus.Pending)
+            throw new InvalidOperationException("Only a pending review stage can be started.");
+        Status = PersistedReviewStageStatus.Running;
+        StartedAt = startedAt.ToUniversalTime();
+        Touch();
+    }
+
+    public void AwaitInstructorResolution()
+    {
+        if (Status is PersistedReviewStageStatus.Completed or PersistedReviewStageStatus.Failed)
+            throw new InvalidOperationException("A terminal review stage cannot await instructor resolution.");
+        StartedAt ??= SystemClock.UtcNow;
+        Status = PersistedReviewStageStatus.AwaitingInstructorResolution;
+        Touch();
+    }
+
+    public void AwaitEvidence()
+    {
+        if (Status is PersistedReviewStageStatus.Completed or PersistedReviewStageStatus.Failed)
+            throw new InvalidOperationException("A terminal review stage cannot await evidence.");
+        StartedAt ??= SystemClock.UtcNow;
+        Status = PersistedReviewStageStatus.AwaitingEvidence;
+        Touch();
+    }
+
+    public void Complete(DateTime completedAt)
+    {
+        if (Status == PersistedReviewStageStatus.Completed) return;
+        if (Status == PersistedReviewStageStatus.Failed)
+            throw new InvalidOperationException("A failed review stage cannot complete.");
+        StartedAt ??= completedAt.ToUniversalTime();
+        Status = PersistedReviewStageStatus.Completed;
+        CompletedAt = completedAt.ToUniversalTime();
+        Touch();
+    }
+
+    public void Fail(DateTime completedAt)
+    {
+        if (Status == PersistedReviewStageStatus.Completed)
+            throw new InvalidOperationException("A completed review stage cannot fail.");
+        StartedAt ??= completedAt.ToUniversalTime();
+        Status = PersistedReviewStageStatus.Failed;
+        CompletedAt = completedAt.ToUniversalTime();
+        Touch();
     }
 }
 
@@ -372,6 +557,30 @@ public sealed class GradeItemResult
     public ScoreValue MaxScore { get; private set; }
     public string? Feedback { get; private set; }
     public DateTime CreatedAt { get; private set; }
+
+    public static GradeItemResult Create(Guid? tenantId, Guid stageId, GradeItemResultV1 result)
+    {
+        if (stageId == Guid.Empty) throw new ArgumentException("Review stage ID is required.", nameof(stageId));
+        if (string.IsNullOrWhiteSpace(result.ItemId)) throw new ArgumentException("Item ID is required.", nameof(result));
+        return new GradeItemResult
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            ReviewStageId = stageId,
+            ItemId = result.ItemId,
+            State = result.State switch
+            {
+                GradeItemState.Graded => PersistedGradeItemState.Graded,
+                GradeItemState.Pending => PersistedGradeItemState.Pending,
+                GradeItemState.Unsupported => PersistedGradeItemState.Unsupported,
+                _ => throw new ArgumentOutOfRangeException(nameof(result)),
+            },
+            Score = result.Score,
+            MaxScore = result.MaxScore,
+            Feedback = result.Feedback,
+            CreatedAt = SystemClock.UtcNow,
+        };
+    }
 }
 
 public sealed class ReviewEvidence
@@ -391,6 +600,330 @@ public sealed class ReviewEvidence
     public Guid? ProducedByActorId { get; private set; }
     public string? ProducedByService { get; private set; }
     public DateTime CreatedAt { get; private set; }
+
+    public static ReviewEvidence CreateForActor(
+        Guid? tenantId,
+        Guid stageId,
+        string evidenceKey,
+        string evidenceType,
+        string schemaVersion,
+        string canonicalJson,
+        Guid actorId,
+        string? itemId = null)
+    {
+        if (actorId == Guid.Empty) throw new ArgumentException("Actor ID is required.", nameof(actorId));
+        return Create(tenantId, stageId, evidenceKey, evidenceType, schemaVersion, canonicalJson, itemId, actorId, null);
+    }
+
+    public static ReviewEvidence CreateForService(
+        Guid? tenantId,
+        Guid stageId,
+        string evidenceKey,
+        string evidenceType,
+        string schemaVersion,
+        string canonicalJson,
+        string service,
+        string? itemId = null)
+    {
+        if (string.IsNullOrWhiteSpace(service)) throw new ArgumentException("Service is required.", nameof(service));
+        return Create(tenantId, stageId, evidenceKey, evidenceType, schemaVersion, canonicalJson, itemId, null, service.Trim());
+    }
+
+    private static ReviewEvidence Create(
+        Guid? tenantId,
+        Guid stageId,
+        string evidenceKey,
+        string evidenceType,
+        string schemaVersion,
+        string canonicalJson,
+        string? itemId,
+        Guid? actorId,
+        string? service)
+    {
+        if (stageId == Guid.Empty) throw new ArgumentException("Review stage ID is required.", nameof(stageId));
+        var canonical = CanonicalPayload.Require(canonicalJson, 1024 * 1024, "review evidence");
+        return new ReviewEvidence
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            ReviewStageId = stageId,
+            EvidenceKey = RequireText(evidenceKey, nameof(evidenceKey)),
+            ItemId = string.IsNullOrWhiteSpace(itemId) ? null : itemId.Trim(),
+            EvidenceType = RequireText(evidenceType, nameof(evidenceType)),
+            SchemaVersion = RequireText(schemaVersion, nameof(schemaVersion)),
+            CanonicalJson = canonical,
+            PayloadHash = CanonicalPayload.Hash(canonical),
+            HashVersion = GradingContractVersions.Hash,
+            ProducedByActorId = actorId,
+            ProducedByService = service,
+            CreatedAt = SystemClock.UtcNow,
+        };
+    }
+
+    private static string RequireText(string value, string parameterName) =>
+        string.IsNullOrWhiteSpace(value) ? throw new ArgumentException("Value is required.", parameterName) : value.Trim();
+}
+
+/// <summary>Append-only learner-visible release for one immutable grade round.</summary>
+public sealed class GradeResultRelease
+{
+    private GradeResultRelease() { }
+
+    public Guid Id { get; private set; }
+    public Guid TenantId { get; private set; }
+    public Guid GradeRoundId { get; private set; }
+    public Guid GradingExecutionId { get; private set; }
+    public ReviewExecutionContext ExecutionContext { get; private set; }
+    public GradeResultReleaseStatus Status { get; private set; }
+    public Guid? ReleasedByActorId { get; private set; }
+    public string? ReleasedByService { get; private set; }
+    public string? Reason { get; private set; }
+    public DateTime ReleasedAt { get; private set; }
+
+    public static GradeResultRelease CreateByActor(
+        Guid tenantId,
+        Guid roundId,
+        Guid executionId,
+        Guid actorId,
+        string? reason = null)
+    {
+        if (actorId == Guid.Empty) throw new ArgumentException("Actor ID is required.", nameof(actorId));
+        return Create(tenantId, roundId, executionId, actorId, null, reason);
+    }
+
+    public static GradeResultRelease CreateByService(
+        Guid tenantId,
+        Guid roundId,
+        Guid executionId,
+        string service,
+        string? reason = null)
+    {
+        if (string.IsNullOrWhiteSpace(service)) throw new ArgumentException("Service is required.", nameof(service));
+        return Create(tenantId, roundId, executionId, null, service.Trim(), reason);
+    }
+
+    private static GradeResultRelease Create(
+        Guid tenantId,
+        Guid roundId,
+        Guid executionId,
+        Guid? actorId,
+        string? service,
+        string? reason)
+    {
+        if (tenantId == Guid.Empty || roundId == Guid.Empty || executionId == Guid.Empty)
+            throw new ArgumentException("Tenant, grade round, and execution IDs are required.");
+        return new GradeResultRelease
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            GradeRoundId = roundId,
+            GradingExecutionId = executionId,
+            ExecutionContext = ReviewExecutionContext.OfficialSubmission,
+            Status = GradeResultReleaseStatus.Released,
+            ReleasedByActorId = actorId,
+            ReleasedByService = service,
+            Reason = string.IsNullOrWhiteSpace(reason) ? null : reason.Trim(),
+            ReleasedAt = SystemClock.UtcNow,
+        };
+    }
+}
+
+/// <summary>Frozen member snapshot for a collective assessment submission.</summary>
+public sealed class AssessmentSubmissionParticipant
+{
+    private AssessmentSubmissionParticipant() { }
+
+    public Guid Id { get; private set; }
+    public Guid? TenantId { get; private set; }
+    public Guid SubmissionId { get; private set; }
+    public Guid EnrollmentId { get; private set; }
+    public Guid UserId { get; private set; }
+    public DateTime CapturedAt { get; private set; }
+
+    public static AssessmentSubmissionParticipant Create(
+        Guid? tenantId,
+        Guid submissionId,
+        Guid enrollmentId,
+        Guid userId)
+    {
+        if (submissionId == Guid.Empty || enrollmentId == Guid.Empty || userId == Guid.Empty)
+            throw new ArgumentException("Submission, enrollment, and user IDs are required.");
+        return new AssessmentSubmissionParticipant
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            SubmissionId = submissionId,
+            EnrollmentId = enrollmentId,
+            UserId = userId,
+            CapturedAt = SystemClock.UtcNow,
+        };
+    }
+}
+
+/// <summary>Append-only audit record for an accepted collective response mutation.</summary>
+public sealed class CollectiveAttemptDraftChange
+{
+    private CollectiveAttemptDraftChange() { }
+
+    public Guid Id { get; private set; }
+    public Guid TenantId { get; private set; }
+    public Guid SubmissionId { get; private set; }
+    public Guid ActorId { get; private set; }
+    public long PreviousVersion { get; private set; }
+    public long NewVersion { get; private set; }
+    public string IdempotencyKey { get; private set; } = string.Empty;
+    public string RequestHash { get; private set; } = string.Empty;
+    public string ResponseHash { get; private set; } = string.Empty;
+    public DateTime ChangedAt { get; private set; }
+
+    public static CollectiveAttemptDraftChange Create(
+        Guid tenantId,
+        Guid submissionId,
+        Guid actorId,
+        long previousVersion,
+        long newVersion,
+        string idempotencyKey,
+        string requestHash,
+        string responseHash)
+    {
+        if (tenantId == Guid.Empty || submissionId == Guid.Empty || actorId == Guid.Empty)
+            throw new ArgumentException("Tenant, submission, and actor IDs are required.");
+        if (previousVersion < 0 || newVersion != previousVersion + 1)
+            throw new ArgumentOutOfRangeException(nameof(newVersion), "Draft version must advance exactly once.");
+        return new CollectiveAttemptDraftChange
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            SubmissionId = submissionId,
+            ActorId = actorId,
+            PreviousVersion = previousVersion,
+            NewVersion = newVersion,
+            IdempotencyKey = RequireText(idempotencyKey, nameof(idempotencyKey)),
+            RequestHash = CanonicalPayload.RequireHash(requestHash, nameof(requestHash)),
+            ResponseHash = CanonicalPayload.RequireHash(responseHash, nameof(responseHash)),
+            ChangedAt = SystemClock.UtcNow,
+        };
+    }
+
+    private static string RequireText(string value, string parameterName) =>
+        string.IsNullOrWhiteSpace(value) ? throw new ArgumentException("Value is required.", parameterName) : value.Trim();
+}
+
+/// <summary>Mutable, rebuildable internal contribution selected for an enrollment and assessment.</summary>
+public sealed class AssessmentGradebookEntry : EntityBase
+{
+    private AssessmentGradebookEntry() { }
+
+    public Guid CourseId { get; private set; }
+    public Guid EnrollmentId { get; private set; }
+    public Guid AssessmentId { get; private set; }
+    public Guid? AssessmentGroupId { get; private set; }
+    public Guid SubmissionId { get; private set; }
+    public Guid GradeRoundId { get; private set; }
+    public ScoreValue EffectiveScore { get; private set; }
+    public ScoreValue CapturedMaxScore { get; private set; }
+    public PercentValue? CapturedWeightPercent { get; private set; }
+
+    public static AssessmentGradebookEntry Create(
+        Guid? tenantId,
+        Guid courseId,
+        Guid enrollmentId,
+        Guid assessmentId,
+        Guid? assessmentGroupId,
+        Guid submissionId,
+        Guid roundId,
+        ScoreValue score,
+        ScoreValue maxScore,
+        PercentValue? weight)
+    {
+        var entry = new AssessmentGradebookEntry();
+        entry.Id = Guid.NewGuid();
+        entry.TenantId = tenantId;
+        entry.Apply(courseId, enrollmentId, assessmentId, assessmentGroupId, submissionId, roundId, score, maxScore, weight);
+        return entry;
+    }
+
+    public void Reproject(
+        Guid? assessmentGroupId,
+        Guid submissionId,
+        Guid roundId,
+        ScoreValue score,
+        ScoreValue maxScore,
+        PercentValue? weight)
+    {
+        Apply(CourseId, EnrollmentId, AssessmentId, assessmentGroupId, submissionId, roundId, score, maxScore, weight);
+        Touch();
+    }
+
+    private void Apply(
+        Guid courseId,
+        Guid enrollmentId,
+        Guid assessmentId,
+        Guid? assessmentGroupId,
+        Guid submissionId,
+        Guid roundId,
+        ScoreValue score,
+        ScoreValue maxScore,
+        PercentValue? weight)
+    {
+        if (courseId == Guid.Empty || enrollmentId == Guid.Empty || assessmentId == Guid.Empty ||
+            submissionId == Guid.Empty || roundId == Guid.Empty)
+            throw new ArgumentException("Gradebook projection identifiers are required.");
+        if (maxScore.CompareTo(ScoreValue.Zero) <= 0 ||
+            score.CompareTo(ScoreValue.Zero) < 0 ||
+            score.CompareTo(maxScore) > 0)
+            throw new ArgumentOutOfRangeException(nameof(score), "Gradebook score is outside its captured bounds.");
+        CourseId = courseId;
+        EnrollmentId = enrollmentId;
+        AssessmentId = assessmentId;
+        AssessmentGroupId = assessmentGroupId;
+        SubmissionId = submissionId;
+        GradeRoundId = roundId;
+        EffectiveScore = score;
+        CapturedMaxScore = maxScore;
+        CapturedWeightPercent = weight;
+    }
+}
+
+/// <summary>Idempotent completion projection emitted only by the grading runtime.</summary>
+public sealed class AssessmentContentCompletionProjection : EntityBase
+{
+    private AssessmentContentCompletionProjection() { }
+
+    public Guid AssessmentId { get; private set; }
+    public Guid ContentId { get; private set; }
+    public Guid EnrollmentId { get; private set; }
+    public Guid SubmissionId { get; private set; }
+    public Guid? GradeRoundId { get; private set; }
+    public string Transition { get; private set; } = string.Empty;
+    public DateTime CompletedAt { get; private set; }
+
+    public static AssessmentContentCompletionProjection Create(
+        Guid? tenantId,
+        Guid assessmentId,
+        Guid contentId,
+        Guid enrollmentId,
+        Guid submissionId,
+        Guid? gradeRoundId,
+        string transition)
+    {
+        if (assessmentId == Guid.Empty || contentId == Guid.Empty || enrollmentId == Guid.Empty || submissionId == Guid.Empty)
+            throw new ArgumentException("Completion projection identifiers are required.");
+        if (string.IsNullOrWhiteSpace(transition)) throw new ArgumentException("Transition is required.", nameof(transition));
+        var projection = new AssessmentContentCompletionProjection
+        {
+            Id = Guid.NewGuid(),
+            AssessmentId = assessmentId,
+            ContentId = contentId,
+            EnrollmentId = enrollmentId,
+            SubmissionId = submissionId,
+            GradeRoundId = gradeRoundId,
+            Transition = transition.Trim(),
+            CompletedAt = SystemClock.UtcNow,
+        };
+        projection.TenantId = tenantId;
+        return projection;
+    }
 }
 
 public sealed class GradingCommandReceipt

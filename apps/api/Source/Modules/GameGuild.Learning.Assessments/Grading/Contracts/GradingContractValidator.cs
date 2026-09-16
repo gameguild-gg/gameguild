@@ -239,6 +239,52 @@ public static class GradingContractValidator
         Require(response.Payload.ValueKind != JsonValueKind.Undefined, "Response payload is required.");
     }
 
+    public static void Validate(GradeResultV1 result)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        Require(result.SchemaVersion == GradingContractVersions.GradeResult,
+            $"Grade result schemaVersion must be {GradingContractVersions.GradeResult}.");
+        Require(result.State is "partial" or "final", "Grade result state must be partial or final.");
+        Require(result.MaxScore.CompareTo(ScoreValue.Zero) > 0, "Grade result maxScore must be positive.");
+        Require((result.State == "final") == result.Score.HasValue,
+            "Only a final grade result may contain a score.");
+        if (result.Score.HasValue)
+        {
+            Require(result.Score.Value.CompareTo(ScoreValue.Zero) >= 0 &&
+                    result.Score.Value.CompareTo(result.MaxScore) <= 0,
+                "Grade result score must be within its maximum.");
+        }
+
+        Require(result.Items is not null && result.Items.Count > 0, "Grade result items are required.");
+        Require(result.Items.Select(item => item.ItemId).Distinct(StringComparer.Ordinal).Count() == result.Items.Count,
+            "Grade result item IDs must be unique.");
+        foreach (var item in result.Items)
+        {
+            RequireText(item.ItemId, "Grade result item ID");
+            Require(item.MaxScore.CompareTo(ScoreValue.Zero) >= 0, $"Grade item {item.ItemId} maxScore cannot be negative.");
+            Require((item.State == GradeItemState.Graded) == item.Score.HasValue,
+                $"Grade item {item.ItemId} score must match its state.");
+            if (item.Score.HasValue)
+            {
+                Require(item.Score.Value.CompareTo(ScoreValue.Zero) >= 0 &&
+                        item.Score.Value.CompareTo(item.MaxScore) <= 0,
+                    $"Grade item {item.ItemId} score must be within its maximum.");
+            }
+            RequireText(item.HandlerKey, $"Grade item {item.ItemId} handler key");
+            RequireText(item.HandlerVersion, $"Grade item {item.ItemId} handler version");
+        }
+
+        var expectedMaxScore = ScoreValue.Sum(result.Items.Select(item => item.MaxScore));
+        Require(expectedMaxScore == result.MaxScore, "Grade result maxScore must equal the sum of item maximums.");
+        if (result.State == "final")
+        {
+            Require(result.Items.All(item => item.State == GradeItemState.Graded),
+                "A final grade result cannot contain unresolved items.");
+            Require(ScoreValue.Sum(result.Items.Select(item => item.Score!.Value)) == result.Score,
+                "Grade result score must equal the sum of item scores.");
+        }
+    }
+
     public static void ValidateBindings(
         string executionSnapshotHash,
         AssessmentExecutionSnapshotV1 snapshot,

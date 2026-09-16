@@ -12,6 +12,8 @@ import type {
 export const QUIZ_CONTENT_TYPE = "quiz" as const;
 export const QUIZ_ANSWER_PAYLOAD_SCHEMA = "quiz-answer/v1" as const;
 export const QUIZ_ITEM_PROJECTION_SCHEMA_VERSION = 1 as const;
+export const MATCHING_PARTIAL_CREDIT_ALGORITHM = "matching-position-v1" as const;
+export const ORDERING_PARTIAL_CREDIT_ALGORITHM = "ordering-position-v1" as const;
 
 export const QUIZ_ASSESSMENT_TYPE_ADAPTER = { key: "quiz-assessment-type", version: "1" } as const;
 export const QUIZ_AUTOMATED_REVIEW_HANDLER = { key: "quiz-automated-review", version: "1" } as const;
@@ -26,6 +28,9 @@ export interface QuizItemProjectionV1 {
   itemId: string;
   itemType: QuizEntryType;
   maxScore: ScoreValue;
+  partialCreditAlgorithm?:
+    | typeof MATCHING_PARTIAL_CREDIT_ALGORITHM
+    | typeof ORDERING_PARTIAL_CREDIT_ALGORITHM;
   source: {
     contentType: typeof QUIZ_CONTENT_TYPE;
     itemId: string;

@@ -112,25 +112,14 @@ public sealed class AssessmentsModelConfiguration : IModelConfiguration
 
         modelBuilder.Entity<AssessmentSubmission>(entity =>
         {
-            entity.ToTable("AssessmentSubmissions");
-            entity.HasKey(e => e.Id);
-            entity.HasIndex(e => e.AssessmentId);
-            entity.HasIndex(e => e.EnrollmentId);
-            entity.HasIndex(e => e.UserId);
-            entity.HasIndex(e => new { e.AssessmentId, e.EnrollmentId, e.AttemptNumber })
-                .IsUnique()
-                .HasDatabaseName("UX_AssessmentSubmissions_Assessment_Enrollment_Attempt");
-            entity.Property(e => e.SubmittedModalities).HasConversion<int>();
-            entity.Property(e => e.TextPayload).HasColumnType("text");
-            entity.Property(e => e.FilePayload).HasMaxLength(2048);
-            entity.Property(e => e.UrlPayload).HasMaxLength(2048);
-            entity.Property(e => e.CodePayload).HasColumnType("text");
-            entity.Property(e => e.MediaPayload).HasMaxLength(2048);
-            entity.Property(e => e.ProjectPayload).HasMaxLength(2048);
-            entity.Property(e => e.Score).HasConversion(NullableScoreConverter).HasColumnType("integer");
-            entity.Property(e => e.RubricScoresPayload).HasColumnType("jsonb");
-            entity.ToTable(table =>
+            entity.ToTable("AssessmentSubmissions", table =>
             {
+                table.HasCheckConstraint(
+                    "CK_AssessmentSubmissions_Subject",
+                    "(\"EnrollmentId\" IS NOT NULL AND \"UserId\" IS NOT NULL AND \"CourseGroupId\" IS NULL) OR " +
+                    "(\"EnrollmentId\" IS NULL AND \"UserId\" IS NULL AND \"CourseGroupId\" IS NOT NULL)");
+                table.HasCheckConstraint("CK_AssessmentSubmissions_Starter", "\"StartedByUserId\" <> '00000000-0000-0000-0000-000000000000'");
+                table.HasCheckConstraint("CK_AssessmentSubmissions_DraftVersion", "\"DraftVersion\" >= 0");
                 table.HasCheckConstraint(
                     "CK_AssessmentSubmissions_SubmittedModalities",
                     "\"SubmittedModalities\" >= 0 AND (\"SubmittedModalities\" & ~127) = 0");
@@ -155,6 +144,36 @@ public sealed class AssessmentsModelConfiguration : IModelConfiguration
                     "(\"MediaPayload\" IS NULL OR (\"SubmittedModalities\" & 16) <> 0) AND " +
                     "(\"ProjectPayload\" IS NULL OR (\"SubmittedModalities\" & 32) <> 0)");
             });
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.AssessmentId);
+            entity.HasIndex(e => e.EnrollmentId);
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => new { e.AssessmentId, e.EnrollmentId, e.AttemptNumber })
+                .IsUnique()
+                .HasFilter("\"EnrollmentId\" IS NOT NULL")
+                .HasDatabaseName("UX_AssessmentSubmissions_Assessment_Enrollment_Attempt");
+            entity.HasIndex(e => new { e.AssessmentId, e.CourseGroupId, e.AttemptNumber })
+                .IsUnique()
+                .HasFilter("\"CourseGroupId\" IS NOT NULL AND \"EnrollmentId\" IS NULL")
+                .HasDatabaseName("UX_AssessmentSubmissions_Assessment_Group_Attempt");
+            entity.Property(e => e.SubmittedModalities).HasConversion<int>();
+            entity.Property(e => e.TextPayload).HasColumnType("text");
+            entity.Property(e => e.FilePayload).HasMaxLength(2048);
+            entity.Property(e => e.UrlPayload).HasMaxLength(2048);
+            entity.Property(e => e.CodePayload).HasColumnType("text");
+            entity.Property(e => e.MediaPayload).HasMaxLength(2048);
+            entity.Property(e => e.ProjectPayload).HasMaxLength(2048);
+            entity.Property(e => e.Score).HasConversion(NullableScoreConverter).HasColumnType("integer");
+            entity.Property(e => e.RubricScoresPayload).HasColumnType("jsonb");
+            entity.HasOne<AssessmentDefinitionRevision>()
+                .WithMany()
+                .HasForeignKey(e => new { e.DefinitionRevisionId, e.AssessmentId })
+                .HasPrincipalKey(e => new { e.Id, e.AssessmentId })
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<CourseGroup>()
+                .WithMany()
+                .HasForeignKey(e => e.CourseGroupId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<CourseGroupSet>(entity =>

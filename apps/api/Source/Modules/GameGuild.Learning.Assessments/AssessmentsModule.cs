@@ -8,6 +8,7 @@ using GameGuild.Learning.Assessments.Grading.Abstractions;
 using GameGuild.Learning.Assessments.Grading.Authoring;
 using GameGuild.Learning.Assessments.Grading.Contracts;
 using GameGuild.Learning.Assessments.Grading.Persistence;
+using GameGuild.Learning.Assessments.Grading.Runtime;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace GameGuild.Learning.Assessments;
@@ -50,7 +51,17 @@ public static class AssessmentsModule
         services.AddSingleton<IAssessmentTypeAdapterResolver, AssessmentTypeAdapterResolver>();
         services.AddSingleton<IAssessmentExecutionPolicyResolver, AssessmentExecutionPolicyResolver>();
         services.AddSingleton<IReviewStageHandlerResolver, ReviewStageHandlerResolver>();
+        services.AddSingleton<InstructorReviewStageHandler>();
+        services.AddSingleton<IReviewStageHandler>(provider => provider.GetRequiredService<InstructorReviewStageHandler>());
         services.AddScoped<IAssessmentAuthoringService, AssessmentAuthoringService>();
+        services.AddScoped<IAssessmentGradebookProjectionService, AssessmentGradebookProjectionService>();
+        services.AddScoped<IAssessmentLearnerResultProjectionService, AssessmentLearnerResultProjectionService>();
+        services.AddScoped<OfficialGradingFinalizationSink>();
+        services.AddScoped<IGradingFinalizationSink>(provider => provider.GetRequiredService<OfficialGradingFinalizationSink>());
+        services.AddScoped<IGradingExecutionOrchestrator, GradingExecutionOrchestrator>();
+        services.AddScoped<IAssessmentGradingRuntimeService, AssessmentGradingRuntimeService>();
+        services.AddScoped<IGradeReleaseService, GradeReleaseService>();
+        services.AddScoped<IAcademicOutboxConsumer, ImmediateGradeReleaseConsumer>();
         services.AddScoped<IAcademicOutboxWriter, AcademicOutboxWriter>();
         services.AddSingleton<IAcademicOutboxDispatcher, AcademicOutboxDispatcher>();
         services.AddScoped<IAssessmentExecutableVersionPreflight, AssessmentExecutableVersionPreflight>();

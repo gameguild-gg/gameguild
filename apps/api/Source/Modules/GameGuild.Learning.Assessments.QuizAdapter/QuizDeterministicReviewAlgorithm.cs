@@ -59,6 +59,8 @@ public sealed class QuizDeterministicReviewAlgorithm
             return Unresolved(itemId, maxScore, handlerKey, handlerVersion, GradeItemState.Unsupported, "Rating does not define a deterministic answer.");
         }
 
+        ValidatePartialCreditAlgorithm(itemType, entry, projection);
+
         if (!answers.TryGetProperty(itemId, out var answer)) return Graded(itemId, ScoreValue.Zero, maxScore, handlerKey, handlerVersion);
         if (!string.Equals(answer.GetProperty("type").GetString(), itemType, StringComparison.Ordinal))
         {
@@ -67,11 +69,13 @@ public sealed class QuizDeterministicReviewAlgorithm
 
         if (itemType == "MATCHING" && entry.TryGetProperty("allowPartialCredit", out var matchingPartial) && matchingPartial.GetBoolean())
         {
+            RequirePartialCreditAlgorithm(projection, QuizAdapterContracts.MatchingPartialCreditAlgorithm);
             return GradeMatchingPartial(itemId, entry, answer, maxScore, handlerKey, handlerVersion);
         }
 
         if (itemType == "ORDERING" && entry.TryGetProperty("allowPartialCredit", out var orderingPartial) && orderingPartial.GetBoolean())
         {
+            RequirePartialCreditAlgorithm(projection, QuizAdapterContracts.OrderingPartialCreditAlgorithm);
             return GradeOrderingPartial(itemId, entry, answer, maxScore, handlerKey, handlerVersion);
         }
 
@@ -290,6 +294,25 @@ public sealed class QuizDeterministicReviewAlgorithm
 
     private static bool OptionalBoolean(JsonElement owner, string property, bool defaultValue = false) =>
         owner.TryGetProperty(property, out var value) ? value.GetBoolean() : defaultValue;
+
+    private static void RequirePartialCreditAlgorithm(JsonElement projection, string expected)
+    {
+        if (!projection.TryGetProperty("partialCreditAlgorithm", out var algorithm) ||
+            algorithm.ValueKind != JsonValueKind.String ||
+            !string.Equals(algorithm.GetString(), expected, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"Quiz partial-credit algorithm {expected} is not pinned by the item projection.");
+        }
+    }
+
+    private static void ValidatePartialCreditAlgorithm(string itemType, JsonElement entry, JsonElement projection)
+    {
+        if (!entry.TryGetProperty("allowPartialCredit", out var enabled) || !enabled.GetBoolean()) return;
+        if (itemType == "MATCHING")
+            RequirePartialCreditAlgorithm(projection, QuizAdapterContracts.MatchingPartialCreditAlgorithm);
+        else if (itemType == "ORDERING")
+            RequirePartialCreditAlgorithm(projection, QuizAdapterContracts.OrderingPartialCreditAlgorithm);
+    }
 
     private static GradeItemResultV1 Graded(
         string itemId,

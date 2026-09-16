@@ -511,14 +511,18 @@ public class AssessmentGroup : EntityBase
 public class AssessmentSubmission : EntityBase
 {
     public Guid AssessmentId { get; private set; }
-    public Guid EnrollmentId { get; private set; }
-    public Guid UserId { get; private set; }
+    public Guid? DefinitionRevisionId { get; private set; }
+    public Guid? EnrollmentId { get; private set; }
+    public Guid? UserId { get; private set; }
     public Guid? CourseGroupId { get; private set; }
+    public Guid StartedByUserId { get; private set; }
     public int AttemptNumber { get; private set; }
+    public long DraftVersion { get; private set; }
     public ScoreValue? Score { get; private set; }
     public bool? Passed { get; private set; }
     public DateTime StartedAt { get; private set; }
     public DateTime? SubmittedAt { get; private set; }
+    public Guid? SubmittedByUserId { get; private set; }
     public DateTime? GradedAt { get; private set; }
     public Guid? GradedBy { get; private set; }
     public string? Feedback { get; private set; }
@@ -535,18 +539,89 @@ public class AssessmentSubmission : EntityBase
 
     private AssessmentSubmission() { } // EF Core
 
+    /// <summary>
+    /// Starts a submission for assessment types that do not use the grading runtime.
+    /// Runtime-backed submissions must use StartIndividual or StartCollective so the
+    /// immutable definition revision is always captured.
+    /// </summary>
     public static AssessmentSubmission Start(Guid assessmentId, Guid enrollmentId, Guid userId, int attemptNumber)
     {
+        if (assessmentId == Guid.Empty || enrollmentId == Guid.Empty || userId == Guid.Empty)
+            throw new ArgumentException("Assessment, enrollment, and user IDs are required.");
+        if (attemptNumber < 1) throw new ArgumentOutOfRangeException(nameof(attemptNumber));
         return new AssessmentSubmission
         {
             Id = Guid.NewGuid(),
             AssessmentId = assessmentId,
             EnrollmentId = enrollmentId,
             UserId = userId,
+            StartedByUserId = userId,
+            AttemptNumber = attemptNumber,
+            StartedAt = SystemClock.UtcNow,
+            Status = SubmissionStatus.InProgress,
+        };
+    }
+
+    public static AssessmentSubmission StartIndividual(
+        Guid? tenantId,
+        Guid assessmentId,
+        Guid definitionRevisionId,
+        Guid enrollmentId,
+        Guid userId,
+        int attemptNumber)
+    {
+        if (assessmentId == Guid.Empty || definitionRevisionId == Guid.Empty ||
+            enrollmentId == Guid.Empty || userId == Guid.Empty)
+            throw new ArgumentException("Assessment, revision, enrollment, and user IDs are required.");
+        if (attemptNumber < 1) throw new ArgumentOutOfRangeException(nameof(attemptNumber));
+        return new AssessmentSubmission
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            AssessmentId = assessmentId,
+            DefinitionRevisionId = definitionRevisionId,
+            EnrollmentId = enrollmentId,
+            UserId = userId,
+            StartedByUserId = userId,
             AttemptNumber = attemptNumber,
             StartedAt = SystemClock.UtcNow,
             Status = SubmissionStatus.InProgress
         };
+    }
+
+    public static AssessmentSubmission StartCollective(
+        Guid? tenantId,
+        Guid assessmentId,
+        Guid definitionRevisionId,
+        Guid courseGroupId,
+        Guid startedByUserId,
+        int attemptNumber)
+    {
+        if (assessmentId == Guid.Empty || definitionRevisionId == Guid.Empty ||
+            courseGroupId == Guid.Empty || startedByUserId == Guid.Empty)
+            throw new ArgumentException("Assessment, revision, group, and starter IDs are required.");
+        if (attemptNumber < 1) throw new ArgumentOutOfRangeException(nameof(attemptNumber));
+        return new AssessmentSubmission
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            AssessmentId = assessmentId,
+            DefinitionRevisionId = definitionRevisionId,
+            CourseGroupId = courseGroupId,
+            StartedByUserId = startedByUserId,
+            AttemptNumber = attemptNumber,
+            StartedAt = SystemClock.UtcNow,
+            Status = SubmissionStatus.InProgress,
+        };
+    }
+
+    public bool IsCollective => CourseGroupId.HasValue;
+
+    public void StampCourseGroup(Guid courseGroupId)
+    {
+        if (courseGroupId == Guid.Empty) throw new ArgumentException("Course group ID is required.", nameof(courseGroupId));
+        CourseGroupId = courseGroupId;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void SetPayload(SubmitAssessmentRequest payload, SubmissionModality allowedModalities)
@@ -585,26 +660,42 @@ public class AssessmentSubmission : EntityBase
 
     public void Submit(bool isLate = false)
     {
-        Submit(isLate, SystemClock.UtcNow);
+        Submit(isLate, SystemClock.UtcNow, UserId ?? StartedByUserId);
     }
 
     public void Submit(bool isLate, DateTime submittedAt)
+    {
+        Submit(isLate, submittedAt, UserId ?? StartedByUserId);
+    }
+
+    public void Submit(bool isLate, DateTime submittedAt, Guid submittedByUserId)
     {
         if (Status != SubmissionStatus.InProgress)
         {
             throw new InvalidOperationException("Only an in-progress submission can be submitted.");
         }
+        if (submittedByUserId == Guid.Empty)
+        {
+            throw new ArgumentException("Submitter ID is required.", nameof(submittedByUserId));
+        }
 
         SubmittedAt = submittedAt;
+        SubmittedByUserId = submittedByUserId;
         IsLate = isLate;
         Status = isLate ? SubmissionStatus.Late : SubmissionStatus.Submitted;
         UpdatedAt = submittedAt;
     }
 
-    internal void StampCourseGroup(Guid courseGroupId)
+    public long AdvanceCollectiveDraft(long expectedVersion)
     {
-        CourseGroupId = courseGroupId;
+        if (!IsCollective) throw new InvalidOperationException("Only collective submissions have a shared draft version.");
+        if (Status != SubmissionStatus.InProgress)
+            throw new InvalidOperationException("A finalized collective draft cannot be changed.");
+        if (DraftVersion != expectedVersion)
+            throw new InvalidOperationException("The collective draft version is stale.");
+        DraftVersion = checked(DraftVersion + 1);
         UpdatedAt = SystemClock.UtcNow;
+        return DraftVersion;
     }
 
     public void Grade(ScoreValue score, ScoreValue passingScore, ScoreValue maxScore, Guid? gradedBy = null, string? feedback = null)
@@ -619,7 +710,22 @@ public class AssessmentSubmission : EntityBase
             throw new ArgumentOutOfRangeException(nameof(score), "Score must be between zero and the assessment maximum.");
         }
 
-        GradeCore(score, passingScore, gradedBy, feedback);
+        GradeCore(score, passingScore, gradedBy, feedback, allowRegrade: false);
+    }
+
+    public void ApplyRuntimeGrade(
+        ScoreValue score,
+        ScoreValue passingScore,
+        ScoreValue maxScore,
+        string? feedback = null)
+    {
+        if (maxScore.CompareTo(ScoreValue.Zero) <= 0 || passingScore.CompareTo(maxScore) > 0 ||
+            score.CompareTo(ScoreValue.Zero) < 0 || score.CompareTo(maxScore) > 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(score), "Runtime score is outside the assessment bounds.");
+        }
+
+        GradeCore(score, passingScore, null, feedback, allowRegrade: true);
     }
 
     public void Grade(ScoreValue score, ScoreValue passingScore, ScoreValue maxScore, Guid? gradedBy, string? feedback, string? rubricScores)
@@ -629,9 +735,15 @@ public class AssessmentSubmission : EntityBase
         UpdatedAt = SystemClock.UtcNow;
     }
 
-    private void GradeCore(ScoreValue score, ScoreValue passingScore, Guid? gradedBy, string? feedback)
+    private void GradeCore(
+        ScoreValue score,
+        ScoreValue passingScore,
+        Guid? gradedBy,
+        string? feedback,
+        bool allowRegrade)
     {
-        if (Status is not (SubmissionStatus.Submitted or SubmissionStatus.Late))
+        if (Status is not (SubmissionStatus.Submitted or SubmissionStatus.Late) &&
+            !(allowRegrade && Status == SubmissionStatus.Graded))
         {
             throw new InvalidOperationException("Only submitted submissions can be graded.");
         }

@@ -1,49 +1,41 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import type { LearningAssessmentsAssessmentSubmission } from '@game-guild/client';
-import { TextViewer } from './text-viewer';
-import { UrlViewer } from './url-viewer';
-import { FileViewer } from './file-viewer';
-import { MediaViewer } from './media-viewer';
-import { CodeGraderPanel, type ComputedScore } from './code-grader-panel';
-import { codePayloadToFiles } from '@/lib/coding-assignment/code-payload';
-import type { CodingAssignmentContent as WebCodingAssignmentContent } from '@/lib/coding-assignment/client';
-import { fetchSubmissionAction } from './speedgrader-actions';
-import { parseSubmittedModalities } from './submitted-modalities';
-
-export { parseSubmittedModalities };
+import { useEffect, useMemo, useState } from 'react';
+import type { AssessmentSubmissionRuntimeViewV1 } from '@game-guild/grading';
+import {
+  parseQuizAnswerEnvelope,
+  QUIZ_ASSESSMENT_TYPE_ADAPTER,
+  type QuizLearnerDeliveryItemV1,
+} from '@game-guild/grading-adapter-quiz';
+import { createEmptyQuizAnswer, type QuizAnswer } from '@game-guild/quiz';
+import { QuizPlayer, type QuizSubmissionResult } from '@game-guild/quiz-surface/player';
+import { Badge } from '@game-guild/ui/components/badge';
+import { getRuntimeSubmission } from '@/lib/learning/grading-runtime-actions';
+import { scoreUnitsToPoints } from '@/lib/learning/academic-values';
 
 export interface SubmissionViewerProps {
-  /** Canonical submission id (queue item.submissionId — fetch happens here). */
   submissionId: string;
-  /** Full coding assignment — required for the IDE code viewer. */
-  codingAssignment?: WebCodingAssignmentContent | null;
-  manifestUrl?: string;
-  onComputedScore?: (result: ComputedScore) => void;
 }
 
 /**
- * SpeedGrader left panel: fetches the submission for the current queue item
- * and renders EVERY present payload stacked (submissions may be multi-modality).
+ * Instructor view of the exact delivery and response bound to the official
+ * grading execution. The authored content is intentionally not consulted.
  */
 export function SubmissionViewer({
   submissionId,
-  codingAssignment,
-  manifestUrl = '/emception/manifest.json',
-  onComputedScore,
 }: SubmissionViewerProps): React.JSX.Element {
-  const [submission, setSubmission] = useState<LearningAssessmentsAssessmentSubmission | null>(null);
+  const [submission, setSubmission] =
+    useState<AssessmentSubmissionRuntimeViewV1 | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     setSubmission(null);
     setError(null);
-    fetchSubmissionAction(submissionId).then((result) => {
+    getRuntimeSubmission(submissionId).then((result) => {
       if (cancelled) return;
-      if (result.ok) {
-        setSubmission(result.submission);
+      if (result.success) {
+        setSubmission(result.data);
       } else {
         setError(result.error);
       }
@@ -55,90 +47,178 @@ export function SubmissionViewer({
 
   if (error) {
     return (
-      <div data-testid="viewer-error" role="alert" className="p-4 text-sm text-destructive">
+      <div
+        data-testid="viewer-error"
+        role="alert"
+        className="p-4 text-sm text-destructive"
+      >
         {error}
       </div>
     );
   }
   if (!submission) {
     return (
-      <div data-testid="viewer-loading" className="p-4 text-sm text-muted-foreground">
-        Loading submission…
+      <div
+        data-testid="viewer-loading"
+        className="p-4 text-sm text-muted-foreground"
+      >
+        Loading submission...
       </div>
     );
   }
 
-  const modalities = parseSubmittedModalities(submission.submittedModalities);
-  const panes: React.ReactNode[] = [];
+  return <RuntimeSubmission submission={submission} />;
+}
 
-  if (modalities.has('Text') && submission.textPayload) {
-    panes.push(<TextViewer key="text" text={submission.textPayload} />);
-  }
-  if (modalities.has('Url') && submission.urlPayload) {
-    panes.push(<UrlViewer key="url" url={submission.urlPayload} />);
-  }
-  if (modalities.has('Code') && submission.codePayload) {
-    panes.push(
-      codingAssignment ? (
-        <CodeGraderPanel
-          key="code"
-          assignment={codingAssignment}
-          submittedFiles={safeParseCodeFiles(submission.codePayload)}
-          maxScore={codingAssignment.Grading.MaxScore}
-          manifestUrl={manifestUrl}
-          submissionId={submissionId}
-          onComputedScore={onComputedScore}
-        />
-      ) : (
-        <CodeFallback key="code" payload={submission.codePayload} />
-      ),
-    );
-  }
-  if (modalities.has('File') && submission.filePayload) {
-    panes.push(<FileViewer key="file" payload={submission.filePayload} />);
-  }
-  if (modalities.has('Media') && submission.mediaPayload) {
-    panes.push(<MediaViewer key="media" url={submission.mediaPayload} />);
-  }
-
-  if (panes.length === 0) {
-    return (
-      <div data-testid="viewer-empty" className="p-4 text-sm text-muted-foreground">
-        This submission has no viewable payload.
-      </div>
-    );
-  }
+function RuntimeSubmission({
+  submission,
+}: {
+  submission: AssessmentSubmissionRuntimeViewV1;
+}): React.JSX.Element {
+  const quiz = useMemo(() => readQuizSubmission(submission), [submission]);
 
   return (
-    <div data-testid="submission-viewer" className="h-full space-y-4 overflow-auto p-4">
-      {panes}
+    <div
+      data-testid="submission-viewer"
+      className="h-full space-y-4 overflow-auto p-4"
+    >
+      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+        <Badge variant="outline">Attempt {submission.attemptNumber}</Badge>
+        <span>Delivery {submission.execution.deliveryHash.slice(0, 12)}</span>
+        <span>Revision {submission.definitionRevisionId.slice(0, 8)}</span>
+      </div>
+
+      {quiz ? (
+        <div className="space-y-4" data-testid="runtime-quiz-submission">
+          {quiz.items.map((item, index) => (
+            <section
+              key={item.itemId}
+              className="space-y-3 rounded-md border bg-card p-4"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-sm font-semibold">Question {index + 1}</h2>
+                <Badge variant="secondary">
+                  {scoreUnitsToPoints(
+                    submission.execution.itemMaxScores[item.itemId] ?? 0,
+                  )}{' '}
+                  pts
+                </Badge>
+              </div>
+              <QuizPlayer
+                entry={item.delivery.entry}
+                answer={item.answer}
+                onAnswerChange={() => undefined}
+                onSubmit={() => undefined}
+                submissionResult={item.result}
+                disabled
+              />
+            </section>
+          ))}
+        </div>
+      ) : (
+        <GenericRuntimeSubmission submission={submission} />
+      )}
     </div>
   );
 }
 
-function safeParseCodeFiles(payload: string) {
-  try {
-    return codePayloadToFiles(payload);
-  } catch (err) {
-    // ponytail: surface the parse failure so an empty IDE is diagnosable
-    // (payload shape drift / truncated JSON) instead of a silent empty array.
-    console.error('[speedgrader] Failed to parse codePayload:', err);
-    return [];
+function readQuizSubmission(submission: AssessmentSubmissionRuntimeViewV1): {
+  items: Array<{
+    itemId: string;
+    delivery: QuizLearnerDeliveryItemV1;
+    answer: QuizAnswer;
+    result: QuizSubmissionResult;
+  }>;
+} | null {
+  const delivery = submission.execution.delivery;
+  if (
+    delivery.itemOrder.some((itemId) => {
+      const item = delivery.items[itemId];
+      return (
+        !item ||
+        item.adapterKey !== QUIZ_ASSESSMENT_TYPE_ADAPTER.key ||
+        item.adapterVersion !== QUIZ_ASSESSMENT_TYPE_ADAPTER.version
+      );
+    })
+  ) {
+    return null;
   }
+
+  let answers: Record<string, QuizAnswer> = {};
+  if (submission.execution.submittedResponse) {
+    try {
+      answers = parseQuizAnswerEnvelope(
+        submission.execution.submittedResponse,
+      ).payload.answers;
+    } catch {
+      return null;
+    }
+  }
+
+  const resultByItem = new Map(
+    (submission.execution.instructorVisibleResult?.items ?? []).map((item) => [
+      item.itemId,
+      item,
+    ]),
+  );
+  return {
+    items: delivery.itemOrder.map((itemId) => {
+      const item = delivery.items[itemId]!;
+      const learnerPayload = item.learnerPayload as QuizLearnerDeliveryItemV1;
+      if (learnerPayload.itemId !== itemId) {
+        throw new Error(`Quiz delivery item ${itemId} has a mismatched payload.`);
+      }
+      const answer =
+        answers[itemId] ?? createEmptyQuizAnswer(learnerPayload.entry.type);
+      const result = resultByItem.get(itemId);
+      return {
+        itemId,
+        delivery: learnerPayload,
+        answer,
+        result: toQuizSubmissionResult(result),
+      };
+    }),
+  };
 }
 
-/** Code submission without a loadable coding assignment: raw file listing. */
-function CodeFallback({ payload }: { payload: string }): React.JSX.Element {
-  const files = safeParseCodeFiles(payload);
+function toQuizSubmissionResult(
+  item:
+    | NonNullable<
+        AssessmentSubmissionRuntimeViewV1['execution']['instructorVisibleResult']
+      >['items'][number]
+    | undefined,
+): QuizSubmissionResult {
+  if (!item || item.state !== 'graded' || item.score == null) {
+    return {
+      status: 'pending',
+      feedback: 'Awaiting grading.',
+    };
+  }
+  return {
+    status: item.score === item.maxScore ? 'correct' : 'incorrect',
+    feedback: item.feedback ?? undefined,
+  };
+}
+
+function GenericRuntimeSubmission({
+  submission,
+}: {
+  submission: AssessmentSubmissionRuntimeViewV1;
+}): React.JSX.Element {
   return (
-    <div data-testid="code-fallback" className="space-y-3 rounded-md border bg-card p-4">
-      {files.map((file) => (
-        <div key={file.path} className="space-y-1">
-          <p className="text-sm font-medium">{file.path}</p>
-          <pre className="overflow-auto rounded bg-muted p-2 text-xs text-muted-foreground">{file.content}</pre>
-        </div>
-      ))}
-      {files.length === 0 && <pre className="overflow-auto rounded bg-muted p-2 text-xs text-muted-foreground">{payload}</pre>}
+    <div data-testid="runtime-generic-submission" className="space-y-4">
+      <div className="rounded-md border bg-card p-4">
+        <h2 className="text-sm font-semibold">Immutable delivery</h2>
+        <pre className="mt-3 overflow-auto whitespace-pre-wrap text-xs text-muted-foreground">
+          {JSON.stringify(submission.execution.delivery, null, 2)}
+        </pre>
+      </div>
+      <div className="rounded-md border bg-card p-4">
+        <h2 className="text-sm font-semibold">Submitted response</h2>
+        <pre className="mt-3 overflow-auto whitespace-pre-wrap text-xs text-muted-foreground">
+          {JSON.stringify(submission.execution.submittedResponse, null, 2)}
+        </pre>
+      </div>
     </div>
   );
 }

@@ -315,34 +315,6 @@ public class TasksAggregationTests
     }
 
     [Fact]
-    public async Task GradeFanOut_NotifiesEachMember()
-    {
-        await using var db = CreateContext();
-        var courseId = Guid.NewGuid();
-        await SeedCourseAsync(db, courseId, "Music", creatorId: Guid.NewGuid());
-        var assessment = await SeedAssessmentAsync(db, courseId, "Group Performance");
-        var group = await SeedGroupAsync(db, assessment, "Alice", "Bob", "Carol");
-        var gradedRow = default(AssessmentSubmission);
-        foreach (var (userId, _) in group.Members)
-        {
-            var row = await SeedUserRowAsync(db, assessment.Id, userId, "member", 1, SubmissionStatus.Submitted, groupId: group.GroupId);
-            if (gradedRow == null) gradedRow = row.Row;
-        }
-
-        var notifier = new RecordingNotifier();
-        var service = CreateAssessmentService(db, notifier);
-        var result = await service.GradeSubmissionAsync(gradedRow!.Id, new GradeSubmissionRequest(Score(90), GradedBy: Guid.NewGuid(), Feedback: "bravo"));
-
-        result.IsSuccess.Should().BeTrue();
-        notifier.Sent.Should().HaveCount(3, "grade fan-out notifies every graded member");
-        notifier.Sent.Select(s => s.Recipient).Should().BeEquivalentTo(group.Members.Select(m => m.UserId));
-        notifier.Sent.Should().OnlyContain(s =>
-            s.Type == NotificationType.AssessmentGraded &&
-            s.Message.Contains(assessment.Title) &&
-            s.Message.Contains("90"));
-    }
-
-    [Fact]
     public async Task NotificationFailure_DoesNotBreakSubmit()
     {
         await using var db = CreateContext();

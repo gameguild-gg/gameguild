@@ -902,23 +902,4 @@ public class AssessmentRequestRecordTests
         request.IsRequired.Should().BeNull();
     }
 
-    [Fact]
-    public void GradeSubmissionRequest_ShouldSetAllProperties()
-    {
-        var graderId = Guid.NewGuid();
-        var request = new GradeSubmissionRequest(Score(85), graderId, "Well done");
-
-        request.Score.Should().Be(Score(85));
-        request.GradedBy.Should().Be(graderId);
-        request.Feedback.Should().Be("Well done");
-    }
-
-    [Fact]
-    public void GradeSubmissionRequest_Defaults_ShouldBeNull()
-    {
-        var request = new GradeSubmissionRequest(Score(70));
-
-        request.GradedBy.Should().BeNull();
-        request.Feedback.Should().BeNull();
-    }
 }

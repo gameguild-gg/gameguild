@@ -612,20 +612,42 @@ public sealed class AssessmentAuthoringService(
         AssessmentExecutionPolicyV1 policy,
         ReviewExecutionContext contextKind)
     {
-        var items = projection.Items.Select(item =>
+        var resolvedAdapters = projection.Items.Select(item =>
         {
-            assessmentTypeAdapters.Resolve(projection.ContentType, item.AdapterKey, item.AdapterVersion, contextKind);
-            return new AssessmentItemManifestV1(
-                item.ItemId,
-                item.ItemType,
+            var adapter = assessmentTypeAdapters.Resolve(
+                projection.ContentType,
                 item.AdapterKey,
-                item.AdapterVersion);
+                item.AdapterVersion,
+                contextKind);
+            return (Item: item, Adapter: adapter);
         }).ToArray();
+        var items = resolvedAdapters.Select(value => new AssessmentItemManifestV1(
+            value.Item.ItemId,
+            value.Item.ItemType,
+            value.Item.AdapterKey,
+            value.Item.AdapterVersion)).ToArray();
 
         var handlers = registeredStageHandlers.ToArray();
         var stages = policy.Review.Methods.ToSequence().Select(method =>
         {
-            var candidates = handlers.Where(handler => handler.Method == method && handler.Contexts.Contains(contextKind)).Take(2).ToArray();
+            var adapterBindings = resolvedAdapters
+                .Select(value => value.Adapter)
+                .DistinctBy(adapter => (adapter.Key, adapter.Version))
+                .Select(adapter => adapter.ReviewHandlers.TryGetValue(method, out var binding) ? binding : null)
+                .Where(binding => binding is not null)
+                .Distinct()
+                .ToArray();
+            if (adapterBindings.Length > 1)
+                throw new InvalidOperationException($"Assessment adapters disagree about the {method} handler binding.");
+
+            var candidates = handlers.Where(handler =>
+                    handler.Method == method &&
+                    handler.Contexts.Contains(contextKind) &&
+                    (adapterBindings.Length == 0 ||
+                     (string.Equals(handler.Key, adapterBindings[0]!.Key, StringComparison.Ordinal) &&
+                      string.Equals(handler.Version, adapterBindings[0]!.Version, StringComparison.Ordinal))))
+                .Take(2)
+                .ToArray();
             if (candidates.Length != 1)
                 throw new InvalidOperationException($"Exactly one {method} handler must be registered for {contextKind}.");
             var handler = candidates[0];
@@ -657,7 +679,18 @@ public sealed class AssessmentAuthoringService(
         var snapshot = AssessmentDefinitionRevisionReader.ReadValidated(revision);
         foreach (var item in snapshot.Manifest.Items)
         {
-            assessmentTypeAdapters.Resolve(snapshot.AuthoringSource.ContentType, item.AdapterKey, item.AdapterVersion, contextKind);
+            var adapter = assessmentTypeAdapters.Resolve(
+                snapshot.AuthoringSource.ContentType,
+                item.AdapterKey,
+                item.AdapterVersion,
+                contextKind);
+            if (contextKind == ReviewExecutionContext.OfficialSubmission &&
+                snapshot.AuthoringSource.Policy.Review.Methods == ReviewMethods.AutomatedReview &&
+                !adapter.CanEvaluateDeterministically(snapshot.ItemProjections[item.ItemId]))
+            {
+                throw new InvalidOperationException(
+                    $"Item {item.ItemId} does not have deterministic coverage. Add InstructorReview before publishing.");
+            }
         }
         foreach (var stage in snapshot.Manifest.Stages)
         {

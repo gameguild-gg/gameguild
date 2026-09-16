@@ -1,5 +1,7 @@
 using GameGuild.CQRS;
 using GameGuild.Learning.Assessments;
+using GameGuild.Learning.Assessments.Grading.Persistence;
+using GameGuild.Learning.Assessments.Grading.Runtime;
 using GameGuild.Learning.Certificates;
 using GameGuild.Learning.Cohorts;
 using GameGuild.Learning.Courses;
@@ -12,7 +14,9 @@ namespace GameGuild.Learning.Workspaces;
 
 public sealed record GetLearnerDashboardQuery(Guid UserId) : IQuery<LearnerDashboardDto>;
 
-public sealed class GetLearnerDashboardQueryHandler(IApplicationDbContext context)
+public sealed class GetLearnerDashboardQueryHandler(
+    IApplicationDbContext context,
+    IAssessmentGradebookProjectionService gradebookProjection)
     : IQueryHandler<GetLearnerDashboardQuery, LearnerDashboardDto>
 {
     public async Task<LearnerDashboardDto> Handle(
@@ -98,14 +102,35 @@ public sealed class GetLearnerDashboardQueryHandler(IApplicationDbContext contex
             .ToArrayAsync(cancellationToken)
             .ConfigureAwait(false);
         var assessmentIds = assessments.Select(assessment => assessment.Id).ToArray();
+        var participantSubmissionIds = await context.Set<AssessmentSubmissionParticipant>()
+            .AsNoTracking()
+            .Where(participant => participant.UserId == request.UserId)
+            .Select(participant => participant.SubmissionId)
+            .ToArrayAsync(cancellationToken)
+            .ConfigureAwait(false);
         var submissions = assessmentIds.Length == 0
             ? []
             : await context.Set<AssessmentSubmission>()
                 .AsNoTracking()
                 .Where(submission =>
-                    submission.UserId == request.UserId &&
+                    (submission.UserId == request.UserId || participantSubmissionIds.Contains(submission.Id)) &&
                     assessmentIds.Contains(submission.AssessmentId) &&
                     submission.DeletedAt == null)
+                .ToArrayAsync(cancellationToken)
+                .ConfigureAwait(false);
+        var runtimeSubmissionIds = submissions
+            .Where(submission => submission.DefinitionRevisionId.HasValue)
+            .Select(submission => submission.Id)
+            .ToArray();
+        var releasedResults = await new AssessmentLearnerResultProjectionService(context)
+            .GetLatestReleasedAsync(runtimeSubmissionIds, cancellationToken)
+            .ConfigureAwait(false);
+        var submissionIds = submissions.Select(submission => submission.Id).ToArray();
+        var gradingCompletions = submissionIds.Length == 0
+            ? []
+            : await context.Set<AssessmentContentCompletionProjection>()
+                .AsNoTracking()
+                .Where(item => submissionIds.Contains(item.SubmissionId))
                 .ToArrayAsync(cancellationToken)
                 .ConfigureAwait(false);
         var certificates = await context.Set<Certificate>()
@@ -131,14 +156,32 @@ public sealed class GetLearnerDashboardQueryHandler(IApplicationDbContext contex
         var courseById = courses.ToDictionary(course => course.Id);
         var contentByCourse = content.ToLookup(item => item.ProgramId);
         var progressByEnrollment = progress.ToLookup(item => item.ProgramEnrollmentId);
-        var courseSummaries = enrollments
-            .Where(enrollment => courseById.ContainsKey(enrollment.ProgramId))
-            .Select(enrollment => LearnerWorkspaceMapper.MapCourse(
+        var gradebookByCourse = new Dictionary<Guid, GradebookCourseProjectionV1>();
+        var courseSummaries = new List<LearnerCourseSummaryDto>();
+        foreach (var enrollment in enrollments.Where(enrollment => courseById.ContainsKey(enrollment.ProgramId)))
+        {
+            var membershipId = learningEnrollments
+                .Where(value => value.CourseId == enrollment.ProgramId)
+                .OrderByDescending(value => value.UpdatedAt)
+                .Select(value => (Guid?)value.Id)
+                .FirstOrDefault() ?? enrollment.Id;
+            var gradebook = await gradebookProjection.GetCourseProjectionAsync(
+                enrollment.ProgramId,
+                membershipId,
+                learnerView: true,
+                cancellationToken).ConfigureAwait(false);
+            gradebookByCourse[enrollment.ProgramId] = gradebook;
+            courseSummaries.Add(LearnerWorkspaceMapper.MapCourse(
                 courseById[enrollment.ProgramId],
                 enrollment,
                 contentByCourse[enrollment.ProgramId].ToArray(),
-                progressByEnrollment[enrollment.Id].ToArray()))
-            .ToArray();
+                progressByEnrollment[enrollment.Id].ToArray(),
+                gradingCompletions
+                    .Where(item => contentByCourse[enrollment.ProgramId].Any(contentItem => contentItem.Id == item.ContentId))
+                    .Select(item => item.ContentId)
+                    .ToHashSet(),
+                ToVisiblePercent(gradebook)));
+        }
         var cohortsById = cohorts.ToDictionary(cohort => cohort.Id);
         var courseByCohortId = learningEnrollments
             .Where(enrollment => enrollment.CohortId.HasValue)
@@ -191,7 +234,9 @@ public sealed class GetLearnerDashboardQueryHandler(IApplicationDbContext contex
                 course,
                 assessments.Where(assessment => assessment.CourseId == course.CourseId).ToArray(),
                 assessmentGroups.Where(group => group.CourseId == course.CourseId).ToArray(),
-                latestSubmissionByAssessment))
+                latestSubmissionByAssessment,
+                gradebookByCourse[course.CourseId],
+                releasedResults))
             .ToArray();
         var mappedCertificates = certificates.Select(LearnerWorkspaceMapper.MapCertificate).ToArray();
         var mappedAnnouncements = announcements
@@ -225,37 +270,22 @@ public sealed class GetLearnerDashboardQueryHandler(IApplicationDbContext contex
         LearnerCourseSummaryDto course,
         IReadOnlyList<Assessment> assessments,
         IReadOnlyList<AssessmentGroup> groups,
-        IReadOnlyDictionary<Guid, AssessmentSubmission> submissions)
+        IReadOnlyDictionary<Guid, AssessmentSubmission> submissions,
+        GradebookCourseProjectionV1 gradebook,
+        IReadOnlyDictionary<Guid, LearnerReleasedAssessmentResultV1> releasedResults)
     {
-        var graded = assessments
-            .Where(assessment =>
-                submissions.TryGetValue(assessment.Id, out var submission) &&
-                submission.Score.HasValue)
-            .Select(assessment => new
-            {
-                Assessment = assessment,
-                Submission = submissions[assessment.Id],
-            })
-            .ToArray();
-        var earned = graded.Length > 0
-            ? GameGuild.Learning.Grading.Contracts.ScoreValue.Sum(graded.Select(item => item.Submission.Score!.Value))
-            : (GameGuild.Learning.Grading.Contracts.ScoreValue?)null;
-        var possible = graded.Length > 0
-            ? GameGuild.Learning.Grading.Contracts.ScoreValue.Sum(graded.Select(item => item.Assessment.MaxScore))
-            : (GameGuild.Learning.Grading.Contracts.ScoreValue?)null;
-        var percentage = earned.HasValue && possible.HasValue
-            ? GameGuild.Learning.Grading.Contracts.PercentValue.FromScores(earned.Value, possible.Value)
-            : (GameGuild.Learning.Grading.Contracts.PercentValue?)null;
+        var visibleContributions = gradebook.Groups.SelectMany(group => group.Assessments).ToArray();
+        var percentage = ToVisiblePercent(gradebook);
 
         return new LearnerGradeSummaryDto(
             course.CourseId,
             course.Title,
             course.Slug,
-            course.FinalGrade,
-            graded.Length,
+            percentage,
+            visibleContributions.Length,
             assessments.Count,
-            earned,
-            possible,
+            null,
+            null,
             percentage,
             groups
                 .OrderBy(group => group.Order)
@@ -271,6 +301,9 @@ public sealed class GetLearnerDashboardQueryHandler(IApplicationDbContext contex
                 .Select(assessment =>
                 {
                     submissions.TryGetValue(assessment.Id, out var submission);
+                    var releasedResult = submission is not null
+                        ? releasedResults.GetValueOrDefault(submission.Id)
+                        : null;
                     return new LearnerGradeItemDto(
                         assessment.Id,
                         assessment.ContentId,
@@ -282,13 +315,20 @@ public sealed class GetLearnerDashboardQueryHandler(IApplicationDbContext contex
                         assessment.AvailableUntil,
                         assessment.DueAt,
                         submission?.Status.ToString() ?? "NotStarted",
-                        submission?.Score,
-                        submission?.Passed,
-                        submission?.Feedback,
-                        submission?.GradedAt);
+                        releasedResult?.Score,
+                        releasedResult?.Passed,
+                        releasedResult?.Feedback,
+                        releasedResult?.FinalizedAt);
                 })
                 .ToArray());
     }
+
+    private static GameGuild.Learning.Grading.Contracts.PercentValue? ToVisiblePercent(
+        GradebookCourseProjectionV1 projection) =>
+        projection.LearnerVisible && projection.Groups.Count > 0 &&
+        projection.CoursePercentUnits is >= 0 and <= GameGuild.Learning.Grading.Contracts.PercentValue.MaximumUnits
+            ? GameGuild.Learning.Grading.Contracts.PercentValue.FromUnits(projection.CoursePercentUnits.Value)
+            : null;
 
     private static LearnerDashboardDto EmptyDashboard()
     {

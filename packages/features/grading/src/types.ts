@@ -306,6 +306,111 @@ export interface GradebookGroupContributionV1 {
   assessments: GradebookAssessmentContributionV1[];
 }
 
+/** API-facing state of one persisted grading execution. */
+export type GradingRuntimeExecutionStatus =
+  | "pending"
+  | "running"
+  | "awaitingReview"
+  | "completed"
+  | "failed";
+
+/** API-facing state of a persisted grade round. */
+export type GradingRuntimeRoundStatus =
+  | "pending"
+  | "running"
+  | "awaitingEvidence"
+  | "awaitingInstructorResolution"
+  | "failed"
+  | "finalized";
+
+export type AssessmentTestRunStatus =
+  | "draft"
+  | "running"
+  | "completed"
+  | "cancelled";
+
+export type AssessmentRuntimeSubmissionStatus =
+  | "inProgress"
+  | "submitted"
+  | "graded"
+  | "returned"
+  | "late";
+
+export interface GradeRoundRuntimeViewV1 {
+  roundId: string;
+  roundNumber: number;
+  reason: string;
+  reasonDetail: string | null;
+  initiatedByActorId: string | null;
+  status: GradingRuntimeRoundStatus;
+  startedAt: string;
+  finalizedAt: string | null;
+  result: GradeResultV1 | null;
+  released: boolean;
+  releasedAt: string | null;
+}
+
+export interface AssessmentExecutionRuntimeViewV1<TLearnerPayload = unknown> {
+  executionId: string;
+  definitionRevisionId: string;
+  context: ReviewExecutionContext;
+  executionSnapshotHash: string;
+  deliveryHash: string;
+  delivery: AssessmentExecutionDeliveryV1<TLearnerPayload>;
+  itemMaxScores: Record<string, ScoreValue>;
+  submittedResponse: AssessmentResponseEnvelopeV1 | null;
+  status: GradingRuntimeExecutionStatus;
+  activeRoundId: string | null;
+  instructorVisibleResult: GradeResultV1 | null;
+  learnerVisibleResult: GradeResultV1 | null;
+  requiresInstructorReview: boolean;
+  released: boolean;
+  history: GradeRoundRuntimeViewV1[];
+}
+
+export interface AssessmentTestRunRuntimeViewV1<TLearnerPayload = unknown> {
+  testRunId: string;
+  assessmentId: string;
+  definitionRevisionId: string;
+  status: AssessmentTestRunStatus;
+  personaKey: string;
+  personaDisplayName: string;
+  execution: AssessmentExecutionRuntimeViewV1<TLearnerPayload>;
+  candidateStillMatchesDraft: boolean;
+  readyForPublication: boolean;
+  diagnostics: string[];
+}
+
+export interface AssessmentSubmissionRuntimeViewV1<TLearnerPayload = unknown> {
+  submissionId: string;
+  assessmentId: string;
+  definitionRevisionId: string;
+  enrollmentId: string | null;
+  courseGroupId: string | null;
+  attemptNumber: number;
+  status: AssessmentRuntimeSubmissionStatus;
+  draftVersion: number;
+  version: number;
+  startedAt: string;
+  submittedAt: string | null;
+  submittedByUserId: string | null;
+  contentCompleted: boolean;
+  execution: AssessmentExecutionRuntimeViewV1<TLearnerPayload>;
+}
+
+export interface InstructorItemResolutionV1 {
+  itemId: string;
+  score: ScoreValue;
+  feedback?: string | null;
+}
+
+export interface InstructorReviewResolutionV1 {
+  schemaVersion: 1;
+  items: InstructorItemResolutionV1[];
+  feedback?: string | null;
+  overrideReason?: string | null;
+}
+
 export class GradingContractValidationError extends Error {
   readonly issues: string[];
 

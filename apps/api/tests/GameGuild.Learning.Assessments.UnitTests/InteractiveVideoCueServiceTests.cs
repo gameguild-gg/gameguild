@@ -237,52 +237,6 @@ public sealed class InteractiveVideoCueServiceTests
     }
 
     [Fact]
-    public async Task GradeSubmissionAsync_WhenScoreExceedsAssessmentMaximum_ReturnsValidationError()
-    {
-        await using var db = CreateContext();
-        var courseId = Guid.NewGuid();
-        var assessment = Assessment.Create(courseId, "Quiz", AssessmentType.Quiz, Score(100));
-        var submission = AssessmentSubmission.Start(assessment.Id, Guid.NewGuid(), Guid.NewGuid(), 1);
-        submission.Submit();
-        var program = new Program { Id = courseId, PassingScore = Percent(60) };
-        db.AddRange(program, assessment, submission);
-        await db.SaveChangesAsync();
-        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), new RubricService(db, NullLogger<RubricService>.Instance), NullLogger<AssessmentService>.Instance);
-
-        var result = await service.GradeSubmissionAsync(submission.Id, new GradeSubmissionRequest(Score(101)));
-
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Type.Should().Be(ErrorType.Validation);
-    }
-
-    [Fact]
-    public async Task GradeSubmissionAsync_LoadsProgramPassingScore_ComputesAbsolutePassing()
-    {
-        await using var db = CreateContext();
-        var courseId = Guid.NewGuid();
-        var assessment = Assessment.Create(courseId, "Quiz", AssessmentType.Quiz, Score(100));
-        assessment.SetPassingScore(Score(60));
-        var program = new Program { Id = courseId, PassingScore = Percent(60) };
-        var passing = AssessmentSubmission.Start(assessment.Id, Guid.NewGuid(), Guid.NewGuid(), 1);
-        passing.Submit();
-        var failing = AssessmentSubmission.Start(assessment.Id, Guid.NewGuid(), Guid.NewGuid(), 2);
-        failing.Submit();
-        db.AddRange(program, assessment, passing, failing);
-        await db.SaveChangesAsync();
-        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), new RubricService(db, NullLogger<RubricService>.Instance), NullLogger<AssessmentService>.Instance);
-
-        var passResult = await service.GradeSubmissionAsync(passing.Id, new GradeSubmissionRequest(Score(70)));
-        var failResult = await service.GradeSubmissionAsync(failing.Id, new GradeSubmissionRequest(Score(50)));
-
-        passResult.IsSuccess.Should().BeTrue();
-        passResult.Value.Passed.Should().BeTrue();
-        passResult.Value.Score.Should().Be(Score(70));
-        failResult.IsSuccess.Should().BeTrue();
-        failResult.Value.Passed.Should().BeFalse();
-        failResult.Value.Score.Should().Be(Score(50));
-    }
-
-    [Fact]
     public async Task UpdateAssessmentAsync_WhenNewMaximumIsBelowAssignedScore_ReturnsValidationError()
     {
         await using var db = CreateContext();
@@ -325,8 +279,8 @@ public sealed class InteractiveVideoCueServiceTests
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             new AssessmentsModelConfiguration().Configure(modelBuilder);
-            // ponytail: minimal Program mapping for GradeSubmissionAsync rewire (loads Program to read PassingScore).
-            // Ignore navigations — full mapping lives in ApplicationDbContext; unit tests don't traverse them.
+            new Grading.Persistence.GradingPersistenceModelConfiguration().Configure(modelBuilder);
+            // Ignore navigations; full mapping lives in ApplicationDbContext and these tests do not traverse them.
             modelBuilder.Entity<Program>(b =>
             {
                 b.HasKey(p => p.Id);

@@ -391,6 +391,114 @@ export class LearningAssessmentsModule {
 
   /**
    */
+  async postAssessmentsRuntimeSubmissionsCollective(
+    id: string,
+    body: Types.LearningAssessmentsStartCollectiveRuntimeSubmissionInput,
+  ): Promise<Result<Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1, ApiError>> {
+    const url = `/v1/assessments/${id}/runtime-submissions/collective`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.LearningAssessmentsStartCollectiveRuntimeSubmissionInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1Schema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postAssessmentsRuntimeSubmissionsIndividual(
+    id: string,
+    body: Types.LearningAssessmentsStartIndividualRuntimeSubmissionInput,
+  ): Promise<Result<Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1, ApiError>> {
+    const url = `/v1/assessments/${id}/runtime-submissions/individual`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.LearningAssessmentsStartIndividualRuntimeSubmissionInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1Schema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postAssessmentsTestRuns(
+    id: string,
+    body: Types.LearningAssessmentsStartAssessmentTestRunInput,
+  ): Promise<Result<Types.LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1, ApiError>> {
+    const url = `/v1/assessments/${id}/test-runs`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.LearningAssessmentsStartAssessmentTestRunInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1Schema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postAssessmentsContentRuntimeSubmissionsIndividual(
+    contentId: string,
+    body: Types.LearningAssessmentsStartContentRuntimeSubmissionInput,
+  ): Promise<Result<Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1, ApiError>> {
+    const url = `/v1/assessments/content/${contentId}/runtime-submissions/individual`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.LearningAssessmentsStartContentRuntimeSubmissionInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1Schema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async getAssessmentsCourse(courseId: string): Promise<Result<Array<Types.LearningAssessmentsAssessment>, ApiError>> {
     const url = `/v1/assessments/course/${courseId}`;
 
@@ -445,6 +553,29 @@ export class LearningAssessmentsModule {
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(Types.LearningAssessmentsGradingAuthoringAssessmentDraftResultSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getAssessmentsCourseGradebook(
+    courseId: string,
+    enrollmentId: string,
+  ): Promise<Result<Types.LearningAssessmentsGradingRuntimeGradebookCourseProjectionV1, ApiError>> {
+    const url = `/v1/assessments/course/${courseId}/gradebook/${enrollmentId}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningAssessmentsGradingRuntimeGradebookCourseProjectionV1Schema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -546,8 +677,8 @@ export class LearningAssessmentsModule {
 
   /**
    */
-  async getAssessmentsSubmissionsForGetAssessmentsSubmissionsBySubmissionId(submissionId: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/assessments/submissions/${submissionId}`;
+  async getAssessmentsRuntimeSubmissions(submissionId: string): Promise<Result<Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1, ApiError>> {
+    const url = `/v1/assessments/runtime-submissions/${submissionId}`;
 
     const result = await this.client.request({
       method: 'GET',
@@ -555,19 +686,52 @@ export class LearningAssessmentsModule {
       requiresAuth: true,
     });
 
-    return result as Result<void, ApiError>;
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1Schema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
   }
 
   /**
    */
-  async postAssessmentsSubmissionsGrade(
+  async putAssessmentsRuntimeSubmissionsDraft(
     submissionId: string,
-    body: Types.LearningAssessmentsGradeSubmissionInput,
-  ): Promise<Result<Types.LearningAssessmentsAssessmentSubmission, ApiError>> {
-    const url = `/v1/assessments/submissions/${submissionId}/grade`;
+    body: Types.LearningAssessmentsSaveCollectiveRuntimeDraftInput,
+  ): Promise<Result<Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1, ApiError>> {
+    const url = `/v1/assessments/runtime-submissions/${submissionId}/draft`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningAssessmentsGradeSubmissionInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.LearningAssessmentsSaveCollectiveRuntimeDraftInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'PUT',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1Schema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postAssessmentsRuntimeSubmissionsInstructorReview(
+    submissionId: string,
+    body: Types.LearningAssessmentsResolveInstructorReviewInput,
+  ): Promise<Result<Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1, ApiError>> {
+    const url = `/v1/assessments/runtime-submissions/${submissionId}/instructor-review`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.LearningAssessmentsResolveInstructorReviewInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -578,11 +742,106 @@ export class LearningAssessmentsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.LearningAssessmentsAssessmentSubmissionSchema, result.data, 'response');
+      const validatedData = safeParse(Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1Schema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
     return result;
+  }
+
+  /**
+   */
+  async postAssessmentsRuntimeSubmissionsRegrade(
+    submissionId: string,
+    body: Types.LearningAssessmentsGradingRuntimeRegradeExecutionCommand,
+  ): Promise<Result<Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1, ApiError>> {
+    const url = `/v1/assessments/runtime-submissions/${submissionId}/regrade`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.LearningAssessmentsGradingRuntimeRegradeExecutionCommandSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1Schema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postAssessmentsRuntimeSubmissionsRelease(
+    submissionId: string,
+    body: Types.LearningAssessmentsGradingRuntimeReleaseGradeResultCommand,
+  ): Promise<Result<Types.LearningAssessmentsGradeResultReleaseOutput, ApiError>> {
+    const url = `/v1/assessments/runtime-submissions/${submissionId}/release`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.LearningAssessmentsGradingRuntimeReleaseGradeResultCommandSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningAssessmentsGradeResultReleaseOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postAssessmentsRuntimeSubmissionsSubmit(
+    submissionId: string,
+    body: Types.LearningAssessmentsSubmitAssessmentRuntimeInput,
+  ): Promise<Result<Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1, ApiError>> {
+    const url = `/v1/assessments/runtime-submissions/${submissionId}/submit`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.LearningAssessmentsSubmitAssessmentRuntimeInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1Schema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getAssessmentsSubmissionsForGetAssessmentsSubmissionsBySubmissionId(submissionId: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/assessments/submissions/${submissionId}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
   }
 
   /**
@@ -606,6 +865,107 @@ export class LearningAssessmentsModule {
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(Types.LearningAssessmentsLearnerAssessmentSubmissionSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getAssessmentsTestRuns(testRunId: string): Promise<Result<Types.LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1, ApiError>> {
+    const url = `/v1/assessments/test-runs/${testRunId}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1Schema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postAssessmentsTestRunsInstructorReview(
+    testRunId: string,
+    body: Types.LearningAssessmentsResolveInstructorReviewInput,
+  ): Promise<Result<Types.LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1, ApiError>> {
+    const url = `/v1/assessments/test-runs/${testRunId}/instructor-review`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.LearningAssessmentsResolveInstructorReviewInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1Schema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postAssessmentsTestRunsRestart(
+    testRunId: string,
+    body: Types.LearningAssessmentsIdempotentRuntimeInput,
+  ): Promise<Result<Types.LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1, ApiError>> {
+    const url = `/v1/assessments/test-runs/${testRunId}/restart`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.LearningAssessmentsIdempotentRuntimeInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1Schema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postAssessmentsTestRunsSubmit(
+    testRunId: string,
+    body: Types.LearningAssessmentsSubmitAssessmentRuntimeInput,
+  ): Promise<Result<Types.LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1, ApiError>> {
+    const url = `/v1/assessments/test-runs/${testRunId}/submit`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.LearningAssessmentsSubmitAssessmentRuntimeInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1Schema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
