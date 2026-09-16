@@ -13,7 +13,7 @@ import { getCourseLearnerContext, getMyProjects } from '@/lib/learner/records';
 import { createServerClient, GeneratedApi } from '@game-guild/client';
 import { MarkdownRenderer } from '@game-guild/content-rendering';
 import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
+import { buttonVariants } from '@game-guild/ui/components/button-variants';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { ArrowLeft, CalendarClock, ClipboardCheck } from 'lucide-react';
 import { notFound } from 'next/navigation';
@@ -192,12 +192,10 @@ export default async function LearnerActivityPage({
         codingProps ? 'w-full space-y-6' : 'mx-auto max-w-4xl space-y-6'
       }
     >
-      <Button asChild variant="ghost" className="-ml-3">
-        <Link href={`/learn/courses/${slug}/activities`}>
-          <ArrowLeft className="size-4" />
-          All activities
-        </Link>
-      </Button>
+      <Link href={`/learn/courses/${slug}/activities`} className={buttonVariants({ variant: 'ghost', className: '-ml-3' })}>
+        <ArrowLeft className="size-4" />
+        All activities
+      </Link>
       <header className="border-b pb-6">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline">{type}</Badge>

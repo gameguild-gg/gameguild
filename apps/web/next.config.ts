@@ -66,6 +66,14 @@ const nextConfig: NextConfig = {
     cpus: 1,
   },
   turbopack: {
+    rules: {
+      "*.py": {
+        loaders: [
+          path.resolve(__dirname, "scripts/turbopack-raw-source-loader.cjs"),
+        ],
+        as: "*.js",
+      },
+    },
     resolveAlias: {
       module: {
         browser: "./src/lib/browser-node-module-stub.ts",

@@ -109,6 +109,33 @@ public sealed class ProgramWriteServiceTests
     }
 
     [Fact]
+    public async Task ManagerReflectionResponses_WithoutPermissionService_ShouldRejectAccess()
+    {
+        await using var context = CreateContext();
+        var tenantId = Guid.NewGuid();
+        var program = CreateProgram();
+        program.TenantId = tenantId;
+        var reflection = new ProgramContent
+        {
+            Id = Guid.NewGuid(),
+            ProgramId = program.Id,
+            Title = "Reflection",
+            Type = ProgramContentType.Reflection,
+        };
+        reflection.SetActivitySettings(new ReflectionActivitySettings());
+        context.AddRange(program, reflection);
+        await context.SaveChangesAsync();
+        var service = new ContentInteractionService(
+            context,
+            new TestRequestContextAccessor(Guid.NewGuid(), tenantId));
+
+        var action = () => service.GetReflectionResponsesAsync(program.Id, reflection.Id);
+
+        await action.Should().ThrowAsync<RequestValidationException>()
+            .WithMessage("*review permission*");
+    }
+
+    [Fact]
     public async Task GetSurveyResults_WhenServiceRejectsRequestValidation_ShouldReturnBadRequest()
     {
         var programId = Guid.NewGuid();
@@ -624,6 +651,42 @@ public sealed class ProgramWriteServiceTests
     }
 
     [Fact]
+    public async Task UpdateUserProgressAsync_WhenCurrentAttemptIsCompleted_ShouldNotRegressItsState()
+    {
+        await using var context = CreateContext();
+        var graph = CreateAttemptGraph();
+        graph.CurrentAttempt.Complete();
+        context.AddRange(graph.Program, graph.Content, graph.Enrollment, graph.CurrentAttempt);
+        await context.SaveChangesAsync();
+        var service = new ProgramWriteService(context);
+
+        await service.UpdateUserProgressAsync(
+            graph.Program.Id,
+            graph.Enrollment.UserId,
+            graph.Content.Id,
+            ProgressStatus.InProgress);
+
+        graph.CurrentAttempt.IsCompleted.Should().BeTrue();
+        graph.CurrentAttempt.Status.Should().Be(ProgressStatus.Completed);
+    }
+
+    [Fact]
+    public void SubmissionTargetDetach_WhenContextIsNotEfCore_IsANoOp()
+    {
+        var service = new ContentInteractionService(
+            Mock.Of<IApplicationDbContext>(),
+            new TestRequestContextAccessor(Guid.NewGuid(), Guid.NewGuid()));
+        var detach = typeof(ContentInteractionService).GetMethod(
+            "DetachTrackedSubmissionTarget",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+
+        var action = () => detach!.Invoke(service, [Guid.NewGuid(), Guid.NewGuid()]);
+
+        detach.Should().NotBeNull();
+        action.Should().NotThrow();
+    }
+
+    [Fact]
     public async Task MarkContentCompletedAsync_ShouldCountDistinctRequiredContent()
     {
         await using var context = CreateContext();
@@ -712,6 +775,56 @@ public sealed class ProgramWriteServiceTests
         item.Status.Should().Be(ProgressStatus.InProgress);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task GetProgramAnalyticsAsync_ShouldAverageOnlyPositiveCompletionDurations(
+        bool hasPositiveDuration)
+    {
+        await using var context = CreateContext();
+        var program = CreateProgram();
+        var completedAt = SystemClock.UtcNow;
+        var startedAt = hasPositiveDuration
+            ? completedAt.AddHours(-2)
+            : completedAt;
+        var enrollment = new ProgramUser
+        {
+            Id = Guid.NewGuid(),
+            ProgramId = program.Id,
+            UserId = Guid.NewGuid(),
+            IsActive = true,
+            JoinedAt = startedAt,
+            StartedAt = startedAt,
+            CompletedAt = completedAt,
+            CompletionPercentage = 100,
+        };
+        context.AddRange(program, enrollment);
+        await context.SaveChangesAsync();
+        var service = new ProgramReadService(context);
+
+        var analytics = await service.GetProgramAnalyticsAsync(program.Id);
+
+        analytics.Should().NotBeNull();
+        analytics!.AverageCompletionTime.Should().Be(
+            hasPositiveDuration ? TimeSpan.FromHours(2) : TimeSpan.Zero);
+    }
+
+    [Fact]
+    public async Task GetProgramAnalyticsAsync_WithNoLearners_ReportsZeroCompletionRate()
+    {
+        await using var context = CreateContext();
+        var program = CreateProgram();
+        context.Add(program);
+        await context.SaveChangesAsync();
+        var service = new ProgramReadService(context);
+
+        var analytics = await service.GetProgramAnalyticsAsync(program.Id);
+
+        analytics.Should().NotBeNull();
+        analytics!.CompletionRate.Should().Be(0);
+        analytics.TotalUsers.Should().Be(0);
+    }
+
     [Fact]
     public async Task UpdateUserProgressAsync_ShouldReturnOnlyTheCurrentAttemptPerContent()
     {
@@ -738,6 +851,30 @@ public sealed class ProgramWriteServiceTests
         var item = progress!.ContentProgress.Should().ContainSingle().Subject;
         item.ContentId.Should().Be(graph.Content.Id);
         item.Status.Should().Be(ProgressStatus.InProgress);
+    }
+
+    [Fact]
+    public async Task UpdateUserProgressAsync_WithActiveAttempt_ShouldApplyNonTerminalStatus()
+    {
+        await using var context = CreateContext();
+        var graph = CreateAttemptGraph();
+        context.AddRange(
+            graph.Program,
+            graph.Content,
+            graph.Enrollment,
+            graph.CurrentAttempt);
+        await context.SaveChangesAsync();
+        var previousAccess = graph.CurrentAttempt.LastAccessedAt;
+        var service = new ProgramWriteService(context);
+
+        await service.UpdateUserProgressAsync(
+            graph.Program.Id,
+            graph.Enrollment.UserId,
+            graph.Content.Id,
+            ProgressStatus.Submitted);
+
+        graph.CurrentAttempt.Status.Should().Be(ProgressStatus.Submitted);
+        graph.CurrentAttempt.LastAccessedAt.Should().NotBe(previousAccess);
     }
 
     [Fact]

@@ -31,7 +31,7 @@ public sealed class ScheduleConflictDetector
         CohortSchedulePreviewItem item,
         ICollection<CohortScheduleConflict> conflicts)
     {
-        if (item.AvailableFrom is null || item.DueAt is null || item.AvailableFrom <= item.DueAt)
+        if (item.AvailableFrom is null || item.DueAt is null || item.AvailableFrom.Value <= item.DueAt.Value)
         {
             return;
         }

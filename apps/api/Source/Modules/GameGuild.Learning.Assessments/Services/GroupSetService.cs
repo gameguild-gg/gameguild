@@ -1,5 +1,5 @@
 using GameGuild.Identity.Users;
-using GameGuild.Learning.Enrollments;
+using GameGuild.Learning.Courses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -175,10 +175,10 @@ public class GroupSetService : IGroupSetService
 
     public async Task<bool> HasActiveEnrollmentAsync(Guid courseId, Guid userId)
     {
-        return await _context.Set<Enrollment>()
-            .AnyAsync(e => e.CourseId == courseId &&
+        return await _context.Set<ProgramEnrollment>()
+            .AnyAsync(e => e.ProgramId == courseId &&
                            e.UserId == userId &&
-                           e.Status == EnrollmentStatus.Active &&
+                           e.EnrollmentStatus == EnrollmentStatus.Active &&
                            e.DeletedAt == null)
             .ConfigureAwait(false);
     }

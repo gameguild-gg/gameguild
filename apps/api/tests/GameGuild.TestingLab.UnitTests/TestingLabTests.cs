@@ -159,12 +159,57 @@ public class TestingLocationTests
 
         location.FullAddress.Should().Be("Tokyo, Japan");
     }
+
+    [Fact]
+    public void ScopeAndSessionCount_ReflectTenantAndSessionState()
+    {
+        var global = new TestingLocation { Sessions = null! };
+        global.IsGlobal.Should().BeTrue();
+        global.ActiveSessionCount.Should().Be(0);
+
+        var tenantScoped = new TestingLocation
+        {
+            TenantId = Guid.NewGuid(),
+            Sessions =
+            [
+                new TestingSession { Status = SessionStatus.Active },
+                new TestingSession { Status = SessionStatus.Scheduled }
+            ]
+        };
+        tenantScoped.IsGlobal.Should().BeFalse();
+        tenantScoped.ActiveSessionCount.Should().Be(1);
+    }
+
+    [Fact]
+    public void CanAccommodate_WhenLocationIsInactive_ShouldBeFalseRegardlessOfCapacity()
+    {
+        var location = new TestingLocation { Status = LocationStatus.Inactive, Capacity = null };
+
+        location.CanAccommodate(1).Should().BeFalse();
+    }
 }
 
 #endregion
 
 public sealed class TestingRequestsControllerAuthorizationTests
 {
+    [Fact]
+    public void RequestProjection_HandlesMissingVersionAndMissingProject()
+    {
+        var withoutVersion = TestingRequestDetailProjection.FromEntity(new TestingRequest());
+        withoutVersion.ProjectVersion.Should().BeNull();
+
+        var version = ProjectVersion.Create(Guid.NewGuid(), "1.0.0", null, Guid.NewGuid(), null);
+        version.Project = null!;
+        var withoutProject = TestingRequestDetailProjection.FromEntity(new TestingRequest
+        {
+            ProjectVersionId = version.Id,
+            ProjectVersion = version
+        });
+        withoutProject.ProjectVersion.Should().NotBeNull();
+        withoutProject.ProjectVersion!.Project.Should().BeNull();
+    }
+
     [Fact]
     public async Task GetTestingRequests_Should_Return_Stable_Projections_With_Project_Context()
     {
@@ -627,6 +672,22 @@ public class SessionRegistrationTests
         reg.MarkNoShow();
 
         reg.AttendanceStatus.Should().Be(AttendanceStatus.NoShow);
+    }
+
+    [Fact]
+    public void ScopeNotesAndIncompleteAttendance_ExposeExpectedComputedValues()
+    {
+        var global = new SessionRegistration();
+        global.IsGlobal.Should().BeTrue();
+        global.AttendanceDuration.Should().BeNull();
+
+        global.TenantId = Guid.NewGuid();
+        global.IsGlobal.Should().BeFalse();
+        global.UpdateNotes("Bring a controller");
+        global.RegistrationNotes.Should().Be("Bring a controller");
+
+        global.CheckIn();
+        global.AttendanceDuration.Should().BeNull();
     }
 }
 
