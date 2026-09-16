@@ -37,8 +37,8 @@ importers:
         specifier: ^10.0.0
         version: 10.1.1(@babel/core@8.0.5)(@types/node@26.6.0)(asn1.js@5.4.1)
       '@dbml/core':
-        specifier: ^3.0.0
-        version: 3.14.1
+        specifier: ^10.1.1
+        version: 10.1.1
       '@game-guild/eslint-config':
         specifier: workspace:*
         version: link:packages/tooling/eslint
@@ -3750,16 +3750,8 @@ packages:
     resolution: {integrity: sha512-okz4w1QMLOOqFXe7gEjBMMmbyNnVJrS/MNTECoMuGzWEibUplCRYuPzpuU4TxjQ/Ag1xf+fjnmJiQXM9dAo3+Q==}
     engines: {node: '>=16'}
 
-  '@dbml/core@3.14.1':
-    resolution: {integrity: sha512-X7qQo+ILK8NZ7S6LGmAExm28kX+YkfhDIiO4kZE/4Gm5pwzBOCZM4XVYWCRO1PACTLvvvAjNNMsZjJ2DhlYWxg==}
-    engines: {node: '>=16'}
-
   '@dbml/parse@10.1.1':
     resolution: {integrity: sha512-5diN/EBs7E3lud0vdQXcwv2CDWIB3Vhi0PyVOQv5F4UnGKjKuPnhSnSxQuxkrMSyd+nqK3ASrvuYzyVgVW3JfA==}
-    engines: {node: '>=18'}
-
-  '@dbml/parse@3.14.1':
-    resolution: {integrity: sha512-I906RBlLF04IWQlMUw10EIKimafZ4STb86BC8hGnezb+wJqtAtVLAX8hfbzMDnGpjthm4jg0oddxTLFTZrk80g==}
     engines: {node: '>=18'}
 
   '@dnd-kit/accessibility@3.1.1':
@@ -16665,23 +16657,11 @@ snapshots:
       parsimmon: 1.18.1
       pluralize: 8.0.0
 
-  '@dbml/core@3.14.1':
-    dependencies:
-      '@dbml/parse': 3.14.1
-      antlr4: 4.13.2
-      lodash: 4.18.1
-      parsimmon: 1.18.1
-      pluralize: 8.0.0
-
   '@dbml/parse@10.1.1':
     dependencies:
       lodash-es: 4.18.0
       luxon: 3.7.2
       pathe: 2.0.3
-
-  '@dbml/parse@3.14.1':
-    dependencies:
-      lodash-es: 4.18.0
 
   '@dnd-kit/accessibility@3.1.1(react@19.2.8)':
     dependencies:
