@@ -60,7 +60,7 @@
     "@testing-library/user-event": "^14.6.1",
     "@testing-library/jest-dom": "^7.0.0",
     "happy-dom": "^20.14.5",
-    "vitest": "^4.1.10"
+    "vitest": "^5.0.0"
   },
   "scripts": {
     "test": "vitest run",
