@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using FluentAssertions;
+using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
 using GameGuild.Learning.Courses;
 using Microsoft.AspNetCore.Authorization;
@@ -110,12 +111,13 @@ public sealed class ProgramContentVisibilityTests
 
         var controller = new ProgramContentController(
             contentMock.Object,
-            programMock.Object,
-            new Mock<ICodingAssignmentContentService>().Object,
-            authorizationMock.Object,
-            [],
-            [],
-            Mock.Of<ILogger<ProgramContentController>>());
+             programMock.Object,
+             new Mock<ICodingAssignmentContentService>().Object,
+             authorizationMock.Object,
+             [],
+             [],
+            Mock.Of<ILogger<ProgramContentController>>(),
+             Mock.Of<ISender>());
 
         if (userId.HasValue)
         {

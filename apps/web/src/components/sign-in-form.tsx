@@ -1,8 +1,7 @@
 "use client"
 
-import { type FormEvent, useState } from "react"
+import { type FormEvent, useState, useSyncExternalStore } from "react"
 import { Link } from "@/i18n/navigation"
-import { useLocale } from "next-intl"
 import { useAuth } from "@game-guild/client/react"
 import { cn } from "@/lib/utils"
 import { Button } from "@game-guild/ui/components/button"
@@ -23,6 +22,8 @@ import {
 import { Input } from "@game-guild/ui/components/input"
 import { PasswordInput } from "@/components/ui/password-input"
 
+const subscribeToHydration = () => () => undefined
+
 export function SignInForm({
   className,
   redirectTo = "/",
@@ -34,7 +35,7 @@ export function SignInForm({
 }) {
   const { signIn, isLoading, error, clearError } = useAuth()
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
-  const locale = useLocale()
+  const isHydrated = useSyncExternalStore(subscribeToHydration, () => true, () => false)
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -87,7 +88,12 @@ export function SignInForm({
               </div>
             </>
           )}
-          <form method="post" onSubmit={handleSubmit} noValidate>
+          <form
+            method="post"
+            onSubmit={handleSubmit}
+            noValidate
+            data-auth-ready={isHydrated ? "true" : "false"}
+          >
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
@@ -115,7 +121,6 @@ export function SignInForm({
                   <FieldLabel htmlFor="password">Password</FieldLabel>
                   <Link
                     href="/forgot-password"
-                    locale={locale}
                     className="ml-auto text-sm text-sky-200 underline-offset-4 hover:underline"
                     tabIndex={-1}
                   >
@@ -143,14 +148,13 @@ export function SignInForm({
                 <FieldError>{error.message}</FieldError>
               )}
               <Field>
-                <Button type="submit" disabled={isLoading}>
+                <Button type="submit" disabled={isLoading || !isHydrated}>
                   {isLoading ? "Signing in..." : "Sign in"}
                 </Button>
                 <FieldDescription className="text-center text-slate-300">
                   Don&apos;t have an account?{" "}
                   <Link
                     href={redirectTo ? `/sign-up?redirectTo=${encodeURIComponent(redirectTo)}` : "/sign-up"}
-                    locale={locale}
                     className="text-sky-200 underline-offset-4 hover:underline"
                   >
                     Sign up
@@ -163,8 +167,8 @@ export function SignInForm({
       </Card>
       <FieldDescription className="px-6 text-center text-slate-400">
         By clicking continue, you agree to our{" "}
-        <Link href="/legal/terms-of-service" locale={locale} className="text-sky-200 underline-offset-4 hover:underline">Terms of Service</Link> and{" "}
-        <Link href="/legal/privacy" locale={locale} className="text-sky-200 underline-offset-4 hover:underline">Privacy Policy</Link>.
+        <Link href="/legal/terms-of-service" className="text-sky-200 underline-offset-4 hover:underline">Terms of Service</Link> and{" "}
+        <Link href="/legal/privacy" className="text-sky-200 underline-offset-4 hover:underline">Privacy Policy</Link>.
       </FieldDescription>
     </div>
   )

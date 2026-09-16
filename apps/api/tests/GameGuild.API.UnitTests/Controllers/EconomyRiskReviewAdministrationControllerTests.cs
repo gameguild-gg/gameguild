@@ -1,6 +1,6 @@
 using FluentAssertions;
 using GameGuild.API.Controllers;
-using GameGuild.Economy.Risk;
+using GameGuild.Finance.Economy.Risk;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Mvc;
@@ -87,7 +87,10 @@ public sealed class EconomyRiskReviewAdministrationControllerTests
             IsAuthenticated = true
         });
         var controller = new EconomyRiskReviewAdministrationController(
-            store.Object, accessor, new FixedTimeProvider(Now));
+            EconomyHandlerSenders.Compliance(riskReviews: store.Object),
+            store.Object,
+            accessor,
+            new FixedTimeProvider(Now));
 
         (await controller.List(null, 25, null, default)).Should().BeOfType<ForbidResult>();
     }
@@ -105,7 +108,10 @@ public sealed class EconomyRiskReviewAdministrationControllerTests
             IsAuthenticated = true
         });
         return new EconomyRiskReviewAdministrationController(
-            store, accessor, new FixedTimeProvider(Now));
+            EconomyHandlerSenders.Compliance(riskReviews: store),
+            store,
+            accessor,
+            new FixedTimeProvider(Now));
     }
 
     private static RiskReviewCase Review() => new(

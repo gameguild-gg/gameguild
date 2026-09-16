@@ -17,7 +17,7 @@ export class SocialReactionsModule {
 
   /**
    */
-  async putApiSocialReactions(body: Types.SocialReactionsSetReactionInput): Promise<Result<Types.SocialReactionsReaction, ApiError>> {
+  async putApiSocialReactions(body: Types.SocialReactionsSetReactionInput): Promise<Result<Types.SocialReactionsReactionDto, ApiError>> {
     const url = '/api/social/reactions';
 
     // Validate request body
@@ -32,7 +32,7 @@ export class SocialReactionsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.SocialReactionsReactionSchema, result.data, 'response');
+      const validatedData = safeParse(Types.SocialReactionsReactionDtoSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -59,10 +59,33 @@ export class SocialReactionsModule {
 
   /**
    */
+  async getApiSocialReactionsMeTarget(
+    targetType: Types.SocialReactionsReactionTargetType,
+    targetId: string,
+  ): Promise<Result<Types.SocialReactionsReactionDto, ApiError>> {
+    const url = `/api/social/reactions/me/target/${targetType}/${targetId}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.SocialReactionsReactionDtoSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async getApiSocialReactionsTarget(
     targetType: Types.SocialReactionsReactionTargetType,
     targetId: string,
-  ): Promise<Result<Types.SocialReactionsTargetReactionSummary, ApiError>> {
+  ): Promise<Result<Types.SocialReactionsTargetReactionSummaryDto, ApiError>> {
     const url = `/api/social/reactions/target/${targetType}/${targetId}`;
 
     const result = await this.client.request({
@@ -73,31 +96,7 @@ export class SocialReactionsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.SocialReactionsTargetReactionSummarySchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async getApiSocialReactionsUsersTarget(
-    userId: string,
-    targetType: Types.SocialReactionsReactionTargetType,
-    targetId: string,
-  ): Promise<Result<Types.SocialReactionsReaction, ApiError>> {
-    const url = `/api/social/reactions/users/${userId}/target/${targetType}/${targetId}`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.SocialReactionsReactionSchema, result.data, 'response');
+      const validatedData = safeParse(Types.SocialReactionsTargetReactionSummaryDtoSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 

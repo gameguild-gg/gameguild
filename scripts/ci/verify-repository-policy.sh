@@ -36,4 +36,9 @@ bash "$script_dir/install-and-audit-pnpm.sh"
 gate_stage='policy-tests'
 bash "$script_dir/tests/verify-economy.sh"
 
+gate_stage='deployment-contracts'
+bash -n "$repository_root/scripts/deploy/promote-candidates.sh"
+bash -n "$repository_root/scripts/deploy/rollout-devtron.sh"
+node --test "$repository_root"/scripts/deploy/tests/*.test.mjs
+
 gate_stage='completed'

@@ -22,6 +22,10 @@ import {
   waitlistTestingEventApplication,
   type TestingEventActionResult,
 } from "@/lib/testing-lab/events-actions";
+import {
+  browserTimeZone,
+  formatWallClockInTimeZone,
+} from "@/lib/date-time-zone";
 import { formatEventDateTime } from "@/lib/testing-lab/event-workspace";
 import { formatTestingEventStatus } from "@/lib/testing-lab/format";
 import type {
@@ -47,6 +51,8 @@ import {
 import { Badge } from "@game-guild/ui/components/badge";
 import { Button } from "@game-guild/ui/components/button";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
+import { DateTimeRangePicker } from "@/components/ui/date-time-range-picker";
+import { TimeZoneCombobox } from "@/components/ui/time-zone-combobox";
 import {
   Dialog,
   DialogContent,
@@ -65,14 +71,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@game-guild/ui/components/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@game-guild/ui/components/sheet";
 import { Textarea } from "@game-guild/ui/components/textarea";
 import {
   AlertCircle,
@@ -121,13 +119,11 @@ export interface TestingLabLearningActivityOption {
   label: string;
 }
 
-function apiDatetimeLocal(value?: string | null) {
+function apiDatetimeLocal(value?: string | null, timeZoneId = "UTC") {
   if (!value) return "";
-  const wallClock = value.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})/);
-  if (wallClock) return wallClock[1];
   const date = new Date(value);
   if (Number.isNaN(date.valueOf())) return "";
-  return date.toISOString().slice(0, 16);
+  return formatWallClockInTimeZone(date, timeZoneId);
 }
 
 function localDatetime(date: Date) {
@@ -326,53 +322,108 @@ function EventActionDialog({
   );
 }
 
-function EventFields({
-  event,
-  schedule,
-  onScheduleChange,
-}: {
+type EventFieldsProps = {
   event?: TestingLabTestingEventProjection;
   schedule?: TestingEventSchedule;
   onScheduleChange?: (field: keyof TestingEventSchedule, value: string) => void;
+  timeZoneId?: string;
+  stacked?: boolean;
+  compact?: boolean;
+};
+
+function EventIdentityFields({
+  event,
+  includeBrief = true,
+  compact = false,
+  templates = [],
+}: {
+  event?: TestingLabTestingEventProjection;
+  includeBrief?: boolean;
+  compact?: boolean;
+  templates?: TestingLabTestingEventTemplateProjection[];
 }) {
-  const applicationsOpenAt =
-    schedule?.applicationsOpenAt ?? apiDatetimeLocal(event?.applicationsOpenAt);
-  const applicationsCloseAt =
-    schedule?.applicationsCloseAt ??
-    apiDatetimeLocal(event?.applicationsCloseAt);
-  const startsAt = schedule?.startsAt ?? apiDatetimeLocal(event?.startsAt);
-  const endsAt = schedule?.endsAt ?? apiDatetimeLocal(event?.endsAt);
+  const fieldSuffix = event?.id ?? "new";
+  const compactRow =
+    "grid gap-1.5 sm:grid-cols-[7rem_minmax(0,1fr)] sm:items-center sm:gap-3";
+  const availableTemplates = templates.filter(
+    (template) => template.currentRevision?.id,
+  );
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      {event?.id ? (
-        <input type="hidden" name="eventId" value={event.id} />
-      ) : null}
-      <div className="space-y-2 sm:col-span-2">
-        <Label htmlFor={`event-name-${event?.id ?? "new"}`}>Event name</Label>
+    <div className={compact ? "grid gap-2.5" : "grid gap-4 sm:grid-cols-2"}>
+      <div className={compact ? "mb-1" : "space-y-2 sm:col-span-2"}>
+        <Label
+          className={compact ? "sr-only" : undefined}
+          htmlFor={`event-name-${fieldSuffix}`}
+        >
+          Event name
+        </Label>
         <Input
-          id={`event-name-${event?.id ?? "new"}`}
+          id={`event-name-${fieldSuffix}`}
           name="name"
           required
+          placeholder={compact ? "Event name" : undefined}
           defaultValue={event?.name ?? ""}
+          className={
+            compact
+              ? "h-10 rounded-none border-x-0 border-t-0 bg-transparent px-0 text-lg font-semibold shadow-none focus-visible:ring-0"
+              : undefined
+          }
         />
       </div>
-      <div className="space-y-2 sm:col-span-2">
-        <Label htmlFor={`event-description-${event?.id ?? "new"}`}>
-          Purpose and tester brief
+      {availableTemplates.length > 0 ? (
+        <div className={compact ? compactRow : "space-y-2"}>
+          <Label
+            className={compact ? "text-xs text-muted-foreground" : undefined}
+            htmlFor={`event-calendar-${fieldSuffix}`}
+          >
+            Calendar
+          </Label>
+          <Select
+            name="templateRevisionId"
+            defaultValue={availableTemplates[0]!.currentRevision!.id}
+          >
+            <SelectTrigger
+              id={`event-calendar-${fieldSuffix}`}
+              aria-label="Event calendar"
+              className="h-10 w-full"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {availableTemplates.map((template) => (
+                  <SelectItem
+                    key={template.id}
+                    value={template.currentRevision!.id!}
+                  >
+                    {template.name?.trim() || "Untitled calendar"}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+        </div>
+      ) : null}
+      <div className={compact ? compactRow : "space-y-2"}>
+        <Label
+          className={compact ? "text-xs text-muted-foreground" : undefined}
+          htmlFor={`event-format-${fieldSuffix}`}
+        >
+          Event format
         </Label>
-        <Textarea
-          id={`event-description-${event?.id ?? "new"}`}
-          name="description"
-          rows={3}
-          defaultValue={event?.description ?? ""}
-        />
-      </div>
-      <div className="space-y-2">
-        <Label>Delivery mode</Label>
         <Select name="mode" defaultValue={event?.mode ?? "Online"}>
-          <SelectTrigger>
-            <SelectValue />
+          <SelectTrigger
+            id={`event-format-${fieldSuffix}`}
+            className="h-10 w-full"
+          >
+            <SelectValue>
+              {(value: string | null) =>
+                value === "InPerson"
+                  ? "In person"
+                  : value === "Hybrid"
+                    ? "Hybrid"
+                    : "Online"
+              }
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="Online">Online</SelectItem>
@@ -381,98 +432,232 @@ function EventFields({
           </SelectContent>
         </Select>
       </div>
-      <div className="space-y-2">
-        <Label>Approval</Label>
+      <div className={compact ? compactRow : "space-y-2"}>
+        <Label
+          className={compact ? "text-xs text-muted-foreground" : undefined}
+          htmlFor={`project-review-${fieldSuffix}`}
+        >
+          Project review
+        </Label>
         <Select
           name="approvalMode"
           defaultValue={event?.approvalMode ?? "ManagerOnly"}
         >
-          <SelectTrigger>
-            <SelectValue />
+          <SelectTrigger
+            id={`project-review-${fieldSuffix}`}
+            className="h-10 w-full"
+          >
+            <SelectValue>
+              {(value: string | null) =>
+                value === "Committee"
+                  ? "Review committee votes"
+                  : "Event managers decide"
+              }
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="ManagerOnly">Manager decision</SelectItem>
-            <SelectItem value="Committee">Review committee</SelectItem>
+            <SelectItem value="ManagerOnly">Event managers decide</SelectItem>
+            <SelectItem value="Committee">Review committee votes</SelectItem>
           </SelectContent>
         </Select>
       </div>
-      <div className="space-y-2">
-        <Label htmlFor={`applications-open-${event?.id ?? "new"}`}>
-          Applications open
-        </Label>
-        <DateTimePicker
-          id={`applications-open-${event?.id ?? "new"}`}
-          name="applicationsOpenAt"
-          required
-          value={schedule ? applicationsOpenAt : undefined}
-          defaultValue={applicationsOpenAt}
-          onValueChange={(value) =>
-            onScheduleChange?.("applicationsOpenAt", value)
-          }
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor={`applications-close-${event?.id ?? "new"}`}>
-          Applications close
-        </Label>
-        <DateTimePicker
-          id={`applications-close-${event?.id ?? "new"}`}
-          name="applicationsCloseAt"
-          required
-          value={schedule ? applicationsCloseAt : undefined}
-          defaultValue={applicationsCloseAt}
-          onValueChange={(value) =>
-            onScheduleChange?.("applicationsCloseAt", value)
-          }
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor={`event-start-${event?.id ?? "new"}`}>
-          Event starts
-        </Label>
-        <DateTimePicker
-          id={`event-start-${event?.id ?? "new"}`}
-          name="startsAt"
-          required
-          value={schedule ? startsAt : undefined}
-          defaultValue={startsAt}
-          onValueChange={(value) => onScheduleChange?.("startsAt", value)}
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor={`event-end-${event?.id ?? "new"}`}>Event ends</Label>
-        <DateTimePicker
-          id={`event-end-${event?.id ?? "new"}`}
-          name="endsAt"
-          required
-          value={schedule ? endsAt : undefined}
-          defaultValue={endsAt}
-          onValueChange={(value) => onScheduleChange?.("endsAt", value)}
-        />
-      </div>
-      <label className="flex items-start gap-3 rounded-md border p-3 text-sm sm:col-span-2">
-        <input
-          name="requiresFeedback"
-          type="checkbox"
-          defaultChecked={event?.requiresFeedback ?? true}
-          className="mt-1"
-        />
-        <span>
-          <strong className="block font-medium">Require tester feedback</strong>
-          <span className="text-muted-foreground">
-            Attendance can only be completed after required project feedback is
-            submitted.
-          </span>
-        </span>
-      </label>
+      {includeBrief ? (
+        <div className="space-y-2 sm:col-span-2">
+          <Label htmlFor={`event-description-${fieldSuffix}`}>
+            Purpose and tester brief
+          </Label>
+          <Textarea
+            id={`event-description-${fieldSuffix}`}
+            name="description"
+            rows={3}
+            defaultValue={event?.description ?? ""}
+          />
+        </div>
+      ) : null}
     </div>
   );
 }
 
-function EventRecurrenceFields({ onDirty }: { onDirty: () => void }) {
-  const [frequency, setFrequency] = useState("");
-  const [endMode, setEndMode] = useState("count");
-  const days = [
+function EventTimelineFields({
+  event,
+  schedule,
+  onScheduleChange,
+  timeZoneId,
+  stacked = false,
+  compact = false,
+}: EventFieldsProps) {
+  const eventTimeZone = timeZoneId ?? event?.timeZoneId ?? "UTC";
+  const applicationsOpenAt =
+    schedule?.applicationsOpenAt ??
+    apiDatetimeLocal(event?.applicationsOpenAt, eventTimeZone);
+  const applicationsCloseAt =
+    schedule?.applicationsCloseAt ??
+    apiDatetimeLocal(event?.applicationsCloseAt, eventTimeZone);
+  const startsAt =
+    schedule?.startsAt ?? apiDatetimeLocal(event?.startsAt, eventTimeZone);
+  const endsAt =
+    schedule?.endsAt ?? apiDatetimeLocal(event?.endsAt, eventTimeZone);
+
+  const fieldSuffix = event?.id ?? "new";
+
+  function changeRange(
+    startField: "applicationsOpenAt" | "startsAt",
+    endField: "applicationsCloseAt" | "endsAt",
+    next: { start: string; end: string },
+    currentStart: string,
+    currentEnd: string,
+  ) {
+    if (next.start !== currentStart) {
+      onScheduleChange?.(startField, next.start);
+    }
+    if (next.end !== currentEnd) {
+      onScheduleChange?.(endField, next.end);
+    }
+  }
+
+  return (
+    <div className={stacked ? "grid gap-3" : "grid gap-4 md:grid-cols-2"}>
+      <details
+        open={compact ? undefined : true}
+        className={compact ? "group min-w-0" : "min-w-0 space-y-2"}
+      >
+        <summary
+          className={
+            compact
+              ? "grid min-h-10 cursor-pointer list-none items-center gap-1.5 rounded-md px-2 hover:bg-muted/40 sm:grid-cols-[7rem_minmax(0,1fr)] sm:gap-3"
+              : "pointer-events-none list-none"
+          }
+        >
+          <Label
+            className={compact ? "text-xs text-muted-foreground" : undefined}
+            htmlFor={`applications-window-${fieldSuffix}`}
+          >
+            {compact ? "Applications" : "Application window"}
+          </Label>
+          {compact ? (
+            <span className="text-sm text-muted-foreground group-open:hidden">
+              Set application window
+            </span>
+          ) : null}
+        </summary>
+        <div className={compact ? "mt-2 sm:ml-[7.75rem]" : undefined}>
+          <DateTimeRangePicker
+            id={`applications-window-${fieldSuffix}`}
+            label="Application window"
+            startName="applicationsOpenAt"
+            endName="applicationsCloseAt"
+            timeZoneId={eventTimeZone}
+            required
+            value={
+              schedule
+                ? { start: applicationsOpenAt, end: applicationsCloseAt }
+                : undefined
+            }
+            defaultValue={{ start: applicationsOpenAt, end: applicationsCloseAt }}
+            onValueChange={(next) =>
+              changeRange(
+                "applicationsOpenAt",
+                "applicationsCloseAt",
+                next,
+                applicationsOpenAt,
+                applicationsCloseAt,
+              )
+            }
+          />
+        </div>
+      </details>
+      <div
+        className={
+          compact
+            ? "grid min-w-0 gap-1.5 sm:grid-cols-[7rem_minmax(0,1fr)] sm:items-center sm:gap-3"
+            : "min-w-0 space-y-2"
+        }
+      >
+        <Label
+          className={compact ? "text-xs text-muted-foreground" : undefined}
+          htmlFor={`event-schedule-${fieldSuffix}`}
+        >
+          {compact ? "Testing session" : "Event schedule"}
+        </Label>
+        <DateTimeRangePicker
+          id={`event-schedule-${fieldSuffix}`}
+          label="Event schedule"
+          startName="startsAt"
+          endName="endsAt"
+          timeZoneId={eventTimeZone}
+          required
+          value={schedule ? { start: startsAt, end: endsAt } : undefined}
+          defaultValue={{ start: startsAt, end: endsAt }}
+          onValueChange={(next) =>
+            changeRange("startsAt", "endsAt", next, startsAt, endsAt)
+          }
+        />
+      </div>
+    </div>
+  );
+}
+
+function EventFeedbackField({
+  event,
+}: {
+  event?: TestingLabTestingEventProjection;
+}) {
+  return (
+    <label className="flex items-start gap-3 rounded-md bg-muted/30 p-3 text-sm">
+      <input
+        name="requiresFeedback"
+        type="checkbox"
+        defaultChecked={event?.requiresFeedback ?? true}
+        className="mt-1"
+      />
+      <span>
+        <strong className="block font-medium">Require tester feedback</strong>
+        <span className="text-muted-foreground">
+          Testers must submit project feedback before attendance is complete.
+        </span>
+      </span>
+    </label>
+  );
+}
+
+function EventFields({
+  event,
+  schedule,
+  onScheduleChange,
+  timeZoneId,
+}: EventFieldsProps) {
+  return (
+    <div className="space-y-6">
+      {event?.id ? (
+        <input type="hidden" name="eventId" value={event.id} />
+      ) : null}
+      <input
+        type="hidden"
+        name="timeZoneId"
+        value={timeZoneId ?? event?.timeZoneId ?? "UTC"}
+      />
+      <EventIdentityFields event={event} />
+      <EventTimelineFields
+        event={event}
+        schedule={schedule}
+        onScheduleChange={onScheduleChange}
+        timeZoneId={timeZoneId}
+      />
+      <EventFeedbackField event={event} />
+    </div>
+  );
+}
+
+function EventRecurrenceFields({
+  onDirty,
+  startDate,
+  compact = false,
+}: {
+  onDirty: () => void;
+  startDate: string;
+  compact?: boolean;
+}) {
+  const allDays = [
     "Sunday",
     "Monday",
     "Tuesday",
@@ -481,48 +666,181 @@ function EventRecurrenceFields({ onDirty }: { onDirty: () => void }) {
     "Friday",
     "Saturday",
   ];
+  const displayDays = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+  ];
+  const parsedStart = new Date(startDate);
+  const startDay = Number.isNaN(parsedStart.valueOf())
+    ? "Monday"
+    : allDays[parsedStart.getDay()]!;
+  const startDayOfMonth = Number.isNaN(parsedStart.valueOf())
+    ? 1
+    : parsedStart.getDate();
+  const [repeatOption, setRepeatOption] = useState("none");
+  const [customFrequency, setCustomFrequency] = useState("Weekly");
+  const [customDays, setCustomDays] = useState<string[]>([startDay]);
+  const [endMode, setEndMode] = useState("count");
+  const frequency =
+    repeatOption === "custom"
+      ? customFrequency
+      : repeatOption === "none"
+        ? ""
+        : repeatOption;
+
+  function toggleCustomDay(day: string) {
+    setCustomDays((current) =>
+      current.includes(day)
+        ? current.filter((value) => value !== day)
+        : [...current, day],
+    );
+    onDirty();
+  }
 
   return (
-    <fieldset className="space-y-4 rounded-md border p-4">
-      <legend className="px-1 text-sm font-medium">Repeats</legend>
-      <div className="space-y-2">
-        <Label>Frequency</Label>
+    <section
+      aria-labelledby="event-recurrence-heading"
+      className={compact ? "space-y-2.5" : "space-y-3"}
+    >
+      <div
+        className={
+          compact
+            ? "grid gap-1.5 sm:grid-cols-[7rem_minmax(0,1fr)] sm:items-center sm:gap-3"
+            : "space-y-2"
+        }
+      >
+        <Label
+          id="event-recurrence-heading"
+          className={compact ? "text-xs text-muted-foreground" : undefined}
+          htmlFor="event-recurrence"
+        >
+          Repeats
+        </Label>
         <Select
-          value={frequency || "none"}
+          value={repeatOption}
           onValueChange={(value) => {
-            setFrequency(value === "none" ? "" : value);
+            setRepeatOption(value);
             onDirty();
           }}
         >
-          <SelectTrigger>
-            <SelectValue />
+          <SelectTrigger id="event-recurrence" className="h-10 w-full">
+            <SelectValue>
+              {(value: string | null) =>
+                value === "Daily"
+                  ? "Daily"
+                  : value === "Weekly"
+                    ? `Weekly on ${startDay}`
+                    : value === "Monthly"
+                      ? `Monthly on day ${startDayOfMonth}`
+                      : value === "custom"
+                        ? "Custom…"
+                        : "Does not repeat"
+              }
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="none">Does not repeat</SelectItem>
             <SelectItem value="Daily">Daily</SelectItem>
-            <SelectItem value="Weekly">Weekly</SelectItem>
-            <SelectItem value="Monthly">Monthly</SelectItem>
+            <SelectItem value="Weekly">Weekly on {startDay}</SelectItem>
+            <SelectItem value="Monthly">
+              Monthly on day {startDayOfMonth}
+            </SelectItem>
+            <SelectItem value="custom">Custom…</SelectItem>
           </SelectContent>
         </Select>
         <input type="hidden" name="recurrenceFrequency" value={frequency} />
       </div>
+
       {frequency ? (
-        <>
-          <div className="grid gap-4 sm:grid-cols-2">
+        <div
+          className={`space-y-3 rounded-md bg-muted/30 p-3 ${compact ? "sm:ml-[7.75rem]" : ""}`}
+        >
+          {repeatOption === "custom" ? (
             <div className="space-y-2">
               <Label htmlFor="recurrence-interval">Repeat every</Label>
-              <Input
-                id="recurrence-interval"
-                name="recurrenceInterval"
-                type="number"
-                min="1"
-                max="52"
-                defaultValue="1"
-                required
-              />
+              <div className="grid grid-cols-[5rem_minmax(0,1fr)] gap-2">
+                <Input
+                  id="recurrence-interval"
+                  name="recurrenceInterval"
+                  type="number"
+                  min="1"
+                  max="52"
+                  defaultValue="1"
+                  required
+                />
+                <Select
+                  value={customFrequency}
+                  onValueChange={(value) => {
+                    setCustomFrequency(value);
+                    onDirty();
+                  }}
+                >
+                  <SelectTrigger aria-label="Repeat unit" className="w-full">
+                    <SelectValue>
+                      {(value: string | null) =>
+                        value === "Daily"
+                          ? "Day(s)"
+                          : value === "Monthly"
+                            ? "Month(s)"
+                            : "Week(s)"
+                      }
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Daily">Day(s)</SelectItem>
+                    <SelectItem value="Weekly">Week(s)</SelectItem>
+                    <SelectItem value="Monthly">Month(s)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+          ) : (
+            <input type="hidden" name="recurrenceInterval" value="1" />
+          )}
+
+          {frequency === "Weekly" ? (
+            repeatOption === "custom" ? (
+              <fieldset className="space-y-2">
+                <legend className="text-sm font-medium">Repeat on</legend>
+                <div className="flex flex-wrap gap-1.5">
+                  {displayDays.map((day) => {
+                    const selected = customDays.includes(day);
+                    return (
+                      <label
+                        key={day}
+                        className={`flex size-9 cursor-pointer items-center justify-center rounded-full text-xs font-medium transition-colors ${selected ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:text-foreground"}`}
+                      >
+                        <input
+                          className="sr-only"
+                          name="recurrenceDaysOfWeek"
+                          type="checkbox"
+                          value={day}
+                          checked={selected}
+                          onChange={() => toggleCustomDay(day)}
+                        />
+                        {day.slice(0, 1)}
+                      </label>
+                    );
+                  })}
+                </div>
+              </fieldset>
+            ) : (
+              <input
+                type="hidden"
+                name="recurrenceDaysOfWeek"
+                value={startDay}
+              />
+            )
+          ) : null}
+
+          <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Ends</Label>
+              <Label htmlFor="recurrence-end-mode">Ends</Label>
               <Select
                 value={endMode}
                 onValueChange={(value) => {
@@ -530,66 +848,47 @@ function EventRecurrenceFields({ onDirty }: { onDirty: () => void }) {
                   onDirty();
                 }}
               >
-                <SelectTrigger>
-                  <SelectValue />
+                <SelectTrigger id="recurrence-end-mode" className="w-full">
+                  <SelectValue>
+                    {(value: string | null) =>
+                      value === "date" ? "On a date" : "After"
+                    }
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="count">
-                    After a number of events
-                  </SelectItem>
+                  <SelectItem value="count">After</SelectItem>
                   <SelectItem value="date">On a date</SelectItem>
                 </SelectContent>
               </Select>
               <input type="hidden" name="recurrenceEndMode" value={endMode} />
             </div>
-          </div>
-          {frequency === "Weekly" ? (
-            <fieldset className="space-y-2">
-              <legend className="text-sm font-medium">Repeats on</legend>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                {days.map((day) => (
-                  <label
-                    key={day}
-                    className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm"
-                  >
-                    <input
-                      name="recurrenceDaysOfWeek"
-                      type="checkbox"
-                      value={day}
-                      onChange={onDirty}
-                    />
-                    {day}
-                  </label>
-                ))}
+            {endMode === "date" ? (
+              <div className="space-y-2">
+                <Label htmlFor="recurrence-ends-at">End date</Label>
+                <DateTimePicker
+                  id="recurrence-ends-at"
+                  name="recurrenceEndsAt"
+                  required
+                />
               </div>
-            </fieldset>
-          ) : null}
-          {endMode === "date" ? (
-            <div className="space-y-2">
-              <Label htmlFor="recurrence-ends-at">Repeat until</Label>
-              <DateTimePicker
-                id="recurrence-ends-at"
-                name="recurrenceEndsAt"
-                required
-              />
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <Label htmlFor="recurrence-count">Number of events</Label>
-              <Input
-                id="recurrence-count"
-                name="recurrenceOccurrenceCount"
-                type="number"
-                min="1"
-                max="104"
-                defaultValue="4"
-                required
-              />
-            </div>
-          )}
-        </>
+            ) : (
+              <div className="space-y-2">
+                <Label htmlFor="recurrence-count">Number of events</Label>
+                <Input
+                  id="recurrence-count"
+                  name="recurrenceOccurrenceCount"
+                  type="number"
+                  min="1"
+                  max="104"
+                  defaultValue="4"
+                  required
+                />
+              </div>
+            )}
+          </div>
+        </div>
       ) : null}
-    </fieldset>
+    </section>
   );
 }
 
@@ -599,6 +898,13 @@ export interface CreateTestingEventDialogProps {
   onOpenChange?: (open: boolean) => void;
   showTrigger?: boolean;
   templates?: TestingLabTestingEventTemplateProjection[];
+  defaultTimeZone?: string;
+}
+
+function preferredNewEventTimeZone(defaultTimeZone: string) {
+  return defaultTimeZone === "UTC"
+    ? browserTimeZone(defaultTimeZone)
+    : defaultTimeZone;
 }
 
 export function CreateTestingEventDialog({
@@ -607,6 +913,7 @@ export function CreateTestingEventDialog({
   onOpenChange,
   showTrigger = true,
   templates = [],
+  defaultTimeZone = "UTC",
 }: CreateTestingEventDialogProps = {}) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
@@ -617,6 +924,9 @@ export function CreateTestingEventDialog({
   const [pending, startTransition] = useTransition();
   const [result, setResult] =
     useState<TestingEventActionResult<unknown> | null>(null);
+  const [timeZoneId, setTimeZoneId] = useState(() =>
+    preferredNewEventTimeZone(defaultTimeZone),
+  );
   const [schedule, setSchedule] = useState<TestingEventSchedule>(() =>
     createTestingEventSchedule(new Date(), initialDate),
   );
@@ -629,6 +939,7 @@ export function CreateTestingEventDialog({
   function resetDraft() {
     formRef.current?.reset();
     setSchedule(createTestingEventSchedule(new Date(), initialDate));
+    setTimeZoneId(preferredNewEventTimeZone(defaultTimeZone));
     setDirty(false);
     setResult(null);
   }
@@ -681,67 +992,71 @@ export function CreateTestingEventDialog({
           New event
         </Button>
       ) : null}
-      <Sheet
+      <Dialog
         open={open}
         onOpenChange={(next) => {
           if (next) setOpen(true);
           else requestClose();
         }}
       >
-        <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-xl">
+        <DialogContent className="flex max-h-[calc(100dvh-2rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
           <form
             ref={formRef}
             onSubmit={submit}
             onChange={trackChanges}
             className="flex min-h-0 flex-1 flex-col"
           >
-            <SheetHeader className="border-b px-6 py-5">
-              <SheetTitle>Create testing event</SheetTitle>
-              <SheetDescription>
-                Create the application window first. Project capacity is
-                reserved only after approval.
-              </SheetDescription>
-            </SheetHeader>
-            <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-6 py-5">
+            <DialogHeader className="px-5 pb-3 pt-4 text-left">
+              <DialogTitle>New testing event</DialogTitle>
+              <DialogDescription className="sr-only">
+                Create a testing event draft with its format, review process,
+                schedule, time zone, and recurrence.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5">
               {result ? <ActionMessage result={result} /> : null}
-              <div className="space-y-2 rounded-md border bg-muted/20 p-4">
-                <Label htmlFor="event-template">Start from</Label>
-                <select
-                  id="event-template"
-                  name="templateRevisionId"
-                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-                >
-                  <option value="">Blank event</option>
-                  {templates.flatMap((template) =>
-                    template.currentRevision?.id
-                      ? [
-                          <option
-                            key={template.currentRevision.id}
-                            value={template.currentRevision.id}
-                          >
-                            {template.name} · revision{" "}
-                            {template.currentRevision.revisionNumber}
-                          </option>,
-                        ]
-                      : [],
-                  )}
-                </select>
-                <p className="text-xs text-muted-foreground">
-                  A template is copied into an independent event snapshot. Later
-                  template revisions never change this event.
-                </p>
+              <div className="space-y-3">
+                <EventIdentityFields
+                  includeBrief={false}
+                  compact
+                  templates={templates}
+                />
+
+                <section aria-label="Schedule" className="space-y-2.5">
+                  <div className="grid min-w-0 gap-1.5 sm:grid-cols-[7rem_minmax(0,1fr)] sm:items-center sm:gap-3">
+                    <Label
+                      className="text-xs text-muted-foreground"
+                      htmlFor="new-event-time-zone"
+                    >
+                      Time zone
+                    </Label>
+                    <TimeZoneCombobox
+                      id="new-event-time-zone"
+                      value={timeZoneId}
+                      onValueChange={(value) => {
+                        setTimeZoneId(value);
+                        setDirty(true);
+                      }}
+                    />
+                  </div>
+                  <EventTimelineFields
+                    schedule={schedule}
+                    onScheduleChange={changeSchedule}
+                    timeZoneId={timeZoneId}
+                    stacked
+                    compact
+                  />
+                </section>
+
+                <EventRecurrenceFields
+                  startDate={schedule.startsAt}
+                  onDirty={() => setDirty(true)}
+                  compact
+                />
+                <input type="hidden" name="requiresFeedback" value="true" />
               </div>
-              <EventFields
-                schedule={schedule}
-                onScheduleChange={changeSchedule}
-              />
-              <p className="text-xs text-muted-foreground">
-                Dates start in a valid order. Changing the event start updates
-                its end time by two hours.
-              </p>
-              <EventRecurrenceFields onDirty={() => setDirty(true)} />
             </div>
-            <SheetFooter className="border-t px-6 py-4 sm:flex-row sm:justify-end">
+            <DialogFooter className="px-5 py-3 sm:flex-row sm:justify-end">
               <Button
                 type="button"
                 variant="outline"
@@ -753,10 +1068,10 @@ export function CreateTestingEventDialog({
               <Button type="submit" disabled={pending}>
                 {pending ? "Creating event..." : "Create event"}
               </Button>
-            </SheetFooter>
+            </DialogFooter>
           </form>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
       <AlertDialog open={discardOpen} onOpenChange={setDiscardOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -795,7 +1110,7 @@ export function EditTestingEventDialog({
       submitLabel="Save event"
       action={updateTestingEvent}
     >
-      <EventFields event={event} />
+      <EventFields event={event} timeZoneId={event.timeZoneId ?? "UTC"} />
     </EventActionDialog>
   );
 }
@@ -1046,6 +1361,14 @@ export function TestingEventLifecycleActions({
     Active: ["complete", "Complete event", CheckCircle2],
   };
   const next = nextByStatus[event.status ?? "Draft"];
+  const configuration = event.configuration;
+  const draftConfigurationReady = Boolean(
+    configuration?.generalRules?.trim() &&
+    configuration.candidateInstructions?.trim() &&
+    configuration.testerInstructions?.trim() &&
+    configuration.projectApplicationSchema &&
+    configuration.testerRegistrationSchema,
+  );
 
   function run(transition: string) {
     if (!event.id) return;
@@ -1059,7 +1382,16 @@ export function TestingEventLifecycleActions({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
-        {next && NextIcon ? (
+        {event.status === "Draft" && !draftConfigurationReady && event.id ? (
+          <Button asChild size="sm">
+            <a
+              href={`/workspace/testing-lab/events/${event.id}/overview#event-configuration-heading`}
+            >
+              <Pencil className="mr-2 size-4" />
+              Complete setup
+            </a>
+          </Button>
+        ) : next && NextIcon ? (
           <Button size="sm" disabled={pending} onClick={() => run(next[0])}>
             <NextIcon className="mr-2 size-4" />
             {next[1]}
@@ -1107,7 +1439,7 @@ export function TestingEventLifecycleActions({
             submitLabel="Delete draft"
             action={deleteTestingEvent}
             destructive
-            successHref="/console/community/testing-lab/events"
+            successHref="/workspace/testing-lab/events"
           >
             <input type="hidden" name="eventId" value={event.id} />
           </EventActionDialog>
@@ -1124,7 +1456,7 @@ export function TestingEventLifecycleActions({
             description="The event leaves the active directory while its audit history remains available for restoration."
             submitLabel="Archive event"
             action={archiveTestingEvent}
-            successHref="/console/community/testing-lab/events"
+            successHref="/workspace/testing-lab/events"
           >
             <input type="hidden" name="eventId" value={event.id} />
           </EventActionDialog>

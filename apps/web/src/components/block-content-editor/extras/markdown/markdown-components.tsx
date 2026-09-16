@@ -2,6 +2,9 @@ import { type Components } from "react-markdown"
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
 import { vscDarkPlus, vs } from "react-syntax-highlighter/dist/esm/styles/prism"
 import { useTheme } from "next-themes"
+import { MermaidDiagram } from "@game-guild/content-rendering"
+import { VegaLiteViewer } from "@game-guild/lexical-surface"
+import { AssetImage } from "../media/asset-image"
 
 export function useMarkdownComponents(): Components {
   const { theme } = useTheme()
@@ -10,9 +13,17 @@ export function useMarkdownComponents(): Components {
   return {
     // Code blocks with syntax highlighting
     code({ node, className, children, ...props }: any) {
-      const match = /language-(\w+)/.exec(className || "")
+      const match = /language-(\w[\w-]*)/.exec(className || "")
       const language = match ? match[1] : ""
       const inline = !className
+
+      if (!inline && language === "mermaid") {
+        return <MermaidDiagram code={String(children).replace(/\n$/, "")} />
+      }
+
+      if (!inline && (language === "vegalite" || language === "vega-lite")) {
+        return <VegaLiteViewer spec={String(children).replace(/\n$/, "")} />
+      }
 
       return !inline && language ? (
         <SyntaxHighlighter
@@ -191,8 +202,8 @@ export function useMarkdownComponents(): Components {
 
     // Images
     img: ({ src, alt, ...props }) => (
-      <img
-        src={src}
+      <AssetImage
+        src={typeof src === "string" ? src : undefined}
         alt={alt}
         className="rounded-lg shadow-md max-w-full h-auto my-4"
         {...props}

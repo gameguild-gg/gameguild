@@ -6,6 +6,7 @@ using GameGuild.Assets.Configuration;
 using GameGuild.Assets.Commands;
 using GameGuild.Assets.Queries;
 using GameGuild.Assets.Security;
+using GameGuild.Assets.SocialMedia;
 using FluentValidation;
 
 namespace GameGuild.Assets.Extensions;
@@ -99,11 +100,14 @@ public static class AssetsModuleExtensions
         services.AddScoped<IAssetScopedAccessService, AssetScopedAccessService>();
         services.AddScoped<IAssetModerationService, AssetModerationService>();
         services.AddScoped<IAssetTextExtractionService, AssetTextExtractionService>();
+        services.AddScoped<ISocialMediaAssetService, SocialMediaAssetService>();
 
         // Security Services (Threat Mitigations)
         services.AddScoped<IAssetRateLimitService, AssetRateLimitService>();
         services.AddScoped<ITransformationValidator, TransformationValidator>();
         services.AddScoped<IVirusScanService, VirusScanService>();
+        services.AddScoped<BackgroundServices.IAssetVirusScanProcessor, BackgroundServices.AssetVirusScanProcessor>();
+        services.AddHostedService<BackgroundServices.VirusScanBackgroundService>();
         services.AddScoped<IAssetGarbageCollectionService, AssetGarbageCollectionService>();
         services.AddScoped<ITenantAssetValidationService, TenantAssetValidationService>();
         services.AddScoped<IDownloadWindowService, DownloadWindowService>();

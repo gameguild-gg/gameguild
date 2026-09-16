@@ -349,7 +349,7 @@ assert_economy_manifest "$repository_root" "$manifest_path"
 gate_stage='preflight-postgres-isolation'
 mapfile -t nested_postgres_builders < <(
   grep -RIl --include='*.cs' --exclude-dir=bin --exclude-dir=obj 'new PostgreSqlBuilder' apps/api/tests \
-    | grep -v '^apps/api/tests/GameGuild.TestSupport.Economy/' \
+    | grep -v '^apps/api/tests/GameGuild.TestSupport.Finance.Economy/' \
     || true
 )
 if ((${#nested_postgres_builders[@]})); then
@@ -496,7 +496,7 @@ fi
     GARAGE_ADMIN_PORT="$garage_admin_port" \
     GARAGE_ADMIN_TOKEN=development-garage-admin-token \
     GARAGE_S3_BUCKET=assets \
-    GARAGE_KEY_ID=GK111111111111111111111111 \
+    GARAGE_KEY_ID=GK333333333333333333333333 \
     GARAGE_KEY_SECRET=2222222222222222222222222222222222222222222222222222222222222222 \
     sh scripts/garage/init.sh
 
@@ -504,7 +504,7 @@ fi
   export GARAGE_ADMIN_URL="http://127.0.0.1:$garage_admin_port"
   export GARAGE_ADMIN_TOKEN=development-garage-admin-token
   export S3_BUCKET=assets
-  export S3_ACCESS_KEY=GK111111111111111111111111
+  export S3_ACCESS_KEY=GK333333333333333333333333
   export S3_SECRET_KEY=2222222222222222222222222222222222222222222222222222222222222222
   export S3_REGION=garage
 }
@@ -578,8 +578,8 @@ done
 
 if [[ "${ECONOMY_CI_PROBE_COVERAGE_FAILURE:-0}" == '1' ]]; then
   lowered="$artifact_root/coverage/lowered.cobertura.xml"
-  printf '<coverage><packages><package name="GameGuild.Economy.Probe" line-rate="0.99" branch-rate="1"><classes><class name="Probe"><methods><method name="Covered"><lines><line number="1" hits="1" /></lines></method></methods></class></classes></package></packages></coverage>\n' > "$lowered"
-  assert_cobertura_coverage "$lowered" 'GameGuild.Economy.Probe' >/dev/null
+  printf '<coverage><packages><package name="GameGuild.Finance.Economy.Probe" line-rate="0.99" branch-rate="1"><classes><class name="Probe"><methods><method name="Covered"><lines><line number="1" hits="1" /></lines></method></methods></class></classes></package></packages></coverage>\n' > "$lowered"
+  assert_cobertura_coverage "$lowered" 'GameGuild.Finance.Economy.Probe' >/dev/null
 fi
 
 run_whole_solution_test_project() {

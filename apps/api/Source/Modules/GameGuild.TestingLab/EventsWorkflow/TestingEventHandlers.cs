@@ -62,7 +62,10 @@ public sealed class TestingEventHandlers(
                     return Result.Failure<TestingEventProjection>(
                         Error.NotFound("TestingLab.TemplateRevisionNotFound", "Testing event template revision not found."));
             }
-            var occurrenceStarts = TestingEventRecurrenceSchedule.Expand(request.StartsAt, request.Recurrence);
+            var occurrenceStarts = TestingEventRecurrenceSchedule.Expand(
+                request.StartsAt,
+                request.Recurrence,
+                request.TimeZoneId);
             Guid? recurrenceSeriesId = request.Recurrence == null ? null : Guid.NewGuid();
             var recurrenceDaysOfWeek = request.Recurrence?.DaysOfWeek is { Count: > 0 } days
                 ? string.Join(',', days.Distinct().OrderBy(day => day))
@@ -89,8 +92,21 @@ public sealed class TestingEventHandlers(
                         request.Recurrence?.Interval,
                         recurrenceDaysOfWeek,
                         request.Recurrence?.EndsAt,
-                        request.Recurrence?.OccurrenceCount);
-                    if (templateRevision != null) testingEvent.ConfigureFromTemplate(templateRevision);
+                        request.Recurrence?.OccurrenceCount,
+                        request.TimeZoneId);
+                    if (templateRevision != null)
+                    {
+                        testingEvent.ConfigureFromTemplate(templateRevision);
+                    }
+                    else if (request.Configuration is { } configuration)
+                    {
+                        testingEvent.Configure(
+                            configuration.GeneralRules,
+                            configuration.CandidateInstructions,
+                            configuration.TesterInstructions,
+                            configuration.ProjectApplicationSchema,
+                            configuration.TesterRegistrationSchema);
+                    }
                     return testingEvent;
                 })
                 .ToArray();
@@ -158,7 +174,8 @@ public sealed class TestingEventHandlers(
                 request.ApplicationsCloseAt,
                 request.StartsAt,
                 request.EndsAt,
-                request.RequiresFeedback);
+                request.RequiresFeedback,
+                request.TimeZoneId);
             await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             return Result.Success(ToProjection(authorization.Event));
         }
@@ -600,7 +617,8 @@ public sealed class TestingEventHandlers(
                     approvedProjectCounts.GetValueOrDefault(slot.Id),
                     registeredTesterCounts.GetValueOrDefault(slot.Id)))
                 .ToList(),
-            ToConfigurationProjection(testingEvent)))
+            ToConfigurationProjection(testingEvent),
+            testingEvent.TimeZoneId))
             .ToList();
     }
 
@@ -891,7 +909,8 @@ public sealed class TestingEventHandlers(
         ParseRecurrenceDaysOfWeek(testingEvent.RecurrenceDaysOfWeek),
         testingEvent.RecurrenceEndsAt,
         testingEvent.RecurrenceOccurrenceCount,
-        ToConfigurationProjection(testingEvent));
+        ToConfigurationProjection(testingEvent),
+        testingEvent.TimeZoneId);
 
     private static readonly Expression<Func<TestingEvent, TestingEventProjection>> EventProjection = testingEvent => new(
         testingEvent.Id,
@@ -920,7 +939,8 @@ public sealed class TestingEventHandlers(
         ParseRecurrenceDaysOfWeek(testingEvent.RecurrenceDaysOfWeek),
         testingEvent.RecurrenceEndsAt,
         testingEvent.RecurrenceOccurrenceCount,
-        null);
+        null,
+        testingEvent.TimeZoneId);
 
     private static TestingEventConfigurationProjection? ToConfigurationProjection(TestingEvent testingEvent)
     {

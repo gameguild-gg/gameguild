@@ -2,6 +2,7 @@
 
 import React, {
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -72,6 +73,8 @@ function formatContentTypeLabel(type: ContentItemDetail["type"]) {
   return type;
 }
 
+const AUTOSAVE_DELAY_MS = 3000;
+
 // ── Component ────────────────────────────────────────────────────────────────
 
 interface ContentItemEditorProps {
@@ -114,6 +117,9 @@ export function ContentItemEditor({
   const [saved, setSaved] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
   const [codingError, setCodingError] = useState<string | null>(null);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(
+    item.updatedAt ? new Date(item.updatedAt) : null,
+  );
 
   // ── Graded toggle (Task 7) ──
   // checked mirrors linkedAssessmentId (server-side non-deleted link).
@@ -131,6 +137,8 @@ export function ContentItemEditor({
   const isLesson = item.type === "Lesson";
   const isQuiz = item.type === "Questionnaire";
   const isCode = item.type === "Code";
+  const linkedAssessmentId = linkedAssessment?.id;
+  const linkedAssessmentSlug = linkedAssessment?.slug;
   const isAutomatedReview = linkedAssessment
     ? hasReviewMethod(linkedAssessment.reviewMethods, "AutomatedReview")
     : false;
@@ -154,6 +162,7 @@ export function ContentItemEditor({
     () => (isQuiz ? (item.jsonBody ?? undefined) : undefined),
     [isQuiz, item.jsonBody],
   );
+  const [quizRevision, setQuizRevision] = useState(0);
   const quizContentRef = useRef<Record<string, unknown> | undefined>(
     initialQuizContent,
   );
@@ -199,6 +208,7 @@ export function ContentItemEditor({
   const handleQuizContentChange = useCallback(
     (content: Record<string, unknown>) => {
       quizContentRef.current = content;
+      setQuizRevision((r) => r + 1);
     },
     [],
   );
@@ -217,14 +227,7 @@ export function ContentItemEditor({
     setSlug(slugify(value));
   }
 
-  function handleSave() {
-    if (!title.trim()) {
-      setError("Title is required.");
-      return;
-    }
-    setError(null);
-    setSaved(false);
-
+  function buildSavePayload() {
     // Lesson: Lexical -> jsonBody (object); text formats -> body (string).
     // Quiz is structured content and must persist in jsonBody.
     let bodyToSave: string | undefined;
@@ -246,81 +249,175 @@ export function ContentItemEditor({
     } else if (isQuiz) {
       jsonBodyToSave = quizContentRef.current;
     }
+    return {
+      title: (title ?? "").trim(),
+      // Backend keeps the stored slug when sent whitespace — derive locally
+      // so a cleared field can't silently revert to the old slug. Re-slugify
+      // to strip the trailing hyphen live typing can leave behind. Slugs can
+      // be missing on legacy items, so coerce before slugify.
+      slug:
+        normalizeSlug(slug ?? "") ||
+        normalizeSlug(title ?? ""),
+      description: description.trim() || undefined,
+      body: bodyToSave,
+      jsonBody: jsonBodyToSave,
+      visibility,
+      isRequired,
+      estimatedMinutes: estimatedMinutes ? Number(estimatedMinutes) : null,
+      estimatedMinutesSource: estimatedMinutes ? ("Manual" as const) : ("Auto" as const),
+    };
+  }
+
+  const snapshotRef = useRef<string | null>(null);
+  const saveInFlightRef = useRef(false);
+  const buildPayloadRef = useRef(buildSavePayload);
+
+  async function performSave(isManual: boolean) {
+    if (!isManual && saveInFlightRef.current) return;
+    setError(null);
+    if (isManual) setSaved(false);
+
+    const payload = buildSavePayload();
+    const payloadJson = JSON.stringify(payload);
+
+    saveInFlightRef.current = true;
     startTransition(async () => {
-      const result = isQuiz
-        ? await saveQuizAssessmentDraft({
-            courseId,
-            contentId: item.id,
-            expectedContentVersion: contentVersionRef.current,
-            expectedAssessmentVersion: quizAssessmentVersionRef.current,
-            title: title.trim(),
-            slug: normalizeSlug(slug) || normalizeSlug(title),
-            description: description.trim() || undefined,
-            document: jsonBodyToSave ?? {},
-            visibility,
-            isRequired,
-            estimatedMinutes: estimatedMinutes ? Number(estimatedMinutes) : null,
-            estimatedMinutesSource: estimatedMinutes ? "Manual" : "Auto",
-            reviewMethods:
-              linkedAssessment?.reviewMethods ??
-              createReviewMethods("AutomatedReview", true),
-            passingScore: linkedAssessment?.passingScore ?? 0,
-            timeLimitMinutes: linkedAssessment?.timeLimitMinutes ?? null,
-            maxAttempts: linkedAssessment?.maxAttempts ?? 1,
-            presentationMode:
-              linkedAssessment?.presentationMode ?? "Continuous",
-            contentCompletionMode:
-              linkedAssessment?.contentCompletionMode ?? "on-release-and-pass",
-            resultReleaseMode:
-              linkedAssessment?.resultReleaseMode ?? "manual",
-            resultReleaseScheduledFor:
-              linkedAssessment?.resultReleaseScheduledFor ?? null,
-            attemptContributionMode:
-              linkedAssessment?.attemptContributionMode ?? null,
-            reviewConfigurationCanonicalJson:
-              linkedAssessment?.reviewConfigurationCanonicalJson ?? null,
-          })
-        : await updateContent({
-            courseId,
-            contentId: item.id,
-            title: title.trim(),
-            slug: normalizeSlug(slug) || normalizeSlug(title),
-            description: description.trim() || undefined,
-            body: bodyToSave,
-            ...(isLesson
-              ? { jsonBody: jsonBodyToSave, lessonFormat: selectedFormat }
-              : {}),
-            visibility,
-            isRequired,
-            estimatedMinutes: estimatedMinutes ? Number(estimatedMinutes) : null,
-            estimatedMinutesSource: estimatedMinutes ? "Manual" : "Auto",
-          });
+      try {
+        const result = isQuiz
+          ? await saveQuizAssessmentDraft({
+              courseId,
+              contentId: item.id,
+              expectedContentVersion: contentVersionRef.current,
+              expectedAssessmentVersion: quizAssessmentVersionRef.current,
+              title: payload.title,
+              slug: payload.slug,
+              description: payload.description,
+              document: payload.jsonBody ?? {},
+              visibility: payload.visibility,
+              isRequired: payload.isRequired,
+              estimatedMinutes: payload.estimatedMinutes,
+              estimatedMinutesSource: payload.estimatedMinutesSource,
+              reviewMethods:
+                linkedAssessment?.reviewMethods ??
+                createReviewMethods("AutomatedReview", true),
+              passingScore: linkedAssessment?.passingScore ?? 0,
+              timeLimitMinutes: linkedAssessment?.timeLimitMinutes ?? null,
+              maxAttempts: linkedAssessment?.maxAttempts ?? 1,
+              presentationMode:
+                linkedAssessment?.presentationMode ?? "Continuous",
+              contentCompletionMode:
+                linkedAssessment?.contentCompletionMode ??
+                "on-release-and-pass",
+              resultReleaseMode:
+                linkedAssessment?.resultReleaseMode ?? "manual",
+              resultReleaseScheduledFor:
+                linkedAssessment?.resultReleaseScheduledFor ?? null,
+              attemptContributionMode:
+                linkedAssessment?.attemptContributionMode ?? null,
+              reviewConfigurationCanonicalJson:
+                linkedAssessment?.reviewConfigurationCanonicalJson ?? null,
+            })
+          : await updateContent({
+              courseId,
+              contentId: item.id,
+              title: payload.title,
+              slug: payload.slug,
+              description: payload.description,
+              body: payload.body,
+              ...(isLesson
+                ? {
+                    jsonBody: payload.jsonBody,
+                    lessonFormat: selectedFormat,
+                  }
+                : {}),
+              visibility: payload.visibility,
+              isRequired: payload.isRequired,
+              estimatedMinutes: payload.estimatedMinutes,
+              estimatedMinutesSource: payload.estimatedMinutesSource,
+            });
 
-      if (!result.success) {
-        setError(result.error);
-        return;
-      }
+        if (!result.success) {
+          setError(result.error);
+          return;
+        }
 
-      if (isQuiz && result.data) {
-        contentVersionRef.current = result.data.contentVersion;
-        quizAssessmentVersionRef.current = result.data.assessmentVersion;
-      }
+        if (isQuiz && result.data) {
+          contentVersionRef.current = result.data.contentVersion;
+          quizAssessmentVersionRef.current = result.data.assessmentVersion;
+        }
 
-      setSaved(true);
+        snapshotRef.current = payloadJson;
+        setLastSavedAt(new Date());
+        if (isManual) setSaved(true);
 
-      // The route param IS the slug — after a slug change the current URL is
-      // stale, so replace it instead of refreshing in place.
-      const savedSlug = normalizeSlug(slug) || normalizeSlug(title);
-      if (savedSlug && savedSlug !== item.slug) {
-        router.replace(
-          `${learningBase}/courses/${encodeURIComponent(courseId)}/content/${savedSlug}` as Parameters<
-            typeof router.push
-          >[0],
-        );
-      } else {
-        router.refresh();
+        // The route param IS the slug — after a slug change the current URL is
+        // stale, so replace it instead of refreshing in place. Autosave skips
+        // router.refresh() to avoid re-rendering server data mid-typing.
+        const savedSlug = payload.slug;
+        if (savedSlug && savedSlug !== item.slug) {
+          router.replace(
+            `${learningBase}/courses/${encodeURIComponent(courseId)}/content/${savedSlug}` as Parameters<
+              typeof router.push
+            >[0],
+          );
+        } else if (isManual) {
+          router.refresh();
+        }
+      } finally {
+        saveInFlightRef.current = false;
       }
     });
+  }
+
+  const performSaveRef = useRef(performSave);
+
+  // Keeps both latest-closure refs fresh after every render so the debounced
+  // timer below always fires against current state.
+  useEffect(() => {
+    buildPayloadRef.current = buildSavePayload;
+    performSaveRef.current = performSave;
+  });
+
+  // Debounced autosave: waits for edits to settle, then saves silently. The
+  // JSON snapshot keeps mount-time and no-op re-renders from firing requests;
+  // the in-flight guard keeps a slow save from racing a newer one.
+  useEffect(() => {
+    const payloadJson = JSON.stringify(buildPayloadRef.current());
+    if (snapshotRef.current === null) {
+      snapshotRef.current = payloadJson;
+      return;
+    }
+    if (payloadJson === snapshotRef.current) return;
+    if (!title.trim()) return;
+
+    const timer = setTimeout(() => {
+      const latestJson = JSON.stringify(buildPayloadRef.current());
+      if (latestJson === snapshotRef.current) return;
+      void performSaveRef.current(false);
+    }, AUTOSAVE_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [
+    title,
+    slug,
+    description,
+    visibility,
+    isRequired,
+    estimatedMinutes,
+    editorState,
+    codeBody,
+    videoUrl,
+    quizRevision,
+    isLesson,
+    isQuiz,
+    selectedFormat,
+  ]);
+
+  function handleSave() {
+    if (!title.trim()) {
+      setError("Title is required.");
+      return;
+    }
+    performSave(true);
   }
 
   function handleBack() {
@@ -343,17 +440,17 @@ export function ContentItemEditor({
 
   async function handleConfigureCoding() {
     setCodingError(null);
-    if (!linkedAssessment?.slug && !linkedAssessment?.id) {
+    if (!linkedAssessmentSlug && !linkedAssessmentId) {
       setCodingError(
         "No assessment is linked to this content item yet. Add an assessment in the Assessments tab first.",
       );
       return;
     }
-    router.push(codingDefinitionRoute(linkedAssessment.slug ?? linkedAssessment.id));
+    router.push(codingDefinitionRoute(linkedAssessmentSlug ?? linkedAssessmentId!));
   }
 
   // ── Graded toggle handlers (Task 7) ──
-  // ponytail: content-to-assessment type map mirrors addContent (actions.ts). Inlined here
+  // The content-to-assessment type map mirrors addContent (actions.ts). Inlined here
   // rather than imported because the action's map keys LearningCoursesProgramContentType and
   // we only need the four graded branches — re-using the action's const would pull server-only
   // code into the client bundle.
@@ -372,7 +469,7 @@ export function ContentItemEditor({
       setShowGradedOffConfirm(true);
       return;
     }
-    const restoreTargetId = recentlyDeletedAssessmentId ?? linkedAssessment?.id;
+    const restoreTargetId = recentlyDeletedAssessmentId ?? linkedAssessmentId;
     startGradedTransition(async () => {
       setGradedChecked(true);
       setGradedError(null);
@@ -410,7 +507,7 @@ export function ContentItemEditor({
   }
 
   function confirmGradedOff() {
-    const targetId = linkedAssessment?.id;
+    const targetId = linkedAssessmentId;
     setShowGradedOffConfirm(false);
     if (!targetId) return;
     startGradedTransition(async () => {
@@ -427,7 +524,7 @@ export function ContentItemEditor({
     });
   }
 
-  // ── Coding test-plan stats (Code + deterministic review only) ──
+  // ── Coding test-plan stats (Code + AutoGraded only) ──
   // ponytail: narrow cast on the testPlan shape; the public endpoint strips hidden cases
   // server-side so cases[].length is the public count and the hidden count is unknown here.
   const codingCases =
@@ -441,8 +538,6 @@ export function ContentItemEditor({
   const functionalCaseCount = codingCases.filter(
     (c) => c.kind === "doctest" || c.kind === "clang-query",
   ).length;
-  const linkedAssessmentRouteKey =
-    linkedAssessment?.slug || linkedAssessment?.id;
 
   const previewContent: unknown = (() => {
     switch (selectedFormat) {
@@ -473,385 +568,107 @@ export function ContentItemEditor({
         <Badge variant="secondary">{contentTypeLabel}</Badge>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Main editor area */}
-        <div className="space-y-6 lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between gap-2">
-                <CardTitle>{contentTypeLabel} content</CardTitle>
-                {isLesson && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPreviewMode((v) => !v)}
-                  >
-                    {previewMode ? (
-                      <>
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Edit
-                      </>
-                    ) : (
-                      <>
-                        <Eye className="mr-2 h-4 w-4" />
-                        Preview
-                      </>
-                    )}
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Title</Label>
-                <Input
-                  id="title"
-                  value={title}
-                  onChange={(e) => handleTitleChange(e.target.value)}
-                  placeholder="Content title"
-                />
-              </div>
+      {/* Publication settings — configured before the content */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{contentTypeLabel} publication</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-6 md:grid-cols-3">
+          <div className="space-y-2">
+            <Label htmlFor="visibility">
+              {contentTypeLabel} visibility
+            </Label>
+            <Select
+              value={visibility}
+              onValueChange={(v) =>
+                setVisibility(v as LearningCoursesVisibility)
+              }
+            >
+              <SelectTrigger id="visibility">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CONTENT_ITEM_VISIBILITIES.map((v) => (
+                  <SelectItem key={v} value={v}>
+                    {formatEnumLabel(v)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-muted-foreground text-xs">
+              Controls enrolled-student access only. Public course
+              landing-page visibility is managed in Listing.
+            </p>
+          </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="slug">URL Slug</Label>
-                <Input
-                  id="slug"
-                  value={slug}
-                  onChange={(e) => handleSlugChange(e.target.value)}
-                  onBlur={() => setSlug(normalizeSlug(slug))}
-                  placeholder="introduction-to-game-development"
-                />
-                <p className="text-muted-foreground text-xs">
-                  Auto-generated from title. Edit to customize.
-                </p>
-              </div>
+          <div className="space-y-2">
+            <Label htmlFor="required">Required</Label>
+            <div className="flex h-9 items-center">
+              <Switch
+                id="required"
+                checked={isRequired}
+                onCheckedChange={setIsRequired}
+              />
+            </div>
+          </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Brief description for enrolled students"
-                  rows={3}
-                />
-              </div>
-
-              <Separator />
-
-              {isGradedType && (
-                <div
-                  className="space-y-3 rounded-md border p-4"
-                  data-testid="graded-section"
+          <div className="space-y-2">
+            <Label htmlFor="duration">
+              <Clock className="mr-1 inline h-3 w-3" />
+              Estimated minutes
+            </Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="duration"
+                type="number"
+                min={0}
+                value={estimatedMinutes}
+                onChange={(e) => setEstimatedMinutes(e.target.value)}
+                placeholder={autoHint ? `Auto (~${autoHint} min)` : "Auto"}
+              />
+              {estimatedMinutes && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEstimatedMinutes("")}
+                  title="Reset to auto estimate"
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <div>
-                      <p className="font-medium">Graded</p>
-                      <p className="text-muted-foreground text-sm">
-                        Link this content to a gradebook assessment.
-                      </p>
-                    </div>
-                    <Switch
-                      aria-label="Graded"
-                      checked={gradedChecked}
-                      disabled={isGradedPending}
-                      onCheckedChange={handleGradedToggle}
-                    />
-                  </div>
-                  {isGradedPending && (
-                    <p className="text-muted-foreground text-sm">
-                      <Loader2 className="mr-2 inline h-3 w-3 animate-spin" />
-                      Updating gradebook link…
-                    </p>
-                  )}
-                  {gradedError && (
-                    <p className="text-destructive text-sm">{gradedError}</p>
-                  )}
-                  <AlertDialog
-                    open={showGradedOffConfirm}
-                    onOpenChange={setShowGradedOffConfirm}
-                  >
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Remove grading?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This soft-deletes the linked assessment. Existing
-                          submissions are preserved. Toggle Graded back on to
-                          restore it.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          className={buttonVariants({ variant: "destructive" })}
-                          onClick={confirmGradedOff}
-                        >
-                          Remove grading
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
+                  Auto
+                </Button>
               )}
+            </div>
+            {autoHint && !estimatedMinutes && (
+              <p className="text-muted-foreground text-xs">
+                Leave blank to keep auto (~{autoHint} min). Type a number to
+                pin it manually.
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
-              <Separator />
-
-              {/* ── Lesson format display + body editor ── */}
-              {isLesson && (
-                <div className="space-y-2">
-                  <Label htmlFor="lesson-format">Lesson format</Label>
-                  <Input
-                    id="lesson-format"
-                    value={getLessonFormatLabel(selectedFormat)}
-                    readOnly
-                    className="bg-muted"
-                  />
-                </div>
-              )}
-
-              {isLesson && selectedFormat === "Lexical" && !previewMode && (
-                <LessonContentEditor
-                  itemId={item.id}
-                  initialState={initialLexicalState}
-                  onChange={handleEditorChange}
-                />
-              )}
-
-              {isLesson && selectedFormat === "Markdown" && !previewMode && (
-                <LessonCodeEditor
-                  key={item.id}
-                  initialValue={codeBody}
-                  language="markdown"
-                  placeholder="Write lesson content in Markdown."
-                  onChange={setCodeBody}
-                />
-              )}
-
-              {isLesson && selectedFormat === "Html" && !previewMode && (
-                <LessonCodeEditor
-                  key={item.id}
-                  initialValue={codeBody}
-                  language="html"
-                  placeholder="Write lesson content in HTML."
-                  onChange={setCodeBody}
-                />
-              )}
-
-              {isLesson && selectedFormat === "RevealJs" && !previewMode && (
-                <LessonCodeEditor
-                  key={item.id}
-                  initialValue={codeBody}
-                  language="markdown"
-                  placeholder="Author slides in Markdown — separate slides with --- on its own line."
-                  onChange={setCodeBody}
-                />
-              )}
-
-              {isLesson && selectedFormat === "Video" && !previewMode && (
-                <LessonVideoEditor
-                  key={item.id}
-                  initialValue={videoUrl}
-                  onChange={setVideoUrl}
-                />
-              )}
-
-              {isLesson && previewMode && (
-                <div
-                  data-testid="lesson-preview"
-                  className="rounded-md border p-4"
-                >
-                  <LearnerLessonRenderer
-                    courseId={courseId}
-                    itemId={item.id}
-                    format={selectedFormat}
-                    content={previewContent}
-                  />
-                </div>
-              )}
-
-              {isQuiz && (
-                <QuizContentEditor
-                  key={item.id}
-                  initialContent={initialQuizContent}
-                  onChange={handleQuizContentChange}
-                  mode={previewMode ? "preview" : "edit"}
-                />
-              )}
-
-              {isCode && gradedChecked && isAutomatedReview && (
-                <div
-                  className="space-y-3 rounded-md border p-4"
-                  data-testid="coding-tests-section"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <div>
-                      <p className="font-medium">Coding Tests</p>
-                      <p className="text-muted-foreground text-sm">
-                        Configure test cases, starter files, and the run
-                        environment in the coding-definition editor.
-                      </p>
-                    </div>
-                    {initialCodingDefinition ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          linkedAssessmentRouteKey &&
-                          router.push(
-                            codingDefinitionRoute(linkedAssessmentRouteKey),
-                          )
-                        }
-                        disabled={!linkedAssessmentRouteKey}
-                      >
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Edit Coding Tests
-                      </Button>
-                    ) : (
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={handleConfigureCoding}
-                        disabled={!linkedAssessmentRouteKey}
-                      >
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Configure Coding Tests
-                      </Button>
-                    )}
-                  </div>
-                  {initialCodingDefinition ? (
-                    <div className="text-muted-foreground space-y-1 text-sm">
-                      <p>Language: {initialCodingDefinition.language}</p>
-                      <p>Test cases: {codingCases.length} (public)</p>
-                      <p>
-                        Types: {stdioCaseCount} stdin/stdout ·{" "}
-                        {functionalCaseCount} functional
-                      </p>
-                      <p>
-                        Passing score: {initialCodingDefinition.passingScore}/
-                        {initialCodingDefinition.maxScore}
-                      </p>
-                    </div>
-                  ) : !linkedAssessmentRouteKey ? (
-                    <p className="text-muted-foreground text-sm">
-                      Link this content item to an assessment to enable coding
-                      tests.
-                    </p>
-                  ) : null}
-                  {codingError && (
-                    <p className="text-destructive text-sm">{codingError}</p>
-                  )}
-                </div>
-              )}
-
-              {!isLesson && !isQuiz && !isGradedType && (
-                <div className="space-y-2">
-                  <Label>Body</Label>
-                  <p className="text-muted-foreground text-sm py-8 text-center">
-                    Editor for <strong>{contentTypeLabel}</strong> content is
-                    not yet available.
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Sidebar settings */}
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>{contentTypeLabel} publication</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="visibility">
-                  {contentTypeLabel} visibility
-                </Label>
-                <Select
-                  value={visibility}
-                  onValueChange={(v) =>
-                    setVisibility(v as LearningCoursesVisibility)
-                  }
-                >
-                  <SelectTrigger id="visibility">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CONTENT_ITEM_VISIBILITIES.map((v) => (
-                      <SelectItem key={v} value={v}>
-                        {formatEnumLabel(v)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-muted-foreground text-xs">
-                  Controls enrolled-student access only. Public course
-                  landing-page visibility is managed in Listing.
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label htmlFor="required">Required</Label>
-                <Switch
-                  id="required"
-                  checked={isRequired}
-                  onCheckedChange={setIsRequired}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="duration">
-                  <Clock className="mr-1 inline h-3 w-3" />
-                  Estimated minutes
-                </Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="duration"
-                    type="number"
-                    min={0}
-                    value={estimatedMinutes}
-                    onChange={(e) => setEstimatedMinutes(e.target.value)}
-                    placeholder={autoHint ? `Auto (~${autoHint} min)` : "Auto"}
-                  />
-                  {estimatedMinutes && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setEstimatedMinutes("")}
-                      title="Reset to auto estimate"
-                    >
-                      Auto
-                    </Button>
-                  )}
-                </div>
-                {autoHint && !estimatedMinutes && (
-                  <p className="text-muted-foreground text-xs">
-                    Leave blank to keep auto (~{autoHint} min). Type a number to
-                    pin it manually.
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {error && <p className="text-destructive text-sm">{error}</p>}
-              {saved && (
-                <p className="text-sm text-green-600">Saved successfully.</p>
-              )}
-
-              <Button
-                className="w-full"
-                onClick={handleSave}
-                disabled={isPending}
+      {/* Actions + info */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Actions</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {error && <p className="text-destructive text-sm">{error}</p>}
+            {saved && (
+              <p className="text-sm text-green-600">Saved successfully.</p>
+            )}
+            {lastSavedAt && (
+              <p
+                className="text-muted-foreground text-xs"
+                data-testid="last-saved-at"
               >
+                Last saved {lastSavedAt.toLocaleTimeString()}
+              </p>
+            )}
+            <div className="flex flex-wrap items-center gap-2">
+              <Button onClick={handleSave} disabled={isPending}>
                 {isPending ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
@@ -859,25 +676,327 @@ export function ContentItemEditor({
                 )}
                 Save Changes
               </Button>
-              <Button variant="outline" className="w-full" onClick={handleBack}>
+              <Button variant="outline" onClick={handleBack}>
                 Cancel
               </Button>
-            </CardContent>
-          </Card>
+            </div>
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Info</CardTitle>
-            </CardHeader>
-            <CardContent className="text-muted-foreground space-y-1 text-sm">
-              <p>Type: {contentTypeLabel}</p>
-              <p>Status: {item.status}</p>
-              <p>Created: {new Date(item.createdAt).toLocaleDateString()}</p>
-              <p>Updated: {new Date(item.updatedAt).toLocaleDateString()}</p>
-            </CardContent>
-          </Card>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Info</CardTitle>
+          </CardHeader>
+          <CardContent className="text-muted-foreground space-y-1 text-sm">
+            <p>Type: {contentTypeLabel}</p>
+            <p>Status: {item.status}</p>
+            <p>Created: {new Date(item.createdAt).toLocaleDateString()}</p>
+            <p>Updated: {new Date(item.updatedAt).toLocaleString()}</p>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Content editor */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle>{contentTypeLabel} content</CardTitle>
+            {isLesson && selectedFormat !== "Markdown" && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setPreviewMode((v) => !v)}
+              >
+                {previewMode ? (
+                  <>
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Edit
+                  </>
+                ) : (
+                  <>
+                    <Eye className="mr-2 h-4 w-4" />
+                    Preview
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="title">Title</Label>
+            <Input
+              id="title"
+              value={title}
+              onChange={(e) => handleTitleChange(e.target.value)}
+              placeholder="Content title"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="slug">URL Slug</Label>
+            <Input
+              id="slug"
+              value={slug}
+              onChange={(e) => handleSlugChange(e.target.value)}
+              onBlur={() => setSlug(normalizeSlug(slug))}
+              placeholder="introduction-to-game-development"
+            />
+            <p className="text-muted-foreground text-xs">
+              Auto-generated from title. Edit to customize.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Brief description for enrolled students"
+              rows={3}
+            />
+          </div>
+
+          <Separator />
+
+          {isGradedType && (
+            <div
+              className="space-y-3 rounded-md border p-4"
+              data-testid="graded-section"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <p className="font-medium">Graded</p>
+                  <p className="text-muted-foreground text-sm">
+                    Link this content to a gradebook assessment.
+                  </p>
+                </div>
+                <Switch
+                  aria-label="Graded"
+                  checked={gradedChecked}
+                  disabled={isGradedPending}
+                  onCheckedChange={handleGradedToggle}
+                />
+              </div>
+              {isGradedPending && (
+                <p className="text-muted-foreground text-sm">
+                  <Loader2 className="mr-2 inline h-3 w-3 animate-spin" />
+                  Updating gradebook link…
+                </p>
+              )}
+              {gradedError && (
+                <p className="text-destructive text-sm">{gradedError}</p>
+              )}
+              <AlertDialog
+                open={showGradedOffConfirm}
+                onOpenChange={setShowGradedOffConfirm}
+              >
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Remove grading?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This soft-deletes the linked assessment. Existing
+                      submissions are preserved. Toggle Graded back on to
+                      restore it.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      className={buttonVariants({ variant: "destructive" })}
+                      onClick={confirmGradedOff}
+                    >
+                      Remove grading
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          )}
+
+          <Separator />
+
+          {/* ── Lesson format display + body editor ── */}
+          {isLesson && (
+            <div className="space-y-2">
+              <Label htmlFor="lesson-format">Lesson format</Label>
+              <Input
+                id="lesson-format"
+                value={getLessonFormatLabel(selectedFormat)}
+                readOnly
+                className="bg-muted"
+              />
+            </div>
+          )}
+
+          {isLesson && selectedFormat === "Lexical" && !previewMode && (
+            <LessonContentEditor
+              itemId={item.id}
+              initialState={initialLexicalState}
+              onChange={handleEditorChange}
+            />
+          )}
+
+          {isLesson && selectedFormat === "Markdown" && (
+            <div className="grid gap-4 lg:grid-cols-2">
+              <LessonCodeEditor
+                key={item.id}
+                initialValue={codeBody}
+                language="markdown"
+                placeholder="Write lesson content in Markdown."
+                onChange={setCodeBody}
+              />
+              <div
+                data-testid="lesson-preview"
+                className="flex h-[452px] flex-col overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700"
+              >
+                <div className="border-b border-gray-200 px-4 py-2 text-sm font-medium text-muted-foreground dark:border-gray-700">
+                  Preview
+                </div>
+                <div className="flex-1 overflow-auto p-4">
+                  <LearnerLessonRenderer
+                    courseId={courseId}
+                    itemId={item.id}
+                    format="Markdown"
+                    content={codeBody}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {isLesson && selectedFormat === "Html" && !previewMode && (
+            <LessonCodeEditor
+              key={item.id}
+              initialValue={codeBody}
+              language="html"
+              placeholder="Write lesson content in HTML."
+              onChange={setCodeBody}
+            />
+          )}
+
+          {isLesson && selectedFormat === "RevealJs" && !previewMode && (
+            <LessonCodeEditor
+              key={item.id}
+              initialValue={codeBody}
+              language="markdown"
+              placeholder="Author slides in Markdown — separate slides with --- on its own line."
+              onChange={setCodeBody}
+            />
+          )}
+
+          {isLesson && selectedFormat === "Video" && !previewMode && (
+            <LessonVideoEditor
+              key={item.id}
+              initialValue={videoUrl}
+              onChange={setVideoUrl}
+            />
+          )}
+
+          {isLesson && selectedFormat !== "Markdown" && previewMode && (
+            <div
+              data-testid="lesson-preview"
+              className="rounded-md border p-4"
+            >
+              <LearnerLessonRenderer
+                courseId={courseId}
+                itemId={item.id}
+                format={selectedFormat}
+                content={previewContent}
+              />
+            </div>
+          )}
+
+          {isQuiz && (
+            <QuizContentEditor
+              key={item.id}
+              initialContent={initialQuizContent}
+              onChange={handleQuizContentChange}
+              mode={previewMode ? "preview" : "edit"}
+            />
+          )}
+
+          {isCode && gradedChecked && isAutomatedReview && (
+            <div
+              className="space-y-3 rounded-md border p-4"
+              data-testid="coding-tests-section"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <p className="font-medium">Coding Tests</p>
+                  <p className="text-muted-foreground text-sm">
+                    Configure test cases, starter files, and the run
+                    environment in the coding-definition editor.
+                  </p>
+                </div>
+                {initialCodingDefinition ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      (linkedAssessmentSlug ?? linkedAssessmentId) &&
+                      router.push(
+                        codingDefinitionRoute(
+                          linkedAssessmentSlug ?? linkedAssessmentId!,
+                        ),
+                      )
+                    }
+                    disabled={!linkedAssessmentSlug && !linkedAssessmentId}
+                  >
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Edit Coding Tests
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleConfigureCoding}
+                    disabled={!linkedAssessmentId}
+                  >
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Configure Coding Tests
+                  </Button>
+                )}
+              </div>
+              {initialCodingDefinition ? (
+                <div className="text-muted-foreground space-y-1 text-sm">
+                  <p>Language: {initialCodingDefinition.language}</p>
+                  <p>Test cases: {codingCases.length} (public)</p>
+                  <p>
+                    Types: {stdioCaseCount} stdin/stdout ·{" "}
+                    {functionalCaseCount} functional
+                  </p>
+                  <p>
+                    Passing score: {initialCodingDefinition.passingScore}/
+                    {initialCodingDefinition.maxScore}
+                  </p>
+                </div>
+              ) : !linkedAssessmentId ? (
+                <p className="text-muted-foreground text-sm">
+                  Link this content item to an assessment to enable coding
+                  tests.
+                </p>
+              ) : null}
+              {codingError && (
+                <p className="text-destructive text-sm">{codingError}</p>
+              )}
+            </div>
+          )}
+
+          {!isLesson && !isQuiz && !isGradedType && (
+            <div className="space-y-2">
+              <Label>Body</Label>
+              <p className="text-muted-foreground text-sm py-8 text-center">
+                Editor for <strong>{contentTypeLabel}</strong> content is
+                not yet available.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

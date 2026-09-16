@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Learning.Courses;
@@ -33,10 +34,10 @@ public class AssessmentsController : BaseApiController
     private readonly IGradingQueueService _gradingQueueService;
     private readonly IAssessmentAuthoringService _authoringService;
     private readonly IAssessmentGradingRuntimeService? _gradingRuntime;
-    private readonly IGradeReleaseService? _gradeReleaseService;
     private readonly IAssessmentGradebookProjectionService? _gradebookProjection;
     private readonly IAssessmentLearnerResultProjectionService? _learnerResultProjection;
     private readonly ILogger<AssessmentsController> _logger;
+    private readonly ISender _sender;
 
     public AssessmentsController(
         IAssessmentService assessmentService,
@@ -47,8 +48,8 @@ public class AssessmentsController : BaseApiController
         IGradingQueueService gradingQueueService,
         IAssessmentAuthoringService authoringService,
         ILogger<AssessmentsController> logger,
+        ISender sender,
         IAssessmentGradingRuntimeService? gradingRuntime = null,
-        IGradeReleaseService? gradeReleaseService = null,
         IAssessmentGradebookProjectionService? gradebookProjection = null,
         IAssessmentLearnerResultProjectionService? learnerResultProjection = null)
     {
@@ -60,8 +61,8 @@ public class AssessmentsController : BaseApiController
         _gradingQueueService = gradingQueueService;
         _authoringService = authoringService;
         _logger = logger;
+        _sender = sender;
         _gradingRuntime = gradingRuntime;
-        _gradeReleaseService = gradeReleaseService;
         _gradebookProjection = gradebookProjection;
         _learnerResultProjection = learnerResultProjection;
     }
@@ -80,8 +81,10 @@ public class AssessmentsController : BaseApiController
         var actorId = _actorContextAccessor.ActorContext.SubjectIdAsGuid;
         if (!actorId.HasValue) return Unauthorized();
 
-        var result = await _authoringService
-            .SaveDraftAsync(courseId, contentId, actorId.Value, request, cancellationToken)
+        var result = await _sender
+            .Send(
+                new SaveAssessmentDraftEndpointCommand(courseId, contentId, actorId.Value, request),
+                cancellationToken)
             .ConfigureAwait(false);
         return ToActionResult(result);
     }
@@ -113,7 +116,9 @@ public class AssessmentsController : BaseApiController
         var actorId = _actorContextAccessor.ActorContext.SubjectIdAsGuid;
         if (!actorId.HasValue) return Unauthorized();
 
-        var result = await _authoringService.PrepareAsync(id, actorId.Value, request, cancellationToken).ConfigureAwait(false);
+        var result = await _sender
+            .Send(new PrepareAssessmentRevisionEndpointCommand(id, actorId.Value, request), cancellationToken)
+            .ConfigureAwait(false);
         return ToActionResult(result);
     }
 
@@ -130,7 +135,9 @@ public class AssessmentsController : BaseApiController
         var actorId = _actorContextAccessor.ActorContext.SubjectIdAsGuid;
         if (!actorId.HasValue) return Unauthorized();
 
-        var result = await _authoringService.PublishAsync(id, actorId.Value, request, cancellationToken).ConfigureAwait(false);
+        var result = await _sender
+            .Send(new PublishAssessmentRevisionEndpointCommand(id, actorId.Value, request), cancellationToken)
+            .ConfigureAwait(false);
         return ToActionResult(result);
     }
 
@@ -147,7 +154,9 @@ public class AssessmentsController : BaseApiController
         var actorId = _actorContextAccessor.ActorContext.SubjectIdAsGuid;
         if (!actorId.HasValue) return Unauthorized();
 
-        var result = await _authoringService.UnpublishAsync(id, actorId.Value, request, cancellationToken).ConfigureAwait(false);
+        var result = await _sender
+            .Send(new UnpublishAssessmentRevisionEndpointCommand(id, actorId.Value, request), cancellationToken)
+            .ConfigureAwait(false);
         return ToActionResult(result);
     }
 
@@ -164,14 +173,15 @@ public class AssessmentsController : BaseApiController
         if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
         var actorId = _actorContextAccessor.ActorContext.SubjectIdAsGuid;
         if (!actorId.HasValue) return Unauthorized();
-        return await ExecuteRuntimeAsync(() => RequireRuntime().StartTestRunAsync(
-            id,
-            actorId.Value,
-            new StartAssessmentTestRunCommand(
-                request.RevisionId,
-                request.PersonaKey,
-                request.PersonaDisplayName,
-                request.IdempotencyKey),
+        return await ExecuteRuntimeAsync(() => _sender.Send(
+            new StartAssessmentTestRunEndpointCommand(
+                id,
+                actorId.Value,
+                new StartAssessmentTestRunCommand(
+                    request.RevisionId,
+                    request.PersonaKey,
+                    request.PersonaDisplayName,
+                    request.IdempotencyKey)),
             cancellationToken)).ConfigureAwait(false);
     }
 
@@ -202,10 +212,11 @@ public class AssessmentsController : BaseApiController
         {
             var run = await RequireRuntime().GetTestRunAsync(testRunId, actorId.Value, cancellationToken).ConfigureAwait(false);
             await RequireTestRunManagementPermissionAsync(run).ConfigureAwait(false);
-            return await RequireRuntime().SubmitTestRunAsync(
-                testRunId,
-                actorId.Value,
-                new SubmitAssessmentResponseCommand(request.Response, request.IdempotencyKey),
+            return await _sender.Send(
+                new SubmitAssessmentTestRunEndpointCommand(
+                    testRunId,
+                    actorId.Value,
+                    new SubmitAssessmentResponseCommand(request.Response, request.IdempotencyKey)),
                 cancellationToken).ConfigureAwait(false);
         }).ConfigureAwait(false);
     }
@@ -222,11 +233,12 @@ public class AssessmentsController : BaseApiController
         {
             var run = await RequireRuntime().GetTestRunAsync(testRunId, actorId.Value, cancellationToken).ConfigureAwait(false);
             await RequireTestRunManagementPermissionAsync(run).ConfigureAwait(false);
-            return await RequireRuntime().ResolveTestInstructorReviewAsync(
-                testRunId,
-                actorId.Value,
-                request.Resolution,
-                request.IdempotencyKey,
+            return await _sender.Send(
+                new ResolveAssessmentTestRunEndpointCommand(
+                    testRunId,
+                    actorId.Value,
+                    request.Resolution,
+                    request.IdempotencyKey),
                 cancellationToken).ConfigureAwait(false);
         }).ConfigureAwait(false);
     }
@@ -243,10 +255,11 @@ public class AssessmentsController : BaseApiController
         {
             var run = await RequireRuntime().GetTestRunAsync(testRunId, actorId.Value, cancellationToken).ConfigureAwait(false);
             await RequireTestRunManagementPermissionAsync(run).ConfigureAwait(false);
-            return await RequireRuntime().RestartTestRunAsync(
-                testRunId,
-                actorId.Value,
-                request.IdempotencyKey,
+            return await _sender.Send(
+                new RestartAssessmentTestRunEndpointCommand(
+                    testRunId,
+                    actorId.Value,
+                    request.IdempotencyKey),
                 cancellationToken).ConfigureAwait(false);
         }).ConfigureAwait(false);
     }
@@ -267,13 +280,14 @@ public class AssessmentsController : BaseApiController
             actorId.Value,
             canManage: false).ConfigureAwait(false);
         if (!userId.HasValue || userId.Value != actorId.Value) return Forbid();
-        return await ExecuteRuntimeAsync(() => RequireRuntime().StartIndividualSubmissionAsync(
-            id,
-            new StartIndividualSubmissionCommand(
-                request.EnrollmentId,
-                actorId.Value,
-                actorId.Value,
-                request.IdempotencyKey),
+        return await ExecuteRuntimeAsync(() => _sender.Send(
+            new StartIndividualRuntimeSubmissionEndpointCommand(
+                id,
+                new StartIndividualSubmissionCommand(
+                    request.EnrollmentId,
+                    actorId.Value,
+                    actorId.Value,
+                    request.IdempotencyKey)),
             cancellationToken)).ConfigureAwait(false);
     }
 
@@ -297,13 +311,14 @@ public class AssessmentsController : BaseApiController
             return Forbid();
         }
 
-        return await ExecuteRuntimeAsync(() => RequireRuntime().StartIndividualSubmissionAsync(
-            assessment.Id,
-            new StartIndividualSubmissionCommand(
-                enrollmentId.Value,
-                actorId.Value,
-                actorId.Value,
-                request.IdempotencyKey),
+        return await ExecuteRuntimeAsync(() => _sender.Send(
+            new StartIndividualRuntimeSubmissionEndpointCommand(
+                assessment.Id,
+                new StartIndividualSubmissionCommand(
+                    enrollmentId.Value,
+                    actorId.Value,
+                    actorId.Value,
+                    request.IdempotencyKey)),
             cancellationToken)).ConfigureAwait(false);
     }
 
@@ -315,9 +330,13 @@ public class AssessmentsController : BaseApiController
     {
         var actorId = _actorContextAccessor.ActorContext.SubjectIdAsGuid;
         if (!actorId.HasValue) return Unauthorized();
-        return await ExecuteRuntimeAsync(() => RequireRuntime().StartCollectiveSubmissionAsync(
-            id,
-            new StartCollectiveSubmissionCommand(request.CourseGroupId, actorId.Value, request.IdempotencyKey),
+        return await ExecuteRuntimeAsync(() => _sender.Send(
+            new StartCollectiveRuntimeSubmissionEndpointCommand(
+                id,
+                new StartCollectiveSubmissionCommand(
+                    request.CourseGroupId,
+                    actorId.Value,
+                    request.IdempotencyKey)),
             cancellationToken)).ConfigureAwait(false);
     }
 
@@ -348,13 +367,14 @@ public class AssessmentsController : BaseApiController
     {
         var actorId = _actorContextAccessor.ActorContext.SubjectIdAsGuid;
         if (!actorId.HasValue) return Unauthorized();
-        return await ExecuteRuntimeAsync(() => RequireRuntime().SaveCollectiveDraftAsync(
-            submissionId,
-            actorId.Value,
-            new SaveCollectiveAssessmentDraftCommand(
-                request.Response,
-                request.ExpectedVersion,
-                request.IdempotencyKey),
+        return await ExecuteRuntimeAsync(() => _sender.Send(
+            new SaveCollectiveRuntimeDraftEndpointCommand(
+                submissionId,
+                actorId.Value,
+                new SaveCollectiveAssessmentDraftCommand(
+                    request.Response,
+                    request.ExpectedVersion,
+                    request.IdempotencyKey)),
             cancellationToken)).ConfigureAwait(false);
     }
 
@@ -366,13 +386,14 @@ public class AssessmentsController : BaseApiController
     {
         var actorId = _actorContextAccessor.ActorContext.SubjectIdAsGuid;
         if (!actorId.HasValue) return Unauthorized();
-        return await ExecuteRuntimeAsync(() => RequireRuntime().SubmitOfficialAsync(
-            submissionId,
-            actorId.Value,
-            new SubmitAssessmentResponseCommand(
-                request.Response,
-                request.IdempotencyKey,
-                request.ExpectedDraftVersion),
+        return await ExecuteRuntimeAsync(() => _sender.Send(
+            new SubmitRuntimeSubmissionEndpointCommand(
+                submissionId,
+                actorId.Value,
+                new SubmitAssessmentResponseCommand(
+                    request.Response,
+                    request.IdempotencyKey,
+                    request.ExpectedDraftVersion)),
             cancellationToken)).ConfigureAwait(false);
     }
 
@@ -385,11 +406,12 @@ public class AssessmentsController : BaseApiController
         var permission = await RequireSubmissionReviewPermissionAsync(submissionId).ConfigureAwait(false);
         if (permission is not null) return permission;
         var actorId = _actorContextAccessor.ActorContext.SubjectIdAsGuid!.Value;
-        return await ExecuteRuntimeAsync(() => RequireRuntime().ResolveOfficialInstructorReviewAsync(
-            submissionId,
-            actorId,
-            request.Resolution,
-            request.IdempotencyKey,
+        return await ExecuteRuntimeAsync(() => _sender.Send(
+            new ResolveRuntimeInstructorReviewEndpointCommand(
+                submissionId,
+                actorId,
+                request.Resolution,
+                request.IdempotencyKey),
             cancellationToken)).ConfigureAwait(false);
     }
 
@@ -402,10 +424,8 @@ public class AssessmentsController : BaseApiController
         var permission = await RequireSubmissionReviewPermissionAsync(submissionId).ConfigureAwait(false);
         if (permission is not null) return permission;
         var actorId = _actorContextAccessor.ActorContext.SubjectIdAsGuid!.Value;
-        return await ExecuteRuntimeAsync(() => RequireRuntime().RegradeOfficialAsync(
-            submissionId,
-            actorId,
-            request,
+        return await ExecuteRuntimeAsync(() => _sender.Send(
+            new RegradeRuntimeSubmissionEndpointCommand(submissionId, actorId, request),
             cancellationToken)).ConfigureAwait(false);
     }
 
@@ -418,18 +438,9 @@ public class AssessmentsController : BaseApiController
         var permission = await RequireSubmissionReviewPermissionAsync(submissionId).ConfigureAwait(false);
         if (permission is not null) return permission;
         var actorId = _actorContextAccessor.ActorContext.SubjectIdAsGuid!.Value;
-        return await ExecuteRuntimeAsync(async () =>
-        {
-            var release = await RequireReleaseService().ReleaseByActorAsync(
-                submissionId,
-                request.ExpectedRoundId,
-                checked((int)request.ExpectedSubmissionVersion),
-                actorId,
-                request.IdempotencyKey,
-                request.Reason,
-                cancellationToken).ConfigureAwait(false);
-            return new GradeResultReleaseResponse(release.Id, release.GradeRoundId, release.ReleasedAt);
-        }).ConfigureAwait(false);
+        return await ExecuteRuntimeAsync(() => _sender.Send(
+            new ReleaseRuntimeSubmissionEndpointCommand(submissionId, actorId, request),
+            cancellationToken)).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -442,7 +453,7 @@ public class AssessmentsController : BaseApiController
         if (program == null) return NotFound();
         if (!await CanManageCourseAsync(program.Id).ConfigureAwait(false)) return Forbid();
 
-        var result = await _assessmentService.CreateAssessmentAsync(request).ConfigureAwait(false);
+        var result = await _sender.Send(new CreateAssessmentEndpointCommand(request)).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             return BadRequest(result.Error);
@@ -546,7 +557,7 @@ public class AssessmentsController : BaseApiController
         if (program == null) return NotFound();
         if (!await CanManageCourseAsync(program.Id).ConfigureAwait(false)) return Forbid();
 
-        var result = await _assessmentService.CreateAssessmentGroupAsync(request).ConfigureAwait(false);
+        var result = await _sender.Send(new CreateAssessmentGroupEndpointCommand(request)).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             return BadRequest(result.Error);
@@ -568,7 +579,7 @@ public class AssessmentsController : BaseApiController
         if (group == null) return NotFound();
         if (!await CanManageCourseAsync(group.CourseId).ConfigureAwait(false)) return Forbid();
 
-        var result = await _assessmentService.UpdateAssessmentGroupAsync(id, request).ConfigureAwait(false);
+        var result = await _sender.Send(new UpdateAssessmentGroupEndpointCommand(id, request)).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             return result.Error.Type == ErrorType.NotFound
@@ -589,7 +600,7 @@ public class AssessmentsController : BaseApiController
         if (group == null) return NotFound();
         if (!await CanManageCourseAsync(group.CourseId).ConfigureAwait(false)) return Forbid();
 
-        var result = await _assessmentService.DeleteAssessmentGroupAsync(id).ConfigureAwait(false);
+        var result = await _sender.Send(new DeleteAssessmentGroupEndpointCommand(id)).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             return result.Error.Type == ErrorType.NotFound
@@ -610,7 +621,7 @@ public class AssessmentsController : BaseApiController
         if (assessment == null) return NotFound();
         if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
 
-        var result = await _assessmentService.UpdateAssessmentAsync(id, request).ConfigureAwait(false);
+        var result = await _sender.Send(new UpdateAssessmentEndpointCommand(id, request)).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             return result.Error.Type switch
@@ -634,7 +645,7 @@ public class AssessmentsController : BaseApiController
         if (assessment == null) return NotFound();
         if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
 
-        var result = await _assessmentService.AssignAssessmentToGroupAsync(id, request).ConfigureAwait(false);
+        var result = await _sender.Send(new AssignAssessmentToGroupEndpointCommand(id, request)).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             return result.Error.Type == ErrorType.NotFound
@@ -657,7 +668,7 @@ public class AssessmentsController : BaseApiController
         if (assessment == null) return NotFound();
         if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
 
-        var result = await _assessmentService.LinkInteractiveVideoCueAsync(id, request).ConfigureAwait(false);
+        var result = await _sender.Send(new LinkInteractiveVideoCueEndpointCommand(id, request)).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             return result.Error.Type == ErrorType.NotFound
@@ -692,7 +703,7 @@ public class AssessmentsController : BaseApiController
         if (assessment == null) return NotFound();
         if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
 
-        var result = await _assessmentService.UnlinkInteractiveVideoCueAsync(id, cueId).ConfigureAwait(false);
+        var result = await _sender.Send(new UnlinkInteractiveVideoCueEndpointCommand(id, cueId)).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             return result.Error.Type == ErrorType.NotFound ? NotFound(result.Error) : BadRequest(result.Error);
@@ -734,7 +745,7 @@ public class AssessmentsController : BaseApiController
         if (assessment == null) return NotFound();
         if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
 
-        var result = await _assessmentService.DeleteAssessmentAsync(id).ConfigureAwait(false);
+        var result = await _sender.Send(new DeleteAssessmentEndpointCommand(id)).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             return result.Error.Type == ErrorType.NotFound
@@ -755,7 +766,7 @@ public class AssessmentsController : BaseApiController
         if (assessment == null) return NotFound();
         if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
 
-        var result = await _assessmentService.RestoreAssessmentAsync(id).ConfigureAwait(false);
+        var result = await _sender.Send(new RestoreAssessmentEndpointCommand(id)).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             return result.Error.Type == ErrorType.NotFound
@@ -805,10 +816,10 @@ public class AssessmentsController : BaseApiController
             assessmentId,
             request.EnrollmentId,
             enrollmentUserId.Value);
-        var result = await _assessmentService.StartSubmissionAsync(
+        var result = await _sender.Send(new StartAssessmentSubmissionEndpointCommand(
             assessmentId,
             request.EnrollmentId,
-            enrollmentUserId.Value).ConfigureAwait(false);
+            enrollmentUserId.Value)).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -845,7 +856,7 @@ public class AssessmentsController : BaseApiController
         if (submission == null) return NotFound();
         if (submission.UserId != actorUserId.Value) return Forbid();
 
-        var result = await _assessmentService.SubmitAsync(submissionId, request).ConfigureAwait(false);
+        var result = await _sender.Send(new SubmitAssessmentEndpointCommand(submissionId, request)).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             return BadRequest(result.Error);
@@ -1132,9 +1143,6 @@ public class AssessmentsController : BaseApiController
 
     private IAssessmentGradingRuntimeService RequireRuntime() =>
         _gradingRuntime ?? throw new InvalidOperationException("The grading runtime is not registered.");
-
-    private IGradeReleaseService RequireReleaseService() =>
-        _gradeReleaseService ?? throw new InvalidOperationException("The grade release service is not registered.");
 
     private IAssessmentGradebookProjectionService RequireGradebookProjection() =>
         _gradebookProjection ?? throw new InvalidOperationException("The gradebook projection service is not registered.");

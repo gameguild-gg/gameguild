@@ -263,6 +263,13 @@ test('compareDbml returns exactly { ok: true } for identical strings', () => {
   });
 });
 
+test('compareDbml ignores platform line-ending differences', () => {
+  const generated = '// header\nTable "users" {\n  id text\n}\n';
+  const committedOnWindows = generated.replaceAll('\n', '\r\n');
+
+  assert.deepEqual(compareDbml(generated, committedOnWindows), { ok: true });
+});
+
 test('compareDbml reports the first divergence with 1-based line number and both line contents', () => {
   const result = compareDbml('// header\nTable "users" {\n  id text\n}\n', '// header\nTable "orders" {\n  id text\n}\n');
 

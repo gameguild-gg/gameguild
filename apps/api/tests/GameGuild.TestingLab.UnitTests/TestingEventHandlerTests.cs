@@ -96,6 +96,37 @@ public sealed class TestingEventHandlerTests : IDisposable
     }
 
     [Fact]
+    public async Task CreateEvent_WithCustomConfiguration_PersistsAReadyToOpenDraftAtomically()
+    {
+        var configuration = new ConfigureTestingEventRequest(
+            "Respect the code of conduct.",
+            "Provide a playable build.",
+            "Complete the assigned tasks.",
+            BasicSchema("Project"),
+            BasicSchema("Tester"));
+
+        var result = await CreateEventHandler().Handle(new CreateTestingEventCommand(
+            "Configured event",
+            null,
+            TestingEventMode.Online,
+            TestingEventApprovalMode.ManagerOnly,
+            SystemClock.UtcNow.AddDays(-1),
+            SystemClock.UtcNow.AddDays(1),
+            SystemClock.UtcNow.AddDays(2),
+            SystemClock.UtcNow.AddDays(3),
+            true,
+            Configuration: configuration), default);
+
+        result.IsSuccess.Should().BeTrue();
+        var testingEvent = await _context.Set<TestingEvent>().SingleAsync();
+        testingEvent.GeneralRules.Should().Be(configuration.GeneralRules);
+        testingEvent.CandidateInstructions.Should().Be(configuration.CandidateInstructions);
+        testingEvent.TesterInstructions.Should().Be(configuration.TesterInstructions);
+        testingEvent.ProjectApplicationSchema.Should().NotBeNull();
+        testingEvent.TesterRegistrationSchema.Should().NotBeNull();
+    }
+
+    [Fact]
     public async Task EventConfiguration_IsRequiredForOpeningAndCannotChangeAfterFreeze()
     {
         var created = await CreateEventHandler().Handle(new CreateTestingEventCommand(
@@ -183,6 +214,41 @@ public sealed class TestingEventHandlerTests : IDisposable
         events[0].RecurrenceSeriesId.Should().NotBeNull();
         events.Should().OnlyContain(item => item.RecurrenceSeriesId == events[0].RecurrenceSeriesId);
         events.Select(item => item.RecurrenceOccurrence).Should().Equal(1, 2, 3);
+    }
+
+    [Fact]
+    public async Task CreateEvent_KeepsRecurringLocalTimeAcrossDaylightSavingChanges()
+    {
+        var handler = CreateEventHandler();
+        var startsAt = new DateTime(2026, 3, 1, 15, 0, 0, DateTimeKind.Utc);
+
+        var result = await handler.Handle(new CreateTestingEventCommand(
+            "Weekly playtest",
+            null,
+            TestingEventMode.Online,
+            TestingEventApprovalMode.ManagerOnly,
+            startsAt.AddDays(-14),
+            startsAt.AddDays(-1),
+            startsAt,
+            startsAt.AddHours(2),
+            true,
+            new TestingEventRecurrenceRequest(
+                TestingEventRecurrenceFrequency.Weekly,
+                1,
+                [DayOfWeek.Sunday],
+                null,
+                3),
+            TimeZoneId: "America/New_York"), default);
+
+        result.IsSuccess.Should().BeTrue();
+        var events = await _context.Set<TestingEvent>()
+            .OrderBy(item => item.StartsAt)
+            .ToListAsync();
+        events.Select(item => item.StartsAt).Should().Equal(
+            startsAt,
+            new DateTime(2026, 3, 8, 14, 0, 0, DateTimeKind.Utc),
+            new DateTime(2026, 3, 15, 14, 0, 0, DateTimeKind.Utc));
+        events.Should().OnlyContain(item => item.TimeZoneId == "America/New_York");
     }
 
     [Fact]

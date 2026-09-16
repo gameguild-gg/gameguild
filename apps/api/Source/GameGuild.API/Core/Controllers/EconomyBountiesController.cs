@@ -1,7 +1,8 @@
 using Asp.Versioning;
-using GameGuild.Economy.Bounties;
-using GameGuild.Economy.Contracts;
-using GameGuild.Economy.Risk;
+using GameGuild.CQRS;
+using GameGuild.Finance.Economy.Bounties;
+using GameGuild.Finance.Economy.Contracts;
+using GameGuild.Finance.Economy.Risk;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
@@ -32,6 +33,7 @@ public sealed record BountyProtectedOperationFailureResponse(
 [Tags("economy-bounties")]
 [Authorize]
 public sealed class EconomyBountiesController(
+    ISender sender,
     IDurableBountyApplicationService bounties,
     IActorContextAccessor actorContextAccessor,
     TimeProvider timeProvider) : BaseApiController
@@ -45,7 +47,7 @@ public sealed class EconomyBountiesController(
         if (!TryActor(out _, out _)) return Forbid();
         ArgumentNullException.ThrowIfNull(request);
         return await ExecuteProtectedAsync(
-            () => bounties.CreateAsync(new CreateDurableBountyRequest(
+            () => sender.Send(new CreateBountyEndpointCommand(new CreateDurableBountyRequest(
                 new CoinAmount(request.Currency, request.AmountUnits),
                 new BountyEligibilityRequirements(
                     request.RequiresPrerequisite,
@@ -53,7 +55,7 @@ public sealed class EconomyBountiesController(
                     request.RequiresInstructorVerification),
                 request.ExpiresAt,
                 new IdempotencyKey(request.IdempotencyKey),
-                timeProvider.GetUtcNow()), cancellationToken).AsTask(),
+                timeProvider.GetUtcNow())), cancellationToken),
             result => CreatedAtAction(
                 nameof(Get), new { version = "1", bountyId = result.Id.Value }, result));
     }
@@ -88,10 +90,10 @@ public sealed class EconomyBountiesController(
         if (!TryActor(out _, out _)) return Forbid();
         ArgumentNullException.ThrowIfNull(request);
         return await ExecuteProtectedAsync(
-            () => bounties.ClaimAsync(new ClaimDurableBountyRequest(
+            () => sender.Send(new ClaimBountyEndpointCommand(new ClaimDurableBountyRequest(
                 new BountyId(bountyId),
                 new IdempotencyKey(request.IdempotencyKey),
-                timeProvider.GetUtcNow()), cancellationToken).AsTask(),
+                timeProvider.GetUtcNow())), cancellationToken),
             Ok);
     }
 
@@ -105,10 +107,10 @@ public sealed class EconomyBountiesController(
         if (!TryActor(out _, out _)) return Forbid();
         ArgumentNullException.ThrowIfNull(request);
         return await ExecuteProtectedAsync(
-            () => bounties.ReclaimAsync(new ReclaimDurableBountyRequest(
+            () => sender.Send(new ReclaimBountyEndpointCommand(new ReclaimDurableBountyRequest(
                 new BountyId(bountyId),
                 new IdempotencyKey(request.IdempotencyKey),
-                timeProvider.GetUtcNow()), cancellationToken).AsTask(),
+                timeProvider.GetUtcNow())), cancellationToken),
             Ok);
     }
 

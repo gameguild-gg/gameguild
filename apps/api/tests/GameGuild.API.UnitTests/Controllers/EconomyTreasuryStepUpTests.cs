@@ -1,7 +1,7 @@
 using FluentAssertions;
 using GameGuild.API.Controllers;
-using GameGuild.Economy.Risk;
-using GameGuild.Economy.Treasury;
+using GameGuild.Finance.Economy.Risk;
+using GameGuild.Finance.Economy.Treasury;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Http;
@@ -54,7 +54,11 @@ public sealed class EconomyTreasuryStepUpTests
             .Returns(new ValueTask<AdminWithdrawalRun>((AdminWithdrawalRun)null!));
         var stepUp = new TestEconomyStepUpExecutor();
         var controller = new EconomyTreasuryAdministrationController(
-            withdrawals.Object, stepUp, Accessor(tenantId, actorId), new FixedTimeProvider(Now));
+            EconomyHandlerSenders.Funds(
+                withdrawals: withdrawals.Object, stepUp: stepUp, timeProvider: new FixedTimeProvider(Now)),
+            withdrawals.Object,
+            Accessor(tenantId, actorId),
+            new FixedTimeProvider(Now));
 
         var result = await controller.Propose(
             new ProposeTreasuryWithdrawalRequest(
@@ -90,7 +94,11 @@ public sealed class EconomyTreasuryStepUpTests
             .ReturnsAsync((AdminWithdrawalRun)null!);
         var stepUp = new TestEconomyStepUpExecutor();
         var controller = new EconomyTreasuryAdministrationController(
-            withdrawals.Object, stepUp, Accessor(tenantId, actorId), new FixedTimeProvider(Now));
+            EconomyHandlerSenders.Funds(
+                withdrawals: withdrawals.Object, stepUp: stepUp, timeProvider: new FixedTimeProvider(Now)),
+            withdrawals.Object,
+            Accessor(tenantId, actorId),
+            new FixedTimeProvider(Now));
 
         (await controller.Approve(runId, new(3, "approval-receipt"), default))
             .Should().BeOfType<OkObjectResult>();
@@ -125,9 +133,11 @@ public sealed class EconomyTreasuryStepUpTests
                 It.IsAny<DispatchAdminWithdrawalCommand>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new EconomyProtectedOperationException(
                 state, reviewId, ["safe diagnostic"]));
+        var stepUp = new TestEconomyStepUpExecutor();
         var controller = new EconomyTreasuryAdministrationController(
+            EconomyHandlerSenders.Funds(
+                withdrawals: withdrawals.Object, stepUp: stepUp, timeProvider: new FixedTimeProvider(Now)),
             withdrawals.Object,
-            new TestEconomyStepUpExecutor(),
             Accessor(tenantId, actorId),
             new FixedTimeProvider(Now));
 

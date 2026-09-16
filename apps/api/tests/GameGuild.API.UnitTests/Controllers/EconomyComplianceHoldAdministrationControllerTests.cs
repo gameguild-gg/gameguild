@@ -1,7 +1,7 @@
 using FluentAssertions;
 using GameGuild.API.Authorization;
 using GameGuild.API.Controllers;
-using GameGuild.Economy.Risk;
+using GameGuild.Finance.Economy.Risk;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Mvc;
@@ -133,8 +133,8 @@ public sealed class EconomyComplianceHoldAdministrationControllerTests
         var store = new Mock<IComplianceHoldAdministrationStore>(MockBehavior.Strict);
         var accessor = Actor([]);
         var controller = new EconomyComplianceHoldAdministrationController(
+            EconomyHandlerSenders.Compliance(holds: store.Object, stepUp: new RecordingStepUpExecutor()),
             store.Object,
-            new RecordingStepUpExecutor(),
             accessor,
             new FixedTimeProvider(Now));
         var holdId = Guid.NewGuid();
@@ -152,8 +152,10 @@ public sealed class EconomyComplianceHoldAdministrationControllerTests
         IComplianceHoldAdministrationStore store,
         IEconomyStepUpExecutor? executor = null) =>
         new(
+            EconomyHandlerSenders.Compliance(
+                holds: store,
+                stepUp: executor ?? new RecordingStepUpExecutor()),
             store,
-            executor ?? new RecordingStepUpExecutor(),
             Actor([EconomyPermission.Keys.OperateCompliance]),
             new FixedTimeProvider(Now));
 

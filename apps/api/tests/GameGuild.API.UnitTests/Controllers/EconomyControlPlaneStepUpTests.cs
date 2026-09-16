@@ -1,10 +1,10 @@
 using FluentAssertions;
 using GameGuild.API.Controllers;
-using GameGuild.Economy.Ledger;
-using GameGuild.Economy.Operations;
-using GameGuild.Economy.Projections;
-using GameGuild.Economy.Reserves;
-using GameGuild.Economy.Risk;
+using GameGuild.Finance.Economy.Ledger;
+using GameGuild.Finance.Economy.Operations;
+using GameGuild.Finance.Economy.Projections;
+using GameGuild.Finance.Economy.Reserves;
+using GameGuild.Finance.Economy.Risk;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Mvc;
@@ -96,16 +96,16 @@ public sealed class EconomyControlPlaneStepUpTests
             IsAuthenticated = true
         });
         return new EconomyControlPlaneAdministrationController(
-            policies,
+            EconomyHandlerSenders.ControlPlane(
+                policies: policies,
+                killSwitches: killSwitches,
+                projections: projections,
+                reserves: reserves,
+                stepUp: stepUp,
+                timeProvider: new FixedTimeProvider()),
             Mock.Of<IEconomyCapabilityReadinessInspector>(),
             Mock.Of<IEconomyOperationsReader>(),
-            killSwitches,
-            Mock.Of<IJournalIntegrityService>(),
-            Mock.Of<IEconomyAnchorPublisher>(),
-            Mock.Of<IEconomyAnchorVerificationService>(),
-            projections,
             reserves,
-            stepUp,
             actor.Object,
             new FixedTimeProvider());
     }

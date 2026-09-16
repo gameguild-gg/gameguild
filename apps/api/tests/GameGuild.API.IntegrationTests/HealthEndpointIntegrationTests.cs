@@ -32,6 +32,8 @@ public class HealthEndpointIntegrationTests : IDisposable
         result.Should().NotBeNull();
         result!.Status.Should().Be("Healthy");
         result.Checks.Should().ContainKey("database").WhoseValue.Status.Should().Be("Healthy");
+        result.ReleaseSha.Should().NotBeNullOrWhiteSpace();
+        response.Headers.GetValues("X-GameGuild-Release-Sha").Should().ContainSingle(result.ReleaseSha);
     }
 
     [Fact]

@@ -1,8 +1,8 @@
 using FluentAssertions;
 using GameGuild.API.Controllers;
-using GameGuild.Economy.Bounties;
-using GameGuild.Economy.Contracts;
-using GameGuild.Economy.Risk;
+using GameGuild.Finance.Economy.Bounties;
+using GameGuild.Finance.Economy.Contracts;
+using GameGuild.Finance.Economy.Risk;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Mvc;
 
@@ -47,8 +47,9 @@ public sealed class EconomyBountiesControllerContractTests
             IsAuthenticated = true
         });
         Guid? reviewId = state == EconomyProtectedOperationState.ReviewRequired ? Guid.NewGuid() : null;
-        var controller = new EconomyBountiesController(
-            new ThrowingBountyService(state, reviewId), actor, TimeProvider.System);
+        var service = new ThrowingBountyService(state, reviewId);
+        var sender = EconomyHandlerSenders.Public(bounties: service);
+        var controller = new EconomyBountiesController(sender, service, actor, TimeProvider.System);
 
         var result = await controller.Create(new CreateMyBountyRequest(
             CurrencyCode.HardCoin,

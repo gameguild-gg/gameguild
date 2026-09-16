@@ -31,8 +31,8 @@ public class ControllerAndModuleTests
     private readonly Mock<IGradingQueueService> _gradingQueue = new();
     private readonly Mock<IAssessmentAuthoringService> _authoring = new();
     private readonly Mock<IAssessmentGradingRuntimeService> _runtime = new();
-    private readonly Mock<IGradeReleaseService> _release = new();
     private readonly Mock<ILogger<AssessmentsController>> _log = new();
+    private AssessmentEndpointTestSender? _endpointSender;
 
     private AssessmentsController CreateController(Guid? userId = null, bool isSystemAdmin = false, Guid? tenantId = null)
     {
@@ -46,17 +46,18 @@ public class ControllerAndModuleTests
             Roles = isSystemAdmin ? new HashSet<string> { "SystemAdmin" } : new HashSet<string>(),
             Permissions = new HashSet<string>()
         });
+        _endpointSender = new AssessmentEndpointTestSender(assessmentService: _svc.Object);
         return new AssessmentsController(
             _svc.Object,
             _actor.Object,
             _programs.Object,
-            _enrollments.Object,
-            _permissions.Object,
-            _gradingQueue.Object,
-            _authoring.Object,
+             _enrollments.Object,
+             _permissions.Object,
+             _gradingQueue.Object,
+             _authoring.Object,
             _log.Object,
-            _runtime.Object,
-            _release.Object);
+            _endpointSender,
+             _runtime.Object);
     }
 
     [Fact] public void Ctor_Creates() => CreateController().Should().NotBeNull();
@@ -502,14 +503,8 @@ public class ControllerAndModuleTests
             CancellationToken.None);
 
         result.Result.Should().BeOfType<ForbidResult>();
-        _release.Verify(service => service.ReleaseByActorAsync(
-            It.IsAny<Guid>(),
-            It.IsAny<Guid>(),
-            It.IsAny<int>(),
-            It.IsAny<Guid>(),
-            It.IsAny<string>(),
-            It.IsAny<string?>(),
-            It.IsAny<CancellationToken>()), Times.Never);
+        _endpointSender!.SentRequests.Should().NotContain(request =>
+            request is ReleaseRuntimeSubmissionEndpointCommand);
     }
 
     [Fact]

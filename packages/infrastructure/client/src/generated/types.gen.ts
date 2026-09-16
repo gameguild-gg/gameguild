@@ -28,10 +28,10 @@ export interface AIAiCompletionOutput {
   model?: string | null;
   provider?: string | null;
   text?: string | null;
-  usage?: AIAiUsage;
+  usage?: AIAiUsageDto;
 }
 
-export interface AIAiConversationHistoryEntry {
+export interface AIAiConversationHistoryEntryDto {
   id?: string;
   finishReason?: string | null;
   model?: string | null;
@@ -44,7 +44,7 @@ export interface AIAiConversationHistoryEntry {
   requestText?: string | null;
   responseText?: string | null;
   systemPrompt?: string | null;
-  usage?: AIAiUsage;
+  usage?: AIAiUsageDto;
   userId?: string | null;
 }
 
@@ -80,7 +80,7 @@ export interface AIAiGenerateInput {
   temperature?: number | null;
 }
 
-export interface AIAiPromptTemplate {
+export interface AIAiPromptTemplateDto {
   id?: string;
   category?: string | null;
   createdAt?: string;
@@ -117,7 +117,7 @@ export interface AIAiPromptTemplateRenderOutput {
   variables?: Record<string, string | null> | null;
 }
 
-export interface AIAiProviderStatus {
+export interface AIAiProviderStatusDto {
   baseUrl?: string | null;
   configured?: boolean;
   credentialsConfigured?: boolean;
@@ -125,7 +125,7 @@ export interface AIAiProviderStatus {
   provider?: string | null;
 }
 
-export interface AIAiQuotaStatus {
+export interface AIAiQuotaStatusDto {
   currentUsage?: number;
   hardLimit?: number | null;
   isActive?: boolean;
@@ -140,7 +140,7 @@ export interface AIAiQuotaStatus {
 
 export interface AIAiQuotaStatusOutput {
   generatedAtUtc?: string;
-  quotas?: Array<AIAiQuotaStatus> | null;
+  quotas?: Array<AIAiQuotaStatusDto> | null;
   tenantId?: string;
 }
 
@@ -148,10 +148,10 @@ export interface AIAiStatusOutput {
   allowTenantOverrides?: boolean;
   defaultProvider?: string | null;
   enabled?: boolean;
-  providers?: Array<AIAiProviderStatus> | null;
+  providers?: Array<AIAiProviderStatusDto> | null;
 }
 
-export interface AIAiUsage {
+export interface AIAiUsageDto {
   inputTokens?: number | null;
   outputTokens?: number | null;
   totalTokens?: number | null;
@@ -176,7 +176,7 @@ export interface AIUpdateAiPromptTemplateInput {
   systemPrompt?: string | null;
 }
 
-export interface AnalyticsAnalyticsWarehouseFact {
+export interface AnalyticsAnalyticsWarehouseFactDto {
   id?: string;
   amountUsd?: number | null;
   count?: number | null;
@@ -219,7 +219,7 @@ export interface AnalyticsCreateDashboardInput {
   widgets?: Array<AnalyticsDashboardWidgetInput> | null;
 }
 
-export interface AnalyticsDashboard {
+export interface AnalyticsDashboardDto {
   id?: string;
   createdAt?: string;
   description?: string | null;
@@ -228,10 +228,10 @@ export interface AnalyticsDashboard {
   tenantId?: string | null;
   title?: string | null;
   updatedAt?: string;
-  widgets?: Array<AnalyticsDashboardWidget> | null;
+  widgets?: Array<AnalyticsDashboardWidgetDto> | null;
 }
 
-export interface AnalyticsDashboardWidget {
+export interface AnalyticsDashboardWidgetDto {
   id?: string;
   configuration?: string | null;
   sortOrder?: number;
@@ -330,14 +330,14 @@ export interface APIAccessAccessCapabilitiesOutput {
 
 export interface APIControllersActivateEconomyKillSwitchInput {
   id?: string;
-  capability?: EconomyRiskEconomyValueMovementCapability;
+  capability?: FinanceEconomyRiskEconomyValueMovementCapability;
   reason?: string | null;
 }
 
 export interface APIControllersAdRewardProtectedOperationFailureOutput {
   diagnostics?: Array<string> | null;
   reviewId?: string | null;
-  state?: EconomyRiskEconomyProtectedOperationState;
+  state?: FinanceEconomyRiskEconomyProtectedOperationState;
 }
 
 export interface APIControllersApplicationDetails {
@@ -395,8 +395,8 @@ export interface APIControllersCaptureLegacyEconomyMigrationInput {
 
 export interface APIControllersCompleteMyAdRewardSessionInput {
   idempotencyKey?: string | null;
-  playback?: EconomyAdRewardsAdPlaybackEvidence;
-  providerProof?: EconomyAdRewardsProviderCompletionProof;
+  playback?: FinanceEconomyAdRewardsAdPlaybackEvidence;
+  providerProof?: FinanceEconomyAdRewardsProviderCompletionProof;
   token?: string | null;
 }
 
@@ -406,7 +406,7 @@ export interface APIControllersCompleteMyBountyInput {
 
 export interface APIControllersCreateMyBountyInput {
   amountUnits?: number;
-  currency?: EconomyContractsCurrencyCode;
+  currency?: FinanceEconomyContractsCurrencyCode;
   expiresAt?: string;
   idempotencyKey?: string | null;
   minimumReputation?: number;
@@ -468,16 +468,16 @@ export interface APIControllersDispatchTreasuryWithdrawalInput {
   stepUpReceipt?: string | null;
 }
 
-export interface APIControllersEconomyKycStatus {
+export interface APIControllersEconomyKycStatusDto {
   expiresAt?: string | null;
   hasEvidence?: boolean;
   isCurrent?: boolean;
   issuedAt?: string | null;
-  result?: EconomyRiskComplianceEvidenceResult;
+  result?: FinanceEconomyRiskComplianceEvidenceResult;
   version?: number | null;
 }
 
-export interface APIControllersEconomyPayoutExecutionOperation {
+export interface APIControllersEconomyPayoutExecutionOperationDto {
   id?: string;
   createdAt?: string;
   destinationHash?: string | null;
@@ -490,14 +490,14 @@ export interface APIControllersEconomyPayoutExecutionOperation {
   reserveAuthorizationEpoch?: number;
   reserveVersion?: number;
   riskDecisionId?: string;
-  state?: EconomyPayoutsPayoutOperationState;
+  state?: FinanceEconomyPayoutsPayoutOperationState;
   updatedAt?: string;
   version?: number;
   walletId?: string;
 }
 
-export interface APIControllersEconomySelfServiceCapability {
-  capability?: EconomyRiskEconomyValueMovementCapability;
+export interface APIControllersEconomySelfServiceCapabilityDto {
+  capability?: FinanceEconomyRiskEconomyValueMovementCapability;
   diagnostics?: Array<string> | null;
   state?: APISetupEconomyCapabilityReadinessState;
 }
@@ -514,15 +514,21 @@ export interface APIControllersEconomyTopUpFailureOutput {
 export interface APIControllersEconomyTransferProtectedOperationFailureOutput {
   diagnostics?: Array<string> | null;
   reviewId?: string | null;
-  state?: EconomyRiskEconomyProtectedOperationState;
+  state?: FinanceEconomyRiskEconomyProtectedOperationState;
 }
 
 export interface APIControllersHealthinessOutput {
+  builtAt?: string | null;
   checks?: Record<string, APIControllersHealthinessResponseItem> | null;
+  deployedAt?: string | null;
   duration?: string;
   error?: string | null;
+  imageDigest?: string | null;
+  releaseSha?: string | null;
+  sourceTree?: string | null;
   status?: string | null;
   timestamp?: string;
+  version?: string | null;
 }
 
 export interface APIControllersHealthinessResponseItem {
@@ -533,7 +539,7 @@ export interface APIControllersHealthinessResponseItem {
 }
 
 export interface APIControllersInspectEconomyCapabilityReadinessInput {
-  capability?: EconomyRiskEconomyValueMovementCapability;
+  capability?: FinanceEconomyRiskEconomyValueMovementCapability;
   destinationHash?: string | null;
   jurisdictionCode?: string | null;
   operationFingerprint?: string | null;
@@ -554,13 +560,20 @@ export interface APIControllersLivenessOutput {
 export interface APIControllersMarketplaceProtectedOperationFailureOutput {
   diagnostics?: Array<string> | null;
   reviewId?: string | null;
-  state?: EconomyRiskEconomyProtectedOperationState;
+  state?: FinanceEconomyRiskEconomyProtectedOperationState;
 }
 
 export interface APIControllersPayoutProtectedOperationFailureOutput {
   diagnostics?: Array<string> | null;
   reviewId?: string | null;
-  state?: EconomyRiskEconomyProtectedOperationState;
+  state?: FinanceEconomyRiskEconomyProtectedOperationState;
+}
+
+export interface APIControllersPlatformKpisOutput {
+  activeTenants?: number;
+  calculatedAt?: string;
+  churnRate?: number;
+  mrr?: number;
 }
 
 export interface APIControllersProcessDetails {
@@ -570,7 +583,7 @@ export interface APIControllersProcessDetails {
 
 export interface APIControllersProposeEconomyPolicyInput {
   id?: string;
-  capability?: EconomyRiskEconomyValueMovementCapability;
+  capability?: FinanceEconomyRiskEconomyValueMovementCapability;
   effectiveAt?: string;
   expiresAt?: string;
   jurisdictionCode?: string | null;
@@ -582,14 +595,14 @@ export interface APIControllersProposeEconomyPolicyInput {
 export interface APIControllersProposeEconomyReserveInput {
   id?: string;
   authorizationEpoch?: number;
-  buffers?: EconomyReservesReserveBufferPosition;
+  buffers?: FinanceEconomyReservesReserveBufferPosition;
   custodyObservationIds?: Array<string> | null;
   expectedActiveVersion?: number | null;
   expiresAt?: string;
   irreversibleInFlightProviderCostUsdNanos?: number;
   observedAt?: string;
   policyVersion?: number;
-  services?: Array<EconomyReservesReserveServiceObservation> | null;
+  services?: Array<FinanceEconomyReservesReserveServiceObservation> | null;
   version?: number;
 }
 
@@ -635,7 +648,7 @@ export interface APIControllersReserveApprovedPayoutExecutionInput {
 }
 
 export interface APIControllersResolveEconomyRiskReviewInput {
-  decisionCode?: EconomyRiskRiskManualDecisionCode;
+  decisionCode?: FinanceEconomyRiskRiskManualDecisionCode;
   resolution?: string | null;
 }
 
@@ -652,7 +665,7 @@ export interface APIControllersRuntimeDetails {
 }
 
 export interface APIControllersSettleMyMarketplaceOrderInput {
-  currencyChoice?: EconomyMarketplaceMarketplaceCurrencyChoice;
+  currencyChoice?: FinanceEconomyMarketplaceMarketplaceCurrencyChoice;
   idempotencyKey?: string | null;
 }
 
@@ -665,6 +678,22 @@ export interface APIControllersStartMyAdRewardSessionInput {
 
 export interface APIControllersStartMyKycInput {
   idempotencyKey?: string | null;
+}
+
+export interface APIEventingDeadLetterEvent {
+  attemptCount?: number;
+  consumerName?: string | null;
+  deadLetteredAtUtc?: string;
+  eventId?: string;
+  eventName?: string | null;
+  lastError?: string | null;
+}
+
+export interface APIEventingEventTransportStatus {
+  completed?: number;
+  deadLettered?: number;
+  incompleteConsumers?: number;
+  pending?: number;
 }
 
 export interface APIProjectsAddProjectTeamInput {
@@ -701,7 +730,7 @@ export interface APIProjectsCreateProjectTeamAgreementInput {
   startsAt?: string;
 }
 
-export interface APIProjectsProjectAllocation {
+export interface APIProjectsProjectAllocationDto {
   id?: string;
   capacityPercentage?: number;
   endsAt?: string | null;
@@ -712,14 +741,14 @@ export interface APIProjectsProjectAllocation {
   userId?: string;
 }
 
-export interface APIProjectsProjectOwnership {
-  agreements?: Array<APIProjectsProjectTeamAgreement> | null;
-  allocations?: Array<APIProjectsProjectAllocation> | null;
+export interface APIProjectsProjectOwnershipDto {
+  agreements?: Array<APIProjectsProjectTeamAgreementDto> | null;
+  allocations?: Array<APIProjectsProjectAllocationDto> | null;
   projectId?: string;
-  teams?: Array<APIProjectsProjectTeamOwnership> | null;
+  teams?: Array<APIProjectsProjectTeamOwnershipDto> | null;
 }
 
-export interface APIProjectsProjectTeamAgreement {
+export interface APIProjectsProjectTeamAgreementDto {
   id?: string;
   acceptedByUserId?: string | null;
   deliverables?: string | null;
@@ -733,7 +762,7 @@ export interface APIProjectsProjectTeamAgreement {
   status?: ProjectsProjectTeamAgreementStatus;
 }
 
-export interface APIProjectsProjectTeamOwnership {
+export interface APIProjectsProjectTeamOwnershipDto {
   id?: string;
   assignedAt?: string;
   endedAt?: string | null;
@@ -811,21 +840,21 @@ export interface APIProjectWorkMoveProjectWorkTaskInput {
   position?: number;
 }
 
-export interface APIProjectWorkProjectBoard {
+export interface APIProjectWorkProjectBoardDto {
   id?: string;
-  columns?: Array<APIProjectWorkProjectWorkColumn> | null;
+  columns?: Array<APIProjectWorkProjectWorkColumnDto> | null;
   name?: string | null;
   projectId?: string;
 }
 
-export interface APIProjectWorkProjectChecklistItem {
+export interface APIProjectWorkProjectChecklistItemDto {
   id?: string;
   isCompleted?: boolean;
   position?: number;
   text?: string | null;
 }
 
-export interface APIProjectWorkProjectMilestone {
+export interface APIProjectWorkProjectMilestoneDto {
   id?: string;
   completedAt?: string | null;
   description?: string | null;
@@ -833,7 +862,7 @@ export interface APIProjectWorkProjectMilestone {
   name?: string | null;
 }
 
-export interface APIProjectWorkProjectTaskComment {
+export interface APIProjectWorkProjectTaskCommentDto {
   id?: string;
   authorUserId?: string;
   body?: string | null;
@@ -841,27 +870,27 @@ export interface APIProjectWorkProjectTaskComment {
   editedAt?: string | null;
 }
 
-export interface APIProjectWorkProjectTaskDependency {
+export interface APIProjectWorkProjectTaskDependencyDto {
   id?: string;
   dependsOnTaskId?: string;
 }
 
-export interface APIProjectWorkProjectTaskLabel {
+export interface APIProjectWorkProjectTaskLabelDto {
   id?: string;
   color?: string | null;
   name?: string | null;
 }
 
-export interface APIProjectWorkProjectWorkColumn {
+export interface APIProjectWorkProjectWorkColumnDto {
   id?: string;
   kind?: ProjectWorkProjectWorkColumnKind;
   name?: string | null;
   position?: number;
-  tasks?: Array<APIProjectWorkProjectWorkTask> | null;
+  tasks?: Array<APIProjectWorkProjectWorkTaskDto> | null;
   workInProgressLimit?: number | null;
 }
 
-export interface APIProjectWorkProjectWorkHistory {
+export interface APIProjectWorkProjectWorkHistoryDto {
   id?: string;
   action?: string | null;
   actorUserId?: string;
@@ -870,7 +899,15 @@ export interface APIProjectWorkProjectWorkHistory {
   taskId?: string | null;
 }
 
-export interface APIProjectWorkProjectWorkTask {
+export interface APIProjectWorkProjectWorkTaskDetailsDto {
+  checklist?: Array<APIProjectWorkProjectChecklistItemDto> | null;
+  comments?: Array<APIProjectWorkProjectTaskCommentDto> | null;
+  dependencies?: Array<APIProjectWorkProjectTaskDependencyDto> | null;
+  labels?: Array<APIProjectWorkProjectTaskLabelDto> | null;
+  task?: APIProjectWorkProjectWorkTaskDto;
+}
+
+export interface APIProjectWorkProjectWorkTaskDto {
   id?: string;
   assigneeUserId?: string | null;
   columnId?: string;
@@ -882,14 +919,6 @@ export interface APIProjectWorkProjectWorkTask {
   priority?: ProjectWorkProjectWorkTaskPriority;
   status?: ProjectWorkProjectWorkTaskStatus;
   title?: string | null;
-}
-
-export interface APIProjectWorkProjectWorkTaskDetails {
-  checklist?: Array<APIProjectWorkProjectChecklistItem> | null;
-  comments?: Array<APIProjectWorkProjectTaskComment> | null;
-  dependencies?: Array<APIProjectWorkProjectTaskDependency> | null;
-  labels?: Array<APIProjectWorkProjectTaskLabel> | null;
-  task?: APIProjectWorkProjectWorkTask;
 }
 
 export interface APIProjectWorkUpdateProjectMilestoneInput {
@@ -948,7 +977,7 @@ export interface APITeamsCreateTeamInvitationInput {
   userId?: string | null;
 }
 
-export interface APITeamsMyTeamInvitation {
+export interface APITeamsMyTeamInvitationDto {
   id?: string;
   authority?: TeamsTeamMemberAuthority;
   expiresAt?: string;
@@ -957,11 +986,11 @@ export interface APITeamsMyTeamInvitation {
   teamSlug?: string | null;
 }
 
-export interface APITeamsTeam {
+export interface APITeamsTeamDto {
   id?: string;
   description?: string | null;
   isPersonal?: boolean;
-  members?: Array<APITeamsTeamMember> | null;
+  members?: Array<APITeamsTeamMemberDto> | null;
   name?: string | null;
   slug?: string | null;
   status?: TeamsTeamStatus;
@@ -969,7 +998,13 @@ export interface APITeamsTeam {
   visibility?: TeamsTeamVisibility;
 }
 
-export interface APITeamsTeamInvitation {
+export interface APITeamsTeamInvitationCreatedDto {
+  id?: string;
+  expiresAt?: string;
+  token?: string | null;
+}
+
+export interface APITeamsTeamInvitationDto {
   id?: string;
   authority?: TeamsTeamMemberAuthority;
   expiresAt?: string;
@@ -980,13 +1015,7 @@ export interface APITeamsTeamInvitation {
   usedAt?: string | null;
 }
 
-export interface APITeamsTeamInvitationCreated {
-  id?: string;
-  expiresAt?: string;
-  token?: string | null;
-}
-
-export interface APITeamsTeamMember {
+export interface APITeamsTeamMemberDto {
   authority?: TeamsTeamMemberAuthority;
   isActive?: boolean;
   joinedAt?: string;
@@ -1245,6 +1274,16 @@ export interface AssetsSecurityAccessUrlInput {
   transform?: string | null;
 }
 
+export interface AssetsSocialMediaSocialMediaAssetDescriptor {
+  assetReferenceId?: string;
+  deliveryUrl?: string | null;
+  mimeType?: string | null;
+  sizeBytes?: number;
+  state?: AssetsSocialMediaSocialMediaProcessingState;
+}
+
+export type AssetsSocialMediaSocialMediaProcessingState = 'Processing' | 'Ready' | 'Rejected';
+
 export type AssetsVirusScanStatus = 'Pending' | 'Scanning' | 'Clean' | 'Infected' | 'ScanFailed';
 
 export type BillingCycle = 'Weekly' | 'Monthly' | 'Quarterly' | 'SemiAnnually' | 'Annually' | 'Biannually';
@@ -1328,16 +1367,16 @@ export interface CommerceOrdersCreateOrderInput {
   idempotencyKey?: string | null;
 }
 
-export interface CommerceOrdersMarketplaceCart {
+export interface CommerceOrdersMarketplaceCartDto {
   id?: string | null;
-  items?: Array<CommerceOrdersMarketplaceCartItem> | null;
+  items?: Array<CommerceOrdersMarketplaceCartItemDto> | null;
   state?: CommerceOrdersMarketplaceCartState;
   tenantId?: string;
   userId?: string;
   version?: number;
 }
 
-export interface CommerceOrdersMarketplaceCartItem {
+export interface CommerceOrdersMarketplaceCartItemDto {
   id?: string;
   productId?: string;
   productPricingId?: string;
@@ -1347,46 +1386,25 @@ export interface CommerceOrdersMarketplaceCartItem {
 
 export type CommerceOrdersMarketplaceCartState = 'Active' | 'CheckedOut' | 'Abandoned';
 
-export interface CommerceOrdersMarketplaceCheckout {
+export interface CommerceOrdersMarketplaceCheckoutDto {
   cartId?: string;
-  orders?: Array<CommerceOrdersMarketplaceCheckoutOrder> | null;
+  orders?: Array<CommerceOrdersMarketplaceCheckoutOrderDto> | null;
 }
 
-export interface CommerceOrdersMarketplaceCheckoutOrder {
+export interface CommerceOrdersMarketplaceCheckoutOrderDto {
   currency?: string | null;
   orderId?: string;
   total?: number;
 }
 
-export interface CommerceOrdersOrder {
-  id?: string;
-  createdAt?: string;
-  currency?: string | null;
-  discountTotal?: number;
-  idempotencyKey?: string | null;
-  lineItems?: Array<CommerceOrdersOrderLineItem> | null;
-  paidAt?: string | null;
-  paymentMethod?: string | null;
-  paymentProviderReference?: string | null;
-  refundAmount?: number | null;
-  refundedAt?: string | null;
-  refundReason?: string | null;
-  status?: CommerceOrdersOrderStatus;
-  subtotal?: number;
-  taxAmount?: number;
-  total?: number;
-  updatedAt?: string;
-  userId?: string;
-}
-
-export interface CommerceOrdersOrderCapture {
+export interface CommerceOrdersOrderCaptureDto {
   id?: string;
   clientActionToken?: string | null;
   createdAt?: string;
   currency?: string | null;
   discountTotal?: number;
   idempotencyKey?: string | null;
-  lineItems?: Array<CommerceOrdersOrderLineItem> | null;
+  lineItems?: Array<CommerceOrdersOrderLineItemDto> | null;
   paidAt?: string | null;
   paymentId?: string | null;
   paymentMessage?: string | null;
@@ -1404,7 +1422,28 @@ export interface CommerceOrdersOrderCapture {
   userId?: string;
 }
 
-export interface CommerceOrdersOrderLineItem {
+export interface CommerceOrdersOrderDto {
+  id?: string;
+  createdAt?: string;
+  currency?: string | null;
+  discountTotal?: number;
+  idempotencyKey?: string | null;
+  lineItems?: Array<CommerceOrdersOrderLineItemDto> | null;
+  paidAt?: string | null;
+  paymentMethod?: string | null;
+  paymentProviderReference?: string | null;
+  refundAmount?: number | null;
+  refundedAt?: string | null;
+  refundReason?: string | null;
+  status?: CommerceOrdersOrderStatus;
+  subtotal?: number;
+  taxAmount?: number;
+  total?: number;
+  updatedAt?: string;
+  userId?: string;
+}
+
+export interface CommerceOrdersOrderLineItemDto {
   id?: string;
   basePrice?: number;
   currency?: string | null;
@@ -1645,6 +1684,7 @@ export interface CommercePaymentsTaxJurisdiction {
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isActive?: boolean;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -1682,6 +1722,7 @@ export interface CommercePaymentsTaxRate {
   domainEvents?: Array<CQRSIDomainEvent> | null;
   effectiveFrom?: string;
   effectiveTo?: string | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isActive?: boolean;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -1710,6 +1751,7 @@ export interface CommercePaymentsTaxRule {
   effectiveFrom?: string | null;
   effectiveTo?: string | null;
   exemptionConditions?: string | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isActive?: boolean;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -1755,6 +1797,7 @@ export interface CommercePaymentsUserWallet {
   dailyLimit?: number | null;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isActive?: boolean;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -1787,6 +1830,7 @@ export interface CommercePaymentsWalletTransaction {
   deletedAt?: string | null;
   description: string;
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -1923,7 +1967,7 @@ export interface CommerceProductsEntitlementCheckResult {
   productId?: string;
 }
 
-export interface CommerceProductsEntitlementInfo {
+export interface CommerceProductsEntitlementInfoDto {
   accessEndDate?: string | null;
   accessStartDate?: string | null;
   acquisitionType?: string | null;
@@ -1977,7 +2021,9 @@ export interface CommerceProductsPatchPromoCodeInput {
   validUntil?: string | null;
 }
 
-export interface CommerceProductsProduct {
+export type CommerceProductsProductAcquisitionType = 'Purchase' | 'Subscription' | 'Grant' | 'PromoCode' | 'Bundle' | 'Trial' | 'Referral' | 'Free' | 'Gift';
+
+export interface CommerceProductsProductDto {
   id?: string;
   affiliateCommissionPercentage?: number;
   bundleItems?: Array<string> | null;
@@ -1989,16 +2035,14 @@ export interface CommerceProductsProduct {
   isPublished?: boolean;
   maxAffiliateDiscount?: number;
   name?: string | null;
-  pricing?: Array<CommerceProductsProductPricing> | null;
+  pricing?: Array<CommerceProductsProductPricingDto> | null;
   referralCommissionPercentage?: number;
   shortDescription?: string | null;
   type?: CommerceProductsProductType;
   updatedAt?: string;
 }
 
-export type CommerceProductsProductAcquisitionType = 'Purchase' | 'Subscription' | 'Grant' | 'PromoCode' | 'Bundle' | 'Trial' | 'Referral' | 'Free' | 'Gift';
-
-export interface CommerceProductsProductPricing {
+export interface CommerceProductsProductPricingDto {
   id?: string;
   basePrice?: number;
   currency?: string | null;
@@ -2029,7 +2073,15 @@ export type CommerceProductsProductType =
   | 'LearningPathway'
   | 'Other';
 
-export interface CommerceProductsPromoCode {
+export interface CommerceProductsPromoCodeApplicationResult {
+  appliedCodes?: Array<CommerceProductsAppliedPromoCode> | null;
+  finalAmount?: number;
+  originalAmount?: number;
+  rejectedCodes?: Array<CommerceProductsRejectedPromoCode> | null;
+  totalDiscount?: number;
+}
+
+export interface CommerceProductsPromoCodeDto {
   id?: string;
   code?: string | null;
   createdAt?: string;
@@ -2052,17 +2104,9 @@ export interface CommerceProductsPromoCode {
   validUntil?: string | null;
 }
 
-export interface CommerceProductsPromoCodeApplicationResult {
-  appliedCodes?: Array<CommerceProductsAppliedPromoCode> | null;
-  finalAmount?: number;
-  originalAmount?: number;
-  rejectedCodes?: Array<CommerceProductsRejectedPromoCode> | null;
-  totalDiscount?: number;
-}
-
 export type CommerceProductsPromoCodeType = 'PercentageOff' | 'FixedAmountOff' | 'FreeTrial' | 'BuyOneGetOne' | 'FreeShipping';
 
-export interface CommerceProductsPromoCodeUsage {
+export interface CommerceProductsPromoCodeUsageDto {
   averageDiscountPerUse?: number;
   code?: string | null;
   firstUsedAt?: string | null;
@@ -2112,7 +2156,7 @@ export interface CommerceProductsSetProductPricingInput {
   saleStartDate?: string | null;
 }
 
-export interface CommerceProductsSupportTicket {
+export interface CommerceProductsSupportTicketDto {
   id?: string;
   assignedToName?: string | null;
   assignedToUserId?: string | null;
@@ -2124,7 +2168,7 @@ export interface CommerceProductsSupportTicket {
   lastMessageAt?: string | null;
   lastMessagePreview?: string | null;
   messageCount?: number;
-  messages?: Array<CommerceProductsSupportTicketMessage> | null;
+  messages?: Array<CommerceProductsSupportTicketMessageDto> | null;
   openedAt?: string;
   priority?: CommerceProductsSupportTicketPriority;
   reporterEmail?: string | null;
@@ -2138,7 +2182,9 @@ export interface CommerceProductsSupportTicket {
   tenantId?: string | null;
 }
 
-export interface CommerceProductsSupportTicketMessage {
+export type CommerceProductsSupportTicketMessageAuthorType = 'Customer' | 'Agent' | 'System';
+
+export interface CommerceProductsSupportTicketMessageDto {
   id?: string;
   authorEmail?: string | null;
   authorName?: string | null;
@@ -2149,8 +2195,6 @@ export interface CommerceProductsSupportTicketMessage {
   isInternal?: boolean;
   ticketId?: string;
 }
-
-export type CommerceProductsSupportTicketMessageAuthorType = 'Customer' | 'Agent' | 'System';
 
 export type CommerceProductsSupportTicketPriority = 'Low' | 'Normal' | 'High' | 'Urgent';
 
@@ -2194,7 +2238,7 @@ export interface CommerceProductsValidatePromoCodeInput {
   productId?: string | null;
 }
 
-export interface CommerceSubscriptionsBillingHistory {
+export interface CommerceSubscriptionsBillingHistoryDto {
   id?: string;
   amount?: number;
   billingDate?: string;
@@ -2229,7 +2273,7 @@ export type CommerceSubscriptionsCancellationReason =
 export interface CommerceSubscriptionsClientModulesOutput {
   clientId?: string;
   featureFlags?: Record<string, boolean> | null;
-  subscriptions?: PagedResultOfCommerceSubscriptionsSubscription;
+  subscriptions?: PagedResultSubscription;
 }
 
 export interface CommerceSubscriptionsCreateClientInput {
@@ -2261,6 +2305,7 @@ export interface CommerceSubscriptionsSubscription {
   externalCustomerId?: string | null;
   externalId?: string | null;
   fulfilledOrderId?: string | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isActive?: boolean;
   isCancelled?: boolean;
   isDeleted?: boolean;
@@ -2286,7 +2331,7 @@ export interface CommerceSubscriptionsSubscription {
   version?: number;
 }
 
-export interface CommerceSubscriptionsSubscriptionChurnReport {
+export interface CommerceSubscriptionsSubscriptionChurnReportDto {
   activeSubscriptions?: number;
   cancelledInPeriod?: number;
   churnRate?: number;
@@ -2350,7 +2395,7 @@ export interface CommerceSubscriptionsSubscriptionLifecycleControllerUpgradeInpu
   newPlanId?: string;
 }
 
-export interface CommerceSubscriptionsSubscriptionNotification {
+export interface CommerceSubscriptionsSubscriptionNotificationDto {
   id?: string;
   channel?: string | null;
   createdAt?: string;
@@ -2380,6 +2425,7 @@ export interface CommerceSubscriptionsSubscriptionPlan {
   hasAdvancedAnalytics?: boolean;
   hasCustomBranding?: boolean;
   hasPrioritySupport?: boolean;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isActive?: boolean;
   isDeleted?: boolean;
   isFeatured?: boolean;
@@ -2512,7 +2558,7 @@ export interface CommerceSubscriptionsSubscriptionUpgradeResult {
   updatedSubscription?: CommerceSubscriptionsSubscription;
 }
 
-export interface CommerceSubscriptionsSubscriptionUsage {
+export interface CommerceSubscriptionsSubscriptionUsageDto {
   apiCallsThisMonth?: number;
   isOverLimit?: boolean;
   limitWarnings?: Array<string> | null;
@@ -2540,7 +2586,7 @@ export interface ComplianceAuditAuditExportInput {
   userId?: string | null;
 }
 
-export interface ComplianceAuditAuditLog {
+export interface ComplianceAuditAuditLogDto {
   id?: string;
   actionType?: string | null;
   category?: ComplianceAuditAuditCategory;
@@ -2560,7 +2606,7 @@ export interface ComplianceAuditAuditLog {
 }
 
 export interface ComplianceAuditAuditLogOutput {
-  logs?: Array<ComplianceAuditAuditLog> | null;
+  logs?: Array<ComplianceAuditAuditLogDto> | null;
   skip?: number;
   take?: number;
   totalCount?: number;
@@ -2728,7 +2774,7 @@ export interface ComplianceAuditUnifiedSecurityAuditOutput {
   totalCount?: number;
 }
 
-export interface ComplianceConsentConsentPolicy {
+export interface ComplianceConsentConsentPolicyDto {
   id?: string;
   currentVersion?: string | null;
   isActive?: boolean;
@@ -2746,7 +2792,7 @@ export interface ComplianceConsentCreateConsentPolicyCommand {
   policyType?: ComplianceConsentPolicyType;
 }
 
-export interface ComplianceConsentDataSubjectInput {
+export interface ComplianceConsentDataSubjectRequestDto {
   id?: string;
   deadline?: string;
   processedAt?: string | null;
@@ -2771,7 +2817,7 @@ export interface ComplianceConsentGrantConsentCommand {
 export type ComplianceConsentPolicyType =
   'PrivacyPolicy' | 'TermsOfService' | 'CookiePolicy' | 'DataProcessingAgreement' | 'MarketingConsent' | 'ThirdPartySharing' | 'Custom';
 
-export interface ComplianceConsentPolicyVersion {
+export interface ComplianceConsentPolicyVersionDto {
   id?: string;
   contentType?: ComplianceConsentContentType;
   effectiveFrom?: string;
@@ -2802,7 +2848,7 @@ export interface ComplianceConsentSubmitDataSubjectRequestCommand {
   userId?: string;
 }
 
-export interface ComplianceConsentUserConsent {
+export interface ComplianceConsentUserConsentDto {
   id?: string;
   consentGivenAt?: string;
   consentMethod?: string | null;
@@ -2821,7 +2867,7 @@ export interface ComplianceFERPACompleteFerpaInspectionRequestBody {
 export type ComplianceFERPAEducationRecordKind =
   'CourseEnrollment' | 'AssessmentSubmission' | 'Grade' | 'Certificate' | 'Attendance' | 'Communication' | 'SupportCase' | 'Custom';
 
-export interface ComplianceFERPAFerpaDirectoryInformationPolicy {
+export interface ComplianceFERPAFerpaDirectoryInformationPolicyDto {
   id?: string;
   allowedFieldsJson?: string | null;
   annualNoticeSentAt?: string | null;
@@ -2841,7 +2887,7 @@ export type ComplianceFERPAFerpaDisclosureBasis =
   | 'DirectoryInformation'
   | 'Other';
 
-export interface ComplianceFERPAFerpaDisclosureConsent {
+export interface ComplianceFERPAFerpaDisclosureConsentDto {
   id?: string;
   effectiveFrom?: string;
   expiresAt?: string | null;
@@ -2854,7 +2900,7 @@ export interface ComplianceFERPAFerpaDisclosureConsent {
   studentUserId?: string;
 }
 
-export interface ComplianceFERPAFerpaDisclosureLog {
+export interface ComplianceFERPAFerpaDisclosureLogDto {
   id?: string;
   basis?: ComplianceFERPAFerpaDisclosureBasis;
   disclosedAt?: string;
@@ -2865,7 +2911,7 @@ export interface ComplianceFERPAFerpaDisclosureLog {
   studentUserId?: string;
 }
 
-export interface ComplianceFERPAFerpaEducationRecord {
+export interface ComplianceFERPAFerpaEducationRecordDto {
   id?: string;
   createdAt?: string;
   externalRecordId?: string | null;
@@ -2878,7 +2924,7 @@ export interface ComplianceFERPAFerpaEducationRecord {
   title?: string | null;
 }
 
-export interface ComplianceFERPAFerpaInspectionInput {
+export interface ComplianceFERPAFerpaInspectionRequestDto {
   id?: string;
   deadline?: string;
   processedAt?: string | null;
@@ -3018,14 +3064,16 @@ export interface ComplianceKYCKycAmlOnboarding {
 
 export type ComplianceKYCKycAmlState = 'Created' | 'ApplicantPending' | 'InReview' | 'Approved' | 'Rejected' | 'NeedsReview' | 'Expired';
 
+export type ComplianceKYCKycEvidenceIngestionStatus = 'Published' | 'Duplicate' | 'Deferred' | 'Rejected';
+
 export interface ComplianceKYCSumSubWebhookIngestionResult {
   evidenceId?: string | null;
   providerEventId?: string | null;
   state?: ComplianceKYCKycAmlState;
-  status?: EconomyRiskComplianceEvidenceIngestionStatus;
+  status?: ComplianceKYCKycEvidenceIngestionStatus;
 }
 
-export interface ContentPagesContentResource {
+export interface ContentPagesContentResourceDto {
   id?: string;
   authorId?: string | null;
   authorName?: string | null;
@@ -3063,7 +3111,7 @@ export type ContentPagesContentResourceStatus = 'Draft' | 'InReview' | 'Publishe
 
 export type ContentPagesContentResourceType = 'Article' | 'Tutorial' | 'Documentation' | 'Video' | 'Download' | 'ExternalLink' | 'Course' | 'Custom';
 
-export interface ContentPagesCreateContentResource {
+export interface ContentPagesCreateContentResourceDto {
   body?: string | null;
   categorySlug?: string | null;
   coverImageUrl?: string | null;
@@ -3088,7 +3136,7 @@ export interface ContentPagesCreateContentResource {
   videoUrl?: string | null;
 }
 
-export interface ContentPagesCreateMarketingLead {
+export interface ContentPagesCreateMarketingLeadDto {
   company?: string | null;
   email: string;
   locale?: string | null;
@@ -3102,7 +3150,7 @@ export interface ContentPagesCreateMarketingLead {
   userAgent?: string | null;
 }
 
-export interface ContentPagesCreatePage {
+export interface ContentPagesCreatePageDto {
   body?: string | null;
   canonicalUrl?: string | null;
   customData?: string | null;
@@ -3126,7 +3174,7 @@ export interface ContentPagesCreatePage {
   twitterSite?: string | null;
 }
 
-export interface ContentPagesCreatePageSection {
+export interface ContentPagesCreatePageSectionDto {
   cssClasses?: string | null;
   data?: string | null;
   heading?: string | null;
@@ -3136,7 +3184,7 @@ export interface ContentPagesCreatePageSection {
   subheading?: string | null;
 }
 
-export interface ContentPagesMarketingLead {
+export interface ContentPagesMarketingLeadDto {
   id?: string;
   company?: string | null;
   createdAt?: string;
@@ -3154,7 +3202,7 @@ export interface ContentPagesMarketingLead {
   userAgent?: string | null;
 }
 
-export interface ContentPagesOpenGraphMetadata {
+export interface ContentPagesOpenGraphMetadataDto {
   canonicalUrl?: string | null;
   description?: string | null;
   ogDescription?: string | null;
@@ -3169,7 +3217,7 @@ export interface ContentPagesOpenGraphMetadata {
   twitterSite?: string | null;
 }
 
-export interface ContentPagesPage {
+export interface ContentPagesPageDto {
   id?: string;
   body?: string | null;
   canonicalUrl?: string | null;
@@ -3189,7 +3237,7 @@ export interface ContentPagesPage {
   publishedAt?: string | null;
   robotsDirective?: string | null;
   scheduledPublishAt?: string | null;
-  sections?: Array<ContentPagesPageSection> | null;
+  sections?: Array<ContentPagesPageSectionDto> | null;
   slug?: string | null;
   sortOrder?: number;
   status?: string | null;
@@ -3200,7 +3248,7 @@ export interface ContentPagesPage {
   updatedAt?: string | null;
 }
 
-export interface ContentPagesPageSection {
+export interface ContentPagesPageSectionDto {
   id?: string;
   createdAt?: string;
   cssClasses?: string | null;
@@ -3235,13 +3283,13 @@ export type ContentPagesSectionType =
   | 'ResourceCards'
   | 'Custom';
 
-export interface ContentPagesSitemapEntry {
+export interface ContentPagesSitemapEntryDto {
   locale?: string | null;
   slug?: string | null;
   updatedAt?: string | null;
 }
 
-export interface ContentPagesUpdateContentResource {
+export interface ContentPagesUpdateContentResourceDto {
   body?: string | null;
   categorySlug?: string | null;
   coverImageUrl?: string | null;
@@ -3268,7 +3316,7 @@ export interface ContentPagesUpdateContentResource {
   videoUrl?: string | null;
 }
 
-export interface ContentPagesUpdatePage {
+export interface ContentPagesUpdatePageDto {
   body?: string | null;
   canonicalUrl?: string | null;
   customData?: string | null;
@@ -3294,7 +3342,7 @@ export interface ContentPagesUpdatePage {
   twitterSite?: string | null;
 }
 
-export interface ContentPagesUpdatePageSection {
+export interface ContentPagesUpdatePageSectionDto {
   cssClasses?: string | null;
   data?: string | null;
   heading?: string | null;
@@ -3318,1372 +3366,6 @@ export interface CQRSModelsTenantId {
   value?: string;
 }
 
-export interface EconomyAdRewardsAdPlaybackEvidence {
-  completedAt?: string;
-  focusLoss?: string;
-  milestones?: Array<number> | null;
-  playbackDuration?: string;
-  startedAt?: string;
-  visibleDuration?: string;
-}
-
-export interface EconomyAdRewardsAdProviderReport {
-  actualRevenueUsdNanos?: number;
-  batchId?: string | null;
-  evidenceHash?: string | null;
-  importedAt?: string;
-  network?: string | null;
-  periodEnd?: string;
-  periodStart?: string;
-  reportId?: string | null;
-  signature?: string | null;
-  verifiedSessionIds?: Array<string> | null;
-  version?: number;
-}
-
-export interface EconomyAdRewardsAdRewardCompletionOperationalStatus {
-  completedAt?: string;
-  jurisdictionCode?: string | null;
-  postingId?: string | null;
-  providerEventId?: string | null;
-  reserveVersion?: number | null;
-  rewardSoftUnits?: number;
-  state?: EconomyAdRewardsAdRewardCompletionState;
-}
-
-export type EconomyAdRewardsAdRewardCompletionState = 'Issued' | 'PendingProviderReport' | 'AccumulatedRemainder';
-
-export interface EconomyAdRewardsAdRewardMilestoneOperationalStatus {
-  id?: string;
-  evidenceHash?: string | null;
-  observedAt?: string;
-  percentage?: number;
-  sequence?: number;
-}
-
-export interface EconomyAdRewardsAdRewardPendingClaimOperationalStatus {
-  confirmedAt?: string | null;
-  deferredAt?: string;
-  providerReportId?: string | null;
-  sessionId?: string;
-  sourceStampId?: string;
-  tenantId?: string;
-}
-
-export interface EconomyAdRewardsAdRewardReconciliation {
-  actualDeltaUsdNanos?: number;
-  actualRevenueUsdNanos?: number;
-  batchId?: string | null;
-  estimatedRevenueUsdNanos?: number;
-  historicalRewardSoftUnits?: number;
-  network?: string | null;
-  previousActualRevenueUsdNanos?: number;
-  reconciledAt?: string;
-  reportId?: string | null;
-  varianceUsdNanos?: number;
-  version?: number;
-}
-
-export interface EconomyAdRewardsAdRewardReconciliationOperationalStatus {
-  id?: string;
-  actualRevenueUsdNanos?: number;
-  batchId?: string | null;
-  estimatedRevenueUsdNanos?: number;
-  historicalRewardSoftUnits?: number;
-  network?: string | null;
-  providerReportId?: string;
-  reconciledAt?: string;
-  reportId?: string | null;
-  tenantId?: string;
-  varianceUsdNanos?: number;
-  version?: number;
-}
-
-export interface EconomyAdRewardsAdRewardSessionEventOperationalStatus {
-  id?: string;
-  evidenceHash?: string | null;
-  occurredAt?: string;
-  sequence?: number;
-  state?: EconomyAdRewardsDurableAdRewardSessionState;
-}
-
-export interface EconomyAdRewardsAdRewardSessionOperationalDetails {
-  completion?: EconomyAdRewardsAdRewardCompletionOperationalStatus;
-  events?: Array<EconomyAdRewardsAdRewardSessionEventOperationalStatus> | null;
-  milestones?: Array<EconomyAdRewardsAdRewardMilestoneOperationalStatus> | null;
-  summary?: EconomyAdRewardsAdRewardSessionOperationalSummary;
-}
-
-export interface EconomyAdRewardsAdRewardSessionOperationalSummary {
-  id?: string;
-  creativeId?: string | null;
-  expiresAt?: string;
-  issuedAt?: string;
-  network?: string | null;
-  policyVersion?: number;
-  state?: EconomyAdRewardsDurableAdRewardSessionState;
-  tenantId?: string;
-  updatedAt?: string;
-  userId?: string;
-}
-
-export interface EconomyAdRewardsDurableAdProviderReportImportResult {
-  isDuplicate?: boolean;
-  providerReportId?: string;
-  reconciliation?: EconomyAdRewardsAdRewardReconciliation;
-  verifiedPendingSessions?: Array<string> | null;
-}
-
-export interface EconomyAdRewardsDurableAdProviderReportStatus {
-  actualRevenueUsdNanos?: number;
-  batchId?: string | null;
-  evidenceHash?: string | null;
-  network?: string | null;
-  payloadHash?: string | null;
-  periodEnd?: string;
-  periodStart?: string;
-  processedAt?: string | null;
-  processingError?: string | null;
-  providerReportId?: string;
-  receivedAt?: string;
-  reconciliation?: EconomyAdRewardsDurableAdRewardReconciliationStatus;
-  reportId?: string | null;
-  signatureVerified?: boolean;
-  version?: number;
-}
-
-export interface EconomyAdRewardsDurableAdRewardCompletionResult {
-  completedAt?: string;
-  isDuplicate?: boolean;
-  outputLotId?: EconomyContractsCreditLotId;
-  postingId?: EconomyContractsPostingId;
-  rewardSoftUnits?: number;
-  sessionId?: string;
-  state?: EconomyAdRewardsAdRewardCompletionState;
-}
-
-export interface EconomyAdRewardsDurableAdRewardReconciliationStatus {
-  actualDeltaUsdNanos?: number;
-  actualRevenueUsdNanos?: number;
-  estimatedRevenueUsdNanos?: number;
-  historicalRewardSoftUnits?: number;
-  previousActualRevenueUsdNanos?: number;
-  reconciledAt?: string;
-  varianceUsdNanos?: number;
-}
-
-export interface EconomyAdRewardsDurableAdRewardSessionClaims {
-  asnRiskHash?: string | null;
-  creativeId?: string | null;
-  deviceRiskHash?: string | null;
-  expiresAt?: string;
-  ipRiskHash?: string | null;
-  issuedAt?: string;
-  network?: string | null;
-  nonce?: string | null;
-  policyVersion?: EconomyContractsPolicyVersion;
-  requiredDuration?: string;
-  sessionId?: string;
-  tenantId?: string;
-  userId?: string;
-  walletId?: EconomyContractsWalletId;
-}
-
-export interface EconomyAdRewardsDurableAdRewardSessionResult {
-  claims?: EconomyAdRewardsDurableAdRewardSessionClaims;
-  isDuplicate?: boolean;
-  token?: EconomyAdRewardsSignedAdRewardSession;
-}
-
-export type EconomyAdRewardsDurableAdRewardSessionState = 'Issued' | 'Active' | 'ProofPending' | 'Verified' | 'Posted' | 'Deferred' | 'Rejected';
-
-export interface EconomyAdRewardsDurableAdRewardSessionStatus {
-  creativeId?: string | null;
-  expiresAt?: string;
-  issuedAt?: string;
-  network?: string | null;
-  postingId?: string | null;
-  rewardSoftUnits?: number;
-  sessionId?: string;
-  state?: EconomyAdRewardsDurableAdRewardSessionState;
-  updatedAt?: string;
-}
-
-export interface EconomyAdRewardsProviderCompletionProof {
-  completedAt?: string;
-  creativeId?: string | null;
-  evidenceHash?: string | null;
-  network?: string | null;
-  providerEventId?: string | null;
-  sessionId?: string;
-  signature?: string | null;
-}
-
-export interface EconomyAdRewardsSignedAdRewardSession {
-  value?: string | null;
-}
-
-export interface EconomyBountiesBountyEligibilityRequirements {
-  minimumReputation?: number;
-  requiresInstructorVerification?: boolean;
-  requiresPrerequisite?: boolean;
-}
-
-export interface EconomyBountiesBountyId {
-  value?: string;
-}
-
-export type EconomyBountiesBountyStatus = 'Open' | 'Expired' | 'Claimed' | 'Reclaimed';
-
-export interface EconomyBountiesBountyTerminalOutputLot {
-  amount?: EconomyContractsCoinAmount;
-  cashOutEligible?: boolean;
-  confirmedAt?: string;
-  lotId?: EconomyContractsCreditLotId;
-  originalMaturesAt?: string;
-  provenance?: EconomyContractsProvenanceKind;
-  rootSourceStampId?: EconomyContractsSourceStampId;
-  walletId?: EconomyContractsWalletId;
-}
-
-export interface EconomyBountiesDurableBountyView {
-  id?: EconomyBountiesBountyId;
-  amount?: EconomyContractsCoinAmount;
-  eligibility?: EconomyBountiesBountyEligibilityRequirements;
-  expiresAt?: string;
-  postedAt?: string;
-  posterId?: string;
-  reclaimFeePpm?: number;
-  status?: EconomyBountiesBountyStatus;
-  terminalEvent?: EconomyBountiesPersistedBountyTerminalEvent;
-  version?: number;
-}
-
-export interface EconomyBountiesPersistedBountyTerminalEvent {
-  id?: string;
-  actorId?: string;
-  bountyId?: EconomyBountiesBountyId;
-  destinationWalletId?: EconomyContractsWalletId;
-  feeUnits?: number;
-  firstJournalSequence?: number;
-  idempotencyKey?: EconomyContractsIdempotencyKey;
-  occurredAt?: string;
-  outputLots?: Array<EconomyBountiesBountyTerminalOutputLot> | null;
-  proceedsLotId?: EconomyContractsCreditLotId;
-  proceedsSourceStampId?: EconomyContractsSourceStampId;
-  returnedUnits?: number;
-  riskDecisionId?: string | null;
-  status?: EconomyBountiesBountyStatus;
-  tenantId?: string;
-}
-
-export interface EconomyCommandsConvertMyHardToSoftInput {
-  idempotencyKey?: string | null;
-  principalHardCoinUnits?: number;
-}
-
-export interface EconomyCommandsCreateMyHardCoinTopUpInput {
-  hardCoinUnits?: number;
-  idempotencyKey?: string | null;
-}
-
-export interface EconomyContractsCoinAmount {
-  currency?: EconomyContractsCurrencyCode;
-  units?: number;
-}
-
-export interface EconomyContractsCreditLotId {
-  value?: string;
-}
-
-export type EconomyContractsCurrencyCode = 'HardCoin' | 'SoftCoin';
-
-export interface EconomyContractsEconomyWalletSummary {
-  availableHardToSpend?: number;
-  availableSoftToSpend?: number;
-  createdAt?: string;
-  earnedHard?: number;
-  heldHard?: number;
-  heldSoft?: number;
-  outstandingHardDebt?: number;
-  pendingHard?: number;
-  pendingSoft?: number;
-  projectionRebuiltAt?: string;
-  purchasedHard?: number;
-  restrictedHard?: number;
-  soft?: number;
-  sourceJournalSequence?: number;
-  state?: EconomyContractsWalletLifecycleState;
-  walletId?: string;
-  withdrawableHard?: number;
-}
-
-export interface EconomyContractsEconomyWalletTransaction {
-  amountUnits?: number;
-  currency?: EconomyContractsCurrencyCode;
-  journalEntryId?: string;
-  journalSequence?: number;
-  postingGroupId?: string;
-  provenance?: EconomyContractsProvenanceKind;
-  recordedAt?: string;
-  side?: EconomyContractsEntrySide;
-  status?: EconomyContractsPostingStatus;
-  templateKind?: EconomyContractsPostingTemplateKind;
-}
-
-export type EconomyContractsEntrySide = 'Debit' | 'Credit';
-
-export interface EconomyContractsIdempotencyKey {
-  value?: string | null;
-}
-
-export interface EconomyContractsPolicyVersion {
-  value?: number;
-}
-
-export interface EconomyContractsPostingId {
-  value?: string;
-}
-
-export type EconomyContractsPostingStatus = 'Accepted' | 'Rejected' | 'Duplicate';
-
-export type EconomyContractsPostingTemplateKind =
-  | 'ConfirmedTopUpMint'
-  | 'ProviderReversalFull'
-  | 'ProviderReversalPartial'
-  | 'Spend'
-  | 'HardToSoftConversion'
-  | 'SystemBackedGrant'
-  | 'Burn'
-  | 'Escrow'
-  | 'Reclaim'
-  | 'Refund'
-  | 'PayoutReservation'
-  | 'PayoutSuccess'
-  | 'PayoutFailure'
-  | 'AdminWithdrawalReservation'
-  | 'AdminWithdrawalSuccess'
-  | 'AdminWithdrawalFailure'
-  | 'HardToSoftConversionFee'
-  | 'ProviderConvertedSoftReversal'
-  | 'ProviderReversalDebt'
-  | 'ProviderReversalLoss'
-  | 'AdRewardIssuance'
-  | 'BountyEscrow'
-  | 'BountyClaim'
-  | 'BountyReclaim'
-  | 'MarketplaceSettlement'
-  | 'MarketplaceRefund';
-
-export type EconomyContractsProvenanceKind =
-  'PurchasedHard' | 'EarnedHard' | 'ConvertedSoft' | 'AdRewardSoft' | 'SystemGrantSoft' | 'RefundRestoration' | 'EscrowReturn' | 'MarketplaceSoft';
-
-export interface EconomyContractsReserveVersion {
-  value?: number;
-}
-
-export interface EconomyContractsSourceStampId {
-  value?: string;
-}
-
-export interface EconomyContractsWalletId {
-  value?: string;
-}
-
-export type EconomyContractsWalletLifecycleState = 'Active' | 'Frozen' | 'Closed' | 'UnderReview';
-
-export type EconomyFundingEconomyTopUpProviderStatus =
-  'Prepared' | 'RequiresAction' | 'Processing' | 'ProviderSucceeded' | 'Posted' | 'Failed' | 'Cancelled' | 'Ambiguous' | 'Held' | 'Reversed';
-
-export interface EconomyFundingEconomyTopUpStatus {
-  currency?: string | null;
-  hardCoinUnits?: number;
-  providerBoundAt?: string | null;
-  providerObjectId?: string | null;
-  requestedAt?: string;
-  status?: EconomyFundingEconomyTopUpProviderStatus;
-  topUpId?: string;
-  usdMinorUnits?: number;
-}
-
-export interface EconomyFundingSelfServiceHardCoinTopUpReceipt {
-  clientSecret?: string | null;
-  currency?: string | null;
-  hardCoinUnits?: number;
-  isDuplicate?: boolean;
-  paymentId?: string;
-  providerObjectId?: string | null;
-  publishableKey?: string | null;
-  status?: EconomyFundingEconomyTopUpProviderStatus;
-  topUpId?: string;
-  usdMinorUnits?: number;
-}
-
-export interface EconomyFundingSelfServiceHardToSoftConversionReceipt {
-  feePostingId?: string | null;
-  isDuplicate?: boolean;
-  journalHash?: string | null;
-  journalSequence?: number;
-  principalPostingId?: string;
-}
-
-export interface EconomyLedgerAnchorVerificationRunResult {
-  failed?: number;
-  verified?: number;
-}
-
-export interface EconomyLedgerEconomyAnchorPublicationResult {
-  anchorId?: string;
-  eTag?: string | null;
-  journalHash?: string | null;
-  journalSequence?: number;
-  keyId?: string | null;
-  objectHash?: string | null;
-  objectKey?: string | null;
-  objectVersion?: string | null;
-  retainUntil?: string;
-}
-
-export type EconomyLedgerJournalIntegrityFailureCode =
-  | 'None'
-  | 'SequenceGap'
-  | 'PreviousHashMismatch'
-  | 'CanonicalPayloadMissing'
-  | 'EntryHashMismatch'
-  | 'PostingContractInvalid'
-  | 'InvalidLineAmount'
-  | 'CurrencyParityMismatch'
-  | 'SourceStampInvalid'
-  | 'AllocationInvalid'
-  | 'LineageInvalid'
-  | 'RootRangeInvalid'
-  | 'CumulativeReversalInvalid';
-
-export interface EconomyLedgerJournalIntegrityRunResult {
-  fencingToken?: number;
-  status?: EconomyLedgerJournalIntegrityRunStatus;
-  verification?: EconomyLedgerJournalIntegrityVerificationResult;
-}
-
-export type EconomyLedgerJournalIntegrityRunStatus = 'Verified' | 'Failed' | 'LeaseUnavailable';
-
-export interface EconomyLedgerJournalIntegrityVerificationResult {
-  currentHash?: string | null;
-  failureCode?: EconomyLedgerJournalIntegrityFailureCode;
-  fromSequence?: number;
-  isValid?: boolean;
-  toSequence?: number;
-}
-
-export interface EconomyMarketplaceDurableMarketplaceRefundDebt {
-  currency?: EconomyContractsCurrencyCode;
-  evidenceHash?: string | null;
-  responsibleWalletId?: EconomyContractsWalletId;
-  units?: number;
-}
-
-export interface EconomyMarketplaceDurableMarketplaceRefundResult {
-  cumulativeRefundedQuantity?: number;
-  debts?: Array<EconomyMarketplaceDurableMarketplaceRefundDebt> | null;
-  entitlementStatus?: EconomyMarketplaceMarketplaceEntitlementStatus;
-  isDuplicate?: boolean;
-  journalHash?: string | null;
-  journalSequence?: number;
-  legs?: Array<EconomyContractsCoinAmount> | null;
-  postingId?: EconomyContractsPostingId;
-  quantity?: number;
-  refundedAt?: string;
-  refundId?: string;
-  settlementId?: string;
-  settlementStatus?: EconomyMarketplaceMarketplaceSettlementStatus;
-}
-
-export interface EconomyMarketplaceDurableMarketplaceSettlementResult {
-  buyerId?: string;
-  entitlementStatus?: EconomyMarketplaceMarketplaceEntitlementStatus;
-  isDuplicate?: boolean;
-  journalHash?: string | null;
-  journalSequence?: number;
-  legs?: Array<EconomyMarketplaceMarketplacePriceLegSnapshot> | null;
-  orderId?: string;
-  postingId?: EconomyContractsPostingId;
-  productId?: string;
-  sellerId?: string;
-  settledAt?: string;
-  settlementId?: string;
-  status?: EconomyMarketplaceMarketplaceSettlementStatus;
-}
-
-export type EconomyMarketplaceMarketplaceCurrencyChoice = 'Hard' | 'Soft' | 'FixedMix';
-
-export type EconomyMarketplaceMarketplaceEntitlementStatus = 'PendingGrant' | 'Granted' | 'Revoked';
-
-export interface EconomyMarketplaceMarketplaceEventOperationalStatus {
-  id?: string;
-  evidenceHash?: string | null;
-  kind?: string | null;
-  occurredAt?: string;
-  sequence?: number;
-}
-
-export interface EconomyMarketplaceMarketplaceOutboxOperationalStatus {
-  id?: string;
-  attemptCount?: number;
-  hasLastError?: boolean;
-  leaseExpiresAt?: string | null;
-  messageType?: string | null;
-  occurredAt?: string;
-  payloadHash?: string | null;
-  publishedAt?: string | null;
-  settlementId?: string;
-  tenantId?: string;
-}
-
-export interface EconomyMarketplaceMarketplacePriceLegSnapshot {
-  amount?: EconomyContractsCoinAmount;
-  currency?: EconomyContractsCurrencyCode;
-  platformFeeUnits?: number;
-  sellerUnits?: number;
-  units?: number;
-}
-
-export interface EconomyMarketplaceMarketplaceRefundOperationalStatus {
-  id?: string;
-  buyerId?: string;
-  entitlementRevoked?: boolean;
-  firstJournalSequence?: number;
-  isFullRefund?: boolean;
-  quantity?: number;
-  reasonCode?: string | null;
-  refundedAt?: string;
-  refundedQuantity?: number;
-  settlementId?: string;
-  tenantId?: string;
-}
-
-export interface EconomyMarketplaceMarketplaceSettlementLegOperationalStatus {
-  currency?: EconomyContractsCurrencyCode;
-  platformFeeUnits?: number;
-  refundedUnits?: number;
-  sellerUnits?: number;
-  units?: number;
-}
-
-export interface EconomyMarketplaceMarketplaceSettlementOperationalDetails {
-  events?: Array<EconomyMarketplaceMarketplaceEventOperationalStatus> | null;
-  legs?: Array<EconomyMarketplaceMarketplaceSettlementLegOperationalStatus> | null;
-  outbox?: Array<EconomyMarketplaceMarketplaceOutboxOperationalStatus> | null;
-  refunds?: Array<EconomyMarketplaceMarketplaceRefundOperationalStatus> | null;
-  summary?: EconomyMarketplaceMarketplaceSettlementOperationalSummary;
-}
-
-export interface EconomyMarketplaceMarketplaceSettlementOperationalSummary {
-  id?: string;
-  buyerId?: string;
-  currencyMode?: EconomyMarketplaceProductCurrencyMode;
-  entitlementId?: string;
-  entitlementStatus?: EconomyMarketplaceMarketplaceEntitlementStatus;
-  journalSequence?: number;
-  jurisdictionCode?: string | null;
-  orderId?: string;
-  orderLineItemId?: string;
-  policyVersion?: number;
-  productId?: string;
-  quantity?: number;
-  refundedQuantity?: number;
-  refundHoldUntil?: string;
-  reserveVersion?: number;
-  sellerId?: string;
-  settledAt?: string;
-  status?: EconomyMarketplaceMarketplaceSettlementStatus;
-  tenantId?: string;
-  updatedAt?: string;
-}
-
-export type EconomyMarketplaceMarketplaceSettlementStatus = 'Settled' | 'PartiallyRefunded' | 'Refunded';
-
-export type EconomyMarketplaceProductCurrencyMode = 'HardOnly' | 'SoftOnly' | 'Either' | 'FixedMix';
-
-export interface EconomyOperationsEconomyActiveReserveOperationalDetails {
-  allocations?: Array<EconomyOperationsEconomyReserveAssetAllocationOperationalStatus> | null;
-  head?: EconomyOperationsEconomyReserveOperationalStatus;
-  reconciliation?: EconomyOperationsEconomyCustodyReconciliationOperationalStatus;
-}
-
-export interface EconomyOperationsEconomyAnchorOperationalDetails {
-  dispatchSnapshotHash?: string | null;
-  summary?: EconomyOperationsEconomyAnchorOperationalStatus;
-}
-
-export interface EconomyOperationsEconomyAnchorOperationalStatus {
-  id?: string;
-  anchoredAt?: string;
-  journalHash?: string | null;
-  journalSequence?: number;
-  objectMatches?: boolean;
-  provider?: string | null;
-  retainUntil?: string | null;
-  signatureValid?: boolean;
-  verifiedAt?: string | null;
-}
-
-export interface EconomyOperationsEconomyAnchorVerificationOperationalStatus {
-  id?: string;
-  eTag?: string | null;
-  keyId?: string | null;
-  objectHash?: string | null;
-  objectMatches?: boolean;
-  objectVersion?: string | null;
-  retainUntil?: string;
-  signatureValid?: boolean;
-  verifiedAt?: string;
-}
-
-export interface EconomyOperationsEconomyCapabilityConfigurationSnapshot {
-  killSwitches?: Array<EconomyOperationsEconomyKillSwitchOperationalStatus> | null;
-  policies?: Array<EconomyOperationsEconomyCapabilityPolicyOperationalStatus> | null;
-}
-
-export interface EconomyOperationsEconomyCapabilityPolicyOperationalStatus {
-  id?: string;
-  capability?: EconomyRiskEconomyValueMovementCapability;
-  effectiveAt?: string;
-  expiresAt?: string;
-  jurisdictionCode?: string | null;
-  keyId?: string | null;
-  payloadHash?: string | null;
-  providerReady?: boolean;
-  state?: EconomyRiskEconomyCapabilityPolicyState;
-  tenantId?: string | null;
-  version?: number;
-}
-
-export interface EconomyOperationsEconomyCustodyObservationOperationalStatus {
-  id?: string;
-  assetKey?: string | null;
-  eligibleUsdNanos?: number;
-  expiresAt?: string;
-  keyId?: string | null;
-  observedAt?: string;
-  payloadHash?: string | null;
-  provider?: string | null;
-  purpose?: EconomyReservesReserveBackingPurpose;
-  version?: number;
-}
-
-export interface EconomyOperationsEconomyCustodyReconciliationOperationalStatus {
-  id?: string;
-  eligibleAssetUsdNanos?: number;
-  evidenceHash?: string | null;
-  isReconciled?: boolean;
-  liabilityUsdNanos?: number;
-  reconciledAt?: string;
-  reconciledBy?: string;
-  varianceUsdNanos?: number;
-}
-
-export interface EconomyOperationsEconomyJournalHeadStatus {
-  hash?: string | null;
-  sequence?: number;
-  updatedAt?: string;
-}
-
-export interface EconomyOperationsEconomyJournalVerificationRunDetails {
-  id?: string;
-  completedAt?: string;
-  currentHash?: string | null;
-  failureCode?: string | null;
-  fencingToken?: number;
-  fromSequence?: number;
-  isValid?: boolean;
-  previousHash?: string | null;
-  startedAt?: string;
-  toSequence?: number;
-}
-
-export interface EconomyOperationsEconomyJournalVerificationStatus {
-  completedAt?: string;
-  currentHash?: string | null;
-  failureCode?: string | null;
-  fencingToken?: number;
-  fromSequence?: number;
-  isValid?: boolean;
-  toSequence?: number;
-}
-
-export interface EconomyOperationsEconomyKillSwitchOperationalStatus {
-  id?: string;
-  activatedAt?: string;
-  activatedBy?: string;
-  epoch?: number;
-  isActive?: boolean;
-  reason?: string | null;
-  releaseApprovers?: Array<string> | null;
-  releasedAt?: string | null;
-  releaseProposedBy?: string | null;
-  scope?: EconomyRiskEconomyKillSwitchScope;
-}
-
-export interface EconomyOperationsEconomyLedgerHealthSnapshot {
-  activeProjection?: EconomyOperationsEconomyProjectionOperationalStatus;
-  activeReserve?: EconomyOperationsEconomyReserveOperationalStatus;
-  diagnostics?: Array<string> | null;
-  head?: EconomyOperationsEconomyJournalHeadStatus;
-  isAnchorHealthy?: boolean;
-  isJournalHealthy?: boolean;
-  isProjectionHealthy?: boolean;
-  isReserveHealthy?: boolean;
-  latestAnchor?: EconomyOperationsEconomyAnchorOperationalStatus;
-  latestVerification?: EconomyOperationsEconomyJournalVerificationStatus;
-}
-
-export interface EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardPendingClaimOperationalStatus {
-  items?: Array<EconomyAdRewardsAdRewardPendingClaimOperationalStatus> | null;
-  nextCursor?: string | null;
-}
-
-export interface EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardReconciliationOperationalStatus {
-  items?: Array<EconomyAdRewardsAdRewardReconciliationOperationalStatus> | null;
-  nextCursor?: string | null;
-}
-
-export interface EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardSessionOperationalSummary {
-  items?: Array<EconomyAdRewardsAdRewardSessionOperationalSummary> | null;
-  nextCursor?: string | null;
-}
-
-export interface EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceOutboxOperationalStatus {
-  items?: Array<EconomyMarketplaceMarketplaceOutboxOperationalStatus> | null;
-  nextCursor?: string | null;
-}
-
-export interface EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceRefundOperationalStatus {
-  items?: Array<EconomyMarketplaceMarketplaceRefundOperationalStatus> | null;
-  nextCursor?: string | null;
-}
-
-export interface EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceSettlementOperationalSummary {
-  items?: Array<EconomyMarketplaceMarketplaceSettlementOperationalSummary> | null;
-  nextCursor?: string | null;
-}
-
-export interface EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyAnchorOperationalDetails {
-  items?: Array<EconomyOperationsEconomyAnchorOperationalDetails> | null;
-  nextCursor?: string | null;
-}
-
-export interface EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyCapabilityPolicyOperationalStatus {
-  items?: Array<EconomyOperationsEconomyCapabilityPolicyOperationalStatus> | null;
-  nextCursor?: string | null;
-}
-
-export interface EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyCustodyObservationOperationalStatus {
-  items?: Array<EconomyOperationsEconomyCustodyObservationOperationalStatus> | null;
-  nextCursor?: string | null;
-}
-
-export interface EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyJournalVerificationRunDetails {
-  items?: Array<EconomyOperationsEconomyJournalVerificationRunDetails> | null;
-  nextCursor?: string | null;
-}
-
-export interface EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyProjectionGenerationOperationalDetails {
-  items?: Array<EconomyOperationsEconomyProjectionGenerationOperationalDetails> | null;
-  nextCursor?: string | null;
-}
-
-export interface EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyReserveProposalOperationalStatus {
-  items?: Array<EconomyOperationsEconomyReserveProposalOperationalStatus> | null;
-  nextCursor?: string | null;
-}
-
-export interface EconomyOperationsEconomyOperationalPageOfEconomyOperationsLegacyEconomyShadowBatchSummary {
-  items?: Array<EconomyOperationsLegacyEconomyShadowBatchSummary> | null;
-  nextCursor?: string | null;
-}
-
-export interface EconomyOperationsEconomyPolicyAuditEntry {
-  actorId?: string;
-  evidenceHash?: string | null;
-  kind?: string | null;
-  occurredAt?: string;
-}
-
-export interface EconomyOperationsEconomyPolicyOperationalDetails {
-  approvedAt?: string | null;
-  approvedBy?: string | null;
-  canonicalPayload?: string | null;
-  proposedAt?: string;
-  proposedBy?: string;
-  summary?: EconomyOperationsEconomyCapabilityPolicyOperationalStatus;
-}
-
-export interface EconomyOperationsEconomyProjectionApprovalAuditEntry {
-  id?: string;
-  actorId?: string;
-  approvedAt?: string;
-  evidenceHash?: string | null;
-}
-
-export interface EconomyOperationsEconomyProjectionGenerationOperationalDetails {
-  completedAt?: string | null;
-  fromSequence?: number;
-  isActive?: boolean;
-  startedAt?: string;
-  summary?: EconomyOperationsEconomyProjectionOperationalStatus;
-}
-
-export interface EconomyOperationsEconomyProjectionOperationalStatus {
-  activatedAt?: string | null;
-  approvedBy?: string | null;
-  generation?: number;
-  journalHash?: string | null;
-  mismatchCount?: number;
-  projectionHash?: string | null;
-  proposedBy?: string;
-  secondApprovedBy?: string | null;
-  state?: string | null;
-  toSequence?: number;
-}
-
-export interface EconomyOperationsEconomyReserveAssetAllocationOperationalStatus {
-  id?: string;
-  assetKey?: string | null;
-  eligibleUsdNanos?: number;
-  purpose?: EconomyReservesReserveBackingPurpose;
-}
-
-export interface EconomyOperationsEconomyReserveOperationalStatus {
-  authorizationEpoch?: number;
-  coverage?: EconomyReservesReserveCoverageState;
-  custodyReconciled?: boolean;
-  custodyVarianceUsdNanos?: number | null;
-  evidenceHash?: string | null;
-  expiresAt?: string;
-  observedAt?: string;
-  policyVersion?: number;
-  reconciledAt?: string | null;
-  version?: number;
-}
-
-export interface EconomyOperationsEconomyReserveProposalOperationalStatus {
-  id?: string;
-  approvedAt?: string | null;
-  approvedBy?: string | null;
-  assetAllocations?: string | null;
-  authorizationEpoch?: number;
-  coverage?: EconomyReservesReserveCoverageState;
-  eligibleAssetUsdNanos?: number;
-  evidenceHash?: string | null;
-  expectedActiveVersion?: number | null;
-  expiresAt?: string;
-  liabilityUsdNanos?: number;
-  observationIds?: string | null;
-  observedAt?: string;
-  policyVersion?: number;
-  proposedAt?: string;
-  proposedBy?: string;
-  snapshotHash?: string | null;
-  status?: string | null;
-  version?: number;
-}
-
-export interface EconomyOperationsLegacyEconomyShadowBatchSummary {
-  id?: string;
-  backfilledHardUnits?: number;
-  capturedAt?: string;
-  expectedHardUnits?: number;
-  failureCode?: string | null;
-  financialLedgerEntryCount?: number;
-  jurisdictionCode?: string | null;
-  policyVersion?: number;
-  reconciledHardUnits?: number;
-  state?: EconomyOperationsLegacyEconomyShadowState;
-  tenantId?: string;
-  transactionCount?: number;
-  updatedAt?: string;
-  version?: number;
-  walletCount?: number;
-}
-
-export interface EconomyOperationsLegacyEconomyShadowBatchView {
-  id?: string;
-  backfilledHardUnits?: number;
-  expectedHardUnits?: number;
-  failureCode?: string | null;
-  financialLedgerEntryCount?: number;
-  financialLedgerSnapshotHash?: string | null;
-  policyVersion?: number;
-  reconciledHardUnits?: number;
-  state?: EconomyOperationsLegacyEconomyShadowState;
-  tenantId?: string;
-  transactionCount?: number;
-  transactionSnapshotHash?: string | null;
-  walletCount?: number;
-  wallets?: Array<EconomyOperationsLegacyEconomyShadowWalletView> | null;
-  walletSnapshotHash?: string | null;
-}
-
-export type EconomyOperationsLegacyEconomyShadowState =
-  'Captured' | 'Backfilling' | 'Backfilled' | 'Reconciled' | 'CutoverProposed' | 'CutoverActive' | 'RolledBack' | 'Failed';
-
-export interface EconomyOperationsLegacyEconomyShadowWalletView {
-  completedCreditsMinorUnits?: number;
-  completedDebitsMinorUnits?: number;
-  creditLotId?: string;
-  economyWalletId?: string | null;
-  failureCode?: string | null;
-  journalSequence?: number | null;
-  legacyBalanceMinorUnits?: number;
-  legacyWalletId?: string;
-  ownerId?: string;
-  postingId?: string;
-  sourceStampId?: string;
-  state?: string | null;
-  transactionCount?: number;
-}
-
-export interface EconomyPayoutsCommandsCreateMyPayoutRequestInput {
-  hardCoinUnits?: number;
-  idempotencyKey?: string | null;
-}
-
-export interface EconomyPayoutsCommandsReviewPayoutRequestInput {
-  reason?: string | null;
-}
-
-export interface EconomyPayoutsConnectAccountSnapshot {
-  chargesEnabled?: boolean;
-  destinationHash?: string | null;
-  evidenceHash?: string | null;
-  expiresAt?: string;
-  observedAt?: string;
-  payeeId?: string;
-  payoutsEnabled?: boolean;
-  providerAccountId?: string | null;
-  state?: EconomyPayoutsConnectAccountState;
-  version?: number;
-}
-
-export type EconomyPayoutsConnectAccountState = 'Pending' | 'Restricted' | 'Ready' | 'Disabled';
-
-export interface EconomyPayoutsConnectOnboardingResult {
-  account?: EconomyPayoutsConnectAccountSnapshot;
-  onboardingUri?: string | null;
-}
-
-export type EconomyPayoutsPayoutOperationState = 'Reserved' | 'Dispatching' | 'Ambiguous' | 'Succeeded' | 'Failed' | 'Cancelled';
-
-export type EconomyPayoutsPayoutRequestState = 'Submitted' | 'Cancelled' | 'Approved' | 'Rejected' | 'AwaitingSecondApproval';
-
-export interface EconomyPayoutsQueriesEconomyPayoutInput {
-  id?: string;
-  createdAt?: string;
-  hardCoinUnits?: number;
-  state?: EconomyPayoutsPayoutRequestState;
-  updatedAt?: string;
-}
-
-export interface EconomyPayoutsQueriesEconomyPayoutOperation {
-  id?: string;
-  createdAt?: string;
-  hardCoinUnits?: number;
-  state?: EconomyPayoutsPayoutOperationState;
-  updatedAt?: string;
-}
-
-export interface EconomyPayoutsQueriesEconomyPayoutRequestReview {
-  id?: string;
-  createdAt?: string;
-  hardCoinUnits?: number;
-  payeeId?: string;
-  state?: EconomyPayoutsPayoutRequestState;
-  updatedAt?: string;
-  version?: number;
-  walletId?: string;
-}
-
-export interface EconomyPayoutsQueriesEconomyPayoutRequestReviewAudit {
-  id?: string;
-  actorId?: string;
-  occurredAt?: string;
-  outcome?: EconomyPayoutsPayoutRequestState;
-  reason?: string | null;
-}
-
-export interface EconomyProjectionsProjectionGenerationState {
-  approvedBy?: Array<string> | null;
-  generation?: number;
-  isActive?: boolean;
-  journalHash?: string | null;
-  mismatchCount?: number;
-  projectionHash?: string | null;
-  proposedBy?: string;
-  state?: string | null;
-  toSequence?: number;
-}
-
-export interface EconomyReservesCustodyObservationCommand {
-  id?: string;
-  assetKey?: string | null;
-  eligibleUsdNanos?: number;
-  expiresAt?: string;
-  keyId?: string | null;
-  observedAt?: string;
-  payloadHash?: string | null;
-  provider?: string | null;
-  purpose?: EconomyReservesReserveBackingPurpose;
-  signature?: string | null;
-  version?: number;
-}
-
-export interface EconomyReservesDurableCustodyObservation {
-  id?: string;
-  assetKey?: string | null;
-  eligibleUsdNanos?: number;
-  expiresAt?: string;
-  keyId?: string | null;
-  observedAt?: string;
-  payloadHash?: string | null;
-  provider?: string | null;
-  purpose?: EconomyReservesReserveBackingPurpose;
-  signature?: string | null;
-  version?: number;
-}
-
-export interface EconomyReservesDurableReserveProposalState {
-  id?: string;
-  approvedBy?: string | null;
-  authorizationEpoch?: number;
-  coverage?: EconomyReservesReserveCoverageState;
-  eligibleAssetUsdNanos?: number;
-  expiresAt?: string;
-  liabilityUsdNanos?: number;
-  observedAt?: string;
-  policyVersion?: number;
-  proposedBy?: string;
-  snapshotHash?: string | null;
-  status?: string | null;
-  version?: number;
-}
-
-export interface EconomyReservesEconomyLiabilitySnapshot {
-  journalHash?: string | null;
-  journalSequence?: number;
-  liabilityUsdNanos?: number;
-  outstandingHardUnits?: number;
-  outstandingSoftUnits?: number;
-}
-
-export interface EconomyReservesExternalReserveAsset {
-  assetKey?: string | null;
-  eligibleUsdNanos?: number;
-  purpose?: EconomyReservesReserveBackingPurpose;
-}
-
-export type EconomyReservesReserveBackingPurpose = 'HardCoin' | 'SoftCoin';
-
-export interface EconomyReservesReserveBufferPosition {
-  adEstimateVarianceBufferUsdNanos?: number;
-  chargebackRefundBufferUsdMinor?: number;
-  fraudLossBudgetUsdNanos?: number;
-  hardOperatingLiquidityBufferUsdMinor?: number;
-  payoutSettlementBufferUsdMinor?: number;
-  providerFxBufferUsdNanos?: number;
-  softOperatingLiquidityBufferUsdNanos?: number;
-}
-
-export type EconomyReservesReserveCoverageState = 'Covered' | 'Shortfall';
-
-export interface EconomyReservesReserveHead {
-  assetAllocations?: Array<EconomyReservesExternalReserveAsset> | null;
-  authorizationEpoch?: number;
-  coverage?: EconomyReservesReserveCoverageState;
-  evidenceHash?: string | null;
-  expiresAt?: string;
-  hardBackingUsdNanos?: number;
-  observedAt?: string;
-  policyVersion?: EconomyContractsPolicyVersion;
-  requirements?: EconomyReservesReserveRequirementSnapshot;
-  softBackingUsdNanos?: number;
-  version?: EconomyContractsReserveVersion;
-}
-
-export interface EconomyReservesReserveRequirementSnapshot {
-  hardFaceValueUsdMinor?: number;
-  requiredHardReserveUsdMinor?: number;
-  requiredSoftReserveUsdNanos?: number;
-  softFaceValueUsdNanos?: number;
-  stressedExpectedRedemptionCostUsdNanos?: number;
-}
-
-export interface EconomyReservesReserveServiceObservation {
-  currentProviderCostUsdNanos?: number;
-  currentServicePriceSoftUnits?: number;
-  enabled?: boolean;
-  expiresAt?: string;
-  observedAt?: string;
-  providerFxStressCostUsdNanos?: number;
-  reservedSoftUnits?: number;
-  serviceCode?: string | null;
-  trailingHighPercentileCostUsdNanos?: number;
-}
-
-export interface EconomyRiskCapabilityAuthorizationReceipt {
-  id?: string;
-  actorId?: string;
-  capability?: EconomyRiskEconomyValueMovementCapability;
-  destinationHash?: string | null;
-  evidenceHashes?: Array<string> | null;
-  expiresAt?: string;
-  issuedAt?: string;
-  jurisdictionCode?: string | null;
-  keyId?: string | null;
-  killSwitchEpoch?: number;
-  operationFingerprint?: string | null;
-  policyVersion?: number;
-  providerHash?: string | null;
-  receiptHash?: string | null;
-  reserveVersion?: number;
-  riskDecisionId?: string;
-  signature?: string | null;
-  sourceRootHashes?: Array<string> | null;
-  subjectReference?: string | null;
-  tenantId?: string;
-}
-
-export type EconomyRiskComplianceEvidenceIngestionStatus = 'Published' | 'Duplicate' | 'Deferred' | 'Rejected';
-
-export type EconomyRiskComplianceEvidenceResult = 'Approved' | 'Rejected' | 'NeedsReview' | 'Unavailable';
-
-export interface EconomyRiskComplianceHold {
-  id?: string;
-  activatedAt?: string;
-  activatedBy?: string;
-  caseReferenceHash?: string | null;
-  evidenceHash?: string | null;
-  expiresAt?: string;
-  reasonCode?: string | null;
-  releasedAt?: string | null;
-  releasedBy?: string | null;
-  scope?: EconomyRiskComplianceHoldScope;
-}
-
-export interface EconomyRiskComplianceHoldAdministrationState {
-  hold?: EconomyRiskComplianceHold;
-  releaseApprovers?: Array<string> | null;
-  releasePolicyEvidenceHash?: string | null;
-  releaseProposedAt?: string | null;
-  releaseProposedBy?: string | null;
-  requiredReleaseApprovals?: number | null;
-}
-
-export interface EconomyRiskComplianceHoldEvent {
-  actorId?: string;
-  evidenceHash?: string | null;
-  holdId?: string;
-  kind?: string | null;
-  occurredAt?: string;
-  sequence?: number;
-}
-
-export interface EconomyRiskComplianceHoldPage {
-  items?: Array<EconomyRiskComplianceHoldAdministrationState> | null;
-  nextCursor?: string | null;
-}
-
-export interface EconomyRiskComplianceHoldScope {
-  capability?: EconomyRiskEconomyValueMovementCapability;
-  key?: string | null;
-  subjectHash?: string | null;
-  tenantId?: string;
-}
-
-export interface EconomyRiskEconomyCapabilityEvaluationResult {
-  diagnostics?: Array<string> | null;
-  isReady?: boolean;
-  receipt?: EconomyRiskCapabilityAuthorizationReceipt;
-  state?: EconomyRiskEconomyCapabilityReadinessStatus;
-}
-
-export interface EconomyRiskEconomyCapabilityPolicy {
-  id?: string;
-  approvedAt?: string | null;
-  approvedBy?: string | null;
-  canonicalPayload?: string | null;
-  capability?: EconomyRiskEconomyValueMovementCapability;
-  effectiveAt?: string;
-  expiresAt?: string;
-  jurisdictionCode?: string | null;
-  keyId?: string | null;
-  payloadHash?: string | null;
-  proposedAt?: string;
-  proposedBy?: string;
-  providerReady?: boolean;
-  scopeKey?: string | null;
-  signature?: string | null;
-  state?: EconomyRiskEconomyCapabilityPolicyState;
-  tenantId?: string | null;
-  version?: number;
-}
-
-export type EconomyRiskEconomyCapabilityPolicyState = 'PendingApproval' | 'Approved' | 'Active' | 'Expired';
-
-export type EconomyRiskEconomyCapabilityReadinessStatus =
-  | 'Disabled'
-  | 'Ready'
-  | 'InvalidPolicy'
-  | 'JurisdictionBlocked'
-  | 'ComplianceUnavailable'
-  | 'ComplianceStale'
-  | 'ReviewRequired'
-  | 'LedgerUnhealthy'
-  | 'ProjectionMismatch'
-  | 'ReserveInsufficient'
-  | 'CustodyUnreconciled'
-  | 'AnchorInvalid'
-  | 'ProviderNotReady'
-  | 'KillSwitchActive';
-
-export interface EconomyRiskEconomyKillSwitchScope {
-  capability?: EconomyRiskEconomyValueMovementCapability;
-  scopeKey?: string | null;
-  tenantId?: string | null;
-}
-
-export interface EconomyRiskEconomyKillSwitchState {
-  id?: string;
-  activatedAt?: string;
-  activatedBy?: string;
-  epoch?: number;
-  isActive?: boolean;
-  reason?: string | null;
-  releaseApprovers?: Array<string> | null;
-  releasedAt?: string | null;
-  releaseProposedAt?: string | null;
-  releaseProposedBy?: string | null;
-  scope?: EconomyRiskEconomyKillSwitchScope;
-}
-
-export type EconomyRiskEconomyProtectedOperationState =
-  'Ready' | 'ReviewRequired' | 'Hold' | 'Challenge' | 'Denied' | 'ComplianceUnavailable' | 'ComplianceStale' | 'InvalidPolicy' | 'ReserveInsufficient';
-
-export type EconomyRiskEconomyValueMovementCapability =
-  | 'ConfirmHardCoinFunding'
-  | 'ConvertHardToSoft'
-  | 'ReverseProviderFunding'
-  | 'Transfer'
-  | 'IssueAdReward'
-  | 'BountyEscrow'
-  | 'BountyClaim'
-  | 'MarketplaceSettlement'
-  | 'PayoutExecution'
-  | 'AdminWithdrawalExecution'
-  | 'MarketplaceRefund'
-  | 'BountyReclaim'
-  | 'LegacyBalanceBackfill';
-
-export type EconomyRiskRiskManualDecisionCode = 'EvidenceVerified' | 'RiskAccepted' | 'PolicyViolation' | 'FraudConfirmed';
-
-export interface EconomyRiskRiskReviewCase {
-  id?: string;
-  appealOf?: string | null;
-  approvers?: Array<string> | null;
-  decisionId?: string;
-  requiredApprovals?: number;
-  resolution?: string | null;
-  resolvedAt?: string | null;
-  resolvedBy?: string | null;
-  status?: EconomyRiskRiskReviewStatus;
-  submittedAt?: string;
-  submittedBy?: string;
-}
-
-export interface EconomyRiskRiskReviewEvent {
-  actorId?: string;
-  decisionCode?: EconomyRiskRiskManualDecisionCode;
-  evidenceHashes?: Array<string> | null;
-  kind?: EconomyRiskRiskReviewEventKind;
-  occurredAt?: string;
-  resolution?: string | null;
-  reviewId?: string;
-  sequence?: number;
-}
-
-export type EconomyRiskRiskReviewEventKind = 'Submitted' | 'ApprovalRecorded' | 'Approved' | 'Rejected' | 'AppealSubmitted';
-
-export interface EconomyRiskRiskReviewPage {
-  items?: Array<EconomyRiskRiskReviewCase> | null;
-  nextCursor?: string | null;
-}
-
-export type EconomyRiskRiskReviewStatus = 'Pending' | 'Approved' | 'Rejected';
-
-export interface EconomyTransfersSelfServiceEconomyTransferInput {
-  amountUnits?: number;
-  currency?: EconomyContractsCurrencyCode;
-  idempotencyKey?: string | null;
-  recipientUserId?: string;
-  transferType?: EconomyTransfersSelfServiceEconomyTransferType;
-}
-
-export interface EconomyTransfersSelfServiceEconomyTransferReceipt {
-  amountUnits?: number;
-  currency?: EconomyContractsCurrencyCode;
-  isDuplicate?: boolean;
-  journalHash?: string | null;
-  journalSequence?: number;
-  postingId?: string;
-  recipientUserId?: string;
-  transferType?: EconomyTransfersSelfServiceEconomyTransferType;
-}
-
-export type EconomyTransfersSelfServiceEconomyTransferType = 'Tip' | 'Gift' | 'CreatorSupport';
-
-export interface EconomyTreasuryAdminWithdrawalAuditEvent {
-  actorId?: string | null;
-  evidence?: string | null;
-  hash?: string | null;
-  kind?: string | null;
-  occurredAt?: string;
-  previousHash?: string | null;
-  runId?: string;
-  sequence?: number;
-}
-
-export interface EconomyTreasuryAdminWithdrawalAuditView {
-  events?: Array<EconomyTreasuryAdminWithdrawalAuditEvent> | null;
-  integrityValid?: boolean;
-  runId?: string;
-}
-
-export interface EconomyTreasuryAdminWithdrawalRun {
-  id?: string;
-  amount?: EconomyContractsCoinAmount;
-  approvedBy?: string | null;
-  createdAt?: string;
-  destinationHash?: string | null;
-  dispatchSnapshotHash?: string | null;
-  executionEpoch?: number;
-  fencingToken?: number;
-  idempotencyKey?: EconomyContractsIdempotencyKey;
-  periodStart?: string;
-  platformFeeWalletId?: EconomyContractsWalletId;
-  policyVersion?: EconomyContractsPolicyVersion;
-  providerTransferId?: string | null;
-  requestedBy?: string;
-  requestHash?: string | null;
-  reserveAuthorizationEpoch?: number;
-  reserveVersion?: EconomyContractsReserveVersion;
-  sourceAssetKey?: string | null;
-  state?: EconomyTreasuryAdminWithdrawalRunState;
-  tenantId?: string;
-  updatedAt?: string;
-  version?: number;
-}
-
-export type EconomyTreasuryAdminWithdrawalRunState = 'PendingApproval' | 'Approved' | 'Dispatching' | 'Ambiguous' | 'Succeeded' | 'Failed' | 'Cancelled';
-
 export interface Error {
   code?: string | null;
   description?: string | null;
@@ -4697,7 +3379,7 @@ export interface FeaturesBulkEvaluationInput {
   featureKeys?: Array<string> | null;
 }
 
-export interface FeaturesCapabilityAuditLog {
+export interface FeaturesCapabilityAuditLogDto {
   id?: string;
   capabilityKey?: string | null;
   changedAt?: string;
@@ -4743,7 +3425,7 @@ export interface FeaturesFeatureEvaluationInput {
   featureKey?: string | null;
 }
 
-export interface FeaturesFeatureFlag {
+export interface FeaturesFeatureFlagDto {
   id: string;
   createdAt: string;
   defaultValue?: Record<string, unknown> | null;
@@ -4753,13 +3435,13 @@ export interface FeaturesFeatureFlag {
   isEnabled: boolean;
   key: string | null;
   name: string | null;
-  targets?: Array<FeaturesFeatureFlagTarget> | null;
+  targets?: Array<FeaturesFeatureFlagTargetDto> | null;
   tenantId?: string | null;
   type: FeaturesFeatureFlagType;
   updatedAt?: string | null;
 }
 
-export interface FeaturesFeatureFlagTarget {
+export interface FeaturesFeatureFlagTargetDto {
   id: string;
   createdAt: string;
   customValue?: string | null;
@@ -4849,6 +3531,1370 @@ export interface Fido2NetLibPublicKeyCredentialRpEntity {
   name?: string | null;
 }
 
+export interface FinanceEconomyAdRewardsAdPlaybackEvidence {
+  completedAt?: string;
+  focusLoss?: string;
+  milestones?: Array<number> | null;
+  playbackDuration?: string;
+  startedAt?: string;
+  visibleDuration?: string;
+}
+
+export interface FinanceEconomyAdRewardsAdProviderReport {
+  actualRevenueUsdNanos?: number;
+  batchId?: string | null;
+  evidenceHash?: string | null;
+  importedAt?: string;
+  network?: string | null;
+  periodEnd?: string;
+  periodStart?: string;
+  reportId?: string | null;
+  signature?: string | null;
+  verifiedSessionIds?: Array<string> | null;
+  version?: number;
+}
+
+export interface FinanceEconomyAdRewardsAdRewardCompletionOperationalStatus {
+  completedAt?: string;
+  jurisdictionCode?: string | null;
+  postingId?: string | null;
+  providerEventId?: string | null;
+  reserveVersion?: number | null;
+  rewardSoftUnits?: number;
+  state?: FinanceEconomyAdRewardsAdRewardCompletionState;
+}
+
+export type FinanceEconomyAdRewardsAdRewardCompletionState = 'Issued' | 'PendingProviderReport' | 'AccumulatedRemainder';
+
+export interface FinanceEconomyAdRewardsAdRewardMilestoneOperationalStatus {
+  id?: string;
+  evidenceHash?: string | null;
+  observedAt?: string;
+  percentage?: number;
+  sequence?: number;
+}
+
+export interface FinanceEconomyAdRewardsAdRewardPendingClaimOperationalStatus {
+  confirmedAt?: string | null;
+  deferredAt?: string;
+  providerReportId?: string | null;
+  sessionId?: string;
+  sourceStampId?: string;
+  tenantId?: string;
+}
+
+export interface FinanceEconomyAdRewardsAdRewardReconciliation {
+  actualDeltaUsdNanos?: number;
+  actualRevenueUsdNanos?: number;
+  batchId?: string | null;
+  estimatedRevenueUsdNanos?: number;
+  historicalRewardSoftUnits?: number;
+  network?: string | null;
+  previousActualRevenueUsdNanos?: number;
+  reconciledAt?: string;
+  reportId?: string | null;
+  varianceUsdNanos?: number;
+  version?: number;
+}
+
+export interface FinanceEconomyAdRewardsAdRewardReconciliationOperationalStatus {
+  id?: string;
+  actualRevenueUsdNanos?: number;
+  batchId?: string | null;
+  estimatedRevenueUsdNanos?: number;
+  historicalRewardSoftUnits?: number;
+  network?: string | null;
+  providerReportId?: string;
+  reconciledAt?: string;
+  reportId?: string | null;
+  tenantId?: string;
+  varianceUsdNanos?: number;
+  version?: number;
+}
+
+export interface FinanceEconomyAdRewardsAdRewardSessionEventOperationalStatus {
+  id?: string;
+  evidenceHash?: string | null;
+  occurredAt?: string;
+  sequence?: number;
+  state?: FinanceEconomyAdRewardsDurableAdRewardSessionState;
+}
+
+export interface FinanceEconomyAdRewardsAdRewardSessionOperationalDetails {
+  completion?: FinanceEconomyAdRewardsAdRewardCompletionOperationalStatus;
+  events?: Array<FinanceEconomyAdRewardsAdRewardSessionEventOperationalStatus> | null;
+  milestones?: Array<FinanceEconomyAdRewardsAdRewardMilestoneOperationalStatus> | null;
+  summary?: FinanceEconomyAdRewardsAdRewardSessionOperationalSummary;
+}
+
+export interface FinanceEconomyAdRewardsAdRewardSessionOperationalSummary {
+  id?: string;
+  creativeId?: string | null;
+  expiresAt?: string;
+  issuedAt?: string;
+  network?: string | null;
+  policyVersion?: number;
+  state?: FinanceEconomyAdRewardsDurableAdRewardSessionState;
+  tenantId?: string;
+  updatedAt?: string;
+  userId?: string;
+}
+
+export interface FinanceEconomyAdRewardsDurableAdProviderReportImportResult {
+  isDuplicate?: boolean;
+  providerReportId?: string;
+  reconciliation?: FinanceEconomyAdRewardsAdRewardReconciliation;
+  verifiedPendingSessions?: Array<string> | null;
+}
+
+export interface FinanceEconomyAdRewardsDurableAdProviderReportStatus {
+  actualRevenueUsdNanos?: number;
+  batchId?: string | null;
+  evidenceHash?: string | null;
+  network?: string | null;
+  payloadHash?: string | null;
+  periodEnd?: string;
+  periodStart?: string;
+  processedAt?: string | null;
+  processingError?: string | null;
+  providerReportId?: string;
+  receivedAt?: string;
+  reconciliation?: FinanceEconomyAdRewardsDurableAdRewardReconciliationStatus;
+  reportId?: string | null;
+  signatureVerified?: boolean;
+  version?: number;
+}
+
+export interface FinanceEconomyAdRewardsDurableAdRewardCompletionResult {
+  completedAt?: string;
+  isDuplicate?: boolean;
+  outputLotId?: FinanceEconomyContractsCreditLotId;
+  postingId?: FinanceEconomyContractsPostingId;
+  rewardSoftUnits?: number;
+  sessionId?: string;
+  state?: FinanceEconomyAdRewardsAdRewardCompletionState;
+}
+
+export interface FinanceEconomyAdRewardsDurableAdRewardReconciliationStatus {
+  actualDeltaUsdNanos?: number;
+  actualRevenueUsdNanos?: number;
+  estimatedRevenueUsdNanos?: number;
+  historicalRewardSoftUnits?: number;
+  previousActualRevenueUsdNanos?: number;
+  reconciledAt?: string;
+  varianceUsdNanos?: number;
+}
+
+export interface FinanceEconomyAdRewardsDurableAdRewardSessionClaims {
+  asnRiskHash?: string | null;
+  creativeId?: string | null;
+  deviceRiskHash?: string | null;
+  expiresAt?: string;
+  ipRiskHash?: string | null;
+  issuedAt?: string;
+  network?: string | null;
+  nonce?: string | null;
+  policyVersion?: FinanceEconomyContractsPolicyVersion;
+  requiredDuration?: string;
+  sessionId?: string;
+  tenantId?: string;
+  userId?: string;
+  walletId?: FinanceEconomyContractsWalletId;
+}
+
+export interface FinanceEconomyAdRewardsDurableAdRewardSessionResult {
+  claims?: FinanceEconomyAdRewardsDurableAdRewardSessionClaims;
+  isDuplicate?: boolean;
+  token?: FinanceEconomyAdRewardsSignedAdRewardSession;
+}
+
+export type FinanceEconomyAdRewardsDurableAdRewardSessionState = 'Issued' | 'Active' | 'ProofPending' | 'Verified' | 'Posted' | 'Deferred' | 'Rejected';
+
+export interface FinanceEconomyAdRewardsDurableAdRewardSessionStatus {
+  creativeId?: string | null;
+  expiresAt?: string;
+  issuedAt?: string;
+  network?: string | null;
+  postingId?: string | null;
+  rewardSoftUnits?: number;
+  sessionId?: string;
+  state?: FinanceEconomyAdRewardsDurableAdRewardSessionState;
+  updatedAt?: string;
+}
+
+export interface FinanceEconomyAdRewardsProviderCompletionProof {
+  completedAt?: string;
+  creativeId?: string | null;
+  evidenceHash?: string | null;
+  network?: string | null;
+  providerEventId?: string | null;
+  sessionId?: string;
+  signature?: string | null;
+}
+
+export interface FinanceEconomyAdRewardsSignedAdRewardSession {
+  value?: string | null;
+}
+
+export interface FinanceEconomyBountiesBountyEligibilityRequirements {
+  minimumReputation?: number;
+  requiresInstructorVerification?: boolean;
+  requiresPrerequisite?: boolean;
+}
+
+export interface FinanceEconomyBountiesBountyId {
+  value?: string;
+}
+
+export type FinanceEconomyBountiesBountyStatus = 'Open' | 'Expired' | 'Claimed' | 'Reclaimed';
+
+export interface FinanceEconomyBountiesBountyTerminalOutputLot {
+  amount?: FinanceEconomyContractsCoinAmount;
+  cashOutEligible?: boolean;
+  confirmedAt?: string;
+  lotId?: FinanceEconomyContractsCreditLotId;
+  originalMaturesAt?: string;
+  provenance?: FinanceEconomyContractsProvenanceKind;
+  rootSourceStampId?: FinanceEconomyContractsSourceStampId;
+  walletId?: FinanceEconomyContractsWalletId;
+}
+
+export interface FinanceEconomyBountiesDurableBountyView {
+  id?: FinanceEconomyBountiesBountyId;
+  amount?: FinanceEconomyContractsCoinAmount;
+  eligibility?: FinanceEconomyBountiesBountyEligibilityRequirements;
+  expiresAt?: string;
+  postedAt?: string;
+  posterId?: string;
+  reclaimFeePpm?: number;
+  status?: FinanceEconomyBountiesBountyStatus;
+  terminalEvent?: FinanceEconomyBountiesPersistedBountyTerminalEvent;
+  version?: number;
+}
+
+export interface FinanceEconomyBountiesPersistedBountyTerminalEvent {
+  id?: string;
+  actorId?: string;
+  bountyId?: FinanceEconomyBountiesBountyId;
+  destinationWalletId?: FinanceEconomyContractsWalletId;
+  feeUnits?: number;
+  firstJournalSequence?: number;
+  idempotencyKey?: FinanceEconomyContractsIdempotencyKey;
+  occurredAt?: string;
+  outputLots?: Array<FinanceEconomyBountiesBountyTerminalOutputLot> | null;
+  proceedsLotId?: FinanceEconomyContractsCreditLotId;
+  proceedsSourceStampId?: FinanceEconomyContractsSourceStampId;
+  returnedUnits?: number;
+  riskDecisionId?: string | null;
+  status?: FinanceEconomyBountiesBountyStatus;
+  tenantId?: string;
+}
+
+export interface FinanceEconomyCommandsConvertMyHardToSoftInput {
+  idempotencyKey?: string | null;
+  principalHardCoinUnits?: number;
+}
+
+export interface FinanceEconomyCommandsCreateMyHardCoinTopUpInput {
+  hardCoinUnits?: number;
+  idempotencyKey?: string | null;
+}
+
+export interface FinanceEconomyContractsCoinAmount {
+  currency?: FinanceEconomyContractsCurrencyCode;
+  units?: number;
+}
+
+export interface FinanceEconomyContractsCreditLotId {
+  value?: string;
+}
+
+export type FinanceEconomyContractsCurrencyCode = 'HardCoin' | 'SoftCoin';
+
+export interface FinanceEconomyContractsEconomyWalletSummaryDto {
+  availableHardToSpend?: number;
+  availableSoftToSpend?: number;
+  createdAt?: string;
+  earnedHard?: number;
+  heldHard?: number;
+  heldSoft?: number;
+  outstandingHardDebt?: number;
+  pendingHard?: number;
+  pendingSoft?: number;
+  projectionRebuiltAt?: string;
+  purchasedHard?: number;
+  restrictedHard?: number;
+  soft?: number;
+  sourceJournalSequence?: number;
+  state?: FinanceEconomyContractsWalletLifecycleState;
+  walletId?: string;
+  withdrawableHard?: number;
+}
+
+export interface FinanceEconomyContractsEconomyWalletTransactionDto {
+  amountUnits?: number;
+  currency?: FinanceEconomyContractsCurrencyCode;
+  journalEntryId?: string;
+  journalSequence?: number;
+  postingGroupId?: string;
+  provenance?: FinanceEconomyContractsProvenanceKind;
+  recordedAt?: string;
+  side?: FinanceEconomyContractsEntrySide;
+  status?: FinanceEconomyContractsPostingStatus;
+  templateKind?: FinanceEconomyContractsPostingTemplateKind;
+}
+
+export type FinanceEconomyContractsEntrySide = 'Debit' | 'Credit';
+
+export interface FinanceEconomyContractsIdempotencyKey {
+  value?: string | null;
+}
+
+export interface FinanceEconomyContractsPolicyVersion {
+  value?: number;
+}
+
+export interface FinanceEconomyContractsPostingId {
+  value?: string;
+}
+
+export type FinanceEconomyContractsPostingStatus = 'Accepted' | 'Rejected' | 'Duplicate';
+
+export type FinanceEconomyContractsPostingTemplateKind =
+  | 'ConfirmedTopUpMint'
+  | 'ProviderReversalFull'
+  | 'ProviderReversalPartial'
+  | 'Spend'
+  | 'HardToSoftConversion'
+  | 'SystemBackedGrant'
+  | 'Burn'
+  | 'Escrow'
+  | 'Reclaim'
+  | 'Refund'
+  | 'PayoutReservation'
+  | 'PayoutSuccess'
+  | 'PayoutFailure'
+  | 'AdminWithdrawalReservation'
+  | 'AdminWithdrawalSuccess'
+  | 'AdminWithdrawalFailure'
+  | 'HardToSoftConversionFee'
+  | 'ProviderConvertedSoftReversal'
+  | 'ProviderReversalDebt'
+  | 'ProviderReversalLoss'
+  | 'AdRewardIssuance'
+  | 'BountyEscrow'
+  | 'BountyClaim'
+  | 'BountyReclaim'
+  | 'MarketplaceSettlement'
+  | 'MarketplaceRefund';
+
+export type FinanceEconomyContractsProvenanceKind =
+  'PurchasedHard' | 'EarnedHard' | 'ConvertedSoft' | 'AdRewardSoft' | 'SystemGrantSoft' | 'RefundRestoration' | 'EscrowReturn' | 'MarketplaceSoft';
+
+export interface FinanceEconomyContractsReserveVersion {
+  value?: number;
+}
+
+export interface FinanceEconomyContractsSourceStampId {
+  value?: string;
+}
+
+export interface FinanceEconomyContractsWalletId {
+  value?: string;
+}
+
+export type FinanceEconomyContractsWalletLifecycleState = 'Active' | 'Frozen' | 'Closed' | 'UnderReview';
+
+export type FinanceEconomyFundingEconomyTopUpProviderStatus =
+  'Prepared' | 'RequiresAction' | 'Processing' | 'ProviderSucceeded' | 'Posted' | 'Failed' | 'Cancelled' | 'Ambiguous' | 'Held' | 'Reversed';
+
+export interface FinanceEconomyFundingEconomyTopUpStatusDto {
+  currency?: string | null;
+  hardCoinUnits?: number;
+  providerBoundAt?: string | null;
+  providerObjectId?: string | null;
+  requestedAt?: string;
+  status?: FinanceEconomyFundingEconomyTopUpProviderStatus;
+  topUpId?: string;
+  usdMinorUnits?: number;
+}
+
+export interface FinanceEconomyFundingSelfServiceHardCoinTopUpReceipt {
+  clientSecret?: string | null;
+  currency?: string | null;
+  hardCoinUnits?: number;
+  isDuplicate?: boolean;
+  paymentId?: string;
+  providerObjectId?: string | null;
+  publishableKey?: string | null;
+  status?: FinanceEconomyFundingEconomyTopUpProviderStatus;
+  topUpId?: string;
+  usdMinorUnits?: number;
+}
+
+export interface FinanceEconomyFundingSelfServiceHardToSoftConversionReceipt {
+  feePostingId?: string | null;
+  isDuplicate?: boolean;
+  journalHash?: string | null;
+  journalSequence?: number;
+  principalPostingId?: string;
+}
+
+export interface FinanceEconomyLedgerAnchorVerificationRunResult {
+  failed?: number;
+  verified?: number;
+}
+
+export interface FinanceEconomyLedgerEconomyAnchorPublicationResult {
+  anchorId?: string;
+  eTag?: string | null;
+  journalHash?: string | null;
+  journalSequence?: number;
+  keyId?: string | null;
+  objectHash?: string | null;
+  objectKey?: string | null;
+  objectVersion?: string | null;
+  retainUntil?: string;
+}
+
+export type FinanceEconomyLedgerJournalIntegrityFailureCode =
+  | 'None'
+  | 'SequenceGap'
+  | 'PreviousHashMismatch'
+  | 'CanonicalPayloadMissing'
+  | 'EntryHashMismatch'
+  | 'PostingContractInvalid'
+  | 'InvalidLineAmount'
+  | 'CurrencyParityMismatch'
+  | 'SourceStampInvalid'
+  | 'AllocationInvalid'
+  | 'LineageInvalid'
+  | 'RootRangeInvalid'
+  | 'CumulativeReversalInvalid';
+
+export interface FinanceEconomyLedgerJournalIntegrityRunResult {
+  fencingToken?: number;
+  status?: FinanceEconomyLedgerJournalIntegrityRunStatus;
+  verification?: FinanceEconomyLedgerJournalIntegrityVerificationResult;
+}
+
+export type FinanceEconomyLedgerJournalIntegrityRunStatus = 'Verified' | 'Failed' | 'LeaseUnavailable';
+
+export interface FinanceEconomyLedgerJournalIntegrityVerificationResult {
+  currentHash?: string | null;
+  failureCode?: FinanceEconomyLedgerJournalIntegrityFailureCode;
+  fromSequence?: number;
+  isValid?: boolean;
+  toSequence?: number;
+}
+
+export interface FinanceEconomyMarketplaceDurableMarketplaceRefundDebt {
+  currency?: FinanceEconomyContractsCurrencyCode;
+  evidenceHash?: string | null;
+  responsibleWalletId?: FinanceEconomyContractsWalletId;
+  units?: number;
+}
+
+export interface FinanceEconomyMarketplaceDurableMarketplaceRefundResult {
+  cumulativeRefundedQuantity?: number;
+  debts?: Array<FinanceEconomyMarketplaceDurableMarketplaceRefundDebt> | null;
+  entitlementStatus?: FinanceEconomyMarketplaceMarketplaceEntitlementStatus;
+  isDuplicate?: boolean;
+  journalHash?: string | null;
+  journalSequence?: number;
+  legs?: Array<FinanceEconomyContractsCoinAmount> | null;
+  postingId?: FinanceEconomyContractsPostingId;
+  quantity?: number;
+  refundedAt?: string;
+  refundId?: string;
+  settlementId?: string;
+  settlementStatus?: FinanceEconomyMarketplaceMarketplaceSettlementStatus;
+}
+
+export interface FinanceEconomyMarketplaceDurableMarketplaceSettlementResult {
+  buyerId?: string;
+  entitlementStatus?: FinanceEconomyMarketplaceMarketplaceEntitlementStatus;
+  isDuplicate?: boolean;
+  journalHash?: string | null;
+  journalSequence?: number;
+  legs?: Array<FinanceEconomyMarketplaceMarketplacePriceLegSnapshot> | null;
+  orderId?: string;
+  postingId?: FinanceEconomyContractsPostingId;
+  productId?: string;
+  sellerId?: string;
+  settledAt?: string;
+  settlementId?: string;
+  status?: FinanceEconomyMarketplaceMarketplaceSettlementStatus;
+}
+
+export type FinanceEconomyMarketplaceMarketplaceCurrencyChoice = 'Hard' | 'Soft' | 'FixedMix';
+
+export type FinanceEconomyMarketplaceMarketplaceEntitlementStatus = 'PendingGrant' | 'Granted' | 'Revoked';
+
+export interface FinanceEconomyMarketplaceMarketplaceEventOperationalStatus {
+  id?: string;
+  evidenceHash?: string | null;
+  kind?: string | null;
+  occurredAt?: string;
+  sequence?: number;
+}
+
+export interface FinanceEconomyMarketplaceMarketplaceOutboxOperationalStatus {
+  id?: string;
+  attemptCount?: number;
+  hasLastError?: boolean;
+  leaseExpiresAt?: string | null;
+  messageType?: string | null;
+  occurredAt?: string;
+  payloadHash?: string | null;
+  publishedAt?: string | null;
+  settlementId?: string;
+  tenantId?: string;
+}
+
+export interface FinanceEconomyMarketplaceMarketplacePriceLegSnapshot {
+  amount?: FinanceEconomyContractsCoinAmount;
+  currency?: FinanceEconomyContractsCurrencyCode;
+  platformFeeUnits?: number;
+  sellerUnits?: number;
+  units?: number;
+}
+
+export interface FinanceEconomyMarketplaceMarketplaceRefundOperationalStatus {
+  id?: string;
+  buyerId?: string;
+  entitlementRevoked?: boolean;
+  firstJournalSequence?: number;
+  isFullRefund?: boolean;
+  quantity?: number;
+  reasonCode?: string | null;
+  refundedAt?: string;
+  refundedQuantity?: number;
+  settlementId?: string;
+  tenantId?: string;
+}
+
+export interface FinanceEconomyMarketplaceMarketplaceSettlementLegOperationalStatus {
+  currency?: FinanceEconomyContractsCurrencyCode;
+  platformFeeUnits?: number;
+  refundedUnits?: number;
+  sellerUnits?: number;
+  units?: number;
+}
+
+export interface FinanceEconomyMarketplaceMarketplaceSettlementOperationalDetails {
+  events?: Array<FinanceEconomyMarketplaceMarketplaceEventOperationalStatus> | null;
+  legs?: Array<FinanceEconomyMarketplaceMarketplaceSettlementLegOperationalStatus> | null;
+  outbox?: Array<FinanceEconomyMarketplaceMarketplaceOutboxOperationalStatus> | null;
+  refunds?: Array<FinanceEconomyMarketplaceMarketplaceRefundOperationalStatus> | null;
+  summary?: FinanceEconomyMarketplaceMarketplaceSettlementOperationalSummary;
+}
+
+export interface FinanceEconomyMarketplaceMarketplaceSettlementOperationalSummary {
+  id?: string;
+  buyerId?: string;
+  currencyMode?: FinanceEconomyMarketplaceProductCurrencyMode;
+  entitlementId?: string;
+  entitlementStatus?: FinanceEconomyMarketplaceMarketplaceEntitlementStatus;
+  journalSequence?: number;
+  jurisdictionCode?: string | null;
+  orderId?: string;
+  orderLineItemId?: string;
+  policyVersion?: number;
+  productId?: string;
+  quantity?: number;
+  refundedQuantity?: number;
+  refundHoldUntil?: string;
+  reserveVersion?: number;
+  sellerId?: string;
+  settledAt?: string;
+  status?: FinanceEconomyMarketplaceMarketplaceSettlementStatus;
+  tenantId?: string;
+  updatedAt?: string;
+}
+
+export type FinanceEconomyMarketplaceMarketplaceSettlementStatus = 'Settled' | 'PartiallyRefunded' | 'Refunded';
+
+export type FinanceEconomyMarketplaceProductCurrencyMode = 'HardOnly' | 'SoftOnly' | 'Either' | 'FixedMix';
+
+export interface FinanceEconomyOperationsEconomyActiveReserveOperationalDetails {
+  allocations?: Array<FinanceEconomyOperationsEconomyReserveAssetAllocationOperationalStatus> | null;
+  head?: FinanceEconomyOperationsEconomyReserveOperationalStatus;
+  reconciliation?: FinanceEconomyOperationsEconomyCustodyReconciliationOperationalStatus;
+}
+
+export interface FinanceEconomyOperationsEconomyAnchorOperationalDetails {
+  dispatchSnapshotHash?: string | null;
+  summary?: FinanceEconomyOperationsEconomyAnchorOperationalStatus;
+}
+
+export interface FinanceEconomyOperationsEconomyAnchorOperationalStatus {
+  id?: string;
+  anchoredAt?: string;
+  journalHash?: string | null;
+  journalSequence?: number;
+  objectMatches?: boolean;
+  provider?: string | null;
+  retainUntil?: string | null;
+  signatureValid?: boolean;
+  verifiedAt?: string | null;
+}
+
+export interface FinanceEconomyOperationsEconomyAnchorVerificationOperationalStatus {
+  id?: string;
+  eTag?: string | null;
+  keyId?: string | null;
+  objectHash?: string | null;
+  objectMatches?: boolean;
+  objectVersion?: string | null;
+  retainUntil?: string;
+  signatureValid?: boolean;
+  verifiedAt?: string;
+}
+
+export interface FinanceEconomyOperationsEconomyCapabilityConfigurationSnapshot {
+  killSwitches?: Array<FinanceEconomyOperationsEconomyKillSwitchOperationalStatus> | null;
+  policies?: Array<FinanceEconomyOperationsEconomyCapabilityPolicyOperationalStatus> | null;
+}
+
+export interface FinanceEconomyOperationsEconomyCapabilityPolicyOperationalStatus {
+  id?: string;
+  capability?: FinanceEconomyRiskEconomyValueMovementCapability;
+  effectiveAt?: string;
+  expiresAt?: string;
+  jurisdictionCode?: string | null;
+  keyId?: string | null;
+  payloadHash?: string | null;
+  providerReady?: boolean;
+  state?: FinanceEconomyRiskEconomyCapabilityPolicyState;
+  tenantId?: string | null;
+  version?: number;
+}
+
+export interface FinanceEconomyOperationsEconomyCustodyObservationOperationalStatus {
+  id?: string;
+  assetKey?: string | null;
+  eligibleUsdNanos?: number;
+  expiresAt?: string;
+  keyId?: string | null;
+  observedAt?: string;
+  payloadHash?: string | null;
+  provider?: string | null;
+  purpose?: FinanceEconomyReservesReserveBackingPurpose;
+  version?: number;
+}
+
+export interface FinanceEconomyOperationsEconomyCustodyReconciliationOperationalStatus {
+  id?: string;
+  eligibleAssetUsdNanos?: number;
+  evidenceHash?: string | null;
+  isReconciled?: boolean;
+  liabilityUsdNanos?: number;
+  reconciledAt?: string;
+  reconciledBy?: string;
+  varianceUsdNanos?: number;
+}
+
+export interface FinanceEconomyOperationsEconomyJournalHeadStatus {
+  hash?: string | null;
+  sequence?: number;
+  updatedAt?: string;
+}
+
+export interface FinanceEconomyOperationsEconomyJournalVerificationRunDetails {
+  id?: string;
+  completedAt?: string;
+  currentHash?: string | null;
+  failureCode?: string | null;
+  fencingToken?: number;
+  fromSequence?: number;
+  isValid?: boolean;
+  previousHash?: string | null;
+  startedAt?: string;
+  toSequence?: number;
+}
+
+export interface FinanceEconomyOperationsEconomyJournalVerificationStatus {
+  completedAt?: string;
+  currentHash?: string | null;
+  failureCode?: string | null;
+  fencingToken?: number;
+  fromSequence?: number;
+  isValid?: boolean;
+  toSequence?: number;
+}
+
+export interface FinanceEconomyOperationsEconomyKillSwitchOperationalStatus {
+  id?: string;
+  activatedAt?: string;
+  activatedBy?: string;
+  epoch?: number;
+  isActive?: boolean;
+  reason?: string | null;
+  releaseApprovers?: Array<string> | null;
+  releasedAt?: string | null;
+  releaseProposedBy?: string | null;
+  scope?: FinanceEconomyRiskEconomyKillSwitchScope;
+}
+
+export interface FinanceEconomyOperationsEconomyLedgerHealthSnapshot {
+  activeProjection?: FinanceEconomyOperationsEconomyProjectionOperationalStatus;
+  activeReserve?: FinanceEconomyOperationsEconomyReserveOperationalStatus;
+  diagnostics?: Array<string> | null;
+  head?: FinanceEconomyOperationsEconomyJournalHeadStatus;
+  isAnchorHealthy?: boolean;
+  isJournalHealthy?: boolean;
+  isProjectionHealthy?: boolean;
+  isReserveHealthy?: boolean;
+  latestAnchor?: FinanceEconomyOperationsEconomyAnchorOperationalStatus;
+  latestVerification?: FinanceEconomyOperationsEconomyJournalVerificationStatus;
+}
+
+export interface FinanceEconomyOperationsEconomyOperationalPageAdRewardPendingClaimOperationalStatus {
+  items?: Array<FinanceEconomyAdRewardsAdRewardPendingClaimOperationalStatus> | null;
+  nextCursor?: string | null;
+}
+
+export interface FinanceEconomyOperationsEconomyOperationalPageAdRewardReconciliationOperationalStatus {
+  items?: Array<FinanceEconomyAdRewardsAdRewardReconciliationOperationalStatus> | null;
+  nextCursor?: string | null;
+}
+
+export interface FinanceEconomyOperationsEconomyOperationalPageAdRewardSessionOperationalSummary {
+  items?: Array<FinanceEconomyAdRewardsAdRewardSessionOperationalSummary> | null;
+  nextCursor?: string | null;
+}
+
+export interface FinanceEconomyOperationsEconomyOperationalPageEconomyAnchorOperationalDetails {
+  items?: Array<FinanceEconomyOperationsEconomyAnchorOperationalDetails> | null;
+  nextCursor?: string | null;
+}
+
+export interface FinanceEconomyOperationsEconomyOperationalPageEconomyCapabilityPolicyOperationalStatus {
+  items?: Array<FinanceEconomyOperationsEconomyCapabilityPolicyOperationalStatus> | null;
+  nextCursor?: string | null;
+}
+
+export interface FinanceEconomyOperationsEconomyOperationalPageEconomyCustodyObservationOperationalStatus {
+  items?: Array<FinanceEconomyOperationsEconomyCustodyObservationOperationalStatus> | null;
+  nextCursor?: string | null;
+}
+
+export interface FinanceEconomyOperationsEconomyOperationalPageEconomyJournalVerificationRunDetails {
+  items?: Array<FinanceEconomyOperationsEconomyJournalVerificationRunDetails> | null;
+  nextCursor?: string | null;
+}
+
+export interface FinanceEconomyOperationsEconomyOperationalPageEconomyProjectionGenerationOperationalDetails {
+  items?: Array<FinanceEconomyOperationsEconomyProjectionGenerationOperationalDetails> | null;
+  nextCursor?: string | null;
+}
+
+export interface FinanceEconomyOperationsEconomyOperationalPageEconomyReserveProposalOperationalStatus {
+  items?: Array<FinanceEconomyOperationsEconomyReserveProposalOperationalStatus> | null;
+  nextCursor?: string | null;
+}
+
+export interface FinanceEconomyOperationsEconomyOperationalPageLegacyEconomyShadowBatchSummary {
+  items?: Array<FinanceEconomyOperationsLegacyEconomyShadowBatchSummary> | null;
+  nextCursor?: string | null;
+}
+
+export interface FinanceEconomyOperationsEconomyOperationalPageMarketplaceOutboxOperationalStatus {
+  items?: Array<FinanceEconomyMarketplaceMarketplaceOutboxOperationalStatus> | null;
+  nextCursor?: string | null;
+}
+
+export interface FinanceEconomyOperationsEconomyOperationalPageMarketplaceRefundOperationalStatus {
+  items?: Array<FinanceEconomyMarketplaceMarketplaceRefundOperationalStatus> | null;
+  nextCursor?: string | null;
+}
+
+export interface FinanceEconomyOperationsEconomyOperationalPageMarketplaceSettlementOperationalSummary {
+  items?: Array<FinanceEconomyMarketplaceMarketplaceSettlementOperationalSummary> | null;
+  nextCursor?: string | null;
+}
+
+export interface FinanceEconomyOperationsEconomyPolicyAuditEntry {
+  actorId?: string;
+  evidenceHash?: string | null;
+  kind?: string | null;
+  occurredAt?: string;
+}
+
+export interface FinanceEconomyOperationsEconomyPolicyOperationalDetails {
+  approvedAt?: string | null;
+  approvedBy?: string | null;
+  canonicalPayload?: string | null;
+  proposedAt?: string;
+  proposedBy?: string;
+  summary?: FinanceEconomyOperationsEconomyCapabilityPolicyOperationalStatus;
+}
+
+export interface FinanceEconomyOperationsEconomyProjectionApprovalAuditEntry {
+  id?: string;
+  actorId?: string;
+  approvedAt?: string;
+  evidenceHash?: string | null;
+}
+
+export interface FinanceEconomyOperationsEconomyProjectionGenerationOperationalDetails {
+  completedAt?: string | null;
+  fromSequence?: number;
+  isActive?: boolean;
+  startedAt?: string;
+  summary?: FinanceEconomyOperationsEconomyProjectionOperationalStatus;
+}
+
+export interface FinanceEconomyOperationsEconomyProjectionOperationalStatus {
+  activatedAt?: string | null;
+  approvedBy?: string | null;
+  generation?: number;
+  journalHash?: string | null;
+  mismatchCount?: number;
+  projectionHash?: string | null;
+  proposedBy?: string;
+  secondApprovedBy?: string | null;
+  state?: string | null;
+  toSequence?: number;
+}
+
+export interface FinanceEconomyOperationsEconomyReserveAssetAllocationOperationalStatus {
+  id?: string;
+  assetKey?: string | null;
+  eligibleUsdNanos?: number;
+  purpose?: FinanceEconomyReservesReserveBackingPurpose;
+}
+
+export interface FinanceEconomyOperationsEconomyReserveOperationalStatus {
+  authorizationEpoch?: number;
+  coverage?: FinanceEconomyReservesReserveCoverageState;
+  custodyReconciled?: boolean;
+  custodyVarianceUsdNanos?: number | null;
+  evidenceHash?: string | null;
+  expiresAt?: string;
+  observedAt?: string;
+  policyVersion?: number;
+  reconciledAt?: string | null;
+  version?: number;
+}
+
+export interface FinanceEconomyOperationsEconomyReserveProposalOperationalStatus {
+  id?: string;
+  approvedAt?: string | null;
+  approvedBy?: string | null;
+  assetAllocations?: string | null;
+  authorizationEpoch?: number;
+  coverage?: FinanceEconomyReservesReserveCoverageState;
+  eligibleAssetUsdNanos?: number;
+  evidenceHash?: string | null;
+  expectedActiveVersion?: number | null;
+  expiresAt?: string;
+  liabilityUsdNanos?: number;
+  observationIds?: string | null;
+  observedAt?: string;
+  policyVersion?: number;
+  proposedAt?: string;
+  proposedBy?: string;
+  snapshotHash?: string | null;
+  status?: string | null;
+  version?: number;
+}
+
+export interface FinanceEconomyOperationsLegacyEconomyShadowBatchSummary {
+  id?: string;
+  backfilledHardUnits?: number;
+  capturedAt?: string;
+  expectedHardUnits?: number;
+  failureCode?: string | null;
+  financialLedgerEntryCount?: number;
+  jurisdictionCode?: string | null;
+  policyVersion?: number;
+  reconciledHardUnits?: number;
+  state?: FinanceEconomyOperationsLegacyEconomyShadowState;
+  tenantId?: string;
+  transactionCount?: number;
+  updatedAt?: string;
+  version?: number;
+  walletCount?: number;
+}
+
+export interface FinanceEconomyOperationsLegacyEconomyShadowBatchView {
+  id?: string;
+  backfilledHardUnits?: number;
+  expectedHardUnits?: number;
+  failureCode?: string | null;
+  financialLedgerEntryCount?: number;
+  financialLedgerSnapshotHash?: string | null;
+  policyVersion?: number;
+  reconciledHardUnits?: number;
+  state?: FinanceEconomyOperationsLegacyEconomyShadowState;
+  tenantId?: string;
+  transactionCount?: number;
+  transactionSnapshotHash?: string | null;
+  walletCount?: number;
+  wallets?: Array<FinanceEconomyOperationsLegacyEconomyShadowWalletView> | null;
+  walletSnapshotHash?: string | null;
+}
+
+export type FinanceEconomyOperationsLegacyEconomyShadowState =
+  'Captured' | 'Backfilling' | 'Backfilled' | 'Reconciled' | 'CutoverProposed' | 'CutoverActive' | 'RolledBack' | 'Failed';
+
+export interface FinanceEconomyOperationsLegacyEconomyShadowWalletView {
+  completedCreditsMinorUnits?: number;
+  completedDebitsMinorUnits?: number;
+  creditLotId?: string;
+  economyWalletId?: string | null;
+  failureCode?: string | null;
+  journalSequence?: number | null;
+  legacyBalanceMinorUnits?: number;
+  legacyWalletId?: string;
+  ownerId?: string;
+  postingId?: string;
+  sourceStampId?: string;
+  state?: string | null;
+  transactionCount?: number;
+}
+
+export interface FinanceEconomyPayoutsCommandsCreateMyPayoutRequestInput {
+  hardCoinUnits?: number;
+  idempotencyKey?: string | null;
+}
+
+export interface FinanceEconomyPayoutsCommandsReviewPayoutRequestInput {
+  reason?: string | null;
+}
+
+export interface FinanceEconomyPayoutsConnectAccountSnapshot {
+  chargesEnabled?: boolean;
+  destinationHash?: string | null;
+  evidenceHash?: string | null;
+  expiresAt?: string;
+  observedAt?: string;
+  payeeId?: string;
+  payoutsEnabled?: boolean;
+  providerAccountId?: string | null;
+  state?: FinanceEconomyPayoutsConnectAccountState;
+  version?: number;
+}
+
+export type FinanceEconomyPayoutsConnectAccountState = 'Pending' | 'Restricted' | 'Ready' | 'Disabled';
+
+export interface FinanceEconomyPayoutsConnectOnboardingResult {
+  account?: FinanceEconomyPayoutsConnectAccountSnapshot;
+  onboardingUri?: string | null;
+}
+
+export type FinanceEconomyPayoutsPayoutOperationState = 'Reserved' | 'Dispatching' | 'Ambiguous' | 'Succeeded' | 'Failed' | 'Cancelled';
+
+export type FinanceEconomyPayoutsPayoutRequestState = 'Submitted' | 'Cancelled' | 'Approved' | 'Rejected' | 'AwaitingSecondApproval';
+
+export interface FinanceEconomyPayoutsQueriesEconomyPayoutOperationDto {
+  id?: string;
+  createdAt?: string;
+  hardCoinUnits?: number;
+  state?: FinanceEconomyPayoutsPayoutOperationState;
+  updatedAt?: string;
+}
+
+export interface FinanceEconomyPayoutsQueriesEconomyPayoutRequestDto {
+  id?: string;
+  createdAt?: string;
+  hardCoinUnits?: number;
+  state?: FinanceEconomyPayoutsPayoutRequestState;
+  updatedAt?: string;
+}
+
+export interface FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewAuditDto {
+  id?: string;
+  actorId?: string;
+  occurredAt?: string;
+  outcome?: FinanceEconomyPayoutsPayoutRequestState;
+  reason?: string | null;
+}
+
+export interface FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewDto {
+  id?: string;
+  createdAt?: string;
+  hardCoinUnits?: number;
+  payeeId?: string;
+  state?: FinanceEconomyPayoutsPayoutRequestState;
+  updatedAt?: string;
+  version?: number;
+  walletId?: string;
+}
+
+export interface FinanceEconomyProjectionsProjectionGenerationState {
+  approvedBy?: Array<string> | null;
+  generation?: number;
+  isActive?: boolean;
+  journalHash?: string | null;
+  mismatchCount?: number;
+  projectionHash?: string | null;
+  proposedBy?: string;
+  state?: string | null;
+  toSequence?: number;
+}
+
+export interface FinanceEconomyReservesCustodyObservationCommand {
+  id?: string;
+  assetKey?: string | null;
+  eligibleUsdNanos?: number;
+  expiresAt?: string;
+  keyId?: string | null;
+  observedAt?: string;
+  payloadHash?: string | null;
+  provider?: string | null;
+  purpose?: FinanceEconomyReservesReserveBackingPurpose;
+  signature?: string | null;
+  version?: number;
+}
+
+export interface FinanceEconomyReservesDurableCustodyObservation {
+  id?: string;
+  assetKey?: string | null;
+  eligibleUsdNanos?: number;
+  expiresAt?: string;
+  keyId?: string | null;
+  observedAt?: string;
+  payloadHash?: string | null;
+  provider?: string | null;
+  purpose?: FinanceEconomyReservesReserveBackingPurpose;
+  signature?: string | null;
+  version?: number;
+}
+
+export interface FinanceEconomyReservesDurableReserveProposalState {
+  id?: string;
+  approvedBy?: string | null;
+  authorizationEpoch?: number;
+  coverage?: FinanceEconomyReservesReserveCoverageState;
+  eligibleAssetUsdNanos?: number;
+  expiresAt?: string;
+  liabilityUsdNanos?: number;
+  observedAt?: string;
+  policyVersion?: number;
+  proposedBy?: string;
+  snapshotHash?: string | null;
+  status?: string | null;
+  version?: number;
+}
+
+export interface FinanceEconomyReservesEconomyLiabilitySnapshot {
+  journalHash?: string | null;
+  journalSequence?: number;
+  liabilityUsdNanos?: number;
+  outstandingHardUnits?: number;
+  outstandingSoftUnits?: number;
+}
+
+export interface FinanceEconomyReservesExternalReserveAsset {
+  assetKey?: string | null;
+  eligibleUsdNanos?: number;
+  purpose?: FinanceEconomyReservesReserveBackingPurpose;
+}
+
+export type FinanceEconomyReservesReserveBackingPurpose = 'HardCoin' | 'SoftCoin';
+
+export interface FinanceEconomyReservesReserveBufferPosition {
+  adEstimateVarianceBufferUsdNanos?: number;
+  chargebackRefundBufferUsdMinor?: number;
+  fraudLossBudgetUsdNanos?: number;
+  hardOperatingLiquidityBufferUsdMinor?: number;
+  payoutSettlementBufferUsdMinor?: number;
+  providerFxBufferUsdNanos?: number;
+  softOperatingLiquidityBufferUsdNanos?: number;
+}
+
+export type FinanceEconomyReservesReserveCoverageState = 'Covered' | 'Shortfall';
+
+export interface FinanceEconomyReservesReserveHead {
+  assetAllocations?: Array<FinanceEconomyReservesExternalReserveAsset> | null;
+  authorizationEpoch?: number;
+  coverage?: FinanceEconomyReservesReserveCoverageState;
+  evidenceHash?: string | null;
+  expiresAt?: string;
+  hardBackingUsdNanos?: number;
+  observedAt?: string;
+  policyVersion?: FinanceEconomyContractsPolicyVersion;
+  requirements?: FinanceEconomyReservesReserveRequirementSnapshot;
+  softBackingUsdNanos?: number;
+  version?: FinanceEconomyContractsReserveVersion;
+}
+
+export interface FinanceEconomyReservesReserveRequirementSnapshot {
+  hardFaceValueUsdMinor?: number;
+  requiredHardReserveUsdMinor?: number;
+  requiredSoftReserveUsdNanos?: number;
+  softFaceValueUsdNanos?: number;
+  stressedExpectedRedemptionCostUsdNanos?: number;
+}
+
+export interface FinanceEconomyReservesReserveServiceObservation {
+  currentProviderCostUsdNanos?: number;
+  currentServicePriceSoftUnits?: number;
+  enabled?: boolean;
+  expiresAt?: string;
+  observedAt?: string;
+  providerFxStressCostUsdNanos?: number;
+  reservedSoftUnits?: number;
+  serviceCode?: string | null;
+  trailingHighPercentileCostUsdNanos?: number;
+}
+
+export interface FinanceEconomyRiskCapabilityAuthorizationReceipt {
+  id?: string;
+  actorId?: string;
+  capability?: FinanceEconomyRiskEconomyValueMovementCapability;
+  destinationHash?: string | null;
+  evidenceHashes?: Array<string> | null;
+  expiresAt?: string;
+  issuedAt?: string;
+  jurisdictionCode?: string | null;
+  keyId?: string | null;
+  killSwitchEpoch?: number;
+  operationFingerprint?: string | null;
+  policyVersion?: number;
+  providerHash?: string | null;
+  receiptHash?: string | null;
+  reserveVersion?: number;
+  riskDecisionId?: string;
+  signature?: string | null;
+  sourceRootHashes?: Array<string> | null;
+  subjectReference?: string | null;
+  tenantId?: string;
+}
+
+export type FinanceEconomyRiskComplianceEvidenceResult = 'Approved' | 'Rejected' | 'NeedsReview' | 'Unavailable';
+
+export interface FinanceEconomyRiskComplianceHold {
+  id?: string;
+  activatedAt?: string;
+  activatedBy?: string;
+  caseReferenceHash?: string | null;
+  evidenceHash?: string | null;
+  expiresAt?: string;
+  reasonCode?: string | null;
+  releasedAt?: string | null;
+  releasedBy?: string | null;
+  scope?: FinanceEconomyRiskComplianceHoldScope;
+}
+
+export interface FinanceEconomyRiskComplianceHoldAdministrationState {
+  hold?: FinanceEconomyRiskComplianceHold;
+  releaseApprovers?: Array<string> | null;
+  releasePolicyEvidenceHash?: string | null;
+  releaseProposedAt?: string | null;
+  releaseProposedBy?: string | null;
+  requiredReleaseApprovals?: number | null;
+}
+
+export interface FinanceEconomyRiskComplianceHoldEvent {
+  actorId?: string;
+  evidenceHash?: string | null;
+  holdId?: string;
+  kind?: string | null;
+  occurredAt?: string;
+  sequence?: number;
+}
+
+export interface FinanceEconomyRiskComplianceHoldPage {
+  items?: Array<FinanceEconomyRiskComplianceHoldAdministrationState> | null;
+  nextCursor?: string | null;
+}
+
+export interface FinanceEconomyRiskComplianceHoldScope {
+  capability?: FinanceEconomyRiskEconomyValueMovementCapability;
+  key?: string | null;
+  subjectHash?: string | null;
+  tenantId?: string;
+}
+
+export interface FinanceEconomyRiskEconomyCapabilityEvaluationResult {
+  diagnostics?: Array<string> | null;
+  isReady?: boolean;
+  receipt?: FinanceEconomyRiskCapabilityAuthorizationReceipt;
+  state?: FinanceEconomyRiskEconomyCapabilityReadinessStatus;
+}
+
+export interface FinanceEconomyRiskEconomyCapabilityPolicy {
+  id?: string;
+  approvedAt?: string | null;
+  approvedBy?: string | null;
+  canonicalPayload?: string | null;
+  capability?: FinanceEconomyRiskEconomyValueMovementCapability;
+  effectiveAt?: string;
+  expiresAt?: string;
+  jurisdictionCode?: string | null;
+  keyId?: string | null;
+  payloadHash?: string | null;
+  proposedAt?: string;
+  proposedBy?: string;
+  providerReady?: boolean;
+  scopeKey?: string | null;
+  signature?: string | null;
+  state?: FinanceEconomyRiskEconomyCapabilityPolicyState;
+  tenantId?: string | null;
+  version?: number;
+}
+
+export type FinanceEconomyRiskEconomyCapabilityPolicyState = 'PendingApproval' | 'Approved' | 'Active' | 'Expired';
+
+export type FinanceEconomyRiskEconomyCapabilityReadinessStatus =
+  | 'Disabled'
+  | 'Ready'
+  | 'InvalidPolicy'
+  | 'JurisdictionBlocked'
+  | 'ComplianceUnavailable'
+  | 'ComplianceStale'
+  | 'ReviewRequired'
+  | 'LedgerUnhealthy'
+  | 'ProjectionMismatch'
+  | 'ReserveInsufficient'
+  | 'CustodyUnreconciled'
+  | 'AnchorInvalid'
+  | 'ProviderNotReady'
+  | 'KillSwitchActive';
+
+export interface FinanceEconomyRiskEconomyKillSwitchScope {
+  capability?: FinanceEconomyRiskEconomyValueMovementCapability;
+  scopeKey?: string | null;
+  tenantId?: string | null;
+}
+
+export interface FinanceEconomyRiskEconomyKillSwitchState {
+  id?: string;
+  activatedAt?: string;
+  activatedBy?: string;
+  epoch?: number;
+  isActive?: boolean;
+  reason?: string | null;
+  releaseApprovers?: Array<string> | null;
+  releasedAt?: string | null;
+  releaseProposedAt?: string | null;
+  releaseProposedBy?: string | null;
+  scope?: FinanceEconomyRiskEconomyKillSwitchScope;
+}
+
+export type FinanceEconomyRiskEconomyProtectedOperationState =
+  'Ready' | 'ReviewRequired' | 'Hold' | 'Challenge' | 'Denied' | 'ComplianceUnavailable' | 'ComplianceStale' | 'InvalidPolicy' | 'ReserveInsufficient';
+
+export type FinanceEconomyRiskEconomyValueMovementCapability =
+  | 'ConfirmHardCoinFunding'
+  | 'ConvertHardToSoft'
+  | 'ReverseProviderFunding'
+  | 'Transfer'
+  | 'IssueAdReward'
+  | 'BountyEscrow'
+  | 'BountyClaim'
+  | 'MarketplaceSettlement'
+  | 'PayoutExecution'
+  | 'AdminWithdrawalExecution'
+  | 'MarketplaceRefund'
+  | 'BountyReclaim'
+  | 'LegacyBalanceBackfill';
+
+export type FinanceEconomyRiskRiskManualDecisionCode = 'EvidenceVerified' | 'RiskAccepted' | 'PolicyViolation' | 'FraudConfirmed';
+
+export interface FinanceEconomyRiskRiskReviewCase {
+  id?: string;
+  appealOf?: string | null;
+  approvers?: Array<string> | null;
+  decisionId?: string;
+  requiredApprovals?: number;
+  resolution?: string | null;
+  resolvedAt?: string | null;
+  resolvedBy?: string | null;
+  status?: FinanceEconomyRiskRiskReviewStatus;
+  submittedAt?: string;
+  submittedBy?: string;
+}
+
+export interface FinanceEconomyRiskRiskReviewEvent {
+  actorId?: string;
+  decisionCode?: FinanceEconomyRiskRiskManualDecisionCode;
+  evidenceHashes?: Array<string> | null;
+  kind?: FinanceEconomyRiskRiskReviewEventKind;
+  occurredAt?: string;
+  resolution?: string | null;
+  reviewId?: string;
+  sequence?: number;
+}
+
+export type FinanceEconomyRiskRiskReviewEventKind = 'Submitted' | 'ApprovalRecorded' | 'Approved' | 'Rejected' | 'AppealSubmitted';
+
+export interface FinanceEconomyRiskRiskReviewPage {
+  items?: Array<FinanceEconomyRiskRiskReviewCase> | null;
+  nextCursor?: string | null;
+}
+
+export type FinanceEconomyRiskRiskReviewStatus = 'Pending' | 'Approved' | 'Rejected';
+
+export interface FinanceEconomyTransfersSelfServiceEconomyTransferInput {
+  amountUnits?: number;
+  currency?: FinanceEconomyContractsCurrencyCode;
+  idempotencyKey?: string | null;
+  recipientUserId?: string;
+  transferType?: FinanceEconomyTransfersSelfServiceEconomyTransferType;
+}
+
+export interface FinanceEconomyTransfersSelfServiceEconomyTransferReceipt {
+  amountUnits?: number;
+  currency?: FinanceEconomyContractsCurrencyCode;
+  isDuplicate?: boolean;
+  journalHash?: string | null;
+  journalSequence?: number;
+  postingId?: string;
+  recipientUserId?: string;
+  transferType?: FinanceEconomyTransfersSelfServiceEconomyTransferType;
+}
+
+export type FinanceEconomyTransfersSelfServiceEconomyTransferType = 'Tip' | 'Gift' | 'CreatorSupport';
+
+export interface FinanceEconomyTreasuryAdminWithdrawalAuditEvent {
+  actorId?: string | null;
+  evidence?: string | null;
+  hash?: string | null;
+  kind?: string | null;
+  occurredAt?: string;
+  previousHash?: string | null;
+  runId?: string;
+  sequence?: number;
+}
+
+export interface FinanceEconomyTreasuryAdminWithdrawalAuditView {
+  events?: Array<FinanceEconomyTreasuryAdminWithdrawalAuditEvent> | null;
+  integrityValid?: boolean;
+  runId?: string;
+}
+
+export interface FinanceEconomyTreasuryAdminWithdrawalRun {
+  id?: string;
+  amount?: FinanceEconomyContractsCoinAmount;
+  approvedBy?: string | null;
+  createdAt?: string;
+  destinationHash?: string | null;
+  dispatchSnapshotHash?: string | null;
+  executionEpoch?: number;
+  fencingToken?: number;
+  idempotencyKey?: FinanceEconomyContractsIdempotencyKey;
+  periodStart?: string;
+  platformFeeWalletId?: FinanceEconomyContractsWalletId;
+  policyVersion?: FinanceEconomyContractsPolicyVersion;
+  providerTransferId?: string | null;
+  requestedBy?: string;
+  requestHash?: string | null;
+  reserveAuthorizationEpoch?: number;
+  reserveVersion?: FinanceEconomyContractsReserveVersion;
+  sourceAssetKey?: string | null;
+  state?: FinanceEconomyTreasuryAdminWithdrawalRunState;
+  tenantId?: string;
+  updatedAt?: string;
+  version?: number;
+}
+
+export type FinanceEconomyTreasuryAdminWithdrawalRunState = 'PendingApproval' | 'Approved' | 'Dispatching' | 'Ambiguous' | 'Succeeded' | 'Failed' | 'Cancelled';
+
 export interface GameJamsAddJamCriteriaInput {
   description?: string | null;
   maxScore?: number;
@@ -4878,6 +4924,7 @@ export interface GameJamsJam {
   description?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   endDate: string;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -4896,7 +4943,7 @@ export interface GameJamsJam {
   votingEndDate?: string | null;
 }
 
-export interface GameJamsJamCriteria {
+export interface GameJamsJamCriteriaDto {
   id?: string;
   description?: string | null;
   jamId?: string;
@@ -4927,6 +4974,7 @@ export interface GameJamsJamScore {
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   feedback?: string | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -4949,7 +4997,7 @@ export interface GameJamsJamScoreDto {
 
 export type GameJamsJamStatus = 'Upcoming' | 'Active' | 'Voting' | 'Completed' | 'Cancelled';
 
-export interface GameJamsJamSubmission {
+export interface GameJamsJamSubmissionDto {
   id?: string;
   jamId?: string;
   projectVersionId?: string;
@@ -4970,7 +5018,7 @@ export interface GameJamsSubmitJamEntryInput {
   userId?: string;
 }
 
-export interface IdentityAuthenticationApiKey {
+export interface IdentityAuthenticationApiKeyDto {
   id?: string;
   createdAt?: string;
   expiresAt?: string | null;
@@ -5118,7 +5166,7 @@ export interface IdentityAuthenticationDiscordAuthorizeInput {
   redirectUri: string;
 }
 
-export interface IdentityAuthenticationDiscordCallbackInput {
+export interface IdentityAuthenticationDiscordCallbackRequestDto {
   code: string;
   redirectUri: string;
   state: string;
@@ -5161,12 +5209,12 @@ export interface IdentityAuthenticationGitHubSignInOutput {
   authUrl: string | null;
 }
 
-export interface IdentityAuthenticationGoogleIdTokenInput {
+export interface IdentityAuthenticationGoogleIdTokenRequestDto {
   idToken: string;
   tenantId?: string | null;
 }
 
-export interface IdentityAuthenticationJwtKeyInfo {
+export interface IdentityAuthenticationJwtKeyInfoDto {
   algorithm?: string | null;
   expiresAt?: string;
   isActive?: boolean;
@@ -5463,7 +5511,7 @@ export interface IdentityAuthenticationSignInOutput {
   success?: boolean;
   tempToken?: string | null;
   tenantId?: string | null;
-  user?: IdentityAuthenticationUser;
+  user?: IdentityAuthenticationUserDto;
   userId?: string;
 }
 
@@ -5515,7 +5563,7 @@ export interface IdentityAuthenticationUpdateScopesInput {
   scopes?: string | null;
 }
 
-export interface IdentityAuthenticationUser {
+export interface IdentityAuthenticationUserDto {
   id?: string;
   createdAt?: string;
   email?: string | null;
@@ -5832,7 +5880,7 @@ export interface IdentityAuthorizationDenyTenantPermissionCommand {
   userId: string;
 }
 
-export interface IdentityAuthorizationEffectivePermission {
+export interface IdentityAuthorizationEffectivePermissionDto {
   expiresAt?: string | null;
   grantedAt?: string | null;
   permission: string | null;
@@ -5842,7 +5890,7 @@ export interface IdentityAuthorizationEffectivePermission {
 export interface IdentityAuthorizationEffectivePermissionsOutput {
   hasFullAccess?: boolean;
   isOwner?: boolean;
-  permissions: Array<IdentityAuthorizationEffectivePermission> | null;
+  permissions: Array<IdentityAuthorizationEffectivePermissionDto> | null;
   resourceId: string;
   resourceType: string | null;
   userId: string;
@@ -5851,12 +5899,12 @@ export interface IdentityAuthorizationEffectivePermissionsOutput {
 export type IdentityAuthorizationElevationRequestStatus = 'None' | 'Pending' | 'Approved' | 'Denied' | 'Active' | 'Expired' | 'Revoked';
 
 export interface IdentityAuthorizationGetPendingResourceInvitationsOutput {
-  invitations: Array<IdentityAuthorizationResourceInvitation> | null;
+  invitations: Array<IdentityAuthorizationResourceInvitationDto> | null;
   totalCount?: number;
 }
 
 export interface IdentityAuthorizationGetResourceInvitationOutput {
-  invitation: IdentityAuthorizationResourceInvitation;
+  invitation: IdentityAuthorizationResourceInvitationDto;
 }
 
 export interface IdentityAuthorizationGetResourceUsersOutput {
@@ -6115,7 +6163,7 @@ export interface IdentityAuthorizationResourceAccessPattern {
   uniqueUsers?: number;
 }
 
-export interface IdentityAuthorizationResourceInvitation {
+export interface IdentityAuthorizationResourceInvitationDto {
   email?: string | null;
   expiresAt?: string | null;
   invitationId?: string;
@@ -6331,7 +6379,7 @@ export interface IdentityTenantsCreateTenantInput {
 }
 
 export interface IdentityTenantsGetUserMembershipsOutput {
-  memberships?: Array<IdentityTenantsUserMembership> | null;
+  memberships?: Array<IdentityTenantsUserMembershipDto> | null;
   totalCount?: number;
 }
 
@@ -6391,6 +6439,7 @@ export interface IdentityTenantsTenant {
   description?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   hasActiveMembers?: boolean;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isActive?: boolean;
   isArchived?: boolean;
   isDefault?: boolean;
@@ -6409,7 +6458,7 @@ export interface IdentityTenantsTenant {
   version?: number;
 }
 
-export interface IdentityTenantsTenantAddress {
+export interface IdentityTenantsTenantAddressDto {
   city?: string | null;
   country?: string | null;
   postalCode?: string | null;
@@ -6433,7 +6482,7 @@ export interface IdentityTenantsTenantAuditLogEntry {
   userAgent?: string | null;
 }
 
-export interface IdentityTenantsTenantBranding {
+export interface IdentityTenantsTenantBrandingDto {
   companyName?: string | null;
   faviconUrl?: string | null;
   logoUrl?: string | null;
@@ -6441,7 +6490,7 @@ export interface IdentityTenantsTenantBranding {
   secondaryColor?: string | null;
 }
 
-export interface IdentityTenantsTenantBusinessInfo {
+export interface IdentityTenantsTenantBusinessInfoDto {
   complianceRequirements?: Array<string> | null;
   geographicRegion?: string | null;
   industry?: string | null;
@@ -6449,15 +6498,15 @@ export interface IdentityTenantsTenantBusinessInfo {
   tenantType?: string | null;
 }
 
-export interface IdentityTenantsTenantBusinessRules {
+export interface IdentityTenantsTenantBusinessRulesDto {
   approvalRules?: Record<string, Record<string, unknown> | null> | null;
   notificationRules?: Record<string, Record<string, unknown> | null> | null;
   validationRules?: Record<string, Record<string, unknown> | null> | null;
   workflowRules?: Record<string, Record<string, unknown> | null> | null;
 }
 
-export interface IdentityTenantsTenantContactInfo {
-  address?: IdentityTenantsTenantAddress;
+export interface IdentityTenantsTenantContactInfoDto {
+  address?: IdentityTenantsTenantAddressDto;
   organizationName?: string | null;
   primaryContactEmail?: string | null;
   primaryContactName?: string | null;
@@ -6465,7 +6514,7 @@ export interface IdentityTenantsTenantContactInfo {
   website?: string | null;
 }
 
-export interface IdentityTenantsTenantCurrencySettings {
+export interface IdentityTenantsTenantCurrencySettingsDto {
   decimalPlaces?: number;
   defaultCurrency?: string | null;
   displayFormat?: string | null;
@@ -6477,6 +6526,7 @@ export interface IdentityTenantsTenantDomain {
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   fullDomain?: string | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isMainDomain?: boolean;
@@ -6491,7 +6541,7 @@ export interface IdentityTenantsTenantDomain {
   version?: number;
 }
 
-export interface IdentityTenantsTenantIntegrationSettings {
+export interface IdentityTenantsTenantIntegrationSettingsDto {
   apiKeys?: Record<string, string> | null;
   externalServices?: Record<string, Record<string, unknown> | null> | null;
   ssoConfiguration?: Record<string, Record<string, unknown> | null> | null;
@@ -6504,6 +6554,7 @@ export interface IdentityTenantsTenantMember {
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isActive?: boolean;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -6522,11 +6573,11 @@ export interface IdentityTenantsTenantMember {
   version?: number;
 }
 
-export interface IdentityTenantsTenantMetadata {
+export interface IdentityTenantsTenantMetadataDto {
   id?: string;
   adminNotes?: string | null;
-  businessInfo?: IdentityTenantsTenantBusinessInfo;
-  contactInfo?: IdentityTenantsTenantContactInfo;
+  businessInfo?: IdentityTenantsTenantBusinessInfoDto;
+  contactInfo?: IdentityTenantsTenantContactInfoDto;
   createdAt?: string;
   customFields?: Record<string, Record<string, unknown> | null> | null;
   externalReferences?: Record<string, string> | null;
@@ -6534,7 +6585,7 @@ export interface IdentityTenantsTenantMetadata {
   updatedAt?: string;
 }
 
-export interface IdentityTenantsTenantSecuritySettings {
+export interface IdentityTenantsTenantSecuritySettingsDto {
   apiRateLimits?: Record<string, number> | null;
   ipWhitelist?: Array<string> | null;
   passwordPolicy?: Record<string, Record<string, unknown> | null> | null;
@@ -6554,6 +6605,7 @@ export interface IdentityTenantsTenantSettings {
   domainEvents?: Array<CQRSIDomainEvent> | null;
   enableApiAccess?: boolean;
   enableAuditLogging?: boolean;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   integrationSettingsJson?: string | null;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -6572,15 +6624,15 @@ export interface IdentityTenantsTenantSettings {
 
 export interface IdentityTenantsTenantSettingsDto {
   id?: string;
-  businessRules?: IdentityTenantsTenantBusinessRules;
+  businessRules?: IdentityTenantsTenantBusinessRulesDto;
   createdAt?: string;
   featureFlags?: Record<string, boolean> | null;
-  integrationSettings?: IdentityTenantsTenantIntegrationSettings;
-  securitySettings?: IdentityTenantsTenantSecuritySettings;
-  systemConfiguration?: IdentityTenantsTenantSystemConfiguration;
-  systemLimits?: IdentityTenantsTenantSystemLimits;
+  integrationSettings?: IdentityTenantsTenantIntegrationSettingsDto;
+  securitySettings?: IdentityTenantsTenantSecuritySettingsDto;
+  systemConfiguration?: IdentityTenantsTenantSystemConfigurationDto;
+  systemLimits?: IdentityTenantsTenantSystemLimitsDto;
   updatedAt?: string;
-  userInterfaceSettings?: IdentityTenantsTenantUiSettings;
+  userInterfaceSettings?: IdentityTenantsTenantUiSettingsDto;
 }
 
 export interface IdentityTenantsTenantStatistics {
@@ -6592,6 +6644,7 @@ export interface IdentityTenantsTenantStatistics {
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   inactiveMembers?: number;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -6606,8 +6659,8 @@ export interface IdentityTenantsTenantStatistics {
   version?: number;
 }
 
-export interface IdentityTenantsTenantSystemConfiguration {
-  currencySettings?: IdentityTenantsTenantCurrencySettings;
+export interface IdentityTenantsTenantSystemConfigurationDto {
+  currencySettings?: IdentityTenantsTenantCurrencySettingsDto;
   customConfiguration?: Record<string, Record<string, unknown> | null> | null;
   dateFormat?: string | null;
   locale?: string | null;
@@ -6615,7 +6668,7 @@ export interface IdentityTenantsTenantSystemConfiguration {
   timeZone?: string | null;
 }
 
-export interface IdentityTenantsTenantSystemLimits {
+export interface IdentityTenantsTenantSystemLimitsDto {
   customLimits?: Record<string, number> | null;
   maxApiCalls?: number;
   maxProjects?: number;
@@ -6623,8 +6676,8 @@ export interface IdentityTenantsTenantSystemLimits {
   maxUsers?: number;
 }
 
-export interface IdentityTenantsTenantUiSettings {
-  branding?: IdentityTenantsTenantBranding;
+export interface IdentityTenantsTenantUiSettingsDto {
+  branding?: IdentityTenantsTenantBrandingDto;
   componentSettings?: Record<string, Record<string, unknown> | null> | null;
   customCss?: string | null;
   layout?: Record<string, Record<string, unknown> | null> | null;
@@ -6799,6 +6852,7 @@ export interface IdentityTenantsUsageTracking {
   date?: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -6812,7 +6866,7 @@ export interface IdentityTenantsUsageTracking {
   version?: number;
 }
 
-export interface IdentityTenantsUserMembership {
+export interface IdentityTenantsUserMembershipDto {
   acceptedAt?: string | null;
   cancelledAt?: string | null;
   invitedAt?: string | null;
@@ -6926,7 +6980,7 @@ export interface IdentityUsersCreateUserRequestItem {
   phoneNumber?: string | null;
 }
 
-export interface IdentityUsersNotificationAction {
+export interface IdentityUsersNotificationActionDto {
   id?: string | null;
   isPrimary?: boolean;
   text?: string | null;
@@ -7057,6 +7111,7 @@ export interface IdentityUsersUser {
   domainEvents?: Array<CQRSIDomainEvent> | null;
   email: string;
   hasPassword?: boolean;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isActive?: boolean;
   isDeleted?: boolean;
   isEmailVerified?: boolean;
@@ -7080,7 +7135,7 @@ export interface IdentityUsersUser {
   version?: number;
 }
 
-export interface IdentityUsersUserAccessibilityPreferences {
+export interface IdentityUsersUserAccessibilityPreferencesDto {
   colorScheme?: string | null;
   customSettings?: Record<string, Record<string, unknown>> | null;
   fontSize?: number;
@@ -7102,7 +7157,7 @@ export interface IdentityUsersUserDto {
   updatedAt?: string | null;
 }
 
-export interface IdentityUsersUserLocalizationPreferences {
+export interface IdentityUsersUserLocalizationPreferencesDto {
   currency?: string | null;
   customSettings?: Record<string, Record<string, unknown>> | null;
   dateFormat?: string | null;
@@ -7119,6 +7174,7 @@ export interface IdentityUsersUserMetadata {
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   externalReferences?: string | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -7150,6 +7206,7 @@ export interface IdentityUsersUserNotification {
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isArchived?: boolean;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -7171,8 +7228,8 @@ export interface IdentityUsersUserNotification {
   version?: number;
 }
 
-export interface IdentityUsersUserNotificationDetail {
-  actions?: Array<IdentityUsersNotificationAction> | null;
+export interface IdentityUsersUserNotificationDetailDto {
+  actions?: Array<IdentityUsersNotificationActionDto> | null;
   notification?: IdentityUsersUserNotificationDto;
   relatedNotifications?: Array<IdentityUsersUserNotificationDto> | null;
 }
@@ -7199,7 +7256,7 @@ export interface IdentityUsersUserNotificationDto {
   version?: string | null;
 }
 
-export interface IdentityUsersUserNotificationPreferences {
+export interface IdentityUsersUserNotificationPreferencesDto {
   categoryPreferences?: Record<string, Record<string, unknown>> | null;
   emailEnabled?: boolean;
   frequency?: string | null;
@@ -7216,6 +7273,7 @@ export interface IdentityUsersUserPreferences {
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   generalPreferences?: string | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -7242,7 +7300,7 @@ export interface IdentityUsersUserPreferencesDto {
   version?: string | null;
 }
 
-export interface IdentityUsersUserPrivacyPreferences {
+export interface IdentityUsersUserPrivacyPreferencesDto {
   activityTracking?: boolean;
   analyticsCookies?: boolean;
   customSettings?: Record<string, Record<string, unknown>> | null;
@@ -7265,6 +7323,7 @@ export interface IdentityUsersUserProfile {
   displayName?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   gender?: string | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -7306,6 +7365,20 @@ export interface IdentityUsersUserStatus {
   isSuspended?: boolean;
 }
 
+export interface IDurableIntegrationEvent {
+  actorId?: string;
+  aggregateId?: string | null;
+  aggregateType?: string | null;
+  causationId?: string | null;
+  correlationId?: string;
+  eventId?: string;
+  eventName?: string | null;
+  occurredAt?: string;
+  schemaVersion?: number;
+  sourceModule?: string | null;
+  tenantId?: string;
+}
+
 export interface KeyValuePairStringAuthenticationExtensionsPRFValues {
   key?: string | null;
   value?: ObjectsAuthenticationExtensionsPRFValues;
@@ -7344,6 +7417,7 @@ export interface LaunchPadLaunchChecklistItem {
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isComplete?: boolean;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -7378,6 +7452,7 @@ export interface LaunchPadLaunchPadApplication {
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -7427,6 +7502,7 @@ export interface LaunchPadLaunchPadEvent {
   description?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   endsAt?: string;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -7465,6 +7541,7 @@ export interface LaunchPadLaunchPadParticipantRegistration {
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -7489,6 +7566,7 @@ export interface LaunchPadLaunchPadParticipantSlot {
   domainEvents?: Array<CQRSIDomainEvent> | null;
   endsAt?: string;
   hasCapacity?: boolean;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -7541,6 +7619,7 @@ export interface LaunchPadLaunchPlan {
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -7604,25 +7683,25 @@ export interface LaunchPadUpdateLaunchPadSettingsInput {
   versionSubmissionPolicy?: ProjectsVersionSubmissionPolicy;
 }
 
-export interface LearningAssessmentsAnonymousReviewAssessment {
+export interface LearningAssessmentsAnonymousReviewAssessmentDto {
   id?: string;
   maxScore?: LearningGradingContractsScoreValue;
   title?: string | null;
 }
 
-export interface LearningAssessmentsAnonymousReviewRubric {
-  criteria?: Array<LearningAssessmentsRubricCriterion> | null;
+export interface LearningAssessmentsAnonymousReviewRubricDto {
+  criteria?: Array<LearningAssessmentsRubricCriterionDto> | null;
 }
 
-export interface LearningAssessmentsAnonymousReviewSubmission {
-  assessment?: LearningAssessmentsAnonymousReviewAssessment;
+export interface LearningAssessmentsAnonymousReviewSubmissionDto {
+  assessment?: LearningAssessmentsAnonymousReviewAssessmentDto;
   attemptNumber?: number;
   codePayload?: string | null;
   filePayload?: string | null;
   mediaPayload?: string | null;
   projectPayload?: string | null;
   reviewId?: string;
-  rubric?: LearningAssessmentsAnonymousReviewRubric;
+  rubric?: LearningAssessmentsAnonymousReviewRubricDto;
   status?: LearningAssessmentsPeerReviewStatus;
   submissionStatus?: LearningAssessmentsSubmissionStatus;
   submittedAt?: string | null;
@@ -7630,7 +7709,7 @@ export interface LearningAssessmentsAnonymousReviewSubmission {
   urlPayload?: string | null;
 }
 
-export interface LearningAssessmentsAssessment {
+export interface LearningAssessmentsAssessmentDto {
   id?: string;
   allowLateSubmissions?: boolean;
   assessmentGroupId?: string | null;
@@ -7667,19 +7746,10 @@ export interface LearningAssessmentsAssessment {
   version?: number;
 }
 
-export interface LearningAssessmentsAssessmentGroup {
-  id?: string;
-  courseId?: string;
-  description?: string | null;
-  name?: string | null;
-  order?: number;
-  weightPercent?: LearningGradingContractsPercentValue;
-}
-
-export interface LearningAssessmentsAssessmentGroupAnalytics {
+export interface LearningAssessmentsAssessmentGroupAnalyticsDto {
   assessmentCount?: number;
   averagePercent?: LearningGradingContractsPercentValue;
-  distribution?: Array<LearningAssessmentsAssessmentScoreBucket> | null;
+  distribution?: Array<LearningAssessmentsAssessmentScoreBucketDto> | null;
   gradedCount?: number;
   groupId?: string | null;
   groupName?: string | null;
@@ -7688,16 +7758,25 @@ export interface LearningAssessmentsAssessmentGroupAnalytics {
   weightPercent?: LearningGradingContractsPercentValue | null;
 }
 
+export interface LearningAssessmentsAssessmentGroupDto {
+  id?: string;
+  courseId?: string;
+  description?: string | null;
+  name?: string | null;
+  order?: number;
+  weightPercent?: LearningGradingContractsPercentValue;
+}
+
 export type LearningAssessmentsAssessmentPresentationMode = 'SingleStep' | 'Continuous';
 
-export interface LearningAssessmentsAssessmentScoreBucket {
+export interface LearningAssessmentsAssessmentScoreBucketDto {
   count?: number;
   label?: string | null;
   maxPercent?: number;
   minPercent?: number;
 }
 
-export interface LearningAssessmentsAssessmentSubmission {
+export interface LearningAssessmentsAssessmentSubmissionDto {
   id?: string;
   assessmentId?: string;
   attemptNumber?: number;
@@ -7733,13 +7812,13 @@ export interface LearningAssessmentsCanAttemptOutput {
   currentAttemptCount?: number;
 }
 
-export interface LearningAssessmentsCourseAssessmentAnalytics {
+export interface LearningAssessmentsCourseAssessmentAnalyticsDto {
   assessmentCount?: number;
   averagePercent?: LearningGradingContractsPercentValue;
   courseId?: string;
-  distribution?: Array<LearningAssessmentsAssessmentScoreBucket> | null;
+  distribution?: Array<LearningAssessmentsAssessmentScoreBucketDto> | null;
   gradedCount?: number;
-  groups?: Array<LearningAssessmentsAssessmentGroupAnalytics> | null;
+  groups?: Array<LearningAssessmentsAssessmentGroupAnalyticsDto> | null;
   passRate?: LearningGradingContractsPercentValue;
   ungradedCount?: number;
 }
@@ -7935,25 +8014,25 @@ export type LearningAssessmentsGradingPersistencePersistedGradeRoundStatus =
 
 export type LearningAssessmentsGradingPersistencePersistedGradingExecutionStatus = 'Pending' | 'Running' | 'AwaitingReview' | 'Completed' | 'Failed';
 
-export interface LearningAssessmentsGradingQueue {
-  assessment?: LearningAssessmentsGradingQueueAssessment;
-  items?: Array<LearningAssessmentsGradingQueueItem> | null;
-  needsGrading?: number;
-  total?: number;
-}
-
-export interface LearningAssessmentsGradingQueueAssessment {
+export interface LearningAssessmentsGradingQueueAssessmentDto {
   id?: string;
   groupSetId?: string | null;
   hasRubric?: boolean;
   maxScore?: LearningGradingContractsScoreValue;
   reviewMethods?: LearningAssessmentsGradingContractsReviewMethods;
-  rubric?: LearningAssessmentsRubric;
+  rubric?: LearningAssessmentsRubricDto;
   title?: string | null;
   type?: LearningAssessmentsAssessmentType;
 }
 
-export interface LearningAssessmentsGradingQueueItem {
+export interface LearningAssessmentsGradingQueueDto {
+  assessment?: LearningAssessmentsGradingQueueAssessmentDto;
+  items?: Array<LearningAssessmentsGradingQueueItemDto> | null;
+  needsGrading?: number;
+  total?: number;
+}
+
+export interface LearningAssessmentsGradingQueueItemDto {
   assignmentPassed?: boolean | null;
   assignmentScore?: LearningGradingContractsScoreValue | null;
   attemptCount?: number;
@@ -8084,46 +8163,46 @@ export interface LearningAssessmentsGradingRuntimeReleaseGradeResultCommand {
   reason?: string | null;
 }
 
-export interface LearningAssessmentsGroup {
+export interface LearningAssessmentsGroupDetailDto {
+  id?: string;
+  capacity?: number;
+  memberCount?: number;
+  members?: Array<LearningAssessmentsGroupMemberDto> | null;
+  name?: string | null;
+}
+
+export interface LearningAssessmentsGroupDto {
   id?: string;
   capacity?: number;
   groupSetId?: string;
   name?: string | null;
 }
 
-export interface LearningAssessmentsGroupDetail {
-  id?: string;
-  capacity?: number;
-  memberCount?: number;
-  members?: Array<LearningAssessmentsGroupMember> | null;
-  name?: string | null;
-}
-
-export interface LearningAssessmentsGroupMember {
+export interface LearningAssessmentsGroupMemberDto {
   displayName?: string | null;
   userId?: string;
 }
 
-export interface LearningAssessmentsGroupMembership {
+export interface LearningAssessmentsGroupMembershipDto {
   id?: string;
   groupId?: string;
   joinedAt?: string;
   userId?: string;
 }
 
-export interface LearningAssessmentsGroupSet {
+export interface LearningAssessmentsGroupSetDto {
   id?: string;
   courseId?: string;
   name?: string | null;
 }
 
-export interface LearningAssessmentsGroupSetSummary {
+export interface LearningAssessmentsGroupSetSummaryDto {
   id?: string;
-  groups?: Array<LearningAssessmentsGroupSummary> | null;
+  groups?: Array<LearningAssessmentsGroupSummaryDto> | null;
   name?: string | null;
 }
 
-export interface LearningAssessmentsGroupSummary {
+export interface LearningAssessmentsGroupSummaryDto {
   id?: string;
   capacity?: number;
   memberCount?: number;
@@ -8134,7 +8213,7 @@ export interface LearningAssessmentsIdempotentRuntimeInput {
   idempotencyKey?: string | null;
 }
 
-export interface LearningAssessmentsInstructorPeerReview {
+export interface LearningAssessmentsInstructorPeerReviewDto {
   feedback?: string | null;
   reviewerName?: string | null;
   reviewerUserId?: string;
@@ -8144,7 +8223,7 @@ export interface LearningAssessmentsInstructorPeerReview {
   submittedAt?: string | null;
 }
 
-export interface LearningAssessmentsInteractiveVideoAssessmentCue {
+export interface LearningAssessmentsInteractiveVideoAssessmentCueDto {
   id?: string;
   assessmentId?: string;
   contentId?: string;
@@ -8152,11 +8231,11 @@ export interface LearningAssessmentsInteractiveVideoAssessmentCue {
   cuePositionSeconds?: number | null;
 }
 
-export interface LearningAssessmentsLearnerAssessmentAttempt {
-  submission?: LearningAssessmentsLearnerAssessmentSubmission;
+export interface LearningAssessmentsLearnerAssessmentAttemptDto {
+  submission?: LearningAssessmentsLearnerAssessmentSubmissionDto;
 }
 
-export interface LearningAssessmentsLearnerAssessmentSubmission {
+export interface LearningAssessmentsLearnerAssessmentSubmissionDto {
   id?: string;
   assessmentId?: string;
   attemptNumber?: number;
@@ -8178,7 +8257,7 @@ export interface LearningAssessmentsLearnerAssessmentSubmission {
   urlPayload?: string | null;
 }
 
-export interface LearningAssessmentsLearnerInteractiveVideoAssessmentCue {
+export interface LearningAssessmentsLearnerInteractiveVideoAssessmentCueDto {
   cueId?: string | null;
   cuePositionSeconds?: number | null;
 }
@@ -8189,7 +8268,7 @@ export interface LearningAssessmentsLinkInteractiveVideoCueInput {
   cuePositionSeconds?: number | null;
 }
 
-export interface LearningAssessmentsPeerReviewClaim {
+export interface LearningAssessmentsPeerReviewClaimDto {
   maskedSubmission?: string | null;
   reviewId?: string;
 }
@@ -8202,7 +8281,7 @@ export interface LearningAssessmentsPeerReviewSubmitInput {
   score?: LearningGradingContractsScoreValue | null;
 }
 
-export interface LearningAssessmentsReceivedPeerReview {
+export interface LearningAssessmentsReceivedPeerReviewDto {
   feedback?: string | null;
   reviewId?: string;
   rubricScoresPayload?: string | null;
@@ -8215,17 +8294,17 @@ export interface LearningAssessmentsResolveInstructorReviewInput {
   resolution?: LearningAssessmentsGradingRuntimeInstructorReviewResolutionV1;
 }
 
-export interface LearningAssessmentsRubric {
-  id?: string;
-  criteria?: Array<LearningAssessmentsRubricCriterion> | null;
-  title?: string | null;
-}
-
-export interface LearningAssessmentsRubricCriterion {
+export interface LearningAssessmentsRubricCriterionDto {
   id?: string;
   description?: string | null;
   order?: number;
   points?: LearningGradingContractsScoreValue;
+}
+
+export interface LearningAssessmentsRubricDto {
+  id?: string;
+  criteria?: Array<LearningAssessmentsRubricCriterionDto> | null;
+  title?: string | null;
 }
 
 export interface LearningAssessmentsSaveCollectiveRuntimeDraftInput {
@@ -8290,7 +8369,7 @@ export interface LearningAssessmentsSubmitAssessmentRuntimeInput {
   response?: LearningAssessmentsGradingContractsAssessmentResponseEnvelopeV1;
 }
 
-export interface LearningAssessmentsTaskItem {
+export interface LearningAssessmentsTaskItemDto {
   assessmentId?: string;
   assessmentTitle?: string | null;
   countSubmitted?: number | null;
@@ -8302,8 +8381,8 @@ export interface LearningAssessmentsTaskItem {
   type?: string | null;
 }
 
-export interface LearningAssessmentsTasks {
-  items?: Array<LearningAssessmentsTaskItem> | null;
+export interface LearningAssessmentsTasksDto {
+  items?: Array<LearningAssessmentsTaskItemDto> | null;
 }
 
 export interface LearningAssessmentsUpdateAssessmentGroupInput {
@@ -8350,7 +8429,7 @@ export interface LearningAssessmentsUpdateAssessmentInput {
   title?: string | null;
 }
 
-export interface LearningCertificatesCertificate {
+export interface LearningCertificatesCertificateDto {
   id?: string;
   certificateNumber?: string | null;
   courseId?: string;
@@ -8366,19 +8445,7 @@ export interface LearningCertificatesCertificate {
 
 export type LearningCertificatesCertificateStatus = 'Active' | 'Expired' | 'Revoked';
 
-export interface LearningCertificatesCertificateTemplate {
-  id?: string;
-  courseId?: string;
-  createdAt?: string;
-  description?: string | null;
-  isActive?: boolean;
-  isDefault?: boolean;
-  name?: string | null;
-  tenantId?: string | null;
-  updatedAt?: string;
-}
-
-export interface LearningCertificatesCertificateTemplateDetail {
+export interface LearningCertificatesCertificateTemplateDetailDto {
   id?: string;
   courseId?: string;
   createdAt?: string;
@@ -8388,6 +8455,18 @@ export interface LearningCertificatesCertificateTemplateDetail {
   name?: string | null;
   templateHtml?: string | null;
   templateStyles?: string | null;
+  tenantId?: string | null;
+  updatedAt?: string;
+}
+
+export interface LearningCertificatesCertificateTemplateDto {
+  id?: string;
+  courseId?: string;
+  createdAt?: string;
+  description?: string | null;
+  isActive?: boolean;
+  isDefault?: boolean;
+  name?: string | null;
   tenantId?: string | null;
   updatedAt?: string;
 }
@@ -8435,7 +8514,7 @@ export interface LearningCohortsApplyCohortScheduleInput {
   rules?: LearningCohortsPreviewCohortScheduleInput;
 }
 
-export interface LearningCohortsAvailableCohortContent {
+export interface LearningCohortsAvailableCohortContentDto {
   availableFrom?: string | null;
   availableUntil?: string | null;
   body?: string | null;
@@ -8449,7 +8528,20 @@ export interface LearningCohortsAvailableCohortContent {
   type?: LearningCoursesProgramContentType;
 }
 
-export interface LearningCohortsCohort {
+export interface LearningCohortsCohortCalendarEntryDto {
+  availableFrom?: string | null;
+  cohortId?: string;
+  cohortName?: string | null;
+  dueAt?: string | null;
+  endsAt?: string | null;
+  itemId?: string;
+  startsAt?: string | null;
+  status?: LearningCohortsCohortScheduleItemStatus;
+  title?: string | null;
+  type?: LearningCohortsCohortScheduleItemType;
+}
+
+export interface LearningCohortsCohortDto {
   id?: string;
   availableSpots?: number;
   canEnroll?: boolean;
@@ -8465,33 +8557,28 @@ export interface LearningCohortsCohort {
   meetingSchedule?: string | null;
   name?: string | null;
   nextMeetingAt?: string | null;
-  schedule?: LearningCohortsCohortScheduleSummary;
+  schedule?: LearningCohortsCohortScheduleSummaryDto;
   startDate?: string;
   status?: LearningCohortsCohortStatus;
   tenantId?: string | null;
-}
-
-export interface LearningCohortsCohortCalendarEntry {
-  availableFrom?: string | null;
-  cohortId?: string;
-  cohortName?: string | null;
-  dueAt?: string | null;
-  endsAt?: string | null;
-  itemId?: string;
-  startsAt?: string | null;
-  status?: LearningCohortsCohortScheduleItemStatus;
-  title?: string | null;
-  type?: LearningCohortsCohortScheduleItemType;
 }
 
 export type LearningCohortsCohortPacingMode = 'OneModulePerWeek' | 'OneLessonPerMeeting' | 'FixedLessonsPerWeek' | 'Manual';
 
 export type LearningCohortsCohortReleasePolicy = 'Weekly' | 'BeforeMeeting' | 'Manual' | 'Immediately';
 
-export interface LearningCohortsCohortSchedule {
+export interface LearningCohortsCohortScheduleConflictDto {
+  assessmentId?: string | null;
+  code?: string | null;
+  message?: string | null;
+  programContentId?: string | null;
+  severity?: LearningCohortsScheduleConflictSeverity;
+}
+
+export interface LearningCohortsCohortScheduleDto {
   id?: string;
   cohortId?: string;
-  items?: Array<LearningCohortsCohortScheduleItem> | null;
+  items?: Array<LearningCohortsCohortScheduleItemDto> | null;
   meetingDays?: Array<SystemDayOfWeek> | null;
   meetingDurationMinutes?: number;
   meetingStartTime?: string;
@@ -8503,15 +8590,7 @@ export interface LearningCohortsCohortSchedule {
   version?: number;
 }
 
-export interface LearningCohortsCohortScheduleConflict {
-  assessmentId?: string | null;
-  code?: string | null;
-  message?: string | null;
-  programContentId?: string | null;
-  severity?: LearningCohortsScheduleConflictSeverity;
-}
-
-export interface LearningCohortsCohortScheduleItem {
+export interface LearningCohortsCohortScheduleItemDto {
   id?: string;
   assessmentId?: string | null;
   availableFrom?: string | null;
@@ -8534,14 +8613,14 @@ export type LearningCohortsCohortScheduleItemStatus = 'Draft' | 'Scheduled' | 'P
 
 export type LearningCohortsCohortScheduleItemType = 'ContentRelease' | 'LiveSession' | 'AssessmentWindow' | 'Milestone';
 
-export interface LearningCohortsCohortSchedulePreview {
+export interface LearningCohortsCohortSchedulePreviewDto {
   calculatedEndDate?: string;
-  conflicts?: Array<LearningCohortsCohortScheduleConflict> | null;
+  conflicts?: Array<LearningCohortsCohortScheduleConflictDto> | null;
   hasBlockingConflicts?: boolean;
-  items?: Array<LearningCohortsCohortSchedulePreviewItem> | null;
+  items?: Array<LearningCohortsCohortSchedulePreviewItemDto> | null;
 }
 
-export interface LearningCohortsCohortSchedulePreviewItem {
+export interface LearningCohortsCohortSchedulePreviewItemDto {
   assessmentId?: string | null;
   availableFrom?: string | null;
   availableUntil?: string | null;
@@ -8555,7 +8634,7 @@ export interface LearningCohortsCohortSchedulePreviewItem {
   type?: LearningCohortsCohortScheduleItemType;
 }
 
-export interface LearningCohortsCohortScheduleSummary {
+export interface LearningCohortsCohortScheduleSummaryDto {
   itemCount?: number;
   meetingDays?: Array<SystemDayOfWeek> | null;
   meetingStartTime?: string;
@@ -8569,9 +8648,9 @@ export type LearningCohortsCohortStatus = 'Scheduled' | 'Active' | 'Completed' |
 
 export type LearningCohortsCohortVisibilityOverride = 'Inherited' | 'Hidden' | 'Visible';
 
-export interface LearningCohortsCourseCohortCalendar {
+export interface LearningCohortsCourseCohortCalendarDto {
   courseId?: string;
-  entries?: Array<LearningCohortsCohortCalendarEntry> | null;
+  entries?: Array<LearningCohortsCohortCalendarEntryDto> | null;
 }
 
 export interface LearningCohortsCreateCohortInput {
@@ -8638,15 +8717,15 @@ export interface LearningCohortsUpdateCohortScheduleItemInput {
   visibilityOverride?: LearningCohortsCohortVisibilityOverride;
 }
 
-export interface LearningCoursesActivityGrade {
+export interface LearningCoursesActivityGradeDto {
   id?: string;
-  contentInteraction?: LearningCoursesContentInteractionSummary;
+  contentInteraction?: LearningCoursesContentInteractionSummaryDto;
   contentInteractionId?: string;
   createdAt?: string;
   feedback?: string | null;
   gradedAt?: string;
   gradePercentage?: string | null;
-  grader?: LearningCoursesGraderSummary;
+  grader?: LearningCoursesGraderSummaryDto;
   graderProgramUserId?: string | null;
   gradingDetails?: string | null;
   hasFeedback?: boolean;
@@ -8660,6 +8739,116 @@ export interface LearningCoursesActivityGrade {
 
 export interface LearningCoursesActivitySettings {}
 
+export interface LearningCoursesAiAuthoringConversationDto {
+  id?: string;
+  authorId?: string;
+  contentId?: string;
+  lastMessageAt?: string;
+  messages?: Array<LearningCoursesAiAuthoringMessageDto> | null;
+}
+
+export interface LearningCoursesAiAuthoringMessageDto {
+  id?: string;
+  content?: string | null;
+  createdAt?: string;
+  role?: string | null;
+  runId?: string | null;
+}
+
+export interface LearningCoursesAiAuthoringRunDto {
+  id?: string;
+  baseDraftRevision?: number;
+  completedAt?: string | null;
+  contentId?: string;
+  conversationId?: string;
+  createdAt?: string;
+  errorCode?: string | null;
+  errorMessage?: string | null;
+  instruction?: string | null;
+  model?: string | null;
+  proposal?: LearningCoursesAiProposalDto;
+  proposalKind?: LearningCoursesAiProposalKind;
+  provider?: string | null;
+  startedAt?: string | null;
+  status?: LearningCoursesAiAuthoringRunStatus;
+  usage?: LearningCoursesAiCreditUsageDto;
+}
+
+export interface LearningCoursesAiAuthoringRunInput {
+  conversationId?: string | null;
+  draftRevision?: number;
+  idempotencyKey?: string | null;
+  instruction?: string | null;
+  proposalKind?: LearningCoursesAiProposalKind;
+  selection?: string | null;
+}
+
+export type LearningCoursesAiAuthoringRunStatus = 'Queued' | 'Reserved' | 'Running' | 'Completed' | 'Failed' | 'Cancelled';
+
+export interface LearningCoursesAiCreditUsageDto {
+  availableSoftCredits?: number;
+  currency?: string | null;
+  inputTokens?: number;
+  maximumEstimatedCost?: number;
+  outputTokens?: number;
+  releasedAmount?: number;
+  settledCost?: number;
+}
+
+export interface LearningCoursesAiEntitlementDto {
+  availableSoftCredits?: number;
+  currency?: string | null;
+  reservedSoftCredits?: number;
+  settledSoftCredits?: number;
+}
+
+export interface LearningCoursesAiProposalDto {
+  id?: string;
+  baseDraftRevision?: number;
+  kind?: LearningCoursesAiProposalKind;
+  originalContent?: string | null;
+  proposedAt?: string;
+  proposedContent?: string | null;
+  runId?: string;
+  status?: LearningCoursesAiProposalStatus;
+}
+
+export type LearningCoursesAiProposalKind = 'ReplaceDocument' | 'InsertAtCursor' | 'LexicalPatch' | 'QuizPatch' | 'MetadataPatch';
+
+export type LearningCoursesAiProposalStatus = 'Pending' | 'Applied' | 'Discarded';
+
+export interface LearningCoursesApplyAiProposalInput {
+  cursorOffset?: number | null;
+  draftRevision?: number;
+}
+
+export interface LearningCoursesAuthoringContentPayload {
+  activitySettings?: LearningCoursesActivitySettings;
+  body?: string | null;
+  description?: string | null;
+  estimatedMinutes?: number | null;
+  estimatedMinutesSource?: LearningCoursesEstimatedMinutesSource;
+  isRequired?: boolean;
+  jsonBody?: Record<string, unknown> | null;
+  lessonFormat?: LearningCoursesLessonContentFormat;
+  slug?: string | null;
+  title?: string | null;
+  type?: LearningCoursesProgramContentType;
+  visibility?: LearningCoursesVisibility;
+}
+
+export interface LearningCoursesAuthoringDraftDto {
+  id?: string;
+  basePublishedVersion?: number;
+  contentId?: string;
+  eTag?: string | null;
+  lastEditedAt?: string;
+  lastEditedBy?: string;
+  payload?: LearningCoursesAuthoringContentPayload;
+  programId?: string;
+  revision?: number;
+}
+
 export interface LearningCoursesBundleFileMeta {
   content: string | null;
   encoding?: string | null;
@@ -8671,7 +8860,7 @@ export interface LearningCoursesCircularDependencyCheckResult {
   wouldCreateCycle?: boolean;
 }
 
-export interface LearningCoursesCloneProgram {
+export interface LearningCoursesCloneProgramDto {
   newDescription?: string | null;
   newTitle?: string | null;
 }
@@ -8715,26 +8904,26 @@ export interface LearningCoursesCompleteCourseCheckoutOutput {
   productId?: string;
 }
 
-export interface LearningCoursesCompletionRates {
-  completionTrends?: Array<LearningCoursesCompletionTrend> | null;
+export interface LearningCoursesCompletionRatesDto {
+  completionTrends?: Array<LearningCoursesCompletionTrendDto> | null;
   contentCompletionRates?: Record<string, number> | null;
   overallCompletionRate?: number;
   programId?: string;
 }
 
-export interface LearningCoursesCompletionTrend {
+export interface LearningCoursesCompletionTrendDto {
   completedCount?: number;
   date?: string;
   rate?: number;
   totalCount?: number;
 }
 
-export interface LearningCoursesContentInteraction {
+export interface LearningCoursesContentInteractionDto {
   id?: string;
   canModify?: boolean;
   completedAt?: string | null;
   completionPercentage?: LearningGradingContractsPercentValue;
-  content?: LearningCoursesContentSummary;
+  content?: LearningCoursesContentSummaryDto;
   contentId?: string;
   createdAt?: string;
   durationInMinutes?: number;
@@ -8743,7 +8932,7 @@ export interface LearningCoursesContentInteraction {
   isCompleted?: boolean;
   isSubmitted?: boolean;
   lastAccessedAt?: string | null;
-  programUser?: LearningCoursesProgramUserSummary;
+  programUser?: LearningCoursesProgramUserSummaryDto;
   programUserId?: string;
   status?: LearningCoursesProgressStatus;
   submissionData?: string | null;
@@ -8753,7 +8942,7 @@ export interface LearningCoursesContentInteraction {
   updatedAt?: string;
 }
 
-export interface LearningCoursesContentInteractionEvent {
+export interface LearningCoursesContentInteractionEventDto {
   id?: string;
   durationSeconds?: number | null;
   idempotencyKey?: string | null;
@@ -8768,17 +8957,17 @@ export interface LearningCoursesContentInteractionEvent {
 export type LearningCoursesContentInteractionEventType =
   'Opened' | 'Heartbeat' | 'Progressed' | 'Paused' | 'Resumed' | 'Seeked' | 'Completed' | 'QuizPresented' | 'QuizAnswered';
 
-export interface LearningCoursesContentInteractionSummary {
+export interface LearningCoursesContentInteractionSummaryDto {
   id?: string;
-  content?: LearningCoursesContentSummary;
+  content?: LearningCoursesContentSummaryDto;
   contentId?: string;
   programUserId?: string;
   status?: string | null;
-  student?: LearningCoursesStudentSummary;
+  student?: LearningCoursesStudentSummaryDto;
   submittedAt?: string | null;
 }
 
-export interface LearningCoursesContentProgress {
+export interface LearningCoursesContentProgressDto {
   completedAt?: string | null;
   completionPercentage?: LearningGradingContractsPercentValue;
   contentId?: string;
@@ -8788,7 +8977,7 @@ export interface LearningCoursesContentProgress {
   title?: string | null;
 }
 
-export interface LearningCoursesContentStats {
+export interface LearningCoursesContentStatsDto {
   contentByType?: {
     Assignment?: number;
     Challenge?: number;
@@ -8811,7 +9000,7 @@ export interface LearningCoursesContentStats {
   totalContent?: number;
 }
 
-export interface LearningCoursesContentSummary {
+export interface LearningCoursesContentSummaryDto {
   id?: string;
   contentType?: string | null;
   estimatedMinutes?: number | null;
@@ -8823,7 +9012,7 @@ export interface LearningCoursesCourseSupportTicketMessageInput {
   message?: string | null;
 }
 
-export interface LearningCoursesCreateActivityGrade {
+export interface LearningCoursesCreateActivityGradeDto {
   contentInteractionId?: string;
   feedback?: string | null;
   graderProgramUserId?: string;
@@ -8842,23 +9031,14 @@ export interface LearningCoursesCreatePrerequisiteApiInput {
   type?: LearningCoursesPrerequisiteType;
 }
 
-export interface LearningCoursesCreateProductFromProgram {
+export interface LearningCoursesCreateProductFromProgramDto {
   basePrice?: number;
   currency?: string | null;
   description?: string | null;
   name?: string | null;
 }
 
-export interface LearningCoursesCreateProgram {
-  creatorId?: string | null;
-  description?: string | null;
-  passingScore?: LearningGradingContractsPercentValue;
-  slug?: string | null;
-  thumbnail?: string | null;
-  title?: string | null;
-}
-
-export interface LearningCoursesCreateProgramContent {
+export interface LearningCoursesCreateProgramContentDto {
   activitySettings?: LearningCoursesActivitySettings;
   body?: string | null;
   description?: string | null;
@@ -8876,7 +9056,16 @@ export interface LearningCoursesCreateProgramContent {
   visibility?: LearningCoursesVisibility;
 }
 
-export interface LearningCoursesEngagementMetrics {
+export interface LearningCoursesCreateProgramDto {
+  creatorId?: string | null;
+  description?: string | null;
+  passingScore?: LearningGradingContractsPercentValue;
+  slug?: string | null;
+  thumbnail?: string | null;
+  title?: string | null;
+}
+
+export interface LearningCoursesEngagementMetricsDto {
   averageSessionDuration?: string;
   contentEngagement?: Record<string, number> | null;
   dailyActiveUsers?: number;
@@ -8889,16 +9078,20 @@ export interface LearningCoursesEngagementMetrics {
 
 export type LearningCoursesEnrollmentStatus = 'Open' | 'Active' | 'Paused' | 'Cancelled' | 'Expired' | 'Completed' | 'Closed' | 'InviteOnly' | 'Waitlist';
 
+export interface LearningCoursesEnrollProgramUserInput {
+  userReference?: string | null;
+}
+
 export type LearningCoursesEstimatedMinutesSource = 'Auto' | 'Manual';
 
-export interface LearningCoursesGraderSummary {
+export interface LearningCoursesGraderSummaryDto {
   id?: string;
   role?: string | null;
   userDisplayName?: string | null;
   userEmail?: string | null;
 }
 
-export interface LearningCoursesGradeStatistics {
+export interface LearningCoursesGradeStatisticsDto {
   averageGrade?: LearningGradingContractsPercentValue;
   averageGradeFormatted?: string | null;
   hasGrades?: boolean;
@@ -8915,20 +9108,25 @@ export interface LearningCoursesGradingConfig {
 
 export type LearningCoursesLessonContentFormat = 'Markdown' | 'Lexical' | 'RevealJs' | 'Video' | 'Html' | 'ExternalLink';
 
-export interface LearningCoursesMonetization {
+export interface LearningCoursesMonetizationDto {
   currency?: string | null;
   isSubscription?: boolean;
   price?: number;
   subscriptionDurationDays?: number | null;
 }
 
-export interface LearningCoursesMoveContent {
+export interface LearningCoursesMoveContentDto {
   contentId: string;
   newParentId?: string | null;
   newSortOrder: number;
 }
 
-export interface LearningCoursesPrerequisite {
+export interface LearningCoursesPrerequisiteCheckResultDto {
+  isSatisfied?: boolean;
+  prerequisites?: Array<LearningCoursesPrerequisiteStatusDto> | null;
+}
+
+export interface LearningCoursesPrerequisiteDto {
   id?: string;
   courseId?: string;
   createdAt?: string;
@@ -8942,12 +9140,7 @@ export interface LearningCoursesPrerequisite {
   type?: LearningCoursesPrerequisiteType;
 }
 
-export interface LearningCoursesPrerequisiteCheckResult {
-  isSatisfied?: boolean;
-  prerequisites?: Array<LearningCoursesPrerequisiteStatus> | null;
-}
-
-export interface LearningCoursesPrerequisiteStatus {
+export interface LearningCoursesPrerequisiteStatusDto {
   achievedGrade?: LearningGradingContractsPercentValue | null;
   courseName?: string | null;
   isSatisfied?: boolean;
@@ -8960,7 +9153,7 @@ export interface LearningCoursesPrerequisiteStatus {
 
 export type LearningCoursesPrerequisiteType = 'Required' | 'Recommended' | 'Corequisite';
 
-export interface LearningCoursesPricing {
+export interface LearningCoursesPricingDto {
   currency?: string | null;
   isMonetizationEnabled?: boolean;
   isSubscription?: boolean;
@@ -8968,35 +9161,7 @@ export interface LearningCoursesPricing {
   subscriptionDurationDays?: number | null;
 }
 
-export interface LearningCoursesProgram {
-  id?: string;
-  averageRating?: number;
-  category?: ProgramCategory;
-  createdAt?: string;
-  creatorId?: string | null;
-  currentEnrollments?: number;
-  description?: string | null;
-  difficulty?: LearningCoursesProgramDifficulty;
-  enrollmentDeadline?: string | null;
-  enrollmentStatus?: LearningCoursesEnrollmentStatus;
-  estimatedHours?: number | null;
-  isEnrollmentOpen?: boolean;
-  maxEnrollments?: number | null;
-  metadata?: string | null;
-  passingScore?: LearningGradingContractsPercentValue;
-  skillsProvided?: string | null;
-  skillsRequired?: string | null;
-  slug?: string | null;
-  status?: ContentStatus;
-  thumbnail?: string | null;
-  title?: string | null;
-  totalRatings?: number;
-  updatedAt?: string | null;
-  videoShowcaseUrl?: string | null;
-  visibility?: ContentVisibility;
-}
-
-export interface LearningCoursesProgramAnalytics {
+export interface LearningCoursesProgramAnalyticsDto {
   activeUsers?: number;
   additionalMetrics?: Record<string, Record<string, unknown>> | null;
   averageCompletionTime?: string;
@@ -9009,11 +9174,11 @@ export interface LearningCoursesProgramAnalytics {
   totalViews?: number;
 }
 
-export interface LearningCoursesProgramContent {
+export interface LearningCoursesProgramContentDto {
   id?: string;
   activitySettings?: LearningCoursesActivitySettings;
   body?: string | null;
-  children?: Array<LearningCoursesProgramContent> | null;
+  children?: Array<LearningCoursesProgramContentDto> | null;
   childrenCount?: number;
   createdAt?: string;
   description?: string | null;
@@ -9041,13 +9206,50 @@ export type LearningCoursesProgramContentType =
 
 export type LearningCoursesProgramDifficulty = 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';
 
-export interface LearningCoursesProgramUserSummary {
+export interface LearningCoursesProgramDto {
+  id?: string;
+  averageRating?: number;
+  category?: ProgramCategory;
+  createdAt?: string;
+  creatorId?: string | null;
+  currentEnrollments?: number;
+  description?: string | null;
+  difficulty?: LearningCoursesProgramDifficulty;
+  enrollmentDeadline?: string | null;
+  enrollmentStatus?: LearningCoursesEnrollmentStatus;
+  estimatedHours?: number | null;
+  isEnrollmentOpen?: boolean;
+  maxEnrollments?: number | null;
+  metadata?: string | null;
+  passingScore?: LearningGradingContractsPercentValue;
+  skillsProvided?: string | null;
+  skillsRequired?: string | null;
+  slug?: string | null;
+  status?: ContentStatus;
+  thumbnail?: string | null;
+  title?: string | null;
+  totalRatings?: number;
+  updatedAt?: string | null;
+  videoShowcaseUrl?: string | null;
+  visibility?: ContentVisibility;
+}
+
+export interface LearningCoursesProgramUserSummaryDto {
   id?: string;
   userDisplayName?: string | null;
   userEmail?: string | null;
 }
 
 export type LearningCoursesProgressStatus = 'NotStarted' | 'InProgress' | 'Completed' | 'Submitted';
+
+export interface LearningCoursesPublishAuthoringDraftInput {
+  revision?: number;
+}
+
+export interface LearningCoursesPublishAuthoringResult {
+  draft?: LearningCoursesAuthoringDraftDto;
+  publishedContent?: LearningCoursesProgramContentDto;
+}
 
 export interface LearningCoursesRecordContentInteractionEventInput {
   durationSeconds?: number | null;
@@ -9059,18 +9261,18 @@ export interface LearningCoursesRecordContentInteractionEventInput {
   type?: LearningCoursesContentInteractionEventType;
 }
 
-export interface LearningCoursesReflectionResponseResult {
+export interface LearningCoursesReflectionResponseResultDto {
   body?: string | null;
   respondentUserId?: string | null;
   responseId?: string;
   submittedAt?: string | null;
 }
 
-export interface LearningCoursesRejectProgram {
+export interface LearningCoursesRejectProgramDto {
   reason?: string | null;
 }
 
-export interface LearningCoursesReorderContent {
+export interface LearningCoursesReorderContentDto {
   contentIds?: Array<string> | null;
 }
 
@@ -9082,28 +9284,33 @@ export interface LearningCoursesResolveCourseSupportTicketInput {
   summary?: string | null;
 }
 
-export interface LearningCoursesRevenueAnalytics {
+export interface LearningCoursesRevenueAnalyticsDto {
   averageRevenuePerUser?: number;
   conversionRate?: number;
   monthlyPurchases?: number;
   monthlyRevenue?: number;
   programId?: string;
-  revenueChart?: Array<LearningCoursesRevenueChart> | null;
+  revenueChart?: Array<LearningCoursesRevenueChartDto> | null;
   totalPurchases?: number;
   totalRevenue?: number;
 }
 
-export interface LearningCoursesRevenueChart {
+export interface LearningCoursesRevenueChartDto {
   date?: string;
   purchases?: number;
   revenue?: number;
 }
 
-export interface LearningCoursesScheduleProgram {
+export interface LearningCoursesSaveAuthoringDraftInput {
+  payload?: LearningCoursesAuthoringContentPayload;
+  revision?: number;
+}
+
+export interface LearningCoursesScheduleProgramDto {
   publishAt?: string;
 }
 
-export interface LearningCoursesSearchContent {
+export interface LearningCoursesSearchContentDto {
   isRequired?: boolean | null;
   parentId?: string | null;
   programId: string;
@@ -9127,7 +9334,7 @@ export interface LearningCoursesStartContentInput {
   programUserId?: string;
 }
 
-export interface LearningCoursesStudentSummary {
+export interface LearningCoursesStudentSummaryDto {
   id?: string;
   userDisplayName?: string | null;
   userEmail?: string | null;
@@ -9139,11 +9346,11 @@ export interface LearningCoursesSubmitContentInput {
   submissionData?: string | null;
 }
 
-export interface LearningCoursesSubmitUserContent {
+export interface LearningCoursesSubmitUserContentDto {
   submissionData: string;
 }
 
-export interface LearningCoursesSurveyResponseResult {
+export interface LearningCoursesSurveyResponseResultDto {
   answers?: Record<string, Record<string, unknown>> | null;
   respondentUserId?: string | null;
   responseId?: string;
@@ -9160,7 +9367,7 @@ export interface LearningCoursesTestSuite {
   public?: Array<LearningCoursesTest> | null;
 }
 
-export interface LearningCoursesUpdateActivityGrade {
+export interface LearningCoursesUpdateActivityGradeDto {
   feedback?: string | null;
   gradingDetails?: string | null;
   maxPoints?: LearningGradingContractsScoreValue | null;
@@ -9175,14 +9382,31 @@ export interface LearningCoursesUpdatePrerequisiteApiInput {
   type?: LearningCoursesPrerequisiteType;
 }
 
-export interface LearningCoursesUpdatePricing {
+export interface LearningCoursesUpdatePricingDto {
   currency?: string | null;
   isSubscription?: boolean | null;
   price?: number | null;
   subscriptionDurationDays?: number | null;
 }
 
-export interface LearningCoursesUpdateProgram {
+export interface LearningCoursesUpdateProgramContentDto {
+  id: string;
+  activitySettings?: LearningCoursesActivitySettings;
+  body?: string | null;
+  description?: string | null;
+  estimatedMinutes?: number | null;
+  estimatedMinutesSource?: LearningCoursesEstimatedMinutesSource;
+  isRequired?: boolean | null;
+  jsonBody?: Record<string, unknown> | null;
+  lessonFormat?: LearningCoursesLessonContentFormat;
+  slug?: string | null;
+  sortOrder?: number | null;
+  title?: string | null;
+  type?: LearningCoursesProgramContentType;
+  visibility?: LearningCoursesVisibility;
+}
+
+export interface LearningCoursesUpdateProgramDto {
   category?: ProgramCategory;
   clearEnrollmentDeadline?: boolean;
   clearMaxEnrollments?: boolean;
@@ -9204,24 +9428,7 @@ export interface LearningCoursesUpdateProgram {
   visibility?: ContentVisibility;
 }
 
-export interface LearningCoursesUpdateProgramContent {
-  id: string;
-  activitySettings?: LearningCoursesActivitySettings;
-  body?: string | null;
-  description?: string | null;
-  estimatedMinutes?: number | null;
-  estimatedMinutesSource?: LearningCoursesEstimatedMinutesSource;
-  isRequired?: boolean | null;
-  jsonBody?: Record<string, unknown> | null;
-  lessonFormat?: LearningCoursesLessonContentFormat;
-  slug?: string | null;
-  sortOrder?: number | null;
-  title?: string | null;
-  type?: LearningCoursesProgramContentType;
-  visibility?: LearningCoursesVisibility;
-}
-
-export interface LearningCoursesUpdateProgress {
+export interface LearningCoursesUpdateProgressDto {
   additionalData?: Record<string, Record<string, unknown>> | null;
   lastAccessedAt?: string | null;
   status?: LearningCoursesProgressStatus;
@@ -9239,15 +9446,17 @@ export interface LearningCoursesUpdateTimeSpentInput {
   programUserId?: string;
 }
 
-export interface LearningCoursesUserProgress {
+export interface LearningCoursesUserProgressDto {
   completedAt?: string | null;
   completionPercentage?: LearningGradingContractsPercentValue;
-  contentProgress?: Array<LearningCoursesContentProgress> | null;
+  contentProgress?: Array<LearningCoursesContentProgressDto> | null;
   courseId?: string;
   enrollmentId?: string;
   lastAccessedAt?: string | null;
   startedAt?: string | null;
+  userEmail?: string | null;
   userId?: string;
+  userName?: string | null;
 }
 
 export type LearningCoursesVisibility = 'Public' | 'Internal' | 'Private' | 'Restricted';
@@ -9256,7 +9465,7 @@ export interface LearningCoursesWorkspaceData {
   files?: Record<string, LearningCoursesBundleFileMeta> | null;
 }
 
-export interface LearningEnrollmentsEnrollment {
+export interface LearningEnrollmentsEnrollmentDto {
   id?: string;
   cohortId?: string | null;
   completedAt?: string | null;
@@ -9283,7 +9492,7 @@ export interface LearningEnrollmentsUpdateEnrollmentProgressInput {
 
 export type LearningExperienceDiscoveryCollectionType = 'Curated' | 'Category' | 'Skill' | 'Career' | 'Trending' | 'NewReleases';
 
-export interface LearningExperienceDiscoveryCourseCollection {
+export interface LearningExperienceDiscoveryCourseCollectionDto {
   id?: string;
   courseCount?: number;
   createdAt?: string;
@@ -9299,14 +9508,14 @@ export interface LearningExperienceDiscoveryCourseCollection {
   updatedAt?: string;
 }
 
-export interface LearningExperienceDiscoveryCreateCourseCollection {
+export interface LearningExperienceDiscoveryCreateCourseCollectionDto {
   description?: string | null;
   imageUrl?: string | null;
   title?: string | null;
   type?: LearningExperienceDiscoveryCollectionType;
 }
 
-export interface LearningExperienceDiscoveryCreateFeaturedContent {
+export interface LearningExperienceDiscoveryCreateFeaturedContentDto {
   courseId?: string | null;
   displayOrder?: number;
   endsAt?: string | null;
@@ -9320,7 +9529,7 @@ export interface LearningExperienceDiscoveryCreateFeaturedContent {
   type?: LearningExperienceDiscoveryFeaturedContentType;
 }
 
-export interface LearningExperienceDiscoveryFeaturedContent {
+export interface LearningExperienceDiscoveryFeaturedContentDto {
   id?: string;
   courseId?: string | null;
   createdAt?: string;
@@ -9349,18 +9558,18 @@ export interface LearningExperienceDiscoveryPopularSearchResult {
   totalClicks?: number;
 }
 
-export interface LearningExperienceDiscoveryRecordSearch {
+export interface LearningExperienceDiscoveryRecordSearchClickDto {
+  clickedCourseId?: string;
+  searchId?: string;
+}
+
+export interface LearningExperienceDiscoveryRecordSearchDto {
   filters?: string | null;
   query?: string | null;
   resultCount?: number;
 }
 
-export interface LearningExperienceDiscoveryRecordSearchClick {
-  clickedCourseId?: string;
-  searchId?: string;
-}
-
-export interface LearningExperienceDiscoverySearchHistory {
+export interface LearningExperienceDiscoverySearchHistoryDto {
   id?: string;
   clickedCourseId?: string | null;
   createdAt?: string;
@@ -9370,14 +9579,14 @@ export interface LearningExperienceDiscoverySearchHistory {
   userId?: string | null;
 }
 
-export interface LearningExperienceDiscoveryUpdateCourseCollection {
+export interface LearningExperienceDiscoveryUpdateCourseCollectionDto {
   description?: string | null;
   imageUrl?: string | null;
   isFeatured?: boolean | null;
   title?: string | null;
 }
 
-export interface LearningExperienceDiscoveryUpdateFeaturedContent {
+export interface LearningExperienceDiscoveryUpdateFeaturedContentDto {
   displayOrder?: number | null;
   endsAt?: string | null;
   imageUrl?: string | null;
@@ -9389,18 +9598,18 @@ export interface LearningExperienceDiscoveryUpdateFeaturedContent {
   title?: string | null;
 }
 
-export interface LearningExperienceLearningPathsAddCourseToPath {
+export interface LearningExperienceLearningPathsAddCourseToPathDto {
   courseId?: string;
   isRequired?: boolean;
   order?: number;
 }
 
-export interface LearningExperienceLearningPathsCourseOrder {
+export interface LearningExperienceLearningPathsCourseOrderDto {
   courseId?: string;
   order?: number;
 }
 
-export interface LearningExperienceLearningPathsCreateLearningPath {
+export interface LearningExperienceLearningPathsCreateLearningPathDto {
   description?: string | null;
   difficulty?: LearningExperienceLearningPathsLearningPathDifficulty;
   estimatedHours?: number;
@@ -9408,7 +9617,34 @@ export interface LearningExperienceLearningPathsCreateLearningPath {
   title?: string | null;
 }
 
-export interface LearningExperienceLearningPathsLearningPath {
+export interface LearningExperienceLearningPathsLearningPathCourseDto {
+  courseId?: string;
+  isRequired?: boolean;
+  order?: number;
+}
+
+export interface LearningExperienceLearningPathsLearningPathDetailDto {
+  id?: string;
+  completionCount?: number;
+  courses?: Array<LearningExperienceLearningPathsLearningPathCourseDto> | null;
+  createdAt?: string;
+  creatorId?: string;
+  description?: string | null;
+  difficulty?: LearningExperienceLearningPathsLearningPathDifficulty;
+  enrollmentCount?: number;
+  estimatedHours?: number;
+  imageUrl?: string | null;
+  isFeatured?: boolean;
+  isPublished?: boolean;
+  slug?: string | null;
+  tenantId?: string | null;
+  title?: string | null;
+  updatedAt?: string;
+}
+
+export type LearningExperienceLearningPathsLearningPathDifficulty = 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';
+
+export interface LearningExperienceLearningPathsLearningPathDto {
   id?: string;
   completionCount?: number;
   courseCount?: number;
@@ -9427,34 +9663,7 @@ export interface LearningExperienceLearningPathsLearningPath {
   updatedAt?: string;
 }
 
-export interface LearningExperienceLearningPathsLearningPathCourse {
-  courseId?: string;
-  isRequired?: boolean;
-  order?: number;
-}
-
-export interface LearningExperienceLearningPathsLearningPathDetail {
-  id?: string;
-  completionCount?: number;
-  courses?: Array<LearningExperienceLearningPathsLearningPathCourse> | null;
-  createdAt?: string;
-  creatorId?: string;
-  description?: string | null;
-  difficulty?: LearningExperienceLearningPathsLearningPathDifficulty;
-  enrollmentCount?: number;
-  estimatedHours?: number;
-  imageUrl?: string | null;
-  isFeatured?: boolean;
-  isPublished?: boolean;
-  slug?: string | null;
-  tenantId?: string | null;
-  title?: string | null;
-  updatedAt?: string;
-}
-
-export type LearningExperienceLearningPathsLearningPathDifficulty = 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';
-
-export interface LearningExperienceLearningPathsLearningPathEnrollment {
+export interface LearningExperienceLearningPathsLearningPathEnrollmentDto {
   id?: string;
   completedAt?: string | null;
   coursesCompleted?: number;
@@ -9470,7 +9679,7 @@ export interface LearningExperienceLearningPathsLearningPathEnrollment {
 
 export type LearningExperienceLearningPathsLearningPathEnrollmentStatus = 'InProgress' | 'Completed' | 'Abandoned';
 
-export interface LearningExperienceLearningPathsLearningPathStatistics {
+export interface LearningExperienceLearningPathsLearningPathStatisticsDto {
   activeEnrollments?: number;
   averageCompletionTime?: string;
   averageProgress?: number;
@@ -9480,11 +9689,11 @@ export interface LearningExperienceLearningPathsLearningPathStatistics {
   totalEnrollments?: number;
 }
 
-export interface LearningExperienceLearningPathsReorderCourses {
-  courses?: Array<LearningExperienceLearningPathsCourseOrder> | null;
+export interface LearningExperienceLearningPathsReorderCoursesDto {
+  courses?: Array<LearningExperienceLearningPathsCourseOrderDto> | null;
 }
 
-export interface LearningExperienceLearningPathsUpdateLearningPath {
+export interface LearningExperienceLearningPathsUpdateLearningPathDto {
   description?: string | null;
   difficulty?: LearningExperienceLearningPathsLearningPathDifficulty;
   estimatedHours?: number | null;
@@ -9493,7 +9702,7 @@ export interface LearningExperienceLearningPathsUpdateLearningPath {
   title?: string | null;
 }
 
-export interface LearningExperienceLearningPathsUpdatePathProgress {
+export interface LearningExperienceLearningPathsUpdatePathProgressDto {
   coursesCompleted?: number;
 }
 
@@ -9501,7 +9710,7 @@ export interface LearningExperienceRecommendationsAddSkillInput {
   skill?: string | null;
 }
 
-export interface LearningExperienceRecommendationsCreateOrUpdateLearningProfile {
+export interface LearningExperienceRecommendationsCreateOrUpdateLearningProfileDto {
   learningGoals?: Array<string> | null;
   preferredCategories?: Array<string> | null;
   preferredDifficulty?: string | null;
@@ -9509,7 +9718,7 @@ export interface LearningExperienceRecommendationsCreateOrUpdateLearningProfile 
   skills?: Array<string> | null;
 }
 
-export interface LearningExperienceRecommendationsPopularCourse {
+export interface LearningExperienceRecommendationsPopularCourseDto {
   averageRating?: number;
   category?: string | null;
   courseId?: string;
@@ -9520,7 +9729,7 @@ export interface LearningExperienceRecommendationsPopularCourse {
   totalRatings?: number;
 }
 
-export interface LearningExperienceRecommendationsRecommendation {
+export interface LearningExperienceRecommendationsRecommendationDto {
   id?: string;
   courseId?: string;
   createdAt?: string;
@@ -9533,7 +9742,7 @@ export interface LearningExperienceRecommendationsRecommendation {
   userId?: string;
 }
 
-export interface LearningExperienceRecommendationsRecommendationStatistics {
+export interface LearningExperienceRecommendationsRecommendationStatisticsDto {
   byType?: {
     BasedOnHistory?: number;
     InstructorFollowed?: number;
@@ -9553,7 +9762,7 @@ export interface LearningExperienceRecommendationsRecommendationStatistics {
 export type LearningExperienceRecommendationsRecommendationType =
   'PersonalizedAI' | 'PopularInCategory' | 'TrendingNow' | 'BasedOnHistory' | 'SimilarToCompleted' | 'NextInPath' | 'InstructorFollowed' | 'PeerRecommended';
 
-export interface LearningExperienceRecommendationsSimilarCourse {
+export interface LearningExperienceRecommendationsSimilarCourseDto {
   category?: string | null;
   courseId?: string;
   description?: string | null;
@@ -9563,7 +9772,7 @@ export interface LearningExperienceRecommendationsSimilarCourse {
   title?: string | null;
 }
 
-export interface LearningExperienceRecommendationsTrendingCourse {
+export interface LearningExperienceRecommendationsTrendingCourseDto {
   category?: string | null;
   courseId?: string;
   description?: string | null;
@@ -9573,7 +9782,7 @@ export interface LearningExperienceRecommendationsTrendingCourse {
   trendScore?: number;
 }
 
-export interface LearningExperienceRecommendationsUserLearningProfile {
+export interface LearningExperienceRecommendationsUserLearningProfileDto {
   id?: string;
   createdAt?: string;
   lastActivityAt?: string | null;
@@ -9605,7 +9814,7 @@ export type LearningExperienceSocialFeedItemType =
   | 'AchievementUnlocked'
   | 'SkillMilestone';
 
-export interface LearningExperienceSocialServicesCourseDiscussion {
+export interface LearningExperienceSocialServicesCourseDiscussionDto {
   id?: string;
   authorId?: string;
   content?: string | null;
@@ -9620,7 +9829,7 @@ export interface LearningExperienceSocialServicesCourseDiscussion {
   viewCount?: number;
 }
 
-export interface LearningExperienceSocialServicesCourseLike {
+export interface LearningExperienceSocialServicesCourseLikeDto {
   id?: string;
   courseId?: string;
   createdAt?: string;
@@ -9639,7 +9848,7 @@ export interface LearningExperienceSocialServicesCourseRatingStats {
   twoStarCount?: number;
 }
 
-export interface LearningExperienceSocialServicesCourseReview {
+export interface LearningExperienceSocialServicesCourseReviewDto {
   id?: string;
   content?: string | null;
   courseId?: string;
@@ -9653,7 +9862,7 @@ export interface LearningExperienceSocialServicesCourseReview {
   userId?: string;
 }
 
-export interface LearningExperienceSocialServicesCourseWishlist {
+export interface LearningExperienceSocialServicesCourseWishlistDto {
   id?: string;
   courseId?: string;
   createdAt?: string;
@@ -9683,7 +9892,7 @@ export interface LearningExperienceSocialServicesCreateReviewInput {
   title?: string | null;
 }
 
-export interface LearningExperienceSocialServicesDiscussionReply {
+export interface LearningExperienceSocialServicesDiscussionReplyDto {
   id?: string;
   authorId?: string;
   content?: string | null;
@@ -9694,7 +9903,7 @@ export interface LearningExperienceSocialServicesDiscussionReply {
   upvoteCount?: number;
 }
 
-export interface LearningExperienceSocialServicesPersonalizedFeedItem {
+export interface LearningExperienceSocialServicesPersonalizedFeedItemDto {
   id?: string;
   courseId?: string | null;
   createdAt?: string;
@@ -9719,7 +9928,26 @@ export type LearningGradingContractsPercentValue = number;
 /** Score in non-negative integer units scaled by 100 (100 units = 1 point). */
 export type LearningGradingContractsScoreValue = number;
 
-export interface LearningWorkspacesLearnerAnnouncement {
+export interface LearningLtiCreateLtiDeploymentInput {
+  active?: boolean;
+  authorizationUrl?: string | null;
+  authTokenUrl?: string | null;
+  clientId?: string | null;
+  deploymentId?: string | null;
+  issuer?: string | null;
+  keyId?: string | null;
+  platformJwksUrl?: string | null;
+  privateKeyPem?: string | null;
+}
+
+export interface LearningLtiCreateLtiLineItemInput {
+  assessmentId?: string;
+  lineItemId?: string | null;
+  lineItemUrl?: string | null;
+  maxScore?: LearningGradingContractsScoreValue;
+}
+
+export interface LearningWorkspacesLearnerAnnouncementDto {
   content?: string | null;
   courseId?: string;
   courseSlug?: string | null;
@@ -9730,7 +9958,23 @@ export interface LearningWorkspacesLearnerAnnouncement {
   title?: string | null;
 }
 
-export interface LearningWorkspacesLearnerAssessment {
+export interface LearningWorkspacesLearnerAssessmentDeadlineDto {
+  assessmentId?: string;
+  availableFrom?: string | null;
+  availableUntil?: string | null;
+  contentId?: string | null;
+  courseId?: string;
+  courseSlug?: string | null;
+  courseTitle?: string | null;
+  dueAt?: string | null;
+  groupId?: string | null;
+  maxScore?: LearningGradingContractsScoreValue;
+  submissionStatus?: string | null;
+  title?: string | null;
+  type?: string | null;
+}
+
+export interface LearningWorkspacesLearnerAssessmentDto {
   allowLateSubmissions?: boolean;
   assessmentId?: string;
   availableFrom?: string | null;
@@ -9751,23 +9995,7 @@ export interface LearningWorkspacesLearnerAssessment {
   type?: string | null;
 }
 
-export interface LearningWorkspacesLearnerAssessmentDeadline {
-  assessmentId?: string;
-  availableFrom?: string | null;
-  availableUntil?: string | null;
-  contentId?: string | null;
-  courseId?: string;
-  courseSlug?: string | null;
-  courseTitle?: string | null;
-  dueAt?: string | null;
-  groupId?: string | null;
-  maxScore?: LearningGradingContractsScoreValue;
-  submissionStatus?: string | null;
-  title?: string | null;
-  type?: string | null;
-}
-
-export interface LearningWorkspacesLearnerAssessmentGroup {
+export interface LearningWorkspacesLearnerAssessmentGroupDto {
   description?: string | null;
   groupId?: string;
   name?: string | null;
@@ -9775,7 +10003,7 @@ export interface LearningWorkspacesLearnerAssessmentGroup {
   weightPercent?: LearningGradingContractsPercentValue;
 }
 
-export interface LearningWorkspacesLearnerAssessmentSubmission {
+export interface LearningWorkspacesLearnerAssessmentSubmissionDto {
   assessmentId?: string;
   attemptNumber?: number;
   enrollmentId?: string;
@@ -9790,7 +10018,7 @@ export interface LearningWorkspacesLearnerAssessmentSubmission {
   submittedAt?: string | null;
 }
 
-export interface LearningWorkspacesLearnerCertificate {
+export interface LearningWorkspacesLearnerCertificateDto {
   certificateId?: string;
   certificateNumber?: string | null;
   courseId?: string;
@@ -9803,7 +10031,7 @@ export interface LearningWorkspacesLearnerCertificate {
   verificationUrl?: string | null;
 }
 
-export interface LearningWorkspacesLearnerCohort {
+export interface LearningWorkspacesLearnerCohortDto {
   cohortId?: string;
   currentEnrollmentCount?: number;
   description?: string | null;
@@ -9816,7 +10044,7 @@ export interface LearningWorkspacesLearnerCohort {
   status?: string | null;
 }
 
-export interface LearningWorkspacesLearnerContent {
+export interface LearningWorkspacesLearnerContentDto {
   activitySettings?: string | null;
   body?: string | null;
   contentId?: string;
@@ -9831,7 +10059,7 @@ export interface LearningWorkspacesLearnerContent {
   visibility?: string | null;
 }
 
-export interface LearningWorkspacesLearnerContentProgress {
+export interface LearningWorkspacesLearnerContentProgressDto {
   attempts?: number;
   completedAt?: string | null;
   contentId?: string;
@@ -9844,7 +10072,7 @@ export interface LearningWorkspacesLearnerContentProgress {
   timeSpentSeconds?: number;
 }
 
-export interface LearningWorkspacesLearnerCourseSummary {
+export interface LearningWorkspacesLearnerCourseSummaryDto {
   category?: string | null;
   completedItems?: number;
   completionStatus?: string | null;
@@ -9867,29 +10095,29 @@ export interface LearningWorkspacesLearnerCourseSummary {
   totalItems?: number;
 }
 
-export interface LearningWorkspacesLearnerCourseWorkspace {
-  assessmentGroups?: Array<LearningWorkspacesLearnerAssessmentGroup> | null;
-  assessments?: Array<LearningWorkspacesLearnerAssessment> | null;
-  calendar?: Array<LearningWorkspacesLearnerScheduleEntry> | null;
-  certificates?: Array<LearningWorkspacesLearnerCertificate> | null;
-  cohort?: LearningWorkspacesLearnerCohort;
-  content?: Array<LearningWorkspacesLearnerContent> | null;
-  course?: LearningWorkspacesLearnerCourseSummary;
-  discussions?: Array<LearningWorkspacesLearnerDiscussion> | null;
-  progress?: Array<LearningWorkspacesLearnerContentProgress> | null;
-  submissions?: Array<LearningWorkspacesLearnerAssessmentSubmission> | null;
+export interface LearningWorkspacesLearnerCourseWorkspaceDto {
+  assessmentGroups?: Array<LearningWorkspacesLearnerAssessmentGroupDto> | null;
+  assessments?: Array<LearningWorkspacesLearnerAssessmentDto> | null;
+  calendar?: Array<LearningWorkspacesLearnerScheduleEntryDto> | null;
+  certificates?: Array<LearningWorkspacesLearnerCertificateDto> | null;
+  cohort?: LearningWorkspacesLearnerCohortDto;
+  content?: Array<LearningWorkspacesLearnerContentDto> | null;
+  course?: LearningWorkspacesLearnerCourseSummaryDto;
+  discussions?: Array<LearningWorkspacesLearnerDiscussionDto> | null;
+  progress?: Array<LearningWorkspacesLearnerContentProgressDto> | null;
+  submissions?: Array<LearningWorkspacesLearnerAssessmentSubmissionDto> | null;
 }
 
-export interface LearningWorkspacesLearnerDashboard {
-  announcements?: Array<LearningWorkspacesLearnerAnnouncement> | null;
-  certificates?: Array<LearningWorkspacesLearnerCertificate> | null;
-  courses?: Array<LearningWorkspacesLearnerCourseSummary> | null;
-  deadlines?: Array<LearningWorkspacesLearnerAssessmentDeadline> | null;
-  grades?: Array<LearningWorkspacesLearnerGradeSummary> | null;
-  upcoming?: Array<LearningWorkspacesLearnerScheduleEntry> | null;
+export interface LearningWorkspacesLearnerDashboardDto {
+  announcements?: Array<LearningWorkspacesLearnerAnnouncementDto> | null;
+  certificates?: Array<LearningWorkspacesLearnerCertificateDto> | null;
+  courses?: Array<LearningWorkspacesLearnerCourseSummaryDto> | null;
+  deadlines?: Array<LearningWorkspacesLearnerAssessmentDeadlineDto> | null;
+  grades?: Array<LearningWorkspacesLearnerGradeSummaryDto> | null;
+  upcoming?: Array<LearningWorkspacesLearnerScheduleEntryDto> | null;
 }
 
-export interface LearningWorkspacesLearnerDiscussion {
+export interface LearningWorkspacesLearnerDiscussionDto {
   authorId?: string;
   content?: string | null;
   contentId?: string | null;
@@ -9903,7 +10131,7 @@ export interface LearningWorkspacesLearnerDiscussion {
   viewCount?: number;
 }
 
-export interface LearningWorkspacesLearnerGradeItem {
+export interface LearningWorkspacesLearnerGradeItemDto {
   assessmentId?: string;
   availableFrom?: string | null;
   availableUntil?: string | null;
@@ -9920,21 +10148,21 @@ export interface LearningWorkspacesLearnerGradeItem {
   type?: string | null;
 }
 
-export interface LearningWorkspacesLearnerGradeSummary {
+export interface LearningWorkspacesLearnerGradeSummaryDto {
   courseId?: string;
   courseSlug?: string | null;
   courseTitle?: string | null;
   earnedPoints?: LearningGradingContractsScoreValue | null;
   finalGrade?: LearningGradingContractsPercentValue | null;
   gradedAssessments?: number;
-  groups?: Array<LearningWorkspacesLearnerAssessmentGroup> | null;
-  items?: Array<LearningWorkspacesLearnerGradeItem> | null;
+  groups?: Array<LearningWorkspacesLearnerAssessmentGroupDto> | null;
+  items?: Array<LearningWorkspacesLearnerGradeItemDto> | null;
   percentage?: LearningGradingContractsPercentValue | null;
   possiblePoints?: LearningGradingContractsScoreValue | null;
   totalAssessments?: number;
 }
 
-export interface LearningWorkspacesLearnerScheduleEntry {
+export interface LearningWorkspacesLearnerScheduleEntryDto {
   assessmentId?: string | null;
   availableFrom?: string | null;
   availableUntil?: string | null;
@@ -9955,7 +10183,7 @@ export interface LearningWorkspacesLearnerScheduleEntry {
   type?: string | null;
 }
 
-export interface LearningWorkspacesLearnerSearchResult {
+export interface LearningWorkspacesLearnerSearchResultDto {
   id?: string;
   courseId?: string;
   courseSlug?: string | null;
@@ -9981,7 +10209,7 @@ export interface MonitoringSLACreateSloCommand {
   timeWindowDays?: number;
 }
 
-export interface MonitoringSLAErrorBudget {
+export interface MonitoringSLAErrorBudgetDto {
   actualPercentage?: number;
   allowedFailures?: number;
   burnRate?: number;
@@ -10018,26 +10246,7 @@ export interface MonitoringSLAResolveSloViolationCommand {
   violationId?: string;
 }
 
-export interface MonitoringSLASlo {
-  id?: string;
-  alertThresholdPercentage?: number;
-  createdAt?: string;
-  currentActualPercentage?: number | null;
-  description?: string | null;
-  errorBudgetPercentage?: number;
-  isEnabled?: boolean;
-  lastEvaluatedAt?: string | null;
-  name?: string | null;
-  remainingErrorBudget?: number | null;
-  serviceName?: string | null;
-  status?: MonitoringSLASloStatus;
-  targetPercentage?: number;
-  tenantId?: string;
-  timeWindowDays?: number;
-  updatedAt?: string | null;
-}
-
-export interface MonitoringSLASloCompliance {
+export interface MonitoringSLASloComplianceDto {
   actualPercentage?: number;
   calculatedAt?: string;
   isCompliant?: boolean;
@@ -10056,9 +10265,28 @@ export interface MonitoringSLASloCompliance {
   violationCount?: number;
 }
 
+export interface MonitoringSLASloDto {
+  id?: string;
+  alertThresholdPercentage?: number;
+  createdAt?: string;
+  currentActualPercentage?: number | null;
+  description?: string | null;
+  errorBudgetPercentage?: number;
+  isEnabled?: boolean;
+  lastEvaluatedAt?: string | null;
+  name?: string | null;
+  remainingErrorBudget?: number | null;
+  serviceName?: string | null;
+  status?: MonitoringSLASloStatus;
+  targetPercentage?: number;
+  tenantId?: string;
+  timeWindowDays?: number;
+  updatedAt?: string | null;
+}
+
 export type MonitoringSLASloStatus = 'Active' | 'Breached' | 'AtRisk' | 'Disabled' | 'Violated' | 'Warning' | 'Inactive';
 
-export interface MonitoringSLASloViolation {
+export interface MonitoringSLASloViolationDto {
   id?: string;
   acknowledgedAt?: string | null;
   acknowledgedByUserId?: string | null;
@@ -10103,7 +10331,7 @@ export interface MvcProblemDetails {
   [key: string]: any;
 }
 
-export interface NotificationsControllersDeadLetter {
+export interface NotificationsControllersDeadLetterDto {
   id?: string;
   attemptCount?: number;
   channel?: string | null;
@@ -10124,7 +10352,7 @@ export interface NotificationsControllersDigestFrequencyOutput {
   emailDigestFrequency?: string | null;
 }
 
-export interface NotificationsControllersEmailDeliveryEvent {
+export interface NotificationsControllersEmailDeliveryEventDto {
   id?: string;
   bounceType?: string | null;
   diagnosticCode?: string | null;
@@ -10135,7 +10363,7 @@ export interface NotificationsControllersEmailDeliveryEvent {
   recipientEmail?: string | null;
 }
 
-export interface NotificationsControllersEmailSuppression {
+export interface NotificationsControllersEmailSuppressionDto {
   id?: string;
   bounceType?: string | null;
   emailAddress?: string | null;
@@ -10150,7 +10378,7 @@ export interface NotificationsControllersMutedTypesOutput {
   mutedTypes?: Array<string> | null;
 }
 
-export interface NotificationsControllersNotification {
+export interface NotificationsControllersNotificationDto {
   id?: string;
   actionUrl?: string | null;
   channel?: string | null;
@@ -10166,7 +10394,7 @@ export interface NotificationsControllersNotification {
   type?: string | null;
 }
 
-export interface NotificationsControllersNotificationPreference {
+export interface NotificationsControllersNotificationPreferenceDto {
   achievementsEnabled?: boolean;
   emailDigestFrequency?: string | null;
   emailEnabled?: boolean;
@@ -10182,8 +10410,8 @@ export interface NotificationsControllersNotificationPreference {
   timezone?: string | null;
 }
 
-export interface NotificationsControllersNotificationTimeline {
-  events?: Array<NotificationsControllersEmailDeliveryEvent> | null;
+export interface NotificationsControllersNotificationTimelineDto {
+  events?: Array<NotificationsControllersEmailDeliveryEventDto> | null;
   notificationId?: string;
   providerMessageId?: string | null;
 }
@@ -10299,10 +10527,10 @@ export type ObjectsResidentKeyRequirement = 'Required' | 'Preferred' | 'Discoura
 
 export type ObjectsUserVerificationRequirement = 'Required' | 'Preferred' | 'Discouraged';
 
-export interface PagedResultOfCommerceProductsProduct {
+export interface PagedResultDeadLetterDto {
   hasNextPage?: boolean;
   hasPreviousPage?: boolean;
-  items?: Array<CommerceProductsProduct> | null;
+  items?: Array<NotificationsControllersDeadLetterDto> | null;
   pageNumber?: number;
   pageSize?: number;
   skip?: number;
@@ -10311,10 +10539,10 @@ export interface PagedResultOfCommerceProductsProduct {
   totalPages?: number;
 }
 
-export interface PagedResultOfCommerceProductsPromoCode {
+export interface PagedResultEmailDeliveryEventDto {
   hasNextPage?: boolean;
   hasPreviousPage?: boolean;
-  items?: Array<CommerceProductsPromoCode> | null;
+  items?: Array<NotificationsControllersEmailDeliveryEventDto> | null;
   pageNumber?: number;
   pageSize?: number;
   skip?: number;
@@ -10323,10 +10551,10 @@ export interface PagedResultOfCommerceProductsPromoCode {
   totalPages?: number;
 }
 
-export interface PagedResultOfCommerceProductsSupportTicket {
+export interface PagedResultEmailSuppressionDto {
   hasNextPage?: boolean;
   hasPreviousPage?: boolean;
-  items?: Array<CommerceProductsSupportTicket> | null;
+  items?: Array<NotificationsControllersEmailSuppressionDto> | null;
   pageNumber?: number;
   pageSize?: number;
   skip?: number;
@@ -10335,7 +10563,31 @@ export interface PagedResultOfCommerceProductsSupportTicket {
   totalPages?: number;
 }
 
-export interface PagedResultOfCommerceSubscriptionsSubscription {
+export interface PagedResultProductDto {
+  hasNextPage?: boolean;
+  hasPreviousPage?: boolean;
+  items?: Array<CommerceProductsProductDto> | null;
+  pageNumber?: number;
+  pageSize?: number;
+  skip?: number;
+  take?: number;
+  totalCount?: number;
+  totalPages?: number;
+}
+
+export interface PagedResultPromoCodeDto {
+  hasNextPage?: boolean;
+  hasPreviousPage?: boolean;
+  items?: Array<CommerceProductsPromoCodeDto> | null;
+  pageNumber?: number;
+  pageSize?: number;
+  skip?: number;
+  take?: number;
+  totalCount?: number;
+  totalPages?: number;
+}
+
+export interface PagedResultSubscription {
   hasNextPage?: boolean;
   hasPreviousPage?: boolean;
   items?: Array<CommerceSubscriptionsSubscription> | null;
@@ -10347,10 +10599,10 @@ export interface PagedResultOfCommerceSubscriptionsSubscription {
   totalPages?: number;
 }
 
-export interface PagedResultOfCommerceSubscriptionsSubscriptionNotification {
+export interface PagedResultSubscriptionNotificationDto {
   hasNextPage?: boolean;
   hasPreviousPage?: boolean;
-  items?: Array<CommerceSubscriptionsSubscriptionNotification> | null;
+  items?: Array<CommerceSubscriptionsSubscriptionNotificationDto> | null;
   pageNumber?: number;
   pageSize?: number;
   skip?: number;
@@ -10359,7 +10611,19 @@ export interface PagedResultOfCommerceSubscriptionsSubscriptionNotification {
   totalPages?: number;
 }
 
-export interface PagedResultOfIdentityTenantsTenant {
+export interface PagedResultSupportTicketDto {
+  hasNextPage?: boolean;
+  hasPreviousPage?: boolean;
+  items?: Array<CommerceProductsSupportTicketDto> | null;
+  pageNumber?: number;
+  pageSize?: number;
+  skip?: number;
+  take?: number;
+  totalCount?: number;
+  totalPages?: number;
+}
+
+export interface PagedResultTenant {
   hasNextPage?: boolean;
   hasPreviousPage?: boolean;
   items?: Array<IdentityTenantsTenant> | null;
@@ -10371,7 +10635,7 @@ export interface PagedResultOfIdentityTenantsTenant {
   totalPages?: number;
 }
 
-export interface PagedResultOfIdentityTenantsTenantAuditLogEntry {
+export interface PagedResultTenantAuditLogEntry {
   hasNextPage?: boolean;
   hasPreviousPage?: boolean;
   items?: Array<IdentityTenantsTenantAuditLogEntry> | null;
@@ -10383,7 +10647,7 @@ export interface PagedResultOfIdentityTenantsTenantAuditLogEntry {
   totalPages?: number;
 }
 
-export interface PagedResultOfIdentityUsersUser {
+export interface PagedResultUserDto {
   hasNextPage?: boolean;
   hasPreviousPage?: boolean;
   items?: Array<IdentityUsersUserDto> | null;
@@ -10395,7 +10659,7 @@ export interface PagedResultOfIdentityUsersUser {
   totalPages?: number;
 }
 
-export interface PagedResultOfIdentityUsersUserNotification {
+export interface PagedResultUserNotificationDto {
   hasNextPage?: boolean;
   hasPreviousPage?: boolean;
   items?: Array<IdentityUsersUserNotificationDto> | null;
@@ -10407,46 +10671,10 @@ export interface PagedResultOfIdentityUsersUserNotification {
   totalPages?: number;
 }
 
-export interface PagedResultOfIdentityUsersUserProfile {
+export interface PagedResultUserProfileDto {
   hasNextPage?: boolean;
   hasPreviousPage?: boolean;
   items?: Array<IdentityUsersUserProfileDto> | null;
-  pageNumber?: number;
-  pageSize?: number;
-  skip?: number;
-  take?: number;
-  totalCount?: number;
-  totalPages?: number;
-}
-
-export interface PagedResultOfNotificationsControllersDeadLetter {
-  hasNextPage?: boolean;
-  hasPreviousPage?: boolean;
-  items?: Array<NotificationsControllersDeadLetter> | null;
-  pageNumber?: number;
-  pageSize?: number;
-  skip?: number;
-  take?: number;
-  totalCount?: number;
-  totalPages?: number;
-}
-
-export interface PagedResultOfNotificationsControllersEmailDeliveryEvent {
-  hasNextPage?: boolean;
-  hasPreviousPage?: boolean;
-  items?: Array<NotificationsControllersEmailDeliveryEvent> | null;
-  pageNumber?: number;
-  pageSize?: number;
-  skip?: number;
-  take?: number;
-  totalCount?: number;
-  totalPages?: number;
-}
-
-export interface PagedResultOfNotificationsControllersEmailSuppression {
-  hasNextPage?: boolean;
-  hasPreviousPage?: boolean;
-  items?: Array<NotificationsControllersEmailSuppression> | null;
   pageNumber?: number;
   pageSize?: number;
   skip?: number;
@@ -10490,7 +10718,7 @@ export interface ProjectsAddProjectCollaboratorInput {
   userId: string;
 }
 
-export interface ProjectsCollaborator {
+export interface ProjectsCollaboratorDto {
   id?: string;
   isActive?: boolean;
   joinedAt?: string;
@@ -10576,6 +10804,7 @@ export interface ProjectsProject {
   followerCount?: number;
   followers?: Array<ProjectsProjectFollower> | null;
   imageUrl?: string | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isActive?: boolean;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -10651,6 +10880,7 @@ export interface ProjectsProjectCategory {
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -10671,6 +10901,7 @@ export interface ProjectsProjectCollaborator {
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isActive?: boolean;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -10719,6 +10950,7 @@ export interface ProjectsProjectFeedback {
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   helpfulVotes?: number;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isDeleted?: boolean;
   isFeatured?: boolean;
   isGlobal?: boolean;
@@ -10745,6 +10977,7 @@ export interface ProjectsProjectFollower {
   domainEvents?: Array<CQRSIDomainEvent> | null;
   emailNotifications?: boolean;
   followedAt?: string;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -10758,7 +10991,7 @@ export interface ProjectsProjectFollower {
   version?: number;
 }
 
-export interface ProjectsProjectInvitation {
+export interface ProjectsProjectInvitationDto {
   id?: string;
   expiresAt?: string | null;
   invitedAt?: string;
@@ -10784,6 +11017,7 @@ export interface ProjectsProjectJamSubmission {
   domainEvents?: Array<CQRSIDomainEvent> | null;
   finalScore?: number | null;
   hasAward?: boolean;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isDeleted?: boolean;
   isEligible?: boolean;
   isGlobal?: boolean;
@@ -10809,6 +11043,7 @@ export interface ProjectsProjectMemberAllocation {
   domainEvents?: Array<CQRSIDomainEvent> | null;
   endsAt?: string | null;
   function: string;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isActive?: boolean;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -10829,6 +11064,7 @@ export interface ProjectsProjectMetadata {
   domainEvents?: Array<CQRSIDomainEvent> | null;
   downloadCount?: number;
   followerCount?: number;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -10857,6 +11093,7 @@ export interface ProjectsProjectRelease {
   downloadCount?: number;
   downloadUrl?: string | null;
   fileSize?: number | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isLatest?: boolean;
@@ -10938,6 +11175,7 @@ export interface ProjectsProjectTeam {
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   endedAt?: string | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isActive?: boolean;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -10965,6 +11203,7 @@ export interface ProjectsProjectTeamAgreement {
   deliverables: string;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   endsAt?: string;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -11017,6 +11256,7 @@ export interface ProjectsProjectVersion {
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   downloadCount?: number;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -11154,7 +11394,21 @@ export interface ResourcesContentsBulkGeneratedContractsOutput {
 
 export type ResourcesContentsContentReviewDecision = 'Pending' | 'Approve' | 'RequestChanges' | 'Reject';
 
-export interface ResourcesContentsContentVersion {
+export interface ResourcesContentsContentVersionDiff {
+  bodyChanged?: boolean;
+  bodyDiff?: string | null;
+  metadataChanged?: boolean;
+  summaryChanged?: boolean;
+  summaryDiff?: string | null;
+  titleChanged?: boolean;
+  titleDiff?: string | null;
+  version1Id?: string;
+  version1Number?: number;
+  version2Id?: string;
+  version2Number?: number;
+}
+
+export interface ResourcesContentsContentVersionDto {
   id?: string;
   body?: string | null;
   changeNotes?: string | null;
@@ -11177,21 +11431,7 @@ export interface ResourcesContentsContentVersion {
   versionNumber?: number;
 }
 
-export interface ResourcesContentsContentVersionDiff {
-  bodyChanged?: boolean;
-  bodyDiff?: string | null;
-  metadataChanged?: boolean;
-  summaryChanged?: boolean;
-  summaryDiff?: string | null;
-  titleChanged?: boolean;
-  titleDiff?: string | null;
-  version1Id?: string;
-  version1Number?: number;
-  version2Id?: string;
-  version2Number?: number;
-}
-
-export interface ResourcesContentsContentVersionReview {
+export interface ResourcesContentsContentVersionReviewDto {
   id?: string;
   contentVersionId?: string;
   createdAt?: string;
@@ -11292,6 +11532,7 @@ export interface ResourcesResourceMetadata {
   description?: string | null;
   displayOrder?: number;
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isActive?: boolean;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -11356,6 +11597,7 @@ export interface ResourcesResourceSettings {
   description?: string | null;
   displayOrder?: number;
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isActive?: boolean;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -11447,6 +11689,7 @@ export interface ResourcesUsageRecord {
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -11480,7 +11723,7 @@ export interface ResourcesUsageTrendsResult {
   type?: ResourcesResourceUsageType;
 }
 
-export interface SocialBlogBlogPost {
+export interface SocialBlogBlogPostDto {
   id?: string;
   allowComments?: boolean;
   authorId?: string;
@@ -11512,18 +11755,36 @@ export interface SocialBlogCreateBlogPostInput {
 }
 
 export interface SocialFeedAddFeedItemInput {
-  authorId?: string;
   contentCreatedAt?: string | null;
   contentId?: string;
   contentType?: SocialFeedFeedContentType;
   reason?: SocialFeedFeedItemReason;
   relevanceScore?: number;
+}
+
+export interface SocialFeedCreateStoryInput {
+  assetReferenceId?: string;
+  caption?: string | null;
+}
+
+export interface SocialFeedFeedAuthorDto {
+  avatarUrl?: string | null;
+  displayName?: string | null;
+  handle?: string | null;
+  isVerified?: boolean;
   userId?: string;
 }
 
 export type SocialFeedFeedContentType = 'Post' | 'BlogPost' | 'CourseReview' | 'ProjectUpdate' | 'Achievement' | 'CourseCompletion';
 
-export interface SocialFeedFeedItem {
+export interface SocialFeedFeedEngagementDto {
+  commentsCount?: number;
+  reactionsCount?: number;
+  repostsCount?: number;
+  viewsCount?: number;
+}
+
+export interface SocialFeedFeedItemDto {
   id?: string;
   authorId?: string;
   contentCreatedAt?: string;
@@ -11538,6 +11799,181 @@ export interface SocialFeedFeedItem {
 }
 
 export type SocialFeedFeedItemReason = 'Following' | 'Trending' | 'Recommended' | 'Mentioned' | 'Replied' | 'Liked' | 'InNetwork';
+
+export interface SocialFeedFeedViewerStateDto {
+  canDelete?: boolean;
+  canEdit?: boolean;
+  hasReposted?: boolean;
+  isFollowingAuthor?: boolean;
+  isSaved?: boolean;
+  reaction?: string | null;
+}
+
+export interface SocialFeedOriginalPostDto {
+  id?: string;
+  author?: SocialFeedFeedAuthorDto;
+  content?: string | null;
+  createdAt?: string;
+  mediaType?: string | null;
+  mediaUrl?: string | null;
+}
+
+export interface SocialFeedSavedPostStateDto {
+  isSaved?: boolean;
+  postId?: string;
+}
+
+export interface SocialFeedSocialFeedItemDto {
+  id?: string;
+  author?: SocialFeedFeedAuthorDto;
+  createdAt?: string;
+  engagement?: SocialFeedFeedEngagementDto;
+  kind?: SocialFeedSocialFeedItemKind;
+  post?: SocialFeedSocialPostContentDto;
+  tags?: Array<string> | null;
+  testingSession?: SocialFeedTestingSessionFeedDto;
+  viewer?: SocialFeedFeedViewerStateDto;
+}
+
+export type SocialFeedSocialFeedItemKind = 'Post' | 'Repost' | 'TestingSession';
+
+export interface SocialFeedSocialFeedPageDto {
+  items?: Array<SocialFeedSocialFeedItemDto> | null;
+  nextCursor?: string | null;
+}
+
+export interface SocialFeedSocialFeedProfileDto {
+  id?: string;
+  availabilityStatus?: string | null;
+  avatarUrl?: string | null;
+  bannerUrl?: string | null;
+  bio?: string | null;
+  displayName?: string | null;
+  followerCount?: number;
+  followingCount?: number;
+  handle?: string | null;
+  headline?: string | null;
+  isFollowing?: boolean;
+  isVerified?: boolean;
+  location?: string | null;
+  postCount?: number;
+  projectCount?: number;
+  timeZone?: string | null;
+  userId?: string;
+  websiteUrl?: string | null;
+}
+
+export interface SocialFeedSocialPostContentDto {
+  content?: string | null;
+  editedAt?: string | null;
+  isEdited?: boolean;
+  mediaType?: string | null;
+  mediaUrl?: string | null;
+  repostedPost?: SocialFeedOriginalPostDto;
+  visibility?: string | null;
+}
+
+export interface SocialFeedStoryDto {
+  id?: string;
+  assetReferenceId?: string;
+  authorId?: string;
+  caption?: string | null;
+  createdAt?: string;
+  expiresAt?: string;
+  isViewed?: boolean;
+  mediaType?: string | null;
+  mediaUrl?: string | null;
+}
+
+export interface SocialFeedTestingSessionFeedDto {
+  availableTesterCount?: number;
+  endsAt?: string;
+  maxTesters?: number;
+  mode?: string | null;
+  name?: string | null;
+  registeredTesterCount?: number;
+  startsAt?: string;
+  status?: string | null;
+}
+
+export interface SocialFollowsControllersBatchCountsInput {
+  entityIds?: Array<string> | null;
+  entityType?: string | null;
+}
+
+export interface SocialFollowsControllersBatchStatusInput {
+  entityIds?: Array<string> | null;
+  entityType?: string | null;
+}
+
+export interface SocialFollowsControllersBlockDto {
+  id?: string;
+  blockedAt?: string;
+  blockedId?: string;
+  blockerId?: string;
+  reason?: string | null;
+}
+
+export interface SocialFollowsControllersBlockInput {
+  blockedUserId?: string;
+  reason?: string | null;
+}
+
+export interface SocialFollowsControllersFollowDto {
+  id?: string;
+  followedAt?: string;
+  followedEntityId?: string;
+  followedEntityType?: string | null;
+  followerId?: string;
+  notificationsEnabled?: boolean;
+}
+
+export interface SocialFollowsControllersFollowInput {
+  entityId?: string;
+  entityType?: string | null;
+  notificationsEnabled?: boolean;
+}
+
+export interface SocialFollowsControllersFollowPrivacySettingsDto {
+  id?: string;
+  allowFollowers?: boolean;
+  isFollowerListPublic?: boolean;
+  isFollowingListPublic?: boolean;
+  notifyOnNewFollower?: boolean;
+  showFollowerCount?: boolean;
+  showFollowingCount?: boolean;
+  userId?: string;
+}
+
+export interface SocialFollowsControllersMuteDto {
+  id?: string;
+  expiresAt?: string | null;
+  mutedAt?: string;
+  mutedId?: string;
+  muterId?: string;
+  reason?: string | null;
+}
+
+export interface SocialFollowsControllersMuteInput {
+  expiresAt?: string | null;
+  mutedUserId?: string;
+  reason?: string | null;
+}
+
+export interface SocialFollowsControllersUpdateNotificationsInput {
+  entityId?: string;
+  entityType?: string | null;
+  notificationsEnabled?: boolean;
+}
+
+export interface SocialFollowsControllersUpdatePrivacySettingsInput {
+  allowFollowers?: boolean;
+  isFollowerListPublic?: boolean;
+  isFollowingListPublic?: boolean;
+  notifyOnNewFollower?: boolean;
+  showFollowerCount?: boolean;
+  showFollowingCount?: boolean;
+}
 
 export interface SocialGroupsApproveSocialGroupMemberInput {
   approvedByUserId?: string;
@@ -11562,7 +11998,7 @@ export interface SocialGroupsJoinSocialGroupInput {
   userId?: string;
 }
 
-export interface SocialGroupsSocialGroup {
+export interface SocialGroupsSocialGroupDto {
   id?: string;
   createdAt?: string;
   description?: string | null;
@@ -11578,7 +12014,7 @@ export interface SocialGroupsSocialGroup {
   visibility?: SocialGroupsSocialGroupVisibility;
 }
 
-export interface SocialGroupsSocialGroupMember {
+export interface SocialGroupsSocialGroupMemberDto {
   id?: string;
   approvedByUserId?: string | null;
   groupId?: string;
@@ -11614,12 +12050,14 @@ export interface SocialPostsControllersAddCommentInput {
 }
 
 export interface SocialPostsControllersCreatePostInput {
+  assetReferenceId?: string | null;
   content?: string | null;
-  mediaType?: SocialPostsMediaType;
-  mediaUrl?: string | null;
   tags?: Array<string> | null;
-  tenantId?: string | null;
   visibility?: SocialPostsPostVisibility;
+}
+
+export interface SocialPostsControllersCreateRepostInput {
+  content?: string | null;
 }
 
 export interface SocialPostsControllersFollowPostInput {
@@ -11636,8 +12074,6 @@ export interface SocialPostsControllersUpdateCommentInput {
 export interface SocialPostsControllersUpdatePostInput {
   content?: string | null;
 }
-
-export type SocialPostsMediaType = 'Image' | 'Video' | 'Audio' | 'Document';
 
 export type SocialPostsPostVisibility = 'Public' | 'Followers' | 'Private' | 'Unlisted';
 
@@ -11659,7 +12095,7 @@ export interface SocialProfilesAddProfileSkillBody {
 
 export type SocialProfilesProfileAvailabilityStatus = 'NotSet' | 'OpenToWork' | 'OpenToCollaborate' | 'Busy' | 'Hidden';
 
-export interface SocialProfilesProfilePortfolioItem {
+export interface SocialProfilesProfilePortfolioItemDto {
   id?: string;
   description?: string | null;
   displayOrder?: number;
@@ -11671,7 +12107,7 @@ export interface SocialProfilesProfilePortfolioItem {
   url?: string | null;
 }
 
-export interface SocialProfilesProfileSkill {
+export interface SocialProfilesProfileSkillDto {
   id?: string;
   displayOrder?: number;
   name?: string | null;
@@ -11683,7 +12119,7 @@ export type SocialProfilesProfileSkillProficiency = 'Beginner' | 'Intermediate' 
 
 export type SocialProfilesProfileVisibility = 'Private' | 'Connections' | 'Public';
 
-export interface SocialProfilesSocialProfile {
+export interface SocialProfilesSocialProfileDto {
   id?: string;
   availabilityStatus?: SocialProfilesProfileAvailabilityStatus;
   avatarUrl?: string | null;
@@ -11696,13 +12132,13 @@ export interface SocialProfilesSocialProfile {
   handle?: string | null;
   headline?: string | null;
   location?: string | null;
-  portfolioItems?: Array<SocialProfilesProfilePortfolioItem> | null;
+  portfolioItems?: Array<SocialProfilesProfilePortfolioItemDto> | null;
   postCount?: number;
   projectCount?: number;
   showActivity?: boolean;
   showPortfolio?: boolean;
   showSkills?: boolean;
-  skills?: Array<SocialProfilesProfileSkill> | null;
+  skills?: Array<SocialProfilesProfileSkillDto> | null;
   socialLinksJson?: string | null;
   timeZone?: string | null;
   userId?: string;
@@ -11727,13 +12163,6 @@ export interface SocialProfilesUpdateProfilePrivacyBody {
   visibility?: SocialProfilesProfileVisibility;
 }
 
-export interface SocialProfilesUpdateProfileStatsBody {
-  followerCount?: number;
-  followingCount?: number;
-  postCount?: number;
-  projectCount?: number;
-}
-
 export interface SocialProfilesUpdateSocialProfileBody {
   availabilityStatus?: SocialProfilesProfileAvailabilityStatus;
   avatarUrl?: string | null;
@@ -11748,7 +12177,7 @@ export interface SocialProfilesUpdateSocialProfileBody {
   websiteUrl?: string | null;
 }
 
-export interface SocialReactionsReaction {
+export interface SocialReactionsReactionDto {
   id?: string;
   createdAt?: string;
   targetId?: string;
@@ -11765,17 +12194,15 @@ export type SocialReactionsReactionType = 'Like' | 'Love' | 'Insightful' | 'Cele
 export interface SocialReactionsRemoveReactionInput {
   targetId?: string;
   targetType?: SocialReactionsReactionTargetType;
-  userId?: string;
 }
 
 export interface SocialReactionsSetReactionInput {
   targetId?: string;
   targetType?: SocialReactionsReactionTargetType;
   type?: SocialReactionsReactionType;
-  userId?: string;
 }
 
-export interface SocialReactionsTargetReactionSummary {
+export interface SocialReactionsTargetReactionSummaryDto {
   counts?: { Celebrate?: number; Curious?: number; Insightful?: number; Like?: number; Love?: number; Support?: number } | null;
   targetId?: string;
   targetType?: SocialReactionsReactionTargetType;
@@ -11790,6 +12217,7 @@ export interface TeamsTeam {
   deletedAt?: string | null;
   description?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   invitations?: Array<TeamsTeamInvitation> | null;
   isActive?: boolean;
   isDeleted?: boolean;
@@ -11814,6 +12242,7 @@ export interface TeamsTeamInvitation {
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   expiresAt?: string;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   invitedByUserId?: string;
   invitedEmail?: string | null;
   invitedUserId?: string | null;
@@ -11836,6 +12265,7 @@ export interface TeamsTeamMember {
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isActive?: boolean;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -11910,7 +12340,7 @@ export interface TestingLabConfigureTestingEventLearningInput {
   requirement?: TestingLabTestingLearningCompletionRequirement;
 }
 
-export interface TestingLabCreateSimpleTestingInput {
+export interface TestingLabCreateSimpleTestingRequestDto {
   description?: string | null;
   downloadUrl?: string | null;
   endDate?: string | null;
@@ -11930,6 +12360,7 @@ export interface TestingLabCreateTestingEventInput {
   applicationsCloseAt?: string;
   applicationsOpenAt?: string;
   approvalMode?: TestingLabTestingEventApprovalMode;
+  configuration?: TestingLabConfigureTestingEventInput;
   description?: string | null;
   endsAt?: string;
   mode?: TestingLabTestingEventMode;
@@ -11938,31 +12369,16 @@ export interface TestingLabCreateTestingEventInput {
   requiresFeedback?: boolean;
   startsAt?: string;
   templateRevisionId?: string | null;
-}
-
-export interface TestingLabCreateTestingInput {
-  description?: string | null;
-  downloadUrl?: string | null;
-  endDate: string;
-  feedbackFormContent?: string | null;
-  instructionsContent?: string | null;
-  instructionsFileId?: string | null;
-  instructionsType: TestingLabInstructionType;
-  instructionsUrl?: string | null;
-  maxTesters?: number | null;
-  projectVersionId: string;
-  startDate: string;
-  status: TestingLabTestingRequestStatus;
-  title: string;
+  timeZoneId?: string | null;
 }
 
 export interface TestingLabCreateTestingLabRoleInput {
   description?: string | null;
   name?: string | null;
-  permissions?: TestingLabTestingLabPermissions;
+  permissions?: TestingLabTestingLabPermissionsDto;
 }
 
-export interface TestingLabCreateTestingLabSettings {
+export interface TestingLabCreateTestingLabSettingsDto {
   allowPublicSignups?: boolean;
   defaultSessionDuration: number;
   description?: string | null;
@@ -11975,7 +12391,7 @@ export interface TestingLabCreateTestingLabSettings {
   versionSubmissionPolicy?: ProjectsVersionSubmissionPolicy;
 }
 
-export interface TestingLabCreateTestingLocation {
+export interface TestingLabCreateTestingLocationDto {
   address?: string | null;
   city?: string | null;
   contactEmail?: string | null;
@@ -11997,7 +12413,23 @@ export interface TestingLabCreateTestingProjectApplicationDraftInput {
   projectId?: string;
 }
 
-export interface TestingLabCreateTestingSession {
+export interface TestingLabCreateTestingRequestDto {
+  description?: string | null;
+  downloadUrl?: string | null;
+  endDate: string;
+  feedbackFormContent?: string | null;
+  instructionsContent?: string | null;
+  instructionsFileId?: string | null;
+  instructionsType: TestingLabInstructionType;
+  instructionsUrl?: string | null;
+  maxTesters?: number | null;
+  projectVersionId: string;
+  startDate: string;
+  status: TestingLabTestingRequestStatus;
+  title: string;
+}
+
+export interface TestingLabCreateTestingSessionDto {
   endTime: string;
   locationId: string;
   managerUserId: string;
@@ -12034,6 +12466,7 @@ export interface TestingLabFeedbackQualityRating {
   domainEvents?: Array<CQRSIDomainEvent> | null;
   feedback?: TestingLabTestingFeedback;
   feedbackId: string;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNegative?: boolean;
@@ -12081,6 +12514,7 @@ export interface TestingLabPublicTestingEventProjection {
   slots?: Array<TestingLabPublicTestingEventSlotProjection> | null;
   startsAt?: string;
   status?: TestingLabTestingEventStatus;
+  timeZoneId?: string | null;
 }
 
 export interface TestingLabPublicTestingEventSlotProjection {
@@ -12138,7 +12572,7 @@ export interface TestingLabQuestionnaireSchema {
   title?: string | null;
 }
 
-export interface TestingLabRateFeedbackQuality {
+export interface TestingLabRateFeedbackQualityDto {
   quality?: TestingLabFeedbackQuality;
 }
 
@@ -12152,7 +12586,7 @@ export type TestingLabRegistrationStatus = 'Registered' | 'Confirmed' | 'Cancell
 
 export type TestingLabRegistrationType = 'ProjectMember' | 'Tester';
 
-export interface TestingLabReportFeedback {
+export interface TestingLabReportFeedbackDto {
   reason?: string | null;
 }
 
@@ -12185,6 +12619,7 @@ export interface TestingLabSessionRegistration {
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isCheckedIn?: boolean;
   isCheckedOut?: boolean;
   isConfirmed?: boolean;
@@ -12217,6 +12652,7 @@ export interface TestingLabSessionWaitlist {
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -12232,7 +12668,7 @@ export interface TestingLabSessionWaitlist {
   version?: number;
 }
 
-export interface TestingLabSubmitFeedback {
+export interface TestingLabSubmitFeedbackDto {
   additionalNotes?: string | null;
   feedbackResponses: string;
   overallRating?: number | null;
@@ -12297,6 +12733,7 @@ export interface TestingLabTestingApplicationVote {
   decision?: TestingLabTestingApplicationVoteDecision;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -12324,6 +12761,7 @@ export interface TestingLabTestingCommitteeMember {
   domainEvents?: Array<CQRSIDomainEvent> | null;
   event?: TestingLabTestingEvent;
   eventId?: string;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isActive?: boolean;
   isChair?: boolean;
   isDeleted?: boolean;
@@ -12357,6 +12795,7 @@ export interface TestingLabTestingEvent {
   domainEvents?: Array<CQRSIDomainEvent> | null;
   endsAt?: string;
   generalRules?: string | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -12387,6 +12826,7 @@ export interface TestingLabTestingEvent {
   testerInstructions?: string | null;
   testerRegistrationSchema?: TestingLabQuestionnaireSchema;
   testerRegistrationSchemaJson?: string | null;
+  timeZoneId: string;
   updatedAt: string;
   version?: number;
 }
@@ -12475,6 +12915,7 @@ export interface TestingLabTestingEventProjection {
   startsAt?: string;
   status?: TestingLabTestingEventStatus;
   tenantId?: string | null;
+  timeZoneId?: string | null;
 }
 
 export type TestingLabTestingEventRecurrenceFrequency = 'Daily' | 'Weekly' | 'Monthly';
@@ -12496,6 +12937,7 @@ export interface TestingLabTestingEventSlot {
   endsAt?: string;
   event?: TestingLabTestingEvent;
   eventId?: string;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -12572,6 +13014,7 @@ export interface TestingLabTestingFeedback {
   feedbackData: string;
   feedbackForm?: TestingLabTestingFeedbackForm;
   feedbackFormId?: string | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNegative?: boolean;
@@ -12649,6 +13092,7 @@ export interface TestingLabTestingFeedbackForm {
   formSchema?: string | null;
   formType?: TestingLabFeedbackFormType;
   formVersion?: number;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isActive?: boolean;
   isDeleted?: boolean;
   isForOnline?: boolean;
@@ -12704,6 +13148,7 @@ export interface TestingLabTestingInput {
   instructionsFileId?: string | null;
   instructionsType: TestingLabInstructionType;
   instructionsUrl?: string | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isActive?: boolean;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -12778,7 +13223,7 @@ export interface TestingLabTestingLabLocationAnalyticsProjection {
   total?: number;
 }
 
-export interface TestingLabTestingLabPermissions {
+export interface TestingLabTestingLabPermissionsDto {
   canApproveApplications?: boolean;
   canApproveRequests?: boolean;
   canCreateEvents?: boolean;
@@ -12809,7 +13254,7 @@ export interface TestingLabTestingLabPermissions {
   canViewSessions?: boolean;
 }
 
-export interface TestingLabTestingLabResourcePermission {
+export interface TestingLabTestingLabResourcePermissionDto {
   action?: string | null;
   expiresAt?: string | null;
   resourceId?: string;
@@ -12821,10 +13266,10 @@ export interface TestingLabTestingLabRoleTemplate {
   description?: string | null;
   isSystemRole?: boolean;
   name?: string | null;
-  permissions?: TestingLabTestingLabPermissions;
+  permissions?: TestingLabTestingLabPermissionsDto;
 }
 
-export interface TestingLabTestingLabSettings {
+export interface TestingLabTestingLabSettingsDto {
   id?: string;
   allowPublicSignups?: boolean;
   createdAt?: string;
@@ -12860,6 +13305,7 @@ export interface TestingLabTestingLocation {
   equipment?: string | null;
   equipmentAvailable?: string | null;
   fullAddress?: string | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isAvailable?: boolean;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -12891,6 +13337,7 @@ export interface TestingLabTestingParticipant {
   feedbackCount?: number;
   instructionsAcknowledged: boolean;
   instructionsAcknowledgedAt?: string | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isActive?: boolean;
   isCompleted?: boolean;
   isDeleted?: boolean;
@@ -12973,6 +13420,7 @@ export interface TestingLabTestingProjectApplication {
   eventApplicationResponse?: TestingLabQuestionnaireOutput;
   eventApplicationResponseJson?: string | null;
   eventId?: string;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -13033,6 +13481,7 @@ export interface TestingLabTestingQuestionnaireRevision {
   createdByUserId?: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -13091,6 +13540,7 @@ export interface TestingLabTestingSession {
   eventSlot?: TestingLabTestingEventSlot;
   eventSlotId?: string | null;
   feedback?: Array<TestingLabTestingFeedback> | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isActive?: boolean;
   isCompleted?: boolean;
   isDeleted?: boolean;
@@ -13139,7 +13589,7 @@ export interface TestingLabTestingSlotRegistrationProjection {
 
 export type TestingLabTestingSlotRegistrationStatus = 'Registered' | 'Waitlisted' | 'CheckedIn' | 'Attended' | 'Completed' | 'Cancelled' | 'NoShow';
 
-export interface TestingLabUpdateAttendance {
+export interface TestingLabUpdateAttendanceDto {
   attendanceStatus?: TestingLabAttendanceStatus;
   userId?: string;
 }
@@ -13154,31 +13604,16 @@ export interface TestingLabUpdateTestingEventInput {
   name?: string | null;
   requiresFeedback?: boolean;
   startsAt?: string;
-}
-
-export interface TestingLabUpdateTestingInput {
-  description?: string | null;
-  downloadUrl?: string | null;
-  endDate?: string | null;
-  feedbackFormContent?: string | null;
-  instructionsContent?: string | null;
-  instructionsFileId?: string | null;
-  instructionsType?: TestingLabInstructionType;
-  instructionsUrl?: string | null;
-  maxTesters?: number | null;
-  projectVersionId?: string | null;
-  startDate?: string | null;
-  status?: TestingLabTestingRequestStatus;
-  title?: string | null;
+  timeZoneId?: string | null;
 }
 
 export interface TestingLabUpdateTestingLabRoleInput {
   description?: string | null;
   name?: string | null;
-  permissions?: TestingLabTestingLabPermissions;
+  permissions?: TestingLabTestingLabPermissionsDto;
 }
 
-export interface TestingLabUpdateTestingLabSettings {
+export interface TestingLabUpdateTestingLabSettingsDto {
   allowPublicSignups?: boolean | null;
   defaultSessionDuration?: number | null;
   description?: string | null;
@@ -13191,7 +13626,7 @@ export interface TestingLabUpdateTestingLabSettings {
   versionSubmissionPolicy?: ProjectsVersionSubmissionPolicy;
 }
 
-export interface TestingLabUpdateTestingLocation {
+export interface TestingLabUpdateTestingLocationDto {
   address?: string | null;
   city?: string | null;
   contactEmail?: string | null;
@@ -13213,6 +13648,22 @@ export interface TestingLabUpdateTestingProjectApplicationInput {
   preferredAvailability?: string | null;
   projectVersionId?: string;
   submittedAssetReferenceIds?: Array<string> | null;
+}
+
+export interface TestingLabUpdateTestingRequestDto {
+  description?: string | null;
+  downloadUrl?: string | null;
+  endDate?: string | null;
+  feedbackFormContent?: string | null;
+  instructionsContent?: string | null;
+  instructionsFileId?: string | null;
+  instructionsType?: TestingLabInstructionType;
+  instructionsUrl?: string | null;
+  maxTesters?: number | null;
+  projectVersionId?: string | null;
+  startDate?: string | null;
+  status?: TestingLabTestingRequestStatus;
+  title?: string | null;
 }
 
 export interface TestingLabUpsertTestingEventSlotInput {
@@ -13242,8 +13693,8 @@ export interface TestingLabUpsertTestingEventTemplateInput {
 
 export interface TestingLabUserTestingLabPermissions {
   assignedRoles?: Array<string> | null;
-  permissions?: TestingLabTestingLabPermissions;
-  resourcePermissions?: Array<TestingLabTestingLabResourcePermission> | null;
+  permissions?: TestingLabTestingLabPermissionsDto;
+  resourcePermissions?: Array<TestingLabTestingLabResourcePermissionDto> | null;
   tenantId?: string | null;
   userId?: string;
 }
@@ -13271,29 +13722,29 @@ export type TrustSafetyTrustSafetyAppealState = 'Submitted' | 'Assigned' | 'Uphe
 export let AIAiChatInputSchema: z.ZodType<AIAiChatInput>;
 export let AIAiChatMessageSchema: z.ZodType<AIAiChatMessage>;
 export let AIAiCompletionOutputSchema: z.ZodType<AIAiCompletionOutput>;
-export let AIAiConversationHistoryEntrySchema: z.ZodType<AIAiConversationHistoryEntry>;
+export let AIAiConversationHistoryEntryDtoSchema: z.ZodType<AIAiConversationHistoryEntryDto>;
 export let AIAiGeneratedContentDraftInputSchema: z.ZodType<AIAiGeneratedContentDraftInput>;
 export let AIAiGeneratedContentInputSchema: z.ZodType<AIAiGeneratedContentInput>;
 export let AIAiGeneratedContentKindSchema: z.ZodType<AIAiGeneratedContentKind>;
 export let AIAiGenerateInputSchema: z.ZodType<AIAiGenerateInput>;
-export let AIAiPromptTemplateSchema: z.ZodType<AIAiPromptTemplate>;
+export let AIAiPromptTemplateDtoSchema: z.ZodType<AIAiPromptTemplateDto>;
 export let AIAiPromptTemplateGenerateInputSchema: z.ZodType<AIAiPromptTemplateGenerateInput>;
 export let AIAiPromptTemplateRenderInputSchema: z.ZodType<AIAiPromptTemplateRenderInput>;
 export let AIAiPromptTemplateRenderOutputSchema: z.ZodType<AIAiPromptTemplateRenderOutput>;
-export let AIAiProviderStatusSchema: z.ZodType<AIAiProviderStatus>;
-export let AIAiQuotaStatusSchema: z.ZodType<AIAiQuotaStatus>;
+export let AIAiProviderStatusDtoSchema: z.ZodType<AIAiProviderStatusDto>;
+export let AIAiQuotaStatusDtoSchema: z.ZodType<AIAiQuotaStatusDto>;
 export let AIAiQuotaStatusOutputSchema: z.ZodType<AIAiQuotaStatusOutput>;
 export let AIAiStatusOutputSchema: z.ZodType<AIAiStatusOutput>;
-export let AIAiUsageSchema: z.ZodType<AIAiUsage>;
+export let AIAiUsageDtoSchema: z.ZodType<AIAiUsageDto>;
 export let AICreateAiPromptTemplateInputSchema: z.ZodType<AICreateAiPromptTemplateInput>;
 export let AIUpdateAiPromptTemplateInputSchema: z.ZodType<AIUpdateAiPromptTemplateInput>;
-export let AnalyticsAnalyticsWarehouseFactSchema: z.ZodType<AnalyticsAnalyticsWarehouseFact>;
+export let AnalyticsAnalyticsWarehouseFactDtoSchema: z.ZodType<AnalyticsAnalyticsWarehouseFactDto>;
 export let AnalyticsAnalyticsWarehouseRunInputSchema: z.ZodType<AnalyticsAnalyticsWarehouseRunInput>;
 export let AnalyticsAnalyticsWarehouseRunOutputSchema: z.ZodType<AnalyticsAnalyticsWarehouseRunOutput>;
 export let AnalyticsAnalyzeFunnelQuerySchema: z.ZodType<AnalyticsAnalyzeFunnelQuery>;
 export let AnalyticsCreateDashboardInputSchema: z.ZodType<AnalyticsCreateDashboardInput>;
-export let AnalyticsDashboardSchema: z.ZodType<AnalyticsDashboard>;
-export let AnalyticsDashboardWidgetSchema: z.ZodType<AnalyticsDashboardWidget>;
+export let AnalyticsDashboardDtoSchema: z.ZodType<AnalyticsDashboardDto>;
+export let AnalyticsDashboardWidgetDtoSchema: z.ZodType<AnalyticsDashboardWidgetDto>;
 export let AnalyticsDashboardWidgetInputSchema: z.ZodType<AnalyticsDashboardWidgetInput>;
 export let AnalyticsProductCapacityMetricsSchema: z.ZodType<AnalyticsProductCapacityMetrics>;
 export let AnalyticsProductCatalogMetricsSchema: z.ZodType<AnalyticsProductCatalogMetrics>;
@@ -13330,9 +13781,9 @@ export let APIControllersDependencyHealthItemSchema: z.ZodType<APIControllersDep
 export let APIControllersDependencyHealthOutputSchema: z.ZodType<APIControllersDependencyHealthOutput>;
 export let APIControllersDispatchPayoutExecutionInputSchema: z.ZodType<APIControllersDispatchPayoutExecutionInput>;
 export let APIControllersDispatchTreasuryWithdrawalInputSchema: z.ZodType<APIControllersDispatchTreasuryWithdrawalInput>;
-export let APIControllersEconomyKycStatusSchema: z.ZodType<APIControllersEconomyKycStatus>;
-export let APIControllersEconomyPayoutExecutionOperationSchema: z.ZodType<APIControllersEconomyPayoutExecutionOperation>;
-export let APIControllersEconomySelfServiceCapabilitySchema: z.ZodType<APIControllersEconomySelfServiceCapability>;
+export let APIControllersEconomyKycStatusDtoSchema: z.ZodType<APIControllersEconomyKycStatusDto>;
+export let APIControllersEconomyPayoutExecutionOperationDtoSchema: z.ZodType<APIControllersEconomyPayoutExecutionOperationDto>;
+export let APIControllersEconomySelfServiceCapabilityDtoSchema: z.ZodType<APIControllersEconomySelfServiceCapabilityDto>;
 export let APIControllersEconomyStepUpInputSchema: z.ZodType<APIControllersEconomyStepUpInput>;
 export let APIControllersEconomyTopUpFailureOutputSchema: z.ZodType<APIControllersEconomyTopUpFailureOutput>;
 export let APIControllersEconomyTransferProtectedOperationFailureOutputSchema: z.ZodType<APIControllersEconomyTransferProtectedOperationFailureOutput>;
@@ -13342,6 +13793,7 @@ export let APIControllersInspectEconomyCapabilityReadinessInputSchema: z.ZodType
 export let APIControllersLivenessOutputSchema: z.ZodType<APIControllersLivenessOutput>;
 export let APIControllersMarketplaceProtectedOperationFailureOutputSchema: z.ZodType<APIControllersMarketplaceProtectedOperationFailureOutput>;
 export let APIControllersPayoutProtectedOperationFailureOutputSchema: z.ZodType<APIControllersPayoutProtectedOperationFailureOutput>;
+export let APIControllersPlatformKpisOutputSchema: z.ZodType<APIControllersPlatformKpisOutput>;
 export let APIControllersProcessDetailsSchema: z.ZodType<APIControllersProcessDetails>;
 export let APIControllersProposeEconomyPolicyInputSchema: z.ZodType<APIControllersProposeEconomyPolicyInput>;
 export let APIControllersProposeEconomyReserveInputSchema: z.ZodType<APIControllersProposeEconomyReserveInput>;
@@ -13358,14 +13810,16 @@ export let APIControllersRuntimeDetailsSchema: z.ZodType<APIControllersRuntimeDe
 export let APIControllersSettleMyMarketplaceOrderInputSchema: z.ZodType<APIControllersSettleMyMarketplaceOrderInput>;
 export let APIControllersStartMyAdRewardSessionInputSchema: z.ZodType<APIControllersStartMyAdRewardSessionInput>;
 export let APIControllersStartMyKycInputSchema: z.ZodType<APIControllersStartMyKycInput>;
+export let APIEventingDeadLetterEventSchema: z.ZodType<APIEventingDeadLetterEvent>;
+export let APIEventingEventTransportStatusSchema: z.ZodType<APIEventingEventTransportStatus>;
 export let APIProjectsAddProjectTeamInputSchema: z.ZodType<APIProjectsAddProjectTeamInput>;
 export let APIProjectsCounterProjectTeamAgreementInputSchema: z.ZodType<APIProjectsCounterProjectTeamAgreementInput>;
 export let APIProjectsCreateProjectAllocationInputSchema: z.ZodType<APIProjectsCreateProjectAllocationInput>;
 export let APIProjectsCreateProjectTeamAgreementInputSchema: z.ZodType<APIProjectsCreateProjectTeamAgreementInput>;
-export let APIProjectsProjectAllocationSchema: z.ZodType<APIProjectsProjectAllocation>;
-export let APIProjectsProjectOwnershipSchema: z.ZodType<APIProjectsProjectOwnership>;
-export let APIProjectsProjectTeamAgreementSchema: z.ZodType<APIProjectsProjectTeamAgreement>;
-export let APIProjectsProjectTeamOwnershipSchema: z.ZodType<APIProjectsProjectTeamOwnership>;
+export let APIProjectsProjectAllocationDtoSchema: z.ZodType<APIProjectsProjectAllocationDto>;
+export let APIProjectsProjectOwnershipDtoSchema: z.ZodType<APIProjectsProjectOwnershipDto>;
+export let APIProjectsProjectTeamAgreementDtoSchema: z.ZodType<APIProjectsProjectTeamAgreementDto>;
+export let APIProjectsProjectTeamOwnershipDtoSchema: z.ZodType<APIProjectsProjectTeamOwnershipDto>;
 export let APIProjectsTransferProjectOwnerTeamInputSchema: z.ZodType<APIProjectsTransferProjectOwnerTeamInput>;
 export let APIProjectsUpdateProjectAllocationInputSchema: z.ZodType<APIProjectsUpdateProjectAllocationInput>;
 export let APIProjectsUpdateProjectTeamInputSchema: z.ZodType<APIProjectsUpdateProjectTeamInput>;
@@ -13377,16 +13831,16 @@ export let APIProjectWorkCreateProjectMilestoneInputSchema: z.ZodType<APIProject
 export let APIProjectWorkCreateProjectTaskLabelInputSchema: z.ZodType<APIProjectWorkCreateProjectTaskLabelInput>;
 export let APIProjectWorkCreateProjectWorkTaskInputSchema: z.ZodType<APIProjectWorkCreateProjectWorkTaskInput>;
 export let APIProjectWorkMoveProjectWorkTaskInputSchema: z.ZodType<APIProjectWorkMoveProjectWorkTaskInput>;
-export let APIProjectWorkProjectBoardSchema: z.ZodType<APIProjectWorkProjectBoard>;
-export let APIProjectWorkProjectChecklistItemSchema: z.ZodType<APIProjectWorkProjectChecklistItem>;
-export let APIProjectWorkProjectMilestoneSchema: z.ZodType<APIProjectWorkProjectMilestone>;
-export let APIProjectWorkProjectTaskCommentSchema: z.ZodType<APIProjectWorkProjectTaskComment>;
-export let APIProjectWorkProjectTaskDependencySchema: z.ZodType<APIProjectWorkProjectTaskDependency>;
-export let APIProjectWorkProjectTaskLabelSchema: z.ZodType<APIProjectWorkProjectTaskLabel>;
-export let APIProjectWorkProjectWorkColumnSchema: z.ZodType<APIProjectWorkProjectWorkColumn>;
-export let APIProjectWorkProjectWorkHistorySchema: z.ZodType<APIProjectWorkProjectWorkHistory>;
-export let APIProjectWorkProjectWorkTaskSchema: z.ZodType<APIProjectWorkProjectWorkTask>;
-export let APIProjectWorkProjectWorkTaskDetailsSchema: z.ZodType<APIProjectWorkProjectWorkTaskDetails>;
+export let APIProjectWorkProjectBoardDtoSchema: z.ZodType<APIProjectWorkProjectBoardDto>;
+export let APIProjectWorkProjectChecklistItemDtoSchema: z.ZodType<APIProjectWorkProjectChecklistItemDto>;
+export let APIProjectWorkProjectMilestoneDtoSchema: z.ZodType<APIProjectWorkProjectMilestoneDto>;
+export let APIProjectWorkProjectTaskCommentDtoSchema: z.ZodType<APIProjectWorkProjectTaskCommentDto>;
+export let APIProjectWorkProjectTaskDependencyDtoSchema: z.ZodType<APIProjectWorkProjectTaskDependencyDto>;
+export let APIProjectWorkProjectTaskLabelDtoSchema: z.ZodType<APIProjectWorkProjectTaskLabelDto>;
+export let APIProjectWorkProjectWorkColumnDtoSchema: z.ZodType<APIProjectWorkProjectWorkColumnDto>;
+export let APIProjectWorkProjectWorkHistoryDtoSchema: z.ZodType<APIProjectWorkProjectWorkHistoryDto>;
+export let APIProjectWorkProjectWorkTaskDetailsDtoSchema: z.ZodType<APIProjectWorkProjectWorkTaskDetailsDto>;
+export let APIProjectWorkProjectWorkTaskDtoSchema: z.ZodType<APIProjectWorkProjectWorkTaskDto>;
 export let APIProjectWorkUpdateProjectMilestoneInputSchema: z.ZodType<APIProjectWorkUpdateProjectMilestoneInput>;
 export let APIProjectWorkUpdateProjectTaskChecklistInputSchema: z.ZodType<APIProjectWorkUpdateProjectTaskChecklistInput>;
 export let APIProjectWorkUpdateProjectTaskCommentInputSchema: z.ZodType<APIProjectWorkUpdateProjectTaskCommentInput>;
@@ -13397,11 +13851,11 @@ export let APITeamsAddTeamMemberInputSchema: z.ZodType<APITeamsAddTeamMemberInpu
 export let APITeamsChangeTeamMemberInputSchema: z.ZodType<APITeamsChangeTeamMemberInput>;
 export let APITeamsCreateTeamInputSchema: z.ZodType<APITeamsCreateTeamInput>;
 export let APITeamsCreateTeamInvitationInputSchema: z.ZodType<APITeamsCreateTeamInvitationInput>;
-export let APITeamsMyTeamInvitationSchema: z.ZodType<APITeamsMyTeamInvitation>;
-export let APITeamsTeamSchema: z.ZodType<APITeamsTeam>;
-export let APITeamsTeamInvitationSchema: z.ZodType<APITeamsTeamInvitation>;
-export let APITeamsTeamInvitationCreatedSchema: z.ZodType<APITeamsTeamInvitationCreated>;
-export let APITeamsTeamMemberSchema: z.ZodType<APITeamsTeamMember>;
+export let APITeamsMyTeamInvitationDtoSchema: z.ZodType<APITeamsMyTeamInvitationDto>;
+export let APITeamsTeamDtoSchema: z.ZodType<APITeamsTeamDto>;
+export let APITeamsTeamInvitationCreatedDtoSchema: z.ZodType<APITeamsTeamInvitationCreatedDto>;
+export let APITeamsTeamInvitationDtoSchema: z.ZodType<APITeamsTeamInvitationDto>;
+export let APITeamsTeamMemberDtoSchema: z.ZodType<APITeamsTeamMemberDto>;
 export let APITeamsTeamProjectSummarySchema: z.ZodType<APITeamsTeamProjectSummary>;
 export let APITeamsUpdateTeamInputSchema: z.ZodType<APITeamsUpdateTeamInput>;
 export let AssetsAssetAccessPolicySchema: z.ZodType<AssetsAssetAccessPolicy>;
@@ -13440,6 +13894,8 @@ export let AssetsQueriesBulkAssetAccessUrlsOutputSchema: z.ZodType<AssetsQueries
 export let AssetsReportReasonSchema: z.ZodType<AssetsReportReason>;
 export let AssetsReviewDecisionSchema: z.ZodType<AssetsReviewDecision>;
 export let AssetsSecurityAccessUrlInputSchema: z.ZodType<AssetsSecurityAccessUrlInput>;
+export let AssetsSocialMediaSocialMediaAssetDescriptorSchema: z.ZodType<AssetsSocialMediaSocialMediaAssetDescriptor>;
+export let AssetsSocialMediaSocialMediaProcessingStateSchema: z.ZodType<AssetsSocialMediaSocialMediaProcessingState>;
 export let AssetsVirusScanStatusSchema: z.ZodType<AssetsVirusScanStatus>;
 export let BillingCycleSchema: z.ZodType<BillingCycle>;
 export let BulkOperationErrorSchema: z.ZodType<BulkOperationError>;
@@ -13455,14 +13911,14 @@ export let CommerceOrdersCheckoutMarketplaceCartInputSchema: z.ZodType<CommerceO
 export let CommerceOrdersCompleteOrderInputSchema: z.ZodType<CommerceOrdersCompleteOrderInput>;
 export let CommerceOrdersCompleteOrderMarketplaceSettlementSchema: z.ZodType<CommerceOrdersCompleteOrderMarketplaceSettlement>;
 export let CommerceOrdersCreateOrderInputSchema: z.ZodType<CommerceOrdersCreateOrderInput>;
-export let CommerceOrdersMarketplaceCartSchema: z.ZodType<CommerceOrdersMarketplaceCart>;
-export let CommerceOrdersMarketplaceCartItemSchema: z.ZodType<CommerceOrdersMarketplaceCartItem>;
+export let CommerceOrdersMarketplaceCartDtoSchema: z.ZodType<CommerceOrdersMarketplaceCartDto>;
+export let CommerceOrdersMarketplaceCartItemDtoSchema: z.ZodType<CommerceOrdersMarketplaceCartItemDto>;
 export let CommerceOrdersMarketplaceCartStateSchema: z.ZodType<CommerceOrdersMarketplaceCartState>;
-export let CommerceOrdersMarketplaceCheckoutSchema: z.ZodType<CommerceOrdersMarketplaceCheckout>;
-export let CommerceOrdersMarketplaceCheckoutOrderSchema: z.ZodType<CommerceOrdersMarketplaceCheckoutOrder>;
-export let CommerceOrdersOrderSchema: z.ZodType<CommerceOrdersOrder>;
-export let CommerceOrdersOrderCaptureSchema: z.ZodType<CommerceOrdersOrderCapture>;
-export let CommerceOrdersOrderLineItemSchema: z.ZodType<CommerceOrdersOrderLineItem>;
+export let CommerceOrdersMarketplaceCheckoutDtoSchema: z.ZodType<CommerceOrdersMarketplaceCheckoutDto>;
+export let CommerceOrdersMarketplaceCheckoutOrderDtoSchema: z.ZodType<CommerceOrdersMarketplaceCheckoutOrderDto>;
+export let CommerceOrdersOrderCaptureDtoSchema: z.ZodType<CommerceOrdersOrderCaptureDto>;
+export let CommerceOrdersOrderDtoSchema: z.ZodType<CommerceOrdersOrderDto>;
+export let CommerceOrdersOrderLineItemDtoSchema: z.ZodType<CommerceOrdersOrderLineItemDto>;
 export let CommerceOrdersOrderMarketplaceCurrencyChoiceSchema: z.ZodType<CommerceOrdersOrderMarketplaceCurrencyChoice>;
 export let CommerceOrdersOrderStatusSchema: z.ZodType<CommerceOrdersOrderStatus>;
 export let CommerceOrdersSetMarketplaceCartItemQuantityInputSchema: z.ZodType<CommerceOrdersSetMarketplaceCartItemQuantityInput>;
@@ -13520,39 +13976,39 @@ export let CommerceProductsCreateProductInputSchema: z.ZodType<CommerceProductsC
 export let CommerceProductsCreatePromoCodeInputSchema: z.ZodType<CommerceProductsCreatePromoCodeInput>;
 export let CommerceProductsCreateSupportTicketInputSchema: z.ZodType<CommerceProductsCreateSupportTicketInput>;
 export let CommerceProductsEntitlementCheckResultSchema: z.ZodType<CommerceProductsEntitlementCheckResult>;
-export let CommerceProductsEntitlementInfoSchema: z.ZodType<CommerceProductsEntitlementInfo>;
+export let CommerceProductsEntitlementInfoDtoSchema: z.ZodType<CommerceProductsEntitlementInfoDto>;
 export let CommerceProductsGrantEntitlementInputSchema: z.ZodType<CommerceProductsGrantEntitlementInput>;
 export let CommerceProductsPatchProductInputSchema: z.ZodType<CommerceProductsPatchProductInput>;
 export let CommerceProductsPatchPromoCodeInputSchema: z.ZodType<CommerceProductsPatchPromoCodeInput>;
-export let CommerceProductsProductSchema: z.ZodType<CommerceProductsProduct>;
 export let CommerceProductsProductAcquisitionTypeSchema: z.ZodType<CommerceProductsProductAcquisitionType>;
-export let CommerceProductsProductPricingSchema: z.ZodType<CommerceProductsProductPricing>;
+export let CommerceProductsProductDtoSchema: z.ZodType<CommerceProductsProductDto>;
+export let CommerceProductsProductPricingDtoSchema: z.ZodType<CommerceProductsProductPricingDto>;
 export let CommerceProductsProductTypeSchema: z.ZodType<CommerceProductsProductType>;
-export let CommerceProductsPromoCodeSchema: z.ZodType<CommerceProductsPromoCode>;
 export let CommerceProductsPromoCodeApplicationResultSchema: z.ZodType<CommerceProductsPromoCodeApplicationResult>;
+export let CommerceProductsPromoCodeDtoSchema: z.ZodType<CommerceProductsPromoCodeDto>;
 export let CommerceProductsPromoCodeTypeSchema: z.ZodType<CommerceProductsPromoCodeType>;
-export let CommerceProductsPromoCodeUsageSchema: z.ZodType<CommerceProductsPromoCodeUsage>;
+export let CommerceProductsPromoCodeUsageDtoSchema: z.ZodType<CommerceProductsPromoCodeUsageDto>;
 export let CommerceProductsPromoCodeValidationResultSchema: z.ZodType<CommerceProductsPromoCodeValidationResult>;
 export let CommerceProductsRejectedPromoCodeSchema: z.ZodType<CommerceProductsRejectedPromoCode>;
 export let CommerceProductsResolveSupportTicketInputSchema: z.ZodType<CommerceProductsResolveSupportTicketInput>;
 export let CommerceProductsRevokeEntitlementInputSchema: z.ZodType<CommerceProductsRevokeEntitlementInput>;
 export let CommerceProductsSetProductPricingInputSchema: z.ZodType<CommerceProductsSetProductPricingInput>;
-export let CommerceProductsSupportTicketSchema: z.ZodType<CommerceProductsSupportTicket>;
-export let CommerceProductsSupportTicketMessageSchema: z.ZodType<CommerceProductsSupportTicketMessage>;
+export let CommerceProductsSupportTicketDtoSchema: z.ZodType<CommerceProductsSupportTicketDto>;
 export let CommerceProductsSupportTicketMessageAuthorTypeSchema: z.ZodType<CommerceProductsSupportTicketMessageAuthorType>;
+export let CommerceProductsSupportTicketMessageDtoSchema: z.ZodType<CommerceProductsSupportTicketMessageDto>;
 export let CommerceProductsSupportTicketPrioritySchema: z.ZodType<CommerceProductsSupportTicketPriority>;
 export let CommerceProductsSupportTicketStatusSchema: z.ZodType<CommerceProductsSupportTicketStatus>;
 export let CommerceProductsUpdateProductInputSchema: z.ZodType<CommerceProductsUpdateProductInput>;
 export let CommerceProductsUpdatePromoCodeInputSchema: z.ZodType<CommerceProductsUpdatePromoCodeInput>;
 export let CommerceProductsValidatePromoCodeInputSchema: z.ZodType<CommerceProductsValidatePromoCodeInput>;
-export let CommerceSubscriptionsBillingHistorySchema: z.ZodType<CommerceSubscriptionsBillingHistory>;
+export let CommerceSubscriptionsBillingHistoryDtoSchema: z.ZodType<CommerceSubscriptionsBillingHistoryDto>;
 export let CommerceSubscriptionsBillingSubscriptionsControllerCancelBillingSubscriptionInputSchema: z.ZodType<CommerceSubscriptionsBillingSubscriptionsControllerCancelBillingSubscriptionInput>;
 export let CommerceSubscriptionsBillingSubscriptionsControllerCreateBillingSubscriptionInputSchema: z.ZodType<CommerceSubscriptionsBillingSubscriptionsControllerCreateBillingSubscriptionInput>;
 export let CommerceSubscriptionsCancellationReasonSchema: z.ZodType<CommerceSubscriptionsCancellationReason>;
 export let CommerceSubscriptionsClientModulesOutputSchema: z.ZodType<CommerceSubscriptionsClientModulesOutput>;
 export let CommerceSubscriptionsCreateClientInputSchema: z.ZodType<CommerceSubscriptionsCreateClientInput>;
 export let CommerceSubscriptionsSubscriptionSchema: z.ZodType<CommerceSubscriptionsSubscription>;
-export let CommerceSubscriptionsSubscriptionChurnReportSchema: z.ZodType<CommerceSubscriptionsSubscriptionChurnReport>;
+export let CommerceSubscriptionsSubscriptionChurnReportDtoSchema: z.ZodType<CommerceSubscriptionsSubscriptionChurnReportDto>;
 export let CommerceSubscriptionsSubscriptionDowngradeResultSchema: z.ZodType<CommerceSubscriptionsSubscriptionDowngradeResult>;
 export let CommerceSubscriptionsSubscriptionLifecycleControllerAutoRenewInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionLifecycleControllerAutoRenewInput>;
 export let CommerceSubscriptionsSubscriptionLifecycleControllerCancelInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionLifecycleControllerCancelInput>;
@@ -13563,7 +14019,7 @@ export let CommerceSubscriptionsSubscriptionLifecycleControllerPauseSubscription
 export let CommerceSubscriptionsSubscriptionLifecycleControllerStartTrialInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionLifecycleControllerStartTrialInput>;
 export let CommerceSubscriptionsSubscriptionLifecycleControllerSuspendInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionLifecycleControllerSuspendInput>;
 export let CommerceSubscriptionsSubscriptionLifecycleControllerUpgradeInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionLifecycleControllerUpgradeInput>;
-export let CommerceSubscriptionsSubscriptionNotificationSchema: z.ZodType<CommerceSubscriptionsSubscriptionNotification>;
+export let CommerceSubscriptionsSubscriptionNotificationDtoSchema: z.ZodType<CommerceSubscriptionsSubscriptionNotificationDto>;
 export let CommerceSubscriptionsSubscriptionNotificationsControllerResendSubscriptionNotificationInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionNotificationsControllerResendSubscriptionNotificationInput>;
 export let CommerceSubscriptionsSubscriptionPlanSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlan>;
 export let CommerceSubscriptionsSubscriptionPlanOperationsControllerCloneSubscriptionPlanInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionPlanOperationsControllerCloneSubscriptionPlanInput>;
@@ -13582,10 +14038,10 @@ export let CommerceSubscriptionsSubscriptionsControllerPatchSubscriptionInputSch
 export let CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInputSchema: z.ZodType<CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInput>;
 export let CommerceSubscriptionsSubscriptionStatusSchema: z.ZodType<CommerceSubscriptionsSubscriptionStatus>;
 export let CommerceSubscriptionsSubscriptionUpgradeResultSchema: z.ZodType<CommerceSubscriptionsSubscriptionUpgradeResult>;
-export let CommerceSubscriptionsSubscriptionUsageSchema: z.ZodType<CommerceSubscriptionsSubscriptionUsage>;
+export let CommerceSubscriptionsSubscriptionUsageDtoSchema: z.ZodType<CommerceSubscriptionsSubscriptionUsageDto>;
 export let ComplianceAuditAuditCategorySchema: z.ZodType<ComplianceAuditAuditCategory>;
 export let ComplianceAuditAuditExportInputSchema: z.ZodType<ComplianceAuditAuditExportInput>;
-export let ComplianceAuditAuditLogSchema: z.ZodType<ComplianceAuditAuditLog>;
+export let ComplianceAuditAuditLogDtoSchema: z.ZodType<ComplianceAuditAuditLogDto>;
 export let ComplianceAuditAuditLogOutputSchema: z.ZodType<ComplianceAuditAuditLogOutput>;
 export let ComplianceAuditAuditRiskLevelSchema: z.ZodType<ComplianceAuditAuditRiskLevel>;
 export let ComplianceAuditAuditStatisticsOutputSchema: z.ZodType<ComplianceAuditAuditStatisticsOutput>;
@@ -13602,28 +14058,28 @@ export let ComplianceAuditTopUserActivitySchema: z.ZodType<ComplianceAuditTopUse
 export let ComplianceAuditUnifiedSecurityAuditEntrySchema: z.ZodType<ComplianceAuditUnifiedSecurityAuditEntry>;
 export let ComplianceAuditUnifiedSecurityAuditInputSchema: z.ZodType<ComplianceAuditUnifiedSecurityAuditInput>;
 export let ComplianceAuditUnifiedSecurityAuditOutputSchema: z.ZodType<ComplianceAuditUnifiedSecurityAuditOutput>;
-export let ComplianceConsentConsentPolicySchema: z.ZodType<ComplianceConsentConsentPolicy>;
+export let ComplianceConsentConsentPolicyDtoSchema: z.ZodType<ComplianceConsentConsentPolicyDto>;
 export let ComplianceConsentContentTypeSchema: z.ZodType<ComplianceConsentContentType>;
 export let ComplianceConsentCreateConsentPolicyCommandSchema: z.ZodType<ComplianceConsentCreateConsentPolicyCommand>;
-export let ComplianceConsentDataSubjectInputSchema: z.ZodType<ComplianceConsentDataSubjectInput>;
+export let ComplianceConsentDataSubjectRequestDtoSchema: z.ZodType<ComplianceConsentDataSubjectRequestDto>;
 export let ComplianceConsentDataSubjectRequestStatusSchema: z.ZodType<ComplianceConsentDataSubjectRequestStatus>;
 export let ComplianceConsentDataSubjectRequestTypeSchema: z.ZodType<ComplianceConsentDataSubjectRequestType>;
 export let ComplianceConsentGrantConsentCommandSchema: z.ZodType<ComplianceConsentGrantConsentCommand>;
 export let ComplianceConsentPolicyTypeSchema: z.ZodType<ComplianceConsentPolicyType>;
-export let ComplianceConsentPolicyVersionSchema: z.ZodType<ComplianceConsentPolicyVersion>;
+export let ComplianceConsentPolicyVersionDtoSchema: z.ZodType<ComplianceConsentPolicyVersionDto>;
 export let ComplianceConsentProcessRequestBodySchema: z.ZodType<ComplianceConsentProcessRequestBody>;
 export let ComplianceConsentPublishVersionInputSchema: z.ZodType<ComplianceConsentPublishVersionInput>;
 export let ComplianceConsentRevokeConsentCommandSchema: z.ZodType<ComplianceConsentRevokeConsentCommand>;
 export let ComplianceConsentSubmitDataSubjectRequestCommandSchema: z.ZodType<ComplianceConsentSubmitDataSubjectRequestCommand>;
-export let ComplianceConsentUserConsentSchema: z.ZodType<ComplianceConsentUserConsent>;
+export let ComplianceConsentUserConsentDtoSchema: z.ZodType<ComplianceConsentUserConsentDto>;
 export let ComplianceFERPACompleteFerpaInspectionRequestBodySchema: z.ZodType<ComplianceFERPACompleteFerpaInspectionRequestBody>;
 export let ComplianceFERPAEducationRecordKindSchema: z.ZodType<ComplianceFERPAEducationRecordKind>;
-export let ComplianceFERPAFerpaDirectoryInformationPolicySchema: z.ZodType<ComplianceFERPAFerpaDirectoryInformationPolicy>;
+export let ComplianceFERPAFerpaDirectoryInformationPolicyDtoSchema: z.ZodType<ComplianceFERPAFerpaDirectoryInformationPolicyDto>;
 export let ComplianceFERPAFerpaDisclosureBasisSchema: z.ZodType<ComplianceFERPAFerpaDisclosureBasis>;
-export let ComplianceFERPAFerpaDisclosureConsentSchema: z.ZodType<ComplianceFERPAFerpaDisclosureConsent>;
-export let ComplianceFERPAFerpaDisclosureLogSchema: z.ZodType<ComplianceFERPAFerpaDisclosureLog>;
-export let ComplianceFERPAFerpaEducationRecordSchema: z.ZodType<ComplianceFERPAFerpaEducationRecord>;
-export let ComplianceFERPAFerpaInspectionInputSchema: z.ZodType<ComplianceFERPAFerpaInspectionInput>;
+export let ComplianceFERPAFerpaDisclosureConsentDtoSchema: z.ZodType<ComplianceFERPAFerpaDisclosureConsentDto>;
+export let ComplianceFERPAFerpaDisclosureLogDtoSchema: z.ZodType<ComplianceFERPAFerpaDisclosureLogDto>;
+export let ComplianceFERPAFerpaEducationRecordDtoSchema: z.ZodType<ComplianceFERPAFerpaEducationRecordDto>;
+export let ComplianceFERPAFerpaInspectionRequestDtoSchema: z.ZodType<ComplianceFERPAFerpaInspectionRequestDto>;
 export let ComplianceFERPAFerpaRecordProtectionLevelSchema: z.ZodType<ComplianceFERPAFerpaRecordProtectionLevel>;
 export let ComplianceFERPAFerpaRequestStatusSchema: z.ZodType<ComplianceFERPAFerpaRequestStatus>;
 export let ComplianceFERPAGrantFerpaDisclosureConsentCommandSchema: z.ZodType<ComplianceFERPAGrantFerpaDisclosureConsentCommand>;
@@ -13641,198 +14097,40 @@ export let ComplianceFinancialCrimeFinancialCrimeRegulatoryReferenceSchema: z.Zo
 export let ComplianceKYCKycAmlAccessTokenSchema: z.ZodType<ComplianceKYCKycAmlAccessToken>;
 export let ComplianceKYCKycAmlOnboardingSchema: z.ZodType<ComplianceKYCKycAmlOnboarding>;
 export let ComplianceKYCKycAmlStateSchema: z.ZodType<ComplianceKYCKycAmlState>;
+export let ComplianceKYCKycEvidenceIngestionStatusSchema: z.ZodType<ComplianceKYCKycEvidenceIngestionStatus>;
 export let ComplianceKYCSumSubWebhookIngestionResultSchema: z.ZodType<ComplianceKYCSumSubWebhookIngestionResult>;
-export let ContentPagesContentResourceSchema: z.ZodType<ContentPagesContentResource>;
+export let ContentPagesContentResourceDtoSchema: z.ZodType<ContentPagesContentResourceDto>;
 export let ContentPagesContentResourceStatusSchema: z.ZodType<ContentPagesContentResourceStatus>;
 export let ContentPagesContentResourceTypeSchema: z.ZodType<ContentPagesContentResourceType>;
-export let ContentPagesCreateContentResourceSchema: z.ZodType<ContentPagesCreateContentResource>;
-export let ContentPagesCreateMarketingLeadSchema: z.ZodType<ContentPagesCreateMarketingLead>;
-export let ContentPagesCreatePageSchema: z.ZodType<ContentPagesCreatePage>;
-export let ContentPagesCreatePageSectionSchema: z.ZodType<ContentPagesCreatePageSection>;
-export let ContentPagesMarketingLeadSchema: z.ZodType<ContentPagesMarketingLead>;
-export let ContentPagesOpenGraphMetadataSchema: z.ZodType<ContentPagesOpenGraphMetadata>;
-export let ContentPagesPageSchema: z.ZodType<ContentPagesPage>;
-export let ContentPagesPageSectionSchema: z.ZodType<ContentPagesPageSection>;
+export let ContentPagesCreateContentResourceDtoSchema: z.ZodType<ContentPagesCreateContentResourceDto>;
+export let ContentPagesCreateMarketingLeadDtoSchema: z.ZodType<ContentPagesCreateMarketingLeadDto>;
+export let ContentPagesCreatePageDtoSchema: z.ZodType<ContentPagesCreatePageDto>;
+export let ContentPagesCreatePageSectionDtoSchema: z.ZodType<ContentPagesCreatePageSectionDto>;
+export let ContentPagesMarketingLeadDtoSchema: z.ZodType<ContentPagesMarketingLeadDto>;
+export let ContentPagesOpenGraphMetadataDtoSchema: z.ZodType<ContentPagesOpenGraphMetadataDto>;
+export let ContentPagesPageDtoSchema: z.ZodType<ContentPagesPageDto>;
+export let ContentPagesPageSectionDtoSchema: z.ZodType<ContentPagesPageSectionDto>;
 export let ContentPagesPageStatusSchema: z.ZodType<ContentPagesPageStatus>;
 export let ContentPagesPageTypeSchema: z.ZodType<ContentPagesPageType>;
 export let ContentPagesSectionTypeSchema: z.ZodType<ContentPagesSectionType>;
-export let ContentPagesSitemapEntrySchema: z.ZodType<ContentPagesSitemapEntry>;
-export let ContentPagesUpdateContentResourceSchema: z.ZodType<ContentPagesUpdateContentResource>;
-export let ContentPagesUpdatePageSchema: z.ZodType<ContentPagesUpdatePage>;
-export let ContentPagesUpdatePageSectionSchema: z.ZodType<ContentPagesUpdatePageSection>;
+export let ContentPagesSitemapEntryDtoSchema: z.ZodType<ContentPagesSitemapEntryDto>;
+export let ContentPagesUpdateContentResourceDtoSchema: z.ZodType<ContentPagesUpdateContentResourceDto>;
+export let ContentPagesUpdatePageDtoSchema: z.ZodType<ContentPagesUpdatePageDto>;
+export let ContentPagesUpdatePageSectionDtoSchema: z.ZodType<ContentPagesUpdatePageSectionDto>;
 export let ContentStatusSchema: z.ZodType<ContentStatus>;
 export let ContentVisibilitySchema: z.ZodType<ContentVisibility>;
 export let CQRSIDomainEventSchema: z.ZodType<CQRSIDomainEvent>;
 export let CQRSModelsTenantIdSchema: z.ZodType<CQRSModelsTenantId>;
-export let EconomyAdRewardsAdPlaybackEvidenceSchema: z.ZodType<EconomyAdRewardsAdPlaybackEvidence>;
-export let EconomyAdRewardsAdProviderReportSchema: z.ZodType<EconomyAdRewardsAdProviderReport>;
-export let EconomyAdRewardsAdRewardCompletionOperationalStatusSchema: z.ZodType<EconomyAdRewardsAdRewardCompletionOperationalStatus>;
-export let EconomyAdRewardsAdRewardCompletionStateSchema: z.ZodType<EconomyAdRewardsAdRewardCompletionState>;
-export let EconomyAdRewardsAdRewardMilestoneOperationalStatusSchema: z.ZodType<EconomyAdRewardsAdRewardMilestoneOperationalStatus>;
-export let EconomyAdRewardsAdRewardPendingClaimOperationalStatusSchema: z.ZodType<EconomyAdRewardsAdRewardPendingClaimOperationalStatus>;
-export let EconomyAdRewardsAdRewardReconciliationSchema: z.ZodType<EconomyAdRewardsAdRewardReconciliation>;
-export let EconomyAdRewardsAdRewardReconciliationOperationalStatusSchema: z.ZodType<EconomyAdRewardsAdRewardReconciliationOperationalStatus>;
-export let EconomyAdRewardsAdRewardSessionEventOperationalStatusSchema: z.ZodType<EconomyAdRewardsAdRewardSessionEventOperationalStatus>;
-export let EconomyAdRewardsAdRewardSessionOperationalDetailsSchema: z.ZodType<EconomyAdRewardsAdRewardSessionOperationalDetails>;
-export let EconomyAdRewardsAdRewardSessionOperationalSummarySchema: z.ZodType<EconomyAdRewardsAdRewardSessionOperationalSummary>;
-export let EconomyAdRewardsDurableAdProviderReportImportResultSchema: z.ZodType<EconomyAdRewardsDurableAdProviderReportImportResult>;
-export let EconomyAdRewardsDurableAdProviderReportStatusSchema: z.ZodType<EconomyAdRewardsDurableAdProviderReportStatus>;
-export let EconomyAdRewardsDurableAdRewardCompletionResultSchema: z.ZodType<EconomyAdRewardsDurableAdRewardCompletionResult>;
-export let EconomyAdRewardsDurableAdRewardReconciliationStatusSchema: z.ZodType<EconomyAdRewardsDurableAdRewardReconciliationStatus>;
-export let EconomyAdRewardsDurableAdRewardSessionClaimsSchema: z.ZodType<EconomyAdRewardsDurableAdRewardSessionClaims>;
-export let EconomyAdRewardsDurableAdRewardSessionResultSchema: z.ZodType<EconomyAdRewardsDurableAdRewardSessionResult>;
-export let EconomyAdRewardsDurableAdRewardSessionStateSchema: z.ZodType<EconomyAdRewardsDurableAdRewardSessionState>;
-export let EconomyAdRewardsDurableAdRewardSessionStatusSchema: z.ZodType<EconomyAdRewardsDurableAdRewardSessionStatus>;
-export let EconomyAdRewardsProviderCompletionProofSchema: z.ZodType<EconomyAdRewardsProviderCompletionProof>;
-export let EconomyAdRewardsSignedAdRewardSessionSchema: z.ZodType<EconomyAdRewardsSignedAdRewardSession>;
-export let EconomyBountiesBountyEligibilityRequirementsSchema: z.ZodType<EconomyBountiesBountyEligibilityRequirements>;
-export let EconomyBountiesBountyIdSchema: z.ZodType<EconomyBountiesBountyId>;
-export let EconomyBountiesBountyStatusSchema: z.ZodType<EconomyBountiesBountyStatus>;
-export let EconomyBountiesBountyTerminalOutputLotSchema: z.ZodType<EconomyBountiesBountyTerminalOutputLot>;
-export let EconomyBountiesDurableBountyViewSchema: z.ZodType<EconomyBountiesDurableBountyView>;
-export let EconomyBountiesPersistedBountyTerminalEventSchema: z.ZodType<EconomyBountiesPersistedBountyTerminalEvent>;
-export let EconomyCommandsConvertMyHardToSoftInputSchema: z.ZodType<EconomyCommandsConvertMyHardToSoftInput>;
-export let EconomyCommandsCreateMyHardCoinTopUpInputSchema: z.ZodType<EconomyCommandsCreateMyHardCoinTopUpInput>;
-export let EconomyContractsCoinAmountSchema: z.ZodType<EconomyContractsCoinAmount>;
-export let EconomyContractsCreditLotIdSchema: z.ZodType<EconomyContractsCreditLotId>;
-export let EconomyContractsCurrencyCodeSchema: z.ZodType<EconomyContractsCurrencyCode>;
-export let EconomyContractsEconomyWalletSummarySchema: z.ZodType<EconomyContractsEconomyWalletSummary>;
-export let EconomyContractsEconomyWalletTransactionSchema: z.ZodType<EconomyContractsEconomyWalletTransaction>;
-export let EconomyContractsEntrySideSchema: z.ZodType<EconomyContractsEntrySide>;
-export let EconomyContractsIdempotencyKeySchema: z.ZodType<EconomyContractsIdempotencyKey>;
-export let EconomyContractsPolicyVersionSchema: z.ZodType<EconomyContractsPolicyVersion>;
-export let EconomyContractsPostingIdSchema: z.ZodType<EconomyContractsPostingId>;
-export let EconomyContractsPostingStatusSchema: z.ZodType<EconomyContractsPostingStatus>;
-export let EconomyContractsPostingTemplateKindSchema: z.ZodType<EconomyContractsPostingTemplateKind>;
-export let EconomyContractsProvenanceKindSchema: z.ZodType<EconomyContractsProvenanceKind>;
-export let EconomyContractsReserveVersionSchema: z.ZodType<EconomyContractsReserveVersion>;
-export let EconomyContractsSourceStampIdSchema: z.ZodType<EconomyContractsSourceStampId>;
-export let EconomyContractsWalletIdSchema: z.ZodType<EconomyContractsWalletId>;
-export let EconomyContractsWalletLifecycleStateSchema: z.ZodType<EconomyContractsWalletLifecycleState>;
-export let EconomyFundingEconomyTopUpProviderStatusSchema: z.ZodType<EconomyFundingEconomyTopUpProviderStatus>;
-export let EconomyFundingEconomyTopUpStatusSchema: z.ZodType<EconomyFundingEconomyTopUpStatus>;
-export let EconomyFundingSelfServiceHardCoinTopUpReceiptSchema: z.ZodType<EconomyFundingSelfServiceHardCoinTopUpReceipt>;
-export let EconomyFundingSelfServiceHardToSoftConversionReceiptSchema: z.ZodType<EconomyFundingSelfServiceHardToSoftConversionReceipt>;
-export let EconomyLedgerAnchorVerificationRunResultSchema: z.ZodType<EconomyLedgerAnchorVerificationRunResult>;
-export let EconomyLedgerEconomyAnchorPublicationResultSchema: z.ZodType<EconomyLedgerEconomyAnchorPublicationResult>;
-export let EconomyLedgerJournalIntegrityFailureCodeSchema: z.ZodType<EconomyLedgerJournalIntegrityFailureCode>;
-export let EconomyLedgerJournalIntegrityRunResultSchema: z.ZodType<EconomyLedgerJournalIntegrityRunResult>;
-export let EconomyLedgerJournalIntegrityRunStatusSchema: z.ZodType<EconomyLedgerJournalIntegrityRunStatus>;
-export let EconomyLedgerJournalIntegrityVerificationResultSchema: z.ZodType<EconomyLedgerJournalIntegrityVerificationResult>;
-export let EconomyMarketplaceDurableMarketplaceRefundDebtSchema: z.ZodType<EconomyMarketplaceDurableMarketplaceRefundDebt>;
-export let EconomyMarketplaceDurableMarketplaceRefundResultSchema: z.ZodType<EconomyMarketplaceDurableMarketplaceRefundResult>;
-export let EconomyMarketplaceDurableMarketplaceSettlementResultSchema: z.ZodType<EconomyMarketplaceDurableMarketplaceSettlementResult>;
-export let EconomyMarketplaceMarketplaceCurrencyChoiceSchema: z.ZodType<EconomyMarketplaceMarketplaceCurrencyChoice>;
-export let EconomyMarketplaceMarketplaceEntitlementStatusSchema: z.ZodType<EconomyMarketplaceMarketplaceEntitlementStatus>;
-export let EconomyMarketplaceMarketplaceEventOperationalStatusSchema: z.ZodType<EconomyMarketplaceMarketplaceEventOperationalStatus>;
-export let EconomyMarketplaceMarketplaceOutboxOperationalStatusSchema: z.ZodType<EconomyMarketplaceMarketplaceOutboxOperationalStatus>;
-export let EconomyMarketplaceMarketplacePriceLegSnapshotSchema: z.ZodType<EconomyMarketplaceMarketplacePriceLegSnapshot>;
-export let EconomyMarketplaceMarketplaceRefundOperationalStatusSchema: z.ZodType<EconomyMarketplaceMarketplaceRefundOperationalStatus>;
-export let EconomyMarketplaceMarketplaceSettlementLegOperationalStatusSchema: z.ZodType<EconomyMarketplaceMarketplaceSettlementLegOperationalStatus>;
-export let EconomyMarketplaceMarketplaceSettlementOperationalDetailsSchema: z.ZodType<EconomyMarketplaceMarketplaceSettlementOperationalDetails>;
-export let EconomyMarketplaceMarketplaceSettlementOperationalSummarySchema: z.ZodType<EconomyMarketplaceMarketplaceSettlementOperationalSummary>;
-export let EconomyMarketplaceMarketplaceSettlementStatusSchema: z.ZodType<EconomyMarketplaceMarketplaceSettlementStatus>;
-export let EconomyMarketplaceProductCurrencyModeSchema: z.ZodType<EconomyMarketplaceProductCurrencyMode>;
-export let EconomyOperationsEconomyActiveReserveOperationalDetailsSchema: z.ZodType<EconomyOperationsEconomyActiveReserveOperationalDetails>;
-export let EconomyOperationsEconomyAnchorOperationalDetailsSchema: z.ZodType<EconomyOperationsEconomyAnchorOperationalDetails>;
-export let EconomyOperationsEconomyAnchorOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyAnchorOperationalStatus>;
-export let EconomyOperationsEconomyAnchorVerificationOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyAnchorVerificationOperationalStatus>;
-export let EconomyOperationsEconomyCapabilityConfigurationSnapshotSchema: z.ZodType<EconomyOperationsEconomyCapabilityConfigurationSnapshot>;
-export let EconomyOperationsEconomyCapabilityPolicyOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyCapabilityPolicyOperationalStatus>;
-export let EconomyOperationsEconomyCustodyObservationOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyCustodyObservationOperationalStatus>;
-export let EconomyOperationsEconomyCustodyReconciliationOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyCustodyReconciliationOperationalStatus>;
-export let EconomyOperationsEconomyJournalHeadStatusSchema: z.ZodType<EconomyOperationsEconomyJournalHeadStatus>;
-export let EconomyOperationsEconomyJournalVerificationRunDetailsSchema: z.ZodType<EconomyOperationsEconomyJournalVerificationRunDetails>;
-export let EconomyOperationsEconomyJournalVerificationStatusSchema: z.ZodType<EconomyOperationsEconomyJournalVerificationStatus>;
-export let EconomyOperationsEconomyKillSwitchOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyKillSwitchOperationalStatus>;
-export let EconomyOperationsEconomyLedgerHealthSnapshotSchema: z.ZodType<EconomyOperationsEconomyLedgerHealthSnapshot>;
-export let EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardPendingClaimOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardPendingClaimOperationalStatus>;
-export let EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardReconciliationOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardReconciliationOperationalStatus>;
-export let EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardSessionOperationalSummarySchema: z.ZodType<EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardSessionOperationalSummary>;
-export let EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceOutboxOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceOutboxOperationalStatus>;
-export let EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceRefundOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceRefundOperationalStatus>;
-export let EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceSettlementOperationalSummarySchema: z.ZodType<EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceSettlementOperationalSummary>;
-export let EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyAnchorOperationalDetailsSchema: z.ZodType<EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyAnchorOperationalDetails>;
-export let EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyCapabilityPolicyOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyCapabilityPolicyOperationalStatus>;
-export let EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyCustodyObservationOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyCustodyObservationOperationalStatus>;
-export let EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyJournalVerificationRunDetailsSchema: z.ZodType<EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyJournalVerificationRunDetails>;
-export let EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyProjectionGenerationOperationalDetailsSchema: z.ZodType<EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyProjectionGenerationOperationalDetails>;
-export let EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyReserveProposalOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyReserveProposalOperationalStatus>;
-export let EconomyOperationsEconomyOperationalPageOfEconomyOperationsLegacyEconomyShadowBatchSummarySchema: z.ZodType<EconomyOperationsEconomyOperationalPageOfEconomyOperationsLegacyEconomyShadowBatchSummary>;
-export let EconomyOperationsEconomyPolicyAuditEntrySchema: z.ZodType<EconomyOperationsEconomyPolicyAuditEntry>;
-export let EconomyOperationsEconomyPolicyOperationalDetailsSchema: z.ZodType<EconomyOperationsEconomyPolicyOperationalDetails>;
-export let EconomyOperationsEconomyProjectionApprovalAuditEntrySchema: z.ZodType<EconomyOperationsEconomyProjectionApprovalAuditEntry>;
-export let EconomyOperationsEconomyProjectionGenerationOperationalDetailsSchema: z.ZodType<EconomyOperationsEconomyProjectionGenerationOperationalDetails>;
-export let EconomyOperationsEconomyProjectionOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyProjectionOperationalStatus>;
-export let EconomyOperationsEconomyReserveAssetAllocationOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyReserveAssetAllocationOperationalStatus>;
-export let EconomyOperationsEconomyReserveOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyReserveOperationalStatus>;
-export let EconomyOperationsEconomyReserveProposalOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyReserveProposalOperationalStatus>;
-export let EconomyOperationsLegacyEconomyShadowBatchSummarySchema: z.ZodType<EconomyOperationsLegacyEconomyShadowBatchSummary>;
-export let EconomyOperationsLegacyEconomyShadowBatchViewSchema: z.ZodType<EconomyOperationsLegacyEconomyShadowBatchView>;
-export let EconomyOperationsLegacyEconomyShadowStateSchema: z.ZodType<EconomyOperationsLegacyEconomyShadowState>;
-export let EconomyOperationsLegacyEconomyShadowWalletViewSchema: z.ZodType<EconomyOperationsLegacyEconomyShadowWalletView>;
-export let EconomyPayoutsCommandsCreateMyPayoutRequestInputSchema: z.ZodType<EconomyPayoutsCommandsCreateMyPayoutRequestInput>;
-export let EconomyPayoutsCommandsReviewPayoutRequestInputSchema: z.ZodType<EconomyPayoutsCommandsReviewPayoutRequestInput>;
-export let EconomyPayoutsConnectAccountSnapshotSchema: z.ZodType<EconomyPayoutsConnectAccountSnapshot>;
-export let EconomyPayoutsConnectAccountStateSchema: z.ZodType<EconomyPayoutsConnectAccountState>;
-export let EconomyPayoutsConnectOnboardingResultSchema: z.ZodType<EconomyPayoutsConnectOnboardingResult>;
-export let EconomyPayoutsPayoutOperationStateSchema: z.ZodType<EconomyPayoutsPayoutOperationState>;
-export let EconomyPayoutsPayoutRequestStateSchema: z.ZodType<EconomyPayoutsPayoutRequestState>;
-export let EconomyPayoutsQueriesEconomyPayoutInputSchema: z.ZodType<EconomyPayoutsQueriesEconomyPayoutInput>;
-export let EconomyPayoutsQueriesEconomyPayoutOperationSchema: z.ZodType<EconomyPayoutsQueriesEconomyPayoutOperation>;
-export let EconomyPayoutsQueriesEconomyPayoutRequestReviewSchema: z.ZodType<EconomyPayoutsQueriesEconomyPayoutRequestReview>;
-export let EconomyPayoutsQueriesEconomyPayoutRequestReviewAuditSchema: z.ZodType<EconomyPayoutsQueriesEconomyPayoutRequestReviewAudit>;
-export let EconomyProjectionsProjectionGenerationStateSchema: z.ZodType<EconomyProjectionsProjectionGenerationState>;
-export let EconomyReservesCustodyObservationCommandSchema: z.ZodType<EconomyReservesCustodyObservationCommand>;
-export let EconomyReservesDurableCustodyObservationSchema: z.ZodType<EconomyReservesDurableCustodyObservation>;
-export let EconomyReservesDurableReserveProposalStateSchema: z.ZodType<EconomyReservesDurableReserveProposalState>;
-export let EconomyReservesEconomyLiabilitySnapshotSchema: z.ZodType<EconomyReservesEconomyLiabilitySnapshot>;
-export let EconomyReservesExternalReserveAssetSchema: z.ZodType<EconomyReservesExternalReserveAsset>;
-export let EconomyReservesReserveBackingPurposeSchema: z.ZodType<EconomyReservesReserveBackingPurpose>;
-export let EconomyReservesReserveBufferPositionSchema: z.ZodType<EconomyReservesReserveBufferPosition>;
-export let EconomyReservesReserveCoverageStateSchema: z.ZodType<EconomyReservesReserveCoverageState>;
-export let EconomyReservesReserveHeadSchema: z.ZodType<EconomyReservesReserveHead>;
-export let EconomyReservesReserveRequirementSnapshotSchema: z.ZodType<EconomyReservesReserveRequirementSnapshot>;
-export let EconomyReservesReserveServiceObservationSchema: z.ZodType<EconomyReservesReserveServiceObservation>;
-export let EconomyRiskCapabilityAuthorizationReceiptSchema: z.ZodType<EconomyRiskCapabilityAuthorizationReceipt>;
-export let EconomyRiskComplianceEvidenceIngestionStatusSchema: z.ZodType<EconomyRiskComplianceEvidenceIngestionStatus>;
-export let EconomyRiskComplianceEvidenceResultSchema: z.ZodType<EconomyRiskComplianceEvidenceResult>;
-export let EconomyRiskComplianceHoldSchema: z.ZodType<EconomyRiskComplianceHold>;
-export let EconomyRiskComplianceHoldAdministrationStateSchema: z.ZodType<EconomyRiskComplianceHoldAdministrationState>;
-export let EconomyRiskComplianceHoldEventSchema: z.ZodType<EconomyRiskComplianceHoldEvent>;
-export let EconomyRiskComplianceHoldPageSchema: z.ZodType<EconomyRiskComplianceHoldPage>;
-export let EconomyRiskComplianceHoldScopeSchema: z.ZodType<EconomyRiskComplianceHoldScope>;
-export let EconomyRiskEconomyCapabilityEvaluationResultSchema: z.ZodType<EconomyRiskEconomyCapabilityEvaluationResult>;
-export let EconomyRiskEconomyCapabilityPolicySchema: z.ZodType<EconomyRiskEconomyCapabilityPolicy>;
-export let EconomyRiskEconomyCapabilityPolicyStateSchema: z.ZodType<EconomyRiskEconomyCapabilityPolicyState>;
-export let EconomyRiskEconomyCapabilityReadinessStatusSchema: z.ZodType<EconomyRiskEconomyCapabilityReadinessStatus>;
-export let EconomyRiskEconomyKillSwitchScopeSchema: z.ZodType<EconomyRiskEconomyKillSwitchScope>;
-export let EconomyRiskEconomyKillSwitchStateSchema: z.ZodType<EconomyRiskEconomyKillSwitchState>;
-export let EconomyRiskEconomyProtectedOperationStateSchema: z.ZodType<EconomyRiskEconomyProtectedOperationState>;
-export let EconomyRiskEconomyValueMovementCapabilitySchema: z.ZodType<EconomyRiskEconomyValueMovementCapability>;
-export let EconomyRiskRiskManualDecisionCodeSchema: z.ZodType<EconomyRiskRiskManualDecisionCode>;
-export let EconomyRiskRiskReviewCaseSchema: z.ZodType<EconomyRiskRiskReviewCase>;
-export let EconomyRiskRiskReviewEventSchema: z.ZodType<EconomyRiskRiskReviewEvent>;
-export let EconomyRiskRiskReviewEventKindSchema: z.ZodType<EconomyRiskRiskReviewEventKind>;
-export let EconomyRiskRiskReviewPageSchema: z.ZodType<EconomyRiskRiskReviewPage>;
-export let EconomyRiskRiskReviewStatusSchema: z.ZodType<EconomyRiskRiskReviewStatus>;
-export let EconomyTransfersSelfServiceEconomyTransferInputSchema: z.ZodType<EconomyTransfersSelfServiceEconomyTransferInput>;
-export let EconomyTransfersSelfServiceEconomyTransferReceiptSchema: z.ZodType<EconomyTransfersSelfServiceEconomyTransferReceipt>;
-export let EconomyTransfersSelfServiceEconomyTransferTypeSchema: z.ZodType<EconomyTransfersSelfServiceEconomyTransferType>;
-export let EconomyTreasuryAdminWithdrawalAuditEventSchema: z.ZodType<EconomyTreasuryAdminWithdrawalAuditEvent>;
-export let EconomyTreasuryAdminWithdrawalAuditViewSchema: z.ZodType<EconomyTreasuryAdminWithdrawalAuditView>;
-export let EconomyTreasuryAdminWithdrawalRunSchema: z.ZodType<EconomyTreasuryAdminWithdrawalRun>;
-export let EconomyTreasuryAdminWithdrawalRunStateSchema: z.ZodType<EconomyTreasuryAdminWithdrawalRunState>;
 export let ErrorSchema: z.ZodType<Error>;
 export let ErrorTypeSchema: z.ZodType<ErrorType>;
 export let FeaturesBulkEvaluationInputSchema: z.ZodType<FeaturesBulkEvaluationInput>;
-export let FeaturesCapabilityAuditLogSchema: z.ZodType<FeaturesCapabilityAuditLog>;
+export let FeaturesCapabilityAuditLogDtoSchema: z.ZodType<FeaturesCapabilityAuditLogDto>;
 export let FeaturesCapabilityCheckOutputSchema: z.ZodType<FeaturesCapabilityCheckOutput>;
 export let FeaturesCreateFeatureInputSchema: z.ZodType<FeaturesCreateFeatureInput>;
 export let FeaturesFeatureContextSchema: z.ZodType<FeaturesFeatureContext>;
 export let FeaturesFeatureEvaluationInputSchema: z.ZodType<FeaturesFeatureEvaluationInput>;
-export let FeaturesFeatureFlagSchema: z.ZodType<FeaturesFeatureFlag>;
-export let FeaturesFeatureFlagTargetSchema: z.ZodType<FeaturesFeatureFlagTarget>;
+export let FeaturesFeatureFlagDtoSchema: z.ZodType<FeaturesFeatureFlagDto>;
+export let FeaturesFeatureFlagTargetDtoSchema: z.ZodType<FeaturesFeatureFlagTargetDto>;
 export let FeaturesFeatureFlagTypeSchema: z.ZodType<FeaturesFeatureFlagType>;
 export let FeaturesSetCapabilityOverrideInputSchema: z.ZodType<FeaturesSetCapabilityOverrideInput>;
 export let FeaturesToggleFeatureInputSchema: z.ZodType<FeaturesToggleFeatureInput>;
@@ -13843,18 +14141,176 @@ export let Fido2NetLibCredentialCreateOptionsSchema: z.ZodType<Fido2NetLibCreden
 export let Fido2NetLibFido2UserSchema: z.ZodType<Fido2NetLibFido2User>;
 export let Fido2NetLibPubKeyCredParamSchema: z.ZodType<Fido2NetLibPubKeyCredParam>;
 export let Fido2NetLibPublicKeyCredentialRpEntitySchema: z.ZodType<Fido2NetLibPublicKeyCredentialRpEntity>;
+export let FinanceEconomyAdRewardsAdPlaybackEvidenceSchema: z.ZodType<FinanceEconomyAdRewardsAdPlaybackEvidence>;
+export let FinanceEconomyAdRewardsAdProviderReportSchema: z.ZodType<FinanceEconomyAdRewardsAdProviderReport>;
+export let FinanceEconomyAdRewardsAdRewardCompletionOperationalStatusSchema: z.ZodType<FinanceEconomyAdRewardsAdRewardCompletionOperationalStatus>;
+export let FinanceEconomyAdRewardsAdRewardCompletionStateSchema: z.ZodType<FinanceEconomyAdRewardsAdRewardCompletionState>;
+export let FinanceEconomyAdRewardsAdRewardMilestoneOperationalStatusSchema: z.ZodType<FinanceEconomyAdRewardsAdRewardMilestoneOperationalStatus>;
+export let FinanceEconomyAdRewardsAdRewardPendingClaimOperationalStatusSchema: z.ZodType<FinanceEconomyAdRewardsAdRewardPendingClaimOperationalStatus>;
+export let FinanceEconomyAdRewardsAdRewardReconciliationSchema: z.ZodType<FinanceEconomyAdRewardsAdRewardReconciliation>;
+export let FinanceEconomyAdRewardsAdRewardReconciliationOperationalStatusSchema: z.ZodType<FinanceEconomyAdRewardsAdRewardReconciliationOperationalStatus>;
+export let FinanceEconomyAdRewardsAdRewardSessionEventOperationalStatusSchema: z.ZodType<FinanceEconomyAdRewardsAdRewardSessionEventOperationalStatus>;
+export let FinanceEconomyAdRewardsAdRewardSessionOperationalDetailsSchema: z.ZodType<FinanceEconomyAdRewardsAdRewardSessionOperationalDetails>;
+export let FinanceEconomyAdRewardsAdRewardSessionOperationalSummarySchema: z.ZodType<FinanceEconomyAdRewardsAdRewardSessionOperationalSummary>;
+export let FinanceEconomyAdRewardsDurableAdProviderReportImportResultSchema: z.ZodType<FinanceEconomyAdRewardsDurableAdProviderReportImportResult>;
+export let FinanceEconomyAdRewardsDurableAdProviderReportStatusSchema: z.ZodType<FinanceEconomyAdRewardsDurableAdProviderReportStatus>;
+export let FinanceEconomyAdRewardsDurableAdRewardCompletionResultSchema: z.ZodType<FinanceEconomyAdRewardsDurableAdRewardCompletionResult>;
+export let FinanceEconomyAdRewardsDurableAdRewardReconciliationStatusSchema: z.ZodType<FinanceEconomyAdRewardsDurableAdRewardReconciliationStatus>;
+export let FinanceEconomyAdRewardsDurableAdRewardSessionClaimsSchema: z.ZodType<FinanceEconomyAdRewardsDurableAdRewardSessionClaims>;
+export let FinanceEconomyAdRewardsDurableAdRewardSessionResultSchema: z.ZodType<FinanceEconomyAdRewardsDurableAdRewardSessionResult>;
+export let FinanceEconomyAdRewardsDurableAdRewardSessionStateSchema: z.ZodType<FinanceEconomyAdRewardsDurableAdRewardSessionState>;
+export let FinanceEconomyAdRewardsDurableAdRewardSessionStatusSchema: z.ZodType<FinanceEconomyAdRewardsDurableAdRewardSessionStatus>;
+export let FinanceEconomyAdRewardsProviderCompletionProofSchema: z.ZodType<FinanceEconomyAdRewardsProviderCompletionProof>;
+export let FinanceEconomyAdRewardsSignedAdRewardSessionSchema: z.ZodType<FinanceEconomyAdRewardsSignedAdRewardSession>;
+export let FinanceEconomyBountiesBountyEligibilityRequirementsSchema: z.ZodType<FinanceEconomyBountiesBountyEligibilityRequirements>;
+export let FinanceEconomyBountiesBountyIdSchema: z.ZodType<FinanceEconomyBountiesBountyId>;
+export let FinanceEconomyBountiesBountyStatusSchema: z.ZodType<FinanceEconomyBountiesBountyStatus>;
+export let FinanceEconomyBountiesBountyTerminalOutputLotSchema: z.ZodType<FinanceEconomyBountiesBountyTerminalOutputLot>;
+export let FinanceEconomyBountiesDurableBountyViewSchema: z.ZodType<FinanceEconomyBountiesDurableBountyView>;
+export let FinanceEconomyBountiesPersistedBountyTerminalEventSchema: z.ZodType<FinanceEconomyBountiesPersistedBountyTerminalEvent>;
+export let FinanceEconomyCommandsConvertMyHardToSoftInputSchema: z.ZodType<FinanceEconomyCommandsConvertMyHardToSoftInput>;
+export let FinanceEconomyCommandsCreateMyHardCoinTopUpInputSchema: z.ZodType<FinanceEconomyCommandsCreateMyHardCoinTopUpInput>;
+export let FinanceEconomyContractsCoinAmountSchema: z.ZodType<FinanceEconomyContractsCoinAmount>;
+export let FinanceEconomyContractsCreditLotIdSchema: z.ZodType<FinanceEconomyContractsCreditLotId>;
+export let FinanceEconomyContractsCurrencyCodeSchema: z.ZodType<FinanceEconomyContractsCurrencyCode>;
+export let FinanceEconomyContractsEconomyWalletSummaryDtoSchema: z.ZodType<FinanceEconomyContractsEconomyWalletSummaryDto>;
+export let FinanceEconomyContractsEconomyWalletTransactionDtoSchema: z.ZodType<FinanceEconomyContractsEconomyWalletTransactionDto>;
+export let FinanceEconomyContractsEntrySideSchema: z.ZodType<FinanceEconomyContractsEntrySide>;
+export let FinanceEconomyContractsIdempotencyKeySchema: z.ZodType<FinanceEconomyContractsIdempotencyKey>;
+export let FinanceEconomyContractsPolicyVersionSchema: z.ZodType<FinanceEconomyContractsPolicyVersion>;
+export let FinanceEconomyContractsPostingIdSchema: z.ZodType<FinanceEconomyContractsPostingId>;
+export let FinanceEconomyContractsPostingStatusSchema: z.ZodType<FinanceEconomyContractsPostingStatus>;
+export let FinanceEconomyContractsPostingTemplateKindSchema: z.ZodType<FinanceEconomyContractsPostingTemplateKind>;
+export let FinanceEconomyContractsProvenanceKindSchema: z.ZodType<FinanceEconomyContractsProvenanceKind>;
+export let FinanceEconomyContractsReserveVersionSchema: z.ZodType<FinanceEconomyContractsReserveVersion>;
+export let FinanceEconomyContractsSourceStampIdSchema: z.ZodType<FinanceEconomyContractsSourceStampId>;
+export let FinanceEconomyContractsWalletIdSchema: z.ZodType<FinanceEconomyContractsWalletId>;
+export let FinanceEconomyContractsWalletLifecycleStateSchema: z.ZodType<FinanceEconomyContractsWalletLifecycleState>;
+export let FinanceEconomyFundingEconomyTopUpProviderStatusSchema: z.ZodType<FinanceEconomyFundingEconomyTopUpProviderStatus>;
+export let FinanceEconomyFundingEconomyTopUpStatusDtoSchema: z.ZodType<FinanceEconomyFundingEconomyTopUpStatusDto>;
+export let FinanceEconomyFundingSelfServiceHardCoinTopUpReceiptSchema: z.ZodType<FinanceEconomyFundingSelfServiceHardCoinTopUpReceipt>;
+export let FinanceEconomyFundingSelfServiceHardToSoftConversionReceiptSchema: z.ZodType<FinanceEconomyFundingSelfServiceHardToSoftConversionReceipt>;
+export let FinanceEconomyLedgerAnchorVerificationRunResultSchema: z.ZodType<FinanceEconomyLedgerAnchorVerificationRunResult>;
+export let FinanceEconomyLedgerEconomyAnchorPublicationResultSchema: z.ZodType<FinanceEconomyLedgerEconomyAnchorPublicationResult>;
+export let FinanceEconomyLedgerJournalIntegrityFailureCodeSchema: z.ZodType<FinanceEconomyLedgerJournalIntegrityFailureCode>;
+export let FinanceEconomyLedgerJournalIntegrityRunResultSchema: z.ZodType<FinanceEconomyLedgerJournalIntegrityRunResult>;
+export let FinanceEconomyLedgerJournalIntegrityRunStatusSchema: z.ZodType<FinanceEconomyLedgerJournalIntegrityRunStatus>;
+export let FinanceEconomyLedgerJournalIntegrityVerificationResultSchema: z.ZodType<FinanceEconomyLedgerJournalIntegrityVerificationResult>;
+export let FinanceEconomyMarketplaceDurableMarketplaceRefundDebtSchema: z.ZodType<FinanceEconomyMarketplaceDurableMarketplaceRefundDebt>;
+export let FinanceEconomyMarketplaceDurableMarketplaceRefundResultSchema: z.ZodType<FinanceEconomyMarketplaceDurableMarketplaceRefundResult>;
+export let FinanceEconomyMarketplaceDurableMarketplaceSettlementResultSchema: z.ZodType<FinanceEconomyMarketplaceDurableMarketplaceSettlementResult>;
+export let FinanceEconomyMarketplaceMarketplaceCurrencyChoiceSchema: z.ZodType<FinanceEconomyMarketplaceMarketplaceCurrencyChoice>;
+export let FinanceEconomyMarketplaceMarketplaceEntitlementStatusSchema: z.ZodType<FinanceEconomyMarketplaceMarketplaceEntitlementStatus>;
+export let FinanceEconomyMarketplaceMarketplaceEventOperationalStatusSchema: z.ZodType<FinanceEconomyMarketplaceMarketplaceEventOperationalStatus>;
+export let FinanceEconomyMarketplaceMarketplaceOutboxOperationalStatusSchema: z.ZodType<FinanceEconomyMarketplaceMarketplaceOutboxOperationalStatus>;
+export let FinanceEconomyMarketplaceMarketplacePriceLegSnapshotSchema: z.ZodType<FinanceEconomyMarketplaceMarketplacePriceLegSnapshot>;
+export let FinanceEconomyMarketplaceMarketplaceRefundOperationalStatusSchema: z.ZodType<FinanceEconomyMarketplaceMarketplaceRefundOperationalStatus>;
+export let FinanceEconomyMarketplaceMarketplaceSettlementLegOperationalStatusSchema: z.ZodType<FinanceEconomyMarketplaceMarketplaceSettlementLegOperationalStatus>;
+export let FinanceEconomyMarketplaceMarketplaceSettlementOperationalDetailsSchema: z.ZodType<FinanceEconomyMarketplaceMarketplaceSettlementOperationalDetails>;
+export let FinanceEconomyMarketplaceMarketplaceSettlementOperationalSummarySchema: z.ZodType<FinanceEconomyMarketplaceMarketplaceSettlementOperationalSummary>;
+export let FinanceEconomyMarketplaceMarketplaceSettlementStatusSchema: z.ZodType<FinanceEconomyMarketplaceMarketplaceSettlementStatus>;
+export let FinanceEconomyMarketplaceProductCurrencyModeSchema: z.ZodType<FinanceEconomyMarketplaceProductCurrencyMode>;
+export let FinanceEconomyOperationsEconomyActiveReserveOperationalDetailsSchema: z.ZodType<FinanceEconomyOperationsEconomyActiveReserveOperationalDetails>;
+export let FinanceEconomyOperationsEconomyAnchorOperationalDetailsSchema: z.ZodType<FinanceEconomyOperationsEconomyAnchorOperationalDetails>;
+export let FinanceEconomyOperationsEconomyAnchorOperationalStatusSchema: z.ZodType<FinanceEconomyOperationsEconomyAnchorOperationalStatus>;
+export let FinanceEconomyOperationsEconomyAnchorVerificationOperationalStatusSchema: z.ZodType<FinanceEconomyOperationsEconomyAnchorVerificationOperationalStatus>;
+export let FinanceEconomyOperationsEconomyCapabilityConfigurationSnapshotSchema: z.ZodType<FinanceEconomyOperationsEconomyCapabilityConfigurationSnapshot>;
+export let FinanceEconomyOperationsEconomyCapabilityPolicyOperationalStatusSchema: z.ZodType<FinanceEconomyOperationsEconomyCapabilityPolicyOperationalStatus>;
+export let FinanceEconomyOperationsEconomyCustodyObservationOperationalStatusSchema: z.ZodType<FinanceEconomyOperationsEconomyCustodyObservationOperationalStatus>;
+export let FinanceEconomyOperationsEconomyCustodyReconciliationOperationalStatusSchema: z.ZodType<FinanceEconomyOperationsEconomyCustodyReconciliationOperationalStatus>;
+export let FinanceEconomyOperationsEconomyJournalHeadStatusSchema: z.ZodType<FinanceEconomyOperationsEconomyJournalHeadStatus>;
+export let FinanceEconomyOperationsEconomyJournalVerificationRunDetailsSchema: z.ZodType<FinanceEconomyOperationsEconomyJournalVerificationRunDetails>;
+export let FinanceEconomyOperationsEconomyJournalVerificationStatusSchema: z.ZodType<FinanceEconomyOperationsEconomyJournalVerificationStatus>;
+export let FinanceEconomyOperationsEconomyKillSwitchOperationalStatusSchema: z.ZodType<FinanceEconomyOperationsEconomyKillSwitchOperationalStatus>;
+export let FinanceEconomyOperationsEconomyLedgerHealthSnapshotSchema: z.ZodType<FinanceEconomyOperationsEconomyLedgerHealthSnapshot>;
+export let FinanceEconomyOperationsEconomyOperationalPageAdRewardPendingClaimOperationalStatusSchema: z.ZodType<FinanceEconomyOperationsEconomyOperationalPageAdRewardPendingClaimOperationalStatus>;
+export let FinanceEconomyOperationsEconomyOperationalPageAdRewardReconciliationOperationalStatusSchema: z.ZodType<FinanceEconomyOperationsEconomyOperationalPageAdRewardReconciliationOperationalStatus>;
+export let FinanceEconomyOperationsEconomyOperationalPageAdRewardSessionOperationalSummarySchema: z.ZodType<FinanceEconomyOperationsEconomyOperationalPageAdRewardSessionOperationalSummary>;
+export let FinanceEconomyOperationsEconomyOperationalPageEconomyAnchorOperationalDetailsSchema: z.ZodType<FinanceEconomyOperationsEconomyOperationalPageEconomyAnchorOperationalDetails>;
+export let FinanceEconomyOperationsEconomyOperationalPageEconomyCapabilityPolicyOperationalStatusSchema: z.ZodType<FinanceEconomyOperationsEconomyOperationalPageEconomyCapabilityPolicyOperationalStatus>;
+export let FinanceEconomyOperationsEconomyOperationalPageEconomyCustodyObservationOperationalStatusSchema: z.ZodType<FinanceEconomyOperationsEconomyOperationalPageEconomyCustodyObservationOperationalStatus>;
+export let FinanceEconomyOperationsEconomyOperationalPageEconomyJournalVerificationRunDetailsSchema: z.ZodType<FinanceEconomyOperationsEconomyOperationalPageEconomyJournalVerificationRunDetails>;
+export let FinanceEconomyOperationsEconomyOperationalPageEconomyProjectionGenerationOperationalDetailsSchema: z.ZodType<FinanceEconomyOperationsEconomyOperationalPageEconomyProjectionGenerationOperationalDetails>;
+export let FinanceEconomyOperationsEconomyOperationalPageEconomyReserveProposalOperationalStatusSchema: z.ZodType<FinanceEconomyOperationsEconomyOperationalPageEconomyReserveProposalOperationalStatus>;
+export let FinanceEconomyOperationsEconomyOperationalPageLegacyEconomyShadowBatchSummarySchema: z.ZodType<FinanceEconomyOperationsEconomyOperationalPageLegacyEconomyShadowBatchSummary>;
+export let FinanceEconomyOperationsEconomyOperationalPageMarketplaceOutboxOperationalStatusSchema: z.ZodType<FinanceEconomyOperationsEconomyOperationalPageMarketplaceOutboxOperationalStatus>;
+export let FinanceEconomyOperationsEconomyOperationalPageMarketplaceRefundOperationalStatusSchema: z.ZodType<FinanceEconomyOperationsEconomyOperationalPageMarketplaceRefundOperationalStatus>;
+export let FinanceEconomyOperationsEconomyOperationalPageMarketplaceSettlementOperationalSummarySchema: z.ZodType<FinanceEconomyOperationsEconomyOperationalPageMarketplaceSettlementOperationalSummary>;
+export let FinanceEconomyOperationsEconomyPolicyAuditEntrySchema: z.ZodType<FinanceEconomyOperationsEconomyPolicyAuditEntry>;
+export let FinanceEconomyOperationsEconomyPolicyOperationalDetailsSchema: z.ZodType<FinanceEconomyOperationsEconomyPolicyOperationalDetails>;
+export let FinanceEconomyOperationsEconomyProjectionApprovalAuditEntrySchema: z.ZodType<FinanceEconomyOperationsEconomyProjectionApprovalAuditEntry>;
+export let FinanceEconomyOperationsEconomyProjectionGenerationOperationalDetailsSchema: z.ZodType<FinanceEconomyOperationsEconomyProjectionGenerationOperationalDetails>;
+export let FinanceEconomyOperationsEconomyProjectionOperationalStatusSchema: z.ZodType<FinanceEconomyOperationsEconomyProjectionOperationalStatus>;
+export let FinanceEconomyOperationsEconomyReserveAssetAllocationOperationalStatusSchema: z.ZodType<FinanceEconomyOperationsEconomyReserveAssetAllocationOperationalStatus>;
+export let FinanceEconomyOperationsEconomyReserveOperationalStatusSchema: z.ZodType<FinanceEconomyOperationsEconomyReserveOperationalStatus>;
+export let FinanceEconomyOperationsEconomyReserveProposalOperationalStatusSchema: z.ZodType<FinanceEconomyOperationsEconomyReserveProposalOperationalStatus>;
+export let FinanceEconomyOperationsLegacyEconomyShadowBatchSummarySchema: z.ZodType<FinanceEconomyOperationsLegacyEconomyShadowBatchSummary>;
+export let FinanceEconomyOperationsLegacyEconomyShadowBatchViewSchema: z.ZodType<FinanceEconomyOperationsLegacyEconomyShadowBatchView>;
+export let FinanceEconomyOperationsLegacyEconomyShadowStateSchema: z.ZodType<FinanceEconomyOperationsLegacyEconomyShadowState>;
+export let FinanceEconomyOperationsLegacyEconomyShadowWalletViewSchema: z.ZodType<FinanceEconomyOperationsLegacyEconomyShadowWalletView>;
+export let FinanceEconomyPayoutsCommandsCreateMyPayoutRequestInputSchema: z.ZodType<FinanceEconomyPayoutsCommandsCreateMyPayoutRequestInput>;
+export let FinanceEconomyPayoutsCommandsReviewPayoutRequestInputSchema: z.ZodType<FinanceEconomyPayoutsCommandsReviewPayoutRequestInput>;
+export let FinanceEconomyPayoutsConnectAccountSnapshotSchema: z.ZodType<FinanceEconomyPayoutsConnectAccountSnapshot>;
+export let FinanceEconomyPayoutsConnectAccountStateSchema: z.ZodType<FinanceEconomyPayoutsConnectAccountState>;
+export let FinanceEconomyPayoutsConnectOnboardingResultSchema: z.ZodType<FinanceEconomyPayoutsConnectOnboardingResult>;
+export let FinanceEconomyPayoutsPayoutOperationStateSchema: z.ZodType<FinanceEconomyPayoutsPayoutOperationState>;
+export let FinanceEconomyPayoutsPayoutRequestStateSchema: z.ZodType<FinanceEconomyPayoutsPayoutRequestState>;
+export let FinanceEconomyPayoutsQueriesEconomyPayoutOperationDtoSchema: z.ZodType<FinanceEconomyPayoutsQueriesEconomyPayoutOperationDto>;
+export let FinanceEconomyPayoutsQueriesEconomyPayoutRequestDtoSchema: z.ZodType<FinanceEconomyPayoutsQueriesEconomyPayoutRequestDto>;
+export let FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewAuditDtoSchema: z.ZodType<FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewAuditDto>;
+export let FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewDtoSchema: z.ZodType<FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewDto>;
+export let FinanceEconomyProjectionsProjectionGenerationStateSchema: z.ZodType<FinanceEconomyProjectionsProjectionGenerationState>;
+export let FinanceEconomyReservesCustodyObservationCommandSchema: z.ZodType<FinanceEconomyReservesCustodyObservationCommand>;
+export let FinanceEconomyReservesDurableCustodyObservationSchema: z.ZodType<FinanceEconomyReservesDurableCustodyObservation>;
+export let FinanceEconomyReservesDurableReserveProposalStateSchema: z.ZodType<FinanceEconomyReservesDurableReserveProposalState>;
+export let FinanceEconomyReservesEconomyLiabilitySnapshotSchema: z.ZodType<FinanceEconomyReservesEconomyLiabilitySnapshot>;
+export let FinanceEconomyReservesExternalReserveAssetSchema: z.ZodType<FinanceEconomyReservesExternalReserveAsset>;
+export let FinanceEconomyReservesReserveBackingPurposeSchema: z.ZodType<FinanceEconomyReservesReserveBackingPurpose>;
+export let FinanceEconomyReservesReserveBufferPositionSchema: z.ZodType<FinanceEconomyReservesReserveBufferPosition>;
+export let FinanceEconomyReservesReserveCoverageStateSchema: z.ZodType<FinanceEconomyReservesReserveCoverageState>;
+export let FinanceEconomyReservesReserveHeadSchema: z.ZodType<FinanceEconomyReservesReserveHead>;
+export let FinanceEconomyReservesReserveRequirementSnapshotSchema: z.ZodType<FinanceEconomyReservesReserveRequirementSnapshot>;
+export let FinanceEconomyReservesReserveServiceObservationSchema: z.ZodType<FinanceEconomyReservesReserveServiceObservation>;
+export let FinanceEconomyRiskCapabilityAuthorizationReceiptSchema: z.ZodType<FinanceEconomyRiskCapabilityAuthorizationReceipt>;
+export let FinanceEconomyRiskComplianceEvidenceResultSchema: z.ZodType<FinanceEconomyRiskComplianceEvidenceResult>;
+export let FinanceEconomyRiskComplianceHoldSchema: z.ZodType<FinanceEconomyRiskComplianceHold>;
+export let FinanceEconomyRiskComplianceHoldAdministrationStateSchema: z.ZodType<FinanceEconomyRiskComplianceHoldAdministrationState>;
+export let FinanceEconomyRiskComplianceHoldEventSchema: z.ZodType<FinanceEconomyRiskComplianceHoldEvent>;
+export let FinanceEconomyRiskComplianceHoldPageSchema: z.ZodType<FinanceEconomyRiskComplianceHoldPage>;
+export let FinanceEconomyRiskComplianceHoldScopeSchema: z.ZodType<FinanceEconomyRiskComplianceHoldScope>;
+export let FinanceEconomyRiskEconomyCapabilityEvaluationResultSchema: z.ZodType<FinanceEconomyRiskEconomyCapabilityEvaluationResult>;
+export let FinanceEconomyRiskEconomyCapabilityPolicySchema: z.ZodType<FinanceEconomyRiskEconomyCapabilityPolicy>;
+export let FinanceEconomyRiskEconomyCapabilityPolicyStateSchema: z.ZodType<FinanceEconomyRiskEconomyCapabilityPolicyState>;
+export let FinanceEconomyRiskEconomyCapabilityReadinessStatusSchema: z.ZodType<FinanceEconomyRiskEconomyCapabilityReadinessStatus>;
+export let FinanceEconomyRiskEconomyKillSwitchScopeSchema: z.ZodType<FinanceEconomyRiskEconomyKillSwitchScope>;
+export let FinanceEconomyRiskEconomyKillSwitchStateSchema: z.ZodType<FinanceEconomyRiskEconomyKillSwitchState>;
+export let FinanceEconomyRiskEconomyProtectedOperationStateSchema: z.ZodType<FinanceEconomyRiskEconomyProtectedOperationState>;
+export let FinanceEconomyRiskEconomyValueMovementCapabilitySchema: z.ZodType<FinanceEconomyRiskEconomyValueMovementCapability>;
+export let FinanceEconomyRiskRiskManualDecisionCodeSchema: z.ZodType<FinanceEconomyRiskRiskManualDecisionCode>;
+export let FinanceEconomyRiskRiskReviewCaseSchema: z.ZodType<FinanceEconomyRiskRiskReviewCase>;
+export let FinanceEconomyRiskRiskReviewEventSchema: z.ZodType<FinanceEconomyRiskRiskReviewEvent>;
+export let FinanceEconomyRiskRiskReviewEventKindSchema: z.ZodType<FinanceEconomyRiskRiskReviewEventKind>;
+export let FinanceEconomyRiskRiskReviewPageSchema: z.ZodType<FinanceEconomyRiskRiskReviewPage>;
+export let FinanceEconomyRiskRiskReviewStatusSchema: z.ZodType<FinanceEconomyRiskRiskReviewStatus>;
+export let FinanceEconomyTransfersSelfServiceEconomyTransferInputSchema: z.ZodType<FinanceEconomyTransfersSelfServiceEconomyTransferInput>;
+export let FinanceEconomyTransfersSelfServiceEconomyTransferReceiptSchema: z.ZodType<FinanceEconomyTransfersSelfServiceEconomyTransferReceipt>;
+export let FinanceEconomyTransfersSelfServiceEconomyTransferTypeSchema: z.ZodType<FinanceEconomyTransfersSelfServiceEconomyTransferType>;
+export let FinanceEconomyTreasuryAdminWithdrawalAuditEventSchema: z.ZodType<FinanceEconomyTreasuryAdminWithdrawalAuditEvent>;
+export let FinanceEconomyTreasuryAdminWithdrawalAuditViewSchema: z.ZodType<FinanceEconomyTreasuryAdminWithdrawalAuditView>;
+export let FinanceEconomyTreasuryAdminWithdrawalRunSchema: z.ZodType<FinanceEconomyTreasuryAdminWithdrawalRun>;
+export let FinanceEconomyTreasuryAdminWithdrawalRunStateSchema: z.ZodType<FinanceEconomyTreasuryAdminWithdrawalRunState>;
 export let GameJamsAddJamCriteriaInputSchema: z.ZodType<GameJamsAddJamCriteriaInput>;
 export let GameJamsCreateJamInputSchema: z.ZodType<GameJamsCreateJamInput>;
 export let GameJamsJamSchema: z.ZodType<GameJamsJam>;
-export let GameJamsJamCriteriaSchema: z.ZodType<GameJamsJamCriteria>;
+export let GameJamsJamCriteriaDtoSchema: z.ZodType<GameJamsJamCriteriaDto>;
 export let GameJamsJamDtoSchema: z.ZodType<GameJamsJamDto>;
 export let GameJamsJamScoreSchema: z.ZodType<GameJamsJamScore>;
 export let GameJamsJamScoreDtoSchema: z.ZodType<GameJamsJamScoreDto>;
 export let GameJamsJamStatusSchema: z.ZodType<GameJamsJamStatus>;
-export let GameJamsJamSubmissionSchema: z.ZodType<GameJamsJamSubmission>;
+export let GameJamsJamSubmissionDtoSchema: z.ZodType<GameJamsJamSubmissionDto>;
 export let GameJamsScoreJamSubmissionInputSchema: z.ZodType<GameJamsScoreJamSubmissionInput>;
 export let GameJamsSubmitJamEntryInputSchema: z.ZodType<GameJamsSubmitJamEntryInput>;
-export let IdentityAuthenticationApiKeySchema: z.ZodType<IdentityAuthenticationApiKey>;
+export let IdentityAuthenticationApiKeyDtoSchema: z.ZodType<IdentityAuthenticationApiKeyDto>;
 export let IdentityAuthenticationAssignRoleToUserInputSchema: z.ZodType<IdentityAuthenticationAssignRoleToUserInput>;
 export let IdentityAuthenticationBackupCodesOutputSchema: z.ZodType<IdentityAuthenticationBackupCodesOutput>;
 export let IdentityAuthenticationBackupCodesStatusOutputSchema: z.ZodType<IdentityAuthenticationBackupCodesStatusOutput>;
@@ -13876,7 +14332,7 @@ export let IdentityAuthenticationCreateStepUpChallengeInputSchema: z.ZodType<Ide
 export let IdentityAuthenticationDeviceInfoSchema: z.ZodType<IdentityAuthenticationDeviceInfo>;
 export let IdentityAuthenticationDisableMfaInputSchema: z.ZodType<IdentityAuthenticationDisableMfaInput>;
 export let IdentityAuthenticationDiscordAuthorizeInputSchema: z.ZodType<IdentityAuthenticationDiscordAuthorizeInput>;
-export let IdentityAuthenticationDiscordCallbackInputSchema: z.ZodType<IdentityAuthenticationDiscordCallbackInput>;
+export let IdentityAuthenticationDiscordCallbackRequestDtoSchema: z.ZodType<IdentityAuthenticationDiscordCallbackRequestDto>;
 export let IdentityAuthenticationDiscordLinkAuthorizeInputSchema: z.ZodType<IdentityAuthenticationDiscordLinkAuthorizeInput>;
 export let IdentityAuthenticationDiscordLinkAuthorizeOutputSchema: z.ZodType<IdentityAuthenticationDiscordLinkAuthorizeOutput>;
 export let IdentityAuthenticationDiscordLinkCallbackInputSchema: z.ZodType<IdentityAuthenticationDiscordLinkCallbackInput>;
@@ -13884,8 +14340,8 @@ export let IdentityAuthenticationDiscordSignInOutputSchema: z.ZodType<IdentityAu
 export let IdentityAuthenticationEmailVerificationOutputSchema: z.ZodType<IdentityAuthenticationEmailVerificationOutput>;
 export let IdentityAuthenticationEmailVerificationResultSchema: z.ZodType<IdentityAuthenticationEmailVerificationResult>;
 export let IdentityAuthenticationGitHubSignInOutputSchema: z.ZodType<IdentityAuthenticationGitHubSignInOutput>;
-export let IdentityAuthenticationGoogleIdTokenInputSchema: z.ZodType<IdentityAuthenticationGoogleIdTokenInput>;
-export let IdentityAuthenticationJwtKeyInfoSchema: z.ZodType<IdentityAuthenticationJwtKeyInfo>;
+export let IdentityAuthenticationGoogleIdTokenRequestDtoSchema: z.ZodType<IdentityAuthenticationGoogleIdTokenRequestDto>;
+export let IdentityAuthenticationJwtKeyInfoDtoSchema: z.ZodType<IdentityAuthenticationJwtKeyInfoDto>;
 export let IdentityAuthenticationLinkGoogleAccountInputSchema: z.ZodType<IdentityAuthenticationLinkGoogleAccountInput>;
 export let IdentityAuthenticationLocalSignInInputSchema: z.ZodType<IdentityAuthenticationLocalSignInInput>;
 export let IdentityAuthenticationLocalSignUpInputSchema: z.ZodType<IdentityAuthenticationLocalSignUpInput>;
@@ -13934,7 +14390,7 @@ export let IdentityAuthenticationTrustedDeviceOutputSchema: z.ZodType<IdentityAu
 export let IdentityAuthenticationUpdateCredentialNameInputSchema: z.ZodType<IdentityAuthenticationUpdateCredentialNameInput>;
 export let IdentityAuthenticationUpdateRoleInputSchema: z.ZodType<IdentityAuthenticationUpdateRoleInput>;
 export let IdentityAuthenticationUpdateScopesInputSchema: z.ZodType<IdentityAuthenticationUpdateScopesInput>;
-export let IdentityAuthenticationUserSchema: z.ZodType<IdentityAuthenticationUser>;
+export let IdentityAuthenticationUserDtoSchema: z.ZodType<IdentityAuthenticationUserDto>;
 export let IdentityAuthenticationVerifyEmailInputSchema: z.ZodType<IdentityAuthenticationVerifyEmailInput>;
 export let IdentityAuthenticationVerifyMfaInputSchema: z.ZodType<IdentityAuthenticationVerifyMfaInput>;
 export let IdentityAuthenticationVerifyStepUpChallengeInputSchema: z.ZodType<IdentityAuthenticationVerifyStepUpChallengeInput>;
@@ -13974,7 +14430,7 @@ export let IdentityAuthorizationDeclineInvitationInputSchema: z.ZodType<Identity
 export let IdentityAuthorizationDelegatedAdminScopeSchema: z.ZodType<IdentityAuthorizationDelegatedAdminScope>;
 export let IdentityAuthorizationDelegatedAdminScopeTypeSchema: z.ZodType<IdentityAuthorizationDelegatedAdminScopeType>;
 export let IdentityAuthorizationDenyTenantPermissionCommandSchema: z.ZodType<IdentityAuthorizationDenyTenantPermissionCommand>;
-export let IdentityAuthorizationEffectivePermissionSchema: z.ZodType<IdentityAuthorizationEffectivePermission>;
+export let IdentityAuthorizationEffectivePermissionDtoSchema: z.ZodType<IdentityAuthorizationEffectivePermissionDto>;
 export let IdentityAuthorizationEffectivePermissionsOutputSchema: z.ZodType<IdentityAuthorizationEffectivePermissionsOutput>;
 export let IdentityAuthorizationElevationRequestStatusSchema: z.ZodType<IdentityAuthorizationElevationRequestStatus>;
 export let IdentityAuthorizationGetPendingResourceInvitationsOutputSchema: z.ZodType<IdentityAuthorizationGetPendingResourceInvitationsOutput>;
@@ -13996,7 +14452,7 @@ export let IdentityAuthorizationPermissionUsageMetricsSchema: z.ZodType<Identity
 export let IdentityAuthorizationRemoveDenyPermissionsCommandSchema: z.ZodType<IdentityAuthorizationRemoveDenyPermissionsCommand>;
 export let IdentityAuthorizationRemoveUserAccessCommandSchema: z.ZodType<IdentityAuthorizationRemoveUserAccessCommand>;
 export let IdentityAuthorizationResourceAccessPatternSchema: z.ZodType<IdentityAuthorizationResourceAccessPattern>;
-export let IdentityAuthorizationResourceInvitationSchema: z.ZodType<IdentityAuthorizationResourceInvitation>;
+export let IdentityAuthorizationResourceInvitationDtoSchema: z.ZodType<IdentityAuthorizationResourceInvitationDto>;
 export let IdentityAuthorizationResourceUserSchema: z.ZodType<IdentityAuthorizationResourceUser>;
 export let IdentityAuthorizationRevokeTenantPermissionCommandSchema: z.ZodType<IdentityAuthorizationRevokeTenantPermissionCommand>;
 export let IdentityAuthorizationSetGlobalDefaultPermissionsCommandSchema: z.ZodType<IdentityAuthorizationSetGlobalDefaultPermissionsCommand>;
@@ -14034,24 +14490,24 @@ export let IdentityTenantsSetTenantMembershipStatusInputSchema: z.ZodType<Identi
 export let IdentityTenantsSetTenantMembershipStatusOutputSchema: z.ZodType<IdentityTenantsSetTenantMembershipStatusOutput>;
 export let IdentityTenantsSlugValidationSchema: z.ZodType<IdentityTenantsSlugValidation>;
 export let IdentityTenantsTenantSchema: z.ZodType<IdentityTenantsTenant>;
-export let IdentityTenantsTenantAddressSchema: z.ZodType<IdentityTenantsTenantAddress>;
+export let IdentityTenantsTenantAddressDtoSchema: z.ZodType<IdentityTenantsTenantAddressDto>;
 export let IdentityTenantsTenantAuditLogEntrySchema: z.ZodType<IdentityTenantsTenantAuditLogEntry>;
-export let IdentityTenantsTenantBrandingSchema: z.ZodType<IdentityTenantsTenantBranding>;
-export let IdentityTenantsTenantBusinessInfoSchema: z.ZodType<IdentityTenantsTenantBusinessInfo>;
-export let IdentityTenantsTenantBusinessRulesSchema: z.ZodType<IdentityTenantsTenantBusinessRules>;
-export let IdentityTenantsTenantContactInfoSchema: z.ZodType<IdentityTenantsTenantContactInfo>;
-export let IdentityTenantsTenantCurrencySettingsSchema: z.ZodType<IdentityTenantsTenantCurrencySettings>;
+export let IdentityTenantsTenantBrandingDtoSchema: z.ZodType<IdentityTenantsTenantBrandingDto>;
+export let IdentityTenantsTenantBusinessInfoDtoSchema: z.ZodType<IdentityTenantsTenantBusinessInfoDto>;
+export let IdentityTenantsTenantBusinessRulesDtoSchema: z.ZodType<IdentityTenantsTenantBusinessRulesDto>;
+export let IdentityTenantsTenantContactInfoDtoSchema: z.ZodType<IdentityTenantsTenantContactInfoDto>;
+export let IdentityTenantsTenantCurrencySettingsDtoSchema: z.ZodType<IdentityTenantsTenantCurrencySettingsDto>;
 export let IdentityTenantsTenantDomainSchema: z.ZodType<IdentityTenantsTenantDomain>;
-export let IdentityTenantsTenantIntegrationSettingsSchema: z.ZodType<IdentityTenantsTenantIntegrationSettings>;
+export let IdentityTenantsTenantIntegrationSettingsDtoSchema: z.ZodType<IdentityTenantsTenantIntegrationSettingsDto>;
 export let IdentityTenantsTenantMemberSchema: z.ZodType<IdentityTenantsTenantMember>;
-export let IdentityTenantsTenantMetadataSchema: z.ZodType<IdentityTenantsTenantMetadata>;
-export let IdentityTenantsTenantSecuritySettingsSchema: z.ZodType<IdentityTenantsTenantSecuritySettings>;
+export let IdentityTenantsTenantMetadataDtoSchema: z.ZodType<IdentityTenantsTenantMetadataDto>;
+export let IdentityTenantsTenantSecuritySettingsDtoSchema: z.ZodType<IdentityTenantsTenantSecuritySettingsDto>;
 export let IdentityTenantsTenantSettingsSchema: z.ZodType<IdentityTenantsTenantSettings>;
 export let IdentityTenantsTenantSettingsDtoSchema: z.ZodType<IdentityTenantsTenantSettingsDto>;
 export let IdentityTenantsTenantStatisticsSchema: z.ZodType<IdentityTenantsTenantStatistics>;
-export let IdentityTenantsTenantSystemConfigurationSchema: z.ZodType<IdentityTenantsTenantSystemConfiguration>;
-export let IdentityTenantsTenantSystemLimitsSchema: z.ZodType<IdentityTenantsTenantSystemLimits>;
-export let IdentityTenantsTenantUiSettingsSchema: z.ZodType<IdentityTenantsTenantUiSettings>;
+export let IdentityTenantsTenantSystemConfigurationDtoSchema: z.ZodType<IdentityTenantsTenantSystemConfigurationDto>;
+export let IdentityTenantsTenantSystemLimitsDtoSchema: z.ZodType<IdentityTenantsTenantSystemLimitsDto>;
+export let IdentityTenantsTenantUiSettingsDtoSchema: z.ZodType<IdentityTenantsTenantUiSettingsDto>;
 export let IdentityTenantsTenantValidationErrorSchema: z.ZodType<IdentityTenantsTenantValidationError>;
 export let IdentityTenantsTenantValidationOutputSchema: z.ZodType<IdentityTenantsTenantValidationOutput>;
 export let IdentityTenantsTenantValidationWarningSchema: z.ZodType<IdentityTenantsTenantValidationWarning>;
@@ -14076,7 +14532,7 @@ export let IdentityTenantsUpdateTenantUiSettingsInputSchema: z.ZodType<IdentityT
 export let IdentityTenantsUpdateUserMembershipInviteInputSchema: z.ZodType<IdentityTenantsUpdateUserMembershipInviteInput>;
 export let IdentityTenantsUpdateUserMembershipRoleInputSchema: z.ZodType<IdentityTenantsUpdateUserMembershipRoleInput>;
 export let IdentityTenantsUsageTrackingSchema: z.ZodType<IdentityTenantsUsageTracking>;
-export let IdentityTenantsUserMembershipSchema: z.ZodType<IdentityTenantsUserMembership>;
+export let IdentityTenantsUserMembershipDtoSchema: z.ZodType<IdentityTenantsUserMembershipDto>;
 export let IdentityTenantsValidateTenantInputSchema: z.ZodType<IdentityTenantsValidateTenantInput>;
 export let IdentityUsersBulkActivateUsersInputSchema: z.ZodType<IdentityUsersBulkActivateUsersInput>;
 export let IdentityUsersBulkActivateUsersOutputSchema: z.ZodType<IdentityUsersBulkActivateUsersOutput>;
@@ -14096,7 +14552,7 @@ export let IdentityUsersBulkUnsuspendUsersOutputSchema: z.ZodType<IdentityUsersB
 export let IdentityUsersBulkUpdateUsersInputSchema: z.ZodType<IdentityUsersBulkUpdateUsersInput>;
 export let IdentityUsersCreateUserInputSchema: z.ZodType<IdentityUsersCreateUserInput>;
 export let IdentityUsersCreateUserRequestItemSchema: z.ZodType<IdentityUsersCreateUserRequestItem>;
-export let IdentityUsersNotificationActionSchema: z.ZodType<IdentityUsersNotificationAction>;
+export let IdentityUsersNotificationActionDtoSchema: z.ZodType<IdentityUsersNotificationActionDto>;
 export let IdentityUsersNotificationFilterCriteriaSchema: z.ZodType<IdentityUsersNotificationFilterCriteria>;
 export let IdentityUsersNotificationPrioritySchema: z.ZodType<IdentityUsersNotificationPriority>;
 export let IdentityUsersProfileVisibilitySchema: z.ZodType<IdentityUsersProfileVisibility>;
@@ -14118,21 +14574,22 @@ export let IdentityUsersUpdateUserPrivacyPreferencesInputSchema: z.ZodType<Ident
 export let IdentityUsersUpdateUserProfileInputSchema: z.ZodType<IdentityUsersUpdateUserProfileInput>;
 export let IdentityUsersUpdateUserRequestItemSchema: z.ZodType<IdentityUsersUpdateUserRequestItem>;
 export let IdentityUsersUserSchema: z.ZodType<IdentityUsersUser>;
-export let IdentityUsersUserAccessibilityPreferencesSchema: z.ZodType<IdentityUsersUserAccessibilityPreferences>;
+export let IdentityUsersUserAccessibilityPreferencesDtoSchema: z.ZodType<IdentityUsersUserAccessibilityPreferencesDto>;
 export let IdentityUsersUserDtoSchema: z.ZodType<IdentityUsersUserDto>;
-export let IdentityUsersUserLocalizationPreferencesSchema: z.ZodType<IdentityUsersUserLocalizationPreferences>;
+export let IdentityUsersUserLocalizationPreferencesDtoSchema: z.ZodType<IdentityUsersUserLocalizationPreferencesDto>;
 export let IdentityUsersUserMetadataSchema: z.ZodType<IdentityUsersUserMetadata>;
 export let IdentityUsersUserMetadataDtoSchema: z.ZodType<IdentityUsersUserMetadataDto>;
 export let IdentityUsersUserNotificationSchema: z.ZodType<IdentityUsersUserNotification>;
-export let IdentityUsersUserNotificationDetailSchema: z.ZodType<IdentityUsersUserNotificationDetail>;
+export let IdentityUsersUserNotificationDetailDtoSchema: z.ZodType<IdentityUsersUserNotificationDetailDto>;
 export let IdentityUsersUserNotificationDtoSchema: z.ZodType<IdentityUsersUserNotificationDto>;
-export let IdentityUsersUserNotificationPreferencesSchema: z.ZodType<IdentityUsersUserNotificationPreferences>;
+export let IdentityUsersUserNotificationPreferencesDtoSchema: z.ZodType<IdentityUsersUserNotificationPreferencesDto>;
 export let IdentityUsersUserPreferencesSchema: z.ZodType<IdentityUsersUserPreferences>;
 export let IdentityUsersUserPreferencesDtoSchema: z.ZodType<IdentityUsersUserPreferencesDto>;
-export let IdentityUsersUserPrivacyPreferencesSchema: z.ZodType<IdentityUsersUserPrivacyPreferences>;
+export let IdentityUsersUserPrivacyPreferencesDtoSchema: z.ZodType<IdentityUsersUserPrivacyPreferencesDto>;
 export let IdentityUsersUserProfileSchema: z.ZodType<IdentityUsersUserProfile>;
 export let IdentityUsersUserProfileDtoSchema: z.ZodType<IdentityUsersUserProfileDto>;
 export let IdentityUsersUserStatusSchema: z.ZodType<IdentityUsersUserStatus>;
+export let IDurableIntegrationEventSchema: z.ZodType<IDurableIntegrationEvent>;
 export let KeyValuePairStringAuthenticationExtensionsPRFValuesSchema: z.ZodType<KeyValuePairStringAuthenticationExtensionsPRFValues>;
 export let LaunchPadCreateLaunchPadEventInputSchema: z.ZodType<LaunchPadCreateLaunchPadEventInput>;
 export let LaunchPadCreateLaunchPadSlotInputSchema: z.ZodType<LaunchPadCreateLaunchPadSlotInput>;
@@ -14163,19 +14620,19 @@ export let LaunchPadTransitionLaunchPadRegistrationInputSchema: z.ZodType<Launch
 export let LaunchPadUpdateLaunchPadApplicationInputSchema: z.ZodType<LaunchPadUpdateLaunchPadApplicationInput>;
 export let LaunchPadUpdateLaunchPadEventInputSchema: z.ZodType<LaunchPadUpdateLaunchPadEventInput>;
 export let LaunchPadUpdateLaunchPadSettingsInputSchema: z.ZodType<LaunchPadUpdateLaunchPadSettingsInput>;
-export let LearningAssessmentsAnonymousReviewAssessmentSchema: z.ZodType<LearningAssessmentsAnonymousReviewAssessment>;
-export let LearningAssessmentsAnonymousReviewRubricSchema: z.ZodType<LearningAssessmentsAnonymousReviewRubric>;
-export let LearningAssessmentsAnonymousReviewSubmissionSchema: z.ZodType<LearningAssessmentsAnonymousReviewSubmission>;
-export let LearningAssessmentsAssessmentSchema: z.ZodType<LearningAssessmentsAssessment>;
-export let LearningAssessmentsAssessmentGroupSchema: z.ZodType<LearningAssessmentsAssessmentGroup>;
-export let LearningAssessmentsAssessmentGroupAnalyticsSchema: z.ZodType<LearningAssessmentsAssessmentGroupAnalytics>;
+export let LearningAssessmentsAnonymousReviewAssessmentDtoSchema: z.ZodType<LearningAssessmentsAnonymousReviewAssessmentDto>;
+export let LearningAssessmentsAnonymousReviewRubricDtoSchema: z.ZodType<LearningAssessmentsAnonymousReviewRubricDto>;
+export let LearningAssessmentsAnonymousReviewSubmissionDtoSchema: z.ZodType<LearningAssessmentsAnonymousReviewSubmissionDto>;
+export let LearningAssessmentsAssessmentDtoSchema: z.ZodType<LearningAssessmentsAssessmentDto>;
+export let LearningAssessmentsAssessmentGroupAnalyticsDtoSchema: z.ZodType<LearningAssessmentsAssessmentGroupAnalyticsDto>;
+export let LearningAssessmentsAssessmentGroupDtoSchema: z.ZodType<LearningAssessmentsAssessmentGroupDto>;
 export let LearningAssessmentsAssessmentPresentationModeSchema: z.ZodType<LearningAssessmentsAssessmentPresentationMode>;
-export let LearningAssessmentsAssessmentScoreBucketSchema: z.ZodType<LearningAssessmentsAssessmentScoreBucket>;
-export let LearningAssessmentsAssessmentSubmissionSchema: z.ZodType<LearningAssessmentsAssessmentSubmission>;
+export let LearningAssessmentsAssessmentScoreBucketDtoSchema: z.ZodType<LearningAssessmentsAssessmentScoreBucketDto>;
+export let LearningAssessmentsAssessmentSubmissionDtoSchema: z.ZodType<LearningAssessmentsAssessmentSubmissionDto>;
 export let LearningAssessmentsAssessmentTypeSchema: z.ZodType<LearningAssessmentsAssessmentType>;
 export let LearningAssessmentsAssignAssessmentGroupInputSchema: z.ZodType<LearningAssessmentsAssignAssessmentGroupInput>;
 export let LearningAssessmentsCanAttemptOutputSchema: z.ZodType<LearningAssessmentsCanAttemptOutput>;
-export let LearningAssessmentsCourseAssessmentAnalyticsSchema: z.ZodType<LearningAssessmentsCourseAssessmentAnalytics>;
+export let LearningAssessmentsCourseAssessmentAnalyticsDtoSchema: z.ZodType<LearningAssessmentsCourseAssessmentAnalyticsDto>;
 export let LearningAssessmentsCreateAssessmentGroupInputSchema: z.ZodType<LearningAssessmentsCreateAssessmentGroupInput>;
 export let LearningAssessmentsCreateAssessmentInputSchema: z.ZodType<LearningAssessmentsCreateAssessmentInput>;
 export let LearningAssessmentsCreateGroupInputSchema: z.ZodType<LearningAssessmentsCreateGroupInput>;
@@ -14205,9 +14662,9 @@ export let LearningAssessmentsGradingContractsReviewMethodsSchema: z.ZodType<Lea
 export let LearningAssessmentsGradingPersistenceAssessmentTestRunStatusSchema: z.ZodType<LearningAssessmentsGradingPersistenceAssessmentTestRunStatus>;
 export let LearningAssessmentsGradingPersistencePersistedGradeRoundStatusSchema: z.ZodType<LearningAssessmentsGradingPersistencePersistedGradeRoundStatus>;
 export let LearningAssessmentsGradingPersistencePersistedGradingExecutionStatusSchema: z.ZodType<LearningAssessmentsGradingPersistencePersistedGradingExecutionStatus>;
-export let LearningAssessmentsGradingQueueSchema: z.ZodType<LearningAssessmentsGradingQueue>;
-export let LearningAssessmentsGradingQueueAssessmentSchema: z.ZodType<LearningAssessmentsGradingQueueAssessment>;
-export let LearningAssessmentsGradingQueueItemSchema: z.ZodType<LearningAssessmentsGradingQueueItem>;
+export let LearningAssessmentsGradingQueueAssessmentDtoSchema: z.ZodType<LearningAssessmentsGradingQueueAssessmentDto>;
+export let LearningAssessmentsGradingQueueDtoSchema: z.ZodType<LearningAssessmentsGradingQueueDto>;
+export let LearningAssessmentsGradingQueueItemDtoSchema: z.ZodType<LearningAssessmentsGradingQueueItemDto>;
 export let LearningAssessmentsGradingRuntimeAssessmentExecutionViewV1Schema: z.ZodType<LearningAssessmentsGradingRuntimeAssessmentExecutionViewV1>;
 export let LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1Schema: z.ZodType<LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1>;
 export let LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1Schema: z.ZodType<LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1>;
@@ -14219,27 +14676,27 @@ export let LearningAssessmentsGradingRuntimeInstructorItemResolutionV1Schema: z.
 export let LearningAssessmentsGradingRuntimeInstructorReviewResolutionV1Schema: z.ZodType<LearningAssessmentsGradingRuntimeInstructorReviewResolutionV1>;
 export let LearningAssessmentsGradingRuntimeRegradeExecutionCommandSchema: z.ZodType<LearningAssessmentsGradingRuntimeRegradeExecutionCommand>;
 export let LearningAssessmentsGradingRuntimeReleaseGradeResultCommandSchema: z.ZodType<LearningAssessmentsGradingRuntimeReleaseGradeResultCommand>;
-export let LearningAssessmentsGroupSchema: z.ZodType<LearningAssessmentsGroup>;
-export let LearningAssessmentsGroupDetailSchema: z.ZodType<LearningAssessmentsGroupDetail>;
-export let LearningAssessmentsGroupMemberSchema: z.ZodType<LearningAssessmentsGroupMember>;
-export let LearningAssessmentsGroupMembershipSchema: z.ZodType<LearningAssessmentsGroupMembership>;
-export let LearningAssessmentsGroupSetSchema: z.ZodType<LearningAssessmentsGroupSet>;
-export let LearningAssessmentsGroupSetSummarySchema: z.ZodType<LearningAssessmentsGroupSetSummary>;
-export let LearningAssessmentsGroupSummarySchema: z.ZodType<LearningAssessmentsGroupSummary>;
+export let LearningAssessmentsGroupDetailDtoSchema: z.ZodType<LearningAssessmentsGroupDetailDto>;
+export let LearningAssessmentsGroupDtoSchema: z.ZodType<LearningAssessmentsGroupDto>;
+export let LearningAssessmentsGroupMemberDtoSchema: z.ZodType<LearningAssessmentsGroupMemberDto>;
+export let LearningAssessmentsGroupMembershipDtoSchema: z.ZodType<LearningAssessmentsGroupMembershipDto>;
+export let LearningAssessmentsGroupSetDtoSchema: z.ZodType<LearningAssessmentsGroupSetDto>;
+export let LearningAssessmentsGroupSetSummaryDtoSchema: z.ZodType<LearningAssessmentsGroupSetSummaryDto>;
+export let LearningAssessmentsGroupSummaryDtoSchema: z.ZodType<LearningAssessmentsGroupSummaryDto>;
 export let LearningAssessmentsIdempotentRuntimeInputSchema: z.ZodType<LearningAssessmentsIdempotentRuntimeInput>;
-export let LearningAssessmentsInstructorPeerReviewSchema: z.ZodType<LearningAssessmentsInstructorPeerReview>;
-export let LearningAssessmentsInteractiveVideoAssessmentCueSchema: z.ZodType<LearningAssessmentsInteractiveVideoAssessmentCue>;
-export let LearningAssessmentsLearnerAssessmentAttemptSchema: z.ZodType<LearningAssessmentsLearnerAssessmentAttempt>;
-export let LearningAssessmentsLearnerAssessmentSubmissionSchema: z.ZodType<LearningAssessmentsLearnerAssessmentSubmission>;
-export let LearningAssessmentsLearnerInteractiveVideoAssessmentCueSchema: z.ZodType<LearningAssessmentsLearnerInteractiveVideoAssessmentCue>;
+export let LearningAssessmentsInstructorPeerReviewDtoSchema: z.ZodType<LearningAssessmentsInstructorPeerReviewDto>;
+export let LearningAssessmentsInteractiveVideoAssessmentCueDtoSchema: z.ZodType<LearningAssessmentsInteractiveVideoAssessmentCueDto>;
+export let LearningAssessmentsLearnerAssessmentAttemptDtoSchema: z.ZodType<LearningAssessmentsLearnerAssessmentAttemptDto>;
+export let LearningAssessmentsLearnerAssessmentSubmissionDtoSchema: z.ZodType<LearningAssessmentsLearnerAssessmentSubmissionDto>;
+export let LearningAssessmentsLearnerInteractiveVideoAssessmentCueDtoSchema: z.ZodType<LearningAssessmentsLearnerInteractiveVideoAssessmentCueDto>;
 export let LearningAssessmentsLinkInteractiveVideoCueInputSchema: z.ZodType<LearningAssessmentsLinkInteractiveVideoCueInput>;
-export let LearningAssessmentsPeerReviewClaimSchema: z.ZodType<LearningAssessmentsPeerReviewClaim>;
+export let LearningAssessmentsPeerReviewClaimDtoSchema: z.ZodType<LearningAssessmentsPeerReviewClaimDto>;
 export let LearningAssessmentsPeerReviewStatusSchema: z.ZodType<LearningAssessmentsPeerReviewStatus>;
 export let LearningAssessmentsPeerReviewSubmitInputSchema: z.ZodType<LearningAssessmentsPeerReviewSubmitInput>;
-export let LearningAssessmentsReceivedPeerReviewSchema: z.ZodType<LearningAssessmentsReceivedPeerReview>;
+export let LearningAssessmentsReceivedPeerReviewDtoSchema: z.ZodType<LearningAssessmentsReceivedPeerReviewDto>;
 export let LearningAssessmentsResolveInstructorReviewInputSchema: z.ZodType<LearningAssessmentsResolveInstructorReviewInput>;
-export let LearningAssessmentsRubricSchema: z.ZodType<LearningAssessmentsRubric>;
-export let LearningAssessmentsRubricCriterionSchema: z.ZodType<LearningAssessmentsRubricCriterion>;
+export let LearningAssessmentsRubricCriterionDtoSchema: z.ZodType<LearningAssessmentsRubricCriterionDto>;
+export let LearningAssessmentsRubricDtoSchema: z.ZodType<LearningAssessmentsRubricDto>;
 export let LearningAssessmentsSaveCollectiveRuntimeDraftInputSchema: z.ZodType<LearningAssessmentsSaveCollectiveRuntimeDraftInput>;
 export let LearningAssessmentsSaveRubricCriterionInputSchema: z.ZodType<LearningAssessmentsSaveRubricCriterionInput>;
 export let LearningAssessmentsSaveRubricInputSchema: z.ZodType<LearningAssessmentsSaveRubricInput>;
@@ -14252,36 +14709,36 @@ export let LearningAssessmentsSubmissionModalitySchema: z.ZodType<LearningAssess
 export let LearningAssessmentsSubmissionStatusSchema: z.ZodType<LearningAssessmentsSubmissionStatus>;
 export let LearningAssessmentsSubmitAssessmentInputSchema: z.ZodType<LearningAssessmentsSubmitAssessmentInput>;
 export let LearningAssessmentsSubmitAssessmentRuntimeInputSchema: z.ZodType<LearningAssessmentsSubmitAssessmentRuntimeInput>;
-export let LearningAssessmentsTaskItemSchema: z.ZodType<LearningAssessmentsTaskItem>;
-export let LearningAssessmentsTasksSchema: z.ZodType<LearningAssessmentsTasks>;
+export let LearningAssessmentsTaskItemDtoSchema: z.ZodType<LearningAssessmentsTaskItemDto>;
+export let LearningAssessmentsTasksDtoSchema: z.ZodType<LearningAssessmentsTasksDto>;
 export let LearningAssessmentsUpdateAssessmentGroupInputSchema: z.ZodType<LearningAssessmentsUpdateAssessmentGroupInput>;
 export let LearningAssessmentsUpdateAssessmentInputSchema: z.ZodType<LearningAssessmentsUpdateAssessmentInput>;
-export let LearningCertificatesCertificateSchema: z.ZodType<LearningCertificatesCertificate>;
+export let LearningCertificatesCertificateDtoSchema: z.ZodType<LearningCertificatesCertificateDto>;
 export let LearningCertificatesCertificateStatusSchema: z.ZodType<LearningCertificatesCertificateStatus>;
-export let LearningCertificatesCertificateTemplateSchema: z.ZodType<LearningCertificatesCertificateTemplate>;
-export let LearningCertificatesCertificateTemplateDetailSchema: z.ZodType<LearningCertificatesCertificateTemplateDetail>;
+export let LearningCertificatesCertificateTemplateDetailDtoSchema: z.ZodType<LearningCertificatesCertificateTemplateDetailDto>;
+export let LearningCertificatesCertificateTemplateDtoSchema: z.ZodType<LearningCertificatesCertificateTemplateDto>;
 export let LearningCertificatesCertificateVerificationResultSchema: z.ZodType<LearningCertificatesCertificateVerificationResult>;
 export let LearningCertificatesCreateCertificateTemplateInputSchema: z.ZodType<LearningCertificatesCreateCertificateTemplateInput>;
 export let LearningCertificatesIssueCertificateInputSchema: z.ZodType<LearningCertificatesIssueCertificateInput>;
 export let LearningCertificatesRevokeCertificateInputSchema: z.ZodType<LearningCertificatesRevokeCertificateInput>;
 export let LearningCertificatesUpdateCertificateTemplateInputSchema: z.ZodType<LearningCertificatesUpdateCertificateTemplateInput>;
 export let LearningCohortsApplyCohortScheduleInputSchema: z.ZodType<LearningCohortsApplyCohortScheduleInput>;
-export let LearningCohortsAvailableCohortContentSchema: z.ZodType<LearningCohortsAvailableCohortContent>;
-export let LearningCohortsCohortSchema: z.ZodType<LearningCohortsCohort>;
-export let LearningCohortsCohortCalendarEntrySchema: z.ZodType<LearningCohortsCohortCalendarEntry>;
+export let LearningCohortsAvailableCohortContentDtoSchema: z.ZodType<LearningCohortsAvailableCohortContentDto>;
+export let LearningCohortsCohortCalendarEntryDtoSchema: z.ZodType<LearningCohortsCohortCalendarEntryDto>;
+export let LearningCohortsCohortDtoSchema: z.ZodType<LearningCohortsCohortDto>;
 export let LearningCohortsCohortPacingModeSchema: z.ZodType<LearningCohortsCohortPacingMode>;
 export let LearningCohortsCohortReleasePolicySchema: z.ZodType<LearningCohortsCohortReleasePolicy>;
-export let LearningCohortsCohortScheduleSchema: z.ZodType<LearningCohortsCohortSchedule>;
-export let LearningCohortsCohortScheduleConflictSchema: z.ZodType<LearningCohortsCohortScheduleConflict>;
-export let LearningCohortsCohortScheduleItemSchema: z.ZodType<LearningCohortsCohortScheduleItem>;
+export let LearningCohortsCohortScheduleConflictDtoSchema: z.ZodType<LearningCohortsCohortScheduleConflictDto>;
+export let LearningCohortsCohortScheduleDtoSchema: z.ZodType<LearningCohortsCohortScheduleDto>;
+export let LearningCohortsCohortScheduleItemDtoSchema: z.ZodType<LearningCohortsCohortScheduleItemDto>;
 export let LearningCohortsCohortScheduleItemStatusSchema: z.ZodType<LearningCohortsCohortScheduleItemStatus>;
 export let LearningCohortsCohortScheduleItemTypeSchema: z.ZodType<LearningCohortsCohortScheduleItemType>;
-export let LearningCohortsCohortSchedulePreviewSchema: z.ZodType<LearningCohortsCohortSchedulePreview>;
-export let LearningCohortsCohortSchedulePreviewItemSchema: z.ZodType<LearningCohortsCohortSchedulePreviewItem>;
-export let LearningCohortsCohortScheduleSummarySchema: z.ZodType<LearningCohortsCohortScheduleSummary>;
+export let LearningCohortsCohortSchedulePreviewDtoSchema: z.ZodType<LearningCohortsCohortSchedulePreviewDto>;
+export let LearningCohortsCohortSchedulePreviewItemDtoSchema: z.ZodType<LearningCohortsCohortSchedulePreviewItemDto>;
+export let LearningCohortsCohortScheduleSummaryDtoSchema: z.ZodType<LearningCohortsCohortScheduleSummaryDto>;
 export let LearningCohortsCohortStatusSchema: z.ZodType<LearningCohortsCohortStatus>;
 export let LearningCohortsCohortVisibilityOverrideSchema: z.ZodType<LearningCohortsCohortVisibilityOverride>;
-export let LearningCohortsCourseCohortCalendarSchema: z.ZodType<LearningCohortsCourseCohortCalendar>;
+export let LearningCohortsCourseCohortCalendarDtoSchema: z.ZodType<LearningCohortsCourseCohortCalendarDto>;
 export let LearningCohortsCreateCohortInputSchema: z.ZodType<LearningCohortsCreateCohortInput>;
 export let LearningCohortsPreviewCohortScheduleInputSchema: z.ZodType<LearningCohortsPreviewCohortScheduleInput>;
 export let LearningCohortsScheduleConflictSeveritySchema: z.ZodType<LearningCohortsScheduleConflictSeverity>;
@@ -14290,173 +14747,192 @@ export let LearningCohortsShiftCohortScheduleInputSchema: z.ZodType<LearningCoho
 export let LearningCohortsUpdateCohortInputSchema: z.ZodType<LearningCohortsUpdateCohortInput>;
 export let LearningCohortsUpdateCohortScheduleInputSchema: z.ZodType<LearningCohortsUpdateCohortScheduleInput>;
 export let LearningCohortsUpdateCohortScheduleItemInputSchema: z.ZodType<LearningCohortsUpdateCohortScheduleItemInput>;
-export let LearningCoursesActivityGradeSchema: z.ZodType<LearningCoursesActivityGrade>;
+export let LearningCoursesActivityGradeDtoSchema: z.ZodType<LearningCoursesActivityGradeDto>;
 export let LearningCoursesActivitySettingsSchema: z.ZodType<LearningCoursesActivitySettings>;
+export let LearningCoursesAiAuthoringConversationDtoSchema: z.ZodType<LearningCoursesAiAuthoringConversationDto>;
+export let LearningCoursesAiAuthoringMessageDtoSchema: z.ZodType<LearningCoursesAiAuthoringMessageDto>;
+export let LearningCoursesAiAuthoringRunDtoSchema: z.ZodType<LearningCoursesAiAuthoringRunDto>;
+export let LearningCoursesAiAuthoringRunInputSchema: z.ZodType<LearningCoursesAiAuthoringRunInput>;
+export let LearningCoursesAiAuthoringRunStatusSchema: z.ZodType<LearningCoursesAiAuthoringRunStatus>;
+export let LearningCoursesAiCreditUsageDtoSchema: z.ZodType<LearningCoursesAiCreditUsageDto>;
+export let LearningCoursesAiEntitlementDtoSchema: z.ZodType<LearningCoursesAiEntitlementDto>;
+export let LearningCoursesAiProposalDtoSchema: z.ZodType<LearningCoursesAiProposalDto>;
+export let LearningCoursesAiProposalKindSchema: z.ZodType<LearningCoursesAiProposalKind>;
+export let LearningCoursesAiProposalStatusSchema: z.ZodType<LearningCoursesAiProposalStatus>;
+export let LearningCoursesApplyAiProposalInputSchema: z.ZodType<LearningCoursesApplyAiProposalInput>;
+export let LearningCoursesAuthoringContentPayloadSchema: z.ZodType<LearningCoursesAuthoringContentPayload>;
+export let LearningCoursesAuthoringDraftDtoSchema: z.ZodType<LearningCoursesAuthoringDraftDto>;
 export let LearningCoursesBundleFileMetaSchema: z.ZodType<LearningCoursesBundleFileMeta>;
 export let LearningCoursesCircularDependencyCheckResultSchema: z.ZodType<LearningCoursesCircularDependencyCheckResult>;
-export let LearningCoursesCloneProgramSchema: z.ZodType<LearningCoursesCloneProgram>;
+export let LearningCoursesCloneProgramDtoSchema: z.ZodType<LearningCoursesCloneProgramDto>;
 export let LearningCoursesCodingAssignmentContentSchema: z.ZodType<LearningCoursesCodingAssignmentContent>;
 export let LearningCoursesCodingEnvironmentSchema: z.ZodType<LearningCoursesCodingEnvironment>;
 export let LearningCoursesCompleteContentInputSchema: z.ZodType<LearningCoursesCompleteContentInput>;
 export let LearningCoursesCompleteCourseCheckoutInputSchema: z.ZodType<LearningCoursesCompleteCourseCheckoutInput>;
 export let LearningCoursesCompleteCourseCheckoutOutputSchema: z.ZodType<LearningCoursesCompleteCourseCheckoutOutput>;
-export let LearningCoursesCompletionRatesSchema: z.ZodType<LearningCoursesCompletionRates>;
-export let LearningCoursesCompletionTrendSchema: z.ZodType<LearningCoursesCompletionTrend>;
-export let LearningCoursesContentInteractionSchema: z.ZodType<LearningCoursesContentInteraction>;
-export let LearningCoursesContentInteractionEventSchema: z.ZodType<LearningCoursesContentInteractionEvent>;
+export let LearningCoursesCompletionRatesDtoSchema: z.ZodType<LearningCoursesCompletionRatesDto>;
+export let LearningCoursesCompletionTrendDtoSchema: z.ZodType<LearningCoursesCompletionTrendDto>;
+export let LearningCoursesContentInteractionDtoSchema: z.ZodType<LearningCoursesContentInteractionDto>;
+export let LearningCoursesContentInteractionEventDtoSchema: z.ZodType<LearningCoursesContentInteractionEventDto>;
 export let LearningCoursesContentInteractionEventTypeSchema: z.ZodType<LearningCoursesContentInteractionEventType>;
-export let LearningCoursesContentInteractionSummarySchema: z.ZodType<LearningCoursesContentInteractionSummary>;
-export let LearningCoursesContentProgressSchema: z.ZodType<LearningCoursesContentProgress>;
-export let LearningCoursesContentStatsSchema: z.ZodType<LearningCoursesContentStats>;
-export let LearningCoursesContentSummarySchema: z.ZodType<LearningCoursesContentSummary>;
+export let LearningCoursesContentInteractionSummaryDtoSchema: z.ZodType<LearningCoursesContentInteractionSummaryDto>;
+export let LearningCoursesContentProgressDtoSchema: z.ZodType<LearningCoursesContentProgressDto>;
+export let LearningCoursesContentStatsDtoSchema: z.ZodType<LearningCoursesContentStatsDto>;
+export let LearningCoursesContentSummaryDtoSchema: z.ZodType<LearningCoursesContentSummaryDto>;
 export let LearningCoursesCourseSupportTicketMessageInputSchema: z.ZodType<LearningCoursesCourseSupportTicketMessageInput>;
-export let LearningCoursesCreateActivityGradeSchema: z.ZodType<LearningCoursesCreateActivityGrade>;
+export let LearningCoursesCreateActivityGradeDtoSchema: z.ZodType<LearningCoursesCreateActivityGradeDto>;
 export let LearningCoursesCreatePrerequisiteApiInputSchema: z.ZodType<LearningCoursesCreatePrerequisiteApiInput>;
-export let LearningCoursesCreateProductFromProgramSchema: z.ZodType<LearningCoursesCreateProductFromProgram>;
-export let LearningCoursesCreateProgramSchema: z.ZodType<LearningCoursesCreateProgram>;
-export let LearningCoursesCreateProgramContentSchema: z.ZodType<LearningCoursesCreateProgramContent>;
-export let LearningCoursesEngagementMetricsSchema: z.ZodType<LearningCoursesEngagementMetrics>;
+export let LearningCoursesCreateProductFromProgramDtoSchema: z.ZodType<LearningCoursesCreateProductFromProgramDto>;
+export let LearningCoursesCreateProgramContentDtoSchema: z.ZodType<LearningCoursesCreateProgramContentDto>;
+export let LearningCoursesCreateProgramDtoSchema: z.ZodType<LearningCoursesCreateProgramDto>;
+export let LearningCoursesEngagementMetricsDtoSchema: z.ZodType<LearningCoursesEngagementMetricsDto>;
 export let LearningCoursesEnrollmentStatusSchema: z.ZodType<LearningCoursesEnrollmentStatus>;
+export let LearningCoursesEnrollProgramUserInputSchema: z.ZodType<LearningCoursesEnrollProgramUserInput>;
 export let LearningCoursesEstimatedMinutesSourceSchema: z.ZodType<LearningCoursesEstimatedMinutesSource>;
-export let LearningCoursesGraderSummarySchema: z.ZodType<LearningCoursesGraderSummary>;
-export let LearningCoursesGradeStatisticsSchema: z.ZodType<LearningCoursesGradeStatistics>;
+export let LearningCoursesGraderSummaryDtoSchema: z.ZodType<LearningCoursesGraderSummaryDto>;
+export let LearningCoursesGradeStatisticsDtoSchema: z.ZodType<LearningCoursesGradeStatisticsDto>;
 export let LearningCoursesGradingConfigSchema: z.ZodType<LearningCoursesGradingConfig>;
 export let LearningCoursesLessonContentFormatSchema: z.ZodType<LearningCoursesLessonContentFormat>;
-export let LearningCoursesMonetizationSchema: z.ZodType<LearningCoursesMonetization>;
-export let LearningCoursesMoveContentSchema: z.ZodType<LearningCoursesMoveContent>;
-export let LearningCoursesPrerequisiteSchema: z.ZodType<LearningCoursesPrerequisite>;
-export let LearningCoursesPrerequisiteCheckResultSchema: z.ZodType<LearningCoursesPrerequisiteCheckResult>;
-export let LearningCoursesPrerequisiteStatusSchema: z.ZodType<LearningCoursesPrerequisiteStatus>;
+export let LearningCoursesMonetizationDtoSchema: z.ZodType<LearningCoursesMonetizationDto>;
+export let LearningCoursesMoveContentDtoSchema: z.ZodType<LearningCoursesMoveContentDto>;
+export let LearningCoursesPrerequisiteCheckResultDtoSchema: z.ZodType<LearningCoursesPrerequisiteCheckResultDto>;
+export let LearningCoursesPrerequisiteDtoSchema: z.ZodType<LearningCoursesPrerequisiteDto>;
+export let LearningCoursesPrerequisiteStatusDtoSchema: z.ZodType<LearningCoursesPrerequisiteStatusDto>;
 export let LearningCoursesPrerequisiteTypeSchema: z.ZodType<LearningCoursesPrerequisiteType>;
-export let LearningCoursesPricingSchema: z.ZodType<LearningCoursesPricing>;
-export let LearningCoursesProgramSchema: z.ZodType<LearningCoursesProgram>;
-export let LearningCoursesProgramAnalyticsSchema: z.ZodType<LearningCoursesProgramAnalytics>;
-export let LearningCoursesProgramContentSchema: z.ZodType<LearningCoursesProgramContent>;
+export let LearningCoursesPricingDtoSchema: z.ZodType<LearningCoursesPricingDto>;
+export let LearningCoursesProgramAnalyticsDtoSchema: z.ZodType<LearningCoursesProgramAnalyticsDto>;
+export let LearningCoursesProgramContentDtoSchema: z.ZodType<LearningCoursesProgramContentDto>;
 export let LearningCoursesProgramContentTypeSchema: z.ZodType<LearningCoursesProgramContentType>;
 export let LearningCoursesProgramDifficultySchema: z.ZodType<LearningCoursesProgramDifficulty>;
-export let LearningCoursesProgramUserSummarySchema: z.ZodType<LearningCoursesProgramUserSummary>;
+export let LearningCoursesProgramDtoSchema: z.ZodType<LearningCoursesProgramDto>;
+export let LearningCoursesProgramUserSummaryDtoSchema: z.ZodType<LearningCoursesProgramUserSummaryDto>;
 export let LearningCoursesProgressStatusSchema: z.ZodType<LearningCoursesProgressStatus>;
+export let LearningCoursesPublishAuthoringDraftInputSchema: z.ZodType<LearningCoursesPublishAuthoringDraftInput>;
+export let LearningCoursesPublishAuthoringResultSchema: z.ZodType<LearningCoursesPublishAuthoringResult>;
 export let LearningCoursesRecordContentInteractionEventInputSchema: z.ZodType<LearningCoursesRecordContentInteractionEventInput>;
-export let LearningCoursesReflectionResponseResultSchema: z.ZodType<LearningCoursesReflectionResponseResult>;
-export let LearningCoursesRejectProgramSchema: z.ZodType<LearningCoursesRejectProgram>;
-export let LearningCoursesReorderContentSchema: z.ZodType<LearningCoursesReorderContent>;
+export let LearningCoursesReflectionResponseResultDtoSchema: z.ZodType<LearningCoursesReflectionResponseResultDto>;
+export let LearningCoursesRejectProgramDtoSchema: z.ZodType<LearningCoursesRejectProgramDto>;
+export let LearningCoursesReorderContentDtoSchema: z.ZodType<LearningCoursesReorderContentDto>;
 export let LearningCoursesReorderPrerequisitesInputSchema: z.ZodType<LearningCoursesReorderPrerequisitesInput>;
 export let LearningCoursesResolveCourseSupportTicketInputSchema: z.ZodType<LearningCoursesResolveCourseSupportTicketInput>;
-export let LearningCoursesRevenueAnalyticsSchema: z.ZodType<LearningCoursesRevenueAnalytics>;
-export let LearningCoursesRevenueChartSchema: z.ZodType<LearningCoursesRevenueChart>;
-export let LearningCoursesScheduleProgramSchema: z.ZodType<LearningCoursesScheduleProgram>;
-export let LearningCoursesSearchContentSchema: z.ZodType<LearningCoursesSearchContent>;
+export let LearningCoursesRevenueAnalyticsDtoSchema: z.ZodType<LearningCoursesRevenueAnalyticsDto>;
+export let LearningCoursesRevenueChartDtoSchema: z.ZodType<LearningCoursesRevenueChartDto>;
+export let LearningCoursesSaveAuthoringDraftInputSchema: z.ZodType<LearningCoursesSaveAuthoringDraftInput>;
+export let LearningCoursesScheduleProgramDtoSchema: z.ZodType<LearningCoursesScheduleProgramDto>;
+export let LearningCoursesSearchContentDtoSchema: z.ZodType<LearningCoursesSearchContentDto>;
 export let LearningCoursesSendCourseStudentMessageInputSchema: z.ZodType<LearningCoursesSendCourseStudentMessageInput>;
 export let LearningCoursesSendCourseStudentMessageOutputSchema: z.ZodType<LearningCoursesSendCourseStudentMessageOutput>;
 export let LearningCoursesStartContentInputSchema: z.ZodType<LearningCoursesStartContentInput>;
-export let LearningCoursesStudentSummarySchema: z.ZodType<LearningCoursesStudentSummary>;
+export let LearningCoursesStudentSummaryDtoSchema: z.ZodType<LearningCoursesStudentSummaryDto>;
 export let LearningCoursesSubmitContentInputSchema: z.ZodType<LearningCoursesSubmitContentInput>;
-export let LearningCoursesSubmitUserContentSchema: z.ZodType<LearningCoursesSubmitUserContent>;
-export let LearningCoursesSurveyResponseResultSchema: z.ZodType<LearningCoursesSurveyResponseResult>;
+export let LearningCoursesSubmitUserContentDtoSchema: z.ZodType<LearningCoursesSubmitUserContentDto>;
+export let LearningCoursesSurveyResponseResultDtoSchema: z.ZodType<LearningCoursesSurveyResponseResultDto>;
 export let LearningCoursesTestSchema: z.ZodType<LearningCoursesTest>;
 export let LearningCoursesTestSuiteSchema: z.ZodType<LearningCoursesTestSuite>;
-export let LearningCoursesUpdateActivityGradeSchema: z.ZodType<LearningCoursesUpdateActivityGrade>;
+export let LearningCoursesUpdateActivityGradeDtoSchema: z.ZodType<LearningCoursesUpdateActivityGradeDto>;
 export let LearningCoursesUpdatePrerequisiteApiInputSchema: z.ZodType<LearningCoursesUpdatePrerequisiteApiInput>;
-export let LearningCoursesUpdatePricingSchema: z.ZodType<LearningCoursesUpdatePricing>;
-export let LearningCoursesUpdateProgramSchema: z.ZodType<LearningCoursesUpdateProgram>;
-export let LearningCoursesUpdateProgramContentSchema: z.ZodType<LearningCoursesUpdateProgramContent>;
-export let LearningCoursesUpdateProgressSchema: z.ZodType<LearningCoursesUpdateProgress>;
+export let LearningCoursesUpdatePricingDtoSchema: z.ZodType<LearningCoursesUpdatePricingDto>;
+export let LearningCoursesUpdateProgramContentDtoSchema: z.ZodType<LearningCoursesUpdateProgramContentDto>;
+export let LearningCoursesUpdateProgramDtoSchema: z.ZodType<LearningCoursesUpdateProgramDto>;
+export let LearningCoursesUpdateProgressDtoSchema: z.ZodType<LearningCoursesUpdateProgressDto>;
 export let LearningCoursesUpdateProgressInputSchema: z.ZodType<LearningCoursesUpdateProgressInput>;
 export let LearningCoursesUpdateTimeSpentInputSchema: z.ZodType<LearningCoursesUpdateTimeSpentInput>;
-export let LearningCoursesUserProgressSchema: z.ZodType<LearningCoursesUserProgress>;
+export let LearningCoursesUserProgressDtoSchema: z.ZodType<LearningCoursesUserProgressDto>;
 export let LearningCoursesVisibilitySchema: z.ZodType<LearningCoursesVisibility>;
 export let LearningCoursesWorkspaceDataSchema: z.ZodType<LearningCoursesWorkspaceData>;
-export let LearningEnrollmentsEnrollmentSchema: z.ZodType<LearningEnrollmentsEnrollment>;
+export let LearningEnrollmentsEnrollmentDtoSchema: z.ZodType<LearningEnrollmentsEnrollmentDto>;
 export let LearningEnrollmentsEnrollmentStatusSchema: z.ZodType<LearningEnrollmentsEnrollmentStatus>;
 export let LearningEnrollmentsEnrollUserInputSchema: z.ZodType<LearningEnrollmentsEnrollUserInput>;
 export let LearningEnrollmentsUpdateEnrollmentProgressInputSchema: z.ZodType<LearningEnrollmentsUpdateEnrollmentProgressInput>;
 export let LearningExperienceDiscoveryCollectionTypeSchema: z.ZodType<LearningExperienceDiscoveryCollectionType>;
-export let LearningExperienceDiscoveryCourseCollectionSchema: z.ZodType<LearningExperienceDiscoveryCourseCollection>;
-export let LearningExperienceDiscoveryCreateCourseCollectionSchema: z.ZodType<LearningExperienceDiscoveryCreateCourseCollection>;
-export let LearningExperienceDiscoveryCreateFeaturedContentSchema: z.ZodType<LearningExperienceDiscoveryCreateFeaturedContent>;
-export let LearningExperienceDiscoveryFeaturedContentSchema: z.ZodType<LearningExperienceDiscoveryFeaturedContent>;
+export let LearningExperienceDiscoveryCourseCollectionDtoSchema: z.ZodType<LearningExperienceDiscoveryCourseCollectionDto>;
+export let LearningExperienceDiscoveryCreateCourseCollectionDtoSchema: z.ZodType<LearningExperienceDiscoveryCreateCourseCollectionDto>;
+export let LearningExperienceDiscoveryCreateFeaturedContentDtoSchema: z.ZodType<LearningExperienceDiscoveryCreateFeaturedContentDto>;
+export let LearningExperienceDiscoveryFeaturedContentDtoSchema: z.ZodType<LearningExperienceDiscoveryFeaturedContentDto>;
 export let LearningExperienceDiscoveryFeaturedContentTypeSchema: z.ZodType<LearningExperienceDiscoveryFeaturedContentType>;
 export let LearningExperienceDiscoveryPopularSearchResultSchema: z.ZodType<LearningExperienceDiscoveryPopularSearchResult>;
-export let LearningExperienceDiscoveryRecordSearchSchema: z.ZodType<LearningExperienceDiscoveryRecordSearch>;
-export let LearningExperienceDiscoveryRecordSearchClickSchema: z.ZodType<LearningExperienceDiscoveryRecordSearchClick>;
-export let LearningExperienceDiscoverySearchHistorySchema: z.ZodType<LearningExperienceDiscoverySearchHistory>;
-export let LearningExperienceDiscoveryUpdateCourseCollectionSchema: z.ZodType<LearningExperienceDiscoveryUpdateCourseCollection>;
-export let LearningExperienceDiscoveryUpdateFeaturedContentSchema: z.ZodType<LearningExperienceDiscoveryUpdateFeaturedContent>;
-export let LearningExperienceLearningPathsAddCourseToPathSchema: z.ZodType<LearningExperienceLearningPathsAddCourseToPath>;
-export let LearningExperienceLearningPathsCourseOrderSchema: z.ZodType<LearningExperienceLearningPathsCourseOrder>;
-export let LearningExperienceLearningPathsCreateLearningPathSchema: z.ZodType<LearningExperienceLearningPathsCreateLearningPath>;
-export let LearningExperienceLearningPathsLearningPathSchema: z.ZodType<LearningExperienceLearningPathsLearningPath>;
-export let LearningExperienceLearningPathsLearningPathCourseSchema: z.ZodType<LearningExperienceLearningPathsLearningPathCourse>;
-export let LearningExperienceLearningPathsLearningPathDetailSchema: z.ZodType<LearningExperienceLearningPathsLearningPathDetail>;
+export let LearningExperienceDiscoveryRecordSearchClickDtoSchema: z.ZodType<LearningExperienceDiscoveryRecordSearchClickDto>;
+export let LearningExperienceDiscoveryRecordSearchDtoSchema: z.ZodType<LearningExperienceDiscoveryRecordSearchDto>;
+export let LearningExperienceDiscoverySearchHistoryDtoSchema: z.ZodType<LearningExperienceDiscoverySearchHistoryDto>;
+export let LearningExperienceDiscoveryUpdateCourseCollectionDtoSchema: z.ZodType<LearningExperienceDiscoveryUpdateCourseCollectionDto>;
+export let LearningExperienceDiscoveryUpdateFeaturedContentDtoSchema: z.ZodType<LearningExperienceDiscoveryUpdateFeaturedContentDto>;
+export let LearningExperienceLearningPathsAddCourseToPathDtoSchema: z.ZodType<LearningExperienceLearningPathsAddCourseToPathDto>;
+export let LearningExperienceLearningPathsCourseOrderDtoSchema: z.ZodType<LearningExperienceLearningPathsCourseOrderDto>;
+export let LearningExperienceLearningPathsCreateLearningPathDtoSchema: z.ZodType<LearningExperienceLearningPathsCreateLearningPathDto>;
+export let LearningExperienceLearningPathsLearningPathCourseDtoSchema: z.ZodType<LearningExperienceLearningPathsLearningPathCourseDto>;
+export let LearningExperienceLearningPathsLearningPathDetailDtoSchema: z.ZodType<LearningExperienceLearningPathsLearningPathDetailDto>;
 export let LearningExperienceLearningPathsLearningPathDifficultySchema: z.ZodType<LearningExperienceLearningPathsLearningPathDifficulty>;
-export let LearningExperienceLearningPathsLearningPathEnrollmentSchema: z.ZodType<LearningExperienceLearningPathsLearningPathEnrollment>;
+export let LearningExperienceLearningPathsLearningPathDtoSchema: z.ZodType<LearningExperienceLearningPathsLearningPathDto>;
+export let LearningExperienceLearningPathsLearningPathEnrollmentDtoSchema: z.ZodType<LearningExperienceLearningPathsLearningPathEnrollmentDto>;
 export let LearningExperienceLearningPathsLearningPathEnrollmentStatusSchema: z.ZodType<LearningExperienceLearningPathsLearningPathEnrollmentStatus>;
-export let LearningExperienceLearningPathsLearningPathStatisticsSchema: z.ZodType<LearningExperienceLearningPathsLearningPathStatistics>;
-export let LearningExperienceLearningPathsReorderCoursesSchema: z.ZodType<LearningExperienceLearningPathsReorderCourses>;
-export let LearningExperienceLearningPathsUpdateLearningPathSchema: z.ZodType<LearningExperienceLearningPathsUpdateLearningPath>;
-export let LearningExperienceLearningPathsUpdatePathProgressSchema: z.ZodType<LearningExperienceLearningPathsUpdatePathProgress>;
+export let LearningExperienceLearningPathsLearningPathStatisticsDtoSchema: z.ZodType<LearningExperienceLearningPathsLearningPathStatisticsDto>;
+export let LearningExperienceLearningPathsReorderCoursesDtoSchema: z.ZodType<LearningExperienceLearningPathsReorderCoursesDto>;
+export let LearningExperienceLearningPathsUpdateLearningPathDtoSchema: z.ZodType<LearningExperienceLearningPathsUpdateLearningPathDto>;
+export let LearningExperienceLearningPathsUpdatePathProgressDtoSchema: z.ZodType<LearningExperienceLearningPathsUpdatePathProgressDto>;
 export let LearningExperienceRecommendationsAddSkillInputSchema: z.ZodType<LearningExperienceRecommendationsAddSkillInput>;
-export let LearningExperienceRecommendationsCreateOrUpdateLearningProfileSchema: z.ZodType<LearningExperienceRecommendationsCreateOrUpdateLearningProfile>;
-export let LearningExperienceRecommendationsPopularCourseSchema: z.ZodType<LearningExperienceRecommendationsPopularCourse>;
-export let LearningExperienceRecommendationsRecommendationSchema: z.ZodType<LearningExperienceRecommendationsRecommendation>;
-export let LearningExperienceRecommendationsRecommendationStatisticsSchema: z.ZodType<LearningExperienceRecommendationsRecommendationStatistics>;
+export let LearningExperienceRecommendationsCreateOrUpdateLearningProfileDtoSchema: z.ZodType<LearningExperienceRecommendationsCreateOrUpdateLearningProfileDto>;
+export let LearningExperienceRecommendationsPopularCourseDtoSchema: z.ZodType<LearningExperienceRecommendationsPopularCourseDto>;
+export let LearningExperienceRecommendationsRecommendationDtoSchema: z.ZodType<LearningExperienceRecommendationsRecommendationDto>;
+export let LearningExperienceRecommendationsRecommendationStatisticsDtoSchema: z.ZodType<LearningExperienceRecommendationsRecommendationStatisticsDto>;
 export let LearningExperienceRecommendationsRecommendationTypeSchema: z.ZodType<LearningExperienceRecommendationsRecommendationType>;
-export let LearningExperienceRecommendationsSimilarCourseSchema: z.ZodType<LearningExperienceRecommendationsSimilarCourse>;
-export let LearningExperienceRecommendationsTrendingCourseSchema: z.ZodType<LearningExperienceRecommendationsTrendingCourse>;
-export let LearningExperienceRecommendationsUserLearningProfileSchema: z.ZodType<LearningExperienceRecommendationsUserLearningProfile>;
+export let LearningExperienceRecommendationsSimilarCourseDtoSchema: z.ZodType<LearningExperienceRecommendationsSimilarCourseDto>;
+export let LearningExperienceRecommendationsTrendingCourseDtoSchema: z.ZodType<LearningExperienceRecommendationsTrendingCourseDto>;
+export let LearningExperienceRecommendationsUserLearningProfileDtoSchema: z.ZodType<LearningExperienceRecommendationsUserLearningProfileDto>;
 export let LearningExperienceSocialControllersUpdateReviewModerationInputSchema: z.ZodType<LearningExperienceSocialControllersUpdateReviewModerationInput>;
 export let LearningExperienceSocialFeedItemTypeSchema: z.ZodType<LearningExperienceSocialFeedItemType>;
-export let LearningExperienceSocialServicesCourseDiscussionSchema: z.ZodType<LearningExperienceSocialServicesCourseDiscussion>;
-export let LearningExperienceSocialServicesCourseLikeSchema: z.ZodType<LearningExperienceSocialServicesCourseLike>;
+export let LearningExperienceSocialServicesCourseDiscussionDtoSchema: z.ZodType<LearningExperienceSocialServicesCourseDiscussionDto>;
+export let LearningExperienceSocialServicesCourseLikeDtoSchema: z.ZodType<LearningExperienceSocialServicesCourseLikeDto>;
 export let LearningExperienceSocialServicesCourseRatingStatsSchema: z.ZodType<LearningExperienceSocialServicesCourseRatingStats>;
-export let LearningExperienceSocialServicesCourseReviewSchema: z.ZodType<LearningExperienceSocialServicesCourseReview>;
-export let LearningExperienceSocialServicesCourseWishlistSchema: z.ZodType<LearningExperienceSocialServicesCourseWishlist>;
+export let LearningExperienceSocialServicesCourseReviewDtoSchema: z.ZodType<LearningExperienceSocialServicesCourseReviewDto>;
+export let LearningExperienceSocialServicesCourseWishlistDtoSchema: z.ZodType<LearningExperienceSocialServicesCourseWishlistDto>;
 export let LearningExperienceSocialServicesCreateDiscussionInputSchema: z.ZodType<LearningExperienceSocialServicesCreateDiscussionInput>;
 export let LearningExperienceSocialServicesCreateReplyInputSchema: z.ZodType<LearningExperienceSocialServicesCreateReplyInput>;
 export let LearningExperienceSocialServicesCreateReviewInputSchema: z.ZodType<LearningExperienceSocialServicesCreateReviewInput>;
-export let LearningExperienceSocialServicesDiscussionReplySchema: z.ZodType<LearningExperienceSocialServicesDiscussionReply>;
-export let LearningExperienceSocialServicesPersonalizedFeedItemSchema: z.ZodType<LearningExperienceSocialServicesPersonalizedFeedItem>;
+export let LearningExperienceSocialServicesDiscussionReplyDtoSchema: z.ZodType<LearningExperienceSocialServicesDiscussionReplyDto>;
+export let LearningExperienceSocialServicesPersonalizedFeedItemDtoSchema: z.ZodType<LearningExperienceSocialServicesPersonalizedFeedItemDto>;
 export let LearningExperienceSocialServicesWishlistPreferencesInputSchema: z.ZodType<LearningExperienceSocialServicesWishlistPreferencesInput>;
 export let LearningGradingContractsPercentValueSchema: z.ZodType<LearningGradingContractsPercentValue>;
 export let LearningGradingContractsScoreValueSchema: z.ZodType<LearningGradingContractsScoreValue>;
-export let LearningWorkspacesLearnerAnnouncementSchema: z.ZodType<LearningWorkspacesLearnerAnnouncement>;
-export let LearningWorkspacesLearnerAssessmentSchema: z.ZodType<LearningWorkspacesLearnerAssessment>;
-export let LearningWorkspacesLearnerAssessmentDeadlineSchema: z.ZodType<LearningWorkspacesLearnerAssessmentDeadline>;
-export let LearningWorkspacesLearnerAssessmentGroupSchema: z.ZodType<LearningWorkspacesLearnerAssessmentGroup>;
-export let LearningWorkspacesLearnerAssessmentSubmissionSchema: z.ZodType<LearningWorkspacesLearnerAssessmentSubmission>;
-export let LearningWorkspacesLearnerCertificateSchema: z.ZodType<LearningWorkspacesLearnerCertificate>;
-export let LearningWorkspacesLearnerCohortSchema: z.ZodType<LearningWorkspacesLearnerCohort>;
-export let LearningWorkspacesLearnerContentSchema: z.ZodType<LearningWorkspacesLearnerContent>;
-export let LearningWorkspacesLearnerContentProgressSchema: z.ZodType<LearningWorkspacesLearnerContentProgress>;
-export let LearningWorkspacesLearnerCourseSummarySchema: z.ZodType<LearningWorkspacesLearnerCourseSummary>;
-export let LearningWorkspacesLearnerCourseWorkspaceSchema: z.ZodType<LearningWorkspacesLearnerCourseWorkspace>;
-export let LearningWorkspacesLearnerDashboardSchema: z.ZodType<LearningWorkspacesLearnerDashboard>;
-export let LearningWorkspacesLearnerDiscussionSchema: z.ZodType<LearningWorkspacesLearnerDiscussion>;
-export let LearningWorkspacesLearnerGradeItemSchema: z.ZodType<LearningWorkspacesLearnerGradeItem>;
-export let LearningWorkspacesLearnerGradeSummarySchema: z.ZodType<LearningWorkspacesLearnerGradeSummary>;
-export let LearningWorkspacesLearnerScheduleEntrySchema: z.ZodType<LearningWorkspacesLearnerScheduleEntry>;
-export let LearningWorkspacesLearnerSearchResultSchema: z.ZodType<LearningWorkspacesLearnerSearchResult>;
+export let LearningLtiCreateLtiDeploymentInputSchema: z.ZodType<LearningLtiCreateLtiDeploymentInput>;
+export let LearningLtiCreateLtiLineItemInputSchema: z.ZodType<LearningLtiCreateLtiLineItemInput>;
+export let LearningWorkspacesLearnerAnnouncementDtoSchema: z.ZodType<LearningWorkspacesLearnerAnnouncementDto>;
+export let LearningWorkspacesLearnerAssessmentDeadlineDtoSchema: z.ZodType<LearningWorkspacesLearnerAssessmentDeadlineDto>;
+export let LearningWorkspacesLearnerAssessmentDtoSchema: z.ZodType<LearningWorkspacesLearnerAssessmentDto>;
+export let LearningWorkspacesLearnerAssessmentGroupDtoSchema: z.ZodType<LearningWorkspacesLearnerAssessmentGroupDto>;
+export let LearningWorkspacesLearnerAssessmentSubmissionDtoSchema: z.ZodType<LearningWorkspacesLearnerAssessmentSubmissionDto>;
+export let LearningWorkspacesLearnerCertificateDtoSchema: z.ZodType<LearningWorkspacesLearnerCertificateDto>;
+export let LearningWorkspacesLearnerCohortDtoSchema: z.ZodType<LearningWorkspacesLearnerCohortDto>;
+export let LearningWorkspacesLearnerContentDtoSchema: z.ZodType<LearningWorkspacesLearnerContentDto>;
+export let LearningWorkspacesLearnerContentProgressDtoSchema: z.ZodType<LearningWorkspacesLearnerContentProgressDto>;
+export let LearningWorkspacesLearnerCourseSummaryDtoSchema: z.ZodType<LearningWorkspacesLearnerCourseSummaryDto>;
+export let LearningWorkspacesLearnerCourseWorkspaceDtoSchema: z.ZodType<LearningWorkspacesLearnerCourseWorkspaceDto>;
+export let LearningWorkspacesLearnerDashboardDtoSchema: z.ZodType<LearningWorkspacesLearnerDashboardDto>;
+export let LearningWorkspacesLearnerDiscussionDtoSchema: z.ZodType<LearningWorkspacesLearnerDiscussionDto>;
+export let LearningWorkspacesLearnerGradeItemDtoSchema: z.ZodType<LearningWorkspacesLearnerGradeItemDto>;
+export let LearningWorkspacesLearnerGradeSummaryDtoSchema: z.ZodType<LearningWorkspacesLearnerGradeSummaryDto>;
+export let LearningWorkspacesLearnerScheduleEntryDtoSchema: z.ZodType<LearningWorkspacesLearnerScheduleEntryDto>;
+export let LearningWorkspacesLearnerSearchResultDtoSchema: z.ZodType<LearningWorkspacesLearnerSearchResultDto>;
 export let MoneySchema: z.ZodType<Money>;
 export let MonitoringSLACreateSloCommandSchema: z.ZodType<MonitoringSLACreateSloCommand>;
-export let MonitoringSLAErrorBudgetSchema: z.ZodType<MonitoringSLAErrorBudget>;
+export let MonitoringSLAErrorBudgetDtoSchema: z.ZodType<MonitoringSLAErrorBudgetDto>;
 export let MonitoringSLARecordSliMetricCommandSchema: z.ZodType<MonitoringSLARecordSliMetricCommand>;
 export let MonitoringSLAResolveSloViolationCommandSchema: z.ZodType<MonitoringSLAResolveSloViolationCommand>;
-export let MonitoringSLASloSchema: z.ZodType<MonitoringSLASlo>;
-export let MonitoringSLASloComplianceSchema: z.ZodType<MonitoringSLASloCompliance>;
+export let MonitoringSLASloComplianceDtoSchema: z.ZodType<MonitoringSLASloComplianceDto>;
+export let MonitoringSLASloDtoSchema: z.ZodType<MonitoringSLASloDto>;
 export let MonitoringSLASloStatusSchema: z.ZodType<MonitoringSLASloStatus>;
-export let MonitoringSLASloViolationSchema: z.ZodType<MonitoringSLASloViolation>;
+export let MonitoringSLASloViolationDtoSchema: z.ZodType<MonitoringSLASloViolationDto>;
 export let MonitoringSLAUpdateSloCommandSchema: z.ZodType<MonitoringSLAUpdateSloCommand>;
 export let MonitoringSLAViolationSeveritySchema: z.ZodType<MonitoringSLAViolationSeverity>;
 export let MvcProblemDetailsSchema: z.ZodType<MvcProblemDetails>;
-export let NotificationsControllersDeadLetterSchema: z.ZodType<NotificationsControllersDeadLetter>;
+export let NotificationsControllersDeadLetterDtoSchema: z.ZodType<NotificationsControllersDeadLetterDto>;
 export let NotificationsControllersDeletedCountOutputSchema: z.ZodType<NotificationsControllersDeletedCountOutput>;
 export let NotificationsControllersDigestFrequencyOutputSchema: z.ZodType<NotificationsControllersDigestFrequencyOutput>;
-export let NotificationsControllersEmailDeliveryEventSchema: z.ZodType<NotificationsControllersEmailDeliveryEvent>;
-export let NotificationsControllersEmailSuppressionSchema: z.ZodType<NotificationsControllersEmailSuppression>;
+export let NotificationsControllersEmailDeliveryEventDtoSchema: z.ZodType<NotificationsControllersEmailDeliveryEventDto>;
+export let NotificationsControllersEmailSuppressionDtoSchema: z.ZodType<NotificationsControllersEmailSuppressionDto>;
 export let NotificationsControllersMutedTypesOutputSchema: z.ZodType<NotificationsControllersMutedTypesOutput>;
-export let NotificationsControllersNotificationSchema: z.ZodType<NotificationsControllersNotification>;
-export let NotificationsControllersNotificationPreferenceSchema: z.ZodType<NotificationsControllersNotificationPreference>;
-export let NotificationsControllersNotificationTimelineSchema: z.ZodType<NotificationsControllersNotificationTimeline>;
+export let NotificationsControllersNotificationDtoSchema: z.ZodType<NotificationsControllersNotificationDto>;
+export let NotificationsControllersNotificationPreferenceDtoSchema: z.ZodType<NotificationsControllersNotificationPreferenceDto>;
+export let NotificationsControllersNotificationTimelineDtoSchema: z.ZodType<NotificationsControllersNotificationTimelineDto>;
 export let NotificationsControllersNotificationTypeCatalogEntrySchema: z.ZodType<NotificationsControllersNotificationTypeCatalogEntry>;
 export let NotificationsControllersRequeueOutputSchema: z.ZodType<NotificationsControllersRequeueOutput>;
 export let NotificationsControllersSetQuietHoursInputSchema: z.ZodType<NotificationsControllersSetQuietHoursInput>;
@@ -14483,23 +14959,23 @@ export let ObjectsPublicKeyCredentialHintSchema: z.ZodType<ObjectsPublicKeyCrede
 export let ObjectsPublicKeyCredentialTypeSchema: z.ZodType<ObjectsPublicKeyCredentialType>;
 export let ObjectsResidentKeyRequirementSchema: z.ZodType<ObjectsResidentKeyRequirement>;
 export let ObjectsUserVerificationRequirementSchema: z.ZodType<ObjectsUserVerificationRequirement>;
-export let PagedResultOfCommerceProductsProductSchema: z.ZodType<PagedResultOfCommerceProductsProduct>;
-export let PagedResultOfCommerceProductsPromoCodeSchema: z.ZodType<PagedResultOfCommerceProductsPromoCode>;
-export let PagedResultOfCommerceProductsSupportTicketSchema: z.ZodType<PagedResultOfCommerceProductsSupportTicket>;
-export let PagedResultOfCommerceSubscriptionsSubscriptionSchema: z.ZodType<PagedResultOfCommerceSubscriptionsSubscription>;
-export let PagedResultOfCommerceSubscriptionsSubscriptionNotificationSchema: z.ZodType<PagedResultOfCommerceSubscriptionsSubscriptionNotification>;
-export let PagedResultOfIdentityTenantsTenantSchema: z.ZodType<PagedResultOfIdentityTenantsTenant>;
-export let PagedResultOfIdentityTenantsTenantAuditLogEntrySchema: z.ZodType<PagedResultOfIdentityTenantsTenantAuditLogEntry>;
-export let PagedResultOfIdentityUsersUserSchema: z.ZodType<PagedResultOfIdentityUsersUser>;
-export let PagedResultOfIdentityUsersUserNotificationSchema: z.ZodType<PagedResultOfIdentityUsersUserNotification>;
-export let PagedResultOfIdentityUsersUserProfileSchema: z.ZodType<PagedResultOfIdentityUsersUserProfile>;
-export let PagedResultOfNotificationsControllersDeadLetterSchema: z.ZodType<PagedResultOfNotificationsControllersDeadLetter>;
-export let PagedResultOfNotificationsControllersEmailDeliveryEventSchema: z.ZodType<PagedResultOfNotificationsControllersEmailDeliveryEvent>;
-export let PagedResultOfNotificationsControllersEmailSuppressionSchema: z.ZodType<PagedResultOfNotificationsControllersEmailSuppression>;
+export let PagedResultDeadLetterDtoSchema: z.ZodType<PagedResultDeadLetterDto>;
+export let PagedResultEmailDeliveryEventDtoSchema: z.ZodType<PagedResultEmailDeliveryEventDto>;
+export let PagedResultEmailSuppressionDtoSchema: z.ZodType<PagedResultEmailSuppressionDto>;
+export let PagedResultProductDtoSchema: z.ZodType<PagedResultProductDto>;
+export let PagedResultPromoCodeDtoSchema: z.ZodType<PagedResultPromoCodeDto>;
+export let PagedResultSubscriptionSchema: z.ZodType<PagedResultSubscription>;
+export let PagedResultSubscriptionNotificationDtoSchema: z.ZodType<PagedResultSubscriptionNotificationDto>;
+export let PagedResultSupportTicketDtoSchema: z.ZodType<PagedResultSupportTicketDto>;
+export let PagedResultTenantSchema: z.ZodType<PagedResultTenant>;
+export let PagedResultTenantAuditLogEntrySchema: z.ZodType<PagedResultTenantAuditLogEntry>;
+export let PagedResultUserDtoSchema: z.ZodType<PagedResultUserDto>;
+export let PagedResultUserNotificationDtoSchema: z.ZodType<PagedResultUserNotificationDto>;
+export let PagedResultUserProfileDtoSchema: z.ZodType<PagedResultUserProfileDto>;
 export let ProgramCategorySchema: z.ZodType<ProgramCategory>;
 export let ProjectsAddCollaboratorInputSchema: z.ZodType<ProjectsAddCollaboratorInput>;
 export let ProjectsAddProjectCollaboratorInputSchema: z.ZodType<ProjectsAddProjectCollaboratorInput>;
-export let ProjectsCollaboratorSchema: z.ZodType<ProjectsCollaborator>;
+export let ProjectsCollaboratorDtoSchema: z.ZodType<ProjectsCollaboratorDto>;
 export let ProjectsCreateProjectInputSchema: z.ZodType<ProjectsCreateProjectInput>;
 export let ProjectsCreateProjectVersionInputSchema: z.ZodType<ProjectsCreateProjectVersionInput>;
 export let ProjectsDevelopmentStatusSchema: z.ZodType<ProjectsDevelopmentStatus>;
@@ -14517,7 +14993,7 @@ export let ProjectsProjectCollaboratorApiOutputSchema: z.ZodType<ProjectsProject
 export let ProjectsProjectCollaboratorDtoSchema: z.ZodType<ProjectsProjectCollaboratorDto>;
 export let ProjectsProjectFeedbackSchema: z.ZodType<ProjectsProjectFeedback>;
 export let ProjectsProjectFollowerSchema: z.ZodType<ProjectsProjectFollower>;
-export let ProjectsProjectInvitationSchema: z.ZodType<ProjectsProjectInvitation>;
+export let ProjectsProjectInvitationDtoSchema: z.ZodType<ProjectsProjectInvitationDto>;
 export let ProjectsProjectInvitationStatusSchema: z.ZodType<ProjectsProjectInvitationStatus>;
 export let ProjectsProjectJamSubmissionSchema: z.ZodType<ProjectsProjectJamSubmission>;
 export let ProjectsProjectMemberAllocationSchema: z.ZodType<ProjectsProjectMemberAllocation>;
@@ -14559,9 +15035,9 @@ export let ResourcesContentsBulkGenerateContractsInputSchema: z.ZodType<Resource
 export let ResourcesContentsBulkGeneratedContractItemOutputSchema: z.ZodType<ResourcesContentsBulkGeneratedContractItemOutput>;
 export let ResourcesContentsBulkGeneratedContractsOutputSchema: z.ZodType<ResourcesContentsBulkGeneratedContractsOutput>;
 export let ResourcesContentsContentReviewDecisionSchema: z.ZodType<ResourcesContentsContentReviewDecision>;
-export let ResourcesContentsContentVersionSchema: z.ZodType<ResourcesContentsContentVersion>;
 export let ResourcesContentsContentVersionDiffSchema: z.ZodType<ResourcesContentsContentVersionDiff>;
-export let ResourcesContentsContentVersionReviewSchema: z.ZodType<ResourcesContentsContentVersionReview>;
+export let ResourcesContentsContentVersionDtoSchema: z.ZodType<ResourcesContentsContentVersionDto>;
+export let ResourcesContentsContentVersionReviewDtoSchema: z.ZodType<ResourcesContentsContentVersionReviewDto>;
 export let ResourcesContentsContentVersionStatusSchema: z.ZodType<ResourcesContentsContentVersionStatus>;
 export let ResourcesContentsCreateDraftInputSchema: z.ZodType<ResourcesContentsCreateDraftInput>;
 export let ResourcesContentsGenerateContractInputSchema: z.ZodType<ResourcesContentsGenerateContractInput>;
@@ -14588,19 +15064,43 @@ export let ResourcesTrendGranularitySchema: z.ZodType<ResourcesTrendGranularity>
 export let ResourcesUsageRecordSchema: z.ZodType<ResourcesUsageRecord>;
 export let ResourcesUsageTrendDataPointSchema: z.ZodType<ResourcesUsageTrendDataPoint>;
 export let ResourcesUsageTrendsResultSchema: z.ZodType<ResourcesUsageTrendsResult>;
-export let SocialBlogBlogPostSchema: z.ZodType<SocialBlogBlogPost>;
+export let SocialBlogBlogPostDtoSchema: z.ZodType<SocialBlogBlogPostDto>;
 export let SocialBlogBlogPostStatusSchema: z.ZodType<SocialBlogBlogPostStatus>;
 export let SocialBlogCreateBlogPostInputSchema: z.ZodType<SocialBlogCreateBlogPostInput>;
 export let SocialFeedAddFeedItemInputSchema: z.ZodType<SocialFeedAddFeedItemInput>;
+export let SocialFeedCreateStoryInputSchema: z.ZodType<SocialFeedCreateStoryInput>;
+export let SocialFeedFeedAuthorDtoSchema: z.ZodType<SocialFeedFeedAuthorDto>;
 export let SocialFeedFeedContentTypeSchema: z.ZodType<SocialFeedFeedContentType>;
-export let SocialFeedFeedItemSchema: z.ZodType<SocialFeedFeedItem>;
+export let SocialFeedFeedEngagementDtoSchema: z.ZodType<SocialFeedFeedEngagementDto>;
+export let SocialFeedFeedItemDtoSchema: z.ZodType<SocialFeedFeedItemDto>;
 export let SocialFeedFeedItemReasonSchema: z.ZodType<SocialFeedFeedItemReason>;
+export let SocialFeedFeedViewerStateDtoSchema: z.ZodType<SocialFeedFeedViewerStateDto>;
+export let SocialFeedOriginalPostDtoSchema: z.ZodType<SocialFeedOriginalPostDto>;
+export let SocialFeedSavedPostStateDtoSchema: z.ZodType<SocialFeedSavedPostStateDto>;
+export let SocialFeedSocialFeedItemDtoSchema: z.ZodType<SocialFeedSocialFeedItemDto>;
+export let SocialFeedSocialFeedItemKindSchema: z.ZodType<SocialFeedSocialFeedItemKind>;
+export let SocialFeedSocialFeedPageDtoSchema: z.ZodType<SocialFeedSocialFeedPageDto>;
+export let SocialFeedSocialFeedProfileDtoSchema: z.ZodType<SocialFeedSocialFeedProfileDto>;
+export let SocialFeedSocialPostContentDtoSchema: z.ZodType<SocialFeedSocialPostContentDto>;
+export let SocialFeedStoryDtoSchema: z.ZodType<SocialFeedStoryDto>;
+export let SocialFeedTestingSessionFeedDtoSchema: z.ZodType<SocialFeedTestingSessionFeedDto>;
+export let SocialFollowsControllersBatchCountsInputSchema: z.ZodType<SocialFollowsControllersBatchCountsInput>;
+export let SocialFollowsControllersBatchStatusInputSchema: z.ZodType<SocialFollowsControllersBatchStatusInput>;
+export let SocialFollowsControllersBlockDtoSchema: z.ZodType<SocialFollowsControllersBlockDto>;
+export let SocialFollowsControllersBlockInputSchema: z.ZodType<SocialFollowsControllersBlockInput>;
+export let SocialFollowsControllersFollowDtoSchema: z.ZodType<SocialFollowsControllersFollowDto>;
+export let SocialFollowsControllersFollowInputSchema: z.ZodType<SocialFollowsControllersFollowInput>;
+export let SocialFollowsControllersFollowPrivacySettingsDtoSchema: z.ZodType<SocialFollowsControllersFollowPrivacySettingsDto>;
+export let SocialFollowsControllersMuteDtoSchema: z.ZodType<SocialFollowsControllersMuteDto>;
+export let SocialFollowsControllersMuteInputSchema: z.ZodType<SocialFollowsControllersMuteInput>;
+export let SocialFollowsControllersUpdateNotificationsInputSchema: z.ZodType<SocialFollowsControllersUpdateNotificationsInput>;
+export let SocialFollowsControllersUpdatePrivacySettingsInputSchema: z.ZodType<SocialFollowsControllersUpdatePrivacySettingsInput>;
 export let SocialGroupsApproveSocialGroupMemberInputSchema: z.ZodType<SocialGroupsApproveSocialGroupMemberInput>;
 export let SocialGroupsChangeSocialGroupMemberRoleInputSchema: z.ZodType<SocialGroupsChangeSocialGroupMemberRoleInput>;
 export let SocialGroupsCreateSocialGroupInputSchema: z.ZodType<SocialGroupsCreateSocialGroupInput>;
 export let SocialGroupsJoinSocialGroupInputSchema: z.ZodType<SocialGroupsJoinSocialGroupInput>;
-export let SocialGroupsSocialGroupSchema: z.ZodType<SocialGroupsSocialGroup>;
-export let SocialGroupsSocialGroupMemberSchema: z.ZodType<SocialGroupsSocialGroupMember>;
+export let SocialGroupsSocialGroupDtoSchema: z.ZodType<SocialGroupsSocialGroupDto>;
+export let SocialGroupsSocialGroupMemberDtoSchema: z.ZodType<SocialGroupsSocialGroupMemberDto>;
 export let SocialGroupsSocialGroupMemberRoleSchema: z.ZodType<SocialGroupsSocialGroupMemberRole>;
 export let SocialGroupsSocialGroupMembershipStatusSchema: z.ZodType<SocialGroupsSocialGroupMembershipStatus>;
 export let SocialGroupsSocialGroupStatusSchema: z.ZodType<SocialGroupsSocialGroupStatus>;
@@ -14609,29 +15109,28 @@ export let SocialGroupsSocialGroupVisibilitySchema: z.ZodType<SocialGroupsSocial
 export let SocialGroupsUpdateSocialGroupInputSchema: z.ZodType<SocialGroupsUpdateSocialGroupInput>;
 export let SocialPostsControllersAddCommentInputSchema: z.ZodType<SocialPostsControllersAddCommentInput>;
 export let SocialPostsControllersCreatePostInputSchema: z.ZodType<SocialPostsControllersCreatePostInput>;
+export let SocialPostsControllersCreateRepostInputSchema: z.ZodType<SocialPostsControllersCreateRepostInput>;
 export let SocialPostsControllersFollowPostInputSchema: z.ZodType<SocialPostsControllersFollowPostInput>;
 export let SocialPostsControllersUpdateCommentInputSchema: z.ZodType<SocialPostsControllersUpdateCommentInput>;
 export let SocialPostsControllersUpdatePostInputSchema: z.ZodType<SocialPostsControllersUpdatePostInput>;
-export let SocialPostsMediaTypeSchema: z.ZodType<SocialPostsMediaType>;
 export let SocialPostsPostVisibilitySchema: z.ZodType<SocialPostsPostVisibility>;
 export let SocialProfilesAddProfilePortfolioItemBodySchema: z.ZodType<SocialProfilesAddProfilePortfolioItemBody>;
 export let SocialProfilesAddProfileSkillBodySchema: z.ZodType<SocialProfilesAddProfileSkillBody>;
 export let SocialProfilesProfileAvailabilityStatusSchema: z.ZodType<SocialProfilesProfileAvailabilityStatus>;
-export let SocialProfilesProfilePortfolioItemSchema: z.ZodType<SocialProfilesProfilePortfolioItem>;
-export let SocialProfilesProfileSkillSchema: z.ZodType<SocialProfilesProfileSkill>;
+export let SocialProfilesProfilePortfolioItemDtoSchema: z.ZodType<SocialProfilesProfilePortfolioItemDto>;
+export let SocialProfilesProfileSkillDtoSchema: z.ZodType<SocialProfilesProfileSkillDto>;
 export let SocialProfilesProfileSkillProficiencySchema: z.ZodType<SocialProfilesProfileSkillProficiency>;
 export let SocialProfilesProfileVisibilitySchema: z.ZodType<SocialProfilesProfileVisibility>;
-export let SocialProfilesSocialProfileSchema: z.ZodType<SocialProfilesSocialProfile>;
+export let SocialProfilesSocialProfileDtoSchema: z.ZodType<SocialProfilesSocialProfileDto>;
 export let SocialProfilesUpdateProfilePortfolioItemBodySchema: z.ZodType<SocialProfilesUpdateProfilePortfolioItemBody>;
 export let SocialProfilesUpdateProfilePrivacyBodySchema: z.ZodType<SocialProfilesUpdateProfilePrivacyBody>;
-export let SocialProfilesUpdateProfileStatsBodySchema: z.ZodType<SocialProfilesUpdateProfileStatsBody>;
 export let SocialProfilesUpdateSocialProfileBodySchema: z.ZodType<SocialProfilesUpdateSocialProfileBody>;
-export let SocialReactionsReactionSchema: z.ZodType<SocialReactionsReaction>;
+export let SocialReactionsReactionDtoSchema: z.ZodType<SocialReactionsReactionDto>;
 export let SocialReactionsReactionTargetTypeSchema: z.ZodType<SocialReactionsReactionTargetType>;
 export let SocialReactionsReactionTypeSchema: z.ZodType<SocialReactionsReactionType>;
 export let SocialReactionsRemoveReactionInputSchema: z.ZodType<SocialReactionsRemoveReactionInput>;
 export let SocialReactionsSetReactionInputSchema: z.ZodType<SocialReactionsSetReactionInput>;
-export let SocialReactionsTargetReactionSummarySchema: z.ZodType<SocialReactionsTargetReactionSummary>;
+export let SocialReactionsTargetReactionSummaryDtoSchema: z.ZodType<SocialReactionsTargetReactionSummaryDto>;
 export let SystemDayOfWeekSchema: z.ZodType<SystemDayOfWeek>;
 export let TeamsTeamSchema: z.ZodType<TeamsTeam>;
 export let TeamsTeamInvitationSchema: z.ZodType<TeamsTeamInvitation>;
@@ -14649,14 +15148,14 @@ export let TestingLabCancelTestingEventInputSchema: z.ZodType<TestingLabCancelTe
 export let TestingLabCastTestingApplicationVoteInputSchema: z.ZodType<TestingLabCastTestingApplicationVoteInput>;
 export let TestingLabConfigureTestingEventInputSchema: z.ZodType<TestingLabConfigureTestingEventInput>;
 export let TestingLabConfigureTestingEventLearningInputSchema: z.ZodType<TestingLabConfigureTestingEventLearningInput>;
-export let TestingLabCreateSimpleTestingInputSchema: z.ZodType<TestingLabCreateSimpleTestingInput>;
+export let TestingLabCreateSimpleTestingRequestDtoSchema: z.ZodType<TestingLabCreateSimpleTestingRequestDto>;
 export let TestingLabCreateTestingEventInputSchema: z.ZodType<TestingLabCreateTestingEventInput>;
-export let TestingLabCreateTestingInputSchema: z.ZodType<TestingLabCreateTestingInput>;
 export let TestingLabCreateTestingLabRoleInputSchema: z.ZodType<TestingLabCreateTestingLabRoleInput>;
-export let TestingLabCreateTestingLabSettingsSchema: z.ZodType<TestingLabCreateTestingLabSettings>;
-export let TestingLabCreateTestingLocationSchema: z.ZodType<TestingLabCreateTestingLocation>;
+export let TestingLabCreateTestingLabSettingsDtoSchema: z.ZodType<TestingLabCreateTestingLabSettingsDto>;
+export let TestingLabCreateTestingLocationDtoSchema: z.ZodType<TestingLabCreateTestingLocationDto>;
 export let TestingLabCreateTestingProjectApplicationDraftInputSchema: z.ZodType<TestingLabCreateTestingProjectApplicationDraftInput>;
-export let TestingLabCreateTestingSessionSchema: z.ZodType<TestingLabCreateTestingSession>;
+export let TestingLabCreateTestingRequestDtoSchema: z.ZodType<TestingLabCreateTestingRequestDto>;
+export let TestingLabCreateTestingSessionDtoSchema: z.ZodType<TestingLabCreateTestingSessionDto>;
 export let TestingLabDecideTestingProjectApplicationInputSchema: z.ZodType<TestingLabDecideTestingProjectApplicationInput>;
 export let TestingLabFeedbackFormTypeSchema: z.ZodType<TestingLabFeedbackFormType>;
 export let TestingLabFeedbackInputSchema: z.ZodType<TestingLabFeedbackInput>;
@@ -14677,18 +15176,18 @@ export let TestingLabQuestionnaireOutputSchema: z.ZodType<TestingLabQuestionnair
 export let TestingLabQuestionnaireQuestionSchema: z.ZodType<TestingLabQuestionnaireQuestion>;
 export let TestingLabQuestionnaireQuestionTypeSchema: z.ZodType<TestingLabQuestionnaireQuestionType>;
 export let TestingLabQuestionnaireSchemaSchema: z.ZodType<TestingLabQuestionnaireSchema>;
-export let TestingLabRateFeedbackQualitySchema: z.ZodType<TestingLabRateFeedbackQuality>;
+export let TestingLabRateFeedbackQualityDtoSchema: z.ZodType<TestingLabRateFeedbackQualityDto>;
 export let TestingLabRegisterTestingEventSlotInputSchema: z.ZodType<TestingLabRegisterTestingEventSlotInput>;
 export let TestingLabRegistrationStatusSchema: z.ZodType<TestingLabRegistrationStatus>;
 export let TestingLabRegistrationTypeSchema: z.ZodType<TestingLabRegistrationType>;
-export let TestingLabReportFeedbackSchema: z.ZodType<TestingLabReportFeedback>;
+export let TestingLabReportFeedbackDtoSchema: z.ZodType<TestingLabReportFeedbackDto>;
 export let TestingLabSaveTestingProjectApplicationDraftInputSchema: z.ZodType<TestingLabSaveTestingProjectApplicationDraftInput>;
 export let TestingLabSessionProjectProjectionSchema: z.ZodType<TestingLabSessionProjectProjection>;
 export let TestingLabSessionRegistrationSchema: z.ZodType<TestingLabSessionRegistration>;
 export let TestingLabSessionRegistrationInputSchema: z.ZodType<TestingLabSessionRegistrationInput>;
 export let TestingLabSessionStatusSchema: z.ZodType<TestingLabSessionStatus>;
 export let TestingLabSessionWaitlistSchema: z.ZodType<TestingLabSessionWaitlist>;
-export let TestingLabSubmitFeedbackSchema: z.ZodType<TestingLabSubmitFeedback>;
+export let TestingLabSubmitFeedbackDtoSchema: z.ZodType<TestingLabSubmitFeedbackDto>;
 export let TestingLabSubmitTestingEventFeedbackInputSchema: z.ZodType<TestingLabSubmitTestingEventFeedbackInput>;
 export let TestingLabSubmitTestingProjectApplicationInputSchema: z.ZodType<TestingLabSubmitTestingProjectApplicationInput>;
 export let TestingLabTestingApplicationReviewAssetProjectionSchema: z.ZodType<TestingLabTestingApplicationReviewAssetProjection>;
@@ -14729,10 +15228,10 @@ export let TestingLabTestingLabAnalyticsSummaryProjectionSchema: z.ZodType<Testi
 export let TestingLabTestingLabAnalyticsTrendProjectionSchema: z.ZodType<TestingLabTestingLabAnalyticsTrendProjection>;
 export let TestingLabTestingLabEventAnalyticsProjectionSchema: z.ZodType<TestingLabTestingLabEventAnalyticsProjection>;
 export let TestingLabTestingLabLocationAnalyticsProjectionSchema: z.ZodType<TestingLabTestingLabLocationAnalyticsProjection>;
-export let TestingLabTestingLabPermissionsSchema: z.ZodType<TestingLabTestingLabPermissions>;
-export let TestingLabTestingLabResourcePermissionSchema: z.ZodType<TestingLabTestingLabResourcePermission>;
+export let TestingLabTestingLabPermissionsDtoSchema: z.ZodType<TestingLabTestingLabPermissionsDto>;
+export let TestingLabTestingLabResourcePermissionDtoSchema: z.ZodType<TestingLabTestingLabResourcePermissionDto>;
 export let TestingLabTestingLabRoleTemplateSchema: z.ZodType<TestingLabTestingLabRoleTemplate>;
-export let TestingLabTestingLabSettingsSchema: z.ZodType<TestingLabTestingLabSettings>;
+export let TestingLabTestingLabSettingsDtoSchema: z.ZodType<TestingLabTestingLabSettingsDto>;
 export let TestingLabTestingLearningCompletionRequirementSchema: z.ZodType<TestingLabTestingLearningCompletionRequirement>;
 export let TestingLabTestingLocationSchema: z.ZodType<TestingLabTestingLocation>;
 export let TestingLabTestingModeSchema: z.ZodType<TestingLabTestingMode>;
@@ -14752,13 +15251,13 @@ export let TestingLabTestingRequestStatusSchema: z.ZodType<TestingLabTestingRequ
 export let TestingLabTestingSessionSchema: z.ZodType<TestingLabTestingSession>;
 export let TestingLabTestingSlotRegistrationProjectionSchema: z.ZodType<TestingLabTestingSlotRegistrationProjection>;
 export let TestingLabTestingSlotRegistrationStatusSchema: z.ZodType<TestingLabTestingSlotRegistrationStatus>;
-export let TestingLabUpdateAttendanceSchema: z.ZodType<TestingLabUpdateAttendance>;
+export let TestingLabUpdateAttendanceDtoSchema: z.ZodType<TestingLabUpdateAttendanceDto>;
 export let TestingLabUpdateTestingEventInputSchema: z.ZodType<TestingLabUpdateTestingEventInput>;
-export let TestingLabUpdateTestingInputSchema: z.ZodType<TestingLabUpdateTestingInput>;
 export let TestingLabUpdateTestingLabRoleInputSchema: z.ZodType<TestingLabUpdateTestingLabRoleInput>;
-export let TestingLabUpdateTestingLabSettingsSchema: z.ZodType<TestingLabUpdateTestingLabSettings>;
-export let TestingLabUpdateTestingLocationSchema: z.ZodType<TestingLabUpdateTestingLocation>;
+export let TestingLabUpdateTestingLabSettingsDtoSchema: z.ZodType<TestingLabUpdateTestingLabSettingsDto>;
+export let TestingLabUpdateTestingLocationDtoSchema: z.ZodType<TestingLabUpdateTestingLocationDto>;
 export let TestingLabUpdateTestingProjectApplicationInputSchema: z.ZodType<TestingLabUpdateTestingProjectApplicationInput>;
+export let TestingLabUpdateTestingRequestDtoSchema: z.ZodType<TestingLabUpdateTestingRequestDto>;
 export let TestingLabUpsertTestingEventSlotInputSchema: z.ZodType<TestingLabUpsertTestingEventSlotInput>;
 export let TestingLabUpsertTestingEventTemplateInputSchema: z.ZodType<TestingLabUpsertTestingEventTemplateInput>;
 export let TestingLabUserTestingLabPermissionsSchema: z.ZodType<TestingLabUserTestingLabPermissions>;
@@ -14791,11 +15290,11 @@ AIAiCompletionOutputSchema = z.object({
   model: z.string().nullable().optional(),
   provider: z.string().nullable().optional(),
   text: z.string().nullable().optional(),
-  usage: z.lazy(() => AIAiUsageSchema).optional(),
+  usage: z.lazy(() => AIAiUsageDtoSchema).optional(),
 });
 
-/** Zod schema for AIAiConversationHistoryEntry */
-AIAiConversationHistoryEntrySchema = z.object({
+/** Zod schema for AIAiConversationHistoryEntryDto */
+AIAiConversationHistoryEntryDtoSchema = z.object({
   id: z.string().uuid().optional(),
   finishReason: z.string().nullable().optional(),
   model: z.string().nullable().optional(),
@@ -14808,7 +15307,7 @@ AIAiConversationHistoryEntrySchema = z.object({
   requestText: z.string().nullable().optional(),
   responseText: z.string().nullable().optional(),
   systemPrompt: z.string().nullable().optional(),
-  usage: z.lazy(() => AIAiUsageSchema).optional(),
+  usage: z.lazy(() => AIAiUsageDtoSchema).optional(),
   userId: z.string().uuid().nullable().optional(),
 });
 
@@ -14848,8 +15347,8 @@ AIAiGenerateInputSchema = z.object({
   temperature: z.number().nullable().optional(),
 });
 
-/** Zod schema for AIAiPromptTemplate */
-AIAiPromptTemplateSchema = z.object({
+/** Zod schema for AIAiPromptTemplateDto */
+AIAiPromptTemplateDtoSchema = z.object({
   id: z.string().uuid().optional(),
   category: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
@@ -14889,8 +15388,8 @@ AIAiPromptTemplateRenderOutputSchema = z.object({
   variables: z.record(z.string(), z.string().nullable()).nullable().optional(),
 });
 
-/** Zod schema for AIAiProviderStatus */
-AIAiProviderStatusSchema = z.object({
+/** Zod schema for AIAiProviderStatusDto */
+AIAiProviderStatusDtoSchema = z.object({
   baseUrl: z.string().nullable().optional(),
   configured: z.boolean().optional(),
   credentialsConfigured: z.boolean().optional(),
@@ -14898,8 +15397,8 @@ AIAiProviderStatusSchema = z.object({
   provider: z.string().nullable().optional(),
 });
 
-/** Zod schema for AIAiQuotaStatus */
-AIAiQuotaStatusSchema = z.object({
+/** Zod schema for AIAiQuotaStatusDto */
+AIAiQuotaStatusDtoSchema = z.object({
   currentUsage: z.number().int().optional(),
   hardLimit: z.number().int().nullable().optional(),
   isActive: z.boolean().optional(),
@@ -14916,7 +15415,7 @@ AIAiQuotaStatusSchema = z.object({
 AIAiQuotaStatusOutputSchema = z.object({
   generatedAtUtc: z.string().datetime().optional(),
   quotas: z
-    .array(z.lazy(() => AIAiQuotaStatusSchema))
+    .array(z.lazy(() => AIAiQuotaStatusDtoSchema))
     .nullable()
     .optional(),
   tenantId: z.string().uuid().optional(),
@@ -14928,13 +15427,13 @@ AIAiStatusOutputSchema = z.object({
   defaultProvider: z.string().nullable().optional(),
   enabled: z.boolean().optional(),
   providers: z
-    .array(z.lazy(() => AIAiProviderStatusSchema))
+    .array(z.lazy(() => AIAiProviderStatusDtoSchema))
     .nullable()
     .optional(),
 });
 
-/** Zod schema for AIAiUsage */
-AIAiUsageSchema = z.object({
+/** Zod schema for AIAiUsageDto */
+AIAiUsageDtoSchema = z.object({
   inputTokens: z.number().int().nullable().optional(),
   outputTokens: z.number().int().nullable().optional(),
   totalTokens: z.number().int().nullable().optional(),
@@ -14961,8 +15460,8 @@ AIUpdateAiPromptTemplateInputSchema = z.object({
   systemPrompt: z.string().nullable().optional(),
 });
 
-/** Zod schema for AnalyticsAnalyticsWarehouseFact */
-AnalyticsAnalyticsWarehouseFactSchema = z.object({
+/** Zod schema for AnalyticsAnalyticsWarehouseFactDto */
+AnalyticsAnalyticsWarehouseFactDtoSchema = z.object({
   id: z.string().uuid().optional(),
   amountUsd: z.number().nullable().optional(),
   count: z.number().int().nullable().optional(),
@@ -15012,8 +15511,8 @@ AnalyticsCreateDashboardInputSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for AnalyticsDashboard */
-AnalyticsDashboardSchema = z.object({
+/** Zod schema for AnalyticsDashboardDto */
+AnalyticsDashboardDtoSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
   description: z.string().nullable().optional(),
@@ -15023,13 +15522,13 @@ AnalyticsDashboardSchema = z.object({
   title: z.string().nullable().optional(),
   updatedAt: z.string().datetime().optional(),
   widgets: z
-    .array(z.lazy(() => AnalyticsDashboardWidgetSchema))
+    .array(z.lazy(() => AnalyticsDashboardWidgetDtoSchema))
     .nullable()
     .optional(),
 });
 
-/** Zod schema for AnalyticsDashboardWidget */
-AnalyticsDashboardWidgetSchema = z.object({
+/** Zod schema for AnalyticsDashboardWidgetDto */
+AnalyticsDashboardWidgetDtoSchema = z.object({
   id: z.string().uuid().optional(),
   configuration: z.string().nullable().optional(),
   sortOrder: z.number().int().optional(),
@@ -15149,7 +15648,7 @@ APIAccessAccessCapabilitiesOutputSchema = z.object({
 /** Zod schema for APIControllersActivateEconomyKillSwitchInput */
 APIControllersActivateEconomyKillSwitchInputSchema = z.object({
   id: z.string().uuid().optional(),
-  capability: z.lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema).optional(),
+  capability: z.lazy(() => FinanceEconomyRiskEconomyValueMovementCapabilitySchema).optional(),
   reason: z.string().nullable().optional(),
 });
 
@@ -15157,7 +15656,7 @@ APIControllersActivateEconomyKillSwitchInputSchema = z.object({
 APIControllersAdRewardProtectedOperationFailureOutputSchema = z.object({
   diagnostics: z.array(z.string()).nullable().optional(),
   reviewId: z.string().uuid().nullable().optional(),
-  state: z.lazy(() => EconomyRiskEconomyProtectedOperationStateSchema).optional(),
+  state: z.lazy(() => FinanceEconomyRiskEconomyProtectedOperationStateSchema).optional(),
 });
 
 /** Zod schema for APIControllersApplicationDetails */
@@ -15226,8 +15725,8 @@ APIControllersCaptureLegacyEconomyMigrationInputSchema = z.object({
 /** Zod schema for APIControllersCompleteMyAdRewardSessionInput */
 APIControllersCompleteMyAdRewardSessionInputSchema = z.object({
   idempotencyKey: z.string().nullable().optional(),
-  playback: z.lazy(() => EconomyAdRewardsAdPlaybackEvidenceSchema).optional(),
-  providerProof: z.lazy(() => EconomyAdRewardsProviderCompletionProofSchema).optional(),
+  playback: z.lazy(() => FinanceEconomyAdRewardsAdPlaybackEvidenceSchema).optional(),
+  providerProof: z.lazy(() => FinanceEconomyAdRewardsProviderCompletionProofSchema).optional(),
   token: z.string().nullable().optional(),
 });
 
@@ -15239,7 +15738,7 @@ APIControllersCompleteMyBountyInputSchema = z.object({
 /** Zod schema for APIControllersCreateMyBountyInput */
 APIControllersCreateMyBountyInputSchema = z.object({
   amountUnits: z.number().int().optional(),
-  currency: z.lazy(() => EconomyContractsCurrencyCodeSchema).optional(),
+  currency: z.lazy(() => FinanceEconomyContractsCurrencyCodeSchema).optional(),
   expiresAt: z.string().datetime().optional(),
   idempotencyKey: z.string().nullable().optional(),
   minimumReputation: z.number().int().optional(),
@@ -15311,18 +15810,18 @@ APIControllersDispatchTreasuryWithdrawalInputSchema = z.object({
   stepUpReceipt: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIControllersEconomyKycStatus */
-APIControllersEconomyKycStatusSchema = z.object({
+/** Zod schema for APIControllersEconomyKycStatusDto */
+APIControllersEconomyKycStatusDtoSchema = z.object({
   expiresAt: z.string().datetime().nullable().optional(),
   hasEvidence: z.boolean().optional(),
   isCurrent: z.boolean().optional(),
   issuedAt: z.string().datetime().nullable().optional(),
-  result: z.lazy(() => EconomyRiskComplianceEvidenceResultSchema).optional(),
+  result: z.lazy(() => FinanceEconomyRiskComplianceEvidenceResultSchema).optional(),
   version: z.number().int().nullable().optional(),
 });
 
-/** Zod schema for APIControllersEconomyPayoutExecutionOperation */
-APIControllersEconomyPayoutExecutionOperationSchema = z.object({
+/** Zod schema for APIControllersEconomyPayoutExecutionOperationDto */
+APIControllersEconomyPayoutExecutionOperationDtoSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
   destinationHash: z.string().nullable().optional(),
@@ -15335,15 +15834,15 @@ APIControllersEconomyPayoutExecutionOperationSchema = z.object({
   reserveAuthorizationEpoch: z.number().int().optional(),
   reserveVersion: z.number().int().optional(),
   riskDecisionId: z.string().uuid().optional(),
-  state: z.lazy(() => EconomyPayoutsPayoutOperationStateSchema).optional(),
+  state: z.lazy(() => FinanceEconomyPayoutsPayoutOperationStateSchema).optional(),
   updatedAt: z.string().datetime().optional(),
   version: z.number().int().optional(),
   walletId: z.string().uuid().optional(),
 });
 
-/** Zod schema for APIControllersEconomySelfServiceCapability */
-APIControllersEconomySelfServiceCapabilitySchema = z.object({
-  capability: z.lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema).optional(),
+/** Zod schema for APIControllersEconomySelfServiceCapabilityDto */
+APIControllersEconomySelfServiceCapabilityDtoSchema = z.object({
+  capability: z.lazy(() => FinanceEconomyRiskEconomyValueMovementCapabilitySchema).optional(),
   diagnostics: z.array(z.string()).nullable().optional(),
   state: z.lazy(() => APISetupEconomyCapabilityReadinessStateSchema).optional(),
 });
@@ -15363,11 +15862,12 @@ APIControllersEconomyTopUpFailureOutputSchema = z.object({
 APIControllersEconomyTransferProtectedOperationFailureOutputSchema = z.object({
   diagnostics: z.array(z.string()).nullable().optional(),
   reviewId: z.string().uuid().nullable().optional(),
-  state: z.lazy(() => EconomyRiskEconomyProtectedOperationStateSchema).optional(),
+  state: z.lazy(() => FinanceEconomyRiskEconomyProtectedOperationStateSchema).optional(),
 });
 
 /** Zod schema for APIControllersHealthinessOutput */
 APIControllersHealthinessOutputSchema = z.object({
+  builtAt: z.string().nullable().optional(),
   checks: z
     .record(
       z.string(),
@@ -15375,10 +15875,15 @@ APIControllersHealthinessOutputSchema = z.object({
     )
     .nullable()
     .optional(),
+  deployedAt: z.string().nullable().optional(),
   duration: z.string().optional(),
   error: z.string().nullable().optional(),
+  imageDigest: z.string().nullable().optional(),
+  releaseSha: z.string().nullable().optional(),
+  sourceTree: z.string().nullable().optional(),
   status: z.string().nullable().optional(),
   timestamp: z.string().datetime().optional(),
+  version: z.string().nullable().optional(),
 });
 
 /** Zod schema for APIControllersHealthinessResponseItem */
@@ -15391,7 +15896,7 @@ APIControllersHealthinessResponseItemSchema = z.object({
 
 /** Zod schema for APIControllersInspectEconomyCapabilityReadinessInput */
 APIControllersInspectEconomyCapabilityReadinessInputSchema = z.object({
-  capability: z.lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema).optional(),
+  capability: z.lazy(() => FinanceEconomyRiskEconomyValueMovementCapabilitySchema).optional(),
   destinationHash: z.string().nullable().optional(),
   jurisdictionCode: z.string().nullable().optional(),
   operationFingerprint: z.string().nullable().optional(),
@@ -15414,14 +15919,22 @@ APIControllersLivenessOutputSchema = z.object({
 APIControllersMarketplaceProtectedOperationFailureOutputSchema = z.object({
   diagnostics: z.array(z.string()).nullable().optional(),
   reviewId: z.string().uuid().nullable().optional(),
-  state: z.lazy(() => EconomyRiskEconomyProtectedOperationStateSchema).optional(),
+  state: z.lazy(() => FinanceEconomyRiskEconomyProtectedOperationStateSchema).optional(),
 });
 
 /** Zod schema for APIControllersPayoutProtectedOperationFailureOutput */
 APIControllersPayoutProtectedOperationFailureOutputSchema = z.object({
   diagnostics: z.array(z.string()).nullable().optional(),
   reviewId: z.string().uuid().nullable().optional(),
-  state: z.lazy(() => EconomyRiskEconomyProtectedOperationStateSchema).optional(),
+  state: z.lazy(() => FinanceEconomyRiskEconomyProtectedOperationStateSchema).optional(),
+});
+
+/** Zod schema for APIControllersPlatformKpisOutput */
+APIControllersPlatformKpisOutputSchema = z.object({
+  activeTenants: z.number().int().optional(),
+  calculatedAt: z.string().datetime().optional(),
+  churnRate: z.number().optional(),
+  mrr: z.number().optional(),
 });
 
 /** Zod schema for APIControllersProcessDetails */
@@ -15433,7 +15946,7 @@ APIControllersProcessDetailsSchema = z.object({
 /** Zod schema for APIControllersProposeEconomyPolicyInput */
 APIControllersProposeEconomyPolicyInputSchema = z.object({
   id: z.string().uuid().optional(),
-  capability: z.lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema).optional(),
+  capability: z.lazy(() => FinanceEconomyRiskEconomyValueMovementCapabilitySchema).optional(),
   effectiveAt: z.string().datetime().optional(),
   expiresAt: z.string().datetime().optional(),
   jurisdictionCode: z.string().nullable().optional(),
@@ -15446,7 +15959,7 @@ APIControllersProposeEconomyPolicyInputSchema = z.object({
 APIControllersProposeEconomyReserveInputSchema = z.object({
   id: z.string().uuid().optional(),
   authorizationEpoch: z.number().int().optional(),
-  buffers: z.lazy(() => EconomyReservesReserveBufferPositionSchema).optional(),
+  buffers: z.lazy(() => FinanceEconomyReservesReserveBufferPositionSchema).optional(),
   custodyObservationIds: z.array(z.string().uuid()).nullable().optional(),
   expectedActiveVersion: z.number().int().nullable().optional(),
   expiresAt: z.string().datetime().optional(),
@@ -15454,7 +15967,7 @@ APIControllersProposeEconomyReserveInputSchema = z.object({
   observedAt: z.string().datetime().optional(),
   policyVersion: z.number().int().optional(),
   services: z
-    .array(z.lazy(() => EconomyReservesReserveServiceObservationSchema))
+    .array(z.lazy(() => FinanceEconomyReservesReserveServiceObservationSchema))
     .nullable()
     .optional(),
   version: z.number().int().optional(),
@@ -15510,7 +16023,7 @@ APIControllersReserveApprovedPayoutExecutionInputSchema = z.object({
 
 /** Zod schema for APIControllersResolveEconomyRiskReviewInput */
 APIControllersResolveEconomyRiskReviewInputSchema = z.object({
-  decisionCode: z.lazy(() => EconomyRiskRiskManualDecisionCodeSchema).optional(),
+  decisionCode: z.lazy(() => FinanceEconomyRiskRiskManualDecisionCodeSchema).optional(),
   resolution: z.string().nullable().optional(),
 });
 
@@ -15530,7 +16043,7 @@ APIControllersRuntimeDetailsSchema = z.object({
 
 /** Zod schema for APIControllersSettleMyMarketplaceOrderInput */
 APIControllersSettleMyMarketplaceOrderInputSchema = z.object({
-  currencyChoice: z.lazy(() => EconomyMarketplaceMarketplaceCurrencyChoiceSchema).optional(),
+  currencyChoice: z.lazy(() => FinanceEconomyMarketplaceMarketplaceCurrencyChoiceSchema).optional(),
   idempotencyKey: z.string().nullable().optional(),
 });
 
@@ -15545,6 +16058,24 @@ APIControllersStartMyAdRewardSessionInputSchema = z.object({
 /** Zod schema for APIControllersStartMyKycInput */
 APIControllersStartMyKycInputSchema = z.object({
   idempotencyKey: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIEventingDeadLetterEvent */
+APIEventingDeadLetterEventSchema = z.object({
+  attemptCount: z.number().int().optional(),
+  consumerName: z.string().nullable().optional(),
+  deadLetteredAtUtc: z.string().datetime().optional(),
+  eventId: z.string().uuid().optional(),
+  eventName: z.string().nullable().optional(),
+  lastError: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIEventingEventTransportStatus */
+APIEventingEventTransportStatusSchema = z.object({
+  completed: z.number().int().optional(),
+  deadLettered: z.number().int().optional(),
+  incompleteConsumers: z.number().int().optional(),
+  pending: z.number().int().optional(),
 });
 
 /** Zod schema for APIProjectsAddProjectTeamInput */
@@ -15588,8 +16119,8 @@ APIProjectsCreateProjectTeamAgreementInputSchema = z.object({
   startsAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for APIProjectsProjectAllocation */
-APIProjectsProjectAllocationSchema = z.object({
+/** Zod schema for APIProjectsProjectAllocationDto */
+APIProjectsProjectAllocationDtoSchema = z.object({
   id: z.string().uuid().optional(),
   capacityPercentage: z.number().optional(),
   endsAt: z.string().datetime().nullable().optional(),
@@ -15600,25 +16131,25 @@ APIProjectsProjectAllocationSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for APIProjectsProjectOwnership */
-APIProjectsProjectOwnershipSchema = z.object({
+/** Zod schema for APIProjectsProjectOwnershipDto */
+APIProjectsProjectOwnershipDtoSchema = z.object({
   agreements: z
-    .array(z.lazy(() => APIProjectsProjectTeamAgreementSchema))
+    .array(z.lazy(() => APIProjectsProjectTeamAgreementDtoSchema))
     .nullable()
     .optional(),
   allocations: z
-    .array(z.lazy(() => APIProjectsProjectAllocationSchema))
+    .array(z.lazy(() => APIProjectsProjectAllocationDtoSchema))
     .nullable()
     .optional(),
   projectId: z.string().uuid().optional(),
   teams: z
-    .array(z.lazy(() => APIProjectsProjectTeamOwnershipSchema))
+    .array(z.lazy(() => APIProjectsProjectTeamOwnershipDtoSchema))
     .nullable()
     .optional(),
 });
 
-/** Zod schema for APIProjectsProjectTeamAgreement */
-APIProjectsProjectTeamAgreementSchema = z.object({
+/** Zod schema for APIProjectsProjectTeamAgreementDto */
+APIProjectsProjectTeamAgreementDtoSchema = z.object({
   id: z.string().uuid().optional(),
   acceptedByUserId: z.string().uuid().nullable().optional(),
   deliverables: z.string().nullable().optional(),
@@ -15632,8 +16163,8 @@ APIProjectsProjectTeamAgreementSchema = z.object({
   status: z.lazy(() => ProjectsProjectTeamAgreementStatusSchema).optional(),
 });
 
-/** Zod schema for APIProjectsProjectTeamOwnership */
-APIProjectsProjectTeamOwnershipSchema = z.object({
+/** Zod schema for APIProjectsProjectTeamOwnershipDto */
+APIProjectsProjectTeamOwnershipDtoSchema = z.object({
   id: z.string().uuid().optional(),
   assignedAt: z.string().datetime().optional(),
   endedAt: z.string().datetime().nullable().optional(),
@@ -15725,27 +16256,27 @@ APIProjectWorkMoveProjectWorkTaskInputSchema = z.object({
   position: z.number().int().optional(),
 });
 
-/** Zod schema for APIProjectWorkProjectBoard */
-APIProjectWorkProjectBoardSchema = z.object({
+/** Zod schema for APIProjectWorkProjectBoardDto */
+APIProjectWorkProjectBoardDtoSchema = z.object({
   id: z.string().uuid().optional(),
   columns: z
-    .array(z.lazy(() => APIProjectWorkProjectWorkColumnSchema))
+    .array(z.lazy(() => APIProjectWorkProjectWorkColumnDtoSchema))
     .nullable()
     .optional(),
   name: z.string().nullable().optional(),
   projectId: z.string().uuid().optional(),
 });
 
-/** Zod schema for APIProjectWorkProjectChecklistItem */
-APIProjectWorkProjectChecklistItemSchema = z.object({
+/** Zod schema for APIProjectWorkProjectChecklistItemDto */
+APIProjectWorkProjectChecklistItemDtoSchema = z.object({
   id: z.string().uuid().optional(),
   isCompleted: z.boolean().optional(),
   position: z.number().int().optional(),
   text: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIProjectWorkProjectMilestone */
-APIProjectWorkProjectMilestoneSchema = z.object({
+/** Zod schema for APIProjectWorkProjectMilestoneDto */
+APIProjectWorkProjectMilestoneDtoSchema = z.object({
   id: z.string().uuid().optional(),
   completedAt: z.string().datetime().nullable().optional(),
   description: z.string().nullable().optional(),
@@ -15753,8 +16284,8 @@ APIProjectWorkProjectMilestoneSchema = z.object({
   name: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIProjectWorkProjectTaskComment */
-APIProjectWorkProjectTaskCommentSchema = z.object({
+/** Zod schema for APIProjectWorkProjectTaskCommentDto */
+APIProjectWorkProjectTaskCommentDtoSchema = z.object({
   id: z.string().uuid().optional(),
   authorUserId: z.string().uuid().optional(),
   body: z.string().nullable().optional(),
@@ -15762,34 +16293,34 @@ APIProjectWorkProjectTaskCommentSchema = z.object({
   editedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for APIProjectWorkProjectTaskDependency */
-APIProjectWorkProjectTaskDependencySchema = z.object({
+/** Zod schema for APIProjectWorkProjectTaskDependencyDto */
+APIProjectWorkProjectTaskDependencyDtoSchema = z.object({
   id: z.string().uuid().optional(),
   dependsOnTaskId: z.string().uuid().optional(),
 });
 
-/** Zod schema for APIProjectWorkProjectTaskLabel */
-APIProjectWorkProjectTaskLabelSchema = z.object({
+/** Zod schema for APIProjectWorkProjectTaskLabelDto */
+APIProjectWorkProjectTaskLabelDtoSchema = z.object({
   id: z.string().uuid().optional(),
   color: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIProjectWorkProjectWorkColumn */
-APIProjectWorkProjectWorkColumnSchema = z.object({
+/** Zod schema for APIProjectWorkProjectWorkColumnDto */
+APIProjectWorkProjectWorkColumnDtoSchema = z.object({
   id: z.string().uuid().optional(),
   kind: z.lazy(() => ProjectWorkProjectWorkColumnKindSchema).optional(),
   name: z.string().nullable().optional(),
   position: z.number().int().optional(),
   tasks: z
-    .array(z.lazy(() => APIProjectWorkProjectWorkTaskSchema))
+    .array(z.lazy(() => APIProjectWorkProjectWorkTaskDtoSchema))
     .nullable()
     .optional(),
   workInProgressLimit: z.number().int().nullable().optional(),
 });
 
-/** Zod schema for APIProjectWorkProjectWorkHistory */
-APIProjectWorkProjectWorkHistorySchema = z.object({
+/** Zod schema for APIProjectWorkProjectWorkHistoryDto */
+APIProjectWorkProjectWorkHistoryDtoSchema = z.object({
   id: z.string().uuid().optional(),
   action: z.string().nullable().optional(),
   actorUserId: z.string().uuid().optional(),
@@ -15798,8 +16329,29 @@ APIProjectWorkProjectWorkHistorySchema = z.object({
   taskId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for APIProjectWorkProjectWorkTask */
-APIProjectWorkProjectWorkTaskSchema = z.object({
+/** Zod schema for APIProjectWorkProjectWorkTaskDetailsDto */
+APIProjectWorkProjectWorkTaskDetailsDtoSchema = z.object({
+  checklist: z
+    .array(z.lazy(() => APIProjectWorkProjectChecklistItemDtoSchema))
+    .nullable()
+    .optional(),
+  comments: z
+    .array(z.lazy(() => APIProjectWorkProjectTaskCommentDtoSchema))
+    .nullable()
+    .optional(),
+  dependencies: z
+    .array(z.lazy(() => APIProjectWorkProjectTaskDependencyDtoSchema))
+    .nullable()
+    .optional(),
+  labels: z
+    .array(z.lazy(() => APIProjectWorkProjectTaskLabelDtoSchema))
+    .nullable()
+    .optional(),
+  task: z.lazy(() => APIProjectWorkProjectWorkTaskDtoSchema).optional(),
+});
+
+/** Zod schema for APIProjectWorkProjectWorkTaskDto */
+APIProjectWorkProjectWorkTaskDtoSchema = z.object({
   id: z.string().uuid().optional(),
   assigneeUserId: z.string().uuid().nullable().optional(),
   columnId: z.string().uuid().optional(),
@@ -15811,27 +16363,6 @@ APIProjectWorkProjectWorkTaskSchema = z.object({
   priority: z.lazy(() => ProjectWorkProjectWorkTaskPrioritySchema).optional(),
   status: z.lazy(() => ProjectWorkProjectWorkTaskStatusSchema).optional(),
   title: z.string().nullable().optional(),
-});
-
-/** Zod schema for APIProjectWorkProjectWorkTaskDetails */
-APIProjectWorkProjectWorkTaskDetailsSchema = z.object({
-  checklist: z
-    .array(z.lazy(() => APIProjectWorkProjectChecklistItemSchema))
-    .nullable()
-    .optional(),
-  comments: z
-    .array(z.lazy(() => APIProjectWorkProjectTaskCommentSchema))
-    .nullable()
-    .optional(),
-  dependencies: z
-    .array(z.lazy(() => APIProjectWorkProjectTaskDependencySchema))
-    .nullable()
-    .optional(),
-  labels: z
-    .array(z.lazy(() => APIProjectWorkProjectTaskLabelSchema))
-    .nullable()
-    .optional(),
-  task: z.lazy(() => APIProjectWorkProjectWorkTaskSchema).optional(),
 });
 
 /** Zod schema for APIProjectWorkUpdateProjectMilestoneInput */
@@ -15900,8 +16431,8 @@ APITeamsCreateTeamInvitationInputSchema = z.object({
   userId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for APITeamsMyTeamInvitation */
-APITeamsMyTeamInvitationSchema = z.object({
+/** Zod schema for APITeamsMyTeamInvitationDto */
+APITeamsMyTeamInvitationDtoSchema = z.object({
   id: z.string().uuid().optional(),
   authority: z.lazy(() => TeamsTeamMemberAuthoritySchema).optional(),
   expiresAt: z.string().datetime().optional(),
@@ -15910,13 +16441,13 @@ APITeamsMyTeamInvitationSchema = z.object({
   teamSlug: z.string().nullable().optional(),
 });
 
-/** Zod schema for APITeamsTeam */
-APITeamsTeamSchema = z.object({
+/** Zod schema for APITeamsTeamDto */
+APITeamsTeamDtoSchema = z.object({
   id: z.string().uuid().optional(),
   description: z.string().nullable().optional(),
   isPersonal: z.boolean().optional(),
   members: z
-    .array(z.lazy(() => APITeamsTeamMemberSchema))
+    .array(z.lazy(() => APITeamsTeamMemberDtoSchema))
     .nullable()
     .optional(),
   name: z.string().nullable().optional(),
@@ -15926,8 +16457,15 @@ APITeamsTeamSchema = z.object({
   visibility: z.lazy(() => TeamsTeamVisibilitySchema).optional(),
 });
 
-/** Zod schema for APITeamsTeamInvitation */
-APITeamsTeamInvitationSchema = z.object({
+/** Zod schema for APITeamsTeamInvitationCreatedDto */
+APITeamsTeamInvitationCreatedDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  expiresAt: z.string().datetime().optional(),
+  token: z.string().nullable().optional(),
+});
+
+/** Zod schema for APITeamsTeamInvitationDto */
+APITeamsTeamInvitationDtoSchema = z.object({
   id: z.string().uuid().optional(),
   authority: z.lazy(() => TeamsTeamMemberAuthoritySchema).optional(),
   expiresAt: z.string().datetime().optional(),
@@ -15938,15 +16476,8 @@ APITeamsTeamInvitationSchema = z.object({
   usedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for APITeamsTeamInvitationCreated */
-APITeamsTeamInvitationCreatedSchema = z.object({
-  id: z.string().uuid().optional(),
-  expiresAt: z.string().datetime().optional(),
-  token: z.string().nullable().optional(),
-});
-
-/** Zod schema for APITeamsTeamMember */
-APITeamsTeamMemberSchema = z.object({
+/** Zod schema for APITeamsTeamMemberDto */
+APITeamsTeamMemberDtoSchema = z.object({
   authority: z.lazy(() => TeamsTeamMemberAuthoritySchema).optional(),
   isActive: z.boolean().optional(),
   joinedAt: z.string().datetime().optional(),
@@ -16267,6 +16798,18 @@ AssetsSecurityAccessUrlInputSchema = z.object({
   transform: z.string().nullable().optional(),
 });
 
+/** Zod schema for AssetsSocialMediaSocialMediaAssetDescriptor */
+AssetsSocialMediaSocialMediaAssetDescriptorSchema = z.object({
+  assetReferenceId: z.string().uuid().optional(),
+  deliveryUrl: z.string().nullable().optional(),
+  mimeType: z.string().nullable().optional(),
+  sizeBytes: z.number().int().optional(),
+  state: z.lazy(() => AssetsSocialMediaSocialMediaProcessingStateSchema).optional(),
+});
+
+/** Zod schema for AssetsSocialMediaSocialMediaProcessingState */
+AssetsSocialMediaSocialMediaProcessingStateSchema = z.enum(['Processing', 'Ready', 'Rejected']);
+
 /** Zod schema for AssetsVirusScanStatus */
 AssetsVirusScanStatusSchema = z.enum(['Pending', 'Scanning', 'Clean', 'Infected', 'ScanFailed']);
 
@@ -16368,11 +16911,11 @@ CommerceOrdersCreateOrderInputSchema = z.object({
   idempotencyKey: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommerceOrdersMarketplaceCart */
-CommerceOrdersMarketplaceCartSchema = z.object({
+/** Zod schema for CommerceOrdersMarketplaceCartDto */
+CommerceOrdersMarketplaceCartDtoSchema = z.object({
   id: z.string().uuid().nullable().optional(),
   items: z
-    .array(z.lazy(() => CommerceOrdersMarketplaceCartItemSchema))
+    .array(z.lazy(() => CommerceOrdersMarketplaceCartItemDtoSchema))
     .nullable()
     .optional(),
   state: z.lazy(() => CommerceOrdersMarketplaceCartStateSchema).optional(),
@@ -16381,8 +16924,8 @@ CommerceOrdersMarketplaceCartSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for CommerceOrdersMarketplaceCartItem */
-CommerceOrdersMarketplaceCartItemSchema = z.object({
+/** Zod schema for CommerceOrdersMarketplaceCartItemDto */
+CommerceOrdersMarketplaceCartItemDtoSchema = z.object({
   id: z.string().uuid().optional(),
   productId: z.string().uuid().optional(),
   productPricingId: z.string().uuid().optional(),
@@ -16393,49 +16936,24 @@ CommerceOrdersMarketplaceCartItemSchema = z.object({
 /** Zod schema for CommerceOrdersMarketplaceCartState */
 CommerceOrdersMarketplaceCartStateSchema = z.enum(['Active', 'CheckedOut', 'Abandoned']);
 
-/** Zod schema for CommerceOrdersMarketplaceCheckout */
-CommerceOrdersMarketplaceCheckoutSchema = z.object({
+/** Zod schema for CommerceOrdersMarketplaceCheckoutDto */
+CommerceOrdersMarketplaceCheckoutDtoSchema = z.object({
   cartId: z.string().uuid().optional(),
   orders: z
-    .array(z.lazy(() => CommerceOrdersMarketplaceCheckoutOrderSchema))
+    .array(z.lazy(() => CommerceOrdersMarketplaceCheckoutOrderDtoSchema))
     .nullable()
     .optional(),
 });
 
-/** Zod schema for CommerceOrdersMarketplaceCheckoutOrder */
-CommerceOrdersMarketplaceCheckoutOrderSchema = z.object({
+/** Zod schema for CommerceOrdersMarketplaceCheckoutOrderDto */
+CommerceOrdersMarketplaceCheckoutOrderDtoSchema = z.object({
   currency: z.string().nullable().optional(),
   orderId: z.string().uuid().optional(),
   total: z.number().optional(),
 });
 
-/** Zod schema for CommerceOrdersOrder */
-CommerceOrdersOrderSchema = z.object({
-  id: z.string().uuid().optional(),
-  createdAt: z.string().datetime().optional(),
-  currency: z.string().nullable().optional(),
-  discountTotal: z.number().optional(),
-  idempotencyKey: z.string().nullable().optional(),
-  lineItems: z
-    .array(z.lazy(() => CommerceOrdersOrderLineItemSchema))
-    .nullable()
-    .optional(),
-  paidAt: z.string().datetime().nullable().optional(),
-  paymentMethod: z.string().nullable().optional(),
-  paymentProviderReference: z.string().nullable().optional(),
-  refundAmount: z.number().nullable().optional(),
-  refundedAt: z.string().datetime().nullable().optional(),
-  refundReason: z.string().nullable().optional(),
-  status: z.lazy(() => CommerceOrdersOrderStatusSchema).optional(),
-  subtotal: z.number().optional(),
-  taxAmount: z.number().optional(),
-  total: z.number().optional(),
-  updatedAt: z.string().datetime().optional(),
-  userId: z.string().uuid().optional(),
-});
-
-/** Zod schema for CommerceOrdersOrderCapture */
-CommerceOrdersOrderCaptureSchema = z.object({
+/** Zod schema for CommerceOrdersOrderCaptureDto */
+CommerceOrdersOrderCaptureDtoSchema = z.object({
   id: z.string().uuid().optional(),
   clientActionToken: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
@@ -16443,7 +16961,7 @@ CommerceOrdersOrderCaptureSchema = z.object({
   discountTotal: z.number().optional(),
   idempotencyKey: z.string().nullable().optional(),
   lineItems: z
-    .array(z.lazy(() => CommerceOrdersOrderLineItemSchema))
+    .array(z.lazy(() => CommerceOrdersOrderLineItemDtoSchema))
     .nullable()
     .optional(),
   paidAt: z.string().datetime().nullable().optional(),
@@ -16463,8 +16981,33 @@ CommerceOrdersOrderCaptureSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for CommerceOrdersOrderLineItem */
-CommerceOrdersOrderLineItemSchema = z.object({
+/** Zod schema for CommerceOrdersOrderDto */
+CommerceOrdersOrderDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  createdAt: z.string().datetime().optional(),
+  currency: z.string().nullable().optional(),
+  discountTotal: z.number().optional(),
+  idempotencyKey: z.string().nullable().optional(),
+  lineItems: z
+    .array(z.lazy(() => CommerceOrdersOrderLineItemDtoSchema))
+    .nullable()
+    .optional(),
+  paidAt: z.string().datetime().nullable().optional(),
+  paymentMethod: z.string().nullable().optional(),
+  paymentProviderReference: z.string().nullable().optional(),
+  refundAmount: z.number().nullable().optional(),
+  refundedAt: z.string().datetime().nullable().optional(),
+  refundReason: z.string().nullable().optional(),
+  status: z.lazy(() => CommerceOrdersOrderStatusSchema).optional(),
+  subtotal: z.number().optional(),
+  taxAmount: z.number().optional(),
+  total: z.number().optional(),
+  updatedAt: z.string().datetime().optional(),
+  userId: z.string().uuid().optional(),
+});
+
+/** Zod schema for CommerceOrdersOrderLineItemDto */
+CommerceOrdersOrderLineItemDtoSchema = z.object({
   id: z.string().uuid().optional(),
   basePrice: z.number().optional(),
   currency: z.string().nullable().optional(),
@@ -16756,6 +17299,10 @@ CommercePaymentsTaxJurisdictionSchema = z.object({
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isActive: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -16802,6 +17349,10 @@ CommercePaymentsTaxRateSchema = z.object({
     .optional(),
   effectiveFrom: z.string().datetime().optional(),
   effectiveTo: z.string().datetime().nullable().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isActive: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -16834,6 +17385,10 @@ CommercePaymentsTaxRuleSchema = z.object({
   effectiveFrom: z.string().datetime().nullable().optional(),
   effectiveTo: z.string().datetime().nullable().optional(),
   exemptionConditions: z.string().max(2000).nullable().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isActive: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -16887,6 +17442,10 @@ CommercePaymentsUserWalletSchema = z.object({
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isActive: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -16925,6 +17484,10 @@ CommercePaymentsWalletTransactionSchema = z.object({
   description: z.string().min(1).max(500),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
     .nullable()
     .optional(),
   isDeleted: z.boolean().optional(),
@@ -17081,8 +17644,8 @@ CommerceProductsEntitlementCheckResultSchema = z.object({
   productId: z.string().uuid().optional(),
 });
 
-/** Zod schema for CommerceProductsEntitlementInfo */
-CommerceProductsEntitlementInfoSchema = z.object({
+/** Zod schema for CommerceProductsEntitlementInfoDto */
+CommerceProductsEntitlementInfoDtoSchema = z.object({
   accessEndDate: z.string().datetime().nullable().optional(),
   accessStartDate: z.string().datetime().nullable().optional(),
   acquisitionType: z.string().nullable().optional(),
@@ -17139,8 +17702,11 @@ CommerceProductsPatchPromoCodeInputSchema = z.object({
   validUntil: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for CommerceProductsProduct */
-CommerceProductsProductSchema = z.object({
+/** Zod schema for CommerceProductsProductAcquisitionType */
+CommerceProductsProductAcquisitionTypeSchema = z.enum(['Purchase', 'Subscription', 'Grant', 'PromoCode', 'Bundle', 'Trial', 'Referral', 'Free', 'Gift']);
+
+/** Zod schema for CommerceProductsProductDto */
+CommerceProductsProductDtoSchema = z.object({
   id: z.string().uuid().optional(),
   affiliateCommissionPercentage: z.number().optional(),
   bundleItems: z.array(z.string().uuid()).nullable().optional(),
@@ -17153,7 +17719,7 @@ CommerceProductsProductSchema = z.object({
   maxAffiliateDiscount: z.number().optional(),
   name: z.string().nullable().optional(),
   pricing: z
-    .array(z.lazy(() => CommerceProductsProductPricingSchema))
+    .array(z.lazy(() => CommerceProductsProductPricingDtoSchema))
     .nullable()
     .optional(),
   referralCommissionPercentage: z.number().optional(),
@@ -17162,11 +17728,8 @@ CommerceProductsProductSchema = z.object({
   updatedAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for CommerceProductsProductAcquisitionType */
-CommerceProductsProductAcquisitionTypeSchema = z.enum(['Purchase', 'Subscription', 'Grant', 'PromoCode', 'Bundle', 'Trial', 'Referral', 'Free', 'Gift']);
-
-/** Zod schema for CommerceProductsProductPricing */
-CommerceProductsProductPricingSchema = z.object({
+/** Zod schema for CommerceProductsProductPricingDto */
+CommerceProductsProductPricingDtoSchema = z.object({
   id: z.string().uuid().optional(),
   basePrice: z.number().optional(),
   currency: z.string().nullable().optional(),
@@ -17199,8 +17762,23 @@ CommerceProductsProductTypeSchema = z.enum([
   'Other',
 ]);
 
-/** Zod schema for CommerceProductsPromoCode */
-CommerceProductsPromoCodeSchema = z.object({
+/** Zod schema for CommerceProductsPromoCodeApplicationResult */
+CommerceProductsPromoCodeApplicationResultSchema = z.object({
+  appliedCodes: z
+    .array(z.lazy(() => CommerceProductsAppliedPromoCodeSchema))
+    .nullable()
+    .optional(),
+  finalAmount: z.number().optional(),
+  originalAmount: z.number().optional(),
+  rejectedCodes: z
+    .array(z.lazy(() => CommerceProductsRejectedPromoCodeSchema))
+    .nullable()
+    .optional(),
+  totalDiscount: z.number().optional(),
+});
+
+/** Zod schema for CommerceProductsPromoCodeDto */
+CommerceProductsPromoCodeDtoSchema = z.object({
   id: z.string().uuid().optional(),
   code: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
@@ -17223,26 +17801,11 @@ CommerceProductsPromoCodeSchema = z.object({
   validUntil: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for CommerceProductsPromoCodeApplicationResult */
-CommerceProductsPromoCodeApplicationResultSchema = z.object({
-  appliedCodes: z
-    .array(z.lazy(() => CommerceProductsAppliedPromoCodeSchema))
-    .nullable()
-    .optional(),
-  finalAmount: z.number().optional(),
-  originalAmount: z.number().optional(),
-  rejectedCodes: z
-    .array(z.lazy(() => CommerceProductsRejectedPromoCodeSchema))
-    .nullable()
-    .optional(),
-  totalDiscount: z.number().optional(),
-});
-
 /** Zod schema for CommerceProductsPromoCodeType */
 CommerceProductsPromoCodeTypeSchema = z.enum(['PercentageOff', 'FixedAmountOff', 'FreeTrial', 'BuyOneGetOne', 'FreeShipping']);
 
-/** Zod schema for CommerceProductsPromoCodeUsage */
-CommerceProductsPromoCodeUsageSchema = z.object({
+/** Zod schema for CommerceProductsPromoCodeUsageDto */
+CommerceProductsPromoCodeUsageDtoSchema = z.object({
   averageDiscountPerUse: z.number().optional(),
   code: z.string().nullable().optional(),
   firstUsedAt: z.string().datetime().nullable().optional(),
@@ -17297,8 +17860,8 @@ CommerceProductsSetProductPricingInputSchema = z.object({
   saleStartDate: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for CommerceProductsSupportTicket */
-CommerceProductsSupportTicketSchema = z.object({
+/** Zod schema for CommerceProductsSupportTicketDto */
+CommerceProductsSupportTicketDtoSchema = z.object({
   id: z.string().uuid().optional(),
   assignedToName: z.string().nullable().optional(),
   assignedToUserId: z.string().uuid().nullable().optional(),
@@ -17311,7 +17874,7 @@ CommerceProductsSupportTicketSchema = z.object({
   lastMessagePreview: z.string().nullable().optional(),
   messageCount: z.number().int().optional(),
   messages: z
-    .array(z.lazy(() => CommerceProductsSupportTicketMessageSchema))
+    .array(z.lazy(() => CommerceProductsSupportTicketMessageDtoSchema))
     .nullable()
     .optional(),
   openedAt: z.string().datetime().optional(),
@@ -17327,8 +17890,11 @@ CommerceProductsSupportTicketSchema = z.object({
   tenantId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for CommerceProductsSupportTicketMessage */
-CommerceProductsSupportTicketMessageSchema = z.object({
+/** Zod schema for CommerceProductsSupportTicketMessageAuthorType */
+CommerceProductsSupportTicketMessageAuthorTypeSchema = z.enum(['Customer', 'Agent', 'System']);
+
+/** Zod schema for CommerceProductsSupportTicketMessageDto */
+CommerceProductsSupportTicketMessageDtoSchema = z.object({
   id: z.string().uuid().optional(),
   authorEmail: z.string().nullable().optional(),
   authorName: z.string().nullable().optional(),
@@ -17339,9 +17905,6 @@ CommerceProductsSupportTicketMessageSchema = z.object({
   isInternal: z.boolean().optional(),
   ticketId: z.string().uuid().optional(),
 });
-
-/** Zod schema for CommerceProductsSupportTicketMessageAuthorType */
-CommerceProductsSupportTicketMessageAuthorTypeSchema = z.enum(['Customer', 'Agent', 'System']);
 
 /** Zod schema for CommerceProductsSupportTicketPriority */
 CommerceProductsSupportTicketPrioritySchema = z.enum(['Low', 'Normal', 'High', 'Urgent']);
@@ -17390,8 +17953,8 @@ CommerceProductsValidatePromoCodeInputSchema = z.object({
   productId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsBillingHistory */
-CommerceSubscriptionsBillingHistorySchema = z.object({
+/** Zod schema for CommerceSubscriptionsBillingHistoryDto */
+CommerceSubscriptionsBillingHistoryDtoSchema = z.object({
   id: z.string().uuid().optional(),
   amount: z.number().optional(),
   billingDate: z.string().datetime().optional(),
@@ -17438,7 +18001,7 @@ CommerceSubscriptionsCancellationReasonSchema = z.enum([
 CommerceSubscriptionsClientModulesOutputSchema = z.object({
   clientId: z.string().uuid().optional(),
   featureFlags: z.record(z.string(), z.boolean()).nullable().optional(),
-  subscriptions: z.lazy(() => PagedResultOfCommerceSubscriptionsSubscriptionSchema).optional(),
+  subscriptions: z.lazy(() => PagedResultSubscriptionSchema).optional(),
 });
 
 /** Zod schema for CommerceSubscriptionsCreateClientInput */
@@ -17475,6 +18038,10 @@ CommerceSubscriptionsSubscriptionSchema = z.object({
   externalCustomerId: z.string().max(100).nullable().optional(),
   externalId: z.string().max(100).nullable().optional(),
   fulfilledOrderId: z.string().uuid().nullable().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isActive: z.boolean().optional(),
   isCancelled: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
@@ -17500,8 +18067,8 @@ CommerceSubscriptionsSubscriptionSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionChurnReport */
-CommerceSubscriptionsSubscriptionChurnReportSchema = z.object({
+/** Zod schema for CommerceSubscriptionsSubscriptionChurnReportDto */
+CommerceSubscriptionsSubscriptionChurnReportDtoSchema = z.object({
   activeSubscriptions: z.number().int().optional(),
   cancelledInPeriod: z.number().int().optional(),
   churnRate: z.number().optional(),
@@ -17575,8 +18142,8 @@ CommerceSubscriptionsSubscriptionLifecycleControllerUpgradeInputSchema = z.objec
   newPlanId: z.string().uuid().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionNotification */
-CommerceSubscriptionsSubscriptionNotificationSchema = z.object({
+/** Zod schema for CommerceSubscriptionsSubscriptionNotificationDto */
+CommerceSubscriptionsSubscriptionNotificationDtoSchema = z.object({
   id: z.string().uuid().optional(),
   channel: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
@@ -17611,6 +18178,10 @@ CommerceSubscriptionsSubscriptionPlanSchema = z.object({
   hasAdvancedAnalytics: z.boolean().optional(),
   hasCustomBranding: z.boolean().optional(),
   hasPrioritySupport: z.boolean().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isActive: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
   isFeatured: z.boolean().optional(),
@@ -17762,8 +18333,8 @@ CommerceSubscriptionsSubscriptionUpgradeResultSchema = z.object({
   updatedSubscription: z.lazy(() => CommerceSubscriptionsSubscriptionSchema).optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionUsage */
-CommerceSubscriptionsSubscriptionUsageSchema = z.object({
+/** Zod schema for CommerceSubscriptionsSubscriptionUsageDto */
+CommerceSubscriptionsSubscriptionUsageDtoSchema = z.object({
   apiCallsThisMonth: z.number().int().optional(),
   isOverLimit: z.boolean().optional(),
   limitWarnings: z.array(z.string()).nullable().optional(),
@@ -17804,8 +18375,8 @@ ComplianceAuditAuditExportInputSchema = z.object({
   userId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for ComplianceAuditAuditLog */
-ComplianceAuditAuditLogSchema = z.object({
+/** Zod schema for ComplianceAuditAuditLogDto */
+ComplianceAuditAuditLogDtoSchema = z.object({
   id: z.string().uuid().optional(),
   actionType: z.string().nullable().optional(),
   category: z.lazy(() => ComplianceAuditAuditCategorySchema).optional(),
@@ -17827,7 +18398,7 @@ ComplianceAuditAuditLogSchema = z.object({
 /** Zod schema for ComplianceAuditAuditLogOutput */
 ComplianceAuditAuditLogOutputSchema = z.object({
   logs: z
-    .array(z.lazy(() => ComplianceAuditAuditLogSchema))
+    .array(z.lazy(() => ComplianceAuditAuditLogDtoSchema))
     .nullable()
     .optional(),
   skip: z.number().int().optional(),
@@ -18041,8 +18612,8 @@ ComplianceAuditUnifiedSecurityAuditOutputSchema = z.object({
   totalCount: z.number().int().optional(),
 });
 
-/** Zod schema for ComplianceConsentConsentPolicy */
-ComplianceConsentConsentPolicySchema = z.object({
+/** Zod schema for ComplianceConsentConsentPolicyDto */
+ComplianceConsentConsentPolicyDtoSchema = z.object({
   id: z.string().uuid().optional(),
   currentVersion: z.string().nullable().optional(),
   isActive: z.boolean().optional(),
@@ -18062,8 +18633,8 @@ ComplianceConsentCreateConsentPolicyCommandSchema = z.object({
   policyType: z.lazy(() => ComplianceConsentPolicyTypeSchema).optional(),
 });
 
-/** Zod schema for ComplianceConsentDataSubjectInput */
-ComplianceConsentDataSubjectInputSchema = z.object({
+/** Zod schema for ComplianceConsentDataSubjectRequestDto */
+ComplianceConsentDataSubjectRequestDtoSchema = z.object({
   id: z.string().uuid().optional(),
   deadline: z.string().datetime().optional(),
   processedAt: z.string().datetime().nullable().optional(),
@@ -18099,8 +18670,8 @@ ComplianceConsentPolicyTypeSchema = z.enum([
   'Custom',
 ]);
 
-/** Zod schema for ComplianceConsentPolicyVersion */
-ComplianceConsentPolicyVersionSchema = z.object({
+/** Zod schema for ComplianceConsentPolicyVersionDto */
+ComplianceConsentPolicyVersionDtoSchema = z.object({
   id: z.string().uuid().optional(),
   contentType: z.lazy(() => ComplianceConsentContentTypeSchema).optional(),
   effectiveFrom: z.string().datetime().optional(),
@@ -18135,8 +18706,8 @@ ComplianceConsentSubmitDataSubjectRequestCommandSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for ComplianceConsentUserConsent */
-ComplianceConsentUserConsentSchema = z.object({
+/** Zod schema for ComplianceConsentUserConsentDto */
+ComplianceConsentUserConsentDtoSchema = z.object({
   id: z.string().uuid().optional(),
   consentGivenAt: z.string().datetime().optional(),
   consentMethod: z.string().nullable().optional(),
@@ -18165,8 +18736,8 @@ ComplianceFERPAEducationRecordKindSchema = z.enum([
   'Custom',
 ]);
 
-/** Zod schema for ComplianceFERPAFerpaDirectoryInformationPolicy */
-ComplianceFERPAFerpaDirectoryInformationPolicySchema = z.object({
+/** Zod schema for ComplianceFERPAFerpaDirectoryInformationPolicyDto */
+ComplianceFERPAFerpaDirectoryInformationPolicyDtoSchema = z.object({
   id: z.string().uuid().optional(),
   allowedFieldsJson: z.string().nullable().optional(),
   annualNoticeSentAt: z.string().datetime().nullable().optional(),
@@ -18188,8 +18759,8 @@ ComplianceFERPAFerpaDisclosureBasisSchema = z.enum([
   'Other',
 ]);
 
-/** Zod schema for ComplianceFERPAFerpaDisclosureConsent */
-ComplianceFERPAFerpaDisclosureConsentSchema = z.object({
+/** Zod schema for ComplianceFERPAFerpaDisclosureConsentDto */
+ComplianceFERPAFerpaDisclosureConsentDtoSchema = z.object({
   id: z.string().uuid().optional(),
   effectiveFrom: z.string().datetime().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
@@ -18202,8 +18773,8 @@ ComplianceFERPAFerpaDisclosureConsentSchema = z.object({
   studentUserId: z.string().uuid().optional(),
 });
 
-/** Zod schema for ComplianceFERPAFerpaDisclosureLog */
-ComplianceFERPAFerpaDisclosureLogSchema = z.object({
+/** Zod schema for ComplianceFERPAFerpaDisclosureLogDto */
+ComplianceFERPAFerpaDisclosureLogDtoSchema = z.object({
   id: z.string().uuid().optional(),
   basis: z.lazy(() => ComplianceFERPAFerpaDisclosureBasisSchema).optional(),
   disclosedAt: z.string().datetime().optional(),
@@ -18214,8 +18785,8 @@ ComplianceFERPAFerpaDisclosureLogSchema = z.object({
   studentUserId: z.string().uuid().optional(),
 });
 
-/** Zod schema for ComplianceFERPAFerpaEducationRecord */
-ComplianceFERPAFerpaEducationRecordSchema = z.object({
+/** Zod schema for ComplianceFERPAFerpaEducationRecordDto */
+ComplianceFERPAFerpaEducationRecordDtoSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
   externalRecordId: z.string().nullable().optional(),
@@ -18228,8 +18799,8 @@ ComplianceFERPAFerpaEducationRecordSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for ComplianceFERPAFerpaInspectionInput */
-ComplianceFERPAFerpaInspectionInputSchema = z.object({
+/** Zod schema for ComplianceFERPAFerpaInspectionRequestDto */
+ComplianceFERPAFerpaInspectionRequestDtoSchema = z.object({
   id: z.string().uuid().optional(),
   deadline: z.string().datetime().optional(),
   processedAt: z.string().datetime().nullable().optional(),
@@ -18395,16 +18966,19 @@ ComplianceKYCKycAmlOnboardingSchema = z.object({
 /** Zod schema for ComplianceKYCKycAmlState */
 ComplianceKYCKycAmlStateSchema = z.enum(['Created', 'ApplicantPending', 'InReview', 'Approved', 'Rejected', 'NeedsReview', 'Expired']);
 
+/** Zod schema for ComplianceKYCKycEvidenceIngestionStatus */
+ComplianceKYCKycEvidenceIngestionStatusSchema = z.enum(['Published', 'Duplicate', 'Deferred', 'Rejected']);
+
 /** Zod schema for ComplianceKYCSumSubWebhookIngestionResult */
 ComplianceKYCSumSubWebhookIngestionResultSchema = z.object({
   evidenceId: z.string().uuid().nullable().optional(),
   providerEventId: z.string().nullable().optional(),
   state: z.lazy(() => ComplianceKYCKycAmlStateSchema).optional(),
-  status: z.lazy(() => EconomyRiskComplianceEvidenceIngestionStatusSchema).optional(),
+  status: z.lazy(() => ComplianceKYCKycEvidenceIngestionStatusSchema).optional(),
 });
 
-/** Zod schema for ContentPagesContentResource */
-ContentPagesContentResourceSchema = z.object({
+/** Zod schema for ContentPagesContentResourceDto */
+ContentPagesContentResourceDtoSchema = z.object({
   id: z.string().uuid().optional(),
   authorId: z.string().uuid().nullable().optional(),
   authorName: z.string().nullable().optional(),
@@ -18444,8 +19018,8 @@ ContentPagesContentResourceStatusSchema = z.enum(['Draft', 'InReview', 'Publishe
 /** Zod schema for ContentPagesContentResourceType */
 ContentPagesContentResourceTypeSchema = z.enum(['Article', 'Tutorial', 'Documentation', 'Video', 'Download', 'ExternalLink', 'Course', 'Custom']);
 
-/** Zod schema for ContentPagesCreateContentResource */
-ContentPagesCreateContentResourceSchema = z.object({
+/** Zod schema for ContentPagesCreateContentResourceDto */
+ContentPagesCreateContentResourceDtoSchema = z.object({
   body: z.string().nullable().optional(),
   categorySlug: z.string().nullable().optional(),
   coverImageUrl: z.string().nullable().optional(),
@@ -18470,8 +19044,8 @@ ContentPagesCreateContentResourceSchema = z.object({
   videoUrl: z.string().nullable().optional(),
 });
 
-/** Zod schema for ContentPagesCreateMarketingLead */
-ContentPagesCreateMarketingLeadSchema = z.object({
+/** Zod schema for ContentPagesCreateMarketingLeadDto */
+ContentPagesCreateMarketingLeadDtoSchema = z.object({
   company: z.string().max(200).nullable().optional(),
   email: z.string().email().min(1).max(200),
   locale: z.string().max(10).nullable().optional(),
@@ -18485,8 +19059,8 @@ ContentPagesCreateMarketingLeadSchema = z.object({
   userAgent: z.string().max(500).nullable().optional(),
 });
 
-/** Zod schema for ContentPagesCreatePage */
-ContentPagesCreatePageSchema = z.object({
+/** Zod schema for ContentPagesCreatePageDto */
+ContentPagesCreatePageDtoSchema = z.object({
   body: z.string().nullable().optional(),
   canonicalUrl: z.string().nullable().optional(),
   customData: z.string().nullable().optional(),
@@ -18510,8 +19084,8 @@ ContentPagesCreatePageSchema = z.object({
   twitterSite: z.string().nullable().optional(),
 });
 
-/** Zod schema for ContentPagesCreatePageSection */
-ContentPagesCreatePageSectionSchema = z.object({
+/** Zod schema for ContentPagesCreatePageSectionDto */
+ContentPagesCreatePageSectionDtoSchema = z.object({
   cssClasses: z.string().nullable().optional(),
   data: z.string().nullable().optional(),
   heading: z.string().nullable().optional(),
@@ -18521,8 +19095,8 @@ ContentPagesCreatePageSectionSchema = z.object({
   subheading: z.string().nullable().optional(),
 });
 
-/** Zod schema for ContentPagesMarketingLead */
-ContentPagesMarketingLeadSchema = z.object({
+/** Zod schema for ContentPagesMarketingLeadDto */
+ContentPagesMarketingLeadDtoSchema = z.object({
   id: z.string().uuid().optional(),
   company: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
@@ -18540,8 +19114,8 @@ ContentPagesMarketingLeadSchema = z.object({
   userAgent: z.string().nullable().optional(),
 });
 
-/** Zod schema for ContentPagesOpenGraphMetadata */
-ContentPagesOpenGraphMetadataSchema = z.object({
+/** Zod schema for ContentPagesOpenGraphMetadataDto */
+ContentPagesOpenGraphMetadataDtoSchema = z.object({
   canonicalUrl: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   ogDescription: z.string().nullable().optional(),
@@ -18556,8 +19130,8 @@ ContentPagesOpenGraphMetadataSchema = z.object({
   twitterSite: z.string().nullable().optional(),
 });
 
-/** Zod schema for ContentPagesPage */
-ContentPagesPageSchema = z.object({
+/** Zod schema for ContentPagesPageDto */
+ContentPagesPageDtoSchema = z.object({
   id: z.string().uuid().optional(),
   body: z.string().nullable().optional(),
   canonicalUrl: z.string().nullable().optional(),
@@ -18578,7 +19152,7 @@ ContentPagesPageSchema = z.object({
   robotsDirective: z.string().nullable().optional(),
   scheduledPublishAt: z.string().datetime().nullable().optional(),
   sections: z
-    .array(z.lazy(() => ContentPagesPageSectionSchema))
+    .array(z.lazy(() => ContentPagesPageSectionDtoSchema))
     .nullable()
     .optional(),
   slug: z.string().nullable().optional(),
@@ -18591,8 +19165,8 @@ ContentPagesPageSchema = z.object({
   updatedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for ContentPagesPageSection */
-ContentPagesPageSectionSchema = z.object({
+/** Zod schema for ContentPagesPageSectionDto */
+ContentPagesPageSectionDtoSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
   cssClasses: z.string().nullable().optional(),
@@ -18631,15 +19205,15 @@ ContentPagesSectionTypeSchema = z.enum([
   'Custom',
 ]);
 
-/** Zod schema for ContentPagesSitemapEntry */
-ContentPagesSitemapEntrySchema = z.object({
+/** Zod schema for ContentPagesSitemapEntryDto */
+ContentPagesSitemapEntryDtoSchema = z.object({
   locale: z.string().nullable().optional(),
   slug: z.string().nullable().optional(),
   updatedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for ContentPagesUpdateContentResource */
-ContentPagesUpdateContentResourceSchema = z.object({
+/** Zod schema for ContentPagesUpdateContentResourceDto */
+ContentPagesUpdateContentResourceDtoSchema = z.object({
   body: z.string().nullable().optional(),
   categorySlug: z.string().nullable().optional(),
   coverImageUrl: z.string().nullable().optional(),
@@ -18666,8 +19240,8 @@ ContentPagesUpdateContentResourceSchema = z.object({
   videoUrl: z.string().nullable().optional(),
 });
 
-/** Zod schema for ContentPagesUpdatePage */
-ContentPagesUpdatePageSchema = z.object({
+/** Zod schema for ContentPagesUpdatePageDto */
+ContentPagesUpdatePageDtoSchema = z.object({
   body: z.string().nullable().optional(),
   canonicalUrl: z.string().nullable().optional(),
   customData: z.string().nullable().optional(),
@@ -18693,8 +19267,8 @@ ContentPagesUpdatePageSchema = z.object({
   twitterSite: z.string().nullable().optional(),
 });
 
-/** Zod schema for ContentPagesUpdatePageSection */
-ContentPagesUpdatePageSectionSchema = z.object({
+/** Zod schema for ContentPagesUpdatePageSectionDto */
+ContentPagesUpdatePageSectionDtoSchema = z.object({
   cssClasses: z.string().nullable().optional(),
   data: z.string().nullable().optional(),
   heading: z.string().nullable().optional(),
@@ -18722,1663 +19296,6 @@ CQRSModelsTenantIdSchema = z.object({
   value: z.string().uuid().optional(),
 });
 
-/** Zod schema for EconomyAdRewardsAdPlaybackEvidence */
-EconomyAdRewardsAdPlaybackEvidenceSchema = z.object({
-  completedAt: z.string().datetime().optional(),
-  focusLoss: z.string().optional(),
-  milestones: z.array(z.number().int()).nullable().optional(),
-  playbackDuration: z.string().optional(),
-  startedAt: z.string().datetime().optional(),
-  visibleDuration: z.string().optional(),
-});
-
-/** Zod schema for EconomyAdRewardsAdProviderReport */
-EconomyAdRewardsAdProviderReportSchema = z.object({
-  actualRevenueUsdNanos: z.number().int().optional(),
-  batchId: z.string().nullable().optional(),
-  evidenceHash: z.string().nullable().optional(),
-  importedAt: z.string().datetime().optional(),
-  network: z.string().nullable().optional(),
-  periodEnd: z.string().datetime().optional(),
-  periodStart: z.string().datetime().optional(),
-  reportId: z.string().nullable().optional(),
-  signature: z.string().nullable().optional(),
-  verifiedSessionIds: z.array(z.string().uuid()).nullable().optional(),
-  version: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyAdRewardsAdRewardCompletionOperationalStatus */
-EconomyAdRewardsAdRewardCompletionOperationalStatusSchema = z.object({
-  completedAt: z.string().datetime().optional(),
-  jurisdictionCode: z.string().nullable().optional(),
-  postingId: z.string().uuid().nullable().optional(),
-  providerEventId: z.string().nullable().optional(),
-  reserveVersion: z.number().int().nullable().optional(),
-  rewardSoftUnits: z.number().int().optional(),
-  state: z.lazy(() => EconomyAdRewardsAdRewardCompletionStateSchema).optional(),
-});
-
-/** Zod schema for EconomyAdRewardsAdRewardCompletionState */
-EconomyAdRewardsAdRewardCompletionStateSchema = z.enum(['Issued', 'PendingProviderReport', 'AccumulatedRemainder']);
-
-/** Zod schema for EconomyAdRewardsAdRewardMilestoneOperationalStatus */
-EconomyAdRewardsAdRewardMilestoneOperationalStatusSchema = z.object({
-  id: z.string().uuid().optional(),
-  evidenceHash: z.string().nullable().optional(),
-  observedAt: z.string().datetime().optional(),
-  percentage: z.number().int().optional(),
-  sequence: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyAdRewardsAdRewardPendingClaimOperationalStatus */
-EconomyAdRewardsAdRewardPendingClaimOperationalStatusSchema = z.object({
-  confirmedAt: z.string().datetime().nullable().optional(),
-  deferredAt: z.string().datetime().optional(),
-  providerReportId: z.string().uuid().nullable().optional(),
-  sessionId: z.string().uuid().optional(),
-  sourceStampId: z.string().uuid().optional(),
-  tenantId: z.string().uuid().optional(),
-});
-
-/** Zod schema for EconomyAdRewardsAdRewardReconciliation */
-EconomyAdRewardsAdRewardReconciliationSchema = z.object({
-  actualDeltaUsdNanos: z.number().int().optional(),
-  actualRevenueUsdNanos: z.number().int().optional(),
-  batchId: z.string().nullable().optional(),
-  estimatedRevenueUsdNanos: z.number().int().optional(),
-  historicalRewardSoftUnits: z.number().int().optional(),
-  network: z.string().nullable().optional(),
-  previousActualRevenueUsdNanos: z.number().int().optional(),
-  reconciledAt: z.string().datetime().optional(),
-  reportId: z.string().nullable().optional(),
-  varianceUsdNanos: z.number().int().optional(),
-  version: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyAdRewardsAdRewardReconciliationOperationalStatus */
-EconomyAdRewardsAdRewardReconciliationOperationalStatusSchema = z.object({
-  id: z.string().uuid().optional(),
-  actualRevenueUsdNanos: z.number().int().optional(),
-  batchId: z.string().nullable().optional(),
-  estimatedRevenueUsdNanos: z.number().int().optional(),
-  historicalRewardSoftUnits: z.number().int().optional(),
-  network: z.string().nullable().optional(),
-  providerReportId: z.string().uuid().optional(),
-  reconciledAt: z.string().datetime().optional(),
-  reportId: z.string().nullable().optional(),
-  tenantId: z.string().uuid().optional(),
-  varianceUsdNanos: z.number().int().optional(),
-  version: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyAdRewardsAdRewardSessionEventOperationalStatus */
-EconomyAdRewardsAdRewardSessionEventOperationalStatusSchema = z.object({
-  id: z.string().uuid().optional(),
-  evidenceHash: z.string().nullable().optional(),
-  occurredAt: z.string().datetime().optional(),
-  sequence: z.number().int().optional(),
-  state: z.lazy(() => EconomyAdRewardsDurableAdRewardSessionStateSchema).optional(),
-});
-
-/** Zod schema for EconomyAdRewardsAdRewardSessionOperationalDetails */
-EconomyAdRewardsAdRewardSessionOperationalDetailsSchema = z.object({
-  completion: z.lazy(() => EconomyAdRewardsAdRewardCompletionOperationalStatusSchema).optional(),
-  events: z
-    .array(z.lazy(() => EconomyAdRewardsAdRewardSessionEventOperationalStatusSchema))
-    .nullable()
-    .optional(),
-  milestones: z
-    .array(z.lazy(() => EconomyAdRewardsAdRewardMilestoneOperationalStatusSchema))
-    .nullable()
-    .optional(),
-  summary: z.lazy(() => EconomyAdRewardsAdRewardSessionOperationalSummarySchema).optional(),
-});
-
-/** Zod schema for EconomyAdRewardsAdRewardSessionOperationalSummary */
-EconomyAdRewardsAdRewardSessionOperationalSummarySchema = z.object({
-  id: z.string().uuid().optional(),
-  creativeId: z.string().nullable().optional(),
-  expiresAt: z.string().datetime().optional(),
-  issuedAt: z.string().datetime().optional(),
-  network: z.string().nullable().optional(),
-  policyVersion: z.number().int().optional(),
-  state: z.lazy(() => EconomyAdRewardsDurableAdRewardSessionStateSchema).optional(),
-  tenantId: z.string().uuid().optional(),
-  updatedAt: z.string().datetime().optional(),
-  userId: z.string().uuid().optional(),
-});
-
-/** Zod schema for EconomyAdRewardsDurableAdProviderReportImportResult */
-EconomyAdRewardsDurableAdProviderReportImportResultSchema = z.object({
-  isDuplicate: z.boolean().optional(),
-  providerReportId: z.string().uuid().optional(),
-  reconciliation: z.lazy(() => EconomyAdRewardsAdRewardReconciliationSchema).optional(),
-  verifiedPendingSessions: z.array(z.string().uuid()).nullable().optional(),
-});
-
-/** Zod schema for EconomyAdRewardsDurableAdProviderReportStatus */
-EconomyAdRewardsDurableAdProviderReportStatusSchema = z.object({
-  actualRevenueUsdNanos: z.number().int().optional(),
-  batchId: z.string().nullable().optional(),
-  evidenceHash: z.string().nullable().optional(),
-  network: z.string().nullable().optional(),
-  payloadHash: z.string().nullable().optional(),
-  periodEnd: z.string().datetime().optional(),
-  periodStart: z.string().datetime().optional(),
-  processedAt: z.string().datetime().nullable().optional(),
-  processingError: z.string().nullable().optional(),
-  providerReportId: z.string().uuid().optional(),
-  receivedAt: z.string().datetime().optional(),
-  reconciliation: z.lazy(() => EconomyAdRewardsDurableAdRewardReconciliationStatusSchema).optional(),
-  reportId: z.string().nullable().optional(),
-  signatureVerified: z.boolean().optional(),
-  version: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyAdRewardsDurableAdRewardCompletionResult */
-EconomyAdRewardsDurableAdRewardCompletionResultSchema = z.object({
-  completedAt: z.string().datetime().optional(),
-  isDuplicate: z.boolean().optional(),
-  outputLotId: z.lazy(() => EconomyContractsCreditLotIdSchema).optional(),
-  postingId: z.lazy(() => EconomyContractsPostingIdSchema).optional(),
-  rewardSoftUnits: z.number().int().optional(),
-  sessionId: z.string().uuid().optional(),
-  state: z.lazy(() => EconomyAdRewardsAdRewardCompletionStateSchema).optional(),
-});
-
-/** Zod schema for EconomyAdRewardsDurableAdRewardReconciliationStatus */
-EconomyAdRewardsDurableAdRewardReconciliationStatusSchema = z.object({
-  actualDeltaUsdNanos: z.number().int().optional(),
-  actualRevenueUsdNanos: z.number().int().optional(),
-  estimatedRevenueUsdNanos: z.number().int().optional(),
-  historicalRewardSoftUnits: z.number().int().optional(),
-  previousActualRevenueUsdNanos: z.number().int().optional(),
-  reconciledAt: z.string().datetime().optional(),
-  varianceUsdNanos: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyAdRewardsDurableAdRewardSessionClaims */
-EconomyAdRewardsDurableAdRewardSessionClaimsSchema = z.object({
-  asnRiskHash: z.string().nullable().optional(),
-  creativeId: z.string().nullable().optional(),
-  deviceRiskHash: z.string().nullable().optional(),
-  expiresAt: z.string().datetime().optional(),
-  ipRiskHash: z.string().nullable().optional(),
-  issuedAt: z.string().datetime().optional(),
-  network: z.string().nullable().optional(),
-  nonce: z.string().nullable().optional(),
-  policyVersion: z.lazy(() => EconomyContractsPolicyVersionSchema).optional(),
-  requiredDuration: z.string().optional(),
-  sessionId: z.string().uuid().optional(),
-  tenantId: z.string().uuid().optional(),
-  userId: z.string().uuid().optional(),
-  walletId: z.lazy(() => EconomyContractsWalletIdSchema).optional(),
-});
-
-/** Zod schema for EconomyAdRewardsDurableAdRewardSessionResult */
-EconomyAdRewardsDurableAdRewardSessionResultSchema = z.object({
-  claims: z.lazy(() => EconomyAdRewardsDurableAdRewardSessionClaimsSchema).optional(),
-  isDuplicate: z.boolean().optional(),
-  token: z.lazy(() => EconomyAdRewardsSignedAdRewardSessionSchema).optional(),
-});
-
-/** Zod schema for EconomyAdRewardsDurableAdRewardSessionState */
-EconomyAdRewardsDurableAdRewardSessionStateSchema = z.enum(['Issued', 'Active', 'ProofPending', 'Verified', 'Posted', 'Deferred', 'Rejected']);
-
-/** Zod schema for EconomyAdRewardsDurableAdRewardSessionStatus */
-EconomyAdRewardsDurableAdRewardSessionStatusSchema = z.object({
-  creativeId: z.string().nullable().optional(),
-  expiresAt: z.string().datetime().optional(),
-  issuedAt: z.string().datetime().optional(),
-  network: z.string().nullable().optional(),
-  postingId: z.string().uuid().nullable().optional(),
-  rewardSoftUnits: z.number().int().optional(),
-  sessionId: z.string().uuid().optional(),
-  state: z.lazy(() => EconomyAdRewardsDurableAdRewardSessionStateSchema).optional(),
-  updatedAt: z.string().datetime().optional(),
-});
-
-/** Zod schema for EconomyAdRewardsProviderCompletionProof */
-EconomyAdRewardsProviderCompletionProofSchema = z.object({
-  completedAt: z.string().datetime().optional(),
-  creativeId: z.string().nullable().optional(),
-  evidenceHash: z.string().nullable().optional(),
-  network: z.string().nullable().optional(),
-  providerEventId: z.string().nullable().optional(),
-  sessionId: z.string().uuid().optional(),
-  signature: z.string().nullable().optional(),
-});
-
-/** Zod schema for EconomyAdRewardsSignedAdRewardSession */
-EconomyAdRewardsSignedAdRewardSessionSchema = z.object({
-  value: z.string().nullable().optional(),
-});
-
-/** Zod schema for EconomyBountiesBountyEligibilityRequirements */
-EconomyBountiesBountyEligibilityRequirementsSchema = z.object({
-  minimumReputation: z.number().int().optional(),
-  requiresInstructorVerification: z.boolean().optional(),
-  requiresPrerequisite: z.boolean().optional(),
-});
-
-/** Zod schema for EconomyBountiesBountyId */
-EconomyBountiesBountyIdSchema = z.object({
-  value: z.string().uuid().optional(),
-});
-
-/** Zod schema for EconomyBountiesBountyStatus */
-EconomyBountiesBountyStatusSchema = z.enum(['Open', 'Expired', 'Claimed', 'Reclaimed']);
-
-/** Zod schema for EconomyBountiesBountyTerminalOutputLot */
-EconomyBountiesBountyTerminalOutputLotSchema = z.object({
-  amount: z.lazy(() => EconomyContractsCoinAmountSchema).optional(),
-  cashOutEligible: z.boolean().optional(),
-  confirmedAt: z.string().datetime().optional(),
-  lotId: z.lazy(() => EconomyContractsCreditLotIdSchema).optional(),
-  originalMaturesAt: z.string().datetime().optional(),
-  provenance: z.lazy(() => EconomyContractsProvenanceKindSchema).optional(),
-  rootSourceStampId: z.lazy(() => EconomyContractsSourceStampIdSchema).optional(),
-  walletId: z.lazy(() => EconomyContractsWalletIdSchema).optional(),
-});
-
-/** Zod schema for EconomyBountiesDurableBountyView */
-EconomyBountiesDurableBountyViewSchema = z.object({
-  id: z.lazy(() => EconomyBountiesBountyIdSchema).optional(),
-  amount: z.lazy(() => EconomyContractsCoinAmountSchema).optional(),
-  eligibility: z.lazy(() => EconomyBountiesBountyEligibilityRequirementsSchema).optional(),
-  expiresAt: z.string().datetime().optional(),
-  postedAt: z.string().datetime().optional(),
-  posterId: z.string().uuid().optional(),
-  reclaimFeePpm: z.number().int().optional(),
-  status: z.lazy(() => EconomyBountiesBountyStatusSchema).optional(),
-  terminalEvent: z.lazy(() => EconomyBountiesPersistedBountyTerminalEventSchema).optional(),
-  version: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyBountiesPersistedBountyTerminalEvent */
-EconomyBountiesPersistedBountyTerminalEventSchema = z.object({
-  id: z.string().uuid().optional(),
-  actorId: z.string().uuid().optional(),
-  bountyId: z.lazy(() => EconomyBountiesBountyIdSchema).optional(),
-  destinationWalletId: z.lazy(() => EconomyContractsWalletIdSchema).optional(),
-  feeUnits: z.number().int().optional(),
-  firstJournalSequence: z.number().int().optional(),
-  idempotencyKey: z.lazy(() => EconomyContractsIdempotencyKeySchema).optional(),
-  occurredAt: z.string().datetime().optional(),
-  outputLots: z
-    .array(z.lazy(() => EconomyBountiesBountyTerminalOutputLotSchema))
-    .nullable()
-    .optional(),
-  proceedsLotId: z.lazy(() => EconomyContractsCreditLotIdSchema).optional(),
-  proceedsSourceStampId: z.lazy(() => EconomyContractsSourceStampIdSchema).optional(),
-  returnedUnits: z.number().int().optional(),
-  riskDecisionId: z.string().uuid().nullable().optional(),
-  status: z.lazy(() => EconomyBountiesBountyStatusSchema).optional(),
-  tenantId: z.string().uuid().optional(),
-});
-
-/** Zod schema for EconomyCommandsConvertMyHardToSoftInput */
-EconomyCommandsConvertMyHardToSoftInputSchema = z.object({
-  idempotencyKey: z.string().nullable().optional(),
-  principalHardCoinUnits: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyCommandsCreateMyHardCoinTopUpInput */
-EconomyCommandsCreateMyHardCoinTopUpInputSchema = z.object({
-  hardCoinUnits: z.number().int().optional(),
-  idempotencyKey: z.string().nullable().optional(),
-});
-
-/** Zod schema for EconomyContractsCoinAmount */
-EconomyContractsCoinAmountSchema = z.object({
-  currency: z.lazy(() => EconomyContractsCurrencyCodeSchema).optional(),
-  units: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyContractsCreditLotId */
-EconomyContractsCreditLotIdSchema = z.object({
-  value: z.string().uuid().optional(),
-});
-
-/** Zod schema for EconomyContractsCurrencyCode */
-EconomyContractsCurrencyCodeSchema = z.enum(['HardCoin', 'SoftCoin']);
-
-/** Zod schema for EconomyContractsEconomyWalletSummary */
-EconomyContractsEconomyWalletSummarySchema = z.object({
-  availableHardToSpend: z.number().int().optional(),
-  availableSoftToSpend: z.number().int().optional(),
-  createdAt: z.string().datetime().optional(),
-  earnedHard: z.number().int().optional(),
-  heldHard: z.number().int().optional(),
-  heldSoft: z.number().int().optional(),
-  outstandingHardDebt: z.number().int().optional(),
-  pendingHard: z.number().int().optional(),
-  pendingSoft: z.number().int().optional(),
-  projectionRebuiltAt: z.string().datetime().optional(),
-  purchasedHard: z.number().int().optional(),
-  restrictedHard: z.number().int().optional(),
-  soft: z.number().int().optional(),
-  sourceJournalSequence: z.number().int().optional(),
-  state: z.lazy(() => EconomyContractsWalletLifecycleStateSchema).optional(),
-  walletId: z.string().uuid().optional(),
-  withdrawableHard: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyContractsEconomyWalletTransaction */
-EconomyContractsEconomyWalletTransactionSchema = z.object({
-  amountUnits: z.number().int().optional(),
-  currency: z.lazy(() => EconomyContractsCurrencyCodeSchema).optional(),
-  journalEntryId: z.string().uuid().optional(),
-  journalSequence: z.number().int().optional(),
-  postingGroupId: z.string().uuid().optional(),
-  provenance: z.lazy(() => EconomyContractsProvenanceKindSchema).optional(),
-  recordedAt: z.string().datetime().optional(),
-  side: z.lazy(() => EconomyContractsEntrySideSchema).optional(),
-  status: z.lazy(() => EconomyContractsPostingStatusSchema).optional(),
-  templateKind: z.lazy(() => EconomyContractsPostingTemplateKindSchema).optional(),
-});
-
-/** Zod schema for EconomyContractsEntrySide */
-EconomyContractsEntrySideSchema = z.enum(['Debit', 'Credit']);
-
-/** Zod schema for EconomyContractsIdempotencyKey */
-EconomyContractsIdempotencyKeySchema = z.object({
-  value: z.string().nullable().optional(),
-});
-
-/** Zod schema for EconomyContractsPolicyVersion */
-EconomyContractsPolicyVersionSchema = z.object({
-  value: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyContractsPostingId */
-EconomyContractsPostingIdSchema = z.object({
-  value: z.string().uuid().optional(),
-});
-
-/** Zod schema for EconomyContractsPostingStatus */
-EconomyContractsPostingStatusSchema = z.enum(['Accepted', 'Rejected', 'Duplicate']);
-
-/** Zod schema for EconomyContractsPostingTemplateKind */
-EconomyContractsPostingTemplateKindSchema = z.enum([
-  'ConfirmedTopUpMint',
-  'ProviderReversalFull',
-  'ProviderReversalPartial',
-  'Spend',
-  'HardToSoftConversion',
-  'SystemBackedGrant',
-  'Burn',
-  'Escrow',
-  'Reclaim',
-  'Refund',
-  'PayoutReservation',
-  'PayoutSuccess',
-  'PayoutFailure',
-  'AdminWithdrawalReservation',
-  'AdminWithdrawalSuccess',
-  'AdminWithdrawalFailure',
-  'HardToSoftConversionFee',
-  'ProviderConvertedSoftReversal',
-  'ProviderReversalDebt',
-  'ProviderReversalLoss',
-  'AdRewardIssuance',
-  'BountyEscrow',
-  'BountyClaim',
-  'BountyReclaim',
-  'MarketplaceSettlement',
-  'MarketplaceRefund',
-]);
-
-/** Zod schema for EconomyContractsProvenanceKind */
-EconomyContractsProvenanceKindSchema = z.enum([
-  'PurchasedHard',
-  'EarnedHard',
-  'ConvertedSoft',
-  'AdRewardSoft',
-  'SystemGrantSoft',
-  'RefundRestoration',
-  'EscrowReturn',
-  'MarketplaceSoft',
-]);
-
-/** Zod schema for EconomyContractsReserveVersion */
-EconomyContractsReserveVersionSchema = z.object({
-  value: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyContractsSourceStampId */
-EconomyContractsSourceStampIdSchema = z.object({
-  value: z.string().uuid().optional(),
-});
-
-/** Zod schema for EconomyContractsWalletId */
-EconomyContractsWalletIdSchema = z.object({
-  value: z.string().uuid().optional(),
-});
-
-/** Zod schema for EconomyContractsWalletLifecycleState */
-EconomyContractsWalletLifecycleStateSchema = z.enum(['Active', 'Frozen', 'Closed', 'UnderReview']);
-
-/** Zod schema for EconomyFundingEconomyTopUpProviderStatus */
-EconomyFundingEconomyTopUpProviderStatusSchema = z.enum([
-  'Prepared',
-  'RequiresAction',
-  'Processing',
-  'ProviderSucceeded',
-  'Posted',
-  'Failed',
-  'Cancelled',
-  'Ambiguous',
-  'Held',
-  'Reversed',
-]);
-
-/** Zod schema for EconomyFundingEconomyTopUpStatus */
-EconomyFundingEconomyTopUpStatusSchema = z.object({
-  currency: z.string().nullable().optional(),
-  hardCoinUnits: z.number().int().optional(),
-  providerBoundAt: z.string().datetime().nullable().optional(),
-  providerObjectId: z.string().nullable().optional(),
-  requestedAt: z.string().datetime().optional(),
-  status: z.lazy(() => EconomyFundingEconomyTopUpProviderStatusSchema).optional(),
-  topUpId: z.string().uuid().optional(),
-  usdMinorUnits: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyFundingSelfServiceHardCoinTopUpReceipt */
-EconomyFundingSelfServiceHardCoinTopUpReceiptSchema = z.object({
-  clientSecret: z.string().nullable().optional(),
-  currency: z.string().nullable().optional(),
-  hardCoinUnits: z.number().int().optional(),
-  isDuplicate: z.boolean().optional(),
-  paymentId: z.string().uuid().optional(),
-  providerObjectId: z.string().nullable().optional(),
-  publishableKey: z.string().nullable().optional(),
-  status: z.lazy(() => EconomyFundingEconomyTopUpProviderStatusSchema).optional(),
-  topUpId: z.string().uuid().optional(),
-  usdMinorUnits: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyFundingSelfServiceHardToSoftConversionReceipt */
-EconomyFundingSelfServiceHardToSoftConversionReceiptSchema = z.object({
-  feePostingId: z.string().uuid().nullable().optional(),
-  isDuplicate: z.boolean().optional(),
-  journalHash: z.string().nullable().optional(),
-  journalSequence: z.number().int().optional(),
-  principalPostingId: z.string().uuid().optional(),
-});
-
-/** Zod schema for EconomyLedgerAnchorVerificationRunResult */
-EconomyLedgerAnchorVerificationRunResultSchema = z.object({
-  failed: z.number().int().optional(),
-  verified: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyLedgerEconomyAnchorPublicationResult */
-EconomyLedgerEconomyAnchorPublicationResultSchema = z.object({
-  anchorId: z.string().uuid().optional(),
-  eTag: z.string().nullable().optional(),
-  journalHash: z.string().nullable().optional(),
-  journalSequence: z.number().int().optional(),
-  keyId: z.string().nullable().optional(),
-  objectHash: z.string().nullable().optional(),
-  objectKey: z.string().nullable().optional(),
-  objectVersion: z.string().nullable().optional(),
-  retainUntil: z.string().datetime().optional(),
-});
-
-/** Zod schema for EconomyLedgerJournalIntegrityFailureCode */
-EconomyLedgerJournalIntegrityFailureCodeSchema = z.enum([
-  'None',
-  'SequenceGap',
-  'PreviousHashMismatch',
-  'CanonicalPayloadMissing',
-  'EntryHashMismatch',
-  'PostingContractInvalid',
-  'InvalidLineAmount',
-  'CurrencyParityMismatch',
-  'SourceStampInvalid',
-  'AllocationInvalid',
-  'LineageInvalid',
-  'RootRangeInvalid',
-  'CumulativeReversalInvalid',
-]);
-
-/** Zod schema for EconomyLedgerJournalIntegrityRunResult */
-EconomyLedgerJournalIntegrityRunResultSchema = z.object({
-  fencingToken: z.number().int().optional(),
-  status: z.lazy(() => EconomyLedgerJournalIntegrityRunStatusSchema).optional(),
-  verification: z.lazy(() => EconomyLedgerJournalIntegrityVerificationResultSchema).optional(),
-});
-
-/** Zod schema for EconomyLedgerJournalIntegrityRunStatus */
-EconomyLedgerJournalIntegrityRunStatusSchema = z.enum(['Verified', 'Failed', 'LeaseUnavailable']);
-
-/** Zod schema for EconomyLedgerJournalIntegrityVerificationResult */
-EconomyLedgerJournalIntegrityVerificationResultSchema = z.object({
-  currentHash: z.string().nullable().optional(),
-  failureCode: z.lazy(() => EconomyLedgerJournalIntegrityFailureCodeSchema).optional(),
-  fromSequence: z.number().int().optional(),
-  isValid: z.boolean().optional(),
-  toSequence: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyMarketplaceDurableMarketplaceRefundDebt */
-EconomyMarketplaceDurableMarketplaceRefundDebtSchema = z.object({
-  currency: z.lazy(() => EconomyContractsCurrencyCodeSchema).optional(),
-  evidenceHash: z.string().nullable().optional(),
-  responsibleWalletId: z.lazy(() => EconomyContractsWalletIdSchema).optional(),
-  units: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyMarketplaceDurableMarketplaceRefundResult */
-EconomyMarketplaceDurableMarketplaceRefundResultSchema = z.object({
-  cumulativeRefundedQuantity: z.number().int().optional(),
-  debts: z
-    .array(z.lazy(() => EconomyMarketplaceDurableMarketplaceRefundDebtSchema))
-    .nullable()
-    .optional(),
-  entitlementStatus: z.lazy(() => EconomyMarketplaceMarketplaceEntitlementStatusSchema).optional(),
-  isDuplicate: z.boolean().optional(),
-  journalHash: z.string().nullable().optional(),
-  journalSequence: z.number().int().optional(),
-  legs: z
-    .array(z.lazy(() => EconomyContractsCoinAmountSchema))
-    .nullable()
-    .optional(),
-  postingId: z.lazy(() => EconomyContractsPostingIdSchema).optional(),
-  quantity: z.number().int().optional(),
-  refundedAt: z.string().datetime().optional(),
-  refundId: z.string().uuid().optional(),
-  settlementId: z.string().uuid().optional(),
-  settlementStatus: z.lazy(() => EconomyMarketplaceMarketplaceSettlementStatusSchema).optional(),
-});
-
-/** Zod schema for EconomyMarketplaceDurableMarketplaceSettlementResult */
-EconomyMarketplaceDurableMarketplaceSettlementResultSchema = z.object({
-  buyerId: z.string().uuid().optional(),
-  entitlementStatus: z.lazy(() => EconomyMarketplaceMarketplaceEntitlementStatusSchema).optional(),
-  isDuplicate: z.boolean().optional(),
-  journalHash: z.string().nullable().optional(),
-  journalSequence: z.number().int().optional(),
-  legs: z
-    .array(z.lazy(() => EconomyMarketplaceMarketplacePriceLegSnapshotSchema))
-    .nullable()
-    .optional(),
-  orderId: z.string().uuid().optional(),
-  postingId: z.lazy(() => EconomyContractsPostingIdSchema).optional(),
-  productId: z.string().uuid().optional(),
-  sellerId: z.string().uuid().optional(),
-  settledAt: z.string().datetime().optional(),
-  settlementId: z.string().uuid().optional(),
-  status: z.lazy(() => EconomyMarketplaceMarketplaceSettlementStatusSchema).optional(),
-});
-
-/** Zod schema for EconomyMarketplaceMarketplaceCurrencyChoice */
-EconomyMarketplaceMarketplaceCurrencyChoiceSchema = z.enum(['Hard', 'Soft', 'FixedMix']);
-
-/** Zod schema for EconomyMarketplaceMarketplaceEntitlementStatus */
-EconomyMarketplaceMarketplaceEntitlementStatusSchema = z.enum(['PendingGrant', 'Granted', 'Revoked']);
-
-/** Zod schema for EconomyMarketplaceMarketplaceEventOperationalStatus */
-EconomyMarketplaceMarketplaceEventOperationalStatusSchema = z.object({
-  id: z.string().uuid().optional(),
-  evidenceHash: z.string().nullable().optional(),
-  kind: z.string().nullable().optional(),
-  occurredAt: z.string().datetime().optional(),
-  sequence: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyMarketplaceMarketplaceOutboxOperationalStatus */
-EconomyMarketplaceMarketplaceOutboxOperationalStatusSchema = z.object({
-  id: z.string().uuid().optional(),
-  attemptCount: z.number().int().optional(),
-  hasLastError: z.boolean().optional(),
-  leaseExpiresAt: z.string().datetime().nullable().optional(),
-  messageType: z.string().nullable().optional(),
-  occurredAt: z.string().datetime().optional(),
-  payloadHash: z.string().nullable().optional(),
-  publishedAt: z.string().datetime().nullable().optional(),
-  settlementId: z.string().uuid().optional(),
-  tenantId: z.string().uuid().optional(),
-});
-
-/** Zod schema for EconomyMarketplaceMarketplacePriceLegSnapshot */
-EconomyMarketplaceMarketplacePriceLegSnapshotSchema = z.object({
-  amount: z.lazy(() => EconomyContractsCoinAmountSchema).optional(),
-  currency: z.lazy(() => EconomyContractsCurrencyCodeSchema).optional(),
-  platformFeeUnits: z.number().int().optional(),
-  sellerUnits: z.number().int().optional(),
-  units: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyMarketplaceMarketplaceRefundOperationalStatus */
-EconomyMarketplaceMarketplaceRefundOperationalStatusSchema = z.object({
-  id: z.string().uuid().optional(),
-  buyerId: z.string().uuid().optional(),
-  entitlementRevoked: z.boolean().optional(),
-  firstJournalSequence: z.number().int().optional(),
-  isFullRefund: z.boolean().optional(),
-  quantity: z.number().int().optional(),
-  reasonCode: z.string().nullable().optional(),
-  refundedAt: z.string().datetime().optional(),
-  refundedQuantity: z.number().int().optional(),
-  settlementId: z.string().uuid().optional(),
-  tenantId: z.string().uuid().optional(),
-});
-
-/** Zod schema for EconomyMarketplaceMarketplaceSettlementLegOperationalStatus */
-EconomyMarketplaceMarketplaceSettlementLegOperationalStatusSchema = z.object({
-  currency: z.lazy(() => EconomyContractsCurrencyCodeSchema).optional(),
-  platformFeeUnits: z.number().int().optional(),
-  refundedUnits: z.number().int().optional(),
-  sellerUnits: z.number().int().optional(),
-  units: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyMarketplaceMarketplaceSettlementOperationalDetails */
-EconomyMarketplaceMarketplaceSettlementOperationalDetailsSchema = z.object({
-  events: z
-    .array(z.lazy(() => EconomyMarketplaceMarketplaceEventOperationalStatusSchema))
-    .nullable()
-    .optional(),
-  legs: z
-    .array(z.lazy(() => EconomyMarketplaceMarketplaceSettlementLegOperationalStatusSchema))
-    .nullable()
-    .optional(),
-  outbox: z
-    .array(z.lazy(() => EconomyMarketplaceMarketplaceOutboxOperationalStatusSchema))
-    .nullable()
-    .optional(),
-  refunds: z
-    .array(z.lazy(() => EconomyMarketplaceMarketplaceRefundOperationalStatusSchema))
-    .nullable()
-    .optional(),
-  summary: z.lazy(() => EconomyMarketplaceMarketplaceSettlementOperationalSummarySchema).optional(),
-});
-
-/** Zod schema for EconomyMarketplaceMarketplaceSettlementOperationalSummary */
-EconomyMarketplaceMarketplaceSettlementOperationalSummarySchema = z.object({
-  id: z.string().uuid().optional(),
-  buyerId: z.string().uuid().optional(),
-  currencyMode: z.lazy(() => EconomyMarketplaceProductCurrencyModeSchema).optional(),
-  entitlementId: z.string().uuid().optional(),
-  entitlementStatus: z.lazy(() => EconomyMarketplaceMarketplaceEntitlementStatusSchema).optional(),
-  journalSequence: z.number().int().optional(),
-  jurisdictionCode: z.string().nullable().optional(),
-  orderId: z.string().uuid().optional(),
-  orderLineItemId: z.string().uuid().optional(),
-  policyVersion: z.number().int().optional(),
-  productId: z.string().uuid().optional(),
-  quantity: z.number().int().optional(),
-  refundedQuantity: z.number().int().optional(),
-  refundHoldUntil: z.string().datetime().optional(),
-  reserveVersion: z.number().int().optional(),
-  sellerId: z.string().uuid().optional(),
-  settledAt: z.string().datetime().optional(),
-  status: z.lazy(() => EconomyMarketplaceMarketplaceSettlementStatusSchema).optional(),
-  tenantId: z.string().uuid().optional(),
-  updatedAt: z.string().datetime().optional(),
-});
-
-/** Zod schema for EconomyMarketplaceMarketplaceSettlementStatus */
-EconomyMarketplaceMarketplaceSettlementStatusSchema = z.enum(['Settled', 'PartiallyRefunded', 'Refunded']);
-
-/** Zod schema for EconomyMarketplaceProductCurrencyMode */
-EconomyMarketplaceProductCurrencyModeSchema = z.enum(['HardOnly', 'SoftOnly', 'Either', 'FixedMix']);
-
-/** Zod schema for EconomyOperationsEconomyActiveReserveOperationalDetails */
-EconomyOperationsEconomyActiveReserveOperationalDetailsSchema = z.object({
-  allocations: z
-    .array(z.lazy(() => EconomyOperationsEconomyReserveAssetAllocationOperationalStatusSchema))
-    .nullable()
-    .optional(),
-  head: z.lazy(() => EconomyOperationsEconomyReserveOperationalStatusSchema).optional(),
-  reconciliation: z.lazy(() => EconomyOperationsEconomyCustodyReconciliationOperationalStatusSchema).optional(),
-});
-
-/** Zod schema for EconomyOperationsEconomyAnchorOperationalDetails */
-EconomyOperationsEconomyAnchorOperationalDetailsSchema = z.object({
-  dispatchSnapshotHash: z.string().nullable().optional(),
-  summary: z.lazy(() => EconomyOperationsEconomyAnchorOperationalStatusSchema).optional(),
-});
-
-/** Zod schema for EconomyOperationsEconomyAnchorOperationalStatus */
-EconomyOperationsEconomyAnchorOperationalStatusSchema = z.object({
-  id: z.string().uuid().optional(),
-  anchoredAt: z.string().datetime().optional(),
-  journalHash: z.string().nullable().optional(),
-  journalSequence: z.number().int().optional(),
-  objectMatches: z.boolean().optional(),
-  provider: z.string().nullable().optional(),
-  retainUntil: z.string().datetime().nullable().optional(),
-  signatureValid: z.boolean().optional(),
-  verifiedAt: z.string().datetime().nullable().optional(),
-});
-
-/** Zod schema for EconomyOperationsEconomyAnchorVerificationOperationalStatus */
-EconomyOperationsEconomyAnchorVerificationOperationalStatusSchema = z.object({
-  id: z.string().uuid().optional(),
-  eTag: z.string().nullable().optional(),
-  keyId: z.string().nullable().optional(),
-  objectHash: z.string().nullable().optional(),
-  objectMatches: z.boolean().optional(),
-  objectVersion: z.string().nullable().optional(),
-  retainUntil: z.string().datetime().optional(),
-  signatureValid: z.boolean().optional(),
-  verifiedAt: z.string().datetime().optional(),
-});
-
-/** Zod schema for EconomyOperationsEconomyCapabilityConfigurationSnapshot */
-EconomyOperationsEconomyCapabilityConfigurationSnapshotSchema = z.object({
-  killSwitches: z
-    .array(z.lazy(() => EconomyOperationsEconomyKillSwitchOperationalStatusSchema))
-    .nullable()
-    .optional(),
-  policies: z
-    .array(z.lazy(() => EconomyOperationsEconomyCapabilityPolicyOperationalStatusSchema))
-    .nullable()
-    .optional(),
-});
-
-/** Zod schema for EconomyOperationsEconomyCapabilityPolicyOperationalStatus */
-EconomyOperationsEconomyCapabilityPolicyOperationalStatusSchema = z.object({
-  id: z.string().uuid().optional(),
-  capability: z.lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema).optional(),
-  effectiveAt: z.string().datetime().optional(),
-  expiresAt: z.string().datetime().optional(),
-  jurisdictionCode: z.string().nullable().optional(),
-  keyId: z.string().nullable().optional(),
-  payloadHash: z.string().nullable().optional(),
-  providerReady: z.boolean().optional(),
-  state: z.lazy(() => EconomyRiskEconomyCapabilityPolicyStateSchema).optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  version: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyOperationsEconomyCustodyObservationOperationalStatus */
-EconomyOperationsEconomyCustodyObservationOperationalStatusSchema = z.object({
-  id: z.string().uuid().optional(),
-  assetKey: z.string().nullable().optional(),
-  eligibleUsdNanos: z.number().int().optional(),
-  expiresAt: z.string().datetime().optional(),
-  keyId: z.string().nullable().optional(),
-  observedAt: z.string().datetime().optional(),
-  payloadHash: z.string().nullable().optional(),
-  provider: z.string().nullable().optional(),
-  purpose: z.lazy(() => EconomyReservesReserveBackingPurposeSchema).optional(),
-  version: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyOperationsEconomyCustodyReconciliationOperationalStatus */
-EconomyOperationsEconomyCustodyReconciliationOperationalStatusSchema = z.object({
-  id: z.string().uuid().optional(),
-  eligibleAssetUsdNanos: z.number().int().optional(),
-  evidenceHash: z.string().nullable().optional(),
-  isReconciled: z.boolean().optional(),
-  liabilityUsdNanos: z.number().int().optional(),
-  reconciledAt: z.string().datetime().optional(),
-  reconciledBy: z.string().uuid().optional(),
-  varianceUsdNanos: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyOperationsEconomyJournalHeadStatus */
-EconomyOperationsEconomyJournalHeadStatusSchema = z.object({
-  hash: z.string().nullable().optional(),
-  sequence: z.number().int().optional(),
-  updatedAt: z.string().datetime().optional(),
-});
-
-/** Zod schema for EconomyOperationsEconomyJournalVerificationRunDetails */
-EconomyOperationsEconomyJournalVerificationRunDetailsSchema = z.object({
-  id: z.string().uuid().optional(),
-  completedAt: z.string().datetime().optional(),
-  currentHash: z.string().nullable().optional(),
-  failureCode: z.string().nullable().optional(),
-  fencingToken: z.number().int().optional(),
-  fromSequence: z.number().int().optional(),
-  isValid: z.boolean().optional(),
-  previousHash: z.string().nullable().optional(),
-  startedAt: z.string().datetime().optional(),
-  toSequence: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyOperationsEconomyJournalVerificationStatus */
-EconomyOperationsEconomyJournalVerificationStatusSchema = z.object({
-  completedAt: z.string().datetime().optional(),
-  currentHash: z.string().nullable().optional(),
-  failureCode: z.string().nullable().optional(),
-  fencingToken: z.number().int().optional(),
-  fromSequence: z.number().int().optional(),
-  isValid: z.boolean().optional(),
-  toSequence: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyOperationsEconomyKillSwitchOperationalStatus */
-EconomyOperationsEconomyKillSwitchOperationalStatusSchema = z.object({
-  id: z.string().uuid().optional(),
-  activatedAt: z.string().datetime().optional(),
-  activatedBy: z.string().uuid().optional(),
-  epoch: z.number().int().optional(),
-  isActive: z.boolean().optional(),
-  reason: z.string().nullable().optional(),
-  releaseApprovers: z.array(z.string().uuid()).nullable().optional(),
-  releasedAt: z.string().datetime().nullable().optional(),
-  releaseProposedBy: z.string().uuid().nullable().optional(),
-  scope: z.lazy(() => EconomyRiskEconomyKillSwitchScopeSchema).optional(),
-});
-
-/** Zod schema for EconomyOperationsEconomyLedgerHealthSnapshot */
-EconomyOperationsEconomyLedgerHealthSnapshotSchema = z.object({
-  activeProjection: z.lazy(() => EconomyOperationsEconomyProjectionOperationalStatusSchema).optional(),
-  activeReserve: z.lazy(() => EconomyOperationsEconomyReserveOperationalStatusSchema).optional(),
-  diagnostics: z.array(z.string()).nullable().optional(),
-  head: z.lazy(() => EconomyOperationsEconomyJournalHeadStatusSchema).optional(),
-  isAnchorHealthy: z.boolean().optional(),
-  isJournalHealthy: z.boolean().optional(),
-  isProjectionHealthy: z.boolean().optional(),
-  isReserveHealthy: z.boolean().optional(),
-  latestAnchor: z.lazy(() => EconomyOperationsEconomyAnchorOperationalStatusSchema).optional(),
-  latestVerification: z.lazy(() => EconomyOperationsEconomyJournalVerificationStatusSchema).optional(),
-});
-
-/** Zod schema for EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardPendingClaimOperationalStatus */
-EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardPendingClaimOperationalStatusSchema = z.object({
-  items: z
-    .array(z.lazy(() => EconomyAdRewardsAdRewardPendingClaimOperationalStatusSchema))
-    .nullable()
-    .optional(),
-  nextCursor: z.string().nullable().optional(),
-});
-
-/** Zod schema for EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardReconciliationOperationalStatus */
-EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardReconciliationOperationalStatusSchema = z.object({
-  items: z
-    .array(z.lazy(() => EconomyAdRewardsAdRewardReconciliationOperationalStatusSchema))
-    .nullable()
-    .optional(),
-  nextCursor: z.string().nullable().optional(),
-});
-
-/** Zod schema for EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardSessionOperationalSummary */
-EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardSessionOperationalSummarySchema = z.object({
-  items: z
-    .array(z.lazy(() => EconomyAdRewardsAdRewardSessionOperationalSummarySchema))
-    .nullable()
-    .optional(),
-  nextCursor: z.string().nullable().optional(),
-});
-
-/** Zod schema for EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceOutboxOperationalStatus */
-EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceOutboxOperationalStatusSchema = z.object({
-  items: z
-    .array(z.lazy(() => EconomyMarketplaceMarketplaceOutboxOperationalStatusSchema))
-    .nullable()
-    .optional(),
-  nextCursor: z.string().nullable().optional(),
-});
-
-/** Zod schema for EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceRefundOperationalStatus */
-EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceRefundOperationalStatusSchema = z.object({
-  items: z
-    .array(z.lazy(() => EconomyMarketplaceMarketplaceRefundOperationalStatusSchema))
-    .nullable()
-    .optional(),
-  nextCursor: z.string().nullable().optional(),
-});
-
-/** Zod schema for EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceSettlementOperationalSummary */
-EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceSettlementOperationalSummarySchema = z.object({
-  items: z
-    .array(z.lazy(() => EconomyMarketplaceMarketplaceSettlementOperationalSummarySchema))
-    .nullable()
-    .optional(),
-  nextCursor: z.string().nullable().optional(),
-});
-
-/** Zod schema for EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyAnchorOperationalDetails */
-EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyAnchorOperationalDetailsSchema = z.object({
-  items: z
-    .array(z.lazy(() => EconomyOperationsEconomyAnchorOperationalDetailsSchema))
-    .nullable()
-    .optional(),
-  nextCursor: z.string().nullable().optional(),
-});
-
-/** Zod schema for EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyCapabilityPolicyOperationalStatus */
-EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyCapabilityPolicyOperationalStatusSchema = z.object({
-  items: z
-    .array(z.lazy(() => EconomyOperationsEconomyCapabilityPolicyOperationalStatusSchema))
-    .nullable()
-    .optional(),
-  nextCursor: z.string().nullable().optional(),
-});
-
-/** Zod schema for EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyCustodyObservationOperationalStatus */
-EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyCustodyObservationOperationalStatusSchema = z.object({
-  items: z
-    .array(z.lazy(() => EconomyOperationsEconomyCustodyObservationOperationalStatusSchema))
-    .nullable()
-    .optional(),
-  nextCursor: z.string().nullable().optional(),
-});
-
-/** Zod schema for EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyJournalVerificationRunDetails */
-EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyJournalVerificationRunDetailsSchema = z.object({
-  items: z
-    .array(z.lazy(() => EconomyOperationsEconomyJournalVerificationRunDetailsSchema))
-    .nullable()
-    .optional(),
-  nextCursor: z.string().nullable().optional(),
-});
-
-/** Zod schema for EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyProjectionGenerationOperationalDetails */
-EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyProjectionGenerationOperationalDetailsSchema = z.object({
-  items: z
-    .array(z.lazy(() => EconomyOperationsEconomyProjectionGenerationOperationalDetailsSchema))
-    .nullable()
-    .optional(),
-  nextCursor: z.string().nullable().optional(),
-});
-
-/** Zod schema for EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyReserveProposalOperationalStatus */
-EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyReserveProposalOperationalStatusSchema = z.object({
-  items: z
-    .array(z.lazy(() => EconomyOperationsEconomyReserveProposalOperationalStatusSchema))
-    .nullable()
-    .optional(),
-  nextCursor: z.string().nullable().optional(),
-});
-
-/** Zod schema for EconomyOperationsEconomyOperationalPageOfEconomyOperationsLegacyEconomyShadowBatchSummary */
-EconomyOperationsEconomyOperationalPageOfEconomyOperationsLegacyEconomyShadowBatchSummarySchema = z.object({
-  items: z
-    .array(z.lazy(() => EconomyOperationsLegacyEconomyShadowBatchSummarySchema))
-    .nullable()
-    .optional(),
-  nextCursor: z.string().nullable().optional(),
-});
-
-/** Zod schema for EconomyOperationsEconomyPolicyAuditEntry */
-EconomyOperationsEconomyPolicyAuditEntrySchema = z.object({
-  actorId: z.string().uuid().optional(),
-  evidenceHash: z.string().nullable().optional(),
-  kind: z.string().nullable().optional(),
-  occurredAt: z.string().datetime().optional(),
-});
-
-/** Zod schema for EconomyOperationsEconomyPolicyOperationalDetails */
-EconomyOperationsEconomyPolicyOperationalDetailsSchema = z.object({
-  approvedAt: z.string().datetime().nullable().optional(),
-  approvedBy: z.string().uuid().nullable().optional(),
-  canonicalPayload: z.string().nullable().optional(),
-  proposedAt: z.string().datetime().optional(),
-  proposedBy: z.string().uuid().optional(),
-  summary: z.lazy(() => EconomyOperationsEconomyCapabilityPolicyOperationalStatusSchema).optional(),
-});
-
-/** Zod schema for EconomyOperationsEconomyProjectionApprovalAuditEntry */
-EconomyOperationsEconomyProjectionApprovalAuditEntrySchema = z.object({
-  id: z.string().uuid().optional(),
-  actorId: z.string().uuid().optional(),
-  approvedAt: z.string().datetime().optional(),
-  evidenceHash: z.string().nullable().optional(),
-});
-
-/** Zod schema for EconomyOperationsEconomyProjectionGenerationOperationalDetails */
-EconomyOperationsEconomyProjectionGenerationOperationalDetailsSchema = z.object({
-  completedAt: z.string().datetime().nullable().optional(),
-  fromSequence: z.number().int().optional(),
-  isActive: z.boolean().optional(),
-  startedAt: z.string().datetime().optional(),
-  summary: z.lazy(() => EconomyOperationsEconomyProjectionOperationalStatusSchema).optional(),
-});
-
-/** Zod schema for EconomyOperationsEconomyProjectionOperationalStatus */
-EconomyOperationsEconomyProjectionOperationalStatusSchema = z.object({
-  activatedAt: z.string().datetime().nullable().optional(),
-  approvedBy: z.string().uuid().nullable().optional(),
-  generation: z.number().int().optional(),
-  journalHash: z.string().nullable().optional(),
-  mismatchCount: z.number().int().optional(),
-  projectionHash: z.string().nullable().optional(),
-  proposedBy: z.string().uuid().optional(),
-  secondApprovedBy: z.string().uuid().nullable().optional(),
-  state: z.string().nullable().optional(),
-  toSequence: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyOperationsEconomyReserveAssetAllocationOperationalStatus */
-EconomyOperationsEconomyReserveAssetAllocationOperationalStatusSchema = z.object({
-  id: z.string().uuid().optional(),
-  assetKey: z.string().nullable().optional(),
-  eligibleUsdNanos: z.number().int().optional(),
-  purpose: z.lazy(() => EconomyReservesReserveBackingPurposeSchema).optional(),
-});
-
-/** Zod schema for EconomyOperationsEconomyReserveOperationalStatus */
-EconomyOperationsEconomyReserveOperationalStatusSchema = z.object({
-  authorizationEpoch: z.number().int().optional(),
-  coverage: z.lazy(() => EconomyReservesReserveCoverageStateSchema).optional(),
-  custodyReconciled: z.boolean().optional(),
-  custodyVarianceUsdNanos: z.number().int().nullable().optional(),
-  evidenceHash: z.string().nullable().optional(),
-  expiresAt: z.string().datetime().optional(),
-  observedAt: z.string().datetime().optional(),
-  policyVersion: z.number().int().optional(),
-  reconciledAt: z.string().datetime().nullable().optional(),
-  version: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyOperationsEconomyReserveProposalOperationalStatus */
-EconomyOperationsEconomyReserveProposalOperationalStatusSchema = z.object({
-  id: z.string().uuid().optional(),
-  approvedAt: z.string().datetime().nullable().optional(),
-  approvedBy: z.string().uuid().nullable().optional(),
-  assetAllocations: z.string().nullable().optional(),
-  authorizationEpoch: z.number().int().optional(),
-  coverage: z.lazy(() => EconomyReservesReserveCoverageStateSchema).optional(),
-  eligibleAssetUsdNanos: z.number().int().optional(),
-  evidenceHash: z.string().nullable().optional(),
-  expectedActiveVersion: z.number().int().nullable().optional(),
-  expiresAt: z.string().datetime().optional(),
-  liabilityUsdNanos: z.number().int().optional(),
-  observationIds: z.string().nullable().optional(),
-  observedAt: z.string().datetime().optional(),
-  policyVersion: z.number().int().optional(),
-  proposedAt: z.string().datetime().optional(),
-  proposedBy: z.string().uuid().optional(),
-  snapshotHash: z.string().nullable().optional(),
-  status: z.string().nullable().optional(),
-  version: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyOperationsLegacyEconomyShadowBatchSummary */
-EconomyOperationsLegacyEconomyShadowBatchSummarySchema = z.object({
-  id: z.string().uuid().optional(),
-  backfilledHardUnits: z.number().int().optional(),
-  capturedAt: z.string().datetime().optional(),
-  expectedHardUnits: z.number().int().optional(),
-  failureCode: z.string().nullable().optional(),
-  financialLedgerEntryCount: z.number().int().optional(),
-  jurisdictionCode: z.string().nullable().optional(),
-  policyVersion: z.number().int().optional(),
-  reconciledHardUnits: z.number().int().optional(),
-  state: z.lazy(() => EconomyOperationsLegacyEconomyShadowStateSchema).optional(),
-  tenantId: z.string().uuid().optional(),
-  transactionCount: z.number().int().optional(),
-  updatedAt: z.string().datetime().optional(),
-  version: z.number().int().optional(),
-  walletCount: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyOperationsLegacyEconomyShadowBatchView */
-EconomyOperationsLegacyEconomyShadowBatchViewSchema = z.object({
-  id: z.string().uuid().optional(),
-  backfilledHardUnits: z.number().int().optional(),
-  expectedHardUnits: z.number().int().optional(),
-  failureCode: z.string().nullable().optional(),
-  financialLedgerEntryCount: z.number().int().optional(),
-  financialLedgerSnapshotHash: z.string().nullable().optional(),
-  policyVersion: z.number().int().optional(),
-  reconciledHardUnits: z.number().int().optional(),
-  state: z.lazy(() => EconomyOperationsLegacyEconomyShadowStateSchema).optional(),
-  tenantId: z.string().uuid().optional(),
-  transactionCount: z.number().int().optional(),
-  transactionSnapshotHash: z.string().nullable().optional(),
-  walletCount: z.number().int().optional(),
-  wallets: z
-    .array(z.lazy(() => EconomyOperationsLegacyEconomyShadowWalletViewSchema))
-    .nullable()
-    .optional(),
-  walletSnapshotHash: z.string().nullable().optional(),
-});
-
-/** Zod schema for EconomyOperationsLegacyEconomyShadowState */
-EconomyOperationsLegacyEconomyShadowStateSchema = z.enum([
-  'Captured',
-  'Backfilling',
-  'Backfilled',
-  'Reconciled',
-  'CutoverProposed',
-  'CutoverActive',
-  'RolledBack',
-  'Failed',
-]);
-
-/** Zod schema for EconomyOperationsLegacyEconomyShadowWalletView */
-EconomyOperationsLegacyEconomyShadowWalletViewSchema = z.object({
-  completedCreditsMinorUnits: z.number().int().optional(),
-  completedDebitsMinorUnits: z.number().int().optional(),
-  creditLotId: z.string().uuid().optional(),
-  economyWalletId: z.string().uuid().nullable().optional(),
-  failureCode: z.string().nullable().optional(),
-  journalSequence: z.number().int().nullable().optional(),
-  legacyBalanceMinorUnits: z.number().int().optional(),
-  legacyWalletId: z.string().uuid().optional(),
-  ownerId: z.string().uuid().optional(),
-  postingId: z.string().uuid().optional(),
-  sourceStampId: z.string().uuid().optional(),
-  state: z.string().nullable().optional(),
-  transactionCount: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyPayoutsCommandsCreateMyPayoutRequestInput */
-EconomyPayoutsCommandsCreateMyPayoutRequestInputSchema = z.object({
-  hardCoinUnits: z.number().int().optional(),
-  idempotencyKey: z.string().nullable().optional(),
-});
-
-/** Zod schema for EconomyPayoutsCommandsReviewPayoutRequestInput */
-EconomyPayoutsCommandsReviewPayoutRequestInputSchema = z.object({
-  reason: z.string().nullable().optional(),
-});
-
-/** Zod schema for EconomyPayoutsConnectAccountSnapshot */
-EconomyPayoutsConnectAccountSnapshotSchema = z.object({
-  chargesEnabled: z.boolean().optional(),
-  destinationHash: z.string().nullable().optional(),
-  evidenceHash: z.string().nullable().optional(),
-  expiresAt: z.string().datetime().optional(),
-  observedAt: z.string().datetime().optional(),
-  payeeId: z.string().uuid().optional(),
-  payoutsEnabled: z.boolean().optional(),
-  providerAccountId: z.string().nullable().optional(),
-  state: z.lazy(() => EconomyPayoutsConnectAccountStateSchema).optional(),
-  version: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyPayoutsConnectAccountState */
-EconomyPayoutsConnectAccountStateSchema = z.enum(['Pending', 'Restricted', 'Ready', 'Disabled']);
-
-/** Zod schema for EconomyPayoutsConnectOnboardingResult */
-EconomyPayoutsConnectOnboardingResultSchema = z.object({
-  account: z.lazy(() => EconomyPayoutsConnectAccountSnapshotSchema).optional(),
-  onboardingUri: z.string().url().nullable().optional(),
-});
-
-/** Zod schema for EconomyPayoutsPayoutOperationState */
-EconomyPayoutsPayoutOperationStateSchema = z.enum(['Reserved', 'Dispatching', 'Ambiguous', 'Succeeded', 'Failed', 'Cancelled']);
-
-/** Zod schema for EconomyPayoutsPayoutRequestState */
-EconomyPayoutsPayoutRequestStateSchema = z.enum(['Submitted', 'Cancelled', 'Approved', 'Rejected', 'AwaitingSecondApproval']);
-
-/** Zod schema for EconomyPayoutsQueriesEconomyPayoutInput */
-EconomyPayoutsQueriesEconomyPayoutInputSchema = z.object({
-  id: z.string().uuid().optional(),
-  createdAt: z.string().datetime().optional(),
-  hardCoinUnits: z.number().int().optional(),
-  state: z.lazy(() => EconomyPayoutsPayoutRequestStateSchema).optional(),
-  updatedAt: z.string().datetime().optional(),
-});
-
-/** Zod schema for EconomyPayoutsQueriesEconomyPayoutOperation */
-EconomyPayoutsQueriesEconomyPayoutOperationSchema = z.object({
-  id: z.string().uuid().optional(),
-  createdAt: z.string().datetime().optional(),
-  hardCoinUnits: z.number().int().optional(),
-  state: z.lazy(() => EconomyPayoutsPayoutOperationStateSchema).optional(),
-  updatedAt: z.string().datetime().optional(),
-});
-
-/** Zod schema for EconomyPayoutsQueriesEconomyPayoutRequestReview */
-EconomyPayoutsQueriesEconomyPayoutRequestReviewSchema = z.object({
-  id: z.string().uuid().optional(),
-  createdAt: z.string().datetime().optional(),
-  hardCoinUnits: z.number().int().optional(),
-  payeeId: z.string().uuid().optional(),
-  state: z.lazy(() => EconomyPayoutsPayoutRequestStateSchema).optional(),
-  updatedAt: z.string().datetime().optional(),
-  version: z.number().int().optional(),
-  walletId: z.string().uuid().optional(),
-});
-
-/** Zod schema for EconomyPayoutsQueriesEconomyPayoutRequestReviewAudit */
-EconomyPayoutsQueriesEconomyPayoutRequestReviewAuditSchema = z.object({
-  id: z.string().uuid().optional(),
-  actorId: z.string().uuid().optional(),
-  occurredAt: z.string().datetime().optional(),
-  outcome: z.lazy(() => EconomyPayoutsPayoutRequestStateSchema).optional(),
-  reason: z.string().nullable().optional(),
-});
-
-/** Zod schema for EconomyProjectionsProjectionGenerationState */
-EconomyProjectionsProjectionGenerationStateSchema = z.object({
-  approvedBy: z.array(z.string().uuid()).nullable().optional(),
-  generation: z.number().int().optional(),
-  isActive: z.boolean().optional(),
-  journalHash: z.string().nullable().optional(),
-  mismatchCount: z.number().int().optional(),
-  projectionHash: z.string().nullable().optional(),
-  proposedBy: z.string().uuid().optional(),
-  state: z.string().nullable().optional(),
-  toSequence: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyReservesCustodyObservationCommand */
-EconomyReservesCustodyObservationCommandSchema = z.object({
-  id: z.string().uuid().optional(),
-  assetKey: z.string().nullable().optional(),
-  eligibleUsdNanos: z.number().int().optional(),
-  expiresAt: z.string().datetime().optional(),
-  keyId: z.string().nullable().optional(),
-  observedAt: z.string().datetime().optional(),
-  payloadHash: z.string().nullable().optional(),
-  provider: z.string().nullable().optional(),
-  purpose: z.lazy(() => EconomyReservesReserveBackingPurposeSchema).optional(),
-  signature: z.string().nullable().optional(),
-  version: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyReservesDurableCustodyObservation */
-EconomyReservesDurableCustodyObservationSchema = z.object({
-  id: z.string().uuid().optional(),
-  assetKey: z.string().nullable().optional(),
-  eligibleUsdNanos: z.number().int().optional(),
-  expiresAt: z.string().datetime().optional(),
-  keyId: z.string().nullable().optional(),
-  observedAt: z.string().datetime().optional(),
-  payloadHash: z.string().nullable().optional(),
-  provider: z.string().nullable().optional(),
-  purpose: z.lazy(() => EconomyReservesReserveBackingPurposeSchema).optional(),
-  signature: z.string().nullable().optional(),
-  version: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyReservesDurableReserveProposalState */
-EconomyReservesDurableReserveProposalStateSchema = z.object({
-  id: z.string().uuid().optional(),
-  approvedBy: z.string().uuid().nullable().optional(),
-  authorizationEpoch: z.number().int().optional(),
-  coverage: z.lazy(() => EconomyReservesReserveCoverageStateSchema).optional(),
-  eligibleAssetUsdNanos: z.number().int().optional(),
-  expiresAt: z.string().datetime().optional(),
-  liabilityUsdNanos: z.number().int().optional(),
-  observedAt: z.string().datetime().optional(),
-  policyVersion: z.number().int().optional(),
-  proposedBy: z.string().uuid().optional(),
-  snapshotHash: z.string().nullable().optional(),
-  status: z.string().nullable().optional(),
-  version: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyReservesEconomyLiabilitySnapshot */
-EconomyReservesEconomyLiabilitySnapshotSchema = z.object({
-  journalHash: z.string().nullable().optional(),
-  journalSequence: z.number().int().optional(),
-  liabilityUsdNanos: z.number().int().optional(),
-  outstandingHardUnits: z.number().int().optional(),
-  outstandingSoftUnits: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyReservesExternalReserveAsset */
-EconomyReservesExternalReserveAssetSchema = z.object({
-  assetKey: z.string().nullable().optional(),
-  eligibleUsdNanos: z.number().int().optional(),
-  purpose: z.lazy(() => EconomyReservesReserveBackingPurposeSchema).optional(),
-});
-
-/** Zod schema for EconomyReservesReserveBackingPurpose */
-EconomyReservesReserveBackingPurposeSchema = z.enum(['HardCoin', 'SoftCoin']);
-
-/** Zod schema for EconomyReservesReserveBufferPosition */
-EconomyReservesReserveBufferPositionSchema = z.object({
-  adEstimateVarianceBufferUsdNanos: z.number().int().optional(),
-  chargebackRefundBufferUsdMinor: z.number().int().optional(),
-  fraudLossBudgetUsdNanos: z.number().int().optional(),
-  hardOperatingLiquidityBufferUsdMinor: z.number().int().optional(),
-  payoutSettlementBufferUsdMinor: z.number().int().optional(),
-  providerFxBufferUsdNanos: z.number().int().optional(),
-  softOperatingLiquidityBufferUsdNanos: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyReservesReserveCoverageState */
-EconomyReservesReserveCoverageStateSchema = z.enum(['Covered', 'Shortfall']);
-
-/** Zod schema for EconomyReservesReserveHead */
-EconomyReservesReserveHeadSchema = z.object({
-  assetAllocations: z
-    .array(z.lazy(() => EconomyReservesExternalReserveAssetSchema))
-    .nullable()
-    .optional(),
-  authorizationEpoch: z.number().int().optional(),
-  coverage: z.lazy(() => EconomyReservesReserveCoverageStateSchema).optional(),
-  evidenceHash: z.string().nullable().optional(),
-  expiresAt: z.string().datetime().optional(),
-  hardBackingUsdNanos: z.number().int().optional(),
-  observedAt: z.string().datetime().optional(),
-  policyVersion: z.lazy(() => EconomyContractsPolicyVersionSchema).optional(),
-  requirements: z.lazy(() => EconomyReservesReserveRequirementSnapshotSchema).optional(),
-  softBackingUsdNanos: z.number().int().optional(),
-  version: z.lazy(() => EconomyContractsReserveVersionSchema).optional(),
-});
-
-/** Zod schema for EconomyReservesReserveRequirementSnapshot */
-EconomyReservesReserveRequirementSnapshotSchema = z.object({
-  hardFaceValueUsdMinor: z.number().int().optional(),
-  requiredHardReserveUsdMinor: z.number().int().optional(),
-  requiredSoftReserveUsdNanos: z.number().int().optional(),
-  softFaceValueUsdNanos: z.number().int().optional(),
-  stressedExpectedRedemptionCostUsdNanos: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyReservesReserveServiceObservation */
-EconomyReservesReserveServiceObservationSchema = z.object({
-  currentProviderCostUsdNanos: z.number().int().optional(),
-  currentServicePriceSoftUnits: z.number().int().optional(),
-  enabled: z.boolean().optional(),
-  expiresAt: z.string().datetime().optional(),
-  observedAt: z.string().datetime().optional(),
-  providerFxStressCostUsdNanos: z.number().int().optional(),
-  reservedSoftUnits: z.number().int().optional(),
-  serviceCode: z.string().nullable().optional(),
-  trailingHighPercentileCostUsdNanos: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyRiskCapabilityAuthorizationReceipt */
-EconomyRiskCapabilityAuthorizationReceiptSchema = z.object({
-  id: z.string().uuid().optional(),
-  actorId: z.string().uuid().optional(),
-  capability: z.lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema).optional(),
-  destinationHash: z.string().nullable().optional(),
-  evidenceHashes: z.array(z.string()).nullable().optional(),
-  expiresAt: z.string().datetime().optional(),
-  issuedAt: z.string().datetime().optional(),
-  jurisdictionCode: z.string().nullable().optional(),
-  keyId: z.string().nullable().optional(),
-  killSwitchEpoch: z.number().int().optional(),
-  operationFingerprint: z.string().nullable().optional(),
-  policyVersion: z.number().int().optional(),
-  providerHash: z.string().nullable().optional(),
-  receiptHash: z.string().nullable().optional(),
-  reserveVersion: z.number().int().optional(),
-  riskDecisionId: z.string().uuid().optional(),
-  signature: z.string().nullable().optional(),
-  sourceRootHashes: z.array(z.string()).nullable().optional(),
-  subjectReference: z.string().nullable().optional(),
-  tenantId: z.string().uuid().optional(),
-});
-
-/** Zod schema for EconomyRiskComplianceEvidenceIngestionStatus */
-EconomyRiskComplianceEvidenceIngestionStatusSchema = z.enum(['Published', 'Duplicate', 'Deferred', 'Rejected']);
-
-/** Zod schema for EconomyRiskComplianceEvidenceResult */
-EconomyRiskComplianceEvidenceResultSchema = z.enum(['Approved', 'Rejected', 'NeedsReview', 'Unavailable']);
-
-/** Zod schema for EconomyRiskComplianceHold */
-EconomyRiskComplianceHoldSchema = z.object({
-  id: z.string().uuid().optional(),
-  activatedAt: z.string().datetime().optional(),
-  activatedBy: z.string().uuid().optional(),
-  caseReferenceHash: z.string().nullable().optional(),
-  evidenceHash: z.string().nullable().optional(),
-  expiresAt: z.string().datetime().optional(),
-  reasonCode: z.string().nullable().optional(),
-  releasedAt: z.string().datetime().nullable().optional(),
-  releasedBy: z.string().uuid().nullable().optional(),
-  scope: z.lazy(() => EconomyRiskComplianceHoldScopeSchema).optional(),
-});
-
-/** Zod schema for EconomyRiskComplianceHoldAdministrationState */
-EconomyRiskComplianceHoldAdministrationStateSchema = z.object({
-  hold: z.lazy(() => EconomyRiskComplianceHoldSchema).optional(),
-  releaseApprovers: z.array(z.string().uuid()).nullable().optional(),
-  releasePolicyEvidenceHash: z.string().nullable().optional(),
-  releaseProposedAt: z.string().datetime().nullable().optional(),
-  releaseProposedBy: z.string().uuid().nullable().optional(),
-  requiredReleaseApprovals: z.number().int().nullable().optional(),
-});
-
-/** Zod schema for EconomyRiskComplianceHoldEvent */
-EconomyRiskComplianceHoldEventSchema = z.object({
-  actorId: z.string().uuid().optional(),
-  evidenceHash: z.string().nullable().optional(),
-  holdId: z.string().uuid().optional(),
-  kind: z.string().nullable().optional(),
-  occurredAt: z.string().datetime().optional(),
-  sequence: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyRiskComplianceHoldPage */
-EconomyRiskComplianceHoldPageSchema = z.object({
-  items: z
-    .array(z.lazy(() => EconomyRiskComplianceHoldAdministrationStateSchema))
-    .nullable()
-    .optional(),
-  nextCursor: z.string().nullable().optional(),
-});
-
-/** Zod schema for EconomyRiskComplianceHoldScope */
-EconomyRiskComplianceHoldScopeSchema = z.object({
-  capability: z.lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema).optional(),
-  key: z.string().nullable().optional(),
-  subjectHash: z.string().nullable().optional(),
-  tenantId: z.string().uuid().optional(),
-});
-
-/** Zod schema for EconomyRiskEconomyCapabilityEvaluationResult */
-EconomyRiskEconomyCapabilityEvaluationResultSchema = z.object({
-  diagnostics: z.array(z.string()).nullable().optional(),
-  isReady: z.boolean().optional(),
-  receipt: z.lazy(() => EconomyRiskCapabilityAuthorizationReceiptSchema).optional(),
-  state: z.lazy(() => EconomyRiskEconomyCapabilityReadinessStatusSchema).optional(),
-});
-
-/** Zod schema for EconomyRiskEconomyCapabilityPolicy */
-EconomyRiskEconomyCapabilityPolicySchema = z.object({
-  id: z.string().uuid().optional(),
-  approvedAt: z.string().datetime().nullable().optional(),
-  approvedBy: z.string().uuid().nullable().optional(),
-  canonicalPayload: z.string().nullable().optional(),
-  capability: z.lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema).optional(),
-  effectiveAt: z.string().datetime().optional(),
-  expiresAt: z.string().datetime().optional(),
-  jurisdictionCode: z.string().nullable().optional(),
-  keyId: z.string().nullable().optional(),
-  payloadHash: z.string().nullable().optional(),
-  proposedAt: z.string().datetime().optional(),
-  proposedBy: z.string().uuid().optional(),
-  providerReady: z.boolean().optional(),
-  scopeKey: z.string().nullable().optional(),
-  signature: z.string().nullable().optional(),
-  state: z.lazy(() => EconomyRiskEconomyCapabilityPolicyStateSchema).optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  version: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyRiskEconomyCapabilityPolicyState */
-EconomyRiskEconomyCapabilityPolicyStateSchema = z.enum(['PendingApproval', 'Approved', 'Active', 'Expired']);
-
-/** Zod schema for EconomyRiskEconomyCapabilityReadinessStatus */
-EconomyRiskEconomyCapabilityReadinessStatusSchema = z.enum([
-  'Disabled',
-  'Ready',
-  'InvalidPolicy',
-  'JurisdictionBlocked',
-  'ComplianceUnavailable',
-  'ComplianceStale',
-  'ReviewRequired',
-  'LedgerUnhealthy',
-  'ProjectionMismatch',
-  'ReserveInsufficient',
-  'CustodyUnreconciled',
-  'AnchorInvalid',
-  'ProviderNotReady',
-  'KillSwitchActive',
-]);
-
-/** Zod schema for EconomyRiskEconomyKillSwitchScope */
-EconomyRiskEconomyKillSwitchScopeSchema = z.object({
-  capability: z.lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema).optional(),
-  scopeKey: z.string().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-});
-
-/** Zod schema for EconomyRiskEconomyKillSwitchState */
-EconomyRiskEconomyKillSwitchStateSchema = z.object({
-  id: z.string().uuid().optional(),
-  activatedAt: z.string().datetime().optional(),
-  activatedBy: z.string().uuid().optional(),
-  epoch: z.number().int().optional(),
-  isActive: z.boolean().optional(),
-  reason: z.string().nullable().optional(),
-  releaseApprovers: z.array(z.string().uuid()).nullable().optional(),
-  releasedAt: z.string().datetime().nullable().optional(),
-  releaseProposedAt: z.string().datetime().nullable().optional(),
-  releaseProposedBy: z.string().uuid().nullable().optional(),
-  scope: z.lazy(() => EconomyRiskEconomyKillSwitchScopeSchema).optional(),
-});
-
-/** Zod schema for EconomyRiskEconomyProtectedOperationState */
-EconomyRiskEconomyProtectedOperationStateSchema = z.enum([
-  'Ready',
-  'ReviewRequired',
-  'Hold',
-  'Challenge',
-  'Denied',
-  'ComplianceUnavailable',
-  'ComplianceStale',
-  'InvalidPolicy',
-  'ReserveInsufficient',
-]);
-
-/** Zod schema for EconomyRiskEconomyValueMovementCapability */
-EconomyRiskEconomyValueMovementCapabilitySchema = z.enum([
-  'ConfirmHardCoinFunding',
-  'ConvertHardToSoft',
-  'ReverseProviderFunding',
-  'Transfer',
-  'IssueAdReward',
-  'BountyEscrow',
-  'BountyClaim',
-  'MarketplaceSettlement',
-  'PayoutExecution',
-  'AdminWithdrawalExecution',
-  'MarketplaceRefund',
-  'BountyReclaim',
-  'LegacyBalanceBackfill',
-]);
-
-/** Zod schema for EconomyRiskRiskManualDecisionCode */
-EconomyRiskRiskManualDecisionCodeSchema = z.enum(['EvidenceVerified', 'RiskAccepted', 'PolicyViolation', 'FraudConfirmed']);
-
-/** Zod schema for EconomyRiskRiskReviewCase */
-EconomyRiskRiskReviewCaseSchema = z.object({
-  id: z.string().uuid().optional(),
-  appealOf: z.string().uuid().nullable().optional(),
-  approvers: z.array(z.string().uuid()).nullable().optional(),
-  decisionId: z.string().uuid().optional(),
-  requiredApprovals: z.number().int().optional(),
-  resolution: z.string().nullable().optional(),
-  resolvedAt: z.string().datetime().nullable().optional(),
-  resolvedBy: z.string().uuid().nullable().optional(),
-  status: z.lazy(() => EconomyRiskRiskReviewStatusSchema).optional(),
-  submittedAt: z.string().datetime().optional(),
-  submittedBy: z.string().uuid().optional(),
-});
-
-/** Zod schema for EconomyRiskRiskReviewEvent */
-EconomyRiskRiskReviewEventSchema = z.object({
-  actorId: z.string().uuid().optional(),
-  decisionCode: z.lazy(() => EconomyRiskRiskManualDecisionCodeSchema).optional(),
-  evidenceHashes: z.array(z.string()).nullable().optional(),
-  kind: z.lazy(() => EconomyRiskRiskReviewEventKindSchema).optional(),
-  occurredAt: z.string().datetime().optional(),
-  resolution: z.string().nullable().optional(),
-  reviewId: z.string().uuid().optional(),
-  sequence: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyRiskRiskReviewEventKind */
-EconomyRiskRiskReviewEventKindSchema = z.enum(['Submitted', 'ApprovalRecorded', 'Approved', 'Rejected', 'AppealSubmitted']);
-
-/** Zod schema for EconomyRiskRiskReviewPage */
-EconomyRiskRiskReviewPageSchema = z.object({
-  items: z
-    .array(z.lazy(() => EconomyRiskRiskReviewCaseSchema))
-    .nullable()
-    .optional(),
-  nextCursor: z.string().nullable().optional(),
-});
-
-/** Zod schema for EconomyRiskRiskReviewStatus */
-EconomyRiskRiskReviewStatusSchema = z.enum(['Pending', 'Approved', 'Rejected']);
-
-/** Zod schema for EconomyTransfersSelfServiceEconomyTransferInput */
-EconomyTransfersSelfServiceEconomyTransferInputSchema = z.object({
-  amountUnits: z.number().int().optional(),
-  currency: z.lazy(() => EconomyContractsCurrencyCodeSchema).optional(),
-  idempotencyKey: z.string().nullable().optional(),
-  recipientUserId: z.string().uuid().optional(),
-  transferType: z.lazy(() => EconomyTransfersSelfServiceEconomyTransferTypeSchema).optional(),
-});
-
-/** Zod schema for EconomyTransfersSelfServiceEconomyTransferReceipt */
-EconomyTransfersSelfServiceEconomyTransferReceiptSchema = z.object({
-  amountUnits: z.number().int().optional(),
-  currency: z.lazy(() => EconomyContractsCurrencyCodeSchema).optional(),
-  isDuplicate: z.boolean().optional(),
-  journalHash: z.string().nullable().optional(),
-  journalSequence: z.number().int().optional(),
-  postingId: z.string().uuid().optional(),
-  recipientUserId: z.string().uuid().optional(),
-  transferType: z.lazy(() => EconomyTransfersSelfServiceEconomyTransferTypeSchema).optional(),
-});
-
-/** Zod schema for EconomyTransfersSelfServiceEconomyTransferType */
-EconomyTransfersSelfServiceEconomyTransferTypeSchema = z.enum(['Tip', 'Gift', 'CreatorSupport']);
-
-/** Zod schema for EconomyTreasuryAdminWithdrawalAuditEvent */
-EconomyTreasuryAdminWithdrawalAuditEventSchema = z.object({
-  actorId: z.string().uuid().nullable().optional(),
-  evidence: z.string().nullable().optional(),
-  hash: z.string().nullable().optional(),
-  kind: z.string().nullable().optional(),
-  occurredAt: z.string().datetime().optional(),
-  previousHash: z.string().nullable().optional(),
-  runId: z.string().uuid().optional(),
-  sequence: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyTreasuryAdminWithdrawalAuditView */
-EconomyTreasuryAdminWithdrawalAuditViewSchema = z.object({
-  events: z
-    .array(z.lazy(() => EconomyTreasuryAdminWithdrawalAuditEventSchema))
-    .nullable()
-    .optional(),
-  integrityValid: z.boolean().optional(),
-  runId: z.string().uuid().optional(),
-});
-
-/** Zod schema for EconomyTreasuryAdminWithdrawalRun */
-EconomyTreasuryAdminWithdrawalRunSchema = z.object({
-  id: z.string().uuid().optional(),
-  amount: z.lazy(() => EconomyContractsCoinAmountSchema).optional(),
-  approvedBy: z.string().uuid().nullable().optional(),
-  createdAt: z.string().datetime().optional(),
-  destinationHash: z.string().nullable().optional(),
-  dispatchSnapshotHash: z.string().nullable().optional(),
-  executionEpoch: z.number().int().optional(),
-  fencingToken: z.number().int().optional(),
-  idempotencyKey: z.lazy(() => EconomyContractsIdempotencyKeySchema).optional(),
-  periodStart: z.string().date().optional(),
-  platformFeeWalletId: z.lazy(() => EconomyContractsWalletIdSchema).optional(),
-  policyVersion: z.lazy(() => EconomyContractsPolicyVersionSchema).optional(),
-  providerTransferId: z.string().nullable().optional(),
-  requestedBy: z.string().uuid().optional(),
-  requestHash: z.string().nullable().optional(),
-  reserveAuthorizationEpoch: z.number().int().optional(),
-  reserveVersion: z.lazy(() => EconomyContractsReserveVersionSchema).optional(),
-  sourceAssetKey: z.string().nullable().optional(),
-  state: z.lazy(() => EconomyTreasuryAdminWithdrawalRunStateSchema).optional(),
-  tenantId: z.string().uuid().optional(),
-  updatedAt: z.string().datetime().optional(),
-  version: z.number().int().optional(),
-});
-
-/** Zod schema for EconomyTreasuryAdminWithdrawalRunState */
-EconomyTreasuryAdminWithdrawalRunStateSchema = z.enum(['PendingApproval', 'Approved', 'Dispatching', 'Ambiguous', 'Succeeded', 'Failed', 'Cancelled']);
-
 /** Zod schema for Error */
 ErrorSchema = z.object({
   code: z.string().nullable().optional(),
@@ -20395,8 +19312,8 @@ FeaturesBulkEvaluationInputSchema = z.object({
   featureKeys: z.array(z.string()).nullable().optional(),
 });
 
-/** Zod schema for FeaturesCapabilityAuditLog */
-FeaturesCapabilityAuditLogSchema = z.object({
+/** Zod schema for FeaturesCapabilityAuditLogDto */
+FeaturesCapabilityAuditLogDtoSchema = z.object({
   id: z.string().uuid().optional(),
   capabilityKey: z.string().nullable().optional(),
   changedAt: z.string().datetime().optional(),
@@ -20446,8 +19363,8 @@ FeaturesFeatureEvaluationInputSchema = z.object({
   featureKey: z.string().nullable().optional(),
 });
 
-/** Zod schema for FeaturesFeatureFlag */
-FeaturesFeatureFlagSchema = z.object({
+/** Zod schema for FeaturesFeatureFlagDto */
+FeaturesFeatureFlagDtoSchema = z.object({
   id: z.string().uuid(),
   createdAt: z.string().datetime(),
   defaultValue: z.record(z.string(), z.unknown()).nullable().optional(),
@@ -20458,7 +19375,7 @@ FeaturesFeatureFlagSchema = z.object({
   key: z.string().nullable(),
   name: z.string().nullable(),
   targets: z
-    .array(z.lazy(() => FeaturesFeatureFlagTargetSchema))
+    .array(z.lazy(() => FeaturesFeatureFlagTargetDtoSchema))
     .nullable()
     .optional(),
   tenantId: z.string().uuid().nullable().optional(),
@@ -20466,8 +19383,8 @@ FeaturesFeatureFlagSchema = z.object({
   updatedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for FeaturesFeatureFlagTarget */
-FeaturesFeatureFlagTargetSchema = z.object({
+/** Zod schema for FeaturesFeatureFlagTargetDto */
+FeaturesFeatureFlagTargetDtoSchema = z.object({
   id: z.string().uuid(),
   createdAt: z.string().datetime(),
   customValue: z.string().nullable().optional(),
@@ -20582,6 +19499,1660 @@ Fido2NetLibPublicKeyCredentialRpEntitySchema = z.object({
   name: z.string().nullable().optional(),
 });
 
+/** Zod schema for FinanceEconomyAdRewardsAdPlaybackEvidence */
+FinanceEconomyAdRewardsAdPlaybackEvidenceSchema = z.object({
+  completedAt: z.string().datetime().optional(),
+  focusLoss: z.string().optional(),
+  milestones: z.array(z.number().int()).nullable().optional(),
+  playbackDuration: z.string().optional(),
+  startedAt: z.string().datetime().optional(),
+  visibleDuration: z.string().optional(),
+});
+
+/** Zod schema for FinanceEconomyAdRewardsAdProviderReport */
+FinanceEconomyAdRewardsAdProviderReportSchema = z.object({
+  actualRevenueUsdNanos: z.number().int().optional(),
+  batchId: z.string().nullable().optional(),
+  evidenceHash: z.string().nullable().optional(),
+  importedAt: z.string().datetime().optional(),
+  network: z.string().nullable().optional(),
+  periodEnd: z.string().datetime().optional(),
+  periodStart: z.string().datetime().optional(),
+  reportId: z.string().nullable().optional(),
+  signature: z.string().nullable().optional(),
+  verifiedSessionIds: z.array(z.string().uuid()).nullable().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyAdRewardsAdRewardCompletionOperationalStatus */
+FinanceEconomyAdRewardsAdRewardCompletionOperationalStatusSchema = z.object({
+  completedAt: z.string().datetime().optional(),
+  jurisdictionCode: z.string().nullable().optional(),
+  postingId: z.string().uuid().nullable().optional(),
+  providerEventId: z.string().nullable().optional(),
+  reserveVersion: z.number().int().nullable().optional(),
+  rewardSoftUnits: z.number().int().optional(),
+  state: z.lazy(() => FinanceEconomyAdRewardsAdRewardCompletionStateSchema).optional(),
+});
+
+/** Zod schema for FinanceEconomyAdRewardsAdRewardCompletionState */
+FinanceEconomyAdRewardsAdRewardCompletionStateSchema = z.enum(['Issued', 'PendingProviderReport', 'AccumulatedRemainder']);
+
+/** Zod schema for FinanceEconomyAdRewardsAdRewardMilestoneOperationalStatus */
+FinanceEconomyAdRewardsAdRewardMilestoneOperationalStatusSchema = z.object({
+  id: z.string().uuid().optional(),
+  evidenceHash: z.string().nullable().optional(),
+  observedAt: z.string().datetime().optional(),
+  percentage: z.number().int().optional(),
+  sequence: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyAdRewardsAdRewardPendingClaimOperationalStatus */
+FinanceEconomyAdRewardsAdRewardPendingClaimOperationalStatusSchema = z.object({
+  confirmedAt: z.string().datetime().nullable().optional(),
+  deferredAt: z.string().datetime().optional(),
+  providerReportId: z.string().uuid().nullable().optional(),
+  sessionId: z.string().uuid().optional(),
+  sourceStampId: z.string().uuid().optional(),
+  tenantId: z.string().uuid().optional(),
+});
+
+/** Zod schema for FinanceEconomyAdRewardsAdRewardReconciliation */
+FinanceEconomyAdRewardsAdRewardReconciliationSchema = z.object({
+  actualDeltaUsdNanos: z.number().int().optional(),
+  actualRevenueUsdNanos: z.number().int().optional(),
+  batchId: z.string().nullable().optional(),
+  estimatedRevenueUsdNanos: z.number().int().optional(),
+  historicalRewardSoftUnits: z.number().int().optional(),
+  network: z.string().nullable().optional(),
+  previousActualRevenueUsdNanos: z.number().int().optional(),
+  reconciledAt: z.string().datetime().optional(),
+  reportId: z.string().nullable().optional(),
+  varianceUsdNanos: z.number().int().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyAdRewardsAdRewardReconciliationOperationalStatus */
+FinanceEconomyAdRewardsAdRewardReconciliationOperationalStatusSchema = z.object({
+  id: z.string().uuid().optional(),
+  actualRevenueUsdNanos: z.number().int().optional(),
+  batchId: z.string().nullable().optional(),
+  estimatedRevenueUsdNanos: z.number().int().optional(),
+  historicalRewardSoftUnits: z.number().int().optional(),
+  network: z.string().nullable().optional(),
+  providerReportId: z.string().uuid().optional(),
+  reconciledAt: z.string().datetime().optional(),
+  reportId: z.string().nullable().optional(),
+  tenantId: z.string().uuid().optional(),
+  varianceUsdNanos: z.number().int().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyAdRewardsAdRewardSessionEventOperationalStatus */
+FinanceEconomyAdRewardsAdRewardSessionEventOperationalStatusSchema = z.object({
+  id: z.string().uuid().optional(),
+  evidenceHash: z.string().nullable().optional(),
+  occurredAt: z.string().datetime().optional(),
+  sequence: z.number().int().optional(),
+  state: z.lazy(() => FinanceEconomyAdRewardsDurableAdRewardSessionStateSchema).optional(),
+});
+
+/** Zod schema for FinanceEconomyAdRewardsAdRewardSessionOperationalDetails */
+FinanceEconomyAdRewardsAdRewardSessionOperationalDetailsSchema = z.object({
+  completion: z.lazy(() => FinanceEconomyAdRewardsAdRewardCompletionOperationalStatusSchema).optional(),
+  events: z
+    .array(z.lazy(() => FinanceEconomyAdRewardsAdRewardSessionEventOperationalStatusSchema))
+    .nullable()
+    .optional(),
+  milestones: z
+    .array(z.lazy(() => FinanceEconomyAdRewardsAdRewardMilestoneOperationalStatusSchema))
+    .nullable()
+    .optional(),
+  summary: z.lazy(() => FinanceEconomyAdRewardsAdRewardSessionOperationalSummarySchema).optional(),
+});
+
+/** Zod schema for FinanceEconomyAdRewardsAdRewardSessionOperationalSummary */
+FinanceEconomyAdRewardsAdRewardSessionOperationalSummarySchema = z.object({
+  id: z.string().uuid().optional(),
+  creativeId: z.string().nullable().optional(),
+  expiresAt: z.string().datetime().optional(),
+  issuedAt: z.string().datetime().optional(),
+  network: z.string().nullable().optional(),
+  policyVersion: z.number().int().optional(),
+  state: z.lazy(() => FinanceEconomyAdRewardsDurableAdRewardSessionStateSchema).optional(),
+  tenantId: z.string().uuid().optional(),
+  updatedAt: z.string().datetime().optional(),
+  userId: z.string().uuid().optional(),
+});
+
+/** Zod schema for FinanceEconomyAdRewardsDurableAdProviderReportImportResult */
+FinanceEconomyAdRewardsDurableAdProviderReportImportResultSchema = z.object({
+  isDuplicate: z.boolean().optional(),
+  providerReportId: z.string().uuid().optional(),
+  reconciliation: z.lazy(() => FinanceEconomyAdRewardsAdRewardReconciliationSchema).optional(),
+  verifiedPendingSessions: z.array(z.string().uuid()).nullable().optional(),
+});
+
+/** Zod schema for FinanceEconomyAdRewardsDurableAdProviderReportStatus */
+FinanceEconomyAdRewardsDurableAdProviderReportStatusSchema = z.object({
+  actualRevenueUsdNanos: z.number().int().optional(),
+  batchId: z.string().nullable().optional(),
+  evidenceHash: z.string().nullable().optional(),
+  network: z.string().nullable().optional(),
+  payloadHash: z.string().nullable().optional(),
+  periodEnd: z.string().datetime().optional(),
+  periodStart: z.string().datetime().optional(),
+  processedAt: z.string().datetime().nullable().optional(),
+  processingError: z.string().nullable().optional(),
+  providerReportId: z.string().uuid().optional(),
+  receivedAt: z.string().datetime().optional(),
+  reconciliation: z.lazy(() => FinanceEconomyAdRewardsDurableAdRewardReconciliationStatusSchema).optional(),
+  reportId: z.string().nullable().optional(),
+  signatureVerified: z.boolean().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyAdRewardsDurableAdRewardCompletionResult */
+FinanceEconomyAdRewardsDurableAdRewardCompletionResultSchema = z.object({
+  completedAt: z.string().datetime().optional(),
+  isDuplicate: z.boolean().optional(),
+  outputLotId: z.lazy(() => FinanceEconomyContractsCreditLotIdSchema).optional(),
+  postingId: z.lazy(() => FinanceEconomyContractsPostingIdSchema).optional(),
+  rewardSoftUnits: z.number().int().optional(),
+  sessionId: z.string().uuid().optional(),
+  state: z.lazy(() => FinanceEconomyAdRewardsAdRewardCompletionStateSchema).optional(),
+});
+
+/** Zod schema for FinanceEconomyAdRewardsDurableAdRewardReconciliationStatus */
+FinanceEconomyAdRewardsDurableAdRewardReconciliationStatusSchema = z.object({
+  actualDeltaUsdNanos: z.number().int().optional(),
+  actualRevenueUsdNanos: z.number().int().optional(),
+  estimatedRevenueUsdNanos: z.number().int().optional(),
+  historicalRewardSoftUnits: z.number().int().optional(),
+  previousActualRevenueUsdNanos: z.number().int().optional(),
+  reconciledAt: z.string().datetime().optional(),
+  varianceUsdNanos: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyAdRewardsDurableAdRewardSessionClaims */
+FinanceEconomyAdRewardsDurableAdRewardSessionClaimsSchema = z.object({
+  asnRiskHash: z.string().nullable().optional(),
+  creativeId: z.string().nullable().optional(),
+  deviceRiskHash: z.string().nullable().optional(),
+  expiresAt: z.string().datetime().optional(),
+  ipRiskHash: z.string().nullable().optional(),
+  issuedAt: z.string().datetime().optional(),
+  network: z.string().nullable().optional(),
+  nonce: z.string().nullable().optional(),
+  policyVersion: z.lazy(() => FinanceEconomyContractsPolicyVersionSchema).optional(),
+  requiredDuration: z.string().optional(),
+  sessionId: z.string().uuid().optional(),
+  tenantId: z.string().uuid().optional(),
+  userId: z.string().uuid().optional(),
+  walletId: z.lazy(() => FinanceEconomyContractsWalletIdSchema).optional(),
+});
+
+/** Zod schema for FinanceEconomyAdRewardsDurableAdRewardSessionResult */
+FinanceEconomyAdRewardsDurableAdRewardSessionResultSchema = z.object({
+  claims: z.lazy(() => FinanceEconomyAdRewardsDurableAdRewardSessionClaimsSchema).optional(),
+  isDuplicate: z.boolean().optional(),
+  token: z.lazy(() => FinanceEconomyAdRewardsSignedAdRewardSessionSchema).optional(),
+});
+
+/** Zod schema for FinanceEconomyAdRewardsDurableAdRewardSessionState */
+FinanceEconomyAdRewardsDurableAdRewardSessionStateSchema = z.enum(['Issued', 'Active', 'ProofPending', 'Verified', 'Posted', 'Deferred', 'Rejected']);
+
+/** Zod schema for FinanceEconomyAdRewardsDurableAdRewardSessionStatus */
+FinanceEconomyAdRewardsDurableAdRewardSessionStatusSchema = z.object({
+  creativeId: z.string().nullable().optional(),
+  expiresAt: z.string().datetime().optional(),
+  issuedAt: z.string().datetime().optional(),
+  network: z.string().nullable().optional(),
+  postingId: z.string().uuid().nullable().optional(),
+  rewardSoftUnits: z.number().int().optional(),
+  sessionId: z.string().uuid().optional(),
+  state: z.lazy(() => FinanceEconomyAdRewardsDurableAdRewardSessionStateSchema).optional(),
+  updatedAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for FinanceEconomyAdRewardsProviderCompletionProof */
+FinanceEconomyAdRewardsProviderCompletionProofSchema = z.object({
+  completedAt: z.string().datetime().optional(),
+  creativeId: z.string().nullable().optional(),
+  evidenceHash: z.string().nullable().optional(),
+  network: z.string().nullable().optional(),
+  providerEventId: z.string().nullable().optional(),
+  sessionId: z.string().uuid().optional(),
+  signature: z.string().nullable().optional(),
+});
+
+/** Zod schema for FinanceEconomyAdRewardsSignedAdRewardSession */
+FinanceEconomyAdRewardsSignedAdRewardSessionSchema = z.object({
+  value: z.string().nullable().optional(),
+});
+
+/** Zod schema for FinanceEconomyBountiesBountyEligibilityRequirements */
+FinanceEconomyBountiesBountyEligibilityRequirementsSchema = z.object({
+  minimumReputation: z.number().int().optional(),
+  requiresInstructorVerification: z.boolean().optional(),
+  requiresPrerequisite: z.boolean().optional(),
+});
+
+/** Zod schema for FinanceEconomyBountiesBountyId */
+FinanceEconomyBountiesBountyIdSchema = z.object({
+  value: z.string().uuid().optional(),
+});
+
+/** Zod schema for FinanceEconomyBountiesBountyStatus */
+FinanceEconomyBountiesBountyStatusSchema = z.enum(['Open', 'Expired', 'Claimed', 'Reclaimed']);
+
+/** Zod schema for FinanceEconomyBountiesBountyTerminalOutputLot */
+FinanceEconomyBountiesBountyTerminalOutputLotSchema = z.object({
+  amount: z.lazy(() => FinanceEconomyContractsCoinAmountSchema).optional(),
+  cashOutEligible: z.boolean().optional(),
+  confirmedAt: z.string().datetime().optional(),
+  lotId: z.lazy(() => FinanceEconomyContractsCreditLotIdSchema).optional(),
+  originalMaturesAt: z.string().datetime().optional(),
+  provenance: z.lazy(() => FinanceEconomyContractsProvenanceKindSchema).optional(),
+  rootSourceStampId: z.lazy(() => FinanceEconomyContractsSourceStampIdSchema).optional(),
+  walletId: z.lazy(() => FinanceEconomyContractsWalletIdSchema).optional(),
+});
+
+/** Zod schema for FinanceEconomyBountiesDurableBountyView */
+FinanceEconomyBountiesDurableBountyViewSchema = z.object({
+  id: z.lazy(() => FinanceEconomyBountiesBountyIdSchema).optional(),
+  amount: z.lazy(() => FinanceEconomyContractsCoinAmountSchema).optional(),
+  eligibility: z.lazy(() => FinanceEconomyBountiesBountyEligibilityRequirementsSchema).optional(),
+  expiresAt: z.string().datetime().optional(),
+  postedAt: z.string().datetime().optional(),
+  posterId: z.string().uuid().optional(),
+  reclaimFeePpm: z.number().int().optional(),
+  status: z.lazy(() => FinanceEconomyBountiesBountyStatusSchema).optional(),
+  terminalEvent: z.lazy(() => FinanceEconomyBountiesPersistedBountyTerminalEventSchema).optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyBountiesPersistedBountyTerminalEvent */
+FinanceEconomyBountiesPersistedBountyTerminalEventSchema = z.object({
+  id: z.string().uuid().optional(),
+  actorId: z.string().uuid().optional(),
+  bountyId: z.lazy(() => FinanceEconomyBountiesBountyIdSchema).optional(),
+  destinationWalletId: z.lazy(() => FinanceEconomyContractsWalletIdSchema).optional(),
+  feeUnits: z.number().int().optional(),
+  firstJournalSequence: z.number().int().optional(),
+  idempotencyKey: z.lazy(() => FinanceEconomyContractsIdempotencyKeySchema).optional(),
+  occurredAt: z.string().datetime().optional(),
+  outputLots: z
+    .array(z.lazy(() => FinanceEconomyBountiesBountyTerminalOutputLotSchema))
+    .nullable()
+    .optional(),
+  proceedsLotId: z.lazy(() => FinanceEconomyContractsCreditLotIdSchema).optional(),
+  proceedsSourceStampId: z.lazy(() => FinanceEconomyContractsSourceStampIdSchema).optional(),
+  returnedUnits: z.number().int().optional(),
+  riskDecisionId: z.string().uuid().nullable().optional(),
+  status: z.lazy(() => FinanceEconomyBountiesBountyStatusSchema).optional(),
+  tenantId: z.string().uuid().optional(),
+});
+
+/** Zod schema for FinanceEconomyCommandsConvertMyHardToSoftInput */
+FinanceEconomyCommandsConvertMyHardToSoftInputSchema = z.object({
+  idempotencyKey: z.string().nullable().optional(),
+  principalHardCoinUnits: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyCommandsCreateMyHardCoinTopUpInput */
+FinanceEconomyCommandsCreateMyHardCoinTopUpInputSchema = z.object({
+  hardCoinUnits: z.number().int().optional(),
+  idempotencyKey: z.string().nullable().optional(),
+});
+
+/** Zod schema for FinanceEconomyContractsCoinAmount */
+FinanceEconomyContractsCoinAmountSchema = z.object({
+  currency: z.lazy(() => FinanceEconomyContractsCurrencyCodeSchema).optional(),
+  units: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyContractsCreditLotId */
+FinanceEconomyContractsCreditLotIdSchema = z.object({
+  value: z.string().uuid().optional(),
+});
+
+/** Zod schema for FinanceEconomyContractsCurrencyCode */
+FinanceEconomyContractsCurrencyCodeSchema = z.enum(['HardCoin', 'SoftCoin']);
+
+/** Zod schema for FinanceEconomyContractsEconomyWalletSummaryDto */
+FinanceEconomyContractsEconomyWalletSummaryDtoSchema = z.object({
+  availableHardToSpend: z.number().int().optional(),
+  availableSoftToSpend: z.number().int().optional(),
+  createdAt: z.string().datetime().optional(),
+  earnedHard: z.number().int().optional(),
+  heldHard: z.number().int().optional(),
+  heldSoft: z.number().int().optional(),
+  outstandingHardDebt: z.number().int().optional(),
+  pendingHard: z.number().int().optional(),
+  pendingSoft: z.number().int().optional(),
+  projectionRebuiltAt: z.string().datetime().optional(),
+  purchasedHard: z.number().int().optional(),
+  restrictedHard: z.number().int().optional(),
+  soft: z.number().int().optional(),
+  sourceJournalSequence: z.number().int().optional(),
+  state: z.lazy(() => FinanceEconomyContractsWalletLifecycleStateSchema).optional(),
+  walletId: z.string().uuid().optional(),
+  withdrawableHard: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyContractsEconomyWalletTransactionDto */
+FinanceEconomyContractsEconomyWalletTransactionDtoSchema = z.object({
+  amountUnits: z.number().int().optional(),
+  currency: z.lazy(() => FinanceEconomyContractsCurrencyCodeSchema).optional(),
+  journalEntryId: z.string().uuid().optional(),
+  journalSequence: z.number().int().optional(),
+  postingGroupId: z.string().uuid().optional(),
+  provenance: z.lazy(() => FinanceEconomyContractsProvenanceKindSchema).optional(),
+  recordedAt: z.string().datetime().optional(),
+  side: z.lazy(() => FinanceEconomyContractsEntrySideSchema).optional(),
+  status: z.lazy(() => FinanceEconomyContractsPostingStatusSchema).optional(),
+  templateKind: z.lazy(() => FinanceEconomyContractsPostingTemplateKindSchema).optional(),
+});
+
+/** Zod schema for FinanceEconomyContractsEntrySide */
+FinanceEconomyContractsEntrySideSchema = z.enum(['Debit', 'Credit']);
+
+/** Zod schema for FinanceEconomyContractsIdempotencyKey */
+FinanceEconomyContractsIdempotencyKeySchema = z.object({
+  value: z.string().nullable().optional(),
+});
+
+/** Zod schema for FinanceEconomyContractsPolicyVersion */
+FinanceEconomyContractsPolicyVersionSchema = z.object({
+  value: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyContractsPostingId */
+FinanceEconomyContractsPostingIdSchema = z.object({
+  value: z.string().uuid().optional(),
+});
+
+/** Zod schema for FinanceEconomyContractsPostingStatus */
+FinanceEconomyContractsPostingStatusSchema = z.enum(['Accepted', 'Rejected', 'Duplicate']);
+
+/** Zod schema for FinanceEconomyContractsPostingTemplateKind */
+FinanceEconomyContractsPostingTemplateKindSchema = z.enum([
+  'ConfirmedTopUpMint',
+  'ProviderReversalFull',
+  'ProviderReversalPartial',
+  'Spend',
+  'HardToSoftConversion',
+  'SystemBackedGrant',
+  'Burn',
+  'Escrow',
+  'Reclaim',
+  'Refund',
+  'PayoutReservation',
+  'PayoutSuccess',
+  'PayoutFailure',
+  'AdminWithdrawalReservation',
+  'AdminWithdrawalSuccess',
+  'AdminWithdrawalFailure',
+  'HardToSoftConversionFee',
+  'ProviderConvertedSoftReversal',
+  'ProviderReversalDebt',
+  'ProviderReversalLoss',
+  'AdRewardIssuance',
+  'BountyEscrow',
+  'BountyClaim',
+  'BountyReclaim',
+  'MarketplaceSettlement',
+  'MarketplaceRefund',
+]);
+
+/** Zod schema for FinanceEconomyContractsProvenanceKind */
+FinanceEconomyContractsProvenanceKindSchema = z.enum([
+  'PurchasedHard',
+  'EarnedHard',
+  'ConvertedSoft',
+  'AdRewardSoft',
+  'SystemGrantSoft',
+  'RefundRestoration',
+  'EscrowReturn',
+  'MarketplaceSoft',
+]);
+
+/** Zod schema for FinanceEconomyContractsReserveVersion */
+FinanceEconomyContractsReserveVersionSchema = z.object({
+  value: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyContractsSourceStampId */
+FinanceEconomyContractsSourceStampIdSchema = z.object({
+  value: z.string().uuid().optional(),
+});
+
+/** Zod schema for FinanceEconomyContractsWalletId */
+FinanceEconomyContractsWalletIdSchema = z.object({
+  value: z.string().uuid().optional(),
+});
+
+/** Zod schema for FinanceEconomyContractsWalletLifecycleState */
+FinanceEconomyContractsWalletLifecycleStateSchema = z.enum(['Active', 'Frozen', 'Closed', 'UnderReview']);
+
+/** Zod schema for FinanceEconomyFundingEconomyTopUpProviderStatus */
+FinanceEconomyFundingEconomyTopUpProviderStatusSchema = z.enum([
+  'Prepared',
+  'RequiresAction',
+  'Processing',
+  'ProviderSucceeded',
+  'Posted',
+  'Failed',
+  'Cancelled',
+  'Ambiguous',
+  'Held',
+  'Reversed',
+]);
+
+/** Zod schema for FinanceEconomyFundingEconomyTopUpStatusDto */
+FinanceEconomyFundingEconomyTopUpStatusDtoSchema = z.object({
+  currency: z.string().nullable().optional(),
+  hardCoinUnits: z.number().int().optional(),
+  providerBoundAt: z.string().datetime().nullable().optional(),
+  providerObjectId: z.string().nullable().optional(),
+  requestedAt: z.string().datetime().optional(),
+  status: z.lazy(() => FinanceEconomyFundingEconomyTopUpProviderStatusSchema).optional(),
+  topUpId: z.string().uuid().optional(),
+  usdMinorUnits: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyFundingSelfServiceHardCoinTopUpReceipt */
+FinanceEconomyFundingSelfServiceHardCoinTopUpReceiptSchema = z.object({
+  clientSecret: z.string().nullable().optional(),
+  currency: z.string().nullable().optional(),
+  hardCoinUnits: z.number().int().optional(),
+  isDuplicate: z.boolean().optional(),
+  paymentId: z.string().uuid().optional(),
+  providerObjectId: z.string().nullable().optional(),
+  publishableKey: z.string().nullable().optional(),
+  status: z.lazy(() => FinanceEconomyFundingEconomyTopUpProviderStatusSchema).optional(),
+  topUpId: z.string().uuid().optional(),
+  usdMinorUnits: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyFundingSelfServiceHardToSoftConversionReceipt */
+FinanceEconomyFundingSelfServiceHardToSoftConversionReceiptSchema = z.object({
+  feePostingId: z.string().uuid().nullable().optional(),
+  isDuplicate: z.boolean().optional(),
+  journalHash: z.string().nullable().optional(),
+  journalSequence: z.number().int().optional(),
+  principalPostingId: z.string().uuid().optional(),
+});
+
+/** Zod schema for FinanceEconomyLedgerAnchorVerificationRunResult */
+FinanceEconomyLedgerAnchorVerificationRunResultSchema = z.object({
+  failed: z.number().int().optional(),
+  verified: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyLedgerEconomyAnchorPublicationResult */
+FinanceEconomyLedgerEconomyAnchorPublicationResultSchema = z.object({
+  anchorId: z.string().uuid().optional(),
+  eTag: z.string().nullable().optional(),
+  journalHash: z.string().nullable().optional(),
+  journalSequence: z.number().int().optional(),
+  keyId: z.string().nullable().optional(),
+  objectHash: z.string().nullable().optional(),
+  objectKey: z.string().nullable().optional(),
+  objectVersion: z.string().nullable().optional(),
+  retainUntil: z.string().datetime().optional(),
+});
+
+/** Zod schema for FinanceEconomyLedgerJournalIntegrityFailureCode */
+FinanceEconomyLedgerJournalIntegrityFailureCodeSchema = z.enum([
+  'None',
+  'SequenceGap',
+  'PreviousHashMismatch',
+  'CanonicalPayloadMissing',
+  'EntryHashMismatch',
+  'PostingContractInvalid',
+  'InvalidLineAmount',
+  'CurrencyParityMismatch',
+  'SourceStampInvalid',
+  'AllocationInvalid',
+  'LineageInvalid',
+  'RootRangeInvalid',
+  'CumulativeReversalInvalid',
+]);
+
+/** Zod schema for FinanceEconomyLedgerJournalIntegrityRunResult */
+FinanceEconomyLedgerJournalIntegrityRunResultSchema = z.object({
+  fencingToken: z.number().int().optional(),
+  status: z.lazy(() => FinanceEconomyLedgerJournalIntegrityRunStatusSchema).optional(),
+  verification: z.lazy(() => FinanceEconomyLedgerJournalIntegrityVerificationResultSchema).optional(),
+});
+
+/** Zod schema for FinanceEconomyLedgerJournalIntegrityRunStatus */
+FinanceEconomyLedgerJournalIntegrityRunStatusSchema = z.enum(['Verified', 'Failed', 'LeaseUnavailable']);
+
+/** Zod schema for FinanceEconomyLedgerJournalIntegrityVerificationResult */
+FinanceEconomyLedgerJournalIntegrityVerificationResultSchema = z.object({
+  currentHash: z.string().nullable().optional(),
+  failureCode: z.lazy(() => FinanceEconomyLedgerJournalIntegrityFailureCodeSchema).optional(),
+  fromSequence: z.number().int().optional(),
+  isValid: z.boolean().optional(),
+  toSequence: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyMarketplaceDurableMarketplaceRefundDebt */
+FinanceEconomyMarketplaceDurableMarketplaceRefundDebtSchema = z.object({
+  currency: z.lazy(() => FinanceEconomyContractsCurrencyCodeSchema).optional(),
+  evidenceHash: z.string().nullable().optional(),
+  responsibleWalletId: z.lazy(() => FinanceEconomyContractsWalletIdSchema).optional(),
+  units: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyMarketplaceDurableMarketplaceRefundResult */
+FinanceEconomyMarketplaceDurableMarketplaceRefundResultSchema = z.object({
+  cumulativeRefundedQuantity: z.number().int().optional(),
+  debts: z
+    .array(z.lazy(() => FinanceEconomyMarketplaceDurableMarketplaceRefundDebtSchema))
+    .nullable()
+    .optional(),
+  entitlementStatus: z.lazy(() => FinanceEconomyMarketplaceMarketplaceEntitlementStatusSchema).optional(),
+  isDuplicate: z.boolean().optional(),
+  journalHash: z.string().nullable().optional(),
+  journalSequence: z.number().int().optional(),
+  legs: z
+    .array(z.lazy(() => FinanceEconomyContractsCoinAmountSchema))
+    .nullable()
+    .optional(),
+  postingId: z.lazy(() => FinanceEconomyContractsPostingIdSchema).optional(),
+  quantity: z.number().int().optional(),
+  refundedAt: z.string().datetime().optional(),
+  refundId: z.string().uuid().optional(),
+  settlementId: z.string().uuid().optional(),
+  settlementStatus: z.lazy(() => FinanceEconomyMarketplaceMarketplaceSettlementStatusSchema).optional(),
+});
+
+/** Zod schema for FinanceEconomyMarketplaceDurableMarketplaceSettlementResult */
+FinanceEconomyMarketplaceDurableMarketplaceSettlementResultSchema = z.object({
+  buyerId: z.string().uuid().optional(),
+  entitlementStatus: z.lazy(() => FinanceEconomyMarketplaceMarketplaceEntitlementStatusSchema).optional(),
+  isDuplicate: z.boolean().optional(),
+  journalHash: z.string().nullable().optional(),
+  journalSequence: z.number().int().optional(),
+  legs: z
+    .array(z.lazy(() => FinanceEconomyMarketplaceMarketplacePriceLegSnapshotSchema))
+    .nullable()
+    .optional(),
+  orderId: z.string().uuid().optional(),
+  postingId: z.lazy(() => FinanceEconomyContractsPostingIdSchema).optional(),
+  productId: z.string().uuid().optional(),
+  sellerId: z.string().uuid().optional(),
+  settledAt: z.string().datetime().optional(),
+  settlementId: z.string().uuid().optional(),
+  status: z.lazy(() => FinanceEconomyMarketplaceMarketplaceSettlementStatusSchema).optional(),
+});
+
+/** Zod schema for FinanceEconomyMarketplaceMarketplaceCurrencyChoice */
+FinanceEconomyMarketplaceMarketplaceCurrencyChoiceSchema = z.enum(['Hard', 'Soft', 'FixedMix']);
+
+/** Zod schema for FinanceEconomyMarketplaceMarketplaceEntitlementStatus */
+FinanceEconomyMarketplaceMarketplaceEntitlementStatusSchema = z.enum(['PendingGrant', 'Granted', 'Revoked']);
+
+/** Zod schema for FinanceEconomyMarketplaceMarketplaceEventOperationalStatus */
+FinanceEconomyMarketplaceMarketplaceEventOperationalStatusSchema = z.object({
+  id: z.string().uuid().optional(),
+  evidenceHash: z.string().nullable().optional(),
+  kind: z.string().nullable().optional(),
+  occurredAt: z.string().datetime().optional(),
+  sequence: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyMarketplaceMarketplaceOutboxOperationalStatus */
+FinanceEconomyMarketplaceMarketplaceOutboxOperationalStatusSchema = z.object({
+  id: z.string().uuid().optional(),
+  attemptCount: z.number().int().optional(),
+  hasLastError: z.boolean().optional(),
+  leaseExpiresAt: z.string().datetime().nullable().optional(),
+  messageType: z.string().nullable().optional(),
+  occurredAt: z.string().datetime().optional(),
+  payloadHash: z.string().nullable().optional(),
+  publishedAt: z.string().datetime().nullable().optional(),
+  settlementId: z.string().uuid().optional(),
+  tenantId: z.string().uuid().optional(),
+});
+
+/** Zod schema for FinanceEconomyMarketplaceMarketplacePriceLegSnapshot */
+FinanceEconomyMarketplaceMarketplacePriceLegSnapshotSchema = z.object({
+  amount: z.lazy(() => FinanceEconomyContractsCoinAmountSchema).optional(),
+  currency: z.lazy(() => FinanceEconomyContractsCurrencyCodeSchema).optional(),
+  platformFeeUnits: z.number().int().optional(),
+  sellerUnits: z.number().int().optional(),
+  units: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyMarketplaceMarketplaceRefundOperationalStatus */
+FinanceEconomyMarketplaceMarketplaceRefundOperationalStatusSchema = z.object({
+  id: z.string().uuid().optional(),
+  buyerId: z.string().uuid().optional(),
+  entitlementRevoked: z.boolean().optional(),
+  firstJournalSequence: z.number().int().optional(),
+  isFullRefund: z.boolean().optional(),
+  quantity: z.number().int().optional(),
+  reasonCode: z.string().nullable().optional(),
+  refundedAt: z.string().datetime().optional(),
+  refundedQuantity: z.number().int().optional(),
+  settlementId: z.string().uuid().optional(),
+  tenantId: z.string().uuid().optional(),
+});
+
+/** Zod schema for FinanceEconomyMarketplaceMarketplaceSettlementLegOperationalStatus */
+FinanceEconomyMarketplaceMarketplaceSettlementLegOperationalStatusSchema = z.object({
+  currency: z.lazy(() => FinanceEconomyContractsCurrencyCodeSchema).optional(),
+  platformFeeUnits: z.number().int().optional(),
+  refundedUnits: z.number().int().optional(),
+  sellerUnits: z.number().int().optional(),
+  units: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyMarketplaceMarketplaceSettlementOperationalDetails */
+FinanceEconomyMarketplaceMarketplaceSettlementOperationalDetailsSchema = z.object({
+  events: z
+    .array(z.lazy(() => FinanceEconomyMarketplaceMarketplaceEventOperationalStatusSchema))
+    .nullable()
+    .optional(),
+  legs: z
+    .array(z.lazy(() => FinanceEconomyMarketplaceMarketplaceSettlementLegOperationalStatusSchema))
+    .nullable()
+    .optional(),
+  outbox: z
+    .array(z.lazy(() => FinanceEconomyMarketplaceMarketplaceOutboxOperationalStatusSchema))
+    .nullable()
+    .optional(),
+  refunds: z
+    .array(z.lazy(() => FinanceEconomyMarketplaceMarketplaceRefundOperationalStatusSchema))
+    .nullable()
+    .optional(),
+  summary: z.lazy(() => FinanceEconomyMarketplaceMarketplaceSettlementOperationalSummarySchema).optional(),
+});
+
+/** Zod schema for FinanceEconomyMarketplaceMarketplaceSettlementOperationalSummary */
+FinanceEconomyMarketplaceMarketplaceSettlementOperationalSummarySchema = z.object({
+  id: z.string().uuid().optional(),
+  buyerId: z.string().uuid().optional(),
+  currencyMode: z.lazy(() => FinanceEconomyMarketplaceProductCurrencyModeSchema).optional(),
+  entitlementId: z.string().uuid().optional(),
+  entitlementStatus: z.lazy(() => FinanceEconomyMarketplaceMarketplaceEntitlementStatusSchema).optional(),
+  journalSequence: z.number().int().optional(),
+  jurisdictionCode: z.string().nullable().optional(),
+  orderId: z.string().uuid().optional(),
+  orderLineItemId: z.string().uuid().optional(),
+  policyVersion: z.number().int().optional(),
+  productId: z.string().uuid().optional(),
+  quantity: z.number().int().optional(),
+  refundedQuantity: z.number().int().optional(),
+  refundHoldUntil: z.string().datetime().optional(),
+  reserveVersion: z.number().int().optional(),
+  sellerId: z.string().uuid().optional(),
+  settledAt: z.string().datetime().optional(),
+  status: z.lazy(() => FinanceEconomyMarketplaceMarketplaceSettlementStatusSchema).optional(),
+  tenantId: z.string().uuid().optional(),
+  updatedAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for FinanceEconomyMarketplaceMarketplaceSettlementStatus */
+FinanceEconomyMarketplaceMarketplaceSettlementStatusSchema = z.enum(['Settled', 'PartiallyRefunded', 'Refunded']);
+
+/** Zod schema for FinanceEconomyMarketplaceProductCurrencyMode */
+FinanceEconomyMarketplaceProductCurrencyModeSchema = z.enum(['HardOnly', 'SoftOnly', 'Either', 'FixedMix']);
+
+/** Zod schema for FinanceEconomyOperationsEconomyActiveReserveOperationalDetails */
+FinanceEconomyOperationsEconomyActiveReserveOperationalDetailsSchema = z.object({
+  allocations: z
+    .array(z.lazy(() => FinanceEconomyOperationsEconomyReserveAssetAllocationOperationalStatusSchema))
+    .nullable()
+    .optional(),
+  head: z.lazy(() => FinanceEconomyOperationsEconomyReserveOperationalStatusSchema).optional(),
+  reconciliation: z.lazy(() => FinanceEconomyOperationsEconomyCustodyReconciliationOperationalStatusSchema).optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsEconomyAnchorOperationalDetails */
+FinanceEconomyOperationsEconomyAnchorOperationalDetailsSchema = z.object({
+  dispatchSnapshotHash: z.string().nullable().optional(),
+  summary: z.lazy(() => FinanceEconomyOperationsEconomyAnchorOperationalStatusSchema).optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsEconomyAnchorOperationalStatus */
+FinanceEconomyOperationsEconomyAnchorOperationalStatusSchema = z.object({
+  id: z.string().uuid().optional(),
+  anchoredAt: z.string().datetime().optional(),
+  journalHash: z.string().nullable().optional(),
+  journalSequence: z.number().int().optional(),
+  objectMatches: z.boolean().optional(),
+  provider: z.string().nullable().optional(),
+  retainUntil: z.string().datetime().nullable().optional(),
+  signatureValid: z.boolean().optional(),
+  verifiedAt: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsEconomyAnchorVerificationOperationalStatus */
+FinanceEconomyOperationsEconomyAnchorVerificationOperationalStatusSchema = z.object({
+  id: z.string().uuid().optional(),
+  eTag: z.string().nullable().optional(),
+  keyId: z.string().nullable().optional(),
+  objectHash: z.string().nullable().optional(),
+  objectMatches: z.boolean().optional(),
+  objectVersion: z.string().nullable().optional(),
+  retainUntil: z.string().datetime().optional(),
+  signatureValid: z.boolean().optional(),
+  verifiedAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsEconomyCapabilityConfigurationSnapshot */
+FinanceEconomyOperationsEconomyCapabilityConfigurationSnapshotSchema = z.object({
+  killSwitches: z
+    .array(z.lazy(() => FinanceEconomyOperationsEconomyKillSwitchOperationalStatusSchema))
+    .nullable()
+    .optional(),
+  policies: z
+    .array(z.lazy(() => FinanceEconomyOperationsEconomyCapabilityPolicyOperationalStatusSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsEconomyCapabilityPolicyOperationalStatus */
+FinanceEconomyOperationsEconomyCapabilityPolicyOperationalStatusSchema = z.object({
+  id: z.string().uuid().optional(),
+  capability: z.lazy(() => FinanceEconomyRiskEconomyValueMovementCapabilitySchema).optional(),
+  effectiveAt: z.string().datetime().optional(),
+  expiresAt: z.string().datetime().optional(),
+  jurisdictionCode: z.string().nullable().optional(),
+  keyId: z.string().nullable().optional(),
+  payloadHash: z.string().nullable().optional(),
+  providerReady: z.boolean().optional(),
+  state: z.lazy(() => FinanceEconomyRiskEconomyCapabilityPolicyStateSchema).optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsEconomyCustodyObservationOperationalStatus */
+FinanceEconomyOperationsEconomyCustodyObservationOperationalStatusSchema = z.object({
+  id: z.string().uuid().optional(),
+  assetKey: z.string().nullable().optional(),
+  eligibleUsdNanos: z.number().int().optional(),
+  expiresAt: z.string().datetime().optional(),
+  keyId: z.string().nullable().optional(),
+  observedAt: z.string().datetime().optional(),
+  payloadHash: z.string().nullable().optional(),
+  provider: z.string().nullable().optional(),
+  purpose: z.lazy(() => FinanceEconomyReservesReserveBackingPurposeSchema).optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsEconomyCustodyReconciliationOperationalStatus */
+FinanceEconomyOperationsEconomyCustodyReconciliationOperationalStatusSchema = z.object({
+  id: z.string().uuid().optional(),
+  eligibleAssetUsdNanos: z.number().int().optional(),
+  evidenceHash: z.string().nullable().optional(),
+  isReconciled: z.boolean().optional(),
+  liabilityUsdNanos: z.number().int().optional(),
+  reconciledAt: z.string().datetime().optional(),
+  reconciledBy: z.string().uuid().optional(),
+  varianceUsdNanos: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsEconomyJournalHeadStatus */
+FinanceEconomyOperationsEconomyJournalHeadStatusSchema = z.object({
+  hash: z.string().nullable().optional(),
+  sequence: z.number().int().optional(),
+  updatedAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsEconomyJournalVerificationRunDetails */
+FinanceEconomyOperationsEconomyJournalVerificationRunDetailsSchema = z.object({
+  id: z.string().uuid().optional(),
+  completedAt: z.string().datetime().optional(),
+  currentHash: z.string().nullable().optional(),
+  failureCode: z.string().nullable().optional(),
+  fencingToken: z.number().int().optional(),
+  fromSequence: z.number().int().optional(),
+  isValid: z.boolean().optional(),
+  previousHash: z.string().nullable().optional(),
+  startedAt: z.string().datetime().optional(),
+  toSequence: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsEconomyJournalVerificationStatus */
+FinanceEconomyOperationsEconomyJournalVerificationStatusSchema = z.object({
+  completedAt: z.string().datetime().optional(),
+  currentHash: z.string().nullable().optional(),
+  failureCode: z.string().nullable().optional(),
+  fencingToken: z.number().int().optional(),
+  fromSequence: z.number().int().optional(),
+  isValid: z.boolean().optional(),
+  toSequence: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsEconomyKillSwitchOperationalStatus */
+FinanceEconomyOperationsEconomyKillSwitchOperationalStatusSchema = z.object({
+  id: z.string().uuid().optional(),
+  activatedAt: z.string().datetime().optional(),
+  activatedBy: z.string().uuid().optional(),
+  epoch: z.number().int().optional(),
+  isActive: z.boolean().optional(),
+  reason: z.string().nullable().optional(),
+  releaseApprovers: z.array(z.string().uuid()).nullable().optional(),
+  releasedAt: z.string().datetime().nullable().optional(),
+  releaseProposedBy: z.string().uuid().nullable().optional(),
+  scope: z.lazy(() => FinanceEconomyRiskEconomyKillSwitchScopeSchema).optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsEconomyLedgerHealthSnapshot */
+FinanceEconomyOperationsEconomyLedgerHealthSnapshotSchema = z.object({
+  activeProjection: z.lazy(() => FinanceEconomyOperationsEconomyProjectionOperationalStatusSchema).optional(),
+  activeReserve: z.lazy(() => FinanceEconomyOperationsEconomyReserveOperationalStatusSchema).optional(),
+  diagnostics: z.array(z.string()).nullable().optional(),
+  head: z.lazy(() => FinanceEconomyOperationsEconomyJournalHeadStatusSchema).optional(),
+  isAnchorHealthy: z.boolean().optional(),
+  isJournalHealthy: z.boolean().optional(),
+  isProjectionHealthy: z.boolean().optional(),
+  isReserveHealthy: z.boolean().optional(),
+  latestAnchor: z.lazy(() => FinanceEconomyOperationsEconomyAnchorOperationalStatusSchema).optional(),
+  latestVerification: z.lazy(() => FinanceEconomyOperationsEconomyJournalVerificationStatusSchema).optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageAdRewardPendingClaimOperationalStatus */
+FinanceEconomyOperationsEconomyOperationalPageAdRewardPendingClaimOperationalStatusSchema = z.object({
+  items: z
+    .array(z.lazy(() => FinanceEconomyAdRewardsAdRewardPendingClaimOperationalStatusSchema))
+    .nullable()
+    .optional(),
+  nextCursor: z.string().nullable().optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageAdRewardReconciliationOperationalStatus */
+FinanceEconomyOperationsEconomyOperationalPageAdRewardReconciliationOperationalStatusSchema = z.object({
+  items: z
+    .array(z.lazy(() => FinanceEconomyAdRewardsAdRewardReconciliationOperationalStatusSchema))
+    .nullable()
+    .optional(),
+  nextCursor: z.string().nullable().optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageAdRewardSessionOperationalSummary */
+FinanceEconomyOperationsEconomyOperationalPageAdRewardSessionOperationalSummarySchema = z.object({
+  items: z
+    .array(z.lazy(() => FinanceEconomyAdRewardsAdRewardSessionOperationalSummarySchema))
+    .nullable()
+    .optional(),
+  nextCursor: z.string().nullable().optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageEconomyAnchorOperationalDetails */
+FinanceEconomyOperationsEconomyOperationalPageEconomyAnchorOperationalDetailsSchema = z.object({
+  items: z
+    .array(z.lazy(() => FinanceEconomyOperationsEconomyAnchorOperationalDetailsSchema))
+    .nullable()
+    .optional(),
+  nextCursor: z.string().nullable().optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageEconomyCapabilityPolicyOperationalStatus */
+FinanceEconomyOperationsEconomyOperationalPageEconomyCapabilityPolicyOperationalStatusSchema = z.object({
+  items: z
+    .array(z.lazy(() => FinanceEconomyOperationsEconomyCapabilityPolicyOperationalStatusSchema))
+    .nullable()
+    .optional(),
+  nextCursor: z.string().nullable().optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageEconomyCustodyObservationOperationalStatus */
+FinanceEconomyOperationsEconomyOperationalPageEconomyCustodyObservationOperationalStatusSchema = z.object({
+  items: z
+    .array(z.lazy(() => FinanceEconomyOperationsEconomyCustodyObservationOperationalStatusSchema))
+    .nullable()
+    .optional(),
+  nextCursor: z.string().nullable().optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageEconomyJournalVerificationRunDetails */
+FinanceEconomyOperationsEconomyOperationalPageEconomyJournalVerificationRunDetailsSchema = z.object({
+  items: z
+    .array(z.lazy(() => FinanceEconomyOperationsEconomyJournalVerificationRunDetailsSchema))
+    .nullable()
+    .optional(),
+  nextCursor: z.string().nullable().optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageEconomyProjectionGenerationOperationalDetails */
+FinanceEconomyOperationsEconomyOperationalPageEconomyProjectionGenerationOperationalDetailsSchema = z.object({
+  items: z
+    .array(z.lazy(() => FinanceEconomyOperationsEconomyProjectionGenerationOperationalDetailsSchema))
+    .nullable()
+    .optional(),
+  nextCursor: z.string().nullable().optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageEconomyReserveProposalOperationalStatus */
+FinanceEconomyOperationsEconomyOperationalPageEconomyReserveProposalOperationalStatusSchema = z.object({
+  items: z
+    .array(z.lazy(() => FinanceEconomyOperationsEconomyReserveProposalOperationalStatusSchema))
+    .nullable()
+    .optional(),
+  nextCursor: z.string().nullable().optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageLegacyEconomyShadowBatchSummary */
+FinanceEconomyOperationsEconomyOperationalPageLegacyEconomyShadowBatchSummarySchema = z.object({
+  items: z
+    .array(z.lazy(() => FinanceEconomyOperationsLegacyEconomyShadowBatchSummarySchema))
+    .nullable()
+    .optional(),
+  nextCursor: z.string().nullable().optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageMarketplaceOutboxOperationalStatus */
+FinanceEconomyOperationsEconomyOperationalPageMarketplaceOutboxOperationalStatusSchema = z.object({
+  items: z
+    .array(z.lazy(() => FinanceEconomyMarketplaceMarketplaceOutboxOperationalStatusSchema))
+    .nullable()
+    .optional(),
+  nextCursor: z.string().nullable().optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageMarketplaceRefundOperationalStatus */
+FinanceEconomyOperationsEconomyOperationalPageMarketplaceRefundOperationalStatusSchema = z.object({
+  items: z
+    .array(z.lazy(() => FinanceEconomyMarketplaceMarketplaceRefundOperationalStatusSchema))
+    .nullable()
+    .optional(),
+  nextCursor: z.string().nullable().optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageMarketplaceSettlementOperationalSummary */
+FinanceEconomyOperationsEconomyOperationalPageMarketplaceSettlementOperationalSummarySchema = z.object({
+  items: z
+    .array(z.lazy(() => FinanceEconomyMarketplaceMarketplaceSettlementOperationalSummarySchema))
+    .nullable()
+    .optional(),
+  nextCursor: z.string().nullable().optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsEconomyPolicyAuditEntry */
+FinanceEconomyOperationsEconomyPolicyAuditEntrySchema = z.object({
+  actorId: z.string().uuid().optional(),
+  evidenceHash: z.string().nullable().optional(),
+  kind: z.string().nullable().optional(),
+  occurredAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsEconomyPolicyOperationalDetails */
+FinanceEconomyOperationsEconomyPolicyOperationalDetailsSchema = z.object({
+  approvedAt: z.string().datetime().nullable().optional(),
+  approvedBy: z.string().uuid().nullable().optional(),
+  canonicalPayload: z.string().nullable().optional(),
+  proposedAt: z.string().datetime().optional(),
+  proposedBy: z.string().uuid().optional(),
+  summary: z.lazy(() => FinanceEconomyOperationsEconomyCapabilityPolicyOperationalStatusSchema).optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsEconomyProjectionApprovalAuditEntry */
+FinanceEconomyOperationsEconomyProjectionApprovalAuditEntrySchema = z.object({
+  id: z.string().uuid().optional(),
+  actorId: z.string().uuid().optional(),
+  approvedAt: z.string().datetime().optional(),
+  evidenceHash: z.string().nullable().optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsEconomyProjectionGenerationOperationalDetails */
+FinanceEconomyOperationsEconomyProjectionGenerationOperationalDetailsSchema = z.object({
+  completedAt: z.string().datetime().nullable().optional(),
+  fromSequence: z.number().int().optional(),
+  isActive: z.boolean().optional(),
+  startedAt: z.string().datetime().optional(),
+  summary: z.lazy(() => FinanceEconomyOperationsEconomyProjectionOperationalStatusSchema).optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsEconomyProjectionOperationalStatus */
+FinanceEconomyOperationsEconomyProjectionOperationalStatusSchema = z.object({
+  activatedAt: z.string().datetime().nullable().optional(),
+  approvedBy: z.string().uuid().nullable().optional(),
+  generation: z.number().int().optional(),
+  journalHash: z.string().nullable().optional(),
+  mismatchCount: z.number().int().optional(),
+  projectionHash: z.string().nullable().optional(),
+  proposedBy: z.string().uuid().optional(),
+  secondApprovedBy: z.string().uuid().nullable().optional(),
+  state: z.string().nullable().optional(),
+  toSequence: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsEconomyReserveAssetAllocationOperationalStatus */
+FinanceEconomyOperationsEconomyReserveAssetAllocationOperationalStatusSchema = z.object({
+  id: z.string().uuid().optional(),
+  assetKey: z.string().nullable().optional(),
+  eligibleUsdNanos: z.number().int().optional(),
+  purpose: z.lazy(() => FinanceEconomyReservesReserveBackingPurposeSchema).optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsEconomyReserveOperationalStatus */
+FinanceEconomyOperationsEconomyReserveOperationalStatusSchema = z.object({
+  authorizationEpoch: z.number().int().optional(),
+  coverage: z.lazy(() => FinanceEconomyReservesReserveCoverageStateSchema).optional(),
+  custodyReconciled: z.boolean().optional(),
+  custodyVarianceUsdNanos: z.number().int().nullable().optional(),
+  evidenceHash: z.string().nullable().optional(),
+  expiresAt: z.string().datetime().optional(),
+  observedAt: z.string().datetime().optional(),
+  policyVersion: z.number().int().optional(),
+  reconciledAt: z.string().datetime().nullable().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsEconomyReserveProposalOperationalStatus */
+FinanceEconomyOperationsEconomyReserveProposalOperationalStatusSchema = z.object({
+  id: z.string().uuid().optional(),
+  approvedAt: z.string().datetime().nullable().optional(),
+  approvedBy: z.string().uuid().nullable().optional(),
+  assetAllocations: z.string().nullable().optional(),
+  authorizationEpoch: z.number().int().optional(),
+  coverage: z.lazy(() => FinanceEconomyReservesReserveCoverageStateSchema).optional(),
+  eligibleAssetUsdNanos: z.number().int().optional(),
+  evidenceHash: z.string().nullable().optional(),
+  expectedActiveVersion: z.number().int().nullable().optional(),
+  expiresAt: z.string().datetime().optional(),
+  liabilityUsdNanos: z.number().int().optional(),
+  observationIds: z.string().nullable().optional(),
+  observedAt: z.string().datetime().optional(),
+  policyVersion: z.number().int().optional(),
+  proposedAt: z.string().datetime().optional(),
+  proposedBy: z.string().uuid().optional(),
+  snapshotHash: z.string().nullable().optional(),
+  status: z.string().nullable().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsLegacyEconomyShadowBatchSummary */
+FinanceEconomyOperationsLegacyEconomyShadowBatchSummarySchema = z.object({
+  id: z.string().uuid().optional(),
+  backfilledHardUnits: z.number().int().optional(),
+  capturedAt: z.string().datetime().optional(),
+  expectedHardUnits: z.number().int().optional(),
+  failureCode: z.string().nullable().optional(),
+  financialLedgerEntryCount: z.number().int().optional(),
+  jurisdictionCode: z.string().nullable().optional(),
+  policyVersion: z.number().int().optional(),
+  reconciledHardUnits: z.number().int().optional(),
+  state: z.lazy(() => FinanceEconomyOperationsLegacyEconomyShadowStateSchema).optional(),
+  tenantId: z.string().uuid().optional(),
+  transactionCount: z.number().int().optional(),
+  updatedAt: z.string().datetime().optional(),
+  version: z.number().int().optional(),
+  walletCount: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsLegacyEconomyShadowBatchView */
+FinanceEconomyOperationsLegacyEconomyShadowBatchViewSchema = z.object({
+  id: z.string().uuid().optional(),
+  backfilledHardUnits: z.number().int().optional(),
+  expectedHardUnits: z.number().int().optional(),
+  failureCode: z.string().nullable().optional(),
+  financialLedgerEntryCount: z.number().int().optional(),
+  financialLedgerSnapshotHash: z.string().nullable().optional(),
+  policyVersion: z.number().int().optional(),
+  reconciledHardUnits: z.number().int().optional(),
+  state: z.lazy(() => FinanceEconomyOperationsLegacyEconomyShadowStateSchema).optional(),
+  tenantId: z.string().uuid().optional(),
+  transactionCount: z.number().int().optional(),
+  transactionSnapshotHash: z.string().nullable().optional(),
+  walletCount: z.number().int().optional(),
+  wallets: z
+    .array(z.lazy(() => FinanceEconomyOperationsLegacyEconomyShadowWalletViewSchema))
+    .nullable()
+    .optional(),
+  walletSnapshotHash: z.string().nullable().optional(),
+});
+
+/** Zod schema for FinanceEconomyOperationsLegacyEconomyShadowState */
+FinanceEconomyOperationsLegacyEconomyShadowStateSchema = z.enum([
+  'Captured',
+  'Backfilling',
+  'Backfilled',
+  'Reconciled',
+  'CutoverProposed',
+  'CutoverActive',
+  'RolledBack',
+  'Failed',
+]);
+
+/** Zod schema for FinanceEconomyOperationsLegacyEconomyShadowWalletView */
+FinanceEconomyOperationsLegacyEconomyShadowWalletViewSchema = z.object({
+  completedCreditsMinorUnits: z.number().int().optional(),
+  completedDebitsMinorUnits: z.number().int().optional(),
+  creditLotId: z.string().uuid().optional(),
+  economyWalletId: z.string().uuid().nullable().optional(),
+  failureCode: z.string().nullable().optional(),
+  journalSequence: z.number().int().nullable().optional(),
+  legacyBalanceMinorUnits: z.number().int().optional(),
+  legacyWalletId: z.string().uuid().optional(),
+  ownerId: z.string().uuid().optional(),
+  postingId: z.string().uuid().optional(),
+  sourceStampId: z.string().uuid().optional(),
+  state: z.string().nullable().optional(),
+  transactionCount: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyPayoutsCommandsCreateMyPayoutRequestInput */
+FinanceEconomyPayoutsCommandsCreateMyPayoutRequestInputSchema = z.object({
+  hardCoinUnits: z.number().int().optional(),
+  idempotencyKey: z.string().nullable().optional(),
+});
+
+/** Zod schema for FinanceEconomyPayoutsCommandsReviewPayoutRequestInput */
+FinanceEconomyPayoutsCommandsReviewPayoutRequestInputSchema = z.object({
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for FinanceEconomyPayoutsConnectAccountSnapshot */
+FinanceEconomyPayoutsConnectAccountSnapshotSchema = z.object({
+  chargesEnabled: z.boolean().optional(),
+  destinationHash: z.string().nullable().optional(),
+  evidenceHash: z.string().nullable().optional(),
+  expiresAt: z.string().datetime().optional(),
+  observedAt: z.string().datetime().optional(),
+  payeeId: z.string().uuid().optional(),
+  payoutsEnabled: z.boolean().optional(),
+  providerAccountId: z.string().nullable().optional(),
+  state: z.lazy(() => FinanceEconomyPayoutsConnectAccountStateSchema).optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyPayoutsConnectAccountState */
+FinanceEconomyPayoutsConnectAccountStateSchema = z.enum(['Pending', 'Restricted', 'Ready', 'Disabled']);
+
+/** Zod schema for FinanceEconomyPayoutsConnectOnboardingResult */
+FinanceEconomyPayoutsConnectOnboardingResultSchema = z.object({
+  account: z.lazy(() => FinanceEconomyPayoutsConnectAccountSnapshotSchema).optional(),
+  onboardingUri: z.string().url().nullable().optional(),
+});
+
+/** Zod schema for FinanceEconomyPayoutsPayoutOperationState */
+FinanceEconomyPayoutsPayoutOperationStateSchema = z.enum(['Reserved', 'Dispatching', 'Ambiguous', 'Succeeded', 'Failed', 'Cancelled']);
+
+/** Zod schema for FinanceEconomyPayoutsPayoutRequestState */
+FinanceEconomyPayoutsPayoutRequestStateSchema = z.enum(['Submitted', 'Cancelled', 'Approved', 'Rejected', 'AwaitingSecondApproval']);
+
+/** Zod schema for FinanceEconomyPayoutsQueriesEconomyPayoutOperationDto */
+FinanceEconomyPayoutsQueriesEconomyPayoutOperationDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  createdAt: z.string().datetime().optional(),
+  hardCoinUnits: z.number().int().optional(),
+  state: z.lazy(() => FinanceEconomyPayoutsPayoutOperationStateSchema).optional(),
+  updatedAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for FinanceEconomyPayoutsQueriesEconomyPayoutRequestDto */
+FinanceEconomyPayoutsQueriesEconomyPayoutRequestDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  createdAt: z.string().datetime().optional(),
+  hardCoinUnits: z.number().int().optional(),
+  state: z.lazy(() => FinanceEconomyPayoutsPayoutRequestStateSchema).optional(),
+  updatedAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewAuditDto */
+FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewAuditDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  actorId: z.string().uuid().optional(),
+  occurredAt: z.string().datetime().optional(),
+  outcome: z.lazy(() => FinanceEconomyPayoutsPayoutRequestStateSchema).optional(),
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewDto */
+FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  createdAt: z.string().datetime().optional(),
+  hardCoinUnits: z.number().int().optional(),
+  payeeId: z.string().uuid().optional(),
+  state: z.lazy(() => FinanceEconomyPayoutsPayoutRequestStateSchema).optional(),
+  updatedAt: z.string().datetime().optional(),
+  version: z.number().int().optional(),
+  walletId: z.string().uuid().optional(),
+});
+
+/** Zod schema for FinanceEconomyProjectionsProjectionGenerationState */
+FinanceEconomyProjectionsProjectionGenerationStateSchema = z.object({
+  approvedBy: z.array(z.string().uuid()).nullable().optional(),
+  generation: z.number().int().optional(),
+  isActive: z.boolean().optional(),
+  journalHash: z.string().nullable().optional(),
+  mismatchCount: z.number().int().optional(),
+  projectionHash: z.string().nullable().optional(),
+  proposedBy: z.string().uuid().optional(),
+  state: z.string().nullable().optional(),
+  toSequence: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyReservesCustodyObservationCommand */
+FinanceEconomyReservesCustodyObservationCommandSchema = z.object({
+  id: z.string().uuid().optional(),
+  assetKey: z.string().nullable().optional(),
+  eligibleUsdNanos: z.number().int().optional(),
+  expiresAt: z.string().datetime().optional(),
+  keyId: z.string().nullable().optional(),
+  observedAt: z.string().datetime().optional(),
+  payloadHash: z.string().nullable().optional(),
+  provider: z.string().nullable().optional(),
+  purpose: z.lazy(() => FinanceEconomyReservesReserveBackingPurposeSchema).optional(),
+  signature: z.string().nullable().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyReservesDurableCustodyObservation */
+FinanceEconomyReservesDurableCustodyObservationSchema = z.object({
+  id: z.string().uuid().optional(),
+  assetKey: z.string().nullable().optional(),
+  eligibleUsdNanos: z.number().int().optional(),
+  expiresAt: z.string().datetime().optional(),
+  keyId: z.string().nullable().optional(),
+  observedAt: z.string().datetime().optional(),
+  payloadHash: z.string().nullable().optional(),
+  provider: z.string().nullable().optional(),
+  purpose: z.lazy(() => FinanceEconomyReservesReserveBackingPurposeSchema).optional(),
+  signature: z.string().nullable().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyReservesDurableReserveProposalState */
+FinanceEconomyReservesDurableReserveProposalStateSchema = z.object({
+  id: z.string().uuid().optional(),
+  approvedBy: z.string().uuid().nullable().optional(),
+  authorizationEpoch: z.number().int().optional(),
+  coverage: z.lazy(() => FinanceEconomyReservesReserveCoverageStateSchema).optional(),
+  eligibleAssetUsdNanos: z.number().int().optional(),
+  expiresAt: z.string().datetime().optional(),
+  liabilityUsdNanos: z.number().int().optional(),
+  observedAt: z.string().datetime().optional(),
+  policyVersion: z.number().int().optional(),
+  proposedBy: z.string().uuid().optional(),
+  snapshotHash: z.string().nullable().optional(),
+  status: z.string().nullable().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyReservesEconomyLiabilitySnapshot */
+FinanceEconomyReservesEconomyLiabilitySnapshotSchema = z.object({
+  journalHash: z.string().nullable().optional(),
+  journalSequence: z.number().int().optional(),
+  liabilityUsdNanos: z.number().int().optional(),
+  outstandingHardUnits: z.number().int().optional(),
+  outstandingSoftUnits: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyReservesExternalReserveAsset */
+FinanceEconomyReservesExternalReserveAssetSchema = z.object({
+  assetKey: z.string().nullable().optional(),
+  eligibleUsdNanos: z.number().int().optional(),
+  purpose: z.lazy(() => FinanceEconomyReservesReserveBackingPurposeSchema).optional(),
+});
+
+/** Zod schema for FinanceEconomyReservesReserveBackingPurpose */
+FinanceEconomyReservesReserveBackingPurposeSchema = z.enum(['HardCoin', 'SoftCoin']);
+
+/** Zod schema for FinanceEconomyReservesReserveBufferPosition */
+FinanceEconomyReservesReserveBufferPositionSchema = z.object({
+  adEstimateVarianceBufferUsdNanos: z.number().int().optional(),
+  chargebackRefundBufferUsdMinor: z.number().int().optional(),
+  fraudLossBudgetUsdNanos: z.number().int().optional(),
+  hardOperatingLiquidityBufferUsdMinor: z.number().int().optional(),
+  payoutSettlementBufferUsdMinor: z.number().int().optional(),
+  providerFxBufferUsdNanos: z.number().int().optional(),
+  softOperatingLiquidityBufferUsdNanos: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyReservesReserveCoverageState */
+FinanceEconomyReservesReserveCoverageStateSchema = z.enum(['Covered', 'Shortfall']);
+
+/** Zod schema for FinanceEconomyReservesReserveHead */
+FinanceEconomyReservesReserveHeadSchema = z.object({
+  assetAllocations: z
+    .array(z.lazy(() => FinanceEconomyReservesExternalReserveAssetSchema))
+    .nullable()
+    .optional(),
+  authorizationEpoch: z.number().int().optional(),
+  coverage: z.lazy(() => FinanceEconomyReservesReserveCoverageStateSchema).optional(),
+  evidenceHash: z.string().nullable().optional(),
+  expiresAt: z.string().datetime().optional(),
+  hardBackingUsdNanos: z.number().int().optional(),
+  observedAt: z.string().datetime().optional(),
+  policyVersion: z.lazy(() => FinanceEconomyContractsPolicyVersionSchema).optional(),
+  requirements: z.lazy(() => FinanceEconomyReservesReserveRequirementSnapshotSchema).optional(),
+  softBackingUsdNanos: z.number().int().optional(),
+  version: z.lazy(() => FinanceEconomyContractsReserveVersionSchema).optional(),
+});
+
+/** Zod schema for FinanceEconomyReservesReserveRequirementSnapshot */
+FinanceEconomyReservesReserveRequirementSnapshotSchema = z.object({
+  hardFaceValueUsdMinor: z.number().int().optional(),
+  requiredHardReserveUsdMinor: z.number().int().optional(),
+  requiredSoftReserveUsdNanos: z.number().int().optional(),
+  softFaceValueUsdNanos: z.number().int().optional(),
+  stressedExpectedRedemptionCostUsdNanos: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyReservesReserveServiceObservation */
+FinanceEconomyReservesReserveServiceObservationSchema = z.object({
+  currentProviderCostUsdNanos: z.number().int().optional(),
+  currentServicePriceSoftUnits: z.number().int().optional(),
+  enabled: z.boolean().optional(),
+  expiresAt: z.string().datetime().optional(),
+  observedAt: z.string().datetime().optional(),
+  providerFxStressCostUsdNanos: z.number().int().optional(),
+  reservedSoftUnits: z.number().int().optional(),
+  serviceCode: z.string().nullable().optional(),
+  trailingHighPercentileCostUsdNanos: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyRiskCapabilityAuthorizationReceipt */
+FinanceEconomyRiskCapabilityAuthorizationReceiptSchema = z.object({
+  id: z.string().uuid().optional(),
+  actorId: z.string().uuid().optional(),
+  capability: z.lazy(() => FinanceEconomyRiskEconomyValueMovementCapabilitySchema).optional(),
+  destinationHash: z.string().nullable().optional(),
+  evidenceHashes: z.array(z.string()).nullable().optional(),
+  expiresAt: z.string().datetime().optional(),
+  issuedAt: z.string().datetime().optional(),
+  jurisdictionCode: z.string().nullable().optional(),
+  keyId: z.string().nullable().optional(),
+  killSwitchEpoch: z.number().int().optional(),
+  operationFingerprint: z.string().nullable().optional(),
+  policyVersion: z.number().int().optional(),
+  providerHash: z.string().nullable().optional(),
+  receiptHash: z.string().nullable().optional(),
+  reserveVersion: z.number().int().optional(),
+  riskDecisionId: z.string().uuid().optional(),
+  signature: z.string().nullable().optional(),
+  sourceRootHashes: z.array(z.string()).nullable().optional(),
+  subjectReference: z.string().nullable().optional(),
+  tenantId: z.string().uuid().optional(),
+});
+
+/** Zod schema for FinanceEconomyRiskComplianceEvidenceResult */
+FinanceEconomyRiskComplianceEvidenceResultSchema = z.enum(['Approved', 'Rejected', 'NeedsReview', 'Unavailable']);
+
+/** Zod schema for FinanceEconomyRiskComplianceHold */
+FinanceEconomyRiskComplianceHoldSchema = z.object({
+  id: z.string().uuid().optional(),
+  activatedAt: z.string().datetime().optional(),
+  activatedBy: z.string().uuid().optional(),
+  caseReferenceHash: z.string().nullable().optional(),
+  evidenceHash: z.string().nullable().optional(),
+  expiresAt: z.string().datetime().optional(),
+  reasonCode: z.string().nullable().optional(),
+  releasedAt: z.string().datetime().nullable().optional(),
+  releasedBy: z.string().uuid().nullable().optional(),
+  scope: z.lazy(() => FinanceEconomyRiskComplianceHoldScopeSchema).optional(),
+});
+
+/** Zod schema for FinanceEconomyRiskComplianceHoldAdministrationState */
+FinanceEconomyRiskComplianceHoldAdministrationStateSchema = z.object({
+  hold: z.lazy(() => FinanceEconomyRiskComplianceHoldSchema).optional(),
+  releaseApprovers: z.array(z.string().uuid()).nullable().optional(),
+  releasePolicyEvidenceHash: z.string().nullable().optional(),
+  releaseProposedAt: z.string().datetime().nullable().optional(),
+  releaseProposedBy: z.string().uuid().nullable().optional(),
+  requiredReleaseApprovals: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for FinanceEconomyRiskComplianceHoldEvent */
+FinanceEconomyRiskComplianceHoldEventSchema = z.object({
+  actorId: z.string().uuid().optional(),
+  evidenceHash: z.string().nullable().optional(),
+  holdId: z.string().uuid().optional(),
+  kind: z.string().nullable().optional(),
+  occurredAt: z.string().datetime().optional(),
+  sequence: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyRiskComplianceHoldPage */
+FinanceEconomyRiskComplianceHoldPageSchema = z.object({
+  items: z
+    .array(z.lazy(() => FinanceEconomyRiskComplianceHoldAdministrationStateSchema))
+    .nullable()
+    .optional(),
+  nextCursor: z.string().nullable().optional(),
+});
+
+/** Zod schema for FinanceEconomyRiskComplianceHoldScope */
+FinanceEconomyRiskComplianceHoldScopeSchema = z.object({
+  capability: z.lazy(() => FinanceEconomyRiskEconomyValueMovementCapabilitySchema).optional(),
+  key: z.string().nullable().optional(),
+  subjectHash: z.string().nullable().optional(),
+  tenantId: z.string().uuid().optional(),
+});
+
+/** Zod schema for FinanceEconomyRiskEconomyCapabilityEvaluationResult */
+FinanceEconomyRiskEconomyCapabilityEvaluationResultSchema = z.object({
+  diagnostics: z.array(z.string()).nullable().optional(),
+  isReady: z.boolean().optional(),
+  receipt: z.lazy(() => FinanceEconomyRiskCapabilityAuthorizationReceiptSchema).optional(),
+  state: z.lazy(() => FinanceEconomyRiskEconomyCapabilityReadinessStatusSchema).optional(),
+});
+
+/** Zod schema for FinanceEconomyRiskEconomyCapabilityPolicy */
+FinanceEconomyRiskEconomyCapabilityPolicySchema = z.object({
+  id: z.string().uuid().optional(),
+  approvedAt: z.string().datetime().nullable().optional(),
+  approvedBy: z.string().uuid().nullable().optional(),
+  canonicalPayload: z.string().nullable().optional(),
+  capability: z.lazy(() => FinanceEconomyRiskEconomyValueMovementCapabilitySchema).optional(),
+  effectiveAt: z.string().datetime().optional(),
+  expiresAt: z.string().datetime().optional(),
+  jurisdictionCode: z.string().nullable().optional(),
+  keyId: z.string().nullable().optional(),
+  payloadHash: z.string().nullable().optional(),
+  proposedAt: z.string().datetime().optional(),
+  proposedBy: z.string().uuid().optional(),
+  providerReady: z.boolean().optional(),
+  scopeKey: z.string().nullable().optional(),
+  signature: z.string().nullable().optional(),
+  state: z.lazy(() => FinanceEconomyRiskEconomyCapabilityPolicyStateSchema).optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyRiskEconomyCapabilityPolicyState */
+FinanceEconomyRiskEconomyCapabilityPolicyStateSchema = z.enum(['PendingApproval', 'Approved', 'Active', 'Expired']);
+
+/** Zod schema for FinanceEconomyRiskEconomyCapabilityReadinessStatus */
+FinanceEconomyRiskEconomyCapabilityReadinessStatusSchema = z.enum([
+  'Disabled',
+  'Ready',
+  'InvalidPolicy',
+  'JurisdictionBlocked',
+  'ComplianceUnavailable',
+  'ComplianceStale',
+  'ReviewRequired',
+  'LedgerUnhealthy',
+  'ProjectionMismatch',
+  'ReserveInsufficient',
+  'CustodyUnreconciled',
+  'AnchorInvalid',
+  'ProviderNotReady',
+  'KillSwitchActive',
+]);
+
+/** Zod schema for FinanceEconomyRiskEconomyKillSwitchScope */
+FinanceEconomyRiskEconomyKillSwitchScopeSchema = z.object({
+  capability: z.lazy(() => FinanceEconomyRiskEconomyValueMovementCapabilitySchema).optional(),
+  scopeKey: z.string().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for FinanceEconomyRiskEconomyKillSwitchState */
+FinanceEconomyRiskEconomyKillSwitchStateSchema = z.object({
+  id: z.string().uuid().optional(),
+  activatedAt: z.string().datetime().optional(),
+  activatedBy: z.string().uuid().optional(),
+  epoch: z.number().int().optional(),
+  isActive: z.boolean().optional(),
+  reason: z.string().nullable().optional(),
+  releaseApprovers: z.array(z.string().uuid()).nullable().optional(),
+  releasedAt: z.string().datetime().nullable().optional(),
+  releaseProposedAt: z.string().datetime().nullable().optional(),
+  releaseProposedBy: z.string().uuid().nullable().optional(),
+  scope: z.lazy(() => FinanceEconomyRiskEconomyKillSwitchScopeSchema).optional(),
+});
+
+/** Zod schema for FinanceEconomyRiskEconomyProtectedOperationState */
+FinanceEconomyRiskEconomyProtectedOperationStateSchema = z.enum([
+  'Ready',
+  'ReviewRequired',
+  'Hold',
+  'Challenge',
+  'Denied',
+  'ComplianceUnavailable',
+  'ComplianceStale',
+  'InvalidPolicy',
+  'ReserveInsufficient',
+]);
+
+/** Zod schema for FinanceEconomyRiskEconomyValueMovementCapability */
+FinanceEconomyRiskEconomyValueMovementCapabilitySchema = z.enum([
+  'ConfirmHardCoinFunding',
+  'ConvertHardToSoft',
+  'ReverseProviderFunding',
+  'Transfer',
+  'IssueAdReward',
+  'BountyEscrow',
+  'BountyClaim',
+  'MarketplaceSettlement',
+  'PayoutExecution',
+  'AdminWithdrawalExecution',
+  'MarketplaceRefund',
+  'BountyReclaim',
+  'LegacyBalanceBackfill',
+]);
+
+/** Zod schema for FinanceEconomyRiskRiskManualDecisionCode */
+FinanceEconomyRiskRiskManualDecisionCodeSchema = z.enum(['EvidenceVerified', 'RiskAccepted', 'PolicyViolation', 'FraudConfirmed']);
+
+/** Zod schema for FinanceEconomyRiskRiskReviewCase */
+FinanceEconomyRiskRiskReviewCaseSchema = z.object({
+  id: z.string().uuid().optional(),
+  appealOf: z.string().uuid().nullable().optional(),
+  approvers: z.array(z.string().uuid()).nullable().optional(),
+  decisionId: z.string().uuid().optional(),
+  requiredApprovals: z.number().int().optional(),
+  resolution: z.string().nullable().optional(),
+  resolvedAt: z.string().datetime().nullable().optional(),
+  resolvedBy: z.string().uuid().nullable().optional(),
+  status: z.lazy(() => FinanceEconomyRiskRiskReviewStatusSchema).optional(),
+  submittedAt: z.string().datetime().optional(),
+  submittedBy: z.string().uuid().optional(),
+});
+
+/** Zod schema for FinanceEconomyRiskRiskReviewEvent */
+FinanceEconomyRiskRiskReviewEventSchema = z.object({
+  actorId: z.string().uuid().optional(),
+  decisionCode: z.lazy(() => FinanceEconomyRiskRiskManualDecisionCodeSchema).optional(),
+  evidenceHashes: z.array(z.string()).nullable().optional(),
+  kind: z.lazy(() => FinanceEconomyRiskRiskReviewEventKindSchema).optional(),
+  occurredAt: z.string().datetime().optional(),
+  resolution: z.string().nullable().optional(),
+  reviewId: z.string().uuid().optional(),
+  sequence: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyRiskRiskReviewEventKind */
+FinanceEconomyRiskRiskReviewEventKindSchema = z.enum(['Submitted', 'ApprovalRecorded', 'Approved', 'Rejected', 'AppealSubmitted']);
+
+/** Zod schema for FinanceEconomyRiskRiskReviewPage */
+FinanceEconomyRiskRiskReviewPageSchema = z.object({
+  items: z
+    .array(z.lazy(() => FinanceEconomyRiskRiskReviewCaseSchema))
+    .nullable()
+    .optional(),
+  nextCursor: z.string().nullable().optional(),
+});
+
+/** Zod schema for FinanceEconomyRiskRiskReviewStatus */
+FinanceEconomyRiskRiskReviewStatusSchema = z.enum(['Pending', 'Approved', 'Rejected']);
+
+/** Zod schema for FinanceEconomyTransfersSelfServiceEconomyTransferInput */
+FinanceEconomyTransfersSelfServiceEconomyTransferInputSchema = z.object({
+  amountUnits: z.number().int().optional(),
+  currency: z.lazy(() => FinanceEconomyContractsCurrencyCodeSchema).optional(),
+  idempotencyKey: z.string().nullable().optional(),
+  recipientUserId: z.string().uuid().optional(),
+  transferType: z.lazy(() => FinanceEconomyTransfersSelfServiceEconomyTransferTypeSchema).optional(),
+});
+
+/** Zod schema for FinanceEconomyTransfersSelfServiceEconomyTransferReceipt */
+FinanceEconomyTransfersSelfServiceEconomyTransferReceiptSchema = z.object({
+  amountUnits: z.number().int().optional(),
+  currency: z.lazy(() => FinanceEconomyContractsCurrencyCodeSchema).optional(),
+  isDuplicate: z.boolean().optional(),
+  journalHash: z.string().nullable().optional(),
+  journalSequence: z.number().int().optional(),
+  postingId: z.string().uuid().optional(),
+  recipientUserId: z.string().uuid().optional(),
+  transferType: z.lazy(() => FinanceEconomyTransfersSelfServiceEconomyTransferTypeSchema).optional(),
+});
+
+/** Zod schema for FinanceEconomyTransfersSelfServiceEconomyTransferType */
+FinanceEconomyTransfersSelfServiceEconomyTransferTypeSchema = z.enum(['Tip', 'Gift', 'CreatorSupport']);
+
+/** Zod schema for FinanceEconomyTreasuryAdminWithdrawalAuditEvent */
+FinanceEconomyTreasuryAdminWithdrawalAuditEventSchema = z.object({
+  actorId: z.string().uuid().nullable().optional(),
+  evidence: z.string().nullable().optional(),
+  hash: z.string().nullable().optional(),
+  kind: z.string().nullable().optional(),
+  occurredAt: z.string().datetime().optional(),
+  previousHash: z.string().nullable().optional(),
+  runId: z.string().uuid().optional(),
+  sequence: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyTreasuryAdminWithdrawalAuditView */
+FinanceEconomyTreasuryAdminWithdrawalAuditViewSchema = z.object({
+  events: z
+    .array(z.lazy(() => FinanceEconomyTreasuryAdminWithdrawalAuditEventSchema))
+    .nullable()
+    .optional(),
+  integrityValid: z.boolean().optional(),
+  runId: z.string().uuid().optional(),
+});
+
+/** Zod schema for FinanceEconomyTreasuryAdminWithdrawalRun */
+FinanceEconomyTreasuryAdminWithdrawalRunSchema = z.object({
+  id: z.string().uuid().optional(),
+  amount: z.lazy(() => FinanceEconomyContractsCoinAmountSchema).optional(),
+  approvedBy: z.string().uuid().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  destinationHash: z.string().nullable().optional(),
+  dispatchSnapshotHash: z.string().nullable().optional(),
+  executionEpoch: z.number().int().optional(),
+  fencingToken: z.number().int().optional(),
+  idempotencyKey: z.lazy(() => FinanceEconomyContractsIdempotencyKeySchema).optional(),
+  periodStart: z.string().date().optional(),
+  platformFeeWalletId: z.lazy(() => FinanceEconomyContractsWalletIdSchema).optional(),
+  policyVersion: z.lazy(() => FinanceEconomyContractsPolicyVersionSchema).optional(),
+  providerTransferId: z.string().nullable().optional(),
+  requestedBy: z.string().uuid().optional(),
+  requestHash: z.string().nullable().optional(),
+  reserveAuthorizationEpoch: z.number().int().optional(),
+  reserveVersion: z.lazy(() => FinanceEconomyContractsReserveVersionSchema).optional(),
+  sourceAssetKey: z.string().nullable().optional(),
+  state: z.lazy(() => FinanceEconomyTreasuryAdminWithdrawalRunStateSchema).optional(),
+  tenantId: z.string().uuid().optional(),
+  updatedAt: z.string().datetime().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for FinanceEconomyTreasuryAdminWithdrawalRunState */
+FinanceEconomyTreasuryAdminWithdrawalRunStateSchema = z.enum(['PendingApproval', 'Approved', 'Dispatching', 'Ambiguous', 'Succeeded', 'Failed', 'Cancelled']);
+
 /** Zod schema for GameJamsAddJamCriteriaInput */
 GameJamsAddJamCriteriaInputSchema = z.object({
   description: z.string().nullable().optional(),
@@ -20617,6 +21188,10 @@ GameJamsJamSchema = z.object({
     .nullable()
     .optional(),
   endDate: z.string().datetime(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -20635,8 +21210,8 @@ GameJamsJamSchema = z.object({
   votingEndDate: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for GameJamsJamCriteria */
-GameJamsJamCriteriaSchema = z.object({
+/** Zod schema for GameJamsJamCriteriaDto */
+GameJamsJamCriteriaDtoSchema = z.object({
   id: z.string().uuid().optional(),
   description: z.string().nullable().optional(),
   jamId: z.string().uuid().optional(),
@@ -20672,6 +21247,10 @@ GameJamsJamScoreSchema = z.object({
     .nullable()
     .optional(),
   feedback: z.string().nullable().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -20696,8 +21275,8 @@ GameJamsJamScoreDtoSchema = z.object({
 /** Zod schema for GameJamsJamStatus */
 GameJamsJamStatusSchema = z.enum(['Upcoming', 'Active', 'Voting', 'Completed', 'Cancelled']);
 
-/** Zod schema for GameJamsJamSubmission */
-GameJamsJamSubmissionSchema = z.object({
+/** Zod schema for GameJamsJamSubmissionDto */
+GameJamsJamSubmissionDtoSchema = z.object({
   id: z.string().uuid().optional(),
   jamId: z.string().uuid().optional(),
   projectVersionId: z.string().uuid().optional(),
@@ -20720,8 +21299,8 @@ GameJamsSubmitJamEntryInputSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationApiKey */
-IdentityAuthenticationApiKeySchema = z.object({
+/** Zod schema for IdentityAuthenticationApiKeyDto */
+IdentityAuthenticationApiKeyDtoSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
@@ -20890,8 +21469,8 @@ IdentityAuthenticationDiscordAuthorizeInputSchema = z.object({
   redirectUri: z.string().min(1),
 });
 
-/** Zod schema for IdentityAuthenticationDiscordCallbackInput */
-IdentityAuthenticationDiscordCallbackInputSchema = z.object({
+/** Zod schema for IdentityAuthenticationDiscordCallbackRequestDto */
+IdentityAuthenticationDiscordCallbackRequestDtoSchema = z.object({
   code: z.string().min(1),
   redirectUri: z.string().min(1),
   state: z.string().min(1),
@@ -20941,14 +21520,14 @@ IdentityAuthenticationGitHubSignInOutputSchema = z.object({
   authUrl: z.string().nullable(),
 });
 
-/** Zod schema for IdentityAuthenticationGoogleIdTokenInput */
-IdentityAuthenticationGoogleIdTokenInputSchema = z.object({
+/** Zod schema for IdentityAuthenticationGoogleIdTokenRequestDto */
+IdentityAuthenticationGoogleIdTokenRequestDtoSchema = z.object({
   idToken: z.string().min(1),
   tenantId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationJwtKeyInfo */
-IdentityAuthenticationJwtKeyInfoSchema = z.object({
+/** Zod schema for IdentityAuthenticationJwtKeyInfoDto */
+IdentityAuthenticationJwtKeyInfoDtoSchema = z.object({
   algorithm: z.string().nullable().optional(),
   expiresAt: z.string().datetime().optional(),
   isActive: z.boolean().optional(),
@@ -21290,7 +21869,7 @@ IdentityAuthenticationSignInOutputSchema = z.object({
   success: z.boolean().optional(),
   tempToken: z.string().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
-  user: z.lazy(() => IdentityAuthenticationUserSchema).optional(),
+  user: z.lazy(() => IdentityAuthenticationUserDtoSchema).optional(),
   userId: z.string().uuid().optional(),
 });
 
@@ -21351,8 +21930,8 @@ IdentityAuthenticationUpdateScopesInputSchema = z.object({
   scopes: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationUser */
-IdentityAuthenticationUserSchema = z.object({
+/** Zod schema for IdentityAuthenticationUserDto */
+IdentityAuthenticationUserDtoSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
   email: z.string().nullable().optional(),
@@ -21716,8 +22295,8 @@ IdentityAuthorizationDenyTenantPermissionCommandSchema = z.object({
   userId: z.string().uuid(),
 });
 
-/** Zod schema for IdentityAuthorizationEffectivePermission */
-IdentityAuthorizationEffectivePermissionSchema = z.object({
+/** Zod schema for IdentityAuthorizationEffectivePermissionDto */
+IdentityAuthorizationEffectivePermissionDtoSchema = z.object({
   expiresAt: z.string().datetime().nullable().optional(),
   grantedAt: z.string().datetime().nullable().optional(),
   permission: z.string().nullable(),
@@ -21728,7 +22307,7 @@ IdentityAuthorizationEffectivePermissionSchema = z.object({
 IdentityAuthorizationEffectivePermissionsOutputSchema = z.object({
   hasFullAccess: z.boolean().optional(),
   isOwner: z.boolean().optional(),
-  permissions: z.array(z.lazy(() => IdentityAuthorizationEffectivePermissionSchema)).nullable(),
+  permissions: z.array(z.lazy(() => IdentityAuthorizationEffectivePermissionDtoSchema)).nullable(),
   resourceId: z.string().uuid(),
   resourceType: z.string().nullable(),
   userId: z.string().uuid(),
@@ -21739,13 +22318,13 @@ IdentityAuthorizationElevationRequestStatusSchema = z.enum(['None', 'Pending', '
 
 /** Zod schema for IdentityAuthorizationGetPendingResourceInvitationsOutput */
 IdentityAuthorizationGetPendingResourceInvitationsOutputSchema = z.object({
-  invitations: z.array(z.lazy(() => IdentityAuthorizationResourceInvitationSchema)).nullable(),
+  invitations: z.array(z.lazy(() => IdentityAuthorizationResourceInvitationDtoSchema)).nullable(),
   totalCount: z.number().int().optional(),
 });
 
 /** Zod schema for IdentityAuthorizationGetResourceInvitationOutput */
 IdentityAuthorizationGetResourceInvitationOutputSchema = z.object({
-  invitation: z.lazy(() => IdentityAuthorizationResourceInvitationSchema),
+  invitation: z.lazy(() => IdentityAuthorizationResourceInvitationDtoSchema),
 });
 
 /** Zod schema for IdentityAuthorizationGetResourceUsersOutput */
@@ -22031,8 +22610,8 @@ IdentityAuthorizationResourceAccessPatternSchema = z.object({
   uniqueUsers: z.number().int().optional(),
 });
 
-/** Zod schema for IdentityAuthorizationResourceInvitation */
-IdentityAuthorizationResourceInvitationSchema = z.object({
+/** Zod schema for IdentityAuthorizationResourceInvitationDto */
+IdentityAuthorizationResourceInvitationDtoSchema = z.object({
   email: z.string().nullable().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
   invitationId: z.string().uuid().optional(),
@@ -22300,7 +22879,7 @@ IdentityTenantsCreateTenantInputSchema = z.object({
 /** Zod schema for IdentityTenantsGetUserMembershipsOutput */
 IdentityTenantsGetUserMembershipsOutputSchema = z.object({
   memberships: z
-    .array(z.lazy(() => IdentityTenantsUserMembershipSchema))
+    .array(z.lazy(() => IdentityTenantsUserMembershipDtoSchema))
     .nullable()
     .optional(),
   totalCount: z.number().int().optional(),
@@ -22373,6 +22952,10 @@ IdentityTenantsTenantSchema = z.object({
     .nullable()
     .optional(),
   hasActiveMembers: z.boolean().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isActive: z.boolean().optional(),
   isArchived: z.boolean().optional(),
   isDefault: z.boolean().optional(),
@@ -22400,8 +22983,8 @@ IdentityTenantsTenantSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for IdentityTenantsTenantAddress */
-IdentityTenantsTenantAddressSchema = z.object({
+/** Zod schema for IdentityTenantsTenantAddressDto */
+IdentityTenantsTenantAddressDtoSchema = z.object({
   city: z.string().nullable().optional(),
   country: z.string().nullable().optional(),
   postalCode: z.string().nullable().optional(),
@@ -22426,8 +23009,8 @@ IdentityTenantsTenantAuditLogEntrySchema = z.object({
   userAgent: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsTenantBranding */
-IdentityTenantsTenantBrandingSchema = z.object({
+/** Zod schema for IdentityTenantsTenantBrandingDto */
+IdentityTenantsTenantBrandingDtoSchema = z.object({
   companyName: z.string().nullable().optional(),
   faviconUrl: z.string().nullable().optional(),
   logoUrl: z.string().nullable().optional(),
@@ -22435,8 +23018,8 @@ IdentityTenantsTenantBrandingSchema = z.object({
   secondaryColor: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsTenantBusinessInfo */
-IdentityTenantsTenantBusinessInfoSchema = z.object({
+/** Zod schema for IdentityTenantsTenantBusinessInfoDto */
+IdentityTenantsTenantBusinessInfoDtoSchema = z.object({
   complianceRequirements: z.array(z.string()).nullable().optional(),
   geographicRegion: z.string().nullable().optional(),
   industry: z.string().nullable().optional(),
@@ -22444,17 +23027,17 @@ IdentityTenantsTenantBusinessInfoSchema = z.object({
   tenantType: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsTenantBusinessRules */
-IdentityTenantsTenantBusinessRulesSchema = z.object({
+/** Zod schema for IdentityTenantsTenantBusinessRulesDto */
+IdentityTenantsTenantBusinessRulesDtoSchema = z.object({
   approvalRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   notificationRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   validationRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   workflowRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsTenantContactInfo */
-IdentityTenantsTenantContactInfoSchema = z.object({
-  address: z.lazy(() => IdentityTenantsTenantAddressSchema).optional(),
+/** Zod schema for IdentityTenantsTenantContactInfoDto */
+IdentityTenantsTenantContactInfoDtoSchema = z.object({
+  address: z.lazy(() => IdentityTenantsTenantAddressDtoSchema).optional(),
   organizationName: z.string().nullable().optional(),
   primaryContactEmail: z.string().nullable().optional(),
   primaryContactName: z.string().nullable().optional(),
@@ -22462,8 +23045,8 @@ IdentityTenantsTenantContactInfoSchema = z.object({
   website: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsTenantCurrencySettings */
-IdentityTenantsTenantCurrencySettingsSchema = z.object({
+/** Zod schema for IdentityTenantsTenantCurrencySettingsDto */
+IdentityTenantsTenantCurrencySettingsDtoSchema = z.object({
   decimalPlaces: z.number().int().optional(),
   defaultCurrency: z.string().nullable().optional(),
   displayFormat: z.string().nullable().optional(),
@@ -22479,6 +23062,10 @@ IdentityTenantsTenantDomainSchema = z.object({
     .nullable()
     .optional(),
   fullDomain: z.string().nullable().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isMainDomain: z.boolean().optional(),
@@ -22493,8 +23080,8 @@ IdentityTenantsTenantDomainSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for IdentityTenantsTenantIntegrationSettings */
-IdentityTenantsTenantIntegrationSettingsSchema = z.object({
+/** Zod schema for IdentityTenantsTenantIntegrationSettingsDto */
+IdentityTenantsTenantIntegrationSettingsDtoSchema = z.object({
   apiKeys: z.record(z.string(), z.string()).nullable().optional(),
   externalServices: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   ssoConfiguration: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
@@ -22512,6 +23099,10 @@ IdentityTenantsTenantMemberSchema = z.object({
   deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
     .nullable()
     .optional(),
   isActive: z.boolean().optional(),
@@ -22532,12 +23123,12 @@ IdentityTenantsTenantMemberSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for IdentityTenantsTenantMetadata */
-IdentityTenantsTenantMetadataSchema = z.object({
+/** Zod schema for IdentityTenantsTenantMetadataDto */
+IdentityTenantsTenantMetadataDtoSchema = z.object({
   id: z.string().uuid().optional(),
   adminNotes: z.string().nullable().optional(),
-  businessInfo: z.lazy(() => IdentityTenantsTenantBusinessInfoSchema).optional(),
-  contactInfo: z.lazy(() => IdentityTenantsTenantContactInfoSchema).optional(),
+  businessInfo: z.lazy(() => IdentityTenantsTenantBusinessInfoDtoSchema).optional(),
+  contactInfo: z.lazy(() => IdentityTenantsTenantContactInfoDtoSchema).optional(),
   createdAt: z.string().datetime().optional(),
   customFields: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   externalReferences: z.record(z.string(), z.string()).nullable().optional(),
@@ -22545,8 +23136,8 @@ IdentityTenantsTenantMetadataSchema = z.object({
   updatedAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for IdentityTenantsTenantSecuritySettings */
-IdentityTenantsTenantSecuritySettingsSchema = z.object({
+/** Zod schema for IdentityTenantsTenantSecuritySettingsDto */
+IdentityTenantsTenantSecuritySettingsDtoSchema = z.object({
   apiRateLimits: z.record(z.string(), z.number().int()).nullable().optional(),
   ipWhitelist: z.array(z.string()).nullable().optional(),
   passwordPolicy: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
@@ -22570,6 +23161,10 @@ IdentityTenantsTenantSettingsSchema = z.object({
     .optional(),
   enableApiAccess: z.boolean().optional(),
   enableAuditLogging: z.boolean().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   integrationSettingsJson: z.string().nullable().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -22589,15 +23184,15 @@ IdentityTenantsTenantSettingsSchema = z.object({
 /** Zod schema for IdentityTenantsTenantSettingsDto */
 IdentityTenantsTenantSettingsDtoSchema = z.object({
   id: z.string().uuid().optional(),
-  businessRules: z.lazy(() => IdentityTenantsTenantBusinessRulesSchema).optional(),
+  businessRules: z.lazy(() => IdentityTenantsTenantBusinessRulesDtoSchema).optional(),
   createdAt: z.string().datetime().optional(),
   featureFlags: z.record(z.string(), z.boolean()).nullable().optional(),
-  integrationSettings: z.lazy(() => IdentityTenantsTenantIntegrationSettingsSchema).optional(),
-  securitySettings: z.lazy(() => IdentityTenantsTenantSecuritySettingsSchema).optional(),
-  systemConfiguration: z.lazy(() => IdentityTenantsTenantSystemConfigurationSchema).optional(),
-  systemLimits: z.lazy(() => IdentityTenantsTenantSystemLimitsSchema).optional(),
+  integrationSettings: z.lazy(() => IdentityTenantsTenantIntegrationSettingsDtoSchema).optional(),
+  securitySettings: z.lazy(() => IdentityTenantsTenantSecuritySettingsDtoSchema).optional(),
+  systemConfiguration: z.lazy(() => IdentityTenantsTenantSystemConfigurationDtoSchema).optional(),
+  systemLimits: z.lazy(() => IdentityTenantsTenantSystemLimitsDtoSchema).optional(),
   updatedAt: z.string().datetime().optional(),
-  userInterfaceSettings: z.lazy(() => IdentityTenantsTenantUiSettingsSchema).optional(),
+  userInterfaceSettings: z.lazy(() => IdentityTenantsTenantUiSettingsDtoSchema).optional(),
 });
 
 /** Zod schema for IdentityTenantsTenantStatistics */
@@ -22613,6 +23208,10 @@ IdentityTenantsTenantStatisticsSchema = z.object({
     .nullable()
     .optional(),
   inactiveMembers: z.number().int().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -22627,9 +23226,9 @@ IdentityTenantsTenantStatisticsSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for IdentityTenantsTenantSystemConfiguration */
-IdentityTenantsTenantSystemConfigurationSchema = z.object({
-  currencySettings: z.lazy(() => IdentityTenantsTenantCurrencySettingsSchema).optional(),
+/** Zod schema for IdentityTenantsTenantSystemConfigurationDto */
+IdentityTenantsTenantSystemConfigurationDtoSchema = z.object({
+  currencySettings: z.lazy(() => IdentityTenantsTenantCurrencySettingsDtoSchema).optional(),
   customConfiguration: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   dateFormat: z.string().nullable().optional(),
   locale: z.string().nullable().optional(),
@@ -22637,8 +23236,8 @@ IdentityTenantsTenantSystemConfigurationSchema = z.object({
   timeZone: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsTenantSystemLimits */
-IdentityTenantsTenantSystemLimitsSchema = z.object({
+/** Zod schema for IdentityTenantsTenantSystemLimitsDto */
+IdentityTenantsTenantSystemLimitsDtoSchema = z.object({
   customLimits: z.record(z.string(), z.number().int()).nullable().optional(),
   maxApiCalls: z.number().int().optional(),
   maxProjects: z.number().int().optional(),
@@ -22646,9 +23245,9 @@ IdentityTenantsTenantSystemLimitsSchema = z.object({
   maxUsers: z.number().int().optional(),
 });
 
-/** Zod schema for IdentityTenantsTenantUiSettings */
-IdentityTenantsTenantUiSettingsSchema = z.object({
-  branding: z.lazy(() => IdentityTenantsTenantBrandingSchema).optional(),
+/** Zod schema for IdentityTenantsTenantUiSettingsDto */
+IdentityTenantsTenantUiSettingsDtoSchema = z.object({
+  branding: z.lazy(() => IdentityTenantsTenantBrandingDtoSchema).optional(),
   componentSettings: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   customCss: z.string().nullable().optional(),
   layout: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
@@ -22856,6 +23455,10 @@ IdentityTenantsUsageTrackingSchema = z.object({
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -22869,8 +23472,8 @@ IdentityTenantsUsageTrackingSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for IdentityTenantsUserMembership */
-IdentityTenantsUserMembershipSchema = z.object({
+/** Zod schema for IdentityTenantsUserMembershipDto */
+IdentityTenantsUserMembershipDtoSchema = z.object({
   acceptedAt: z.string().datetime().nullable().optional(),
   cancelledAt: z.string().datetime().nullable().optional(),
   invitedAt: z.string().datetime().nullable().optional(),
@@ -23024,8 +23627,8 @@ IdentityUsersCreateUserRequestItemSchema = z.object({
   phoneNumber: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersNotificationAction */
-IdentityUsersNotificationActionSchema = z.object({
+/** Zod schema for IdentityUsersNotificationActionDto */
+IdentityUsersNotificationActionDtoSchema = z.object({
   id: z.string().nullable().optional(),
   isPrimary: z.boolean().optional(),
   text: z.string().nullable().optional(),
@@ -23180,6 +23783,10 @@ IdentityUsersUserSchema = z.object({
     .optional(),
   email: z.string().email().min(1).max(255),
   hasPassword: z.boolean().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isActive: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
   isEmailVerified: z.boolean().optional(),
@@ -23209,8 +23816,8 @@ IdentityUsersUserSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for IdentityUsersUserAccessibilityPreferences */
-IdentityUsersUserAccessibilityPreferencesSchema = z.object({
+/** Zod schema for IdentityUsersUserAccessibilityPreferencesDto */
+IdentityUsersUserAccessibilityPreferencesDtoSchema = z.object({
   colorScheme: z.string().nullable().optional(),
   customSettings: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   fontSize: z.number().int().optional(),
@@ -23233,8 +23840,8 @@ IdentityUsersUserDtoSchema = z.object({
   updatedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersUserLocalizationPreferences */
-IdentityUsersUserLocalizationPreferencesSchema = z.object({
+/** Zod schema for IdentityUsersUserLocalizationPreferencesDto */
+IdentityUsersUserLocalizationPreferencesDtoSchema = z.object({
   currency: z.string().nullable().optional(),
   customSettings: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   dateFormat: z.string().nullable().optional(),
@@ -23255,6 +23862,10 @@ IdentityUsersUserMetadataSchema = z.object({
     .nullable()
     .optional(),
   externalReferences: z.string().max(25000).nullable().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -23291,6 +23902,10 @@ IdentityUsersUserNotificationSchema = z.object({
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isArchived: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -23312,10 +23927,10 @@ IdentityUsersUserNotificationSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for IdentityUsersUserNotificationDetail */
-IdentityUsersUserNotificationDetailSchema = z.object({
+/** Zod schema for IdentityUsersUserNotificationDetailDto */
+IdentityUsersUserNotificationDetailDtoSchema = z.object({
   actions: z
-    .array(z.lazy(() => IdentityUsersNotificationActionSchema))
+    .array(z.lazy(() => IdentityUsersNotificationActionDtoSchema))
     .nullable()
     .optional(),
   notification: z.lazy(() => IdentityUsersUserNotificationDtoSchema).optional(),
@@ -23348,8 +23963,8 @@ IdentityUsersUserNotificationDtoSchema = z.object({
   version: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersUserNotificationPreferences */
-IdentityUsersUserNotificationPreferencesSchema = z.object({
+/** Zod schema for IdentityUsersUserNotificationPreferencesDto */
+IdentityUsersUserNotificationPreferencesDtoSchema = z.object({
   categoryPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   emailEnabled: z.boolean().optional(),
   frequency: z.string().nullable().optional(),
@@ -23370,6 +23985,10 @@ IdentityUsersUserPreferencesSchema = z.object({
     .nullable()
     .optional(),
   generalPreferences: z.string().max(10000).nullable().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -23397,8 +24016,8 @@ IdentityUsersUserPreferencesDtoSchema = z.object({
   version: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersUserPrivacyPreferences */
-IdentityUsersUserPrivacyPreferencesSchema = z.object({
+/** Zod schema for IdentityUsersUserPrivacyPreferencesDto */
+IdentityUsersUserPrivacyPreferencesDtoSchema = z.object({
   activityTracking: z.boolean().optional(),
   analyticsCookies: z.boolean().optional(),
   customSettings: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
@@ -23425,6 +24044,10 @@ IdentityUsersUserProfileSchema = z.object({
     .nullable()
     .optional(),
   gender: z.string().max(20).nullable().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -23466,6 +24089,21 @@ IdentityUsersUserProfileDtoSchema = z.object({
 IdentityUsersUserStatusSchema = z.object({
   isActive: z.boolean().optional(),
   isSuspended: z.boolean().optional(),
+});
+
+/** Zod schema for IDurableIntegrationEvent */
+IDurableIntegrationEventSchema = z.object({
+  actorId: z.string().uuid().optional(),
+  aggregateId: z.string().nullable().optional(),
+  aggregateType: z.string().nullable().optional(),
+  causationId: z.string().uuid().nullable().optional(),
+  correlationId: z.string().uuid().optional(),
+  eventId: z.string().uuid().optional(),
+  eventName: z.string().nullable().optional(),
+  occurredAt: z.string().datetime().optional(),
+  schemaVersion: z.number().int().optional(),
+  sourceModule: z.string().nullable().optional(),
+  tenantId: z.string().uuid().optional(),
 });
 
 /** Zod schema for KeyValuePairStringAuthenticationExtensionsPRFValues */
@@ -23517,6 +24155,10 @@ LaunchPadLaunchChecklistItemSchema = z.object({
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isComplete: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -23555,6 +24197,10 @@ LaunchPadLaunchPadApplicationSchema = z.object({
   deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
     .nullable()
     .optional(),
   isDeleted: z.boolean().optional(),
@@ -23615,6 +24261,10 @@ LaunchPadLaunchPadEventSchema = z.object({
     .nullable()
     .optional(),
   endsAt: z.string().datetime().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -23665,6 +24315,10 @@ LaunchPadLaunchPadParticipantRegistrationSchema = z.object({
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -23694,6 +24348,10 @@ LaunchPadLaunchPadParticipantSlotSchema = z.object({
     .optional(),
   endsAt: z.string().datetime().optional(),
   hasCapacity: z.boolean().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -23758,6 +24416,10 @@ LaunchPadLaunchPlanSchema = z.object({
   deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
     .nullable()
     .optional(),
   isDeleted: z.boolean().optional(),
@@ -23831,31 +24493,31 @@ LaunchPadUpdateLaunchPadSettingsInputSchema = z.object({
   versionSubmissionPolicy: z.lazy(() => ProjectsVersionSubmissionPolicySchema).optional(),
 });
 
-/** Zod schema for LearningAssessmentsAnonymousReviewAssessment */
-LearningAssessmentsAnonymousReviewAssessmentSchema = z.object({
+/** Zod schema for LearningAssessmentsAnonymousReviewAssessmentDto */
+LearningAssessmentsAnonymousReviewAssessmentDtoSchema = z.object({
   id: z.string().uuid().optional(),
   maxScore: z.lazy(() => LearningGradingContractsScoreValueSchema).optional(),
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsAnonymousReviewRubric */
-LearningAssessmentsAnonymousReviewRubricSchema = z.object({
+/** Zod schema for LearningAssessmentsAnonymousReviewRubricDto */
+LearningAssessmentsAnonymousReviewRubricDtoSchema = z.object({
   criteria: z
-    .array(z.lazy(() => LearningAssessmentsRubricCriterionSchema))
+    .array(z.lazy(() => LearningAssessmentsRubricCriterionDtoSchema))
     .nullable()
     .optional(),
 });
 
-/** Zod schema for LearningAssessmentsAnonymousReviewSubmission */
-LearningAssessmentsAnonymousReviewSubmissionSchema = z.object({
-  assessment: z.lazy(() => LearningAssessmentsAnonymousReviewAssessmentSchema).optional(),
+/** Zod schema for LearningAssessmentsAnonymousReviewSubmissionDto */
+LearningAssessmentsAnonymousReviewSubmissionDtoSchema = z.object({
+  assessment: z.lazy(() => LearningAssessmentsAnonymousReviewAssessmentDtoSchema).optional(),
   attemptNumber: z.number().int().optional(),
   codePayload: z.string().nullable().optional(),
   filePayload: z.string().nullable().optional(),
   mediaPayload: z.string().nullable().optional(),
   projectPayload: z.string().nullable().optional(),
   reviewId: z.string().uuid().optional(),
-  rubric: z.lazy(() => LearningAssessmentsAnonymousReviewRubricSchema).optional(),
+  rubric: z.lazy(() => LearningAssessmentsAnonymousReviewRubricDtoSchema).optional(),
   status: z.lazy(() => LearningAssessmentsPeerReviewStatusSchema).optional(),
   submissionStatus: z.lazy(() => LearningAssessmentsSubmissionStatusSchema).optional(),
   submittedAt: z.string().datetime().nullable().optional(),
@@ -23863,8 +24525,8 @@ LearningAssessmentsAnonymousReviewSubmissionSchema = z.object({
   urlPayload: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsAssessment */
-LearningAssessmentsAssessmentSchema = z.object({
+/** Zod schema for LearningAssessmentsAssessmentDto */
+LearningAssessmentsAssessmentDtoSchema = z.object({
   id: z.string().uuid().optional(),
   allowLateSubmissions: z.boolean().optional(),
   assessmentGroupId: z.string().uuid().nullable().optional(),
@@ -23907,22 +24569,12 @@ LearningAssessmentsAssessmentSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for LearningAssessmentsAssessmentGroup */
-LearningAssessmentsAssessmentGroupSchema = z.object({
-  id: z.string().uuid().optional(),
-  courseId: z.string().uuid().optional(),
-  description: z.string().nullable().optional(),
-  name: z.string().nullable().optional(),
-  order: z.number().int().optional(),
-  weightPercent: z.lazy(() => LearningGradingContractsPercentValueSchema).optional(),
-});
-
-/** Zod schema for LearningAssessmentsAssessmentGroupAnalytics */
-LearningAssessmentsAssessmentGroupAnalyticsSchema = z.object({
+/** Zod schema for LearningAssessmentsAssessmentGroupAnalyticsDto */
+LearningAssessmentsAssessmentGroupAnalyticsDtoSchema = z.object({
   assessmentCount: z.number().int().optional(),
   averagePercent: z.lazy(() => LearningGradingContractsPercentValueSchema).optional(),
   distribution: z
-    .array(z.lazy(() => LearningAssessmentsAssessmentScoreBucketSchema))
+    .array(z.lazy(() => LearningAssessmentsAssessmentScoreBucketDtoSchema))
     .nullable()
     .optional(),
   gradedCount: z.number().int().optional(),
@@ -23936,19 +24588,29 @@ LearningAssessmentsAssessmentGroupAnalyticsSchema = z.object({
     .optional(),
 });
 
+/** Zod schema for LearningAssessmentsAssessmentGroupDto */
+LearningAssessmentsAssessmentGroupDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  courseId: z.string().uuid().optional(),
+  description: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  order: z.number().int().optional(),
+  weightPercent: z.lazy(() => LearningGradingContractsPercentValueSchema).optional(),
+});
+
 /** Zod schema for LearningAssessmentsAssessmentPresentationMode */
 LearningAssessmentsAssessmentPresentationModeSchema = z.enum(['SingleStep', 'Continuous']);
 
-/** Zod schema for LearningAssessmentsAssessmentScoreBucket */
-LearningAssessmentsAssessmentScoreBucketSchema = z.object({
+/** Zod schema for LearningAssessmentsAssessmentScoreBucketDto */
+LearningAssessmentsAssessmentScoreBucketDtoSchema = z.object({
   count: z.number().int().optional(),
   label: z.string().nullable().optional(),
   maxPercent: z.number().int().optional(),
   minPercent: z.number().int().optional(),
 });
 
-/** Zod schema for LearningAssessmentsAssessmentSubmission */
-LearningAssessmentsAssessmentSubmissionSchema = z.object({
+/** Zod schema for LearningAssessmentsAssessmentSubmissionDto */
+LearningAssessmentsAssessmentSubmissionDtoSchema = z.object({
   id: z.string().uuid().optional(),
   assessmentId: z.string().uuid().optional(),
   attemptNumber: z.number().int().optional(),
@@ -23990,18 +24652,18 @@ LearningAssessmentsCanAttemptOutputSchema = z.object({
   currentAttemptCount: z.number().int().optional(),
 });
 
-/** Zod schema for LearningAssessmentsCourseAssessmentAnalytics */
-LearningAssessmentsCourseAssessmentAnalyticsSchema = z.object({
+/** Zod schema for LearningAssessmentsCourseAssessmentAnalyticsDto */
+LearningAssessmentsCourseAssessmentAnalyticsDtoSchema = z.object({
   assessmentCount: z.number().int().optional(),
   averagePercent: z.lazy(() => LearningGradingContractsPercentValueSchema).optional(),
   courseId: z.string().uuid().optional(),
   distribution: z
-    .array(z.lazy(() => LearningAssessmentsAssessmentScoreBucketSchema))
+    .array(z.lazy(() => LearningAssessmentsAssessmentScoreBucketDtoSchema))
     .nullable()
     .optional(),
   gradedCount: z.number().int().optional(),
   groups: z
-    .array(z.lazy(() => LearningAssessmentsAssessmentGroupAnalyticsSchema))
+    .array(z.lazy(() => LearningAssessmentsAssessmentGroupAnalyticsDtoSchema))
     .nullable()
     .optional(),
   passRate: z.lazy(() => LearningGradingContractsPercentValueSchema).optional(),
@@ -24271,31 +24933,31 @@ LearningAssessmentsGradingPersistencePersistedGradeRoundStatusSchema = z.enum([
 /** Zod schema for LearningAssessmentsGradingPersistencePersistedGradingExecutionStatus */
 LearningAssessmentsGradingPersistencePersistedGradingExecutionStatusSchema = z.enum(['Pending', 'Running', 'AwaitingReview', 'Completed', 'Failed']);
 
-/** Zod schema for LearningAssessmentsGradingQueue */
-LearningAssessmentsGradingQueueSchema = z.object({
-  assessment: z.lazy(() => LearningAssessmentsGradingQueueAssessmentSchema).optional(),
+/** Zod schema for LearningAssessmentsGradingQueueAssessmentDto */
+LearningAssessmentsGradingQueueAssessmentDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  groupSetId: z.string().uuid().nullable().optional(),
+  hasRubric: z.boolean().optional(),
+  maxScore: z.lazy(() => LearningGradingContractsScoreValueSchema).optional(),
+  reviewMethods: z.lazy(() => LearningAssessmentsGradingContractsReviewMethodsSchema).optional(),
+  rubric: z.lazy(() => LearningAssessmentsRubricDtoSchema).optional(),
+  title: z.string().nullable().optional(),
+  type: z.lazy(() => LearningAssessmentsAssessmentTypeSchema).optional(),
+});
+
+/** Zod schema for LearningAssessmentsGradingQueueDto */
+LearningAssessmentsGradingQueueDtoSchema = z.object({
+  assessment: z.lazy(() => LearningAssessmentsGradingQueueAssessmentDtoSchema).optional(),
   items: z
-    .array(z.lazy(() => LearningAssessmentsGradingQueueItemSchema))
+    .array(z.lazy(() => LearningAssessmentsGradingQueueItemDtoSchema))
     .nullable()
     .optional(),
   needsGrading: z.number().int().optional(),
   total: z.number().int().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGradingQueueAssessment */
-LearningAssessmentsGradingQueueAssessmentSchema = z.object({
-  id: z.string().uuid().optional(),
-  groupSetId: z.string().uuid().nullable().optional(),
-  hasRubric: z.boolean().optional(),
-  maxScore: z.lazy(() => LearningGradingContractsScoreValueSchema).optional(),
-  reviewMethods: z.lazy(() => LearningAssessmentsGradingContractsReviewMethodsSchema).optional(),
-  rubric: z.lazy(() => LearningAssessmentsRubricSchema).optional(),
-  title: z.string().nullable().optional(),
-  type: z.lazy(() => LearningAssessmentsAssessmentTypeSchema).optional(),
-});
-
-/** Zod schema for LearningAssessmentsGradingQueueItem */
-LearningAssessmentsGradingQueueItemSchema = z.object({
+/** Zod schema for LearningAssessmentsGradingQueueItemDto */
+LearningAssessmentsGradingQueueItemDtoSchema = z.object({
   assignmentPassed: z.boolean().nullable().optional(),
   assignmentScore: z
     .lazy(() => LearningGradingContractsScoreValueSchema)
@@ -24458,59 +25120,59 @@ LearningAssessmentsGradingRuntimeReleaseGradeResultCommandSchema = z.object({
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGroup */
-LearningAssessmentsGroupSchema = z.object({
+/** Zod schema for LearningAssessmentsGroupDetailDto */
+LearningAssessmentsGroupDetailDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  capacity: z.number().int().optional(),
+  memberCount: z.number().int().optional(),
+  members: z
+    .array(z.lazy(() => LearningAssessmentsGroupMemberDtoSchema))
+    .nullable()
+    .optional(),
+  name: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningAssessmentsGroupDto */
+LearningAssessmentsGroupDtoSchema = z.object({
   id: z.string().uuid().optional(),
   capacity: z.number().int().optional(),
   groupSetId: z.string().uuid().optional(),
   name: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGroupDetail */
-LearningAssessmentsGroupDetailSchema = z.object({
-  id: z.string().uuid().optional(),
-  capacity: z.number().int().optional(),
-  memberCount: z.number().int().optional(),
-  members: z
-    .array(z.lazy(() => LearningAssessmentsGroupMemberSchema))
-    .nullable()
-    .optional(),
-  name: z.string().nullable().optional(),
-});
-
-/** Zod schema for LearningAssessmentsGroupMember */
-LearningAssessmentsGroupMemberSchema = z.object({
+/** Zod schema for LearningAssessmentsGroupMemberDto */
+LearningAssessmentsGroupMemberDtoSchema = z.object({
   displayName: z.string().nullable().optional(),
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGroupMembership */
-LearningAssessmentsGroupMembershipSchema = z.object({
+/** Zod schema for LearningAssessmentsGroupMembershipDto */
+LearningAssessmentsGroupMembershipDtoSchema = z.object({
   id: z.string().uuid().optional(),
   groupId: z.string().uuid().optional(),
   joinedAt: z.string().datetime().optional(),
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGroupSet */
-LearningAssessmentsGroupSetSchema = z.object({
+/** Zod schema for LearningAssessmentsGroupSetDto */
+LearningAssessmentsGroupSetDtoSchema = z.object({
   id: z.string().uuid().optional(),
   courseId: z.string().uuid().optional(),
   name: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGroupSetSummary */
-LearningAssessmentsGroupSetSummarySchema = z.object({
+/** Zod schema for LearningAssessmentsGroupSetSummaryDto */
+LearningAssessmentsGroupSetSummaryDtoSchema = z.object({
   id: z.string().uuid().optional(),
   groups: z
-    .array(z.lazy(() => LearningAssessmentsGroupSummarySchema))
+    .array(z.lazy(() => LearningAssessmentsGroupSummaryDtoSchema))
     .nullable()
     .optional(),
   name: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGroupSummary */
-LearningAssessmentsGroupSummarySchema = z.object({
+/** Zod schema for LearningAssessmentsGroupSummaryDto */
+LearningAssessmentsGroupSummaryDtoSchema = z.object({
   id: z.string().uuid().optional(),
   capacity: z.number().int().optional(),
   memberCount: z.number().int().optional(),
@@ -24522,8 +25184,8 @@ LearningAssessmentsIdempotentRuntimeInputSchema = z.object({
   idempotencyKey: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsInstructorPeerReview */
-LearningAssessmentsInstructorPeerReviewSchema = z.object({
+/** Zod schema for LearningAssessmentsInstructorPeerReviewDto */
+LearningAssessmentsInstructorPeerReviewDtoSchema = z.object({
   feedback: z.string().nullable().optional(),
   reviewerName: z.string().nullable().optional(),
   reviewerUserId: z.string().uuid().optional(),
@@ -24536,8 +25198,8 @@ LearningAssessmentsInstructorPeerReviewSchema = z.object({
   submittedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsInteractiveVideoAssessmentCue */
-LearningAssessmentsInteractiveVideoAssessmentCueSchema = z.object({
+/** Zod schema for LearningAssessmentsInteractiveVideoAssessmentCueDto */
+LearningAssessmentsInteractiveVideoAssessmentCueDtoSchema = z.object({
   id: z.string().uuid().optional(),
   assessmentId: z.string().uuid().optional(),
   contentId: z.string().uuid().optional(),
@@ -24545,13 +25207,13 @@ LearningAssessmentsInteractiveVideoAssessmentCueSchema = z.object({
   cuePositionSeconds: z.number().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsLearnerAssessmentAttempt */
-LearningAssessmentsLearnerAssessmentAttemptSchema = z.object({
-  submission: z.lazy(() => LearningAssessmentsLearnerAssessmentSubmissionSchema).optional(),
+/** Zod schema for LearningAssessmentsLearnerAssessmentAttemptDto */
+LearningAssessmentsLearnerAssessmentAttemptDtoSchema = z.object({
+  submission: z.lazy(() => LearningAssessmentsLearnerAssessmentSubmissionDtoSchema).optional(),
 });
 
-/** Zod schema for LearningAssessmentsLearnerAssessmentSubmission */
-LearningAssessmentsLearnerAssessmentSubmissionSchema = z.object({
+/** Zod schema for LearningAssessmentsLearnerAssessmentSubmissionDto */
+LearningAssessmentsLearnerAssessmentSubmissionDtoSchema = z.object({
   id: z.string().uuid().optional(),
   assessmentId: z.string().uuid().optional(),
   attemptNumber: z.number().int().optional(),
@@ -24576,8 +25238,8 @@ LearningAssessmentsLearnerAssessmentSubmissionSchema = z.object({
   urlPayload: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsLearnerInteractiveVideoAssessmentCue */
-LearningAssessmentsLearnerInteractiveVideoAssessmentCueSchema = z.object({
+/** Zod schema for LearningAssessmentsLearnerInteractiveVideoAssessmentCueDto */
+LearningAssessmentsLearnerInteractiveVideoAssessmentCueDtoSchema = z.object({
   cueId: z.string().nullable().optional(),
   cuePositionSeconds: z.number().nullable().optional(),
 });
@@ -24589,8 +25251,8 @@ LearningAssessmentsLinkInteractiveVideoCueInputSchema = z.object({
   cuePositionSeconds: z.number().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsPeerReviewClaim */
-LearningAssessmentsPeerReviewClaimSchema = z.object({
+/** Zod schema for LearningAssessmentsPeerReviewClaimDto */
+LearningAssessmentsPeerReviewClaimDtoSchema = z.object({
   maskedSubmission: z.string().nullable().optional(),
   reviewId: z.string().uuid().optional(),
 });
@@ -24608,8 +25270,8 @@ LearningAssessmentsPeerReviewSubmitInputSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for LearningAssessmentsReceivedPeerReview */
-LearningAssessmentsReceivedPeerReviewSchema = z.object({
+/** Zod schema for LearningAssessmentsReceivedPeerReviewDto */
+LearningAssessmentsReceivedPeerReviewDtoSchema = z.object({
   feedback: z.string().nullable().optional(),
   reviewId: z.string().uuid().optional(),
   rubricScoresPayload: z.string().nullable().optional(),
@@ -24626,22 +25288,22 @@ LearningAssessmentsResolveInstructorReviewInputSchema = z.object({
   resolution: z.lazy(() => LearningAssessmentsGradingRuntimeInstructorReviewResolutionV1Schema).optional(),
 });
 
-/** Zod schema for LearningAssessmentsRubric */
-LearningAssessmentsRubricSchema = z.object({
-  id: z.string().uuid().optional(),
-  criteria: z
-    .array(z.lazy(() => LearningAssessmentsRubricCriterionSchema))
-    .nullable()
-    .optional(),
-  title: z.string().nullable().optional(),
-});
-
-/** Zod schema for LearningAssessmentsRubricCriterion */
-LearningAssessmentsRubricCriterionSchema = z.object({
+/** Zod schema for LearningAssessmentsRubricCriterionDto */
+LearningAssessmentsRubricCriterionDtoSchema = z.object({
   id: z.string().uuid().optional(),
   description: z.string().nullable().optional(),
   order: z.number().int().optional(),
   points: z.lazy(() => LearningGradingContractsScoreValueSchema).optional(),
+});
+
+/** Zod schema for LearningAssessmentsRubricDto */
+LearningAssessmentsRubricDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  criteria: z
+    .array(z.lazy(() => LearningAssessmentsRubricCriterionDtoSchema))
+    .nullable()
+    .optional(),
+  title: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningAssessmentsSaveCollectiveRuntimeDraftInput */
@@ -24720,8 +25382,8 @@ LearningAssessmentsSubmitAssessmentRuntimeInputSchema = z.object({
   response: z.lazy(() => LearningAssessmentsGradingContractsAssessmentResponseEnvelopeV1Schema).optional(),
 });
 
-/** Zod schema for LearningAssessmentsTaskItem */
-LearningAssessmentsTaskItemSchema = z.object({
+/** Zod schema for LearningAssessmentsTaskItemDto */
+LearningAssessmentsTaskItemDtoSchema = z.object({
   assessmentId: z.string().uuid().optional(),
   assessmentTitle: z.string().nullable().optional(),
   countSubmitted: z.number().int().nullable().optional(),
@@ -24733,10 +25395,10 @@ LearningAssessmentsTaskItemSchema = z.object({
   type: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsTasks */
-LearningAssessmentsTasksSchema = z.object({
+/** Zod schema for LearningAssessmentsTasksDto */
+LearningAssessmentsTasksDtoSchema = z.object({
   items: z
-    .array(z.lazy(() => LearningAssessmentsTaskItemSchema))
+    .array(z.lazy(() => LearningAssessmentsTaskItemDtoSchema))
     .nullable()
     .optional(),
 });
@@ -24808,8 +25470,8 @@ LearningAssessmentsUpdateAssessmentInputSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningCertificatesCertificate */
-LearningCertificatesCertificateSchema = z.object({
+/** Zod schema for LearningCertificatesCertificateDto */
+LearningCertificatesCertificateDtoSchema = z.object({
   id: z.string().uuid().optional(),
   certificateNumber: z.string().nullable().optional(),
   courseId: z.string().uuid().optional(),
@@ -24826,21 +25488,8 @@ LearningCertificatesCertificateSchema = z.object({
 /** Zod schema for LearningCertificatesCertificateStatus */
 LearningCertificatesCertificateStatusSchema = z.enum(['Active', 'Expired', 'Revoked']);
 
-/** Zod schema for LearningCertificatesCertificateTemplate */
-LearningCertificatesCertificateTemplateSchema = z.object({
-  id: z.string().uuid().optional(),
-  courseId: z.string().uuid().optional(),
-  createdAt: z.string().datetime().optional(),
-  description: z.string().nullable().optional(),
-  isActive: z.boolean().optional(),
-  isDefault: z.boolean().optional(),
-  name: z.string().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  updatedAt: z.string().datetime().optional(),
-});
-
-/** Zod schema for LearningCertificatesCertificateTemplateDetail */
-LearningCertificatesCertificateTemplateDetailSchema = z.object({
+/** Zod schema for LearningCertificatesCertificateTemplateDetailDto */
+LearningCertificatesCertificateTemplateDetailDtoSchema = z.object({
   id: z.string().uuid().optional(),
   courseId: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
@@ -24850,6 +25499,19 @@ LearningCertificatesCertificateTemplateDetailSchema = z.object({
   name: z.string().nullable().optional(),
   templateHtml: z.string().nullable().optional(),
   templateStyles: z.string().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for LearningCertificatesCertificateTemplateDto */
+LearningCertificatesCertificateTemplateDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  courseId: z.string().uuid().optional(),
+  createdAt: z.string().datetime().optional(),
+  description: z.string().nullable().optional(),
+  isActive: z.boolean().optional(),
+  isDefault: z.boolean().optional(),
+  name: z.string().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
   updatedAt: z.string().datetime().optional(),
 });
@@ -24903,8 +25565,8 @@ LearningCohortsApplyCohortScheduleInputSchema = z.object({
   rules: z.lazy(() => LearningCohortsPreviewCohortScheduleInputSchema).optional(),
 });
 
-/** Zod schema for LearningCohortsAvailableCohortContent */
-LearningCohortsAvailableCohortContentSchema = z.object({
+/** Zod schema for LearningCohortsAvailableCohortContentDto */
+LearningCohortsAvailableCohortContentDtoSchema = z.object({
   availableFrom: z.string().datetime().nullable().optional(),
   availableUntil: z.string().datetime().nullable().optional(),
   body: z.string().nullable().optional(),
@@ -24918,8 +25580,22 @@ LearningCohortsAvailableCohortContentSchema = z.object({
   type: z.lazy(() => LearningCoursesProgramContentTypeSchema).optional(),
 });
 
-/** Zod schema for LearningCohortsCohort */
-LearningCohortsCohortSchema = z.object({
+/** Zod schema for LearningCohortsCohortCalendarEntryDto */
+LearningCohortsCohortCalendarEntryDtoSchema = z.object({
+  availableFrom: z.string().datetime().nullable().optional(),
+  cohortId: z.string().uuid().optional(),
+  cohortName: z.string().nullable().optional(),
+  dueAt: z.string().datetime().nullable().optional(),
+  endsAt: z.string().datetime().nullable().optional(),
+  itemId: z.string().uuid().optional(),
+  startsAt: z.string().datetime().nullable().optional(),
+  status: z.lazy(() => LearningCohortsCohortScheduleItemStatusSchema).optional(),
+  title: z.string().nullable().optional(),
+  type: z.lazy(() => LearningCohortsCohortScheduleItemTypeSchema).optional(),
+});
+
+/** Zod schema for LearningCohortsCohortDto */
+LearningCohortsCohortDtoSchema = z.object({
   id: z.string().uuid().optional(),
   availableSpots: z.number().int().optional(),
   canEnroll: z.boolean().optional(),
@@ -24935,24 +25611,10 @@ LearningCohortsCohortSchema = z.object({
   meetingSchedule: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
   nextMeetingAt: z.string().datetime().nullable().optional(),
-  schedule: z.lazy(() => LearningCohortsCohortScheduleSummarySchema).optional(),
+  schedule: z.lazy(() => LearningCohortsCohortScheduleSummaryDtoSchema).optional(),
   startDate: z.string().datetime().optional(),
   status: z.lazy(() => LearningCohortsCohortStatusSchema).optional(),
   tenantId: z.string().uuid().nullable().optional(),
-});
-
-/** Zod schema for LearningCohortsCohortCalendarEntry */
-LearningCohortsCohortCalendarEntrySchema = z.object({
-  availableFrom: z.string().datetime().nullable().optional(),
-  cohortId: z.string().uuid().optional(),
-  cohortName: z.string().nullable().optional(),
-  dueAt: z.string().datetime().nullable().optional(),
-  endsAt: z.string().datetime().nullable().optional(),
-  itemId: z.string().uuid().optional(),
-  startsAt: z.string().datetime().nullable().optional(),
-  status: z.lazy(() => LearningCohortsCohortScheduleItemStatusSchema).optional(),
-  title: z.string().nullable().optional(),
-  type: z.lazy(() => LearningCohortsCohortScheduleItemTypeSchema).optional(),
 });
 
 /** Zod schema for LearningCohortsCohortPacingMode */
@@ -24961,12 +25623,21 @@ LearningCohortsCohortPacingModeSchema = z.enum(['OneModulePerWeek', 'OneLessonPe
 /** Zod schema for LearningCohortsCohortReleasePolicy */
 LearningCohortsCohortReleasePolicySchema = z.enum(['Weekly', 'BeforeMeeting', 'Manual', 'Immediately']);
 
-/** Zod schema for LearningCohortsCohortSchedule */
-LearningCohortsCohortScheduleSchema = z.object({
+/** Zod schema for LearningCohortsCohortScheduleConflictDto */
+LearningCohortsCohortScheduleConflictDtoSchema = z.object({
+  assessmentId: z.string().uuid().nullable().optional(),
+  code: z.string().nullable().optional(),
+  message: z.string().nullable().optional(),
+  programContentId: z.string().uuid().nullable().optional(),
+  severity: z.lazy(() => LearningCohortsScheduleConflictSeveritySchema).optional(),
+});
+
+/** Zod schema for LearningCohortsCohortScheduleDto */
+LearningCohortsCohortScheduleDtoSchema = z.object({
   id: z.string().uuid().optional(),
   cohortId: z.string().uuid().optional(),
   items: z
-    .array(z.lazy(() => LearningCohortsCohortScheduleItemSchema))
+    .array(z.lazy(() => LearningCohortsCohortScheduleItemDtoSchema))
     .nullable()
     .optional(),
   meetingDays: z
@@ -24983,17 +25654,8 @@ LearningCohortsCohortScheduleSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for LearningCohortsCohortScheduleConflict */
-LearningCohortsCohortScheduleConflictSchema = z.object({
-  assessmentId: z.string().uuid().nullable().optional(),
-  code: z.string().nullable().optional(),
-  message: z.string().nullable().optional(),
-  programContentId: z.string().uuid().nullable().optional(),
-  severity: z.lazy(() => LearningCohortsScheduleConflictSeveritySchema).optional(),
-});
-
-/** Zod schema for LearningCohortsCohortScheduleItem */
-LearningCohortsCohortScheduleItemSchema = z.object({
+/** Zod schema for LearningCohortsCohortScheduleItemDto */
+LearningCohortsCohortScheduleItemDtoSchema = z.object({
   id: z.string().uuid().optional(),
   assessmentId: z.string().uuid().nullable().optional(),
   availableFrom: z.string().datetime().nullable().optional(),
@@ -25018,22 +25680,22 @@ LearningCohortsCohortScheduleItemStatusSchema = z.enum(['Draft', 'Scheduled', 'P
 /** Zod schema for LearningCohortsCohortScheduleItemType */
 LearningCohortsCohortScheduleItemTypeSchema = z.enum(['ContentRelease', 'LiveSession', 'AssessmentWindow', 'Milestone']);
 
-/** Zod schema for LearningCohortsCohortSchedulePreview */
-LearningCohortsCohortSchedulePreviewSchema = z.object({
+/** Zod schema for LearningCohortsCohortSchedulePreviewDto */
+LearningCohortsCohortSchedulePreviewDtoSchema = z.object({
   calculatedEndDate: z.string().date().optional(),
   conflicts: z
-    .array(z.lazy(() => LearningCohortsCohortScheduleConflictSchema))
+    .array(z.lazy(() => LearningCohortsCohortScheduleConflictDtoSchema))
     .nullable()
     .optional(),
   hasBlockingConflicts: z.boolean().optional(),
   items: z
-    .array(z.lazy(() => LearningCohortsCohortSchedulePreviewItemSchema))
+    .array(z.lazy(() => LearningCohortsCohortSchedulePreviewItemDtoSchema))
     .nullable()
     .optional(),
 });
 
-/** Zod schema for LearningCohortsCohortSchedulePreviewItem */
-LearningCohortsCohortSchedulePreviewItemSchema = z.object({
+/** Zod schema for LearningCohortsCohortSchedulePreviewItemDto */
+LearningCohortsCohortSchedulePreviewItemDtoSchema = z.object({
   assessmentId: z.string().uuid().nullable().optional(),
   availableFrom: z.string().datetime().nullable().optional(),
   availableUntil: z.string().datetime().nullable().optional(),
@@ -25047,8 +25709,8 @@ LearningCohortsCohortSchedulePreviewItemSchema = z.object({
   type: z.lazy(() => LearningCohortsCohortScheduleItemTypeSchema).optional(),
 });
 
-/** Zod schema for LearningCohortsCohortScheduleSummary */
-LearningCohortsCohortScheduleSummarySchema = z.object({
+/** Zod schema for LearningCohortsCohortScheduleSummaryDto */
+LearningCohortsCohortScheduleSummaryDtoSchema = z.object({
   itemCount: z.number().int().optional(),
   meetingDays: z
     .array(z.lazy(() => SystemDayOfWeekSchema))
@@ -25067,11 +25729,11 @@ LearningCohortsCohortStatusSchema = z.enum(['Scheduled', 'Active', 'Completed', 
 /** Zod schema for LearningCohortsCohortVisibilityOverride */
 LearningCohortsCohortVisibilityOverrideSchema = z.enum(['Inherited', 'Hidden', 'Visible']);
 
-/** Zod schema for LearningCohortsCourseCohortCalendar */
-LearningCohortsCourseCohortCalendarSchema = z.object({
+/** Zod schema for LearningCohortsCourseCohortCalendarDto */
+LearningCohortsCourseCohortCalendarDtoSchema = z.object({
   courseId: z.string().uuid().optional(),
   entries: z
-    .array(z.lazy(() => LearningCohortsCohortCalendarEntrySchema))
+    .array(z.lazy(() => LearningCohortsCohortCalendarEntryDtoSchema))
     .nullable()
     .optional(),
 });
@@ -25151,16 +25813,16 @@ LearningCohortsUpdateCohortScheduleItemInputSchema = z.object({
   visibilityOverride: z.lazy(() => LearningCohortsCohortVisibilityOverrideSchema).optional(),
 });
 
-/** Zod schema for LearningCoursesActivityGrade */
-LearningCoursesActivityGradeSchema = z.object({
+/** Zod schema for LearningCoursesActivityGradeDto */
+LearningCoursesActivityGradeDtoSchema = z.object({
   id: z.string().uuid().optional(),
-  contentInteraction: z.lazy(() => LearningCoursesContentInteractionSummarySchema).optional(),
+  contentInteraction: z.lazy(() => LearningCoursesContentInteractionSummaryDtoSchema).optional(),
   contentInteractionId: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
   feedback: z.string().nullable().optional(),
   gradedAt: z.string().datetime().optional(),
   gradePercentage: z.string().nullable().optional(),
-  grader: z.lazy(() => LearningCoursesGraderSummarySchema).optional(),
+  grader: z.lazy(() => LearningCoursesGraderSummaryDtoSchema).optional(),
   graderProgramUserId: z.string().uuid().nullable().optional(),
   gradingDetails: z.string().nullable().optional(),
   hasFeedback: z.boolean().optional(),
@@ -25184,6 +25846,132 @@ LearningCoursesActivityGradeSchema = z.object({
 /** Zod schema for LearningCoursesActivitySettings */
 LearningCoursesActivitySettingsSchema = z.object({});
 
+/** Zod schema for LearningCoursesAiAuthoringConversationDto */
+LearningCoursesAiAuthoringConversationDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  authorId: z.string().uuid().optional(),
+  contentId: z.string().uuid().optional(),
+  lastMessageAt: z.string().datetime().optional(),
+  messages: z
+    .array(z.lazy(() => LearningCoursesAiAuthoringMessageDtoSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for LearningCoursesAiAuthoringMessageDto */
+LearningCoursesAiAuthoringMessageDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  content: z.string().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  role: z.string().nullable().optional(),
+  runId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for LearningCoursesAiAuthoringRunDto */
+LearningCoursesAiAuthoringRunDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  baseDraftRevision: z.number().int().optional(),
+  completedAt: z.string().datetime().nullable().optional(),
+  contentId: z.string().uuid().optional(),
+  conversationId: z.string().uuid().optional(),
+  createdAt: z.string().datetime().optional(),
+  errorCode: z.string().nullable().optional(),
+  errorMessage: z.string().nullable().optional(),
+  instruction: z.string().nullable().optional(),
+  model: z.string().nullable().optional(),
+  proposal: z.lazy(() => LearningCoursesAiProposalDtoSchema).optional(),
+  proposalKind: z.lazy(() => LearningCoursesAiProposalKindSchema).optional(),
+  provider: z.string().nullable().optional(),
+  startedAt: z.string().datetime().nullable().optional(),
+  status: z.lazy(() => LearningCoursesAiAuthoringRunStatusSchema).optional(),
+  usage: z.lazy(() => LearningCoursesAiCreditUsageDtoSchema).optional(),
+});
+
+/** Zod schema for LearningCoursesAiAuthoringRunInput */
+LearningCoursesAiAuthoringRunInputSchema = z.object({
+  conversationId: z.string().uuid().nullable().optional(),
+  draftRevision: z.number().int().optional(),
+  idempotencyKey: z.string().nullable().optional(),
+  instruction: z.string().nullable().optional(),
+  proposalKind: z.lazy(() => LearningCoursesAiProposalKindSchema).optional(),
+  selection: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningCoursesAiAuthoringRunStatus */
+LearningCoursesAiAuthoringRunStatusSchema = z.enum(['Queued', 'Reserved', 'Running', 'Completed', 'Failed', 'Cancelled']);
+
+/** Zod schema for LearningCoursesAiCreditUsageDto */
+LearningCoursesAiCreditUsageDtoSchema = z.object({
+  availableSoftCredits: z.number().int().optional(),
+  currency: z.string().nullable().optional(),
+  inputTokens: z.number().int().optional(),
+  maximumEstimatedCost: z.number().int().optional(),
+  outputTokens: z.number().int().optional(),
+  releasedAmount: z.number().int().optional(),
+  settledCost: z.number().int().optional(),
+});
+
+/** Zod schema for LearningCoursesAiEntitlementDto */
+LearningCoursesAiEntitlementDtoSchema = z.object({
+  availableSoftCredits: z.number().int().optional(),
+  currency: z.string().nullable().optional(),
+  reservedSoftCredits: z.number().int().optional(),
+  settledSoftCredits: z.number().int().optional(),
+});
+
+/** Zod schema for LearningCoursesAiProposalDto */
+LearningCoursesAiProposalDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  baseDraftRevision: z.number().int().optional(),
+  kind: z.lazy(() => LearningCoursesAiProposalKindSchema).optional(),
+  originalContent: z.string().nullable().optional(),
+  proposedAt: z.string().datetime().optional(),
+  proposedContent: z.string().nullable().optional(),
+  runId: z.string().uuid().optional(),
+  status: z.lazy(() => LearningCoursesAiProposalStatusSchema).optional(),
+});
+
+/** Zod schema for LearningCoursesAiProposalKind */
+LearningCoursesAiProposalKindSchema = z.enum(['ReplaceDocument', 'InsertAtCursor', 'LexicalPatch', 'QuizPatch', 'MetadataPatch']);
+
+/** Zod schema for LearningCoursesAiProposalStatus */
+LearningCoursesAiProposalStatusSchema = z.enum(['Pending', 'Applied', 'Discarded']);
+
+/** Zod schema for LearningCoursesApplyAiProposalInput */
+LearningCoursesApplyAiProposalInputSchema = z.object({
+  cursorOffset: z.number().int().nullable().optional(),
+  draftRevision: z.number().int().optional(),
+});
+
+/** Zod schema for LearningCoursesAuthoringContentPayload */
+LearningCoursesAuthoringContentPayloadSchema = z.object({
+  activitySettings: z.lazy(() => LearningCoursesActivitySettingsSchema).optional(),
+  body: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  estimatedMinutes: z.number().int().nullable().optional(),
+  estimatedMinutesSource: z.lazy(() => LearningCoursesEstimatedMinutesSourceSchema).optional(),
+  isRequired: z.boolean().optional(),
+  jsonBody: z.record(z.string(), z.unknown()).nullable().optional(),
+  lessonFormat: z.lazy(() => LearningCoursesLessonContentFormatSchema).optional(),
+  slug: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
+  type: z.lazy(() => LearningCoursesProgramContentTypeSchema).optional(),
+  visibility: z.lazy(() => LearningCoursesVisibilitySchema).optional(),
+});
+
+/** Zod schema for LearningCoursesAuthoringDraftDto */
+LearningCoursesAuthoringDraftDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  basePublishedVersion: z.number().int().optional(),
+  contentId: z.string().uuid().optional(),
+  eTag: z.string().nullable().optional(),
+  lastEditedAt: z.string().datetime().optional(),
+  lastEditedBy: z.string().uuid().optional(),
+  payload: z.lazy(() => LearningCoursesAuthoringContentPayloadSchema).optional(),
+  programId: z.string().uuid().optional(),
+  revision: z.number().int().optional(),
+});
+
 /** Zod schema for LearningCoursesBundleFileMeta */
 LearningCoursesBundleFileMetaSchema = z.object({
   content: z.string().nullable(),
@@ -25197,8 +25985,8 @@ LearningCoursesCircularDependencyCheckResultSchema = z.object({
   wouldCreateCycle: z.boolean().optional(),
 });
 
-/** Zod schema for LearningCoursesCloneProgram */
-LearningCoursesCloneProgramSchema = z.object({
+/** Zod schema for LearningCoursesCloneProgramDto */
+LearningCoursesCloneProgramDtoSchema = z.object({
   newDescription: z.string().nullable().optional(),
   newTitle: z.string().nullable().optional(),
 });
@@ -25247,10 +26035,10 @@ LearningCoursesCompleteCourseCheckoutOutputSchema = z.object({
   productId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningCoursesCompletionRates */
-LearningCoursesCompletionRatesSchema = z.object({
+/** Zod schema for LearningCoursesCompletionRatesDto */
+LearningCoursesCompletionRatesDtoSchema = z.object({
   completionTrends: z
-    .array(z.lazy(() => LearningCoursesCompletionTrendSchema))
+    .array(z.lazy(() => LearningCoursesCompletionTrendDtoSchema))
     .nullable()
     .optional(),
   contentCompletionRates: z.record(z.string(), z.number()).nullable().optional(),
@@ -25258,21 +26046,21 @@ LearningCoursesCompletionRatesSchema = z.object({
   programId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningCoursesCompletionTrend */
-LearningCoursesCompletionTrendSchema = z.object({
+/** Zod schema for LearningCoursesCompletionTrendDto */
+LearningCoursesCompletionTrendDtoSchema = z.object({
   completedCount: z.number().int().optional(),
   date: z.string().datetime().optional(),
   rate: z.number().optional(),
   totalCount: z.number().int().optional(),
 });
 
-/** Zod schema for LearningCoursesContentInteraction */
-LearningCoursesContentInteractionSchema = z.object({
+/** Zod schema for LearningCoursesContentInteractionDto */
+LearningCoursesContentInteractionDtoSchema = z.object({
   id: z.string().uuid().optional(),
   canModify: z.boolean().optional(),
   completedAt: z.string().datetime().nullable().optional(),
   completionPercentage: z.lazy(() => LearningGradingContractsPercentValueSchema).optional(),
-  content: z.lazy(() => LearningCoursesContentSummarySchema).optional(),
+  content: z.lazy(() => LearningCoursesContentSummaryDtoSchema).optional(),
   contentId: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
   durationInMinutes: z.number().int().optional(),
@@ -25281,7 +26069,7 @@ LearningCoursesContentInteractionSchema = z.object({
   isCompleted: z.boolean().optional(),
   isSubmitted: z.boolean().optional(),
   lastAccessedAt: z.string().datetime().nullable().optional(),
-  programUser: z.lazy(() => LearningCoursesProgramUserSummarySchema).optional(),
+  programUser: z.lazy(() => LearningCoursesProgramUserSummaryDtoSchema).optional(),
   programUserId: z.string().uuid().optional(),
   status: z.lazy(() => LearningCoursesProgressStatusSchema).optional(),
   submissionData: z.string().nullable().optional(),
@@ -25291,8 +26079,8 @@ LearningCoursesContentInteractionSchema = z.object({
   updatedAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for LearningCoursesContentInteractionEvent */
-LearningCoursesContentInteractionEventSchema = z.object({
+/** Zod schema for LearningCoursesContentInteractionEventDto */
+LearningCoursesContentInteractionEventDtoSchema = z.object({
   id: z.string().uuid().optional(),
   durationSeconds: z.number().int().nullable().optional(),
   idempotencyKey: z.string().nullable().optional(),
@@ -25320,19 +26108,19 @@ LearningCoursesContentInteractionEventTypeSchema = z.enum([
   'QuizAnswered',
 ]);
 
-/** Zod schema for LearningCoursesContentInteractionSummary */
-LearningCoursesContentInteractionSummarySchema = z.object({
+/** Zod schema for LearningCoursesContentInteractionSummaryDto */
+LearningCoursesContentInteractionSummaryDtoSchema = z.object({
   id: z.string().uuid().optional(),
-  content: z.lazy(() => LearningCoursesContentSummarySchema).optional(),
+  content: z.lazy(() => LearningCoursesContentSummaryDtoSchema).optional(),
   contentId: z.string().uuid().optional(),
   programUserId: z.string().uuid().optional(),
   status: z.string().nullable().optional(),
-  student: z.lazy(() => LearningCoursesStudentSummarySchema).optional(),
+  student: z.lazy(() => LearningCoursesStudentSummaryDtoSchema).optional(),
   submittedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesContentProgress */
-LearningCoursesContentProgressSchema = z.object({
+/** Zod schema for LearningCoursesContentProgressDto */
+LearningCoursesContentProgressDtoSchema = z.object({
   completedAt: z.string().datetime().nullable().optional(),
   completionPercentage: z.lazy(() => LearningGradingContractsPercentValueSchema).optional(),
   contentId: z.string().uuid().optional(),
@@ -25342,8 +26130,8 @@ LearningCoursesContentProgressSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesContentStats */
-LearningCoursesContentStatsSchema = z.object({
+/** Zod schema for LearningCoursesContentStatsDto */
+LearningCoursesContentStatsDtoSchema = z.object({
   contentByType: z
     .object({
       Assignment: z.number().int(),
@@ -25377,8 +26165,8 @@ LearningCoursesContentStatsSchema = z.object({
   totalContent: z.number().int().optional(),
 });
 
-/** Zod schema for LearningCoursesContentSummary */
-LearningCoursesContentSummarySchema = z.object({
+/** Zod schema for LearningCoursesContentSummaryDto */
+LearningCoursesContentSummaryDtoSchema = z.object({
   id: z.string().uuid().optional(),
   contentType: z.string().nullable().optional(),
   estimatedMinutes: z.number().int().nullable().optional(),
@@ -25391,8 +26179,8 @@ LearningCoursesCourseSupportTicketMessageInputSchema = z.object({
   message: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesCreateActivityGrade */
-LearningCoursesCreateActivityGradeSchema = z.object({
+/** Zod schema for LearningCoursesCreateActivityGradeDto */
+LearningCoursesCreateActivityGradeDtoSchema = z.object({
   contentInteractionId: z.string().uuid().optional(),
   feedback: z.string().nullable().optional(),
   graderProgramUserId: z.string().uuid().optional(),
@@ -25415,26 +26203,16 @@ LearningCoursesCreatePrerequisiteApiInputSchema = z.object({
   type: z.lazy(() => LearningCoursesPrerequisiteTypeSchema).optional(),
 });
 
-/** Zod schema for LearningCoursesCreateProductFromProgram */
-LearningCoursesCreateProductFromProgramSchema = z.object({
+/** Zod schema for LearningCoursesCreateProductFromProgramDto */
+LearningCoursesCreateProductFromProgramDtoSchema = z.object({
   basePrice: z.number().optional(),
   currency: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesCreateProgram */
-LearningCoursesCreateProgramSchema = z.object({
-  creatorId: z.string().uuid().nullable().optional(),
-  description: z.string().nullable().optional(),
-  passingScore: z.lazy(() => LearningGradingContractsPercentValueSchema).optional(),
-  slug: z.string().nullable().optional(),
-  thumbnail: z.string().nullable().optional(),
-  title: z.string().nullable().optional(),
-});
-
-/** Zod schema for LearningCoursesCreateProgramContent */
-LearningCoursesCreateProgramContentSchema = z.object({
+/** Zod schema for LearningCoursesCreateProgramContentDto */
+LearningCoursesCreateProgramContentDtoSchema = z.object({
   activitySettings: z.lazy(() => LearningCoursesActivitySettingsSchema).optional(),
   body: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
@@ -25452,8 +26230,18 @@ LearningCoursesCreateProgramContentSchema = z.object({
   visibility: z.lazy(() => LearningCoursesVisibilitySchema).optional(),
 });
 
-/** Zod schema for LearningCoursesEngagementMetrics */
-LearningCoursesEngagementMetricsSchema = z.object({
+/** Zod schema for LearningCoursesCreateProgramDto */
+LearningCoursesCreateProgramDtoSchema = z.object({
+  creatorId: z.string().uuid().nullable().optional(),
+  description: z.string().nullable().optional(),
+  passingScore: z.lazy(() => LearningGradingContractsPercentValueSchema).optional(),
+  slug: z.string().nullable().optional(),
+  thumbnail: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningCoursesEngagementMetricsDto */
+LearningCoursesEngagementMetricsDtoSchema = z.object({
   averageSessionDuration: z.string().optional(),
   contentEngagement: z.record(z.string(), z.number().int()).nullable().optional(),
   dailyActiveUsers: z.number().int().optional(),
@@ -25467,19 +26255,24 @@ LearningCoursesEngagementMetricsSchema = z.object({
 /** Zod schema for LearningCoursesEnrollmentStatus */
 LearningCoursesEnrollmentStatusSchema = z.enum(['Open', 'Active', 'Paused', 'Cancelled', 'Expired', 'Completed', 'Closed', 'InviteOnly', 'Waitlist']);
 
+/** Zod schema for LearningCoursesEnrollProgramUserInput */
+LearningCoursesEnrollProgramUserInputSchema = z.object({
+  userReference: z.string().nullable().optional(),
+});
+
 /** Zod schema for LearningCoursesEstimatedMinutesSource */
 LearningCoursesEstimatedMinutesSourceSchema = z.enum(['Auto', 'Manual']);
 
-/** Zod schema for LearningCoursesGraderSummary */
-LearningCoursesGraderSummarySchema = z.object({
+/** Zod schema for LearningCoursesGraderSummaryDto */
+LearningCoursesGraderSummaryDtoSchema = z.object({
   id: z.string().uuid().optional(),
   role: z.string().nullable().optional(),
   userDisplayName: z.string().nullable().optional(),
   userEmail: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesGradeStatistics */
-LearningCoursesGradeStatisticsSchema = z.object({
+/** Zod schema for LearningCoursesGradeStatisticsDto */
+LearningCoursesGradeStatisticsDtoSchema = z.object({
   averageGrade: z.lazy(() => LearningGradingContractsPercentValueSchema).optional(),
   averageGradeFormatted: z.string().nullable().optional(),
   hasGrades: z.boolean().optional(),
@@ -25498,23 +26291,32 @@ LearningCoursesGradingConfigSchema = z.object({
 /** Zod schema for LearningCoursesLessonContentFormat */
 LearningCoursesLessonContentFormatSchema = z.enum(['Markdown', 'Lexical', 'RevealJs', 'Video', 'Html', 'ExternalLink']);
 
-/** Zod schema for LearningCoursesMonetization */
-LearningCoursesMonetizationSchema = z.object({
+/** Zod schema for LearningCoursesMonetizationDto */
+LearningCoursesMonetizationDtoSchema = z.object({
   currency: z.string().nullable().optional(),
   isSubscription: z.boolean().optional(),
   price: z.number().optional(),
   subscriptionDurationDays: z.number().int().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesMoveContent */
-LearningCoursesMoveContentSchema = z.object({
+/** Zod schema for LearningCoursesMoveContentDto */
+LearningCoursesMoveContentDtoSchema = z.object({
   contentId: z.string().uuid(),
   newParentId: z.string().uuid().nullable().optional(),
   newSortOrder: z.number().int(),
 });
 
-/** Zod schema for LearningCoursesPrerequisite */
-LearningCoursesPrerequisiteSchema = z.object({
+/** Zod schema for LearningCoursesPrerequisiteCheckResultDto */
+LearningCoursesPrerequisiteCheckResultDtoSchema = z.object({
+  isSatisfied: z.boolean().optional(),
+  prerequisites: z
+    .array(z.lazy(() => LearningCoursesPrerequisiteStatusDtoSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for LearningCoursesPrerequisiteDto */
+LearningCoursesPrerequisiteDtoSchema = z.object({
   id: z.string().uuid().optional(),
   courseId: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
@@ -25531,17 +26333,8 @@ LearningCoursesPrerequisiteSchema = z.object({
   type: z.lazy(() => LearningCoursesPrerequisiteTypeSchema).optional(),
 });
 
-/** Zod schema for LearningCoursesPrerequisiteCheckResult */
-LearningCoursesPrerequisiteCheckResultSchema = z.object({
-  isSatisfied: z.boolean().optional(),
-  prerequisites: z
-    .array(z.lazy(() => LearningCoursesPrerequisiteStatusSchema))
-    .nullable()
-    .optional(),
-});
-
-/** Zod schema for LearningCoursesPrerequisiteStatus */
-LearningCoursesPrerequisiteStatusSchema = z.object({
+/** Zod schema for LearningCoursesPrerequisiteStatusDto */
+LearningCoursesPrerequisiteStatusDtoSchema = z.object({
   achievedGrade: z
     .lazy(() => LearningGradingContractsPercentValueSchema)
     .nullable()
@@ -25561,8 +26354,8 @@ LearningCoursesPrerequisiteStatusSchema = z.object({
 /** Zod schema for LearningCoursesPrerequisiteType */
 LearningCoursesPrerequisiteTypeSchema = z.enum(['Required', 'Recommended', 'Corequisite']);
 
-/** Zod schema for LearningCoursesPricing */
-LearningCoursesPricingSchema = z.object({
+/** Zod schema for LearningCoursesPricingDto */
+LearningCoursesPricingDtoSchema = z.object({
   currency: z.string().nullable().optional(),
   isMonetizationEnabled: z.boolean().optional(),
   isSubscription: z.boolean().optional(),
@@ -25570,37 +26363,8 @@ LearningCoursesPricingSchema = z.object({
   subscriptionDurationDays: z.number().int().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesProgram */
-LearningCoursesProgramSchema = z.object({
-  id: z.string().uuid().optional(),
-  averageRating: z.number().optional(),
-  category: z.lazy(() => ProgramCategorySchema).optional(),
-  createdAt: z.string().datetime().optional(),
-  creatorId: z.string().uuid().nullable().optional(),
-  currentEnrollments: z.number().int().optional(),
-  description: z.string().nullable().optional(),
-  difficulty: z.lazy(() => LearningCoursesProgramDifficultySchema).optional(),
-  enrollmentDeadline: z.string().datetime().nullable().optional(),
-  enrollmentStatus: z.lazy(() => LearningCoursesEnrollmentStatusSchema).optional(),
-  estimatedHours: z.number().int().nullable().optional(),
-  isEnrollmentOpen: z.boolean().optional(),
-  maxEnrollments: z.number().int().nullable().optional(),
-  metadata: z.string().nullable().optional(),
-  passingScore: z.lazy(() => LearningGradingContractsPercentValueSchema).optional(),
-  skillsProvided: z.string().nullable().optional(),
-  skillsRequired: z.string().nullable().optional(),
-  slug: z.string().nullable().optional(),
-  status: z.lazy(() => ContentStatusSchema).optional(),
-  thumbnail: z.string().nullable().optional(),
-  title: z.string().nullable().optional(),
-  totalRatings: z.number().int().optional(),
-  updatedAt: z.string().datetime().nullable().optional(),
-  videoShowcaseUrl: z.string().nullable().optional(),
-  visibility: z.lazy(() => ContentVisibilitySchema).optional(),
-});
-
-/** Zod schema for LearningCoursesProgramAnalytics */
-LearningCoursesProgramAnalyticsSchema = z.object({
+/** Zod schema for LearningCoursesProgramAnalyticsDto */
+LearningCoursesProgramAnalyticsDtoSchema = z.object({
   activeUsers: z.number().int().optional(),
   additionalMetrics: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   averageCompletionTime: z.string().optional(),
@@ -25613,13 +26377,13 @@ LearningCoursesProgramAnalyticsSchema = z.object({
   totalViews: z.number().int().optional(),
 });
 
-/** Zod schema for LearningCoursesProgramContent */
-LearningCoursesProgramContentSchema = z.object({
+/** Zod schema for LearningCoursesProgramContentDto */
+LearningCoursesProgramContentDtoSchema = z.object({
   id: z.string().uuid().optional(),
   activitySettings: z.lazy(() => LearningCoursesActivitySettingsSchema).optional(),
   body: z.string().nullable().optional(),
   children: z
-    .array(z.lazy(() => LearningCoursesProgramContentSchema))
+    .array(z.lazy(() => LearningCoursesProgramContentDtoSchema))
     .nullable()
     .optional(),
   childrenCount: z.number().int().optional(),
@@ -25649,8 +26413,37 @@ LearningCoursesProgramContentTypeSchema = z.enum(['Lesson', 'Assignment', 'Quest
 /** Zod schema for LearningCoursesProgramDifficulty */
 LearningCoursesProgramDifficultySchema = z.enum(['Beginner', 'Intermediate', 'Advanced', 'Expert']);
 
-/** Zod schema for LearningCoursesProgramUserSummary */
-LearningCoursesProgramUserSummarySchema = z.object({
+/** Zod schema for LearningCoursesProgramDto */
+LearningCoursesProgramDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  averageRating: z.number().optional(),
+  category: z.lazy(() => ProgramCategorySchema).optional(),
+  createdAt: z.string().datetime().optional(),
+  creatorId: z.string().uuid().nullable().optional(),
+  currentEnrollments: z.number().int().optional(),
+  description: z.string().nullable().optional(),
+  difficulty: z.lazy(() => LearningCoursesProgramDifficultySchema).optional(),
+  enrollmentDeadline: z.string().datetime().nullable().optional(),
+  enrollmentStatus: z.lazy(() => LearningCoursesEnrollmentStatusSchema).optional(),
+  estimatedHours: z.number().int().nullable().optional(),
+  isEnrollmentOpen: z.boolean().optional(),
+  maxEnrollments: z.number().int().nullable().optional(),
+  metadata: z.string().nullable().optional(),
+  passingScore: z.lazy(() => LearningGradingContractsPercentValueSchema).optional(),
+  skillsProvided: z.string().nullable().optional(),
+  skillsRequired: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
+  status: z.lazy(() => ContentStatusSchema).optional(),
+  thumbnail: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
+  totalRatings: z.number().int().optional(),
+  updatedAt: z.string().datetime().nullable().optional(),
+  videoShowcaseUrl: z.string().nullable().optional(),
+  visibility: z.lazy(() => ContentVisibilitySchema).optional(),
+});
+
+/** Zod schema for LearningCoursesProgramUserSummaryDto */
+LearningCoursesProgramUserSummaryDtoSchema = z.object({
   id: z.string().uuid().optional(),
   userDisplayName: z.string().nullable().optional(),
   userEmail: z.string().nullable().optional(),
@@ -25658,6 +26451,17 @@ LearningCoursesProgramUserSummarySchema = z.object({
 
 /** Zod schema for LearningCoursesProgressStatus */
 LearningCoursesProgressStatusSchema = z.enum(['NotStarted', 'InProgress', 'Completed', 'Submitted']);
+
+/** Zod schema for LearningCoursesPublishAuthoringDraftInput */
+LearningCoursesPublishAuthoringDraftInputSchema = z.object({
+  revision: z.number().int().optional(),
+});
+
+/** Zod schema for LearningCoursesPublishAuthoringResult */
+LearningCoursesPublishAuthoringResultSchema = z.object({
+  draft: z.lazy(() => LearningCoursesAuthoringDraftDtoSchema).optional(),
+  publishedContent: z.lazy(() => LearningCoursesProgramContentDtoSchema).optional(),
+});
 
 /** Zod schema for LearningCoursesRecordContentInteractionEventInput */
 LearningCoursesRecordContentInteractionEventInputSchema = z.object({
@@ -25673,21 +26477,21 @@ LearningCoursesRecordContentInteractionEventInputSchema = z.object({
   type: z.lazy(() => LearningCoursesContentInteractionEventTypeSchema).optional(),
 });
 
-/** Zod schema for LearningCoursesReflectionResponseResult */
-LearningCoursesReflectionResponseResultSchema = z.object({
+/** Zod schema for LearningCoursesReflectionResponseResultDto */
+LearningCoursesReflectionResponseResultDtoSchema = z.object({
   body: z.string().nullable().optional(),
   respondentUserId: z.string().uuid().nullable().optional(),
   responseId: z.string().uuid().optional(),
   submittedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesRejectProgram */
-LearningCoursesRejectProgramSchema = z.object({
+/** Zod schema for LearningCoursesRejectProgramDto */
+LearningCoursesRejectProgramDtoSchema = z.object({
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesReorderContent */
-LearningCoursesReorderContentSchema = z.object({
+/** Zod schema for LearningCoursesReorderContentDto */
+LearningCoursesReorderContentDtoSchema = z.object({
   contentIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
@@ -25701,35 +26505,41 @@ LearningCoursesResolveCourseSupportTicketInputSchema = z.object({
   summary: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesRevenueAnalytics */
-LearningCoursesRevenueAnalyticsSchema = z.object({
+/** Zod schema for LearningCoursesRevenueAnalyticsDto */
+LearningCoursesRevenueAnalyticsDtoSchema = z.object({
   averageRevenuePerUser: z.number().optional(),
   conversionRate: z.number().optional(),
   monthlyPurchases: z.number().int().optional(),
   monthlyRevenue: z.number().optional(),
   programId: z.string().uuid().optional(),
   revenueChart: z
-    .array(z.lazy(() => LearningCoursesRevenueChartSchema))
+    .array(z.lazy(() => LearningCoursesRevenueChartDtoSchema))
     .nullable()
     .optional(),
   totalPurchases: z.number().int().optional(),
   totalRevenue: z.number().optional(),
 });
 
-/** Zod schema for LearningCoursesRevenueChart */
-LearningCoursesRevenueChartSchema = z.object({
+/** Zod schema for LearningCoursesRevenueChartDto */
+LearningCoursesRevenueChartDtoSchema = z.object({
   date: z.string().datetime().optional(),
   purchases: z.number().int().optional(),
   revenue: z.number().optional(),
 });
 
-/** Zod schema for LearningCoursesScheduleProgram */
-LearningCoursesScheduleProgramSchema = z.object({
+/** Zod schema for LearningCoursesSaveAuthoringDraftInput */
+LearningCoursesSaveAuthoringDraftInputSchema = z.object({
+  payload: z.lazy(() => LearningCoursesAuthoringContentPayloadSchema).optional(),
+  revision: z.number().int().optional(),
+});
+
+/** Zod schema for LearningCoursesScheduleProgramDto */
+LearningCoursesScheduleProgramDtoSchema = z.object({
   publishAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for LearningCoursesSearchContent */
-LearningCoursesSearchContentSchema = z.object({
+/** Zod schema for LearningCoursesSearchContentDto */
+LearningCoursesSearchContentDtoSchema = z.object({
   isRequired: z.boolean().nullable().optional(),
   parentId: z.string().uuid().nullable().optional(),
   programId: z.string().uuid(),
@@ -25756,8 +26566,8 @@ LearningCoursesStartContentInputSchema = z.object({
   programUserId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningCoursesStudentSummary */
-LearningCoursesStudentSummarySchema = z.object({
+/** Zod schema for LearningCoursesStudentSummaryDto */
+LearningCoursesStudentSummaryDtoSchema = z.object({
   id: z.string().uuid().optional(),
   userDisplayName: z.string().nullable().optional(),
   userEmail: z.string().nullable().optional(),
@@ -25770,13 +26580,13 @@ LearningCoursesSubmitContentInputSchema = z.object({
   submissionData: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesSubmitUserContent */
-LearningCoursesSubmitUserContentSchema = z.object({
+/** Zod schema for LearningCoursesSubmitUserContentDto */
+LearningCoursesSubmitUserContentDtoSchema = z.object({
   submissionData: z.string().min(1),
 });
 
-/** Zod schema for LearningCoursesSurveyResponseResult */
-LearningCoursesSurveyResponseResultSchema = z.object({
+/** Zod schema for LearningCoursesSurveyResponseResultDto */
+LearningCoursesSurveyResponseResultDtoSchema = z.object({
   answers: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   respondentUserId: z.string().uuid().nullable().optional(),
   responseId: z.string().uuid().optional(),
@@ -25801,8 +26611,8 @@ LearningCoursesTestSuiteSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for LearningCoursesUpdateActivityGrade */
-LearningCoursesUpdateActivityGradeSchema = z.object({
+/** Zod schema for LearningCoursesUpdateActivityGradeDto */
+LearningCoursesUpdateActivityGradeDtoSchema = z.object({
   feedback: z.string().nullable().optional(),
   gradingDetails: z.string().nullable().optional(),
   maxPoints: z
@@ -25827,16 +26637,34 @@ LearningCoursesUpdatePrerequisiteApiInputSchema = z.object({
   type: z.lazy(() => LearningCoursesPrerequisiteTypeSchema).optional(),
 });
 
-/** Zod schema for LearningCoursesUpdatePricing */
-LearningCoursesUpdatePricingSchema = z.object({
+/** Zod schema for LearningCoursesUpdatePricingDto */
+LearningCoursesUpdatePricingDtoSchema = z.object({
   currency: z.string().nullable().optional(),
   isSubscription: z.boolean().nullable().optional(),
   price: z.number().nullable().optional(),
   subscriptionDurationDays: z.number().int().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesUpdateProgram */
-LearningCoursesUpdateProgramSchema = z.object({
+/** Zod schema for LearningCoursesUpdateProgramContentDto */
+LearningCoursesUpdateProgramContentDtoSchema = z.object({
+  id: z.string().uuid(),
+  activitySettings: z.lazy(() => LearningCoursesActivitySettingsSchema).optional(),
+  body: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  estimatedMinutes: z.number().int().nullable().optional(),
+  estimatedMinutesSource: z.lazy(() => LearningCoursesEstimatedMinutesSourceSchema).optional(),
+  isRequired: z.boolean().nullable().optional(),
+  jsonBody: z.record(z.string(), z.unknown()).nullable().optional(),
+  lessonFormat: z.lazy(() => LearningCoursesLessonContentFormatSchema).optional(),
+  slug: z.string().min(0).max(220).nullable().optional(),
+  sortOrder: z.number().int().nullable().optional(),
+  title: z.string().min(0).max(255).nullable().optional(),
+  type: z.lazy(() => LearningCoursesProgramContentTypeSchema).optional(),
+  visibility: z.lazy(() => LearningCoursesVisibilitySchema).optional(),
+});
+
+/** Zod schema for LearningCoursesUpdateProgramDto */
+LearningCoursesUpdateProgramDtoSchema = z.object({
   category: z.lazy(() => ProgramCategorySchema).optional(),
   clearEnrollmentDeadline: z.boolean().optional(),
   clearMaxEnrollments: z.boolean().optional(),
@@ -25861,26 +26689,8 @@ LearningCoursesUpdateProgramSchema = z.object({
   visibility: z.lazy(() => ContentVisibilitySchema).optional(),
 });
 
-/** Zod schema for LearningCoursesUpdateProgramContent */
-LearningCoursesUpdateProgramContentSchema = z.object({
-  id: z.string().uuid(),
-  activitySettings: z.lazy(() => LearningCoursesActivitySettingsSchema).optional(),
-  body: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  estimatedMinutes: z.number().int().nullable().optional(),
-  estimatedMinutesSource: z.lazy(() => LearningCoursesEstimatedMinutesSourceSchema).optional(),
-  isRequired: z.boolean().nullable().optional(),
-  jsonBody: z.record(z.string(), z.unknown()).nullable().optional(),
-  lessonFormat: z.lazy(() => LearningCoursesLessonContentFormatSchema).optional(),
-  slug: z.string().min(0).max(220).nullable().optional(),
-  sortOrder: z.number().int().nullable().optional(),
-  title: z.string().min(0).max(255).nullable().optional(),
-  type: z.lazy(() => LearningCoursesProgramContentTypeSchema).optional(),
-  visibility: z.lazy(() => LearningCoursesVisibilitySchema).optional(),
-});
-
-/** Zod schema for LearningCoursesUpdateProgress */
-LearningCoursesUpdateProgressSchema = z.object({
+/** Zod schema for LearningCoursesUpdateProgressDto */
+LearningCoursesUpdateProgressDtoSchema = z.object({
   additionalData: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   lastAccessedAt: z.string().datetime().nullable().optional(),
   status: z.lazy(() => LearningCoursesProgressStatusSchema).optional(),
@@ -25900,19 +26710,21 @@ LearningCoursesUpdateTimeSpentInputSchema = z.object({
   programUserId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningCoursesUserProgress */
-LearningCoursesUserProgressSchema = z.object({
+/** Zod schema for LearningCoursesUserProgressDto */
+LearningCoursesUserProgressDtoSchema = z.object({
   completedAt: z.string().datetime().nullable().optional(),
   completionPercentage: z.lazy(() => LearningGradingContractsPercentValueSchema).optional(),
   contentProgress: z
-    .array(z.lazy(() => LearningCoursesContentProgressSchema))
+    .array(z.lazy(() => LearningCoursesContentProgressDtoSchema))
     .nullable()
     .optional(),
   courseId: z.string().uuid().optional(),
   enrollmentId: z.string().uuid().optional(),
   lastAccessedAt: z.string().datetime().nullable().optional(),
   startedAt: z.string().datetime().nullable().optional(),
+  userEmail: z.string().nullable().optional(),
   userId: z.string().uuid().optional(),
+  userName: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningCoursesVisibility */
@@ -25929,8 +26741,8 @@ LearningCoursesWorkspaceDataSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for LearningEnrollmentsEnrollment */
-LearningEnrollmentsEnrollmentSchema = z.object({
+/** Zod schema for LearningEnrollmentsEnrollmentDto */
+LearningEnrollmentsEnrollmentDtoSchema = z.object({
   id: z.string().uuid().optional(),
   cohortId: z.string().uuid().nullable().optional(),
   completedAt: z.string().datetime().nullable().optional(),
@@ -25961,8 +26773,8 @@ LearningEnrollmentsUpdateEnrollmentProgressInputSchema = z.object({
 /** Zod schema for LearningExperienceDiscoveryCollectionType */
 LearningExperienceDiscoveryCollectionTypeSchema = z.enum(['Curated', 'Category', 'Skill', 'Career', 'Trending', 'NewReleases']);
 
-/** Zod schema for LearningExperienceDiscoveryCourseCollection */
-LearningExperienceDiscoveryCourseCollectionSchema = z.object({
+/** Zod schema for LearningExperienceDiscoveryCourseCollectionDto */
+LearningExperienceDiscoveryCourseCollectionDtoSchema = z.object({
   id: z.string().uuid().optional(),
   courseCount: z.number().int().optional(),
   createdAt: z.string().datetime().optional(),
@@ -25978,16 +26790,16 @@ LearningExperienceDiscoveryCourseCollectionSchema = z.object({
   updatedAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for LearningExperienceDiscoveryCreateCourseCollection */
-LearningExperienceDiscoveryCreateCourseCollectionSchema = z.object({
+/** Zod schema for LearningExperienceDiscoveryCreateCourseCollectionDto */
+LearningExperienceDiscoveryCreateCourseCollectionDtoSchema = z.object({
   description: z.string().nullable().optional(),
   imageUrl: z.string().nullable().optional(),
   title: z.string().nullable().optional(),
   type: z.lazy(() => LearningExperienceDiscoveryCollectionTypeSchema).optional(),
 });
 
-/** Zod schema for LearningExperienceDiscoveryCreateFeaturedContent */
-LearningExperienceDiscoveryCreateFeaturedContentSchema = z.object({
+/** Zod schema for LearningExperienceDiscoveryCreateFeaturedContentDto */
+LearningExperienceDiscoveryCreateFeaturedContentDtoSchema = z.object({
   courseId: z.string().uuid().nullable().optional(),
   displayOrder: z.number().int().optional(),
   endsAt: z.string().datetime().nullable().optional(),
@@ -26001,8 +26813,8 @@ LearningExperienceDiscoveryCreateFeaturedContentSchema = z.object({
   type: z.lazy(() => LearningExperienceDiscoveryFeaturedContentTypeSchema).optional(),
 });
 
-/** Zod schema for LearningExperienceDiscoveryFeaturedContent */
-LearningExperienceDiscoveryFeaturedContentSchema = z.object({
+/** Zod schema for LearningExperienceDiscoveryFeaturedContentDto */
+LearningExperienceDiscoveryFeaturedContentDtoSchema = z.object({
   id: z.string().uuid().optional(),
   courseId: z.string().uuid().nullable().optional(),
   createdAt: z.string().datetime().optional(),
@@ -26040,21 +26852,21 @@ LearningExperienceDiscoveryPopularSearchResultSchema = z.object({
   totalClicks: z.number().int().optional(),
 });
 
-/** Zod schema for LearningExperienceDiscoveryRecordSearch */
-LearningExperienceDiscoveryRecordSearchSchema = z.object({
+/** Zod schema for LearningExperienceDiscoveryRecordSearchClickDto */
+LearningExperienceDiscoveryRecordSearchClickDtoSchema = z.object({
+  clickedCourseId: z.string().uuid().optional(),
+  searchId: z.string().uuid().optional(),
+});
+
+/** Zod schema for LearningExperienceDiscoveryRecordSearchDto */
+LearningExperienceDiscoveryRecordSearchDtoSchema = z.object({
   filters: z.string().nullable().optional(),
   query: z.string().nullable().optional(),
   resultCount: z.number().int().optional(),
 });
 
-/** Zod schema for LearningExperienceDiscoveryRecordSearchClick */
-LearningExperienceDiscoveryRecordSearchClickSchema = z.object({
-  clickedCourseId: z.string().uuid().optional(),
-  searchId: z.string().uuid().optional(),
-});
-
-/** Zod schema for LearningExperienceDiscoverySearchHistory */
-LearningExperienceDiscoverySearchHistorySchema = z.object({
+/** Zod schema for LearningExperienceDiscoverySearchHistoryDto */
+LearningExperienceDiscoverySearchHistoryDtoSchema = z.object({
   id: z.string().uuid().optional(),
   clickedCourseId: z.string().uuid().nullable().optional(),
   createdAt: z.string().datetime().optional(),
@@ -26064,16 +26876,16 @@ LearningExperienceDiscoverySearchHistorySchema = z.object({
   userId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for LearningExperienceDiscoveryUpdateCourseCollection */
-LearningExperienceDiscoveryUpdateCourseCollectionSchema = z.object({
+/** Zod schema for LearningExperienceDiscoveryUpdateCourseCollectionDto */
+LearningExperienceDiscoveryUpdateCourseCollectionDtoSchema = z.object({
   description: z.string().nullable().optional(),
   imageUrl: z.string().nullable().optional(),
   isFeatured: z.boolean().nullable().optional(),
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningExperienceDiscoveryUpdateFeaturedContent */
-LearningExperienceDiscoveryUpdateFeaturedContentSchema = z.object({
+/** Zod schema for LearningExperienceDiscoveryUpdateFeaturedContentDto */
+LearningExperienceDiscoveryUpdateFeaturedContentDtoSchema = z.object({
   displayOrder: z.number().int().nullable().optional(),
   endsAt: z.string().datetime().nullable().optional(),
   imageUrl: z.string().nullable().optional(),
@@ -26085,21 +26897,21 @@ LearningExperienceDiscoveryUpdateFeaturedContentSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningExperienceLearningPathsAddCourseToPath */
-LearningExperienceLearningPathsAddCourseToPathSchema = z.object({
+/** Zod schema for LearningExperienceLearningPathsAddCourseToPathDto */
+LearningExperienceLearningPathsAddCourseToPathDtoSchema = z.object({
   courseId: z.string().uuid().optional(),
   isRequired: z.boolean().optional(),
   order: z.number().int().optional(),
 });
 
-/** Zod schema for LearningExperienceLearningPathsCourseOrder */
-LearningExperienceLearningPathsCourseOrderSchema = z.object({
+/** Zod schema for LearningExperienceLearningPathsCourseOrderDto */
+LearningExperienceLearningPathsCourseOrderDtoSchema = z.object({
   courseId: z.string().uuid().optional(),
   order: z.number().int().optional(),
 });
 
-/** Zod schema for LearningExperienceLearningPathsCreateLearningPath */
-LearningExperienceLearningPathsCreateLearningPathSchema = z.object({
+/** Zod schema for LearningExperienceLearningPathsCreateLearningPathDto */
+LearningExperienceLearningPathsCreateLearningPathDtoSchema = z.object({
   description: z.string().nullable().optional(),
   difficulty: z.lazy(() => LearningExperienceLearningPathsLearningPathDifficultySchema).optional(),
   estimatedHours: z.number().int().optional(),
@@ -26107,39 +26919,19 @@ LearningExperienceLearningPathsCreateLearningPathSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningExperienceLearningPathsLearningPath */
-LearningExperienceLearningPathsLearningPathSchema = z.object({
-  id: z.string().uuid().optional(),
-  completionCount: z.number().int().optional(),
-  courseCount: z.number().int().optional(),
-  createdAt: z.string().datetime().optional(),
-  creatorId: z.string().uuid().optional(),
-  description: z.string().nullable().optional(),
-  difficulty: z.lazy(() => LearningExperienceLearningPathsLearningPathDifficultySchema).optional(),
-  enrollmentCount: z.number().int().optional(),
-  estimatedHours: z.number().int().optional(),
-  imageUrl: z.string().nullable().optional(),
-  isFeatured: z.boolean().optional(),
-  isPublished: z.boolean().optional(),
-  slug: z.string().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  title: z.string().nullable().optional(),
-  updatedAt: z.string().datetime().optional(),
-});
-
-/** Zod schema for LearningExperienceLearningPathsLearningPathCourse */
-LearningExperienceLearningPathsLearningPathCourseSchema = z.object({
+/** Zod schema for LearningExperienceLearningPathsLearningPathCourseDto */
+LearningExperienceLearningPathsLearningPathCourseDtoSchema = z.object({
   courseId: z.string().uuid().optional(),
   isRequired: z.boolean().optional(),
   order: z.number().int().optional(),
 });
 
-/** Zod schema for LearningExperienceLearningPathsLearningPathDetail */
-LearningExperienceLearningPathsLearningPathDetailSchema = z.object({
+/** Zod schema for LearningExperienceLearningPathsLearningPathDetailDto */
+LearningExperienceLearningPathsLearningPathDetailDtoSchema = z.object({
   id: z.string().uuid().optional(),
   completionCount: z.number().int().optional(),
   courses: z
-    .array(z.lazy(() => LearningExperienceLearningPathsLearningPathCourseSchema))
+    .array(z.lazy(() => LearningExperienceLearningPathsLearningPathCourseDtoSchema))
     .nullable()
     .optional(),
   createdAt: z.string().datetime().optional(),
@@ -26160,8 +26952,28 @@ LearningExperienceLearningPathsLearningPathDetailSchema = z.object({
 /** Zod schema for LearningExperienceLearningPathsLearningPathDifficulty */
 LearningExperienceLearningPathsLearningPathDifficultySchema = z.enum(['Beginner', 'Intermediate', 'Advanced', 'Expert']);
 
-/** Zod schema for LearningExperienceLearningPathsLearningPathEnrollment */
-LearningExperienceLearningPathsLearningPathEnrollmentSchema = z.object({
+/** Zod schema for LearningExperienceLearningPathsLearningPathDto */
+LearningExperienceLearningPathsLearningPathDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  completionCount: z.number().int().optional(),
+  courseCount: z.number().int().optional(),
+  createdAt: z.string().datetime().optional(),
+  creatorId: z.string().uuid().optional(),
+  description: z.string().nullable().optional(),
+  difficulty: z.lazy(() => LearningExperienceLearningPathsLearningPathDifficultySchema).optional(),
+  enrollmentCount: z.number().int().optional(),
+  estimatedHours: z.number().int().optional(),
+  imageUrl: z.string().nullable().optional(),
+  isFeatured: z.boolean().optional(),
+  isPublished: z.boolean().optional(),
+  slug: z.string().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  title: z.string().nullable().optional(),
+  updatedAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for LearningExperienceLearningPathsLearningPathEnrollmentDto */
+LearningExperienceLearningPathsLearningPathEnrollmentDtoSchema = z.object({
   id: z.string().uuid().optional(),
   completedAt: z.string().datetime().nullable().optional(),
   coursesCompleted: z.number().int().optional(),
@@ -26178,8 +26990,8 @@ LearningExperienceLearningPathsLearningPathEnrollmentSchema = z.object({
 /** Zod schema for LearningExperienceLearningPathsLearningPathEnrollmentStatus */
 LearningExperienceLearningPathsLearningPathEnrollmentStatusSchema = z.enum(['InProgress', 'Completed', 'Abandoned']);
 
-/** Zod schema for LearningExperienceLearningPathsLearningPathStatistics */
-LearningExperienceLearningPathsLearningPathStatisticsSchema = z.object({
+/** Zod schema for LearningExperienceLearningPathsLearningPathStatisticsDto */
+LearningExperienceLearningPathsLearningPathStatisticsDtoSchema = z.object({
   activeEnrollments: z.number().int().optional(),
   averageCompletionTime: z.string().optional(),
   averageProgress: z.number().optional(),
@@ -26189,16 +27001,16 @@ LearningExperienceLearningPathsLearningPathStatisticsSchema = z.object({
   totalEnrollments: z.number().int().optional(),
 });
 
-/** Zod schema for LearningExperienceLearningPathsReorderCourses */
-LearningExperienceLearningPathsReorderCoursesSchema = z.object({
+/** Zod schema for LearningExperienceLearningPathsReorderCoursesDto */
+LearningExperienceLearningPathsReorderCoursesDtoSchema = z.object({
   courses: z
-    .array(z.lazy(() => LearningExperienceLearningPathsCourseOrderSchema))
+    .array(z.lazy(() => LearningExperienceLearningPathsCourseOrderDtoSchema))
     .nullable()
     .optional(),
 });
 
-/** Zod schema for LearningExperienceLearningPathsUpdateLearningPath */
-LearningExperienceLearningPathsUpdateLearningPathSchema = z.object({
+/** Zod schema for LearningExperienceLearningPathsUpdateLearningPathDto */
+LearningExperienceLearningPathsUpdateLearningPathDtoSchema = z.object({
   description: z.string().nullable().optional(),
   difficulty: z.lazy(() => LearningExperienceLearningPathsLearningPathDifficultySchema).optional(),
   estimatedHours: z.number().int().nullable().optional(),
@@ -26207,8 +27019,8 @@ LearningExperienceLearningPathsUpdateLearningPathSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningExperienceLearningPathsUpdatePathProgress */
-LearningExperienceLearningPathsUpdatePathProgressSchema = z.object({
+/** Zod schema for LearningExperienceLearningPathsUpdatePathProgressDto */
+LearningExperienceLearningPathsUpdatePathProgressDtoSchema = z.object({
   coursesCompleted: z.number().int().optional(),
 });
 
@@ -26217,8 +27029,8 @@ LearningExperienceRecommendationsAddSkillInputSchema = z.object({
   skill: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningExperienceRecommendationsCreateOrUpdateLearningProfile */
-LearningExperienceRecommendationsCreateOrUpdateLearningProfileSchema = z.object({
+/** Zod schema for LearningExperienceRecommendationsCreateOrUpdateLearningProfileDto */
+LearningExperienceRecommendationsCreateOrUpdateLearningProfileDtoSchema = z.object({
   learningGoals: z.array(z.string()).nullable().optional(),
   preferredCategories: z.array(z.string()).nullable().optional(),
   preferredDifficulty: z.string().nullable().optional(),
@@ -26226,8 +27038,8 @@ LearningExperienceRecommendationsCreateOrUpdateLearningProfileSchema = z.object(
   skills: z.array(z.string()).nullable().optional(),
 });
 
-/** Zod schema for LearningExperienceRecommendationsPopularCourse */
-LearningExperienceRecommendationsPopularCourseSchema = z.object({
+/** Zod schema for LearningExperienceRecommendationsPopularCourseDto */
+LearningExperienceRecommendationsPopularCourseDtoSchema = z.object({
   averageRating: z.number().optional(),
   category: z.string().nullable().optional(),
   courseId: z.string().uuid().optional(),
@@ -26238,8 +27050,8 @@ LearningExperienceRecommendationsPopularCourseSchema = z.object({
   totalRatings: z.number().int().optional(),
 });
 
-/** Zod schema for LearningExperienceRecommendationsRecommendation */
-LearningExperienceRecommendationsRecommendationSchema = z.object({
+/** Zod schema for LearningExperienceRecommendationsRecommendationDto */
+LearningExperienceRecommendationsRecommendationDtoSchema = z.object({
   id: z.string().uuid().optional(),
   courseId: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
@@ -26252,8 +27064,8 @@ LearningExperienceRecommendationsRecommendationSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningExperienceRecommendationsRecommendationStatistics */
-LearningExperienceRecommendationsRecommendationStatisticsSchema = z.object({
+/** Zod schema for LearningExperienceRecommendationsRecommendationStatisticsDto */
+LearningExperienceRecommendationsRecommendationStatisticsDtoSchema = z.object({
   byType: z
     .object({
       BasedOnHistory: z.number().int(),
@@ -26285,8 +27097,8 @@ LearningExperienceRecommendationsRecommendationTypeSchema = z.enum([
   'PeerRecommended',
 ]);
 
-/** Zod schema for LearningExperienceRecommendationsSimilarCourse */
-LearningExperienceRecommendationsSimilarCourseSchema = z.object({
+/** Zod schema for LearningExperienceRecommendationsSimilarCourseDto */
+LearningExperienceRecommendationsSimilarCourseDtoSchema = z.object({
   category: z.string().nullable().optional(),
   courseId: z.string().uuid().optional(),
   description: z.string().nullable().optional(),
@@ -26296,8 +27108,8 @@ LearningExperienceRecommendationsSimilarCourseSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningExperienceRecommendationsTrendingCourse */
-LearningExperienceRecommendationsTrendingCourseSchema = z.object({
+/** Zod schema for LearningExperienceRecommendationsTrendingCourseDto */
+LearningExperienceRecommendationsTrendingCourseDtoSchema = z.object({
   category: z.string().nullable().optional(),
   courseId: z.string().uuid().optional(),
   description: z.string().nullable().optional(),
@@ -26307,8 +27119,8 @@ LearningExperienceRecommendationsTrendingCourseSchema = z.object({
   trendScore: z.number().optional(),
 });
 
-/** Zod schema for LearningExperienceRecommendationsUserLearningProfile */
-LearningExperienceRecommendationsUserLearningProfileSchema = z.object({
+/** Zod schema for LearningExperienceRecommendationsUserLearningProfileDto */
+LearningExperienceRecommendationsUserLearningProfileDtoSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
   lastActivityAt: z.string().datetime().nullable().optional(),
@@ -26343,8 +27155,8 @@ LearningExperienceSocialFeedItemTypeSchema = z.enum([
   'SkillMilestone',
 ]);
 
-/** Zod schema for LearningExperienceSocialServicesCourseDiscussion */
-LearningExperienceSocialServicesCourseDiscussionSchema = z.object({
+/** Zod schema for LearningExperienceSocialServicesCourseDiscussionDto */
+LearningExperienceSocialServicesCourseDiscussionDtoSchema = z.object({
   id: z.string().uuid().optional(),
   authorId: z.string().uuid().optional(),
   content: z.string().nullable().optional(),
@@ -26359,8 +27171,8 @@ LearningExperienceSocialServicesCourseDiscussionSchema = z.object({
   viewCount: z.number().int().optional(),
 });
 
-/** Zod schema for LearningExperienceSocialServicesCourseLike */
-LearningExperienceSocialServicesCourseLikeSchema = z.object({
+/** Zod schema for LearningExperienceSocialServicesCourseLikeDto */
+LearningExperienceSocialServicesCourseLikeDtoSchema = z.object({
   id: z.string().uuid().optional(),
   courseId: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
@@ -26380,8 +27192,8 @@ LearningExperienceSocialServicesCourseRatingStatsSchema = z.object({
   twoStarCount: z.number().int().optional(),
 });
 
-/** Zod schema for LearningExperienceSocialServicesCourseReview */
-LearningExperienceSocialServicesCourseReviewSchema = z.object({
+/** Zod schema for LearningExperienceSocialServicesCourseReviewDto */
+LearningExperienceSocialServicesCourseReviewDtoSchema = z.object({
   id: z.string().uuid().optional(),
   content: z.string().nullable().optional(),
   courseId: z.string().uuid().optional(),
@@ -26395,8 +27207,8 @@ LearningExperienceSocialServicesCourseReviewSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningExperienceSocialServicesCourseWishlist */
-LearningExperienceSocialServicesCourseWishlistSchema = z.object({
+/** Zod schema for LearningExperienceSocialServicesCourseWishlistDto */
+LearningExperienceSocialServicesCourseWishlistDtoSchema = z.object({
   id: z.string().uuid().optional(),
   courseId: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
@@ -26429,8 +27241,8 @@ LearningExperienceSocialServicesCreateReviewInputSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningExperienceSocialServicesDiscussionReply */
-LearningExperienceSocialServicesDiscussionReplySchema = z.object({
+/** Zod schema for LearningExperienceSocialServicesDiscussionReplyDto */
+LearningExperienceSocialServicesDiscussionReplyDtoSchema = z.object({
   id: z.string().uuid().optional(),
   authorId: z.string().uuid().optional(),
   content: z.string().nullable().optional(),
@@ -26441,8 +27253,8 @@ LearningExperienceSocialServicesDiscussionReplySchema = z.object({
   upvoteCount: z.number().int().optional(),
 });
 
-/** Zod schema for LearningExperienceSocialServicesPersonalizedFeedItem */
-LearningExperienceSocialServicesPersonalizedFeedItemSchema = z.object({
+/** Zod schema for LearningExperienceSocialServicesPersonalizedFeedItemDto */
+LearningExperienceSocialServicesPersonalizedFeedItemDtoSchema = z.object({
   id: z.string().uuid().optional(),
   courseId: z.string().uuid().nullable().optional(),
   createdAt: z.string().datetime().optional(),
@@ -26468,8 +27280,29 @@ LearningGradingContractsPercentValueSchema = z.number().int().min(0).max(10000);
 /** Zod schema for LearningGradingContractsScoreValue. Score in non-negative integer units scaled by 100 (100 units = 1 point). */
 LearningGradingContractsScoreValueSchema = z.number().int().min(0).max(2147483647);
 
-/** Zod schema for LearningWorkspacesLearnerAnnouncement */
-LearningWorkspacesLearnerAnnouncementSchema = z.object({
+/** Zod schema for LearningLtiCreateLtiDeploymentInput */
+LearningLtiCreateLtiDeploymentInputSchema = z.object({
+  active: z.boolean().optional(),
+  authorizationUrl: z.string().nullable().optional(),
+  authTokenUrl: z.string().nullable().optional(),
+  clientId: z.string().nullable().optional(),
+  deploymentId: z.string().nullable().optional(),
+  issuer: z.string().nullable().optional(),
+  keyId: z.string().nullable().optional(),
+  platformJwksUrl: z.string().nullable().optional(),
+  privateKeyPem: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningLtiCreateLtiLineItemInput */
+LearningLtiCreateLtiLineItemInputSchema = z.object({
+  assessmentId: z.string().uuid().optional(),
+  lineItemId: z.string().nullable().optional(),
+  lineItemUrl: z.string().nullable().optional(),
+  maxScore: z.lazy(() => LearningGradingContractsScoreValueSchema).optional(),
+});
+
+/** Zod schema for LearningWorkspacesLearnerAnnouncementDto */
+LearningWorkspacesLearnerAnnouncementDtoSchema = z.object({
   content: z.string().nullable().optional(),
   courseId: z.string().uuid().optional(),
   courseSlug: z.string().nullable().optional(),
@@ -26480,8 +27313,25 @@ LearningWorkspacesLearnerAnnouncementSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningWorkspacesLearnerAssessment */
-LearningWorkspacesLearnerAssessmentSchema = z.object({
+/** Zod schema for LearningWorkspacesLearnerAssessmentDeadlineDto */
+LearningWorkspacesLearnerAssessmentDeadlineDtoSchema = z.object({
+  assessmentId: z.string().uuid().optional(),
+  availableFrom: z.string().datetime().nullable().optional(),
+  availableUntil: z.string().datetime().nullable().optional(),
+  contentId: z.string().uuid().nullable().optional(),
+  courseId: z.string().uuid().optional(),
+  courseSlug: z.string().nullable().optional(),
+  courseTitle: z.string().nullable().optional(),
+  dueAt: z.string().datetime().nullable().optional(),
+  groupId: z.string().uuid().nullable().optional(),
+  maxScore: z.lazy(() => LearningGradingContractsScoreValueSchema).optional(),
+  submissionStatus: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
+  type: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningWorkspacesLearnerAssessmentDto */
+LearningWorkspacesLearnerAssessmentDtoSchema = z.object({
   allowLateSubmissions: z.boolean().optional(),
   assessmentId: z.string().uuid().optional(),
   availableFrom: z.string().datetime().nullable().optional(),
@@ -26502,25 +27352,8 @@ LearningWorkspacesLearnerAssessmentSchema = z.object({
   type: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningWorkspacesLearnerAssessmentDeadline */
-LearningWorkspacesLearnerAssessmentDeadlineSchema = z.object({
-  assessmentId: z.string().uuid().optional(),
-  availableFrom: z.string().datetime().nullable().optional(),
-  availableUntil: z.string().datetime().nullable().optional(),
-  contentId: z.string().uuid().nullable().optional(),
-  courseId: z.string().uuid().optional(),
-  courseSlug: z.string().nullable().optional(),
-  courseTitle: z.string().nullable().optional(),
-  dueAt: z.string().datetime().nullable().optional(),
-  groupId: z.string().uuid().nullable().optional(),
-  maxScore: z.lazy(() => LearningGradingContractsScoreValueSchema).optional(),
-  submissionStatus: z.string().nullable().optional(),
-  title: z.string().nullable().optional(),
-  type: z.string().nullable().optional(),
-});
-
-/** Zod schema for LearningWorkspacesLearnerAssessmentGroup */
-LearningWorkspacesLearnerAssessmentGroupSchema = z.object({
+/** Zod schema for LearningWorkspacesLearnerAssessmentGroupDto */
+LearningWorkspacesLearnerAssessmentGroupDtoSchema = z.object({
   description: z.string().nullable().optional(),
   groupId: z.string().uuid().optional(),
   name: z.string().nullable().optional(),
@@ -26528,8 +27361,8 @@ LearningWorkspacesLearnerAssessmentGroupSchema = z.object({
   weightPercent: z.lazy(() => LearningGradingContractsPercentValueSchema).optional(),
 });
 
-/** Zod schema for LearningWorkspacesLearnerAssessmentSubmission */
-LearningWorkspacesLearnerAssessmentSubmissionSchema = z.object({
+/** Zod schema for LearningWorkspacesLearnerAssessmentSubmissionDto */
+LearningWorkspacesLearnerAssessmentSubmissionDtoSchema = z.object({
   assessmentId: z.string().uuid().optional(),
   attemptNumber: z.number().int().optional(),
   enrollmentId: z.string().uuid().optional(),
@@ -26547,8 +27380,8 @@ LearningWorkspacesLearnerAssessmentSubmissionSchema = z.object({
   submittedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for LearningWorkspacesLearnerCertificate */
-LearningWorkspacesLearnerCertificateSchema = z.object({
+/** Zod schema for LearningWorkspacesLearnerCertificateDto */
+LearningWorkspacesLearnerCertificateDtoSchema = z.object({
   certificateId: z.string().uuid().optional(),
   certificateNumber: z.string().nullable().optional(),
   courseId: z.string().uuid().optional(),
@@ -26561,8 +27394,8 @@ LearningWorkspacesLearnerCertificateSchema = z.object({
   verificationUrl: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningWorkspacesLearnerCohort */
-LearningWorkspacesLearnerCohortSchema = z.object({
+/** Zod schema for LearningWorkspacesLearnerCohortDto */
+LearningWorkspacesLearnerCohortDtoSchema = z.object({
   cohortId: z.string().uuid().optional(),
   currentEnrollmentCount: z.number().int().optional(),
   description: z.string().nullable().optional(),
@@ -26575,8 +27408,8 @@ LearningWorkspacesLearnerCohortSchema = z.object({
   status: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningWorkspacesLearnerContent */
-LearningWorkspacesLearnerContentSchema = z.object({
+/** Zod schema for LearningWorkspacesLearnerContentDto */
+LearningWorkspacesLearnerContentDtoSchema = z.object({
   activitySettings: z.string().nullable().optional(),
   body: z.string().nullable().optional(),
   contentId: z.string().uuid().optional(),
@@ -26591,8 +27424,8 @@ LearningWorkspacesLearnerContentSchema = z.object({
   visibility: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningWorkspacesLearnerContentProgress */
-LearningWorkspacesLearnerContentProgressSchema = z.object({
+/** Zod schema for LearningWorkspacesLearnerContentProgressDto */
+LearningWorkspacesLearnerContentProgressDtoSchema = z.object({
   attempts: z.number().int().optional(),
   completedAt: z.string().datetime().nullable().optional(),
   contentId: z.string().uuid().optional(),
@@ -26611,8 +27444,8 @@ LearningWorkspacesLearnerContentProgressSchema = z.object({
   timeSpentSeconds: z.number().int().optional(),
 });
 
-/** Zod schema for LearningWorkspacesLearnerCourseSummary */
-LearningWorkspacesLearnerCourseSummarySchema = z.object({
+/** Zod schema for LearningWorkspacesLearnerCourseSummaryDto */
+LearningWorkspacesLearnerCourseSummaryDtoSchema = z.object({
   category: z.string().nullable().optional(),
   completedItems: z.number().int().optional(),
   completionStatus: z.string().nullable().optional(),
@@ -26638,74 +27471,74 @@ LearningWorkspacesLearnerCourseSummarySchema = z.object({
   totalItems: z.number().int().optional(),
 });
 
-/** Zod schema for LearningWorkspacesLearnerCourseWorkspace */
-LearningWorkspacesLearnerCourseWorkspaceSchema = z.object({
+/** Zod schema for LearningWorkspacesLearnerCourseWorkspaceDto */
+LearningWorkspacesLearnerCourseWorkspaceDtoSchema = z.object({
   assessmentGroups: z
-    .array(z.lazy(() => LearningWorkspacesLearnerAssessmentGroupSchema))
+    .array(z.lazy(() => LearningWorkspacesLearnerAssessmentGroupDtoSchema))
     .nullable()
     .optional(),
   assessments: z
-    .array(z.lazy(() => LearningWorkspacesLearnerAssessmentSchema))
+    .array(z.lazy(() => LearningWorkspacesLearnerAssessmentDtoSchema))
     .nullable()
     .optional(),
   calendar: z
-    .array(z.lazy(() => LearningWorkspacesLearnerScheduleEntrySchema))
+    .array(z.lazy(() => LearningWorkspacesLearnerScheduleEntryDtoSchema))
     .nullable()
     .optional(),
   certificates: z
-    .array(z.lazy(() => LearningWorkspacesLearnerCertificateSchema))
+    .array(z.lazy(() => LearningWorkspacesLearnerCertificateDtoSchema))
     .nullable()
     .optional(),
-  cohort: z.lazy(() => LearningWorkspacesLearnerCohortSchema).optional(),
+  cohort: z.lazy(() => LearningWorkspacesLearnerCohortDtoSchema).optional(),
   content: z
-    .array(z.lazy(() => LearningWorkspacesLearnerContentSchema))
+    .array(z.lazy(() => LearningWorkspacesLearnerContentDtoSchema))
     .nullable()
     .optional(),
-  course: z.lazy(() => LearningWorkspacesLearnerCourseSummarySchema).optional(),
+  course: z.lazy(() => LearningWorkspacesLearnerCourseSummaryDtoSchema).optional(),
   discussions: z
-    .array(z.lazy(() => LearningWorkspacesLearnerDiscussionSchema))
+    .array(z.lazy(() => LearningWorkspacesLearnerDiscussionDtoSchema))
     .nullable()
     .optional(),
   progress: z
-    .array(z.lazy(() => LearningWorkspacesLearnerContentProgressSchema))
+    .array(z.lazy(() => LearningWorkspacesLearnerContentProgressDtoSchema))
     .nullable()
     .optional(),
   submissions: z
-    .array(z.lazy(() => LearningWorkspacesLearnerAssessmentSubmissionSchema))
+    .array(z.lazy(() => LearningWorkspacesLearnerAssessmentSubmissionDtoSchema))
     .nullable()
     .optional(),
 });
 
-/** Zod schema for LearningWorkspacesLearnerDashboard */
-LearningWorkspacesLearnerDashboardSchema = z.object({
+/** Zod schema for LearningWorkspacesLearnerDashboardDto */
+LearningWorkspacesLearnerDashboardDtoSchema = z.object({
   announcements: z
-    .array(z.lazy(() => LearningWorkspacesLearnerAnnouncementSchema))
+    .array(z.lazy(() => LearningWorkspacesLearnerAnnouncementDtoSchema))
     .nullable()
     .optional(),
   certificates: z
-    .array(z.lazy(() => LearningWorkspacesLearnerCertificateSchema))
+    .array(z.lazy(() => LearningWorkspacesLearnerCertificateDtoSchema))
     .nullable()
     .optional(),
   courses: z
-    .array(z.lazy(() => LearningWorkspacesLearnerCourseSummarySchema))
+    .array(z.lazy(() => LearningWorkspacesLearnerCourseSummaryDtoSchema))
     .nullable()
     .optional(),
   deadlines: z
-    .array(z.lazy(() => LearningWorkspacesLearnerAssessmentDeadlineSchema))
+    .array(z.lazy(() => LearningWorkspacesLearnerAssessmentDeadlineDtoSchema))
     .nullable()
     .optional(),
   grades: z
-    .array(z.lazy(() => LearningWorkspacesLearnerGradeSummarySchema))
+    .array(z.lazy(() => LearningWorkspacesLearnerGradeSummaryDtoSchema))
     .nullable()
     .optional(),
   upcoming: z
-    .array(z.lazy(() => LearningWorkspacesLearnerScheduleEntrySchema))
+    .array(z.lazy(() => LearningWorkspacesLearnerScheduleEntryDtoSchema))
     .nullable()
     .optional(),
 });
 
-/** Zod schema for LearningWorkspacesLearnerDiscussion */
-LearningWorkspacesLearnerDiscussionSchema = z.object({
+/** Zod schema for LearningWorkspacesLearnerDiscussionDto */
+LearningWorkspacesLearnerDiscussionDtoSchema = z.object({
   authorId: z.string().uuid().optional(),
   content: z.string().nullable().optional(),
   contentId: z.string().uuid().nullable().optional(),
@@ -26719,8 +27552,8 @@ LearningWorkspacesLearnerDiscussionSchema = z.object({
   viewCount: z.number().int().optional(),
 });
 
-/** Zod schema for LearningWorkspacesLearnerGradeItem */
-LearningWorkspacesLearnerGradeItemSchema = z.object({
+/** Zod schema for LearningWorkspacesLearnerGradeItemDto */
+LearningWorkspacesLearnerGradeItemDtoSchema = z.object({
   assessmentId: z.string().uuid().optional(),
   availableFrom: z.string().datetime().nullable().optional(),
   availableUntil: z.string().datetime().nullable().optional(),
@@ -26740,8 +27573,8 @@ LearningWorkspacesLearnerGradeItemSchema = z.object({
   type: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningWorkspacesLearnerGradeSummary */
-LearningWorkspacesLearnerGradeSummarySchema = z.object({
+/** Zod schema for LearningWorkspacesLearnerGradeSummaryDto */
+LearningWorkspacesLearnerGradeSummaryDtoSchema = z.object({
   courseId: z.string().uuid().optional(),
   courseSlug: z.string().nullable().optional(),
   courseTitle: z.string().nullable().optional(),
@@ -26755,11 +27588,11 @@ LearningWorkspacesLearnerGradeSummarySchema = z.object({
     .optional(),
   gradedAssessments: z.number().int().optional(),
   groups: z
-    .array(z.lazy(() => LearningWorkspacesLearnerAssessmentGroupSchema))
+    .array(z.lazy(() => LearningWorkspacesLearnerAssessmentGroupDtoSchema))
     .nullable()
     .optional(),
   items: z
-    .array(z.lazy(() => LearningWorkspacesLearnerGradeItemSchema))
+    .array(z.lazy(() => LearningWorkspacesLearnerGradeItemDtoSchema))
     .nullable()
     .optional(),
   percentage: z
@@ -26773,8 +27606,8 @@ LearningWorkspacesLearnerGradeSummarySchema = z.object({
   totalAssessments: z.number().int().optional(),
 });
 
-/** Zod schema for LearningWorkspacesLearnerScheduleEntry */
-LearningWorkspacesLearnerScheduleEntrySchema = z.object({
+/** Zod schema for LearningWorkspacesLearnerScheduleEntryDto */
+LearningWorkspacesLearnerScheduleEntryDtoSchema = z.object({
   assessmentId: z.string().uuid().nullable().optional(),
   availableFrom: z.string().datetime().nullable().optional(),
   availableUntil: z.string().datetime().nullable().optional(),
@@ -26795,8 +27628,8 @@ LearningWorkspacesLearnerScheduleEntrySchema = z.object({
   type: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningWorkspacesLearnerSearchResult */
-LearningWorkspacesLearnerSearchResultSchema = z.object({
+/** Zod schema for LearningWorkspacesLearnerSearchResultDto */
+LearningWorkspacesLearnerSearchResultDtoSchema = z.object({
   id: z.string().uuid().optional(),
   courseId: z.string().uuid().optional(),
   courseSlug: z.string().nullable().optional(),
@@ -26824,8 +27657,8 @@ MonitoringSLACreateSloCommandSchema = z.object({
   timeWindowDays: z.number().int().optional(),
 });
 
-/** Zod schema for MonitoringSLAErrorBudget */
-MonitoringSLAErrorBudgetSchema = z.object({
+/** Zod schema for MonitoringSLAErrorBudgetDto */
+MonitoringSLAErrorBudgetDtoSchema = z.object({
   actualPercentage: z.number().optional(),
   allowedFailures: z.number().int().optional(),
   burnRate: z.number().optional(),
@@ -26864,28 +27697,8 @@ MonitoringSLAResolveSloViolationCommandSchema = z.object({
   violationId: z.string().uuid().optional(),
 });
 
-/** Zod schema for MonitoringSLASlo */
-MonitoringSLASloSchema = z.object({
-  id: z.string().uuid().optional(),
-  alertThresholdPercentage: z.number().optional(),
-  createdAt: z.string().datetime().optional(),
-  currentActualPercentage: z.number().nullable().optional(),
-  description: z.string().nullable().optional(),
-  errorBudgetPercentage: z.number().optional(),
-  isEnabled: z.boolean().optional(),
-  lastEvaluatedAt: z.string().datetime().nullable().optional(),
-  name: z.string().nullable().optional(),
-  remainingErrorBudget: z.number().nullable().optional(),
-  serviceName: z.string().nullable().optional(),
-  status: z.lazy(() => MonitoringSLASloStatusSchema).optional(),
-  targetPercentage: z.number().optional(),
-  tenantId: z.string().uuid().optional(),
-  timeWindowDays: z.number().int().optional(),
-  updatedAt: z.string().datetime().nullable().optional(),
-});
-
-/** Zod schema for MonitoringSLASloCompliance */
-MonitoringSLASloComplianceSchema = z.object({
+/** Zod schema for MonitoringSLASloComplianceDto */
+MonitoringSLASloComplianceDtoSchema = z.object({
   actualPercentage: z.number().optional(),
   calculatedAt: z.string().datetime().optional(),
   isCompliant: z.boolean().optional(),
@@ -26904,11 +27717,31 @@ MonitoringSLASloComplianceSchema = z.object({
   violationCount: z.number().int().optional(),
 });
 
+/** Zod schema for MonitoringSLASloDto */
+MonitoringSLASloDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  alertThresholdPercentage: z.number().optional(),
+  createdAt: z.string().datetime().optional(),
+  currentActualPercentage: z.number().nullable().optional(),
+  description: z.string().nullable().optional(),
+  errorBudgetPercentage: z.number().optional(),
+  isEnabled: z.boolean().optional(),
+  lastEvaluatedAt: z.string().datetime().nullable().optional(),
+  name: z.string().nullable().optional(),
+  remainingErrorBudget: z.number().nullable().optional(),
+  serviceName: z.string().nullable().optional(),
+  status: z.lazy(() => MonitoringSLASloStatusSchema).optional(),
+  targetPercentage: z.number().optional(),
+  tenantId: z.string().uuid().optional(),
+  timeWindowDays: z.number().int().optional(),
+  updatedAt: z.string().datetime().nullable().optional(),
+});
+
 /** Zod schema for MonitoringSLASloStatus */
 MonitoringSLASloStatusSchema = z.enum(['Active', 'Breached', 'AtRisk', 'Disabled', 'Violated', 'Warning', 'Inactive']);
 
-/** Zod schema for MonitoringSLASloViolation */
-MonitoringSLASloViolationSchema = z.object({
+/** Zod schema for MonitoringSLASloViolationDto */
+MonitoringSLASloViolationDtoSchema = z.object({
   id: z.string().uuid().optional(),
   acknowledgedAt: z.string().datetime().nullable().optional(),
   acknowledgedByUserId: z.string().uuid().nullable().optional(),
@@ -26957,8 +27790,8 @@ MvcProblemDetailsSchema = z
   })
   .catchall(z.record(z.string(), z.unknown()));
 
-/** Zod schema for NotificationsControllersDeadLetter */
-NotificationsControllersDeadLetterSchema = z.object({
+/** Zod schema for NotificationsControllersDeadLetterDto */
+NotificationsControllersDeadLetterDtoSchema = z.object({
   id: z.string().uuid().optional(),
   attemptCount: z.number().int().optional(),
   channel: z.string().nullable().optional(),
@@ -26981,8 +27814,8 @@ NotificationsControllersDigestFrequencyOutputSchema = z.object({
   emailDigestFrequency: z.string().nullable().optional(),
 });
 
-/** Zod schema for NotificationsControllersEmailDeliveryEvent */
-NotificationsControllersEmailDeliveryEventSchema = z.object({
+/** Zod schema for NotificationsControllersEmailDeliveryEventDto */
+NotificationsControllersEmailDeliveryEventDtoSchema = z.object({
   id: z.string().uuid().optional(),
   bounceType: z.string().nullable().optional(),
   diagnosticCode: z.string().nullable().optional(),
@@ -26993,8 +27826,8 @@ NotificationsControllersEmailDeliveryEventSchema = z.object({
   recipientEmail: z.string().nullable().optional(),
 });
 
-/** Zod schema for NotificationsControllersEmailSuppression */
-NotificationsControllersEmailSuppressionSchema = z.object({
+/** Zod schema for NotificationsControllersEmailSuppressionDto */
+NotificationsControllersEmailSuppressionDtoSchema = z.object({
   id: z.string().uuid().optional(),
   bounceType: z.string().nullable().optional(),
   emailAddress: z.string().nullable().optional(),
@@ -27010,8 +27843,8 @@ NotificationsControllersMutedTypesOutputSchema = z.object({
   mutedTypes: z.array(z.string()).nullable().optional(),
 });
 
-/** Zod schema for NotificationsControllersNotification */
-NotificationsControllersNotificationSchema = z.object({
+/** Zod schema for NotificationsControllersNotificationDto */
+NotificationsControllersNotificationDtoSchema = z.object({
   id: z.string().uuid().optional(),
   actionUrl: z.string().nullable().optional(),
   channel: z.string().nullable().optional(),
@@ -27027,8 +27860,8 @@ NotificationsControllersNotificationSchema = z.object({
   type: z.string().nullable().optional(),
 });
 
-/** Zod schema for NotificationsControllersNotificationPreference */
-NotificationsControllersNotificationPreferenceSchema = z.object({
+/** Zod schema for NotificationsControllersNotificationPreferenceDto */
+NotificationsControllersNotificationPreferenceDtoSchema = z.object({
   achievementsEnabled: z.boolean().optional(),
   emailDigestFrequency: z.string().nullable().optional(),
   emailEnabled: z.boolean().optional(),
@@ -27044,10 +27877,10 @@ NotificationsControllersNotificationPreferenceSchema = z.object({
   timezone: z.string().nullable().optional(),
 });
 
-/** Zod schema for NotificationsControllersNotificationTimeline */
-NotificationsControllersNotificationTimelineSchema = z.object({
+/** Zod schema for NotificationsControllersNotificationTimelineDto */
+NotificationsControllersNotificationTimelineDtoSchema = z.object({
   events: z
-    .array(z.lazy(() => NotificationsControllersEmailDeliveryEventSchema))
+    .array(z.lazy(() => NotificationsControllersEmailDeliveryEventDtoSchema))
     .nullable()
     .optional(),
   notificationId: z.string().uuid().optional(),
@@ -27194,12 +28027,12 @@ ObjectsResidentKeyRequirementSchema = z.enum(['Required', 'Preferred', 'Discoura
 /** Zod schema for ObjectsUserVerificationRequirement */
 ObjectsUserVerificationRequirementSchema = z.enum(['Required', 'Preferred', 'Discouraged']);
 
-/** Zod schema for PagedResultOfCommerceProductsProduct */
-PagedResultOfCommerceProductsProductSchema = z.object({
+/** Zod schema for PagedResultDeadLetterDto */
+PagedResultDeadLetterDtoSchema = z.object({
   hasNextPage: z.boolean().optional(),
   hasPreviousPage: z.boolean().optional(),
   items: z
-    .array(z.lazy(() => CommerceProductsProductSchema))
+    .array(z.lazy(() => NotificationsControllersDeadLetterDtoSchema))
     .nullable()
     .optional(),
   pageNumber: z.number().int().optional(),
@@ -27210,12 +28043,12 @@ PagedResultOfCommerceProductsProductSchema = z.object({
   totalPages: z.number().int().optional(),
 });
 
-/** Zod schema for PagedResultOfCommerceProductsPromoCode */
-PagedResultOfCommerceProductsPromoCodeSchema = z.object({
+/** Zod schema for PagedResultEmailDeliveryEventDto */
+PagedResultEmailDeliveryEventDtoSchema = z.object({
   hasNextPage: z.boolean().optional(),
   hasPreviousPage: z.boolean().optional(),
   items: z
-    .array(z.lazy(() => CommerceProductsPromoCodeSchema))
+    .array(z.lazy(() => NotificationsControllersEmailDeliveryEventDtoSchema))
     .nullable()
     .optional(),
   pageNumber: z.number().int().optional(),
@@ -27226,12 +28059,12 @@ PagedResultOfCommerceProductsPromoCodeSchema = z.object({
   totalPages: z.number().int().optional(),
 });
 
-/** Zod schema for PagedResultOfCommerceProductsSupportTicket */
-PagedResultOfCommerceProductsSupportTicketSchema = z.object({
+/** Zod schema for PagedResultEmailSuppressionDto */
+PagedResultEmailSuppressionDtoSchema = z.object({
   hasNextPage: z.boolean().optional(),
   hasPreviousPage: z.boolean().optional(),
   items: z
-    .array(z.lazy(() => CommerceProductsSupportTicketSchema))
+    .array(z.lazy(() => NotificationsControllersEmailSuppressionDtoSchema))
     .nullable()
     .optional(),
   pageNumber: z.number().int().optional(),
@@ -27242,8 +28075,40 @@ PagedResultOfCommerceProductsSupportTicketSchema = z.object({
   totalPages: z.number().int().optional(),
 });
 
-/** Zod schema for PagedResultOfCommerceSubscriptionsSubscription */
-PagedResultOfCommerceSubscriptionsSubscriptionSchema = z.object({
+/** Zod schema for PagedResultProductDto */
+PagedResultProductDtoSchema = z.object({
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
+  items: z
+    .array(z.lazy(() => CommerceProductsProductDtoSchema))
+    .nullable()
+    .optional(),
+  pageNumber: z.number().int().optional(),
+  pageSize: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  totalCount: z.number().int().optional(),
+  totalPages: z.number().int().optional(),
+});
+
+/** Zod schema for PagedResultPromoCodeDto */
+PagedResultPromoCodeDtoSchema = z.object({
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
+  items: z
+    .array(z.lazy(() => CommerceProductsPromoCodeDtoSchema))
+    .nullable()
+    .optional(),
+  pageNumber: z.number().int().optional(),
+  pageSize: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  totalCount: z.number().int().optional(),
+  totalPages: z.number().int().optional(),
+});
+
+/** Zod schema for PagedResultSubscription */
+PagedResultSubscriptionSchema = z.object({
   hasNextPage: z.boolean().optional(),
   hasPreviousPage: z.boolean().optional(),
   items: z
@@ -27258,12 +28123,12 @@ PagedResultOfCommerceSubscriptionsSubscriptionSchema = z.object({
   totalPages: z.number().int().optional(),
 });
 
-/** Zod schema for PagedResultOfCommerceSubscriptionsSubscriptionNotification */
-PagedResultOfCommerceSubscriptionsSubscriptionNotificationSchema = z.object({
+/** Zod schema for PagedResultSubscriptionNotificationDto */
+PagedResultSubscriptionNotificationDtoSchema = z.object({
   hasNextPage: z.boolean().optional(),
   hasPreviousPage: z.boolean().optional(),
   items: z
-    .array(z.lazy(() => CommerceSubscriptionsSubscriptionNotificationSchema))
+    .array(z.lazy(() => CommerceSubscriptionsSubscriptionNotificationDtoSchema))
     .nullable()
     .optional(),
   pageNumber: z.number().int().optional(),
@@ -27274,8 +28139,24 @@ PagedResultOfCommerceSubscriptionsSubscriptionNotificationSchema = z.object({
   totalPages: z.number().int().optional(),
 });
 
-/** Zod schema for PagedResultOfIdentityTenantsTenant */
-PagedResultOfIdentityTenantsTenantSchema = z.object({
+/** Zod schema for PagedResultSupportTicketDto */
+PagedResultSupportTicketDtoSchema = z.object({
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
+  items: z
+    .array(z.lazy(() => CommerceProductsSupportTicketDtoSchema))
+    .nullable()
+    .optional(),
+  pageNumber: z.number().int().optional(),
+  pageSize: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  totalCount: z.number().int().optional(),
+  totalPages: z.number().int().optional(),
+});
+
+/** Zod schema for PagedResultTenant */
+PagedResultTenantSchema = z.object({
   hasNextPage: z.boolean().optional(),
   hasPreviousPage: z.boolean().optional(),
   items: z
@@ -27290,8 +28171,8 @@ PagedResultOfIdentityTenantsTenantSchema = z.object({
   totalPages: z.number().int().optional(),
 });
 
-/** Zod schema for PagedResultOfIdentityTenantsTenantAuditLogEntry */
-PagedResultOfIdentityTenantsTenantAuditLogEntrySchema = z.object({
+/** Zod schema for PagedResultTenantAuditLogEntry */
+PagedResultTenantAuditLogEntrySchema = z.object({
   hasNextPage: z.boolean().optional(),
   hasPreviousPage: z.boolean().optional(),
   items: z
@@ -27306,8 +28187,8 @@ PagedResultOfIdentityTenantsTenantAuditLogEntrySchema = z.object({
   totalPages: z.number().int().optional(),
 });
 
-/** Zod schema for PagedResultOfIdentityUsersUser */
-PagedResultOfIdentityUsersUserSchema = z.object({
+/** Zod schema for PagedResultUserDto */
+PagedResultUserDtoSchema = z.object({
   hasNextPage: z.boolean().optional(),
   hasPreviousPage: z.boolean().optional(),
   items: z
@@ -27322,8 +28203,8 @@ PagedResultOfIdentityUsersUserSchema = z.object({
   totalPages: z.number().int().optional(),
 });
 
-/** Zod schema for PagedResultOfIdentityUsersUserNotification */
-PagedResultOfIdentityUsersUserNotificationSchema = z.object({
+/** Zod schema for PagedResultUserNotificationDto */
+PagedResultUserNotificationDtoSchema = z.object({
   hasNextPage: z.boolean().optional(),
   hasPreviousPage: z.boolean().optional(),
   items: z
@@ -27338,60 +28219,12 @@ PagedResultOfIdentityUsersUserNotificationSchema = z.object({
   totalPages: z.number().int().optional(),
 });
 
-/** Zod schema for PagedResultOfIdentityUsersUserProfile */
-PagedResultOfIdentityUsersUserProfileSchema = z.object({
+/** Zod schema for PagedResultUserProfileDto */
+PagedResultUserProfileDtoSchema = z.object({
   hasNextPage: z.boolean().optional(),
   hasPreviousPage: z.boolean().optional(),
   items: z
     .array(z.lazy(() => IdentityUsersUserProfileDtoSchema))
-    .nullable()
-    .optional(),
-  pageNumber: z.number().int().optional(),
-  pageSize: z.number().int().optional(),
-  skip: z.number().int().optional(),
-  take: z.number().int().optional(),
-  totalCount: z.number().int().optional(),
-  totalPages: z.number().int().optional(),
-});
-
-/** Zod schema for PagedResultOfNotificationsControllersDeadLetter */
-PagedResultOfNotificationsControllersDeadLetterSchema = z.object({
-  hasNextPage: z.boolean().optional(),
-  hasPreviousPage: z.boolean().optional(),
-  items: z
-    .array(z.lazy(() => NotificationsControllersDeadLetterSchema))
-    .nullable()
-    .optional(),
-  pageNumber: z.number().int().optional(),
-  pageSize: z.number().int().optional(),
-  skip: z.number().int().optional(),
-  take: z.number().int().optional(),
-  totalCount: z.number().int().optional(),
-  totalPages: z.number().int().optional(),
-});
-
-/** Zod schema for PagedResultOfNotificationsControllersEmailDeliveryEvent */
-PagedResultOfNotificationsControllersEmailDeliveryEventSchema = z.object({
-  hasNextPage: z.boolean().optional(),
-  hasPreviousPage: z.boolean().optional(),
-  items: z
-    .array(z.lazy(() => NotificationsControllersEmailDeliveryEventSchema))
-    .nullable()
-    .optional(),
-  pageNumber: z.number().int().optional(),
-  pageSize: z.number().int().optional(),
-  skip: z.number().int().optional(),
-  take: z.number().int().optional(),
-  totalCount: z.number().int().optional(),
-  totalPages: z.number().int().optional(),
-});
-
-/** Zod schema for PagedResultOfNotificationsControllersEmailSuppression */
-PagedResultOfNotificationsControllersEmailSuppressionSchema = z.object({
-  hasNextPage: z.boolean().optional(),
-  hasPreviousPage: z.boolean().optional(),
-  items: z
-    .array(z.lazy(() => NotificationsControllersEmailSuppressionSchema))
     .nullable()
     .optional(),
   pageNumber: z.number().int().optional(),
@@ -27444,8 +28277,8 @@ ProjectsAddProjectCollaboratorInputSchema = z.object({
   userId: z.string().uuid(),
 });
 
-/** Zod schema for ProjectsCollaborator */
-ProjectsCollaboratorSchema = z.object({
+/** Zod schema for ProjectsCollaboratorDto */
+ProjectsCollaboratorDtoSchema = z.object({
   id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   joinedAt: z.string().datetime().optional(),
@@ -27558,6 +28391,10 @@ ProjectsProjectSchema = z.object({
     .nullable()
     .optional(),
   imageUrl: z.string().max(500).nullable().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isActive: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -27665,6 +28502,10 @@ ProjectsProjectCategorySchema = z.object({
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -27691,6 +28532,10 @@ ProjectsProjectCollaboratorSchema = z.object({
   deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
     .nullable()
     .optional(),
   isActive: z.boolean().optional(),
@@ -27750,6 +28595,10 @@ ProjectsProjectFeedbackSchema = z.object({
     .nullable()
     .optional(),
   helpfulVotes: z.number().int().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isDeleted: z.boolean().optional(),
   isFeatured: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -27780,6 +28629,10 @@ ProjectsProjectFollowerSchema = z.object({
     .optional(),
   emailNotifications: z.boolean().optional(),
   followedAt: z.string().datetime().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -27793,8 +28646,8 @@ ProjectsProjectFollowerSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for ProjectsProjectInvitation */
-ProjectsProjectInvitationSchema = z.object({
+/** Zod schema for ProjectsProjectInvitationDto */
+ProjectsProjectInvitationDtoSchema = z.object({
   id: z.string().uuid().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
   invitedAt: z.string().datetime().optional(),
@@ -27825,6 +28678,10 @@ ProjectsProjectJamSubmissionSchema = z.object({
     .optional(),
   finalScore: z.number().nullable().optional(),
   hasAward: z.boolean().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isDeleted: z.boolean().optional(),
   isEligible: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -27857,6 +28714,10 @@ ProjectsProjectMemberAllocationSchema = z.object({
     .optional(),
   endsAt: z.string().datetime().nullable().optional(),
   function: z.string().min(1).max(100),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isActive: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -27881,6 +28742,10 @@ ProjectsProjectMetadataSchema = z.object({
     .optional(),
   downloadCount: z.number().int().optional(),
   followerCount: z.number().int().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -27914,6 +28779,10 @@ ProjectsProjectReleaseSchema = z.object({
   downloadCount: z.number().int().optional(),
   downloadUrl: z.string().max(500).nullable().optional(),
   fileSize: z.number().int().nullable().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isLatest: z.boolean().optional(),
@@ -28009,6 +28878,10 @@ ProjectsProjectTeamSchema = z.object({
     .nullable()
     .optional(),
   endedAt: z.string().datetime().nullable().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isActive: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -28040,6 +28913,10 @@ ProjectsProjectTeamAgreementSchema = z.object({
     .nullable()
     .optional(),
   endsAt: z.string().datetime().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -28102,6 +28979,10 @@ ProjectsProjectVersionSchema = z.object({
     .nullable()
     .optional(),
   downloadCount: z.number().int().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -28273,8 +29154,23 @@ ResourcesContentsBulkGeneratedContractsOutputSchema = z.object({
 /** Zod schema for ResourcesContentsContentReviewDecision */
 ResourcesContentsContentReviewDecisionSchema = z.enum(['Pending', 'Approve', 'RequestChanges', 'Reject']);
 
-/** Zod schema for ResourcesContentsContentVersion */
-ResourcesContentsContentVersionSchema = z.object({
+/** Zod schema for ResourcesContentsContentVersionDiff */
+ResourcesContentsContentVersionDiffSchema = z.object({
+  bodyChanged: z.boolean().optional(),
+  bodyDiff: z.string().nullable().optional(),
+  metadataChanged: z.boolean().optional(),
+  summaryChanged: z.boolean().optional(),
+  summaryDiff: z.string().nullable().optional(),
+  titleChanged: z.boolean().optional(),
+  titleDiff: z.string().nullable().optional(),
+  version1Id: z.string().uuid().optional(),
+  version1Number: z.number().int().optional(),
+  version2Id: z.string().uuid().optional(),
+  version2Number: z.number().int().optional(),
+});
+
+/** Zod schema for ResourcesContentsContentVersionDto */
+ResourcesContentsContentVersionDtoSchema = z.object({
   id: z.string().uuid().optional(),
   body: z.string().nullable().optional(),
   changeNotes: z.string().nullable().optional(),
@@ -28297,23 +29193,8 @@ ResourcesContentsContentVersionSchema = z.object({
   versionNumber: z.number().int().optional(),
 });
 
-/** Zod schema for ResourcesContentsContentVersionDiff */
-ResourcesContentsContentVersionDiffSchema = z.object({
-  bodyChanged: z.boolean().optional(),
-  bodyDiff: z.string().nullable().optional(),
-  metadataChanged: z.boolean().optional(),
-  summaryChanged: z.boolean().optional(),
-  summaryDiff: z.string().nullable().optional(),
-  titleChanged: z.boolean().optional(),
-  titleDiff: z.string().nullable().optional(),
-  version1Id: z.string().uuid().optional(),
-  version1Number: z.number().int().optional(),
-  version2Id: z.string().uuid().optional(),
-  version2Number: z.number().int().optional(),
-});
-
-/** Zod schema for ResourcesContentsContentVersionReview */
-ResourcesContentsContentVersionReviewSchema = z.object({
+/** Zod schema for ResourcesContentsContentVersionReviewDto */
+ResourcesContentsContentVersionReviewDtoSchema = z.object({
   id: z.string().uuid().optional(),
   contentVersionId: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
@@ -28429,6 +29310,10 @@ ResourcesResourceMetadataSchema = z.object({
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isActive: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -28498,6 +29383,10 @@ ResourcesResourceSettingsSchema = z.object({
   displayOrder: z.number().int().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
     .nullable()
     .optional(),
   isActive: z.boolean().optional(),
@@ -28603,6 +29492,10 @@ ResourcesUsageRecordSchema = z.object({
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -28641,8 +29534,8 @@ ResourcesUsageTrendsResultSchema = z.object({
   type: z.lazy(() => ResourcesResourceUsageTypeSchema).optional(),
 });
 
-/** Zod schema for SocialBlogBlogPost */
-SocialBlogBlogPostSchema = z.object({
+/** Zod schema for SocialBlogBlogPostDto */
+SocialBlogBlogPostDtoSchema = z.object({
   id: z.string().uuid().optional(),
   allowComments: z.boolean().optional(),
   authorId: z.string().uuid().optional(),
@@ -28677,20 +29570,41 @@ SocialBlogCreateBlogPostInputSchema = z.object({
 
 /** Zod schema for SocialFeedAddFeedItemInput */
 SocialFeedAddFeedItemInputSchema = z.object({
-  authorId: z.string().uuid().optional(),
   contentCreatedAt: z.string().datetime().nullable().optional(),
   contentId: z.string().uuid().optional(),
   contentType: z.lazy(() => SocialFeedFeedContentTypeSchema).optional(),
   reason: z.lazy(() => SocialFeedFeedItemReasonSchema).optional(),
   relevanceScore: z.number().optional(),
+});
+
+/** Zod schema for SocialFeedCreateStoryInput */
+SocialFeedCreateStoryInputSchema = z.object({
+  assetReferenceId: z.string().uuid().optional(),
+  caption: z.string().nullable().optional(),
+});
+
+/** Zod schema for SocialFeedFeedAuthorDto */
+SocialFeedFeedAuthorDtoSchema = z.object({
+  avatarUrl: z.string().nullable().optional(),
+  displayName: z.string().nullable().optional(),
+  handle: z.string().nullable().optional(),
+  isVerified: z.boolean().optional(),
   userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for SocialFeedFeedContentType */
 SocialFeedFeedContentTypeSchema = z.enum(['Post', 'BlogPost', 'CourseReview', 'ProjectUpdate', 'Achievement', 'CourseCompletion']);
 
-/** Zod schema for SocialFeedFeedItem */
-SocialFeedFeedItemSchema = z.object({
+/** Zod schema for SocialFeedFeedEngagementDto */
+SocialFeedFeedEngagementDtoSchema = z.object({
+  commentsCount: z.number().int().optional(),
+  reactionsCount: z.number().int().optional(),
+  repostsCount: z.number().int().optional(),
+  viewsCount: z.number().int().optional(),
+});
+
+/** Zod schema for SocialFeedFeedItemDto */
+SocialFeedFeedItemDtoSchema = z.object({
   id: z.string().uuid().optional(),
   authorId: z.string().uuid().optional(),
   contentCreatedAt: z.string().datetime().optional(),
@@ -28706,6 +29620,205 @@ SocialFeedFeedItemSchema = z.object({
 
 /** Zod schema for SocialFeedFeedItemReason */
 SocialFeedFeedItemReasonSchema = z.enum(['Following', 'Trending', 'Recommended', 'Mentioned', 'Replied', 'Liked', 'InNetwork']);
+
+/** Zod schema for SocialFeedFeedViewerStateDto */
+SocialFeedFeedViewerStateDtoSchema = z.object({
+  canDelete: z.boolean().optional(),
+  canEdit: z.boolean().optional(),
+  hasReposted: z.boolean().optional(),
+  isFollowingAuthor: z.boolean().optional(),
+  isSaved: z.boolean().optional(),
+  reaction: z.string().nullable().optional(),
+});
+
+/** Zod schema for SocialFeedOriginalPostDto */
+SocialFeedOriginalPostDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  author: z.lazy(() => SocialFeedFeedAuthorDtoSchema).optional(),
+  content: z.string().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  mediaType: z.string().nullable().optional(),
+  mediaUrl: z.string().nullable().optional(),
+});
+
+/** Zod schema for SocialFeedSavedPostStateDto */
+SocialFeedSavedPostStateDtoSchema = z.object({
+  isSaved: z.boolean().optional(),
+  postId: z.string().uuid().optional(),
+});
+
+/** Zod schema for SocialFeedSocialFeedItemDto */
+SocialFeedSocialFeedItemDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  author: z.lazy(() => SocialFeedFeedAuthorDtoSchema).optional(),
+  createdAt: z.string().datetime().optional(),
+  engagement: z.lazy(() => SocialFeedFeedEngagementDtoSchema).optional(),
+  kind: z.lazy(() => SocialFeedSocialFeedItemKindSchema).optional(),
+  post: z.lazy(() => SocialFeedSocialPostContentDtoSchema).optional(),
+  tags: z.array(z.string()).nullable().optional(),
+  testingSession: z.lazy(() => SocialFeedTestingSessionFeedDtoSchema).optional(),
+  viewer: z.lazy(() => SocialFeedFeedViewerStateDtoSchema).optional(),
+});
+
+/** Zod schema for SocialFeedSocialFeedItemKind */
+SocialFeedSocialFeedItemKindSchema = z.enum(['Post', 'Repost', 'TestingSession']);
+
+/** Zod schema for SocialFeedSocialFeedPageDto */
+SocialFeedSocialFeedPageDtoSchema = z.object({
+  items: z
+    .array(z.lazy(() => SocialFeedSocialFeedItemDtoSchema))
+    .nullable()
+    .optional(),
+  nextCursor: z.string().nullable().optional(),
+});
+
+/** Zod schema for SocialFeedSocialFeedProfileDto */
+SocialFeedSocialFeedProfileDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  availabilityStatus: z.string().nullable().optional(),
+  avatarUrl: z.string().nullable().optional(),
+  bannerUrl: z.string().nullable().optional(),
+  bio: z.string().nullable().optional(),
+  displayName: z.string().nullable().optional(),
+  followerCount: z.number().int().optional(),
+  followingCount: z.number().int().optional(),
+  handle: z.string().nullable().optional(),
+  headline: z.string().nullable().optional(),
+  isFollowing: z.boolean().optional(),
+  isVerified: z.boolean().optional(),
+  location: z.string().nullable().optional(),
+  postCount: z.number().int().optional(),
+  projectCount: z.number().int().optional(),
+  timeZone: z.string().nullable().optional(),
+  userId: z.string().uuid().optional(),
+  websiteUrl: z.string().nullable().optional(),
+});
+
+/** Zod schema for SocialFeedSocialPostContentDto */
+SocialFeedSocialPostContentDtoSchema = z.object({
+  content: z.string().nullable().optional(),
+  editedAt: z.string().datetime().nullable().optional(),
+  isEdited: z.boolean().optional(),
+  mediaType: z.string().nullable().optional(),
+  mediaUrl: z.string().nullable().optional(),
+  repostedPost: z.lazy(() => SocialFeedOriginalPostDtoSchema).optional(),
+  visibility: z.string().nullable().optional(),
+});
+
+/** Zod schema for SocialFeedStoryDto */
+SocialFeedStoryDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  assetReferenceId: z.string().uuid().optional(),
+  authorId: z.string().uuid().optional(),
+  caption: z.string().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  expiresAt: z.string().datetime().optional(),
+  isViewed: z.boolean().optional(),
+  mediaType: z.string().nullable().optional(),
+  mediaUrl: z.string().nullable().optional(),
+});
+
+/** Zod schema for SocialFeedTestingSessionFeedDto */
+SocialFeedTestingSessionFeedDtoSchema = z.object({
+  availableTesterCount: z.number().int().optional(),
+  endsAt: z.string().datetime().optional(),
+  maxTesters: z.number().int().optional(),
+  mode: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  registeredTesterCount: z.number().int().optional(),
+  startsAt: z.string().datetime().optional(),
+  status: z.string().nullable().optional(),
+});
+
+/** Zod schema for SocialFollowsControllersBatchCountsInput */
+SocialFollowsControllersBatchCountsInputSchema = z.object({
+  entityIds: z.array(z.string().uuid()).nullable().optional(),
+  entityType: z.string().nullable().optional(),
+});
+
+/** Zod schema for SocialFollowsControllersBatchStatusInput */
+SocialFollowsControllersBatchStatusInputSchema = z.object({
+  entityIds: z.array(z.string().uuid()).nullable().optional(),
+  entityType: z.string().nullable().optional(),
+});
+
+/** Zod schema for SocialFollowsControllersBlockDto */
+SocialFollowsControllersBlockDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  blockedAt: z.string().datetime().optional(),
+  blockedId: z.string().uuid().optional(),
+  blockerId: z.string().uuid().optional(),
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for SocialFollowsControllersBlockInput */
+SocialFollowsControllersBlockInputSchema = z.object({
+  blockedUserId: z.string().uuid().optional(),
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for SocialFollowsControllersFollowDto */
+SocialFollowsControllersFollowDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  followedAt: z.string().datetime().optional(),
+  followedEntityId: z.string().uuid().optional(),
+  followedEntityType: z.string().nullable().optional(),
+  followerId: z.string().uuid().optional(),
+  notificationsEnabled: z.boolean().optional(),
+});
+
+/** Zod schema for SocialFollowsControllersFollowInput */
+SocialFollowsControllersFollowInputSchema = z.object({
+  entityId: z.string().uuid().optional(),
+  entityType: z.string().nullable().optional(),
+  notificationsEnabled: z.boolean().optional(),
+});
+
+/** Zod schema for SocialFollowsControllersFollowPrivacySettingsDto */
+SocialFollowsControllersFollowPrivacySettingsDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  allowFollowers: z.boolean().optional(),
+  isFollowerListPublic: z.boolean().optional(),
+  isFollowingListPublic: z.boolean().optional(),
+  notifyOnNewFollower: z.boolean().optional(),
+  showFollowerCount: z.boolean().optional(),
+  showFollowingCount: z.boolean().optional(),
+  userId: z.string().uuid().optional(),
+});
+
+/** Zod schema for SocialFollowsControllersMuteDto */
+SocialFollowsControllersMuteDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
+  mutedAt: z.string().datetime().optional(),
+  mutedId: z.string().uuid().optional(),
+  muterId: z.string().uuid().optional(),
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for SocialFollowsControllersMuteInput */
+SocialFollowsControllersMuteInputSchema = z.object({
+  expiresAt: z.string().datetime().nullable().optional(),
+  mutedUserId: z.string().uuid().optional(),
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for SocialFollowsControllersUpdateNotificationsInput */
+SocialFollowsControllersUpdateNotificationsInputSchema = z.object({
+  entityId: z.string().uuid().optional(),
+  entityType: z.string().nullable().optional(),
+  notificationsEnabled: z.boolean().optional(),
+});
+
+/** Zod schema for SocialFollowsControllersUpdatePrivacySettingsInput */
+SocialFollowsControllersUpdatePrivacySettingsInputSchema = z.object({
+  allowFollowers: z.boolean().optional(),
+  isFollowerListPublic: z.boolean().optional(),
+  isFollowingListPublic: z.boolean().optional(),
+  notifyOnNewFollower: z.boolean().optional(),
+  showFollowerCount: z.boolean().optional(),
+  showFollowingCount: z.boolean().optional(),
+});
 
 /** Zod schema for SocialGroupsApproveSocialGroupMemberInput */
 SocialGroupsApproveSocialGroupMemberInputSchema = z.object({
@@ -28734,8 +29847,8 @@ SocialGroupsJoinSocialGroupInputSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for SocialGroupsSocialGroup */
-SocialGroupsSocialGroupSchema = z.object({
+/** Zod schema for SocialGroupsSocialGroupDto */
+SocialGroupsSocialGroupDtoSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
   description: z.string().nullable().optional(),
@@ -28751,8 +29864,8 @@ SocialGroupsSocialGroupSchema = z.object({
   visibility: z.lazy(() => SocialGroupsSocialGroupVisibilitySchema).optional(),
 });
 
-/** Zod schema for SocialGroupsSocialGroupMember */
-SocialGroupsSocialGroupMemberSchema = z.object({
+/** Zod schema for SocialGroupsSocialGroupMemberDto */
+SocialGroupsSocialGroupMemberDtoSchema = z.object({
   id: z.string().uuid().optional(),
   approvedByUserId: z.string().uuid().nullable().optional(),
   groupId: z.string().uuid().optional(),
@@ -28796,12 +29909,15 @@ SocialPostsControllersAddCommentInputSchema = z.object({
 
 /** Zod schema for SocialPostsControllersCreatePostInput */
 SocialPostsControllersCreatePostInputSchema = z.object({
+  assetReferenceId: z.string().uuid().nullable().optional(),
   content: z.string().nullable().optional(),
-  mediaType: z.lazy(() => SocialPostsMediaTypeSchema).optional(),
-  mediaUrl: z.string().nullable().optional(),
   tags: z.array(z.string()).nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
   visibility: z.lazy(() => SocialPostsPostVisibilitySchema).optional(),
+});
+
+/** Zod schema for SocialPostsControllersCreateRepostInput */
+SocialPostsControllersCreateRepostInputSchema = z.object({
+  content: z.string().nullable().optional(),
 });
 
 /** Zod schema for SocialPostsControllersFollowPostInput */
@@ -28821,9 +29937,6 @@ SocialPostsControllersUpdateCommentInputSchema = z.object({
 SocialPostsControllersUpdatePostInputSchema = z.object({
   content: z.string().nullable().optional(),
 });
-
-/** Zod schema for SocialPostsMediaType */
-SocialPostsMediaTypeSchema = z.enum(['Image', 'Video', 'Audio', 'Document']);
 
 /** Zod schema for SocialPostsPostVisibility */
 SocialPostsPostVisibilitySchema = z.enum(['Public', 'Followers', 'Private', 'Unlisted']);
@@ -28849,8 +29962,8 @@ SocialProfilesAddProfileSkillBodySchema = z.object({
 /** Zod schema for SocialProfilesProfileAvailabilityStatus */
 SocialProfilesProfileAvailabilityStatusSchema = z.enum(['NotSet', 'OpenToWork', 'OpenToCollaborate', 'Busy', 'Hidden']);
 
-/** Zod schema for SocialProfilesProfilePortfolioItem */
-SocialProfilesProfilePortfolioItemSchema = z.object({
+/** Zod schema for SocialProfilesProfilePortfolioItemDto */
+SocialProfilesProfilePortfolioItemDtoSchema = z.object({
   id: z.string().uuid().optional(),
   description: z.string().nullable().optional(),
   displayOrder: z.number().int().optional(),
@@ -28862,8 +29975,8 @@ SocialProfilesProfilePortfolioItemSchema = z.object({
   url: z.string().nullable().optional(),
 });
 
-/** Zod schema for SocialProfilesProfileSkill */
-SocialProfilesProfileSkillSchema = z.object({
+/** Zod schema for SocialProfilesProfileSkillDto */
+SocialProfilesProfileSkillDtoSchema = z.object({
   id: z.string().uuid().optional(),
   displayOrder: z.number().int().optional(),
   name: z.string().nullable().optional(),
@@ -28877,8 +29990,8 @@ SocialProfilesProfileSkillProficiencySchema = z.enum(['Beginner', 'Intermediate'
 /** Zod schema for SocialProfilesProfileVisibility */
 SocialProfilesProfileVisibilitySchema = z.enum(['Private', 'Connections', 'Public']);
 
-/** Zod schema for SocialProfilesSocialProfile */
-SocialProfilesSocialProfileSchema = z.object({
+/** Zod schema for SocialProfilesSocialProfileDto */
+SocialProfilesSocialProfileDtoSchema = z.object({
   id: z.string().uuid().optional(),
   availabilityStatus: z.lazy(() => SocialProfilesProfileAvailabilityStatusSchema).optional(),
   avatarUrl: z.string().nullable().optional(),
@@ -28892,7 +30005,7 @@ SocialProfilesSocialProfileSchema = z.object({
   headline: z.string().nullable().optional(),
   location: z.string().nullable().optional(),
   portfolioItems: z
-    .array(z.lazy(() => SocialProfilesProfilePortfolioItemSchema))
+    .array(z.lazy(() => SocialProfilesProfilePortfolioItemDtoSchema))
     .nullable()
     .optional(),
   postCount: z.number().int().optional(),
@@ -28901,7 +30014,7 @@ SocialProfilesSocialProfileSchema = z.object({
   showPortfolio: z.boolean().optional(),
   showSkills: z.boolean().optional(),
   skills: z
-    .array(z.lazy(() => SocialProfilesProfileSkillSchema))
+    .array(z.lazy(() => SocialProfilesProfileSkillDtoSchema))
     .nullable()
     .optional(),
   socialLinksJson: z.string().nullable().optional(),
@@ -28930,14 +30043,6 @@ SocialProfilesUpdateProfilePrivacyBodySchema = z.object({
   visibility: z.lazy(() => SocialProfilesProfileVisibilitySchema).optional(),
 });
 
-/** Zod schema for SocialProfilesUpdateProfileStatsBody */
-SocialProfilesUpdateProfileStatsBodySchema = z.object({
-  followerCount: z.number().int().optional(),
-  followingCount: z.number().int().optional(),
-  postCount: z.number().int().optional(),
-  projectCount: z.number().int().optional(),
-});
-
 /** Zod schema for SocialProfilesUpdateSocialProfileBody */
 SocialProfilesUpdateSocialProfileBodySchema = z.object({
   availabilityStatus: z.lazy(() => SocialProfilesProfileAvailabilityStatusSchema).optional(),
@@ -28953,8 +30058,8 @@ SocialProfilesUpdateSocialProfileBodySchema = z.object({
   websiteUrl: z.string().nullable().optional(),
 });
 
-/** Zod schema for SocialReactionsReaction */
-SocialReactionsReactionSchema = z.object({
+/** Zod schema for SocialReactionsReactionDto */
+SocialReactionsReactionDtoSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
   targetId: z.string().uuid().optional(),
@@ -28974,7 +30079,6 @@ SocialReactionsReactionTypeSchema = z.enum(['Like', 'Love', 'Insightful', 'Celeb
 SocialReactionsRemoveReactionInputSchema = z.object({
   targetId: z.string().uuid().optional(),
   targetType: z.lazy(() => SocialReactionsReactionTargetTypeSchema).optional(),
-  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for SocialReactionsSetReactionInput */
@@ -28982,11 +30086,10 @@ SocialReactionsSetReactionInputSchema = z.object({
   targetId: z.string().uuid().optional(),
   targetType: z.lazy(() => SocialReactionsReactionTargetTypeSchema).optional(),
   type: z.lazy(() => SocialReactionsReactionTypeSchema).optional(),
-  userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for SocialReactionsTargetReactionSummary */
-SocialReactionsTargetReactionSummarySchema = z.object({
+/** Zod schema for SocialReactionsTargetReactionSummaryDto */
+SocialReactionsTargetReactionSummaryDtoSchema = z.object({
   counts: z
     .object({
       Celebrate: z.number().int(),
@@ -29014,6 +30117,10 @@ TeamsTeamSchema = z.object({
   description: z.string().max(2000).nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
     .nullable()
     .optional(),
   invitations: z
@@ -29050,6 +30157,10 @@ TeamsTeamInvitationSchema = z.object({
     .nullable()
     .optional(),
   expiresAt: z.string().datetime().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   invitedByUserId: z.string().uuid().optional(),
   invitedEmail: z.string().max(255).nullable().optional(),
   invitedUserId: z.string().uuid().nullable().optional(),
@@ -29074,6 +30185,10 @@ TeamsTeamMemberSchema = z.object({
   deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
     .nullable()
     .optional(),
   isActive: z.boolean().optional(),
@@ -29163,8 +30278,8 @@ TestingLabConfigureTestingEventLearningInputSchema = z.object({
   requirement: z.lazy(() => TestingLabTestingLearningCompletionRequirementSchema).optional(),
 });
 
-/** Zod schema for TestingLabCreateSimpleTestingInput */
-TestingLabCreateSimpleTestingInputSchema = z.object({
+/** Zod schema for TestingLabCreateSimpleTestingRequestDto */
+TestingLabCreateSimpleTestingRequestDtoSchema = z.object({
   description: z.string().nullable().optional(),
   downloadUrl: z.string().max(1000).nullable().optional(),
   endDate: z.string().datetime().nullable().optional(),
@@ -29185,6 +30300,7 @@ TestingLabCreateTestingEventInputSchema = z.object({
   applicationsCloseAt: z.string().datetime().optional(),
   applicationsOpenAt: z.string().datetime().optional(),
   approvalMode: z.lazy(() => TestingLabTestingEventApprovalModeSchema).optional(),
+  configuration: z.lazy(() => TestingLabConfigureTestingEventInputSchema).optional(),
   description: z.string().nullable().optional(),
   endsAt: z.string().datetime().optional(),
   mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
@@ -29193,34 +30309,18 @@ TestingLabCreateTestingEventInputSchema = z.object({
   requiresFeedback: z.boolean().optional(),
   startsAt: z.string().datetime().optional(),
   templateRevisionId: z.string().uuid().nullable().optional(),
-});
-
-/** Zod schema for TestingLabCreateTestingInput */
-TestingLabCreateTestingInputSchema = z.object({
-  description: z.string().nullable().optional(),
-  downloadUrl: z.string().max(1000).nullable().optional(),
-  endDate: z.string().datetime(),
-  feedbackFormContent: z.string().nullable().optional(),
-  instructionsContent: z.string().nullable().optional(),
-  instructionsFileId: z.string().uuid().nullable().optional(),
-  instructionsType: z.lazy(() => TestingLabInstructionTypeSchema),
-  instructionsUrl: z.string().max(500).nullable().optional(),
-  maxTesters: z.number().int().nullable().optional(),
-  projectVersionId: z.string().uuid(),
-  startDate: z.string().datetime(),
-  status: z.lazy(() => TestingLabTestingRequestStatusSchema),
-  title: z.string().min(1).max(255),
+  timeZoneId: z.string().nullable().optional(),
 });
 
 /** Zod schema for TestingLabCreateTestingLabRoleInput */
 TestingLabCreateTestingLabRoleInputSchema = z.object({
   description: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
-  permissions: z.lazy(() => TestingLabTestingLabPermissionsSchema).optional(),
+  permissions: z.lazy(() => TestingLabTestingLabPermissionsDtoSchema).optional(),
 });
 
-/** Zod schema for TestingLabCreateTestingLabSettings */
-TestingLabCreateTestingLabSettingsSchema = z.object({
+/** Zod schema for TestingLabCreateTestingLabSettingsDto */
+TestingLabCreateTestingLabSettingsDtoSchema = z.object({
   allowPublicSignups: z.boolean().optional(),
   defaultSessionDuration: z.number().int().min(15).max(480),
   description: z.string().max(1000).nullable().optional(),
@@ -29233,8 +30333,8 @@ TestingLabCreateTestingLabSettingsSchema = z.object({
   versionSubmissionPolicy: z.lazy(() => ProjectsVersionSubmissionPolicySchema).optional(),
 });
 
-/** Zod schema for TestingLabCreateTestingLocation */
-TestingLabCreateTestingLocationSchema = z.object({
+/** Zod schema for TestingLabCreateTestingLocationDto */
+TestingLabCreateTestingLocationDtoSchema = z.object({
   address: z.string().nullable().optional(),
   city: z.string().nullable().optional(),
   contactEmail: z.string().nullable().optional(),
@@ -29257,8 +30357,25 @@ TestingLabCreateTestingProjectApplicationDraftInputSchema = z.object({
   projectId: z.string().uuid().optional(),
 });
 
-/** Zod schema for TestingLabCreateTestingSession */
-TestingLabCreateTestingSessionSchema = z.object({
+/** Zod schema for TestingLabCreateTestingRequestDto */
+TestingLabCreateTestingRequestDtoSchema = z.object({
+  description: z.string().nullable().optional(),
+  downloadUrl: z.string().max(1000).nullable().optional(),
+  endDate: z.string().datetime(),
+  feedbackFormContent: z.string().nullable().optional(),
+  instructionsContent: z.string().nullable().optional(),
+  instructionsFileId: z.string().uuid().nullable().optional(),
+  instructionsType: z.lazy(() => TestingLabInstructionTypeSchema),
+  instructionsUrl: z.string().max(500).nullable().optional(),
+  maxTesters: z.number().int().nullable().optional(),
+  projectVersionId: z.string().uuid(),
+  startDate: z.string().datetime(),
+  status: z.lazy(() => TestingLabTestingRequestStatusSchema),
+  title: z.string().min(1).max(255),
+});
+
+/** Zod schema for TestingLabCreateTestingSessionDto */
+TestingLabCreateTestingSessionDtoSchema = z.object({
   endTime: z.string().datetime(),
   locationId: z.string().uuid(),
   managerUserId: z.string().uuid(),
@@ -29303,6 +30420,10 @@ TestingLabFeedbackQualityRatingSchema = z.object({
     .optional(),
   feedback: z.lazy(() => TestingLabTestingFeedbackSchema).optional(),
   feedbackId: z.string().uuid(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNegative: z.boolean().optional(),
@@ -29359,6 +30480,7 @@ TestingLabPublicTestingEventProjectionSchema = z.object({
     .optional(),
   startsAt: z.string().datetime().optional(),
   status: z.lazy(() => TestingLabTestingEventStatusSchema).optional(),
+  timeZoneId: z.string().nullable().optional(),
 });
 
 /** Zod schema for TestingLabPublicTestingEventSlotProjection */
@@ -29434,8 +30556,8 @@ TestingLabQuestionnaireSchemaSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for TestingLabRateFeedbackQuality */
-TestingLabRateFeedbackQualitySchema = z.object({
+/** Zod schema for TestingLabRateFeedbackQualityDto */
+TestingLabRateFeedbackQualityDtoSchema = z.object({
   quality: z.lazy(() => TestingLabFeedbackQualitySchema).optional(),
 });
 
@@ -29452,8 +30574,8 @@ TestingLabRegistrationStatusSchema = z.enum(['Registered', 'Confirmed', 'Cancell
 /** Zod schema for TestingLabRegistrationType */
 TestingLabRegistrationTypeSchema = z.enum(['ProjectMember', 'Tester']);
 
-/** Zod schema for TestingLabReportFeedback */
-TestingLabReportFeedbackSchema = z.object({
+/** Zod schema for TestingLabReportFeedbackDto */
+TestingLabReportFeedbackDtoSchema = z.object({
   reason: z.string().nullable().optional(),
 });
 
@@ -29490,6 +30612,10 @@ TestingLabSessionRegistrationSchema = z.object({
   deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
     .nullable()
     .optional(),
   isCheckedIn: z.boolean().optional(),
@@ -29530,6 +30656,10 @@ TestingLabSessionWaitlistSchema = z.object({
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -29545,8 +30675,8 @@ TestingLabSessionWaitlistSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for TestingLabSubmitFeedback */
-TestingLabSubmitFeedbackSchema = z.object({
+/** Zod schema for TestingLabSubmitFeedbackDto */
+TestingLabSubmitFeedbackDtoSchema = z.object({
   additionalNotes: z.string().nullable().optional(),
   feedbackResponses: z.string().min(1),
   overallRating: z.number().int().min(1).max(10).nullable().optional(),
@@ -29624,6 +30754,10 @@ TestingLabTestingApplicationVoteSchema = z.object({
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -29657,6 +30791,10 @@ TestingLabTestingCommitteeMemberSchema = z.object({
     .optional(),
   event: z.lazy(() => TestingLabTestingEventSchema).optional(),
   eventId: z.string().uuid().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isActive: z.boolean().optional(),
   isChair: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
@@ -29701,6 +30839,10 @@ TestingLabTestingEventSchema = z.object({
     .optional(),
   endsAt: z.string().datetime().optional(),
   generalRules: z.string().max(20000).nullable().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -29734,6 +30876,7 @@ TestingLabTestingEventSchema = z.object({
   testerInstructions: z.string().max(20000).nullable().optional(),
   testerRegistrationSchema: z.lazy(() => TestingLabQuestionnaireSchemaSchema).optional(),
   testerRegistrationSchemaJson: z.string().nullable().optional(),
+  timeZoneId: z.string().min(1).max(100),
   updatedAt: z.string().datetime(),
   version: z.number().int().optional(),
 });
@@ -29833,6 +30976,7 @@ TestingLabTestingEventProjectionSchema = z.object({
   startsAt: z.string().datetime().optional(),
   status: z.lazy(() => TestingLabTestingEventStatusSchema).optional(),
   tenantId: z.string().uuid().nullable().optional(),
+  timeZoneId: z.string().nullable().optional(),
 });
 
 /** Zod schema for TestingLabTestingEventRecurrenceFrequency */
@@ -29863,6 +31007,10 @@ TestingLabTestingEventSlotSchema = z.object({
   endsAt: z.string().datetime().optional(),
   event: z.lazy(() => TestingLabTestingEventSchema).optional(),
   eventId: z.string().uuid().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -29947,6 +31095,10 @@ TestingLabTestingFeedbackSchema = z.object({
   feedbackData: z.string().min(1),
   feedbackForm: z.lazy(() => TestingLabTestingFeedbackFormSchema).optional(),
   feedbackFormId: z.string().uuid().nullable().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNegative: z.boolean().optional(),
@@ -30039,6 +31191,10 @@ TestingLabTestingFeedbackFormSchema = z.object({
   formSchema: z.string().nullable().optional(),
   formType: z.lazy(() => TestingLabFeedbackFormTypeSchema).optional(),
   formVersion: z.number().int().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isActive: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
   isForOnline: z.boolean().optional(),
@@ -30107,6 +31263,10 @@ TestingLabTestingInputSchema = z.object({
   instructionsFileId: z.string().uuid().nullable().optional(),
   instructionsType: z.lazy(() => TestingLabInstructionTypeSchema),
   instructionsUrl: z.string().max(500).nullable().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isActive: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -30198,8 +31358,8 @@ TestingLabTestingLabLocationAnalyticsProjectionSchema = z.object({
   total: z.number().int().optional(),
 });
 
-/** Zod schema for TestingLabTestingLabPermissions */
-TestingLabTestingLabPermissionsSchema = z.object({
+/** Zod schema for TestingLabTestingLabPermissionsDto */
+TestingLabTestingLabPermissionsDtoSchema = z.object({
   canApproveApplications: z.boolean().optional(),
   canApproveRequests: z.boolean().optional(),
   canCreateEvents: z.boolean().optional(),
@@ -30230,8 +31390,8 @@ TestingLabTestingLabPermissionsSchema = z.object({
   canViewSessions: z.boolean().optional(),
 });
 
-/** Zod schema for TestingLabTestingLabResourcePermission */
-TestingLabTestingLabResourcePermissionSchema = z.object({
+/** Zod schema for TestingLabTestingLabResourcePermissionDto */
+TestingLabTestingLabResourcePermissionDtoSchema = z.object({
   action: z.string().nullable().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
   resourceId: z.string().uuid().optional(),
@@ -30244,11 +31404,11 @@ TestingLabTestingLabRoleTemplateSchema = z.object({
   description: z.string().nullable().optional(),
   isSystemRole: z.boolean().optional(),
   name: z.string().nullable().optional(),
-  permissions: z.lazy(() => TestingLabTestingLabPermissionsSchema).optional(),
+  permissions: z.lazy(() => TestingLabTestingLabPermissionsDtoSchema).optional(),
 });
 
-/** Zod schema for TestingLabTestingLabSettings */
-TestingLabTestingLabSettingsSchema = z.object({
+/** Zod schema for TestingLabTestingLabSettingsDto */
+TestingLabTestingLabSettingsDtoSchema = z.object({
   id: z.string().uuid().optional(),
   allowPublicSignups: z.boolean().optional(),
   createdAt: z.string().datetime().optional(),
@@ -30288,6 +31448,10 @@ TestingLabTestingLocationSchema = z.object({
   equipment: z.string().nullable().optional(),
   equipmentAvailable: z.string().nullable().optional(),
   fullAddress: z.string().nullable().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isAvailable: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -30330,6 +31494,10 @@ TestingLabTestingParticipantSchema = z.object({
   feedbackCount: z.number().int().optional(),
   instructionsAcknowledged: z.boolean(),
   instructionsAcknowledgedAt: z.string().datetime().nullable().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isActive: z.boolean().optional(),
   isCompleted: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
@@ -30423,6 +31591,10 @@ TestingLabTestingProjectApplicationSchema = z.object({
   eventApplicationResponse: z.lazy(() => TestingLabQuestionnaireOutputSchema).optional(),
   eventApplicationResponseJson: z.string().nullable().optional(),
   eventId: z.string().uuid().optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -30498,6 +31670,10 @@ TestingLabTestingQuestionnaireRevisionSchema = z.object({
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -30567,6 +31743,10 @@ TestingLabTestingSessionSchema = z.object({
     .array(z.lazy(() => TestingLabTestingFeedbackSchema))
     .nullable()
     .optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
   isActive: z.boolean().optional(),
   isCompleted: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
@@ -30620,8 +31800,8 @@ TestingLabTestingSlotRegistrationProjectionSchema = z.object({
 /** Zod schema for TestingLabTestingSlotRegistrationStatus */
 TestingLabTestingSlotRegistrationStatusSchema = z.enum(['Registered', 'Waitlisted', 'CheckedIn', 'Attended', 'Completed', 'Cancelled', 'NoShow']);
 
-/** Zod schema for TestingLabUpdateAttendance */
-TestingLabUpdateAttendanceSchema = z.object({
+/** Zod schema for TestingLabUpdateAttendanceDto */
+TestingLabUpdateAttendanceDtoSchema = z.object({
   attendanceStatus: z.lazy(() => TestingLabAttendanceStatusSchema).optional(),
   userId: z.string().uuid().optional(),
 });
@@ -30637,34 +31817,18 @@ TestingLabUpdateTestingEventInputSchema = z.object({
   name: z.string().nullable().optional(),
   requiresFeedback: z.boolean().optional(),
   startsAt: z.string().datetime().optional(),
-});
-
-/** Zod schema for TestingLabUpdateTestingInput */
-TestingLabUpdateTestingInputSchema = z.object({
-  description: z.string().nullable().optional(),
-  downloadUrl: z.string().max(500).nullable().optional(),
-  endDate: z.string().datetime().nullable().optional(),
-  feedbackFormContent: z.string().nullable().optional(),
-  instructionsContent: z.string().nullable().optional(),
-  instructionsFileId: z.string().uuid().nullable().optional(),
-  instructionsType: z.lazy(() => TestingLabInstructionTypeSchema).optional(),
-  instructionsUrl: z.string().max(500).nullable().optional(),
-  maxTesters: z.number().int().nullable().optional(),
-  projectVersionId: z.string().uuid().nullable().optional(),
-  startDate: z.string().datetime().nullable().optional(),
-  status: z.lazy(() => TestingLabTestingRequestStatusSchema).optional(),
-  title: z.string().max(255).nullable().optional(),
+  timeZoneId: z.string().nullable().optional(),
 });
 
 /** Zod schema for TestingLabUpdateTestingLabRoleInput */
 TestingLabUpdateTestingLabRoleInputSchema = z.object({
   description: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
-  permissions: z.lazy(() => TestingLabTestingLabPermissionsSchema).optional(),
+  permissions: z.lazy(() => TestingLabTestingLabPermissionsDtoSchema).optional(),
 });
 
-/** Zod schema for TestingLabUpdateTestingLabSettings */
-TestingLabUpdateTestingLabSettingsSchema = z.object({
+/** Zod schema for TestingLabUpdateTestingLabSettingsDto */
+TestingLabUpdateTestingLabSettingsDtoSchema = z.object({
   allowPublicSignups: z.boolean().nullable().optional(),
   defaultSessionDuration: z.number().int().min(15).max(480).nullable().optional(),
   description: z.string().max(1000).nullable().optional(),
@@ -30677,8 +31841,8 @@ TestingLabUpdateTestingLabSettingsSchema = z.object({
   versionSubmissionPolicy: z.lazy(() => ProjectsVersionSubmissionPolicySchema).optional(),
 });
 
-/** Zod schema for TestingLabUpdateTestingLocation */
-TestingLabUpdateTestingLocationSchema = z.object({
+/** Zod schema for TestingLabUpdateTestingLocationDto */
+TestingLabUpdateTestingLocationDtoSchema = z.object({
   address: z.string().nullable().optional(),
   city: z.string().nullable().optional(),
   contactEmail: z.string().nullable().optional(),
@@ -30701,6 +31865,23 @@ TestingLabUpdateTestingProjectApplicationInputSchema = z.object({
   preferredAvailability: z.string().nullable().optional(),
   projectVersionId: z.string().uuid().optional(),
   submittedAssetReferenceIds: z.array(z.string().uuid()).nullable().optional(),
+});
+
+/** Zod schema for TestingLabUpdateTestingRequestDto */
+TestingLabUpdateTestingRequestDtoSchema = z.object({
+  description: z.string().nullable().optional(),
+  downloadUrl: z.string().max(500).nullable().optional(),
+  endDate: z.string().datetime().nullable().optional(),
+  feedbackFormContent: z.string().nullable().optional(),
+  instructionsContent: z.string().nullable().optional(),
+  instructionsFileId: z.string().uuid().nullable().optional(),
+  instructionsType: z.lazy(() => TestingLabInstructionTypeSchema).optional(),
+  instructionsUrl: z.string().max(500).nullable().optional(),
+  maxTesters: z.number().int().nullable().optional(),
+  projectVersionId: z.string().uuid().nullable().optional(),
+  startDate: z.string().datetime().nullable().optional(),
+  status: z.lazy(() => TestingLabTestingRequestStatusSchema).optional(),
+  title: z.string().max(255).nullable().optional(),
 });
 
 /** Zod schema for TestingLabUpsertTestingEventSlotInput */
@@ -30733,9 +31914,9 @@ TestingLabUpsertTestingEventTemplateInputSchema = z.object({
 /** Zod schema for TestingLabUserTestingLabPermissions */
 TestingLabUserTestingLabPermissionsSchema = z.object({
   assignedRoles: z.array(z.string()).nullable().optional(),
-  permissions: z.lazy(() => TestingLabTestingLabPermissionsSchema).optional(),
+  permissions: z.lazy(() => TestingLabTestingLabPermissionsDtoSchema).optional(),
   resourcePermissions: z
-    .array(z.lazy(() => TestingLabTestingLabResourcePermissionSchema))
+    .array(z.lazy(() => TestingLabTestingLabResourcePermissionDtoSchema))
     .nullable()
     .optional(),
   tenantId: z.string().uuid().nullable().optional(),
@@ -30762,3 +31943,637 @@ TrustSafetyTrustSafetyAppealSchema = z.object({
 
 /** Zod schema for TrustSafetyTrustSafetyAppealState */
 TrustSafetyTrustSafetyAppealStateSchema = z.enum(['Submitted', 'Assigned', 'Upheld', 'Overturned']);
+
+// Backwards-compatible aliases for names generated before DTO identity was preserved
+export type AIAiConversationHistoryEntry = AIAiConversationHistoryEntryDto;
+export { AIAiConversationHistoryEntryDtoSchema as AIAiConversationHistoryEntrySchema };
+export type AIAiPromptTemplate = AIAiPromptTemplateDto;
+export { AIAiPromptTemplateDtoSchema as AIAiPromptTemplateSchema };
+export type AIAiProviderStatus = AIAiProviderStatusDto;
+export { AIAiProviderStatusDtoSchema as AIAiProviderStatusSchema };
+export type AIAiQuotaStatus = AIAiQuotaStatusDto;
+export { AIAiQuotaStatusDtoSchema as AIAiQuotaStatusSchema };
+export type AIAiUsage = AIAiUsageDto;
+export { AIAiUsageDtoSchema as AIAiUsageSchema };
+export type AnalyticsAnalyticsWarehouseFact = AnalyticsAnalyticsWarehouseFactDto;
+export { AnalyticsAnalyticsWarehouseFactDtoSchema as AnalyticsAnalyticsWarehouseFactSchema };
+export type AnalyticsDashboard = AnalyticsDashboardDto;
+export { AnalyticsDashboardDtoSchema as AnalyticsDashboardSchema };
+export type AnalyticsDashboardWidget = AnalyticsDashboardWidgetDto;
+export { AnalyticsDashboardWidgetDtoSchema as AnalyticsDashboardWidgetSchema };
+export type APIControllersEconomyKycStatus = APIControllersEconomyKycStatusDto;
+export { APIControllersEconomyKycStatusDtoSchema as APIControllersEconomyKycStatusSchema };
+export type APIControllersEconomyPayoutExecutionOperation = APIControllersEconomyPayoutExecutionOperationDto;
+export { APIControllersEconomyPayoutExecutionOperationDtoSchema as APIControllersEconomyPayoutExecutionOperationSchema };
+export type APIControllersEconomySelfServiceCapability = APIControllersEconomySelfServiceCapabilityDto;
+export { APIControllersEconomySelfServiceCapabilityDtoSchema as APIControllersEconomySelfServiceCapabilitySchema };
+export type APIProjectsProjectAllocation = APIProjectsProjectAllocationDto;
+export { APIProjectsProjectAllocationDtoSchema as APIProjectsProjectAllocationSchema };
+export type APIProjectsProjectOwnership = APIProjectsProjectOwnershipDto;
+export { APIProjectsProjectOwnershipDtoSchema as APIProjectsProjectOwnershipSchema };
+export type APIProjectsProjectTeamAgreement = APIProjectsProjectTeamAgreementDto;
+export { APIProjectsProjectTeamAgreementDtoSchema as APIProjectsProjectTeamAgreementSchema };
+export type APIProjectsProjectTeamOwnership = APIProjectsProjectTeamOwnershipDto;
+export { APIProjectsProjectTeamOwnershipDtoSchema as APIProjectsProjectTeamOwnershipSchema };
+export type APIProjectWorkProjectBoard = APIProjectWorkProjectBoardDto;
+export { APIProjectWorkProjectBoardDtoSchema as APIProjectWorkProjectBoardSchema };
+export type APIProjectWorkProjectChecklistItem = APIProjectWorkProjectChecklistItemDto;
+export { APIProjectWorkProjectChecklistItemDtoSchema as APIProjectWorkProjectChecklistItemSchema };
+export type APIProjectWorkProjectMilestone = APIProjectWorkProjectMilestoneDto;
+export { APIProjectWorkProjectMilestoneDtoSchema as APIProjectWorkProjectMilestoneSchema };
+export type APIProjectWorkProjectTaskComment = APIProjectWorkProjectTaskCommentDto;
+export { APIProjectWorkProjectTaskCommentDtoSchema as APIProjectWorkProjectTaskCommentSchema };
+export type APIProjectWorkProjectTaskDependency = APIProjectWorkProjectTaskDependencyDto;
+export { APIProjectWorkProjectTaskDependencyDtoSchema as APIProjectWorkProjectTaskDependencySchema };
+export type APIProjectWorkProjectTaskLabel = APIProjectWorkProjectTaskLabelDto;
+export { APIProjectWorkProjectTaskLabelDtoSchema as APIProjectWorkProjectTaskLabelSchema };
+export type APIProjectWorkProjectWorkColumn = APIProjectWorkProjectWorkColumnDto;
+export { APIProjectWorkProjectWorkColumnDtoSchema as APIProjectWorkProjectWorkColumnSchema };
+export type APIProjectWorkProjectWorkHistory = APIProjectWorkProjectWorkHistoryDto;
+export { APIProjectWorkProjectWorkHistoryDtoSchema as APIProjectWorkProjectWorkHistorySchema };
+export type APIProjectWorkProjectWorkTaskDetails = APIProjectWorkProjectWorkTaskDetailsDto;
+export { APIProjectWorkProjectWorkTaskDetailsDtoSchema as APIProjectWorkProjectWorkTaskDetailsSchema };
+export type APIProjectWorkProjectWorkTask = APIProjectWorkProjectWorkTaskDto;
+export { APIProjectWorkProjectWorkTaskDtoSchema as APIProjectWorkProjectWorkTaskSchema };
+export type APITeamsMyTeamInvitation = APITeamsMyTeamInvitationDto;
+export { APITeamsMyTeamInvitationDtoSchema as APITeamsMyTeamInvitationSchema };
+export type APITeamsTeam = APITeamsTeamDto;
+export { APITeamsTeamDtoSchema as APITeamsTeamSchema };
+export type APITeamsTeamInvitationCreated = APITeamsTeamInvitationCreatedDto;
+export { APITeamsTeamInvitationCreatedDtoSchema as APITeamsTeamInvitationCreatedSchema };
+export type APITeamsTeamInvitation = APITeamsTeamInvitationDto;
+export { APITeamsTeamInvitationDtoSchema as APITeamsTeamInvitationSchema };
+export type APITeamsTeamMember = APITeamsTeamMemberDto;
+export { APITeamsTeamMemberDtoSchema as APITeamsTeamMemberSchema };
+export type CommerceOrdersMarketplaceCart = CommerceOrdersMarketplaceCartDto;
+export { CommerceOrdersMarketplaceCartDtoSchema as CommerceOrdersMarketplaceCartSchema };
+export type CommerceOrdersMarketplaceCartItem = CommerceOrdersMarketplaceCartItemDto;
+export { CommerceOrdersMarketplaceCartItemDtoSchema as CommerceOrdersMarketplaceCartItemSchema };
+export type CommerceOrdersMarketplaceCheckout = CommerceOrdersMarketplaceCheckoutDto;
+export { CommerceOrdersMarketplaceCheckoutDtoSchema as CommerceOrdersMarketplaceCheckoutSchema };
+export type CommerceOrdersMarketplaceCheckoutOrder = CommerceOrdersMarketplaceCheckoutOrderDto;
+export { CommerceOrdersMarketplaceCheckoutOrderDtoSchema as CommerceOrdersMarketplaceCheckoutOrderSchema };
+export type CommerceOrdersOrderCapture = CommerceOrdersOrderCaptureDto;
+export { CommerceOrdersOrderCaptureDtoSchema as CommerceOrdersOrderCaptureSchema };
+export type CommerceOrdersOrder = CommerceOrdersOrderDto;
+export { CommerceOrdersOrderDtoSchema as CommerceOrdersOrderSchema };
+export type CommerceOrdersOrderLineItem = CommerceOrdersOrderLineItemDto;
+export { CommerceOrdersOrderLineItemDtoSchema as CommerceOrdersOrderLineItemSchema };
+export type CommerceProductsEntitlementInfo = CommerceProductsEntitlementInfoDto;
+export { CommerceProductsEntitlementInfoDtoSchema as CommerceProductsEntitlementInfoSchema };
+export type CommerceProductsProduct = CommerceProductsProductDto;
+export { CommerceProductsProductDtoSchema as CommerceProductsProductSchema };
+export type CommerceProductsProductPricing = CommerceProductsProductPricingDto;
+export { CommerceProductsProductPricingDtoSchema as CommerceProductsProductPricingSchema };
+export type CommerceProductsPromoCode = CommerceProductsPromoCodeDto;
+export { CommerceProductsPromoCodeDtoSchema as CommerceProductsPromoCodeSchema };
+export type CommerceProductsPromoCodeUsage = CommerceProductsPromoCodeUsageDto;
+export { CommerceProductsPromoCodeUsageDtoSchema as CommerceProductsPromoCodeUsageSchema };
+export type CommerceProductsSupportTicket = CommerceProductsSupportTicketDto;
+export { CommerceProductsSupportTicketDtoSchema as CommerceProductsSupportTicketSchema };
+export type CommerceProductsSupportTicketMessage = CommerceProductsSupportTicketMessageDto;
+export { CommerceProductsSupportTicketMessageDtoSchema as CommerceProductsSupportTicketMessageSchema };
+export type CommerceSubscriptionsBillingHistory = CommerceSubscriptionsBillingHistoryDto;
+export { CommerceSubscriptionsBillingHistoryDtoSchema as CommerceSubscriptionsBillingHistorySchema };
+export type CommerceSubscriptionsSubscriptionChurnReport = CommerceSubscriptionsSubscriptionChurnReportDto;
+export { CommerceSubscriptionsSubscriptionChurnReportDtoSchema as CommerceSubscriptionsSubscriptionChurnReportSchema };
+export type CommerceSubscriptionsSubscriptionNotification = CommerceSubscriptionsSubscriptionNotificationDto;
+export { CommerceSubscriptionsSubscriptionNotificationDtoSchema as CommerceSubscriptionsSubscriptionNotificationSchema };
+export type CommerceSubscriptionsSubscriptionUsage = CommerceSubscriptionsSubscriptionUsageDto;
+export { CommerceSubscriptionsSubscriptionUsageDtoSchema as CommerceSubscriptionsSubscriptionUsageSchema };
+export type ComplianceAuditAuditLog = ComplianceAuditAuditLogDto;
+export { ComplianceAuditAuditLogDtoSchema as ComplianceAuditAuditLogSchema };
+export type ComplianceConsentConsentPolicy = ComplianceConsentConsentPolicyDto;
+export { ComplianceConsentConsentPolicyDtoSchema as ComplianceConsentConsentPolicySchema };
+export type ComplianceConsentDataSubjectRequest = ComplianceConsentDataSubjectRequestDto;
+export { ComplianceConsentDataSubjectRequestDtoSchema as ComplianceConsentDataSubjectRequestSchema };
+export type ComplianceConsentPolicyVersion = ComplianceConsentPolicyVersionDto;
+export { ComplianceConsentPolicyVersionDtoSchema as ComplianceConsentPolicyVersionSchema };
+export type ComplianceConsentUserConsent = ComplianceConsentUserConsentDto;
+export { ComplianceConsentUserConsentDtoSchema as ComplianceConsentUserConsentSchema };
+export type ComplianceFERPAFerpaDirectoryInformationPolicy = ComplianceFERPAFerpaDirectoryInformationPolicyDto;
+export { ComplianceFERPAFerpaDirectoryInformationPolicyDtoSchema as ComplianceFERPAFerpaDirectoryInformationPolicySchema };
+export type ComplianceFERPAFerpaDisclosureConsent = ComplianceFERPAFerpaDisclosureConsentDto;
+export { ComplianceFERPAFerpaDisclosureConsentDtoSchema as ComplianceFERPAFerpaDisclosureConsentSchema };
+export type ComplianceFERPAFerpaDisclosureLog = ComplianceFERPAFerpaDisclosureLogDto;
+export { ComplianceFERPAFerpaDisclosureLogDtoSchema as ComplianceFERPAFerpaDisclosureLogSchema };
+export type ComplianceFERPAFerpaEducationRecord = ComplianceFERPAFerpaEducationRecordDto;
+export { ComplianceFERPAFerpaEducationRecordDtoSchema as ComplianceFERPAFerpaEducationRecordSchema };
+export type ComplianceFERPAFerpaInspectionRequest = ComplianceFERPAFerpaInspectionRequestDto;
+export { ComplianceFERPAFerpaInspectionRequestDtoSchema as ComplianceFERPAFerpaInspectionRequestSchema };
+export type ContentPagesContentResource = ContentPagesContentResourceDto;
+export { ContentPagesContentResourceDtoSchema as ContentPagesContentResourceSchema };
+export type ContentPagesCreateContentResource = ContentPagesCreateContentResourceDto;
+export { ContentPagesCreateContentResourceDtoSchema as ContentPagesCreateContentResourceSchema };
+export type ContentPagesCreateMarketingLead = ContentPagesCreateMarketingLeadDto;
+export { ContentPagesCreateMarketingLeadDtoSchema as ContentPagesCreateMarketingLeadSchema };
+export type ContentPagesCreatePage = ContentPagesCreatePageDto;
+export { ContentPagesCreatePageDtoSchema as ContentPagesCreatePageSchema };
+export type ContentPagesCreatePageSection = ContentPagesCreatePageSectionDto;
+export { ContentPagesCreatePageSectionDtoSchema as ContentPagesCreatePageSectionSchema };
+export type ContentPagesMarketingLead = ContentPagesMarketingLeadDto;
+export { ContentPagesMarketingLeadDtoSchema as ContentPagesMarketingLeadSchema };
+export type ContentPagesOpenGraphMetadata = ContentPagesOpenGraphMetadataDto;
+export { ContentPagesOpenGraphMetadataDtoSchema as ContentPagesOpenGraphMetadataSchema };
+export type ContentPagesPage = ContentPagesPageDto;
+export { ContentPagesPageDtoSchema as ContentPagesPageSchema };
+export type ContentPagesPageSection = ContentPagesPageSectionDto;
+export { ContentPagesPageSectionDtoSchema as ContentPagesPageSectionSchema };
+export type ContentPagesSitemapEntry = ContentPagesSitemapEntryDto;
+export { ContentPagesSitemapEntryDtoSchema as ContentPagesSitemapEntrySchema };
+export type ContentPagesUpdateContentResource = ContentPagesUpdateContentResourceDto;
+export { ContentPagesUpdateContentResourceDtoSchema as ContentPagesUpdateContentResourceSchema };
+export type ContentPagesUpdatePage = ContentPagesUpdatePageDto;
+export { ContentPagesUpdatePageDtoSchema as ContentPagesUpdatePageSchema };
+export type ContentPagesUpdatePageSection = ContentPagesUpdatePageSectionDto;
+export { ContentPagesUpdatePageSectionDtoSchema as ContentPagesUpdatePageSectionSchema };
+export type FeaturesCapabilityAuditLog = FeaturesCapabilityAuditLogDto;
+export { FeaturesCapabilityAuditLogDtoSchema as FeaturesCapabilityAuditLogSchema };
+export type FeaturesFeatureFlag = FeaturesFeatureFlagDto;
+export { FeaturesFeatureFlagDtoSchema as FeaturesFeatureFlagSchema };
+export type FeaturesFeatureFlagTarget = FeaturesFeatureFlagTargetDto;
+export { FeaturesFeatureFlagTargetDtoSchema as FeaturesFeatureFlagTargetSchema };
+export type FinanceEconomyContractsEconomyWalletSummary = FinanceEconomyContractsEconomyWalletSummaryDto;
+export { FinanceEconomyContractsEconomyWalletSummaryDtoSchema as FinanceEconomyContractsEconomyWalletSummarySchema };
+export type FinanceEconomyContractsEconomyWalletTransaction = FinanceEconomyContractsEconomyWalletTransactionDto;
+export { FinanceEconomyContractsEconomyWalletTransactionDtoSchema as FinanceEconomyContractsEconomyWalletTransactionSchema };
+export type FinanceEconomyFundingEconomyTopUpStatus = FinanceEconomyFundingEconomyTopUpStatusDto;
+export { FinanceEconomyFundingEconomyTopUpStatusDtoSchema as FinanceEconomyFundingEconomyTopUpStatusSchema };
+export type FinanceEconomyPayoutsQueriesEconomyPayoutOperation = FinanceEconomyPayoutsQueriesEconomyPayoutOperationDto;
+export { FinanceEconomyPayoutsQueriesEconomyPayoutOperationDtoSchema as FinanceEconomyPayoutsQueriesEconomyPayoutOperationSchema };
+export type FinanceEconomyPayoutsQueriesEconomyPayoutRequest = FinanceEconomyPayoutsQueriesEconomyPayoutRequestDto;
+export { FinanceEconomyPayoutsQueriesEconomyPayoutRequestDtoSchema as FinanceEconomyPayoutsQueriesEconomyPayoutRequestSchema };
+export type FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewAudit = FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewAuditDto;
+export { FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewAuditDtoSchema as FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewAuditSchema };
+export type FinanceEconomyPayoutsQueriesEconomyPayoutRequestReview = FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewDto;
+export { FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewDtoSchema as FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewSchema };
+export type GameJamsJamCriteria = GameJamsJamCriteriaDto;
+export { GameJamsJamCriteriaDtoSchema as GameJamsJamCriteriaSchema };
+export type GameJamsJamSubmission = GameJamsJamSubmissionDto;
+export { GameJamsJamSubmissionDtoSchema as GameJamsJamSubmissionSchema };
+export type IdentityAuthenticationApiKey = IdentityAuthenticationApiKeyDto;
+export { IdentityAuthenticationApiKeyDtoSchema as IdentityAuthenticationApiKeySchema };
+export type IdentityAuthenticationDiscordCallbackRequest = IdentityAuthenticationDiscordCallbackRequestDto;
+export { IdentityAuthenticationDiscordCallbackRequestDtoSchema as IdentityAuthenticationDiscordCallbackRequestSchema };
+export type IdentityAuthenticationGoogleIdTokenRequest = IdentityAuthenticationGoogleIdTokenRequestDto;
+export { IdentityAuthenticationGoogleIdTokenRequestDtoSchema as IdentityAuthenticationGoogleIdTokenRequestSchema };
+export type IdentityAuthenticationJwtKeyInfo = IdentityAuthenticationJwtKeyInfoDto;
+export { IdentityAuthenticationJwtKeyInfoDtoSchema as IdentityAuthenticationJwtKeyInfoSchema };
+export type IdentityAuthenticationUser = IdentityAuthenticationUserDto;
+export { IdentityAuthenticationUserDtoSchema as IdentityAuthenticationUserSchema };
+export type IdentityAuthorizationEffectivePermission = IdentityAuthorizationEffectivePermissionDto;
+export { IdentityAuthorizationEffectivePermissionDtoSchema as IdentityAuthorizationEffectivePermissionSchema };
+export type IdentityAuthorizationResourceInvitation = IdentityAuthorizationResourceInvitationDto;
+export { IdentityAuthorizationResourceInvitationDtoSchema as IdentityAuthorizationResourceInvitationSchema };
+export type IdentityTenantsTenantAddress = IdentityTenantsTenantAddressDto;
+export { IdentityTenantsTenantAddressDtoSchema as IdentityTenantsTenantAddressSchema };
+export type IdentityTenantsTenantBranding = IdentityTenantsTenantBrandingDto;
+export { IdentityTenantsTenantBrandingDtoSchema as IdentityTenantsTenantBrandingSchema };
+export type IdentityTenantsTenantBusinessInfo = IdentityTenantsTenantBusinessInfoDto;
+export { IdentityTenantsTenantBusinessInfoDtoSchema as IdentityTenantsTenantBusinessInfoSchema };
+export type IdentityTenantsTenantBusinessRules = IdentityTenantsTenantBusinessRulesDto;
+export { IdentityTenantsTenantBusinessRulesDtoSchema as IdentityTenantsTenantBusinessRulesSchema };
+export type IdentityTenantsTenantContactInfo = IdentityTenantsTenantContactInfoDto;
+export { IdentityTenantsTenantContactInfoDtoSchema as IdentityTenantsTenantContactInfoSchema };
+export type IdentityTenantsTenantCurrencySettings = IdentityTenantsTenantCurrencySettingsDto;
+export { IdentityTenantsTenantCurrencySettingsDtoSchema as IdentityTenantsTenantCurrencySettingsSchema };
+export type IdentityTenantsTenantIntegrationSettings = IdentityTenantsTenantIntegrationSettingsDto;
+export { IdentityTenantsTenantIntegrationSettingsDtoSchema as IdentityTenantsTenantIntegrationSettingsSchema };
+export type IdentityTenantsTenantMetadata = IdentityTenantsTenantMetadataDto;
+export { IdentityTenantsTenantMetadataDtoSchema as IdentityTenantsTenantMetadataSchema };
+export type IdentityTenantsTenantSecuritySettings = IdentityTenantsTenantSecuritySettingsDto;
+export { IdentityTenantsTenantSecuritySettingsDtoSchema as IdentityTenantsTenantSecuritySettingsSchema };
+export type IdentityTenantsTenantSystemConfiguration = IdentityTenantsTenantSystemConfigurationDto;
+export { IdentityTenantsTenantSystemConfigurationDtoSchema as IdentityTenantsTenantSystemConfigurationSchema };
+export type IdentityTenantsTenantSystemLimits = IdentityTenantsTenantSystemLimitsDto;
+export { IdentityTenantsTenantSystemLimitsDtoSchema as IdentityTenantsTenantSystemLimitsSchema };
+export type IdentityTenantsTenantUiSettings = IdentityTenantsTenantUiSettingsDto;
+export { IdentityTenantsTenantUiSettingsDtoSchema as IdentityTenantsTenantUiSettingsSchema };
+export type IdentityTenantsUserMembership = IdentityTenantsUserMembershipDto;
+export { IdentityTenantsUserMembershipDtoSchema as IdentityTenantsUserMembershipSchema };
+export type IdentityUsersNotificationAction = IdentityUsersNotificationActionDto;
+export { IdentityUsersNotificationActionDtoSchema as IdentityUsersNotificationActionSchema };
+export type IdentityUsersUserAccessibilityPreferences = IdentityUsersUserAccessibilityPreferencesDto;
+export { IdentityUsersUserAccessibilityPreferencesDtoSchema as IdentityUsersUserAccessibilityPreferencesSchema };
+export type IdentityUsersUserLocalizationPreferences = IdentityUsersUserLocalizationPreferencesDto;
+export { IdentityUsersUserLocalizationPreferencesDtoSchema as IdentityUsersUserLocalizationPreferencesSchema };
+export type IdentityUsersUserNotificationDetail = IdentityUsersUserNotificationDetailDto;
+export { IdentityUsersUserNotificationDetailDtoSchema as IdentityUsersUserNotificationDetailSchema };
+export type IdentityUsersUserNotificationPreferences = IdentityUsersUserNotificationPreferencesDto;
+export { IdentityUsersUserNotificationPreferencesDtoSchema as IdentityUsersUserNotificationPreferencesSchema };
+export type IdentityUsersUserPrivacyPreferences = IdentityUsersUserPrivacyPreferencesDto;
+export { IdentityUsersUserPrivacyPreferencesDtoSchema as IdentityUsersUserPrivacyPreferencesSchema };
+export type LearningAssessmentsAnonymousReviewAssessment = LearningAssessmentsAnonymousReviewAssessmentDto;
+export { LearningAssessmentsAnonymousReviewAssessmentDtoSchema as LearningAssessmentsAnonymousReviewAssessmentSchema };
+export type LearningAssessmentsAnonymousReviewRubric = LearningAssessmentsAnonymousReviewRubricDto;
+export { LearningAssessmentsAnonymousReviewRubricDtoSchema as LearningAssessmentsAnonymousReviewRubricSchema };
+export type LearningAssessmentsAnonymousReviewSubmission = LearningAssessmentsAnonymousReviewSubmissionDto;
+export { LearningAssessmentsAnonymousReviewSubmissionDtoSchema as LearningAssessmentsAnonymousReviewSubmissionSchema };
+export type LearningAssessmentsAssessment = LearningAssessmentsAssessmentDto;
+export { LearningAssessmentsAssessmentDtoSchema as LearningAssessmentsAssessmentSchema };
+export type LearningAssessmentsAssessmentGroupAnalytics = LearningAssessmentsAssessmentGroupAnalyticsDto;
+export { LearningAssessmentsAssessmentGroupAnalyticsDtoSchema as LearningAssessmentsAssessmentGroupAnalyticsSchema };
+export type LearningAssessmentsAssessmentGroup = LearningAssessmentsAssessmentGroupDto;
+export { LearningAssessmentsAssessmentGroupDtoSchema as LearningAssessmentsAssessmentGroupSchema };
+export type LearningAssessmentsAssessmentScoreBucket = LearningAssessmentsAssessmentScoreBucketDto;
+export { LearningAssessmentsAssessmentScoreBucketDtoSchema as LearningAssessmentsAssessmentScoreBucketSchema };
+export type LearningAssessmentsAssessmentSubmission = LearningAssessmentsAssessmentSubmissionDto;
+export { LearningAssessmentsAssessmentSubmissionDtoSchema as LearningAssessmentsAssessmentSubmissionSchema };
+export type LearningAssessmentsCourseAssessmentAnalytics = LearningAssessmentsCourseAssessmentAnalyticsDto;
+export { LearningAssessmentsCourseAssessmentAnalyticsDtoSchema as LearningAssessmentsCourseAssessmentAnalyticsSchema };
+export type LearningAssessmentsGradingQueueAssessment = LearningAssessmentsGradingQueueAssessmentDto;
+export { LearningAssessmentsGradingQueueAssessmentDtoSchema as LearningAssessmentsGradingQueueAssessmentSchema };
+export type LearningAssessmentsGradingQueue = LearningAssessmentsGradingQueueDto;
+export { LearningAssessmentsGradingQueueDtoSchema as LearningAssessmentsGradingQueueSchema };
+export type LearningAssessmentsGradingQueueItem = LearningAssessmentsGradingQueueItemDto;
+export { LearningAssessmentsGradingQueueItemDtoSchema as LearningAssessmentsGradingQueueItemSchema };
+export type LearningAssessmentsGroupDetail = LearningAssessmentsGroupDetailDto;
+export { LearningAssessmentsGroupDetailDtoSchema as LearningAssessmentsGroupDetailSchema };
+export type LearningAssessmentsGroup = LearningAssessmentsGroupDto;
+export { LearningAssessmentsGroupDtoSchema as LearningAssessmentsGroupSchema };
+export type LearningAssessmentsGroupMember = LearningAssessmentsGroupMemberDto;
+export { LearningAssessmentsGroupMemberDtoSchema as LearningAssessmentsGroupMemberSchema };
+export type LearningAssessmentsGroupMembership = LearningAssessmentsGroupMembershipDto;
+export { LearningAssessmentsGroupMembershipDtoSchema as LearningAssessmentsGroupMembershipSchema };
+export type LearningAssessmentsGroupSet = LearningAssessmentsGroupSetDto;
+export { LearningAssessmentsGroupSetDtoSchema as LearningAssessmentsGroupSetSchema };
+export type LearningAssessmentsGroupSetSummary = LearningAssessmentsGroupSetSummaryDto;
+export { LearningAssessmentsGroupSetSummaryDtoSchema as LearningAssessmentsGroupSetSummarySchema };
+export type LearningAssessmentsGroupSummary = LearningAssessmentsGroupSummaryDto;
+export { LearningAssessmentsGroupSummaryDtoSchema as LearningAssessmentsGroupSummarySchema };
+export type LearningAssessmentsInstructorPeerReview = LearningAssessmentsInstructorPeerReviewDto;
+export { LearningAssessmentsInstructorPeerReviewDtoSchema as LearningAssessmentsInstructorPeerReviewSchema };
+export type LearningAssessmentsInteractiveVideoAssessmentCue = LearningAssessmentsInteractiveVideoAssessmentCueDto;
+export { LearningAssessmentsInteractiveVideoAssessmentCueDtoSchema as LearningAssessmentsInteractiveVideoAssessmentCueSchema };
+export type LearningAssessmentsLearnerAssessmentAttempt = LearningAssessmentsLearnerAssessmentAttemptDto;
+export { LearningAssessmentsLearnerAssessmentAttemptDtoSchema as LearningAssessmentsLearnerAssessmentAttemptSchema };
+export type LearningAssessmentsLearnerAssessmentSubmission = LearningAssessmentsLearnerAssessmentSubmissionDto;
+export { LearningAssessmentsLearnerAssessmentSubmissionDtoSchema as LearningAssessmentsLearnerAssessmentSubmissionSchema };
+export type LearningAssessmentsLearnerInteractiveVideoAssessmentCue = LearningAssessmentsLearnerInteractiveVideoAssessmentCueDto;
+export { LearningAssessmentsLearnerInteractiveVideoAssessmentCueDtoSchema as LearningAssessmentsLearnerInteractiveVideoAssessmentCueSchema };
+export type LearningAssessmentsPeerReviewClaim = LearningAssessmentsPeerReviewClaimDto;
+export { LearningAssessmentsPeerReviewClaimDtoSchema as LearningAssessmentsPeerReviewClaimSchema };
+export type LearningAssessmentsReceivedPeerReview = LearningAssessmentsReceivedPeerReviewDto;
+export { LearningAssessmentsReceivedPeerReviewDtoSchema as LearningAssessmentsReceivedPeerReviewSchema };
+export type LearningAssessmentsRubricCriterion = LearningAssessmentsRubricCriterionDto;
+export { LearningAssessmentsRubricCriterionDtoSchema as LearningAssessmentsRubricCriterionSchema };
+export type LearningAssessmentsRubric = LearningAssessmentsRubricDto;
+export { LearningAssessmentsRubricDtoSchema as LearningAssessmentsRubricSchema };
+export type LearningAssessmentsTaskItem = LearningAssessmentsTaskItemDto;
+export { LearningAssessmentsTaskItemDtoSchema as LearningAssessmentsTaskItemSchema };
+export type LearningAssessmentsTasks = LearningAssessmentsTasksDto;
+export { LearningAssessmentsTasksDtoSchema as LearningAssessmentsTasksSchema };
+export type LearningCertificatesCertificate = LearningCertificatesCertificateDto;
+export { LearningCertificatesCertificateDtoSchema as LearningCertificatesCertificateSchema };
+export type LearningCertificatesCertificateTemplateDetail = LearningCertificatesCertificateTemplateDetailDto;
+export { LearningCertificatesCertificateTemplateDetailDtoSchema as LearningCertificatesCertificateTemplateDetailSchema };
+export type LearningCertificatesCertificateTemplate = LearningCertificatesCertificateTemplateDto;
+export { LearningCertificatesCertificateTemplateDtoSchema as LearningCertificatesCertificateTemplateSchema };
+export type LearningCohortsAvailableCohortContent = LearningCohortsAvailableCohortContentDto;
+export { LearningCohortsAvailableCohortContentDtoSchema as LearningCohortsAvailableCohortContentSchema };
+export type LearningCohortsCohortCalendarEntry = LearningCohortsCohortCalendarEntryDto;
+export { LearningCohortsCohortCalendarEntryDtoSchema as LearningCohortsCohortCalendarEntrySchema };
+export type LearningCohortsCohort = LearningCohortsCohortDto;
+export { LearningCohortsCohortDtoSchema as LearningCohortsCohortSchema };
+export type LearningCohortsCohortScheduleConflict = LearningCohortsCohortScheduleConflictDto;
+export { LearningCohortsCohortScheduleConflictDtoSchema as LearningCohortsCohortScheduleConflictSchema };
+export type LearningCohortsCohortSchedule = LearningCohortsCohortScheduleDto;
+export { LearningCohortsCohortScheduleDtoSchema as LearningCohortsCohortScheduleSchema };
+export type LearningCohortsCohortScheduleItem = LearningCohortsCohortScheduleItemDto;
+export { LearningCohortsCohortScheduleItemDtoSchema as LearningCohortsCohortScheduleItemSchema };
+export type LearningCohortsCohortSchedulePreview = LearningCohortsCohortSchedulePreviewDto;
+export { LearningCohortsCohortSchedulePreviewDtoSchema as LearningCohortsCohortSchedulePreviewSchema };
+export type LearningCohortsCohortSchedulePreviewItem = LearningCohortsCohortSchedulePreviewItemDto;
+export { LearningCohortsCohortSchedulePreviewItemDtoSchema as LearningCohortsCohortSchedulePreviewItemSchema };
+export type LearningCohortsCohortScheduleSummary = LearningCohortsCohortScheduleSummaryDto;
+export { LearningCohortsCohortScheduleSummaryDtoSchema as LearningCohortsCohortScheduleSummarySchema };
+export type LearningCohortsCourseCohortCalendar = LearningCohortsCourseCohortCalendarDto;
+export { LearningCohortsCourseCohortCalendarDtoSchema as LearningCohortsCourseCohortCalendarSchema };
+export type LearningCoursesActivityGrade = LearningCoursesActivityGradeDto;
+export { LearningCoursesActivityGradeDtoSchema as LearningCoursesActivityGradeSchema };
+export type LearningCoursesAiAuthoringConversation = LearningCoursesAiAuthoringConversationDto;
+export { LearningCoursesAiAuthoringConversationDtoSchema as LearningCoursesAiAuthoringConversationSchema };
+export type LearningCoursesAiAuthoringMessage = LearningCoursesAiAuthoringMessageDto;
+export { LearningCoursesAiAuthoringMessageDtoSchema as LearningCoursesAiAuthoringMessageSchema };
+export type LearningCoursesAiAuthoringRun = LearningCoursesAiAuthoringRunDto;
+export { LearningCoursesAiAuthoringRunDtoSchema as LearningCoursesAiAuthoringRunSchema };
+export type LearningCoursesAiCreditUsage = LearningCoursesAiCreditUsageDto;
+export { LearningCoursesAiCreditUsageDtoSchema as LearningCoursesAiCreditUsageSchema };
+export type LearningCoursesAiEntitlement = LearningCoursesAiEntitlementDto;
+export { LearningCoursesAiEntitlementDtoSchema as LearningCoursesAiEntitlementSchema };
+export type LearningCoursesAiProposal = LearningCoursesAiProposalDto;
+export { LearningCoursesAiProposalDtoSchema as LearningCoursesAiProposalSchema };
+export type LearningCoursesAuthoringDraft = LearningCoursesAuthoringDraftDto;
+export { LearningCoursesAuthoringDraftDtoSchema as LearningCoursesAuthoringDraftSchema };
+export type LearningCoursesCloneProgram = LearningCoursesCloneProgramDto;
+export { LearningCoursesCloneProgramDtoSchema as LearningCoursesCloneProgramSchema };
+export type LearningCoursesCompletionRates = LearningCoursesCompletionRatesDto;
+export { LearningCoursesCompletionRatesDtoSchema as LearningCoursesCompletionRatesSchema };
+export type LearningCoursesCompletionTrend = LearningCoursesCompletionTrendDto;
+export { LearningCoursesCompletionTrendDtoSchema as LearningCoursesCompletionTrendSchema };
+export type LearningCoursesContentInteraction = LearningCoursesContentInteractionDto;
+export { LearningCoursesContentInteractionDtoSchema as LearningCoursesContentInteractionSchema };
+export type LearningCoursesContentInteractionEvent = LearningCoursesContentInteractionEventDto;
+export { LearningCoursesContentInteractionEventDtoSchema as LearningCoursesContentInteractionEventSchema };
+export type LearningCoursesContentInteractionSummary = LearningCoursesContentInteractionSummaryDto;
+export { LearningCoursesContentInteractionSummaryDtoSchema as LearningCoursesContentInteractionSummarySchema };
+export type LearningCoursesContentProgress = LearningCoursesContentProgressDto;
+export { LearningCoursesContentProgressDtoSchema as LearningCoursesContentProgressSchema };
+export type LearningCoursesContentStats = LearningCoursesContentStatsDto;
+export { LearningCoursesContentStatsDtoSchema as LearningCoursesContentStatsSchema };
+export type LearningCoursesContentSummary = LearningCoursesContentSummaryDto;
+export { LearningCoursesContentSummaryDtoSchema as LearningCoursesContentSummarySchema };
+export type LearningCoursesCreateActivityGrade = LearningCoursesCreateActivityGradeDto;
+export { LearningCoursesCreateActivityGradeDtoSchema as LearningCoursesCreateActivityGradeSchema };
+export type LearningCoursesCreateProductFromProgram = LearningCoursesCreateProductFromProgramDto;
+export { LearningCoursesCreateProductFromProgramDtoSchema as LearningCoursesCreateProductFromProgramSchema };
+export type LearningCoursesCreateProgramContent = LearningCoursesCreateProgramContentDto;
+export { LearningCoursesCreateProgramContentDtoSchema as LearningCoursesCreateProgramContentSchema };
+export type LearningCoursesCreateProgram = LearningCoursesCreateProgramDto;
+export { LearningCoursesCreateProgramDtoSchema as LearningCoursesCreateProgramSchema };
+export type LearningCoursesEngagementMetrics = LearningCoursesEngagementMetricsDto;
+export { LearningCoursesEngagementMetricsDtoSchema as LearningCoursesEngagementMetricsSchema };
+export type LearningCoursesGraderSummary = LearningCoursesGraderSummaryDto;
+export { LearningCoursesGraderSummaryDtoSchema as LearningCoursesGraderSummarySchema };
+export type LearningCoursesGradeStatistics = LearningCoursesGradeStatisticsDto;
+export { LearningCoursesGradeStatisticsDtoSchema as LearningCoursesGradeStatisticsSchema };
+export type LearningCoursesMonetization = LearningCoursesMonetizationDto;
+export { LearningCoursesMonetizationDtoSchema as LearningCoursesMonetizationSchema };
+export type LearningCoursesMoveContent = LearningCoursesMoveContentDto;
+export { LearningCoursesMoveContentDtoSchema as LearningCoursesMoveContentSchema };
+export type LearningCoursesPrerequisiteCheckResult = LearningCoursesPrerequisiteCheckResultDto;
+export { LearningCoursesPrerequisiteCheckResultDtoSchema as LearningCoursesPrerequisiteCheckResultSchema };
+export type LearningCoursesPrerequisite = LearningCoursesPrerequisiteDto;
+export { LearningCoursesPrerequisiteDtoSchema as LearningCoursesPrerequisiteSchema };
+export type LearningCoursesPrerequisiteStatus = LearningCoursesPrerequisiteStatusDto;
+export { LearningCoursesPrerequisiteStatusDtoSchema as LearningCoursesPrerequisiteStatusSchema };
+export type LearningCoursesPricing = LearningCoursesPricingDto;
+export { LearningCoursesPricingDtoSchema as LearningCoursesPricingSchema };
+export type LearningCoursesProgramAnalytics = LearningCoursesProgramAnalyticsDto;
+export { LearningCoursesProgramAnalyticsDtoSchema as LearningCoursesProgramAnalyticsSchema };
+export type LearningCoursesProgramContent = LearningCoursesProgramContentDto;
+export { LearningCoursesProgramContentDtoSchema as LearningCoursesProgramContentSchema };
+export type LearningCoursesProgram = LearningCoursesProgramDto;
+export { LearningCoursesProgramDtoSchema as LearningCoursesProgramSchema };
+export type LearningCoursesProgramUserSummary = LearningCoursesProgramUserSummaryDto;
+export { LearningCoursesProgramUserSummaryDtoSchema as LearningCoursesProgramUserSummarySchema };
+export type LearningCoursesReflectionResponseResult = LearningCoursesReflectionResponseResultDto;
+export { LearningCoursesReflectionResponseResultDtoSchema as LearningCoursesReflectionResponseResultSchema };
+export type LearningCoursesRejectProgram = LearningCoursesRejectProgramDto;
+export { LearningCoursesRejectProgramDtoSchema as LearningCoursesRejectProgramSchema };
+export type LearningCoursesReorderContent = LearningCoursesReorderContentDto;
+export { LearningCoursesReorderContentDtoSchema as LearningCoursesReorderContentSchema };
+export type LearningCoursesRevenueAnalytics = LearningCoursesRevenueAnalyticsDto;
+export { LearningCoursesRevenueAnalyticsDtoSchema as LearningCoursesRevenueAnalyticsSchema };
+export type LearningCoursesRevenueChart = LearningCoursesRevenueChartDto;
+export { LearningCoursesRevenueChartDtoSchema as LearningCoursesRevenueChartSchema };
+export type LearningCoursesScheduleProgram = LearningCoursesScheduleProgramDto;
+export { LearningCoursesScheduleProgramDtoSchema as LearningCoursesScheduleProgramSchema };
+export type LearningCoursesSearchContent = LearningCoursesSearchContentDto;
+export { LearningCoursesSearchContentDtoSchema as LearningCoursesSearchContentSchema };
+export type LearningCoursesStudentSummary = LearningCoursesStudentSummaryDto;
+export { LearningCoursesStudentSummaryDtoSchema as LearningCoursesStudentSummarySchema };
+export type LearningCoursesSubmitUserContent = LearningCoursesSubmitUserContentDto;
+export { LearningCoursesSubmitUserContentDtoSchema as LearningCoursesSubmitUserContentSchema };
+export type LearningCoursesSurveyResponseResult = LearningCoursesSurveyResponseResultDto;
+export { LearningCoursesSurveyResponseResultDtoSchema as LearningCoursesSurveyResponseResultSchema };
+export type LearningCoursesUpdateActivityGrade = LearningCoursesUpdateActivityGradeDto;
+export { LearningCoursesUpdateActivityGradeDtoSchema as LearningCoursesUpdateActivityGradeSchema };
+export type LearningCoursesUpdatePricing = LearningCoursesUpdatePricingDto;
+export { LearningCoursesUpdatePricingDtoSchema as LearningCoursesUpdatePricingSchema };
+export type LearningCoursesUpdateProgramContent = LearningCoursesUpdateProgramContentDto;
+export { LearningCoursesUpdateProgramContentDtoSchema as LearningCoursesUpdateProgramContentSchema };
+export type LearningCoursesUpdateProgram = LearningCoursesUpdateProgramDto;
+export { LearningCoursesUpdateProgramDtoSchema as LearningCoursesUpdateProgramSchema };
+export type LearningCoursesUpdateProgress = LearningCoursesUpdateProgressDto;
+export { LearningCoursesUpdateProgressDtoSchema as LearningCoursesUpdateProgressSchema };
+export type LearningCoursesUserProgress = LearningCoursesUserProgressDto;
+export { LearningCoursesUserProgressDtoSchema as LearningCoursesUserProgressSchema };
+export type LearningEnrollmentsEnrollment = LearningEnrollmentsEnrollmentDto;
+export { LearningEnrollmentsEnrollmentDtoSchema as LearningEnrollmentsEnrollmentSchema };
+export type LearningExperienceDiscoveryCourseCollection = LearningExperienceDiscoveryCourseCollectionDto;
+export { LearningExperienceDiscoveryCourseCollectionDtoSchema as LearningExperienceDiscoveryCourseCollectionSchema };
+export type LearningExperienceDiscoveryCreateCourseCollection = LearningExperienceDiscoveryCreateCourseCollectionDto;
+export { LearningExperienceDiscoveryCreateCourseCollectionDtoSchema as LearningExperienceDiscoveryCreateCourseCollectionSchema };
+export type LearningExperienceDiscoveryCreateFeaturedContent = LearningExperienceDiscoveryCreateFeaturedContentDto;
+export { LearningExperienceDiscoveryCreateFeaturedContentDtoSchema as LearningExperienceDiscoveryCreateFeaturedContentSchema };
+export type LearningExperienceDiscoveryFeaturedContent = LearningExperienceDiscoveryFeaturedContentDto;
+export { LearningExperienceDiscoveryFeaturedContentDtoSchema as LearningExperienceDiscoveryFeaturedContentSchema };
+export type LearningExperienceDiscoveryRecordSearchClick = LearningExperienceDiscoveryRecordSearchClickDto;
+export { LearningExperienceDiscoveryRecordSearchClickDtoSchema as LearningExperienceDiscoveryRecordSearchClickSchema };
+export type LearningExperienceDiscoveryRecordSearch = LearningExperienceDiscoveryRecordSearchDto;
+export { LearningExperienceDiscoveryRecordSearchDtoSchema as LearningExperienceDiscoveryRecordSearchSchema };
+export type LearningExperienceDiscoverySearchHistory = LearningExperienceDiscoverySearchHistoryDto;
+export { LearningExperienceDiscoverySearchHistoryDtoSchema as LearningExperienceDiscoverySearchHistorySchema };
+export type LearningExperienceDiscoveryUpdateCourseCollection = LearningExperienceDiscoveryUpdateCourseCollectionDto;
+export { LearningExperienceDiscoveryUpdateCourseCollectionDtoSchema as LearningExperienceDiscoveryUpdateCourseCollectionSchema };
+export type LearningExperienceDiscoveryUpdateFeaturedContent = LearningExperienceDiscoveryUpdateFeaturedContentDto;
+export { LearningExperienceDiscoveryUpdateFeaturedContentDtoSchema as LearningExperienceDiscoveryUpdateFeaturedContentSchema };
+export type LearningExperienceLearningPathsAddCourseToPath = LearningExperienceLearningPathsAddCourseToPathDto;
+export { LearningExperienceLearningPathsAddCourseToPathDtoSchema as LearningExperienceLearningPathsAddCourseToPathSchema };
+export type LearningExperienceLearningPathsCourseOrder = LearningExperienceLearningPathsCourseOrderDto;
+export { LearningExperienceLearningPathsCourseOrderDtoSchema as LearningExperienceLearningPathsCourseOrderSchema };
+export type LearningExperienceLearningPathsCreateLearningPath = LearningExperienceLearningPathsCreateLearningPathDto;
+export { LearningExperienceLearningPathsCreateLearningPathDtoSchema as LearningExperienceLearningPathsCreateLearningPathSchema };
+export type LearningExperienceLearningPathsLearningPathCourse = LearningExperienceLearningPathsLearningPathCourseDto;
+export { LearningExperienceLearningPathsLearningPathCourseDtoSchema as LearningExperienceLearningPathsLearningPathCourseSchema };
+export type LearningExperienceLearningPathsLearningPathDetail = LearningExperienceLearningPathsLearningPathDetailDto;
+export { LearningExperienceLearningPathsLearningPathDetailDtoSchema as LearningExperienceLearningPathsLearningPathDetailSchema };
+export type LearningExperienceLearningPathsLearningPath = LearningExperienceLearningPathsLearningPathDto;
+export { LearningExperienceLearningPathsLearningPathDtoSchema as LearningExperienceLearningPathsLearningPathSchema };
+export type LearningExperienceLearningPathsLearningPathEnrollment = LearningExperienceLearningPathsLearningPathEnrollmentDto;
+export { LearningExperienceLearningPathsLearningPathEnrollmentDtoSchema as LearningExperienceLearningPathsLearningPathEnrollmentSchema };
+export type LearningExperienceLearningPathsLearningPathStatistics = LearningExperienceLearningPathsLearningPathStatisticsDto;
+export { LearningExperienceLearningPathsLearningPathStatisticsDtoSchema as LearningExperienceLearningPathsLearningPathStatisticsSchema };
+export type LearningExperienceLearningPathsReorderCourses = LearningExperienceLearningPathsReorderCoursesDto;
+export { LearningExperienceLearningPathsReorderCoursesDtoSchema as LearningExperienceLearningPathsReorderCoursesSchema };
+export type LearningExperienceLearningPathsUpdateLearningPath = LearningExperienceLearningPathsUpdateLearningPathDto;
+export { LearningExperienceLearningPathsUpdateLearningPathDtoSchema as LearningExperienceLearningPathsUpdateLearningPathSchema };
+export type LearningExperienceLearningPathsUpdatePathProgress = LearningExperienceLearningPathsUpdatePathProgressDto;
+export { LearningExperienceLearningPathsUpdatePathProgressDtoSchema as LearningExperienceLearningPathsUpdatePathProgressSchema };
+export type LearningExperienceRecommendationsCreateOrUpdateLearningProfile = LearningExperienceRecommendationsCreateOrUpdateLearningProfileDto;
+export { LearningExperienceRecommendationsCreateOrUpdateLearningProfileDtoSchema as LearningExperienceRecommendationsCreateOrUpdateLearningProfileSchema };
+export type LearningExperienceRecommendationsPopularCourse = LearningExperienceRecommendationsPopularCourseDto;
+export { LearningExperienceRecommendationsPopularCourseDtoSchema as LearningExperienceRecommendationsPopularCourseSchema };
+export type LearningExperienceRecommendationsRecommendation = LearningExperienceRecommendationsRecommendationDto;
+export { LearningExperienceRecommendationsRecommendationDtoSchema as LearningExperienceRecommendationsRecommendationSchema };
+export type LearningExperienceRecommendationsRecommendationStatistics = LearningExperienceRecommendationsRecommendationStatisticsDto;
+export { LearningExperienceRecommendationsRecommendationStatisticsDtoSchema as LearningExperienceRecommendationsRecommendationStatisticsSchema };
+export type LearningExperienceRecommendationsSimilarCourse = LearningExperienceRecommendationsSimilarCourseDto;
+export { LearningExperienceRecommendationsSimilarCourseDtoSchema as LearningExperienceRecommendationsSimilarCourseSchema };
+export type LearningExperienceRecommendationsTrendingCourse = LearningExperienceRecommendationsTrendingCourseDto;
+export { LearningExperienceRecommendationsTrendingCourseDtoSchema as LearningExperienceRecommendationsTrendingCourseSchema };
+export type LearningExperienceRecommendationsUserLearningProfile = LearningExperienceRecommendationsUserLearningProfileDto;
+export { LearningExperienceRecommendationsUserLearningProfileDtoSchema as LearningExperienceRecommendationsUserLearningProfileSchema };
+export type LearningExperienceSocialServicesCourseDiscussion = LearningExperienceSocialServicesCourseDiscussionDto;
+export { LearningExperienceSocialServicesCourseDiscussionDtoSchema as LearningExperienceSocialServicesCourseDiscussionSchema };
+export type LearningExperienceSocialServicesCourseLike = LearningExperienceSocialServicesCourseLikeDto;
+export { LearningExperienceSocialServicesCourseLikeDtoSchema as LearningExperienceSocialServicesCourseLikeSchema };
+export type LearningExperienceSocialServicesCourseReview = LearningExperienceSocialServicesCourseReviewDto;
+export { LearningExperienceSocialServicesCourseReviewDtoSchema as LearningExperienceSocialServicesCourseReviewSchema };
+export type LearningExperienceSocialServicesCourseWishlist = LearningExperienceSocialServicesCourseWishlistDto;
+export { LearningExperienceSocialServicesCourseWishlistDtoSchema as LearningExperienceSocialServicesCourseWishlistSchema };
+export type LearningExperienceSocialServicesDiscussionReply = LearningExperienceSocialServicesDiscussionReplyDto;
+export { LearningExperienceSocialServicesDiscussionReplyDtoSchema as LearningExperienceSocialServicesDiscussionReplySchema };
+export type LearningExperienceSocialServicesPersonalizedFeedItem = LearningExperienceSocialServicesPersonalizedFeedItemDto;
+export { LearningExperienceSocialServicesPersonalizedFeedItemDtoSchema as LearningExperienceSocialServicesPersonalizedFeedItemSchema };
+export type LearningWorkspacesLearnerAnnouncement = LearningWorkspacesLearnerAnnouncementDto;
+export { LearningWorkspacesLearnerAnnouncementDtoSchema as LearningWorkspacesLearnerAnnouncementSchema };
+export type LearningWorkspacesLearnerAssessmentDeadline = LearningWorkspacesLearnerAssessmentDeadlineDto;
+export { LearningWorkspacesLearnerAssessmentDeadlineDtoSchema as LearningWorkspacesLearnerAssessmentDeadlineSchema };
+export type LearningWorkspacesLearnerAssessment = LearningWorkspacesLearnerAssessmentDto;
+export { LearningWorkspacesLearnerAssessmentDtoSchema as LearningWorkspacesLearnerAssessmentSchema };
+export type LearningWorkspacesLearnerAssessmentGroup = LearningWorkspacesLearnerAssessmentGroupDto;
+export { LearningWorkspacesLearnerAssessmentGroupDtoSchema as LearningWorkspacesLearnerAssessmentGroupSchema };
+export type LearningWorkspacesLearnerAssessmentSubmission = LearningWorkspacesLearnerAssessmentSubmissionDto;
+export { LearningWorkspacesLearnerAssessmentSubmissionDtoSchema as LearningWorkspacesLearnerAssessmentSubmissionSchema };
+export type LearningWorkspacesLearnerCertificate = LearningWorkspacesLearnerCertificateDto;
+export { LearningWorkspacesLearnerCertificateDtoSchema as LearningWorkspacesLearnerCertificateSchema };
+export type LearningWorkspacesLearnerCohort = LearningWorkspacesLearnerCohortDto;
+export { LearningWorkspacesLearnerCohortDtoSchema as LearningWorkspacesLearnerCohortSchema };
+export type LearningWorkspacesLearnerContent = LearningWorkspacesLearnerContentDto;
+export { LearningWorkspacesLearnerContentDtoSchema as LearningWorkspacesLearnerContentSchema };
+export type LearningWorkspacesLearnerContentProgress = LearningWorkspacesLearnerContentProgressDto;
+export { LearningWorkspacesLearnerContentProgressDtoSchema as LearningWorkspacesLearnerContentProgressSchema };
+export type LearningWorkspacesLearnerCourseSummary = LearningWorkspacesLearnerCourseSummaryDto;
+export { LearningWorkspacesLearnerCourseSummaryDtoSchema as LearningWorkspacesLearnerCourseSummarySchema };
+export type LearningWorkspacesLearnerCourseWorkspace = LearningWorkspacesLearnerCourseWorkspaceDto;
+export { LearningWorkspacesLearnerCourseWorkspaceDtoSchema as LearningWorkspacesLearnerCourseWorkspaceSchema };
+export type LearningWorkspacesLearnerDashboard = LearningWorkspacesLearnerDashboardDto;
+export { LearningWorkspacesLearnerDashboardDtoSchema as LearningWorkspacesLearnerDashboardSchema };
+export type LearningWorkspacesLearnerDiscussion = LearningWorkspacesLearnerDiscussionDto;
+export { LearningWorkspacesLearnerDiscussionDtoSchema as LearningWorkspacesLearnerDiscussionSchema };
+export type LearningWorkspacesLearnerGradeItem = LearningWorkspacesLearnerGradeItemDto;
+export { LearningWorkspacesLearnerGradeItemDtoSchema as LearningWorkspacesLearnerGradeItemSchema };
+export type LearningWorkspacesLearnerGradeSummary = LearningWorkspacesLearnerGradeSummaryDto;
+export { LearningWorkspacesLearnerGradeSummaryDtoSchema as LearningWorkspacesLearnerGradeSummarySchema };
+export type LearningWorkspacesLearnerScheduleEntry = LearningWorkspacesLearnerScheduleEntryDto;
+export { LearningWorkspacesLearnerScheduleEntryDtoSchema as LearningWorkspacesLearnerScheduleEntrySchema };
+export type LearningWorkspacesLearnerSearchResult = LearningWorkspacesLearnerSearchResultDto;
+export { LearningWorkspacesLearnerSearchResultDtoSchema as LearningWorkspacesLearnerSearchResultSchema };
+export type MonitoringSLAErrorBudget = MonitoringSLAErrorBudgetDto;
+export { MonitoringSLAErrorBudgetDtoSchema as MonitoringSLAErrorBudgetSchema };
+export type MonitoringSLASloCompliance = MonitoringSLASloComplianceDto;
+export { MonitoringSLASloComplianceDtoSchema as MonitoringSLASloComplianceSchema };
+export type MonitoringSLASlo = MonitoringSLASloDto;
+export { MonitoringSLASloDtoSchema as MonitoringSLASloSchema };
+export type MonitoringSLASloViolation = MonitoringSLASloViolationDto;
+export { MonitoringSLASloViolationDtoSchema as MonitoringSLASloViolationSchema };
+export type NotificationsControllersDeadLetter = NotificationsControllersDeadLetterDto;
+export { NotificationsControllersDeadLetterDtoSchema as NotificationsControllersDeadLetterSchema };
+export type NotificationsControllersEmailDeliveryEvent = NotificationsControllersEmailDeliveryEventDto;
+export { NotificationsControllersEmailDeliveryEventDtoSchema as NotificationsControllersEmailDeliveryEventSchema };
+export type NotificationsControllersEmailSuppression = NotificationsControllersEmailSuppressionDto;
+export { NotificationsControllersEmailSuppressionDtoSchema as NotificationsControllersEmailSuppressionSchema };
+export type NotificationsControllersNotification = NotificationsControllersNotificationDto;
+export { NotificationsControllersNotificationDtoSchema as NotificationsControllersNotificationSchema };
+export type NotificationsControllersNotificationPreference = NotificationsControllersNotificationPreferenceDto;
+export { NotificationsControllersNotificationPreferenceDtoSchema as NotificationsControllersNotificationPreferenceSchema };
+export type NotificationsControllersNotificationTimeline = NotificationsControllersNotificationTimelineDto;
+export { NotificationsControllersNotificationTimelineDtoSchema as NotificationsControllersNotificationTimelineSchema };
+export type PagedResultDeadLetter = PagedResultDeadLetterDto;
+export { PagedResultDeadLetterDtoSchema as PagedResultDeadLetterSchema };
+export type PagedResultEmailDeliveryEvent = PagedResultEmailDeliveryEventDto;
+export { PagedResultEmailDeliveryEventDtoSchema as PagedResultEmailDeliveryEventSchema };
+export type PagedResultEmailSuppression = PagedResultEmailSuppressionDto;
+export { PagedResultEmailSuppressionDtoSchema as PagedResultEmailSuppressionSchema };
+export type PagedResultProduct = PagedResultProductDto;
+export { PagedResultProductDtoSchema as PagedResultProductSchema };
+export type PagedResultPromoCode = PagedResultPromoCodeDto;
+export { PagedResultPromoCodeDtoSchema as PagedResultPromoCodeSchema };
+export type PagedResultSubscriptionNotification = PagedResultSubscriptionNotificationDto;
+export { PagedResultSubscriptionNotificationDtoSchema as PagedResultSubscriptionNotificationSchema };
+export type PagedResultSupportTicket = PagedResultSupportTicketDto;
+export { PagedResultSupportTicketDtoSchema as PagedResultSupportTicketSchema };
+export type PagedResultUser = PagedResultUserDto;
+export { PagedResultUserDtoSchema as PagedResultUserSchema };
+export type PagedResultUserNotification = PagedResultUserNotificationDto;
+export { PagedResultUserNotificationDtoSchema as PagedResultUserNotificationSchema };
+export type PagedResultUserProfile = PagedResultUserProfileDto;
+export { PagedResultUserProfileDtoSchema as PagedResultUserProfileSchema };
+export type ProjectsCollaborator = ProjectsCollaboratorDto;
+export { ProjectsCollaboratorDtoSchema as ProjectsCollaboratorSchema };
+export type ProjectsProjectInvitation = ProjectsProjectInvitationDto;
+export { ProjectsProjectInvitationDtoSchema as ProjectsProjectInvitationSchema };
+export type ResourcesContentsContentVersion = ResourcesContentsContentVersionDto;
+export { ResourcesContentsContentVersionDtoSchema as ResourcesContentsContentVersionSchema };
+export type ResourcesContentsContentVersionReview = ResourcesContentsContentVersionReviewDto;
+export { ResourcesContentsContentVersionReviewDtoSchema as ResourcesContentsContentVersionReviewSchema };
+export type SocialBlogBlogPost = SocialBlogBlogPostDto;
+export { SocialBlogBlogPostDtoSchema as SocialBlogBlogPostSchema };
+export type SocialFeedFeedAuthor = SocialFeedFeedAuthorDto;
+export { SocialFeedFeedAuthorDtoSchema as SocialFeedFeedAuthorSchema };
+export type SocialFeedFeedEngagement = SocialFeedFeedEngagementDto;
+export { SocialFeedFeedEngagementDtoSchema as SocialFeedFeedEngagementSchema };
+export type SocialFeedFeedItem = SocialFeedFeedItemDto;
+export { SocialFeedFeedItemDtoSchema as SocialFeedFeedItemSchema };
+export type SocialFeedFeedViewerState = SocialFeedFeedViewerStateDto;
+export { SocialFeedFeedViewerStateDtoSchema as SocialFeedFeedViewerStateSchema };
+export type SocialFeedOriginalPost = SocialFeedOriginalPostDto;
+export { SocialFeedOriginalPostDtoSchema as SocialFeedOriginalPostSchema };
+export type SocialFeedSavedPostState = SocialFeedSavedPostStateDto;
+export { SocialFeedSavedPostStateDtoSchema as SocialFeedSavedPostStateSchema };
+export type SocialFeedSocialFeedItem = SocialFeedSocialFeedItemDto;
+export { SocialFeedSocialFeedItemDtoSchema as SocialFeedSocialFeedItemSchema };
+export type SocialFeedSocialFeedPage = SocialFeedSocialFeedPageDto;
+export { SocialFeedSocialFeedPageDtoSchema as SocialFeedSocialFeedPageSchema };
+export type SocialFeedSocialFeedProfile = SocialFeedSocialFeedProfileDto;
+export { SocialFeedSocialFeedProfileDtoSchema as SocialFeedSocialFeedProfileSchema };
+export type SocialFeedSocialPostContent = SocialFeedSocialPostContentDto;
+export { SocialFeedSocialPostContentDtoSchema as SocialFeedSocialPostContentSchema };
+export type SocialFeedStory = SocialFeedStoryDto;
+export { SocialFeedStoryDtoSchema as SocialFeedStorySchema };
+export type SocialFeedTestingSessionFeed = SocialFeedTestingSessionFeedDto;
+export { SocialFeedTestingSessionFeedDtoSchema as SocialFeedTestingSessionFeedSchema };
+export type SocialFollowsControllersBlock = SocialFollowsControllersBlockDto;
+export { SocialFollowsControllersBlockDtoSchema as SocialFollowsControllersBlockSchema };
+export type SocialFollowsControllersFollow = SocialFollowsControllersFollowDto;
+export { SocialFollowsControllersFollowDtoSchema as SocialFollowsControllersFollowSchema };
+export type SocialFollowsControllersFollowPrivacySettings = SocialFollowsControllersFollowPrivacySettingsDto;
+export { SocialFollowsControllersFollowPrivacySettingsDtoSchema as SocialFollowsControllersFollowPrivacySettingsSchema };
+export type SocialFollowsControllersMute = SocialFollowsControllersMuteDto;
+export { SocialFollowsControllersMuteDtoSchema as SocialFollowsControllersMuteSchema };
+export type SocialGroupsSocialGroup = SocialGroupsSocialGroupDto;
+export { SocialGroupsSocialGroupDtoSchema as SocialGroupsSocialGroupSchema };
+export type SocialGroupsSocialGroupMember = SocialGroupsSocialGroupMemberDto;
+export { SocialGroupsSocialGroupMemberDtoSchema as SocialGroupsSocialGroupMemberSchema };
+export type SocialProfilesProfilePortfolioItem = SocialProfilesProfilePortfolioItemDto;
+export { SocialProfilesProfilePortfolioItemDtoSchema as SocialProfilesProfilePortfolioItemSchema };
+export type SocialProfilesProfileSkill = SocialProfilesProfileSkillDto;
+export { SocialProfilesProfileSkillDtoSchema as SocialProfilesProfileSkillSchema };
+export type SocialProfilesSocialProfile = SocialProfilesSocialProfileDto;
+export { SocialProfilesSocialProfileDtoSchema as SocialProfilesSocialProfileSchema };
+export type SocialReactionsReaction = SocialReactionsReactionDto;
+export { SocialReactionsReactionDtoSchema as SocialReactionsReactionSchema };
+export type SocialReactionsTargetReactionSummary = SocialReactionsTargetReactionSummaryDto;
+export { SocialReactionsTargetReactionSummaryDtoSchema as SocialReactionsTargetReactionSummarySchema };
+export type TestingLabCreateSimpleTestingRequest = TestingLabCreateSimpleTestingRequestDto;
+export { TestingLabCreateSimpleTestingRequestDtoSchema as TestingLabCreateSimpleTestingRequestSchema };
+export type TestingLabCreateTestingLabSettings = TestingLabCreateTestingLabSettingsDto;
+export { TestingLabCreateTestingLabSettingsDtoSchema as TestingLabCreateTestingLabSettingsSchema };
+export type TestingLabCreateTestingLocation = TestingLabCreateTestingLocationDto;
+export { TestingLabCreateTestingLocationDtoSchema as TestingLabCreateTestingLocationSchema };
+export type TestingLabCreateTestingRequest = TestingLabCreateTestingRequestDto;
+export { TestingLabCreateTestingRequestDtoSchema as TestingLabCreateTestingRequestSchema };
+export type TestingLabCreateTestingSession = TestingLabCreateTestingSessionDto;
+export { TestingLabCreateTestingSessionDtoSchema as TestingLabCreateTestingSessionSchema };
+export type TestingLabRateFeedbackQuality = TestingLabRateFeedbackQualityDto;
+export { TestingLabRateFeedbackQualityDtoSchema as TestingLabRateFeedbackQualitySchema };
+export type TestingLabReportFeedback = TestingLabReportFeedbackDto;
+export { TestingLabReportFeedbackDtoSchema as TestingLabReportFeedbackSchema };
+export type TestingLabSubmitFeedback = TestingLabSubmitFeedbackDto;
+export { TestingLabSubmitFeedbackDtoSchema as TestingLabSubmitFeedbackSchema };
+export type TestingLabTestingLabPermissions = TestingLabTestingLabPermissionsDto;
+export { TestingLabTestingLabPermissionsDtoSchema as TestingLabTestingLabPermissionsSchema };
+export type TestingLabTestingLabResourcePermission = TestingLabTestingLabResourcePermissionDto;
+export { TestingLabTestingLabResourcePermissionDtoSchema as TestingLabTestingLabResourcePermissionSchema };
+export type TestingLabTestingLabSettings = TestingLabTestingLabSettingsDto;
+export { TestingLabTestingLabSettingsDtoSchema as TestingLabTestingLabSettingsSchema };
+export type TestingLabUpdateAttendance = TestingLabUpdateAttendanceDto;
+export { TestingLabUpdateAttendanceDtoSchema as TestingLabUpdateAttendanceSchema };
+export type TestingLabUpdateTestingLabSettings = TestingLabUpdateTestingLabSettingsDto;
+export { TestingLabUpdateTestingLabSettingsDtoSchema as TestingLabUpdateTestingLabSettingsSchema };
+export type TestingLabUpdateTestingLocation = TestingLabUpdateTestingLocationDto;
+export { TestingLabUpdateTestingLocationDtoSchema as TestingLabUpdateTestingLocationSchema };
+export type TestingLabUpdateTestingRequest = TestingLabUpdateTestingRequestDto;
+export { TestingLabUpdateTestingRequestDtoSchema as TestingLabUpdateTestingRequestSchema };

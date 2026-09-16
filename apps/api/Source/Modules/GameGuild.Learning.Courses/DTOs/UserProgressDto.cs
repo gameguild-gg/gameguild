@@ -2,7 +2,18 @@ using GameGuild.Learning.Grading.Contracts;
 
 namespace GameGuild.Learning.Courses;
 
-public sealed record UserProgressDto(Guid EnrollmentId, Guid CourseId, Guid UserId, PercentValue CompletionPercentage, DateTime? LastAccessedAt, DateTime? StartedAt, DateTime? CompletedAt, IEnumerable<ContentProgressDto> ContentProgress) {
+public sealed record UserProgressDto(
+  Guid EnrollmentId,
+  Guid CourseId,
+  Guid UserId,
+  PercentValue CompletionPercentage,
+  DateTime? LastAccessedAt,
+  DateTime? StartedAt,
+  DateTime? CompletedAt,
+  IEnumerable<ContentProgressDto> ContentProgress,
+  string? UserName = null,
+  string? UserEmail = null
+) {
   public Guid EnrollmentId { get; init; } = EnrollmentId;
 
   public Guid CourseId { get; init; } = CourseId;
@@ -18,4 +29,8 @@ public sealed record UserProgressDto(Guid EnrollmentId, Guid CourseId, Guid User
   public DateTime? CompletedAt { get; init; } = CompletedAt;
 
   public IEnumerable<ContentProgressDto> ContentProgress { get; init; } = ContentProgress;
+
+  public string? UserName { get; init; } = UserName;
+
+  public string? UserEmail { get; init; } = UserEmail;
 }

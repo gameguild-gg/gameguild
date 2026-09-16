@@ -22,11 +22,13 @@
         <PackageReference Include="FluentAssertions" />
         <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+        <PackageReference Include="Testcontainers.PostgreSql" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\..\Source\GameGuild.API\GameGuild.API.csproj" />
-        <ProjectReference Include="..\GameGuild.TestSupport.Economy\GameGuild.TestSupport.Economy.csproj" />
+        <ProjectReference Include="..\GameGuild.TestSupport.Finance.Economy\GameGuild.TestSupport.Finance.Economy.csproj" />
     </ItemGroup>
 
     <ItemGroup>

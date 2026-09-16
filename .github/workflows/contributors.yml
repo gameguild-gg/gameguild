@@ -1,0 +1,36 @@
+name: Contributors Visualization
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: contributors-visualization
+  cancel-in-progress: true
+
+jobs:
+  contributors:
+    name: Render contributors without blocking production
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Install ffmpeg and gource
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --fix-missing ffmpeg gource xvfb
+      - name: Render headless visualization
+        run: |
+          chmod +x ./contributors/gource.sh
+          xvfb-run --auto-servernum env OUTPUT_DIR="${RUNNER_TEMP}/gameguild-gource" ./contributors/gource.sh
+      - uses: actions/upload-artifact@v7
+        with:
+          name: contributors-gource-${{ github.sha }}
+          path: ${{ runner.temp }}/gameguild-gource
+          retention-days: 14
+          if-no-files-found: error

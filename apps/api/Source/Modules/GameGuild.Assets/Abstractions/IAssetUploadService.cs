@@ -60,7 +60,8 @@ public record UploadAssetOptions(
     string? ParentResourceType = null,
     Guid? ParentResourceId = null,
     Guid? FolderId = null,
-    Guid? TenantId = null);
+    Guid? TenantId = null,
+    Guid? RequestedReferenceId = null);
 
 /// <summary>
 /// Result of an asset upload.

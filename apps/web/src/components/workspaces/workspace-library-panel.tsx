@@ -3,6 +3,7 @@ import {
   createWorkspaceFolderForm,
   restoreWorkspaceAssetRevisionForm,
   restrictWorkspaceFolderForm,
+  updateProjectDeliverableUrlForm,
   uploadWorkspaceAssetForm,
 } from '@/lib/workspace-actions';
 import { getWorkspaceAssetRevisions, type WorkspaceLibrary } from '@/lib/workspaces';
@@ -18,15 +19,16 @@ interface WorkspaceLibraryPanelProps {
   resourceType: 'Team' | 'Project';
   resourceId: string;
   returnPath: string;
+  externalUrl?: string | null;
 }
 
-export async function WorkspaceLibraryPanel({ title, library, resourceType, resourceId, returnPath }: WorkspaceLibraryPanelProps) {
+export async function WorkspaceLibraryPanel({ title, library, resourceType, resourceId, returnPath, externalUrl }: WorkspaceLibraryPanelProps) {
   const revisions = new Map(await Promise.all((library?.assets ?? []).map(async (asset) => [asset.id, await getWorkspaceAssetRevisions(asset.id)] as const)));
 
   return <Card>
     <CardHeader><CardTitle>{title}</CardTitle><CardDescription>Uploads validate the parent workspace. Binary content is deduplicated while folders, copies and revisions remain logical resources.</CardDescription></CardHeader>
     <CardContent className="space-y-6">
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className={`grid gap-4 ${resourceType === 'Project' ? 'lg:grid-cols-3' : 'lg:grid-cols-2'}`}>
         <form action={uploadWorkspaceAssetForm} className="space-y-3 rounded-lg border p-4">
           <input type="hidden" name="resourceType" value={resourceType} /><input type="hidden" name="resourceId" value={resourceId} /><input type="hidden" name="returnPath" value={returnPath} />
           <div><Label htmlFor={`asset-file-${resourceId}`}>Upload file</Label><Input id={`asset-file-${resourceId}`} name="file" type="file" required /></div>
@@ -39,6 +41,13 @@ export async function WorkspaceLibraryPanel({ title, library, resourceType, reso
           <div><Label htmlFor={`parent-folder-${resourceId}`}>Parent folder</Label><select id={`parent-folder-${resourceId}`} name="parentFolderId" className="mt-1 h-9 w-full rounded-md border bg-background px-3 text-sm"><option value="">Library root</option>{library?.folders.map((folder) => <option key={folder.id} value={folder.id}>{folder.name}</option>)}</select></div>
           <Button type="submit">Create folder</Button>
         </form>
+        {resourceType === 'Project' && <form action={updateProjectDeliverableUrlForm} className="space-y-3 rounded-lg border p-4">
+          <input type="hidden" name="projectId" value={resourceId} /><input type="hidden" name="returnPath" value={returnPath} />
+          <div><Label htmlFor={`external-deliverable-${resourceId}`}>External deliverable URL</Label><Input id={`external-deliverable-${resourceId}`} name="downloadUrl" type="url" defaultValue={externalUrl ?? ''} placeholder="https://drive.google.com/..." /></div>
+          <p className="text-sm text-muted-foreground">Use a Google Drive, itch.io, repository release, or other HTTPS link when the build is hosted elsewhere.</p>
+          {externalUrl && <a className="block break-all text-sm underline underline-offset-4" href={externalUrl} target="_blank" rel="noreferrer">Open current link</a>}
+          <Button type="submit">Save link</Button>
+        </form>}
       </div>
 
       <section className="space-y-3"><h2 className="text-sm font-medium">Folders and additional restrictions</h2>

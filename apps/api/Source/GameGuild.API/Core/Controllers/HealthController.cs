@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using GameGuild.API.Deployment;
 
 namespace GameGuild.API.Controllers;
 
@@ -44,6 +45,9 @@ public class HealthController(
     [ProducesResponseType<HealthinessResponse>(503)]
     public async Task<ActionResult<HealthinessResponse>> GetHealth()
     {
+        var releaseIdentity = ReleaseIdentity.FromEnvironment();
+        SetReleaseHeader(releaseIdentity.ReleaseSha);
+
         try
         {
             var healthReport = await _healthCheckService.CheckHealthAsync().ConfigureAwait(false);
@@ -53,6 +57,12 @@ public class HealthController(
                 Status = healthReport.Status.ToString(),
                 Duration = healthReport.TotalDuration,
                 Timestamp = SystemClock.UtcNow,
+                Version = releaseIdentity.Version,
+                ReleaseSha = releaseIdentity.ReleaseSha,
+                SourceTree = releaseIdentity.SourceTree,
+                ImageDigest = releaseIdentity.ImageDigest,
+                BuiltAt = releaseIdentity.BuiltAt,
+                DeployedAt = releaseIdentity.DeployedAt,
                 Checks = healthReport.Entries.ToDictionary(
                     kvp => kvp.Key,
                     kvp => new HealthinessResponseItem
@@ -75,6 +85,12 @@ public class HealthController(
                 Status = "Unhealthy",
                 Duration = TimeSpan.Zero,
                 Timestamp = SystemClock.UtcNow,
+                Version = releaseIdentity.Version,
+                ReleaseSha = releaseIdentity.ReleaseSha,
+                SourceTree = releaseIdentity.SourceTree,
+                ImageDigest = releaseIdentity.ImageDigest,
+                BuiltAt = releaseIdentity.BuiltAt,
+                DeployedAt = releaseIdentity.DeployedAt,
                 Error = ex.Message
             };
 
@@ -105,6 +121,7 @@ public class HealthController(
     [ProducesResponseType<ReadinessResponse>(503)]
     public async Task<ActionResult<ReadinessResponse>> GetReadiness()
     {
+        SetReleaseHeader(ReleaseIdentity.FromEnvironment().ReleaseSha);
         var healthReport = await _healthCheckService.CheckHealthAsync(
             check => check.Tags.Contains("ready")).ConfigureAwait(false);
 
@@ -148,13 +165,15 @@ public class HealthController(
     [ProducesResponseType<LivenessResponse>(200)]
     public ActionResult<LivenessResponse> GetLiveness()
     {
+        var releaseIdentity = ReleaseIdentity.FromEnvironment();
+        SetReleaseHeader(releaseIdentity.ReleaseSha);
         var response = new LivenessResponse
         {
             Status = "Healthy",
             Alive = true,
             Timestamp = SystemClock.UtcNow,
             Uptime = SystemClock.UtcNow - System.Diagnostics.Process.GetCurrentProcess().StartTime.ToUniversalTime(),
-            Version = GetType().Assembly.GetName().Version!.ToString()
+            Version = releaseIdentity.Version
         };
 
         return Ok(response);
@@ -186,6 +205,7 @@ public class HealthController(
     [ProducesResponseType<DependencyHealthResponse>(503)]
     public async Task<ActionResult<DependencyHealthResponse>> GetDependencyHealth()
     {
+        SetReleaseHeader(ReleaseIdentity.FromEnvironment().ReleaseSha);
         var healthReport = await _healthCheckService.CheckHealthAsync(
             check => check.Tags.Contains("dependency") || check.Tags.Contains("ready")).ConfigureAwait(false);
 
@@ -221,6 +241,14 @@ public class HealthController(
         var statusCode = healthReport.Status != HealthStatus.Unhealthy ? 200 : 503;
         return StatusCode(statusCode, response);
     }
+
+    private void SetReleaseHeader(string releaseSha)
+    {
+        if (ControllerContext.HttpContext is not null)
+        {
+            Response.Headers["X-GameGuild-Release-Sha"] = releaseSha;
+        }
+    }
 }
 
 #region Health Response Models
@@ -235,6 +263,18 @@ public class HealthinessResponse
     public TimeSpan Duration { get; set; }
 
     public DateTime Timestamp { get; set; }
+
+    public string Version { get; set; } = "Unknown";
+
+    public string ReleaseSha { get; set; } = "Unknown";
+
+    public string SourceTree { get; set; } = "Unknown";
+
+    public string ImageDigest { get; set; } = "Unknown";
+
+    public string BuiltAt { get; set; } = "Unknown";
+
+    public string DeployedAt { get; set; } = "Unknown";
 
     public Dictionary<string, HealthinessResponseItem> Checks { get; set; } = new();
 

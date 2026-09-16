@@ -583,6 +583,7 @@ export function AssessmentsList({
       {/* Weighted grade groups */}
       {groupedAssessments.length > 0 && (
         <DndContext
+          id={`assessments-${courseId}`}
           sensors={dndSensors}
           collisionDetection={closestCorners}
           onDragStart={handleDragStart}
@@ -653,15 +654,10 @@ export function AssessmentsList({
                             <span className="block truncate text-sm font-semibold underline-offset-2 group-hover:underline">
                               {assessment.title}
                             </span>
-                            <span className="min-w-0 flex-1">
-                              <span className="block truncate text-sm font-semibold underline-offset-2 group-hover:underline">
-                                {assessment.title}
-                              </span>
-                              <span className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-                                {assessment.timeLimitMinutes && <span>{assessment.timeLimitMinutes}m</span>}
-                                {assessment.maxAttempts && <span>{assessment.maxAttempts} attempts</span>}
-                                <span>{assessment.maxScore} pts</span>
-                              </span>
+                            <span className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                              {assessment.timeLimitMinutes && <span>{assessment.timeLimitMinutes}m</span>}
+                              {assessment.maxAttempts && <span>{assessment.maxAttempts} attempts</span>}
+                              <span>{assessment.maxScore} pts</span>
                             </span>
                           </span>
                           <Badge variant={typeBadgeVariant(assessment.type)} className="hidden shrink-0 sm:inline-flex">

@@ -1,6 +1,7 @@
 using FluentValidation;
 using GameGuild.Identity.Authorization;
 using GameGuild.Learning.Abstractions;
+using GameGuild.Assets;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace GameGuild.Learning.Courses;
@@ -28,6 +29,14 @@ public static class CoursesModule
         services.AddScoped<IProgramContentScheduleGuard, NullProgramContentScheduleGuard>();
         services.AddScoped<IProgramContentLifecycleGuard, NullProgramContentLifecycleGuard>();
         services.AddScoped<IProgramContentService, ProgramContentService>();
+        services.AddScoped<IProgramContentAuthoringService, ProgramContentAuthoringService>();
+        services.AddScoped<LearningAssetManifestService>();
+        services.AddScoped<ILearningAssetManifestService>(provider => provider.GetRequiredService<LearningAssetManifestService>());
+        services.AddScoped<IAssetUsageGuard>(provider => provider.GetRequiredService<LearningAssetManifestService>());
+        services.AddScoped<IAssetParentAuthorizationResolver, LearningAssetParentAuthorizationResolver>();
+        services.AddSingleton<IAuthoringAiRunQueue, AuthoringAiRunQueue>();
+        services.AddScoped<IAuthoringAiService, AuthoringAiService>();
+        services.AddHostedService<AuthoringAiBackgroundService>();
         services.AddScoped<CourseContentAccessRuleEvaluator>();
         services.AddSingleton(new ScopedRuleEvaluatorRegistration(
             RuleTypes.CourseContentAccess,

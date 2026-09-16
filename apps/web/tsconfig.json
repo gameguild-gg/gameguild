@@ -47,12 +47,11 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
-    "**/*.mts",
-    ".next-e2e-coding-cycle/types/**/*.ts",
-    ".next-e2e-coding-cycle/dev/types/**/*.ts"
+    "**/*.mts"
   ],
   "exclude": [
     "node_modules",
+    ".next-e2e-*",
     "vitest.config.ts",
     "src/test",
     "src/**/__tests__",

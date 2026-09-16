@@ -230,6 +230,64 @@ public class AssetAccessServiceTests
     }
 
     [Fact]
+    public async Task ValidateAccessAsync_PrivateParentScopedAsset_ParentManagerCanReadDraftAsset()
+    {
+        var assetReferenceId = Guid.NewGuid();
+        var parentId = Guid.NewGuid();
+        var ownerId = Guid.NewGuid();
+        var collaboratorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var reference = CreateAssetReference(
+            assetReferenceId,
+            AssetAccessPolicy.Private,
+            ownerId,
+            "ProgramContent",
+            parentId);
+
+        _referenceRepositoryMock
+            .Setup(x => x.GetByIdAsync(assetReferenceId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(reference);
+        _parentAuthorizationResolverMock.Setup(x => x.Supports("ProgramContent")).Returns(true);
+        _parentAuthorizationResolverMock
+            .Setup(x => x.CanManageAsync(parentId, collaboratorId, tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var result = await _service.ValidateAccessAsync(assetReferenceId, collaboratorId, tenantId);
+
+        result.IsValid.Should().BeTrue();
+        result.DeniedReason.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task ValidateAccessAsync_PrivateParentScopedAsset_NonManagerCannotReadDraftAsset()
+    {
+        var assetReferenceId = Guid.NewGuid();
+        var parentId = Guid.NewGuid();
+        var ownerId = Guid.NewGuid();
+        var learnerId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var reference = CreateAssetReference(
+            assetReferenceId,
+            AssetAccessPolicy.Private,
+            ownerId,
+            "ProgramContent",
+            parentId);
+
+        _referenceRepositoryMock
+            .Setup(x => x.GetByIdAsync(assetReferenceId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(reference);
+        _parentAuthorizationResolverMock.Setup(x => x.Supports("ProgramContent")).Returns(true);
+        _parentAuthorizationResolverMock
+            .Setup(x => x.CanManageAsync(parentId, learnerId, tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var result = await _service.ValidateAccessAsync(assetReferenceId, learnerId, tenantId);
+
+        result.IsValid.Should().BeFalse();
+        result.DeniedReason.Should().Be(AssetAccessDeniedReason.OwnershipRequired);
+    }
+
+    [Fact]
     public async Task ValidateAccessAsync_InheritedAsset_NoUser_ReturnsDenied()
     {
         // Arrange

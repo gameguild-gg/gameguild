@@ -10,6 +10,7 @@ using GameGuild.Learning.Assessments.Grading.Contracts;
 using GameGuild.Learning.Assessments.Grading.Persistence;
 using GameGuild.Learning.Assessments.Grading.Runtime;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using GameGuild.Assets;
 
 namespace GameGuild.Learning.Assessments;
 
@@ -37,6 +38,7 @@ public static class AssessmentsModule
         services.AddScoped<ITasksService, TasksService>();
         services.AddScoped<IProgramContentLifecycleGuard, AssessmentProgramContentLifecycleGuard>();
         services.AddScoped<GameGuild.Learning.Courses.IAssessmentGradingSync, AssessmentGradingSync>();
+        services.AddScoped<IAssetParentAuthorizationResolver, AssessmentSubmissionAssetAuthorizationResolver>();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IReviewCapabilityRegistration, CoreGradingCapabilityRegistration>());
         services.AddSingleton<IReviewCapabilityRegistry>(provider =>
         {

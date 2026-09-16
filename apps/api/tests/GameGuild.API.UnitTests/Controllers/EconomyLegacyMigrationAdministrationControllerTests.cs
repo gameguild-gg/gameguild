@@ -1,7 +1,7 @@
 using FluentAssertions;
 using GameGuild.API.Controllers;
-using GameGuild.Economy.Operations;
-using GameGuild.Economy.Risk;
+using GameGuild.Finance.Economy.Operations;
+using GameGuild.Finance.Economy.Risk;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Http;
@@ -189,10 +189,14 @@ public sealed class EconomyLegacyMigrationAdministrationControllerTests
             TypedAttributes = ActorAttributes.Empty,
             IsAuthenticated = true
         });
+        var resolvedStepUp = stepUp ?? new TestEconomyStepUpExecutor();
         return new EconomyLegacyMigrationAdministrationController(
+            EconomyHandlerSenders.Funds(
+                legacyMigration: migration,
+                stepUp: resolvedStepUp,
+                timeProvider: new FixedTimeProvider()),
             migration,
             queries ?? Mock.Of<ILegacyEconomyQueryReader>(),
-            stepUp ?? new TestEconomyStepUpExecutor(),
             actorContext.Object,
             new FixedTimeProvider());
     }

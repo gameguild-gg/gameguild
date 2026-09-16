@@ -16,6 +16,7 @@ public class PostCommentService : IPostCommentService
         public static Error NotFound => Error.NotFound("Post.NotFound", "Post not found");
         public static Error CommentNotFound => Error.NotFound("Comment.NotFound", "Comment not found");
         public static Error ParentCommentNotFound => Error.NotFound("ParentComment.NotFound", "Parent comment not found");
+        public static Error Forbidden => Error.Forbidden("Comment.Forbidden", "Only the comment author can perform this action");
     }
 
     public PostCommentService(IApplicationDbContext context, ILogger<PostCommentService> logger)
@@ -53,7 +54,7 @@ public class PostCommentService : IPostCommentService
         return Result.Success(comment);
     }
 
-    public async Task<Result<PostComment>> UpdateCommentAsync(Guid commentId, string content, CancellationToken cancellationToken = default)
+    public async Task<Result<PostComment>> UpdateCommentAsync(Guid commentId, Guid actorId, string content, CancellationToken cancellationToken = default)
     {
         var comment = await _context.Set<PostComment>()
             .FirstOrDefaultAsync(c => c.Id == commentId && c.DeletedAt == null, cancellationToken).ConfigureAwait(false);
@@ -61,35 +62,73 @@ public class PostCommentService : IPostCommentService
         if (comment is null)
             return Result.Failure<PostComment>(PostErrors.CommentNotFound);
 
+        if (comment.AuthorId != actorId)
+            return Result.Failure<PostComment>(PostErrors.Forbidden);
+
         comment.Edit(content);
         await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return Result.Success(comment);
     }
 
-    public async Task<Result> DeleteCommentAsync(Guid commentId, CancellationToken cancellationToken = default)
+    public async Task<Result> DeleteCommentAsync(Guid commentId, Guid actorId, CancellationToken cancellationToken = default)
     {
         var comment = await _context.Set<PostComment>()
-            .FirstOrDefaultAsync(c => c.Id == commentId, cancellationToken).ConfigureAwait(false);
+            .FirstOrDefaultAsync(c => c.Id == commentId && c.DeletedAt == null, cancellationToken).ConfigureAwait(false);
 
         if (comment is null)
             return Result.Failure(PostErrors.CommentNotFound);
 
+        if (comment.AuthorId != actorId)
+            return Result.Failure(PostErrors.Forbidden);
+
         var post = await _context.Set<Post>()
             .FirstOrDefaultAsync(p => p.Id == comment.PostId, cancellationToken).ConfigureAwait(false);
 
-        comment.Delete();
-        post?.DecrementComments();
+        var postComments = await _context.Set<PostComment>()
+            .Where(c => c.PostId == comment.PostId)
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
+        var commentsById = postComments.ToDictionary(candidate => candidate.Id);
+        var childrenByParentId = postComments
+            .Where(candidate => candidate.ParentCommentId.HasValue)
+            .GroupBy(candidate => candidate.ParentCommentId!.Value)
+            .ToDictionary(group => group.Key, group => group.ToList());
+        var pending = new Stack<Guid>();
+        var visited = new HashSet<Guid>();
+        var deletedCount = 0;
+        pending.Push(comment.Id);
+
+        while (pending.Count > 0)
+        {
+            var currentId = pending.Pop();
+            if (!visited.Add(currentId) || !commentsById.TryGetValue(currentId, out var current)) continue;
+
+            if (!current.IsDeleted)
+            {
+                current.Delete();
+                deletedCount++;
+            }
+
+            if (!childrenByParentId.TryGetValue(currentId, out var children)) continue;
+            foreach (var child in children) pending.Push(child.Id);
+        }
+
+        for (var index = 0; index < deletedCount; index++) post?.DecrementComments();
 
         await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return Result.Success();
     }
 
-    public async Task<Result<IEnumerable<PostComment>>> GetPostCommentsAsync(Guid postId, int skip = 0, int take = 50, CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<PostComment>>> GetPostCommentsAsync(Guid postId, int skip = 0, int take = 50, Guid? parentCommentId = null, CancellationToken cancellationToken = default)
     {
-        var comments = await _context.Set<PostComment>()
-            .Where(c => c.PostId == postId && c.DeletedAt == null)
+        var query = _context.Set<PostComment>()
+            .Where(c => c.PostId == postId && c.DeletedAt == null);
+
+        if (parentCommentId.HasValue)
+            query = query.Where(c => c.ParentCommentId == parentCommentId.Value);
+
+        var comments = await query
             .OrderBy(c => c.CreatedAt)
             .Skip(skip)
             .Take(take)

@@ -1,5 +1,6 @@
 using FluentAssertions;
 using GameGuild.CQRS;
+using GameGuild.Finance.Contracts;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Identity.Authorization;
 using GameGuild.Resources;
@@ -939,9 +940,10 @@ public class ControllerConstructorTests
     public void TenantResourceMetadataController_CanBeConstructed()
     {
         var repo = new Mock<IResourceMetadataRepository>();
+        var sender = new Mock<ISender>();
         var accessor = new Mock<IActorContextAccessor>();
         var checker = new Mock<GameGuild.Identity.Authorization.ITenantMembershipChecker>();
-        var controller = new TenantResourceMetadataController(repo.Object, accessor.Object, checker.Object);
+        var controller = new TenantResourceMetadataController(repo.Object, sender.Object, accessor.Object, checker.Object);
         controller.Should().NotBeNull();
     }
 
@@ -960,9 +962,10 @@ public class ControllerConstructorTests
     public void TenantResourceSettingsController_CanBeConstructed()
     {
         var repo = new Mock<IResourceSettingsRepository>();
+        var sender = new Mock<ISender>();
         var accessor = new Mock<IActorContextAccessor>();
         var checker = new Mock<GameGuild.Identity.Authorization.ITenantMembershipChecker>();
-        var controller = new TenantResourceSettingsController(repo.Object, accessor.Object, checker.Object);
+        var controller = new TenantResourceSettingsController(repo.Object, sender.Object, accessor.Object, checker.Object);
         controller.Should().NotBeNull();
     }
 
@@ -979,8 +982,9 @@ public class ControllerConstructorTests
     public void UserResourceMetadataController_CanBeConstructed()
     {
         var repo = new Mock<IResourceMetadataRepository>();
+        var sender = new Mock<ISender>();
         var accessor = new Mock<IActorContextAccessor>();
-        var controller = new UserResourceMetadataController(repo.Object, accessor.Object);
+        var controller = new UserResourceMetadataController(repo.Object, sender.Object, accessor.Object);
         controller.Should().NotBeNull();
     }
 
@@ -997,8 +1001,9 @@ public class ControllerConstructorTests
     public void UserResourceSettingsController_CanBeConstructed()
     {
         var repo = new Mock<IResourceSettingsRepository>();
+        var sender = new Mock<ISender>();
         var accessor = new Mock<IActorContextAccessor>();
-        var controller = new UserResourceSettingsController(repo.Object, accessor.Object);
+        var controller = new UserResourceSettingsController(repo.Object, sender.Object, accessor.Object);
         controller.Should().NotBeNull();
     }
 }
@@ -1044,6 +1049,7 @@ public class DependencyInjectionTests : IDisposable
         registeredTypes.Should().Contain(typeof(IResourceQuotaService));
         registeredTypes.Should().Contain(typeof(IResourceSettingsRepository));
         registeredTypes.Should().Contain(typeof(IResourceMetadataRepository));
+        registeredTypes.Should().Contain(typeof(IIntegrationEventHandler<EconomyPostingAcceptedEventV1>));
     }
 
     public void Dispose()
