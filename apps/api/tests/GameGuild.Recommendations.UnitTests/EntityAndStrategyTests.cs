@@ -481,7 +481,7 @@ public class EntityAndStrategyTests
     }
 
     [Fact]
-    public async Task Engine_GenerateRecommendations_StrategyThrows_PropagatesException()
+    public async Task Engine_GenerateRecommendations_StrategyThrows_ContinuesWithOtherStrategies()
     {
         var dbMock = CreateMockDbContext();
         var failStrategy = new Mock<IRecommendationStrategy>();
@@ -494,8 +494,9 @@ public class EntityAndStrategyTests
 
         var logger = new Mock<ILogger<RecommendationEngine>>();
         var engine = new RecommendationEngine(dbMock.Object, new[] { failStrategy.Object }, logger.Object);
-        await engine.Invoking(e => e.GenerateRecommendationsAsync(Guid.NewGuid()))
-            .Should().ThrowAsync<InvalidOperationException>();
+        var result = await engine.GenerateRecommendationsAsync(Guid.NewGuid());
+
+        result.Should().BeEmpty();
     }
 
     // ===== RecommendationType Enum =====

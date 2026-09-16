@@ -24,10 +24,11 @@ public class FeedService : IFeedService
         int skip = 0,
         int take = 20,
         FeedItemType? filterByType = null,
+        Guid? tenantId = null,
         CancellationToken cancellationToken = default)
     {
         var query = _context.Set<PersonalizedFeedItem>()
-            .Where(f => f.UserId == userId && !f.IsDismissed && f.ExpiresAt > SystemClock.UtcNow);
+            .Where(f => f.UserId == userId && f.TenantId == tenantId && !f.IsDismissed && f.ExpiresAt > SystemClock.UtcNow);
 
         if (filterByType.HasValue)
         {
@@ -50,15 +51,36 @@ public class FeedService : IFeedService
         // more sophisticated algorithms based on user behavior, preferences, etc.
         var generatedCount = 0;
 
+        var currentItems = await _context.Set<PersonalizedFeedItem>()
+            .Where(item => item.UserId == userId &&
+                           item.TenantId == tenantId &&
+                           !item.IsDismissed &&
+                           item.ExpiresAt > SystemClock.UtcNow)
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
+
+        var existingDiscussionIds = currentItems
+            .Where(item => item.DiscussionId.HasValue)
+            .Select(item => item.DiscussionId!.Value)
+            .ToHashSet();
+        var existingReviewIds = currentItems
+            .Where(item => item.ReviewId.HasValue)
+            .Select(item => item.ReviewId!.Value)
+            .ToHashSet();
+
         // Get trending discussions (most replied in last 7 days)
         var trendingDiscussions = await _context.Set<CourseDiscussion>()
-            .Where(d => d.LastActivityAt > SystemClock.UtcNow.AddDays(-7))
+            .Where(d => d.TenantId == tenantId && d.LastActivityAt > SystemClock.UtcNow.AddDays(-7))
             .OrderByDescending(d => d.ReplyCount)
             .Take(5)
             .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         foreach (var discussion in trendingDiscussions)
         {
+            if (existingDiscussionIds.Contains(discussion.Id))
+            {
+                continue;
+            }
+
             var feedItem = PersonalizedFeedItem.Create(
                 userId,
                 FeedItemType.TrendingDiscussion,
@@ -74,13 +96,18 @@ public class FeedService : IFeedService
 
         // Get featured reviews
         var featuredReviews = await _context.Set<CourseReview>()
-            .Where(r => r.IsFeatured && r.IsApproved)
+            .Where(r => r.TenantId == tenantId && r.IsFeatured && r.IsApproved)
             .OrderByDescending(r => r.HelpfulCount)
             .Take(3)
             .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         foreach (var review in featuredReviews)
         {
+            if (existingReviewIds.Contains(review.Id))
+            {
+                continue;
+            }
+
             var feedItem = PersonalizedFeedItem.Create(
                 userId,
                 FeedItemType.FeaturedReview,
@@ -100,7 +127,10 @@ public class FeedService : IFeedService
         return Result.Success(generatedCount);
     }
 
-    public async Task<Result<PersonalizedFeedItem>> MarkFeedItemViewedAsync(Guid feedItemId, CancellationToken cancellationToken = default)
+    public async Task<Result<PersonalizedFeedItem>> MarkFeedItemViewedAsync(
+        Guid feedItemId,
+        Guid userId,
+        CancellationToken cancellationToken = default)
     {
         var item = await _context.Set<PersonalizedFeedItem>()
             .FirstOrDefaultAsync(f => f.Id == feedItemId, cancellationToken).ConfigureAwait(false);
@@ -108,6 +138,11 @@ public class FeedService : IFeedService
         if (item == null)
         {
             return Result.Failure<PersonalizedFeedItem>(Error.NotFound("FeedItem.NotFound", $"Feed item with ID {feedItemId} not found"));
+        }
+
+        if (item.UserId != userId)
+        {
+            return Result.Failure<PersonalizedFeedItem>(Error.Failure("FeedItem.Unauthorized", "You can only view your own feed items"));
         }
 
         item.MarkViewed();

@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,10 +12,12 @@ namespace GameGuild.Social.Ratings;
 public class RatingsController : BaseApiController
 {
     private readonly IRatingService _ratingService;
+    private readonly ISender _sender;
 
-    public RatingsController(IRatingService ratingService)
+    public RatingsController(IRatingService ratingService, ISender sender)
     {
         _ratingService = ratingService;
+        _sender = sender;
     }
 
     /// <summary>
@@ -25,13 +28,12 @@ public class RatingsController : BaseApiController
     [ProducesResponseType(400)]
     public async Task<IActionResult> Rate([FromBody] CreateRatingRequest request, CancellationToken ct)
     {
-        var result = await _ratingService.RateAsync(
-            request.EntityId, 
-            request.EntityType, 
-            request.Value, 
-            request.ReviewText, 
-            request.ReviewTitle, 
-            ct).ConfigureAwait(false);
+        var result = await _sender.Send(new RateRatingEndpointCommand(
+            request.EntityId,
+            request.EntityType,
+            request.Value,
+            request.ReviewText,
+            request.ReviewTitle), ct).ConfigureAwait(false);
 
         return result.IsSuccess 
             ? Ok(RatingDto.FromEntity(result.Value)) 
@@ -86,7 +88,7 @@ public class RatingsController : BaseApiController
     [ProducesResponseType(404)]
     public async Task<IActionResult> Delete(Guid ratingId, CancellationToken ct)
     {
-        var result = await _ratingService.DeleteAsync(ratingId, ct).ConfigureAwait(false);
+        var result = await _sender.Send(new DeleteRatingEndpointCommand(ratingId), ct).ConfigureAwait(false);
         return result.IsSuccess ? NoContent() : NotFound(result.Error);
     }
 
@@ -140,7 +142,8 @@ public class RatingsController : BaseApiController
     [ProducesResponseType(typeof(Dictionary<Guid, RatingSummaryDto>), 200)]
     public async Task<IActionResult> GetSummariesBatch([FromBody] BatchSummaryRequest request, CancellationToken ct)
     {
-        var result = await _ratingService.GetSummariesBatchAsync(request.EntityIds, request.EntityType, ct).ConfigureAwait(false);
+        var result = await _sender.Send(new GetRatingSummariesBatchEndpointCommand(
+            request.EntityIds.ToArray(), request.EntityType), ct).ConfigureAwait(false);
         
         if (!result.IsSuccess)
             return BadRequest(result.Error);
@@ -159,7 +162,8 @@ public class RatingsController : BaseApiController
     [ProducesResponseType(typeof(Dictionary<Guid, RatingDto>), 200)]
     public async Task<IActionResult> GetMyRatingsBatch([FromBody] BatchSummaryRequest request, CancellationToken ct)
     {
-        var result = await _ratingService.GetUserRatingsBatchAsync(request.EntityIds, request.EntityType, ct).ConfigureAwait(false);
+        var result = await _sender.Send(new GetUserRatingsBatchEndpointCommand(
+            request.EntityIds.ToArray(), request.EntityType), ct).ConfigureAwait(false);
         
         if (!result.IsSuccess)
             return BadRequest(result.Error);
@@ -213,7 +217,8 @@ public class RatingsController : BaseApiController
     [ProducesResponseType(400)]
     public async Task<IActionResult> VoteHelpful(Guid ratingId, [FromBody] VoteHelpfulRequest request, CancellationToken ct)
     {
-        var result = await _ratingService.VoteHelpfulAsync(ratingId, request.IsHelpful, ct).ConfigureAwait(false);
+        var result = await _sender.Send(new VoteRatingHelpfulEndpointCommand(
+            ratingId, request.IsHelpful), ct).ConfigureAwait(false);
         return result.IsSuccess ? NoContent() : BadRequest(result.Error);
     }
 
@@ -225,7 +230,7 @@ public class RatingsController : BaseApiController
     [ProducesResponseType(404)]
     public async Task<IActionResult> RemoveHelpfulVote(Guid ratingId, CancellationToken ct)
     {
-        var result = await _ratingService.RemoveHelpfulVoteAsync(ratingId, ct).ConfigureAwait(false);
+        var result = await _sender.Send(new RemoveRatingHelpfulVoteEndpointCommand(ratingId), ct).ConfigureAwait(false);
         return result.IsSuccess ? NoContent() : NotFound(result.Error);
     }
 
@@ -237,7 +242,8 @@ public class RatingsController : BaseApiController
     [ProducesResponseType(404)]
     public async Task<IActionResult> Report(Guid ratingId, [FromBody] ReportRequest request, CancellationToken ct)
     {
-        var result = await _ratingService.ReportAsync(ratingId, request.Reason, ct).ConfigureAwait(false);
+        var result = await _sender.Send(new ReportRatingEndpointCommand(
+            ratingId, request.Reason), ct).ConfigureAwait(false);
         return result.IsSuccess ? NoContent() : NotFound(result.Error);
     }
 
@@ -313,7 +319,7 @@ public class RatingsController : BaseApiController
     [ProducesResponseType(404)]
     public async Task<IActionResult> Approve(Guid ratingId, CancellationToken ct)
     {
-        var result = await _ratingService.ApproveAsync(ratingId, ct).ConfigureAwait(false);
+        var result = await _sender.Send(new ApproveRatingEndpointCommand(ratingId), ct).ConfigureAwait(false);
         return result.IsSuccess ? NoContent() : NotFound(result.Error);
     }
 
@@ -326,7 +332,7 @@ public class RatingsController : BaseApiController
     [ProducesResponseType(404)]
     public async Task<IActionResult> Reject(Guid ratingId, CancellationToken ct)
     {
-        var result = await _ratingService.RejectAsync(ratingId, ct).ConfigureAwait(false);
+        var result = await _sender.Send(new RejectRatingEndpointCommand(ratingId), ct).ConfigureAwait(false);
         return result.IsSuccess ? NoContent() : NotFound(result.Error);
     }
 
@@ -339,7 +345,7 @@ public class RatingsController : BaseApiController
     [ProducesResponseType(404)]
     public async Task<IActionResult> AdminDelete(Guid ratingId, CancellationToken ct)
     {
-        var result = await _ratingService.AdminDeleteAsync(ratingId, ct).ConfigureAwait(false);
+        var result = await _sender.Send(new AdminDeleteRatingEndpointCommand(ratingId), ct).ConfigureAwait(false);
         return result.IsSuccess ? NoContent() : NotFound(result.Error);
     }
 
@@ -351,7 +357,8 @@ public class RatingsController : BaseApiController
     [ProducesResponseType(204)]
     public async Task<IActionResult> RecalculateSummary(string entityType, Guid entityId, CancellationToken ct)
     {
-        var result = await _ratingService.RecalculateSummaryAsync(entityId, entityType, ct).ConfigureAwait(false);
+        var result = await _sender.Send(new RecalculateRatingSummaryEndpointCommand(
+            entityId, entityType), ct).ConfigureAwait(false);
         return result.IsSuccess ? NoContent() : BadRequest(result.Error);
     }
 }

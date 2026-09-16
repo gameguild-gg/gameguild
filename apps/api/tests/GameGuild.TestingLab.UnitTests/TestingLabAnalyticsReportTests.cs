@@ -118,6 +118,70 @@ public sealed class TestingLabAnalyticsReportTests : IDisposable
         csv.Should().Contain("Event,Status,Mode,Starts at,Applications,Approved projects,Registered testers,Attended testers,Feedback,Average rating,Capacity,Fill rate");
     }
 
+    [Fact]
+    public async Task Report_RequiresAnAuthenticatedActiveTenantActor()
+    {
+        _actorAccessor.SetActorContext(ActorContext.Anonymous);
+
+        var anonymous = await CreateHandler().Handle(
+            new GetTestingLabAnalyticsReportQuery(PeriodStart, PeriodEnd), default);
+
+        anonymous.IsFailure.Should().BeTrue();
+        anonymous.Error.Code.Should().Be("TestingLab.Unauthenticated");
+
+        var missingMemberId = Guid.NewGuid();
+        _actorAccessor.SetActorContext(
+            ActorContextBuilder.ForUser(missingMemberId).WithTenantId(_tenantId).Build());
+
+        var inactive = await CreateHandler().Handle(
+            new GetTestingLabAnalyticsReportQuery(PeriodStart, PeriodEnd), default);
+
+        inactive.IsFailure.Should().BeTrue();
+        inactive.Error.Code.Should().Be("TestingLab.InactiveActor");
+        var export = await CreateHandler().Handle(
+            new ExportTestingLabAnalyticsReportQuery(PeriodStart, PeriodEnd), default);
+        export.IsFailure.Should().BeTrue();
+        export.Error.Code.Should().Be("TestingLab.InactiveActor");
+    }
+
+    [Fact]
+    public async Task Report_NormalizesOpenEndedPeriodsAndRejectsExcessiveRanges()
+    {
+        var defaults = await CreateHandler().Handle(
+            new GetTestingLabAnalyticsReportQuery(null, null), default);
+        defaults.IsSuccess.Should().BeTrue();
+        defaults.Value.Current.Events.Should().Be(0);
+        defaults.Value.Current.AverageRating.Should().BeNull();
+        defaults.Value.Current.RecommendationRate.Should().BeNull();
+        defaults.Value.Current.FillRate.Should().Be(0);
+
+        (await CreateHandler().Handle(
+            new GetTestingLabAnalyticsReportQuery(null, PeriodEnd), default)).IsSuccess.Should().BeTrue();
+        (await CreateHandler().Handle(
+            new GetTestingLabAnalyticsReportQuery(SystemClock.UtcNow.AddDays(-5), null), default))
+            .IsSuccess.Should().BeTrue();
+
+        var excessive = await CreateHandler().Handle(
+            new GetTestingLabAnalyticsReportQuery(PeriodStart, PeriodStart.AddDays(367)), default);
+        excessive.IsFailure.Should().BeTrue();
+        excessive.Error.Code.Should().Be("TestingLab.InvalidAnalyticsPeriod");
+    }
+
+    [Fact]
+    public async Task CsvExport_FormatsEventsWithoutRatingsOrSpecialCharacters()
+    {
+        await AddCompletedEventAsync(
+            _tenantId, _managerId, "Simple lab", PeriodStart.AddDays(2), null, 0, 0, 0, 0);
+
+        var result = await CreateHandler().Handle(
+            new ExportTestingLabAnalyticsReportQuery(PeriodStart, PeriodEnd), default);
+
+        result.IsSuccess.Should().BeTrue();
+        var csv = System.Text.Encoding.UTF8.GetString(result.Value.Content);
+        csv.Should().Contain("Simple lab,Draft,InPerson");
+        csv.Should().Contain(",0,0,0,0,0,,0,0");
+    }
+
     private TestingLabAnalyticsHandlers CreateHandler() => new(
         _context,
         _actorAccessor);
@@ -127,7 +191,7 @@ public sealed class TestingLabAnalyticsReportTests : IDisposable
         Guid managerId,
         string name,
         DateTime startsAt,
-        int capacity,
+        int? capacity,
         int applications,
         int registrations,
         int attended,
@@ -154,7 +218,7 @@ public sealed class TestingLabAnalyticsReportTests : IDisposable
             startsAt,
             startsAt.AddHours(3),
             capacity,
-            applications,
+            applications == 0 ? null : applications,
             "Main campus",
             "Lab 1",
             null,

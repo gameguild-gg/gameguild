@@ -5753,6 +5753,7 @@ export interface GetPostsCommentsInput {
   query?: {
     skip?: number;
     take?: number;
+    parentCommentId?: string;
   };
 }
 export type GetPostsCommentsOutput = void;
@@ -8889,6 +8890,7 @@ export interface PostAssetsInput {
     parentResourceType?: string;
     parentResourceId?: string;
     folderId?: string;
+    referenceId?: string;
   };
   body?: FormData;
 }

@@ -34,9 +34,13 @@ public sealed class DiscoveryCommandHandlers(IApplicationDbContext context, ILog
             learningPathId: request.LearningPathId,
             tenantId: request.TenantId
         );
-
-        // Note: Setting additional properties would require adding methods to the entity
-        // For now, we create with the basic factory method
+        featuredContent.Update(
+            subtitle: request.Subtitle,
+            imageUrl: request.ImageUrl,
+            linkUrl: request.LinkUrl,
+            startsAt: request.StartsAt,
+            endsAt: request.EndsAt,
+            targetAudience: request.TargetAudience);
 
         context.Set<FeaturedContent>().Add(featuredContent);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -59,9 +63,16 @@ public sealed class DiscoveryCommandHandlers(IApplicationDbContext context, ILog
             return null;
         }
 
-        // Note: Entity would need Update methods added for proper encapsulation
-        // This is a simplified implementation
-        context.Set<FeaturedContent>().Update(featuredContent);
+        featuredContent.Update(
+            request.Title,
+            request.Subtitle,
+            request.ImageUrl,
+            request.LinkUrl,
+            request.DisplayOrder,
+            request.StartsAt,
+            request.EndsAt,
+            request.IsActive,
+            request.TargetAudience);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Updated featured content: {Id}", request.Id);
@@ -102,8 +113,7 @@ public sealed class DiscoveryCommandHandlers(IApplicationDbContext context, ILog
             return null;
         }
 
-        // Note: Entity would need SetActive method for proper encapsulation
-        context.Set<FeaturedContent>().Update(featuredContent);
+        featuredContent.SetActive(request.IsActive);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return featuredContent;
@@ -135,6 +145,7 @@ public sealed class DiscoveryCommandHandlers(IApplicationDbContext context, ILog
             type: request.Type,
             tenantId: request.TenantId
         );
+        collection.Update(description: request.Description, imageUrl: request.ImageUrl);
 
         context.Set<CourseCollection>().Add(collection);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -157,8 +168,7 @@ public sealed class DiscoveryCommandHandlers(IApplicationDbContext context, ILog
             return null;
         }
 
-        // Note: Entity would need Update methods for proper encapsulation
-        context.Set<CourseCollection>().Update(collection);
+        collection.Update(request.Title, request.Description, request.ImageUrl, request.IsFeatured);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Updated course collection: {Id}", request.Id);
@@ -179,8 +189,7 @@ public sealed class DiscoveryCommandHandlers(IApplicationDbContext context, ILog
             return null;
         }
 
-        // Note: Entity would need Publish method for proper encapsulation
-        context.Set<CourseCollection>().Update(collection);
+        collection.Publish();
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Published course collection: {Id}", request.Id);
@@ -201,8 +210,7 @@ public sealed class DiscoveryCommandHandlers(IApplicationDbContext context, ILog
             return null;
         }
 
-        // Note: Entity would need Unpublish method for proper encapsulation
-        context.Set<CourseCollection>().Update(collection);
+        collection.Unpublish();
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Unpublished course collection: {Id}", request.Id);
@@ -260,7 +268,7 @@ public sealed class DiscoveryCommandHandlers(IApplicationDbContext context, ILog
             return false;
         }
 
-        // Note: Entity would need RecordClick method for proper encapsulation
+        searchHistory.RecordClick(request.ClickedCourseId, position: 0);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return true;

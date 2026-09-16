@@ -55,7 +55,8 @@ public static class QuestionnaireResponseValidator
             if (hasText) errors.Add($"Question '{question.Id}' accepts option identifiers only.");
             if (question.Type == QuestionnaireQuestionType.SingleChoice && selected.Length > 1)
                 errors.Add($"Question '{question.Id}' accepts only one option.");
-            var allowed = (question.Options ?? []).Select(option => option.Id).ToHashSet(StringComparer.Ordinal);
+            // Schema validation above guarantees options for every choice question.
+            var allowed = question.Options!.Select(option => option.Id).ToHashSet(StringComparer.Ordinal);
             if (selected.Any(value => !allowed.Contains(value)))
                 errors.Add($"Question '{question.Id}' contains a value that is not an allowed option.");
         }

@@ -14,11 +14,7 @@ import { ArrowRight, CalendarClock, ClipboardList, Search } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
-import {
-  defaultLearnerRoutes,
-  type LearnerCourseRecord,
-  type LearnerRoutes,
-} from "./types";
+import type { LearnerCourseRecord } from "./types";
 
 type ActivityState =
   "pending" | "overdue" | "submitted" | "graded" | "completed" | "locked";
@@ -59,7 +55,7 @@ function assessmentState(
 
 function buildRows(
   records: LearnerCourseRecord[],
-  routes: LearnerRoutes,
+  courseBasePath: string,
 ): ActivityRow[] {
   return records.flatMap(({ course, context }) => {
     const assessments = context.assessments.flatMap((assessment) => {
@@ -88,7 +84,7 @@ function buildRows(
           dueAt: assessment.dueAt ?? null,
           points: assessment.maxScore ?? null,
           score: submission?.score ?? null,
-          href: routes.activity(course.slug, "assessment-" + assessment.id),
+          href: `${courseBasePath}/${course.slug}/activities/assessment-${assessment.id}`,
         } satisfies ActivityRow,
       ];
     });
@@ -120,7 +116,7 @@ function buildRows(
               dueAt: null,
               points: item.maxPoints ?? null,
               score: null,
-              href: routes.activity(course.slug, "content-" + item.id),
+              href: `${courseBasePath}/${course.slug}/activities/content-${item.id}`,
             }) satisfies ActivityRow,
         ),
     );
@@ -147,12 +143,16 @@ function statusLabel(state: ActivityState) {
 
 export function LearnerActivityCenter({
   records,
-  routes = defaultLearnerRoutes,
+  courseBasePath = "/courses",
 }: {
   records: LearnerCourseRecord[];
-  routes?: LearnerRoutes;
+  courseBasePath?: string;
 }) {
-  const rows = useMemo(() => buildRows(records, routes), [records, routes]);
+  const normalizedCourseBasePath = courseBasePath.replace(/\/+$/, "");
+  const rows = useMemo(
+    () => buildRows(records, normalizedCourseBasePath),
+    [records, normalizedCourseBasePath],
+  );
   const [query, setQuery] = useState("");
   const [courseId, setCourseId] = useState("all");
   const [type, setType] = useState("all");

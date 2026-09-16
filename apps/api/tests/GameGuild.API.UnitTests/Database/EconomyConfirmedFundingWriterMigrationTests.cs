@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore.Migrations.Operations;
 
 namespace GameGuild.API.UnitTests.Database;
 
+[Collection(PostgreSqlTestCollection.Name)]
 public sealed class EconomyConfirmedFundingWriterMigrationTests
 {
     [Fact]

@@ -1,0 +1,349 @@
+import "@testing-library/jest-dom/vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const actions = vi.hoisted(() => ({
+  assignTestingLabRole: vi.fn(),
+  grantTestingLabResourcePermission: vi.fn(),
+  inspectTestingLabUserAccess: vi.fn(),
+  revokeTestingLabResourcePermission: vi.fn(),
+  revokeTestingLabRole: vi.fn(),
+}));
+
+vi.mock("@/lib/testing-lab/actions", () => actions);
+
+import {
+  executeTestingLabAccessMutation,
+  TestingLabAccessManagement,
+} from "./testing-lab-access-management";
+
+const members = [
+  { id: "user-1", label: "Alex Tester" },
+  { id: "user-2", label: "Sam Reviewer" },
+];
+
+const roles = [
+  {
+    id: "role-1",
+    name: "Facilitator",
+    description: "Runs sessions",
+    permissions: { canViewSessions: true },
+  },
+];
+
+const resources = [
+  { id: "request-1", label: "Vertical slice", type: "TestingRequest" as const },
+  { id: "session-1", label: "Friday playtest", type: "TestingSession" as const },
+  { id: "location-1", label: "Remote lab", type: "TestingLocation" as const },
+];
+
+function access(overrides: Record<string, unknown> = {}) {
+  return {
+    success: true as const,
+    data: {
+      userId: "user-1",
+      assignedRoles: ["Facilitator"],
+      permissions: { canViewSessions: true, canEditSessions: false },
+      resourcePermissions: [],
+      ...overrides,
+    },
+    message: "Effective Testing Lab access loaded.",
+  };
+}
+
+async function choose(user: ReturnType<typeof userEvent.setup>, label: string, option: string) {
+  await user.click(screen.getByLabelText(label));
+  await user.click(await screen.findByRole("option", { name: option }));
+}
+
+describe("TestingLabAccessManagement UI", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    actions.inspectTestingLabUserAccess.mockResolvedValue(access());
+    actions.assignTestingLabRole.mockResolvedValue({ success: true, data: null, message: "Role assigned." });
+    actions.revokeTestingLabRole.mockResolvedValue({ success: true, data: null, message: "Role revoked." });
+    actions.grantTestingLabResourcePermission.mockResolvedValue({ success: true, data: null, message: "Permission granted." });
+    actions.revokeTestingLabResourcePermission.mockResolvedValue({ success: true, data: null, message: "Permission revoked." });
+  });
+
+  it("keeps management disabled until a member is selected and loads effective access when opened", async () => {
+    const user = userEvent.setup();
+    render(<TestingLabAccessManagement members={members} roles={roles} resources={resources} />);
+
+    expect(screen.getByRole("button", { name: "Manage access" })).toBeDisabled();
+    await choose(user, "Member", "Alex Tester");
+    await user.click(screen.getByRole("button", { name: "Manage access" }));
+
+    expect(await screen.findByRole("dialog", { name: /Testing Lab access · Alex Tester/ })).toBeInTheDocument();
+    await waitFor(() => expect(actions.inspectTestingLabUserAccess).toHaveBeenCalledOnce());
+    expect(screen.getAllByText("Facilitator")).not.toHaveLength(0);
+    expect(screen.getByText("View Sessions")).toBeInTheDocument();
+    expect(screen.queryByText("Edit Sessions")).not.toBeInTheDocument();
+  });
+
+  it("assigns and revokes a role, refreshing effective access after each mutation", async () => {
+    const user = userEvent.setup();
+    render(<TestingLabAccessManagement members={members} roles={roles} resources={resources} />);
+    await choose(user, "Member", "Alex Tester");
+    await user.click(screen.getByRole("button", { name: "Manage access" }));
+    await screen.findAllByText("Facilitator");
+
+    await choose(user, "Testing Lab role", "Facilitator");
+    await user.click(screen.getByRole("button", { name: "Assign" }));
+    await waitFor(() => expect(actions.assignTestingLabRole).toHaveBeenCalledOnce());
+    expect(actions.inspectTestingLabUserAccess).toHaveBeenCalledTimes(2);
+
+    const revokeRole = screen.getByRole("button", { name: "Revoke" });
+    await waitFor(() => expect(revokeRole).toBeEnabled());
+    await user.click(revokeRole);
+    await waitFor(() => expect(actions.revokeTestingLabRole).toHaveBeenCalledOnce());
+    expect(actions.inspectTestingLabUserAccess).toHaveBeenCalledTimes(3);
+  });
+
+  it("filters resources by type and grants then revokes a resource exception", async () => {
+    const user = userEvent.setup();
+    actions.inspectTestingLabUserAccess
+      .mockResolvedValueOnce(access())
+      .mockResolvedValueOnce(
+        access({
+          resourcePermissions: [
+            {
+              resourceType: "TestingSession",
+              resourceId: "session-1",
+              action: "edit",
+              expiresAt: "2026-10-01T12:00:00.000Z",
+            },
+          ],
+        }),
+      )
+      .mockResolvedValueOnce(access());
+
+    render(<TestingLabAccessManagement members={members} roles={roles} resources={resources} />);
+    await choose(user, "Member", "Alex Tester");
+    await user.click(screen.getByRole("button", { name: "Manage access" }));
+    await screen.findByText("Resource exceptions");
+
+    await choose(user, "Resource type", "Session");
+    await choose(user, "Action", "edit");
+    await choose(user, "Resource", "Friday playtest");
+    await user.click(screen.getByRole("button", { name: "Grant exception" }));
+
+    await waitFor(() => expect(actions.grantTestingLabResourcePermission).toHaveBeenCalledOnce());
+    expect(await screen.findAllByText("Friday playtest")).not.toHaveLength(0);
+    expect(screen.getByText(/Expires/)).toBeInTheDocument();
+
+    const revokePermission = screen.getByRole("button", { name: "Revoke resource permission" });
+    await waitFor(() => expect(revokePermission).toBeEnabled());
+    await user.click(revokePermission);
+    await waitFor(() => expect(actions.revokeTestingLabResourcePermission).toHaveBeenCalledOnce());
+    expect(actions.inspectTestingLabUserAccess).toHaveBeenCalledTimes(3);
+  });
+
+  it("shows mutation and refresh failures without discarding the saved operation result", async () => {
+    const user = userEvent.setup();
+    actions.assignTestingLabRole.mockResolvedValue({ success: true, data: null, message: "Role assigned." });
+    actions.inspectTestingLabUserAccess
+      .mockResolvedValueOnce(access({ assignedRoles: [], permissions: {}, resourcePermissions: [] }))
+      .mockResolvedValueOnce({ success: false, error: "Access API unavailable" });
+
+    render(<TestingLabAccessManagement members={members} roles={roles} resources={resources} />);
+    await choose(user, "Member", "Alex Tester");
+    await user.click(screen.getByRole("button", { name: "Manage access" }));
+    await screen.findByText("No Testing Lab roles assigned.");
+    await choose(user, "Testing Lab role", "Facilitator");
+    await user.click(screen.getByRole("button", { name: "Assign" }));
+
+    expect(
+      await screen.findByText(
+        "The change was saved, but effective access could not be refreshed: Access API unavailable",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("shows a returned mutation failure and does not refresh unchanged access", async () => {
+    const user = userEvent.setup();
+    actions.assignTestingLabRole.mockResolvedValue({
+      success: false,
+      error: "Role assignment denied",
+    });
+
+    render(
+      <TestingLabAccessManagement
+        members={members}
+        roles={roles}
+        resources={resources}
+      />,
+    );
+    await choose(user, "Member", "Alex Tester");
+    await user.click(screen.getByRole("button", { name: "Manage access" }));
+    await screen.findByText("View Sessions");
+    await choose(user, "Testing Lab role", "Facilitator");
+    await user.click(screen.getByRole("button", { name: "Assign" }));
+
+    expect(await screen.findByText("Role assignment denied")).toBeInTheDocument();
+    expect(actions.inspectTestingLabUserAccess).toHaveBeenCalledOnce();
+  });
+
+  it("clears effective access and reports a failed manual inspection", async () => {
+    const user = userEvent.setup();
+    actions.inspectTestingLabUserAccess
+      .mockResolvedValueOnce(access())
+      .mockResolvedValueOnce({ success: false, error: "Access denied" });
+
+    render(
+      <TestingLabAccessManagement
+        members={members}
+        roles={roles}
+        resources={resources}
+      />,
+    );
+    await choose(user, "Member", "Alex Tester");
+    await user.click(screen.getByRole("button", { name: "Manage access" }));
+    await screen.findByText("View Sessions");
+    const refresh = screen.getByRole("button", { name: "Refresh access" });
+    await waitFor(() => expect(refresh).toBeEnabled());
+    await user.click(refresh);
+
+    expect(await screen.findByText("Access denied")).toBeInTheDocument();
+    expect(screen.getByText("Access is loaded when this sheet opens.")).toBeInTheDocument();
+    expect(screen.queryByText("View Sessions")).not.toBeInTheDocument();
+  });
+
+  it("converts an inspection exception into a visible error", async () => {
+    const user = userEvent.setup();
+    actions.inspectTestingLabUserAccess.mockRejectedValue(
+      new Error("Access service unavailable"),
+    );
+
+    render(
+      <TestingLabAccessManagement
+        members={members}
+        roles={roles}
+        resources={resources}
+      />,
+    );
+    await choose(user, "Member", "Alex Tester");
+    await user.click(screen.getByRole("button", { name: "Manage access" }));
+
+    expect(
+      await screen.findByText("Access service unavailable"),
+    ).toBeInTheDocument();
+  });
+
+  it("renders missing access collections and unknown resource metadata safely", async () => {
+    const user = userEvent.setup();
+    actions.inspectTestingLabUserAccess.mockResolvedValue(
+      access({
+        assignedRoles: undefined,
+        permissions: undefined,
+        resourcePermissions: [
+          {
+            resourceType: undefined,
+            resourceId: undefined,
+            action: undefined,
+            expiresAt: undefined,
+          },
+        ],
+      }),
+    );
+
+    render(
+      <TestingLabAccessManagement
+        members={members}
+        roles={[
+          ...roles,
+          { id: undefined, name: "Observer", permissions: {} },
+          { id: "invalid-role", name: undefined, permissions: {} },
+        ]}
+        resources={resources}
+      />,
+    );
+    await choose(user, "Member", "Alex Tester");
+    await user.click(screen.getByRole("button", { name: "Manage access" }));
+
+    expect(await screen.findByText("No Testing Lab roles assigned.")).toBeInTheDocument();
+    await choose(user, "Testing Lab role", "Observer");
+    expect(screen.queryByText(/Expires/)).not.toBeInTheDocument();
+    await user.click(
+      screen.getByRole("button", { name: "Revoke resource permission" }),
+    );
+    await waitFor(() =>
+      expect(actions.revokeTestingLabResourcePermission).toHaveBeenCalledOnce(),
+    );
+  });
+
+  it("clears stale access when another member is selected and supports manual refresh", async () => {
+    const user = userEvent.setup();
+    render(<TestingLabAccessManagement members={members} roles={roles} resources={resources} />);
+    await choose(user, "Member", "Alex Tester");
+    await user.click(screen.getByRole("button", { name: "Manage access" }));
+    await screen.findByText("View Sessions");
+    const refresh = screen.getByRole("button", { name: "Refresh access" });
+    await waitFor(() => expect(refresh).toBeEnabled());
+    await user.click(refresh);
+    await waitFor(() => expect(actions.inspectTestingLabUserAccess).toHaveBeenCalledTimes(2));
+
+    await user.click(screen.getByRole("button", { name: "Close" }));
+    await choose(user, "Member", "Sam Reviewer");
+    await user.click(screen.getByRole("button", { name: "Manage access" }));
+    expect(await screen.findByRole("dialog", { name: /Testing Lab access · Sam Reviewer/ })).toBeInTheDocument();
+  });
+});
+
+describe("executeTestingLabAccessMutation", () => {
+  it("does not inspect access after a failed mutation", async () => {
+    const operation = vi.fn().mockResolvedValue({
+      success: false,
+      error: "Mutation rejected",
+    });
+    const inspect = vi.fn();
+
+    await expect(
+      executeTestingLabAccessMutation(operation, inspect, { userId: "user-1" }),
+    ).resolves.toEqual({
+      result: { success: false, error: "Mutation rejected" },
+      effectiveAccess: null,
+      refreshError: null,
+    });
+    expect(inspect).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [new Error("Mutation exploded"), "Mutation exploded"],
+    ["unknown failure", "The Testing Lab access operation failed."],
+  ])("normalizes rejected mutations", async (failure, message) => {
+    const operation = vi.fn().mockRejectedValue(failure);
+
+    const outcome = await executeTestingLabAccessMutation(
+      operation,
+      vi.fn(),
+      { userId: "user-1" },
+    );
+
+    expect(outcome.result).toEqual({ success: false, error: message });
+    expect(outcome.effectiveAccess).toBeNull();
+  });
+
+  it.each([
+    [new Error("Refresh exploded"), "Refresh exploded"],
+    ["unknown failure", "Effective access could not be refreshed."],
+  ])("reports rejected access refreshes", async (failure, message) => {
+    const operation = vi.fn().mockResolvedValue({
+      success: true,
+      data: null,
+      message: "Saved",
+    });
+    const inspect = vi.fn().mockRejectedValue(failure);
+
+    const outcome = await executeTestingLabAccessMutation(
+      operation,
+      inspect,
+      {},
+    );
+
+    expect(outcome.refreshError).toBe(message);
+    expect(outcome.effectiveAccess).toBeNull();
+    expect(inspect.mock.calls[0]?.[0].get("userId")).toBe("");
+  });
+});
