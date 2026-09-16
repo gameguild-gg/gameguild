@@ -25,10 +25,10 @@
         "clsx": "^2.1.1",
         "emception": "4.3.0",
         "monaco-editor": "^0.56.0",
-        "next": "16.3.4",
-        "react": "19.2.8",
-        "react-dom": "19.2.8",
-        "react-resizable-panels": "^4.12.2"
+        "next": "16.3.5",
+        "react": "19.3.0",
+        "react-dom": "19.3.0",
+        "react-resizable-panels": "^4.12.4"
     },
     "devDependencies": {
         "@eslint/compat": "^2.1.1",
@@ -37,7 +37,7 @@
         "@types/react": "^19",
         "@types/react-dom": "^19",
         "eslint": "^10.10.0",
-        "eslint-config-next": "16.3.4",
+        "eslint-config-next": "16.3.5",
         "raw-loader": "^4.0.2",
         "tailwindcss": "^4",
         "typescript": "^6.0.3"
