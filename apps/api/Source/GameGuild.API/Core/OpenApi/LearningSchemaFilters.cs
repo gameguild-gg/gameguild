@@ -2,6 +2,9 @@ using GameGuild.Learning.Assessments;
 using GameGuild.Learning.Assessments.Grading.Contracts;
 using GameGuild.Learning.Courses;
 using GameGuild.Learning.Grading.Contracts;
+using System.Reflection;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -36,6 +39,8 @@ internal sealed class LearningContractSchemaFilter : ISchemaFilter
 
     public void Apply(OpenApiSchema schema, SchemaFilterContext context)
     {
+        ApplyNullableValueTypeProperties(schema, context.Type);
+
         if (context.Type == typeof(ReviewMethods))
         {
             ApplyReviewMethods(schema);
@@ -71,5 +76,30 @@ internal sealed class LearningContractSchemaFilter : ISchemaFilter
         schema.AdditionalProperties = null;
         schema.Description =
             "Numeric review-workflow bitmask. Valid values are 0, 1, 2, 4, 8, 9, 10, 12, 16, and 24.";
+    }
+
+    private static void ApplyNullableValueTypeProperties(OpenApiSchema schema, Type contractType)
+    {
+        if (schema.Properties is null || schema.Properties.Count == 0)
+            return;
+
+        foreach (var property in contractType.GetProperties(BindingFlags.Instance | BindingFlags.Public))
+        {
+            var valueType = Nullable.GetUnderlyingType(property.PropertyType);
+            if (valueType?.Namespace != typeof(ScoreValue).Namespace &&
+                valueType?.Namespace != typeof(AttemptContributionMode).Namespace)
+                continue;
+
+            var jsonName = property.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name
+                ?? JsonNamingPolicy.CamelCase.ConvertName(property.Name);
+
+            if (!schema.Properties.TryGetValue(jsonName, out var propertySchema) || propertySchema.Reference is null)
+                continue;
+
+            var reference = propertySchema.Reference;
+            propertySchema.Reference = null;
+            propertySchema.AllOf = [new OpenApiSchema { Reference = reference }];
+            propertySchema.Nullable = true;
+        }
     }
 }

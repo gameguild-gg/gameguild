@@ -19,6 +19,10 @@ public sealed class OpenApiFilterTests
     [Flags]
     private enum FlagValues { None = 0, Read = 1, Write = 2 }
     private enum PlainValues { None = 0, One = 1 }
+    private sealed record NullableGradingContract(
+        PercentValue? Weight,
+        AttemptContributionMode? ContributionMode,
+        DateTime? AvailableAt);
 
     private sealed class PlainController
     {
@@ -98,6 +102,42 @@ public sealed class OpenApiFilterTests
         schema.Format.Should().Be("int32");
         schema.Enum.Cast<OpenApiInteger>().Select(value => value.Value)
             .Should().Equal(0, 1, 2, 4, 8, 9, 10, 12, 16, 24);
+    }
+
+    [Fact]
+    public void LearningContractSchemaFilter_PreservesNullableGradingReferences()
+    {
+        var weightReference = new OpenApiReference { Type = ReferenceType.Schema, Id = "PercentValue" };
+        var contributionModeReference = new OpenApiReference { Type = ReferenceType.Schema, Id = "AttemptContributionMode" };
+        var availableAtSchema = new OpenApiSchema { Type = "string", Format = "date-time", Nullable = true };
+        var schema = new OpenApiSchema
+        {
+            Type = "object",
+            Properties = new Dictionary<string, OpenApiSchema>
+            {
+                ["weight"] = new() { Reference = weightReference },
+                ["contributionMode"] = new() { Reference = contributionModeReference },
+                ["availableAt"] = availableAtSchema,
+            },
+        };
+        var context = new SchemaFilterContext(
+            typeof(NullableGradingContract),
+            Mock.Of<ISchemaGenerator>(),
+            new SchemaRepository());
+
+        new LearningContractSchemaFilter().Apply(schema, context);
+
+        schema.Properties["weight"].Should().Match<OpenApiSchema>(property =>
+            property.Nullable &&
+            property.Reference == null &&
+            property.AllOf.Count == 1 &&
+            property.AllOf[0].Reference == weightReference);
+        schema.Properties["contributionMode"].Should().Match<OpenApiSchema>(property =>
+            property.Nullable &&
+            property.Reference == null &&
+            property.AllOf.Count == 1 &&
+            property.AllOf[0].Reference == contributionModeReference);
+        schema.Properties["availableAt"].Should().BeSameAs(availableAtSchema);
     }
 
     [Fact]

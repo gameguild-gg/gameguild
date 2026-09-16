@@ -157,10 +157,7 @@ describe('Type Generator', () => {
       components: {
         schemas: {
           Response: {
-            oneOf: [
-              { $ref: '#/components/schemas/SuccessResponse' },
-              { $ref: '#/components/schemas/ErrorResponse' },
-            ],
+            oneOf: [{ $ref: '#/components/schemas/SuccessResponse' }, { $ref: '#/components/schemas/ErrorResponse' }],
           },
           SuccessResponse: {
             type: 'object',
@@ -234,6 +231,31 @@ describe('Type Generator', () => {
     const output = generateTypes(spec);
 
     expect(output).toContain('email?: string | null');
+  });
+
+  it('should preserve nullable references in TypeScript and Zod schemas', () => {
+    const spec: OpenApiSpec = {
+      ...simpleSpec,
+      components: {
+        schemas: {
+          ScoreValue: { type: 'integer' },
+          AssessmentDto: {
+            type: 'object',
+            properties: {
+              score: {
+                nullable: true,
+                allOf: [{ $ref: '#/components/schemas/ScoreValue' }],
+              },
+            },
+          },
+        },
+      },
+    } as OpenApiSpec;
+
+    const output = generateTypes(spec);
+
+    expect(output).toContain('score?: ScoreValue | null');
+    expect(output).toContain('score: z.lazy(() => ScoreValueSchema).nullable().optional()');
   });
 
   it('should add JSDoc comments from schema descriptions', () => {

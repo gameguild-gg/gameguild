@@ -407,8 +407,9 @@ export const getAssessment = cache(
         assessments.assessments.find((a) => a.slug === assessmentIdOrSlug) ??
         null
       );
-    } catch {
-      return null;
+    } catch (error) {
+      console.error("Error fetching assessment:", error);
+      throw error;
     }
   },
 );
