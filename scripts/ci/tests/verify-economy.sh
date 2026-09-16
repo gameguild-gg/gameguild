@@ -397,9 +397,9 @@ test_economy_frontend_build_reuses_the_validated_client() {
   local gate="$ci_dir/verify-economy.sh"
   local web_package="$repository_root/apps/web/package.json"
 
-  grep -Fq '"build:emception-runtime-dependencies"' "$web_package" || return 1
+  grep -Fq '"build:emception-dependencies"' "$web_package" || return 1
   grep -Fq -- '--filter @game-guild/client build' "$gate" || return 1
-  grep -Fq -- '--filter @game-guild/web run build:emception-runtime-dependencies' "$gate" || return 1
+  grep -Fq -- '--filter @game-guild/web run build:emception-dependencies' "$gate" || return 1
   grep -Fq -- '--filter @game-guild/web run sync:emception' "$gate" || return 1
   grep -Fq 'GAMEGUILD_DISABLE_WEBPACK_CACHE=1 run "${pnpm_command[@]}" --filter @game-guild/web exec next build --webpack' "$gate" || return 1
   ! grep -Fq -- '--filter @game-guild/web build' "$gate"

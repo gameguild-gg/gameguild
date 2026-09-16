@@ -23,9 +23,9 @@
     "@game-guild/quiz-content": "workspace:^",
     "@game-guild/ui": "workspace:^",
     "lexical": "^0.50.0",
-    "lucide-react": "^1.41.0",
+    "lucide-react": "^1.45.0",
     "mathlive": "^0.110.0",
-    "react-hook-form": "^7.87.0"
+    "react-hook-form": "^7.88.0"
   },
   "peerDependencies": {
     "react": "^19.2.0",
@@ -39,9 +39,9 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "jsdom": "30.0.1",
-    "react": "19.2.8",
-    "react-dom": "19.2.8",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.10"
+    "vitest": "^5.0.0"
   }
 }
