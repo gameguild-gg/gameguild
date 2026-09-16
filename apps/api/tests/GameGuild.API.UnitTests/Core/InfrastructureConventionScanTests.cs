@@ -31,6 +31,18 @@ public sealed class InfrastructureConventionScanTests
     }
 
     [Fact]
+    public void AddRepositories_Should_RegisterTenantMembershipRolesAsAuthorizationPermissions()
+    {
+        var services = new ServiceCollection();
+
+        InvokeAddRepositories(services, new CapturingLogger());
+
+        services.Should().Contain(descriptor =>
+            descriptor.ServiceType == typeof(IAuthorizationRolePermissionProvider) &&
+            descriptor.ImplementationType == typeof(TenantMembershipRolePermissionProvider));
+    }
+
+    [Fact]
     public void MonthlyStatementDispatchBackgroundService_Should_Resolve_From_CompositionRoot_Dependencies()
     {
         var services = new ServiceCollection();

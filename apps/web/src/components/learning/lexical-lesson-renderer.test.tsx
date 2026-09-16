@@ -58,4 +58,23 @@ describe("LexicalLessonRenderer", () => {
     ).toBeInTheDocument();
     expect(mocks.surface).not.toHaveBeenCalled();
   });
+
+  it("rejects object content without a Lexical root", () => {
+    render(
+      <LexicalLessonRenderer content={{ children: [] }} itemId="lesson-1" />,
+    );
+
+    expect(
+      screen.getByText("This Lexical lesson has no published content."),
+    ).toBeInTheDocument();
+    expect(mocks.surface).not.toHaveBeenCalled();
+  });
+
+  it("rejects an empty published payload", () => {
+    render(<LexicalLessonRenderer content={null} itemId="lesson-1" />);
+
+    expect(
+      screen.getByText("This Lexical lesson has no published content."),
+    ).toBeInTheDocument();
+  });
 });

@@ -360,11 +360,6 @@ public class SecureAssetDeliveryController : BaseApiController
         }
 
         var transformSpec = TransformationSpec.Parse(transform);
-        if (transformSpec == null)
-        {
-            return null;
-        }
-
         var validation = _transformationValidator.Validate(transformSpec, assetKind);
         if (validation.IsValid)
         {

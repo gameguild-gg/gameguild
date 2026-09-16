@@ -9,11 +9,10 @@ public sealed record ReflectionResponseResultDto(
 {
     public static ReflectionResponseResultDto FromInteraction(ContentInteraction interaction, bool includeRespondentIdentity = false)
     {
-        var response = ActivityResponseContract.Parse(
+        var response = (ReflectionActivityResponse)ActivityResponseContract.Parse(
             ProgramContentType.Reflection,
             interaction.SubmissionData ?? throw new InvalidOperationException("Reflection submission data is missing."),
-            null) as ReflectionActivityResponse
-            ?? throw new InvalidOperationException("Reflection submission data is invalid.");
+            null);
 
         return new ReflectionResponseResultDto(
             interaction.Id,

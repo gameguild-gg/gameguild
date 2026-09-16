@@ -25,9 +25,10 @@ public class DiscussionService : IDiscussionService
         string title,
         string content,
         Guid? contentId = null,
+        Guid? tenantId = null,
         CancellationToken cancellationToken = default)
     {
-        var discussion = CourseDiscussion.Create(courseId, authorId, title, content, contentId);
+        var discussion = CourseDiscussion.Create(courseId, authorId, title, content, contentId, tenantId);
         _context.Set<CourseDiscussion>().Add(discussion);
         await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 

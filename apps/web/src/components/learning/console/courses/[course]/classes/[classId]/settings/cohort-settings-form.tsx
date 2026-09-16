@@ -40,28 +40,42 @@ export function CohortSettingsForm({ courseId, cohort }: CohortSettingsFormProps
     const endDate = String(data.get('endDate') ?? '');
 
     startTransition(async () => {
-      const result = await updateCohort({
-        courseId,
-        cohortId: cohort.id,
-        name: String(data.get('name') ?? ''),
-        description: String(data.get('description') ?? ''),
-        startDate: `${startDate}T00:00:00`,
-        endDate: `${endDate}T23:59:59`,
-        maxCapacity: Number.parseInt(String(data.get('capacity') ?? ''), 10),
-        meetingSchedule: String(data.get('meetingPattern') ?? ''),
-      });
+      try {
+        const result = await updateCohort({
+          courseId,
+          cohortId: cohort.id,
+          name: String(data.get('name') ?? ''),
+          description: String(data.get('description') ?? ''),
+          startDate: `${startDate}T00:00:00`,
+          endDate: `${endDate}T23:59:59`,
+          maxCapacity: Number.parseInt(String(data.get('capacity') ?? ''), 10),
+          meetingSchedule: String(data.get('meetingPattern') ?? ''),
+        });
 
-      setMessage(result.success ? { kind: 'success', text: 'Class settings saved.' } : { kind: 'error', text: result.error });
-      if (result.success) router.refresh();
+        setMessage(result.success ? { kind: 'success', text: 'Class settings saved.' } : { kind: 'error', text: result.error });
+        if (result.success) router.refresh();
+      } catch (saveError) {
+        setMessage({
+          kind: 'error',
+          text: saveError instanceof Error ? saveError.message : 'Unable to save class settings.',
+        });
+      }
     });
   };
 
   const runStatus = (action: 'open' | 'close' | 'complete' | 'cancel') => {
     setMessage(null);
     startTransition(async () => {
-      const result = await updateCohortStatus(courseId, cohort.id, action);
-      setMessage(result.success ? { kind: 'success', text: 'Class status updated.' } : { kind: 'error', text: result.error });
-      if (result.success) router.refresh();
+      try {
+        const result = await updateCohortStatus(courseId, cohort.id, action);
+        setMessage(result.success ? { kind: 'success', text: 'Class status updated.' } : { kind: 'error', text: result.error });
+        if (result.success) router.refresh();
+      } catch (statusError) {
+        setMessage({
+          kind: 'error',
+          text: statusError instanceof Error ? statusError.message : 'Unable to update class status.',
+        });
+      }
     });
   };
 

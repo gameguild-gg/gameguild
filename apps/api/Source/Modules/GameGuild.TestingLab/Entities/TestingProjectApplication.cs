@@ -140,7 +140,7 @@ public sealed class TestingProjectApplication : EntityBase
         if (Status is not (TestingApplicationStatus.Draft or TestingApplicationStatus.Pending))
             throw new InvalidOperationException("The application package is frozen.");
         if (projectVersionId == Guid.Empty) throw new ArgumentException("Project version is invalid.", nameof(projectVersionId));
-        if (Status == TestingApplicationStatus.Pending && projectVersionId.HasValue && projectVersionId != ProjectVersionId &&
+        if (Status == TestingApplicationStatus.Pending && projectVersionId.HasValue && projectVersionId.Value != ProjectVersionId.GetValueOrDefault() &&
             !ProjectVersionEligibility.CanReplaceAfterSubmission(SubmissionVersionPolicy))
             throw new InvalidOperationException("The submitted project version is immutable under this application's policy.");
         if (projectVersionId.HasValue) ProjectVersionId = projectVersionId;

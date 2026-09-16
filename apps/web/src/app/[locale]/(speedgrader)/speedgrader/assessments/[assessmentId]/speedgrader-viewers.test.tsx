@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { LearningAssessmentsAssessmentSubmission } from '@game-guild/client';
 import { parseSubmittedModalities, SubmissionViewer } from './submission-viewer';
@@ -170,7 +170,9 @@ describe('SubmissionViewer — modality switch', () => {
   it('renders the code viewer when Code modality + assignment are present', async () => {
     resolveSubmission({
       submittedModalities: 'Code',
-      codePayload: JSON.stringify([{ path: '/home/user/main.cpp', content: '// student main' }]),
+      codePayload: JSON.stringify({
+        '/home/user/main.cpp': { content: '// student main', encoding: 'text' },
+      }),
     });
 
     render(<SubmissionViewer submissionId="sub-1" codingAssignment={sampleAssignment} manifestUrl="/emception/manifest.json" />);
@@ -181,7 +183,9 @@ describe('SubmissionViewer — modality switch', () => {
   it('renders a file fallback listing when code arrives without an assignment', async () => {
     resolveSubmission({
       submittedModalities: 'Code',
-      codePayload: JSON.stringify([{ path: '/home/user/main.cpp', content: 'int main() {}' }]),
+      codePayload: JSON.stringify({
+        '/home/user/main.cpp': { content: 'int main() {}', encoding: 'text' },
+      }),
     });
 
     render(<SubmissionViewer submissionId="sub-1" />);
@@ -225,7 +229,9 @@ describe('manifest URL resolution', () => {
   it('defaults the manifest URL to the self-hosted /emception/ path', async () => {
     resolveSubmission({
       submittedModalities: 'Code',
-      codePayload: JSON.stringify([{ path: '/home/user/main.cpp', content: '// student main' }]),
+      codePayload: JSON.stringify({
+        '/home/user/main.cpp': { content: '// student main', encoding: 'text' },
+      }),
     });
 
     render(<SubmissionViewer submissionId="sub-1" codingAssignment={sampleAssignment} />);
@@ -237,7 +243,9 @@ describe('manifest URL resolution', () => {
   it('passes an explicit manifestUrl through to the Ide', async () => {
     resolveSubmission({
       submittedModalities: 'Code',
-      codePayload: JSON.stringify([{ path: '/home/user/main.cpp', content: '// student main' }]),
+      codePayload: JSON.stringify({
+        '/home/user/main.cpp': { content: '// student main', encoding: 'text' },
+      }),
     });
 
     render(
@@ -460,7 +468,7 @@ describe('CodeGraderPanel', () => {
       />,
     );
     await waitFor(() => expect(assessmentEditorMock.props).toBeDefined());
-    screen.getByRole('button', { name: 'Emit grader result' }).click();
+    fireEvent.click(screen.getByRole('button', { name: 'Emit grader result' }));
 
     await waitFor(() => expect(onComputedScore).toHaveBeenCalled());
     expect(onComputedScore).toHaveBeenCalledWith(expect.objectContaining({ score: 67 }));

@@ -15,7 +15,9 @@ export default async function CourseOverviewPage({ params }: { params: Promise<{
   if (access.kind === 'not-found') notFound();
   if (access.kind !== 'ready') return <CourseAccessGate access={access} />;
 
-  const groupSets = await getCourseGroupSetViews(access.course.id);
+  const groupSets = access.course.enrollmentId
+    ? await getCourseGroupSetViews(access.course.id)
+    : [];
 
   return (
     <div className="space-y-8">

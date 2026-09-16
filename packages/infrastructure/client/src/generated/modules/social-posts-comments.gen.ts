@@ -17,7 +17,7 @@ export class SocialPostsCommentsModule {
 
   /**
    */
-  async getPostsComments(postId: string, query?: { skip?: number; take?: number }): Promise<Result<void, ApiError>> {
+  async getPostsComments(postId: string, query?: { skip?: number; take?: number; parentCommentId?: string }): Promise<Result<void, ApiError>> {
     const url = `/api/v1/posts/${postId}/comments`;
 
     const result = await this.client.request({

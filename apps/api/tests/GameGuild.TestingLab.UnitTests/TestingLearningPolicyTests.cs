@@ -5,6 +5,19 @@ namespace GameGuild.TestingLab.UnitTests;
 
 public sealed class TestingLearningPolicyTests
 {
+    [Fact]
+    public void IsSatisfied_WhenNoRequirementIsConfigured_ShouldBeFalse()
+    {
+        TestingLearningPolicy.IsSatisfied(
+                TestingLearningCompletionRequirement.None,
+                new TestingLearningEvidenceState(
+                    TestingSlotRegistrationStatus.Completed,
+                    HasSubmittedFeedback: true,
+                    HasPresentedProject: true))
+            .Should()
+            .BeFalse();
+    }
+
     [Theory]
     [InlineData(TestingSlotRegistrationStatus.Registered, false)]
     [InlineData(TestingSlotRegistrationStatus.CheckedIn, false)]
