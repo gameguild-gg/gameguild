@@ -4,7 +4,7 @@ import { completeCourseContent, beginCourseContent } from '@/lib/learner/progres
 import { Button } from '@game-guild/ui/components/button';
 import { CheckCircle2, PlayCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 
 interface LessonProgressControlsProps {
   contentId: string;
@@ -19,37 +19,48 @@ export function LessonProgressControls({
 }: LessonProgressControlsProps) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
+  const [refreshing, startRefreshTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const busy = pending || refreshing;
 
   async function mutate(action: typeof beginCourseContent) {
     setPending(true);
     setError(null);
-    const result = await action(courseId, contentId);
-    setPending(false);
-    if (!result.success) {
-      setError(result.error);
-      return;
+    try {
+      const result = await action(courseId, contentId);
+      if (!result.success) {
+        setError(result.error);
+        return;
+      }
+      startRefreshTransition(() => router.refresh());
+    } catch (mutationError) {
+      setError(
+        mutationError instanceof Error
+          ? mutationError.message
+          : 'Unable to update lesson progress.',
+      );
+    } finally {
+      setPending(false);
     }
-    router.refresh();
   }
 
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap gap-2">
         {status === 'available' ? (
-          <Button disabled={pending} onClick={() => void mutate(beginCourseContent)}>
+          <Button disabled={busy} onClick={() => void mutate(beginCourseContent)}>
             <PlayCircle className="size-4" />
-            {pending ? 'Starting...' : 'Start lesson'}
+            {busy ? 'Starting...' : 'Start lesson'}
           </Button>
         ) : null}
         {status === 'available' || status === 'in-progress' ? (
           <Button
             variant="outline"
-            disabled={pending}
+            disabled={busy}
             onClick={() => void mutate(completeCourseContent)}
           >
             <CheckCircle2 className="size-4" />
-            {pending ? 'Saving...' : 'Mark complete'}
+            {busy ? 'Saving...' : 'Mark complete'}
           </Button>
         ) : null}
         {status === 'completed' ? (

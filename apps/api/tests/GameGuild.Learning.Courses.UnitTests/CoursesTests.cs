@@ -1142,10 +1142,26 @@ public class CreateProgramCommandValidatorTests
     }
 
     [Fact]
+    public void AbsoluteNonHttpThumbnailUrl_ShouldFail()
+    {
+        var cmd = new CreateProgramCommand("Valid Title", "A valid description for the course",
+            Thumbnail: "ftp://example.com/image.png");
+        _validator.Validate(cmd).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
     public void ValidThumbnailUrl_ShouldPass()
     {
         var cmd = new CreateProgramCommand("Valid Title", "A valid description for the course",
             Thumbnail: "https://example.com/img.png");
+        _validator.Validate(cmd).IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ValidHttpThumbnailUrl_ShouldPass()
+    {
+        var cmd = new CreateProgramCommand("Valid Title", "A valid description for the course",
+            Thumbnail: "http://example.com/img.png");
         _validator.Validate(cmd).IsValid.Should().BeTrue();
     }
 

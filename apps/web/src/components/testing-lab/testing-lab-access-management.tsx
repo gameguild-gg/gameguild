@@ -82,6 +82,16 @@ function createFormData(values: Record<string, string>) {
   return formData;
 }
 
+function accessFailure(error: unknown): TestingLabActionResult<unknown> {
+  return {
+    success: false,
+    error:
+      error instanceof Error
+        ? error.message
+        : "The Testing Lab access operation failed.",
+  };
+}
+
 export async function executeTestingLabAccessMutation(
   operation: Operation,
   inspect: AccessInspection,
@@ -91,13 +101,34 @@ export async function executeTestingLabAccessMutation(
   effectiveAccess: TestingLabUserTestingLabPermissions | null;
   refreshError: string | null;
 }> {
-  const result = await operation(createFormData(values));
+  let result: TestingLabActionResult<unknown>;
+  try {
+    result = await operation(createFormData(values));
+  } catch (error) {
+    return {
+      result: accessFailure(error),
+      effectiveAccess: null,
+      refreshError: null,
+    };
+  }
   if (!result.success)
     return { result, effectiveAccess: null, refreshError: null };
 
-  const refreshed = await inspect(
-    createFormData({ userId: values.userId ?? "" }),
-  );
+  let refreshed: Awaited<ReturnType<AccessInspection>>;
+  try {
+    refreshed = await inspect(
+      createFormData({ userId: values.userId ?? "" }),
+    );
+  } catch (error) {
+    return {
+      result,
+      effectiveAccess: null,
+      refreshError:
+        error instanceof Error
+          ? error.message
+          : "Effective access could not be refreshed.",
+    };
+  }
   if (!refreshed.success) {
     return { result, effectiveAccess: null, refreshError: refreshed.error };
   }
@@ -184,20 +215,24 @@ export function TestingLabAccessManagement({
   );
   const availableActions = getTestingLabResourceActions(resourceType);
 
-  function loadAccess(userId = memberId) {
-    if (!userId) return;
+  function loadAccess(userId: string) {
     startTransition(async () => {
-      const access = await inspectTestingLabUserAccess(
-        createFormData({ userId }),
-      );
-      setResult(access);
-      setRefreshError(null);
-      if (access.success) setEffectiveAccess(access.data);
+      try {
+        const access = await inspectTestingLabUserAccess(
+          createFormData({ userId }),
+        );
+        setResult(access);
+        setRefreshError(null);
+        setEffectiveAccess(access.success ? access.data : null);
+      } catch (error) {
+        setResult(accessFailure(error));
+        setRefreshError(null);
+        setEffectiveAccess(null);
+      }
     });
   }
 
   function openMemberAccess() {
-    if (!memberId) return;
     setOpen(true);
     loadAccess(memberId);
   }
@@ -278,7 +313,7 @@ export function TestingLabAccessManagement({
                   size="icon"
                   variant="ghost"
                   disabled={pending || !memberId}
-                  onClick={() => loadAccess()}
+                  onClick={() => loadAccess(memberId)}
                   title="Refresh access"
                 >
                   {pending ? (
@@ -346,10 +381,10 @@ export function TestingLabAccessManagement({
                     <SelectValue placeholder="Choose a role" />
                   </SelectTrigger>
                   <SelectContent>
-                    {roles.map((role) => (
+                    {roles.filter((role) => role.name).map((role) => (
                       <SelectItem
                         key={role.id ?? role.name}
-                        value={role.name ?? ""}
+                        value={role.name!}
                       >
                         {role.name}
                       </SelectItem>
@@ -470,19 +505,17 @@ export function TestingLabAccessManagement({
 
               <div className="grid gap-3 rounded-md bg-muted/25 p-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Resource type</Label>
+                  <Label htmlFor="testing-access-resource-type">Resource type</Label>
                   <Select
                     value={resourceType}
                     onValueChange={(value) => {
                       const type = value as ResourceOption["type"];
                       setResourceType(type);
                       setResourceId("");
-                      setPermissionAction(
-                        getTestingLabResourceActions(type)[0] ?? "read",
-                      );
+                      setPermissionAction(getTestingLabResourceActions(type)[0]!);
                     }}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger id="testing-access-resource-type">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -493,12 +526,12 @@ export function TestingLabAccessManagement({
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Action</Label>
+                  <Label htmlFor="testing-access-action">Action</Label>
                   <Select
                     value={permissionAction}
                     onValueChange={setPermissionAction}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger id="testing-access-action">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -513,9 +546,9 @@ export function TestingLabAccessManagement({
                   </Select>
                 </div>
                 <div className="space-y-2 sm:col-span-2">
-                  <Label>Resource</Label>
+                  <Label htmlFor="testing-access-resource">Resource</Label>
                   <Select value={resourceId} onValueChange={setResourceId}>
-                    <SelectTrigger>
+                    <SelectTrigger id="testing-access-resource">
                       <SelectValue placeholder="Choose a resource" />
                     </SelectTrigger>
                     <SelectContent>

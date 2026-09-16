@@ -24,7 +24,7 @@ public class SimilarToCompletedStrategy(IApplicationDbContext context) : IRecomm
         // Get user's completed courses
         var completedCourses = await context.Set<ProgramUser>()
             .AsNoTracking()
-            .Where(pu => pu.UserId == userId && pu.IsActive)
+            .Where(pu => pu.UserId == userId && pu.IsActive && pu.CompletedAt.HasValue)
             .Include(pu => pu.Program)
             .Select(pu => pu.Program)
             .Where(p => p != null && p.DeletedAt == null)
@@ -37,7 +37,7 @@ public class SimilarToCompletedStrategy(IApplicationDbContext context) : IRecomm
 
         // Extract characteristics from completed courses
         var completedCategories = completedCourses
-            .Select(c => c!.Category.ToString())
+            .Select(c => c!.Category)
             .GroupBy(c => c)
             .OrderByDescending(g => g.Count())
             .Take(3)
@@ -74,7 +74,7 @@ public class SimilarToCompletedStrategy(IApplicationDbContext context) : IRecomm
         // Filter by similar categories
         if (completedCategories.Any())
         {
-            query = query.Where(p => completedCategories.Contains(p.Category.ToString()));
+            query = query.Where(p => completedCategories.Contains(p.Category));
         }
 
         var similarCourses = await query
@@ -96,7 +96,7 @@ public class SimilarToCompletedStrategy(IApplicationDbContext context) : IRecomm
             {
                 Course = course,
                 SimilarityScore = CalculateSimilarityScore(
-                    course.Category.ToString(), completedCategories,
+                    course.Category, completedCategories,
                     course.Difficulty.ToString(), completedDifficulties,
                     ParseSkills(course.SkillsProvided ?? ""), completedSkills,
                     (double)course.AverageRating)
@@ -133,8 +133,8 @@ public class SimilarToCompletedStrategy(IApplicationDbContext context) : IRecomm
     }
 
     private static double CalculateSimilarityScore(
-        string category,
-        List<string> preferredCategories,
+        ProgramCategory category,
+        List<ProgramCategory> preferredCategories,
         string difficulty,
         List<string> preferredDifficulties,
         List<string> courseSkills,
@@ -144,11 +144,8 @@ public class SimilarToCompletedStrategy(IApplicationDbContext context) : IRecomm
         double score = 0.0;
 
         // Category match: 30%
-        if (preferredCategories.Contains(category))
-        {
-            var categoryRank = preferredCategories.IndexOf(category);
-            score += 0.3 * (1.0 - (categoryRank * 0.1)); // Top category gets full 30%
-        }
+        var categoryRank = preferredCategories.IndexOf(category);
+        score += 0.3 * (1.0 - (categoryRank * 0.1)); // Top category gets full 30%
 
         // Difficulty progression: 20% (prefer next level up or same)
         if (preferredDifficulties.Contains(difficulty))

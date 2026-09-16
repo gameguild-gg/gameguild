@@ -5,7 +5,7 @@ import { LessonProgressControls } from '@/components/learning/lesson-progress-co
 import { getCourseAccessData } from '@/lib/learner/courses';
 import { canEditCourse } from '@/lib/learning/queries/course';
 import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
+import { buttonVariants } from '@game-guild/ui/components/button-variants';
 import { ArrowLeft, ArrowRight, Lock, Pencil } from 'lucide-react';
 import { notFound } from 'next/navigation';
 
@@ -34,28 +34,26 @@ export default async function LessonPage({
   return (
     <article className="mx-auto max-w-4xl space-y-8">
       <header className="border-b pb-6">
-        <Button asChild variant="ghost" className="-ml-3 mb-4">
-          <Link href={`${courseHref}/content`}>
-            <ArrowLeft className="size-4" />
-            Course content
-          </Link>
-        </Button>
+        <Link href={`${courseHref}/content`} className={buttonVariants({ variant: 'ghost', className: '-ml-3 mb-4' })}>
+          <ArrowLeft className="size-4" />
+          Course content
+        </Link>
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline">Lesson</Badge>
           {item.duration ? <Badge variant="secondary">{item.duration} min</Badge> : null}
           {canEdit ? (
-            <Button
-              asChild
-              variant="ghost"
-              size="icon-xs"
-              className="ml-auto text-muted-foreground hover:text-foreground"
+            <Link
+              href={editHref}
+              className={buttonVariants({
+                variant: 'ghost',
+                size: 'icon-xs',
+                className: 'ml-auto text-muted-foreground hover:text-foreground',
+              })}
               title="Edit lesson"
             >
-              <Link href={editHref}>
-                <Pencil className="size-3.5" />
-                <span className="sr-only">Edit lesson</span>
-              </Link>
-            </Button>
+              <Pencil className="size-3.5" />
+              <span className="sr-only">Edit lesson</span>
+            </Link>
           ) : null}
         </div>
         <h1 className="mt-4 text-3xl font-semibold sm:text-4xl">{item.title}</h1>
@@ -93,22 +91,18 @@ export default async function LessonPage({
 
       <nav aria-label="Lesson navigation" className="flex justify-between gap-4 border-t pt-6">
         {previous ? (
-          <Button asChild variant="outline">
-            <Link href={`${courseHref}/lessons/${previous.slug || previous.id}`}>
-              <ArrowLeft className="size-4" />
-              Previous
-            </Link>
-          </Button>
+          <Link href={`${courseHref}/lessons/${previous.slug || previous.id}`} className={buttonVariants({ variant: 'outline' })}>
+            <ArrowLeft className="size-4" />
+            Previous
+          </Link>
         ) : (
           <span />
         )}
         {next ? (
-          <Button asChild>
-            <Link href={`${courseHref}/lessons/${next.slug || next.id}`}>
-              Next
-              <ArrowRight className="size-4" />
-            </Link>
-          </Button>
+          <Link href={`${courseHref}/lessons/${next.slug || next.id}`} className={buttonVariants()}>
+            Next
+            <ArrowRight className="size-4" />
+          </Link>
         ) : null}
       </nav>
     </article>

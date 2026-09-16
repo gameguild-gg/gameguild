@@ -104,23 +104,24 @@ export function FunctionalTestEditor({
   }
 
   function patchCaseInput(cIndex: number, pIndex: number, raw: string) {
-    const param = fn.Parameters[pIndex];
-    const case_ = test.Cases[cIndex];
-    if (!param || !case_) return;
-    const inputs = case_.Inputs.map((inp, i) =>
-      i === pIndex
-        ? { Type: param.Type, Content: parseContent(param.Type, raw) }
-        : inp,
-    );
+    const param = fn.Parameters[pIndex]!;
+    const case_ = test.Cases[cIndex]!;
+    const inputs = fn.Parameters.map((signatureParameter, i) => {
+      const input = case_.Inputs[i] ?? {
+        Type: signatureParameter.Type,
+        Content: defaultFunctionalContentForType(signatureParameter.Type, ""),
+      };
+      return i === pIndex
+        ? { Type: param.Type, Content: parseFunctionalContent(param.Type, raw) }
+        : input;
+    });
     patchCase(cIndex, { Inputs: inputs });
   }
 
   function patchCaseExpected(cIndex: number, raw: string) {
-    const case_ = test.Cases[cIndex];
-    if (!case_) return;
     const expected: FunctionParameter = {
       Type: fn.ReturnType.Type,
-      Content: parseContent(fn.ReturnType.Type, raw),
+      Content: parseFunctionalContent(fn.ReturnType.Type, raw),
     };
     patchCase(cIndex, { Expected: expected });
   }
@@ -128,11 +129,11 @@ export function FunctionalTestEditor({
   function addCase() {
     const inputs: FunctionParameter[] = fn.Parameters.map((p) => ({
       Type: p.Type,
-      Content: defaultContentForType(p.Type, ""),
+      Content: defaultFunctionalContentForType(p.Type, ""),
     }));
     const expected: FunctionParameter = {
       Type: fn.ReturnType.Type,
-      Content: defaultContentForType(fn.ReturnType.Type, ""),
+      Content: defaultFunctionalContentForType(fn.ReturnType.Type, ""),
     };
     patchCases([...test.Cases, { Inputs: inputs, Expected: expected }]);
   }
@@ -347,7 +348,7 @@ export function FunctionalTestEditor({
                 {fn.Parameters.map((p, pIndex) => {
                   const inp = c.Inputs[pIndex] ?? {
                     Type: p.Type,
-                    Content: defaultContentForType(p.Type, ""),
+                    Content: defaultFunctionalContentForType(p.Type, ""),
                   };
                   return (
                     <div
@@ -398,7 +399,7 @@ export function FunctionalTestEditor({
 }
 
 /** Coerce a string input into the wire value for the given parameter type. */
-function parseContent(type: FunctionParameterType, raw: string): FunctionParameterValue {
+export function parseFunctionalContent(type: FunctionParameterType, raw: string): FunctionParameterValue {
   switch (type) {
     case "integer":
       return Number.isNaN(Number(raw)) ? 0 : Number(raw);
@@ -412,7 +413,7 @@ function parseContent(type: FunctionParameterType, raw: string): FunctionParamet
 }
 
 /** Reset content to a sane default when the type changes. */
-function defaultContentForType(
+export function defaultFunctionalContentForType(
   type: FunctionParameterType,
   current: FunctionParameterValue,
 ): FunctionParameterValue {

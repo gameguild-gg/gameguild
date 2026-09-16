@@ -38,12 +38,13 @@ public class RecommendationEngine : IRecommendationEngine
             userId, tenantId, maxResults);
 
         // Get courses to exclude (already enrolled, completed, or recently dismissed)
-        var excludeCourseIds = await GetExcludedCourseIdsAsync(userId, cancellationToken).ConfigureAwait(false);
+        var excludeCourseIds = await GetExcludedCourseIdsAsync(userId, tenantId, cancellationToken).ConfigureAwait(false);
 
         // Get existing valid recommendations to avoid duplicates
         var existingRecommendations = await _context.Set<CourseRecommendation>()
             .AsNoTracking()
             .Where(r => r.UserId == userId)
+            .Where(r => r.TenantId == tenantId)
             .Where(r => !r.IsDismissed)
             .Where(r => r.ExpiresAt > SystemClock.UtcNow)
             .ToListAsync(cancellationToken).ConfigureAwait(false);
@@ -75,7 +76,6 @@ public class RecommendationEngine : IRecommendationEngine
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Strategy {Strategy} failed, continuing with others", strategy.Type);
-                throw;
             }
         }
 
@@ -95,7 +95,8 @@ public class RecommendationEngine : IRecommendationEngine
                 type: c.Type,
                 score: c.Score,
                 reason: c.Reason,
-                validFor: TimeSpan.FromDays(7))).ToList();
+                validFor: TimeSpan.FromDays(7),
+                tenantId: tenantId)).ToList();
 
         // Persist new recommendations
         if (newRecommendations.Any())
@@ -123,6 +124,7 @@ public class RecommendationEngine : IRecommendationEngine
         // Mark expired recommendations as dismissed
         var expiredRecommendations = await _context.Set<CourseRecommendation>()
             .Where(r => r.UserId == userId)
+            .Where(r => r.TenantId == tenantId)
             .Where(r => r.ExpiresAt <= SystemClock.UtcNow)
             .Where(r => !r.IsDismissed)
             .ToListAsync(cancellationToken).ConfigureAwait(false);
@@ -141,7 +143,7 @@ public class RecommendationEngine : IRecommendationEngine
         await GenerateRecommendationsAsync(userId, tenantId, DefaultMaxResults, null, cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task<HashSet<Guid>> GetExcludedCourseIdsAsync(Guid userId, CancellationToken cancellationToken)
+    private async Task<HashSet<Guid>> GetExcludedCourseIdsAsync(Guid userId, Guid? tenantId, CancellationToken cancellationToken)
     {
         // Get enrolled/completed courses
         var enrolledCourseIds = await _context.Set<ProgramUser>()
@@ -155,6 +157,7 @@ public class RecommendationEngine : IRecommendationEngine
         var dismissedCourseIds = await _context.Set<CourseRecommendation>()
             .AsNoTracking()
             .Where(r => r.UserId == userId)
+            .Where(r => r.TenantId == tenantId)
             .Where(r => r.IsDismissed)
             .Where(r => r.UpdatedAt >= dismissedCutoff)
             .Select(r => r.CourseId)

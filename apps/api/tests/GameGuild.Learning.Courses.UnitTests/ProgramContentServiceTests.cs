@@ -60,6 +60,28 @@ public sealed class ProgramContentServiceTests
         contents.Should().OnlyContain(content => content.DeletedAt != null);
     }
 
+    [Fact]
+    public async Task DeleteContentAsync_WithCorruptCycle_TerminatesAndDeletesEachItemOnce()
+    {
+        await using var context = CreateContext();
+        var programId = Guid.NewGuid();
+        var root = PersistedContent(programId, "Root");
+        var child = PersistedContent(programId, "Child", root.Id);
+        root.ParentId = child.Id;
+        context.Set<ProgramContent>().AddRange(root, child);
+        await context.SaveChangesAsync();
+        var service = new ProgramContentService(
+            context,
+            Mock.Of<IProgramContentScheduleGuard>(),
+            Mock.Of<IProgramContentLifecycleGuard>());
+
+        var deleted = await service.DeleteContentAsync(root.Id);
+
+        deleted.Should().BeTrue();
+        var contents = await context.Set<ProgramContent>().IgnoreQueryFilters().ToListAsync();
+        contents.Should().HaveCount(2).And.OnlyContain(content => content.DeletedAt != null);
+    }
+
     private static LearningCoursesTestContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<LearningCoursesTestContext>()

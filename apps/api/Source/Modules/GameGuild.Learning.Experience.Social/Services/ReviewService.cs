@@ -26,6 +26,7 @@ public class ReviewService : IReviewService
         string? title = null,
         string? content = null,
         Guid? enrollmentId = null,
+        Guid? tenantId = null,
         CancellationToken cancellationToken = default)
     {
         var existingReview = await _context.Set<CourseReview>()
@@ -36,7 +37,7 @@ public class ReviewService : IReviewService
             return Result.Failure<CourseReview>(Error.Failure("Review.AlreadyExists", "You have already reviewed this course"));
         }
 
-        var review = CourseReview.Create(courseId, userId, rating, title, content, enrollmentId);
+        var review = CourseReview.Create(courseId, userId, rating, title, content, enrollmentId, tenantId);
         _context.Set<CourseReview>().Add(review);
         await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 

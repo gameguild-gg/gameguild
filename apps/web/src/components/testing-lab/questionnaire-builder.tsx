@@ -50,7 +50,6 @@ export function QuestionnaireBuilder({
 
   function move(index: number, offset: -1 | 1) {
     const target = index + offset;
-    if (target < 0 || target >= questions.length) return;
     const next = [...questions];
     [next[index], next[target]] = [next[target], next[index]];
     onChange({ ...value, questions: next });
@@ -80,7 +79,9 @@ export function QuestionnaireBuilder({
         />
       </div>
 
-      {questions.map((question, index) => (
+      {questions.map((question, index) => {
+        const questionOptions = question.options ?? [];
+        return (
         <section key={question.id ?? index} className="space-y-3 rounded-md border p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <Badge variant="outline">Question {index + 1}</Badge>
@@ -117,21 +118,21 @@ export function QuestionnaireBuilder({
           {question.type !== 'FreeText' ? (
             <div className="space-y-2">
               <Label>Options</Label>
-              {(question.options ?? []).map((option, optionIndex) => (
+              {questionOptions.map((option, optionIndex) => (
                 <div key={option.id ?? optionIndex} className="flex gap-2">
                   <Input
                     value={option.label ?? ''}
                     aria-label={`Option ${optionIndex + 1}`}
                     onChange={(event) => {
-                      const options = [...(question.options ?? [])];
+                      const options = [...questionOptions];
                       options[optionIndex] = { ...option, label: event.currentTarget.value };
                       updateQuestion(index, { options });
                     }}
                   />
-                  <Button type="button" variant="ghost" size="icon-sm" aria-label="Delete option" onClick={() => updateQuestion(index, { options: (question.options ?? []).filter((_, candidate) => candidate !== optionIndex) })}><Trash2 /></Button>
+                  <Button type="button" variant="ghost" size="icon-sm" aria-label="Delete option" onClick={() => updateQuestion(index, { options: questionOptions.filter((_, candidate) => candidate !== optionIndex) })}><Trash2 /></Button>
                 </div>
               ))}
-              <Button type="button" variant="outline" size="sm" onClick={() => updateQuestion(index, { options: [...(question.options ?? []), { id: stableId('option'), label: '' }] })}>
+              <Button type="button" variant="outline" size="sm" onClick={() => updateQuestion(index, { options: [...questionOptions, { id: stableId('option'), label: '' }] })}>
                 <Plus className="mr-2 size-4" /> Add option
               </Button>
             </div>
@@ -172,7 +173,8 @@ export function QuestionnaireBuilder({
             </div>
           ) : null}
         </section>
-      ))}
+        );
+      })}
 
       <div className="flex flex-wrap gap-2">
         <Button

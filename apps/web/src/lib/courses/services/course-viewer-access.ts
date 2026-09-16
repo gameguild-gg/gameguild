@@ -1,7 +1,8 @@
 import 'server-only';
 
 import { auth, getToken } from '@/auth';
-import { createServerClient, GeneratedApi, type ApiError } from '@game-guild/client';
+import { createServerClient, GeneratedApi } from '@game-guild/client';
+import type { ApiError } from '@game-guild/client';
 
 export type CourseViewerAccessState = 'signed-out' | 'has-access' | 'no-access' | 'unavailable';
 
@@ -12,10 +13,8 @@ export interface CourseViewerAccess {
     error?: string;
 }
 
-const DEFAULT_API_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-
 function getApiUrl(): string {
-    return DEFAULT_API_URL.replace(/\/$/, '');
+    return (process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080').replace(/\/$/, '');
 }
 
 function createAuthenticatedProgramsModule(accessToken: string) {

@@ -1,7 +1,7 @@
 import { Link } from '@/i18n/navigation';
 import { getWorkspaceMyTeamInvitations, getWorkspaceProjects, getWorkspaceTeams } from '@/lib/workspaces';
 import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
+import { buttonVariants } from '@game-guild/ui/components/button-variants';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { CheckSquare2, FolderKanban, Mail, Plus, Users } from 'lucide-react';
 import React from 'react';
@@ -24,8 +24,8 @@ export async function WorkspaceHub(): Promise<React.JSX.Element> {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" asChild><Link href="/workspace/teams/new"><Plus className="size-4" />Team</Link></Button>
-          <Button asChild><Link href="/workspace/projects/new"><Plus className="size-4" />Project</Link></Button>
+          <Link href="/workspace/teams/new" className={buttonVariants({ variant: 'outline' })}><Plus className="size-4" />Team</Link>
+          <Link href="/workspace/projects/new" className={buttonVariants()}><Plus className="size-4" />Project</Link>
         </div>
       </header>
 
@@ -39,7 +39,7 @@ export async function WorkspaceHub(): Promise<React.JSX.Element> {
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0">
             <div><CardTitle>Recent teams</CardTitle><CardDescription>Active team memberships.</CardDescription></div>
-            <Button size="sm" variant="ghost" asChild><Link href="/workspace/teams">All teams</Link></Button>
+            <Link href="/workspace/teams" className={buttonVariants({ size: 'sm', variant: 'ghost' })}>All teams</Link>
           </CardHeader>
           <CardContent className="space-y-2">
             {teams.slice(0, 5).map((team) => (
@@ -54,7 +54,7 @@ export async function WorkspaceHub(): Promise<React.JSX.Element> {
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0">
             <div><CardTitle>Recent projects</CardTitle><CardDescription>Projects you can access.</CardDescription></div>
-            <Button size="sm" variant="ghost" asChild><Link href="/workspace/projects">All projects</Link></Button>
+            <Link href="/workspace/projects" className={buttonVariants({ size: 'sm', variant: 'ghost' })}>All projects</Link>
           </CardHeader>
           <CardContent className="space-y-2">
             {projects.slice(0, 5).map((project) => (
@@ -73,7 +73,7 @@ export async function WorkspaceHub(): Promise<React.JSX.Element> {
           <CardTitle className="flex items-center gap-2"><CheckSquare2 className="size-4" />My work</CardTitle>
           <CardDescription>Tasks live inside the project that owns them.</CardDescription>
         </CardHeader>
-        <CardContent><Button variant="outline" asChild><Link href="/workspace/work">Open assigned work</Link></Button></CardContent>
+        <CardContent><Link href="/workspace/work" className={buttonVariants({ variant: 'outline' })}>Open assigned work</Link></CardContent>
       </Card>
     </div>
   );

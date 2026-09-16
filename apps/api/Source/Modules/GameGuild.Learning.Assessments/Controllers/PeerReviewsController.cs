@@ -263,7 +263,12 @@ public class PeerReviewsController : BaseApiController
     private static bool IsReviewWindowOpen(Assessment assessment)
     {
         var closesAt = assessment.DueAt ?? assessment.AvailableUntil ?? assessment.LateSubmissionDeadline;
-        return closesAt is null || closesAt >= SystemClock.UtcNow;
+        if (!closesAt.HasValue)
+        {
+            return true;
+        }
+
+        return closesAt.Value >= SystemClock.UtcNow;
     }
 
     private async Task<bool> IsActorInProgramTenantAsync(Guid courseId)
