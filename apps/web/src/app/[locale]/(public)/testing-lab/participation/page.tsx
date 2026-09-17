@@ -2,7 +2,7 @@ import { Link } from '@/i18n/navigation';
 import { getTestingParticipationOverview } from '@/lib/testing-lab/events-public-queries';
 import { Alert, AlertDescription, AlertTitle } from '@game-guild/ui/components/alert';
 import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
+import { buttonVariants } from '@game-guild/ui/components/button-variants';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { CalendarCheck2, ClipboardCheck, FolderKanban, MessageSquareWarning } from 'lucide-react';
 
@@ -15,7 +15,7 @@ export default async function TestingLabParticipationPage() {
         <div className="mx-auto max-w-3xl rounded-3xl border border-white/10 bg-white/[0.04] p-8">
           <h1 className="text-3xl font-semibold">Your Testing Lab participation</h1>
           <p className="mt-3 text-slate-300">Sign in to manage your tester registrations, Team project applications, and pending feedback.</p>
-          <Button asChild className="mt-6"><Link href="/sign-in">Sign in</Link></Button>
+          <Link href="/sign-in" className={buttonVariants({ className: 'mt-6' })}>Sign in</Link>
         </div>
       </main>
     );
@@ -30,7 +30,7 @@ export default async function TestingLabParticipationPage() {
             <h1 className="mt-2 text-4xl font-semibold">Your Testing Lab</h1>
             <p className="mt-3 text-slate-300">Individual testing and applications owned by Projects you can represent.</p>
           </div>
-          <Button asChild variant="outline"><Link href="/testing-lab/events">Discover events</Link></Button>
+          <Link href="/testing-lab/events" className={buttonVariants({ variant: 'outline' })}>Discover events</Link>
         </header>
 
         {participation.accessIssues.length > 0 ? (
@@ -69,7 +69,7 @@ export default async function TestingLabParticipationPage() {
                 <div key={obligation.id} className="rounded-xl border border-amber-300/20 bg-amber-300/5 p-3">
                   <p className="text-sm font-medium">Feedback required</p>
                   <p className="mt-1 text-xs text-slate-400">Application {obligation.applicationId}</p>
-                  <Button asChild size="sm" className="mt-3"><Link href={`/testing-lab/events/${obligation.eventId}`}>Submit feedback</Link></Button>
+                  <Link href={`/testing-lab/events/${obligation.eventId}`} className={buttonVariants({ size: 'sm', className: 'mt-3' })}>Submit feedback</Link>
                 </div>
               ))}
             </CardContent>

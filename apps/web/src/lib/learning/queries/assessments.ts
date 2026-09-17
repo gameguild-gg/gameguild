@@ -667,7 +667,7 @@ export const getCourseGroupSetViews = cache(
     const details = await Promise.all(
       sets.map((set) => getGroupSetGroups(courseId, set.id)),
     );
-    return sets.map((set, index) => ({ ...set, groups: details[index] ?? [] }));
+    return sets.map((set, index) => ({ ...set, groups: details[index] }));
   },
 );
 

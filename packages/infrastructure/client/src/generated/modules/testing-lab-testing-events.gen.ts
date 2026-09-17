@@ -575,6 +575,27 @@ export class TestingLabTestingEventsModule {
 
   /**
    */
+  async postTestingEventsSlotsBatch(
+    eventId: string,
+    body: Types.TestingLabCreateTestingEventSlotsInput,
+  ): Promise<Result<Array<Types.TestingLabTestingEventSlotProjection>, ApiError>> {
+    const url = `/v1/testing/events/${eventId}/slots/batch`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.TestingLabCreateTestingEventSlotsInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.TestingLabTestingEventSlotProjection>, ApiError>;
+  }
+
+  /**
+   */
   async getTestingEventsApplicationsForGetTestingEventsApplicationsByApplicationId(
     applicationId: string,
   ): Promise<Result<Types.TestingLabTestingProjectApplicationProjection, ApiError>> {

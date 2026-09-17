@@ -253,7 +253,7 @@ export const getCourse = cache(
 
 export const resolveCourseId = cache(
   async (courseIdentifier: string): Promise<string> => {
-    if (isGuid(courseIdentifier)) return courseIdentifier;
+    if (isGuid(courseIdentifier)) return courseIdentifier.trim();
 
     const course = await getCourse(courseIdentifier);
     return course?.id ?? courseIdentifier;

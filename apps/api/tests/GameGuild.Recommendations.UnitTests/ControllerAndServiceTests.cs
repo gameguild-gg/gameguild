@@ -14,6 +14,7 @@ public class ControllerAndServiceTests
 {
     private readonly Mock<IRecommendationService> _svc = new();
     private readonly Mock<IActorContextAccessor> _actor = new();
+    private readonly Mock<ISender> _sender = new();
 
     private RecommendationsController CreateController(Guid? userId = null)
     {
@@ -27,7 +28,7 @@ public class ControllerAndServiceTests
             Roles = new HashSet<string>(),
             Permissions = new HashSet<string>()
         });
-        return new RecommendationsController(_svc.Object, _actor.Object);
+        return new RecommendationsController(_svc.Object, _actor.Object, _sender.Object);
     }
 
     [Fact]
@@ -49,7 +50,7 @@ public class ControllerAndServiceTests
     public async Task GenerateRecommendations_ReturnsOk()
     {
         var uid = Guid.NewGuid();
-        _svc.Setup(s => s.GenerateRecommendationsAsync(uid, null, 10, null, default))
+        _sender.Setup(s => s.Send(It.IsAny<GenerateRecommendationsCommand>(), default))
             .ReturnsAsync(Enumerable.Empty<CourseRecommendation>());
         var r = await CreateController(uid).GenerateRecommendations();
         r.Result.Should().BeOfType<OkObjectResult>();
@@ -107,7 +108,7 @@ public class ControllerAndServiceTests
         var uid = Guid.NewGuid();
         var dto = new CreateOrUpdateLearningProfileDto(null, null, null, null, null);
         var profile = UserLearningProfile.Create(uid);
-        _svc.Setup(s => s.UpdateUserProfileAsync(uid, dto, default)).ReturnsAsync(profile);
+        _sender.Setup(s => s.Send(It.IsAny<CreateOrUpdateLearningProfileCommand>(), default)).ReturnsAsync(profile);
         var ctrl = CreateController(uid);
         // Need to fake valid ModelState
         var r = await ctrl.UpdateMyProfile(dto);
@@ -119,7 +120,7 @@ public class ControllerAndServiceTests
     {
         var uid = Guid.NewGuid();
         var profile = UserLearningProfile.Create(uid);
-        _svc.Setup(s => s.AddSkillToProfileAsync(uid, "C#", default)).ReturnsAsync(profile);
+        _sender.Setup(s => s.Send(It.IsAny<AddSkillToProfileCommand>(), default)).ReturnsAsync(profile);
         var r = await CreateController(uid).AddSkillToProfile(new AddSkillRequest("C#"));
         r.Result.Should().BeOfType<OkObjectResult>();
     }
@@ -136,7 +137,7 @@ public class ControllerAndServiceTests
     {
         var uid = Guid.NewGuid();
         var profile = UserLearningProfile.Create(uid);
-        _svc.Setup(s => s.RemoveSkillFromProfileAsync(uid, "C#", default)).ReturnsAsync(profile);
+        _sender.Setup(s => s.Send(It.IsAny<RemoveSkillFromProfileCommand>(), default)).ReturnsAsync(profile);
         var r = await CreateController(uid).RemoveSkillFromProfile("C#");
         r.Result.Should().BeOfType<OkObjectResult>();
     }

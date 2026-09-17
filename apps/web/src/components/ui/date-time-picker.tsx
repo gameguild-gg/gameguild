@@ -26,6 +26,9 @@ export interface DateTimePickerProps {
   disabled?: boolean
   placeholder?: string
   timezoneLabel?: string
+  displayFormat?: string
+  minValue?: string
+  maxValue?: string
   className?: string
   "aria-invalid"?: boolean | "true" | "false"
 }
@@ -77,6 +80,9 @@ export function DateTimePicker({
   disabled = false,
   placeholder = "Choose date and time",
   timezoneLabel = "UTC",
+  displayFormat = "PPP 'at' HH:mm",
+  minValue,
+  maxValue,
   className,
   "aria-invalid": ariaInvalid,
 }: DateTimePickerProps) {
@@ -86,6 +92,8 @@ export function DateTimePicker({
   const [internalValue, setInternalValue] = React.useState(defaultValue)
   const committedValue = controlled ? value : internalValue
   const committedDate = parseDateTime(committedValue)
+  const minimumDate = parseDateTime(minValue)
+  const maximumDate = parseDateTime(maxValue)
   const [open, setOpen] = React.useState(false)
   const [draftDate, setDraftDate] = React.useState<Date | undefined>(
     committedDate,
@@ -96,6 +104,33 @@ export function DateTimePicker({
   const [draftMinute, setDraftMinute] = React.useState(
     committedDate ? String(committedDate.getMinutes()).padStart(2, "0") : "00",
   )
+  const draftValue = React.useMemo(() => {
+    if (!draftDate) return ""
+    const candidate = new Date(draftDate)
+    candidate.setHours(
+      boundedPart(draftHour, 23),
+      boundedPart(draftMinute, 59),
+      0,
+      0,
+    )
+    return formatDateTime(candidate)
+  }, [draftDate, draftHour, draftMinute])
+  const draftOutsideRange =
+    (Boolean(minValue) && draftValue < minValue!) ||
+    (Boolean(maxValue) && draftValue > maxValue!)
+
+  const rangeDescription = React.useMemo(() => {
+    if (minimumDate && maximumDate) {
+      return `Choose a date and time between ${format(minimumDate, "PPP 'at' HH:mm")} and ${format(maximumDate, "PPP 'at' HH:mm")} (${timezoneLabel}).`
+    }
+    if (minimumDate) {
+      return `Choose a date and time on or after ${format(minimumDate, "PPP 'at' HH:mm")} (${timezoneLabel}).`
+    }
+    if (maximumDate) {
+      return `Choose a date and time on or before ${format(maximumDate, "PPP 'at' HH:mm")} (${timezoneLabel}).`
+    }
+    return ""
+  }, [maximumDate, minimumDate, timezoneLabel])
 
   const commit = React.useCallback(
     (nextValue: string) => {
@@ -128,15 +163,8 @@ export function DateTimePicker({
   }
 
   const applyDraft = () => {
-    if (!draftDate) return
-    const nextDate = new Date(draftDate)
-    nextDate.setHours(
-      boundedPart(draftHour, 23),
-      boundedPart(draftMinute, 59),
-      0,
-      0,
-    )
-    commit(formatDateTime(nextDate))
+    if (!draftDate || draftOutsideRange) return
+    commit(draftValue)
     setOpen(false)
   }
 
@@ -186,7 +214,7 @@ export function DateTimePicker({
             <CalendarIcon aria-hidden="true" />
             <span className="min-w-0 flex-1 truncate">
               {committedDate
-                ? format(committedDate, "PPP 'at' HH:mm")
+                ? format(committedDate, displayFormat)
                 : placeholder}
             </span>
             <span className="shrink-0 text-xs text-muted-foreground">
@@ -198,7 +226,20 @@ export function DateTimePicker({
           <Calendar
             mode="single"
             selected={draftDate}
-            defaultMonth={draftDate}
+            defaultMonth={draftDate ?? minimumDate}
+            disabled={(date) => {
+              const day = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+              const minimumDay = minimumDate
+                ? new Date(minimumDate.getFullYear(), minimumDate.getMonth(), minimumDate.getDate())
+                : null
+              const maximumDay = maximumDate
+                ? new Date(maximumDate.getFullYear(), maximumDate.getMonth(), maximumDate.getDate())
+                : null
+              return Boolean(
+                (minimumDay && day < minimumDay) ||
+                  (maximumDay && day > maximumDay),
+              )
+            }}
             onSelect={(selected) => {
               if (!selected) return
               selected.setHours(
@@ -253,6 +294,11 @@ export function DateTimePicker({
                 {timezoneLabel}
               </span>
             </div>
+            {draftOutsideRange ? (
+              <p role="alert" className="mb-3 max-w-xs text-xs text-destructive">
+                {rangeDescription}
+              </p>
+            ) : null}
             <div className="flex items-center justify-between gap-2">
               <div>
                 {!required ? (
@@ -284,6 +330,7 @@ export function DateTimePicker({
                   type="button"
                   size="sm"
                   onClick={applyDraft}
+                  disabled={!draftDate || draftOutsideRange}
                   aria-label="Apply date and time"
                 >
                   Apply

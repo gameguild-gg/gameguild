@@ -69,4 +69,16 @@ describe("TestingEventDirectoryFilters", () => {
     );
     expect(screen.queryByRole("button", { name: "Search" })).not.toBeInTheDocument();
   });
+
+  it("navigates to the archived event directory", async () => {
+    const user = userEvent.setup();
+    render(<TestingEventDirectoryFilters status="Draft" />);
+    await user.click(
+      screen.getByRole("combobox", { name: "Filter testing events by status" }),
+    );
+    await user.click(screen.getByRole("option", { name: "Archived" }));
+    expect(mocks.replace).toHaveBeenCalledWith(
+      "/workspace/testing-lab/events?archived=true",
+    );
+  });
 });

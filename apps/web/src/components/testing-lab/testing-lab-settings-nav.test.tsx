@@ -1,9 +1,13 @@
 import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const mocks = vi.hoisted(() => ({
+  pathname: vi.fn<() => string | null>(),
+}));
 
 vi.mock("@/i18n/navigation", () => ({
-  usePathname: () => "/workspace/testing-lab/settings/locations",
+  usePathname: mocks.pathname,
   Link: ({
     children,
     href,
@@ -21,6 +25,10 @@ vi.mock("@/i18n/navigation", () => ({
 import { TestingLabSettingsNav } from "./testing-lab-settings-nav";
 
 describe("TestingLabSettingsNav", () => {
+  beforeEach(() => {
+    mocks.pathname.mockReturnValue("/workspace/testing-lab/settings/locations");
+  });
+
   it("marks the current settings section for visual and assistive navigation", () => {
     render(<TestingLabSettingsNav />);
 
@@ -51,5 +59,24 @@ describe("TestingLabSettingsNav", () => {
     expect(screen.queryByRole("link", { name: "Locations" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Access" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Calendars" })).not.toBeInTheDocument();
+  });
+
+  it("marks nested settings routes as current", () => {
+    mocks.pathname.mockReturnValue(
+      "/workspace/testing-lab/settings/templates/template-1",
+    );
+    render(<TestingLabSettingsNav />);
+    expect(screen.getByRole("link", { name: "Calendars" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+  });
+
+  it("handles a missing pathname without marking a section current", () => {
+    mocks.pathname.mockReturnValue(null);
+    render(<TestingLabSettingsNav capabilities={[]} />);
+    expect(
+      screen.queryByRole("link", { name: "General" }),
+    ).not.toBeInTheDocument();
   });
 });

@@ -84,6 +84,43 @@ public sealed class LessonInteractionTrackingTests
     }
 
     [Fact]
+    public void CreateEvent_WhenInteractionIdIsEmpty_ShouldRejectIt()
+    {
+        var action = () => ContentInteractionEvent.Create(
+            Guid.Empty,
+            ContentInteractionEventType.Opened);
+
+        action.Should().Throw<ArgumentException>()
+            .WithParameterName("interactionId");
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void CreateEvent_WhenDurationIsNotPositive_ShouldRejectIt(int durationSeconds)
+    {
+        var action = () => ContentInteractionEvent.Create(
+            Guid.NewGuid(),
+            ContentInteractionEventType.Heartbeat,
+            durationSeconds: durationSeconds);
+
+        action.Should().Throw<ArgumentOutOfRangeException>()
+            .WithParameterName("durationSeconds");
+    }
+
+    [Fact]
+    public void CreateEvent_WhenIdempotencyKeyExceedsStorageLimit_ShouldRejectIt()
+    {
+        var action = () => ContentInteractionEvent.Create(
+            Guid.NewGuid(),
+            ContentInteractionEventType.Opened,
+            idempotencyKey: new string('x', 129));
+
+        action.Should().Throw<ArgumentException>()
+            .WithParameterName("idempotencyKey");
+    }
+
+    [Fact]
     public void DatabaseContract_ShouldRestrictPersistedInteractionEventTypes()
     {
         var modelBuilder = new ModelBuilder(new ConventionSet());
@@ -155,6 +192,49 @@ public sealed class LessonInteractionTrackingTests
             .WithParameterName("positionSeconds");
         progressScale.Should().Throw<FormatException>()
             .WithMessage("*at most two fractional digits*");
+    }
+
+    [Theory]
+    [InlineData("-0.01")]
+    [InlineData("100.01")]
+    public void PercentValue_ShouldRejectProgressOutsideDatabaseRange(string value)
+    {
+        var action = () => Percent(value);
+
+        action.Should().Throw<Exception>();
+    }
+
+    [Fact]
+    public void MatchesReplay_AllowsOmittedTimestampAndComparesExplicitTimestamp()
+    {
+        var occurredAt = new DateTime(2026, 9, 14, 12, 0, 0, DateTimeKind.Utc);
+        var interactionEvent = ContentInteractionEvent.Create(
+            Guid.NewGuid(),
+            ContentInteractionEventType.Progressed,
+            progressPercentage: Percent(50),
+            occurredAt: occurredAt);
+
+        interactionEvent.MatchesReplay(
+            ContentInteractionEventType.Progressed,
+            null,
+            null,
+            Percent(50),
+            null,
+            null).Should().BeTrue();
+        interactionEvent.MatchesReplay(
+            ContentInteractionEventType.Progressed,
+            null,
+            null,
+            Percent(50),
+            null,
+            occurredAt).Should().BeTrue();
+        interactionEvent.MatchesReplay(
+            ContentInteractionEventType.Progressed,
+            null,
+            null,
+            Percent(50),
+            null,
+            occurredAt.AddSeconds(1)).Should().BeFalse();
     }
 
     [Fact]
@@ -399,6 +479,59 @@ public sealed class LessonInteractionTrackingTests
                 lesson.ProgramId,
                 interaction.Id,
                 ContentInteractionEventType.Opened),
+            CancellationToken.None);
+
+        interaction.IsCompleted.Should().BeTrue();
+        interaction.Status.Should().Be(ProgressStatus.Completed);
+        interaction.ProgressPercentage.Should().Be(PercentValue.Hundred);
+    }
+
+    [Fact]
+    public async Task RecordEventHandler_WhenLessonIsOpened_ShouldStartInteraction()
+    {
+        await using var context = TrackingTestDbContext.Create();
+        var lesson = CreateLesson();
+        var interaction = CreateInteraction();
+        interaction.ContentId = lesson.Id;
+        interaction.Content = lesson;
+        context.Set<ProgramContent>().Add(lesson);
+        context.Set<ContentInteraction>().Add(interaction);
+        await context.SaveChangesAsync();
+        var handler = new RecordContentInteractionEventCommandHandler(
+            context,
+            new TestRequestContextAccessor(interaction.UserId));
+
+        await handler.Handle(
+            new RecordContentInteractionEventCommand(
+                lesson.ProgramId,
+                interaction.Id,
+                ContentInteractionEventType.Opened),
+            CancellationToken.None);
+
+        interaction.StartedAt.Should().NotBeNull();
+        interaction.Status.Should().Be(ProgressStatus.InProgress);
+    }
+
+    [Fact]
+    public async Task RecordEventHandler_WhenLessonIsCompleted_ShouldCompleteInteraction()
+    {
+        await using var context = TrackingTestDbContext.Create();
+        var lesson = CreateLesson();
+        var interaction = CreateInteraction();
+        interaction.ContentId = lesson.Id;
+        interaction.Content = lesson;
+        context.Set<ProgramContent>().Add(lesson);
+        context.Set<ContentInteraction>().Add(interaction);
+        await context.SaveChangesAsync();
+        var handler = new RecordContentInteractionEventCommandHandler(
+            context,
+            new TestRequestContextAccessor(interaction.UserId));
+
+        await handler.Handle(
+            new RecordContentInteractionEventCommand(
+                lesson.ProgramId,
+                interaction.Id,
+                ContentInteractionEventType.Completed),
             CancellationToken.None);
 
         interaction.IsCompleted.Should().BeTrue();

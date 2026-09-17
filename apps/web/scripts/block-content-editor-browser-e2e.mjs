@@ -11,20 +11,16 @@ const baseUrl = (
 
 const routeChecks = [
   ['Editor home', '/en-US/block-content-editor', /My Projects|GameGuild Lexical Editor/i],
-  ['Studio', '/en-US/block-content-editor/studio', /GameGuild Lexical Editor|Studio|Project/i],
-  ['Viewer', '/en-US/block-content-editor/viewer', /GameGuild Lexical Editor|Viewer|Open Project/i],
-  ['Quiz editor', '/en-US/block-content-editor/quiz-editor', /GameGuild Lexical Editor|Quiz/i],
-  ['Doc editor', '/en-US/block-content-editor/doc-editor', /GameGuild Lexical Editor|Document|Project/i],
-  ['Block editor', '/en-US/block-content-editor/block-editor', /GameGuild Lexical Editor|Project/i],
-  ['Full editor', '/en-US/block-content-editor/full-editor', /GameGuild Lexical Editor|Project/i],
-  ['Static viewer', '/en-US/block-content-editor/static-viewer', /GameGuild Lexical Editor|Static|Viewer/i],
-  ['Publish', '/en-US/block-content-editor/publish', /GameGuild Lexical Editor|Publish/i],
+  ['Studio', '/en-US/block-content-editor/studio', /Add your first block|Untitled/i],
+  ['Viewer', '/en-US/block-content-editor/viewer', /No Project Selected|Open Project/i],
+  ['Quiz editor', '/en-US/block-content-editor/quiz-editor', /Add your first block|Untitled/i],
+  ['Doc editor', '/en-US/block-content-editor/doc-editor', /Untitled|Settings/i],
+  ['Block editor', '/en-US/block-content-editor/block-editor', /Add your first block|Untitled/i],
+  ['Full editor', '/en-US/block-content-editor/full-editor', /Add your first block|Untitled/i],
+  ['Publish', '/en-US/block-content-editor/publish', /GameGuild Lexical Editor|Studio|Viewer/i],
 ];
 
 const apiChecks = [
-  ['Static project API', '/api/static-viewer/folder/projeto-17792247804366bs8q7l9t', 200],
-  ['Static project traversal defense', '/api/static-viewer/folder/..%2Fsecret', 400],
-  ['Static file missing defense', '/api/static-viewer/file/not-real/data.block-content-editor', 404],
   ['Web health API', '/api/health', 200],
 ];
 

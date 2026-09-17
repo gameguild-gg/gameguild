@@ -5,7 +5,7 @@ const mocks = vi.hoisted(() => ({
   getToken: vi.fn(),
   createServerClient: vi.fn(),
   getCoursesSlug: vi.fn(),
-  getCoursesById: vi.fn(),
+  getCoursesForGetCoursesById: vi.fn(),
   getCoursesMeProgress: vi.fn(),
   getCoursesContent: vi.fn(),
   postCoursesContentSubmit: vi.fn(),
@@ -21,7 +21,7 @@ vi.mock('@game-guild/client', () => ({
   GeneratedApi: {
     LearningCoursesProgramModule: class {
       getCoursesSlug = mocks.getCoursesSlug;
-      getCoursesById = mocks.getCoursesById;
+      getCoursesForGetCoursesById = mocks.getCoursesForGetCoursesById;
       getCoursesMeProgress = mocks.getCoursesMeProgress;
     },
     LearningCoursesProgramContentModule: class {
@@ -45,7 +45,7 @@ describe('course server actions', () => {
     mocks.getToken.mockResolvedValue('access-token');
     mocks.createServerClient.mockReturnValue({});
     mocks.getCoursesSlug.mockReset();
-    mocks.getCoursesById.mockReset();
+    mocks.getCoursesForGetCoursesById.mockReset();
     mocks.getCoursesMeProgress.mockReset();
     mocks.getCoursesContent.mockReset();
   });
@@ -96,7 +96,7 @@ describe('course server actions', () => {
       ok: true,
       data: { id: 'course-1', title: 'Course', description: '' },
     });
-    mocks.getCoursesById.mockResolvedValue({
+    mocks.getCoursesForGetCoursesById.mockResolvedValue({
       ok: true,
       data: { id: 'course-1', title: 'Course' },
     });

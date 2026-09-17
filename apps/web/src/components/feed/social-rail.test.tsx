@@ -72,16 +72,21 @@ describe("SocialRail", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Follow Lin Creator" }));
-    await waitFor(() =>
+    await waitFor(() => {
+      expect(mocks.followCreator).toHaveBeenCalledTimes(1);
+      expect(screen.getByRole("button", { name: "Follow Lin Creator" })).toBeEnabled();
       expect(screen.getByRole("button", { name: "Follow Lin Creator" })).toHaveAttribute(
         "aria-pressed",
         "false",
-      ),
-    );
+      );
+    });
 
     mocks.followCreator.mockRejectedValueOnce(new Error("Follow unavailable"));
     fireEvent.click(screen.getByRole("button", { name: "Follow Lin Creator" }));
-    await waitFor(() => expect(mocks.toastError).toHaveBeenCalledWith("Follow unavailable"));
+    await waitFor(() => {
+      expect(mocks.followCreator).toHaveBeenCalledTimes(2);
+      expect(mocks.toastError).toHaveBeenCalledWith("Follow unavailable");
+    });
     expect(screen.getByRole("button", { name: "Follow Lin Creator" })).toHaveAttribute(
       "aria-pressed",
       "false",

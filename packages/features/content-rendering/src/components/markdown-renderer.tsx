@@ -143,6 +143,32 @@ export function MarkdownRenderer({ content, renderer = 'markdown', tone = 'learn
     li: (props: React.HTMLAttributes<HTMLLIElement>) => <li className="mb-1" {...props} />,
     a: (props: React.AnchorHTMLAttributes<HTMLAnchorElement>) => <a className={isLearningTone ? 'text-sky-700 hover:text-sky-600 hover:underline dark:text-sky-400 dark:hover:text-sky-300' : 'text-blue-600 hover:underline'} {...props} />,
     blockquote: (props: React.HTMLAttributes<HTMLQuoteElement>) => <blockquote className={isLearningTone ? 'my-4 border-l-4 border-slate-300 pl-4 italic text-slate-600 dark:border-slate-500 dark:text-slate-300' : 'border-l-4 border-gray-300 pl-4 italic my-4'} {...props} />,
+    table: (props: React.TableHTMLAttributes<HTMLTableElement>) => (
+      <div className={`my-6 overflow-x-auto rounded-xl border ${isLearningTone ? 'border-slate-300 dark:border-slate-700' : 'border-gray-300'}`}>
+        <table className="w-full border-collapse text-left text-sm" {...props} />
+      </div>
+    ),
+    thead: (props: React.HTMLAttributes<HTMLTableSectionElement>) => <thead className={isLearningTone ? 'bg-slate-100 dark:bg-slate-800' : 'bg-gray-50'} {...props} />,
+    tbody: (props: React.HTMLAttributes<HTMLTableSectionElement>) => <tbody className="align-top" {...props} />,
+    tr: (props: React.HTMLAttributes<HTMLTableRowElement>) => (
+      <tr
+        className={
+          isLearningTone
+            ? 'divide-x divide-slate-300 border-b border-slate-300 last:border-b-0 dark:divide-slate-600 dark:border-slate-600 dark:last:border-b-0'
+            : 'divide-x divide-gray-300 border-b border-gray-300 last:border-b-0'
+        }
+        {...props}
+      />
+    ),
+    th: (props: React.ThHTMLAttributes<HTMLTableCellElement>) => (
+      <th
+        className={`px-4 py-3 font-semibold ${isLearningTone ? 'text-slate-900 dark:text-slate-100' : 'text-gray-900'}`}
+        {...props}
+      />
+    ),
+    td: (props: React.TdHTMLAttributes<HTMLTableCellElement>) => (
+      <td className={`px-4 py-3 align-top ${isLearningTone ? 'text-slate-700 dark:text-slate-200' : 'text-gray-700'}`} {...props} />
+    ),
     code: ({ className, children, ...props }: React.HTMLAttributes<HTMLElement> & { className?: string }) => {
       const match = /language-([\w-]+)/.exec(className || '');
       const language = match && match[1] ? match[1] : '';

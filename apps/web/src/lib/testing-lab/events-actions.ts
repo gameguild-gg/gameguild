@@ -20,6 +20,8 @@ import {
   type TestingLabTestingProjectApplicationProjection,
   type TestingLabTestingProjectBrief,
   type TestingLabTestingEventTemplateProjection,
+  type TestingLabTestingEventSlotProjection,
+  type TestingLabUpsertTestingEventSlotInput,
 } from "@game-guild/client";
 import { revalidatePath } from "next/cache";
 
@@ -338,8 +340,11 @@ function recurrenceInput(
 }
 
 function eventInput(formData: FormData): {
-  data: TestingLabCreateTestingEventInput | null;
-  error: string | null;
+  data: TestingLabCreateTestingEventInput;
+  error: null;
+} | {
+  data: null;
+  error: string;
 } {
   const timeZoneId = text(formData, "timeZoneId") || "UTC";
   if (!isSupportedTimeZone(timeZoneId))
@@ -444,7 +449,7 @@ export async function createTestingEvent(
   if (invalid) return invalid;
   const input = eventInput(formData);
   if (!input.data)
-    return { success: false, error: input.error ?? "Enter valid event dates." };
+    return { success: false, error: input.error };
   return complete(
     createModules().events.postTestingEvents(input.data),
     "Testing event created.",
@@ -544,23 +549,30 @@ export async function transitionTestingEvent(
   return complete(operation(), "Event status updated.", eventId);
 }
 
-function slotInput(formData: FormData) {
+function slotInput(formData: FormData):
+  | { ok: true; data: TestingLabUpsertTestingEventSlotInput }
+  | { ok: false; error: string } {
+  const timeZoneId = text(formData, "timeZoneId") || "UTC";
+  if (!isSupportedTimeZone(timeZoneId))
+    return { ok: false, error: "Choose a valid time zone." };
   const mode = (text(formData, "mode") ||
     "Online") as TestingLabTestingEventMode;
-  const startsAt = isoDate(formData, "startsAt");
-  const endsAt = isoDate(formData, "endsAt");
+  const startsAt = isoDate(formData, "startsAt", timeZoneId);
+  const endsAt = isoDate(formData, "endsAt", timeZoneId);
   if (!startsAt || !endsAt)
-    return { error: "Enter a valid slot schedule." } as const;
+    return { ok: false, error: "Enter a valid slot schedule." };
   if (
     mode === "InPerson" &&
     (!text(formData, "campusName") || !text(formData, "roomName"))
   )
     return {
+      ok: false,
       error: "Campus and room are required for in-person slots.",
-    } as const;
+    };
   if (mode === "Online" && !text(formData, "meetingUrl"))
-    return { error: "A meeting URL is required for online slots." } as const;
+    return { ok: false, error: "A meeting URL is required for online slots." };
   return {
+    ok: true,
     data: {
       mode,
       startsAt,
@@ -572,7 +584,7 @@ function slotInput(formData: FormData) {
       meetingUrl: optionalText(formData, "meetingUrl"),
       locationId: optionalText(formData, "locationId"),
     },
-  } as const;
+  };
 }
 
 export async function createTestingEventSlot(
@@ -581,11 +593,53 @@ export async function createTestingEventSlot(
   const eventId = text(formData, "eventId");
   if (!eventId) return { success: false, error: "Event is required." };
   const input = slotInput(formData);
-  if ("error" in input && input.error)
+  if (!input.ok)
     return { success: false, error: input.error };
   return complete(
     createModules().events.postTestingEventsSlots(eventId, input.data),
     "Event slot created.",
+    eventId,
+  );
+}
+
+type TimeSlotSchedule = {
+  startsAt: string;
+  endsAt: string;
+};
+
+export async function createTestingEventSlots(
+  formData: FormData,
+): Promise<TestingEventActionResult<TestingLabTestingEventSlotProjection[]>> {
+  const eventId = text(formData, "eventId");
+  if (!eventId) return { success: false, error: "Event is required." };
+
+  const schedules = jsonValue<TimeSlotSchedule[]>(formData, "slotsJson");
+  if (!Array.isArray(schedules) || schedules.length < 1 || schedules.length > 200)
+    return {
+      success: false,
+      error: "Create between 1 and 200 time slots at once.",
+    };
+
+  const slots: TestingLabUpsertTestingEventSlotInput[] = [];
+  for (const schedule of schedules) {
+    if (
+      typeof schedule?.startsAt !== "string" ||
+      typeof schedule?.endsAt !== "string"
+    )
+      return { success: false, error: "Enter a valid time slot schedule." };
+
+    const candidate = new FormData();
+    formData.forEach((value, key) => candidate.append(key, value));
+    candidate.set("startsAt", schedule.startsAt);
+    candidate.set("endsAt", schedule.endsAt);
+    const input = slotInput(candidate);
+    if (!input.ok) return { success: false, error: input.error };
+    slots.push(input.data);
+  }
+
+  return complete(
+    createModules().events.postTestingEventsSlotsBatch(eventId, { slots }),
+    `${slots.length} time slot${slots.length === 1 ? "" : "s"} created.`,
     eventId,
   );
 }
@@ -598,7 +652,7 @@ export async function updateTestingEventSlot(
   if (!eventId || !slotId)
     return { success: false, error: "Event and slot are required." };
   const input = slotInput(formData);
-  if ("error" in input && input.error)
+  if (!input.ok)
     return { success: false, error: input.error };
   return complete(
     createModules().events.putTestingEventsSlots(eventId, slotId, input.data),

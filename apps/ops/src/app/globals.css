@@ -1,9 +1,0 @@
-@import "@game-guild/ui/globals.css";
-
-:root {
-  color-scheme: dark;
-}
-
-body {
-  @apply bg-background text-foreground;
-}
