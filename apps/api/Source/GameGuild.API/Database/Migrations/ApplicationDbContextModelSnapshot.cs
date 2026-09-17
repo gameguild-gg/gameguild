@@ -16479,9 +16479,11 @@ namespace GameGuild.API.Database.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("ContentCompletionMode")
+                        .ValueGeneratedOnAdd()
                         .IsRequired()
                         .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                        .HasColumnType("character varying(32)")
+                        .HasDefaultValue("on-release-and-pass");
 
                     b.Property<Guid?>("ContentId")
                         .HasColumnType("uuid");
@@ -16491,6 +16493,14 @@ namespace GameGuild.API.Database.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DefinitionPayload")
+                        .HasColumnType("jsonb");
+
+                    b.Property<int>("DefinitionSchemaVersion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
@@ -16504,6 +16514,11 @@ namespace GameGuild.API.Database.Migrations
 
                     b.Property<Guid?>("GroupSetId")
                         .HasColumnType("uuid");
+
+                    b.Property<int>("GradingMethods")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(8);
 
                     b.Property<bool>("IsRequired")
                         .HasColumnType("boolean");
@@ -16525,6 +16540,11 @@ namespace GameGuild.API.Database.Migrations
                     b.Property<int>("PassingScore")
                         .HasColumnType("integer");
 
+                    b.Property<int>("PeerReviewsRequiredCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
                     b.Property<int>("PresentationMode")
                         .HasColumnType("integer");
 
@@ -16532,9 +16552,11 @@ namespace GameGuild.API.Database.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("ResultReleaseMode")
+                        .ValueGeneratedOnAdd()
                         .IsRequired()
                         .HasMaxLength(16)
-                        .HasColumnType("character varying(16)");
+                        .HasColumnType("character varying(16)")
+                        .HasDefaultValue("manual");
 
                     b.Property<DateTime?>("ResultReleaseScheduledFor")
                         .HasColumnType("timestamp with time zone");
@@ -16544,7 +16566,9 @@ namespace GameGuild.API.Database.Migrations
                         .HasColumnType("text");
 
                     b.Property<int>("ReviewMethods")
-                        .HasColumnType("integer");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(8);
 
                     b.Property<Guid?>("RubricId")
                         .HasColumnType("uuid");
@@ -16596,7 +16620,9 @@ namespace GameGuild.API.Database.Migrations
                         {
                             t.HasCheckConstraint("CK_Assessments_DeliverySchedule", "(\"AvailableFrom\" IS NULL OR \"AvailableUntil\" IS NULL OR \"AvailableFrom\" <= \"AvailableUntil\") AND (\"DueAt\" IS NULL OR \"AvailableFrom\" IS NULL OR \"DueAt\" >= \"AvailableFrom\") AND (\"DueAt\" IS NULL OR \"AvailableUntil\" IS NULL OR \"DueAt\" <= \"AvailableUntil\") AND (NOT \"AllowLateSubmissions\" OR (\"DueAt\" IS NOT NULL AND \"LateSubmissionDeadline\" IS NOT NULL AND \"LateSubmissionDeadline\" > \"DueAt\" AND (\"AvailableUntil\" IS NULL OR \"LateSubmissionDeadline\" <= \"AvailableUntil\"))) AND (\"AllowLateSubmissions\" OR \"LateSubmissionDeadline\" IS NULL)");
 
-                            t.HasCheckConstraint("CK_Assessments_MaxAttempts", "\"MaxAttempts\" = 1");
+                            t.HasCheckConstraint("CK_Assessments_GradingMethods", "\"GradingMethods\" >= 0 AND (\"GradingMethods\" & ~15) = 0");
+
+                            t.HasCheckConstraint("CK_Assessments_MaxAttempts", "\"MaxAttempts\" >= 1");
 
                             t.HasCheckConstraint("CK_Assessments_PresentationMode", "\"PresentationMode\" IN (0, 1)");
 
@@ -16837,6 +16863,9 @@ namespace GameGuild.API.Database.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
+                    b.Property<string>("StructuredAnswerPayload")
+                        .HasColumnType("jsonb");
+
                     b.Property<DateTime?>("SubmittedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -16894,7 +16923,7 @@ namespace GameGuild.API.Database.Migrations
 
                             t.HasCheckConstraint("CK_AssessmentSubmissions_DraftVersion", "\"DraftVersion\" >= 0");
 
-                            t.HasCheckConstraint("CK_AssessmentSubmissions_PayloadConsistency", "((\"SubmittedModalities\" & 1) = 0 OR \"TextPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 2) = 0 OR \"FilePayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 4) = 0 OR \"UrlPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 8) = 0 OR \"CodePayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 16) = 0 OR \"MediaPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 32) = 0 OR \"ProjectPayload\" IS NOT NULL) AND (\"TextPayload\" IS NULL OR (\"SubmittedModalities\" & 1) <> 0) AND (\"FilePayload\" IS NULL OR (\"SubmittedModalities\" & 2) <> 0) AND (\"UrlPayload\" IS NULL OR (\"SubmittedModalities\" & 4) <> 0) AND (\"CodePayload\" IS NULL OR (\"SubmittedModalities\" & 8) <> 0) AND (\"MediaPayload\" IS NULL OR (\"SubmittedModalities\" & 16) <> 0) AND (\"ProjectPayload\" IS NULL OR (\"SubmittedModalities\" & 32) <> 0)");
+                            t.HasCheckConstraint("CK_AssessmentSubmissions_PayloadConsistency", "((\"SubmittedModalities\" & 1) = 0 OR \"TextPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 2) = 0 OR \"FilePayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 4) = 0 OR \"UrlPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 8) = 0 OR \"CodePayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 16) = 0 OR \"MediaPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 32) = 0 OR \"ProjectPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 64) = 0 OR \"StructuredAnswerPayload\" IS NOT NULL) AND (\"TextPayload\" IS NULL OR (\"SubmittedModalities\" & 1) <> 0) AND (\"FilePayload\" IS NULL OR (\"SubmittedModalities\" & 2) <> 0) AND (\"UrlPayload\" IS NULL OR (\"SubmittedModalities\" & 4) <> 0) AND (\"CodePayload\" IS NULL OR (\"SubmittedModalities\" & 8) <> 0) AND (\"MediaPayload\" IS NULL OR (\"SubmittedModalities\" & 16) <> 0) AND (\"ProjectPayload\" IS NULL OR (\"SubmittedModalities\" & 32) <> 0) AND (\"StructuredAnswerPayload\" IS NULL OR (\"SubmittedModalities\" & 64) <> 0)");
 
                             t.HasCheckConstraint("CK_AssessmentSubmissions_ScoreCanonical", "\"Score\" IS NULL OR \"Score\" >= 0");
 
