@@ -59,7 +59,7 @@ public sealed class LaunchPadTests
             requestContext.Object,
             ActorAccessor(actorId, tenantId).Object,
             authorization.Object,
-            new Mock<IAssetScopedAccessService>().Object);
+            CreateEndpointSender(context));
 
         var rejected = await controller.SubmitApplication(
             launchEvent.Id,
@@ -86,7 +86,11 @@ public sealed class LaunchPadTests
         var authorization = new Mock<ILaunchPadAuthorizationService>();
         authorization.Setup(service => service.CanParticipateAsync(tenantId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
         authorization.Setup(service => service.CanManageSettingsAsync(tenantId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
-        var controller = new LaunchPadSettingsController(context, requestContext.Object, authorization.Object);
+        var controller = new LaunchPadSettingsController(
+            context,
+            requestContext.Object,
+            authorization.Object,
+            CreateEndpointSender(context));
 
         var defaults = await controller.GetSettings(default);
         var updated = await controller.UpdateSettings(
@@ -133,7 +137,7 @@ public sealed class LaunchPadTests
             requestContext.Object,
             ActorAccessor(registeredUserId, tenantId).Object,
             new Mock<ILaunchPadAuthorizationService>().Object,
-            new Mock<IAssetScopedAccessService>().Object);
+            CreateEndpointSender(context));
 
         var response = await controller.CancelRegistration(registered.Id, CancellationToken.None);
 
@@ -813,6 +817,16 @@ public sealed class LaunchPadTests
         return new LaunchPadTestDbContext(options);
     }
 
+    private static ISender CreateEndpointSender(
+        IApplicationDbContext context,
+        IAssetScopedAccessService? assetScopedAccessService = null) =>
+        new LaunchPadEndpointTestSender(
+            new LaunchPadApplicationEndpointCommandHandler(
+                context,
+                assetScopedAccessService ?? Mock.Of<IAssetScopedAccessService>()),
+            new LaunchPadRegistrationEndpointCommandHandler(context),
+            new LaunchPadSettingsEndpointCommandHandler(context));
+
     private static (Project Project, LaunchPlan Plan) AddProjectPlan(
         LaunchPadTestDbContext context,
         Guid tenantId,
@@ -935,5 +949,49 @@ public sealed class LaunchPadTests
         }
 
         public void AllowPermission() => _permissionAllowed.TrySetResult();
+    }
+
+    private sealed class LaunchPadEndpointTestSender(
+        LaunchPadApplicationEndpointCommandHandler applications,
+        LaunchPadRegistrationEndpointCommandHandler registrations,
+        LaunchPadSettingsEndpointCommandHandler settings) : ISender
+    {
+        public async Task<TResponse> Send<TResponse>(
+            IRequest<TResponse> request,
+            CancellationToken cancellationToken = default)
+        {
+            object response = request switch
+            {
+                SubmitLaunchPadApplicationEndpointCommand command =>
+                    await applications.Handle(command, cancellationToken),
+                CancelLaunchPadRegistrationEndpointCommand command =>
+                    await registrations.Handle(command, cancellationToken),
+                CreateDefaultLaunchPadSettingsCommand command =>
+                    await settings.Handle(command, cancellationToken),
+                UpdateLaunchPadSettingsEndpointCommand command =>
+                    await settings.Handle(command, cancellationToken),
+                _ => throw new InvalidOperationException($"Unsupported test request {request.GetType().Name}")
+            };
+
+            return (TResponse)response;
+        }
+
+        public Task Send<TRequest>(TRequest request, CancellationToken cancellationToken = default)
+            where TRequest : IRequest =>
+            throw new InvalidOperationException($"Unsupported test request {request.GetType().Name}");
+
+        public async Task<object?> Send(object request, CancellationToken cancellationToken = default) =>
+            request switch
+            {
+                SubmitLaunchPadApplicationEndpointCommand command =>
+                    await applications.Handle(command, cancellationToken),
+                CancelLaunchPadRegistrationEndpointCommand command =>
+                    await registrations.Handle(command, cancellationToken),
+                CreateDefaultLaunchPadSettingsCommand command =>
+                    await settings.Handle(command, cancellationToken),
+                UpdateLaunchPadSettingsEndpointCommand command =>
+                    await settings.Handle(command, cancellationToken),
+                _ => throw new InvalidOperationException($"Unsupported test request {request.GetType().Name}")
+            };
     }
 }

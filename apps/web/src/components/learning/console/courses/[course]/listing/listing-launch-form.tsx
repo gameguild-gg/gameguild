@@ -15,7 +15,7 @@ interface ListingLaunchFormProps {
   course: CourseDetails;
 }
 
-function toDateTimeLocal(value: string | null): string {
+export function toDateTimeLocal(value: string | null): string {
   if (!value) {
     return '';
   }
@@ -29,7 +29,7 @@ function toDateTimeLocal(value: string | null): string {
   return localDate.toISOString().slice(0, 16);
 }
 
-function toIsoDateTime(value: string): string | null {
+export function toIsoDateTime(value: string): string | null {
   if (!value) {
     return null;
   }
@@ -42,7 +42,7 @@ function toIsoDateTime(value: string): string | null {
   return date.toISOString();
 }
 
-function parseEnrollmentCap(value: string): number | null {
+export function parseEnrollmentCap(value: string): number | null {
   const parsed = Number.parseInt(value, 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 }

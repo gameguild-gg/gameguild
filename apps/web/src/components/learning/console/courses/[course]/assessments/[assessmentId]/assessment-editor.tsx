@@ -63,9 +63,9 @@ import {
   unpublishAssessmentRevision,
   updateAssessment,
 } from "@/lib/learning/actions";
-import { useLearningBase } from '@/lib/learning/use-learning-base';
+import { useLearningBase } from "@/lib/learning/use-learning-base";
 import { normalizeSlug, slugify } from "@/lib/slugify";
-import { RuntimeQuizTestRun } from '@/components/learning/grading/runtime-quiz-test-run';
+import { RuntimeQuizTestRun } from "@/components/learning/grading/runtime-quiz-test-run";
 
 const ASSESSMENT_TYPE_OPTIONS: { value: AssessmentType; label: string }[] = [
   { value: "Quiz", label: "Quiz" },
@@ -80,6 +80,11 @@ const GROUP_SET_NONE = "none";
 const RUBRIC_LOCK_MESSAGE = "Rubric locked after grading started";
 
 const DEFAULT_PEER_REVIEWS = 3;
+
+export function resolvePeerReviewsRequiredCount(value: string): number {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : DEFAULT_PEER_REVIEWS;
+}
 
 function readPeerReviewsRequired(configuration: string | null): number {
   if (!configuration) return DEFAULT_PEER_REVIEWS;
@@ -191,7 +196,9 @@ export function AssessmentEditor({
   const [isLifecyclePending, startLifecycleTransition] = useTransition();
   const isQuiz = assessment.type === "Quiz";
   const isLinkedQuiz = isQuiz && assessment.contentId != null;
-  const [assessmentVersion, setAssessmentVersion] = useState(assessment.version);
+  const [assessmentVersion, setAssessmentVersion] = useState(
+    assessment.version,
+  );
 
   useEffect(() => {
     setAssessmentVersion(assessment.version);
@@ -294,10 +301,8 @@ export function AssessmentEditor({
         primaryReviewMethod,
         requiresInstructorReview,
       );
-      const requiredPeerReviews = Math.max(
-        1,
-        Number(peerReviewsRequired) || DEFAULT_PEER_REVIEWS,
-      );
+      const requiredPeerReviews =
+        resolvePeerReviewsRequiredCount(peerReviewsRequired);
       const result = await updateAssessment({
         courseId,
         assessmentId: assessment.id,
@@ -309,14 +314,12 @@ export function AssessmentEditor({
               slug: normalizeSlug(slug) || normalizeSlug(title),
               description: description.trim() || null,
             }),
-        maxScore:
-          isLinkedQuiz
+        maxScore: isLinkedQuiz
+          ? undefined
+          : maxScore === ""
             ? undefined
-            : maxScore === ""
-              ? undefined
-              : Number(maxScore),
-        passingScore:
-          passingScore === "" ? undefined : Number(passingScore),
+            : Number(maxScore),
+        passingScore: passingScore === "" ? undefined : Number(passingScore),
         timeLimitMinutes: timeLimitMinutes ? Number(timeLimitMinutes) : null,
         maxAttempts: maxAttempts ? Number(maxAttempts) : null,
         isRequired,
@@ -444,7 +447,8 @@ export function AssessmentEditor({
   const criteriaValid =
     criteria.length > 0 &&
     criteria.every(
-      (row) => row.description.trim() !== "" && row.points != null && row.points > 0,
+      (row) =>
+        row.description.trim() !== "" && row.points != null && row.points > 0,
     );
   const rubricSumMatches = criteriaPointsSum === assessment.maxScore;
   const canSaveRubric = criteriaValid && rubricSumMatches && !rubricLockedNow;
@@ -471,7 +475,8 @@ export function AssessmentEditor({
         title: rubricTitle,
         criteria: criteria.map((row, index) => ({
           description: row.description.trim(),
-          points: row.points ?? 0,
+          // The save action is enabled only when every criterion has points.
+          points: row.points as number,
           order: index,
         })),
       });
@@ -492,7 +497,11 @@ export function AssessmentEditor({
   }
 
   function handleDeleteRubric() {
-    if (!confirm("Are you sure you want to remove the rubric from this assessment?")) {
+    if (
+      !confirm(
+        "Are you sure you want to remove the rubric from this assessment?",
+      )
+    ) {
       return;
     }
 
@@ -749,133 +758,128 @@ export function AssessmentEditor({
                 )}
                 <div className="space-y-3">
                   {criteria.map((row, index) => (
-                    <div
-                      key={index}
-                      className="flex items-end gap-2"
-                    >
-                          <div className="flex-1 space-y-1">
-                            <Label htmlFor={`criterion-${index + 1}-description`}>
-                              Criterion {index + 1} description
-                            </Label>
-                            <Input
-                              id={`criterion-${index + 1}-description`}
-                              value={row.description}
-                              onChange={(e) =>
-                                setCriteria((rows) =>
-                                  rows.map((current, rowIndex) =>
-                                    rowIndex === index
-                                      ? { ...current, description: e.target.value }
-                                      : current,
-                                  ),
-                                )
-                              }
-                              placeholder="What this criterion assesses"
-                              disabled={isRubricPending || rubricLockedNow}
-                            />
-                          </div>
-                          <div className="w-24 space-y-1">
-                            <Label htmlFor={`criterion-${index + 1}-points`}>
-                              Criterion {index + 1} points
-                            </Label>
-                            <Input
-                              id={`criterion-${index + 1}-points`}
-                              type="number"
-                              min={0.01}
-                              step={0.01}
-                              value={row.points ?? ""}
-                              onChange={(e) =>
-                                setCriteria((rows) =>
-                                  rows.map((current, rowIndex) =>
-                                    rowIndex === index
-                                      ? {
-                                          ...current,
-                                          points: e.target.value
-                                            ? Number(e.target.value)
-                                            : null,
-                                        }
-                                      : current,
-                                  ),
-                                )
-                              }
-                              disabled={isRubricPending || rubricLockedNow}
-                            />
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            aria-label={`Remove criterion ${index + 1}`}
-                            onClick={() => removeCriterionRow(index)}
-                            disabled={isRubricPending}
-                          >
-                            <X className="size-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="flex items-center justify-between">
+                    <div key={index} className="flex items-end gap-2">
+                      <div className="flex-1 space-y-1">
+                        <Label htmlFor={`criterion-${index + 1}-description`}>
+                          Criterion {index + 1} description
+                        </Label>
+                        <Input
+                          id={`criterion-${index + 1}-description`}
+                          value={row.description}
+                          onChange={(e) =>
+                            setCriteria((rows) =>
+                              rows.map((current, rowIndex) =>
+                                rowIndex === index
+                                  ? { ...current, description: e.target.value }
+                                  : current,
+                              ),
+                            )
+                          }
+                          placeholder="What this criterion assesses"
+                          disabled={isRubricPending || rubricLockedNow}
+                        />
+                      </div>
+                      <div className="w-24 space-y-1">
+                        <Label htmlFor={`criterion-${index + 1}-points`}>
+                          Criterion {index + 1} points
+                        </Label>
+                        <Input
+                          id={`criterion-${index + 1}-points`}
+                          type="number"
+                          min={0.01}
+                          step={0.01}
+                          value={row.points ?? ""}
+                          onChange={(e) =>
+                            setCriteria((rows) =>
+                              rows.map((current, rowIndex) =>
+                                rowIndex === index
+                                  ? {
+                                      ...current,
+                                      points: e.target.value
+                                        ? Number(e.target.value)
+                                        : null,
+                                    }
+                                  : current,
+                              ),
+                            )
+                          }
+                          disabled={isRubricPending || rubricLockedNow}
+                        />
+                      </div>
                       <Button
                         type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={addCriterionRow}
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Remove criterion ${index + 1}`}
+                        onClick={() => removeCriterionRow(index)}
                         disabled={isRubricPending}
                       >
-                        <Plus className="mr-2 size-4" />
-                        Add criterion
+                        <X className="size-4" />
                       </Button>
-                      <p
-                        data-testid="rubric-sum"
-                        className={`text-sm font-semibold ${
-                          rubricSumMatches
-                            ? "text-green-600"
-                            : "text-destructive"
-                        }`}
-                      >
-                        Σ {criteriaPointsSum} / {assessment.maxScore}
-                        {!rubricSumMatches && (
-                          <span>
-                            {" "}
-                            ({criteriaPointsSum > assessment.maxScore ? "+" : ""}
-                            {criteriaPointsSum - assessment.maxScore})
-                          </span>
-                        )}
-                      </p>
                     </div>
+                  ))}
+                </div>
 
-                    <div className="flex items-center gap-2">
-                      <Button
-                        type="button"
-                        onClick={handleSaveRubric}
-                        disabled={!canSaveRubric || isRubricPending}
-                      >
-                        {isRubricPending ? (
-                          <Loader2 className="mr-2 size-4 animate-spin" />
-                        ) : (
-                          <Save className="mr-2 size-4" />
-                        )}
-                        Save rubric
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={handleDeleteRubric}
-                        disabled={isRubricPending}
-                      >
-                        <Trash2 className="mr-2 size-4" />
-                        Delete rubric
-                      </Button>
-                      {rubricSaved && (
-                        <span className="text-sm text-green-600">
-                          Rubric saved.
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-muted-foreground text-xs">
-                      Criterion points must sum to the assessment max score.
-                      Locked after grading starts.
-                    </p>
+                <div className="flex items-center justify-between">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addCriterionRow}
+                    disabled={isRubricPending}
+                  >
+                    <Plus className="mr-2 size-4" />
+                    Add criterion
+                  </Button>
+                  <p
+                    data-testid="rubric-sum"
+                    className={`text-sm font-semibold ${
+                      rubricSumMatches ? "text-green-600" : "text-destructive"
+                    }`}
+                  >
+                    Σ {criteriaPointsSum} / {assessment.maxScore}
+                    {!rubricSumMatches && (
+                      <span>
+                        {" "}
+                        ({criteriaPointsSum > assessment.maxScore ? "+" : ""}
+                        {criteriaPointsSum - assessment.maxScore})
+                      </span>
+                    )}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    onClick={handleSaveRubric}
+                    disabled={!canSaveRubric || isRubricPending}
+                  >
+                    {isRubricPending ? (
+                      <Loader2 className="mr-2 size-4 animate-spin" />
+                    ) : (
+                      <Save className="mr-2 size-4" />
+                    )}
+                    Save rubric
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleDeleteRubric}
+                    disabled={isRubricPending}
+                  >
+                    <Trash2 className="mr-2 size-4" />
+                    Delete rubric
+                  </Button>
+                  {rubricSaved && (
+                    <span className="text-sm text-green-600">
+                      Rubric saved.
+                    </span>
+                  )}
+                </div>
+                <p className="text-muted-foreground text-xs">
+                  Criterion points must sum to the assessment max score. Locked
+                  after grading starts.
+                </p>
               </CardContent>
             )}
           </Card>
@@ -959,7 +963,8 @@ export function AssessmentEditor({
                   </SelectContent>
                 </Select>
                 <p className="text-muted-foreground text-xs">
-                  Zero-weight groups are practice activities. Positive-weight groups contribute to the gradebook.
+                  Zero-weight groups are practice activities. Positive-weight
+                  groups contribute to the gradebook.
                 </p>
               </div>
 
@@ -986,12 +991,15 @@ export function AssessmentEditor({
                         {item?.title ?? assessment.contentId}
                       </Link>
                       <p className="text-muted-foreground text-xs">
-                        This assessment was created by its content and cannot
-                        be unlinked.
+                        This assessment was created by its content and cannot be
+                        unlinked.
                       </p>
                     </div>
                   ) : (
-                    <p className="text-muted-foreground text-sm" data-testid="linked-content-none">
+                    <p
+                      className="text-muted-foreground text-sm"
+                      data-testid="linked-content-none"
+                    >
                       Not linked (standalone assessment).
                     </p>
                   );
@@ -1117,14 +1125,20 @@ export function AssessmentEditor({
 
                     {!authoringState.prepare.available &&
                       authoringState.prepare.message && (
-                        <p className="text-muted-foreground text-xs" role="status">
+                        <p
+                          className="text-muted-foreground text-xs"
+                          role="status"
+                        >
                           Test capability: {authoringState.prepare.message}
                         </p>
                       )}
                     {authoringState.candidateMatchesDraft &&
                       !authoringState.publish.available &&
                       authoringState.publish.message && (
-                        <p className="text-muted-foreground text-xs" role="status">
+                        <p
+                          className="text-muted-foreground text-xs"
+                          role="status"
+                        >
                           Official capability: {authoringState.publish.message}
                         </p>
                       )}
@@ -1242,7 +1256,9 @@ export function AssessmentEditor({
               {primaryReviewMethod === "PeerReview" && (
                 <>
                   <div className="space-y-2">
-                    <Label htmlFor="required-reviews">Required peer reviews</Label>
+                    <Label htmlFor="required-reviews">
+                      Required peer reviews
+                    </Label>
                     <Input
                       id="required-reviews"
                       type="number"
@@ -1276,7 +1292,9 @@ export function AssessmentEditor({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="content-completion-mode">Content completion</Label>
+                <Label htmlFor="content-completion-mode">
+                  Content completion
+                </Label>
                 <Select
                   value={contentCompletionMode}
                   onValueChange={setContentCompletionMode}
@@ -1287,7 +1305,9 @@ export function AssessmentEditor({
                   <SelectContent>
                     <SelectItem value="on-submit">On submission</SelectItem>
                     <SelectItem value="on-finalize">On final result</SelectItem>
-                    <SelectItem value="on-release">On result release</SelectItem>
+                    <SelectItem value="on-release">
+                      On result release
+                    </SelectItem>
                     <SelectItem value="on-release-and-pass">
                       On released passing result
                     </SelectItem>

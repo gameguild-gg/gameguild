@@ -52,6 +52,48 @@ public sealed class CodingAssignmentEndpointsTests
         result.Data.Files.Should().ContainKey("secret.cpp");
     }
 
+    [Fact]
+    public async Task GetFullAsync_WhenPersistedJsonIsMalformed_ReturnsNull()
+    {
+        await using var fixture = new ServiceFixture();
+        var programId = Guid.NewGuid();
+        var content = new ProgramContent
+        {
+            Id = Guid.NewGuid(),
+            ProgramId = programId,
+            Title = "Malformed coding assignment",
+            Type = ProgramContentType.Code,
+            JsonBody = "{",
+        };
+        fixture.Context.Set<ProgramContent>().Add(content);
+        await fixture.Context.SaveChangesAsync();
+
+        var result = await fixture.Service.GetFullAsync(programId, content.Id);
+
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetFullAsync_WhenPersistedJsonIsBlank_ReturnsNull()
+    {
+        await using var fixture = new ServiceFixture();
+        var programId = Guid.NewGuid();
+        var content = new ProgramContent
+        {
+            Id = Guid.NewGuid(),
+            ProgramId = programId,
+            Title = "Blank coding assignment",
+            Type = ProgramContentType.Code,
+            JsonBody = "   ",
+        };
+        fixture.Context.Set<ProgramContent>().Add(content);
+        await fixture.Context.SaveChangesAsync();
+
+        var result = await fixture.Service.GetFullAsync(programId, content.Id);
+
+        result.Should().BeNull();
+    }
+
     // ── (e) PUT valid payload on null JsonBody → creates ─────────────────────────
 
     [Fact]

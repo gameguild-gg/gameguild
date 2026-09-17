@@ -18,6 +18,18 @@ namespace GameGuild.Learning.UnitTests;
 public sealed class LxpCapabilityFilterTests
 {
     [Fact]
+    public async Task OnActionExecutionAsync_ActionWithoutCapability_Continues()
+    {
+        var context = CreateContext(CreateUser("User"), null, endpointMetadata: []);
+        var nextCalled = false;
+
+        await CreateFilter().OnActionExecutionAsync(context, CreateNext(context, () => nextCalled = true));
+
+        nextCalled.Should().BeTrue();
+        context.Result.Should().BeNull();
+    }
+
+    [Fact]
     public async Task OnActionExecutionAsync_AuthenticatedSystemAdmin_BypassesTenantCapability()
     {
         var capabilityService = new Mock<ICapabilityService>(MockBehavior.Strict);
@@ -71,16 +83,158 @@ public sealed class LxpCapabilityFilterTests
         nextCalled.Should().BeTrue();
         context.Result.Should().BeNull();
     }
+
+    [Fact]
+    public async Task OnActionExecutionAsync_MissingTenant_ReturnsBadRequest()
+    {
+        var context = CreateContext(CreateUser("User"), new Mock<ICapabilityService>().Object);
+
+        await CreateFilter().OnActionExecutionAsync(context, CreateNext(context, () => { }));
+
+        var result = context.Result.Should().BeOfType<ObjectResult>().Subject;
+        result.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+        result.Value.Should().BeOfType<ProblemDetails>()
+            .Which.Title.Should().Be("Missing Tenant ID");
+    }
+
+    [Fact]
+    public async Task OnActionExecutionAsync_MissingCapabilityService_FailsClosed()
+    {
+        var context = CreateContext(CreateUser("User", Guid.NewGuid()), null);
+
+        await CreateFilter().OnActionExecutionAsync(context, CreateNext(context, () => { }));
+
+        var result = context.Result.Should().BeOfType<ObjectResult>().Subject;
+        result.StatusCode.Should().Be(StatusCodes.Status503ServiceUnavailable);
+        result.Value.Should().BeOfType<ProblemDetails>()
+            .Which.Title.Should().Be("Service Unavailable");
+    }
+
+    [Theory]
+    [InlineData("route")]
+    [InlineData("header")]
+    [InlineData("query")]
+    public async Task OnActionExecutionAsync_ResolvesTenantFromHttpRequest(string source)
+    {
+        var tenantId = Guid.NewGuid();
+        var capabilityService = new Mock<ICapabilityService>();
+        capabilityService
+            .Setup(service => service.IsCapabilityEnabledAsync(tenantId, LxpCapabilities.Social, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        var context = CreateContext(CreateUser("User"), capabilityService.Object);
+        switch (source)
+        {
+            case "route":
+                context.HttpContext.Request.RouteValues["tenantId"] = tenantId.ToString();
+                break;
+            case "header":
+                context.HttpContext.Request.Headers["X-Tenant-Id"] = tenantId.ToString();
+                break;
+            case "query":
+                context.HttpContext.Request.QueryString = QueryString.Create("tenantId", tenantId.ToString());
+                break;
+        }
+        var nextCalled = false;
+
+        await CreateFilter().OnActionExecutionAsync(context, CreateNext(context, () => nextCalled = true));
+
+        nextCalled.Should().BeTrue();
+        capabilityService.VerifyAll();
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("invalid")]
+    public async Task OnActionExecutionAsync_InvalidRouteTenant_FallsBackToCanonicalTenantClaim(string? routeTenant)
+    {
+        var tenantId = Guid.NewGuid();
+        var capabilityService = new Mock<ICapabilityService>();
+        capabilityService
+            .Setup(service => service.IsCapabilityEnabledAsync(tenantId, LxpCapabilities.Social, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        var user = CreateUser("User");
+        ((ClaimsIdentity)user.Identity!).AddClaim(new Claim("tenantId", tenantId.ToString()));
+        var context = CreateContext(user, capabilityService.Object);
+        context.HttpContext.Request.RouteValues["tenantId"] = routeTenant;
+        var nextCalled = false;
+
+        await CreateFilter().OnActionExecutionAsync(context, CreateNext(context, () => nextCalled = true));
+
+        nextCalled.Should().BeTrue();
+        capabilityService.VerifyAll();
+    }
+
+    [Fact]
+    public async Task OnActionExecutionAsync_CustomCapabilityMessage_IsReturned()
+    {
+        var tenantId = Guid.NewGuid();
+        var capabilityService = new Mock<ICapabilityService>();
+        capabilityService
+            .Setup(service => service.IsCapabilityEnabledAsync(tenantId, LxpCapabilities.Social, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        capabilityService
+            .Setup(service => service.IsCapabilityEnabledAsync(tenantId, LxpCapabilities.Discovery, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        var context = CreateContext(
+            CreateUser("User", tenantId),
+            capabilityService.Object,
+            endpointMetadata:
+            [
+                new LxpCapabilityAttribute(LxpCapabilities.Social),
+                new LxpCapabilityAttribute(LxpCapabilities.Discovery) { ErrorMessage = "Upgrade required" }
+            ]);
+
+        await CreateFilter().OnActionExecutionAsync(context, CreateNext(context, () => { }));
+
+        var problem = context.Result.Should().BeOfType<ObjectResult>().Which.Value
+            .Should().BeOfType<ProblemDetails>().Subject;
+        problem.Detail.Should().Be("Upgrade required");
+        problem.Extensions["capability"].Should().Be(LxpCapabilities.Discovery);
+        problem.Extensions["upgradeUrl"].Should().Be("/settings/subscription");
+    }
+
+    [Fact]
+    public async Task OnActionExecutionAsync_CapabilityFailure_FailsClosed()
+    {
+        var tenantId = Guid.NewGuid();
+        var capabilityService = new Mock<ICapabilityService>();
+        capabilityService
+            .Setup(service => service.IsCapabilityEnabledAsync(tenantId, LxpCapabilities.Social, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("feature store unavailable"));
+        var context = CreateContext(CreateUser("User", tenantId), capabilityService.Object);
+
+        await CreateFilter().OnActionExecutionAsync(context, CreateNext(context, () => { }));
+
+        var result = context.Result.Should().BeOfType<ObjectResult>().Subject;
+        result.StatusCode.Should().Be(StatusCodes.Status503ServiceUnavailable);
+        result.Value.Should().BeOfType<ProblemDetails>()
+            .Which.Detail.Should().Be("Unable to verify feature access. Please try again later.");
+    }
+
+    [Fact]
+    public void Attribute_CreatesReusableFilterFromRegisteredLogger()
+    {
+        using var services = new ServiceCollection().AddLogging().BuildServiceProvider();
+        var attribute = new LxpCapabilityFilterAttribute();
+
+        attribute.IsReusable.Should().BeTrue();
+        attribute.CreateInstance(services).Should().BeOfType<LxpCapabilityFilter>();
+    }
+
     private static LxpCapabilityFilter CreateFilter()
         => new(NullLogger<LxpCapabilityFilter>.Instance);
 
     private static ActionExecutingContext CreateContext(
         ClaimsPrincipal user,
-        ICapabilityService capabilityService,
-        IRequestContextAccessor? requestContextAccessor = null)
+        ICapabilityService? capabilityService,
+        IRequestContextAccessor? requestContextAccessor = null,
+        IReadOnlyList<object>? endpointMetadata = null)
     {
-        var serviceCollection = new ServiceCollection()
-            .AddSingleton(capabilityService);
+        var serviceCollection = new ServiceCollection();
+        if (capabilityService is not null)
+        {
+            serviceCollection.AddSingleton(capabilityService);
+        }
         if (requestContextAccessor is not null)
         {
             serviceCollection.AddSingleton(requestContextAccessor);
@@ -93,7 +247,9 @@ public sealed class LxpCapabilityFilterTests
         };
         var actionDescriptor = new ActionDescriptor
         {
-            EndpointMetadata = [new LxpCapabilityAttribute(LxpCapabilities.Social)]
+            EndpointMetadata = endpointMetadata is null
+                ? new List<object> { new LxpCapabilityAttribute(LxpCapabilities.Social) }
+                : endpointMetadata.ToList()
         };
 
         return new ActionExecutingContext(

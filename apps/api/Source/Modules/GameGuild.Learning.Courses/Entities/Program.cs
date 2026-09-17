@@ -271,16 +271,12 @@ public class Program : EntityBase {
         if (!dict.TryGetValue(key, out var value) || value is null)
             return null;
 
-        if (value is System.Text.Json.JsonElement jsonElement) {
-            return jsonElement.ValueKind switch {
-                System.Text.Json.JsonValueKind.String => jsonElement.GetString(),
-                System.Text.Json.JsonValueKind.Null => null,
-                System.Text.Json.JsonValueKind.Undefined => null,
-                _ => jsonElement.ToString(),
-            };
-        }
-
-        return value.ToString();
+        // Dictionary<string, object> values produced by System.Text.Json are JsonElement
+        // instances. Null JSON values are handled by the guard above.
+        var jsonElement = (System.Text.Json.JsonElement)value;
+        return jsonElement.ValueKind == System.Text.Json.JsonValueKind.String
+            ? jsonElement.GetString()
+            : jsonElement.ToString();
     }
 
     private void SetMetadataString(string key, string? value) {

@@ -42,7 +42,10 @@ import {
 import { buttonVariants } from "@game-guild/ui/components/button";
 import { ArrowLeft, Clock, Eye, Loader2, Pencil, Save } from "lucide-react";
 import type { SerializedEditorState } from "lexical";
-import type { LearningCoursesLessonContentFormat, LearningCoursesVisibility } from "@game-guild/client";
+import type {
+  LearningCoursesLessonContentFormat,
+  LearningCoursesVisibility,
+} from "@game-guild/client";
 import { createReviewMethods } from "@game-guild/grading";
 import type { ContentItemDetail } from "@/lib/learning/types";
 import type {
@@ -57,16 +60,20 @@ import {
   saveQuizAssessmentDraft,
   updateContent,
 } from "@/lib/learning/actions";
-import { CONTENT_ITEM_VISIBILITIES, formatEnumLabel } from "@/lib/learning/enums";
+import {
+  CONTENT_ITEM_VISIBILITIES,
+  formatEnumLabel,
+} from "@/lib/learning/enums";
 import { getLessonFormatLabel } from "@/lib/learning/lesson-formats";
 import { estimateReadingMinutes } from "@/lib/learning/reading-time";
 import { normalizeSlug, slugify } from "@/lib/slugify";
 import { LearnerLessonRenderer } from "@/components/learning/learner-lesson-renderer";
 import { LessonContentEditor } from "./lesson-content-editor";
 import { LessonCodeEditor } from "./lesson-code-editor";
+import { LessonExternalLinkEditor } from "./lesson-external-link-editor";
 import { LessonVideoEditor } from "./lesson-video-editor";
 import { QuizContentEditor } from "./quiz-content-editor";
-import { useLearningBase } from '@/lib/learning/use-learning-base';
+import { useLearningBase } from "@/lib/learning/use-learning-base";
 
 function formatContentTypeLabel(type: ContentItemDetail["type"]) {
   if (type === "Questionnaire") return "Quiz";
@@ -96,15 +103,16 @@ export function ContentItemEditor({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const [title, setTitle] = useState(item.title);
-  const [slug, setSlug] = useState(item.slug);
+  const [title, setTitle] = useState(item.title ?? "");
+  const [slug, setSlug] = useState(item.slug ?? "");
   // Slug starts in auto mode regardless of the stored value (it may be a
   // legacy backfill): title edits regenerate it until the slug is edited
   // directly in this session, which detaches it.
   const [autoSlug, setAutoSlug] = useState(true);
   const [description, setDescription] = useState(item.description ?? "");
-  const [visibility, setVisibility] =
-    useState<LearningCoursesVisibility>(item.visibility);
+  const [visibility, setVisibility] = useState<LearningCoursesVisibility>(
+    item.visibility,
+  );
   const [isRequired, setIsRequired] = useState<boolean>(
     (item.settings?.isRequired as boolean) ?? true,
   );
@@ -116,10 +124,11 @@ export function ContentItemEditor({
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
-  const [codingError, setCodingError] = useState<string | null>(null);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(
     item.updatedAt ? new Date(item.updatedAt) : null,
   );
+  const linkedAssessmentId = linkedAssessment?.id;
+  const linkedAssessmentSlug = linkedAssessment?.slug;
 
   // ── Graded toggle (Task 7) ──
   // checked mirrors linkedAssessmentId (server-side non-deleted link).
@@ -127,7 +136,13 @@ export function ContentItemEditor({
   // a re-toggle ON restores instead of creating a duplicate — the GET assessments
   // endpoint filters deleted rows server-side, so this is the only client-side signal.
   const [gradedChecked, setGradedChecked] =
-    useState<boolean>(!!linkedAssessment);
+    useState<boolean>(!!linkedAssessmentId);
+  const [activeAssessmentId, setActiveAssessmentId] = useState<
+    string | undefined
+  >(linkedAssessmentId);
+  const [activeReviewMethods, setActiveReviewMethods] = useState(
+    linkedAssessment?.reviewMethods,
+  );
   const [recentlyDeletedAssessmentId, setRecentlyDeletedAssessmentId] =
     useState<string | null>(null);
   const [showGradedOffConfirm, setShowGradedOffConfirm] = useState(false);
@@ -137,11 +152,10 @@ export function ContentItemEditor({
   const isLesson = item.type === "Lesson";
   const isQuiz = item.type === "Questionnaire";
   const isCode = item.type === "Code";
-  const linkedAssessmentId = linkedAssessment?.id;
-  const linkedAssessmentSlug = linkedAssessment?.slug;
-  const isAutomatedReview = linkedAssessment
-    ? hasReviewMethod(linkedAssessment.reviewMethods, "AutomatedReview")
-    : false;
+  const isAutomatedReview =
+    activeReviewMethods != null
+      ? hasReviewMethod(activeReviewMethods, "AutomatedReview")
+      : false;
   const GRADED_CONTENT_TYPES: ReadonlySet<string> = new Set([
     "Assignment",
     "Project",
@@ -154,10 +168,12 @@ export function ContentItemEditor({
     () => item.jsonBody as SerializedEditorState | null,
     [item.jsonBody],
   );
-  const [editorState, setEditorState] =
-    useState<SerializedEditorState | null>(initialLexicalState);
+  const [editorState, setEditorState] = useState<SerializedEditorState | null>(
+    initialLexicalState,
+  );
   const [codeBody, setCodeBody] = useState(item.content ?? "");
   const [videoUrl, setVideoUrl] = useState(item.content ?? "");
+  const [externalUrl, setExternalUrl] = useState(item.content ?? "");
   const initialQuizContent = useMemo(
     () => (isQuiz ? (item.jsonBody ?? undefined) : undefined),
     [isQuiz, item.jsonBody],
@@ -178,23 +194,23 @@ export function ContentItemEditor({
     if (item.jsonBody) return "Lexical";
     return "Markdown";
   }, [isLesson, item.lessonFormat, item.jsonBody]);
-  const [selectedFormat] =
-    useState<LearningCoursesLessonContentFormat>(initialSelectedFormat);
+  const [selectedFormat] = useState<LearningCoursesLessonContentFormat>(
+    initialSelectedFormat,
+  );
 
   const autoHint = useMemo(() => {
     if (!isLesson) return null;
     switch (selectedFormat) {
       case "Lexical":
         return estimateReadingMinutes({
-          jsonBody: (editorState ?? null) as Record<
-            string,
-            unknown
-          > | null,
+          jsonBody: (editorState ?? null) as Record<string, unknown> | null,
         });
       case "Markdown":
       case "RevealJs":
+      case "Html":
         return estimateReadingMinutes({ body: codeBody || null });
       case "Video":
+      case "ExternalLink":
         return null;
       default:
         return null;
@@ -240,40 +256,50 @@ export function ContentItemEditor({
           break;
         case "Markdown":
         case "RevealJs":
+        case "Html":
           bodyToSave = codeBody || undefined;
           break;
         case "Video":
           bodyToSave = videoUrl || undefined;
+          break;
+        case "ExternalLink":
+          bodyToSave = externalUrl || undefined;
           break;
       }
     } else if (isQuiz) {
       jsonBodyToSave = quizContentRef.current;
     }
     return {
-      title: (title ?? "").trim(),
+      title: title.trim(),
       // Backend keeps the stored slug when sent whitespace — derive locally
       // so a cleared field can't silently revert to the old slug. Re-slugify
       // to strip the trailing hyphen live typing can leave behind. Slugs can
       // be missing on legacy items, so coerce before slugify.
-      slug:
-        normalizeSlug(slug ?? "") ||
-        normalizeSlug(title ?? ""),
+      slug: normalizeSlug(slug) || normalizeSlug(title),
       description: description.trim() || undefined,
       body: bodyToSave,
       jsonBody: jsonBodyToSave,
       visibility,
       isRequired,
       estimatedMinutes: estimatedMinutes ? Number(estimatedMinutes) : null,
-      estimatedMinutesSource: estimatedMinutes ? ("Manual" as const) : ("Auto" as const),
+      estimatedMinutesSource: estimatedMinutes
+        ? ("Manual" as const)
+        : ("Auto" as const),
     };
   }
 
   const snapshotRef = useRef<string | null>(null);
   const saveInFlightRef = useRef(false);
+  const saveQueuedRef = useRef(false);
+  const manualSaveQueuedRef = useRef(false);
   const buildPayloadRef = useRef(buildSavePayload);
 
   async function performSave(isManual: boolean) {
-    if (!isManual && saveInFlightRef.current) return;
+    if (saveInFlightRef.current) {
+      saveQueuedRef.current = true;
+      manualSaveQueuedRef.current ||= isManual;
+      return;
+    }
     setError(null);
     if (isManual) setSaved(false);
 
@@ -365,6 +391,12 @@ export function ContentItemEditor({
         }
       } finally {
         saveInFlightRef.current = false;
+        if (saveQueuedRef.current) {
+          const queuedManualSave = manualSaveQueuedRef.current;
+          saveQueuedRef.current = false;
+          manualSaveQueuedRef.current = false;
+          void performSaveRef.current(queuedManualSave);
+        }
       }
     });
   }
@@ -391,8 +423,6 @@ export function ContentItemEditor({
     if (!title.trim()) return;
 
     const timer = setTimeout(() => {
-      const latestJson = JSON.stringify(buildPayloadRef.current());
-      if (latestJson === snapshotRef.current) return;
       void performSaveRef.current(false);
     }, AUTOSAVE_DELAY_MS);
     return () => clearTimeout(timer);
@@ -406,6 +436,7 @@ export function ContentItemEditor({
     editorState,
     codeBody,
     videoUrl,
+    externalUrl,
     quizRevision,
     isLesson,
     isQuiz,
@@ -438,15 +469,10 @@ export function ContentItemEditor({
     );
   }
 
-  async function handleConfigureCoding() {
-    setCodingError(null);
-    if (!linkedAssessmentSlug && !linkedAssessmentId) {
-      setCodingError(
-        "No assessment is linked to this content item yet. Add an assessment in the Assessments tab first.",
-      );
-      return;
-    }
-    router.push(codingDefinitionRoute(linkedAssessmentSlug ?? linkedAssessmentId!));
+  const linkedAssessmentRouteId = linkedAssessmentSlug ?? activeAssessmentId;
+
+  function handleConfigureCoding() {
+    router.push(codingDefinitionRoute(linkedAssessmentRouteId!));
   }
 
   // ── Graded toggle handlers (Task 7) ──
@@ -469,7 +495,7 @@ export function ContentItemEditor({
       setShowGradedOffConfirm(true);
       return;
     }
-    const restoreTargetId = recentlyDeletedAssessmentId ?? linkedAssessmentId;
+    const restoreTargetId = recentlyDeletedAssessmentId ?? activeAssessmentId;
     startGradedTransition(async () => {
       setGradedChecked(true);
       setGradedError(null);
@@ -480,36 +506,39 @@ export function ContentItemEditor({
           setGradedError(result.error);
           return;
         }
+        setActiveAssessmentId(restoreTargetId);
         setRecentlyDeletedAssessmentId(null);
         router.refresh();
         return;
       }
       const assessmentType =
         CONTENT_TO_ASSESSMENT_TYPE[item.type] ?? "Assignment";
+      const reviewMethods =
+        item.type === "Code"
+          ? createReviewMethods("AutomatedReview", true)
+          : createReviewMethods("InstructorReview");
       const result = await createAssessment({
         courseId,
         title: item.title,
         type: assessmentType,
         contentId: item.id,
         submissionModalities: item.type === "Code" ? "Code" : undefined,
-        reviewMethods:
-          item.type === "Code"
-            ? createReviewMethods("AutomatedReview", true)
-            : createReviewMethods("InstructorReview"),
+        reviewMethods,
       });
       if (!result.success) {
         setGradedChecked(false);
         setGradedError(result.error);
         return;
       }
+      setActiveAssessmentId(result.data.id);
+      setActiveReviewMethods(reviewMethods);
       router.refresh();
     });
   }
 
   function confirmGradedOff() {
-    const targetId = linkedAssessmentId;
+    const targetId = activeAssessmentId!;
     setShowGradedOffConfirm(false);
-    if (!targetId) return;
     startGradedTransition(async () => {
       setGradedChecked(false);
       setGradedError(null);
@@ -519,6 +548,7 @@ export function ContentItemEditor({
         setGradedError(result.error);
         return;
       }
+      setActiveAssessmentId(undefined);
       setRecentlyDeletedAssessmentId(targetId);
       router.refresh();
     });
@@ -545,9 +575,12 @@ export function ContentItemEditor({
         return editorState;
       case "Markdown":
       case "RevealJs":
+      case "Html":
         return codeBody;
       case "Video":
         return videoUrl;
+      case "ExternalLink":
+        return externalUrl;
       default:
         return "";
     }
@@ -575,9 +608,7 @@ export function ContentItemEditor({
         </CardHeader>
         <CardContent className="grid gap-6 md:grid-cols-3">
           <div className="space-y-2">
-            <Label htmlFor="visibility">
-              {contentTypeLabel} visibility
-            </Label>
+            <Label htmlFor="visibility">{contentTypeLabel} visibility</Label>
             <Select
               value={visibility}
               onValueChange={(v) =>
@@ -596,8 +627,8 @@ export function ContentItemEditor({
               </SelectContent>
             </Select>
             <p className="text-muted-foreground text-xs">
-              Controls enrolled-student access only. Public course
-              landing-page visibility is managed in Listing.
+              Controls enrolled-student access only. Public course landing-page
+              visibility is managed in Listing.
             </p>
           </div>
 
@@ -640,8 +671,8 @@ export function ContentItemEditor({
             </div>
             {autoHint && !estimatedMinutes && (
               <p className="text-muted-foreground text-xs">
-                Leave blank to keep auto (~{autoHint} min). Type a number to
-                pin it manually.
+                Leave blank to keep auto (~{autoHint} min). Type a number to pin
+                it manually.
               </p>
             )}
           </div>
@@ -895,11 +926,16 @@ export function ContentItemEditor({
             />
           )}
 
+          {isLesson && selectedFormat === "ExternalLink" && !previewMode && (
+            <LessonExternalLinkEditor
+              key={item.id}
+              initialValue={externalUrl}
+              onChange={setExternalUrl}
+            />
+          )}
+
           {isLesson && selectedFormat !== "Markdown" && previewMode && (
-            <div
-              data-testid="lesson-preview"
-              className="rounded-md border p-4"
-            >
+            <div data-testid="lesson-preview" className="rounded-md border p-4">
               <LearnerLessonRenderer
                 courseId={courseId}
                 itemId={item.id}
@@ -914,7 +950,6 @@ export function ContentItemEditor({
               key={item.id}
               initialContent={initialQuizContent}
               onChange={handleQuizContentChange}
-              mode={previewMode ? "preview" : "edit"}
             />
           )}
 
@@ -927,8 +962,8 @@ export function ContentItemEditor({
                 <div>
                   <p className="font-medium">Coding Tests</p>
                   <p className="text-muted-foreground text-sm">
-                    Configure test cases, starter files, and the run
-                    environment in the coding-definition editor.
+                    Configure test cases, starter files, and the run environment
+                    in the coding-definition editor.
                   </p>
                 </div>
                 {initialCodingDefinition ? (
@@ -936,15 +971,8 @@ export function ContentItemEditor({
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() =>
-                      (linkedAssessmentSlug ?? linkedAssessmentId) &&
-                      router.push(
-                        codingDefinitionRoute(
-                          linkedAssessmentSlug ?? linkedAssessmentId!,
-                        ),
-                      )
-                    }
-                    disabled={!linkedAssessmentSlug && !linkedAssessmentId}
+                    onClick={handleConfigureCoding}
+                    disabled={!linkedAssessmentRouteId}
                   >
                     <Pencil className="mr-2 h-4 w-4" />
                     Edit Coding Tests
@@ -954,7 +982,7 @@ export function ContentItemEditor({
                     type="button"
                     size="sm"
                     onClick={handleConfigureCoding}
-                    disabled={!linkedAssessmentId}
+                    disabled={!linkedAssessmentRouteId}
                   >
                     <Pencil className="mr-2 h-4 w-4" />
                     Configure Coding Tests
@@ -966,23 +994,15 @@ export function ContentItemEditor({
                   <p>Language: {initialCodingDefinition.language}</p>
                   <p>Test cases: {codingCases.length} (public)</p>
                   <p>
-                    Types: {stdioCaseCount} stdin/stdout ·{" "}
-                    {functionalCaseCount} functional
+                    Types: {stdioCaseCount} stdin/stdout · {functionalCaseCount}{" "}
+                    functional
                   </p>
                   <p>
                     Passing score: {initialCodingDefinition.passingScore}/
                     {initialCodingDefinition.maxScore}
                   </p>
                 </div>
-              ) : !linkedAssessmentId ? (
-                <p className="text-muted-foreground text-sm">
-                  Link this content item to an assessment to enable coding
-                  tests.
-                </p>
               ) : null}
-              {codingError && (
-                <p className="text-destructive text-sm">{codingError}</p>
-              )}
             </div>
           )}
 
@@ -990,8 +1010,8 @@ export function ContentItemEditor({
             <div className="space-y-2">
               <Label>Body</Label>
               <p className="text-muted-foreground text-sm py-8 text-center">
-                Editor for <strong>{contentTypeLabel}</strong> content is
-                not yet available.
+                Editor for <strong>{contentTypeLabel}</strong> content is not
+                yet available.
               </p>
             </div>
           )}

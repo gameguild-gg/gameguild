@@ -70,10 +70,13 @@ public sealed class LearningAssetParentAuthorizationResolver(
     private bool HasAuthoritativeActor(Guid userId, Guid? tenantId)
     {
         var actor = actorContextAccessor.ActorContext;
-        return actor.IsAuthenticated &&
-               actor.SubjectIdAsGuid == userId &&
-               tenantId.HasValue &&
-               actor.TenantId == tenantId;
+        if (!actor.IsAuthenticated) return false;
+        var actorUserId = actor.SubjectIdAsGuid;
+        if (!actorUserId.HasValue) return false;
+        if (actorUserId.Value != userId) return false;
+        if (!tenantId.HasValue) return false;
+        if (!actor.TenantId.HasValue) return false;
+        return actor.TenantId.Value == tenantId.Value;
     }
 
     private async Task<Program?> ResolveProgramAsync(Guid parentResourceId, CancellationToken cancellationToken)

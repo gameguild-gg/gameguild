@@ -13,7 +13,9 @@ vi.mock("@/lib/learner/activity-actions", () => ({
 
 vi.mock("@/i18n/navigation", () => ({
   useRouter: () => ({ refresh: mocks.refresh }),
-  Link: ({ children, href }: { children: ReactNode; href: string }) => <a href={href}>{children}</a>,
+  Link: ({ children, href }: { children: ReactNode; href: string }) => (
+    <a href={href}>{children}</a>
+  ),
 }));
 
 import { CourseDiscussionThread } from "./course-discussion-thread";
@@ -95,6 +97,84 @@ describe("CourseDiscussionThread", () => {
 
     expect(
       await screen.findByText("Replies are temporarily unavailable."),
+    ).toBeInTheDocument();
+    expect(mocks.refresh).not.toHaveBeenCalled();
+  });
+
+  it("renders missing discussion data and nested reply fallbacks", () => {
+    render(
+      <CourseDiscussionThread
+        courseSlug="game-production"
+        courseTitle="Game Production"
+        discussion={{
+          ...discussion,
+          title: "",
+          content: "",
+          isPinned: false,
+          isResolved: false,
+          viewCount: undefined,
+          createdAt: undefined,
+        }}
+        replies={[
+          {
+            id: "reply-2",
+            discussionId: "discussion-1",
+            parentReplyId: "reply-1",
+            content: "A nested response.",
+            isAcceptedAnswer: false,
+            upvoteCount: undefined,
+            createdAt: undefined,
+          },
+        ]}
+      />,
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "Course discussion" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/^Course conversation/)).toBeInTheDocument();
+    expect(screen.getByText("0 views", { exact: false })).toBeInTheDocument();
+    expect(
+      screen.getByText("No discussion message was provided."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("A nested response.").closest("article"),
+    ).toHaveClass("ml-8");
+    expect(screen.getByText("0 helpful", { exact: false })).toBeInTheDocument();
+    expect(screen.queryByText("Pinned")).not.toBeInTheDocument();
+    expect(screen.queryByText("Resolved")).not.toBeInTheDocument();
+    expect(screen.queryByText("Accepted answer")).not.toBeInTheDocument();
+  });
+
+  it("shows pending state and the default error when the API omits a message", async () => {
+    let finish: ((value: { success: false }) => void) | undefined;
+    mocks.createReply.mockImplementation(
+      () =>
+        new Promise<{ success: false }>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    render(
+      <CourseDiscussionThread
+        courseSlug="game-production"
+        courseTitle="Game Production"
+        discussion={discussion}
+        replies={[]}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText("Reply message"), {
+      target: { value: "Retry without an API message." },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Publish reply" }));
+
+    expect(
+      await screen.findByRole("button", { name: "Publishing..." }),
+    ).toBeDisabled();
+    finish?.({ success: false });
+
+    expect(
+      await screen.findByText("The reply could not be published."),
     ).toBeInTheDocument();
     expect(mocks.refresh).not.toHaveBeenCalled();
   });

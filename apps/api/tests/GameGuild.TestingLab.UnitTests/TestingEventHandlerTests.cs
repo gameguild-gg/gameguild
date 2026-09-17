@@ -733,6 +733,65 @@ public sealed class TestingEventHandlerTests : IDisposable
     }
 
     [Fact]
+    public async Task CreateSlots_PersistsTheCompleteTimeboxPlan()
+    {
+        var testingEvent = AddOpenEvent(TestingEventApprovalMode.ManagerOnly);
+        await _context.SaveChangesAsync();
+        var startsAt = testingEvent.StartsAt;
+
+        var result = await CreateEventHandler().Handle(new CreateTestingEventSlotsCommand(
+            testingEvent.Id,
+            Enumerable.Range(0, 4)
+                .Select(index => new TestingEventSlotInput(
+                    TestingEventMode.Online,
+                    startsAt.AddHours(index),
+                    startsAt.AddHours(index).AddMinutes(45),
+                    8,
+                    2,
+                    null,
+                    null,
+                    "https://meet.example.com/timebox"))
+                .ToArray()), default);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().HaveCount(4);
+        (await _context.Set<TestingEventSlot>().ToListAsync()).Should().HaveCount(4);
+    }
+
+    [Fact]
+    public async Task CreateSlots_WhenOneTimeboxIsInvalid_PersistsNothing()
+    {
+        var testingEvent = AddOpenEvent(TestingEventApprovalMode.ManagerOnly);
+        await _context.SaveChangesAsync();
+
+        var result = await CreateEventHandler().Handle(new CreateTestingEventSlotsCommand(
+            testingEvent.Id,
+            [
+                new TestingEventSlotInput(
+                    TestingEventMode.Online,
+                    testingEvent.StartsAt,
+                    testingEvent.StartsAt.AddMinutes(45),
+                    8,
+                    2,
+                    null,
+                    null,
+                    "https://meet.example.com/timebox"),
+                new TestingEventSlotInput(
+                    TestingEventMode.Online,
+                    testingEvent.EndsAt,
+                    testingEvent.EndsAt.AddMinutes(45),
+                    8,
+                    2,
+                    null,
+                    null,
+                    "https://meet.example.com/timebox")
+            ]), default);
+
+        result.IsFailure.Should().BeTrue();
+        (await _context.Set<TestingEventSlot>().ToListAsync()).Should().BeEmpty();
+    }
+
+    [Fact]
     public async Task UpdateEvent_RequiresEventManager()
     {
         var testingEvent = AddOpenEvent(TestingEventApprovalMode.ManagerOnly);

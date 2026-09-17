@@ -293,9 +293,6 @@ public class ProgramContent : EntityBase
         UpdatedAt = SystemClock.UtcNow;
     }
 
-    private static bool IsLessonType(ProgramContentType type) =>
-        type is ProgramContentType.Lesson or ProgramContentType.Page;
-
     /// <summary>
     /// Recomputes EstimatedMinutes from body word count (200 wpm) unless the source is Manual.
     /// No extractable text (e.g. Video URL) leaves the stored value untouched.

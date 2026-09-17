@@ -43,7 +43,7 @@ public class PopularInCategoryStrategy(IApplicationDbContext context) : IRecomme
         // Filter by preferred categories if user has preferences
         if (preferredCategories.Any())
         {
-            query = query.Where(p => preferredCategories.Contains(p.Category.ToString()));
+            query = query.Where(p => preferredCategories.Contains(p.Category));
         }
 
         // Order by average rating and enrollment count
@@ -68,18 +68,25 @@ public class PopularInCategoryStrategy(IApplicationDbContext context) : IRecomme
             Reason: $"Popular in {course.Category} with {course.AverageRating:F1}★ rating"));
     }
 
-    private static List<string> ParseCategories(string? json)
+    private static List<ProgramCategory> ParseCategories(string? json)
     {
-        if (string.IsNullOrWhiteSpace(json)) return new List<string>();
+        if (string.IsNullOrWhiteSpace(json)) return [];
         
         try
         {
-            var categoryStrings = System.Text.Json.JsonSerializer.Deserialize<string[]>(json);
-            return categoryStrings?.ToList() ?? new List<string>();
+            var categoryStrings = System.Text.Json.JsonSerializer.Deserialize<string[]>(json) ?? [];
+            return categoryStrings
+                .Select(value => Enum.TryParse<ProgramCategory>(value, ignoreCase: true, out var category)
+                    ? (ProgramCategory?)category
+                    : null)
+                .Where(category => category.HasValue)
+                .Select(category => category!.Value)
+                .Distinct()
+                .ToList();
         }
-        catch
+        catch (System.Text.Json.JsonException)
         {
-            return new List<string>();
+            return [];
         }
     }
 

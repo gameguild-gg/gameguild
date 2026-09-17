@@ -20,6 +20,17 @@ public sealed class CourseContentAccessRuleEvaluatorTests
     }
 
     [Fact]
+    public void RuleType_IdentifiesCourseContentAccessContract()
+    {
+        var evaluator = new CourseContentAccessRuleEvaluator(
+            _programService.Object,
+            _actorContextAccessor.Object,
+            _permissionChecker.Object);
+
+        evaluator.RuleType.Should().Be(RuleTypes.CourseContentAccess);
+    }
+
+    [Fact]
     public async Task PublicOutline_AllowsAnonymousOnlyForPublishedPublicProgram()
     {
         var program = new Program

@@ -122,9 +122,14 @@ public sealed class CohortSchedule : EntityBase
             throw new ArgumentException("Timezone is required.", nameof(timezoneId));
         }
 
+        return ResolveTimezone(timezoneId.Trim(), TimeZoneInfo.FindSystemTimeZoneById);
+    }
+
+    private static string ResolveTimezone(string timezoneId, Func<string, TimeZoneInfo> resolver)
+    {
         try
         {
-            return TimeZoneInfo.FindSystemTimeZoneById(timezoneId.Trim()).Id;
+            return resolver(timezoneId).Id;
         }
         catch (TimeZoneNotFoundException exception)
         {

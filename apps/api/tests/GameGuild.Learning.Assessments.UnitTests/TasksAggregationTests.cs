@@ -218,6 +218,29 @@ public class TasksAggregationTests
         dto.Items.Should().NotContain(i => i.Type == "grade", "plain enrollees never see grade tasks");
     }
 
+    [Fact]
+    public async Task ExplicitProgramPermission_ProducesGradeTaskAndIgnoresMalformedPermissions()
+    {
+        await using var db = CreateContext();
+        var courseId = Guid.NewGuid();
+        var actorId = Guid.NewGuid();
+        await SeedCourseAsync(db, courseId, "Authorized course", creatorId: Guid.NewGuid());
+        var assessment = await SeedAssessmentAsync(db, courseId, "Submission");
+        await SeedRowAsync(db, assessment.Id, "Learner", 1, SubmissionStatus.Submitted);
+        var permissions = new Mock<IPermissionQueryService>();
+        permissions.Setup(p => p.GetEffectivePermissionsAsync(actorId, TenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([
+                "Program.not-a-guid.Edit",
+                $"Program.{Guid.NewGuid()}.Review",
+                $"Program.{courseId}.Edit"
+            ]);
+        var service = new TasksService(db, permissions.Object, NullLogger<TasksService>.Instance);
+
+        var dto = await service.GetTasksAsync(actorId, TenantId, isSystemAdmin: false);
+
+        dto.Items.Should().ContainSingle(item => item.Type == "grade" && item.CourseId == courseId);
+    }
+
     // ===== NOTIFICATIONS =====
 
     [Fact]

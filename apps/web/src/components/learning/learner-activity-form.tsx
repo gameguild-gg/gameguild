@@ -5,6 +5,7 @@ import {
   submitContentActivity,
 } from "@/lib/learner/activity-actions";
 import { getPreferredSubmissionModality } from "@/lib/learner/activity-contracts";
+import { scoreUnitsToPoints } from "@/lib/learning/academic-values";
 import type {
   LearningAssessmentsAssessment,
   LearningAssessmentsLearnerAssessmentSubmission,
@@ -108,7 +109,7 @@ export function LearnerActivityForm({
           </Badge>
           {finalSubmission.score != null ? (
             <strong className="text-lg text-white">
-              {finalSubmission.score} points
+              {scoreUnitsToPoints(finalSubmission.score)} points
             </strong>
           ) : (
             <span className="text-sm text-muted-foreground">
@@ -177,7 +178,11 @@ export function LearnerActivityForm({
         <>
           <input type="hidden" name="courseId" value={courseId} />
           <input type="hidden" name="contentId" value={activity.contentId} />
-          <input type="hidden" name="kind" value={contentKind || ""} />
+          <input
+            type="hidden"
+            name="kind"
+            value={activity.contentType.toLowerCase()}
+          />
         </>
       )}
       <input type="hidden" name="enrollmentId" value={enrollmentId} />

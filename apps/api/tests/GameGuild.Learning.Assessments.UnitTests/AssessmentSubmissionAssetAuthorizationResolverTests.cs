@@ -12,6 +12,73 @@ namespace GameGuild.Learning.Assessments.Tests;
 public sealed class AssessmentSubmissionAssetAuthorizationResolverTests
 {
     [Fact]
+    public void Supports_AcceptsCanonicalAliasesOnly()
+    {
+        using var context = CreateContext();
+        var resolver = CreateResolver(context, Guid.NewGuid(), Guid.NewGuid());
+
+        resolver.Supports(nameof(AssessmentSubmission)).Should().BeTrue();
+        resolver.Supports("SUBMISSIONS").Should().BeTrue();
+        resolver.Supports("assessment").Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Authorization_DeniesUnauthenticatedActorAndMissingRequestedTenant()
+    {
+        await using var context = CreateContext();
+        var actorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var unauthenticated = CreateResolver(
+            context,
+            new ActorContext
+            {
+                ActorKind = ActorKind.User,
+                SubjectId = actorId.ToString(),
+                TenantId = tenantId,
+                IsAuthenticated = false,
+                Roles = new HashSet<string>(),
+                Permissions = new HashSet<string>(),
+            });
+        var authenticated = CreateResolver(context, actorId, tenantId);
+
+        (await unauthenticated.CanReadAsync(Guid.NewGuid(), actorId, tenantId)).Should().BeFalse();
+        (await authenticated.CanManageAsync(Guid.NewGuid(), actorId, null)).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Authorization_DeniesInvalidActorSubjectAndMissingActorTenant()
+    {
+        await using var context = CreateContext();
+        var actorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var invalidSubject = CreateResolver(
+            context,
+            new ActorContext
+            {
+                ActorKind = ActorKind.User,
+                SubjectId = "not-a-guid",
+                TenantId = tenantId,
+                IsAuthenticated = true,
+                Roles = new HashSet<string>(),
+                Permissions = new HashSet<string>(),
+            });
+        var missingActorTenant = CreateResolver(
+            context,
+            new ActorContext
+            {
+                ActorKind = ActorKind.User,
+                SubjectId = actorId.ToString(),
+                TenantId = null,
+                IsAuthenticated = true,
+                Roles = new HashSet<string>(),
+                Permissions = new HashSet<string>(),
+            });
+
+        (await invalidSubject.CanReadAsync(Guid.NewGuid(), actorId, tenantId)).Should().BeFalse();
+        (await missingActorTenant.CanManageAsync(Guid.NewGuid(), actorId, tenantId)).Should().BeFalse();
+    }
+
+    [Fact]
     public async Task CanManageAsync_AllowsOnlyOwnerOfInProgressSubmissionInCurrentTenant()
     {
         var tenantId = Guid.NewGuid();
@@ -83,6 +150,54 @@ public sealed class AssessmentSubmissionAssetAuthorizationResolverTests
         (await resolver.CanManageAsync(submission.Id, learnerId, tenantId)).Should().BeFalse();
     }
 
+    [Theory]
+    [InlineData("Edit")]
+    [InlineData("Publish")]
+    public async Task CanReadAsync_AllowsEachManagementPermission(string grantedPermission)
+    {
+        var tenantId = Guid.NewGuid();
+        var learnerId = Guid.NewGuid();
+        var reviewerId = Guid.NewGuid();
+        var program = new Program { Id = Guid.NewGuid(), TenantId = tenantId };
+        var assessment = Assessment.Create(program.Id, "Upload", AssessmentType.Assignment, Score(100));
+        assessment.TenantId = tenantId;
+        var submission = AssessmentSubmission.Start(assessment.Id, Guid.NewGuid(), learnerId, 1);
+        submission.TenantId = tenantId;
+        await using var context = CreateContext();
+        context.AddRange(program, assessment, submission);
+        await context.SaveChangesAsync();
+        var permissions = new Mock<IPermissionQueryService>();
+        permissions.Setup(service => service.HasTenantPermissionAsync(
+                reviewerId,
+                tenantId,
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Guid _, Guid? _, string permission, CancellationToken _) =>
+                permission.EndsWith($".{grantedPermission}", StringComparison.Ordinal));
+        var resolver = CreateResolver(context, reviewerId, tenantId, permissions);
+
+        (await resolver.CanReadAsync(submission.Id, reviewerId, tenantId)).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task CanReadAsync_DeniesAuthoritativeActorWithoutAnyPermission()
+    {
+        var tenantId = Guid.NewGuid();
+        var learnerId = Guid.NewGuid();
+        var actorId = Guid.NewGuid();
+        var program = new Program { Id = Guid.NewGuid(), TenantId = tenantId };
+        var assessment = Assessment.Create(program.Id, "Upload", AssessmentType.Assignment, Score(100));
+        assessment.TenantId = tenantId;
+        var submission = AssessmentSubmission.Start(assessment.Id, Guid.NewGuid(), learnerId, 1);
+        submission.TenantId = tenantId;
+        await using var context = CreateContext();
+        context.AddRange(program, assessment, submission);
+        await context.SaveChangesAsync();
+        var resolver = CreateResolver(context, actorId, tenantId);
+
+        (await resolver.CanReadAsync(submission.Id, actorId, tenantId)).Should().BeFalse();
+    }
+
     private static AssessmentSubmissionAssetAuthorizationResolver CreateResolver(
         TestDbContext context,
         Guid actorId,
@@ -103,6 +218,18 @@ public sealed class AssessmentSubmissionAssetAuthorizationResolverTests
             context,
             actor.Object,
             permissions?.Object ?? Mock.Of<IPermissionQueryService>());
+    }
+
+    private static AssessmentSubmissionAssetAuthorizationResolver CreateResolver(
+        TestDbContext context,
+        ActorContext actorContext)
+    {
+        var actor = new Mock<IActorContextAccessor>();
+        actor.SetupGet(accessor => accessor.ActorContext).Returns(actorContext);
+        return new AssessmentSubmissionAssetAuthorizationResolver(
+            context,
+            actor.Object,
+            Mock.Of<IPermissionQueryService>());
     }
 
     private static TestDbContext CreateContext() => new(

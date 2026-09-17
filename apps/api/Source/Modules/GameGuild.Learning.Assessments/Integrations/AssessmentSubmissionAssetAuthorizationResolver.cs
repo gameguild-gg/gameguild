@@ -31,12 +31,23 @@ public sealed class AssessmentSubmissionAssetAuthorizationResolver(
         if (authorization is null) return false;
         if (authorization.OwnerId == userId) return true;
 
-        return await HasAnyPermissionAsync(
-            authorization.ProgramId,
-            userId,
-            tenantId.Value,
-            cancellationToken,
-            "Review", "Edit", "Publish").ConfigureAwait(false);
+        if (await HasPermissionAsync(
+                authorization.ProgramId, userId, tenantId.Value, "Review", cancellationToken)
+            .ConfigureAwait(false))
+        {
+            return true;
+        }
+
+        if (await HasPermissionAsync(
+                authorization.ProgramId, userId, tenantId.Value, "Edit", cancellationToken)
+            .ConfigureAwait(false))
+        {
+            return true;
+        }
+
+        return await HasPermissionAsync(
+                authorization.ProgramId, userId, tenantId.Value, "Publish", cancellationToken)
+            .ConfigureAwait(false);
     }
 
     public async Task<bool> CanManageAsync(
@@ -57,10 +68,13 @@ public sealed class AssessmentSubmissionAssetAuthorizationResolver(
     private bool HasAuthoritativeActor(Guid userId, Guid? tenantId)
     {
         var actor = actorContextAccessor.ActorContext;
-        return actor.IsAuthenticated &&
-               actor.SubjectIdAsGuid == userId &&
-               tenantId.HasValue &&
-               actor.TenantId == tenantId;
+        if (!actor.IsAuthenticated) return false;
+        var actorUserId = actor.SubjectIdAsGuid;
+        if (!actorUserId.HasValue) return false;
+        if (actorUserId.Value != userId) return false;
+        if (!tenantId.HasValue) return false;
+        if (!actor.TenantId.HasValue) return false;
+        return actor.TenantId.Value == tenantId.Value;
     }
 
     private Task<SubmissionAuthorization?> ResolveAsync(
@@ -82,25 +96,17 @@ public sealed class AssessmentSubmissionAssetAuthorizationResolver(
          select new SubmissionAuthorization(submission.UserId, submission.Status, program.Id))
         .SingleOrDefaultAsync(cancellationToken);
 
-    private async Task<bool> HasAnyPermissionAsync(
+    private Task<bool> HasPermissionAsync(
         Guid programId,
         Guid userId,
         Guid tenantId,
-        CancellationToken cancellationToken,
-        params string[] permissions)
-    {
-        foreach (var permission in permissions)
-        {
-            if (await permissionQueryService.HasTenantPermissionAsync(
-                    userId,
-                    tenantId,
-                    $"Program.{programId}.{permission}",
-                    cancellationToken)
-                .ConfigureAwait(false)) return true;
-        }
-
-        return false;
-    }
+        string permission,
+        CancellationToken cancellationToken) =>
+        permissionQueryService.HasTenantPermissionAsync(
+            userId,
+            tenantId,
+            $"Program.{programId}.{permission}",
+            cancellationToken);
 
     private sealed record SubmissionAuthorization(Guid? OwnerId, SubmissionStatus Status, Guid ProgramId);
 }

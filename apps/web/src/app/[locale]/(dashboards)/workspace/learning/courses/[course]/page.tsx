@@ -1,6 +1,6 @@
+import { redirect } from '@/i18n/navigation';
 import { getCourseRouteParam } from '@/lib/learning/course-route';
 import { getCourse } from '@/lib/learning';
-import { redirect } from 'next/navigation';
 
 /**
  * L4: Course Detail Redirect
@@ -8,10 +8,13 @@ import { redirect } from 'next/navigation';
  * Redirects to the overview page which contains the course dashboard
  * with analytics, metrics, and course summary.
  */
-export default async function Page({ params }: PageProps<'/[locale]/workspace/learning/courses/[course]'>): Promise<never> {
+export default async function Page({ params }: PageProps<'/[locale]/workspace/learning/courses/[course]'>): Promise<void> {
   const { locale, course: courseIdentifier } = await params;
   const course = await getCourse(courseIdentifier);
   const courseRouteParam = course ? getCourseRouteParam(course) : courseIdentifier;
 
-  redirect(`/${locale}/workspace/learning/courses/${encodeURIComponent(courseRouteParam)}/overview`);
+  return redirect({
+    href: `/workspace/learning/courses/${encodeURIComponent(courseRouteParam)}/overview`,
+    locale,
+  });
 }

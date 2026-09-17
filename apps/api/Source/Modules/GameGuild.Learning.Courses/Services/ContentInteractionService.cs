@@ -355,7 +355,7 @@ public class ContentInteractionService(
       .ToListAsync();
 
   private Task<bool> HasProgramReviewAccessAsync(Guid programId, Guid actorId) {
-    if (!requestContextAccessor.CurrentTenantId.HasValue || permissionQueryService is null) return Task.FromResult(false);
+    if (permissionQueryService is null) return Task.FromResult(false);
     return permissionQueryService.HasTenantPermissionAsync(
       actorId,
       requestContextAccessor.CurrentTenantId,

@@ -24,6 +24,7 @@ public class WishlistService : IWishlistService
         Guid userId,
         bool notifyOnSale = true,
         bool notifyOnUpdate = false,
+        Guid? tenantId = null,
         CancellationToken cancellationToken = default)
     {
         var existing = await _context.Set<CourseWishlist>()
@@ -34,7 +35,7 @@ public class WishlistService : IWishlistService
             return Result.Failure<CourseWishlist>(Error.Failure("Wishlist.AlreadyExists", "This course is already in your wishlist"));
         }
 
-        var wishlistItem = CourseWishlist.Create(courseId, userId);
+        var wishlistItem = CourseWishlist.Create(courseId, userId, notifyOnSale, notifyOnUpdate, tenantId);
         _context.Set<CourseWishlist>().Add(wishlistItem);
         await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
@@ -98,9 +99,10 @@ public class WishlistService : IWishlistService
             return Result.Failure<CourseWishlist>(Error.NotFound("Wishlist.NotFound", "This course is not in your wishlist"));
         }
 
-        // Note: Need to add setter methods to the entity for these properties
-        // For now, return the existing item
+        wishlistItem.UpdatePreferences(notifyOnSale, notifyOnUpdate);
         await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        _logger.LogInformation("Wishlist preferences updated for course {CourseId} and user {UserId}", courseId, userId);
         return Result.Success(wishlistItem);
     }
 }

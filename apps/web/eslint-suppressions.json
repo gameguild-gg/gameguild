@@ -1427,11 +1427,6 @@
       "count": 1
     }
   },
-  "src/components/learning/console/courses/[course]/assessments/[assessmentId]/submissions/[submissionId]/grade/grade-client.test.tsx": {
-    "@typescript-eslint/no-require-imports": {
-      "count": 1
-    }
-  },
   "src/components/learning/console/courses/[course]/assessments/[assessmentId]/submissions/[submissionId]/grade/grade-client.tsx": {
     "@typescript-eslint/no-unused-vars": {
       "count": 1
@@ -1460,11 +1455,6 @@
   "src/components/learning/console/courses/[course]/classes/[classId]/schedule/schedule-test-fixtures.ts": {
     "@typescript-eslint/no-unused-vars": {
       "count": 3
-    }
-  },
-  "src/components/learning/console/courses/[course]/content/content-tree-model.test.ts": {
-    "@next/next/no-assign-module-variable": {
-      "count": 1
     }
   },
   "src/components/learning/console/courses/[course]/content/content-tree.tsx": {
