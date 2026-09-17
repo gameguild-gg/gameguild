@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GameGuild.Learning.Assessments.Grading.Contracts;
 using GameGuild.Learning.Courses;
 using System.Reflection;
 using Xunit;
@@ -10,12 +11,12 @@ public sealed class AssessmentEntityCoverageTests
     [Fact]
     public void Mutators_ApplyEverySupportedDeliveryAndGroupingValue()
     {
-        var assessment = Assessment.Create(Guid.NewGuid(), "Original", AssessmentType.Quiz, 100);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Original", AssessmentType.Quiz, Score(100));
         var groupId = Guid.NewGuid();
         var groupSetId = Guid.NewGuid();
         var contentId = Guid.NewGuid();
 
-        assessment.SetMaxScore(150);
+        assessment.SetMaxScore(Score(150));
         assessment.AssignToGroup(groupId);
         assessment.SetDeliveryContract(
             SubmissionModality.Text | SubmissionModality.File,
@@ -23,43 +24,58 @@ public sealed class AssessmentEntityCoverageTests
         assessment.Update(
             title: "Updated",
             description: "Description",
-            maxScore: 125,
+            clearDescription: false,
+            maxScore: Score(125),
+            passingScore: null,
             timeLimitMinutes: 30,
-            maxAttempts: 2,
+            clearTimeLimitMinutes: false,
+            maxAttempts: 1,
             isRequired: false,
             availableFrom: null,
+            clearAvailableFrom: false,
             availableUntil: null,
+            clearAvailableUntil: false,
             contentId: contentId,
             assessmentGroupId: groupId,
             submissionModalities: SubmissionModality.Project,
             presentationMode: AssessmentPresentationMode.SingleStep,
-            gradingMethods: AssessmentGradingMethod.AutoGraded,
+            reviewMethods: ReviewMethods.AutomatedReview,
             groupSetId: groupSetId,
-            peerReviewsRequiredCount: 2,
             slug: "updated-slug");
 
-        assessment.MaxScore.Should().Be(125);
+        assessment.MaxScore.Should().Be(Score(125));
         assessment.ContentId.Should().Be(contentId);
         assessment.AssessmentGroupId.Should().Be(groupId);
         assessment.GroupSetId.Should().Be(groupSetId);
         assessment.SubmissionModalities.Should().Be(SubmissionModality.Project);
         assessment.PresentationMode.Should().Be(AssessmentPresentationMode.SingleStep);
-        assessment.GradingMethods.Should().Be(AssessmentGradingMethod.AutoGraded);
-        assessment.PeerReviewsRequiredCount.Should().Be(2);
+        assessment.ReviewMethods.Should().Be(ReviewMethods.AutomatedReview);
         assessment.Slug.Should().Be("updated-slug");
     }
 
     [Fact]
     public void Update_CanClearOptionalLinksAndSchedule()
     {
-        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, Score(100));
         var dueAt = DateTime.UtcNow.AddDays(1);
         assessment.AssignToGroup(Guid.NewGuid());
         assessment.AssignToGroupSet(Guid.NewGuid());
         assessment.SetDeliverySchedule(null, dueAt.AddDays(2), dueAt, true, dueAt.AddDays(1));
 
         assessment.Update(
-            null, null, null, null, null, null, null, dueAt.AddDays(2),
+            title: null,
+            description: null,
+            clearDescription: false,
+            maxScore: null,
+            passingScore: null,
+            timeLimitMinutes: null,
+            clearTimeLimitMinutes: false,
+            maxAttempts: null,
+            isRequired: null,
+            availableFrom: null,
+            clearAvailableFrom: false,
+            availableUntil: dueAt.AddDays(2),
+            clearAvailableUntil: false,
             clearContentId: true,
             clearAssessmentGroupId: true,
             clearDueAt: true,
@@ -77,17 +93,41 @@ public sealed class AssessmentEntityCoverageTests
     [Fact]
     public void Update_CanProvideScheduleAndEitherDeliveryFieldIndependently()
     {
-        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100, slug: "quiz");
+        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, Score(100), slug: "quiz");
         var dueAt = DateTime.UtcNow.AddHours(2);
 
         assessment.Update(
-            null, null, null, null, null, null, null, dueAt.AddHours(2),
+            title: null,
+            description: null,
+            clearDescription: false,
+            maxScore: null,
+            passingScore: null,
+            timeLimitMinutes: null,
+            clearTimeLimitMinutes: false,
+            maxAttempts: null,
+            isRequired: null,
+            availableFrom: null,
+            clearAvailableFrom: false,
+            availableUntil: dueAt.AddHours(2),
+            clearAvailableUntil: false,
             presentationMode: AssessmentPresentationMode.Continuous,
             dueAt: dueAt,
             allowLateSubmissions: true,
             lateSubmissionDeadline: dueAt.AddHours(1));
         assessment.Update(
-            null, null, null, null, null, null, null, dueAt.AddHours(2),
+            title: null,
+            description: null,
+            clearDescription: false,
+            maxScore: null,
+            passingScore: null,
+            timeLimitMinutes: null,
+            clearTimeLimitMinutes: false,
+            maxAttempts: null,
+            isRequired: null,
+            availableFrom: null,
+            clearAvailableFrom: false,
+            availableUntil: dueAt.AddHours(2),
+            clearAvailableUntil: false,
             submissionModalities: SubmissionModality.Code);
 
         assessment.DueAt.Should().Be(dueAt);
@@ -101,27 +141,39 @@ public sealed class AssessmentEntityCoverageTests
     {
         var contentId = Guid.NewGuid();
         var assessment = Assessment.Create(
-            Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100, contentId: contentId);
+            Guid.NewGuid(), "Quiz", AssessmentType.Quiz, Score(100), contentId: contentId);
 
-        assessment.Update(null, null, null, null, null, null, null, null);
+        assessment.Update(
+            title: null,
+            description: null,
+            clearDescription: false,
+            maxScore: null,
+            passingScore: null,
+            timeLimitMinutes: null,
+            clearTimeLimitMinutes: false,
+            maxAttempts: null,
+            isRequired: null,
+            availableFrom: null,
+            clearAvailableFrom: false,
+            availableUntil: null,
+            clearAvailableUntil: false);
 
         assessment.ContentId.Should().Be(contentId);
     }
 
     [Theory]
     [InlineData(0)]
-    [InlineData(-1)]
     public void SetMaxScore_RejectsNonPositiveValues(int score)
     {
-        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 1);
-        var action = () => assessment.SetMaxScore(score);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, Score(1));
+        var action = () => assessment.SetMaxScore(Score(score));
         action.Should().Throw<ArgumentOutOfRangeException>();
     }
 
     [Fact]
     public void SetDeliveryContract_RejectsUndefinedPresentationMode()
     {
-        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, Score(100));
         var action = () => assessment.SetDeliveryContract(SubmissionModality.Text, (AssessmentPresentationMode)999);
         action.Should().Throw<ArgumentOutOfRangeException>();
     }
@@ -131,7 +183,7 @@ public sealed class AssessmentEntityCoverageTests
     [InlineData((SubmissionModality)128)]
     public void SetDeliveryContract_RejectsUnsupportedModalities(SubmissionModality modality)
     {
-        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, Score(100));
         var action = () => assessment.SetDeliveryContract(modality, AssessmentPresentationMode.SingleStep);
         action.Should().Throw<ArgumentOutOfRangeException>();
     }
@@ -161,7 +213,7 @@ public sealed class AssessmentEntityCoverageTests
         bool allowLate,
         DateTime? lateDeadline)
     {
-        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, Score(100));
         var action = () => assessment.SetDeliverySchedule(
             availableFrom, availableUntil, dueAt, allowLate, lateDeadline);
         action.Should().Throw<ArgumentException>();
@@ -170,13 +222,13 @@ public sealed class AssessmentEntityCoverageTests
     [Fact]
     public void AssessmentGroup_UpdateChangesAllValuesAndNormalizesDescription()
     {
-        var group = AssessmentGroup.Create(Guid.NewGuid(), "Initial", 10, description: "Initial");
+        var group = AssessmentGroup.Create(Guid.NewGuid(), "Initial", Percent(10), description: "Initial");
 
-        group.Update(" Updated ", "   ", 25, 4);
+        group.Update(" Updated ", "   ", Percent(25), 4);
 
         group.Name.Should().Be("Updated");
         group.Description.Should().BeNull();
-        group.WeightPercent.Should().Be(25);
+        group.WeightPercent.Should().Be(Percent(25));
         group.Order.Should().Be(4);
     }
 
@@ -185,18 +237,17 @@ public sealed class AssessmentEntityCoverageTests
     [InlineData("   ")]
     public void AssessmentGroup_UpdateRejectsBlankName(string name)
     {
-        var group = AssessmentGroup.Create(Guid.NewGuid(), "Initial", 10);
+        var group = AssessmentGroup.Create(Guid.NewGuid(), "Initial", Percent(10));
         var action = () => group.Update(name, null, null, null);
         action.Should().Throw<ArgumentException>();
     }
 
     [Theory]
-    [InlineData(-0.1)]
     [InlineData(100.1)]
     public void AssessmentGroup_UpdateRejectsInvalidWeight(decimal weight)
     {
-        var group = AssessmentGroup.Create(Guid.NewGuid(), "Initial", 10);
-        var action = () => group.Update(null, null, weight, null);
+        var group = AssessmentGroup.Create(Guid.NewGuid(), "Initial", Percent(10));
+        var action = () => group.Update(null, null, Percent(weight), null);
         action.Should().Throw<ArgumentOutOfRangeException>();
     }
 
@@ -236,8 +287,7 @@ public sealed class AssessmentEntityCoverageTests
     }
 
     [Theory]
-    [InlineData(0, 0, -1)]
-    [InlineData(10, -1, 5)]
+    [InlineData(0, 0, 0)]
     [InlineData(10, 11, 5)]
     public void AssessmentSubmission_GradeRejectsInvalidAssessmentBounds(
         int maxScore,
@@ -246,18 +296,17 @@ public sealed class AssessmentEntityCoverageTests
     {
         var submission = AssessmentSubmission.Start(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 1);
         submission.Submit();
-        var action = () => submission.Grade(score, passingScore, maxScore);
+        var action = () => submission.Grade(Score(score), Score(passingScore), Score(maxScore));
         action.Should().Throw<ArgumentOutOfRangeException>();
     }
 
     [Theory]
-    [InlineData(-1)]
     [InlineData(101)]
     public void AssessmentSubmission_GradeRejectsScoreOutsideBounds(int score)
     {
         var submission = AssessmentSubmission.Start(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 1);
         submission.Submit();
-        var action = () => submission.Grade(score, 60, 100);
+        var action = () => submission.Grade(Score(score), Score(60), Score(100));
         action.Should().Throw<ArgumentOutOfRangeException>();
     }
 

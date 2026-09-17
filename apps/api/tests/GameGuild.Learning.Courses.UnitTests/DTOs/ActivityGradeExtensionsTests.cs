@@ -34,7 +34,8 @@ public sealed class ActivityGradeExtensionsTests
         dto.Id.Should().Be(grade.Id);
         dto.ContentInteractionId.Should().Be(grade.ContentInteractionId);
         dto.GraderProgramUserId.Should().Be(grade.GraderProgramUserId);
-        dto.Grade.Should().Be(grade.Grade);
+        dto.Points.Should().Be(grade.Points);
+        dto.MaxPoints.Should().Be(grade.MaxPoints);
         dto.Feedback.Should().Be(grade.Feedback);
         dto.GradingDetails.Should().Be(grade.GradingDetails);
         dto.GradedAt.Should().Be(grade.GradedAt);
@@ -132,10 +133,10 @@ public sealed class ActivityGradeExtensionsTests
         var statistics = new GradeStatistics
         {
             TotalGrades = 12,
-            AverageGrade = 82.5m,
-            MinGrade = 45m,
-            MaxGrade = 100m,
-            PassingRate = 75m
+            AverageGrade = Percent(82.5m),
+            MinGrade = Percent(45),
+            MaxGrade = Percent(100),
+            PassingRate = Percent(75)
         };
 
         var dto = statistics.ToDto();
@@ -148,7 +149,8 @@ public sealed class ActivityGradeExtensionsTests
         Id = Guid.NewGuid(),
         ContentInteractionId = Guid.NewGuid(),
         GraderProgramUserId = Guid.NewGuid(),
-        Points = 88m,
+        Points = Score(88),
+        MaxPoints = Score(100),
         Feedback = "Strong submission",
         GradingDetails = "{\"rubric\":true}",
         GradedAt = SystemClock.UtcNow

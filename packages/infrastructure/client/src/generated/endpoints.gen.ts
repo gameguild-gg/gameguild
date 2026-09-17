@@ -8540,14 +8540,14 @@ export const deleteAssessmentsEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetAssessmentsDefinitionInput {
+export interface GetAssessmentsAuthoringStateInput {
   id: string;
 }
-export type GetAssessmentsDefinitionOutput = Types.LearningAssessmentsAssessmentDefinitionDto;
-export const getAssessmentsDefinitionEndpoint = {
-  operationId: 'getAssessmentsDefinition' as const,
+export type GetAssessmentsAuthoringStateOutput = Types.LearningAssessmentsGradingAuthoringAssessmentAuthoringStateResult;
+export const getAssessmentsAuthoringStateEndpoint = {
+  operationId: 'getAssessmentsAuthoringState' as const,
   method: 'GET' as const,
-  path: '/v1/assessments/{id}/definition' as const,
+  path: '/v1/assessments/{id}/authoring-state' as const,
   tags: ['LearningAssessments'] as const,
   requiresAuth: true,
 } as const;
@@ -8615,6 +8615,97 @@ export const postAssessmentsRestoreEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface PostAssessmentsRevisionsPrepareInput {
+  id: string;
+  body?: Types.LearningAssessmentsGradingAuthoringPrepareAssessmentRevisionInput;
+}
+export type PostAssessmentsRevisionsPrepareOutput = Types.LearningAssessmentsGradingAuthoringPreparedAssessmentRevisionResult;
+export const postAssessmentsRevisionsPrepareEndpoint = {
+  operationId: 'postAssessmentsRevisionsPrepare' as const,
+  method: 'POST' as const,
+  path: '/v1/assessments/{id}/revisions/prepare' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssessmentsRevisionsPublishInput {
+  id: string;
+  body?: Types.LearningAssessmentsGradingAuthoringPublishAssessmentRevisionInput;
+}
+export type PostAssessmentsRevisionsPublishOutput = Types.LearningAssessmentsGradingAuthoringPreparedAssessmentRevisionResult;
+export const postAssessmentsRevisionsPublishEndpoint = {
+  operationId: 'postAssessmentsRevisionsPublish' as const,
+  method: 'POST' as const,
+  path: '/v1/assessments/{id}/revisions/publish' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssessmentsRevisionsUnpublishInput {
+  id: string;
+  body?: Types.LearningAssessmentsGradingAuthoringUnpublishAssessmentRevisionInput;
+}
+export type PostAssessmentsRevisionsUnpublishOutput = void;
+export const postAssessmentsRevisionsUnpublishEndpoint = {
+  operationId: 'postAssessmentsRevisionsUnpublish' as const,
+  method: 'POST' as const,
+  path: '/v1/assessments/{id}/revisions/unpublish' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssessmentsRuntimeSubmissionsCollectiveInput {
+  id: string;
+  body?: Types.LearningAssessmentsStartCollectiveRuntimeSubmissionInput;
+}
+export type PostAssessmentsRuntimeSubmissionsCollectiveOutput = Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1;
+export const postAssessmentsRuntimeSubmissionsCollectiveEndpoint = {
+  operationId: 'postAssessmentsRuntimeSubmissionsCollective' as const,
+  method: 'POST' as const,
+  path: '/v1/assessments/{id}/runtime-submissions/collective' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssessmentsRuntimeSubmissionsIndividualInput {
+  id: string;
+  body?: Types.LearningAssessmentsStartIndividualRuntimeSubmissionInput;
+}
+export type PostAssessmentsRuntimeSubmissionsIndividualOutput = Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1;
+export const postAssessmentsRuntimeSubmissionsIndividualEndpoint = {
+  operationId: 'postAssessmentsRuntimeSubmissionsIndividual' as const,
+  method: 'POST' as const,
+  path: '/v1/assessments/{id}/runtime-submissions/individual' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssessmentsTestRunsInput {
+  id: string;
+  body?: Types.LearningAssessmentsStartAssessmentTestRunInput;
+}
+export type PostAssessmentsTestRunsOutput = Types.LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1;
+export const postAssessmentsTestRunsEndpoint = {
+  operationId: 'postAssessmentsTestRuns' as const,
+  method: 'POST' as const,
+  path: '/v1/assessments/{id}/test-runs' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssessmentsContentRuntimeSubmissionsIndividualInput {
+  contentId: string;
+  body?: Types.LearningAssessmentsStartContentRuntimeSubmissionInput;
+}
+export type PostAssessmentsContentRuntimeSubmissionsIndividualOutput = Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1;
+export const postAssessmentsContentRuntimeSubmissionsIndividualEndpoint = {
+  operationId: 'postAssessmentsContentRuntimeSubmissionsIndividual' as const,
+  method: 'POST' as const,
+  path: '/v1/assessments/content/{contentId}/runtime-submissions/individual' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetAssessmentsCourseInput {
   courseId: string;
 }
@@ -8635,6 +8726,33 @@ export const getAssessmentsCourseAnalyticsEndpoint = {
   operationId: 'getAssessmentsCourseAnalytics' as const,
   method: 'GET' as const,
   path: '/v1/assessments/course/{courseId}/analytics' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutAssessmentsCourseContentDraftInput {
+  courseId: string;
+  contentId: string;
+  body?: Types.LearningAssessmentsGradingAuthoringSaveAssessmentDraftInput;
+}
+export type PutAssessmentsCourseContentDraftOutput = Types.LearningAssessmentsGradingAuthoringAssessmentDraftResult;
+export const putAssessmentsCourseContentDraftEndpoint = {
+  operationId: 'putAssessmentsCourseContentDraft' as const,
+  method: 'PUT' as const,
+  path: '/v1/assessments/course/{courseId}/content/{contentId}/draft' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAssessmentsCourseGradebookInput {
+  courseId: string;
+  enrollmentId: string;
+}
+export type GetAssessmentsCourseGradebookOutput = Types.LearningAssessmentsGradingRuntimeGradebookCourseProjectionV1;
+export const getAssessmentsCourseGradebookEndpoint = {
+  operationId: 'getAssessmentsCourseGradebook' as const,
+  method: 'GET' as const,
+  path: '/v1/assessments/course/{courseId}/gradebook/{enrollmentId}' as const,
   tags: ['LearningAssessments'] as const,
   requiresAuth: true,
 } as const;
@@ -8725,6 +8843,83 @@ export const postAssessmentsPeerReviewsSubmitEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetAssessmentsRuntimeSubmissionsInput {
+  submissionId: string;
+}
+export type GetAssessmentsRuntimeSubmissionsOutput = Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1;
+export const getAssessmentsRuntimeSubmissionsEndpoint = {
+  operationId: 'getAssessmentsRuntimeSubmissions' as const,
+  method: 'GET' as const,
+  path: '/v1/assessments/runtime-submissions/{submissionId}' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutAssessmentsRuntimeSubmissionsDraftInput {
+  submissionId: string;
+  body?: Types.LearningAssessmentsSaveCollectiveRuntimeDraftInput;
+}
+export type PutAssessmentsRuntimeSubmissionsDraftOutput = Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1;
+export const putAssessmentsRuntimeSubmissionsDraftEndpoint = {
+  operationId: 'putAssessmentsRuntimeSubmissionsDraft' as const,
+  method: 'PUT' as const,
+  path: '/v1/assessments/runtime-submissions/{submissionId}/draft' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssessmentsRuntimeSubmissionsInstructorReviewInput {
+  submissionId: string;
+  body?: Types.LearningAssessmentsResolveInstructorReviewInput;
+}
+export type PostAssessmentsRuntimeSubmissionsInstructorReviewOutput = Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1;
+export const postAssessmentsRuntimeSubmissionsInstructorReviewEndpoint = {
+  operationId: 'postAssessmentsRuntimeSubmissionsInstructorReview' as const,
+  method: 'POST' as const,
+  path: '/v1/assessments/runtime-submissions/{submissionId}/instructor-review' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssessmentsRuntimeSubmissionsRegradeInput {
+  submissionId: string;
+  body?: Types.LearningAssessmentsGradingRuntimeRegradeExecutionCommand;
+}
+export type PostAssessmentsRuntimeSubmissionsRegradeOutput = Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1;
+export const postAssessmentsRuntimeSubmissionsRegradeEndpoint = {
+  operationId: 'postAssessmentsRuntimeSubmissionsRegrade' as const,
+  method: 'POST' as const,
+  path: '/v1/assessments/runtime-submissions/{submissionId}/regrade' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssessmentsRuntimeSubmissionsReleaseInput {
+  submissionId: string;
+  body?: Types.LearningAssessmentsGradingRuntimeReleaseGradeResultCommand;
+}
+export type PostAssessmentsRuntimeSubmissionsReleaseOutput = Types.LearningAssessmentsGradeResultReleaseOutput;
+export const postAssessmentsRuntimeSubmissionsReleaseEndpoint = {
+  operationId: 'postAssessmentsRuntimeSubmissionsRelease' as const,
+  method: 'POST' as const,
+  path: '/v1/assessments/runtime-submissions/{submissionId}/release' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssessmentsRuntimeSubmissionsSubmitInput {
+  submissionId: string;
+  body?: Types.LearningAssessmentsSubmitAssessmentRuntimeInput;
+}
+export type PostAssessmentsRuntimeSubmissionsSubmitOutput = Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1;
+export const postAssessmentsRuntimeSubmissionsSubmitEndpoint = {
+  operationId: 'postAssessmentsRuntimeSubmissionsSubmit' as const,
+  method: 'POST' as const,
+  path: '/v1/assessments/runtime-submissions/{submissionId}/submit' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetAssessmentsSubmissionsForGetAssessmentsSubmissionsBySubmissionIdInput {
   submissionId: string;
 }
@@ -8733,19 +8928,6 @@ export const getAssessmentsSubmissionsForGetAssessmentsSubmissionsBySubmissionId
   operationId: 'getAssessmentsSubmissionsForGetAssessmentsSubmissionsBySubmissionId' as const,
   method: 'GET' as const,
   path: '/v1/assessments/submissions/{submissionId}' as const,
-  tags: ['LearningAssessments'] as const,
-  requiresAuth: true,
-} as const;
-
-export interface PostAssessmentsSubmissionsGradeInput {
-  submissionId: string;
-  body?: Types.LearningAssessmentsGradeSubmissionInput;
-}
-export type PostAssessmentsSubmissionsGradeOutput = Types.LearningAssessmentsAssessmentSubmissionDto;
-export const postAssessmentsSubmissionsGradeEndpoint = {
-  operationId: 'postAssessmentsSubmissionsGrade' as const,
-  method: 'POST' as const,
-  path: '/v1/assessments/submissions/{submissionId}/grade' as const,
   tags: ['LearningAssessments'] as const,
   requiresAuth: true,
 } as const;
@@ -8783,6 +8965,57 @@ export const postAssessmentsSubmissionsSubmitEndpoint = {
   operationId: 'postAssessmentsSubmissionsSubmit' as const,
   method: 'POST' as const,
   path: '/v1/assessments/submissions/{submissionId}/submit' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAssessmentsTestRunsInput {
+  testRunId: string;
+}
+export type GetAssessmentsTestRunsOutput = Types.LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1;
+export const getAssessmentsTestRunsEndpoint = {
+  operationId: 'getAssessmentsTestRuns' as const,
+  method: 'GET' as const,
+  path: '/v1/assessments/test-runs/{testRunId}' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssessmentsTestRunsInstructorReviewInput {
+  testRunId: string;
+  body?: Types.LearningAssessmentsResolveInstructorReviewInput;
+}
+export type PostAssessmentsTestRunsInstructorReviewOutput = Types.LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1;
+export const postAssessmentsTestRunsInstructorReviewEndpoint = {
+  operationId: 'postAssessmentsTestRunsInstructorReview' as const,
+  method: 'POST' as const,
+  path: '/v1/assessments/test-runs/{testRunId}/instructor-review' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssessmentsTestRunsRestartInput {
+  testRunId: string;
+  body?: Types.LearningAssessmentsIdempotentRuntimeInput;
+}
+export type PostAssessmentsTestRunsRestartOutput = Types.LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1;
+export const postAssessmentsTestRunsRestartEndpoint = {
+  operationId: 'postAssessmentsTestRunsRestart' as const,
+  method: 'POST' as const,
+  path: '/v1/assessments/test-runs/{testRunId}/restart' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssessmentsTestRunsSubmitInput {
+  testRunId: string;
+  body?: Types.LearningAssessmentsSubmitAssessmentRuntimeInput;
+}
+export type PostAssessmentsTestRunsSubmitOutput = Types.LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1;
+export const postAssessmentsTestRunsSubmitEndpoint = {
+  operationId: 'postAssessmentsTestRunsSubmit' as const,
+  method: 'POST' as const,
+  path: '/v1/assessments/test-runs/{testRunId}/submit' as const,
   tags: ['LearningAssessments'] as const,
   requiresAuth: true,
 } as const;
@@ -21963,14 +22196,23 @@ export const endpoints = {
   getAssessments: getAssessmentsEndpoint,
   putAssessments: putAssessmentsEndpoint,
   deleteAssessments: deleteAssessmentsEndpoint,
-  getAssessmentsDefinition: getAssessmentsDefinitionEndpoint,
+  getAssessmentsAuthoringState: getAssessmentsAuthoringStateEndpoint,
   putAssessmentsGroup: putAssessmentsGroupEndpoint,
   getAssessmentsInteractiveVideoCues: getAssessmentsInteractiveVideoCuesEndpoint,
   postAssessmentsInteractiveVideoCues: postAssessmentsInteractiveVideoCuesEndpoint,
   deleteAssessmentsInteractiveVideoCues: deleteAssessmentsInteractiveVideoCuesEndpoint,
   postAssessmentsRestore: postAssessmentsRestoreEndpoint,
+  postAssessmentsRevisionsPrepare: postAssessmentsRevisionsPrepareEndpoint,
+  postAssessmentsRevisionsPublish: postAssessmentsRevisionsPublishEndpoint,
+  postAssessmentsRevisionsUnpublish: postAssessmentsRevisionsUnpublishEndpoint,
+  postAssessmentsRuntimeSubmissionsCollective: postAssessmentsRuntimeSubmissionsCollectiveEndpoint,
+  postAssessmentsRuntimeSubmissionsIndividual: postAssessmentsRuntimeSubmissionsIndividualEndpoint,
+  postAssessmentsTestRuns: postAssessmentsTestRunsEndpoint,
+  postAssessmentsContentRuntimeSubmissionsIndividual: postAssessmentsContentRuntimeSubmissionsIndividualEndpoint,
   getAssessmentsCourse: getAssessmentsCourseEndpoint,
   getAssessmentsCourseAnalytics: getAssessmentsCourseAnalyticsEndpoint,
+  putAssessmentsCourseContentDraft: putAssessmentsCourseContentDraftEndpoint,
+  getAssessmentsCourseGradebook: getAssessmentsCourseGradebookEndpoint,
   getAssessmentsCourseGroups: getAssessmentsCourseGroupsEndpoint,
   postAssessmentsGroups: postAssessmentsGroupsEndpoint,
   putAssessmentsGroups: putAssessmentsGroupsEndpoint,
@@ -21978,11 +22220,20 @@ export const endpoints = {
   getAssessmentsMySubmissions: getAssessmentsMySubmissionsEndpoint,
   getAssessmentsPeerReviews: getAssessmentsPeerReviewsEndpoint,
   postAssessmentsPeerReviewsSubmit: postAssessmentsPeerReviewsSubmitEndpoint,
+  getAssessmentsRuntimeSubmissions: getAssessmentsRuntimeSubmissionsEndpoint,
+  putAssessmentsRuntimeSubmissionsDraft: putAssessmentsRuntimeSubmissionsDraftEndpoint,
+  postAssessmentsRuntimeSubmissionsInstructorReview: postAssessmentsRuntimeSubmissionsInstructorReviewEndpoint,
+  postAssessmentsRuntimeSubmissionsRegrade: postAssessmentsRuntimeSubmissionsRegradeEndpoint,
+  postAssessmentsRuntimeSubmissionsRelease: postAssessmentsRuntimeSubmissionsReleaseEndpoint,
+  postAssessmentsRuntimeSubmissionsSubmit: postAssessmentsRuntimeSubmissionsSubmitEndpoint,
   getAssessmentsSubmissionsForGetAssessmentsSubmissionsBySubmissionId: getAssessmentsSubmissionsForGetAssessmentsSubmissionsBySubmissionIdEndpoint,
-  postAssessmentsSubmissionsGrade: postAssessmentsSubmissionsGradeEndpoint,
   getAssessmentsSubmissionsPeerReviews: getAssessmentsSubmissionsPeerReviewsEndpoint,
   getAssessmentsSubmissionsReceivedPeerReviews: getAssessmentsSubmissionsReceivedPeerReviewsEndpoint,
   postAssessmentsSubmissionsSubmit: postAssessmentsSubmissionsSubmitEndpoint,
+  getAssessmentsTestRuns: getAssessmentsTestRunsEndpoint,
+  postAssessmentsTestRunsInstructorReview: postAssessmentsTestRunsInstructorReviewEndpoint,
+  postAssessmentsTestRunsRestart: postAssessmentsTestRunsRestartEndpoint,
+  postAssessmentsTestRunsSubmit: postAssessmentsTestRunsSubmitEndpoint,
   getAssetLibraries: getAssetLibrariesEndpoint,
   postAssetLibrariesFolders: postAssetLibrariesFoldersEndpoint,
   postAssetLibrariesAssetsCopy: postAssetLibrariesAssetsCopyEndpoint,

@@ -78,8 +78,6 @@ public sealed class EfConfigurationCoverageTests
         builder.Metadata.GetIndexes().Should().Contain(index => index.IsUnique &&
             index.Properties.Select(property => property.Name)
                 .SequenceEqual(new[] { nameof(ProgramEnrollment.UserId), nameof(ProgramEnrollment.ProgramId) }));
-        builder.Metadata.FindProperty(nameof(ProgramEnrollment.ProgressPercentage))!.GetPrecision().Should().Be(5);
-        builder.Metadata.FindProperty(nameof(ProgramEnrollment.FinalGrade))!.GetScale().Should().Be(2);
         builder.Metadata.FindNavigation(nameof(ProgramEnrollment.Program))!.ForeignKey.DeleteBehavior
             .Should().Be(DeleteBehavior.Cascade);
         builder.Metadata.FindNavigation(nameof(ProgramEnrollment.User))!.ForeignKey.DeleteBehavior
@@ -97,9 +95,6 @@ public sealed class EfConfigurationCoverageTests
         builder.Metadata.GetIndexes().Should().Contain(index => index.IsUnique &&
             index.Properties.Select(property => property.Name)
                 .SequenceEqual(new[] { nameof(ContentProgress.UserId), nameof(ContentProgress.ContentId) }));
-        builder.Metadata.FindProperty(nameof(ContentProgress.ProgressPercentage))!.GetPrecision().Should().Be(5);
-        builder.Metadata.FindProperty(nameof(ContentProgress.Score))!.GetScale().Should().Be(2);
-        builder.Metadata.FindProperty(nameof(ContentProgress.MaxScore))!.GetPrecision().Should().Be(5);
         builder.Metadata.FindProperty(nameof(ContentProgress.ProgressData))!.GetColumnType().Should().Be("jsonb");
         builder.Metadata.FindNavigation(nameof(ContentProgress.Content))!.ForeignKey.DeleteBehavior
             .Should().Be(DeleteBehavior.Cascade);
@@ -158,9 +153,7 @@ public sealed class EfConfigurationCoverageTests
         builder.Metadata.FindProperty(nameof(Program.SkillsProvided)).Should().BeNull();
         builder.Metadata.FindProperty(nameof(Program.AverageRating)).Should().BeNull();
         builder.Metadata.FindProperty(nameof(Program.TotalRatings)).Should().BeNull();
-        builder.Metadata.FindProperty(nameof(Program.PassingScore))!.GetPrecision().Should().Be(5);
-        builder.Metadata.FindProperty(nameof(Program.PassingScore))!.GetScale().Should().Be(2);
-        builder.Metadata.FindProperty(nameof(Program.PassingScore))!.GetDefaultValue().Should().Be(60m);
+        builder.Metadata.FindProperty(nameof(Program.PassingScore))!.GetDefaultValue().Should().Be(Percent(60));
     }
 
     [Fact]

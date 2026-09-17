@@ -19,14 +19,14 @@ public sealed class ControllerBranchCoverageTests
         var method = typeof(PeerReviewsController)
             .GetMethod("IsReviewWindowOpen", BindingFlags.NonPublic | BindingFlags.Static)!;
         var now = DateTime.UtcNow;
-        var openEnded = Assessment.Create(Guid.NewGuid(), "Open", AssessmentType.PeerReview, 100);
-        var due = Assessment.Create(Guid.NewGuid(), "Due", AssessmentType.PeerReview, 100);
+        var openEnded = Assessment.Create(Guid.NewGuid(), "Open", AssessmentType.PeerReview, Score(100));
+        var due = Assessment.Create(Guid.NewGuid(), "Due", AssessmentType.PeerReview, Score(100));
         due.SetDeliverySchedule(null, null, now.AddHours(1), false, null);
-        var pastDue = Assessment.Create(Guid.NewGuid(), "Past due", AssessmentType.PeerReview, 100);
+        var pastDue = Assessment.Create(Guid.NewGuid(), "Past due", AssessmentType.PeerReview, Score(100));
         pastDue.SetDeliverySchedule(null, null, now.AddHours(-1), false, null);
-        var availability = Assessment.Create(Guid.NewGuid(), "Availability", AssessmentType.PeerReview, 100);
+        var availability = Assessment.Create(Guid.NewGuid(), "Availability", AssessmentType.PeerReview, Score(100));
         availability.SetDeliverySchedule(null, now.AddHours(-1), null, false, null);
-        var lateDeadline = Assessment.Create(Guid.NewGuid(), "Late", AssessmentType.PeerReview, 100);
+        var lateDeadline = Assessment.Create(Guid.NewGuid(), "Late", AssessmentType.PeerReview, Score(100));
         SetProperty(lateDeadline, nameof(Assessment.LateSubmissionDeadline), now.AddHours(1));
 
         Invoke(method, openEnded).Should().BeTrue();

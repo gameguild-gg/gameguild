@@ -18,18 +18,17 @@ public sealed class EndpointCommandHandlerTests
         var submissionId = Guid.NewGuid();
         var cueId = Guid.NewGuid();
         var groupId = Guid.NewGuid();
-        var assessment = Assessment.Create(courseId, "Quiz", AssessmentType.Quiz, 100);
-        var group = AssessmentGroup.Create(courseId, "Quizzes", 50);
+        var assessment = Assessment.Create(courseId, "Quiz", AssessmentType.Quiz, Score(100));
+        var group = AssessmentGroup.Create(courseId, "Quizzes", Percent(50));
         var submission = AssessmentSubmission.Start(assessmentId, enrollmentId, userId, 1);
         var cue = InteractiveVideoAssessmentCue.Create(assessmentId, Guid.NewGuid(), "intro", 1.5m);
-        var create = new CreateAssessmentRequest(courseId, "Quiz", null, AssessmentType.Quiz, 100);
-        var createGroup = new CreateAssessmentGroupRequest(courseId, "Quizzes", 50);
+        var create = new CreateAssessmentRequest(courseId, "Quiz", null, AssessmentType.Quiz, Score(100));
+        var createGroup = new CreateAssessmentGroupRequest(courseId, "Quizzes", Percent(50));
         var updateGroup = new UpdateAssessmentGroupRequest(Name: "Updated");
-        var update = new UpdateAssessmentRequest(Title: "Updated");
+        var update = new UpdateAssessmentRequest(assessment.Version, Title: "Updated");
         var assign = new AssignAssessmentGroupRequest(groupId);
         var link = new LinkInteractiveVideoCueRequest(cue.ContentId, cue.CueId, cue.CuePositionSeconds);
         var submit = new SubmitAssessmentRequest(TextPayload: "answer");
-        var grade = new GradeSubmissionRequest(90, userId);
 
         service.Setup(s => s.CreateAssessmentAsync(create)).ReturnsAsync(Result.Success(assessment));
         service.Setup(s => s.CreateAssessmentGroupAsync(createGroup)).ReturnsAsync(Result.Success(group));
@@ -43,7 +42,6 @@ public sealed class EndpointCommandHandlerTests
         service.Setup(s => s.RestoreAssessmentAsync(assessmentId, It.IsAny<CancellationToken>())).ReturnsAsync(Result.Success());
         service.Setup(s => s.StartSubmissionAsync(assessmentId, enrollmentId, userId)).ReturnsAsync(Result.Success(submission));
         service.Setup(s => s.SubmitAsync(submissionId, submit)).ReturnsAsync(Result.Success(submission));
-        service.Setup(s => s.GradeSubmissionAsync(submissionId, grade)).ReturnsAsync(Result.Success(submission));
 
         var handler = new AssessmentEndpointCommandHandler(service.Object);
 
@@ -59,7 +57,6 @@ public sealed class EndpointCommandHandlerTests
         (await handler.Handle(new RestoreAssessmentEndpointCommand(assessmentId), default)).IsSuccess.Should().BeTrue();
         (await handler.Handle(new StartAssessmentSubmissionEndpointCommand(assessmentId, enrollmentId, userId), default)).Value.Should().BeSameAs(submission);
         (await handler.Handle(new SubmitAssessmentEndpointCommand(submissionId, submit), default)).Value.Should().BeSameAs(submission);
-        (await handler.Handle(new GradeAssessmentSubmissionEndpointCommand(submissionId, grade), default)).Value.Should().BeSameAs(submission);
 
         service.VerifyAll();
     }
@@ -105,13 +102,13 @@ public sealed class EndpointCommandHandlerTests
         var claim = new PeerReviewClaimResult(review.Id, "anonymous submission");
 
         service.Setup(s => s.ClaimAsync(assessmentId, userId)).ReturnsAsync(Result.Success(claim));
-        service.Setup(s => s.SubmitReviewAsync(review, 80, "Good", "{}"))
+        service.Setup(s => s.SubmitReviewAsync(review, Score(80), "Good", "{}"))
             .ReturnsAsync(Result.Success(review));
 
         var handler = new PeerReviewEndpointCommandHandler(service.Object);
 
         (await handler.Handle(new ClaimPeerReviewEndpointCommand(assessmentId, userId), default)).Value.Should().Be(claim);
-        (await handler.Handle(new SubmitPeerReviewEndpointCommand(review, 80, "Good", "{}"), default)).Value.Should().BeSameAs(review);
+        (await handler.Handle(new SubmitPeerReviewEndpointCommand(review, Score(80), "Good", "{}"), default)).Value.Should().BeSameAs(review);
 
         service.VerifyAll();
     }

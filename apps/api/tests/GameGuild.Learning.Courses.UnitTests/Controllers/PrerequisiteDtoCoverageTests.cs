@@ -13,7 +13,7 @@ public sealed class PrerequisiteDtoCoverageTests
             Guid.NewGuid(),
             Guid.NewGuid(),
             PrerequisiteType.Corequisite,
-            minimumGrade: 75,
+            minimumGrade: Percent(75),
             description: "Complete the foundation course",
             displayOrder: 3,
             prerequisiteGroup: "foundation");
@@ -29,7 +29,7 @@ public sealed class PrerequisiteDtoCoverageTests
         dto.PrerequisiteCourseName.Should().Be("Foundation");
         dto.TenantId.Should().Be(prerequisite.TenantId);
         dto.Type.Should().Be(PrerequisiteType.Corequisite);
-        dto.MinimumGrade.Should().Be(75);
+        dto.MinimumGrade.Should().Be(Percent(75));
         dto.Description.Should().Be("Complete the foundation course");
         dto.DisplayOrder.Should().Be(3);
         dto.PrerequisiteGroup.Should().Be("foundation");
@@ -52,20 +52,20 @@ public sealed class PrerequisiteDtoCoverageTests
             Guid.NewGuid(),
             null,
             PrerequisiteType.Required,
-            minimumGrade: 80,
+            minimumGrade: Percent(80),
             description: "Original",
             displayOrder: 1,
             prerequisiteGroup: "first");
 
         prerequisite.Update(
             PrerequisiteType.Recommended,
-            minimumGrade: 60,
+            minimumGrade: Percent(60),
             description: "Updated",
             displayOrder: 4,
             prerequisiteGroup: "second");
 
         prerequisite.Type.Should().Be(PrerequisiteType.Recommended);
-        prerequisite.MinimumGrade.Should().Be(60);
+        prerequisite.MinimumGrade.Should().Be(Percent(60));
         prerequisite.Description.Should().Be("Updated");
         prerequisite.DisplayOrder.Should().Be(4);
         prerequisite.PrerequisiteGroup.Should().Be("second");
@@ -91,21 +91,21 @@ public sealed class PrerequisiteDtoCoverageTests
             "Foundation",
             PrerequisiteType.Required,
             true,
-            70,
-            85,
+            Percent(70),
+            Percent(85),
             "Completed");
         var result = new PrerequisiteCheckResultDto(true, [status]);
         var create = new CreatePrerequisiteApiRequest(
             Guid.NewGuid(),
             courseId,
             PrerequisiteType.Required,
-            70,
+            Percent(70),
             "Required course",
             2,
             "foundation");
         var update = new UpdatePrerequisiteApiRequest(
             PrerequisiteType.Recommended,
-            60,
+            Percent(60),
             "Suggested course",
             3,
             "optional");
@@ -118,8 +118,8 @@ public sealed class PrerequisiteDtoCoverageTests
         status.CourseName.Should().Be("Foundation");
         status.Type.Should().Be(PrerequisiteType.Required);
         status.IsSatisfied.Should().BeTrue();
-        status.RequiredGrade.Should().Be(70);
-        status.AchievedGrade.Should().Be(85);
+        status.RequiredGrade.Should().Be(Percent(70));
+        status.AchievedGrade.Should().Be(Percent(85));
         status.Reason.Should().Be("Completed");
         create.PrerequisiteCourseId.Should().Be(courseId);
         create.Description.Should().Be("Required course");

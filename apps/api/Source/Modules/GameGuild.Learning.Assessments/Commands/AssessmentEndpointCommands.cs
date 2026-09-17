@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using GameGuild.Learning.Grading.Contracts;
 
 namespace GameGuild.Learning.Assessments;
 
@@ -14,7 +15,6 @@ public sealed record DeleteAssessmentEndpointCommand(Guid AssessmentId) : IComma
 public sealed record RestoreAssessmentEndpointCommand(Guid AssessmentId) : ICommand<Result>;
 public sealed record StartAssessmentSubmissionEndpointCommand(Guid AssessmentId, Guid EnrollmentId, Guid UserId) : ICommand<Result<AssessmentSubmission>>;
 public sealed record SubmitAssessmentEndpointCommand(Guid SubmissionId, SubmitAssessmentRequest? Request) : ICommand<Result<AssessmentSubmission>>;
-public sealed record GradeAssessmentSubmissionEndpointCommand(Guid SubmissionId, GradeSubmissionRequest Request) : ICommand<Result<AssessmentSubmission>>;
 
 public sealed class AssessmentEndpointCommandHandler(IAssessmentService service) :
     ICommandHandler<CreateAssessmentEndpointCommand, Result<Assessment>>,
@@ -28,8 +28,7 @@ public sealed class AssessmentEndpointCommandHandler(IAssessmentService service)
     ICommandHandler<DeleteAssessmentEndpointCommand, Result>,
     ICommandHandler<RestoreAssessmentEndpointCommand, Result>,
     ICommandHandler<StartAssessmentSubmissionEndpointCommand, Result<AssessmentSubmission>>,
-    ICommandHandler<SubmitAssessmentEndpointCommand, Result<AssessmentSubmission>>,
-    ICommandHandler<GradeAssessmentSubmissionEndpointCommand, Result<AssessmentSubmission>>
+    ICommandHandler<SubmitAssessmentEndpointCommand, Result<AssessmentSubmission>>
 {
     public Task<Result<Assessment>> Handle(CreateAssessmentEndpointCommand request, CancellationToken cancellationToken) => service.CreateAssessmentAsync(request.Request);
     public Task<Result<AssessmentGroup>> Handle(CreateAssessmentGroupEndpointCommand request, CancellationToken cancellationToken) => service.CreateAssessmentGroupAsync(request.Request);
@@ -43,7 +42,6 @@ public sealed class AssessmentEndpointCommandHandler(IAssessmentService service)
     public Task<Result> Handle(RestoreAssessmentEndpointCommand request, CancellationToken cancellationToken) => service.RestoreAssessmentAsync(request.AssessmentId, cancellationToken);
     public Task<Result<AssessmentSubmission>> Handle(StartAssessmentSubmissionEndpointCommand request, CancellationToken cancellationToken) => service.StartSubmissionAsync(request.AssessmentId, request.EnrollmentId, request.UserId);
     public Task<Result<AssessmentSubmission>> Handle(SubmitAssessmentEndpointCommand request, CancellationToken cancellationToken) => service.SubmitAsync(request.SubmissionId, request.Request);
-    public Task<Result<AssessmentSubmission>> Handle(GradeAssessmentSubmissionEndpointCommand request, CancellationToken cancellationToken) => service.GradeSubmissionAsync(request.SubmissionId, request.Request);
 }
 
 public sealed record CreateCourseGroupSetEndpointCommand(Guid CourseId, string Name) : ICommand<Result<CourseGroupSet>>;
@@ -70,7 +68,7 @@ public sealed class CourseGroupEndpointCommandHandler(IGroupSetService service) 
 }
 
 public sealed record ClaimPeerReviewEndpointCommand(Guid AssessmentId, Guid UserId) : ICommand<Result<PeerReviewClaimResult>>;
-public sealed record SubmitPeerReviewEndpointCommand(AssessmentPeerReview Review, int Score, string Feedback, string? RubricScores) : ICommand<Result<AssessmentPeerReview>>;
+public sealed record SubmitPeerReviewEndpointCommand(AssessmentPeerReview Review, ScoreValue Score, string Feedback, string? RubricScores) : ICommand<Result<AssessmentPeerReview>>;
 
 public sealed class PeerReviewEndpointCommandHandler(IPeerReviewAssignmentService service) :
     ICommandHandler<ClaimPeerReviewEndpointCommand, Result<PeerReviewClaimResult>>,

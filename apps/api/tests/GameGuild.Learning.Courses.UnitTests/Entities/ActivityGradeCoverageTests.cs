@@ -10,7 +10,7 @@ public sealed class ActivityGradeCoverageTests
     {
         var grade = new ActivityGrade { GradedAt = SystemClock.UtcNow.AddDays(-4) };
 
-        grade.Grade.Should().Be(0m);
+        grade.Points.Should().BeNull();
         grade.PercentageScore.Should().BeNull();
         grade.IsPassing.Should().BeNull();
         grade.IsAutomaticGrade.Should().BeFalse();
@@ -18,13 +18,13 @@ public sealed class ActivityGradeCoverageTests
         grade.IsGlobal.Should().BeTrue();
         grade.DaysSinceGrading.Should().BeInRange(3, 4);
 
-        grade.Points = 50m;
+        grade.Points = Score(50);
         grade.MaxPoints = null;
         grade.PercentageScore.Should().BeNull();
-        grade.MaxPoints = 0m;
+        grade.MaxPoints = ScoreValue.Zero;
         grade.PercentageScore.Should().BeNull();
 
-        grade.MaxPoints = 100m;
+        grade.MaxPoints = Score(100);
         grade.IsPassing.Should().BeFalse();
         grade.GradeType = GradeType.Automatic;
         grade.IsAutomaticGrade.Should().BeTrue();
@@ -39,14 +39,14 @@ public sealed class ActivityGradeCoverageTests
     {
         var grade = new ActivityGrade();
 
-        grade.AssignPoints(75m);
-        grade.Points.Should().Be(75m);
-        grade.MaxPoints.Should().Be(100m);
+        grade.AssignPoints(Score(75));
+        grade.Points.Should().Be(Score(75));
+        grade.MaxPoints.Should().Be(Score(100));
 
-        grade.MaxPoints = 80m;
-        grade.AssignPoints(70m);
-        grade.Points.Should().Be(70m);
-        grade.MaxPoints.Should().Be(80m);
+        grade.MaxPoints = Score(80);
+        grade.AssignPoints(Score(70));
+        grade.Points.Should().Be(Score(70));
+        grade.MaxPoints.Should().Be(Score(80));
     }
 
     [Fact]
@@ -74,7 +74,11 @@ public sealed class ActivityGradeCoverageTests
     [InlineData(63, "D")]
     public void CalculateLetterGrade_CoversRemainingBoundaries(int? points, string? expected)
     {
-        var grade = new ActivityGrade { Points = points, MaxPoints = points.HasValue ? 100m : null };
+        var grade = new ActivityGrade
+        {
+            Points = points.HasValue ? Score(points.Value) : null,
+            MaxPoints = points.HasValue ? Score(100) : null
+        };
 
         grade.CalculateLetterGrade().Should().Be(expected);
     }
@@ -83,8 +87,8 @@ public sealed class ActivityGradeCoverageTests
     public void IsValid_CoversOptionalAndInvalidMaximum()
     {
         new ActivityGrade().IsValid().Should().BeTrue();
-        new ActivityGrade { Points = 0m, MaxPoints = 0m }.IsValid().Should().BeFalse();
-        new ActivityGrade { Points = null, MaxPoints = 100m }.IsValid().Should().BeTrue();
+        new ActivityGrade { Points = ScoreValue.Zero, MaxPoints = ScoreValue.Zero }.IsValid().Should().BeFalse();
+        new ActivityGrade { Points = null, MaxPoints = Score(100) }.IsValid().Should().BeTrue();
     }
 
     [Fact]
@@ -97,15 +101,15 @@ public sealed class ActivityGradeCoverageTests
             GraderId = Guid.NewGuid(),
             ContentInteractionId = Guid.NewGuid(),
             ProgramUserId = Guid.NewGuid(),
-            Points = 93m,
-            MaxPoints = 100m,
+            Points = Score(93),
+            MaxPoints = Score(100),
             Feedback = "Original feedback",
             GradeType = GradeType.PeerReview,
             AttemptNumber = 2,
             TenantId = tenantId
         };
 
-        var revision = grade.CreateRevision(95m);
+        var revision = grade.CreateRevision(Score(95));
 
         revision.Should().BeEquivalentTo(new
         {
@@ -113,8 +117,8 @@ public sealed class ActivityGradeCoverageTests
             grade.GraderId,
             grade.ContentInteractionId,
             grade.ProgramUserId,
-            Points = 95m,
-            MaxPoints = 100m,
+            Points = Score(95),
+            MaxPoints = Score(100),
             GradeLetter = "A",
             Feedback = "Original feedback",
             IsFinalized = false,

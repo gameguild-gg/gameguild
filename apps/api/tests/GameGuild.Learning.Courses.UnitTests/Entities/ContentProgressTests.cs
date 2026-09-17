@@ -38,7 +38,7 @@ public sealed class ContentProgressTests
         progress.MarkAsCompleted();
 
         progress.CompletionStatus.Should().Be(ContentCompletionStatus.Completed);
-        progress.ProgressPercentage.Should().Be(100m);
+        progress.ProgressPercentage.Should().Be(PercentValue.Hundred);
         progress.CompletedAt.Should().NotBeNull();
         progress.Score.Should().BeNull();
         progress.MaxScore.Should().BeNull();
@@ -50,23 +50,21 @@ public sealed class ContentProgressTests
     {
         var progress = new ContentProgress();
 
-        progress.MarkAsCompleted(84m, 100m);
+        progress.MarkAsCompleted(Score(84), Score(100));
 
-        progress.Score.Should().Be(84m);
-        progress.MaxScore.Should().Be(100m);
+        progress.Score.Should().Be(Score(84));
+        progress.MaxScore.Should().Be(Score(100));
     }
 
     [Theory]
-    [InlineData(-5, 0)]
     [InlineData(25, 25)]
-    [InlineData(150, 100)]
-    public void UpdateProgress_ClampsPercentageToSupportedRange(decimal requested, decimal expected)
+    public void UpdateProgress_PersistsSupportedPercentage(decimal requested, decimal expected)
     {
         var progress = new ContentProgress();
 
-        progress.UpdateProgress(requested);
+        progress.UpdateProgress(Percent(requested));
 
-        progress.ProgressPercentage.Should().Be(expected);
+        progress.ProgressPercentage.Should().Be(Percent(expected));
     }
 
     [Fact]
@@ -74,7 +72,7 @@ public sealed class ContentProgressTests
     {
         var progress = new ContentProgress();
 
-        progress.UpdateProgress(50m);
+        progress.UpdateProgress(Percent(50));
 
         progress.CompletionStatus.Should().Be(ContentCompletionStatus.InProgress);
         progress.CompletedAt.Should().BeNull();
@@ -85,9 +83,9 @@ public sealed class ContentProgressTests
     {
         var progress = new ContentProgress();
 
-        progress.UpdateProgress(100m);
+        progress.UpdateProgress(Percent(100));
         var completedAt = progress.CompletedAt;
-        progress.UpdateProgress(100m);
+        progress.UpdateProgress(Percent(100));
 
         progress.CompletionStatus.Should().Be(ContentCompletionStatus.Completed);
         progress.CompletedAt.Should().Be(completedAt);
@@ -98,7 +96,7 @@ public sealed class ContentProgressTests
     {
         var progress = new ContentProgress { CompletionStatus = ContentCompletionStatus.RequiresReview };
 
-        progress.UpdateProgress(50m);
+        progress.UpdateProgress(Percent(50));
 
         progress.CompletionStatus.Should().Be(ContentCompletionStatus.RequiresReview);
     }

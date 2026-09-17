@@ -84,7 +84,7 @@ public sealed class AssessmentSubmissionAssetAuthorizationResolverTests
         var tenantId = Guid.NewGuid();
         var learnerId = Guid.NewGuid();
         var program = new Program { Id = Guid.NewGuid(), TenantId = tenantId };
-        var assessment = Assessment.Create(program.Id, "Upload", AssessmentType.Assignment, 100);
+        var assessment = Assessment.Create(program.Id, "Upload", AssessmentType.Assignment, Score(100));
         assessment.TenantId = tenantId;
         var submission = AssessmentSubmission.Start(assessment.Id, Guid.NewGuid(), learnerId, 1);
         submission.TenantId = tenantId;
@@ -106,7 +106,7 @@ public sealed class AssessmentSubmissionAssetAuthorizationResolverTests
         var learnerId = Guid.NewGuid();
         var reviewerId = Guid.NewGuid();
         var program = new Program { Id = Guid.NewGuid(), TenantId = tenantId };
-        var assessment = Assessment.Create(program.Id, "Upload", AssessmentType.Assignment, 100);
+        var assessment = Assessment.Create(program.Id, "Upload", AssessmentType.Assignment, Score(100));
         assessment.TenantId = tenantId;
         var submission = AssessmentSubmission.Start(assessment.Id, Guid.NewGuid(), learnerId, 1);
         submission.TenantId = tenantId;
@@ -134,7 +134,7 @@ public sealed class AssessmentSubmissionAssetAuthorizationResolverTests
         var tenantId = Guid.NewGuid();
         var learnerId = Guid.NewGuid();
         var program = new Program { Id = Guid.NewGuid(), TenantId = tenantId };
-        var assessment = Assessment.Create(program.Id, "Upload", AssessmentType.Assignment, 100);
+        var assessment = Assessment.Create(program.Id, "Upload", AssessmentType.Assignment, Score(100));
         assessment.TenantId = tenantId;
         var submission = AssessmentSubmission.Start(assessment.Id, Guid.NewGuid(), learnerId, 1);
         submission.TenantId = tenantId;
@@ -159,7 +159,7 @@ public sealed class AssessmentSubmissionAssetAuthorizationResolverTests
         var learnerId = Guid.NewGuid();
         var reviewerId = Guid.NewGuid();
         var program = new Program { Id = Guid.NewGuid(), TenantId = tenantId };
-        var assessment = Assessment.Create(program.Id, "Upload", AssessmentType.Assignment, 100);
+        var assessment = Assessment.Create(program.Id, "Upload", AssessmentType.Assignment, Score(100));
         assessment.TenantId = tenantId;
         var submission = AssessmentSubmission.Start(assessment.Id, Guid.NewGuid(), learnerId, 1);
         submission.TenantId = tenantId;
@@ -186,7 +186,7 @@ public sealed class AssessmentSubmissionAssetAuthorizationResolverTests
         var learnerId = Guid.NewGuid();
         var actorId = Guid.NewGuid();
         var program = new Program { Id = Guid.NewGuid(), TenantId = tenantId };
-        var assessment = Assessment.Create(program.Id, "Upload", AssessmentType.Assignment, 100);
+        var assessment = Assessment.Create(program.Id, "Upload", AssessmentType.Assignment, Score(100));
         assessment.TenantId = tenantId;
         var submission = AssessmentSubmission.Start(assessment.Id, Guid.NewGuid(), learnerId, 1);
         submission.TenantId = tenantId;

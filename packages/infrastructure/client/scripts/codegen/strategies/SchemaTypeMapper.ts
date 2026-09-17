@@ -20,18 +20,23 @@ export class ReferenceTypeMapper implements SchemaTypeMapper {
   map(schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject): string {
     if ('$ref' in schema) {
       const rawTypeName = schema.$ref.replace('#/components/schemas/', '');
-      return resolveKnownSchemaTypeName(rawTypeName, this.knownSchemaNames) ?? 'unknown';
+      const typeName = resolveKnownSchemaTypeName(rawTypeName, this.knownSchemaNames) ?? 'unknown';
+      return `${typeName}${isNullableReference(schema) ? ' | null' : ''}`;
     }
     throw new Error('Not a reference schema');
   }
 }
 
+function isNullableReference(schema: OpenAPIV3.ReferenceObject): boolean {
+  return (schema as OpenAPIV3.ReferenceObject & { nullable?: boolean }).nullable === true;
+}
+
 export class StringTypeMapper implements SchemaTypeMapper {
   private readonly FORMAT_MAP: Record<string, string> = {
     'date-time': 'string',
-    'date': 'string',
-    'uuid': 'string',
-    'binary': 'Blob',
+    date: 'string',
+    uuid: 'string',
+    binary: 'Blob',
   };
 
   canHandle(schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject): boolean {
@@ -157,6 +162,28 @@ export class UnionTypeMapper implements SchemaTypeMapper {
   }
 }
 
+export class IntersectionTypeMapper implements SchemaTypeMapper {
+  constructor(private typeMapperChain: TypeMapperChain) {}
+
+  canHandle(schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject): boolean {
+    return !('$ref' in schema) && Array.isArray(schema.allOf);
+  }
+
+  map(schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject): string {
+    if ('$ref' in schema) throw new Error('Reference schema');
+
+    const schemaObj = schema as OpenAPIV3.SchemaObject;
+    const parts = schemaObj.allOf ?? [];
+    const nullable = schemaObj.nullable ? ' | null' : '';
+
+    if (parts.length === 0) {
+      return `unknown${nullable}`;
+    }
+
+    return `${parts.map((part) => this.typeMapperChain.map(part)).join(' & ')}${nullable}`;
+  }
+}
+
 /**
  * Chain of Responsibility for type mapping
  */
@@ -174,8 +201,10 @@ export class TypeMapperChain {
     const arrayMapper = new ArrayTypeMapper(this);
     const objectMapper = new ObjectTypeMapper(this);
     const unionMapper = new UnionTypeMapper(this);
+    const intersectionMapper = new IntersectionTypeMapper(this);
 
     this.mappers.push(unionMapper);
+    this.mappers.push(intersectionMapper);
     this.mappers.push(arrayMapper);
     this.mappers.push(objectMapper);
   }

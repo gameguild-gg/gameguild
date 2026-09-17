@@ -67,6 +67,23 @@ describe('course server actions', () => {
     expect(mocks.postCoursesContentSubmit).not.toHaveBeenCalled();
   });
 
+  it('does not route graded quiz submissions through generic content completion', async () => {
+    const result = await submitActivity({
+      activityId: '3d85ccca-7428-4fc9-88c7-13670a98d0f1',
+      courseId: 'course-1',
+      activityType: 'quiz',
+      content: {},
+      isGraded: true,
+      attempt: 1,
+    });
+
+    expect(result).toEqual({
+      success: false,
+      message: 'Official graded submissions are not available through the generic activity endpoint.',
+    });
+    expect(mocks.postCoursesContentSubmit).not.toHaveBeenCalled();
+  });
+
   it('redacts answer keys before returning a server-graded quiz to learners', async () => {
     const question = createTrueFalseEntry('Server-owned answer');
     const jsonBody = enableQuizContentGrading(
@@ -101,14 +118,16 @@ describe('course server actions', () => {
     });
 
     const course = await getCourseLearningData('course-slug');
-    const content = course?.currentItem?.content as {
-      blocks: Record<string, Record<string, unknown>>;
+    const runtime = course?.currentItem?.content as {
+      mode: string;
+      document: { blocks: Record<string, Record<string, unknown>> };
     };
 
-    expect(content.blocks['question-1']).toMatchObject({
+    expect(runtime.mode).toBe('server-graded');
+    expect(runtime.document.blocks['question-1']).toMatchObject({
       type: 'TRUE_FALSE',
       stem: 'Server-owned answer',
     });
-    expect(content.blocks['question-1']).not.toHaveProperty('correctAnswer');
+    expect(runtime.document.blocks['question-1']).not.toHaveProperty('correctAnswer');
   });
 });

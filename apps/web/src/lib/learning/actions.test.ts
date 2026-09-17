@@ -190,7 +190,7 @@ describe("learning server actions", () => {
       ok: true,
       data: { id: "assessment-1" },
     });
-    mocks.putAssessments.mockResolvedValue({ ok: true, data: undefined });
+    mocks.putAssessments.mockResolvedValue({ ok: true, data: { version: 8 } });
     mocks.deleteAssessments.mockResolvedValue({ ok: true, data: undefined });
     mocks.getCoursesForGetCoursesById.mockResolvedValue({
       ok: true,
@@ -866,11 +866,15 @@ describe("learning server actions", () => {
     await updateAssessment({
       courseId: "creature-design-by-admin",
       assessmentId: "assessment-1",
+      expectedVersion: 7,
       slug: "final-review-retake",
     });
     expect(mocks.putAssessments).toHaveBeenCalledWith(
       "assessment-1",
-      expect.objectContaining({ slug: "final-review-retake" }),
+      expect.objectContaining({
+        expectedVersion: 7,
+        slug: "final-review-retake",
+      }),
     );
   });
 
@@ -1183,7 +1187,7 @@ describe("learning server actions", () => {
     expect(mocks.putAssessmentsGroups).toHaveBeenCalledWith("group-1", {
       name: "Weekly quizzes",
       description: "Weekly knowledge checks.",
-      weightPercent: 25,
+      weightPercent: 2_500,
       order: 2,
     });
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
@@ -1247,7 +1251,7 @@ describe("learning server actions", () => {
         title: "Milestone brief",
         type: "Assignment",
         contentId: "new-content-id",
-        gradingMethods: "InstructorGraded",
+        reviewMethods: 8,
       }),
     );
   });

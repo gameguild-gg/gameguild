@@ -6,6 +6,7 @@ using GameGuild.Learning.Courses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -110,10 +111,13 @@ public sealed class ProgramContentVisibilityTests
 
         var controller = new ProgramContentController(
             contentMock.Object,
-            programMock.Object,
-            new Mock<ICodingAssignmentContentService>().Object,
-            authorizationMock.Object,
-            Mock.Of<ISender>());
+             programMock.Object,
+             new Mock<ICodingAssignmentContentService>().Object,
+             authorizationMock.Object,
+             [],
+             [],
+            Mock.Of<ILogger<ProgramContentController>>(),
+             Mock.Of<ISender>());
 
         if (userId.HasValue)
         {
@@ -305,6 +309,9 @@ public sealed class ProgramContentVisibilityTests
             programMock.Object,
             codingAssignmentMock.Object,
             authorizationMock.Object,
+            [],
+            [],
+            Mock.Of<ILogger<ProgramContentController>>(),
             Mock.Of<ISender>())
         {
             ControllerContext = new ControllerContext
@@ -332,6 +339,9 @@ public sealed class ProgramContentVisibilityTests
             Mock.Of<IProgramCrudService>(),
             Mock.Of<ICodingAssignmentContentService>(),
             Mock.Of<IAuthorizationService>(),
+            [],
+            [],
+            Mock.Of<ILogger<ProgramContentController>>(),
             Mock.Of<ISender>())
         {
             ControllerContext = new ControllerContext
@@ -359,6 +369,9 @@ public sealed class ProgramContentVisibilityTests
             Mock.Of<IProgramCrudService>(),
             Mock.Of<ICodingAssignmentContentService>(),
             Mock.Of<IAuthorizationService>(),
+            [],
+            [],
+            Mock.Of<ILogger<ProgramContentController>>(),
             Mock.Of<ISender>())
         {
             ControllerContext = new ControllerContext

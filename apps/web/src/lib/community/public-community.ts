@@ -63,4 +63,3 @@ export const communityOpportunities = [
     description: 'Improve publishing templates, platform notes, and release-readiness checklists.',
   },
 ] as const;
-

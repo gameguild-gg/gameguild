@@ -166,12 +166,12 @@ public sealed class EndpointCommandHandlerCoverageTests
         var created = new ActivityGrade();
         var updated = new ActivityGrade();
 
-        service.Setup(candidate => candidate.GradeActivityAsync(interactionId, graderId, 91m, "Good", "{}" )).ReturnsAsync(created);
-        service.Setup(candidate => candidate.UpdateGradeAsync(gradeId, 95m, "Better", "{\"v\":2}")).ReturnsAsync(updated);
+        service.Setup(candidate => candidate.GradeActivityAsync(interactionId, graderId, Score(91), Score(100), "Good", "{}" )).ReturnsAsync(created);
+        service.Setup(candidate => candidate.UpdateGradeAsync(gradeId, Score(95), null, "Better", "{\"v\":2}")).ReturnsAsync(updated);
         service.Setup(candidate => candidate.DeleteGradeAsync(gradeId)).ReturnsAsync(true);
 
-        Assert.Same(created, await handler.Handle(new GradeActivityEndpointCommand(interactionId, graderId, 91m, "Good", "{}"), default));
-        Assert.Same(updated, await handler.Handle(new UpdateActivityGradeEndpointCommand(gradeId, 95m, "Better", "{\"v\":2}"), default));
+        Assert.Same(created, await handler.Handle(new GradeActivityEndpointCommand(interactionId, graderId, Score(91), Score(100), "Good", "{}"), default));
+        Assert.Same(updated, await handler.Handle(new UpdateActivityGradeEndpointCommand(gradeId, Score(95), null, "Better", "{\"v\":2}"), default));
         Assert.True(await handler.Handle(new DeleteActivityGradeEndpointCommand(gradeId), default));
 
         service.VerifyAll();
@@ -220,13 +220,13 @@ public sealed class EndpointCommandHandlerCoverageTests
         var interaction = new ContentInteraction();
 
         service.Setup(candidate => candidate.StartContentAsync(userId, contentId)).ReturnsAsync(interaction);
-        service.Setup(candidate => candidate.UpdateProgressAsync(interactionId, 55m)).ReturnsAsync(interaction);
+        service.Setup(candidate => candidate.UpdateProgressAsync(interactionId, Percent(55))).ReturnsAsync(interaction);
         service.Setup(candidate => candidate.SubmitContentAsync(interactionId, "submission")).ReturnsAsync(interaction);
         service.Setup(candidate => candidate.CompleteContentAsync(interactionId)).ReturnsAsync(interaction);
         service.Setup(candidate => candidate.UpdateTimeSpentAsync(interactionId, 12)).ReturnsAsync(interaction);
 
         Assert.Same(interaction, await handler.Handle(new StartContentInteractionEndpointCommand(userId, contentId), default));
-        Assert.Same(interaction, await handler.Handle(new UpdateContentInteractionProgressEndpointCommand(interactionId, 55m), default));
+        Assert.Same(interaction, await handler.Handle(new UpdateContentInteractionProgressEndpointCommand(interactionId, Percent(55)), default));
         Assert.Same(interaction, await handler.Handle(new SubmitContentInteractionEndpointCommand(interactionId, "submission"), default));
         Assert.Same(interaction, await handler.Handle(new CompleteContentInteractionEndpointCommand(interactionId), default));
         Assert.Same(interaction, await handler.Handle(new UpdateContentInteractionTimeEndpointCommand(interactionId, 12), default));

@@ -4,6 +4,9 @@ using GameGuild.Learning.Certificates;
 using GameGuild.Learning.Cohorts;
 using GameGuild.Learning.Courses;
 using GameGuild.Learning.Experience.Social;
+using GameGuild.Learning.Assessments.Grading.Runtime;
+using GameGuild.Learning.Assessments.Grading.Persistence;
+using GameGuild.Learning.Grading.Contracts;
 using GameGuild.Learning.Workspaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -23,8 +26,8 @@ public sealed class LearnerWorkspaceQueryTests
         var otherUserId = Guid.NewGuid();
         var course = CreateCourse("game-ai", "Game AI");
         var hiddenCourse = CreateCourse("hidden", "Hidden");
-        var enrollment = CreateEnrollment(userId, course.Id, 50m);
-        var otherEnrollment = CreateEnrollment(otherUserId, hiddenCourse.Id, 80m);
+        var enrollment = CreateEnrollment(userId, course.Id, PercentValue.FromPercentage("50"));
+        var otherEnrollment = CreateEnrollment(otherUserId, hiddenCourse.Id, PercentValue.FromPercentage("80"));
         var module = CreateContent(course.Id, "Foundations", ProgramContentType.Module, 0);
         var lesson = CreateContent(course.Id, "Pathfinding", ProgramContentType.Lesson, 1, module.Id, 45);
         var progress = new ContentProgress
@@ -33,7 +36,7 @@ public sealed class LearnerWorkspaceQueryTests
             ContentId = lesson.Id,
             ProgramEnrollmentId = enrollment.Id,
             CompletionStatus = ContentCompletionStatus.InProgress,
-            ProgressPercentage = 40m,
+            ProgressPercentage = PercentValue.FromPercentage("40"),
             TimeSpentSeconds = 900,
         };
         var cohort = Cohort.Create(
@@ -52,8 +55,14 @@ public sealed class LearnerWorkspaceQueryTests
             startsAt: DateTime.UtcNow.AddDays(1),
             endsAt: DateTime.UtcNow.AddDays(1).AddHours(2),
             status: CohortScheduleItemStatus.Published);
-        var group = AssessmentGroup.Create(course.Id, "Quizzes", 20m);
-        var assessment = Assessment.Create(course.Id, "Pathfinding quiz", AssessmentType.Quiz, 10, assessmentGroupId: group.Id);
+        var group = AssessmentGroup.Create(course.Id, "Quizzes", PercentValue.FromPercentage("20"));
+        var assessment = Assessment.Create(
+            course.Id,
+            "Pathfinding quiz",
+            AssessmentType.Quiz,
+            ScoreValue.FromPoints("10"),
+            assessmentGroupId: group.Id,
+            contentId: lesson.Id);
         assessment.SetDeliverySchedule(
             DateTime.UtcNow.AddDays(-1),
             DateTime.UtcNow.AddDays(3),
@@ -62,7 +71,19 @@ public sealed class LearnerWorkspaceQueryTests
             null);
         var submission = AssessmentSubmission.Start(assessment.Id, enrollment.Id, userId, 1);
         submission.Submit();
-        submission.Grade(8, 7, 10, feedback: "Strong pathfinding result.");
+        submission.Grade(
+            ScoreValue.FromPoints("8"),
+            ScoreValue.FromPoints("7"),
+            ScoreValue.FromPoints("10"),
+            feedback: "Strong pathfinding result.");
+        var gradingCompletion = AssessmentContentCompletionProjection.Create(
+            null,
+            assessment.Id,
+            lesson.Id,
+            learningEnrollment.Id,
+            submission.Id,
+            null,
+            "finalize");
         var discussion = CourseDiscussion.Create(course.Id, userId, "Welcome", "Start here");
         discussion.Pin();
         var certificate = Certificate.Issue(
@@ -87,30 +108,50 @@ public sealed class LearnerWorkspaceQueryTests
             group,
             assessment,
             submission,
+            gradingCompletion,
             discussion,
             certificate);
         await context.SaveChangesAsync();
 
-        var result = await new GetLearnerDashboardQueryHandler(context)
+        var gradebook = new TestGradebookProjectionService((courseId, enrollmentId, _) =>
+            new GradebookCourseProjectionV1(
+                courseId,
+                enrollmentId,
+                true,
+                false,
+                PercentValue.FromPercentage("16").Units,
+                [new GradebookGroupProjectionV1(
+                    group.Id,
+                    group.WeightPercent,
+                    PercentValue.FromPercentage("80"),
+                    PercentValue.FromPercentage("16"),
+                    [new GradebookAssessmentProjectionV1(
+                        assessment.Id,
+                        submission.Id,
+                        Guid.NewGuid(),
+                        ScoreValue.FromPoints("8"),
+                        ScoreValue.FromPoints("10"),
+                        true)])]));
+        var result = await new GetLearnerDashboardQueryHandler(context, gradebook)
             .Handle(new GetLearnerDashboardQuery(userId), CancellationToken.None);
 
         result.Courses.Should().ContainSingle();
         result.Courses[0].CourseId.Should().Be(course.Id);
-        result.Courses[0].CurrentContentId.Should().Be(lesson.Id);
-        result.Courses[0].CurrentContentTitle.Should().Be(lesson.Title);
-        result.Courses[0].CurrentContentType.Should().Be(nameof(ProgramContentType.Lesson));
+        result.Courses[0].CompletedItems.Should().Be(1);
+        result.Courses[0].CurrentContentId.Should().BeNull();
+        result.Courses[0].RemainingMinutes.Should().Be(0);
         result.Upcoming.Should().ContainSingle(entry => entry.ScheduleItemId == meeting.Id);
         result.Deadlines.Should().ContainSingle(item => item.AssessmentId == assessment.Id);
-        result.Grades.Should().ContainSingle(item => item.Percentage == 80m);
+        result.Grades.Should().ContainSingle(item => item.Percentage == PercentValue.FromPercentage("16"));
         var grade = result.Grades.Single();
         grade.Groups.Should().ContainSingle(item =>
-            item.GroupId == group.Id && item.Name == "Quizzes" && item.WeightPercent == 20m);
+            item.GroupId == group.Id && item.Name == "Quizzes" && item.WeightPercent == PercentValue.FromPercentage("20"));
         grade.Items.Should().ContainSingle(item =>
             item.AssessmentId == assessment.Id &&
             item.Title == "Pathfinding quiz" &&
-            item.Score == 8 &&
+            item.Score == null &&
             item.SubmissionStatus == nameof(SubmissionStatus.Graded) &&
-            item.Feedback == "Strong pathfinding result.");
+            item.Feedback == null);
         result.Certificates.Should().ContainSingle(item => item.CertificateId == certificate.Id);
         result.Announcements.Should().ContainSingle(item => item.DiscussionId == discussion.Id);
     }
@@ -123,7 +164,7 @@ public sealed class LearnerWorkspaceQueryTests
         context.Add(course);
         await context.SaveChangesAsync();
 
-        var result = await new GetLearnerCourseWorkspaceQueryHandler(context)
+        var result = await new GetLearnerCourseWorkspaceQueryHandler(context, new TestGradebookProjectionService())
             .Handle(new GetLearnerCourseWorkspaceQuery(Guid.NewGuid(), course.Id), CancellationToken.None);
 
         result.Should().BeNull();
@@ -135,20 +176,41 @@ public sealed class LearnerWorkspaceQueryTests
         await using var context = CreateContext();
         var userId = Guid.NewGuid();
         var course = CreateCourse("workspace", "Workspace");
-        var enrollment = CreateEnrollment(userId, course.Id, 25m);
+        var enrollment = CreateEnrollment(userId, course.Id, PercentValue.FromPercentage("25"));
         var lesson = CreateContent(course.Id, "First lesson", ProgramContentType.Lesson, 0, estimatedMinutes: 30);
+        var quiz = CreateContent(course.Id, "Final quiz", ProgramContentType.Questionnaire, 1, estimatedMinutes: 15);
         var progress = new ContentProgress
         {
             UserId = userId,
             ContentId = lesson.Id,
             ProgramEnrollmentId = enrollment.Id,
             CompletionStatus = ContentCompletionStatus.Completed,
-            ProgressPercentage = 100m,
+            ProgressPercentage = PercentValue.FromPercentage("100"),
             CompletedAt = DateTime.UtcNow,
         };
-        var group = AssessmentGroup.Create(course.Id, "Assignments", 100m);
-        var assessment = Assessment.Create(course.Id, "Practice", AssessmentType.Assignment, 20, assessmentGroupId: group.Id);
-        assessment.Update(null, null, null, null, null, null, null, null, contentId: lesson.Id);
+        var group = AssessmentGroup.Create(course.Id, "Assignments", PercentValue.FromPercentage("100"));
+        var assessment = Assessment.Create(
+            course.Id,
+            "Practice",
+            AssessmentType.Quiz,
+            ScoreValue.FromPoints("20"),
+            assessmentGroupId: group.Id,
+            contentId: quiz.Id);
+        var learningEnrollment = LearningEnrollment.Create(course.Id, userId);
+        var submission = AssessmentSubmission.Start(assessment.Id, learningEnrollment.Id, userId, 1);
+        submission.Submit();
+        submission.Grade(
+            ScoreValue.FromPoints("20"),
+            ScoreValue.FromPoints("10"),
+            ScoreValue.FromPoints("20"));
+        var gradingCompletion = AssessmentContentCompletionProjection.Create(
+            null,
+            assessment.Id,
+            quiz.Id,
+            learningEnrollment.Id,
+            submission.Id,
+            null,
+            "finalize");
         var discussion = CourseDiscussion.Create(course.Id, userId, "Question", "How does this work?", lesson.Id);
         var certificate = Certificate.Issue(
             Guid.NewGuid(),
@@ -158,16 +220,34 @@ public sealed class LearnerWorkspaceQueryTests
             "Grace Learner",
             course.Title);
 
-        context.AddRange(course, enrollment, lesson, progress, group, assessment, discussion, certificate);
+        context.AddRange(
+            course,
+            enrollment,
+            lesson,
+            quiz,
+            progress,
+            group,
+            assessment,
+            learningEnrollment,
+            submission,
+            gradingCompletion,
+            discussion,
+            certificate);
         await context.SaveChangesAsync();
 
-        var result = await new GetLearnerCourseWorkspaceQueryHandler(context)
+        var result = await new GetLearnerCourseWorkspaceQueryHandler(context, new TestGradebookProjectionService())
             .Handle(new GetLearnerCourseWorkspaceQuery(userId, course.Id), CancellationToken.None);
 
         result.Should().NotBeNull();
         result!.Course.CourseId.Should().Be(course.Id);
-        result.Content.Should().ContainSingle(item => item.ContentId == lesson.Id);
+        result.Content.Should().HaveCount(2);
         result.Progress.Should().ContainSingle(item => item.ContentId == lesson.Id);
+        result.Progress.Should().ContainSingle(item =>
+            item.ContentId == quiz.Id &&
+            item.Status == nameof(ContentCompletionStatus.Completed) &&
+            item.ProgressPercentage == PercentValue.Hundred);
+        result.Course.CompletedItems.Should().Be(2);
+        result.Course.RemainingMinutes.Should().Be(0);
         result.AssessmentGroups.Should().ContainSingle(item => item.GroupId == group.Id);
         result.Assessments.Should().ContainSingle(item => item.AssessmentId == assessment.Id);
         result.Discussions.Should().ContainSingle(item => item.DiscussionId == discussion.Id);
@@ -181,7 +261,7 @@ public sealed class LearnerWorkspaceQueryTests
         var userId = Guid.NewGuid();
         var enrolled = CreateCourse("game-ai", "Advanced Game AI");
         var privateCourse = CreateCourse("private-ai", "Private Game AI");
-        var enrollment = CreateEnrollment(userId, enrolled.Id, 0m);
+        var enrollment = CreateEnrollment(userId, enrolled.Id, PercentValue.Zero);
         var lesson = CreateContent(enrolled.Id, "AI Pathfinding", ProgramContentType.Lesson, 0);
         var privateLesson = CreateContent(privateCourse.Id, "AI Secrets", ProgramContentType.Lesson, 0);
         context.AddRange(enrolled, privateCourse, enrollment, lesson, privateLesson);
@@ -223,7 +303,7 @@ public sealed class LearnerWorkspaceQueryTests
         };
     }
 
-    private static ProgramEnrollment CreateEnrollment(Guid userId, Guid courseId, decimal progress)
+    private static ProgramEnrollment CreateEnrollment(Guid userId, Guid courseId, PercentValue progress)
     {
         return new ProgramEnrollment
         {
@@ -290,6 +370,8 @@ public sealed class LearnerWorkspaceQueryTests
             modelBuilder.Entity<CohortScheduleItem>();
             modelBuilder.Entity<AssessmentGroup>();
             modelBuilder.Entity<AssessmentSubmission>();
+            modelBuilder.Entity<AssessmentSubmissionParticipant>();
+            modelBuilder.Entity<AssessmentContentCompletionProjection>();
             modelBuilder.Entity<Certificate>();
             modelBuilder.Entity<CourseDiscussion>();
         }

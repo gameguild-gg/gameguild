@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
+import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import {
   closestCorners,
   DndContext,
@@ -10,63 +10,100 @@ import {
   useDroppable,
   useSensor,
   useSensors,
-} from '@dnd-kit/core';
-import { CSS } from '@dnd-kit/utilities';
-import { Link, usePathname, useRouter } from '@/i18n/navigation';
-import { createAssessment, createAssessmentGroup, deleteAssessmentGroup, updateAssessment, updateAssessmentGroup } from '@/lib/learning/actions';
-import type { Assessment, AssessmentGroup, AssessmentType, CourseAssessmentAnalytics } from '@/lib/learning/queries/assessments';
-import { normalizeSlug, slugify } from '@/lib/slugify';
-import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
-import { Card, CardContent } from '@game-guild/ui/components/card';
+} from "@dnd-kit/core";
+import { CSS } from "@dnd-kit/utilities";
+import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@game-guild/ui/components/dialog';
-import { Input } from '@game-guild/ui/components/input';
-import { Label } from '@game-guild/ui/components/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
-import { AlertTriangle, BarChart3, ChevronDown, ClipboardCheck, ClipboardList, GripVertical, Loader2, Pencil, Plus, Target, Trash2, Trophy, Wand2 } from 'lucide-react';
-import React, { useState, useTransition } from 'react';
+  createAssessment,
+  createAssessmentGroup,
+  deleteAssessmentGroup,
+  updateAssessment,
+  updateAssessmentGroup,
+} from "@/lib/learning/actions";
+import type {
+  Assessment,
+  AssessmentGroup,
+  AssessmentType,
+  CourseAssessmentAnalytics,
+} from "@/lib/learning/queries/assessments";
+import {
+  ASSESSMENT_PRIMARY_REVIEW_METHODS,
+  buildReviewWorkflow,
+  REVIEW_METHOD_LABELS,
+  type AssessmentReviewMethod,
+} from "@/lib/learning/assessment-grading-methods";
+import { normalizeSlug, slugify } from "@/lib/slugify";
+import { Badge } from "@game-guild/ui/components/badge";
+import { Button } from "@game-guild/ui/components/button";
+import { Card, CardContent } from "@game-guild/ui/components/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@game-guild/ui/components/dialog";
+import { Input } from "@game-guild/ui/components/input";
+import { Label } from "@game-guild/ui/components/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@game-guild/ui/components/select";
+import { Switch } from "@game-guild/ui/components/switch";
+import {
+  AlertTriangle,
+  BarChart3,
+  ChevronDown,
+  ClipboardCheck,
+  ClipboardList,
+  GripVertical,
+  Loader2,
+  Pencil,
+  Plus,
+  Target,
+  Trash2,
+  Trophy,
+  Wand2,
+} from "lucide-react";
+import React, { useState, useTransition } from "react";
 
 function typeIcon(type: AssessmentType) {
   switch (type) {
-    case 'Quiz':
+    case "Quiz":
       return <ClipboardList className="size-4" />;
-    case 'Project':
+    case "Project":
       return <Trophy className="size-4" />;
     default:
       return <Target className="size-4" />;
   }
 }
 
-function typeBadgeVariant(type: AssessmentType): 'default' | 'secondary' | 'outline' {
+function typeBadgeVariant(
+  type: AssessmentType,
+): "default" | "secondary" | "outline" {
   switch (type) {
-    case 'Quiz':
-      return 'secondary';
+    case "Quiz":
+      return "secondary";
     default:
-      return 'outline';
+      return "outline";
   }
 }
 
-const CREATE_ASSESSMENT_TYPES: AssessmentType[] = ['Quiz', 'Assignment', 'Project'];
-type AssessmentGradingMethodFlag = 'PeerReview' | 'AIGraded' | 'AutoGraded' | 'InstructorGraded';
-const GRADING_METHOD_FLAGS: AssessmentGradingMethodFlag[] = [
-  'PeerReview',
-  'AIGraded',
-  'AutoGraded',
-  'InstructorGraded',
+const CREATE_ASSESSMENT_TYPES: AssessmentType[] = [
+  "Quiz",
+  "Assignment",
+  "Project",
 ];
-const NO_GROUP_VALUE = '__none__';
-const UNGROUPED_ID = 'ungrouped';
-const UNGROUPED_NAME = 'Unassigned';
-const UNGROUPED_DESCRIPTION = 'Activities that still need a grading group.';
-const ASSESSMENT_DRAG_PREFIX = 'assessment-';
-const GROUP_DROP_PREFIX = 'group-drop-';
+const NO_GROUP_VALUE = "__none__";
+const UNGROUPED_ID = "ungrouped";
+const UNGROUPED_NAME = "Unassigned";
+const UNGROUPED_DESCRIPTION = "Activities that still need a grading group.";
+const ASSESSMENT_DRAG_PREFIX = "assessment-";
+const GROUP_DROP_PREFIX = "group-drop-";
 
 interface AssessmentsListProps {
   courseId: string;
@@ -87,20 +124,23 @@ interface AssessmentGroupView {
 }
 
 function formatWeight(weightPercent: number | null) {
-  if (weightPercent == null) return 'Unconfigured';
+  if (weightPercent == null) return "Unconfigured";
   return `${formatPercent(weightPercent)} of Total`;
 }
 
 function formatAssessmentRole(weightPercent: number | null) {
-  if (weightPercent == null) return 'Unconfigured';
-  return weightPercent === 0 ? 'Practice' : 'Gradebook';
+  if (weightPercent == null) return "Unconfigured";
+  return weightPercent === 0 ? "Practice" : "Gradebook";
 }
 
 function formatPercent(value: number) {
   return `${Number.isInteger(value) ? value : value.toFixed(1)}%`;
 }
 
-function buildGroupedAssessments(assessments: Assessment[], assessmentGroups: AssessmentGroup[]): AssessmentGroupView[] {
+function buildGroupedAssessments(
+  assessments: Assessment[],
+  assessmentGroups: AssessmentGroup[],
+): AssessmentGroupView[] {
   const groups = new Map<string, AssessmentGroupView>();
 
   // Seed an Unassigned slot only when there is something to drag.
@@ -138,12 +178,21 @@ function buildGroupedAssessments(assessments: Assessment[], assessmentGroups: As
     .sort((a, b) => a.order - b.order || a.name.localeCompare(b.name))
     .map((group) => ({
       ...group,
-      assessments: [...group.assessments].sort((a, b) => a.order - b.order || a.title.localeCompare(b.title)),
+      assessments: [...group.assessments].sort(
+        (a, b) => a.order - b.order || a.title.localeCompare(b.title),
+      ),
     }));
 }
 
-function DraggableAssessmentRow({ id, children }: { id: string; children: React.ReactNode }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id });
+function DraggableAssessmentRow({
+  id,
+  children,
+}: {
+  id: string;
+  children: React.ReactNode;
+}) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({ id });
   const style: React.CSSProperties = {
     transform: CSS.Translate.toString(transform),
     opacity: isDragging ? 0.4 : undefined,
@@ -155,17 +204,33 @@ function DraggableAssessmentRow({ id, children }: { id: string; children: React.
   );
 }
 
-function DroppableGroupBody({ id, children }: { id: string; children: React.ReactNode }) {
+function DroppableGroupBody({
+  id,
+  children,
+}: {
+  id: string;
+  children: React.ReactNode;
+}) {
   const { setNodeRef, isOver } = useDroppable({ id });
   return (
-    <div ref={setNodeRef} className={isOver ? 'bg-primary/5 transition-colors' : undefined}>
+    <div
+      ref={setNodeRef}
+      className={isOver ? "bg-primary/5 transition-colors" : undefined}
+    >
       {children}
     </div>
   );
 }
 
-function AssessmentAnalyticsPanel({ analytics }: { analytics: CourseAssessmentAnalytics }) {
-  const maxBucketCount = Math.max(1, ...analytics.distribution.map((bucket) => bucket.count));
+function AssessmentAnalyticsPanel({
+  analytics,
+}: {
+  analytics: CourseAssessmentAnalytics;
+}) {
+  const maxBucketCount = Math.max(
+    1,
+    ...analytics.distribution.map((bucket) => bucket.count),
+  );
 
   return (
     <Card>
@@ -183,11 +248,15 @@ function AssessmentAnalyticsPanel({ analytics }: { analytics: CourseAssessmentAn
           <div className="grid grid-cols-3 gap-2 text-right text-sm">
             <div>
               <p className="text-muted-foreground text-xs">Average</p>
-              <p className="font-semibold">{formatPercent(analytics.averagePercent)}</p>
+              <p className="font-semibold">
+                {formatPercent(analytics.averagePercent)}
+              </p>
             </div>
             <div>
               <p className="text-muted-foreground text-xs">Pass rate</p>
-              <p className="font-semibold">{formatPercent(analytics.passRate)}</p>
+              <p className="font-semibold">
+                {formatPercent(analytics.passRate)}
+              </p>
             </div>
             <div>
               <p className="text-muted-foreground text-xs">Grading</p>
@@ -206,7 +275,10 @@ function AssessmentAnalyticsPanel({ analytics }: { analytics: CourseAssessmentAn
         ) : (
           <div className="grid gap-3 md:grid-cols-5">
             {analytics.distribution.map((bucket) => (
-              <div key={bucket.label} className="rounded-lg border bg-muted/20 p-3">
+              <div
+                key={bucket.label}
+                className="rounded-lg border bg-muted/20 p-3"
+              >
                 <div className="mb-2 flex items-center justify-between text-xs">
                   <span className="font-medium">{bucket.label}</span>
                   <span className="text-muted-foreground">{bucket.count}</span>
@@ -214,7 +286,9 @@ function AssessmentAnalyticsPanel({ analytics }: { analytics: CourseAssessmentAn
                 <div className="h-2 overflow-hidden rounded-full bg-muted">
                   <div
                     className="h-full rounded-full bg-primary"
-                    style={{ width: `${Math.max(6, (bucket.count / maxBucketCount) * 100)}%` }}
+                    style={{
+                      width: `${Math.max(6, (bucket.count / maxBucketCount) * 100)}%`,
+                    }}
                   />
                 </div>
               </div>
@@ -224,7 +298,10 @@ function AssessmentAnalyticsPanel({ analytics }: { analytics: CourseAssessmentAn
 
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {analytics.groups.map((group) => (
-            <div key={group.groupId ?? group.groupName} className="rounded-lg border p-3">
+            <div
+              key={group.groupId ?? group.groupName}
+              className="rounded-lg border p-3"
+            >
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <p className="text-sm font-semibold">{group.groupName}</p>
@@ -232,16 +309,24 @@ function AssessmentAnalyticsPanel({ analytics }: { analytics: CourseAssessmentAn
                     {group.gradedCount} graded · {group.ungradedCount} ungraded
                   </p>
                 </div>
-                <Badge variant="outline">{group.weightPercent == null ? 'Unconfigured' : formatPercent(group.weightPercent)}</Badge>
+                <Badge variant="outline">
+                  {group.weightPercent == null
+                    ? "Unconfigured"
+                    : formatPercent(group.weightPercent)}
+                </Badge>
               </div>
               <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
                 <div>
                   <p className="text-muted-foreground text-xs">Average</p>
-                  <p className="font-semibold">{formatPercent(group.averagePercent)}</p>
+                  <p className="font-semibold">
+                    {formatPercent(group.averagePercent)}
+                  </p>
                 </div>
                 <div>
                   <p className="text-muted-foreground text-xs">Pass rate</p>
-                  <p className="font-semibold">{formatPercent(group.passRate)}</p>
+                  <p className="font-semibold">
+                    {formatPercent(group.passRate)}
+                  </p>
                 </div>
               </div>
             </div>
@@ -265,30 +350,39 @@ export function AssessmentsList({
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [isGroupPending, startGroupTransition] = useTransition();
 
-  const [newGroupName, setNewGroupName] = useState('');
-  const [newGroupWeight, setNewGroupWeight] = useState('20');
+  const [newGroupName, setNewGroupName] = useState("");
+  const [newGroupWeight, setNewGroupWeight] = useState("20");
   const [groupError, setGroupError] = useState<string | null>(null);
-  const [editingGroup, setEditingGroup] = useState<AssessmentGroup | null>(null);
-  const [editGroupName, setEditGroupName] = useState('');
-  const [editGroupDescription, setEditGroupDescription] = useState('');
-  const [editGroupWeight, setEditGroupWeight] = useState('');
+  const [editingGroup, setEditingGroup] = useState<AssessmentGroup | null>(
+    null,
+  );
+  const [editGroupName, setEditGroupName] = useState("");
+  const [editGroupDescription, setEditGroupDescription] = useState("");
+  const [editGroupWeight, setEditGroupWeight] = useState("");
   const [editGroupError, setEditGroupError] = useState<string | null>(null);
-  const [deletingGroup, setDeletingGroup] = useState<AssessmentGroup | null>(null);
+  const [deletingGroup, setDeletingGroup] = useState<AssessmentGroup | null>(
+    null,
+  );
   const [deleteGroupError, setDeleteGroupError] = useState<string | null>(null);
 
   const [showCreateAssessment, setShowCreateAssessment] = useState(false);
-  const [newAssessmentTitle, setNewAssessmentTitle] = useState('');
-  const [newAssessmentSlug, setNewAssessmentSlug] = useState('');
+  const [newAssessmentTitle, setNewAssessmentTitle] = useState("");
+  const [newAssessmentSlug, setNewAssessmentSlug] = useState("");
   const [newAssessmentAutoSlug, setNewAssessmentAutoSlug] = useState(true);
-  const [newAssessmentType, setNewAssessmentType] = useState<AssessmentType>('Assignment');
-  const [newAssessmentGroupId, setNewAssessmentGroupId] = useState<string>(NO_GROUP_VALUE);
-  const [newAssessmentGradingMethods, setNewAssessmentGradingMethods] = useState<Set<AssessmentGradingMethodFlag>>(
-    () => new Set<AssessmentGradingMethodFlag>(['InstructorGraded']),
-  );
+  const [newAssessmentType, setNewAssessmentType] =
+    useState<AssessmentType>("Assignment");
+  const [newAssessmentGroupId, setNewAssessmentGroupId] =
+    useState<string>(NO_GROUP_VALUE);
+  const [newAssessmentPrimaryReview, setNewAssessmentPrimaryReview] =
+    useState<AssessmentReviewMethod>("InstructorReview");
+  const [newAssessmentInstructorReview, setNewAssessmentInstructorReview] =
+    useState(false);
   const [assessmentError, setAssessmentError] = useState<string | null>(null);
   const [isAssessmentPending, startAssessmentTransition] = useTransition();
 
-  const [activeAssessmentId, setActiveAssessmentId] = useState<string | null>(null);
+  const [activeAssessmentId, setActiveAssessmentId] = useState<string | null>(
+    null,
+  );
   const [moveError, setMoveError] = useState<string | null>(null);
   const [isMovePending, startMoveTransition] = useTransition();
   const dndSensors = useSensors(
@@ -303,17 +397,18 @@ export function AssessmentsList({
     () => assessmentGroups.reduce((sum, group) => sum + group.weightPercent, 0),
     [assessmentGroups],
   );
-  const hasWeightWarning = assessmentGroups.length > 0 && Math.round(weightTotal * 100) / 100 !== 100;
+  const hasWeightWarning =
+    assessmentGroups.length > 0 && Math.round(weightTotal * 100) / 100 !== 100;
 
   function handleCreateGroup() {
     if (!newGroupName.trim()) {
-      setGroupError('Group name is required.');
+      setGroupError("Group name is required.");
       return;
     }
 
     const weight = Number(newGroupWeight);
     if (!Number.isFinite(weight) || weight < 0 || weight > 100) {
-      setGroupError('Weight must be between 0 and 100.');
+      setGroupError("Weight must be between 0 and 100.");
       return;
     }
 
@@ -328,8 +423,8 @@ export function AssessmentsList({
 
       if (result.success) {
         setShowCreateGroup(false);
-        setNewGroupName('');
-        setNewGroupWeight('20');
+        setNewGroupName("");
+        setNewGroupWeight("20");
         router.refresh();
       } else {
         setGroupError(result.error);
@@ -343,7 +438,7 @@ export function AssessmentsList({
 
     setEditingGroup(source);
     setEditGroupName(source.name);
-    setEditGroupDescription(source.description ?? '');
+    setEditGroupDescription(source.description ?? "");
     setEditGroupWeight(String(source.weightPercent));
     setEditGroupError(null);
   }
@@ -351,13 +446,13 @@ export function AssessmentsList({
   function handleUpdateGroup() {
     const group = editingGroup!;
     if (!editGroupName.trim()) {
-      setEditGroupError('Group name is required.');
+      setEditGroupError("Group name is required.");
       return;
     }
 
     const weight = Number(editGroupWeight);
     if (!Number.isFinite(weight) || weight < 0 || weight > 100) {
-      setEditGroupError('Weight must be between 0 and 100.');
+      setEditGroupError("Weight must be between 0 and 100.");
       return;
     }
 
@@ -404,18 +499,6 @@ export function AssessmentsList({
     });
   }
 
-  function toggleGradingMethod(method: AssessmentGradingMethodFlag) {
-    setNewAssessmentGradingMethods((prev) => {
-      const next = new Set(prev);
-      if (next.has(method)) {
-        next.delete(method);
-      } else {
-        next.add(method);
-      }
-      return next;
-    });
-  }
-
   function handleNewAssessmentTitleChange(value: string) {
     setNewAssessmentTitle(value);
     if (newAssessmentAutoSlug) {
@@ -429,31 +512,37 @@ export function AssessmentsList({
   }
 
   function resetCreateAssessmentForm() {
-    setNewAssessmentTitle('');
-    setNewAssessmentSlug('');
+    setNewAssessmentTitle("");
+    setNewAssessmentSlug("");
     setNewAssessmentAutoSlug(true);
-    setNewAssessmentType('Assignment');
+    setNewAssessmentType("Assignment");
     setNewAssessmentGroupId(NO_GROUP_VALUE);
-    setNewAssessmentGradingMethods(new Set<AssessmentGradingMethodFlag>(['InstructorGraded']));
+    setNewAssessmentPrimaryReview("InstructorReview");
+    setNewAssessmentInstructorReview(false);
     setAssessmentError(null);
   }
 
   function handleCreateAssessment() {
     const trimmedTitle = newAssessmentTitle.trim();
-    if (newAssessmentGradingMethods.size === 0) {
-      setAssessmentError('Select at least one grading method.');
+    if (!trimmedTitle) {
+      setAssessmentError("Title is required.");
       return;
     }
-
     setAssessmentError(null);
     startAssessmentTransition(async () => {
       const result = await createAssessment({
         courseId,
         title: trimmedTitle,
-        ...(normalizeSlug(newAssessmentSlug) ? { slug: normalizeSlug(newAssessmentSlug) } : {}),
+        ...(normalizeSlug(newAssessmentSlug)
+          ? { slug: normalizeSlug(newAssessmentSlug) }
+          : {}),
         type: newAssessmentType,
-        assessmentGroupId: newAssessmentGroupId === NO_GROUP_VALUE ? null : newAssessmentGroupId,
-        gradingMethods: [...newAssessmentGradingMethods].join(','),
+        assessmentGroupId:
+          newAssessmentGroupId === NO_GROUP_VALUE ? null : newAssessmentGroupId,
+        reviewMethods: buildReviewWorkflow(
+          newAssessmentPrimaryReview,
+          newAssessmentInstructorReview,
+        ),
       });
 
       if (result.success) {
@@ -501,9 +590,20 @@ export function AssessmentsList({
 
     setMoveError(null);
     startMoveTransition(async () => {
-      const result = targetGroupId === UNGROUPED_ID
-        ? await updateAssessment({ courseId, assessmentId, clearAssessmentGroupId: true })
-        : await updateAssessment({ courseId, assessmentId, assessmentGroupId: targetGroupId });
+      const result =
+        targetGroupId === UNGROUPED_ID
+          ? await updateAssessment({
+              courseId,
+              assessmentId,
+              expectedVersion: assessment.version,
+              clearAssessmentGroupId: true,
+            })
+          : await updateAssessment({
+              courseId,
+              assessmentId,
+              expectedVersion: assessment.version,
+              assessmentGroupId: targetGroupId,
+            });
 
       if (result.success) {
         router.refresh();
@@ -526,7 +626,11 @@ export function AssessmentsList({
             <Wand2 className="mr-2 h-4 w-4" />
             Create Assessment
           </Button>
-          <Button size="sm" variant="outline" onClick={() => setShowCreateGroup(true)}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setShowCreateGroup(true)}
+          >
             <Plus className="mr-2 h-4 w-4" />
             Add Group
           </Button>
@@ -536,10 +640,17 @@ export function AssessmentsList({
       {hasWeightWarning && (
         <Card className="border-amber-500/50 bg-amber-500/10">
           <CardContent className="flex items-start gap-3 p-4">
-            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-500" aria-hidden="true" />
+            <AlertTriangle
+              className="mt-0.5 size-4 shrink-0 text-amber-500"
+              aria-hidden="true"
+            />
             <div>
-              <p className="text-sm font-semibold">Grade weights total {formatPercent(weightTotal)}.</p>
-              <p className="text-muted-foreground text-sm">Adjust groups until they equal 100%.</p>
+              <p className="text-sm font-semibold">
+                Grade weights total {formatPercent(weightTotal)}.
+              </p>
+              <p className="text-muted-foreground text-sm">
+                Adjust groups until they equal 100%.
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -554,7 +665,8 @@ export function AssessmentsList({
             <ClipboardList className="text-muted-foreground mb-4 size-12" />
             <h3 className="text-lg font-medium">No assessments yet</h3>
             <p className="text-muted-foreground mt-1 text-sm">
-              Graded content will appear here after grading is enabled from the content editor.
+              Graded content will appear here after grading is enabled from the
+              content editor.
             </p>
           </CardContent>
         </Card>
@@ -576,22 +688,45 @@ export function AssessmentsList({
             </div>
           )}
           {isMovePending && (
-            <div className="text-muted-foreground text-sm">Moving assessment…</div>
+            <div className="text-muted-foreground text-sm">
+              Moving assessment…
+            </div>
           )}
           <div className="overflow-hidden rounded-xl border bg-card">
             {groupedAssessments.map((group) => (
-              <section key={group.id} data-testid={`assessment-group-${group.id}`} className="border-b last:border-b-0">
+              <section
+                key={group.id}
+                data-testid={`assessment-group-${group.id}`}
+                className="border-b last:border-b-0"
+              >
                 <div className="flex min-h-12 items-center gap-3 bg-muted/60 px-4 py-3">
-                  <GripVertical className="text-muted-foreground size-4 shrink-0" aria-hidden="true" />
-                  <ChevronDown className="text-muted-foreground size-4 shrink-0" aria-hidden="true" />
+                  <GripVertical
+                    className="text-muted-foreground size-4 shrink-0"
+                    aria-hidden="true"
+                  />
+                  <ChevronDown
+                    className="text-muted-foreground size-4 shrink-0"
+                    aria-hidden="true"
+                  />
                   <div className="min-w-0 flex-1">
-                    <h3 className="truncate text-sm font-semibold">{group.name}</h3>
-                    {group.description && <p className="text-muted-foreground mt-0.5 truncate text-xs">{group.description}</p>}
+                    <h3 className="truncate text-sm font-semibold">
+                      {group.name}
+                    </h3>
+                    {group.description && (
+                      <p className="text-muted-foreground mt-0.5 truncate text-xs">
+                        {group.description}
+                      </p>
+                    )}
                   </div>
-                  <Badge variant="outline" className="shrink-0 rounded-full bg-background">
+                  <Badge
+                    variant="outline"
+                    className="shrink-0 rounded-full bg-background"
+                  >
                     {formatWeight(group.weightPercent)}
                   </Badge>
-                  <Badge variant="outline">{formatAssessmentRole(group.weightPercent)}</Badge>
+                  <Badge variant="outline">
+                    {formatAssessmentRole(group.weightPercent)}
+                  </Badge>
                   {group.id !== UNGROUPED_ID && (
                     <>
                       <Button
@@ -621,12 +756,18 @@ export function AssessmentsList({
                 <DroppableGroupBody id={`${GROUP_DROP_PREFIX}${group.id}`}>
                   <div className="divide-y">
                     {group.assessments.map((assessment) => (
-                      <DraggableAssessmentRow key={assessment.id} id={`${ASSESSMENT_DRAG_PREFIX}${assessment.id}`}>
+                      <DraggableAssessmentRow
+                        key={assessment.id}
+                        id={`${ASSESSMENT_DRAG_PREFIX}${assessment.id}`}
+                      >
                         <Link
                           href={`${pathname}/${assessment.id}`}
                           className="group flex min-h-16 items-center gap-3 px-4 py-3 transition hover:bg-muted/45"
                         >
-                          <GripVertical className="text-muted-foreground/70 size-4 shrink-0 cursor-grab" aria-hidden="true" />
+                          <GripVertical
+                            className="text-muted-foreground/70 size-4 shrink-0 cursor-grab"
+                            aria-hidden="true"
+                          />
                           <span className="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-md">
                             {typeIcon(assessment.type)}
                           </span>
@@ -635,20 +776,37 @@ export function AssessmentsList({
                               {assessment.title}
                             </span>
                             <span className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-                              {assessment.timeLimitMinutes && <span>{assessment.timeLimitMinutes}m</span>}
-                              {assessment.maxAttempts && <span>{assessment.maxAttempts} attempts</span>}
+                              {assessment.timeLimitMinutes && (
+                                <span>{assessment.timeLimitMinutes}m</span>
+                              )}
+                              {assessment.maxAttempts && (
+                                <span>{assessment.maxAttempts} attempts</span>
+                              )}
                               <span>{assessment.maxScore} pts</span>
                             </span>
                           </span>
-                          <Badge variant={typeBadgeVariant(assessment.type)} className="hidden shrink-0 sm:inline-flex">
+                          <Badge
+                            variant={typeBadgeVariant(assessment.type)}
+                            className="hidden shrink-0 sm:inline-flex"
+                          >
                             {assessment.type}
                           </Badge>
-                          <Badge variant={assessment.isAvailable ? 'secondary' : 'outline'} className="hidden shrink-0 sm:inline-flex">
-                            {assessment.isAvailable ? 'available' : 'scheduled'}
+                          <Badge
+                            variant={
+                              assessment.isAvailable ? "secondary" : "outline"
+                            }
+                            className="hidden shrink-0 sm:inline-flex"
+                          >
+                            {assessment.isAvailable ? "available" : "scheduled"}
                           </Badge>
                         </Link>
                         {canManage && (
-                          <Button asChild variant="outline" size="sm" className="mr-4 shrink-0">
+                          <Button
+                            asChild
+                            variant="outline"
+                            size="sm"
+                            className="mr-4 shrink-0"
+                          >
                             <Link
                               href={`${pathname}/${assessment.id}/submissions`}
                               data-testid={`grade-link-${assessment.id}`}
@@ -668,14 +826,18 @@ export function AssessmentsList({
           <DragOverlay dropAnimation={null}>
             {activeAssessmentId
               ? (() => {
-                  const previewId = activeAssessmentId.slice(ASSESSMENT_DRAG_PREFIX.length);
+                  const previewId = activeAssessmentId.slice(
+                    ASSESSMENT_DRAG_PREFIX.length,
+                  );
                   const preview = assessments.find((a) => a.id === previewId);
                   return preview ? (
                     <div className="bg-card flex items-center gap-3 rounded-md border px-4 py-3 shadow-md">
                       <span className="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-md">
                         {typeIcon(preview.type)}
                       </span>
-                      <span className="text-sm font-semibold">{preview.title}</span>
+                      <span className="text-sm font-semibold">
+                        {preview.title}
+                      </span>
                     </div>
                   ) : null;
                 })()
@@ -690,7 +852,8 @@ export function AssessmentsList({
           <DialogHeader>
             <DialogTitle>Create Assessment Group</DialogTitle>
             <DialogDescription>
-              Group graded activities into weighted blocks such as quizzes, midterms, projects, or attendance.
+              Group graded activities into weighted blocks such as quizzes,
+              midterms, projects, or attendance.
             </DialogDescription>
           </DialogHeader>
 
@@ -715,7 +878,9 @@ export function AssessmentsList({
                 onChange={(e) => setNewGroupWeight(e.target.value)}
               />
             </div>
-            {groupError && <p className="text-destructive text-sm">{groupError}</p>}
+            {groupError && (
+              <p className="text-destructive text-sm">{groupError}</p>
+            )}
           </div>
 
           <DialogFooter>
@@ -723,7 +888,9 @@ export function AssessmentsList({
               Cancel
             </Button>
             <Button onClick={handleCreateGroup} disabled={isGroupPending}>
-              {isGroupPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isGroupPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Create Group
             </Button>
           </DialogFooter>
@@ -731,12 +898,16 @@ export function AssessmentsList({
       </Dialog>
 
       {/* Edit Assessment Group Dialog */}
-      <Dialog open={Boolean(editingGroup)} onOpenChange={(open) => !open && setEditingGroup(null)}>
+      <Dialog
+        open={Boolean(editingGroup)}
+        onOpenChange={(open) => !open && setEditingGroup(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Assessment Group</DialogTitle>
             <DialogDescription>
-              Update the weighted grading block used to calculate course outcomes.
+              Update the weighted grading block used to calculate course
+              outcomes.
             </DialogDescription>
           </DialogHeader>
 
@@ -750,7 +921,9 @@ export function AssessmentsList({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-assessment-group-description">Description</Label>
+              <Label htmlFor="edit-assessment-group-description">
+                Description
+              </Label>
               <Input
                 id="edit-assessment-group-description"
                 value={editGroupDescription}
@@ -759,7 +932,9 @@ export function AssessmentsList({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-assessment-group-weight">Weight percent</Label>
+              <Label htmlFor="edit-assessment-group-weight">
+                Weight percent
+              </Label>
               <Input
                 id="edit-assessment-group-weight"
                 type="number"
@@ -769,7 +944,9 @@ export function AssessmentsList({
                 onChange={(e) => setEditGroupWeight(e.target.value)}
               />
             </div>
-            {editGroupError && <p className="text-destructive text-sm">{editGroupError}</p>}
+            {editGroupError && (
+              <p className="text-destructive text-sm">{editGroupError}</p>
+            )}
           </div>
 
           <DialogFooter>
@@ -777,7 +954,9 @@ export function AssessmentsList({
               Cancel
             </Button>
             <Button onClick={handleUpdateGroup} disabled={isGroupPending}>
-              {isGroupPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isGroupPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Save Group
             </Button>
           </DialogFooter>
@@ -785,23 +964,35 @@ export function AssessmentsList({
       </Dialog>
 
       {/* Delete Assessment Group Dialog */}
-      <Dialog open={Boolean(deletingGroup)} onOpenChange={(open) => !open && setDeletingGroup(null)}>
+      <Dialog
+        open={Boolean(deletingGroup)}
+        onOpenChange={(open) => !open && setDeletingGroup(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Assessment Group</DialogTitle>
             <DialogDescription>
-              This removes "{deletingGroup?.name}" and will move existing assessments to ungrouped work.
+              This removes "{deletingGroup?.name}" and will move existing
+              assessments to ungrouped work.
             </DialogDescription>
           </DialogHeader>
 
-          {deleteGroupError && <p className="text-destructive text-sm">{deleteGroupError}</p>}
+          {deleteGroupError && (
+            <p className="text-destructive text-sm">{deleteGroupError}</p>
+          )}
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeletingGroup(null)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDeleteGroup} disabled={isGroupPending}>
-              {isGroupPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button
+              variant="destructive"
+              onClick={handleDeleteGroup}
+              disabled={isGroupPending}
+            >
+              {isGroupPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Delete Group
             </Button>
           </DialogFooter>
@@ -820,7 +1011,8 @@ export function AssessmentsList({
           <DialogHeader>
             <DialogTitle>Create Assessment</DialogTitle>
             <DialogDescription>
-              Add a standalone graded activity. Link it to course content later from the editor.
+              Add a standalone graded activity. Link it to course content later
+              from the editor.
             </DialogDescription>
           </DialogHeader>
 
@@ -841,7 +1033,9 @@ export function AssessmentsList({
                 id="new-assessment-slug"
                 value={newAssessmentSlug}
                 onChange={(e) => handleNewAssessmentSlugChange(e.target.value)}
-                onBlur={() => setNewAssessmentSlug(normalizeSlug(newAssessmentSlug))}
+                onBlur={() =>
+                  setNewAssessmentSlug(normalizeSlug(newAssessmentSlug))
+                }
                 placeholder="midterm-exam"
               />
               <p className="text-muted-foreground text-xs">
@@ -851,7 +1045,12 @@ export function AssessmentsList({
 
             <div className="space-y-2">
               <Label htmlFor="new-assessment-type">Type</Label>
-              <Select value={newAssessmentType} onValueChange={(value) => setNewAssessmentType(value as AssessmentType)}>
+              <Select
+                value={newAssessmentType}
+                onValueChange={(value) =>
+                  setNewAssessmentType(value as AssessmentType)
+                }
+              >
                 <SelectTrigger id="new-assessment-type">
                   <SelectValue placeholder="Choose a type" />
                 </SelectTrigger>
@@ -867,7 +1066,10 @@ export function AssessmentsList({
 
             <div className="space-y-2">
               <Label htmlFor="new-assessment-group">Grade group</Label>
-              <Select value={newAssessmentGroupId} onValueChange={setNewAssessmentGroupId}>
+              <Select
+                value={newAssessmentGroupId}
+                onValueChange={setNewAssessmentGroupId}
+              >
                 <SelectTrigger id="new-assessment-group">
                   <SelectValue placeholder="Unassigned" />
                 </SelectTrigger>
@@ -882,34 +1084,61 @@ export function AssessmentsList({
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label>Grading methods</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {GRADING_METHOD_FLAGS.map((method) => {
-                  const checked = newAssessmentGradingMethods.has(method);
-                  return (
-                    <Label
-                      key={method}
-                      htmlFor={`grading-method-${method}`}
-                      className={`flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm transition ${
-                        checked ? 'border-primary bg-primary/5' : 'hover:bg-muted/40'
-                      }`}
-                    >
-                      <input
-                        id={`grading-method-${method}`}
-                        type="checkbox"
-                        className="size-4 accent-primary"
-                        checked={checked}
-                        onChange={() => toggleGradingMethod(method)}
-                      />
-                      {method}
-                    </Label>
-                  );
-                })}
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <Label htmlFor="new-assessment-primary-review">
+                  Primary review
+                </Label>
+                <Select
+                  value={newAssessmentPrimaryReview}
+                  onValueChange={(value) => {
+                    const method = value as AssessmentReviewMethod;
+                    setNewAssessmentPrimaryReview(method);
+                    if (method === "InstructorReview") {
+                      setNewAssessmentInstructorReview(false);
+                    }
+                  }}
+                >
+                  <SelectTrigger id="new-assessment-primary-review">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ASSESSMENT_PRIMARY_REVIEW_METHODS.map((method) => (
+                      <SelectItem key={method} value={method}>
+                        {REVIEW_METHOD_LABELS[method]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+
+              {newAssessmentPrimaryReview !== "InstructorReview" && (
+                <div className="flex items-start justify-between gap-3 rounded-md border p-3">
+                  <span>
+                    <Label
+                      htmlFor="new-assessment-instructor-review"
+                      className="block text-sm font-medium"
+                    >
+                      Final instructor review
+                    </Label>
+                    <span className="text-muted-foreground mt-1 block text-xs">
+                      Add an instructor as the final review stage.
+                    </span>
+                  </span>
+                  <Switch
+                    id="new-assessment-instructor-review"
+                    checked={newAssessmentInstructorReview}
+                    onCheckedChange={(checked) =>
+                      setNewAssessmentInstructorReview(checked === true)
+                    }
+                  />
+                </div>
+              )}
             </div>
 
-            {assessmentError && <p className="text-destructive text-sm">{assessmentError}</p>}
+            {assessmentError && (
+              <p className="text-destructive text-sm">{assessmentError}</p>
+            )}
           </div>
 
           <DialogFooter>
@@ -926,13 +1155,14 @@ export function AssessmentsList({
               onClick={handleCreateAssessment}
               disabled={!newAssessmentTitle.trim() || isAssessmentPending}
             >
-              {isAssessmentPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isAssessmentPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Create Assessment
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
     </div>
   );
 }

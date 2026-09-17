@@ -5,6 +5,7 @@ import {
   submitContentActivity,
 } from "@/lib/learner/activity-actions";
 import { getPreferredSubmissionModality } from "@/lib/learner/activity-contracts";
+import { scoreUnitsToPoints } from "@/lib/learning/academic-values";
 import type {
   LearningAssessmentsAssessment,
   LearningAssessmentsLearnerAssessmentSubmission,
@@ -50,7 +51,6 @@ function responseLabel(activity: LearnerActivityDescriptor, modality: string) {
     if (activity.contentType === "Survey") return "Your response";
     return "Your contribution";
   }
-  if (modality === "StructuredAnswer") return "Your answer";
   if (modality === "Code") return "Your code";
   if (modality === "Url" || modality === "Media") return "Submission URL";
   return "Your submission";
@@ -109,7 +109,7 @@ export function LearnerActivityForm({
           </Badge>
           {finalSubmission.score != null ? (
             <strong className="text-lg text-white">
-              {finalSubmission.score} points
+              {scoreUnitsToPoints(finalSubmission.score)} points
             </strong>
           ) : (
             <span className="text-sm text-muted-foreground">
@@ -138,6 +138,17 @@ export function LearnerActivityForm({
         <AlertTitle>Activity completed</AlertTitle>
         <AlertDescription>
           Your course response has already been submitted.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (activity.kind === "assessment" && activity.assessment.type === "Quiz") {
+    return (
+      <Alert>
+        <AlertTitle>Quiz attempt unavailable</AlertTitle>
+        <AlertDescription>
+          This quiz cannot be answered through the generic assessment form.
         </AlertDescription>
       </Alert>
     );

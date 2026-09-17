@@ -17,6 +17,7 @@ using GameGuild.GameJams;
 using GameGuild.Identity.Authorization;
 using GameGuild.LaunchPad;
 using GameGuild.Learning.Assessments;
+using GameGuild.Learning.Assessments.QuizAdapter;
 using GameGuild.Learning.Certificates;
 using GameGuild.Learning.Cohorts;
 using GameGuild.Learning.Courses;
@@ -116,6 +117,7 @@ internal sealed class ApiProductComposition : IApiProductComposition
         new GameGuild.Social.Announcements.AnnouncementsModule().ConfigureServices(builder.Services, builder.Configuration);
         builder.Services.AddCoursesModule();
         builder.Services.AddAssessmentsModule();
+        builder.Services.AddQuizGradingAdapter();
         builder.Services.AddLearningEnrollmentsModule();
         builder.Services.AddCohortsModule();
         builder.Services.AddCertificatesModule();
@@ -152,7 +154,7 @@ internal sealed class ApiProductComposition : IApiProductComposition
 
     public void ConfigureOpenApi(SwaggerGenOptions options)
     {
-        options.SchemaFilter<LegacyAssessmentTypeSchemaFilter>();
+        options.SchemaFilter<LearningContractSchemaFilter>();
         options.SchemaFilter<LegacyProgramContentTypeSchemaFilter>();
     }
 

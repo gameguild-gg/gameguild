@@ -86,7 +86,7 @@ public sealed class ProgramCrudControllerLearnerTests
         enrollmentId,
         courseId,
         studentId,
-        0,
+        Percent("0"),
         null,
         null,
         null,

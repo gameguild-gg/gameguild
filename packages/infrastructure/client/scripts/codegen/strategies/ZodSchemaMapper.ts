@@ -24,23 +24,27 @@ export class ZodReferenceMapper implements ZodSchemaMapper {
       const rawTypeName = schema.$ref.replace('#/components/schemas/', '');
       const typeName = resolveKnownSchemaTypeName(rawTypeName, this.knownSchemaNames);
       if (!typeName) {
-        return 'z.unknown()';
+        return `z.unknown()${isNullableReference(schema) ? '.nullable()' : ''}`;
       }
       // Use z.lazy() to defer evaluation and handle circular/forward references
-      return `z.lazy(() => ${typeName}Schema)`;
+      return `z.lazy(() => ${typeName}Schema)${isNullableReference(schema) ? '.nullable()' : ''}`;
     }
     throw new Error('Not a reference schema');
   }
 }
 
+function isNullableReference(schema: OpenAPIV3.ReferenceObject): boolean {
+  return (schema as OpenAPIV3.ReferenceObject & { nullable?: boolean }).nullable === true;
+}
+
 export class ZodStringMapper implements ZodSchemaMapper {
   private readonly FORMAT_MAP: Record<string, string> = {
-    'email': '.email()',
-    'uuid': '.uuid()',
-    'uri': '.url()',
-    'url': '.url()',
+    email: '.email()',
+    uuid: '.uuid()',
+    uri: '.url()',
+    url: '.url()',
     'date-time': '.datetime()',
-    'date': '.date()',
+    date: '.date()',
   };
 
   canHandle(schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject): boolean {
@@ -240,6 +244,32 @@ export class ZodUnionMapper implements ZodSchemaMapper {
   }
 }
 
+export class ZodIntersectionMapper implements ZodSchemaMapper {
+  constructor(private zodMapperChain: ZodSchemaMapperChain) {}
+
+  canHandle(schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject): boolean {
+    return !('$ref' in schema) && Array.isArray(schema.allOf);
+  }
+
+  map(schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject): string {
+    if ('$ref' in schema) throw new Error('Reference schema');
+
+    const schemaObj = schema as OpenAPIV3.SchemaObject;
+    const parts = (schemaObj.allOf ?? []).map((part) => this.zodMapperChain.map(part));
+    let zodSchema: string;
+
+    if (parts.length === 0) {
+      zodSchema = 'z.unknown()';
+    } else if (parts.length === 1) {
+      zodSchema = parts[0];
+    } else {
+      zodSchema = parts.slice(1).reduce((left, right) => `z.intersection(${left}, ${right})`, parts[0]);
+    }
+
+    return `${zodSchema}${schemaObj.nullable ? '.nullable()' : ''}`;
+  }
+}
+
 /**
  * Chain of Responsibility for Zod schema mapping
  */
@@ -257,8 +287,10 @@ export class ZodSchemaMapperChain {
     const arrayMapper = new ZodArrayMapper(this);
     const objectMapper = new ZodObjectMapper(this);
     const unionMapper = new ZodUnionMapper(this);
+    const intersectionMapper = new ZodIntersectionMapper(this);
 
     this.mappers.push(unionMapper);
+    this.mappers.push(intersectionMapper);
     this.mappers.push(arrayMapper);
     this.mappers.push(objectMapper);
   }

@@ -4,18 +4,25 @@ import { useEffect, useMemo, useState } from 'react';
 import type {
   LearningAssessmentsGradingQueueAssessment,
   LearningAssessmentsGradingQueueItem,
-  LearningAssessmentsInstructorPeerReview,
-  LearningAssessmentsRubricCriterion,
 } from '@game-guild/client';
+import type {
+  AssessmentSubmissionRuntimeViewV1,
+  GradeItemResultV1,
+} from '@game-guild/grading';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
 import { Input } from '@game-guild/ui/components/input';
 import { Textarea } from '@game-guild/ui/components/textarea';
-import { parseGradingMethods } from '@/lib/learning/assessment-grading-methods';
-import { gradeSubmission } from '@/lib/learning/grade-action';
-import { composeFeedback } from './compose-feedback';
-import { fetchPeerReviewsAction } from './speedgrader-actions';
-import type { ComputedScore } from './code-grader-panel';
+import {
+  getRuntimeSubmission,
+  regradeRuntimeSubmission,
+  releaseRuntimeSubmission,
+  resolveRuntimeInstructorReview,
+} from '@/lib/learning/grading-runtime-actions';
+import {
+  pointsToScoreUnits,
+  scoreUnitsToPoints,
+} from '@/lib/learning/academic-values';
 import { useRouter } from '@/i18n/navigation';
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', {
@@ -28,300 +35,383 @@ const dateFormatter = new Intl.DateTimeFormat('en-US', {
 
 export interface GradingPanelProps {
   item: LearningAssessmentsGradingQueueItem;
-  /** Queue assessment summary — carries hasRubric + rubric (with criterion ids). */
   assessment: LearningAssessmentsGradingQueueAssessment;
-  /** Run-tests result seeded from the code viewer (coding assessments). */
-  computedScore?: ComputedScore | null;
 }
 
-interface CriterionState {
+interface ItemResolutionState {
   points: string;
-  comment: string;
+  feedback: string;
 }
 
-function sortedCriteria(rubric: LearningAssessmentsGradingQueueAssessment['rubric']): LearningAssessmentsRubricCriterion[] {
-  return [...(rubric?.criteria ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-}
-
-/**
- * SpeedGrader right panel. Rubric mode (assessment.hasRubric): per-criterion
- * points capped [0..criterion.Points] + comment; the score is AUTO-DERIVED
- * from Σ — no manual score input, and submit is enabled iff every criterion
- * is within its cap (partial credit is the normal case; Σ need NOT equal
- * maxScore). Plain mode: single score input 0..maxScore.
- */
-export function GradingPanel({ item, assessment, computedScore }: GradingPanelProps): React.JSX.Element {
+export function GradingPanel({
+  item,
+  assessment,
+}: GradingPanelProps): React.JSX.Element {
   const router = useRouter();
-  const criteria = useMemo(() => sortedCriteria(assessment.rubric), [assessment.rubric]);
-  const rubricMode = assessment.hasRubric === true && criteria.length > 0;
-  const maxScore = assessment.maxScore ?? 100;
-
-  const [criterionState, setCriterionState] = useState<Record<string, CriterionState>>(() =>
-    Object.fromEntries(criteria.map((criterion) => [criterion.id ?? '', { points: '', comment: '' }])),
-  );
-  const [plainScore, setPlainScore] = useState<string>('');
-  const [overallComment, setOverallComment] = useState('');
-  const [autoFeedback, setAutoFeedback] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [submission, setSubmission] =
+    useState<AssessmentSubmissionRuntimeViewV1 | null>(null);
+  const [resolutions, setResolutions] = useState<
+    Record<string, ItemResolutionState>
+  >({});
+  const [overallFeedback, setOverallFeedback] = useState('');
+  const [overrideReason, setOverrideReason] = useState('');
+  const [regradeReason, setRegradeReason] = useState('');
+  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-
-  const [reviews, setReviews] = useState<LearningAssessmentsInstructorPeerReview[] | null>(null);
-  const peerReviewEnabled = parseGradingMethods(assessment.gradingMethods).has('PeerReview');
-
-  // Reset per-item grading state when the queue item changes.
-  useEffect(() => {
-    setCriterionState(Object.fromEntries(criteria.map((criterion) => [criterion.id ?? '', { points: '', comment: '' }])));
-    setPlainScore('');
-    setOverallComment('');
-    setAutoFeedback('');
-    setError(null);
-    setReviews(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [item.submissionId]);
-
-  // Seed the plain score input + auto feedback from the code viewer's
-  // run-tests result (ignored in rubric mode — the score is Σ, read-only).
-  useEffect(() => {
-    if (computedScore) {
-      setPlainScore(String(computedScore.score));
-      setAutoFeedback(computedScore.autoFeedback);
-    }
-  }, [computedScore]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!peerReviewEnabled || !item.submissionId) return;
     let cancelled = false;
-    fetchPeerReviewsAction(item.submissionId).then((result) => {
+    setLoading(true);
+    setError(null);
+    setSubmission(null);
+    getRuntimeSubmission(item.submissionId ?? '').then((result) => {
       if (cancelled) return;
-      setReviews(result.ok ? result.reviews : []);
+      setLoading(false);
+      if (!result.success) {
+        setError(result.error);
+        return;
+      }
+      setSubmission(result.data);
     });
     return () => {
       cancelled = true;
     };
-  }, [peerReviewEnabled, item.submissionId]);
+  }, [item.submissionId]);
 
-  // --- Rubric validation ---------------------------------------------------
+  const orderedItemIds = useMemo(() => {
+    if (!submission) return [];
+    const known = new Set(Object.keys(submission.execution.itemMaxScores));
+    const ordered = submission.execution.delivery.itemOrder.filter((id) =>
+      known.delete(id),
+    );
+    return [...ordered, ...known];
+  }, [submission]);
 
-  const rows = criteria.map((criterion) => {
-    const id = criterion.id ?? '';
-    const raw = criterionState[id]?.points ?? '';
-    const cap = criterion.points ?? 0;
-    const parsed = raw.trim() === '' ? Number.NaN : Number.parseInt(raw, 10);
-    const inRange = Number.isInteger(parsed) && parsed >= 0 && parsed <= cap;
+  useEffect(() => {
+    if (!submission) return;
+    const resultByItem = new Map(
+      (submission.execution.instructorVisibleResult?.items ?? []).map(
+        (result) => [result.itemId, result],
+      ),
+    );
+    const next = Object.fromEntries(
+      Object.entries(submission.execution.itemMaxScores).map(
+        ([itemId]) => {
+          const result = resultByItem.get(itemId);
+          return [
+            itemId,
+            {
+              points:
+                result?.score == null
+                  ? ''
+                  : String(scoreUnitsToPoints(result.score)),
+              feedback: result?.feedback ?? '',
+            },
+          ];
+        },
+      ),
+    );
+    setResolutions(next);
+    setOverallFeedback(
+      submission.execution.instructorVisibleResult?.feedback ?? '',
+    );
+  }, [submission]);
+
+  const itemRows = orderedItemIds.map((itemId) => {
+    const maxUnits = submission?.execution.itemMaxScores[itemId] ?? 0;
+    const raw = resolutions[itemId]?.points ?? '';
+    let scoreUnits: ReturnType<typeof pointsToScoreUnits> | null = null;
+    try {
+      if (raw.trim()) scoreUnits = pointsToScoreUnits(raw);
+    } catch {
+      scoreUnits = null;
+    }
     return {
-      criterion,
-      id,
+      itemId,
+      label: readItemLabel(submission, itemId),
+      maxUnits,
+      maxPoints: scoreUnitsToPoints(maxUnits),
       raw,
-      parsed,
-      cap,
-      inRange,
-      filled: raw.trim() !== '',
+      scoreUnits,
+      valid: scoreUnits != null && scoreUnits <= maxUnits,
+      prior: submission?.execution.instructorVisibleResult?.items.find(
+        (entry) => entry.itemId === itemId,
+      ),
     };
   });
-  const total = rows.reduce((sum, row) => sum + (row.inRange ? row.parsed : 0), 0);
-  const totalAboveMax = total > maxScore;
-  const rubricComplete = rows.every((row) => row.filled && row.inRange);
-  const rubricValid = rubricComplete && !totalAboveMax;
+  const canResolve =
+    submission?.execution.requiresInstructorReview === true &&
+    itemRows.length > 0 &&
+    itemRows.every((row) => row.valid) &&
+    !submitting;
+  const finalResult =
+    submission?.execution.instructorVisibleResult?.state === 'final'
+      ? submission.execution.instructorVisibleResult
+      : null;
+  const canRelease = Boolean(
+    submission &&
+      finalResult &&
+      !submission.execution.released &&
+      submission.execution.activeRoundId,
+  );
 
-  // --- Plain validation ----------------------------------------------------
-
-  const plainParsed = plainScore.trim() === '' ? Number.NaN : Number.parseInt(plainScore, 10);
-  const plainInRange = Number.isInteger(plainParsed) && plainParsed >= 0 && plainParsed <= maxScore;
-  const plainValid = plainScore.trim() !== '' && plainInRange;
-
-  const canSubmit = !submitting && (rubricMode ? rubricValid : plainValid);
-
-  async function handleSubmit() {
-    if (!canSubmit || !item.submissionId) return;
+  async function submitReview() {
+    if (!submission || !canResolve) return;
     setSubmitting(true);
     setError(null);
-    try {
-      const feedback = composeFeedback({
-        overallComment,
-        autoFeedback,
-      });
-      const result = await gradeSubmission(
-        rubricMode
-          ? {
-              submissionId: item.submissionId,
-              score: total,
-              feedback,
-              rubricScores: JSON.stringify(
-                Object.fromEntries(
-                  rows.map((row) => [
-                    row.id,
-                    {
-                      points: row.parsed,
-                      comment: (criterionState[row.id]?.comment ?? '').trim(),
-                    },
-                  ]),
-                ),
-              ),
-            }
-          : {
-              submissionId: item.submissionId,
-              score: plainParsed,
-              feedback,
-            },
-      );
-      if (!result.success) {
-        setError(result.error);
-        setSubmitting(false);
-        return;
-      }
-      // Keep position; refresh so status/score update in the queue + header.
-      router.refresh();
-      setSubmitting(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-      setSubmitting(false);
+    const result = await resolveRuntimeInstructorReview(
+      submission.submissionId,
+      {
+        schemaVersion: 1,
+        items: itemRows.map((row) => ({
+          itemId: row.itemId,
+          score: row.scoreUnits!,
+          feedback: resolutions[row.itemId]?.feedback.trim() || null,
+        })),
+        feedback: overallFeedback.trim() || null,
+        overrideReason: overrideReason.trim() || null,
+      },
+      createIdempotencyKey(),
+    );
+    setSubmitting(false);
+    if (!result.success) {
+      setError(result.error);
+      return;
     }
+    setSubmission(result.data);
+    router.refresh();
+  }
+
+  async function releaseResult() {
+    if (!submission || !submission.execution.activeRoundId) return;
+    setSubmitting(true);
+    setError(null);
+    const result = await releaseRuntimeSubmission(
+      {
+        submissionId: submission.submissionId,
+        version: submission.version,
+        expectedRoundId: submission.execution.activeRoundId,
+      },
+      'Released by instructor from SpeedGrader.',
+      createIdempotencyKey(),
+    );
+    setSubmitting(false);
+    if (!result.success) {
+      setError(result.error);
+      return;
+    }
+    const refreshed = await getRuntimeSubmission(submission.submissionId);
+    if (refreshed.success) setSubmission(refreshed.data);
+    router.refresh();
+  }
+
+  async function startRegrade() {
+    if (!submission || !regradeReason.trim()) return;
+    setSubmitting(true);
+    setError(null);
+    const result = await regradeRuntimeSubmission(
+      submission.submissionId,
+      regradeReason.trim(),
+      createIdempotencyKey(),
+    );
+    setSubmitting(false);
+    if (!result.success) {
+      setError(result.error);
+      return;
+    }
+    setSubmission(result.data);
+    setRegradeReason('');
+    router.refresh();
   }
 
   return (
     <div data-testid="grading-panel" className="h-full space-y-4 overflow-auto p-4">
-      {/* Attempt meta */}
       <div data-testid="attempt-meta" className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-        <span>attempt {item.attemptNumber ?? 1}{item.attemptCount ? ` of ${item.attemptCount}` : ''}</span>
-        {item.submittedAt && <span>· {dateFormatter.format(new Date(item.submittedAt))}</span>}
-        {item.isLate && (
-          <Badge data-testid="late-badge" variant="destructive">
-            Late
-          </Badge>
+        <span>
+          attempt {item.attemptNumber ?? 1}
+          {item.attemptCount ? ` of ${item.attemptCount}` : ''}
+        </span>
+        {item.submittedAt && (
+          <span>· {dateFormatter.format(new Date(item.submittedAt))}</span>
         )}
-        {item.status && <Badge variant="outline">{item.status}</Badge>}
-        {item.assignmentScore != null && (
-          <Badge data-testid="assignment-score-badge" variant="secondary">
-            Assignment: {item.assignmentScore}/{maxScore}
-          </Badge>
+        {item.isLate && <Badge variant="destructive">Late</Badge>}
+        {submission?.execution.requiresInstructorReview && (
+          <Badge variant="secondary">Instructor review</Badge>
         )}
-        {item.assignmentPassed != null && (
-          <Badge data-testid="assignment-passed-badge" variant={item.assignmentPassed ? 'default' : 'destructive'}>
-            {item.assignmentPassed ? 'Passed' : 'Not passed'}
-          </Badge>
-        )}
+        {submission?.execution.released && <Badge>Released</Badge>}
       </div>
 
-      {/* Group banner */}
       {item.isGroup && (item.memberNames?.length ?? 0) > 0 && (
         <div data-testid="group-banner" className="rounded-md border bg-muted/40 p-3">
-          <p className="text-sm font-medium">Grade applies to {item.memberNames?.length} members</p>
+          <p className="text-sm font-medium">
+            One result applies to {item.memberNames?.length} frozen participants
+          </p>
           <div data-testid="group-members" className="mt-2 flex flex-wrap gap-1">
             {item.memberNames?.map((name) => (
-              <Badge key={name} variant="secondary">
-                {name}
-              </Badge>
+              <Badge key={name} variant="secondary">{name}</Badge>
             ))}
           </div>
         </div>
       )}
 
-      {/* Score area */}
-      {rubricMode ? (
-        <div data-testid="rubric-grid" className="space-y-3">
-          {rows.map((row) => (
-            <div key={row.id} data-testid={`criterion-row-${row.id}`} className="space-y-2 rounded-md border p-3">
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-sm font-medium">{row.criterion.description || 'Criterion'}</p>
-                <span className="whitespace-nowrap text-xs text-muted-foreground">
-                  0..{row.cap} · / {row.cap}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
+      {loading && <p className="text-sm text-muted-foreground">Loading grading round...</p>}
+
+      {!loading && submission && (
+        <>
+          <section className="space-y-3" aria-label="Item scores">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-sm font-semibold">Item scores</h2>
+              <span className="text-xs text-muted-foreground">
+                Total is calculated by the server
+              </span>
+            </div>
+            {itemRows.map((row) => (
+              <div key={row.itemId} className="space-y-2 rounded-md border p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium">{row.label}</p>
+                    <p className="text-xs text-muted-foreground">{row.itemId}</p>
+                  </div>
+                  {row.prior && <ResultStateBadge result={row.prior} />}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Input
+                    data-testid={`item-score-${row.itemId}`}
+                    aria-label={`Score for ${row.label}`}
+                    type="number"
+                    min={0}
+                    max={row.maxPoints}
+                    step="0.01"
+                    value={row.raw}
+                    disabled={!submission.execution.requiresInstructorReview || submitting}
+                    onChange={(event) =>
+                      setResolutions((current) => ({
+                        ...current,
+                        [row.itemId]: {
+                          ...(current[row.itemId] ?? { feedback: '' }),
+                          points: event.target.value,
+                        },
+                      }))
+                    }
+                    className="w-28"
+                  />
+                  <span className="text-sm text-muted-foreground">/ {row.maxPoints}</span>
+                </div>
+                {row.raw && !row.valid && (
+                  <p role="alert" className="text-xs text-destructive">
+                    Enter a value from 0 to {row.maxPoints}.
+                  </p>
+                )}
                 <Input
-                  data-testid={`criterion-points-${row.id}`}
-                  type="number"
-                  min={0}
-                  max={row.cap}
-                  value={row.raw}
-                  onChange={(e) =>
-                    setCriterionState((prev) => ({
-                      ...prev,
-                      [row.id]: {
-                        ...(prev[row.id] ?? { points: '', comment: '' }),
-                        points: e.target.value,
+                  value={resolutions[row.itemId]?.feedback ?? ''}
+                  disabled={!submission.execution.requiresInstructorReview || submitting}
+                  onChange={(event) =>
+                    setResolutions((current) => ({
+                      ...current,
+                      [row.itemId]: {
+                        ...(current[row.itemId] ?? { points: '' }),
+                        feedback: event.target.value,
                       },
                     }))
                   }
-                  className="w-24"
-                  aria-label={`Points for ${row.criterion.description ?? row.id}`}
+                  placeholder="Item feedback"
                 />
-                {row.filled && !row.inRange && (
-                  <p data-testid={`criterion-error-${row.id}`} className="text-xs text-destructive" role="alert">
-                    Enter 0 to {row.cap}
-                  </p>
-                )}
               </div>
+            ))}
+          </section>
+
+          <div className="space-y-2">
+            <label htmlFor="overall-feedback" className="text-sm font-medium">Overall feedback</label>
+            <Textarea
+              id="overall-feedback"
+              value={overallFeedback}
+              disabled={!submission.execution.requiresInstructorReview || submitting}
+              onChange={(event) => setOverallFeedback(event.target.value)}
+              rows={3}
+            />
+          </div>
+
+          {submission.execution.requiresInstructorReview && (
+            <div className="space-y-2">
+              <label htmlFor="override-reason" className="text-sm font-medium">Override reason</label>
               <Input
-                data-testid={`criterion-comment-${row.id}`}
-                value={criterionState[row.id]?.comment ?? ''}
-                onChange={(e) =>
-                  setCriterionState((prev) => ({
-                    ...prev,
-                    [row.id]: {
-                      ...(prev[row.id] ?? { points: '', comment: '' }),
-                      comment: e.target.value,
-                    },
-                  }))
-                }
-                placeholder="Comment (optional)"
-                className="text-sm"
+                id="override-reason"
+                value={overrideReason}
+                onChange={(event) => setOverrideReason(event.target.value)}
+                placeholder="Required when policy demands an override reason"
               />
             </div>
-          ))}
-          <div className="flex items-center justify-between rounded-md bg-muted/40 p-3">
-            <span className="text-sm text-muted-foreground">Total</span>
-            <span data-testid="rubric-total" className={`text-sm font-semibold tabular-nums ${totalAboveMax ? 'text-destructive' : ''}`}>
-              {total}
-            </span>
-          </div>
-          {totalAboveMax && (
-            <p className="text-xs text-destructive" role="alert">
-              Total exceeds the assessment max score ({maxScore}).
-            </p>
           )}
-          <p data-testid="derived-score" className="text-sm font-medium text-muted-foreground">
-            Score: {total} / {maxScore} (auto-derived from rubric)
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          <label htmlFor="plain-score" className="text-sm font-medium">
-            Score
-          </label>
-          <Input
-            id="plain-score"
-            data-testid="plain-score-input"
-            type="number"
-            min={0}
-            max={maxScore}
-            value={plainScore}
-            onChange={(e) => setPlainScore(e.target.value)}
-            className="w-28"
-          />
-          <span className="text-sm text-muted-foreground">out of {maxScore}</span>
-          {plainScore.trim() !== '' && !plainInRange && (
-            <p data-testid="plain-score-error" className="text-xs text-destructive" role="alert">
-              Enter 0 to {maxScore}
-            </p>
-          )}
-        </div>
-      )}
 
-      {/* Overall comment */}
-      <div className="space-y-2">
-        <label htmlFor="overall-comment" className="text-sm font-medium">
-          Overall comment
-        </label>
-        <Textarea
-          id="overall-comment"
-          data-testid="overall-comment"
-          rows={4}
-          value={overallComment}
-          onChange={(e) => setOverallComment(e.target.value)}
-          placeholder="Overall feedback for the student"
-        />
-      </div>
+          {finalResult && (
+            <div className="rounded-md border bg-muted/40 p-3 text-sm">
+              Final result: {scoreUnitsToPoints(finalResult.score ?? 0)} /{' '}
+              {scoreUnitsToPoints(finalResult.maxScore)}
+            </div>
+          )}
+
+          <div className="flex flex-wrap gap-2">
+            {submission.execution.requiresInstructorReview && (
+              <Button
+                type="button"
+                data-testid="resolve-instructor-review"
+                onClick={() => void submitReview()}
+                disabled={!canResolve}
+              >
+                Finalize review
+              </Button>
+            )}
+            {canRelease && (
+              <Button
+                type="button"
+                variant="outline"
+                data-testid="release-result"
+                onClick={() => void releaseResult()}
+                disabled={submitting}
+              >
+                Release result
+              </Button>
+            )}
+          </div>
+
+          {finalResult && (
+            <div className="space-y-2 border-t pt-4">
+              <label htmlFor="regrade-reason" className="text-sm font-medium">Regrade</label>
+              <div className="flex gap-2">
+                <Input
+                  id="regrade-reason"
+                  value={regradeReason}
+                  onChange={(event) => setRegradeReason(event.target.value)}
+                  placeholder="Reason for opening a new round"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => void startRegrade()}
+                  disabled={submitting || !regradeReason.trim()}
+                >
+                  Start regrade
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {submission.execution.history.length > 0 && (
+            <section className="space-y-2 border-t pt-4">
+              <h2 className="text-sm font-semibold">Round history</h2>
+              {submission.execution.history.map((round) => (
+                <div key={round.roundId} className="flex items-center justify-between gap-2 text-sm">
+                  <span>Round {round.roundNumber}: {round.reason}</span>
+                  <Badge variant="outline">
+                    {round.status}{round.released ? ' · released' : ''}
+                  </Badge>
+                </div>
+              ))}
+            </section>
+          )}
+        </>
+      )}
 
       {error && (
         <div role="alert" className="rounded-md border border-destructive bg-destructive/10 p-3 text-sm text-destructive">
@@ -329,31 +419,38 @@ export function GradingPanel({ item, assessment, computedScore }: GradingPanelPr
         </div>
       )}
 
-      <Button type="button" onClick={handleSubmit} disabled={!canSubmit} data-testid="submit-grade">
-        Submit grade
-      </Button>
-
-      {/* Peer reviews (instructor-named; todo 8d endpoint) */}
-      {peerReviewEnabled && (
-        <section data-testid="peer-reviews" className="space-y-2 border-t pt-4">
-          <h2 className="text-sm font-semibold">Peer reviews</h2>
-          {reviews === null && <p className="text-sm text-muted-foreground">Loading peer reviews…</p>}
-          {reviews?.length === 0 && <p className="text-sm text-muted-foreground">No peer reviews submitted yet.</p>}
-          {reviews?.map((review) => (
-            <div key={review.reviewId} data-testid={`peer-review-${review.reviewId}`} className="space-y-1 rounded-md border p-3">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-sm font-medium">{review.reviewerName ?? 'Unknown reviewer'}</span>
-                {review.score != null && (
-                  <Badge variant="secondary">
-                    {review.score}/{maxScore}
-                  </Badge>
-                )}
-              </div>
-              {review.feedback && <p className="text-sm text-muted-foreground">{review.feedback}</p>}
-            </div>
-          ))}
-        </section>
+      {!loading && !submission && !error && (
+        <p className="text-sm text-muted-foreground">
+          No runtime grading execution is available for {assessment.title ?? 'this assessment'}.
+        </p>
       )}
     </div>
   );
+}
+
+function readItemLabel(
+  submission: AssessmentSubmissionRuntimeViewV1 | null,
+  itemId: string,
+): string {
+  const payload = submission?.execution.delivery.items[itemId]?.learnerPayload;
+  if (isRecord(payload) && isRecord(payload.entry) && typeof payload.entry.stem === 'string') {
+    return payload.entry.stem;
+  }
+  return `Item ${itemId}`;
+}
+
+function ResultStateBadge({ result }: { result: GradeItemResultV1 }) {
+  return (
+    <Badge variant={result.state === 'graded' ? 'secondary' : 'outline'}>
+      {result.state}
+    </Badge>
+  );
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function createIdempotencyKey(): string {
+  return globalThis.crypto?.randomUUID?.() ?? `grading-${Date.now()}-${Math.random()}`;
 }

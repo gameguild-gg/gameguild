@@ -36,17 +36,17 @@ public sealed class ProgramUserCoverageTests
         {
             ReceivedGrades =
             [
-                new ActivityGrade { Points = 70m },
+                new ActivityGrade { Points = Score(70), MaxPoints = Score(100) },
                 new ActivityGrade { Points = null },
-                new ActivityGrade { Points = 90m }
+                new ActivityGrade { Points = Score(90), MaxPoints = Score(100) }
             ]
         };
 
-        enrollment.AverageGrade.Should().Be(80m);
-        enrollment.CalculateFinalGrade().Should().Be(80m);
+        enrollment.AverageGrade.Should().Be(Percent(80));
+        enrollment.CalculateFinalGrade().Should().Be(Percent(80));
         enrollment.Complete();
 
-        enrollment.FinalGrade.Should().Be(80m);
+        enrollment.FinalGrade.Should().Be(Percent(80));
         enrollment.IsCompleted.Should().BeTrue();
         enrollment.IsInProgress.Should().BeFalse();
     }
@@ -69,18 +69,18 @@ public sealed class ProgramUserCoverageTests
     {
         var enrollment = new ProgramUser
         {
-            CompletionPercentage = 75m,
+            CompletionPercentage = Percent(75),
             Program = new Program { ProgramContents = [new ProgramContent { IsRequired = false }] }
         };
 
         enrollment.UpdateCompletionPercentage();
 
-        enrollment.CompletionPercentage.Should().Be(0m);
+        enrollment.CompletionPercentage.Should().Be(PercentValue.Zero);
 
         enrollment.Program.ProgramContents = null!;
-        enrollment.CompletionPercentage = 50m;
+        enrollment.CompletionPercentage = Percent(50);
         enrollment.UpdateCompletionPercentage();
-        enrollment.CompletionPercentage.Should().Be(0m);
+        enrollment.CompletionPercentage.Should().Be(PercentValue.Zero);
     }
 
     [Fact]
@@ -99,7 +99,7 @@ public sealed class ProgramUserCoverageTests
 
         enrollment.UpdateCompletionPercentage();
 
-        enrollment.CompletionPercentage.Should().Be(50m);
+        enrollment.CompletionPercentage.Should().Be(Percent(50));
         enrollment.CompletedAt.Should().BeNull();
         enrollment.UpdatedAt.Should().NotBe(default);
     }
@@ -118,7 +118,7 @@ public sealed class ProgramUserCoverageTests
         var completedAt = enrollment.CompletedAt;
         enrollment.UpdateCompletionPercentage();
 
-        enrollment.CompletionPercentage.Should().Be(100m);
+        enrollment.CompletionPercentage.Should().Be(PercentValue.Hundred);
         enrollment.CompletedAt.Should().Be(completedAt);
     }
 

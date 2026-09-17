@@ -9,20 +9,29 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   createEmptyQuizAnswer,
   evaluateQuizAnswer,
-  toStructuredGradingAnswer,
   type QuizAnswer,
   type QuizLearnerEntry,
   type QuizPracticeEntry,
 } from '@game-guild/quiz';
+import type { AssessmentSubmissionRuntimeViewV1 } from '@game-guild/grading';
+import {
+  createQuizAnswerEnvelope,
+  QUIZ_ASSESSMENT_TYPE_ADAPTER,
+  type QuizLearnerDeliveryItemV1,
+} from '@game-guild/grading-adapter-quiz';
+import { isQuizRuntimeContentDocument } from '@game-guild/quiz-content';
 import {
   QuizPlayer,
   QuizPracticePlayer,
   type QuizSubmissionResult,
 } from '@game-guild/quiz-surface/player';
-import { readContentGradingDefinition } from '@game-guild/grading';
 import { submitActivity } from '@/lib/courses/server-actions';
+import {
+  startContentRuntimeSubmission,
+  submitRuntimeSubmission,
+} from '@/lib/learning/grading-runtime-actions';
 import { Clock, Code, FileText, MessageSquare, Play, Save, Send, Upload } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 interface ContentItem {
   id: string;
@@ -59,22 +68,46 @@ type QuizActivityContent =
       serverGraded: false;
     };
 
-interface QuizStorage {
-  order: unknown[];
-  blocks: Record<string, unknown>;
-}
-
 export function ActivityComponent({ item, courseId, onComplete }: ActivityComponentProps) {
   const [hasStarted, setHasStarted] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [runtimeError, setRuntimeError] = useState<string | null>(null);
+  const [runtimeSubmission, setRuntimeSubmission] = useState<
+    AssessmentSubmissionRuntimeViewV1<QuizLearnerDeliveryItemV1> | null
+  >(null);
   const [submission, setSubmission] = useState<Record<string, unknown>>({});
   const [currentStep, setCurrentStep] = useState(0);
   const [quizAnswers, setQuizAnswers] = useState<Record<string, QuizAnswer>>({});
   const [quizSubmissionResults, setQuizSubmissionResults] = useState<
     Record<string, QuizSubmissionResult>
   >({});
+  const startIdempotencyKey = useRef(createIdempotencyKey());
+  const submitCommand = useRef<{ payload: string; key: string } | null>(null);
 
-  const handleStart = () => {
+  const handleStart = async () => {
+    const authoredQuiz = item.type === 'quiz' ? getAuthoredQuizContent() : null;
+    if (!authoredQuiz?.serverGraded) {
+      setHasStarted(true);
+      return;
+    }
+
+    setIsStarting(true);
+    setRuntimeError(null);
+    const result = await startContentRuntimeSubmission(
+      item.id,
+      startIdempotencyKey.current,
+    );
+    setIsStarting(false);
+    if (!result.success) {
+      setRuntimeError(result.error);
+      return;
+    }
+
+    setRuntimeSubmission(
+      result.data as AssessmentSubmissionRuntimeViewV1<QuizLearnerDeliveryItemV1>,
+    );
+    if (result.data.contentCompleted) onComplete();
     setHasStarted(true);
   };
 
@@ -83,22 +116,66 @@ export function ActivityComponent({ item, courseId, onComplete }: ActivityCompon
 
     try {
       const quiz = item.type === 'quiz' ? getQuizContent() : null;
+      const quizResponse = quiz
+        ? createQuizAnswerEnvelope(Object.fromEntries(
+            quiz.questions.map((question) => {
+              const answer =
+                quizAnswers[question.id] ??
+                createEmptyQuizAnswer(question.data.type);
+              return [question.id, answer];
+            }),
+          ))
+        : null;
+
+      if (quiz?.serverGraded) {
+        if (!runtimeSubmission || !quizResponse) {
+          setRuntimeError('The official quiz attempt is not available.');
+          return;
+        }
+        if (runtimeSubmission.status !== 'inProgress') {
+          setRuntimeError('This attempt has already been submitted.');
+          return;
+        }
+
+        const canonicalResponse = JSON.stringify(quizResponse);
+        if (submitCommand.current?.payload !== canonicalResponse) {
+          submitCommand.current = {
+            payload: canonicalResponse,
+            key: createIdempotencyKey(),
+          };
+        }
+        const result = await submitRuntimeSubmission(
+          runtimeSubmission.submissionId,
+          quizResponse,
+          submitCommand.current.key,
+        );
+        if (!result.success) {
+          setRuntimeError(result.error);
+          return;
+        }
+
+        const nextSubmission =
+          result.data as AssessmentSubmissionRuntimeViewV1<QuizLearnerDeliveryItemV1>;
+        setRuntimeSubmission(nextSubmission);
+        setRuntimeError(null);
+        setQuizSubmissionResults(buildQuizSubmissionResults(nextSubmission, quiz));
+        if (nextSubmission.contentCompleted) {
+          const visible = nextSubmission.execution.learnerVisibleResult;
+          const score =
+            visible?.score != null && visible.maxScore > 0
+              ? Math.round((visible.score / visible.maxScore) * 100)
+              : undefined;
+          onComplete(score);
+        }
+        submitCommand.current = null;
+        return;
+      }
+
       const submissionData = {
         activityId: item.id,
         courseId,
         activityType: item.activityType || 'text',
-        content: quiz
-          ? {
-              answers: Object.fromEntries(
-                quiz.questions.map((question) => {
-                  const answer =
-                    quizAnswers[question.id] ??
-                    createEmptyQuizAnswer(question.data.type);
-                  return [question.id, toStructuredGradingAnswer(answer)];
-                }),
-              ),
-            }
-          : submission,
+        content: quizResponse ?? submission,
         isGraded:
           item.type === 'quiz'
             ? quiz?.serverGraded ?? false
@@ -127,7 +204,7 @@ export function ActivityComponent({ item, courseId, onComplete }: ActivityCompon
   ): number => {
     const totals = quiz.questions.reduce(
       (current, question) => {
-        const points = question.data.points ?? 1;
+        const points = Number(question.data.points ?? "00000001.0000");
         const answer =
           quizAnswers[question.id] ??
           createEmptyQuizAnswer(question.data.type);
@@ -146,13 +223,13 @@ export function ActivityComponent({ item, courseId, onComplete }: ActivityCompon
       : 0;
   };
 
-  const getQuizContent = (): QuizActivityContent => {
-    const content = item.content;
-    if (!isBlockStorage(content)) {
+  const getAuthoredQuizContent = (): QuizActivityContent => {
+    const runtime = item.content;
+    if (!isQuizRuntimeContentDocument(runtime)) {
       return { questions: [], serverGraded: false };
     }
 
-    const grading = readContentGradingDefinition(content);
+    const content = runtime.document;
     const rawQuestions = content.order.flatMap((entry) => {
       if (
         !Array.isArray(entry) ||
@@ -168,7 +245,7 @@ export function ActivityComponent({ item, courseId, onComplete }: ActivityCompon
       return [{ id: entry[0], data }];
     });
 
-    return grading?.enabled
+    return runtime.mode === 'server-graded'
       ? {
           questions: rawQuestions as Array<
             QuizActivityQuestion<QuizLearnerEntry>
@@ -181,6 +258,28 @@ export function ActivityComponent({ item, courseId, onComplete }: ActivityCompon
           >,
           serverGraded: false,
         };
+  };
+
+  const getQuizContent = (): QuizActivityContent => {
+    if (!runtimeSubmission) return getAuthoredQuizContent();
+
+    const { delivery } = runtimeSubmission.execution;
+    const questions = delivery.itemOrder.map((itemId) => {
+      const itemDelivery = delivery.items[itemId];
+      if (
+        !itemDelivery ||
+        itemDelivery.adapterKey !== QUIZ_ASSESSMENT_TYPE_ADAPTER.key ||
+        itemDelivery.adapterVersion !== QUIZ_ASSESSMENT_TYPE_ADAPTER.version
+      ) {
+        throw new Error(`Unsupported quiz delivery for item ${itemId}.`);
+      }
+      const payload = itemDelivery.learnerPayload;
+      if (payload.itemId !== itemId) {
+        throw new Error(`Quiz delivery item ${itemId} has a mismatched payload.`);
+      }
+      return { id: itemId, data: payload.entry };
+    });
+    return { questions, serverGraded: true };
   };
 
   const getActivityIcon = () => {
@@ -227,11 +326,18 @@ export function ActivityComponent({ item, courseId, onComplete }: ActivityCompon
 
     return (
       <div className="space-y-6">
+        {runtimeError && (
+          <div role="alert" className="rounded-md border border-destructive bg-destructive/10 p-3 text-sm text-destructive">
+            {runtimeError}
+          </div>
+        )}
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">
             Question {currentStep + 1} of {quiz.questions.length}
           </h3>
-          <Badge variant="outline">{currentQuestion.data.points ?? 1} points</Badge>
+          <Badge variant="outline">
+            {Number(currentQuestion.data.points ?? "00000001.0000")} points
+          </Badge>
         </div>
 
         <Card>
@@ -271,7 +377,11 @@ export function ActivityComponent({ item, courseId, onComplete }: ActivityCompon
           </Button>
 
           {isLastQuestion ? (
-            <Button onClick={handleSubmit} disabled={isSubmitting} className="bg-green-600 hover:bg-green-700">
+            <Button
+              onClick={handleSubmit}
+              disabled={isSubmitting || (quiz.serverGraded && runtimeSubmission?.status !== 'inProgress')}
+              className="bg-green-600 hover:bg-green-700"
+            >
               {isSubmitting ? 'Submitting...' : 'Submit Quiz'}
             </Button>
           ) : (
@@ -435,8 +545,17 @@ export function ActivityComponent({ item, courseId, onComplete }: ActivityCompon
             </Badge>
           )}
         </div>
-        <Button onClick={handleStart} className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-0 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition-all">
-          Start Activity
+        {runtimeError && (
+          <p role="alert" className="mb-4 text-sm text-destructive">
+            {runtimeError}
+          </p>
+        )}
+        <Button
+          onClick={() => void handleStart()}
+          disabled={isStarting}
+          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-0 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition-all"
+        >
+          {isStarting ? 'Starting...' : 'Start Activity'}
         </Button>
       </div>
     );
@@ -457,14 +576,43 @@ export function ActivityComponent({ item, courseId, onComplete }: ActivityCompon
   );
 }
 
-function isBlockStorage(value: unknown): value is QuizStorage {
-  if (!value || typeof value !== 'object') return false;
+function createIdempotencyKey(): string {
+  return globalThis.crypto?.randomUUID?.() ?? `grading-${Date.now()}-${Math.random()}`;
+}
 
-  const candidate = value as { order?: unknown; blocks?: unknown };
-  return (
-    Array.isArray(candidate.order) &&
-    Boolean(candidate.blocks) &&
-    typeof candidate.blocks === 'object' &&
-    !Array.isArray(candidate.blocks)
+function buildQuizSubmissionResults(
+  submission: AssessmentSubmissionRuntimeViewV1<QuizLearnerDeliveryItemV1>,
+  quiz: Extract<QuizActivityContent, { serverGraded: true }>,
+): Record<string, QuizSubmissionResult> {
+  const visible = submission.execution.learnerVisibleResult;
+  if (!visible) {
+    return Object.fromEntries(
+      quiz.questions.map((question) => [
+        question.id,
+        {
+          status: 'pending' as const,
+          feedback: submission.execution.requiresInstructorReview
+            ? 'Submitted for instructor review.'
+            : 'Submitted. The result has not been released yet.',
+        },
+      ]),
+    );
+  }
+
+  const byId = new Map(visible.items.map((item) => [item.itemId, item]));
+  return Object.fromEntries(
+    quiz.questions.map((question) => {
+      const item = byId.get(question.id);
+      if (!item || item.score == null) {
+        return [question.id, { status: 'pending' as const, feedback: item?.feedback }];
+      }
+      return [
+        question.id,
+        {
+          status: item.score === item.maxScore ? ('correct' as const) : ('incorrect' as const),
+          feedback: item.feedback,
+        },
+      ];
+    }),
   );
 }
