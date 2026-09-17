@@ -2,6 +2,11 @@
   "hash": "2a57f211059ce322a4e344cb0533e3e6d65fc40994348a6464ae3f869943333a",
   "apiVersion": "4.3.0",
   "source": "gameguild-openapi",
+<<<<<<< Updated upstream
   "generatedAt": "2026-09-17T01:07:42.662Z",
   "generatedBy": "miguel"
+=======
+  "generatedAt": "2026-09-16T23:49:38.357Z",
+  "generatedBy": "MatheusMartins"
+>>>>>>> Stashed changes
 }
