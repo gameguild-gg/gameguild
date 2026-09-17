@@ -1,8 +1,10 @@
 using FluentAssertions;
 using GameGuild.Learning.Courses;
+using GameGuild.Learning.Grading.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System.Data.Common;
 
 namespace GameGuild.API.UnitTests.Database;
@@ -358,6 +360,16 @@ public sealed class SurveyResponsePostgreSqlConcurrencyTests
             modelBuilder.Entity<ProgramUser>(entity =>
             {
                 entity.ToTable("program_users");
+                entity.Property(enrollment => enrollment.CompletionPercentage)
+                    .HasConversion(
+                        value => value.Units,
+                        value => PercentValue.FromUnits(value))
+                    .HasColumnType("integer");
+                entity.Property(enrollment => enrollment.FinalGrade)
+                    .HasConversion(new ValueConverter<PercentValue?, int?>(
+                        value => value.HasValue ? value.Value.Units : null,
+                        value => value.HasValue ? PercentValue.FromUnits(value.Value) : null))
+                    .HasColumnType("integer");
                 entity.Ignore(enrollment => enrollment.User);
                 entity.Ignore(enrollment => enrollment.Program);
                 entity.Ignore(enrollment => enrollment.ContentInteractions);
@@ -368,6 +380,16 @@ public sealed class SurveyResponsePostgreSqlConcurrencyTests
             modelBuilder.Entity<ContentInteraction>(entity =>
             {
                 entity.ToTable("content_interactions");
+                entity.Property(interaction => interaction.ProgressPercentage)
+                    .HasConversion(new ValueConverter<PercentValue?, int?>(
+                        value => value.HasValue ? value.Value.Units : null,
+                        value => value.HasValue ? PercentValue.FromUnits(value.Value) : null))
+                    .HasColumnType("integer");
+                entity.Property(interaction => interaction.BestScore)
+                    .HasConversion(new ValueConverter<ScoreValue?, int?>(
+                        value => value.HasValue ? value.Value.Units : null,
+                        value => value.HasValue ? ScoreValue.FromUnits(value.Value) : null))
+                    .HasColumnType("integer");
                 entity.Ignore(interaction => interaction.User);
                 entity.Ignore(interaction => interaction.ProgramUser);
                 entity.Ignore(interaction => interaction.ActivityGrades);

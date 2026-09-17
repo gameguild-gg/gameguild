@@ -1,5 +1,6 @@
 using System.Reflection;
 using FluentAssertions;
+using GameGuild.API.Setup;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
