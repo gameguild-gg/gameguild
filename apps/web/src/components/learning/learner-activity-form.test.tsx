@@ -171,6 +171,30 @@ describe("LearnerActivityForm", () => {
     ).toBeEnabled();
   });
 
+  it("keeps quiz attempts out of the generic assessment form", () => {
+    render(
+      <LearnerActivityForm
+        courseId="course-1"
+        courseSlug="game-production"
+        enrollmentId="enrollment-1"
+        activity={{
+          kind: "assessment",
+          assessment: {
+            id: "quiz-1",
+            title: "Knowledge check",
+            type: "Quiz",
+            submissionModalities: "StructuredAnswer",
+          },
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Quiz attempt unavailable")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Submit assessment" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("directs project assessments without projects to the configured projects URL", () => {
     vi.stubEnv("NEXT_PUBLIC_WEB_URL", "https://gameguild.example");
     renderActivity(
@@ -258,33 +282,16 @@ describe("LearnerActivityForm", () => {
     expect(response).toHaveClass("font-mono");
   });
 
-  it("renders quiz and default assessment labels", () => {
-    const { rerender } = render(
-      <LearnerActivityForm
-        {...formProps}
-        activity={assessmentActivity({
-          assessment: {
-            id: "quiz-1",
-            title: "Quiz",
-            type: "Quiz",
-          },
-        })}
-      />,
-    );
-    expect(screen.getByLabelText("Your answer")).toBeInTheDocument();
-
-    rerender(
-      <LearnerActivityForm
-        {...formProps}
-        activity={assessmentActivity({
-          assessment: {
-            id: "essay-1",
-            title: "Essay",
-            type: "Essay",
-            submissionModalities: "None",
-          },
-        })}
-      />,
+  it("renders the default assessment label", () => {
+    renderActivity(
+      assessmentActivity({
+        assessment: {
+          id: "essay-1",
+          title: "Essay",
+          type: "Essay",
+          submissionModalities: "None",
+        },
+      }),
     );
     expect(screen.getByLabelText("Your submission")).toBeInTheDocument();
   });
@@ -320,7 +327,7 @@ describe("LearnerActivityForm", () => {
       assessmentActivity({
         submission: {
           status: "Graded",
-          score: 92,
+          score: 9200,
           feedback: "Strong solution.",
         },
       }),

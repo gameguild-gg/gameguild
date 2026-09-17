@@ -18,7 +18,7 @@ public sealed class AssessmentInfrastructureCoverageTests
         await using var db = CreateContext();
         var contentId = Guid.NewGuid();
         var assessment = Assessment.Create(
-            Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100, contentId: contentId);
+            Guid.NewGuid(), "Quiz", AssessmentType.Quiz, Score(100), contentId: contentId);
         db.Add(assessment);
         await db.SaveChangesAsync();
         var sync = new AssessmentGradingSync(db);
@@ -26,7 +26,7 @@ public sealed class AssessmentInfrastructureCoverageTests
         await sync.SyncAsync(Guid.NewGuid(), 25);
         await sync.SyncAsync(contentId, 75);
 
-        assessment.MaxScore.Should().Be(75);
+        assessment.MaxScore.Should().Be(Score(75));
     }
 
     [Fact]
@@ -34,7 +34,7 @@ public sealed class AssessmentInfrastructureCoverageTests
     {
         await using var db = CreateContext();
         var contentId = Guid.NewGuid();
-        var assessment = Assessment.Create(Guid.NewGuid(), "Video quiz", AssessmentType.Quiz, 100);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Video quiz", AssessmentType.Quiz, Score(100));
         var cue = assessment.AddInteractiveVideoCue(contentId, "checkpoint");
         db.AddRange(assessment, cue);
         await db.SaveChangesAsync();
@@ -101,9 +101,9 @@ public sealed class AssessmentInfrastructureCoverageTests
     [Fact]
     public void ScoreFacts_FallBackToLegacyPassingPercentAndHandleEmptyAggregates()
     {
-        var assessment = Assessment.Create(Guid.NewGuid(), "Legacy", AssessmentType.Quiz, 100);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, Score(100));
         var submission = AssessmentSubmission.Start(assessment.Id, Guid.NewGuid(), Guid.NewGuid(), 1);
-        SetProperty(submission, nameof(AssessmentSubmission.Score), 60);
+        SetProperty<ScoreValue?>(submission, nameof(AssessmentSubmission.Score), Score(60));
         SetProperty<bool?>(submission, nameof(AssessmentSubmission.Passed), null);
 
         var buildFacts = typeof(AssessmentService)
@@ -116,8 +116,8 @@ public sealed class AssessmentInfrastructureCoverageTests
             .GetMethod("AveragePercent", BindingFlags.NonPublic | BindingFlags.Static)!;
         var passRate = typeof(AssessmentService)
             .GetMethod("PassRate", BindingFlags.NonPublic | BindingFlags.Static)!;
-        ((decimal)average.Invoke(null, [factList])!).Should().Be(0);
-        ((decimal)passRate.Invoke(null, [factList])!).Should().Be(0);
+        ((PercentValue)average.Invoke(null, [factList])!).Should().Be(PercentValue.Zero);
+        ((PercentValue)passRate.Invoke(null, [factList])!).Should().Be(PercentValue.Zero);
     }
 
     private static void SetProperty<T>(AssessmentSubmission submission, string name, T value) =>

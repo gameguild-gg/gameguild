@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -212,7 +213,7 @@ public sealed class CodingAssignmentEndpointsTests
             out var programMock, out var codingMock,
             hasManagementAccess: false);
         programMock.Setup(s => s.GetUserProgressDtoAsync(It.IsAny<Guid>(), It.IsAny<Guid>()))
-            .ReturnsAsync(new UserProgressDto(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 0m, null, DateTime.UtcNow, null, Enumerable.Empty<ContentProgressDto>()));
+            .ReturnsAsync(new UserProgressDto(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), PercentValue.Zero, null, DateTime.UtcNow, null, Enumerable.Empty<ContentProgressDto>()));
 
         var result = await controller.GetCodingAssignmentFull(Guid.NewGuid(), Guid.NewGuid());
 
@@ -282,10 +283,13 @@ public sealed class CodingAssignmentEndpointsTests
 
         var controller = new ProgramContentController(
             contentMock.Object,
-            programMock.Object,
-            codingMock.Object,
-            authorizationMock.Object,
-            Mock.Of<ISender>());
+             programMock.Object,
+             codingMock.Object,
+             authorizationMock.Object,
+             [],
+             [],
+            Mock.Of<ILogger<ProgramContentController>>(),
+             Mock.Of<ISender>());
 
         var userId = Guid.NewGuid();
         var identity = new ClaimsIdentity(new[]

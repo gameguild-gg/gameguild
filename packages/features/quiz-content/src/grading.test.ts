@@ -12,10 +12,12 @@ describe("quiz content grading", () => {
       items: [{ id: "question", entry: createTrueFalseEntry("Question") }],
     });
     const enabled = enableQuizContentGrading(document);
-    expect(enabled.grading?.items.question).toMatchObject({
-      contentBlockId: "question",
-      gradingKind: "deterministic",
+    expect(enabled.grading).toEqual({
+      schemaVersion: 2,
+      items: { question: {} },
     });
+    expect(enabled.grading?.items.question).not.toHaveProperty("points");
+    expect(enabled.grading?.items.question).not.toHaveProperty("gradingKind");
     expect(disableQuizContentGrading(enabled)).not.toHaveProperty("grading");
   });
 });

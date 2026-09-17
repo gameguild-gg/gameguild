@@ -1,10 +1,12 @@
+using GameGuild.Learning.Grading.Contracts;
+
 namespace GameGuild.Learning.Courses;
 
 public sealed record UserProgressDto(
   Guid EnrollmentId,
   Guid CourseId,
   Guid UserId,
-  decimal CompletionPercentage,
+  PercentValue CompletionPercentage,
   DateTime? LastAccessedAt,
   DateTime? StartedAt,
   DateTime? CompletedAt,
@@ -18,7 +20,7 @@ public sealed record UserProgressDto(
 
   public Guid UserId { get; init; } = UserId;
 
-  public decimal CompletionPercentage { get; init; } = CompletionPercentage;
+  public PercentValue CompletionPercentage { get; init; } = CompletionPercentage;
 
   public DateTime? LastAccessedAt { get; init; } = LastAccessedAt;
 

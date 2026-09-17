@@ -174,10 +174,10 @@ public sealed class ProgramContentCoverageTests
     public void GetCompletionPercentage_WhenInteractionsAreUnavailable_ReturnsZero()
     {
         var content = new ProgramContent { ContentInteractions = null! };
-        content.GetCompletionPercentage(Guid.NewGuid()).Should().Be(0m);
+        content.GetCompletionPercentage(Guid.NewGuid()).Should().Be(PercentValue.Zero);
 
         content.ContentInteractions = [];
-        content.GetCompletionPercentage(Guid.NewGuid()).Should().Be(0m);
+        content.GetCompletionPercentage(Guid.NewGuid()).Should().Be(PercentValue.Zero);
     }
 
     [Fact]
@@ -192,7 +192,7 @@ public sealed class ProgramContentCoverageTests
                 new ContentInteraction
                 {
                     UserId = userId,
-                    ProgressPercentage = 25m,
+                    ProgressPercentage = Percent(25),
                     UpdatedAt = SystemClock.UtcNow.AddMinutes(-2)
                 },
                 new ContentInteraction
@@ -201,11 +201,11 @@ public sealed class ProgramContentCoverageTests
                     ProgressPercentage = null,
                     UpdatedAt = SystemClock.UtcNow.AddMinutes(-1)
                 },
-                new ContentInteraction { UserId = Guid.NewGuid(), ProgressPercentage = 100m }
+                new ContentInteraction { UserId = Guid.NewGuid(), ProgressPercentage = Percent(100) }
             ]
         };
 
-        content.GetCompletionPercentage(userId).Should().Be(0m);
+        content.GetCompletionPercentage(userId).Should().Be(PercentValue.Zero);
 
         content.ContentInteractions.Add(new ContentInteraction
         {
@@ -213,7 +213,7 @@ public sealed class ProgramContentCoverageTests
             IsCompleted = true,
             UpdatedAt = SystemClock.UtcNow
         });
-        content.GetCompletionPercentage(userId).Should().Be(100m);
+        content.GetCompletionPercentage(userId).Should().Be(PercentValue.Hundred);
     }
 
     [Fact]
@@ -226,7 +226,7 @@ public sealed class ProgramContentCoverageTests
         };
         var halfDone = new ProgramContent
         {
-            ContentInteractions = [new ContentInteraction { UserId = userId, ProgressPercentage = 50m }]
+            ContentInteractions = [new ContentInteraction { UserId = userId, ProgressPercentage = Percent(50) }]
         };
         var parent = new ProgramContent
         {
@@ -234,7 +234,7 @@ public sealed class ProgramContentCoverageTests
             Children = [completed, halfDone]
         };
 
-        parent.GetCompletionPercentage(userId).Should().Be(75m);
+        parent.GetCompletionPercentage(userId).Should().Be(Percent(75));
     }
 
     [Fact]

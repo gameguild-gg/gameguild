@@ -130,14 +130,14 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/worksp
           return;
         }
 
-        setRecoveryHref(`/workspace/learning/courses/${courseRouteParam}`);
+        setRecoveryHref(`/workspace/learning/courses/${courseRouteParam}/overview`);
         setError(
           `${updateResult.error} The draft still exists as "${createResult.data.slug}" because cleanup failed: ${rollbackResult.error}`,
         );
         return;
       }
 
-      router.push(`/workspace/learning/courses/${courseRouteParam}`);
+      router.push(`/workspace/learning/courses/${courseRouteParam}/overview`);
     });
   }
 
@@ -219,7 +219,7 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/worksp
                   maxLength={2000}
                   rows={5}
                 />
-                <p className="text-muted-foreground text-xs">{description.length}/2000 characters</p>
+                <p className="text-muted-foreground text-xs">Minimum 10 characters. {description.length}/2000 characters</p>
               </div>
             </CardContent>
           </Card>

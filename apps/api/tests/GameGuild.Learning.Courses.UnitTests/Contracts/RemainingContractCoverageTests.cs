@@ -12,16 +12,16 @@ public sealed class RemainingContractCoverageTests
         decimal grade,
         bool isPassing)
     {
-        var withoutDetails = new ActivityGradeDto { Grade = grade };
+        var withoutDetails = new ActivityGradeDto { PercentageScore = Percent(grade) };
         var withDetails = new ActivityGradeDto
         {
-            Grade = grade,
+            PercentageScore = Percent(grade),
             Feedback = "Strong solution",
             GradingDetails = "All assertions passed",
         };
 
         Assert.Equal(isPassing, withoutDetails.IsPassingGrade);
-        Assert.Equal($"{grade:F1}%", withoutDetails.GradePercentage);
+        Assert.Equal($"{Percent(grade)}%", withoutDetails.GradePercentage);
         Assert.False(withoutDetails.HasFeedback);
         Assert.False(withoutDetails.HasGradingDetails);
         Assert.True(withDetails.HasFeedback);
@@ -51,12 +51,12 @@ public sealed class RemainingContractCoverageTests
         var dto = new GradeStatisticsDto
         {
             TotalGrades = totalGrades,
-            AverageGrade = 87.25m,
-            PassingRate = 76.75m,
+            AverageGrade = Percent(87.25m),
+            PassingRate = Percent(76.75m),
         };
 
-        Assert.Equal($"{dto.AverageGrade:F1}%", dto.AverageGradeFormatted);
-        Assert.Equal($"{dto.PassingRate:F1}%", dto.PassingRateFormatted);
+        Assert.Equal($"{dto.AverageGrade}%", dto.AverageGradeFormatted);
+        Assert.Equal($"{dto.PassingRate}%", dto.PassingRateFormatted);
         Assert.Equal(hasGrades, dto.HasGrades);
     }
 
@@ -88,7 +88,7 @@ public sealed class RemainingContractCoverageTests
             new CloneProgramDto("Copy", "Copied course"),
             new CompleteContentRequest(id, Guid.NewGuid()),
             new CompletionTrendDto(now, 4, 5, 80m),
-            new CreateActivityGradeDto(id, Guid.NewGuid(), 95m, "Excellent", "{}"),
+            new CreateActivityGradeDto(id, Guid.NewGuid(), Score(95), Score(100), "Excellent", "{}"),
             new CreateProductFromProgramDto("Course", "Description", 29.90m, "BRL"),
             new EngagementMetricsDto(id, 1, 2, 3, TimeSpan.FromMinutes(20), 4, 50m, new()),
             new ProgramSearchDto("game", ContentStatus.Published, ContentVisibility.Public, id, 5, 10),
@@ -101,8 +101,8 @@ public sealed class RemainingContractCoverageTests
             new SetVisibilityDto(ContentVisibility.Private),
             new StartContentRequest(id, Guid.NewGuid()),
             new SubmitContentRequest(id, Guid.NewGuid(), "submission"),
-            new UpdateActivityGradeDto(90m, "Updated", "{}"),
-            new UpdateProgressRequest(id, Guid.NewGuid(), 75m),
+            new UpdateActivityGradeDto(Score(90), null, "Updated", "{}"),
+            new UpdateProgressRequest(id, Guid.NewGuid(), Percent(75)),
             new UpdateTimeSpentRequest(id, Guid.NewGuid(), 5),
         ];
 
@@ -150,7 +150,7 @@ public sealed class RemainingContractCoverageTests
         var completedAt = DateTime.UtcNow;
         var timeSpent = TimeSpan.FromHours(4);
         var averageTime = TimeSpan.FromHours(8);
-        var progress = new ProgramUserProgress(programId, userId, 6, 10, 60m, timeSpent, completedAt, true, completedAt);
+        var progress = new ProgramUserProgress(programId, userId, 6, 10, Percent(60), timeSpent, completedAt, true, completedAt);
         var program = new ProgramStatistics(programId, 100, 80, 60, 4.5m, 50, 60m, averageTime);
         var global = new GlobalProgramStatistics(20, 15, 1_000, 750, 4.2m, 300, (ProgramCategory)1, (ProgramDifficulty)1);
         var creator = new CreatorProgramStatistics(creatorId, 8, 6, 500, 350, 4.7m, 200, 72m);
@@ -159,7 +159,7 @@ public sealed class RemainingContractCoverageTests
         Assert.Equal(userId, progress.UserId);
         Assert.Equal(6, progress.CompletedContent);
         Assert.Equal(10, progress.TotalContent);
-        Assert.Equal(60m, progress.ProgressPercentage);
+        Assert.Equal(Percent(60), progress.ProgressPercentage);
         Assert.Equal(timeSpent, progress.TimeSpent);
         Assert.Equal(completedAt, progress.LastActivityAt);
         Assert.True(progress.IsCompleted);
@@ -205,13 +205,13 @@ public sealed class RemainingContractCoverageTests
             prerequisiteCourseId,
             tenantId,
             PrerequisiteType.Required,
-            80,
+            Percent(80),
             "Complete foundations",
             2,
             "core");
         var update = new UpdatePrerequisiteRequest(
             PrerequisiteType.Recommended,
-            70,
+            Percent(70),
             "Recommended foundation",
             3,
             "recommended");
@@ -221,8 +221,8 @@ public sealed class RemainingContractCoverageTests
             "Foundations",
             PrerequisiteType.Required,
             true,
-            80,
-            95,
+            Percent(80),
+            Percent(95),
             "Satisfied");
         var result = new PrerequisiteCheckResult(true, [status]);
 
@@ -230,13 +230,13 @@ public sealed class RemainingContractCoverageTests
         Assert.Equal(prerequisiteCourseId, create.PrerequisiteCourseId);
         Assert.Equal(tenantId, create.TenantId);
         Assert.Equal(PrerequisiteType.Required, create.Type);
-        Assert.Equal(80, create.MinimumGrade);
+        Assert.Equal(Percent(80), create.MinimumGrade);
         Assert.Equal("Complete foundations", create.Description);
         Assert.Equal(2, create.DisplayOrder);
         Assert.Equal("core", create.PrerequisiteGroup);
 
         Assert.Equal(PrerequisiteType.Recommended, update.Type);
-        Assert.Equal(70, update.MinimumGrade);
+        Assert.Equal(Percent(70), update.MinimumGrade);
         Assert.Equal("Recommended foundation", update.Description);
         Assert.Equal(3, update.DisplayOrder);
         Assert.Equal("recommended", update.PrerequisiteGroup);
@@ -246,8 +246,8 @@ public sealed class RemainingContractCoverageTests
         Assert.Equal("Foundations", status.CourseName);
         Assert.Equal(PrerequisiteType.Required, status.Type);
         Assert.True(status.IsSatisfied);
-        Assert.Equal(80, status.RequiredGrade);
-        Assert.Equal(95, status.AchievedGrade);
+        Assert.Equal(Percent(80), status.RequiredGrade);
+        Assert.Equal(Percent(95), status.AchievedGrade);
         Assert.Equal("Satisfied", status.Reason);
         Assert.True(result.IsSatisfied);
         Assert.Same(status, Assert.Single(result.Prerequisites));

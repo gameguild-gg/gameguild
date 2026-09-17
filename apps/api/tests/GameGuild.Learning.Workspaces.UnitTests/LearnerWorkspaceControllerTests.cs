@@ -2,6 +2,7 @@ using FluentAssertions;
 using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Learning.Workspaces;
+using GameGuild.Learning.Grading.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -160,7 +161,7 @@ public sealed class LearnerWorkspaceControllerTests
             8,
             "Active",
             "InProgress",
-            10m,
+            PercentValue.FromPercentage("10"),
             null,
             DateTime.UtcNow,
             0,

@@ -1,9 +1,12 @@
 using GameGuild.CQRS;
 using GameGuild.Learning.Assessments;
+using GameGuild.Learning.Assessments.Grading.Persistence;
+using GameGuild.Learning.Assessments.Grading.Runtime;
 using GameGuild.Learning.Certificates;
 using GameGuild.Learning.Cohorts;
 using GameGuild.Learning.Courses;
 using GameGuild.Learning.Experience.Social;
+using GameGuild.Learning.Grading.Contracts;
 using Microsoft.EntityFrameworkCore;
 using LearningEnrollment = GameGuild.Learning.Enrollments.Enrollment;
 using Program = GameGuild.Learning.Courses.Program;
@@ -13,7 +16,9 @@ namespace GameGuild.Learning.Workspaces;
 public sealed record GetLearnerCourseWorkspaceQuery(Guid UserId, Guid CourseId)
     : IQuery<LearnerCourseWorkspaceDto?>;
 
-public sealed class GetLearnerCourseWorkspaceQueryHandler(IApplicationDbContext context)
+public sealed class GetLearnerCourseWorkspaceQueryHandler(
+    IApplicationDbContext context,
+    IAssessmentGradebookProjectionService gradebookProjection)
     : IQueryHandler<GetLearnerCourseWorkspaceQuery, LearnerCourseWorkspaceDto?>
 {
     public async Task<LearnerCourseWorkspaceDto?> Handle(
@@ -105,17 +110,48 @@ public sealed class GetLearnerCourseWorkspaceQueryHandler(IApplicationDbContext 
             .ToArrayAsync(cancellationToken)
             .ConfigureAwait(false);
         var assessmentIds = assessments.Select(item => item.Id).ToArray();
+        var participantSubmissionIds = await context.Set<AssessmentSubmissionParticipant>()
+            .AsNoTracking()
+            .Where(item => item.UserId == request.UserId)
+            .Select(item => item.SubmissionId)
+            .ToArrayAsync(cancellationToken)
+            .ConfigureAwait(false);
         var submissions = assessmentIds.Length == 0
             ? Array.Empty<AssessmentSubmission>()
             : await context.Set<AssessmentSubmission>()
                 .AsNoTracking()
                 .Where(item =>
-                    item.UserId == request.UserId &&
+                    (item.UserId == request.UserId || participantSubmissionIds.Contains(item.Id)) &&
                     assessmentIds.Contains(item.AssessmentId) &&
                     item.DeletedAt == null)
                 .OrderBy(item => item.AssessmentId)
                 .ThenByDescending(item => item.AttemptNumber)
                 .ToArrayAsync(cancellationToken)
+                .ConfigureAwait(false);
+        var runtimeSubmissionIds = submissions
+            .Where(item => item.DefinitionRevisionId.HasValue)
+            .Select(item => item.Id)
+            .ToArray();
+        var releasedResults = await new AssessmentLearnerResultProjectionService(context)
+            .GetLatestReleasedAsync(runtimeSubmissionIds, cancellationToken)
+            .ConfigureAwait(false);
+        var submissionIds = submissions.Select(item => item.Id).ToArray();
+        var gradingCompletions = submissionIds.Length == 0
+            ? []
+            : await context.Set<AssessmentContentCompletionProjection>()
+                .AsNoTracking()
+                .Where(item => submissionIds.Contains(item.SubmissionId))
+                .ToArrayAsync(cancellationToken)
+                .ConfigureAwait(false);
+        var gradingCompletedContentIds = gradingCompletions
+            .Select(item => item.ContentId)
+            .ToHashSet();
+        var participantEnrollmentIds = participantSubmissionIds.Length == 0
+            ? new Dictionary<Guid, Guid>()
+            : await context.Set<AssessmentSubmissionParticipant>()
+                .AsNoTracking()
+                .Where(item => item.UserId == request.UserId && participantSubmissionIds.Contains(item.SubmissionId))
+                .ToDictionaryAsync(item => item.SubmissionId, item => item.EnrollmentId, cancellationToken)
                 .ConfigureAwait(false);
         var discussions = await context.Set<CourseDiscussion>()
             .AsNoTracking()
@@ -135,17 +171,39 @@ public sealed class GetLearnerCourseWorkspaceQueryHandler(IApplicationDbContext 
             .ToArrayAsync(cancellationToken)
             .ConfigureAwait(false);
 
+        var gradebook = await gradebookProjection.GetCourseProjectionAsync(
+            request.CourseId,
+            learningEnrollment?.Id ?? enrollment.Id,
+            learnerView: true,
+            cancellationToken).ConfigureAwait(false);
+        var finalGrade = gradebook.LearnerVisible &&
+                         gradebook.Groups.Count > 0 &&
+                         gradebook.CoursePercentUnits is >= 0 and <= GameGuild.Learning.Grading.Contracts.PercentValue.MaximumUnits
+            ? GameGuild.Learning.Grading.Contracts.PercentValue.FromUnits(gradebook.CoursePercentUnits.Value)
+            : (GameGuild.Learning.Grading.Contracts.PercentValue?)null;
+
         return new LearnerCourseWorkspaceDto(
-            LearnerWorkspaceMapper.MapCourse(course, enrollment, content, progress),
+            LearnerWorkspaceMapper.MapCourse(
+                course,
+                enrollment,
+                content,
+                progress,
+                gradingCompletedContentIds,
+                finalGrade),
             content.Select(MapContent).ToArray(),
-            progress.Select(MapProgress).ToArray(),
+            MapProgress(progress, gradingCompletions, content),
             cohort is null ? null : MapCohort(cohort),
             cohort is null
                 ? []
                 : schedule.Select(item => LearnerWorkspaceMapper.MapSchedule(item, cohort, course)).ToArray(),
             groups.Select(MapGroup).ToArray(),
             assessments.Select(MapAssessment).ToArray(),
-            submissions.Select(LearnerWorkspaceMapper.MapSubmission).ToArray(),
+            submissions.Select(submission => LearnerWorkspaceMapper.MapSubmission(
+                submission,
+                submission.EnrollmentId ?? participantEnrollmentIds.GetValueOrDefault(
+                    submission.Id,
+                    learningEnrollment?.Id ?? enrollment.Id),
+                releasedResults.GetValueOrDefault(submission.Id))).ToArray(),
             discussions.Select(MapDiscussion).ToArray(),
             certificates.Select(LearnerWorkspaceMapper.MapCertificate).ToArray());
     }
@@ -180,6 +238,47 @@ public sealed class GetLearnerCourseWorkspaceQueryHandler(IApplicationDbContext 
             item.Score,
             item.MaxScore,
             item.Attempts);
+    }
+
+    private static IReadOnlyList<LearnerContentProgressDto> MapProgress(
+        IReadOnlyList<ContentProgress> progress,
+        IReadOnlyList<AssessmentContentCompletionProjection> gradingCompletions,
+        IReadOnlyList<ProgramContent> content)
+    {
+        var result = progress
+            .GroupBy(item => item.ContentId)
+            .ToDictionary(
+                group => group.Key,
+                group => MapProgress(group.OrderByDescending(item => item.UpdatedAt).First()));
+        foreach (var completion in gradingCompletions
+                     .GroupBy(item => item.ContentId)
+                     .Select(group => group.OrderByDescending(item => item.CompletedAt).First()))
+        {
+            result[completion.ContentId] = result.TryGetValue(completion.ContentId, out var existing)
+                ? existing with
+                {
+                    Status = ContentCompletionStatus.Completed.ToString(),
+                    ProgressPercentage = PercentValue.Hundred,
+                    LastAccessedAt = existing.LastAccessedAt ?? completion.CompletedAt,
+                    CompletedAt = completion.CompletedAt,
+                }
+                : new LearnerContentProgressDto(
+                    completion.ContentId,
+                    ContentCompletionStatus.Completed.ToString(),
+                    PercentValue.Hundred,
+                    null,
+                    completion.CompletedAt,
+                    completion.CompletedAt,
+                    0,
+                    null,
+                    null,
+                    1);
+        }
+
+        return content
+            .Where(item => result.ContainsKey(item.Id))
+            .Select(item => result[item.Id])
+            .ToArray();
     }
 
     private static LearnerCohortDto MapCohort(Cohort cohort)

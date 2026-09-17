@@ -1,17 +1,20 @@
 using GameGuild.CQRS;
+using GameGuild.Learning.Grading.Contracts;
 
 namespace GameGuild.Learning.Courses;
 
 public sealed record GradeActivityEndpointCommand(
     Guid ContentInteractionId,
     Guid GraderProgramUserId,
-    decimal Grade,
+    ScoreValue Points,
+    ScoreValue MaxPoints,
     string? Feedback,
     string? GradingDetails) : ICommand<ActivityGrade>;
 
 public sealed record UpdateActivityGradeEndpointCommand(
     Guid GradeId,
-    decimal? Grade,
+    ScoreValue? Points,
+    ScoreValue? MaxPoints,
     string? Feedback,
     string? GradingDetails) : ICommand<ActivityGrade?>;
 
@@ -26,14 +29,16 @@ public sealed class ActivityGradeEndpointCommandHandler(IActivityGradeService ac
         activityGradeService.GradeActivityAsync(
             request.ContentInteractionId,
             request.GraderProgramUserId,
-            request.Grade,
+            request.Points,
+            request.MaxPoints,
             request.Feedback,
             request.GradingDetails);
 
     public Task<ActivityGrade?> Handle(UpdateActivityGradeEndpointCommand request, CancellationToken cancellationToken) =>
         activityGradeService.UpdateGradeAsync(
             request.GradeId,
-            request.Grade,
+            request.Points,
+            request.MaxPoints,
             request.Feedback,
             request.GradingDetails);
 

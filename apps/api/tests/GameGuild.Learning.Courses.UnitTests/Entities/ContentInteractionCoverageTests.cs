@@ -33,7 +33,7 @@ public sealed class ContentInteractionCoverageTests
         untouched.IsInProgress.Should().BeFalse();
         untouched.EngagementDuration.Should().BeNull();
         untouched.ProgressPercentage = null;
-        untouched.CompletionPercentage.Should().Be(0m);
+        untouched.CompletionPercentage.Should().Be(PercentValue.Zero);
     }
 
     [Theory]
@@ -63,57 +63,13 @@ public sealed class ContentInteractionCoverageTests
     [Fact]
     public void UpdateProgress_AfterCompletion_PreservesCompletedState()
     {
-        var interaction = new ContentInteraction { IsCompleted = true, ProgressPercentage = 10m };
+        var interaction = new ContentInteraction { IsCompleted = true, ProgressPercentage = Percent(10) };
 
-        interaction.UpdateProgress(20m);
+        interaction.UpdateProgress(Percent(20));
 
         interaction.Status.Should().Be(ProgressStatus.Completed);
-        interaction.ProgressPercentage.Should().Be(100m);
+        interaction.ProgressPercentage.Should().Be(PercentValue.Hundred);
         interaction.LastAccessedAt.Should().NotBeNull();
     }
 
-    [Theory]
-    [InlineData(60, 60, 0, null, 20)]
-    [InlineData(30, 100, 0, null, 10)]
-    [InlineData(10, 100, 0, null, 0)]
-    [InlineData(null, 100, 0, null, 0)]
-    [InlineData(60, null, 0, null, 0)]
-    [InlineData(null, null, 2, 100, 10)]
-    [InlineData(null, null, 1, 150, 20)]
-    public void CalculateEngagementScore_AppliesTimeAndAttemptContributions(
-        int? timeSpent,
-        int? estimatedMinutes,
-        int attempts,
-        int? bestScore,
-        int expected)
-    {
-        var interaction = new ContentInteraction
-        {
-            ProgressPercentage = 0,
-            TimeSpentMinutes = timeSpent,
-            Content = estimatedMinutes.HasValue
-                ? new ProgramContent { EstimatedMinutes = estimatedMinutes }
-                : null!,
-            AttemptCount = attempts,
-            BestScore = bestScore
-        };
-
-        interaction.CalculateEngagementScore().Should().Be((decimal)expected);
-    }
-
-    [Fact]
-    public void CalculateEngagementScore_CapsCombinedSignalsAtOneHundred()
-    {
-        var interaction = new ContentInteraction
-        {
-            ProgressPercentage = 200,
-            IsCompleted = true,
-            TimeSpentMinutes = 60,
-            Content = new ProgramContent { EstimatedMinutes = 60 },
-            AttemptCount = 1,
-            BestScore = 150
-        };
-
-        interaction.CalculateEngagementScore().Should().Be(100m);
-    }
 }

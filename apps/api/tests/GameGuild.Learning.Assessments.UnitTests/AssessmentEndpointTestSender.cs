@@ -12,6 +12,8 @@ internal sealed class AssessmentEndpointTestSender(
     IPeerReviewAssignmentService? peerReviewService = null,
     IRubricService? rubricService = null) : ISender
 {
+    public List<object> SentRequests { get; } = [];
+
     public async Task<TResponse> Send<TResponse>(
         IRequest<TResponse> request,
         CancellationToken cancellationToken = default)
@@ -32,6 +34,7 @@ internal sealed class AssessmentEndpointTestSender(
 
     private async Task<object?> DispatchAsync(object request, CancellationToken cancellationToken)
     {
+        SentRequests.Add(request);
         return request switch
         {
             CreateAssessmentEndpointCommand command when assessmentService is not null =>
@@ -58,8 +61,6 @@ internal sealed class AssessmentEndpointTestSender(
                 await assessmentService.StartSubmissionAsync(command.AssessmentId, command.EnrollmentId, command.UserId).ConfigureAwait(false),
             SubmitAssessmentEndpointCommand command when assessmentService is not null =>
                 await assessmentService.SubmitAsync(command.SubmissionId, command.Request).ConfigureAwait(false),
-            GradeAssessmentSubmissionEndpointCommand command when assessmentService is not null =>
-                await assessmentService.GradeSubmissionAsync(command.SubmissionId, command.Request).ConfigureAwait(false),
 
             CreateCourseGroupSetEndpointCommand command when groupSetService is not null =>
                 await groupSetService.CreateGroupSetAsync(command.CourseId, command.Name).ConfigureAwait(false),

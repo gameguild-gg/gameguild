@@ -108,5 +108,5 @@ public sealed class AssessmentSubmissionAssetAuthorizationResolver(
             $"Program.{programId}.{permission}",
             cancellationToken);
 
-    private sealed record SubmissionAuthorization(Guid OwnerId, SubmissionStatus Status, Guid ProgramId);
+    private sealed record SubmissionAuthorization(Guid? OwnerId, SubmissionStatus Status, Guid ProgramId);
 }

@@ -44,8 +44,8 @@ public sealed class CourseControllerCoverageTests
             "Foundations",
             PrerequisiteType.Required,
             true,
-            70,
-            85,
+            Percent(70),
+            Percent(85),
             null);
         var service = new Mock<IPrerequisiteService>(MockBehavior.Strict);
         service.Setup(candidate => candidate.CheckPrerequisitesAsync(courseId, userId, tenantId))

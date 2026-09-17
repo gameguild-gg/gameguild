@@ -1,5 +1,6 @@
 using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
+using GameGuild.Learning.Grading.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -251,14 +252,14 @@ public sealed record CreatePrerequisiteApiRequest(
     Guid CourseId,
     Guid PrerequisiteCourseId,
     PrerequisiteType Type = PrerequisiteType.Required,
-    int? MinimumGrade = null,
+    PercentValue? MinimumGrade = null,
     string? Description = null,
     int DisplayOrder = 0,
     string? PrerequisiteGroup = null);
 
 public sealed record UpdatePrerequisiteApiRequest(
     PrerequisiteType? Type = null,
-    int? MinimumGrade = null,
+    PercentValue? MinimumGrade = null,
     string? Description = null,
     int? DisplayOrder = null,
     string? PrerequisiteGroup = null);
@@ -274,7 +275,7 @@ public sealed record PrerequisiteDto(
     string? PrerequisiteCourseName,
     Guid? TenantId,
     PrerequisiteType Type,
-    int? MinimumGrade,
+    PercentValue? MinimumGrade,
     string? Description,
     int DisplayOrder,
     string? PrerequisiteGroup,
@@ -304,8 +305,8 @@ public sealed record PrerequisiteStatusDto(
     string CourseName,
     PrerequisiteType Type,
     bool IsSatisfied,
-    int? RequiredGrade,
-    int? AchievedGrade,
+    PercentValue? RequiredGrade,
+    PercentValue? AchievedGrade,
     string? Reason);
 
 public sealed record CircularDependencyCheckResult(bool WouldCreateCycle);

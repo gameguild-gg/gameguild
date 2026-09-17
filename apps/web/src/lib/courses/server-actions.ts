@@ -16,12 +16,16 @@ import {
     parseQuizContentDocument,
     prepareQuizContentForRuntime,
 } from '@game-guild/quiz-content';
+import {
+    percentageToPercentUnits,
+    percentUnitsToPercentage,
+} from '@/lib/learning/academic-values';
 
 interface SubmitActivityData {
     activityId: string;
     courseId?: string;
     activityType: string;
-    content: Record<string, unknown>;
+    content: unknown;
     isGraded: boolean;
     attempt: number;
     submissionData?: unknown;
@@ -83,6 +87,13 @@ export async function submitActivity(
     data: SubmitActivityData
 ): Promise<SubmitActivityResult> {
     try {
+        if (data.activityType === 'quiz' && data.isGraded) {
+            return {
+                success: false,
+                message: 'Official graded submissions are not available through the generic activity endpoint.',
+            };
+        }
+
         const userId = await getCurrentUserId();
         if (!userId) {
             return {
@@ -359,15 +370,15 @@ function mapLearningStatus(
 
 function prepareQuizContentForLearner(
     contentBody: Record<string, unknown> | null | undefined,
-): Record<string, unknown> | undefined {
+): ReturnType<typeof prepareQuizContentForRuntime> | undefined {
     if (!contentBody) return undefined;
 
     const { document } = parseQuizContentDocument(contentBody);
     const runtime = prepareQuizContentForRuntime(
         document,
-        document.grading?.enabled ? 'server-graded' : 'local-practice',
+        document.grading ? 'server-graded' : 'local-practice',
     );
-    return { ...runtime.document };
+    return runtime;
 }
 
 export async function getCourseLearningData(courseSlug: string): Promise<CourseLearningData | null> {
@@ -523,7 +534,11 @@ export async function getCourseProgress(_courseId: string): Promise<CourseProgre
         });
 
         const completedItems = items.filter((item) => item.status === 'completed' || item.status === 'graded').length;
-        const progressPercentage = Math.round(progress?.completionPercentage ?? (items.length > 0 ? (completedItems / items.length) * 100 : 0));
+        const progressPercentage = Math.round(
+            progress?.completionPercentage == null
+                ? (items.length > 0 ? (completedItems / items.length) * 100 : 0)
+                : percentUnitsToPercentage(progress.completionPercentage),
+        );
         const timeSpent = items
             .filter((item) => item.status === 'completed' || item.status === 'graded')
             .reduce((total, item) => total + (item.estimatedMinutes ?? 0), 0);
@@ -572,7 +587,7 @@ export async function updateCourseProgress(
             additionalData: {
                 content: {
                     contentId: _contentId,
-                    completionPercentage: _progress,
+                    completionPercentage: percentageToPercentUnits(_progress),
                 },
             },
         });
