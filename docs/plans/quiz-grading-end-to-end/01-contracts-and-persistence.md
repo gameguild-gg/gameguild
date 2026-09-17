@@ -19,8 +19,9 @@ Este documento descreve o estado-alvo completo da persistência, mas não ordena
 suas alterações como uma única fase. A sequência canônica em
 [`08-implementation-sequence.md`](./08-implementation-sequence.md) distribui os
 itens por fatias verticais e exige um `SCHEMA-GATE` antes de cada impacto
-relacional. Cada fatia aprovada edita o mesmo baseline global inicial e recria os
-bancos descartáveis; nunca adiciona uma migration incremental.
+relacional. Cada fatia aprovada adiciona uma migration incremental compatível
+com a versão anterior e valida upgrade com dados existentes. Um eventual squash
+de baseline é uma operação posterior, coordenada e independente desta entrega.
 
 ## Persistência atual
 
@@ -44,9 +45,14 @@ operacional consultável. Os scores de assessment e peer review são inteiros.
 
 ## Review methods
 
-Renomear o conceito para `ReviewMethods` em entidade, enum, DTOs e schema final.
-Como não há dados lançados, o schema de criação já nasce com o nome e a
-constraint definitivos; não existe etapa de rename em banco.
+Introduzir `ReviewMethods` em entidade, enum, DTOs e schema final sem renomear
+`PeerReviewsRequiredCount`, pois os campos representam conceitos diferentes.
+Os valores compatíveis de `GradingMethods` são copiados para a nova coluna; as
+colunas legadas permanecem disponíveis durante a janela de transição e só podem
+ser removidas por uma migration posterior com prova de materialização completa.
+Combinações antigas não suportadas pelo workflow novo recebem
+`InstructorReview`, preservando uma revisão humana em vez de falhar o deploy ou
+escolher silenciosamente um dos métodos automáticos.
 
 Constraint-alvo:
 
@@ -58,25 +64,22 @@ O domínio rejeita `0` ao publicar. O banco pode mantê-lo para drafts. Os nomes
 textuais antigos são substituídos atomicamente; os valores `1`, `2`, `4` e `8`
 permanecem estáveis e `SelfReview = 16` é acrescentado.
 
-Política pré-lançamento:
+Política de evolução:
 
-- não criar nem executar migration incremental que transforme um schema
-  anterior no schema novo;
-- não criar migration de dados, backfill ou compatibilidade legacy;
-- manter os valores `1`, `2`, `4` e `8` porque continuam sendo os valores
-  canônicos, não por compatibilidade com dados antigos;
-- atualizar entidade, model configuration, DTOs e o schema inicial limpo em
-  conjunto;
-- recriar bancos locais, de desenvolvimento e de teste afetados;
-- validar criação do banco do zero, constraints e round-trip.
+- criar migration incremental que transforme o schema anterior sem perder
+  payloads, scores, atores ou políticas existentes;
+- executar backfills antes de tornar colunas obrigatórias ou instalar novas
+  constraints;
+- manter os valores `1`, `2`, `4` e `8` porque continuam canônicos e permitem
+  a cópia determinística de `GradingMethods` para `ReviewMethods`;
+- converter decimais para unidades inteiras com escala `100` no próprio
+  `ALTER COLUMN ... USING`, evitando truncamento;
+- validar criação limpa, upgrade populado, constraints e round-trip.
 
-A API atualmente inicializa o banco por `Database.MigrateAsync()`. Portanto,
-"sem migrations" significa que não haverá uma sequência incremental nem
-preservação de estado anterior: a cadeia histórica de desenvolvimento deve ser
-substituída por um único baseline de criação EF limpo, ou o inicializador deve
-ser trocado por outro mecanismo de criação antes desta fase. Acrescentar uma
-migration ao fim da cadeia atual não atende ao plano. Essa escolha operacional
-deve ser registrada no ADR de persistência antes do primeiro `SCHEMA-GATE`.
+A API inicializa o banco por `Database.MigrateAsync()`. Portanto, toda migration
+nova precisa funcionar sobre a cadeia publicada. Substituir a cadeia por um
+baseline limpo exige uma operação separada, com inventário, backups e migração
+coordenada dos ambientes existentes.
 
 O snapshot EF não descreve todo o banco atual. Antes de substituir a cadeia, o
 gate inventaria extensões, schemas, roles, grants, policies, funções,
@@ -226,19 +229,20 @@ documento [`05`](./05-learner-attempts-and-results.md). Nenhum contrato do core
 expõe `StructuredAnswer`, `contentBlockId` ou outra forma específica de quiz.
 
 O envelope validado é canonicalizado e persistido uma única vez na
-`GradingExecution`. Retry e regrade reutilizam os mesmos bytes. O baseline
-remove `AssessmentSubmission.StructuredAnswerPayload`; não há alias, dual-read
-ou cópia concorrente da resposta na submission.
+`GradingExecution`. Retry e regrade reutilizam os mesmos bytes. A coluna legada
+`AssessmentSubmission.StructuredAnswerPayload` permanece durante a transição;
+uma migration posterior poderá removê-la somente após comprovar que todos os
+payloads foram materializados no novo owner e que rollback não depende dela.
 
 `AssessmentExecutionPolicyV1` é um contrato materializado pela API e congelado
 na revisão, não um segundo draft JSON. No agregado mutável:
 
 - campos consultáveis como tentativas, tempo, datas, passing score e
   apresentação têm as colunas de `Assessment` como única fonte;
-- o atual `Assessment.DefinitionPayload`, sua versão e o setter genérico são
-  removidos. Se uma policy complexa sem coluna exigir persistência mutável, ela
-  recebe contrato tipado, nome específico e aprovação no `SCHEMA-GATE`; não
-  existe payload genérico substituto;
+- o atual `Assessment.DefinitionPayload` e sua versão tornam-se somente legado
+  de compatibilidade durante a materialização das revisões. Escritas novas usam
+  os contratos tipados; a remoção física fica para uma migration posterior
+  comprovadamente segura;
 - nenhuma propriedade pode existir simultaneamente numa coluna e nesse payload;
 - a API monta `AssessmentExecutionPolicyV1` dessas fontes ao validar, testar e
   publicar.
@@ -496,9 +500,11 @@ podem filtrar, paginar, somar e ordenar com operadores inteiros.
 
 Converter as colunas relacionais atuais de `decimal` para `integer` e redefinir
 as colunas `integer` atuais como unidades escaladas é a alteração de schema
-aprovada para o baseline limpo. Não
-reaproveitar `RubricScoresPayload` ou `StructuredAnswerPayload` para evitar essa
-decisão, pois isso misturaria responsabilidades.
+aprovada. A migration usa `ALTER COLUMN ... TYPE integer USING
+round(valor * 100)::integer` para preservar escala e precisão dos dados
+existentes. Não reaproveitar `RubricScoresPayload` ou
+`StructuredAnswerPayload` para evitar essa decisão, pois isso misturaria
+responsabilidades.
 
 O `SCHEMA-GATE` do núcleo em `SEQ-02` deve inventariar e aprovar no mesmo corte
 todos os scores, pesos e percentuais acadêmicos já persistidos como tipos
@@ -1009,24 +1015,24 @@ documento `08`; marcar itens aqui não autoriza aplicar todo o schema de uma vez
 - [ ] aprovar ADR de rodadas, concorrência e outbox com confirmação durável por
   `(EventId, ConsumerKey)`;
 - [ ] inventariar e testar todo artefato SQL ativo fora do `IModel` antes de
-  substituir a cadeia de migrations pelo baseline limpo;
+  qualquer squash coordenado da cadeia de migrations;
 - [ ] definir `GradingExecution` com owner relacional exclusivo entre sujeito
   sintético de test run e submission;
 - [ ] modelar `AssessmentTestRunSubject` para que cada alvo multipersona possua
   uma execução independente;
 - [ ] aprovar ADR de sujeito da submission e snapshot de participantes,
   preservando a decisão de uma única avaliação por grupo;
-- [ ] renomear `GradingMethods` para `ReviewMethods` e aplicar constraint exata;
+- [ ] adicionar `ReviewMethods`, fazer backfill de `GradingMethods` e aplicar a
+  constraint exata sem renomear `PeerReviewsRequiredCount`;
 - [ ] adicionar `SelfReview = 16`;
 - [ ] fechar `AssessmentReviewPolicyV1` e parsers versionados;
-- [ ] remover `Assessment.DefinitionPayload`, sua versão e o setter genérico;
-  qualquer fonte mutável de policy restante deve ser tipada, ter nome próprio e
-  não replicar coluna relacional;
+- [ ] retirar novas escritas de `Assessment.DefinitionPayload`; remover a coluna
+  somente após materialização verificada e migration compatível;
 - [ ] criar revisão imutável candidata e ponteiro de publicação ativa;
 - [ ] publicar candidata somente quando o hash do draft ainda coincidir;
 - [ ] implementar unpublish versionado que preserve revisões e execuções;
 - [ ] converter scores, pesos e percentuais acadêmicos para inteiros de escala
-  `100` no baseline limpo;
+  `100` com `ALTER ... USING`, preservando dados existentes;
 - [ ] vincular submission e test run à revisão usada no start;
 - [ ] fechar schemas de resposta, estágio, rodada e resultado;
 - [ ] fechar capability descriptor por método e contexto de execução;
@@ -1115,7 +1121,6 @@ documento `08`; marcar itens aqui não autoriza aplicar todo o schema de uma vez
   duráveis;
 - crash depois do commit não perde evento e retry não duplica efeito;
 - nenhuma alteração de schema existe sem ownership e consulta documentados;
-- o fluxo não possui migration incremental, migração de dados ou caminho
-  substituído mantido por compatibilidade; o banco nasce do baseline de criação
-  final com todos os artefatos SQL ativos aprovados, inclusive os que não são
-  representados pelo `IModel`.
+- o fluxo possui upgrade incremental testado em banco populado, sem perda de
+  payload, precisão ou autoria; todo squash futuro reinstala os artefatos SQL
+  ativos aprovados, inclusive os que não são representados pelo `IModel`.

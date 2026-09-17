@@ -38,13 +38,29 @@ public sealed class AssessmentsModelConfiguration : IModelConfiguration
             entity.Property(e => e.Description).HasMaxLength(2000);
             entity.Property(e => e.SubmissionModalities).HasConversion<int>();
             entity.Property(e => e.PresentationMode).HasConversion<int>();
-            entity.Property(e => e.ReviewMethods).HasConversion<int>();
+            entity.Property(e => e.ReviewMethods)
+                .HasConversion<int>()
+                .HasDefaultValue(ReviewMethods.InstructorReview);
+            // Keep the pre-runtime definition columns as shadow properties until every
+            // deployed assessment has been materialized into an immutable revision.
+            // Dropping these columns in the grading migration would make rollback and
+            // legacy-data recovery impossible.
+            entity.Property<string?>("DefinitionPayload").HasColumnType("jsonb");
+            entity.Property<int>("DefinitionSchemaVersion").HasDefaultValue(1);
+            entity.Property<int>("GradingMethods").HasDefaultValue(8);
+            entity.Property<int>("PeerReviewsRequiredCount").HasDefaultValue(0);
             entity.Property(e => e.MaxScore).HasConversion(ScoreConverter).HasColumnType("integer");
             entity.Property(e => e.PassingScore).HasConversion(ScoreConverter).HasColumnType("integer");
             entity.Property(e => e.ReviewConfigurationCanonicalJson).HasColumnType("text").HasMaxLength(65536);
             entity.Property(e => e.AttemptContributionMode).HasConversion(AttemptContributionConverter).HasMaxLength(32);
-            entity.Property(e => e.ContentCompletionMode).HasConversion(CompletionConverter).HasMaxLength(32);
-            entity.Property(e => e.ResultReleaseMode).HasConversion(ReleaseConverter).HasMaxLength(16);
+            entity.Property(e => e.ContentCompletionMode)
+                .HasConversion(CompletionConverter)
+                .HasMaxLength(32)
+                .HasDefaultValue(ContentCompletionMode.OnReleaseAndPass);
+            entity.Property(e => e.ResultReleaseMode)
+                .HasConversion(ReleaseConverter)
+                .HasMaxLength(16)
+                .HasDefaultValue(ResultReleaseMode.Manual);
             entity.Property(e => e.MaxAttempts).HasDefaultValue(1);
             entity.ToTable(table =>
             {
@@ -58,9 +74,14 @@ public sealed class AssessmentsModelConfiguration : IModelConfiguration
                     "CK_Assessments_ReviewMethods",
                     "\"ReviewMethods\" IN (0, 1, 2, 4, 8, 9, 10, 12, 16, 24)");
                 table.HasCheckConstraint(
+                    "CK_Assessments_GradingMethods",
+                    "\"GradingMethods\" >= 0 AND (\"GradingMethods\" & ~15) = 0");
+                table.HasCheckConstraint(
                     "CK_Assessments_ScoreRange",
                     "\"MaxScore\" > 0 AND \"PassingScore\" >= 0 AND \"PassingScore\" <= \"MaxScore\"");
-                table.HasCheckConstraint("CK_Assessments_MaxAttempts", "\"MaxAttempts\" = 1");
+                // Preserve legacy assessments with multiple attempts while the new
+                // authoring/runtime path continues to accept only one attempt.
+                table.HasCheckConstraint("CK_Assessments_MaxAttempts", "\"MaxAttempts\" >= 1");
                 table.HasCheckConstraint(
                     "CK_Assessments_ResultRelease",
                     "(\"ResultReleaseMode\" = 'scheduled' AND \"ResultReleaseScheduledFor\" IS NOT NULL) OR " +
@@ -137,12 +158,14 @@ public sealed class AssessmentsModelConfiguration : IModelConfiguration
                     "((\"SubmittedModalities\" & 8) = 0 OR \"CodePayload\" IS NOT NULL) AND " +
                     "((\"SubmittedModalities\" & 16) = 0 OR \"MediaPayload\" IS NOT NULL) AND " +
                     "((\"SubmittedModalities\" & 32) = 0 OR \"ProjectPayload\" IS NOT NULL) AND " +
+                    "((\"SubmittedModalities\" & 64) = 0 OR \"StructuredAnswerPayload\" IS NOT NULL) AND " +
                     "(\"TextPayload\" IS NULL OR (\"SubmittedModalities\" & 1) <> 0) AND " +
                     "(\"FilePayload\" IS NULL OR (\"SubmittedModalities\" & 2) <> 0) AND " +
                     "(\"UrlPayload\" IS NULL OR (\"SubmittedModalities\" & 4) <> 0) AND " +
                     "(\"CodePayload\" IS NULL OR (\"SubmittedModalities\" & 8) <> 0) AND " +
                     "(\"MediaPayload\" IS NULL OR (\"SubmittedModalities\" & 16) <> 0) AND " +
-                    "(\"ProjectPayload\" IS NULL OR (\"SubmittedModalities\" & 32) <> 0)");
+                    "(\"ProjectPayload\" IS NULL OR (\"SubmittedModalities\" & 32) <> 0) AND " +
+                    "(\"StructuredAnswerPayload\" IS NULL OR (\"SubmittedModalities\" & 64) <> 0)");
             });
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.AssessmentId);
@@ -157,6 +180,7 @@ public sealed class AssessmentsModelConfiguration : IModelConfiguration
                 .HasFilter("\"CourseGroupId\" IS NOT NULL AND \"EnrollmentId\" IS NULL")
                 .HasDatabaseName("UX_AssessmentSubmissions_Assessment_Group_Attempt");
             entity.Property(e => e.SubmittedModalities).HasConversion<int>();
+            entity.Property<string?>("StructuredAnswerPayload").HasColumnType("jsonb");
             entity.Property(e => e.TextPayload).HasColumnType("text");
             entity.Property(e => e.FilePayload).HasMaxLength(2048);
             entity.Property(e => e.UrlPayload).HasMaxLength(2048);

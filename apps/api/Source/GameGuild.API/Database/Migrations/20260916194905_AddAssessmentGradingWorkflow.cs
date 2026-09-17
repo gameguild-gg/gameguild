@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -27,143 +27,41 @@ namespace GameGuild.API.Database.Migrations
                 name: "CK_AssessmentSubmissions_ScoreNonNegative",
                 table: "AssessmentSubmissions");
 
-            migrationBuilder.DropCheckConstraint(
-                name: "CK_Assessments_GradingMethods",
-                table: "Assessments");
+            migrationBuilder.Sql(
+                """
+                -- grading-workflow: preserve completion progress before removing the duplicate column
+                UPDATE "content_interactions"
+                SET "ProgressPercentage" = COALESCE("ProgressPercentage", "CompletionPercentage")
+                WHERE "ProgressPercentage" IS NULL AND "CompletionPercentage" IS NOT NULL;
+                """);
 
             migrationBuilder.DropColumn(
                 name: "CompletionPercentage",
                 table: "content_interactions");
 
-            migrationBuilder.DropColumn(
-                name: "StructuredAnswerPayload",
-                table: "AssessmentSubmissions");
-
-            migrationBuilder.DropColumn(
-                name: "DefinitionPayload",
-                table: "Assessments");
-
-            migrationBuilder.DropColumn(
-                name: "DefinitionSchemaVersion",
-                table: "Assessments");
-
-            migrationBuilder.DropColumn(
-                name: "GradingMethods",
-                table: "Assessments");
-
-            migrationBuilder.RenameColumn(
-                name: "PeerReviewsRequiredCount",
-                table: "Assessments",
-                newName: "ReviewMethods");
-
-            migrationBuilder.AlterColumn<int>(
-                name: "PassingScore",
-                table: "programs",
-                type: "integer",
-                nullable: false,
-                defaultValue: 6000,
-                oldClrType: typeof(decimal),
-                oldType: "numeric(5,2)",
-                oldPrecision: 5,
-                oldScale: 2,
-                oldDefaultValue: 60m);
-
-            migrationBuilder.AlterColumn<int>(
-                name: "FinalGrade",
-                table: "program_users",
-                type: "integer",
-                nullable: true,
-                oldClrType: typeof(decimal),
-                oldType: "numeric(5,2)",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<int>(
-                name: "CompletionPercentage",
-                table: "program_users",
-                type: "integer",
-                nullable: false,
-                oldClrType: typeof(decimal),
-                oldType: "numeric(5,2)");
-
-            migrationBuilder.AlterColumn<int>(
-                name: "ProgressPercentage",
-                table: "program_enrollments",
-                type: "integer",
-                nullable: false,
-                oldClrType: typeof(decimal),
-                oldType: "numeric(5,2)",
-                oldPrecision: 5,
-                oldScale: 2);
-
-            migrationBuilder.AlterColumn<int>(
-                name: "FinalGrade",
-                table: "program_enrollments",
-                type: "integer",
-                nullable: true,
-                oldClrType: typeof(decimal),
-                oldType: "numeric(5,2)",
-                oldPrecision: 5,
-                oldScale: 2,
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<int>(
-                name: "Score",
-                table: "content_progress",
-                type: "integer",
-                nullable: true,
-                oldClrType: typeof(decimal),
-                oldType: "numeric(5,2)",
-                oldPrecision: 5,
-                oldScale: 2,
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<int>(
-                name: "ProgressPercentage",
-                table: "content_progress",
-                type: "integer",
-                nullable: false,
-                oldClrType: typeof(decimal),
-                oldType: "numeric(5,2)",
-                oldPrecision: 5,
-                oldScale: 2);
-
-            migrationBuilder.AlterColumn<int>(
-                name: "MaxScore",
-                table: "content_progress",
-                type: "integer",
-                nullable: true,
-                oldClrType: typeof(decimal),
-                oldType: "numeric(5,2)",
-                oldPrecision: 5,
-                oldScale: 2,
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<int>(
-                name: "ProgressPercentage",
-                table: "content_interactions",
-                type: "integer",
-                nullable: true,
-                oldClrType: typeof(decimal),
-                oldType: "numeric(5,2)",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<int>(
-                name: "BestScore",
-                table: "content_interactions",
-                type: "integer",
-                nullable: true,
-                oldClrType: typeof(decimal),
-                oldType: "numeric(5,2)",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<int>(
-                name: "ProgressPercentage",
-                table: "content_interaction_events",
-                type: "integer",
-                nullable: true,
-                oldClrType: typeof(decimal),
-                oldType: "numeric(5,2)",
-                oldNullable: true);
+            // Convert decimal values to canonical hundredths in the same ALTER statement.
+            // Updating numeric(5,2) first cannot work because values such as 10000 exceed
+            // the source column's precision.
+            migrationBuilder.Sql(
+                """
+                -- grading-workflow: canonical-score-conversion
+                ALTER TABLE "programs" ALTER COLUMN "PassingScore" DROP DEFAULT;
+                ALTER TABLE "programs" ALTER COLUMN "PassingScore" TYPE integer USING round("PassingScore" * 100)::integer;
+                ALTER TABLE "programs" ALTER COLUMN "PassingScore" SET DEFAULT 6000;
+                ALTER TABLE "program_users" ALTER COLUMN "FinalGrade" TYPE integer USING round("FinalGrade" * 100)::integer;
+                ALTER TABLE "program_users" ALTER COLUMN "CompletionPercentage" TYPE integer USING round("CompletionPercentage" * 100)::integer;
+                ALTER TABLE "program_enrollments" ALTER COLUMN "ProgressPercentage" TYPE integer USING round("ProgressPercentage" * 100)::integer;
+                ALTER TABLE "program_enrollments" ALTER COLUMN "FinalGrade" TYPE integer USING round("FinalGrade" * 100)::integer;
+                ALTER TABLE "content_progress" ALTER COLUMN "Score" TYPE integer USING round("Score" * 100)::integer;
+                ALTER TABLE "content_progress" ALTER COLUMN "ProgressPercentage" TYPE integer USING round("ProgressPercentage" * 100)::integer;
+                ALTER TABLE "content_progress" ALTER COLUMN "MaxScore" TYPE integer USING round("MaxScore" * 100)::integer;
+                ALTER TABLE "content_interactions" ALTER COLUMN "ProgressPercentage" TYPE integer USING round("ProgressPercentage" * 100)::integer;
+                ALTER TABLE "content_interactions" ALTER COLUMN "BestScore" TYPE integer USING round("BestScore" * 100)::integer;
+                ALTER TABLE "content_interaction_events" ALTER COLUMN "ProgressPercentage" TYPE integer USING round("ProgressPercentage" * 100)::integer;
+                ALTER TABLE "AssessmentGroups" ALTER COLUMN "WeightPercent" TYPE integer USING round("WeightPercent" * 100)::integer;
+                ALTER TABLE "activity_grades" ALTER COLUMN "Points" TYPE integer USING round("Points" * 100)::integer;
+                ALTER TABLE "activity_grades" ALTER COLUMN "MaxPoints" TYPE integer USING round("MaxPoints" * 100)::integer;
+                """);
 
             migrationBuilder.AlterColumn<Guid>(
                 name: "UserId",
@@ -198,14 +96,42 @@ namespace GameGuild.API.Database.Migrations
                 name: "StartedByUserId",
                 table: "AssessmentSubmissions",
                 type: "uuid",
-                nullable: false,
-                defaultValue: new Guid("00000000-0000-0000-0000-000000000000"));
+                nullable: true);
 
             migrationBuilder.AddColumn<Guid>(
                 name: "SubmittedByUserId",
                 table: "AssessmentSubmissions",
                 type: "uuid",
                 nullable: true);
+
+            migrationBuilder.Sql(
+                """
+                -- grading-workflow: submission-actor-backfill
+                UPDATE "AssessmentSubmissions"
+                SET "StartedByUserId" = "UserId",
+                    "SubmittedByUserId" = CASE
+                        WHEN "SubmittedAt" IS NOT NULL THEN "UserId"
+                        ELSE "SubmittedByUserId"
+                    END
+                WHERE "StartedByUserId" IS NULL;
+                """);
+
+            migrationBuilder.AlterColumn<Guid>(
+                name: "StartedByUserId",
+                table: "AssessmentSubmissions",
+                type: "uuid",
+                nullable: false,
+                oldClrType: typeof(Guid),
+                oldType: "uuid",
+                oldNullable: true);
+
+            migrationBuilder.Sql(
+                """
+                -- grading-workflow: assessment-policy-backfill
+                UPDATE "Assessments"
+                SET "MaxAttempts" = 1
+                WHERE "MaxAttempts" IS NULL;
+                """);
 
             migrationBuilder.AlterColumn<int>(
                 name: "MaxAttempts",
@@ -230,7 +156,7 @@ namespace GameGuild.API.Database.Migrations
                 type: "character varying(32)",
                 maxLength: 32,
                 nullable: false,
-                defaultValue: "");
+                defaultValue: "on-release-and-pass");
 
             migrationBuilder.AddColumn<Guid>(
                 name: "PublishedDefinitionRevisionId",
@@ -244,7 +170,7 @@ namespace GameGuild.API.Database.Migrations
                 type: "character varying(16)",
                 maxLength: 16,
                 nullable: false,
-                defaultValue: "");
+                defaultValue: "manual");
 
             migrationBuilder.AddColumn<DateTime>(
                 name: "ResultReleaseScheduledFor",
@@ -259,32 +185,32 @@ namespace GameGuild.API.Database.Migrations
                 maxLength: 65536,
                 nullable: true);
 
+            migrationBuilder.AddColumn<int>(
+                name: "ReviewMethods",
+                table: "Assessments",
+                type: "integer",
+                nullable: true);
+
+            migrationBuilder.Sql(
+                """
+                -- grading-workflow: review-method-backfill
+                UPDATE "Assessments"
+                SET "ReviewMethods" = CASE
+                    WHEN "GradingMethods" IN (0, 1, 2, 4, 8, 9, 10, 12)
+                        THEN "GradingMethods"
+                    ELSE 8
+                END
+                WHERE "ReviewMethods" IS NULL;
+                """);
+
             migrationBuilder.AlterColumn<int>(
-                name: "WeightPercent",
-                table: "AssessmentGroups",
+                name: "ReviewMethods",
+                table: "Assessments",
                 type: "integer",
                 nullable: false,
-                oldClrType: typeof(decimal),
-                oldType: "numeric(5,2)",
-                oldPrecision: 5,
-                oldScale: 2);
-
-            migrationBuilder.AlterColumn<int>(
-                name: "Points",
-                table: "activity_grades",
-                type: "integer",
-                nullable: true,
-                oldClrType: typeof(decimal),
-                oldType: "numeric(5,2)",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<int>(
-                name: "MaxPoints",
-                table: "activity_grades",
-                type: "integer",
-                nullable: true,
-                oldClrType: typeof(decimal),
-                oldType: "numeric(5,2)",
+                defaultValue: 8,
+                oldClrType: typeof(int),
+                oldType: "integer",
                 oldNullable: true);
 
             migrationBuilder.CreateTable(
@@ -915,7 +841,7 @@ namespace GameGuild.API.Database.Migrations
             migrationBuilder.AddCheckConstraint(
                 name: "CK_AssessmentSubmissions_PayloadConsistency",
                 table: "AssessmentSubmissions",
-                sql: "((\"SubmittedModalities\" & 1) = 0 OR \"TextPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 2) = 0 OR \"FilePayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 4) = 0 OR \"UrlPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 8) = 0 OR \"CodePayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 16) = 0 OR \"MediaPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 32) = 0 OR \"ProjectPayload\" IS NOT NULL) AND (\"TextPayload\" IS NULL OR (\"SubmittedModalities\" & 1) <> 0) AND (\"FilePayload\" IS NULL OR (\"SubmittedModalities\" & 2) <> 0) AND (\"UrlPayload\" IS NULL OR (\"SubmittedModalities\" & 4) <> 0) AND (\"CodePayload\" IS NULL OR (\"SubmittedModalities\" & 8) <> 0) AND (\"MediaPayload\" IS NULL OR (\"SubmittedModalities\" & 16) <> 0) AND (\"ProjectPayload\" IS NULL OR (\"SubmittedModalities\" & 32) <> 0)");
+                sql: "((\"SubmittedModalities\" & 1) = 0 OR \"TextPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 2) = 0 OR \"FilePayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 4) = 0 OR \"UrlPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 8) = 0 OR \"CodePayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 16) = 0 OR \"MediaPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 32) = 0 OR \"ProjectPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 64) = 0 OR \"StructuredAnswerPayload\" IS NOT NULL) AND (\"TextPayload\" IS NULL OR (\"SubmittedModalities\" & 1) <> 0) AND (\"FilePayload\" IS NULL OR (\"SubmittedModalities\" & 2) <> 0) AND (\"UrlPayload\" IS NULL OR (\"SubmittedModalities\" & 4) <> 0) AND (\"CodePayload\" IS NULL OR (\"SubmittedModalities\" & 8) <> 0) AND (\"MediaPayload\" IS NULL OR (\"SubmittedModalities\" & 16) <> 0) AND (\"ProjectPayload\" IS NULL OR (\"SubmittedModalities\" & 32) <> 0) AND (\"StructuredAnswerPayload\" IS NULL OR (\"SubmittedModalities\" & 64) <> 0)");
 
             migrationBuilder.AddCheckConstraint(
                 name: "CK_AssessmentSubmissions_ScoreCanonical",
@@ -947,7 +873,7 @@ namespace GameGuild.API.Database.Migrations
             migrationBuilder.AddCheckConstraint(
                 name: "CK_Assessments_MaxAttempts",
                 table: "Assessments",
-                sql: "\"MaxAttempts\" = 1");
+                sql: "\"MaxAttempts\" >= 1");
 
             migrationBuilder.AddCheckConstraint(
                 name: "CK_Assessments_ResultRelease",
@@ -1495,110 +1421,30 @@ namespace GameGuild.API.Database.Migrations
                 name: "ReviewConfigurationCanonicalJson",
                 table: "Assessments");
 
-            migrationBuilder.RenameColumn(
+            migrationBuilder.DropColumn(
                 name: "ReviewMethods",
-                table: "Assessments",
-                newName: "PeerReviewsRequiredCount");
+                table: "Assessments");
 
-            migrationBuilder.AlterColumn<decimal>(
-                name: "PassingScore",
-                table: "programs",
-                type: "numeric(5,2)",
-                precision: 5,
-                scale: 2,
-                nullable: false,
-                defaultValue: 60m,
-                oldClrType: typeof(int),
-                oldType: "integer",
-                oldDefaultValue: 6000);
-
-            migrationBuilder.AlterColumn<decimal>(
-                name: "FinalGrade",
-                table: "program_users",
-                type: "numeric(5,2)",
-                nullable: true,
-                oldClrType: typeof(int),
-                oldType: "integer",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<decimal>(
-                name: "CompletionPercentage",
-                table: "program_users",
-                type: "numeric(5,2)",
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "integer");
-
-            migrationBuilder.AlterColumn<decimal>(
-                name: "ProgressPercentage",
-                table: "program_enrollments",
-                type: "numeric(5,2)",
-                precision: 5,
-                scale: 2,
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "integer");
-
-            migrationBuilder.AlterColumn<decimal>(
-                name: "FinalGrade",
-                table: "program_enrollments",
-                type: "numeric(5,2)",
-                precision: 5,
-                scale: 2,
-                nullable: true,
-                oldClrType: typeof(int),
-                oldType: "integer",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<decimal>(
-                name: "Score",
-                table: "content_progress",
-                type: "numeric(5,2)",
-                precision: 5,
-                scale: 2,
-                nullable: true,
-                oldClrType: typeof(int),
-                oldType: "integer",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<decimal>(
-                name: "ProgressPercentage",
-                table: "content_progress",
-                type: "numeric(5,2)",
-                precision: 5,
-                scale: 2,
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "integer");
-
-            migrationBuilder.AlterColumn<decimal>(
-                name: "MaxScore",
-                table: "content_progress",
-                type: "numeric(5,2)",
-                precision: 5,
-                scale: 2,
-                nullable: true,
-                oldClrType: typeof(int),
-                oldType: "integer",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<decimal>(
-                name: "ProgressPercentage",
-                table: "content_interactions",
-                type: "numeric(5,2)",
-                nullable: true,
-                oldClrType: typeof(int),
-                oldType: "integer",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<decimal>(
-                name: "BestScore",
-                table: "content_interactions",
-                type: "numeric(5,2)",
-                nullable: true,
-                oldClrType: typeof(int),
-                oldType: "integer",
-                oldNullable: true);
+            migrationBuilder.Sql(
+                """
+                -- grading-workflow: restore-decimal-scores
+                ALTER TABLE "programs" ALTER COLUMN "PassingScore" DROP DEFAULT;
+                ALTER TABLE "programs" ALTER COLUMN "PassingScore" TYPE numeric(5,2) USING ("PassingScore"::numeric / 100);
+                ALTER TABLE "programs" ALTER COLUMN "PassingScore" SET DEFAULT 60;
+                ALTER TABLE "program_users" ALTER COLUMN "FinalGrade" TYPE numeric(5,2) USING ("FinalGrade"::numeric / 100);
+                ALTER TABLE "program_users" ALTER COLUMN "CompletionPercentage" TYPE numeric(5,2) USING ("CompletionPercentage"::numeric / 100);
+                ALTER TABLE "program_enrollments" ALTER COLUMN "ProgressPercentage" TYPE numeric(5,2) USING ("ProgressPercentage"::numeric / 100);
+                ALTER TABLE "program_enrollments" ALTER COLUMN "FinalGrade" TYPE numeric(5,2) USING ("FinalGrade"::numeric / 100);
+                ALTER TABLE "content_progress" ALTER COLUMN "Score" TYPE numeric(5,2) USING ("Score"::numeric / 100);
+                ALTER TABLE "content_progress" ALTER COLUMN "ProgressPercentage" TYPE numeric(5,2) USING ("ProgressPercentage"::numeric / 100);
+                ALTER TABLE "content_progress" ALTER COLUMN "MaxScore" TYPE numeric(5,2) USING ("MaxScore"::numeric / 100);
+                ALTER TABLE "content_interactions" ALTER COLUMN "ProgressPercentage" TYPE numeric(5,2) USING ("ProgressPercentage"::numeric / 100);
+                ALTER TABLE "content_interactions" ALTER COLUMN "BestScore" TYPE numeric(5,2) USING ("BestScore"::numeric / 100);
+                ALTER TABLE "content_interaction_events" ALTER COLUMN "ProgressPercentage" TYPE numeric(5,2) USING ("ProgressPercentage"::numeric / 100);
+                ALTER TABLE "AssessmentGroups" ALTER COLUMN "WeightPercent" TYPE numeric(5,2) USING ("WeightPercent"::numeric / 100);
+                ALTER TABLE "activity_grades" ALTER COLUMN "Points" TYPE numeric(5,2) USING ("Points"::numeric / 100);
+                ALTER TABLE "activity_grades" ALTER COLUMN "MaxPoints" TYPE numeric(5,2) USING ("MaxPoints"::numeric / 100);
+                """);
 
             migrationBuilder.AddColumn<decimal>(
                 name: "CompletionPercentage",
@@ -1607,14 +1453,11 @@ namespace GameGuild.API.Database.Migrations
                 nullable: false,
                 defaultValue: 0m);
 
-            migrationBuilder.AlterColumn<decimal>(
-                name: "ProgressPercentage",
-                table: "content_interaction_events",
-                type: "numeric(5,2)",
-                nullable: true,
-                oldClrType: typeof(int),
-                oldType: "integer",
-                oldNullable: true);
+            migrationBuilder.Sql(
+                """
+                UPDATE "content_interactions"
+                SET "CompletionPercentage" = COALESCE("ProgressPercentage", 0);
+                """);
 
             migrationBuilder.AlterColumn<Guid>(
                 name: "UserId",
@@ -1636,12 +1479,6 @@ namespace GameGuild.API.Database.Migrations
                 oldType: "uuid",
                 oldNullable: true);
 
-            migrationBuilder.AddColumn<string>(
-                name: "StructuredAnswerPayload",
-                table: "AssessmentSubmissions",
-                type: "jsonb",
-                nullable: true);
-
             migrationBuilder.AlterColumn<int>(
                 name: "MaxAttempts",
                 table: "Assessments",
@@ -1650,54 +1487,6 @@ namespace GameGuild.API.Database.Migrations
                 oldClrType: typeof(int),
                 oldType: "integer",
                 oldDefaultValue: 1);
-
-            migrationBuilder.AddColumn<string>(
-                name: "DefinitionPayload",
-                table: "Assessments",
-                type: "jsonb",
-                nullable: true);
-
-            migrationBuilder.AddColumn<int>(
-                name: "DefinitionSchemaVersion",
-                table: "Assessments",
-                type: "integer",
-                nullable: false,
-                defaultValue: 1);
-
-            migrationBuilder.AddColumn<int>(
-                name: "GradingMethods",
-                table: "Assessments",
-                type: "integer",
-                nullable: false,
-                defaultValue: 0);
-
-            migrationBuilder.AlterColumn<decimal>(
-                name: "WeightPercent",
-                table: "AssessmentGroups",
-                type: "numeric(5,2)",
-                precision: 5,
-                scale: 2,
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "integer");
-
-            migrationBuilder.AlterColumn<decimal>(
-                name: "Points",
-                table: "activity_grades",
-                type: "numeric(5,2)",
-                nullable: true,
-                oldClrType: typeof(int),
-                oldType: "integer",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<decimal>(
-                name: "MaxPoints",
-                table: "activity_grades",
-                type: "numeric(5,2)",
-                nullable: true,
-                oldClrType: typeof(int),
-                oldType: "integer",
-                oldNullable: true);
 
             migrationBuilder.AddCheckConstraint(
                 name: "CK_content_interaction_events_ProgressPercentage_Range",
@@ -1720,10 +1509,6 @@ namespace GameGuild.API.Database.Migrations
                 table: "AssessmentSubmissions",
                 sql: "\"Score\" IS NULL OR \"Score\" >= 0");
 
-            migrationBuilder.AddCheckConstraint(
-                name: "CK_Assessments_GradingMethods",
-                table: "Assessments",
-                sql: "\"GradingMethods\" >= 0 AND (\"GradingMethods\" & ~15) = 0");
         }
     }
 }
