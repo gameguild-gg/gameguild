@@ -35,26 +35,54 @@ function parseSpec(spec: string): Record<string, unknown> {
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
     throw new Error('Specification must be a JSON object');
   }
-  const record = parsed as Record<string, unknown>;
-  if (!record.data && !record.datasets) {
-    throw new Error('Vega-Lite spec missing data field');
-  }
-  if (
-    !record.mark &&
-    !record.layer &&
-    !record.concat &&
-    !record.hconcat &&
-    !record.vconcat &&
-    !record.facet &&
-    !record.repeat
-  ) {
-    throw new Error('Vega-Lite spec missing a mark or composite view');
-  }
-  return record;
+  return parsed as Record<string, unknown>;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+const VEGA_LITE_VIEW_KEYS = [
+  'mark',
+  'encoding',
+  'layer',
+  'facet',
+  'repeat',
+  'concat',
+  'hconcat',
+  'vconcat',
+] as const;
+
+const VEGA_VIEW_KEYS = ['marks', 'scales', 'signals', 'projections'] as const;
+
+// Heuristic: $schema URL disambiguates when present; otherwise Vega-Lite view
+// keys win and plain Vega needs `marks`/`scales`/`signals`/`projections`.
+// Vega-Lite stays the default so invalid specs keep failing VL validation.
+function isPlainVegaSpec(spec: Record<string, unknown>): boolean {
+  const schema = typeof spec.$schema === 'string' ? spec.$schema : '';
+  if (schema.includes('/schema/vega-lite/')) return false;
+  if (schema.includes('/schema/vega/')) return true;
+  if (VEGA_LITE_VIEW_KEYS.some((key) => key in spec)) return false;
+  return VEGA_VIEW_KEYS.some((key) => key in spec);
+}
+
+function validateVegaLiteSpec(record: Record<string, unknown>): void {
+  if (!record.data && !record.datasets) {
+    throw new Error('Vega-Lite spec missing data field');
+  }
+  if (!VEGA_LITE_VIEW_KEYS.some((key) => key in record)) {
+    throw new Error('Vega-Lite spec missing a mark or composite view');
+  }
+}
+
+function mergeConfig(record: Record<string, unknown>, isDarkMode: boolean) {
+  return {
+    ...record,
+    config: {
+      ...(isRecord(record.config) ? record.config : {}),
+      ...(isDarkMode ? DARK_CONFIG : LIGHT_CONFIG),
+    },
+  };
 }
 
 async function renderVegaSvg(
@@ -63,18 +91,23 @@ async function renderVegaSvg(
   isDarkMode: boolean,
 ): Promise<() => void> {
   const parsedSpec = parseSpec(spec);
-  const [vegaLite, vega] = await Promise.all([import('vega-lite'), import('vega')]);
+  const plainVega = isPlainVegaSpec(parsedSpec);
 
-  const compiled = vegaLite.compile({
-    ...parsedSpec,
-    config: {
-      ...(isRecord(parsedSpec.config) ? parsedSpec.config : {}),
-      ...(isDarkMode ? DARK_CONFIG : LIGHT_CONFIG),
-    },
-  } as Parameters<typeof vegaLite.compile>[0]);
+  if (!plainVega) {
+    validateVegaLiteSpec(parsedSpec);
+  }
+
+  const vega = await import('vega');
+  const runtimeSpec = plainVega
+    ? mergeConfig(parsedSpec, isDarkMode)
+    : await import('vega-lite').then((vegaLite) =>
+        vegaLite.compile(
+          mergeConfig(parsedSpec, isDarkMode) as Parameters<typeof vegaLite.compile>[0],
+        ).spec,
+      );
 
   container.replaceChildren();
-  const view = new vega.View(vega.parse(compiled.spec), { renderer: 'svg' });
+  const view = new vega.View(vega.parse(runtimeSpec), { renderer: 'svg' });
   view.initialize(container);
 
   try {
@@ -100,7 +133,7 @@ async function renderVegaSvg(
 }
 
 export interface VegaLiteDiagramProps {
-  /** Vega-Lite specification as a JSON string (the fenced block content). */
+  /** Vega or Vega-Lite specification as a JSON string (the fenced block content). */
   spec: string;
   className?: string;
 }

@@ -32,6 +32,29 @@ const THEME_MAP: Record<string, string> = {
 
 const renderGenerations = new WeakMap<HTMLElement, number>();
 
+const VEGA_LITE_VIEW_KEYS = [
+  "mark",
+  "encoding",
+  "layer",
+  "facet",
+  "repeat",
+  "concat",
+  "hconcat",
+  "vconcat",
+] as const;
+
+const VEGA_VIEW_KEYS = ["marks", "scales", "signals", "projections"] as const;
+
+// Heuristic mirroring content-rendering: $schema URL disambiguates when
+// present; Vega-Lite view keys win otherwise, Vega-Lite stays the default.
+export function isPlainVegaSpec(spec: Record<string, any>): boolean {
+  const schema = typeof spec.$schema === "string" ? spec.$schema : "";
+  if (schema.includes("/schema/vega-lite/")) return false;
+  if (schema.includes("/schema/vega/")) return true;
+  if (VEGA_LITE_VIEW_KEYS.some((key) => key in spec)) return false;
+  return VEGA_VIEW_KEYS.some((key) => key in spec);
+}
+
 function nextRenderGeneration(container: HTMLElement): number {
   const generation = (renderGenerations.get(container) ?? 0) + 1;
   renderGenerations.set(container, generation);
@@ -98,27 +121,27 @@ export function useVegaLiteChart({
       if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
         throw new Error("Specification must be a JSON object");
       }
-      if (!parsed.data && !parsed.datasets) {
-        throw new Error("Vega-Lite spec missing data field");
-      }
-      if (
-        !parsed.mark &&
-        !parsed.layer &&
-        !parsed.concat &&
-        !parsed.hconcat &&
-        !parsed.vconcat &&
-        !parsed.facet &&
-        !parsed.repeat
-      ) {
-        throw new Error("Vega-Lite spec missing a mark or composite view");
-      }
 
-      setParsedSpec({
-        ...parsed,
-        width: layout === "square" ? 400 : 800,
-        height: layout === "square" ? 400 : 300,
-      });
-      setError("");
+      if (isPlainVegaSpec(parsed)) {
+        // Plain Vega specs own their sizing; do not inject width/height or
+        // apply Vega-Lite shape validation.
+        setParsedSpec(parsed);
+        setError("");
+      } else {
+        if (!parsed.data && !parsed.datasets) {
+          throw new Error("Vega-Lite spec missing data field");
+        }
+        if (!VEGA_LITE_VIEW_KEYS.some((key) => key in parsed)) {
+          throw new Error("Vega-Lite spec missing a mark or composite view");
+        }
+
+        setParsedSpec({
+          ...parsed,
+          width: layout === "square" ? 400 : 800,
+          height: layout === "square" ? 400 : 300,
+        });
+        setError("");
+      }
     } catch (parseError) {
       setParsedSpec(null);
       setError(
@@ -142,8 +165,8 @@ export async function renderVegaChart(
 ): Promise<() => void> {
   const generation = nextRenderGeneration(container);
   const isCurrent = () => renderGenerations.get(container) === generation;
-  const [vegaLite, vega, vegaThemes] = await Promise.all([
-    import("vega-lite"),
+  const plainVega = isPlainVegaSpec(parsedSpec);
+  const [vega, vegaThemes] = await Promise.all([
     import("vega"),
     import("vega-themes"),
   ]);
@@ -175,9 +198,13 @@ export async function renderVegaChart(
     }
   }
 
-  const vegaSpec = vegaLite.compile(
-    specWithTheme as Parameters<typeof vegaLite.compile>[0],
-  ).spec;
+  const vegaSpec = plainVega
+    ? specWithTheme
+    : await import("vega-lite").then((vegaLite) =>
+        vegaLite.compile(
+          specWithTheme as Parameters<typeof vegaLite.compile>[0],
+        ).spec,
+      );
   if (!isCurrent()) return () => undefined;
 
   container.replaceChildren();
