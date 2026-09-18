@@ -1,10 +1,12 @@
 using System.Security.Claims;
 using FluentAssertions;
+using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
 using GameGuild.Learning.Courses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -109,9 +111,13 @@ public sealed class ProgramContentVisibilityTests
 
         var controller = new ProgramContentController(
             contentMock.Object,
-            programMock.Object,
-            new Mock<ICodingAssignmentContentService>().Object,
-            authorizationMock.Object);
+             programMock.Object,
+             new Mock<ICodingAssignmentContentService>().Object,
+             authorizationMock.Object,
+             [],
+             [],
+            Mock.Of<ILogger<ProgramContentController>>(),
+             Mock.Of<ISender>());
 
         if (userId.HasValue)
         {
@@ -271,5 +277,114 @@ public sealed class ProgramContentVisibilityTests
         var result = await controller.GetProgramContent(programId);
 
         result.Result.Should().BeOfType<NotFoundResult>();
+    }
+
+    [Theory]
+    [InlineData("sub")]
+    [InlineData("userId")]
+    public async Task GetCodingAssignmentPublic_AcceptsSupportedFallbackUserClaims(string claimType)
+    {
+        var programMock = new Mock<IProgramCrudService>();
+        var contentMock = SetupContent();
+        var codingAssignmentMock = new Mock<ICodingAssignmentContentService>();
+        var authorizationMock = new Mock<IAuthorizationService>();
+        authorizationMock
+            .Setup(service => service.AuthorizeAsync(
+                It.IsAny<ClaimsPrincipal>(),
+                It.IsAny<object>(),
+                Policies.CourseContentLearner))
+            .ReturnsAsync(AuthorizationResult.Success());
+        codingAssignmentMock
+            .Setup(service => service.GetPublicAsync(programId, publicItemId, viewerId))
+            .ReturnsAsync((CodingAssignmentContent?)null);
+        programMock.Setup(service => service.GetProgramByIdAsync(programId)).ReturnsAsync(new Program
+        {
+            Id = programId,
+            CreatorId = creatorId,
+            Title = "Course",
+            Version = 1,
+        });
+        var controller = new ProgramContentController(
+            contentMock.Object,
+            programMock.Object,
+            codingAssignmentMock.Object,
+            authorizationMock.Object,
+            [],
+            [],
+            Mock.Of<ILogger<ProgramContentController>>(),
+            Mock.Of<ISender>())
+        {
+            ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(claimType, viewerId.ToString())])),
+                },
+            },
+        };
+
+        var result = await controller.GetCodingAssignmentPublic(programId, publicItemId);
+
+        result.Result.Should().BeOfType<NotFoundResult>();
+        codingAssignmentMock.Verify(
+            service => service.GetPublicAsync(programId, publicItemId, viewerId),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GetCodingAssignmentPublic_WithInvalidPrimaryUserClaim_ReturnsUnauthorized()
+    {
+        var controller = new ProgramContentController(
+            Mock.Of<IProgramContentService>(),
+            Mock.Of<IProgramCrudService>(),
+            Mock.Of<ICodingAssignmentContentService>(),
+            Mock.Of<IAuthorizationService>(),
+            [],
+            [],
+            Mock.Of<ILogger<ProgramContentController>>(),
+            Mock.Of<ISender>())
+        {
+            ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new ClaimsPrincipal(new ClaimsIdentity([
+                        new Claim(ClaimTypes.NameIdentifier, "not-a-guid"),
+                        new Claim("sub", viewerId.ToString()),
+                    ])),
+                },
+            },
+        };
+
+        var result = await controller.GetCodingAssignmentPublic(programId, publicItemId);
+
+        result.Result.Should().BeOfType<UnauthorizedResult>();
+    }
+
+    [Fact]
+    public async Task GetCodingAssignmentPublic_WithoutSupportedUserClaims_ReturnsUnauthorized()
+    {
+        var controller = new ProgramContentController(
+            Mock.Of<IProgramContentService>(),
+            Mock.Of<IProgramCrudService>(),
+            Mock.Of<ICodingAssignmentContentService>(),
+            Mock.Of<IAuthorizationService>(),
+            [],
+            [],
+            Mock.Of<ILogger<ProgramContentController>>(),
+            Mock.Of<ISender>())
+        {
+            ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new ClaimsPrincipal(new ClaimsIdentity()),
+                },
+            },
+        };
+
+        var result = await controller.GetCodingAssignmentPublic(programId, publicItemId);
+
+        result.Result.Should().BeOfType<UnauthorizedResult>();
     }
 }

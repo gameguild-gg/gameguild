@@ -21,7 +21,8 @@ public class ActivityGradeController(IActivityGradeService activityGradeService,
       var grade = await sender.Send(new GradeActivityEndpointCommand(
         gradeDto.ContentInteractionId,
         gradeDto.GraderProgramUserId,
-        gradeDto.Grade,
+        gradeDto.Points,
+        gradeDto.MaxPoints,
         gradeDto.Feedback,
         gradeDto.GradingDetails)).ConfigureAwait(false);
 
@@ -83,7 +84,8 @@ public class ActivityGradeController(IActivityGradeService activityGradeService,
 
     var updatedGrade = await sender.Send(new UpdateActivityGradeEndpointCommand(
       gradeId,
-      updateDto.Grade,
+      updateDto.Points,
+      updateDto.MaxPoints,
       updateDto.Feedback,
       updateDto.GradingDetails)).ConfigureAwait(false);
 

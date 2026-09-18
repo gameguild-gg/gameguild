@@ -166,8 +166,11 @@ export const getCourseEngagementAnalytics = cache(async (
   const metrics = engagementResult.ok ? engagementResult.data : undefined;
 
   const now = new Date();
+  const startOfPeriod = new Date(now);
+  startOfPeriod.setUTCHours(0, 0, 0, 0);
+  startOfPeriod.setUTCDate(startOfPeriod.getUTCDate() - 6);
   const defaultPeriod = {
-    from: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6).toISOString(),
+    from: startOfPeriod.toISOString(),
     to: now.toISOString(),
   };
   const contentById = new Map(content.items.map((item) => [item.id, item]));

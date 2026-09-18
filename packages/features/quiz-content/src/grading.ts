@@ -1,15 +1,16 @@
 import {
-  createDisabledGradingDefinition,
+  validateContentGradingDefinition,
+  type ContentGradingDefinitionV2,
+} from "@game-guild/grading";
+import {
   createQuizGradingDefinition,
   syncQuizGradingDefinition,
-  validateGradingDefinition,
-  type ContentGradingDefinition,
-} from "@game-guild/grading";
+} from "@game-guild/grading-adapter-quiz";
 import { QUIZ_CONTENT_SCHEMA_VERSION } from "./constants";
 import { assertQuizContentDocument } from "./parsing";
+import { quizDocumentToGradingItems } from "./grading-projection";
 import {
   quizContentItemsToStorage,
-  quizDocumentToBlocks,
 } from "./storage";
 import type {
   QuizContentDocument,
@@ -18,17 +19,16 @@ import type {
 
 export function readQuizContentGrading(
   document: QuizContentDocument,
-): ContentGradingDefinition {
-  return document.grading ?? createDisabledGradingDefinition();
+): ContentGradingDefinitionV2 | null {
+  return document.grading ?? null;
 }
 
 export function enableQuizContentGrading(
   document: QuizContentDocument,
-  options: Parameters<typeof createQuizGradingDefinition>[1] = {},
 ): QuizContentDocument {
   return {
     ...document,
-    grading: createQuizGradingDefinition(quizDocumentToBlocks(document), options),
+    grading: createQuizGradingDefinition(quizDocumentToGradingItems(document)),
   };
 }
 
@@ -41,16 +41,16 @@ export function disableQuizContentGrading(
 
 export function updateQuizContentGrading(
   document: QuizContentDocument,
-  updater: (current: ContentGradingDefinition) => ContentGradingDefinition,
+  updater: (current: ContentGradingDefinitionV2) => ContentGradingDefinitionV2,
 ): QuizContentDocument {
-  const current = readQuizContentGrading(document);
-  const next = updater(current);
-  if (!next.enabled) return disableQuizContentGrading(document);
+  const current = readQuizContentGrading(document) ??
+    createQuizGradingDefinition(quizDocumentToGradingItems(document));
+  const next = validateContentGradingDefinition(updater(current));
   return {
     ...document,
     grading: syncQuizGradingDefinition(
-      quizDocumentToBlocks(document),
-      validateGradingDefinition(next),
+      quizDocumentToGradingItems(document),
+      next,
     ),
   };
 }
@@ -58,11 +58,11 @@ export function updateQuizContentGrading(
 export function syncQuizContentGrading(
   document: QuizContentDocument,
 ): QuizContentDocument {
-  if (!document.grading?.enabled) return disableQuizContentGrading(document);
+  if (!document.grading) return document;
   return {
     ...document,
     grading: syncQuizGradingDefinition(
-      quizDocumentToBlocks(document),
+      quizDocumentToGradingItems(document),
       document.grading,
     ),
   };
@@ -78,10 +78,10 @@ export function quizContentItemsToDocument({
     order: storage.order,
     blocks: storage.blocks,
   };
-  if (grading?.enabled) {
+  if (grading) {
     document = {
       ...document,
-      grading: syncQuizGradingDefinition(quizDocumentToBlocks(document), grading),
+      grading: syncQuizGradingDefinition(quizDocumentToGradingItems(document), grading),
     };
   }
   return assertQuizContentDocument(document);

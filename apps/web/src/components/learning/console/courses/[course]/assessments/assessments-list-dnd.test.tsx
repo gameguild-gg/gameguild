@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { act, render, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AssessmentsList } from './assessments-list';
@@ -8,6 +8,11 @@ import type { Assessment } from '@/lib/learning/queries/assessments';
 
 const dndHarness = vi.hoisted(() => ({
   handlers: [] as Array<(event: { active: { id: string }; over: { id: string } | null }) => void>,
+  startHandlers: [] as Array<(event: { active: { id: string } }) => void>,
+  cancelHandlers: [] as Array<() => void>,
+  contextIds: [] as Array<string | undefined>,
+  draggingId: null as string | null,
+  overId: null as string | null,
 }));
 
 const routerMocks = vi.hoisted(() => ({
@@ -17,27 +22,36 @@ const routerMocks = vi.hoisted(() => ({
 vi.mock('@dnd-kit/core', () => ({
   DndContext: ({
     children,
+    id,
+    onDragStart,
     onDragEnd,
+    onDragCancel,
   }: {
     children: ReactNode;
+    id?: string;
+    onDragStart?: (event: { active: { id: string } }) => void;
     onDragEnd?: (event: { active: { id: string }; over: { id: string } | null }) => void;
+    onDragCancel?: () => void;
   }) => {
+    dndHarness.contextIds.push(id);
+    if (onDragStart) dndHarness.startHandlers.push(onDragStart);
     if (onDragEnd) dndHarness.handlers.push(onDragEnd);
+    if (onDragCancel) dndHarness.cancelHandlers.push(onDragCancel);
     return children;
   },
   DragOverlay: ({ children }: { children: ReactNode }) => children ?? null,
   PointerSensor: vi.fn(),
   closestCorners: vi.fn(),
-  useDraggable: () => ({
+  useDraggable: ({ id }: { id: string }) => ({
     attributes: {},
     listeners: {},
     setNodeRef: vi.fn(),
-    transform: null,
-    isDragging: false,
+    transform: dndHarness.draggingId === id ? { x: 1, y: 2 } : null,
+    isDragging: dndHarness.draggingId === id,
   }),
-  useDroppable: () => ({
+  useDroppable: ({ id }: { id: string }) => ({
     setNodeRef: vi.fn(),
-    isOver: false,
+    isOver: dndHarness.overId === id,
   }),
   useSensor: vi.fn(() => ({})),
   useSensors: vi.fn(() => []),
@@ -140,6 +154,11 @@ const assessments = [unassignedAssessment, groupAAssessment, groupBAssessment, f
 
 function renderList() {
   dndHarness.handlers.length = 0;
+  dndHarness.startHandlers.length = 0;
+  dndHarness.cancelHandlers.length = 0;
+  dndHarness.contextIds.length = 0;
+  dndHarness.draggingId = null;
+  dndHarness.overId = null;
   routerMocks.refresh.mockClear();
   return render(
     <AssessmentsList
@@ -155,6 +174,12 @@ describe('AssessmentsList DnD between grade groups', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(updateAssessment).mockResolvedValue({ success: true, data: null });
+  });
+
+  it('uses a deterministic context id for server and client rendering', () => {
+    renderList();
+
+    expect(dndHarness.contextIds).toEqual(['assessments-course-1']);
   });
 
   it('moves an unassigned assessment into Group A via drop', async () => {
@@ -278,6 +303,87 @@ describe('AssessmentsList DnD between grade groups', () => {
     await waitFor(() => {
       expect(updateAssessment).toHaveBeenCalled();
     });
+    expect(screen.getByRole('alert')).toHaveTextContent('Cannot move locked assessment.');
     expect(routerMocks.refresh).not.toHaveBeenCalled();
+  });
+
+  it('shows and clears the active drag preview', async () => {
+    renderList();
+
+    await act(async () => {
+      dndHarness.startHandlers[0]!({ active: { id: 'assessment-assessment-groupA' } });
+    });
+    expect(screen.getAllByText('In group A')).toHaveLength(2);
+
+    await act(async () => {
+      dndHarness.cancelHandlers[0]!();
+    });
+    expect(screen.getAllByText('In group A')).toHaveLength(1);
+  });
+
+  it('ignores a drag preview whose assessment no longer exists', async () => {
+    renderList();
+
+    await act(async () => {
+      dndHarness.startHandlers[0]!({ active: { id: 'assessment-missing' } });
+    });
+
+    expect(screen.queryByText('missing')).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ['the same draggable', 'assessment-assessment-groupA', 'assessment-assessment-groupA'],
+    ['an unrelated draggable', 'group-a', 'group-drop-group-b'],
+    ['a removed assessment', 'assessment-missing', 'group-drop-group-b'],
+    ['an unrelated target', 'assessment-assessment-groupA', 'unrelated-target'],
+    ['a removed target assessment', 'assessment-assessment-groupA', 'assessment-missing'],
+  ])('ignores %s', async (_case, activeId, overId) => {
+    renderList();
+
+    await act(async () => {
+      dndHarness.handlers[0]!({ active: { id: activeId }, over: { id: overId } });
+    });
+
+    expect(updateAssessment).not.toHaveBeenCalled();
+  });
+
+  it('uses the unassigned destination of another assessment card', async () => {
+    renderList();
+
+    await act(async () => {
+      dndHarness.handlers[0]!({
+        active: { id: 'assessment-assessment-groupA' },
+        over: { id: 'assessment-assessment-unassigned' },
+      });
+    });
+
+    await waitFor(() => {
+      expect(updateAssessment).toHaveBeenCalledWith({
+        courseId: 'course-1',
+        assessmentId: 'assessment-groupA',
+        clearAssessmentGroupId: true,
+      });
+    });
+  });
+
+  it('renders the active draggable and droppable visual states', () => {
+    dndHarness.draggingId = 'assessment-assessment-groupA';
+    dndHarness.overId = 'group-drop-group-a';
+    dndHarness.handlers.length = 0;
+    dndHarness.startHandlers.length = 0;
+    dndHarness.cancelHandlers.length = 0;
+    dndHarness.contextIds.length = 0;
+
+    const { container } = render(
+      <AssessmentsList
+        courseId="course-1"
+        assessments={assessments}
+        total={assessments.length}
+        assessmentGroups={assessmentGroups}
+      />,
+    );
+
+    expect(screen.getByTestId('assessment-group-group-a').querySelector('.bg-primary\\/5')).toBeInTheDocument();
+    expect(container.querySelector('[style*="opacity: 0.4"]')).toBeInTheDocument();
   });
 });

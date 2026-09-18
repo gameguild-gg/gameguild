@@ -46,6 +46,7 @@ export async function GET(
     },
     cache: "no-store",
     redirect: "follow",
+    signal: request.signal,
   });
 
   const headers = new Headers();

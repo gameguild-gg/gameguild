@@ -2,7 +2,11 @@
 
 import { Link } from "@/i18n/navigation";
 import { followCreator } from "@/lib/feed/actions";
-import type { SocialProfile } from "@/lib/feed/contracts";
+import type {
+  SocialProfile,
+  SocialProfilePost,
+  SocialProfileProject,
+} from "@/lib/feed/contracts";
 import { Button } from "@game-guild/ui/components/button";
 import { ArrowLeft, BadgeCheck, ExternalLink, MapPin } from "lucide-react";
 import Image from "next/image";
@@ -16,9 +20,15 @@ function initials(name: string) {
 export function SocialProfileView({
   profile,
   currentUserId,
+  posts,
+  projects,
+  collectionsError,
 }: {
   profile: SocialProfile;
   currentUserId: string | null;
+  posts: SocialProfilePost[];
+  projects: SocialProfileProject[];
+  collectionsError?: string | null;
 }): React.JSX.Element {
   const [following, setFollowing] = React.useState(profile.isFollowing);
   const [followerCount, setFollowerCount] = React.useState(profile.followerCount);
@@ -27,15 +37,25 @@ export function SocialProfileView({
 
   async function toggleFollow() {
     if (pending) return;
-    const next = !following;
+    const previous = following;
+    const previousFollowerCount = followerCount;
+    const next = !previous;
     setFollowing(next);
-    setFollowerCount((count) => Math.max(0, count + (next ? 1 : -1)));
+    setFollowerCount(Math.max(0, previousFollowerCount + (next ? 1 : -1)));
     setPending(true);
     try {
-      await followCreator(profile.userId, next);
+      const state = await followCreator(profile.userId, next);
+      setFollowing(state.isFollowing);
+      setFollowerCount(
+        Math.max(
+          0,
+          previousFollowerCount +
+            (state.isFollowing === previous ? 0 : state.isFollowing ? 1 : -1),
+        ),
+      );
     } catch (error) {
-      setFollowing(!next);
-      setFollowerCount((count) => Math.max(0, count + (next ? -1 : 1)));
+      setFollowing(previous);
+      setFollowerCount(previousFollowerCount);
       toast.error(error instanceof Error ? error.message : "Follow could not be updated.");
     } finally {
       setPending(false);
@@ -111,6 +131,63 @@ export function SocialProfileView({
           </dl>
         </div>
       </section>
+
+      <div className="space-y-8 px-4 py-8 sm:px-6">
+        {collectionsError ? (
+          <p role="alert" className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            {collectionsError}
+          </p>
+        ) : null}
+
+        <section aria-labelledby="profile-projects-heading">
+          <h2 id="profile-projects-heading" className="text-lg font-semibold">Projects</h2>
+          {projects.length > 0 ? (
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              {projects.map((project) => (
+                <article key={project.id} className="overflow-hidden rounded-xl border bg-card text-card-foreground">
+                  {project.imageUrl ? (
+                    <div className="relative aspect-video bg-muted">
+                      <Image src={project.imageUrl} alt="" fill unoptimized className="object-cover" sizes="(min-width: 640px) 386px, 100vw" />
+                    </div>
+                  ) : null}
+                  <div className="space-y-2 p-4">
+                    <h3 className="font-semibold">
+                      <Link href={`/projects/${project.slug}`} className="hover:underline">{project.title}</Link>
+                    </h3>
+                    {project.shortDescription ? <p className="text-sm text-muted-foreground">{project.shortDescription}</p> : null}
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-3 text-sm text-muted-foreground">No public projects yet.</p>
+          )}
+        </section>
+
+        <section aria-labelledby="profile-posts-heading">
+          <h2 id="profile-posts-heading" className="text-lg font-semibold">Posts</h2>
+          {posts.length > 0 ? (
+            <div className="mt-4 space-y-4">
+              {posts.map((post) => (
+                <article key={post.id} className="overflow-hidden rounded-xl border bg-card p-4 text-card-foreground">
+                  <p className="whitespace-pre-wrap text-sm leading-6">{post.content}</p>
+                  {post.mediaUrl && post.mediaType?.startsWith("image/") ? (
+                    <div className="relative mt-4 aspect-video overflow-hidden rounded-lg bg-muted">
+                      <Image src={post.mediaUrl} alt="" fill unoptimized className="object-cover" sizes="772px" />
+                    </div>
+                  ) : null}
+                  {post.mediaUrl && post.mediaType?.startsWith("video/") ? (
+                    <video src={post.mediaUrl} controls preload="metadata" className="mt-4 aspect-video w-full rounded-lg bg-black" />
+                  ) : null}
+                  <Link href={`/social/posts/${post.id}`} className="mt-4 inline-flex text-sm font-medium text-primary hover:underline">Open post</Link>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-3 text-sm text-muted-foreground">No public posts yet.</p>
+          )}
+        </section>
+      </div>
     </main>
   );
 }

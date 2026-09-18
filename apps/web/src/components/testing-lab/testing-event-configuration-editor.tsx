@@ -43,7 +43,19 @@ export function TestingEventConfigurationEditor({
     const formData = new FormData(event.currentTarget);
     formData.set('projectApplicationSchemaJson', JSON.stringify(applicationSchema));
     formData.set('testerRegistrationSchemaJson', JSON.stringify(registrationSchema));
-    startTransition(async () => setResult(await configureTestingEvent(formData)));
+    startTransition(async () => {
+      try {
+        setResult(await configureTestingEvent(formData));
+      } catch (error) {
+        setResult({
+          success: false,
+          error:
+            error instanceof Error
+              ? error.message
+              : 'The Testing Lab operation failed.',
+        });
+      }
+    });
   }
 
   if (!editable) {

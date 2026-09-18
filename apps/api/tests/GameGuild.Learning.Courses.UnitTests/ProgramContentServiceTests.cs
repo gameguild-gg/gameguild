@@ -9,6 +9,34 @@ namespace GameGuild.Learning.Courses.UnitTests;
 public sealed class ProgramContentServiceTests
 {
     [Fact]
+    public async Task CreateContentAsync_ShouldInheritTenantFromProgram()
+    {
+        await using var context = CreateContext();
+        var program = new Program
+        {
+            Id = Guid.NewGuid(),
+            TenantId = Guid.NewGuid(),
+            Title = "Tenant course",
+            Slug = $"tenant-course-{Guid.NewGuid():N}",
+        };
+        context.Set<Program>().Add(program);
+        await context.SaveChangesAsync();
+        var service = new ProgramContentService(
+            context,
+            Mock.Of<IProgramContentScheduleGuard>(),
+            Mock.Of<IProgramContentLifecycleGuard>());
+
+        var created = await service.CreateContentAsync(new ProgramContent
+        {
+            Id = Guid.NewGuid(),
+            ProgramId = program.Id,
+            Title = "Tenant lesson",
+        });
+
+        created.TenantId.Should().Be(program.TenantId);
+    }
+
+    [Fact]
     public async Task DeleteContentAsync_ShouldSoftDeleteNestedDescendants()
     {
         await using var context = CreateContext();
@@ -30,6 +58,28 @@ public sealed class ProgramContentServiceTests
         deleted.Should().BeTrue();
         var contents = await context.Set<ProgramContent>().IgnoreQueryFilters().ToListAsync();
         contents.Should().OnlyContain(content => content.DeletedAt != null);
+    }
+
+    [Fact]
+    public async Task DeleteContentAsync_WithCorruptCycle_TerminatesAndDeletesEachItemOnce()
+    {
+        await using var context = CreateContext();
+        var programId = Guid.NewGuid();
+        var root = PersistedContent(programId, "Root");
+        var child = PersistedContent(programId, "Child", root.Id);
+        root.ParentId = child.Id;
+        context.Set<ProgramContent>().AddRange(root, child);
+        await context.SaveChangesAsync();
+        var service = new ProgramContentService(
+            context,
+            Mock.Of<IProgramContentScheduleGuard>(),
+            Mock.Of<IProgramContentLifecycleGuard>());
+
+        var deleted = await service.DeleteContentAsync(root.Id);
+
+        deleted.Should().BeTrue();
+        var contents = await context.Set<ProgramContent>().IgnoreQueryFilters().ToListAsync();
+        contents.Should().HaveCount(2).And.OnlyContain(content => content.DeletedAt != null);
     }
 
     private static LearningCoursesTestContext CreateContext()
@@ -59,6 +109,13 @@ public sealed class ProgramContentServiceTests
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<Program>(entity =>
+            {
+                entity.Ignore(program => program.ProgramContents);
+                entity.Ignore(program => program.ProgramUsers);
+                entity.Ignore(program => program.ProgramRatings);
+                entity.Ignore(program => program.ProgramWishlists);
+            });
             modelBuilder.Entity<ProgramContent>(entity =>
             {
                 entity.Ignore(content => content.Program);

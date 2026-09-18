@@ -237,6 +237,41 @@ public class AssetUploadServiceTests
     }
 
     [Fact]
+    public async Task UploadAsync_WithRequestedReferenceId_PreservesPortableAssetUri()
+    {
+        var bytes = new byte[16];
+        using var stream = new MemoryStream(bytes);
+        var userId = Guid.NewGuid();
+        var requestedReferenceId = Guid.NewGuid();
+        var existingContent = new AssetContent("bucket", "key", "hash", "image/png", bytes.Length, null, null)
+        {
+            Id = Guid.NewGuid(),
+        };
+        _contentRepositoryMock
+            .Setup(x => x.GetByContentHashAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingContent);
+        AssetReference? captured = null;
+        _referenceRepositoryMock
+            .Setup(x => x.AddAsync(It.IsAny<AssetReference>(), It.IsAny<CancellationToken>()))
+            .Callback<AssetReference, CancellationToken>((candidate, _) => captured = candidate)
+            .ReturnsAsync((AssetReference candidate, CancellationToken _) => candidate);
+        var options = new UploadAssetOptions(
+            "portable.png",
+            AssetAccessPolicy.Inherited,
+            "ProgramContent",
+            Guid.NewGuid(),
+            TenantId: Guid.NewGuid(),
+            RequestedReferenceId: requestedReferenceId);
+
+        var result = await _service.UploadAsync(stream, "portable.png", "image/png", userId, options);
+
+        result.Success.Should().BeTrue();
+        captured.Should().NotBeNull();
+        captured!.Id.Should().Be(requestedReferenceId);
+        result.AssetReferenceId.Should().Be(requestedReferenceId);
+    }
+
+    [Fact]
     public async Task UploadAsync_WithParentResource_CreatesReferenceWithParent()
     {
         // Arrange

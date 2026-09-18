@@ -38,6 +38,10 @@ import {
   getCourseLookupSlug,
   slugifyRoutePart,
 } from "@/lib/learning/course-route";
+import {
+  optionalPercentUnitsToPercentage,
+  percentUnitsToPercentage,
+} from "@/lib/learning/academic-values";
 
 // Re-export generated types for consumers
 export type {
@@ -167,7 +171,7 @@ function mapProgramDtoToCourseViewModel(
     thumbnail: dto.thumbnail ?? null,
     videoShowcaseUrl: dto.videoShowcaseUrl ?? null,
     estimatedHours: dto.estimatedHours ?? null,
-    passingScore: typeof dto.passingScore === "number" ? dto.passingScore : null,
+    passingScore: optionalPercentUnitsToPercentage(dto.passingScore),
     category: dto.category ?? "GeneralEducation",
     difficulty: dto.difficulty ?? "Beginner",
     skillsRequired: dto.skillsRequired ?? null,
@@ -249,7 +253,7 @@ export const getCourse = cache(
 
 export const resolveCourseId = cache(
   async (courseIdentifier: string): Promise<string> => {
-    if (isGuid(courseIdentifier)) return courseIdentifier;
+    if (isGuid(courseIdentifier)) return courseIdentifier.trim();
 
     const course = await getCourse(courseIdentifier);
     return course?.id ?? courseIdentifier;
@@ -372,9 +376,11 @@ function mapContentDto(
   dto: LearningCoursesProgramContent,
 ): CourseContentItemViewModel {
   const gradingConfig = readDtoGradingConfig(dto);
+  const version = (dto as LearningCoursesProgramContent & { version?: number }).version;
 
   return {
     id: dto.id!,
+    version: version ?? 0,
     slug: dto.slug ?? dto.id!,
     parentId: dto.parentId ?? null,
     order: dto.sortOrder ?? 0,
@@ -496,44 +502,31 @@ export const getCourseStudents = cache(
     try {
       const resolvedCourseId = await resolveCourseId(courseId);
       const { programs } = createCourseModules();
-      const { users } = createCourseModules();
       const result = await programs.getCoursesUsers(resolvedCourseId, {
         take: 200,
       });
 
       if (!result.ok) return { students: [], total: 0 };
 
-      const students = await Promise.all(
-        result.data.map(async (dto, i) => {
-          const userId = dto.userId ?? `user-${i}`;
-          let identity: { name?: string | null; email?: string | null } | null =
-            null;
+      const students = result.data.map((dto, i) => {
+        const userId = dto.userId ?? `user-${i}`;
+        const name = dto.userName?.trim();
+        const email = dto.userEmail?.trim() ?? "";
 
-          if (dto.userId) {
-            try {
-              const userResult = await users.getUsersForGetUsersByUserId(dto.userId);
-              if (userResult.ok) identity = userResult.data;
-            } catch {
-              // The roster remains usable if an individual identity lookup fails.
-            }
-          }
-
-          return {
-            id: dto.enrollmentId ?? userId,
-            userId,
-            name:
-              identity?.name?.trim() ||
-              identity?.email?.split("@")[0] ||
-              `Student ${i + 1}`,
-            email: identity?.email ?? "",
-            enrolledAt: dto.startedAt ?? new Date().toISOString(),
-            progress: Math.round(dto.completionPercentage ?? 0),
-            completedAt: dto.completedAt ?? null,
-            lastActivity:
-              dto.lastAccessedAt ?? dto.startedAt ?? new Date().toISOString(),
-          };
-        }),
-      );
+        return {
+          id: dto.enrollmentId ?? userId,
+          userId,
+          name: name || email.split("@")[0] || `Student ${i + 1}`,
+          email,
+          enrolledAt: dto.startedAt ?? new Date().toISOString(),
+          progress: Math.round(
+            percentUnitsToPercentage(dto.completionPercentage ?? 0),
+          ),
+          completedAt: dto.completedAt ?? null,
+          lastActivity:
+            dto.lastAccessedAt ?? dto.startedAt ?? new Date().toISOString(),
+        };
+      });
 
       return { students, total: students.length };
     } catch {

@@ -4,6 +4,8 @@ using GameGuild.Learning.Certificates;
 using GameGuild.Learning.Cohorts;
 using GameGuild.Learning.Courses;
 using GameGuild.Learning.Experience.Social;
+using GameGuild.Learning.Assessments.Grading.Persistence;
+using GameGuild.Learning.Grading.Contracts;
 using GameGuild.Learning.Workspaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -21,7 +23,7 @@ public sealed class LearnerWorkspaceEdgeCaseTests
     {
         await using var context = CreateContext();
 
-        var result = await new GetLearnerDashboardQueryHandler(context)
+        var result = await new GetLearnerDashboardQueryHandler(context, new TestGradebookProjectionService())
             .Handle(new GetLearnerDashboardQuery(Guid.NewGuid()), CancellationToken.None);
 
         result.Should().Be(new LearnerDashboardDto([], [], [], [], [], []));
@@ -32,7 +34,7 @@ public sealed class LearnerWorkspaceEdgeCaseTests
     {
         await using var context = CreateContext();
 
-        var action = () => new GetLearnerDashboardQueryHandler(context)
+        var action = () => new GetLearnerDashboardQueryHandler(context, new TestGradebookProjectionService())
             .Handle(new GetLearnerDashboardQuery(Guid.Empty), CancellationToken.None);
 
         await action.Should().ThrowAsync<ArgumentException>();
@@ -78,7 +80,11 @@ public sealed class LearnerWorkspaceEdgeCaseTests
             CohortScheduleItemType.ContentRelease,
             "Undated",
             status: CohortScheduleItemStatus.Published);
-        var ungraded = Assessment.Create(course.Id, "Ungraded yet", AssessmentType.Quiz, 10);
+        var ungraded = Assessment.Create(
+            course.Id,
+            "Ungraded yet",
+            AssessmentType.Quiz,
+            ScoreValue.FromPoints("10"));
 
         context.AddRange(
             course,
@@ -92,7 +98,7 @@ public sealed class LearnerWorkspaceEdgeCaseTests
             ungraded);
         await context.SaveChangesAsync();
 
-        var result = await new GetLearnerDashboardQueryHandler(context)
+        var result = await new GetLearnerDashboardQueryHandler(context, new TestGradebookProjectionService())
             .Handle(new GetLearnerDashboardQuery(userId), CancellationToken.None);
 
         result.Courses.Should().ContainSingle(item =>
@@ -120,7 +126,7 @@ public sealed class LearnerWorkspaceEdgeCaseTests
             ? new GetLearnerCourseWorkspaceQuery(Guid.Empty, Guid.NewGuid())
             : new GetLearnerCourseWorkspaceQuery(Guid.NewGuid(), Guid.Empty);
 
-        var result = await new GetLearnerCourseWorkspaceQueryHandler(context)
+        var result = await new GetLearnerCourseWorkspaceQueryHandler(context, new TestGradebookProjectionService())
             .Handle(query, CancellationToken.None);
 
         result.Should().BeNull();
@@ -135,7 +141,7 @@ public sealed class LearnerWorkspaceEdgeCaseTests
         context.Add(CreateEnrollment(userId, courseId));
         await context.SaveChangesAsync();
 
-        var result = await new GetLearnerCourseWorkspaceQueryHandler(context)
+        var result = await new GetLearnerCourseWorkspaceQueryHandler(context, new TestGradebookProjectionService())
             .Handle(new GetLearnerCourseWorkspaceQuery(userId, courseId), CancellationToken.None);
 
         result.Should().BeNull();
@@ -150,7 +156,7 @@ public sealed class LearnerWorkspaceEdgeCaseTests
         context.AddRange(course, CreateEnrollment(userId, course.Id));
         await context.SaveChangesAsync();
 
-        var result = await new GetLearnerCourseWorkspaceQueryHandler(context)
+        var result = await new GetLearnerCourseWorkspaceQueryHandler(context, new TestGradebookProjectionService())
             .Handle(new GetLearnerCourseWorkspaceQuery(userId, course.Id), CancellationToken.None);
 
         result.Should().NotBeNull();
@@ -169,14 +175,14 @@ public sealed class LearnerWorkspaceEdgeCaseTests
         var lesson = CreateContent(course.Id, "First lesson");
         lesson.Description = "Lesson description";
         lesson.LessonFormat = null;
-        var group = AssessmentGroup.Create(course.Id, "Assignments", 100m);
+        var group = AssessmentGroup.Create(course.Id, "Assignments", PercentValue.FromPercentage("100"));
         var assessment = Assessment.Create(
             course.Id,
             "Practice",
             AssessmentType.Assignment,
-            20,
-            assessmentGroupId: group.Id);
-        assessment.Update(null, null, null, null, null, null, null, null, contentId: lesson.Id);
+            ScoreValue.FromPoints("20"),
+            assessmentGroupId: group.Id,
+            contentId: lesson.Id);
         var submission = AssessmentSubmission.Start(assessment.Id, enrollment.Id, userId, 1);
         submission.Submit();
         var cohort = Cohort.Create(
@@ -211,7 +217,7 @@ public sealed class LearnerWorkspaceEdgeCaseTests
             schedule);
         await context.SaveChangesAsync();
 
-        var result = await new GetLearnerCourseWorkspaceQueryHandler(context)
+        var result = await new GetLearnerCourseWorkspaceQueryHandler(context, new TestGradebookProjectionService())
             .Handle(new GetLearnerCourseWorkspaceQuery(userId, course.Id), CancellationToken.None);
 
         result.Should().NotBeNull();
@@ -296,6 +302,8 @@ public sealed class LearnerWorkspaceEdgeCaseTests
             modelBuilder.Entity<CohortScheduleItem>();
             modelBuilder.Entity<AssessmentGroup>();
             modelBuilder.Entity<AssessmentSubmission>();
+            modelBuilder.Entity<AssessmentSubmissionParticipant>();
+            modelBuilder.Entity<AssessmentContentCompletionProjection>();
             modelBuilder.Entity<Certificate>();
             modelBuilder.Entity<CourseDiscussion>();
         }

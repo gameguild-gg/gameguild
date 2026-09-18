@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using GameGuild.CQRS;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Users;
+using GameGuild.Learning.Grading.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -25,7 +26,7 @@ public sealed record CreateLtiLineItemCommand(
     Guid AssessmentId,
     string LineItemId,
     string LineItemUrl,
-    int MaxScore) : ICommand<CreateLtiLineItemResult>;
+    ScoreValue MaxScore) : ICommand<CreateLtiLineItemResult>;
 
 public enum LtiLaunchStatus
 {

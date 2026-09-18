@@ -1,10 +1,11 @@
 import {
-  syncQuizGradingDefinition,
-  tryParseGradingDefinition,
+  tryParseContentGradingDefinition,
 } from "@game-guild/grading";
+import { syncQuizGradingDefinition } from "@game-guild/grading-adapter-quiz";
 import { safeParseQuizEntry } from "@game-guild/quiz";
 import { QUIZ_BLOCK_TYPE, QUIZ_CONTENT_SCHEMA_VERSION } from "./constants";
-import { createEmptyQuizContentDocument, quizDocumentToBlocks } from "./storage";
+import { quizDocumentToGradingItems } from "./grading-projection";
+import { createEmptyQuizContentDocument } from "./storage";
 import type {
   QuizContentDocument,
   QuizContentParseIssue,
@@ -145,17 +146,17 @@ export function parseQuizContentDocument(value: unknown): QuizContentParseResult
   };
 
   if (Object.prototype.hasOwnProperty.call(root, "grading")) {
-    const grading = tryParseGradingDefinition(root.grading);
+    const grading = tryParseContentGradingDefinition(root.grading);
     if (!grading) {
       issues.push({
         code: "invalid-grading",
         path: "grading",
-        message: "Grading must be an enabled valid grading definition",
+        message: "Grading must be a valid ContentGradingDefinitionV2",
       });
     } else {
       document = {
         ...document,
-        grading: syncQuizGradingDefinition(quizDocumentToBlocks(document), grading),
+        grading: syncQuizGradingDefinition(quizDocumentToGradingItems(document), grading),
       };
     }
   }

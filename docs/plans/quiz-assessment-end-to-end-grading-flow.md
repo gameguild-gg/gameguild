@@ -9,6 +9,19 @@ Data da avaliação: 2026-08-19. Revisado em 2026-08-20.
 > 2026-08-21. Este documento preserva a auditoria detalhada do estado
 > encontrado e não deve ser usado isoladamente para implementar workflows.
 
+> Atualização posterior: o modelo canônico usa métodos de **review** para
+> identificar quem ou o que analisa a submissão, enquanto grading é o efeito
+> que produz score, feedback e resultado. `PeerReview` é um método primário
+> válido. O fluxo existente já registra revisões individuais em
+> `AssessmentPeerReview`, mas ainda não as agrega em nota oficial nem finaliza
+> `AssessmentSubmission`. Os nomes, workflows e fronteiras vigentes estão no
+> [`plano canônico`](./quiz-grading-end-to-end/README.md); a consolidação de
+> pares está detalhada em
+> [`04-graders-and-instructor-review.md`](./quiz-grading-end-to-end/04-graders-and-instructor-review.md).
+> O corpo arquivado abaixo antecede essa decisão e, por isso, ainda usa nomes
+> `*Graded`, trata `AutoGraded` como autoavaliação e descreve somente sete
+> combinações. Essas passagens são evidência histórica, não especificação.
+
 ## Resumo executivo
 
 O sistema já possui partes importantes do fluxo, mas elas ainda não formam um
@@ -125,9 +138,9 @@ O grupo decide somente a participação no resultado do curso:
   peso configurado.
 
 O peso não limita `GradingMethods`. O instrutor pode selecionar qualquer
-workflow válido, inclusive publicação direta por pares, IA ou autoavaliação em
-um grupo de peso positivo. Essa é uma decisão acadêmica explícita do instrutor,
-não uma regra inferida pelo gradebook.
+workflow válido, inclusive publicação direta após revisão entre alunos, IA ou
+autoavaliação em um grupo de peso positivo. Essa é uma decisão acadêmica
+explícita do instrutor, não uma regra inferida pelo gradebook.
 
 Isso substitui a necessidade de um `resultUse` separado. `feedback` e
 `gradebook` não são propriedades do quiz nem modos alternativos do motor de
@@ -137,7 +150,8 @@ grading. São interpretações da colocação do assessment na estrutura do curs
 
 `GradingMethods` representa atores e fases do workflow:
 
-- `PeerReview`: pares produzem a avaliação primária;
+- `PeerReview`: alunos revisam submissões de outros alunos, e essas revisões
+  produzem a avaliação primária;
 - `AIGraded`: a IA produz a avaliação primária;
 - `AutoGraded`: o próprio aluno produz sua autoavaliação e nota;
 - `InstructorGraded`: o instrutor avalia diretamente ou, quando combinado com
@@ -147,11 +161,11 @@ Combinações válidas:
 
 | Flags | Ordem canônica | Publicação |
 | --- | --- | --- |
-| `PeerReview` | pares | após concluir a política de pares |
+| `PeerReview` | revisão entre alunos | após concluir a política de revisão entre alunos |
 | `AIGraded` | IA | após concluir a avaliação por IA |
 | `AutoGraded` | aluno | após concluir a autoavaliação |
 | `InstructorGraded` | instrutor | após a avaliação do instrutor |
-| `PeerReview,InstructorGraded` | pares -> instrutor | após revisão do instrutor |
+| `PeerReview,InstructorGraded` | revisão entre alunos -> instrutor | após revisão do instrutor |
 | `AIGraded,InstructorGraded` | IA -> instrutor | após revisão do instrutor |
 | `AutoGraded,InstructorGraded` | aluno -> instrutor | após revisão do instrutor |
 
@@ -474,7 +488,7 @@ real atual do quiz.
 | Correção manual específica de quiz | parcial | 40% |
 | Avaliação por IA confiável no servidor | ausente | 15% |
 | Autoavaliação do aluno | ausente | 10% |
-| Avaliação por pares | parcial | 35% |
+| Revisão entre alunos | parcial | 35% |
 | Resultado do quiz para o aluno | parcial | 30% |
 | Gradebook ponderado | parcial e ambíguo | 45% |
 | Segurança da definição para o aluno | bloqueio crítico | 20% |
@@ -983,7 +997,7 @@ a execução das flags por `SubmitAsync`, fila, aprovação e gradebook.
 
 | Método primário | Sem instrutor | Com `InstructorGraded` |
 | --- | --- | --- |
-| `PeerReview` | pares avaliam e publicam | pares avaliam; instrutor revisa e publica |
+| `PeerReview` | alunos revisam submissões de outros alunos e o resultado é publicado | alunos revisam submissões de outros alunos; instrutor revisa e publica |
 | `AIGraded` | IA avalia e publica | IA avalia; instrutor revisa e publica |
 | `AutoGraded` | aluno se autoavalia e publica | aluno se autoavalia; instrutor revisa e publica |
 | `InstructorGraded` | instrutor avalia e publica | não se aplica |
@@ -1022,8 +1036,8 @@ Responsabilidades:
   finalizador, mas não substituem o histórico de estágios;
 - `AIGraded` pode finalizar sem `GradedBy` humano quando não houver revisão;
 - `AutoGraded` deve identificar o aluno como autor da autoavaliação;
-- `PeerReview` precisa preservar os pares participantes mesmo que o resultado
-  consolidado não possua um único `GradedBy`;
+- `PeerReview` precisa preservar os alunos revisores participantes mesmo que o
+  resultado consolidado não possua um único `GradedBy`;
 - o evento de auditoria diferencia aprovação sem mudança, override e regrade;
 - o ID do professor sempre vem do ator autenticado. O controller atual já
   substitui `GradedBy` recebido pelo ID desse ator.
@@ -1110,7 +1124,7 @@ Usar dois controles sequenciais, em vez de expor combinações de flags.
 Primeiro, uma seleção exclusiva de avaliador primário:
 
 ```text
-Avaliação por pares       PeerReview
+Revisão entre alunos     PeerReview
 Avaliação por IA          AIGraded
 Autoavaliação do aluno    AutoGraded
 Avaliação pelo instrutor  InstructorGraded
@@ -1134,7 +1148,8 @@ resumo da sequência, por exemplo `IA -> revisão do instrutor -> publicação`.
 - somente `InstructorGraded` pode ser acrescentado ao primário;
 - a API normaliza a ordem e rejeita todas as outras combinações;
 - cada método deve indicar seus pré-requisitos ainda não configurados;
-- `PeerReview` mantém quantidade e política de pares em sua seção específica;
+- `PeerReview` mantém quantidade e política de alunos revisores em sua seção
+  específica;
 - `AIGraded` deve ficar indisponível enquanto seu executor não estiver
   operacional;
 - `AutoGraded` exige configurar a experiência de autoavaliação do aluno;
@@ -1434,7 +1449,7 @@ professor. O peso não altera nenhum dos dois caminhos.
 
 Executar Fases 6 e 7.
 
-Autoavaliação e avaliação por pares reutilizam o resultado por estágios e a
+Autoavaliação e revisão entre alunos reutilizam o resultado por estágios e a
 revisão docente já implementados. O gradebook deve ser fechado antes de
 considerar o fluxo acadêmico completo.
 
@@ -1475,11 +1490,11 @@ considerar o fluxo acadêmico completo.
 6. com `InstructorGraded`, o professor revisa e pode alterar com motivo;
 7. a autoria do aluno e qualquer alteração docente permanecem auditáveis.
 
-### Avaliação por pares
+### Revisão entre alunos
 
 1. professor seleciona `PeerReview` e configura sua política;
-2. a API distribui as submissões somente a pares autorizados;
-3. as avaliações são consolidadas conforme a política;
+2. a API distribui cada submissão somente a outros alunos revisores elegíveis;
+3. as revisões dos alunos são consolidadas conforme a política;
 4. sem `InstructorGraded`, o resultado consolidado é publicado;
 5. com `InstructorGraded`, o resultado segue para revisão docente;
 6. anonimato, conflitos e atores permanecem auditáveis conforme a política.
@@ -1601,7 +1616,7 @@ definição versionada e segura
 
 A sequência recomendada é entregar primeiro o workflow docente seguro, depois
 ligar `AIGraded` e a revisão opcional e, por fim, completar autoavaliação,
-avaliação por pares e gradebook. Essa ordem produz valor completo a cada marco
+revisão entre alunos e gradebook. Essa ordem produz valor completo a cada marco
 e evita construir novos avaliadores sobre um fluxo de submissão ainda
 fragmentado.
 

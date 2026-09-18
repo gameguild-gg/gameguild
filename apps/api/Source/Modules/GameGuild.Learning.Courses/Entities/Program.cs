@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild.Learning.Grading.Contracts;
 // using GameGuild.Modules.Certificates.Entities;
 // using GameGuild.Modules.Feedbacks.Entities;
 
@@ -85,7 +86,7 @@ public class Program : EntityBase {
     /// <summary>
     /// Passing score percentage (0-100) used to determine successful program completion. Default 60.
     /// </summary>
-    public decimal PassingScore { get; set; } = 60m;
+    public PercentValue PassingScore { get; set; } = PercentValue.FromPercentage("60");
 
     /// <summary>
     /// Current enrollment status
@@ -270,16 +271,12 @@ public class Program : EntityBase {
         if (!dict.TryGetValue(key, out var value) || value is null)
             return null;
 
-        if (value is System.Text.Json.JsonElement jsonElement) {
-            return jsonElement.ValueKind switch {
-                System.Text.Json.JsonValueKind.String => jsonElement.GetString(),
-                System.Text.Json.JsonValueKind.Null => null,
-                System.Text.Json.JsonValueKind.Undefined => null,
-                _ => jsonElement.ToString(),
-            };
-        }
-
-        return value.ToString();
+        // Dictionary<string, object> values produced by System.Text.Json are JsonElement
+        // instances. Null JSON values are handled by the guard above.
+        var jsonElement = (System.Text.Json.JsonElement)value;
+        return jsonElement.ValueKind == System.Text.Json.JsonValueKind.String
+            ? jsonElement.GetString()
+            : jsonElement.ToString();
     }
 
     private void SetMetadataString(string key, string? value) {

@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { readdir, readFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -70,5 +71,23 @@ describe('web runtime hardening', () => {
     );
 
     expect(dynamicImports.map(({ file }) => file)).toEqual([]);
+  });
+
+  it('loads the Emception Python shim as source in both bundlers', () => {
+    const nextConfig = readRepoFile('apps/web/next.config.ts');
+    const loaderPath = resolve(
+      repoRoot,
+      'apps/web/scripts/turbopack-raw-source-loader.cjs',
+    );
+    const rawSourceLoader = createRequire(import.meta.url)(loaderPath) as (
+      source: string,
+    ) => string;
+
+    expect(nextConfig).toContain('"*.py"');
+    expect(nextConfig).toContain('turbopack-raw-source-loader.cjs');
+    expect(nextConfig).toContain('resourceQuery: /raw/');
+    expect(rawSourceLoader('print("ready")\n')).toBe(
+      'export default "print(\\\"ready\\\")\\n";',
+    );
   });
 });

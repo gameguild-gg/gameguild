@@ -235,8 +235,14 @@ describe('Launch Pad E2E — project release workflow', () => {
     }), 'Create applicant Project');
     const version = unwrap(await participant.request<{ id: string }>({
       method: 'POST', path: `/v1/projects/${submittedProject.id}/versions`, requiresAuth: true,
-      body: { versionNumber: '1.0.0-event-e2e', status: 'ready', releaseNotes: 'Applicant event build.' },
+      body: { versionNumber: '1.0.0-event-e2e', status: 'Draft', releaseNotes: 'Applicant event build.' },
     }), 'Create applicant ProjectVersion');
+    unwrap(await participant.request<unknown>({
+      method: 'POST', path: `/v1/projects/${submittedProject.id}/versions/${version.id}:ready`, requiresAuth: true,
+    }), 'Mark applicant ProjectVersion ready for testing');
+    unwrap(await participant.request<unknown>({
+      method: 'POST', path: `/v1/projects/${submittedProject.id}/versions/${version.id}:release`, requiresAuth: true,
+    }), 'Release applicant ProjectVersion');
 
     const now = Date.now();
     const launchEvent = unwrap(await authedClient.request<LaunchPadEventOutput>({

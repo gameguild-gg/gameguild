@@ -30,9 +30,9 @@ public class PostCommentsController(
     /// <summary>Get comments for a post</summary>
     [HttpGet("{postId:guid}/comments")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetComments(Guid postId, [FromQuery] int skip = 0, [FromQuery] int take = 50, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetComments(Guid postId, [FromQuery] int skip = 0, [FromQuery] int take = 50, [FromQuery] Guid? parentCommentId = null, CancellationToken cancellationToken = default)
     {
-        var result = await postService.GetPostCommentsAsync(postId, skip, take, cancellationToken).ConfigureAwait(false);
+        var result = await postService.GetPostCommentsAsync(postId, skip, take, parentCommentId, cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? Ok(result.Value!.Select(PostMappings.MapCommentToDto))
             : BadRequest(result.Error);

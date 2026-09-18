@@ -1,5 +1,6 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { createElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -8,12 +9,19 @@ const mocks = vi.hoisted(() => ({
   getSocialMediaStatus: vi.fn(),
   markStoryViewed: vi.fn(),
   uploadSocialMedia: vi.fn(),
+  uploadSocialMediaWithProgress: vi.fn(),
   refresh: vi.fn(),
 }));
 
 vi.mock("@/lib/feed/actions", () => mocks);
+vi.mock("@/lib/feed/social-media-upload", () => ({
+  uploadSocialMediaWithProgress: mocks.uploadSocialMediaWithProgress,
+}));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: mocks.refresh }) }));
-vi.mock("next/image", () => ({ default: (props: Record<string, unknown>) => <img {...props} /> }));
+vi.mock("next/image", () => ({
+  default: ({ alt = "", ...props }: Record<string, unknown>) =>
+    createElement("img", { ...props, alt: typeof alt === "string" ? alt : "" }),
+}));
 
 import { BuildStories, type SocialStoryPreview } from "./build-stories";
 
@@ -57,7 +65,19 @@ describe("BuildStories", () => {
     mocks.deleteStory.mockResolvedValue(undefined);
     Object.defineProperty(window, "matchMedia", {
       configurable: true,
-      value: vi.fn().mockReturnValue({ matches: true }),
+      value: vi.fn().mockReturnValue({
+        matches: true,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      }),
+    });
+    Object.defineProperty(URL, "createObjectURL", {
+      configurable: true,
+      value: vi.fn(() => "blob:story-preview"),
+    });
+    Object.defineProperty(URL, "revokeObjectURL", {
+      configurable: true,
+      value: vi.fn(),
     });
   });
   afterEach(cleanup);
@@ -78,8 +98,44 @@ describe("BuildStories", () => {
     render(<BuildStories userName="Me" stories={stories} />);
     fireEvent.click(screen.getByRole("button", { name: "View Me's story" }));
     fireEvent.click(screen.getByRole("button", { name: "Delete story" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm story deletion" }));
 
     await waitFor(() => expect(mocks.deleteStory).toHaveBeenCalledWith("story-2"));
     expect(screen.queryByRole("button", { name: "View Me's story" })).not.toBeInTheDocument();
+  });
+
+  it("inserts the authoritative story exactly once without refreshing the route", async () => {
+    const story = {
+      ...stories[1]!,
+      id: "story-created",
+      assetReferenceId: "asset-created",
+      caption: "New build",
+      mediaUrl: "https://cdn.example/created.png",
+    };
+    mocks.uploadSocialMediaWithProgress.mockResolvedValue({
+      assetReferenceId: "asset-created",
+      deliveryUrl: story.mediaUrl,
+      mimeType: "image/png",
+      sizeBytes: 6,
+      state: "Ready",
+    });
+    mocks.createStory.mockResolvedValue(story);
+    render(<BuildStories userName="Me" stories={stories} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Add story" }));
+    fireEvent.change(screen.getByLabelText("Add photo or video"), {
+      target: { files: [new File(["pixels"], "new.png", { type: "image/png" })] },
+    });
+    fireEvent.change(screen.getByLabelText("Story caption"), {
+      target: { value: "New build" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Publish story" }));
+
+    await waitFor(() =>
+      expect(screen.getAllByRole("button", { name: "View Me's story" })).toHaveLength(2),
+    );
+    expect(screen.getAllByRole("button", { name: "View Me's story" })).toHaveLength(2);
+    expect(mocks.createStory).toHaveBeenCalledTimes(1);
+    expect(mocks.refresh).not.toHaveBeenCalled();
   });
 });

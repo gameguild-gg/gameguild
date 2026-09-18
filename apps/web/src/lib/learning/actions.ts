@@ -16,7 +16,15 @@ import type { LessonContentFormat } from "@/lib/learning/lesson-formats";
 import {
   createServerClient,
   GeneratedApi,
+  type LearningAssessmentsCreateAssessmentGroupInput,
   type LearningAssessmentsCreateAssessmentInput,
+  type LearningAssessmentsGradingAuthoringAssessmentDraftResult,
+  type LearningAssessmentsGradingAuthoringPreparedAssessmentRevisionResult,
+  type LearningAssessmentsGradingAuthoringSaveAssessmentDraftInput,
+  type LearningAssessmentsGradingContractsAttemptContributionMode,
+  type LearningAssessmentsGradingContractsContentCompletionMode,
+  type LearningAssessmentsGradingContractsResultReleaseMode,
+  type LearningAssessmentsUpdateAssessmentGroupInput,
   type LearningAssessmentsUpdateAssessmentInput,
   type LearningCoursesMonetization,
   type LearningCoursesCloneProgram,
@@ -25,7 +33,15 @@ import {
   type LearningCoursesUpdateProgram,
   type LearningCoursesUpdateProgramContent,
   type LearningCoursesProgramContentType,
+  type LearningCoursesVisibility,
 } from "@game-guild/client";
+import {
+  createReviewMethods,
+  percentValueFromPercentage,
+  parseReviewMethods,
+  scoreValueFromPoints,
+  type ReviewMethods,
+} from "@game-guild/grading";
 import { createEmptyQuizContentDocument } from "@game-guild/quiz-content";
 import { revalidatePath } from "next/cache";
 
@@ -59,7 +75,7 @@ function revalidateCoursePath(
   revalidatePath(`/console/learning/courses/${courseId}${suffix}`);
   if (resolvedCourseId !== courseId) {
     revalidatePath(`/workspace/learning/courses/${resolvedCourseId}${suffix}`);
-  revalidatePath(`/console/learning/courses/${resolvedCourseId}${suffix}`);
+    revalidatePath(`/console/learning/courses/${resolvedCourseId}${suffix}`);
   }
 }
 
@@ -125,7 +141,6 @@ function formatUnexpectedError(err: unknown): string {
 // ── Content actions ──
 
 // Maps graded content types to their auto-created assessment type.
-// SubmissionModality.Code is sent as the string "Code" — the wire format is comma-separated flag names, not a bitmask.
 const CONTENT_TO_ASSESSMENT_TYPE: Record<string, AssessmentType> = {
   Assignment: "Assignment",
   Project: "Project",
@@ -146,7 +161,16 @@ export interface AddContentInput {
 export async function addContent(
   input: AddContentInput,
 ): Promise<ActionResult<{ id: string }>> {
-  const { courseId, parentId, title, slug, type, description, lessonFormat, sortOrder } = input;
+  const {
+    courseId,
+    parentId,
+    title,
+    slug,
+    type,
+    description,
+    lessonFormat,
+    sortOrder,
+  } = input;
 
   if (!title || title.trim().length < 1) {
     return { success: false, error: "Title is required." };
@@ -155,7 +179,7 @@ export async function addContent(
   try {
     const resolvedCourseId = await resolveCourseMutationId(courseId);
     const jsonBody: Record<string, unknown> | undefined =
-      type === 'Questionnaire'
+      type === "Questionnaire"
         ? { ...createEmptyQuizContentDocument() }
         : undefined;
     const contentBody: LearningCoursesCreateProgramContent = {
@@ -168,7 +192,7 @@ export async function addContent(
       visibility: "Public",
       ...(parentId ? { parentId } : {}),
       ...(jsonBody ? { jsonBody } : {}),
-      ...(type === 'Lesson' && lessonFormat ? { lessonFormat } : {}),
+      ...(type === "Lesson" && lessonFormat ? { lessonFormat } : {}),
       // Empty slug omitted -> backend derives it from the title (ToSlugCase).
       ...(slug && normalizeSlug(slug) ? { slug: normalizeSlug(slug) } : {}),
     };
@@ -193,10 +217,10 @@ export async function addContent(
           type: assessmentType,
           contentId,
           submissionModalities: type === "Code" ? "Code" : undefined,
-          gradingMethods:
+          reviewMethods:
             type === "Code"
-              ? "AutoGraded,InstructorGraded"
-              : "InstructorGraded",
+              ? createReviewMethods("AutomatedReview", true)
+              : createReviewMethods("InstructorReview"),
         });
         if (!assessment.success) {
           console.error("addContent: assessment auto-create failed", {
@@ -385,20 +409,39 @@ export async function createCourse(
   }
 
   try {
-    const { programs } = createCourseModules();
+    const { programs, users } = createCourseModules();
     const result = await programs.postCourses({
       title: title.trim(),
       description: description.trim(),
       slug: slug.trim(),
-      passingScore,
-    } satisfies LearningCoursesCreateProgram);
+      passingScore:
+        passingScore == null
+          ? undefined
+          : percentValueFromPercentage(String(passingScore)),
+    } as unknown as LearningCoursesCreateProgram);
 
     if (result.ok) {
       const id = result.data.id!;
       const createdSlug = result.data.slug?.trim() || slug.trim();
+      const creatorId = result.data.creatorId ?? null;
+      let creatorName: string | null = null;
+      let creatorEmail: string | null = null;
+
+      if (creatorId) {
+        try {
+          const creatorResult =
+            await users.getUsersForGetUsersByUserId(creatorId);
+          if (creatorResult.ok) {
+            creatorName = creatorResult.data.name ?? null;
+            creatorEmail = creatorResult.data.email ?? null;
+          }
+        } catch {
+          // The creator ID remains a valid route fallback if identity lookup fails.
+        }
+      }
 
       revalidatePath("/workspace/learning/courses");
-  revalidatePath("/console/learning/courses");
+      revalidatePath("/console/learning/courses");
       return {
         success: true,
         data: {
@@ -407,7 +450,9 @@ export async function createCourse(
           routeParam: getCourseRouteParam({
             id,
             slug: createdSlug,
-            creatorId: result.data.creatorId ?? null,
+            creatorId,
+            creatorName,
+            creatorEmail,
           }),
         },
       };
@@ -446,10 +491,16 @@ export async function updateCourse(
   input: UpdateCourseInput,
 ): Promise<ActionResult<null>> {
   const { courseId, ...fields } = input;
-  const updateFields: LearningCoursesUpdateProgram & {
+  const updateFields = {
+    ...fields,
+    passingScore:
+      fields.passingScore == null
+        ? undefined
+        : percentValueFromPercentage(String(fields.passingScore)),
+  } as unknown as LearningCoursesUpdateProgram & {
     clearMaxEnrollments?: boolean;
     clearEnrollmentDeadline?: boolean;
-  } = { ...fields } as LearningCoursesUpdateProgram;
+  };
 
   if (input.maxEnrollments === null) {
     delete updateFields.maxEnrollments;
@@ -467,9 +518,9 @@ export async function updateCourse(
 
     if (result.ok) {
       revalidatePath(`/workspace/learning/courses/${courseId}`);
-  revalidatePath(`/console/learning/courses/${courseId}`);
+      revalidatePath(`/console/learning/courses/${courseId}`);
       revalidatePath("/workspace/learning/courses");
-  revalidatePath("/console/learning/courses");
+      revalidatePath("/console/learning/courses");
       return { success: true, data: null };
     }
 
@@ -519,7 +570,7 @@ export async function publishCourse(
       revalidateCoursePath(courseId, resolvedCourseId);
       revalidateCoursePath(courseId, resolvedCourseId, "overview");
       revalidatePath("/workspace/learning/courses");
-  revalidatePath("/console/learning/courses");
+      revalidatePath("/console/learning/courses");
       return { success: true, data: null };
     }
 
@@ -544,7 +595,7 @@ export async function unpublishCourse(
       revalidateCoursePath(courseId, resolvedCourseId);
       revalidateCoursePath(courseId, resolvedCourseId, "overview");
       revalidatePath("/workspace/learning/courses");
-  revalidatePath("/console/learning/courses");
+      revalidatePath("/console/learning/courses");
       return { success: true, data: null };
     }
 
@@ -569,7 +620,7 @@ export async function restoreCourse(
       revalidateCoursePath(courseId, resolvedCourseId);
       revalidateCoursePath(courseId, resolvedCourseId, "overview");
       revalidatePath("/workspace/learning/courses");
-  revalidatePath("/console/learning/courses");
+      revalidatePath("/console/learning/courses");
       return { success: true, data: null };
     }
 
@@ -612,7 +663,7 @@ export async function transferCourseOwnership(
     revalidateCoursePath(courseId, resolvedCourseId);
     revalidateCoursePath(courseId, resolvedCourseId, "settings/danger");
     revalidatePath("/workspace/learning/courses");
-  revalidatePath("/console/learning/courses");
+    revalidatePath("/console/learning/courses");
     return { success: true, data: null };
   } catch (e) {
     return {
@@ -633,7 +684,7 @@ export async function archiveCourse(
     if (result.ok) {
       revalidateCoursePath(courseId, resolvedCourseId);
       revalidatePath("/workspace/learning/courses");
-  revalidatePath("/console/learning/courses");
+      revalidatePath("/console/learning/courses");
       return { success: true, data: null };
     }
 
@@ -656,7 +707,7 @@ export async function deleteCourse(
 
     if (result.ok) {
       revalidatePath("/workspace/learning/courses");
-  revalidatePath("/console/learning/courses");
+      revalidatePath("/console/learning/courses");
       return { success: true, data: null };
     }
 
@@ -738,31 +789,33 @@ export async function manualEnrollStudent(
 
   try {
     const resolvedCourseId = await resolveCourseMutationId(courseId);
-    const resolvedUser = await resolveEnrollmentUserId(userReference);
-    if (!resolvedUser.success) {
-      return resolvedUser;
-    }
-
     const { programs, enrollments } = createCourseModules();
-    const rosterResult = await programs.postCoursesUsers(
+    const rosterResult = await programs.postCoursesUsersEnroll(
       resolvedCourseId,
-      resolvedUser.data.userId,
+      { userReference },
     );
     if (!rosterResult.ok) {
       return { success: false, error: extractError(rosterResult.error) };
+    }
+    const enrolledUserId = rosterResult.data.userId;
+    if (!enrolledUserId) {
+      return {
+        success: false,
+        error: "Enrollment succeeded without identifying the enrolled student.",
+      };
     }
 
     if (cohortId) {
       const cohortResult = await enrollments.postApiLearningEnrollments({
         courseId: resolvedCourseId,
-        userId: resolvedUser.data.userId,
+        userId: enrolledUserId,
         cohortId,
       });
 
       if (!cohortResult.ok) {
         await programs.deleteCoursesUsers(
           resolvedCourseId,
-          resolvedUser.data.userId,
+          enrolledUserId,
         );
         return { success: false, error: extractError(cohortResult.error) };
       }
@@ -920,7 +973,8 @@ async function updateCourseMetadataSection(
   try {
     const resolvedCourseId = await resolveCourseMutationId(courseId);
     const { programs } = createCourseModules();
-    const courseResult = await programs.getCoursesForGetCoursesById(resolvedCourseId);
+    const courseResult =
+      await programs.getCoursesForGetCoursesById(resolvedCourseId);
     if (!courseResult.ok)
       return { success: false, error: extractError(courseResult.error) };
 
@@ -1030,19 +1084,26 @@ export async function updateCourseReviewModeration(
   isApproved: boolean,
   isFeatured: boolean,
 ): Promise<ActionResult<null>> {
-  const { reviews } = createCourseModules();
-  const result = await reviews.patchApiSocialReviewsModeration(reviewId, {
-    isApproved,
-    isFeatured,
-  });
+  try {
+    const { reviews } = createCourseModules();
+    const result = await reviews.patchApiSocialReviewsModeration(reviewId, {
+      isApproved,
+      isFeatured,
+    });
 
-  if (!result.ok) return { success: false, error: extractError(result.error) };
+    if (!result.ok) return { success: false, error: extractError(result.error) };
 
-  revalidatePath(
-    `/workspace/learning/courses/${courseId}/listing/testimonials`,
-  );
-  revalidatePath(`/courses/${courseId}`);
-  return { success: true, data: null };
+    revalidatePath(
+      `/workspace/learning/courses/${courseId}/listing/testimonials`,
+    );
+    revalidatePath(`/courses/${courseId}`);
+    return { success: true, data: null };
+  } catch (error) {
+    return {
+      success: false,
+      error: `Unexpected error: ${error instanceof Error ? error.message : String(error)}`,
+    };
+  }
 }
 
 export async function updateCourseFaq(
@@ -1192,7 +1253,7 @@ export async function cloneCourse(
 
     if (result.ok) {
       revalidatePath("/workspace/learning/courses");
-  revalidatePath("/console/learning/courses");
+      revalidatePath("/console/learning/courses");
       return { success: true, data: { id: result.data.id! } };
     }
 
@@ -1206,6 +1267,231 @@ export async function cloneCourse(
 }
 
 // ── Assessment actions ──
+
+export interface SaveQuizAssessmentDraftInput {
+  courseId: string;
+  contentId: string;
+  expectedContentVersion: number;
+  expectedAssessmentVersion: number | null;
+  title: string;
+  slug: string;
+  description?: string;
+  document: Record<string, unknown>;
+  visibility: LearningCoursesVisibility;
+  isRequired: boolean;
+  estimatedMinutes: number | null;
+  estimatedMinutesSource: "Auto" | "Manual";
+  reviewMethods?: ReviewMethods;
+  passingScore?: number;
+  timeLimitMinutes?: number | null;
+  maxAttempts?: number;
+  presentationMode?: AssessmentPresentationMode;
+  contentCompletionMode?: LearningAssessmentsGradingContractsContentCompletionMode;
+  resultReleaseMode?: LearningAssessmentsGradingContractsResultReleaseMode;
+  resultReleaseScheduledFor?: string | null;
+  attemptContributionMode?: LearningAssessmentsGradingContractsAttemptContributionMode | null;
+  reviewConfigurationCanonicalJson?: string | null;
+}
+
+export interface QuizAssessmentDraftSaveResult {
+  contentId: string;
+  contentVersion: number;
+  assessmentId: string | null;
+  assessmentVersion: number | null;
+}
+
+function parseAssessmentDraftSaveResult(
+  value: LearningAssessmentsGradingAuthoringAssessmentDraftResult,
+): QuizAssessmentDraftSaveResult | null {
+  if (!value.contentId || !Number.isInteger(value.contentVersion)) return null;
+
+  return {
+    contentId: value.contentId,
+    contentVersion: value.contentVersion!,
+    assessmentId: value.assessmentId ?? null,
+    assessmentVersion: value.assessmentVersion ?? null,
+  };
+}
+
+export async function saveQuizAssessmentDraft(
+  input: SaveQuizAssessmentDraftInput,
+): Promise<ActionResult<QuizAssessmentDraftSaveResult>> {
+  const resolvedCourseId = await resolveCourseMutationId(input.courseId);
+
+  try {
+    const body = {
+      expectedContentVersion: input.expectedContentVersion,
+      expectedAssessmentVersion: input.expectedAssessmentVersion,
+      title: input.title.trim(),
+      slug: normalizeSlug(input.slug) || normalizeSlug(input.title),
+      description: input.description?.trim() || null,
+      document: input.document,
+      visibility: input.visibility,
+      isRequired: input.isRequired,
+      estimatedMinutes: input.estimatedMinutes,
+      estimatedMinutesSource: input.estimatedMinutesSource,
+      reviewMethods:
+        input.reviewMethods == null
+          ? undefined
+          : parseReviewMethods(input.reviewMethods, { allowDraft: true }),
+      passingScore:
+        input.passingScore == null
+          ? undefined
+          : scoreValueFromPoints(String(input.passingScore)),
+      timeLimitMinutes: input.timeLimitMinutes ?? null,
+      maxAttempts: input.maxAttempts ?? 1,
+      presentationMode: input.presentationMode ?? "Continuous",
+      contentCompletionMode:
+        input.contentCompletionMode ?? "on-release-and-pass",
+      resultReleaseMode: input.resultReleaseMode ?? "manual",
+      resultReleaseScheduledFor: input.resultReleaseScheduledFor ?? null,
+      attemptContributionMode: input.attemptContributionMode ?? undefined,
+      reviewConfigurationCanonicalJson:
+        input.reviewConfigurationCanonicalJson ?? null,
+    } satisfies LearningAssessmentsGradingAuthoringSaveAssessmentDraftInput;
+    const { assessments } = createCourseModules();
+    const result = await assessments.putAssessmentsCourseContentDraft(
+      resolvedCourseId,
+      input.contentId,
+      body,
+    );
+
+    if (!result.ok) {
+      return { success: false, error: extractError(result.error) };
+    }
+
+    const data = parseAssessmentDraftSaveResult(result.data);
+    if (!data) {
+      return {
+        success: false,
+        error: "The API returned an invalid assessment draft result.",
+      };
+    }
+
+    revalidateCourseContentPaths(input.courseId, resolvedCourseId);
+    revalidateCourseAssessmentPaths(input.courseId, resolvedCourseId);
+    return { success: true, data };
+  } catch (error) {
+    return {
+      success: false,
+      error: `Unexpected error: ${formatUnexpectedError(error)}`,
+    };
+  }
+}
+
+export interface PreparedAssessmentRevision {
+  revisionId: string;
+  revisionNumber: number;
+  authoringSourceHash: string;
+  executionSnapshotHash: string;
+}
+
+function parsePreparedAssessmentRevision(
+  value: LearningAssessmentsGradingAuthoringPreparedAssessmentRevisionResult,
+): PreparedAssessmentRevision | null {
+  if (
+    !value.revisionId ||
+    !Number.isInteger(value.revisionNumber) ||
+    !value.authoringSourceHash ||
+    !value.executionSnapshotHash
+  ) {
+    return null;
+  }
+
+  return {
+    revisionId: value.revisionId,
+    revisionNumber: value.revisionNumber!,
+    authoringSourceHash: value.authoringSourceHash,
+    executionSnapshotHash: value.executionSnapshotHash,
+  };
+}
+
+export async function prepareAssessmentRevision(
+  courseId: string,
+  assessmentId: string,
+  expectedAssessmentVersion: number,
+): Promise<ActionResult<PreparedAssessmentRevision>> {
+  try {
+    const { assessments } = createCourseModules();
+    const result = await assessments.postAssessmentsRevisionsPrepare(
+      assessmentId,
+      { expectedAssessmentVersion },
+    );
+    if (!result.ok)
+      return { success: false, error: extractError(result.error) };
+    const data = parsePreparedAssessmentRevision(result.data);
+    if (!data)
+      return {
+        success: false,
+        error: "The API returned an invalid prepared revision.",
+      };
+    const resolvedCourseId = await resolveCourseMutationId(courseId);
+    revalidateCourseAssessmentPaths(courseId, resolvedCourseId);
+    return { success: true, data };
+  } catch (error) {
+    return {
+      success: false,
+      error: `Unexpected error: ${formatUnexpectedError(error)}`,
+    };
+  }
+}
+
+export async function publishAssessmentRevision(
+  courseId: string,
+  assessmentId: string,
+  revisionId: string,
+  expectedAssessmentVersion: number,
+): Promise<ActionResult<PreparedAssessmentRevision>> {
+  try {
+    const { assessments } = createCourseModules();
+    const result = await assessments.postAssessmentsRevisionsPublish(
+      assessmentId,
+      { revisionId, expectedAssessmentVersion },
+    );
+    if (!result.ok)
+      return { success: false, error: extractError(result.error) };
+    const data = parsePreparedAssessmentRevision(result.data);
+    if (!data)
+      return {
+        success: false,
+        error: "The API returned an invalid published revision.",
+      };
+    const resolvedCourseId = await resolveCourseMutationId(courseId);
+    revalidateCourseAssessmentPaths(courseId, resolvedCourseId);
+    return { success: true, data };
+  } catch (error) {
+    return {
+      success: false,
+      error: `Unexpected error: ${formatUnexpectedError(error)}`,
+    };
+  }
+}
+
+export async function unpublishAssessmentRevision(
+  courseId: string,
+  assessmentId: string,
+  expectedRevisionId: string,
+  expectedAssessmentVersion: number,
+  idempotencyKey: string,
+): Promise<ActionResult<null>> {
+  try {
+    const { assessments } = createCourseModules();
+    const result = await assessments.postAssessmentsRevisionsUnpublish(
+      assessmentId,
+      { expectedRevisionId, expectedAssessmentVersion, idempotencyKey },
+    );
+    if (!result.ok)
+      return { success: false, error: extractError(result.error) };
+    const resolvedCourseId = await resolveCourseMutationId(courseId);
+    revalidateCourseAssessmentPaths(courseId, resolvedCourseId);
+    return { success: true, data: null };
+  } catch (error) {
+    return {
+      success: false,
+      error: `Unexpected error: ${formatUnexpectedError(error)}`,
+    };
+  }
+}
 
 export interface CreateAssessmentInput {
   courseId: string;
@@ -1222,10 +1508,8 @@ export interface CreateAssessmentInput {
   availableUntil?: string;
   presentationMode?: AssessmentPresentationMode;
   contentId?: string;
-  // ponytail: both fields are comma-separated C# [Flags] names — wire format is string, NOT numeric bitmask
-  // (see queries/assessments.ts and learner activity page). submissionModalities e.g. "Code"; gradingMethods e.g. "AutoGraded,InstructorGraded".
   submissionModalities?: string;
-  gradingMethods?: string;
+  reviewMethods?: ReviewMethods;
   slug?: string;
 }
 
@@ -1240,19 +1524,16 @@ export async function createAssessment(
 
   try {
     const resolvedCourseId = await resolveCourseMutationId(courseId);
-    const body: LearningAssessmentsCreateAssessmentInput & {
-      assessmentGroupId?: string | null;
-      passingScore?: number | null;
-    } = {
+    const body = {
       courseId: resolvedCourseId,
       title: title.trim(),
       description: rest.description?.trim() ?? null,
       type: rest.type,
       assessmentGroupId: rest.assessmentGroupId ?? null,
-      maxScore: rest.maxScore ?? 100,
-      passingScore: rest.passingScore ?? 70,
+      maxScore: scoreValueFromPoints(String(rest.maxScore ?? 100)),
+      passingScore: scoreValueFromPoints(String(rest.passingScore ?? 70)),
       timeLimitMinutes: rest.timeLimitMinutes ?? null,
-      maxAttempts: rest.maxAttempts ?? null,
+      maxAttempts: rest.maxAttempts ?? 1,
       isRequired: rest.isRequired ?? true,
       availableFrom: rest.availableFrom ?? null,
       availableUntil: rest.availableUntil ?? null,
@@ -1261,9 +1542,10 @@ export async function createAssessment(
         (rest.type === "Quiz" ? "Continuous" : "SingleStep"),
       contentId: rest.contentId ?? null,
       submissionModalities: rest.submissionModalities,
-      gradingMethods: rest.gradingMethods,
+      reviewMethods:
+        rest.reviewMethods ?? createReviewMethods("InstructorReview"),
       slug: rest.slug ? normalizeSlug(rest.slug) : null,
-    };
+    } satisfies LearningAssessmentsCreateAssessmentInput;
 
     const { assessments } = createCourseModules();
     const result = await assessments.postAssessments(body);
@@ -1331,13 +1613,14 @@ export async function createAssessmentGroup(
   try {
     const resolvedCourseId = await resolveCourseMutationId(input.courseId);
     const { assessments } = createCourseModules();
-    const result = await assessments.postAssessmentsGroups({
+    const body = {
       courseId: resolvedCourseId,
       name,
-      weightPercent: input.weightPercent,
+      weightPercent: percentValueFromPercentage(String(input.weightPercent)),
       order: input.order ?? 0,
       description: input.description?.trim() || null,
-    });
+    } satisfies LearningAssessmentsCreateAssessmentGroupInput;
+    const result = await assessments.postAssessmentsGroups(body);
 
     if (!result.ok)
       return { success: false, error: extractError(result.error) };
@@ -1369,12 +1652,13 @@ export async function updateAssessmentGroup(
 
   try {
     const { assessments } = createCourseModules();
-    const result = await assessments.putAssessmentsGroups(input.groupId, {
+    const body = {
       name,
       description: input.description?.trim() || null,
-      weightPercent: input.weightPercent,
+      weightPercent: percentValueFromPercentage(String(input.weightPercent)),
       order: input.order ?? 0,
-    });
+    } satisfies LearningAssessmentsUpdateAssessmentGroupInput;
+    const result = await assessments.putAssessmentsGroups(input.groupId, body);
 
     if (!result.ok)
       return { success: false, error: extractError(result.error) };
@@ -1406,7 +1690,7 @@ export async function deleteAssessmentGroup(
       return { success: false, error: extractError(result.error) };
 
     revalidatePath(`/workspace/learning/courses/${courseId}`);
-  revalidatePath(`/console/learning/courses/${courseId}`);
+    revalidatePath(`/console/learning/courses/${courseId}`);
     revalidatePath(`/workspace/learning/courses/${courseId}/assessments`);
     return { success: true, data: null };
   } catch (e) {
@@ -1420,8 +1704,9 @@ export async function deleteAssessmentGroup(
 export interface UpdateAssessmentInput {
   courseId: string;
   assessmentId: string;
+  expectedVersion: number;
   title?: string;
-  description?: string;
+  description?: string | null;
   maxScore?: number;
   passingScore?: number;
   timeLimitMinutes?: number | null;
@@ -1434,52 +1719,86 @@ export interface UpdateAssessmentInput {
   assessmentGroupId?: string | null;
   clearAssessmentGroupId?: boolean;
   presentationMode?: AssessmentPresentationMode;
-  gradingMethods?: string;
+  reviewMethods?: ReviewMethods;
   groupSetId?: string | null;
   clearGroupSetId?: boolean;
-  peerReviewsRequiredCount?: number;
+  reviewConfigurationCanonicalJson?: string | null;
+  attemptContributionMode?: LearningAssessmentsGradingContractsAttemptContributionMode | null;
+  contentCompletionMode?: LearningAssessmentsGradingContractsContentCompletionMode;
+  resultReleaseMode?: LearningAssessmentsGradingContractsResultReleaseMode;
+  resultReleaseScheduledFor?: string | null;
   slug?: string;
 }
 
 export async function updateAssessment(
   input: UpdateAssessmentInput,
-): Promise<ActionResult<null>> {
-  const { courseId, assessmentId, ...fields } = input;
+): Promise<ActionResult<{ version: number }>> {
+  const { courseId, assessmentId, expectedVersion, ...fields } = input;
 
   try {
     const resolvedCourseId = await resolveCourseMutationId(courseId);
-    const body: LearningAssessmentsUpdateAssessmentInput & {
-      assessmentGroupId?: string | null;
-      clearAssessmentGroupId?: boolean;
-      passingScore?: number | null;
-    } = {
+    const body = {
+      expectedVersion,
       title: fields.title?.trim() ?? null,
-      description: fields.description?.trim() ?? null,
-      maxScore: fields.maxScore ?? null,
-      passingScore: fields.passingScore ?? null,
-      timeLimitMinutes: fields.timeLimitMinutes ?? null,
+      description:
+        typeof fields.description === "string"
+          ? fields.description.trim() || null
+          : null,
+      clearDescription: fields.description === null,
+      maxScore:
+        fields.maxScore == null
+          ? undefined
+          : scoreValueFromPoints(String(fields.maxScore)),
+      passingScore:
+        fields.passingScore == null
+          ? undefined
+          : scoreValueFromPoints(String(fields.passingScore)),
+      timeLimitMinutes:
+        fields.timeLimitMinutes === undefined ? null : fields.timeLimitMinutes,
+      clearTimeLimitMinutes: fields.timeLimitMinutes === null,
       maxAttempts: fields.maxAttempts ?? null,
       isRequired: fields.isRequired ?? null,
-      availableFrom: fields.availableFrom ?? null,
-      availableUntil: fields.availableUntil ?? null,
+      availableFrom:
+        fields.availableFrom === undefined ? null : fields.availableFrom,
+      clearAvailableFrom: fields.availableFrom === null,
+      availableUntil:
+        fields.availableUntil === undefined ? null : fields.availableUntil,
+      clearAvailableUntil: fields.availableUntil === null,
       contentId: fields.contentId ?? null,
       clearContentId: fields.clearContentId ?? false,
       assessmentGroupId: fields.assessmentGroupId ?? null,
       clearAssessmentGroupId: fields.clearAssessmentGroupId ?? false,
       presentationMode: fields.presentationMode,
-      gradingMethods: fields.gradingMethods ?? undefined,
+      reviewMethods:
+        fields.reviewMethods == null
+          ? undefined
+          : parseReviewMethods(fields.reviewMethods, { allowDraft: true }),
       groupSetId: fields.groupSetId ?? null,
       clearGroupSetId: fields.clearGroupSetId ?? false,
-      peerReviewsRequiredCount: fields.peerReviewsRequiredCount ?? null,
+      reviewConfigurationCanonicalJson:
+        fields.reviewConfigurationCanonicalJson ?? undefined,
+      attemptContributionMode: fields.attemptContributionMode ?? undefined,
+      contentCompletionMode: fields.contentCompletionMode ?? undefined,
+      resultReleaseMode: fields.resultReleaseMode ?? undefined,
+      resultReleaseScheduledFor: fields.resultReleaseScheduledFor ?? undefined,
       slug: fields.slug ? normalizeSlug(fields.slug) : null,
-    };
+    } satisfies LearningAssessmentsUpdateAssessmentInput;
 
     const { assessments } = createCourseModules();
     const result = await assessments.putAssessments(assessmentId, body);
 
     if (result.ok) {
       revalidateCourseAssessmentPaths(courseId, resolvedCourseId);
-      return { success: true, data: null };
+      if (!Number.isInteger(result.data.version)) {
+        return {
+          success: false,
+          error: "The API returned an invalid assessment version.",
+        };
+      }
+      return {
+        success: true,
+        data: { version: result.data.version! },
+      };
     }
 
     return { success: false, error: extractError(result.error) };
@@ -1773,7 +2092,7 @@ export async function saveRubric(
       title: input.title,
       criteria: input.criteria.map((criterion) => ({
         description: criterion.description,
-        points: criterion.points,
+        points: scoreValueFromPoints(String(criterion.points)),
         order: criterion.order,
       })),
     });
@@ -2149,11 +2468,12 @@ export async function updateDiscussionPin(
       ? await discussions.postApiSocialDiscussionsPin(discussionId)
       : await discussions.postApiSocialDiscussionsUnpin(discussionId);
 
-    if (!result.ok)
+    if (result.ok) {
+      revalidateCourseSupport(courseId, discussionId);
+      return { success: true, data: null };
+    } else {
       return { success: false, error: extractError(result.error) };
-
-    revalidateCourseSupport(courseId, discussionId);
-    return { success: true, data: null };
+    }
   } catch (e) {
     return {
       success: false,

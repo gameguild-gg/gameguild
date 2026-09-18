@@ -8,6 +8,7 @@ namespace GameGuild.TestingLab;
 /// <summary> GraphQL type definition for TestingRequest entity </summary>
 public class TestingRequestType : ObjectType<TestingRequest> {
   protected override void Configure(IObjectTypeDescriptor<TestingRequest> descriptor) {
+    descriptor.BindFieldsExplicitly();
     descriptor.Name("TestingRequest");
     descriptor.Description("Represents a testing request in the TestingLab system.");
 
@@ -48,10 +49,10 @@ public class TestingRequestType : ObjectType<TestingRequest> {
     // Navigation Properties
     descriptor.Field("projectVersion")
               .ResolveWith<TestingRequestResolvers>(r => r.GetProjectVersion(default(TestingRequest)!, default(IApplicationDbContext)!))
-              .Type<ObjectType<ProjectVersionEntity>>()
+              .Type<TestingRequestProjectVersionType>()
               .Description("The project version being tested.");
 
-    descriptor.Field("createdBy").ResolveWith<TestingRequestResolvers>(r => r.GetCreatedBy(default(TestingRequest)!, default(IApplicationDbContext)!)).Type<ObjectType<User>>().Description("The user who created this testing request.");
+    descriptor.Field("createdBy").ResolveWith<TestingRequestResolvers>(r => r.GetCreatedBy(default(TestingRequest)!, default(IApplicationDbContext)!)).Type<TestingRequestCreatorType>().Description("The user who created this testing request.");
 
     descriptor.Field("participants")
               .ResolveWith<TestingRequestResolvers>(r => r.GetParticipants(default(TestingRequest)!, default(IApplicationDbContext)!))
@@ -62,5 +63,26 @@ public class TestingRequestType : ObjectType<TestingRequest> {
               .ResolveWith<TestingRequestResolvers>(r => TestingRequestResolvers.GetSessions(default(TestingRequest)!, default(IApplicationDbContext)!))
               .Type<ListType<TestingSessionType>>()
               .Description("Testing sessions for this request.");
+  }
+}
+
+public sealed class TestingRequestProjectVersionType : ObjectType<ProjectVersionEntity> {
+  protected override void Configure(IObjectTypeDescriptor<ProjectVersionEntity> descriptor) {
+    descriptor.BindFieldsExplicitly();
+    descriptor.Name("TestingRequestProjectVersion");
+    descriptor.Field(version => version.Id).Type<NonNullType<UuidType>>();
+    descriptor.Field(version => version.ProjectId).Type<NonNullType<UuidType>>();
+    descriptor.Field(version => version.VersionNumber).Type<NonNullType<StringType>>();
+    descriptor.Field(version => version.Status).Type<NonNullType<EnumType<GameGuild.Projects.ProjectVersionStatus>>>();
+  }
+}
+
+public sealed class TestingRequestCreatorType : ObjectType<User> {
+  protected override void Configure(IObjectTypeDescriptor<User> descriptor) {
+    descriptor.BindFieldsExplicitly();
+    descriptor.Name("TestingRequestCreator");
+    descriptor.Field(user => user.Id).Type<NonNullType<UuidType>>();
+    descriptor.Field(user => user.Name).Type<NonNullType<StringType>>();
+    descriptor.Field(user => user.Username).Type<StringType>();
   }
 }

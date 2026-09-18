@@ -5,7 +5,6 @@ import {
   createServerClient,
   type AssetsSocialMediaSocialMediaAssetDescriptor,
   type SocialFollowsControllersFollowDto,
-  type SocialReactionsReactionDto,
 } from "@game-guild/client";
 import { FeedMutationError } from "./errors";
 import type {
@@ -23,12 +22,15 @@ import type {
   SocialPostMutation,
   SocialPostPublicationResult,
   SocialReaction,
+  SocialReactionMutationResult,
   SocialStory,
   ViewedPostState,
   ViewedStoryState,
 } from "./contracts";
 import {
   loadPostComments,
+  loadPostCommentRepliesPage,
+  loadPostCommentsPage,
   loadSocialFeed,
   mapSocialFeedItem,
   type SocialFeedRequestError,
@@ -59,6 +61,8 @@ function postMutation(value: SocialPostMutation): SocialPostMutation {
     content: value.content,
     createdAt: value.createdAt,
     visibility: value.visibility,
+    hasReposted: value.hasReposted,
+    repostsCount: value.repostsCount,
   };
 }
 
@@ -126,6 +130,14 @@ export async function loadPostCommentsAction(postId: string) {
   return loadPostComments(postId);
 }
 
+export async function loadPostCommentsPageAction(postId: string, skip = 0, take = 10) {
+  return loadPostCommentsPage(postId, skip, take);
+}
+
+export async function loadPostCommentRepliesPageAction(postId: string, parentCommentId: string, skip = 0, take = 2) {
+  return loadPostCommentRepliesPage(postId, parentCommentId, skip, take);
+}
+
 export async function createSocialPost(input: {
   content: string;
   visibility?: "Public" | "Followers" | "Private" | "Unlisted";
@@ -170,7 +182,7 @@ export async function deleteSocialPost(postId: string): Promise<DeletedSocialPos
 export async function setPostReaction(
   postId: string,
   reaction: SocialReaction | null,
-): Promise<SocialReactionsReactionDto | null> {
+): Promise<SocialReactionMutationResult> {
   if (!reaction) {
     await request<void>({
       method: "DELETE",
@@ -178,14 +190,20 @@ export async function setPostReaction(
       body: { targetType: "Post", targetId: postId },
       requiresAuth: true,
     });
-    return null;
+  } else {
+    await request<unknown>({
+      method: "PUT",
+      path: "/api/social/reactions",
+      body: { targetType: "Post", targetId: postId, type: reaction },
+      requiresAuth: true,
+    });
   }
-  return request<SocialReactionsReactionDto>({
-    method: "PUT",
-    path: "/api/social/reactions",
-    body: { targetType: "Post", targetId: postId, type: reaction },
-    requiresAuth: true,
-  });
+  try {
+    const post = await hydrateSocialPost(postId);
+    return { kind: "confirmed", reaction: post.viewer.reaction, reactionsCount: post.engagement.reactionsCount };
+  } catch {
+    return { kind: "committed-needs-hydration", reaction };
+  }
 }
 
 export async function createPostComment(
@@ -216,7 +234,12 @@ export async function deletePostComment(postId: string, commentId: string): Prom
     path: `/api/v1/posts/${postId}/comments/${commentId}`,
     requiresAuth: true,
   });
-  return { postId, commentId, deleted: true };
+  try {
+    const post = await hydrateSocialPost(postId);
+    return { kind: "confirmed", postId, commentId, commentsCount: post.engagement.commentsCount };
+  } catch {
+    return { kind: "committed-needs-hydration", postId, commentId };
+  }
 }
 
 export async function repostPost(postId: string, content = ""): Promise<SocialPostMutation> {

@@ -297,6 +297,74 @@ public class AiOrchestratorTests
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    [Fact]
+    public async Task GenerateForActorStreamingWithReservedQuota_DoesNotConsumeQuotaTwice()
+    {
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var requestContextAccessor = CreateRequestContextAccessor(tenantId, userId);
+        var tenantSettingsRepository = new Mock<ITenantSettingsRepository>();
+        tenantSettingsRepository
+            .Setup(repository => repository.GetByTenantIdAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TenantSettings
+            {
+                TenantId = tenantId,
+                IntegrationSettingsJson = """
+                {
+                  "externalServices": {
+                    "ai": {
+                      "enabled": true,
+                      "defaultProvider": "OpenAi",
+                      "history": { "enabled": true }
+                    }
+                  }
+                }
+                """
+            });
+        var quotaEnforcer = CreateQuotaEnforcer();
+        var historyRepository = CreateHistoryRepository();
+        var openAiAdapter = CreateAdapter(
+            AiProvider.OpenAi,
+            expectedApiKey: "platform-openai-key",
+            responseModel: "gpt-4.1-mini");
+        var orchestrator = CreateOrchestrator(
+            requestContextAccessor,
+            tenantSettingsRepository.Object,
+            quotaEnforcer.Object,
+            historyRepository.Object,
+            new[] { openAiAdapter.Object },
+            new AiOptions
+            {
+                Enabled = true,
+                DefaultProvider = "OpenAi",
+                Providers = new Dictionary<string, AiProviderOptions>
+                {
+                    ["OpenAi"] = new() { ApiKey = "platform-openai-key", DefaultModel = "gpt-4.1-mini" },
+                }
+            });
+
+        var deltas = new List<string>();
+        var result = await orchestrator.GenerateForActorStreamingWithReservedQuotaAsync(
+            new AiExecutionActor(tenantId, userId),
+            new AiGenerateRequest(null, null, null, "Write a title", null, null),
+            (delta, _) =>
+            {
+                deltas.Add(delta);
+                return ValueTask.CompletedTask;
+            });
+
+        result.IsSuccess.Should().BeTrue();
+        deltas.Should().NotBeEmpty();
+        quotaEnforcer.Verify(service => service.TryAtomicConsumeAsync(
+            It.IsAny<Guid>(),
+            It.IsAny<ResourceUsageType>(),
+            It.IsAny<long>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        historyRepository.Verify(repository => repository.AddAsync(
+            It.Is<AiConversationLog>(entry => entry.UserId == userId && entry.Outcome == "Completed"),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     private static AiOrchestrator CreateOrchestrator(
         IRequestContextAccessor requestContextAccessor,
         ITenantSettingsRepository tenantSettingsRepository,
@@ -383,6 +451,24 @@ public class AiOrchestratorTests
                 if (expectedApiKey is not null)
                     request.ApiKey.Should().Be(expectedApiKey);
 
+                return Result.Success(new AiProviderExecutionResult(
+                    responseModel ?? request.Model,
+                    "ok",
+                    "stop",
+                    10,
+                    5,
+                    15));
+            });
+        adapter
+            .Setup(instance => instance.CompleteStreamingAsync(
+                It.IsAny<AiResolvedRequest>(),
+                It.IsAny<Func<string, CancellationToken, ValueTask>>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(async (AiResolvedRequest request, Func<string, CancellationToken, ValueTask> onDelta, CancellationToken token) =>
+            {
+                if (expectedApiKey is not null)
+                    request.ApiKey.Should().Be(expectedApiKey);
+                await onDelta("ok", token);
                 return Result.Success(new AiProviderExecutionResult(
                     responseModel ?? request.Model,
                     "ok",

@@ -40,6 +40,9 @@ The remaining checks verify:
 
 - Web app health, root, courses, programs, and learning dashboard routes.
 - Learning app root and sign-in route.
+- The production social OpenAPI operations and a recent, passing two-user non-admin browser artifact for the same API/Web origins. The smoke consumes that artifact; it does not run the browser journey.
+
+The general smoke has no committed administrator credential fallback. Set `GAMEGUILD_SMOKE_ADMIN_EMAIL` and `GAMEGUILD_SMOKE_ADMIN_PASSWORD` for its API and Web authentication checks. Before running it for a social release, generate `.tmp/social-feed-browser-e2e/evidence.json` with `pnpm --filter @game-guild/web test:browser:social-feed`; see [the production social feed release notes](operations/social-feed-production-release.md) for the two non-admin variables, storage requirements, artifact override, and rollback procedure.
 
 ## Legacy Coolify startup configuration
 

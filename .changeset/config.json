@@ -27,7 +27,6 @@
       "@game-guild/jest-config",
       "@game-guild/learning",
       "@game-guild/lexical-surface",
-      "@game-guild/ops",
       "@game-guild/prettier-config",
       "@game-guild/quiz",
       "@game-guild/quiz-content",

@@ -3,6 +3,10 @@ using System.Text.Json.Serialization;
 using FluentValidation;
 using GameGuild.Learning.Courses;
 using GameGuild.Learning.Enrollments;
+using GameGuild.Learning.Assessments.Grading.Contracts;
+using GameGuild.Learning.Assessments.Grading.Runtime;
+using GameGuild.Learning.Grading.Contracts;
+using GameGuild.Identity.Context.Actors;
 using GameGuild.Notifications;
 using GameGuild.Notifications.Services;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +25,8 @@ public class AssessmentService : IAssessmentService
     private readonly ILogger<AssessmentService> _logger;
     private readonly ILtiScorePassback? _ltiScorePassback;
     private readonly INotificationService? _notifications;
+    private readonly IAssessmentGradebookProjectionService? _gradebookProjection;
+    private readonly IActorContextAccessor? _actorContextAccessor;
 
     public AssessmentService(
         IApplicationDbContext context,
@@ -28,7 +34,9 @@ public class AssessmentService : IAssessmentService
         IRubricService rubricService,
         ILogger<AssessmentService> logger,
         ILtiScorePassback? ltiScorePassback = null,
-        INotificationService? notifications = null)
+        INotificationService? notifications = null,
+        IAssessmentGradebookProjectionService? gradebookProjection = null,
+        IActorContextAccessor? actorContextAccessor = null)
     {
         _context = context;
         _programContentService = programContentService;
@@ -36,6 +44,8 @@ public class AssessmentService : IAssessmentService
         _logger = logger;
         _ltiScorePassback = ltiScorePassback;
         _notifications = notifications;
+        _gradebookProjection = gradebookProjection;
+        _actorContextAccessor = actorContextAccessor;
     }
 
     // ===== ASSESSMENT MANAGEMENT =====
@@ -44,6 +54,22 @@ public class AssessmentService : IAssessmentService
     {
         try
         {
+            if (request.ContentId.HasValue)
+            {
+                return Result.Failure<Assessment>(Error.Validation(
+                    "Assessment.ContentOwnership",
+                    "A content-linked assessment must be created through its content authoring workflow."));
+            }
+
+            var course = await _context.Set<GameGuild.Learning.Courses.Program>()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(value => value.Id == request.CourseId && value.DeletedAt == null)
+                .ConfigureAwait(false);
+            if (course is null)
+            {
+                return Result.Failure<Assessment>(Error.NotFound("Program", "Course not found"));
+            }
+
             var assessment = Assessment.Create(
                 request.CourseId,
                 request.Title,
@@ -52,13 +78,15 @@ public class AssessmentService : IAssessmentService
                 request.IsRequired,
                 request.AssessmentGroupId,
                 request.ContentId,
-                request.GradingMethods,
+                request.ReviewMethods,
                 request.Slug);
+            assessment.TenantId = course.TenantId;
 
             // Set optional properties using internal setters
             assessment.SetDescription(request.Description);
             assessment.SetTimeLimit(request.TimeLimitMinutes);
             assessment.SetMaxAttempts(request.MaxAttempts);
+            assessment.SetPassingScore(request.PassingScore ?? ScoreValue.Zero);
             assessment.SetDeliveryContract(request.SubmissionModalities, request.PresentationMode);
             assessment.SetDeliverySchedule(
                 request.AvailableFrom,
@@ -80,7 +108,7 @@ public class AssessmentService : IAssessmentService
 
             return Result.Success(assessment);
         }
-        catch (ArgumentException ex)
+        catch (Exception ex) when (ex is ArgumentException or JsonException)
         {
             return Result.Failure<Assessment>(Error.Validation("Assessment.Invalid", ex.Message));
         }
@@ -96,6 +124,16 @@ public class AssessmentService : IAssessmentService
         return await _context.Set<Assessment>()
             .Include(a => a.AssessmentGroup)
             .FirstOrDefaultAsync(a => a.Id == id && a.DeletedAt == null).ConfigureAwait(false);
+    }
+
+    public async Task<Assessment?> GetAssessmentByContentIdAsync(Guid contentId)
+    {
+        if (contentId == Guid.Empty) return null;
+
+        return await _context.Set<Assessment>()
+            .Include(a => a.AssessmentGroup)
+            .SingleOrDefaultAsync(a => a.ContentId == contentId && a.DeletedAt == null)
+            .ConfigureAwait(false);
     }
 
     public async Task<Assessment?> GetAssessmentByIdIncludingDeletedAsync(Guid id)
@@ -117,13 +155,14 @@ public class AssessmentService : IAssessmentService
 
     public async Task<CourseAssessmentAnalyticsDto> GetCourseAssessmentAnalyticsAsync(Guid courseId)
     {
-        var assessments = await _context.Set<Assessment>()
+        var assessments = (await _context.Set<Assessment>()
             .Include(a => a.AssessmentGroup)
             .Where(a => a.CourseId == courseId &&
                         a.DeletedAt == null &&
-                        a.AssessmentGroup != null &&
-                        a.AssessmentGroup.WeightPercent > 0)
-            .ToListAsync().ConfigureAwait(false);
+                        a.AssessmentGroup != null)
+            .ToListAsync().ConfigureAwait(false))
+            .Where(a => a.AssessmentGroup!.WeightPercent.CompareTo(PercentValue.Zero) > 0)
+            .ToList();
 
         var assessmentIds = assessments.Select(a => a.Id).ToArray();
         var submissions = assessmentIds.Length == 0
@@ -181,27 +220,51 @@ public class AssessmentService : IAssessmentService
                 return Result.Failure<Assessment>(Error.NotFound("Assessment", "Assessment not found"));
             }
 
+            if (assessment.Version != request.ExpectedVersion)
+            {
+                return Result.Failure<Assessment>(Error.Conflict(
+                    "Assessment.ConcurrentWrite",
+                    "Assessment changed before it was saved."));
+            }
+
+            if (assessment.ContentId.HasValue &&
+                (request.Title is not null || request.Description is not null || request.ClearDescription ||
+                 request.MaxScore.HasValue || request.IsRequired.HasValue || request.ContentId.HasValue ||
+                 request.ClearContentId || request.Slug is not null))
+            {
+                return Result.Failure<Assessment>(Error.Validation(
+                    "Assessment.ContentOwnership",
+                    "Content-owned assessment fields must be changed through their content authoring workflow."));
+            }
+
             if (request.MaxScore.HasValue &&
-                await _context.Set<AssessmentSubmission>()
-                    .AnyAsync(submission => submission.AssessmentId == id &&
-                                              submission.Score.HasValue &&
-                                              submission.Score.Value > request.MaxScore.Value)
-                    .ConfigureAwait(false))
+                (await _context.Set<AssessmentSubmission>()
+                    .Where(submission => submission.AssessmentId == id && submission.Score.HasValue)
+                    .Select(submission => submission.Score)
+                    .ToListAsync().ConfigureAwait(false))
+                .Any(score => score!.Value.CompareTo(request.MaxScore.Value) > 0))
             {
                 return Result.Failure<Assessment>(Error.Validation(
                     "Assessment.ScoreRange",
                     "Maximum score cannot be lower than an assigned submission score."));
             }
 
+            var previousGroupId = assessment.AssessmentGroupId;
+            var previousWeight = assessment.AssessmentGroup?.WeightPercent;
             assessment.Update(
                 request.Title,
                 request.Description,
+                request.ClearDescription,
                 request.MaxScore,
+                request.PassingScore,
                 request.TimeLimitMinutes,
+                request.ClearTimeLimitMinutes,
                 request.MaxAttempts,
                 request.IsRequired,
                 request.AvailableFrom,
+                request.ClearAvailableFrom,
                 request.AvailableUntil,
+                request.ClearAvailableUntil,
                 request.ContentId,
                 request.ClearContentId,
                 request.AssessmentGroupId,
@@ -213,10 +276,14 @@ public class AssessmentService : IAssessmentService
                 request.AllowLateSubmissions,
                 request.LateSubmissionDeadline,
                 request.ClearLateSubmissionDeadline,
-                request.GradingMethods,
+                request.ReviewMethods,
                 groupSetId: request.GroupSetId,
                 clearGroupSetId: request.ClearGroupSetId,
-                peerReviewsRequiredCount: request.PeerReviewsRequiredCount,
+                reviewConfigurationCanonicalJson: request.ReviewConfigurationCanonicalJson,
+                attemptContributionMode: request.AttemptContributionMode,
+                contentCompletionMode: request.ContentCompletionMode,
+                resultReleaseMode: request.ResultReleaseMode,
+                resultReleaseScheduledFor: request.ResultReleaseScheduledFor,
                 slug: request.Slug);
 
             var groupValidation = await EnsureGroupMatchesCourseAsync(assessment.AssessmentGroupId, assessment.CourseId).ConfigureAwait(false);
@@ -234,13 +301,27 @@ public class AssessmentService : IAssessmentService
             }
 
             _context.Set<Assessment>().Update(assessment);
+            if (previousGroupId != assessment.AssessmentGroupId && TryGetProjectionActor(out var projectionActor))
+            {
+                await _gradebookProjection!.ReprojectAssessmentPlacementAsync(
+                    assessment.Id,
+                    projectionActor,
+                    previousGroupId,
+                    previousWeight).ConfigureAwait(false);
+            }
             await _context.SaveChangesAsync().ConfigureAwait(false);
 
             _logger.LogInformation("Assessment updated: {AssessmentId}", id);
 
             return Result.Success(assessment);
         }
-        catch (ArgumentException ex)
+        catch (DbUpdateConcurrencyException)
+        {
+            return Result.Failure<Assessment>(Error.Conflict(
+                "Assessment.ConcurrentWrite",
+                "Assessment changed before it was saved."));
+        }
+        catch (Exception ex) when (ex is ArgumentException or JsonException)
         {
             return Result.Failure<Assessment>(Error.Validation("Assessment.Invalid", ex.Message));
         }
@@ -264,6 +345,13 @@ public class AssessmentService : IAssessmentService
                 if (assessment == null)
                 {
                     return Result.Failure(Error.NotFound("Assessment", "Assessment not found"));
+                }
+
+                if (assessment.ContentId.HasValue)
+                {
+                    return Result.Failure(Error.Validation(
+                        "Assessment.ContentOwnership",
+                        "Disable grading through the content authoring workflow instead of deleting its assessment independently."));
                 }
 
                 assessment.SoftDelete();
@@ -322,6 +410,13 @@ public class AssessmentService : IAssessmentService
                     return Result.Failure(Error.NotFound("Assessment", "Assessment not found"));
                 }
 
+                if (assessment.ContentId.HasValue)
+                {
+                    return Result.Failure(Error.Validation(
+                        "Assessment.ContentOwnership",
+                        "Content-linked assessments are restored only by their content authoring workflow."));
+                }
+
                 // ponytail: delete cascades SoftDelete to InteractiveVideoAssessmentCues, but restore does not
                 // cascade-restore them. Acceptable for now: managers re-link cues via the cue endpoint.
                 assessment.Restore();
@@ -373,12 +468,32 @@ public class AssessmentService : IAssessmentService
     {
         try
         {
+            var course = await _context.Set<GameGuild.Learning.Courses.Program>()
+                .AsNoTracking()
+                .SingleOrDefaultAsync(value => value.Id == request.CourseId && value.DeletedAt == null)
+                .ConfigureAwait(false);
+            if (course is null)
+                return Result.Failure<AssessmentGroup>(Error.NotFound("Program", "Course not found"));
+            var configuredWeights = await _context.Set<AssessmentGroup>()
+                .Where(value => value.CourseId == request.CourseId && value.DeletedAt == null)
+                .Select(value => value.WeightPercent)
+                .ToArrayAsync()
+                .ConfigureAwait(false);
+            var configuredWeight = configuredWeights.Sum(value => value.Units);
+            if (checked(configuredWeight + request.WeightPercent.Units) > PercentValue.MaximumUnits)
+            {
+                return Result.Failure<AssessmentGroup>(Error.Validation(
+                    "AssessmentGroup.TotalWeight",
+                    "Assessment group weights cannot exceed 100 percent."));
+            }
+
             var group = AssessmentGroup.Create(
                 request.CourseId,
                 request.Name,
                 request.WeightPercent,
                 request.Order,
                 request.Description);
+            group.TenantId = course.TenantId;
 
             _context.Set<AssessmentGroup>().Add(group);
             await _context.SaveChangesAsync().ConfigureAwait(false);
@@ -408,8 +523,29 @@ public class AssessmentService : IAssessmentService
                 return Result.Failure<AssessmentGroup>(Error.NotFound("AssessmentGroup", "Assessment group not found"));
             }
 
+            var previousWeight = group.WeightPercent;
+            if (request.WeightPercent is { } nextWeight)
+            {
+                var otherWeights = await _context.Set<AssessmentGroup>()
+                    .Where(value => value.CourseId == group.CourseId && value.Id != group.Id && value.DeletedAt == null)
+                    .Select(value => value.WeightPercent)
+                    .ToArrayAsync()
+                    .ConfigureAwait(false);
+                var otherWeight = otherWeights.Sum(value => value.Units);
+                if (checked(otherWeight + nextWeight.Units) > PercentValue.MaximumUnits)
+                {
+                    return Result.Failure<AssessmentGroup>(Error.Validation(
+                        "AssessmentGroup.TotalWeight",
+                        "Assessment group weights cannot exceed 100 percent."));
+                }
+            }
             group.Update(request.Name, request.Description, request.WeightPercent, request.Order);
             _context.Set<AssessmentGroup>().Update(group);
+            if (previousWeight != group.WeightPercent && TryGetProjectionActor(out var projectionActor))
+            {
+                await _gradebookProjection!.ReprojectGroupWeightAsync(group.Id, projectionActor, previousWeight)
+                    .ConfigureAwait(false);
+            }
             await _context.SaveChangesAsync().ConfigureAwait(false);
 
             _logger.LogInformation("Assessment group updated: {AssessmentGroupId}", id);
@@ -440,6 +576,7 @@ public class AssessmentService : IAssessmentService
             var groupedAssessments = await _context.Set<Assessment>()
                 .Where(a => a.AssessmentGroupId == id)
                 .ToListAsync().ConfigureAwait(false);
+            var previousWeight = group.WeightPercent;
 
             foreach (var assessment in groupedAssessments)
             {
@@ -447,6 +584,11 @@ public class AssessmentService : IAssessmentService
             }
 
             group.SoftDelete();
+            if (TryGetProjectionActor(out var projectionActor))
+            {
+                await _gradebookProjection!.RemoveAssessmentGroupPlacementAsync(group.Id, projectionActor, previousWeight)
+                    .ConfigureAwait(false);
+            }
             _context.Set<Assessment>().UpdateRange(groupedAssessments);
             _context.Set<AssessmentGroup>().Update(group);
             await _context.SaveChangesAsync().ConfigureAwait(false);
@@ -484,8 +626,18 @@ public class AssessmentService : IAssessmentService
                 return Result.Failure<Assessment>(groupValidation.Error);
             }
 
+            var previousGroupId = assessment.AssessmentGroupId;
+            var previousWeight = assessment.AssessmentGroup?.WeightPercent;
             assessment.AssignToGroup(nextGroupId);
             _context.Set<Assessment>().Update(assessment);
+            if (previousGroupId != nextGroupId && TryGetProjectionActor(out var projectionActor))
+            {
+                await _gradebookProjection!.ReprojectAssessmentPlacementAsync(
+                    assessment.Id,
+                    projectionActor,
+                    previousGroupId,
+                    previousWeight).ConfigureAwait(false);
+            }
             await _context.SaveChangesAsync().ConfigureAwait(false);
 
             _logger.LogInformation("Assessment {AssessmentId} assigned to group {AssessmentGroupId}", assessment.Id, nextGroupId);
@@ -678,31 +830,29 @@ public class AssessmentService : IAssessmentService
             .Select(s =>
             {
                 var assessment = assessmentsById[s.AssessmentId];
-                var percent = assessment.MaxScore <= 0
-                    ? 0
-                    : Math.Clamp((decimal)s.Score!.Value / assessment.MaxScore * 100m, 0m, 100m);
+                var percent = PercentValue.FromScores(s.Score!.Value, assessment.MaxScore);
 
                 return new AssessmentScoreFact(
                     assessment.Id,
                     percent,
-                    s.Passed ?? percent >= DefaultPassingPercent);
+                    s.Passed ?? percent.CompareTo(DefaultPassingPercent) >= 0);
             })
             .ToList();
     }
 
-    // ponytail: per-assessment PassingScore is gone (T3); course-level Program.PassingScore
-    // drives grade time. For legacy rows where submission.Passed is null, fall back to the
-    // historical course default of 60%. Revisit if analytics need course-specific thresholds.
-    private const decimal DefaultPassingPercent = 60m;
+    // Course-level passing policy is authoritative when no submission decision was captured.
+    private static readonly PercentValue DefaultPassingPercent = PercentValue.FromPercentage("60");
 
-    private static decimal AveragePercent(IReadOnlyCollection<AssessmentScoreFact> facts)
+    private static PercentValue AveragePercent(IReadOnlyCollection<AssessmentScoreFact> facts)
     {
-        return facts.Count == 0 ? 0 : Math.Round(facts.Average(f => f.Percent), 2);
+        return PercentValue.Average(facts.Select(f => f.Percent));
     }
 
-    private static decimal PassRate(IReadOnlyCollection<AssessmentScoreFact> facts)
+    private static PercentValue PassRate(IReadOnlyCollection<AssessmentScoreFact> facts)
     {
-        return facts.Count == 0 ? 0 : Math.Round((decimal)facts.Count(f => f.Passed) / facts.Count * 100m, 2);
+        return facts.Count == 0
+            ? PercentValue.Zero
+            : PercentValue.FromRatio(facts.Count(f => f.Passed), facts.Count);
     }
 
     private static IReadOnlyCollection<AssessmentScoreBucketDto> BuildDistribution(IReadOnlyCollection<AssessmentScoreFact> facts)
@@ -723,11 +873,13 @@ public class AssessmentService : IAssessmentService
         int maxPercent,
         IReadOnlyCollection<AssessmentScoreFact> facts)
     {
-        var count = facts.Count(f => f.Percent >= minPercent && f.Percent <= maxPercent);
+        var minimum = PercentValue.FromPercentage(minPercent.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        var maximum = PercentValue.FromPercentage(maxPercent.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        var count = facts.Count(f => f.Percent.CompareTo(minimum) >= 0 && f.Percent.CompareTo(maximum) <= 0);
         return new AssessmentScoreBucketDto(label, minPercent, maxPercent, count);
     }
 
-    private sealed record AssessmentScoreFact(Guid AssessmentId, decimal Percent, bool Passed);
+    private sealed record AssessmentScoreFact(Guid AssessmentId, PercentValue Percent, bool Passed);
 
     // ===== SUBMISSION MANAGEMENT =====
 
@@ -783,6 +935,20 @@ public class AssessmentService : IAssessmentService
             return Result.Failure<AssessmentSubmission>(Error.Validation("Assessment", "Assessment is not currently available"));
         }
 
+        if (UsesGradingRuntime(assessment))
+        {
+            return Result.Failure<AssessmentSubmission>(Error.Conflict(
+                "Assessment.OfficialRuntimeUnavailable",
+                "Content-backed graded assessments cannot start through the generic submission endpoint."));
+        }
+
+        if (assessment.GroupSetId.HasValue)
+        {
+            return Result.Failure<AssessmentSubmission>(Error.Conflict(
+                "Assessment.CollectiveRuntimeRequired",
+                "Collective assessments must start through the grading runtime."));
+        }
+
         Guid? courseGroupId = null;
         if (assessment.GroupSetId.HasValue)
         {
@@ -796,7 +962,7 @@ public class AssessmentService : IAssessmentService
         }
 
         var attemptCount = await GetAttemptCountAsync(assessmentId, enrollmentId).ConfigureAwait(false);
-        if (assessment.MaxAttempts.HasValue && attemptCount >= assessment.MaxAttempts.Value)
+        if (attemptCount >= assessment.MaxAttempts)
         {
             return Result.Failure<AssessmentSubmission>(Error.Validation("Assessment.MaxAttemptsReached", "Maximum attempts reached"));
         }
@@ -838,6 +1004,13 @@ public class AssessmentService : IAssessmentService
                 return Result.Failure<AssessmentSubmission>(Error.NotFound("Assessment", "Assessment not found"));
             }
 
+            if (UsesGradingRuntime(assessment))
+            {
+                return Result.Failure<AssessmentSubmission>(Error.Conflict(
+                    "Assessment.OfficialRuntimeUnavailable",
+                    "Content-backed graded assessments cannot submit through the generic submission endpoint."));
+            }
+
             var submittedAt = SystemClock.UtcNow;
             if (!assessment.TryGetSubmissionTiming(submittedAt, out var isLate))
             {
@@ -850,11 +1023,6 @@ public class AssessmentService : IAssessmentService
             }
 
             submission.Submit(isLate, submittedAt);
-
-            if (submission.CourseGroupId.HasValue)
-            {
-                await FanOutGroupSubmitAsync(submission, assessment, request, isLate, submittedAt).ConfigureAwait(false);
-            }
 
             _context.Set<AssessmentSubmission>().Update(submission);
             await _context.SaveChangesAsync().ConfigureAwait(false);
@@ -896,69 +1064,6 @@ public class AssessmentService : IAssessmentService
     }
 
     /// <summary>
-    ///     One-submission-per-group: after the submitting member's row is submitted, bring every other
-    ///     active group member to the same submitted state at the same attempt. The UX unique index
-    ///     (AssessmentId, EnrollmentId, AttemptNumber) forbids naive cloning — members who clicked
-    ///     Start first hold an InProgress row at this attempt that must be REUSED, never duplicated.
-    ///     Membership snapshot = active members at submit time; members joining later are not covered
-    ///     retroactively, and members with dropped enrollments get no row.
-    /// </summary>
-    private async Task FanOutGroupSubmitAsync(
-        AssessmentSubmission submission,
-        Assessment assessment,
-        SubmitAssessmentRequest? request,
-        bool isLate,
-        DateTime submittedAt)
-    {
-        var groupId = submission.CourseGroupId!.Value;
-
-        var memberUserIds = await _context.Set<CourseGroupMember>()
-            .Where(m => m.GroupId == groupId && m.DeletedAt == null && m.UserId != submission.UserId)
-            .Select(m => m.UserId)
-            .ToListAsync().ConfigureAwait(false);
-
-        var memberEnrollments = await _context.Set<Enrollment>()
-            .Where(e => e.CourseId == assessment.CourseId &&
-                        e.Status == GameGuild.Learning.Enrollments.EnrollmentStatus.Active &&
-                        e.DeletedAt == null &&
-                        memberUserIds.Contains(e.UserId))
-            .ToListAsync().ConfigureAwait(false);
-
-        foreach (var enrollment in memberEnrollments)
-        {
-            var existing = await _context.Set<AssessmentSubmission>()
-                .FirstOrDefaultAsync(s => s.AssessmentId == assessment.Id &&
-                                          s.EnrollmentId == enrollment.Id &&
-                                          s.AttemptNumber == submission.AttemptNumber)
-                .ConfigureAwait(false);
-
-            if (existing is null)
-            {
-                var clone = AssessmentSubmission.Start(assessment.Id, enrollment.Id, enrollment.UserId, submission.AttemptNumber);
-                if (request != null)
-                {
-                    clone.SetPayload(request, assessment.SubmissionModalities);
-                }
-
-                clone.StampCourseGroup(groupId);
-                clone.Submit(isLate, submittedAt);
-                _context.Set<AssessmentSubmission>().Add(clone);
-            }
-            else if (existing.Status == SubmissionStatus.InProgress)
-            {
-                if (request != null)
-                {
-                    existing.SetPayload(request, assessment.SubmissionModalities);
-                }
-
-                existing.Submit(isLate, submittedAt);
-                _context.Set<AssessmentSubmission>().Update(existing);
-            }
-            // Submitted/Late/Graded: the member already holds this attempt — skip, never duplicate.
-        }
-    }
-
-    /// <summary>
     ///     Notifies every course manager once per submit event with the assessment's current
     ///     pending-grade target count (same dedup as /me/tasks grade items).
     /// </summary>
@@ -989,117 +1094,6 @@ public class AssessmentService : IAssessmentService
         }
     }
 
-    public async Task<Result<AssessmentSubmission>> GradeSubmissionAsync(Guid submissionId, GradeSubmissionRequest request)
-    {
-        try
-        {
-            var submission = await GetSubmissionByIdAsync(submissionId).ConfigureAwait(false);
-            if (submission == null)
-            {
-                return Result.Failure<AssessmentSubmission>(Error.NotFound("Submission", "Submission not found"));
-            }
-
-            var assessment = await GetAssessmentByIdAsync(submission.AssessmentId).ConfigureAwait(false);
-            if (assessment == null)
-            {
-                return Result.Failure<AssessmentSubmission>(Error.NotFound("Assessment", "Assessment not found"));
-            }
-
-            // ponytail: Assessment.CourseId stores Program.Id (verified via content.ProgramId != assessment.CourseId
-            // in AssessmentService.cs). Course owns the PassingScore threshold (T1); compute the absolute snapshot.
-            var program = await _context.Set<Program>()
-                .FirstOrDefaultAsync(p => p.Id == assessment.CourseId)
-                .ConfigureAwait(false);
-            if (program == null)
-            {
-                return Result.Failure<AssessmentSubmission>(Error.NotFound("Course", "Course not found for assessment"));
-            }
-
-            var absolutePassing = (int)Math.Round(assessment.MaxScore * ((double)program.PassingScore / 100.0));
-
-            var rubricValidation = await _rubricService
-                .ValidateScoresAsync(assessment.Id, request.Score, request.RubricScores)
-                .ConfigureAwait(false);
-            if (!rubricValidation.IsSuccess)
-            {
-                return Result.Failure<AssessmentSubmission>(rubricValidation.Error);
-            }
-
-            submission.Grade(request.Score, absolutePassing, assessment.MaxScore, request.GradedBy, request.Feedback, request.RubricScores);
-            _context.Set<AssessmentSubmission>().Update(submission);
-
-            var gradedUserIds = new List<Guid> { submission.UserId };
-            if (submission.CourseGroupId.HasValue)
-            {
-                var siblings = await _context.Set<AssessmentSubmission>()
-                    .Where(s => s.CourseGroupId == submission.CourseGroupId &&
-                                s.AttemptNumber == submission.AttemptNumber &&
-                                s.Id != submission.Id &&
-                                (s.Status == SubmissionStatus.Submitted || s.Status == SubmissionStatus.Late))
-                    .ToListAsync().ConfigureAwait(false);
-
-                foreach (var sibling in siblings)
-                {
-                    sibling.Grade(request.Score, absolutePassing, assessment.MaxScore, request.GradedBy, request.Feedback, request.RubricScores);
-                    _context.Set<AssessmentSubmission>().Update(sibling);
-                    gradedUserIds.Add(sibling.UserId);
-                }
-            }
-
-            await _context.SaveChangesAsync().ConfigureAwait(false);
-
-            _logger.LogInformation("Submission graded: {SubmissionId} with score {Score}", submissionId, request.Score);
-
-            // LTI AGS score passback (todo 16): fire-and-log per graded user; the
-            // implementation swallows all platform failures so grading never rolls back.
-            // Group fan-out (todo 5): invoked once PER GRADED MEMBER (original + siblings).
-            if (_ltiScorePassback is not null)
-            {
-                foreach (var gradedUserId in gradedUserIds)
-                {
-                    await _ltiScorePassback
-                        .PostScoreIfMappedAsync(assessment.Id, gradedUserId, request.Score, assessment.MaxScore)
-                        .ConfigureAwait(false);
-                }
-            }
-
-            if (_notifications is not null)
-            {
-                try
-                {
-                    // Titles are instructor-authored and interpolated as PLAIN TEXT (no HTML/markup
-                    // rendering on the client) — in-app channel only, so no injection surface.
-                    foreach (var gradedUserId in gradedUserIds)
-                    {
-                        await _notifications.SendAsync(
-                                gradedUserId,
-                                NotificationType.AssessmentGraded,
-                                "Assessment graded",
-                                $"{assessment.Title} graded — score {request.Score}/{assessment.MaxScore}",
-                                NotificationChannel.InApp,
-                                actionUrl: "/dashboard/tasks")
-                            .ConfigureAwait(false);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Graded notification failed for submission {SubmissionId}", submissionId);
-                }
-            }
-
-            return Result.Success(submission);
-        }
-        catch (ArgumentException ex)
-        {
-            return Result.Failure<AssessmentSubmission>(Error.Validation("Submission.InvalidScore", ex.Message));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error grading submission {SubmissionId}", submissionId);
-            return Result.Failure<AssessmentSubmission>(Error.Failure("GradeSubmission", "Failed to grade submission"));
-        }
-    }
-
     public async Task<AssessmentSubmission?> GetSubmissionByIdAsync(Guid id)
     {
         return await _context.Set<AssessmentSubmission>()
@@ -1125,7 +1119,12 @@ public class AssessmentService : IAssessmentService
     public async Task<IEnumerable<AssessmentSubmission>> GetUserSubmissionsAsync(Guid enrollmentId, Guid userId)
     {
         return await _context.Set<AssessmentSubmission>()
-            .Where(s => s.EnrollmentId == enrollmentId && s.UserId == userId)
+            .Where(submission =>
+                (submission.EnrollmentId == enrollmentId && submission.UserId == userId) ||
+                _context.Set<Grading.Persistence.AssessmentSubmissionParticipant>().Any(participant =>
+                    participant.SubmissionId == submission.Id &&
+                    participant.EnrollmentId == enrollmentId &&
+                    participant.UserId == userId))
             .OrderByDescending(s => s.StartedAt)
             .ToListAsync().ConfigureAwait(false);
     }
@@ -1145,9 +1144,8 @@ public class AssessmentService : IAssessmentService
             .ConfigureAwait(false) ?? 0;
     }
 
-    // Group attempt numbering ignores InProgress rows: members who clicked Start hold the CURRENT
-    // group attempt open (all at the same number — the reuse path in FanOutGroupSubmitAsync depends
-    // on it); a new attempt number only opens once a group attempt is submitted.
+    // Generic submissions do not implement collective grading. Collective attempts are owned by
+    // the grading runtime and therefore always have one submission and one execution.
     private async Task<int> GetHighestGroupAttemptNumberAsync(Guid assessmentId, Guid courseGroupId)
     {
         return await _context.Set<AssessmentSubmission>()
@@ -1200,18 +1198,23 @@ public class AssessmentService : IAssessmentService
                 return Result.Success(false);
             }
 
-            if (assessment.MaxAttempts.HasValue)
-            {
-                var attemptCount = await GetAttemptCountAsync(assessmentId, enrollmentId).ConfigureAwait(false);
-                return Result.Success(attemptCount < assessment.MaxAttempts.Value);
-            }
-
-            return Result.Success(true);
+            if (UsesGradingRuntime(assessment)) return Result.Success(false);
+            var attemptCount = await GetAttemptCountAsync(assessmentId, enrollmentId).ConfigureAwait(false);
+            return Result.Success(attemptCount < assessment.MaxAttempts);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error checking attempt eligibility for assessment {AssessmentId}", assessmentId);
             return Result.Failure<bool>(Error.Failure("CanAttempt", "Failed to check attempt eligibility"));
         }
+    }
+
+    private static bool UsesGradingRuntime(Assessment assessment) =>
+        assessment.ContentId.HasValue && assessment.ReviewMethods != ReviewMethods.None;
+
+    private bool TryGetProjectionActor(out Guid actorId)
+    {
+        actorId = _actorContextAccessor?.ActorContext.SubjectIdAsGuid ?? Guid.Empty;
+        return _gradebookProjection is not null && actorId != Guid.Empty;
     }
 }

@@ -10,6 +10,7 @@ import type {
   AssessmentGroup,
 } from "@/lib/learning/queries/assessments";
 import type { CourseContentItemViewModel } from "@/lib/learning/queries/course";
+import { createReviewMethods } from "@game-guild/grading";
 
 const routerMocks = vi.hoisted(() => ({
   back: vi.fn(),
@@ -32,7 +33,7 @@ global.ResizeObserver = class ResizeObserver {
 };
 
 vi.mock("next/navigation", () => ({
-  usePathname: () => '/workspace/learning',
+  usePathname: () => "/workspace/learning",
   useRouter: () => routerMocks,
 }));
 
@@ -71,7 +72,7 @@ const assessment = {
   maxScore: 10,
   passingScore: 7,
   timeLimitMinutes: 30,
-  maxAttempts: 2,
+  maxAttempts: 1,
   isRequired: true,
   order: 1,
   availableFrom: "2026-07-01T10:00:00.000Z",
@@ -81,9 +82,15 @@ const assessment = {
   allowLateSubmissions: false,
   lateSubmissionDeadline: null,
   isAvailable: true,
-  gradingMethods: "InstructorGraded",
+  reviewMethods: createReviewMethods("InstructorReview"),
   groupSetId: null,
-  peerReviewsRequiredCount: 0,
+  publishedDefinitionRevisionId: null,
+  reviewConfigurationCanonicalJson: null,
+  attemptContributionMode: null,
+  contentCompletionMode: "on-release-and-pass",
+  resultReleaseMode: "manual",
+  resultReleaseScheduledFor: null,
+  version: 1,
 } satisfies Assessment;
 
 const groups = [
@@ -135,7 +142,7 @@ describe("AssessmentEditor", () => {
     vi.clearAllMocks();
     vi.mocked(updateAssessment).mockResolvedValue({
       success: true,
-      data: null,
+      data: { version: 2 },
     });
     vi.mocked(deleteAssessment).mockResolvedValue({
       success: true,
@@ -194,30 +201,32 @@ describe("AssessmentEditor", () => {
     fireEvent.change(screen.getByLabelText(/time limit/i), {
       target: { value: "45" },
     });
-    fireEvent.change(screen.getByLabelText(/max attempts/i), {
-      target: { value: "3" },
-    });
-
     await user.click(screen.getByRole("button", { name: /save changes/i }));
 
     await waitFor(() => {
-      expect(updateAssessment).toHaveBeenCalledWith({
-        courseId: "course-1",
-        assessmentId: "assessment-1",
-        title: "Updated Quiz",
-        slug: "updated-quiz",
-        description: "Updated instructions.",
-        maxScore: 20,
-        passingScore: 14,
-        timeLimitMinutes: 45,
-        maxAttempts: 3,
-        isRequired: true,
-        availableFrom: "2026-08-01T10:00",
-        availableUntil: "2026-08-05T10:00",
-        assessmentGroupId: "group-quizzes",
-        clearAssessmentGroupId: false,
-        presentationMode: "Continuous",
-      });
+      expect(updateAssessment).toHaveBeenCalledWith(
+        expect.objectContaining({
+          courseId: "course-1",
+          assessmentId: "assessment-1",
+          expectedVersion: 1,
+          title: "Updated Quiz",
+          slug: "updated-quiz",
+          description: "Updated instructions.",
+          maxScore: 20,
+          passingScore: 14,
+          timeLimitMinutes: 45,
+          maxAttempts: 1,
+          isRequired: true,
+          availableFrom: "2026-08-01T10:00",
+          availableUntil: "2026-08-05T10:00",
+          assessmentGroupId: "group-quizzes",
+          clearAssessmentGroupId: false,
+          presentationMode: "Continuous",
+          reviewMethods: 8,
+          contentCompletionMode: "on-release-and-pass",
+          resultReleaseMode: "manual",
+        }),
+      );
     });
     expect(routerMocks.replace).toHaveBeenCalledWith(
       "/workspace/learning/courses/course-1/assessments/updated-quiz",
@@ -356,9 +365,7 @@ describe("AssessmentEditor", () => {
       "/workspace/learning/courses/course-1/content/content-assignment-1",
     );
     expect(contentLink).toHaveTextContent("Module 1 Homework");
-    expect(
-      screen.getByText(/cannot\s+be\s+unlinked/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/cannot\s+be\s+unlinked/i)).toBeInTheDocument();
   });
 
   it("shows standalone text when no content is linked", async () => {
@@ -377,7 +384,7 @@ describe("AssessmentEditor", () => {
     expect(screen.getByTestId("linked-content-none")).toBeInTheDocument();
   });
 
-  it("toggles grading methods and writes the comma-separated string", async () => {
+  it("persists a primary peer review followed by final instructor review", async () => {
     const user = userEvent.setup();
     render(
       <AssessmentEditor
@@ -388,24 +395,40 @@ describe("AssessmentEditor", () => {
       />,
     );
 
-    // Given: assessment starts with only InstructorGraded
-    expect(screen.getByRole("checkbox", { name: /instructorgraded/i })).toBeChecked();
-    expect(screen.getByRole("checkbox", { name: /peerreview/i })).not.toBeChecked();
-
-    await user.click(screen.getByRole("checkbox", { name: /peerreview/i }));
+    const primaryReview = screen.getByRole("combobox", {
+      name: /primary review/i,
+    });
+    expect(primaryReview).toHaveTextContent("Instructor review");
+    await user.click(primaryReview);
+    await user.click(
+      await screen.findByRole("option", { name: "Peer review" }),
+    );
+    await user.click(
+      screen.getByRole("switch", { name: /final instructor review/i }),
+    );
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
 
     await waitFor(() => {
-      expect(updateAssessment).toHaveBeenCalledWith({
-        courseId: "course-1",
-        assessmentId: "assessment-1",
-        gradingMethods: "InstructorGraded,PeerReview",
-      });
+      expect(updateAssessment).toHaveBeenCalledWith(
+        expect.objectContaining({
+          reviewMethods: 9,
+        }),
+      );
     });
+    const configuration = JSON.parse(
+      vi.mocked(updateAssessment).mock.calls.at(-1)![0]
+        .reviewConfigurationCanonicalJson!,
+    );
+    expect(configuration.peer.reviewsRequiredPerSubmission).toBe(3);
+    expect(configuration.instructor).toEqual({ requireOverrideReason: false });
   });
 
-  it("removes a flag from the grading methods string when unchecked", async () => {
+  it("removes final instructor review while preserving the primary review", async () => {
     const user = userEvent.setup();
-    const multi = { ...assessment, gradingMethods: "PeerReview,AutoGraded" };
+    const multi = {
+      ...assessment,
+      reviewMethods: createReviewMethods("AutomatedReview", true),
+    };
     render(
       <AssessmentEditor
         courseId="course-1"
@@ -415,14 +438,20 @@ describe("AssessmentEditor", () => {
       />,
     );
 
-    await user.click(screen.getByRole("checkbox", { name: /autograded/i }));
+    expect(
+      screen.getByRole("combobox", { name: /primary review/i }),
+    ).toHaveTextContent("Automated review");
+    await user.click(
+      screen.getByRole("switch", { name: /final instructor review/i }),
+    );
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
 
     await waitFor(() => {
-      expect(updateAssessment).toHaveBeenCalledWith({
-        courseId: "course-1",
-        assessmentId: "assessment-1",
-        gradingMethods: "PeerReview",
-      });
+      expect(updateAssessment).toHaveBeenCalledWith(
+        expect.objectContaining({
+          reviewMethods: 4,
+        }),
+      );
     });
   });
 
@@ -436,7 +465,8 @@ describe("AssessmentEditor", () => {
       />,
     );
 
-    const typeTrigger = screen.getByText("Type cannot be changed after creation.")
+    const typeTrigger = screen
+      .getByText("Type cannot be changed after creation.")
       .closest("div")
       ?.querySelector('[role="combobox"]');
     expect(typeTrigger).toBeDisabled();
@@ -496,5 +526,201 @@ describe("AssessmentEditor", () => {
     expect(
       screen.queryByTestId("start-speedgrader-button"),
     ).not.toBeInTheDocument();
+  });
+
+  it("saves cleared optional fields, quiz presentation, and no grading group", async () => {
+    const user = userEvent.setup();
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={assessment}
+        assessmentGroups={[
+          ...groups,
+          {
+            ...groups[0]!,
+            id: "practice",
+            name: "Practice",
+            weightPercent: 12.5,
+          },
+        ]}
+      />,
+    );
+
+    await user.clear(screen.getByLabelText(/description/i));
+    await user.clear(screen.getByLabelText(/max score/i));
+    await user.clear(screen.getByLabelText(/passing score/i));
+    await user.clear(screen.getByLabelText(/time limit/i));
+    fireEvent.change(screen.getByLabelText(/available from/i), {
+      target: { value: "" },
+    });
+    fireEvent.change(screen.getByLabelText(/available until/i), {
+      target: { value: "" },
+    });
+    await user.click(screen.getByRole("switch", { name: /^required$/i }));
+    await user.click(screen.getByRole("combobox", { name: /grading group/i }));
+    expect(
+      await screen.findByRole("option", { name: /12.5% of Total/ }),
+    ).toBeInTheDocument();
+    await user.click(await screen.findByRole("option", { name: "No group" }));
+    await user.click(screen.getByRole("combobox", { name: /presentation/i }));
+    await user.click(
+      await screen.findByRole("option", { name: "One at a time" }),
+    );
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateAssessment).toHaveBeenCalledWith(
+        expect.objectContaining({
+          courseId: "course-1",
+          assessmentId: "assessment-1",
+          expectedVersion: 1,
+          title: assessment.title,
+          slug: assessment.slug,
+          description: null,
+          maxScore: undefined,
+          passingScore: undefined,
+          timeLimitMinutes: null,
+          maxAttempts: 1,
+          isRequired: false,
+          availableFrom: null,
+          availableUntil: null,
+          assessmentGroupId: null,
+          clearAssessmentGroupId: true,
+          presentationMode: "SingleStep",
+        }),
+      );
+    });
+    expect(routerMocks.refresh).toHaveBeenCalled();
+    expect(routerMocks.replace).not.toHaveBeenCalled();
+  });
+
+  it("navigates back, respects delete cancellation, and reports delete failures", async () => {
+    const user = userEvent.setup();
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={assessment}
+        assessmentGroups={groups}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Back" }));
+    expect(routerMocks.push).toHaveBeenCalledWith(
+      "/workspace/learning/courses/course-1/assessments",
+    );
+
+    vi.mocked(confirm).mockReturnValueOnce(false);
+    await user.click(
+      screen.getByRole("button", { name: /delete assessment/i }),
+    );
+    expect(deleteAssessment).not.toHaveBeenCalled();
+
+    vi.mocked(deleteAssessment).mockResolvedValueOnce({
+      success: false,
+      error: "Delete failed",
+    });
+    await user.click(
+      screen.getByRole("button", { name: /delete assessment/i }),
+    );
+    expect(await screen.findByText("Delete failed")).toBeInTheDocument();
+  });
+
+  it("reports a review workflow persistence failure and keeps the draft", async () => {
+    const user = userEvent.setup();
+    vi.mocked(updateAssessment).mockResolvedValueOnce({
+      success: false,
+      error: "Grading update failed",
+    });
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={assessment}
+        assessmentGroups={groups}
+      />,
+    );
+
+    const primaryReview = screen.getByRole("combobox", {
+      name: /primary review/i,
+    });
+    await user.click(primaryReview);
+    await user.click(
+      await screen.findByRole("option", { name: "Peer review" }),
+    );
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    expect(
+      await screen.findByText("Grading update failed"),
+    ).toBeInTheDocument();
+    expect(primaryReview).toHaveTextContent("Peer review");
+    expect(updateAssessment).toHaveBeenCalledWith(
+      expect.objectContaining({ reviewMethods: 1 }),
+    );
+  });
+
+  it("renders legacy, practice, unavailable, and missing linked-content states", async () => {
+    const user = userEvent.setup();
+    const legacy = {
+      ...assessment,
+      type: "LegacyAssessment",
+      contentId: "missing-content",
+      assessmentGroupId: "practice",
+      isAvailable: false,
+    } as unknown as Assessment;
+    render(
+      <AssessmentEditor
+        courseId="course id"
+        assessment={legacy}
+        assessmentGroups={[
+          { ...groups[0]!, id: "practice", name: "Practice", weightPercent: 0 },
+        ]}
+        courseContent={courseContent}
+      />,
+    );
+
+    expect(screen.getAllByText("LegacyAssessment").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Practice").length).toBeGreaterThan(0);
+    expect(screen.getByText("No")).toBeInTheDocument();
+    expect(screen.getByTestId("linked-content-link")).toHaveTextContent(
+      "missing-content",
+    );
+    await user.click(
+      screen.getByRole("button", { name: /edit coding definition/i }),
+    );
+    expect(routerMocks.push).toHaveBeenCalledWith(
+      "/workspace/learning/courses/course%20id/assessments/assessment-1/coding-definition",
+    );
+  });
+
+  it("falls back to the title slug and zero passing score for empty fields", async () => {
+    const user = userEvent.setup();
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={{ ...assessment, description: null }}
+        assessmentGroups={groups}
+      />,
+    );
+
+    expect(screen.getByLabelText(/description/i)).toHaveValue("");
+    await user.clear(screen.getByLabelText(/url slug/i));
+    await user.clear(screen.getByLabelText(/passing score/i));
+    expect(
+      screen.getByText(/0 out of 10 points to pass \(0%\)/i),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateAssessment).toHaveBeenCalledWith(
+        expect.objectContaining({
+          slug: "schema-patterns-quiz",
+          passingScore: undefined,
+        }),
+      );
+    });
+    await waitFor(() => {
+      expect(routerMocks.replace).toHaveBeenCalledWith(
+        "/workspace/learning/courses/course-1/assessments/schema-patterns-quiz",
+      );
+    });
   });
 });

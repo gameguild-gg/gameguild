@@ -2,6 +2,7 @@ using FluentAssertions;
 using GameGuild.API.Database;
 using GameGuild.Learning.Assessments;
 using GameGuild.Learning.Courses;
+using GameGuild.Learning.Grading.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -30,12 +31,12 @@ public sealed class AssessmentLifecyclePostgreSqlRaceTests
             {
                 await setup.Database.EnsureCreatedAsync();
                 var courseId = Guid.NewGuid();
-                var group = AssessmentGroup.Create(courseId, "Final project", 40, 2);
+                var group = AssessmentGroup.Create(courseId, "Final project", PercentValue.FromPercentage("40"), 2);
                 var assessment = Assessment.Create(
                     courseId,
                     "Vertical slice review",
                     AssessmentType.Project,
-                    120,
+                    ScoreValue.FromPoints("120"),
                     assessmentGroupId: group.Id);
                 assessment.SetDeliveryContract(
                     SubmissionModality.Project | SubmissionModality.StructuredAnswer,
@@ -85,7 +86,7 @@ public sealed class AssessmentLifecyclePostgreSqlRaceTests
             await using (var setup = new ApplicationDbContext(options))
             {
                 await setup.Database.EnsureCreatedAsync();
-                var assessment = Assessment.Create(courseId, "Race", AssessmentType.Quiz, 100);
+                var assessment = Assessment.Create(courseId, "Race", AssessmentType.Quiz, ScoreValue.FromPoints("100"));
                 assessmentId = assessment.Id;
                 setup.Add(assessment);
                 await setup.SaveChangesAsync();

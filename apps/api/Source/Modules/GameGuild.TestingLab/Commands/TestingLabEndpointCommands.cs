@@ -287,7 +287,7 @@ public sealed class TestingEventTemplateEndpointCommandHandler(IApplicationDbCon
         var template = await LoadTemplateAsync(request.TemplateId, request.TenantId, cancellationToken).ConfigureAwait(false);
         if (template is null) return null;
         var input = request.Request;
-        template.CreateRevision(
+        var revision = template.CreateRevision(
             input.GeneralRules,
             input.CandidateInstructions,
             input.TesterInstructions,
@@ -299,6 +299,7 @@ public sealed class TestingEventTemplateEndpointCommandHandler(IApplicationDbCon
             request.UserId,
             input.Name,
             input.Description);
+        context.Set<TestingEventTemplateRevision>().Add(revision);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return template;
     }

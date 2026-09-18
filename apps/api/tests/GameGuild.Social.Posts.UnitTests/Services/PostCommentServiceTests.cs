@@ -333,6 +333,25 @@ public class PostCommentServiceTests
         result.Value.Count().Should().Be(5);
     }
 
+    [Fact]
+    public async Task GetPostCommentsAsync_WithParentCommentId_ShouldFilterBeforePagination()
+    {
+        var postId = Guid.NewGuid();
+        var parentId = Guid.NewGuid();
+        var otherParentId = Guid.NewGuid();
+        _comments.Add(PostComment.Create(postId, Guid.NewGuid(), "Child 1", parentId));
+        _comments.Add(PostComment.Create(postId, Guid.NewGuid(), "Other child", otherParentId));
+        _comments.Add(PostComment.Create(postId, Guid.NewGuid(), "Child 2", parentId));
+        _comments.Add(PostComment.Create(postId, Guid.NewGuid(), "Child 3", parentId));
+        SetupDbSets();
+
+        var result = await _service.GetPostCommentsAsync(postId, skip: 1, take: 2, parentCommentId: parentId);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().OnlyContain(comment => comment.ParentCommentId == parentId);
+        result.Value.Select(comment => comment.Content).Should().Equal("Child 2", "Child 3");
+    }
+
     #endregion
 
     #region GetCommentByIdAsync Tests

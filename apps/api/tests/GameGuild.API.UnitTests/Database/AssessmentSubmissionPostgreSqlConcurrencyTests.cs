@@ -2,6 +2,7 @@ using FluentAssertions;
 using GameGuild.API.Database;
 using GameGuild.Learning.Assessments;
 using GameGuild.Learning.Courses;
+using GameGuild.Learning.Grading.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -26,7 +27,7 @@ public sealed class AssessmentSubmissionPostgreSqlConcurrencyTests
             await using (var setup = new ApplicationDbContext(options))
             {
                 await setup.Database.EnsureCreatedAsync();
-                var assessment = Assessment.Create(Guid.NewGuid(), "Concurrent quiz", AssessmentType.Quiz, 100);
+                var assessment = Assessment.Create(Guid.NewGuid(), "Concurrent quiz", AssessmentType.Quiz, ScoreValue.FromPoints("100"));
                 assessment.SetMaxAttempts(1);
                 assessmentId = assessment.Id;
                 setup.Add(assessment);

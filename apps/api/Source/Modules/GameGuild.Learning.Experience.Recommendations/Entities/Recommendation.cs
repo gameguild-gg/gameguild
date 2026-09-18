@@ -23,11 +23,13 @@ public class CourseRecommendation : EntityBase
         RecommendationType type,
         double score,
         string? reason = null,
-        TimeSpan? validFor = null)
+        TimeSpan? validFor = null,
+        Guid? tenantId = null)
     {
         return new CourseRecommendation
         {
             Id = Guid.NewGuid(),
+            TenantId = tenantId,
             UserId = userId,
             CourseId = courseId,
             Type = type,
@@ -114,7 +116,7 @@ public class UserLearningProfile : EntityBase
     {
         var currentSkills = string.IsNullOrEmpty(Skills) 
             ? new List<string>() 
-            : System.Text.Json.JsonSerializer.Deserialize<List<string>>(Skills) ?? new List<string>();
+            : ParseSkills(Skills);
         
         if (!currentSkills.Contains(skill, StringComparer.OrdinalIgnoreCase))
         {
@@ -128,10 +130,22 @@ public class UserLearningProfile : EntityBase
     {
         if (string.IsNullOrEmpty(Skills)) return;
         
-        var currentSkills = System.Text.Json.JsonSerializer.Deserialize<List<string>>(Skills) ?? new List<string>();
+        var currentSkills = ParseSkills(Skills);
         currentSkills.RemoveAll(s => s.Equals(skill, StringComparison.OrdinalIgnoreCase));
         Skills = currentSkills.Count > 0 ? System.Text.Json.JsonSerializer.Serialize(currentSkills) : null;
         UpdatedAt = SystemClock.UtcNow;
+    }
+
+    private static List<string> ParseSkills(string skills)
+    {
+        try
+        {
+            return System.Text.Json.JsonSerializer.Deserialize<List<string>>(skills) ?? [];
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return [];
+        }
     }
 }
 
