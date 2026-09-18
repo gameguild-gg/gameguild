@@ -20,7 +20,7 @@ export function useMarkdownComponents(): Components {
         return <MermaidDiagram code={String(children).replace(/\n$/, "")} />
       }
 
-      if (!inline && (language === "vegalite" || language === "vega-lite")) {
+      if (!inline && (language === "vega" || language === "vegalite" || language === "vega-lite")) {
         return <VegaLiteViewer spec={String(children).replace(/\n$/, "")} />
       }
 
