@@ -16,9 +16,9 @@ import type { FeedScope, SocialProfile } from "@/lib/feed/contracts";
 import {
   loadSocialFeed,
   loadSocialProfile,
+  loadCreatorSuggestions,
   loadStories,
   loadTrendingTags,
-  searchSocialProfiles,
 } from "@/lib/feed/queries";
 import { AlertCircle } from "lucide-react";
 
@@ -66,7 +66,9 @@ export async function SocialShell({
       currentUserId
         ? optional(loadSocialProfile(currentUserId), null)
         : Promise.resolve(null),
-      optional(searchSocialProfiles("", 8), []),
+      currentUserId
+        ? optional(loadCreatorSuggestions(currentUserId, 8), [])
+        : Promise.resolve([]),
       optional(loadTrendingTags(6), []),
       scope === "community"
         ? Promise.resolve(primary)
@@ -114,6 +116,7 @@ export async function SocialShell({
             key={storyPreviews.map((story) => story.id).join(":")}
             userName={userName}
             stories={storyPreviews}
+            currentProfile={currentProfile}
           />
           {primaryError ? (
             <div role="alert" className="mx-4 my-8 flex items-start gap-3 rounded-xl bg-card px-5 py-6 sm:mx-6">
@@ -139,6 +142,7 @@ export async function SocialShell({
           sessions={sessions}
           creators={creators}
           tags={trendingTags}
+          activeTab={tab}
         />
       </div>
     </div>

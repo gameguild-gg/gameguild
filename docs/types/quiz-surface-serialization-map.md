@@ -152,6 +152,11 @@ interface QuizSettings {
 }
 ```
 
+Esse é o tipo atual. Na `SEQ-01`, `points` passa atomicamente para string
+canônica compatível com `ScoreValue`; números deixam de ser aceitos sem
+dual-read. O valor continua pertencendo ao quiz e é projetado pelo
+`@game-guild/grading-adapter-quiz`.
+
 `QuizEntry` e uma uniao discriminada fechada com 14 tipos. A fonte de verdade e [`question-types.ts`](../../packages/features/quiz/src/questions/question-types.ts).
 
 ## Tipos autorais de pergunta
@@ -391,7 +396,7 @@ Funcoes de round-trip:
 - `toStructuredGradingAnswer()` converte para o vocabulario de transporte.
 - `fromStructuredGradingAnswer()` reconstrui `QuizAnswer` a partir desse vocabulario.
 
-## Payload estruturado de grading
+## Payload estruturado de grading atual
 
 O contrato de transporte intencionalmente pequeno e:
 
@@ -420,7 +425,12 @@ Mapeamentos especiais:
 
 O adaptador de grading em [`structured-answer.ts`](../../packages/features/grading/src/adapters/quiz/structured-answer.ts) normaliza valores, remove duplicatas, restringe respostas aos `contentBlockId` configurados e bloqueia nomes de campos que poderiam transportar answer key, score ou alegacoes de correcao.
 
-## Grading no content body
+Na arquitetura alvo, esse formato é removido. O core recebe
+`AssessmentResponseEnvelopeV1`, e `@game-guild/grading-adapter-quiz` fornece o
+payload `QuizAnswerEnvelopeV1` discriminado pelos 14 tipos, sem strings
+delimitadas, JSON embutido ou coordenadas textualizadas.
+
+## Grading atual no content body
 
 O mapa completo dos contratos, adapters, projecao para Assessment, submissions
 e fronteiras de ownership esta em
@@ -460,6 +470,11 @@ interface ContentGradingDefinition {
   }>;
 }
 ```
+
+Na `ContentGradingDefinitionV2` alvo, cada valor de `items` contém somente
+configuração autoral adicional, como `rubricRef`. ID, pontos, tipo e
+`gradingKind` não são copiados: o ID é a chave, os pontos vêm de `QuizEntry` e
+capabilities executáveis pertencem ao manifest.
 
 Nao existe `resultUse`, `feedbackOnly` ou `gradebook` nesse JSON. Esses termos nao pertencem mais ao contrato de grading. A decisao sobre uso do resultado e feita pelas estruturas de assessment, grupos e pesos, fora do `QuizEntry` e fora de `ContentGradingDefinition`.
 

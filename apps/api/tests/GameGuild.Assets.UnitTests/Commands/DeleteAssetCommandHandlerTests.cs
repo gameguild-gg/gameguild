@@ -18,6 +18,55 @@ public class DeleteAssetCommandHandlerTests
     }
 
     [Fact]
+    public async Task Handle_RecordsRemovalWithTheActiveUseCaseCorrelation()
+    {
+        var assetReferenceId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var contentId = Guid.NewGuid();
+        var reference = CreateAssetReference(assetReferenceId, contentId, userId);
+        reference.TenantId = tenantId;
+        _referenceRepositoryMock.Setup(x => x.GetByIdAsync(assetReferenceId, It.IsAny<CancellationToken>())).ReturnsAsync(reference);
+        _referenceRepositoryMock.Setup(x => x.IsOwnedByUserAsync(assetReferenceId, userId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _contentRepositoryMock.Setup(x => x.GetByIdAsync(contentId, It.IsAny<CancellationToken>())).ReturnsAsync((AssetContent?)null);
+        var operationAccessor = new UseCaseOperationContextAccessor();
+        var correlationId = Guid.NewGuid();
+        using var operation = operationAccessor.Begin(new UseCaseOperationContext(
+            "assets.delete-asset", nameof(DeleteAssetCommand), tenantId, userId, correlationId, null));
+        var handler = new DeleteAssetHandler(
+            _referenceRepositoryMock.Object,
+            _contentRepositoryMock.Object,
+            operationContextAccessor: operationAccessor);
+
+        var result = await handler.Handle(new DeleteAssetCommand(assetReferenceId, userId));
+
+        result.Success.Should().BeTrue();
+        reference.IntegrationEvents.Should().ContainSingle().Which.CorrelationId.Should().Be(correlationId);
+    }
+
+    [Fact]
+    public async Task Handle_ReferencedAsset_IsNotDeleted()
+    {
+        var assetReferenceId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var contentId = Guid.NewGuid();
+        var reference = CreateAssetReference(assetReferenceId, contentId, userId);
+        _referenceRepositoryMock.Setup(x => x.GetByIdAsync(assetReferenceId, It.IsAny<CancellationToken>())).ReturnsAsync(reference);
+        _referenceRepositoryMock.Setup(x => x.IsOwnedByUserAsync(assetReferenceId, userId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        var usageGuard = new Mock<IAssetUsageGuard>();
+        usageGuard.Setup(x => x.IsInUseAsync(assetReferenceId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        var handler = new DeleteAssetHandler(
+            _referenceRepositoryMock.Object,
+            _contentRepositoryMock.Object,
+            [usageGuard.Object]);
+
+        var result = await handler.Handle(new DeleteAssetCommand(assetReferenceId, userId));
+
+        result.Success.Should().BeFalse();
+        _referenceRepositoryMock.Verify(x => x.DeleteAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task Handle_ReferenceNotFound_ReturnsFailure()
     {
         // Arrange

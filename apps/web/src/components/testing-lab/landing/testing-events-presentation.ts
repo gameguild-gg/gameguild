@@ -37,7 +37,7 @@ function normalizeStatus(status?: string): TestingEventStatus {
 
 function sumLimit(values: Array<number | null | undefined>): number | null {
   if (values.length === 0 || values.some((value) => value == null)) return null;
-  return values.reduce<number>((total, value) => total + (value ?? 0), 0);
+  return values.reduce<number>((total, value) => total + value!, 0);
 }
 
 export function presentTestingEvents(
@@ -100,7 +100,7 @@ export function presentTestingEvents(
       )
         ? null
         : slots.reduce(
-            (total, slot) => total + (slot.availableTesterCount ?? 0),
+            (total, slot) => total + slot.availableTesterCount!,
             0,
           ),
       scheduleCount: slots.length,

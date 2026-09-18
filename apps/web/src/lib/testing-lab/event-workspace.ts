@@ -9,16 +9,16 @@ export function isTestingEventReadOnly(event: TestingLabTestingEventProjection) 
   return readOnlyStatuses.includes(event.status ?? 'Draft');
 }
 
-export function formatEventDateTime(value?: string | null) {
+export function formatEventDateTime(value?: string | null, timeZone = 'UTC') {
   if (!value) return 'Not scheduled';
   const date = new Date(value);
   if (Number.isNaN(date.valueOf())) return 'Not scheduled';
   const formatted = new Intl.DateTimeFormat('en', {
     dateStyle: 'medium',
     timeStyle: 'short',
-    timeZone: 'UTC',
+    timeZone,
   }).format(date);
-  return `${formatted} UTC`;
+  return `${formatted} ${timeZone}`;
 }
 
 export function formatCapacity(current?: number, maximum?: number | null) {

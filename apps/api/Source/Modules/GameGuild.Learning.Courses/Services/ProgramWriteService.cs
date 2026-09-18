@@ -1,6 +1,7 @@
 using GameGuild.Commerce.Products;
 using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
+using GameGuild.Learning.Grading.Contracts;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 
@@ -14,13 +15,16 @@ public class ProgramWriteService(
   IApplicationDbContext context,
   IProgramContentLifecycleGuard? lifecycleReferenceGuard = null,
   IRequestContextAccessor? requestContextAccessor = null,
-  IPermissionQueryService? permissionQueryService = null) : IProgramWriteService
+  IPermissionQueryService? permissionQueryService = null,
+  IEnumerable<IProgramContentAcademicMutationGuard>? academicGuards = null) : IProgramWriteService
 {
   private readonly IProgramContentLifecycleGuard lifecycleGuard = lifecycleReferenceGuard ?? new NullProgramContentLifecycleGuard();
+  private readonly IEnumerable<IProgramContentAcademicMutationGuard> academicMutationGuards = academicGuards ?? [];
   // ── Program CRUD ────────────────────────────────────────────────────
 
   public async Task<Program> CreateProgramAsync(Program program)
   {
+    program.TenantId ??= requestContextAccessor?.CurrentTenantId;
     program.Status = ContentStatus.Draft;
     program.Visibility = ContentVisibility.Private;
 
@@ -62,6 +66,7 @@ public class ProgramWriteService(
 
     var clonedProgram = new Program
     {
+      TenantId = originalProgram.TenantId,
       CreatorId = originalProgram.CreatorId,
       Title = newTitle,
       Description = originalProgram.Description,
@@ -79,6 +84,7 @@ public class ProgramWriteService(
     {
       var clonedContent = new ProgramContent
       {
+        TenantId = clonedProgram.TenantId,
         ProgramId = clonedProgram.Id,
         Title = content.Title,
         Description = content.Description,
@@ -110,6 +116,7 @@ public class ProgramWriteService(
     var program = new Program
     {
       Id = Guid.NewGuid(),
+      TenantId = requestContextAccessor?.CurrentTenantId,
       CreatorId = createDto.CreatorId,
       Title = createDto.Title,
       Description = createDto.Description,
@@ -162,12 +169,18 @@ public class ProgramWriteService(
 
   public async Task<ProgramContent> AddContentAsync(Guid programId, ProgramContent content)
   {
-    var program = await context.Set<Program>().Where(p => p.DeletedAt == null).AnyAsync(p => p.Id == programId).ConfigureAwait(false);
+    var program = await context.Set<Program>()
+      .AsNoTracking()
+      .Where(p => p.DeletedAt == null)
+      .SingleOrDefaultAsync(p => p.Id == programId)
+      .ConfigureAwait(false);
 
-    if (!program) throw new ArgumentException("Program not found", nameof(programId));
+    if (program == null) throw new ArgumentException("Program not found", nameof(programId));
 
     content.ProgramId = programId;
+    content.TenantId = program.TenantId;
     content.NormalizeLearningContract();
+    ProgramContentAcademicMutationGuard.EnsureAllowed(academicMutationGuards, content, ProgramContentAcademicMutation.Authoring);
 
     if (content.SortOrder == 0)
     {
@@ -192,6 +205,7 @@ public class ProgramWriteService(
     if (existingContent == null) throw new InvalidOperationException($"ProgramContent with ID {content.Id} not found or has been deleted");
 
     content.NormalizeLearningContract();
+    ProgramContentAcademicMutationGuard.EnsureAllowed(academicMutationGuards, content, ProgramContentAcademicMutation.Authoring);
     if (await lifecycleGuard.HasBlockingIncompatibleUpdateReference(
           content.Id,
           content.Type,
@@ -217,6 +231,7 @@ public class ProgramWriteService(
 
     if (content != null)
     {
+      ProgramContentAcademicMutationGuard.EnsureAllowed(academicMutationGuards, content, ProgramContentAcademicMutation.Delete);
       if (await lifecycleGuard.HasBlockingDeleteReference(content.Id).ConfigureAwait(false))
       {
         throw new GameGuild.CQRS.RequestValidationException(
@@ -261,6 +276,7 @@ public class ProgramWriteService(
     var content = new ProgramContent
     {
       Id = Guid.NewGuid(),
+      TenantId = program.TenantId,
       ProgramId = programId,
       Title = contentDto.Title,
       Description = contentDto.Description,
@@ -272,6 +288,7 @@ public class ProgramWriteService(
     };
 
     content.NormalizeLearningContract();
+    ProgramContentAcademicMutationGuard.EnsureAllowed(academicMutationGuards, content, ProgramContentAcademicMutation.Authoring);
 
     context.Set<ProgramContent>().Add(content);
     await context.SaveChangesAsync().ConfigureAwait(false);
@@ -304,6 +321,7 @@ public class ProgramWriteService(
     if (contentDto.EstimatedMinutes != null) content.EstimatedMinutes = contentDto.EstimatedMinutes;
 
     content.NormalizeLearningContract();
+    ProgramContentAcademicMutationGuard.EnsureAllowed(academicMutationGuards, content, ProgramContentAcademicMutation.Authoring);
     if (await lifecycleGuard.HasBlockingIncompatibleUpdateReference(
           content.Id,
           content.Type,
@@ -360,7 +378,20 @@ public class ProgramWriteService(
       return existingUser;
     }
 
-    var programUser = new ProgramUser { ProgramId = programId, UserId = userId, IsActive = true, JoinedAt = SystemClock.UtcNow };
+    var programTenantId = await context.Set<Program>()
+      .AsNoTracking()
+      .Where(program => program.Id == programId && program.DeletedAt == null)
+      .Select(program => program.TenantId)
+      .SingleOrDefaultAsync()
+      .ConfigureAwait(false);
+    var programUser = new ProgramUser
+    {
+      ProgramId = programId,
+      UserId = userId,
+      IsActive = true,
+      JoinedAt = SystemClock.UtcNow,
+      TenantId = programTenantId,
+    };
 
     context.Set<ProgramUser>().Add(programUser);
     await context.SaveChangesAsync().ConfigureAwait(false);
@@ -400,7 +431,7 @@ public class ProgramWriteService(
         UserId = userId,
         JoinedAt = now,
         LastAccessedAt = now,
-        CompletionPercentage = 0,
+        CompletionPercentage = PercentValue.Zero,
         IsActive = true,
         TenantId = program.TenantId,
       };
@@ -556,6 +587,7 @@ public class ProgramWriteService(
       .FirstOrDefaultAsync(pc => pc.Id == contentId && pc.ProgramId == programId && pc.DeletedAt == null)
       .ConfigureAwait(false);
     if (content == null) return null;
+    ProgramContentAcademicMutationGuard.EnsureAllowed(academicMutationGuards, content, ProgramContentAcademicMutation.Submit);
 
     var response = LearningActivityContract.IsActivityType(content.Type)
       ? ActivityResponseContract.Parse(content.Type, submissionData, content.GetActivitySettings())
@@ -604,7 +636,7 @@ public class ProgramWriteService(
         FirstAccessedAt = now,
         LastAccessedAt = now,
         StartedAt = now,
-        CompletionPercentage = 0,
+        CompletionPercentage = PercentValue.Zero,
       };
 
     }
@@ -648,11 +680,13 @@ public class ProgramWriteService(
 
     if (programUser == null) return false;
 
-    var contentExists = await context.Set<ProgramContent>()
-      .AnyAsync(pc => pc.Id == contentId && pc.ProgramId == programId && pc.DeletedAt == null)
+    var content = await context.Set<ProgramContent>()
+      .AsNoTracking()
+      .FirstOrDefaultAsync(pc => pc.Id == contentId && pc.ProgramId == programId && pc.DeletedAt == null)
       .ConfigureAwait(false);
 
-    if (!contentExists) return false;
+    if (content is null) return false;
+    ProgramContentAcademicMutationGuard.EnsureAllowed(academicMutationGuards, content, ProgramContentAcademicMutation.Complete);
 
     var now = SystemClock.UtcNow;
     var interaction = await context.Set<ContentInteraction>()
@@ -675,7 +709,7 @@ public class ProgramWriteService(
         LastAccessedAt = now,
         StartedAt = now,
         CompletedAt = now,
-        CompletionPercentage = 100,
+        CompletionPercentage = PercentValue.Hundred,
         IsCompleted = true,
         AttemptCount = 1,
       };
@@ -707,7 +741,7 @@ public class ProgramWriteService(
 
     if (programUser == null) return false;
 
-    programUser.CompletionPercentage = 0;
+    programUser.CompletionPercentage = PercentValue.Zero;
     programUser.CompletedAt = null;
     programUser.LastAccessedAt = SystemClock.UtcNow;
     programUser.Touch();
@@ -885,7 +919,7 @@ public class ProgramWriteService(
 
     if (totalContent == 0)
     {
-      programUser.CompletionPercentage = 0;
+      programUser.CompletionPercentage = PercentValue.Zero;
 
       return;
     }
@@ -901,10 +935,12 @@ public class ProgramWriteService(
       .CountAsync()
       .ConfigureAwait(false);
 
-    programUser.CompletionPercentage = (decimal)completedContent / totalContent * 100;
+    programUser.CompletionPercentage = PercentValue.FromRatio(completedContent, totalContent);
 
-    if (programUser is { CompletionPercentage: >= 100, CompletedAt: null }) programUser.CompletedAt = SystemClock.UtcNow;
-    else if (programUser.CompletionPercentage < 100) programUser.CompletedAt = null;
+    if (programUser.CompletionPercentage.CompareTo(PercentValue.Hundred) == 0 && programUser.CompletedAt is null)
+      programUser.CompletedAt = SystemClock.UtcNow;
+    else if (programUser.CompletionPercentage.CompareTo(PercentValue.Hundred) < 0)
+      programUser.CompletedAt = null;
 
     programUser.Touch();
   }

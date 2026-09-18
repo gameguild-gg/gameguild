@@ -4,7 +4,8 @@ import type React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  redirect: vi.fn((href: string) => {
+  redirect: vi.fn((target: string | { href: string; locale: string }) => {
+    const href = typeof target === "string" ? target : `/${target.locale}${target.href}`;
     throw new Error(`redirect:${href}`);
   }),
   notFound: vi.fn(() => {
@@ -27,6 +28,7 @@ const mocks = vi.hoisted(() => ({
   getCourseTestimonials: vi.fn(),
   getCourseContent: vi.fn(),
   getContentItem: vi.fn(),
+  getAuthoringDraft: vi.fn(),
   getAssessment: vi.fn(),
   getCourseAssessments: vi.fn(),
   getCourseAssessmentGroups: vi.fn(),
@@ -44,6 +46,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/i18n/navigation", () => ({
+  redirect: mocks.redirect,
   Link: ({
     href,
     children,
@@ -91,15 +94,23 @@ vi.mock("@/lib/learning", () => ({
   canManageCourse: mocks.canManageCourse,
 }));
 
-vi.mock("./content/[contentId]/content-item-editor", () => ({
-  ContentItemEditor: ({
+vi.mock("@/lib/learning/authoring", () => ({
+  getAuthoringDraft: mocks.getAuthoringDraft,
+}));
+
+vi.mock("@/components/learning/authoring/lesson-authoring-workspace", () => ({
+  LessonAuthoringWorkspace: ({
     courseTitle,
     item,
+    initialDraft,
   }: {
     courseTitle: string;
     item: { title: string };
+    initialDraft: { revision: number };
   }) => (
-    <div data-testid="content-item-editor">{`${courseTitle}:${item.title}`}</div>
+    <div data-testid="lesson-authoring-workspace">
+      {`${courseTitle}:${item.title}:${initialDraft.revision}`}
+    </div>
   ),
 }));
 
@@ -178,7 +189,7 @@ import AssessmentsLayout from "@/app/[locale]/(dashboards)/workspace/learning/co
 import AssessmentDetailPage from "@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/assessments/[assessmentSlug]/page";
 import CertificatesLayout from "@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/certificates/layout";
 import CertificateTemplateDetailPage from "@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/certificates/[templateId]/page";
-import ContentItemPage from "@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/content/[contentSlug]/page";
+import ContentItemPage from "@/app/[locale]/(authoring)/workspace/learning/courses/[course]/content/[contentSlug]/page";
 import ListingLayout from "@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/listing/layout";
 import ListingFaqPage from "@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/listing/faq/page";
 import ListingPricingPage from "@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/listing/pricing/page";
@@ -402,6 +413,10 @@ describe("course-management secondary route pages", () => {
     mocks.getContentItem.mockResolvedValue({
       id: "content-1",
       title: "Lesson 1",
+    });
+    mocks.getAuthoringDraft.mockResolvedValue({
+      success: true,
+      data: { revision: 2 },
     });
     mocks.getAssessment.mockResolvedValue({
       id: "assessment-1",
@@ -661,14 +676,14 @@ describe("course-management secondary route pages", () => {
     expect(screen.getByText("Useful")).toBeInTheDocument();
   });
 
-  it("renders item-level editors and certificate details, and uses notFound for missing records", async () => {
+  it("renders the lesson authoring workspace and certificate details, and uses notFound for missing records", async () => {
     render(
       await ContentItemPage({
         params: params({ contentId: "content-1" }),
       } as never),
     );
-    expect(screen.getByTestId("content-item-editor")).toHaveTextContent(
-      "Advanced AI:Lesson 1",
+    expect(screen.getByTestId("lesson-authoring-workspace")).toHaveTextContent(
+      "Advanced AI:Lesson 1:2",
     );
 
     render(

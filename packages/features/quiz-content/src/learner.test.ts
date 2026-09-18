@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { QuizEntryType, createTrueFalseEntry } from "@game-guild/quiz";
 import { QUIZ_BLOCK_TYPE, QUIZ_CONTENT_SCHEMA_VERSION } from "./constants";
-import { toQuizLearnerContentDocument } from "./learner";
+import {
+  isQuizRuntimeContentDocument,
+  prepareQuizContentForRuntime,
+  toQuizLearnerContentDocument,
+} from "./learner";
 import { createAllQuestionTypesDocument } from "./testing/fixtures";
 
 describe("quiz learner content", () => {
@@ -25,11 +29,15 @@ describe("quiz learner content", () => {
   });
 
   it("projects every supported question type through the document boundary", () => {
-    const authoring = createAllQuestionTypesDocument();
+    const authoring = {
+      ...createAllQuestionTypesDocument(),
+      grading: { schemaVersion: 2 as const, items: {} },
+    };
     const learner = toQuizLearnerContentDocument(authoring);
 
     expect(learner.order).toEqual(authoring.order);
     expect(Object.keys(learner.blocks)).toHaveLength(14);
+    expect(learner).not.toHaveProperty("grading");
 
     for (const [id] of learner.order) {
       const entry = learner.blocks[id]!;
@@ -90,5 +98,14 @@ describe("quiz learner content", () => {
           break;
       }
     }
+  });
+
+  it("recognizes only explicit runtime envelopes", () => {
+    const document = createAllQuestionTypesDocument();
+    const runtime = prepareQuizContentForRuntime(document, "server-graded");
+
+    expect(isQuizRuntimeContentDocument(runtime)).toBe(true);
+    expect(isQuizRuntimeContentDocument(runtime.document)).toBe(false);
+    expect(isQuizRuntimeContentDocument({ mode: "server-graded", document: { order: [] } })).toBe(false);
   });
 });

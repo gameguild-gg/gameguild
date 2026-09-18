@@ -1,9 +1,10 @@
 using GameGuild.CQRS;
+using GameGuild.Learning.Grading.Contracts;
 
 namespace GameGuild.Learning.Courses;
 
 public sealed record StartContentInteractionEndpointCommand(Guid ProgramUserId, Guid ContentId) : ICommand<ContentInteraction>;
-public sealed record UpdateContentInteractionProgressEndpointCommand(Guid InteractionId, decimal CompletionPercentage) : ICommand<ContentInteraction>;
+public sealed record UpdateContentInteractionProgressEndpointCommand(Guid InteractionId, PercentValue CompletionPercentage) : ICommand<ContentInteraction>;
 public sealed record SubmitContentInteractionEndpointCommand(Guid InteractionId, string SubmissionData) : ICommand<ContentInteraction>;
 public sealed record CompleteContentInteractionEndpointCommand(Guid InteractionId) : ICommand<ContentInteraction>;
 public sealed record UpdateContentInteractionTimeEndpointCommand(Guid InteractionId, int AdditionalMinutes) : ICommand<ContentInteraction>;

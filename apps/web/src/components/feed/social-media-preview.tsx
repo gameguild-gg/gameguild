@@ -3,6 +3,7 @@
 import type { SelectedSocialMedia } from "./social-media-picker";
 import { Button } from "@game-guild/ui/components/button";
 import { FileVideo2, ImageIcon, X } from "lucide-react";
+import Image from "next/image";
 
 export function SocialMediaPreview({
   media,
@@ -18,7 +19,9 @@ export function SocialMediaPreview({
       {media.kind === "video" ? (
         <video src={media.previewUrl} aria-label="Selected media preview" controls className="max-h-80 w-full object-contain" />
       ) : (
-        <img src={media.previewUrl} alt="Selected media preview" className="max-h-80 w-full object-contain" />
+        <div className="relative h-80 w-full">
+          <Image src={media.previewUrl} alt="Selected media preview" fill sizes="100vw" unoptimized className="object-contain" />
+        </div>
       )}
       <div className="absolute inset-x-0 bottom-0 flex items-center gap-2 bg-background/85 px-3 py-2 text-xs backdrop-blur">
         {media.kind === "video" ? <FileVideo2 className="size-4 text-primary" /> : <ImageIcon className="size-4 text-primary" />}

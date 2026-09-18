@@ -5,6 +5,8 @@ using GameGuild.Identity.Context.Actors;
 using GameGuild.Learning.Courses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using GameGuild.Learning.Assessments.Grading.Contracts;
+using GameGuild.Learning.Grading.Contracts;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Learning.Assessments;
@@ -128,8 +130,7 @@ public class PeerReviewsController : BaseApiController
             submission.CodePayload,
             submission.MediaPayload,
             submission.FilePayload,
-            submission.ProjectPayload,
-            submission.StructuredAnswerPayload));
+            submission.ProjectPayload));
     }
 
     /// <summary>
@@ -167,7 +168,7 @@ public class PeerReviewsController : BaseApiController
             });
         }
 
-        if (request.Score is not { } score || score < 0 || score > assessment.MaxScore)
+        if (request.Score is not { } score || score.CompareTo(ScoreValue.Zero) < 0 || score.CompareTo(assessment.MaxScore) > 0)
         {
             return BadRequest(new ProblemDetails
             {
@@ -263,7 +264,12 @@ public class PeerReviewsController : BaseApiController
     private static bool IsReviewWindowOpen(Assessment assessment)
     {
         var closesAt = assessment.DueAt ?? assessment.AvailableUntil ?? assessment.LateSubmissionDeadline;
-        return closesAt is null || closesAt >= SystemClock.UtcNow;
+        if (!closesAt.HasValue)
+        {
+            return true;
+        }
+
+        return closesAt.Value >= SystemClock.UtcNow;
     }
 
     private async Task<bool> IsActorInProgramTenantAsync(Guid courseId)
@@ -317,7 +323,7 @@ public sealed record PeerReviewClaimDto(Guid ReviewId, string MaskedSubmission);
 /// Body of a peer review submit: plain score XOR rubric scores (rubric rules enforced server-side),
 /// plus the mandatory feedback comment.
 /// </summary>
-public sealed record PeerReviewSubmitRequest(int? Score, string? Feedback, string? RubricScores);
+public sealed record PeerReviewSubmitRequest(ScoreValue? Score, string? Feedback, string? RubricScores);
 
 public sealed record PeerReviewSubmitDto(Guid ReviewId, PeerReviewStatus Status);
 
@@ -339,10 +345,9 @@ public sealed record AnonymousReviewSubmissionDto(
     string? CodePayload,
     string? MediaPayload,
     string? FilePayload,
-    string? ProjectPayload,
-    string? StructuredAnswerPayload);
+    string? ProjectPayload);
 
-public sealed record AnonymousReviewAssessmentDto(Guid Id, string Title, int MaxScore);
+public sealed record AnonymousReviewAssessmentDto(Guid Id, string Title, ScoreValue MaxScore);
 
 public sealed record AnonymousReviewRubricDto(IReadOnlyList<RubricCriterionDto> Criteria);
 
@@ -352,7 +357,7 @@ public sealed record AnonymousReviewRubricDto(IReadOnlyList<RubricCriterionDto> 
 /// </summary>
 public sealed record ReceivedPeerReviewDto(
     Guid ReviewId,
-    int? Score,
+    ScoreValue? Score,
     string? Feedback,
     string? RubricScoresPayload,
     DateTime? SubmittedAt);
@@ -362,7 +367,7 @@ public sealed record ReceivedPeerReviewDto(
 /// </summary>
 public sealed record InstructorPeerReviewDto(
     Guid ReviewId,
-    int? Score,
+    ScoreValue? Score,
     string? Feedback,
     string? RubricScoresPayload,
     DateTime? SubmittedAt,

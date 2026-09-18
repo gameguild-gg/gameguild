@@ -3,7 +3,6 @@ using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Identity.Users;
 using GameGuild.Learning.Courses;
-using GameGuild.Learning.Enrollments;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -87,7 +86,7 @@ public class GroupSetServiceTests
         await using var db = CreateContext();
         var (courseId, setId, groupId, userId) = await SeedSetWithGroupAsync(db, capacity: 4);
         await SeedEnrollmentAsync(db, courseId, userId);
-        var assessment = Assessment.Create(courseId, "Project", AssessmentType.Project, 100);
+        var assessment = Assessment.Create(courseId, "Project", AssessmentType.Project, Score(100));
         assessment.AssignToGroupSet(setId);
         assessment.SetDeliverySchedule(null, DateTime.UtcNow.AddHours(-1), null, false, null);
         db.Add(assessment);
@@ -105,8 +104,8 @@ public class GroupSetServiceTests
     {
         await using var db = CreateContext();
         var (courseId, setId, groupId, userId) = await SeedSetWithGroupAsync(db, capacity: 4);
-        var dropped = Enrollment.Create(courseId, userId);
-        dropped.Drop();
+        var dropped = CreateEnrollment(courseId, userId);
+        dropped.EnrollmentStatus = EnrollmentStatus.Cancelled;
         db.Add(dropped);
         await db.SaveChangesAsync();
         var service = CreateService(db);
@@ -322,9 +321,9 @@ public class GroupSetServiceTests
         var courseId = Guid.NewGuid();
         var activeUser = Guid.NewGuid();
         var droppedUser = Guid.NewGuid();
-        var active = Enrollment.Create(courseId, activeUser);
-        var dropped = Enrollment.Create(courseId, droppedUser);
-        dropped.Drop();
+        var active = CreateEnrollment(courseId, activeUser);
+        var dropped = CreateEnrollment(courseId, droppedUser);
+        dropped.EnrollmentStatus = EnrollmentStatus.Cancelled;
         db.AddRange(active, dropped);
         await db.SaveChangesAsync();
         var service = CreateService(db);
@@ -358,7 +357,8 @@ public class GroupSetServiceTests
             _actor.Object,
             _programs.Object,
             _permissions.Object,
-            _log.Object);
+            _log.Object,
+            new AssessmentEndpointTestSender(groupSetService: _svc.Object));
     }
 
     [Fact]
@@ -401,6 +401,29 @@ public class GroupSetServiceTests
             .ReturnsAsync(new List<GroupSetSummaryDto>());
 
         var result = await CreateController(actorId).GetGroupSets(courseId);
+
+        result.Result.Should().BeOfType<OkObjectResult>();
+    }
+
+    [Fact]
+    public async Task GetGroupSets_WhenCrossTenantActorHasActiveEnrollment_ReturnsOk()
+    {
+        var actorId = Guid.NewGuid();
+        var actorTenantId = Guid.NewGuid();
+        var courseTenantId = Guid.NewGuid();
+        var courseId = Guid.NewGuid();
+        _programs.Setup(service => service.GetProgramByIdAsync(courseId))
+            .ReturnsAsync(new Program
+            {
+                Id = courseId,
+                CreatorId = Guid.NewGuid(),
+                TenantId = courseTenantId
+            });
+        _svc.Setup(service => service.HasActiveEnrollmentAsync(courseId, actorId)).ReturnsAsync(true);
+        _svc.Setup(service => service.GetCourseGroupSetsAsync(courseId))
+            .ReturnsAsync(new List<GroupSetSummaryDto>());
+
+        var result = await CreateController(actorId, tenantId: actorTenantId).GetGroupSets(courseId);
 
         result.Result.Should().BeOfType<OkObjectResult>();
     }
@@ -468,9 +491,18 @@ public class GroupSetServiceTests
 
     private static async Task SeedEnrollmentAsync(TestGroupDbContext db, Guid courseId, Guid userId)
     {
-        db.Add(Enrollment.Create(courseId, userId));
+        db.Add(CreateEnrollment(courseId, userId));
         await db.SaveChangesAsync();
     }
+
+    private static ProgramEnrollment CreateEnrollment(Guid courseId, Guid userId) =>
+        new()
+        {
+            Id = Guid.NewGuid(),
+            ProgramId = courseId,
+            UserId = userId,
+            EnrollmentStatus = EnrollmentStatus.Active
+        };
 
     private static async Task SeedFullGroupAsync(TestGroupDbContext db, Guid groupId)
     {
@@ -481,7 +513,7 @@ public class GroupSetServiceTests
     private static async Task SeedLockedAssessmentAsync(
         TestGroupDbContext db, Guid courseId, Guid setId, DateTime dueAt, DateTime? lateDeadline)
     {
-        var assessment = Assessment.Create(courseId, "Project", AssessmentType.Project, 100);
+        var assessment = Assessment.Create(courseId, "Project", AssessmentType.Project, Score(100));
         assessment.AssignToGroupSet(setId);
         assessment.SetDeliverySchedule(null, null, dueAt, lateDeadline.HasValue, lateDeadline);
         db.Add(assessment);
@@ -503,7 +535,12 @@ public class GroupSetServiceTests
         {
             new AssessmentsModelConfiguration().Configure(modelBuilder);
             // ponytail: minimal cross-module mappings for membership rules; full mapping lives in ApplicationDbContext.
-            modelBuilder.Entity<Enrollment>().HasKey(e => e.Id);
+            modelBuilder.Entity<ProgramEnrollment>(b =>
+            {
+                b.HasKey(e => e.Id);
+                b.Ignore(e => e.Program);
+                b.Ignore(e => e.User);
+            });
             modelBuilder.Entity<User>(b =>
             {
                 b.HasKey(u => u.Id);

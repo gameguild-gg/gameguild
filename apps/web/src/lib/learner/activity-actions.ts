@@ -57,7 +57,7 @@ async function authenticatedClient() {
 
 async function uploadAssessmentFile(
   token: string,
-  assessmentId: string,
+  submissionId: string,
   file: File,
 ): Promise<string> {
   if (file.size === 0) throw new Error("Choose a file before submitting.");
@@ -66,7 +66,7 @@ async function uploadAssessmentFile(
   const endpoint = new URL("/v1/assets", getApiUrl());
   endpoint.searchParams.set("accessPolicy", "Private");
   endpoint.searchParams.set("parentResourceType", "AssessmentSubmission");
-  endpoint.searchParams.set("parentResourceId", assessmentId);
+  endpoint.searchParams.set("parentResourceId", submissionId);
   const response = await fetch(endpoint, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
@@ -99,6 +99,11 @@ export async function submitAssessment(
       return {
         success: false,
         error: "Assessment enrollment context is missing.",
+      };
+    if (modality === "None" || modality === "StructuredAnswer")
+      return {
+        success: false,
+        error: "Quiz attempts are unavailable through the generic assessment form.",
       };
 
     const authenticated = await authenticatedClient();
@@ -135,7 +140,7 @@ export async function submitAssessment(
       modality === "File"
         ? await uploadAssessmentFile(
             authenticated.token,
-            assessmentId,
+            submissionId,
             formData.get("file") as File,
           )
         : String(formData.get("response") || "");

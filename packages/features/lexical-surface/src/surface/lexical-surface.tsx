@@ -10,7 +10,7 @@ import * as React from "react";
 import { useMemo } from "react";
 import type { LexicalEditor, SerializedEditorState } from "lexical";
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
-import type { AssetRepository } from "@game-guild/assets";
+import type { AssetRepository, AssetScope } from "@game-guild/assets";
 import { AssetsProvider, useHasAssetsProvider } from "@game-guild/assets/react";
 import {
   resolveLexicalSurfaceFeatures,
@@ -45,6 +45,7 @@ export interface LexicalSurfaceProps {
   contentScrollable?: boolean;
   initialPageSettings?: PageSettings;
   assetsRepository?: AssetRepository;
+  assetScope?: AssetScope;
 }
 
 export function LexicalSurface({
@@ -65,6 +66,7 @@ export function LexicalSurface({
   contentScrollable,
   initialPageSettings,
   assetsRepository,
+  assetScope,
 }: LexicalSurfaceProps) {
   const resolvedFeatures = useMemo(
     () => resolveLexicalSurfaceFeatures(features, readOnly),
@@ -105,7 +107,7 @@ export function LexicalSurface({
     </LexicalComposer>
   );
 
-  return assetsRepository || !hasAssetsProvider
-    ? <AssetsProvider repository={assetsRepository}>{content}</AssetsProvider>
+  return assetsRepository || assetScope || !hasAssetsProvider
+    ? <AssetsProvider repository={assetsRepository} scope={assetScope}>{content}</AssetsProvider>
     : content;
 }

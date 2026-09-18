@@ -26,8 +26,18 @@ public sealed class CanonicalSnapshotEntitySetTests
             snapshotContract.Schema.Should().Be(designerContract.Schema);
 
             foreach (var property in designerContract.Properties)
+            {
+                if (IntentionallyEvolvedProperties.Contains((entityName, property.Name)))
+                {
+                    snapshotContract.Properties.Should().Contain(
+                        current => current.Name == property.Name,
+                        $"the current snapshot must retain the intentionally evolved property {property.Name} on {entityName}");
+                    continue;
+                }
+
                 snapshotContract.Properties.Should().ContainEquivalentOf(property,
                     $"the current snapshot must preserve the migration-era property {property.Name} on {entityName}");
+            }
 
             foreach (var constraint in designerContract.CheckConstraints)
                 snapshotContract.CheckConstraints.Should().ContainEquivalentOf(constraint,
@@ -38,8 +48,19 @@ public sealed class CanonicalSnapshotEntitySetTests
                     $"the current snapshot must preserve the migration-era index {index.Name} on {entityName}");
 
             foreach (var foreignKey in designerContract.ForeignKeys)
+            {
+                if (IntentionallyOptionalRelationships.Contains((entityName, foreignKey.Properties.Single())))
+                {
+                    snapshotContract.ForeignKeys.Should().Contain(
+                        current => current.Properties.SequenceEqual(foreignKey.Properties)
+                                   && current.PrincipalEntity == foreignKey.PrincipalEntity,
+                        $"the current snapshot must retain the intentionally optional relationship on {entityName}");
+                    continue;
+                }
+
                 snapshotContract.ForeignKeys.Should().ContainEquivalentOf(foreignKey,
                     $"the current snapshot must preserve migration-era relationships on {entityName}");
+            }
         }
     }
 
@@ -124,6 +145,19 @@ public sealed class CanonicalSnapshotEntitySetTests
         "GameGuild.Learning.Assessments.Assessment",
         "GameGuild.Learning.Assessments.AssessmentSubmission",
         "GameGuild.Learning.Assessments.InteractiveVideoAssessmentCue"
+    ];
+
+    private static readonly HashSet<(string Entity, string Property)> IntentionallyEvolvedProperties =
+    [
+        ("GameGuild.Learning.Assessments.Assessment", "MaxAttempts"),
+        ("GameGuild.Learning.Assessments.AssessmentSubmission", "EnrollmentId"),
+        ("GameGuild.Learning.Assessments.AssessmentSubmission", "UserId")
+    ];
+
+    private static readonly HashSet<(string Entity, string Property)> IntentionallyOptionalRelationships =
+    [
+        ("GameGuild.Learning.Assessments.AssessmentSubmission", "EnrollmentId"),
+        ("GameGuild.Learning.Assessments.AssessmentSubmission", "UserId")
     ];
 
     private static readonly string[] ProjectChannelEntityNames =

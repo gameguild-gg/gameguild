@@ -9,9 +9,19 @@ namespace GameGuild.Learning.Courses;
 public class ProgramContentService(
   IApplicationDbContext context,
   IProgramContentScheduleGuard scheduleGuard,
-  IProgramContentLifecycleGuard lifecycleGuard) : IProgramContentService {
+  IProgramContentLifecycleGuard lifecycleGuard,
+  IEnumerable<IProgramContentAcademicMutationGuard>? academicGuards = null) : IProgramContentService {
+  private readonly IEnumerable<IProgramContentAcademicMutationGuard> academicMutationGuards = academicGuards ?? [];
   public async Task<ProgramContent> CreateContentAsync(ProgramContent content) {
+    var parentTenantId = await context.Set<Program>()
+      .AsNoTracking()
+      .Where(program => program.Id == content.ProgramId && program.DeletedAt == null)
+      .Select(program => program.TenantId)
+      .SingleOrDefaultAsync()
+      .ConfigureAwait(false);
+    content.TenantId = parentTenantId;
     content.NormalizeLearningContract();
+    ProgramContentAcademicMutationGuard.EnsureAllowed(academicMutationGuards, content, ProgramContentAcademicMutation.Authoring);
 
     // Set creation timestamp
     content.Touch();
@@ -54,6 +64,7 @@ public class ProgramContentService(
 
     // Update properties
     content.NormalizeLearningContract();
+    ProgramContentAcademicMutationGuard.EnsureAllowed(academicMutationGuards, content, ProgramContentAcademicMutation.Authoring);
     if (await lifecycleGuard.HasBlockingIncompatibleUpdateReference(
             existingContent.Id,
             content.Type,

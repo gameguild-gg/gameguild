@@ -3,7 +3,10 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { AssessmentEditor } from "./assessment-editor";
+import {
+  AssessmentEditor,
+  resolvePeerReviewsRequiredCount,
+} from "./assessment-editor";
 import {
   deleteAssessment,
   deleteRubric,
@@ -14,11 +17,13 @@ import type {
   Assessment,
   AssessmentGroup,
 } from "@/lib/learning/queries/assessments";
+import { createReviewMethods } from "@game-guild/grading";
 
 const routerMocks = vi.hoisted(() => ({
   back: vi.fn(),
   push: vi.fn(),
   refresh: vi.fn(),
+  replace: vi.fn(),
 }));
 
 Object.defineProperties(HTMLElement.prototype, {
@@ -36,7 +41,8 @@ global.ResizeObserver = class ResizeObserver {
 
 vi.mock("next/navigation", () => ({
   useRouter: () => routerMocks,
-  usePathname: () => "/workspace/learning/courses/course-1/assessments/assessment-1",
+  usePathname: () =>
+    "/workspace/learning/courses/course-1/assessments/assessment-1",
 }));
 
 vi.mock("@/i18n/navigation", () => ({
@@ -63,6 +69,7 @@ vi.mock("@/lib/learning/actions", () => ({
 
 const assessment = {
   id: "assessment-1",
+  slug: "assessment-1",
   courseId: "course-1",
   contentId: null,
   assessmentGroupId: null,
@@ -85,9 +92,15 @@ const assessment = {
   allowLateSubmissions: false,
   lateSubmissionDeadline: null,
   isAvailable: true,
-  gradingMethods: "InstructorGraded",
+  reviewMethods: createReviewMethods("InstructorReview"),
   groupSetId: null,
-  peerReviewsRequiredCount: 0,
+  publishedDefinitionRevisionId: null,
+  reviewConfigurationCanonicalJson: null,
+  attemptContributionMode: null,
+  contentCompletionMode: "on-release-and-pass",
+  resultReleaseMode: "manual",
+  resultReleaseScheduledFor: null,
+  version: 1,
 } satisfies Assessment;
 
 const groups = [] satisfies AssessmentGroup[];
@@ -99,10 +112,10 @@ const groupSets = [
 
 describe("AssessmentEditor policy sections", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     vi.mocked(updateAssessment).mockResolvedValue({
       success: true,
-      data: null,
+      data: { version: 2 },
     });
     vi.mocked(deleteAssessment).mockResolvedValue({
       success: true,
@@ -110,9 +123,13 @@ describe("AssessmentEditor policy sections", () => {
     });
     vi.mocked(saveRubric).mockResolvedValue({ success: true, data: null });
     vi.mocked(deleteRubric).mockResolvedValue({ success: true, data: null });
+    vi.stubGlobal(
+      "confirm",
+      vi.fn(() => true),
+    );
   });
 
-  it("peer review toggle reveals required reviews defaulting to 3 (min 1)", async () => {
+  it("selecting peer review reveals its required-review policy", async () => {
     const user = userEvent.setup();
     render(
       <AssessmentEditor
@@ -122,30 +139,46 @@ describe("AssessmentEditor policy sections", () => {
       />,
     );
 
-    expect(screen.queryByLabelText(/required reviews/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText(/required peer reviews/i),
+    ).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("switch", { name: /peer review/i }));
+    await user.click(screen.getByRole("combobox", { name: /primary review/i }));
+    await user.click(
+      await screen.findByRole("option", { name: "Peer review" }),
+    );
 
-    const countInput = screen.getByLabelText(/required reviews/i);
+    const countInput = screen.getByLabelText(/required peer reviews/i);
     expect(countInput).toHaveValue(3);
     expect(countInput).toHaveAttribute("min", "1");
 
-    await waitFor(() => {
-      expect(updateAssessment).toHaveBeenCalledWith({
-        courseId: "course-1",
-        assessmentId: "assessment-1",
-        gradingMethods: "InstructorGraded,PeerReview",
-        peerReviewsRequiredCount: 3,
-      });
-    });
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+    await waitFor(() => expect(updateAssessment).toHaveBeenCalled());
+    const call = vi.mocked(updateAssessment).mock.calls.at(-1)![0];
+    expect(call.reviewMethods).toBe(1);
+    expect(
+      JSON.parse(call.reviewConfigurationCanonicalJson!).peer,
+    ).toMatchObject({ reviewsRequiredPerSubmission: 3 });
   });
 
-  it("turning peer review off removes the flag but keeps the count server-side", async () => {
+  it("switching away from peer review removes its owned configuration", async () => {
     const user = userEvent.setup();
     const withPeer = {
       ...assessment,
-      gradingMethods: "InstructorGraded,PeerReview",
-      peerReviewsRequiredCount: 4,
+      reviewMethods: createReviewMethods("PeerReview", true),
+      reviewConfigurationCanonicalJson: JSON.stringify({
+        schemaVersion: 1,
+        peer: {
+          reviewsPerReviewer: 4,
+          reviewsRequiredPerSubmission: 4,
+          minimumReviewsToFinalize: 4,
+          aggregation: "median",
+          claimLeaseMinutes: 15,
+          evidenceWindowMinutes: 1440,
+          onInsufficientEvidence: "await-instructor",
+        },
+        instructor: { requireOverrideReason: false },
+      }),
     };
     render(
       <AssessmentEditor
@@ -155,20 +188,18 @@ describe("AssessmentEditor policy sections", () => {
       />,
     );
 
-    expect(screen.getByLabelText(/required reviews/i)).toHaveValue(4);
+    expect(screen.getByLabelText(/required peer reviews/i)).toHaveValue(4);
 
-    await user.click(screen.getByRole("switch", { name: /peer review/i }));
+    await user.click(screen.getByRole("combobox", { name: /primary review/i }));
+    await user.click(
+      await screen.findByRole("option", { name: "Instructor review" }),
+    );
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
 
-    await waitFor(() => {
-      expect(updateAssessment).toHaveBeenCalledWith({
-        courseId: "course-1",
-        assessmentId: "assessment-1",
-        gradingMethods: "InstructorGraded",
-      });
-    });
-    expect(
-      vi.mocked(updateAssessment).mock.calls.at(-1)?.[0],
-    ).not.toHaveProperty("peerReviewsRequiredCount");
+    await waitFor(() => expect(updateAssessment).toHaveBeenCalled());
+    const call = vi.mocked(updateAssessment).mock.calls.at(-1)![0];
+    expect(call.reviewMethods).toBe(8);
+    expect(JSON.parse(call.reviewConfigurationCanonicalJson!).peer).toBeNull();
   });
 
   it("group assignment toggle reveals the group set dropdown with course sets", async () => {
@@ -182,15 +213,19 @@ describe("AssessmentEditor policy sections", () => {
       />,
     );
 
-    expect(screen.queryByRole("combobox", { name: /group set/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("combobox", { name: /group set/i }),
+    ).not.toBeInTheDocument();
 
-    await user.click(
-      screen.getByRole("switch", { name: /group assignment/i }),
-    );
+    await user.click(screen.getByRole("switch", { name: /group assignment/i }));
 
     await user.click(screen.getByRole("combobox", { name: /group set/i }));
-    expect(await screen.findByRole("option", { name: "Project teams" })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: "Lab pairs" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("option", { name: "Project teams" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", { name: "Lab pairs" }),
+    ).toBeInTheDocument();
 
     await user.click(screen.getByRole("option", { name: "Project teams" }));
 
@@ -198,6 +233,7 @@ describe("AssessmentEditor policy sections", () => {
       expect(updateAssessment).toHaveBeenCalledWith({
         courseId: "course-1",
         assessmentId: "assessment-1",
+        expectedVersion: 1,
         groupSetId: "set-1",
         clearGroupSetId: false,
       });
@@ -216,16 +252,17 @@ describe("AssessmentEditor policy sections", () => {
       />,
     );
 
-    expect(screen.getByRole("combobox", { name: /group set/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("combobox", { name: /group set/i }),
+    ).toBeInTheDocument();
 
-    await user.click(
-      screen.getByRole("switch", { name: /group assignment/i }),
-    );
+    await user.click(screen.getByRole("switch", { name: /group assignment/i }));
 
     await waitFor(() => {
       expect(updateAssessment).toHaveBeenCalledWith({
         courseId: "course-1",
         assessmentId: "assessment-1",
+        expectedVersion: 1,
         groupSetId: null,
         clearGroupSetId: true,
       });
@@ -244,10 +281,16 @@ describe("AssessmentEditor policy sections", () => {
 
     await user.click(screen.getByRole("switch", { name: /grade by rubric/i }));
 
-    await user.type(screen.getByLabelText(/criterion 1 description/i), "Design");
+    await user.type(
+      screen.getByLabelText(/criterion 1 description/i),
+      "Design",
+    );
     await user.type(screen.getByLabelText(/criterion 1 points/i), "10");
     await user.click(screen.getByRole("button", { name: /add criterion/i }));
-    await user.type(screen.getByLabelText(/criterion 2 description/i), "Correctness");
+    await user.type(
+      screen.getByLabelText(/criterion 2 description/i),
+      "Correctness",
+    );
     await user.type(screen.getByLabelText(/criterion 2 points/i), "15");
 
     const indicator = screen.getByTestId("rubric-sum");
@@ -255,6 +298,10 @@ describe("AssessmentEditor policy sections", () => {
     expect(indicator).toHaveClass(/red|destructive/);
     expect(screen.getByRole("button", { name: /save rubric/i })).toBeDisabled();
     expect(saveRubric).not.toHaveBeenCalled();
+
+    await user.clear(screen.getByLabelText(/criterion 2 points/i));
+    await user.type(screen.getByLabelText(/criterion 2 points/i), "21");
+    expect(screen.getByTestId("rubric-sum")).toHaveTextContent(/\+1/);
 
     await user.clear(screen.getByLabelText(/criterion 2 points/i));
     await user.type(screen.getByLabelText(/criterion 2 points/i), "20");
@@ -294,7 +341,9 @@ describe("AssessmentEditor policy sections", () => {
     expect(
       screen.getByText("Rubric locked after grading started"),
     ).toBeInTheDocument();
-    expect(screen.getByRole("switch", { name: /grade by rubric/i })).toHaveAttribute("aria-disabled", "true");
+    expect(
+      screen.getByRole("switch", { name: /grade by rubric/i }),
+    ).toHaveAttribute("aria-disabled", "true");
     expect(screen.getByRole("button", { name: /save rubric/i })).toBeDisabled();
     expect(screen.getByLabelText(/criterion 1 description/i)).toBeDisabled();
   });
@@ -314,7 +363,10 @@ describe("AssessmentEditor policy sections", () => {
     );
 
     await user.click(screen.getByRole("switch", { name: /grade by rubric/i }));
-    await user.type(screen.getByLabelText(/criterion 1 description/i), "Design");
+    await user.type(
+      screen.getByLabelText(/criterion 1 description/i),
+      "Design",
+    );
     await user.type(screen.getByLabelText(/criterion 1 points/i), "30");
     await user.click(screen.getByRole("button", { name: /save rubric/i }));
 
@@ -326,7 +378,10 @@ describe("AssessmentEditor policy sections", () => {
 
   it("deletes the rubric after confirmation", async () => {
     const user = userEvent.setup();
-    vi.stubGlobal("confirm", vi.fn(() => true));
+    vi.stubGlobal(
+      "confirm",
+      vi.fn(() => true),
+    );
     render(
       <AssessmentEditor
         courseId="course-1"
@@ -344,5 +399,287 @@ describe("AssessmentEditor policy sections", () => {
     await waitFor(() => {
       expect(deleteRubric).toHaveBeenCalledWith("assessment-1");
     });
+  });
+
+  it("rolls back group assignment when clearing the persisted group set fails", async () => {
+    const user = userEvent.setup();
+    vi.mocked(updateAssessment).mockResolvedValueOnce({
+      success: false,
+      error: "Group assignment update failed",
+    });
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={{ ...assessment, groupSetId: "set-1" }}
+        assessmentGroups={groups}
+        groupSets={groupSets}
+      />,
+    );
+
+    await user.click(screen.getByRole("switch", { name: /group assignment/i }));
+
+    expect(
+      await screen.findByText("Group assignment update failed"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("switch", { name: /group assignment/i }),
+    ).toBeChecked();
+    expect(
+      screen.getByRole("combobox", { name: /group set/i }),
+    ).toHaveTextContent("Project teams");
+  });
+
+  it("rolls back a group-set selection failure", async () => {
+    const user = userEvent.setup();
+    vi.mocked(updateAssessment).mockResolvedValueOnce({
+      success: false,
+      error: "Group set failed",
+    });
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={{ ...assessment, groupSetId: "set-1" }}
+        assessmentGroups={groups}
+        groupSets={groupSets}
+      />,
+    );
+
+    const groupSet = screen.getByRole("combobox", { name: /group set/i });
+    await user.click(groupSet);
+    await user.click(await screen.findByRole("option", { name: "Lab pairs" }));
+    expect(await screen.findByText("Group set failed")).toBeInTheDocument();
+    expect(groupSet).toHaveTextContent("Project teams");
+  });
+
+  it("explicitly clears a selected group set", async () => {
+    const user = userEvent.setup();
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={{ ...assessment, groupSetId: "set-1" }}
+        assessmentGroups={groups}
+        groupSets={groupSets}
+      />,
+    );
+
+    const groupSet = screen.getByRole("combobox", { name: /group set/i });
+    await user.click(groupSet);
+    await user.click(
+      await screen.findByRole("option", { name: "No group set" }),
+    );
+    await waitFor(() => {
+      expect(updateAssessment).toHaveBeenLastCalledWith({
+        courseId: "course-1",
+        assessmentId: "assessment-1",
+        expectedVersion: 1,
+        groupSetId: null,
+        clearGroupSetId: true,
+      });
+    });
+  });
+
+  it("reports a peer-review workflow save failure and keeps the draft", async () => {
+    const user = userEvent.setup();
+    vi.mocked(updateAssessment).mockResolvedValueOnce({
+      success: false,
+      error: "Peer review update failed",
+    });
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={assessment}
+        assessmentGroups={groups}
+      />,
+    );
+
+    const primaryReview = screen.getByRole("combobox", {
+      name: /primary review/i,
+    });
+    await user.click(primaryReview);
+    await user.click(
+      await screen.findByRole("option", { name: "Peer review" }),
+    );
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    expect(
+      await screen.findByText("Peer review update failed"),
+    ).toBeInTheDocument();
+    expect(primaryReview).toHaveTextContent("Peer review");
+  });
+
+  it("persists and reports failures for the peer review count", async () => {
+    const user = userEvent.setup();
+    const withPeer = {
+      ...assessment,
+      reviewMethods: createReviewMethods("PeerReview", true),
+      reviewConfigurationCanonicalJson: JSON.stringify({
+        schemaVersion: 1,
+        peer: {
+          reviewsPerReviewer: 4,
+          reviewsRequiredPerSubmission: 4,
+          minimumReviewsToFinalize: 4,
+          aggregation: "mean",
+          claimLeaseMinutes: 30,
+          evidenceWindowMinutes: 10080,
+          onInsufficientEvidence: "await-instructor-resolution",
+        },
+        instructor: { requireOverrideReason: false },
+      }),
+    };
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={withPeer}
+        assessmentGroups={groups}
+      />,
+    );
+    const requiredReviews = screen.getByLabelText(/required peer reviews/i);
+    expect(requiredReviews).toHaveValue(4);
+
+    await user.clear(requiredReviews);
+    await user.type(requiredReviews, "5");
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+    await waitFor(() => expect(updateAssessment).toHaveBeenCalled());
+    const saved = vi.mocked(updateAssessment).mock.calls.at(-1)![0];
+    expect(saved.reviewMethods).toBe(9);
+    expect(
+      JSON.parse(saved.reviewConfigurationCanonicalJson!).peer,
+    ).toMatchObject({ reviewsRequiredPerSubmission: 5 });
+    expect(routerMocks.refresh).toHaveBeenCalled();
+    await waitFor(() => expect(requiredReviews).toBeEnabled());
+
+    vi.mocked(updateAssessment).mockResolvedValueOnce({
+      success: false,
+      error: "Count update failed",
+    });
+    await user.clear(requiredReviews);
+    await user.type(requiredReviews, "6");
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+    expect(await screen.findByText("Count update failed")).toBeInTheDocument();
+  });
+
+  it("removes both the only rubric criterion and one of multiple criteria", async () => {
+    const user = userEvent.setup();
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={assessment}
+        assessmentGroups={groups}
+      />,
+    );
+
+    await user.click(screen.getByRole("switch", { name: /grade by rubric/i }));
+    await user.click(
+      screen.getByRole("button", { name: "Remove criterion 1" }),
+    );
+    expect(screen.getByLabelText(/criterion 1 description/i)).toHaveValue("");
+
+    await user.click(screen.getByRole("button", { name: /add criterion/i }));
+    expect(
+      screen.getByLabelText(/criterion 2 description/i),
+    ).toBeInTheDocument();
+    await user.click(
+      screen.getByRole("button", { name: "Remove criterion 1" }),
+    );
+    expect(
+      screen.queryByLabelText(/criterion 2 description/i),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows a non-locking rubric save failure", async () => {
+    const user = userEvent.setup();
+    vi.mocked(saveRubric).mockResolvedValueOnce({
+      success: false,
+      error: "Rubric save failed",
+    });
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={assessment}
+        assessmentGroups={groups}
+        rubric={{
+          title: "Rubric",
+          criteria: [{ description: "Design", points: 30, order: 0 }],
+        }}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /save rubric/i }));
+
+    expect(await screen.findByText("Rubric save failed")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Rubric locked after grading started"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("respects rubric deletion cancellation", async () => {
+    const user = userEvent.setup();
+    vi.mocked(confirm).mockReturnValueOnce(false);
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={assessment}
+        assessmentGroups={groups}
+        rubric={{
+          title: "Rubric",
+          criteria: [{ description: "Design", points: 30, order: 0 }],
+        }}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /delete rubric/i }));
+
+    expect(deleteRubric).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["Rubric locked after grading started", true],
+    ["Rubric delete failed", false],
+  ])("handles rubric deletion failure: %s", async (error, locksRubric) => {
+    const user = userEvent.setup();
+    vi.mocked(deleteRubric).mockResolvedValueOnce({ success: false, error });
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={assessment}
+        assessmentGroups={groups}
+        rubric={{
+          title: "Rubric",
+          criteria: [{ description: "Design", points: 30, order: 0 }],
+        }}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /delete rubric/i }));
+
+    if (locksRubric) {
+      expect(
+        await screen.findByText("Rubric locked after grading started"),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /save rubric/i }),
+      ).toBeDisabled();
+    } else {
+      expect(await screen.findByText(error)).toBeInTheDocument();
+    }
+  });
+
+  it("starts an empty stored rubric with one editable criterion", () => {
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={assessment}
+        assessmentGroups={groups}
+        rubric={{ title: "Empty rubric", criteria: [] }}
+      />,
+    );
+
+    expect(screen.getByLabelText(/criterion 1 description/i)).toHaveValue("");
+    expect(screen.getByLabelText(/criterion 1 points/i)).toHaveValue(null);
+  });
+
+  it("normalizes peer-review counts and defaults zero to three", () => {
+    expect(resolvePeerReviewsRequiredCount("2")).toBe(2);
+    expect(resolvePeerReviewsRequiredCount("0")).toBe(3);
   });
 });

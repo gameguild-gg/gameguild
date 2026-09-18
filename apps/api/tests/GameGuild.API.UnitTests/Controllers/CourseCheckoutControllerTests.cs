@@ -3,6 +3,7 @@ using FluentAssertions;
 using GameGuild.Commerce.Products;
 using GameGuild.CQRS;
 using GameGuild.Learning.Courses;
+using GameGuild.Learning.Grading.Contracts;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
@@ -40,7 +41,7 @@ public sealed class CourseCheckoutControllerTests
         programService.Setup(service => service.GetLinkedProductsAsync(courseId)).ReturnsAsync(new[] { productId });
         programService
             .Setup(service => service.AddUserToProgramAsync(courseId, userId))
-            .ReturnsAsync(new UserProgressDto(Guid.NewGuid(), courseId, userId, 0, null, null, null, []));
+            .ReturnsAsync(new UserProgressDto(Guid.NewGuid(), courseId, userId, PercentValue.Zero, null, null, null, []));
 
         var enrollmentService = new Mock<IProgramEnrollmentService>();
         enrollmentService

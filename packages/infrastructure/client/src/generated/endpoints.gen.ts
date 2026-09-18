@@ -5753,6 +5753,7 @@ export interface GetPostsCommentsInput {
   query?: {
     skip?: number;
     take?: number;
+    parentCommentId?: string;
   };
 }
 export type GetPostsCommentsOutput = void;
@@ -8539,14 +8540,14 @@ export const deleteAssessmentsEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetAssessmentsDefinitionInput {
+export interface GetAssessmentsAuthoringStateInput {
   id: string;
 }
-export type GetAssessmentsDefinitionOutput = Types.LearningAssessmentsAssessmentDefinitionDto;
-export const getAssessmentsDefinitionEndpoint = {
-  operationId: 'getAssessmentsDefinition' as const,
+export type GetAssessmentsAuthoringStateOutput = Types.LearningAssessmentsGradingAuthoringAssessmentAuthoringStateResult;
+export const getAssessmentsAuthoringStateEndpoint = {
+  operationId: 'getAssessmentsAuthoringState' as const,
   method: 'GET' as const,
-  path: '/v1/assessments/{id}/definition' as const,
+  path: '/v1/assessments/{id}/authoring-state' as const,
   tags: ['LearningAssessments'] as const,
   requiresAuth: true,
 } as const;
@@ -8614,6 +8615,97 @@ export const postAssessmentsRestoreEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface PostAssessmentsRevisionsPrepareInput {
+  id: string;
+  body?: Types.LearningAssessmentsGradingAuthoringPrepareAssessmentRevisionInput;
+}
+export type PostAssessmentsRevisionsPrepareOutput = Types.LearningAssessmentsGradingAuthoringPreparedAssessmentRevisionResult;
+export const postAssessmentsRevisionsPrepareEndpoint = {
+  operationId: 'postAssessmentsRevisionsPrepare' as const,
+  method: 'POST' as const,
+  path: '/v1/assessments/{id}/revisions/prepare' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssessmentsRevisionsPublishInput {
+  id: string;
+  body?: Types.LearningAssessmentsGradingAuthoringPublishAssessmentRevisionInput;
+}
+export type PostAssessmentsRevisionsPublishOutput = Types.LearningAssessmentsGradingAuthoringPreparedAssessmentRevisionResult;
+export const postAssessmentsRevisionsPublishEndpoint = {
+  operationId: 'postAssessmentsRevisionsPublish' as const,
+  method: 'POST' as const,
+  path: '/v1/assessments/{id}/revisions/publish' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssessmentsRevisionsUnpublishInput {
+  id: string;
+  body?: Types.LearningAssessmentsGradingAuthoringUnpublishAssessmentRevisionInput;
+}
+export type PostAssessmentsRevisionsUnpublishOutput = void;
+export const postAssessmentsRevisionsUnpublishEndpoint = {
+  operationId: 'postAssessmentsRevisionsUnpublish' as const,
+  method: 'POST' as const,
+  path: '/v1/assessments/{id}/revisions/unpublish' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssessmentsRuntimeSubmissionsCollectiveInput {
+  id: string;
+  body?: Types.LearningAssessmentsStartCollectiveRuntimeSubmissionInput;
+}
+export type PostAssessmentsRuntimeSubmissionsCollectiveOutput = Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1;
+export const postAssessmentsRuntimeSubmissionsCollectiveEndpoint = {
+  operationId: 'postAssessmentsRuntimeSubmissionsCollective' as const,
+  method: 'POST' as const,
+  path: '/v1/assessments/{id}/runtime-submissions/collective' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssessmentsRuntimeSubmissionsIndividualInput {
+  id: string;
+  body?: Types.LearningAssessmentsStartIndividualRuntimeSubmissionInput;
+}
+export type PostAssessmentsRuntimeSubmissionsIndividualOutput = Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1;
+export const postAssessmentsRuntimeSubmissionsIndividualEndpoint = {
+  operationId: 'postAssessmentsRuntimeSubmissionsIndividual' as const,
+  method: 'POST' as const,
+  path: '/v1/assessments/{id}/runtime-submissions/individual' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssessmentsTestRunsInput {
+  id: string;
+  body?: Types.LearningAssessmentsStartAssessmentTestRunInput;
+}
+export type PostAssessmentsTestRunsOutput = Types.LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1;
+export const postAssessmentsTestRunsEndpoint = {
+  operationId: 'postAssessmentsTestRuns' as const,
+  method: 'POST' as const,
+  path: '/v1/assessments/{id}/test-runs' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssessmentsContentRuntimeSubmissionsIndividualInput {
+  contentId: string;
+  body?: Types.LearningAssessmentsStartContentRuntimeSubmissionInput;
+}
+export type PostAssessmentsContentRuntimeSubmissionsIndividualOutput = Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1;
+export const postAssessmentsContentRuntimeSubmissionsIndividualEndpoint = {
+  operationId: 'postAssessmentsContentRuntimeSubmissionsIndividual' as const,
+  method: 'POST' as const,
+  path: '/v1/assessments/content/{contentId}/runtime-submissions/individual' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetAssessmentsCourseInput {
   courseId: string;
 }
@@ -8634,6 +8726,33 @@ export const getAssessmentsCourseAnalyticsEndpoint = {
   operationId: 'getAssessmentsCourseAnalytics' as const,
   method: 'GET' as const,
   path: '/v1/assessments/course/{courseId}/analytics' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutAssessmentsCourseContentDraftInput {
+  courseId: string;
+  contentId: string;
+  body?: Types.LearningAssessmentsGradingAuthoringSaveAssessmentDraftInput;
+}
+export type PutAssessmentsCourseContentDraftOutput = Types.LearningAssessmentsGradingAuthoringAssessmentDraftResult;
+export const putAssessmentsCourseContentDraftEndpoint = {
+  operationId: 'putAssessmentsCourseContentDraft' as const,
+  method: 'PUT' as const,
+  path: '/v1/assessments/course/{courseId}/content/{contentId}/draft' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAssessmentsCourseGradebookInput {
+  courseId: string;
+  enrollmentId: string;
+}
+export type GetAssessmentsCourseGradebookOutput = Types.LearningAssessmentsGradingRuntimeGradebookCourseProjectionV1;
+export const getAssessmentsCourseGradebookEndpoint = {
+  operationId: 'getAssessmentsCourseGradebook' as const,
+  method: 'GET' as const,
+  path: '/v1/assessments/course/{courseId}/gradebook/{enrollmentId}' as const,
   tags: ['LearningAssessments'] as const,
   requiresAuth: true,
 } as const;
@@ -8724,6 +8843,83 @@ export const postAssessmentsPeerReviewsSubmitEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetAssessmentsRuntimeSubmissionsInput {
+  submissionId: string;
+}
+export type GetAssessmentsRuntimeSubmissionsOutput = Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1;
+export const getAssessmentsRuntimeSubmissionsEndpoint = {
+  operationId: 'getAssessmentsRuntimeSubmissions' as const,
+  method: 'GET' as const,
+  path: '/v1/assessments/runtime-submissions/{submissionId}' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutAssessmentsRuntimeSubmissionsDraftInput {
+  submissionId: string;
+  body?: Types.LearningAssessmentsSaveCollectiveRuntimeDraftInput;
+}
+export type PutAssessmentsRuntimeSubmissionsDraftOutput = Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1;
+export const putAssessmentsRuntimeSubmissionsDraftEndpoint = {
+  operationId: 'putAssessmentsRuntimeSubmissionsDraft' as const,
+  method: 'PUT' as const,
+  path: '/v1/assessments/runtime-submissions/{submissionId}/draft' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssessmentsRuntimeSubmissionsInstructorReviewInput {
+  submissionId: string;
+  body?: Types.LearningAssessmentsResolveInstructorReviewInput;
+}
+export type PostAssessmentsRuntimeSubmissionsInstructorReviewOutput = Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1;
+export const postAssessmentsRuntimeSubmissionsInstructorReviewEndpoint = {
+  operationId: 'postAssessmentsRuntimeSubmissionsInstructorReview' as const,
+  method: 'POST' as const,
+  path: '/v1/assessments/runtime-submissions/{submissionId}/instructor-review' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssessmentsRuntimeSubmissionsRegradeInput {
+  submissionId: string;
+  body?: Types.LearningAssessmentsGradingRuntimeRegradeExecutionCommand;
+}
+export type PostAssessmentsRuntimeSubmissionsRegradeOutput = Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1;
+export const postAssessmentsRuntimeSubmissionsRegradeEndpoint = {
+  operationId: 'postAssessmentsRuntimeSubmissionsRegrade' as const,
+  method: 'POST' as const,
+  path: '/v1/assessments/runtime-submissions/{submissionId}/regrade' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssessmentsRuntimeSubmissionsReleaseInput {
+  submissionId: string;
+  body?: Types.LearningAssessmentsGradingRuntimeReleaseGradeResultCommand;
+}
+export type PostAssessmentsRuntimeSubmissionsReleaseOutput = Types.LearningAssessmentsGradeResultReleaseOutput;
+export const postAssessmentsRuntimeSubmissionsReleaseEndpoint = {
+  operationId: 'postAssessmentsRuntimeSubmissionsRelease' as const,
+  method: 'POST' as const,
+  path: '/v1/assessments/runtime-submissions/{submissionId}/release' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssessmentsRuntimeSubmissionsSubmitInput {
+  submissionId: string;
+  body?: Types.LearningAssessmentsSubmitAssessmentRuntimeInput;
+}
+export type PostAssessmentsRuntimeSubmissionsSubmitOutput = Types.LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1;
+export const postAssessmentsRuntimeSubmissionsSubmitEndpoint = {
+  operationId: 'postAssessmentsRuntimeSubmissionsSubmit' as const,
+  method: 'POST' as const,
+  path: '/v1/assessments/runtime-submissions/{submissionId}/submit' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetAssessmentsSubmissionsForGetAssessmentsSubmissionsBySubmissionIdInput {
   submissionId: string;
 }
@@ -8732,19 +8928,6 @@ export const getAssessmentsSubmissionsForGetAssessmentsSubmissionsBySubmissionId
   operationId: 'getAssessmentsSubmissionsForGetAssessmentsSubmissionsBySubmissionId' as const,
   method: 'GET' as const,
   path: '/v1/assessments/submissions/{submissionId}' as const,
-  tags: ['LearningAssessments'] as const,
-  requiresAuth: true,
-} as const;
-
-export interface PostAssessmentsSubmissionsGradeInput {
-  submissionId: string;
-  body?: Types.LearningAssessmentsGradeSubmissionInput;
-}
-export type PostAssessmentsSubmissionsGradeOutput = Types.LearningAssessmentsAssessmentSubmissionDto;
-export const postAssessmentsSubmissionsGradeEndpoint = {
-  operationId: 'postAssessmentsSubmissionsGrade' as const,
-  method: 'POST' as const,
-  path: '/v1/assessments/submissions/{submissionId}/grade' as const,
   tags: ['LearningAssessments'] as const,
   requiresAuth: true,
 } as const;
@@ -8782,6 +8965,57 @@ export const postAssessmentsSubmissionsSubmitEndpoint = {
   operationId: 'postAssessmentsSubmissionsSubmit' as const,
   method: 'POST' as const,
   path: '/v1/assessments/submissions/{submissionId}/submit' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAssessmentsTestRunsInput {
+  testRunId: string;
+}
+export type GetAssessmentsTestRunsOutput = Types.LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1;
+export const getAssessmentsTestRunsEndpoint = {
+  operationId: 'getAssessmentsTestRuns' as const,
+  method: 'GET' as const,
+  path: '/v1/assessments/test-runs/{testRunId}' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssessmentsTestRunsInstructorReviewInput {
+  testRunId: string;
+  body?: Types.LearningAssessmentsResolveInstructorReviewInput;
+}
+export type PostAssessmentsTestRunsInstructorReviewOutput = Types.LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1;
+export const postAssessmentsTestRunsInstructorReviewEndpoint = {
+  operationId: 'postAssessmentsTestRunsInstructorReview' as const,
+  method: 'POST' as const,
+  path: '/v1/assessments/test-runs/{testRunId}/instructor-review' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssessmentsTestRunsRestartInput {
+  testRunId: string;
+  body?: Types.LearningAssessmentsIdempotentRuntimeInput;
+}
+export type PostAssessmentsTestRunsRestartOutput = Types.LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1;
+export const postAssessmentsTestRunsRestartEndpoint = {
+  operationId: 'postAssessmentsTestRunsRestart' as const,
+  method: 'POST' as const,
+  path: '/v1/assessments/test-runs/{testRunId}/restart' as const,
+  tags: ['LearningAssessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssessmentsTestRunsSubmitInput {
+  testRunId: string;
+  body?: Types.LearningAssessmentsSubmitAssessmentRuntimeInput;
+}
+export type PostAssessmentsTestRunsSubmitOutput = Types.LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1;
+export const postAssessmentsTestRunsSubmitEndpoint = {
+  operationId: 'postAssessmentsTestRunsSubmit' as const,
+  method: 'POST' as const,
+  path: '/v1/assessments/test-runs/{testRunId}/submit' as const,
   tags: ['LearningAssessments'] as const,
   requiresAuth: true,
 } as const;
@@ -8889,6 +9123,7 @@ export interface PostAssetsInput {
     parentResourceType?: string;
     parentResourceId?: string;
     folderId?: string;
+    referenceId?: string;
   };
   body?: FormData;
 }
@@ -11414,6 +11649,19 @@ export const getCoursesUsersEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface PostCoursesUsersEnrollInput {
+  id: string;
+  body?: Types.LearningCoursesEnrollProgramUserInput;
+}
+export type PostCoursesUsersEnrollOutput = Types.LearningCoursesUserProgressDto;
+export const postCoursesUsersEnrollEndpoint = {
+  operationId: 'postCoursesUsersEnroll' as const,
+  method: 'POST' as const,
+  path: '/v1/courses/{id}/users:enroll' as const,
+  tags: ['LearningCoursesProgram'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface PostCoursesUsersInput {
   id: string;
   userId: string;
@@ -11647,6 +11895,158 @@ export const postCoursesContentEndpoint = {
   method: 'POST' as const,
   path: '/v1/courses/{programId}/content' as const,
   tags: ['LearningCoursesProgramContent'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetCoursesContentAuthoringInput {
+  programId: string;
+  contentId: string;
+}
+export type GetCoursesContentAuthoringOutput = Types.LearningCoursesAuthoringDraftDto;
+export const getCoursesContentAuthoringEndpoint = {
+  operationId: 'getCoursesContentAuthoring' as const,
+  method: 'GET' as const,
+  path: '/v1/courses/{programId}/content/{contentId}/authoring' as const,
+  tags: ['LearningCoursesProgramContentAuthoring'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutCoursesContentAuthoringInput {
+  programId: string;
+  contentId: string;
+  body?: Types.LearningCoursesSaveAuthoringDraftInput;
+}
+export type PutCoursesContentAuthoringOutput = Types.LearningCoursesAuthoringDraftDto;
+export const putCoursesContentAuthoringEndpoint = {
+  operationId: 'putCoursesContentAuthoring' as const,
+  method: 'PUT' as const,
+  path: '/v1/courses/{programId}/content/{contentId}/authoring' as const,
+  tags: ['LearningCoursesProgramContentAuthoring'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetCoursesContentAuthoringAiConversationsInput {
+  programId: string;
+  contentId: string;
+}
+export type GetCoursesContentAuthoringAiConversationsOutput = Array<Types.LearningCoursesAiAuthoringConversationDto>;
+export const getCoursesContentAuthoringAiConversationsEndpoint = {
+  operationId: 'getCoursesContentAuthoringAiConversations' as const,
+  method: 'GET' as const,
+  path: '/v1/courses/{programId}/content/{contentId}/authoring/ai/conversations' as const,
+  tags: ['LearningCoursesProgramContentAuthoring'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetCoursesContentAuthoringAiEntitlementInput {
+  programId: string;
+  contentId: string;
+}
+export type GetCoursesContentAuthoringAiEntitlementOutput = Types.LearningCoursesAiEntitlementDto;
+export const getCoursesContentAuthoringAiEntitlementEndpoint = {
+  operationId: 'getCoursesContentAuthoringAiEntitlement' as const,
+  method: 'GET' as const,
+  path: '/v1/courses/{programId}/content/{contentId}/authoring/ai/entitlement' as const,
+  tags: ['LearningCoursesProgramContentAuthoring'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface DeleteCoursesContentAuthoringAiProposalsInput {
+  programId: string;
+  contentId: string;
+  proposalId: string;
+}
+export type DeleteCoursesContentAuthoringAiProposalsOutput = Types.LearningCoursesAiProposalDto;
+export const deleteCoursesContentAuthoringAiProposalsEndpoint = {
+  operationId: 'deleteCoursesContentAuthoringAiProposals' as const,
+  method: 'DELETE' as const,
+  path: '/v1/courses/{programId}/content/{contentId}/authoring/ai/proposals/{proposalId}' as const,
+  tags: ['LearningCoursesProgramContentAuthoring'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostCoursesContentAuthoringAiProposalsApplyInput {
+  programId: string;
+  contentId: string;
+  proposalId: string;
+  body?: Types.LearningCoursesApplyAiProposalInput;
+}
+export type PostCoursesContentAuthoringAiProposalsApplyOutput = Types.LearningCoursesAuthoringDraftDto;
+export const postCoursesContentAuthoringAiProposalsApplyEndpoint = {
+  operationId: 'postCoursesContentAuthoringAiProposalsApply' as const,
+  method: 'POST' as const,
+  path: '/v1/courses/{programId}/content/{contentId}/authoring/ai/proposals/{proposalId}/apply' as const,
+  tags: ['LearningCoursesProgramContentAuthoring'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostCoursesContentAuthoringAiRunsInput {
+  programId: string;
+  contentId: string;
+  body?: Types.LearningCoursesAiAuthoringRunInput;
+}
+export type PostCoursesContentAuthoringAiRunsOutput = Types.LearningCoursesAiAuthoringRunDto;
+export const postCoursesContentAuthoringAiRunsEndpoint = {
+  operationId: 'postCoursesContentAuthoringAiRuns' as const,
+  method: 'POST' as const,
+  path: '/v1/courses/{programId}/content/{contentId}/authoring/ai/runs' as const,
+  tags: ['LearningCoursesProgramContentAuthoring'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetCoursesContentAuthoringAiRunsInput {
+  programId: string;
+  contentId: string;
+  runId: string;
+}
+export type GetCoursesContentAuthoringAiRunsOutput = Types.LearningCoursesAiAuthoringRunDto;
+export const getCoursesContentAuthoringAiRunsEndpoint = {
+  operationId: 'getCoursesContentAuthoringAiRuns' as const,
+  method: 'GET' as const,
+  path: '/v1/courses/{programId}/content/{contentId}/authoring/ai/runs/{runId}' as const,
+  tags: ['LearningCoursesProgramContentAuthoring'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostCoursesContentAuthoringAiRunsCancelInput {
+  programId: string;
+  contentId: string;
+  runId: string;
+}
+export type PostCoursesContentAuthoringAiRunsCancelOutput = Types.LearningCoursesAiAuthoringRunDto;
+export const postCoursesContentAuthoringAiRunsCancelEndpoint = {
+  operationId: 'postCoursesContentAuthoringAiRunsCancel' as const,
+  method: 'POST' as const,
+  path: '/v1/courses/{programId}/content/{contentId}/authoring/ai/runs/{runId}/cancel' as const,
+  tags: ['LearningCoursesProgramContentAuthoring'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetCoursesContentAuthoringAiRunsStreamInput {
+  programId: string;
+  contentId: string;
+  runId: string;
+}
+export type GetCoursesContentAuthoringAiRunsStreamOutput = void;
+export const getCoursesContentAuthoringAiRunsStreamEndpoint = {
+  operationId: 'getCoursesContentAuthoringAiRunsStream' as const,
+  method: 'GET' as const,
+  path: '/v1/courses/{programId}/content/{contentId}/authoring/ai/runs/{runId}/stream' as const,
+  tags: ['LearningCoursesProgramContentAuthoring'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostCoursesContentAuthoringPublishInput {
+  programId: string;
+  contentId: string;
+  body?: Types.LearningCoursesPublishAuthoringDraftInput;
+}
+export type PostCoursesContentAuthoringPublishOutput = Types.LearningCoursesPublishAuthoringResult;
+export const postCoursesContentAuthoringPublishEndpoint = {
+  operationId: 'postCoursesContentAuthoringPublish' as const,
+  method: 'POST' as const,
+  path: '/v1/courses/{programId}/content/{contentId}/authoring/publish' as const,
+  tags: ['LearningCoursesProgramContentAuthoring'] as const,
   requiresAuth: true,
 } as const;
 
@@ -18369,6 +18769,19 @@ export const deleteTestingEventsSlotsEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface PostTestingEventsSlotsBatchInput {
+  eventId: string;
+  body?: Types.TestingLabCreateTestingEventSlotsInput;
+}
+export type PostTestingEventsSlotsBatchOutput = Array<Types.TestingLabTestingEventSlotProjection>;
+export const postTestingEventsSlotsBatchEndpoint = {
+  operationId: 'postTestingEventsSlotsBatch' as const,
+  method: 'POST' as const,
+  path: '/v1/testing/events/{eventId}/slots/batch' as const,
+  tags: ['TestingLabTestingEvents'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetTestingEventsApplicationsForGetTestingEventsApplicationsByApplicationIdInput {
   applicationId: string;
 }
@@ -21783,14 +22196,23 @@ export const endpoints = {
   getAssessments: getAssessmentsEndpoint,
   putAssessments: putAssessmentsEndpoint,
   deleteAssessments: deleteAssessmentsEndpoint,
-  getAssessmentsDefinition: getAssessmentsDefinitionEndpoint,
+  getAssessmentsAuthoringState: getAssessmentsAuthoringStateEndpoint,
   putAssessmentsGroup: putAssessmentsGroupEndpoint,
   getAssessmentsInteractiveVideoCues: getAssessmentsInteractiveVideoCuesEndpoint,
   postAssessmentsInteractiveVideoCues: postAssessmentsInteractiveVideoCuesEndpoint,
   deleteAssessmentsInteractiveVideoCues: deleteAssessmentsInteractiveVideoCuesEndpoint,
   postAssessmentsRestore: postAssessmentsRestoreEndpoint,
+  postAssessmentsRevisionsPrepare: postAssessmentsRevisionsPrepareEndpoint,
+  postAssessmentsRevisionsPublish: postAssessmentsRevisionsPublishEndpoint,
+  postAssessmentsRevisionsUnpublish: postAssessmentsRevisionsUnpublishEndpoint,
+  postAssessmentsRuntimeSubmissionsCollective: postAssessmentsRuntimeSubmissionsCollectiveEndpoint,
+  postAssessmentsRuntimeSubmissionsIndividual: postAssessmentsRuntimeSubmissionsIndividualEndpoint,
+  postAssessmentsTestRuns: postAssessmentsTestRunsEndpoint,
+  postAssessmentsContentRuntimeSubmissionsIndividual: postAssessmentsContentRuntimeSubmissionsIndividualEndpoint,
   getAssessmentsCourse: getAssessmentsCourseEndpoint,
   getAssessmentsCourseAnalytics: getAssessmentsCourseAnalyticsEndpoint,
+  putAssessmentsCourseContentDraft: putAssessmentsCourseContentDraftEndpoint,
+  getAssessmentsCourseGradebook: getAssessmentsCourseGradebookEndpoint,
   getAssessmentsCourseGroups: getAssessmentsCourseGroupsEndpoint,
   postAssessmentsGroups: postAssessmentsGroupsEndpoint,
   putAssessmentsGroups: putAssessmentsGroupsEndpoint,
@@ -21798,11 +22220,20 @@ export const endpoints = {
   getAssessmentsMySubmissions: getAssessmentsMySubmissionsEndpoint,
   getAssessmentsPeerReviews: getAssessmentsPeerReviewsEndpoint,
   postAssessmentsPeerReviewsSubmit: postAssessmentsPeerReviewsSubmitEndpoint,
+  getAssessmentsRuntimeSubmissions: getAssessmentsRuntimeSubmissionsEndpoint,
+  putAssessmentsRuntimeSubmissionsDraft: putAssessmentsRuntimeSubmissionsDraftEndpoint,
+  postAssessmentsRuntimeSubmissionsInstructorReview: postAssessmentsRuntimeSubmissionsInstructorReviewEndpoint,
+  postAssessmentsRuntimeSubmissionsRegrade: postAssessmentsRuntimeSubmissionsRegradeEndpoint,
+  postAssessmentsRuntimeSubmissionsRelease: postAssessmentsRuntimeSubmissionsReleaseEndpoint,
+  postAssessmentsRuntimeSubmissionsSubmit: postAssessmentsRuntimeSubmissionsSubmitEndpoint,
   getAssessmentsSubmissionsForGetAssessmentsSubmissionsBySubmissionId: getAssessmentsSubmissionsForGetAssessmentsSubmissionsBySubmissionIdEndpoint,
-  postAssessmentsSubmissionsGrade: postAssessmentsSubmissionsGradeEndpoint,
   getAssessmentsSubmissionsPeerReviews: getAssessmentsSubmissionsPeerReviewsEndpoint,
   getAssessmentsSubmissionsReceivedPeerReviews: getAssessmentsSubmissionsReceivedPeerReviewsEndpoint,
   postAssessmentsSubmissionsSubmit: postAssessmentsSubmissionsSubmitEndpoint,
+  getAssessmentsTestRuns: getAssessmentsTestRunsEndpoint,
+  postAssessmentsTestRunsInstructorReview: postAssessmentsTestRunsInstructorReviewEndpoint,
+  postAssessmentsTestRunsRestart: postAssessmentsTestRunsRestartEndpoint,
+  postAssessmentsTestRunsSubmit: postAssessmentsTestRunsSubmitEndpoint,
   getAssetLibraries: getAssetLibrariesEndpoint,
   postAssetLibrariesFolders: postAssetLibrariesFoldersEndpoint,
   postAssetLibrariesAssetsCopy: postAssetLibrariesAssetsCopyEndpoint,
@@ -21983,6 +22414,7 @@ export const endpoints = {
   putCoursesPricing: putCoursesPricingEndpoint,
   getCoursesProducts: getCoursesProductsEndpoint,
   getCoursesUsers: getCoursesUsersEndpoint,
+  postCoursesUsersEnroll: postCoursesUsersEnrollEndpoint,
   postCoursesUsers: postCoursesUsersEndpoint,
   deleteCoursesUsers: deleteCoursesUsersEndpoint,
   postCoursesUsersReset: postCoursesUsersResetEndpoint,
@@ -22001,6 +22433,17 @@ export const endpoints = {
   getCoursesActivityGradesStudent: getCoursesActivityGradesStudentEndpoint,
   getCoursesContent: getCoursesContentEndpoint,
   postCoursesContent: postCoursesContentEndpoint,
+  getCoursesContentAuthoring: getCoursesContentAuthoringEndpoint,
+  putCoursesContentAuthoring: putCoursesContentAuthoringEndpoint,
+  getCoursesContentAuthoringAiConversations: getCoursesContentAuthoringAiConversationsEndpoint,
+  getCoursesContentAuthoringAiEntitlement: getCoursesContentAuthoringAiEntitlementEndpoint,
+  deleteCoursesContentAuthoringAiProposals: deleteCoursesContentAuthoringAiProposalsEndpoint,
+  postCoursesContentAuthoringAiProposalsApply: postCoursesContentAuthoringAiProposalsApplyEndpoint,
+  postCoursesContentAuthoringAiRuns: postCoursesContentAuthoringAiRunsEndpoint,
+  getCoursesContentAuthoringAiRuns: getCoursesContentAuthoringAiRunsEndpoint,
+  postCoursesContentAuthoringAiRunsCancel: postCoursesContentAuthoringAiRunsCancelEndpoint,
+  getCoursesContentAuthoringAiRunsStream: getCoursesContentAuthoringAiRunsStreamEndpoint,
+  postCoursesContentAuthoringPublish: postCoursesContentAuthoringPublishEndpoint,
   getCoursesContentById: getCoursesContentByIdEndpoint,
   putCoursesContent: putCoursesContentEndpoint,
   deleteCoursesContent: deleteCoursesContentEndpoint,
@@ -22470,6 +22913,7 @@ export const endpoints = {
   postTestingEventsSlots: postTestingEventsSlotsEndpoint,
   putTestingEventsSlots: putTestingEventsSlotsEndpoint,
   deleteTestingEventsSlots: deleteTestingEventsSlotsEndpoint,
+  postTestingEventsSlotsBatch: postTestingEventsSlotsBatchEndpoint,
   getTestingEventsApplicationsForGetTestingEventsApplicationsByApplicationId:
     getTestingEventsApplicationsForGetTestingEventsApplicationsByApplicationIdEndpoint,
   putTestingEventsApplications: putTestingEventsApplicationsEndpoint,

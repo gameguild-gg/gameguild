@@ -5,6 +5,7 @@ import {
   submitContentActivity,
 } from "@/lib/learner/activity-actions";
 import { getPreferredSubmissionModality } from "@/lib/learner/activity-contracts";
+import { scoreUnitsToPoints } from "@/lib/learning/academic-values";
 import type {
   LearningAssessmentsAssessment,
   LearningAssessmentsLearnerAssessmentSubmission,
@@ -50,7 +51,6 @@ function responseLabel(activity: LearnerActivityDescriptor, modality: string) {
     if (activity.contentType === "Survey") return "Your response";
     return "Your contribution";
   }
-  if (modality === "StructuredAnswer") return "Your answer";
   if (modality === "Code") return "Your code";
   if (modality === "Url" || modality === "Media") return "Submission URL";
   return "Your submission";
@@ -109,7 +109,7 @@ export function LearnerActivityForm({
           </Badge>
           {finalSubmission.score != null ? (
             <strong className="text-lg text-white">
-              {finalSubmission.score} points
+              {scoreUnitsToPoints(finalSubmission.score)} points
             </strong>
           ) : (
             <span className="text-sm text-muted-foreground">
@@ -143,6 +143,17 @@ export function LearnerActivityForm({
     );
   }
 
+  if (activity.kind === "assessment" && activity.assessment.type === "Quiz") {
+    return (
+      <Alert>
+        <AlertTitle>Quiz attempt unavailable</AlertTitle>
+        <AlertDescription>
+          This quiz cannot be answered through the generic assessment form.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   const label = responseLabel(activity, modality);
   const projects =
     activity.kind === "assessment" ? (activity.projects ?? []) : [];
@@ -167,7 +178,11 @@ export function LearnerActivityForm({
         <>
           <input type="hidden" name="courseId" value={courseId} />
           <input type="hidden" name="contentId" value={activity.contentId} />
-          <input type="hidden" name="kind" value={contentKind || ""} />
+          <input
+            type="hidden"
+            name="kind"
+            value={activity.contentType.toLowerCase()}
+          />
         </>
       )}
       <input type="hidden" name="enrollmentId" value={enrollmentId} />

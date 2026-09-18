@@ -136,8 +136,8 @@ public class PostService : IPostService
     public Task<Result> DeleteCommentAsync(Guid commentId, Guid actorId, CancellationToken cancellationToken = default) =>
         _commentService.DeleteCommentAsync(commentId, actorId, cancellationToken);
 
-    public Task<Result<IEnumerable<PostComment>>> GetPostCommentsAsync(Guid postId, int skip = 0, int take = 50, CancellationToken cancellationToken = default) =>
-        _commentService.GetPostCommentsAsync(postId, skip, take, cancellationToken);
+    public Task<Result<IEnumerable<PostComment>>> GetPostCommentsAsync(Guid postId, int skip = 0, int take = 50, Guid? parentCommentId = null, CancellationToken cancellationToken = default) =>
+        _commentService.GetPostCommentsAsync(postId, skip, take, parentCommentId, cancellationToken);
 
     // Tag delegations
     public Task<Result> AddTagsToPostAsync(Guid postId, string[] tagNames, CancellationToken cancellationToken = default) =>

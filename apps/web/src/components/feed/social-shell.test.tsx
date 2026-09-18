@@ -1,5 +1,6 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup, render, screen } from "@testing-library/react";
+import { createElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -7,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   loadSocialFeed: vi.fn(),
   loadStories: vi.fn(),
   loadSocialProfile: vi.fn(),
+  loadCreatorSuggestions: vi.fn(),
   searchSocialProfiles: vi.fn(),
   loadTrendingTags: vi.fn(),
 }));
@@ -16,12 +18,16 @@ vi.mock("@/lib/feed/queries", () => ({
   loadSocialFeed: mocks.loadSocialFeed,
   loadStories: mocks.loadStories,
   loadSocialProfile: mocks.loadSocialProfile,
+  loadCreatorSuggestions: mocks.loadCreatorSuggestions,
   searchSocialProfiles: mocks.searchSocialProfiles,
   loadTrendingTags: mocks.loadTrendingTags,
 }));
 vi.mock("@/i18n/navigation", () => ({ Link: ({ children, ...props }: React.ComponentProps<"a">) => <a {...props}>{children}</a> }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
-vi.mock("next/image", () => ({ default: (props: Record<string, unknown>) => <img alt="" {...props} /> }));
+vi.mock("next/image", () => ({
+  default: ({ alt = "", ...props }: Record<string, unknown>) =>
+    createElement("img", { ...props, alt: typeof alt === "string" ? alt : "" }),
+}));
 
 import { SocialShell } from "./social-shell";
 
@@ -32,6 +38,7 @@ describe("SocialShell", () => {
     mocks.loadSocialFeed.mockResolvedValue({ items: [], nextCursor: null });
     mocks.loadStories.mockResolvedValue([]);
     mocks.loadSocialProfile.mockResolvedValue(null);
+    mocks.loadCreatorSuggestions.mockResolvedValue([]);
     mocks.searchSocialProfiles.mockResolvedValue([]);
     mocks.loadTrendingTags.mockResolvedValue([]);
   });
@@ -52,5 +59,11 @@ describe("SocialShell", () => {
     render(await SocialShell({ tab: "foryou" }));
     expect(screen.getByText(/feed is temporarily unavailable/i)).toBeInTheDocument();
     expect(screen.queryByTestId("post-card")).not.toBeInTheDocument();
+  });
+
+  it("loads moderation-aware creator suggestions for the current actor", async () => {
+    render(await SocialShell({ tab: "foryou" }));
+
+    expect(mocks.loadCreatorSuggestions).toHaveBeenCalledWith("user-1", 8);
   });
 });

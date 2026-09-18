@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using FluentAssertions;
 using FluentValidation;
+using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
 using GameGuild.Learning.Assessments;
 using Microsoft.AspNetCore.Authorization;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -48,6 +50,48 @@ public sealed class CodingAssignmentEndpointsTests
         result!.Tests.Public.Should().HaveCount(2);
         result.Tests.Private.Should().HaveCount(1);
         result.Data.Files.Should().ContainKey("secret.cpp");
+    }
+
+    [Fact]
+    public async Task GetFullAsync_WhenPersistedJsonIsMalformed_ReturnsNull()
+    {
+        await using var fixture = new ServiceFixture();
+        var programId = Guid.NewGuid();
+        var content = new ProgramContent
+        {
+            Id = Guid.NewGuid(),
+            ProgramId = programId,
+            Title = "Malformed coding assignment",
+            Type = ProgramContentType.Code,
+            JsonBody = "{",
+        };
+        fixture.Context.Set<ProgramContent>().Add(content);
+        await fixture.Context.SaveChangesAsync();
+
+        var result = await fixture.Service.GetFullAsync(programId, content.Id);
+
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetFullAsync_WhenPersistedJsonIsBlank_ReturnsNull()
+    {
+        await using var fixture = new ServiceFixture();
+        var programId = Guid.NewGuid();
+        var content = new ProgramContent
+        {
+            Id = Guid.NewGuid(),
+            ProgramId = programId,
+            Title = "Blank coding assignment",
+            Type = ProgramContentType.Code,
+            JsonBody = "   ",
+        };
+        fixture.Context.Set<ProgramContent>().Add(content);
+        await fixture.Context.SaveChangesAsync();
+
+        var result = await fixture.Service.GetFullAsync(programId, content.Id);
+
+        result.Should().BeNull();
     }
 
     // ── (e) PUT valid payload on null JsonBody → creates ─────────────────────────
@@ -169,7 +213,7 @@ public sealed class CodingAssignmentEndpointsTests
             out var programMock, out var codingMock,
             hasManagementAccess: false);
         programMock.Setup(s => s.GetUserProgressDtoAsync(It.IsAny<Guid>(), It.IsAny<Guid>()))
-            .ReturnsAsync(new UserProgressDto(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 0m, null, DateTime.UtcNow, null, Enumerable.Empty<ContentProgressDto>()));
+            .ReturnsAsync(new UserProgressDto(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), PercentValue.Zero, null, DateTime.UtcNow, null, Enumerable.Empty<ContentProgressDto>()));
 
         var result = await controller.GetCodingAssignmentFull(Guid.NewGuid(), Guid.NewGuid());
 
@@ -239,9 +283,13 @@ public sealed class CodingAssignmentEndpointsTests
 
         var controller = new ProgramContentController(
             contentMock.Object,
-            programMock.Object,
-            codingMock.Object,
-            authorizationMock.Object);
+             programMock.Object,
+             codingMock.Object,
+             authorizationMock.Object,
+             [],
+             [],
+            Mock.Of<ILogger<ProgramContentController>>(),
+             Mock.Of<ISender>());
 
         var userId = Guid.NewGuid();
         var identity = new ClaimsIdentity(new[]

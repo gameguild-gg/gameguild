@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { chromium } from 'playwright';
-import { writeBrowserEvidence } from './browser-smoke-evidence.mjs';
+import { writeSocialFeedEvidence } from './browser-smoke-evidence.mjs';
 
 export const REQUIRED_SOCIAL_EVIDENCE = [
   'nonAdminActors',
+  'crossActorMutationForbidden',
   'published',
   'mediaPublished',
   'postEdited',
@@ -33,16 +34,132 @@ export const REQUIRED_SOCIAL_EVIDENCE = [
   'postDeleted',
 ];
 
+export function missingSocialEvidence(evidence) {
+  return REQUIRED_SOCIAL_EVIDENCE.filter((key) => evidence[key] !== true);
+}
+
 export function assertSocialEvidence(evidence) {
-  const missing = REQUIRED_SOCIAL_EVIDENCE.filter((key) => evidence[key] !== true);
+  const missing = missingSocialEvidence(evidence);
   if (missing.length > 0) throw new Error(`Missing social feed evidence: ${missing.join(', ')}`);
+}
+
+const roleClaimNames = [
+  'role',
+  'roles',
+  'http://schemas.microsoft.com/ws/2008/06/identity/claims/role',
+];
+const administratorRoles = new Set(['systemadmin', 'tenantadmin', 'admin', 'owner']);
+
+function appendRoles(target, value) {
+  if (Array.isArray(value)) {
+    for (const entry of value) appendRoles(target, entry);
+    return;
+  }
+  if (typeof value !== 'string') return;
+  const trimmed = value.trim();
+  if (!trimmed) return;
+  if (trimmed.startsWith('[')) {
+    try {
+      appendRoles(target, JSON.parse(trimmed));
+      return;
+    } catch {
+      // Treat malformed JSON-looking role values as opaque role names.
+    }
+  }
+  for (const role of trimmed.split(',').map((entry) => entry.trim()).filter(Boolean)) {
+    if (!target.some((existing) => existing.toLowerCase() === role.toLowerCase())) target.push(role);
+  }
+}
+
+export function getAccessTokenRoles(accessToken) {
+  const payloadSegment = typeof accessToken === 'string' ? accessToken.split('.')[1] : undefined;
+  if (!payloadSegment) throw new Error('Access token is not a JWT with a payload.');
+  let payload;
+  try {
+    payload = JSON.parse(Buffer.from(payloadSegment, 'base64url').toString('utf8'));
+  } catch (error) {
+    throw new Error(`Access token payload is invalid: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  const roles = [];
+  for (const claimName of roleClaimNames) appendRoles(roles, payload?.[claimName]);
+  return roles;
+}
+
+export function assertNonAdminActors(actorA, actorB) {
+  if (!actorA?.id || !actorB?.id || actorA.id === actorB.id) {
+    throw new Error('Social E2E actors must have distinct user IDs.');
+  }
+  if (!actorA.email || !actorB.email || actorA.email.toLowerCase() === actorB.email.toLowerCase()) {
+    throw new Error('Social E2E actors must have distinct email addresses.');
+  }
+  const actorARoles = assertNonAdminActor(actorA, 'A');
+  const actorBRoles = assertNonAdminActor(actorB, 'B');
+  return { actorARoles, actorBRoles };
+}
+
+export function assertNonAdminActor(actor, label) {
+  const roles = getAccessTokenRoles(actor?.accessToken);
+  if (roles.length === 0) throw new Error(`Social E2E actor ${label} access token must contain an explicit role claim.`);
+  const administratorRole = roles.find((role) => administratorRoles.has(role.toLowerCase()));
+  if (administratorRole) {
+    throw new Error(`Social E2E actor ${label} must be non-admin; access token contains ${administratorRole}.`);
+  }
+  return roles;
+}
+
+const actorCredentialNames = {
+  A: ['SOCIAL_FEED_E2E_USER_A_EMAIL', 'SOCIAL_FEED_E2E_USER_A_PASSWORD'],
+  B: ['SOCIAL_FEED_E2E_USER_B_EMAIL', 'SOCIAL_FEED_E2E_USER_B_PASSWORD'],
+};
+
+export function readRequiredActorCredentials(environment = process.env) {
+  const missing = Object.values(actorCredentialNames)
+    .flat()
+    .filter((name) => typeof environment[name] !== 'string' || environment[name].trim() === '');
+  if (missing.length > 0) {
+    throw new Error(`Missing required social feed E2E credentials: ${missing.join(', ')}. Configure two existing non-admin users; the runner never creates accounts.`);
+  }
+  return Object.fromEntries(Object.entries(actorCredentialNames).map(([label, [emailName, passwordName]]) => [
+    label,
+    { email: environment[emailName].trim(), password: environment[passwordName] },
+  ]));
 }
 
 const apiBaseUrl = (process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080').replace(/\/$/, '');
 const webBaseUrl = (process.env.SOCIAL_FEED_E2E_BASE_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3004').replace(/\/$/, '');
 const headless = !['0', 'false', 'no'].includes((process.env.SOCIAL_FEED_E2E_HEADLESS ?? 'true').toLowerCase());
 const browserChannel = process.env.SOCIAL_FEED_E2E_BROWSER_CHANNEL ?? (process.platform === 'win32' ? 'chrome' : undefined);
-const evidencePath = process.env.PLAYWRIGHT_JSON_OUTPUT_NAME;
+export const DEFAULT_SOCIAL_EVIDENCE_PATH = fileURLToPath(new URL('../../../.tmp/social-feed-browser-e2e/evidence.json', import.meta.url));
+const evidencePath = process.env.SOCIAL_FEED_E2E_EVIDENCE_PATH ?? DEFAULT_SOCIAL_EVIDENCE_PATH;
+
+export function buildSocialRunMetadata(startedAt, details = {}, completedAt = Date.now()) {
+  return {
+    journey: 'social-feed-browser-e2e',
+    startedAt: new Date(startedAt).toISOString(),
+    completedAt: new Date(completedAt).toISOString(),
+    durationMs: Math.max(0, completedAt - startedAt),
+    apiBaseUrl,
+    webBaseUrl,
+    ...details,
+  };
+}
+
+export function createSocialRunState(startedAt = Date.now()) {
+  return {
+    startedAt,
+    capabilities: Object.fromEntries(REQUIRED_SOCIAL_EVIDENCE.map((key) => [key, false])),
+  };
+}
+
+export async function writeSocialRunFailure(outputPath, state, error, details = {}, completedAt = Date.now()) {
+  const message = error instanceof Error ? error.message : String(error);
+  await writeSocialFeedEvidence(outputPath, {
+    capabilities: state.capabilities,
+    errors: [message],
+    requiredCapabilities: REQUIRED_SOCIAL_EVIDENCE,
+    metadata: buildSocialRunMetadata(state.startedAt, details, completedAt),
+  });
+}
 
 function unique() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -112,51 +229,48 @@ async function apiStatus(path, init = {}, accessToken, tenantId) {
   return response.status;
 }
 
-async function createActor(label, tag) {
-  const configuredEmail = process.env[`SOCIAL_FEED_E2E_USER_${label}_EMAIL`];
-  const configuredPassword = process.env[`SOCIAL_FEED_E2E_USER_${label}_PASSWORD`];
-  const email = configuredEmail ?? `social-feed-${label.toLowerCase()}-${tag}@example.test`;
-  const password = configuredPassword ?? 'Str0ng!Passw0rd123!';
-  const created = !configuredEmail;
-  let session;
-  if (created) {
-    session = await apiRequest('/v1/auth/sign-up', {
-      method: 'POST',
-      body: JSON.stringify({
-        username: `social_feed_${label.toLowerCase()}_${tag.replace(/[^a-z0-9]/gi, '_')}`,
-        email,
-        password,
-      }),
-    });
-  } else {
-    session = await apiRequest('/v1/auth/sign-in', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    });
-  }
+async function authenticateActor(_label, credentials) {
+  const { email, password } = credentials;
+  const session = await apiRequest('/v1/auth/sign-in', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
   if (!session.accessToken || !session.userId || !session.tenantId) {
     throw new Error(`Social test user ${email} has an incomplete session.`);
   }
-  const handle = `e2e-${label.toLowerCase()}-${tag}`.replace(/[^a-z0-9-]/g, '').slice(0, 70);
-  await apiRequest(`/api/social/profiles/users/${session.userId}`, {
-    method: 'PUT',
-    body: JSON.stringify({ handle, displayName: `Feed E2E ${label}`, socialLinksJson: '{}' }),
-  }, session.accessToken, session.tenantId);
   return {
     id: session.userId,
     email,
     password,
-    handle,
-    created,
     accessToken: session.accessToken,
     tenantId: session.tenantId,
   };
 }
 
+async function writeActorProfile(actor, label, tag) {
+  const handle = `e2e-${label.toLowerCase()}-${tag}`.replace(/[^a-z0-9-]/g, '').slice(0, 70);
+  await apiRequest(`/api/social/profiles/users/${actor.id}`, {
+    method: 'PUT',
+    body: JSON.stringify({ handle, displayName: `Feed E2E ${label}`, socialLinksJson: '{}' }),
+  }, actor.accessToken, actor.tenantId);
+  return handle;
+}
+
+export async function prepareNonAdminActor(label, tag, credentials, adapters = {}) {
+  const authenticate = adapters.authenticate ?? authenticateActor;
+  const writeProfile = adapters.writeProfile ?? writeActorProfile;
+  const actor = await authenticate(label, credentials);
+  const roles = assertNonAdminActor(actor, label);
+  const handle = await writeProfile(actor, label, tag);
+  return { ...actor, handle, roles };
+}
+
 async function bootstrap() {
   const tag = unique();
-  const actorA = await createActor('A', tag);
-  const actorB = await createActor('B', tag);
+  const credentials = readRequiredActorCredentials();
+  const actorA = await prepareNonAdminActor('A', tag, credentials.A);
+  const actorB = await prepareNonAdminActor('B', tag, credentials.B);
+  assertNonAdminActors(actorA, actorB);
   if (actorA.tenantId !== actorB.tenantId) {
     throw new Error('Social E2E actors must belong to the same tenant.');
   }
@@ -199,48 +313,40 @@ async function cleanupFixture(fixture, postId, storyId) {
   if (storyId) await apiStatus(`/api/social/stories/${storyId}`, { method: 'DELETE' }, fixture.actorA.accessToken, fixture.tenantId);
   if (postId) await apiStatus(`/api/v1/posts/${postId}`, { method: 'DELETE' }, fixture.actorA.accessToken, fixture.tenantId);
   await apiStatus(`/api/followers/unfollow?entityId=${fixture.actorA.id}&entityType=User`, { method: 'DELETE' }, fixture.actorB.accessToken, fixture.tenantId);
-  for (const actor of [fixture.actorA, fixture.actorB]) {
-    if (actor.created) await apiStatus(`/v1/users/${actor.id}`, { method: 'DELETE' }, actor.accessToken, actor.tenantId);
-  }
 }
 
 export async function runSocialFeedBrowserE2e() {
-  const fixture = await bootstrap();
-  let browser;
+  const state = createSocialRunState();
+  let fixture = null;
   try {
-    browser = await chromium.launch({ headless, ...(browserChannel ? { channel: browserChannel } : {}) });
-  } catch (error) {
-    await cleanupFixture(fixture, null, null);
-    throw error;
-  }
-  const contextA = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
-  const contextB = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
-  await contextB.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: webBaseUrl });
-  await contextB.addInitScript(() => {
-    Object.defineProperty(navigator, 'share', { configurable: true, value: undefined });
-  });
-  const pageA = await contextA.newPage();
-  const pageB = await contextB.newPage();
-  const browserErrors = [];
-  const failedResponses = [];
-  const evidence = Object.fromEntries(REQUIRED_SOCIAL_EVIDENCE.map((key) => [key, false]));
-  const marker = `Production feed ${fixture.tag} #e2efeed`;
-  const editedMarker = `${marker} edited`;
-  const comment = `Persisted comment ${fixture.tag}`;
-  const reply = `Persisted reply ${fixture.tag}`;
-  const editedReply = `${reply} edited`;
-  const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64');
-  let postId = null;
-  let storyId = null;
-  monitorPage(pageA, 'actor A', browserErrors, failedResponses);
-  monitorPage(pageB, 'actor B', browserErrors, failedResponses);
-  pageA.setDefaultTimeout(60_000);
-  pageB.setDefaultTimeout(60_000);
-
-  try {
-    evidence.nonAdminActors = fixture.actorA.id !== fixture.actorB.id &&
-      fixture.actorA.email !== fixture.actorB.email;
-
+    fixture = await bootstrap();
+    state.capabilities.nonAdminActors = fixture.actorA.roles.length > 0 && fixture.actorB.roles.length > 0;
+    let browser;
+    let postId = null;
+    let storyId = null;
+    try {
+      browser = await chromium.launch({ headless, ...(browserChannel ? { channel: browserChannel } : {}) });
+      const contextA = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+      const contextB = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+      await contextB.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: webBaseUrl });
+      await contextB.addInitScript(() => {
+        Object.defineProperty(navigator, 'share', { configurable: true, value: undefined });
+      });
+      const pageA = await contextA.newPage();
+      const pageB = await contextB.newPage();
+      const browserErrors = [];
+      const failedResponses = [];
+      const evidence = state.capabilities;
+      const marker = `Production feed ${fixture.tag} #e2efeed`;
+      const editedMarker = `${marker} edited`;
+      const comment = `Persisted comment ${fixture.tag}`;
+      const reply = `Persisted reply ${fixture.tag}`;
+      const editedReply = `${reply} edited`;
+      const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64');
+      monitorPage(pageA, 'actor A', browserErrors, failedResponses);
+      monitorPage(pageB, 'actor B', browserErrors, failedResponses);
+      pageA.setDefaultTimeout(60_000);
+      pageB.setDefaultTimeout(60_000);
     await signIn(pageA, fixture.actorA);
     await pageA.getByRole('button', { name: 'Share your progress' }).click();
     await pageA.getByPlaceholder('What are you building?').fill(marker);
@@ -273,6 +379,28 @@ export async function runSocialFeedBrowserE2e() {
       (item) => item?.post?.content === editedMarker && item?.post?.isEdited === true,
     );
     evidence.postEdited = true;
+
+    const forbiddenMarker = `${marker} forbidden actor B edit`;
+    const forbiddenStatus = await apiStatus(`/api/v1/posts/${postId}`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ content: forbiddenMarker }),
+    }, fixture.actorB.accessToken, fixture.tenantId);
+    if (forbiddenStatus !== 403) {
+      await apiStatus(`/api/v1/posts/${postId}`, {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ content: editedMarker }),
+      }, fixture.actorA.accessToken, fixture.tenantId);
+      throw new Error(`Cross-actor post edit must return 403, received ${forbiddenStatus}.`);
+    }
+    const postAfterForbiddenEdit = await apiRequest(
+      `/api/social/feed/posts/${postId}`,
+      {},
+      fixture.actorA.accessToken,
+      fixture.tenantId,
+    );
+    evidence.crossActorMutationForbidden = postAfterForbiddenEdit?.post?.content === editedMarker;
 
     await waitFor(
       () => apiRequest('/api/v1/posts/tags/popular?count=20', {}, fixture.actorA.accessToken, fixture.tenantId),
@@ -493,19 +621,35 @@ export async function runSocialFeedBrowserE2e() {
     if (browserErrors.length > 0) throw new Error(`Browser errors:\n${browserErrors.join('\n')}`);
     if (failedResponses.length > 0) throw new Error(`Failed responses:\n${failedResponses.join('\n')}`);
     assertSocialEvidence(evidence);
-    await writeBrowserEvidence(evidencePath, { passed: true, errors: [] });
+    await writeSocialFeedEvidence(evidencePath, {
+      capabilities: evidence,
+      errors: [],
+      requiredCapabilities: REQUIRED_SOCIAL_EVIDENCE,
+      metadata: buildSocialRunMetadata(state.startedAt, {
+        tenantId: fixture.tenantId,
+        actorIds: [fixture.actorA.id, fixture.actorB.id],
+        runTag: fixture.tag,
+      }),
+    });
     process.stdout.write(`Social feed browser E2E passed against ${webBaseUrl}.\n`);
     return evidence;
-  } finally {
-    await browser.close();
-    await cleanupFixture(fixture, postId, storyId);
+    } finally {
+      if (browser) await browser.close();
+      await cleanupFixture(fixture, postId, storyId);
+    }
+  } catch (error) {
+    await writeSocialRunFailure(evidencePath, state, error, fixture ? {
+      tenantId: fixture.tenantId,
+      actorIds: [fixture.actorA.id, fixture.actorB.id],
+      runTag: fixture.tag,
+    } : {});
+    throw error;
   }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  runSocialFeedBrowserE2e().catch(async (error) => {
+  runSocialFeedBrowserE2e().catch((error) => {
     const message = error instanceof Error ? error.message : String(error);
-    await writeBrowserEvidence(evidencePath, { passed: false, errors: [message] });
     console.error(message);
     process.exitCode = 1;
   });

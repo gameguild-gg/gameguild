@@ -72,4 +72,19 @@ describe("quiz entry runtime schema", () => {
       imageAssetUri: "https://example.com/image.png",
     })).toBe(false);
   });
+
+  it("accepts only non-negative integer academic point units", () => {
+    expect(isQuizEntry({
+      ...createTrueFalseEntry("Question"),
+      points: 250,
+    })).toBe(true);
+    expect(isQuizEntry({
+      ...createTrueFalseEntry("Question"),
+      points: 2.5,
+    })).toBe(false);
+    expect(isQuizEntry({
+      ...createTrueFalseEntry("Question"),
+      points: "250",
+    })).toBe(false);
+  });
 });

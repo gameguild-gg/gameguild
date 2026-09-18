@@ -20,11 +20,11 @@ public sealed class CreateLearningPathCommandValidator : AbstractValidator<Creat
             .IsInEnum().WithMessage("Invalid difficulty level");
 
         RuleFor(x => x.Description)
-            .MaximumLength(5000).WithMessage("Description must not exceed 5000 characters")
+            .MaximumLength(4000).WithMessage("Description must not exceed 4000 characters")
             .When(x => x.Description != null);
 
         RuleFor(x => x.ImageUrl)
-            .MaximumLength(2000).WithMessage("Image URL must not exceed 2000 characters")
+            .MaximumLength(1000).WithMessage("Image URL must not exceed 1000 characters")
             .When(x => x.ImageUrl != null);
 
         RuleFor(x => x.EstimatedHours)
@@ -43,12 +43,17 @@ public sealed class UpdateLearningPathCommandValidator : AbstractValidator<Updat
             .NotEmpty().WithMessage("Learning path ID is required");
 
         RuleFor(x => x.Title)
+            .NotEmpty().WithMessage("Title must not be empty")
             .MaximumLength(200).WithMessage("Title must not exceed 200 characters")
             .When(x => x.Title != null);
 
         RuleFor(x => x.Description)
-            .MaximumLength(5000).WithMessage("Description must not exceed 5000 characters")
+            .MaximumLength(4000).WithMessage("Description must not exceed 4000 characters")
             .When(x => x.Description != null);
+
+        RuleFor(x => x.ImageUrl)
+            .MaximumLength(1000).WithMessage("Image URL must not exceed 1000 characters")
+            .When(x => x.ImageUrl != null);
 
         RuleFor(x => x.EstimatedHours)
             .GreaterThanOrEqualTo(0).WithMessage("Estimated hours must be non-negative")
@@ -123,5 +128,17 @@ public sealed class ReorderPathCoursesCommandValidator : AbstractValidator<Reord
 
         RuleFor(x => x.Courses)
             .NotEmpty().WithMessage("At least one course must be specified");
+
+        RuleForEach(x => x.Courses).ChildRules(course =>
+        {
+            course.RuleFor(x => x.CourseId).NotEmpty().WithMessage("Course ID is required");
+            course.RuleFor(x => x.Order).GreaterThanOrEqualTo(0).WithMessage("Order must be non-negative");
+        });
+
+        RuleFor(x => x.Courses)
+            .Must(courses => courses.Select(course => course.CourseId).Distinct().Count() == courses.Count())
+            .WithMessage("Each course must be specified once")
+            .Must(courses => courses.Select(course => course.Order).Distinct().Count() == courses.Count())
+            .WithMessage("Each course order must be unique");
     }
 }

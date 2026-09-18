@@ -716,7 +716,7 @@ if [[ "$gate_profile" == full ]]; then
     "${pnpm_command[@]}" --filter @game-guild/web run test:economy:coverage \
     --reporter=json "--outputFile=$economy_web_evidence"
   assert_vitest_evidence "$economy_web_evidence" >/dev/null
-  run "${pnpm_command[@]}" --filter @game-guild/web run build:emception-runtime-dependencies
+  run "${pnpm_command[@]}" --filter @game-guild/web run build:emception-dependencies
   run "${pnpm_command[@]}" --filter @game-guild/web run sync:emception
   GAMEGUILD_DISABLE_WEBPACK_CACHE=1 run "${pnpm_command[@]}" --filter @game-guild/web exec next build --webpack
 }

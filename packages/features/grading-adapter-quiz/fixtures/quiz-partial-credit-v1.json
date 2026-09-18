@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "items": [
+    {
+      "itemId": "matching-partial",
+      "entry": {
+        "type": "MATCHING",
+        "stem": "Match the values.",
+        "points": 100,
+        "pairs": [
+          { "id": "a", "left": "A", "right": "1" },
+          { "id": "b", "left": "B", "right": "2" },
+          { "id": "c", "left": "C", "right": "3" }
+        ],
+        "allowPartialCredit": true,
+        "settings": { "allowRetry": false }
+      }
+    },
+    {
+      "itemId": "matching-all-or-nothing",
+      "entry": {
+        "type": "MATCHING",
+        "stem": "Match all values.",
+        "points": 100,
+        "pairs": [
+          { "id": "a", "left": "A", "right": "1" },
+          { "id": "b", "left": "B", "right": "2" },
+          { "id": "c", "left": "C", "right": "3" }
+        ],
+        "allowPartialCredit": false,
+        "settings": { "allowRetry": false }
+      }
+    },
+    {
+      "itemId": "ordering-partial",
+      "entry": {
+        "type": "ORDERING",
+        "stem": "Order the values.",
+        "points": 100,
+        "items": [
+          { "id": "a", "text": "A", "correctPosition": 0 },
+          { "id": "b", "text": "B", "correctPosition": 1 },
+          { "id": "c", "text": "C", "correctPosition": 2 }
+        ],
+        "allowPartialCredit": true,
+        "settings": { "allowRetry": false }
+      }
+    },
+    {
+      "itemId": "ordering-all-or-nothing",
+      "entry": {
+        "type": "ORDERING",
+        "stem": "Order all values.",
+        "points": 100,
+        "items": [
+          { "id": "a", "text": "A", "correctPosition": 0 },
+          { "id": "b", "text": "B", "correctPosition": 1 },
+          { "id": "c", "text": "C", "correctPosition": 2 }
+        ],
+        "allowPartialCredit": false,
+        "settings": { "allowRetry": false }
+      }
+    },
+    {
+      "itemId": "multiple-limited",
+      "entry": {
+        "type": "MULTIPLE_CHOICE",
+        "stem": "Choose at most two.",
+        "points": 100,
+        "options": [
+          { "id": "a", "text": "A" },
+          { "id": "b", "text": "B" },
+          { "id": "c", "text": "C" }
+        ],
+        "correctOptionIds": ["a", "b"],
+        "selectionLimit": 2,
+        "settings": { "allowRetry": false }
+      }
+    }
+  ],
+  "scoreCases": [
+    { "name": "matching-zero", "itemId": "matching-partial", "answer": { "type": "MATCHING", "matches": {} }, "expectedScore": 0 },
+    { "name": "matching-one-third", "itemId": "matching-partial", "answer": { "type": "MATCHING", "matches": { "a": "1" } }, "expectedScore": 33 },
+    { "name": "matching-two-thirds-rounds-half-up", "itemId": "matching-partial", "answer": { "type": "MATCHING", "matches": { "a": "1", "b": "2" } }, "expectedScore": 67 },
+    { "name": "matching-full", "itemId": "matching-partial", "answer": { "type": "MATCHING", "matches": { "a": "1", "b": "2", "c": "3" } }, "expectedScore": 100 },
+    { "name": "matching-flag-disabled", "itemId": "matching-all-or-nothing", "answer": { "type": "MATCHING", "matches": { "a": "1", "b": "2" } }, "expectedScore": 0 },
+    { "name": "ordering-zero", "itemId": "ordering-partial", "answer": { "type": "ORDERING", "itemIds": [] }, "expectedScore": 0 },
+    { "name": "ordering-one-third", "itemId": "ordering-partial", "answer": { "type": "ORDERING", "itemIds": ["a", "c", "b"] }, "expectedScore": 33 },
+    { "name": "ordering-two-thirds-rounds-half-up", "itemId": "ordering-partial", "answer": { "type": "ORDERING", "itemIds": ["a", "b"] }, "expectedScore": 67 },
+    { "name": "ordering-full", "itemId": "ordering-partial", "answer": { "type": "ORDERING", "itemIds": ["a", "b", "c"] }, "expectedScore": 100 },
+    { "name": "ordering-flag-disabled", "itemId": "ordering-all-or-nothing", "answer": { "type": "ORDERING", "itemIds": ["a", "b"] }, "expectedScore": 0 }
+  ],
+  "invalidCases": [
+    { "name": "matching-unknown-id", "itemId": "matching-partial", "answer": { "type": "MATCHING", "matches": { "unknown": "1" } } },
+    { "name": "matching-repeated-value", "itemId": "matching-partial", "answer": { "type": "MATCHING", "matches": { "a": "1", "b": "1" } } },
+    { "name": "ordering-unknown-id", "itemId": "ordering-partial", "answer": { "type": "ORDERING", "itemIds": ["a", "unknown"] } },
+    { "name": "ordering-repeated-id", "itemId": "ordering-partial", "answer": { "type": "ORDERING", "itemIds": ["a", "a"] } },
+    { "name": "selection-cardinality-exceeded", "itemId": "multiple-limited", "answer": { "type": "MULTIPLE_CHOICE", "optionIds": ["a", "b", "c"] } }
+  ]
+}

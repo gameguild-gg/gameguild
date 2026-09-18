@@ -1,3 +1,6 @@
+using GameGuild.Learning.Assessments.Grading.Contracts;
+using GameGuild.Learning.Grading.Contracts;
+
 namespace GameGuild.Learning.Assessments;
 
 /// <summary>
@@ -16,6 +19,11 @@ public interface IAssessmentService
     /// Gets an assessment by ID
     /// </summary>
     Task<Assessment?> GetAssessmentByIdAsync(Guid id);
+
+    /// <summary>
+    /// Gets the active assessment owned by one course content item.
+    /// </summary>
+    Task<Assessment?> GetAssessmentByContentIdAsync(Guid contentId);
 
     /// <summary>
     /// Gets an assessment by ID, ignoring the soft-delete filter. Used by the restore flow.
@@ -110,11 +118,6 @@ public interface IAssessmentService
     Task<Result<AssessmentSubmission>> SubmitAsync(Guid submissionId, SubmitAssessmentRequest? request = null);
 
     /// <summary>
-    /// Grades a submission
-    /// </summary>
-    Task<Result<AssessmentSubmission>> GradeSubmissionAsync(Guid submissionId, GradeSubmissionRequest request);
-
-    /// <summary>
     /// Gets a submission by ID
     /// </summary>
     Task<AssessmentSubmission?> GetSubmissionByIdAsync(Guid id);
@@ -150,9 +153,10 @@ public sealed record CreateAssessmentRequest(
     string Title,
     string? Description,
     AssessmentType Type,
-    int MaxScore,
+    ScoreValue MaxScore,
+    ScoreValue? PassingScore = null,
     int? TimeLimitMinutes = null,
-    int? MaxAttempts = null,
+    int MaxAttempts = 1,
     bool IsRequired = true,
     DateTime? AvailableFrom = null,
     DateTime? AvailableUntil = null,
@@ -163,7 +167,7 @@ public sealed record CreateAssessmentRequest(
     bool AllowLateSubmissions = false,
     DateTime? LateSubmissionDeadline = null,
     Guid? ContentId = null,
-    AssessmentGradingMethod GradingMethods = AssessmentGradingMethod.InstructorGraded,
+    ReviewMethods ReviewMethods = ReviewMethods.InstructorReview,
     string? Slug = null
 );
 
@@ -171,14 +175,20 @@ public sealed record CreateAssessmentRequest(
 /// Request to update an assessment
 /// </summary>
 public sealed record UpdateAssessmentRequest(
+    int ExpectedVersion,
     string? Title = null,
     string? Description = null,
-    int? MaxScore = null,
+    bool ClearDescription = false,
+    ScoreValue? MaxScore = null,
+    ScoreValue? PassingScore = null,
     int? TimeLimitMinutes = null,
+    bool ClearTimeLimitMinutes = false,
     int? MaxAttempts = null,
     bool? IsRequired = null,
     DateTime? AvailableFrom = null,
+    bool ClearAvailableFrom = false,
     DateTime? AvailableUntil = null,
+    bool ClearAvailableUntil = false,
     Guid? ContentId = null,
     bool ClearContentId = false,
     Guid? AssessmentGroupId = null,
@@ -190,10 +200,14 @@ public sealed record UpdateAssessmentRequest(
     bool? AllowLateSubmissions = null,
     DateTime? LateSubmissionDeadline = null,
     bool ClearLateSubmissionDeadline = false,
-    AssessmentGradingMethod? GradingMethods = null,
+    ReviewMethods? ReviewMethods = null,
     Guid? GroupSetId = null,
     bool ClearGroupSetId = false,
-    int? PeerReviewsRequiredCount = null,
+    string? ReviewConfigurationCanonicalJson = null,
+    AttemptContributionMode? AttemptContributionMode = null,
+    ContentCompletionMode? ContentCompletionMode = null,
+    ResultReleaseMode? ResultReleaseMode = null,
+    DateTime? ResultReleaseScheduledFor = null,
     string? Slug = null
 );
 
@@ -203,7 +217,7 @@ public sealed record UpdateAssessmentRequest(
 public sealed record CreateAssessmentGroupRequest(
     Guid CourseId,
     string Name,
-    decimal WeightPercent,
+    PercentValue WeightPercent,
     int Order = 0,
     string? Description = null
 );
@@ -214,7 +228,7 @@ public sealed record CreateAssessmentGroupRequest(
 public sealed record UpdateAssessmentGroupRequest(
     string? Name = null,
     string? Description = null,
-    decimal? WeightPercent = null,
+    PercentValue? WeightPercent = null,
     int? Order = null
 );
 
@@ -244,18 +258,7 @@ public sealed record SubmitAssessmentRequest(
     string? UrlPayload = null,
     string? CodePayload = null,
     string? MediaPayload = null,
-    string? ProjectPayload = null,
-    string? StructuredAnswerPayload = null
-);
-
-/// <summary>
-/// Request to grade a submission
-/// </summary>
-public sealed record GradeSubmissionRequest(
-    int Score,
-    Guid? GradedBy = null,
-    string? Feedback = null,
-    string? RubricScores = null
+    string? ProjectPayload = null
 );
 
 public sealed record AssessmentScoreBucketDto(
@@ -268,12 +271,12 @@ public sealed record AssessmentScoreBucketDto(
 public sealed record AssessmentGroupAnalyticsDto(
     Guid? GroupId,
     string GroupName,
-    decimal? WeightPercent,
+    PercentValue? WeightPercent,
     int AssessmentCount,
     int GradedCount,
     int UngradedCount,
-    decimal AveragePercent,
-    decimal PassRate,
+    PercentValue AveragePercent,
+    PercentValue PassRate,
     IReadOnlyCollection<AssessmentScoreBucketDto> Distribution
 );
 
@@ -282,8 +285,8 @@ public sealed record CourseAssessmentAnalyticsDto(
     int AssessmentCount,
     int GradedCount,
     int UngradedCount,
-    decimal AveragePercent,
-    decimal PassRate,
+    PercentValue AveragePercent,
+    PercentValue PassRate,
     IReadOnlyCollection<AssessmentScoreBucketDto> Distribution,
     IReadOnlyCollection<AssessmentGroupAnalyticsDto> Groups
 );

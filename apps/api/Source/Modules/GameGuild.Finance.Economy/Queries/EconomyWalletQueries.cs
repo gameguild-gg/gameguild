@@ -1,5 +1,6 @@
 using GameGuild.CQRS;
 using GameGuild.Finance.Economy.Contracts;
+using GameGuild.Finance.Economy.Integrations.AI;
 using GameGuild.Finance.Economy.Persistence;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.EntityFrameworkCore;
@@ -36,6 +37,23 @@ public sealed class GetMyEconomyWalletQueryHandler(
             .AsNoTracking()
             .SingleOrDefaultAsync(row => row.WalletId == wallet.Id, cancellationToken)
             .ConfigureAwait(false);
+        var aiUsage = await context.Set<AiCreditReservation>()
+            .AsNoTracking()
+            .Where(row => row.WalletId == wallet.Id)
+            .GroupBy(_ => 1)
+            .Select(group => new
+            {
+                Reserved = group
+                    .Where(row => row.Status == AiCreditReservationStatus.Reserved)
+                    .Sum(row => row.ReservedSoftUnits),
+                Settled = group
+                    .Where(row => row.Status == AiCreditReservationStatus.Settled)
+                    .Sum(row => row.SettledSoftUnits),
+            })
+            .SingleOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var aiReserved = aiUsage?.Reserved ?? 0;
+        var aiSettled = aiUsage?.Settled ?? 0;
 
         return new EconomyWalletSummaryDto(
             wallet.Id,
@@ -48,9 +66,9 @@ public sealed class GetMyEconomyWalletQueryHandler(
             balance?.RestrictedHard ?? 0,
             balance?.Soft ?? 0,
             balance?.HeldHard ?? 0,
-            balance?.HeldSoft ?? 0,
+            checked((balance?.HeldSoft ?? 0) + aiReserved),
             balance?.AvailableHardToSpend ?? 0,
-            balance?.AvailableSoftToSpend ?? 0,
+            Math.Max(0, (balance?.AvailableSoftToSpend ?? 0) - aiReserved - aiSettled),
             balance?.WithdrawableHard ?? 0,
             debt?.OutstandingHardUnits ?? 0,
             balance?.RebuiltAt ?? wallet.CreatedAt,

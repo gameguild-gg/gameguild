@@ -2,6 +2,7 @@
 
 import type { SerializedEditorState } from "lexical";
 import { LexicalSurface } from "@game-guild/lexical-surface";
+import { getLearningAssetRepository } from "@/lib/learning/assets/learning-asset-repository";
 
 interface LexicalLessonRendererProps {
   content: unknown;
@@ -32,6 +33,7 @@ export function LexicalLessonRenderer({
   itemId,
 }: LexicalLessonRendererProps) {
   const initialState = parseEditorState(content);
+  const assetRepository = getLearningAssetRepository();
 
   if (!initialState) {
     return (
@@ -50,6 +52,8 @@ export function LexicalLessonRenderer({
       accessibleLabel="Lesson content"
       contentClassName="max-w-none"
       features={{ pageLayout: false }}
+      assetsRepository={assetRepository}
+      assetScope={{ type: "ProgramContent", id: itemId }}
     />
   );
 }
