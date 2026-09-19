@@ -1,21 +1,25 @@
 # Devtron production release runbook
 
-Devtron is the production source of truth for GameGuild. GitHub Actions builds and verifies immutable candidates before merge, promotes the exact tested digests, and sends those digests to Devtron. Devtron must not build production images from Git.
+Devtron is the production source of truth for GameGuild. The live Devtron applications read `main` from the private Forgejo mirror `gameguild-gg/gameguild`; that mirror follows GitHub and is the Git material configured in Devtron for API and Web. Both production CD pipelines use `AUTOMATIC` triggers from their internal Forgejo CI pipelines.
+
+The immutable external-CI flow later in this document is a target contract only. GitHub does not push PR candidates to the public registry and does not automatically run `Production Release` on `main` while Devtron remains on internal CI. This avoids making the required PR gate depend on Cloudflare's upload limits or on release credentials that are not part of the live topology.
 
 The service-level objective is p95 from an approved merge to a verified healthy production release in 10 minutes or less.
 
-## Release path
+## Current live release path
 
-1. `PR Verify` classifies the diff and runs only the required Web, API, Learning, Testing Lab, OpenAPI, migration, or Economy gates.
-2. Affected services are built from the PR merge ref and pushed as `candidate-<treeSha>-<service>`.
-3. `PR Required Gate` aggregates every selected job and is the only required status check on `main`.
-4. A push to `main` resolves the successful PR run and refuses direct pushes or missing candidates.
-5. The exact candidate digests are tagged `release-<releaseSha>`; unchanged service digests come from the prior stable manifest.
-6. Devtron rolls out API, Web, and Learning in that order, skipping unaffected services.
-7. Health identity and authenticated Testing Lab smoke checks must pass before the stable manifest is advanced and Cloudflare is purged.
-8. Any failure restores the already-triggered services in reverse order to their prior immutable digests.
+1. `PR Verify` classifies the diff and runs only the required Web, API, Testing Lab, OpenAPI, migration, or Economy gates.
+2. `PR Required Gate` aggregates every selected verification job and is the required status check on `main`.
+3. The approved change is merged to GitHub `main` and the private Forgejo mirror is synchronized.
+4. Devtron's internal CI pipelines build API and Web from Forgejo `main` and publish to the in-cluster registry path.
+5. The automatic production CD pipelines deploy the resulting service images.
+6. Operators verify Kubernetes rollout state, workload health, public health endpoints, and the affected Learning and Testing Lab routes.
 
-There is no build in the post-merge production path.
+Normal production releases must be monitored in Devtron and Kubernetes until both workloads are ready. The GitHub `Production Release` workflow is manual-only and must not be used until the external-CI contract below is fully configured and proven in staging.
+
+## Target immutable external-CI path
+
+The remaining sections specify the future flow in which PR jobs build immutable candidates, GitHub promotes exact digests, and Devtron accepts external-CI webhooks. They are retained as the migration target, not as a description of the current deployment.
 
 ## GitHub production environment
 
@@ -23,23 +27,21 @@ Create the `production` environment without a wait timer or manual approval for 
 
 Required variables:
 
-| Variable | Contract |
-| --- | --- |
-| `DEVTRON_REGISTRY_HOST` | Registry hostname used by both GitHub and Devtron |
-| `DEVTRON_REGISTRY_NAMESPACE` | Namespace containing `gameguild-api`, `gameguild-web`, `gameguild-learning`, and `gameguild-release-state` |
-| `DEVTRON_BASE_URL` | Devtron origin, without a trailing path |
-| `DEVTRON_EXTERNAL_CI_ID_API` | API external-CI pipeline identifier |
-| `DEVTRON_EXTERNAL_CI_ID_WEB` | Web external-CI pipeline identifier |
-| `DEVTRON_EXTERNAL_CI_ID_LEARNING` | Learning external-CI pipeline identifier |
-| `DEVTRON_RELEASE_IDENTITY_CONFIGURED` | Must be `true` only after the runtime identity contract below is verified |
-| `DEVTRON_API_PREDEPLOY_MIGRATIONS` | Must be `true` only after the API migration pre-deploy job is configured |
-| `GAMEGUILD_API_URL` | `https://api.gameguild.gg` in production |
-| `GAMEGUILD_WEB_URL` | `https://gameguild.gg` in production |
-| `GAMEGUILD_LEARNING_URL` | Production Learning origin |
-| `GAMEGUILD_SMOKE_PROJECT_ID` | Stable tenant project readable by the smoke administrator |
-| `CLOUDFLARE_ZONE_ID` | Zone purged only after the rollout and smoke pass |
+| Variable                              | Contract                                                                             |
+| ------------------------------------- | ------------------------------------------------------------------------------------ |
+| `DEVTRON_REGISTRY_HOST`               | Registry hostname used by both GitHub and Devtron                                    |
+| `DEVTRON_REGISTRY_NAMESPACE`          | Namespace containing `gameguild-api`, `gameguild-web`, and `gameguild-release-state` |
+| `DEVTRON_BASE_URL`                    | Devtron origin, without a trailing path                                              |
+| `DEVTRON_EXTERNAL_CI_ID_API`          | API external-CI pipeline identifier                                                  |
+| `DEVTRON_EXTERNAL_CI_ID_WEB`          | Web external-CI pipeline identifier                                                  |
+| `DEVTRON_RELEASE_IDENTITY_CONFIGURED` | Must be `true` only after the runtime identity contract below is verified            |
+| `DEVTRON_API_PREDEPLOY_MIGRATIONS`    | Must be `true` only after the API migration pre-deploy job is configured             |
+| `GAMEGUILD_API_URL`                   | `https://api.gameguild.gg` in production                                             |
+| `GAMEGUILD_WEB_URL`                   | `https://gameguild.gg` in production                                                 |
+| `GAMEGUILD_SMOKE_PROJECT_ID`          | Stable tenant project readable by the smoke administrator                            |
+| `CLOUDFLARE_ZONE_ID`                  | Zone purged only after the rollout and smoke pass                                    |
 
-The candidate build also uses `GAMEGUILD_API_INTERNAL_URL`, `GAMEGUILD_API_PUBLIC_URL`, `GAMEGUILD_WEB_PUBLIC_URL`, `GAMEGUILD_LEARNING_PUBLIC_URL`, `GAMEGUILD_AUTH_COOKIE_DOMAIN`, and `GAMEGUILD_GOOGLE_CLIENT_ID`.
+The candidate build also uses `GAMEGUILD_API_INTERNAL_URL`, `GAMEGUILD_API_PUBLIC_URL`, `GAMEGUILD_WEB_PUBLIC_URL`, `GAMEGUILD_AUTH_COOKIE_DOMAIN`, and `GAMEGUILD_GOOGLE_CLIENT_ID`.
 
 Required secrets:
 
@@ -54,7 +56,7 @@ Never set `ALLOW_INITIAL_RELEASE_WITHOUT_STABLE=true` in production. It is a sta
 
 Create one external-CI pipeline per service. The webhook endpoint is `/orchestrator/webhook/ext-ci/<externalCiId>` and receives `dockerImage`, `digest`, and `ciProjectDetails`. Disable Git-triggered builds and automatic rebuilds. The incoming image digest is the deployment artifact.
 
-All three workloads must use:
+Both workloads must use:
 
 - rolling update with `maxUnavailable: 0` and `maxSurge: 1`;
 - `progressDeadlineSeconds: 300`;
@@ -64,14 +66,14 @@ All three workloads must use:
 
 API and Web must receive the following runtime values for each external-CI deployment:
 
-| Environment variable | Source |
-| --- | --- |
-| `RELEASE_SHA` | `ciProjectDetails[0].commitHash` from the external-CI payload |
-| `SOURCE_TREE` | OCI image label/build value baked into the candidate |
-| `IMAGE_DIGEST` | Incoming immutable `digest` |
-| `VERSION` | OCI image label/build value baked into the candidate |
-| `BUILD_TIMESTAMP` | OCI image label/build value baked into the candidate |
-| `DEPLOYED_AT` | UTC timestamp generated by the deployment |
+| Environment variable | Source                                                        |
+| -------------------- | ------------------------------------------------------------- |
+| `RELEASE_SHA`        | `ciProjectDetails[0].commitHash` from the external-CI payload |
+| `SOURCE_TREE`        | OCI image label/build value baked into the candidate          |
+| `IMAGE_DIGEST`       | Incoming immutable `digest`                                   |
+| `VERSION`            | OCI image label/build value baked into the candidate          |
+| `BUILD_TIMESTAMP`    | OCI image label/build value baked into the candidate          |
+| `DEPLOYED_AT`        | UTC timestamp generated by the deployment                     |
 
 Do not set `DEVTRON_RELEASE_IDENTITY_CONFIGURED=true` until a staging rollout proves that Web `/api/health` and API `/health` return the exact release SHA, tree, and digest plus non-`Unknown` `version`, `builtAt`, and `deployedAt`. Both endpoints must emit `X-GameGuild-Release-Sha`.
 
@@ -106,7 +108,7 @@ After this workflow has produced `PR Required Gate` on `main`, activate the vers
 APPLY_MAIN_RULESET=true bash scripts/deploy/apply-main-ruleset.sh
 ```
 
-The script creates or updates `main-production`, requires one approval, the latest `main`, resolved conversations, squash merge, and `PR Required Gate`. It also disables merge commits and rebase merges repository-wide. Direct pushes cannot produce a release because `Production Release` independently requires a successful PR run and matching candidate evidence.
+The script creates or updates `main-production`, requires one approval, the latest `main`, resolved conversations, squash merge, and `PR Required Gate`. It also disables merge commits and rebase merges repository-wide. When the external-CI migration is activated, `Production Release` must independently require a successful PR run and matching candidate evidence. Until then, normal releases follow the current live path above and repository policy must enforce the PR gate.
 
 ## Audited hotfix
 

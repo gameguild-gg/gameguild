@@ -96,7 +96,7 @@ test_repository_policy_runs_in_a_parallel_required_gate() {
   grep -Fq 'repository-policy:' "$workflow" || return 1
   grep -Fq 'name: Repository policy' "$workflow" || return 1
   grep -Fq 'run: bash scripts/ci/verify-repository-policy.sh' "$workflow" || return 1
-  grep -Fq 'needs: [classify, repository-policy,' "$workflow"
+  sed -n '/^  required-gate:/,$p' "$workflow" | grep -Fq 'repository-policy,'
 }
 
 test_workflow_uses_fast_pr_and_full_release_economy_profiles() {

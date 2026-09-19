@@ -192,6 +192,45 @@ public sealed class ProgramContentAuthoringServiceTests
     }
 
     [Fact]
+    public async Task Publish_InvokesMatchingFeatureParticipantsBeforeCommit()
+    {
+        await using var context = CreateContext();
+        var actorId = Guid.NewGuid();
+        var content = PublishedContent("Quiz", "Original");
+        content.Type = ProgramContentType.Questionnaire;
+        content.LessonFormat = null;
+        context.Add(content);
+        await context.SaveChangesAsync();
+        var participant = new RecordingPublicationParticipant();
+        var service = new ProgramContentAuthoringService(context, publicationParticipants: [participant]);
+        var draft = await service.GetOrCreateDraft(
+            content.ProgramId,
+            content.Id,
+            actorId,
+            CancellationToken.None);
+        var quizDocument = JsonDocument.Parse("{\"schemaVersion\":1,\"order\":[],\"blocks\":{}}")
+            .RootElement.Clone();
+        var saved = await service.SaveDraft(
+            content.ProgramId,
+            content.Id,
+            draft.Revision,
+            draft.Payload with { JsonBody = quizDocument },
+            actorId,
+            CancellationToken.None);
+
+        await service.Publish(content.ProgramId, content.Id, saved.Revision, actorId, CancellationToken.None);
+
+        participant.Calls.Should().ContainSingle();
+        participant.Calls[0].ContentId.Should().Be(content.Id);
+        participant.Calls[0].ActorId.Should().Be(actorId);
+        participant.Calls[0].Payload.JsonBody.Should().NotBeNull();
+        participant.SawPendingContentUpdate.Should().BeTrue(
+            "the participant must execute inside the publication unit of work");
+        participant.FinalizeCalls.Should().ContainSingle();
+        participant.FinalizeCalls[0].ContentId.Should().Be(content.Id);
+    }
+
+    [Fact]
     public async Task GetDraft_RequiresAuthenticatedAuthor()
     {
         await using var context = CreateContext();
@@ -362,5 +401,36 @@ public sealed class ProgramContentAuthoringServiceTests
 
         public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
+    }
+
+    private sealed class RecordingPublicationParticipant : IProgramContentPublicationParticipant
+    {
+        public List<(Guid ContentId, Guid ActorId, AuthoringContentPayload Payload)> Calls { get; } = [];
+        public List<(Guid ContentId, Guid ActorId)> FinalizeCalls { get; } = [];
+        public bool SawPendingContentUpdate { get; private set; }
+
+        public bool CanHandle(ProgramContent content) =>
+            content.Type == ProgramContentType.Questionnaire;
+
+        public Task PreparePublishAsync(
+            ProgramContent content,
+            AuthoringContentPayload payload,
+            Guid actorId,
+            CancellationToken cancellationToken = default)
+        {
+            Calls.Add((content.Id, actorId, payload));
+            SawPendingContentUpdate = content.Title == payload.Title;
+            return Task.CompletedTask;
+        }
+
+        public Task FinalizePublishAsync(
+            ProgramContent content,
+            AuthoringContentPayload payload,
+            Guid actorId,
+            CancellationToken cancellationToken = default)
+        {
+            FinalizeCalls.Add((content.Id, actorId));
+            return Task.CompletedTask;
+        }
     }
 }

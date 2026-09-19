@@ -5,6 +5,9 @@ import { LessonCodeEditor } from "@/components/learning/console/courses/[course]
 import { LessonContentEditor } from "@/components/learning/console/courses/[course]/content/[contentId]/lesson-content-editor";
 import { LessonVideoEditor } from "@/components/learning/console/courses/[course]/content/[contentId]/lesson-video-editor";
 import { QuizContentEditor } from "@/components/learning/console/courses/[course]/content/[contentId]/quiz-content-editor";
+import { CodingDefinitionEditor } from "@/components/learning/console/courses/[course]/assessments/[assessmentId]/coding-definition/coding-definition-editor";
+import { CodingAssignmentPreview } from "@/components/learning/authoring/coding-assignment-preview";
+import type { CodingAssignmentContent } from "@/lib/coding-assignment/types";
 import {
   applyAiProposal,
   cancelAiAuthoringRun,
@@ -97,6 +100,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 
 configureMonacoWorkers();
@@ -117,6 +121,12 @@ interface LessonAuthoringWorkspaceProps {
   item: CourseContentItemDetailViewModel;
   curriculum: CourseContentItemViewModel[];
   initialDraft: AuthoringDraft;
+  linkedAssessment?: {
+    id: string;
+    slug: string;
+    title?: string;
+  } | null;
+  initialCodingAssignment?: CodingAssignmentContent | null;
 }
 
 const statusCopy: Record<SaveStatus, string> = {
@@ -125,6 +135,31 @@ const statusCopy: Record<SaveStatus, string> = {
   offline: "Offline",
   conflict: "Conflict",
 };
+
+export function AuthoringLocalTime({
+  value,
+  className,
+}: {
+  value: string;
+  className?: string;
+}) {
+  const isHydrated = useSyncExternalStore(
+    () => () => undefined,
+    () => true,
+    () => false,
+  );
+  const date = new Date(value);
+  const label =
+    isHydrated && !Number.isNaN(date.getTime())
+      ? date.toLocaleTimeString()
+      : "—";
+
+  return (
+    <time className={className} dateTime={value}>
+      {label}
+    </time>
+  );
+}
 
 function iconFor(type: CourseContentItemViewModel["type"]) {
   if (type === "Questionnaire") return CircleAlert;
@@ -159,6 +194,8 @@ export function LessonAuthoringWorkspace({
   item,
   curriculum,
   initialDraft,
+  linkedAssessment = null,
+  initialCodingAssignment = null,
 }: LessonAuthoringWorkspaceProps) {
   const router = useRouter();
   const params = useParams<{ locale?: string }>();
@@ -166,6 +203,9 @@ export function LessonAuthoringWorkspace({
   const { resolvedTheme } = useTheme();
   const [draft, setDraft] = useState(initialDraft);
   const [payload, setPayload] = useState(initialDraft.payload);
+  const [codingAssignment, setCodingAssignment] = useState(
+    initialCodingAssignment,
+  );
   const [mode, setMode] = useState<EditorMode>("split");
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("saved");
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -205,9 +245,12 @@ export function LessonAuthoringWorkspace({
     [item.id],
   );
 
-  const format = payload.lessonFormat ?? (payload.jsonBody ? "Lexical" : "Markdown");
+  const format =
+    payload.lessonFormat ?? (payload.jsonBody ? "Lexical" : "Markdown");
   const isLesson = payload.type === "Lesson";
   const isQuiz = payload.type === "Questionnaire";
+  const isCode = payload.type === "Code";
+  const formatLabel = isCode ? "Coding assignment" : isQuiz ? "Quiz" : format;
   const isStructured = isQuiz || (isLesson && format === "Lexical");
   const currentPayloadJson = JSON.stringify(payload);
   const isDirty = savedSnapshot !== currentPayloadJson;
@@ -219,40 +262,52 @@ export function LessonAuthoringWorkspace({
     payloadRef.current = payload;
   }, [payload]);
 
-  const persist = useCallback(async (nextPayload = payloadRef.current) => {
-    if (saveInFlightRef.current) return saveInFlightRef.current;
-    setSaveStatus("saving");
-    setSaveError(null);
-    const revision = revisionRef.current;
-    const operation = prepareAuthoringAssets(nextPayload, assetRepository, assetScope)
-      .then(() => saveAuthoringDraft(courseId, item.id, revision, nextPayload))
-      .then((result) => {
-        if (!result.success) {
-          if (result.status === 409) {
-            setConflictBackup(nextPayload);
-            setSaveStatus("conflict");
+  const persist = useCallback(
+    async (nextPayload = payloadRef.current) => {
+      if (saveInFlightRef.current) return saveInFlightRef.current;
+      setSaveStatus("saving");
+      setSaveError(null);
+      const revision = revisionRef.current;
+      const operation = prepareAuthoringAssets(
+        nextPayload,
+        assetRepository,
+        assetScope,
+      )
+        .then(() =>
+          saveAuthoringDraft(courseId, item.id, revision, nextPayload),
+        )
+        .then((result) => {
+          if (!result.success) {
+            if (result.status === 409) {
+              setConflictBackup(nextPayload);
+              setSaveStatus("conflict");
+            } else setSaveStatus("offline");
+            setSaveError(result.error);
+            return null;
           }
-          else setSaveStatus("offline");
-          setSaveError(result.error);
+          revisionRef.current = result.data.revision;
+          setSavedSnapshot(JSON.stringify(nextPayload));
+          setDraft(result.data);
+          setSaveStatus("saved");
+          return result.data;
+        })
+        .catch((error: unknown) => {
+          setSaveStatus("offline");
+          setSaveError(
+            error instanceof Error
+              ? error.message
+              : "Unable to save this draft.",
+          );
           return null;
-        }
-        revisionRef.current = result.data.revision;
-        setSavedSnapshot(JSON.stringify(nextPayload));
-        setDraft(result.data);
-        setSaveStatus("saved");
-        return result.data;
-      })
-      .catch((error: unknown) => {
-        setSaveStatus("offline");
-        setSaveError(error instanceof Error ? error.message : "Unable to save this draft.");
-        return null;
-      })
-      .finally(() => {
-        saveInFlightRef.current = null;
-      });
-    saveInFlightRef.current = operation;
-    return operation;
-  }, [assetRepository, assetScope, courseId, item.id]);
+        })
+        .finally(() => {
+          saveInFlightRef.current = null;
+        });
+      saveInFlightRef.current = operation;
+      return operation;
+    },
+    [assetRepository, assetScope, courseId, item.id],
+  );
 
   const loadLatestDraft = async () => {
     const result = await getAuthoringDraft(courseId, item.id);
@@ -292,7 +347,8 @@ export function LessonAuthoringWorkspace({
       event.returnValue = "";
     };
     window.addEventListener("beforeunload", warnAboutUnsavedChanges);
-    return () => window.removeEventListener("beforeunload", warnAboutUnsavedChanges);
+    return () =>
+      window.removeEventListener("beforeunload", warnAboutUnsavedChanges);
   }, [isDirty]);
 
   useEffect(() => {
@@ -305,7 +361,8 @@ export function LessonAuthoringWorkspace({
       if (command && event.shiftKey && event.key.toLowerCase() === "i") {
         event.preventDefault();
         setRightPanel("copilot");
-        if (window.matchMedia("(min-width: 1280px)").matches) setRightOpen(true);
+        if (window.matchMedia("(min-width: 1280px)").matches)
+          setRightOpen(true);
         else setMobileRightOpen(true);
       }
     };
@@ -377,9 +434,17 @@ export function LessonAuthoringWorkspace({
       return;
     }
     try {
-      await prepareAuthoringAssets(payloadRef.current, assetRepository, assetScope);
+      await prepareAuthoringAssets(
+        payloadRef.current,
+        assetRepository,
+        assetScope,
+      );
     } catch (error) {
-      setSaveError(error instanceof Error ? error.message : "Lesson assets are not ready to publish.");
+      setSaveError(
+        error instanceof Error
+          ? error.message
+          : "Lesson assets are not ready to publish.",
+      );
       setSaveStatus("offline");
       setIsPublishing(false);
       return;
@@ -390,11 +455,21 @@ export function LessonAuthoringWorkspace({
       savedDraft.revision,
     );
     if (result.success) {
-      setDraft(result.data.draft);
-      revisionRef.current = result.data.draft.revision;
-      setSavedSnapshot(JSON.stringify(result.data.draft.payload));
+      const publishedDraft = result.data.draft;
+      setDraft(publishedDraft);
+      setPayload(publishedDraft.payload);
+      payloadRef.current = publishedDraft.payload;
+      revisionRef.current = publishedDraft.revision;
+      setSavedSnapshot(JSON.stringify(publishedDraft.payload));
       setSaveStatus("saved");
-      router.refresh();
+      const publishedSlug = result.data.publishedContent.slug;
+      if (publishedSlug !== item.slug) {
+        router.replace(
+          `${learningBase}/courses/${encodeURIComponent(courseSlug)}/content/${encodeURIComponent(publishedSlug)}`,
+        );
+      } else {
+        router.refresh();
+      }
     } else {
       setSaveError(result.error);
       setSaveStatus(result.status === 409 ? "conflict" : "offline");
@@ -402,97 +477,116 @@ export function LessonAuthoringWorkspace({
     setIsPublishing(false);
   };
 
-  const readRunStream = useCallback(async (run: AiAuthoringRun) => {
-    let lastEventId = 0;
-    let reconnectAttempts = 0;
-    streamAbortRef.current?.abort();
-    const abortController = new AbortController();
-    streamAbortRef.current = abortController;
-    window.sessionStorage.setItem(activeRunStorageKey, run.id);
+  const readRunStream = useCallback(
+    async (run: AiAuthoringRun) => {
+      let lastEventId = 0;
+      let reconnectAttempts = 0;
+      streamAbortRef.current?.abort();
+      const abortController = new AbortController();
+      streamAbortRef.current = abortController;
+      window.sessionStorage.setItem(activeRunStorageKey, run.id);
 
-    while (!abortController.signal.aborted) {
-      try {
-        const response = await fetch(
-          `/api/learning/authoring/${encodeURIComponent(courseId)}/${encodeURIComponent(item.id)}/runs/${encodeURIComponent(run.id)}/stream`,
-          {
-            headers: lastEventId ? { "Last-Event-ID": String(lastEventId) } : {},
-            signal: abortController.signal,
-          },
-        );
-        if (!response.ok || !response.body)
-          throw new Error("The Copilot stream could not be opened.");
-        reconnectAttempts = 0;
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
-        while (true) {
-          const { done, value } = await reader.read();
-          buffer += decoder.decode(value, { stream: !done });
-          const frames = buffer.split("\n\n");
-          // String#split always returns at least one segment.
-          buffer = frames.pop() as string;
-          for (const frame of frames) {
-            const id = frame.match(/^id:\s*(\d+)/m)?.[1];
-            if (id) lastEventId = Number(id);
-            const event = parseStreamFrame(frame) as
-              | { delta?: string; proposal?: AiProposal; errorCode?: string }
-              | null;
-            if (event?.delta) {
-              const delta = event.delta;
-              setMessages((current) => {
-                const last = current.at(-1);
-                if (last?.role === "assistant" && last.runId === run.id)
-                  return [...current.slice(0, -1), { ...last, content: last.content + delta }];
-                return [
-                  ...current,
-                  {
-                    id: `stream-${run.id}`,
-                    role: "assistant",
-                    content: delta,
-                    runId: run.id,
-                    createdAt: new Date().toISOString(),
-                  },
-                ];
-              });
+      while (!abortController.signal.aborted) {
+        try {
+          const response = await fetch(
+            `/api/learning/authoring/${encodeURIComponent(courseId)}/${encodeURIComponent(item.id)}/runs/${encodeURIComponent(run.id)}/stream`,
+            {
+              headers: lastEventId
+                ? { "Last-Event-ID": String(lastEventId) }
+                : {},
+              signal: abortController.signal,
+            },
+          );
+          if (!response.ok || !response.body)
+            throw new Error("The Copilot stream could not be opened.");
+          reconnectAttempts = 0;
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = "";
+          while (true) {
+            const { done, value } = await reader.read();
+            buffer += decoder.decode(value, { stream: !done });
+            const frames = buffer.split("\n\n");
+            // String#split always returns at least one segment.
+            buffer = frames.pop() as string;
+            for (const frame of frames) {
+              const id = frame.match(/^id:\s*(\d+)/m)?.[1];
+              if (id) lastEventId = Number(id);
+              const event = parseStreamFrame(frame) as {
+                delta?: string;
+                proposal?: AiProposal;
+                errorCode?: string;
+              } | null;
+              if (event?.delta) {
+                const delta = event.delta;
+                setMessages((current) => {
+                  const last = current.at(-1);
+                  if (last?.role === "assistant" && last.runId === run.id)
+                    return [
+                      ...current.slice(0, -1),
+                      { ...last, content: last.content + delta },
+                    ];
+                  return [
+                    ...current,
+                    {
+                      id: `stream-${run.id}`,
+                      role: "assistant",
+                      content: delta,
+                      runId: run.id,
+                      createdAt: new Date().toISOString(),
+                    },
+                  ];
+                });
+              }
+              if (event?.proposal) {
+                setProposal(event.proposal);
+                setDiffOpen(true);
+              }
+              if (
+                event?.errorCode &&
+                !["AI_CANCEL_REQUESTED", "AI_CANCELLED"].includes(
+                  event.errorCode,
+                )
+              )
+                setAiError(event.errorCode);
             }
-            if (event?.proposal) {
-              setProposal(event.proposal);
-              setDiffOpen(true);
-            }
-            if (
-              event?.errorCode &&
-              !["AI_CANCEL_REQUESTED", "AI_CANCELLED"].includes(event.errorCode)
-            )
-              setAiError(event.errorCode);
+            if (done) break;
           }
-          if (done) break;
-        }
 
-        const latest = await getAiAuthoringRun(courseId, item.id, run.id);
-        if (!latest.success) throw new Error(latest.error);
-        setActiveRun(latest.data);
-        if (latest.data.proposal) {
-          setProposal(latest.data.proposal);
-          setDiffOpen(true);
+          const latest = await getAiAuthoringRun(courseId, item.id, run.id);
+          if (!latest.success) throw new Error(latest.error);
+          setActiveRun(latest.data);
+          if (latest.data.proposal) {
+            setProposal(latest.data.proposal);
+            setDiffOpen(true);
+          }
+          if (
+            ["Completed", "Failed", "Cancelled"].includes(latest.data.status)
+          ) {
+            window.sessionStorage.removeItem(activeRunStorageKey);
+            if (latest.data.status === "Failed")
+              setAiError(
+                latest.data.errorMessage ?? "Copilot generation failed.",
+              );
+            const balance = await getAiEntitlement(courseId, item.id);
+            if (balance.success) setEntitlement(balance.data);
+            return;
+          }
+        } catch (error) {
+          if (abortController.signal.aborted) return;
+          reconnectAttempts += 1;
+          if (reconnectAttempts > 4) throw error;
         }
-        if (["Completed", "Failed", "Cancelled"].includes(latest.data.status)) {
-          window.sessionStorage.removeItem(activeRunStorageKey);
-          if (latest.data.status === "Failed")
-            setAiError(latest.data.errorMessage ?? "Copilot generation failed.");
-          const balance = await getAiEntitlement(courseId, item.id);
-          if (balance.success) setEntitlement(balance.data);
-          return;
-        }
-      } catch (error) {
-        if (abortController.signal.aborted) return;
-        reconnectAttempts += 1;
-        if (reconnectAttempts > 4) throw error;
+        await new Promise((resolve) =>
+          window.setTimeout(
+            resolve,
+            Math.min(750 * 2 ** reconnectAttempts, 5000),
+          ),
+        );
       }
-      await new Promise((resolve) =>
-        window.setTimeout(resolve, Math.min(750 * 2 ** reconnectAttempts, 5000)),
-      );
-    }
-  }, [activeRunStorageKey, courseId, item.id]);
+    },
+    [activeRunStorageKey, courseId, item.id],
+  );
 
   useEffect(() => {
     if (restoredRunRef.current) return;
@@ -519,7 +613,11 @@ export function LessonAuthoringWorkspace({
       try {
         await readRunStream(result.data);
       } catch (error) {
-        setAiError(error instanceof Error ? error.message : "Copilot stopped unexpectedly.");
+        setAiError(
+          error instanceof Error
+            ? error.message
+            : "Copilot stopped unexpectedly.",
+        );
       } finally {
         setIsRunning(false);
       }
@@ -566,7 +664,11 @@ export function LessonAuthoringWorkspace({
     try {
       await readRunStream(result.data);
     } catch (error) {
-      setAiError(error instanceof Error ? error.message : "Copilot stopped unexpectedly.");
+      setAiError(
+        error instanceof Error
+          ? error.message
+          : "Copilot stopped unexpectedly.",
+      );
     } finally {
       setIsRunning(false);
     }
@@ -597,7 +699,9 @@ export function LessonAuthoringWorkspace({
       item.id,
       proposalToApply.id,
       revisionRef.current,
-      proposalToApply.kind === "InsertAtCursor" ? cursorOffsetRef.current : undefined,
+      proposalToApply.kind === "InsertAtCursor"
+        ? cursorOffsetRef.current
+        : undefined,
     );
     if (!result.success) {
       setAiError(result.error);
@@ -614,12 +718,33 @@ export function LessonAuthoringWorkspace({
   };
 
   const rejectProposal = async (proposalToDiscard: AiProposal) => {
-    const result = await discardAiProposal(courseId, item.id, proposalToDiscard.id);
+    const result = await discardAiProposal(
+      courseId,
+      item.id,
+      proposalToDiscard.id,
+    );
     if (result.success) setProposal(result.data);
     setDiffOpen(false);
   };
 
   const renderEditor = () => {
+    if (isCode)
+      return (
+        <CodingDefinitionEditor
+          courseId={courseSlug}
+          assessmentId={linkedAssessment?.id ?? item.id}
+          assessmentSlug={linkedAssessment?.slug ?? payload.slug}
+          programId={courseId}
+          contentId={item.id}
+          assessmentTitle={linkedAssessment?.title ?? payload.title}
+          initialContent={codingAssignment}
+          embedded
+          onSaved={(content) => {
+            setCodingAssignment(content);
+            router.refresh();
+          }}
+        />
+      );
     if (isQuiz)
       return (
         <QuizContentEditor
@@ -633,9 +758,14 @@ export function LessonAuthoringWorkspace({
         <LessonContentEditor
           key={`${item.id}-${draft.revision}`}
           itemId={item.id}
-          initialState={(payload.jsonBody ?? null) as SerializedEditorState | null}
+          initialState={
+            (payload.jsonBody ?? null) as SerializedEditorState | null
+          }
           onChange={(value) =>
-            updatePayload("jsonBody", value as unknown as Record<string, unknown>)
+            updatePayload(
+              "jsonBody",
+              value as unknown as Record<string, unknown>,
+            )
           }
         />
       );
@@ -656,7 +786,11 @@ export function LessonAuthoringWorkspace({
         onCursorOffsetChange={(offset) => {
           cursorOffsetRef.current = offset;
         }}
-        placeholder={format === "RevealJs" ? "Separate slides with --- on its own line." : undefined}
+        placeholder={
+          format === "RevealJs"
+            ? "Separate slides with --- on its own line."
+            : undefined
+        }
       />
     );
   };
@@ -682,17 +816,35 @@ export function LessonAuthoringWorkspace({
     <section className="h-full min-w-0 overflow-auto bg-muted/20 px-6 py-8 xl:px-10">
       <article className="mx-auto max-w-3xl">
         <p className="mb-3 text-sm font-medium text-primary">{courseTitle}</p>
-        <h1 className="text-3xl font-semibold tracking-tight">{payload.title}</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">
+          {payload.title}
+        </h1>
         {payload.description ? (
-          <p className="mt-3 text-base text-muted-foreground">{payload.description}</p>
+          <p className="mt-3 text-base text-muted-foreground">
+            {payload.description}
+          </p>
         ) : null}
         <Separator className="my-7" />
-        <LearnerLessonRenderer
-          courseId={courseId}
-          itemId={item.id}
-          format={format}
-          content={bodyForPreview(payload)}
-        />
+        {isCode && codingAssignment ? (
+          <CodingAssignmentPreview assignment={codingAssignment} />
+        ) : isCode ? (
+          <div className="flex min-h-80 items-center justify-center rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
+            Save the coding assignment to preview the student experience.
+          </div>
+        ) : isQuiz ? (
+          <QuizContentEditor
+            initialContent={payload.jsonBody}
+            onChange={() => undefined}
+            mode="preview"
+          />
+        ) : (
+          <LearnerLessonRenderer
+            courseId={courseId}
+            itemId={item.id}
+            format={format}
+            content={bodyForPreview(payload)}
+          />
+        )}
       </article>
     </section>
   );
@@ -719,20 +871,31 @@ export function LessonAuthoringWorkspace({
           variant="ghost"
           size="sm"
           className="gap-2 text-muted-foreground"
-          onClick={() => router.push(`${learningBase}/courses/${encodeURIComponent(courseSlug)}/content`)}
+          onClick={() =>
+            router.push(
+              `${learningBase}/courses/${encodeURIComponent(courseSlug)}/content`,
+            )
+          }
         >
           <ArrowLeft />
           <span className="hidden md:inline">Curriculum</span>
         </Button>
-        <Separator orientation="vertical" className="mx-1 hidden h-5 md:block" />
+        <Separator
+          orientation="vertical"
+          className="mx-1 hidden h-5 md:block"
+        />
         <div className="hidden min-w-0 flex-1 md:block">
           <p className="truncate text-sm font-medium">{payload.title}</p>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Badge variant="outline" className="h-5 rounded-sm px-1.5 text-sm">
               {item.status === "published" ? "Published" : "Draft"}
             </Badge>
-            <span className={saveStatus === "conflict" ? "text-destructive" : ""}>
-              {saveStatus === "saving" ? <Loader2 className="mr-1 inline size-3 animate-spin" /> : null}
+            <span
+              className={saveStatus === "conflict" ? "text-destructive" : ""}
+            >
+              {saveStatus === "saving" ? (
+                <Loader2 className="mr-1 inline size-3 animate-spin" />
+              ) : null}
               {statusCopy[saveStatus]}
             </span>
           </div>
@@ -741,7 +904,11 @@ export function LessonAuthoringWorkspace({
           value={mode === "preview" ? "preview" : "editor"}
           onValueChange={(value) => setMode(value as "editor" | "preview")}
         >
-          <SelectTrigger aria-label="Editor view" size="sm" className="w-24 lg:hidden">
+          <SelectTrigger
+            aria-label="Editor view"
+            size="sm"
+            className="w-24 lg:hidden"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -759,7 +926,13 @@ export function LessonAuthoringWorkspace({
               className="h-7 capitalize"
               onClick={() => setMode(value)}
             >
-              {value === "split" ? <SplitSquareHorizontal /> : value === "preview" ? <Play /> : <FileCode2 />}
+              {value === "split" ? (
+                <SplitSquareHorizontal />
+              ) : value === "preview" ? (
+                <Play />
+              ) : (
+                <FileCode2 />
+              )}
               <span className="hidden xl:inline">{value}</span>
             </Button>
           ))}
@@ -771,13 +944,18 @@ export function LessonAuthoringWorkspace({
                 variant="ghost"
                 size="icon-sm"
                 aria-label="Open student view"
-                onClick={() =>
-                  window.open(
-                    `/${params.locale ?? "en-US"}/learn/courses/${encodeURIComponent(courseSlug)}/lessons/${encodeURIComponent(payload.slug)}`,
-                    "_blank",
-                    "noopener,noreferrer",
-                  )
-                }
+                onClick={() => {
+                  const learnerBase = `/${params.locale ?? "en-US"}/learn/courses/${encodeURIComponent(courseSlug)}`;
+                  const href =
+                    (payload.type === "Code" ||
+                      payload.type === "Questionnaire") &&
+                    linkedAssessment
+                      ? `${learnerBase}/activities/assessment-${encodeURIComponent(linkedAssessment.id)}`
+                      : payload.type === "Lesson"
+                        ? `${learnerBase}/lessons/${encodeURIComponent(payload.slug)}`
+                        : `${learnerBase}/activities/content-${encodeURIComponent(item.id)}`;
+                  window.open(href, "_blank", "noopener,noreferrer");
+                }}
               />
             }
           >
@@ -786,7 +964,9 @@ export function LessonAuthoringWorkspace({
           <TooltipContent>Student view</TooltipContent>
         </Tooltip>
         <Button
-          variant={rightPanel === "copilot" && rightOpen ? "secondary" : "ghost"}
+          variant={
+            rightPanel === "copilot" && rightOpen ? "secondary" : "ghost"
+          }
           size="sm"
           aria-label="Open Copilot"
           onClick={openCopilot}
@@ -834,15 +1014,27 @@ export function LessonAuthoringWorkspace({
           </span>
           <div className="flex shrink-0 items-center gap-1">
             {saveStatus === "conflict" ? (
-              <Button variant="ghost" size="xs" onClick={() => void loadLatestDraft()}>
+              <Button
+                variant="ghost"
+                size="xs"
+                onClick={() => void loadLatestDraft()}
+              >
                 <RotateCcw /> Load latest
               </Button>
             ) : conflictBackup ? (
               <>
-                <Button variant="ghost" size="xs" onClick={() => setConflictBackup(null)}>
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  onClick={() => setConflictBackup(null)}
+                >
                   Discard my copy
                 </Button>
-                <Button variant="secondary" size="xs" onClick={restoreConflictCopy}>
+                <Button
+                  variant="secondary"
+                  size="xs"
+                  onClick={restoreConflictCopy}
+                >
                   Restore my changes
                 </Button>
               </>
@@ -900,7 +1092,9 @@ export function LessonAuthoringWorkspace({
                       key={entry.id}
                       type="button"
                       className={`flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm transition-colors ${
-                        active ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        active
+                          ? "bg-primary/10 text-primary"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
                       }`}
                       onClick={() => {
                         setMobileLeftOpen(false);
@@ -910,11 +1104,19 @@ export function LessonAuthoringWorkspace({
                       }}
                     >
                       <Icon className="size-3.5 shrink-0" />
-                      <span className="min-w-0 flex-1 truncate">{entry.title}</span>
+                      <span className="min-w-0 flex-1 truncate">
+                        {entry.title}
+                      </span>
                       {entry.status === "published" ? (
-                        <Check className="size-3 text-primary" aria-label="Published" />
+                        <Check
+                          className="size-3 text-primary"
+                          aria-label="Published"
+                        />
                       ) : (
-                        <Clock3 className="size-3 text-muted-foreground" aria-label="Draft" />
+                        <Clock3
+                          className="size-3 text-muted-foreground"
+                          aria-label="Draft"
+                        />
                       )}
                     </button>
                   );
@@ -950,7 +1152,11 @@ export function LessonAuthoringWorkspace({
         ) : null}
         {rightOpen || mobileRightOpen ? (
           <aside
-            aria-label={rightPanel === "settings" ? "Lesson settings" : "AI authoring copilot"}
+            aria-label={
+              rightPanel === "settings"
+                ? "Lesson settings"
+                : "AI authoring copilot"
+            }
             className={`${mobileRightOpen ? "flex" : "hidden"} fixed bottom-0 right-0 top-14 z-40 w-[min(24rem,92vw)] shrink-0 flex-col border-l bg-background shadow-xl xl:static xl:z-auto xl:w-80 xl:shadow-none ${rightOpen ? "xl:flex" : "xl:hidden"}`}
           >
             <div className="flex h-12 items-center gap-1 border-b px-2">
@@ -975,50 +1181,88 @@ export function LessonAuthoringWorkspace({
               <ScrollArea className="min-h-0 flex-1">
                 <div className="space-y-5 p-4">
                   <div>
-                    <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Publishing</h2>
+                    <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                      Publishing
+                    </h2>
                     <div className="mt-3 space-y-4">
                       <div className="space-y-1.5">
-                        <Label htmlFor="authoring-visibility">Lesson access</Label>
+                        <Label htmlFor="authoring-visibility">
+                          Lesson access
+                        </Label>
                         <Select
                           value={payload.visibility}
                           onValueChange={(value) =>
-                            updatePayload("visibility", value as AuthoringContentPayload["visibility"])
+                            updatePayload(
+                              "visibility",
+                              value as AuthoringContentPayload["visibility"],
+                            )
                           }
                         >
-                          <SelectTrigger id="authoring-visibility" className="w-full">
+                          <SelectTrigger
+                            id="authoring-visibility"
+                            className="w-full"
+                          >
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Public">Enrolled students</SelectItem>
-                            <SelectItem value="MembersOnly">Members only</SelectItem>
+                            <SelectItem value="Public">
+                              Enrolled students
+                            </SelectItem>
+                            <SelectItem value="MembersOnly">
+                              Members only
+                            </SelectItem>
                             <SelectItem value="Private">Private</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="flex items-center justify-between gap-3">
                         <div>
-                          <Label htmlFor="authoring-required">Required for completion</Label>
-                          <p className="mt-0.5 text-sm text-muted-foreground">Students must complete this item.</p>
+                          <Label htmlFor="authoring-required">
+                            Required for completion
+                          </Label>
+                          <p className="mt-0.5 text-sm text-muted-foreground">
+                            Students must complete this item.
+                          </p>
                         </div>
                         <Switch
                           id="authoring-required"
                           checked={payload.isRequired}
-                          onCheckedChange={(value) => updatePayload("isRequired", value)}
+                          onCheckedChange={(value) =>
+                            updatePayload("isRequired", value)
+                          }
                         />
                       </div>
                     </div>
                   </div>
                   <Separator />
                   <div className="space-y-3">
-                    <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Lesson details</h2>
+                    <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                      Lesson details
+                    </h2>
                     <div className="space-y-1.5">
-                      <Label htmlFor="authoring-slug">URL</Label>
+                      <Label htmlFor="authoring-title">Title</Label>
+                      <Input
+                        id="authoring-title"
+                        value={payload.title}
+                        onChange={(event) => handleTitle(event.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="authoring-slug">URL slug</Label>
                       <Input
                         id="authoring-slug"
                         value={payload.slug}
-                        onChange={(event) => updatePayload("slug", slugify(event.target.value))}
-                        onBlur={() => updatePayload("slug", normalizeSlug(payload.slug))}
+                        onChange={(event) =>
+                          updatePayload("slug", slugify(event.target.value))
+                        }
+                        onBlur={() =>
+                          updatePayload("slug", normalizeSlug(payload.slug))
+                        }
                       />
+                      <p className="break-all text-xs text-muted-foreground">
+                        {learningBase}/courses/{courseSlug}/content/
+                        {payload.slug}
+                      </p>
                     </div>
                     <div className="space-y-1.5">
                       <Label htmlFor="authoring-description">Description</Label>
@@ -1026,11 +1270,15 @@ export function LessonAuthoringWorkspace({
                         id="authoring-description"
                         rows={3}
                         value={payload.description ?? ""}
-                        onChange={(event) => updatePayload("description", event.target.value)}
+                        onChange={(event) =>
+                          updatePayload("description", event.target.value)
+                        }
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label htmlFor="authoring-minutes">Estimated minutes</Label>
+                      <Label htmlFor="authoring-minutes">
+                        Estimated minutes
+                      </Label>
                       <div className="relative">
                         <Clock3 className="absolute left-2.5 top-2.5 size-3.5 text-muted-foreground" />
                         <Input
@@ -1041,8 +1289,14 @@ export function LessonAuthoringWorkspace({
                           value={payload.estimatedMinutes ?? ""}
                           onChange={(event) => {
                             const value = event.target.value;
-                            updatePayload("estimatedMinutes", value ? Number(value) : null);
-                            updatePayload("estimatedMinutesSource", value ? "Manual" : "Auto");
+                            updatePayload(
+                              "estimatedMinutes",
+                              value ? Number(value) : null,
+                            );
+                            updatePayload(
+                              "estimatedMinutesSource",
+                              value ? "Manual" : "Auto",
+                            );
                           }}
                           placeholder="Auto"
                         />
@@ -1051,10 +1305,27 @@ export function LessonAuthoringWorkspace({
                   </div>
                   <Separator />
                   <div className="space-y-2 text-sm text-muted-foreground">
-                    <div className="flex justify-between"><span>Format</span><span className="text-foreground">{format}</span></div>
-                    <div className="flex justify-between"><span>Draft revision</span><span className="text-foreground">{draft.revision}</span></div>
-                    <div className="flex justify-between"><span>Published version</span><span className="text-foreground">{draft.basePublishedVersion}</span></div>
-                    <div className="flex justify-between"><span>Last saved</span><span className="text-foreground">{new Date(draft.lastEditedAt).toLocaleTimeString()}</span></div>
+                    <div className="flex justify-between">
+                      <span>Format</span>
+                      <span className="text-foreground">{formatLabel}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Draft revision</span>
+                      <span className="text-foreground">{draft.revision}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Published version</span>
+                      <span className="text-foreground">
+                        {draft.basePublishedVersion}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Last saved</span>
+                      <AuthoringLocalTime
+                        className="text-foreground"
+                        value={draft.lastEditedAt}
+                      />
+                    </div>
                   </div>
                 </div>
               </ScrollArea>
@@ -1063,11 +1334,17 @@ export function LessonAuthoringWorkspace({
                 <div className="border-b px-4 py-3">
                   <div className="flex items-center justify-between gap-2">
                     <div>
-                      <p className="text-sm font-medium">AI authoring copilot</p>
-                      <p className="text-sm text-muted-foreground">Changes always require your approval.</p>
+                      <p className="text-sm font-medium">
+                        AI authoring copilot
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Changes always require your approval.
+                      </p>
                     </div>
                     <Badge variant="outline" className="font-mono text-sm">
-                      {entitlement ? `${entitlement.availableSoftCredits} SC` : "… SC"}
+                      {entitlement
+                        ? `${entitlement.availableSoftCredits} SC`
+                        : "… SC"}
                     </Badge>
                   </div>
                 </div>
@@ -1076,11 +1353,26 @@ export function LessonAuthoringWorkspace({
                     {messages.length === 0 ? (
                       <div className="py-5 text-center">
                         <Sparkles className="mx-auto size-5 text-primary" />
-                        <p className="mt-2 text-sm font-medium">Improve this lesson</p>
-                        <p className="mx-auto mt-1 max-w-56 text-sm text-muted-foreground">Ask for a rewrite, explanation, example, code sample, summary, or quiz.</p>
+                        <p className="mt-2 text-sm font-medium">
+                          Improve this lesson
+                        </p>
+                        <p className="mx-auto mt-1 max-w-56 text-sm text-muted-foreground">
+                          Ask for a rewrite, explanation, example, code sample,
+                          summary, or quiz.
+                        </p>
                         <div className="mt-4 grid gap-1.5">
-                          {["Make this clearer and more concise", "Add a practical example", "Create a short knowledge check"].map((suggestion) => (
-                            <Button key={suggestion} variant="outline" size="sm" className="h-auto justify-start py-2 text-left text-sm" onClick={() => void runCopilot(suggestion)}>
+                          {[
+                            "Make this clearer and more concise",
+                            "Add a practical example",
+                            "Create a short knowledge check",
+                          ].map((suggestion) => (
+                            <Button
+                              key={suggestion}
+                              variant="outline"
+                              size="sm"
+                              className="h-auto justify-start py-2 text-left text-sm"
+                              onClick={() => void runCopilot(suggestion)}
+                            >
                               {suggestion}
                             </Button>
                           ))}
@@ -1088,7 +1380,14 @@ export function LessonAuthoringWorkspace({
                       </div>
                     ) : null}
                     {messages.map((message) => (
-                      <div key={message.id} className={message.role === "user" ? "ml-7 rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground" : "mr-3 rounded-lg bg-muted px-3 py-2 text-sm leading-relaxed"}>
+                      <div
+                        key={message.id}
+                        className={
+                          message.role === "user"
+                            ? "ml-7 rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground"
+                            : "mr-3 rounded-lg bg-muted px-3 py-2 text-sm leading-relaxed"
+                        }
+                      >
                         {message.content}
                       </div>
                     ))}
@@ -1103,34 +1402,58 @@ export function LessonAuthoringWorkspace({
                         <Button
                           variant="ghost"
                           size="xs"
-                          disabled={activeRun?.errorCode === "AI_CANCEL_REQUESTED"}
+                          disabled={
+                            activeRun?.errorCode === "AI_CANCEL_REQUESTED"
+                          }
                           onClick={() => void stopCopilot()}
                         >
                           Stop
                         </Button>
                       </div>
                     ) : null}
-                    {aiError ? <p className="rounded-md bg-destructive/10 p-2 text-sm text-destructive">{aiError}</p> : null}
+                    {aiError ? (
+                      <p className="rounded-md bg-destructive/10 p-2 text-sm text-destructive">
+                        {aiError}
+                      </p>
+                    ) : null}
                     {activeRun?.usage.maximumEstimatedCost ? (
                       <div className="rounded-md bg-muted/50 p-2 text-sm text-muted-foreground">
-                        Max {activeRun.usage.maximumEstimatedCost} SC · Used {activeRun.usage.inputTokens + activeRun.usage.outputTokens} tokens · Settled {activeRun.usage.settledCost} SC
+                        Max {activeRun.usage.maximumEstimatedCost} SC · Used{" "}
+                        {activeRun.usage.inputTokens +
+                          activeRun.usage.outputTokens}{" "}
+                        tokens · Settled {activeRun.usage.settledCost} SC
                       </div>
                     ) : null}
                   </div>
                 </ScrollArea>
                 <div className="space-y-2 border-t p-3">
                   {!isStructured && format !== "Video" ? (
-                    <Select value={proposalMode} onValueChange={(value) => setProposalMode(value as AiProposalKind)}>
-                      <SelectTrigger aria-label="Proposal application" className="h-8 w-full text-sm"><SelectValue /></SelectTrigger>
+                    <Select
+                      value={proposalMode}
+                      onValueChange={(value) =>
+                        setProposalMode(value as AiProposalKind)
+                      }
+                    >
+                      <SelectTrigger
+                        aria-label="Proposal application"
+                        className="h-8 w-full text-sm"
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="ReplaceDocument">Replace document</SelectItem>
-                        <SelectItem value="InsertAtCursor">Insert at cursor</SelectItem>
+                        <SelectItem value="ReplaceDocument">
+                          Replace document
+                        </SelectItem>
+                        <SelectItem value="InsertAtCursor">
+                          Insert at cursor
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   ) : null}
                   {format === "Video" ? (
                     <p className="rounded-md bg-muted/50 px-2.5 py-2 text-sm text-muted-foreground">
-                      Video media is protected. Copilot can only propose metadata changes.
+                      Video media is protected. Copilot can only propose
+                      metadata changes.
                     </p>
                   ) : null}
                   <div className="relative">
@@ -1155,10 +1478,17 @@ export function LessonAuthoringWorkspace({
                       disabled={!copilotPrompt.trim() || isRunning}
                       onClick={() => void runCopilot()}
                     >
-                      {isRunning ? <Loader2 className="animate-spin" /> : <Send />}
+                      {isRunning ? (
+                        <Loader2 className="animate-spin" />
+                      ) : (
+                        <Send />
+                      )}
                     </Button>
                   </div>
-                  <p className="text-sm text-muted-foreground">Maximum cost is reserved first. Only actual token usage is charged to your wallet.</p>
+                  <p className="text-sm text-muted-foreground">
+                    Maximum cost is reserved first. Only actual token usage is
+                    charged to your wallet.
+                  </p>
                 </div>
               </div>
             )}
@@ -1172,33 +1502,64 @@ export function LessonAuthoringWorkspace({
             <div className="flex items-start justify-between gap-4 pr-10">
               <div>
                 <DialogTitle>Review AI proposal</DialogTitle>
-                <DialogDescription>Compare the current draft with the proposed content before applying it.</DialogDescription>
+                <DialogDescription>
+                  Compare the current draft with the proposed content before
+                  applying it.
+                </DialogDescription>
               </div>
               <div className="flex rounded-md border p-0.5">
-                <Button variant={!unifiedDiff ? "secondary" : "ghost"} size="xs" onClick={() => setUnifiedDiff(false)}><ChevronsRight /> Side by side</Button>
-                <Button variant={unifiedDiff ? "secondary" : "ghost"} size="xs" onClick={() => setUnifiedDiff(true)}><ChevronsLeft /> Unified</Button>
+                <Button
+                  variant={!unifiedDiff ? "secondary" : "ghost"}
+                  size="xs"
+                  onClick={() => setUnifiedDiff(false)}
+                >
+                  <ChevronsRight /> Side by side
+                </Button>
+                <Button
+                  variant={unifiedDiff ? "secondary" : "ghost"}
+                  size="xs"
+                  onClick={() => setUnifiedDiff(true)}
+                >
+                  <ChevronsLeft /> Unified
+                </Button>
               </div>
             </div>
           </DialogHeader>
           <div className="min-h-0 bg-background">
             {proposal ? (
-              <Suspense fallback={<div className="flex h-full items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+              <Suspense
+                fallback={
+                  <div className="flex h-full items-center justify-center">
+                    <Loader2 className="animate-spin" />
+                  </div>
+                }
+              >
                 <MonacoDiffEditor
                   original={proposal.originalContent}
                   modified={proposal.proposedContent}
                   language={format === "Html" ? "html" : "markdown"}
                   theme={resolvedTheme === "light" ? "vs-light" : "vs-dark"}
                   height="100%"
-                  options={{ readOnly: true, renderSideBySide: !unifiedDiff, minimap: { enabled: false }, wordWrap: "on" }}
+                  options={{
+                    readOnly: true,
+                    renderSideBySide: !unifiedDiff,
+                    minimap: { enabled: false },
+                    wordWrap: "on",
+                  }}
                 />
               </Suspense>
             ) : null}
           </div>
           <DialogFooter className="border-t px-5 py-3">
-            <div className="mr-auto text-sm text-muted-foreground">Base draft revision {proposal?.baseDraftRevision}</div>
+            <div className="mr-auto text-sm text-muted-foreground">
+              Base draft revision {proposal?.baseDraftRevision}
+            </div>
             {proposal ? (
               <>
-                <Button variant="outline" onClick={() => void rejectProposal(proposal)}>
+                <Button
+                  variant="outline"
+                  onClick={() => void rejectProposal(proposal)}
+                >
                   Discard
                 </Button>
                 <Button onClick={() => void acceptProposal(proposal)}>

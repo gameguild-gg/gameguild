@@ -90,7 +90,7 @@ describe("recordLessonEvent", () => {
         occurredAt: "2026-09-15T12:30:00.000Z",
         positionSeconds: 42,
         durationSeconds: 120,
-        progressPercentage: 35,
+        progressPercentage: 3500,
         idempotencyKey: "event-1",
       },
     );

@@ -28,7 +28,7 @@ inspect_digest() {
   docker buildx imagetools inspect "$reference" | awk '/^Digest:/ { print $2; exit }'
 }
 
-for service in api web learning; do
+for service in api web; do
   if ! jq -e --arg service "$service" 'index($service) != null' <<<"$SERVICES_JSON" >/dev/null; then
     continue
   fi
@@ -90,7 +90,7 @@ fi
 
 jq -s '
   reduce (((.[0].services // []) + .[1])[]) as $item ({}; .[$item.service] = $item)
-  | [.api, .web, .learning]
+  | [.api, .web]
   | map(select(. != null))
 ' "$OUTPUT_DIR/previous-release-manifest.json" "$OUTPUT_DIR/promoted-services.json" \
   > "$OUTPUT_DIR/active-services.json"

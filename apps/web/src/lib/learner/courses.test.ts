@@ -149,8 +149,8 @@ describe("learner course aggregate adapter", () => {
     });
   });
 
-  it("clamps aggregate progress and supplies safe summary defaults", () => {
-    expect(mapLearnerCourseSummary({ progressPercentage: -20 })).toMatchObject({
+  it("maps canonical aggregate progress units and supplies safe summary defaults", () => {
+    expect(mapLearnerCourseSummary({ progressPercentage: 0 })).toMatchObject({
       id: "",
       title: "Untitled course",
       slug: "",
@@ -163,8 +163,11 @@ describe("learner course aggregate adapter", () => {
       currentItem: undefined,
     });
     expect(
-      mapLearnerCourseSummary({ progressPercentage: 140 }).overallProgress,
+      mapLearnerCourseSummary({ progressPercentage: 10_000 }).overallProgress,
     ).toBe(100);
+    expect(() =>
+      mapLearnerCourseSummary({ progressPercentage: -20 }),
+    ).toThrow("PercentValue must be an integer between 0 and 10000.");
   });
 
   it("maps the public catalog and its missing optional values", async () => {

@@ -204,17 +204,13 @@ describe('learning action coverage', () => {
     await expect(actions.updateContent({ courseId: 'course-1', contentId: 'content-1' })).resolves.toEqual({ success: false, error: 'Unexpected error: [object Object]' });
   });
 
-  it('creates code content with the code-specific assessment contract', async () => {
+  it('creates code content without bypassing the content-owned assessment workflow', async () => {
     mocks.postCoursesContent.mockResolvedValue({ ok: true, data: { id: 'code-1' } });
-    mocks.postAssessments.mockResolvedValue({ ok: true, data: { id: 'assessment-1' } });
     await expect(actions.addContent({ courseId: 'course-1', title: 'Code task', type: 'Code' })).resolves.toEqual({
       success: true,
       data: { id: 'code-1' },
     });
-    expect(mocks.postAssessments).toHaveBeenCalledWith(expect.objectContaining({
-      submissionModalities: 'Code',
-      gradingMethods: 'AutoGraded,InstructorGraded',
-    }));
+    expect(mocks.postAssessments).not.toHaveBeenCalled();
   });
 
   it('covers content update, delete, reorder, and move failures and exceptions', async () => {
@@ -504,17 +500,19 @@ describe('learning action coverage', () => {
       .mockResolvedValueOnce({ ok: true, data: { id: 'assessment-2' } });
     await actions.createAssessment({ courseId: 'course-1', title: ' Quiz ', type: 'Quiz' });
     expect(mocks.postAssessments).toHaveBeenLastCalledWith(expect.objectContaining({
-      description: null, assessmentGroupId: null, maxScore: 100, passingScore: 70, timeLimitMinutes: null,
-      maxAttempts: null, isRequired: true, availableFrom: null, availableUntil: null, presentationMode: 'Continuous', contentId: null, slug: null,
+      courseId: 'course-1', title: 'Quiz', description: null, assessmentGroupId: null,
+      maxScore: 10_000, passingScore: 7_000, timeLimitMinutes: null,
+      maxAttempts: 1, isRequired: true, availableFrom: null, availableUntil: null,
+      presentationMode: 'Continuous', contentId: null, reviewMethods: 8, slug: null,
     }));
     await actions.createAssessment({
       courseId: 'course-1', title: 'Assignment', description: ' Description ', type: 'Assignment', assessmentGroupId: 'group-1',
       maxScore: 50, passingScore: 40, timeLimitMinutes: 10, maxAttempts: 2, isRequired: false,
       availableFrom: 'from', availableUntil: 'until', presentationMode: 'SingleStep', contentId: 'content-1',
-      submissionModalities: 'Text', gradingMethods: 'InstructorGraded', slug: ' My Assessment ',
+      submissionModalities: 'Text', reviewMethods: 8, slug: ' My Assessment ',
     });
     expect(mocks.postAssessments).toHaveBeenLastCalledWith(expect.objectContaining({
-      description: 'Description', assessmentGroupId: 'group-1', maxScore: 50, passingScore: 40,
+      description: 'Description', assessmentGroupId: 'group-1', maxScore: 5_000, passingScore: 4_000,
       timeLimitMinutes: 10, maxAttempts: 2, isRequired: false, slug: 'my-assessment',
     }));
   });
@@ -527,21 +525,25 @@ describe('learning action coverage', () => {
   });
 
   it('maps explicit and default assessment updates', async () => {
-    mocks.putAssessments.mockResolvedValue({ ok: true, data: {} });
-    await actions.updateAssessment({ courseId: 'course-1', assessmentId: 'assessment-1' });
+    mocks.putAssessments.mockResolvedValue({ ok: true, data: { version: 2 } });
+    await actions.updateAssessment({ courseId: 'course-1', assessmentId: 'assessment-1', expectedVersion: 1 });
     expect(mocks.putAssessments).toHaveBeenLastCalledWith('assessment-1', expect.objectContaining({
-      title: null, description: null, maxScore: null, passingScore: null, timeLimitMinutes: null, maxAttempts: null,
+      expectedVersion: 1, title: null, description: null, clearDescription: false,
+      maxScore: undefined, passingScore: undefined, timeLimitMinutes: null, clearTimeLimitMinutes: false, maxAttempts: null,
       isRequired: null, contentId: null, clearContentId: false, assessmentGroupId: null, clearAssessmentGroupId: false,
-      gradingMethods: undefined, groupSetId: null, clearGroupSetId: false, peerReviewsRequiredCount: null, slug: null,
+      reviewMethods: undefined, groupSetId: null, clearGroupSetId: false, slug: null,
     }));
     await actions.updateAssessment({
-      courseId: 'course-1', assessmentId: 'assessment-1', title: ' Title ', description: ' Description ', maxScore: 20,
+      courseId: 'course-1', assessmentId: 'assessment-1', expectedVersion: 2,
+      title: ' Title ', description: ' Description ', maxScore: 20,
       passingScore: 10, timeLimitMinutes: 5, maxAttempts: 1, isRequired: false, availableFrom: 'from', availableUntil: 'until',
       contentId: 'content', clearContentId: true, assessmentGroupId: 'group', clearAssessmentGroupId: true,
-      presentationMode: 'Continuous', gradingMethods: 'AutoGraded', groupSetId: 'set', clearGroupSetId: true,
-      peerReviewsRequiredCount: 2, slug: ' Slug ',
+      presentationMode: 'Continuous', reviewMethods: 4, groupSetId: 'set', clearGroupSetId: true, slug: ' Slug ',
     });
-    expect(mocks.putAssessments).toHaveBeenLastCalledWith('assessment-1', expect.objectContaining({ title: 'Title', description: 'Description', slug: 'slug' }));
+    expect(mocks.putAssessments).toHaveBeenLastCalledWith('assessment-1', expect.objectContaining({
+      expectedVersion: 2, title: 'Title', description: 'Description', maxScore: 2_000,
+      passingScore: 1_000, reviewMethods: 4, slug: 'slug',
+    }));
   });
 
   it.each([
@@ -556,7 +558,7 @@ describe('learning action coverage', () => {
   it('covers assessment group defaults, required IDs, API failures, and exceptions', async () => {
     mocks.postAssessmentsGroups.mockResolvedValueOnce({ ok: true, data: { id: 'group-1' } });
     await actions.createAssessmentGroup({ courseId: 'course-1', name: ' Group ', weightPercent: 50 });
-    expect(mocks.postAssessmentsGroups).toHaveBeenLastCalledWith({ courseId: 'course-1', name: 'Group', weightPercent: 50, order: 0, description: null });
+    expect(mocks.postAssessmentsGroups).toHaveBeenLastCalledWith({ courseId: 'course-1', name: 'Group', weightPercent: 5_000, order: 0, description: null });
     await expectApiFailureAndThrow(actions.createAssessmentGroup as ServerAction, mocks.postAssessmentsGroups, [{ courseId: 'course-1', name: 'Group', weightPercent: 50, order: 2, description: ' Description ' }]);
     await expect(actions.updateAssessmentGroup({ courseId: 'course-1', groupId: ' ', name: 'Group', weightPercent: 50 })).resolves.toEqual({ success: false, error: 'Group id is required.' });
     mocks.putAssessmentsGroups.mockResolvedValueOnce({ ok: true, data: { id: 'group-1' } });
@@ -595,7 +597,7 @@ describe('learning action coverage', () => {
   it('covers rubric success, failure, exceptions, and criterion mapping', async () => {
     mocks.putAssessmentsRubric.mockResolvedValueOnce({ ok: true, data: {} });
     await actions.saveRubric({ assessmentId: 'assessment-1', title: 'Rubric', criteria: [{ description: 'Quality', points: 10, order: 1 }] });
-    expect(mocks.putAssessmentsRubric).toHaveBeenCalledWith('assessment-1', { title: 'Rubric', criteria: [{ description: 'Quality', points: 10, order: 1 }] });
+    expect(mocks.putAssessmentsRubric).toHaveBeenCalledWith('assessment-1', { title: 'Rubric', criteria: [{ description: 'Quality', points: 1_000, order: 1 }] });
     await expectApiFailureAndThrow(actions.saveRubric as ServerAction, mocks.putAssessmentsRubric, [{ assessmentId: 'assessment-1', title: 'Rubric', criteria: [] }]);
     mocks.deleteAssessmentsRubric.mockResolvedValueOnce({ ok: true, data: {} });
     await expect(actions.deleteRubric('assessment-1')).resolves.toEqual({ success: true, data: null });

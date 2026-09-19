@@ -28,6 +28,38 @@ public interface IProgramContentAcademicMutationGuard
     string? GetRejection(ProgramContent content, ProgramContentAcademicMutation mutation);
 }
 
+/// <summary>
+/// Lets a feature module participate in the same content lifecycle transaction
+/// without coupling Courses to that module's persistence model.
+/// </summary>
+public interface IProgramContentDeleteParticipant
+{
+    bool CanHandle(ProgramContent content);
+    Task PrepareDeleteAsync(ProgramContent content, CancellationToken cancellationToken = default);
+}
+
+/// <summary>
+/// Lets a feature module synchronize its published projection before the
+/// authoring transaction is committed, without coupling Courses to that
+/// module's persistence model.
+/// </summary>
+public interface IProgramContentPublicationParticipant
+{
+    bool CanHandle(ProgramContent content);
+
+    Task PreparePublishAsync(
+        ProgramContent content,
+        AuthoringContentPayload payload,
+        Guid actorId,
+        CancellationToken cancellationToken = default);
+
+    Task FinalizePublishAsync(
+        ProgramContent content,
+        AuthoringContentPayload payload,
+        Guid actorId,
+        CancellationToken cancellationToken = default) => Task.CompletedTask;
+}
+
 public static class ProgramContentAcademicMutationGuard
 {
     public static void EnsureAllowed(

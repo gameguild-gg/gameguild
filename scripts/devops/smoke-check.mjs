@@ -11,18 +11,15 @@ const defaults = liveMode
   ? {
       api: 'https://game-guild-api.matheusmartins.com',
       web: 'https://game-guild-website.matheusmartins.com',
-      learning: 'https://game-guild-learning.matheusmartins.com',
     }
   : {
       api: 'http://localhost:8080',
       web: 'http://localhost:3005',
-      learning: 'http://localhost:3006',
     };
 
 const config = {
   api: process.env.GAMEGUILD_API_URL ?? process.env.API_URL ?? defaults.api,
   web: process.env.GAMEGUILD_WEB_URL ?? process.env.WEB_URL ?? defaults.web,
-  learning: process.env.GAMEGUILD_LEARNING_URL ?? process.env.LEARNING_URL ?? defaults.learning,
   adminEmail: process.env.GAMEGUILD_SMOKE_ADMIN_EMAIL,
   adminPassword: process.env.GAMEGUILD_SMOKE_ADMIN_PASSWORD,
 };
@@ -97,11 +94,7 @@ const checks = [
   ['web manifest', config.web, '/manifest.webmanifest'],
   ['course catalog', config.web, '/courses'],
   ['programs', config.web, '/programs'],
-  ['learning dashboard', config.web, '/dashboard/learning/courses'],
-  ['learning root', config.learning, '/'],
-  ['learning sign in', config.learning, '/sign-in'],
-  ['learning favicon', config.learning, '/favicon.svg'],
-  ['learning manifest', config.learning, '/manifest.webmanifest'],
+  ['learning catalog', config.web, '/learn/courses'],
 ];
 
 function joinUrl(base, path) {

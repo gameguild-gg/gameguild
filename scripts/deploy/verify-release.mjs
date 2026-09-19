@@ -2,12 +2,11 @@
 
 import { pathToFileURL } from 'node:url';
 
-const supportedServices = new Set(['api', 'web', 'learning']);
+const supportedServices = new Set(['api', 'web']);
 
 export function healthPathForService(service) {
   if (service === 'api') return '/health';
   if (service === 'web') return '/api/health';
-  if (service === 'learning') return '/';
   throw new TypeError(`unsupported service ${service}`);
 }
 
@@ -16,7 +15,6 @@ export function validateReleaseResponse(service, response, expected) {
   if (!Number.isInteger(response?.status) || response.status < 200 || response.status >= 400) {
     return { ok: false, error: `unexpected HTTP status ${response?.status ?? 'unknown'}` };
   }
-  if (service === 'learning') return { ok: true };
 
   const failures = [];
   const headerReleaseSha = response.headers?.get?.('X-GameGuild-Release-Sha');

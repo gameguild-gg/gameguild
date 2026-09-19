@@ -1,22 +1,37 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  parseGradingMethods,
-  serializeGradingMethods,
+  buildReviewWorkflow,
+  hasReviewMethod,
+  readReviewWorkflow,
+  REVIEW_METHOD_FLAGS,
 } from "./assessment-grading-methods";
 
 describe("assessment grading method helpers", () => {
-  it("parses supported flags while ignoring blanks, unknown values, and duplicates", () => {
-    expect([
-      ...parseGradingMethods(" PeerReview,AIGraded,Unknown,,PeerReview "),
-    ]).toEqual(["PeerReview", "AIGraded"]);
-    expect([...parseGradingMethods(null)]).toEqual([]);
+  it("reads a canonical two-stage review workflow", () => {
+    expect(
+      readReviewWorkflow(
+        REVIEW_METHOD_FLAGS.AutomatedReview |
+          REVIEW_METHOD_FLAGS.InstructorReview,
+      ),
+    ).toEqual({
+      methods: 12,
+      primary: "AutomatedReview",
+      requiresInstructorReview: true,
+    });
+    expect(readReviewWorkflow(0)).toEqual({
+      methods: 0,
+      primary: null,
+      requiresInstructorReview: false,
+    });
   });
 
-  it("serializes flags in their supplied order", () => {
-    expect(serializeGradingMethods(["AutoGraded", "InstructorGraded"])).toBe(
-      "AutoGraded,InstructorGraded",
-    );
-    expect(serializeGradingMethods([])).toBe("");
+  it("builds and inspects canonical review flags", () => {
+    const methods = buildReviewWorkflow("PeerReview", true);
+    expect(methods).toBe(9);
+    expect(hasReviewMethod(methods, "PeerReview")).toBe(true);
+    expect(hasReviewMethod(methods, "InstructorReview")).toBe(true);
+    expect(hasReviewMethod(methods, "AIReview")).toBe(false);
+    expect(buildReviewWorkflow("InstructorReview", true)).toBe(8);
   });
 });

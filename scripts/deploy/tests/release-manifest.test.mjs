@@ -88,3 +88,25 @@ test('rejects duplicate services in one release', () => {
     /duplicate service api/u,
   );
 });
+
+test('rejects the removed standalone Learning service', () => {
+  assert.throws(
+    () =>
+      createReleaseManifest({
+        releaseSha,
+        treeSha,
+        releasedAt: '2026-09-01T12:05:00Z',
+        migrationRequired: false,
+        verificationRunIds: [],
+        services: [
+          {
+            service: 'learning',
+            image: 'registry.example/gameguild-learning',
+            imageDigest,
+            sourceSha: releaseSha,
+          },
+        ],
+      }),
+    /unsupported service learning/u,
+  );
+});

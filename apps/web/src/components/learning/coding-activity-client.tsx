@@ -1,23 +1,27 @@
-'use client';
+"use client";
 
-import { useRouter } from '@/i18n/navigation';
-import { filesToCodePayload } from '@/lib/coding-assignment/code-payload';
-import type { CodingAssignmentContent } from '@/lib/coding-assignment/types';
+import { useRouter } from "@/i18n/navigation";
+import { filesToCodePayload } from "@/lib/coding-assignment/code-payload";
+import type { CodingAssignmentContent } from "@/lib/coding-assignment/types";
 import {
   submitAssessment,
   type LearnerMutationResult,
-} from '@/lib/learner/activity-actions';
-import { buildAssessmentExecutionPlan } from '@game-guild/emception-ui/assessment/plan';
+} from "@/lib/learner/activity-actions";
+import { buildAssessmentExecutionPlan } from "@game-guild/emception-ui/assessment/plan";
 import type {
   AssessmentRunResult,
   AssessmentSession,
   CodingAssessmentEditorProps,
-} from '@game-guild/emception-ui/assessment/editor';
-import { createAssessmentWorkspaceConfig, type CodingLanguage } from '@game-guild/emception-ui/assessment/presets';
-import { workspaceStorageKey } from '@game-guild/emception-ui/assessment/storage';
-import { Button } from '@game-guild/ui/components/button';
-import type { TestReport, WorkspaceConfig } from 'emception';
-import Script from 'next/script';
+} from "@game-guild/emception-ui/assessment/editor";
+import { EMCEPTION_MANIFEST_URL } from "@/lib/emception/manifest-url";
+import {
+  createAssessmentWorkspaceConfig,
+  type CodingLanguage,
+} from "@game-guild/emception-ui/assessment/presets";
+import { workspaceStorageKey } from "@game-guild/emception-ui/assessment/storage";
+import { Button } from "@game-guild/ui/components/button";
+import type { TestReport, WorkspaceConfig } from "emception";
+import Script from "next/script";
 import {
   useCallback,
   useEffect,
@@ -26,14 +30,19 @@ import {
   useState,
   type ComponentType,
   type FormEvent,
-} from 'react';
-import { PublicTestEstimateBanner } from './public-test-estimate-banner';
-import { publicSeedFiles, type SeedFile } from './resolve-seed';
+} from "react";
+import { PublicTestEstimateBanner } from "./public-test-estimate-banner";
+import { publicSeedFiles, type SeedFile } from "./resolve-seed";
 
-type CodingEditorLoader = () => Promise<ComponentType<CodingAssessmentEditorProps>>;
+type CodingEditorLoader = () => Promise<
+  ComponentType<CodingAssessmentEditorProps>
+>;
 
-async function loadCodingEditor(): Promise<ComponentType<CodingAssessmentEditorProps>> {
-  const { CodingAssessmentEditor } = await import('@game-guild/emception-ui/assessment/editor');
+async function loadCodingEditor(): Promise<
+  ComponentType<CodingAssessmentEditorProps>
+> {
+  const { CodingAssessmentEditor } =
+    await import("@game-guild/emception-ui/assessment/editor");
   return CodingAssessmentEditor;
 }
 
@@ -82,7 +91,8 @@ export function CodingActivityClient({
   const [report, setReport] = useState<TestReport | null>(null);
   const [result, setResult] = useState<LearnerMutationResult | null>(null);
   const [sessionReady, setSessionReady] = useState(false);
-  const [Editor, setEditor] = useState<ComponentType<CodingAssessmentEditorProps> | null>(null);
+  const [Editor, setEditor] =
+    useState<ComponentType<CodingAssessmentEditorProps> | null>(null);
   const [editorLoadError, setEditorLoadError] = useState<string | null>(null);
 
   // The neutral IDE owns browser-only APIs (Monaco, Worker and WASM). Import it
@@ -97,7 +107,11 @@ export function CodingActivityClient({
       })
       .catch((error: unknown) => {
         if (!active) return;
-        setEditorLoadError(error instanceof Error ? error.message : 'Unable to load the coding editor.');
+        setEditorLoadError(
+          error instanceof Error
+            ? error.message
+            : "Unable to load the coding editor.",
+        );
       });
 
     return () => {
@@ -115,7 +129,7 @@ export function CodingActivityClient({
 
   const seedFiles = useMemo(() => publicSeedFiles(assignment), [assignment]);
   const publicPlan = useMemo(
-    () => buildAssessmentExecutionPlan(assignment, 'public').plan,
+    () => buildAssessmentExecutionPlan(assignment, "public").plan,
     [assignment],
   );
   const maxScore = assignment.Grading.MaxScore;
@@ -124,12 +138,18 @@ export function CodingActivityClient({
   // constant) until T13 wires the course-level field through getCourseLearnerContext.
   const passingScore = 60;
 
-  const language = (assignment.Environment.Language as CodingLanguage | undefined) ?? 'cpp';
+  const language =
+    (assignment.Environment.Language as CodingLanguage | undefined) ?? "cpp";
   // The host template supplies language-specific compiler/runtime settings.
   // Its files are the public seed overlaid by a previous server submission;
   // the neutral IDE restores a newer local draft from workspaceStorageKey.
   const workspaceConfig = useMemo<WorkspaceConfig>(() => {
-    const files = new Map(seedFiles.map(({ path, content, encoding }) => [path, { encoding, content }]));
+    const files = new Map(
+      seedFiles.map(({ path, content, encoding }) => [
+        path,
+        { encoding, content },
+      ]),
+    );
     for (const file of submissionFiles ?? []) {
       files.set(file.path, { encoding: file.encoding, content: file.content });
     }
@@ -160,11 +180,11 @@ export function CodingActivityClient({
       // permitted student-created text files.
       const modified = (await sessionRef.current?.getSubmissionDelta()) ?? [];
       const fd = new FormData();
-      fd.set('assessmentId', assessmentId);
-      fd.set('enrollmentId', enrollmentId);
-      fd.set('modality', 'Code');
+      fd.set("assessmentId", assessmentId);
+      fd.set("enrollmentId", enrollmentId);
+      fd.set("modality", "Code");
       // Wire shape (Metis #29): Record<path, {content, encoding: 'text'}>
-      fd.set('response', filesToCodePayload([...modified]));
+      fd.set("response", filesToCodePayload([...modified]));
       const outcome = await submitAssessment({ success: false }, fd);
       setResult(outcome);
       if (outcome.success) {
@@ -173,7 +193,10 @@ export function CodingActivityClient({
     } catch (error) {
       setResult({
         success: false,
-        error: error instanceof Error ? error.message : 'Unable to submit the coding activity.',
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unable to submit the coding activity.",
       });
     } finally {
       setSubmitting(false);
@@ -194,7 +217,7 @@ export function CodingActivityClient({
                 userId ? `${userId}:${assessmentId}` : assessmentId,
                 workspaceConfig.id,
               )}
-              manifestUrl={manifestUrl}
+              manifestUrl={manifestUrl ?? EMCEPTION_MANIFEST_URL}
               maxScore={maxScore}
               passingScore={passingScore}
               onSessionReady={receiveSession}
@@ -208,25 +231,25 @@ export function CodingActivityClient({
             <IdeSkeleton />
           )}
         </div>
-      {report ? (
-        <PublicTestEstimateBanner
-          report={report}
-          plan={publicPlan}
-          maxScore={maxScore}
-          passingScore={passingScore}
-        />
-      ) : null}
-      {result?.error ? (
-        <p role="alert" className="text-sm text-destructive">
-          {result.error}
-        </p>
-      ) : null}
-      <div className="flex justify-end">
-        <Button type="submit" disabled={submitting || !sessionReady}>
-          {submitting ? 'Submitting…' : 'Submit'}
-        </Button>
-      </div>
-    </form>
+        {report ? (
+          <PublicTestEstimateBanner
+            report={report}
+            plan={publicPlan}
+            maxScore={maxScore}
+            passingScore={passingScore}
+          />
+        ) : null}
+        {result?.error ? (
+          <p role="alert" className="text-sm text-destructive">
+            {result.error}
+          </p>
+        ) : null}
+        <div className="flex justify-end">
+          <Button type="submit" disabled={submitting || !sessionReady}>
+            {submitting ? "Submitting…" : "Submit"}
+          </Button>
+        </div>
+      </form>
     </>
   );
 }

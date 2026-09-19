@@ -133,7 +133,7 @@ if [[ "${MIGRATION_REQUIRED:-false}" == 'true' && "${DEVTRON_API_PREDEPLOY_MIGRA
   exit 1
 fi
 
-for service in api web learning; do
+for service in api web; do
   current=$(jq -c --arg service "$service" '.[] | select(.service == $service)' "$PROMOTED_SERVICES")
   if [[ -z "$current" ]]; then
     continue
@@ -144,7 +144,7 @@ for service in api web learning; do
   fi
 done
 
-for service in api web learning; do
+for service in api web; do
   current=$(jq -c --arg service "$service" '.[] | select(.service == $service)' "$PROMOTED_SERVICES")
   if [[ -z "$current" ]]; then
     continue

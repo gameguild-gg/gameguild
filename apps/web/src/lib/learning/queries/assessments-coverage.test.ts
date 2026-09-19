@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   createServerClient: vi.fn(), getToken: vi.fn(), resolveCourseId: vi.fn(), request: vi.fn(),
-  getCourse: vi.fn(), getOne: vi.fn(), getGroups: vi.fn(), getAnalytics: vi.fn(), getDefinition: vi.fn(), getSubmissions: vi.fn(),
+  getCourse: vi.fn(), getOne: vi.fn(), getGroups: vi.fn(), getAnalytics: vi.fn(), getSubmissions: vi.fn(),
   getTemplates: vi.fn(), getIssued: vi.fn(), getTemplate: vi.fn(),
   getGroupSets: vi.fn(), getGroupSetGroups: vi.fn(), getRubric: vi.fn(),
 }));
@@ -18,7 +18,6 @@ vi.mock('@game-guild/client', () => ({
       getAssessments = mocks.getOne;
       getAssessmentsCourseGroups = mocks.getGroups;
       getAssessmentsCourseAnalytics = mocks.getAnalytics;
-      getAssessmentsDefinition = mocks.getDefinition;
       getAssessmentsSubmissionsForGetAssessmentsByAssessmentIdSubmissions = mocks.getSubmissions;
     },
     LearningCertificatesModule: class {
@@ -38,7 +37,6 @@ vi.mock('@game-guild/client', () => ({
 
 import {
   getAssessment,
-  getAssessmentDefinition,
   getAssessmentRubric,
   getAssessmentSubmissions,
   getCertificateTemplate,
@@ -73,12 +71,12 @@ describe('assessment query coverage', () => {
   it('maps every assessment type and both explicit and default fields', async () => {
     const full = {
       id: 'assessment-1', slug: 'quiz-1', courseId: 'course-1', contentId: 'content-1',
-      assessmentGroupId: 'group-1', assessmentGroupName: 'Quizzes', assessmentGroupWeightPercent: 30,
-      assessmentGroupOrder: 2, title: 'Quiz', description: 'Description', type: 'Exam', maxScore: 50,
-      passingScore: 35, timeLimitMinutes: 20, maxAttempts: 2, isRequired: false, order: 3,
+      assessmentGroupId: 'group-1', assessmentGroupName: 'Quizzes', assessmentGroupWeightPercent: 3_000,
+      assessmentGroupOrder: 2, title: 'Quiz', description: 'Description', type: 'Exam', maxScore: 5_000,
+      passingScore: 3_500, timeLimitMinutes: 20, maxAttempts: 2, isRequired: false, order: 3,
       availableFrom: '2026-01-01', availableUntil: '2026-02-01', presentationMode: 'Continuous',
       dueAt: '2026-02-01', allowLateSubmissions: true, lateSubmissionDeadline: '2026-02-02',
-      isAvailable: false, gradingMethods: 'AutoGraded', groupSetId: 'set-1', peerReviewsRequiredCount: 2,
+      isAvailable: false, reviewMethods: 8, groupSetId: 'set-1',
     };
     const types = ['Quiz', 'Assignment', 'Project', 'PeerReview', 'SelfAssessment'];
     mocks.getCourse.mockResolvedValue({
@@ -98,6 +96,16 @@ describe('assessment query coverage', () => {
     expect(result.assessments[0]).toEqual({
       ...full,
       type: 'Quiz',
+      assessmentGroupWeightPercent: 30,
+      maxScore: 50,
+      passingScore: 35,
+      publishedDefinitionRevisionId: null,
+      reviewConfigurationCanonicalJson: null,
+      attemptContributionMode: null,
+      contentCompletionMode: 'on-release-and-pass',
+      resultReleaseMode: 'manual',
+      resultReleaseScheduledFor: null,
+      version: 0,
     });
     expect(result.assessments.slice(1, 6).map((item) => item.type)).toEqual(types);
     expect(result.assessments[6]).toMatchObject({ id: 'legacy-id', slug: 'legacy-id', type: 'Quiz' });
@@ -107,7 +115,10 @@ describe('assessment query coverage', () => {
       type: 'Quiz', maxScore: 100, passingScore: 70, timeLimitMinutes: null, maxAttempts: null,
       isRequired: true, order: 0, availableFrom: null, availableUntil: null, presentationMode: 'SingleStep',
       dueAt: null, allowLateSubmissions: false, lateSubmissionDeadline: null, isAvailable: true,
-      gradingMethods: '', groupSetId: null, peerReviewsRequiredCount: 0,
+      reviewMethods: 8, groupSetId: null, publishedDefinitionRevisionId: null,
+      reviewConfigurationCanonicalJson: null, attemptContributionMode: null,
+      contentCompletionMode: 'on-release-and-pass', resultReleaseMode: 'manual',
+      resultReleaseScheduledFor: null, version: 0,
     });
     expect(mocks.createServerClient).toHaveBeenCalledWith({
       baseUrl: 'https://api.gameguild.test', auth: { getAccessToken: expect.any(Function) },
@@ -126,7 +137,7 @@ describe('assessment query coverage', () => {
 
   it('maps assessment groups and their defaults', async () => {
     mocks.getGroups.mockResolvedValueOnce({ ok: true, data: [
-      { id: 'group-1', courseId: 'course-1', name: 'Projects', description: 'Work', weightPercent: 40, order: 1 },
+      { id: 'group-1', courseId: 'course-1', name: 'Projects', description: 'Work', weightPercent: 4_000, order: 1 },
       { id: null, courseId: null, name: null, description: null, weightPercent: null, order: null },
     ] });
     await expect(getCourseAssessmentGroups('course-1')).resolves.toEqual([
@@ -189,25 +200,9 @@ describe('assessment query coverage', () => {
     await expect(getAssessment('course-1', 'project')).resolves.toMatchObject({ id: 'a-1' });
     mocks.getCourse.mockResolvedValueOnce({ ok: true, data: [] });
     await expect(getAssessment('course-1', 'missing')).resolves.toBeNull();
-    mocks.getOne.mockRejectedValueOnce(new Error('offline'));
-    await expect(getAssessment('course-1', guid)).resolves.toBeNull();
-  });
-
-  it('maps assessment definitions with explicit and fallback payloads', async () => {
-    mocks.getDefinition.mockResolvedValueOnce({ ok: true, data: {
-      assessmentId: 'assessment-1', definitionSchemaVersion: 3, definition: { blocks: { a: {} } },
-    } });
-    await expect(getAssessmentDefinition('assessment-1')).resolves.toEqual({
-      assessmentId: 'assessment-1', definitionSchemaVersion: 3, definition: { blocks: { a: {} } },
-    });
-    mocks.getDefinition.mockResolvedValueOnce({ ok: true, data: {} });
-    await expect(getAssessmentDefinition('assessment-2')).resolves.toEqual({
-      assessmentId: 'assessment-2', definitionSchemaVersion: 1, definition: { order: [], blocks: {} },
-    });
-    mocks.getDefinition.mockResolvedValueOnce({ ok: false, error: {} });
-    await expect(getAssessmentDefinition('assessment-3')).resolves.toBeNull();
-    mocks.getDefinition.mockRejectedValueOnce(new Error('offline'));
-    await expect(getAssessmentDefinition('assessment-4')).resolves.toBeNull();
+    const offline = new Error('offline');
+    mocks.getOne.mockRejectedValueOnce(offline);
+    await expect(getAssessment('course-1', guid)).rejects.toBe(offline);
   });
 
   it('loads assessment submissions and contains API failures', async () => {
@@ -324,7 +319,7 @@ describe('assessment query coverage', () => {
   it('maps rubrics, lock conflicts, absence, and failures', async () => {
     mocks.getRubric.mockResolvedValueOnce({ ok: true, data: {
       id: null, title: null, criteria: [
-        { description: 'Quality', points: 5, order: 1 },
+        { description: 'Quality', points: 500, order: 1 },
         { description: null, points: null, order: null },
       ],
     } });
