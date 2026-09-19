@@ -11,7 +11,6 @@ const expected = {
 test('uses the public health route for each service', () => {
   assert.equal(healthPathForService('api'), '/health');
   assert.equal(healthPathForService('web'), '/api/health');
-  assert.equal(healthPathForService('learning'), '/');
 });
 
 test('accepts only an exact Web or API release identity', () => {
@@ -54,13 +53,10 @@ test('rejects a healthy response from a different image', () => {
   assert.match(result.error, /imageDigest/u);
 });
 
-test('requires only availability for Learning until its health contract is introduced', () => {
+test('rejects services outside the API and Web deployment topology', () => {
+  assert.throws(() => healthPathForService('learning'), /unsupported service learning/u);
   assert.deepEqual(
     validateReleaseResponse('learning', { status: 200, headers: new Headers(), body: null }, expected),
-    { ok: true },
-  );
-  assert.equal(
-    validateReleaseResponse('learning', { status: 503, headers: new Headers(), body: null }, expected).ok,
-    false,
+    { ok: false, error: 'unsupported service learning' },
   );
 });

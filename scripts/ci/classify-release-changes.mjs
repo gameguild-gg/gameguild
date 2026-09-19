@@ -7,10 +7,8 @@ import { pathToFileURL } from "node:url";
 const emptyClassification = Object.freeze({
   api: false,
   web: false,
-  learning: false,
   apiRuntimeChanged: false,
   webRuntimeChanged: false,
-  learningRuntimeChanged: false,
   testingLab: false,
   economyCritical: false,
   openApi: false,
@@ -90,7 +88,6 @@ export function classifyReleaseChanges(filePaths) {
     const isTest = testPathPattern.test(filePath);
     const isApi = filePath.startsWith("apps/api/");
     const isWeb = filePath.startsWith("apps/web/");
-    const isLearning = filePath.startsWith("apps/learning/");
     const isShared = isSharedNodePackage(filePath);
     const isNodeRoot = isNodeRuntimeRoot(filePath);
     const isApiRoot = isApiBuildRoot(filePath);
@@ -98,11 +95,9 @@ export function classifyReleaseChanges(filePaths) {
 
     if (isApi) classification.api = true;
     if (isWeb) classification.web = true;
-    if (isLearning) classification.learning = true;
 
     if (isShared || isNodeRoot) {
       classification.web = true;
-      classification.learning = true;
     }
 
     if (isApiRoot) classification.api = true;
@@ -110,7 +105,6 @@ export function classifyReleaseChanges(filePaths) {
     if (isRuntimeConfig) {
       classification.api = true;
       classification.web = true;
-      classification.learning = true;
     }
 
     if (testingLabPathPattern.test(filePath)) classification.testingLab = true;
@@ -138,12 +132,9 @@ export function classifyReleaseChanges(filePaths) {
       if (isApi || isApiRoot) classification.apiRuntimeChanged = true;
       if (isWeb || isShared || isNodeRoot)
         classification.webRuntimeChanged = true;
-      if (isLearning || isShared || isNodeRoot)
-        classification.learningRuntimeChanged = true;
       if (isRuntimeConfig) {
         classification.apiRuntimeChanged = true;
         classification.webRuntimeChanged = true;
-        classification.learningRuntimeChanged = true;
       }
 
       classification.runtimeChanged =

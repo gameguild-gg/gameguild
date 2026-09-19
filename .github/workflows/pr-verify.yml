@@ -19,7 +19,6 @@ jobs:
     outputs:
       api: ${{ steps.changes.outputs.api }}
       web: ${{ steps.changes.outputs.web }}
-      learning: ${{ steps.changes.outputs.learning }}
       testingLab: ${{ steps.changes.outputs.testingLab }}
       economyCritical: ${{ steps.changes.outputs.economyCritical }}
       openApi: ${{ steps.changes.outputs.openApi }}
@@ -27,7 +26,6 @@ jobs:
       runtimeChanged: ${{ steps.changes.outputs.runtimeChanged }}
       apiRuntimeChanged: ${{ steps.changes.outputs.apiRuntimeChanged }}
       webRuntimeChanged: ${{ steps.changes.outputs.webRuntimeChanged }}
-      learningRuntimeChanged: ${{ steps.changes.outputs.learningRuntimeChanged }}
       changedFiles: ${{ steps.changes.outputs.changedFiles }}
       serviceMatrix: ${{ steps.changes.outputs.serviceMatrix }}
       runtimeServiceMatrix: ${{ steps.changes.outputs.runtimeServiceMatrix }}
@@ -96,26 +94,6 @@ jobs:
         env:
           GAMEGUILD_DISABLE_WEBPACK_CACHE: "1"
         run: pnpm --filter @game-guild/web build
-
-  learning:
-    name: Learning verify
-    needs: classify
-    if: needs.classify.outputs.learning == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup-node-workspace
-      - name: Build generated client
-        run: pnpm --filter @game-guild/client build
-      - name: Lint Learning
-        run: pnpm --filter @game-guild/learning lint
-      - name: Typecheck Learning
-        run: pnpm --filter @game-guild/learning typecheck
-      - name: Test Learning
-        run: pnpm --filter @game-guild/learning test
-      - name: Build Learning
-        run: pnpm --filter @game-guild/learning build
 
   api:
     name: API verify
@@ -382,7 +360,6 @@ jobs:
         classify,
         repository-policy,
         web,
-        learning,
         api,
         testing-lab,
         openapi,
