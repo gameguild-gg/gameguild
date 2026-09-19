@@ -1,13 +1,13 @@
 # GameGuild Component Package Inventory
 
-This inventory classifies app-owned components before moving reusable components into context packages. The goal is to reuse components across `apps/web` and `apps/learning` without turning `@game-guild/ui` into a domain-component dumping ground.
+This inventory classifies app-owned components before moving reusable components into context packages. The goal is to keep reusable Learning components inside context packages while the student and authoring experiences run in `apps/web`, without turning `@game-guild/ui` into a domain-component dumping ground.
 
 ## Dependency Direction
 
 Allowed:
 
 ```text
-apps/web, apps/learning
+apps/web
   -> packages/features/*
   -> @game-guild/ui
 ```
@@ -16,7 +16,7 @@ Not allowed:
 
 ```text
 @game-guild/ui -> packages/features/*
-packages/features/* -> apps/web or apps/learning
+packages/features/* -> apps/web
 ```
 
 ## Existing Feature Packages
@@ -93,8 +93,6 @@ Potential sources:
 - `apps/web/src/components/signup-form.tsx`
 - `apps/web/src/components/forgot-password-form.tsx`
 - `apps/web/src/components/input-otp-form.tsx`
-- `apps/learning/src/components/sign-in-form.tsx`
-- `apps/learning/src/components/sign-up-form.tsx`
 
 Requirement before moving: forms must accept route, copy, provider, and submit callbacks through props. They must not hard-code app routes or NextAuth behavior.
 
@@ -105,7 +103,6 @@ Candidate package for markdown and lightweight content renderers shared by websi
 Potential sources:
 
 - `apps/web/src/components/markdown-renderer`
-- `apps/learning/src/components/markdown-renderer.tsx`
 - content renderer variants found in `.tmp/gameguild-main` and `.tmp/gameguild-block-content-editor`
 
 Keep this separate from `@game-guild/block-content-editor`; rendering published content is a broader context than editing content.

@@ -129,19 +129,16 @@ test("accepts the session cookie when a cold sign-in page does not redirect", as
 });
 
 test("classifies same-origin 404, server, and RSC failures", () => {
-  const origins = [
-    "http://gameguild.localhost:3011",
-    "http://learning.gameguild.localhost:3011",
-  ];
+  const origins = ["http://gameguild.localhost:3011"];
 
   assert.equal(
     classifyAppHttpFailure({
       origins,
       resourceType: "fetch",
       status: 404,
-      url: "http://learning.gameguild.localhost:3011/courses/game-ai?_rsc=abc",
+      url: "http://gameguild.localhost:3011/learn/courses/game-ai?_rsc=abc",
     }),
-    "404 RSC fetch http://learning.gameguild.localhost:3011/courses/game-ai?_rsc=abc",
+    "404 RSC fetch http://gameguild.localhost:3011/learn/courses/game-ai?_rsc=abc",
   );
   assert.equal(
     classifyAppHttpFailure({
@@ -225,12 +222,12 @@ test("uses an explicit loopback address for Node probes of local app hosts", () 
   );
   assert.equal(
     resolveNodeHealthCheckUrl(
-      "http://learning.gameguild.localhost:3011/courses",
+      "http://gameguild.localhost:3011/learn/courses",
     ),
-    "http://127.0.0.1:3011/courses",
+    "http://127.0.0.1:3011/learn/courses",
   );
   assert.equal(
-    resolveNodeHealthCheckUrl("https://learning.gameguild.gg/courses"),
-    "https://learning.gameguild.gg/courses",
+    resolveNodeHealthCheckUrl("https://gameguild.gg/learn/courses"),
+    "https://gameguild.gg/learn/courses",
   );
 });

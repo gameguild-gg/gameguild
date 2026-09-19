@@ -1,4 +1,4 @@
-# Coolify deployment - API, web app, and learner app (staging).
+# Coolify deployment - API and web app (staging).
 #
 # Routing: traffic enters via Cloudflare Tunnel -> Coolify's Traefik proxy ->
 # this container on the shared Coolify network. Services may use the same
@@ -11,7 +11,7 @@
 #   POSTGRES_HOST, POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD,
 #   POSTGRES_MIGRATION_CONNECTION,
 #   JWT_SECRET_KEY, ENCRYPTION_KEY,
-#   AUTH_SECRET, API_PUBLIC_URL, WEB_PUBLIC_URL, LEARNING_PUBLIC_URL,
+#   AUTH_SECRET, API_PUBLIC_URL, WEB_PUBLIC_URL,
 #   PaymentGateways__Stripe__ApiKey,
 #   PaymentGateways__Stripe__PublishableKey,
 #   PaymentGateways__Stripe__AccountId,
@@ -197,71 +197,6 @@ services:
         reservations:
           cpus: '0.25'
           memory: 256M
-    networks:
-      - default
-      - coolify
-    depends_on:
-      backend:
-        condition: service_started
-
-  learning:
-    build:
-      context: .
-      dockerfile: apps/learning/Dockerfile
-      args:
-        GIT_HASH: ${GIT_HASH:-}
-        AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET}
-        API_INTERNAL_URL: http://backend:8080
-        API_PUBLIC_URL: ${API_PUBLIC_URL:?set API_PUBLIC_URL}
-        LEARNING_PUBLIC_URL: ${LEARNING_PUBLIC_URL:?set LEARNING_PUBLIC_URL}
-        WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:?set WEB_PUBLIC_URL}
-        AUTH_COOKIE_DOMAIN: ${AUTH_COOKIE_DOMAIN:-}
-    image: game-guild-learning
-    ports:
-      - '3000'
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - HOSTNAME=0.0.0.0
-      - API_URL=http://backend:8080
-      - NEXT_PUBLIC_API_URL=${API_PUBLIC_URL:?set API_PUBLIC_URL}
-      - NEXTAUTH_URL=${LEARNING_PUBLIC_URL:?set LEARNING_PUBLIC_URL}
-      - AUTH_SECRET=${AUTH_SECRET:?set AUTH_SECRET}
-      - AUTH_TRUST_HOST=true
-      - NEXT_PUBLIC_WEB_URL=${WEB_PUBLIC_URL:?set WEB_PUBLIC_URL}
-      - AUTH_COOKIE_DOMAIN=${AUTH_COOKIE_DOMAIN:-}
-    security_opt:
-      - no-new-privileges:true
-    healthcheck:
-      test:
-        [
-          'CMD-SHELL',
-          "node -e \"fetch('http://127.0.0.1:3000/sign-in').then(r=>{process.exit(r.ok?0:1)}).catch(()=>process.exit(1))\"",
-        ]
-      start_interval: 10s
-      start_period: 90s
-      interval: 30s
-      timeout: 10s
-      retries: 5
-    restart: unless-stopped
-    logging:
-      driver: 'json-file'
-      options:
-        max-size: '10m'
-        max-file: '3'
-    labels:
-      - 'com.game-guild.app=learning'
-      - 'com.game-guild.tier=frontend'
-      - 'com.game-guild.environment=staging'
-      - 'traefik.docker.network=coolify'
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-        reservations:
-          cpus: '0.1'
-          memory: 128M
     networks:
       - default
       - coolify
