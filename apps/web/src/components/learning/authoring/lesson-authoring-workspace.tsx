@@ -170,7 +170,7 @@ function iconFor(type: CourseContentItemViewModel["type"]) {
 function contentItemType(value: unknown): string | null {
   if (typeof value !== "object" || value === null) return null;
 
-  const type = Reflect.get(value, "type");
+  const type = (value as Record<string, unknown>)["type"];
   return typeof type === "string" ? type : null;
 }
 
@@ -214,11 +214,12 @@ export function LessonAuthoringWorkspace({
     initialCodingAssignment,
   );
   const itemType = contentItemType(item);
+  const payloadType = contentItemType(payload);
   const [mode, setMode] = useState<EditorMode>(() =>
     itemType === "Code" ||
     itemType === "Questionnaire" ||
-    initialDraft.payload.type === "Code" ||
-    initialDraft.payload.type === "Questionnaire"
+    payloadType === "Code" ||
+    payloadType === "Questionnaire"
       ? "editor"
       : "split",
   );
