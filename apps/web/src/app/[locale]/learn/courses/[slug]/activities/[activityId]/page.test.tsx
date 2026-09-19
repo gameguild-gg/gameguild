@@ -294,7 +294,6 @@ describe('last-submission restore (server page)', () => {
     expect(props.submissionFiles).toBeNull();
   });
 });
-
 describe('full-width coding experience (server page)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -382,6 +381,23 @@ describe('quiz learner experience (server page)', () => {
     expect(props.content.document.blocks['question-1']).not.toHaveProperty(
       'correctAnswer',
     );
+    expect(screen.queryByTestId('activity-form')).not.toBeInTheDocument();
+  });
+
+  it('renders a published questionnaire directly from its content activity route', async () => {
+    mocks.getCourseLearnerContext.mockResolvedValue({
+      ...makeContext(makeAssessment()),
+      assessments: [],
+    });
+
+    await renderActivityPage('content-content-1');
+
+    const quiz = await screen.findByTestId('quiz-client');
+    const props = JSON.parse(quiz.dataset.props ?? '{}');
+
+    expect(props.contentId).toBe('content-1');
+    expect(props.title).toBe('Quiz');
+    expect(props.content.mode).toBe('server-graded');
     expect(screen.queryByTestId('activity-form')).not.toBeInTheDocument();
   });
 });
