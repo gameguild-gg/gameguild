@@ -5,6 +5,7 @@ import React, {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   useTransition,
   type ReactElement,
 } from "react";
@@ -197,7 +198,11 @@ export function CodingDefinitionEditor({
 
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
-  const [ideMounted, setIdeMounted] = useState(false);
+  const ideMounted = useSyncExternalStore(
+    () => () => undefined,
+    () => true,
+    () => false,
+  );
 
   // ── Autosave bookkeeping ──
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -206,14 +211,6 @@ export function CodingDefinitionEditor({
   const hydratedRef = useRef(false);
   const seededRef = useRef(false);
   const performSaveRef = useRef<() => Promise<void>>(null!);
-
-  // Emception's IDE reads browser globals while rendering. Keep the server and
-  // first client render deterministic, then mount the IDE once browser APIs are
-  // available. This prevents the authoring route from falling back to client
-  // rendering with `window is not defined`.
-  useEffect(() => {
-    setIdeMounted(true);
-  }, []);
 
   // ── WorkspaceConfig for the IDE — derive from language preset + files ──
   const workspaceConfig = useMemo(() => {

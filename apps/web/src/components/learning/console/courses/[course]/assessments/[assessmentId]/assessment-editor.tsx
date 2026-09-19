@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useTransition } from "react";
+import React, { useCallback, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Card,
@@ -196,13 +196,31 @@ export function AssessmentEditor({
   const [isLifecyclePending, startLifecycleTransition] = useTransition();
   const isQuiz = assessment.type === "Quiz";
   const isLinkedQuiz = isQuiz && assessment.contentId != null;
-  const [assessmentVersion, setAssessmentVersion] = useState(
-    assessment.version,
-  );
+  const [versionOverride, setVersionOverride] = useState<{
+    source: number;
+    value: number;
+  } | null>(null);
+  const assessmentVersion =
+    versionOverride?.source === assessment.version
+      ? versionOverride.value
+      : assessment.version;
+  const setAssessmentVersion = useCallback(
+    (next: number | ((current: number) => number)) => {
+      setVersionOverride((current) => {
+        const currentVersion =
+          current?.source === assessment.version
+            ? current.value
+            : assessment.version;
 
-  useEffect(() => {
-    setAssessmentVersion(assessment.version);
-  }, [assessment.version]);
+        return {
+          source: assessment.version,
+          value:
+            typeof next === "function" ? next(currentVersion) : next,
+        };
+      });
+    },
+    [assessment.version],
+  );
 
   const [title, setTitle] = useState(assessment.title);
   const [slug, setSlug] = useState(assessment.slug);

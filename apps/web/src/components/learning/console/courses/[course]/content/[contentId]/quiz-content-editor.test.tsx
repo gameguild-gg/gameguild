@@ -109,7 +109,8 @@ describe("QuizContentEditor", () => {
       grading: { items: {}, score: { maxScore: 10 } },
     }));
     mocks.disableGrading.mockImplementation((document: TestDocument) => {
-      const { grading: _grading, ...content } = document;
+      const content = { ...document };
+      delete content.grading;
       return content;
     });
   });

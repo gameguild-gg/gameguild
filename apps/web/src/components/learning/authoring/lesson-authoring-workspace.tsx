@@ -100,6 +100,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 
 configureMonacoWorkers();
@@ -142,12 +143,16 @@ export function AuthoringLocalTime({
   value: string;
   className?: string;
 }) {
-  const [label, setLabel] = useState("—");
-
-  useEffect(() => {
-    const date = new Date(value);
-    setLabel(Number.isNaN(date.getTime()) ? "—" : date.toLocaleTimeString());
-  }, [value]);
+  const isHydrated = useSyncExternalStore(
+    () => () => undefined,
+    () => true,
+    () => false,
+  );
+  const date = new Date(value);
+  const label =
+    isHydrated && !Number.isNaN(date.getTime())
+      ? date.toLocaleTimeString()
+      : "—";
 
   return (
     <time className={className} dateTime={value}>
