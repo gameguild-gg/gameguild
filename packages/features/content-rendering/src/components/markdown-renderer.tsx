@@ -179,7 +179,7 @@ export function MarkdownRenderer({ content, renderer = 'markdown', tone = 'learn
         return <MermaidDiagram code={code} />;
       }
 
-      if (language === 'vegalite' || language === 'vega-lite') {
+      if (language === 'vega' || language === 'vegalite' || language === 'vega-lite') {
         return <VegaLiteDiagram spec={code} />;
       }
 
