@@ -971,9 +971,11 @@ export function CreateTestingEventDialog({
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
+    const data = new FormData(form);
+    data.set("timeZoneId", timeZoneId);
     startTransition(async () => {
       try {
-        const next = await createTestingEvent(new FormData(form));
+        const next = await createTestingEvent(data);
         if (next.success) {
           closeDrawer();
           router.refresh();
@@ -1254,7 +1256,7 @@ function timeSlotLabel(slot: TestingTimeSlotSchedule) {
   const day =
     date == null
       ? slot.startsAt.slice(0, 10)
-    : new Intl.DateTimeFormat("en-US", {
+      : new Intl.DateTimeFormat("en-US", {
           weekday: "short",
           month: "short",
           day: "numeric",
