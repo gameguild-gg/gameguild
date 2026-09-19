@@ -75,6 +75,14 @@ describe("web runtime hardening", () => {
     expect(
       readRepoFile(".github/actions/build-candidate/action.yml"),
     ).toContain("mode=min");
+
+    expect(dockerfile).toContain("/runtime-sharded/root ./");
+    expect(dockerfile).not.toContain("/repo/apps/web/.next/standalone ./");
+    for (let shard = 0; shard < 8; shard += 1) {
+      expect(dockerfile).toContain(
+        `/runtime-sharded/shards/${shard} ./node_modules/.pnpm/`,
+      );
+    }
   });
 
   it("uses lightweight container readiness and keeps the web health endpoint available", () => {
