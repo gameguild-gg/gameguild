@@ -21,10 +21,12 @@ const emptyClassification = Object.freeze({
 const economyPathPattern =
   /(?:^|[./-])(?:economy|commerce|billing|payments?|payouts?|treasury|marketplace|bounties|ad-?rewards?|kyc|financial-?crime)(?:[./-]|$)/i;
 const testingLabPathPattern = /(?:testing-?lab|testinglab)/i;
-const migrationPathPattern = /(?:^|\/)(?:migrations?|database\/migrations?)(?:\/|$)|\.(?:sql|ddl)$/i;
+const migrationPathPattern =
+  /(?:^|\/)(?:migrations?|database\/migrations?)(?:\/|$)|\.(?:sql|ddl)$/i;
 const apiContractPathPattern =
   /(?:^|\/)(?:controllers?|endpoints?|contracts?|dtos?|requests?|responses?|openapi)(?:\/|$)/i;
-const testPathPattern = /(?:^|\/)(?:tests?|__tests__|e2e)(?:\/|$)|\.(?:test|spec)\.[cm]?[jt]sx?$/i;
+const testPathPattern =
+  /(?:^|\/)(?:tests?|__tests__|e2e)(?:\/|$)|\.(?:test|spec)\.[cm]?[jt]sx?$/i;
 
 function normalizePath(filePath) {
   return filePath.trim().replaceAll("\\", "/").replace(/^\.\//, "");
@@ -53,11 +55,18 @@ function isNodeRuntimeRoot(filePath) {
 }
 
 function isApiBuildRoot(filePath) {
-  return ["Directory.Build.props", "Directory.Packages.props", "global.json"].includes(filePath);
+  return [
+    "Directory.Build.props",
+    "Directory.Packages.props",
+    "global.json",
+  ].includes(filePath);
 }
 
 function isSharedNodePackage(filePath) {
-  return filePath.startsWith("packages/") && !filePath.startsWith("packages/testing/");
+  return (
+    filePath.startsWith("packages/") &&
+    !filePath.startsWith("packages/testing/")
+  );
 }
 
 function isRuntimeConfiguration(filePath) {
@@ -65,7 +74,9 @@ function isRuntimeConfiguration(filePath) {
     filePath.startsWith("deploy/") ||
     filePath.startsWith("infra/") ||
     filePath.startsWith("infrastructure/") ||
-    /(?:^|\/)(?:dockerfile(?:\.[^/]+)?|compose(?:\.[^/]+)?\.ya?ml)$/i.test(filePath)
+    /(?:^|\/)(?:dockerfile(?:\.[^/]+)?|compose(?:\.[^/]+)?\.ya?ml)$/i.test(
+      filePath,
+    )
   );
 }
 
@@ -103,10 +114,13 @@ export function classifyReleaseChanges(filePaths) {
     }
 
     if (testingLabPathPattern.test(filePath)) classification.testingLab = true;
-    if (economyPathPattern.test(filePath)) classification.economyCritical = true;
+    if (economyPathPattern.test(filePath))
+      classification.economyCritical = true;
 
     if (
-      (isApi && filePath.startsWith("apps/api/Source/") && apiContractPathPattern.test(filePath)) ||
+      (isApi &&
+        filePath.startsWith("apps/api/Source/") &&
+        apiContractPathPattern.test(filePath)) ||
       (isApi && filePath.includes("/Modules/")) ||
       filePath.startsWith("packages/infrastructure/client/src/generated/") ||
       filePath.includes("openapi")
@@ -122,8 +136,10 @@ export function classifyReleaseChanges(filePaths) {
 
     if (!isTest) {
       if (isApi || isApiRoot) classification.apiRuntimeChanged = true;
-      if (isWeb || isShared || isNodeRoot) classification.webRuntimeChanged = true;
-      if (isLearning || isShared || isNodeRoot) classification.learningRuntimeChanged = true;
+      if (isWeb || isShared || isNodeRoot)
+        classification.webRuntimeChanged = true;
+      if (isLearning || isShared || isNodeRoot)
+        classification.learningRuntimeChanged = true;
       if (isRuntimeConfig) {
         classification.apiRuntimeChanged = true;
         classification.webRuntimeChanged = true;
@@ -131,13 +147,21 @@ export function classifyReleaseChanges(filePaths) {
       }
 
       classification.runtimeChanged =
-        classification.apiRuntimeChanged ||
-        classification.webRuntimeChanged ||
-        classification.learningRuntimeChanged;
+        classification.apiRuntimeChanged || classification.webRuntimeChanged;
     }
   }
 
   return Object.freeze(classification);
+}
+
+export function releaseServiceMatrix(classification) {
+  return ["api", "web"].filter((service) => classification[service]);
+}
+
+export function runtimeReleaseServiceMatrix(classification) {
+  return ["api", "web"].filter(
+    (service) => classification[`${service}RuntimeChanged`],
+  );
 }
 
 function parseArguments(argv) {
@@ -166,7 +190,9 @@ function parseArguments(argv) {
 
 function readChangedFiles(options) {
   if (options.filesFrom) {
-    return readFileSync(options.filesFrom, "utf8").split(/\r?\n/u).filter(Boolean);
+    return readFileSync(options.filesFrom, "utf8")
+      .split(/\r?\n/u)
+      .filter(Boolean);
   }
 
   if (!options.base) {
@@ -175,7 +201,12 @@ function readChangedFiles(options) {
 
   const output = execFileSync(
     "git",
-    ["diff", "--name-only", "--diff-filter=ACMR", `${options.base}...${options.head}`],
+    [
+      "diff",
+      "--name-only",
+      "--diff-filter=ACMR",
+      `${options.base}...${options.head}`,
+    ],
     { encoding: "utf8" },
   );
   return output.split(/\r?\n/u).filter(Boolean);
@@ -186,16 +217,12 @@ function writeGitHubOutputs(classification, changedFiles) {
   if (!outputPath) return;
 
   const lines = [
-    ...Object.entries(classification).map(([key, value]) => `${key}=${String(value)}`),
+    ...Object.entries(classification).map(
+      ([key, value]) => `${key}=${String(value)}`,
+    ),
     `changedFiles=${JSON.stringify(changedFiles.map(normalizePath))}`,
-    `serviceMatrix=${JSON.stringify(
-      ["api", "web", "learning"].filter((service) => classification[service]),
-    )}`,
-    `runtimeServiceMatrix=${JSON.stringify(
-      ["api", "web", "learning"].filter(
-        (service) => classification[`${service}RuntimeChanged`],
-      ),
-    )}`,
+    `serviceMatrix=${JSON.stringify(releaseServiceMatrix(classification))}`,
+    `runtimeServiceMatrix=${JSON.stringify(runtimeReleaseServiceMatrix(classification))}`,
   ];
   appendFileSync(outputPath, `${lines.join("\n")}\n`, "utf8");
 }
@@ -205,7 +232,9 @@ function main() {
   const changedFiles = readChangedFiles(options);
   const classification = classifyReleaseChanges(changedFiles);
   writeGitHubOutputs(classification, changedFiles);
-  process.stdout.write(`${JSON.stringify({ changedFiles, ...classification }, null, 2)}\n`);
+  process.stdout.write(
+    `${JSON.stringify({ changedFiles, ...classification }, null, 2)}\n`,
+  );
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {

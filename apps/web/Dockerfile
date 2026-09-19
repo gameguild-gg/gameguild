@@ -78,6 +78,21 @@ RUN --mount=type=secret,id=auth_secret,required=false \
     && if [ -z "$AUTH_SECRET" ]; then echo "AUTH_SECRET build secret is required" >&2; exit 1; fi \
     && pnpm --filter @game-guild/web build
 
+# Next.js output tracing includes optional native packages for every supported
+# platform. The runtime image is Alpine amd64, so retaining the other targets
+# creates oversized registry layers without adding executable functionality.
+RUN pnpm_root="apps/web/.next/standalone/node_modules/.pnpm" \
+    && for directory in \
+      "$pnpm_root"/@swc+core-* \
+      "$pnpm_root"/@img+* \
+      "$pnpm_root"/@esbuild+*; do \
+        [ -d "$directory" ] || continue; \
+        case "$directory" in \
+          *@swc+core-linux-x64-musl@*|*@img+sharp-linuxmusl-x64@*|*@img+sharp-libvips-linuxmusl-x64@*|*@esbuild+linux-x64@*) ;; \
+          *) rm -rf "$directory" ;; \
+        esac; \
+      done
+
 FROM node:22-alpine AS runner
 ARG SOURCE_SHA=unknown
 ARG SOURCE_TREE=unknown

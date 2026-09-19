@@ -374,63 +374,23 @@ jobs:
           path: candidate-web.json
           retention-days: 30
 
-  candidate-learning:
-    name: Learning immutable candidate
-    needs: [classify, learning, economy]
-    if: >-
-      always() &&
-      github.event.pull_request.head.repo.full_name == github.repository &&
-      needs.classify.outputs.learningRuntimeChanged == 'true' &&
-      needs.learning.result == 'success' &&
-      (needs.economy.result == 'success' || needs.economy.result == 'skipped')
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v7
-      - id: candidate
-        uses: ./.github/actions/build-candidate
-        with:
-          service: learning
-          dockerfile: apps/learning/Dockerfile
-          registry-host: ${{ vars.DEVTRON_REGISTRY_HOST }}
-          registry-namespace: ${{ vars.DEVTRON_REGISTRY_NAMESPACE }}
-          registry-username: ${{ secrets.DEVTRON_REGISTRY_USERNAME }}
-          registry-password: ${{ secrets.DEVTRON_REGISTRY_PASSWORD }}
-          source-sha: ${{ github.event.pull_request.head.sha }}
-          tree-sha: ${{ needs.classify.outputs.treeSha }}
-          build-args: |
-            GIT_HASH=${{ github.event.pull_request.head.sha }}
-            AUTH_SECRET=build-only-candidate-secret-not-for-runtime
-            API_INTERNAL_URL=${{ vars.GAMEGUILD_API_INTERNAL_URL }}
-            API_PUBLIC_URL=${{ vars.GAMEGUILD_API_PUBLIC_URL }}
-            LEARNING_PUBLIC_URL=${{ vars.GAMEGUILD_LEARNING_PUBLIC_URL }}
-            WEB_PUBLIC_URL=${{ vars.GAMEGUILD_WEB_PUBLIC_URL }}
-            AUTH_COOKIE_DOMAIN=${{ vars.GAMEGUILD_AUTH_COOKIE_DOMAIN }}
-      - name: Record candidate
-        env:
-          SERVICE: learning
-          IMAGE: ${{ steps.candidate.outputs.image }}
-          TAG: ${{ steps.candidate.outputs.tag }}
-          DIGEST: ${{ steps.candidate.outputs.digest }}
-          TREE_SHA: ${{ needs.classify.outputs.treeSha }}
-          SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
-          BUILT_AT: ${{ steps.candidate.outputs.built_at }}
-        run: >-
-          jq -n --arg service "$SERVICE" --arg image "$IMAGE" --arg tag "$TAG"
-          --arg imageDigest "$DIGEST" --arg treeSha "$TREE_SHA"
-          --arg sourceSha "$SOURCE_SHA" --arg builtAt "$BUILT_AT"
-          '{service:$service,image:$image,tag:$tag,imageDigest:$imageDigest,treeSha:$treeSha,sourceSha:$sourceSha,builtAt:$builtAt}'
-          > candidate-learning.json
-      - uses: actions/upload-artifact@v7
-        with:
-          name: candidate-learning-${{ needs.classify.outputs.treeSha }}
-          path: candidate-learning.json
-          retention-days: 30
-
   required-gate:
     name: PR Required Gate
     if: always()
-    needs: [classify, repository-policy, web, learning, api, testing-lab, openapi, migration, economy, candidate-api, candidate-web, candidate-learning]
+    needs:
+      [
+        classify,
+        repository-policy,
+        web,
+        learning,
+        api,
+        testing-lab,
+        openapi,
+        migration,
+        economy,
+        candidate-api,
+        candidate-web,
+      ]
     runs-on: ubuntu-latest
     steps:
       - name: Require every selected gate

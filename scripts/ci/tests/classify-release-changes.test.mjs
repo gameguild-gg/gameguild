@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { classifyReleaseChanges } from "../classify-release-changes.mjs";
+import {
+  classifyReleaseChanges,
+  releaseServiceMatrix,
+  runtimeReleaseServiceMatrix,
+} from "../classify-release-changes.mjs";
 
 const expectedEmptyClassification = {
   api: false,
@@ -92,7 +96,9 @@ test("an EF migration selects API, migration, and OpenAPI gates", () => {
 
 test("a shared UI package deploys each JavaScript consumer", () => {
   assert.deepEqual(
-    classifyReleaseChanges(["packages/infrastructure/ui/src/components/button.tsx"]),
+    classifyReleaseChanges([
+      "packages/infrastructure/ui/src/components/button.tsx",
+    ]),
     {
       ...expectedEmptyClassification,
       web: true,
@@ -129,6 +135,31 @@ test("a root dependency lock change rebuilds Node runtimes without selecting Eco
     learningRuntimeChanged: true,
     runtimeChanged: true,
   });
+});
+
+test("Learning remains verified but is not selected as a production service", () => {
+  const classification = classifyReleaseChanges([
+    "apps/learning/src/app/courses/[slug]/page.tsx",
+  ]);
+
+  assert.deepEqual(classification, {
+    ...expectedEmptyClassification,
+    learning: true,
+    learningRuntimeChanged: true,
+  });
+  assert.deepEqual(releaseServiceMatrix(classification), []);
+  assert.deepEqual(runtimeReleaseServiceMatrix(classification), []);
+});
+
+test("production service matrices contain only deployed API and Web services", () => {
+  const classification = classifyReleaseChanges([
+    "apps/api/Source/GameGuild.API/Program.cs",
+    "apps/web/src/app/page.tsx",
+    "apps/learning/src/app/page.tsx",
+  ]);
+
+  assert.deepEqual(releaseServiceMatrix(classification), ["api", "web"]);
+  assert.deepEqual(runtimeReleaseServiceMatrix(classification), ["api", "web"]);
 });
 
 test("unknown runtime configuration changes fail conservatively", () => {
