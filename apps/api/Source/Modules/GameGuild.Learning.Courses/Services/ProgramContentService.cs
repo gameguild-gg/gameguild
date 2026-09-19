@@ -10,8 +10,10 @@ public class ProgramContentService(
   IApplicationDbContext context,
   IProgramContentScheduleGuard scheduleGuard,
   IProgramContentLifecycleGuard lifecycleGuard,
-  IEnumerable<IProgramContentAcademicMutationGuard>? academicGuards = null) : IProgramContentService {
+  IEnumerable<IProgramContentAcademicMutationGuard>? academicGuards = null,
+  IEnumerable<IProgramContentDeleteParticipant>? deleteParticipants = null) : IProgramContentService {
   private readonly IEnumerable<IProgramContentAcademicMutationGuard> academicMutationGuards = academicGuards ?? [];
+  private readonly IEnumerable<IProgramContentDeleteParticipant> contentDeleteParticipants = deleteParticipants ?? [];
   public async Task<ProgramContent> CreateContentAsync(ProgramContent content) {
     var parentTenantId = await context.Set<Program>()
       .AsNoTracking()
@@ -111,6 +113,14 @@ public class ProgramContentService(
       if (await lifecycleGuard.HasBlockingDeleteReference(contentId).ConfigureAwait(false)) {
         throw new GameGuild.CQRS.RequestValidationException(
           "Content linked to an assessment cue cannot be deleted. Remove the assessment cue first.");
+      }
+    }
+
+    var contentById = contents.ToDictionary(item => item.Id);
+    foreach (var contentId in contentTreeIds) {
+      if (!contentById.TryGetValue(contentId, out var contentToDelete)) continue;
+      foreach (var participant in contentDeleteParticipants.Where(value => value.CanHandle(contentToDelete))) {
+        await participant.PrepareDeleteAsync(contentToDelete).ConfigureAwait(false);
       }
     }
 

@@ -205,6 +205,14 @@ public sealed class QuizGradingAdapterContractTests
         var services = new ServiceCollection();
         services.AddAssessmentsModule();
         services.AddQuizGradingAdapter();
+        services.Should().ContainSingle(descriptor =>
+            descriptor.ServiceType == typeof(IProgramContentDeleteParticipant) &&
+            descriptor.ImplementationType == typeof(QuizProgramContentDeleteParticipant) &&
+            descriptor.Lifetime == ServiceLifetime.Scoped);
+        services.Should().ContainSingle(descriptor =>
+            descriptor.ServiceType == typeof(IProgramContentPublicationParticipant) &&
+            descriptor.ImplementationType == typeof(QuizProgramContentPublicationParticipant) &&
+            descriptor.Lifetime == ServiceLifetime.Scoped);
         using var provider = services.BuildServiceProvider();
         var resolver = provider.GetRequiredService<IAssessmentTypeAdapterResolver>();
 

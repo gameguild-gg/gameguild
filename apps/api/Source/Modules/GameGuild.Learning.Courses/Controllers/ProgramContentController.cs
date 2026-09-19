@@ -163,15 +163,6 @@ public class ProgramContentController(
 
     if (content == null || content.ProgramId != programId) return NotFound();
 
-    try
-    {
-      ProgramContentAcademicMutationGuard.EnsureAllowed(academicMutationGuards, content, ProgramContentAcademicMutation.Delete);
-    }
-    catch (InvalidOperationException exception)
-    {
-      return Conflict(exception.Message);
-    }
-
     var deleted = await sender.Send(new DeleteProgramContentEndpointCommand(id)).ConfigureAwait(false);
 
     if (!deleted) return NotFound();
