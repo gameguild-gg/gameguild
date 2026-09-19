@@ -196,30 +196,63 @@ export default async function LearnerActivityPage({
     const item = access.course.modules
       .flatMap((module) => module.items)
       .find((candidate) => candidate.id === contentId);
-    if (!item || !['Discussion', 'Reflection', 'Survey'].includes(item.contentType || '')) {
+    if (!item) {
       notFound();
     }
-    activity = {
-      kind: 'content',
-      contentId: item.id,
-      contentType: item.contentType as 'Discussion' | 'Reflection' | 'Survey',
-      title: item.title,
-      description: item.description,
-      completed: item.status === 'completed',
-    };
-    description = promptBody(item.content) || item.description || '';
+
+    if (item.contentType === 'Questionnaire') {
+      const parsed = parseQuizContentDocument(item.content);
+      if (parsed.issues.length > 0) {
+        console.error(
+          'LearnerActivityPage: invalid published quiz content',
+          parsed.issues,
+        );
+        quizUnavailable = true;
+      } else {
+        quizContent = prepareQuizContentForRuntime(
+          parsed.document,
+          'server-graded',
+        );
+        quizContentItem = {
+          id: item.id,
+          title: item.title,
+          description: item.description,
+          isRequired: item.isRequired,
+          status: item.status,
+        };
+      }
+    } else if (
+      ['Discussion', 'Reflection', 'Survey'].includes(item.contentType || '')
+    ) {
+      activity = {
+        kind: 'content',
+        contentId: item.id,
+        contentType: item.contentType as 'Discussion' | 'Reflection' | 'Survey',
+        title: item.title,
+        description: item.description,
+        completed: item.status === 'completed',
+      };
+      description = promptBody(item.content) || item.description || '';
+    } else {
+      notFound();
+    }
   }
 
-  if (!activity) notFound();
-  const title = activity.kind === 'assessment' ? activity.assessment.title || 'Assessment' : activity.title;
-  const type = activity.kind === 'assessment'
-    ? activity.assessment.type
-    : activity.contentType;
+  if (!activity && !quizContentItem) notFound();
+  const title = quizContentItem?.title ??
+    (activity?.kind === 'assessment'
+      ? activity.assessment.title || 'Assessment'
+      : activity?.title || 'Activity');
+  const type = quizContentItem
+    ? 'Quiz'
+    : activity?.kind === 'assessment'
+      ? activity.assessment.type
+      : activity?.contentType || 'Activity';
   // learn/layout.tsx already redirects signed-out visitors; the userId
   // guard keeps the client's user-scoped token well-formed even if that
   // invariant ever breaks.
   const codingProps =
-    activity.kind === 'assessment' &&
+    activity?.kind === 'assessment' &&
     useCodingExperience &&
     codingAssignment &&
     activity.assessment.id &&
@@ -324,7 +357,7 @@ export default async function LearnerActivityPage({
             submissionFiles={submissionFiles}
           />
         </div>
-      ) : !quizUnavailable ? (
+      ) : activity && !quizUnavailable ? (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Your response</CardTitle>
