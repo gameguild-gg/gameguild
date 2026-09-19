@@ -1,5 +1,12 @@
 import "@testing-library/jest-dom/vitest";
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -8,9 +15,10 @@ const routerMocks = vi.hoisted(() => ({
 }));
 
 const ideMock = vi.hoisted(() => {
-  const getFiles = vi.fn<
-    () => Promise<Array<{ path: string; content: string; type: "text" }>>
-  >();
+  const getFiles =
+    vi.fn<
+      () => Promise<Array<{ path: string; content: string; type: "text" }>>
+    >();
 
   return {
     getFiles,
@@ -65,7 +73,14 @@ const assignmentSamplesMock = vi.hoisted(() => ({
       },
     },
     plan: {
-      cases: [{ kind: "custom", name: "renders without crashing", weight: 1, hidden: false }],
+      cases: [
+        {
+          kind: "custom",
+          name: "renders without crashing",
+          weight: 1,
+          hidden: false,
+        },
+      ],
       build: { sources: ["/user/allegro-main.cpp"] },
     },
   },
@@ -96,7 +111,7 @@ global.ResizeObserver = class ResizeObserver {
 };
 
 vi.mock("next/navigation", () => ({
-  usePathname: () => '/workspace/learning',
+  usePathname: () => "/workspace/learning",
   useRouter: () => routerMocks,
 }));
 
@@ -105,6 +120,7 @@ vi.mock("@game-guild/emception-ui", async () => {
 
   function CodingAssessmentEditor(props: {
     mode?: string;
+    manifestUrl?: string;
     definition?: {
       Environment?: { AllowStudentCreateFiles?: boolean };
       Tests?: { Public?: unknown[]; Private?: unknown[] };
@@ -144,7 +160,7 @@ vi.mock("@game-guild/emception-ui", async () => {
       React.createElement(
         "div",
         { "data-testid": "mock-assessment-surface" },
-        ...((props.extensions ?? []).map((extension) =>
+        ...(props.extensions ?? []).map((extension) =>
           React.createElement(
             React.Fragment,
             { key: extension.id },
@@ -155,7 +171,7 @@ vi.mock("@game-guild/emception-ui", async () => {
             }),
             extension.bottomPanel?.(),
           ),
-        )),
+        ),
       ),
     );
   }
@@ -220,6 +236,9 @@ describe("CodingDefinitionEditor", () => {
 
     await screen.findByTestId("mock-assessment-editor");
     expect(lastAssessmentEditorProps?.mode).toBe("author");
+    expect(lastAssessmentEditorProps?.manifestUrl).toBe(
+      "/emception/manifest.json",
+    );
     expect(lastAssessmentEditorProps?.workspaceConfig?.id).toBe("cpp");
     expect(lastAssessmentEditorProps?.extensions).toEqual(
       expect.arrayContaining([
@@ -235,7 +254,11 @@ describe("CodingDefinitionEditor", () => {
     await act(async () => {});
     ideMock.getFiles.mockResolvedValue([
       { path: "/user/main.cpp", content: "// edited starter", type: "text" },
-      { path: "/user/private-helper.cpp", content: "int hidden() { return 42; }", type: "text" },
+      {
+        path: "/user/private-helper.cpp",
+        content: "int hidden() { return 42; }",
+        type: "text",
+      },
     ]);
     await user.click(await screen.findByTestId("sync-file-policies"));
     const visibility = await screen.findByLabelText(
@@ -253,9 +276,9 @@ describe("CodingDefinitionEditor", () => {
 
     // The IDE only renders once the seed useEffect populates fileRows.
     await screen.findByTestId("mock-assessment-surface");
-    expect(
-      Object.keys(lastIdeProps.workspaceConfig?.files ?? {}),
-    ).toContain("/user/main.cpp");
+    expect(Object.keys(lastIdeProps.workspaceConfig?.files ?? {})).toContain(
+      "/user/main.cpp",
+    );
     expect(sample.workspaceConfig.id).toBeDefined();
   });
 
@@ -282,14 +305,19 @@ describe("CodingDefinitionEditor", () => {
       target: { value: "XYZ" },
     });
     await user.click(screen.getByTestId("standard-visibility-1"));
-    await user.click(within(await screen.findByRole("listbox")).getByRole("option", { name: "Private" }));
+    await user.click(
+      within(await screen.findByRole("listbox")).getByRole("option", {
+        name: "Private",
+      }),
+    );
 
     await user.click(screen.getByTestId("save-button"));
 
     await waitFor(() => {
       expect(putCodingAssignmentAction).toHaveBeenCalledTimes(1);
     });
-    const payloadArg = putCodingAssignmentAction.mock.calls[0][2] as CodingAssignmentContent;
+    const payloadArg = putCodingAssignmentAction.mock
+      .calls[0][2] as CodingAssignmentContent;
     const payloadText = JSON.stringify(payloadArg, null, 2);
 
     // v1 wire format — PascalCase
@@ -314,20 +342,23 @@ describe("CodingDefinitionEditor", () => {
     // Switch to Allegro — seeds the allegro starter into the workspace.
     await user.selectOptions(picker, "allegro-cpp");
     expect(lastIdeProps.workspaceConfig?.id).toBe("allegro-cpp");
-    expect(
-      Object.keys(lastIdeProps.workspaceConfig?.files ?? {}),
-    ).toContain("/user/allegro-main.cpp");
+    expect(Object.keys(lastIdeProps.workspaceConfig?.files ?? {})).toContain(
+      "/user/allegro-main.cpp",
+    );
 
     await user.click(screen.getByTestId("save-button"));
 
     await waitFor(() => {
       expect(putCodingAssignmentAction).toHaveBeenCalledTimes(1);
     });
-    const payloadArg = putCodingAssignmentAction.mock.calls[0][2] as CodingAssignmentContent;
+    const payloadArg = putCodingAssignmentAction.mock
+      .calls[0][2] as CodingAssignmentContent;
     expect(payloadArg.Environment.Language).toBe("allegro-cpp");
     expect(payloadArg.Environment.Tools).toBe("clang");
     expect(payloadArg.Environment.LibBundle).toBe("allegro");
-    expect(Object.keys(payloadArg.Data.Files)).toContain("/user/allegro-main.cpp");
+    expect(Object.keys(payloadArg.Data.Files)).toContain(
+      "/user/allegro-main.cpp",
+    );
   });
 
   it("rejects negative weight client-side — Save disabled + error shown", async () => {
@@ -348,7 +379,8 @@ describe("CodingDefinitionEditor", () => {
 
   it("submits a valid form and PUTs the v1 CodingAssignmentContent", async () => {
     const user = userEvent.setup();
-    render(<CodingDefinitionEditor {...baseProps} />);
+    const onSaved = vi.fn();
+    render(<CodingDefinitionEditor {...baseProps} onSaved={onSaved} />);
 
     await user.click(screen.getByTestId("add-standard"));
     fireEvent.change(screen.getByTestId("standard-stdin-0"), {
@@ -364,7 +396,8 @@ describe("CodingDefinitionEditor", () => {
       expect(putCodingAssignmentAction).toHaveBeenCalledTimes(1);
     });
 
-    const [programIdArg, contentIdArg, payloadArg] = putCodingAssignmentAction.mock.calls[0];
+    const [programIdArg, contentIdArg, payloadArg] =
+      putCodingAssignmentAction.mock.calls[0];
     expect(programIdArg).toBe("course-1");
     expect(contentIdArg).toBe("content-1");
     expect(payloadArg.Type).toBe("coding-assignment");
@@ -382,6 +415,7 @@ describe("CodingDefinitionEditor", () => {
 
     // Save stays on the page (no redirect) and shows the Saved. indicator.
     expect(await screen.findByText("Saved.")).toBeInTheDocument();
+    expect(onSaved).toHaveBeenCalledWith(payloadArg);
     expect(routerMocks.push).not.toHaveBeenCalled();
   });
 
@@ -473,10 +507,7 @@ describe("CodingDefinitionEditor", () => {
     };
 
     render(
-      <CodingDefinitionEditor
-        {...baseProps}
-        initialContent={initialContent}
-      />,
+      <CodingDefinitionEditor {...baseProps} initialContent={initialContent} />,
     );
 
     // No edits — save echoes the round-tripped test buckets.
@@ -485,7 +516,8 @@ describe("CodingDefinitionEditor", () => {
     await waitFor(() => {
       expect(putCodingAssignmentAction).toHaveBeenCalledTimes(1);
     });
-    const payloadArg = putCodingAssignmentAction.mock.calls[0][2] as CodingAssignmentContent;
+    const payloadArg = putCodingAssignmentAction.mock
+      .calls[0][2] as CodingAssignmentContent;
     const payloadText = JSON.stringify(payloadArg, null, 2);
 
     // Both standard cases preserved across buckets.
@@ -555,7 +587,8 @@ describe("CodingDefinitionEditor", () => {
     await waitFor(() => {
       expect(putCodingAssignmentAction).toHaveBeenCalledTimes(1);
     });
-    const payloadArg = putCodingAssignmentAction.mock.calls[0][2] as CodingAssignmentContent;
+    const payloadArg = putCodingAssignmentAction.mock
+      .calls[0][2] as CodingAssignmentContent;
     const payloadText = JSON.stringify(payloadArg, null, 2);
     expect(payloadText).toContain('"FunctionName": "add"');
     expect(payloadText).toContain('"Type": "integer"');
@@ -600,7 +633,8 @@ describe("CodingDefinitionEditor", () => {
       });
 
       expect(putCodingAssignmentAction).toHaveBeenCalledTimes(1);
-      const payloadArg = putCodingAssignmentAction.mock.calls[0][2] as CodingAssignmentContent;
+      const payloadArg = putCodingAssignmentAction.mock
+        .calls[0][2] as CodingAssignmentContent;
       expect(payloadArg.Environment.AllowStudentCreateFiles).toBe(true);
     } finally {
       vi.useRealTimers();
@@ -620,9 +654,7 @@ describe("CodingDefinitionEditor", () => {
 
   it("reports missing content without calling the API", async () => {
     const user = userEvent.setup();
-    render(
-      <CodingDefinitionEditor {...baseProps} contentId={null} />,
-    );
+    render(<CodingDefinitionEditor {...baseProps} contentId={null} />);
 
     await user.click(screen.getByTestId("save-button"));
     expect(
@@ -656,7 +688,9 @@ describe("CodingDefinitionEditor", () => {
     ).toBeInTheDocument();
 
     await user.click(screen.getByTestId("save-button"));
-    await waitFor(() => expect(putCodingAssignmentAction).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
+      expect(putCodingAssignmentAction).toHaveBeenCalledTimes(1),
+    );
     expect(await screen.findByText("Saved.")).toBeInTheDocument();
   });
 
@@ -671,14 +705,20 @@ describe("CodingDefinitionEditor", () => {
   });
 
   it.each([
-    [new Error("replace failed"), "Could not switch editor workspace: replace failed"],
+    [
+      new Error("replace failed"),
+      "Could not switch editor workspace: replace failed",
+    ],
     ["replace failed", "Could not switch editor workspace."],
   ])("reports workspace replacement failures", async (failure, message) => {
     ideMock.replaceFiles.mockRejectedValueOnce(failure);
     const user = userEvent.setup();
     render(<CodingDefinitionEditor {...baseProps} />);
 
-    await user.selectOptions(await screen.findByTestId("preset-picker"), "allegro-cpp");
+    await user.selectOptions(
+      await screen.findByTestId("preset-picker"),
+      "allegro-cpp",
+    );
 
     expect(await screen.findByText(message)).toBeInTheDocument();
   });
@@ -686,29 +726,35 @@ describe("CodingDefinitionEditor", () => {
   it.each([
     [new Error("sync failed"), "Could not read editor files: sync failed"],
     ["sync failed", "Could not read editor files."],
-  ])("reports file policy synchronization failures", async (failure, message) => {
-    ideMock.getFiles.mockRejectedValueOnce(failure);
-    const user = userEvent.setup();
-    render(<CodingDefinitionEditor {...baseProps} />);
+  ])(
+    "reports file policy synchronization failures",
+    async (failure, message) => {
+      ideMock.getFiles.mockRejectedValueOnce(failure);
+      const user = userEvent.setup();
+      render(<CodingDefinitionEditor {...baseProps} />);
 
-    await user.click(await screen.findByTestId("sync-file-policies"));
+      await user.click(await screen.findByTestId("sync-file-policies"));
 
-    expect(await screen.findByText(message)).toBeInTheDocument();
-  });
+      expect(await screen.findByText(message)).toBeInTheDocument();
+    },
+  );
 
   it.each([
     [new Error("read failed"), "Could not read editor files: read failed"],
     ["read failed", "Could not read editor files."],
-  ])("aborts a save when reading live IDE files fails", async (failure, message) => {
-    ideMock.getFiles.mockRejectedValueOnce(failure);
-    const user = userEvent.setup();
-    render(<CodingDefinitionEditor {...baseProps} />);
+  ])(
+    "aborts a save when reading live IDE files fails",
+    async (failure, message) => {
+      ideMock.getFiles.mockRejectedValueOnce(failure);
+      const user = userEvent.setup();
+      render(<CodingDefinitionEditor {...baseProps} />);
 
-    await user.click(screen.getByTestId("save-button"));
+      await user.click(screen.getByTestId("save-button"));
 
-    expect(await screen.findByText(message)).toBeInTheDocument();
-    expect(putCodingAssignmentAction).not.toHaveBeenCalled();
-  });
+      expect(await screen.findByText(message)).toBeInTheDocument();
+      expect(putCodingAssignmentAction).not.toHaveBeenCalled();
+    },
+  );
 
   it("shows API failures and prevents a concurrent duplicate save", async () => {
     vi.useFakeTimers();
@@ -763,7 +809,10 @@ describe("CodingDefinitionEditor", () => {
     };
     const user = userEvent.setup();
     render(
-      <CodingDefinitionEditor {...baseProps} initialContent={oversizedContent} />,
+      <CodingDefinitionEditor
+        {...baseProps}
+        initialContent={oversizedContent}
+      />,
     );
 
     await user.click(screen.getByTestId("save-button"));
@@ -811,9 +860,12 @@ describe("CodingDefinitionEditor", () => {
 
     await user.click(screen.getByLabelText("Student can edit /user/main.cpp"));
     await user.click(screen.getByTestId("save-button"));
-    await waitFor(() => expect(putCodingAssignmentAction).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
+      expect(putCodingAssignmentAction).toHaveBeenCalledTimes(1),
+    );
 
-    const payload = putCodingAssignmentAction.mock.calls[0][2] as CodingAssignmentContent;
+    const payload = putCodingAssignmentAction.mock
+      .calls[0][2] as CodingAssignmentContent;
     expect(payload.Data.Files["/user/main.cpp"]).toMatchObject({
       Content: "// edited starter",
       Encoding: "text",
@@ -861,14 +913,21 @@ describe("CodingDefinitionEditor", () => {
       Grading: { MaxScore: 100 },
     } as unknown as CodingAssignmentContent;
     render(
-      <CodingDefinitionEditor {...baseProps} initialContent={malformedContent} />,
+      <CodingDefinitionEditor
+        {...baseProps}
+        initialContent={malformedContent}
+      />,
     );
 
     expect(
-      await screen.findAllByText(/Parameter type "array" is not supported in v1/i),
+      await screen.findAllByText(
+        /Parameter type "array" is not supported in v1/i,
+      ),
     ).not.toHaveLength(0);
     expect(
-      await screen.findAllByText(/Return type "object" is not supported in v1/i),
+      await screen.findAllByText(
+        /Return type "object" is not supported in v1/i,
+      ),
     ).not.toHaveLength(0);
     expect(screen.getByTestId("save-button")).toBeDisabled();
   });

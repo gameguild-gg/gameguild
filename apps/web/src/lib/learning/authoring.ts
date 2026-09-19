@@ -47,6 +47,10 @@ export interface AuthoringDraft {
   lastEditedAt: string;
 }
 
+export interface PublishedAuthoringContent {
+  slug: string;
+}
+
 export interface AiCreditUsage {
   availableSoftCredits: number;
   maximumEstimatedCost: number;
@@ -192,7 +196,10 @@ export async function publishAuthoringDraft(
   contentId: string,
   revision: number,
 ) {
-  return authoringRequest<{ draft: AuthoringDraft }>(
+  return authoringRequest<{
+    draft: AuthoringDraft;
+    publishedContent: PublishedAuthoringContent;
+  }>(
     path(courseId, contentId, "/publish"),
     { method: "POST", body: JSON.stringify({ revision }) },
   );
