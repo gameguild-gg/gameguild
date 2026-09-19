@@ -206,7 +206,14 @@ export function LessonAuthoringWorkspace({
   const [codingAssignment, setCodingAssignment] = useState(
     initialCodingAssignment,
   );
-  const [mode, setMode] = useState<EditorMode>("split");
+  const [mode, setMode] = useState<EditorMode>(() =>
+    item.type === "Code" ||
+    item.type === "Questionnaire" ||
+    initialDraft.payload.type === "Code" ||
+    initialDraft.payload.type === "Questionnaire"
+      ? "editor"
+      : "split",
+  );
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("saved");
   const [saveError, setSaveError] = useState<string | null>(null);
   const [conflictBackup, setConflictBackup] =
@@ -247,9 +254,11 @@ export function LessonAuthoringWorkspace({
 
   const format =
     payload.lessonFormat ?? (payload.jsonBody ? "Lexical" : "Markdown");
-  const isLesson = payload.type === "Lesson";
-  const isQuiz = payload.type === "Questionnaire";
-  const isCode = payload.type === "Code";
+  const isCode = item.type === "Code" || payload.type === "Code";
+  const isQuiz =
+    !isCode &&
+    (item.type === "Questionnaire" || payload.type === "Questionnaire");
+  const isLesson = !isCode && !isQuiz && payload.type === "Lesson";
   const formatLabel = isCode ? "Coding assignment" : isQuiz ? "Quiz" : format;
   const isStructured = isQuiz || (isLesson && format === "Lexical");
   const currentPayloadJson = JSON.stringify(payload);
