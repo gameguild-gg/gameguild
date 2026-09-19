@@ -147,7 +147,6 @@ interface TestRow {
 
 export function CodingDefinitionEditor({
   courseId,
-  assessmentId,
   assessmentSlug,
   programId,
   contentId,
