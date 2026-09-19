@@ -167,6 +167,13 @@ function iconFor(type: CourseContentItemViewModel["type"]) {
   return FileText;
 }
 
+function contentItemType(value: unknown): string | null {
+  if (typeof value !== "object" || value === null) return null;
+
+  const type = Reflect.get(value, "type");
+  return typeof type === "string" ? type : null;
+}
+
 function bodyForPreview(payload: AuthoringContentPayload) {
   if (payload.lessonFormat === "Lexical" || payload.type === "Questionnaire")
     return payload.jsonBody ?? null;
@@ -206,9 +213,10 @@ export function LessonAuthoringWorkspace({
   const [codingAssignment, setCodingAssignment] = useState(
     initialCodingAssignment,
   );
+  const itemType = contentItemType(item);
   const [mode, setMode] = useState<EditorMode>(() =>
-    item.type === "Code" ||
-    item.type === "Questionnaire" ||
+    itemType === "Code" ||
+    itemType === "Questionnaire" ||
     initialDraft.payload.type === "Code" ||
     initialDraft.payload.type === "Questionnaire"
       ? "editor"
