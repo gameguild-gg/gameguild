@@ -409,6 +409,38 @@ describe("TestingEventApplications", () => {
     }
   });
 
+  it("submits the selected timezone even when a native form reset clears the hidden input", async () => {
+    const resolvedOptions = Intl.DateTimeFormat.prototype.resolvedOptions;
+    const timeZone = vi
+      .spyOn(Intl.DateTimeFormat.prototype, "resolvedOptions")
+      .mockImplementation(function (this: Intl.DateTimeFormat) {
+        return {
+          ...resolvedOptions.call(this),
+          timeZone: "America/Sao_Paulo",
+        };
+      });
+
+    try {
+      render(<CreateTestingEventDialog defaultTimeZone="UTC" />);
+      fireEvent.click(screen.getByRole("button", { name: "New event" }));
+
+      const hiddenTimeZone = document.querySelector<HTMLInputElement>(
+        'input[name="timeZoneId"]',
+      );
+      expect(hiddenTimeZone).toHaveValue("America/Sao_Paulo");
+
+      // Reproduces the browser behavior seen in production after form.reset().
+      if (hiddenTimeZone) hiddenTimeZone.value = "";
+      fireEvent.submit(hiddenTimeZone?.closest("form") as HTMLFormElement);
+
+      await waitFor(() => expect(mocks.createEvent).toHaveBeenCalledTimes(1));
+      const submitted = mocks.createEvent.mock.calls[0]?.[0] as FormData;
+      expect(submitted.get("timeZoneId")).toBe("America/Sao_Paulo");
+    } finally {
+      timeZone.mockRestore();
+    }
+  });
+
   it("keeps the quick-create dialog focused on event identity and schedule", () => {
     render(<CreateTestingEventDialog />);
 
