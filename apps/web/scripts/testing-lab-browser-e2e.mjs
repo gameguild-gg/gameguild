@@ -811,7 +811,7 @@ async function run() {
       ],
       [
         `/workspace/testing-lab/events/${fixture.event.id}/schedule`,
-        "Schedule and capacity",
+        "Schedule",
       ],
       [
         `/workspace/testing-lab/events/${fixture.event.id}/projects`,
