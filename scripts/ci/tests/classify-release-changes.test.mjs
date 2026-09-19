@@ -10,10 +10,8 @@ import {
 const expectedEmptyClassification = {
   api: false,
   web: false,
-  learning: false,
   apiRuntimeChanged: false,
   webRuntimeChanged: false,
-  learningRuntimeChanged: false,
   testingLab: false,
   economyCritical: false,
   openApi: false,
@@ -102,9 +100,7 @@ test("a shared UI package deploys each JavaScript consumer", () => {
     {
       ...expectedEmptyClassification,
       web: true,
-      learning: true,
       webRuntimeChanged: true,
-      learningRuntimeChanged: true,
       runtimeChanged: true,
     },
   );
@@ -130,32 +126,15 @@ test("a root dependency lock change rebuilds Node runtimes without selecting Eco
   assert.deepEqual(classifyReleaseChanges(["pnpm-lock.yaml"]), {
     ...expectedEmptyClassification,
     web: true,
-    learning: true,
     webRuntimeChanged: true,
-    learningRuntimeChanged: true,
     runtimeChanged: true,
   });
-});
-
-test("Learning remains verified but is not selected as a production service", () => {
-  const classification = classifyReleaseChanges([
-    "apps/learning/src/app/courses/[slug]/page.tsx",
-  ]);
-
-  assert.deepEqual(classification, {
-    ...expectedEmptyClassification,
-    learning: true,
-    learningRuntimeChanged: true,
-  });
-  assert.deepEqual(releaseServiceMatrix(classification), []);
-  assert.deepEqual(runtimeReleaseServiceMatrix(classification), []);
 });
 
 test("production service matrices contain only deployed API and Web services", () => {
   const classification = classifyReleaseChanges([
     "apps/api/Source/GameGuild.API/Program.cs",
     "apps/web/src/app/page.tsx",
-    "apps/learning/src/app/page.tsx",
   ]);
 
   assert.deepEqual(releaseServiceMatrix(classification), ["api", "web"]);
@@ -167,10 +146,8 @@ test("unknown runtime configuration changes fail conservatively", () => {
     ...expectedEmptyClassification,
     api: true,
     web: true,
-    learning: true,
     apiRuntimeChanged: true,
     webRuntimeChanged: true,
-    learningRuntimeChanged: true,
     runtimeChanged: true,
   });
 });

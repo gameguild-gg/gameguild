@@ -1,17 +1,17 @@
 # Devtron production release runbook
 
-Devtron is the production source of truth for GameGuild. GitHub Actions builds and verifies immutable candidates before merge, promotes the exact tested digests, and sends those digests to Devtron. Devtron must not build production images from Git.
+Devtron is the production source of truth for GameGuild. The live Devtron applications currently read `main` from the private Forgejo mirror `gameguild-gg/gameguild`; that mirror follows GitHub and is the Git material configured in Devtron for API and Web. The immutable external-CI flow described below is the target release contract and must not be treated as active until the two live pipelines are explicitly migrated from internal Forgejo CI.
 
 The service-level objective is p95 from an approved merge to a verified healthy production release in 10 minutes or less.
 
 ## Release path
 
-1. `PR Verify` classifies the diff and runs only the required Web, API, Learning, Testing Lab, OpenAPI, migration, or Economy gates.
+1. `PR Verify` classifies the diff and runs only the required Web, API, Testing Lab, OpenAPI, migration, or Economy gates.
 2. Affected services are built from the PR merge ref and pushed as `candidate-<treeSha>-<service>`.
 3. `PR Required Gate` aggregates every selected job and is the only required status check on `main`.
 4. A push to `main` resolves the successful PR run and refuses direct pushes or missing candidates.
 5. The exact candidate digests are tagged `release-<releaseSha>`; unchanged service digests come from the prior stable manifest.
-6. Devtron rolls out API, Web, and Learning in that order, skipping unaffected services.
+6. Devtron rolls out API and Web in that order, skipping unaffected services.
 7. Health identity and authenticated Testing Lab smoke checks must pass before the stable manifest is advanced and Cloudflare is purged.
 8. Any failure restores the already-triggered services in reverse order to their prior immutable digests.
 
@@ -26,20 +26,18 @@ Required variables:
 | Variable | Contract |
 | --- | --- |
 | `DEVTRON_REGISTRY_HOST` | Registry hostname used by both GitHub and Devtron |
-| `DEVTRON_REGISTRY_NAMESPACE` | Namespace containing `gameguild-api`, `gameguild-web`, `gameguild-learning`, and `gameguild-release-state` |
+| `DEVTRON_REGISTRY_NAMESPACE` | Namespace containing `gameguild-api`, `gameguild-web`, and `gameguild-release-state` |
 | `DEVTRON_BASE_URL` | Devtron origin, without a trailing path |
 | `DEVTRON_EXTERNAL_CI_ID_API` | API external-CI pipeline identifier |
 | `DEVTRON_EXTERNAL_CI_ID_WEB` | Web external-CI pipeline identifier |
-| `DEVTRON_EXTERNAL_CI_ID_LEARNING` | Learning external-CI pipeline identifier |
 | `DEVTRON_RELEASE_IDENTITY_CONFIGURED` | Must be `true` only after the runtime identity contract below is verified |
 | `DEVTRON_API_PREDEPLOY_MIGRATIONS` | Must be `true` only after the API migration pre-deploy job is configured |
 | `GAMEGUILD_API_URL` | `https://api.gameguild.gg` in production |
 | `GAMEGUILD_WEB_URL` | `https://gameguild.gg` in production |
-| `GAMEGUILD_LEARNING_URL` | Production Learning origin |
 | `GAMEGUILD_SMOKE_PROJECT_ID` | Stable tenant project readable by the smoke administrator |
 | `CLOUDFLARE_ZONE_ID` | Zone purged only after the rollout and smoke pass |
 
-The candidate build also uses `GAMEGUILD_API_INTERNAL_URL`, `GAMEGUILD_API_PUBLIC_URL`, `GAMEGUILD_WEB_PUBLIC_URL`, `GAMEGUILD_LEARNING_PUBLIC_URL`, `GAMEGUILD_AUTH_COOKIE_DOMAIN`, and `GAMEGUILD_GOOGLE_CLIENT_ID`.
+The candidate build also uses `GAMEGUILD_API_INTERNAL_URL`, `GAMEGUILD_API_PUBLIC_URL`, `GAMEGUILD_WEB_PUBLIC_URL`, `GAMEGUILD_AUTH_COOKIE_DOMAIN`, and `GAMEGUILD_GOOGLE_CLIENT_ID`.
 
 Required secrets:
 
@@ -54,7 +52,7 @@ Never set `ALLOW_INITIAL_RELEASE_WITHOUT_STABLE=true` in production. It is a sta
 
 Create one external-CI pipeline per service. The webhook endpoint is `/orchestrator/webhook/ext-ci/<externalCiId>` and receives `dockerImage`, `digest`, and `ciProjectDetails`. Disable Git-triggered builds and automatic rebuilds. The incoming image digest is the deployment artifact.
 
-All three workloads must use:
+Both workloads must use:
 
 - rolling update with `maxUnavailable: 0` and `maxSurge: 1`;
 - `progressDeadlineSeconds: 300`;
