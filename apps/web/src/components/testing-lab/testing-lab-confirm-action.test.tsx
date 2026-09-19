@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   error: vi.fn(),
@@ -19,6 +19,10 @@ vi.mock('sonner', () => ({
 import { TestingLabConfirmAction } from './testing-lab-confirm-action';
 
 describe('TestingLabConfirmAction', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('publishes successful mutation feedback outside the row that may unmount', async () => {
     const action = vi.fn().mockResolvedValue({
       success: true,
@@ -69,5 +73,38 @@ describe('TestingLabConfirmAction', () => {
     await waitFor(() => {
       expect(mocks.push).toHaveBeenCalledWith('/workspace/testing-lab/projects');
     });
+  });
+
+  it('cancels the delayed dialog close when the component unmounts', async () => {
+    const setTimeoutSpy = vi.spyOn(window, 'setTimeout');
+    const clearTimeoutSpy = vi.spyOn(window, 'clearTimeout');
+    const action = vi.fn().mockResolvedValue({
+      success: true,
+      message: 'Testing location archived.',
+    });
+
+    const { unmount } = render(
+      <TestingLabConfirmAction
+        action={action}
+        fields={{ locationId: 'location-1' }}
+        label="Archive"
+        title="Archive this location?"
+        description="The location is hidden from scheduling."
+        confirmLabel="Archive location"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Archive' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Archive location' }));
+
+    await waitFor(() => {
+      expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 650);
+    });
+    const closeTimerIndex = setTimeoutSpy.mock.calls.findIndex(([, delay]) => delay === 650);
+    const closeTimer = setTimeoutSpy.mock.results[closeTimerIndex]?.value;
+
+    unmount();
+
+    expect(clearTimeoutSpy).toHaveBeenCalledWith(closeTimer);
   });
 });

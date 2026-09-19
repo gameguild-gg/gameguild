@@ -70,6 +70,25 @@ public sealed class ProgramContentAuthoringService(
         if (existing is not null)
         {
             EnsureProgram(existing.ProgramId, programId);
+            var publishedContent = await FindContent(programId, contentId, cancellationToken).ConfigureAwait(false);
+            var existingPayload = Deserialize(existing.PayloadJson);
+            var authoritativeType = ProgramContentMappingExtensions.NormalizeProfessorFacingType(publishedContent.Type);
+            var hasStaleType = existingPayload.Type != authoritativeType;
+            var hasInvalidLessonFormat = authoritativeType != ProgramContentType.Lesson && existingPayload.LessonFormat is not null;
+            if (hasStaleType || hasInvalidLessonFormat)
+            {
+                var repaired = existingPayload with
+                {
+                    Type = authoritativeType,
+                    LessonFormat = authoritativeType == ProgramContentType.Lesson ? existingPayload.LessonFormat : null,
+                };
+                existing.Update(
+                    existing.Revision,
+                    JsonSerializer.Serialize(repaired, JsonOptions),
+                    actorId,
+                    DateTimeOffset.UtcNow);
+                await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            }
             return ToDto(existing);
         }
 

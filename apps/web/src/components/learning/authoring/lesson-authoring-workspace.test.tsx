@@ -1058,6 +1058,9 @@ describe("LessonAuthoringWorkspace", () => {
     expect(
       screen.queryByRole("textbox", { name: "Lesson body" }),
     ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("coding-assignment-preview"),
+    ).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /preview/i }));
     expect(screen.getByTestId("coding-assignment-preview")).toBeInTheDocument();
@@ -1094,6 +1097,57 @@ describe("LessonAuthoringWorkspace", () => {
     expect(mocks.refresh).toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: /preview/i }));
     expect(screen.getByTestId("coding-assignment-preview")).toBeInTheDocument();
+  });
+
+  it("opens the coding editor when the content tree is Code but a legacy draft still says Lesson", () => {
+    renderWorkspace(
+      {
+        ...initialDraft,
+        payload: {
+          ...initialDraft.payload,
+          type: "Lesson",
+          lessonFormat: "Markdown",
+          body: "Legacy markdown payload",
+          jsonBody: null,
+        },
+      } as never,
+      {
+        activeItem: { ...item, type: "Code" } as never,
+        linkedAssessment: null,
+        initialCodingAssignment: null,
+      },
+    );
+
+    expect(screen.getByTestId("coding-definition-editor")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("textbox", { name: "Lesson body" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("opens the quiz editor when the content tree is Questionnaire but a legacy draft still says Lesson", () => {
+    renderWorkspace(
+      {
+        ...initialDraft,
+        payload: {
+          ...initialDraft.payload,
+          type: "Lesson",
+          lessonFormat: "Markdown",
+          body: "Legacy markdown payload",
+          jsonBody: null,
+        },
+      } as never,
+      {
+        activeItem: { ...item, type: "Questionnaire" } as never,
+      },
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Quiz editor" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId("quiz-preview")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("textbox", { name: "Lesson body" }),
+    ).not.toBeInTheDocument();
   });
 
   it("replaces the stale authoring URL after publishing a changed slug", async () => {
