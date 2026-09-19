@@ -21,7 +21,8 @@ vi.mock("@/auth", () => ({
   getToken: mocks.getToken,
 }));
 
-vi.mock("@game-guild/grading", () => ({
+vi.mock("@game-guild/grading", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@game-guild/grading")>()),
   readContentGradingDefinition: vi.fn(),
 }));
 
@@ -333,7 +334,7 @@ describe("course analytics query", () => {
           userId: "user-1",
           userName: "Ada Learner",
           userEmail: "ada@example.com",
-          completionPercentage: 42.4,
+          completionPercentage: 4_240,
           startedAt: "2026-06-01T00:00:00.000Z",
           lastAccessedAt: "2026-06-10T00:00:00.000Z",
           completedAt: null,
