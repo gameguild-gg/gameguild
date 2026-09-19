@@ -48,9 +48,9 @@ ARG BUILD_TIMESTAMP=unknown
 ENV GIT_HASH=${GIT_HASH}
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_PRIVATE_BUILD_WORKER_COUNT=1
-# Devtron limits this build container to 3 GiB. Leave native/webpack headroom
-# instead of allowing V8 alone to claim more memory than the pod can provide.
-ENV NODE_OPTIONS=--max-old-space-size=2048
+# Devtron's GameGuild build profile allows 6 GiB for this container, leaving
+# native/SWC headroom around the 4 GiB V8 heap required by generated client DTS.
+ENV NODE_OPTIONS=--max-old-space-size=4096
 ENV GAMEGUILD_DISABLE_WEBPACK_CACHE=1
 ENV NEXTAUTH_URL=${WEB_PUBLIC_URL}
 ENV AUTH_TRUST_HOST=true
