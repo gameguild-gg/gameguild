@@ -30,6 +30,42 @@ public sealed class AssessmentInfrastructureCoverageTests
     }
 
     [Fact]
+    public async Task GradingSync_CreatesTheContentOwnedAssessmentForANewCodingAssignment()
+    {
+        await using var db = CreateContext();
+        var courseId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var content = new ProgramContent
+        {
+            Id = Guid.NewGuid(),
+            ProgramId = courseId,
+            TenantId = tenantId,
+            Title = "Pathfinding challenge",
+            Slug = "pathfinding-challenge",
+            Type = ProgramContentType.Code,
+            IsRequired = true,
+        };
+        db.Add(content);
+        await db.SaveChangesAsync();
+        var sync = new AssessmentGradingSync(db);
+
+        await sync.SyncAsync(content.Id, 100);
+
+        var assessment = await db.Set<Assessment>().SingleAsync();
+        assessment.CourseId.Should().Be(courseId);
+        assessment.ContentId.Should().Be(content.Id);
+        assessment.TenantId.Should().Be(tenantId);
+        assessment.Title.Should().Be(content.Title);
+        assessment.Slug.Should().Be(content.Slug);
+        assessment.Type.Should().Be(AssessmentType.Assignment);
+        assessment.SubmissionModalities.Should().Be(SubmissionModality.Code);
+        assessment.ReviewMethods.Should().Be(
+            Grading.Contracts.ReviewMethods.AutomatedReview |
+            Grading.Contracts.ReviewMethods.InstructorReview);
+        assessment.MaxScore.Should().Be(Score(100));
+    }
+
+    [Fact]
     public async Task LifecycleGuard_ReportsOnlyActiveVideoCueReferences()
     {
         await using var db = CreateContext();
@@ -134,8 +170,14 @@ public sealed class AssessmentInfrastructureCoverageTests
     private sealed class AssessmentCoverageDbContext(DbContextOptions<AssessmentCoverageDbContext> options)
         : DbContext(options), IApplicationDbContext
     {
-        protected override void OnModelCreating(ModelBuilder modelBuilder) =>
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
             new AssessmentsModelConfiguration().Configure(modelBuilder);
+            modelBuilder.Entity<ProgramContent>().Ignore(content => content.Program);
+            modelBuilder.Entity<ProgramContent>().Ignore(content => content.Parent);
+            modelBuilder.Entity<ProgramContent>().Ignore(content => content.Children);
+            modelBuilder.Entity<ProgramContent>().Ignore(content => content.ContentInteractions);
+        }
 
         public Task<IDbContextTransaction> BeginTransactionAsync(
             CancellationToken cancellationToken = default) =>

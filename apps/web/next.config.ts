@@ -17,9 +17,7 @@ const nextConfig: NextConfig = {
     : {}),
   allowedDevOrigins: configuredDevOrigins ?? [
     "gameguild.localhost",
-    "learning.gameguild.localhost",
     "gameguild.127.0.0.1.sslip.io",
-    "learning.gameguild.127.0.0.1.sslip.io",
   ],
   reactCompiler: true,
   output: "standalone",

@@ -5,7 +5,7 @@ import { pathToFileURL } from 'node:url';
 
 const fullShaPattern = /^[0-9a-f]{40}$/u;
 const digestPattern = /^sha256:[0-9a-f]{64}$/u;
-const supportedServices = new Set(['api', 'web', 'learning']);
+const supportedServices = new Set(['api', 'web']);
 
 function requireText(value, name) {
   if (typeof value !== 'string' || value.trim() === '') {

@@ -7,10 +7,8 @@ import {
 } from "./activity-contracts";
 
 describe("getPreferredSubmissionModality", () => {
-  it("uses the modality required by quizzes and projects", () => {
-    expect(getPreferredSubmissionModality("Quiz", "File")).toBe(
-      "StructuredAnswer",
-    );
+  it("routes quizzes through their dedicated runtime and projects through project submissions", () => {
+    expect(getPreferredSubmissionModality("Quiz", "File")).toBe("None");
     expect(getPreferredSubmissionModality("Project", "Text")).toBe("Project");
   });
 
@@ -26,7 +24,6 @@ describe("getPreferredSubmissionModality", () => {
 
 describe("buildAssessmentPayload", () => {
   it.each([
-    ["StructuredAnswer", { structuredAnswerPayload: '{"answer":"answer"}' }],
     ["File", { filePayload: "answer" }],
     ["Url", { urlPayload: "answer" }],
     ["Code", { codePayload: "answer" }],
@@ -49,6 +46,9 @@ describe("buildAssessmentPayload", () => {
     );
     expect(() =>
       buildAssessmentPayload("Unsupported" as never, "answer"),
+    ).toThrow("This assessment does not have a valid submission method.");
+    expect(() =>
+      buildAssessmentPayload("StructuredAnswer", "answer"),
     ).toThrow("This assessment does not have a valid submission method.");
   });
 });

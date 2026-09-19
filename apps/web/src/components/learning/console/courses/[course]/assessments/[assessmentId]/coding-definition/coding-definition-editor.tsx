@@ -5,14 +5,13 @@ import React, {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   useTransition,
   type ReactElement,
 } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, Plus, Save } from "lucide-react";
-import {
-  CodingAssessmentEditor,
-} from "@game-guild/emception-ui";
+import { CodingAssessmentEditor } from "@game-guild/emception-ui";
 import {
   ASSIGNMENT_SAMPLES,
   createAssessmentWorkspaceConfig,
@@ -40,7 +39,8 @@ import {
 import type { FileEncoding } from "@/lib/coding-assignment/types";
 import { StandardTestEditor } from "./standard-test-editor";
 import { FunctionalTestEditor } from "./functional-test-editor";
-import { useLearningBase } from '@/lib/learning/use-learning-base';
+import { useLearningBase } from "@/lib/learning/use-learning-base";
+import { EMCEPTION_MANIFEST_URL } from "@/lib/emception/manifest-url";
 
 // ponytail: direct import (matches code-grader-panel pattern). The IDE manages
 // its own worker boot client-side; Next's transpilePackages list already
@@ -136,6 +136,8 @@ interface EditorProps {
   contentId: string | null;
   assessmentTitle: string;
   initialContent: CodingAssignmentContent | null;
+  embedded?: boolean;
+  onSaved?: (content: CodingAssignmentContent) => void;
 }
 
 interface TestRow {
@@ -145,12 +147,13 @@ interface TestRow {
 
 export function CodingDefinitionEditor({
   courseId,
-  assessmentId,
   assessmentSlug,
   programId,
   contentId,
   assessmentTitle,
   initialContent,
+  embedded = false,
+  onSaved,
 }: EditorProps): ReactElement {
   const learningBase = useLearningBase();
   const router = useRouter();
@@ -158,11 +161,13 @@ export function CodingDefinitionEditor({
   const ideControllerRef = useRef<AssessmentIdeController | null>(null);
 
   // ── Editor state ──
-  const initialLang = (initialContent?.Environment.Language as CodingLanguage) ?? "cpp";
+  const initialLang =
+    (initialContent?.Environment.Language as CodingLanguage) ?? "cpp";
   const [language, setLanguage] = useState<CodingLanguage>(initialLang);
-  const [allowStudentCreateFiles, setAllowStudentCreateFiles] = useState<boolean>(
-    initialContent?.Environment.AllowStudentCreateFiles ?? false,
-  );
+  const [allowStudentCreateFiles, setAllowStudentCreateFiles] =
+    useState<boolean>(
+      initialContent?.Environment.AllowStudentCreateFiles ?? false,
+    );
   const [fileRows, setFileRows] = useState<AssignmentFileRow[]>(() =>
     initialContent
       ? Object.entries(initialContent.Data.Files).map(([path, meta]) => ({
@@ -177,8 +182,14 @@ export function CodingDefinitionEditor({
   const [testRows, setTestRows] = useState<TestRow[]>(() =>
     initialContent
       ? [
-          ...initialContent.Tests.Public.map((test) => ({ test, visibility: "Public" as FileVisibility })),
-          ...initialContent.Tests.Private.map((test) => ({ test, visibility: "Private" as FileVisibility })),
+          ...initialContent.Tests.Public.map((test) => ({
+            test,
+            visibility: "Public" as FileVisibility,
+          })),
+          ...initialContent.Tests.Private.map((test) => ({
+            test,
+            visibility: "Private" as FileVisibility,
+          })),
         ]
       : [],
   );
@@ -186,6 +197,11 @@ export function CodingDefinitionEditor({
 
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const ideMounted = useSyncExternalStore(
+    () => () => undefined,
+    () => true,
+    () => false,
+  );
 
   // ── Autosave bookkeeping ──
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -209,7 +225,6 @@ export function CodingDefinitionEditor({
       Object.keys(files).length > 0 ? files : sample.workspaceConfig.files,
     );
   }, [language, fileRows]);
-
 
   // ── Auto-seed default sample on first mount when no initialContent ──
   // The Language preset Card used to host this seed via handleLanguageChange;
@@ -248,7 +263,11 @@ export function CodingDefinitionEditor({
     if (controller) {
       void controller
         .replaceFiles(
-          rows.map(({ path, content }) => ({ path, content, type: "text" as const })),
+          rows.map(({ path, content }) => ({
+            path,
+            content,
+            type: "text" as const,
+          })),
         )
         .catch((replaceError) => {
           setError(
@@ -378,12 +397,17 @@ export function CodingDefinitionEditor({
 
     startTransition(async () => {
       try {
-        const result = await putCodingAssignmentAction(programId, contentId, content);
+        const result = await putCodingAssignmentAction(
+          programId,
+          contentId,
+          content,
+        );
         if (!result.success) {
           setError(result.error);
           return;
         }
         setSaved(true);
+        onSaved?.(content);
         dirtyRef.current = false;
         if (autosaveTimerRef.current) {
           clearTimeout(autosaveTimerRef.current);
@@ -424,7 +448,14 @@ export function CodingDefinitionEditor({
         autosaveTimerRef.current = null;
       }
     };
-  }, [testRows, fileRows, language, allowStudentCreateFiles, isValid, contentId]);
+  }, [
+    testRows,
+    fileRows,
+    language,
+    allowStudentCreateFiles,
+    isValid,
+    contentId,
+  ]);
 
   function handleBack() {
     router.push(
@@ -437,15 +468,17 @@ export function CodingDefinitionEditor({
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={handleBack}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
+        {!embedded ? (
+          <Button variant="ghost" size="sm" onClick={handleBack}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+        ) : null}
         <div className="flex-1">
-          <p className="text-muted-foreground text-sm">
-            Coding Definition Editor
-          </p>
-          <h1 className="text-2xl font-bold">{assessmentTitle}</h1>
+          <p className="text-muted-foreground text-sm">Coding assignment</p>
+          {!embedded ? (
+            <h1 className="text-2xl font-bold">{assessmentTitle}</h1>
+          ) : null}
         </div>
         {saved && <p className="text-sm text-green-600">Saved.</p>}
         {error && <p className="text-destructive text-sm">{error}</p>}
@@ -473,187 +506,230 @@ export function CodingDefinitionEditor({
       )}
 
       {workspaceConfig && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Workspace</CardTitle>
-          </CardHeader>
+        <Card
+          className={embedded ? "rounded-none border-0 shadow-none" : undefined}
+        >
+          {!embedded ? (
+            <CardHeader>
+              <CardTitle>Workspace</CardTitle>
+            </CardHeader>
+          ) : null}
           <CardContent className="space-y-4">
-            <div data-testid="ide-mount" className="h-[70vh] min-h-[500px]">
-              <CodingAssessmentEditor
-                mode="author"
-                definition={buildContent({
-                  language,
-                  allowStudentCreateFiles,
-                  fileRows,
-                  testRows,
-                  maxScore,
-                })}
-                workspaceConfig={workspaceConfig}
-                maxScore={maxScore}
-                onReady={(controller) => {
-                  ideControllerRef.current = controller;
-                }}
-                extensions={[
-                  {
-                    id: "gameguild-assessment-authoring",
-                    toolbarEnd: () => (
-                      <div className="flex items-center gap-2">
-                        <select
-                          aria-label="Workspace preset"
-                          data-testid="preset-picker"
-                          value={language}
-                          onChange={(event) =>
-                            handleLanguageChange(event.target.value as CodingLanguage)
-                          }
-                        >
-                          {LANGUAGE_OPTIONS.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
-                        <button
-                          type="button"
-                          data-testid="allow-student-create"
-                          onClick={() =>
-                            setAllowStudentCreateFiles((value) => !value)
-                          }
-                        >
-                          {allowStudentCreateFiles ? "🔓" : "🔒"}
-                        </button>
-                      </div>
-                    ),
-                    explorerFooter: () => (
-                      <section
-                        aria-label="Assignment file policies"
-                        className="space-y-2 border-t border-border p-2 text-xs"
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <strong>File policies</strong>
-                          <button
-                            type="button"
-                            data-testid="sync-file-policies"
-                            onClick={() => {
-                              const controller = ideControllerRef.current;
-                              if (!controller) {
-                                setError("Editor is still loading. Try again shortly.");
-                                return;
+            <div
+              data-testid="ide-mount"
+              className={
+                embedded
+                  ? "h-[calc(100dvh-13rem)] min-h-[500px]"
+                  : "h-[70vh] min-h-[500px]"
+              }
+            >
+              {ideMounted ? (
+                <CodingAssessmentEditor
+                  mode="author"
+                  manifestUrl={EMCEPTION_MANIFEST_URL}
+                  definition={buildContent({
+                    language,
+                    allowStudentCreateFiles,
+                    fileRows,
+                    testRows,
+                    maxScore,
+                  })}
+                  workspaceConfig={workspaceConfig}
+                  maxScore={maxScore}
+                  onReady={(controller) => {
+                    ideControllerRef.current = controller;
+                  }}
+                  extensions={
+                    [
+                      {
+                        id: "gameguild-assessment-authoring",
+                        toolbarEnd: () => (
+                          <div className="flex items-center gap-2">
+                            <select
+                              aria-label="Workspace preset"
+                              data-testid="preset-picker"
+                              value={language}
+                              onChange={(event) =>
+                                handleLanguageChange(
+                                  event.target.value as CodingLanguage,
+                                )
                               }
-                              void synchronizeFilePolicies(controller);
-                            }}
+                            >
+                              {LANGUAGE_OPTIONS.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
+                            <button
+                              type="button"
+                              data-testid="allow-student-create"
+                              onClick={() =>
+                                setAllowStudentCreateFiles((value) => !value)
+                              }
+                            >
+                              {allowStudentCreateFiles ? "🔓" : "🔒"}
+                            </button>
+                          </div>
+                        ),
+                        explorerFooter: () => (
+                          <section
+                            aria-label="Assignment file policies"
+                            className="space-y-2 border-t border-border p-2 text-xs"
                           >
-                            Sync files
-                          </button>
-                        </div>
-                        {fileRows.map((row) => (
-                          <div key={row.path} className="space-y-1">
-                            <p className="truncate font-mono" title={row.path}>
-                              {row.path}
-                            </p>
-                            <div className="flex items-center gap-2">
-                              <select
-                                aria-label={`Visibility for ${row.path}`}
-                                value={row.visibility}
-                                onChange={(event) =>
-                                  setFileRows((previous) =>
-                                    previous.map((file) =>
-                                      file.path === row.path
-                                        ? {
-                                            ...file,
-                                            visibility: event.target.value as FileVisibility,
-                                          }
-                                        : file,
-                                    ),
-                                  )
-                                }
-                              >
-                                <option value="Public">Public</option>
-                                <option value="Private">Private</option>
-                              </select>
-                              <label className="flex items-center gap-1">
-                                <input
-                                  aria-label={`Student can edit ${row.path}`}
-                                  type="checkbox"
-                                  checked={row.modifiable}
-                                  onChange={(event) =>
-                                    setFileRows((previous) =>
-                                      previous.map((file) =>
-                                        file.path === row.path
-                                          ? { ...file, modifiable: event.target.checked }
-                                          : file,
-                                      ),
-                                    )
+                            <div className="flex items-center justify-between gap-2">
+                              <strong>File policies</strong>
+                              <button
+                                type="button"
+                                data-testid="sync-file-policies"
+                                onClick={() => {
+                                  const controller = ideControllerRef.current;
+                                  if (!controller) {
+                                    setError(
+                                      "Editor is still loading. Try again shortly.",
+                                    );
+                                    return;
                                   }
+                                  void synchronizeFilePolicies(controller);
+                                }}
+                              >
+                                Sync files
+                              </button>
+                            </div>
+                            {fileRows.map((row) => (
+                              <div key={row.path} className="space-y-1">
+                                <p
+                                  className="truncate font-mono"
+                                  title={row.path}
+                                >
+                                  {row.path}
+                                </p>
+                                <div className="flex items-center gap-2">
+                                  <select
+                                    aria-label={`Visibility for ${row.path}`}
+                                    value={row.visibility}
+                                    onChange={(event) =>
+                                      setFileRows((previous) =>
+                                        previous.map((file) =>
+                                          file.path === row.path
+                                            ? {
+                                                ...file,
+                                                visibility: event.target
+                                                  .value as FileVisibility,
+                                              }
+                                            : file,
+                                        ),
+                                      )
+                                    }
+                                  >
+                                    <option value="Public">Public</option>
+                                    <option value="Private">Private</option>
+                                  </select>
+                                  <label className="flex items-center gap-1">
+                                    <input
+                                      aria-label={`Student can edit ${row.path}`}
+                                      type="checkbox"
+                                      checked={row.modifiable}
+                                      onChange={(event) =>
+                                        setFileRows((previous) =>
+                                          previous.map((file) =>
+                                            file.path === row.path
+                                              ? {
+                                                  ...file,
+                                                  modifiable:
+                                                    event.target.checked,
+                                                }
+                                              : file,
+                                          ),
+                                        )
+                                      }
+                                    />
+                                    Editable
+                                  </label>
+                                </div>
+                              </div>
+                            ))}
+                          </section>
+                        ),
+                        bottomPanel: () => (
+                          <div className="space-y-4">
+                            {testRows.length === 0 && (
+                              <p
+                                className="text-muted-foreground text-sm"
+                                data-testid="empty-tests"
+                              >
+                                No tests yet. Add a Standard or Functional test
+                                below.
+                              </p>
+                            )}
+                            {testRows.map((row, i) =>
+                              row.test.kind === "standard" ? (
+                                <StandardTestEditor
+                                  key={i}
+                                  index={i}
+                                  test={row.test as StandardTest}
+                                  visibility={row.visibility}
+                                  errors={validationErrors.filter((e) =>
+                                    e.field.startsWith(`tests[${i}]`),
+                                  )}
+                                  onChange={handleTestChange}
+                                  onVisibilityChange={
+                                    handleTestVisibilityChange
+                                  }
+                                  onRemove={handleRemoveTest}
                                 />
-                                Editable
-                              </label>
+                              ) : (
+                                <FunctionalTestEditor
+                                  key={i}
+                                  index={i}
+                                  test={row.test as FunctionalTestGroup}
+                                  visibility={row.visibility}
+                                  errors={validationErrors.filter((e) =>
+                                    e.field.startsWith(`tests[${i}]`),
+                                  )}
+                                  onChange={handleTestChange}
+                                  onVisibilityChange={
+                                    handleTestVisibilityChange
+                                  }
+                                  onRemove={handleRemoveTest}
+                                />
+                              ),
+                            )}
+                            <div className="flex flex-wrap gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleAddStandard}
+                                data-testid="add-standard"
+                              >
+                                <Plus className="mr-1 h-3 w-3" /> Standard test
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleAddFunctional}
+                                data-testid="add-functional"
+                              >
+                                <Plus className="mr-1 h-3 w-3" /> Functional
+                                test
+                              </Button>
                             </div>
                           </div>
-                        ))}
-                      </section>
-                    ),
-                    bottomPanel: () => (
-                  <div className="space-y-4">
-                    {testRows.length === 0 && (
-                      <p
-                        className="text-muted-foreground text-sm"
-                        data-testid="empty-tests"
-                      >
-                        No tests yet. Add a Standard or Functional test below.
-                      </p>
-                    )}
-                    {testRows.map((row, i) =>
-                      row.test.kind === "standard" ? (
-                        <StandardTestEditor
-                          key={i}
-                          index={i}
-                          test={row.test as StandardTest}
-                          visibility={row.visibility}
-                          errors={validationErrors.filter((e) =>
-                            e.field.startsWith(`tests[${i}]`),
-                          )}
-                          onChange={handleTestChange}
-                          onVisibilityChange={handleTestVisibilityChange}
-                          onRemove={handleRemoveTest}
-                        />
-                      ) : (
-                        <FunctionalTestEditor
-                          key={i}
-                          index={i}
-                          test={row.test as FunctionalTestGroup}
-                          visibility={row.visibility}
-                          errors={validationErrors.filter((e) =>
-                            e.field.startsWith(`tests[${i}]`),
-                          )}
-                          onChange={handleTestChange}
-                          onVisibilityChange={handleTestVisibilityChange}
-                          onRemove={handleRemoveTest}
-                        />
-                      ),
-                    )}
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleAddStandard}
-                        data-testid="add-standard"
-                      >
-                        <Plus className="mr-1 h-3 w-3" /> Standard test
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleAddFunctional}
-                        data-testid="add-functional"
-                      >
-                        <Plus className="mr-1 h-3 w-3" /> Functional test
-                      </Button>
-                    </div>
-                  </div>
-                    ),
-                  },
-                ] satisfies readonly AssessmentIdeExtension[]}
-              />
+                        ),
+                      },
+                    ] satisfies readonly AssessmentIdeExtension[]
+                  }
+                />
+              ) : (
+                <div
+                  className="flex h-full min-h-[500px] items-center justify-center gap-2 text-sm text-muted-foreground"
+                  data-testid="ide-loading"
+                  role="status"
+                >
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading coding editor…
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -769,7 +845,15 @@ interface BuildArgs {
 }
 
 function buildContent(args: BuildArgs): CodingAssignmentContent {
-  const files: Record<string, { Content: string; Encoding: FileEncoding; Visibility: FileVisibility; Modifiable: boolean }> = {};
+  const files: Record<
+    string,
+    {
+      Content: string;
+      Encoding: FileEncoding;
+      Visibility: FileVisibility;
+      Modifiable: boolean;
+    }
+  > = {};
   for (const row of args.fileRows) {
     files[row.path] = {
       Content: row.content,

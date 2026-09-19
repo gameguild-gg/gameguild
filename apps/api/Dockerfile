@@ -39,7 +39,7 @@ LABEL org.opencontainers.image.source="https://github.com/gameguild-gg/gameguild
       io.gameguild.source-tree="${SOURCE_TREE}"
 
 WORKDIR /app
-RUN apk add --no-cache curl krb5-libs icu-libs icu-data-full openssl3 libssl3 \
+RUN apk add --no-cache curl krb5-libs icu-libs icu-data-full openssl3 libssl3 tzdata \
     && addgroup -g 1001 -S appuser \
     && adduser -S appuser -G appuser -u 1001 \
     && chown -R appuser:appuser /app

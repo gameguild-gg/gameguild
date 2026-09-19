@@ -25,7 +25,6 @@
       "@game-guild/eslint-config",
       "@game-guild/grading",
       "@game-guild/jest-config",
-      "@game-guild/learning",
       "@game-guild/lexical-surface",
       "@game-guild/prettier-config",
       "@game-guild/quiz",

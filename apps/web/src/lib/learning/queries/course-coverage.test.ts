@@ -17,7 +17,10 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('react', () => ({ cache: (callback: unknown) => callback }));
 vi.mock('@/auth', () => ({ auth: mocks.auth, getToken: mocks.getToken }));
-vi.mock('@game-guild/grading', () => ({ readContentGradingDefinition: mocks.readGrading }));
+vi.mock('@game-guild/grading', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@game-guild/grading')>()),
+  readContentGradingDefinition: mocks.readGrading,
+}));
 vi.mock('@game-guild/client', () => ({
   createServerClient: mocks.createServerClient,
   hasRole: (session: { user?: { roles?: string[] } }, role: string) => Boolean(session.user?.roles?.includes(role)),
@@ -113,7 +116,7 @@ describe('course query coverage', () => {
         data: {
           id: courseId, creatorId: 'creator-name', title: 'Course', description: 'Description', metadata: '{}',
           slug: 'course', status: 'Published', visibility: 'Public', thumbnail: 'cover.png', videoShowcaseUrl: 'video.mp4',
-          estimatedHours: 5, passingScore: 75, category: 'Programming', difficulty: 'Advanced',
+          estimatedHours: 5, passingScore: 7_500, category: 'Programming', difficulty: 'Advanced',
           skillsRequired: 'Logic', skillsProvided: 'C++', enrollmentStatus: 'Closed', maxEnrollments: 20,
           enrollmentDeadline: '2026-10-01T00:00:00.000Z', currentEnrollments: 4, averageRating: 4.5,
           totalRatings: 2, isEnrollmentOpen: false, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-02T00:00:00.000Z',
@@ -149,7 +152,7 @@ describe('course query coverage', () => {
   });
 
   it('maps default course fields and timestamps', async () => {
-    mocks.getCourseBySlug.mockResolvedValue({ ok: true, data: { id: courseId, passingScore: 'invalid' } });
+    mocks.getCourseBySlug.mockResolvedValue({ ok: true, data: { id: courseId, passingScore: null } });
     const result = await getCourse('defaults');
     expect(result).toMatchObject({
       creatorId: null, creatorHandle: null, title: '', description: '', metadata: null, slug: '', status: 'draft',
@@ -313,7 +316,7 @@ describe('course query coverage', () => {
         {
           enrollmentId: 'enrollment-1', userId: 'user-1', userName: ' Ada ', userEmail: ' ada@example.com ',
           startedAt: '2026-01-01T00:00:00.000Z', lastAccessedAt: '2026-01-02T00:00:00.000Z',
-          completionPercentage: 42.4, completedAt: '2026-01-03T00:00:00.000Z',
+          completionPercentage: 4_240, completedAt: '2026-01-03T00:00:00.000Z',
         },
         { userId: 'user-2', userName: ' ', userEmail: 'grace@example.com', startedAt: '2026-02-01T00:00:00.000Z' },
         { userName: null, userEmail: null },

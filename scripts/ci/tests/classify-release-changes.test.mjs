@@ -1,15 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { classifyReleaseChanges } from "../classify-release-changes.mjs";
+import {
+  classifyReleaseChanges,
+  releaseServiceMatrix,
+  runtimeReleaseServiceMatrix,
+} from "../classify-release-changes.mjs";
 
 const expectedEmptyClassification = {
   api: false,
   web: false,
-  learning: false,
   apiRuntimeChanged: false,
   webRuntimeChanged: false,
-  learningRuntimeChanged: false,
   testingLab: false,
   economyCritical: false,
   openApi: false,
@@ -92,13 +94,13 @@ test("an EF migration selects API, migration, and OpenAPI gates", () => {
 
 test("a shared UI package deploys each JavaScript consumer", () => {
   assert.deepEqual(
-    classifyReleaseChanges(["packages/infrastructure/ui/src/components/button.tsx"]),
+    classifyReleaseChanges([
+      "packages/infrastructure/ui/src/components/button.tsx",
+    ]),
     {
       ...expectedEmptyClassification,
       web: true,
-      learning: true,
       webRuntimeChanged: true,
-      learningRuntimeChanged: true,
       runtimeChanged: true,
     },
   );
@@ -124,11 +126,19 @@ test("a root dependency lock change rebuilds Node runtimes without selecting Eco
   assert.deepEqual(classifyReleaseChanges(["pnpm-lock.yaml"]), {
     ...expectedEmptyClassification,
     web: true,
-    learning: true,
     webRuntimeChanged: true,
-    learningRuntimeChanged: true,
     runtimeChanged: true,
   });
+});
+
+test("production service matrices contain only deployed API and Web services", () => {
+  const classification = classifyReleaseChanges([
+    "apps/api/Source/GameGuild.API/Program.cs",
+    "apps/web/src/app/page.tsx",
+  ]);
+
+  assert.deepEqual(releaseServiceMatrix(classification), ["api", "web"]);
+  assert.deepEqual(runtimeReleaseServiceMatrix(classification), ["api", "web"]);
 });
 
 test("unknown runtime configuration changes fail conservatively", () => {
@@ -136,10 +146,8 @@ test("unknown runtime configuration changes fail conservatively", () => {
     ...expectedEmptyClassification,
     api: true,
     web: true,
-    learning: true,
     apiRuntimeChanged: true,
     webRuntimeChanged: true,
-    learningRuntimeChanged: true,
     runtimeChanged: true,
   });
 });

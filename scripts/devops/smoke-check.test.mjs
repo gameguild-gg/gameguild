@@ -121,7 +121,6 @@ async function runSmokeWithOpenApi(paths, options = {}) {
     ...process.env,
     GAMEGUILD_API_URL: origin,
     GAMEGUILD_WEB_URL: origin,
-    GAMEGUILD_LEARNING_URL: origin,
     GAMEGUILD_SMOKE_ADMIN_EMAIL: 'admin@example.test',
     GAMEGUILD_SMOKE_ADMIN_PASSWORD: 'env-only-secret',
     SOCIAL_FEED_E2E_EVIDENCE_PATH: evidencePath,
