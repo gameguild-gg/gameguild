@@ -36,7 +36,7 @@ async function readSourceFiles(
 }
 
 describe("web runtime hardening", () => {
-  it("keeps React Compiler enabled within the Devtron build memory limit", () => {
+  it("keeps React Compiler enabled with the Devtron build capacity", () => {
     const nextConfig = readRepoFile("apps/web/next.config.ts");
     const economyGate = readRepoFile("scripts/ci/verify-economy.sh");
     const dockerfile = readRepoFile("apps/web/Dockerfile");
@@ -49,9 +49,9 @@ describe("web runtime hardening", () => {
       'process.env.GAMEGUILD_DISABLE_WEBPACK_CACHE === "1"',
     );
     expect(economyGate).toContain("GAMEGUILD_DISABLE_WEBPACK_CACHE=1");
-    expect(dockerfile).toContain("NODE_OPTIONS=--max-old-space-size=2048");
+    expect(dockerfile).toContain("NODE_OPTIONS=--max-old-space-size=4096");
     expect(dockerfile).toContain("GAMEGUILD_DISABLE_WEBPACK_CACHE=1");
-    expect(dockerfile).not.toContain("NODE_OPTIONS=--max-old-space-size=4096");
+    expect(dockerfile).not.toContain("NODE_OPTIONS=--max-old-space-size=2048");
   });
 
   it("uses POSIX-safe quoting when resolving the emception toolchain version", () => {
