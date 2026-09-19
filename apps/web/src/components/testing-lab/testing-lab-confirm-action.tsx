@@ -17,7 +17,7 @@ import { Button } from '@game-guild/ui/components/button';
 import { buttonVariants } from '@game-guild/ui/components/button-variants';
 import { AlertCircle, Archive, CheckCircle2, Loader2, RotateCcw, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition, type MouseEvent } from 'react';
+import { useEffect, useRef, useState, useTransition, type MouseEvent } from 'react';
 import { toast } from 'sonner';
 
 type Action = (formData: FormData) => Promise<TestingLabActionResult<unknown>>;
@@ -45,7 +45,16 @@ export function TestingLabConfirmAction({
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const [result, setResult] = useState<TestingLabActionResult<unknown> | null>(null);
+  const closeTimerRef = useRef<number | null>(null);
   const Icon = intent === 'restore' ? RotateCcw : intent === 'delete' ? Trash2 : Archive;
+
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current !== null) {
+        window.clearTimeout(closeTimerRef.current);
+      }
+    };
+  }, []);
 
   function runAction(event: MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
@@ -58,7 +67,13 @@ export function TestingLabConfirmAction({
         if (next.success) {
           toast.success(next.message);
           if (successHref) router.push(successHref);
-          window.setTimeout(() => setOpen(false), 650);
+          if (closeTimerRef.current !== null) {
+            window.clearTimeout(closeTimerRef.current);
+          }
+          closeTimerRef.current = window.setTimeout(() => {
+            closeTimerRef.current = null;
+            setOpen(false);
+          }, 650);
         } else {
           toast.error(next.error);
         }
@@ -74,6 +89,10 @@ export function TestingLabConfirmAction({
     <AlertDialog
       open={open}
       onOpenChange={(next) => {
+        if (!next && closeTimerRef.current !== null) {
+          window.clearTimeout(closeTimerRef.current);
+          closeTimerRef.current = null;
+        }
         setOpen(next);
         if (!next) setResult(null);
       }}
