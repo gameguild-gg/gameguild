@@ -144,7 +144,6 @@ function formatUnexpectedError(err: unknown): string {
 const CONTENT_TO_ASSESSMENT_TYPE: Record<string, AssessmentType> = {
   Assignment: "Assignment",
   Project: "Project",
-  Code: "Assignment",
 };
 
 export interface AddContentInput {

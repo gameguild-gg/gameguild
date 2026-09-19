@@ -37,19 +37,20 @@ export function QuizContentEditor({
     [initialContent],
   );
   const [document, setDocument] = useState<QuizContentDocument>(initialDocument);
+  const renderedDocument = mode === "preview" ? initialDocument : document;
   const quizItems = useMemo(
-    () => quizDocumentToContentItems(document),
-    [document],
+    () => quizDocumentToContentItems(renderedDocument),
+    [renderedDocument],
   );
   const gradingConfig = useMemo(
-    () => readQuizContentGrading(document),
-    [document],
+    () => readQuizContentGrading(renderedDocument),
+    [renderedDocument],
   );
   const gradingEnabled = gradingConfig !== null;
   const gradedItemCount = gradingConfig ? Object.keys(gradingConfig.items).length : 0;
   const gradedPoints = useMemo(
-    () => sumQuizItemPoints(quizDocumentToGradingItems(document)),
-    [document],
+    () => sumQuizItemPoints(quizDocumentToGradingItems(renderedDocument)),
+    [renderedDocument],
   );
 
   const commitDocument = useCallback(

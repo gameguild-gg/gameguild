@@ -11,11 +11,11 @@ const mocks = vi.hoisted(() => ({
   serializeDocument: vi.fn(),
   sumPoints: vi.fn(),
   toItems: vi.fn(),
-  updateGrading: vi.fn(),
+  toGradingItems: vi.fn(),
 }));
 
-vi.mock("@game-guild/grading", () => ({
-  sumGradedItemPoints: mocks.sumPoints,
+vi.mock("@game-guild/grading-adapter-quiz", () => ({
+  sumQuizItemPoints: mocks.sumPoints,
 }));
 
 vi.mock("@game-guild/quiz-content", () => ({
@@ -24,9 +24,9 @@ vi.mock("@game-guild/quiz-content", () => ({
   parseQuizContentDocument: mocks.parseDocument,
   quizContentItemsToDocument: mocks.itemsToDocument,
   quizDocumentToContentItems: mocks.toItems,
+  quizDocumentToGradingItems: mocks.toGradingItems,
   readQuizContentGrading: mocks.readGrading,
   serializeQuizContentDocument: mocks.serializeDocument,
-  updateQuizContentGrading: mocks.updateGrading,
 }));
 
 vi.mock("@game-guild/quiz-surface/editor", () => ({
@@ -58,8 +58,7 @@ import { QuizContentEditor } from "./quiz-content-editor";
 
 type TestDocument = {
   items: Array<{ id: string }>;
-  grading: {
-    enabled: boolean;
+  grading?: {
     items: Record<string, unknown>;
     score: { maxScore: number; passingScore?: number };
   };
@@ -67,11 +66,6 @@ type TestDocument = {
 
 const disabledDocument: TestDocument = {
   items: [{ id: "question-1" }],
-  grading: {
-    enabled: false,
-    items: {},
-    score: { maxScore: 10 },
-  },
 };
 
 function renderEditor(
@@ -99,7 +93,10 @@ describe("QuizContentEditor", () => {
       (document: TestDocument) => document.items,
     );
     mocks.readGrading.mockImplementation(
-      (document: TestDocument) => document.grading,
+      (document: TestDocument) => document.grading ?? null,
+    );
+    mocks.toGradingItems.mockImplementation(
+      (document: TestDocument) => document.items,
     );
     mocks.sumPoints.mockReturnValue(7);
     mocks.serializeDocument.mockImplementation((document) => document);
@@ -109,21 +106,12 @@ describe("QuizContentEditor", () => {
     }));
     mocks.enableGrading.mockImplementation((document: TestDocument) => ({
       ...document,
-      grading: { ...document.grading, enabled: true },
+      grading: { items: {}, score: { maxScore: 10 } },
     }));
-    mocks.disableGrading.mockImplementation((document: TestDocument) => ({
-      ...document,
-      grading: { ...document.grading, enabled: false },
-    }));
-    mocks.updateGrading.mockImplementation(
-      (
-        document: TestDocument,
-        updater: (current: TestDocument["grading"]) => TestDocument["grading"],
-      ) => ({
-        ...document,
-        grading: updater(document.grading),
-      }),
-    );
+    mocks.disableGrading.mockImplementation((document: TestDocument) => {
+      const { grading: _grading, ...content } = document;
+      return content;
+    });
   });
 
   it("renders an ungraded quiz in local-practice edit mode", () => {
@@ -162,7 +150,7 @@ describe("QuizContentEditor", () => {
     renderEditor(
       {
         ...disabledDocument,
-        grading: { ...disabledDocument.grading, enabled: true },
+        grading: { items: {}, score: { maxScore: 10 } },
       },
       "preview",
     );
@@ -170,6 +158,31 @@ describe("QuizContentEditor", () => {
       "data-submission-mode",
       "server-graded",
     );
+  });
+
+  it("updates a mounted preview when the draft content changes", () => {
+    const { rerender } = render(
+      <QuizContentEditor
+        initialContent={disabledDocument as never}
+        onChange={vi.fn()}
+        mode="preview"
+      />,
+    );
+
+    expect(screen.getByText("1 quiz items")).toBeInTheDocument();
+
+    rerender(
+      <QuizContentEditor
+        initialContent={{
+          ...disabledDocument,
+          items: [{ id: "question-1" }, { id: "question-2" }],
+        } as never}
+        onChange={vi.fn()}
+        mode="preview"
+      />,
+    );
+
+    expect(screen.getByText("2 quiz items")).toBeInTheDocument();
   });
 
   it("enables and disables server grading", () => {
@@ -180,7 +193,10 @@ describe("QuizContentEditor", () => {
     expect(mocks.enableGrading).toHaveBeenCalledWith(disabledDocument);
     expect(onChange).toHaveBeenLastCalledWith(
       expect.objectContaining({
-        grading: expect.objectContaining({ enabled: true }),
+        grading: expect.objectContaining({
+          items: {},
+          score: { maxScore: 10 },
+        }),
       }),
     );
     expect(screen.getByText("0 items")).toBeInTheDocument();
@@ -206,104 +222,17 @@ describe("QuizContentEditor", () => {
     );
   });
 
-  it("normalizes max score and clamps an existing passing score", () => {
-    const { onChange } = renderEditor({
+  it("summarizes configured grading items and their points", () => {
+    renderEditor({
       ...disabledDocument,
       grading: {
-        enabled: true,
         items: { one: {}, two: {} },
-        score: { maxScore: 10, passingScore: 8 },
-      },
-    });
-
-    fireEvent.change(screen.getByLabelText("Max score"), {
-      target: { value: "5" },
-    });
-    expect(onChange).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        grading: expect.objectContaining({
-          score: { maxScore: 5, passingScore: 5 },
-        }),
-      }),
-    );
-
-    fireEvent.change(screen.getByLabelText("Max score"), {
-      target: { value: "0" },
-    });
-    expect(onChange).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        grading: expect.objectContaining({
-          score: { maxScore: 1, passingScore: 1 },
-        }),
-      }),
-    );
-  });
-
-  it("keeps an undefined passing score while max score changes", () => {
-    const { onChange } = renderEditor({
-      ...disabledDocument,
-      grading: { ...disabledDocument.grading, enabled: true },
-    });
-
-    fireEvent.change(screen.getByLabelText("Max score"), {
-      target: { value: "20" },
-    });
-
-    expect(onChange).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        grading: expect.objectContaining({
-          score: { maxScore: 20, passingScore: undefined },
-        }),
-      }),
-    );
-  });
-
-  it("clears, clamps, and normalizes passing scores", () => {
-    const { onChange } = renderEditor({
-      ...disabledDocument,
-      grading: {
-        ...disabledDocument.grading,
-        enabled: true,
         score: { maxScore: 10, passingScore: 6 },
       },
     });
-    const passingScore = screen.getByLabelText("Passing score");
 
-    fireEvent.change(passingScore, { target: { value: "" } });
-    expect(onChange).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        grading: expect.objectContaining({
-          score: { maxScore: 10, passingScore: undefined },
-        }),
-      }),
-    );
-
-    fireEvent.change(passingScore, { target: { value: "20" } });
-    expect(onChange).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        grading: expect.objectContaining({
-          score: { maxScore: 10, passingScore: 10 },
-        }),
-      }),
-    );
-
-    fireEvent.change(passingScore, { target: { value: "-2" } });
-    expect(onChange).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        grading: expect.objectContaining({
-          score: { maxScore: 10, passingScore: 0 },
-        }),
-      }),
-    );
-
-    passingScore.setAttribute("type", "text");
-    fireEvent.change(passingScore, { target: { value: "invalid" } });
-    expect(onChange).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        grading: expect.objectContaining({
-          score: { maxScore: 10, passingScore: 0 },
-        }),
-      }),
-    );
+    expect(screen.getByText("2 items")).toBeInTheDocument();
+    expect(screen.getByText("7 configured pts")).toBeInTheDocument();
+    expect(screen.getByText("Assessment")).toBeInTheDocument();
   });
 });

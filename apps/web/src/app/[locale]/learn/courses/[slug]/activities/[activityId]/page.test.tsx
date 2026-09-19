@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { filesToCodePayload } from '@/lib/coding-assignment/code-payload';
+import { createTrueFalseEntry } from '@game-guild/quiz';
 
 const mocks = vi.hoisted(() => ({
   getCourseAccessData: vi.fn(),
@@ -63,6 +64,12 @@ vi.mock('@/components/learning/coding-activity-client', () => ({
   ),
 }));
 
+vi.mock('@/components/learning/learner-quiz-activity', () => ({
+  LearnerQuizActivity: (props: Record<string, unknown>) => (
+    <div data-testid="quiz-client" data-props={JSON.stringify(props)} />
+  ),
+}));
+
 vi.mock('@/components/learning/learner-activity-form', () => ({
   LearnerActivityForm: () => <div data-testid="activity-form" />,
 }));
@@ -85,7 +92,7 @@ function makeAssessment(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function makeReadyAccess() {
+function makeReadyAccess(modules: unknown[] = []) {
   return {
     kind: 'ready' as const,
     course: {
@@ -94,7 +101,7 @@ function makeReadyAccess() {
       slug: 'test-course',
       description: '',
       thumbnail: null,
-      modules: [],
+      modules,
       overallProgress: 0,
       totalItems: 0,
       completedItems: 0,
@@ -319,5 +326,62 @@ describe('full-width coding experience (server page)', () => {
     expect(screen.queryByTestId('ide-fullwidth-mount')).not.toBeInTheDocument();
     expect(screen.getByTestId('activity-form')).toBeInTheDocument();
     expect(container.firstElementChild).toHaveClass('mx-auto', 'max-w-4xl');
+  });
+});
+
+describe('quiz learner experience (server page)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    const question = createTrueFalseEntry('The Earth is round.');
+    question.correctAnswer = true;
+    mocks.getCourseAccessData.mockResolvedValue(
+      makeReadyAccess([
+        {
+          id: 'module-1',
+          title: 'Module',
+          items: [
+            {
+              id: 'content-1',
+              title: 'Quiz',
+              type: 'quiz',
+              status: 'available',
+              order: 0,
+              isRequired: true,
+              contentType: 'Questionnaire',
+              content: {
+                schemaVersion: 1,
+                order: [['question-1', 'quiz']],
+                blocks: { 'question-1': question },
+              },
+            },
+          ],
+        },
+      ]),
+    );
+    mocks.getCourseLearnerContext.mockResolvedValue(
+      makeContext(
+        makeAssessment({
+          title: 'Published Quiz',
+          type: 'Quiz',
+          submissionModalities: 'None',
+        }),
+      ),
+    );
+    mocks.auth.mockResolvedValue({ user: { id: 'user-1' } });
+    mocks.getMyProjects.mockResolvedValue([]);
+  });
+
+  it('renders the published quiz runtime and removes answer keys before hydration', async () => {
+    await renderActivityPage();
+
+    const quiz = await screen.findByTestId('quiz-client');
+    const props = JSON.parse(quiz.dataset.props ?? '{}');
+
+    expect(props.contentId).toBe('content-1');
+    expect(props.content.mode).toBe('server-graded');
+    expect(props.content.document.blocks['question-1']).not.toHaveProperty(
+      'correctAnswer',
+    );
+    expect(screen.queryByTestId('activity-form')).not.toBeInTheDocument();
   });
 });

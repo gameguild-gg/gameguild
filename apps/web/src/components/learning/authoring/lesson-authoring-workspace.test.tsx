@@ -1,13 +1,21 @@
 import "@testing-library/jest-dom/vitest";
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentProps } from "react";
+import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   params: { locale: "en-US" } as { locale?: string },
   theme: "dark",
   push: vi.fn(),
+  replace: vi.fn(),
   refresh: vi.fn(),
   saveDraft: vi.fn(),
   getDraft: vi.fn(),
@@ -29,13 +37,22 @@ const mocks = vi.hoisted(() => ({
         onCursorOffsetChange: (offset: number) => void;
       }
     | undefined,
+  quizEditorModes: [] as string[],
   diffEditorProps: undefined as
-    | { language: string; theme: string; options: { renderSideBySide: boolean } }
+    | {
+        language: string;
+        theme: string;
+        options: { renderSideBySide: boolean };
+      }
     | undefined,
 }));
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: mocks.push, refresh: mocks.refresh }),
+  useRouter: () => ({
+    push: mocks.push,
+    replace: mocks.replace,
+    refresh: mocks.refresh,
+  }),
   useParams: () => mocks.params,
 }));
 vi.mock("@/lib/learning/use-learning-base", () => ({
@@ -71,49 +88,144 @@ vi.mock("@game-guild/ui/components/scroll-area", () => ({
     <div {...props}>{children}</div>
   ),
 }));
-vi.mock("@/components/learning/console/courses/[course]/content/[contentId]/lesson-code-editor", () => ({
-  LessonCodeEditor: (props: {
-    initialValue: string;
-    language: string;
-    placeholder?: string;
-    onChange: (value: string) => void;
-    onCursorOffsetChange: (offset: number) => void;
-  }) => {
-    mocks.codeEditorProps = props;
-    return (
-      <textarea
-        aria-label="Lesson body"
-        defaultValue={props.initialValue}
-        onChange={(event) => props.onChange(event.target.value)}
-        onSelect={() => props.onCursorOffsetChange(4)}
-      />
-    );
-  },
-}));
-vi.mock("@/components/learning/console/courses/[course]/content/[contentId]/lesson-content-editor", () => ({
-  LessonContentEditor: ({ onChange }: { onChange: (value: Record<string, unknown>) => void }) => (
-    <button type="button" onClick={() => onChange({ root: { children: [] } })}>Lexical editor</button>
-  ),
-}));
-vi.mock("@/components/learning/console/courses/[course]/content/[contentId]/lesson-video-editor", () => ({
-  LessonVideoEditor: ({ onChange }: { onChange: (value: string) => void }) => (
-    <button type="button" onClick={() => onChange("https://cdn.example.test/changed.mp4")}>Video editor</button>
-  ),
-}));
-vi.mock("@/components/learning/console/courses/[course]/content/[contentId]/quiz-content-editor", () => ({
-  QuizContentEditor: ({ onChange }: { onChange: (value: Record<string, unknown>) => void }) => (
-    <button type="button" onClick={() => onChange({ questions: [] })}>Quiz editor</button>
+vi.mock(
+  "@/components/learning/console/courses/[course]/content/[contentId]/lesson-code-editor",
+  () => ({
+    LessonCodeEditor: (props: {
+      initialValue: string;
+      language: string;
+      placeholder?: string;
+      onChange: (value: string) => void;
+      onCursorOffsetChange: (offset: number) => void;
+    }) => {
+      mocks.codeEditorProps = props;
+      return (
+        <textarea
+          aria-label="Lesson body"
+          defaultValue={props.initialValue}
+          onChange={(event) => props.onChange(event.target.value)}
+          onSelect={() => props.onCursorOffsetChange(4)}
+        />
+      );
+    },
+  }),
+);
+vi.mock(
+  "@/components/learning/console/courses/[course]/content/[contentId]/lesson-content-editor",
+  () => ({
+    LessonContentEditor: ({
+      onChange,
+    }: {
+      onChange: (value: Record<string, unknown>) => void;
+    }) => (
+      <button
+        type="button"
+        onClick={() => onChange({ root: { children: [] } })}
+      >
+        Lexical editor
+      </button>
+    ),
+  }),
+);
+vi.mock(
+  "@/components/learning/console/courses/[course]/content/[contentId]/lesson-video-editor",
+  () => ({
+    LessonVideoEditor: ({
+      onChange,
+    }: {
+      onChange: (value: string) => void;
+    }) => (
+      <button
+        type="button"
+        onClick={() => onChange("https://cdn.example.test/changed.mp4")}
+      >
+        Video editor
+      </button>
+    ),
+  }),
+);
+vi.mock(
+  "@/components/learning/console/courses/[course]/content/[contentId]/quiz-content-editor",
+  () => ({
+    QuizContentEditor: ({
+      onChange,
+      mode = "edit",
+    }: {
+      onChange: (value: Record<string, unknown>) => void;
+      mode?: "edit" | "preview";
+    }) => {
+      mocks.quizEditorModes.push(mode);
+      return mode === "preview" ? (
+        <div data-testid="quiz-preview">Quiz preview</div>
+      ) : (
+        <button type="button" onClick={() => onChange({ questions: [] })}>
+          Quiz editor
+        </button>
+      );
+    },
+  }),
+);
+vi.mock(
+  "@/components/learning/console/courses/[course]/assessments/[assessmentId]/coding-definition/coding-definition-editor",
+  () => ({
+    CodingDefinitionEditor: ({
+      embedded,
+      onSaved,
+    }: {
+      embedded?: boolean;
+      onSaved?: (content: Record<string, unknown>) => void;
+    }) => (
+      <button
+        type="button"
+        data-testid="coding-definition-editor"
+        data-embedded={String(embedded)}
+        onClick={() =>
+          onSaved?.({
+            Type: "coding-assignment",
+            Version: 1,
+            Environment: { Language: "cpp" },
+            Data: { Files: {} },
+            Tests: { Public: [], Private: [] },
+            Grading: { MaxScore: 100 },
+          })
+        }
+      >
+        Coding assignment editor
+      </button>
+    ),
+  }),
+);
+vi.mock("@/components/learning/authoring/coding-assignment-preview", () => ({
+  CodingAssignmentPreview: () => (
+    <div data-testid="coding-assignment-preview">Coding assignment preview</div>
   ),
 }));
 vi.mock("@monaco-editor/react", () => ({
-  DiffEditor: (props: { language: string; theme: string; options: { renderSideBySide: boolean } }) => {
+  DiffEditor: (props: {
+    language: string;
+    theme: string;
+    options: { renderSideBySide: boolean };
+  }) => {
     mocks.diffEditorProps = props;
     return <div>Diff editor</div>;
   },
 }));
-vi.mock("next-themes", () => ({ useTheme: () => ({ resolvedTheme: mocks.theme }) }));
+vi.mock("next-themes", () => ({
+  useTheme: () => ({ resolvedTheme: mocks.theme }),
+}));
 
-import { LessonAuthoringWorkspace } from "./lesson-authoring-workspace";
+import {
+  AuthoringLocalTime,
+  LessonAuthoringWorkspace,
+} from "./lesson-authoring-workspace";
+
+describe("AuthoringLocalTime", () => {
+  it("renders a deterministic placeholder during SSR", () => {
+    expect(
+      renderToString(<AuthoringLocalTime value="2026-09-10T12:00:00Z" />),
+    ).toContain("—");
+  });
+});
 
 const initialDraft = {
   id: "draft-1",
@@ -193,7 +305,8 @@ function streamResponse(...frames: string[]) {
   return new Response(
     new ReadableStream({
       start(controller) {
-        for (const frame of frames) controller.enqueue(encoder.encode(`${frame}\n\n`));
+        for (const frame of frames)
+          controller.enqueue(encoder.encode(`${frame}\n\n`));
         controller.close();
       },
     }),
@@ -203,10 +316,12 @@ function streamResponse(...frames: string[]) {
 
 async function flushCopilotRetries(iterations = 8) {
   for (let index = 0; index < iterations; index += 1) {
-    for (let microtask = 0; microtask < 12; microtask += 1) await Promise.resolve();
+    for (let microtask = 0; microtask < 12; microtask += 1)
+      await Promise.resolve();
     await vi.advanceTimersByTimeAsync(5000);
   }
-  for (let microtask = 0; microtask < 12; microtask += 1) await Promise.resolve();
+  for (let microtask = 0; microtask < 12; microtask += 1)
+    await Promise.resolve();
 }
 
 describe("LessonAuthoringWorkspace", () => {
@@ -217,33 +332,70 @@ describe("LessonAuthoringWorkspace", () => {
     mocks.params = { locale: "en-US" };
     mocks.theme = "dark";
     mocks.codeEditorProps = undefined;
+    mocks.quizEditorModes = [];
     mocks.diffEditorProps = undefined;
     Object.defineProperty(window, "matchMedia", {
       configurable: true,
       value: vi.fn().mockReturnValue({ matches: true }),
     });
-    mocks.saveDraft.mockImplementation(async (_courseId, _contentId, revision, payload) => ({
-      success: true,
-      data: { ...initialDraft, payload, revision: revision + 1 },
-    }));
+    mocks.saveDraft.mockImplementation(
+      async (_courseId, _contentId, revision, payload) => ({
+        success: true,
+        data: { ...initialDraft, payload, revision: revision + 1 },
+      }),
+    );
     mocks.getDraft.mockResolvedValue({
       success: true,
       data: initialDraft,
     });
-    mocks.publishDraft.mockImplementation(async (_courseId, _contentId, revision) => ({
-      success: true,
-      data: { draft: { ...initialDraft, revision: revision + 1, basePublishedVersion: 4 } },
-    }));
+    mocks.publishDraft.mockImplementation(
+      async (_courseId, _contentId, revision) => ({
+        success: true,
+        data: {
+          draft: {
+            ...initialDraft,
+            revision: revision + 1,
+            basePublishedVersion: 4,
+          },
+          publishedContent: { slug: initialDraft.payload.slug },
+        },
+      }),
+    );
     mocks.getEntitlement.mockResolvedValue({
       success: true,
-      data: { availableSoftCredits: 100, reservedSoftCredits: 0, settledSoftCredits: 0, currency: "SoftCoin" },
+      data: {
+        availableSoftCredits: 100,
+        reservedSoftCredits: 0,
+        settledSoftCredits: 0,
+        currency: "SoftCoin",
+      },
     });
     mocks.getConversations.mockResolvedValue({ success: true, data: [] });
-    mocks.createRun.mockResolvedValue({ success: false, error: "Not configured", status: 503 });
-    mocks.getRun.mockResolvedValue({ success: false, error: "Run not found", status: 404 });
-    mocks.cancelRun.mockResolvedValue({ success: false, error: "Unable to cancel", status: 409 });
-    mocks.applyProposal.mockResolvedValue({ success: false, error: "Unable to apply", status: 409 });
-    mocks.discardProposal.mockResolvedValue({ success: false, error: "Unable to discard", status: 409 });
+    mocks.createRun.mockResolvedValue({
+      success: false,
+      error: "Not configured",
+      status: 503,
+    });
+    mocks.getRun.mockResolvedValue({
+      success: false,
+      error: "Run not found",
+      status: 404,
+    });
+    mocks.cancelRun.mockResolvedValue({
+      success: false,
+      error: "Unable to cancel",
+      status: 409,
+    });
+    mocks.applyProposal.mockResolvedValue({
+      success: false,
+      error: "Unable to apply",
+      status: 409,
+    });
+    mocks.discardProposal.mockResolvedValue({
+      success: false,
+      error: "Unable to discard",
+      status: 409,
+    });
     mocks.prepareAssets.mockResolvedValue({ assetUris: [], promotedUris: [] });
   });
 
@@ -257,7 +409,9 @@ describe("LessonAuthoringWorkspace", () => {
     draft = initialDraft,
     options: {
       activeItem?: typeof item;
-      curriculum?: typeof item[];
+      curriculum?: (typeof item)[];
+      linkedAssessment?: { id: string; slug: string; title: string } | null;
+      initialCodingAssignment?: Record<string, unknown> | null;
     } = {},
   ) {
     const activeItem = options.activeItem ?? item;
@@ -269,6 +423,8 @@ describe("LessonAuthoringWorkspace", () => {
         item={activeItem}
         curriculum={options.curriculum ?? [activeItem]}
         initialDraft={draft as never}
+        linkedAssessment={options.linkedAssessment}
+        initialCodingAssignment={options.initialCodingAssignment as never}
       />,
     );
   }
@@ -285,7 +441,10 @@ describe("LessonAuthoringWorkspace", () => {
       "course-1",
       "lesson-1",
       1,
-      expect.objectContaining({ title: "Updated lesson", slug: "updated-lesson" }),
+      expect.objectContaining({
+        title: "Updated lesson",
+        slug: "updated-lesson",
+      }),
     );
     expect(screen.getByText("Saved")).toBeInTheDocument();
   });
@@ -294,7 +453,9 @@ describe("LessonAuthoringWorkspace", () => {
     renderWorkspace();
 
     fireEvent.click(screen.getByRole("button", { name: /preview/i }));
-    expect(screen.getByTestId("learner-renderer")).toHaveTextContent("Original body");
+    expect(screen.getByTestId("learner-renderer")).toHaveTextContent(
+      "Original body",
+    );
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: /publish changes/i }));
       await Promise.resolve();
@@ -302,6 +463,25 @@ describe("LessonAuthoringWorkspace", () => {
 
     expect(mocks.publishDraft).toHaveBeenCalledWith("course-1", "lesson-1", 1);
     expect(mocks.refresh).toHaveBeenCalled();
+  });
+
+  it("previews a questionnaire with the quiz renderer instead of the lesson renderer", () => {
+    renderWorkspace({
+      ...initialDraft,
+      payload: {
+        ...initialDraft.payload,
+        type: "Questionnaire",
+        lessonFormat: null,
+        body: null,
+        jsonBody: { schemaVersion: 1, order: [], blocks: {} },
+      },
+    } as never);
+
+    fireEvent.click(screen.getByRole("button", { name: /preview/i }));
+
+    expect(screen.getByTestId("quiz-preview")).toBeInTheDocument();
+    expect(screen.queryByTestId("learner-renderer")).not.toBeInTheDocument();
+    expect(mocks.quizEditorModes).toContain("preview");
   });
 
   it("opens the Copilot with the authenticated user's SoftCoin balance", async () => {
@@ -315,7 +495,9 @@ describe("LessonAuthoringWorkspace", () => {
 
     expect(mocks.getEntitlement).toHaveBeenCalledWith("course-1", "lesson-1");
     expect(screen.getByText("100 SC")).toBeInTheDocument();
-    expect(screen.getByText(/only actual token usage is charged/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/only actual token usage is charged/i),
+    ).toBeInTheDocument();
   });
 
   it("limits video lessons to metadata-only Copilot proposals", async () => {
@@ -383,7 +565,9 @@ describe("LessonAuthoringWorkspace", () => {
       "Latest team version",
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /restore my changes/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /restore my changes/i }),
+    );
     expect(screen.getByRole("textbox", { name: "Lesson title" })).toHaveValue(
       "My unsaved version",
     );
@@ -404,7 +588,10 @@ describe("LessonAuthoringWorkspace", () => {
         outputTokens: 0,
       },
     };
-    window.sessionStorage.setItem("authoring-ai-run:course-1:lesson-1", running.id);
+    window.sessionStorage.setItem(
+      "authoring-ai-run:course-1:lesson-1",
+      running.id,
+    );
     mocks.getRun.mockResolvedValue({ success: true, data: running });
     mocks.cancelRun.mockResolvedValue({
       success: true,
@@ -412,12 +599,13 @@ describe("LessonAuthoringWorkspace", () => {
     });
     vi.stubGlobal(
       "fetch",
-      vi.fn((_url: string, init?: RequestInit) =>
-        new Promise((_resolve, reject) => {
-          init?.signal?.addEventListener("abort", () =>
-            reject(new DOMException("Aborted", "AbortError")),
-          );
-        }),
+      vi.fn(
+        (_url: string, init?: RequestInit) =>
+          new Promise((_resolve, reject) => {
+            init?.signal?.addEventListener("abort", () =>
+              reject(new DOMException("Aborted", "AbortError")),
+            );
+          }),
       ),
     );
 
@@ -437,7 +625,9 @@ describe("LessonAuthoringWorkspace", () => {
       "lesson-1",
       "run-1",
     );
-    expect(window.sessionStorage.getItem("authoring-ai-run:course-1:lesson-1")).toBeNull();
+    expect(
+      window.sessionStorage.getItem("authoring-ai-run:course-1:lesson-1"),
+    ).toBeNull();
   });
 
   it("navigates the curriculum and student view with locale fallback", () => {
@@ -446,7 +636,9 @@ describe("LessonAuthoringWorkspace", () => {
     renderWorkspace();
 
     fireEvent.click(screen.getByRole("button", { name: "Curriculum" }));
-    expect(mocks.push).toHaveBeenCalledWith("/workspace/learning/courses/course-slug/content");
+    expect(mocks.push).toHaveBeenCalledWith(
+      "/workspace/learning/courses/course-slug/content",
+    );
 
     fireEvent.click(screen.getByRole("button", { name: "Open student view" }));
     expect(open).toHaveBeenCalledWith(
@@ -456,24 +648,82 @@ describe("LessonAuthoringWorkspace", () => {
     );
   });
 
+  it.each([
+    [
+      "Questionnaire",
+      "quiz-assessment",
+      "/en-US/learn/courses/course-slug/activities/assessment-assessment-1",
+    ],
+    [
+      "Code",
+      "code-assessment",
+      "/en-US/learn/courses/course-slug/activities/assessment-assessment-1",
+    ],
+  ])(
+    "opens the linked %s assessment in student view",
+    (type, assessmentSlug, expectedHref) => {
+      const open = vi.spyOn(window, "open").mockReturnValue(null);
+      render(
+        <LessonAuthoringWorkspace
+          courseId="course-1"
+          courseSlug="course-slug"
+          courseTitle="Course title"
+          item={{ ...item, type } as never}
+          curriculum={[{ ...item, type } as never]}
+          initialDraft={
+            {
+              ...initialDraft,
+              payload: { ...initialDraft.payload, type, lessonFormat: null },
+            } as never
+          }
+          linkedAssessment={{ id: "assessment-1", slug: assessmentSlug }}
+        />,
+      );
+
+      fireEvent.click(
+        screen.getByRole("button", { name: "Open student view" }),
+      );
+
+      expect(open).toHaveBeenCalledWith(
+        expectedHref,
+        "_blank",
+        "noopener,noreferrer",
+      );
+    },
+  );
+
   it("supports desktop and mobile panel controls", async () => {
     const media = { matches: true };
-    vi.mocked(window.matchMedia).mockImplementation(() => media as MediaQueryList);
+    vi.mocked(window.matchMedia).mockImplementation(
+      () => media as MediaQueryList,
+    );
     renderWorkspace();
 
     fireEvent.click(screen.getByRole("button", { name: "Toggle curriculum" }));
-    expect(screen.queryByRole("complementary", { name: "Course curriculum" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("complementary", { name: "Course curriculum" }),
+    ).not.toBeInTheDocument();
     media.matches = false;
     fireEvent.click(screen.getByRole("button", { name: "Toggle curriculum" }));
-    expect(screen.getByRole("button", { name: "Close curriculum" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Close curriculum" }),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Close curriculum" }));
 
     media.matches = true;
-    fireEvent.click(screen.getByRole("button", { name: "Toggle lesson panel" }));
-    expect(screen.queryByRole("complementary", { name: "Lesson settings" })).not.toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Toggle lesson panel" }),
+    );
+    expect(
+      screen.queryByRole("complementary", { name: "Lesson settings" }),
+    ).not.toBeInTheDocument();
     media.matches = false;
-    fireEvent.click(screen.getByRole("button", { name: "Toggle lesson panel" }));
-    expect(screen.getByRole("button", { name: "Close lesson panel" })).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Toggle lesson panel" }),
+    );
+    expect(
+      screen.getByRole("button", { name: "Close lesson panel" }),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Close lesson panel" }));
 
     fireEvent.click(screen.getByRole("button", { name: "Open Copilot" }));
@@ -481,7 +731,9 @@ describe("LessonAuthoringWorkspace", () => {
       await Promise.resolve();
       await Promise.resolve();
     });
-    expect(screen.getByRole("complementary", { name: "AI authoring copilot" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("complementary", { name: "AI authoring copilot" }),
+    ).toBeInTheDocument();
   });
 
   it("filters, sorts, labels, and opens curriculum entries", () => {
@@ -507,9 +759,12 @@ describe("LessonAuthoringWorkspace", () => {
 
     expect(screen.getAllByLabelText("Published")).toHaveLength(1);
     expect(screen.getAllByLabelText("Draft")).toHaveLength(2);
-    fireEvent.change(screen.getByPlaceholderText("Search lessons and quizzes"), {
-      target: { value: " beta " },
-    });
+    fireEvent.change(
+      screen.getByPlaceholderText("Search lessons and quizzes"),
+      {
+        target: { value: " beta " },
+      },
+    );
     expect(screen.queryByText("Alpha code")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Beta quiz/ }));
     expect(mocks.push).toHaveBeenCalledWith(
@@ -549,14 +804,19 @@ describe("LessonAuthoringWorkspace", () => {
   it.each([
     ["Html", "html", undefined],
     ["RevealJs", "markdown", "Separate slides with --- on its own line."],
-  ] as const)("configures the %s code editor", (lessonFormat, language, placeholder) => {
-    renderWorkspace({
-      ...initialDraft,
-      payload: { ...initialDraft.payload, lessonFormat },
-    } as never);
+  ] as const)(
+    "configures the %s code editor",
+    (lessonFormat, language, placeholder) => {
+      renderWorkspace({
+        ...initialDraft,
+        payload: { ...initialDraft.payload, lessonFormat },
+      } as never);
 
-    expect(mocks.codeEditorProps).toEqual(expect.objectContaining({ language, placeholder }));
-  });
+      expect(mocks.codeEditorProps).toEqual(
+        expect.objectContaining({ language, placeholder }),
+      );
+    },
+  );
 
   it("supports Lexical, video, and quiz editor changes", () => {
     const lexical = renderWorkspace({
@@ -594,14 +854,27 @@ describe("LessonAuthoringWorkspace", () => {
   it("updates lesson settings including automatic time estimation", () => {
     renderWorkspace();
 
-    fireEvent.change(screen.getByLabelText("URL"), { target: { value: "  New URL  " } });
-    fireEvent.blur(screen.getByLabelText("URL"));
-    fireEvent.change(screen.getByLabelText("Description"), { target: { value: "New description" } });
-    fireEvent.click(screen.getByRole("switch", { name: "Required for completion" }));
-    fireEvent.change(screen.getByLabelText("Estimated minutes"), { target: { value: "12" } });
-    fireEvent.change(screen.getByLabelText("Estimated minutes"), { target: { value: "" } });
+    expect(screen.getByLabelText("Title", { selector: "input" })).toHaveValue(
+      "Original lesson",
+    );
+    fireEvent.change(screen.getByLabelText("URL slug"), {
+      target: { value: "  New URL  " },
+    });
+    fireEvent.blur(screen.getByLabelText("URL slug"));
+    fireEvent.change(screen.getByLabelText("Description"), {
+      target: { value: "New description" },
+    });
+    fireEvent.click(
+      screen.getByRole("switch", { name: "Required for completion" }),
+    );
+    fireEvent.change(screen.getByLabelText("Estimated minutes"), {
+      target: { value: "12" },
+    });
+    fireEvent.change(screen.getByLabelText("Estimated minutes"), {
+      target: { value: "" },
+    });
 
-    expect(screen.getByLabelText("URL")).toHaveValue("new-url");
+    expect(screen.getByLabelText("URL slug")).toHaveValue("new-url");
     expect(screen.getByLabelText("Description")).toHaveValue("New description");
     expect(screen.getByLabelText("Estimated minutes")).toHaveValue(null);
   });
@@ -624,7 +897,11 @@ describe("LessonAuthoringWorkspace", () => {
   });
 
   it("shows controlled errors returned and thrown while saving", async () => {
-    mocks.saveDraft.mockResolvedValueOnce({ success: false, error: "Save unavailable", status: 503 });
+    mocks.saveDraft.mockResolvedValueOnce({
+      success: false,
+      error: "Save unavailable",
+      status: 503,
+    });
     const first = renderWorkspace();
     fireEvent.change(screen.getByRole("textbox", { name: "Lesson title" }), {
       target: { value: "Changed once" },
@@ -643,8 +920,16 @@ describe("LessonAuthoringWorkspace", () => {
   });
 
   it("handles latest-draft failures and discards the preserved conflict copy", async () => {
-    mocks.saveDraft.mockResolvedValueOnce({ success: false, error: "Conflict", status: 409 });
-    mocks.getDraft.mockResolvedValueOnce({ success: false, error: "Reload failed", status: 503 });
+    mocks.saveDraft.mockResolvedValueOnce({
+      success: false,
+      error: "Conflict",
+      status: 409,
+    });
+    mocks.getDraft.mockResolvedValueOnce({
+      success: false,
+      error: "Reload failed",
+      status: 503,
+    });
     renderWorkspace();
     fireEvent.change(screen.getByRole("textbox", { name: "Lesson title" }), {
       target: { value: "My version" },
@@ -665,7 +950,9 @@ describe("LessonAuthoringWorkspace", () => {
       await Promise.resolve();
     });
     fireEvent.click(screen.getByRole("button", { name: "Discard my copy" }));
-    expect(screen.queryByRole("button", { name: "Discard my copy" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Discard my copy" }),
+    ).not.toBeInTheDocument();
   });
 
   it("publishes an edited draft before refreshing the route", async () => {
@@ -690,44 +977,201 @@ describe("LessonAuthoringWorkspace", () => {
     expect(mocks.refresh).toHaveBeenCalledOnce();
   });
 
-  it.each([
-    [new Error("Assets are not promoted"), "Assets are not promoted"],
-    ["asset failure", "Lesson assets are not ready to publish."],
-  ])("blocks publication when assets are unavailable", async (failure, message) => {
-    mocks.prepareAssets.mockRejectedValueOnce(failure);
+  it("adopts the canonical published draft without scheduling another save", async () => {
+    const canonicalPayload = {
+      ...initialDraft.payload,
+      description: "Normalized by the API",
+    };
+    mocks.publishDraft.mockResolvedValueOnce({
+      success: true,
+      data: {
+        draft: {
+          ...initialDraft,
+          payload: canonicalPayload,
+          revision: 2,
+          basePublishedVersion: 4,
+        },
+        publishedContent: { slug: initialDraft.payload.slug },
+      },
+    });
     renderWorkspace();
 
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "Publish changes" }));
       await Promise.resolve();
+      await Promise.resolve();
+    });
+    await act(async () => vi.advanceTimersByTimeAsync(1200));
+
+    expect(screen.getByLabelText("Description")).toHaveValue(
+      "Normalized by the API",
+    );
+    expect(screen.getByText("4")).toBeInTheDocument();
+    expect(mocks.saveDraft).not.toHaveBeenCalled();
+  });
+
+  it("uses the coding assignment authoring and learner preview for Code content", () => {
+    const codingAssignment = {
+      Type: "coding-assignment",
+      Version: 1,
+      Environment: {
+        Language: "cpp",
+        Tools: "clang",
+        AllowStudentCreateFiles: false,
+      },
+      Data: { Files: {} },
+      Tests: { Public: [], Private: [] },
+      Grading: { MaxScore: 100 },
+    };
+    renderWorkspace(
+      {
+        ...initialDraft,
+        payload: {
+          ...initialDraft.payload,
+          type: "Code",
+          lessonFormat: null,
+          body: null,
+          jsonBody: codingAssignment,
+        },
+      } as never,
+      {
+        activeItem: { ...item, type: "Code" } as never,
+        linkedAssessment: {
+          id: "assessment-1",
+          slug: "code-assessment",
+          title: "Code assessment",
+        },
+        initialCodingAssignment: codingAssignment,
+      },
+    );
+
+    expect(screen.getByTestId("coding-definition-editor")).toHaveAttribute(
+      "data-embedded",
+      "true",
+    );
+    expect(
+      screen.getByText("Coding assignment", { exact: true }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Markdown", { exact: true }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("textbox", { name: "Lesson body" }),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /preview/i }));
+    expect(screen.getByTestId("coding-assignment-preview")).toBeInTheDocument();
+    expect(screen.queryByTestId("learner-renderer")).not.toBeInTheDocument();
+  });
+
+  it("opens the coding editor before the content-owned assessment exists and refreshes after save", () => {
+    renderWorkspace(
+      {
+        ...initialDraft,
+        payload: {
+          ...initialDraft.payload,
+          type: "Code",
+          lessonFormat: null,
+          body: null,
+          jsonBody: null,
+        },
+      } as never,
+      {
+        activeItem: { ...item, type: "Code" } as never,
+        linkedAssessment: null,
+        initialCodingAssignment: null,
+      },
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /preview/i }));
+    expect(
+      screen.getByText(/save the coding assignment to preview/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId("learner-renderer")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /editor/i }));
+    fireEvent.click(screen.getByTestId("coding-definition-editor"));
+    expect(mocks.refresh).toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: /preview/i }));
+    expect(screen.getByTestId("coding-assignment-preview")).toBeInTheDocument();
+  });
+
+  it("replaces the stale authoring URL after publishing a changed slug", async () => {
+    mocks.publishDraft.mockResolvedValueOnce({
+      success: true,
+      data: {
+        draft: { ...initialDraft, revision: 2, basePublishedVersion: 4 },
+        publishedContent: { slug: "renamed-lesson" },
+      },
+    });
+    renderWorkspace();
+    fireEvent.change(screen.getByLabelText("URL slug"), {
+      target: { value: "renamed-lesson" },
     });
 
-    expect(screen.getByText(message)).toBeInTheDocument();
-    expect(mocks.publishDraft).not.toHaveBeenCalled();
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Publish changes" }));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(mocks.replace).toHaveBeenCalledWith(
+      "/workspace/learning/courses/course-slug/content/renamed-lesson",
+    );
   });
+
+  it.each([
+    [new Error("Assets are not promoted"), "Assets are not promoted"],
+    ["asset failure", "Lesson assets are not ready to publish."],
+  ])(
+    "blocks publication when assets are unavailable",
+    async (failure, message) => {
+      mocks.prepareAssets.mockRejectedValueOnce(failure);
+      renderWorkspace();
+
+      await act(async () => {
+        fireEvent.click(
+          screen.getByRole("button", { name: "Publish changes" }),
+        );
+        await Promise.resolve();
+      });
+
+      expect(screen.getByText(message)).toBeInTheDocument();
+      expect(mocks.publishDraft).not.toHaveBeenCalled();
+    },
+  );
 
   it.each([
     [409, "Conflict"],
     [503, "Offline"],
-  ])("maps publication status %s to the editor state", async (status, expectedState) => {
-    mocks.publishDraft.mockResolvedValueOnce({
-      success: false,
-      error: `Publish failed ${status}`,
-      status,
-    });
-    renderWorkspace();
+  ])(
+    "maps publication status %s to the editor state",
+    async (status, expectedState) => {
+      mocks.publishDraft.mockResolvedValueOnce({
+        success: false,
+        error: `Publish failed ${status}`,
+        status,
+      });
+      renderWorkspace();
 
-    await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "Publish changes" }));
-      await Promise.resolve();
-    });
+      await act(async () => {
+        fireEvent.click(
+          screen.getByRole("button", { name: "Publish changes" }),
+        );
+        await Promise.resolve();
+      });
 
-    expect(screen.getByText(`Publish failed ${status}`)).toBeInTheDocument();
-    expect(screen.getByText(expectedState)).toBeInTheDocument();
-  });
+      expect(screen.getByText(`Publish failed ${status}`)).toBeInTheDocument();
+      expect(screen.getByText(expectedState)).toBeInTheDocument();
+    },
+  );
 
   it("does not publish when the dirty draft cannot be saved", async () => {
-    mocks.saveDraft.mockResolvedValueOnce({ success: false, error: "Save failed", status: 503 });
+    mocks.saveDraft.mockResolvedValueOnce({
+      success: false,
+      error: "Save failed",
+      status: 503,
+    });
     renderWorkspace();
     fireEvent.change(screen.getByRole("textbox", { name: "Lesson title" }), {
       target: { value: "Unsaved" },
@@ -761,11 +1205,17 @@ describe("LessonAuthoringWorkspace", () => {
       await Promise.resolve();
       await Promise.resolve();
     });
-    expect(screen.getByRole("complementary", { name: "AI authoring copilot" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("complementary", { name: "AI authoring copilot" }),
+    ).toBeInTheDocument();
   });
 
   it("loads the latest Copilot conversation even if entitlement lookup fails", async () => {
-    mocks.getEntitlement.mockResolvedValueOnce({ success: false, error: "Wallet unavailable", status: 503 });
+    mocks.getEntitlement.mockResolvedValueOnce({
+      success: false,
+      error: "Wallet unavailable",
+      status: 503,
+    });
     mocks.getConversations.mockResolvedValueOnce({
       success: true,
       data: [
@@ -803,22 +1253,26 @@ describe("LessonAuthoringWorkspace", () => {
     });
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(
-        streamResponse(
-          "event: heartbeat",
-          "data: not-json",
-          'id: 7\ndata: {"delta":"Hello"}',
-          'id: 8\ndata: {"delta":" world","errorCode":"AI_CANCEL_REQUESTED"}',
-          'data: {"errorCode":"PROVIDER_WARNING"}',
-          `data: ${JSON.stringify({ proposal: pendingProposal })}`,
+      vi
+        .fn()
+        .mockResolvedValue(
+          streamResponse(
+            "event: heartbeat",
+            "data: not-json",
+            'id: 7\ndata: {"delta":"Hello"}',
+            'id: 8\ndata: {"delta":" world","errorCode":"AI_CANCEL_REQUESTED"}',
+            'data: {"errorCode":"PROVIDER_WARNING"}',
+            `data: ${JSON.stringify({ proposal: pendingProposal })}`,
+          ),
         ),
-      ),
     );
     renderWorkspace();
     fireEvent.click(screen.getByRole("button", { name: "Open Copilot" }));
 
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "Add a practical example" }));
+      fireEvent.click(
+        screen.getByRole("button", { name: "Add a practical example" }),
+      );
       await Promise.resolve();
       await Promise.resolve();
       await Promise.resolve();
@@ -826,15 +1280,23 @@ describe("LessonAuthoringWorkspace", () => {
 
     expect(screen.getByText("Hello world")).toBeInTheDocument();
     expect(screen.getByText("PROVIDER_WARNING")).toBeInTheDocument();
-    expect(screen.getByText(/Max 20 SC · Used 18 tokens · Settled 3 SC/)).toBeInTheDocument();
-    expect(screen.getByRole("dialog", { name: "Review AI proposal" })).toBeInTheDocument();
+    expect(
+      screen.getByText(/Max 20 SC · Used 18 tokens · Settled 3 SC/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("dialog", { name: "Review AI proposal" }),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Unified/ }));
     fireEvent.click(screen.getByRole("button", { name: /Side by side/ }));
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "Discard" }));
       await Promise.resolve();
     });
-    expect(mocks.discardProposal).toHaveBeenCalledWith("course-1", "lesson-1", "proposal-1");
+    expect(mocks.discardProposal).toHaveBeenCalledWith(
+      "course-1",
+      "lesson-1",
+      "proposal-1",
+    );
   });
 
   it("accepts an insertion proposal at the current editor cursor", async () => {
@@ -851,7 +1313,11 @@ describe("LessonAuthoringWorkspace", () => {
     });
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(streamResponse(`data: ${JSON.stringify({ proposal: insertion })}`)),
+      vi
+        .fn()
+        .mockResolvedValue(
+          streamResponse(`data: ${JSON.stringify({ proposal: insertion })}`),
+        ),
     );
     renderWorkspace();
     fireEvent.select(screen.getByRole("textbox", { name: "Lesson body" }));
@@ -880,21 +1346,37 @@ describe("LessonAuthoringWorkspace", () => {
       1,
       4,
     );
-    expect(screen.getByRole("textbox", { name: "Lesson body" })).toHaveValue("Improved body");
+    expect(screen.getByRole("textbox", { name: "Lesson body" })).toHaveValue(
+      "Improved body",
+    );
   });
 
   it("marks the draft conflicted when a stale AI proposal is applied", async () => {
     mocks.createRun.mockResolvedValueOnce({ success: true, data: runningRun });
     mocks.getRun.mockResolvedValueOnce({ success: true, data: completedRun });
-    mocks.applyProposal.mockResolvedValueOnce({ success: false, error: "Proposal is stale", status: 409 });
+    mocks.applyProposal.mockResolvedValueOnce({
+      success: false,
+      error: "Proposal is stale",
+      status: 409,
+    });
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(streamResponse(`data: ${JSON.stringify({ proposal: pendingProposal })}`)),
+      vi
+        .fn()
+        .mockResolvedValue(
+          streamResponse(
+            `data: ${JSON.stringify({ proposal: pendingProposal })}`,
+          ),
+        ),
     );
     renderWorkspace();
     fireEvent.click(screen.getByRole("button", { name: "Open Copilot" }));
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "Make this clearer and more concise" }));
+      fireEvent.click(
+        screen.getByRole("button", {
+          name: "Make this clearer and more concise",
+        }),
+      );
       await Promise.resolve();
       await Promise.resolve();
       await Promise.resolve();
@@ -911,9 +1393,10 @@ describe("LessonAuthoringWorkspace", () => {
   it("reuses an in-flight save for repeated save commands", async () => {
     let finishSave: ((result: unknown) => void) | undefined;
     mocks.saveDraft.mockImplementationOnce(
-      () => new Promise((resolve) => {
-        finishSave = resolve;
-      }),
+      () =>
+        new Promise((resolve) => {
+          finishSave = resolve;
+        }),
     );
     renderWorkspace();
 
@@ -931,7 +1414,9 @@ describe("LessonAuthoringWorkspace", () => {
   });
 
   it("opens Copilot from the keyboard on a mobile viewport", async () => {
-    vi.mocked(window.matchMedia).mockReturnValue({ matches: false } as MediaQueryList);
+    vi.mocked(window.matchMedia).mockReturnValue({
+      matches: false,
+    } as MediaQueryList);
     renderWorkspace();
 
     await act(async () => {
@@ -940,8 +1425,12 @@ describe("LessonAuthoringWorkspace", () => {
       await Promise.resolve();
     });
 
-    expect(screen.getByRole("button", { name: "Close lesson panel" })).toBeInTheDocument();
-    expect(screen.getByRole("complementary", { name: "AI authoring copilot" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Close lesson panel" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("complementary", { name: "AI authoring copilot" }),
+    ).toBeInTheDocument();
   });
 
   it("uses the compact view selector and both editor-only modes", async () => {
@@ -955,7 +1444,9 @@ describe("LessonAuthoringWorkspace", () => {
     expect(screen.getByTestId("learner-renderer")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "editor" }));
-    expect(screen.getByRole("textbox", { name: "Lesson body" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: "Lesson body" }),
+    ).toBeInTheDocument();
   });
 
   it("switches right-panel tabs and changes lesson visibility", async () => {
@@ -995,40 +1486,57 @@ describe("LessonAuthoringWorkspace", () => {
   it.each([
     ["Questionnaire", "QuizPatch"],
     ["Lesson", "LexicalPatch"],
-  ])("uses the required Copilot proposal kind for %s content", async (type, expectedKind) => {
-    const structuredDraft = {
-      ...initialDraft,
-      payload: {
-        ...initialDraft.payload,
-        type,
-        lessonFormat: type === "Questionnaire" ? null : "Lexical",
-        body: null,
-        jsonBody: { root: { children: [] } },
-      },
-    };
-    mocks.createRun.mockResolvedValueOnce({ success: false, error: "Captured", status: 400 });
-    renderWorkspace(structuredDraft as never);
-    fireEvent.click(screen.getByRole("button", { name: "Open Copilot" }));
+  ])(
+    "uses the required Copilot proposal kind for %s content",
+    async (type, expectedKind) => {
+      const structuredDraft = {
+        ...initialDraft,
+        payload: {
+          ...initialDraft.payload,
+          type,
+          lessonFormat: type === "Questionnaire" ? null : "Lexical",
+          body: null,
+          jsonBody: { root: { children: [] } },
+        },
+      };
+      mocks.createRun.mockResolvedValueOnce({
+        success: false,
+        error: "Captured",
+        status: 400,
+      });
+      renderWorkspace(structuredDraft as never);
+      fireEvent.click(screen.getByRole("button", { name: "Open Copilot" }));
 
-    await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "Create a short knowledge check" }));
-      await Promise.resolve();
-    });
+      await act(async () => {
+        fireEvent.click(
+          screen.getByRole("button", {
+            name: "Create a short knowledge check",
+          }),
+        );
+        await Promise.resolve();
+      });
 
-    expect(mocks.createRun).toHaveBeenCalledWith(
-      "course-1",
-      "lesson-1",
-      expect.objectContaining({ proposalKind: expectedKind }),
-    );
-  });
+      expect(mocks.createRun).toHaveBeenCalledWith(
+        "course-1",
+        "lesson-1",
+        expect.objectContaining({ proposalKind: expectedKind }),
+      );
+    },
+  );
 
   it("does not start Copilot for an empty prompt or an unsaved draft", async () => {
     renderWorkspace();
     fireEvent.click(screen.getByRole("button", { name: "Open Copilot" }));
-    fireEvent.keyDown(screen.getByRole("textbox", { name: "Ask Copilot" }), { key: "Enter" });
+    fireEvent.keyDown(screen.getByRole("textbox", { name: "Ask Copilot" }), {
+      key: "Enter",
+    });
     expect(mocks.createRun).not.toHaveBeenCalled();
 
-    mocks.saveDraft.mockResolvedValueOnce({ success: false, error: "Save first", status: 503 });
+    mocks.saveDraft.mockResolvedValueOnce({
+      success: false,
+      error: "Save first",
+      status: 503,
+    });
     fireEvent.change(screen.getByRole("textbox", { name: "Lesson title" }), {
       target: { value: "Dirty lesson" },
     });
@@ -1052,20 +1560,32 @@ describe("LessonAuthoringWorkspace", () => {
     mocks.getRun.mockImplementation(async () => {
       runLookup += 1;
       if (runLookup === 1)
-        return { success: false, error: "Temporary lookup failure", status: 503 };
+        return {
+          success: false,
+          error: "Temporary lookup failure",
+          status: 503,
+        };
       if (runLookup === 2) return { success: true, data: runningRun };
       return { success: true, data: completedWithProposal };
     });
-    mocks.getEntitlement.mockResolvedValue({ success: false, error: "Wallet refresh failed", status: 503 });
+    mocks.getEntitlement.mockResolvedValue({
+      success: false,
+      error: "Wallet refresh failed",
+      status: 503,
+    });
     const fetchMock = vi
       .fn()
-      .mockImplementation(async () => streamResponse('id: 9\ndata: {"delta":"Reconnected"}'));
+      .mockImplementation(async () =>
+        streamResponse('id: 9\ndata: {"delta":"Reconnected"}'),
+      );
     vi.stubGlobal("fetch", fetchMock);
     renderWorkspace();
     fireEvent.click(screen.getByRole("button", { name: "Open Copilot" }));
 
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "Add a practical example" }));
+      fireEvent.click(
+        screen.getByRole("button", { name: "Add a practical example" }),
+      );
       await flushCopilotRetries(4);
     });
 
@@ -1075,26 +1595,36 @@ describe("LessonAuthoringWorkspace", () => {
         JSON.stringify(init).includes('"Last-Event-ID":"9"'),
       ),
     ).toBe(true);
-    expect(screen.getByRole("dialog", { name: "Review AI proposal" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("dialog", { name: "Review AI proposal" }),
+    ).toBeInTheDocument();
   });
 
   it.each([
     [{ ok: false, body: null }, "The Copilot stream could not be opened."],
     [{ ok: true, body: null }, "The Copilot stream could not be opened."],
-  ])("stops after repeated stream connection failures", async (response, message) => {
-    mocks.createRun.mockResolvedValueOnce({ success: true, data: runningRun });
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response));
-    renderWorkspace();
-    fireEvent.click(screen.getByRole("button", { name: "Open Copilot" }));
+  ])(
+    "stops after repeated stream connection failures",
+    async (response, message) => {
+      mocks.createRun.mockResolvedValueOnce({
+        success: true,
+        data: runningRun,
+      });
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response));
+      renderWorkspace();
+      fireEvent.click(screen.getByRole("button", { name: "Open Copilot" }));
 
-    await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "Add a practical example" }));
-      await flushCopilotRetries();
-    });
+      await act(async () => {
+        fireEvent.click(
+          screen.getByRole("button", { name: "Add a practical example" }),
+        );
+        await flushCopilotRetries();
+      });
 
-    expect(screen.getByText(message)).toBeInTheDocument();
-    expect(fetch).toHaveBeenCalledTimes(5);
-  });
+      expect(screen.getByText(message)).toBeInTheDocument();
+      expect(fetch).toHaveBeenCalledTimes(5);
+    },
+  );
 
   it("normalizes a non-Error Copilot stream failure", async () => {
     mocks.createRun.mockResolvedValueOnce({ success: true, data: runningRun });
@@ -1103,11 +1633,15 @@ describe("LessonAuthoringWorkspace", () => {
     fireEvent.click(screen.getByRole("button", { name: "Open Copilot" }));
 
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "Add a practical example" }));
+      fireEvent.click(
+        screen.getByRole("button", { name: "Add a practical example" }),
+      );
       await flushCopilotRetries();
     });
 
-    expect(screen.getByText("Copilot stopped unexpectedly.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Copilot stopped unexpectedly."),
+    ).toBeInTheDocument();
   });
 
   it.each([
@@ -1119,12 +1653,17 @@ describe("LessonAuthoringWorkspace", () => {
       success: true,
       data: { ...completedRun, status: "Failed", errorMessage },
     });
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(streamResponse('data: {"delta":"Partial"}')));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(streamResponse('data: {"delta":"Partial"}')),
+    );
     renderWorkspace();
     fireEvent.click(screen.getByRole("button", { name: "Open Copilot" }));
 
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "Add a practical example" }));
+      fireEvent.click(
+        screen.getByRole("button", { name: "Add a practical example" }),
+      );
       await Promise.resolve();
       await Promise.resolve();
       await Promise.resolve();
@@ -1134,17 +1673,29 @@ describe("LessonAuthoringWorkspace", () => {
   });
 
   it("restores and clears missing or finished Copilot runs", async () => {
-    window.sessionStorage.setItem("authoring-ai-run:course-1:lesson-1", "missing-run");
-    mocks.getRun.mockResolvedValueOnce({ success: false, error: "Missing", status: 404 });
+    window.sessionStorage.setItem(
+      "authoring-ai-run:course-1:lesson-1",
+      "missing-run",
+    );
+    mocks.getRun.mockResolvedValueOnce({
+      success: false,
+      error: "Missing",
+      status: 404,
+    });
     const first = renderWorkspace();
     await act(async () => {
       await Promise.resolve();
       await Promise.resolve();
     });
-    expect(window.sessionStorage.getItem("authoring-ai-run:course-1:lesson-1")).toBeNull();
+    expect(
+      window.sessionStorage.getItem("authoring-ai-run:course-1:lesson-1"),
+    ).toBeNull();
     first.unmount();
 
-    window.sessionStorage.setItem("authoring-ai-run:course-1:lesson-1", "finished-run");
+    window.sessionStorage.setItem(
+      "authoring-ai-run:course-1:lesson-1",
+      "finished-run",
+    );
     mocks.getRun.mockResolvedValueOnce({
       success: true,
       data: {
@@ -1158,12 +1709,19 @@ describe("LessonAuthoringWorkspace", () => {
       await Promise.resolve();
       await Promise.resolve();
     });
-    expect(window.sessionStorage.getItem("authoring-ai-run:course-1:lesson-1")).toBeNull();
-    expect(screen.queryByRole("dialog", { name: "Review AI proposal" })).not.toBeInTheDocument();
+    expect(
+      window.sessionStorage.getItem("authoring-ai-run:course-1:lesson-1"),
+    ).toBeNull();
+    expect(
+      screen.queryByRole("dialog", { name: "Review AI proposal" }),
+    ).not.toBeInTheDocument();
   });
 
   it("does not restore a second run after the component identity changes", async () => {
-    window.sessionStorage.setItem("authoring-ai-run:course-1:lesson-1", "run-1");
+    window.sessionStorage.setItem(
+      "authoring-ai-run:course-1:lesson-1",
+      "run-1",
+    );
     mocks.getRun.mockResolvedValueOnce({ success: true, data: completedRun });
     const view = render(
       <LessonAuthoringWorkspace
@@ -1195,17 +1753,30 @@ describe("LessonAuthoringWorkspace", () => {
   });
 
   it("keeps a running Copilot active when cancellation fails or is deferred", async () => {
-    window.sessionStorage.setItem("authoring-ai-run:course-1:lesson-1", runningRun.id);
+    window.sessionStorage.setItem(
+      "authoring-ai-run:course-1:lesson-1",
+      runningRun.id,
+    );
     mocks.getRun.mockResolvedValueOnce({ success: true, data: runningRun });
     mocks.cancelRun
-      .mockResolvedValueOnce({ success: false, error: "Cancellation failed", status: 503 })
-      .mockResolvedValueOnce({ success: true, data: { ...runningRun, status: "Running" } });
+      .mockResolvedValueOnce({
+        success: false,
+        error: "Cancellation failed",
+        status: 503,
+      })
+      .mockResolvedValueOnce({
+        success: true,
+        data: { ...runningRun, status: "Running" },
+      });
     vi.stubGlobal(
       "fetch",
-      vi.fn((_url: string, init?: RequestInit) =>
-        new Promise((_resolve, reject) => {
-          init?.signal?.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")));
-        }),
+      vi.fn(
+        (_url: string, init?: RequestInit) =>
+          new Promise((_resolve, reject) => {
+            init?.signal?.addEventListener("abort", () =>
+              reject(new DOMException("Aborted", "AbortError")),
+            );
+          }),
       ),
     );
     renderWorkspace();
@@ -1229,13 +1800,16 @@ describe("LessonAuthoringWorkspace", () => {
   it("ignores a stop click until run creation returns", async () => {
     let resolveCreate: ((result: unknown) => void) | undefined;
     mocks.createRun.mockImplementationOnce(
-      () => new Promise((resolve) => {
-        resolveCreate = resolve;
-      }),
+      () =>
+        new Promise((resolve) => {
+          resolveCreate = resolve;
+        }),
     );
     renderWorkspace();
     fireEvent.click(screen.getByRole("button", { name: "Open Copilot" }));
-    fireEvent.click(screen.getByRole("button", { name: "Add a practical example" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Add a practical example" }),
+    );
     await act(async () => {
       await Promise.resolve();
     });
@@ -1249,19 +1823,29 @@ describe("LessonAuthoringWorkspace", () => {
   });
 
   it("keeps the previous balance when cancellation cannot refresh it", async () => {
-    window.sessionStorage.setItem("authoring-ai-run:course-1:lesson-1", runningRun.id);
+    window.sessionStorage.setItem(
+      "authoring-ai-run:course-1:lesson-1",
+      runningRun.id,
+    );
     mocks.getRun.mockResolvedValueOnce({ success: true, data: runningRun });
     mocks.cancelRun.mockResolvedValueOnce({
       success: true,
       data: { ...runningRun, status: "Cancelled", errorCode: "AI_CANCELLED" },
     });
-    mocks.getEntitlement.mockResolvedValue({ success: false, error: "Wallet unavailable", status: 503 });
+    mocks.getEntitlement.mockResolvedValue({
+      success: false,
+      error: "Wallet unavailable",
+      status: 503,
+    });
     vi.stubGlobal(
       "fetch",
-      vi.fn((_url: string, init?: RequestInit) =>
-        new Promise((_resolve, reject) => {
-          init?.signal?.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")));
-        }),
+      vi.fn(
+        (_url: string, init?: RequestInit) =>
+          new Promise((_resolve, reject) => {
+            init?.signal?.addEventListener("abort", () =>
+              reject(new DOMException("Aborted", "AbortError")),
+            );
+          }),
       ),
     );
     renderWorkspace();
@@ -1274,21 +1858,35 @@ describe("LessonAuthoringWorkspace", () => {
       await Promise.resolve();
     });
 
-    expect(screen.queryByRole("button", { name: "Stop" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Stop" }),
+    ).not.toBeInTheDocument();
   });
 
   it("keeps the diff open when proposal application fails without a conflict", async () => {
     mocks.createRun.mockResolvedValueOnce({ success: true, data: runningRun });
     mocks.getRun.mockResolvedValueOnce({ success: true, data: completedRun });
-    mocks.applyProposal.mockResolvedValueOnce({ success: false, error: "Apply unavailable", status: 503 });
+    mocks.applyProposal.mockResolvedValueOnce({
+      success: false,
+      error: "Apply unavailable",
+      status: 503,
+    });
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(streamResponse(`data: ${JSON.stringify({ proposal: pendingProposal })}`)),
+      vi
+        .fn()
+        .mockResolvedValue(
+          streamResponse(
+            `data: ${JSON.stringify({ proposal: pendingProposal })}`,
+          ),
+        ),
     );
     renderWorkspace();
     fireEvent.click(screen.getByRole("button", { name: "Open Copilot" }));
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "Add a practical example" }));
+      fireEvent.click(
+        screen.getByRole("button", { name: "Add a practical example" }),
+      );
       await Promise.resolve();
       await Promise.resolve();
       await Promise.resolve();
@@ -1306,12 +1904,20 @@ describe("LessonAuthoringWorkspace", () => {
     mocks.getRun.mockResolvedValueOnce({ success: true, data: completedRun });
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(streamResponse(`data: ${JSON.stringify({ proposal: pendingProposal })}`)),
+      vi
+        .fn()
+        .mockResolvedValue(
+          streamResponse(
+            `data: ${JSON.stringify({ proposal: pendingProposal })}`,
+          ),
+        ),
     );
     renderWorkspace();
     fireEvent.click(screen.getByRole("button", { name: "Open Copilot" }));
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "Add a practical example" }));
+      fireEvent.click(
+        screen.getByRole("button", { name: "Add a practical example" }),
+      );
       await Promise.resolve();
       await Promise.resolve();
       await Promise.resolve();
@@ -1321,7 +1927,9 @@ describe("LessonAuthoringWorkspace", () => {
       await Promise.resolve();
     });
 
-    expect(screen.queryByRole("dialog", { name: "Review AI proposal" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("dialog", { name: "Review AI proposal" }),
+    ).not.toBeInTheDocument();
   });
 
   it("renders a null structured body safely in preview", () => {
@@ -1342,29 +1950,41 @@ describe("LessonAuthoringWorkspace", () => {
   it.each([
     [new Error("Restored stream failed"), "Restored stream failed"],
     ["offline", "Copilot stopped unexpectedly."],
-  ])("reports restoration stream failures", async (failure, expectedMessage) => {
-    window.sessionStorage.setItem("authoring-ai-run:course-1:lesson-1", runningRun.id);
-    mocks.getRun.mockResolvedValueOnce({ success: true, data: runningRun });
-    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(failure));
-    renderWorkspace();
+  ])(
+    "reports restoration stream failures",
+    async (failure, expectedMessage) => {
+      window.sessionStorage.setItem(
+        "authoring-ai-run:course-1:lesson-1",
+        runningRun.id,
+      );
+      mocks.getRun.mockResolvedValueOnce({ success: true, data: runningRun });
+      vi.stubGlobal("fetch", vi.fn().mockRejectedValue(failure));
+      renderWorkspace();
 
-    await act(async () => {
-      await flushCopilotRetries();
-    });
+      await act(async () => {
+        await flushCopilotRetries();
+      });
 
-    expect(screen.getByText(expectedMessage)).toBeInTheDocument();
-  });
+      expect(screen.getByText(expectedMessage)).toBeInTheDocument();
+    },
+  );
 
   it("shows a pending cancellation and protects the stop action", async () => {
     const cancellingRun = { ...runningRun, errorCode: "AI_CANCEL_REQUESTED" };
-    window.sessionStorage.setItem("authoring-ai-run:course-1:lesson-1", cancellingRun.id);
+    window.sessionStorage.setItem(
+      "authoring-ai-run:course-1:lesson-1",
+      cancellingRun.id,
+    );
     mocks.getRun.mockResolvedValueOnce({ success: true, data: cancellingRun });
     vi.stubGlobal(
       "fetch",
-      vi.fn((_url: string, init?: RequestInit) =>
-        new Promise((_resolve, reject) => {
-          init?.signal?.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")));
-        }),
+      vi.fn(
+        (_url: string, init?: RequestInit) =>
+          new Promise((_resolve, reject) => {
+            init?.signal?.addEventListener("abort", () =>
+              reject(new DOMException("Aborted", "AbortError")),
+            );
+          }),
       ),
     );
     renderWorkspace();
@@ -1380,7 +2000,11 @@ describe("LessonAuthoringWorkspace", () => {
   it("selects insertion mode and preserves Shift+Enter in the prompt", async () => {
     vi.useRealTimers();
     const user = userEvent.setup();
-    mocks.createRun.mockResolvedValueOnce({ success: false, error: "Captured", status: 400 });
+    mocks.createRun.mockResolvedValueOnce({
+      success: false,
+      error: "Captured",
+      status: 400,
+    });
     renderWorkspace();
     await user.click(screen.getByRole("button", { name: "Open Copilot" }));
     const mode = screen.getByRole("combobox", { name: "Proposal application" });
@@ -1408,7 +2032,13 @@ describe("LessonAuthoringWorkspace", () => {
     mocks.getRun.mockResolvedValueOnce({ success: true, data: completedRun });
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(streamResponse(`data: ${JSON.stringify({ proposal: pendingProposal })}`)),
+      vi
+        .fn()
+        .mockResolvedValue(
+          streamResponse(
+            `data: ${JSON.stringify({ proposal: pendingProposal })}`,
+          ),
+        ),
     );
     renderWorkspace({
       ...initialDraft,
@@ -1416,7 +2046,9 @@ describe("LessonAuthoringWorkspace", () => {
     } as never);
     fireEvent.click(screen.getByRole("button", { name: "Open Copilot" }));
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "Add a practical example" }));
+      fireEvent.click(
+        screen.getByRole("button", { name: "Add a practical example" }),
+      );
       await Promise.resolve();
       await Promise.resolve();
       await Promise.resolve();

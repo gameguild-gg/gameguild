@@ -18,6 +18,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/compone
 import { ArrowLeft, CalendarClock, ClipboardCheck } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { CodingActivityClient } from '@/components/learning/coding-activity-client';
+import { LearnerQuizActivity } from '@/components/learning/learner-quiz-activity';
+import {
+  parseQuizContentDocument,
+  prepareQuizContentForRuntime,
+  type QuizRuntimeContentDocument,
+} from '@game-guild/quiz-content';
 
 interface SubmissionFile {
   path: string;
@@ -102,6 +108,17 @@ export default async function LearnerActivityPage({
   let codingAssignment: CodingAssignmentContent | null = null;
   let useCodingExperience = false;
   let codingUnpublished = false;
+  let quizContent: QuizRuntimeContentDocument | null = null;
+  let quizContentItem:
+    | {
+        id: string;
+        title: string;
+        description?: string;
+        isRequired: boolean;
+        status: 'locked' | 'available' | 'in-progress' | 'completed';
+      }
+    | null = null;
+  let quizUnavailable = false;
   let submissionFiles: SubmissionFile[] | null = null;
   let userId: string | null = null;
   let description = '';
@@ -146,6 +163,34 @@ export default async function LearnerActivityPage({
       }
     }
     codingUnpublished = codingEligible && !codingAssignment;
+
+    if (assessment.type === 'Quiz' && assessment.contentId) {
+      const linkedContent = access.course.modules
+        .flatMap((module) => module.items)
+        .find((candidate) => candidate.id === assessment.contentId);
+      if (linkedContent) {
+        const parsed = parseQuizContentDocument(linkedContent.content);
+        if (parsed.issues.length === 0) {
+          quizContent = prepareQuizContentForRuntime(
+            parsed.document,
+            'server-graded',
+          );
+          quizContentItem = {
+            id: linkedContent.id,
+            title: linkedContent.title,
+            description: linkedContent.description,
+            isRequired: linkedContent.isRequired,
+            status: linkedContent.status,
+          };
+        } else {
+          console.error(
+            'LearnerActivityPage: invalid published quiz content',
+            parsed.issues,
+          );
+        }
+      }
+      quizUnavailable = !quizContent || !quizContentItem;
+    }
   } else if (activityId.startsWith('content-')) {
     const contentId = activityId.slice('content-'.length);
     const item = access.course.modules
@@ -242,7 +287,31 @@ export default async function LearnerActivityPage({
           </CardContent>
         </Card>
       ) : null}
-      {codingProps ? (
+      {quizUnavailable ? (
+        <Card className="border-amber-500/50 bg-amber-500/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg text-amber-600 dark:text-amber-400">
+              <ClipboardCheck className="size-5" />
+              Quiz not published yet
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-muted-foreground">
+            The questions for this quiz are not available yet. Please contact
+            the course instructor if this continues.
+          </CardContent>
+        </Card>
+      ) : null}
+      {quizContent && quizContentItem ? (
+        <LearnerQuizActivity
+          contentId={quizContentItem.id}
+          courseId={access.course.id}
+          title={quizContentItem.title}
+          description={quizContentItem.description}
+          content={quizContent}
+          isRequired={quizContentItem.isRequired}
+          status={quizContentItem.status}
+        />
+      ) : codingProps ? (
         <div data-testid="ide-fullwidth-mount">
           <CodingActivityClient
             assessmentId={codingProps.assessmentId}
@@ -255,7 +324,7 @@ export default async function LearnerActivityPage({
             submissionFiles={submissionFiles}
           />
         </div>
-      ) : (
+      ) : !quizUnavailable ? (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Your response</CardTitle>
@@ -269,7 +338,7 @@ export default async function LearnerActivityPage({
             />
           </CardContent>
         </Card>
-      )}
+      ) : null}
     </div>
   );
 }
