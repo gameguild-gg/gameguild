@@ -105,12 +105,12 @@ describe('peer review actions', () => {
 
     mocks.submit.mockResolvedValue({ ok: true, data: null });
     await expect(
-      submitPeerReview('review-1', { score: 90, feedback: '  Useful feedback.  ', rubricScores: '{"quality":5}' }),
+      submitPeerReview('review-1', { score: 90, feedback: '  Useful feedback.  ', rubricScores: '{"quality":{"points":5}}' }),
     ).resolves.toEqual({ success: true, data: null });
     expect(mocks.submit).toHaveBeenCalledWith('review-1', {
-      score: 90,
+      score: 9000,
       feedback: 'Useful feedback.',
-      rubricScores: '{"quality":5}',
+      rubricScores: '{"quality":{"points":500}}',
     });
   });
 
@@ -118,7 +118,7 @@ describe('peer review actions', () => {
     mocks.submit.mockResolvedValue({ ok: true, data: null });
     await submitPeerReview('review-1', { feedback: 'Good work.' });
     expect(mocks.submit).toHaveBeenCalledWith('review-1', {
-      score: null,
+      score: undefined,
       feedback: 'Good work.',
       rubricScores: null,
     });
