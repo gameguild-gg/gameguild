@@ -137,6 +137,49 @@ public sealed class ProgramContentAuthoringServiceTests
         (await context.Set<ProgramContentDraft>().CountAsync()).Should().Be(1);
     }
 
+    [Theory]
+    [InlineData(ProgramContentType.Code)]
+    [InlineData(ProgramContentType.Questionnaire)]
+    public async Task GetDraft_WhenPersistedTypeIsStale_RepairsTheContentContractWithoutDiscardingDraftEdits(
+        ProgramContentType authoritativeType)
+    {
+        await using var context = CreateContext();
+        var actorId = Guid.NewGuid();
+        var content = PublishedContent("Specialized content", "Published instructions");
+        content.Type = authoritativeType;
+        content.LessonFormat = null;
+        var stalePayload = AuthoringContentPayload.From(content) with
+        {
+            Title = "Unsaved coding task title",
+            Type = ProgramContentType.Lesson,
+            LessonFormat = LessonContentFormat.Markdown,
+            Body = "Unsaved author notes",
+        };
+        var draft = ProgramContentDraft.Create(
+            Guid.NewGuid(),
+            content.ProgramId,
+            content.Id,
+            actorId,
+            content.Version,
+            JsonSerializer.Serialize(stalePayload, new JsonSerializerOptions(JsonSerializerDefaults.Web)),
+            DateTimeOffset.UtcNow);
+        context.AddRange(content, draft);
+        await context.SaveChangesAsync();
+        var service = new ProgramContentAuthoringService(context);
+
+        var result = await service.GetOrCreateDraft(
+            content.ProgramId,
+            content.Id,
+            actorId,
+            CancellationToken.None);
+
+        result.Payload.Type.Should().Be(authoritativeType);
+        result.Payload.LessonFormat.Should().BeNull();
+        result.Payload.Title.Should().Be("Unsaved coding task title");
+        result.Payload.Body.Should().Be("Unsaved author notes");
+        result.Revision.Should().Be(2);
+    }
+
     [Fact]
     public async Task SaveDraft_WithStaleRevision_DoesNotOverwriteNewerPayload()
     {

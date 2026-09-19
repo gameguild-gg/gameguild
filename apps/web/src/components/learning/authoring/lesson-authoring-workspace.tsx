@@ -167,6 +167,14 @@ function iconFor(type: CourseContentItemViewModel["type"]) {
   return FileText;
 }
 
+function contentItemType(value: unknown): string | null {
+  if (typeof value !== "object" || value === null || !("type" in value)) {
+    return null;
+  }
+
+  return typeof value.type === "string" ? value.type : null;
+}
+
 function bodyForPreview(payload: AuthoringContentPayload) {
   if (payload.lessonFormat === "Lexical" || payload.type === "Questionnaire")
     return payload.jsonBody ?? null;
@@ -206,7 +214,16 @@ export function LessonAuthoringWorkspace({
   const [codingAssignment, setCodingAssignment] = useState(
     initialCodingAssignment,
   );
-  const [mode, setMode] = useState<EditorMode>("split");
+  const itemType = contentItemType(item);
+  const payloadType = contentItemType(payload);
+  const [mode, setMode] = useState<EditorMode>(() =>
+    itemType === "Code" ||
+    itemType === "Questionnaire" ||
+    payloadType === "Code" ||
+    payloadType === "Questionnaire"
+      ? "editor"
+      : "split",
+  );
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("saved");
   const [saveError, setSaveError] = useState<string | null>(null);
   const [conflictBackup, setConflictBackup] =
@@ -247,9 +264,11 @@ export function LessonAuthoringWorkspace({
 
   const format =
     payload.lessonFormat ?? (payload.jsonBody ? "Lexical" : "Markdown");
-  const isLesson = payload.type === "Lesson";
-  const isQuiz = payload.type === "Questionnaire";
-  const isCode = payload.type === "Code";
+  const isCode = itemType === "Code" || payloadType === "Code";
+  const isQuiz =
+    !isCode &&
+    (itemType === "Questionnaire" || payloadType === "Questionnaire");
+  const isLesson = !isCode && !isQuiz && payloadType === "Lesson";
   const formatLabel = isCode ? "Coding assignment" : isQuiz ? "Quiz" : format;
   const isStructured = isQuiz || (isLesson && format === "Lexical");
   const currentPayloadJson = JSON.stringify(payload);

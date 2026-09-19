@@ -372,11 +372,18 @@ describe("TestingProjectApplication extended workflow", () => {
       />,
     );
     expect(screen.getByRole("combobox", { name: "Eligible project version" })).toBeDisabled();
-    await user.click(screen.getByRole("button", { name: "Save and continue" }));
-    await user.click(screen.getByRole("button", { name: "Save and continue" }));
-    await user.click(screen.getByRole("button", { name: "Save and continue" }));
-    await user.click(screen.getByRole("button", { name: "Review application" }));
-    await user.click(screen.getByRole("button", { name: "Update pending application" }));
+    for (let step = 0; step < 3; step += 1) {
+      const continueButton = screen.getByRole("button", { name: "Save and continue" });
+      await waitFor(() => expect(continueButton).toBeEnabled());
+      await user.click(continueButton);
+    }
+    const reviewButton = await screen.findByRole("button", { name: "Review application" });
+    await waitFor(() => expect(reviewButton).toBeEnabled());
+    await user.click(reviewButton);
+    const updateButton = await screen.findByRole("button", { name: "Update pending application" });
+    await waitFor(() => expect(updateButton).toBeEnabled());
+    await user.click(updateButton);
+    await waitFor(() => expect(mocks.fetch).toHaveBeenCalledTimes(5));
     const body = JSON.parse(String((mocks.fetch.mock.calls.at(-1)![1] as RequestInit).body));
     expect(body.intent).toBe("save");
   });
