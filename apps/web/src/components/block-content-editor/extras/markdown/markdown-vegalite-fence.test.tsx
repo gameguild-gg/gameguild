@@ -17,6 +17,39 @@ const VALID_SPEC = JSON.stringify({
   },
 });
 
+const VALID_PLAIN_VEGA_SPEC = JSON.stringify({
+  $schema: 'https://vega.github.io/schema/vega/v5.json',
+  width: 400,
+  height: 200,
+  data: {
+    name: 'table',
+    values: [{ category: 'A', value: 4 }, { category: 'B', value: 6 }],
+  },
+  scales: [
+    { name: 'xscale', type: 'band', range: 'width', domain: { data: 'table', field: 'category' } },
+    { name: 'yscale', range: 'height', domain: { data: 'table', field: 'value' } },
+  ],
+  axes: [
+    { scale: 'xscale', orient: 'bottom' },
+    { scale: 'yscale', orient: 'left' },
+  ],
+  marks: [
+    {
+      type: 'rect',
+      from: { data: 'table' },
+      encode: {
+        enter: {
+          x: { scale: 'xscale', field: 'category' },
+          width: { scale: 'xscale', band: 1 },
+          y: { scale: 'yscale', field: 'value' },
+          y2: { scale: 'yscale', value: 0 },
+          fill: { value: 'steelblue' },
+        },
+      },
+    },
+  ],
+});
+
 function fenced(lang: string, body: string): string {
   return `\`\`\`${lang}\n${body}\n\`\`\``;
 }
@@ -54,6 +87,33 @@ describe('vegalite fenced code blocks in markdown', () => {
 
   it('renders a valid ```vegalite spec as an SVG chart (content-rendering)', async () => {
     render(<MarkdownRenderer content={fenced('vegalite', VALID_SPEC)} />);
+
+    await waitFor(
+      () => {
+        expect(document.querySelector('svg')).toBeInTheDocument();
+      },
+      { timeout: 15000 },
+    );
+  });
+
+  it('dispatches ```vega fences to the chart renderer (content-rendering)', async () => {
+    render(<MarkdownRenderer content={fenced('vega', INVALID_SPEC)} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Chart failed to render')).toBeInTheDocument();
+    });
+  });
+
+  it('dispatches ```vega fences to VegaLiteViewer in the editor preview components', async () => {
+    render(<MarkdownPreview content={fenced('vega', INVALID_SPEC)} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Error rendering chart:')).toBeInTheDocument();
+    });
+  });
+
+  it('renders a valid plain-Vega ```vega spec as an SVG chart (content-rendering)', async () => {
+    render(<MarkdownRenderer content={fenced('vega', VALID_PLAIN_VEGA_SPEC)} />);
 
     await waitFor(
       () => {
