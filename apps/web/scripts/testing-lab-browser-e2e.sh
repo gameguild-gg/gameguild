@@ -20,6 +20,7 @@ NEXT_STANDALONE_SERVER="${NEXT_BUILD_DIR}/standalone/apps/web/server.js"
 NEXT_STANDALONE_ROOT="$(dirname "${NEXT_STANDALONE_SERVER}")"
 WEB_MODE="${TESTING_LAB_E2E_WEB_MODE:-development}"
 API_MODE="${TESTING_LAB_E2E_API_MODE:-development}"
+API_READY_TIMEOUT_SECONDS="${TESTING_LAB_E2E_API_READY_TIMEOUT_SECONDS:-600}"
 API_RELEASE_DIR="${TESTING_LAB_E2E_API_RELEASE_DIR:-${REPO_ROOT}/.tmp/testing-lab-release-api}"
 API_RELEASE_DLL="${API_RELEASE_DIR}/GameGuild.API.dll"
 LOCK_ACQUIRED="0"
@@ -229,7 +230,7 @@ echo "[testing-lab-browser-e2e] starting API on ${API_PORT}"
   fi
 ) >"${API_LOG}" 2>&1 &
 API_PID=$!
-wait_for_http "http://127.0.0.1:${API_PORT}/ready" "GameGuild API" "${API_LOG}" 180 "${API_PID}"
+wait_for_http "http://127.0.0.1:${API_PORT}/ready" "GameGuild API" "${API_LOG}" "${API_READY_TIMEOUT_SECONDS}" "${API_PID}"
 
 WEB_ENV=(
   "NODE_ENV=${WEB_MODE}"
