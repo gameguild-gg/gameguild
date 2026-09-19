@@ -264,11 +264,11 @@ export function LessonAuthoringWorkspace({
 
   const format =
     payload.lessonFormat ?? (payload.jsonBody ? "Lexical" : "Markdown");
-  const isCode = item.type === "Code" || payload.type === "Code";
+  const isCode = itemType === "Code" || payloadType === "Code";
   const isQuiz =
     !isCode &&
-    (item.type === "Questionnaire" || payload.type === "Questionnaire");
-  const isLesson = !isCode && !isQuiz && payload.type === "Lesson";
+    (itemType === "Questionnaire" || payloadType === "Questionnaire");
+  const isLesson = !isCode && !isQuiz && payloadType === "Lesson";
   const formatLabel = isCode ? "Coding assignment" : isQuiz ? "Quiz" : format;
   const isStructured = isQuiz || (isLesson && format === "Lexical");
   const currentPayloadJson = JSON.stringify(payload);
