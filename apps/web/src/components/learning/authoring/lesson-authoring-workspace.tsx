@@ -168,10 +168,11 @@ function iconFor(type: CourseContentItemViewModel["type"]) {
 }
 
 function contentItemType(value: unknown): string | null {
-  if (typeof value !== "object" || value === null) return null;
+  if (typeof value !== "object" || value === null || !("type" in value)) {
+    return null;
+  }
 
-  const type = (value as Record<string, unknown>)["type"];
-  return typeof type === "string" ? type : null;
+  return typeof value.type === "string" ? value.type : null;
 }
 
 function bodyForPreview(payload: AuthoringContentPayload) {
