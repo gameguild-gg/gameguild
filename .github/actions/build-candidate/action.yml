@@ -98,7 +98,7 @@ runs:
         sbom: true
         tags: ${{ steps.identity.outputs.image }}:${{ steps.identity.outputs.tag }}
         cache-from: type=registry,ref=${{ steps.identity.outputs.image }}:buildcache-${{ inputs.service }}
-        cache-to: type=registry,ref=${{ steps.identity.outputs.image }}:buildcache-${{ inputs.service }},mode=max
+        cache-to: type=registry,ref=${{ steps.identity.outputs.image }}:buildcache-${{ inputs.service }},mode=min
         build-args: |
           ${{ inputs.build-args }}
           SOURCE_SHA=${{ inputs.source-sha }}
