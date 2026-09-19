@@ -20,6 +20,8 @@ public static class QuizAdapterModule
         services.AddSingleton<QuizProgramContentBoundary>();
         services.AddSingleton<GameGuild.Learning.Courses.IProgramContentLearnerProjector>(provider => provider.GetRequiredService<QuizProgramContentBoundary>());
         services.AddSingleton<GameGuild.Learning.Courses.IProgramContentAcademicMutationGuard>(provider => provider.GetRequiredService<QuizProgramContentBoundary>());
+        services.AddScoped<GameGuild.Learning.Courses.IProgramContentDeleteParticipant, QuizProgramContentDeleteParticipant>();
+        services.AddScoped<GameGuild.Learning.Courses.IProgramContentPublicationParticipant, QuizProgramContentPublicationParticipant>();
         services.AddSingleton<IReviewCapabilityRegistration, QuizCapabilityRegistration>();
         return services;
     }

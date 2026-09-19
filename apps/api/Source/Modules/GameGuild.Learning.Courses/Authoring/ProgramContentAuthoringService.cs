@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace GameGuild.Learning.Courses;
 
@@ -49,9 +50,12 @@ public sealed class ProgramContentPublicationAudit : EntityBase
 
 public sealed class ProgramContentAuthoringService(
     IApplicationDbContext db,
-    ILearningAssetManifestService? assetManifestService = null) : IProgramContentAuthoringService
+    ILearningAssetManifestService? assetManifestService = null,
+    IEnumerable<IProgramContentPublicationParticipant>? publicationParticipants = null) : IProgramContentAuthoringService
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private readonly IReadOnlyList<IProgramContentPublicationParticipant> _publicationParticipants =
+        publicationParticipants?.ToArray() ?? [];
 
     public async Task<AuthoringDraftDto> GetOrCreateDraft(
         Guid programId,
@@ -147,6 +151,7 @@ public sealed class ProgramContentAuthoringService(
         CancellationToken cancellationToken)
     {
         ValidateActor(actorId);
+        await using var transaction = await BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
         var draft = await FindDraft(programId, contentId, cancellationToken).ConfigureAwait(false);
         if (draft.Revision != expectedRevision)
             throw new AuthoringRevisionConflictException(expectedRevision, draft.Revision);
@@ -161,6 +166,11 @@ public sealed class ProgramContentAuthoringService(
             await assetManifestService.ValidateAndReconcileAsync(content, payload, true, cancellationToken)
                 .ConfigureAwait(false);
         ApplyPayload(content, payload);
+        foreach (var participant in _publicationParticipants.Where(candidate => candidate.CanHandle(content)))
+        {
+            await participant.PreparePublishAsync(content, payload, actorId, cancellationToken)
+                .ConfigureAwait(false);
+        }
         var now = DateTimeOffset.UtcNow;
         var nextPublishedVersion = checked(content.Version + 1);
         var audit = ProgramContentPublicationAudit.Create(content, draft, actorId, nextPublishedVersion, now);
@@ -170,6 +180,14 @@ public sealed class ProgramContentAuthoringService(
         try
         {
             await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            foreach (var participant in _publicationParticipants.Where(candidate => candidate.CanHandle(content)))
+            {
+                await participant.FinalizePublishAsync(content, payload, actorId, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            if (transaction is not null)
+                await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -201,6 +219,16 @@ public sealed class ProgramContentAuthoringService(
         }
 
         return new PublishAuthoringResult(ToDto(draft), content.ToDto());
+    }
+
+    private async Task<IDbContextTransaction?> BeginTransactionAsync(CancellationToken cancellationToken)
+    {
+        if (db is not DbContext dbContext ||
+            !dbContext.Database.IsRelational() ||
+            dbContext.Database.CurrentTransaction is not null)
+            return null;
+
+        return await db.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<ProgramContent> FindContent(Guid programId, Guid contentId, CancellationToken cancellationToken)

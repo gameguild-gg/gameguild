@@ -14,7 +14,32 @@ public sealed class AssessmentGradingSync(IApplicationDbContext context) : IAsse
             .FirstOrDefaultAsync(a => a.ContentId == contentId && a.DeletedAt == null, ct)
             .ConfigureAwait(false);
 
-        if (assessment == null) return;
+        if (assessment == null)
+        {
+            var content = await context.Set<ProgramContent>()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(value => value.Id == contentId && value.DeletedAt == null, ct)
+                .ConfigureAwait(false);
+            if (content is null || content.Type != ProgramContentType.Code) return;
+
+            assessment = Assessment.Create(
+                content.ProgramId,
+                content.Title,
+                AssessmentType.Assignment,
+                ScoreValue.FromPoints(maxScore.ToString(CultureInfo.InvariantCulture)),
+                content.IsRequired,
+                contentId: content.Id,
+                reviewMethods: ReviewMethods.AutomatedReview | ReviewMethods.InstructorReview,
+                slug: content.Slug);
+            assessment.TenantId = content.TenantId;
+            assessment.SetDescription(content.Description);
+            assessment.SetDeliveryContract(
+                SubmissionModality.Code,
+                AssessmentPresentationMode.SingleStep);
+            context.Set<Assessment>().Add(assessment);
+            await context.SaveChangesAsync(ct).ConfigureAwait(false);
+            return;
+        }
 
         assessment.SetMaxScore(ScoreValue.FromPoints(maxScore.ToString(CultureInfo.InvariantCulture)));
         context.Set<Assessment>().Update(assessment);

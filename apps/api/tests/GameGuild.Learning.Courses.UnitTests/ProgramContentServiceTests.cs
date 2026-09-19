@@ -82,6 +82,29 @@ public sealed class ProgramContentServiceTests
         contents.Should().HaveCount(2).And.OnlyContain(content => content.DeletedAt != null);
     }
 
+    [Fact]
+    public async Task DeleteContentAsync_PreparesFeatureOwnedRecordsInsideTheContentWorkflow()
+    {
+        await using var context = CreateContext();
+        var content = PersistedContent(Guid.NewGuid(), "Graded quiz");
+        content.Type = ProgramContentType.Questionnaire;
+        context.Set<ProgramContent>().Add(content);
+        await context.SaveChangesAsync();
+        var participant = new Mock<IProgramContentDeleteParticipant>(MockBehavior.Strict);
+        participant.Setup(value => value.CanHandle(content)).Returns(true);
+        participant.Setup(value => value.PrepareDeleteAsync(content, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        var service = new ProgramContentService(
+            context,
+            Mock.Of<IProgramContentScheduleGuard>(),
+            Mock.Of<IProgramContentLifecycleGuard>(),
+            deleteParticipants: [participant.Object]);
+
+        await service.DeleteContentAsync(content.Id);
+
+        participant.VerifyAll();
+    }
+
     private static LearningCoursesTestContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<LearningCoursesTestContext>()
