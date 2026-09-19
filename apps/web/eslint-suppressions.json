@@ -112,11 +112,6 @@
       "count": 2
     }
   },
-  "src/app/[locale]/(speedgrader)/speedgrader/assessments/[assessmentId]/speedgrader-viewers.test.tsx": {
-    "@typescript-eslint/no-require-imports": {
-      "count": 1
-    }
-  },
   "src/app/[locale]/(speedgrader)/speedgrader/assessments/[assessmentId]/submission-viewer.tsx": {
     "react-hooks/set-state-in-effect": {
       "count": 1
@@ -1419,16 +1414,6 @@
   },
   "src/components/feed/infinite-post-feed.tsx": {
     "react-hooks/set-state-in-effect": {
-      "count": 1
-    }
-  },
-  "src/components/learning/console/courses/[course]/assessments/[assessmentId]/coding-definition/coding-definition-editor.tsx": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 1
-    }
-  },
-  "src/components/learning/console/courses/[course]/assessments/[assessmentId]/submissions/[submissionId]/grade/grade-client.tsx": {
-    "@typescript-eslint/no-unused-vars": {
       "count": 1
     }
   },
