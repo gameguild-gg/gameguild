@@ -1,51 +1,55 @@
-import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import { win32 } from 'node:path';
-import test from 'node:test';
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import { win32 } from "node:path";
+import test from "node:test";
 
-import { resolveBashExecutable } from './run-testing-lab-browser-e2e.mjs';
+import { resolveBashExecutable } from "./run-testing-lab-browser-e2e.mjs";
 
 const packageJson = JSON.parse(
-  await readFile(new URL('../package.json', import.meta.url), 'utf8'),
+  await readFile(new URL("../package.json", import.meta.url), "utf8"),
 );
 
-test('runs Testing Lab browser E2E through the portable isolated runner', () => {
+test("runs Testing Lab browser E2E through the portable isolated runner", () => {
   assert.equal(
-    packageJson.scripts['test:browser:testing-lab'],
-    'node scripts/run-testing-lab-browser-e2e.mjs',
+    packageJson.scripts["test:browser:testing-lab"],
+    "node scripts/run-testing-lab-browser-e2e.mjs",
   );
 });
 
-test('resolves Git Bash without falling through to the WSL app alias', () => {
-  const expected = win32.join(
-    'C:\\Program Files',
-    'Git',
-    'bin',
-    'bash.exe',
-  );
+test("resolves Git Bash without falling through to the WSL app alias", () => {
+  const expected = win32.join("C:\\Program Files", "Git", "bin", "bash.exe");
 
   assert.equal(
     resolveBashExecutable({
-      platform: 'win32',
-      env: { ProgramFiles: 'C:\\Program Files' },
+      platform: "win32",
+      env: { ProgramFiles: "C:\\Program Files" },
       exists: (candidate) => candidate === expected,
     }),
     expected,
   );
 });
 
-test('isolates the browser journey in a disposable PostgreSQL database', async () => {
+test("isolates the browser journey in a disposable PostgreSQL database", async () => {
   const runner = await readFile(
-    new URL('./testing-lab-browser-e2e.sh', import.meta.url),
-    'utf8',
+    new URL("./testing-lab-browser-e2e.sh", import.meta.url),
+    "utf8",
   );
 
   assert.match(runner, /^#!\/usr\/bin\/env bash/m);
   assert.match(runner, /set -euo pipefail/);
   assert.match(runner, /postgres:16-alpine/);
-  assert.match(runner, /POSTGRES_PORT="\$\{TESTING_LAB_E2E_POSTGRES_PORT:-\$\(\(43000 \+ RANDOM % 1000\)\)\}"/);
-  assert.match(runner, /API_PORT="\$\{TESTING_LAB_E2E_API_PORT:-\$\(\(42000 \+ RANDOM % 1000\)\)\}"/);
-  assert.match(runner, /WEB_PORT="\$\{TESTING_LAB_E2E_WEB_PORT:-\$\(\(44000 \+ RANDOM % 1000\)\)\}"/);
+  assert.match(
+    runner,
+    /POSTGRES_PORT="\$\{TESTING_LAB_E2E_POSTGRES_PORT:-\$\(\(43000 \+ RANDOM % 1000\)\)\}"/,
+  );
+  assert.match(
+    runner,
+    /API_PORT="\$\{TESTING_LAB_E2E_API_PORT:-\$\(\(42000 \+ RANDOM % 1000\)\)\}"/,
+  );
+  assert.match(
+    runner,
+    /WEB_PORT="\$\{TESTING_LAB_E2E_WEB_PORT:-\$\(\(44000 \+ RANDOM % 1000\)\)\}"/,
+  );
   assert.match(runner, /TESTING_LAB_E2E_DATABASE_MODE=disposable/);
   assert.match(runner, /POSTGRES_HOST=127\.0\.0\.1/);
   assert.match(runner, /POSTGRES_PORT=\$\{POSTGRES_PORT\}/);
@@ -81,17 +85,28 @@ test('isolates the browser journey in a disposable PostgreSQL database', async (
   assert.match(runner, /assert_port_available "\$\{API_PORT\}"/);
   assert.match(runner, /assert_port_available "\$\{WEB_PORT\}"/);
   assert.match(runner, /trap cleanup EXIT INT TERM/);
-  assert.match(runner, /wait_for_http "http:\/\/127\.0\.0\.1:\$\{API_PORT\}\/ready"/);
+  assert.match(
+    runner,
+    /API_READY_TIMEOUT_SECONDS="\$\{TESTING_LAB_E2E_API_READY_TIMEOUT_SECONDS:-600\}"/,
+  );
+  assert.match(
+    runner,
+    /wait_for_http "http:\/\/127\.0\.0\.1:\$\{API_PORT\}\/ready"/,
+  );
+  assert.match(
+    runner,
+    /"GameGuild API" "\$\{API_LOG\}" "\$\{API_READY_TIMEOUT_SECONDS\}" "\$\{API_PID\}"/,
+  );
   assert.match(runner, /wait_for_http .* "\$\{API_PID\}"/);
   assert.match(runner, /kill -0 "\$\{process_pid\}"/);
   assert.match(runner, /docker rm -f/);
   assert.doesNotMatch(runner, /docker compose down/);
 });
 
-test('allows cold SSR route compilation without aborting browser navigation', async () => {
+test("allows cold SSR route compilation without aborting browser navigation", async () => {
   const journey = await readFile(
-    new URL('./testing-lab-browser-e2e.mjs', import.meta.url),
-    'utf8',
+    new URL("./testing-lab-browser-e2e.mjs", import.meta.url),
+    "utf8",
   );
 
   assert.match(journey, /page\.setDefaultNavigationTimeout\(120_000\)/);
@@ -114,49 +129,69 @@ test('allows cold SSR route compilation without aborting browser navigation', as
     /warmSsr\(["']\/en-US\/testing-lab["'], ["']Testing Lab SSR["']\)/,
   );
   assert.ok(
-    journey.indexOf('const fixture = await bootstrap();') <
-      journey.indexOf('await warmTestingLabSsr();'),
+    journey.indexOf("const fixture = await bootstrap();") <
+      journey.indexOf("await warmTestingLabSsr();"),
   );
 });
 
-test('keeps the raw browser command explicitly unsafe for shared environments', () => {
+test("keeps the raw browser command explicitly unsafe for shared environments", () => {
   assert.equal(
-    packageJson.scripts['test:browser:testing-lab:existing'],
-    'node scripts/testing-lab-browser-e2e.mjs',
+    packageJson.scripts["test:browser:testing-lab:existing"],
+    "node scripts/testing-lab-browser-e2e.mjs",
   );
 });
-test('waits for hydration before every client-side Testing Lab mutation', async () => {
+test("waits for hydration before every client-side Testing Lab mutation", async () => {
   const journey = await readFile(
-    new URL('./testing-lab-browser-e2e.mjs', import.meta.url),
-    'utf8',
+    new URL("./testing-lab-browser-e2e.mjs", import.meta.url),
+    "utf8",
   );
   const scenarios = [
-    ['"project-owner public Testing Lab event"', 'await waitForClientHydration(ownerPage);', '.getByLabel("Eligible project version")'],
-    ['"Testing Lab manager applications"', 'await waitForClientHydration(page);', 'name: "Review", exact: true'],
-    ['"committee review applications"', 'await waitForClientHydration(reviewerPage);', 'name: "Vote", exact: true'],
-    ['"scheduled public Testing Lab event"', 'await waitForClientHydration(testerPage);', 'name: "Reserve tester seat"'],
+    [
+      '"project-owner public Testing Lab event"',
+      "await waitForClientHydration(ownerPage);",
+      '.getByLabel("Eligible project version")',
+    ],
+    [
+      '"Testing Lab manager applications"',
+      "await waitForClientHydration(page);",
+      'name: "Review", exact: true',
+    ],
+    [
+      '"committee review applications"',
+      "await waitForClientHydration(reviewerPage);",
+      'name: "Vote", exact: true',
+    ],
+    [
+      '"scheduled public Testing Lab event"',
+      "await waitForClientHydration(testerPage);",
+      'name: "Reserve tester seat"',
+    ],
   ];
 
   for (const [visitMarker, hydrationMarker, actionMarker] of scenarios) {
     const visitIndex = journey.indexOf(visitMarker);
     const hydrationIndex = journey.indexOf(hydrationMarker, visitIndex);
     const actionIndex = journey.indexOf(actionMarker, visitIndex);
-    assert.ok(visitIndex >= 0 && hydrationIndex > visitIndex && actionIndex > hydrationIndex);
+    assert.ok(
+      visitIndex >= 0 &&
+        hydrationIndex > visitIndex &&
+        actionIndex > hydrationIndex,
+    );
   }
 });
-test('covers the complete Testing Lab operational browser matrix', async () => {
+test("covers the complete Testing Lab operational browser matrix", async () => {
   const journey = await readFile(
-    new URL('./testing-lab-browser-e2e.mjs', import.meta.url),
-    'utf8',
+    new URL("./testing-lab-browser-e2e.mjs", import.meta.url),
+    "utf8",
   );
 
   for (const scenario of [
-    'general settings persistence',
-    'location lifecycle',
-    'role and member access lifecycle',
-    'attendance and required feedback',
-    'event filters search and pagination',
-    'event cancellation and read-only history',
+    "general settings persistence",
+    "location lifecycle",
+    "role and member access lifecycle",
+    "attendance and required feedback",
+    "event filters search and pagination",
+    "event cancellation and read-only history",
   ]) {
     assert.ok(
       journey.includes(`[testing-lab-browser-e2e] ${scenario}`),
@@ -174,18 +209,21 @@ test('covers the complete Testing Lab operational browser matrix', async () => {
     'name: "Submit required feedback", exact: true',
     'name: "Cancel event", exact: true',
   ]) {
-    assert.ok(journey.includes(expectedInteraction), `missing interaction: ${expectedInteraction}`);
+    assert.ok(
+      journey.includes(expectedInteraction),
+      `missing interaction: ${expectedInteraction}`,
+    );
   }
 });
-test('waits for hydration after SSR reloads before editing locations and roles', async () => {
+test("waits for hydration after SSR reloads before editing locations and roles", async () => {
   const journey = await readFile(
-    new URL('./testing-lab-browser-e2e.mjs', import.meta.url),
-    'utf8',
+    new URL("./testing-lab-browser-e2e.mjs", import.meta.url),
+    "utf8",
   );
 
   for (const scenarioMarker of [
-    '[testing-lab-browser-e2e] location lifecycle',
-    '[testing-lab-browser-e2e] role and member access lifecycle',
+    "[testing-lab-browser-e2e] location lifecycle",
+    "[testing-lab-browser-e2e] role and member access lifecycle",
   ]) {
     const scenarioIndex = journey.indexOf(scenarioMarker);
     const editIndex = journey.indexOf(
@@ -196,7 +234,10 @@ test('waits for hydration after SSR reloads before editing locations and roles',
       'page.reload({ waitUntil: "domcontentloaded" })',
       editIndex,
     );
-    const hydrationIndex = journey.indexOf('await waitForClientHydration(page);', reloadIndex);
+    const hydrationIndex = journey.indexOf(
+      "await waitForClientHydration(page);",
+      reloadIndex,
+    );
     assert.ok(
       scenarioIndex >= 0 &&
         editIndex > scenarioIndex &&
@@ -207,14 +248,17 @@ test('waits for hydration after SSR reloads before editing locations and roles',
   }
 });
 
-test('waits for the canonical workspace redirect after browser sign-in', async () => {
+test("waits for the canonical workspace redirect after browser sign-in", async () => {
   const journey = await readFile(
-    new URL('./testing-lab-browser-e2e.mjs', import.meta.url),
-    'utf8',
+    new URL("./testing-lab-browser-e2e.mjs", import.meta.url),
+    "utf8",
   );
 
-  const signInStart = journey.indexOf('async function signIn(');
-  const submitIndex = journey.indexOf('.click({ noWaitAfter: true });', signInStart);
+  const signInStart = journey.indexOf("async function signIn(");
+  const submitIndex = journey.indexOf(
+    ".click({ noWaitAfter: true });",
+    signInStart,
+  );
   const workspaceIndex = journey.indexOf(
     'url.pathname.endsWith("/workspace")',
     submitIndex,
@@ -224,6 +268,6 @@ test('waits for the canonical workspace redirect after browser sign-in', async (
   assert.ok(submitIndex > signInStart);
   assert.ok(
     workspaceIndex > submitIndex,
-    'the canonical workspace redirect must settle before the next journey navigation',
+    "the canonical workspace redirect must settle before the next journey navigation",
   );
 });
