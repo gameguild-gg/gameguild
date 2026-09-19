@@ -93,6 +93,23 @@ RUN pnpm_root="apps/web/.next/standalone/node_modules/.pnpm" \
         esac; \
       done
 
+# Cloudflare fronts the public registry and rejects individual upload blobs
+# larger than its request limit. Preserve the exact standalone filesystem while
+# distributing pnpm package directories across deterministic Docker layers.
+RUN standalone_root="/repo/apps/web/.next/standalone" \
+    && runtime_root="/repo/apps/web/.next/runtime-sharded" \
+    && rm -rf "$runtime_root" \
+    && mkdir -p "$runtime_root/root" \
+    && for shard in 0 1 2 3 4 5 6 7; do mkdir -p "$runtime_root/shards/$shard"; done \
+    && cp -a "$standalone_root"/. "$runtime_root/root"/ \
+    && pnpm_root="$runtime_root/root/node_modules/.pnpm" \
+    && shard=0 \
+    && for directory in "$pnpm_root"/*; do \
+         [ -d "$directory" ] || continue; \
+         mv "$directory" "$runtime_root/shards/$shard"/; \
+         shard=$(( (shard + 1) % 8 )); \
+       done
+
 FROM node:22-alpine AS runner
 ARG SOURCE_SHA=unknown
 ARG SOURCE_TREE=unknown
@@ -121,7 +138,15 @@ WORKDIR /app
 RUN addgroup --system --gid 1001 nodejs \
     && adduser --system --uid 1001 nextjs
 
-COPY --from=builder --chown=nextjs:nodejs /repo/apps/web/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /repo/apps/web/.next/runtime-sharded/root ./
+COPY --from=builder --chown=nextjs:nodejs /repo/apps/web/.next/runtime-sharded/shards/0 ./node_modules/.pnpm/
+COPY --from=builder --chown=nextjs:nodejs /repo/apps/web/.next/runtime-sharded/shards/1 ./node_modules/.pnpm/
+COPY --from=builder --chown=nextjs:nodejs /repo/apps/web/.next/runtime-sharded/shards/2 ./node_modules/.pnpm/
+COPY --from=builder --chown=nextjs:nodejs /repo/apps/web/.next/runtime-sharded/shards/3 ./node_modules/.pnpm/
+COPY --from=builder --chown=nextjs:nodejs /repo/apps/web/.next/runtime-sharded/shards/4 ./node_modules/.pnpm/
+COPY --from=builder --chown=nextjs:nodejs /repo/apps/web/.next/runtime-sharded/shards/5 ./node_modules/.pnpm/
+COPY --from=builder --chown=nextjs:nodejs /repo/apps/web/.next/runtime-sharded/shards/6 ./node_modules/.pnpm/
+COPY --from=builder --chown=nextjs:nodejs /repo/apps/web/.next/runtime-sharded/shards/7 ./node_modules/.pnpm/
 COPY --from=builder --chown=nextjs:nodejs /repo/apps/web/.next/static ./apps/web/.next/static
 COPY --from=builder --chown=nextjs:nodejs /repo/apps/web/public ./apps/web/public
 COPY --from=builder --chown=nextjs:nodejs /repo/apps/web/static-cache-guard.cjs ./static-cache-guard.cjs
