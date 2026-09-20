@@ -9,6 +9,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarRail,
   useSidebar,
 } from '@game-guild/ui/components/sidebar';
 import {
@@ -115,6 +116,7 @@ export function SocialSidebar(): React.JSX.Element {
       <SidebarFooter className="items-center p-3">
         <SocialSidebarToggle placement="footer" />
       </SidebarFooter>
+      <SidebarRail />
     </Sidebar>
   );
 }
