@@ -1,67 +1,26 @@
-import React from 'react';
-import { notFound } from 'next/navigation';
-import {
-  getCourse,
-  getContentItem,
-  getCourseAssessments,
-  getCodingDefinitionPublic,
-} from '@/lib/learning';
-import { ContentItemEditor } from '@/components/learning/console/courses/[course]/content/[contentId]/content-item-editor';
+import { redirect } from "@/i18n/navigation";
+import { getCourse, getContentItem } from "@/lib/learning";
+import { getCourseRouteParam } from "@/lib/learning/course-route";
+import { notFound } from "next/navigation";
 
-export default async function ContentItemPage({
+/**
+ * The authoring surface was consolidated into the workspace editor. The console
+ * content item route is preserved as a redirect so existing deep links (course
+ * content tree, resources/tutorials lists, learner "edit" button) all funnel into
+ * the single /workspace/learning authoring editor.
+ */
+export default async function ContentItemRedirectPage({
   params,
-}: PageProps<'/[locale]/console/learning/courses/[course]/content/[contentSlug]'>): Promise<React.JSX.Element> {
-  const { course: courseId, contentSlug } = await params;
+}: PageProps<"/[locale]/console/learning/courses/[course]/content/[contentSlug]">): Promise<void> {
+  const { locale, course: courseIdentifier, contentSlug } = await params;
+  const course = await getCourse(courseIdentifier);
+  if (!course) notFound();
+  const item = await getContentItem(course.id, contentSlug);
+  if (!item) notFound();
+  const courseRouteParam = getCourseRouteParam(course);
 
-  const [course, contentItem] = await Promise.all([
-    getCourse(courseId),
-    getContentItem(courseId, contentSlug),
-  ]);
-
-  if (!course) {
-    notFound();
-  }
-
-  if (!contentItem) {
-    notFound();
-  }
-
-  // For graded content types (Assignment/Quiz/Project/Code), look up the linked
-  // Assessment and any existing v2 coding definition so the editor can bridge to
-  // the coding-definition authoring route without an extra round-trip. The
-  // coding definition itself only exists for coding-capable types.
-  const GRADED_TYPES = new Set([
-    "Assignment",
-    "Questionnaire",
-    "Project",
-    "Code",
-  ]);
-  const CODING_TYPES = new Set(["Assignment", "Project", "Code"]);
-
-  let linkedAssessment: Awaited<ReturnType<typeof getCourseAssessments>>["assessments"][number] | undefined;
-  let initialCodingDefinition: Awaited<
-    ReturnType<typeof getCodingDefinitionPublic>
-  > = null;
-  if (GRADED_TYPES.has(contentItem.type)) {
-    const assessmentsResp = await getCourseAssessments(courseId);
-    const linked = assessmentsResp.assessments.find(
-      (a) => a.contentId === contentItem.id,
-    );
-    if (linked) {
-      linkedAssessment = linked;
-      if (CODING_TYPES.has(contentItem.type)) {
-        initialCodingDefinition = await getCodingDefinitionPublic(linked.id);
-      }
-    }
-  }
-
-  return (
-    <ContentItemEditor
-      courseId={courseId}
-      item={contentItem}
-      courseTitle={course.title}
-      linkedAssessment={linkedAssessment}
-      initialCodingDefinition={initialCodingDefinition}
-    />
-  );
+  redirect({
+    href: `/workspace/learning/courses/${encodeURIComponent(courseRouteParam)}/content/${encodeURIComponent(item.slug ?? item.id)}`,
+    locale,
+  });
 }
