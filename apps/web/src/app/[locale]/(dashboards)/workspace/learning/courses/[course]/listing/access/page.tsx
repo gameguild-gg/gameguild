@@ -98,7 +98,7 @@ export default function ListingAccessPage({ params }: { params: Promise<{ locale
         <CardContent className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <Label htmlFor="course-visibility">Course visibility</Label>
-            <Select value={visibility} onValueChange={setVisibility}>
+            <Select value={visibility} onValueChange={(value) => setVisibility(value ?? '')}>
               <SelectTrigger id="course-visibility">
                 <SelectValue />
               </SelectTrigger>
@@ -125,7 +125,7 @@ export default function ListingAccessPage({ params }: { params: Promise<{ locale
         <CardContent className="flex flex-col gap-5">
           <div className="flex flex-col gap-2">
             <Label htmlFor="course-enrollment-status">Enrollment status</Label>
-            <Select value={enrollmentStatus} onValueChange={setEnrollmentStatus}>
+            <Select value={enrollmentStatus} onValueChange={(value) => setEnrollmentStatus(value ?? '')}>
               <SelectTrigger id="course-enrollment-status">
                 <SelectValue />
               </SelectTrigger>

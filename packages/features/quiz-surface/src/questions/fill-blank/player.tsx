@@ -179,7 +179,7 @@ export function FillBlankRenderer({
         return (
           <Select
             value={currentValue}
-            onValueChange={(value) => handleInputChange(blank.id, value)}
+            onValueChange={(value) => handleInputChange(blank.id, value ?? "")}
             disabled={disabled || showFeedback}
           >
             <SelectTrigger className="inline-flex w-40 mx-2 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600">

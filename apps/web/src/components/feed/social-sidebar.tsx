@@ -97,16 +97,14 @@ export function SocialSidebar(): React.JSX.Element {
             return (
               <SidebarMenuItem key={label} className="group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:w-8">
                 <SidebarMenuButton
-                  asChild
                   size="lg"
                   isActive={active}
                   tooltip={label}
                   className="h-11 rounded-xl px-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-active:bg-sidebar-primary/10 data-active:text-sidebar-primary [&_svg]:size-5"
+                  render={<Link href={href} aria-current={active ? 'page' : undefined} />}
                 >
-                  <Link href={href} aria-current={active ? 'page' : undefined}>
-                    <Icon strokeWidth={1.8} aria-hidden="true" />
-                    <span className="group-data-[collapsible=icon]:hidden">{label}</span>
-                  </Link>
+                  <Icon strokeWidth={1.8} aria-hidden="true" />
+                  <span className="group-data-[collapsible=icon]:hidden">{label}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             );

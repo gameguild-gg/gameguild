@@ -2,41 +2,10 @@
 
 import * as React from "react"
 import { Select as SelectPrimitive } from "@base-ui/react/select"
-
-import { cn } from "@game-guild/ui/lib/utils"
+import { cn } from "cn"
 import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from "lucide-react"
 
-type SelectProps<Value> = Omit<
-  SelectPrimitive.Root.Props<Value, false>,
-  "onValueChange"
-> & {
-  onValueChange?: (value: Value) => void
-}
-
-// Legacy consumers declare labels as SelectItem children. Base UI requires its
-// items map before the portalled popup is mounted to display those labels.
-function declaredItems(children: React.ReactNode): { value: unknown; label: React.ReactNode }[] {
-  return React.Children.toArray(children).flatMap((child) => {
-    if (!React.isValidElement<{ value?: unknown; children?: React.ReactNode }>(child)) return []
-    if (child.type === SelectItem) return [{ value: child.props.value, label: child.props.children }]
-    return declaredItems(child.props.children)
-  })
-}
-
-function Select<Value>({ onValueChange, items, children, ...props }: SelectProps<Value>) {
-  const inferredItems = React.useMemo(() => declaredItems(children), [children])
-  return (
-    <SelectPrimitive.Root<Value, false>
-      {...props}
-      items={items ?? (inferredItems.length ? inferredItems : undefined)}
-      onValueChange={(value) => {
-        if (value !== null) onValueChange?.(value)
-      }}
-    >
-      {children}
-    </SelectPrimitive.Root>
-  )
-}
+const Select = SelectPrimitive.Root
 
 function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
   return (

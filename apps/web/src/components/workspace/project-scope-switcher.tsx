@@ -28,27 +28,29 @@ export function ProjectScopeSwitcher({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          className="h-auto w-full justify-start gap-3 px-3 py-2 text-left sm:w-72"
-          aria-label={`Filter projects by Team. Current scope: ${activeLabel}`}
-        >
-          <span className="bg-muted text-foreground flex size-8 shrink-0 items-center justify-center rounded-md border">
-            <ActiveIcon className="size-4" aria-hidden="true" />
-          </span>
-          <span className="grid min-w-0 flex-1 leading-tight">
-            <span className="truncate text-sm font-medium">{activeLabel}</span>
-            <span className="truncate text-sm text-muted-foreground">
-              {selectedTeam ? "Team projects" : "My workspace"}
-            </span>
-          </span>
-          <ChevronsUpDown
-            className="ml-auto size-4 shrink-0 text-muted-foreground"
-            aria-hidden="true"
+      <DropdownMenuTrigger
+        render={
+          <Button
+            type="button"
+            variant="outline"
+            className="h-auto w-full justify-start gap-3 px-3 py-2 text-left sm:w-72"
+            aria-label={`Filter projects by Team. Current scope: ${activeLabel}`}
           />
-        </Button>
+        }
+      >
+        <span className="bg-muted text-foreground flex size-8 shrink-0 items-center justify-center rounded-md border">
+          <ActiveIcon className="size-4" aria-hidden="true" />
+        </span>
+        <span className="grid min-w-0 flex-1 leading-tight">
+          <span className="truncate text-sm font-medium">{activeLabel}</span>
+          <span className="truncate text-sm text-muted-foreground">
+            {selectedTeam ? "Team projects" : "My workspace"}
+          </span>
+        </span>
+        <ChevronsUpDown
+          className="ml-auto size-4 shrink-0 text-muted-foreground"
+          aria-hidden="true"
+        />
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
@@ -57,41 +59,46 @@ export function ProjectScopeSwitcher({
         <DropdownMenuLabel className="text-muted-foreground">
           Project scope
         </DropdownMenuLabel>
-        <DropdownMenuItem asChild>
-          <Link
-            href="/workspace/projects"
-            className="w-full"
-            aria-current={selectedTeam ? undefined : "page"}
-          >
-            <FolderKanban className="size-4" aria-hidden="true" />
-            <span>All projects</span>
-            {!selectedTeam && (
-              <Check
-                className="ml-auto size-4 text-primary"
-                aria-hidden="true"
-              />
-            )}
-          </Link>
+        <DropdownMenuItem
+          render={
+            <Link
+              href="/workspace/projects"
+              className="w-full"
+              aria-current={selectedTeam ? undefined : "page"}
+            />
+          }
+        >
+          <FolderKanban className="size-4" aria-hidden="true" />
+          <span>All projects</span>
+          {!selectedTeam && (
+            <Check
+              className="ml-auto size-4 text-primary"
+              aria-hidden="true"
+            />
+          )}
         </DropdownMenuItem>
         {teams.map((team) => {
           const isSelected = selectedTeam?.id === team.id;
 
           return (
-            <DropdownMenuItem key={team.id} asChild>
-              <Link
-                href={`/workspace/projects?team=${encodeURIComponent(team.slug)}`}
-                className="min-w-0 w-full"
-                aria-current={isSelected ? "page" : undefined}
-              >
-                <Users className="size-4" aria-hidden="true" />
-                <span className="truncate">{team.name} projects</span>
-                {isSelected && (
-                  <Check
-                    className="ml-auto size-4 text-primary"
-                    aria-hidden="true"
-                  />
-                )}
-              </Link>
+            <DropdownMenuItem
+              key={team.id}
+              render={
+                <Link
+                  href={`/workspace/projects?team=${encodeURIComponent(team.slug)}`}
+                  className="min-w-0 w-full"
+                  aria-current={isSelected ? "page" : undefined}
+                />
+              }
+            >
+              <Users className="size-4" aria-hidden="true" />
+              <span className="truncate">{team.name} projects</span>
+              {isSelected && (
+                <Check
+                  className="ml-auto size-4 text-primary"
+                  aria-hidden="true"
+                />
+              )}
             </DropdownMenuItem>
           );
         })}

@@ -2,8 +2,7 @@
 
 import * as React from "react"
 import { Drawer as DrawerPrimitive } from "@base-ui/react/drawer"
-
-import { cn } from "@game-guild/ui/lib/utils"
+import { cn } from "cn"
 
 type DrawerContextProps = {
   hasSnapPoints: boolean
@@ -52,16 +51,16 @@ function Drawer({
   )
 }
 
-function DrawerTrigger({ asChild, children, render, ...props }: DrawerPrimitive.Trigger.Props & { asChild?: boolean }) {
-  return <DrawerPrimitive.Trigger data-slot="drawer-trigger" render={asChild && React.isValidElement(children) ? children : render} {...props}>{asChild ? null : children}</DrawerPrimitive.Trigger>
+function DrawerTrigger({ ...props }: DrawerPrimitive.Trigger.Props) {
+  return <DrawerPrimitive.Trigger data-slot="drawer-trigger" {...props} />
 }
 
 function DrawerPortal({ ...props }: DrawerPrimitive.Portal.Props) {
   return <DrawerPrimitive.Portal data-slot="drawer-portal" {...props} />
 }
 
-function DrawerClose({ asChild, children, render, ...props }: DrawerPrimitive.Close.Props & { asChild?: boolean }) {
-  return <DrawerPrimitive.Close data-slot="drawer-close" render={asChild && React.isValidElement(children) ? children : render} {...props}>{asChild ? null : children}</DrawerPrimitive.Close>
+function DrawerClose({ ...props }: DrawerPrimitive.Close.Props) {
+  return <DrawerPrimitive.Close data-slot="drawer-close" {...props} />
 }
 
 function DrawerOverlay({
@@ -191,7 +190,7 @@ function DrawerTitle({ className, ...props }: DrawerPrimitive.Title.Props) {
   return (
     <DrawerPrimitive.Title
       data-slot="drawer-title"
-      className={cn("font-medium text-foreground", className)}
+      className={cn("font-heading font-medium text-foreground", className)}
       {...props}
     />
   )

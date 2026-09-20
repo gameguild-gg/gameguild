@@ -460,11 +460,9 @@ function NavGroups({ groups }: { groups: DashboardNavGroup[] }) {
                   const isActive = pathname === item.url || pathname?.endsWith(item.url);
                   return (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
-                        <Link href={item.url}>
-                          {Icon && <Icon className="size-4" />}
-                          <span>{item.title}</span>
-                        </Link>
+                      <SidebarMenuButton isActive={isActive} tooltip={item.title} render={<Link href={item.url} />}>
+                        {Icon && <Icon className="size-4" />}
+                        <span>{item.title}</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   );
@@ -475,12 +473,10 @@ function NavGroups({ groups }: { groups: DashboardNavGroup[] }) {
                   return (
                     <Collapsible key={item.title} open={isOpen} onOpenChange={() => toggleItem(item.title)} className="group/collapsible">
                       <SidebarMenuItem>
-                        <CollapsibleTrigger asChild>
-                          <SidebarMenuButton tooltip={item.title}>
-                            {Icon && <Icon className="size-4" />}
-                            <span>{item.title}</span>
-                            <ChevronRight className="ml-auto size-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
-                          </SidebarMenuButton>
+                        <CollapsibleTrigger render={<SidebarMenuButton tooltip={item.title} />}>
+                          {Icon && <Icon className="size-4" />}
+                          <span>{item.title}</span>
+                          <ChevronRight className="ml-auto size-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
                         </CollapsibleTrigger>
                         <CollapsibleContent>
                           <SidebarMenuSub>
@@ -488,14 +484,12 @@ function NavGroups({ groups }: { groups: DashboardNavGroup[] }) {
                               const isActive = pathname === subItem.url || pathname?.endsWith(subItem.url);
                               return (
                                 <SidebarMenuSubItem key={subItem.title}>
-                                  <SidebarMenuSubButton asChild isActive={isActive}>
-                                    <Link href={subItem.url}>
-                                      <subItem.icon className="size-4" />
-                                      <span>{subItem.title}</span>
-                                      {subItem.badge && (
-                                        <span className="ml-auto rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">{subItem.badge}</span>
-                                      )}
-                                    </Link>
+                                  <SidebarMenuSubButton isActive={isActive} render={<Link href={subItem.url} />}>
+                                    <subItem.icon className="size-4" />
+                                    <span>{subItem.title}</span>
+                                    {subItem.badge && (
+                                      <span className="ml-auto rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">{subItem.badge}</span>
+                                    )}
                                   </SidebarMenuSubButton>
                                 </SidebarMenuSubItem>
                               );
@@ -512,12 +506,10 @@ function NavGroups({ groups }: { groups: DashboardNavGroup[] }) {
                   return (
                     <Collapsible key={item.title} open={isOpen} onOpenChange={() => toggleItem(item.title)} className="group/collapsible">
                       <SidebarMenuItem>
-                        <CollapsibleTrigger asChild>
-                          <SidebarMenuButton tooltip={item.title}>
-                            {Icon && <Icon className="size-4" />}
-                            <span>{item.title}</span>
-                            <ChevronRight className="ml-auto size-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
-                          </SidebarMenuButton>
+                        <CollapsibleTrigger render={<SidebarMenuButton tooltip={item.title} />}>
+                          {Icon && <Icon className="size-4" />}
+                          <span>{item.title}</span>
+                          <ChevronRight className="ml-auto size-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
                         </CollapsibleTrigger>
                         <CollapsibleContent>
                           <SidebarMenuSub>
@@ -531,11 +523,9 @@ function NavGroups({ groups }: { groups: DashboardNavGroup[] }) {
                               const SubIcon = subGroup.icon;
                               return (
                                 <SidebarMenuSubItem key={subGroup.title}>
-                                  <SidebarMenuSubButton asChild isActive={isActive}>
-                                    <Link href={subGroup.url || '#'}>
-                                      {SubIcon && <SubIcon className="size-4" />}
-                                      <span>{subGroup.title}</span>
-                                    </Link>
+                                  <SidebarMenuSubButton isActive={isActive} render={<Link href={subGroup.url || '#'} />}>
+                                    {SubIcon && <SubIcon className="size-4" />}
+                                    <span>{subGroup.title}</span>
                                   </SidebarMenuSubButton>
                                 </SidebarMenuSubItem>
                               );

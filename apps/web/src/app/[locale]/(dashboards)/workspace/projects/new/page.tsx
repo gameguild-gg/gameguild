@@ -62,8 +62,8 @@ export default async function NewProjectPage() {
             <input type="hidden" name="type" value="Game" />
             <div className="flex flex-wrap gap-2">
               <Button type="submit">Create Project</Button>
-              <Button asChild type="button" variant="outline">
-                <Link href="/workspace/projects">Cancel</Link>
+              <Button type="button" variant="outline" render={<Link href="/workspace/projects" />}>
+                Cancel
               </Button>
             </div>
           </form>

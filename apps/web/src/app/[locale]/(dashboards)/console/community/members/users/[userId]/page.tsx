@@ -30,10 +30,8 @@ export default async function UserDetailPage({ params }: Props): Promise<React.J
     <div className="flex flex-col gap-6 p-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/console/community/members/users">
-            <ArrowLeft className="size-4" />
-          </Link>
+        <Button variant="ghost" size="icon" render={<Link href="/console/community/members/users" />}>
+          <ArrowLeft className="size-4" />
         </Button>
         <div className="flex-1">
           <h1 className="text-3xl font-bold tracking-tight">{member.displayName}</h1>

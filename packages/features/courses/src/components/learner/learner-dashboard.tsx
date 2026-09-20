@@ -48,8 +48,8 @@ export function LearnerDashboard({
             Enroll in a course to see lessons, deadlines, grades, and cohort
             activity here.
           </p>
-          <Button asChild className="mt-6">
-            <Link href={routes.catalog}>Explore the catalog</Link>
+          <Button className="mt-6" render={<Link href={routes.catalog} />}>
+            Explore the catalog
           </Button>
         </section>
       </div>
@@ -70,8 +70,8 @@ export function LearnerDashboard({
             Continue where you left off or review your current courses.
           </p>
         </div>
-        <Button asChild variant="outline">
-          <Link href={routes.catalog}>Browse catalog</Link>
+        <Button variant="outline" render={<Link href={routes.catalog} />}>
+          Browse catalog
         </Button>
       </header>
 
@@ -93,8 +93,12 @@ export function LearnerDashboard({
             <span>
               <span className="font-medium text-foreground">{tasks.reviewCount}</span> to review
             </span>
-            <Button asChild variant="outline" size="sm">
-              <Link href={tasks.href}>View tasks</Link>
+            <Button
+              variant="outline"
+              size="sm"
+              render={<Link href={tasks.href} />}
+            >
+              View tasks
             </Button>
           </div>
         </section>
@@ -124,11 +128,12 @@ export function LearnerDashboard({
             <span className="text-muted-foreground">Course progress</span>
             <span>{active.overallProgress}%</span>
           </div>
-          <Button asChild className="mt-6">
-            <Link href={routes.content(active.slug)}>
-              Continue learning
-              <ArrowRight className="ml-2 size-4" />
-            </Link>
+          <Button
+            className="mt-6"
+            render={<Link href={routes.content(active.slug)} />}
+          >
+            Continue learning
+            <ArrowRight className="ml-2 size-4" />
           </Button>
         </div>
         <div className="relative min-h-52 border-t bg-muted lg:border-l lg:border-t-0">

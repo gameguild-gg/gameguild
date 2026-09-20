@@ -226,7 +226,7 @@ export function LearnerActivityCenter({
             onChange={(event) => setQuery(event.target.value)}
           />
         </label>
-        <Select value={courseId} onValueChange={setCourseId}>
+        <Select value={courseId} onValueChange={(value) => setCourseId(value ?? "all")}>
           <SelectTrigger aria-label="Course">
             <SelectValue placeholder="All courses" />
           </SelectTrigger>
@@ -239,7 +239,7 @@ export function LearnerActivityCenter({
             ))}
           </SelectContent>
         </Select>
-        <Select value={type} onValueChange={setType}>
+        <Select value={type} onValueChange={(value) => setType(value ?? "all")}>
           <SelectTrigger aria-label="Activity type">
             <SelectValue placeholder="All types" />
           </SelectTrigger>
@@ -252,7 +252,7 @@ export function LearnerActivityCenter({
             ))}
           </SelectContent>
         </Select>
-        <Select value={status} onValueChange={setStatus}>
+        <Select value={status} onValueChange={(value) => setStatus(value ?? "all")}>
           <SelectTrigger aria-label="Activity status">
             <SelectValue placeholder="All statuses" />
           </SelectTrigger>
@@ -266,7 +266,7 @@ export function LearnerActivityCenter({
             <SelectItem value="locked">Locked</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={date} onValueChange={setDate}>
+        <Select value={date} onValueChange={(value) => setDate(value ?? "all")}>
           <SelectTrigger aria-label="Due date">
             <SelectValue placeholder="Any due date" />
           </SelectTrigger>
@@ -350,11 +350,9 @@ export function LearnerActivityCenter({
                   </p>
                 ) : null}
               </div>
-              <Button asChild variant="outline">
-                <Link href={row.href}>
-                  Open
-                  <ArrowRight className="size-4" />
-                </Link>
+              <Button variant="outline" render={<Link href={row.href} />}>
+                Open
+                <ArrowRight className="size-4" />
               </Button>
             </article>
           ))}

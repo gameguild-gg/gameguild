@@ -2,27 +2,25 @@
 
 import * as React from "react"
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
+import { cn } from "cn"
 
-import { cn } from "@game-guild/ui/lib/utils"
-import { type LegacyLayerHandlers, LegacyLayerContext, useLegacyLayerRoot, useLegacyLayerHandlers, useMergedRefs } from "@game-guild/ui/lib/legacy-layer"
 import { Button } from "@game-guild/ui/components/button"
 import { XIcon } from "lucide-react"
 
-function Dialog({ onOpenChange, ...props }: DialogPrimitive.Root.Props) {
-  const layer = useLegacyLayerRoot(onOpenChange)
-  return <LegacyLayerContext.Provider value={layer.handlers}><DialogPrimitive.Root data-slot="dialog" {...props} onOpenChange={layer.onOpenChange} /></LegacyLayerContext.Provider>
+function Dialog({ ...props }: DialogPrimitive.Root.Props) {
+  return <DialogPrimitive.Root data-slot="dialog" {...props} />
 }
 
-function DialogTrigger({ asChild, children, render, ...props }: DialogPrimitive.Trigger.Props & { asChild?: boolean }) {
-  return <DialogPrimitive.Trigger data-slot="dialog-trigger" render={asChild && React.isValidElement(children) ? children : render} {...props}>{asChild ? null : children}</DialogPrimitive.Trigger>
+function DialogTrigger({ ...props }: DialogPrimitive.Trigger.Props) {
+  return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />
 }
 
 function DialogPortal({ ...props }: DialogPrimitive.Portal.Props) {
   return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />
 }
 
-function DialogClose({ asChild, children, render, ...props }: DialogPrimitive.Close.Props & { asChild?: boolean }) {
-  return <DialogPrimitive.Close data-slot="dialog-close" render={asChild && React.isValidElement(children) ? children : render} {...props}>{asChild ? null : children}</DialogPrimitive.Close>
+function DialogClose({ ...props }: DialogPrimitive.Close.Props) {
+  return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
 }
 
 function DialogOverlay({
@@ -45,33 +43,14 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
-  ref,
-  onOpenAutoFocus,
-  onCloseAutoFocus,
-  onPointerDownOutside,
-  onFocusOutside,
-  onInteractOutside,
-  onEscapeKeyDown,
   ...props
 }: DialogPrimitive.Popup.Props & {
   showCloseButton?: boolean
-} & LegacyLayerHandlers) {
-  const popupRef = React.useRef<HTMLDivElement>(null)
-  const focusProps = useLegacyLayerHandlers(popupRef, {
-    onOpenAutoFocus,
-    onCloseAutoFocus,
-    onPointerDownOutside,
-    onFocusOutside,
-    onInteractOutside,
-    onEscapeKeyDown,
-  })
-  const mergedRef = useMergedRefs(ref, popupRef)
+}) {
   return (
     <DialogPortal>
       <DialogOverlay />
       <DialogPrimitive.Popup
-        ref={mergedRef}
-          {...focusProps}
         data-slot="dialog-content"
         className={cn(
           "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-6 rounded-xl bg-popover p-6 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none sm:max-w-md data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
@@ -142,7 +121,7 @@ function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn("leading-none font-medium", className)}
+      className={cn("font-heading leading-none font-medium", className)}
       {...props}
     />
   )

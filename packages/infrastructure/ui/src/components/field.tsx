@@ -2,8 +2,8 @@
 
 import { useMemo } from "react"
 import { cva, type VariantProps } from "class-variance-authority"
+import { cn } from "cn"
 
-import { cn } from "@game-guild/ui/lib/utils"
 import { Label } from "@game-guild/ui/components/label"
 import { Separator } from "@game-guild/ui/components/separator"
 

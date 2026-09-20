@@ -84,11 +84,9 @@ export function CourseCommunity({
             }
           }}
         >
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="size-4" />
-              Start discussion
-            </Button>
+          <DialogTrigger render={<Button />}>
+            <Plus className="size-4" />
+            Start discussion
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
@@ -166,11 +164,9 @@ export function CourseCommunity({
                   <MessageCircle className="size-3.5" />
                   {discussion.replyCount ?? 0} replies
                 </p>
-                <Button asChild size="sm" variant="ghost">
-                  <Link href={`/learn/courses/${courseSlug}/community/${discussion.id}`}>
-                    Open discussion
-                    <ArrowRight className="size-4" />
-                  </Link>
+                <Button size="sm" variant="ghost" render={<Link href={`/learn/courses/${courseSlug}/community/${discussion.id}`} />}>
+                  Open discussion
+                  <ArrowRight className="size-4" />
                 </Button>
               </div>
             </article>

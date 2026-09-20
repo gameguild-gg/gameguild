@@ -33,11 +33,9 @@ export default async function Page({ searchParams }: Props): Promise<React.JSX.E
           <p className="text-muted-foreground">Manage community groups and teams.</p>
         </div>
         <Dialog>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 size-4" />
-              Create Group
-            </Button>
+          <DialogTrigger render={<Button />}>
+            <Plus className="mr-2 size-4" />
+            Create Group
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
@@ -160,11 +158,9 @@ export default async function Page({ searchParams }: Props): Promise<React.JSX.E
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{new Date(group.createdAt).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right">
-                      <Button asChild variant="outline" size="sm">
-                        <Link href={`/console/community/members/groups/${group.id}`}>
-                          Manage
-                          <ArrowRight className="ml-2 size-4" />
-                        </Link>
+                      <Button variant="outline" size="sm" render={<Link href={`/console/community/members/groups/${group.id}`} />}>
+                        Manage
+                        <ArrowRight className="ml-2 size-4" />
                       </Button>
                     </TableCell>
                   </TableRow>

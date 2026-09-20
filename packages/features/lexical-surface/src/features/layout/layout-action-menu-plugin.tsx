@@ -271,26 +271,24 @@ export function LayoutActionMenuPlugin({
           onMouseDown={(e) => e.preventDefault()}
         >
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                aria-label="Layout settings"
-                className={cn(
-                  "inline-flex h-6 items-center justify-center gap-1 rounded px-1.5",
-                  "border border-gray-300 dark:border-gray-700",
-                  "bg-white/90 dark:bg-gray-800/90 text-gray-700 dark:text-gray-200",
-                  "shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700",
-                )}
-              >
-                <LayoutGrid className="h-3.5 w-3.5" />
-                <ChevronDown className="h-3.5 w-3.5" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-64"
-              onCloseAutoFocus={(e) => e.preventDefault()}
-            >
+            <DropdownMenuTrigger
+              render={
+                <button
+                  type="button"
+                  aria-label="Layout settings"
+                  className={cn(
+                    "inline-flex h-6 items-center justify-center gap-1 rounded px-1.5",
+                    "border border-gray-300 dark:border-gray-700",
+                    "bg-white/90 dark:bg-gray-800/90 text-gray-700 dark:text-gray-200",
+                    "shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700",
+                  )}
+                >
+                  <LayoutGrid className="h-3.5 w-3.5" />
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </button>
+              }
+            />
+            <DropdownMenuContent align="end" className="w-64">
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>Columns layout</DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
@@ -322,17 +320,7 @@ export function LayoutActionMenuPlugin({
               </DropdownMenuItem>
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>Border color</DropdownMenuSubTrigger>
-                <DropdownMenuSubContent
-                  className="p-3"
-                  onFocusOutside={(e) => {
-                    const t = (e as any).detail?.originalEvent?.target;
-                    if (
-                      t instanceof Element &&
-                      t.closest('[contenteditable="true"]')
-                    )
-                      e.preventDefault();
-                  }}
-                >
+                <DropdownMenuSubContent className="p-3">
                   <ColorPicker
                     color={layoutState.borderColor ?? "#9ca3af"}
                     onChange={(next) =>

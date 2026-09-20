@@ -65,17 +65,19 @@ export function VegaLiteManager({
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm" className="gap-2">
-            <FileText className="h-4 w-4" />
-            Data
-            {count > 0 && (
-              <span className="ml-1 rounded-full bg-blue-500 px-2 py-0.5 text-xs text-white">
-                {count}
-              </span>
-            )}
-          </Button>
-        </DropdownMenuTrigger>
+        <DropdownMenuTrigger
+          render={
+            <Button variant="outline" size="sm" className="gap-2">
+              <FileText className="h-4 w-4" />
+              Data
+              {count > 0 && (
+                <span className="ml-1 rounded-full bg-blue-500 px-2 py-0.5 text-xs text-white">
+                  {count}
+                </span>
+              )}
+            </Button>
+          }
+        />
         <DropdownMenuContent align="end" className="z-[70] w-80">
           <DropdownMenuLabel>Chart datasets</DropdownMenuLabel>
           {Object.entries(attachments).map(([filename, attachment]) => (

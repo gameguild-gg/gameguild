@@ -801,20 +801,20 @@ export function AssessmentsList({
                           </Badge>
                         </Link>
                         {canManage && (
-                          <Button
-                            asChild
-                            variant="outline"
-                            size="sm"
-                            className="mr-4 shrink-0"
-                          >
-                            <Link
-                              href={`${pathname}/${assessment.id}/submissions`}
-                              data-testid={`grade-link-${assessment.id}`}
-                            >
-                              <ClipboardCheck className="mr-2 h-4 w-4" />
-                              Grade
-                            </Link>
-                          </Button>
+                           <Button
+                             variant="outline"
+                             size="sm"
+                             className="mr-4 shrink-0"
+                             render={
+                               <Link
+                                 href={`${pathname}/${assessment.id}/submissions`}
+                                 data-testid={`grade-link-${assessment.id}`}
+                               />
+                             }
+                           >
+                             <ClipboardCheck className="mr-2 h-4 w-4" />
+                             Grade
+                           </Button>
                         )}
                       </DraggableAssessmentRow>
                     ))}
@@ -1068,7 +1068,7 @@ export function AssessmentsList({
               <Label htmlFor="new-assessment-group">Grade group</Label>
               <Select
                 value={newAssessmentGroupId}
-                onValueChange={setNewAssessmentGroupId}
+                onValueChange={(value) => setNewAssessmentGroupId(value ?? NO_GROUP_VALUE)}
               >
                 <SelectTrigger id="new-assessment-group">
                   <SelectValue placeholder="Unassigned" />

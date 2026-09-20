@@ -260,7 +260,7 @@ export function TestingLabAccessManagement({
         <Select
           value={memberId}
           onValueChange={(value) => {
-            setMemberId(value);
+            setMemberId(value ?? "");
             setEffectiveAccess(null);
             setResult(null);
             setRefreshError(null);
@@ -376,7 +376,7 @@ export function TestingLabAccessManagement({
                 </p>
               </div>
               <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
-                <Select value={roleName} onValueChange={setRoleName}>
+                <Select value={roleName} onValueChange={(value) => setRoleName(value ?? "")}>
                   <SelectTrigger aria-label="Testing Lab role">
                     <SelectValue placeholder="Choose a role" />
                   </SelectTrigger>
@@ -529,7 +529,7 @@ export function TestingLabAccessManagement({
                   <Label htmlFor="testing-access-action">Action</Label>
                   <Select
                     value={permissionAction}
-                    onValueChange={setPermissionAction}
+                    onValueChange={(value) => setPermissionAction(value ?? "read")}
                   >
                     <SelectTrigger id="testing-access-action">
                       <SelectValue />
@@ -547,7 +547,7 @@ export function TestingLabAccessManagement({
                 </div>
                 <div className="space-y-2 sm:col-span-2">
                   <Label htmlFor="testing-access-resource">Resource</Label>
-                  <Select value={resourceId} onValueChange={setResourceId}>
+                  <Select value={resourceId} onValueChange={(value) => setResourceId(value ?? "")}>
                     <SelectTrigger id="testing-access-resource">
                       <SelectValue placeholder="Choose a resource" />
                     </SelectTrigger>

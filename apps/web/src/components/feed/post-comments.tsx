@@ -189,8 +189,16 @@ function CommentThread({
                 <>
                   <button type="button" aria-label={`Edit comment by ${comment.authorName}`} onClick={() => onBeginEdit(comment)} className="mt-1 px-2 text-xs text-muted-foreground hover:text-foreground">Edit</button>
                   <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <button type="button" aria-label={`Delete comment by ${comment.authorName}`} className="mt-1 px-2 text-xs text-muted-foreground hover:text-destructive">Delete</button>
+                    <AlertDialogTrigger
+                      render={
+                        <button
+                          type="button"
+                          aria-label={`Delete comment by ${comment.authorName}`}
+                          className="mt-1 px-2 text-xs text-muted-foreground hover:text-destructive"
+                        />
+                      }
+                    >
+                      Delete
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>

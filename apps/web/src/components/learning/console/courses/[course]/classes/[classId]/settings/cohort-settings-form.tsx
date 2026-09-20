@@ -111,7 +111,7 @@ export function CohortSettingsForm({ courseId, cohort }: CohortSettingsFormProps
           )}
           <Button variant="outline" onClick={() => runStatus('complete')} disabled={pending || cohort.status === 'completed'}><CheckCircle2 className="size-4" />Mark complete</Button>
           <AlertDialog>
-            <AlertDialogTrigger asChild><Button variant="destructive" disabled={pending || cohort.status === 'cancelled'}><Ban className="size-4" />Cancel class</Button></AlertDialogTrigger>
+            <AlertDialogTrigger render={<Button variant="destructive" disabled={pending || cohort.status === 'cancelled'} />}><Ban className="size-4" />Cancel class</AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader><AlertDialogTitle>Cancel {cohort.name}?</AlertDialogTitle><AlertDialogDescription>Enrollment will close and the class schedule will no longer be active. Existing student records remain preserved.</AlertDialogDescription></AlertDialogHeader>
               <AlertDialogFooter><AlertDialogCancel>Keep class</AlertDialogCancel><AlertDialogAction variant="destructive" onClick={() => runStatus('cancel')}>Cancel class</AlertDialogAction></AlertDialogFooter>

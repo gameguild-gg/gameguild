@@ -243,10 +243,16 @@ export function PostEngagement({
         {reactionCount > 0 ? reactionCount : null}
       </button>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button type="button" aria-label="Choose reaction" className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent">
-            <ChevronDown className="size-3.5" />
-          </button>
+        <DropdownMenuTrigger
+          render={
+            <button
+              type="button"
+              aria-label="Choose reaction"
+              className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent"
+            />
+          }
+        >
+          <ChevronDown className="size-3.5" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="flex min-w-0 gap-1 p-2">
           {REACTIONS.map((entry) => (

@@ -58,8 +58,8 @@ export default function DashboardSearchPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <Button asChild variant="outline" size="sm">
-                    <Link href={item.url}>Open result</Link>
+                  <Button variant="outline" size="sm" render={<Link href={item.url} />}>
+                    Open result
                   </Button>
                 </CardContent>
               </Card>
@@ -75,8 +75,8 @@ export default function DashboardSearchPage() {
                   Try a shorter query or open the command palette with Ctrl+K.
                 </p>
               </div>
-              <Button asChild variant="outline">
-                <Link href="/workspace/learning/courses">Open courses</Link>
+              <Button variant="outline" render={<Link href="/workspace/learning/courses" />}>
+                Open courses
               </Button>
             </CardContent>
           </Card>

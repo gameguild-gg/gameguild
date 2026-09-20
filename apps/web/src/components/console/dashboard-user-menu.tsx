@@ -55,35 +55,33 @@ export function DashboardUserMenu({ user }: { user: DashboardUser }) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className="h-11 max-w-72 justify-start gap-2 rounded-lg px-2 text-left"
-          aria-label={`Open ${user.name} account menu`}
-        >
-          <Avatar size="sm">
-            {user.image ? <AvatarImage src={user.image} alt={user.name} /> : null}
-            <AvatarFallback>{getInitials(user.name, user.email)}</AvatarFallback>
-          </Avatar>
-          <span className="hidden min-w-0 flex-1 sm:block">
-            <span className="block truncate text-sm font-semibold leading-tight">{user.name}</span>
-            <span className="block truncate text-xs leading-tight text-muted-foreground">{user.email}</span>
-          </span>
-          <ChevronsUpDown className="hidden size-4 shrink-0 text-muted-foreground sm:block" aria-hidden="true" />
-        </Button>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            variant="ghost"
+            className="h-11 max-w-72 justify-start gap-2 rounded-lg px-2 text-left"
+            aria-label={`Open ${user.name} account menu`}
+          />
+        }
+      >
+        <Avatar size="sm">
+          {user.image ? <AvatarImage src={user.image} alt={user.name} /> : null}
+          <AvatarFallback>{getInitials(user.name, user.email)}</AvatarFallback>
+        </Avatar>
+        <span className="hidden min-w-0 flex-1 sm:block">
+          <span className="block truncate text-sm font-semibold leading-tight">{user.name}</span>
+          <span className="block truncate text-xs leading-tight text-muted-foreground">{user.email}</span>
+        </span>
+        <ChevronsUpDown className="hidden size-4 shrink-0 text-muted-foreground sm:block" aria-hidden="true" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
-        <DropdownMenuItem asChild>
-          <Link href="/workspace">
-            <BriefcaseBusiness className="size-4" />
-            My Workspace
-          </Link>
+        <DropdownMenuItem render={<Link href="/workspace" />}>
+          <BriefcaseBusiness className="size-4" />
+          My Workspace
         </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href="/workspace/settings/account">
-            <Settings className="size-4" />
-            Account settings
-          </Link>
+        <DropdownMenuItem render={<Link href="/workspace/settings/account" />}>
+          <Settings className="size-4" />
+          Account settings
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

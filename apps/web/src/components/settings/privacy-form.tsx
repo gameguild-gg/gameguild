@@ -98,7 +98,7 @@ export function PrivacyForm({ defaultValues }: PrivacyFormProps) {
         <Select
           value={values.profileVisibility}
           onValueChange={(value) => {
-            if (isProfileVisibility(value)) update('profileVisibility', value);
+            if (value !== null && isProfileVisibility(value)) update('profileVisibility', value);
           }}
           disabled={isPending}
         >

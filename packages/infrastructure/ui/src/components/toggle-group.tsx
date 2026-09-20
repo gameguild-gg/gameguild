@@ -4,8 +4,8 @@ import * as React from "react"
 import { Toggle as TogglePrimitive } from "@base-ui/react/toggle"
 import { ToggleGroup as ToggleGroupPrimitive } from "@base-ui/react/toggle-group"
 import { type VariantProps } from "class-variance-authority"
+import { cn } from "cn"
 
-import { cn } from "@game-guild/ui/lib/utils"
 import { toggleVariants } from "@game-guild/ui/components/toggle"
 
 const ToggleGroupContext = React.createContext<
@@ -20,13 +20,6 @@ const ToggleGroupContext = React.createContext<
   orientation: "horizontal",
 })
 
-type ToggleGroupProps = VariantProps<typeof toggleVariants> & { spacing?: number } & (
-  | (ToggleGroupPrimitive.Props & { type?: undefined | "multiple" })
-  | (Omit<ToggleGroupPrimitive.Props, "value" | "defaultValue" | "onValueChange" | "multiple"> & {
-      type: "single"; value?: string; defaultValue?: string; onValueChange?: (value: string) => void
-    })
-)
-
 function ToggleGroup({
   className,
   variant,
@@ -34,13 +27,12 @@ function ToggleGroup({
   spacing = 2,
   orientation = "horizontal",
   children,
-  type,
-  value,
-  defaultValue,
-  onValueChange,
   ...props
-}: ToggleGroupProps) {
-  const single = type === "single"
+}: ToggleGroupPrimitive.Props &
+  VariantProps<typeof toggleVariants> & {
+    spacing?: number
+    orientation?: "horizontal" | "vertical"
+  }) {
   return (
     <ToggleGroupPrimitive
       data-slot="toggle-group"
@@ -54,17 +46,6 @@ function ToggleGroup({
         className
       )}
       {...props}
-      orientation={orientation}
-      multiple={type === "multiple" || (!single && ('multiple' in props ? props.multiple : false))}
-      value={single ? (value === undefined ? undefined : value ? [value as string] : []) : value as string[] | undefined}
-      defaultValue={single ? (defaultValue ? [defaultValue as string] : []) : defaultValue as string[] | undefined}
-      onValueChange={(values, details) => {
-        if (single) {
-          ;(onValueChange as ((value: string) => void) | undefined)?.(values[0] ?? "")
-        } else {
-          ;(onValueChange as ToggleGroupPrimitive.Props["onValueChange"])?.(values, details)
-        }
-      }}
     >
       <ToggleGroupContext.Provider
         value={{ variant, size, spacing, orientation }}

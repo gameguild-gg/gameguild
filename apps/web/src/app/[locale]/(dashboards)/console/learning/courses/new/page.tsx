@@ -144,10 +144,8 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/consol
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6 p-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/console/learning/courses">
-            <ArrowLeft className="size-5" />
-          </Link>
+        <Button variant="ghost" size="icon" render={<Link href="/console/learning/courses" />}>
+          <ArrowLeft className="size-5" />
         </Button>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Create Course</h1>
@@ -236,7 +234,7 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/consol
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="course-category">Category</Label>
-                  <Select value={category} onValueChange={setCategory}>
+                  <Select value={category} onValueChange={(value) => setCategory(value ?? '')}>
                     <SelectTrigger id="course-category">
                       <SelectValue />
                     </SelectTrigger>
@@ -252,7 +250,7 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/consol
 
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="course-difficulty">Difficulty</Label>
-                  <Select value={difficulty} onValueChange={setDifficulty}>
+                  <Select value={difficulty} onValueChange={(value) => setDifficulty(value ?? '')}>
                     <SelectTrigger id="course-difficulty">
                       <SelectValue />
                     </SelectTrigger>
@@ -327,7 +325,7 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/consol
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="course-visibility">Visibility</Label>
-                  <Select value={visibility} onValueChange={setVisibility}>
+                  <Select value={visibility} onValueChange={(value) => setVisibility(value ?? '')}>
                     <SelectTrigger id="course-visibility">
                       <SelectValue />
                     </SelectTrigger>
@@ -343,7 +341,7 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/consol
 
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="course-enrollment-status">Enrollment Status</Label>
-                  <Select value={enrollmentStatus} onValueChange={setEnrollmentStatus}>
+                  <Select value={enrollmentStatus} onValueChange={(value) => setEnrollmentStatus(value ?? '')}>
                     <SelectTrigger id="course-enrollment-status">
                       <SelectValue />
                     </SelectTrigger>
@@ -402,8 +400,8 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/consol
           <div role="alert" className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
             <p>{error}</p>
             {recoveryHref ? (
-              <Button asChild variant="link" className="mt-2 h-auto p-0 text-red-700 underline dark:text-red-300">
-                <Link href={recoveryHref}>Open the draft and finish it manually</Link>
+              <Button variant="link" className="mt-2 h-auto p-0 text-red-700 underline dark:text-red-300" render={<Link href={recoveryHref} />}>
+                Open the draft and finish it manually
               </Button>
             ) : null}
           </div>
@@ -435,8 +433,8 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/consol
             </Button>
           )}
 
-          <Button type="button" variant="ghost" asChild>
-            <Link href="/console/learning/courses">Cancel</Link>
+          <Button type="button" variant="ghost" render={<Link href="/console/learning/courses" />}>
+            Cancel
           </Button>
         </div>
       </form>

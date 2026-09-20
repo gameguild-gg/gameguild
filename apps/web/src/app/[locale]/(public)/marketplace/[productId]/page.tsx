@@ -24,7 +24,7 @@ export default async function MarketplaceProductPage({ params }: { params: Promi
         <CardHeader><CardTitle>{price ? `${price.currentPrice} ${price.currency}` : t('priceUnavailable')}</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <AddToCartForm product={product} labels={{ add: t('addToCart'), quantity: t('quantity'), unavailable: t('priceUnavailable') }} />
-          <Button asChild variant="outline" className="w-full"><Link href="/marketplace/cart">{t('viewCart')}</Link></Button>
+          <Button variant="outline" className="w-full" render={<Link href="/marketplace/cart" />}>{t('viewCart')}</Button>
         </CardContent>
       </Card>
     </main>

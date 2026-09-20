@@ -51,11 +51,9 @@ export default async function MyProjectsPage({
           </p>
         </div>
         {projects.length > 0 ? (
-          <Button asChild>
-            <Link href="/workspace/projects/new">
-              <Plus className="size-4" />
-              Create Project
-            </Link>
+          <Button render={<Link href="/workspace/projects/new" />}>
+            <Plus className="size-4" />
+            Create Project
           </Button>
         ) : null}
       </header>
@@ -101,9 +99,7 @@ export default async function MyProjectsPage({
               <CardDescription>{emptyDescription}</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button asChild>
-                <Link href="/workspace/projects/new">Create Project</Link>
-              </Button>
+              <Button render={<Link href="/workspace/projects/new" />}>Create Project</Button>
             </CardContent>
           </Card>
         )}

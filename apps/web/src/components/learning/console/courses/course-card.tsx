@@ -52,31 +52,23 @@ export function CourseCard({ course, locale }: CourseCardProps) {
         <div className="flex items-start justify-between gap-2">
           {getStatusBadge(course.status)}
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="size-8">
-                <span className="sr-only">Open {course.title} actions</span>
-                <MoreHorizontal className="size-4" />
-              </Button>
+            <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="size-8" />}>
+              <span className="sr-only">Open {course.title} actions</span>
+              <MoreHorizontal className="size-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                <Link href={coursePath} locale={locale} prefetch={false}>
-                  <Edit className="mr-2 size-4" />
-                  Edit Course
-                </Link>
+              <DropdownMenuItem render={<Link href={coursePath} locale={locale} prefetch={false} />}>
+                <Edit className="mr-2 size-4" />
+                Edit Course
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href={previewPath} locale={locale} prefetch={false}>
-                  <Eye className="mr-2 size-4" />
-                  Preview
-                </Link>
+              <DropdownMenuItem render={<Link href={previewPath} locale={locale} prefetch={false} />}>
+                <Eye className="mr-2 size-4" />
+                Preview
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href={overviewPath} locale={locale} prefetch={false}>
-                  <BookOpen className="mr-2 size-4" />
-                  Manage lifecycle
-                </Link>
+              <DropdownMenuItem render={<Link href={overviewPath} locale={locale} prefetch={false} />}>
+                <BookOpen className="mr-2 size-4" />
+                Manage lifecycle
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -112,31 +104,23 @@ export function CourseTableActions({ courseRouteParam, courseTitle, locale }: { 
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="size-8">
-          <span className="sr-only">Open {courseTitle} actions</span>
-          <MoreHorizontal className="size-4" />
-        </Button>
+      <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="size-8" />}>
+        <span className="sr-only">Open {courseTitle} actions</span>
+        <MoreHorizontal className="size-4" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem asChild>
-          <Link href={coursePath} locale={locale} prefetch={false}>
-            <Edit className="mr-2 size-4" />
-            Edit
-          </Link>
+        <DropdownMenuItem render={<Link href={coursePath} locale={locale} prefetch={false} />}>
+          <Edit className="mr-2 size-4" />
+          Edit
         </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href={previewPath} locale={locale} prefetch={false}>
-            <Eye className="mr-2 size-4" />
-            Preview
-          </Link>
+        <DropdownMenuItem render={<Link href={previewPath} locale={locale} prefetch={false} />}>
+          <Eye className="mr-2 size-4" />
+          Preview
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link href={overviewPath} locale={locale} prefetch={false}>
-            <BookOpen className="mr-2 size-4" />
-            Manage lifecycle
-          </Link>
+        <DropdownMenuItem render={<Link href={overviewPath} locale={locale} prefetch={false} />}>
+          <BookOpen className="mr-2 size-4" />
+          Manage lifecycle
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

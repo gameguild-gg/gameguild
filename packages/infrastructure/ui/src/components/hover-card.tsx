@@ -1,23 +1,15 @@
 "use client"
 
-import * as React from "react"
 import { PreviewCard as PreviewCardPrimitive } from "@base-ui/react/preview-card"
+import { cn } from "cn"
 
-import { cn } from "@game-guild/ui/lib/utils"
-
-const HoverCardDelayContext = React.createContext<{
-  openDelay?: number
-  closeDelay?: number
-}>({})
-
-function HoverCard({ openDelay, closeDelay, ...props }: PreviewCardPrimitive.Root.Props & { openDelay?: number; closeDelay?: number }) {
-  return <HoverCardDelayContext.Provider value={{ openDelay, closeDelay }}><PreviewCardPrimitive.Root data-slot="hover-card" {...props} /></HoverCardDelayContext.Provider>
+function HoverCard({ ...props }: PreviewCardPrimitive.Root.Props) {
+  return <PreviewCardPrimitive.Root data-slot="hover-card" {...props} />
 }
 
-function HoverCardTrigger({ asChild, children, render, delay, closeDelay, ...props }: PreviewCardPrimitive.Trigger.Props & { asChild?: boolean }) {
-  const legacyDelay = React.useContext(HoverCardDelayContext)
+function HoverCardTrigger({ ...props }: PreviewCardPrimitive.Trigger.Props) {
   return (
-    <PreviewCardPrimitive.Trigger data-slot="hover-card-trigger" delay={delay ?? legacyDelay.openDelay} closeDelay={closeDelay ?? legacyDelay.closeDelay} render={asChild && React.isValidElement(children) ? children : render} {...props}>{asChild ? null : children}</PreviewCardPrimitive.Trigger>
+    <PreviewCardPrimitive.Trigger data-slot="hover-card-trigger" {...props} />
   )
 }
 

@@ -2,8 +2,7 @@
 
 import { Tabs as TabsPrimitive } from "@base-ui/react/tabs"
 import { cva, type VariantProps } from "class-variance-authority"
-
-import { cn } from "@game-guild/ui/lib/utils"
+import { cn } from "cn"
 
 function Tabs({
   className,
@@ -69,11 +68,10 @@ function TabsTrigger({ className, ...props }: TabsPrimitive.Tab.Props) {
   )
 }
 
-function TabsContent({ className, forceMount, keepMounted, ...props }: TabsPrimitive.Panel.Props & { forceMount?: boolean }) {
+function TabsContent({ className, ...props }: TabsPrimitive.Panel.Props) {
   return (
     <TabsPrimitive.Panel
       data-slot="tabs-content"
-      keepMounted={keepMounted ?? forceMount}
       className={cn("flex-1 text-sm outline-none", className)}
       {...props}
     />

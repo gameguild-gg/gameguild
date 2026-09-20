@@ -1,16 +1,5 @@
 import { Slider as SliderPrimitive } from "@base-ui/react/slider"
-
-import { cn } from "@game-guild/ui/lib/utils"
-
-type SliderProps = Omit<
-  SliderPrimitive.Root.Props<readonly number[]>,
-  "value" | "defaultValue" | "onValueChange" | "onValueCommitted"
-> & {
-  value?: number[]
-  defaultValue?: number[]
-  onValueChange?: (value: number[]) => void
-  onValueCommit?: (value: number[]) => void
-}
+import { cn } from "cn"
 
 function Slider({
   className,
@@ -18,10 +7,8 @@ function Slider({
   value,
   min = 0,
   max = 100,
-  onValueChange,
-  onValueCommit,
   ...props
-}: SliderProps) {
+}: SliderPrimitive.Root.Props) {
   const _values = Array.isArray(value)
     ? value
     : Array.isArray(defaultValue)
@@ -36,8 +23,6 @@ function Slider({
       value={value}
       min={min}
       max={max}
-      onValueChange={(next) => onValueChange?.([...next])}
-      onValueCommitted={(next) => onValueCommit?.([...next])}
       thumbAlignment="edge"
       {...props}
     >

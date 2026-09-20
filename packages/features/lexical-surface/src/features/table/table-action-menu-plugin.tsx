@@ -264,49 +264,37 @@ export function TableActionMenuPlugin({
       onMouseDown={(e) => e.preventDefault()}
     >
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            aria-label="Table actions"
-            className={cn(
-              "inline-flex items-center justify-center gap-0.5 rounded",
-              "border shadow-sm",
-              isBatch
-                ? "h-6 px-1.5 bg-blue-600 text-white border-blue-700 hover:bg-blue-700"
-                : "h-5 w-5 bg-white/90 dark:bg-gray-800/90 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700",
-            )}
-          >
-            {isBatch ? (
-              <>
-                <TableIcon className="w-3.5 h-3.5" />
-                <span className="text-[10px] font-semibold leading-none">
-                  {selectedCellKeys.length}
-                </span>
-                <ChevronDown className="w-3 h-3" />
-              </>
-            ) : (
-              <ChevronDown className="w-3.5 h-3.5" />
-            )}
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="end"
-          className="w-56"
-          onCloseAutoFocus={(e) => e.preventDefault()}
-        >
+        <DropdownMenuTrigger
+          render={
+            <button
+              type="button"
+              aria-label="Table actions"
+              className={cn(
+                "inline-flex items-center justify-center gap-0.5 rounded",
+                "border shadow-sm",
+                isBatch
+                  ? "h-6 px-1.5 bg-blue-600 text-white border-blue-700 hover:bg-blue-700"
+                  : "h-5 w-5 bg-white/90 dark:bg-gray-800/90 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700",
+              )}
+            >
+              {isBatch ? (
+                <>
+                  <TableIcon className="w-3.5 h-3.5" />
+                  <span className="text-[10px] font-semibold leading-none">
+                    {selectedCellKeys.length}
+                  </span>
+                  <ChevronDown className="w-3 h-3" />
+                </>
+              ) : (
+                <ChevronDown className="w-3.5 h-3.5" />
+              )}
+            </button>
+          }
+        />
+        <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>Background color</DropdownMenuSubTrigger>
-            <DropdownMenuSubContent
-              className="p-3"
-              onFocusOutside={(e) => {
-                const t = (e as any).detail?.originalEvent?.target;
-                if (
-                  t instanceof Element &&
-                  t.closest('[contenteditable="true"]')
-                )
-                  e.preventDefault();
-              }}
-            >
+            <DropdownMenuSubContent className="p-3">
               <ColorPicker
                 color={state.backgroundColor ?? "#ffffff"}
                 onChange={(next) => setBackgroundColor(next)}

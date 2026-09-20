@@ -84,14 +84,12 @@ export function ProjectCard({
           </div>
           {featured && url ? (
             <Button
-              asChild
               size="sm"
               className="px-4 py-2 bg-gradient-to-r from-blue-600/80 to-purple-600/80 text-white rounded-lg hover:from-blue-700/80 hover:to-purple-700/80 transition-all duration-300 font-medium shadow-lg border border-white/10 backdrop-blur-sm"
+              render={<Link href={url} />}
             >
-              <Link href={url}>
-                <ExternalLink className="w-4 h-4 mr-2" />
-                View Project
-              </Link>
+              <ExternalLink className="w-4 h-4 mr-2" />
+              View Project
             </Button>
           ) : null}
         </div>

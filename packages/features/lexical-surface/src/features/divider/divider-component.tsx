@@ -219,21 +219,19 @@ export function DividerLexicalComponent({
       {isEditable && (
         <div className="absolute -top-4 right-2 z-10 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                aria-label="Divider settings"
-                className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700"
-              >
-                <Settings2 className="w-3.5 h-3.5" />
-                <ChevronDown className="h-3.5 w-3.5" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-56"
-              onCloseAutoFocus={(e) => e.preventDefault()}
-            >
+            <DropdownMenuTrigger
+              render={
+                <button
+                  type="button"
+                  aria-label="Divider settings"
+                  className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700"
+                >
+                  <Settings2 className="w-3.5 h-3.5" />
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </button>
+              }
+            />
+            <DropdownMenuContent align="end" className="w-56">
               {/* Style */}
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
@@ -324,18 +322,7 @@ export function DividerLexicalComponent({
                     : (COLOR_LIST.find((c) => c.id === colorPalette)?.label ??
                       "Blue")}
                 </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent
-                  className="w-56"
-                  onFocusOutside={(e) => {
-                    const t = (e as any).detail?.originalEvent?.target;
-                    if (
-                      t instanceof Element &&
-                      t.closest('[contenteditable="true"]')
-                    ) {
-                      e.preventDefault();
-                    }
-                  }}
-                >
+                <DropdownMenuSubContent className="w-56">
                   {COLOR_LIST.map(({ id, label, swatch }) => (
                     <DropdownMenuItem
                       key={id}
@@ -363,18 +350,7 @@ export function DividerLexicalComponent({
                       />
                       Custom Color
                     </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent
-                      className="p-3"
-                      onFocusOutside={(e) => {
-                        const t = (e as any).detail?.originalEvent?.target;
-                        if (
-                          t instanceof Element &&
-                          t.closest('[contenteditable="true"]')
-                        ) {
-                          e.preventDefault();
-                        }
-                      }}
-                    >
+                    <DropdownMenuSubContent className="p-3">
                       <ColorPicker
                         color={customColor || "#3b82f6"}
                         onChange={(c) => {

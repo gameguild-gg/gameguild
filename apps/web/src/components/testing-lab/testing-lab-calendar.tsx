@@ -300,48 +300,50 @@ function EventLink({
   const capacity = capacityState(analytics);
 
   return (
-    <HoverCard openDelay={0} closeDelay={100}>
-      <HoverCardTrigger asChild>
-        <button
-          type="button"
-          onClick={() => onSelect(event)}
-          className={cn(
-            "block w-full overflow-hidden rounded-sm border-l-2 px-2 py-1.5 text-left text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-            eventCalendar.eventClassName,
-            eventStatusClass(event.status),
-          )}
-          aria-label={`${event.name ?? "Untitled event"}, ${format(startsAt, "PPp")}`}
-        >
-          <span className="flex min-w-0 items-baseline gap-1.5">
-            <span className="shrink-0 tabular-nums opacity-70">
-              {format(startsAt, "p")}
-            </span>
-            <span className="min-w-0 flex-1 truncate font-medium">
-              {event.name ?? "Untitled event"}
-            </span>
-          </span>
-          <span className="mt-0.5 flex min-w-0 items-center gap-1 truncate text-[11px] opacity-70">
-            <ModeIcon
-              className="size-3 shrink-0"
-              aria-label={`${modeLabel} event`}
-            />
-            <span className="truncate">{modeLabel}</span>
-            <span aria-hidden="true">·</span>
-            <span
-              className={capacity.isFull ? "font-medium text-destructive" : ""}
-            >
-              {capacity.label}
-            </span>
-            {compact ? null : (
-              <>
-                <span aria-hidden="true">·</span>
-                <span className="truncate">
-                  {formatTestingEventStatus(event.status)}
-                </span>
-              </>
+    <HoverCard>
+      <HoverCardTrigger
+        render={
+          <button
+            type="button"
+            onClick={() => onSelect(event)}
+            className={cn(
+              "block w-full overflow-hidden rounded-sm border-l-2 px-2 py-1.5 text-left text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              eventCalendar.eventClassName,
+              eventStatusClass(event.status),
             )}
+            aria-label={`${event.name ?? "Untitled event"}, ${format(startsAt, "PPp")}`}
+          />
+        }
+      >
+        <span className="flex min-w-0 items-baseline gap-1.5">
+          <span className="shrink-0 tabular-nums opacity-70">
+            {format(startsAt, "p")}
           </span>
-        </button>
+          <span className="min-w-0 flex-1 truncate font-medium">
+            {event.name ?? "Untitled event"}
+          </span>
+        </span>
+        <span className="mt-0.5 flex min-w-0 items-center gap-1 truncate text-[11px] opacity-70">
+          <ModeIcon
+            className="size-3 shrink-0"
+            aria-label={`${modeLabel} event`}
+          />
+          <span className="truncate">{modeLabel}</span>
+          <span aria-hidden="true">·</span>
+          <span
+            className={capacity.isFull ? "font-medium text-destructive" : ""}
+          >
+            {capacity.label}
+          </span>
+          {compact ? null : (
+            <>
+              <span aria-hidden="true">·</span>
+              <span className="truncate">
+                {formatTestingEventStatus(event.status)}
+              </span>
+            </>
+          )}
+        </span>
       </HoverCardTrigger>
       <HoverCardContent align="start" sideOffset={8} className="w-80 space-y-3">
         <div className="flex items-start justify-between gap-3">

@@ -64,11 +64,9 @@ export function NewClassSheet({ courseId }: NewClassSheetProps) {
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button>
-          <Plus className="size-4" />
-          New class
-        </Button>
+      <SheetTrigger render={<Button />}>
+        <Plus className="size-4" />
+        New class
       </SheetTrigger>
       <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
         <SheetHeader className="border-b px-6 py-5">

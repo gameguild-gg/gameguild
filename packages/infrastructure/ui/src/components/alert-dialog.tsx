@@ -2,17 +2,17 @@
 
 import * as React from "react"
 import { AlertDialog as AlertDialogPrimitive } from "@base-ui/react/alert-dialog"
+import { cn } from "cn"
 
-import { cn } from "@game-guild/ui/lib/utils"
 import { Button } from "@game-guild/ui/components/button"
 
 function AlertDialog({ ...props }: AlertDialogPrimitive.Root.Props) {
   return <AlertDialogPrimitive.Root data-slot="alert-dialog" {...props} />
 }
 
-function AlertDialogTrigger({ asChild, children, render, ...props }: AlertDialogPrimitive.Trigger.Props & { asChild?: boolean }) {
+function AlertDialogTrigger({ ...props }: AlertDialogPrimitive.Trigger.Props) {
   return (
-    <AlertDialogPrimitive.Trigger data-slot="alert-dialog-trigger" render={asChild && React.isValidElement(children) ? children : render} {...props}>{asChild ? null : children}</AlertDialogPrimitive.Trigger>
+    <AlertDialogPrimitive.Trigger data-slot="alert-dialog-trigger" {...props} />
   )
 }
 
@@ -117,7 +117,7 @@ function AlertDialogTitle({
     <AlertDialogPrimitive.Title
       data-slot="alert-dialog-title"
       className={cn(
-        "text-lg font-medium sm:group-data-[size=default]/alert-dialog-content:group-has-data-[slot=alert-dialog-media]/alert-dialog-content:col-start-2",
+        "font-heading text-lg font-medium sm:group-data-[size=default]/alert-dialog-content:group-has-data-[slot=alert-dialog-media]/alert-dialog-content:col-start-2",
         className
       )}
       {...props}
@@ -158,21 +158,16 @@ function AlertDialogCancel({
   className,
   variant = "outline",
   size = "default",
-  asChild,
-  children,
-  render,
   ...props
 }: AlertDialogPrimitive.Close.Props &
-  Pick<React.ComponentProps<typeof Button>, "variant" | "size"> & { asChild?: boolean }) {
+  Pick<React.ComponentProps<typeof Button>, "variant" | "size">) {
   return (
     <AlertDialogPrimitive.Close
       data-slot="alert-dialog-cancel"
       className={cn(className)}
-      render={asChild && React.isValidElement(children) ? children : render ?? <Button variant={variant} size={size} />}
+      render={<Button variant={variant} size={size} />}
       {...props}
-    >
-      {asChild ? null : children}
-    </AlertDialogPrimitive.Close>
+    />
   )
 }
 

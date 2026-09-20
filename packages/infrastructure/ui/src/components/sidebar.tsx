@@ -4,9 +4,9 @@ import * as React from "react"
 import { mergeProps } from "@base-ui/react/merge-props"
 import { useRender } from "@base-ui/react/use-render"
 import { cva, type VariantProps } from "class-variance-authority"
+import { cn } from "cn"
 
 import { useIsMobile } from "@game-guild/ui/hooks/use-mobile"
-import { cn } from "@game-guild/ui/lib/utils"
 import { Button } from "@game-guild/ui/components/button"
 import { Input } from "@game-guild/ui/components/input"
 import { Separator } from "@game-guild/ui/components/separator"
@@ -393,10 +393,8 @@ function SidebarGroup({ className, ...props }: React.ComponentProps<"div">) {
 function SidebarGroupLabel({
   className,
   render,
-  asChild,
-  children,
   ...props
-}: useRender.ComponentProps<"div"> & React.ComponentProps<"div"> & { asChild?: boolean }) {
+}: useRender.ComponentProps<"div"> & React.ComponentProps<"div">) {
   return useRender({
     defaultTagName: "div",
     props: mergeProps<"div">(
@@ -406,9 +404,9 @@ function SidebarGroupLabel({
           className
         ),
       },
-      { ...props, children: asChild ? undefined : children }
+      props
     ),
-    render: asChild && React.isValidElement(children) ? children : render,
+    render,
     state: {
       slot: "sidebar-group-label",
       sidebar: "group-label",
@@ -419,10 +417,8 @@ function SidebarGroupLabel({
 function SidebarGroupAction({
   className,
   render,
-  asChild,
-  children,
   ...props
-}: useRender.ComponentProps<"button"> & React.ComponentProps<"button"> & { asChild?: boolean }) {
+}: useRender.ComponentProps<"button"> & React.ComponentProps<"button">) {
   return useRender({
     defaultTagName: "button",
     props: mergeProps<"button">(
@@ -432,9 +428,9 @@ function SidebarGroupAction({
           className
         ),
       },
-      { ...props, children: asChild ? undefined : children }
+      props
     ),
-    render: asChild && React.isValidElement(children) ? children : render,
+    render,
     state: {
       slot: "sidebar-group-action",
       sidebar: "group-action",
@@ -502,8 +498,6 @@ const sidebarMenuButtonVariants = cva(
 
 function SidebarMenuButton({
   render,
-  asChild,
-  children,
   isActive = false,
   variant = "default",
   size = "default",
@@ -514,7 +508,6 @@ function SidebarMenuButton({
   React.ComponentProps<"button"> & {
     isActive?: boolean
     tooltip?: string | React.ComponentProps<typeof TooltipContent>
-    asChild?: boolean
   } & VariantProps<typeof sidebarMenuButtonVariants>) {
   const { isMobile, state } = useSidebar()
   const comp = useRender({
@@ -523,11 +516,9 @@ function SidebarMenuButton({
       {
         className: cn(sidebarMenuButtonVariants({ variant, size }), className),
       },
-      { ...props, children: asChild ? undefined : children }
+      props
     ),
-    render: !tooltip
-      ? asChild && React.isValidElement(children) ? children : render
-      : <TooltipTrigger render={asChild && React.isValidElement(children) ? children : render} />,
+    render: !tooltip ? render : <TooltipTrigger render={render} />,
     state: {
       slot: "sidebar-menu-button",
       sidebar: "menu-button",
@@ -562,14 +553,11 @@ function SidebarMenuButton({
 function SidebarMenuAction({
   className,
   render,
-  asChild,
-  children,
   showOnHover = false,
   ...props
 }: useRender.ComponentProps<"button"> &
   React.ComponentProps<"button"> & {
     showOnHover?: boolean
-    asChild?: boolean
   }) {
   return useRender({
     defaultTagName: "button",
@@ -582,9 +570,9 @@ function SidebarMenuAction({
           className
         ),
       },
-      { ...props, children: asChild ? undefined : children }
+      props
     ),
-    render: asChild && React.isValidElement(children) ? children : render,
+    render,
     state: {
       slot: "sidebar-menu-action",
       sidebar: "menu-action",
@@ -677,8 +665,6 @@ function SidebarMenuSubItem({
 
 function SidebarMenuSubButton({
   render,
-  asChild,
-  children,
   size = "md",
   isActive = false,
   className,
@@ -687,7 +673,6 @@ function SidebarMenuSubButton({
   React.ComponentProps<"a"> & {
     size?: "sm" | "md"
     isActive?: boolean
-    asChild?: boolean
   }) {
   return useRender({
     defaultTagName: "a",
@@ -698,9 +683,9 @@ function SidebarMenuSubButton({
           className
         ),
       },
-      { ...props, children: asChild ? undefined : children }
+      props
     ),
-    render: asChild && React.isValidElement(children) ? children : render,
+    render,
     state: {
       slot: "sidebar-menu-sub-button",
       sidebar: "menu-sub-button",

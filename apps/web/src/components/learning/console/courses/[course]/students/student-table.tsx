@@ -303,11 +303,9 @@ export function StudentTable({
           </div>
           <div className="flex flex-wrap gap-2">
             <Dialog open={manualEnrollOpen} onOpenChange={setManualEnrollOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm">
-                  <UserPlus className="mr-2 size-4" />
-                  Enroll student
-                </Button>
+              <DialogTrigger render={<Button size="sm" />}>
+                <UserPlus className="mr-2 size-4" />
+                Enroll student
               </DialogTrigger>
               <DialogContent>
                 <form onSubmit={submitManualEnrollment} className="space-y-5">
@@ -392,7 +390,7 @@ export function StudentTable({
               className="pl-9"
             />
           </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value ?? "")}>
             <SelectTrigger className="w-full sm:w-[160px]">
               <SelectValue placeholder="Filter" />
             </SelectTrigger>
@@ -527,24 +525,28 @@ export function StudentTable({
                         </TableCell>
                         <TableCell>
                           <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="size-8"
-                                aria-label={`Actions for ${student.name}`}
-                              >
-                                <MoreHorizontal className="size-4" />
-                              </Button>
+                            <DropdownMenuTrigger
+                              render={
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="size-8"
+                                  aria-label={`Actions for ${student.name}`}
+                                />
+                              }
+                            >
+                              <MoreHorizontal className="size-4" />
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem asChild>
-                                <Link
-                                  href={`/console/community/members/users/${student.userId}`}
-                                >
-                                  <Eye className="mr-2 size-4" />
-                                  View profile
-                                </Link>
+                              <DropdownMenuItem
+                                render={
+                                  <Link
+                                    href={`/console/community/members/users/${student.userId}`}
+                                  />
+                                }
+                              >
+                                <Eye className="mr-2 size-4" />
+                                View profile
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => setProgressStudent(student)}

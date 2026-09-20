@@ -799,25 +799,33 @@ export function LearnerCertificates({
                       ) : null}
                       <div className="mt-5 flex flex-wrap gap-2">
                         {certificate.verificationUrl ? (
-                          <Button asChild size="sm" variant="outline">
-                            <a
-                              href={certificate.verificationUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                            >
-                              <ExternalLink className="size-4" />
-                              Verify
-                            </a>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            render={
+                              <a
+                                href={certificate.verificationUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                              />
+                            }
+                          >
+                            <ExternalLink className="size-4" />
+                            Verify
                           </Button>
                         ) : null}
-                        <Button asChild size="sm" variant="outline">
-                          <a
-                            href={certificateDownload(certificate)}
-                            download={downloadName}
-                          >
-                            <Download className="size-4" />
-                            Download
-                          </a>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          render={
+                            <a
+                              href={certificateDownload(certificate)}
+                              download={downloadName}
+                            />
+                          }
+                        >
+                          <Download className="size-4" />
+                          Download
                         </Button>
                         <ShareCertificateButton certificate={certificate} />
                       </div>

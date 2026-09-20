@@ -233,26 +233,24 @@ export function AdmonitionLexicalComponent({
       {isEditable && (
         <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                aria-label="Admonition settings"
-                className={cn(
-                  "inline-flex h-6 items-center justify-center gap-1 rounded px-1.5",
-                  "border border-gray-300 dark:border-gray-700",
-                  "bg-white/90 dark:bg-gray-800/90 text-gray-700 dark:text-gray-200",
-                  "shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700",
-                )}
-              >
-                <Settings2 className="h-3.5 w-3.5" />
-                <ChevronDown className="h-3.5 w-3.5" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-56"
-              onCloseAutoFocus={(e) => e.preventDefault()}
-            >
+            <DropdownMenuTrigger
+              render={
+                <button
+                  type="button"
+                  aria-label="Admonition settings"
+                  className={cn(
+                    "inline-flex h-6 items-center justify-center gap-1 rounded px-1.5",
+                    "border border-gray-300 dark:border-gray-700",
+                    "bg-white/90 dark:bg-gray-800/90 text-gray-700 dark:text-gray-200",
+                    "shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700",
+                  )}
+                >
+                  <Settings2 className="h-3.5 w-3.5" />
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </button>
+              }
+            />
+            <DropdownMenuContent align="end" className="w-56">
               {/* Type submenu */}
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
@@ -311,17 +309,7 @@ export function AdmonitionLexicalComponent({
                   />
                   Border Color
                 </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent
-                  className="p-3"
-                  onFocusOutside={(e) => {
-                    const t = (e as any).detail?.originalEvent?.target;
-                    if (
-                      t instanceof Element &&
-                      t.closest('[contenteditable="true"]')
-                    )
-                      e.preventDefault();
-                  }}
-                >
+                <DropdownMenuSubContent className="p-3">
                   <ColorPicker
                     color={customBorderColor || "#3b82f6"}
                     onChange={(c) => {
@@ -350,17 +338,7 @@ export function AdmonitionLexicalComponent({
                   />
                   Text Color
                 </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent
-                  className="p-3"
-                  onFocusOutside={(e) => {
-                    const t = (e as any).detail?.originalEvent?.target;
-                    if (
-                      t instanceof Element &&
-                      t.closest('[contenteditable="true"]')
-                    )
-                      e.preventDefault();
-                  }}
-                >
+                <DropdownMenuSubContent className="p-3">
                   <ColorPicker
                     color={customTextColor || "#ffffff"}
                     onChange={(c) => {

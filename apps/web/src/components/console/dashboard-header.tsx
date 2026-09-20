@@ -77,10 +77,8 @@ function NotificationMenuItem({ item, onSetRead }: NotificationItemProps) {
 
   if (item.actionUrl?.startsWith('/')) {
     return (
-      <DropdownMenuItem asChild className="group">
-        <Link href={item.actionUrl} onClick={toggleOnActivate}>
-          {content}
-        </Link>
+      <DropdownMenuItem className="group" render={<Link href={item.actionUrl} onClick={toggleOnActivate} />}>
+        {content}
       </DropdownMenuItem>
     );
   }
@@ -211,8 +209,8 @@ export function DashboardHeader({ notifications, user }: DashboardHeaderProps) {
               <BreadcrumbList className="flex-nowrap overflow-hidden">
                 <BreadcrumbItem>
                   {breadcrumbs[0]?.href ? (
-                    <BreadcrumbLink asChild>
-                      <Link href={breadcrumbs[0].href}>{breadcrumbs[0].label}</Link>
+                    <BreadcrumbLink render={<Link href={breadcrumbs[0].href} />}>
+                      {breadcrumbs[0].label}
                     </BreadcrumbLink>
                   ) : (
                     <BreadcrumbPage>{breadcrumbs[0]?.label}</BreadcrumbPage>
@@ -223,8 +221,8 @@ export function DashboardHeader({ notifications, user }: DashboardHeaderProps) {
                   <React.Fragment key={`${item.href ?? 'current'}:${item.label}`}>
                     <BreadcrumbItem>
                       {item.href ? (
-                        <BreadcrumbLink asChild className="max-w-24 truncate md:max-w-40 xl:max-w-64">
-                          <Link href={item.href}>{item.label}</Link>
+                        <BreadcrumbLink className="max-w-24 truncate md:max-w-40 xl:max-w-64" render={<Link href={item.href} />}>
+                          {item.label}
                         </BreadcrumbLink>
                       ) : (
                         <BreadcrumbPage className="max-w-24 truncate md:max-w-40 xl:max-w-64">{item.label}</BreadcrumbPage>
@@ -245,29 +243,25 @@ export function DashboardHeader({ notifications, user }: DashboardHeaderProps) {
       >
         {isWorkspace && (
           <Button
-            asChild
             variant="ghost"
             size="icon"
             className="relative"
+            render={<Link href="/" aria-label="Open Community feed" title="Open Community feed" />}
           >
-            <Link href="/" aria-label="Open Community feed" title="Open Community feed">
-              <Rss className="size-5" aria-hidden="true" />
-            </Link>
+            <Rss className="size-5" aria-hidden="true" />
           </Button>
         )}
 
         {/* Notifications */}
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="size-5" />
-              {unreadCount > 0 && (
-                <Badge variant="destructive" className="absolute -right-1 -top-1 h-5 min-w-5 rounded-full px-1 text-xs">
-                  {unreadLabel}
-                </Badge>
-              )}
-              <span className="sr-only">Notifications</span>
-            </Button>
+          <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="relative" />}>
+            <Bell className="size-5" />
+            {unreadCount > 0 && (
+              <Badge variant="destructive" className="absolute -right-1 -top-1 h-5 min-w-5 rounded-full px-1 text-xs">
+                {unreadLabel}
+              </Badge>
+            )}
+            <span className="sr-only">Notifications</span>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-80">
             <DropdownMenuLabel>Notifications</DropdownMenuLabel>

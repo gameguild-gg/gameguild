@@ -2,8 +2,8 @@
 
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
+import { cn } from "cn"
 
-import { cn } from "@game-guild/ui/lib/utils"
 import { Button } from "@game-guild/ui/components/button"
 import { Input } from "@game-guild/ui/components/input"
 import { Textarea } from "@game-guild/ui/components/textarea"

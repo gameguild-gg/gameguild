@@ -251,11 +251,9 @@ export function RuntimeQuizTestRun({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button type="button" size="sm" variant="outline" disabled={disabled}>
-          <Play className="mr-2 size-4" />
-          Test assessment
-        </Button>
+      <DialogTrigger render={<Button type="button" size="sm" variant="outline" disabled={disabled} />}>
+        <Play className="mr-2 size-4" />
+        Test assessment
       </DialogTrigger>
       <DialogContent className="flex h-[min(90vh,900px)] w-[calc(100vw-2rem)] max-w-6xl flex-col gap-0 overflow-hidden p-0">
         <DialogHeader className="border-b px-6 py-4">

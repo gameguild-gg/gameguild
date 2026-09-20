@@ -241,43 +241,48 @@ export function LearningShell({
           </Button>
           <ThemeToggle />
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Open notifications"
-              >
-                <Bell aria-hidden="true" className="size-4" />
-                {(notifications?.unreadCount ?? 0) > 0 ? (
-                  <>
-                    <span
-                      aria-hidden="true"
-                      className="absolute mt-[-1.25rem] ml-5 size-2 rounded-full bg-destructive"
-                    />
-                    <span className="sr-only">
-                      {notifications?.unreadCount} unread notifications
-                    </span>
-                  </>
-                ) : null}
-              </Button>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Open notifications"
+                />
+              }
+            >
+              <Bell aria-hidden="true" className="size-4" />
+              {(notifications?.unreadCount ?? 0) > 0 ? (
+                <>
+                  <span
+                    aria-hidden="true"
+                    className="absolute mt-[-1.25rem] ml-5 size-2 rounded-full bg-destructive"
+                  />
+                  <span className="sr-only">
+                    {notifications?.unreadCount} unread notifications
+                  </span>
+                </>
+              ) : null}
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-80">
               <DropdownMenuLabel>Notifications</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {notificationItems.length > 0 ? (
                 notificationItems.slice(0, 6).map((item) => (
-                  <DropdownMenuItem key={item.id} asChild>
-                    <Link
-                      href={item.actionUrl || "/"}
-                      className="flex-col items-start gap-1"
-                    >
-                      <span className="font-medium">{item.title}</span>
-                      {item.message ? (
-                        <span className="line-clamp-2 text-xs text-muted-foreground">
-                          {item.message}
-                        </span>
-                      ) : null}
-                    </Link>
+                  <DropdownMenuItem
+                    key={item.id}
+                    render={
+                      <Link
+                        href={item.actionUrl || "/"}
+                        className="flex-col items-start gap-1"
+                      />
+                    }
+                  >
+                    <span className="font-medium">{item.title}</span>
+                    {item.message ? (
+                      <span className="line-clamp-2 text-xs text-muted-foreground">
+                        {item.message}
+                      </span>
+                    ) : null}
                   </DropdownMenuItem>
                 ))
               ) : (
@@ -289,22 +294,24 @@ export function LearningShell({
           </DropdownMenu>
 
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="gap-2 px-2"
-                aria-label="Open account menu"
-              >
-                <Avatar size="sm">
-                  {user.image ? (
-                    <AvatarImage src={user.image} alt={user.name} />
-                  ) : null}
-                  <AvatarFallback>{initials(user.name)}</AvatarFallback>
-                </Avatar>
-                <span className="hidden max-w-36 truncate text-sm font-medium xl:inline">
-                  {user.name}
-                </span>
-              </Button>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  className="gap-2 px-2"
+                  aria-label="Open account menu"
+                />
+              }
+            >
+              <Avatar size="sm">
+                {user.image ? (
+                  <AvatarImage src={user.image} alt={user.name} />
+                ) : null}
+                <AvatarFallback>{initials(user.name)}</AvatarFallback>
+              </Avatar>
+              <span className="hidden max-w-36 truncate text-sm font-medium xl:inline">
+                {user.name}
+              </span>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-64">
               <DropdownMenuLabel className="font-normal">
@@ -372,11 +379,9 @@ export function LearningShell({
         </nav>
 
         <div className="mt-auto border-t pt-4">
-          <Button asChild variant="outline" className="w-full justify-start">
-            <Link href={catalogUrl}>
-              <Library className="size-4" />
-              Browse courses
-            </Link>
+          <Button variant="outline" className="w-full justify-start" render={<Link href={catalogUrl} />}>
+            <Library className="size-4" />
+            Browse courses
           </Button>
         </div>
       </aside>
@@ -421,11 +426,9 @@ export function LearningShell({
             })}
           </nav>
           <div className="mt-auto border-t pt-4">
-            <Button asChild variant="outline" className="w-full justify-start">
-              <Link href={catalogUrl} onClick={() => setMobileOpen(false)}>
-                <Library aria-hidden="true" className="size-4" />
-                Browse courses
-              </Link>
+            <Button variant="outline" className="w-full justify-start" render={<Link href={catalogUrl} onClick={() => setMobileOpen(false)} />}>
+              <Library aria-hidden="true" className="size-4" />
+              Browse courses
             </Button>
           </div>
         </SheetContent>

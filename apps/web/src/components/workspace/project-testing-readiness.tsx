@@ -58,8 +58,8 @@ export function ProjectTestingReadiness({ projectId, projectSlug, versions }: Pr
             </li>
           ))}
         </ol>
-        <Button asChild>
-          <Link href={action.href}>{action.label}</Link>
+        <Button render={<Link href={action.href} />}>
+          {action.label}
         </Button>
       </CardContent>
     </Card>

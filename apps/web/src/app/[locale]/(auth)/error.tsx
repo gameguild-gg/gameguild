@@ -16,8 +16,8 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
         <Button onClick={reset} variant="default">
           Try again
         </Button>
-        <Button asChild variant="outline">
-          <Link href="/sign-in">Back to Sign In</Link>
+        <Button variant="outline" render={<Link href="/sign-in" />}>
+          Back to Sign In
         </Button>
       </CardContent>
     </Card>

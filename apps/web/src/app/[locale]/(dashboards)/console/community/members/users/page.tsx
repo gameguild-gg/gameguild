@@ -114,11 +114,9 @@ export default async function Page({ searchParams }: Props): Promise<React.JSX.E
           <p className="text-muted-foreground">Browse registered community members and their workspace access.</p>
         </div>
         <Dialog>
-          <DialogTrigger asChild>
-            <Button>
-              <UserPlus className="mr-2 size-4" />
-              Invite User
-            </Button>
+          <DialogTrigger render={<Button />}>
+            <UserPlus className="mr-2 size-4" />
+            Invite User
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>

@@ -122,10 +122,8 @@ export function AccessibilityForm({ defaultValues }: AccessibilityFormProps) {
           min={MIN_FONT_SIZE}
           max={MAX_FONT_SIZE}
           step={1}
-          value={[fontSize]}
-          // Persist on commit (pointer/key release) rather than on every
-          // intermediate tick to avoid a PATCH per pixel.
-          onValueCommit={(next) => update('fontSize', next[0] ?? fontSize)}
+          value={fontSize}
+          onValueChange={(value) => update('fontSize', Array.isArray(value) ? value[0] ?? fontSize : value)}
           disabled={isPending}
           aria-label={t('fontSize.label')}
         />

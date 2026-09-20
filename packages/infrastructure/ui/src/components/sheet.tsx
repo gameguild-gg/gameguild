@@ -2,8 +2,8 @@
 
 import * as React from "react"
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog"
+import { cn } from "cn"
 
-import { cn } from "@game-guild/ui/lib/utils"
 import { Button } from "@game-guild/ui/components/button"
 import { XIcon } from "lucide-react"
 
@@ -11,12 +11,12 @@ function Sheet({ ...props }: SheetPrimitive.Root.Props) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />
 }
 
-function SheetTrigger({ asChild, children, render, ...props }: SheetPrimitive.Trigger.Props & { asChild?: boolean }) {
-  return <SheetPrimitive.Trigger data-slot="sheet-trigger" render={asChild && React.isValidElement(children) ? children : render} {...props}>{asChild ? null : children}</SheetPrimitive.Trigger>
+function SheetTrigger({ ...props }: SheetPrimitive.Trigger.Props) {
+  return <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props} />
 }
 
-function SheetClose({ asChild, children, render, ...props }: SheetPrimitive.Close.Props & { asChild?: boolean }) {
-  return <SheetPrimitive.Close data-slot="sheet-close" render={asChild && React.isValidElement(children) ? children : render} {...props}>{asChild ? null : children}</SheetPrimitive.Close>
+function SheetClose({ ...props }: SheetPrimitive.Close.Props) {
+  return <SheetPrimitive.Close data-slot="sheet-close" {...props} />
 }
 
 function SheetPortal({ ...props }: SheetPrimitive.Portal.Props) {
@@ -104,7 +104,7 @@ function SheetTitle({ className, ...props }: SheetPrimitive.Title.Props) {
   return (
     <SheetPrimitive.Title
       data-slot="sheet-title"
-      className={cn("font-medium text-foreground", className)}
+      className={cn("font-heading font-medium text-foreground", className)}
       {...props}
     />
   )

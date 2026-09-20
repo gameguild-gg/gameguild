@@ -123,11 +123,9 @@ function HtmlRenderer({ content }: { content: unknown }) {
 function ExternalLinkRenderer({ content }: { content: unknown }) {
     const href = externalLinkSource(content);
     if (!href) return <p className="text-sm text-muted-foreground">This lesson resource link is unavailable.</p>;
-    return <Button asChild>
-        <a href={href} target="_blank" rel="noopener noreferrer">
-            Open lesson resource
-            <ExternalLink className="ml-2 h-4 w-4" />
-        </a>
+    return <Button render={<a href={href} target="_blank" rel="noopener noreferrer" />}>
+        Open lesson resource
+        <ExternalLink className="ml-2 h-4 w-4" />
     </Button>;
 }
 

@@ -9,16 +9,6 @@ import {
 } from "@game-guild/ui/components/dialog";
 import type { InsertionDialogDefinition } from "./insertion-types";
 
-function preserveMathKeyboardInteraction(event: Event): void {
-  const target = event.target as HTMLElement | null;
-  if (
-    document.body.hasAttribute("data-math-keyboard-open") ||
-    target?.closest(".ML__keyboard, .ML__virtual-keyboard, math-field")
-  ) {
-    event.preventDefault();
-  }
-}
-
 export function InsertionDialog({
   definition,
   activeEditor,
@@ -33,17 +23,7 @@ export function InsertionDialog({
       open={definition !== null}
       onOpenChange={(open) => !open && onClose()}
     >
-      <DialogContent
-        className={definition?.contentClassName}
-        onPointerDownOutside={preserveMathKeyboardInteraction}
-        onInteractOutside={preserveMathKeyboardInteraction}
-        onFocusOutside={preserveMathKeyboardInteraction}
-        onEscapeKeyDown={(event) => {
-          if (document.body.hasAttribute("data-math-keyboard-open")) {
-            event.preventDefault();
-          }
-        }}
-      >
+      <DialogContent className={definition?.contentClassName}>
         <DialogHeader>
           <DialogTitle>{definition?.title}</DialogTitle>
         </DialogHeader>
