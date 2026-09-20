@@ -14,7 +14,7 @@ import {
 import { BriefcaseBusiness, ChevronsUpDown, LogOut, Settings } from 'lucide-react';
 import * as React from 'react';
 
-export interface DashboardUser {
+export interface WorkspaceUser {
   id: string;
   name: string;
   email: string;
@@ -34,7 +34,7 @@ function getInitials(name: string, email: string) {
     .toUpperCase();
 }
 
-export function DashboardUserMenu({ user }: { user: DashboardUser }) {
+export function WorkspaceUserMenu({ user }: { user: WorkspaceUser }) {
   const router = useRouter();
   const { signOut, isLoading } = useAuth();
   const [isSigningOut, setIsSigningOut] = React.useState(false);

@@ -46,7 +46,7 @@ import { GraduationCap } from 'lucide-react';
 import { TenantSwitcher, type Tenant } from './tenant-switcher';
 
 // Types for navigation structure
-export interface DashboardNavSubItem {
+export interface WorkspaceNavSubItem {
   title: string;
   url: string;
   icon: LucideIcon;
@@ -59,27 +59,27 @@ export interface DashboardNavItem {
   title: string;
   url?: string;
   icon?: LucideIcon;
-  items: DashboardNavSubItem[];
+  items: WorkspaceNavSubItem[];
   requiredCapabilities?: readonly string[];
 }
 
-export interface DashboardNavGroupItem {
+export interface WorkspaceNavGroupItem {
   title: string;
   url?: string;
   icon?: LucideIcon;
-  items?: DashboardNavSubItem[];
+  items?: WorkspaceNavSubItem[];
   subGroups?: DashboardNavItem[];
   requiredCapabilities?: readonly string[];
 }
 
-export interface DashboardNavGroup {
+export interface WorkspaceNavGroup {
   label: string;
-  items: DashboardNavGroupItem[];
+  items: WorkspaceNavGroupItem[];
 }
 
 // Game Guild Dashboard navigation structure
 // Routes map to: /[locale]/(dashboard)/dashboard/...
-export const dashboardNavigationData: DashboardNavGroup[] = [
+export const workspaceNavigationData: WorkspaceNavGroup[] = [
   {
     label: 'Workspace',
     items: [
@@ -347,10 +347,10 @@ function hasAnyCapability(
   );
 }
 
-export function filterDashboardNavigation(
-  groups: DashboardNavGroup[],
+export function filterWorkspaceNavigation(
+  groups: WorkspaceNavGroup[],
   actorCapabilities: readonly string[],
-): DashboardNavGroup[] {
+): WorkspaceNavGroup[] {
   const capabilities = new Set(actorCapabilities);
 
   return groups.flatMap((group) => {
@@ -374,8 +374,8 @@ export function filterDashboardNavigation(
   });
 }
 
-export function flattenDashboardNavigationItems(groups: DashboardNavGroup[] = dashboardNavigationData): DashboardNavSubItem[] {
-  const items: DashboardNavSubItem[] = [];
+export function flattenWorkspaceNavigationItems(groups: WorkspaceNavGroup[] = workspaceNavigationData): WorkspaceNavSubItem[] {
+  const items: WorkspaceNavSubItem[] = [];
 
   for (const group of groups) {
     for (const item of group.items) {
@@ -414,7 +414,7 @@ function NotificationChip({ count }: { count: number }) {
   );
 }
 
-function NavGroups({ groups, notificationCounts }: { groups: DashboardNavGroup[]; notificationCounts?: Record<string, number> }) {
+function NavGroups({ groups, notificationCounts }: { groups: WorkspaceNavGroup[]; notificationCounts?: Record<string, number> }) {
   const pathname = usePathname();
   const [openItems, setOpenItems] = React.useState<Set<string>>(new Set());
 
@@ -538,8 +538,8 @@ function NavGroups({ groups, notificationCounts }: { groups: DashboardNavGroup[]
   );
 }
 
-interface DashboardSidebarProps extends React.ComponentProps<typeof Sidebar> {
-  navigation?: DashboardNavGroup[];
+interface WorkspaceSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  navigation?: WorkspaceNavGroup[];
   notifications?: DashboardNotificationSummary;
 }
 
@@ -550,9 +550,9 @@ const tenants: Tenant[] = [
 
 function countNotificationsByUrl(
   notifications: DashboardNotificationSummary | undefined,
-  navigation: DashboardNavGroup[],
+  navigation: WorkspaceNavGroup[],
 ): Record<string, number> {
-  const navUrls = flattenDashboardNavigationItems(navigation)
+  const navUrls = flattenWorkspaceNavigationItems(navigation)
     .map((item) => item.url)
     .filter((url): url is string => Boolean(url));
   const counts: Record<string, number> = {};
@@ -565,11 +565,11 @@ function countNotificationsByUrl(
   return counts;
 }
 
-export function DashboardSidebar({
-  navigation = filterDashboardNavigation(dashboardNavigationData, []),
+export function WorkspaceSidebar({
+  navigation = filterWorkspaceNavigation(workspaceNavigationData, []),
   notifications,
   ...props
-}: DashboardSidebarProps) {
+}: WorkspaceSidebarProps) {
   const notificationCounts = countNotificationsByUrl(notifications, navigation);
   return (
     <Sidebar collapsible="icon" {...props}>

@@ -6,13 +6,13 @@ vi.mock("@/i18n/navigation", () => ({
 }));
 
 import {
-  dashboardNavigationData,
-  filterDashboardNavigation,
-} from "./dashboard-sidebar";
+  workspaceNavigationData,
+  filterWorkspaceNavigation,
+} from "./workspace-sidebar";
 
 describe("dashboard management navigation", () => {
   it("places Testing Lab and Launch Pad under an explicit administration scope", () => {
-    const community = dashboardNavigationData.find(
+    const community = workspaceNavigationData.find(
       (group) => group.label === "Community Management",
     );
     const testingLab = community?.items.find(
@@ -21,7 +21,7 @@ describe("dashboard management navigation", () => {
     const launchPad = community?.items.find(
       (item) => item.title === "Launch Pad",
     );
-    const platform = dashboardNavigationData.find(
+    const platform = workspaceNavigationData.find(
       (group) => group.label === "Platform Management",
     );
 
@@ -48,7 +48,7 @@ describe("dashboard management navigation", () => {
   });
 
   it("hides administrative modules from a regular member", () => {
-    const navigation = filterDashboardNavigation(dashboardNavigationData, []);
+    const navigation = filterWorkspaceNavigation(workspaceNavigationData, []);
 
     expect(navigation.map((group) => group.label)).toEqual(["Workspace"]);
     expect(navigation[0]?.items.map((item) => item.title)).toEqual([
@@ -60,7 +60,7 @@ describe("dashboard management navigation", () => {
   });
 
   it("keeps Projects and Teams as direct workspace links without child routes", () => {
-    const workspace = dashboardNavigationData.find(
+    const workspace = workspaceNavigationData.find(
       (group) => group.label === "Workspace",
     );
     const projects = workspace?.items.find((item) => item.title === "Projects");
@@ -73,7 +73,7 @@ describe("dashboard management navigation", () => {
   });
 
   it("shows only the administrative module granted to the actor", () => {
-    const navigation = filterDashboardNavigation(dashboardNavigationData, [
+    const navigation = filterWorkspaceNavigation(workspaceNavigationData, [
       "TestingLab.ManageEvents",
     ]);
     const community = navigation.find(
@@ -89,7 +89,7 @@ describe("dashboard management navigation", () => {
   });
 
   it("keeps global Testing Lab settings grouped behind one entry", () => {
-    const navigation = filterDashboardNavigation(dashboardNavigationData, [
+    const navigation = filterWorkspaceNavigation(workspaceNavigationData, [
       "TestingLab.ManageSettings",
       "TestingLab.ViewAnalytics",
     ]);

@@ -1,5 +1,5 @@
 import { auth } from '@/auth';
-import { ConsoleShell } from '@/components/console/console-shell';
+import { WorkspaceShell } from '@/components/console/workspace-shell';
 import { AccessibilitySyncInitializer } from '@/components/settings/accessibility-sync-initializer';
 import { EditorPreferencesSyncInitializer } from '@/components/settings/editor-preferences-sync-initializer';
 import { ThemeSyncInitializer } from '@/components/settings/theme-sync-initializer';
@@ -30,7 +30,7 @@ export default async function Layout({ children, params }: LayoutProps<'/[locale
   };
 
   return (
-    <ConsoleShell
+    <WorkspaceShell
       notifications={notifications}
       user={dashboardUser}
       capabilities={dashboardContexts.capabilities}
@@ -40,6 +40,6 @@ export default async function Layout({ children, params }: LayoutProps<'/[locale
       <AccessibilitySyncInitializer />
       <EditorPreferencesSyncInitializer />
       {children}
-    </ConsoleShell>
+    </WorkspaceShell>
   );
 }

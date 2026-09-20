@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DashboardHeader } from './dashboard-header';
+import { WorkspaceHeader } from './workspace-header';
 
 const mocks = vi.hoisted(() => ({
   pathname: '/workspace/learning/courses',
@@ -36,7 +36,7 @@ vi.mock('@game-guild/ui/components/sidebar', () => ({
   ),
 }));
 
-describe('DashboardHeader', () => {
+describe('WorkspaceHeader', () => {
   beforeEach(() => {
     mocks.pathname = '/workspace/learning/courses';
   });
@@ -44,7 +44,7 @@ describe('DashboardHeader', () => {
   it('updates the accessible breadcrumb when Testing Lab routes change', () => {
     mocks.pathname = '/workspace/testing-lab/reports';
     const { rerender } = render(
-      <DashboardHeader
+      <WorkspaceHeader
         user={{ id: 'user-123', name: 'Ada Lovelace', email: 'ada@gameguild.gg', image: null }}
         notifications={{ items: [], unreadCount: 0 }}
       />,
@@ -54,7 +54,7 @@ describe('DashboardHeader', () => {
 
     mocks.pathname = '/workspace/testing-lab/settings/access';
     rerender(
-      <DashboardHeader
+      <WorkspaceHeader
         user={{ id: 'user-123', name: 'Ada Lovelace', email: 'ada@gameguild.gg', image: null }}
         notifications={{ items: [], unreadCount: 0 }}
       />,
@@ -66,7 +66,7 @@ describe('DashboardHeader', () => {
   });
   it('keeps Feed, Notifications, and a non-duplicated user profile in workspace header actions', async () => {
     render(
-      <DashboardHeader
+      <WorkspaceHeader
         user={{ id: 'user-123', name: 'Ada Lovelace', email: 'ada@gameguild.gg', image: null }}
         notifications={{ items: [], unreadCount: 0 }}
       />,
@@ -89,7 +89,7 @@ describe('DashboardHeader', () => {
 
   it('temporarily omits dashboard search from desktop and mobile layouts', () => {
     render(
-      <DashboardHeader
+      <WorkspaceHeader
         user={{
           id: 'user-123',
           name: 'Ada Lovelace',
@@ -107,7 +107,7 @@ describe('DashboardHeader', () => {
     mocks.pathname = '/workspace/projects';
 
     render(
-      <DashboardHeader
+      <WorkspaceHeader
         user={{ id: 'user-123', name: 'Ada Lovelace', email: 'ada@gameguild.gg', image: null }}
         notifications={{ items: [], unreadCount: 0 }}
       />,
@@ -127,7 +127,7 @@ describe('DashboardHeader', () => {
     mocks.pathname = '/console/community';
 
     render(
-      <DashboardHeader
+      <WorkspaceHeader
         user={{ id: 'user-123', name: 'Ada Lovelace', email: 'ada@gameguild.gg', image: null }}
         notifications={{ items: [], unreadCount: 0 }}
       />,

@@ -1,7 +1,7 @@
 'use client';
 
 import { Link, usePathname } from '@/i18n/navigation';
-import { DashboardUserMenu, type DashboardUser } from './dashboard-user-menu';
+import { WorkspaceUserMenu, type WorkspaceUser } from './workspace-user-menu';
 import { Badge } from '@game-guild/ui/components/badge';
 import {
   Breadcrumb,
@@ -90,12 +90,12 @@ function NotificationMenuItem({ item, onSetRead }: NotificationItemProps) {
   );
 }
 
-interface DashboardHeaderProps {
+interface WorkspaceHeaderProps {
   notifications?: DashboardNotificationSummary;
-  user: DashboardUser;
+  user: WorkspaceUser;
 }
 
-export function DashboardHeader({ notifications, user }: DashboardHeaderProps) {
+export function WorkspaceHeader({ notifications, user }: WorkspaceHeaderProps) {
   const pathname = usePathname();
   const isWorkspace = pathname?.startsWith('/workspace') ?? false;
   const notificationSummary = notifications ?? { items: [], unreadCount: 0 };
@@ -307,7 +307,7 @@ export function DashboardHeader({ notifications, user }: DashboardHeaderProps) {
         </DropdownMenu>
 
         <div className="ml-1 sm:ml-2">
-          <DashboardUserMenu user={user} />
+          <WorkspaceUserMenu user={user} />
         </div>
       </div>
     </header>

@@ -4,23 +4,23 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const dashboardSidebarSpy = vi.hoisted(() => vi.fn());
 
-vi.mock('./dashboard-sidebar', () => ({
-  DashboardSidebar: (props: unknown) => {
+vi.mock('./workspace-sidebar', () => ({
+  WorkspaceSidebar: (props: unknown) => {
     dashboardSidebarSpy(props);
     return <nav aria-label="Workspace navigation" />;
   },
-  dashboardNavigationData: [],
-  filterDashboardNavigation: () => [],
+  workspaceNavigationData: [],
+  filterWorkspaceNavigation: () => [],
 }));
-vi.mock('./dashboard-header', () => ({ DashboardHeader: () => <header /> }));
-vi.mock('./dashboard-command-palette', () => ({ DashboardCommandPalette: () => null }));
+vi.mock('./workspace-header', () => ({ WorkspaceHeader: () => <header /> }));
+vi.mock('./workspace-command-palette', () => ({ WorkspaceCommandPalette: () => null }));
 vi.mock('@game-guild/ui/components/sonner', () => ({ Toaster: () => null }));
 vi.mock('@game-guild/ui/components/sidebar', () => ({
   SidebarProvider: ({ children }: { readonly children: React.ReactNode }) => <>{children}</>,
   SidebarInset: ({ children }: { readonly children: React.ReactNode }) => <>{children}</>,
 }));
 
-import { ConsoleShell } from './console-shell';
+import { WorkspaceShell } from './workspace-shell';
 
 describe('dashboard keyboard navigation', () => {
   beforeEach(() => {
@@ -29,9 +29,9 @@ describe('dashboard keyboard navigation', () => {
 
   it('offers a direct skip link to the focusable main content', () => {
     render(
-      <ConsoleShell user={{ id: 'user-1', name: 'Member', initials: 'M' }}>
+      <WorkspaceShell user={{ id: 'user-1', name: 'Member', initials: 'M' }}>
         <p>Workspace content</p>
-      </ConsoleShell>,
+      </WorkspaceShell>,
     );
 
     expect(screen.getByRole('link', { name: 'Skip to main content' })).toHaveAttribute(
@@ -45,7 +45,7 @@ describe('dashboard keyboard navigation', () => {
 
   it('does not expose workspace and operations as switchable tenant contexts', () => {
     render(
-      <ConsoleShell
+      <WorkspaceShell
         user={{ id: 'user-1', name: 'Member', initials: 'M' }}
         contexts={[
           { type: 'Workspace', id: null, name: 'Workspace', route: '/workspace' },
@@ -53,7 +53,7 @@ describe('dashboard keyboard navigation', () => {
         ]}
       >
         <p>Workspace content</p>
-      </ConsoleShell>,
+      </WorkspaceShell>,
     );
 
     expect(dashboardSidebarSpy).toHaveBeenCalledOnce();

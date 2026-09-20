@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DashboardHeader } from './dashboard-header';
+import { WorkspaceHeader } from './workspace-header';
 
 const mocks = vi.hoisted(() => ({
   pathname: '/workspace/learning/courses',
@@ -71,7 +71,7 @@ const NOTIFICATIONS = {
 
 async function renderHeaderWithBellOpen() {
   const user = userEvent.setup();
-  render(<DashboardHeader user={USER} notifications={NOTIFICATIONS} />);
+  render(<WorkspaceHeader user={USER} notifications={NOTIFICATIONS} />);
   await user.click(screen.getByRole('button', { name: /notifications/i }));
   await screen.findByRole('menu');
   return user;
@@ -84,7 +84,7 @@ async function ensureBellDropdownOpen(user: ReturnType<typeof userEvent.setup>) 
   }
 }
 
-describe('DashboardHeader bell dropdown mark-read wiring', () => {
+describe('WorkspaceHeader bell dropdown mark-read wiring', () => {
   beforeEach(() => {
     mocks.pathname = '/workspace/learning/courses';
     mocks.push.mockReset();
@@ -158,7 +158,7 @@ describe('DashboardHeader bell dropdown mark-read wiring', () => {
   it('keeps a read linked item navigate-only instead of toggling it unread', async () => {
     const user = userEvent.setup();
     render(
-      <DashboardHeader
+      <WorkspaceHeader
         user={USER}
         notifications={{
           items: [
@@ -186,7 +186,7 @@ describe('DashboardHeader bell dropdown mark-read wiring', () => {
   it('does not fire mark-all when nothing shown is unread', async () => {
     const user = userEvent.setup();
     render(
-      <DashboardHeader
+      <WorkspaceHeader
         user={USER}
         notifications={{ items: [NOTIFICATIONS.items[1]], unreadCount: 0 }}
       />,

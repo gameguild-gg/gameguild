@@ -5,7 +5,7 @@ vi.mock("@/i18n/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
 }));
 
-import { filterDashboardQuickActions } from "./dashboard-command-palette";
+import { filterDashboardQuickActions } from "./workspace-command-palette";
 
 describe("dashboard command palette authorization", () => {
   it("does not expose administrative quick actions to a regular member", () => {

@@ -14,13 +14,13 @@ import {
 } from '@game-guild/ui/components/command';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import {
-  dashboardNavigationData,
-  flattenDashboardNavigationItems,
-  type DashboardNavGroup,
-  type DashboardNavSubItem,
-} from '@/components/console/dashboard-sidebar';
+  workspaceNavigationData,
+  flattenWorkspaceNavigationItems,
+  type WorkspaceNavGroup,
+  type WorkspaceNavSubItem,
+} from '@/components/console/workspace-sidebar';
 
-export const DASHBOARD_COMMAND_PALETTE_OPEN_EVENT = 'gameguild:open-dashboard-command-palette';
+export const DASHBOARD_COMMAND_PALETTE_OPEN_EVENT = 'gameguild:open-workspace-command-palette';
 
 const RECENT_ROUTES_KEY = 'gameguild:dashboard:recent-routes';
 const MAX_RECENT_ROUTES = 6;
@@ -31,7 +31,7 @@ type RecentRoute = {
   visitedAt: number;
 };
 
-type DashboardQuickAction = DashboardNavSubItem & {
+type DashboardQuickAction = WorkspaceNavSubItem & {
   requiredCapability: string;
 };
 
@@ -71,7 +71,7 @@ export function filterDashboardQuickActions(
   );
 }
 
-function getRouteLabel(href: string, items: DashboardNavSubItem[]): string {
+function getRouteLabel(href: string, items: WorkspaceNavSubItem[]): string {
   const exact = items.find((item) => item.url === href);
   if (exact) return exact.title;
 
@@ -112,24 +112,24 @@ function addRecentRoute(route: RecentRoute) {
   return next;
 }
 
-export function openDashboardCommandPalette() {
+export function openWorkspaceCommandPalette() {
   if (typeof window === 'undefined') return;
   window.dispatchEvent(new Event(DASHBOARD_COMMAND_PALETTE_OPEN_EVENT));
 }
 
-interface DashboardCommandPaletteProps {
-  navigation?: DashboardNavGroup[];
+interface WorkspaceCommandPaletteProps {
+  navigation?: WorkspaceNavGroup[];
   capabilities?: readonly string[];
 }
 
-export function DashboardCommandPalette({
-  navigation = dashboardNavigationData,
+export function WorkspaceCommandPalette({
+  navigation = workspaceNavigationData,
   capabilities = [],
-}: DashboardCommandPaletteProps) {
+}: WorkspaceCommandPaletteProps) {
   const router = useRouter();
   const pathname = usePathname();
   const navigationItems = React.useMemo(
-    () => flattenDashboardNavigationItems(navigation),
+    () => flattenWorkspaceNavigationItems(navigation),
     [navigation],
   );
   const authorizedQuickActions = React.useMemo(

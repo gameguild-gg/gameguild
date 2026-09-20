@@ -1,35 +1,35 @@
 'use client';
 
 import {
-  DashboardSidebar,
-  dashboardNavigationData,
-  filterDashboardNavigation,
-} from './dashboard-sidebar';
-import { DashboardHeader } from './dashboard-header';
-import { DashboardCommandPalette } from './dashboard-command-palette';
+  WorkspaceSidebar,
+  workspaceNavigationData,
+  filterWorkspaceNavigation,
+} from './workspace-sidebar';
+import { WorkspaceHeader } from './workspace-header';
+import { WorkspaceCommandPalette } from './workspace-command-palette';
 import { cn } from '@game-guild/ui/lib/utils';
 import { SidebarInset, SidebarProvider } from '@game-guild/ui/components/sidebar';
 import type { DashboardNotificationSummary } from '@/lib/dashboard-notifications';
-import type { DashboardUser } from './dashboard-user-menu';
+import type { WorkspaceUser } from './workspace-user-menu';
 import { Toaster } from '@game-guild/ui/components/sonner';
 import type { DashboardContextSummary } from '@/lib/dashboard-contexts';
 
-interface DashboardShellProps {
+interface WorkspaceShellProps {
   children: React.ReactNode;
   notifications?: DashboardNotificationSummary;
-  user: DashboardUser;
+  user: WorkspaceUser;
   capabilities?: readonly string[];
   contexts?: readonly DashboardContextSummary[];
 }
 
-export function ConsoleShell({
+export function WorkspaceShell({
   children,
   notifications,
   user,
   capabilities = [],
-}: DashboardShellProps) {
-  const navigation = filterDashboardNavigation(
-    dashboardNavigationData,
+}: WorkspaceShellProps) {
+  const navigation = filterWorkspaceNavigation(
+    workspaceNavigationData,
     capabilities,
   );
 
@@ -48,16 +48,16 @@ export function ConsoleShell({
           } as React.CSSProperties
         }
       >
-        <DashboardSidebar navigation={navigation} notifications={notifications} />
+        <WorkspaceSidebar navigation={navigation} notifications={notifications} />
         <SidebarInset className="min-w-0 overflow-hidden">
-          <DashboardCommandPalette
+          <WorkspaceCommandPalette
             navigation={navigation}
             capabilities={capabilities}
           />
           {/* Main Content */}
           <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
             {/* Navbar */}
-            <DashboardHeader notifications={notifications} user={user} />
+            <WorkspaceHeader notifications={notifications} user={user} />
 
             {/* Page Content */}
             <div
