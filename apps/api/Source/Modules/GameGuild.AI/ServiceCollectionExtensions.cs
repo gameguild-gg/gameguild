@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace GameGuild.AI;
 
@@ -26,6 +27,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAiProviderAdapter, OpenAiAdapter>();
         services.AddScoped<IAiProviderAdapter, AnthropicAdapter>();
         services.AddScoped<IAiProviderAdapter, GoogleAiAdapter>();
+        services.TryAddScoped<IAiExecutionBillingRecorder, NoOpAiExecutionBillingRecorder>();
 
         return services;
     }

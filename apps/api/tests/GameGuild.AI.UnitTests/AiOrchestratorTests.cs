@@ -11,6 +11,118 @@ namespace GameGuild.AI.UnitTests;
 public class AiOrchestratorTests
 {
     [Fact]
+    public async Task GenerateAsync_RecordsTerminalExecutionForProductBillingAttribution()
+    {
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var requestContextAccessor = CreateRequestContextAccessor(tenantId, userId);
+        var tenantSettingsRepository = new Mock<ITenantSettingsRepository>();
+        tenantSettingsRepository
+            .Setup(repository => repository.GetByTenantIdAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TenantSettings
+            {
+                TenantId = tenantId,
+                IntegrationSettingsJson = """
+                {
+                  "externalServices": {
+                    "ai": {
+                      "enabled": true,
+                      "defaultProvider": "OpenAi",
+                      "history": { "enabled": true }
+                    }
+                  }
+                }
+                """
+            });
+        var quotaEnforcer = CreateQuotaEnforcer();
+        var historyRepository = CreateHistoryRepository();
+        var openAiAdapter = CreateAdapter(
+            AiProvider.OpenAi,
+            expectedApiKey: "platform-openai-key",
+            responseModel: "gpt-4.1-mini");
+        var billingRecorder = new SpyAiExecutionBillingRecorder();
+        var orchestrator = CreateOrchestrator(
+            requestContextAccessor,
+            tenantSettingsRepository.Object,
+            quotaEnforcer.Object,
+            historyRepository.Object,
+            new[] { openAiAdapter.Object },
+            new AiOptions
+            {
+                Enabled = true,
+                DefaultProvider = "OpenAi",
+                Providers = new Dictionary<string, AiProviderOptions>
+                {
+                    ["OpenAi"] = new() { ApiKey = "platform-openai-key", DefaultModel = "gpt-4.1-mini" },
+                }
+            },
+            billingRecorder);
+
+        var result = await orchestrator.GenerateAsync(new AiGenerateRequest(null, null, null, "Write a title", null, null));
+
+        result.IsSuccess.Should().BeTrue();
+        billingRecorder.Records.Should().ContainSingle();
+        var record = billingRecorder.Records[0];
+        record.TenantId.Should().Be(tenantId);
+        record.ActorId.Should().Be(userId);
+        record.Provider.Should().Be("OpenAi");
+        record.Model.Should().Be("gpt-4.1-mini");
+        record.Outcome.Should().Be("Completed");
+        record.TotalTokens.Should().Be(15);
+    }
+
+    [Fact]
+    public async Task GenerateAsync_RecordsBlockedExecutionForProductBillingAttribution()
+    {
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var requestContextAccessor = CreateRequestContextAccessor(tenantId, userId);
+        var tenantSettingsRepository = new Mock<ITenantSettingsRepository>();
+        tenantSettingsRepository
+            .Setup(repository => repository.GetByTenantIdAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TenantSettings
+            {
+                TenantId = tenantId,
+                IntegrationSettingsJson = """
+                {
+                  "externalServices": {
+                    "ai": {
+                      "enabled": true,
+                      "defaultProvider": "OpenAi",
+                      "moderation": { "enabled": true, "blockedTerms": ["forbidden"] },
+                      "history": { "enabled": true }
+                    }
+                  }
+                }
+                """
+            });
+        var billingRecorder = new SpyAiExecutionBillingRecorder();
+        var orchestrator = CreateOrchestrator(
+            requestContextAccessor,
+            tenantSettingsRepository.Object,
+            CreateQuotaEnforcer().Object,
+            CreateHistoryRepository().Object,
+            new[] { CreateAdapter(AiProvider.OpenAi, failIfCalled: true).Object },
+            new AiOptions
+            {
+                Enabled = true,
+                DefaultProvider = "OpenAi",
+                Providers = new Dictionary<string, AiProviderOptions>
+                {
+                    ["OpenAi"] = new() { ApiKey = "platform-openai-key", DefaultModel = "gpt-4.1-mini" },
+                }
+            },
+            billingRecorder);
+
+        var result = await orchestrator.GenerateAsync(new AiGenerateRequest(null, null, null, "forbidden topic", null, null));
+
+        result.IsFailure.Should().BeTrue();
+        billingRecorder.Records.Should().ContainSingle();
+        billingRecorder.Records[0].Outcome.Should().Be("ModerationBlocked");
+        billingRecorder.Records[0].OutcomeCode.Should().Be("AI.ModerationBlockedTerm");
+    }
+
+    [Fact]
     public async Task GenerateAsync_UsesTenantDefaultProviderAndTenantApiKey_WhenAvailable()
     {
         var tenantId = Guid.NewGuid();
@@ -371,7 +483,8 @@ public class AiOrchestratorTests
         IResourceQuotaEnforcer quotaEnforcer,
         IAiConversationHistoryRepository historyRepository,
         IEnumerable<IAiProviderAdapter> adapters,
-        AiOptions options)
+        AiOptions options,
+        IAiExecutionBillingRecorder? billingRecorder = null)
     {
         return new AiOrchestrator(
             adapters,
@@ -380,7 +493,8 @@ public class AiOrchestratorTests
             quotaEnforcer,
             historyRepository,
             Options.Create(options),
-            NullLogger<AiOrchestrator>.Instance);
+            NullLogger<AiOrchestrator>.Instance,
+            billingRecorder);
     }
 
     private static Mock<IResourceQuotaEnforcer> CreateQuotaEnforcer()
@@ -414,6 +528,17 @@ public class AiOrchestratorTests
             .Setup(repository => repository.GetRecentAsync(It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<AiConversationHistoryEntryDto>());
         return historyRepository;
+    }
+
+    private sealed class SpyAiExecutionBillingRecorder : IAiExecutionBillingRecorder
+    {
+        public List<AiExecutionBillingRecord> Records { get; } = [];
+
+        public ValueTask RecordExecutionAsync(AiExecutionBillingRecord record, CancellationToken cancellationToken = default)
+        {
+            Records.Add(record);
+            return ValueTask.CompletedTask;
+        }
     }
 
     private static IRequestContextAccessor CreateRequestContextAccessor(Guid tenantId, Guid userId)
