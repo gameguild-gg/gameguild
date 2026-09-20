@@ -27,11 +27,21 @@ public interface IAssetAccessService
     /// <summary>
     /// Validates access to an asset.
     /// </summary>
+    /// <param name="assetReferenceId">The asset reference to validate.</param>
+    /// <param name="userId">The requesting user, if authenticated.</param>
+    /// <param name="tenantId">The request tenant context.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <param name="permitCrossTenant">
+    ///     Explicit cross-tenant path: the asset's own tenant is allowed to differ from the
+    ///     request tenant. Only SystemAdmin surfaces may pass <c>true</c>; the default is a
+    ///     fail-closed tenant-mismatch denial.
+    /// </param>
     Task<AssetAccessValidation> ValidateAccessAsync(
         Guid assetReferenceId,
         Guid? userId,
         Guid? tenantId,
-        CancellationToken ct = default);
+        CancellationToken ct = default,
+        bool permitCrossTenant = false);
 
     /// <summary>
     /// Validates a token for asset access.
@@ -111,6 +121,7 @@ public enum AssetAccessDeniedReason
     TokenExpired,
     AuthenticationRequired,
     OwnershipRequired,
+    TenantMismatch,
     InvalidPolicy,
     ContentRejected,
     ContentInfected

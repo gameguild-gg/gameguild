@@ -1,6 +1,4 @@
 using Microsoft.Extensions.Logging;
-using GameGuild.Commerce.Orders;
-using CommerceOrderStatus = GameGuild.Commerce.Orders.OrderStatus;
 
 namespace GameGuild.Assets.Security;
 
@@ -263,30 +261,15 @@ public class DownloadWindowService : IDownloadWindowService
 }
 
 /// <summary>
-/// Commerce module-backed order validation for paid asset downloads.
+/// Fail-closed default order validation. Returns "no valid order" for everything so that
+/// paid-download windows stay locked unless a commerce adapter is registered from the
+/// composition root (the host knows the commerce stack; this module stays platform-generic).
 /// </summary>
-public class CommerceOrderValidationService(IOrderRepository orderRepository) : IOrderValidationService
+public sealed class DenyByDefaultOrderValidationService : IOrderValidationService
 {
-    public async Task<OrderStatus?> GetOrderStatusAsync(Guid orderId, CancellationToken ct = default)
-    {
-        var order = await orderRepository.GetByIdAsync(orderId, ct).ConfigureAwait(false);
-        return order == null ? null : MapStatus(order.Status);
-    }
+    public Task<OrderStatus?> GetOrderStatusAsync(Guid orderId, CancellationToken ct = default)
+        => Task.FromResult<OrderStatus?>(null);
 
-    public async Task<bool> IsOrderValidForDownloadAsync(Guid orderId, CancellationToken ct = default)
-    {
-        var order = await orderRepository.GetByIdAsync(orderId, ct).ConfigureAwait(false);
-        return order?.Status is CommerceOrderStatus.Paid or CommerceOrderStatus.Fulfilled or CommerceOrderStatus.Completed;
-    }
-
-    private static OrderStatus MapStatus(CommerceOrderStatus status)
-        => status switch
-        {
-            CommerceOrderStatus.Paid => OrderStatus.Paid,
-            CommerceOrderStatus.Fulfilled or CommerceOrderStatus.Completed => OrderStatus.Fulfilled,
-            CommerceOrderStatus.Refunded or CommerceOrderStatus.PartiallyRefunded => OrderStatus.Refunded,
-            CommerceOrderStatus.Cancelled => OrderStatus.Cancelled,
-            CommerceOrderStatus.Disputed => OrderStatus.Disputed,
-            _ => OrderStatus.Pending
-        };
+    public Task<bool> IsOrderValidForDownloadAsync(Guid orderId, CancellationToken ct = default)
+        => Task.FromResult(false);
 }

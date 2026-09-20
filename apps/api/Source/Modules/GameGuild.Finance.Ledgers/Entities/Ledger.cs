@@ -188,7 +188,8 @@ public class Ledger
             HierarchyPath = $"/{code}",
             HierarchyDepth = 0,
             CreatedByUserId = createdByUserId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
         };
 
         return ledger;
@@ -228,7 +229,8 @@ public class Ledger
             HierarchyPath = $"{parent.HierarchyPath}/{code}",
             HierarchyDepth = parent.HierarchyDepth + 1,
             CreatedByUserId = createdByUserId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
         };
 
         parent.Children.Add(ledger);
@@ -264,7 +266,8 @@ public class Ledger
             HierarchyPath = $"/virtual/{code}",
             HierarchyDepth = 0,
             CreatedByUserId = createdByUserId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
         };
 
         return ledger;

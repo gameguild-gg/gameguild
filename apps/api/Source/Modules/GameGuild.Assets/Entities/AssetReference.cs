@@ -246,6 +246,7 @@ public class AssetReference : EntityBase, ILocalizable
     {
         if (CurrentRevisionNumber != 0)
             throw new InvalidOperationException("The initial revision already exists.");
+        if (Id == Guid.Empty) Id = Guid.NewGuid();
         CurrentRevisionNumber = 1;
         var revision = AssetReferenceRevision.Create(this, AssetContentId, 1, userId, "Initial version");
         Revisions.Add(revision);
@@ -254,6 +255,7 @@ public class AssetReference : EntityBase, ILocalizable
 
     public AssetReferenceRevision ReplaceContent(Guid contentId, Guid userId, string? note = null)
     {
+        if (Id == Guid.Empty) Id = Guid.NewGuid();
         if (CurrentRevisionNumber == 0)
         {
             CurrentRevisionNumber = 1;

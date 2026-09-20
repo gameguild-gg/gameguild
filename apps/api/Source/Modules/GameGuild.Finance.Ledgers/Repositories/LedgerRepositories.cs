@@ -272,8 +272,7 @@ public class LedgerEntryRepository : ILedgerEntryRepository
     {
         // Use the denormalized ParentLedgerIds field for efficient query
         // Entries belong to this ledger if LedgerId matches OR if ledgerId is in ParentLedgerIds
-        var query = _entries
-            .Where(e => e.LedgerId == ledgerId || e.ParentLedgerIds.Contains(ledgerId));
+        var query = QueryIncludingDescendants(ledgerId);
 
         if (fromDate.HasValue)
         {
@@ -361,9 +360,8 @@ public class LedgerEntryRepository : ILedgerEntryRepository
         DateTimeOffset? asOfDate = null,
         CancellationToken ct = default)
     {
-        var query = _entries
-            .Where(e => (e.LedgerId == ledgerId || e.ParentLedgerIds.Contains(ledgerId))
-                        && e.Status == EntryStatus.Posted
+        var query = QueryIncludingDescendants(ledgerId)
+            .Where(e => e.Status == EntryStatus.Posted
                         && e.ReversedByEntryId == null);
 
         if (asOfDate.HasValue)
@@ -385,5 +383,20 @@ public class LedgerEntryRepository : ILedgerEntryRepository
         return summary is null
             ? (0m, 0m, 0)
             : (summary.TotalCredits, summary.TotalDebits, summary.EntryCount);
+    }
+
+    private IQueryable<LedgerEntry> QueryIncludingDescendants(Guid ledgerId)
+    {
+        if (_context is DbContext dbContext &&
+            string.Equals(dbContext.Database.ProviderName, "Npgsql.EntityFrameworkCore.PostgreSQL", StringComparison.Ordinal))
+        {
+            var parentLedgerJson = System.Text.Json.JsonSerializer.Serialize(new[] { ledgerId });
+            return _entries.Where(entry =>
+                entry.LedgerId == ledgerId || EF.Functions.JsonContains(entry.ParentLedgerIds, parentLedgerJson));
+        }
+
+        // EF's InMemory provider cannot execute Npgsql JSON functions. This branch preserves
+        // the same set-membership semantics for unit tests and non-relational development contexts.
+        return _entries.Where(entry => entry.LedgerId == ledgerId || entry.ParentLedgerIds.Contains(ledgerId));
     }
 }

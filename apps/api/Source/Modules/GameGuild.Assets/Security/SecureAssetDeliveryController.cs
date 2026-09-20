@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -58,7 +59,14 @@ public class SecureAssetDeliveryController : BaseApiController
     /// <summary>
     /// Serves asset content with full security checks.
     /// </summary>
+    /// <remarks>
+    ///     Intentionally anonymous: content delivery is authenticated by the signed,
+    ///     expiring asset token (plus rate limiting and access-policy validation inside).
+    ///     Assets without a token must pass <see cref="IAssetAccessService.ValidateAccessAsync"/>,
+    ///     which denies protected policies to unauthenticated callers.
+    /// </remarks>
     [HttpGet("{assetId:guid}/content")]
+    [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -259,7 +267,14 @@ public class SecureAssetDeliveryController : BaseApiController
     /// <summary>
     /// Gets asset access URL with security checks.
     /// </summary>
+    /// <remarks>
+    ///     Intentionally anonymous: URL generation is authorized per request by
+    ///     <see cref="IAssetAccessService.ValidateAccessAsync"/> against the asset's access
+    ///     policy — public/unlisted assets are reachable, protected policies require an
+    ///     authenticated (and tenant-verified) caller.
+    /// </remarks>
     [HttpPost("{assetId:guid}/access-url")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(AssetAccessUrl), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -360,6 +375,11 @@ public class SecureAssetDeliveryController : BaseApiController
         }
 
         var transformSpec = TransformationSpec.Parse(transform);
+        if (transformSpec == null)
+        {
+            return null;
+        }
+
         var validation = _transformationValidator.Validate(transformSpec, assetKind);
         if (validation.IsValid)
         {

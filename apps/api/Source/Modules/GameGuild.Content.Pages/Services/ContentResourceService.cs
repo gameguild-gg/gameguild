@@ -8,8 +8,9 @@ public sealed class ContentResourceService(IApplicationDbContext db) : IContentR
     public async Task<ContentResource?> GetByIdAsync(Guid id, CancellationToken ct = default) =>
         await db.Set<ContentResource>().FindAsync([id], ct).ConfigureAwait(false);
 
-    public async Task<ContentResource?> GetBySlugAsync(string slug, CancellationToken ct = default) =>
+    public async Task<ContentResource?> GetBySlugAsync(string slug, bool publishedOnly = false, CancellationToken ct = default) =>
         await db.Set<ContentResource>()
+            .Where(r => !publishedOnly || r.Status == ContentResourceStatus.Published)
             .FirstOrDefaultAsync(r => r.Slug == slug, ct)
             .ConfigureAwait(false);
 

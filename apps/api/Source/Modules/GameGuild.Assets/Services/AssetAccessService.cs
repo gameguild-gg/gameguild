@@ -216,7 +216,8 @@ public class AssetAccessService : IAssetAccessService
         Guid assetReferenceId,
         Guid? userId,
         Guid? tenantId,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        bool permitCrossTenant = false)
     {
         var reference = await _referenceRepository.GetByIdAsync(assetReferenceId, ct).ConfigureAwait(false);
         if (reference == null)
@@ -228,6 +229,24 @@ public class AssetAccessService : IAssetAccessService
         if (reference.IsDeleted)
         {
             return new AssetAccessValidation(false, AssetAccessDeniedReason.NotFound);
+        }
+
+        // SECURITY (cross-tenant): the asset's own tenant must match the request tenant.
+        // Membership in the request tenant alone is not sufficient — otherwise a member of
+        // tenant A could resolve URLs for tenant B's assets. Fail closed unless the caller
+        // explicitly opened the SystemAdmin cross-tenant path.
+        if (!permitCrossTenant &&
+            reference.TenantId.HasValue &&
+            tenantId.HasValue &&
+            reference.TenantId.Value != tenantId.Value)
+        {
+            _logger.LogWarning(
+                "Cross-tenant asset access denied: asset {AssetId} belongs to tenant {AssetTenantId} but request tenant is {RequestTenantId}",
+                assetReferenceId,
+                reference.TenantId.Value,
+                tenantId.Value);
+
+            return new AssetAccessValidation(false, AssetAccessDeniedReason.TenantMismatch);
         }
 
         // Check access policy

@@ -13,6 +13,14 @@ namespace GameGuild.Content.Pages;
 [Authorize]
 public class PageController(IPageService pageService, ISender sender, IActorContextAccessor actorContextAccessor) : BaseApiController
 {
+    /// <summary>
+    ///     Content permission keys that unlock unpublished pages and drafts. Pages are
+    ///     platform-global (not tenant-owned), so visibility is gated by publication status:
+    ///     anything other than <see cref="PageStatus.Published"/> requires one of these
+    ///     content permissions; the anonymous slug surface only ever returns published pages.
+    /// </summary>
+    private static readonly string[] ContentManagePermissions = ["content:read", "content:write", "content:admin"];
+
     /// <summary>List pages with optional filtering.</summary>
     [HttpGet]
     public async Task<ActionResult<IEnumerable<PageDto>>> GetPages(
@@ -23,6 +31,13 @@ public class PageController(IPageService pageService, ISender sender, IActorCont
         [FromQuery] int skip = 0,
         [FromQuery] int take = 50)
     {
+        // Non-published listings are restricted to content managers; everyone else
+        // is constrained to published pages regardless of the requested filter.
+        if (status != PageStatus.Published && !CanViewUnpublished)
+        {
+            status = PageStatus.Published;
+        }
+
         var pages = await pageService.GetPagesAsync(type, status, locale, parentId, skip, take).ConfigureAwait(false);
         return Ok(pages.ToDtos());
     }
@@ -33,18 +48,31 @@ public class PageController(IPageService pageService, ISender sender, IActorCont
     {
         var page = await pageService.GetByIdAsync(id).ConfigureAwait(false);
         if (page is null) return NotFound();
+
+        // Get-by-id must not leak drafts: unpublished pages require a content permission.
+        if (page.Status != PageStatus.Published && !CanViewUnpublished)
+        {
+            return NotFound();
+        }
+
         return Ok(page.ToDto());
     }
 
-    /// <summary>Get a page by slug (including sections).</summary>
+    /// <summary>Get a page by slug (including sections). Publicly returns published pages only.</summary>
     [HttpGet("by-slug/{slug}")]
     [AllowAnonymous]
     public async Task<ActionResult<PageDto>> GetPageBySlug(string slug)
     {
-        var page = await pageService.GetBySlugAsync(slug).ConfigureAwait(false);
+        // The anonymous slug surface is intentionally public for the marketing site and
+        // SEO crawlers; restricting the query to published pages keeps drafts unlisted.
+        var publishedOnly = !CanViewUnpublished;
+        var page = await pageService.GetBySlugAsync(slug, publishedOnly).ConfigureAwait(false);
         if (page is null) return NotFound();
         return Ok(page.ToDto());
     }
+
+    private bool CanViewUnpublished =>
+        actorContextAccessor.ActorContext.HasAnyPermission(ContentManagePermissions);
 
     /// <summary>
     ///     Public sitemap feed of published pages — slug + last-modified — for
