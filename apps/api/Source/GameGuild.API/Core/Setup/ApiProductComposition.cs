@@ -9,6 +9,7 @@ using GameGuild.Compliance.FERPA;
 using GameGuild.Compliance.KYC;
 using GameGuild.Finance.Economy;
 using GameGuild.Finance.Economy.AdRewards;
+using GameGuild.Finance.Economy.AiCredits;
 using GameGuild.Finance.Economy.Bounties;
 using GameGuild.Finance.Economy.Marketplace;
 using GameGuild.Finance.Economy.Payouts;
@@ -29,6 +30,7 @@ using GameGuild.Learning.Workspaces;
 using GameGuild.Learning.Lti;
 using GameGuild.ProjectWork;
 using GameGuild.Projects;
+using GameGuild.Social.Assets;
 using GameGuild.Social.Blog;
 using GameGuild.Social.Follows;
 using GameGuild.Social.Feed;
@@ -56,6 +58,7 @@ internal sealed class ApiProductComposition : IApiProductComposition
         "Compliance.FERPA",
         "Finance.Economy",
         "Finance.Economy.AdRewards",
+        "Finance.Economy.AiCredits",
         "Finance.Economy.Bounties",
         "Finance.Economy.Marketplace",
         "Finance.Economy.Payouts",
@@ -77,6 +80,7 @@ internal sealed class ApiProductComposition : IApiProductComposition
         "Projects",
         "ProjectWork",
         "Social.Announcements",
+        "Social.Assets",
         "Social.Blog",
         "Social.Feed",
         "Social.Follows",
@@ -105,6 +109,7 @@ internal sealed class ApiProductComposition : IApiProductComposition
         builder.Services.AddScoped<IEconomyStepUpExecutor, EconomyStepUpExecutor>();
         builder.Services.AddScoped<IAdRewardRequestRiskContextResolver, AdRewardRequestRiskContextResolver>();
         builder.Services.AddAdRewardsComposition(builder.Configuration);
+        builder.Services.AddAiCreditsModule(builder.Configuration);
         builder.Services.AddBountiesComposition(builder.Configuration);
         builder.Services.AddMarketplaceComposition(builder.Configuration);
         builder.Services.AddPayoutsComposition(builder.Configuration);
@@ -129,6 +134,7 @@ internal sealed class ApiProductComposition : IApiProductComposition
         LearningSocialModule.AddSocialModule(builder.Services);
 
         builder.Services.AddSocialProfilesModule();
+        builder.Services.AddSocialAssetsModule();
         builder.Services.AddSocialBlogModule();
         builder.Services.AddSocialFeedModule();
         builder.Services.AddSocialGroupsModule();

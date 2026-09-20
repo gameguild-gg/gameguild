@@ -70,6 +70,7 @@
         <ProjectReference Include="..\Modules\GameGuild.Commerce.Billing\GameGuild.Commerce.Billing.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Commerce.Orders\GameGuild.Commerce.Orders.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Finance.Economy\GameGuild.Finance.Economy.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Finance.Economy.AiCredits\GameGuild.Finance.Economy.AiCredits.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Finance.Economy.AdRewards\GameGuild.Finance.Economy.AdRewards.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Finance.Economy.Bounties\GameGuild.Finance.Economy.Bounties.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Finance.Economy.Marketplace\GameGuild.Finance.Economy.Marketplace.csproj" />
@@ -95,6 +96,7 @@
         <ProjectReference Include="..\Modules\GameGuild.Learning.Experience.LearningPaths\GameGuild.Learning.Experience.LearningPaths.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Learning.Experience.Social\GameGuild.Learning.Experience.Social.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Social.Profiles\GameGuild.Social.Profiles.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Social.Assets\GameGuild.Social.Assets.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Social.Blog\GameGuild.Social.Blog.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Social.Groups\GameGuild.Social.Groups.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Social.Posts\GameGuild.Social.Posts.csproj" />
