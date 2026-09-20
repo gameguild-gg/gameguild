@@ -81,7 +81,7 @@ public class CourseStudentManagementTests
             .ReturnsAsync(new PagedResult<SupportTicketDto>([], 0, 0, 100));
         var actor = new Mock<IActorContextAccessor>();
         actor.SetupGet(accessor => accessor.ActorContext).Returns(ActorContext.Anonymous);
-        var controller = new CourseSupportTicketsController(sender.Object, actor.Object)
+        var controller = new CourseSupportTicketsController(sender.Object, actor.Object, Mock.Of<IApplicationDbContext>())
         {
             ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
         };

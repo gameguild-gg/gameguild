@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using GameGuild.CQRS;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
@@ -264,6 +265,7 @@ public sealed class RecordBlogPostViewCommandHandler(IBlogPostService service) :
 
 [ApiController]
 [Route("api/social/blog")]
+[Authorize]
 public sealed class BlogPostsController(ISender sender) : ControllerBase
 {
     [HttpGet]

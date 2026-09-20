@@ -185,7 +185,12 @@ public class RecommendationsController(
     /// <summary>
     /// Get popular courses across the platform
     /// </summary>
+    /// <remarks>
+    /// Intentionally anonymous: non-personalized discovery over published courses only;
+    /// the personalized recommendation endpoints stay authenticated.
+    /// </remarks>
     [HttpGet("popular")]
+    [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<PopularCourseDto>>> GetPopularCourses(
         [FromQuery] Guid? tenantId = null,
         [FromQuery] string? category = null,
@@ -199,7 +204,11 @@ public class RecommendationsController(
     /// <summary>
     /// Get trending courses (high recent enrollment velocity)
     /// </summary>
+    /// <remarks>
+    /// Intentionally anonymous: aggregate discovery data over published courses only.
+    /// </remarks>
     [HttpGet("trending")]
+    [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<TrendingCourseDto>>> GetTrendingCourses(
         [FromQuery] Guid? tenantId = null,
         [FromQuery] int daysWindow = 7,
@@ -213,7 +222,11 @@ public class RecommendationsController(
     /// <summary>
     /// Get courses similar to a specific course
     /// </summary>
+    /// <remarks>
+    /// Intentionally anonymous: similarity suggestions over published courses only.
+    /// </remarks>
     [HttpGet("courses/{courseId}/similar")]
+    [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<SimilarCourseDto>>> GetSimilarCourses(
         Guid courseId,
         [FromQuery] Guid? tenantId = null,

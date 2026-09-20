@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using GameGuild.CQRS;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
@@ -243,6 +244,7 @@ public sealed class GetCourseEnrollmentsQueryHandler(IEnrollmentService service)
 
 [ApiController]
 [Route("api/learning/enrollments")]
+[Authorize]
 public sealed class EnrollmentsController(ISender sender) : ControllerBase
 {
     [HttpGet("{id:guid}")]

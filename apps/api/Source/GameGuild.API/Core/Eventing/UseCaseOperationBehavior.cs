@@ -74,6 +74,7 @@ internal sealed class UseCaseOperationBehavior<TRequest, TResponse>(
             {
                 await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
                 context.ChangeTracker.Clear();
+                operationContext.ResetForRetry();
                 throw;
             }
         }).ConfigureAwait(false);

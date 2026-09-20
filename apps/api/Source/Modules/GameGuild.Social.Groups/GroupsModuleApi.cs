@@ -556,6 +556,7 @@ public sealed class ListSocialGroupMembersQueryHandler(ISocialGroupService servi
 
 [ApiController]
 [Route("api/social/groups")]
+[Authorize]
 public sealed class SocialGroupsController(
     ISender sender,
     IActorContextAccessor actorContextAccessor) : ControllerBase

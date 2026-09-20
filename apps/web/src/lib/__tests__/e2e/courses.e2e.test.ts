@@ -672,14 +672,8 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
 
     const created = unwrap(await authedClient.request<SupportTicketOutput>({
       method: 'POST',
-      path: '/v1/support/tickets',
+      path: `/v1/courses/${courseId}/support/tickets`,
       body: {
-        tenantId,
-        customerId: courseId,
-        customerName: 'E2E Test Course',
-        reporterUserId: userId,
-        reporterName: 'Course E2E Learner',
-        reporterEmail: email,
         subject: 'Cannot open the milestone lesson',
         body: 'The milestone lesson remains unavailable after enrollment.',
         priority: 'Normal',
