@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Options;
 using Xunit;
 
-namespace GameGuild.Finance.Economy.UnitTests.Integrations.AI;
+namespace GameGuild.Finance.Economy.AiCredits.UnitTests.Integrations;
 
 public sealed class AiCreditReservationTests
 {

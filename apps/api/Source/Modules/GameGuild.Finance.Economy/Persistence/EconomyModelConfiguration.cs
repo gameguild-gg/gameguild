@@ -32,8 +32,6 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
         ConfigureProviderReversalReceipt(modelBuilder);
         ConfigureEconomyWalletProvisioningReceipt(modelBuilder);
         modelBuilder.ApplyConfiguration(new AiProviderCostFactEntityConfiguration());
-        modelBuilder.ApplyConfiguration(new AiCreditReservationConfiguration());
-        modelBuilder.ApplyConfiguration(new AiCreditRateCardConfiguration());
     }
 
     private static void ConfigureWallets(ModelBuilder modelBuilder)

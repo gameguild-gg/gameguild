@@ -1,6 +1,5 @@
 using FluentAssertions;
 using GameGuild.Finance.Economy.Contracts;
-using GameGuild.Finance.Economy.Integrations.AI;
 using GameGuild.Finance.Economy.Ledger;
 using GameGuild.Finance.Economy.Persistence;
 using GameGuild.Finance.Economy.Projections;
@@ -83,69 +82,6 @@ public sealed class EconomyWalletQueryHandlerPostgreSqlTests : IAsyncLifetime
             WalletLifecycleState.Active,
             RecordedAt,
             10, 20, 30, 40, 50, 60, 80, 90, 100, 110, 120, 140, RecordedAt, 130));
-    }
-
-    [Fact]
-    public async Task GetMyWallet_ReflectsAiReservationsAndSettlementsInTheSharedSoftCoinBalance()
-    {
-        await ResetSchemaAsync();
-        var ownerId = Guid.NewGuid();
-        var tenantId = Guid.NewGuid();
-        var walletId = Guid.NewGuid();
-        var runId = Guid.NewGuid();
-
-        await using (var seed = CreateContext())
-        {
-            seed.Add(Wallet(walletId, ownerId, tenantId));
-            seed.Add(new EconomyWalletBalanceProjectionRow
-            {
-                WalletId = walletId,
-                Soft = 100,
-                AvailableSoftToSpend = 100,
-                ProjectionHash = new string('a', 64),
-                RebuiltAt = RecordedAt,
-            });
-            seed.Add(AiCreditReservation.Create(
-                runId,
-                tenantId,
-                ownerId,
-                walletId,
-                "lesson-authoring",
-                "OpenAi",
-                "test-model",
-                20,
-                "reserve-shared-balance",
-                RecordedAt,
-                "rate-v1",
-                1_000_000,
-                1_000_000));
-            await seed.SaveChangesAsync();
-        }
-
-        await using (var reservedContext = CreateContext())
-        {
-            var reserved = await new GetMyEconomyWalletQueryHandler(
-                    reservedContext,
-                    CreateActor(ownerId, tenantId))
-                .Handle(new GetMyEconomyWalletQuery(), CancellationToken.None);
-            reserved!.AvailableSoftToSpend.Should().Be(80);
-            reserved.HeldSoft.Should().Be(20);
-        }
-
-        await using (var settle = CreateContext())
-        {
-            var reservation = await settle.Set<AiCreditReservation>().SingleAsync(item => item.RunId == runId);
-            reservation.Settle(5, 2, 7, "provider-usage", "settle-shared-balance", RecordedAt.AddMinutes(1));
-            await settle.SaveChangesAsync();
-        }
-
-        await using var settledContext = CreateContext();
-        var settled = await new GetMyEconomyWalletQueryHandler(
-                settledContext,
-                CreateActor(ownerId, tenantId))
-            .Handle(new GetMyEconomyWalletQuery(), CancellationToken.None);
-        settled!.AvailableSoftToSpend.Should().Be(93);
-        settled.HeldSoft.Should().Be(0);
     }
 
     [Fact]
