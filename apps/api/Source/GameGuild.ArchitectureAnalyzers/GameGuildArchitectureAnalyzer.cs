@@ -10,13 +10,14 @@ namespace GameGuild.ArchitectureAnalyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class GameGuildArchitectureAnalyzer : DiagnosticAnalyzer
 {
-    public const string MissingContractId = "external-product-architecture001";
-    public const string UnversionedEventId = "external-product-architecture002";
-    public const string ManualPublishId = "external-product-architecture003";
-    public const string ControllerPersistenceId = "external-product-architecture004";
-    public const string HandlerCardinalityId = "external-product-architecture005";
-    public const string ExecutableDelegateCommandId = "external-product-architecture006";
-    public const string ControllerPersistenceBypassId = "external-product-architecture007";
+    public const string MissingContractId = "GGARCH001";
+    public const string UnversionedEventId = "GGARCH002";
+    public const string ManualPublishId = "GGARCH003";
+    public const string ControllerPersistenceId = "GGARCH004";
+    public const string HandlerCardinalityId = "GGARCH005";
+    public const string ExecutableDelegateCommandId = "GGARCH006";
+    public const string ControllerPersistenceBypassId = "GGARCH007";
+    public const string ControllerAuthorizationId = "GGARCH008";
 
     private static readonly DiagnosticDescriptor MissingContract = new(
         MissingContractId,
@@ -74,9 +75,17 @@ public sealed class GameGuildArchitectureAnalyzer : DiagnosticAnalyzer
         DiagnosticSeverity.Error,
         true);
 
+    private static readonly DiagnosticDescriptor ControllerAuthorization = new(
+        ControllerAuthorizationId,
+        "Controller endpoints must declare an authorization decision",
+        "Controller action '{0}' has neither [Authorize] (on the action or the controller) nor an explicit [AllowAnonymous]; unguarded endpoints are rejected",
+        "Architecture",
+        DiagnosticSeverity.Error,
+        true);
+
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
         [MissingContract, UnversionedEvent, ManualPublish, ControllerPersistence, HandlerCardinality,
-            ExecutableDelegateCommand, ControllerPersistenceBypass];
+            ExecutableDelegateCommand, ControllerPersistenceBypass, ControllerAuthorization];
 
     public override void Initialize(AnalysisContext context)
     {
@@ -132,6 +141,35 @@ public sealed class GameGuildArchitectureAnalyzer : DiagnosticAnalyzer
         }, SymbolKind.NamedType);
 
         context.RegisterSyntaxNodeAction(AnalyzeMethod, Microsoft.CodeAnalysis.CSharp.SyntaxKind.MethodDeclaration);
+
+        context.RegisterSymbolAction(controllerContext =>
+        {
+            var type = (INamedTypeSymbol)controllerContext.Symbol;
+            if (type.TypeKind != TypeKind.Class || type.IsAbstract ||
+                !type.Name.EndsWith("Controller", StringComparison.Ordinal))
+                return;
+
+            // A class-level [Authorize] or [AllowAnonymous] covers every action; base types
+            // in other assemblies deliberately do not count (fail closed on inheritance).
+            if (HasAuthorizationAttribute(type.GetAttributes()))
+                return;
+
+            foreach (var method in type.GetMembers().OfType<IMethodSymbol>())
+            {
+                if (method.MethodKind != MethodKind.Ordinary || method.DeclaredAccessibility != Accessibility.Public)
+                    continue;
+                if (!IsHttpEndpoint(method))
+                    continue;
+                if (HasAuthorizationAttribute(method.GetAttributes()))
+                    continue;
+
+                controllerContext.ReportDiagnostic(Diagnostic.Create(
+                    ControllerAuthorization,
+                    method.Locations.FirstOrDefault(),
+                    $"{type.Name}.{method.Name}"));
+            }
+        }, SymbolKind.NamedType);
+
         context.RegisterCompilationEndAction(endContext =>
         {
             var isContractsAssembly = context.Compilation.AssemblyName?.EndsWith(
@@ -317,6 +355,29 @@ public sealed class GameGuildArchitectureAnalyzer : DiagnosticAnalyzer
     private static bool IsCommandInterface(INamedTypeSymbol @interface) =>
         @interface.OriginalDefinition.Name == "ICommand"
         && @interface.OriginalDefinition.ContainingNamespace.ToDisplayString() == "GameGuild.CQRS";
+
+    /// <summary>
+    ///     True when the attribute list contains [Authorize] or [AllowAnonymous]
+    ///     (matched by simple name so any authorization framework flavor is honored).
+    /// </summary>
+    private static bool HasAuthorizationAttribute(ImmutableArray<AttributeData> attributes) =>
+        attributes.Any(attribute =>
+            attribute.AttributeClass?.Name is "AuthorizeAttribute" or "Authorize"
+                or "AllowAnonymousAttribute" or "AllowAnonymous");
+
+    /// <summary>
+    ///     True when the method declares an HTTP endpoint (routed MVC action).
+    /// </summary>
+    private static bool IsHttpEndpoint(IMethodSymbol method) =>
+        method.GetAttributes().Any(attribute => attribute.AttributeClass?.Name
+            is "HttpGetAttribute" or "HttpGet"
+            or "HttpPostAttribute" or "HttpPost"
+            or "HttpPutAttribute" or "HttpPut"
+            or "HttpPatchAttribute" or "HttpPatch"
+            or "HttpDeleteAttribute" or "HttpDelete"
+            or "HttpHeadAttribute" or "HttpHead"
+            or "HttpOptionsAttribute" or "HttpOptions"
+            or "RouteAttribute" or "Route");
 
     private static bool IsRequestHandlerInterface(INamedTypeSymbol @interface) =>
         @interface.TypeArguments.Length > 0
