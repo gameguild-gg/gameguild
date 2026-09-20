@@ -31,6 +31,7 @@ import {
   FlaskConical,
   FolderOpen,
   HeadphonesIcon,
+  Home,
   LayoutDashboard,
   List,
   FolderKanban,
@@ -92,7 +93,7 @@ export const dashboardNavigationData: DashboardNavGroup[] = [
       {
         title: 'Home',
         url: '/workspace',
-        icon: LayoutDashboard,
+        icon: Home,
       },
       {
         title: 'Projects',
@@ -459,7 +460,7 @@ function NavGroups({ groups }: { groups: DashboardNavGroup[] }) {
                   const isActive = pathname === item.url || pathname?.endsWith(item.url);
                   return (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild isActive={isActive}>
+                      <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
                         <Link href={item.url}>
                           {Icon && <Icon className="size-4" />}
                           <span>{item.title}</span>
@@ -475,7 +476,7 @@ function NavGroups({ groups }: { groups: DashboardNavGroup[] }) {
                     <Collapsible key={item.title} open={isOpen} onOpenChange={() => toggleItem(item.title)} className="group/collapsible">
                       <SidebarMenuItem>
                         <CollapsibleTrigger asChild>
-                          <SidebarMenuButton>
+                          <SidebarMenuButton tooltip={item.title}>
                             {Icon && <Icon className="size-4" />}
                             <span>{item.title}</span>
                             <ChevronRight className="ml-auto size-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
@@ -512,7 +513,7 @@ function NavGroups({ groups }: { groups: DashboardNavGroup[] }) {
                     <Collapsible key={item.title} open={isOpen} onOpenChange={() => toggleItem(item.title)} className="group/collapsible">
                       <SidebarMenuItem>
                         <CollapsibleTrigger asChild>
-                          <SidebarMenuButton>
+                          <SidebarMenuButton tooltip={item.title}>
                             {Icon && <Icon className="size-4" />}
                             <span>{item.title}</span>
                             <ChevronRight className="ml-auto size-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />

@@ -41,7 +41,13 @@ export function ConsoleShell({
       >
         Skip to main content
       </a>
-      <SidebarProvider>
+      <SidebarProvider
+        style={
+          {
+            '--sidebar-width-icon': '4rem',
+          } as React.CSSProperties
+        }
+      >
         <DashboardSidebar navigation={navigation} />
         <SidebarInset className="min-w-0 overflow-hidden">
           <DashboardCommandPalette
