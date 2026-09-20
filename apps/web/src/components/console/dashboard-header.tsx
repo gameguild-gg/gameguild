@@ -296,7 +296,9 @@ export function DashboardHeader({ notifications, user }: DashboardHeaderProps) {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <DashboardUserMenu user={user} />
+        <div className="ml-1 sm:ml-2">
+          <DashboardUserMenu user={user} />
+        </div>
       </div>
     </header>
   );
