@@ -14,7 +14,7 @@ vi.mock('./dashboard-sidebar', () => ({
 }));
 vi.mock('./dashboard-header', () => ({ DashboardHeader: () => <header /> }));
 vi.mock('./dashboard-command-palette', () => ({ DashboardCommandPalette: () => null }));
-vi.mock('@/components/ui/sonner', () => ({ Toaster: () => null }));
+vi.mock('@game-guild/ui/components/sonner', () => ({ Toaster: () => null }));
 vi.mock('@game-guild/ui/components/sidebar', () => ({
   SidebarProvider: ({ children }: { readonly children: React.ReactNode }) => <>{children}</>,
   SidebarInset: ({ children }: { readonly children: React.ReactNode }) => <>{children}</>,

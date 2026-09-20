@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Textarea } from '@/components/ui/textarea';
+import { Textarea } from '@game-guild/ui/components/textarea';
 
 export interface CaptionInputProps {
   caption: string;

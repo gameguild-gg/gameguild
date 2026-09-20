@@ -2,8 +2,8 @@
 
 import { useState, useRef, useEffect } from "react"
 import { Play, Pause, Volume2, VolumeX, Maximize, AlertCircle } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Slider } from "@/components/ui/slider"
+import { Button } from "@game-guild/ui/components/button"
+import { Slider } from "@game-guild/ui/components/slider"
 import type { BaseMediaData } from "@/components/block-content-editor/nodes/base/media-node-base"
 import { useResolvedAssetUrl } from "@game-guild/assets/react"
 import { AssetImage } from "./asset-image"
@@ -68,16 +68,16 @@ export function MediaPreview({ data }: MediaPreviewProps) {
     }
   }
 
-  const handleSliderChange = (values: number[]) => {
-    if (!mediaRef.current || !values[0]) return
-    const newTime = values[0]
+  const handleSliderChange = (values: number | readonly number[]) => {
+    const newTime = Array.isArray(values) ? values[0] : values
+    if (!mediaRef.current || !newTime) return
     mediaRef.current.currentTime = newTime
     setCurrentTime(newTime)
   }
 
-  const handleVolumeChange = (values: number[]) => {
-    if (!mediaRef.current || values[0] === undefined) return
-    const newVolume = values[0]
+  const handleVolumeChange = (values: number | readonly number[]) => {
+    const newVolume = Array.isArray(values) ? values[0] : values
+    if (!mediaRef.current || newVolume === undefined) return
     mediaRef.current.volume = newVolume
     setVolume(newVolume)
     setMuted(newVolume === 0)

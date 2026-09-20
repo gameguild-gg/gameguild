@@ -12,7 +12,7 @@ vi.mock("@/i18n/navigation", () => ({
   ),
 }));
 
-vi.mock("@/components/ui/select", async () => {
+vi.mock("@game-guild/ui/components/select", async () => {
   const React = await import("react");
   type MockElement = ReactElement<{
     "aria-label"?: string;

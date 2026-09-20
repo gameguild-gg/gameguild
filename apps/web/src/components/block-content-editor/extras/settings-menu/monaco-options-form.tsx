@@ -1,7 +1,7 @@
 "use client"
 
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
+import { Label } from "@game-guild/ui/components/label"
+import { Switch } from "@game-guild/ui/components/switch"
 import {
   Palette,
   Type,

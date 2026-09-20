@@ -1,8 +1,8 @@
 "use client"
 
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
+import { Input } from "@game-guild/ui/components/input"
+import { Label } from "@game-guild/ui/components/label"
+import { Button } from "@game-guild/ui/components/button"
 import { Calendar, CalendarCheck, User, AlertCircle } from "lucide-react"
 
 interface AdvancedFiltersProps {

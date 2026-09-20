@@ -11,7 +11,7 @@ import {
   CommandList,
   CommandSeparator,
   CommandShortcut,
-} from '@/components/ui/command';
+} from '@game-guild/ui/components/command';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import {
   dashboardNavigationData,

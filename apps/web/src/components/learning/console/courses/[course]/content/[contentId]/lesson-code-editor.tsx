@@ -2,7 +2,7 @@
 
 import { lazy, Suspense, useCallback, useState } from "react";
 import { Label } from "@game-guild/ui/components/label";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@game-guild/ui/components/skeleton";
 
 const MonacoCodeEditor = lazy(async () => {
   const mod = await import("@/components/block-content-editor/extras/code-studio/monaco-code-editor");

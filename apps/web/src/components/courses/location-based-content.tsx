@@ -2,8 +2,8 @@
 
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge } from '@game-guild/ui/components/badge';
+import { Button } from '@game-guild/ui/components/button';
 import { Users, FolderOpen, AlertCircle, Info, Eye, Play } from 'lucide-react';
 import type { TestingLocation } from '@/lib/api/testing-types';
 

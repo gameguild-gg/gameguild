@@ -1,7 +1,7 @@
 'use client';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge } from '@game-guild/ui/components/badge';
+import { Button } from '@game-guild/ui/components/button';
 import { Link } from '@/i18n/navigation';
 import type { Program } from '@/lib/api/generated';
 import { getCourseCategoryName, getCourseLevelConfig } from '@/lib/courses/services/course.service';
@@ -116,16 +116,14 @@ export function CourseHighlightCarousel({ courses }: CourseHighlightCarouselProp
 
               <div className="flex flex-wrap gap-3">
                 {slug ? (
-                  <Button asChild className="bg-white text-slate-950 hover:bg-slate-200">
-                    <Link href={`/courses/${slug}`}>
-                      Open course
-                      <ArrowRight />
-                    </Link>
+                  <Button className="bg-white text-slate-950 hover:bg-slate-200" nativeButton={false} render={<Link href={`/courses/${slug}`} />}>
+                    Open course
+                    <ArrowRight />
                   </Button>
                 ) : null}
                 {program ? (
-                  <Button asChild variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white">
-                    <Link href={`/programs/${program.slug}`}>View package</Link>
+                  <Button variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white" nativeButton={false} render={<Link href={`/programs/${program.slug}`} />}>
+                    View package
                   </Button>
                 ) : null}
               </div>

@@ -1,6 +1,6 @@
 "use client"
 
-import { Label } from "@/components/ui/label"
+import { Label } from "@game-guild/ui/components/label"
 import { Maximize2 } from "lucide-react"
 import { 
   ModalSize, 

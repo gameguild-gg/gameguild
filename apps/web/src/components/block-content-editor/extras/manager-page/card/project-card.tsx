@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { Card as ShadcnCard } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@game-guild/ui/components/badge"
 import { Calendar } from 'lucide-react'
 import { type ProjectCard, type CardAction } from '../types'
 import { formatDistanceToNow } from 'date-fns'

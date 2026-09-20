@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@game-guild/ui/components/button';
 import { cn } from '@/lib/utils';
 import type { CourseProjectShowcase } from '@/lib/courses/public-programs';
 import { ArrowLeft, ArrowRight, CheckCircle2, Layers3 } from 'lucide-react';

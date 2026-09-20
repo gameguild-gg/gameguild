@@ -1,7 +1,7 @@
 'use client';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge } from '@game-guild/ui/components/badge';
+import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import type { GeneratedApi } from '@game-guild/client';
 import { Archive, BookOpen, Clock, Eye, FileText, Play, Star, Users } from 'lucide-react';

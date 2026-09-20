@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@game-guild/ui/components/button"
 import {
   Dialog,
   DialogContent,
@@ -9,9 +9,9 @@ import {
   DialogTitle,
   DialogFooter,
   DialogDescription,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from "@game-guild/ui/components/dialog"
+import { Input } from "@game-guild/ui/components/input"
+import { Label } from "@game-guild/ui/components/label"
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { X } from "lucide-react"

@@ -3,7 +3,7 @@
 import { type FormEvent, useState } from 'react';
 import { useSession } from '@game-guild/client/react';
 import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
+import { Button } from '@game-guild/ui/components/button';
 import {
   Card,
   CardContent,
@@ -11,9 +11,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Checkbox } from '@game-guild/ui/components/checkbox';
+import { Input } from '@game-guild/ui/components/input';
+import { Label } from '@game-guild/ui/components/label';
 import {
   changePasswordAction,
   type PasswordChangeActionResult,

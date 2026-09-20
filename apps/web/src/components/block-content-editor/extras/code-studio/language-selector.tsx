@@ -1,7 +1,7 @@
 "use client"
 
 import { ChevronDown, Code, FileCode, RotateCcw } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@game-guild/ui/components/button"
 import type { CodeFile, FileTreeFolder } from "./types"
 import { cn } from "@/lib/utils"
 import { useState, useRef, useEffect } from "react"

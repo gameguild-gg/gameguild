@@ -1,6 +1,6 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@game-guild/ui/components/button"
 import { Menu } from "lucide-react"
 import { BaseSettingsMenu } from "./base-settings-menu"
 import { SystemSettings } from "./system-settings"

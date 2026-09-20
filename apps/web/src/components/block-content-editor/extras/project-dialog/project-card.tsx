@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@game-guild/ui/components/button"
 import { FolderOpen, Trash2, Download, Info, HardDrive, Cloud, Database, Wifi, WifiOff, Eye, Blocks } from "lucide-react"
 import { useGoogleDriveAuth } from "@/components/block-content-editor/hooks/editor/use-google-drive-auth"
 import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"

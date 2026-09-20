@@ -1,11 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@game-guild/ui/components/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@game-guild/ui/components/tabs"
+import { Input } from "@game-guild/ui/components/input"
+import { Badge } from "@game-guild/ui/components/badge"
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@game-guild/ui/components/tooltip"
 import { BLOCK_REGISTRY, BLOCK_CELL_TYPES, type BlockCellType } from "./block-component-registry"
 import type { Block } from "@/components/block-content-editor/lib/storage/editor/block-structure"
 import { Search, LayoutGrid, FileText } from "lucide-react"
@@ -130,7 +130,7 @@ export function BlockTypePicker({ open, onOpenChange, onSelect, allowedBlockType
 
           {/* ============ Block Types Tab ============ */}
           <TabsContent value="blocks" className="mt-0 px-6 pb-5 overflow-y-auto">
-            <TooltipProvider delayDuration={300}>
+            <TooltipProvider delay={300}>
               {search.trim() ? (
                 /* Flat filtered grid */
                 <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-7 gap-2 pt-2">
@@ -139,15 +139,11 @@ export function BlockTypePicker({ open, onOpenChange, onSelect, allowedBlockType
                     const Icon = config.icon
                     return (
                       <Tooltip key={type}>
-                        <TooltipTrigger asChild>
-                          <button
-                            type="button"
+                        <TooltipTrigger render={<button type="button"
                             onClick={() => handleSelect(type)}
-                            className="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-border hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/30 transition-all text-center group"
-                          >
-                            <Icon className="h-5 w-5 text-muted-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
-                            <span className="text-xs font-medium leading-tight">{config.label}</span>
-                          </button>
+                            className="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-border hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/30 transition-all text-center group" />}>
+                          <Icon className="h-5 w-5 text-muted-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
+                          <span className="text-xs font-medium leading-tight">{config.label}</span>
                         </TooltipTrigger>
                         <TooltipContent side="bottom"><p>{config.description}</p></TooltipContent>
                       </Tooltip>
@@ -169,15 +165,11 @@ export function BlockTypePicker({ open, onOpenChange, onSelect, allowedBlockType
                             const Icon = config.icon
                             return (
                               <Tooltip key={type}>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    type="button"
+                                <TooltipTrigger render={<button type="button"
                                     onClick={() => handleSelect(type)}
-                                    className="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-border hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/30 transition-all text-center group"
-                                  >
-                                    <Icon className="h-5 w-5 text-muted-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
-                                    <span className="text-xs font-medium leading-tight">{config.label}</span>
-                                  </button>
+                                    className="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-border hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/30 transition-all text-center group" />}>
+                                  <Icon className="h-5 w-5 text-muted-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
+                                  <span className="text-xs font-medium leading-tight">{config.label}</span>
                                 </TooltipTrigger>
                                 <TooltipContent side="bottom"><p>{config.description}</p></TooltipContent>
                               </Tooltip>

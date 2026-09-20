@@ -1,10 +1,10 @@
 'use client';
 
 import { TRACK_LEVEL_COLORS, TRACK_LEVELS } from '@/lib/tracks/levels';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@game-guild/ui/components/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Progress } from '@game-guild/ui/components/progress';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@game-guild/ui/components/tooltip';
 import { getTrackProgramHref } from '@/lib/tracks/catalog';
 import type { Track } from '@/lib/tracks/use-tracks';
 import { Book, Code, Paintbrush } from 'lucide-react';

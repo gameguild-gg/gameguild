@@ -5,8 +5,8 @@ import { useState } from "react"
 import { toast } from "sonner"
 import { Cloud } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Button } from "@game-guild/ui/components/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@game-guild/ui/components/dialog"
 import { useGoogleDriveAuth } from "@/components/block-content-editor/hooks/editor/use-google-drive-auth"
 import { GoogleDriveAuthDialog } from "@/components/block-content-editor/extras/editor/google-drive-auth-dialog"
 
@@ -15,7 +15,7 @@ interface ProjectPickerShellProps {
   onOpenChange: (open: boolean) => void
   title: string
   description?: string
-  trigger?: React.ReactNode
+  trigger?: React.ReactElement
   /** Filters area (typically <ProjectSearchFilters />) */
   filters: React.ReactNode
   /** Main list area (typically <ProjectList />) */
@@ -55,12 +55,20 @@ export function ProjectPickerShell({
   const { isAuthenticated, isLoading, signOut, refreshAuthState } = useGoogleDriveAuth()
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen, eventDetails) => {
+        if (!nextOpen && eventDetails.reason === 'outside-press') {
+          eventDetails.cancel()
+          return
+        }
+        onOpenChange(nextOpen)
+      }}
+    >
+      {trigger && <DialogTrigger render={trigger} />}
 
       <DialogContent
         className="max-w-2xl lg:max-w-4xl w-full h-[92vh] p-0 gap-0 flex flex-col overflow-hidden rounded-xl border-border/60 shadow-2xl"
-        onInteractOutside={(e) => e.preventDefault()}
       >
         {/* Header */}
         <DialogHeader className="shrink-0 border-b border-border/40 bg-muted/20 px-6 py-4">

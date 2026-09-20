@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@game-guild/ui/components/button';
 import { cn } from '@/lib/utils';
 import { PanelLeftIcon, X } from 'lucide-react';
 import { useSidebar } from './sidebar-context';

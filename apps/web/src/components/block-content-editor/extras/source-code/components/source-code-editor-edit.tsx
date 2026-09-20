@@ -1,8 +1,8 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
+import { Button } from "@game-guild/ui/components/button"
+import { Label } from "@game-guild/ui/components/label"
+import { Switch } from "@game-guild/ui/components/switch"
 import { cn } from "@/lib/utils"
 import type React from "react"
 import { useEffect } from "react"

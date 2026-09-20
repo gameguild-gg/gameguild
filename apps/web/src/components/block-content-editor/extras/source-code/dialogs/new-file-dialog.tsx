@@ -1,9 +1,9 @@
 "use client"
 
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Label } from "@game-guild/ui/components/label"
+import { Input } from "@game-guild/ui/components/input"
+import { Button } from "@game-guild/ui/components/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@game-guild/ui/components/select"
 import type { NewFileDialogProps } from "../types"
 import { useState } from "react"
 

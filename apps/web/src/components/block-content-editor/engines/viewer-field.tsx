@@ -1,6 +1,6 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@game-guild/ui/components/button"
 import { Eye } from "lucide-react"
 import { BlockArrayViewer } from "@/components/block-content-editor/engines/blocks/block-array-viewer"
 import { useViewer } from "./viewer-provider"

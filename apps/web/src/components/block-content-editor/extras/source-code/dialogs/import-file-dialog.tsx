@@ -2,9 +2,9 @@
 
 import type React from "react"
 
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
+import { Button } from "@game-guild/ui/components/button"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@game-guild/ui/components/dialog"
+import { Label } from "@game-guild/ui/components/label"
 import { Upload } from "lucide-react"
 import { cn } from "@/lib/utils"
 

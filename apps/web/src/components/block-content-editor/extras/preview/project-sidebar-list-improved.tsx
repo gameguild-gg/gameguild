@@ -1,9 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { Button } from "@game-guild/ui/components/button"
+import { Badge } from "@game-guild/ui/components/badge"
+import { ScrollArea } from "@game-guild/ui/components/scroll-area"
 import { FileText, Calendar, Filter, Pin, PinOff } from "lucide-react"
 import { ProjectSearchFilters } from "../../extras/project-dialog/project-search-filters"
 import type { ProjectData } from "./preview-load-operations"

@@ -1,11 +1,11 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge } from '@game-guild/ui/components/badge';
+import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@game-guild/ui/components/label';
+import { Textarea } from '@game-guild/ui/components/textarea';
 import { submitActivity } from '@/lib/courses/server-actions';
 import { MessageSquare, Send, Star } from 'lucide-react';
 

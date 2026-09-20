@@ -2,7 +2,7 @@
 
 import { lazy, type ComponentProps } from "react"
 import { Loader2 } from "lucide-react"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton } from "@game-guild/ui/components/skeleton"
 import type { CodeStudioData } from "@/components/block-content-editor/extras/code-studio/types"
 import { ClientOnlyLazy } from "@/components/block-content-editor/lib/client-only-lazy"
 import type { ModeSelectionDialog as ModeSelectionDialogComponent } from "@/components/block-content-editor/extras/code-studio/mode-selection-dialog"

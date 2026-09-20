@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from "react"
 import { useImmer } from "use-immer"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Button } from "@game-guild/ui/components/button"
+import { Input } from "@game-guild/ui/components/input"
+import { Label } from "@game-guild/ui/components/label"
 import { Save, Code2, Menu, Lock, Layout } from "lucide-react"
 import type { CodeStudioData, CodeFile, FileTreeFolder, LeafPanel, DisplayConfig, PanelType } from "./types"
 import { MonacoCodeEditor } from "./monaco-code-editor"

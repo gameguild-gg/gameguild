@@ -1,7 +1,7 @@
 'use client';
 
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@game-guild/ui/components/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
 import { useTrackFilters } from '@/lib/tracks/use-tracks';
 
 export function TrackFilters() {
@@ -10,7 +10,7 @@ export function TrackFilters() {
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-8">
       <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-        <Select value={area} onValueChange={(value) => setArea(value)}>
+        <Select value={area} onValueChange={(value) => value !== null && setArea(value)}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Select Area" />
           </SelectTrigger>
@@ -21,7 +21,7 @@ export function TrackFilters() {
             <SelectItem value="design">Design</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={tool} onValueChange={(value) => setTool(value)}>
+        <Select value={tool} onValueChange={(value) => value !== null && setTool(value)}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Select Tool" />
           </SelectTrigger>
@@ -34,7 +34,7 @@ export function TrackFilters() {
             ))}
           </SelectContent>
         </Select>
-        <Select value={level} onValueChange={(value) => setLevel(value)}>
+        <Select value={level} onValueChange={(value) => value !== null && setLevel(value)}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Select Level" />
           </SelectTrigger>

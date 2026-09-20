@@ -2,8 +2,8 @@
 
 import { useCoursesSync } from '@/lib/courses/context/course-management.context';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge } from '@game-guild/ui/components/badge';
+import { Button } from '@game-guild/ui/components/button';
 import { Loader2, RefreshCw, BookOpen, Users, BarChart3, TrendingUp } from 'lucide-react';
 
 export function CoursesOverviewContent() {

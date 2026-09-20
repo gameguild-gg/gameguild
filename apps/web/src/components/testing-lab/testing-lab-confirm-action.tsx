@@ -11,7 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+} from '@game-guild/ui/components/alert-dialog';
 import { Alert, AlertDescription } from '@game-guild/ui/components/alert';
 import { Button } from '@game-guild/ui/components/button';
 import { buttonVariants } from '@game-guild/ui/components/button-variants';
@@ -97,11 +97,9 @@ export function TestingLabConfirmAction({
         if (!next) setResult(null);
       }}
     >
-      <AlertDialogTrigger asChild>
-        <Button type="button" size="sm" variant={intent === 'delete' ? 'destructive' : 'outline'}>
-          <Icon className="mr-2 size-4" />
-          {label}
-        </Button>
+      <AlertDialogTrigger render={<Button type="button" size="sm" variant={intent === 'delete' ? 'destructive' : 'outline'} />}>
+        <Icon className="mr-2 size-4" />
+        {label}
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>

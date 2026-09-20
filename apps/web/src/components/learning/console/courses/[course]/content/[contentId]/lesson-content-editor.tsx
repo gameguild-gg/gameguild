@@ -2,7 +2,7 @@
 
 import { lazy, Suspense, useCallback } from "react";
 import { Label } from "@game-guild/ui/components/label";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@game-guild/ui/components/skeleton";
 import { type LexicalSurfaceFeatures } from "@game-guild/lexical-surface";
 import type { SerializedEditorState } from "lexical";
 import { getLearningAssetRepository } from "@/lib/learning/assets/learning-asset-repository";

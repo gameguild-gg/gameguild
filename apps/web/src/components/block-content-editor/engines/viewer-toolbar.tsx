@@ -7,13 +7,13 @@ import {
   MenubarMenu,
   MenubarSeparator,
   MenubarTrigger,
-} from "@/components/ui/menubar"
+} from "@game-guild/ui/components/menubar"
 import { Eye, Menu, Sun, Moon } from "lucide-react"
 import { OpenProjectDialogPreview } from "@/components/block-content-editor/extras/preview/open-project-dialog-preview"
 import { useViewer } from "./viewer-provider"
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@game-guild/ui/components/button"
 
 export function ViewerToolbar() {
   const { viewer, toolbarConfig: tc, ui } = useViewer()

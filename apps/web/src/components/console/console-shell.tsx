@@ -11,7 +11,7 @@ import { cn } from '@game-guild/ui/lib/utils';
 import { SidebarInset, SidebarProvider } from '@game-guild/ui/components/sidebar';
 import type { DashboardNotificationSummary } from '@/lib/dashboard-notifications';
 import type { DashboardUser } from './dashboard-user-menu';
-import { Toaster } from '@/components/ui/sonner';
+import { Toaster } from '@game-guild/ui/components/sonner';
 import type { DashboardContextSummary } from '@/lib/dashboard-contexts';
 
 interface DashboardShellProps {

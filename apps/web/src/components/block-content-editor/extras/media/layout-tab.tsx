@@ -1,9 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
+import { Label } from "@game-guild/ui/components/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@game-guild/ui/components/select"
+import { Button } from "@game-guild/ui/components/button"
 import { Plus, Lock, Unlock, X, MoreVertical } from "lucide-react"
 import {
   DropdownMenu,
@@ -11,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@game-guild/ui/components/dropdown-menu"
 import type { BaseMediaData } from "@/components/block-content-editor/nodes/base/media-node-base"
 import { AssetImage } from "./asset-image"
 
@@ -337,7 +337,7 @@ export function LayoutTab({ items, onItemsChange, columns, onColumnsChange }: La
         <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
           Number of Columns
         </Label>
-        <Select value={columns.toString()} onValueChange={(value) => onColumnsChange(parseInt(value))}>
+        <Select value={columns.toString()} onValueChange={(value) => value !== null && onColumnsChange(parseInt(value))}>
           <SelectTrigger className="w-full">
             <SelectValue />
           </SelectTrigger>
@@ -411,15 +411,11 @@ export function LayoutTab({ items, onItemsChange, columns, onColumnsChange }: La
                 {/* Slot Controls Menu */}
                 <div className="absolute top-1 right-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
                   <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button 
-                        variant="ghost" 
+                    <DropdownMenuTrigger render={<Button variant="ghost" 
                         size="sm" 
                         className="h-6 w-6 p-0 bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-800"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <MoreVertical className="h-3 w-3" />
-                      </Button>
+                        onClick={(e) => e.stopPropagation()} />}>
+                      <MoreVertical className="h-3 w-3" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">
                       {!slot && (

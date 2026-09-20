@@ -3,12 +3,12 @@
 import { useState } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Input } from '@/components/ui/input';
+import { Button } from '@game-guild/ui/components/button';
+import { Badge } from '@game-guild/ui/components/badge';
+import { Progress } from '@game-guild/ui/components/progress';
+import { Input } from '@game-guild/ui/components/input';
 import { BookOpen, Calendar, CheckCircle, ChevronRight, Clock, Filter, MoreHorizontal, Play, Search, Star, Trophy } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@game-guild/ui/components/dropdown-menu';
 
 export interface EnrolledCourse {
   id: string;
@@ -171,11 +171,9 @@ export function BrowseOwnedCoursesPage({ courses = [] }: BrowseOwnedCoursesPageP
           </div>
           <div className="flex gap-2">
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="border-gray-700">
-                  <Filter className="h-4 w-4 mr-2" />
-                  Status: {statusFilter === 'all' ? 'All' : statusFilter}
-                </Button>
+              <DropdownMenuTrigger render={<Button variant="outline" className="border-gray-700" />}>
+                <Filter className="h-4 w-4 mr-2" />
+                Status: {statusFilter === 'all' ? 'All' : statusFilter}
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuItem onClick={() => setStatusFilter('all')}>All Courses</DropdownMenuItem>
@@ -185,10 +183,8 @@ export function BrowseOwnedCoursesPage({ courses = [] }: BrowseOwnedCoursesPageP
               </DropdownMenuContent>
             </DropdownMenu>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="border-gray-700">
-                  Sort: {sortBy === 'recent' ? 'Recent' : sortBy === 'progress' ? 'Progress' : 'Title'}
-                </Button>
+              <DropdownMenuTrigger render={<Button variant="outline" className="border-gray-700" />}>
+                Sort: {sortBy === 'recent' ? 'Recent' : sortBy === 'progress' ? 'Progress' : 'Title'}
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuItem onClick={() => setSortBy('recent')}>Recently Accessed</DropdownMenuItem>
@@ -209,11 +205,9 @@ export function BrowseOwnedCoursesPage({ courses = [] }: BrowseOwnedCoursesPageP
                 </div>
                 <div className="absolute top-2 right-2">
                   <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <span className="sr-only">Open {course.title} menu</span>
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
+                    <DropdownMenuTrigger render={<Button variant="ghost" size="sm" className="h-8 w-8 p-0" />}>
+                      <span className="sr-only">Open {course.title} menu</span>
+                      <MoreHorizontal className="h-4 w-4" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
                       <DropdownMenuItem onClick={() => handleContinueCourse(course.id)}>Continue Course</DropdownMenuItem>

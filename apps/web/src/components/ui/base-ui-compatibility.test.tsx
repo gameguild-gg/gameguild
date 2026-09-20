@@ -14,14 +14,12 @@ import {
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@game-guild/ui/components/hover-card';
 
 describe('Base UI compatibility wrappers', () => {
-  it('opens a dropdown whose trigger uses the legacy asChild API', async () => {
+  it('opens a dropdown whose trigger uses the render prop API', async () => {
     const user = userEvent.setup();
 
     render(
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button>Actions</Button>
-        </DropdownMenuTrigger>
+        <DropdownMenuTrigger render={<Button>Actions</Button>} />
         <DropdownMenuContent>
           <DropdownMenuGroup>
             <DropdownMenuItem>View profile</DropdownMenuItem>
@@ -35,14 +33,12 @@ describe('Base UI compatibility wrappers', () => {
     expect(await screen.findByRole('menuitem', { name: 'View profile' })).toBeInTheDocument();
   });
 
-  it('opens a hover card whose trigger uses the legacy asChild API', async () => {
+  it('opens a hover card whose trigger uses the render prop API', async () => {
     const user = userEvent.setup();
 
     render(
       <HoverCard openDelay={0}>
-        <HoverCardTrigger asChild>
-          <Link href="/events/one">Campus playtest</Link>
-        </HoverCardTrigger>
+        <HoverCardTrigger render={<Link href="/events/one">Campus playtest</Link>} />
         <HoverCardContent>Operational details</HoverCardContent>
       </HoverCard>,
     );

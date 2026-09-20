@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Slider } from '@/components/ui/slider';
+import { Slider } from '@game-guild/ui/components/slider';
 
 export interface ImageSizeControlProps {
   size: number;
@@ -9,8 +9,8 @@ export interface ImageSizeControlProps {
 }
 
 export function ImageSizeControl({ size, onChange }: ImageSizeControlProps) {
-  const handleChange = (values: number[]) => {
-    const value = values[0] ?? size;
+  const handleChange = (values: number | readonly number[]) => {
+    const value = (Array.isArray(values) ? values[0] : values) ?? size;
     onChange(value);
   };
 

@@ -1,14 +1,14 @@
 "use client"
 
 import React from 'react'
-import { Button } from "@/components/ui/button"
+import { Button } from "@game-guild/ui/components/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@game-guild/ui/components/dropdown-menu"
 import { MoreVertical } from 'lucide-react'
 import { type ManagerCard, type CardAction } from '../types'
 
@@ -31,10 +31,8 @@ export function CardActionsMenu({
 }: CardActionsMenuProps) {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-        <Button variant={variant} size="sm" className={buttonClassName}>
-          <MoreVertical className={iconClassName} />
-        </Button>
+      <DropdownMenuTrigger onClick={(e) => e.stopPropagation()} render={<Button variant={variant} size="sm" className={buttonClassName} />}>
+        <MoreVertical className={iconClassName} />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         {primaryActions.map((action, idx) => (

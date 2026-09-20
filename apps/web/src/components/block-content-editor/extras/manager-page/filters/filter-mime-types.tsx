@@ -5,12 +5,12 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Checkbox } from "@/components/ui/checkbox"
+} from "@game-guild/ui/components/popover"
+import { Button } from "@game-guild/ui/components/button"
+import { Badge } from "@game-guild/ui/components/badge"
+import { Checkbox } from "@game-guild/ui/components/checkbox"
 import { ChevronDown, ChevronRight, X } from "lucide-react"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { ScrollArea } from "@game-guild/ui/components/scroll-area"
 
 interface MimeTypeOption {
   value: string
@@ -127,37 +127,39 @@ export function FilterMimeTypes({
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
+    <Popover
+      open={open}
+      onOpenChange={(nextOpen, eventDetails) => {
+        if (!nextOpen && eventDetails.reason === 'outside-press') {
+          const target = eventDetails.event.target as HTMLElement
+          if (target.closest('[data-mime-type-content]')) {
+            eventDetails.cancel()
+            return
+          }
+        }
+        setOpen(nextOpen)
+      }}
+    >
+      <PopoverTrigger render={<Button variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={`${className} justify-between`}
-        >
-          <span className="truncate">{getButtonLabel()}</span>
-          <div className="flex items-center gap-1 ml-2">
-            {selectedTypes.length > 0 && (
-              <button
-                onClick={handleClear}
-                className="hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full p-0.5"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            )}
-            <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
-          </div>
-        </Button>
+          className={`${className} justify-between`} />}>
+        <span className="truncate">{getButtonLabel()}</span>
+        <div className="flex items-center gap-1 ml-2">
+          {selectedTypes.length > 0 && (
+            <button
+              onClick={handleClear}
+              className="hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full p-0.5"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          )}
+          <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+        </div>
       </PopoverTrigger>
-      <PopoverContent 
-        className="w-[500px] p-0" 
+      <PopoverContent
+        className="w-[500px] p-0"
         align="start"
-        onInteractOutside={(e) => {
-          const target = e.target as HTMLElement
-          if (target.closest('[data-mime-type-content]')) {
-            e.preventDefault()
-          }
-        }}
       >
         <div className="p-3 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between mb-2">

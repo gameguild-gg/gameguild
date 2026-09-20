@@ -1,6 +1,6 @@
 import { PublicWebsiteHeader } from '@/components/app/app-shell';
 import { SocialSidebar } from '@/components/feed/social-sidebar';
-import { Toaster } from '@/components/ui/sonner';
+import { Toaster } from '@game-guild/ui/components/sonner';
 import { SidebarProvider } from '@game-guild/ui/components/sidebar';
 
 export async function SocialAppShell({ children }: { children: React.ReactNode }): Promise<React.JSX.Element> {

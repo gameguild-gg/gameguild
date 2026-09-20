@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Input } from "@/components/ui/input"
+import { Input } from "@game-guild/ui/components/input"
 import { Plus, Trash2, Edit2 } from "lucide-react"
 import type { DisplayConfig, PanelType } from "./types"
 import { getTemplatesByScope, type LayoutTemplate as Template, type TemplateSilhouette } from "./templates/templates"

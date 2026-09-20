@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@game-guild/ui/components/button"
 import { Plus, Trash2, Image, Video, Music } from "lucide-react"
 import type { AssetRecord } from "@game-guild/assets"
 import { AssetPickerDialog, AssetsProvider } from "@game-guild/assets/react"

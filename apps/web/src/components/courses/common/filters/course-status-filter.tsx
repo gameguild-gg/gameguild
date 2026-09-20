@@ -1,7 +1,7 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Button } from '@game-guild/ui/components/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@game-guild/ui/components/dropdown-menu';
 import { CourseStatusValue, type CourseStatus } from '@/components/courses/common/course-taxonomy';
 import { Archive, ChevronDown, Eye, FileText } from 'lucide-react';
 
@@ -53,9 +53,7 @@ export function CourseStatusFilter({ selectedStatuses, onToggleStatus }: CourseS
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
+      <DropdownMenuTrigger render={<Button variant="ghost"
           className={`${selectedStatuses.length === 0 ? 'backdrop-blur-md border border-slate-600/30 text-slate-400' : 'backdrop-blur-md border border-blue-400/40 text-white shadow-lg shadow-blue-500/20'
             } rounded-xl px-4 h-10 text-sm focus:outline-none focus:border-blue-400/60 hover:border-blue-400/60 hover:bg-white/5 transition-all duration-200 justify-between min-w-[140px]`}
           style={
@@ -68,14 +66,12 @@ export function CourseStatusFilter({ selectedStatuses, onToggleStatus }: CourseS
                 background: 'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
                 boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(59, 130, 246, 0.2)',
               }
-          }
-        >
-          <div className="flex items-center gap-2">
-            {selectedStatuses.length === 0 ? getStatusIcon('all') : selectedStatuses.length === 1 ? getStatusIcon(selectedStatuses[0]!) : <FileText className="h-4 w-4 text-slate-400" />}
-            <span>{getDisplayText(selectedStatuses)}</span>
-          </div>
-          <ChevronDown className="h-4 w-4 ml-2" />
-        </Button>
+          } />}>
+        <div className="flex items-center gap-2">
+          {selectedStatuses.length === 0 ? getStatusIcon('all') : selectedStatuses.length === 1 ? getStatusIcon(selectedStatuses[0]!) : <FileText className="h-4 w-4 text-slate-400" />}
+          <span>{getDisplayText(selectedStatuses)}</span>
+        </div>
+        <ChevronDown className="h-4 w-4 ml-2" />
       </DropdownMenuTrigger>
       <DropdownMenuContent className="bg-slate-900/80 backdrop-blur-xl border border-slate-600/30 rounded-xl shadow-2xl shadow-black/50">
         <DropdownMenuItem onClick={() => handleToggleStatus('all')} className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5">

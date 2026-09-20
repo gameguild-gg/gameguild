@@ -38,7 +38,7 @@ vi.mock("@/components/ui/theme-toggle", () => ({
   ThemeToggle: () => <button type="button">Theme</button>,
 }));
 
-vi.mock("@/components/ui/command", () => ({
+vi.mock("@game-guild/ui/components/command", () => ({
   CommandDialog: ({
     children,
     description,
