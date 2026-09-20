@@ -33,7 +33,6 @@ import {
   LayoutDashboard,
   List,
   FolderKanban,
-  MailCheck,
   Rocket,
   Settings,
   ShieldCheck,
@@ -107,11 +106,6 @@ export const dashboardNavigationData: DashboardNavGroup[] = [
           { title: 'Tutorials', url: '/workspace/learning/tutorials', icon: FileText, items: [] },
           { title: 'Resources', url: '/workspace/learning/resources', icon: FolderOpen, items: [] },
         ],
-      },
-      {
-        title: 'Invitations',
-        url: '/workspace/invitations',
-        icon: MailCheck,
       },
     ],
   },
@@ -533,7 +527,7 @@ interface DashboardSidebarProps extends React.ComponentProps<typeof Sidebar> {
 }
 
 /** Default console tenant — GameGuild platform until multi-tenant switching ships. */
-const consoleTenants: Tenant[] = [
+const tenants: Tenant[] = [
   { id: 'gameguild', name: 'GameGuild', logo: GraduationCap, plan: 'Platform' },
 ];
 
@@ -545,7 +539,7 @@ export function DashboardSidebar({
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <div className="flex items-center justify-between">
-          <TenantSwitcher tenants={consoleTenants} />
+          <TenantSwitcher tenants={tenants} />
           <SidebarTrigger className="group-data-[collapsible=icon]:hidden" />
         </div>
       </SidebarHeader>

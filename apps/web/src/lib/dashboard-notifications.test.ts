@@ -4,6 +4,7 @@ const mocks = vi.hoisted(() => ({
   createServerClient: vi.fn(),
   getToken: vi.fn(),
   getUsersNotificationsForGetUsersByUserIdNotifications: vi.fn(),
+  getWorkspaceMyTeamInvitations: vi.fn(),
 }));
 
 vi.mock('@/auth', () => ({
@@ -19,6 +20,10 @@ vi.mock('@game-guild/client', () => ({
   },
 }));
 
+vi.mock('@/lib/workspaces', () => ({
+  getWorkspaceMyTeamInvitations: mocks.getWorkspaceMyTeamInvitations,
+}));
+
 import { getDashboardNotificationSummary } from './dashboard-notifications';
 
 describe('dashboard notification summary', () => {
@@ -26,6 +31,7 @@ describe('dashboard notification summary', () => {
     vi.clearAllMocks();
     mocks.createServerClient.mockReturnValue({});
     mocks.getToken.mockResolvedValue('access-token');
+    mocks.getWorkspaceMyTeamInvitations.mockResolvedValue([]);
   });
 
   it('loads recent notifications and unread count from the user notifications API', async () => {
@@ -84,6 +90,37 @@ describe('dashboard notification summary', () => {
         },
       ],
     });
+  });
+
+  it('surfaces pending team invitations in the notification summary and count', async () => {
+    mocks.getUsersNotificationsForGetUsersByUserIdNotifications
+      .mockResolvedValueOnce({
+        ok: true,
+        data: { items: [], totalCount: 0 },
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        data: { items: [], totalCount: 0 },
+      });
+    mocks.getWorkspaceMyTeamInvitations.mockResolvedValue([
+      { id: 'inv-1', teamId: 'team-1', teamName: 'Orbital', teamSlug: 'orbital', authority: 1, expiresAt: '2026-07-01T00:00:00.000Z' },
+    ]);
+
+    const summary = await getDashboardNotificationSummary('user-1');
+
+    expect(mocks.getWorkspaceMyTeamInvitations).toHaveBeenCalledOnce();
+    expect(summary.unreadCount).toBe(1);
+    expect(summary.items).toEqual([
+      {
+        id: 'team-invitation-inv-1',
+        title: 'Team invitation',
+        message: 'Orbital invited you to join their team.',
+        createdLabel: 'Pending',
+        isRead: false,
+        actionUrl: '/workspace/invitations',
+        actionText: 'Review invitation',
+      },
+    ]);
   });
 
   it('falls back to an empty summary when the user is missing or the API fails', async () => {
