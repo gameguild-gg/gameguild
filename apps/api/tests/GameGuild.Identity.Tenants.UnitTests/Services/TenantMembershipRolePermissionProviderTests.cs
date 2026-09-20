@@ -6,20 +6,23 @@ using Xunit;
 namespace GameGuild.Identity.Tenants.UnitTests.Services;
 
 [Trait("Category", "Unit")]
-[Trait("Security", "TenantAuthorization")]
+[Trait("Security", "Authorization")]
 public sealed class TenantMembershipRolePermissionProviderTests
 {
     [Theory]
     [InlineData("Owner")]
     [InlineData("Admin")]
     [InlineData("TenantAdmin")]
-    public async Task GetPermissionsAsync_ShouldGrantTenantAdminPermission_ForAdministrativeMembership(string role)
+    public async Task GetPermissionsAsync_Should_GrantTenantAdmin_ForActiveAdministrativeMembership(string role)
     {
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
         var repository = new Mock<ITenantMemberRepository>();
         repository
-            .Setup(candidate => candidate.GetByUserAndTenantAsync(userId, tenantId, It.IsAny<CancellationToken>()))
+            .Setup(candidate => candidate.GetByUserAndTenantAsync(
+                userId,
+                tenantId,
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(new TenantMember
             {
                 UserId = userId,
@@ -28,51 +31,54 @@ public sealed class TenantMembershipRolePermissionProviderTests
                 IsActive = true
             });
 
-        var permissions = await new TenantMembershipRolePermissionProvider(repository.Object)
-            .GetPermissionsAsync(userId, tenantId);
+        var provider = new TenantMembershipRolePermissionProvider(repository.Object);
 
-        permissions.Should().Contain(AdminPermission.Keys.TenantAdmin);
-        permissions.Should().Contain(UsersPermission.Keys.Manage);
+        var permissions = await provider.GetPermissionsAsync(userId, tenantId);
+
+        permissions.Should().Equal(AdminPermission.Keys.TenantAdmin);
     }
 
-    [Fact]
-    public async Task GetPermissionsAsync_ShouldNotGrantTenantAdminPermission_ForNonAdministrativeMembership()
+    [Theory]
+    [InlineData("PropertyManager")]
+    [InlineData("PropertyOwner")]
+    [InlineData("Renter")]
+    [InlineData("Member")]
+    public async Task GetPermissionsAsync_Should_NotGrantTenantAdmin_ForNonAdministrativeMembership(string role)
     {
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
         var repository = new Mock<ITenantMemberRepository>();
         repository
-            .Setup(candidate => candidate.GetByUserAndTenantAsync(userId, tenantId, It.IsAny<CancellationToken>()))
+            .Setup(candidate => candidate.GetByUserAndTenantAsync(
+                userId,
+                tenantId,
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(new TenantMember
             {
                 UserId = userId,
                 TenantId = tenantId,
-                Role = TenantRole.Member,
+                Role = role,
                 IsActive = true
             });
 
-        var permissions = await new TenantMembershipRolePermissionProvider(repository.Object)
-            .GetPermissionsAsync(userId, tenantId);
+        var provider = new TenantMembershipRolePermissionProvider(repository.Object);
 
-        permissions.Should().Contain([
-            UsersPermission.Keys.ReadSelf,
-            UsersPermission.Keys.EditSelf,
-            UsersPermission.Keys.DeleteSelf
-        ]);
-        permissions.Should().NotContain([
-            AdminPermission.Keys.TenantAdmin,
-            UsersPermission.Keys.Manage
-        ]);
+        var permissions = await provider.GetPermissionsAsync(userId, tenantId);
+
+        permissions.Should().BeEmpty();
     }
 
     [Fact]
-    public async Task GetPermissionsAsync_ShouldGrantNoPermissions_ForInactiveMembership()
+    public async Task GetPermissionsAsync_Should_NotGrantTenantAdmin_ForInactiveAdministrativeMembership()
     {
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
         var repository = new Mock<ITenantMemberRepository>();
         repository
-            .Setup(candidate => candidate.GetByUserAndTenantAsync(userId, tenantId, It.IsAny<CancellationToken>()))
+            .Setup(candidate => candidate.GetByUserAndTenantAsync(
+                userId,
+                tenantId,
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(new TenantMember
             {
                 UserId = userId,
@@ -81,8 +87,35 @@ public sealed class TenantMembershipRolePermissionProviderTests
                 IsActive = false
             });
 
-        var permissions = await new TenantMembershipRolePermissionProvider(repository.Object)
-            .GetPermissionsAsync(userId, tenantId);
+        var provider = new TenantMembershipRolePermissionProvider(repository.Object);
+
+        var permissions = await provider.GetPermissionsAsync(userId, tenantId);
+
+        permissions.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetPermissionsAsync_Should_NotGrantTenantAdmin_ForMembershipFromAnotherTenant()
+    {
+        var userId = Guid.NewGuid();
+        var requestedTenantId = Guid.NewGuid();
+        var repository = new Mock<ITenantMemberRepository>();
+        repository
+            .Setup(candidate => candidate.GetByUserAndTenantAsync(
+                userId,
+                requestedTenantId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TenantMember
+            {
+                UserId = userId,
+                TenantId = Guid.NewGuid(),
+                Role = TenantRole.Owner,
+                IsActive = true
+            });
+
+        var provider = new TenantMembershipRolePermissionProvider(repository.Object);
+
+        var permissions = await provider.GetPermissionsAsync(userId, requestedTenantId);
 
         permissions.Should().BeEmpty();
     }
