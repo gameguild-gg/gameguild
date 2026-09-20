@@ -23,15 +23,21 @@ public sealed class MySupportTicketsController(
 {
     [HttpGet]
     [ProducesResponseType<PagedResult<SupportTicketDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<PagedResult<SupportTicketDto>>> List(
         [FromQuery] SupportTicketStatus? status = null,
         [FromQuery] int skip = 0,
         [FromQuery] int take = 50,
         CancellationToken cancellationToken = default)
     {
-        var (userId, tenantId, _, _) = RequireCustomerContext();
+        if (!TryGetCustomerContext(out var context))
+        {
+            return Forbid();
+        }
+
+        var (userId, tenantId, _, _) = context;
         var result = await sender.Send(
-            new GetSupportTicketsQuery(tenantId, status, null, null, skip, take, userId),
+            new GetSupportTicketsQuery(tenantId, status, null, null, skip, take, userId, IncludeInternalMessages: false),
             cancellationToken).ConfigureAwait(false);
 
         return Ok(result);
@@ -39,17 +45,23 @@ public sealed class MySupportTicketsController(
 
     [HttpPost]
     [ProducesResponseType<SupportTicketDto>(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<SupportTicketDto>> Create(
         [FromBody] CreateMySupportTicketRequest request,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var (userId, tenantId, reporterName, reporterEmail) = RequireCustomerContext();
+        if (!TryGetCustomerContext(out var context))
+        {
+            return Forbid();
+        }
+
+        var (userId, tenantId, reporterName, reporterEmail) = context;
         var result = await sender.Send(
             new CreateSupportTicketCommand(
                 tenantId,
-                tenantId,
-                "Customer workspace",
+                userId,
+                reporterName,
                 userId,
                 reporterName,
                 reporterEmail,
@@ -64,6 +76,7 @@ public sealed class MySupportTicketsController(
 
     [HttpPost("{ticketId:guid}/messages")]
     [ProducesResponseType<SupportTicketDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<SupportTicketDto>> AddMessage(
         Guid ticketId,
@@ -71,16 +84,21 @@ public sealed class MySupportTicketsController(
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var (userId, tenantId, reporterName, reporterEmail) = RequireCustomerContext();
-        var existing = await sender.Send(new GetSupportTicketByIdQuery(ticketId, tenantId), cancellationToken)
+        if (!TryGetCustomerContext(out var context))
+        {
+            return Forbid();
+        }
+
+        var (userId, tenantId, reporterName, reporterEmail) = context;
+        var existing = await sender.Send(new GetSupportTicketByIdQuery(ticketId, tenantId, IncludeInternalMessages: false), cancellationToken)
             .ConfigureAwait(false);
 
-        if (existing is null || existing.ReporterUserId != userId)
+        if (existing is null || existing.CustomerId != userId)
         {
             return NotFound();
         }
 
-        var result = await sender.Send(
+        await sender.Send(
             new AddSupportTicketMessageCommand(
                 ticketId,
                 tenantId,
@@ -92,22 +110,51 @@ public sealed class MySupportTicketsController(
                 false),
             cancellationToken).ConfigureAwait(false);
 
-        return Ok(result);
+        var result = await sender.Send(
+            new GetSupportTicketByIdQuery(ticketId, tenantId, IncludeInternalMessages: false),
+            cancellationToken).ConfigureAwait(false);
+
+        return Ok(result!);
     }
 
-    private (Guid UserId, Guid TenantId, string Name, string? Email) RequireCustomerContext()
+    [HttpGet("{ticketId:guid}")]
+    [ProducesResponseType<SupportTicketDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<SupportTicketDto>> GetById(
+        Guid ticketId,
+        CancellationToken cancellationToken = default)
     {
+        if (!TryGetCustomerContext(out var context))
+        {
+            return Forbid();
+        }
+
+        var (userId, tenantId, _, _) = context;
+        var ticket = await sender.Send(
+            new GetSupportTicketByIdQuery(ticketId, tenantId, IncludeInternalMessages: false),
+            cancellationToken).ConfigureAwait(false);
+        return ticket is null || ticket.CustomerId != userId ? NotFound() : Ok(ticket);
+    }
+
+    private bool TryGetCustomerContext(out (Guid UserId, Guid TenantId, string Name, string? Email) context)
+    {
+        context = default;
         var actor = actorContextAccessor.ActorContext;
-        var userId = actor.SubjectIdAsGuid ?? throw new UnauthorizedAccessException("Authenticated user id is required.");
-        var tenantId = tenantContext.TenantId
-            ?? throw new UnauthorizedAccessException("Active tenant context is required.");
+        var userId = actor.SubjectIdAsGuid;
+        var tenantId = tenantContext.TenantId;
+        if (!userId.HasValue || !tenantId.HasValue || !actor.IsAuthenticated || actor.TenantId != tenantId)
+        {
+            return false;
+        }
 
         var name = actor.TypedAttributes.DisplayName
             ?? actor.TypedAttributes.FullName
             ?? actor.TypedAttributes.Email
             ?? "Customer";
 
-        return (userId, tenantId, name, actor.TypedAttributes.Email);
+        context = (userId.Value, tenantId.Value, name, actor.TypedAttributes.Email);
+        return true;
     }
 }
 

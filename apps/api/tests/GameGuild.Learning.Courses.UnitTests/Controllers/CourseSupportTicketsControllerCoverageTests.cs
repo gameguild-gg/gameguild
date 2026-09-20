@@ -112,7 +112,7 @@ public sealed class CourseSupportTicketsControllerCoverageTests
         IReadOnlyCollection<Claim> claims)
     {
         var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, "test"));
-        return new CourseSupportTicketsController(sender, actors)
+        return new CourseSupportTicketsController(sender, actors, Mock.Of<IApplicationDbContext>())
         {
             ControllerContext = new ControllerContext
             {
