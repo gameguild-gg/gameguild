@@ -5,7 +5,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@game-guild
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -17,7 +16,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarRail,
-  useSidebar,
+  SidebarTrigger,
 } from '@game-guild/ui/components/sidebar';
 import {
   BarChart3,
@@ -35,8 +34,6 @@ import {
   List,
   FolderKanban,
   MailCheck,
-  PanelLeftClose,
-  PanelLeftOpen,
   Rocket,
   Settings,
   ShieldCheck,
@@ -540,44 +537,6 @@ const consoleTenants: Tenant[] = [
   { id: 'gameguild', name: 'GameGuild', logo: GraduationCap, plan: 'Platform' },
 ];
 
-export function DashboardSidebarFooter() {
-  const pathname = usePathname();
-  const { isMobile, openMobile, state, toggleSidebar } = useSidebar();
-  const isWorkspace = pathname?.startsWith('/workspace') ?? false;
-
-  if (!isWorkspace) {
-    return <SidebarFooter />;
-  }
-
-  const expanded = isMobile ? openMobile : state === 'expanded';
-  const label = isMobile
-    ? expanded
-      ? 'Close sidebar'
-      : 'Open sidebar'
-    : expanded
-      ? 'Collapse sidebar'
-      : 'Expand sidebar';
-  const Icon = expanded ? PanelLeftClose : PanelLeftOpen;
-
-  return (
-    <SidebarFooter>
-      <SidebarMenu>
-        <SidebarMenuItem>
-          <SidebarMenuButton
-            type="button"
-            onClick={toggleSidebar}
-            aria-label={label}
-            title={label}
-            tooltip={label}
-          >
-            <Icon aria-hidden="true" />
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      </SidebarMenu>
-    </SidebarFooter>
-  );
-}
-
 export function DashboardSidebar({
   navigation = filterDashboardNavigation(dashboardNavigationData, []),
   ...props
@@ -585,12 +544,14 @@ export function DashboardSidebar({
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TenantSwitcher tenants={consoleTenants} />
+        <div className="flex items-center justify-between">
+          <TenantSwitcher tenants={consoleTenants} />
+          <SidebarTrigger className="group-data-[collapsible=icon]:hidden" />
+        </div>
       </SidebarHeader>
       <SidebarContent className="gap-0">
         <NavGroups groups={navigation} />
       </SidebarContent>
-      <DashboardSidebarFooter />
       <SidebarRail />
     </Sidebar>
   );
