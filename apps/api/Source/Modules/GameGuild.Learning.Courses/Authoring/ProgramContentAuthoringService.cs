@@ -139,12 +139,13 @@ public sealed class ProgramContentAuthoringService(
     {
         ValidateActor(actorId);
         ArgumentNullException.ThrowIfNull(payload);
+        var normalizedPayload = payload.Normalize();
         var draft = await FindDraft(programId, contentId, cancellationToken).ConfigureAwait(false);
         var content = await FindContent(programId, contentId, cancellationToken).ConfigureAwait(false);
         if (assetManifestService is not null)
-            await assetManifestService.ValidateAndReconcileAsync(content, payload, false, cancellationToken)
+            await assetManifestService.ValidateAndReconcileAsync(content, normalizedPayload, false, cancellationToken)
                 .ConfigureAwait(false);
-        draft.Update(expectedRevision, JsonSerializer.Serialize(payload, JsonOptions), actorId, DateTimeOffset.UtcNow);
+        draft.Update(expectedRevision, JsonSerializer.Serialize(normalizedPayload, JsonOptions), actorId, DateTimeOffset.UtcNow);
         try
         {
             await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -180,7 +181,7 @@ public sealed class ProgramContentAuthoringService(
             throw new AuthoringPublishedVersionConflictException(draft.BasePublishedVersion, content.Version);
 
         var basePublishedVersion = draft.BasePublishedVersion;
-        var payload = Deserialize(draft.PayloadJson);
+        var payload = Deserialize(draft.PayloadJson).Normalize();
         if (assetManifestService is not null)
             await assetManifestService.ValidateAndReconcileAsync(content, payload, true, cancellationToken)
                 .ConfigureAwait(false);
@@ -194,7 +195,7 @@ public sealed class ProgramContentAuthoringService(
         var nextPublishedVersion = checked(content.Version + 1);
         var audit = ProgramContentPublicationAudit.Create(content, draft, actorId, nextPublishedVersion, now);
         db.Set<ProgramContentPublicationAudit>().Add(audit);
-        draft.Rebase(nextPublishedVersion, actorId, draft.PayloadJson, now);
+        draft.Rebase(nextPublishedVersion, actorId, JsonSerializer.Serialize(payload, JsonOptions), now);
 
         try
         {
