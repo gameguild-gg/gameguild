@@ -15,6 +15,7 @@ public class AuthorizationCoreTests
         RuleTypes.TenantMatch.Should().NotBeNullOrWhiteSpace();
         RuleTypes.RequireAllPermissions.Should().NotBeNullOrWhiteSpace();
         RuleTypes.RequireAnyPermission.Should().NotBeNullOrWhiteSpace();
+        RuleTypes.RequireAnyRole.Should().NotBeNullOrWhiteSpace();
         RuleTypes.SelfOrPermission.Should().NotBeNullOrWhiteSpace();
         RuleTypes.OwnerOrAcl.Should().NotBeNullOrWhiteSpace();
         RuleTypes.RequireMfa.Should().NotBeNullOrWhiteSpace();
@@ -25,19 +26,20 @@ public class AuthorizationCoreTests
     }
 
     [Fact]
-    public void RuleTypes_AllSet_Contains10Types()
+    public void RuleTypes_AllSet_Contains11Types()
     {
         // Act
         var allTypes = RuleTypes.All;
 
         // Assert
-        allTypes.Should().HaveCount(10);
+        allTypes.Should().HaveCount(11);
     }
 
     [Theory]
     [InlineData("TenantMatch")]
     [InlineData("RequireAllPermissions")]
     [InlineData("RequireAnyPermission")]
+    [InlineData("RequireAnyRole")]
     [InlineData("SelfOrPermission")]
     [InlineData("OwnerOrAcl")]
     [InlineData("RequireMfa")]

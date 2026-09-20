@@ -22,6 +22,11 @@ public static class RuleTypes
     public const string RequireAnyPermission = "RequireAnyPermission";
 
     /// <summary>
+    ///     Requires ANY of the specified roles (OR logic).
+    /// </summary>
+    public const string RequireAnyRole = "RequireAnyRole";
+
+    /// <summary>
     ///     Allows action if user is acting on themselves OR has a management permission.
     /// </summary>
     public const string SelfOrPermission = "SelfOrPermission";
@@ -58,6 +63,7 @@ public static class RuleTypes
         TenantMatch,
         RequireAllPermissions,
         RequireAnyPermission,
+        RequireAnyRole,
         SelfOrPermission,
         OwnerOrAcl,
         RequireIpAllowList,
@@ -86,6 +92,7 @@ public static class RuleTypes
         TenantMatch => [],
         RequireAllPermissions => ["permissions"],
         RequireAnyPermission => ["permissions"],
+        RequireAnyRole => ["roles"],
         SelfOrPermission => [],  // selfPermission or anyPermission recommended but optional
         OwnerOrAcl => [],
         RequireIpAllowList => ["cidrs"],
@@ -107,6 +114,7 @@ public static class RuleTypes
         TenantMatch => "Ensures user belongs to the request tenant",
         RequireAllPermissions => "Requires ALL specified permissions",
         RequireAnyPermission => "Requires ANY of the specified permissions",
+        RequireAnyRole => "Requires ANY of the specified roles",
         SelfOrPermission => "Allows self-action or requires management permission",
         OwnerOrAcl => "Checks resource ownership or ACL access",
         RequireIpAllowList => "Requires IP to be in allowed ranges",
