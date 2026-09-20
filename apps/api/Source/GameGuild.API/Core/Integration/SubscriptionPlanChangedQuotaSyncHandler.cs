@@ -11,10 +11,15 @@ namespace GameGuild.API.Integration;
 /// <remarks>
 ///     This handler coordinates between Commerce.Subscriptions and Resources modules,
 ///     residing in the API composition root to maintain module independence.
-///     
+///
 ///     IMPORTANT: This handler updates quotas to the new plan's limits. For downgrades,
 ///     if current usage exceeds new limits, the system will enforce soft-limit warnings
 ///     but allow continued operation until the next billing cycle (grace period).
+///
+///     A quota update failure is never swallowed: every per-quota failure is logged as an
+///     error and, if any quota failed to apply, the handler throws an aggregate failure so
+///     the plan change surfaces as failed instead of silently leaving stale (typically
+///     higher) limits in place.
 /// </remarks>
 public sealed class SubscriptionPlanChangedQuotaSyncHandler(
     ISubscriptionPlanRepository planRepository,
@@ -48,43 +53,46 @@ public sealed class SubscriptionPlanChangedQuotaSyncHandler(
         var tenantId = notification.TenantId;
         var isUpgrade = notification.NewAmount.Amount > notification.OldAmount.Amount;
 
-        // Sync quotas from new plan limits to tenant
-        var syncTasks = new List<Task>();
+        // Sync quotas from new plan limits to tenant, capturing every per-quota outcome
+        // so a partial failure cannot pass silently (a skipped downgrade limit would
+        // leave the tenant on the old, higher quota).
+        var quotaUpdates = new List<Task<(ResourceUsageType Type, Exception? Error)>>();
+
+        Task<(ResourceUsageType, Exception?)> Enqueue(ResourceUsageType type, long hardLimit) =>
+            TrySetQuotaAsync(tenantId, type, hardLimit, isUpgrade, cancellationToken);
 
         if (newPlan.MaxUsers.HasValue)
         {
-            syncTasks.Add(SetQuotaAsync(
-                tenantId,
-                ResourceUsageType.Users,
-                newPlan.MaxUsers.Value,
-                isUpgrade,
-                cancellationToken));
+            quotaUpdates.Add(Enqueue(ResourceUsageType.Users, newPlan.MaxUsers.Value));
         }
 
         if (newPlan.MaxStorageMb.HasValue)
         {
             // Convert MB to bytes for storage quota
             var storageBytesLimit = newPlan.MaxStorageMb.Value * 1024 * 1024;
-            syncTasks.Add(SetQuotaAsync(
-                tenantId,
-                ResourceUsageType.Storage,
-                storageBytesLimit,
-                isUpgrade,
-                cancellationToken));
+            quotaUpdates.Add(Enqueue(ResourceUsageType.Storage, storageBytesLimit));
         }
 
         if (newPlan.MaxApiCallsPerMonth.HasValue)
         {
-            syncTasks.Add(SetQuotaAsync(
-                tenantId,
-                ResourceUsageType.ApiCalls,
-                newPlan.MaxApiCallsPerMonth.Value,
-                isUpgrade,
-                cancellationToken));
+            quotaUpdates.Add(Enqueue(ResourceUsageType.ApiCalls, newPlan.MaxApiCallsPerMonth.Value));
         }
 
-        // Wait for all quota updates to complete
-        await Task.WhenAll(syncTasks).ConfigureAwait(false);
+        // Wait for all quota updates to complete (the wrappers never throw)
+        var outcomes = await Task.WhenAll(quotaUpdates).ConfigureAwait(false);
+
+        var failures = outcomes.Where(outcome => outcome.Error is not null).ToList();
+        if (failures.Count > 0)
+        {
+            // Surface the partial failure: quota limits were not fully applied for the new
+            // plan, so the plan change cannot be reported as successful.
+            throw new InvalidOperationException(
+                $"Quota sync failed for plan change on subscription {notification.SubscriptionId}: " +
+                $"{failures.Count}/{outcomes.Length} quota updates failed " +
+                $"({string.Join(", ", failures.Select(f => f.Type))}). " +
+                "Quotas must be re-synced or corrected manually.",
+                new AggregateException(failures.Select(f => f.Error!)));
+        }
 
         logger.LogInformation(
             "Quota sync completed for plan change on subscription {SubscriptionId}. " +
@@ -98,7 +106,11 @@ public sealed class SubscriptionPlanChangedQuotaSyncHandler(
             newPlan.MaxApiCallsPerMonth);
     }
 
-    private async Task SetQuotaAsync(
+    /// <summary>
+    ///     Applies one quota update. A failure is logged as an error and returned (never
+    ///     thrown) so the handler can aggregate all failures and decide.
+    /// </summary>
+    private async Task<(ResourceUsageType Type, Exception? Error)> TrySetQuotaAsync(
         Guid tenantId,
         ResourceUsageType type,
         long hardLimit,
@@ -126,18 +138,21 @@ public sealed class SubscriptionPlanChangedQuotaSyncHandler(
                 tenantId,
                 softLimit,
                 hardLimit);
+
+            return (type, null);
         }
         catch (Exception ex)
         {
-            // Log but don't fail the entire sync if one quota fails
-            // This is a best-effort sync; quotas can be manually corrected
-            // For downgrades, this is especially important - we don't want to block
-            // the plan change if quota update fails
+            // A failed quota update means the tenant keeps the previous limit — for
+            // downgrades that is a security/compliance hole, so the failure is logged
+            // as an error and re-surfaced as an aggregate failure by the handler.
             logger.LogError(
                 ex,
                 "Failed to update {ResourceType} quota for tenant {TenantId} during plan change",
                 type,
                 tenantId);
+
+            return (type, ex);
         }
     }
 }

@@ -171,6 +171,6 @@ public class CostAllocationService(
         return _options.CostPerUnit.GetValueOrDefault(typeName, _options.DefaultCostPerUnit);
     }
 
-    // PLANNED: Integration with Billing module for invoice generation (depends on GameGuild.Commerce.Billing)
-    // PLANNED: Integration with Finance module for cost center validation (depends on GameGuild.Finance)
+    // PLANNED: Integration with the billing module for invoice generation (host-composed)
+    // PLANNED: Integration with the finance module for cost center validation (host-composed)
 }
