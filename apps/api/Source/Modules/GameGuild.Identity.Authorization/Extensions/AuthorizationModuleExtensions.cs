@@ -129,6 +129,24 @@ public static class AuthorizationModuleExtensions
     }
 
     /// <summary>
+    ///     Registers a domain policy seed contributor whose policies are seeded alongside the
+    ///     platform defaults by <see cref="PolicyDefinitionSeeder"/>.
+    /// </summary>
+    /// <typeparam name="TContributor">The contributor implementation.</typeparam>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    /// <remarks>
+    ///     Register contributors from the host or a domain module; the common module itself
+    ///     never registers domain-specific seeds.
+    /// </remarks>
+    public static IServiceCollection AddPolicySeedContributor<TContributor>(this IServiceCollection services)
+        where TContributor : class, IPolicySeedContributor
+    {
+        services.AddScoped<IPolicySeedContributor, TContributor>();
+        return services;
+    }
+
+    /// <summary>
     ///     Registers authorization presentation layer services (HTTP/ASP.NET integration).
     /// </summary>
     /// <param name="services">The service collection.</param>
@@ -175,6 +193,7 @@ public static class AuthorizationModuleExtensions
         // Register stateless rule evaluators as singletons
         services.AddSingleton<RequireMfaRuleEvaluator>();
         services.AddSingleton<RequireTimeWindowRuleEvaluator>();
+        services.AddSingleton<RequireAnyRoleRuleEvaluator>();
 
         // Register scoped evaluators that need per-request dependencies
         services.AddScoped<TenantMatchRuleEvaluator>();
@@ -190,7 +209,8 @@ public static class AuthorizationModuleExtensions
             var evaluators = new List<IRuleEvaluator>
             {
                 sp.GetRequiredService<RequireMfaRuleEvaluator>(),
-                sp.GetRequiredService<RequireTimeWindowRuleEvaluator>()
+                sp.GetRequiredService<RequireTimeWindowRuleEvaluator>(),
+                sp.GetRequiredService<RequireAnyRoleRuleEvaluator>()
             };
             return new RuleEvaluatorRegistry(evaluators);
         });

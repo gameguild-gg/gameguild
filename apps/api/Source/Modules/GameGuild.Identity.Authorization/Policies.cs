@@ -77,6 +77,26 @@ public static class Policies
     public const string CourseContentManage = "Course.Content.Manage";
 
     // ========================
+    // FEATURE FLAG POLICIES
+    // ========================
+
+    /// <summary>Read access to feature flag definitions (feature-flag management surface)</summary>
+    public const string FeaturesRead = "Features.Read";
+
+    /// <summary>Create, update, delete, enable, disable and toggle feature flags</summary>
+    public const string FeaturesManage = "Features.Manage";
+
+    // ========================
+    // LEDGER POLICIES
+    // ========================
+
+    /// <summary>Read access to ledgers, entries, balances and rollups</summary>
+    public const string LedgersRead = "Ledgers.Read";
+
+    /// <summary>Create ledgers and post, update, reverse or delete ledger entries</summary>
+    public const string LedgersWrite = "Ledgers.Write";
+
+    // ========================
     // DOCUMENT POLICIES
     // ========================
 
@@ -170,6 +190,10 @@ public static class Policies
         CourseContentPublicOutline, CourseContentLearner, CourseContentViewAll, CourseContentManage,
         // Document
         DocumentEdit,
+        // Feature flags
+        FeaturesRead, FeaturesManage,
+        // Ledgers
+        LedgersRead, LedgersWrite,
         // Admin
         Admin, SystemAdmin, SecureAdmin,
         // Users - Collection
