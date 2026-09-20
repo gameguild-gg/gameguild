@@ -448,8 +448,8 @@ function NavGroups({ groups, notificationCounts }: { groups: WorkspaceNavGroup[]
                   const isActive = pathname === item.url || pathname?.endsWith(item.url);
                   return (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton isActive={isActive} tooltip={item.title} render={<Link href={item.url} />}>
-                        {Icon && <Icon className="size-4" />}
+                      <SidebarMenuButton isActive={isActive} tooltip={item.title} className="[&_svg]:size-5" render={<Link href={item.url} />}>
+                        {Icon && <Icon className="size-5" />}
                         <span>{item.title}</span>
                         {notificationCounts?.[item.url] ? (
                           <NotificationChip count={notificationCounts[item.url]} />
@@ -464,8 +464,8 @@ function NavGroups({ groups, notificationCounts }: { groups: WorkspaceNavGroup[]
                   return (
                     <Collapsible key={item.title} open={isOpen} onOpenChange={() => toggleItem(item.title)} className="group/collapsible">
                       <SidebarMenuItem>
-                        <CollapsibleTrigger render={<SidebarMenuButton tooltip={item.title} />}>
-                          {Icon && <Icon className="size-4" />}
+                        <CollapsibleTrigger render={<SidebarMenuButton tooltip={item.title} className="[&_svg]:size-5" />}>
+                          {Icon && <Icon className="size-5" />}
                           <span>{item.title}</span>
                           <ChevronRight className="ml-auto size-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
                         </CollapsibleTrigger>
@@ -475,8 +475,8 @@ function NavGroups({ groups, notificationCounts }: { groups: WorkspaceNavGroup[]
                               const isActive = pathname === subItem.url || pathname?.endsWith(subItem.url);
                               return (
                                 <SidebarMenuSubItem key={subItem.title}>
-                                  <SidebarMenuSubButton isActive={isActive} render={<Link href={subItem.url} />}>
-                                    <subItem.icon className="size-4" />
+                                  <SidebarMenuSubButton isActive={isActive} className="[&_svg]:size-5" render={<Link href={subItem.url} />}>
+                                    <subItem.icon className="size-5" />
                                     <span>{subItem.title}</span>
                                     {subItem.badge && (
                                       <span className="ml-auto rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">{subItem.badge}</span>
@@ -497,8 +497,8 @@ function NavGroups({ groups, notificationCounts }: { groups: WorkspaceNavGroup[]
                   return (
                     <Collapsible key={item.title} open={isOpen} onOpenChange={() => toggleItem(item.title)} className="group/collapsible">
                       <SidebarMenuItem>
-                        <CollapsibleTrigger render={<SidebarMenuButton tooltip={item.title} />}>
-                          {Icon && <Icon className="size-4" />}
+                        <CollapsibleTrigger render={<SidebarMenuButton tooltip={item.title} className="[&_svg]:size-5" />}>
+                          {Icon && <Icon className="size-5" />}
                           <span>{item.title}</span>
                           <ChevronRight className="ml-auto size-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
                         </CollapsibleTrigger>
@@ -514,8 +514,8 @@ function NavGroups({ groups, notificationCounts }: { groups: WorkspaceNavGroup[]
                               const SubIcon = subGroup.icon;
                               return (
                                 <SidebarMenuSubItem key={subGroup.title}>
-                                  <SidebarMenuSubButton isActive={isActive} render={<Link href={subGroup.url || '#'} />}>
-                                    {SubIcon && <SubIcon className="size-4" />}
+                                  <SidebarMenuSubButton isActive={isActive} className="[&_svg]:size-5" render={<Link href={subGroup.url || '#'} />}>
+                                    {SubIcon && <SubIcon className="size-5" />}
                                     <span>{subGroup.title}</span>
                                   </SidebarMenuSubButton>
                                 </SidebarMenuSubItem>
