@@ -70,8 +70,8 @@ export function SocialSidebar(): React.JSX.Element {
       style={{ borderRightWidth: 0 }}
       className="h-svh bg-sidebar text-sidebar-foreground [&_[data-slot=sidebar-inner]]:bg-sidebar"
     >
-      <SidebarHeader className="p-3">
-        <div className="flex min-h-10 items-center gap-2">
+      <SidebarHeader className="h-16 p-3">
+        <div className="flex h-full items-center gap-2">
           <Link
             href="/"
             aria-label="GameGuild Social home"
@@ -88,7 +88,7 @@ export function SocialSidebar(): React.JSX.Element {
       </SidebarHeader>
 
       <SidebarContent className="px-2 py-3">
-        <SidebarMenu aria-label="Social navigation" className="gap-1.5">
+        <SidebarMenu aria-label="Social navigation" className="gap-2">
           {SOCIAL_NAVIGATION.map(({ label, href, icon: Icon }) => {
             const active =
               (label === 'Home' && pathname === '/' && !activeTab) ||

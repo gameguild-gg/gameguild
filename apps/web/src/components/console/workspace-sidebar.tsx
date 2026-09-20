@@ -436,7 +436,7 @@ function NavGroups({ groups, notificationCounts }: { groups: WorkspaceNavGroup[]
         <SidebarGroup key={group.label}>
           <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="gap-2">
               {group.items.map((item) => {
                 const Icon = item.icon;
                 const hasItems = item.items && item.items.length > 0;
@@ -447,7 +447,7 @@ function NavGroups({ groups, notificationCounts }: { groups: WorkspaceNavGroup[]
                 if (!hasItems && !hasSubGroups && item.url) {
                   const isActive = pathname === item.url || pathname?.endsWith(item.url);
                   return (
-                    <SidebarMenuItem key={item.title}>
+                    <SidebarMenuItem key={item.title} className="group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:w-8">
                       <SidebarMenuButton isActive={isActive} tooltip={item.title} className="[&_svg]:size-5" render={<Link href={item.url} />}>
                         {Icon && <Icon className="size-5" />}
                         <span>{item.title}</span>
@@ -573,10 +573,10 @@ export function WorkspaceSidebar({
   const notificationCounts = countNotificationsByUrl(notifications, navigation);
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
-        <div className="flex items-center justify-between">
+      <SidebarHeader className="h-16 p-2">
+        <div className="flex h-full items-center justify-between gap-2">
           <TenantSwitcher tenants={tenants} />
-          <SidebarTrigger className="group-data-[collapsible=icon]:hidden" />
+          <SidebarTrigger className="shrink-0 group-data-[collapsible=icon]:hidden [&_svg]:size-5" />
         </div>
       </SidebarHeader>
       <SidebarContent className="gap-0">

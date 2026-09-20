@@ -65,7 +65,7 @@ export function TenantSwitcher({
             className="flex h-12 w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-0!"
           >
             <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 shrink-0 items-center justify-center rounded-lg">
-              <activeTenant.logo className="size-4" />
+              <activeTenant.logo className="size-5" />
             </div>
             <div className="grid min-w-0 flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
               <span className="truncate font-medium">{activeTenant.name}</span>
@@ -90,13 +90,13 @@ export function TenantSwitcher({
             }
           >
             <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-              <activeTenant.logo className="size-4" />
+              <activeTenant.logo className="size-5" />
             </div>
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-medium">{activeTenant.name}</span>
               <span className="truncate text-xs">{activeTenant.plan}</span>
             </div>
-            <ChevronsUpDown className="ml-auto" />
+            <ChevronsUpDown className="ml-auto size-5" />
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"

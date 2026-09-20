@@ -197,9 +197,9 @@ export function WorkspaceHeader({ notifications, user }: WorkspaceHeaderProps) {
     <header className="sticky top-0 z-40 grid h-16 min-w-0 shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b px-3 sm:px-4">
       <div className="flex min-w-0 items-center gap-2">
         {isWorkspace ? (
-          <SidebarTrigger className="md:hidden" />
+          <SidebarTrigger className="md:hidden [&_svg]:size-5" />
         ) : (
-          <SidebarTrigger />
+          <SidebarTrigger className="[&_svg]:size-5" />
         )}
         {breadcrumbs.length > 0 && (
           <>
@@ -212,7 +212,7 @@ export function WorkspaceHeader({ notifications, user }: WorkspaceHeaderProps) {
                   {breadcrumbs[0]?.href ? (
                     <BreadcrumbLink render={<Link href={breadcrumbs[0].href} />}>
                       {breadcrumbs[0].label === 'Workspace' ? (
-                        <House className="size-4" aria-hidden="true" />
+                        <House className="size-5" aria-hidden="true" />
                       ) : (
                         breadcrumbs[0].label
                       )}
@@ -220,7 +220,7 @@ export function WorkspaceHeader({ notifications, user }: WorkspaceHeaderProps) {
                   ) : (
                     <BreadcrumbPage>
                       {breadcrumbs[0].label === 'Workspace' ? (
-                        <House className="size-4" aria-hidden="true" />
+                        <House className="size-5" aria-hidden="true" />
                       ) : (
                         breadcrumbs[0]?.label
                       )}
