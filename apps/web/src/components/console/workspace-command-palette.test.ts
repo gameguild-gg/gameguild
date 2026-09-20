@@ -5,15 +5,15 @@ vi.mock("@/i18n/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
 }));
 
-import { filterDashboardQuickActions } from "./workspace-command-palette";
+import { filterWorkspaceQuickActions } from "./workspace-command-palette";
 
 describe("dashboard command palette authorization", () => {
   it("does not expose administrative quick actions to a regular member", () => {
-    expect(filterDashboardQuickActions([])).toEqual([]);
+    expect(filterWorkspaceQuickActions([])).toEqual([]);
   });
 
   it("exposes only quick actions backed by an actor capability", () => {
-    const actions = filterDashboardQuickActions([
+    const actions = filterWorkspaceQuickActions([
       "TestingLab.ManageEvents",
       "Community.ManageMembers",
     ]);

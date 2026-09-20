@@ -31,11 +31,11 @@ type RecentRoute = {
   visitedAt: number;
 };
 
-type DashboardQuickAction = WorkspaceNavSubItem & {
+type WorkspaceQuickAction = WorkspaceNavSubItem & {
   requiredCapability: string;
 };
 
-const quickActions: DashboardQuickAction[] = [
+const quickActions: WorkspaceQuickAction[] = [
   {
     title: 'Create course',
     url: '/workspace/learning/courses/new',
@@ -62,9 +62,9 @@ const quickActions: DashboardQuickAction[] = [
   },
 ];
 
-export function filterDashboardQuickActions(
+export function filterWorkspaceQuickActions(
   actorCapabilities: readonly string[],
-): DashboardQuickAction[] {
+): WorkspaceQuickAction[] {
   const capabilities = new Set(actorCapabilities);
   return quickActions.filter((action) =>
     capabilities.has(action.requiredCapability),
@@ -133,7 +133,7 @@ export function WorkspaceCommandPalette({
     [navigation],
   );
   const authorizedQuickActions = React.useMemo(
-    () => filterDashboardQuickActions(capabilities),
+    () => filterWorkspaceQuickActions(capabilities),
     [capabilities],
   );
   const [open, setOpen] = React.useState(false);

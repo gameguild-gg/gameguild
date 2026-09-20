@@ -2,11 +2,11 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const dashboardSidebarSpy = vi.hoisted(() => vi.fn());
+const workspaceSidebarSpy = vi.hoisted(() => vi.fn());
 
 vi.mock('./workspace-sidebar', () => ({
   WorkspaceSidebar: (props: unknown) => {
-    dashboardSidebarSpy(props);
+    workspaceSidebarSpy(props);
     return <nav aria-label="Workspace navigation" />;
   },
   workspaceNavigationData: [],
@@ -24,7 +24,7 @@ import { WorkspaceShell } from './workspace-shell';
 
 describe('dashboard keyboard navigation', () => {
   beforeEach(() => {
-    dashboardSidebarSpy.mockClear();
+    workspaceSidebarSpy.mockClear();
   });
 
   it('offers a direct skip link to the focusable main content', () => {
@@ -56,7 +56,7 @@ describe('dashboard keyboard navigation', () => {
       </WorkspaceShell>,
     );
 
-    expect(dashboardSidebarSpy).toHaveBeenCalledOnce();
-    expect(dashboardSidebarSpy.mock.calls[0]?.[0]).not.toHaveProperty('contexts');
+    expect(workspaceSidebarSpy).toHaveBeenCalledOnce();
+    expect(workspaceSidebarSpy.mock.calls[0]?.[0]).not.toHaveProperty('contexts');
   });
 });

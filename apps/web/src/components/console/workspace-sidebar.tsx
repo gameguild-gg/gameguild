@@ -55,7 +55,7 @@ export interface WorkspaceNavSubItem {
   requiredCapabilities?: readonly string[];
 }
 
-export interface DashboardNavItem {
+export interface WorkspaceNavItem {
   title: string;
   url?: string;
   icon?: LucideIcon;
@@ -68,7 +68,7 @@ export interface WorkspaceNavGroupItem {
   url?: string;
   icon?: LucideIcon;
   items?: WorkspaceNavSubItem[];
-  subGroups?: DashboardNavItem[];
+  subGroups?: WorkspaceNavItem[];
   requiredCapabilities?: readonly string[];
 }
 
