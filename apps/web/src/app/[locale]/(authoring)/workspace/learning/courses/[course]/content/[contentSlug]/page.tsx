@@ -44,7 +44,7 @@ export default async function ContentItemAuthoringPage({
       initialDraft={draft.data}
       initialCodingAssignment={initialCodingAssignment}
       linkedAssessment={
-        item.type === "Code" || item.type === "Questionnaire"
+        ["Code", "Questionnaire", "Assignment", "Project"].includes(item.type)
           ? assessments.assessments.find(
               (assessment) => assessment.contentId === item.id,
             ) ?? null
