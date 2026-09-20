@@ -22,7 +22,7 @@ import {
 } from '@game-guild/ui/components/dropdown-menu';
 import { Separator } from '@game-guild/ui/components/separator';
 import { SidebarTrigger } from '@game-guild/ui/components/sidebar';
-import { Bell, CheckCheck, Mail, Rss } from 'lucide-react';
+import { Bell, CheckCheck, House, Mail, Rss } from 'lucide-react';
 import * as React from 'react';
 import { toast } from 'sonner';
 import type { DashboardNotificationItem, DashboardNotificationSummary } from '@/lib/dashboard-notifications';
@@ -210,10 +210,20 @@ export function DashboardHeader({ notifications, user }: DashboardHeaderProps) {
                 <BreadcrumbItem>
                   {breadcrumbs[0]?.href ? (
                     <BreadcrumbLink render={<Link href={breadcrumbs[0].href} />}>
-                      {breadcrumbs[0].label}
+                      {breadcrumbs[0].label === 'Workspace' ? (
+                        <House className="size-4" aria-hidden="true" />
+                      ) : (
+                        breadcrumbs[0].label
+                      )}
                     </BreadcrumbLink>
                   ) : (
-                    <BreadcrumbPage>{breadcrumbs[0]?.label}</BreadcrumbPage>
+                    <BreadcrumbPage>
+                      {breadcrumbs[0].label === 'Workspace' ? (
+                        <House className="size-4" aria-hidden="true" />
+                      ) : (
+                        breadcrumbs[0]?.label
+                      )}
+                    </BreadcrumbPage>
                   )}
                 </BreadcrumbItem>
                 {breadcrumbs.length > 1 && <BreadcrumbSeparator />}
