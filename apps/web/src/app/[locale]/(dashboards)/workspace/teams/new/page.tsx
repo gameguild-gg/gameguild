@@ -93,7 +93,7 @@ export default function NewTeamPage() {
             </div>
             <div className="flex flex-wrap gap-2">
               <Button type="submit">Create Team</Button>
-              <Button type="button" variant="outline" render={<Link href="/workspace/teams" />}>
+              <Button nativeButton={false} type="button" variant="outline" render={<Link href="/workspace/teams" />}>
                 Cancel
               </Button>
             </div>

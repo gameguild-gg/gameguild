@@ -11,7 +11,7 @@ export default function Unauthorized(): React.JSX.Element {
         <h2 className="text-xl font-semibold">Sign in required</h2>
         <p className="text-sm text-muted-foreground">You need to be signed in to view this course.</p>
       </div>
-      <Button render={<Link href="/sign-in" />}>Sign in</Button>
+      <Button nativeButton={false} render={<Link href="/sign-in" />}>Sign in</Button>
     </div>
   );
 }

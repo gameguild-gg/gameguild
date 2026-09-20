@@ -442,19 +442,19 @@ export default async function Page({ params }: PageProps<'/[locale]/console/lear
               <CardTitle className="text-lg">Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button variant="outline" className="w-full justify-start" render={<Link href={buildDashboardCoursePath(courseRouteParam, 'listing', 'console')} locale={locale} prefetch={false} />}>
+              <Button nativeButton={false} variant="outline" className="w-full justify-start" render={<Link href={buildDashboardCoursePath(courseRouteParam, 'listing', 'console')} locale={locale} prefetch={false} />}>
                 <Edit className="mr-2 size-4" />
                 Open Listing Controls
               </Button>
-              <Button variant="outline" className="w-full justify-start" render={<Link href={buildDashboardCoursePath(courseRouteParam, 'content', 'console')} locale={locale} prefetch={false} />}>
+              <Button nativeButton={false} variant="outline" className="w-full justify-start" render={<Link href={buildDashboardCoursePath(courseRouteParam, 'content', 'console')} locale={locale} prefetch={false} />}>
                 <BookOpen className="mr-2 size-4" />
                 Manage Content
               </Button>
-              <Button variant="outline" className="w-full justify-start" render={<Link href={buildDashboardCoursePath(courseRouteParam, 'students', 'console')} locale={locale} prefetch={false} />}>
+              <Button nativeButton={false} variant="outline" className="w-full justify-start" render={<Link href={buildDashboardCoursePath(courseRouteParam, 'students', 'console')} locale={locale} prefetch={false} />}>
                 <Users className="mr-2 size-4" />
                 Manage Students
               </Button>
-              <Button variant="outline" className="w-full justify-start" render={<Link href={buildDashboardCoursePath(courseRouteParam, 'settings', 'console')} locale={locale} prefetch={false} />}>
+              <Button nativeButton={false} variant="outline" className="w-full justify-start" render={<Link href={buildDashboardCoursePath(courseRouteParam, 'settings', 'console')} locale={locale} prefetch={false} />}>
                 <Settings className="mr-2 size-4" />
                 Course Settings
               </Button>

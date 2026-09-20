@@ -83,7 +83,7 @@ export function ProjectCard({
             <span>{featured ? 'Community project' : 'Community'}</span>
           </div>
           {featured && url ? (
-            <Button
+            <Button nativeButton={false}
               size="sm"
               className="px-4 py-2 bg-gradient-to-r from-blue-600/80 to-purple-600/80 text-white rounded-lg hover:from-blue-700/80 hover:to-purple-700/80 transition-all duration-300 font-medium shadow-lg border border-white/10 backdrop-blur-sm"
               render={<Link href={url} />}

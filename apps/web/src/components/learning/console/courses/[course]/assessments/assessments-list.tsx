@@ -801,7 +801,7 @@ export function AssessmentsList({
                           </Badge>
                         </Link>
                         {canManage && (
-                           <Button
+                           <Button nativeButton={false}
                              variant="outline"
                              size="sm"
                              className="mr-4 shrink-0"

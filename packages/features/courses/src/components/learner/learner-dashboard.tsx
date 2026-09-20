@@ -48,7 +48,7 @@ export function LearnerDashboard({
             Enroll in a course to see lessons, deadlines, grades, and cohort
             activity here.
           </p>
-          <Button className="mt-6" render={<Link href={routes.catalog} />}>
+          <Button nativeButton={false} className="mt-6" render={<Link href={routes.catalog} />}>
             Explore the catalog
           </Button>
         </section>
@@ -70,7 +70,7 @@ export function LearnerDashboard({
             Continue where you left off or review your current courses.
           </p>
         </div>
-        <Button variant="outline" render={<Link href={routes.catalog} />}>
+        <Button nativeButton={false} variant="outline" render={<Link href={routes.catalog} />}>
           Browse catalog
         </Button>
       </header>
@@ -93,7 +93,7 @@ export function LearnerDashboard({
             <span>
               <span className="font-medium text-foreground">{tasks.reviewCount}</span> to review
             </span>
-            <Button
+            <Button nativeButton={false}
               variant="outline"
               size="sm"
               render={<Link href={tasks.href} />}
@@ -128,7 +128,7 @@ export function LearnerDashboard({
             <span className="text-muted-foreground">Course progress</span>
             <span>{active.overallProgress}%</span>
           </div>
-          <Button
+          <Button nativeButton={false}
             className="mt-6"
             render={<Link href={routes.content(active.slug)} />}
           >

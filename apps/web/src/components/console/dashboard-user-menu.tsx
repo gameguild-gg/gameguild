@@ -57,8 +57,7 @@ export function DashboardUserMenu({ user }: { user: DashboardUser }) {
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <Button
-            variant="ghost"
+          <Button variant="ghost"
             className="h-11 max-w-72 justify-start gap-2 rounded-lg px-2 text-left"
             aria-label={`Open ${user.name} account menu`}
           />

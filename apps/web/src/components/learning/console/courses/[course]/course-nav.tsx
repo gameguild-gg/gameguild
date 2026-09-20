@@ -199,7 +199,7 @@ export function CourseNav({
       {/* Header */}
       <div className="flex min-w-0 max-w-full flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-4">
-          <Button
+          <Button nativeButton={false}
             variant="ghost"
             size="icon"
             render={
@@ -228,7 +228,7 @@ export function CourseNav({
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-          <Button
+          <Button nativeButton={false}
             variant="outline"
             size="sm"
             render={<Link href={previewHref} locale={locale} prefetch={false} />}
@@ -292,7 +292,7 @@ export function CourseNav({
               Publish
             </Button>
           )}
-          <Button
+          <Button nativeButton={false}
             variant="outline"
             size="sm"
             render={

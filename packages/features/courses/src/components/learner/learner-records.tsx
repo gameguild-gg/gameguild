@@ -799,7 +799,7 @@ export function LearnerCertificates({
                       ) : null}
                       <div className="mt-5 flex flex-wrap gap-2">
                         {certificate.verificationUrl ? (
-                          <Button
+                          <Button nativeButton={false}
                             size="sm"
                             variant="outline"
                             render={
@@ -814,7 +814,7 @@ export function LearnerCertificates({
                             Verify
                           </Button>
                         ) : null}
-                        <Button
+                        <Button nativeButton={false}
                           size="sm"
                           variant="outline"
                           render={

@@ -19,7 +19,7 @@ export default async function Page({
   return (
     <main className="min-h-screen bg-slate-950 text-white">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-8">
-        <Button variant="ghost" className="w-fit text-slate-300 hover:text-white" render={<Link href={`/${locale}/members/${member}`} />}>
+        <Button nativeButton={false} variant="ghost" className="w-fit text-slate-300 hover:text-white" render={<Link href={`/${locale}/members/${member}`} />}>
           <ArrowLeft className="mr-2 size-4" />
           Back to {result.member.displayName}
         </Button>
@@ -57,7 +57,7 @@ export default async function Page({
             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <CardTitle className="text-3xl text-white">{result.project.title}</CardTitle>
               {result.project.url ? (
-                <Button className="w-fit" render={<a href={result.project.url} target="_blank" rel="noreferrer" />}>
+                <Button nativeButton={false} className="w-fit" render={<a href={result.project.url} target="_blank" rel="noreferrer" />}>
                   <ExternalLink className="mr-2 size-4" />
                   Open project
                 </Button>

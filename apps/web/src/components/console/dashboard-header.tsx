@@ -242,7 +242,7 @@ export function DashboardHeader({ notifications, user }: DashboardHeaderProps) {
         className="flex shrink-0 items-center justify-end gap-1 sm:gap-2"
       >
         {isWorkspace && (
-          <Button
+          <Button nativeButton={false}
             variant="ghost"
             size="icon"
             className="relative"

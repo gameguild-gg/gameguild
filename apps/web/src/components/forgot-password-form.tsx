@@ -60,7 +60,7 @@ export function ForgotPasswordForm({ className, initialEmail = '', onRequestRese
           <CardContent>
             <FieldGroup>
               <Field>
-                <Button variant="outline" render={<Link href="/sign-in" />}>
+                <Button nativeButton={false} variant="outline" render={<Link href="/sign-in" />}>
                   Back to Sign In
                 </Button>
               </Field>

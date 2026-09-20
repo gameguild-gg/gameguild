@@ -46,7 +46,7 @@ export function ResetPasswordForm({ token, onReset }: ResetPasswordFormProps) {
           <CardDescription>You can now sign in and review your workspace invitations.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Button className="w-full" render={<Link href="/sign-in?callbackUrl=/invitations" />}>
+          <Button nativeButton={false} className="w-full" render={<Link href="/sign-in?callbackUrl=/invitations" />}>
             Continue to sign in
           </Button>
         </CardContent>

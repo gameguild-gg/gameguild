@@ -158,7 +158,7 @@ export default async function Page({ searchParams }: Props): Promise<React.JSX.E
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{new Date(group.createdAt).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="outline" size="sm" render={<Link href={`/console/community/members/groups/${group.id}`} />}>
+                      <Button nativeButton={false} variant="outline" size="sm" render={<Link href={`/console/community/members/groups/${group.id}`} />}>
                         Manage
                         <ArrowRight className="ml-2 size-4" />
                       </Button>

@@ -109,7 +109,7 @@ export function SpeedgraderShell({
         data-testid="speedgrader-header"
         className="flex flex-wrap items-center gap-2 border-b px-3 py-2"
       >
-        <Button variant="ghost" size="sm" render={<Link href={backHref} aria-label="Back to submissions" />}>
+        <Button nativeButton={false} variant="ghost" size="sm" render={<Link href={backHref} aria-label="Back to submissions" />}>
           <ChevronLeft className="size-4" />
           Back
         </Button>

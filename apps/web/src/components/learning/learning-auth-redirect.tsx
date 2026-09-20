@@ -37,7 +37,7 @@ export function LearningAuthRedirect() {
         <p className="mt-2 text-sm text-muted-foreground">
           Your learning destination will be restored after authentication.
         </p>
-        <Button className="mt-6" render={<Link href={href} />}>
+        <Button nativeButton={false} className="mt-6" render={<Link href={href} />}>
           Continue to sign in
         </Button>
       </div>

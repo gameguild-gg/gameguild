@@ -69,7 +69,7 @@ function TestingSessionCard({ item }: { item: SocialFeedItem }) {
             <span className="inline-flex items-center gap-1.5"><Users className="size-4" aria-hidden="true" />{session.availableTesterCount} spots available</span>
           </div>
         </div>
-        <Button size="sm" render={<Link href={`/testing-lab/events/${item.id}`} />}>View session</Button>
+        <Button nativeButton={false} size="sm" render={<Link href={`/testing-lab/events/${item.id}`} />}>View session</Button>
       </div>
     </article>
   );

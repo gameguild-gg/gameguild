@@ -527,8 +527,7 @@ export function StudentTable({
                           <DropdownMenu>
                             <DropdownMenuTrigger
                               render={
-                                <Button
-                                  variant="ghost"
+                                <Button variant="ghost"
                                   size="icon"
                                   className="size-8"
                                   aria-label={`Actions for ${student.name}`}

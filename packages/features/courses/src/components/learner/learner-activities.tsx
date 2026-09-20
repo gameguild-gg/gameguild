@@ -73,7 +73,7 @@ export function LearnerActivities({
             enrollment record.
           </p>
         </div>
-        <Button variant="outline" render={<Link href={routes.content(course.slug)} />}>
+        <Button nativeButton={false} variant="outline" render={<Link href={routes.content(course.slug)} />}>
           Course content
         </Button>
       </header>
@@ -152,7 +152,7 @@ export function LearnerActivities({
                     </div>
                   </div>
                   {assessmentId && assessment.isAvailable !== false ? (
-                    <Button
+                    <Button nativeButton={false}
                       render={
                         <Link
                           href={routes.activity(
@@ -211,7 +211,7 @@ export function LearnerActivities({
                     Locked
                   </Button>
                 ) : (
-                  <Button
+                  <Button nativeButton={false}
                     variant="outline"
                     render={
                       <Link

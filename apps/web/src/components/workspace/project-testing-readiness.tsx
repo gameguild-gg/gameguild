@@ -58,7 +58,7 @@ export function ProjectTestingReadiness({ projectId, projectSlug, versions }: Pr
             </li>
           ))}
         </ol>
-        <Button render={<Link href={action.href} />}>
+        <Button nativeButton={false} render={<Link href={action.href} />}>
           {action.label}
         </Button>
       </CardContent>

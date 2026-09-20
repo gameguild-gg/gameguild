@@ -11,7 +11,7 @@ export default function NotFound(): React.JSX.Element {
         <h2 className="text-xl font-semibold">Course not found</h2>
         <p className="text-sm text-muted-foreground">This course doesn't exist or you don't have access to it.</p>
       </div>
-      <Button variant="outline" render={<Link href="/console/learning/courses" />}>
+      <Button nativeButton={false} variant="outline" render={<Link href="/console/learning/courses" />}>
         Back to courses
       </Button>
     </div>

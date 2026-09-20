@@ -350,7 +350,7 @@ export function LearnerActivityCenter({
                   </p>
                 ) : null}
               </div>
-              <Button variant="outline" render={<Link href={row.href} />}>
+              <Button nativeButton={false} variant="outline" render={<Link href={row.href} />}>
                 Open
                 <ArrowRight className="size-4" />
               </Button>

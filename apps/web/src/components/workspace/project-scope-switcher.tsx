@@ -30,8 +30,7 @@ export function ProjectScopeSwitcher({
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <Button
-            type="button"
+          <Button type="button"
             variant="outline"
             className="h-auto w-full justify-start gap-3 px-3 py-2 text-left sm:w-72"
             aria-label={`Filter projects by Team. Current scope: ${activeLabel}`}

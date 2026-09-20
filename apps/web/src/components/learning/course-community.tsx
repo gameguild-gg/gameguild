@@ -164,7 +164,7 @@ export function CourseCommunity({
                   <MessageCircle className="size-3.5" />
                   {discussion.replyCount ?? 0} replies
                 </p>
-                <Button size="sm" variant="ghost" render={<Link href={`/learn/courses/${courseSlug}/community/${discussion.id}`} />}>
+                <Button nativeButton={false} size="sm" variant="ghost" render={<Link href={`/learn/courses/${courseSlug}/community/${discussion.id}`} />}>
                   Open discussion
                   <ArrowRight className="size-4" />
                 </Button>

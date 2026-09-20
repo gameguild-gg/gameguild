@@ -626,7 +626,7 @@ export function AssessmentEditor({
           <h1 className="text-2xl font-bold">{assessment.title}</h1>
         </div>
         {canManage && (
-          <Button
+          <Button nativeButton={false}
             variant="outline"
             size="sm"
             render={
@@ -641,7 +641,7 @@ export function AssessmentEditor({
           </Button>
         )}
         {canManage && (
-          <Button
+          <Button nativeButton={false}
             variant="outline"
             size="sm"
             render={

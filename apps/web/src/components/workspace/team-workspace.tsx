@@ -70,7 +70,7 @@ export async function TeamWorkspaceView({
           <h1 className="mt-2 text-3xl font-semibold">{team.name}</h1>
           <p className="mt-1 max-w-3xl text-muted-foreground">{team.description || 'Coordinate people, projects, files and agreements from one team workspace.'}</p>
         </div>
-        <Button render={<Link href={`${projectRoot}/new`} />}>Create project</Button>
+        <Button nativeButton={false} render={<Link href={`${projectRoot}/new`} />}>Create project</Button>
       </header>
       <ContextWorkspaceNav base={base} active={active} items={sections} />
 

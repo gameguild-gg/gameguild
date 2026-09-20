@@ -46,7 +46,7 @@ function ResourceCard({ item }: { item: LearningContentLibraryItem }) {
             {formatDuration(item.durationMinutes)}
           </span>
         </div>
-        <Button variant="outline" size="sm" className="justify-between" render={<Link href={`/console/learning/courses/${item.courseSlug || item.courseId}/content/${item.slug || item.id}`} />}>
+        <Button nativeButton={false} variant="outline" size="sm" className="justify-between" render={<Link href={`/console/learning/courses/${item.courseSlug || item.courseId}/content/${item.slug || item.id}`} />}>
           Edit resource
           <ExternalLink className="size-4" />
         </Button>
@@ -63,7 +63,7 @@ export default async function Page(): Promise<React.JSX.Element> {
     <div className="flex flex-col gap-6 p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" render={<Link href="/console/learning" />}>
+          <Button nativeButton={false} variant="ghost" size="icon" render={<Link href="/console/learning" />}>
             <ArrowLeft className="size-5" />
           </Button>
           <div className="flex size-12 items-center justify-center rounded-lg bg-linear-to-br from-cyan-500 to-blue-600">
@@ -74,7 +74,7 @@ export default async function Page(): Promise<React.JSX.Element> {
             <p className="text-muted-foreground">Review every reusable lesson, exercise, download, and reference item across live courses.</p>
           </div>
         </div>
-        <Button render={<Link href="/console/learning/courses" />}>
+        <Button nativeButton={false} render={<Link href="/console/learning/courses" />}>
           <Plus className="mr-2 size-4" />
           Add course content
         </Button>
@@ -120,7 +120,7 @@ export default async function Page(): Promise<React.JSX.Element> {
             <FolderOpen className="mb-4 size-12 text-muted-foreground" />
             <h3 className="text-lg font-semibold">No course resources found</h3>
             <p className="max-w-md text-sm text-muted-foreground">Create course content first, then this library will show all reusable resources and direct editing links.</p>
-            <Button className="mt-5" render={<Link href="/console/learning/courses/new" />}>Create course</Button>
+            <Button nativeButton={false} className="mt-5" render={<Link href="/console/learning/courses/new" />}>Create course</Button>
           </CardContent>
         </Card>
       ) : (

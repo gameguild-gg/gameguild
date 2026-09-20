@@ -113,12 +113,12 @@ export function CourseAccessGate({ access }: { access: GateAccess }) {
             </Button>
           ) : null}
           {access.kind === "payment-required" ? (
-            <Button render={<Link href={storefrontUrl} />}>
+            <Button nativeButton={false} render={<Link href={storefrontUrl} />}>
               Continue to checkout
               <ArrowRight className="ml-2 size-4" />
             </Button>
           ) : null}
-          <Button variant="outline" render={<Link href={`${process.env.NEXT_PUBLIC_WEB_URL || "https://gameguild.gg"}/courses`} />}>
+          <Button nativeButton={false} variant="outline" render={<Link href={`${process.env.NEXT_PUBLIC_WEB_URL || "https://gameguild.gg"}/courses`} />}>
             Browse catalog
           </Button>
         </CardContent>

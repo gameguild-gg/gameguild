@@ -144,7 +144,7 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/consol
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6 p-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" render={<Link href="/console/learning/courses" />}>
+        <Button nativeButton={false} variant="ghost" size="icon" render={<Link href="/console/learning/courses" />}>
           <ArrowLeft className="size-5" />
         </Button>
         <div>
@@ -400,7 +400,7 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/consol
           <div role="alert" className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
             <p>{error}</p>
             {recoveryHref ? (
-              <Button variant="link" className="mt-2 h-auto p-0 text-red-700 underline dark:text-red-300" render={<Link href={recoveryHref} />}>
+              <Button nativeButton={false} variant="link" className="mt-2 h-auto p-0 text-red-700 underline dark:text-red-300" render={<Link href={recoveryHref} />}>
                 Open the draft and finish it manually
               </Button>
             ) : null}
@@ -433,7 +433,7 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/consol
             </Button>
           )}
 
-          <Button type="button" variant="ghost" render={<Link href="/console/learning/courses" />}>
+          <Button nativeButton={false} type="button" variant="ghost" render={<Link href="/console/learning/courses" />}>
             Cancel
           </Button>
         </div>

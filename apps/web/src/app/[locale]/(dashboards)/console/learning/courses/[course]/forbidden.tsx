@@ -12,7 +12,7 @@ export default function Forbidden(): React.JSX.Element {
         <p className="text-sm text-muted-foreground">You don't have permission to view this resource.</p>
       </div>
       <div className="flex gap-2">
-        <Button variant="outline" render={<Link href="/console/learning/courses" />}>
+        <Button nativeButton={false} variant="outline" render={<Link href="/console/learning/courses" />}>
           Back to courses
         </Button>
       </div>

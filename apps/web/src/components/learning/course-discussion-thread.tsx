@@ -71,7 +71,7 @@ export function CourseDiscussionThread({
   return (
     <div className="mx-auto w-full max-w-4xl space-y-8">
       <header className="space-y-5 border-b pb-6">
-        <Button size="sm" variant="ghost" render={<Link href={`/learn/courses/${courseSlug}/community`} />}>
+        <Button nativeButton={false} size="sm" variant="ghost" render={<Link href={`/learn/courses/${courseSlug}/community`} />}>
           <ArrowLeft className="size-4" />
           Back to community
         </Button>

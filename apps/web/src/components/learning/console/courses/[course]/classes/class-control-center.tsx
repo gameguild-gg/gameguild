@@ -63,7 +63,7 @@ export function ClassControlCenter({ courseId, cohorts }: ClassControlCenterProp
           <p className="mt-1 text-sm text-muted-foreground">Each class has an independent period, calendar, release cadence, and roster.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" render={<Link href={`${learningBase}/courses/${courseId}/classes/calendar`} />}>
+          <Button nativeButton={false} variant="outline" render={<Link href={`${learningBase}/courses/${courseId}/classes/calendar`} />}>
             <CalendarDays className="size-4" />
             General calendar
           </Button>

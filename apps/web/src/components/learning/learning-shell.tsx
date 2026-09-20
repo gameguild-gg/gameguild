@@ -379,7 +379,7 @@ export function LearningShell({
         </nav>
 
         <div className="mt-auto border-t pt-4">
-          <Button variant="outline" className="w-full justify-start" render={<Link href={catalogUrl} />}>
+          <Button nativeButton={false} variant="outline" className="w-full justify-start" render={<Link href={catalogUrl} />}>
             <Library className="size-4" />
             Browse courses
           </Button>
@@ -426,7 +426,7 @@ export function LearningShell({
             })}
           </nav>
           <div className="mt-auto border-t pt-4">
-            <Button variant="outline" className="w-full justify-start" render={<Link href={catalogUrl} onClick={() => setMobileOpen(false)} />}>
+            <Button nativeButton={false} variant="outline" className="w-full justify-start" render={<Link href={catalogUrl} onClick={() => setMobileOpen(false)} />}>
               <Library aria-hidden="true" className="size-4" />
               Browse courses
             </Button>

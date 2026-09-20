@@ -51,7 +51,7 @@ export default async function MyProjectsPage({
           </p>
         </div>
         {projects.length > 0 ? (
-          <Button render={<Link href="/workspace/projects/new" />}>
+          <Button nativeButton={false} render={<Link href="/workspace/projects/new" />}>
             <Plus className="size-4" />
             Create Project
           </Button>
@@ -99,7 +99,7 @@ export default async function MyProjectsPage({
               <CardDescription>{emptyDescription}</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button render={<Link href="/workspace/projects/new" />}>Create Project</Button>
+              <Button nativeButton={false} render={<Link href="/workspace/projects/new" />}>Create Project</Button>
             </CardContent>
           </Card>
         )}

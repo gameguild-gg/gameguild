@@ -252,7 +252,7 @@ export function LearnerActivityForm({
               </p>
             </div>
           </div>
-          <Button type="button" variant="outline" render={<Link href={projectsUrl} />}>
+          <Button nativeButton={false} type="button" variant="outline" render={<Link href={projectsUrl} />}>
             Open projects
           </Button>
         </div>
