@@ -15,6 +15,7 @@ import { Button } from '@game-guild/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -274,7 +275,9 @@ export function WorkspaceHeader({ notifications, user }: WorkspaceHeaderProps) {
             <span className="sr-only">Notifications</span>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-80">
-            <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <div className="max-h-[300px] overflow-y-auto">
               {notificationSummary.items.length > 0 ? (
