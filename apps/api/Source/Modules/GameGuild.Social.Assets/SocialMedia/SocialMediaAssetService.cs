@@ -1,4 +1,6 @@
-namespace GameGuild.Assets.SocialMedia;
+using GameGuild.Assets;
+
+namespace GameGuild.Social.Assets.SocialMedia;
 
 public enum SocialMediaProcessingState
 {

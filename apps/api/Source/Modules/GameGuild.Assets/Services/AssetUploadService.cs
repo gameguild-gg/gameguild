@@ -28,7 +28,7 @@ public class AssetUploadService : IAssetUploadService
     private readonly Microsoft.Extensions.Options.IOptions<AssetUploadConfiguration> _options;
     private readonly ILogger<AssetUploadService> _logger;
     private readonly IUseCaseOperationContextAccessor? _operationContextAccessor;
-    
+
     // In-memory store for chunked uploads (should be replaced with distributed cache in production)
     private static readonly Dictionary<string, ChunkedUploadSession> _chunkedSessions = new();
     private static readonly Dictionary<string, SortedDictionary<int, string>> _chunkedSessionPartETags = new();
@@ -68,7 +68,7 @@ public class AssetUploadService : IAssetUploadService
         }
 
         // Validate MIME type
-        if (uploadOptions.AllowedMimeTypes.Length > 0 && 
+        if (uploadOptions.AllowedMimeTypes.Length > 0 &&
             !uploadOptions.AllowedMimeTypes.Contains(mimeType))
         {
             return new AssetUploadResult(
@@ -209,8 +209,8 @@ public class AssetUploadService : IAssetUploadService
         }
 
         partETags[partNumber] = eTag;
-        session = session with 
-        { 
+        session = session with
+        {
             UploadedChunks = partETags.Count
         };
         _chunkedSessions[uploadId] = session;

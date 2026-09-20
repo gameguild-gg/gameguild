@@ -2,7 +2,6 @@ using FluentAssertions;
 using GameGuild.Assets.Extensions;
 using GameGuild.Assets.Security;
 using GameGuild.Assets.Storage;
-using GameGuild.Commerce.Orders;
 using Moq;
 using Xunit;
 using AssetOrderStatus = GameGuild.Assets.Security.OrderStatus;
@@ -10,7 +9,7 @@ using AssetOrderStatus = GameGuild.Assets.Security.OrderStatus;
 namespace GameGuild.Assets.UnitTests;
 
 /// <summary>
-/// R5 tests targeting StorageUploadResult, StorageMetadata, CommerceOrderValidationService
+/// R5 tests targeting StorageUploadResult, StorageMetadata, order validation defaults
 /// to push coverage past 75%.
 /// </summary>
 public class StorageRecordAndPlaceholderTests
@@ -126,77 +125,17 @@ public class StorageRecordAndPlaceholderTests
         lastMod.Should().Be(now);
     }
 
-    // ─── PlaceholderOrderValidationService ────────────────────────────
+    // ─── OrderValidationService (fail-closed default) ────────────────
 
     [Fact]
-    public async Task CommerceOrderValidationService_GetOrderStatusAsync_ReturnsFulfilled()
+    public async Task DenyByDefaultOrderValidationService_DeniesEverything()
     {
-        var orderId = Guid.NewGuid();
-        var repo = new Mock<IOrderRepository>();
-        repo.Setup(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(CreateOrder(orderId, fulfilled: true));
-        var svc = new CommerceOrderValidationService(repo.Object);
+        var svc = new DenyByDefaultOrderValidationService();
 
-        var status = await svc.GetOrderStatusAsync(orderId);
-
-        status.Should().Be(AssetOrderStatus.Fulfilled);
-    }
-
-    [Fact]
-    public async Task CommerceOrderValidationService_IsOrderValidForDownloadAsync_ReturnsTrue()
-    {
-        var orderId = Guid.NewGuid();
-        var repo = new Mock<IOrderRepository>();
-        repo.Setup(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(CreateOrder(orderId, fulfilled: true));
-        var svc = new CommerceOrderValidationService(repo.Object);
-
-        var valid = await svc.IsOrderValidForDownloadAsync(orderId);
-
-        valid.Should().BeTrue();
-    }
-
-    [Fact]
-    public async Task CommerceOrderValidationService_GetOrderStatus_WithCancellationToken()
-    {
-        var orderId = Guid.NewGuid();
-        var repo = new Mock<IOrderRepository>();
-        repo.Setup(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(CreateOrder(orderId, fulfilled: true));
-        var svc = new CommerceOrderValidationService(repo.Object);
-        using var cts = new CancellationTokenSource();
-
-        var status = await svc.GetOrderStatusAsync(orderId, cts.Token);
-
-        status.Should().NotBeNull();
-    }
-
-    [Fact]
-    public async Task CommerceOrderValidationService_IsOrderValid_WithCancellationToken()
-    {
-        var orderId = Guid.NewGuid();
-        var repo = new Mock<IOrderRepository>();
-        repo.Setup(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(CreateOrder(orderId, fulfilled: true));
-        var svc = new CommerceOrderValidationService(repo.Object);
-        using var cts = new CancellationTokenSource();
-
-        var result = await svc.IsOrderValidForDownloadAsync(orderId, cts.Token);
-
-        result.Should().BeTrue();
-    }
-
-    private static Order CreateOrder(Guid id, bool fulfilled = false)
-    {
-        var order = Order.Create(Guid.NewGuid(), $"idem-{Guid.NewGuid():N}", Guid.NewGuid());
-        typeof(Order).GetProperty(nameof(Order.Id))!.SetValue(order, id);
-        order.MarkAsPaidPendingFulfillment(Guid.NewGuid());
-        if (fulfilled)
-        {
-            order.MarkAsFulfilled();
-        }
-
-        return order;
+        (await svc.GetOrderStatusAsync(Guid.NewGuid())).Should().BeNull();
+        (await svc.IsOrderValidForDownloadAsync(Guid.NewGuid())).Should().BeFalse();
+        (await svc.GetOrderStatusAsync(Guid.NewGuid(), CancellationToken.None)).Should().BeNull();
+        (await svc.IsOrderValidForDownloadAsync(Guid.NewGuid(), CancellationToken.None)).Should().BeFalse();
     }
 
     // ─── TenantValidationResult ───────────────────────────────────────

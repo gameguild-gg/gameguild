@@ -1,12 +1,11 @@
-using GameGuild.Assets.SocialMedia;
 using GameGuild.Assets.Commands;
-using GameGuild.Assets.Controllers;
+using GameGuild.Social.Assets.Controllers;
 using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace GameGuild.Assets.UnitTests;
+namespace GameGuild.Social.Assets.UnitTests;
 
 public sealed class SocialMediaUploadTests
 {

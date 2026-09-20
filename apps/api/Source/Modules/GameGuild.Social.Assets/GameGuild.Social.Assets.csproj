@@ -4,29 +4,17 @@
         <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <RootNamespace>GameGuild.Social.Posts</RootNamespace>
+        <RootNamespace>GameGuild.Social.Assets</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
-        <InternalsVisibleTo Include="GameGuild.Social.Posts.UnitTests" />
-    </ItemGroup>
-
-    <ItemGroup>
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Include="FluentValidation" />
-        <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\GameGuild.Assets\GameGuild.Assets.csproj" />
-        <ProjectReference Include="..\GameGuild.Social.Assets\GameGuild.Social.Assets.csproj" />
         <ProjectReference Include="..\GameGuild.Identity.Context\GameGuild.Identity.Context.csproj" />
         <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
-        <ProjectReference Include="..\GameGuild.Social.Profiles\GameGuild.Social.Profiles.csproj" />
-        <ProjectReference Include="..\GameGuild.Tags\GameGuild.Tags.csproj" />
     </ItemGroup>
 
 </Project>

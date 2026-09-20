@@ -637,6 +637,83 @@ public class AssetAccessServiceTests
             Times.Once);
     }
 
+    [Fact]
+    public async Task ValidateAccessAsync_AssetFromAnotherTenant_FailsClosedWithTenantMismatch()
+    {
+        // SECURITY (cross-tenant): a member of the REQUEST tenant must not reach an asset
+        // that belongs to a different tenant, regardless of the asset's access policy.
+        var assetReferenceId = Guid.NewGuid();
+        var assetTenant = Guid.NewGuid();
+        var requestTenant = Guid.NewGuid();
+        var reference = CreateAssetReference(assetReferenceId, AssetAccessPolicy.Public);
+        reference.SetTenantId(assetTenant);
+
+        _referenceRepositoryMock
+            .Setup(x => x.GetByIdAsync(assetReferenceId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(reference);
+
+        var result = await _service.ValidateAccessAsync(assetReferenceId, Guid.NewGuid(), requestTenant);
+
+        result.IsValid.Should().BeFalse();
+        result.DeniedReason.Should().Be(AssetAccessDeniedReason.TenantMismatch);
+
+        // Even tenant owners of the request tenant are denied: the asset is foreign.
+        _tenantMemberRepositoryMock
+            .Setup(x => x.GetByUserAndTenantAsync(It.IsAny<Guid>(), requestTenant, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TenantMember
+            {
+                TenantId = requestTenant,
+                Role = TenantRole.Owner.Value,
+                IsActive = true
+            });
+
+        var ownerResult = await _service.ValidateAccessAsync(assetReferenceId, Guid.NewGuid(), requestTenant);
+        ownerResult.IsValid.Should().BeFalse();
+        ownerResult.DeniedReason.Should().Be(AssetAccessDeniedReason.TenantMismatch);
+    }
+
+    [Fact]
+    public async Task ValidateAccessAsync_SameTenantAsset_DoesNotTripTenantMismatch()
+    {
+        var assetReferenceId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var reference = CreateAssetReference(assetReferenceId, AssetAccessPolicy.Public);
+        reference.SetTenantId(tenantId);
+
+        _referenceRepositoryMock
+            .Setup(x => x.GetByIdAsync(assetReferenceId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(reference);
+
+        var result = await _service.ValidateAccessAsync(assetReferenceId, Guid.NewGuid(), tenantId);
+
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ValidateAccessAsync_ExplicitCrossTenantPath_OnlyWhenPermitted()
+    {
+        // The explicit cross-tenant path (SystemAdmin surfaces) opts in via
+        // permitCrossTenant; without it the mismatch denial is fail-closed.
+        var assetReferenceId = Guid.NewGuid();
+        var assetTenant = Guid.NewGuid();
+        var requestTenant = Guid.NewGuid();
+        var reference = CreateAssetReference(assetReferenceId, AssetAccessPolicy.Public);
+        reference.SetTenantId(assetTenant);
+
+        _referenceRepositoryMock
+            .Setup(x => x.GetByIdAsync(assetReferenceId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(reference);
+
+        var permitted = await _service.ValidateAccessAsync(
+            assetReferenceId, Guid.NewGuid(), requestTenant, CancellationToken.None, permitCrossTenant: true);
+        permitted.IsValid.Should().BeTrue();
+
+        var denied = await _service.ValidateAccessAsync(
+            assetReferenceId, Guid.NewGuid(), requestTenant, CancellationToken.None, permitCrossTenant: false);
+        denied.IsValid.Should().BeFalse();
+        denied.DeniedReason.Should().Be(AssetAccessDeniedReason.TenantMismatch);
+    }
+
     #endregion
 
     #region Helper Methods

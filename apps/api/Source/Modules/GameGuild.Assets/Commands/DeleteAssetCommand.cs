@@ -53,7 +53,7 @@ public sealed class DeleteAssetHandler : ICommandHandler<DeleteAssetCommand, Del
         }
 
         // Verify ownership (admin override with ForceDelete)
-        if (!request.ForceDelete && 
+        if (!request.ForceDelete &&
             !await _referenceRepository.IsOwnedByUserAsync(request.AssetReferenceId, request.UserId, ct))
         {
             return new DeleteAssetResponse(false, false);

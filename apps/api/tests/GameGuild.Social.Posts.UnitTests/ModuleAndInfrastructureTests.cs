@@ -1,6 +1,6 @@
 using FluentAssertions;
 using GameGuild.CQRS;
-using GameGuild.Assets.SocialMedia;
+using GameGuild.Social.Assets.SocialMedia;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Social.Posts.Configuration;
 using GameGuild.Social.Posts.Controllers;

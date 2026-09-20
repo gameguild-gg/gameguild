@@ -1,13 +1,14 @@
 using Asp.Versioning;
+using GameGuild.Assets;
 using GameGuild.Assets.Commands;
-using GameGuild.Assets.SocialMedia;
+using GameGuild.Social.Assets.SocialMedia;
 using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace GameGuild.Assets.Controllers;
+namespace GameGuild.Social.Assets.Controllers;
 
 [ApiController]
 [ApiVersion("1.0")]
