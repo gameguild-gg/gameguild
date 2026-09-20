@@ -73,7 +73,7 @@ describe('DashboardHeader', () => {
     );
 
     const actions = screen.getByRole('group', { name: 'Dashboard actions' });
-    expect(within(actions).getByRole('link', { name: 'Open Community feed' })).toBeInTheDocument();
+    expect(within(actions).getByRole('button', { name: 'Open Community feed' })).toBeInTheDocument();
     expect(within(actions).getByRole('button', { name: 'Notifications' })).toBeInTheDocument();
     const profile = within(actions).getByRole('button', { name: 'Open Ada Lovelace account menu' });
     expect(profile).toHaveTextContent('Ada Lovelace');
@@ -114,7 +114,7 @@ describe('DashboardHeader', () => {
     );
 
     const actions = screen.getByRole('group', { name: 'Dashboard actions' });
-    const feedLink = within(actions).getByRole('link', { name: 'Open Community feed' });
+    const feedLink = within(actions).getByRole('button', { name: 'Open Community feed' });
     expect(feedLink).toHaveAttribute('href', '/');
     expect(feedLink.textContent).toBe('');
     expect(feedLink.querySelector('svg.lucide-rss')).toBeInTheDocument();
@@ -133,7 +133,7 @@ describe('DashboardHeader', () => {
       />,
     );
 
-    expect(screen.queryByRole('link', { name: 'Open Community feed' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Open Community feed' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Toggle sidebar' })).not.toHaveClass('md:hidden');
   });
 });
