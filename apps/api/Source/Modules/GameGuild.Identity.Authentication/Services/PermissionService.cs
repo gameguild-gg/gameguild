@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Context.Actors;
 
 namespace GameGuild.Identity.Authentication;
 
@@ -7,7 +8,20 @@ namespace GameGuild.Identity.Authentication;
 ///     Backward-compatible three-layer permission facade used by legacy authentication surfaces.
 ///     New request handlers should prefer the focused Authorization module services.
 /// </summary>
-public class PermissionService(IApplicationDbContext context) : IPermissionService
+/// <remarks>
+///     <para>
+///         <b>SECURITY:</b> every mutation path bumps the tenant security version (cache
+///         invalidation) and writes a permission audit entry. The invalidation/audit
+///         collaborators are optional so legacy construction sites keep working, but the
+///         composition root always supplies them; when they are absent the mutation still
+///         throws on failure to keep the fail-loud behavior of the Authorization module.
+///     </para>
+/// </remarks>
+public class PermissionService(
+    IApplicationDbContext context,
+    ITenantSecurityVersionStore? securityVersionStore = null,
+    IPermissionAuditService? auditService = null,
+    IActorContextAccessor? actorContextAccessor = null) : IPermissionService
 {
     public async Task<TenantPermission> GrantTenantPermissionAsync(Guid? userId, Guid? tenantId, PermissionType[] permissions)
     {
@@ -28,6 +42,13 @@ public class PermissionService(IApplicationDbContext context) : IPermissionServi
         grant.ExpiresAt = null;
 
         await context.SaveChangesAsync().ConfigureAwait(false);
+
+        await TrackMutationAsync(
+            PermissionOperationType.Grant,
+            userId,
+            tenantId,
+            ToPermissionNames(permissions)).ConfigureAwait(false);
+
         return grant;
     }
 
@@ -81,6 +102,12 @@ public class PermissionService(IApplicationDbContext context) : IPermissionServi
         }
 
         await context.SaveChangesAsync().ConfigureAwait(false);
+
+        await TrackMutationAsync(
+            PermissionOperationType.Revoke,
+            userId,
+            tenantId,
+            ToPermissionNames(permissions)).ConfigureAwait(false);
     }
 
     public async Task<TenantPermission> JoinTenantAsync(Guid userId, Guid tenantId)
@@ -153,6 +180,14 @@ public class PermissionService(IApplicationDbContext context) : IPermissionServi
         grant.ExpiresAt = null;
 
         await context.SaveChangesAsync().ConfigureAwait(false);
+
+        await TrackMutationAsync(
+            PermissionOperationType.Grant,
+            userId,
+            tenantId,
+            permissions.Select(p => p.ToString()),
+            contentTypeName).ConfigureAwait(false);
+
         return grant;
     }
 
@@ -179,6 +214,13 @@ public class PermissionService(IApplicationDbContext context) : IPermissionServi
         }
 
         await context.SaveChangesAsync().ConfigureAwait(false);
+
+        await TrackMutationAsync(
+            PermissionOperationType.Revoke,
+            userId,
+            tenantId,
+            permissions.Select(p => p.ToString()),
+            contentTypeName).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<PermissionType>> GetEffectiveContentTypePermissionsAsync(Guid? userId, Guid? tenantId, string contentTypeName)
@@ -222,6 +264,15 @@ public class PermissionService(IApplicationDbContext context) : IPermissionServi
         grant.ExpiresAt = null;
 
         await context.SaveChangesAsync().ConfigureAwait(false);
+
+        await TrackMutationAsync(
+            PermissionOperationType.Grant,
+            userId,
+            tenantId,
+            permissions.Select(p => p.ToString()),
+            resourceTypeName: typeof(TResource).Name,
+            resourceId: resourceId).ConfigureAwait(false);
+
         return grant;
     }
 
@@ -280,6 +331,14 @@ public class PermissionService(IApplicationDbContext context) : IPermissionServi
 
         context.Set<TPermission>().Remove(grant);
         await context.SaveChangesAsync().ConfigureAwait(false);
+
+        await TrackMutationAsync(
+            PermissionOperationType.Revoke,
+            userId,
+            tenantId,
+            [],
+            resourceTypeName: typeof(TResource).Name,
+            resourceId: resourceId).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<PermissionType>> GetEffectiveResourcePermissionsAsync<TPermission, TResource>(Guid? userId, Guid? tenantId, Guid resourceId, string? contentTypeName = null)
@@ -441,6 +500,27 @@ public class PermissionService(IApplicationDbContext context) : IPermissionServi
         }
 
         await context.SaveChangesAsync().ConfigureAwait(false);
+
+        // Expiring grants changes effective permissions: bump every affected tenant's
+        // security version so stale caches are discarded, then audit the cleanup.
+        var affectedTenants = tenantPermissions
+            .Select(p => p.TenantId)
+            .Concat(contentPermissions.Select(p => (Guid?)p.TenantId))
+            .Concat(resourcePermissions.Select(p => (Guid?)p.TenantId))
+            .Where(id => id.HasValue)
+            .Select(id => id!.Value)
+            .Distinct()
+            .ToArray();
+
+        foreach (var tenantId in affectedTenants)
+        {
+            await TrackMutationAsync(
+                PermissionOperationType.Update,
+                userId: null,
+                tenantId: tenantId,
+                permissionNames: [],
+                reason: "Expired permissions cleanup").ConfigureAwait(false);
+        }
     }
 
     private async Task SetTenantGrantAsync(Guid? userId, Guid? tenantId, PermissionType[] permissions, string reason)
@@ -462,6 +542,13 @@ public class PermissionService(IApplicationDbContext context) : IPermissionServi
         grant.IsActive = true;
         grant.ExpiresAt = null;
         await context.SaveChangesAsync().ConfigureAwait(false);
+
+        await TrackMutationAsync(
+            PermissionOperationType.Update,
+            userId,
+            tenantId,
+            permissions.Select(p => p.ToString()),
+            reason: reason).ConfigureAwait(false);
     }
 
     private Task<TenantPermission?> GetTenantGrantAsync(Guid? userId, Guid? tenantId)
@@ -482,6 +569,45 @@ public class PermissionService(IApplicationDbContext context) : IPermissionServi
                 p.UserId == userId &&
                 p.TenantId == tenantId &&
                 p.ResourceId == resourceId);
+
+    /// <summary>
+    ///     SECURITY: records a permission mutation — bumps the tenant security version so
+    ///     cached permission sets are invalidated, and writes a permission audit entry.
+    ///     Failures propagate: a mutation whose invalidation failed must not be reported as
+    ///     silently successful (stale caches would retain revoked privileges).
+    /// </summary>
+    private async Task TrackMutationAsync(
+        PermissionOperationType operation,
+        Guid? userId,
+        Guid? tenantId,
+        IEnumerable<string> permissionNames,
+        string? contentTypeName = null,
+        string? resourceTypeName = null,
+        Guid? resourceId = null,
+        string? reason = null)
+    {
+        var permissionList = permissionNames as string[] ?? permissionNames.ToArray();
+        var performedBy = actorContextAccessor?.ActorContext.SubjectIdAsGuid ?? Guid.Empty;
+
+        if (securityVersionStore is not null)
+        {
+            var tenantKey = tenantId?.ToString() ?? "global";
+            await securityVersionStore.IncrementVersionAsync(tenantKey).ConfigureAwait(false);
+        }
+
+        if (auditService is not null)
+        {
+            await auditService.LogPermissionChangeAsync(
+                operation,
+                userId,
+                performedBy,
+                tenantId,
+                permissionType: permissionList.Length > 0 ? string.Join(",", permissionList) : contentTypeName ?? resourceTypeName,
+                resourceId: resourceId,
+                resourceType: resourceTypeName ?? contentTypeName,
+                reason: reason ?? $"{operation} via legacy permission facade").ConfigureAwait(false);
+        }
+    }
 
     private static string[] ToPermissionNames(IEnumerable<PermissionType> permissions)
         => permissions.Distinct().Select(p => p.ToString()).ToArray();

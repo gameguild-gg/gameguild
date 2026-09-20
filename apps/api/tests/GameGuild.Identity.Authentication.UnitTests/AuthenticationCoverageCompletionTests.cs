@@ -706,8 +706,8 @@ public sealed class AuthenticationCoverageCompletionTests
         Assert.Throws<ArgumentNullException>(() => new PermissionAdminController(mediator, null!));
         Assert.Throws<ArgumentNullException>(() => new PermissionEvaluationController(null!, NullLogger<PermissionEvaluationController>.Instance));
         Assert.Throws<ArgumentNullException>(() => new PermissionEvaluationController(mediator, null!));
-        Assert.Throws<ArgumentNullException>(() => new PermissionGrantsController(null!, NullLogger<PermissionGrantsController>.Instance));
-        Assert.Throws<ArgumentNullException>(() => new PermissionGrantsController(mediator, null!));
+        Assert.Throws<ArgumentNullException>(() => new PermissionGrantsController(null!, Mock.Of<GameGuild.Identity.Context.Actors.IActorContextAccessor>(), NullLogger<PermissionGrantsController>.Instance));
+        Assert.Throws<ArgumentNullException>(() => new PermissionGrantsController(mediator, null!, NullLogger<PermissionGrantsController>.Instance));
 
         var authService = Mock.Of<IAuthService>();
         var users = Mock.Of<IUserRepository>();
@@ -812,6 +812,9 @@ public sealed class AuthenticationCoverageCompletionTests
 
         new ApplyPermissionTemplateCommandHandler(
             dbContext,
+            Mock.Of<GameGuild.Identity.Context.Actors.IActorContextAccessor>(),
+            Mock.Of<GameGuild.Identity.Authorization.ITenantSecurityVersionStore>(),
+            Mock.Of<GameGuild.Identity.Authorization.IPermissionAuditService>(),
             NullLogger<ApplyPermissionTemplateCommandHandler>.Instance).Should().NotBeNull();
         new GetPermissionTemplatesQueryHandler(
             dbContext,

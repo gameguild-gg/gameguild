@@ -264,7 +264,9 @@ public sealed class AuthorizationCoverageCompletionTests
         MapPermission("view").Should().Be(AccessLevel.Read);
         MapPermission("get").Should().Be(AccessLevel.Read);
         MapPermission("list").Should().Be(AccessLevel.Read);
-        MapPermission("custom").Should().Be(AccessLevel.Write);
+        // Fail closed: unknown permission patterns throw instead of defaulting to Write.
+        var unknown = () => MapPermission("custom");
+        unknown.Should().Throw<UnauthorizedAccessException>();
 
         var attribute = new AuthorizeRequestAttribute("x");
         attribute.Permission.Should().Be("x");
@@ -2828,7 +2830,17 @@ public sealed class AuthorizationCoverageCompletionTests
         var method = type.GetMethods(BindingFlags.NonPublic | BindingFlags.Static)
             .Single(m => m.Name == methodName && m.GetParameters().Length == args.Length);
         method.Should().NotBeNull();
-        return (T)method.Invoke(null, args)!;
+        try
+        {
+            return (T)method.Invoke(null, args)!;
+        }
+        catch (TargetInvocationException ex) when (ex.InnerException is not null)
+        {
+            // Surface the private method's own exception (e.g. the fail-closed
+            // permission-mapping denial) instead of the reflection wrapper.
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
+            throw; // unreachable
+        }
     }
 
     private static T InvokePrivate<T>(object instance, string methodName, params object?[] args)

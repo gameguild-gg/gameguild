@@ -6,7 +6,9 @@ namespace GameGuild.Identity.Authorization;
 
 /// <summary>
 ///     Pipeline behavior that performs authorization checks on CQRS commands and queries.
-///     Uses custom attributes on request classes to determine authorization requirements.
+///     Uses <see cref="AuthorizeRequestAttribute"/> on request classes to determine
+///     authorization requirements. The attribute is resolved by its concrete type — never
+///     by attribute-name matching — so only the platform's own typed attribute is honored.
 /// </summary>
 /// <remarks>
 ///     <para>
@@ -28,6 +30,12 @@ namespace GameGuild.Identity.Authorization;
 ///             </description>
 ///         </item>
 ///     </list>
+///     <para>
+///         <b>Fail-closed:</b> resource-level checks map the permission string to an
+///         <see cref="AccessLevel"/>. A permission that does not match a known access-level
+///         pattern is rejected with an explicit error — it is never silently upgraded to
+///         <see cref="AccessLevel.Write"/>.
+///     </para>
 /// </remarks>
 /// <typeparam name="TRequest">The request type (command or query)</typeparam>
 /// <typeparam name="TResponse">The response type</typeparam>
@@ -44,16 +52,12 @@ public class AuthorizationBehavior<TRequest, TResponse>(
         CancellationToken cancellationToken
     )
     {
-        // Get attributes named AuthorizeRequestAttribute from request type
-        var allAttrs = request.GetType()
-            .GetCustomAttributes(true)
-            .Where(a => string.Equals(
-                a.GetType().Name,
-                "AuthorizeRequestAttribute",
-                StringComparison.Ordinal))
+        // Typed attribute resolution: only the platform's AuthorizeRequestAttribute is honored.
+        var authorizeAttributes = request.GetType()
+            .GetCustomAttributes<AuthorizeRequestAttribute>(inherit: true)
             .ToList();
 
-        if (!allAttrs.Any())
+        if (authorizeAttributes.Count == 0)
         {
             return await next().ConfigureAwait(false);
         }
@@ -71,49 +75,28 @@ public class AuthorizationBehavior<TRequest, TResponse>(
         }
 
         // Evaluate each attribute
-        foreach (var rawAttr in allAttrs)
+        foreach (var attribute in authorizeAttributes)
         {
-            var attrType = rawAttr.GetType();
-
             // Check for explicit RequireSystemAdmin/RequireTenantAdmin flags
-            var requireSystemAdminProp = attrType.GetProperty("RequireSystemAdmin");
-
-            if (requireSystemAdminProp != null)
+            if (attribute.RequireSystemAdmin)
             {
-                var requireSys = requireSystemAdminProp.GetValue(rawAttr) as bool? ?? false;
+                if (!Actor.IsSystemAdmin)
+                    throw new UnauthorizedAccessException("System admin required");
 
-                if (requireSys)
-                {
-                    if (!Actor.IsSystemAdmin)
-                        throw new UnauthorizedAccessException("System admin required");
-
-                    continue;
-                }
+                continue;
             }
 
-            var requireTenantAdminProp = attrType.GetProperty("RequireTenantAdmin");
-
-            if (requireTenantAdminProp != null)
+            if (attribute.RequireTenantAdmin)
             {
-                var requireTenant = requireTenantAdminProp.GetValue(rawAttr) as bool? ?? false;
+                if (!Actor.IsTenantAdmin)
+                    throw new UnauthorizedAccessException("Tenant admin required");
 
-                if (requireTenant)
-                {
-                    if (!Actor.IsTenantAdmin)
-                        throw new UnauthorizedAccessException("Tenant admin required");
-
-                    continue;
-                }
+                continue;
             }
 
-            // Extract permission and resource info
-            var permissionProp = attrType.GetProperty("Permission");
-            var resourceTypeProp = attrType.GetProperty("ResourceType");
-            var resourceIdPropertyProp = attrType.GetProperty("ResourceIdProperty");
-
-            var permission = permissionProp?.GetValue(rawAttr) as string;
-            var resourceType = resourceTypeProp?.GetValue(rawAttr) as string;
-            var resourceIdProperty = resourceIdPropertyProp?.GetValue(rawAttr) as string ?? "ResourceId";
+            var permission = attribute.Permission;
+            var resourceType = attribute.ResourceType;
+            var resourceIdProperty = attribute.ResourceIdProperty ?? "ResourceId";
 
             if (string.IsNullOrEmpty(permission))
             {
@@ -136,15 +119,16 @@ public class AuthorizationBehavior<TRequest, TResponse>(
                 {
                     var userId = Actor.SubjectIdAsGuid ?? throw new UnauthorizedAccessException("User not authenticated");
                     var tenantId = Actor.TenantId ?? throw new UnauthorizedAccessException("Tenant context required");
-                    
-                    // Map permission string to AccessLevel (e.g., "read" -> Read, "write" -> Write)
+
+                    // Map permission string to AccessLevel (e.g., "read" -> Read, "write" -> Write).
+                    // Unknown permission patterns throw (fail closed) rather than defaulting.
                     var requiredLevel = MapPermissionToAccessLevel(permission);
-                    
+
                     // Build AclSubject from actor context
                     // Note: Role/Group IDs would require additional resolution from role names
                     // For now, we rely on user-based ACL lookup; the ACL service can resolve roles internally
                     var subject = AclSubject.ForUser(userId);
-                    
+
                     hasPerm = await aclService
                         .HasAccessAsync(subject, tenantId, resourceType, resourceId.ToString(), requiredLevel, cancellationToken)
                         .ConfigureAwait(false);
@@ -187,31 +171,44 @@ public class AuthorizationBehavior<TRequest, TResponse>(
     ///     Maps a permission string to an <see cref="AccessLevel"/> for ACL checks.
     /// </summary>
     /// <remarks>
-    ///     Permission strings like "read", "write", "delete", "manage" are mapped to
-    ///     appropriate access levels for resource-level authorization.
+    ///     <para>
+    ///         Permission strings like "read", "write", "delete", "manage" are mapped to
+    ///         appropriate access levels for resource-level authorization.
+    ///     </para>
+    ///     <para>
+    ///         <b>Fail-closed:</b> an unrecognized permission pattern throws an
+    ///         <see cref="UnauthorizedAccessException"/> instead of defaulting to
+    ///         <see cref="AccessLevel.Write"/>. Silently upgrading an unknown permission to
+    ///         write access would grant more privilege than the caller declared.
+    ///     </para>
     /// </remarks>
+    /// <exception cref="UnauthorizedAccessException">
+    ///     Thrown when the permission does not match any known access-level pattern.
+    /// </exception>
     private static AccessLevel MapPermissionToAccessLevel(string permission)
     {
         var normalizedPermission = permission.ToLowerInvariant();
-        
+
         // Check for common permission patterns
         // Admin = full access including delete and sharing
         if (normalizedPermission.Contains("manage") || normalizedPermission.Contains("admin") ||
             normalizedPermission.Contains("delete") || normalizedPermission.Contains("remove"))
             return AccessLevel.Admin;
-        
+
         // Write = read and write access
-        if (normalizedPermission.Contains("write") || normalizedPermission.Contains("edit") || 
+        if (normalizedPermission.Contains("write") || normalizedPermission.Contains("edit") ||
             normalizedPermission.Contains("update") || normalizedPermission.Contains("create"))
             return AccessLevel.Write;
-        
+
         // Read = read-only access
-        if (normalizedPermission.Contains("read") || normalizedPermission.Contains("view") || 
+        if (normalizedPermission.Contains("read") || normalizedPermission.Contains("view") ||
             normalizedPermission.Contains("get") || normalizedPermission.Contains("list"))
             return AccessLevel.Read;
-        
-        // Default to Write for unknown permission patterns
-        return AccessLevel.Write;
+
+        // Fail closed: unknown permission patterns are denied with an explicit error,
+        // never defaulted to Write.
+        throw new UnauthorizedAccessException(
+            $"Cannot determine required access level for unknown permission: '{permission}'");
     }
 }
 
