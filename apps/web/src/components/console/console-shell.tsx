@@ -48,7 +48,7 @@ export function ConsoleShell({
           } as React.CSSProperties
         }
       >
-        <DashboardSidebar navigation={navigation} />
+        <DashboardSidebar navigation={navigation} notifications={notifications} />
         <SidebarInset className="min-w-0 overflow-hidden">
           <DashboardCommandPalette
             navigation={navigation}

@@ -1,6 +1,7 @@
 'use client';
 
 import { Link, usePathname } from '@/i18n/navigation';
+import type { DashboardNotificationSummary } from '@/lib/dashboard-notifications';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@game-guild/ui/components/collapsible';
 import {
   Sidebar,
@@ -401,7 +402,19 @@ export function flattenDashboardNavigationItems(groups: DashboardNavGroup[] = da
   return items;
 }
 
-function NavGroups({ groups }: { groups: DashboardNavGroup[] }) {
+function NotificationChip({ count }: { count: number }) {
+  const label = count > 99 ? '99+' : String(count);
+  return (
+    <>
+      <span className="ml-auto hidden size-2 shrink-0 rounded-full bg-primary group-data-[collapsible=icon]:block" aria-hidden="true" />
+      <span className="ml-auto shrink-0 rounded-full bg-primary px-1.5 py-0.5 text-xs font-medium text-primary-foreground group-data-[collapsible=icon]:hidden">
+        {label}
+      </span>
+    </>
+  );
+}
+
+function NavGroups({ groups, notificationCounts }: { groups: DashboardNavGroup[]; notificationCounts?: Record<string, number> }) {
   const pathname = usePathname();
   const [openItems, setOpenItems] = React.useState<Set<string>>(new Set());
 
@@ -438,6 +451,9 @@ function NavGroups({ groups }: { groups: DashboardNavGroup[] }) {
                       <SidebarMenuButton isActive={isActive} tooltip={item.title} render={<Link href={item.url} />}>
                         {Icon && <Icon className="size-4" />}
                         <span>{item.title}</span>
+                        {notificationCounts?.[item.url] ? (
+                          <NotificationChip count={notificationCounts[item.url]} />
+                        ) : null}
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   );
@@ -524,6 +540,7 @@ function NavGroups({ groups }: { groups: DashboardNavGroup[] }) {
 
 interface DashboardSidebarProps extends React.ComponentProps<typeof Sidebar> {
   navigation?: DashboardNavGroup[];
+  notifications?: DashboardNotificationSummary;
 }
 
 /** Default console tenant — GameGuild platform until multi-tenant switching ships. */
@@ -531,10 +548,29 @@ const tenants: Tenant[] = [
   { id: 'gameguild', name: 'GameGuild', logo: GraduationCap, plan: 'Platform' },
 ];
 
+function countNotificationsByUrl(
+  notifications: DashboardNotificationSummary | undefined,
+  navigation: DashboardNavGroup[],
+): Record<string, number> {
+  const navUrls = flattenDashboardNavigationItems(navigation)
+    .map((item) => item.url)
+    .filter((url): url is string => Boolean(url));
+  const counts: Record<string, number> = {};
+  for (const item of notifications?.items ?? []) {
+    const url = item.actionUrl;
+    if (!url) continue;
+    const navUrl = navUrls.find((candidate) => url === candidate || url.startsWith(`${candidate}/`));
+    if (navUrl) counts[navUrl] = (counts[navUrl] ?? 0) + 1;
+  }
+  return counts;
+}
+
 export function DashboardSidebar({
   navigation = filterDashboardNavigation(dashboardNavigationData, []),
+  notifications,
   ...props
 }: DashboardSidebarProps) {
+  const notificationCounts = countNotificationsByUrl(notifications, navigation);
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -544,7 +580,7 @@ export function DashboardSidebar({
         </div>
       </SidebarHeader>
       <SidebarContent className="gap-0">
-        <NavGroups groups={navigation} />
+        <NavGroups groups={navigation} notificationCounts={notificationCounts} />
       </SidebarContent>
       <SidebarRail />
     </Sidebar>
