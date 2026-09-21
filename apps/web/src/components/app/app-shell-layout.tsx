@@ -41,7 +41,7 @@ export function AppShellContent({
     <div
       id="dashboard-main"
       tabIndex={-1}
-      className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden bg-muted/30 p-4 transition-all duration-300 sm:p-6"
+      className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden"
     >
       {children}
     </div>
