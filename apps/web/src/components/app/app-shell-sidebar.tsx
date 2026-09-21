@@ -71,6 +71,13 @@ function NotificationChip({ count }: { count: number }) {
   );
 }
 
+const navButtonClass =
+  '[&_svg]:size-5 data-active:bg-sidebar-primary/15 data-active:text-sidebar-primary data-active:font-medium';
+const collapsibleButtonClass =
+  '[&_svg]:size-5 group-data-[collapsible=icon]:justify-center data-active:bg-sidebar-primary/15 data-active:text-sidebar-primary data-active:font-medium';
+const collapsedItemClass =
+  'group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:w-8';
+
 function NavGroups({ groups, notificationCounts }: { groups: WorkspaceNavGroup[]; notificationCounts?: Record<string, number> }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -112,8 +119,8 @@ function NavGroups({ groups, notificationCounts }: { groups: WorkspaceNavGroup[]
                           : searchParams.get('tab') === item.activeOnTab)
                       : pathname === item.url || pathname?.endsWith(item.url);
                   return (
-                    <SidebarMenuItem key={item.title} className="group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:w-8">
-                      <SidebarMenuButton isActive={isActive} tooltip={item.title} className="[&_svg]:size-5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0 data-active:bg-sidebar-primary/15 data-active:text-sidebar-primary data-active:font-medium" render={<Link href={item.url} />}>
+                    <SidebarMenuItem key={item.title} className={collapsedItemClass}>
+                      <SidebarMenuButton isActive={isActive} tooltip={item.title} className={navButtonClass} render={<Link href={item.url} />}>
                         {Icon && <Icon className="size-5" />}
                         <span className="group-data-[collapsible=icon]:hidden">{item.title}</span>
                         {notificationCounts?.[item.url] ? (
@@ -131,8 +138,8 @@ function NavGroups({ groups, notificationCounts }: { groups: WorkspaceNavGroup[]
                   );
                   return (
                     <Collapsible key={item.title} open={isOpen} onOpenChange={() => toggleItem(item.title)} className="group/collapsible">
-                      <SidebarMenuItem className="group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:w-8">
-                        <CollapsibleTrigger render={<SidebarMenuButton isActive={childActive} tooltip={item.title} className="[&_svg]:size-5 group-data-[collapsible=icon]:justify-center data-active:bg-sidebar-primary/15 data-active:text-sidebar-primary data-active:font-medium" />}>
+                      <SidebarMenuItem className={collapsedItemClass}>
+                        <CollapsibleTrigger render={<SidebarMenuButton isActive={childActive} tooltip={item.title} className={collapsibleButtonClass} />}>
                           {Icon && <Icon className="size-5" />}
                           <span className="group-data-[collapsible=icon]:hidden">{item.title}</span>
                           <ChevronRight className="ml-auto size-4 transition-transform group-data-[state=open]/collapsible:rotate-90 group-data-[collapsible=icon]:hidden" />
@@ -143,7 +150,7 @@ function NavGroups({ groups, notificationCounts }: { groups: WorkspaceNavGroup[]
                               const isActive = pathname === subItem.url || pathname?.endsWith(subItem.url);
                               return (
                                 <SidebarMenuSubItem key={subItem.title}>
-                                  <SidebarMenuSubButton isActive={isActive} className="[&_svg]:size-5 data-active:bg-sidebar-primary/15 data-active:text-sidebar-primary data-active:font-medium" render={<Link href={subItem.url} />}>
+                                  <SidebarMenuSubButton isActive={isActive} className={navButtonClass} render={<Link href={subItem.url} />}>
                                     <subItem.icon className="size-5" />
                                     <span>{subItem.title}</span>
                                     {subItem.badge && (
@@ -173,8 +180,8 @@ function NavGroups({ groups, notificationCounts }: { groups: WorkspaceNavGroup[]
                   );
                   return (
                     <Collapsible key={item.title} open={isOpen} onOpenChange={() => toggleItem(item.title)} className="group/collapsible">
-                      <SidebarMenuItem className="group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:w-8">
-                        <CollapsibleTrigger render={<SidebarMenuButton isActive={childActive} tooltip={item.title} className="[&_svg]:size-5 group-data-[collapsible=icon]:justify-center data-active:bg-sidebar-primary/15 data-active:text-sidebar-primary data-active:font-medium" />}>
+                      <SidebarMenuItem className={collapsedItemClass}>
+                        <CollapsibleTrigger render={<SidebarMenuButton isActive={childActive} tooltip={item.title} className={collapsibleButtonClass} />}>
                           {Icon && <Icon className="size-5" />}
                           <span className="group-data-[collapsible=icon]:hidden">{item.title}</span>
                           <ChevronRight className="ml-auto size-4 transition-transform group-data-[state=open]/collapsible:rotate-90 group-data-[collapsible=icon]:hidden" />
@@ -191,7 +198,7 @@ function NavGroups({ groups, notificationCounts }: { groups: WorkspaceNavGroup[]
                               const SubIcon = subGroup.icon;
                               return (
                                 <SidebarMenuSubItem key={subGroup.title}>
-                                  <SidebarMenuSubButton isActive={isActive} className="[&_svg]:size-5 data-active:bg-sidebar-primary/15 data-active:text-sidebar-primary data-active:font-medium" render={<Link href={subGroup.url || '#'} />}>
+                                  <SidebarMenuSubButton isActive={isActive} className={navButtonClass} render={<Link href={subGroup.url || '#'} />}>
                                     {SubIcon && <SubIcon className="size-5" />}
                                     <span>{subGroup.title}</span>
                                   </SidebarMenuSubButton>
