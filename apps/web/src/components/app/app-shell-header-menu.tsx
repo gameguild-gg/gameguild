@@ -78,11 +78,6 @@ function NotificationMenuItem({ item, onSetRead }: NotificationItemProps) {
   );
 }
 
-interface AppShellHeaderMenuProps {
-  notifications?: DashboardNotificationSummary;
-  user: WorkspaceUser;
-}
-
 function ContextToggle({ isWorkspace }: { isWorkspace: boolean }) {
   return (
     <Button
@@ -103,9 +98,7 @@ function ContextToggle({ isWorkspace }: { isWorkspace: boolean }) {
   );
 }
 
-export function AppShellHeaderMenu({ notifications, user }: AppShellHeaderMenuProps) {
-  const pathname = usePathname();
-  const isWorkspace = pathname?.startsWith('/workspace') ?? false;
+function NotificationsMenu({ notifications }: { notifications?: DashboardNotificationSummary }) {
   const notificationSummary = notifications ?? { items: [], unreadCount: 0 };
   const [readOverrides, setReadOverrides] = React.useState<Record<string, boolean>>({});
   const [hiddenUnreadCount, setHiddenUnreadCount] = React.useState<number | null>(null);
@@ -157,58 +150,70 @@ export function AppShellHeaderMenu({ notifications, user }: AppShellHeaderMenuPr
   };
 
   return (
+    <DropdownMenu>
+      <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="relative" />}>
+        <Bell className="size-5" />
+        {unreadCount > 0 && (
+          <Badge variant="destructive" className="absolute -right-1 -top-1 h-5 min-w-5 rounded-full px-1 text-xs">
+            {unreadLabel}
+          </Badge>
+        )}
+        <span className="sr-only">Notifications</span>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-80">
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <div className="max-h-[300px] overflow-y-auto">
+          {notificationSummary.items.length > 0 ? (
+            items.map((item) => (
+              <NotificationMenuItem key={item.id} item={item} onSetRead={handleSetRead} />
+            ))
+          ) : (
+            <div className="px-3 py-6 text-center">
+              <p className="text-sm font-medium">No notifications</p>
+              <p className="mt-1 text-xs text-muted-foreground">New account updates will appear here.</p>
+            </div>
+          )}
+        </div>
+        <DropdownMenuSeparator />
+        <div className="flex items-center justify-between gap-2 px-3 py-2">
+          <p className="text-xs font-normal text-muted-foreground">Showing latest account notifications</p>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-7 gap-1 px-2 text-xs"
+            disabled={shownUnreadCount === 0}
+            onClick={handleMarkAllRead}
+          >
+            <CheckCheck className="size-3.5" />
+            Mark all read
+          </Button>
+        </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+interface AppShellHeaderMenuProps {
+  notifications?: DashboardNotificationSummary;
+  user: WorkspaceUser;
+}
+
+export function AppShellHeaderMenu({ notifications, user }: AppShellHeaderMenuProps) {
+  const pathname = usePathname();
+  const isWorkspace = pathname?.startsWith('/workspace') ?? false;
+
+  return (
     <div
       role="group"
       aria-label="App menu actions"
       className="flex shrink-0 items-center justify-end gap-1 sm:gap-2"
     >
       <ContextToggle isWorkspace={isWorkspace} />
-
-      <DropdownMenu>
-        <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="relative" />}>
-          <Bell className="size-5" />
-          {unreadCount > 0 && (
-            <Badge variant="destructive" className="absolute -right-1 -top-1 h-5 min-w-5 rounded-full px-1 text-xs">
-              {unreadLabel}
-            </Badge>
-          )}
-          <span className="sr-only">Notifications</span>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-80">
-          <DropdownMenuGroup>
-            <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <div className="max-h-[300px] overflow-y-auto">
-            {notificationSummary.items.length > 0 ? (
-              items.map((item) => (
-                <NotificationMenuItem key={item.id} item={item} onSetRead={handleSetRead} />
-              ))
-            ) : (
-              <div className="px-3 py-6 text-center">
-                <p className="text-sm font-medium">No notifications</p>
-                <p className="mt-1 text-xs text-muted-foreground">New account updates will appear here.</p>
-              </div>
-            )}
-          </div>
-          <DropdownMenuSeparator />
-          <div className="flex items-center justify-between gap-2 px-3 py-2">
-            <p className="text-xs font-normal text-muted-foreground">Showing latest account notifications</p>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-7 gap-1 px-2 text-xs"
-              disabled={shownUnreadCount === 0}
-              onClick={handleMarkAllRead}
-            >
-              <CheckCheck className="size-3.5" />
-              Mark all read
-            </Button>
-          </div>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
+      <NotificationsMenu notifications={notifications} />
       <div className="ml-1 sm:ml-2">
         <WorkspaceUserMenu user={user} />
       </div>
