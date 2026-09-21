@@ -134,8 +134,8 @@ function NavGroups({ groups, notificationCounts }: { groups: WorkspaceNavGroup[]
                       <SidebarMenuItem className="group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:w-8">
                         <CollapsibleTrigger render={<SidebarMenuButton isActive={childActive} tooltip={item.title} className="[&_svg]:size-5 group-data-[collapsible=icon]:justify-center data-active:bg-sidebar-primary/15 data-active:text-sidebar-primary data-active:font-medium" />}>
                           {Icon && <Icon className="size-5" />}
-                          <span>{item.title}</span>
-                          <ChevronRight className="ml-auto size-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                          <span className="group-data-[collapsible=icon]:hidden">{item.title}</span>
+                          <ChevronRight className="ml-auto size-4 transition-transform group-data-[state=open]/collapsible:rotate-90 group-data-[collapsible=icon]:hidden" />
                         </CollapsibleTrigger>
                         <CollapsibleContent>
                           <SidebarMenuSub>
@@ -176,8 +176,8 @@ function NavGroups({ groups, notificationCounts }: { groups: WorkspaceNavGroup[]
                       <SidebarMenuItem className="group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:w-8">
                         <CollapsibleTrigger render={<SidebarMenuButton isActive={childActive} tooltip={item.title} className="[&_svg]:size-5 group-data-[collapsible=icon]:justify-center data-active:bg-sidebar-primary/15 data-active:text-sidebar-primary data-active:font-medium" />}>
                           {Icon && <Icon className="size-5" />}
-                          <span>{item.title}</span>
-                          <ChevronRight className="ml-auto size-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                          <span className="group-data-[collapsible=icon]:hidden">{item.title}</span>
+                          <ChevronRight className="ml-auto size-4 transition-transform group-data-[state=open]/collapsible:rotate-90 group-data-[collapsible=icon]:hidden" />
                         </CollapsibleTrigger>
                         <CollapsibleContent>
                           <SidebarMenuSub>
