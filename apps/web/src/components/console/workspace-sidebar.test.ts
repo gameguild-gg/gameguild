@@ -55,7 +55,6 @@ describe("dashboard management navigation", () => {
       "Projects",
       "Teams",
       "Learning",
-      "Calendar",
     ]);
   });
 

@@ -9,7 +9,7 @@ import React from 'react';
  * is exchanged for a result SERVER-SIDE (this async server component) so it
  * never reaches client JS. The page also renders directly from
  * `?status=&scope=&value=` query params for callers that already hold a result.
- * Hardcoded English by design — matches workspace-header.tsx (no i18n seam yet).
+ * Hardcoded English by design — matches workspace-shell.tsx (no i18n seam yet).
  */
 
 type UnsubscribeState = 'success' | 'already' | 'invalid';

@@ -16,9 +16,11 @@ import { usePathname, useRouter } from '@/i18n/navigation';
 import {
   workspaceNavigationData,
   flattenWorkspaceNavigationItems,
-  type WorkspaceNavGroup,
-  type WorkspaceNavSubItem,
 } from '@/components/console/workspace-sidebar';
+import type {
+  WorkspaceNavGroup,
+  WorkspaceNavSubItem,
+} from '@/components/app/app-shell-sidebar';
 
 export const DASHBOARD_COMMAND_PALETTE_OPEN_EVENT = 'gameguild:open-workspace-command-palette';
 
