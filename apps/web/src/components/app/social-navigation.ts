@@ -55,18 +55,4 @@ export const socialDesktopNav = [
       { label: 'Programs', href: '/programs' },
     ],
   },
-  {
-    label: 'Build',
-    items: [
-      { label: 'Workspace', href: '/workspace' },
-      { label: 'Projects', href: '/projects' },
-    ],
-  },
-  {
-    label: 'Test & Launch',
-    items: [
-      { label: 'Testing Lab', href: '/testing-lab' },
-      { label: 'Launch Pad', href: '/launch-pad' },
-    ],
-  },
 ] as const satisfies readonly PublicNavEntry[];
