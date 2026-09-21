@@ -1,6 +1,6 @@
 import type { WorkspaceNavGroup } from '@/components/app/app-shell-sidebar';
 import type { PublicNavEntry } from '@/components/app/public-website-nav';
-import { Bookmark, Compass, FlaskConical, Home } from 'lucide-react';
+import { Bookmark, Compass, FlaskConical, Home, Rocket } from 'lucide-react';
 
 /**
  * Social sidebar navigation in the shared `WorkspaceNavGroup[]` shape so the
@@ -28,6 +28,12 @@ export const socialNavigationData: WorkspaceNavGroup[] = [
         url: '/workspace/testing-lab',
         icon: FlaskConical,
         activeOnPath: '/workspace/testing-lab',
+      },
+      {
+        title: 'Launch Pad',
+        url: '/launch-pad',
+        icon: Rocket,
+        activeOnPath: '/launch-pad',
       },
       {
         title: 'Saved',
