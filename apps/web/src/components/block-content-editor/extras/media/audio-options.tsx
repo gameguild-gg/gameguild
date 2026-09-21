@@ -1,6 +1,6 @@
 "use client"
 
-import { Label } from "@/components/ui/label"
+import { Label } from "@game-guild/ui/components/label"
 import type { BaseMediaData } from "@/components/block-content-editor/nodes/base/media-node-base"
 
 interface AudioOptionsProps {

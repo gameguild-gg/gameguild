@@ -4,8 +4,8 @@ import { useParams, usePathname } from 'next/navigation';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { ArrowLeft, Award, BookOpen, Calendar, DollarSign, Eye, FileText, HelpCircle, Image, Images, Play, Save, Search, Settings, ChevronDown, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import { Button } from '@game-guild/ui/components/button';
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@game-guild/ui/components/sidebar';
 import { useCourseEditor } from '@/components/courses/editor/context/course-editor-provider';
 import { saveCourse } from '@/components/courses/editor/actions';
 import { cn } from '@/lib/utils';
@@ -157,25 +157,21 @@ export function CourseEditorSidebar() {
 
     return (
       <SidebarMenuItem key={section.id}>
-        <SidebarMenuButton asChild>
-          <Link
-            href={sectionHref}
+        <SidebarMenuButton render={<Link href={sectionHref}
             className={cn(
               'flex items-center gap-3 p-3 rounded-lg transition-all duration-200 group border backdrop-blur-md',
               isActive
                 ? 'bg-gradient-to-r from-blue-600/20 to-purple-600/20 text-white border-blue-500/30 shadow-lg shadow-blue-500/10'
                 : 'bg-slate-800/30 text-slate-300 border-slate-700/30 hover:bg-slate-700/40 hover:text-white hover:border-slate-600/40',
-            )}
-          >
-            <div className={cn('p-2 rounded-lg transition-all duration-200', isActive ? 'bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg' : 'bg-slate-700/50 group-hover:bg-slate-600/50')}>
-              <section.icon className="h-4 w-4 text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="font-medium text-sm truncate">{section.label}</div>
-              <div className={cn('text-xs truncate transition-colors duration-200', isActive ? 'text-blue-200' : 'text-slate-400 group-hover:text-slate-300')}>{section.description}</div>
-            </div>
-            {isActive && <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse flex-shrink-0" />}
-          </Link>
+            )} />}>
+          <div className={cn('p-2 rounded-lg transition-all duration-200', isActive ? 'bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg' : 'bg-slate-700/50 group-hover:bg-slate-600/50')}>
+            <section.icon className="h-4 w-4 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-medium text-sm truncate">{section.label}</div>
+            <div className={cn('text-xs truncate transition-colors duration-200', isActive ? 'text-blue-200' : 'text-slate-400 group-hover:text-slate-300')}>{section.description}</div>
+          </div>
+          {isActive && <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse flex-shrink-0" />}
         </SidebarMenuButton>
       </SidebarMenuItem>
     );

@@ -7,10 +7,10 @@ import {
   MenubarMenu,
   MenubarSeparator,
   MenubarTrigger,
-} from "@/components/ui/menubar"
-import { Badge } from "@/components/ui/badge"
+} from "@game-guild/ui/components/menubar"
+import { Badge } from "@game-guild/ui/components/badge"
 import { Blocks, History, RotateCcw, Sun, Moon } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@game-guild/ui/components/button"
 import { SaveAsDialog } from "@/components/block-content-editor/extras/editor/save-as-dialog"
 import { OpenProjectDialog } from "@/components/block-content-editor/extras/editor/open-project-dialog"
 import { ProjectSizeIndicator } from "@/components/block-content-editor/extras/editor/project-size-indicator"

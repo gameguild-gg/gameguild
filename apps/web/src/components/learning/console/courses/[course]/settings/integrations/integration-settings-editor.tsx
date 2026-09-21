@@ -52,7 +52,7 @@ export function IntegrationSettingsEditor({ settings }: { settings: CourseIntegr
           <CardDescription>Configure delivery providers and outbound course events.</CardDescription>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild><Button type="button" variant="outline"><Plus className="mr-2 size-4" />Add webhook</Button></DialogTrigger>
+          <DialogTrigger render={<Button type="button" variant="outline" />}><Plus className="mr-2 size-4" />Add webhook</DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle>Add webhook</DialogTitle><DialogDescription>Send selected course events to an HTTPS endpoint.</DialogDescription></DialogHeader>
             <div className="space-y-4">

@@ -1,6 +1,6 @@
 "use client"
 
-import { TooltipProvider } from "@/components/ui/tooltip"
+import { TooltipProvider } from "@game-guild/ui/components/tooltip"
 import type React from "react"
 import { useEffect } from "react"
 

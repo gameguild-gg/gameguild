@@ -76,11 +76,9 @@ function PermissionCheckboxes({ role }: { role?: PlatformRole }) {
 function CreateRoleDialog() {
   return (
     <Dialog>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 size-4" />
-          Create role
-        </Button>
+      <DialogTrigger render={<Button />}>
+        <Plus className="mr-2 size-4" />
+        Create role
       </DialogTrigger>
       <DialogContent className="max-h-[88vh] max-w-4xl overflow-y-auto">
         <DialogHeader>

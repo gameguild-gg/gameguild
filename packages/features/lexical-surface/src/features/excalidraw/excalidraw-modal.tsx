@@ -29,20 +29,6 @@ import {
 import { cn } from "@game-guild/ui/lib/utils";
 import { ClientOnlyLazy } from "../../shared/client-only-lazy";
 
-/**
- * Selector that covers internal overlays/popovers of Excalidraw
- * (help, library, mermaid-to-excalidraw, color picker, etc.).
- * Used in the Radix Dialog guards to prevent clicks inside these
- * sub-modals from closing our host Dialog.
- */
-const EXCALIDRAW_INTERNAL_SELECTOR =
-  '.excalidraw, .excalidraw-modal-container, .excalidraw-overlay, [class*="excalidraw"], .ttd-dialog, .Dialog, .Modal, .Island, .popover, .HelpDialog, .library-menu, .picker, [data-prevent-outside-click]';
-
-function isInsideExcalidrawInternal(target: EventTarget | null): boolean {
-  if (!(target instanceof Element)) return false;
-  return target.closest(EXCALIDRAW_INTERNAL_SELECTOR) !== null;
-}
-
 const Excalidraw = lazy(async () => ({
   default: (await import("@excalidraw/excalidraw")).Excalidraw,
 }));
@@ -136,18 +122,7 @@ export default function ExcalidrawModal({
         if (!open) onClose();
       }}
     >
-      <DialogContent
-        className="max-w-[95vw] sm:max-w-[95vw] w-[95vw] h-[90vh] p-0 flex flex-col"
-        onPointerDownOutside={(e) => {
-          if (isInsideExcalidrawInternal(e.target)) e.preventDefault();
-        }}
-        onInteractOutside={(e) => {
-          if (isInsideExcalidrawInternal(e.target)) e.preventDefault();
-        }}
-        onFocusOutside={(e) => {
-          if (isInsideExcalidrawInternal(e.target)) e.preventDefault();
-        }}
-      >
+      <DialogContent className="max-w-[95vw] sm:max-w-[95vw] w-[95vw] h-[90vh] p-0 flex flex-col">
         <DialogHeader className="px-4 pt-4 pb-2">
           <DialogTitle>Excalidraw</DialogTitle>
         </DialogHeader>

@@ -1,9 +1,9 @@
 "use client"
 
 import { X } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
+import { Button } from "@game-guild/ui/components/button"
+import { Switch } from "@game-guild/ui/components/switch"
+import { Label } from "@game-guild/ui/components/label"
 import type { ProgrammingLanguage } from "./types"
 
 interface SettingsPanelProps {

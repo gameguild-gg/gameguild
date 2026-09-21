@@ -11,7 +11,7 @@
       "path": "./packages/infrastructure/client"
     },
     {
-      "path": "./packages/infrastructure/ui"
+      "path": "./packages/ui"
     },
     {
       "path": "./packages/infrastructure/ui-emception"

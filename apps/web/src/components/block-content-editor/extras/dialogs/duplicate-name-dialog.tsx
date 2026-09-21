@@ -3,8 +3,8 @@
 import { useState } from "react"
 import { BaseConfirmDialog } from "./base-confirm-dialog"
 import { AlertTriangle } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Input } from "@game-guild/ui/components/input"
+import { Label } from "@game-guild/ui/components/label"
 
 interface DuplicateNameDialogProps {
   open: boolean

@@ -7,7 +7,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@game-guild/ui/components/select"
 
 interface SelectOption {
   value: string
@@ -30,7 +30,7 @@ export function FilterSelect({
   className = "w-[150px]" 
 }: FilterSelectProps) {
   return (
-    <Select value={value} onValueChange={onChange}>
+    <Select value={value} onValueChange={(value) => value !== null && onChange(value)}>
       <SelectTrigger className={className}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>

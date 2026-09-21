@@ -105,7 +105,7 @@ export function LocalizationForm({ defaultValues }: LocalizationFormProps) {
           <FieldLabel htmlFor="localization-language">{t('language')}</FieldLabel>
           <Select
             value={values.language}
-            onValueChange={(value) => update('language', value)}
+            onValueChange={(value) => update('language', value ?? '')}
             disabled={isPending}
           >
             <SelectTrigger id="localization-language" className="w-full sm:max-w-xs">
@@ -125,7 +125,7 @@ export function LocalizationForm({ defaultValues }: LocalizationFormProps) {
           <FieldLabel htmlFor="localization-timezone">{t('timezone')}</FieldLabel>
           <Select
             value={values.timezone}
-            onValueChange={(value) => update('timezone', value)}
+            onValueChange={(value) => update('timezone', value ?? '')}
             disabled={isPending}
           >
             <SelectTrigger id="localization-timezone" className="w-full sm:max-w-xs">
@@ -149,7 +149,7 @@ export function LocalizationForm({ defaultValues }: LocalizationFormProps) {
             <FieldLabel htmlFor="localization-date-format">{t('dateFormat')}</FieldLabel>
             <Select
               value={values.dateFormat}
-              onValueChange={(value) => update('dateFormat', value)}
+              onValueChange={(value) => update('dateFormat', value ?? '')}
               disabled={isPending}
             >
               <SelectTrigger id="localization-date-format" className="w-full">
@@ -169,7 +169,7 @@ export function LocalizationForm({ defaultValues }: LocalizationFormProps) {
             <FieldLabel htmlFor="localization-time-format">{t('timeFormat')}</FieldLabel>
             <Select
               value={values.timeFormat}
-              onValueChange={(value) => update('timeFormat', value)}
+              onValueChange={(value) => update('timeFormat', value ?? '')}
               disabled={isPending}
             >
               <SelectTrigger id="localization-time-format" className="w-full">
@@ -190,7 +190,7 @@ export function LocalizationForm({ defaultValues }: LocalizationFormProps) {
           <FieldLabel htmlFor="localization-currency">{t('currency')}</FieldLabel>
           <Select
             value={values.currency}
-            onValueChange={(value) => update('currency', value)}
+            onValueChange={(value) => update('currency', value ?? '')}
             disabled={isPending}
           >
             <SelectTrigger id="localization-currency" className="w-full sm:max-w-xs">

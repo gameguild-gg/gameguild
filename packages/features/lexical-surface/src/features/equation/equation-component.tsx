@@ -160,46 +160,7 @@ export default function EquationComponent({
         }}
       />
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent
-          className="sm:max-w-[720px]"
-          onPointerDownOutside={(e) => {
-            const target = e.target as HTMLElement | null;
-            if (document.body.hasAttribute("data-math-keyboard-open"))
-              e.preventDefault();
-            else if (
-              target?.closest(
-                ".ML__keyboard, .ML__virtual-keyboard, math-field",
-              )
-            )
-              e.preventDefault();
-          }}
-          onInteractOutside={(e) => {
-            const target = e.target as HTMLElement | null;
-            if (document.body.hasAttribute("data-math-keyboard-open"))
-              e.preventDefault();
-            else if (
-              target?.closest(
-                ".ML__keyboard, .ML__virtual-keyboard, math-field",
-              )
-            )
-              e.preventDefault();
-          }}
-          onFocusOutside={(e) => {
-            const target = e.target as HTMLElement | null;
-            if (document.body.hasAttribute("data-math-keyboard-open"))
-              e.preventDefault();
-            else if (
-              target?.closest(
-                ".ML__keyboard, .ML__virtual-keyboard, math-field",
-              )
-            )
-              e.preventDefault();
-          }}
-          onEscapeKeyDown={(e) => {
-            if (document.body.hasAttribute("data-math-keyboard-open"))
-              e.preventDefault();
-          }}
-        >
+        <DialogContent className="sm:max-w-[720px]">
           <DialogHeader>
             <DialogTitle>Edit Equation</DialogTitle>
           </DialogHeader>

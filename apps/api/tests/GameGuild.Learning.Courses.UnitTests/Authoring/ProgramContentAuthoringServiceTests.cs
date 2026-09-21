@@ -180,6 +180,44 @@ public sealed class ProgramContentAuthoringServiceTests
         result.Revision.Should().Be(2);
     }
 
+    [Theory]
+    [InlineData(ProgramContentType.Page, ProgramContentType.Lesson, true)]
+    [InlineData(ProgramContentType.Challenge, ProgramContentType.Assignment, false)]
+    public async Task SaveDraft_NormalizesLegacyPayloadTypeAndDropsInvalidLessonFormat(
+        ProgramContentType submittedType,
+        ProgramContentType expectedType,
+        bool keepsLessonFormat)
+    {
+        await using var context = CreateContext();
+        var actorId = Guid.NewGuid();
+        var content = PublishedContent("Legacy content", "Original body");
+        context.Add(content);
+        await context.SaveChangesAsync();
+        var service = new ProgramContentAuthoringService(context);
+        var draft = await service.GetOrCreateDraft(content.ProgramId, content.Id, actorId, CancellationToken.None);
+        var submitted = draft.Payload with
+        {
+            Type = submittedType,
+            LessonFormat = LessonContentFormat.Markdown,
+            Body = "Edited body",
+        };
+
+        var saved = await service.SaveDraft(
+            content.ProgramId,
+            content.Id,
+            draft.Revision,
+            submitted,
+            actorId,
+            CancellationToken.None);
+
+        saved.Payload.Type.Should().Be(expectedType);
+        if (keepsLessonFormat)
+            saved.Payload.LessonFormat.Should().Be(LessonContentFormat.Markdown);
+        else
+            saved.Payload.LessonFormat.Should().BeNull();
+        saved.Payload.Body.Should().Be("Edited body");
+    }
+
     [Fact]
     public async Task SaveDraft_WithStaleRevision_DoesNotOverwriteNewerPayload()
     {

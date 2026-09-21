@@ -324,26 +324,24 @@ export function ButtonLexicalComponent({
       {isEditable && (
         <div className="absolute top-1 right-1 z-10 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                aria-label="Button settings"
-                className={cn(
-                  "inline-flex h-6 items-center justify-center gap-1 rounded px-1.5",
-                  "border border-gray-300 dark:border-gray-700",
-                  "bg-white/90 dark:bg-gray-800/90 text-gray-700 dark:text-gray-200",
-                  "shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700",
-                )}
-              >
-                <Settings2 className="h-3.5 w-3.5" />
-                <ChevronDown className="h-3.5 w-3.5" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-52"
-              onCloseAutoFocus={(e) => e.preventDefault()}
-            >
+            <DropdownMenuTrigger
+              render={
+                <button
+                  type="button"
+                  aria-label="Button settings"
+                  className={cn(
+                    "inline-flex h-6 items-center justify-center gap-1 rounded px-1.5",
+                    "border border-gray-300 dark:border-gray-700",
+                    "bg-white/90 dark:bg-gray-800/90 text-gray-700 dark:text-gray-200",
+                    "shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700",
+                  )}
+                >
+                  <Settings2 className="h-3.5 w-3.5" />
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </button>
+              }
+            />
+            <DropdownMenuContent align="end" className="w-52">
               {/* Action Type */}
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
@@ -431,17 +429,7 @@ export function ButtonLexicalComponent({
                     : (COLOR_LIST.find((c) => c.id === colorPalette)?.label ??
                       "Blue")}
                 </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent
-                  className="w-56"
-                  onFocusOutside={(e) => {
-                    const t = (e as any).detail?.originalEvent?.target;
-                    if (
-                      t instanceof Element &&
-                      t.closest('[contenteditable="true"]')
-                    )
-                      e.preventDefault();
-                  }}
-                >
+                <DropdownMenuSubContent className="w-56">
                   {COLOR_LIST.map(({ id, label, swatch }) => (
                     <DropdownMenuItem
                       key={id}
@@ -474,17 +462,7 @@ export function ButtonLexicalComponent({
                       />
                       Custom Primary
                     </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent
-                      className="p-3"
-                      onFocusOutside={(e) => {
-                        const t = (e as any).detail?.originalEvent?.target;
-                        if (
-                          t instanceof Element &&
-                          t.closest('[contenteditable="true"]')
-                        )
-                          e.preventDefault();
-                      }}
-                    >
+                    <DropdownMenuSubContent className="p-3">
                       <ColorPicker
                         color={customColors?.primary ?? "#3b82f6"}
                         onChange={(c) => {
@@ -520,17 +498,7 @@ export function ButtonLexicalComponent({
                       />
                       Custom Secondary
                     </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent
-                      className="p-3"
-                      onFocusOutside={(e) => {
-                        const t = (e as any).detail?.originalEvent?.target;
-                        if (
-                          t instanceof Element &&
-                          t.closest('[contenteditable="true"]')
-                        )
-                          e.preventDefault();
-                      }}
-                    >
+                    <DropdownMenuSubContent className="p-3">
                       <ColorPicker
                         color={customColors?.secondary ?? "#8b5cf6"}
                         onChange={(c) => {
@@ -566,17 +534,7 @@ export function ButtonLexicalComponent({
                       />
                       Custom Text
                     </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent
-                      className="p-3"
-                      onFocusOutside={(e) => {
-                        const t = (e as any).detail?.originalEvent?.target;
-                        if (
-                          t instanceof Element &&
-                          t.closest('[contenteditable="true"]')
-                        )
-                          e.preventDefault();
-                      }}
-                    >
+                    <DropdownMenuSubContent className="p-3">
                       <ColorPicker
                         color={customColors?.text ?? "#ffffff"}
                         onChange={(c) => {
@@ -618,17 +576,7 @@ export function ButtonLexicalComponent({
                           />
                           Hover Primary
                         </DropdownMenuSubTrigger>
-                        <DropdownMenuSubContent
-                          className="p-3"
-                          onFocusOutside={(e) => {
-                            const t = (e as any).detail?.originalEvent?.target;
-                            if (
-                              t instanceof Element &&
-                              t.closest('[contenteditable="true"]')
-                            )
-                              e.preventDefault();
-                          }}
-                        >
+                        <DropdownMenuSubContent className="p-3">
                           <ColorPicker
                             color={customColors?.hoverPrimary ?? "#1d4ed8"}
                             onChange={(c) => {
@@ -664,17 +612,7 @@ export function ButtonLexicalComponent({
                           />
                           Hover Secondary
                         </DropdownMenuSubTrigger>
-                        <DropdownMenuSubContent
-                          className="p-3"
-                          onFocusOutside={(e) => {
-                            const t = (e as any).detail?.originalEvent?.target;
-                            if (
-                              t instanceof Element &&
-                              t.closest('[contenteditable="true"]')
-                            )
-                              e.preventDefault();
-                          }}
-                        >
+                        <DropdownMenuSubContent className="p-3">
                           <ColorPicker
                             color={customColors?.hoverSecondary ?? "#7c3aed"}
                             onChange={(c) => {
@@ -710,17 +648,7 @@ export function ButtonLexicalComponent({
                           />
                           Hover Text
                         </DropdownMenuSubTrigger>
-                        <DropdownMenuSubContent
-                          className="p-3"
-                          onFocusOutside={(e) => {
-                            const t = (e as any).detail?.originalEvent?.target;
-                            if (
-                              t instanceof Element &&
-                              t.closest('[contenteditable="true"]')
-                            )
-                              e.preventDefault();
-                          }}
-                        >
+                        <DropdownMenuSubContent className="p-3">
                           <ColorPicker
                             color={customColors?.hoverText ?? "#ffffff"}
                             onChange={(c) => {

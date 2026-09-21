@@ -75,34 +75,37 @@ export function PublicDesktopNav({
 
           return (
             <DropdownMenu key={item.label}>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  aria-current={active ? 'page' : undefined}
-                  className={cn(
-                    variant === 'app'
-                      ? 'inline-flex h-9 items-center gap-1 rounded-lg px-2.5 text-[13px] font-medium transition-colors'
-                      : 'inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-medium transition-colors',
-                    active
-                      ? variant === 'app'
-                        ? 'bg-accent text-accent-foreground'
-                        : 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:bg-accent hover:text-foreground',
-                  )}
-                >
-                  {item.label}
-                  <ChevronDown className="size-3.5 opacity-60" aria-hidden="true" />
-                </button>
+              <DropdownMenuTrigger
+                render={
+                  <button
+                    type="button"
+                    aria-current={active ? 'page' : undefined}
+                    className={cn(
+                      variant === 'app'
+                        ? 'inline-flex h-9 items-center gap-1 rounded-lg px-2.5 text-[13px] font-medium transition-colors'
+                        : 'inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-medium transition-colors',
+                      active
+                        ? variant === 'app'
+                          ? 'bg-accent text-accent-foreground'
+                          : 'bg-primary text-primary-foreground'
+                        : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+                    )}
+                  />
+                }
+              >
+                {item.label}
+                <ChevronDown className="size-3.5 opacity-60" aria-hidden="true" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="min-w-40">
                 {item.items.map((child) => {
                   const childActive = isActivePath(pathname, child.href, variant);
 
                   return (
-                    <DropdownMenuItem key={child.href} asChild>
-                      <a href={child.href} aria-current={childActive ? 'page' : undefined}>
-                        {child.label}
-                      </a>
+                    <DropdownMenuItem
+                      key={child.href}
+                      render={<a href={child.href} aria-current={childActive ? 'page' : undefined} />}
+                    >
+                      {child.label}
                     </DropdownMenuItem>
                   );
                 })}
@@ -155,16 +158,18 @@ export function PublicMobileNav({
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          className="border-border bg-accent/30 text-foreground hover:bg-accent hover:text-foreground lg:hidden"
-          aria-label={triggerLabel}
-        >
-          <Menu className="size-4" aria-hidden="true" />
-        </Button>
+      <SheetTrigger
+        render={
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="border-border bg-accent/30 text-foreground hover:bg-accent hover:text-foreground lg:hidden"
+            aria-label={triggerLabel}
+          />
+        }
+      >
+        <Menu className="size-4" aria-hidden="true" />
       </SheetTrigger>
       <SheetContent side="right" className="border-border bg-popover text-popover-foreground">
         <SheetHeader>

@@ -28,18 +28,20 @@ export function QuizEditorSettingsMenu({
 }) {
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          className="h-8 w-8"
-          aria-label="Quiz editor settings"
-          title="Editor settings"
-        >
-          <Menu className="h-4 w-4" />
-        </Button>
-      </PopoverTrigger>
+      <PopoverTrigger
+        render={
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            aria-label="Quiz editor settings"
+            title="Editor settings"
+          >
+            <Menu className="h-4 w-4" />
+          </Button>
+        }
+      />
       <PopoverContent align="end" className="z-[130] w-72 p-4">
         <section className="space-y-3">
           <div className="flex items-center gap-2">

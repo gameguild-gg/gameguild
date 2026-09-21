@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@game-guild/ui/components/button";
 import Link from "next/link";
 
 export function TestingLabLearnMore() {
@@ -12,12 +12,12 @@ export function TestingLabLearnMore() {
         <div className="h-px bg-gradient-to-r from-transparent via-slate-600 to-transparent w-32"></div>
       </div>
       <Button
-        asChild
         size="lg"
         variant="outline"
         className="bg-slate-900/20 backdrop-blur-md border border-slate-700/50 text-slate-200 hover:text-white hover:bg-slate-800/30 hover:border-slate-600/50 px-8 py-4 text-lg transition-all duration-200"
+        nativeButton={false} render={<Link href="#learn-more" />}
       >
-        <Link href="#learn-more">Learn More</Link>
+        Learn More
       </Button>
     </div>
   );

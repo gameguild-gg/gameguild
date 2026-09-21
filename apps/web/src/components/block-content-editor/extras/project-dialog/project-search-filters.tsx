@@ -1,8 +1,8 @@
 "use client"
 
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
+import { Input } from "@game-guild/ui/components/input"
+import { Label } from "@game-guild/ui/components/label"
+import { Button } from "@game-guild/ui/components/button"
 import { useState, useEffect } from "react"
 import { Cloud, Database, HardDrive, Calendar, User, AlertCircle } from "lucide-react"
 import { useGoogleDriveAuth } from "@/components/block-content-editor/hooks/editor/use-google-drive-auth"

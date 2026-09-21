@@ -3,7 +3,7 @@
 import { FolderOpen, Eye } from "lucide-react"
 import { toast } from "sonner"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@game-guild/ui/components/button"
 import { ProjectSearchFilters } from "@/components/block-content-editor/extras/project-dialog/project-search-filters"
 import { ProjectList } from "@/components/block-content-editor/extras/project-dialog/project-list"
 import { ProjectPagination } from "@/components/block-content-editor/extras/project-dialog/project-pagination"

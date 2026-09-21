@@ -2,7 +2,7 @@
 
 import { Sun, Moon, Menu } from "lucide-react"
 import { useTheme } from "next-themes"
-import { Button } from "@/components/ui/button"
+import { Button } from "@game-guild/ui/components/button"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 

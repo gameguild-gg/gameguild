@@ -187,27 +187,29 @@ export function DateTimeRangePicker({
         }}
       />
       <Popover open={open} onOpenChange={handleOpenChange}>
-        <PopoverTrigger asChild>
-          <Button
-            ref={triggerRef}
-            id={id}
-            type="button"
-            variant="outline"
-            disabled={disabled}
-            aria-label={label}
-            aria-required={required}
-            className={cn(
-              "h-auto min-h-10 w-full justify-start gap-3 px-3 py-2 text-left font-normal",
-              !hasValue && "text-muted-foreground",
-            )}
-          >
-            <CalendarDays className="size-4 shrink-0" aria-hidden="true" />
-            <span className="min-w-0 flex-1 truncate">
-              {hasValue
-                ? displayRange(current.start, current.end, timeZoneId)
-                : `Choose ${label.toLowerCase()}`}
-            </span>
-          </Button>
+        <PopoverTrigger
+          render={
+            <Button
+              ref={triggerRef}
+              id={id}
+              type="button"
+              variant="outline"
+              disabled={disabled}
+              aria-label={label}
+              aria-required={required}
+              className={cn(
+                "h-auto min-h-10 w-full justify-start gap-3 px-3 py-2 text-left font-normal",
+                !hasValue && "text-muted-foreground",
+              )}
+            />
+          }
+        >
+          <CalendarDays className="size-4 shrink-0" aria-hidden="true" />
+          <span className="min-w-0 flex-1 truncate">
+            {hasValue
+              ? displayRange(current.start, current.end, timeZoneId)
+              : `Choose ${label.toLowerCase()}`}
+          </span>
         </PopoverTrigger>
         <PopoverContent
           align="start"

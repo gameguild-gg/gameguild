@@ -96,6 +96,7 @@ import {
   useState,
   useTransition,
   type FormEvent,
+  type ReactElement,
   type ReactNode,
 } from "react";
 
@@ -260,7 +261,7 @@ function EventActionDialog({
   successHref,
   submitDisabled = false,
 }: {
-  trigger: ReactNode;
+  trigger: ReactElement;
   title: string;
   description: string;
   submitLabel: string;
@@ -304,7 +305,7 @@ function EventActionDialog({
         setResult(null);
       }}
     >
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      <DialogTrigger render={trigger} />
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <form onSubmit={submit} className="space-y-5">
           <DialogHeader>
@@ -729,7 +730,7 @@ function EventRecurrenceFields({
         <Select
           value={repeatOption}
           onValueChange={(value) => {
-            setRepeatOption(value);
+            setRepeatOption(value ?? "none");
             onDirty();
           }}
         >
@@ -779,7 +780,7 @@ function EventRecurrenceFields({
                 <Select
                   value={customFrequency}
                   onValueChange={(value) => {
-                    setCustomFrequency(value);
+                    setCustomFrequency(value ?? "Weekly");
                     onDirty();
                   }}
                 >
@@ -847,7 +848,7 @@ function EventRecurrenceFields({
               <Select
                 value={endMode}
                 onValueChange={(value) => {
-                  setEndMode(value);
+                  setEndMode(value ?? "count");
                   onDirty();
                 }}
               >
@@ -2594,7 +2595,7 @@ export function TestingEventLearningDialog({
           name="learningActivityId"
           required
           value={selectedActivityId}
-          onValueChange={setSelectedActivityId}
+          onValueChange={(value) => setSelectedActivityId(value ?? "")}
         >
           <SelectTrigger aria-label="Course activity">
             <SelectValue placeholder="Choose a lesson or graded activity" />

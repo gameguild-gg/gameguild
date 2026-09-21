@@ -8,16 +8,16 @@ describe('Button', () => {
     vi.restoreAllMocks();
   });
 
-  it('renders an asChild link without Base UI native button errors', () => {
+  it('renders a render-prop link without Base UI native button errors', () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     render(
-      <Button asChild>
-        <Link href="/workspace/projects">Open projects</Link>
+      <Button nativeButton={false} render={<Link href="/workspace/projects" />}>
+        Open projects
       </Button>,
     );
 
-    expect(screen.getByRole('link', { name: 'Open projects' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: 'Open projects' })).toHaveAttribute(
       'href',
       '/workspace/projects',
     );

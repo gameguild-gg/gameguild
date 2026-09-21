@@ -91,21 +91,23 @@ export function PageSettingsDropDown({ disabled }: { disabled?: boolean }) {
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          disabled={disabled}
-          aria-label="Page settings"
-          title="Page settings"
-          className={cn(
-            "inline-flex items-center gap-1 h-8 px-2 rounded text-sm",
-            "hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40 disabled:pointer-events-none",
-          )}
-        >
-          <PageIcon className="w-4 h-4" />
-          <ChevronDownIcon className="w-3 h-3 opacity-60" />
-        </button>
-      </PopoverTrigger>
+      <PopoverTrigger
+        render={
+          <button
+            type="button"
+            disabled={disabled}
+            aria-label="Page settings"
+            title="Page settings"
+            className={cn(
+              "inline-flex items-center gap-1 h-8 px-2 rounded text-sm",
+              "hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40 disabled:pointer-events-none",
+            )}
+          >
+            <PageIcon className="w-4 h-4" />
+            <ChevronDownIcon className="w-3 h-3 opacity-60" />
+          </button>
+        }
+      />
       <PopoverContent
         align="start"
         sideOffset={4}

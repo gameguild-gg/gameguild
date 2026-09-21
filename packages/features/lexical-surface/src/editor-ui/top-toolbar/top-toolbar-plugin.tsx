@@ -241,27 +241,21 @@ function EmojiPickerPopover({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          disabled={disabled}
-          title="Insert emoji"
-          aria-label="Insert emoji"
-          className="inline-flex h-8 items-center justify-center gap-1 rounded px-2 text-sm text-gray-800 hover:bg-gray-100 disabled:pointer-events-none disabled:opacity-40 dark:text-gray-100 dark:hover:bg-gray-800"
-        >
-          <EmojiIcon className="h-4 w-4" />
-          <span className="hidden sm:inline">Emoji</span>
-        </button>
-      </PopoverTrigger>
-      <PopoverContent
-        align="start"
-        sideOffset={4}
-        className="w-auto p-2"
-        onOpenAutoFocus={(e) => {
-          // Mantém o foco no input interno do panel.
-          e.preventDefault();
-        }}
-      >
+      <PopoverTrigger
+        render={
+          <button
+            type="button"
+            disabled={disabled}
+            title="Insert emoji"
+            aria-label="Insert emoji"
+            className="inline-flex h-8 items-center justify-center gap-1 rounded px-2 text-sm text-gray-800 hover:bg-gray-100 disabled:pointer-events-none disabled:opacity-40 dark:text-gray-100 dark:hover:bg-gray-800"
+          >
+            <EmojiIcon className="h-4 w-4" />
+            <span className="hidden sm:inline">Emoji</span>
+          </button>
+        }
+      />
+      <PopoverContent align="start" sideOffset={4} className="w-auto p-2">
         <EmojiPickerPanel onSelect={insert} />
       </PopoverContent>
     </Popover>

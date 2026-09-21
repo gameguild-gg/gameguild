@@ -4,11 +4,11 @@ import { useEffect, useState } from "react"
 import { Folder, File, ChevronRight, ChevronDown, Package, Trash2, Download, Plus } from "lucide-react"
 import type { CollectionMetadata, CollectionManifest, CollectionFolder, CollectionFile } from "./collection-types"
 import { collectionRepository } from "./collection-repository"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Button } from "@game-guild/ui/components/button"
+import { Input } from "@game-guild/ui/components/input"
+import { ScrollArea } from "@game-guild/ui/components/scroll-area"
+import { Badge } from "@game-guild/ui/components/badge"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@game-guild/ui/components/dialog"
 
 interface CollectionBrowserProps {
   onImportFiles: (files: Array<{ name: string; path: string; assetId: string; isFile?: 'f' | 'm' | 't'; readonly?: boolean; isVisible?: boolean }>, folderMetadata?: Map<string, { readonly?: boolean; isVisible?: boolean }>) => void

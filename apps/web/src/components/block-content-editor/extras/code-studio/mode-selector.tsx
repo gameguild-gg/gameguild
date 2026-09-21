@@ -3,13 +3,13 @@
 import { Play, TestTube, Eye, Terminal, Command } from "lucide-react"
 import type { EditorMode } from "./types"
 import { MODE_CONFIGS } from "./types"
-import { Button } from "@/components/ui/button"
+import { Button } from "@game-guild/ui/components/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@game-guild/ui/components/dropdown-menu"
 
 interface ModeSelectorProps {
   currentMode: EditorMode
@@ -32,11 +32,9 @@ export function ModeSelector({ currentMode, onModeChange, compact = false }: Mod
   if (compact) {
     return (
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm" className="flex items-center gap-2">
-            <CurrentIcon className="h-3 w-3" />
-            <span className="text-xs">{current.label}</span>
-          </Button>
+        <DropdownMenuTrigger render={<Button variant="outline" size="sm" className="flex items-center gap-2" />}>
+          <CurrentIcon className="h-3 w-3" />
+          <span className="text-xs">{current.label}</span>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           {Object.values(MODE_CONFIGS).map((mode) => {

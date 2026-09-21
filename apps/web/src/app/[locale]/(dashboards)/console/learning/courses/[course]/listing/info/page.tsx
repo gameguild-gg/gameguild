@@ -185,7 +185,7 @@ export default function ListingInfoPage({ params }: { params: Promise<{ locale: 
 
               <div className="flex flex-col gap-2">
                 <Label>Category</Label>
-                <Select value={category} onValueChange={setCategory}>
+                <Select value={category} onValueChange={(value) => setCategory(value ?? '')}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -201,7 +201,7 @@ export default function ListingInfoPage({ params }: { params: Promise<{ locale: 
 
               <div className="flex flex-col gap-2">
                 <Label>Difficulty</Label>
-                <Select value={difficulty} onValueChange={setDifficulty}>
+                <Select value={difficulty} onValueChange={(value) => setDifficulty(value ?? '')}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>

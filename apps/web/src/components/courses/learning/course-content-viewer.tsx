@@ -1,12 +1,12 @@
 'use client';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge } from '@game-guild/ui/components/badge';
+import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Progress } from '@/components/ui/progress';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@game-guild/ui/components/dropdown-menu';
+import { Progress } from '@game-guild/ui/components/progress';
 import { useCallback, useEffect, useState } from 'react';
-// import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from '@game-guild/ui/components/tabs';
 import { CourseCompletionCertificateService } from '@/lib/courses/services/certificate.service';
 import { ContentReportService } from '@/lib/courses/services/content-report.service';
 import { CertificateNotification, ContentNavigationSidebar, LessonViewer, ReportContentDialog } from '@game-guild/courses/components/learning';
@@ -429,10 +429,8 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
                           </span>
                         )}
                         <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" aria-label="Content actions">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
+                          <DropdownMenuTrigger render={<Button variant="ghost" size="sm" aria-label="Content actions" />}>
+                            <MoreVertical className="h-4 w-4" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => setShowReportDialog(true)}>

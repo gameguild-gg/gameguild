@@ -1,12 +1,12 @@
 import { MoreVertical, Download, Trash2, FileImage, FileText, FileVideo, File, Edit } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { Button } from "@game-guild/ui/components/button"
+import { Badge } from "@game-guild/ui/components/badge"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@game-guild/ui/components/dropdown-menu"
 import { useEffect, useState } from "react"
 import { toAssetUri } from "@game-guild/assets"
 import { getDefaultBrowserAssetRepository } from "@game-guild/assets/browser"
@@ -181,10 +181,8 @@ export function AssetList({ assets, viewMode, gridColumns = 5, listColumns = 1, 
                   )}
                 </div>
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-7 w-7 sm:h-8 sm:w-8 p-0 shrink-0">
-                      <MoreVertical className="w-3 h-3 sm:w-4 sm:h-4" />
-                    </Button>
+                  <DropdownMenuTrigger render={<Button variant="ghost" size="sm" className="h-7 w-7 sm:h-8 sm:w-8 p-0 shrink-0" />}>
+                    <MoreVertical className="w-3 h-3 sm:w-4 sm:h-4" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => onEdit(asset.id, asset.name)}>
@@ -258,10 +256,8 @@ export function AssetList({ assets, viewMode, gridColumns = 5, listColumns = 1, 
             </div>
             <div className="flex items-center gap-2">
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    <MoreVertical className="w-4 h-4" />
-                  </Button>
+                <DropdownMenuTrigger render={<Button variant="ghost" size="sm" className="h-8 w-8 p-0" />}>
+                  <MoreVertical className="w-4 h-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => onEdit(asset.id, asset.name)}>

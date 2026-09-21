@@ -4,10 +4,19 @@ import { LearnerLessonRenderer } from "@/components/learning/learner-lesson-rend
 import { LessonCodeEditor } from "@/components/learning/console/courses/[course]/content/[contentId]/lesson-code-editor";
 import { LessonContentEditor } from "@/components/learning/console/courses/[course]/content/[contentId]/lesson-content-editor";
 import { LessonVideoEditor } from "@/components/learning/console/courses/[course]/content/[contentId]/lesson-video-editor";
+import { LessonExternalLinkEditor } from "@/components/learning/console/courses/[course]/content/[contentId]/lesson-external-link-editor";
 import { QuizContentEditor } from "@/components/learning/console/courses/[course]/content/[contentId]/quiz-content-editor";
 import { CodingDefinitionEditor } from "@/components/learning/console/courses/[course]/assessments/[assessmentId]/coding-definition/coding-definition-editor";
 import { CodingAssignmentPreview } from "@/components/learning/authoring/coding-assignment-preview";
 import type { CodingAssignmentContent } from "@/lib/coding-assignment/types";
+import {
+  createAssessment,
+  deleteAssessment,
+  restoreAssessment,
+} from "@/lib/learning/actions";
+import { hasReviewMethod } from "@/lib/learning/assessment-grading-methods";
+import type { Assessment } from "@/lib/learning/queries/assessments";
+import { createReviewMethods } from "@game-guild/grading";
 import {
   applyAiProposal,
   cancelAiAuthoringRun,
@@ -35,9 +44,11 @@ import { useLearningBase } from "@/lib/learning/use-learning-base";
 import { configureMonacoWorkers } from "@/lib/learning/configure-monaco-workers";
 import { getLearningAssetRepository } from "@/lib/learning/assets/learning-asset-repository";
 import { prepareAuthoringAssets } from "@/lib/learning/assets/prepare-authoring-assets";
+import { resolveAuthoringContentKind } from "@/lib/learning/authoring-content-kind";
 import { normalizeSlug, slugify } from "@/lib/slugify";
 import { Badge } from "@game-guild/ui/components/badge";
 import { Button } from "@game-guild/ui/components/button";
+import { buttonVariants } from "@game-guild/ui/components/button";
 import {
   Dialog,
   DialogContent,
@@ -46,6 +57,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@game-guild/ui/components/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@game-guild/ui/components/alert-dialog";
 import { Input } from "@game-guild/ui/components/input";
 import { Label } from "@game-guild/ui/components/label";
 import { ScrollArea } from "@game-guild/ui/components/scroll-area";
@@ -101,6 +122,7 @@ import {
   useRef,
   useState,
   useSyncExternalStore,
+  useTransition,
 } from "react";
 
 configureMonacoWorkers();
@@ -121,11 +143,7 @@ interface LessonAuthoringWorkspaceProps {
   item: CourseContentItemDetailViewModel;
   curriculum: CourseContentItemViewModel[];
   initialDraft: AuthoringDraft;
-  linkedAssessment?: {
-    id: string;
-    slug: string;
-    title?: string;
-  } | null;
+  linkedAssessment?: Assessment | null;
   initialCodingAssignment?: CodingAssignmentContent | null;
 }
 
@@ -216,13 +234,23 @@ export function LessonAuthoringWorkspace({
   );
   const itemType = contentItemType(item);
   const payloadType = contentItemType(payload);
+  const linkedAssessmentId = linkedAssessment?.id ?? null;
+  const [gradedChecked, setGradedChecked] = useState(!!linkedAssessmentId);
+  const [activeAssessmentId, setActiveAssessmentId] = useState<
+    string | null | undefined
+  >(linkedAssessmentId);
+  const [activeReviewMethods, setActiveReviewMethods] = useState(
+    linkedAssessment?.reviewMethods,
+  );
+  const [recentlyDeletedAssessmentId, setRecentlyDeletedAssessmentId] =
+    useState<string | null>(null);
+  const [showGradedOffConfirm, setShowGradedOffConfirm] = useState(false);
+  const [gradedError, setGradedError] = useState<string | null>(null);
+  const [isGradedPending, startGradedTransition] = useTransition();
   const [mode, setMode] = useState<EditorMode>(() =>
-    itemType === "Code" ||
-    itemType === "Questionnaire" ||
-    payloadType === "Code" ||
-    payloadType === "Questionnaire"
-      ? "editor"
-      : "split",
+    resolveAuthoringContentKind(itemType, payloadType) === "lesson"
+      ? "split"
+      : "editor",
   );
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("saved");
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -264,11 +292,10 @@ export function LessonAuthoringWorkspace({
 
   const format =
     payload.lessonFormat ?? (payload.jsonBody ? "Lexical" : "Markdown");
-  const isCode = itemType === "Code" || payloadType === "Code";
-  const isQuiz =
-    !isCode &&
-    (itemType === "Questionnaire" || payloadType === "Questionnaire");
-  const isLesson = !isCode && !isQuiz && payloadType === "Lesson";
+  const contentKind = resolveAuthoringContentKind(itemType, payloadType);
+  const isCode = contentKind === "code";
+  const isQuiz = contentKind === "quiz";
+  const isLesson = contentKind === "lesson";
   const formatLabel = isCode ? "Coding assignment" : isQuiz ? "Quiz" : format;
   const isStructured = isQuiz || (isLesson && format === "Lexical");
   const currentPayloadJson = JSON.stringify(payload);
@@ -496,6 +523,94 @@ export function LessonAuthoringWorkspace({
     setIsPublishing(false);
   };
 
+  const GRADED_CONTENT_TYPES: ReadonlySet<string> = new Set([
+    "Assignment",
+    "Project",
+    "Code",
+  ]);
+  const isGradedType = GRADED_CONTENT_TYPES.has(
+    itemType ?? "",
+  );
+  const isAutomatedReview =
+    activeReviewMethods != null
+      ? hasReviewMethod(activeReviewMethods, "AutomatedReview")
+      : false;
+  const CONTENT_TO_ASSESSMENT_TYPE: Record<
+    string,
+    "Assignment" | "Quiz" | "Project"
+  > = {
+    Assignment: "Assignment",
+    Project: "Project",
+    Code: "Assignment",
+  };
+
+  const handleGradedToggle = (next: boolean) => {
+    if (next === gradedChecked || isGradedPending) return;
+    if (!next) {
+      setShowGradedOffConfirm(true);
+      return;
+    }
+    const restoreTargetId =
+      recentlyDeletedAssessmentId ?? activeAssessmentId ?? null;
+    startGradedTransition(async () => {
+      setGradedChecked(true);
+      setGradedError(null);
+      if (restoreTargetId) {
+        const result = await restoreAssessment(courseId, restoreTargetId);
+        if (!result.success) {
+          setGradedChecked(false);
+          setGradedError(result.error);
+          return;
+        }
+        setActiveAssessmentId(restoreTargetId);
+        setRecentlyDeletedAssessmentId(null);
+        router.refresh();
+        return;
+      }
+      const assessmentType =
+        CONTENT_TO_ASSESSMENT_TYPE[itemType ?? ""] ?? "Assignment";
+      const reviewMethods =
+        itemType === "Code"
+          ? createReviewMethods("AutomatedReview", true)
+          : createReviewMethods("InstructorReview");
+      const result = await createAssessment({
+        courseId,
+        title: payload.title,
+        type: assessmentType,
+        contentId: item.id,
+        submissionModalities: itemType === "Code" ? "Code" : undefined,
+        reviewMethods,
+      });
+      if (!result.success) {
+        setGradedChecked(false);
+        setGradedError(result.error);
+        return;
+      }
+      setActiveAssessmentId(result.data.id);
+      setActiveReviewMethods(reviewMethods);
+      router.refresh();
+    });
+  };
+
+  const confirmGradedOff = () => {
+    const targetId = activeAssessmentId ?? null;
+    setShowGradedOffConfirm(false);
+    if (!targetId) return;
+    startGradedTransition(async () => {
+      setGradedChecked(false);
+      setGradedError(null);
+      const result = await deleteAssessment(courseId, targetId);
+      if (!result.success) {
+        setGradedChecked(true);
+        setGradedError(result.error);
+        return;
+      }
+      setActiveAssessmentId(undefined);
+      setRecentlyDeletedAssessmentId(targetId);
+      router.refresh();
+    });
+  };
+
   const readRunStream = useCallback(
     async (run: AiAuthoringRun) => {
       let lastEventId = 0;
@@ -662,7 +777,7 @@ export function LessonAuthoringWorkspace({
       ? "QuizPatch"
       : format === "Lexical"
         ? "LexicalPatch"
-        : format === "Video"
+        : format === "Video" || format === "ExternalLink"
           ? "MetadataPatch"
           : proposalMode;
     const result = await createAiAuthoringRun(courseId, item.id, {
@@ -791,6 +906,14 @@ export function LessonAuthoringWorkspace({
     if (isLesson && format === "Video")
       return (
         <LessonVideoEditor
+          key={`${item.id}-${draft.revision}`}
+          initialValue={payload.body ?? ""}
+          onChange={(value) => updatePayload("body", value)}
+        />
+      );
+    if (isLesson && format === "ExternalLink")
+      return (
+        <LessonExternalLinkEditor
           key={`${item.id}-${draft.revision}`}
           initialValue={payload.body ?? ""}
           onChange={(value) => updatePayload("body", value)}
@@ -1253,6 +1376,76 @@ export function LessonAuthoringWorkspace({
                       </div>
                     </div>
                   </div>
+                  {isGradedType ? (
+                    <div className="space-y-3 rounded-md border p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="font-medium">Graded</p>
+                          <p className="text-sm text-muted-foreground">
+                            Link this content to a gradebook assessment.
+                          </p>
+                        </div>
+                        <Switch
+                          aria-label="Graded"
+                          checked={gradedChecked}
+                          disabled={isGradedPending}
+                          onCheckedChange={handleGradedToggle}
+                        />
+                      </div>
+                      {isGradedPending && (
+                        <p className="text-sm text-muted-foreground">
+                          <Loader2 className="mr-2 inline h-3 w-3 animate-spin" />
+                          Updating gradebook link…
+                        </p>
+                      )}
+                      {gradedError && (
+                        <p className="text-sm text-destructive">{gradedError}</p>
+                      )}
+                      {isCode && gradedChecked && isAutomatedReview && (
+                        <div className="space-y-1 text-sm text-muted-foreground">
+                          <p className="font-medium">Coding tests</p>
+                          <p>
+                            Language: {codingAssignment?.Environment.Language}
+                          </p>
+                          <p>
+                            Test cases:{" "}
+                            {(codingAssignment?.Tests.Public.length ?? 0) +
+                              (codingAssignment?.Tests.Private.length ?? 0)}{" "}
+                            ({codingAssignment?.Tests.Public.length ?? 0} public)
+                          </p>
+                          <p>
+                            Passing score: {codingAssignment?.Grading.MaxScore}
+                          </p>
+                        </div>
+                      )}
+                      <AlertDialog
+                        open={showGradedOffConfirm}
+                        onOpenChange={setShowGradedOffConfirm}
+                      >
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Remove grading?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This soft-deletes the linked assessment.
+                              Existing submissions are preserved. Toggle Graded
+                              back on to restore it.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              className={buttonVariants({
+                                variant: "destructive",
+                              })}
+                              onClick={confirmGradedOff}
+                            >
+                              Remove grading
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  ) : null}
                   <Separator />
                   <div className="space-y-3">
                     <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
@@ -1446,7 +1639,9 @@ export function LessonAuthoringWorkspace({
                   </div>
                 </ScrollArea>
                 <div className="space-y-2 border-t p-3">
-                  {!isStructured && format !== "Video" ? (
+                  {!isStructured &&
+                  format !== "Video" &&
+                  format !== "ExternalLink" ? (
                     <Select
                       value={proposalMode}
                       onValueChange={(value) =>
@@ -1469,10 +1664,11 @@ export function LessonAuthoringWorkspace({
                       </SelectContent>
                     </Select>
                   ) : null}
-                  {format === "Video" ? (
+                  {format === "Video" || format === "ExternalLink" ? (
                     <p className="rounded-md bg-muted/50 px-2.5 py-2 text-sm text-muted-foreground">
-                      Video media is protected. Copilot can only propose
-                      metadata changes.
+                      {format === "Video"
+                        ? "Video media is protected. Copilot can only propose metadata changes."
+                        : "External resources are protected. Copilot can only propose metadata changes."}
                     </p>
                   ) : null}
                   <div className="relative">

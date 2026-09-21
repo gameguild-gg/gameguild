@@ -197,30 +197,32 @@ export function DateTimePicker({
         data-slot="date-time-picker-value"
       />
       <Popover open={open} onOpenChange={handleOpenChange}>
-        <PopoverTrigger asChild>
-          <Button
-            ref={triggerRef}
-            id={id}
-            type="button"
-            variant="outline"
-            disabled={disabled}
-            aria-required={required}
-            aria-invalid={ariaInvalid}
-            className={cn(
-              "w-full justify-start overflow-hidden text-left font-normal",
-              !committedDate && "text-muted-foreground",
-            )}
-          >
-            <CalendarIcon aria-hidden="true" />
-            <span className="min-w-0 flex-1 truncate">
-              {committedDate
-                ? format(committedDate, displayFormat)
-                : placeholder}
-            </span>
-            <span className="shrink-0 text-xs text-muted-foreground">
-              {timezoneLabel}
-            </span>
-          </Button>
+        <PopoverTrigger
+          render={
+            <Button
+              ref={triggerRef}
+              id={id}
+              type="button"
+              variant="outline"
+              disabled={disabled}
+              aria-required={required}
+              aria-invalid={ariaInvalid}
+              className={cn(
+                "w-full justify-start overflow-hidden text-left font-normal",
+                !committedDate && "text-muted-foreground",
+              )}
+            />
+          }
+        >
+          <CalendarIcon aria-hidden="true" />
+          <span className="min-w-0 flex-1 truncate">
+            {committedDate
+              ? format(committedDate, displayFormat)
+              : placeholder}
+          </span>
+          <span className="shrink-0 text-xs text-muted-foreground">
+            {timezoneLabel}
+          </span>
         </PopoverTrigger>
         <PopoverContent align="start" className="w-auto p-0">
           <Calendar

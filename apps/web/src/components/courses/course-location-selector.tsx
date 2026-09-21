@@ -1,8 +1,8 @@
 'use client';
 
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@game-guild/ui/components/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
 import { getTestingLocations } from '@/lib/api/testing-lab';
 import type { TestingLocation as TestingLocationFull } from '@/lib/api/testing-types';
 import { AlertCircle, CheckCircle, FolderOpen, MapPin, Users } from 'lucide-react';
@@ -131,7 +131,7 @@ export function CourseLocationSelector({ onLocationSelected }: CourseLocationSel
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <Select onValueChange={handleLocationChange} disabled={isLoadingContent}>
+          <Select onValueChange={(value: string | null) => value !== null && handleLocationChange(value)} disabled={isLoadingContent}>
             <SelectTrigger>
               <SelectValue placeholder="Choose a testing location..." />
             </SelectTrigger>

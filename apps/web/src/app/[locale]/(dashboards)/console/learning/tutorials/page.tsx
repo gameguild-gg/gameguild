@@ -47,11 +47,9 @@ function TutorialRow({ item, index }: { item: LearningContentLibraryItem; index:
             </div>
           </div>
         </div>
-        <Button asChild variant="outline" size="sm" className="shrink-0">
-          <Link href={`/console/learning/courses/${item.courseSlug || item.courseId}/content/${item.slug || item.id}`}>
-            Edit tutorial
-            <ExternalLink className="ml-2 size-4" />
-          </Link>
+        <Button nativeButton={false} variant="outline" size="sm" className="shrink-0" render={<Link href={`/console/learning/courses/${item.courseSlug || item.courseId}/content/${item.slug || item.id}`} />}>
+          Edit tutorial
+          <ExternalLink className="ml-2 size-4" />
         </Button>
       </CardContent>
     </Card>
@@ -66,10 +64,8 @@ export default async function Page(): Promise<React.JSX.Element> {
     <div className="flex flex-col gap-6 p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/console/learning">
-              <ArrowLeft className="size-5" />
-            </Link>
+          <Button nativeButton={false} variant="ghost" size="icon" render={<Link href="/console/learning" />}>
+            <ArrowLeft className="size-5" />
           </Button>
           <div className="flex size-12 items-center justify-center rounded-lg bg-linear-to-br from-violet-500 to-fuchsia-600">
             <BookOpenCheck className="size-6 text-white" />
@@ -79,11 +75,9 @@ export default async function Page(): Promise<React.JSX.Element> {
             <p className="text-muted-foreground">Curate the hands-on lessons, walkthroughs, and challenges that power course learning paths.</p>
           </div>
         </div>
-        <Button asChild>
-          <Link href="/console/learning/courses">
-            <Plus className="mr-2 size-4" />
-            Add tutorial content
-          </Link>
+        <Button nativeButton={false} render={<Link href="/console/learning/courses" />}>
+          <Plus className="mr-2 size-4" />
+          Add tutorial content
         </Button>
       </div>
 
@@ -121,9 +115,7 @@ export default async function Page(): Promise<React.JSX.Element> {
             <FileText className="mb-4 size-12 text-muted-foreground" />
             <h3 className="text-lg font-semibold">No tutorial content found</h3>
             <p className="max-w-md text-sm text-muted-foreground">Create course lessons, code exercises, or reflections and they will appear here for curation.</p>
-            <Button asChild className="mt-5">
-              <Link href="/console/learning/courses/new">Create course</Link>
-            </Button>
+            <Button nativeButton={false} className="mt-5" render={<Link href="/console/learning/courses/new" />}>Create course</Button>
           </CardContent>
         </Card>
       ) : (

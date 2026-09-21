@@ -1,10 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { Button } from "@game-guild/ui/components/button"
+import { Input } from "@game-guild/ui/components/input"
+import { Label } from "@game-guild/ui/components/label"
+import { Textarea } from "@game-guild/ui/components/textarea"
 import { Save, FileText, Eye, AlertCircle, Check } from "lucide-react"
 import {
   Notebook,
@@ -31,7 +31,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@game-guild/ui/components/dropdown-menu"
 import { BlockEditorShell } from "@/components/block-content-editor/extras/block-editor-shell"
 import { useEditorSettings } from "@/components/block-content-editor/extras/settings-menu/use-editor-settings"
 
@@ -179,14 +179,10 @@ export function AdmonitionEditor({ initialData, onSave, onCancel }: AdmonitionEd
               Admonition Type:
             </Label>
             <DropdownMenu open={typeDropdownOpen} onOpenChange={setTypeDropdownOpen}>
-              <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  className="gap-2 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
-                >
-                  {typeToIcon[data.type]}
-                  <span className="capitalize">{data.type}</span>
-                </Button>
+              <DropdownMenuTrigger render={<Button variant="outline" 
+                  className="gap-2 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700" />}>
+                {typeToIcon[data.type]}
+                <span className="capitalize">{data.type}</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-[420px] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                 <div className="grid grid-cols-2 gap-1 p-1">
@@ -215,13 +211,9 @@ export function AdmonitionEditor({ initialData, onSave, onCancel }: AdmonitionEd
               Design Style:
             </Label>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  className="gap-2 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
-                >
-                  <span className="capitalize">{designStyles.find(s => s.value === (data.design || "default"))?.label}</span>
-                </Button>
+              <DropdownMenuTrigger render={<Button variant="outline" 
+                  className="gap-2 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700" />}>
+                <span className="capitalize">{designStyles.find(s => s.value === (data.design || "default"))?.label}</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-[500px] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 p-3">
                 <div className="space-y-2">

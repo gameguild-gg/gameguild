@@ -4,7 +4,7 @@ import { useState } from "react"
 import { FolderOpen, Plus, Upload } from "lucide-react"
 import { toast } from "sonner"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@game-guild/ui/components/button"
 import { DeleteConfirmDialog } from "@/components/block-content-editor/extras/dialogs/delete-confirm-dialog"
 import { ProjectSearchFilters } from "@/components/block-content-editor/extras/project-dialog/project-search-filters"
 import { ProjectList } from "@/components/block-content-editor/extras/project-dialog/project-list"

@@ -1,6 +1,6 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@game-guild/ui/components/button"
 import { X } from "lucide-react"
 import { useState, type ReactNode } from "react"
 

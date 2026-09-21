@@ -140,3 +140,6 @@ docs/devlog/2025-08-10-permissions-refactor-conversation-summary.md
 # Repo is PUBLIC — infra must NEVER be tracked
 infra/
 .omo/
+
+# Playwright MCP test artifacts
+.playwright-mcp/

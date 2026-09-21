@@ -13,15 +13,15 @@ import {
 } from "lucide-react"
 import { useTheme } from "next-themes"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Button } from "@game-guild/ui/components/button"
+import { Input } from "@game-guild/ui/components/input"
 import { cn } from "@/lib/utils"
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
+} from "@game-guild/ui/components/tooltip"
 
 import { BlockEditorShell } from "@/components/block-content-editor/extras/block-editor-shell"
 import { useEditorSettings } from "../settings-menu"
@@ -345,19 +345,15 @@ export function HTMLEditor({ initialData, onSave, onCancel }: HTMLEditorProps) {
                   placeholder="name.html"
                   className="h-7 text-xs"
                 />
-                <TooltipProvider delayDuration={300}>
+                <TooltipProvider delay={300}>
                   <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        type="button"
+                    <TooltipTrigger render={<Button type="button"
                         size="sm"
                         variant="outline"
                         onClick={handleCreateFile}
                         disabled={!newFileName.trim()}
-                        className="h-7 px-2"
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                      </Button>
+                        className="h-7 px-2" />}>
+                      <Plus className="h-3.5 w-3.5" />
                     </TooltipTrigger>
                     <TooltipContent side="top">Add file</TooltipContent>
                   </Tooltip>

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { GoogleLinkButton } from '@/components/google-link-button';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button, buttonVariants } from '@game-guild/ui/components/button';
 import {
   Card,
   CardContent,

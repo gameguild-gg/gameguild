@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 
 /**
  * The single page-container standard for every app shell (AppShell sections,
- * ConsoleShell, WorkspaceShell, LegalShell). All layouts align their content
+ * WorkspaceShell, WorkspaceShell, LegalShell). All layouts align their content
  * column to the same width and gutters.
  */
 export const CONTAINER_CLASS = 'mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8';

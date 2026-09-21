@@ -15,9 +15,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+} from '@game-guild/ui/components/alert-dialog';
+import { Badge } from '@game-guild/ui/components/badge';
+import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Sheet,
@@ -25,10 +25,10 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from '@/components/ui/sheet';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+} from '@game-guild/ui/components/sheet';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@game-guild/ui/components/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@game-guild/ui/components/tabs';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@game-guild/ui/components/tooltip';
 import { Loader2, Mail, MailOpen, MailWarning, ShieldOff } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useMemo, useState, useTransition } from 'react';
@@ -373,12 +373,10 @@ export function EmailDeliverability({
                             </Button>
                             {suppressed ? (
                               <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <span className="inline-flex">
-                                    <Button type="button" variant="outline" size="sm" disabled>
-                                      {t('deadLetters.requeue')}
-                                    </Button>
-                                  </span>
+                                <TooltipTrigger render={<span className="inline-flex" />}>
+                                  <Button type="button" variant="outline" size="sm" disabled>
+                                    {t('deadLetters.requeue')}
+                                  </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>{t('deadLetters.suppressedTooltip')}</TooltipContent>
                               </Tooltip>

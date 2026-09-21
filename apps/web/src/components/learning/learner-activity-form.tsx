@@ -252,8 +252,8 @@ export function LearnerActivityForm({
               </p>
             </div>
           </div>
-          <Button asChild type="button" variant="outline">
-            <Link href={projectsUrl}>Open projects</Link>
+          <Button nativeButton={false} type="button" variant="outline" render={<Link href={projectsUrl} />}>
+            Open projects
           </Button>
         </div>
       ) : modality === "Url" || modality === "Media" ? (

@@ -1,11 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@game-guild/ui/components/dialog"
+import { Button } from "@game-guild/ui/components/button"
+import { Input } from "@game-guild/ui/components/input"
 import { FileText, Search, X, HardDrive, Cloud, Database } from "lucide-react"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { ScrollArea } from "@game-guild/ui/components/scroll-area"
 import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
 import type { StorageType } from "@/components/block-content-editor/lib/storage/editor/storage-types"
 

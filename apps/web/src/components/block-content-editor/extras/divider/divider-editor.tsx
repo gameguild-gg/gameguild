@@ -1,9 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Button } from "@game-guild/ui/components/button"
+import { Input } from "@game-guild/ui/components/input"
+import { Label } from "@game-guild/ui/components/label"
 import { Save, Minus, Eye } from "lucide-react"
 import type { DividerData, DividerStyle, DividerThickness, DividerSpacing, ColorPalette } from "@/components/block-content-editor/nodes/divider-node"
 import {
@@ -11,7 +11,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@game-guild/ui/components/dropdown-menu"
 import {
   getThicknessStyles,
   getSpacingStyles,
@@ -160,13 +160,9 @@ export function DividerEditor({ initialData, onSave, onCancel }: DividerEditorPr
               Style:
             </Label>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="gap-2 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
-                >
-                  <span>{styles.find((s) => s.value === data.style)?.label}</span>
-                </Button>
+              <DropdownMenuTrigger render={<Button variant="outline"
+                  className="gap-2 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700" />}>
+                <span>{styles.find((s) => s.value === data.style)?.label}</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-[300px] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 p-3">
                 <div className="space-y-2">
@@ -198,13 +194,9 @@ export function DividerEditor({ initialData, onSave, onCancel }: DividerEditorPr
               Thickness:
             </Label>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="gap-2 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
-                >
-                  <span>{thicknesses.find((t) => t.value === data.thickness)?.label}</span>
-                </Button>
+              <DropdownMenuTrigger render={<Button variant="outline"
+                  className="gap-2 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700" />}>
+                <span>{thicknesses.find((t) => t.value === data.thickness)?.label}</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                 {thicknesses.map((thickness) => (
@@ -225,13 +217,9 @@ export function DividerEditor({ initialData, onSave, onCancel }: DividerEditorPr
               Spacing:
             </Label>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="gap-2 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
-                >
-                  <span>{spacings.find((s) => s.value === data.spacing)?.label}</span>
-                </Button>
+              <DropdownMenuTrigger render={<Button variant="outline"
+                  className="gap-2 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700" />}>
+                <span>{spacings.find((s) => s.value === data.spacing)?.label}</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                 {spacings.map((spacing) => (

@@ -1,8 +1,8 @@
 "use client"
 
 import React from 'react'
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { Button } from "@game-guild/ui/components/button"
+import { Badge } from "@game-guild/ui/components/badge"
 import { X } from 'lucide-react'
 import { type FilterConfig } from '../types'
 

@@ -2,7 +2,7 @@
 
 import { useCourseEditor } from '@/components/courses/editor/context/course-editor-provider';
 import { createCourse, saveCourse } from '@/components/courses/editor/actions';
-import { Button } from '@/components/ui/button';
+import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, BookOpen, DollarSign, Eye, FileText, Image, Save, Settings } from 'lucide-react';
 import Link from 'next/link';

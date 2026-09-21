@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button';
+import { Button } from '@game-guild/ui/components/button';
 import { Link } from '@/i18n/navigation';
 import { ArrowLeft, Search } from 'lucide-react';
 
@@ -28,15 +28,13 @@ export default function TrackNotFound() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild variant="outline" className="bg-transparent border-gray-600 text-white hover:bg-gray-800">
-              <Link href="/tracks">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Learning Tracks
-              </Link>
+            <Button variant="outline" className="bg-transparent border-gray-600 text-white hover:bg-gray-800" nativeButton={false} render={<Link href="/tracks" />}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Learning Tracks
             </Button>
 
-            <Button asChild className="bg-blue-600 hover:bg-blue-700">
-              <Link href="/courses">Browse All Courses</Link>
+            <Button className="bg-blue-600 hover:bg-blue-700" nativeButton={false} render={<Link href="/courses" />}>
+              Browse All Courses
             </Button>
           </div>
         </div>

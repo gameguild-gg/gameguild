@@ -1,10 +1,10 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@game-guild/ui/components/input';
+import { Label } from '@game-guild/ui/components/label';
+import { Textarea } from '@game-guild/ui/components/textarea';
 import { createCourse } from '@/lib/learning/actions';
 import { getCourseRouteParam } from '@/lib/learning/course-route';
 import { useRouter } from '@/i18n/navigation';

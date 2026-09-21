@@ -1,6 +1,6 @@
 "use client"
-import { Button } from "@/components/ui/button"
-import { Slider } from "@/components/ui/slider"
+import { Button } from "@game-guild/ui/components/button"
+import { Slider } from "@game-guild/ui/components/slider"
 import { Minus, Plus } from "lucide-react"
 
 interface ImageSizeControlProps {
@@ -56,7 +56,7 @@ export function ImageSizeControl({ size, onChange, className }: ImageSizeControl
           max={100}
           step={1}
           className="flex-1"
-          onValueChange={(values) => onChange(values[0] ?? size)}
+          onValueChange={(values) => onChange((Array.isArray(values) ? values[0] : values) ?? size)}
         />
         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={increaseSize} disabled={size >= 100}>
           <Plus className="h-4 w-4" />

@@ -53,17 +53,19 @@ export function EditorSettingsMenu({
 
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-8 w-8"
-          title="Editor settings"
-        >
-          <Menu className="h-4 w-4" />
-          <span className="sr-only">Editor settings</span>
-        </Button>
-      </PopoverTrigger>
+      <PopoverTrigger
+        render={
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            title="Editor settings"
+          >
+            <Menu className="h-4 w-4" />
+            <span className="sr-only">Editor settings</span>
+          </Button>
+        }
+      />
       <PopoverContent align="end" className="z-[130] w-80 p-0">
         <div className="border-b px-4 pt-4">
           <div className="mb-3 flex items-center gap-2 text-sm font-semibold">

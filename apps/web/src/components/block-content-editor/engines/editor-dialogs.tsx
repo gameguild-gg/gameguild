@@ -1,6 +1,6 @@
 "use client"
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@game-guild/ui/components/dialog"
 import { CreateProjectDialog } from "@/components/block-content-editor/extras/editor/create-project-dialog"
 import { SizeDetailsDialog } from "@/components/block-content-editor/extras/editor/size-details-dialog"
 import { SyncStatusDialog } from "@/components/block-content-editor/extras/editor/sync-status-dialog"

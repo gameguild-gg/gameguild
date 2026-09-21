@@ -1,13 +1,13 @@
 "use client"
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Separator } from "@/components/ui/separator"
-import { Slider } from "@/components/ui/slider"
-import { Switch } from "@/components/ui/switch"
+import { Badge } from "@game-guild/ui/components/badge"
+import { Button } from "@game-guild/ui/components/button"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@game-guild/ui/components/dialog"
+import { Label } from "@game-guild/ui/components/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@game-guild/ui/components/select"
+import { Separator } from "@game-guild/ui/components/separator"
+import { Slider } from "@game-guild/ui/components/slider"
+import { Switch } from "@game-guild/ui/components/switch"
 import { WEBP_PRESETS, WebPConverter, type WebPConversionOptions } from "@/components/block-content-editor/lib/editor/webp-converter"
 import { ImageIcon, Palette, Settings, Zap } from "lucide-react"
 import { useCallback, useEffect, useState } from "react"
@@ -118,15 +118,15 @@ export function CompressionSettingsDialog({
     }
   }
 
-  const handleQualityChange = (value: number[]) => {
-    const quality = value[0];
+  const handleQualityChange = (value: number | readonly number[]) => {
+    const quality = Array.isArray(value) ? value[0] : value;
     if (quality !== undefined) {
       setSettings((prev) => ({ ...prev, quality: quality / 100, preset: "custom" }))
     }
   }
 
-  const handleScaleChange = (value: number[]) => {
-    const newScale = value[0]
+  const handleScaleChange = (value: number | readonly number[]) => {
+    const newScale = Array.isArray(value) ? value[0] : value
     if (newScale === undefined) return;
     setScaleMultiplier(newScale)
 
@@ -264,7 +264,7 @@ export function CompressionSettingsDialog({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div>
                 <Label className="text-base font-medium">Preset</Label>
-                <Select value={settings.preset || "custom"} onValueChange={handlePresetChange}>
+                <Select value={settings.preset || "custom"} onValueChange={(value) => value !== null && handlePresetChange(value)}>
                   <SelectTrigger className="mt-2">
                     <SelectValue placeholder="Choose preset" />
                   </SelectTrigger>

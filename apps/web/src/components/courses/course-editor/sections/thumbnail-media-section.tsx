@@ -1,9 +1,9 @@
 'use client';
 
 import { useCourseEditor } from '@/components/courses/editor/context/course-editor-provider';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Button } from '@game-guild/ui/components/button';
+import { Input } from '@game-guild/ui/components/input';
+import { Label } from '@game-guild/ui/components/label';
 import { Play, Upload, X } from 'lucide-react';
 import React, { useRef } from 'react';
 

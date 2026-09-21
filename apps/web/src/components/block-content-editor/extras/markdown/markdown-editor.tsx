@@ -21,7 +21,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import type * as MonacoNS from "monaco-editor"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@game-guild/ui/components/button"
 import { Save, FileText, Blocks } from "lucide-react"
 import { useTheme } from "next-themes"
 

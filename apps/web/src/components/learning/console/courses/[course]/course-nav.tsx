@@ -199,14 +199,18 @@ export function CourseNav({
       {/* Header */}
       <div className="flex min-w-0 max-w-full flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-4">
-          <Button variant="ghost" size="icon" asChild>
-            <Link
-              href="/workspace/learning/courses"
-              locale={locale}
-              prefetch={false}
-            >
-              <ArrowLeft className="size-5" />
-            </Link>
+          <Button nativeButton={false}
+            variant="ghost"
+            size="icon"
+            render={
+              <Link
+                href="/workspace/learning/courses"
+                locale={locale}
+                prefetch={false}
+              />
+            }
+          >
+            <ArrowLeft className="size-5" />
           </Button>
           <div className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-emerald-500 to-teal-600">
             <BookOpen className="size-6 text-white" />
@@ -224,11 +228,13 @@ export function CourseNav({
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-          <Button variant="outline" size="sm" asChild>
-            <Link href={previewHref} locale={locale} prefetch={false}>
-              <Eye className="mr-2 size-4" />
-              Preview
-            </Link>
+          <Button nativeButton={false}
+            variant="outline"
+            size="sm"
+            render={<Link href={previewHref} locale={locale} prefetch={false} />}
+          >
+            <Eye className="mr-2 size-4" />
+            Preview
           </Button>
           <Button
             variant="outline"
@@ -286,15 +292,19 @@ export function CourseNav({
               Publish
             </Button>
           )}
-          <Button variant="outline" size="sm" asChild>
-            <Link
-              href={buildDashboardCoursePath(courseRouteParam, "settings")}
-              locale={locale}
-              prefetch={false}
-            >
-              <Settings className="mr-2 size-4" />
-              Settings
-            </Link>
+          <Button nativeButton={false}
+            variant="outline"
+            size="sm"
+            render={
+              <Link
+                href={buildDashboardCoursePath(courseRouteParam, "settings")}
+                locale={locale}
+                prefetch={false}
+              />
+            }
+          >
+            <Settings className="mr-2 size-4" />
+            Settings
           </Button>
         </div>
       </div>

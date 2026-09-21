@@ -2,10 +2,10 @@
 
 import React from "react"
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Badge } from "@game-guild/ui/components/badge"
+import { Button } from "@game-guild/ui/components/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Slider } from "@/components/ui/slider"
+import { Slider } from "@game-guild/ui/components/slider"
 import { WebPConverter } from "@/components/block-content-editor/lib/editor/webp-converter"
 import {
   Eye,
@@ -195,7 +195,7 @@ export function BeforeAfterPreview({ data, className = "" }: BeforeAfterPreviewP
         </div>
       </div>
 
-      <Slider value={sliderPosition} onValueChange={setSliderPosition} max={100} min={0} step={1} className="mt-2" />
+      <Slider value={sliderPosition} onValueChange={(value) => setSliderPosition(Array.isArray(value) ? [...value] : [value])} max={100} min={0} step={1} className="mt-2" />
     </div>
   )
 

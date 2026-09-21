@@ -21,7 +21,7 @@
 ### Task 1: Add the reusable shadcn DateTimePicker
 
 **Files:**
-- Create: `packages/infrastructure/ui/src/components/date-time-picker.tsx`
+- Create: `packages/ui/src/components/date-time-picker.tsx`
 - Create: `apps/web/src/components/testing-lab/date-time-picker.test.tsx`
 
 **Interfaces:**

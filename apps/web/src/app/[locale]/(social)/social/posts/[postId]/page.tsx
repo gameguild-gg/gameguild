@@ -18,7 +18,7 @@ export default async function SocialPostPage({
   return (
     <main className="mx-auto min-h-[calc(100svh-4rem)] w-full max-w-[820px] bg-background pb-16">
       <div className="px-4 py-4 sm:px-6">
-        <Button asChild variant="ghost" size="sm"><Link href="/"><ArrowLeft className="size-4" /> Back to feed</Link></Button>
+        <Button nativeButton={false} variant="ghost" size="sm" render={<Link href="/" />}><ArrowLeft className="size-4" /> Back to feed</Button>
       </div>
       <PostCard item={post} currentUserId={currentUserId} />
     </main>

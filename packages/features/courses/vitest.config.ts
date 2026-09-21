@@ -14,7 +14,7 @@ export default defineConfig({
     alias: {
       "@game-guild/ui": path.resolve(
         rootDirectory,
-        "../../infrastructure/ui/src",
+        "../../ui/src",
       ),
     },
   },

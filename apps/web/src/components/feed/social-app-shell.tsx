@@ -1,36 +1,42 @@
-import { PublicWebsiteHeader } from '@/components/app/app-shell';
-import { SocialSidebar } from '@/components/feed/social-sidebar';
-import { Toaster } from '@/components/ui/sonner';
-import { SidebarProvider } from '@game-guild/ui/components/sidebar';
+'use client';
 
-export async function SocialAppShell({ children }: { children: React.ReactNode }): Promise<React.JSX.Element> {
-  const header = await PublicWebsiteHeader({ embedded: true });
+import { AppShellHeader } from '@/components/app/app-shell-header';
+import { AppShellHeaderMenu } from '@/components/app/app-shell-header-menu';
+import { AppShellSidebar } from '@/components/app/app-shell-sidebar';
+import { AppShellContent, AppShellInset, AppShell } from '@/components/app/app-shell-layout';
+import { socialDesktopNav, socialNavigationData } from '@/components/app/social-navigation';
+import { PublicDesktopNav } from '@/components/app/public-website-nav';
+import type { WorkspaceUser } from '@/components/console/workspace-user-menu';
+import type { DashboardNotificationSummary } from '@/lib/dashboard-notifications';
+import { Toaster } from '@game-guild/ui/components/sonner';
 
+interface SocialAppShellProps {
+  children: React.ReactNode;
+  notifications?: DashboardNotificationSummary;
+  user: WorkspaceUser;
+}
+
+export function SocialAppShell({ children, notifications, user }: SocialAppShellProps): React.JSX.Element {
   return (
-    <div className="min-h-svh bg-background text-foreground">
+    <div className="flex h-svh min-w-0 flex-1 overflow-hidden">
       <a
-        href="#social-main"
+        href="#dashboard-main"
         className="sr-only fixed left-4 top-4 z-50 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground focus:not-sr-only"
       >
         Skip to social feed
       </a>
-      <SidebarProvider
-        className="min-h-svh bg-background"
-        style={
-          {
-            '--sidebar-width': '15rem',
-            '--sidebar-width-icon': '4rem',
-          } as React.CSSProperties
-        }
-      >
-        <SocialSidebar />
-        <div className="flex min-h-svh min-w-0 flex-1 flex-col">
-          {header}
-          <main id="social-main" tabIndex={-1} className="min-w-0 flex-1 overflow-x-hidden">
-            {children}
-          </main>
-        </div>
-      </SidebarProvider>
+      <AppShell>
+        <AppShellSidebar navigation={socialNavigationData} notifications={notifications} />
+        <AppShellInset>
+          <AppShellHeader>
+            <div className="flex min-w-0 items-center gap-2">
+              <PublicDesktopNav items={socialDesktopNav} variant="app" />
+            </div>
+            <AppShellHeaderMenu user={user} notifications={notifications} />
+          </AppShellHeader>
+          <AppShellContent>{children}</AppShellContent>
+        </AppShellInset>
+      </AppShell>
       <Toaster closeButton richColors position="top-right" />
     </div>
   );

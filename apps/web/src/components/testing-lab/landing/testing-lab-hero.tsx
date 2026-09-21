@@ -1,5 +1,5 @@
 import { Gamepad2, TestTube, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@game-guild/ui/components/button";
 import { Link } from "@/i18n/navigation";
 
 export function TestingLabHero() {
@@ -95,20 +95,20 @@ export function TestingLabHero() {
             <div className="relative">
               <div className="absolute inset-0 bg-purple-500/20 shadow-[0_0_20px_rgba(168,85,247,0.8)] animate-pulse rounded-lg"></div>
               <Button
-                asChild
                 size="lg"
                 className="relative bg-gradient-to-r from-purple-600/50 to-purple-500/50 backdrop-blur-md border border-purple-400/60 text-white hover:from-purple-600/90 hover:to-purple-500/90 hover:border-purple-300/90 px-8 py-4 text-lg font-semibold shadow-lg transition-all duration-200 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
+                nativeButton={false} render={<Link href="/testing-lab/events" />}
               >
-                <Link href="/testing-lab/events">Browse Events</Link>
+                Browse Events
               </Button>
             </div>
             <Button
-              asChild
               size="lg"
               variant="outline"
               className="border-blue-400/60 bg-blue-950/30 px-8 py-4 text-lg font-semibold text-blue-100 hover:bg-blue-900/50 hover:text-white"
+              nativeButton={false} render={<Link href="/workspace/projects" />}
             >
-              <Link href="/workspace/projects">Submit a project</Link>
+              Submit a project
             </Button>
           </div>
         </div>

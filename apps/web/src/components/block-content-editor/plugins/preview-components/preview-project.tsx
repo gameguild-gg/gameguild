@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { FileText, Copy, ExternalLink, RefreshCw } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@game-guild/ui/components/button"
 import { SerializedContentRenderer } from "../../extras/preview/serialized-content-renderer"
 import { toast } from "sonner"
 import type { SerializedEditorState } from "lexical"

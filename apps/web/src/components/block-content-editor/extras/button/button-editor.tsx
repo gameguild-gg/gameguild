@@ -1,10 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
+import { Button } from "@game-guild/ui/components/button"
+import { Input } from "@game-guild/ui/components/input"
+import { Label } from "@game-guild/ui/components/label"
+import { Switch } from "@game-guild/ui/components/switch"
 import { 
   Save, MousePointerClick, Eye, ExternalLink, Download, Copy, Mail,
   Link, Link2,
@@ -18,7 +18,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@game-guild/ui/components/dropdown-menu"
 import {
   BASE_BUTTON_STYLES,
   getSizeStyles,
@@ -319,14 +319,10 @@ export function ButtonEditor({ initialData, onSave, onCancel }: ButtonEditorProp
               Action Type:
             </Label>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="gap-2 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
-                >
-                  {actionTypes.find((a) => a.value === data.actionType)?.icon}
-                  <span>{actionTypes.find((a) => a.value === data.actionType)?.label}</span>
-                </Button>
+              <DropdownMenuTrigger render={<Button variant="outline"
+                  className="gap-2 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700" />}>
+                {actionTypes.find((a) => a.value === data.actionType)?.icon}
+                <span>{actionTypes.find((a) => a.value === data.actionType)?.label}</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                 {actionTypes.map((action) => (
@@ -350,13 +346,9 @@ export function ButtonEditor({ initialData, onSave, onCancel }: ButtonEditorProp
               Style:
             </Label>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="gap-2 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
-                >
-                  <span className="capitalize">{variants.find((v) => v.value === data.variant)?.label}</span>
-                </Button>
+              <DropdownMenuTrigger render={<Button variant="outline"
+                  className="gap-2 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700" />}>
+                <span className="capitalize">{variants.find((v) => v.value === data.variant)?.label}</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-[400px] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 p-3">
                 <div className="space-y-2">
@@ -408,13 +400,9 @@ export function ButtonEditor({ initialData, onSave, onCancel }: ButtonEditorProp
               Size:
             </Label>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="gap-2 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
-                >
-                  <span>{sizes.find((s) => s.value === data.size)?.label}</span>
-                </Button>
+              <DropdownMenuTrigger render={<Button variant="outline"
+                  className="gap-2 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700" />}>
+                <span>{sizes.find((s) => s.value === data.size)?.label}</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                 {sizes.map((size) => (

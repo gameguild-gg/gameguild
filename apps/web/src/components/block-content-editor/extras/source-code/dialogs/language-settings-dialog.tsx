@@ -1,8 +1,8 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
+import { Button } from "@game-guild/ui/components/button"
+import { Label } from "@game-guild/ui/components/label"
+import { Switch } from "@game-guild/ui/components/switch"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 export interface LanguageSettingsDialogProps {

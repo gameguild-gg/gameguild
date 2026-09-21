@@ -408,21 +408,19 @@ export function MediaLexicalComponent({
 
             {/* Settings DropdownMenu */}
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  className="h-6 px-1.5 inline-flex items-center gap-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 transition-colors"
-                  title="Media settings"
-                >
-                  <Settings className="w-3.5 h-3.5" />
-                  <ChevronDown className="w-3 h-3" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="w-56"
-                onCloseAutoFocus={(e) => e.preventDefault()}
-              >
+              <DropdownMenuTrigger
+                render={
+                  <button
+                    type="button"
+                    className="h-6 px-1.5 inline-flex items-center gap-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 transition-colors"
+                    title="Media settings"
+                  >
+                    <Settings className="w-3.5 h-3.5" />
+                    <ChevronDown className="w-3 h-3" />
+                  </button>
+                }
+              />
+              <DropdownMenuContent align="end" className="w-56">
                 {/* Gallery options */}
                 {galleryItems.length > 1 && (
                   <>
@@ -613,23 +611,7 @@ export function MediaLexicalComponent({
                     <Settings className="w-4 h-4 mr-2" />
                     Block Width: {size}%
                   </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent
-                    className="p-3 w-48"
-                    onFocusOutside={(e) => {
-                      const detail = (
-                        e as unknown as {
-                          detail?: { originalEvent?: { target?: Element } };
-                        }
-                      ).detail;
-                      const t = detail?.originalEvent?.target;
-                      if (
-                        t instanceof Element &&
-                        t.closest("[contenteditable='true']")
-                      ) {
-                        e.preventDefault();
-                      }
-                    }}
-                  >
+                  <DropdownMenuSubContent className="p-3 w-48">
                     <div className="space-y-2">
                       <div className="flex justify-between text-xs font-medium text-gray-500">
                         <span>Width</span>
@@ -641,8 +623,9 @@ export function MediaLexicalComponent({
                         max={100}
                         step={5}
                         onValueChange={(val) => {
-                          if (val[0] !== undefined) {
-                            updateNodeData((node) => node.setSize(val[0]));
+                          const next = Array.isArray(val) ? val[0] : val;
+                          if (next !== undefined) {
+                            updateNodeData((node) => node.setSize(next));
                           }
                         }}
                       />
@@ -1017,9 +1000,12 @@ export function MediaLexicalComponent({
                           max={duration || 100}
                           step={0.1}
                           onValueChange={(vals) => {
-                            if (mediaRef.current && vals[0] !== undefined) {
-                              mediaRef.current.currentTime = vals[0];
-                              setCurrentTime(vals[0]);
+                            const next = Array.isArray(vals)
+                              ? vals[0]
+                              : vals;
+                            if (mediaRef.current && next !== undefined) {
+                              mediaRef.current.currentTime = next;
+                              setCurrentTime(next);
                             }
                           }}
                         />
@@ -1050,9 +1036,12 @@ export function MediaLexicalComponent({
                               step={0.05}
                               className="w-16"
                               onValueChange={(v) => {
-                                if (v[0] !== undefined) {
-                                  setVolume(v[0]);
-                                  setMuted(v[0] === 0);
+                                const next = Array.isArray(v)
+                                  ? v[0]
+                                  : v;
+                                if (next !== undefined) {
+                                  setVolume(next);
+                                  setMuted(next === 0);
                                 }
                               }}
                             />
@@ -1150,12 +1139,15 @@ export function MediaLexicalComponent({
                       value={[currentTime]}
                       max={duration || 100}
                       step={0.1}
-                      onValueChange={(vals) => {
-                        if (mediaRef.current && vals[0] !== undefined) {
-                          mediaRef.current.currentTime = vals[0];
-                          setCurrentTime(vals[0]);
-                        }
-                      }}
+                       onValueChange={(vals) => {
+                         const next = Array.isArray(vals)
+                           ? vals[0]
+                           : vals;
+                         if (mediaRef.current && next !== undefined) {
+                           mediaRef.current.currentTime = next;
+                           setCurrentTime(next);
+                         }
+                       }}
                     />
                     <div className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2">
@@ -1183,12 +1175,13 @@ export function MediaLexicalComponent({
                           max={1}
                           step={0.05}
                           className="w-16"
-                          onValueChange={(v) => {
-                            if (v[0] !== undefined) {
-                              setVolume(v[0]);
-                              setMuted(v[0] === 0);
-                            }
-                          }}
+                           onValueChange={(v) => {
+                             const next = Array.isArray(v) ? v[0] : v;
+                             if (next !== undefined) {
+                               setVolume(next);
+                               setMuted(next === 0);
+                             }
+                           }}
                         />
                       </div>
                     </div>

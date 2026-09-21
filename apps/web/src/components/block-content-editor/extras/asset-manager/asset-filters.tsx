@@ -1,6 +1,6 @@
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
+import { Input } from "@game-guild/ui/components/input"
+import { Label } from "@game-guild/ui/components/label"
+import { Button } from "@game-guild/ui/components/button"
 import { Search, Filter, X } from "lucide-react"
 import {
   Select,
@@ -8,7 +8,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@game-guild/ui/components/select"
 
 interface AssetFiltersProps {
   searchTerm: string
@@ -73,7 +73,7 @@ export function AssetFilters({
           {/* MIME Type Filter */}
           <div className="space-y-2">
             <Label className="text-xs text-gray-600 dark:text-gray-400">File Type</Label>
-            <Select value={mimeTypeFilter} onValueChange={onMimeTypeFilterChange}>
+            <Select value={mimeTypeFilter} onValueChange={(value) => value !== null && onMimeTypeFilterChange(value)}>
               <SelectTrigger>
                 <SelectValue placeholder="All types" />
               </SelectTrigger>
@@ -91,7 +91,7 @@ export function AssetFilters({
           {/* Project Filter */}
           <div className="space-y-2">
             <Label className="text-xs text-gray-600 dark:text-gray-400">Project</Label>
-            <Select value={projectFilter} onValueChange={onProjectFilterChange}>
+            <Select value={projectFilter} onValueChange={(value) => value !== null && onProjectFilterChange(value)}>
               <SelectTrigger>
                 <SelectValue placeholder="All projects" />
               </SelectTrigger>
@@ -109,7 +109,7 @@ export function AssetFilters({
           {/* Usage Filter */}
           <div className="space-y-2">
             <Label className="text-xs text-gray-600 dark:text-gray-400">Usage</Label>
-            <Select value={usageFilter} onValueChange={onUsageFilterChange}>
+            <Select value={usageFilter} onValueChange={(value) => value !== null && onUsageFilterChange(value)}>
               <SelectTrigger>
                 <SelectValue placeholder="All assets" />
               </SelectTrigger>

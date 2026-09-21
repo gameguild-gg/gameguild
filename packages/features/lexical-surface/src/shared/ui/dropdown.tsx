@@ -74,30 +74,35 @@ export function DropDown({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          disabled={disabled}
-          title={title}
-          aria-label={buttonAriaLabel}
-          onMouseDown={
-            preserveSelection ? (event) => event.preventDefault() : undefined
-          }
-          className={cn(
-            "inline-flex items-center gap-1 h-8 px-2 rounded text-sm",
-            "hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40 disabled:pointer-events-none",
-            buttonClassName,
-          )}
-        >
-          {buttonIcon}
-          {buttonLabel != null && (
-            <span className="truncate max-w-[160px]" style={buttonLabelStyle}>
-              {buttonLabel}
-            </span>
-          )}
-          {showChevron && <ChevronDownIcon className="w-3 h-3 opacity-60" />}
-        </button>
-      </PopoverTrigger>
+      <PopoverTrigger
+        render={
+          <button
+            type="button"
+            disabled={disabled}
+            title={title}
+            aria-label={buttonAriaLabel}
+            onMouseDown={
+              preserveSelection ? (event) => event.preventDefault() : undefined
+            }
+            className={cn(
+              "inline-flex items-center gap-1 h-8 px-2 rounded text-sm",
+              "hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40 disabled:pointer-events-none",
+              buttonClassName,
+            )}
+          >
+            {buttonIcon}
+            {buttonLabel != null && (
+              <span
+                className="truncate max-w-[160px]"
+                style={buttonLabelStyle}
+              >
+                {buttonLabel}
+              </span>
+            )}
+            {showChevron && <ChevronDownIcon className="w-3 h-3 opacity-60" />}
+          </button>
+        }
+      />
       <PopoverContent
         ref={contentRef}
         align={align}

@@ -1,11 +1,11 @@
 'use client';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
+import { Badge } from '@game-guild/ui/components/badge';
+import { Button } from '@game-guild/ui/components/button';
+import { Input } from '@game-guild/ui/components/input';
+import { Label } from '@game-guild/ui/components/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
+import { Switch } from '@game-guild/ui/components/switch';
 import { Calendar, DollarSign, Plus, Tag, Users, X } from 'lucide-react';
 import React from 'react';
 import { useCourseEditor } from '../../editor/context/course-editor-provider';
@@ -163,7 +163,7 @@ export function SalesShowcaseSection() {
         {/* Publishing Status */}
         <div className="space-y-2">
           <Label className="text-sm">Publishing Status</Label>
-          <Select value={state.status} onValueChange={setStatus}>
+          <Select value={state.status} onValueChange={(value) => value !== null && setStatus(value)}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>

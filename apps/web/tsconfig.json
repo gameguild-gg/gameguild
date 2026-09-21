@@ -31,7 +31,7 @@
         "../../packages/infrastructure/wasm/dotnet/src/index.ts"
       ],
       "@game-guild/ui/*": [
-        "../../packages/infrastructure/ui/src/*"
+        "../../packages/ui/src/*"
       ],
       "next": [
         "./node_modules/next"

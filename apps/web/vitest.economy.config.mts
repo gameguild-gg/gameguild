@@ -47,7 +47,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(rootDir, './src'),
-      '@game-guild/ui': path.resolve(rootDir, '../../packages/infrastructure/ui/src'),
+      '@game-guild/ui': path.resolve(rootDir, '../../packages/ui/src'),
       '@game-guild/client/react': path.resolve(
         rootDir,
         '../../packages/infrastructure/client/src/integrations/react/index.ts',

@@ -1,5 +1,5 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@game-guild/ui/components/dialog"
+import { Button } from "@game-guild/ui/components/button"
 import { HardDrive, FolderArchive, Image, FileText } from "lucide-react"
 
 interface AssetInfo {

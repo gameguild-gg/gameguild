@@ -109,7 +109,7 @@ export async function SocialShell({
       data-testid="social-shell"
       className="min-h-[calc(100svh-4rem)] bg-background text-foreground"
     >
-      <div className="mx-auto grid min-h-[calc(100svh-4rem)] w-full max-w-[1260px] grid-cols-1 gap-0 xl:grid-cols-[minmax(0,820px)_360px] xl:gap-6 xl:px-5">
+      <div className="mx-auto grid min-h-[calc(100svh-4rem)] w-full max-w-[1260px] grid-cols-1 gap-0 px-4 sm:px-6 xl:grid-cols-[minmax(0,820px)_360px] xl:gap-6 xl:px-5">
         <div className="min-w-0">
           <SocialFeedTabs active={tab} />
           <BuildStories

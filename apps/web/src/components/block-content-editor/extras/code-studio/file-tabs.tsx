@@ -1,7 +1,7 @@
 "use client"
 
 import { X, File } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@game-guild/ui/components/button"
 import type { CodeFile, EditorInstance } from "./types"
 import { cn } from "@/lib/utils"
 import { useRef, useEffect, useState } from "react"

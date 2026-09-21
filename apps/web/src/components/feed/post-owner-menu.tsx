@@ -103,10 +103,10 @@ export function PostOwnerMenu({
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon-sm" aria-label="Post options">
-            <MoreHorizontal className="size-5" />
-          </Button>
+        <DropdownMenuTrigger
+          render={<Button variant="ghost" size="icon-sm" aria-label="Post options" />}
+        >
+          <MoreHorizontal className="size-5" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           {canEdit ? (

@@ -1,10 +1,10 @@
 'use client';
 
 import type { CourseLevel } from '@/lib/courses/catalog-types';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@game-guild/ui/components/input';
+import { Label } from '@game-guild/ui/components/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
+import { Textarea } from '@game-guild/ui/components/textarea';
 import { useCourseEditor } from '../../editor/context/course-editor-provider';
 import { RichTextEditor } from '../rich-text-editor';
 
@@ -82,7 +82,7 @@ export function GeneralDetailsSection() {
         {/* Category */}
         <div className="space-y-2">
           <Label className="text-sm font-medium">Category *</Label>
-          <Select value={state.category} onValueChange={updateCategory}>
+          <Select value={state.category} onValueChange={(value) => value !== null && updateCategory(value)}>
             <SelectTrigger className={state.errors.category ? 'border-red-500' : ''}>
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
@@ -100,7 +100,7 @@ export function GeneralDetailsSection() {
         {/* Difficulty */}
         <div className="space-y-2">
           <Label className="text-sm font-medium">Difficulty Level *</Label>
-          <Select value={state.difficulty.toString()} onValueChange={(value) => updateDifficulty(parseInt(value) as CourseLevel)}>
+          <Select value={state.difficulty.toString()} onValueChange={(value) => value !== null && updateDifficulty(parseInt(value) as CourseLevel)}>
             <SelectTrigger className={state.errors.difficulty ? 'border-red-500' : ''}>
               <SelectValue placeholder="Select difficulty" />
             </SelectTrigger>

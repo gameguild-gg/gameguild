@@ -151,7 +151,7 @@ export function CourseList({ courses, locale }: { courses: EnrichedCourse[]; loc
             className="pl-9"
           />
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value ?? '')}>
           <SelectTrigger className="w-full sm:w-40" aria-label="Course status filter">
             <SelectValue placeholder="Status" />
           </SelectTrigger>

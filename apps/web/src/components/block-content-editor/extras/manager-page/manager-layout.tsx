@@ -1,14 +1,14 @@
 "use client"
 
 import React from 'react'
-import { Button } from "@/components/ui/button"
+import { Button } from "@game-guild/ui/components/button"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@game-guild/ui/components/select"
 import { 
   Folder, 
   Image as ImageIcon, 
@@ -182,6 +182,7 @@ export function ManagerLayout({
               <Select
                 value={currentColumns.toString()}
                 onValueChange={(value) => {
+                  if (value === null) return
                   const cols = parseInt(value)
                   if (isGrid) {
                     onGridColumnsChange(cols)

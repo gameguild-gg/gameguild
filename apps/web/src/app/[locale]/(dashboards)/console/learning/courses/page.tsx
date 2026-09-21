@@ -18,10 +18,8 @@ export default async function Page({ params }: PageProps<'/[locale]/console/lear
     <div className="flex flex-col gap-6 p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/console/learning" locale={locale}>
-              <ArrowLeft className="size-5" />
-            </Link>
+          <Button nativeButton={false} variant="ghost" size="icon" render={<Link href="/console/learning" locale={locale} />}>
+            <ArrowLeft className="size-5" />
           </Button>
           <div className="flex size-12 items-center justify-center rounded-lg bg-linear-to-br from-emerald-500 to-teal-600">
             <BookOpen className="size-6 text-white" />
@@ -32,17 +30,13 @@ export default async function Page({ params }: PageProps<'/[locale]/console/lear
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button asChild variant="outline">
-            <Link href="/courses" locale={locale}>
-              <Eye className="mr-2 size-4" />
-              Storefront preview
-            </Link>
+          <Button nativeButton={false} variant="outline" render={<Link href="/courses" locale={locale} />}>
+            <Eye className="mr-2 size-4" />
+            Storefront preview
           </Button>
-          <Button asChild>
-            <Link href="/console/learning/courses/new" locale={locale}>
-              <Plus className="mr-2 size-4" />
-              Create Course
-            </Link>
+          <Button nativeButton={false} render={<Link href="/console/learning/courses/new" locale={locale} />}>
+            <Plus className="mr-2 size-4" />
+            Create Course
           </Button>
         </div>
       </div>
@@ -101,11 +95,9 @@ export default async function Page({ params }: PageProps<'/[locale]/console/lear
                 <p className="mt-3 rounded-md bg-background/60 px-3 py-2 text-sm text-destructive">{error}</p>
               </div>
             </div>
-            <Button asChild variant="outline" className="shrink-0">
-              <Link href="/console/learning/courses" locale={locale}>
-                <RefreshCw className="mr-2 size-4" />
-                Retry
-              </Link>
+            <Button nativeButton={false} variant="outline" className="shrink-0" render={<Link href="/console/learning/courses" locale={locale} />}>
+              <RefreshCw className="mr-2 size-4" />
+              Retry
             </Button>
           </CardContent>
         </Card>
@@ -124,17 +116,13 @@ export default async function Page({ params }: PageProps<'/[locale]/console/lear
               </p>
             </div>
             <div className="flex flex-wrap justify-center gap-2">
-              <Button asChild>
-                <Link href="/console/learning/courses/new" locale={locale}>
-                  <Plus className="mr-2 size-4" />
-                  Create Course
-                </Link>
+              <Button nativeButton={false} render={<Link href="/console/learning/courses/new" locale={locale} />}>
+                <Plus className="mr-2 size-4" />
+                Create Course
               </Button>
-              <Button asChild variant="outline">
-                <Link href="/courses" locale={locale}>
-                  <Eye className="mr-2 size-4" />
-                  Open storefront
-                </Link>
+              <Button nativeButton={false} variant="outline" render={<Link href="/courses" locale={locale} />}>
+                <Eye className="mr-2 size-4" />
+                Open storefront
               </Button>
             </div>
           </CardContent>

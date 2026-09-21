@@ -1,20 +1,20 @@
 "use client"
 
 import React from 'react'
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { Button } from "@game-guild/ui/components/button"
+import { Badge } from "@game-guild/ui/components/badge"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@game-guild/ui/components/select"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
+} from "@game-guild/ui/components/popover"
 import { Tag as TagIcon } from 'lucide-react'
 
 interface FilterTagsProps {
@@ -34,16 +34,14 @@ export function FilterTags({
 }: FilterTagsProps) {
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <Button variant="outline" size="sm">
-          <TagIcon className="mr-2 h-4 w-4" />
-          Tags
-          {selectedTags.length > 0 && (
-            <Badge variant="secondary" className="ml-2">
-              {selectedTags.length}
-            </Badge>
-          )}
-        </Button>
+      <PopoverTrigger render={<Button variant="outline" size="sm" />}>
+        <TagIcon className="mr-2 h-4 w-4" />
+        Tags
+        {selectedTags.length > 0 && (
+          <Badge variant="secondary" className="ml-2">
+            {selectedTags.length}
+          </Badge>
+        )}
       </PopoverTrigger>
       <PopoverContent className="w-80">
         <div className="space-y-4">
@@ -60,7 +58,7 @@ export function FilterTags({
             )}
           </div>
 
-          <Select value={tagFilterMode} onValueChange={(value: 'all' | 'any') => onModeChange(value)}>
+          <Select value={tagFilterMode} onValueChange={(value) => value !== null && onModeChange(value)}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
