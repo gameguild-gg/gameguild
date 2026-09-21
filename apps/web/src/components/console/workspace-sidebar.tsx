@@ -42,14 +42,9 @@ export const workspaceNavigationData: WorkspaceNavGroup[] = [
         icon: Users,
       },
       {
-        title: 'Learning',
+        title: 'Courses',
+        url: '/workspace/learning/courses',
         icon: BookOpen,
-        subGroups: [
-          { title: 'Overview', url: '/workspace/learning', icon: LayoutDashboard, items: [] },
-          { title: 'Courses', url: '/workspace/learning/courses', icon: BookOpen, items: [] },
-          { title: 'Tutorials', url: '/workspace/learning/tutorials', icon: FileText, items: [] },
-          { title: 'Resources', url: '/workspace/learning/resources', icon: FolderOpen, items: [] },
-        ],
       },
     ],
   },

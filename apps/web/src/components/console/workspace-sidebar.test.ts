@@ -54,7 +54,7 @@ describe("dashboard management navigation", () => {
       "Home",
       "Projects",
       "Teams",
-      "Learning",
+      "Courses",
     ]);
   });
 
