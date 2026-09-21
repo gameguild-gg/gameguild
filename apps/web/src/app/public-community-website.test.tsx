@@ -62,7 +62,7 @@ import JobsPage from './[locale]/(public)/jobs/page';
 import LaunchPadPage from './[locale]/(public)/launch-pad/page';
 import ShowcasePage from './[locale]/(public)/projects/page';
 import ProjectDetailPage from './[locale]/(public)/projects/[slug]/page';
-import TestingLabPage from './[locale]/(public)/testing-lab/page';
+import TestingLabPage from './[locale]/(social)/testing-lab/page';
 import HomePage from './[locale]/(public)/page';
 
 const publishedProject = {

@@ -13,7 +13,7 @@ export const socialNavigationData: WorkspaceNavGroup[] = [
     items: [
       {
         title: 'Home',
-        url: '/',
+        url: '/feed',
         icon: Home,
         activeOnTab: '',
       },
@@ -25,9 +25,9 @@ export const socialNavigationData: WorkspaceNavGroup[] = [
       },
       {
         title: 'Testing Lab',
-        url: '/workspace/testing-lab',
+        url: '/testing-lab',
         icon: FlaskConical,
-        activeOnPath: '/workspace/testing-lab',
+        activeOnPath: '/testing-lab',
       },
       {
         title: 'Launch Pad',
@@ -37,7 +37,7 @@ export const socialNavigationData: WorkspaceNavGroup[] = [
       },
       {
         title: 'Saved',
-        url: '/?tab=saved',
+        url: '/feed?tab=saved',
         icon: Bookmark,
         activeOnTab: 'saved',
       },

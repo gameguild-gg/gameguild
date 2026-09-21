@@ -44,7 +44,7 @@ export function createSharedAuthCookieConfig({
 
 export function resolveAllowedAuthRedirect(
   value: unknown,
-  { fallback = "/social" }: AllowedAuthRedirectOptions = {},
+  { fallback = "/feed" }: AllowedAuthRedirectOptions = {},
 ): string {
   const redirectTo = typeof value === "string" ? value.trim() : "";
 

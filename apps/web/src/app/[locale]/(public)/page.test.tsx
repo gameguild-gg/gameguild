@@ -37,7 +37,7 @@ describe('contextual root page', () => {
     mocks.auth.mockResolvedValue({ user: { id: 'user-1' } });
 
     await expect(RootPage(props)).rejects.toThrow(
-      'redirect:{"href":"/social","locale":"en-US"}',
+      'redirect:{"href":"/feed","locale":"en-US"}',
     );
   });
 
@@ -50,7 +50,7 @@ describe('contextual root page', () => {
         searchParams: Promise.resolve({ tab: 'following' }),
       } as never),
     ).rejects.toThrow(
-      'redirect:{"href":"/social?tab=following","locale":"en-US"}',
+      'redirect:{"href":"/feed?tab=following","locale":"en-US"}',
     );
   });
 

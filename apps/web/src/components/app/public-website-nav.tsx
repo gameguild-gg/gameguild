@@ -43,7 +43,7 @@ export type PublicWebsiteUser = {
 
 function isActivePath(pathname: string, href: string, variant: 'public' | 'app' = 'public') {
   if (href === '/') return pathname === '/';
-  if (variant === 'app' && href === '/community' && (pathname === '/' || pathname === '/social')) return true;
+  if (variant === 'app' && href === '/community' && (pathname === '/' || pathname === '/feed')) return true;
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 

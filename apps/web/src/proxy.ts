@@ -36,7 +36,7 @@ function redirectToPath(request: NextRequest, pathname: string): NextResponse {
  * locales. The marker header prevents Next 16 from canonicalizing the
  * internal `/en-US` rewrite back into a redirect loop.
  */
-export function routeRequest(request: NextRequest, authenticated = false): NextResponse {
+export function routeRequest(request: NextRequest): NextResponse {
   const pathname = request.nextUrl.pathname;
 
   if (request.headers.get(INTERNAL_LOCALE_HEADER) === "1") {
@@ -45,26 +45,19 @@ export function routeRequest(request: NextRequest, authenticated = false): NextR
 
   if (matchesPrefix(pathname, DEFAULT_LOCALE_PREFIX)) {
     const unprefixedPath = pathname.slice(DEFAULT_LOCALE_PREFIX.length) || "/";
-    return redirectToPath(request, authenticated && unprefixedPath === "/social" ? "/" : unprefixedPath);
+    return redirectToPath(request, unprefixedPath === "/social" ? "/feed" : unprefixedPath);
   }
 
   const nonDefaultPrefix = NON_DEFAULT_LOCALE_PREFIXES.find((prefix) => matchesPrefix(pathname, prefix));
   if (nonDefaultPrefix) {
-    if (authenticated && pathname === `${nonDefaultPrefix}/social`) {
-      return redirectToPath(request, nonDefaultPrefix);
-    }
-    if (authenticated && pathname === nonDefaultPrefix) {
-      return rewriteWithLocale(request, `${nonDefaultPrefix}/social`, nonDefaultPrefix.slice(1));
+    if (pathname === `${nonDefaultPrefix}/social`) {
+      return redirectToPath(request, `${nonDefaultPrefix}/feed`);
     }
     return intlMiddleware(request);
   }
 
-  if (authenticated && pathname === "/social") {
-    return redirectToPath(request, "/");
-  }
-
-  if (authenticated && pathname === "/") {
-    return rewriteWithLocale(request, `${DEFAULT_LOCALE_PREFIX}/social`, routing.defaultLocale);
+  if (pathname === "/social") {
+    return redirectToPath(request, "/feed");
   }
 
   const localizedPath = pathname === "/" ? DEFAULT_LOCALE_PREFIX : `${DEFAULT_LOCALE_PREFIX}${pathname}`;
@@ -73,7 +66,7 @@ export function routeRequest(request: NextRequest, authenticated = false): NextR
 
 export default auth((request) => {
   const nextRequest = request as unknown as NextRequest;
-  return routeRequest(nextRequest, Boolean(request.auth));
+  return routeRequest(nextRequest);
 });
 
 export const config = {

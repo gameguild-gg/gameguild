@@ -20,7 +20,7 @@ export default async function Page({ params, searchParams }: PageProps<'/[locale
     const feedQuery = new URLSearchParams();
     if (rawTab) feedQuery.set('tab', rawTab);
     if (rawTag) feedQuery.set('tag', rawTag);
-    redirect({ href: feedQuery.size > 0 ? `/social?${feedQuery}` : '/social', locale });
+    redirect({ href: feedQuery.size > 0 ? `/feed?${feedQuery}` : '/feed', locale });
     throw new Error('Authenticated home redirect');
   }
 

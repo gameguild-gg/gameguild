@@ -42,26 +42,33 @@ describe("GameGuild internationalization proxy", () => {
     expect(response.headers.get("location")).toBeNull();
   });
 
-  it("serves the authenticated social feed from the unprefixed root", () => {
-    const response = routeRequest(
-      new NextRequest("https://gameguild.gg/?tab=following"),
-      true,
-    );
+  it("keeps the root on the public page so signed-in members get the /feed redirect", () => {
+    const response = routeRequest(new NextRequest("https://gameguild.gg/"));
 
     expect(response.headers.get("x-middleware-rewrite")).toBe(
-      "https://gameguild.gg/en-US/social?tab=following",
+      "https://gameguild.gg/en-US",
     );
     expect(response.headers.get("location")).toBeNull();
   });
 
-  it("canonicalizes the legacy authenticated social URL to root", () => {
+  it("serves the social feed at /feed through an internal default-locale rewrite", () => {
+    const response = routeRequest(
+      new NextRequest("https://gameguild.gg/feed?tab=following"),
+    );
+
+    expect(response.headers.get("x-middleware-rewrite")).toBe(
+      "https://gameguild.gg/en-US/feed?tab=following",
+    );
+    expect(response.headers.get("location")).toBeNull();
+  });
+
+  it("canonicalizes the legacy social URL to /feed", () => {
     const response = routeRequest(
       new NextRequest("https://gameguild.gg/social?tab=playtests"),
-      true,
     );
 
     expect(response.headers.get("location")).toBe(
-      "https://gameguild.gg/?tab=playtests",
+      "https://gameguild.gg/feed?tab=playtests",
     );
   });
 });

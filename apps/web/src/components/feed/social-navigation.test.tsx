@@ -19,19 +19,23 @@ describe("social navigation", () => {
   it("does not expose Messages and keeps Saved on the real saved stream", () => {
     expect(socialNavItems.some((item) => item.title === "Messages")).toBe(false);
     expect(socialNavItems.find((item) => item.title === "Saved")?.url).toBe(
-      "/?tab=saved",
+      "/feed?tab=saved",
     );
   });
 
-  it("exposes only implemented destinations and routes Testing Lab through Workspace", () => {
+  it("exposes only implemented destinations and serves Testing Lab in the social shell", () => {
     expect(socialNavItems.map((item) => item.title)).toEqual([
       "Home",
       "Explore",
       "Testing Lab",
+      "Launch Pad",
       "Saved",
     ]);
     expect(socialNavItems.find((item) => item.title === "Testing Lab")?.url).toBe(
-      "/workspace/testing-lab",
+      "/testing-lab",
+    );
+    expect(socialNavItems.find((item) => item.title === "Home")?.url).toBe(
+      "/feed",
     );
   });
 
