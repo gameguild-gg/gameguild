@@ -108,6 +108,11 @@ export const workspaceNavigationData: WorkspaceNavGroup[] = [
           { title: 'Resources', url: '/workspace/learning/resources', icon: FolderOpen, items: [] },
         ],
       },
+      {
+        title: 'Calendar',
+        url: '/workspace/calendar',
+        icon: CalendarDays,
+      },
     ],
   },
   {
@@ -121,38 +126,21 @@ export const workspaceNavigationData: WorkspaceNavGroup[] = [
       },
       {
         title: 'Members',
+        url: '/console/community/members/users',
+        icon: UserCog,
+        requiredCapabilities: ['Community.ManageMembers'],
+      },
+      {
+        title: 'Groups',
+        url: '/console/community/members/groups',
         icon: Users,
         requiredCapabilities: ['Community.ManageMembers'],
-        subGroups: [
-          {
-            title: 'Overview',
-            url: '/console/community/members',
-            icon: LayoutDashboard,
-            items: [],
-            requiredCapabilities: ['Community.ManageMembers'],
-          },
-          {
-            title: 'Users',
-            url: '/console/community/members/users',
-            icon: UserCog,
-            items: [],
-            requiredCapabilities: ['Community.ManageMembers'],
-          },
-          {
-            title: 'Groups',
-            url: '/console/community/members/groups',
-            icon: Users,
-            items: [],
-            requiredCapabilities: ['Community.ManageMembers'],
-          },
-          {
-            title: 'Support',
-            url: '/console/community/members/support',
-            icon: HeadphonesIcon,
-            items: [],
-            requiredCapabilities: ['Community.ManageSupport'],
-          },
-        ],
+      },
+      {
+        title: 'Support',
+        url: '/console/community/members/support',
+        icon: HeadphonesIcon,
+        requiredCapabilities: ['Community.ManageSupport'],
       },
       {
         title: 'Teams',
@@ -178,20 +166,6 @@ export const workspaceNavigationData: WorkspaceNavGroup[] = [
           'TestingLab.ManageSettings',
         ],
         subGroups: [
-          {
-            title: 'Calendar',
-            url: '/workspace/testing-lab',
-            icon: CalendarDays,
-            items: [],
-            requiredCapabilities: [
-              'TestingLab.ManageEvents',
-              'TestingLab.ReviewApplications',
-              'TestingLab.ManageParticipants',
-              'TestingLab.ManageFeedback',
-              'TestingLab.ViewAnalytics',
-              'TestingLab.ManageSettings',
-            ],
-          },
           {
             title: 'Sessions',
             url: '/workspace/testing-lab/events',

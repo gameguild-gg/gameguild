@@ -28,7 +28,6 @@ describe("dashboard management navigation", () => {
     expect(
       testingLab?.subGroups?.map(({ title, url }) => ({ title, url })),
     ).toEqual([
-      { title: "Calendar", url: "/workspace/testing-lab" },
       { title: "Sessions", url: "/workspace/testing-lab/events" },
       { title: "Settings", url: "/workspace/testing-lab/settings" },
     ]);
@@ -56,6 +55,7 @@ describe("dashboard management navigation", () => {
       "Projects",
       "Teams",
       "Learning",
+      "Calendar",
     ]);
   });
 
@@ -85,7 +85,7 @@ describe("dashboard management navigation", () => {
     ]);
     expect(
       community?.items[0]?.subGroups?.map((item) => item.title),
-    ).toEqual(["Calendar", "Sessions"]);
+    ).toEqual(["Sessions"]);
   });
 
   it("keeps global Testing Lab settings grouped behind one entry", () => {
@@ -98,7 +98,6 @@ describe("dashboard management navigation", () => {
       ?.items.find((item) => item.title === "Testing Lab");
 
     expect(testingLab?.subGroups?.map((item) => item.title)).toEqual([
-      "Calendar",
       "Settings",
     ]);
   });
