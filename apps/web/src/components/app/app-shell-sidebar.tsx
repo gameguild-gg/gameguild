@@ -113,9 +113,9 @@ function NavGroups({ groups, notificationCounts }: { groups: WorkspaceNavGroup[]
                       : pathname === item.url || pathname?.endsWith(item.url);
                   return (
                     <SidebarMenuItem key={item.title} className="group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:w-8">
-                      <SidebarMenuButton isActive={isActive} tooltip={item.title} className="[&_svg]:size-5 data-active:bg-sidebar-primary/15 data-active:text-sidebar-primary data-active:font-medium" render={<Link href={item.url} />}>
+                      <SidebarMenuButton isActive={isActive} tooltip={item.title} className="[&_svg]:size-5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0 data-active:bg-sidebar-primary/15 data-active:text-sidebar-primary data-active:font-medium" render={<Link href={item.url} />}>
                         {Icon && <Icon className="size-5" />}
-                        <span>{item.title}</span>
+                        <span className="group-data-[collapsible=icon]:hidden">{item.title}</span>
                         {notificationCounts?.[item.url] ? (
                           <NotificationChip count={notificationCounts[item.url]} />
                         ) : null}
@@ -131,8 +131,8 @@ function NavGroups({ groups, notificationCounts }: { groups: WorkspaceNavGroup[]
                   );
                   return (
                     <Collapsible key={item.title} open={isOpen} onOpenChange={() => toggleItem(item.title)} className="group/collapsible">
-                      <SidebarMenuItem>
-                        <CollapsibleTrigger render={<SidebarMenuButton isActive={childActive} tooltip={item.title} className="[&_svg]:size-5 data-active:bg-sidebar-primary/15 data-active:text-sidebar-primary data-active:font-medium" />}>
+                      <SidebarMenuItem className="group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:w-8">
+                        <CollapsibleTrigger render={<SidebarMenuButton isActive={childActive} tooltip={item.title} className="[&_svg]:size-5 group-data-[collapsible=icon]:justify-center data-active:bg-sidebar-primary/15 data-active:text-sidebar-primary data-active:font-medium" />}>
                           {Icon && <Icon className="size-5" />}
                           <span>{item.title}</span>
                           <ChevronRight className="ml-auto size-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
@@ -173,8 +173,8 @@ function NavGroups({ groups, notificationCounts }: { groups: WorkspaceNavGroup[]
                   );
                   return (
                     <Collapsible key={item.title} open={isOpen} onOpenChange={() => toggleItem(item.title)} className="group/collapsible">
-                      <SidebarMenuItem>
-                        <CollapsibleTrigger render={<SidebarMenuButton isActive={childActive} tooltip={item.title} className="[&_svg]:size-5 data-active:bg-sidebar-primary/15 data-active:text-sidebar-primary data-active:font-medium" />}>
+                      <SidebarMenuItem className="group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:w-8">
+                        <CollapsibleTrigger render={<SidebarMenuButton isActive={childActive} tooltip={item.title} className="[&_svg]:size-5 group-data-[collapsible=icon]:justify-center data-active:bg-sidebar-primary/15 data-active:text-sidebar-primary data-active:font-medium" />}>
                           {Icon && <Icon className="size-5" />}
                           <span>{item.title}</span>
                           <ChevronRight className="ml-auto size-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
@@ -251,7 +251,7 @@ export function AppShellSidebar({ navigation, notifications }: AppShellSidebarPr
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="h-16 p-2">
-        <div className="flex h-full items-center justify-between gap-2">
+        <div className="flex h-full items-center justify-between gap-2 group-data-[collapsible=icon]:justify-center">
           <TenantSwitcher tenants={tenants} />
           <SidebarTrigger className="shrink-0 group-data-[collapsible=icon]:hidden [&_svg]:size-5" />
         </div>
