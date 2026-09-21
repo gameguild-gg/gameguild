@@ -91,8 +91,8 @@ function NavGroups({ groups, notificationCounts }: { groups: WorkspaceNavGroup[]
   return (
     <>
       {groups.map((group) => (
-        <SidebarGroup key={group.label}>
-          <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+        <SidebarGroup key={group.label || 'sidebar'}>
+          {group.label ? <SidebarGroupLabel>{group.label}</SidebarGroupLabel> : null}
           <SidebarGroupContent>
             <SidebarMenu className="gap-2">
               {group.items.map((item) => {

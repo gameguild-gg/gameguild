@@ -9,7 +9,7 @@ import { Bookmark, Compass, FlaskConical, Home } from 'lucide-react';
  */
 export const socialNavigationData: WorkspaceNavGroup[] = [
   {
-    label: 'Community',
+    label: '',
     items: [
       {
         title: 'Home',
