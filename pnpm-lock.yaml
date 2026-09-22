@@ -82,8 +82,8 @@ importers:
   apps/web:
     dependencies:
       '@codingame/monaco-vscode-files-service-override':
-        specifier: 36.2.7
-        version: 36.2.7
+        specifier: 37.0.0
+        version: 37.0.0
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -3546,29 +3546,29 @@ packages:
     resolution: {integrity: sha512-y7/yvZ2TPAnR9+jnc00klvNNLkJiXFFrQA/hlLCcxA9a2A4zQIOimyFQ9XfwYKiGD1fb5GY8vbKIIgO8d5Tb2A==}
     engines: {node: '>= 20.12.0'}
 
-  '@codingame/monaco-vscode-api@36.2.7':
-    resolution: {integrity: sha512-QuJ2+zXizbxzr8ajFkVhdEnU/TIELZWJNT30hn8NDrsZzRLTUP+MiIcJi5VYSAwXPC2HkTigYIodWEXku/8NGQ==}
+  '@codingame/monaco-vscode-api@37.0.0':
+    resolution: {integrity: sha512-MonTaFTrETNbJvIepu72WTJG/nyuSHra5LXrC2HBex/nTzthUdwOI7UfjiwA6Q9OR9zjyCjkbZu2VDEFBtTSqA==}
 
-  '@codingame/monaco-vscode-base-service-override@36.2.7':
-    resolution: {integrity: sha512-TPC4B6pEG32cv/HvVx0iFlKapAGTpPMCyen2whzVwTM9stDPi1f90AO3rQE1Fm//8AK+KZuboJEL2SUBjnOSDQ==}
+  '@codingame/monaco-vscode-base-service-override@37.0.0':
+    resolution: {integrity: sha512-FaOShGn1bP0JDHDUsP81EK35ndOl4Z+QvYhCyWD6BqDTG+MZXPLH6a0EkvPHxumyqIpO5UjHvFC2iSg0iuv04A==}
 
-  '@codingame/monaco-vscode-environment-service-override@36.2.7':
-    resolution: {integrity: sha512-Itqtm2hF51peTIjpK3ieK4s2+hlTgGkUc4t9fX5sEvMvt3L8yu0pmtZbHdFJMQQohJfv57YCVyNPnIVqxiwtvg==}
+  '@codingame/monaco-vscode-environment-service-override@37.0.0':
+    resolution: {integrity: sha512-M5/TKSlaxxnTeuIB6sZ6yn9Dul/DnpjciZV7aRdg7sPzg2czLK5OOWhzXNqAwiu0OHIfAtoAtw6qBNK+022vKA==}
 
-  '@codingame/monaco-vscode-extensions-service-override@36.2.7':
-    resolution: {integrity: sha512-HSd9K4HLRLWMygpXPaQ8FX953n7y2bbj/7/feGiEHEkdLKAsPbRre7f5iCL9Mcb+pn64UoXH+vjLUP5PE+Sw9g==}
+  '@codingame/monaco-vscode-extensions-service-override@37.0.0':
+    resolution: {integrity: sha512-7WfR6o2iXa95IriohfJW59bPQBBVQFF/FBSKcFPJyLXY4/Dzk0dnUIiYhFWHFWdowt3cAup/bWuxHMhgDhicQQ==}
 
-  '@codingame/monaco-vscode-files-service-override@36.2.7':
-    resolution: {integrity: sha512-KFNJVTlbN4wPG5e1SEo3EXvpte5VfUZZwip9QgJB72IpEulObmgSmRzm/NoC9uUP+E7SiPcC8KcNzQpKarf5pw==}
+  '@codingame/monaco-vscode-files-service-override@37.0.0':
+    resolution: {integrity: sha512-N5C5U+Xcx+tMiiHeZ/Vw8gjrOUVM6v48VzoZ6xWFly0YitUA2GIxmePiQKPov9tJzNz/7AGxzv1+hnGMToU3Vg==}
 
-  '@codingame/monaco-vscode-host-service-override@36.2.7':
-    resolution: {integrity: sha512-5v0OtzTRBx3YLJy2VdLUHPtZ1btLbHvctm7qpxKEO3EDbe8Rf78H9yF8++38I7m+IuAxfgnmoNMOI6qiBn6meg==}
+  '@codingame/monaco-vscode-host-service-override@37.0.0':
+    resolution: {integrity: sha512-5x6gEMcx+hOVSNqyZ49Ogm/psdf2/VXBRSQFXdJdjLaenZMHqE6RHVEpkD2LlUJoHWZxinPsmCqdTKwgsDOqMg==}
 
-  '@codingame/monaco-vscode-layout-service-override@36.2.7':
-    resolution: {integrity: sha512-wK3ww6mcL63x72JqePh2/ugnA7KarnRhuRSENbJWZCL9bh4dgEU9jXwljSJxEoufGiIjUd3hUaga9etT/JnkHQ==}
+  '@codingame/monaco-vscode-layout-service-override@37.0.0':
+    resolution: {integrity: sha512-/XScUB8Ip4CPswJImWaED1ejVFm5mnPxHoPl53uP8J1nFPvVNPgNc5k8g3kl5zgeurHhi2aCM3Z7ddQTa+ii/w==}
 
-  '@codingame/monaco-vscode-quickaccess-service-override@36.2.7':
-    resolution: {integrity: sha512-6YCNvxLr+tgbrrd3m3bWoWyDpCnRsWp+/PF5MfBQQvp1k3pHO3l4h67xe5qHzQaIRsbme5zgC8yFtYXC9hqSFw==}
+  '@codingame/monaco-vscode-quickaccess-service-override@37.0.0':
+    resolution: {integrity: sha512-rXN8VQhtDr+XJgVwuc7HeomgktcZj1TG9IsbWZyQFxQ2e291JTJVyXPaLIVUIUHUbg7FOFPk131nMlQOI2hPtA==}
 
   '@colors/colors@1.6.0':
     resolution: {integrity: sha512-Ir+AOibqzrIsL6ajt3Rz3LskB7OiMVHqltZmspbW/TJuTVuyOMirVqAkjfY6JISiLHgyNqicAC8AyHHGzNd/dA==}
@@ -16386,49 +16386,49 @@ snapshots:
       fast-wrap-ansi: 0.2.2
       sisteransi: 1.0.5
 
-  '@codingame/monaco-vscode-api@36.2.7':
+  '@codingame/monaco-vscode-api@37.0.0':
     dependencies:
-      '@codingame/monaco-vscode-base-service-override': 36.2.7
-      '@codingame/monaco-vscode-environment-service-override': 36.2.7
-      '@codingame/monaco-vscode-extensions-service-override': 36.2.7
-      '@codingame/monaco-vscode-files-service-override': 36.2.7
-      '@codingame/monaco-vscode-host-service-override': 36.2.7
-      '@codingame/monaco-vscode-layout-service-override': 36.2.7
-      '@codingame/monaco-vscode-quickaccess-service-override': 36.2.7
+      '@codingame/monaco-vscode-base-service-override': 37.0.0
+      '@codingame/monaco-vscode-environment-service-override': 37.0.0
+      '@codingame/monaco-vscode-extensions-service-override': 37.0.0
+      '@codingame/monaco-vscode-files-service-override': 37.0.0
+      '@codingame/monaco-vscode-host-service-override': 37.0.0
+      '@codingame/monaco-vscode-layout-service-override': 37.0.0
+      '@codingame/monaco-vscode-quickaccess-service-override': 37.0.0
       '@vscode/diff': 0.0.2-7
       '@vscode/iconv-lite-umd': 0.7.1
       dompurify: 3.4.13
       jschardet: 3.1.4
       marked: 14.0.0
 
-  '@codingame/monaco-vscode-base-service-override@36.2.7':
+  '@codingame/monaco-vscode-base-service-override@37.0.0':
     dependencies:
-      '@codingame/monaco-vscode-api': 36.2.7
+      '@codingame/monaco-vscode-api': 37.0.0
 
-  '@codingame/monaco-vscode-environment-service-override@36.2.7':
+  '@codingame/monaco-vscode-environment-service-override@37.0.0':
     dependencies:
-      '@codingame/monaco-vscode-api': 36.2.7
+      '@codingame/monaco-vscode-api': 37.0.0
 
-  '@codingame/monaco-vscode-extensions-service-override@36.2.7':
+  '@codingame/monaco-vscode-extensions-service-override@37.0.0':
     dependencies:
-      '@codingame/monaco-vscode-api': 36.2.7
-      '@codingame/monaco-vscode-files-service-override': 36.2.7
+      '@codingame/monaco-vscode-api': 37.0.0
+      '@codingame/monaco-vscode-files-service-override': 37.0.0
 
-  '@codingame/monaco-vscode-files-service-override@36.2.7':
+  '@codingame/monaco-vscode-files-service-override@37.0.0':
     dependencies:
-      '@codingame/monaco-vscode-api': 36.2.7
+      '@codingame/monaco-vscode-api': 37.0.0
 
-  '@codingame/monaco-vscode-host-service-override@36.2.7':
+  '@codingame/monaco-vscode-host-service-override@37.0.0':
     dependencies:
-      '@codingame/monaco-vscode-api': 36.2.7
+      '@codingame/monaco-vscode-api': 37.0.0
 
-  '@codingame/monaco-vscode-layout-service-override@36.2.7':
+  '@codingame/monaco-vscode-layout-service-override@37.0.0':
     dependencies:
-      '@codingame/monaco-vscode-api': 36.2.7
+      '@codingame/monaco-vscode-api': 37.0.0
 
-  '@codingame/monaco-vscode-quickaccess-service-override@36.2.7':
+  '@codingame/monaco-vscode-quickaccess-service-override@37.0.0':
     dependencies:
-      '@codingame/monaco-vscode-api': 36.2.7
+      '@codingame/monaco-vscode-api': 37.0.0
 
   '@colors/colors@1.6.0': {}
 
