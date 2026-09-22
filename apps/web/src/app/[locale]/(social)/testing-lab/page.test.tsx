@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -25,12 +25,12 @@ vi.mock("@/i18n/navigation", () => ({
   ),
 }));
 
-import TestingLabPage from "./page";
+import TestingLabEventsPage from "./page";
 
-describe("Public Testing Lab page", () => {
+describe("Public Testing Lab events directory", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("renders the legacy landing and links to the dedicated events directory", async () => {
+  it("uses the legacy events UX with real public event data", async () => {
     mocks.getPublicTestingEventsDirectory.mockResolvedValue({
       accessIssues: [],
       events: [
@@ -42,61 +42,79 @@ describe("Public Testing Lab page", () => {
           status: "ApplicationsOpen",
           applicationCount: 3,
           startsAt: "2026-08-12T18:00:00.000Z",
+          endsAt: "2026-08-12T20:00:00.000Z",
           slots: [
             {
               id: "slot-1",
               campusName: "Downtown campus",
+              roomName: "Play Lab",
               availableTesterCount: 7,
               availableProjectCount: 2,
+              registeredTesterCount: 3,
+              approvedProjectCount: 1,
+              maxTesters: 10,
+              maxProjects: 3,
             },
           ],
         },
       ],
     });
 
-    render(await TestingLabPage());
+    render(await TestingLabEventsPage({}));
 
     expect(
-      screen.getByRole("heading", { name: "Game Testing Lab" }),
+      screen.getByRole("heading", { name: "Test. Play. Earn." }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/1 open event/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Search events...")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Switch to cards view" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Community playtesting is live"),
+      screen.getByRole("button", { name: "Switch to rows view" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "How to Get Involved" }),
+      screen.getByRole("button", { name: "Switch to table view" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Browse Events" })).toHaveAttribute(
+    expect(screen.getByText("August campus playtest")).toBeInTheDocument();
+    expect(screen.getByText(/Downtown campus/)).toBeInTheDocument();
+    expect(screen.getByText("3/10 testers")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "View event" })).toHaveAttribute(
       "href",
-      "/testing-lab/events",
+      "/testing-lab/events/event-1",
     );
-    expect(screen.getByRole("link", { name: "Submit a project" })).toHaveAttribute(
-      "href",
-      "/workspace/projects",
-    );
-    expect(
-      screen.queryByText("August campus playtest"),
-    ).not.toBeInTheDocument();
-    expect(screen.getByText("Total Events")).toBeInTheDocument();
-    expect(screen.getByText("Tester Seats")).toBeInTheDocument();
-    expect(screen.getByText("7")).toBeInTheDocument();
     expect(mocks.getPublicTestingEventsDirectory).toHaveBeenCalledWith({
       take: 100,
     });
+
+    fireEvent.change(screen.getByPlaceholderText("Search events..."), {
+      target: { value: "not present" },
+    });
+    expect(
+      screen.getByRole("heading", { name: "No events match your filters" }),
+    ).toBeInTheDocument();
   });
 
-  it("keeps the legacy landing available when no public event exists", async () => {
+  it("renders the legacy no-events state without mock data", async () => {
     mocks.getPublicTestingEventsDirectory.mockResolvedValue({
       accessIssues: [],
       events: [],
     });
 
-    render(await TestingLabPage());
+    render(await TestingLabEventsPage({}));
 
     expect(
-      screen.getByRole("heading", { name: "Game Testing Lab" }),
+      screen.getByRole("heading", { name: "No events available" }),
     ).toBeInTheDocument();
+    expect(screen.queryByPlaceholderText("Search events...")).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("heading", { name: "No public testing events" }),
+      screen.queryByRole("button", { name: "Switch to cards view" }),
     ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Prepare a project" }),
+    ).toHaveAttribute("href", "/workspace/projects");
+    expect(
+      screen.getByRole("link", { name: "Back to Testing Lab" }),
+    ).toHaveAttribute("href", "/testing-lab");
   });
 });

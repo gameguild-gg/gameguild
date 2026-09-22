@@ -113,7 +113,7 @@ describe('Public Testing Event detail page', () => {
     render(await PublicTestingEventDetailPage({ params: Promise.resolve({ eventId: 'event-1' }) }));
 
     expect(screen.getByRole('heading', { level: 1, name: 'Event temporarily unavailable' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Back to Testing Lab events' })).toHaveAttribute('href', '/testing-lab/events');
+    expect(screen.getByRole('link', { name: 'Back to Testing Lab events' })).toHaveAttribute('href', '/testing-lab');
     expect(consoleError).toHaveBeenCalledWith('[testing-lab] public event event-1 could not be loaded', ['Public event failed: response validation failed']);
     consoleError.mockRestore();
   });

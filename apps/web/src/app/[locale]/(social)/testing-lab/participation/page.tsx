@@ -30,7 +30,7 @@ export default async function TestingLabParticipationPage() {
             <h1 className="mt-2 text-4xl font-semibold">Your Testing Lab</h1>
             <p className="mt-3 text-slate-300">Individual testing and applications owned by Projects you can represent.</p>
           </div>
-          <Link href="/testing-lab/events" className={buttonVariants({ variant: 'outline' })}>Discover events</Link>
+          <Link href="/testing-lab" className={buttonVariants({ variant: 'outline' })}>Discover events</Link>
         </header>
 
         {participation.accessIssues.length > 0 ? (

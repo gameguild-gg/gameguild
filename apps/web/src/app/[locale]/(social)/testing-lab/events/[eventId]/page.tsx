@@ -50,7 +50,7 @@ export default async function PublicTestingEventDetailPage({
           <p className="mt-2 text-sm leading-6 text-amber-100/80">
             The event details could not be loaded. Return to the directory and try again shortly.
           </p>
-          <Link href="/testing-lab/events" className="mt-5 inline-flex text-sm font-medium text-sky-200 hover:text-sky-100">
+          <Link href="/testing-lab" className="mt-5 inline-flex text-sm font-medium text-sky-200 hover:text-sky-100">
             Back to Testing Lab events
           </Link>
         </div>
