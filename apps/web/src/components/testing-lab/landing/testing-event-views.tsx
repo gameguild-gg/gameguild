@@ -1,14 +1,10 @@
 import { Badge } from "@game-guild/ui/components/badge";
 import { buttonVariants } from "@game-guild/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Link } from "@/i18n/navigation";
 import { Calendar, Clock, Gamepad2, MapPin, Users } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
+import { EventCoverArt } from "./event-cover-art";
 import type {
   TestingEventStatus,
   TestingEventViewModel,
@@ -60,6 +56,15 @@ function statusClasses(status: TestingEventStatus) {
   return "border-destructive/30 bg-destructive/10 text-destructive";
 }
 
+/** Status dot for the high-contrast cover chip; keeps color coding without
+ * relying on translucent tints that wash out over the artwork. */
+function statusDotClasses(status: TestingEventStatus) {
+  if (status === "open") return "bg-success";
+  if (status === "in-progress") return "bg-highlight";
+  if (status === "completed") return "bg-muted-foreground";
+  return "bg-destructive";
+}
+
 function eventHref(eventId: string, projectId?: string) {
   const path = `/testing-lab/events/${eventId}`;
   return projectId
@@ -90,6 +95,21 @@ function EventMeta({ session }: { session: TestingEventViewModel }) {
   );
 }
 
+function MetaChip({
+  icon: Icon,
+  children,
+}: {
+  icon: LucideIcon;
+  children: ReactNode;
+}) {
+  return (
+    <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+      <Icon className="size-3.5 shrink-0" aria-hidden="true" />
+      {children}
+    </span>
+  );
+}
+
 export function TestingEventCard({
   session,
   projectId,
@@ -101,45 +121,85 @@ export function TestingEventCard({
     session.availableTesterCount != null &&
     session.availableTesterCount > 0 &&
     session.availableTesterCount <= 2;
+  const href = eventHref(session.id, projectId);
   return (
-    <Card className="flex h-full flex-col transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg">
-      <CardHeader className="gap-3 pb-2">
-        <div className="flex items-center justify-between gap-3">
-          <Badge variant="secondary">{session.mode}</Badge>
-          <Badge variant="outline" className={statusClasses(session.status)}>
+    <Link
+      href={href}
+      aria-label="View event"
+      className="group relative isolate block h-full min-h-[26rem] overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+    >
+      {/* Cover art: compact inset artwork that expands to a full-bleed hero on hover. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-[calc(100%-240px)] left-3 right-3 top-3 z-0 overflow-hidden rounded-xl shadow-sm transition-all duration-500 ease-out group-hover:bottom-0 group-hover:left-0 group-hover:right-0 group-hover:top-0 group-hover:rounded-none"
+      >
+        <EventCoverArt seed={session.id} />
+        <div className="absolute inset-x-3 top-3 flex items-start justify-between gap-2">
+          <Badge className="border-white/20 bg-black/55 text-white backdrop-blur-sm">
+            {session.mode}
+          </Badge>
+          <Badge
+            variant="outline"
+            className="gap-1.5 border-white/25 bg-black/55 text-white backdrop-blur-sm"
+          >
+            <span
+              aria-hidden="true"
+              className={`size-1.5 rounded-full ${statusDotClasses(session.status)}`}
+            />
             {session.statusLabel}
           </Badge>
         </div>
-        <div>
-          <CardTitle className="text-base">{session.title}</CardTitle>
-          <CardDescription className="mt-1 text-xs">
-            Testing Event
-          </CardDescription>
-        </div>
-      </CardHeader>
-      <CardContent className="flex flex-1 flex-col gap-4">
-        <p className="line-clamp-3 text-sm leading-6 text-muted-foreground">
+      </div>
+      {/* Title rides on the cover art in both states; fixed offset keeps it over
+          the artwork after the cover expands to full-bleed on hover. */}
+      <div className="pointer-events-none absolute inset-x-4 top-[9.75rem] z-[2]">
+        <h3 className="text-lg font-semibold leading-snug text-white drop-shadow-lg">
+          {session.title}
+        </h3>
+        <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-white/85 drop-shadow-md">
+          Playtest · creators & testers
+        </p>
+      </div>
+      {/* Card-colored scrim keeps overlaid text readable once the art fills the card. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-t from-card via-card/90 to-card/5 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+      />
+      <div className="relative z-[2] flex flex-col gap-3 p-4 pt-[15.75rem]">
+        <p className="line-clamp-2 text-sm leading-6 text-muted-foreground">
           {session.description}
         </p>
-        <EventMeta session={session} />
-        <div className="flex items-start gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
-          <MapPin className="mt-0.5 size-3.5 shrink-0" />
-          <span>{session.location}</span>
+        {/* Two columns: schedule on the left, capacity on the right. */}
+        <div className="grid grid-cols-2 gap-1.5">
+          <MetaChip icon={Calendar}>{formatDate(session.startsAt)}</MetaChip>
+          <MetaChip icon={Users}>
+            {capacityLabel(session.testerCount, session.testerLimit, "testers")}
+          </MetaChip>
+          <MetaChip icon={Clock}>{formatTime(session.startsAt)}</MetaChip>
+          <MetaChip icon={Gamepad2}>
+            {capacityLabel(
+              session.projectCount,
+              session.projectLimit,
+              "projects",
+            )}
+          </MetaChip>
         </div>
+        {/* Online events already show their mode in the cover badge; only real
+            venues (or a pending location) add information here. */}
+        {session.location !== "Online" ? (
+          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <MapPin className="size-3.5 shrink-0" aria-hidden="true" />
+            {session.location}
+          </p>
+        ) : null}
         {almostFull && session.status === "open" ? (
           <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive">
             Only {session.availableTesterCount} tester{" "}
             {session.availableTesterCount === 1 ? "seat" : "seats"} left
           </p>
         ) : null}
-        <Link
-          href={eventHref(session.id, projectId)}
-          className={buttonVariants({ size: "sm", className: "mt-auto w-full" })}
-        >
-          View event
-        </Link>
-      </CardContent>
-    </Card>
+      </div>
+    </Link>
   );
 }
 
