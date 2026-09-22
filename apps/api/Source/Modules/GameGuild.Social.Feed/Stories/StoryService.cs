@@ -1,5 +1,5 @@
 using GameGuild.Assets;
-using GameGuild.Assets.SocialMedia;
+using GameGuild.Social.Assets.SocialMedia;
 using GameGuild.CQRS;
 using GameGuild.Social.Follows;
 using Microsoft.EntityFrameworkCore;

@@ -1,7 +1,7 @@
 "use client"
 
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Input } from "@game-guild/ui/components/input"
+import { Label } from "@game-guild/ui/components/label"
 
 interface ColorPaletteProps {
   selectedColor?: string

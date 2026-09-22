@@ -32,9 +32,9 @@ public class DtoAndValidatorTests
     // ═══════════════════════════════════════════════════════════════════
 
     [Fact]
-    public void CommerceOrderValidationService_CanBeConstructed()
+    public void DenyByDefaultOrderValidationService_CanBeConstructed()
     {
-        var svc = new CommerceOrderValidationService(Mock.Of<GameGuild.Commerce.Orders.IOrderRepository>());
+        var svc = new DenyByDefaultOrderValidationService();
         svc.Should().NotBeNull();
     }
 

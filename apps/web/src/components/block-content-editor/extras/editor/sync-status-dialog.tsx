@@ -1,7 +1,7 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Button } from "@game-guild/ui/components/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@game-guild/ui/components/dialog"
 import { toast } from "sonner"
 import type { SyncStats } from "@/components/block-content-editor/lib/sync/editor/sync-types"
 

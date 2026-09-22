@@ -31,7 +31,6 @@ vi.mock('@game-guild/ui/components/sidebar', () => ({
   }),
 }));
 
-import { DashboardSidebarFooter } from './dashboard-sidebar';
 import { TenantSwitcher } from './tenant-switcher';
 
 function TenantLogo() {
@@ -55,24 +54,5 @@ describe('workspace shell switchers', () => {
     expect(screen.getByText('Platform')).toBeInTheDocument();
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
     expect(screen.queryByText('Tenants')).not.toBeInTheDocument();
-  });
-
-  it('places the desktop collapse control in the workspace sidebar footer', () => {
-    render(<DashboardSidebarFooter />);
-
-    const toggle = screen.getByRole('button', { name: 'Collapse sidebar' });
-    expect(toggle).toHaveAttribute('data-sidebar', 'menu-button');
-    expect(toggle.closest('[data-sidebar="menu"]')).toBeInTheDocument();
-    toggle.click();
-
-    expect(mocks.toggleSidebar).toHaveBeenCalledOnce();
-  });
-
-  it('does not add a footer toggle to the console sidebar', () => {
-    mocks.pathname = '/console/community';
-
-    render(<DashboardSidebarFooter />);
-
-    expect(screen.queryByRole('button', { name: /sidebar/i })).not.toBeInTheDocument();
   });
 });

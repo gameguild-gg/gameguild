@@ -1,12 +1,17 @@
 using Asp.Versioning;
 using GameGuild.Configuration.PresentationLayer.RateLimiting;
 using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Context.Actors;
 using GameGuild.CQRS;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging;
+
+// SECURITY: only the guarded Authorization-module command types exist for these operations.
+using GrantTenantPermissionCommand = GameGuild.Identity.Authorization.GrantTenantPermissionCommand;
+using RevokeTenantPermissionCommand = GameGuild.Identity.Authorization.RevokeTenantPermissionCommand;
 
 namespace GameGuild.Identity.Authentication;
 
@@ -17,6 +22,8 @@ namespace GameGuild.Identity.Authentication;
 /// </summary>
 /// <remarks>
 ///     Rate limited to 100 requests per minute per client to prevent DoS attacks on permission evaluation.
+///     Mutating commands are the guarded Authorization-module types; their handlers enforce
+///     tenant-admin / system-admin / global-defaults authorization and audit every change.
 /// </remarks>
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/permissions")]
@@ -24,11 +31,19 @@ namespace GameGuild.Identity.Authentication;
 [ApiExplorerSettings(IgnoreApi = true)]
 [EnableRateLimiting(RateLimitPolicies.Authorization)]
 [Authorize]
-public class PermissionGrantsController(IMediator mediator, ILogger<PermissionGrantsController> logger) : BaseApiController
+public class PermissionGrantsController(
+    IMediator mediator,
+    IActorContextAccessor actorContextAccessor,
+    ILogger<PermissionGrantsController> logger) : BaseApiController
 {
     private readonly ILogger<PermissionGrantsController> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     private readonly IMediator _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
+
+    private readonly IActorContextAccessor _actorContextAccessor =
+        actorContextAccessor ?? throw new ArgumentNullException(nameof(actorContextAccessor));
+
+    private ActorContext Actor => _actorContextAccessor.ActorContext;
 
     #region Tenant Permission Grants
 
@@ -36,17 +51,28 @@ public class PermissionGrantsController(IMediator mediator, ILogger<PermissionGr
     ///     Create a tenant permission grant for a user
     /// </summary>
     [HttpPost("tenant-grants")]
-    [ProducesResponseType(typeof(TenantPermission), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<TenantPermission>> CreateTenantGrant([FromBody] GrantTenantPermissionCommand command)
+    public async Task<IActionResult> CreateTenantGrant([FromBody] GrantTenantPermissionRequest request)
     {
-        var result = await _mediator.Send(command).ConfigureAwait(false);
+        // The acting user comes from the authenticated actor context — never the request body.
+        var command = new GrantTenantPermissionCommand
+        {
+            TenantId = request.TenantId,
+            UserId = request.UserId,
+            Permissions = request.Permissions,
+            GrantedBy = Actor.SubjectIdAsGuid ?? throw new UnauthorizedAccessException("Authenticated actor required"),
+            ExpiresAt = request.ExpiresAt,
+            Reason = request.Reason
+        };
+
+        var permissionId = await _mediator.Send(command).ConfigureAwait(false);
 
         return CreatedAtAction(
             nameof(PermissionEvaluationController.GetTenantPermissions),
             "PermissionEvaluation",
-            new { userId = command.UserId, tenantId = command.TenantId },
-            result);
+            new { userId = request.UserId, tenantId = request.TenantId },
+            new { permissionId });
     }
 
     /// <summary>
@@ -70,8 +96,17 @@ public class PermissionGrantsController(IMediator mediator, ILogger<PermissionGr
     [HttpPost("tenant-grants:revoke")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult> RevokeTenantPermission([FromBody] RevokeTenantPermissionCommand command)
+    public async Task<ActionResult> RevokeTenantPermission([FromBody] RevokeTenantPermissionRequest request)
     {
+        var command = new RevokeTenantPermissionCommand
+        {
+            TenantId = request.TenantId,
+            UserId = request.UserId,
+            Permissions = request.Permissions,
+            RevokedBy = Actor.SubjectIdAsGuid ?? throw new UnauthorizedAccessException("Authenticated actor required"),
+            Reason = request.Reason
+        };
+
         await _mediator.Send(command).ConfigureAwait(false);
 
         return NoContent();
@@ -216,3 +251,24 @@ public class PermissionGrantsController(IMediator mediator, ILogger<PermissionGr
 
     #endregion
 }
+
+/// <summary>
+///     Request body for creating a tenant permission grant.
+///     The acting user is taken from the authenticated actor context, never the body.
+/// </summary>
+public sealed record GrantTenantPermissionRequest(
+    Guid UserId,
+    Guid TenantId,
+    string[] Permissions,
+    DateTime? ExpiresAt = null,
+    string? Reason = null);
+
+/// <summary>
+///     Request body for revoking tenant permissions.
+///     The acting user is taken from the authenticated actor context, never the body.
+/// </summary>
+public sealed record RevokeTenantPermissionRequest(
+    Guid UserId,
+    Guid TenantId,
+    string[] Permissions,
+    string? Reason = null);

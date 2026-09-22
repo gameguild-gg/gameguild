@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using GameGuild.CQRS;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
@@ -346,6 +347,7 @@ public sealed class ScoreJamSubmissionCommandHandler(IGameJamService service) : 
 
 [ApiController]
 [Route("api/game-jams")]
+[Authorize]
 public sealed class GameJamsController(ISender sender, IGameJamService service) : ControllerBase
 {
     [HttpGet]

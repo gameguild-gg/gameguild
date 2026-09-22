@@ -1,13 +1,13 @@
 "use client"
 
 import React from 'react'
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { Button } from "@game-guild/ui/components/button"
+import { Badge } from "@game-guild/ui/components/badge"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
+} from "@game-guild/ui/components/popover"
 import { Filter } from 'lucide-react'
 
 type SortOrder = 'newest' | 'oldest' | 'name' | 'name-desc' | 'size-largest' | 'size-smallest'
@@ -41,16 +41,14 @@ interface FilterSortProps {
 export function FilterSort({ sortOrder, onSortChange }: FilterSortProps) {
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Filter className="mr-2 h-4 w-4" />
-          Sort
-          {sortOrder.length > 0 && (
-            <Badge variant="secondary" className="ml-2">
-              {sortOrder.length}
-            </Badge>
-          )}
-        </Button>
+      <PopoverTrigger render={<Button variant="outline" size="sm" />}>
+        <Filter className="mr-2 h-4 w-4" />
+        Sort
+        {sortOrder.length > 0 && (
+          <Badge variant="secondary" className="ml-2">
+            {sortOrder.length}
+          </Badge>
+        )}
       </PopoverTrigger>
       <PopoverContent className="w-64">
         <div className="space-y-4">

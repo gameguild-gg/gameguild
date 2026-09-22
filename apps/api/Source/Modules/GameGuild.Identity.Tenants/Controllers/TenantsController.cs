@@ -1,6 +1,5 @@
 using Asp.Versioning;
 using GameGuild.CQRS;
-using GameGuild.Commerce.Payments;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -87,23 +86,6 @@ public sealed class TenantsController(ISender sender) : BaseApiController
             ;
 
         return Ok(tenants);
-    }
-
-    /// <summary>
-    ///     Get payment history for tenant
-    /// </summary>
-    /// <param name="tenantId">Tenant ID</param>
-    /// <param name="startDate">Optional start date filter for payment history</param>
-    /// <param name="endDate">Optional end date filter for payment history</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Payment history</returns>
-    [HttpGet("v{version:apiVersion}/tenants/{tenantId:guid}/payments")]
-    [EndpointSummary("Get payment history for tenant")]
-    [EndpointDescription("Retrieves payment history for a specific tenant with optional date filtering.")]
-    [ProducesResponseType<IEnumerable<PaymentResult>>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetPaymentHistory(Guid tenantId, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, CancellationToken ct)
-    {
-        return Ok(await sender.Send(new GetPaymentHistoryQuery(null, tenantId, startDate, endDate), ct));
     }
 
     /// <summary>

@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RootNamespace>GameGuild.Finance.Economy.AiCredits</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\GameGuild.AI\GameGuild.AI.csproj" />
+        <ProjectReference Include="..\GameGuild.Finance.Economy\GameGuild.Finance.Economy.csproj" />
+        <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="GameGuild.Finance.Economy.AiCredits.UnitTests" />
+    </ItemGroup>
+
+</Project>

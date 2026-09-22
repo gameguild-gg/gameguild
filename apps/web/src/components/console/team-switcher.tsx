@@ -43,18 +43,16 @@ export function ContextSwitcher({ contexts }: { contexts: readonly DashboardCont
     return (
       <SidebarMenu>
         <SidebarMenuItem>
-          <SidebarMenuButton size="lg" asChild>
-            <Link href={active.route}>
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                <ActiveIcon className="size-4" />
-              </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{active.name}</span>
-                {showActiveType && (
-                  <span className="truncate text-xs text-sidebar-foreground/70">{activeTypeLabel}</span>
-                )}
-              </div>
-            </Link>
+          <SidebarMenuButton size="lg" render={<Link href={active.route} />}>
+            <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+              <ActiveIcon className="size-4" />
+            </div>
+            <div className="grid flex-1 text-left text-sm leading-tight">
+              <span className="truncate font-medium">{active.name}</span>
+              {showActiveType && (
+                <span className="truncate text-xs text-sidebar-foreground/70">{activeTypeLabel}</span>
+              )}
+            </div>
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>
@@ -65,19 +63,24 @@ export function ContextSwitcher({ contexts }: { contexts: readonly DashboardCont
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                <ActiveIcon className="size-4" />
-              </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{active.name}</span>
-                {showActiveType && (
-                  <span className="truncate text-xs text-sidebar-foreground/70">{activeTypeLabel}</span>
-                )}
-              </div>
-              <ChevronsUpDown className="ml-auto size-4" />
-            </SidebarMenuButton>
+          <DropdownMenuTrigger
+            render={
+              <SidebarMenuButton
+                size="lg"
+                className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              />
+            }
+          >
+            <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+              <ActiveIcon className="size-4" />
+            </div>
+            <div className="grid flex-1 text-left text-sm leading-tight">
+              <span className="truncate font-medium">{active.name}</span>
+              {showActiveType && (
+                <span className="truncate text-xs text-sidebar-foreground/70">{activeTypeLabel}</span>
+              )}
+            </div>
+            <ChevronsUpDown className="ml-auto size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="w-[--radix-dropdown-menu-trigger-width] min-w-64 rounded-lg"
@@ -89,16 +92,17 @@ export function ContextSwitcher({ contexts }: { contexts: readonly DashboardCont
             {available.map((context) => {
               const Icon = contextMeta[context.type].icon;
               return (
-                <DropdownMenuItem key={`${context.type}:${context.id ?? 'root'}`} asChild>
-                  <Link href={context.route} className="gap-2 p-2">
-                    <div className="flex size-7 items-center justify-center rounded-md border">
-                      <Icon className="size-3.5" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">{context.name}</p>
-                      <p className="text-xs text-muted-foreground">{contextMeta[context.type].label}</p>
-                    </div>
-                  </Link>
+                <DropdownMenuItem
+                  key={`${context.type}:${context.id ?? 'root'}`}
+                  render={<Link href={context.route} className="gap-2 p-2" />}
+                >
+                  <div className="flex size-7 items-center justify-center rounded-md border">
+                    <Icon className="size-3.5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{context.name}</p>
+                    <p className="text-xs text-muted-foreground">{contextMeta[context.type].label}</p>
+                  </div>
                 </DropdownMenuItem>
               );
             })}

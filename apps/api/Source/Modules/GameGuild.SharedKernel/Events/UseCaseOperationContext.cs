@@ -33,6 +33,13 @@ public sealed record UseCaseOperationContext(
 
     public void MarkOperationEventCaptured() => OperationEventCaptured = true;
     public void MarkBusinessMutationObserved() => BusinessMutationObserved = true;
+    public void ResetForRetry()
+    {
+        OperationEventCaptured = false;
+        BusinessMutationObserved = false;
+        _producedEventTypes.Clear();
+    }
+
     public void RecordProducedEvents(IEnumerable<IDurableIntegrationEvent> events)
     {
         foreach (var integrationEvent in events)

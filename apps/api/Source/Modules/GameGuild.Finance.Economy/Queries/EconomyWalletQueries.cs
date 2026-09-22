@@ -1,6 +1,5 @@
 using GameGuild.CQRS;
 using GameGuild.Finance.Economy.Contracts;
-using GameGuild.Finance.Economy.Integrations.AI;
 using GameGuild.Finance.Economy.Persistence;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.EntityFrameworkCore;
@@ -14,7 +13,8 @@ public sealed record ListMyEconomyWalletTransactionsQuery(int Take = 50)
 
 public sealed class GetMyEconomyWalletQueryHandler(
     IApplicationDbContext context,
-    IActorContextAccessor actorContextAccessor) : IQueryHandler<GetMyEconomyWalletQuery, EconomyWalletSummaryDto?>
+    IActorContextAccessor actorContextAccessor,
+    IEnumerable<IEconomyWalletSoftUsageContributor>? softUsageContributors = null) : IQueryHandler<GetMyEconomyWalletQuery, EconomyWalletSummaryDto?>
 {
     public async Task<EconomyWalletSummaryDto?> Handle(GetMyEconomyWalletQuery request, CancellationToken cancellationToken)
     {
@@ -37,23 +37,14 @@ public sealed class GetMyEconomyWalletQueryHandler(
             .AsNoTracking()
             .SingleOrDefaultAsync(row => row.WalletId == wallet.Id, cancellationToken)
             .ConfigureAwait(false);
-        var aiUsage = await context.Set<AiCreditReservation>()
-            .AsNoTracking()
-            .Where(row => row.WalletId == wallet.Id)
-            .GroupBy(_ => 1)
-            .Select(group => new
-            {
-                Reserved = group
-                    .Where(row => row.Status == AiCreditReservationStatus.Reserved)
-                    .Sum(row => row.ReservedSoftUnits),
-                Settled = group
-                    .Where(row => row.Status == AiCreditReservationStatus.Settled)
-                    .Sum(row => row.SettledSoftUnits),
-            })
-            .SingleOrDefaultAsync(cancellationToken)
-            .ConfigureAwait(false);
-        var aiReserved = aiUsage?.Reserved ?? 0;
-        var aiSettled = aiUsage?.Settled ?? 0;
+        var reservedSoftUnits = 0L;
+        var settledSoftUnits = 0L;
+        foreach (var contributor in softUsageContributors ?? [])
+        {
+            var usage = await contributor.GetUsageAsync(wallet.Id, cancellationToken).ConfigureAwait(false);
+            reservedSoftUnits = checked(reservedSoftUnits + usage.ReservedSoftUnits);
+            settledSoftUnits = checked(settledSoftUnits + usage.SettledSoftUnits);
+        }
 
         return new EconomyWalletSummaryDto(
             wallet.Id,
@@ -66,9 +57,9 @@ public sealed class GetMyEconomyWalletQueryHandler(
             balance?.RestrictedHard ?? 0,
             balance?.Soft ?? 0,
             balance?.HeldHard ?? 0,
-            checked((balance?.HeldSoft ?? 0) + aiReserved),
+            checked((balance?.HeldSoft ?? 0) + reservedSoftUnits),
             balance?.AvailableHardToSpend ?? 0,
-            Math.Max(0, (balance?.AvailableSoftToSpend ?? 0) - aiReserved - aiSettled),
+            Math.Max(0, (balance?.AvailableSoftToSpend ?? 0) - reservedSoftUnits - settledSoftUnits),
             balance?.WithdrawableHard ?? 0,
             debt?.OutstandingHardUnits ?? 0,
             balance?.RebuiltAt ?? wallet.CreatedAt,
@@ -120,6 +111,21 @@ public sealed class ListMyEconomyWalletTransactionsQueryHandler(
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
     }
+}
+
+/// <summary>
+/// Soft-coin usage held against or already consumed from an economy wallet by a
+/// product billing domain outside the economy journal.
+/// </summary>
+public sealed record EconomyWalletSoftUsage(long ReservedSoftUnits, long SettledSoftUnits);
+
+/// <summary>
+/// Contributes product soft-coin usage for an economy wallet. The economy wallet
+/// view merges every registered contributor into the shared soft balance.
+/// </summary>
+public interface IEconomyWalletSoftUsageContributor
+{
+    Task<EconomyWalletSoftUsage> GetUsageAsync(Guid walletId, CancellationToken cancellationToken = default);
 }
 
 internal static class EconomyWalletActor

@@ -73,8 +73,8 @@ export function LearnerActivities({
             enrollment record.
           </p>
         </div>
-        <Button asChild variant="outline">
-          <Link href={routes.content(course.slug)}>Course content</Link>
+        <Button nativeButton={false} variant="outline" render={<Link href={routes.content(course.slug)} />}>
+          Course content
         </Button>
       </header>
 
@@ -152,20 +152,22 @@ export function LearnerActivities({
                     </div>
                   </div>
                   {assessmentId && assessment.isAvailable !== false ? (
-                    <Button asChild>
-                      <Link
-                        href={routes.activity(
-                          course.slug,
-                          `assessment-${assessmentId}`,
-                        )}
-                      >
-                        {submission?.status === "Graded"
-                          ? "Review grade"
-                          : submission
-                            ? "View submission"
-                            : "Start"}
-                        <ArrowRight className="size-4" />
-                      </Link>
+                    <Button nativeButton={false}
+                      render={
+                        <Link
+                          href={routes.activity(
+                            course.slug,
+                            `assessment-${assessmentId}`,
+                          )}
+                        />
+                      }
+                    >
+                      {submission?.status === "Graded"
+                        ? "Review grade"
+                        : submission
+                          ? "View submission"
+                          : "Start"}
+                      <ArrowRight className="size-4" />
                     </Button>
                   ) : (
                     <Button disabled>Unavailable</Button>
@@ -209,13 +211,16 @@ export function LearnerActivities({
                     Locked
                   </Button>
                 ) : (
-                  <Button asChild variant="outline">
-                    <Link
-                      href={routes.activity(course.slug, `content-${item.id}`)}
-                    >
-                      {item.status === "completed" ? "Review" : "Open"}
-                      <ArrowRight className="size-4" />
-                    </Link>
+                  <Button nativeButton={false}
+                    variant="outline"
+                    render={
+                      <Link
+                        href={routes.activity(course.slug, `content-${item.id}`)}
+                      />
+                    }
+                  >
+                    {item.status === "completed" ? "Review" : "Open"}
+                    <ArrowRight className="size-4" />
                   </Button>
                 )}
               </CardContent>

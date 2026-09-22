@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using GameGuild.API.Database;
 using GameGuild.API.Eventing;
 using GameGuild.CQRS;
@@ -80,6 +81,32 @@ public sealed class UseCaseOperationBehaviorTests
         (await context.Set<OutboxMessage>().CountAsync()).Should().Be(0);
     }
 
+    [Fact]
+    public async Task Handle_WhenRelationalCommandRuns_UsesProviderExecutionStrategyAroundTransaction()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseSqlite("Data Source=:memory:")
+            .ReplaceService<IExecutionStrategyFactory, CountingExecutionStrategyFactory>()
+            .Options;
+        var operationAccessor = new UseCaseOperationContextAccessor();
+        var actorAccessor = NewActorAccessor(out _, out _);
+        await using var context = new ApplicationDbContext(options, null, operationAccessor);
+        await context.Database.OpenConnectionAsync();
+        CountingExecutionStrategyFactory.Reset();
+        var behavior = new UseCaseOperationBehavior<TestMutationCommand, bool>(
+            context,
+            actorAccessor,
+            operationAccessor);
+
+        var response = await behavior.Handle(
+            new TestMutationCommand(),
+            () => Task.FromResult(true),
+            CancellationToken.None);
+
+        response.Should().BeTrue();
+        CountingExecutionStrategyFactory.CreateCount.Should().Be(1);
+    }
+
     private static ActorContextAccessor NewActorAccessor(out Guid tenantId, out Guid actorId)
     {
         tenantId = Guid.NewGuid();
@@ -90,4 +117,20 @@ public sealed class UseCaseOperationBehaviorTests
     }
 
     private sealed record TestMutationCommand : ICommand<bool>;
+
+    private sealed class CountingExecutionStrategyFactory(ExecutionStrategyDependencies dependencies)
+        : IExecutionStrategyFactory
+    {
+        private static int _createCount;
+
+        public static int CreateCount => _createCount;
+
+        public static void Reset() => _createCount = 0;
+
+        public IExecutionStrategy Create()
+        {
+            Interlocked.Increment(ref _createCount);
+            return new NonRetryingExecutionStrategy(dependencies);
+        }
+    }
 }

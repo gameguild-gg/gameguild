@@ -136,6 +136,69 @@ public class TenantMiddlewareSecurityTests
     }
 
     [Fact]
+    public async Task Should_AllowInvitedUserToAcceptOwnInviteAcrossTenantClaimBoundary()
+    {
+        var userId = Guid.NewGuid();
+        var authenticatedTenantId = Guid.NewGuid();
+        var invitedTenantId = Guid.NewGuid();
+        var invitedTenant = new Tenant
+        {
+            Id = invitedTenantId,
+            Name = "Invited tenant",
+            Slug = "invited",
+            IsActive = true,
+        };
+        var context = CreateHttpContext(
+            isAuthenticated: true,
+            userId: userId,
+            tenantIdHeader: invitedTenantId.ToString(),
+            path: $"/v1/users/{userId}/memberships/{invitedTenantId}/invite:accept",
+            authenticatedTenantId: authenticatedTenantId);
+        context.Request.Method = HttpMethods.Post;
+        _mediatorMock
+            .Setup(m => m.Send(
+                It.Is<GetTenantByIdQuery>(q => q.TenantId == invitedTenantId),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(invitedTenant);
+
+        await _middleware.InvokeAsync(
+            context,
+            _mediatorMock.Object,
+            _domainRepoMock.Object,
+            _memberRepoMock.Object);
+
+        context.Response.StatusCode.Should().Be(StatusCodes.Status200OK);
+        context.Items[HttpContextKeys.AuthorizationTenantId].Should().Be(invitedTenantId);
+        _nextMock.Verify(next => next(context), Times.Once);
+        _memberRepoMock.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task Should_RejectCrossTenantInviteAcceptanceForAnotherUser()
+    {
+        var authenticatedUserId = Guid.NewGuid();
+        var routeUserId = Guid.NewGuid();
+        var authenticatedTenantId = Guid.NewGuid();
+        var invitedTenantId = Guid.NewGuid();
+        var context = CreateHttpContext(
+            isAuthenticated: true,
+            userId: authenticatedUserId,
+            tenantIdHeader: invitedTenantId.ToString(),
+            path: $"/v1/users/{routeUserId}/memberships/{invitedTenantId}/invite:accept",
+            authenticatedTenantId: authenticatedTenantId);
+        context.Request.Method = HttpMethods.Post;
+
+        await _middleware.InvokeAsync(
+            context,
+            _mediatorMock.Object,
+            _domainRepoMock.Object,
+            _memberRepoMock.Object);
+
+        context.Response.StatusCode.Should().Be(StatusCodes.Status403Forbidden);
+        _nextMock.Verify(next => next(context), Times.Never);
+    }
+
+    [Fact]
     public async Task Should_NotTreatTenantAdminAsSystemAdmin_WhenNotMemberOfResolvedTenant()
     {
         var userId = Guid.NewGuid();

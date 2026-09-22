@@ -143,10 +143,15 @@ public sealed class SupportTicket : EntityBase
         if (string.IsNullOrWhiteSpace(authorName)) throw new ArgumentException("Author name is required.", nameof(authorName));
         if (string.IsNullOrWhiteSpace(body)) throw new ArgumentException("Message body is required.", nameof(body));
 
+        if (authorType == SupportTicketMessageAuthorType.Customer && Status == SupportTicketStatus.Resolved)
+        {
+            Reopen();
+        }
+
         var message = SupportTicketMessage.Create(Id, TenantId!.Value, authorUserId, authorName, authorEmail, authorType, body, isInternal);
         Messages.Add(message);
 
-        if (authorType == SupportTicketMessageAuthorType.Agent)
+        if (authorType == SupportTicketMessageAuthorType.Agent && !isInternal)
         {
             if (Status == SupportTicketStatus.Open)
             {
@@ -161,6 +166,50 @@ public sealed class SupportTicket : EntityBase
         Touch();
 
         return message;
+    }
+
+    public void Start()
+    {
+        if (Status is SupportTicketStatus.Closed or SupportTicketStatus.Cancelled)
+            throw new InvalidOperationException("Closed or cancelled support tickets cannot be started.");
+        if (Status == SupportTicketStatus.Resolved)
+            throw new InvalidOperationException("Reopen a resolved support ticket before starting it.");
+        Status = SupportTicketStatus.InProgress;
+        Touch();
+    }
+
+    public void Reopen()
+    {
+        if (Status is not (SupportTicketStatus.Resolved or SupportTicketStatus.Closed))
+            throw new InvalidOperationException("Only resolved or closed support tickets can be reopened.");
+        Status = SupportTicketStatus.Open;
+        ResolvedAt = null;
+        ClosedAt = null;
+        ResolutionSummary = null;
+        Touch();
+    }
+
+    public void ChangePriority(SupportTicketPriority priority)
+    {
+        if (Status is SupportTicketStatus.Closed or SupportTicketStatus.Cancelled)
+            throw new InvalidOperationException("Closed or cancelled support tickets cannot change priority.");
+        Priority = priority;
+        ResponseDueBy = OpenedAt.Add(GetResponseWindow(priority));
+        Touch();
+    }
+
+    /// <summary>
+    /// Repairs legacy tickets that stored the workspace id in CustomerId.
+    /// Callers must first prove that the replacement user belongs to this ticket's tenant.
+    /// </summary>
+    public void CorrectCustomerIdentity(Guid customerId, string customerName)
+    {
+        if (customerId == Guid.Empty) throw new ArgumentException("Customer id is required.", nameof(customerId));
+        if (string.IsNullOrWhiteSpace(customerName)) throw new ArgumentException("Customer name is required.", nameof(customerName));
+
+        CustomerId = customerId;
+        CustomerName = customerName.Trim();
+        Touch();
     }
 
     public void Assign(Guid agentUserId, string agentName)

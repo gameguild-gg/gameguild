@@ -149,8 +149,6 @@ public sealed class EconomyCoreModule : ModuleBase
         }
         services.AddSingleton<IStripeEconomyFundingAdapter, StripeEconomyFundingAdapter>();
         services.AddScoped<IAiProviderCostFactStore, EfAiProviderCostFactStore>();
-        services.AddOptions<AiCreditPricingOptions>().Bind(configuration.GetSection(AiCreditPricingOptions.SectionName));
-        services.AddScoped<IAiCreditWalletService, AiCreditWalletService>();
         return services;
     }
 }

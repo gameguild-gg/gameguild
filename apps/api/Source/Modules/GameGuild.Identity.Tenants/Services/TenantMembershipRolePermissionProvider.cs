@@ -3,11 +3,14 @@ using GameGuild.Identity.Authorization;
 namespace GameGuild.Identity.Tenants;
 
 /// <summary>
-/// Projects the built-in role stored on an active tenant membership into the
-/// authorization permission pipeline.
+/// Projects administrative tenant membership roles into the dynamic permission pipeline.
 /// </summary>
-public sealed class TenantMembershipRolePermissionProvider(ITenantMemberRepository memberRepository)
-    : IAuthorizationRolePermissionProvider
+/// <remarks>
+/// The membership lookup is scoped to the requested tenant and inactive or deleted
+/// memberships never contribute permissions.
+/// </remarks>
+public sealed class TenantMembershipRolePermissionProvider(
+    ITenantMemberRepository memberRepository) : IAuthorizationRolePermissionProvider
 {
     public async Task<IReadOnlyCollection<string>> GetPermissionsAsync(
         Guid userId,
@@ -18,31 +21,21 @@ public sealed class TenantMembershipRolePermissionProvider(ITenantMemberReposito
             .GetByUserAndTenantAsync(userId, tenantId, cancellationToken)
             .ConfigureAwait(false);
 
-        if (membership is not { IsActive: true } || string.IsNullOrWhiteSpace(membership.Role))
-            return [];
-
-        var role = TenantRole.FromString(membership.Role);
-        var permissions = new HashSet<string>(
-            StaticRolePermissions.GetStaticPermissions(role.Value),
-            StringComparer.OrdinalIgnoreCase);
-
-        permissions.Add(UsersPermission.Keys.ReadSelf);
-        permissions.Add(UsersPermission.Keys.EditSelf);
-        permissions.Add(UsersPermission.Keys.DeleteSelf);
-
-        var isAdministrativeRole = role.IsAdmin ||
-                                   string.Equals(role.Value, "TenantAdmin", StringComparison.OrdinalIgnoreCase);
-        if (isAdministrativeRole)
+        if (membership is null ||
+            !membership.IsActive ||
+            membership.DeletedAt is not null ||
+            membership.UserId != userId ||
+            membership.TenantId != tenantId ||
+            !IsAdministrativeRole(membership.Role))
         {
-            permissions.Add(AdminPermission.Keys.TenantAdmin);
-            permissions.Add(UsersPermission.Keys.Read);
-            permissions.Add(UsersPermission.Keys.Create);
-            permissions.Add(UsersPermission.Keys.Update);
-            permissions.Add(UsersPermission.Keys.Delete);
-            permissions.Add(UsersPermission.Keys.Admin);
-            permissions.Add(UsersPermission.Keys.Manage);
+            return [];
         }
 
-        return permissions.ToArray();
+        return [AdminPermission.Keys.TenantAdmin];
     }
+
+    private static bool IsAdministrativeRole(string? role) =>
+        string.Equals(role, TenantRole.Owner.Value, StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(role, TenantRole.Admin.Value, StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(role, "TenantAdmin", StringComparison.OrdinalIgnoreCase);
 }

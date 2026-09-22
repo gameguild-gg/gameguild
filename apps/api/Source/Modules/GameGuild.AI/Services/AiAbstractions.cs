@@ -44,6 +44,25 @@ public interface IAiConversationHistoryReader
     Task<IReadOnlyList<AiConversationHistoryEntryDto>> GetRecentAsync(Guid tenantId, int take, CancellationToken cancellationToken = default);
 }
 
+/// <summary>
+/// Records terminal AI execution outcomes for product billing attribution.
+/// The platform registers a <see cref="NoOpAiExecutionBillingRecorder"/> default;
+/// product modules replace it with their own billing implementation.
+/// </summary>
+public interface IAiExecutionBillingRecorder
+{
+    ValueTask RecordExecutionAsync(AiExecutionBillingRecord record, CancellationToken cancellationToken = default);
+}
+
+/// <summary>
+/// Default billing recorder that discards execution records. Used when no
+/// product billing domain is registered.
+/// </summary>
+public sealed class NoOpAiExecutionBillingRecorder : IAiExecutionBillingRecorder
+{
+    public ValueTask RecordExecutionAsync(AiExecutionBillingRecord record, CancellationToken cancellationToken = default) => ValueTask.CompletedTask;
+}
+
 public interface IAiPromptTemplateService
 {
     Task<Result<IReadOnlyList<AiPromptTemplateDto>>> ListAsync(

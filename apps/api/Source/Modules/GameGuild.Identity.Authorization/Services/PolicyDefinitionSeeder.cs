@@ -8,20 +8,30 @@ namespace GameGuild.Identity.Authorization;
 /// </summary>
 public sealed class PolicyDefinitionSeeder
 {
-    public const long CurrentPolicyVersion = 4;
+    public const long CurrentPolicyVersion = 5;
 
     private readonly IPolicyDefinitionRepository _repository;
     private readonly ILogger<PolicyDefinitionSeeder> _logger;
+    private readonly IReadOnlyList<IPolicySeedContributor> _contributors;
 
     /// <summary>
     ///     Initializes a new instance of <see cref="PolicyDefinitionSeeder"/>.
     /// </summary>
+    /// <param name="repository">The policy definition repository.</param>
+    /// <param name="logger">The logger.</param>
+    /// <param name="contributors">
+    ///     Domain policy seed contributors (see <see cref="IPolicySeedContributor"/>).
+    ///     The common seeder stays platform-generic; domain policies arrive exclusively
+    ///     through this extension point.
+    /// </param>
     public PolicyDefinitionSeeder(
         IPolicyDefinitionRepository repository,
-        ILogger<PolicyDefinitionSeeder> logger)
+        ILogger<PolicyDefinitionSeeder> logger,
+        IEnumerable<IPolicySeedContributor>? contributors = null)
     {
         _repository = repository;
         _logger = logger;
+        _contributors = contributors?.ToArray() ?? [];
     }
 
     /// <summary>
@@ -60,6 +70,38 @@ public sealed class PolicyDefinitionSeeder
                 existing.PolicyVersion = CurrentPolicyVersion;
                 updatedCount++;
                 _logger.LogDebug("Updated policy: {PolicyName}", policy.PolicyName);
+            }
+        }
+
+        foreach (var contributor in _contributors)
+        {
+            foreach (var policy in contributor.BuildPolicies())
+            {
+                policy.PolicyVersion = CurrentPolicyVersion;
+
+                var existing = await _repository.GetByNameAsync(policy.PolicyName, null, cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (existing is null)
+                {
+                    await _repository.AddAsync(policy, cancellationToken).ConfigureAwait(false);
+                    seededCount++;
+                    _logger.LogDebug(
+                        "Seeded policy {PolicyName} from contributor {Contributor}",
+                        policy.PolicyName,
+                        contributor.Name);
+                }
+                else if (existing.PolicyVersion < CurrentPolicyVersion)
+                {
+                    ApplyCanonicalDefinition(existing, policy);
+                    await _repository.UpdateAsync(existing, cancellationToken).ConfigureAwait(false);
+                    existing.PolicyVersion = CurrentPolicyVersion;
+                    updatedCount++;
+                    _logger.LogDebug(
+                        "Updated policy {PolicyName} from contributor {Contributor}",
+                        policy.PolicyName,
+                        contributor.Name);
+                }
             }
         }
 
@@ -756,125 +798,6 @@ public sealed class PolicyDefinitionSeeder
             PolicyVersion = 1
         };
 
-        // ========================
-        // EMPLOYEE POLICIES (Human Resources Module)
-        // ========================
-        yield return new PolicyDefinitionEntity
-        {
-            Id = Guid.NewGuid(),
-            PolicyName = Policies.EmployeesRead,
-            Description = "Read access to employee records",
-            RequireAuthentication = true,
-            IsTenantScoped = true,
-            UseRuleBasedEvaluation = true,
-            RulesJson = """
-            [
-                {
-                    "Type": "TenantMatch",
-                    "Description": "Ensure user belongs to the request tenant",
-                    "Enabled": true
-                },
-                {
-                    "Type": "RequireAllPermissions",
-                    "Description": "Require users.read permission",
-                    "Params": {
-                        "permissions": ["users:read"]
-                    },
-                    "Enabled": true
-                }
-            ]
-            """,
-            IsActive = true,
-            PolicyVersion = 1
-        };
-
-        yield return new PolicyDefinitionEntity
-        {
-            Id = Guid.NewGuid(),
-            PolicyName = Policies.EmployeesCreate,
-            Description = "Permission to create employee records",
-            RequireAuthentication = true,
-            IsTenantScoped = true,
-            UseRuleBasedEvaluation = true,
-            RulesJson = """
-            [
-                {
-                    "Type": "TenantMatch",
-                    "Description": "Ensure user belongs to the request tenant",
-                    "Enabled": true
-                },
-                {
-                    "Type": "RequireAllPermissions",
-                    "Description": "Require users.create permission",
-                    "Params": {
-                        "permissions": ["users:create"]
-                    },
-                    "Enabled": true
-                }
-            ]
-            """,
-            IsActive = true,
-            PolicyVersion = 1
-        };
-
-        yield return new PolicyDefinitionEntity
-        {
-            Id = Guid.NewGuid(),
-            PolicyName = Policies.EmployeesUpdate,
-            Description = "Permission to update employee records",
-            RequireAuthentication = true,
-            IsTenantScoped = true,
-            UseRuleBasedEvaluation = true,
-            RulesJson = """
-            [
-                {
-                    "Type": "TenantMatch",
-                    "Description": "Ensure user belongs to the request tenant",
-                    "Enabled": true
-                },
-                {
-                    "Type": "RequireAllPermissions",
-                    "Description": "Require users.update permission",
-                    "Params": {
-                        "permissions": ["users:update"]
-                    },
-                    "Enabled": true
-                }
-            ]
-            """,
-            IsActive = true,
-            PolicyVersion = 1
-        };
-
-        yield return new PolicyDefinitionEntity
-        {
-            Id = Guid.NewGuid(),
-            PolicyName = Policies.EmployeesDelete,
-            Description = "Permission to delete employee records",
-            RequireAuthentication = true,
-            IsTenantScoped = true,
-            UseRuleBasedEvaluation = true,
-            RulesJson = """
-            [
-                {
-                    "Type": "TenantMatch",
-                    "Description": "Ensure user belongs to the request tenant",
-                    "Enabled": true
-                },
-                {
-                    "Type": "RequireAllPermissions",
-                    "Description": "Require users.delete permission",
-                    "Params": {
-                        "permissions": ["users:delete"]
-                    },
-                    "Enabled": true
-                }
-            ]
-            """,
-            IsActive = true,
-            PolicyVersion = 1
-        };
-
         yield return new PolicyDefinitionEntity
         {
             Id = Guid.NewGuid(),
@@ -960,6 +883,176 @@ public sealed class PolicyDefinitionSeeder
                         "selfPermission": "users:delete:self",
                         "anyPermission": "users:manage"
                     },
+                    "Enabled": true
+                }
+            ]
+            """,
+            IsActive = true,
+            PolicyVersion = 1
+        };
+
+        // ========================
+        // FEATURE FLAG POLICIES
+        // ========================
+        yield return new PolicyDefinitionEntity
+        {
+            Id = Guid.NewGuid(),
+            PolicyName = Policies.FeaturesRead,
+            Description = "Read access to feature flag definitions",
+            RequireAuthentication = true,
+            UseRuleBasedEvaluation = true,
+            RulesJson = """
+            [
+                {
+                    "Type": "TenantMatch",
+                    "Description": "Ensure user belongs to the request tenant",
+                    "Enabled": true
+                },
+                {
+                    "Type": "AnyOf",
+                    "Description": "Tenant/system administrators or users with features:read",
+                    "Rules": [
+                        {
+                            "Type": "RequireAnyRole",
+                            "Params": {
+                                "roles": ["TenantAdmin", "SystemAdmin"]
+                            },
+                            "Enabled": true
+                        },
+                        {
+                            "Type": "RequireAnyPermission",
+                            "Params": {
+                                "permissions": ["features:read"]
+                            },
+                            "Enabled": true
+                        }
+                    ],
+                    "Enabled": true
+                }
+            ]
+            """,
+            IsActive = true,
+            PolicyVersion = 1
+        };
+
+        yield return new PolicyDefinitionEntity
+        {
+            Id = Guid.NewGuid(),
+            PolicyName = Policies.FeaturesManage,
+            Description = "Create, update, delete and toggle feature flags",
+            RequireAuthentication = true,
+            UseRuleBasedEvaluation = true,
+            RulesJson = """
+            [
+                {
+                    "Type": "TenantMatch",
+                    "Description": "Ensure user belongs to the request tenant",
+                    "Enabled": true
+                },
+                {
+                    "Type": "AnyOf",
+                    "Description": "Tenant/system administrators or users with features:manage",
+                    "Rules": [
+                        {
+                            "Type": "RequireAnyRole",
+                            "Params": {
+                                "roles": ["TenantAdmin", "SystemAdmin"]
+                            },
+                            "Enabled": true
+                        },
+                        {
+                            "Type": "RequireAnyPermission",
+                            "Params": {
+                                "permissions": ["features:manage"]
+                            },
+                            "Enabled": true
+                        }
+                    ],
+                    "Enabled": true
+                }
+            ]
+            """,
+            IsActive = true,
+            PolicyVersion = 1
+        };
+
+        // ========================
+        // LEDGER POLICIES
+        // ========================
+        yield return new PolicyDefinitionEntity
+        {
+            Id = Guid.NewGuid(),
+            PolicyName = Policies.LedgersRead,
+            Description = "Read access to ledgers, entries, balances and rollups",
+            RequireAuthentication = true,
+            UseRuleBasedEvaluation = true,
+            RulesJson = """
+            [
+                {
+                    "Type": "TenantMatch",
+                    "Description": "Ensure user belongs to the request tenant",
+                    "Enabled": true
+                },
+                {
+                    "Type": "AnyOf",
+                    "Description": "Tenant/system administrators or users with ledgers:read",
+                    "Rules": [
+                        {
+                            "Type": "RequireAnyRole",
+                            "Params": {
+                                "roles": ["TenantAdmin", "SystemAdmin"]
+                            },
+                            "Enabled": true
+                        },
+                        {
+                            "Type": "RequireAnyPermission",
+                            "Params": {
+                                "permissions": ["ledgers:read"]
+                            },
+                            "Enabled": true
+                        }
+                    ],
+                    "Enabled": true
+                }
+            ]
+            """,
+            IsActive = true,
+            PolicyVersion = 1
+        };
+
+        yield return new PolicyDefinitionEntity
+        {
+            Id = Guid.NewGuid(),
+            PolicyName = Policies.LedgersWrite,
+            Description = "Create ledgers and post, update, reverse or delete ledger entries",
+            RequireAuthentication = true,
+            UseRuleBasedEvaluation = true,
+            RulesJson = """
+            [
+                {
+                    "Type": "TenantMatch",
+                    "Description": "Ensure user belongs to the request tenant",
+                    "Enabled": true
+                },
+                {
+                    "Type": "AnyOf",
+                    "Description": "Tenant/system administrators or users with ledgers:write",
+                    "Rules": [
+                        {
+                            "Type": "RequireAnyRole",
+                            "Params": {
+                                "roles": ["TenantAdmin", "SystemAdmin"]
+                            },
+                            "Enabled": true
+                        },
+                        {
+                            "Type": "RequireAnyPermission",
+                            "Params": {
+                                "permissions": ["ledgers:write"]
+                            },
+                            "Enabled": true
+                        }
+                    ],
                     "Enabled": true
                 }
             ]

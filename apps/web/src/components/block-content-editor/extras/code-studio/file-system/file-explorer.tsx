@@ -21,9 +21,9 @@ import {
   Download,
   Save
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Switch } from "@/components/ui/switch"
+import { Button } from "@game-guild/ui/components/button"
+import { Input } from "@game-guild/ui/components/input"
+import { Switch } from "@game-guild/ui/components/switch"
 import { DeleteConfirmDialog } from "../../dialogs/delete-confirm-dialog"
 import { DuplicateNameDialog } from "../../dialogs/duplicate-name-dialog"
 import { BaseConfirmDialog } from "../../dialogs/base-confirm-dialog"

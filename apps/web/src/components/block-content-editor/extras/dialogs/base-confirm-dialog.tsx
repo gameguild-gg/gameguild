@@ -9,7 +9,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from "@game-guild/ui/components/alert-dialog"
 import type { ReactNode } from "react"
 
 interface BaseConfirmDialogProps {

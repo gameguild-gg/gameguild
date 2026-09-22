@@ -1,6 +1,6 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@game-guild/ui/components/button"
 
 export interface ConfirmDialogProps {
   showConfirmDialog: boolean

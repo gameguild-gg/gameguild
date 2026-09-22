@@ -14,7 +14,6 @@
     <ItemGroup>
         <ProjectReference Include="..\GameGuild.Identity.Authorization\GameGuild.Identity.Authorization.csproj"/>
         <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj"/>
-        <ProjectReference Include="..\GameGuild.Commerce.Payments\GameGuild.Commerce.Payments.csproj"/>
         <ProjectReference Include="..\GameGuild.Resources\GameGuild.Resources.csproj"/>
     </ItemGroup>
 

@@ -88,13 +88,15 @@ public class TenantMiddleware(
 
         var authenticatedTenantId = Authorization.Utilities.ClaimsExtractor.GetTenantIdAsGuid(context.User);
         var explicitTenantId = GetExplicitTenantId(context);
+        var isSelfServiceInviteAcceptance = IsSelfServiceInviteAcceptance(context, path, explicitTenantId);
         var isSystemAdmin = Authorization.Utilities.ClaimsExtractor
             .GetRoles(context.User)
             .Any(role => role.Equals("SystemAdmin", StringComparison.OrdinalIgnoreCase));
         if (authenticatedTenantId.HasValue &&
             explicitTenantId.HasValue &&
             authenticatedTenantId.Value != explicitTenantId.Value &&
-            !isSystemAdmin)
+            !isSystemAdmin &&
+            !isSelfServiceInviteAcceptance)
         {
             await RejectTenantClaimMismatchAsync(
                 context,
@@ -113,7 +115,8 @@ public class TenantMiddleware(
         {
             if (authenticatedTenantId.HasValue &&
                 tenant.Id != authenticatedTenantId.Value &&
-                !isSystemAdmin)
+                !isSystemAdmin &&
+                !isSelfServiceInviteAcceptance)
             {
                 await RejectTenantClaimMismatchAsync(
                     context,
@@ -126,7 +129,7 @@ public class TenantMiddleware(
             var userId = GetAuthenticatedUserId(context);
             if (userId.HasValue)
             {
-                var membership = isSystemAdmin
+                var membership = isSystemAdmin || isSelfServiceInviteAcceptance
                     ? null
                     : await GetActiveTenantMembershipAsync(
                         userId.Value,
@@ -134,7 +137,7 @@ public class TenantMiddleware(
                         tenantMemberRepository,
                         context.RequestAborted).ConfigureAwait(false);
 
-                if (!isSystemAdmin && membership is null)
+                if (!isSystemAdmin && !isSelfServiceInviteAcceptance && membership is null)
                 {
                     logger.LogWarning(
                         "User {UserId} attempted to access tenant {TenantId} ({TenantName}) without membership",
@@ -227,6 +230,37 @@ public class TenantMiddleware(
                Guid.TryParse(segments[2], out _) &&
                (segments[3].Equals("memberships", StringComparison.OrdinalIgnoreCase) ||
                 segments[3].Equals("memberships:count", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool IsSelfServiceInviteAcceptance(
+        HttpContext context,
+        string path,
+        Guid? explicitTenantId)
+    {
+        if (!HttpMethods.IsPost(context.Request.Method))
+        {
+            return false;
+        }
+
+        var segments = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length != 6 ||
+            segments[0].Length <= 1 ||
+            segments[0][0] != 'v' ||
+            !int.TryParse(segments[0].AsSpan(1), out _) ||
+            !segments[1].Equals("users", StringComparison.OrdinalIgnoreCase) ||
+            !Guid.TryParse(segments[2], out var routeUserId) ||
+            !segments[3].Equals("memberships", StringComparison.OrdinalIgnoreCase) ||
+            !Guid.TryParse(segments[4], out var routeTenantId) ||
+            !segments[5].Equals("invite:accept", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var authenticatedUserId = GetAuthenticatedUserId(context);
+        return authenticatedUserId.HasValue &&
+               authenticatedUserId.Value == routeUserId &&
+               explicitTenantId.HasValue &&
+               explicitTenantId.Value == routeTenantId;
     }
 
     private static Guid? GetExplicitTenantId(HttpContext context)

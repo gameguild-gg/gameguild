@@ -1,6 +1,6 @@
 'use client';
 
-import { Input } from '@/components/ui/input';
+import { Input } from '@game-guild/ui/components/input';
 import { Search, X } from 'lucide-react';
 
 interface CourseSearchBarProps {

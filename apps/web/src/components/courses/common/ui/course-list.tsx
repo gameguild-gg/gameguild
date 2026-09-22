@@ -3,8 +3,8 @@
 import { PeriodType } from '@/components/common/filters/filter-context';
 import { CourseFilterControls } from '@/components/courses/common';
 import { CourseLevelValue, CourseStatusValue, type CourseLevel, type CourseStatus } from '@/components/courses/common/course-taxonomy';
-import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Button } from '@game-guild/ui/components/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@game-guild/ui/components/table';
 import { ProgramCategory } from '@/lib/api/generated/types.gen';
 import { Eye, FileText, Plus, Play } from 'lucide-react';
 import React, { useMemo, useState } from 'react';

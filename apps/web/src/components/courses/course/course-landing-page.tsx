@@ -1,5 +1,5 @@
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge } from '@game-guild/ui/components/badge';
+import { Button } from '@game-guild/ui/components/button';
 import { Link } from '@/i18n/navigation';
 import type { Program, ProgramContent } from '@/lib/api/generated';
 import { ProgramContentType } from '@/lib/api/generated';
@@ -465,11 +465,9 @@ export function CourseLandingPage({ course, viewerAccess, products = [] }: Cours
                   The course work should feel like a production path, not disconnected lessons. Each milestone becomes a visible project checkpoint with a
                   concrete deliverable.
                 </p>
-                <Button asChild variant="outline" className="mt-8 border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white">
-                  <Link href="#curriculum">
-                    View learning path
-                    <ArrowRight />
-                  </Link>
+                <Button variant="outline" className="mt-8 border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white" nativeButton={false} render={<Link href="#curriculum" />}>
+                  View learning path
+                  <ArrowRight />
                 </Button>
               </div>
 
@@ -560,19 +558,17 @@ export function CourseLandingPage({ course, viewerAccess, products = [] }: Cours
                   ) : viewerCta.kind === 'enroll' && course.slug ? (
                     <CourseSelfEnrollButton courseSlug={course.slug} />
                   ) : viewerCta.href ? (
-                    <Button asChild size="lg" className="bg-white text-slate-950 hover:bg-slate-200">
-                      <Link href={viewerCta.href}>
-                        {viewerCta.label}
-                        <ArrowRight />
-                      </Link>
+                    <Button size="lg" className="bg-white text-slate-950 hover:bg-slate-200" nativeButton={false} render={<Link href={viewerCta.href} />}>
+                      {viewerCta.label}
+                      <ArrowRight />
                     </Button>
                   ) : (
                     <Button size="lg" disabled className="bg-white/20 text-white">
                       {viewerCta.label}
                     </Button>
                   )}
-                  <Button asChild size="lg" variant="outline" className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white">
-                    <Link href="/courses">Browse catalog</Link>
+                  <Button size="lg" variant="outline" className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white" nativeButton={false} render={<Link href="/courses" />}>
+                    Browse catalog
                   </Button>
                 </div>
               </div>
@@ -650,11 +646,9 @@ export function CourseLandingPage({ course, viewerAccess, products = [] }: Cours
                         </span>
                       ))}
                     </div>
-                    <Button asChild variant="outline" className="mt-8 w-fit border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white">
-                      <Link href={`/programs/${program.slug}`}>
-                        Explore package
-                        <ArrowRight />
-                      </Link>
+                    <Button variant="outline" className="mt-8 w-fit border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white" nativeButton={false} render={<Link href={`/programs/${program.slug}`} />}>
+                      Explore package
+                      <ArrowRight />
                     </Button>
                   </div>
                 </div>

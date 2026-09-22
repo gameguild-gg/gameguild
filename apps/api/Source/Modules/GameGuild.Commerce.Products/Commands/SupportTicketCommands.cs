@@ -81,6 +81,23 @@ public sealed record CloseSupportTicketCommand(
     string AgentName,
     string? ClosingNotes = null) : ICommand<SupportTicketDto>;
 
+public sealed record StartSupportTicketCommand(Guid TicketId, Guid TenantId) : ICommand<SupportTicketDto>;
+
+public sealed record ReopenSupportTicketCommand(Guid TicketId, Guid TenantId) : ICommand<SupportTicketDto>;
+
+public sealed record ChangeSupportTicketPriorityCommand(
+    Guid TicketId,
+    Guid TenantId,
+    SupportTicketPriority Priority) : ICommand<SupportTicketDto>;
+
+public sealed record SupportTicketSummaryDto(
+    int Open,
+    int InProgress,
+    int ResolvedToday,
+    int HighOrUrgent);
+
+public sealed record GetSupportTicketSummaryQuery(Guid TenantId) : IQuery<SupportTicketSummaryDto>;
+
 public sealed record GetSupportTicketsQuery(
     Guid? TenantId = null,
     SupportTicketStatus? Status = null,
@@ -88,11 +105,15 @@ public sealed record GetSupportTicketsQuery(
     string? Search = null,
     int Skip = 0,
     int Take = 50,
-    Guid? CustomerId = null) : IQuery<PagedResult<SupportTicketDto>>;
+    Guid? CustomerId = null,
+    string? Category = null,
+    Guid? AssignedToUserId = null,
+    bool IncludeInternalMessages = true) : IQuery<PagedResult<SupportTicketDto>>;
 
 public sealed record GetSupportTicketByIdQuery(
     Guid TicketId,
-    Guid? TenantId = null) : IQuery<SupportTicketDto?>;
+    Guid? TenantId = null,
+    bool IncludeInternalMessages = true) : IQuery<SupportTicketDto?>;
 
 public sealed class CreateSupportTicketCommandHandler(IApplicationDbContext context)
     : ICommandHandler<CreateSupportTicketCommand, SupportTicketDto>
@@ -132,11 +153,6 @@ public sealed class AddSupportTicketMessageCommandHandler(IApplicationDbContext 
             request.AuthorType,
             request.Body,
             request.IsInternal);
-
-        if (request.AuthorType == SupportTicketMessageAuthorType.Agent)
-        {
-            ticket.Assign(request.AuthorUserId, request.AuthorName);
-        }
 
         await context.Set<SupportTicketMessage>().AddAsync(message, cancellationToken).ConfigureAwait(false);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -186,6 +202,68 @@ public sealed class CloseSupportTicketCommandHandler(IApplicationDbContext conte
     }
 }
 
+public sealed class StartSupportTicketCommandHandler(IApplicationDbContext context)
+    : ICommandHandler<StartSupportTicketCommand, SupportTicketDto>
+{
+    public async Task<SupportTicketDto> Handle(StartSupportTicketCommand request, CancellationToken cancellationToken)
+    {
+        var ticket = await SupportTicketHandlers.LoadTicketAsync(
+            context, request.TicketId, request.TenantId, cancellationToken).ConfigureAwait(false);
+        ticket.Start();
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return ticket.ToDto();
+    }
+}
+
+public sealed class ReopenSupportTicketCommandHandler(IApplicationDbContext context)
+    : ICommandHandler<ReopenSupportTicketCommand, SupportTicketDto>
+{
+    public async Task<SupportTicketDto> Handle(ReopenSupportTicketCommand request, CancellationToken cancellationToken)
+    {
+        var ticket = await SupportTicketHandlers.LoadTicketAsync(
+            context, request.TicketId, request.TenantId, cancellationToken).ConfigureAwait(false);
+        ticket.Reopen();
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return ticket.ToDto();
+    }
+}
+
+public sealed class ChangeSupportTicketPriorityCommandHandler(IApplicationDbContext context)
+    : ICommandHandler<ChangeSupportTicketPriorityCommand, SupportTicketDto>
+{
+    public async Task<SupportTicketDto> Handle(
+        ChangeSupportTicketPriorityCommand request,
+        CancellationToken cancellationToken)
+    {
+        var ticket = await SupportTicketHandlers.LoadTicketAsync(
+            context, request.TicketId, request.TenantId, cancellationToken).ConfigureAwait(false);
+        ticket.ChangePriority(request.Priority);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return ticket.ToDto();
+    }
+}
+
+public sealed class GetSupportTicketSummaryQueryHandler(IApplicationDbContext context)
+    : IQueryHandler<GetSupportTicketSummaryQuery, SupportTicketSummaryDto>
+{
+    public async Task<SupportTicketSummaryDto> Handle(
+        GetSupportTicketSummaryQuery request,
+        CancellationToken cancellationToken)
+    {
+        var startOfToday = DateTime.UtcNow.Date;
+        var tickets = context.Set<SupportTicket>().AsNoTracking()
+            .Where(ticket => ticket.TenantId == request.TenantId && ticket.DeletedAt == null);
+        return new SupportTicketSummaryDto(
+            await tickets.CountAsync(ticket => ticket.Status == SupportTicketStatus.Open, cancellationToken).ConfigureAwait(false),
+            await tickets.CountAsync(ticket => ticket.Status == SupportTicketStatus.InProgress, cancellationToken).ConfigureAwait(false),
+            await tickets.CountAsync(ticket => ticket.ResolvedAt >= startOfToday, cancellationToken).ConfigureAwait(false),
+            await tickets.CountAsync(ticket =>
+                (ticket.Status == SupportTicketStatus.Open || ticket.Status == SupportTicketStatus.InProgress) &&
+                (ticket.Priority == SupportTicketPriority.High || ticket.Priority == SupportTicketPriority.Urgent),
+                cancellationToken).ConfigureAwait(false));
+    }
+}
+
 public sealed class GetSupportTicketsQueryHandler(IApplicationDbContext context)
     : IQueryHandler<GetSupportTicketsQuery, PagedResult<SupportTicketDto>>
 {
@@ -218,6 +296,17 @@ public sealed class GetSupportTicketsQueryHandler(IApplicationDbContext context)
             query = query.Where(ticket => ticket.CustomerId == request.CustomerId.Value);
         }
 
+        if (!string.IsNullOrWhiteSpace(request.Category))
+        {
+            var category = request.Category.Trim().ToLowerInvariant();
+            query = query.Where(ticket => ticket.Category != null && ticket.Category.ToLower() == category);
+        }
+
+        if (request.AssignedToUserId.HasValue)
+        {
+            query = query.Where(ticket => ticket.AssignedToUserId == request.AssignedToUserId.Value);
+        }
+
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var search = request.Search.Trim().ToLowerInvariant();
@@ -237,7 +326,8 @@ public sealed class GetSupportTicketsQueryHandler(IApplicationDbContext context)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        return new PagedResult<SupportTicketDto>(tickets.Select(ticket => ticket.ToDto()), total, skip, take);
+        return new PagedResult<SupportTicketDto>(
+            tickets.Select(ticket => ticket.ToDto(request.IncludeInternalMessages)), total, skip, take);
     }
 }
 
@@ -257,15 +347,16 @@ public sealed class GetSupportTicketByIdQueryHandler(IApplicationDbContext conte
         }
 
         var ticket = await query.SingleOrDefaultAsync(cancellationToken).ConfigureAwait(false);
-        return ticket?.ToDto();
+        return ticket?.ToDto(request.IncludeInternalMessages);
     }
 }
 
 public static class SupportTicketMappingExtensions
 {
-    public static SupportTicketDto ToDto(this SupportTicket ticket)
+    public static SupportTicketDto ToDto(this SupportTicket ticket, bool includeInternalMessages = true)
     {
         var messages = ticket.Messages
+            .Where(message => includeInternalMessages || !message.IsInternal)
             .OrderBy(message => message.CreatedAt)
             .Select(message => message.ToDto())
             .ToList();

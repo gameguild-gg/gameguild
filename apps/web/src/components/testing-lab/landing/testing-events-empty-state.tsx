@@ -1,4 +1,4 @@
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button, buttonVariants } from '@game-guild/ui/components/button';
 import { Link } from '@/i18n/navigation';
 import { Search } from 'lucide-react';
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@game-guild/ui/components/button';
 import {
   Card,
   CardContent,
@@ -8,16 +8,16 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Input } from '@game-guild/ui/components/input';
+import { Label } from '@game-guild/ui/components/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
+} from '@game-guild/ui/components/select';
+import { Switch } from '@game-guild/ui/components/switch';
 import type { PreferenceFlag } from '@/lib/notifications/preferences-action';
 import {
   updateDigestFrequencyAction,
@@ -267,7 +267,7 @@ export function NotificationPreferences({
           <CardDescription>{t('digest.description')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <Select value={digest} onValueChange={changeDigest} disabled={pending}>
+          <Select value={digest} onValueChange={(value) => value !== null && changeDigest(value)} disabled={pending}>
             <SelectTrigger className="w-full sm:w-64" aria-label={t('digest.title')}>
               <SelectValue />
             </SelectTrigger>

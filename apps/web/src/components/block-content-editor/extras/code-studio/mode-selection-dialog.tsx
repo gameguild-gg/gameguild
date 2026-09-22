@@ -1,7 +1,7 @@
 "use client"
 
 import { Play, TestTube } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@game-guild/ui/components/button"
 import type { CodeStudioMode } from "./types"
 import { MODE_CONFIGS } from "./types"
 

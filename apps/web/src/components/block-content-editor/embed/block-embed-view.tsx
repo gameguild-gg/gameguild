@@ -14,7 +14,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Pencil, Trash2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@game-guild/ui/components/button"
 import { cn } from "@/lib/utils"
 
 import { BlockEditorModal } from "../engines/blocks/block-editor-modal"

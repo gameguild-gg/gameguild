@@ -1,7 +1,7 @@
 'use client';
 
 import { Link } from '@/i18n/navigation';
-import { flattenDashboardNavigationItems } from '@/components/console/dashboard-sidebar';
+import { flattenWorkspaceNavigationItems } from '@/components/console/workspace-sidebar';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
@@ -12,7 +12,7 @@ export default function DashboardSearchPage() {
   const searchParams = useSearchParams();
   const query = searchParams.get('q')?.trim() ?? '';
   const lowerQuery = query.toLowerCase();
-  const items = flattenDashboardNavigationItems();
+  const items = flattenWorkspaceNavigationItems();
   const results = lowerQuery
     ? items.filter((item) => `${item.title} ${item.url}`.toLowerCase().includes(lowerQuery))
     : items.slice(0, 12);
@@ -58,8 +58,8 @@ export default function DashboardSearchPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <Button asChild variant="outline" size="sm">
-                    <Link href={item.url}>Open result</Link>
+                  <Button nativeButton={false} variant="outline" size="sm" render={<Link href={item.url} />}>
+                    Open result
                   </Button>
                 </CardContent>
               </Card>
@@ -75,8 +75,8 @@ export default function DashboardSearchPage() {
                   Try a shorter query or open the command palette with Ctrl+K.
                 </p>
               </div>
-              <Button asChild variant="outline">
-                <Link href="/workspace/learning/courses">Open courses</Link>
+              <Button nativeButton={false} variant="outline" render={<Link href="/workspace/learning/courses" />}>
+                Open courses
               </Button>
             </CardContent>
           </Card>

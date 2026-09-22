@@ -3,10 +3,10 @@
 // Inspired by react-hot-toast library
 import * as React from "react"
 
-import type {
-  ToastActionElement,
-  ToastProps,
-} from "@/components/ui/toast"
+import type { Toast, ToastAction } from "@game-guild/ui/components/toast"
+
+type ToastProps = React.ComponentProps<typeof Toast>
+type ToastActionElement = React.ReactElement<typeof ToastAction>
 
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
@@ -157,10 +157,6 @@ function toast({ ...props }: Toast) {
     toast: {
       ...props,
       id,
-      open: true,
-      onOpenChange: (open: any) => {
-        if (!open) dismiss()
-      },
     },
   })
 

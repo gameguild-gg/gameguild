@@ -29,6 +29,19 @@ public sealed record AuthoringContentPayload(
         content.EstimatedMinutes,
         content.EstimatedMinutesSource,
         content.Visibility);
+
+    /// <summary>
+    /// Normalizes the type to professor-facing form and drops any lesson format
+    /// that is invalid for it. Applied on save/publish so stored drafts never hold
+    /// a stale legacy hint.
+    /// </summary>
+    public AuthoringContentPayload Normalize() => this with
+    {
+        Type = ProgramContentMappingExtensions.NormalizeProfessorFacingType(Type),
+        LessonFormat = ProgramContentMappingExtensions.NormalizeProfessorFacingType(Type) == ProgramContentType.Lesson
+            ? LessonFormat
+            : null,
+    };
 }
 
 public sealed record AuthoringDraftDto(

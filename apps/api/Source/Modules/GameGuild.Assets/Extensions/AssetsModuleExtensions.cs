@@ -2,11 +2,11 @@ using Amazon.S3;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using GameGuild.Assets.Configuration;
 using GameGuild.Assets.Commands;
 using GameGuild.Assets.Queries;
 using GameGuild.Assets.Security;
-using GameGuild.Assets.SocialMedia;
 using FluentValidation;
 
 namespace GameGuild.Assets.Extensions;
@@ -100,7 +100,6 @@ public static class AssetsModuleExtensions
         services.AddScoped<IAssetScopedAccessService, AssetScopedAccessService>();
         services.AddScoped<IAssetModerationService, AssetModerationService>();
         services.AddScoped<IAssetTextExtractionService, AssetTextExtractionService>();
-        services.AddScoped<ISocialMediaAssetService, SocialMediaAssetService>();
 
         // Security Services (Threat Mitigations)
         services.AddScoped<IAssetRateLimitService, AssetRateLimitService>();
@@ -111,7 +110,9 @@ public static class AssetsModuleExtensions
         services.AddScoped<IAssetGarbageCollectionService, AssetGarbageCollectionService>();
         services.AddScoped<ITenantAssetValidationService, TenantAssetValidationService>();
         services.AddScoped<IDownloadWindowService, DownloadWindowService>();
-        services.AddScoped<IOrderValidationService, CommerceOrderValidationService>();
+        // Fail-closed default: the composition root replaces it with the commerce-backed
+        // adapter; without one, paid-download windows stay locked (deny all orders).
+        services.TryAddScoped<IOrderValidationService, DenyByDefaultOrderValidationService>();
         services.AddScoped<ISecureUploadService, SecureUploadService>();
 
         // Validators

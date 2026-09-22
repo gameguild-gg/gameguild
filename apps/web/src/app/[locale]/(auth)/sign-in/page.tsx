@@ -3,7 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import { SignInForm } from '@/components/sign-in-form';
 import { GoogleOneTap } from '@/components/google-one-tap';
 import { GoogleSignInButton } from '@/components/google-sign-in-button';
-import { buttonVariants } from '@/components/ui/button';
+import { buttonVariants } from '@game-guild/ui/components/button';
 import { cn } from '@/lib/utils';
 import { resolveAllowedAuthRedirect } from '@/lib/auth/cross-domain-auth';
 import { auth } from '@/auth';

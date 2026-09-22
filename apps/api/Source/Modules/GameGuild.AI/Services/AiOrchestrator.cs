@@ -14,8 +14,10 @@ internal sealed class AiOrchestrator(
     IResourceQuotaEnforcer quotaEnforcer,
     IAiConversationHistoryRepository historyRepository,
     IOptions<AiOptions> aiOptions,
-    ILogger<AiOrchestrator> logger) : IAiOrchestrator
+    ILogger<AiOrchestrator> logger,
+    IAiExecutionBillingRecorder? billingRecorder = null) : IAiOrchestrator
 {
+    private readonly IAiExecutionBillingRecorder _billingRecorder = billingRecorder ?? new NoOpAiExecutionBillingRecorder();
     private static readonly HashSet<string> AllowedMessageRoles = new(StringComparer.OrdinalIgnoreCase)
     {
         "user",
@@ -290,6 +292,7 @@ internal sealed class AiOrchestrator(
         var inputModerationResult = ModerateInput(resolvedRequest);
         if (inputModerationResult.IsFailure)
         {
+            await RecordBillingAsync(resolvedRequest, actorId, null, "ModerationBlocked", inputModerationResult.Error.Code, inputModerationResult.Error.Description, cancellationToken).ConfigureAwait(false);
             await RecordHistoryAsync(resolvedRequest, actorId, null, "ModerationBlocked", inputModerationResult.Error.Code, inputModerationResult.Error.Description, cancellationToken).ConfigureAwait(false);
             return Result.Failure<AiCompletionResponse>(inputModerationResult.Error);
         }
@@ -298,13 +301,17 @@ internal sealed class AiOrchestrator(
         {
             var requestQuotaResult = await ConsumeQuotaAsync(resolvedRequest.TenantId, ResourceUsageType.AiRequests, 1, "AI request quota exceeded.", cancellationToken).ConfigureAwait(false);
             if (requestQuotaResult.IsFailure)
+            {
+                await RecordBillingAsync(resolvedRequest, actorId, null, "Failed", requestQuotaResult.Error.Code, requestQuotaResult.Error.Description, cancellationToken).ConfigureAwait(false);
                 return Result.Failure<AiCompletionResponse>(requestQuotaResult.Error);
+            }
         }
 
         if (!_adapters.TryGetValue(resolvedRequest.Provider, out var adapter))
         {
             if (enforceQuota)
                 await quotaEnforcer.DecrementUsageAsync(resolvedRequest.TenantId, ResourceUsageType.AiRequests, 1, actorId, "AI.ProviderNotRegistered", cancellationToken).ConfigureAwait(false);
+            await RecordBillingAsync(resolvedRequest, actorId, null, "Failed", "AI.ProviderNotRegistered", $"Provider '{AiProviderParser.ToResponseValue(resolvedRequest.Provider)}' is not registered.", cancellationToken).ConfigureAwait(false);
             return Result.Failure<AiCompletionResponse>(Error.Problem(
                 "AI.ProviderNotRegistered",
                 $"Provider '{AiProviderParser.ToResponseValue(resolvedRequest.Provider)}' is not registered."));
@@ -318,6 +325,7 @@ internal sealed class AiOrchestrator(
         {
             if (enforceQuota)
                 await quotaEnforcer.DecrementUsageAsync(resolvedRequest.TenantId, ResourceUsageType.AiRequests, 1, actorId, "AI.ProviderExecutionFailed", cancellationToken).ConfigureAwait(false);
+            await RecordBillingAsync(resolvedRequest, actorId, null, "Failed", executionResult.Error.Code, executionResult.Error.Description, cancellationToken).ConfigureAwait(false);
             await RecordHistoryAsync(resolvedRequest, actorId, null, "Failed", executionResult.Error.Code, executionResult.Error.Description, cancellationToken).ConfigureAwait(false);
             return Result.Failure<AiCompletionResponse>(executionResult.Error);
         }
@@ -330,6 +338,7 @@ internal sealed class AiOrchestrator(
             var tokenQuotaResult = await ConsumeQuotaAsync(resolvedRequest.TenantId, ResourceUsageType.AiTokens, totalTokens, "AI token quota exceeded.", cancellationToken).ConfigureAwait(false);
             if (tokenQuotaResult.IsFailure)
             {
+                await RecordBillingAsync(resolvedRequest, actorId, providerResult, "Failed", tokenQuotaResult.Error.Code, tokenQuotaResult.Error.Description, cancellationToken).ConfigureAwait(false);
                 await RecordHistoryAsync(resolvedRequest, actorId, providerResult, "Failed", tokenQuotaResult.Error.Code, tokenQuotaResult.Error.Description, cancellationToken).ConfigureAwait(false);
                 return Result.Failure<AiCompletionResponse>(tokenQuotaResult.Error);
             }
@@ -338,6 +347,7 @@ internal sealed class AiOrchestrator(
         var outputModerationResult = ModerateOutput(resolvedRequest, providerResult);
         if (outputModerationResult.IsFailure)
         {
+            await RecordBillingAsync(resolvedRequest, actorId, providerResult, "ModerationBlocked", outputModerationResult.Error.Code, outputModerationResult.Error.Description, cancellationToken).ConfigureAwait(false);
             await RecordHistoryAsync(resolvedRequest, actorId, providerResult, "ModerationBlocked", outputModerationResult.Error.Code, outputModerationResult.Error.Description, cancellationToken).ConfigureAwait(false);
             return Result.Failure<AiCompletionResponse>(outputModerationResult.Error);
         }
@@ -353,6 +363,7 @@ internal sealed class AiOrchestrator(
             AiProviderParser.ToResponseValue(resolvedRequest.Provider),
             providerResult.Model);
 
+        await RecordBillingAsync(resolvedRequest, actorId, providerResult, "Completed", null, null, cancellationToken).ConfigureAwait(false);
         await RecordHistoryAsync(resolvedRequest, actorId, providerResult, "Completed", null, null, cancellationToken).ConfigureAwait(false);
 
         return Result.Success(new AiCompletionResponse(
@@ -361,6 +372,30 @@ internal sealed class AiOrchestrator(
             providerResult.Text,
             providerResult.FinishReason,
             new AiUsageDto(providerResult.InputTokens, providerResult.OutputTokens, providerResult.TotalTokens)));
+    }
+
+    private async Task RecordBillingAsync(
+        AiResolvedRequest resolvedRequest,
+        Guid? actorId,
+        AiProviderExecutionResult? providerResult,
+        string outcome,
+        string? outcomeCode,
+        string? outcomeReason,
+        CancellationToken cancellationToken)
+    {
+        var record = new AiExecutionBillingRecord(
+            resolvedRequest.TenantId,
+            actorId,
+            AiProviderParser.ToResponseValue(resolvedRequest.Provider),
+            providerResult?.Model ?? resolvedRequest.Model,
+            providerResult?.InputTokens,
+            providerResult?.OutputTokens,
+            providerResult?.TotalTokens,
+            outcome,
+            outcomeCode,
+            outcomeReason,
+            SystemClock.UtcNow);
+        await _billingRecorder.RecordExecutionAsync(record, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<Result<bool>> ConsumeQuotaAsync(Guid tenantId, ResourceUsageType type, long amount, string message, CancellationToken cancellationToken)

@@ -1,6 +1,6 @@
 'use client';
 
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@game-guild/ui/components/alert';
 import {
   Dialog,
   DialogContent,
@@ -9,10 +9,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
+} from '@game-guild/ui/components/dialog';
+import { RadioGroup, RadioGroupItem } from '@game-guild/ui/components/radio-group';
+import { Separator } from '@game-guild/ui/components/separator';
+import { Button } from '@game-guild/ui/components/button';
 import { completeCourseCheckout, type Product } from '@/lib/courses/actions/enrollment.actions';
 import { getLearnerCourseContentHref } from '@/lib/learner/paths';
 import { cn } from '@/lib/utils';
@@ -88,11 +88,9 @@ export function CourseCheckoutButton({ courseSlug, products, className, buttonCl
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <div className={cn('flex flex-col gap-3', className)}>
-        <DialogTrigger asChild>
-          <Button size="lg" className={cn('bg-white text-slate-950 hover:bg-slate-200', buttonClassName)}>
-            Enroll for {formatPrice(selectedProduct)}
-            <ArrowRight data-icon="inline-end" />
-          </Button>
+        <DialogTrigger render={<Button size="lg" className={cn('bg-white text-slate-950 hover:bg-slate-200', buttonClassName)} />}>
+          Enroll for {formatPrice(selectedProduct)}
+          <ArrowRight data-icon="inline-end" />
         </DialogTrigger>
 
         {success ? (

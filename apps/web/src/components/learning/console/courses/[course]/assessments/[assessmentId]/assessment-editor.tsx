@@ -626,25 +626,33 @@ export function AssessmentEditor({
           <h1 className="text-2xl font-bold">{assessment.title}</h1>
         </div>
         {canManage && (
-          <Button variant="outline" size="sm" asChild>
-            <Link
-              href={`/speedgrader/assessments/${assessment.id}?course=${encodeURIComponent(courseId)}`}
-              data-testid="start-speedgrader-button"
-            >
-              <Gauge className="mr-2 h-4 w-4" />
-              SpeedGrader
-            </Link>
+          <Button nativeButton={false}
+            variant="outline"
+            size="sm"
+            render={
+              <Link
+                href={`/speedgrader/assessments/${assessment.id}?course=${encodeURIComponent(courseId)}`}
+                data-testid="start-speedgrader-button"
+              />
+            }
+          >
+            <Gauge className="mr-2 h-4 w-4" />
+            SpeedGrader
           </Button>
         )}
         {canManage && (
-          <Button variant="outline" size="sm" asChild>
-            <Link
-              href={`${learningBase}/courses/${encodeURIComponent(courseId)}/assessments/${assessment.slug}/submissions`}
-              data-testid="grade-submissions-button"
-            >
-              <ClipboardCheck className="mr-2 h-4 w-4" />
-              Grade submissions
-            </Link>
+          <Button nativeButton={false}
+            variant="outline"
+            size="sm"
+            render={
+              <Link
+                href={`${learningBase}/courses/${encodeURIComponent(courseId)}/assessments/${assessment.slug}/submissions`}
+                data-testid="grade-submissions-button"
+              />
+            }
+          >
+            <ClipboardCheck className="mr-2 h-4 w-4" />
+            Grade submissions
           </Button>
         )}
         <Badge variant="secondary">{typeLabel}</Badge>
@@ -966,7 +974,7 @@ export function AssessmentEditor({
                 <Label htmlFor="grade-group">Grading group</Label>
                 <Select
                   value={assessmentGroupId}
-                  onValueChange={setAssessmentGroupId}
+                  onValueChange={(value) => setAssessmentGroupId(value ?? "none")}
                 >
                   <SelectTrigger id="grade-group">
                     <SelectValue />
@@ -1244,7 +1252,7 @@ export function AssessmentEditor({
                     <Label htmlFor="group-set">Group set</Label>
                     <Select
                       value={groupSetId}
-                      onValueChange={handleGroupSetChange}
+                      onValueChange={(value) => handleGroupSetChange(value ?? GROUP_SET_NONE)}
                       disabled={isPolicyPending}
                     >
                       <SelectTrigger id="group-set">
@@ -1297,7 +1305,7 @@ export function AssessmentEditor({
                 <Label htmlFor="result-release-mode">Result release</Label>
                 <Select
                   value={resultReleaseMode}
-                  onValueChange={setResultReleaseMode}
+                  onValueChange={(value) => setResultReleaseMode(value ?? "manual")}
                 >
                   <SelectTrigger id="result-release-mode">
                     <SelectValue />
@@ -1315,7 +1323,9 @@ export function AssessmentEditor({
                 </Label>
                 <Select
                   value={contentCompletionMode}
-                  onValueChange={setContentCompletionMode}
+                  onValueChange={(value) =>
+                    setContentCompletionMode(value ?? "on-submit")
+                  }
                 >
                   <SelectTrigger id="content-completion-mode">
                     <SelectValue />

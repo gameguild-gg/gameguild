@@ -1,9 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Button } from "@game-guild/ui/components/button"
+import { Input } from "@game-guild/ui/components/input"
+import { Label } from "@game-guild/ui/components/label"
 import {
   Dialog,
   DialogContent,
@@ -11,9 +11,9 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
+} from "@game-guild/ui/components/dialog"
+import { Alert, AlertDescription } from "@game-guild/ui/components/alert"
+import { Badge } from "@game-guild/ui/components/badge"
 import { Loader2, Shield, FolderPlus, ExternalLink, CheckCircle } from "lucide-react"
 import { useGoogleDriveAuth } from "@/components/block-content-editor/hooks/editor/use-google-drive-auth"
 

@@ -1,12 +1,12 @@
 'use client';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@game-guild/ui/components/badge';
+import { Button } from '@game-guild/ui/components/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@game-guild/ui/components/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@game-guild/ui/components/dropdown-menu';
+import { Input } from '@game-guild/ui/components/input';
+import { Switch } from '@game-guild/ui/components/switch';
+import { Textarea } from '@game-guild/ui/components/textarea';
 import { Activity, BookOpen, CheckSquare, ChevronDown, ChevronRight, Copy, Edit, Eye, EyeOff, File, FileText, Folder, FolderOpen, GripVertical, HelpCircle, MoreHorizontal, Plus, Redo, Trash2, Undo, Video } from 'lucide-react';
 import { useState } from 'react';
 import { useCourseEditor } from '../../editor/context/course-editor-provider';
@@ -280,10 +280,8 @@ export function ContentStructureSection() {
 
         {/* Actions */}
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
+          <DropdownMenuTrigger render={<Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100" />}>
+            <MoreHorizontal className="h-4 w-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem onClick={() => handleLessonAction(lesson.id, 'edit')}>
@@ -373,10 +371,8 @@ export function ContentStructureSection() {
 
           {/* Module actions */}
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
+            <DropdownMenuTrigger render={<Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100" />}>
+              <MoreHorizontal className="h-4 w-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem onClick={() => handleModuleAction(module.id, 'edit')}>

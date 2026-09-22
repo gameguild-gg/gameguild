@@ -109,11 +109,9 @@ export function SpeedgraderShell({
         data-testid="speedgrader-header"
         className="flex flex-wrap items-center gap-2 border-b px-3 py-2"
       >
-        <Button variant="ghost" size="sm" asChild>
-          <Link href={backHref} aria-label="Back to submissions">
-            <ChevronLeft className="size-4" />
-            Back
-          </Link>
+        <Button nativeButton={false} variant="ghost" size="sm" render={<Link href={backHref} aria-label="Back to submissions" />}>
+          <ChevronLeft className="size-4" />
+          Back
         </Button>
         <h1 className="min-w-0 truncate text-sm font-semibold">{assessmentTitle}</h1>
         <Badge data-testid="needs-grading-badge" variant="secondary">
@@ -142,7 +140,7 @@ export function SpeedgraderShell({
           <Select
             data-testid="item-picker"
             value={String(index)}
-            onValueChange={(value) => goTo(Number.parseInt(value, 10))}
+            onValueChange={(value) => goTo(Number.parseInt(value ?? String(index), 10))}
           >
             <SelectTrigger className="w-64" aria-label="Select submission">
               <SelectValue placeholder="Select submission" />

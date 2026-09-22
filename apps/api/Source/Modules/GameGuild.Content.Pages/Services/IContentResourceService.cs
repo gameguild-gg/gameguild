@@ -4,7 +4,7 @@ namespace GameGuild.Content.Pages;
 public interface IContentResourceService
 {
     Task<ContentResource?> GetByIdAsync(Guid id, CancellationToken ct = default);
-    Task<ContentResource?> GetBySlugAsync(string slug, CancellationToken ct = default);
+    Task<ContentResource?> GetBySlugAsync(string slug, bool publishedOnly = false, CancellationToken ct = default);
     Task<IReadOnlyList<ContentResource>> ListAsync(
         ContentResourceType? type = null,
         ContentResourceStatus? status = null,

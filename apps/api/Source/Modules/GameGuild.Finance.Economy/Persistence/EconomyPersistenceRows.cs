@@ -9,7 +9,11 @@ using GameGuild.Finance.Economy.Transfers;
 
 namespace GameGuild.Finance.Economy.Persistence;
 
-internal sealed class EconomyWalletRow
+/// <summary>
+/// Wallet row shared with product modules that extend wallet billing behavior
+/// (for example AI-credit holds on the shared soft balance).
+/// </summary>
+public sealed class EconomyWalletRow
 {
     public Guid Id { get; set; }
     public Guid OwnerId { get; set; }
@@ -18,7 +22,11 @@ internal sealed class EconomyWalletRow
     public DateTimeOffset CreatedAt { get; set; }
 }
 
-internal sealed class EconomyWalletBalanceProjectionRow
+/// <summary>
+/// Wallet balance projection row shared with product modules that extend wallet
+/// billing behavior on the shared soft balance.
+/// </summary>
+public sealed class EconomyWalletBalanceProjectionRow
 {
     public Guid WalletId { get; set; }
     public long PendingHard { get; set; }

@@ -1,9 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@game-guild/ui/components/button';
 import { MoreHorizontal, Edit, Trash2, Copy } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@game-guild/ui/components/dropdown-menu';
 
 export interface EditMenuOption {
   label: string;
@@ -56,10 +56,8 @@ export function ContentEditMenu({ options = [], onEdit, onDelete, onDuplicate, c
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className={className}>
-          <MoreHorizontal className="w-4 h-4" />
-        </Button>
+      <DropdownMenuTrigger render={<Button variant="ghost" size="sm" className={className} />}>
+        <MoreHorizontal className="w-4 h-4" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {allOptions.map((option, index) => (

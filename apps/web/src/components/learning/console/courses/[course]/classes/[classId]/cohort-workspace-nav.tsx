@@ -82,10 +82,8 @@ export function CohortWorkspaceNav({ courseRoute, courseTitle, cohort, cohorts, 
           </div>
 
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="w-full justify-between sm:w-auto" aria-label="Switch class">
-                Switch class <ChevronDown className="size-4" />
-              </Button>
+            <DropdownMenuTrigger render={<Button variant="outline" className="w-full justify-between sm:w-auto" aria-label="Switch class" />}>
+              Switch class <ChevronDown className="size-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-72">
               {cohorts.map((item) => (

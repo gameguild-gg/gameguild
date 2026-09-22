@@ -1793,6 +1793,136 @@ public async Task Authorization_PerformsUnderLoad()
 
 ---
 
+## Platform Authorization Hardening
+
+This section documents the authorization-hardening invariants of the common platform
+modules. Everything below applies to the platform modules that are shared verbatim
+across products; product-specific behavior hooks in exclusively through the documented
+extension points.
+
+### Fail-Closed Permission Mapping (CQRS `AuthorizationBehavior`)
+
+- The behavior resolves authorization requirements through the **typed**
+  `AuthorizeRequestAttribute` only. Attributes that merely share the *name*
+  `AuthorizeRequestAttribute` (different type/namespace) are ignored — no
+  name-based reflection matching.
+- Resource-level checks map the permission string to an `AccessLevel`
+  (`manage/admin/delete/remove` → Admin; `write/edit/update/create` → Write;
+  `read/view/get/list` → Read). **Unknown permission patterns throw
+  `UnauthorizedAccessException`** — they are never silently defaulted to `Write`.
+  A typo can only fail closed.
+
+### Permission Template Application (`ApplyPermissionTemplateCommand`)
+
+Applying a template mutates another user's permissions, so the handler enforces
+(defense-in-depth beyond controller attributes):
+
+1. the actor must be authenticated;
+2. **system templates** require `system:manage-global-defaults` (or SystemAdmin);
+3. **tenant templates** require tenant-admin or `permissions:manage`, and the target
+   tenant must equal the actor's tenant (SystemAdmin excepted);
+4. every successful apply **bumps the tenant security version** (cache invalidation) and
+   **writes a `PermissionAuditLog` entry**.
+
+### Permission Cache Clearing (`ClearPermissionCacheCommand`)
+
+The command has a real handler: it bumps the tenant security version through
+`ITenantSecurityVersionStore` and evicts local L1 entries through
+`ICacheInvalidationService`. Authorization: tenant-scoped clears require SystemAdmin or
+tenant-admin of the target tenant; unscoped (global) clears require SystemAdmin. A
+user-scoped clear without a tenant fails closed.
+
+### Bulk Permission Operations
+
+`BulkGrantTenantPermissionsCommand`, `BulkRevokeTenantPermissionsCommand`, and
+`BulkGrantResourcePermissionsCommand` all have guarded handlers that delegate to the
+Authorization-module permission services (which bump versions and audit each mutation).
+The guards mirror single grants: tenant-admin within the actor's own tenant or
+SystemAdmin; `Guid.Empty` tenant IDs (global defaults) additionally require
+`system:manage-global-defaults`. Per-user failures are collected into the
+`BulkPermissionResult`, never swallowed.
+
+Only **one command type exists per operation** — permission-grant endpoints bind the
+guarded Authorization-module commands, and acting-user identity (`GrantedBy`,
+`RevokedBy`, `CreatedByUserId`, …) always comes from the authenticated actor context,
+never from the request body.
+
+### Per-Product Policy Seed Extension Point
+
+The common `PolicyDefinitionSeeder` seeds **platform-generic policies only**. A product
+adds its domain policies by implementing:
+
+```csharp
+public interface IPolicySeedContributor
+{
+    string Name { get; }
+    IEnumerable<PolicyDefinitionEntity> BuildPolicies();
+}
+```
+
+and registering it from the host (or a domain module) with
+`services.AddPolicySeedContributor<TContributor>()`. Contributor policies use the same
+seeding semantics (create-if-missing, refresh when the stored policy version is older
+than the seeder's current version). This product's domain policy gates — role
+admissions and permission-based access rules specific to this product — are seeded
+through this extension point from the host; the common seeder contains no domain
+identifiers.
+
+### Hardened Platform Modules
+
+- **Features** (`GameGuild.Features`): the management controller requires
+  authentication plus the `Features.Read` policy (reads) or `Features.Manage` policy
+  (mutations). No feature-flag endpoint is public; anonymous callers can never mutate
+  flags. Feature *evaluation* for callers happens through the evaluation/SDK surfaces.
+- **Ledgers** (`GameGuild.Finance.Ledgers`): controllers require authentication plus
+  `Ledgers.Read` / `Ledgers.Write`. The effective tenant is the **actor's tenant** — a
+  route-supplied tenant is honored only for SystemAdmin; cross-tenant reads fail
+  closed. `CreatedByUserId` is always taken from the actor, never the request body.
+- **Assets** (`GameGuild.Assets`): object access validates that the asset's **own
+  tenant** matches the request tenant (`TenantMismatch` denial) — membership in the
+  request tenant alone is not sufficient. The only escape hatch is the explicit
+  `permitCrossTenant` path reserved for SystemAdmin surfaces.
+- **Content Pages** (`GameGuild.Content.Pages`): get-by-id and public listing surfaces
+  gate unpublished content behind the `content:read`/`content:write`/`content:admin`
+  permissions; the anonymous slug/sitemap/catalog surfaces return published content
+  only.
+
+### Legacy Permission Facade
+
+The backward-compatible three-layer permission facade bumps the tenant security version
+and writes an audit entry on **every mutation path** (grants, revokes, defaults,
+content-type and resource grants, expired-permission cleanup). Invalidation failures
+propagate — a mutation whose cache invalidation failed is never reported as successful.
+
+### Architecture Rules (enforced by build/tests)
+
+- **Controller authorization (GGARCH008 + `ControllerAuthorizationArchitectureTests`)**:
+  every MVC endpoint must carry `[Authorize]` (class or action) or an explicit
+  `[AllowAnonymous]`. The Roslyn analyzer fails the build on unguarded endpoints; the
+  unit tests additionally require every anonymous endpoint (action-level, or any endpoint
+  of a controller whose class is `[AllowAnonymous]`) to appear in the HOST-side reviewed
+  allowlist registry (`AnonymousEndpointRegistry` in the API host's `Security` folder)
+  with a one-line justification. The registry is per-product content; the tests and
+  analyzer carry no product-specific entries and mirror verbatim.
+- **Dependency direction (`ModuleDependencyDirectionTests`)**: platform modules
+  (`GameGuild.Identity.*`, `GameGuild.Resources*`, `GameGuild.SharedKernel`,
+  `GameGuild.Assets`, `GameGuild.Features`, `GameGuild.Finance.Ledgers`,
+  `GameGuild.Content.Pages`) must not reference **domain modules** — every module under
+  `Source/Modules` that is not in the platform set is a domain module (the test derives
+  this set dynamically; there is no per-product hardcoding) — via project references
+  **or** namespace usages. The reverse direction is allowed. Product-specific bridges
+  live in the host composition root (e.g. the commerce-backed order-validation adapter
+  and the tenant payment-history bridge). Known debt is explicitly listed in the test
+  with a removal plan; anything not listed fails the tests.
+
+### Subscription Quota Sync
+
+Plan-change quota sync never swallows failures: each per-quota failure is logged as an
+error, and if any quota failed to apply the handler throws an aggregate failure so a
+downgrade can never silently skip its new (lower) limits.
+
+---
+
 ## Conclusion
 
 The GameGuild Authorization Architecture provides a **comprehensive, enterprise-grade access control system** that balances:

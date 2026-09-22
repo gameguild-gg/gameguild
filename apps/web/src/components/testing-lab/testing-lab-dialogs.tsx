@@ -26,7 +26,7 @@ import { Label } from '@game-guild/ui/components/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
 import { Textarea } from '@game-guild/ui/components/textarea';
 import { AlertCircle, CheckCircle2, FlaskConical, Link2, MapPin, Pencil, Plus, ShieldCheck, UserPlus } from 'lucide-react';
-import { useState, useTransition, type FormEvent, type ReactNode } from 'react';
+import { useState, useTransition, type FormEvent, type ReactElement, type ReactNode } from 'react';
 
 type Action = (formData: FormData) => Promise<TestingLabActionResult<unknown>>;
 
@@ -48,7 +48,7 @@ function ActionDialog({
   action,
   children,
 }: {
-  trigger: ReactNode;
+  trigger: ReactElement;
   title: string;
   description: string;
   submitLabel: string;
@@ -88,7 +88,7 @@ function ActionDialog({
         setResult(null);
       }}
     >
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      <DialogTrigger render={trigger} />
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <form onSubmit={handleSubmit} className="space-y-5">
           <DialogHeader>

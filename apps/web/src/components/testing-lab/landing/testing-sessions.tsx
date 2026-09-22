@@ -1,14 +1,14 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@game-guild/ui/components/button";
+import { Input } from "@game-guild/ui/components/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@game-guild/ui/components/select";
 import { LayoutGrid, List, Search, Table2, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { TestingEventViewModel } from "./testing-events-presentation";

@@ -259,6 +259,9 @@ public sealed class SystemPermission : Permission
     /// <summary>Permission to manage global default permissions (tenantId=null)</summary>
     public static readonly SystemPermission ManageGlobalDefaults = new(Keys.ManageGlobalDefaults, "Manage global default permissions");
 
+    /// <summary>Permission to manage tenant permission grants and templates</summary>
+    public static readonly SystemPermission ManagePermissions = new(Keys.ManagePermissions, "Manage tenant permission grants and templates");
+
     /// <summary>Full system administration permission</summary>
     public static readonly SystemPermission Admin = new(Keys.Admin, "Full system administration");
 
@@ -271,6 +274,7 @@ public sealed class SystemPermission : Permission
     public static class Keys
     {
         public const string ManageGlobalDefaults = "system:manage-global-defaults";
+        public const string ManagePermissions = "permissions:manage";
         public const string Admin = "system:admin";
         public const string Wildcard = "system:*";
     }

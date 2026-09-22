@@ -6,6 +6,7 @@ packages:
   - "packages/features/*"
 
   # Framework / runtime infrastructure
+  - "packages/ui"
   - "packages/infrastructure/*"
   - "packages/infrastructure/wasm/*"
 

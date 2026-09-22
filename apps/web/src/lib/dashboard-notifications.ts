@@ -1,5 +1,6 @@
 import { getToken } from '@/auth';
 import { createServerClient, GeneratedApi, type IdentityUsersUserNotificationDto } from '@game-guild/client';
+import { getWorkspaceMyTeamInvitations, type WorkspaceMyTeamInvitation } from '@/lib/workspaces';
 
 export interface DashboardNotificationItem {
   id: string;
@@ -53,6 +54,18 @@ function mapNotification(notification: IdentityUsersUserNotificationDto): Dashbo
   };
 }
 
+function notificationItem(invitation: WorkspaceMyTeamInvitation): DashboardNotificationItem {
+  return {
+    id: `team-invitation-${invitation.id}`,
+    title: 'Team invitation',
+    message: `${invitation.teamName} invited you to join their team.`,
+    createdLabel: 'Pending',
+    isRead: false,
+    actionUrl: '/workspace/invitations',
+    actionText: 'Review invitation',
+  };
+}
+
 function getPagedItems(data: unknown): IdentityUsersUserNotificationDto[] {
   const items = (data as { items?: unknown[] | null } | null)?.items;
   return Array.isArray(items) ? (items as IdentityUsersUserNotificationDto[]) : [];
@@ -65,7 +78,7 @@ export async function getDashboardNotificationSummary(userId: string): Promise<D
 
   try {
     const notifications = new GeneratedApi.UsersNotificationsModule(getApiClient());
-    const [recentResult, unreadResult] = await Promise.all([
+    const [recentResult, unreadResult, invitations] = await Promise.all([
       notifications.getUsersNotificationsForGetUsersByUserIdNotifications(userId, {
         page: 1,
         pageSize: 5,
@@ -79,6 +92,7 @@ export async function getDashboardNotificationSummary(userId: string): Promise<D
         isArchived: false,
         isRead: false,
       }),
+      getWorkspaceMyTeamInvitations(),
     ]);
 
     const items = recentResult.ok ? getPagedItems(recentResult.data).map(mapNotification) : [];
@@ -86,7 +100,9 @@ export async function getDashboardNotificationSummary(userId: string): Promise<D
       ? unreadResult.data.totalCount ?? getPagedItems(unreadResult.data).length
       : items.filter((item) => !item.isRead).length;
 
-    return { items, unreadCount };
+    const invitationItems = invitations.map(notificationItem);
+
+    return { items: [...invitationItems, ...items], unreadCount: unreadCount + invitations.length };
   } catch {
     return { items: [], unreadCount: 0 };
   }

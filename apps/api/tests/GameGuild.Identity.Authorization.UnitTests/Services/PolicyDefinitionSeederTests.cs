@@ -24,16 +24,20 @@ public class PolicyDefinitionSeederTests
         await seeder.SeedAsync(CancellationToken.None);
 
         added.Should().NotBeEmpty();
-        added.Select(policy => policy.PolicyName).Should().Contain(Policies.All);
-        added.Select(policy => policy.PolicyName).Should().Contain(new[]
+        var domainSeededPolicies = new[]
         {
             Policies.EmployeesRead,
             Policies.EmployeesCreate,
             Policies.EmployeesUpdate,
             Policies.EmployeesDelete
-        });
-        added.Single(policy => policy.PolicyName == Policies.EmployeesCreate)
-            .RulesJson.Should().Contain("users:create");
+        };
+        // The common seeder covers every platform policy and stays domain-free:
+        // domain policies (including role-admission gates) arrive via IPolicySeedContributor.
+        added.Select(policy => policy.PolicyName)
+            .Should()
+            .Contain(Policies.All.Except(domainSeededPolicies));
+        added.Select(policy => policy.PolicyName).Should().NotContain(domainSeededPolicies);
+        added.Should().NotContain(policy => policy.RulesJson != null && policy.RulesJson.Contains("PropertyManager"));
         added.Single(policy => policy.PolicyName == Policies.CourseContentPublicOutline)
             .RequireAuthentication.Should().BeFalse();
         added.Single(policy => policy.PolicyName == Policies.CourseContentLearner)
@@ -45,6 +49,72 @@ public class PolicyDefinitionSeederTests
         added.Single(policy => policy.PolicyName == Policies.UsersReadSelf)
             .RulesJson.Should().Contain("\"allowNoTenant\": true");
         repo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task SeedAsync_SeedsDomainPolicies_ThroughContributors()
+    {
+        var repo = new Mock<IPolicyDefinitionRepository>();
+        repo.Setup(r => r.GetByNameAsync(It.IsAny<string>(), null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((PolicyDefinitionEntity?)null);
+
+        var added = new List<PolicyDefinitionEntity>();
+        repo.Setup(r => r.AddAsync(It.IsAny<PolicyDefinitionEntity>(), It.IsAny<CancellationToken>()))
+            .Callback<PolicyDefinitionEntity, CancellationToken>((p, _) => added.Add(p))
+            .Returns(Task.CompletedTask);
+
+        var contributor = new StubPolicySeedContributor();
+        var seeder = new PolicyDefinitionSeeder(
+            repo.Object,
+            NullLogger<PolicyDefinitionSeeder>.Instance,
+            [contributor]);
+
+        await seeder.SeedAsync(CancellationToken.None);
+
+        // Contributor policies are seeded with the same semantics as platform policies.
+        added.Select(policy => policy.PolicyName).Should().Contain(StubPolicySeedContributor.DomainPolicyName);
+        var domainPolicy = added.Single(policy => policy.PolicyName == StubPolicySeedContributor.DomainPolicyName);
+        domainPolicy.PolicyVersion.Should().Be(PolicyDefinitionSeeder.CurrentPolicyVersion);
+        repo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task SeedAsync_DoesNotReseedContributorPolicies_AtCurrentVersion()
+    {
+        var repo = new Mock<IPolicyDefinitionRepository>();
+        repo.Setup(r => r.GetByNameAsync(It.IsAny<string>(), null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((string name, Guid? _, CancellationToken _) =>
+                new PolicyDefinitionEntity { PolicyName = name, PolicyVersion = PolicyDefinitionSeeder.CurrentPolicyVersion });
+
+        var seeder = new PolicyDefinitionSeeder(
+            repo.Object,
+            NullLogger<PolicyDefinitionSeeder>.Instance,
+            [new StubPolicySeedContributor()]);
+
+        await seeder.SeedAsync(CancellationToken.None);
+
+        repo.Verify(r => r.AddAsync(It.IsAny<PolicyDefinitionEntity>(), It.IsAny<CancellationToken>()), Times.Never);
+        repo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    private sealed class StubPolicySeedContributor : IPolicySeedContributor
+    {
+        public const string DomainPolicyName = "Stub.DomainPolicy";
+
+        public string Name => "stub";
+
+        public IEnumerable<PolicyDefinitionEntity> BuildPolicies()
+        {
+            yield return new PolicyDefinitionEntity
+            {
+                Id = Guid.NewGuid(),
+                PolicyName = DomainPolicyName,
+                Description = "Domain policy from a contributor",
+                RequireAuthentication = true,
+                RulesJson = "[]",
+                IsActive = true
+            };
+        }
     }
 
     [Fact]

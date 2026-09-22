@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StackExchange.Redis;
 
@@ -8,9 +9,13 @@ internal sealed class CacheEndpoints : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
+        // Cache management mutates shared infrastructure state (clear-by-pattern,
+        // connectivity tests, statistics); it is an admin-only surface and is never
+        // listed in the anonymous endpoint registry.
         var group = app.MapGroup("/cache")
             .WithTags("Cache")
-            .WithDescription("Cache management operations");
+            .WithDescription("Cache management operations")
+            .RequireAuthorization(Policies.SystemAdmin);
 
         group.MapGet("/health", GetCacheHealth)
             .WithName("GetCacheHealth")

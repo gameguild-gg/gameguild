@@ -7,7 +7,7 @@ const mocks = vi.hoisted(() => ({ monaco: vi.fn(() => null) }));
 vi.mock('@game-guild/ui/components/label', () => ({
   Label: ({ children }: { children: ReactNode }) => <label>{children}</label>,
 }));
-vi.mock('@/components/ui/skeleton', () => ({
+vi.mock('@game-guild/ui/components/skeleton', () => ({
   Skeleton: () => <div data-testid="editor-skeleton" />,
 }));
 vi.mock('@/components/block-content-editor/extras/code-studio/monaco-code-editor', () => ({

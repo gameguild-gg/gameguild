@@ -196,21 +196,23 @@ function ContentActionButton({
 }) {
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className={`${className} ${destructive ? "text-destructive hover:text-destructive" : ""}`}
-          onClick={(event) => {
-            event.stopPropagation();
-            onClick();
-          }}
-          disabled={disabled}
-          aria-label={label}
-        >
-          <Icon className="size-4" />
-        </Button>
+      <TooltipTrigger
+        render={
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className={`${className} ${destructive ? "text-destructive hover:text-destructive" : ""}`}
+            onClick={(event) => {
+              event.stopPropagation();
+              onClick();
+            }}
+            disabled={disabled}
+            aria-label={label}
+          />
+        }
+      >
+        <Icon className="size-4" />
       </TooltipTrigger>
       <TooltipContent>{label}</TooltipContent>
     </Tooltip>
@@ -732,18 +734,14 @@ export function ContentTree({
                 <GripVertical className="size-5 text-muted-foreground" />
               </button>
             )}
-            <CollapsibleTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-8"
-              >
-                {isOpen ? (
-                  <ChevronDown className="size-4" />
-                ) : (
-                  <ChevronRight className="size-4" />
-                )}
-              </Button>
+            <CollapsibleTrigger
+              render={<Button variant="ghost" size="icon" className="size-8" />}
+            >
+              {isOpen ? (
+                <ChevronDown className="size-4" />
+              ) : (
+                <ChevronRight className="size-4" />
+              )}
             </CollapsibleTrigger>
             <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-sm font-bold text-primary">
               {displayIndex + 1}

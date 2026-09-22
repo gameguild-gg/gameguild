@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from "react"
 import { Package, Tag, AlertCircle } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Button } from "@game-guild/ui/components/button"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@game-guild/ui/components/dialog"
+import { Input } from "@game-guild/ui/components/input"
+import { Label } from "@game-guild/ui/components/label"
+import { Textarea } from "@game-guild/ui/components/textarea"
+import { Badge } from "@game-guild/ui/components/badge"
+import { Alert, AlertDescription } from "@game-guild/ui/components/alert"
 
 interface SaveCollectionDialogProps {
   open: boolean

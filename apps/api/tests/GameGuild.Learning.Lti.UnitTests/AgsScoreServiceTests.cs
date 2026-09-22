@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using FluentAssertions;using GameGuild.Learning.Assessments;
+using GameGuild.Learning.Grading.Contracts;
 using GameGuild.Learning.Lti;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -64,7 +65,7 @@ public class AgsScoreServiceTests
     {
         _db.Set<LtiLineItemMapping>().Add(LtiLineItemMapping.Create(
             _assessmentId, _deployment.Id, "line-1",
-            "https://canvas.test/api/lti/courses/1/line_items/9", maxScore));
+            "https://canvas.test/api/lti/courses/1/line_items/9", ScoreValue.FromUnits(maxScore)));
         _db.Set<LtiUserMapping>().Add(LtiUserMapping.Create(_deployment.Id, _userId, _sub));
         _db.SaveChanges();
     }
@@ -72,7 +73,7 @@ public class AgsScoreServiceTests
     [Fact]
     public async Task PostScore_WithoutLineItemMapping_MakesNoHttpCall()
     {
-        await CreateService().PostScoreIfMappedAsync(_assessmentId, _userId, 85, 100);
+        await CreateService().PostScoreIfMappedAsync(_assessmentId, _userId, ScoreValue.FromUnits(85), ScoreValue.FromUnits(100));
 
         _handler.Requests.Should().BeEmpty();
     }
@@ -82,10 +83,10 @@ public class AgsScoreServiceTests
     {
         _db.Set<LtiLineItemMapping>().Add(LtiLineItemMapping.Create(
             _assessmentId, _deployment.Id, "line-1",
-            "https://canvas.test/api/lti/courses/1/line_items/9", 100));
+            "https://canvas.test/api/lti/courses/1/line_items/9", ScoreValue.FromUnits(100)));
         _db.SaveChanges();
 
-        await CreateService().PostScoreIfMappedAsync(_assessmentId, _userId, 85, 100);
+        await CreateService().PostScoreIfMappedAsync(_assessmentId, _userId, ScoreValue.FromUnits(85), ScoreValue.FromUnits(100));
 
         _handler.Requests.Should().BeEmpty();
     }
@@ -95,7 +96,7 @@ public class AgsScoreServiceTests
     {
         SeedMapping(maxScore: 25);
 
-        await CreateService().PostScoreIfMappedAsync(_assessmentId, _userId, 18, 25);
+        await CreateService().PostScoreIfMappedAsync(_assessmentId, _userId, ScoreValue.FromUnits(18), ScoreValue.FromUnits(25));
 
         _handler.Requests.Should().HaveCount(2);
 
@@ -140,7 +141,7 @@ public class AgsScoreServiceTests
             new HttpResponseMessage(HttpStatusCode.InternalServerError) { Content = new StringContent("{}") });
         var service = new AgsScoreService(_db, new StubHttpClientFactory(new HttpClient(failing)), NullLogger<AgsScoreService>.Instance);
 
-        var act = () => service.PostScoreIfMappedAsync(_assessmentId, _userId, 85, 100);
+        var act = () => service.PostScoreIfMappedAsync(_assessmentId, _userId, ScoreValue.FromUnits(85), ScoreValue.FromUnits(100));
 
         await act.Should().NotThrowAsync();
         failing.Requests.Should().HaveCountGreaterThanOrEqualTo(1);

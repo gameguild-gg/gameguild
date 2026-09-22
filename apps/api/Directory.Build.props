@@ -59,6 +59,6 @@
     </ItemGroup>
 
     <PropertyGroup Condition="'$(MSBuildProjectName)' != 'GameGuild.ArchitectureAnalyzers' AND '$(MSBuildProjectExtension)' != '.dcproj' AND !$(MSBuildProjectName.EndsWith('Tests')) AND '$(EnforceArchitectureEventContracts)' != 'false'">
-        <WarningsAsErrors>$(WarningsAsErrors);external-product-architecture001;external-product-architecture002;external-product-architecture003;external-product-architecture004;external-product-architecture005</WarningsAsErrors>
+        <WarningsAsErrors>$(WarningsAsErrors);GGARCH001;GGARCH002;GGARCH003;GGARCH004;GGARCH005</WarningsAsErrors>
     </PropertyGroup>
 </Project>

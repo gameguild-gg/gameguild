@@ -2,11 +2,11 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@game-guild/ui/components/button";
+import { Input } from "@game-guild/ui/components/input";
+import { Label } from "@game-guild/ui/components/label";
+import { Textarea } from "@game-guild/ui/components/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@game-guild/ui/components/select";
 import {
   Drawer,
   DrawerClose,
@@ -15,7 +15,7 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "@/components/ui/drawer";
+} from "@game-guild/ui/components/drawer";
 import { cn } from "@/lib/utils";
 
 function slugify(text: string) {
@@ -64,9 +64,7 @@ export function CourseCreateDrawer({ className }: { className?: string }) {
 
   return (
     <Drawer open={open} onOpenChange={handleOpenChange}>
-      <DrawerTrigger asChild>
-        <Button className={cn("", className)}>Create Course</Button>
-      </DrawerTrigger>
+      <DrawerTrigger render={<Button className={cn("", className)}>Create Course</Button>} />
       <DrawerContent className="mx-auto w-full max-w-md">
         <DrawerHeader>
           <DrawerTitle>Create New Course</DrawerTitle>
@@ -109,7 +107,7 @@ export function CourseCreateDrawer({ className }: { className?: string }) {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
-              <Select value={category} onValueChange={setCategory}>
+              <Select value={category} onValueChange={(value) => value !== null && setCategory(value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
@@ -125,7 +123,7 @@ export function CourseCreateDrawer({ className }: { className?: string }) {
 
             <div className="space-y-2">
               <Label htmlFor="difficulty">Difficulty</Label>
-              <Select value={difficulty} onValueChange={setDifficulty}>
+              <Select value={difficulty} onValueChange={(value) => value !== null && setDifficulty(value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select level" />
                 </SelectTrigger>
@@ -142,9 +140,7 @@ export function CourseCreateDrawer({ className }: { className?: string }) {
             <Button type="submit" disabled={!title.trim()}>
               Create Course
             </Button>
-            <DrawerClose asChild>
-              <Button variant="outline">Cancel</Button>
-            </DrawerClose>
+            <DrawerClose render={<Button variant="outline">Cancel</Button>} />
           </DrawerFooter>
         </form>
       </DrawerContent>

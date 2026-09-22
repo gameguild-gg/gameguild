@@ -52,26 +52,28 @@ export function TimeZoneCombobox({
     <>
       <input type="hidden" name={name} value={value} />
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            id={id}
-            type="button"
-            variant="outline"
-            role="combobox"
-            aria-label="Time zone"
-            aria-expanded={open}
-            disabled={disabled}
-            title={value}
-            className="h-10 w-full min-w-0 justify-between font-normal"
-          >
-            <span className="truncate">
-              ({timeZoneOffsetLabel(value)}) {timeZoneLocation(value)}
-            </span>
-            <ChevronsUpDown
-              className="size-4 shrink-0 text-muted-foreground"
-              aria-hidden="true"
+        <PopoverTrigger
+          render={
+            <Button
+              id={id}
+              type="button"
+              variant="outline"
+              role="combobox"
+              aria-label="Time zone"
+              aria-expanded={open}
+              disabled={disabled}
+              title={value}
+              className="h-10 w-full min-w-0 justify-between font-normal"
             />
-          </Button>
+          }
+        >
+          <span className="truncate">
+            ({timeZoneOffsetLabel(value)}) {timeZoneLocation(value)}
+          </span>
+          <ChevronsUpDown
+            className="size-4 shrink-0 text-muted-foreground"
+            aria-hidden="true"
+          />
         </PopoverTrigger>
         <PopoverContent
           align="end"

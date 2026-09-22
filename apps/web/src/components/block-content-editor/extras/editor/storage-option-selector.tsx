@@ -2,10 +2,10 @@
 
 import * as React from "react"
 import { useState } from "react"
-import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Label } from "@game-guild/ui/components/label"
+import { RadioGroup, RadioGroupItem } from "@game-guild/ui/components/radio-group"
 import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Button } from "@game-guild/ui/components/button"
 import { Cloud, Database, HardDrive, Settings, CheckCircle } from "lucide-react"
 import { GoogleDriveAuthDialog } from "./google-drive-auth-dialog"
 import { useGoogleDriveAuth } from "@/components/block-content-editor/hooks/editor/use-google-drive-auth"

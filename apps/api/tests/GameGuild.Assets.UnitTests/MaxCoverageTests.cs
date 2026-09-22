@@ -1163,60 +1163,6 @@ public class DownloadWindowServiceMaxTests
 
 #endregion
 
-#region CommerceOrderValidationService Tests
-
-[Trait("Category", "Unit")]
-public class CommerceOrderValidationServiceMaxTests
-{
-    private readonly Mock<GameGuild.Commerce.Orders.IOrderRepository> _orderRepository = new();
-    private readonly CommerceOrderValidationService _sut;
-
-    public CommerceOrderValidationServiceMaxTests()
-    {
-        _sut = new CommerceOrderValidationService(_orderRepository.Object);
-    }
-
-    [Fact]
-    public async Task GetOrderStatusAsync_ReturnsFulfilled()
-    {
-        var orderId = Guid.NewGuid();
-        _orderRepository.Setup(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(CreateOrder(orderId));
-
-        var result = await _sut.GetOrderStatusAsync(orderId);
-
-        result.Should().Be(OrderStatus.Fulfilled);
-    }
-
-    [Fact]
-    public async Task IsOrderValidForDownloadAsync_ReturnsTrue()
-    {
-        var orderId = Guid.NewGuid();
-        _orderRepository.Setup(r => r.GetByIdAsync(orderId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(CreateOrder(orderId));
-
-        var result = await _sut.IsOrderValidForDownloadAsync(orderId);
-
-        result.Should().BeTrue();
-    }
-
-    private static GameGuild.Commerce.Orders.Order CreateOrder(Guid id)
-    {
-        var order = GameGuild.Commerce.Orders.Order.Create(
-            Guid.NewGuid(),
-            $"idem-{Guid.NewGuid():N}",
-            Guid.NewGuid());
-        typeof(GameGuild.Commerce.Orders.Order)
-            .GetProperty(nameof(GameGuild.Commerce.Orders.Order.Id))!
-            .SetValue(order, id);
-        order.MarkAsPaidPendingFulfillment(Guid.NewGuid());
-        order.MarkAsFulfilled();
-        return order;
-    }
-}
-
-#endregion
-
 #region AssetGarbageCollectionService Tests
 
 [Trait("Category", "Unit")]
@@ -1639,6 +1585,33 @@ public class SecureUploadServiceMaxTests
 
         result.Success.Should().BeTrue();
         result.Status.Should().Be(SecureUploadStatus.PendingVirusScan);
+    }
+
+    [Fact]
+    public async Task UploadWithSecurityChecksAsync_ImageFile_RequiresModeration()
+    {
+        _virusScanOptions.Mode = VirusScanMode.Async;
+        var stream = new MemoryStream(new byte[] { 1, 2, 3 });
+        var refId = Guid.NewGuid();
+        var contentId = Guid.NewGuid();
+        _mockUploadService.Setup(x => x.UploadAsync(
+                It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>(),
+                It.IsAny<Guid>(), It.IsAny<UploadAssetOptions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AssetUploadResult(true, refId, contentId, null));
+
+        var contentEntity = new AssetContent("bucket", "key", "hash", "image/png", 1024, 100, 100);
+        contentEntity.Id = contentId;
+        _mockContentRepo.Setup(x => x.GetByIdAsync(contentId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(contentEntity);
+
+        var options = new UploadAssetOptions();
+
+        var result = await _sut.UploadWithSecurityChecksAsync(
+            stream, "photo.png", "image/png", Guid.NewGuid(), Guid.NewGuid(), options);
+
+        result.Success.Should().BeTrue();
+        result.RequiresModerationReview.Should().BeTrue();
+        result.Status.Should().Be(SecureUploadStatus.PendingModeration);
     }
 
     [Fact]

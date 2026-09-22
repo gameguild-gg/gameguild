@@ -1,6 +1,5 @@
 using FluentAssertions;
 using GameGuild.CQRS;
-using GameGuild.Commerce.Payments;
 using Microsoft.AspNetCore.Mvc;
 using Xunit;
 
@@ -30,18 +29,6 @@ public class TenantsControllerTests
 
         var controller = new TenantsController(sender);
         var result = await controller.GetTenants(page: 0, pageSize: 200, status: "active", searchTerm: null, ct: CancellationToken.None);
-
-        result.Should().BeOfType<OkObjectResult>();
-    }
-
-    [Fact]
-    public async Task GetPaymentHistory_Should_Return_Ok()
-    {
-        var sender = new StubSender();
-        sender.Setup<GetPaymentHistoryQuery, List<PaymentHistoryResult>>(_ => new List<PaymentHistoryResult>());
-
-        var controller = new TenantsController(sender);
-        var result = await controller.GetPaymentHistory(Guid.NewGuid(), null, null, CancellationToken.None);
 
         result.Should().BeOfType<OkObjectResult>();
     }

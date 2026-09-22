@@ -9,15 +9,29 @@ vi.mock("@/i18n/navigation", () => ({
 
 import { SocialFeedTabs } from "./social-feed-tabs";
 import { SocialRail } from "./social-rail";
-import { SOCIAL_NAVIGATION } from "./social-sidebar";
+import { socialNavigationData } from "@/components/app/social-navigation";
+
+const socialNavItems = socialNavigationData.flatMap((group) => group.items);
 
 describe("social navigation", () => {
   afterEach(cleanup);
 
   it("does not expose Messages and keeps Saved on the real saved stream", () => {
-    expect(SOCIAL_NAVIGATION.some((item) => item.label === "Messages")).toBe(false);
-    expect(SOCIAL_NAVIGATION.find((item) => item.label === "Saved")?.href).toBe(
+    expect(socialNavItems.some((item) => item.title === "Messages")).toBe(false);
+    expect(socialNavItems.find((item) => item.title === "Saved")?.url).toBe(
       "/?tab=saved",
+    );
+  });
+
+  it("exposes only implemented destinations and routes Testing Lab through Workspace", () => {
+    expect(socialNavItems.map((item) => item.title)).toEqual([
+      "Home",
+      "Explore",
+      "Testing Lab",
+      "Saved",
+    ]);
+    expect(socialNavItems.find((item) => item.title === "Testing Lab")?.url).toBe(
+      "/workspace/testing-lab",
     );
   });
 

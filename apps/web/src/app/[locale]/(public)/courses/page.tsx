@@ -1,6 +1,6 @@
 import { CourseHighlightCarousel } from '@/components/courses/course-highlight-carousel';
 import { PublicCourseCatalog } from '@/components/courses/public-course-catalog';
-import { Button } from '@/components/ui/button';
+import { Button } from '@game-guild/ui/components/button';
 import { Link } from '@/i18n/navigation';
 import { getPublicPlaytests } from '@/lib/community/public-community-queries';
 import { getPublicCourseCatalog } from '@/lib/courses/services/course.service';
@@ -31,17 +31,13 @@ export default async function CoursesPage() {
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <Button asChild size="lg" className="bg-white text-slate-950 hover:bg-slate-200">
-                <Link href="#catalog">
-                  Explore courses
-                  <ArrowRight />
-                </Link>
+              <Button size="lg" className="bg-white text-slate-950 hover:bg-slate-200" nativeButton={false} render={<Link href="#catalog" />}>
+                Explore courses
+                <ArrowRight />
               </Button>
-              <Button asChild size="lg" variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white">
-                <Link href="/courses">
-                  View programs
-                  <Layers3 />
-                </Link>
+              <Button size="lg" variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white" nativeButton={false} render={<Link href="/courses" />}>
+                View programs
+                <Layers3 />
               </Button>
             </div>
 
@@ -78,11 +74,9 @@ export default async function CoursesPage() {
               Courses connect into community outcomes: projects enter the showcase, testing sessions produce feedback,
               and launch-ready work becomes portfolio evidence.
             </p>
-            <Button asChild variant="outline" className="mt-6 w-fit border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white">
-              <Link href="/projects">
-                View student projects
-                <ArrowRight />
-              </Link>
+            <Button variant="outline" className="mt-6 w-fit border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white" nativeButton={false} render={<Link href="/projects" />}>
+              View student projects
+              <ArrowRight />
             </Button>
           </div>
 

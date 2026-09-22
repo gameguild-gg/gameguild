@@ -1,5 +1,5 @@
-import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Badge } from "@game-guild/ui/components/badge";
+import { Button, buttonVariants } from "@game-guild/ui/components/button";
 import {
   Card,
   CardContent,
@@ -135,11 +135,11 @@ export function TestingEventCard({
           </p>
         ) : null}
         <Button
-          asChild
           size="sm"
           className="mt-auto w-full border border-blue-400/40 bg-gradient-to-r from-blue-600/40 to-blue-500/30 text-white hover:from-blue-600/90 hover:to-blue-500/90"
+          nativeButton={false} render={<Link href={eventHref(session.id, projectId)} />}
         >
-          <Link href={eventHref(session.id, projectId)}>View event</Link>
+          View event
         </Button>
       </CardContent>
     </Card>
@@ -175,11 +175,11 @@ export function TestingEventRow({
       </div>
       <EventMeta session={session} />
       <Button
-        asChild
         size="sm"
         className="w-full border border-blue-400/40 bg-blue-600/40 text-white hover:bg-blue-600/80"
+        nativeButton={false} render={<Link href={eventHref(session.id, projectId)} />}
       >
-        <Link href={eventHref(session.id, projectId)}>View event</Link>
+        View event
       </Button>
     </article>
   );

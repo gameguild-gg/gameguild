@@ -7,13 +7,13 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Button } from "@/components/ui/button"
+} from "@game-guild/ui/components/dropdown-menu"
+import { Button } from "@game-guild/ui/components/button"
 
 interface FileSourceMenuProps {
   onCreateNew: () => void
   onAddFromAssets: () => void
-  trigger?: React.ReactNode
+  trigger?: React.ReactElement
 }
 
 export function FileSourceMenu({ 
@@ -35,13 +35,15 @@ export function FileSourceMenu({
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
-      <DropdownMenuTrigger asChild>
-        {trigger || (
-          <Button variant="ghost" size="sm" className="h-6 w-6 p-0" title="Add File">
-            <FilePlus className="h-3 w-3" />
-          </Button>
-        )}
-      </DropdownMenuTrigger>
+      <DropdownMenuTrigger
+        render={
+          trigger || (
+            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" title="Add File">
+              <FilePlus className="h-3 w-3" />
+            </Button>
+          )
+        }
+      />
       <DropdownMenuContent align="start" className="w-56">
         <DropdownMenuItem onClick={handleCreateNew} className="cursor-pointer">
           <FilePlus className="h-4 w-4 mr-2" />

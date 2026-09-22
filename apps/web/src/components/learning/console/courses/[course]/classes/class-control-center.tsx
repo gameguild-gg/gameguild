@@ -63,11 +63,9 @@ export function ClassControlCenter({ courseId, cohorts }: ClassControlCenterProp
           <p className="mt-1 text-sm text-muted-foreground">Each class has an independent period, calendar, release cadence, and roster.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button asChild variant="outline">
-            <Link href={`${learningBase}/courses/${courseId}/classes/calendar`}>
-              <CalendarDays className="size-4" />
-              General calendar
-            </Link>
+          <Button nativeButton={false} variant="outline" render={<Link href={`${learningBase}/courses/${courseId}/classes/calendar`} />}>
+            <CalendarDays className="size-4" />
+            General calendar
           </Button>
           <NewClassSheet courseId={courseId} />
         </div>
@@ -97,7 +95,7 @@ export function ClassControlCenter({ courseId, cohorts }: ClassControlCenterProp
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search classes" className="pl-9" aria-label="Search classes" />
         </div>
-        <Select value={status} onValueChange={setStatus}>
+        <Select value={status} onValueChange={(value) => setStatus(value ?? 'all')}>
           <SelectTrigger className="w-full sm:w-44" aria-label="Filter class status"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All statuses</SelectItem>

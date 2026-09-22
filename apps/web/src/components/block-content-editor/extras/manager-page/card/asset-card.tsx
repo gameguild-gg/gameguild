@@ -2,15 +2,15 @@
 
 import React from 'react'
 import { Card as ShadcnCard } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Badge } from "@game-guild/ui/components/badge"
+import { Button } from "@game-guild/ui/components/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@game-guild/ui/components/dropdown-menu"
 import { MoreVertical } from 'lucide-react'
 import { type AssetCard, type CardAction } from '../types'
 import { formatFileSize, getMimeTypeIcon, getMimeTypeBadgeColor } from './utils'
@@ -61,14 +61,10 @@ export function AssetCardComponent({
 
           <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <DropdownMenu>
-              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                <Button 
-                  variant="secondary" 
+              <DropdownMenuTrigger onClick={(e) => e.stopPropagation()} render={<Button variant="secondary" 
                   size="sm" 
-                  className="h-7 w-7 p-0 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm hover:bg-white dark:hover:bg-gray-800 shadow-md"
-                >
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
+                  className="h-7 w-7 p-0 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm hover:bg-white dark:hover:bg-gray-800 shadow-md" />}>
+                <MoreVertical className="h-4 w-4" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <div className="px-2 py-2 border-b border-gray-200 dark:border-gray-700">

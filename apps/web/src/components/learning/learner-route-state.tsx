@@ -104,9 +104,7 @@ export function LearnerRouteNotFound({ scope = 'workspace' }: { scope?: RouteSco
       <p className="mt-2 max-w-md text-sm text-muted-foreground">
         {copy[scope].notFoundDescription}
       </p>
-      <Button asChild className="mt-6">
-        <Link href={copy[scope].returnHref}>{copy[scope].returnLabel}</Link>
-      </Button>
+      <Button nativeButton={false} className="mt-6" render={<Link href={copy[scope].returnHref} />}>{copy[scope].returnLabel}</Button>
     </section>
   );
 }

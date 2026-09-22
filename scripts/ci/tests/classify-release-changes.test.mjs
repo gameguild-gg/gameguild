@@ -95,7 +95,7 @@ test("an EF migration selects API, migration, and OpenAPI gates", () => {
 test("a shared UI package deploys each JavaScript consumer", () => {
   assert.deepEqual(
     classifyReleaseChanges([
-      "packages/infrastructure/ui/src/components/button.tsx",
+      "packages/ui/src/components/button.tsx",
     ]),
     {
       ...expectedEmptyClassification,

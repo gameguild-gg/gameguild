@@ -48,6 +48,25 @@ public sealed record AiExecutionActor(Guid TenantId, Guid UserId);
 public sealed record AiResolvedModelDto(string Provider, string Model, int MaximumOutputTokens);
 
 /// <summary>
+/// Terminal billing attribution for one AI execution, emitted after the request
+/// reached a terminal outcome. Product modules record these through
+/// <see cref="IAiExecutionBillingRecorder"/>; the platform registers a no-op
+/// default so AI execution works without any product billing domain.
+/// </summary>
+public sealed record AiExecutionBillingRecord(
+    Guid TenantId,
+    Guid? ActorId,
+    string Provider,
+    string Model,
+    int? InputTokens,
+    int? OutputTokens,
+    int? TotalTokens,
+    string Outcome,
+    string? OutcomeCode,
+    string? OutcomeReason,
+    DateTimeOffset OccurredAt);
+
+/// <summary>
 ///     Normalized token usage information returned by a provider.
 /// </summary>
 public sealed record AiUsageDto(int? InputTokens, int? OutputTokens, int? TotalTokens);

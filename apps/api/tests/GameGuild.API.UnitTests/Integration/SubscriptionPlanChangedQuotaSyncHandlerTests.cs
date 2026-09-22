@@ -118,8 +118,10 @@ public class SubscriptionPlanChangedQuotaSyncHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenQuotaSetFails_ShouldNotThrow()
+    public async Task Handle_WhenQuotaSetFails_ShouldThrowAggregateFailure()
     {
+        // A failed quota update means the tenant keeps the previous (typically higher)
+        // limit, so the failure must surface instead of being swallowed.
         var evt = CreateEvent();
         var plan = CreatePlan(maxUsers: 10);
         _planRepoMock.Setup(r => r.GetByIdAsync(evt.NewPlanId, It.IsAny<CancellationToken>()))
@@ -132,7 +134,42 @@ public class SubscriptionPlanChangedQuotaSyncHandlerTests
 
         var act = () => _handler.Handle(evt, CancellationToken.None);
 
-        await act.Should().NotThrowAsync();
+        var assertion = await act.Should().ThrowAsync<InvalidOperationException>();
+        assertion.Which.Message.Should().Contain(evt.SubscriptionId.ToString())
+            .And.Contain("1/1")
+            .And.Contain("Users");
+        assertion.Which.InnerException.Should().BeOfType<AggregateException>();
+    }
+
+    [Fact]
+    public async Task Handle_WhenOneQuotaOfManyFails_ShouldReportPartialFailureCount()
+    {
+        var evt = CreateEvent();
+        var plan = CreatePlan(maxUsers: 50, maxStorageMb: 1000, maxApiCalls: 10000);
+        _planRepoMock.Setup(r => r.GetByIdAsync(evt.NewPlanId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(plan);
+        _quotaServiceMock.Setup(s => s.SetQuotaAsync(
+                evt.TenantId, ResourceUsageType.ApiCalls,
+                It.IsAny<long?>(), It.IsAny<long?>(),
+                It.IsAny<ResourceQuotaPeriod>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("Quota service down"));
+
+        var act = () => _handler.Handle(evt, CancellationToken.None);
+
+        (await act.Should().ThrowAsync<InvalidOperationException>())
+            .WithMessage("*1/3*ApiCalls*");
+
+        // The two healthy quotas were still applied before the aggregate failure.
+        _quotaServiceMock.Verify(
+            s => s.SetQuotaAsync(evt.TenantId, ResourceUsageType.Users,
+                It.IsAny<long?>(), It.IsAny<long?>(),
+                ResourceQuotaPeriod.Monthly, It.IsAny<CancellationToken>()),
+            Times.Once);
+        _quotaServiceMock.Verify(
+            s => s.SetQuotaAsync(evt.TenantId, ResourceUsageType.Storage,
+                It.IsAny<long?>(), It.IsAny<long?>(),
+                ResourceQuotaPeriod.Monthly, It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     // Helpers

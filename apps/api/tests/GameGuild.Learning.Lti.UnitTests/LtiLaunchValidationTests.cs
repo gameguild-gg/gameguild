@@ -7,6 +7,7 @@ using GameGuild.CQRS;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Identity.Users;
+using GameGuild.Learning.Grading.Contracts;
 using GameGuild.Learning.Lti;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -458,11 +459,11 @@ public class LtiLaunchValidationTests
 
         var result = await controller.CreateLineItem(
             _deployment.Id,
-            new CreateLtiLineItemRequest(assessmentId, "line-1", "https://canvas.test/api/lti/courses/1/line_items/9", 100));
+            new CreateLtiLineItemRequest(assessmentId, "line-1", "https://canvas.test/api/lti/courses/1/line_items/9", ScoreValue.FromUnits(100)));
 
         result.Should().BeAssignableTo<ObjectResult>().Which.StatusCode.Should().Be(201);
         _db.Set<LtiLineItemMapping>().Should().ContainSingle()
-            .Which.MaxScore.Should().Be(100);
+            .Which.MaxScore.Should().Be(ScoreValue.FromUnits(100));
     }
 
     [Fact]
@@ -472,7 +473,7 @@ public class LtiLaunchValidationTests
 
         var result = await controller.CreateLineItem(
             Guid.NewGuid(),
-            new CreateLtiLineItemRequest(Guid.NewGuid(), "line-1", "https://canvas.test/line_items/9", 100));
+            new CreateLtiLineItemRequest(Guid.NewGuid(), "line-1", "https://canvas.test/line_items/9", ScoreValue.FromUnits(100)));
 
         result.Should().BeOfType<NotFoundResult>();
     }

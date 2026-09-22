@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Context.Actors;
 using Xunit;
 
 namespace GameGuild.Identity.Authentication.UnitTests.Controllers;
@@ -468,25 +469,39 @@ public sealed class PermissionEvaluationControllerTests
 public sealed class PermissionGrantsControllerTests
 {
     [Fact]
-    public async Task CreateTenantGrant_ShouldReturnCreatedAtActionAndForwardCommand()
+    public async Task CreateTenantGrant_ShouldReturnCreatedAndForwardGuardedCommand()
     {
         var mediator = new Mock<IMediator>();
-        var command = new GrantTenantPermissionCommand { UserId = Guid.NewGuid(), TenantId = Guid.NewGuid() };
+        var actorId = Guid.NewGuid();
+        var request = new GrantTenantPermissionRequest(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            ["users:read"]);
 
         mediator
-            .Setup(x => x.Send(command, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((TenantPermission)null!);
+            .Setup(x => x.Send(It.IsAny<Authorization.GrantTenantPermissionCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Guid.NewGuid());
 
-        var controller = new PermissionGrantsController(mediator.Object, NullLogger<PermissionGrantsController>.Instance);
+        var controller = new PermissionGrantsController(
+            mediator.Object,
+            ActorAccessor(actorId),
+            NullLogger<PermissionGrantsController>.Instance);
 
-        var result = await controller.CreateTenantGrant(command);
+        var result = await controller.CreateTenantGrant(request);
 
-        var created = result.Result.Should().BeOfType<CreatedAtActionResult>().Subject;
+        var created = result.Should().BeOfType<CreatedAtActionResult>().Subject;
         created.ActionName.Should().Be(nameof(PermissionEvaluationController.GetTenantPermissions));
         created.ControllerName.Should().Be("PermissionEvaluation");
-        created.RouteValues!["userId"].Should().Be(command.UserId);
-        created.RouteValues["tenantId"].Should().Be(command.TenantId);
-        created.Value.Should().BeNull();
+        created.RouteValues!["userId"].Should().Be(request.UserId);
+        created.RouteValues["tenantId"].Should().Be((Guid)request.TenantId);
+
+        // The acting user comes from the actor context, never the request body.
+        mediator.Verify(x => x.Send(
+            It.Is<Authorization.GrantTenantPermissionCommand>(command =>
+                command.UserId == request.UserId &&
+                command.Permissions.SequenceEqual(request.Permissions) &&
+                command.GrantedBy == actorId),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -501,7 +516,10 @@ public sealed class PermissionGrantsControllerTests
             .Callback<object, CancellationToken>((request, _) => captured = (RevokeTenantPermissionByIdCommand)request)
             .Returns(Task.CompletedTask);
 
-        var controller = new PermissionGrantsController(mediator.Object, NullLogger<PermissionGrantsController>.Instance);
+        var controller = new PermissionGrantsController(
+            mediator.Object,
+            ActorAccessor(),
+            NullLogger<PermissionGrantsController>.Instance);
 
         var result = await controller.DeleteTenantGrant(grantId);
 
@@ -511,20 +529,33 @@ public sealed class PermissionGrantsControllerTests
     }
 
     [Fact]
-    public async Task RevokeTenantPermission_ShouldReturnNoContentAndForwardCommand()
+    public async Task RevokeTenantPermission_ShouldReturnNoContentAndForwardGuardedCommand()
     {
         var mediator = new Mock<IMediator>();
-        var command = new RevokeTenantPermissionCommand();
+        var actorId = Guid.NewGuid();
+        var request = new RevokeTenantPermissionRequest(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            ["users:read"]);
 
         mediator
-            .Setup(x => x.Send(command, It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+            .Setup(x => x.Send(It.IsAny<Authorization.RevokeTenantPermissionCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
-        var controller = new PermissionGrantsController(mediator.Object, NullLogger<PermissionGrantsController>.Instance);
+        var controller = new PermissionGrantsController(
+            mediator.Object,
+            ActorAccessor(actorId),
+            NullLogger<PermissionGrantsController>.Instance);
 
-        var result = await controller.RevokeTenantPermission(command);
+        var result = await controller.RevokeTenantPermission(request);
 
         result.Should().BeOfType<NoContentResult>();
+        mediator.Verify(x => x.Send(
+            It.Is<Authorization.RevokeTenantPermissionCommand>(command =>
+                command.UserId == request.UserId &&
+                command.Permissions.SequenceEqual(request.Permissions) &&
+                command.RevokedBy == actorId),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -537,7 +568,7 @@ public sealed class PermissionGrantsControllerTests
             .Setup(x => x.Send(command, It.IsAny<CancellationToken>()))
             .ReturnsAsync((BulkPermissionResult)null!);
 
-        var controller = new PermissionGrantsController(mediator.Object, NullLogger<PermissionGrantsController>.Instance);
+        var controller = new PermissionGrantsController(mediator.Object, ActorAccessor(), NullLogger<PermissionGrantsController>.Instance);
 
         var result = await controller.BatchCreateTenantGrants(command);
 
@@ -554,7 +585,7 @@ public sealed class PermissionGrantsControllerTests
             .Setup(x => x.Send(command, It.IsAny<CancellationToken>()))
             .ReturnsAsync((BulkPermissionResult)null!);
 
-        var controller = new PermissionGrantsController(mediator.Object, NullLogger<PermissionGrantsController>.Instance);
+        var controller = new PermissionGrantsController(mediator.Object, ActorAccessor(), NullLogger<PermissionGrantsController>.Instance);
 
         var result = await controller.BatchDeleteTenantGrants(command);
 
@@ -571,7 +602,7 @@ public sealed class PermissionGrantsControllerTests
             .Setup(x => x.Send(command, It.IsAny<CancellationToken>()))
             .ReturnsAsync((ContentTypePermission)null!);
 
-        var controller = new PermissionGrantsController(mediator.Object, NullLogger<PermissionGrantsController>.Instance);
+        var controller = new PermissionGrantsController(mediator.Object, ActorAccessor(), NullLogger<PermissionGrantsController>.Instance);
 
         var result = await controller.CreateContentTypeGrant(command);
 
@@ -594,7 +625,7 @@ public sealed class PermissionGrantsControllerTests
             .Callback<object, CancellationToken>((request, _) => captured = (RevokeContentTypePermissionByIdCommand)request)
             .Returns(Task.CompletedTask);
 
-        var controller = new PermissionGrantsController(mediator.Object, NullLogger<PermissionGrantsController>.Instance);
+        var controller = new PermissionGrantsController(mediator.Object, ActorAccessor(), NullLogger<PermissionGrantsController>.Instance);
 
         var result = await controller.DeleteContentTypeGrant(grantId);
 
@@ -613,7 +644,7 @@ public sealed class PermissionGrantsControllerTests
             .Setup(x => x.Send(command, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var controller = new PermissionGrantsController(mediator.Object, NullLogger<PermissionGrantsController>.Instance);
+        var controller = new PermissionGrantsController(mediator.Object, ActorAccessor(), NullLogger<PermissionGrantsController>.Instance);
 
         var result = await controller.RevokeContentTypePermission(command);
 
@@ -630,7 +661,7 @@ public sealed class PermissionGrantsControllerTests
             .Setup(x => x.Send(command, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        var controller = new PermissionGrantsController(mediator.Object, NullLogger<PermissionGrantsController>.Instance);
+        var controller = new PermissionGrantsController(mediator.Object, ActorAccessor(), NullLogger<PermissionGrantsController>.Instance);
 
         var result = await controller.CreateResourceGrant(command);
 
@@ -654,7 +685,7 @@ public sealed class PermissionGrantsControllerTests
             .Callback<object, CancellationToken>((request, _) => captured = (RevokeResourcePermissionByIdCommand)request)
             .Returns(Task.CompletedTask);
 
-        var controller = new PermissionGrantsController(mediator.Object, NullLogger<PermissionGrantsController>.Instance);
+        var controller = new PermissionGrantsController(mediator.Object, ActorAccessor(), NullLogger<PermissionGrantsController>.Instance);
 
         var result = await controller.DeleteResourceGrant(grantId);
 
@@ -673,7 +704,7 @@ public sealed class PermissionGrantsControllerTests
             .Setup(x => x.Send(command, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        var controller = new PermissionGrantsController(mediator.Object, NullLogger<PermissionGrantsController>.Instance);
+        var controller = new PermissionGrantsController(mediator.Object, ActorAccessor(), NullLogger<PermissionGrantsController>.Instance);
 
         var result = await controller.RevokeResourcePermission(command);
 
@@ -690,10 +721,25 @@ public sealed class PermissionGrantsControllerTests
             .Setup(x => x.Send(command, It.IsAny<CancellationToken>()))
             .ReturnsAsync((BulkPermissionResult)null!);
 
-        var controller = new PermissionGrantsController(mediator.Object, NullLogger<PermissionGrantsController>.Instance);
+        var controller = new PermissionGrantsController(mediator.Object, ActorAccessor(), NullLogger<PermissionGrantsController>.Instance);
 
         var result = await controller.BatchCreateResourceGrants(command);
 
         result.Result.Should().BeOfType<OkObjectResult>().Which.Value.Should().BeNull();
+    }
+
+    private static IActorContextAccessor ActorAccessor(Guid? subjectId = null)
+    {
+        var actor = new ActorContext
+        {
+            IsAuthenticated = true,
+            ActorKind = ActorKind.User,
+            SubjectId = (subjectId ?? Guid.NewGuid()).ToString(),
+            Roles = new HashSet<string>(),
+            Permissions = new HashSet<string>()
+        };
+        var accessor = new Mock<IActorContextAccessor>();
+        accessor.SetupGet(a => a.ActorContext).Returns(actor);
+        return accessor.Object;
     }
 }

@@ -108,8 +108,8 @@ export function SocialRail({
               </div>
             ))}
           </div>
-          <Button asChild variant="secondary" size="sm" className="mt-4 w-full">
-            <Link href={`/social/profiles/${currentProfile.handle}`}>View profile</Link>
+          <Button nativeButton={false} variant="secondary" size="sm" className="mt-4 w-full" render={<Link href={`/social/profiles/${currentProfile.handle}`} />}>
+            View profile
           </Button>
         </section>
       ) : null}

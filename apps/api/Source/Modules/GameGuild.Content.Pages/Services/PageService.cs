@@ -13,9 +13,10 @@ public sealed class PageService(IApplicationDbContext db) : IPageService
             .FirstOrDefaultAsync(p => p.Id == id, ct)
             .ConfigureAwait(false);
 
-    public async Task<Page?> GetBySlugAsync(string slug, CancellationToken ct = default) =>
+    public async Task<Page?> GetBySlugAsync(string slug, bool publishedOnly = false, CancellationToken ct = default) =>
         await db.Set<Page>()
             .Include(p => p.Sections.Where(s => s.DeletedAt == null).OrderBy(s => s.SortOrder))
+            .Where(p => !publishedOnly || p.Status == PageStatus.Published)
             .FirstOrDefaultAsync(p => p.Slug == slug, ct)
             .ConfigureAwait(false);
 

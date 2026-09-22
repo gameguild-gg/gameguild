@@ -1,7 +1,7 @@
 "use client"
 
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
+import { Label } from "@game-guild/ui/components/label"
+import { Input } from "@game-guild/ui/components/input"
 import type { BaseMediaData } from "@/components/block-content-editor/nodes/base/media-node-base"
 
 interface ImageOptionsProps {

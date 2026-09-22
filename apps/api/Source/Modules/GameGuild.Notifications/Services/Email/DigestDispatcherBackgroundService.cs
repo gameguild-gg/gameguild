@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using GameGuild.Email;
 
 namespace GameGuild.Notifications.Services.Email;
 
@@ -12,12 +13,19 @@ namespace GameGuild.Notifications.Services.Email;
 public sealed class DigestDispatcherBackgroundService(
     IServiceProvider serviceProvider,
     IOptions<DigestDispatcherOptions> options,
+    IOptions<EmailDeliveryOptions> deliveryOptions,
     ILogger<DigestDispatcherBackgroundService> logger) : BackgroundService
 {
     private static readonly TimeSpan InitialDelay = TimeSpan.FromSeconds(30);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        if (!deliveryOptions.Value.Enabled)
+        {
+            logger.LogInformation("DigestDispatcherBackgroundService is disabled because email delivery is disabled");
+            return;
+        }
+
         logger.LogInformation("DigestDispatcherBackgroundService started");
 
         try

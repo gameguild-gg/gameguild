@@ -6,7 +6,7 @@ import { CourseEditorProvider } from '../editor/context/course-editor-provider';
 import { useCourseEditor } from '../editor/context/course-editor-provider';
 import { createCourse, saveCourse } from '../editor/actions';
 import { CourseEditorSidebar } from '../editor/ui/course-editor-sidebar';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider } from '@game-guild/ui/components/sidebar';
 import { CourseEditor } from './course-editor';
 import { GeneralDetailsSection } from './sections/general-details-section';
 import { SalesShowcaseSection } from './sections/sales-showcase-section';

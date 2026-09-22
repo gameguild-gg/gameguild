@@ -359,7 +359,7 @@ export function PublicWebsiteFooter() {
   );
 }
 
-export async function AppShell({ children }: { readonly children: ReactNode }) {
+export async function PublicWebsiteShell({ children }: { readonly children: ReactNode }) {
   const header = await PublicWebsiteHeader();
 
   return (

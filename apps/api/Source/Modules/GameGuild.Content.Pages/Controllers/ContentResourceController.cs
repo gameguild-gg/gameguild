@@ -16,6 +16,14 @@ public class ContentResourceController(
     ISender sender,
     IActorContextAccessor actorContextAccessor) : BaseApiController
 {
+    /// <summary>
+    ///     Content permission keys that unlock unpublished resources. Content resources are
+    ///     platform-global (not tenant-owned), so visibility is gated by publication status:
+    ///     anything other than <see cref="ContentResourceStatus.Published"/> requires one of
+    ///     these content permissions; the public surfaces only ever return published items.
+    /// </summary>
+    private static readonly string[] ContentManagePermissions = ["content:read", "content:write", "content:admin"];
+
     /// <summary>List content resources with filtering and search.</summary>
     [HttpGet]
     [AllowAnonymous]
@@ -29,6 +37,13 @@ public class ContentResourceController(
         [FromQuery] int skip = 0,
         [FromQuery] int take = 50)
     {
+        // The catalog listing is intentionally public for the marketing site; callers
+        // without a content permission are constrained to published resources.
+        if (status != ContentResourceStatus.Published && !CanViewUnpublished)
+        {
+            status = ContentResourceStatus.Published;
+        }
+
         var resources = await resourceService
             .ListAsync(type, status, locale, category, featured, q, skip, take)
             .ConfigureAwait(false);
@@ -37,20 +52,29 @@ public class ContentResourceController(
 
     /// <summary>Get a content resource by ID.</summary>
     [HttpGet("{id:guid}")]
-    [AllowAnonymous]
     public async Task<ActionResult<ContentResourceDto>> GetById(Guid id)
     {
         var resource = await resourceService.GetByIdAsync(id).ConfigureAwait(false);
         if (resource is null) return NotFound();
+
+        // Get-by-id must not leak drafts: unpublished resources require a content permission.
+        if (resource.Status != ContentResourceStatus.Published && !CanViewUnpublished)
+        {
+            return NotFound();
+        }
+
         return Ok(resource.ToDto());
     }
 
-    /// <summary>Get a content resource by slug.</summary>
+    /// <summary>Get a content resource by slug. Publicly returns published resources only.</summary>
     [HttpGet("by-slug/{slug}")]
     [AllowAnonymous]
     public async Task<ActionResult<ContentResourceDto>> GetBySlug(string slug)
     {
-        var resource = await resourceService.GetBySlugAsync(slug).ConfigureAwait(false);
+        // Intentionally public for SEO-friendly resource URLs; restricting the query to
+        // published resources keeps drafts and in-review items unlisted.
+        var publishedOnly = !CanViewUnpublished;
+        var resource = await resourceService.GetBySlugAsync(slug, publishedOnly).ConfigureAwait(false);
         if (resource is null) return NotFound();
 
         // The service is scoped to this request and shares its DbContext. Await the
@@ -100,4 +124,7 @@ public class ContentResourceController(
         if (resource is null) return NotFound();
         return Ok(resource);
     }
+
+    private bool CanViewUnpublished =>
+        actorContextAccessor.ActorContext.HasAnyPermission(ContentManagePermissions);
 }

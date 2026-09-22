@@ -5,7 +5,7 @@ public interface IPageService
 {
     // ── Pages ──
     Task<Page?> GetByIdAsync(Guid id, CancellationToken ct = default);
-    Task<Page?> GetBySlugAsync(string slug, CancellationToken ct = default);
+    Task<Page?> GetBySlugAsync(string slug, bool publishedOnly = false, CancellationToken ct = default);
     Task<IReadOnlyList<Page>> GetPagesAsync(PageType? type = null, PageStatus? status = null, string? locale = null, Guid? parentId = null, int skip = 0, int take = 50, CancellationToken ct = default);
     Task<Page> CreateAsync(CreatePageDto dto, CancellationToken ct = default);
     Task<Page?> UpdateAsync(Guid id, UpdatePageDto dto, CancellationToken ct = default);

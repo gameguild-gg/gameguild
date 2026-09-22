@@ -31,7 +31,6 @@ using GameGuild.Identity.Authorization.Models;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Identity.Tenants;
 using Moq;
-using CommerceOrderStatus = GameGuild.Commerce.Orders.OrderStatus;
 
 namespace GameGuild.Assets.UnitTests;
 
@@ -559,30 +558,11 @@ public class AssetsCoverageCompletionTests
         blocked.IsClean.Should().BeFalse();
         blocked.ThreatName.Should().Be("BLOCKED_EXTENSION");
 
-        InvokeStatic<OrderStatus>(typeof(CommerceOrderValidationService), "MapStatus", CommerceOrderStatus.Paid)
-            .Should()
-            .Be(OrderStatus.Paid);
-        InvokeStatic<OrderStatus>(typeof(CommerceOrderValidationService), "MapStatus", CommerceOrderStatus.Fulfilled)
-            .Should()
-            .Be(OrderStatus.Fulfilled);
-        InvokeStatic<OrderStatus>(typeof(CommerceOrderValidationService), "MapStatus", CommerceOrderStatus.Completed)
-            .Should()
-            .Be(OrderStatus.Fulfilled);
-        InvokeStatic<OrderStatus>(typeof(CommerceOrderValidationService), "MapStatus", CommerceOrderStatus.Refunded)
-            .Should()
-            .Be(OrderStatus.Refunded);
-        InvokeStatic<OrderStatus>(typeof(CommerceOrderValidationService), "MapStatus", CommerceOrderStatus.PartiallyRefunded)
-            .Should()
-            .Be(OrderStatus.Refunded);
-        InvokeStatic<OrderStatus>(typeof(CommerceOrderValidationService), "MapStatus", CommerceOrderStatus.Cancelled)
-            .Should()
-            .Be(OrderStatus.Cancelled);
-        InvokeStatic<OrderStatus>(typeof(CommerceOrderValidationService), "MapStatus", CommerceOrderStatus.Disputed)
-            .Should()
-            .Be(OrderStatus.Disputed);
-        InvokeStatic<OrderStatus>(typeof(CommerceOrderValidationService), "MapStatus", CommerceOrderStatus.Pending)
-            .Should()
-            .Be(OrderStatus.Pending);
+        // Order validation default is fail closed (the commerce-backed adapter is a
+        // composition-root concern and is tested at the host level).
+        var orderValidation = new DenyByDefaultOrderValidationService();
+        (await orderValidation.GetOrderStatusAsync(Guid.NewGuid())).Should().BeNull();
+        (await orderValidation.IsOrderValidForDownloadAsync(Guid.NewGuid())).Should().BeFalse();
     }
 
     [Fact]

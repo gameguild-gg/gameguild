@@ -3,7 +3,7 @@
 import type React from "react"
 import type { ProgrammingLanguage } from "./types"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@game-guild/ui/components/button"
 import {
   Dialog,
   DialogContent,
@@ -11,10 +11,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+} from "@game-guild/ui/components/dialog"
+import { Label } from "@game-guild/ui/components/label"
+import { Switch } from "@game-guild/ui/components/switch"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@game-guild/ui/components/tooltip"
 import { cn } from "@/lib/utils"
 import {
   AlertTriangle,
@@ -827,19 +827,15 @@ export function Terminal({
               <div className="flex-grow" />
               <div className="flex items-center space-x-2">
                 <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={() => {
+                  <TooltipTrigger render={<button onClick={() => {
                         setIsTestMode(false)
                         handleExecute()
                       }}
                       className={runButtonClass}
                       aria-label="Run code"
-                      disabled={isExecuting}
-                    >
-                      <Play className="h-3 w-3 mr-1" />
-                      Run
-                    </button>
+                      disabled={isExecuting} />}>
+                    <Play className="h-3 w-3 mr-1" />
+                    Run
                   </TooltipTrigger>
                   <TooltipContent>
                     <p className="text-xs">Run code</p>
@@ -852,11 +848,9 @@ export function Terminal({
                 </Tooltip>
                 {isExecuting && (
                   <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button onClick={handleStopExecution} className={stopButtonClass} aria-label="Stop execution">
-                        <Square className="h-3 w-3 mr-1" />
-                        Stop
-                      </button>
+                    <TooltipTrigger render={<button onClick={handleStopExecution} className={stopButtonClass} aria-label="Stop execution" />}>
+                      <Square className="h-3 w-3 mr-1" />
+                      Stop
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className="text-xs">Stop execution</p>
@@ -864,19 +858,17 @@ export function Terminal({
                   </Tooltip>
                 )}
                 <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center ml-2 text-xs">
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          id="clear-on-run"
-                          checked={clearTerminalOnRun}
-                          onCheckedChange={setClearTerminalOnRun}
-                          className="scale-75"
-                        />
-                        <Label htmlFor="clear-on-run" className="text-xs cursor-pointer">
-                          Clear on run
-                        </Label>
-                      </div>
+                  <TooltipTrigger render={<div className="flex items-center ml-2 text-xs" />}>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="clear-on-run"
+                        checked={clearTerminalOnRun}
+                        onCheckedChange={setClearTerminalOnRun}
+                        className="scale-75"
+                      />
+                      <Label htmlFor="clear-on-run" className="text-xs cursor-pointer">
+                        Clear on run
+                      </Label>
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -989,9 +981,7 @@ export function Terminal({
               {isEditing && (
                 <>
                   <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        onClick={() => {
+                    <TooltipTrigger render={<button onClick={() => {
                           if (!testCases[activeFileId] || testCases[activeFileId].length === 0) {
                             // First test case, show dialog to select type
                             setShowTestTypeDialog(true)
@@ -1024,11 +1014,9 @@ export function Terminal({
                         aria-label="Add test case"
                         disabled={testCases[activeFileId]?.some(
                           (test) => test.type === "custom" || test.type === "function" || test.type === "console",
-                        )}
-                      >
-                        <Plus className="h-3 w-3 mr-1" />
-                        Add Test
-                      </button>
+                        )} />}>
+                      <Plus className="h-3 w-3 mr-1" />
+                      Add Test
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className="text-xs">
@@ -1041,15 +1029,11 @@ export function Terminal({
                     </TooltipContent>
                   </Tooltip>
                   <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        onClick={() => addSolutionTemplate?.()}
+                    <TooltipTrigger render={<button onClick={() => addSolutionTemplate?.()}
                         className={buttonBaseClass}
-                        aria-label="Add solution template"
-                      >
-                        <Plus className="h-3 w-3 mr-1" />
-                        Add Template
-                      </button>
+                        aria-label="Add solution template" />}>
+                      <Plus className="h-3 w-3 mr-1" />
+                      Add Template
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className="text-xs">Add solution template to file</p>

@@ -39,7 +39,7 @@ public sealed class InfrastructureConventionScanTests
 
         services.Should().Contain(descriptor =>
             descriptor.ServiceType == typeof(IAuthorizationRolePermissionProvider) &&
-            descriptor.ImplementationType == typeof(TenantMembershipRolePermissionProvider));
+            descriptor.ImplementationType == typeof(global::GameGuild.API.Security.TenantMembershipRolePermissionProvider));
     }
 
     [Fact]

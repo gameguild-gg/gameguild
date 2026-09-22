@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@game-guild/ui/components/button';
 import { PERIOD_OPTIONS, type PeriodType } from './filter-context';
 
 interface PeriodSelectorProps {

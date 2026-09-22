@@ -180,11 +180,9 @@ export function ScheduleBuilderSheet({
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button variant={schedule ? 'outline' : 'default'}>
-          <CalendarRange className="size-4" />
-          {schedule ? 'Edit schedule' : 'Build schedule'}
-        </Button>
+      <SheetTrigger render={<Button variant={schedule ? 'outline' : 'default'} />}>
+        <CalendarRange className="size-4" />
+        {schedule ? 'Edit schedule' : 'Build schedule'}
       </SheetTrigger>
       <SheetContent className="w-full overflow-y-auto sm:max-w-2xl">
         <SheetHeader className="border-b">

@@ -3,6 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using GameGuild.CQRS;
+using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Context.Actors;
+using GameGuild.Identity.Tenants;
+using GameGuild.Identity.Users;
 using Moq;
 using Xunit;
 
@@ -88,12 +92,12 @@ public sealed class SupportTicketCqrsTests
                 "agent@example.com",
                 SupportTicketMessageAuthorType.Agent,
                 "I am checking the onboarding state now.",
-                true),
+                false),
             CancellationToken.None);
 
         replyResult.MessageCount.Should().Be(2);
         replyResult.Status.Should().Be(SupportTicketStatus.InProgress);
-        replyResult.AssignedToUserId.Should().Be(agentId);
+        replyResult.AssignedToUserId.Should().BeNull();
 
         var assigned = await new AssignSupportTicketCommandHandler(db).Handle(
             new AssignSupportTicketCommand(createResult.Id, tenantId, agentId, "Sasha Agent"),
@@ -263,16 +267,162 @@ public sealed class SupportTicketCqrsTests
     }
 
     [Fact]
+    public void Customer_Reply_Should_Reopen_A_Resolved_Ticket()
+    {
+        var command = NewCreateCommand(Guid.NewGuid(), SupportTicketPriority.Normal);
+        var ticket = SupportTicket.Open(
+            command.TenantId,
+            command.CustomerId,
+            command.CustomerName,
+            command.ReporterUserId,
+            command.ReporterName,
+            command.ReporterEmail,
+            command.Subject,
+            command.Body,
+            command.Priority,
+            command.Category);
+        ticket.Resolve(Guid.NewGuid(), "Support Agent", "Issue fixed.");
+
+        ticket.AddMessage(
+            command.ReporterUserId,
+            command.ReporterName,
+            command.ReporterEmail,
+            SupportTicketMessageAuthorType.Customer,
+            "The issue came back.",
+            false);
+
+        ticket.Status.Should().Be(SupportTicketStatus.Open);
+        ticket.ResolvedAt.Should().BeNull();
+        ticket.ClosedAt.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Self_Service_Query_Should_Never_Return_Internal_Notes()
+    {
+        await using var db = CreateDbContext();
+        var tenantId = Guid.NewGuid();
+        var created = await new CreateSupportTicketCommandHandler(db).Handle(
+            NewCreateCommand(tenantId, SupportTicketPriority.Normal),
+            CancellationToken.None);
+        await new AddSupportTicketMessageCommandHandler(db).Handle(
+            new AddSupportTicketMessageCommand(
+                created.Id,
+                tenantId,
+                Guid.NewGuid(),
+                "Support Agent",
+                "agent@example.test",
+                SupportTicketMessageAuthorType.Agent,
+                "Internal investigation details.",
+                true),
+            CancellationToken.None);
+
+        var result = await new GetSupportTicketByIdQueryHandler(db).Handle(
+            new GetSupportTicketByIdQuery(created.Id, tenantId, IncludeInternalMessages: false),
+            CancellationToken.None);
+
+        result.Should().NotBeNull();
+        result!.Messages.Should().OnlyContain(message => !message.IsInternal);
+        result.Messages.Should().NotContain(message => message.Body.Contains("investigation"));
+    }
+
+    [Fact]
+    public void Internal_Note_Should_Not_Start_The_Public_Response_Clock()
+    {
+        var command = NewCreateCommand(Guid.NewGuid(), SupportTicketPriority.Normal);
+        var ticket = SupportTicket.Open(
+            command.TenantId,
+            command.CustomerId,
+            command.CustomerName,
+            command.ReporterUserId,
+            command.ReporterName,
+            command.ReporterEmail,
+            command.Subject,
+            command.Body,
+            command.Priority,
+            command.Category);
+
+        ticket.AddMessage(
+            Guid.NewGuid(),
+            "Support Agent",
+            "agent@example.test",
+            SupportTicketMessageAuthorType.Agent,
+            "Private note.",
+            true);
+
+        ticket.Status.Should().Be(SupportTicketStatus.Open);
+        ticket.FirstResponseAt.Should().BeNull();
+    }
+
+    [Fact]
+    public void CorrectCustomerIdentity_Should_Backfill_Legacy_Tenant_Identifiers()
+    {
+        var tenantId = Guid.NewGuid();
+        var reporterId = Guid.NewGuid();
+        var ticket = SupportTicket.Open(
+            tenantId,
+            tenantId,
+            "Legacy workspace",
+            reporterId,
+            "Riley Parker",
+            "riley@example.test",
+            "Legacy ticket",
+            "This ticket predates the customer identity correction.",
+            SupportTicketPriority.Normal,
+            "General");
+
+        ticket.CorrectCustomerIdentity(reporterId, "Riley Parker");
+
+        ticket.CustomerId.Should().Be(reporterId);
+        ticket.CustomerName.Should().Be("Riley Parker");
+    }
+
+    [Fact]
+    public async Task Manager_Workflow_Should_Start_Change_Priority_And_Reopen()
+    {
+        await using var db = CreateDbContext();
+        var tenantId = Guid.NewGuid();
+        var created = await new CreateSupportTicketCommandHandler(db).Handle(
+            NewCreateCommand(tenantId, SupportTicketPriority.Low), CancellationToken.None);
+
+        var started = await new StartSupportTicketCommandHandler(db).Handle(
+            new StartSupportTicketCommand(created.Id, tenantId), CancellationToken.None);
+        var prioritized = await new ChangeSupportTicketPriorityCommandHandler(db).Handle(
+            new ChangeSupportTicketPriorityCommand(created.Id, tenantId, SupportTicketPriority.Urgent),
+            CancellationToken.None);
+        await new ResolveSupportTicketCommandHandler(db).Handle(
+            new ResolveSupportTicketCommand(created.Id, tenantId, Guid.NewGuid(), "Agent", "Done"),
+            CancellationToken.None);
+        var reopened = await new ReopenSupportTicketCommandHandler(db).Handle(
+            new ReopenSupportTicketCommand(created.Id, tenantId), CancellationToken.None);
+
+        started.Status.Should().Be(SupportTicketStatus.InProgress);
+        prioritized.Priority.Should().Be(SupportTicketPriority.Urgent);
+        reopened.Status.Should().Be(SupportTicketStatus.Open);
+        reopened.ResolvedAt.Should().BeNull();
+    }
+
+    [Fact]
     public async Task SupportTicketsController_ShouldDispatchAllRoutes()
     {
+        await using var db = CreateDbContext();
         var sender = new Mock<ISender>();
         var ticketId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
+        var managerId = Guid.NewGuid();
         var agentId = Guid.NewGuid();
+        var customerId = Guid.NewGuid();
+        db.AddRange(
+            new User { Id = managerId, Name = "Manager", Email = "manager@example.test", IsActive = true },
+            new User { Id = agentId, Name = "Agent", Email = "agent@example.test", IsActive = true },
+            new User { Id = customerId, Name = "Acme", Email = "customer@example.test", IsActive = true },
+            new TenantMember { Id = Guid.NewGuid(), TenantId = tenantId, UserId = managerId, Role = "PropertyManager", IsActive = true },
+            new TenantMember { Id = Guid.NewGuid(), TenantId = tenantId, UserId = agentId, Role = "PropertyManager", IsActive = true },
+            new TenantMember { Id = Guid.NewGuid(), TenantId = tenantId, UserId = customerId, Role = "Renter", IsActive = true });
+        await db.SaveChangesAsync();
         var dto = new SupportTicketDto(
             ticketId,
             tenantId,
-            Guid.NewGuid(),
+            customerId,
             "Acme",
             Guid.NewGuid(),
             "Morgan",
@@ -307,30 +457,125 @@ public sealed class SupportTicketCqrsTests
             .ReturnsAsync(dto);
         sender.Setup(service => service.Send(It.IsAny<CloseSupportTicketCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(dto);
-        var controller = new SupportTicketsController(sender.Object);
+        sender.Setup(service => service.Send(It.IsAny<StartSupportTicketCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(dto);
+        sender.Setup(service => service.Send(It.IsAny<ChangeSupportTicketPriorityCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(dto);
+        sender.Setup(service => service.Send(It.IsAny<ReopenSupportTicketCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(dto);
+        var actorAccessor = new ActorContextAccessor();
+        actorAccessor.SetActorContext(ActorContextBuilder.ForUser(managerId)
+            .WithTenantId(tenantId).WithRole("PropertyManager").Build());
+        var resolvedTenant = new Mock<IAuthorizationTenantContext>();
+        resolvedTenant.SetupGet(item => item.TenantId).Returns(tenantId);
+        var controller = new SupportTicketsController(sender.Object, actorAccessor, resolvedTenant.Object, db);
 
-        var list = await controller.List(tenantId, SupportTicketStatus.Open, SupportTicketPriority.Normal, "Acme", 0, 10, CancellationToken.None);
-        var get = await controller.GetById(ticketId, tenantId, CancellationToken.None);
-        var created = await controller.Create(new CreateSupportTicketRequest(tenantId, dto.CustomerId, "Acme", dto.ReporterUserId, "Morgan", null, "Subject", "Body"), CancellationToken.None);
-        var added = await controller.AddMessage(ticketId, new AddSupportTicketMessageRequest(tenantId, agentId, "Agent", null, SupportTicketMessageAuthorType.Agent, "Reply", true), CancellationToken.None);
-        var assigned = await controller.Assign(ticketId, new AssignSupportTicketRequest(tenantId, agentId, "Agent"), CancellationToken.None);
-        var resolved = await controller.Resolve(ticketId, new ResolveSupportTicketRequest(tenantId, agentId, "Agent", "Done"), CancellationToken.None);
-        var closed = await controller.Close(ticketId, new CloseSupportTicketRequest(tenantId, agentId, "Agent", "Closed"), CancellationToken.None);
+        var list = await controller.List(SupportTicketStatus.Open, SupportTicketPriority.Normal, "Acme", 0, 10, CancellationToken.None);
+        var get = await controller.GetById(ticketId, CancellationToken.None);
+        var created = await controller.Create(new CreateSupportTicketRequest(dto.CustomerId, "Subject", "Body"), CancellationToken.None);
+        var added = await controller.AddMessage(ticketId, new AddSupportTicketMessageRequest("Reply", true), CancellationToken.None);
+        var assigned = await controller.Assign(ticketId, new AssignSupportTicketRequest(agentId), CancellationToken.None);
+        var started = await controller.Start(ticketId, CancellationToken.None);
+        var prioritized = await controller.ChangePriority(ticketId, new ChangeSupportTicketPriorityRequest(SupportTicketPriority.High), CancellationToken.None);
+        var resolved = await controller.Resolve(ticketId, new ResolveSupportTicketRequest("Done"), CancellationToken.None);
+        var closed = await controller.Close(ticketId, new CloseSupportTicketRequest("Closed"), CancellationToken.None);
+        var reopened = await controller.Reopen(ticketId, CancellationToken.None);
 
         list.Result.Should().BeOfType<OkObjectResult>();
         get.Result.Should().BeOfType<OkObjectResult>();
         created.Result.Should().BeOfType<CreatedAtRouteResult>();
         added.Result.Should().BeOfType<OkObjectResult>();
         assigned.Result.Should().BeOfType<OkObjectResult>();
+        started.Result.Should().BeOfType<OkObjectResult>();
+        prioritized.Result.Should().BeOfType<OkObjectResult>();
         resolved.Result.Should().BeOfType<OkObjectResult>();
         closed.Result.Should().BeOfType<OkObjectResult>();
+        reopened.Result.Should().BeOfType<OkObjectResult>();
 
         sender.Setup(service => service.Send(It.Is<GetSupportTicketByIdQuery>(query => query.TicketId == Guid.Empty), It.IsAny<CancellationToken>()))
             .ReturnsAsync((SupportTicketDto?)null);
 
-        var missing = await controller.GetById(Guid.Empty, tenantId, CancellationToken.None);
+        var missing = await controller.GetById(Guid.Empty, CancellationToken.None);
 
         missing.Result.Should().BeOfType<NotFoundResult>();
+    }
+
+    [Fact]
+    public async Task MySupportTicketsController_Create_ShouldUseResolvedTenantAndAuthenticatedUser()
+    {
+        var sender = new Mock<ISender>();
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var actorAccessor = new ActorContextAccessor();
+        actorAccessor.SetActorContext(ActorContextBuilder.ForUser(userId)
+            .WithTenantId(tenantId)
+            .WithRole("Renter")
+            .Build());
+        var resolvedTenant = new Mock<IAuthorizationTenantContext>();
+        resolvedTenant.SetupGet(item => item.TenantId).Returns(tenantId);
+        sender.Setup(service => service.Send(It.IsAny<CreateSupportTicketCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((SupportTicketDto)null!);
+        var controller = new MySupportTicketsController(sender.Object, actorAccessor, resolvedTenant.Object);
+
+        await controller.Create(
+            new CreateMySupportTicketRequest("Lease question", "Please review my lease."),
+            CancellationToken.None);
+
+        sender.Verify(service => service.Send(
+            It.Is<CreateSupportTicketCommand>(command =>
+                command.TenantId == tenantId &&
+                command.CustomerId == userId &&
+                command.ReporterUserId == userId),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task MySupportTicketsController_List_ShouldForbidMismatchedResolvedTenant()
+    {
+        var sender = new Mock<ISender>();
+        var actorTenantId = Guid.NewGuid();
+        var resolvedTenantId = Guid.NewGuid();
+        var actorAccessor = new ActorContextAccessor();
+        actorAccessor.SetActorContext(ActorContextBuilder.ForUser(Guid.NewGuid())
+            .WithTenantId(actorTenantId)
+            .WithRole("Renter")
+            .Build());
+        var resolvedTenant = new Mock<IAuthorizationTenantContext>();
+        resolvedTenant.SetupGet(item => item.TenantId).Returns(resolvedTenantId);
+        var controller = new MySupportTicketsController(sender.Object, actorAccessor, resolvedTenant.Object);
+
+        var result = await controller.List(cancellationToken: CancellationToken.None);
+
+        result.Result.Should().BeOfType<ForbidResult>();
+        sender.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task MySupportTicketsController_List_ShouldAllowTenantAdministratorSelfService()
+    {
+        var sender = new Mock<ISender>();
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var actorAccessor = new ActorContextAccessor();
+        actorAccessor.SetActorContext(ActorContextBuilder.ForUser(userId)
+            .WithTenantId(tenantId)
+            .WithRole("TenantAdmin")
+            .Build());
+        var resolvedTenant = new Mock<IAuthorizationTenantContext>();
+        resolvedTenant.SetupGet(item => item.TenantId).Returns(tenantId);
+        sender.Setup(service => service.Send(
+                It.Is<GetSupportTicketsQuery>(query =>
+                    query.TenantId == tenantId &&
+                    query.CustomerId == userId &&
+                    !query.IncludeInternalMessages),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PagedResult<SupportTicketDto>([], 0, 0, 50));
+        var controller = new MySupportTicketsController(sender.Object, actorAccessor, resolvedTenant.Object);
+
+        var result = await controller.List(cancellationToken: CancellationToken.None);
+
+        result.Result.Should().BeOfType<OkObjectResult>();
+        sender.VerifyAll();
     }
 
     private static CreateSupportTicketCommand NewCreateCommand(

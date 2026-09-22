@@ -236,6 +236,9 @@ public static class InfrastructureLayerExtensions
         // 10aa. Assets Module (S3 storage, upload/access services, asset security helpers)
         stepStopwatch.Restart();
         services.AddAssetsModule(configuration);
+        // Replace the Assets module's fail-closed default with this product's
+        // commerce-backed order validation (paid-download windows).
+        services.AddScoped<Assets.Security.IOrderValidationService, Security.CommerceOrderValidationService>();
         logger.LogInformation("Assets Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
         // 10b. Commerce Subscriptions Module (must be registered before Billing since Billing depends on it)
@@ -558,7 +561,7 @@ public static class InfrastructureLayerExtensions
 
         services.Replace(ServiceDescriptor.Scoped<ITenantMembershipChecker, TenantMembershipChecker>());
         services.TryAddEnumerable(
-            ServiceDescriptor.Scoped<IAuthorizationRolePermissionProvider, TenantMembershipRolePermissionProvider>());
+            ServiceDescriptor.Scoped<IAuthorizationRolePermissionProvider, Security.TenantMembershipRolePermissionProvider>());
 
         totalStopwatch.Stop();
         logger.LogInformation("Completed service setup in {ElapsedMs}ms", serviceStopwatch.ElapsedMilliseconds);

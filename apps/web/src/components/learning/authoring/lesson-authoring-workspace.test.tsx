@@ -28,6 +28,9 @@ const mocks = vi.hoisted(() => ({
   applyProposal: vi.fn(),
   discardProposal: vi.fn(),
   prepareAssets: vi.fn(),
+  createAssessment: vi.fn(),
+  deleteAssessment: vi.fn(),
+  restoreAssessment: vi.fn(),
   assetRepository: {},
   codeEditorProps: undefined as
     | {
@@ -75,6 +78,11 @@ vi.mock("@/lib/learning/assets/learning-asset-repository", () => ({
 }));
 vi.mock("@/lib/learning/assets/prepare-authoring-assets", () => ({
   prepareAuthoringAssets: mocks.prepareAssets,
+}));
+vi.mock("@/lib/learning/actions", () => ({
+  createAssessment: mocks.createAssessment,
+  deleteAssessment: mocks.deleteAssessment,
+  restoreAssessment: mocks.restoreAssessment,
 }));
 vi.mock("@/components/learning/learner-lesson-renderer", () => ({
   LearnerLessonRenderer: ({ content }: { content: unknown }) => (
@@ -140,6 +148,23 @@ vi.mock(
         onClick={() => onChange("https://cdn.example.test/changed.mp4")}
       >
         Video editor
+      </button>
+    ),
+  }),
+);
+vi.mock(
+  "@/components/learning/console/courses/[course]/content/[contentId]/lesson-external-link-editor",
+  () => ({
+    LessonExternalLinkEditor: ({
+      onChange,
+    }: {
+      onChange: (value: string) => void;
+    }) => (
+      <button
+        type="button"
+        onClick={() => onChange("https://example.test/updated-article")}
+      >
+        External link editor
       </button>
     ),
   }),
@@ -397,6 +422,12 @@ describe("LessonAuthoringWorkspace", () => {
       status: 409,
     });
     mocks.prepareAssets.mockResolvedValue({ assetUris: [], promotedUris: [] });
+    mocks.createAssessment.mockResolvedValue({
+      success: true,
+      data: { id: "assessment-new" },
+    });
+    mocks.deleteAssessment.mockResolvedValue({ success: true, data: null });
+    mocks.restoreAssessment.mockResolvedValue({ success: true, data: null });
   });
 
   afterEach(() => {
@@ -851,6 +882,35 @@ describe("LessonAuthoringWorkspace", () => {
     fireEvent.click(screen.getByRole("button", { name: "Quiz editor" }));
   });
 
+  it("edits an external link lesson and keeps Copilot metadata-only", () => {
+    const { unmount } = renderWorkspace({
+      ...initialDraft,
+      payload: {
+        ...initialDraft.payload,
+        lessonFormat: "ExternalLink",
+        body: "https://example.test/article",
+      },
+    } as never);
+
+    fireEvent.click(screen.getByRole("button", { name: "External link editor" }));
+    unmount();
+
+    const video = renderWorkspace({
+      ...initialDraft,
+      payload: {
+        ...initialDraft.payload,
+        lessonFormat: "ExternalLink",
+        body: "https://example.test/article",
+      },
+    } as never);
+    fireEvent.click(screen.getAllByRole("button", { name: /copilot/i })[0]!);
+    expect(
+      screen.getByText(/external resources are protected/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Replace document")).not.toBeInTheDocument();
+    video.unmount();
+  });
+
   it("updates lesson settings including automatic time estimation", () => {
     renderWorkspace();
 
@@ -1148,6 +1208,164 @@ describe("LessonAuthoringWorkspace", () => {
     expect(
       screen.queryByRole("textbox", { name: "Lesson body" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("creates a gradebook assessment when Graded is toggled on for Code content", async () => {
+    renderWorkspace(
+      {
+        ...initialDraft,
+        payload: {
+          ...initialDraft.payload,
+          type: "Code",
+          lessonFormat: null,
+          body: null,
+          jsonBody: null,
+        },
+      } as never,
+      {
+        activeItem: { ...item, type: "Code" } as never,
+        linkedAssessment: null,
+        initialCodingAssignment: null,
+      },
+    );
+
+    fireEvent.click(screen.getByRole("switch", { name: "Graded" }));
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(mocks.createAssessment).toHaveBeenCalledWith(
+      expect.objectContaining({
+        courseId: "course-1",
+        title: "Original lesson",
+        type: "Assignment",
+        contentId: "lesson-1",
+        submissionModalities: "Code",
+      }),
+    );
+    expect(mocks.refresh).toHaveBeenCalled();
+  });
+
+  it("soft-deletes the linked assessment after confirming Graded off", async () => {
+    renderWorkspace(
+      {
+        ...initialDraft,
+        payload: {
+          ...initialDraft.payload,
+          type: "Code",
+          lessonFormat: null,
+          body: null,
+          jsonBody: null,
+        },
+      } as never,
+      {
+        activeItem: { ...item, type: "Code" } as never,
+        linkedAssessment: {
+          id: "assessment-1",
+          slug: "test",
+          title: "Test",
+        } as never,
+        initialCodingAssignment: null,
+      },
+    );
+
+    fireEvent.click(screen.getByRole("switch", { name: "Graded" }));
+    fireEvent.click(screen.getByRole("button", { name: "Remove grading" }));
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(mocks.deleteAssessment).toHaveBeenCalledWith("course-1", "assessment-1");
+  });
+
+  it("restores a recently deleted assessment instead of creating a new one", async () => {
+    const assignment = {
+      Type: "coding-assignment",
+      Version: 1,
+      Environment: { Language: "cpp", Tools: "", AllowStudentCreateFiles: false },
+      Data: { Files: {} },
+      Tests: { Public: [{}], Private: [{}] },
+      Grading: { MaxScore: 100 },
+    } as never;
+    renderWorkspace(
+      {
+        ...initialDraft,
+        payload: {
+          ...initialDraft.payload,
+          type: "Code",
+          lessonFormat: null,
+          body: null,
+          jsonBody: null,
+        },
+      } as never,
+      {
+        activeItem: { ...item, type: "Code" } as never,
+        linkedAssessment: {
+          id: "assessment-1",
+          slug: "test",
+          title: "Test",
+        } as never,
+        initialCodingAssignment: assignment,
+      },
+    );
+
+    fireEvent.click(screen.getByRole("switch", { name: "Graded" }));
+    fireEvent.click(screen.getByRole("button", { name: "Remove grading" }));
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    fireEvent.click(screen.getByRole("switch", { name: "Graded" }));
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(mocks.createAssessment).not.toHaveBeenCalled();
+    expect(mocks.restoreAssessment).toHaveBeenCalledWith(
+      "course-1",
+      "assessment-1",
+    );
+  });
+
+  it("renders the coding test summary for an auto-graded Code item", () => {
+    const assignment = {
+      Type: "coding-assignment",
+      Version: 1,
+      Environment: { Language: "cpp", Tools: "", AllowStudentCreateFiles: false },
+      Data: { Files: {} },
+      Tests: { Public: [{}], Private: [{}, {}] },
+      Grading: { MaxScore: 100 },
+    } as never;
+    renderWorkspace(
+      {
+        ...initialDraft,
+        payload: {
+          ...initialDraft.payload,
+          type: "Code",
+          lessonFormat: null,
+          body: null,
+          jsonBody: null,
+        },
+      } as never,
+      {
+        activeItem: { ...item, type: "Code" } as never,
+        linkedAssessment: {
+          id: "assessment-1",
+          slug: "test",
+          title: "Test",
+          reviewMethods: 12,
+        } as never,
+        initialCodingAssignment: assignment,
+      },
+    );
+
+    expect(screen.getByText("Coding tests")).toBeInTheDocument();
+    expect(screen.getByText(/3 \(1 public\)/)).toBeInTheDocument();
+    expect(screen.getByText(/cpp/)).toBeInTheDocument();
   });
 
   it("replaces the stale authoring URL after publishing a changed slug", async () => {

@@ -1,5 +1,5 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@game-guild/ui/components/badge";
+import { Button } from "@game-guild/ui/components/button";
 import { Link } from "@/i18n/navigation";
 import type { Program } from "@/lib/api/generated";
 import type { Product } from "@/lib/courses/actions/enrollment.actions";
@@ -138,14 +138,12 @@ export function CourseHeader({
 
       <div className="container relative z-10 mx-auto flex min-h-[780px] flex-col px-4 py-10">
         <Button
-          asChild
           variant="ghost"
           className="w-fit text-slate-300 hover:bg-white/10 hover:text-white"
+          nativeButton={false} render={<Link href="/courses" />}
         >
-          <Link href="/courses">
-            <ArrowLeft />
-            Back to catalog
-          </Link>
+          <ArrowLeft />
+          Back to catalog
         </Button>
 
         <div className="grid flex-1 gap-12 py-16 lg:grid-cols-[1fr_420px] lg:items-end">
@@ -196,14 +194,12 @@ export function CourseHeader({
                 />
               ) : primaryCta.kind === "link" && primaryCta.href ? (
                 <Button
-                  asChild
                   size="lg"
                   className="bg-white text-slate-950 hover:bg-slate-200"
+                  nativeButton={false} render={<Link href={primaryCta.href} />}
                 >
-                  <Link href={primaryCta.href}>
-                    {primaryCta.label}
-                    <ArrowRight />
-                  </Link>
+                  {primaryCta.label}
+                  <ArrowRight />
                 </Button>
               ) : (
                 <Button size="lg" disabled className="bg-white/20 text-white">
@@ -212,27 +208,23 @@ export function CourseHeader({
               )}
               {course.videoShowcaseUrl ? (
                 <Button
-                  asChild
                   size="lg"
                   variant="outline"
                   className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
+                  nativeButton={false} render={<Link href={course.videoShowcaseUrl} />}
                 >
-                  <Link href={course.videoShowcaseUrl}>
-                    Watch preview
-                    <Play />
-                  </Link>
+                  Watch preview
+                  <Play />
                 </Button>
               ) : null}
               <Button
-                asChild
                 size="lg"
                 variant="outline"
                 className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
+                nativeButton={false} render={<Link href="#curriculum" />}
               >
-                <Link href="#curriculum">
-                  View curriculum
-                  <Layers3 />
-                </Link>
+                View curriculum
+                <Layers3 />
               </Button>
             </div>
           </div>
@@ -270,14 +262,12 @@ export function CourseHeader({
               </div>
               {course.videoShowcaseUrl ? (
                 <Button
-                  asChild
                   variant="outline"
                   className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
+                  nativeButton={false} render={<Link href={course.videoShowcaseUrl} />}
                 >
-                  <Link href={course.videoShowcaseUrl}>
-                    Watch preview
-                    <Play />
-                  </Link>
+                  Watch preview
+                  <Play />
                 </Button>
               ) : null}
             </div>

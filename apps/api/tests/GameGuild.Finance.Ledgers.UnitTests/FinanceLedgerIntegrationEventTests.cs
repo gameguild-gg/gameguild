@@ -12,6 +12,19 @@ namespace GameGuild.Finance.Ledgers.UnitTests;
 public sealed class FinanceLedgerIntegrationEventTests
 {
     [Fact]
+    public void LedgerFactories_InitializeTheRequiredUpdatedTimestamp()
+    {
+        var actorId = Guid.NewGuid();
+        var root = Ledger.CreateRoot(Guid.NewGuid(), "FINANCE", "Finance", "USD", actorId);
+        var child = Ledger.CreateChild(root, LedgerType.BudgetCategory, "MAINT-EXP", "Maintenance Expenses", actorId);
+        var virtualLedger = Ledger.CreateVirtual(root.TenantId, "VIRTUAL", "Virtual", "{}", [child.Id], actorId);
+
+        Assert.NotNull(root.UpdatedAt);
+        Assert.NotNull(child.UpdatedAt);
+        Assert.NotNull(virtualLedger.UpdatedAt);
+    }
+
+    [Fact]
     public async Task PostEntry_QueuesVersionedDurableEventWithOperationCorrelation()
     {
         var tenantId = Guid.NewGuid();

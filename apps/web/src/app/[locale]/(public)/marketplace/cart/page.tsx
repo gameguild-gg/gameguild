@@ -17,7 +17,7 @@ export default async function MarketplaceCartPage() {
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-10 sm:px-6">
       <h1 className="text-3xl font-semibold tracking-tight">{t('cart')}</h1>
       <MarketplaceCartWorkspace cart={cart} products={products} labels={{ title: t('cart'), empty: t('emptyCart'), quantity: t('quantity'), update: t('update'), remove: t('remove') }} />
-      {cart?.items?.length ? <Button asChild className="self-end"><Link href="/marketplace/checkout">{t('checkout')}</Link></Button> : null}
+      {cart?.items?.length ? <Button nativeButton={false} className="self-end" render={<Link href="/marketplace/checkout" />}>{t('checkout')}</Button> : null}
     </main>
   );
 }

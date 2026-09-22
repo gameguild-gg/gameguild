@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button';
+import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { Link } from '@/i18n/navigation';
 import { AlertTriangle, CheckCircle2, MailX } from 'lucide-react';
@@ -9,7 +9,7 @@ import React from 'react';
  * is exchanged for a result SERVER-SIDE (this async server component) so it
  * never reaches client JS. The page also renders directly from
  * `?status=&scope=&value=` query params for callers that already hold a result.
- * Hardcoded English by design — matches dashboard-header.tsx (no i18n seam yet).
+ * Hardcoded English by design — matches workspace-shell.tsx (no i18n seam yet).
  */
 
 type UnsubscribeState = 'success' | 'already' | 'invalid';
@@ -128,8 +128,8 @@ export default async function Page({
           </CardDescription>
         </CardHeader>
         <CardContent className="flex justify-center">
-          <Button asChild>
-            <Link href={MANAGE_PREFERENCES_PATH}>Manage all notification preferences</Link>
+          <Button nativeButton={false} render={<Link href={MANAGE_PREFERENCES_PATH} />}>
+            Manage all notification preferences
           </Button>
         </CardContent>
       </Card>

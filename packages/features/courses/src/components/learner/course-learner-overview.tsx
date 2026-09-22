@@ -74,11 +74,9 @@ export function CourseLearnerOverview({
               {course.description}
             </p>
           </div>
-          <Button asChild>
-            <Link href={routes.content(course.slug)}>
-              Continue learning
-              <ArrowRight className="ml-2 size-4" />
-            </Link>
+          <Button nativeButton={false} render={<Link href={routes.content(course.slug)} />}>
+            Continue learning
+            <ArrowRight className="ml-2 size-4" />
           </Button>
         </div>
       </header>
@@ -196,8 +194,8 @@ export function CourseLearnerOverview({
                   : "Ready when you are"}
               </p>
             </div>
-            <Button asChild variant="outline">
-              <Link href={routes.content(course.slug)}>Open lesson</Link>
+            <Button nativeButton={false} variant="outline" render={<Link href={routes.content(course.slug)} />}>
+              Open lesson
             </Button>
           </div>
         </section>

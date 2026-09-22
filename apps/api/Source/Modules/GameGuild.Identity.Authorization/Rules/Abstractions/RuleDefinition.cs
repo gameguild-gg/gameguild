@@ -77,6 +77,12 @@ public sealed class RuleDefinition
                 errors.Add($"Rule type '{Type}' requires at least one permission");
             }
 
+            if (string.Equals(Type, RuleTypes.RequireAnyRole, StringComparison.OrdinalIgnoreCase)
+                && parameters.GetStringArray("roles").Count == 0)
+            {
+                errors.Add($"Rule type '{Type}' requires at least one role");
+            }
+
             if (string.Equals(Type, RuleTypes.AnyOf, StringComparison.OrdinalIgnoreCase))
             {
                 var enabledRules = Rules?.Where(rule => rule.Enabled).ToList() ?? [];

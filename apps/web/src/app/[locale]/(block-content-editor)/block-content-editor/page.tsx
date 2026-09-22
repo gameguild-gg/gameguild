@@ -1,8 +1,8 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Button } from "@game-guild/ui/components/button"
+import { Input } from "@game-guild/ui/components/input"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@game-guild/ui/components/dialog"
 import React, { useState } from 'react'
 import { AssetPickerDialog, AssetsProvider } from "@game-guild/assets/react"
 import {

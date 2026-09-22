@@ -1,12 +1,12 @@
 "use client"
-import { Button } from "@/components/ui/button"
+import { Button } from "@game-guild/ui/components/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@game-guild/ui/components/dropdown-menu"
 import { cn } from "@/lib/utils"
 import {
   Check,
@@ -88,11 +88,9 @@ export function FileTabs({
         <div className="flex items-center gap-2">
           {(isEditing || showFileButtonInReadMode) && (
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-7">
-                  File
-                  <ChevronDown className="h-3.5 w-3.5 ml-1" />
-                </Button>
+              <DropdownMenuTrigger render={<Button variant="ghost" size="sm" className="h-7" />}>
+                File
+                <ChevronDown className="h-3.5 w-3.5 ml-1" />
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"

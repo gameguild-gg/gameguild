@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using FluentAssertions;
+using GameGuild.Learning.Grading.Contracts;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.IdentityModel.Tokens;
 using Xunit;
@@ -62,7 +63,7 @@ public class LtiEntityValidationTests
             Guid.NewGuid(),
             field == "lineItemId" ? " " : "line-1",
             field == "lineItemUrl" ? " " : "https://canvas.test/line-items/1",
-            field == "maxScore" ? 0 : 100);
+            field == "maxScore" ? ScoreValue.FromUnits(0) : ScoreValue.FromUnits(100));
 
         action.Should().Throw<ArgumentException>().Which.ParamName.Should().Be(field);
     }
