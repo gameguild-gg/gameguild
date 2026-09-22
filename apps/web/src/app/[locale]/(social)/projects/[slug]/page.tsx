@@ -10,7 +10,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const project = await getVisibleProject(slug);
 
   return {
-    title: project ? `${project.title} | GameGuild Projects` : 'Project Not Found | GameGuild',
+    title: project ? `${project.title} | GameGuild Projects` : 'Project Not Found | GameGuild Projects',
     description: project?.summary,
   };
 }
