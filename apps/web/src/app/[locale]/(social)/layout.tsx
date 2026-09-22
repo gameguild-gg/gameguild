@@ -12,7 +12,8 @@ export default async function Layout({ children, params }: LayoutProps<'/[locale
   const session = await auth();
 
   if (!session || typeof session === 'function') {
-    redirect({ href: { pathname: '/sign-in', query: { callbackUrl: '/' } }, locale });
+    // Home is the default post-sign-in destination — no callbackUrl needed.
+    redirect({ href: { pathname: '/sign-in' }, locale });
     throw new Error('Unauthenticated social access');
   }
 
