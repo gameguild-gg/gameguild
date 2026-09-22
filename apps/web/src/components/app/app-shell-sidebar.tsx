@@ -63,7 +63,7 @@ function NotificationChip({ count }: { count: number }) {
   const label = count > 99 ? '99+' : String(count);
   return (
     <>
-      <span className="ml-auto hidden size-2 shrink-0 rounded-full bg-primary group-data-[collapsible=icon]:block" aria-hidden="true" />
+      <span className="absolute right-1.5 top-1.5 ml-0 hidden size-2 rounded-full bg-primary group-data-[collapsible=icon]:block" aria-hidden="true" />
       <span className="ml-auto shrink-0 rounded-full bg-primary px-1.5 py-0.5 text-xs font-medium text-primary-foreground group-data-[collapsible=icon]:hidden">
         {label}
       </span>
@@ -72,7 +72,7 @@ function NotificationChip({ count }: { count: number }) {
 }
 
 const navButtonClass =
-  '[&_svg]:size-5 data-active:bg-sidebar-primary/15 data-active:text-sidebar-primary data-active:font-medium';
+  'relative [&_svg]:size-5 group-data-[collapsible=icon]:justify-center data-active:bg-sidebar-primary/15 data-active:text-sidebar-primary data-active:font-medium';
 const collapsibleButtonClass =
   '[&_svg]:size-5 group-data-[collapsible=icon]:justify-center data-active:bg-sidebar-primary/15 data-active:text-sidebar-primary data-active:font-medium';
 const collapsedItemClass =
