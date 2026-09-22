@@ -79,9 +79,6 @@ export function TestingEventsBrowser({
     status !== "all" ||
     mode !== "all" ||
     period !== "all";
-  const openEvents = presentedEvents.filter(
-    (session) => session.status === "open" || session.status === "in-progress",
-  ).length;
   const clearFilters = () => {
     setSearch("");
     setStatus("all");
@@ -92,22 +89,11 @@ export function TestingEventsBrowser({
   return (
     <div className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-7xl">
-        <header className="mb-12 text-center">
-          {presentedEvents.length > 0 ? (
-            <div className="mb-6 flex justify-center">
-              <div className="flex items-center gap-2 rounded-full border border-success/30 bg-success/10 px-4 py-2">
-                <span className="size-2 rounded-full bg-success" />
-                <span className="text-sm font-semibold text-success">
-                  {openEvents} Open {openEvents === 1 ? "Event" : "Events"} -
-                  Join Now!
-                </span>
-              </div>
-            </div>
-          ) : null}
-          <h1 className="my-8 text-5xl font-bold text-foreground md:text-6xl">
+        <header className="mb-8 text-center">
+          <h1 className="text-3xl font-bold text-foreground md:text-4xl">
             Test. Play. Earn.
           </h1>
-          <p className="mx-auto max-w-3xl text-lg leading-8 text-muted-foreground sm:text-xl">
+          <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
             Join community game testing events, play upcoming projects, and
             provide feedback creators can use.
           </p>

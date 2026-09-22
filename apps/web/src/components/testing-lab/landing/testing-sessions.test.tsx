@@ -123,7 +123,7 @@ describe("TestingEventsBrowser", () => {
     expect(screen.queryByLabelText("Event filters")).not.toBeInTheDocument();
   });
 
-  it("sorts cards by schedule, reports open count, and preserves project context", () => {
+  it("sorts cards by schedule and preserves project context", () => {
     render(
       <TestingEventsBrowser
         events={events}
@@ -132,7 +132,9 @@ describe("TestingEventsBrowser", () => {
       />,
     );
 
-    expect(screen.getByText("2 Open Events - Join Now!")).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Open Events? - Join Now!/),
+    ).not.toBeInTheDocument();
     const links = screen.getAllByRole("link", { name: "View event" });
     expect(links.map((link) => link.getAttribute("href"))).toEqual([
       "/testing-lab/events/past?projectId=project%20%2F%201",
@@ -266,7 +268,9 @@ describe("TestingEventsBrowser", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<TestingEventsBrowser events={[events[2]!]} accessIssues={[]} />);
 
-    expect(screen.getByText("1 Open Event - Join Now!")).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Open Events? - Join Now!/),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Switch to cards view" })).toHaveAttribute(
       "aria-pressed",
       "true",
