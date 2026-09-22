@@ -383,6 +383,7 @@ export async function getTestingEventWorkspaceData(eventId: string) {
 }
 
 export {
+  getApprovedTestingEventGames,
   getPublicTestingEventExperience,
   getPublicTestingEventsDirectory,
 } from "./events-public-queries";

@@ -116,6 +116,77 @@ export async function getPublicTestingEventsDirectory(
   };
 }
 
+export interface TestingEventGameCard {
+  applicationId: string;
+  projectId: string;
+  name: string;
+  imageUrl: string | null;
+  shortDescription: string | null;
+  slug: string | null;
+  assignedSlotId: string | null;
+}
+
+const EVENT_ID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Approved games for an event, resolved through their applications. Only
+ * visible to authenticated viewers permitted to list the event's applications
+ * (e.g. the manager); anonymous visitors get an empty lineup and the page
+ * falls back to capacity cards.
+ */
+export async function getApprovedTestingEventGames(
+  eventId: string,
+): Promise<TestingEventGameCard[]> {
+  if (!EVENT_ID_PATTERN.test(eventId)) return [];
+  const requestAuth = getRequestAuthContext().catch(() => ({
+    session: null,
+    token: null,
+    tenantId: null,
+  }));
+  const { session } = await requestAuth;
+  if (!session?.user) return [];
+
+  const client = createServerClient({
+    baseUrl:
+      process.env.API_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      "http://localhost:8080",
+    auth: { getAccessToken: async () => (await requestAuth).token },
+    tenant: { getTenantId: async () => (await requestAuth).tenantId },
+  });
+  const events = new GeneratedApi.TestingLabTestingEventsModule(client);
+  const projects = new GeneratedApi.ProjectsModule(client);
+
+  const applications = await read(
+    events.getTestingEventsApplicationsForGetTestingEventsByEventIdApplications(
+      eventId,
+      { status: "Approved", take: 24 },
+    ),
+    "Approved applications",
+  );
+  if (!applications.data) return [];
+
+  const cards: TestingEventGameCard[] = [];
+  for (const application of applications.data.slice(0, 12)) {
+    if (!application.id || !application.projectId) continue;
+    const project = await read(
+      projects.getProjectsForGetProjectsById(application.projectId),
+      `Project ${application.projectId}`,
+    );
+    cards.push({
+      applicationId: application.id,
+      projectId: application.projectId,
+      name: project.data?.title?.trim() || "Untitled project",
+      imageUrl: project.data?.featuredImageUrl ?? project.data?.imageUrl ?? null,
+      shortDescription: project.data?.shortDescription?.trim() || null,
+      slug: project.data?.slug ?? null,
+      assignedSlotId: application.assignedSlotId ?? null,
+    });
+  }
+  return cards;
+}
+
 export async function getPublicTestingEvent(
   eventId: string,
 ): Promise<TestingLabPublicTestingEventProjection | null> {
