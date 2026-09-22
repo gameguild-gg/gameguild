@@ -141,7 +141,6 @@ describe("TestingEventsBrowser", () => {
       "/testing-lab/events/future?projectId=project%20%2F%201",
       "/testing-lab/events/october?projectId=project%20%2F%201",
     ]);
-    expect(screen.getByText("3 of 3 events")).toBeInTheDocument();
   });
 
   it.each([
@@ -155,9 +154,7 @@ describe("TestingEventsBrowser", () => {
     await user.type(screen.getByPlaceholderText("Search events..."), `  ${term}  `);
 
     expect(screen.getByText(expectedTitle)).toBeInTheDocument();
-    expect(screen.getByText("1 of 3 events")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Clear filters" }));
-    expect(screen.getByText("3 of 3 events")).toBeInTheDocument();
   });
 
   it("filters by status", async () => {
@@ -177,26 +174,18 @@ describe("TestingEventsBrowser", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<TestingEventsBrowser events={events} accessIssues={[]} />);
 
-    await user.selectOptions(
-      screen.getByRole("combobox", { name: "Filter by format" }),
-      "InPerson",
-    );
+    await user.click(screen.getByRole("button", { name: "In person" }));
 
     expect(screen.getByText("Completed campus session")).toBeInTheDocument();
-    expect(screen.getByText("1 of 3 events")).toBeInTheDocument();
   });
 
   it("filters other formats without label remapping", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<TestingEventsBrowser events={events} accessIssues={[]} />);
 
-    await user.selectOptions(
-      screen.getByRole("combobox", { name: "Filter by format" }),
-      "Hybrid",
-    );
+    await user.click(screen.getByRole("button", { name: "Hybrid" }));
 
     expect(screen.getByText("Hybrid October")).toBeInTheDocument();
-    expect(screen.getByText("1 of 3 events")).toBeInTheDocument();
   });
 
   it("sorts unscheduled events deterministically before scheduled events", () => {
@@ -241,16 +230,12 @@ describe("TestingEventsBrowser", () => {
       />,
     );
 
-    await user.selectOptions(
-      screen.getByRole("combobox", { name: "Filter by schedule" }),
-      option === "Upcoming" ? "upcoming" : "month",
-    );
+    await user.click(screen.getByRole("button", { name: option }));
 
     for (const title of expectedTitles) {
       expect(screen.getByText(title)).toBeInTheDocument();
     }
     expect(screen.queryByText("Unscheduled")).not.toBeInTheDocument();
-    expect(screen.getByText("2 of 4 events")).toBeInTheDocument();
   });
 
   it("shows a filtered empty state and restores results", async () => {

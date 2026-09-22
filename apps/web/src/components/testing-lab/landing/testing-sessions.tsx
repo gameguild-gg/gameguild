@@ -110,99 +110,133 @@ export function TestingEventsBrowser({
 
         {presentedEvents.length > 0 ? <section
           aria-label="Event filters"
-          className="mb-8 rounded-xl border border-border bg-card p-4"
+          className="mb-6 flex flex-wrap items-center gap-2"
         >
-          <div className="grid gap-3 xl:grid-cols-[minmax(16rem,1fr)_12rem_12rem_12rem_auto] xl:items-center">
-            <label className="relative block">
-              <span className="sr-only">Search events</span>
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                suppressHydrationWarning
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search events..."
-                className="pl-9"
-              />
-            </label>
-            <Select
-              value={status}
-              onValueChange={(value) => setStatus(value as StatusFilter)}
-            >
-              <SelectTrigger aria-label="Filter by status">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                <SelectItem value="open">Open</SelectItem>
-                <SelectItem value="in-progress">In progress</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select
-              value={mode}
-              onValueChange={(value) => setMode(value as ModeFilter)}
-            >
-              <SelectTrigger aria-label="Filter by format">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All formats</SelectItem>
-                <SelectItem value="Online">Online</SelectItem>
-                <SelectItem value="InPerson">In person</SelectItem>
-                <SelectItem value="Hybrid">Hybrid</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select
-              value={period}
-              onValueChange={(value) => setPeriod(value as PeriodFilter)}
-            >
-              <SelectTrigger aria-label="Filter by schedule">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Any schedule</SelectItem>
-                <SelectItem value="upcoming">Upcoming</SelectItem>
-                <SelectItem value="month">This month</SelectItem>
-              </SelectContent>
-            </Select>
-            <div className="hidden items-center justify-end gap-2 lg:flex">
-              {(
-                [
-                  ["cards", "Switch to cards view", LayoutGrid],
-                  ["row", "Switch to rows view", List],
-                  ["table", "Switch to table view", Table2],
-                ] as const
-              ).map(([value, label, Icon]) => (
-                <Button
-                  key={value}
-                  type="button"
-                  size="icon"
-                  variant={viewMode === value ? "default" : "outline"}
-                  aria-label={label}
-                  aria-pressed={viewMode === value}
-                  onClick={() => setViewMode(value)}
-                >
-                  <Icon className="size-4" />
-                </Button>
-              ))}
-            </div>
-          </div>
-          <div className="mt-3 flex items-center justify-between gap-4 text-sm text-muted-foreground">
-            <span>
-              {filteredEvents.length} of {presentedEvents.length} events
-            </span>
-            {hasFilters ? (
-              <Button
+          <label className="relative block min-w-44 flex-1 sm:max-w-xs">
+            <span className="sr-only">Search events</span>
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              suppressHydrationWarning
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search events..."
+              className="pl-9"
+            />
+          </label>
+          <Select
+            value={status}
+            onValueChange={(value) => setStatus(value as StatusFilter)}
+          >
+            <SelectTrigger aria-label="Filter by status">
+              <span className="text-muted-foreground">Status:</span>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="open">Open</SelectItem>
+              <SelectItem value="in-progress">In progress</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+            </SelectContent>
+          </Select>
+          {/* Format is a segmented toggle — the options are few and mutually
+              exclusive, so one click beats opening a dropdown. */}
+          <div
+            role="group"
+            aria-label="Filter by format"
+            className="flex h-9 items-stretch overflow-hidden rounded-md border border-input text-sm"
+          >
+            {(
+              [
+                ["all", "All"],
+                ["Online", "Online"],
+                ["InPerson", "In person"],
+                ["Hybrid", "Hybrid"],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
                 type="button"
-                variant="ghost"
-                size="sm"
-                onClick={clearFilters}
+                aria-pressed={mode === value}
+                onClick={() => setMode(value)}
+                className={`border-l border-input px-2.5 transition first:border-l-0 ${
+                  mode === value
+                    ? "bg-primary/15 font-medium text-primary"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                }`}
               >
-                <X className="mr-2 size-4" />
-                Clear filters
-              </Button>
-            ) : null}
+                {label}
+              </button>
+            ))}
           </div>
+          {/* Schedule toggle — same segmented control pattern as Format. */}
+          <div
+            role="group"
+            aria-label="Filter by schedule"
+            className="flex h-9 items-stretch overflow-hidden rounded-md border border-input text-sm"
+          >
+            {(
+              [
+                ["all", "Any"],
+                ["upcoming", "Upcoming"],
+                ["month", "This month"],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={period === value}
+                onClick={() => setPeriod(value)}
+                className={`border-l border-input px-2.5 transition first:border-l-0 ${
+                  period === value
+                    ? "bg-primary/15 font-medium text-primary"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {/* View switcher as one joined segmented control — rounded only on
+              the outer corners, sections divided by inner borders. */}
+          <div
+            role="group"
+            aria-label="Event view"
+            className="hidden h-9 items-stretch overflow-hidden rounded-md border border-input lg:flex"
+          >
+            {(
+              [
+                ["cards", "Switch to cards view", LayoutGrid],
+                ["row", "Switch to rows view", List],
+                ["table", "Switch to table view", Table2],
+              ] as const
+            ).map(([value, label, Icon]) => (
+              <button
+                key={value}
+                type="button"
+                aria-label={label}
+                aria-pressed={viewMode === value}
+                onClick={() => setViewMode(value)}
+                className={`flex w-9 items-center justify-center border-l border-input transition first:border-l-0 ${
+                  viewMode === value
+                    ? "bg-primary/15 text-primary"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                }`}
+              >
+                <Icon className="size-4" aria-hidden="true" />
+              </button>
+            ))}
+          </div>
+          {hasFilters ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={clearFilters}
+            >
+              <X className="mr-1 size-3.5" />
+              Clear filters
+            </Button>
+          ) : null}
         </section> : null}
 
         {filteredEvents.length === 0 ? (
