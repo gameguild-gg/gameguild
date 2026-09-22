@@ -13,6 +13,7 @@ import {
 export function AppShell({ children }: { readonly children: React.ReactNode }) {
   return (
     <SidebarProvider
+      defaultOpen={false}
       style={{ '--sidebar-width-icon': '4rem' } as React.CSSProperties}
     >
       <div className="flex h-svh min-w-0 flex-1 overflow-hidden">{children}</div>

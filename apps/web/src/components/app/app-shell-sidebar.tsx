@@ -101,7 +101,7 @@ function NavGroups({ groups, notificationCounts }: { groups: WorkspaceNavGroup[]
         <SidebarGroup key={group.label || 'sidebar'}>
           {group.label ? <SidebarGroupLabel>{group.label}</SidebarGroupLabel> : null}
           <SidebarGroupContent>
-            <SidebarMenu className="gap-2">
+            <SidebarMenu className="gap-4">
               {group.items.map((item) => {
                 const Icon = item.icon;
                 const hasItems = item.items && item.items.length > 0;
