@@ -134,20 +134,16 @@ export function TestingEventCard({
         className="pointer-events-none absolute bottom-[calc(100%-240px)] left-3 right-3 top-3 z-0 overflow-hidden rounded-xl shadow-sm transition-all duration-500 ease-out group-hover:bottom-0 group-hover:left-0 group-hover:right-0 group-hover:top-0 group-hover:rounded-none"
       >
         <EventCoverArt seed={session.id} />
-        <div className="absolute inset-x-3 top-3 flex items-start justify-between gap-2">
-          <Badge className="border-white/20 bg-black/55 text-white backdrop-blur-sm">
-            {session.mode}
-          </Badge>
-          <Badge
-            variant="outline"
-            className="gap-1.5 border-white/25 bg-black/55 text-white backdrop-blur-sm"
-          >
+        {/* Mode and status share one segmented pill on the artwork. */}
+        <div className="absolute left-3 top-3 flex overflow-hidden rounded-full border border-white/20 bg-black/55 text-xs font-medium text-white backdrop-blur-sm">
+          <span className="px-2.5 py-1">{session.mode}</span>
+          <span className="flex items-center gap-1.5 border-l border-white/20 px-2.5 py-1">
             <span
               aria-hidden="true"
               className={`size-1.5 rounded-full ${statusDotClasses(session.status)}`}
             />
             {session.statusLabel}
-          </Badge>
+          </span>
         </div>
       </div>
       {/* Title rides on the cover art in both states; fixed offset keeps it over
@@ -156,9 +152,12 @@ export function TestingEventCard({
         <h3 className="text-lg font-semibold leading-snug text-white drop-shadow-lg">
           {session.title}
         </h3>
-        <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-white/85 drop-shadow-md">
-          Playtest · creators & testers
-        </p>
+        {session.location !== "Online" ? (
+          <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-white/85 drop-shadow-md">
+            <MapPin className="size-3.5 shrink-0" aria-hidden="true" />
+            {session.location}
+          </p>
+        ) : null}
       </div>
       {/* Card-colored scrim keeps overlaid text readable once the art fills the card. */}
       <div
@@ -184,14 +183,6 @@ export function TestingEventCard({
             )}
           </MetaChip>
         </div>
-        {/* Online events already show their mode in the cover badge; only real
-            venues (or a pending location) add information here. */}
-        {session.location !== "Online" ? (
-          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <MapPin className="size-3.5 shrink-0" aria-hidden="true" />
-            {session.location}
-          </p>
-        ) : null}
         {almostFull && session.status === "open" ? (
           <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive">
             Only {session.availableTesterCount} tester{" "}
