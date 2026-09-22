@@ -407,7 +407,16 @@ function EventIdentityFields({
               aria-label="Event calendar"
               className="h-10 w-full"
             >
-              <SelectValue />
+              <SelectValue>
+                {(value: string | null) => {
+                  const selected = availableTemplates.find(
+                    (template) => template.currentRevision?.id === value,
+                  );
+                  return selected
+                    ? selected.name?.trim() || "Untitled calendar"
+                    : "Choose a calendar";
+                }}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {availableTemplates.map((template) => (

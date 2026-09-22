@@ -145,13 +145,11 @@ export function WorkspaceCommandPalette({
   React.useEffect(() => {
     if (!pathname || pathname === '/sign-in') return;
 
-    setRecentRoutes(
-      addRecentRoute({
-        href: pathname,
-        label: getRouteLabel(pathname, navigationItems),
-        visitedAt: Date.now(),
-      }),
-    );
+    addRecentRoute({
+      href: pathname,
+      label: getRouteLabel(pathname, navigationItems),
+      visitedAt: Date.now(),
+    });
   }, [navigationItems, pathname]);
 
   React.useEffect(() => {

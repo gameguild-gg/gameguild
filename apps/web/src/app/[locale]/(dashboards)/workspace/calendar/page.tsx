@@ -5,7 +5,6 @@ import {
   getTestingLabSettings,
 } from "@/lib/testing-lab";
 import {
-  getTestingApplicationsDirectory,
   getTestingEventTemplates,
   getTestingEventsDirectory,
 } from "@/lib/testing-lab/events-queries";

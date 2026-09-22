@@ -59,7 +59,7 @@ vi.mock("@/lib/learning/actions", () => ({
 vi.mock("@game-guild/ui/components/tooltip", () => ({
   TooltipProvider: ({ children }: { children: ReactNode }) => <>{children}</>,
   Tooltip: ({ children }: { children: ReactNode }) => <>{children}</>,
-  TooltipTrigger: ({ children }: { children: ReactNode; asChild?: boolean }) => <>{children}</>,
+  TooltipTrigger: ({ children, render: trigger }: { children: ReactNode; render?: ReactNode }) => <>{trigger ?? children}</>,
   TooltipContent: () => null,
 }));
 
