@@ -1113,6 +1113,9 @@ importers:
       '@lexical/code':
         specifier: ^0.51.0
         version: 0.51.0(typescript@6.0.3)
+      '@lexical/code-prism':
+        specifier: ^0.51.0
+        version: 0.51.0(typescript@6.0.3)
       '@lexical/link':
         specifier: ^0.51.0
         version: 0.51.0(typescript@6.0.3)
@@ -4738,6 +4741,14 @@ packages:
 
   '@lexical/code-core@0.51.0':
     resolution: {integrity: sha512-D35OqZF2cY78jSRNu/v/IjyEP8qY6dOfjKUBZISJcLkJBHnJAxiWMF1+J2I3dTuu8OvKRib2+uNgzEg/VuTOsQ==}
+    peerDependencies:
+      typescript: '>=5.2'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
+  '@lexical/code-prism@0.51.0':
+    resolution: {integrity: sha512-iw2AkQefB7JP9E5TKHCBx2ew/u1uFGP9WNJRIYmErS2R0thhuPFrjDJ+cGkp9s1Wk8Zo0fi5BWJ2xbYXe/WjqQ==}
     peerDependencies:
       typescript: '>=5.2'
     peerDependenciesMeta:
@@ -17705,6 +17716,15 @@ snapshots:
       '@lexical/internal': 0.51.0(typescript@6.0.3)
       '@lexical/utils': 0.51.0(typescript@6.0.3)
       lexical: 0.51.0(typescript@6.0.3)
+    optionalDependencies:
+      typescript: 6.0.3
+
+  '@lexical/code-prism@0.51.0(typescript@6.0.3)':
+    dependencies:
+      '@lexical/code-core': 0.51.0(typescript@6.0.3)
+      '@lexical/extension': 0.51.0(typescript@6.0.3)
+      lexical: 0.51.0(typescript@6.0.3)
+      prismjs: 1.30.0
     optionalDependencies:
       typescript: 6.0.3
 

@@ -19,6 +19,7 @@
     "@game-guild/ui": "workspace:^",
     "@lexical/clipboard": "^0.51.0",
     "@lexical/code": "^0.51.0",
+    "@lexical/code-prism": "^0.51.0",
     "@lexical/link": "^0.51.0",
     "@lexical/list": "^0.51.0",
     "@lexical/react": "^0.51.0",

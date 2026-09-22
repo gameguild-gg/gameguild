@@ -4,7 +4,7 @@
  *
  * - Tailwind classes throughout (no playground CSS imports).
  * - Icons via `lucide-react` (mapped in `../icons`).
- * - Removed code-prism / code-shiki language & theme dropdowns.
+ * - Uses Prism for code languages without the playground's theme dropdown.
  * - The Insert dropdown is filtered by the surface feature flags.
  * - Shared formatting controls are owned by `editor-ui/formatting` so this
  *   module only coordinates top-toolbar state and layout.
@@ -14,12 +14,12 @@
 
 import * as React from "react";
 import { Dispatch, useCallback, useEffect, useState } from "react";
+import { $isCodeNode } from "@lexical/code";
 import {
-  $isCodeNode,
   CODE_LANGUAGE_FRIENDLY_NAME_MAP,
   getCodeLanguageOptions,
   getLanguageFriendlyName,
-} from "@lexical/code";
+} from "@lexical/code-prism";
 import { $isLinkNode, TOGGLE_LINK_COMMAND } from "@lexical/link";
 import { $isListNode, ListNode } from "@lexical/list";
 import { $isHeadingNode } from "@lexical/rich-text";
