@@ -265,7 +265,7 @@ export function PostEngagement({
             <button
               type="button"
               aria-label="Choose reaction"
-              className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent"
+              className="-ml-1.5 flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent"
             />
           }
         >

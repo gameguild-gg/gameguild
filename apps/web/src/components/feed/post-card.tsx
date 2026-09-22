@@ -116,10 +116,10 @@ function TestingEventEmbed({
   const available = availableTesterCount ?? hydrated?.availableTesterCount ?? null;
   const showCapacity = registered != null || hydrated != null;
   return (
-    <div className="overflow-hidden rounded-2xl border border-border">
+    <div className="overflow-hidden rounded-xl border border-border bg-card">
       {/* Even pixel heights (the 21:9 ratio produced odd values like 749x321). */}
       <div className="relative h-[336px] w-full max-md:h-[152px]">
-        <EventCoverArt seed={href} />
+        <EventCoverArt seed={eventId} />
       </div>
       <div className="flex flex-col gap-2 px-4 pb-4 pt-3 sm:px-5">
         {/* Schedule on the left, capacity on the right. */}
@@ -153,12 +153,11 @@ function TestingEventEmbed({
           </p>
         ) : null}
       </div>
-      <div className="border-t border-border p-4 sm:px-5">
+      <div className="flex justify-end border-t border-border p-3 sm:px-4">
         <Link
           href={href}
-          className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-semibold text-primary-foreground transition hover:bg-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+          className="inline-flex h-8 items-center rounded-md border border-border px-4 text-sm font-medium text-primary transition hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
         >
-          <Users className="size-5" aria-hidden="true" />
           Join
         </Link>
       </div>
