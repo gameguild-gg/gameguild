@@ -17,20 +17,30 @@ import {
 import {
   Bookmark,
   ChevronDown,
+  CircleHelp,
   Heart,
+  HeartHandshake,
+  Lightbulb,
   MessageCircle,
+  PartyPopper,
   Share2,
+  ThumbsUp,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
 
-const REACTIONS: Array<{ value: SocialReaction; label: string; symbol: string }> = [
-  { value: "Like", label: "Like", symbol: "👍" },
-  { value: "Love", label: "Love", symbol: "❤️" },
-  { value: "Insightful", label: "Insightful", symbol: "💡" },
-  { value: "Celebrate", label: "Celebrate", symbol: "🎉" },
-  { value: "Support", label: "Support", symbol: "🙌" },
-  { value: "Curious", label: "Curious", symbol: "🤔" },
+const REACTIONS: Array<{
+  value: SocialReaction;
+  label: string;
+  icon: LucideIcon;
+}> = [
+  { value: "Like", label: "Like", icon: ThumbsUp },
+  { value: "Love", label: "Love", icon: Heart },
+  { value: "Insightful", label: "Insightful", icon: Lightbulb },
+  { value: "Celebrate", label: "Celebrate", icon: PartyPopper },
+  { value: "Support", label: "Support", icon: HeartHandshake },
+  { value: "Curious", label: "Curious", icon: CircleHelp },
 ];
 
 function errorMessage(error: unknown, fallback: string) {
@@ -239,7 +249,14 @@ export function PostEngagement({
         aria-pressed={Boolean(reaction)}
         className={`inline-flex min-h-9 items-center gap-2 rounded-lg px-2 text-sm transition hover:bg-accent disabled:opacity-60 ${reaction ? "text-destructive" : "text-muted-foreground hover:text-foreground"}`}
       >
-        {selectedReaction ? <span aria-hidden="true">{selectedReaction.symbol}</span> : <Heart className="size-[19px]" />}
+        {selectedReaction ? (
+          <selectedReaction.icon
+            className={`size-[19px] ${selectedReaction.value === "Love" ? "fill-current" : ""}`}
+            aria-hidden="true"
+          />
+        ) : (
+          <Heart className="size-[19px]" aria-hidden="true" />
+        )}
         {reactionCount > 0 ? reactionCount : null}
       </button>
       <DropdownMenu>
@@ -254,16 +271,16 @@ export function PostEngagement({
         >
           <ChevronDown className="size-3.5" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="flex min-w-0 gap-1 p-2">
+        <DropdownMenuContent align="start" className="flex min-w-0 gap-1 p-1.5">
           {REACTIONS.map((entry) => (
             <DropdownMenuItem
               key={entry.value}
               onClick={() => void react(entry.value)}
               disabled={reactionPending || reactionHydrationPending}
-              className="flex size-10 justify-center p-0 text-lg"
+              className="flex size-8 justify-center p-0"
               aria-label={entry.label}
             >
-              {entry.symbol}
+              <entry.icon className="size-4" aria-hidden="true" />
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
