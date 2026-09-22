@@ -116,6 +116,19 @@ export async function getPublicTestingEventsDirectory(
   };
 }
 
+export async function getPublicTestingEvent(
+  eventId: string,
+): Promise<TestingLabPublicTestingEventProjection | null> {
+  const api = createPublicModules();
+  const result = await read(
+    api.events.getTestingEventsPublicForGetTestingEventsPublicByEventId(
+      eventId,
+    ),
+    "Public event",
+  );
+  return result.data ?? null;
+}
+
 export async function getPublicTestingEventExperience(
   eventId: string,
 ): Promise<PublicTestingEventExperience> {
