@@ -143,3 +143,6 @@ infra/
 
 # Playwright MCP test artifacts
 .playwright-mcp/
+
+# Local AI tooling state and generated logs
+.mimosa/
