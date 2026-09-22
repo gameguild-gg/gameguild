@@ -71,10 +71,10 @@ export function SignInForm({
       <Card className="border-white/10 bg-slate-900/85 text-white shadow-2xl shadow-sky-950/30 backdrop-blur">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">
-            <h1>Welcome back to GameGuild</h1>
+            <h1>Welcome back</h1>
           </CardTitle>
           <CardDescription className="text-slate-300">
-            Sign in to continue learning, testing projects, and collaborating with the community.
+            Sign in to continue.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -83,7 +83,7 @@ export function SignInForm({
               <div className="mb-6">{providers}</div>
               <div className="flex w-full items-center gap-3 text-xs text-slate-400">
                 <div className="h-px flex-1 bg-white/10" />
-                <span>or with email</span>
+                <span>or sign in with email</span>
                 <div className="h-px flex-1 bg-white/10" />
               </div>
             </>
@@ -101,11 +101,11 @@ export function SignInForm({
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="name@example.com"
                   autoComplete="email"
                   required
                   disabled={isLoading}
-                  className="border-white/10 bg-white/5 text-white placeholder:text-slate-500"
+                  className="h-10 border-white/10 bg-white/5 text-white placeholder:text-slate-500"
                   aria-invalid={!!fieldErrors.email}
                   onChange={() =>
                     fieldErrors.email &&
@@ -117,23 +117,14 @@ export function SignInForm({
                 )}
               </Field>
               <Field>
-                <div className="flex items-center">
-                  <FieldLabel htmlFor="password">Password</FieldLabel>
-                  <Link
-                    href="/forgot-password"
-                    className="ml-auto text-sm text-sky-200 underline-offset-4 hover:underline"
-                    tabIndex={-1}
-                  >
-                    Forgot your password?
-                  </Link>
-                </div>
+                <FieldLabel htmlFor="password">Password</FieldLabel>
                 <PasswordInput
                   id="password"
                   name="password"
                   autoComplete="current-password"
                   required
                   disabled={isLoading}
-                  className="border-white/10 bg-white/5 text-white"
+                  className="h-10 border-white/10 bg-white/5 text-white"
                   aria-invalid={!!fieldErrors.password}
                   onChange={() =>
                     fieldErrors.password &&
@@ -143,12 +134,19 @@ export function SignInForm({
                 {fieldErrors.password && (
                   <FieldError>{fieldErrors.password}</FieldError>
                 )}
+                <Link
+                  href="/forgot-password"
+                  className="ml-auto w-fit text-sm text-sky-200 underline-offset-4 hover:underline"
+                  tabIndex={-1}
+                >
+                  Forgot your password?
+                </Link>
               </Field>
               {error && (
                 <FieldError>{error.message}</FieldError>
               )}
               <Field>
-                <Button type="submit" disabled={isLoading || !isHydrated}>
+                <Button type="submit" size="lg" disabled={isLoading || !isHydrated}>
                   {isLoading ? "Signing in..." : "Sign in"}
                 </Button>
                 <FieldDescription className="text-center text-slate-300">
@@ -165,11 +163,6 @@ export function SignInForm({
           </form>
         </CardContent>
       </Card>
-      <FieldDescription className="px-6 text-center text-slate-400">
-        By clicking continue, you agree to our{" "}
-        <Link href="/legal/terms-of-service" className="text-sky-200 underline-offset-4 hover:underline">Terms of Service</Link> and{" "}
-        <Link href="/legal/privacy" className="text-sky-200 underline-offset-4 hover:underline">Privacy Policy</Link>.
-      </FieldDescription>
     </div>
   )
 }

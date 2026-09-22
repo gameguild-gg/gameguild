@@ -93,7 +93,7 @@ export function ForgotPasswordForm({ className, initialEmail = '', onRequestRese
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="name@example.com"
                   autoComplete="email"
                   required
                   disabled={isLoading}

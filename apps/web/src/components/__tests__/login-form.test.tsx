@@ -49,7 +49,7 @@ describe('SignInForm', () => {
   it('renders the login form with all required elements', () => {
     renderWithUser(<SignInForm />);
 
-    expect(screen.getByText('Welcome back to GameGuild')).toBeInTheDocument();
+    expect(screen.getByText('Welcome back')).toBeInTheDocument();
     expect(screen.getByLabelText('Email')).toBeInTheDocument();
     expect(screen.getByLabelText('Password')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /sign in$/i })).toBeInTheDocument();
@@ -62,8 +62,7 @@ describe('SignInForm', () => {
 
     expect(screen.getByText('Sign up')).toHaveAttribute('href', '/sign-up?redirectTo=%2F');
     expect(screen.getByText('Forgot your password?')).toHaveAttribute('href', '/forgot-password');
-    expect(screen.getByText('Terms of Service')).toHaveAttribute('href', '/legal/terms-of-service');
-    expect(screen.getByText('Privacy Policy')).toHaveAttribute('href', '/legal/privacy');
+    // Terms of Service / Privacy Policy moved to the shared (auth) layout footer.
   });
 
   /* ---------- Client-side validation ---------- */

@@ -104,7 +104,7 @@ export function SignupForm({
               <div className="mb-6">{providers}</div>
               <div className="flex w-full items-center gap-3 text-xs text-slate-400">
                 <div className="h-px flex-1 bg-white/10" />
-                <span>or with email</span>
+                <span>or sign up with email</span>
                 <div className="h-px flex-1 bg-white/10" />
               </div>
             </>
@@ -135,7 +135,7 @@ export function SignupForm({
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="name@example.com"
                   autoComplete="email"
                   required
                   disabled={isLoading}
@@ -208,11 +208,6 @@ export function SignupForm({
           </form>
         </CardContent>
       </Card>
-      <FieldDescription className="px-6 text-center text-slate-400">
-        By clicking continue, you agree to our{" "}
-        <Link href="/legal/terms-of-service" locale={locale} className="text-sky-200 underline-offset-4 hover:underline">Terms of Service</Link> and{" "}
-        <Link href="/legal/privacy" locale={locale} className="text-sky-200 underline-offset-4 hover:underline">Privacy Policy</Link>.
-      </FieldDescription>
     </div>
   )
 }

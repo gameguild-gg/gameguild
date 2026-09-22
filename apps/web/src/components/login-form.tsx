@@ -88,7 +88,7 @@ export function SignInForm({ className, ...props }: React.ComponentProps<'div'>)
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="name@example.com"
                   autoComplete="email"
                   required
                   disabled={isLoading}
@@ -129,9 +129,6 @@ export function SignInForm({ className, ...props }: React.ComponentProps<'div'>)
           </form>
         </CardContent>
       </Card>
-      <FieldDescription className="px-6 text-center">
-        By clicking continue, you agree to our <Link href="/terms-of-service">Terms of Service</Link> and <Link href="/polices/privacy">Privacy Policy</Link>.
-      </FieldDescription>
     </div>
   );
 }

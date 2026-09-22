@@ -52,7 +52,7 @@ describe('SignInForm', () => {
   it('renders the login form with all required elements', () => {
     renderWithUser(<SignInForm />);
 
-    expect(screen.getByText('Welcome back to GameGuild')).toBeInTheDocument();
+    expect(screen.getByText('Welcome back')).toBeInTheDocument();
     expect(screen.getByLabelText('Email')).toBeInTheDocument();
     expect(screen.getByLabelText('Password')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /sign in$/i })).toBeInTheDocument();
@@ -68,8 +68,7 @@ describe('SignInForm', () => {
       'href',
       '/forgot-password'
     );
-    expect(screen.getByText('Terms of Service')).toHaveAttribute('href', '/legal/terms-of-service');
-    expect(screen.getByText('Privacy Policy')).toHaveAttribute('href', '/legal/privacy');
+    // Terms of Service / Privacy Policy moved to the shared (auth) layout footer.
   });
 
   /* ---------- Client-side validation ---------- */
@@ -221,19 +220,19 @@ describe('SignInForm', () => {
   it('does not render divider when no providers passed', () => {
     renderWithUser(<SignInForm />);
 
-    expect(screen.queryByText('or with email')).not.toBeInTheDocument();
+    expect(screen.queryByText('or sign in with email')).not.toBeInTheDocument();
   });
 
   it('renders divider with providers passed', () => {
     renderWithUser(<SignInForm providers={<span>GOOGLE</span>} />);
 
-    expect(screen.getByText('or with email')).toBeInTheDocument();
+    expect(screen.getByText('or sign in with email')).toBeInTheDocument();
   });
 
   it('existing rendering assertions still pass with providers slot', () => {
     renderWithUser(<SignInForm providers={<span>GOOGLE</span>} />);
 
-    expect(screen.getByText('Welcome back to GameGuild')).toBeInTheDocument();
+    expect(screen.getByText('Welcome back')).toBeInTheDocument();
     expect(screen.getByLabelText('Email')).toBeInTheDocument();
     expect(screen.getByLabelText('Password')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /sign in$/i })).toBeInTheDocument();
@@ -301,8 +300,8 @@ describe('SignInForm providers slot composition', () => {
     expect(cardRoot).not.toBeNull();
     expect(cardRoot).toBe(emailCard);
 
-    // (c) "or with email" divider present exactly once.
-    expect(screen.getByText('or with email')).toBeInTheDocument();
-    expect(screen.getAllByText('or with email')).toHaveLength(1);
+    // (c) "or sign in with email" divider present exactly once.
+    expect(screen.getByText('or sign in with email')).toBeInTheDocument();
+    expect(screen.getAllByText('or sign in with email')).toHaveLength(1);
   });
 });

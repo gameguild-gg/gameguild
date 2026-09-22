@@ -67,8 +67,7 @@ describe('SignupForm', () => {
     renderWithUser(<SignupForm />);
 
     expect(screen.getByText('Sign in')).toHaveAttribute('href', '/en-US/sign-in?redirectTo=%2F');
-    expect(screen.getByText('Terms of Service')).toHaveAttribute('href', '/en-US/legal/terms-of-service');
-    expect(screen.getByText('Privacy Policy')).toHaveAttribute('href', '/en-US/legal/privacy');
+    // Terms of Service / Privacy Policy moved to the shared (auth) layout footer.
   });
 
   /* ---------- Client-side validation ---------- */

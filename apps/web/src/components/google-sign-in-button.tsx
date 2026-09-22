@@ -57,11 +57,9 @@ export function GoogleSignInButton({
   }, [status, renderButton, options])
 
   if (status === "error") {
-    return (
-      <div role="alert" className={className}>
-        Google sign-in is unavailable.
-      </div>
-    )
+    // A missing/unloaded Google provider renders nothing — the other
+    // sign-in methods (Discord, email) carry the card.
+    return null
   }
 
   return (
