@@ -3,9 +3,13 @@
 import { Link } from "@/i18n/navigation";
 import { hydrateSocialPost, recordPostView } from "@/lib/feed/actions";
 import type { SocialFeedItem } from "@/lib/feed/contracts";
+import {
+  hydratePublicTestingEvent,
+  type TestingEventHydration,
+} from "@/lib/testing-lab/public-event-hydration";
 import { formatSocialDate, formatSocialDateTime } from "@/lib/feed/format";
-import { Button } from "@game-guild/ui/components/button";
-import { CalendarDays, CheckCircle2, Clock3, Users } from "lucide-react";
+import { EventCoverArt } from "@/components/testing-lab/landing/event-cover-art";
+import { CalendarDays, CheckCircle2, Users } from "lucide-react";
 import Image from "next/image";
 import * as React from "react";
 import { PostComments } from "./post-comments";
@@ -54,22 +58,157 @@ function Avatar({ name, id, url }: { name: string; id: string; url: string | nul
   );
 }
 
-function TestingSessionCard({ item }: { item: SocialFeedItem }) {
+/** Matches auto-published testing event announcements ("🧪 New testing event: …"). */
+const TESTING_EVENT_ANNOUNCEMENT =
+  /🧪 New testing event:\s*(.+?)\s*Event starts\s*([^.]*)\.\s*Details:\s*(\/testing-lab\/events\/[a-z0-9-]+)/iu;
+
+function parseTestingEventAnnouncement(content: string) {
+  const match = content.match(TESTING_EVENT_ANNOUNCEMENT);
+  if (!match) return null;
+  return { name: match[1]!.trim(), startsLabel: match[2]!.trim(), href: match[3]! };
+}
+
+/**
+ * The single feed pattern for testing events: artwork hero, then a footer with
+ * schedule and capacity, the event name, description, and a Join row.
+ * Session items pass their structured data; announcement posts hydrate it from
+ * the public events API.
+ */
+function TestingEventEmbed({
+  href,
+  name,
+  startsAt: startsAtProp,
+  startsLabel,
+  registeredTesterCount,
+  maxTesters,
+  availableTesterCount,
+}: {
+  href: string;
+  name: string;
+  startsAt?: string;
+  startsLabel?: string;
+  registeredTesterCount?: number;
+  maxTesters?: number | null;
+  availableTesterCount?: number | null;
+}) {
+  const eventId = href.split("/").at(-1) ?? "";
+  const [hydrated, setHydrated] = React.useState<TestingEventHydration | null>(
+    null,
+  );
+
+  React.useEffect(() => {
+    let cancelled = false;
+    Promise.resolve(hydratePublicTestingEvent(eventId))
+      .then((data) => {
+        if (!cancelled && data) setHydrated(data);
+      })
+      .catch(() => {
+        // Hydration is optional; the embed keeps its parsed fallback.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [eventId]);
+
+  const startsAt = startsAtProp ?? hydrated?.startsAt ?? null;
+  const registered = registeredTesterCount ?? hydrated?.registeredTesterCount ?? null;
+  const max = maxTesters ?? hydrated?.maxTesters ?? null;
+  const available = availableTesterCount ?? hydrated?.availableTesterCount ?? null;
+  const showCapacity = registered != null || hydrated != null;
+  return (
+    <div className="overflow-hidden rounded-2xl border border-border">
+      {/* Even pixel heights (the 21:9 ratio produced odd values like 749x321). */}
+      <div className="relative h-[336px] w-full max-md:h-[152px]">
+        <EventCoverArt seed={href} />
+      </div>
+      <div className="flex flex-col gap-2 px-4 pb-4 pt-3 sm:px-5">
+        {/* Schedule on the left, capacity on the right. */}
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-sm text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5">
+            <CalendarDays className="size-4 shrink-0" aria-hidden="true" />
+            {startsAt
+              ? formatSocialDateTime(startsAt)
+              : startsLabel || "Schedule pending"}
+          </span>
+          {showCapacity ? (
+            <span className="inline-flex items-center gap-3">
+              <span className="inline-flex items-center gap-1.5">
+                <Users className="size-4 shrink-0" aria-hidden="true" />
+                {registered ?? 0}/{max ?? "Unlimited"} testers signed in
+              </span>
+              {available != null && available > 0 ? (
+                <span className="font-medium text-primary">
+                  {available} spots left
+                </span>
+              ) : null}
+            </span>
+          ) : null}
+        </div>
+        <h3 className="truncate text-lg font-bold leading-snug text-foreground sm:text-xl">
+          {hydrated?.name ?? name}
+        </h3>
+        {hydrated?.description ? (
+          <p className="line-clamp-2 text-sm leading-6 text-muted-foreground">
+            {hydrated.description}
+          </p>
+        ) : null}
+      </div>
+      <div className="border-t border-border p-4 sm:px-5">
+        <Link
+          href={href}
+          className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-semibold text-primary-foreground transition hover:bg-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+        >
+          <Users className="size-5" aria-hidden="true" />
+          Join
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function TestingSessionCard({
+  item,
+  currentUserId,
+}: {
+  item: SocialFeedItem;
+  currentUserId?: string | null;
+}) {
   const session = item.testingSession;
   if (!session) return null;
   return (
-    <article data-testid="post-card" className="bg-card px-4 py-5 text-card-foreground sm:px-6">
-      <div className="flex items-start gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary"><CalendarDays className="size-5" aria-hidden="true" /></span>
+    <article data-testid="post-card" className="py-2 text-card-foreground">
+      <header className="flex items-center gap-3 px-4 py-4 pb-2 sm:px-6">
+        <Link href={`/social/profiles/${item.author.handle || item.author.userId}`} className="rounded-full bg-gradient-to-br from-primary via-highlight to-success p-[2px]">
+          <span className="block rounded-full border-2 border-background">
+            <Avatar name={item.author.displayName} id={item.author.userId} url={item.author.avatarUrl} />
+          </span>
+        </Link>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold uppercase tracking-wide text-primary">Testing Lab</p>
-          <h2 className="mt-1 text-base font-semibold text-foreground">{session.name}</h2>
-          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
-            <span className="inline-flex items-center gap-1.5"><Clock3 className="size-4" aria-hidden="true" />{formatSocialDateTime(new Date(session.startsAt))}</span>
-            <span className="inline-flex items-center gap-1.5"><Users className="size-4" aria-hidden="true" />{session.availableTesterCount} spots available</span>
-          </div>
+          <p className="flex items-center gap-1.5 text-sm">
+            <span className="truncate font-semibold text-foreground">{item.author.displayName}</span>
+            {item.author.isVerified ? <CheckCircle2 className="size-3.5 shrink-0 text-primary" aria-label="Verified" /> : null}
+            <span className="hidden truncate text-muted-foreground sm:inline">@{item.author.handle}</span>
+          </p>
+          <p suppressHydrationWarning className="text-xs text-muted-foreground">
+            {timeAgo(item.createdAt)} · Testing Lab event
+          </p>
         </div>
-        <Button nativeButton={false} size="sm" render={<Link href={`/testing-lab/events/${item.id}`} />}>View session</Button>
+        <PostAuthorFollow
+          authorId={item.author.userId}
+          authorName={item.author.displayName}
+          currentUserId={currentUserId}
+          initialFollowing={item.viewer.isFollowingAuthor}
+        />
+      </header>
+      <div className="px-4 pt-0 sm:px-6">
+        <TestingEventEmbed
+          href={`/testing-lab/events/${item.id}`}
+          name={session.name}
+          startsAt={session.startsAt}
+          registeredTesterCount={session.registeredTesterCount}
+          maxTesters={session.maxTesters}
+          availableTesterCount={session.availableTesterCount}
+        />
       </div>
     </article>
   );
@@ -112,12 +251,23 @@ export function PostCard({ item, currentUserId }: { item: SocialFeedItem; curren
     return () => observer.disconnect();
   }, [item.id, item.kind]);
 
-  if (item.kind === "TestingSession") return <TestingSessionCard item={item} />;
+  if (item.kind === "TestingSession") return <TestingSessionCard item={item} currentUserId={currentUserId} />;
   const post = item.post;
   if (!post || deleted) return <></>;
+  const announcement = parseTestingEventAnnouncement(content);
 
   return (
-    <article ref={articleRef} data-testid="post-card" className="bg-card py-2 text-card-foreground">
+    <article
+      ref={articleRef}
+      data-testid="post-card"
+      // Announcement posts let the event embed carry the visual weight; the
+      // card slab background and divider are reserved for regular posts.
+      className={
+        announcement
+          ? "py-2 text-card-foreground"
+          : "border-b border-border/35 bg-card py-2 text-card-foreground"
+      }
+    >
       <header className="flex items-center gap-3 px-4 py-4 sm:px-6">
         <Link href={`/social/profiles/${item.author.handle || item.author.userId}`} className="rounded-full bg-gradient-to-br from-primary via-highlight to-success p-[2px]">
           <span className="block rounded-full border-2 border-background"><Avatar name={item.author.displayName} id={item.author.userId} url={item.author.avatarUrl} /></span>
@@ -144,8 +294,8 @@ export function PostCard({ item, currentUserId }: { item: SocialFeedItem; curren
         )
       ) : null}
 
-      <div className="px-4 pt-4 sm:px-6">
-        <Caption text={content} />
+      <div className={announcement ? "px-4 pt-0 sm:px-6" : "px-4 pt-4 sm:px-6"}>
+        {announcement ? null : <Caption text={content} />}
         {post.repostedPost ? (
           <div className="mt-3 rounded-xl bg-accent/40 p-3">
             <p className="text-xs font-semibold text-foreground">{post.repostedPost.author.displayName} <span className="font-normal text-muted-foreground">@{post.repostedPost.author.handle}</span></p>
@@ -154,6 +304,13 @@ export function PostCard({ item, currentUserId }: { item: SocialFeedItem; curren
         ) : null}
         {item.tags.length > 0 ? (
           <div className="mt-3 flex flex-wrap gap-2">{item.tags.map((tag) => <Link key={tag} href={`/?tag=${encodeURIComponent(tag)}`} className="text-xs font-medium text-primary">#{tag}</Link>)}</div>
+        ) : null}
+        {announcement ? (
+          <TestingEventEmbed
+            href={announcement.href}
+            name={announcement.name}
+            startsLabel={announcement.startsLabel}
+          />
         ) : null}
         <PostEngagement
           postId={item.id}

@@ -21,6 +21,9 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/feed/actions", () => mocks);
+vi.mock("@/lib/testing-lab/public-event-hydration", () => ({
+  hydratePublicTestingEvent: vi.fn(),
+}));
 vi.mock("next/image", () => ({
   default: ({ alt = "", ...props }: Record<string, unknown>) =>
     createElement("img", { ...props, alt: typeof alt === "string" ? alt : "" }),
@@ -28,6 +31,7 @@ vi.mock("next/image", () => ({
 vi.mock("@/i18n/navigation", () => ({ Link: ({ children, ...props }: React.ComponentProps<"a">) => <a {...props}>{children}</a> }));
 
 import { PostCard } from "./post-card";
+import { hydratePublicTestingEvent } from "@/lib/testing-lab/public-event-hydration";
 import type { SocialFeedItem } from "@/lib/feed/contracts";
 
 const item: SocialFeedItem = {
@@ -45,6 +49,7 @@ const item: SocialFeedItem = {
 describe("PostCard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(hydratePublicTestingEvent).mockResolvedValue(null);
     mocks.setPostReaction.mockResolvedValue({ kind: "confirmed", reaction: "Like", reactionsCount: 3 });
     mocks.savePost.mockResolvedValue({ postId: "post-1", isSaved: true });
     mocks.repostPost.mockResolvedValue({ id: "repost-1" });
@@ -145,5 +150,66 @@ describe("PostCard", () => {
     expect(mocks.repostPost).toHaveBeenCalledTimes(1);
     release({ id: "repost-1" });
     await waitFor(() => expect(screen.getByRole("button", { name: "Reposted" })).toHaveAttribute("aria-pressed", "true"));
+  });
+
+  it("renders testing session posts as event cards with dual sign-up paths", () => {
+    render(
+      <PostCard
+        item={{
+          ...item,
+          id: "session-9",
+          kind: "TestingSession",
+          post: null,
+          testingSession: {
+            name: "Autumn cozy playtest",
+            startsAt: "2026-09-25T18:00:00Z",
+            endsAt: "2026-09-25T20:00:00Z",
+            mode: "Online",
+            status: "ApplicationsOpen",
+            maxTesters: 20,
+            registeredTesterCount: 8,
+            availableTesterCount: 12,
+          },
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Autumn cozy playtest")).toBeInTheDocument();
+    expect(screen.getByText("12 spots left")).toBeInTheDocument();
+    expect(screen.getByText("8/20 testers signed in")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Join" })).toHaveAttribute("href", "/testing-lab/events/session-9");
+    expect(screen.queryByRole("link", { name: "Sign in your product" })).not.toBeInTheDocument();
+  });
+
+  it("appends the designed event card to testing event announcements", async () => {
+    vi.mocked(hydratePublicTestingEvent).mockResolvedValue({
+      name: "Teste!",
+      description: "Final gate playtest for the autumn jam.",
+      startsAt: "2026-09-18T21:00:00.000Z",
+      endsAt: "2026-09-18T23:00:00.000Z",
+      mode: "Online",
+      status: "ApplicationsOpen",
+      registeredTesterCount: 0,
+      maxTesters: 8,
+      availableTesterCount: 8,
+    });
+    const announcement =
+      "🧪 New testing event: Teste! Event starts Sep 18, 21:00 UTC. Details: /testing-lab/events/e112d20d-43d6-4016-bbac-5626f209053d";
+    render(<PostCard item={{ ...item, content: announcement, post: { ...item.post!, content: announcement } }} />);
+
+    expect(screen.getByText("Teste!")).toBeInTheDocument();
+    expect(screen.queryByText(announcement)).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByText("Final gate playtest for the autumn jam.")).toBeInTheDocument(),
+    );
+    expect(screen.getByText("Sep 18, 2026, 9:00 PM UTC")).toBeInTheDocument();
+    expect(screen.getByText("0/8 testers signed in")).toBeInTheDocument();
+    expect(screen.getByText("8 spots left")).toBeInTheDocument();
+    expect(screen.queryByText("#playtest")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Join" })).toHaveAttribute(
+      "href",
+      "/testing-lab/events/e112d20d-43d6-4016-bbac-5626f209053d",
+    );
+    expect(screen.queryByRole("link", { name: "Sign in product" })).not.toBeInTheDocument();
   });
 });

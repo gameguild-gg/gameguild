@@ -142,7 +142,7 @@ export function InfinitePostFeed({
   const empty = EMPTY[scope];
   const EmptyIcon = empty.icon;
   return (
-    <div className="divide-y divide-border/35">
+    <div>
       {items.map((item) => (
         <PostCard
           key={`${item.kind}-${item.id}`}
