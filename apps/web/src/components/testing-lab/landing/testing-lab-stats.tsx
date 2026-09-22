@@ -14,59 +14,49 @@ export function TestingLabStats({
   upcomingEvents,
   openTesterSeats,
 }: TestingLabStatsProps) {
+  const stats = [
+    {
+      label: "Total Events",
+      value: totalEvents,
+      hint: "Public in the directory",
+      icon: TestTube,
+    },
+    {
+      label: "Open Now",
+      value: openEvents,
+      hint: "Ready to join",
+      icon: Users,
+    },
+    {
+      label: "Upcoming",
+      value: upcomingEvents,
+      hint: "With a published schedule",
+      icon: Calendar,
+    },
+    {
+      label: "Tester Seats",
+      value: openTesterSeats,
+      hint: "Open across schedules",
+      icon: ClipboardCheck,
+    },
+  ] as const;
+
   return (
     <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-      <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm gap-2 py-4">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0">
-          <CardTitle className="text-sm font-medium text-slate-200">
-            Total Events
-          </CardTitle>
-          <TestTube className="h-6 w-6 text-blue-400" />
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="text-4xl font-bold text-white">{totalEvents}</div>
-          <p className="text-xs text-slate-400">Public in the directory</p>
-        </CardContent>
-      </Card>
-
-      <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm gap-2 py-4">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0">
-          <CardTitle className="text-sm font-medium text-slate-200">
-            Open Now
-          </CardTitle>
-          <Users className="h-6 w-6 text-green-400" />
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="text-4xl font-bold text-white">{openEvents}</div>
-          <p className="text-xs text-slate-400">Ready to join</p>
-        </CardContent>
-      </Card>
-
-      <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm gap-2 py-4">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0">
-          <CardTitle className="text-sm font-medium text-slate-200">
-            Upcoming
-          </CardTitle>
-          <Calendar className="h-6 w-6 text-purple-400" />
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="text-4xl font-bold text-white">{upcomingEvents}</div>
-          <p className="text-xs text-slate-400">With a published schedule</p>
-        </CardContent>
-      </Card>
-
-      <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm gap-2 py-4">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0">
-          <CardTitle className="text-sm font-medium text-slate-200">
-            Tester Seats
-          </CardTitle>
-          <ClipboardCheck className="h-6 w-6 text-orange-400" />
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="text-4xl font-bold text-white">{openTesterSeats}</div>
-          <p className="text-xs text-slate-400">Open across schedules</p>
-        </CardContent>
-      </Card>
+      {stats.map(({ label, value, hint, icon: Icon }) => (
+        <Card key={label} className="gap-2 py-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-0">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {label}
+            </CardTitle>
+            <Icon className="size-6 text-muted-foreground" />
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="text-4xl font-bold">{value}</div>
+            <p className="text-xs text-muted-foreground">{hint}</p>
+          </CardContent>
+        </Card>
+      ))}
     </section>
   );
 }

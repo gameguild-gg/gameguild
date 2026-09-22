@@ -21,33 +21,31 @@ export function FloatingIcons(): React.JSX.Element {
     () => [
       {
         Icon: FlaskConical,
-        className: "top-10 left-8 text-orange-500/30 animate-pulse",
+        className: "top-10 left-8 animate-pulse",
       },
       {
         Icon: Cpu,
-        className:
-          "top-1/3 left-1/4 text-fuchsia-500/20 animate-[pulse_5s_ease-in-out_infinite]",
+        className: "top-1/3 left-1/4 animate-[pulse_5s_ease-in-out_infinite]",
       },
       {
         Icon: Bug,
-        className: "top-1/2 right-12 text-red-500/25 animate-bounce",
+        className: "top-1/2 right-12 animate-bounce",
       },
       {
         Icon: Rocket,
-        className: "bottom-24 left-12 text-sky-500/25 animate-pulse",
+        className: "bottom-24 left-12 animate-pulse",
       },
       {
         Icon: Compass,
-        className:
-          "top-20 right-1/4 text-emerald-500/25 animate-[pulse_7s_linear_infinite]",
+        className: "top-20 right-1/4 animate-[pulse_7s_linear_infinite]",
       },
       {
         Icon: Trophy,
-        className: "bottom-16 right-8 text-amber-400/30 animate-bounce",
+        className: "bottom-16 right-8 animate-bounce",
       },
       {
         Icon: Sparkles,
-        className: "top-1/2 left-1/2 text-purple-400/30 animate-pulse",
+        className: "top-1/2 left-1/2 animate-pulse",
       },
     ],
     [],
@@ -62,7 +60,7 @@ export function FloatingIcons(): React.JSX.Element {
         <Icon
           key={i}
           className={
-            "absolute h-10 w-10 md:h-14 md:w-14 drop-shadow transition-opacity duration-700 " +
+            "absolute h-10 w-10 text-muted-foreground/20 transition-opacity duration-700 md:h-14 md:w-14 " +
             className
           }
         />

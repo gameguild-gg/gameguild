@@ -6,15 +6,15 @@ import { buttonVariants } from '@game-guild/ui/components/button-variants';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { CalendarCheck2, ClipboardCheck, FolderKanban, MessageSquareWarning } from 'lucide-react';
 
-export default async function TestingLabParticipationPage() {
+export default async function Page() {
   const participation = await getTestingParticipationOverview();
 
   if (!participation.isAuthenticated) {
     return (
-      <main className="min-h-screen bg-slate-950 px-4 py-16 text-white">
-        <div className="mx-auto max-w-3xl rounded-3xl border border-white/10 bg-white/[0.04] p-8">
+      <main className="px-4 py-16">
+        <div className="mx-auto max-w-3xl rounded-3xl border border-border bg-card p-8">
           <h1 className="text-3xl font-semibold">Your Testing Lab participation</h1>
-          <p className="mt-3 text-slate-300">Sign in to manage your tester registrations, Team project applications, and pending feedback.</p>
+          <p className="mt-3 text-muted-foreground">Sign in to manage your tester registrations, Team project applications, and pending feedback.</p>
           <Link href="/sign-in" className={buttonVariants({ className: 'mt-6' })}>Sign in</Link>
         </div>
       </main>
@@ -22,13 +22,13 @@ export default async function TestingLabParticipationPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-12 text-white">
+    <main className="px-4 py-12">
       <div className="mx-auto max-w-7xl space-y-8">
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-200">Community participation</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">Community participation</p>
             <h1 className="mt-2 text-4xl font-semibold">Your Testing Lab</h1>
-            <p className="mt-3 text-slate-300">Individual testing and applications owned by Projects you can represent.</p>
+            <p className="mt-3 text-muted-foreground">Individual testing and applications owned by Projects you can represent.</p>
           </div>
           <Link href="/testing-lab" className={buttonVariants({ variant: 'outline' })}>Discover events</Link>
         </header>
@@ -39,36 +39,36 @@ export default async function TestingLabParticipationPage() {
         ) : null}
 
         <section className="grid gap-5 lg:grid-cols-3">
-          <Card className="border-white/10 bg-white/[0.04] text-white">
+          <Card>
             <CardHeader><CardTitle className="flex items-center gap-2"><FolderKanban className="size-5" /> Project applications</CardTitle></CardHeader>
             <CardContent className="space-y-3">
-              {participation.applications.length === 0 ? <p className="text-sm text-slate-400">No Project application yet.</p> : participation.applications.map((application) => (
-                <div key={application.id} className="rounded-xl border border-white/10 p-3">
+              {participation.applications.length === 0 ? <p className="text-sm text-muted-foreground">No Project application yet.</p> : participation.applications.map((application) => (
+                <div key={application.id} className="rounded-xl border border-border p-3">
                   <div className="flex justify-between gap-3"><span className="text-sm font-medium">Project {application.projectId}</span><Badge variant="outline">{application.status}</Badge></div>
-                  <p className="mt-2 text-xs text-slate-400">Application {application.id}</p>
+                  <p className="mt-2 text-xs text-muted-foreground">Application {application.id}</p>
                 </div>
               ))}
             </CardContent>
           </Card>
 
-          <Card className="border-white/10 bg-white/[0.04] text-white">
+          <Card>
             <CardHeader><CardTitle className="flex items-center gap-2"><CalendarCheck2 className="size-5" /> Tester schedule</CardTitle></CardHeader>
             <CardContent className="space-y-3">
-              {participation.registrations.length === 0 ? <p className="text-sm text-slate-400">No tester registration yet.</p> : participation.registrations.map((registration) => (
-                <div key={registration.id} className="rounded-xl border border-white/10 p-3">
+              {participation.registrations.length === 0 ? <p className="text-sm text-muted-foreground">No tester registration yet.</p> : participation.registrations.map((registration) => (
+                <div key={registration.id} className="rounded-xl border border-border p-3">
                   <div className="flex justify-between gap-3"><span className="text-sm font-medium">Slot {registration.slotId}</span><Badge variant="outline">{registration.status}</Badge></div>
                 </div>
               ))}
             </CardContent>
           </Card>
 
-          <Card className="border-white/10 bg-white/[0.04] text-white">
+          <Card>
             <CardHeader><CardTitle className="flex items-center gap-2"><MessageSquareWarning className="size-5" /> Feedback pending</CardTitle></CardHeader>
             <CardContent className="space-y-3">
-              {participation.feedbackObligations.length === 0 ? <p className="text-sm text-slate-400">Nothing pending.</p> : participation.feedbackObligations.map((obligation) => (
-                <div key={obligation.id} className="rounded-xl border border-amber-300/20 bg-amber-300/5 p-3">
+              {participation.feedbackObligations.length === 0 ? <p className="text-sm text-muted-foreground">Nothing pending.</p> : participation.feedbackObligations.map((obligation) => (
+                <div key={obligation.id} className="rounded-xl border border-highlight/30 bg-highlight/10 p-3">
                   <p className="text-sm font-medium">Feedback required</p>
-                  <p className="mt-1 text-xs text-slate-400">Application {obligation.applicationId}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Application {obligation.applicationId}</p>
                   <Link href={`/testing-lab/events/${obligation.eventId}`} className={buttonVariants({ size: 'sm', className: 'mt-3' })}>Submit feedback</Link>
                 </div>
               ))}
@@ -76,7 +76,7 @@ export default async function TestingLabParticipationPage() {
           </Card>
         </section>
 
-        <div className="flex items-center gap-2 text-sm text-slate-400"><ClipboardCheck className="size-4" /> Project applications remain with the Project when the original submitter leaves.</div>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground"><ClipboardCheck className="size-4" /> Project applications remain with the Project when the original submitter leaves.</div>
       </div>
     </main>
   );

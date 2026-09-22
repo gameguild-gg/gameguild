@@ -90,30 +90,24 @@ export function TestingEventsBrowser({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 px-4 py-12 text-white sm:px-6 lg:px-8">
+    <div className="px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-7xl">
         <header className="mb-12 text-center">
           {presentedEvents.length > 0 ? (
             <div className="mb-6 flex justify-center">
-              <div className="flex items-center gap-2 rounded-full border border-blue-400/30 bg-gradient-to-r from-blue-600/20 to-purple-600/20 px-4 py-2 backdrop-blur-sm">
-                <span className="size-2 animate-pulse rounded-full bg-blue-400" />
-                <span className="text-sm font-semibold text-blue-300">
+              <div className="flex items-center gap-2 rounded-full border border-success/30 bg-success/10 px-4 py-2">
+                <span className="size-2 rounded-full bg-success" />
+                <span className="text-sm font-semibold text-success">
                   {openEvents} Open {openEvents === 1 ? "Event" : "Events"} -
                   Join Now!
                 </span>
               </div>
             </div>
           ) : null}
-          <h1
-            className="my-8 text-5xl font-bold text-white md:text-6xl"
-            style={{
-              textShadow:
-                "0 0 8px rgba(59, 130, 246, 0.25), 0 0 16px rgba(147, 51, 234, 0.2)",
-            }}
-          >
+          <h1 className="my-8 text-5xl font-bold text-foreground md:text-6xl">
             Test. Play. Earn.
           </h1>
-          <p className="mx-auto max-w-3xl text-lg leading-8 text-slate-300 sm:text-xl">
+          <p className="mx-auto max-w-3xl text-lg leading-8 text-muted-foreground sm:text-xl">
             Join community game testing events, play upcoming projects, and
             provide feedback creators can use.
           </p>
@@ -122,7 +116,7 @@ export function TestingEventsBrowser({
         {accessIssues.length > 0 ? (
           <div
             role="alert"
-            className="mb-6 rounded-lg border border-amber-500/40 bg-amber-950/30 p-4 text-sm text-amber-100"
+            className="mb-6 rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive"
           >
             Live testing events could not be refreshed. Retry shortly.
           </div>
@@ -130,18 +124,18 @@ export function TestingEventsBrowser({
 
         {presentedEvents.length > 0 ? <section
           aria-label="Event filters"
-          className="mb-8 rounded-xl border border-slate-700/70 bg-slate-900/50 p-4 backdrop-blur-sm"
+          className="mb-8 rounded-xl border border-border bg-card p-4"
         >
           <div className="grid gap-3 xl:grid-cols-[minmax(16rem,1fr)_12rem_12rem_12rem_auto] xl:items-center">
             <label className="relative block">
               <span className="sr-only">Search events</span>
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 suppressHydrationWarning
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search events..."
-                className="border-slate-700 bg-slate-950/60 pl-9"
+                className="pl-9"
               />
             </label>
             <Select
@@ -207,7 +201,7 @@ export function TestingEventsBrowser({
               ))}
             </div>
           </div>
-          <div className="mt-3 flex items-center justify-between gap-4 text-sm text-slate-400">
+          <div className="mt-3 flex items-center justify-between gap-4 text-sm text-muted-foreground">
             <span>
               {filteredEvents.length} of {presentedEvents.length} events
             </span>

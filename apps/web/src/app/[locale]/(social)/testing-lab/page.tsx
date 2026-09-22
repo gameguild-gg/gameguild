@@ -2,7 +2,7 @@ import { TestingEventsBrowser } from "@/components/testing-lab/landing/testing-s
 import { presentTestingEvents } from "@/components/testing-lab/landing/testing-events-presentation";
 import { getPublicTestingEventsDirectory } from "@/lib/testing-lab/events-queries";
 
-export default async function TestingLabEventsPage({
+export default async function Page({
   searchParams,
 }: {
   searchParams?: Promise<{ projectId?: string }>;

@@ -175,7 +175,7 @@ describe("Testing Lab foundations", () => {
     expect(screen.getByRole("heading", { level: 1, name: "Game Testing Lab" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Browse Events" })).toHaveAttribute(
       "href",
-      "/testing-lab/events",
+      "/testing-lab",
     );
     expect(screen.getByRole("link", { name: "Submit a project" })).toHaveAttribute(
       "href",
