@@ -47,7 +47,7 @@ describe("Testing event directory views", () => {
     expect(screen.getByText("Sep 15, 2026")).toBeInTheDocument();
     expect(screen.getByText("6:30 PM UTC")).toBeInTheDocument();
     expect(screen.getByText("3/8 testers")).toBeInTheDocument();
-    expect(screen.getByText("1/Unlimited projects")).toBeInTheDocument();
+    expect(screen.getByText("1 project")).toBeInTheDocument();
     expect(screen.getByText("Only 1 tester seat left")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "View event" })).toHaveAttribute(
       "href",

@@ -399,7 +399,7 @@ describe("TestingProjectApplication extended workflow", () => {
       />,
     );
     expect(screen.getByText(/package is frozen/)).toBeInTheDocument();
-    expect(screen.getByText("Project applications are currently closed.")).toBeInTheDocument();
+    expect(screen.getByText("Applications are closed.")).toBeInTheDocument();
     expect(screen.queryByText(/decision rationale/i)).not.toBeInTheDocument();
   });
 

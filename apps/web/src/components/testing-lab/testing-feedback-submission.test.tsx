@@ -61,7 +61,7 @@ describe('TestingFeedbackSubmission', () => {
 
   it('explains when no feedback has been assigned', () => {
     render(<TestingFeedbackSubmission eventId="event-1" isAuthenticated obligations={[]} />);
-    expect(screen.getByText(/No project feedback is assigned/)).toBeInTheDocument();
+    expect(screen.getByText(/No feedback assigned yet/)).toBeInTheDocument();
   });
 
   it('requires authentication when pending feedback exists', () => {

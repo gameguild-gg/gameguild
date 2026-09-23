@@ -101,7 +101,7 @@ function FeedbackForm({ eventId, obligation }: { eventId: string; obligation: Fe
 export function TestingFeedbackSubmission({ eventId, isAuthenticated, obligations }: { eventId: string; isAuthenticated: boolean; obligations: FeedbackObligation[] }) {
   const pending = obligations.filter((obligation) => obligation.status === 'Pending');
   if (!isAuthenticated && pending.length > 0) return <Link href="/sign-in" className={buttonVariants()}>Sign in to submit feedback</Link>;
-  if (obligations.length === 0) return <p className="text-sm text-muted-foreground">No project feedback is assigned to you for this event.</p>;
+  if (obligations.length === 0) return <p className="text-sm text-muted-foreground">No feedback assigned yet.</p>;
   if (pending.length === 0) return <Alert><CheckCircle2 className="size-4" /><AlertDescription>All assigned feedback is complete.</AlertDescription></Alert>;
   return (
     <div className="space-y-4">

@@ -134,7 +134,9 @@ function TestingEventEmbed({
             <span className="inline-flex items-center gap-3">
               <span className="inline-flex items-center gap-1.5">
                 <Users className="size-4 shrink-0" aria-hidden="true" />
-                {registered ?? 0}/{max ?? "Unlimited"} testers signed in
+                {max == null
+                  ? `${registered ?? 0} ${(registered ?? 0) === 1 ? "tester" : "testers"} signed in`
+                  : `${registered ?? 0}/${max} testers signed in`}
               </span>
               {available != null && available > 0 ? (
                 <span className="font-medium text-primary">

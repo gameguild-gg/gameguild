@@ -161,10 +161,7 @@ describe("TestingEventsBrowser", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<TestingEventsBrowser events={events} accessIssues={[]} />);
 
-    await user.selectOptions(
-      screen.getByRole("combobox", { name: "Filter by status" }),
-      "completed",
-    );
+    await user.click(screen.getByRole("button", { name: "Completed" }));
 
     expect(screen.getByText("Completed campus session")).toBeInTheDocument();
     expect(screen.queryByText("Online future session")).not.toBeInTheDocument();
@@ -266,5 +263,8 @@ describe("TestingEventsBrowser", () => {
 
     await user.click(screen.getByRole("button", { name: "Switch to table view" }));
     expect(screen.getByRole("table")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Switch to calendar view" }));
+    expect(screen.getByRole("grid")).toBeInTheDocument();
   });
 });

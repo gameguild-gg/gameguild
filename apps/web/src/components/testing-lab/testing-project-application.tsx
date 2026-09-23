@@ -359,7 +359,7 @@ export function TestingProjectApplication({
       {currentApplications.map((item) => (
         <ApplicationWizard key={item.id} eventId={eventId} application={item} projectVersions={applicationData.projectVersions} applicationSchema={applicationSchema} generalRules={generalRules} candidateInstructions={candidateInstructions} requiresFeedback={requiresFeedback} acceptsApplications={acceptsApplications} />
       ))}
-      {!acceptsApplications ? <p className="text-sm text-muted-foreground">Project applications are currently closed.</p> : availableVersions.length > 0 ? (
+      {!acceptsApplications ? <p className="text-sm text-muted-foreground">Applications are closed.</p> : availableVersions.length > 0 ? (
         <ApplicationWizard eventId={eventId} projectVersions={availableVersions} initialProjectId={applicationData.initialProjectId} applicationSchema={applicationSchema} generalRules={generalRules} candidateInstructions={candidateInstructions} requiresFeedback={requiresFeedback} acceptsApplications={acceptsApplications} />
       ) : currentApplications.length === 0 ? (
         <div className="flex flex-col items-start gap-3"><p className="text-sm text-muted-foreground">Create a Ready for Testing or Released project version before applying.</p><Link href="/projects" className={buttonVariants({ variant: 'outline' })}>Browse projects</Link></div>
