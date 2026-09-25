@@ -109,6 +109,64 @@ public sealed class TestingPublicEventQueryTests : IDisposable
     }
 
     [Fact]
+    public async Task PublicDetail_ListsOnlyApprovedGamesWithLimitedPublicFields()
+    {
+        var testingEvent = AddEvent("Public event");
+        testingEvent.OpenConfiguredApplications();
+        var slot = TestingEventSlot.Create(
+            testingEvent.Id,
+            TestingEventMode.Online,
+            testingEvent.StartsAt,
+            testingEvent.StartsAt.AddHours(2),
+            8,
+            4,
+            null,
+            null,
+            "https://private.example.com/meeting",
+            _tenantId);
+        var approvedProject = new Project
+        {
+            Title = "Paper Lantern",
+            Slug = "paper-lantern",
+            ShortDescription = "A cozy puzzle adventure.",
+            Description = "A small adventure about light, memory, and restoring a paper village.",
+            ImageUrl = "https://cdn.example.com/paper-lantern.png",
+            RepositoryUrl = "https://private.example.com/source",
+            TenantId = _tenantId
+        };
+        var pendingProject = new Project
+        {
+            Title = "Unreviewed Build",
+            Slug = "unreviewed-build",
+            ShortDescription = "This game has not been approved.",
+            TenantId = _tenantId
+        };
+        _context.AddRange(slot, approvedProject, pendingProject);
+        await _context.SaveChangesAsync();
+
+        var approvedApplication = TestingProjectApplication.Submit(
+            testingEvent.Id, approvedProject.Id, null, Guid.NewGuid(), null, _tenantId);
+        approvedApplication.Approve(_managerId, slot.Id, "Approved for this event.");
+        var pendingApplication = TestingProjectApplication.Submit(
+            testingEvent.Id, pendingProject.Id, null, Guid.NewGuid(), null, _tenantId);
+        _context.AddRange(approvedApplication, pendingApplication);
+        await _context.SaveChangesAsync();
+
+        _actorAccessor.SetActorContext(ActorContext.Anonymous);
+        var result = await CreateHandler().Handle(new GetPublicTestingEventQuery(testingEvent.Id), default);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Games.Should().ContainSingle().Which.Should().BeEquivalentTo(
+            new PublicTestingEventGameProjection(
+                approvedProject.Id,
+                "Paper Lantern",
+                "A cozy puzzle adventure.",
+                "A small adventure about light, memory, and restoring a paper village.",
+                "https://cdn.example.com/paper-lantern.png"));
+        typeof(PublicTestingEventGameProjection).GetProperty("RepositoryUrl").Should().BeNull();
+    }
+
+    [Fact]
     public async Task PublicDetail_ReturnsNotFoundForDraftEvent()
     {
         var testingEvent = AddEvent("Private draft");

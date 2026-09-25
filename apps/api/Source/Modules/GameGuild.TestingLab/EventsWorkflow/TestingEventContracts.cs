@@ -112,7 +112,20 @@ public sealed record PublicTestingEventProjection(
     IReadOnlyList<PublicTestingEventSlotProjection> Slots,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     TestingEventConfigurationProjection? Configuration = null,
-    string TimeZoneId = "UTC");
+    string TimeZoneId = "UTC",
+    IReadOnlyList<PublicTestingEventGameProjection>? Games = null);
+
+/// <summary>
+/// A deliberately small, event-scoped preview of a game approved for public
+/// playtesting. Private project metadata and submitted application details are
+/// not included in the public event contract.
+/// </summary>
+public sealed record PublicTestingEventGameProjection(
+    Guid ProjectId,
+    string Title,
+    string? ShortDescription,
+    string? Description,
+    string? ImageUrl);
 
 public sealed record CreateTestingEventCommand(
     string Name,

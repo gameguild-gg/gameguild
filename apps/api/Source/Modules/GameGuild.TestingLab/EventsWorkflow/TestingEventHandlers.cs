@@ -3,6 +3,7 @@ using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Identity.Tenants;
 using GameGuild.Identity.Users;
+using GameGuild.Projects;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.TestingLab;
@@ -613,6 +614,29 @@ public sealed class TestingEventHandlers(
             .Select(group => new { EventId = group.Key, Count = group.Count() })
             .ToDictionaryAsync(row => row.EventId, row => row.Count, cancellationToken)
             .ConfigureAwait(false);
+        var approvedGames = await (
+            from application in context.Set<TestingProjectApplication>().AsNoTracking()
+            join project in context.Set<Project>().AsNoTracking() on application.ProjectId equals project.Id
+            where eventIds.Contains(application.EventId) &&
+                  application.Status == TestingApplicationStatus.Approved &&
+                  application.DeletedAt == null &&
+                  project.DeletedAt == null
+            orderby application.EventId, project.Title
+            select new
+            {
+                application.EventId,
+                Game = new PublicTestingEventGameProjection(
+                    project.Id,
+                    project.Title,
+                    project.ShortDescription,
+                    project.Description,
+                    project.FeaturedImageUrl ?? project.ImageUrl)
+            })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var gamesByEvent = approvedGames
+            .GroupBy(entry => entry.EventId)
+            .ToDictionary(group => group.Key, group => (IReadOnlyList<PublicTestingEventGameProjection>)group.Select(entry => entry.Game).ToList());
         var approvedProjectCounts = await context.Set<TestingProjectApplication>()
             .AsNoTracking()
             .Where(application =>
@@ -665,7 +689,8 @@ public sealed class TestingEventHandlers(
                     registeredTesterCounts.GetValueOrDefault(slot.Id)))
                 .ToList(),
             ToConfigurationProjection(testingEvent),
-            testingEvent.TimeZoneId))
+            testingEvent.TimeZoneId,
+            gamesByEvent.GetValueOrDefault(testingEvent.Id) ?? []))
             .ToList();
     }
 

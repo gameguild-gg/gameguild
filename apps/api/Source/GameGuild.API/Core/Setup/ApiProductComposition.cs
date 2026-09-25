@@ -40,6 +40,7 @@ using GameGuild.Social.Reactions;
 using GameGuild.Teams;
 using GameGuild.TestingLab;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Hosting;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using LearningSocialModule = GameGuild.Learning.Experience.Social.SocialModule;
 
@@ -170,6 +171,15 @@ internal sealed class ApiProductComposition : IApiProductComposition
         await services.GetRequiredService<PolicyDefinitionSeeder>()
             .SeedAsync(cancellationToken)
             .ConfigureAwait(false);
+
+        if (services.GetService<IHostEnvironment>()?.IsDevelopment() == true)
+        {
+            await TestingLabLocalSeedDataSeeder.SeedAsync(
+                    services.GetRequiredService<ApplicationDbContext>(),
+                    services.GetService<ILogger<ApplicationDbContext>>(),
+                    cancellationToken)
+                .ConfigureAwait(false);
+        }
     }
 
     public async Task<bool> InitializeAsync(
