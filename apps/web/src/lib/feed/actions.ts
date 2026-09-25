@@ -3,7 +3,7 @@
 import { getSession, getToken } from "@/auth";
 import {
   createServerClient,
-  type AssetsSocialMediaSocialMediaAssetDescriptor,
+  type SocialAssetsSocialMediaSocialMediaAssetDescriptor,
   type SocialFollowsControllersFollowDto,
 } from "@game-guild/client";
 import { FeedMutationError } from "./errors";
@@ -71,7 +71,7 @@ export async function hydrateSocialPost(postId: string): Promise<SocialPostItem>
   return mapSocialFeedItem(item);
 }
 
-function mediaAsset(value: AssetsSocialMediaSocialMediaAssetDescriptor): SocialMediaAsset {
+function mediaAsset(value: SocialAssetsSocialMediaSocialMediaAssetDescriptor): SocialMediaAsset {
   return {
     assetReferenceId: value.assetReferenceId ?? "",
     deliveryUrl: value.deliveryUrl ?? null,
@@ -299,7 +299,7 @@ export async function recordPostView(postId: string): Promise<ViewedPostState> {
 }
 
 export async function uploadSocialMedia(formData: FormData): Promise<SocialMediaAsset> {
-  const asset = await request<AssetsSocialMediaSocialMediaAssetDescriptor>({
+  const asset = await request<SocialAssetsSocialMediaSocialMediaAssetDescriptor>({
     method: "POST",
     path: "/v1/assets/social-media",
     body: formData,
@@ -309,7 +309,7 @@ export async function uploadSocialMedia(formData: FormData): Promise<SocialMedia
 }
 
 export async function getSocialMediaStatus(assetReferenceId: string): Promise<SocialMediaAsset> {
-  const asset = await request<AssetsSocialMediaSocialMediaAssetDescriptor>({
+  const asset = await request<SocialAssetsSocialMediaSocialMediaAssetDescriptor>({
     method: "GET",
     path: `/v1/assets/social-media/${assetReferenceId}`,
     requiresAuth: true,

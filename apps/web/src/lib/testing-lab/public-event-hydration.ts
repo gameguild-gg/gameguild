@@ -12,6 +12,7 @@ export interface TestingEventHydration {
   registeredTesterCount: number;
   maxTesters: number | null;
   availableTesterCount: number | null;
+  gameImages: string[];
 }
 
 const EVENT_ID_PATTERN =
@@ -64,6 +65,13 @@ export async function hydratePublicTestingEvent(
             (total, slot) => total + slot.availableTesterCount!,
             0,
           ),
+      gameImages: Array.from(
+        new Set(
+          (event.games ?? [])
+            .map((game) => game.imageUrl?.trim())
+            .filter((imageUrl): imageUrl is string => Boolean(imageUrl)),
+        ),
+      ),
     };
   } catch {
     // A failed hydration leaves the embed on its parsed-from-text fallback.

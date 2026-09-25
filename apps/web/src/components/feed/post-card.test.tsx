@@ -192,6 +192,7 @@ describe("PostCard", () => {
       registeredTesterCount: 0,
       maxTesters: 8,
       availableTesterCount: 8,
+      gameImages: ["/testing-lab/seeded-games/mothlight.svg", "/testing-lab/seeded-games/hollow-signal.svg"],
     });
     const announcement =
       "🧪 New testing event: Teste! Event starts Sep 18, 21:00 UTC. Details: /testing-lab/events/e112d20d-43d6-4016-bbac-5626f209053d";
@@ -205,6 +206,9 @@ describe("PostCard", () => {
     expect(screen.getByText("Sep 18, 2026, 9:00 PM UTC")).toBeInTheDocument();
     expect(screen.getByText("0/8 testers signed in")).toBeInTheDocument();
     expect(screen.getByText("8 spots left")).toBeInTheDocument();
+    const eventBanner = screen.getByRole("link", { name: /join/i }).closest("div.rounded-xl");
+    expect(eventBanner?.querySelector('img[src="/testing-lab/seeded-games/mothlight.svg"]')).toBeInTheDocument();
+    expect(eventBanner?.querySelector('img[src="/testing-lab/seeded-games/hollow-signal.svg"]')).toBeInTheDocument();
     expect(screen.queryByText("#playtest")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Join" })).toHaveAttribute(
       "href",

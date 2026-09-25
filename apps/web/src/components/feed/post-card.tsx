@@ -8,7 +8,7 @@ import {
   type TestingEventHydration,
 } from "@/lib/testing-lab/public-event-hydration";
 import { formatSocialDate, formatSocialDateTime } from "@/lib/feed/format";
-import { EventCoverArt } from "@/components/testing-lab/landing/event-cover-art";
+import { EventHeroMedia } from "@/components/testing-lab/landing/event-hero-media";
 import { CalendarDays, CheckCircle2, Users } from "lucide-react";
 import Image from "next/image";
 import * as React from "react";
@@ -119,7 +119,7 @@ function TestingEventEmbed({
     <div className="overflow-hidden rounded-xl border border-border bg-card">
       {/* Even pixel heights (the 21:9 ratio produced odd values like 749x321). */}
       <div className="relative h-[336px] w-full max-md:h-[152px]">
-        <EventCoverArt seed={eventId} />
+        <EventHeroMedia seed={eventId} images={hydrated?.gameImages ?? []} />
       </div>
       <div className="flex flex-col gap-2 px-4 pb-4 pt-3 sm:px-5">
         {/* Schedule on the left, capacity on the right. */}
