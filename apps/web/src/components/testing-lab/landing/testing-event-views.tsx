@@ -15,7 +15,6 @@ import { Link } from "@/i18n/navigation";
 import {
   ArrowRight,
   Calendar,
-  CalendarDays,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -594,7 +593,7 @@ export function TestingEventsCalendar({
                       </div>
                       <div className={`space-y-0.5 ${isOutside ? "opacity-40" : ""}`}>
                         {visibleEvents.map((session) => (
-                          <HoverCard key={session.id} openDelay={200}>
+                          <HoverCard key={session.id}>
                             <HoverCardTrigger
                               render={
                                 <Link

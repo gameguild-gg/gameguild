@@ -84,6 +84,28 @@ function SegmentedFilter<T extends string>({
   );
 }
 
+function renderSegmentedFilter<T extends string>(
+  label: string,
+  value: T,
+  options: ReadonlyArray<readonly [T, string]>,
+  onChange: (value: T) => void,
+) {
+  return (
+    <div key={label}>
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
+      <SegmentedFilter
+        label={label}
+        value={value}
+        options={options}
+        onChange={onChange}
+        className="flex flex-wrap rounded-md border border-input text-sm"
+      />
+    </div>
+  );
+}
+
 interface TestingEventsBrowserProps {
   events: TestingEventViewModel[];
   accessIssues: string[];
@@ -209,26 +231,9 @@ export function TestingEventsBrowser({
                     placeholder="Search events..."
                   />
                 </div>
-                {(
-                  [
-                    ["Status", status, setStatus, STATUS_OPTIONS],
-                    ["Format", mode, setMode, FORMAT_OPTIONS],
-                    ["Schedule", period, setPeriod, SCHEDULE_OPTIONS],
-                  ] as const
-                ).map(([label, value, setValue, options]) => (
-                  <div key={label}>
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      {label}
-                    </p>
-                    <SegmentedFilter
-                      label={label}
-                      value={value}
-                      options={options}
-                      onChange={setValue}
-                      className="flex flex-wrap rounded-md border border-input text-sm"
-                    />
-                  </div>
-                ))}
+                {renderSegmentedFilter("Status", status, STATUS_OPTIONS, setStatus)}
+                {renderSegmentedFilter("Format", mode, FORMAT_OPTIONS, setMode)}
+                {renderSegmentedFilter("Schedule", period, SCHEDULE_OPTIONS, setPeriod)}
                 {hasFilters ? (
                   <Button
                     type="button"
