@@ -16,7 +16,7 @@ import { buttonVariants } from '@game-guild/ui/components/button-variants';
 import { Label } from '@game-guild/ui/components/label';
 import { Textarea } from '@game-guild/ui/components/textarea';
 import { AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, FolderKanban, Loader2, Save } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { useState, useTransition } from 'react';
 import { QuestionnaireBuilder } from './questionnaire-builder';
 import { QuestionnaireFieldset } from './questionnaire-fieldset';
@@ -319,6 +319,7 @@ export function TestingProjectApplication({
   application,
   applications,
   initialProjectId,
+  selectedApplicationId,
   applicationSchema,
   generalRules,
   candidateInstructions,
@@ -331,6 +332,7 @@ export function TestingProjectApplication({
   application?: CurrentApplication;
   applications?: CurrentApplication[];
   initialProjectId?: string;
+  selectedApplicationId?: string;
   applicationSchema?: TestingLabQuestionnaireSchema | null;
   generalRules?: string | null;
   candidateInstructions?: string | null;
@@ -348,18 +350,35 @@ export function TestingProjectApplication({
     ? { application, applications, initialProjectId, projectVersions }
     : lastAuthenticatedData;
 
-  if (!applicationData) return <Link href="/sign-in" className={buttonVariants({ className: 'w-full sm:w-auto' })}>Sign in to apply</Link>;
+  if (!applicationData) {
+    if (!acceptsApplications) {
+      return <p className="text-sm text-muted-foreground">Game submissions are closed for this event. Browse the Testing Lab for another opportunity.</p>;
+    }
+    const redirectTo = `/testing-lab/events/${eventId}#submit-game`;
+    const signInHref = `/sign-in?redirectTo=${encodeURIComponent(redirectTo)}`;
+    return (
+      <div className="space-y-2">
+        <Link href={signInHref} className={buttonVariants({ className: 'w-full sm:w-auto' })}>Sign in or create a free account</Link>
+        <p className="text-xs text-muted-foreground">You’ll return to this event to choose a build and complete your application.</p>
+      </div>
+    );
+  }
 
   const currentApplications = applicationData.applications ?? (applicationData.application ? [applicationData.application] : []);
   const activeProjectIds = new Set(currentApplications.filter((item) => !['Rejected', 'Withdrawn'].includes(item.status ?? '')).map((item) => item.projectId).filter((id): id is string => Boolean(id)));
   const availableVersions = applicationData.projectVersions.filter((version) => !activeProjectIds.has(version.projectId));
+  const applicationsToReview = selectedApplicationId
+    ? currentApplications.filter((item) => item.id === selectedApplicationId)
+    : initialProjectId
+      ? currentApplications.filter((item) => item.projectId === initialProjectId)
+      : [];
 
   return (
     <div className="space-y-5">
-      {currentApplications.map((item) => (
+      {applicationsToReview.map((item) => (
         <ApplicationWizard key={item.id} eventId={eventId} application={item} projectVersions={applicationData.projectVersions} applicationSchema={applicationSchema} generalRules={generalRules} candidateInstructions={candidateInstructions} requiresFeedback={requiresFeedback} acceptsApplications={acceptsApplications} />
       ))}
-      {!acceptsApplications ? <p className="text-sm text-muted-foreground">Applications are closed.</p> : availableVersions.length > 0 ? (
+      {!acceptsApplications ? <p className="text-sm text-muted-foreground">Game submissions are closed for this event. You can still review any application already in progress.</p> : availableVersions.length > 0 ? (
         <ApplicationWizard eventId={eventId} projectVersions={availableVersions} initialProjectId={applicationData.initialProjectId} applicationSchema={applicationSchema} generalRules={generalRules} candidateInstructions={candidateInstructions} requiresFeedback={requiresFeedback} acceptsApplications={acceptsApplications} />
       ) : currentApplications.length === 0 ? (
         <div className="flex flex-col items-start gap-3"><p className="text-sm text-muted-foreground">Create a Ready for Testing or Released project version before applying.</p><Link href="/projects" className={buttonVariants({ variant: 'outline' })}>Browse projects</Link></div>

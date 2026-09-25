@@ -12503,6 +12503,14 @@ export type TestingLabLocationStatus = 'Active' | 'Maintenance' | 'Inactive';
 
 export type TestingLabParticipationStatus = 'Registered' | 'Active' | 'Completed' | 'Withdrawn' | 'Suspended';
 
+export interface TestingLabPublicTestingEventGameProjection {
+  description?: string | null;
+  imageUrl?: string | null;
+  projectId?: string;
+  shortDescription?: string | null;
+  title?: string | null;
+}
+
 export interface TestingLabPublicTestingEventProjection {
   id?: string;
   applicationCount?: number;
@@ -12512,6 +12520,7 @@ export interface TestingLabPublicTestingEventProjection {
   configuration?: TestingLabTestingEventConfigurationProjection;
   description?: string | null;
   endsAt?: string;
+  games?: Array<TestingLabPublicTestingEventGameProjection> | null;
   mode?: TestingLabTestingEventMode;
   name?: string | null;
   requiresFeedback?: boolean;
@@ -15171,6 +15180,7 @@ export let TestingLabInstructionTypeSchema: z.ZodType<TestingLabInstructionType>
 export let TestingLabLinkSessionProjectInputSchema: z.ZodType<TestingLabLinkSessionProjectInput>;
 export let TestingLabLocationStatusSchema: z.ZodType<TestingLabLocationStatus>;
 export let TestingLabParticipationStatusSchema: z.ZodType<TestingLabParticipationStatus>;
+export let TestingLabPublicTestingEventGameProjectionSchema: z.ZodType<TestingLabPublicTestingEventGameProjection>;
 export let TestingLabPublicTestingEventProjectionSchema: z.ZodType<TestingLabPublicTestingEventProjection>;
 export let TestingLabPublicTestingEventSlotProjectionSchema: z.ZodType<TestingLabPublicTestingEventSlotProjection>;
 export let TestingLabQuestionnaireAnswerSchema: z.ZodType<TestingLabQuestionnaireAnswer>;
@@ -30474,6 +30484,15 @@ TestingLabLocationStatusSchema = z.enum(['Active', 'Maintenance', 'Inactive']);
 /** Zod schema for TestingLabParticipationStatus */
 TestingLabParticipationStatusSchema = z.enum(['Registered', 'Active', 'Completed', 'Withdrawn', 'Suspended']);
 
+/** Zod schema for TestingLabPublicTestingEventGameProjection */
+TestingLabPublicTestingEventGameProjectionSchema = z.object({
+  description: z.string().nullable().optional(),
+  imageUrl: z.string().nullable().optional(),
+  projectId: z.string().uuid().optional(),
+  shortDescription: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
+});
+
 /** Zod schema for TestingLabPublicTestingEventProjection */
 TestingLabPublicTestingEventProjectionSchema = z.object({
   id: z.string().uuid().optional(),
@@ -30484,6 +30503,10 @@ TestingLabPublicTestingEventProjectionSchema = z.object({
   configuration: z.lazy(() => TestingLabTestingEventConfigurationProjectionSchema).optional(),
   description: z.string().nullable().optional(),
   endsAt: z.string().datetime().optional(),
+  games: z
+    .array(z.lazy(() => TestingLabPublicTestingEventGameProjectionSchema))
+    .nullable()
+    .optional(),
   mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
   name: z.string().nullable().optional(),
   requiresFeedback: z.boolean().optional(),

@@ -9,10 +9,11 @@ import { Alert, AlertDescription } from '@game-guild/ui/components/alert';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
 import { buttonVariants } from '@game-guild/ui/components/button-variants';
-import { AlertCircle, CalendarDays, CheckCircle2, Loader2, MapPin, UsersRound } from 'lucide-react';
-import Link from 'next/link';
+import { AlertCircle, ArrowRight, CalendarDays, CheckCircle2, Loader2, MapPin } from 'lucide-react';
+import { Link } from '@/i18n/navigation';
 import { useState, useTransition } from 'react';
 import type { TestingLabQuestionnaireOutput, TestingLabQuestionnaireSchema } from '@game-guild/client';
+import { TestingEventDateRange } from './testing-event-date-range';
 import { QuestionnaireFieldset } from './questionnaire-fieldset';
 
 interface PublicSlot {
@@ -36,21 +37,14 @@ interface CurrentRegistration {
   waitlistPosition?: number | null;
 }
 
-function formatSchedule(value?: string | null) {
-  if (!value) return 'Schedule pending';
-  const date = new Date(value);
-  if (Number.isNaN(date.valueOf())) return 'Schedule pending';
-  const formatted = new Intl.DateTimeFormat('en', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-    timeZone: 'UTC',
-  }).format(date);
-  return `${formatted} UTC`;
-}
-
 export function TestingSlotRegistration({
   eventId,
   isAuthenticated,
+  registrationOpen = true,
+  showClosedMessage = true,
+  timeZoneId = 'UTC',
+  locale = 'en-US',
+  hour12 = true,
   slot,
   registration,
   registrationSchema,
@@ -59,6 +53,11 @@ export function TestingSlotRegistration({
 }: {
   eventId: string;
   isAuthenticated: boolean;
+  registrationOpen?: boolean;
+  showClosedMessage?: boolean;
+  timeZoneId?: string;
+  locale?: string;
+  hour12?: boolean;
   slot: PublicSlot;
   registration?: CurrentRegistration;
   registrationSchema?: TestingLabQuestionnaireSchema | null;
@@ -70,9 +69,12 @@ export function TestingSlotRegistration({
   const [responses, setResponses] = useState<TestingLabQuestionnaireOutput>({ answers: [] });
   const [questionnaireComplete, setQuestionnaireComplete] = useState((registrationSchema?.questions?.length ?? 0) === 0);
   const [acceptedRules, setAcceptedRules] = useState(false);
-  const isFull = (slot.availableTesterCount ?? 0) <= 0;
+  const [joining, setJoining] = useState(false);
+  const isFull = slot.availableTesterCount !== null && slot.availableTesterCount !== undefined && slot.availableTesterCount <= 0;
   const location = [slot.campusName, slot.roomName].filter(Boolean).join(' · ');
   const registrationId = registration?.id ?? null;
+  const redirectTo = `/testing-lab/events/${eventId}?slotId=${encodeURIComponent(slot.id ?? '')}#session-${slot.id ?? ''}`;
+  const signInHref = `/sign-in?redirectTo=${encodeURIComponent(redirectTo)}`;
 
   function register() {
     const formData = new FormData();
@@ -111,38 +113,25 @@ export function TestingSlotRegistration({
   }
 
   return (
-    <article className="space-y-4 rounded-md border bg-card p-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Badge variant="outline">{slot.mode === 'InPerson' ? 'In person' : slot.mode ?? 'Online'}</Badge>
-            {isFull ? <Badge variant="secondary">Waitlist available</Badge> : null}
-          </div>
-          <p className="flex items-center gap-2 text-sm">
-            <CalendarDays className="size-4 text-muted-foreground" />
-            {formatSchedule(slot.startsAt)}
-          </p>
-          {location ? (
-            <p className="flex items-center gap-2 text-sm text-muted-foreground">
-              <MapPin className="size-4" />
-              {location}
-            </p>
-          ) : null}
+    <article id={slot.id ? `session-${slot.id}` : undefined} className="scroll-mt-24 space-y-3 rounded-lg border bg-card p-4">
+      <div className="space-y-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="outline">{slot.mode === 'InPerson' ? 'In person' : slot.mode ?? 'Online'}</Badge>
+          {!registrationOpen ? <Badge variant="secondary">Registration closed</Badge> : isFull ? <Badge variant="secondary">Waitlist available</Badge> : slot.availableTesterCount != null ? <Badge variant="secondary">{slot.availableTesterCount} {slot.availableTesterCount === 1 ? 'seat' : 'seats'} left</Badge> : null}
         </div>
-        <div className="text-right text-sm text-muted-foreground">
-          <p className="flex items-center justify-end gap-2">
-            <UsersRound className="size-4" />
-            {slot.registeredTesterCount ?? 0} of {slot.maxTesters ?? 'unlimited'} testers
-          </p>
-          <p>
-            Approved projects use {slot.approvedProjectCount ?? 0} of {slot.maxProjects ?? 'unlimited'} slots
-          </p>
+        <div className="flex items-start gap-2 text-sm">
+          <CalendarDays className="size-4 shrink-0 text-muted-foreground" />
+          <TestingEventDateRange startsAt={slot.startsAt} endsAt={slot.endsAt} timeZone={timeZoneId} locale={locale} hour12={hour12} />
         </div>
+        {location ? (
+          <p className="flex items-center gap-2 text-sm text-muted-foreground">
+            <MapPin className="size-4 shrink-0" />
+            {location}
+          </p>
+        ) : null}
       </div>
 
-      {!isAuthenticated ? (
-        <Link href="/sign-in" className={buttonVariants({ className: 'w-full' })}>Sign in to register</Link>
-      ) : registration && registration.status !== 'Cancelled' ? (
+      {registration && registration.status !== 'Cancelled' ? (
         <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
           <div>
             <p className="font-medium">{registration.status ?? 'Registered'}</p>
@@ -157,9 +146,27 @@ export function TestingSlotRegistration({
             </Button>
           ) : null}
         </div>
+      ) : !registrationOpen && showClosedMessage ? (
+        <div className="border-t pt-4">
+          <p className="text-sm text-muted-foreground">This session is not accepting new registrations. Browse other playtests for an open seat.</p>
+        </div>
+      ) : !registrationOpen ? null : !isAuthenticated ? (
+        <div className="border-t pt-3">
+          <Link href={signInHref} className={buttonVariants({ className: 'w-full sm:w-auto' })}>
+            Sign in or create a free account <ArrowRight className="ml-2 size-4" aria-hidden="true" />
+          </Link>
+        </div>
+      ) : !joining ? (
+        <div className="border-t pt-3">
+          <Button type="button" onClick={() => setJoining(true)}>
+            {isFull ? 'Join the waitlist' : 'Join this playtest'} <ArrowRight className="ml-2 size-4" aria-hidden="true" />
+          </Button>
+        </div>
       ) : (
-        <div className="space-y-4 border-t pt-4">
-          {testerInstructions ? <Alert><AlertDescription>{testerInstructions}</AlertDescription></Alert> : null}
+        <div className="space-y-3 border-t pt-3">
+          {testerInstructions?.trim() ? (
+            <Alert><AlertDescription><span className="font-medium">Host’s note: </span>{testerInstructions}</AlertDescription></Alert>
+          ) : null}
           <QuestionnaireFieldset
             schema={registrationSchema}
             value={responses}
@@ -167,17 +174,19 @@ export function TestingSlotRegistration({
             onComplete={() => setQuestionnaireComplete(true)}
             submitLabel="Confirm registration answers"
           />
-          <div className="max-h-40 overflow-y-auto rounded-md border p-3 text-sm leading-6 whitespace-pre-wrap">
-            {generalRules || 'Event rules are unavailable.'}
+          <div className="max-h-48 overflow-y-auto rounded-md border bg-muted/20 p-3 text-sm leading-6 whitespace-pre-wrap">
+            <p className="mb-1 font-medium">Playtest rules</p>
+            {generalRules?.trim() || 'No event-specific rules have been published.'}
           </div>
           <label className="flex items-start gap-3 text-sm">
             <input className="mt-1 size-4" type="checkbox" checked={acceptedRules} onChange={(event) => setAcceptedRules(event.currentTarget.checked)} />
-            <span>I accept the frozen rules for this event.</span>
+            <span>I’ve read and agree to follow the rules for this playtest.</span>
           </label>
           <Button type="button" className="w-full" disabled={pending || !slot.id || !questionnaireComplete || !acceptedRules} onClick={register}>
             {pending ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
-            {isFull ? 'Join waitlist' : 'Reserve tester seat'}
+            {isFull ? 'Confirm waitlist request' : 'Join playtest'}
           </Button>
+          <Button type="button" variant="ghost" className="w-full" disabled={pending} onClick={() => setJoining(false)}>Back to session details</Button>
         </div>
       )}
 

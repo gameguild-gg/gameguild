@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -10,6 +11,12 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/lib/testing-lab/events-actions', () => ({
   registerForTestingEventSlot: mocks.register,
   cancelTestingEventRegistration: mocks.cancel,
+}));
+
+vi.mock('@/i18n/navigation', () => ({
+  Link: ({ children, href, ...rest }: { children: ReactNode; href: string }) => (
+    <a href={href} {...rest}>{children}</a>
+  ),
 }));
 
 import { TestingSlotRegistration } from './testing-slot-registration';
@@ -42,9 +49,13 @@ describe('TestingSlotRegistration', () => {
       />,
     );
 
-    expect(screen.getByRole('button', { name: /join waitlist/i })).toBeInTheDocument();
-    expect(screen.getByText(/approved projects use 2 of 3 slots/i)).toBeInTheDocument();
-    expect(screen.getByText(/Aug 12, 2026, 1:00 PM UTC/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /join the waitlist/i })).toBeInTheDocument();
+    expect(screen.getByText('Waitlist available')).toBeInTheDocument();
+    expect(screen.queryByText(/seats claimed|game slots filled/i)).not.toBeInTheDocument();
+    expect(screen.getAllByText('Aug 12, 2026')).toHaveLength(2);
+    expect(screen.getByText('1:00 PM')).toBeInTheDocument();
+    expect(screen.getByText('3:00 PM')).toBeInTheDocument();
+    expect(screen.getAllByText('UTC')).toHaveLength(1);
   });
 
   it('shows the tester current registration instead of a duplicate form', () => {
@@ -63,7 +74,7 @@ describe('TestingSlotRegistration', () => {
 
     expect(screen.getByText(/waitlist position 2/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /cancel registration/i })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /join waitlist/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /join the waitlist/i })).not.toBeInTheDocument();
   });
 
   it('allows a tester to register again after cancelling', () => {
@@ -79,7 +90,7 @@ describe('TestingSlotRegistration', () => {
       />,
     );
 
-    expect(screen.getByRole('button', { name: /reserve tester seat/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /join this playtest/i })).toBeInTheDocument();
     expect(screen.queryByText(/^cancelled$/i)).not.toBeInTheDocument();
   });
 
@@ -92,13 +103,16 @@ describe('TestingSlotRegistration', () => {
       />,
     );
 
-    expect(screen.getByRole('link', { name: 'Sign in to register' })).toHaveAttribute('href', '/sign-in');
+    expect(screen.getByRole('link', { name: /sign in or create a free account/i })).toHaveAttribute(
+      'href',
+      '/sign-in?redirectTo=%2Ftesting-lab%2Fevents%2Fevent-1%3FslotId%3D%23session-',
+    );
     expect(screen.getByText('Online')).toBeInTheDocument();
     expect(screen.getByText('Schedule pending')).toBeInTheDocument();
-    expect(screen.queryByText(/·/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Downtown campus/)).not.toBeInTheDocument();
   });
 
-  it('uses schedule and capacity fallbacks for malformed public slot data', () => {
+  it('uses a schedule fallback without adding redundant capacity details', () => {
     render(
       <TestingSlotRegistration
         eventId="event-1"
@@ -108,8 +122,7 @@ describe('TestingSlotRegistration', () => {
     );
     expect(screen.getByText('Hybrid')).toBeInTheDocument();
     expect(screen.getByText('Schedule pending')).toBeInTheDocument();
-    expect(screen.getByText('0 of unlimited testers')).toBeInTheDocument();
-    expect(screen.getByText('Approved projects use 0 of unlimited slots')).toBeInTheDocument();
+    expect(screen.queryByText(/testers|game limit/i)).not.toBeInTheDocument();
   });
 
   it.each(['Completed', 'NoShow'])('does not offer cancellation after %s', (status) => {
@@ -163,10 +176,11 @@ describe('TestingSlotRegistration', () => {
       />,
     );
 
+    await user.click(screen.getByRole('button', { name: 'Join this playtest' }));
     expect(screen.getByText('Bring headphones.')).toBeInTheDocument();
     expect(screen.getByText('Respect everyone.')).toBeInTheDocument();
-    await user.click(screen.getByRole('checkbox', { name: /I accept the frozen rules/ }));
-    await user.click(screen.getByRole('button', { name: 'Reserve tester seat' }));
+    await user.click(screen.getByRole('checkbox', { name: /I’ve read and agree/ }));
+    await user.click(screen.getByRole('button', { name: 'Join playtest' }));
 
     await waitFor(() => expect(mocks.register).toHaveBeenCalledOnce());
     const submitted = mocks.register.mock.calls[0]![0] as FormData;
@@ -192,8 +206,9 @@ describe('TestingSlotRegistration', () => {
         }}
       />,
     );
-    const reserve = screen.getByRole('button', { name: 'Reserve tester seat' });
-    await user.click(screen.getByRole('checkbox', { name: /I accept the frozen rules/ }));
+    await user.click(screen.getByRole('button', { name: 'Join this playtest' }));
+    const reserve = screen.getByRole('button', { name: 'Join playtest' });
+    await user.click(screen.getByRole('checkbox', { name: /I’ve read and agree/ }));
     expect(reserve).toBeDisabled();
     await user.type(screen.getByLabelText('Accessibility needs'), 'Captions');
     await user.click(screen.getByRole('button', { name: 'Confirm registration answers' }));
@@ -240,8 +255,9 @@ describe('TestingSlotRegistration', () => {
       />,
     );
     if (operation === 'register') {
-      await user.click(screen.getByRole('checkbox', { name: /I accept the frozen rules/ }));
-      await user.click(screen.getByRole('button', { name: 'Reserve tester seat' }));
+      await user.click(screen.getByRole('button', { name: 'Join this playtest' }));
+      await user.click(screen.getByRole('checkbox', { name: /I’ve read and agree/ }));
+      await user.click(screen.getByRole('button', { name: 'Join playtest' }));
     } else {
       await user.click(screen.getByRole('button', { name: 'Cancel registration' }));
     }
