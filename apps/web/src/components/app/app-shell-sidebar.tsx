@@ -7,6 +7,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@game-guild
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -18,11 +19,18 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarRail,
+  SidebarSeparator,
   SidebarTrigger,
 } from '@game-guild/ui/components/sidebar';
 import { TenantSwitcher, type Tenant } from '@/components/console/tenant-switcher';
 import { flattenWorkspaceNavigationItems } from '@/components/console/workspace-sidebar';
-import { ChevronRight, GraduationCap, type LucideIcon } from 'lucide-react';
+import { GitHubIssueModal } from '@/components/ui/github-issue-modal';
+import {
+  Bug,
+  ChevronRight,
+  GraduationCap,
+  type LucideIcon,
+} from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
 // Types for the shared navigation structure rendered by `AppShellSidebar`.
@@ -77,6 +85,8 @@ const collapsibleButtonClass =
   '[&_svg]:size-5 group-data-[collapsible=icon]:justify-center data-active:bg-sidebar-primary/15 data-active:text-sidebar-primary data-active:font-medium';
 const collapsedItemClass =
   'group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:w-8';
+const utilityButtonClass =
+  'h-10 [&_svg]:size-5 group-data-[collapsible=icon]:justify-center data-active:bg-sidebar-primary/15 data-active:text-sidebar-primary';
 
 function NavGroups({ groups, notificationCounts }: { groups: WorkspaceNavGroup[]; notificationCounts?: Record<string, number> }) {
   const pathname = usePathname();
@@ -254,6 +264,7 @@ interface AppShellSidebarProps {
  * navigation groups (workspace or social) and optional notification summary.
  */
 export function AppShellSidebar({ navigation, notifications }: AppShellSidebarProps) {
+  const [isBugReportOpen, setIsBugReportOpen] = React.useState(false);
   const notificationCounts = countNotificationsByUrl(notifications, navigation);
   return (
     <Sidebar collapsible="icon">
@@ -266,7 +277,27 @@ export function AppShellSidebar({ navigation, notifications }: AppShellSidebarPr
       <SidebarContent className="gap-0">
         <NavGroups groups={navigation} notificationCounts={notificationCounts} />
       </SidebarContent>
+      <SidebarFooter className="gap-6 px-2 pb-3 pt-0">
+        <SidebarSeparator className="mx-0 w-full group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:w-8" />
+        <SidebarMenu className="gap-5">
+          <SidebarMenuItem className={collapsedItemClass}>
+            <SidebarMenuButton
+              aria-label="Report a bug"
+              tooltip="Report a bug"
+              className={utilityButtonClass}
+              onClick={() => setIsBugReportOpen(true)}
+            >
+              <Bug />
+              <span className="group-data-[collapsible=icon]:hidden">Report a bug</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
       <SidebarRail />
+      <GitHubIssueModal
+        isOpen={isBugReportOpen}
+        onClose={() => setIsBugReportOpen(false)}
+      />
     </Sidebar>
   );
 }

@@ -5,6 +5,7 @@ import { AppShellHeaderMenu } from '@/components/app/app-shell-header-menu';
 import { AppShellSidebar } from '@/components/app/app-shell-sidebar';
 import { AppShellContent, AppShellInset, AppShell } from '@/components/app/app-shell-layout';
 import { socialDesktopNav, socialNavigationData } from '@/components/app/social-navigation';
+import { WorkspaceCommandPalette } from '@/components/console/workspace-command-palette';
 import { PublicDesktopNav } from '@/components/app/public-website-nav';
 import type { WorkspaceUser } from '@/components/console/workspace-user-menu';
 import type { DashboardNotificationSummary } from '@/lib/dashboard-notifications';
@@ -28,6 +29,7 @@ export function SocialAppShell({ children, notifications, user }: SocialAppShell
       <AppShell>
         <AppShellSidebar navigation={socialNavigationData} notifications={notifications} />
         <AppShellInset>
+          <WorkspaceCommandPalette navigation={socialNavigationData} />
           <AppShellHeader>
             <div className="flex min-w-0 items-center gap-2">
               <PublicDesktopNav items={socialDesktopNav} variant="app" />

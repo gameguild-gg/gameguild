@@ -189,15 +189,15 @@ export function WorkspaceCommandPalette({
     <CommandDialog
       open={open}
       onOpenChange={setOpen}
-      title="Search dashboard"
-      description="Search GameGuild dashboard pages, recent resources, and quick actions."
+      title="Search GameGuild"
+      description="Search GameGuild pages, recent destinations, and available actions."
       className="max-w-2xl"
     >
       <CommandInput
         value={query}
         onValueChange={setQuery}
-        placeholder="Search courses, members, testing lab, launch pad..."
-        aria-label="Search dashboard"
+        placeholder="Search pages, destinations, and actions..."
+        aria-label="Search GameGuild"
       />
       <CommandList className="max-h-[420px]">
         <CommandEmpty>No matching pages or actions found.</CommandEmpty>
