@@ -9396,24 +9396,24 @@ export const getAssetsSearchEndpoint = {
 export interface PostAssetsSocialMediaInput {
   body?: FormData;
 }
-export type PostAssetsSocialMediaOutput = Types.AssetsSocialMediaSocialMediaAssetDescriptor;
+export type PostAssetsSocialMediaOutput = Types.SocialAssetsSocialMediaSocialMediaAssetDescriptor;
 export const postAssetsSocialMediaEndpoint = {
   operationId: 'postAssetsSocialMedia' as const,
   method: 'POST' as const,
   path: '/v1/assets/social-media' as const,
-  tags: ['AssetsSocialMediaAssets'] as const,
+  tags: ['SocialAssetsSocialMediaAssets'] as const,
   requiresAuth: true,
 } as const;
 
 export interface GetAssetsSocialMediaInput {
   assetReferenceId: string;
 }
-export type GetAssetsSocialMediaOutput = Types.AssetsSocialMediaSocialMediaAssetDescriptor;
+export type GetAssetsSocialMediaOutput = Types.SocialAssetsSocialMediaSocialMediaAssetDescriptor;
 export const getAssetsSocialMediaEndpoint = {
   operationId: 'getAssetsSocialMedia' as const,
   method: 'GET' as const,
   path: '/v1/assets/social-media/{assetReferenceId}' as const,
-  tags: ['AssetsSocialMediaAssets'] as const,
+  tags: ['SocialAssetsSocialMediaAssets'] as const,
   requiresAuth: true,
 } as const;
 
@@ -11228,6 +11228,19 @@ export type GetCoursesSupportTicketsForGetCoursesByCourseIdSupportTicketsOutput 
 export const getCoursesSupportTicketsForGetCoursesByCourseIdSupportTicketsEndpoint = {
   operationId: 'getCoursesSupportTicketsForGetCoursesByCourseIdSupportTickets' as const,
   method: 'GET' as const,
+  path: '/v1/courses/{courseId}/support/tickets' as const,
+  tags: ['LearningCoursesSupportTickets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostCoursesSupportTicketsInput {
+  courseId: string;
+  body?: Types.LearningCoursesCreateCourseSupportTicketInput;
+}
+export type PostCoursesSupportTicketsOutput = Types.CommerceProductsSupportTicketDto;
+export const postCoursesSupportTicketsEndpoint = {
+  operationId: 'postCoursesSupportTickets' as const,
+  method: 'POST' as const,
   path: '/v1/courses/{courseId}/support/tickets' as const,
   tags: ['LearningCoursesSupportTickets'] as const,
   requiresAuth: true,
@@ -16645,13 +16658,14 @@ export const headSubscriptionPlansEndpoint = {
 
 export interface GetSupportTicketsInput {
   query?: {
-    tenantId?: string;
     status?: Types.CommerceProductsSupportTicketStatus;
     priority?: Types.CommerceProductsSupportTicketPriority;
     search?: string;
     skip?: number;
     take?: number;
     customerId?: string;
+    category?: string;
+    assignedToUserId?: string;
   };
 }
 export type GetSupportTicketsOutput = Types.PagedResultSupportTicketDto;
@@ -16677,9 +16691,6 @@ export const postSupportTicketsEndpoint = {
 
 export interface GetSupportTicketByIdInput {
   ticketId: string;
-  query?: {
-    tenantId?: string;
-  };
 }
 export type GetSupportTicketByIdOutput = Types.CommerceProductsSupportTicketDto;
 export const getSupportTicketByIdEndpoint = {
@@ -16716,6 +16727,31 @@ export const postSupportTicketsCloseEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface PostSupportTicketsPriorityInput {
+  ticketId: string;
+  body?: Types.CommerceProductsChangeSupportTicketPriorityInput;
+}
+export type PostSupportTicketsPriorityOutput = Types.CommerceProductsSupportTicketDto;
+export const postSupportTicketsPriorityEndpoint = {
+  operationId: 'postSupportTicketsPriority' as const,
+  method: 'POST' as const,
+  path: '/v1/support/tickets/{ticketId}:priority' as const,
+  tags: ['CommerceProductsSupportTickets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostSupportTicketsReopenInput {
+  ticketId: string;
+}
+export type PostSupportTicketsReopenOutput = Types.CommerceProductsSupportTicketDto;
+export const postSupportTicketsReopenEndpoint = {
+  operationId: 'postSupportTicketsReopen' as const,
+  method: 'POST' as const,
+  path: '/v1/support/tickets/{ticketId}:reopen' as const,
+  tags: ['CommerceProductsSupportTickets'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface PostSupportTicketsResolveInput {
   ticketId: string;
   body?: Types.CommerceProductsResolveSupportTicketInput;
@@ -16725,6 +16761,18 @@ export const postSupportTicketsResolveEndpoint = {
   operationId: 'postSupportTicketsResolve' as const,
   method: 'POST' as const,
   path: '/v1/support/tickets/{ticketId}:resolve' as const,
+  tags: ['CommerceProductsSupportTickets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostSupportTicketsStartInput {
+  ticketId: string;
+}
+export type PostSupportTicketsStartOutput = Types.CommerceProductsSupportTicketDto;
+export const postSupportTicketsStartEndpoint = {
+  operationId: 'postSupportTicketsStart' as const,
+  method: 'POST' as const,
+  path: '/v1/support/tickets/{ticketId}:start' as const,
   tags: ['CommerceProductsSupportTickets'] as const,
   requiresAuth: true,
 } as const;
@@ -16742,16 +16790,26 @@ export const postSupportTicketsMessagesEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetSupportTicketsMineInput {
+export type GetSupportTicketsAgentsInput = void;
+export type GetSupportTicketsAgentsOutput = Array<Types.CommerceProductsSupportAgentDto>;
+export const getSupportTicketsAgentsEndpoint = {
+  operationId: 'getSupportTicketsAgents' as const,
+  method: 'GET' as const,
+  path: '/v1/support/tickets/agents' as const,
+  tags: ['CommerceProductsSupportTickets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetSupportTicketsMineForGetSupportTicketsMineInput {
   query?: {
     status?: Types.CommerceProductsSupportTicketStatus;
     skip?: number;
     take?: number;
   };
 }
-export type GetSupportTicketsMineOutput = Types.PagedResultSupportTicketDto;
-export const getSupportTicketsMineEndpoint = {
-  operationId: 'getSupportTicketsMine' as const,
+export type GetSupportTicketsMineForGetSupportTicketsMineOutput = Types.PagedResultSupportTicketDto;
+export const getSupportTicketsMineForGetSupportTicketsMineEndpoint = {
+  operationId: 'getSupportTicketsMineForGetSupportTicketsMine' as const,
   method: 'GET' as const,
   path: '/v1/support/tickets/mine' as const,
   tags: ['CommerceProductsSupportTicketsSelfService'] as const,
@@ -16770,6 +16828,18 @@ export const postSupportTicketsMineEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetSupportTicketsMineForGetSupportTicketsMineByTicketIdInput {
+  ticketId: string;
+}
+export type GetSupportTicketsMineForGetSupportTicketsMineByTicketIdOutput = Types.CommerceProductsSupportTicketDto;
+export const getSupportTicketsMineForGetSupportTicketsMineByTicketIdEndpoint = {
+  operationId: 'getSupportTicketsMineForGetSupportTicketsMineByTicketId' as const,
+  method: 'GET' as const,
+  path: '/v1/support/tickets/mine/{ticketId}' as const,
+  tags: ['CommerceProductsSupportTicketsSelfService'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface PostSupportTicketsMineMessagesInput {
   ticketId: string;
   body?: Types.CommerceProductsAddMySupportTicketMessageInput;
@@ -16780,6 +16850,16 @@ export const postSupportTicketsMineMessagesEndpoint = {
   method: 'POST' as const,
   path: '/v1/support/tickets/mine/{ticketId}/messages' as const,
   tags: ['CommerceProductsSupportTicketsSelfService'] as const,
+  requiresAuth: true,
+} as const;
+
+export type GetSupportTicketsSummaryInput = void;
+export type GetSupportTicketsSummaryOutput = Types.CommerceProductsSupportTicketSummaryDto;
+export const getSupportTicketsSummaryEndpoint = {
+  operationId: 'getSupportTicketsSummary' as const,
+  method: 'GET' as const,
+  path: '/v1/support/tickets/summary' as const,
+  tags: ['CommerceProductsSupportTickets'] as const,
   requiresAuth: true,
 } as const;
 
@@ -22381,6 +22461,7 @@ export const endpoints = {
   deleteCoursesGroupSetsGroupsMembership: deleteCoursesGroupSetsGroupsMembershipEndpoint,
   postCoursesStudentsMessage: postCoursesStudentsMessageEndpoint,
   getCoursesSupportTicketsForGetCoursesByCourseIdSupportTickets: getCoursesSupportTicketsForGetCoursesByCourseIdSupportTicketsEndpoint,
+  postCoursesSupportTickets: postCoursesSupportTicketsEndpoint,
   getCoursesSupportTicketsForGetCoursesByCourseIdSupportTicketsByTicketId: getCoursesSupportTicketsForGetCoursesByCourseIdSupportTicketsByTicketIdEndpoint,
   postCoursesSupportTicketsResolve: postCoursesSupportTicketsResolveEndpoint,
   postCoursesSupportTicketsMessages: postCoursesSupportTicketsMessagesEndpoint,
@@ -22786,11 +22867,17 @@ export const endpoints = {
   getSupportTicketById: getSupportTicketByIdEndpoint,
   postSupportTicketsAssign: postSupportTicketsAssignEndpoint,
   postSupportTicketsClose: postSupportTicketsCloseEndpoint,
+  postSupportTicketsPriority: postSupportTicketsPriorityEndpoint,
+  postSupportTicketsReopen: postSupportTicketsReopenEndpoint,
   postSupportTicketsResolve: postSupportTicketsResolveEndpoint,
+  postSupportTicketsStart: postSupportTicketsStartEndpoint,
   postSupportTicketsMessages: postSupportTicketsMessagesEndpoint,
-  getSupportTicketsMine: getSupportTicketsMineEndpoint,
+  getSupportTicketsAgents: getSupportTicketsAgentsEndpoint,
+  getSupportTicketsMineForGetSupportTicketsMine: getSupportTicketsMineForGetSupportTicketsMineEndpoint,
   postSupportTicketsMine: postSupportTicketsMineEndpoint,
+  getSupportTicketsMineForGetSupportTicketsMineByTicketId: getSupportTicketsMineForGetSupportTicketsMineByTicketIdEndpoint,
   postSupportTicketsMineMessages: postSupportTicketsMineMessagesEndpoint,
+  getSupportTicketsSummary: getSupportTicketsSummaryEndpoint,
   getTeamsForGetTeams: getTeamsForGetTeamsEndpoint,
   postTeams: postTeamsEndpoint,
   getTeamsForGetTeamsByTeamId: getTeamsForGetTeamsByTeamIdEndpoint,

@@ -41,6 +41,33 @@ export class LearningCoursesSupportTicketsModule {
 
   /**
    */
+  async postCoursesSupportTickets(
+    courseId: string,
+    body: Types.LearningCoursesCreateCourseSupportTicketInput,
+  ): Promise<Result<Types.CommerceProductsSupportTicketDto, ApiError>> {
+    const url = `/v1/courses/${courseId}/support/tickets`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.LearningCoursesCreateCourseSupportTicketInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.CommerceProductsSupportTicketDtoSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async getCoursesSupportTicketsForGetCoursesByCourseIdSupportTicketsByTicketId(
     courseId: string,
     ticketId: string,

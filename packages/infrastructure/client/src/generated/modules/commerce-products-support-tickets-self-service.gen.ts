@@ -17,7 +17,7 @@ export class CommerceProductsSupportTicketsSelfServiceModule {
 
   /**
    */
-  async getSupportTicketsMine(query?: {
+  async getSupportTicketsMineForGetSupportTicketsMine(query?: {
     status?: Types.CommerceProductsSupportTicketStatus;
     skip?: number;
     take?: number;
@@ -52,6 +52,26 @@ export class CommerceProductsSupportTicketsSelfServiceModule {
       method: 'POST',
       path: url,
       body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.CommerceProductsSupportTicketDtoSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getSupportTicketsMineForGetSupportTicketsMineByTicketId(ticketId: string): Promise<Result<Types.CommerceProductsSupportTicketDto, ApiError>> {
+    const url = `/v1/support/tickets/mine/${ticketId}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
       requiresAuth: true,
     });
 

@@ -1274,16 +1274,6 @@ export interface AssetsSecurityAccessUrlInput {
   transform?: string | null;
 }
 
-export interface AssetsSocialMediaSocialMediaAssetDescriptor {
-  assetReferenceId?: string;
-  deliveryUrl?: string | null;
-  mimeType?: string | null;
-  sizeBytes?: number;
-  state?: AssetsSocialMediaSocialMediaProcessingState;
-}
-
-export type AssetsSocialMediaSocialMediaProcessingState = 'Processing' | 'Ready' | 'Rejected';
-
 export type AssetsVirusScanStatus = 'Pending' | 'Scanning' | 'Clean' | 'Infected' | 'ScanFailed';
 
 export type BillingCycle = 'Weekly' | 'Monthly' | 'Quarterly' | 'SemiAnnually' | 'Annually' | 'Biannually';
@@ -1854,13 +1844,8 @@ export interface CommerceProductsAddMySupportTicketMessageInput {
 }
 
 export interface CommerceProductsAddSupportTicketMessageInput {
-  authorEmail?: string | null;
-  authorName?: string | null;
-  authorType?: CommerceProductsSupportTicketMessageAuthorType;
-  authorUserId?: string;
   body?: string | null;
   isInternal?: boolean;
-  tenantId?: string;
 }
 
 export interface CommerceProductsAppliedPromoCode {
@@ -1876,9 +1861,7 @@ export interface CommerceProductsApplyPromoCodesInput {
 }
 
 export interface CommerceProductsAssignSupportTicketInput {
-  agentName?: string | null;
   agentUserId?: string;
-  tenantId?: string;
 }
 
 export interface CommerceProductsBatchCreateProductsInput {
@@ -1899,15 +1882,16 @@ export interface CommerceProductsBatchProductCreateItem {
   type?: CommerceProductsProductType;
 }
 
+export interface CommerceProductsChangeSupportTicketPriorityInput {
+  priority?: CommerceProductsSupportTicketPriority;
+}
+
 export interface CommerceProductsCheckMultipleAccessInput {
   productIds?: Array<string> | null;
 }
 
 export interface CommerceProductsCloseSupportTicketInput {
-  agentName?: string | null;
-  agentUserId?: string;
   closingNotes?: string | null;
-  tenantId?: string;
 }
 
 export interface CommerceProductsCreateMySupportTicketInput {
@@ -1953,13 +1937,8 @@ export interface CommerceProductsCreateSupportTicketInput {
   body?: string | null;
   category?: string | null;
   customerId?: string;
-  customerName?: string | null;
   priority?: CommerceProductsSupportTicketPriority;
-  reporterEmail?: string | null;
-  reporterName?: string | null;
-  reporterUserId?: string;
   subject?: string | null;
-  tenantId?: string;
 }
 
 export interface CommerceProductsEntitlementCheckResult {
@@ -2133,10 +2112,7 @@ export interface CommerceProductsRejectedPromoCode {
 }
 
 export interface CommerceProductsResolveSupportTicketInput {
-  agentName?: string | null;
-  agentUserId?: string;
   resolutionSummary?: string | null;
-  tenantId?: string;
 }
 
 export interface CommerceProductsRevokeEntitlementInput {
@@ -2154,6 +2130,12 @@ export interface CommerceProductsSetProductPricingInput {
   saleEndDate?: string | null;
   salePrice?: number | null;
   saleStartDate?: string | null;
+}
+
+export interface CommerceProductsSupportAgentDto {
+  email?: string | null;
+  name?: string | null;
+  userId?: string;
 }
 
 export interface CommerceProductsSupportTicketDto {
@@ -2199,6 +2181,13 @@ export interface CommerceProductsSupportTicketMessageDto {
 export type CommerceProductsSupportTicketPriority = 'Low' | 'Normal' | 'High' | 'Urgent';
 
 export type CommerceProductsSupportTicketStatus = 'Open' | 'InProgress' | 'Resolved' | 'Closed' | 'Cancelled';
+
+export interface CommerceProductsSupportTicketSummaryDto {
+  highOrUrgent?: number;
+  inProgress?: number;
+  open?: number;
+  resolvedToday?: number;
+}
 
 export interface CommerceProductsUpdateProductInput {
   affiliateCommissionPercentage?: number | null;
@@ -9021,6 +9010,13 @@ export interface LearningCoursesCreateActivityGradeDto {
   points?: LearningGradingContractsScoreValue;
 }
 
+export interface LearningCoursesCreateCourseSupportTicketInput {
+  body?: string | null;
+  category?: string | null;
+  priority?: CommerceProductsSupportTicketPriority;
+  subject?: string | null;
+}
+
 export interface LearningCoursesCreatePrerequisiteApiInput {
   courseId?: string;
   description?: string | null;
@@ -11723,6 +11719,16 @@ export interface ResourcesUsageTrendsResult {
   type?: ResourcesResourceUsageType;
 }
 
+export interface SocialAssetsSocialMediaSocialMediaAssetDescriptor {
+  assetReferenceId?: string;
+  deliveryUrl?: string | null;
+  mimeType?: string | null;
+  sizeBytes?: number;
+  state?: SocialAssetsSocialMediaSocialMediaProcessingState;
+}
+
+export type SocialAssetsSocialMediaSocialMediaProcessingState = 'Processing' | 'Ready' | 'Rejected';
+
 export interface SocialBlogBlogPostDto {
   id?: string;
   allowComments?: boolean;
@@ -13907,8 +13913,6 @@ export let AssetsQueriesBulkAssetAccessUrlsOutputSchema: z.ZodType<AssetsQueries
 export let AssetsReportReasonSchema: z.ZodType<AssetsReportReason>;
 export let AssetsReviewDecisionSchema: z.ZodType<AssetsReviewDecision>;
 export let AssetsSecurityAccessUrlInputSchema: z.ZodType<AssetsSecurityAccessUrlInput>;
-export let AssetsSocialMediaSocialMediaAssetDescriptorSchema: z.ZodType<AssetsSocialMediaSocialMediaAssetDescriptor>;
-export let AssetsSocialMediaSocialMediaProcessingStateSchema: z.ZodType<AssetsSocialMediaSocialMediaProcessingState>;
 export let AssetsVirusScanStatusSchema: z.ZodType<AssetsVirusScanStatus>;
 export let BillingCycleSchema: z.ZodType<BillingCycle>;
 export let BulkOperationErrorSchema: z.ZodType<BulkOperationError>;
@@ -13982,6 +13986,7 @@ export let CommerceProductsApplyPromoCodesInputSchema: z.ZodType<CommerceProduct
 export let CommerceProductsAssignSupportTicketInputSchema: z.ZodType<CommerceProductsAssignSupportTicketInput>;
 export let CommerceProductsBatchCreateProductsInputSchema: z.ZodType<CommerceProductsBatchCreateProductsInput>;
 export let CommerceProductsBatchProductCreateItemSchema: z.ZodType<CommerceProductsBatchProductCreateItem>;
+export let CommerceProductsChangeSupportTicketPriorityInputSchema: z.ZodType<CommerceProductsChangeSupportTicketPriorityInput>;
 export let CommerceProductsCheckMultipleAccessInputSchema: z.ZodType<CommerceProductsCheckMultipleAccessInput>;
 export let CommerceProductsCloseSupportTicketInputSchema: z.ZodType<CommerceProductsCloseSupportTicketInput>;
 export let CommerceProductsCreateMySupportTicketInputSchema: z.ZodType<CommerceProductsCreateMySupportTicketInput>;
@@ -14006,11 +14011,13 @@ export let CommerceProductsRejectedPromoCodeSchema: z.ZodType<CommerceProductsRe
 export let CommerceProductsResolveSupportTicketInputSchema: z.ZodType<CommerceProductsResolveSupportTicketInput>;
 export let CommerceProductsRevokeEntitlementInputSchema: z.ZodType<CommerceProductsRevokeEntitlementInput>;
 export let CommerceProductsSetProductPricingInputSchema: z.ZodType<CommerceProductsSetProductPricingInput>;
+export let CommerceProductsSupportAgentDtoSchema: z.ZodType<CommerceProductsSupportAgentDto>;
 export let CommerceProductsSupportTicketDtoSchema: z.ZodType<CommerceProductsSupportTicketDto>;
 export let CommerceProductsSupportTicketMessageAuthorTypeSchema: z.ZodType<CommerceProductsSupportTicketMessageAuthorType>;
 export let CommerceProductsSupportTicketMessageDtoSchema: z.ZodType<CommerceProductsSupportTicketMessageDto>;
 export let CommerceProductsSupportTicketPrioritySchema: z.ZodType<CommerceProductsSupportTicketPriority>;
 export let CommerceProductsSupportTicketStatusSchema: z.ZodType<CommerceProductsSupportTicketStatus>;
+export let CommerceProductsSupportTicketSummaryDtoSchema: z.ZodType<CommerceProductsSupportTicketSummaryDto>;
 export let CommerceProductsUpdateProductInputSchema: z.ZodType<CommerceProductsUpdateProductInput>;
 export let CommerceProductsUpdatePromoCodeInputSchema: z.ZodType<CommerceProductsUpdatePromoCodeInput>;
 export let CommerceProductsValidatePromoCodeInputSchema: z.ZodType<CommerceProductsValidatePromoCodeInput>;
@@ -14794,6 +14801,7 @@ export let LearningCoursesContentStatsDtoSchema: z.ZodType<LearningCoursesConten
 export let LearningCoursesContentSummaryDtoSchema: z.ZodType<LearningCoursesContentSummaryDto>;
 export let LearningCoursesCourseSupportTicketMessageInputSchema: z.ZodType<LearningCoursesCourseSupportTicketMessageInput>;
 export let LearningCoursesCreateActivityGradeDtoSchema: z.ZodType<LearningCoursesCreateActivityGradeDto>;
+export let LearningCoursesCreateCourseSupportTicketInputSchema: z.ZodType<LearningCoursesCreateCourseSupportTicketInput>;
 export let LearningCoursesCreatePrerequisiteApiInputSchema: z.ZodType<LearningCoursesCreatePrerequisiteApiInput>;
 export let LearningCoursesCreateProductFromProgramDtoSchema: z.ZodType<LearningCoursesCreateProductFromProgramDto>;
 export let LearningCoursesCreateProgramContentDtoSchema: z.ZodType<LearningCoursesCreateProgramContentDto>;
@@ -15077,6 +15085,8 @@ export let ResourcesTrendGranularitySchema: z.ZodType<ResourcesTrendGranularity>
 export let ResourcesUsageRecordSchema: z.ZodType<ResourcesUsageRecord>;
 export let ResourcesUsageTrendDataPointSchema: z.ZodType<ResourcesUsageTrendDataPoint>;
 export let ResourcesUsageTrendsResultSchema: z.ZodType<ResourcesUsageTrendsResult>;
+export let SocialAssetsSocialMediaSocialMediaAssetDescriptorSchema: z.ZodType<SocialAssetsSocialMediaSocialMediaAssetDescriptor>;
+export let SocialAssetsSocialMediaSocialMediaProcessingStateSchema: z.ZodType<SocialAssetsSocialMediaSocialMediaProcessingState>;
 export let SocialBlogBlogPostDtoSchema: z.ZodType<SocialBlogBlogPostDto>;
 export let SocialBlogBlogPostStatusSchema: z.ZodType<SocialBlogBlogPostStatus>;
 export let SocialBlogCreateBlogPostInputSchema: z.ZodType<SocialBlogCreateBlogPostInput>;
@@ -16813,18 +16823,6 @@ AssetsSecurityAccessUrlInputSchema = z.object({
   transform: z.string().nullable().optional(),
 });
 
-/** Zod schema for AssetsSocialMediaSocialMediaAssetDescriptor */
-AssetsSocialMediaSocialMediaAssetDescriptorSchema = z.object({
-  assetReferenceId: z.string().uuid().optional(),
-  deliveryUrl: z.string().nullable().optional(),
-  mimeType: z.string().nullable().optional(),
-  sizeBytes: z.number().int().optional(),
-  state: z.lazy(() => AssetsSocialMediaSocialMediaProcessingStateSchema).optional(),
-});
-
-/** Zod schema for AssetsSocialMediaSocialMediaProcessingState */
-AssetsSocialMediaSocialMediaProcessingStateSchema = z.enum(['Processing', 'Ready', 'Rejected']);
-
 /** Zod schema for AssetsVirusScanStatus */
 AssetsVirusScanStatusSchema = z.enum(['Pending', 'Scanning', 'Clean', 'Infected', 'ScanFailed']);
 
@@ -17531,13 +17529,8 @@ CommerceProductsAddMySupportTicketMessageInputSchema = z.object({
 
 /** Zod schema for CommerceProductsAddSupportTicketMessageInput */
 CommerceProductsAddSupportTicketMessageInputSchema = z.object({
-  authorEmail: z.string().nullable().optional(),
-  authorName: z.string().nullable().optional(),
-  authorType: z.lazy(() => CommerceProductsSupportTicketMessageAuthorTypeSchema).optional(),
-  authorUserId: z.string().uuid().optional(),
   body: z.string().nullable().optional(),
   isInternal: z.boolean().optional(),
-  tenantId: z.string().uuid().optional(),
 });
 
 /** Zod schema for CommerceProductsAppliedPromoCode */
@@ -17556,9 +17549,7 @@ CommerceProductsApplyPromoCodesInputSchema = z.object({
 
 /** Zod schema for CommerceProductsAssignSupportTicketInput */
 CommerceProductsAssignSupportTicketInputSchema = z.object({
-  agentName: z.string().nullable().optional(),
   agentUserId: z.string().uuid().optional(),
-  tenantId: z.string().uuid().optional(),
 });
 
 /** Zod schema for CommerceProductsBatchCreateProductsInput */
@@ -17584,6 +17575,11 @@ CommerceProductsBatchProductCreateItemSchema = z.object({
   type: z.lazy(() => CommerceProductsProductTypeSchema).optional(),
 });
 
+/** Zod schema for CommerceProductsChangeSupportTicketPriorityInput */
+CommerceProductsChangeSupportTicketPriorityInputSchema = z.object({
+  priority: z.lazy(() => CommerceProductsSupportTicketPrioritySchema).optional(),
+});
+
 /** Zod schema for CommerceProductsCheckMultipleAccessInput */
 CommerceProductsCheckMultipleAccessInputSchema = z.object({
   productIds: z.array(z.string().uuid()).nullable().optional(),
@@ -17591,10 +17587,7 @@ CommerceProductsCheckMultipleAccessInputSchema = z.object({
 
 /** Zod schema for CommerceProductsCloseSupportTicketInput */
 CommerceProductsCloseSupportTicketInputSchema = z.object({
-  agentName: z.string().nullable().optional(),
-  agentUserId: z.string().uuid().optional(),
   closingNotes: z.string().nullable().optional(),
-  tenantId: z.string().uuid().optional(),
 });
 
 /** Zod schema for CommerceProductsCreateMySupportTicketInput */
@@ -17644,13 +17637,8 @@ CommerceProductsCreateSupportTicketInputSchema = z.object({
   body: z.string().nullable().optional(),
   category: z.string().nullable().optional(),
   customerId: z.string().uuid().optional(),
-  customerName: z.string().nullable().optional(),
   priority: z.lazy(() => CommerceProductsSupportTicketPrioritySchema).optional(),
-  reporterEmail: z.string().nullable().optional(),
-  reporterName: z.string().nullable().optional(),
-  reporterUserId: z.string().uuid().optional(),
   subject: z.string().nullable().optional(),
-  tenantId: z.string().uuid().optional(),
 });
 
 /** Zod schema for CommerceProductsEntitlementCheckResult */
@@ -17850,10 +17838,7 @@ CommerceProductsRejectedPromoCodeSchema = z.object({
 
 /** Zod schema for CommerceProductsResolveSupportTicketInput */
 CommerceProductsResolveSupportTicketInputSchema = z.object({
-  agentName: z.string().nullable().optional(),
-  agentUserId: z.string().uuid().optional(),
   resolutionSummary: z.string().nullable().optional(),
-  tenantId: z.string().uuid().optional(),
 });
 
 /** Zod schema for CommerceProductsRevokeEntitlementInput */
@@ -17873,6 +17858,13 @@ CommerceProductsSetProductPricingInputSchema = z.object({
   saleEndDate: z.string().datetime().nullable().optional(),
   salePrice: z.number().nullable().optional(),
   saleStartDate: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for CommerceProductsSupportAgentDto */
+CommerceProductsSupportAgentDtoSchema = z.object({
+  email: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for CommerceProductsSupportTicketDto */
@@ -17926,6 +17918,14 @@ CommerceProductsSupportTicketPrioritySchema = z.enum(['Low', 'Normal', 'High', '
 
 /** Zod schema for CommerceProductsSupportTicketStatus */
 CommerceProductsSupportTicketStatusSchema = z.enum(['Open', 'InProgress', 'Resolved', 'Closed', 'Cancelled']);
+
+/** Zod schema for CommerceProductsSupportTicketSummaryDto */
+CommerceProductsSupportTicketSummaryDtoSchema = z.object({
+  highOrUrgent: z.number().int().optional(),
+  inProgress: z.number().int().optional(),
+  open: z.number().int().optional(),
+  resolvedToday: z.number().int().optional(),
+});
 
 /** Zod schema for CommerceProductsUpdateProductInput */
 CommerceProductsUpdateProductInputSchema = z.object({
@@ -26204,6 +26204,14 @@ LearningCoursesCreateActivityGradeDtoSchema = z.object({
   points: z.lazy(() => LearningGradingContractsScoreValueSchema).optional(),
 });
 
+/** Zod schema for LearningCoursesCreateCourseSupportTicketInput */
+LearningCoursesCreateCourseSupportTicketInputSchema = z.object({
+  body: z.string().nullable().optional(),
+  category: z.string().nullable().optional(),
+  priority: z.lazy(() => CommerceProductsSupportTicketPrioritySchema).optional(),
+  subject: z.string().nullable().optional(),
+});
+
 /** Zod schema for LearningCoursesCreatePrerequisiteApiInput */
 LearningCoursesCreatePrerequisiteApiInputSchema = z.object({
   courseId: z.string().uuid().optional(),
@@ -29549,6 +29557,18 @@ ResourcesUsageTrendsResultSchema = z.object({
   type: z.lazy(() => ResourcesResourceUsageTypeSchema).optional(),
 });
 
+/** Zod schema for SocialAssetsSocialMediaSocialMediaAssetDescriptor */
+SocialAssetsSocialMediaSocialMediaAssetDescriptorSchema = z.object({
+  assetReferenceId: z.string().uuid().optional(),
+  deliveryUrl: z.string().nullable().optional(),
+  mimeType: z.string().nullable().optional(),
+  sizeBytes: z.number().int().optional(),
+  state: z.lazy(() => SocialAssetsSocialMediaSocialMediaProcessingStateSchema).optional(),
+});
+
+/** Zod schema for SocialAssetsSocialMediaSocialMediaProcessingState */
+SocialAssetsSocialMediaSocialMediaProcessingStateSchema = z.enum(['Processing', 'Ready', 'Rejected']);
+
 /** Zod schema for SocialBlogBlogPostDto */
 SocialBlogBlogPostDtoSchema = z.object({
   id: z.string().uuid().optional(),
@@ -32065,10 +32085,14 @@ export type CommerceProductsPromoCode = CommerceProductsPromoCodeDto;
 export { CommerceProductsPromoCodeDtoSchema as CommerceProductsPromoCodeSchema };
 export type CommerceProductsPromoCodeUsage = CommerceProductsPromoCodeUsageDto;
 export { CommerceProductsPromoCodeUsageDtoSchema as CommerceProductsPromoCodeUsageSchema };
+export type CommerceProductsSupportAgent = CommerceProductsSupportAgentDto;
+export { CommerceProductsSupportAgentDtoSchema as CommerceProductsSupportAgentSchema };
 export type CommerceProductsSupportTicket = CommerceProductsSupportTicketDto;
 export { CommerceProductsSupportTicketDtoSchema as CommerceProductsSupportTicketSchema };
 export type CommerceProductsSupportTicketMessage = CommerceProductsSupportTicketMessageDto;
 export { CommerceProductsSupportTicketMessageDtoSchema as CommerceProductsSupportTicketMessageSchema };
+export type CommerceProductsSupportTicketSummary = CommerceProductsSupportTicketSummaryDto;
+export { CommerceProductsSupportTicketSummaryDtoSchema as CommerceProductsSupportTicketSummarySchema };
 export type CommerceSubscriptionsBillingHistory = CommerceSubscriptionsBillingHistoryDto;
 export { CommerceSubscriptionsBillingHistoryDtoSchema as CommerceSubscriptionsBillingHistorySchema };
 export type CommerceSubscriptionsSubscriptionChurnReport = CommerceSubscriptionsSubscriptionChurnReportDto;

@@ -1,5 +1,5 @@
 /**
- * @game-guild/client - AssetsSocialMediaAssets Module
+ * @game-guild/client - SocialAssetsSocialMediaAssets Module
  *
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
@@ -12,12 +12,12 @@ import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-export class AssetsSocialMediaAssetsModule {
+export class SocialAssetsSocialMediaAssetsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
    */
-  async postAssetsSocialMedia(): Promise<Result<Types.AssetsSocialMediaSocialMediaAssetDescriptor, ApiError>> {
+  async postAssetsSocialMedia(): Promise<Result<Types.SocialAssetsSocialMediaSocialMediaAssetDescriptor, ApiError>> {
     const url = '/v1/assets/social-media';
 
     const result = await this.client.request({
@@ -28,7 +28,7 @@ export class AssetsSocialMediaAssetsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.AssetsSocialMediaSocialMediaAssetDescriptorSchema, result.data, 'response');
+      const validatedData = safeParse(Types.SocialAssetsSocialMediaSocialMediaAssetDescriptorSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -37,7 +37,7 @@ export class AssetsSocialMediaAssetsModule {
 
   /**
    */
-  async getAssetsSocialMedia(assetReferenceId: string): Promise<Result<Types.AssetsSocialMediaSocialMediaAssetDescriptor, ApiError>> {
+  async getAssetsSocialMedia(assetReferenceId: string): Promise<Result<Types.SocialAssetsSocialMediaSocialMediaAssetDescriptor, ApiError>> {
     const url = `/v1/assets/social-media/${assetReferenceId}`;
 
     const result = await this.client.request({
@@ -48,7 +48,7 @@ export class AssetsSocialMediaAssetsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.AssetsSocialMediaSocialMediaAssetDescriptorSchema, result.data, 'response');
+      const validatedData = safeParse(Types.SocialAssetsSocialMediaSocialMediaAssetDescriptorSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -56,6 +56,6 @@ export class AssetsSocialMediaAssetsModule {
   }
 }
 
-export function createAssetsSocialMediaAssetsModule(client: ApiClient): AssetsSocialMediaAssetsModule {
-  return new AssetsSocialMediaAssetsModule(client);
+export function createSocialAssetsSocialMediaAssetsModule(client: ApiClient): SocialAssetsSocialMediaAssetsModule {
+  return new SocialAssetsSocialMediaAssetsModule(client);
 }

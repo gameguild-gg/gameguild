@@ -18,13 +18,14 @@ export class CommerceProductsSupportTicketsModule {
   /**
    */
   async getSupportTickets(query?: {
-    tenantId?: string;
     status?: Types.CommerceProductsSupportTicketStatus;
     priority?: Types.CommerceProductsSupportTicketPriority;
     search?: string;
     skip?: number;
     take?: number;
     customerId?: string;
+    category?: string;
+    assignedToUserId?: string;
   }): Promise<Result<Types.PagedResultSupportTicketDto, ApiError>> {
     const url = '/v1/support/tickets';
 
@@ -70,13 +71,12 @@ export class CommerceProductsSupportTicketsModule {
 
   /**
    */
-  async getSupportTicketById(ticketId: string, query?: { tenantId?: string }): Promise<Result<Types.CommerceProductsSupportTicketDto, ApiError>> {
+  async getSupportTicketById(ticketId: string): Promise<Result<Types.CommerceProductsSupportTicketDto, ApiError>> {
     const url = `/v1/support/tickets/${ticketId}`;
 
     const result = await this.client.request({
       method: 'GET',
       path: url,
-      params: query,
       requiresAuth: true,
     });
 
@@ -145,6 +145,53 @@ export class CommerceProductsSupportTicketsModule {
 
   /**
    */
+  async postSupportTicketsPriority(
+    ticketId: string,
+    body: Types.CommerceProductsChangeSupportTicketPriorityInput,
+  ): Promise<Result<Types.CommerceProductsSupportTicketDto, ApiError>> {
+    const url = `/v1/support/tickets/${ticketId}:priority`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.CommerceProductsChangeSupportTicketPriorityInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.CommerceProductsSupportTicketDtoSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postSupportTicketsReopen(ticketId: string): Promise<Result<Types.CommerceProductsSupportTicketDto, ApiError>> {
+    const url = `/v1/support/tickets/${ticketId}:reopen`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.CommerceProductsSupportTicketDtoSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async postSupportTicketsResolve(
     ticketId: string,
     body: Types.CommerceProductsResolveSupportTicketInput,
@@ -158,6 +205,26 @@ export class CommerceProductsSupportTicketsModule {
       method: 'POST',
       path: url,
       body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.CommerceProductsSupportTicketDtoSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postSupportTicketsStart(ticketId: string): Promise<Result<Types.CommerceProductsSupportTicketDto, ApiError>> {
+    const url = `/v1/support/tickets/${ticketId}:start`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
       requiresAuth: true,
     });
 
@@ -191,6 +258,40 @@ export class CommerceProductsSupportTicketsModule {
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(Types.CommerceProductsSupportTicketDtoSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getSupportTicketsAgents(): Promise<Result<Array<Types.CommerceProductsSupportAgentDto>, ApiError>> {
+    const url = '/v1/support/tickets/agents';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.CommerceProductsSupportAgentDto>, ApiError>;
+  }
+
+  /**
+   */
+  async getSupportTicketsSummary(): Promise<Result<Types.CommerceProductsSupportTicketSummaryDto, ApiError>> {
+    const url = '/v1/support/tickets/summary';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.CommerceProductsSupportTicketSummaryDtoSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
