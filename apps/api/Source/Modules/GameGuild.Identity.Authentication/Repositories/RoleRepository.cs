@@ -154,7 +154,7 @@ public class RoleRepository(IApplicationDbContext context) : IRoleRepository
         IReadOnlyCollection<Guid> userIds,
         Guid? assignedBy,
         DateTime? expiresAt,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         var uniqueUserIds = userIds.Distinct().ToArray();
         if (uniqueUserIds.Length == 0)

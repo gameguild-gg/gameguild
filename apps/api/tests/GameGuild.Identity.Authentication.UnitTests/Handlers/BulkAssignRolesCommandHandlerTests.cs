@@ -28,7 +28,7 @@ public sealed class BulkAssignRolesCommandHandlerTests
                 actorId,
                 expiresAt,
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new BulkRoleAssignmentItemResult[]
+            .ReturnsAsync(new List<BulkRoleAssignmentItemResult>
             {
                 new(firstUserId, Guid.NewGuid(), BulkRoleAssignmentStatus.Assigned, SystemClock.UtcNow, expiresAt),
                 new(secondUserId, Guid.NewGuid(), BulkRoleAssignmentStatus.AlreadyAssigned, SystemClock.UtcNow, expiresAt)
