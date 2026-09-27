@@ -16573,6 +16573,18 @@ export const postRolesAssignEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface PostRolesBulkAssignInput {
+  body?: Types.IdentityAuthenticationBulkAssignRolesCommand;
+}
+export type PostRolesBulkAssignOutput = Types.IdentityAuthenticationBulkRoleAssignmentResult;
+export const postRolesBulkAssignEndpoint = {
+  operationId: 'postRolesBulkAssign' as const,
+  method: 'POST' as const,
+  path: '/v1/roles/:bulk-assign' as const,
+  tags: ['AuthRoles'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface PostRolesRemoveInput {
   body?: Types.IdentityAuthenticationRemoveRoleFromUserInput;
 }
@@ -23131,6 +23143,7 @@ export const endpoints = {
   getRolesForGetRoles: getRolesForGetRolesEndpoint,
   postRoles: postRolesEndpoint,
   postRolesAssign: postRolesAssignEndpoint,
+  postRolesBulkAssign: postRolesBulkAssignEndpoint,
   postRolesRemove: postRolesRemoveEndpoint,
   getRolesForGetRolesByRoleId: getRolesForGetRolesByRoleIdEndpoint,
   putRoles: putRolesEndpoint,
