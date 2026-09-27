@@ -86,6 +86,148 @@ public sealed class PermissionServiceBulkCheckTests
         (await service.BulkCheckPermissionsAsync([userId], Guid.NewGuid(), [])).Should().ContainKey(userId).WhoseValue.Should().BeEmpty();
     }
 
+    [Fact]
+    public async Task BulkCheckPermissionsAsync_EvaluatesTenantContentTypeAndResourceCombinations()
+    {
+        var options = new DbContextOptionsBuilder<PermissionServiceDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString("N"))
+            .Options;
+        await using var context = new PermissionServiceDbContext(options);
+        var tenantId = Guid.NewGuid();
+        var otherTenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var otherUserId = Guid.NewGuid();
+        var resourceId = Guid.NewGuid();
+
+        context.Set<TenantPermission>().AddRange(
+            new TenantPermission { UserId = null, TenantId = null, Permissions = [nameof(PermissionType.Read)] },
+            new TenantPermission { UserId = null, TenantId = tenantId, Permissions = [nameof(PermissionType.Create)] },
+            new TenantPermission
+            {
+                UserId = userId,
+                TenantId = tenantId,
+                Permissions = [nameof(PermissionType.Comment)],
+                DenyPermissions = [nameof(PermissionType.Create)]
+            });
+        var contentTypeGrant = new ContentTypePermission(userId: null, tenantId: null, contentTypeName: "Project");
+        contentTypeGrant.SetPermissions([PermissionType.Edit]);
+        context.Set<ContentTypePermission>().Add(contentTypeGrant);
+        var resourceGrant = new GenericResourcePermission(userId, tenantId, resourceId, "Project");
+        resourceGrant.SetPermissions([PermissionType.Publish]);
+        context.Set<GenericResourcePermission>().Add(resourceGrant);
+        await context.SaveChangesAsync();
+
+        var service = new PermissionService(context);
+        var requests = new[]
+        {
+            new BulkPermissionCheckRequest(userId, tenantId, PermissionType.Read),
+            new BulkPermissionCheckRequest(userId, tenantId, PermissionType.Create),
+            new BulkPermissionCheckRequest(userId, otherTenantId, PermissionType.Create),
+            new BulkPermissionCheckRequest(otherUserId, tenantId, PermissionType.Comment),
+            new BulkPermissionCheckRequest(userId, tenantId, PermissionType.Edit, ContentTypeName: "Project"),
+            new BulkPermissionCheckRequest(userId, tenantId, PermissionType.Publish, ResourceId: resourceId, ResourceTypeName: "Project"),
+            new BulkPermissionCheckRequest(userId, tenantId, PermissionType.Publish, ResourceId: resourceId, ResourceTypeName: "Course")
+        };
+
+        var results = await service.BulkCheckPermissionsAsync(requests);
+
+        results.Select(result => result.IsGranted).Should().Equal(true, false, false, false, true, true, false);
+        results.Select(result => result.Request).Should().Equal(requests);
+    }
+
+    [Fact]
+    public async Task StreamBulkCheckPermissionsAsync_ProcessesBoundedBatchesAndPreservesInputOrder()
+    {
+        var options = new DbContextOptionsBuilder<PermissionServiceDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString("N"))
+            .Options;
+        await using var context = new PermissionServiceDbContext(options);
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        context.Set<TenantPermission>().Add(new TenantPermission
+        {
+            UserId = userId,
+            TenantId = tenantId,
+            Permissions = [nameof(PermissionType.Read)]
+        });
+        await context.SaveChangesAsync();
+
+        var requests = new[]
+        {
+            new BulkPermissionCheckRequest(userId, tenantId, PermissionType.Read),
+            new BulkPermissionCheckRequest(userId, tenantId, PermissionType.Delete),
+            new BulkPermissionCheckRequest(userId, tenantId, PermissionType.Read)
+        };
+        var results = new List<BulkPermissionCheckResult>();
+        await foreach (var result in new PermissionService(context).StreamBulkCheckPermissionsAsync(AsAsyncEnumerable(requests), batchSize: 2))
+        {
+            results.Add(result);
+        }
+
+        results.Select(result => result.IsGranted).Should().Equal(true, false, true);
+        results.Select(result => result.Request).Should().Equal(requests);
+    }
+
+    [Fact]
+    public async Task StreamBulkCheckPermissionsAsync_HandlesLargeRequestSetsInBoundedBatches()
+    {
+        var options = new DbContextOptionsBuilder<PermissionServiceDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString("N"))
+            .Options;
+        await using var context = new PermissionServiceDbContext(options);
+        var tenantId = Guid.NewGuid();
+        context.Set<TenantPermission>().Add(new TenantPermission
+        {
+            UserId = null,
+            TenantId = tenantId,
+            Permissions = [nameof(PermissionType.Read)]
+        });
+        await context.SaveChangesAsync();
+
+        var requests = Enumerable.Range(0, 1_024)
+            .Select(_ => new BulkPermissionCheckRequest(Guid.NewGuid(), tenantId, PermissionType.Read))
+            .ToArray();
+        var resultCount = 0;
+
+        await foreach (var result in new PermissionService(context).StreamBulkCheckPermissionsAsync(AsAsyncEnumerable(requests), batchSize: 128))
+        {
+            result.IsGranted.Should().BeTrue();
+            resultCount++;
+        }
+
+        resultCount.Should().Be(requests.Length);
+    }
+
+    [Fact]
+    public async Task StreamBulkCheckPermissionsAsync_RejectsUnboundedBatchesAndAmbiguousResourceTypes()
+    {
+        var options = new DbContextOptionsBuilder<PermissionServiceDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString("N"))
+            .Options;
+        await using var context = new PermissionServiceDbContext(options);
+        var service = new PermissionService(context);
+        var request = new BulkPermissionCheckRequest(Guid.NewGuid(), Guid.NewGuid(), PermissionType.Read);
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () =>
+        {
+            await foreach (var _ in service.StreamBulkCheckPermissionsAsync(AsAsyncEnumerable([request]), batchSize: 257)) { }
+        });
+        await Assert.ThrowsAsync<ArgumentException>(async () =>
+        {
+            var ambiguousResourceRequest = request with { ResourceId = Guid.NewGuid() };
+            await foreach (var _ in service.StreamBulkCheckPermissionsAsync(AsAsyncEnumerable([ambiguousResourceRequest]))) { }
+        });
+    }
+
+    private static async IAsyncEnumerable<T> AsAsyncEnumerable<T>(IEnumerable<T> values)
+    {
+        foreach (var value in values)
+        {
+            yield return value;
+            await Task.CompletedTask;
+        }
+    }
+
     private sealed class PermissionServiceDbContext(DbContextOptions<PermissionServiceDbContext> options)
         : DbContext(options), IApplicationDbContext
     {
@@ -95,6 +237,8 @@ public sealed class PermissionServiceBulkCheckTests
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<TenantPermission>().Ignore(permission => permission.Metadata);
+            modelBuilder.Entity<ContentTypePermission>();
+            modelBuilder.Entity<GenericResourcePermission>();
         }
     }
 }

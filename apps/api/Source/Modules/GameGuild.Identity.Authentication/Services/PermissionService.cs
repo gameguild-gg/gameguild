@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Microsoft.EntityFrameworkCore;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
@@ -23,6 +24,8 @@ public class PermissionService(
     IPermissionAuditService? auditService = null,
     IActorContextAccessor? actorContextAccessor = null) : IPermissionService
 {
+    private const int MaximumBulkPermissionCheckBatchSize = 256;
+
     public async Task<TenantPermission> GrantTenantPermissionAsync(Guid? userId, Guid? tenantId, PermissionType[] permissions)
     {
         var grant = await GetTenantGrantAsync(userId, tenantId).ConfigureAwait(false);
@@ -501,6 +504,197 @@ public class PermissionService(
         }
 
         return results;
+    }
+
+    public async Task<IReadOnlyList<BulkPermissionCheckResult>> BulkCheckPermissionsAsync(
+        IReadOnlyCollection<BulkPermissionCheckRequest> requests,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(requests);
+
+        var results = new List<BulkPermissionCheckResult>(requests.Count);
+        await foreach (var result in StreamBulkCheckPermissionsAsync(
+                           ToAsyncEnumerable(requests, cancellationToken),
+                           MaximumBulkPermissionCheckBatchSize,
+                           cancellationToken).ConfigureAwait(false))
+        {
+            results.Add(result);
+        }
+
+        return results;
+    }
+
+    public async IAsyncEnumerable<BulkPermissionCheckResult> StreamBulkCheckPermissionsAsync(
+        IAsyncEnumerable<BulkPermissionCheckRequest> requests,
+        int batchSize = 128,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(requests);
+        if (batchSize is < 1 or > MaximumBulkPermissionCheckBatchSize)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(batchSize),
+                $"Batch size must be between 1 and {MaximumBulkPermissionCheckBatchSize}.");
+        }
+
+        var batch = new List<BulkPermissionCheckRequest>(batchSize);
+        await foreach (var request in requests.WithCancellation(cancellationToken).ConfigureAwait(false))
+        {
+            ValidateBulkPermissionCheckRequest(request);
+            batch.Add(request);
+            if (batch.Count < batchSize) continue;
+
+            var results = await EvaluateBulkPermissionCheckBatchAsync(batch, cancellationToken).ConfigureAwait(false);
+            foreach (var result in results)
+            {
+                yield return result;
+            }
+
+            batch.Clear();
+        }
+
+        if (batch.Count == 0) yield break;
+
+        var finalResults = await EvaluateBulkPermissionCheckBatchAsync(batch, cancellationToken).ConfigureAwait(false);
+        foreach (var result in finalResults)
+        {
+            yield return result;
+        }
+    }
+
+    private async Task<IReadOnlyList<BulkPermissionCheckResult>> EvaluateBulkPermissionCheckBatchAsync(
+        IReadOnlyList<BulkPermissionCheckRequest> requests,
+        CancellationToken cancellationToken)
+    {
+        var userIds = requests.Select(request => request.UserId).Distinct().ToArray();
+        var tenantIds = requests.Where(request => request.TenantId.HasValue)
+            .Select(request => request.TenantId!.Value)
+            .Distinct()
+            .ToArray();
+
+        var tenantGrants = await context.Set<TenantPermission>()
+            .AsNoTracking()
+            .Where(grant =>
+                (grant.UserId == null || userIds.Contains(grant.UserId.Value)) &&
+                (grant.TenantId == null || tenantIds.Contains(grant.TenantId.Value)))
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var contentTypeNames = requests
+            .Where(request => !string.IsNullOrWhiteSpace(request.ContentTypeName))
+            .Select(request => request.ContentTypeName!)
+            .Distinct()
+            .ToArray();
+        var contentTypeGrants = contentTypeNames.Length == 0
+            ? []
+            : await context.Set<ContentTypePermission>()
+                .AsNoTracking()
+                .Where(grant =>
+                    contentTypeNames.Contains(grant.ContentTypeName) &&
+                    (grant.UserId == null || userIds.Contains(grant.UserId.Value)) &&
+                    (grant.TenantId == null || tenantIds.Contains(grant.TenantId.Value)))
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+        var resourceRequests = requests.Where(request => request.ResourceId.HasValue).ToArray();
+        var resourceIds = resourceRequests.Select(request => request.ResourceId!.Value).Distinct().ToArray();
+        var resourceGrants = resourceRequests.Length == 0
+            ? []
+            : await context.Set<GenericResourcePermission>()
+                .AsNoTracking()
+                .Where(grant =>
+                    resourceIds.Contains(grant.ResourceId) &&
+                    grant.UserId.HasValue && userIds.Contains(grant.UserId.Value) &&
+                    (grant.TenantId == null || tenantIds.Contains(grant.TenantId.Value)))
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+        var result = new List<BulkPermissionCheckResult>(requests.Count);
+        var batchCache = new Dictionary<BulkPermissionCheckRequest, bool>();
+        foreach (var request in requests)
+        {
+            if (batchCache.TryGetValue(request, out var cachedDecision))
+            {
+                result.Add(new BulkPermissionCheckResult(request, cachedDecision));
+                continue;
+            }
+
+            var allowed = new HashSet<PermissionType>();
+            var denied = new HashSet<PermissionType>();
+
+            foreach (var grant in tenantGrants)
+            {
+                if (!grant.IsActive || grant.IsExpired() || !TenantGrantApplies(grant, request)) continue;
+                allowed.UnionWith(ToPermissionTypes(grant.Permissions));
+                denied.UnionWith(ToPermissionTypes(grant.DenyPermissions));
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.ContentTypeName))
+            {
+                foreach (var grant in contentTypeGrants)
+                {
+                    if (!grant.IsEffective() ||
+                        !string.Equals(grant.ContentTypeName, request.ContentTypeName, StringComparison.Ordinal) ||
+                        !ContentTypeGrantApplies(grant, request)) continue;
+
+                    allowed.UnionWith(grant.GetPermissionsAsEnum());
+                }
+            }
+
+            if (request.ResourceId.HasValue)
+            {
+                foreach (var grant in resourceGrants)
+                {
+                    if (!grant.IsEffective() ||
+                        grant.UserId != request.UserId ||
+                        grant.TenantId != request.TenantId ||
+                        grant.ResourceId != request.ResourceId.Value ||
+                        !string.Equals(grant.ResourceType, request.ResourceTypeName, StringComparison.Ordinal)) continue;
+
+                    allowed.UnionWith(grant.GetPermissionsAsEnum());
+                }
+            }
+
+            var isGranted = allowed.Contains(request.Permission) && !denied.Contains(request.Permission);
+            batchCache.Add(request, isGranted);
+            result.Add(new BulkPermissionCheckResult(request, isGranted));
+        }
+
+        return result;
+    }
+
+    private static bool TenantGrantApplies(TenantPermission grant, BulkPermissionCheckRequest request)
+        => (grant.UserId == null && grant.TenantId == null) ||
+           (grant.TenantId == request.TenantId && (grant.UserId == null || grant.UserId == request.UserId));
+
+    private static bool ContentTypeGrantApplies(ContentTypePermission grant, BulkPermissionCheckRequest request)
+        => (grant.UserId == null && grant.TenantId == null) ||
+           (grant.TenantId == request.TenantId && (grant.UserId == null || grant.UserId == request.UserId));
+
+    private static void ValidateBulkPermissionCheckRequest(BulkPermissionCheckRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        if (request.ResourceId.HasValue && string.IsNullOrWhiteSpace(request.ResourceTypeName))
+        {
+            throw new ArgumentException("ResourceTypeName is required when ResourceId is provided.", nameof(request));
+        }
+
+        if (!request.ResourceId.HasValue && !string.IsNullOrWhiteSpace(request.ResourceTypeName))
+        {
+            throw new ArgumentException("ResourceTypeName cannot be provided without ResourceId.", nameof(request));
+        }
+    }
+
+    private static async IAsyncEnumerable<T> ToAsyncEnumerable<T>(
+        IEnumerable<T> source,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        foreach (var item in source)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            yield return item;
+            await Task.CompletedTask.ConfigureAwait(false);
+        }
     }
 
     public async Task CleanupExpiredPermissionsAsync()

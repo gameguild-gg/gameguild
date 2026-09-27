@@ -213,6 +213,23 @@ public interface IPermissionService
     Task<Dictionary<Guid, Dictionary<PermissionType, bool>>> BulkCheckPermissionsAsync(Guid[ ] userIds, Guid? tenantId, PermissionType[ ] permissions);
 
     /// <summary>
+    ///     Evaluate a bounded batch of permission checks that may target different users,
+    ///     tenants, content types, and resources.
+    /// </summary>
+    Task<IReadOnlyList<BulkPermissionCheckResult>> BulkCheckPermissionsAsync(
+        IReadOnlyCollection<BulkPermissionCheckRequest> requests,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Stream permission decisions in bounded batches so callers do not need to hold
+    ///     the entire request and result set in memory.
+    /// </summary>
+    IAsyncEnumerable<BulkPermissionCheckResult> StreamBulkCheckPermissionsAsync(
+        IAsyncEnumerable<BulkPermissionCheckRequest> requests,
+        int batchSize = 128,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     ///     Clean up expired permissions
     /// </summary>
     Task CleanupExpiredPermissionsAsync();
