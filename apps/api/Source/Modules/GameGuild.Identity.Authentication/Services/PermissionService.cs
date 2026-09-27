@@ -464,7 +464,10 @@ public class PermissionService(
             userId => userId,
             _ => new Dictionary<PermissionType, bool>());
 
-        if (distinctUserIds.Length == 0 || distinctPermissions.Length == 0) return results;
+        if (distinctUserIds.Length == 0 || distinctPermissions.Length == 0)
+        {
+            return results;
+        }
 
         // Load global defaults, tenant defaults, and all requested users' direct grants
         // in one database round-trip instead of resolving every user/permission pair
@@ -487,10 +490,14 @@ public class PermissionService(
         {
             var effectivePermissions = new HashSet<PermissionType>(defaultPermissions);
             foreach (var grant in activeGrants.Where(grant => grant.UserId == userId))
+            {
                 effectivePermissions.UnionWith(ToPermissionTypes(grant.Permissions));
+            }
 
             foreach (var permission in distinctPermissions)
+            {
                 results[userId][permission] = effectivePermissions.Contains(permission);
+            }
         }
 
         return results;
