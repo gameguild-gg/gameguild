@@ -210,12 +210,18 @@ public sealed class PermissionServiceBulkCheckTests
 
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () =>
         {
-            await foreach (var _ in service.StreamBulkCheckPermissionsAsync(AsAsyncEnumerable([request]), batchSize: 257)) { }
+            await foreach (var _ in service.StreamBulkCheckPermissionsAsync(AsAsyncEnumerable([request]), batchSize: 257))
+            {
+                Assert.Fail("An invalid batch size must fail before yielding any permission decision.");
+            }
         });
         await Assert.ThrowsAsync<ArgumentException>(async () =>
         {
             var ambiguousResourceRequest = request with { ResourceId = Guid.NewGuid() };
-            await foreach (var _ in service.StreamBulkCheckPermissionsAsync(AsAsyncEnumerable([ambiguousResourceRequest]))) { }
+            await foreach (var _ in service.StreamBulkCheckPermissionsAsync(AsAsyncEnumerable([ambiguousResourceRequest])))
+            {
+                Assert.Fail("An ambiguous resource request must fail before yielding a permission decision.");
+            }
         });
     }
 
