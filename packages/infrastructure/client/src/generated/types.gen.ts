@@ -11305,6 +11305,7 @@ export interface ProjectsProjectVersionApiOutput {
 
 export interface ProjectsProjectVersionOptionProjection {
   id?: string;
+  imageUrl?: string | null;
   projectId?: string;
   projectTitle?: string | null;
   status?: ProjectsProjectVersionStatus;
@@ -29097,6 +29098,7 @@ ProjectsProjectVersionApiOutputSchema = z.object({
 /** Zod schema for ProjectsProjectVersionOptionProjection */
 ProjectsProjectVersionOptionProjectionSchema = z.object({
   id: z.string().uuid().optional(),
+  imageUrl: z.string().nullable().optional(),
   projectId: z.string().uuid().optional(),
   projectTitle: z.string().nullable().optional(),
   status: z.lazy(() => ProjectsProjectVersionStatusSchema).optional(),
