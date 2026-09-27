@@ -455,16 +455,42 @@ public class PermissionService(
 
     public async Task<Dictionary<Guid, Dictionary<PermissionType, bool>>> BulkCheckPermissionsAsync(Guid[] userIds, Guid? tenantId, PermissionType[] permissions)
     {
-        var results = new Dictionary<Guid, Dictionary<PermissionType, bool>>();
-        foreach (var userId in userIds.Distinct())
-        {
-            var userResults = new Dictionary<PermissionType, bool>();
-            foreach (var permission in permissions.Distinct())
-            {
-                userResults[permission] = await HasPermissionAsync(userId, tenantId, permission).ConfigureAwait(false);
-            }
+        ArgumentNullException.ThrowIfNull(userIds);
+        ArgumentNullException.ThrowIfNull(permissions);
 
-            results[userId] = userResults;
+        var distinctUserIds = userIds.Distinct().ToArray();
+        var distinctPermissions = permissions.Distinct().ToArray();
+        var results = distinctUserIds.ToDictionary(
+            userId => userId,
+            _ => new Dictionary<PermissionType, bool>());
+
+        if (distinctUserIds.Length == 0 || distinctPermissions.Length == 0) return results;
+
+        // Load global defaults, tenant defaults, and all requested users' direct grants
+        // in one database round-trip instead of resolving every user/permission pair
+        // independently (which previously produced O(users * permissions) queries).
+        var grants = await context.Set<TenantPermission>()
+            .AsNoTracking()
+            .Where(grant =>
+                grant.UserId == null && (grant.TenantId == null || grant.TenantId == tenantId) ||
+                grant.UserId != null && grant.TenantId == tenantId && distinctUserIds.Contains(grant.UserId.Value))
+            .ToListAsync()
+            .ConfigureAwait(false);
+
+        var activeGrants = grants.Where(grant => grant.IsActive && !grant.IsExpired()).ToArray();
+        var defaultPermissions = new HashSet<PermissionType>(
+            activeGrants
+                .Where(grant => grant.UserId == null)
+                .SelectMany(grant => ToPermissionTypes(grant.Permissions)));
+
+        foreach (var userId in distinctUserIds)
+        {
+            var effectivePermissions = new HashSet<PermissionType>(defaultPermissions);
+            foreach (var grant in activeGrants.Where(grant => grant.UserId == userId))
+                effectivePermissions.UnionWith(ToPermissionTypes(grant.Permissions));
+
+            foreach (var permission in distinctPermissions)
+                results[userId][permission] = effectivePermissions.Contains(permission);
         }
 
         return results;
