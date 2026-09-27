@@ -201,7 +201,7 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<BulkRoleAssignmentResult>> BulkAssignRoles(
         [FromBody] BulkAssignRolesCommand command,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         var result = await sender.Send(command, cancellationToken).ConfigureAwait(false);
         return Ok(result);

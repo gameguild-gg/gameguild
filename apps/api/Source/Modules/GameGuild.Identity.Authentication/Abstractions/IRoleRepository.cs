@@ -89,7 +89,7 @@ public interface IRoleRepository
         IReadOnlyCollection<Guid> userIds,
         Guid? assignedBy,
         DateTime? expiresAt,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken);
 
     /// <summary>
     ///     Remove a role from a user
