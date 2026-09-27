@@ -5,7 +5,9 @@ import { selectAffectedDotnetTestNames } from "../select-affected-dotnet-tests.m
 
 const availableProjects = [
   "GameGuild.API.UnitTests",
+  "GameGuild.API.IntegrationTests",
   "GameGuild.Projects.UnitTests",
+  "GameGuild.Identity.Authentication.IntegrationTests",
   "GameGuild.SharedKernel.UnitTests",
   "GameGuild.TestingLab.UnitTests",
 ];
@@ -51,5 +53,15 @@ test("ignores API test-only changes for deployment test selection", () => {
       availableProjects,
     ),
     ["GameGuild.Projects.UnitTests"],
+  );
+});
+
+test("selects the matching integration project for PostgreSQL test changes", () => {
+  assert.deepEqual(
+    selectAffectedDotnetTestNames(
+      ["apps/api/tests/GameGuild.API.IntegrationTests/BulkPermissionChecksPostgreSqlTests.cs"],
+      availableProjects,
+    ),
+    ["GameGuild.API.IntegrationTests"],
   );
 });

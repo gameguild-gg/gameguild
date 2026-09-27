@@ -19,7 +19,7 @@ export function selectAffectedDotnetTestNames(filePaths, availableProjects) {
       /^apps\/api\/Source\/Modules\/(GameGuild\.[^/]+)\//u,
     );
     const testProjectMatch = filePath.match(
-      /^apps\/api\/tests\/(GameGuild\.[^/]+\.UnitTests)\//u,
+      /^apps\/api\/tests\/(GameGuild\.[^/]+\.(?:UnitTests|IntegrationTests))\//u,
     );
 
     if (moduleMatch?.[1]) {
@@ -78,7 +78,10 @@ function changedFiles(options) {
 
 function availableTestProjects(testRoot) {
   return readdirSync(testRoot, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory() && entry.name.endsWith(".UnitTests"))
+    .filter((entry) =>
+      entry.isDirectory() &&
+      (entry.name.endsWith(".UnitTests") || entry.name.endsWith(".IntegrationTests")),
+    )
     .map((entry) => entry.name)
     .sort();
 }
