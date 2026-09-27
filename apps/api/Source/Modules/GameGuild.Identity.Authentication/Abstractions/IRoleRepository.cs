@@ -81,6 +81,17 @@ public interface IRoleRepository
     Task<UserRole> AssignRoleToUserAsync(UserRole userRole, CancellationToken cancellationToken = default);
 
     /// <summary>
+    ///     Assign one role to a set of users with a single lookup and persistence operation.
+    ///     Existing active assignments are returned unchanged; expired assignments are renewed.
+    /// </summary>
+    Task<IReadOnlyList<BulkRoleAssignmentItemResult>> BulkAssignRoleToUsersAsync(
+        Guid roleId,
+        IReadOnlyCollection<Guid> userIds,
+        Guid? assignedBy,
+        DateTime? expiresAt,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     ///     Remove a role from a user
     /// </summary>
     /// <param name="userId">User ID</param>

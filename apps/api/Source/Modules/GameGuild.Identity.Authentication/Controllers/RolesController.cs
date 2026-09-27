@@ -191,6 +191,23 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
     }
 
     /// <summary>
+    ///     Assign one active role to multiple users in a single bounded operation.
+    /// </summary>
+    [HttpPost(":bulk-assign")]
+    [Authorize(Policy = Policies.SystemAdmin)]
+    [ProducesResponseType(typeof(BulkRoleAssignmentResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<BulkRoleAssignmentResult>> BulkAssignRoles(
+        [FromBody] BulkAssignRolesCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await sender.Send(command, cancellationToken).ConfigureAwait(false);
+        return Ok(result);
+    }
+
+    /// <summary>
     ///     Remove a role from a user
     /// </summary>
     /// <param name="request">Remove role request</param>
