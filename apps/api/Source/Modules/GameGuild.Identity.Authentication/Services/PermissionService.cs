@@ -506,9 +506,15 @@ public class PermissionService(
         return results;
     }
 
+    public Task<IReadOnlyList<BulkPermissionCheckResult>> BulkCheckPermissionsAsync(
+        IReadOnlyCollection<BulkPermissionCheckRequest> requests)
+    {
+        return BulkCheckPermissionsAsync(requests, CancellationToken.None);
+    }
+
     public async Task<IReadOnlyList<BulkPermissionCheckResult>> BulkCheckPermissionsAsync(
         IReadOnlyCollection<BulkPermissionCheckRequest> requests,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(requests);
 
@@ -524,10 +530,30 @@ public class PermissionService(
         return results;
     }
 
+    public IAsyncEnumerable<BulkPermissionCheckResult> StreamBulkCheckPermissionsAsync(
+        IAsyncEnumerable<BulkPermissionCheckRequest> requests)
+    {
+        return StreamBulkCheckPermissionsAsync(requests, 128, CancellationToken.None);
+    }
+
+    public IAsyncEnumerable<BulkPermissionCheckResult> StreamBulkCheckPermissionsAsync(
+        IAsyncEnumerable<BulkPermissionCheckRequest> requests,
+        int batchSize)
+    {
+        return StreamBulkCheckPermissionsAsync(requests, batchSize, CancellationToken.None);
+    }
+
+    public IAsyncEnumerable<BulkPermissionCheckResult> StreamBulkCheckPermissionsAsync(
+        IAsyncEnumerable<BulkPermissionCheckRequest> requests,
+        CancellationToken cancellationToken)
+    {
+        return StreamBulkCheckPermissionsAsync(requests, 128, cancellationToken);
+    }
+
     public async IAsyncEnumerable<BulkPermissionCheckResult> StreamBulkCheckPermissionsAsync(
         IAsyncEnumerable<BulkPermissionCheckRequest> requests,
-        int batchSize = 128,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        int batchSize,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(requests);
         if (batchSize is < 1 or > MaximumBulkPermissionCheckBatchSize)
@@ -542,7 +568,10 @@ public class PermissionService(
         {
             ValidateBulkPermissionCheckRequest(request);
             batch.Add(request);
-            if (batch.Count < batchSize) continue;
+            if (batch.Count < batchSize)
+            {
+                continue;
+            }
 
             var results = await EvaluateBulkPermissionCheckBatchAsync(batch, cancellationToken).ConfigureAwait(false);
             foreach (var result in results)
@@ -553,7 +582,10 @@ public class PermissionService(
             batch.Clear();
         }
 
-        if (batch.Count == 0) yield break;
+        if (batch.Count == 0)
+        {
+            yield break;
+        }
 
         var finalResults = await EvaluateBulkPermissionCheckBatchAsync(batch, cancellationToken).ConfigureAwait(false);
         foreach (var result in finalResults)
@@ -624,7 +656,10 @@ public class PermissionService(
 
             foreach (var grant in tenantGrants)
             {
-                if (!grant.IsActive || grant.IsExpired() || !TenantGrantApplies(grant, request)) continue;
+                if (!grant.IsActive || grant.IsExpired() || !TenantGrantApplies(grant, request))
+                {
+                    continue;
+                }
                 allowed.UnionWith(ToPermissionTypes(grant.Permissions));
                 denied.UnionWith(ToPermissionTypes(grant.DenyPermissions));
             }
@@ -635,7 +670,10 @@ public class PermissionService(
                 {
                     if (!grant.IsEffective() ||
                         !string.Equals(grant.ContentTypeName, request.ContentTypeName, StringComparison.Ordinal) ||
-                        !ContentTypeGrantApplies(grant, request)) continue;
+                        !ContentTypeGrantApplies(grant, request))
+                    {
+                        continue;
+                    }
 
                     allowed.UnionWith(grant.GetPermissionsAsEnum());
                 }

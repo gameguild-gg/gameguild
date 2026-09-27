@@ -78,7 +78,10 @@ public class PermissionBulkCheckBenchmarks
         var granted = 0;
         await foreach (var result in _service.StreamBulkCheckPermissionsAsync(AsAsyncEnumerable(_requests), batchSize: 128).ConfigureAwait(false))
         {
-            if (result.IsGranted) granted++;
+            if (result.IsGranted)
+            {
+                granted++;
+            }
         }
 
         return granted;
