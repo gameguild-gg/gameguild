@@ -16,6 +16,8 @@ using GameGuild.Finance.Economy.Payouts;
 using GameGuild.Finance.Economy.Treasury;
 using GameGuild.GameJams;
 using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Tenants;
+using GameGuild.Identity.Users;
 using GameGuild.LaunchPad;
 using GameGuild.Learning.Assessments;
 using GameGuild.Learning.Assessments.QuizAdapter;
@@ -41,6 +43,7 @@ using GameGuild.Teams;
 using GameGuild.TestingLab;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using LearningSocialModule = GameGuild.Learning.Experience.Social.SocialModule;
 
@@ -174,11 +177,42 @@ internal sealed class ApiProductComposition : IApiProductComposition
 
         if (services.GetService<IHostEnvironment>()?.IsDevelopment() == true)
         {
-            await TestingLabLocalSeedDataSeeder.SeedAsync(
-                    services.GetRequiredService<ApplicationDbContext>(),
-                    services.GetService<ILogger<ApplicationDbContext>>(),
-                    cancellationToken)
+            var context = services.GetRequiredService<ApplicationDbContext>();
+            var seedAdminEmail = services.GetRequiredService<IConfiguration>()["Seed:AdminEmail"]
+                ?? "admin@game-guild.com";
+            var manager = await context.Set<User>()
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(user => user.Email == seedAdminEmail.Trim().ToLowerInvariant(), cancellationToken)
                 .ConfigureAwait(false);
+
+            if (manager is not null)
+            {
+                var tenantId = await context.Set<TenantMember>()
+                    .IgnoreQueryFilters()
+                    .Where(member => member.UserId == manager.Id)
+                    .Select(member => (Guid?)member.TenantId)
+                    .FirstOrDefaultAsync(cancellationToken)
+                    .ConfigureAwait(false);
+
+                await TestingLabLocalEventSeedDataSeeder.SeedAsync(context, manager.Id, tenantId, cancellationToken)
+                    .ConfigureAwait(false);
+                await TestingLabLocalSeedDataSeeder.SeedAsync(
+                        context,
+                        services.GetService<ILogger<ApplicationDbContext>>(),
+                        cancellationToken)
+                    .ConfigureAwait(false);
+                await TestingLabLocalSeedDataSeeder.SeedAsync(
+                        context,
+                        services.GetService<ILogger<ApplicationDbContext>>(),
+                        cancellationToken,
+                        TestingLabLocalEventSeedDataSeeder.OpenTesterEventId)
+                    .ConfigureAwait(false);
+            }
+            else
+            {
+                services.GetService<ILogger<ApplicationDbContext>>()?.LogWarning(
+                    "Skipping local Testing Lab enrollment seeds because the configured development admin user was not found.");
+            }
         }
     }
 

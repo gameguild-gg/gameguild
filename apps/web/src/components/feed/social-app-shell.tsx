@@ -24,7 +24,7 @@ export function SocialAppShell({ children, notifications, user }: SocialAppShell
         href="#dashboard-main"
         className="sr-only fixed left-4 top-4 z-50 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground focus:not-sr-only"
       >
-        Skip to social feed
+        Skip to main content
       </a>
       <AppShell>
         <AppShellSidebar navigation={socialNavigationData} notifications={notifications} />

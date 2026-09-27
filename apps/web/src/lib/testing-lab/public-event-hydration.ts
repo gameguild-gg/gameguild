@@ -13,6 +13,14 @@ export interface TestingEventHydration {
   maxTesters: number | null;
   availableTesterCount: number | null;
   gameImages: string[];
+  games: Array<{
+    projectId: string | null;
+    title: string;
+    description: string | null;
+    imageUrl: string | null;
+  }>;
+  approvedGameCount: number;
+  availableGameCount: number | null;
 }
 
 const EVENT_ID_PATTERN =
@@ -72,6 +80,24 @@ export async function hydratePublicTestingEvent(
             .filter((imageUrl): imageUrl is string => Boolean(imageUrl)),
         ),
       ),
+      games: (event.games ?? []).map((game) => ({
+        projectId: game.projectId ?? null,
+        title: game.title?.trim() || "Untitled game",
+        description: game.description?.trim() || game.shortDescription?.trim() || null,
+        imageUrl: game.imageUrl?.trim() || null,
+      })),
+      approvedGameCount: slots.reduce(
+        (total, slot) => total + (slot.approvedProjectCount ?? 0),
+        0,
+      ),
+      availableGameCount: slots.some(
+        (slot) => slot.availableProjectCount == null,
+      )
+        ? null
+        : slots.reduce(
+            (total, slot) => total + slot.availableProjectCount!,
+            0,
+          ),
     };
   } catch {
     // A failed hydration leaves the embed on its parsed-from-text fallback.

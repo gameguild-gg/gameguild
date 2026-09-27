@@ -19,9 +19,9 @@ export const socialNavigationData: WorkspaceNavGroup[] = [
       },
       {
         title: 'Explore',
-        url: '/community',
+        url: '/explore',
         icon: Compass,
-        activeOnPath: '/community',
+        activeOnPath: '/explore',
       },
       {
         title: 'Projects',

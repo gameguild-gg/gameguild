@@ -116,6 +116,7 @@ export interface TestingProjectVersionOption {
   id: string;
   projectId: string;
   projectTitle: string;
+  imageUrl?: string | null;
   versionNumber: string;
   status: string;
 }

@@ -26,14 +26,27 @@ vi.mock('@/components/testing-lab/testing-project-application', () => ({
   ),
 }));
 
-vi.mock('@/components/testing-lab/testing-slot-registration', () => ({
-  TestingSlotRegistration: ({ registration, registrationOpen, showClosedMessage, timeZoneId }: { registration?: { status?: string }; registrationOpen?: boolean; showClosedMessage?: boolean; timeZoneId?: string }) => (
-    <div>
-      <div>Tester state: {registration?.status ?? (registrationOpen ? 'open' : 'closed')}</div>
-      <div>Timezone: {timeZoneId}</div>
-      {!registrationOpen && showClosedMessage !== false ? (
-        <p>This session is not accepting new registrations. Browse other playtests for an open seat.</p>
-      ) : null}
+vi.mock('@/components/testing-lab/testing-event-join', () => ({
+  TestingEventJoin: ({ testerSessions, testerUnavailableReason, projectApplication, initialMode, initialSlotId, initialProjectId, selectedApplicationId }: {
+    testerSessions: Array<{ registrationOpen: boolean }>;
+    testerUnavailableReason: string;
+    projectApplication: { acceptsApplications: boolean };
+    initialMode?: string;
+    initialSlotId?: string;
+    initialProjectId?: string;
+    selectedApplicationId?: string;
+  }) => (
+    <div data-testid="join-options"
+      data-tester-open={testerSessions.some((session) => session.registrationOpen)}
+      data-project-open={projectApplication.acceptsApplications}
+      data-initial-mode={initialMode}
+      data-initial-slot-id={initialSlotId}
+      data-initial-project-id={initialProjectId}
+      data-selected-application-id={selectedApplicationId}
+    >
+      <button type="button">Join</button>
+      <span>{testerUnavailableReason}</span>
+      <span role="link" data-href="/testing-lab" className="inline-flex text-primary">Browse other playtests</span>
     </div>
   ),
 }));
@@ -102,7 +115,7 @@ describe('Public Testing Event detail page', () => {
     expect(within(gameList).getByText('Night Market')).toBeInTheDocument();
     expect(within(gameList).getByText('Your game submission')).toBeInTheDocument();
     expect(within(gameList).getByText('Pending')).toBeInTheDocument();
-    expect(within(gameList).getByRole('link', { name: 'Review Night Market application' })).toHaveAttribute('href', '/testing-lab/events/event-1?submitGame=1&projectId=project-3#submit-game');
+    expect(within(gameList).getByRole('link', { name: 'Review Night Market application' })).toHaveAttribute('href', '/testing-lab/events/event-1?joinAs=developer&applicationId=application-2&projectId=project-3#join');
     expect(gameCarousel.compareDocumentPosition(gameList) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(within(gameContent).queryByRole('heading', { name: 'Schedule' })).not.toBeInTheDocument();
     expect(screen.queryByRole('group', { name: 'Project display' })).not.toBeInTheDocument();
@@ -111,13 +124,14 @@ describe('Public Testing Event detail page', () => {
     expect(within(gameCarousel).getByText('A small exploration game.')).toBeInTheDocument();
     expect(within(gameList).getByRole('button', { name: 'Show Starling in carousel' })).toHaveAttribute('aria-current', 'true');
     const eventInfo = screen.getByRole('complementary', { name: 'Playtest details' });
-    expect(within(eventInfo).getByRole('heading', { name: 'Tester - Sign up' })).toBeInTheDocument();
-    expect(within(eventInfo).getAllByText('This session is not accepting new registrations. Browse other playtests for an open seat.')).toHaveLength(1);
-    expect(within(eventInfo).getByText('Timezone: America/Sao_Paulo')).toBeInTheDocument();
+    expect(within(eventInfo).getByRole('heading', { name: 'Schedule' })).toBeInTheDocument();
+    expect(within(eventInfo).getByTestId('join-options')).toHaveAttribute('data-tester-open', 'false');
+    expect(within(eventInfo).getByTestId('join-options')).toHaveAttribute('data-project-open', 'true');
+    expect(within(eventInfo).getAllByRole('button', { name: 'Join' })).toHaveLength(1);
     expect(within(eventInfo).getByRole('heading', { name: 'Rules for testers' })).toBeInTheDocument();
-    expect(within(eventInfo).getByRole('heading', { name: 'At a glance' })).toBeInTheDocument();
+    expect(within(eventInfo).getByRole('heading', { name: 'Spots & feedback' })).toBeInTheDocument();
     expect(within(eventInfo).getByText('Tester spots')).toBeInTheDocument();
-    expect(within(eventInfo).getByText('Games / game spots')).toBeInTheDocument();
+    expect(within(eventInfo).getByText('Games', { exact: true })).toBeInTheDocument();
     expect(within(eventInfo).getByText('2 / No limit')).toBeInTheDocument();
     expect(within(eventInfo).getByText('Feedback', { exact: true })).toBeInTheDocument();
     expect(within(eventInfo).getByText('Required', { exact: true })).toBeInTheDocument();
@@ -127,11 +141,11 @@ describe('Public Testing Event detail page', () => {
     expect(within(eventInfo).queryByRole('link', { name: 'Submit a game' })).not.toBeInTheDocument();
     expect(within(gameList).getByText('Your game')).toBeInTheDocument();
     expect(within(gameList).getByText('Approved')).toBeInTheDocument();
-    expect(within(gameList).getByRole('link', { name: 'Review Asterion application' })).toHaveAttribute('href', '/testing-lab/events/event-1?submitGame=1&projectId=project-1#submit-game');
+    expect(within(gameList).getByRole('link', { name: 'Review Asterion application' })).toHaveAttribute('href', '/testing-lab/events/event-1?joinAs=developer&applicationId=application-1&projectId=project-1#join');
     expect(within(gameContent).queryByRole('heading', { name: 'Your project' })).not.toBeInTheDocument();
-    expect(within(gameContent).getByText('Submit a game')).toBeInTheDocument();
+    expect(within(gameContent).queryByText('Submit a game')).not.toBeInTheDocument();
     expect(within(eventInfo).queryByText('Application states: Approved')).not.toBeInTheDocument();
-    expect(within(eventInfo).getByText('Tester state: Waitlisted')).toBeInTheDocument();
+    expect(within(eventInfo).getByText(/Your status:/)).toBeInTheDocument();
     expect(within(eventInfo).getByText('Feedback obligations: 1')).toBeInTheDocument();
     expect(mocks.getTestingProjectVersionOptions).toHaveBeenCalledOnce();
     expect(mocks.getLocalizationPreference).toHaveBeenCalledOnce();
@@ -188,7 +202,7 @@ describe('Public Testing Event detail page', () => {
     expect(within(gameList).getByRole('button', { name: 'Show Asterion in carousel' })).toBeInTheDocument();
     expect(within(gameList).getByText('Your game')).toBeInTheDocument();
     expect(within(gameList).getByText('Approved')).toBeInTheDocument();
-    expect(within(gameList).getByRole('link', { name: 'Review Asterion application' })).toHaveAttribute('href', '/testing-lab/events/event-1?submitGame=1&projectId=project-1#submit-game');
+    expect(within(gameList).getByRole('link', { name: 'Review Asterion application' })).toHaveAttribute('href', '/testing-lab/events/event-1?joinAs=developer&applicationId=application-1&projectId=project-1#join');
     expect(within(gameContent).queryByRole('heading', { name: 'Your project' })).not.toBeInTheDocument();
     expect(within(gameContent).queryByText('Review this game submission')).not.toBeInTheDocument();
     expect(mocks.getTestingProjectVersionOptions).not.toHaveBeenCalled();
@@ -207,7 +221,18 @@ describe('Public Testing Event detail page', () => {
         approvalMode: 'ManagerOnly',
         requiresFeedback: true,
         games: [{ projectId: 'project-1', title: 'Lantern Keeper', shortDescription: 'A small world of quiet puzzles.' }],
-        slots: [],
+        slots: [{
+          id: 'slot-1',
+          mode: 'Online',
+          startsAt: '2020-08-12T13:00:00.000Z',
+          endsAt: '2020-08-12T15:00:00.000Z',
+          maxProjects: 4,
+          approvedProjectCount: 2,
+          availableProjectCount: 0,
+          maxTesters: 12,
+          registeredTesterCount: 8,
+          availableTesterCount: 0,
+        }],
       },
       applications: [],
       registrations: [],
@@ -219,9 +244,10 @@ describe('Public Testing Event detail page', () => {
     render(await PublicTestingEventDetailPage({ params: Promise.resolve({ eventId: 'event-1' }) }));
 
     const eventInfo = screen.getByRole('complementary', { name: 'Playtest details' });
+    expect(eventInfo).toHaveClass('pt-5', 'lg:pt-5');
     expect(within(eventInfo).getByRole('heading', { name: 'Past community playtest' })).toBeInTheDocument();
-    expect(within(eventInfo).getByText('Playtest ended')).toBeInTheDocument();
-    expect(within(eventInfo).getByText('Online')).toBeInTheDocument();
+    expect(within(eventInfo).queryByText('Playtest ended')).not.toBeInTheDocument();
+    expect(within(eventInfo).getByText('Online playtest')).toBeInTheDocument();
     expect(within(eventInfo).queryByText('Feedback required')).not.toBeInTheDocument();
     expect(within(eventInfo).getByText('Feedback', { exact: true })).toBeInTheDocument();
     expect(within(eventInfo).getByText('Required', { exact: true })).toBeInTheDocument();
@@ -229,12 +255,14 @@ describe('Public Testing Event detail page', () => {
     expect(screen.getByRole('heading', { name: 'Lantern Keeper' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Sessions' })).not.toBeInTheDocument();
     const browseLink = within(eventInfo).getByRole('link', { name: /browse other playtests/i });
-    expect(browseLink).toHaveAttribute('href', '/testing-lab');
+    expect(browseLink).toHaveAttribute('data-href', '/testing-lab');
     expect(browseLink).toHaveClass('text-primary');
     expect(browseLink).not.toHaveClass('border-border');
-    expect(within(eventInfo).getByRole('button', { name: 'Registration closed' })).toBeDisabled();
-    expect(within(eventInfo).getByRole('heading', { name: 'Tester - Sign up' })).toBeInTheDocument();
-    expect(within(eventInfo).getByText('This session is not accepting new registrations. Browse other playtests for an open seat.')).toBeInTheDocument();
+    expect(within(eventInfo).queryByRole('button', { name: 'Registration closed' })).not.toBeInTheDocument();
+    expect(within(eventInfo).getByRole('heading', { name: 'Schedule' })).toBeInTheDocument();
+    expect(within(eventInfo).getByText('1 of 4')).toBeInTheDocument();
+    expect(within(eventInfo).getByText('Closed · 8/12 used')).toBeInTheDocument();
+    expect(within(eventInfo).getByTestId('join-options')).toHaveAttribute('data-tester-open', 'false');
     expect(mocks.getTestingProjectVersionOptions).not.toHaveBeenCalled();
   });
 
@@ -293,15 +321,140 @@ describe('Public Testing Event detail page', () => {
     render(await PublicTestingEventDetailPage({ params: Promise.resolve({ eventId: 'event-1' }) }));
 
     const eventInfo = screen.getByRole('complementary', { name: 'Playtest details' });
-    expect(within(eventInfo).getByText('Tester state: open')).toBeInTheDocument();
-    const signup = screen.getByRole('link', { name: /Sign up to test/ });
-    expect(signup).toHaveAttribute('href', '#schedule');
+    expect(within(eventInfo).getByTestId('join-options')).toHaveAttribute('data-tester-open', 'true');
+    expect(within(eventInfo).getAllByRole('button', { name: 'Join' })).toHaveLength(1);
     const browseLink = within(eventInfo).getByRole('link', { name: /Browse other playtests/ });
     expect(browseLink).toHaveClass('text-primary');
     expect(browseLink).not.toHaveClass('border-border');
-    expect(within(eventInfo).getByRole('heading', { name: 'Tester - Sign up' })).toBeInTheDocument();
-    expect(within(eventInfo).getByText('Timezone: UTC')).toBeInTheDocument();
+    expect(within(eventInfo).getByRole('heading', { name: 'Schedule' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Submit a game' })).not.toBeInTheDocument();
+  });
+
+  it('keeps Join available at capacity and explains that testers can join the waitlist', async () => {
+    mocks.getPublicTestingEventExperience.mockResolvedValue({
+      event: {
+        id: 'event-full',
+        name: 'Full playtest',
+        mode: 'Online',
+        status: 'Scheduled',
+        startsAt: '2030-08-12T13:00:00.000Z',
+        endsAt: '2030-08-12T15:00:00.000Z',
+        approvalMode: 'ManagerOnly',
+        requiresFeedback: false,
+        configuration: {
+          frozenAt: '2030-08-01T12:00:00.000Z',
+          testerRegistrationSchema: { title: 'Tester registration', questions: [] },
+        },
+        slots: [{
+          id: 'slot-full',
+          mode: 'Online',
+          startsAt: '2030-08-12T13:00:00.000Z',
+          endsAt: '2030-08-12T15:00:00.000Z',
+          maxTesters: 1,
+          registeredTesterCount: 1,
+          availableTesterCount: 0,
+        }],
+      },
+      applications: [],
+      registrations: [],
+      feedbackObligations: [],
+      isAuthenticated: false,
+      accessIssues: [],
+    });
+
+    render(await PublicTestingEventDetailPage({ params: Promise.resolve({ eventId: 'event-full' }) }));
+
+    const eventInfo = screen.getByRole('complementary', { name: 'Playtest details' });
+    expect(within(eventInfo).getByText('All tester spots are filled. You can still join the waitlist.')).toBeInTheDocument();
+    expect(within(eventInfo).getByText('1 of 1 · Waitlist open')).toBeInTheDocument();
+    expect(within(eventInfo).getByTestId('join-options')).toHaveAttribute('data-tester-open', 'true');
+    expect(within(eventInfo).getAllByRole('button', { name: 'Join' })).toHaveLength(1);
+  });
+
+  it('returns an authenticated tester to the enrollment step inside the Join dialog', async () => {
+    mocks.getPublicTestingEventExperience.mockResolvedValue({
+      event: {
+        id: 'event-join',
+        name: 'Open tester session',
+        mode: 'Online',
+        status: 'Scheduled',
+        approvalMode: 'ManagerOnly',
+        requiresFeedback: false,
+        configuration: { frozenAt: '2030-08-01T12:00:00.000Z', testerRegistrationSchema: { questions: [] } },
+        slots: [{ id: 'slot-open', mode: 'Online', endsAt: '2030-08-12T15:00:00.000Z', maxTesters: 20, availableTesterCount: 20 }],
+      },
+      applications: [],
+      registrations: [],
+      feedbackObligations: [],
+      isAuthenticated: true,
+      accessIssues: [],
+    });
+
+    render(await PublicTestingEventDetailPage({
+      params: Promise.resolve({ eventId: 'event-join' }),
+      searchParams: Promise.resolve({ joinAs: 'tester', slotId: 'slot-open' }),
+    }));
+
+    const joinOptions = screen.getByTestId('join-options');
+    expect(joinOptions).toHaveAttribute('data-initial-mode', 'tester');
+    expect(joinOptions).toHaveAttribute('data-initial-slot-id', 'slot-open');
+    expect(screen.queryByText('Tester state: open')).not.toBeInTheDocument();
+  });
+
+  it('returns a developer to the game application step inside the Join dialog', async () => {
+    mocks.getPublicTestingEventExperience.mockResolvedValue({
+      event: {
+        id: 'event-join',
+        name: 'Open project session',
+        mode: 'Online',
+        status: 'ApplicationsOpen',
+        approvalMode: 'ManagerOnly',
+        requiresFeedback: true,
+        configuration: { frozenAt: '2030-08-01T12:00:00.000Z' },
+        slots: [],
+      },
+      applications: [],
+      registrations: [],
+      feedbackObligations: [],
+      isAuthenticated: true,
+      accessIssues: [],
+    });
+
+    render(await PublicTestingEventDetailPage({
+      params: Promise.resolve({ eventId: 'event-join' }),
+      searchParams: Promise.resolve({ joinAs: 'developer' }),
+    }));
+
+    expect(screen.getByTestId('join-options')).toHaveAttribute('data-initial-mode', 'developer');
+  });
+
+  it('reopens a submitted game from the same Join dialog after submissions close', async () => {
+    mocks.getPublicTestingEventExperience.mockResolvedValue({
+      event: {
+        id: 'event-closed',
+        name: 'Closed project session',
+        mode: 'Online',
+        status: 'ApplicationsClosed',
+        approvalMode: 'ManagerOnly',
+        requiresFeedback: false,
+        slots: [],
+      },
+      applications: [{ id: 'application-7', projectId: 'project-7', status: 'Approved' }],
+      registrations: [],
+      feedbackObligations: [],
+      isAuthenticated: true,
+      accessIssues: [],
+    });
+
+    render(await PublicTestingEventDetailPage({
+      params: Promise.resolve({ eventId: 'event-closed' }),
+      searchParams: Promise.resolve({ joinAs: 'developer', applicationId: 'application-7', projectId: 'project-7' }),
+    }));
+
+    const join = screen.getByTestId('join-options');
+    expect(join).toHaveAttribute('data-initial-mode', 'developer');
+    expect(join).toHaveAttribute('data-initial-project-id', 'project-7');
+    expect(join).toHaveAttribute('data-selected-application-id', 'application-7');
   });
 
   it('renders an accessible retry state and records the public contract failure', async () => {

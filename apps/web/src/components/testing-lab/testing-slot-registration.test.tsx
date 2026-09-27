@@ -50,12 +50,29 @@ describe('TestingSlotRegistration', () => {
     );
 
     expect(screen.getByRole('button', { name: /join the waitlist/i })).toBeInTheDocument();
-    expect(screen.getByText('Waitlist available')).toBeInTheDocument();
+    expect(screen.getByText('Waitlist open')).toBeInTheDocument();
     expect(screen.queryByText(/seats claimed|game slots filled/i)).not.toBeInTheDocument();
-    expect(screen.getAllByText('Aug 12, 2026')).toHaveLength(2);
+    expect(screen.getAllByText('Aug 12, 2026')).toHaveLength(1);
     expect(screen.getByText('1:00 PM')).toBeInTheDocument();
     expect(screen.getByText('3:00 PM')).toBeInTheDocument();
     expect(screen.getAllByText('UTC')).toHaveLength(1);
+  });
+
+  it('keeps a closed session readable without suggesting registration is still available', () => {
+    render(
+      <TestingSlotRegistration
+        eventId="event-1"
+        isAuthenticated
+        registrationOpen={false}
+        slot={slot}
+      />,
+    );
+
+    expect(screen.getByText('In person playtest')).toBeInTheDocument();
+    expect(screen.getByText('Sign-ups closed')).toBeInTheDocument();
+    expect(screen.getByText('Aug 12, 2026')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /join this playtest|join the waitlist/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/not accepting new registrations/i)).not.toBeInTheDocument();
   });
 
   it('shows the tester current registration instead of a duplicate form', () => {
@@ -107,9 +124,25 @@ describe('TestingSlotRegistration', () => {
       'href',
       '/sign-in?redirectTo=%2Ftesting-lab%2Fevents%2Fevent-1%3FslotId%3D%23session-',
     );
-    expect(screen.getByText('Online')).toBeInTheDocument();
+    expect(screen.getByText(/Online playtest/)).toBeInTheDocument();
     expect(screen.getByText('Schedule pending')).toBeInTheDocument();
     expect(screen.queryByText(/Downtown campus/)).not.toBeInTheDocument();
+  });
+
+  it('returns anonymous testers to their enrollment step after signing in', () => {
+    render(
+      <TestingSlotRegistration
+        eventId="event-1"
+        isAuthenticated={false}
+        slot={{ id: 'slot-1', mode: 'Online' }}
+        signInReturnUrl="/testing-lab/events/event-1?joinAs=tester&slotId=slot-1#join"
+      />,
+    );
+
+    expect(screen.getByRole('link', { name: /sign in or create a free account/i })).toHaveAttribute(
+      'href',
+      '/sign-in?redirectTo=%2Ftesting-lab%2Fevents%2Fevent-1%3FjoinAs%3Dtester%26slotId%3Dslot-1%23join',
+    );
   });
 
   it('uses a schedule fallback without adding redundant capacity details', () => {
@@ -120,7 +153,7 @@ describe('TestingSlotRegistration', () => {
         slot={{ id: 'slot-1', mode: 'Hybrid', startsAt: 'invalid', availableTesterCount: 1 }}
       />,
     );
-    expect(screen.getByText('Hybrid')).toBeInTheDocument();
+    expect(screen.getByText(/Hybrid playtest/)).toBeInTheDocument();
     expect(screen.getByText('Schedule pending')).toBeInTheDocument();
     expect(screen.queryByText(/testers|game limit/i)).not.toBeInTheDocument();
   });

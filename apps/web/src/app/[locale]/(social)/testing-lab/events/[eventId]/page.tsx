@@ -1,7 +1,6 @@
 import { TestingFeedbackSubmission } from '@/components/testing-lab/testing-feedback-submission';
-import { TestingProjectApplication } from '@/components/testing-lab/testing-project-application';
-import { TestingSlotRegistration } from '@/components/testing-lab/testing-slot-registration';
 import { TestingEventGames } from '@/components/testing-lab/testing-event-games';
+import { TestingEventJoin } from '@/components/testing-lab/testing-event-join';
 import { TestingEventDateRange } from '@/components/testing-lab/testing-event-date-range';
 import { Link } from '@/i18n/navigation';
 import { getPublicTestingEventExperience } from '@/lib/testing-lab/events-queries';
@@ -11,7 +10,6 @@ import type {
   TestingLabPublicTestingEventSlotProjection,
 } from '@game-guild/client';
 import {
-  ArrowDown,
   ArrowLeft,
   CalendarDays,
   Gamepad2,
@@ -40,40 +38,15 @@ function getTimestamp(value?: string | null) {
   return Number.isFinite(timestamp) ? timestamp : null;
 }
 
-function eventStatusLabel({
-  status,
-  ended,
-  beforeOpening,
-  gameApplicationsOpen,
-  testerRegistrationOpen,
-}: {
-  status?: string | null;
-  ended: boolean;
-  beforeOpening: boolean;
-  gameApplicationsOpen: boolean;
-  testerRegistrationOpen: boolean;
-}) {
-  if (ended) return 'Playtest ended';
-  if (testerRegistrationOpen) return 'Tester registration open';
-  if (gameApplicationsOpen) return 'Game submissions open';
-  if (beforeOpening) return 'Game submissions open soon';
-  if (status === 'Active') return 'Live now';
-  if (status === 'Completed') return 'Completed';
-  if (status === 'Cancelled') return 'Cancelled';
-  if (status === 'ApplicationsClosed' || status === 'ApplicationsOpen') return 'Game submissions closed';
-  if (status === 'Scheduled') return 'Scheduled';
-  return status ?? 'Testing Lab event';
-}
-
 export default async function Page({
   params,
   searchParams,
 }: {
   params: Promise<{ eventId: string }>;
-  searchParams?: Promise<{ projectId?: string; submitGame?: string; applicationId?: string }>;
+  searchParams?: Promise<{ projectId?: string; submitGame?: string; applicationId?: string; joinAs?: string; slotId?: string }>;
 }) {
   const { eventId } = await params;
-  const { projectId, submitGame, applicationId } = searchParams ? await searchParams : {};
+  const { projectId, submitGame, applicationId, joinAs, slotId } = searchParams ? await searchParams : {};
   const experience = await getPublicTestingEventExperience(eventId);
   if (!experience.event && experience.accessIssues.length === 0) notFound();
 
@@ -111,8 +84,7 @@ export default async function Page({
   const openingAt = getTimestamp(event.applicationsOpenAt);
   const closingAt = getTimestamp(event.applicationsCloseAt);
   const eventEndsAt = getTimestamp(event.endsAt);
-  const eventEnded = event.status === 'Completed' || event.status === 'Cancelled' || (eventEndsAt !== null && eventEndsAt < now);
-  const beforeOpening = openingAt !== null && openingAt > now;
+  const eventEnded = event.status === 'Completed' || event.status === 'Cancelled' || (eventEndsAt !== null && eventEndsAt <= now);
   const withinApplicationWindow = (openingAt === null || openingAt <= now) && (closingAt === null || closingAt >= now);
   const acceptsApplications = !eventEnded && event.status === 'ApplicationsOpen' && withinApplicationWindow;
   const slots = event.slots ?? [];
@@ -122,41 +94,57 @@ export default async function Page({
   );
   const canRegisterForSlot = (slot: TestingLabPublicTestingEventSlotProjection) => {
     const slotEnd = getTimestamp(slot.endsAt);
+    // Full sessions still accept registrations through the API waitlist.
     return !eventEnded && testerRegistrationStatus && testerConfigurationReady && (slotEnd === null || slotEnd > now);
   };
   const testerRegistrationOpen = slots.some(canRegisterForSlot);
+  const selectedTesterSlot = slots.find((slot) => slot.id === slotId);
+  const requestedApplication = experience.applications.find((application) =>
+    (applicationId && application.id === applicationId)
+    || (projectId && application.projectId === projectId),
+  );
+  const initialJoinMode = joinAs === 'developer' && (acceptsApplications || requestedApplication)
+    ? 'developer'
+    : (submitGame === '1' || Boolean(projectId) || Boolean(applicationId)) && (acceptsApplications || requestedApplication)
+      ? 'developer'
+    : joinAs === 'tester' && selectedTesterSlot && canRegisterForSlot(selectedTesterSlot)
+      ? 'tester'
+      : undefined;
+  const allTesterSpotsFull = slots.length > 0 && slots.every((slot) => {
+    if (slot.maxTesters == null) return false;
+    const available = slot.availableTesterCount ?? Math.max(0, slot.maxTesters - (slot.registeredTesterCount ?? 0));
+    return available <= 0;
+  });
   const games = event.games ?? [];
-  const availableCapacity = (field: 'availableProjectCount' | 'availableTesterCount') => {
+  const slotCapacity = (field: 'maxProjects' | 'maxTesters') => {
     if (slots.length === 0 || slots.some((slot) => slot[field] == null)) return null;
     return slots.reduce((total, slot) => total + (slot[field] ?? 0), 0);
   };
-  const projectSpotsLeft = availableCapacity('availableProjectCount');
-  const testerSpotsLeft = availableCapacity('availableTesterCount');
-  const projectCapacityLabel = acceptsApplications
-    ? projectSpotsLeft === null
-      ? 'No limit'
-      : projectSpotsLeft === 0
-        ? 'Full'
-        : String(projectSpotsLeft) + ' left'
-    : beforeOpening
-      ? 'Opens soon'
-      : 'Closed';
-  const testerCapacityLabel = testerRegistrationOpen
-    ? testerSpotsLeft === null
-      ? 'No limit'
-      : testerSpotsLeft === 0
-        ? 'Full'
-        : String(testerSpotsLeft) + ' left'
-    : 'Closed';
+  const projectCapacity = slotCapacity('maxProjects');
+  const testerCapacity = slotCapacity('maxTesters');
+  const registeredTesters = slots.reduce((total, slot) => total + (slot.registeredTesterCount ?? 0), 0);
+  const projectCapacityLabel = projectCapacity === null ? `${games.length} / No limit` : `${games.length} of ${projectCapacity}`;
+  const testerCapacityLabel = testerCapacity === null ? `${registeredTesters} / No limit` : `${registeredTesters} of ${testerCapacity}`;
+  const testerCapacityStateLabel = testerRegistrationOpen
+    ? allTesterSpotsFull ? `${testerCapacityLabel} · Waitlist open` : testerCapacityLabel
+    : testerCapacity === null
+      ? 'Closed'
+      : `Closed · ${registeredTesters}/${testerCapacity} used`;
+  const testerRegistrationClosedCopy = event.status === 'Cancelled'
+    ? 'This playtest was cancelled. Tester sign-up is closed.'
+    : eventEnded
+      ? 'This playtest has ended. Tester sign-up is closed.'
+      : acceptsApplications
+          ? 'Tester sign-up is not open. Game submissions are open.'
+          : !testerRegistrationStatus
+            ? 'Tester sign-up is not open for this playtest.'
+          : !testerConfigurationReady
+            ? 'Tester sign-up is not available for this playtest yet.'
+            : allTesterSpotsFull
+              ? 'All tester spots are filled. You can still join the waitlist.'
+            : 'Tester sign-up is closed for this playtest.';
   const showGameSubmission = acceptsApplications || submitGame === '1' || Boolean(projectId) || Boolean(applicationId);
   const modeLabel = event.mode === 'InPerson' ? 'In person' : (event.mode ?? 'Online');
-  const statusLabel = eventStatusLabel({
-    status: event.status,
-    ended: eventEnded,
-    beforeOpening,
-    gameApplicationsOpen: acceptsApplications,
-    testerRegistrationOpen,
-  });
   const [projectVersions, localization] = await Promise.all([
     experience.isAuthenticated && showGameSubmission ? getTestingProjectVersionOptions() : Promise.resolve([]),
     experience.isAuthenticated ? getLocalizationPreference().catch(() => null) : Promise.resolve(null),
@@ -169,6 +157,19 @@ export default async function Page({
       || `Game submission ${index + 1}`,
     status: application.status?.trim() || 'Under review',
   }));
+  const projectApplications = experience.applications.flatMap((application) => application.id ? [{
+    id: application.id,
+    projectId: application.projectId,
+    projectVersionId: application.projectVersionId,
+    preferredAvailability: application.preferredAvailability,
+    status: application.status,
+    decisionRationale: application.decisionRationale,
+    brief: application.brief,
+    eventApplicationResponse: application.eventApplicationResponse,
+    feedbackQuestionnaire: application.feedbackQuestionnaire,
+    rulesAcceptedAt: application.rulesAcceptedAt,
+    submittedAssetReferenceIds: application.submittedAssetReferenceIds,
+  }] : []);
   const timeZone = safeTimeZone(localization?.timezone ?? event.timeZoneId);
   const dateLocale = localization?.language ?? 'en-US';
   const hour12 = localization?.timeFormat !== '24h';
@@ -178,7 +179,7 @@ export default async function Page({
       <aside
         id="event-info"
         aria-label="Playtest details"
-        className="min-w-0 space-y-5 border-y border-border bg-muted/20 px-4 pb-5 pt-0 sm:px-6 lg:sticky lg:top-16 lg:col-start-1 lg:row-start-1 lg:h-[calc(100svh-4rem)] lg:self-start lg:overflow-y-auto lg:border-y-0 lg:border-r lg:px-5 lg:pb-5 lg:pt-0"
+        className="order-2 min-w-0 space-y-4 border-y border-border bg-muted/20 px-4 pb-5 pt-5 sm:px-6 lg:order-none lg:sticky lg:top-0 lg:col-start-1 lg:row-start-1 lg:h-[calc(100svh-4rem)] lg:self-start lg:overflow-y-auto lg:border-y-0 lg:border-r lg:px-5 lg:pb-5 lg:pt-5"
       >
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Testing Lab</p>
@@ -191,73 +192,63 @@ export default async function Page({
                 {event.description}
               </p>
             ) : null}
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="inline-flex max-w-full overflow-hidden rounded-full border border-border bg-background text-xs font-medium">
-                <span className="whitespace-nowrap px-2.5 py-1 text-muted-foreground">{modeLabel}</span>
-                <span className="border-l border-border px-2.5 py-1">{statusLabel}</span>
-              </div>
-            </div>
           </header>
         </div>
 
         <section id="schedule" aria-labelledby="schedule-heading" className="scroll-mt-8 border-t border-border pt-4">
-          <h2 id="schedule-heading" className="text-sm font-semibold">Tester - Sign up</h2>
+          <h2 id="schedule-heading" className="text-sm font-semibold">Schedule</h2>
           {slots.length === 0 && event.startsAt ? (
-            <div className="mt-3 flex items-start gap-2">
+            <div className="mt-3 flex items-start gap-3">
               <CalendarDays className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-              <TestingEventDateRange
-                startsAt={event.startsAt}
-                endsAt={event.endsAt}
-                timeZone={timeZone}
-                locale={dateLocale}
-                hour12={hour12}
-              />
+              <div className="min-w-0">
+                <p className="text-sm font-medium">{modeLabel} playtest</p>
+                <div className="mt-1"><TestingEventDateRange startsAt={event.startsAt} endsAt={event.endsAt} timeZone={timeZone} locale={dateLocale} hour12={hour12} /></div>
+              </div>
             </div>
           ) : null}
-          {!testerRegistrationOpen ? (
-            <p className="mt-2 text-sm leading-5 text-muted-foreground">
-              This session is not accepting new registrations. Browse other playtests for an open seat.
-            </p>
-          ) : null}
           {slots.length > 0 ? (
-            <div className="mt-3 space-y-2">
+            <div className="mt-2 divide-y divide-border">
               {slots.map((slot: TestingLabPublicTestingEventSlotProjection) => (
-                <TestingSlotRegistration
-                  key={slot.id}
-                  eventId={eventId}
-                  isAuthenticated={experience.isAuthenticated}
-                  registrationOpen={canRegisterForSlot(slot)}
-                  showClosedMessage={false}
-                  timeZoneId={timeZone}
-                  locale={dateLocale}
-                  hour12={hour12}
-                  slot={slot}
-                  registration={experience.registrations.find((registration) => registration.slotId === slot.id)}
-                  registrationSchema={event.configuration?.testerRegistrationSchema}
-                  generalRules={event.configuration?.generalRules}
-                  testerInstructions={event.configuration?.testerInstructions}
-                />
+                <div key={slot.id} id={slot.id ? `session-${slot.id}` : undefined} className="scroll-mt-24 py-3 first:pt-2 last:pb-0">
+                  <div className="flex items-start gap-3">
+                    <CalendarDays className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium">{slot.mode === 'InPerson' ? 'In person' : (slot.mode ?? 'Online')} playtest</p>
+                      <div className="mt-1"><TestingEventDateRange startsAt={slot.startsAt} endsAt={slot.endsAt} timeZone={timeZone} locale={dateLocale} hour12={hour12} /></div>
+                      {[slot.campusName, slot.roomName].filter(Boolean).length > 0 ? (
+                        <p className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                          <span aria-hidden="true">·</span>{[slot.campusName, slot.roomName].filter(Boolean).join(' · ')}
+                        </p>
+                      ) : null}
+                      {experience.registrations.find((registration) => registration.slotId === slot.id && registration.status !== 'Cancelled')?.status ? (
+                        <p className="mt-1 text-xs text-muted-foreground">Your status: {experience.registrations.find((registration) => registration.slotId === slot.id && registration.status !== 'Cancelled')?.status}</p>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
           ) : null}
         </section>
 
         <section className="border-t border-border pt-5" aria-labelledby="capacity-heading">
-          <h2 id="capacity-heading" className="text-sm font-semibold">At a glance</h2>
+          <h2 id="capacity-heading" className="text-sm font-semibold">Spots &amp; feedback</h2>
           <dl className="mt-2 space-y-1 text-sm">
             <div className="flex items-center justify-between gap-3 py-1">
               <dt className="flex items-center gap-2 text-muted-foreground">
                 <Gamepad2 className="size-4" aria-hidden="true" />
-                Games / game spots
+                Games
               </dt>
-              <dd className="whitespace-nowrap text-right font-semibold tabular-nums">{games.length} / {projectCapacityLabel}</dd>
+              <dd className="whitespace-nowrap text-right font-semibold tabular-nums" aria-label={`${games.length} ${games.length === 1 ? 'game' : 'games'} of ${projectCapacity ?? 'unlimited'} game spots`}>{projectCapacityLabel}</dd>
             </div>
             <div className="flex items-center justify-between gap-3 py-1">
               <dt className="flex items-center gap-2 text-muted-foreground">
                 <Users className="size-4" aria-hidden="true" />
                 Tester spots
               </dt>
-              <dd className="whitespace-nowrap text-right font-semibold">{testerCapacityLabel}</dd>
+              <dd className="whitespace-nowrap text-right font-semibold tabular-nums" aria-label={testerRegistrationOpen
+                ? `${registeredTesters} ${registeredTesters === 1 ? 'tester' : 'testers'} of ${testerCapacity ?? 'unlimited'} tester spots`
+                : `Tester sign-up closed; ${registeredTesters} ${registeredTesters === 1 ? 'tester' : 'testers'} of ${testerCapacity ?? 'unlimited'} spots used`}>{testerCapacityStateLabel}</dd>
             </div>
             {event.requiresFeedback ? (
               <div className="flex items-center justify-between gap-3 py-1">
@@ -306,43 +297,44 @@ export default async function Page({
           </section>
         ) : null}
 
-        <div className="grid gap-2 border-t border-border pt-5">
-          {!testerRegistrationOpen ? (
-            <>
-              <button
-                type="button"
-                disabled
-                className="inline-flex h-10 cursor-not-allowed items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground opacity-60"
-              >
-                Registration closed
-              </button>
-              <Link
-                href="/testing-lab"
-                className="inline-flex items-center gap-2 text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <ArrowLeft className="size-4" aria-hidden="true" />
-                Browse other playtests
-              </Link>
-            </>
-          ) : (
-            <>
-              <a
-                href="#schedule"
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                Sign up to test
-                <ArrowDown className="size-4" aria-hidden="true" />
-              </a>
-              <Link
-                href="/testing-lab"
-                className="inline-flex items-center gap-2 text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <ArrowLeft className="size-4" aria-hidden="true" />
-                Browse other playtests
-              </Link>
-            </>
-          )}
-        </div>
+        <TestingEventJoin
+            eventId={eventId}
+            isAuthenticated={experience.isAuthenticated}
+            testerSessions={slots.flatMap((slot) => slot.id ? [{
+              id: slot.id,
+              label: `${slot.mode === 'InPerson' ? 'In person' : (slot.mode ?? 'Online')} · ${getTimestamp(slot.startsAt) === null
+                ? 'Playtest session'
+                : new Intl.DateTimeFormat(dateLocale, { dateStyle: 'medium', timeStyle: 'short', timeZone, hour12 }).format(new Date(slot.startsAt!))}`,
+              slot: {
+                ...slot,
+                availableTesterCount: slot.maxTesters == null
+                  ? null
+                  : slot.availableTesterCount ?? Math.max(0, slot.maxTesters - (slot.registeredTesterCount ?? 0)),
+              },
+              registration: experience.registrations.find((registration) => registration.slotId === slot.id),
+              registrationOpen: canRegisterForSlot(slot),
+            }] : [])}
+            testerUnavailableReason={testerRegistrationClosedCopy}
+            testerRegistrationSchema={event.configuration?.testerRegistrationSchema}
+            generalRules={event.configuration?.generalRules}
+            testerInstructions={event.configuration?.testerInstructions}
+            timeZoneId={timeZone}
+            locale={dateLocale}
+            hour12={hour12}
+            projectApplication={{
+              acceptsApplications,
+              projectVersions,
+              applications: projectApplications,
+              applicationSchema: event.configuration?.projectApplicationSchema,
+              generalRules: event.configuration?.generalRules,
+              candidateInstructions: event.configuration?.candidateInstructions,
+              requiresFeedback: event.requiresFeedback ?? false,
+            }}
+            initialMode={initialJoinMode}
+            initialSlotId={initialJoinMode === 'tester' ? selectedTesterSlot?.id : undefined}
+            initialProjectId={projectId}
+            selectedApplicationId={applicationId}
+          />
       </aside>
 
       <TestingEventGames
@@ -361,46 +353,7 @@ export default async function Page({
             </p>
           </div>
         }
-      >
-        {showGameSubmission ? (
-          <details
-            id="submit-game"
-            open={submitGame === '1' || Boolean(projectId) || Boolean(applicationId)}
-            className="mt-6 border-t border-border pt-4"
-          >
-            <summary className="cursor-pointer text-sm font-medium">
-              {acceptsApplications ? 'Submit a game' : 'Review this game submission'}
-            </summary>
-            <div className="pt-4">
-              <TestingProjectApplication
-                eventId={eventId}
-                isAuthenticated={experience.isAuthenticated}
-                acceptsApplications={acceptsApplications}
-                projectVersions={projectVersions}
-                initialProjectId={projectId}
-                selectedApplicationId={applicationId}
-                applicationSchema={event.configuration?.projectApplicationSchema}
-                generalRules={event.configuration?.generalRules}
-                candidateInstructions={event.configuration?.candidateInstructions}
-                requiresFeedback={event.requiresFeedback ?? false}
-                applications={experience.applications.flatMap((application) => application.id ? [{
-                  id: application.id,
-                  projectId: application.projectId,
-                  projectVersionId: application.projectVersionId,
-                  preferredAvailability: application.preferredAvailability,
-                  status: application.status,
-                  decisionRationale: application.decisionRationale,
-                  brief: application.brief,
-                  eventApplicationResponse: application.eventApplicationResponse,
-                  feedbackQuestionnaire: application.feedbackQuestionnaire,
-                  rulesAcceptedAt: application.rulesAcceptedAt,
-                  submittedAssetReferenceIds: application.submittedAssetReferenceIds,
-                }] : [])}
-              />
-            </div>
-          </details>
-        ) : null}
-      </TestingEventGames>
+      />
     </main>
   );
 }

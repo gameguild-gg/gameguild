@@ -100,10 +100,18 @@ public class ProjectsControllerTests
             TenantId = tenantId,
             Title = "Versioned project",
             Slug = "versioned-project",
+            FeaturedImageUrl = "https://cdn.example.test/versioned-project-cover.png",
             CreatedById = _actorId
         };
         _context.Projects.Add(project);
         await _context.SaveChangesAsync();
+        _mediator
+            .Setup(x => x.Send(It.IsAny<IRequest<ProjectVersion>>(), It.IsAny<CancellationToken>()))
+            .Returns((IRequest<ProjectVersion> request, CancellationToken _) =>
+            {
+                _context.SaveChanges();
+                return Task.FromResult(((CreateProjectVersionEndpointCommand)request).Version);
+            });
         var controller = CreateController();
 
         var created = await controller.CreateProjectVersion(project.Id, new CreateProjectVersionRequest
@@ -125,7 +133,7 @@ public class ProjectsControllerTests
         var options = await controller.GetAccessibleProjectVersions();
         options.Result.Should().BeOfType<OkObjectResult>()
             .Which.Value.Should().BeAssignableTo<IReadOnlyList<ProjectVersionOptionProjection>>()
-            .Which.Should().ContainSingle(item => item.ProjectId == project.Id && item.Id == version.Id);
+            .Which.Should().ContainSingle(item => item.ProjectId == project.Id && item.Id == version.Id && item.ImageUrl == project.FeaturedImageUrl);
     }
 
     [Fact]

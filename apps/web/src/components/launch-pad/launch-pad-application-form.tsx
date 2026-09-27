@@ -12,7 +12,7 @@ export function LaunchPadApplicationForm({ eventId, versions, initialProjectId }
     () => versions.find((version) => version.projectId === initialProjectId)?.id ?? '',
   );
   const selected = versions.find((version) => version.id === versionId);
-  if (versions.length === 0) return <p className="text-sm text-slate-400">Create an accessible Project version before applying.</p>;
+  if (versions.length === 0) return <p className="text-sm text-muted-foreground">Create an accessible Project version before applying.</p>;
 
   return (
     <form action={submitLaunchPadApplicationForm} className="space-y-4">
@@ -21,7 +21,7 @@ export function LaunchPadApplicationForm({ eventId, versions, initialProjectId }
       <div className="space-y-2">
         <Label htmlFor="launch-project-version">Project version</Label>
         <select id="launch-project-version" name="projectVersionId" required value={versionId} onChange={(event) => setVersionId(event.target.value)}
-          className="h-10 w-full rounded-md border border-white/15 bg-slate-950 px-3 text-sm">
+          className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <option value="" disabled>Select a release</option>
           {versions.map((version) => <option key={version.id} value={version.id}>{version.projectTitle} · {version.versionNumber}</option>)}
         </select>

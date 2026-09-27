@@ -38,6 +38,9 @@ describe("social navigation", () => {
     expect(socialNavItems.find((item) => item.title === "Home")?.url).toBe(
       "/feed",
     );
+    expect(socialNavItems.find((item) => item.title === "Explore")?.url).toBe(
+      "/explore",
+    );
   });
 
   it("gives For You, Following, Community, and Saved distinct locale-aware destinations", () => {
@@ -84,7 +87,7 @@ describe("social navigation", () => {
         activeTab="foryou"
       />,
     );
-    expect(screen.getByRole("link", { name: "View profile" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "View profile" })).toHaveAttribute(
       "href",
       "/social/profiles/lin",
     );

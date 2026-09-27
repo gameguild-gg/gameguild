@@ -3,15 +3,27 @@ import { presentTestingEvents } from "./testing-events-presentation";
 
 describe("presentTestingEvents", () => {
   it("combines real slot capacity, schedule, and location data on the server", () => {
+    const now = new Date("2026-08-01T00:00:00.000Z");
     const [event] = presentTestingEvents([
       {
         id: "event-1",
         name: "Campus night",
         description: "Playtest night.",
         mode: "InPerson",
-        status: "ApplicationsOpen",
+        status: "Scheduled",
         startsAt: "2026-08-12T21:00:00.000Z",
         endsAt: "2026-08-12T23:00:00.000Z",
+        configuration: {
+          frozenAt: "2026-07-31T12:00:00.000Z",
+          testerRegistrationSchema: { title: "Tester registration", questions: [] },
+        },
+        games: [
+          {
+            projectId: "game-1",
+            title: "Lantern Lake",
+            imageUrl: " /games/lantern-lake.webp ",
+          },
+        ],
         slots: [
           {
             id: "slot-1",
@@ -27,13 +39,14 @@ describe("presentTestingEvents", () => {
           },
         ],
       },
-    ]);
+    ], now);
 
     expect(event).toMatchObject({
       id: "event-1",
       title: "Campus night",
       mode: "In person",
       status: "open",
+      statusLabel: "Tester sign-up open",
       location: "Main campus - Lab 2",
       startsAt: "2026-08-12T18:00:00.000Z",
       endsAt: "2026-08-12T20:00:00.000Z",
@@ -42,6 +55,9 @@ describe("presentTestingEvents", () => {
       projectCount: 2,
       projectLimit: 3,
       availableTesterCount: 6,
+      testerRegistrationOpen: true,
+      gameSubmissionsOpen: false,
+      gameImageUrl: "/games/lantern-lake.webp",
       scheduleCount: 1,
     });
   });
@@ -66,11 +82,11 @@ describe("presentTestingEvents", () => {
   });
 
   it.each([
-    ["Scheduled", "open", "Open"],
-    ["Active", "in-progress", "In Progress"],
-    ["Completed", "completed", "Completed"],
-    ["Cancelled", "closed", "Closed"],
-    [undefined, "closed", "Closed"],
+    ["Scheduled", "closed", "Registration closed"],
+    ["Active", "in-progress", "In progress"],
+    ["Completed", "completed", "Playtest ended"],
+    ["Cancelled", "closed", "Cancelled"],
+    [undefined, "closed", "Registration closed"],
   ] as const)(
     "maps the %s API status to the public %s state",
     (apiStatus, status, statusLabel) => {
@@ -101,7 +117,7 @@ describe("presentTestingEvents", () => {
           },
         ],
       },
-    ]);
+    ], new Date("2026-09-01T00:00:00.000Z"));
 
     expect(event).toMatchObject({
       title: "Untitled testing event",
@@ -115,7 +131,7 @@ describe("presentTestingEvents", () => {
       projectCount: 0,
       testerLimit: null,
       projectLimit: null,
-      availableTesterCount: null,
+      availableTesterCount: 0,
       scheduleCount: 1,
     });
   });
@@ -174,6 +190,105 @@ describe("presentTestingEvents", () => {
       projectLimit: 0,
       availableTesterCount: 0,
       scheduleCount: 3,
+    });
+  });
+
+  it("keeps a full session joinable through its waitlist", () => {
+    const [event] = presentTestingEvents([{
+      id: "full-event",
+      status: "Scheduled",
+      configuration: { frozenAt: "2026-07-31T12:00:00.000Z", testerRegistrationSchema: { questions: [] } },
+      slots: [{
+        id: "full-slot",
+        startsAt: "2026-10-02T18:00:00.000Z",
+        endsAt: "2026-10-02T20:00:00.000Z",
+        maxTesters: 1,
+        registeredTesterCount: 1,
+        availableTesterCount: 0,
+      }],
+    }], new Date("2026-09-01T00:00:00.000Z"));
+
+    expect(event).toMatchObject({
+      status: "open",
+      testerRegistrationOpen: true,
+      availableTesterCount: 0,
+      statusLabel: "Tester sign-up open",
+    });
+  });
+
+  it("does not advertise tester spots after a playtest has ended", () => {
+    const [event] = presentTestingEvents(
+      [
+        {
+          id: "expired-event",
+          name: "Past playtest",
+          status: "Scheduled",
+          startsAt: "2026-09-14T16:00:00.000Z",
+          endsAt: "2026-09-14T19:00:00.000Z",
+          configuration: {
+            frozenAt: "2026-09-01T12:00:00.000Z",
+            testerRegistrationSchema: { title: "Tester registration", questions: [] },
+          },
+          slots: [
+            {
+              id: "expired-slot",
+              startsAt: "2026-09-14T16:00:00.000Z",
+              endsAt: "2026-09-14T19:00:00.000Z",
+              maxTesters: 1,
+              registeredTesterCount: 0,
+              availableTesterCount: 1,
+            },
+          ],
+        },
+      ],
+      new Date("2026-09-25T12:00:00.000Z"),
+    );
+
+    expect(event).toMatchObject({
+      status: "completed",
+      statusLabel: "Playtest ended",
+      testerRegistrationOpen: false,
+      gameSubmissionsOpen: false,
+      availableTesterCount: 0,
+    });
+  });
+
+  it("labels open game submissions without presenting tester seats as available", () => {
+    const [event] = presentTestingEvents(
+      [
+        {
+          id: "developer-event",
+          name: "Open game submissions",
+          status: "ApplicationsOpen",
+          applicationsOpenAt: "2026-09-25T00:00:00.000Z",
+          applicationsCloseAt: "2026-10-01T00:00:00.000Z",
+          startsAt: "2026-10-02T16:00:00.000Z",
+          endsAt: "2026-10-02T19:00:00.000Z",
+          configuration: {
+            frozenAt: "2026-09-24T12:00:00.000Z",
+            testerRegistrationSchema: { title: "Tester registration", questions: [] },
+          },
+          slots: [
+            {
+              id: "developer-slot",
+              startsAt: "2026-10-02T16:00:00.000Z",
+              endsAt: "2026-10-02T19:00:00.000Z",
+              maxTesters: 20,
+              registeredTesterCount: 0,
+              availableTesterCount: 20,
+            },
+          ],
+        },
+      ],
+      new Date("2026-09-25T12:00:00.000Z"),
+    );
+
+    expect(event).toMatchObject({
+      status: "open",
+      statusLabel: "Game submissions open",
+      testerRegistrationOpen: false,
+      gameSubmissionsOpen: true,
+      availableTesterCount: 0,
     });
   });
 });

@@ -58,6 +58,7 @@ export function TestingEventDateRange({
   });
   const startDate = dateFormatter.format(start);
   const endDate = end ? dateFormatter.format(end) : null;
+  const sameDay = end !== null && startDate === endDate;
   const zoneLabel = new Intl.DateTimeFormat(resolvedLocale, {
     timeZone: resolvedTimeZone,
     timeZoneName: 'short',
@@ -69,25 +70,21 @@ export function TestingEventDateRange({
       aria-label={end
         ? `${startDate}, ${timeFormatter.format(start)} to ${endDate}, ${timeFormatter.format(end)} ${zoneLabel}`
         : `${startDate}, ${timeFormatter.format(start)} ${zoneLabel}`}
-      className={end
-        ? 'grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-x-2 text-sm'
-        : 'grid min-w-0 grid-cols-1 gap-y-1 text-sm'}
+      className="grid min-w-0 gap-y-1 text-sm"
     >
-      <time
-        dateTime={start.toISOString()}
-        className={`grid min-w-0 gap-y-1 font-medium tabular-nums ${end ? 'text-right' : 'text-left'}`}
-      >
-        <span className="block text-xs font-normal text-muted-foreground">{startDate}</span>
-        <span className="block">{timeFormatter.format(start)}</span>
-      </time>
-      {end ? <span className="pt-0.5 text-center text-xs text-muted-foreground">to</span> : null}
-      {end ? (
-        <time dateTime={end.toISOString()} className="grid min-w-0 gap-y-1 text-left font-medium tabular-nums">
-          <span className="block text-xs font-normal text-muted-foreground">{endDate}</span>
-          <span className="block">{timeFormatter.format(end)}</span>
-        </time>
-      ) : null}
-      <p className={`${end ? 'col-span-3 text-center' : 'text-left'} text-xs text-muted-foreground`}>{zoneLabel}</p>
+      <p className="text-xs leading-5 text-muted-foreground">
+        {sameDay || !endDate ? startDate : `${startDate} → ${endDate}`}
+      </p>
+      <p className="font-medium tabular-nums">
+        <time dateTime={start.toISOString()}>{timeFormatter.format(start)}</time>
+        {end ? (
+          <>
+            <span aria-hidden="true" className="px-1.5 text-muted-foreground">–</span>
+            <time dateTime={end.toISOString()}>{timeFormatter.format(end)}</time>
+          </>
+        ) : null}
+      </p>
+      <p className="text-xs leading-5 text-muted-foreground">{zoneLabel}</p>
     </div>
   );
 }

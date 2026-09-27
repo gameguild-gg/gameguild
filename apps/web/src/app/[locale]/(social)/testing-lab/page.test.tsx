@@ -1,120 +1,34 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import type { ReactNode } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   getPublicTestingEventsDirectory: vi.fn(),
+  getLocalizationPreference: vi.fn(),
 }));
 
-vi.mock("@/lib/testing-lab/events-queries", () => ({
-  getPublicTestingEventsDirectory: mocks.getPublicTestingEventsDirectory,
-}));
-
-vi.mock("@/i18n/navigation", () => ({
-  Link: ({
-    children,
-    href,
-    ...rest
-  }: {
-    children: ReactNode;
-    href: string;
-  }) => (
-    <a href={href} {...rest}>
-      {children}
-    </a>
+vi.mock('@/lib/testing-lab/events-queries', () => ({ getPublicTestingEventsDirectory: mocks.getPublicTestingEventsDirectory }));
+vi.mock('@/lib/user-settings/queries', () => ({ getLocalizationPreference: mocks.getLocalizationPreference }));
+vi.mock('@/components/testing-lab/landing/testing-sessions', () => ({
+  TestingEventsBrowser: ({ events }: { events: Array<{ timeZoneId: string; dateLocale: string; hour12: boolean }> }) => (
+    <div data-testid="events" data-time-zone={events[0]?.timeZoneId} data-locale={events[0]?.dateLocale} data-hour12={events[0]?.hour12} />
   ),
 }));
 
-import TestingLabEventsPage from "./page";
+import Page from './page';
 
-describe("Public Testing Lab events directory", () => {
-  beforeEach(() => vi.clearAllMocks());
-
-  it("uses the legacy events UX with real public event data", async () => {
-    mocks.getPublicTestingEventsDirectory.mockResolvedValue({
-      accessIssues: [],
-      events: [
-        {
-          id: "event-1",
-          name: "August campus playtest",
-          description: "Test community games with their creators.",
-          mode: "InPerson",
-          status: "ApplicationsOpen",
-          applicationCount: 3,
-          startsAt: "2026-08-12T18:00:00.000Z",
-          endsAt: "2026-08-12T20:00:00.000Z",
-          slots: [
-            {
-              id: "slot-1",
-              campusName: "Downtown campus",
-              roomName: "Play Lab",
-              availableTesterCount: 7,
-              availableProjectCount: 2,
-              registeredTesterCount: 3,
-              approvedProjectCount: 1,
-              maxTesters: 10,
-              maxProjects: 3,
-            },
-          ],
-        },
-      ],
+describe('Testing Lab directory locale', () => {
+  it('formats directory dates using the signed-in user preferences', async () => {
+    mocks.getPublicTestingEventsDirectory.mockResolvedValue({ events: [{ id: 'event-1', status: 'Completed' }], accessIssues: [] });
+    mocks.getLocalizationPreference.mockResolvedValue({
+      language: 'pt-BR',
+      timezone: 'America/Sao_Paulo',
+      timeFormat: '24h',
     });
 
-    render(await TestingLabEventsPage({}));
+    render(await Page({ searchParams: Promise.resolve({ projectId: 'project-1' }) }));
 
-    expect(
-      screen.getByRole("heading", { name: "Test. Play. Earn." }),
-    ).toBeInTheDocument();
-    expect(screen.getByText(/1 open event/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("Search events...")).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Switch to cards view" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Switch to rows view" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Switch to table view" }),
-    ).toBeInTheDocument();
-    expect(screen.getByText("August campus playtest")).toBeInTheDocument();
-    expect(screen.getByText(/Downtown campus/)).toBeInTheDocument();
-    expect(screen.getByText("3/10 testers")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "View event" })).toHaveAttribute(
-      "href",
-      "/testing-lab/events/event-1",
-    );
-    expect(mocks.getPublicTestingEventsDirectory).toHaveBeenCalledWith({
-      take: 100,
-    });
-
-    fireEvent.change(screen.getByPlaceholderText("Search events..."), {
-      target: { value: "not present" },
-    });
-    expect(
-      screen.getByRole("heading", { name: "No events match your filters" }),
-    ).toBeInTheDocument();
-  });
-
-  it("renders the legacy no-events state without mock data", async () => {
-    mocks.getPublicTestingEventsDirectory.mockResolvedValue({
-      accessIssues: [],
-      events: [],
-    });
-
-    render(await TestingLabEventsPage({}));
-
-    expect(
-      screen.getByRole("heading", { name: "No events available" }),
-    ).toBeInTheDocument();
-    expect(screen.queryByPlaceholderText("Search events...")).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "Switch to cards view" }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: "Prepare a project" }),
-    ).toHaveAttribute("href", "/workspace/projects");
-    expect(
-      screen.getByRole("link", { name: "Back to Testing Lab" }),
-    ).toHaveAttribute("href", "/testing-lab");
+    expect(screen.getByTestId('events')).toHaveAttribute('data-time-zone', 'America/Sao_Paulo');
+    expect(screen.getByTestId('events')).toHaveAttribute('data-locale', 'pt-BR');
+    expect(screen.getByTestId('events')).toHaveAttribute('data-hour12', 'false');
   });
 });

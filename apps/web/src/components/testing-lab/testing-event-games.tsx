@@ -5,7 +5,7 @@ import { Badge } from "@game-guild/ui/components/badge";
 import { Link } from "@/i18n/navigation";
 import { ArrowLeft, ArrowRight, Gamepad2 } from "lucide-react";
 import Image from "next/image";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 type GameApplicationSummary = {
   id: string;
@@ -68,7 +68,27 @@ export function TestingEventGames({
   children?: ReactNode;
 }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [carouselPaused, setCarouselPaused] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
   const selectedGame = games[selectedIndex];
+
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") return;
+    const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const syncPreference = () => setReducedMotion(motionPreference.matches);
+    syncPreference();
+    motionPreference.addEventListener?.("change", syncPreference);
+    return () => motionPreference.removeEventListener?.("change", syncPreference);
+  }, []);
+
+  useEffect(() => {
+    if (games.length < 2 || carouselPaused || reducedMotion) return;
+    const timer = window.setInterval(() => {
+      setSelectedIndex((current) => (current + 1) % games.length);
+    }, 7000);
+    return () => window.clearInterval(timer);
+  }, [games.length, carouselPaused, reducedMotion]);
+
   const applicationsByProjectId = new Map(
     applications.flatMap((application) =>
       application.projectId
@@ -96,7 +116,7 @@ export function TestingEventGames({
   return (
     <section
       aria-label="Game content"
-      className="min-w-0 pl-4 pt-0 sm:pl-6 lg:col-start-2 lg:row-start-1 lg:pl-0 lg:pt-0"
+      className="order-1 min-w-0 pl-4 pt-0 sm:pl-6 lg:order-none lg:col-start-2 lg:row-start-1 lg:pl-0 lg:pt-0"
     >
       {selectedGame ? (
         <section
@@ -104,6 +124,14 @@ export function TestingEventGames({
           role="region"
           aria-label={"Featured game: " + gameTitle(selectedGame)}
           aria-roledescription="carousel"
+          onMouseEnter={() => setCarouselPaused(true)}
+          onMouseLeave={() => setCarouselPaused(false)}
+          onFocusCapture={() => setCarouselPaused(true)}
+          onBlurCapture={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+              setCarouselPaused(false);
+            }
+          }}
           className="relative isolate h-[62vh] min-h-[24rem] max-h-[52rem] overflow-hidden bg-neutral-950 sm:h-[68vh]"
         >
           <div className="absolute inset-0">
@@ -124,7 +152,7 @@ export function TestingEventGames({
           </div>
 
           <div
-            aria-live="polite"
+            aria-live={carouselPaused ? "polite" : "off"}
             aria-atomic="true"
             className="absolute inset-x-0 bottom-0 px-6 pb-7 pt-20 text-white sm:px-10 sm:pb-10"
           >
@@ -178,8 +206,8 @@ export function TestingEventGames({
               ? applicationsByProjectId.get(game.projectId)
               : undefined;
             const applicationHref = application?.projectId
-              ? `/testing-lab/events/${eventId}?submitGame=1&projectId=${encodeURIComponent(application.projectId)}#submit-game`
-              : "#submit-game";
+              ? `/testing-lab/events/${eventId}?joinAs=developer&applicationId=${encodeURIComponent(application.id)}&projectId=${encodeURIComponent(application.projectId)}#join`
+              : "#join";
 
             return (
               <li
@@ -230,8 +258,8 @@ export function TestingEventGames({
           })}
           {unlistedApplications.map((application) => {
             const applicationHref = application.projectId
-              ? `/testing-lab/events/${eventId}?submitGame=1&projectId=${encodeURIComponent(application.projectId)}#submit-game`
-              : `/testing-lab/events/${eventId}?submitGame=1&applicationId=${encodeURIComponent(application.id)}#submit-game`;
+              ? `/testing-lab/events/${eventId}?joinAs=developer&applicationId=${encodeURIComponent(application.id)}&projectId=${encodeURIComponent(application.projectId)}#join`
+              : `/testing-lab/events/${eventId}?joinAs=developer&applicationId=${encodeURIComponent(application.id)}#join`;
 
             return (
               <li

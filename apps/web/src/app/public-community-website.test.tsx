@@ -2,7 +2,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import type { AnchorHTMLAttributes, ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { authMock, getTokenMock, requestMock, getPublishedProjectsMock, getVisibleProjectMock, publicQueriesMocks } = vi.hoisted(() => ({
+const { authMock, getTokenMock, requestMock, getPublishedProjectsMock, getVisibleProjectMock, publicQueriesMocks, launchPadQueriesMock } = vi.hoisted(() => ({
   authMock: vi.fn(),
   getTokenMock: vi.fn(),
   requestMock: vi.fn(),
@@ -13,6 +13,9 @@ const { authMock, getTokenMock, requestMock, getPublishedProjectsMock, getVisibl
     getPublicMemberSpotlights: vi.fn(),
     getPublicActivities: vi.fn(),
     getPublicCommunityGroups: vi.fn(),
+  },
+  launchPadQueriesMock: {
+    getPublicLaunchPadEvents: vi.fn(),
   },
 }));
 
@@ -55,13 +58,14 @@ vi.mock('@/lib/projects/public-projects', () => ({
 }));
 
 vi.mock('@/lib/community/public-community-queries', () => publicQueriesMocks);
+vi.mock('@/lib/launch-pad/queries', () => launchPadQueriesMock);
 
 import { PublicWebsiteHeader } from '@/components/app/app-shell';
 import CommunityPage from './[locale]/(public)/community/page';
 import JobsPage from './[locale]/(public)/jobs/page';
-import LaunchPadPage from './[locale]/(public)/launch-pad/page';
-import ShowcasePage from './[locale]/(public)/projects/page';
-import ProjectDetailPage from './[locale]/(public)/projects/[slug]/page';
+import LaunchPadPage from './[locale]/(social)/launch-pad/page';
+import ShowcasePage from './[locale]/(social)/projects/page';
+import ProjectDetailPage from './[locale]/(social)/projects/[slug]/page';
 import TestingLabPage from './[locale]/(social)/testing-lab/page';
 import HomePage from './[locale]/(public)/page';
 
@@ -120,6 +124,33 @@ describe('public community website UX', () => {
     ]);
     publicQueriesMocks.getPublicCommunityGroups.mockResolvedValue([
       { name: 'Independent project', description: '1 published community project.', projectCount: 1 },
+    ]);
+    launchPadQueriesMock.getPublicLaunchPadEvents.mockResolvedValue([
+      {
+        id: 'launch-event-1',
+        name: 'Community Launch Showcase',
+        description: 'Present tested community projects to the community.',
+        startsAt: '2026-10-02T18:00:00.000Z',
+        endsAt: '2026-10-02T21:00:00.000Z',
+        status: 'ApplicationsOpen',
+        applicationsCloseAt: '2026-10-01T18:00:00.000Z',
+      },
+      {
+        id: 'launch-event-2',
+        name: 'November Release Room',
+        description: 'A scheduled community release showcase.',
+        startsAt: '2026-11-04T17:00:00.000Z',
+        endsAt: '2026-11-04T20:00:00.000Z',
+        status: 'Scheduled',
+      },
+      {
+        id: 'launch-event-3',
+        name: 'September Showcase',
+        description: 'A completed community event.',
+        startsAt: '2026-09-04T17:00:00.000Z',
+        endsAt: '2026-09-04T20:00:00.000Z',
+        status: 'Completed',
+      },
     ]);
     requestMock.mockImplementation(async ({ path }: { path: string }) =>
       path === '/v1/access/capabilities'
@@ -247,13 +278,14 @@ describe('public community website UX', () => {
     expect(screen.getByRole('heading', { name: /community activity/i })).toBeInTheDocument();
   });
 
-  it('renders a public project showcase and detail path', async () => {
+  it('renders Projects as a searchable social gallery and keeps the project detail path', async () => {
     render(await ShowcasePage());
 
-    expect(screen.getByRole('heading', { name: /project showcase/i })).toBeInTheDocument();
-    expect(screen.getByAltText(/real api project project preview/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Projects' })).toBeInTheDocument();
+    expect(screen.getByAltText(/real api project artwork/i)).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: /view project/i }).length).toBeGreaterThan(0);
-    expect(screen.getByRole('link', { name: /submit to testing lab/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /manage your projects/i })).toHaveAttribute('href', '/workspace/projects');
+    expect(screen.getByLabelText('Search projects')).toBeInTheDocument();
     expect(getPublishedProjectsMock).toHaveBeenCalledOnce();
   });
 
@@ -276,27 +308,30 @@ describe('public community website UX', () => {
     ).rejects.toThrow('NEXT_HTTP_ERROR_FALLBACK;404');
   });
 
-  it('renders the community hub and public testing lab entry', async () => {
+  it('renders the community hub and the social Testing Lab page', async () => {
     render(await CommunityPage());
 
     expect(screen.getByRole('heading', { name: /community hub/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /member spotlights/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /recent activity/i })).toBeInTheDocument();
 
-    render(await TestingLabPage());
-    expect(screen.getByRole('heading', { name: /game testing lab/i, level: 1 })).toBeInTheDocument();
-    expect(screen.getByText(/community playtesting is live/i)).toBeInTheDocument();
-    expect(screen.getByText(/help community creators improve their games/i)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /browse events/i })).toHaveAttribute('href', '/testing-lab/events');
+    render(await TestingLabPage({ searchParams: Promise.resolve({}) }));
+    expect(screen.getByRole('heading', { name: 'Test. Play. Earn.', level: 1 })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'No events available' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Prepare a project' })).toHaveAttribute('href', '/workspace/projects');
   });
 
-  it('renders the public launch pad entry for release-ready projects', async () => {
+  it('renders Launch Pad as a chronological community event schedule', async () => {
     render(await LaunchPadPage());
 
     expect(screen.getByRole('heading', { name: /launch pad/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /from project to public release/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /readiness signals/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /discover launch pad events/i })).toHaveAttribute('href', '/launch-pad/events');
+    expect(screen.getByRole('heading', { name: 'Upcoming events' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Community Launch Showcase' })).toBeInTheDocument();
+    expect(screen.getByText('November Release Room')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Past events' })).toBeInTheDocument();
+    expect(screen.getByText('September Showcase')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /see signup options/i })).toHaveAttribute('href', '/launch-pad/events/launch-event-1');
+    expect(screen.getByRole('link', { name: /your participation/i })).toHaveAttribute('href', '/launch-pad/participation');
   });
 
   it('replaces the jobs placeholder with a community opportunities page', async () => {

@@ -12,6 +12,7 @@ import {
   HoverCardTrigger,
 } from "@game-guild/ui/components/hover-card";
 import { Link } from "@/i18n/navigation";
+import Image from "next/image";
 import {
   ArrowRight,
   Calendar,
@@ -26,32 +27,32 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { getISOWeek } from "date-fns";
 import { type ReactNode, useState } from "react";
-import { EventCoverArt } from "./event-cover-art";
 import type {
   TestingEventStatus,
   TestingEventViewModel,
 } from "./testing-events-presentation";
-function formatDate(value?: string) {
+function formatDate(value: string | undefined, session?: TestingEventViewModel) {
   if (!value) return "Schedule pending";
   const date = new Date(value);
   if (Number.isNaN(date.valueOf())) return "Schedule pending";
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(session?.dateLocale ?? "en-US", {
     month: "short",
     day: "2-digit",
     year: "numeric",
-    timeZone: "UTC",
+    timeZone: session?.timeZoneId ?? "UTC",
   }).format(date);
 }
-function formatTime(value?: string) {
+function formatTime(value: string | undefined, session?: TestingEventViewModel) {
   if (!value) return "Time pending";
   const date = new Date(value);
   if (Number.isNaN(date.valueOf())) return "Time pending";
-  const formatted = new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(session?.dateLocale ?? "en-US", {
     hour: "numeric",
     minute: "2-digit",
-    timeZone: "UTC",
+    timeZone: session?.timeZoneId ?? "UTC",
+    hour12: session?.hour12 ?? true,
+    timeZoneName: "short",
   }).format(date);
-  return `${formatted} UTC`;
 }
 function formatDuration(startsAt?: string, endsAt?: string) {
   if (!startsAt || !endsAt) return "TBD";
@@ -110,12 +111,53 @@ function EventMeta({ session }: { session: TestingEventViewModel }) {
       </span>
       <span className="flex items-center gap-1.5">
         <Calendar className="size-3.5" />
-        {formatDate(session.startsAt)}
+        {formatDate(session.startsAt, session)}
       </span>
       <span className="flex items-center gap-1.5">
         <Clock className="size-3.5" />
-        {formatTime(session.startsAt)}
+        {formatTime(session.startsAt, session)}
       </span>
+    </div>
+  );
+}
+
+function availabilityLabel(session: TestingEventViewModel) {
+  if (session.testerRegistrationOpen) {
+    return session.availableTesterCount == null
+      ? "Tester sign-up open"
+      : session.availableTesterCount === 0
+        ? "Waitlist open"
+        : `${session.availableTesterCount} ${session.availableTesterCount === 1 ? "spot" : "spots"} left`;
+  }
+  if (session.gameSubmissionsOpen) return "Game submissions open";
+  if (session.status === "completed") return "Playtest ended";
+  if (session.status === "in-progress") return "Playtest in progress";
+  return session.statusLabel;
+}
+
+function EventArtwork({
+  session,
+  className,
+}: {
+  session: TestingEventViewModel;
+  className: string;
+}) {
+  return (
+    <div aria-hidden="true" className={`relative shrink-0 overflow-hidden bg-muted ${className}`}>
+      {session.gameImageUrl ? (
+        <Image
+          src={session.gameImageUrl}
+          alt=""
+          fill
+          unoptimized
+          sizes="(min-width: 1024px) 40vw, 100vw"
+          className="object-cover"
+        />
+      ) : (
+        <div className="absolute inset-0 grid place-items-center text-muted-foreground/50">
+          <Gamepad2 className="size-10" strokeWidth={1.25} />
+        </div>
+      )}
     </div>
   );
 }
@@ -142,95 +184,58 @@ export function TestingEventCard({
   session: TestingEventViewModel;
   projectId?: string;
 }) {
-  const almostFull =
-    session.availableTesterCount != null &&
-    session.availableTesterCount > 0 &&
-    session.availableTesterCount <= 2;
   const href = eventHref(session.id, projectId);
   return (
     <Link
       href={href}
-      aria-label="View event"
-      className="group relative isolate block h-full min-h-[24rem] overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+      aria-label={`View event: ${session.title}`}
+      className="group flex h-full min-h-[25rem] flex-col overflow-hidden rounded-xl border border-border bg-card text-card-foreground transition-colors hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
     >
-      {/* Cover art fills the upper portion edge-to-edge (the card clips the
-          top corners); on hover only the bottom edge expands to full-bleed. */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute bottom-[calc(100%-264px)] left-0 right-0 top-0 z-0 overflow-hidden transition-all duration-500 ease-out group-hover:bottom-0"
-      >
-        <EventCoverArt seed={session.id} />
-        {/* Mode and status share one segmented pill on the artwork. */}
-        <div className="absolute right-3 top-3 flex overflow-hidden rounded-full border border-white/20 bg-black/55 text-xs font-medium text-white backdrop-blur-sm">
-          <span className="px-2.5 py-1">{session.mode}</span>
-          <span className="border-l border-white/20 px-2.5 py-1">
-            {session.statusLabel}
-          </span>
-        </div>
+      <div className="relative">
+        <EventArtwork session={session} className="aspect-[16/9] w-full" />
+        <span className="absolute left-3 top-3 rounded-full bg-background/90 px-2.5 py-1 text-xs font-medium text-foreground backdrop-blur-sm">
+          {session.mode}
+        </span>
       </div>
-      {/* Title, location, and description ride on the cover art in both
-          states; a fixed offset keeps them over the artwork after the cover
-          expands to full-bleed on hover. */}
-      <div className="pointer-events-none absolute inset-x-4 top-[9.75rem] z-[2]">
-        <h3 className="text-lg font-semibold leading-snug text-white drop-shadow-lg">
-          {session.title}
-        </h3>
+      <div className="flex min-h-0 flex-1 flex-col p-4">
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="line-clamp-2 text-lg font-semibold leading-snug">
+            {session.title}
+          </h3>
+          <ArrowRight className="mt-1 size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" aria-hidden="true" />
+        </div>
+        <p className="mt-2 line-clamp-2 min-h-10 text-sm leading-5 text-muted-foreground">
+          {session.description}
+        </p>
         {session.location !== "Online" ? (
-          <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-white/85 drop-shadow-md">
+          <p className="mt-3 flex items-center gap-1.5 truncate text-xs text-muted-foreground">
             <MapPin className="size-3.5 shrink-0" aria-hidden="true" />
             {session.location}
           </p>
         ) : null}
-        <p className="mt-2 line-clamp-2 text-sm leading-6 text-white/80 drop-shadow-md">
-          {session.description}
-        </p>
-      </div>
-      {/* Card-colored scrim keeps overlaid text readable once the art fills the card. */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-t from-card via-card/90 to-card/5 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-      />
-      <div className="relative z-[2] flex h-full flex-col gap-3 p-4 pt-[17.25rem]">
-        {/* Two columns: schedule on the left, capacity on the right. */}
-        <div className="grid grid-cols-2 gap-1.5">
-          <MetaChip icon={Calendar}>{formatDate(session.startsAt)}</MetaChip>
-          <MetaChip icon={Users}>
-            {capacityLabel(session.testerCount, session.testerLimit, "testers")}
-          </MetaChip>
-          <MetaChip icon={Clock}>{formatTime(session.startsAt)}</MetaChip>
-          <MetaChip icon={Gamepad2}>
-            {capacityLabel(
-              session.projectCount,
-              session.projectLimit,
-              "projects",
-            )}
-          </MetaChip>
+        <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-2 text-xs text-muted-foreground">
+          <MetaChip icon={Calendar}>{formatDate(session.startsAt, session)}</MetaChip>
+          {(!session.testerRegistrationOpen || session.availableTesterCount == null) ? (
+            <MetaChip icon={Users}>
+              {capacityLabel(session.testerCount, session.testerLimit, "testers")}
+            </MetaChip>
+          ) : (
+            <MetaChip icon={Gamepad2}>
+              {capacityLabel(session.projectCount, session.projectLimit, "projects")}
+            </MetaChip>
+          )}
+          <MetaChip icon={Clock}>{formatTime(session.startsAt, session)}</MetaChip>
+          {!session.testerRegistrationOpen || session.availableTesterCount == null ? (
+            <MetaChip icon={Gamepad2}>
+              {capacityLabel(session.projectCount, session.projectLimit, "projects")}
+            </MetaChip>
+          ) : null}
         </div>
-        {almostFull && session.status === "open" ? (
-          <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive">
-            Only {session.availableTesterCount} tester{" "}
-            {session.availableTesterCount === 1 ? "seat" : "seats"} left
-          </p>
-        ) : null}
-        {/* Footer anchors the bottom: capacity hint on the left, arrow
-            affordance that fills on hover on the right. */}
-        <div className="mt-auto flex items-center justify-between gap-3 border-t border-border/60 pt-3">
-          <span className="text-xs font-medium text-muted-foreground">
-            {session.availableTesterCount != null && session.availableTesterCount > 0
-              ? `${session.availableTesterCount} ${
-                  session.availableTesterCount === 1 ? "spot" : "spots"
-                } left`
-              : session.status === "completed"
-                ? "Session completed"
-                : session.status === "closed"
-                  ? "Registration closed"
-                  : session.testerLimit == null
-                    ? "No seat limit"
-                    : "Registration open"}
+        <div className="mt-auto flex items-center justify-between gap-3 border-t border-border/70 pt-3">
+          <span className="text-sm font-medium text-foreground">
+            {availabilityLabel(session)}
           </span>
-          <span className="flex size-8 items-center justify-center rounded-full border border-border text-muted-foreground transition group-hover:border-primary group-hover:bg-primary group-hover:text-primary-foreground">
-            <ArrowRight className="size-4" aria-hidden="true" />
-          </span>
+          <span className="sr-only">View playtest</span>
         </div>
       </div>
     </Link>
@@ -246,10 +251,7 @@ export function TestingEventRow({
 }) {
   return (
     <article className="grid gap-5 rounded-lg border border-border bg-card p-5 transition hover:border-primary/40 lg:grid-cols-[auto_minmax(0,1fr)_18rem_10rem] lg:items-center">
-      {/* 2:1 cover thumbnail leading the row, same seeded artwork family. */}
-      <div className="relative h-20 w-40 shrink-0 overflow-hidden rounded-lg lg:h-24 lg:w-48">
-        <EventCoverArt seed={session.id} />
-      </div>
+      <EventArtwork session={session} className="h-20 w-40 rounded-lg lg:h-24 lg:w-48" />
       <div className="min-w-0">
         <div className="mb-2 flex flex-wrap items-center gap-2">
           <h2 className="text-lg font-bold">{session.title}</h2>
@@ -317,9 +319,9 @@ export function TestingEventsTable({
               </td>
               <td className="p-4">{session.location}</td>
               <td className="p-4">
-                <p>{formatDate(session.startsAt)}</p>
+                <p>{formatDate(session.startsAt, session)}</p>
                 <p className="text-xs text-muted-foreground">
-                  {formatTime(session.startsAt)}
+                  {formatTime(session.startsAt, session)}
                 </p>
               </td>
               <td className="p-4">
@@ -365,10 +367,32 @@ export function TestingEventsTable({
   );
 }
 
-const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+function calendarDateParts(date: Date, timeZoneId: string) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: timeZoneId,
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+  }).formatToParts(date);
+  return {
+    year: Number(parts.find((part) => part.type === "year")?.value),
+    month: Number(parts.find((part) => part.type === "month")?.value),
+    day: Number(parts.find((part) => part.type === "day")?.value),
+  };
+}
 
-function utcDayKey(date: Date) {
+function calendarDayKey(date: Date) {
   return `${date.getUTCFullYear()}-${date.getUTCMonth()}-${date.getUTCDate()}`;
+}
+
+function localDayKey(date: Date, timeZoneId: string) {
+  const { year, month, day } = calendarDateParts(date, timeZoneId);
+  return `${year}-${month - 1}-${day}`;
+}
+
+function formatCalendarMonth(year: number, month: number, locale: string, options: Intl.DateTimeFormatOptions) {
+  return new Intl.DateTimeFormat(locale, { ...options, timeZone: "UTC" })
+    .format(new Date(Date.UTC(year, month, 1)));
 }
 
 /** Month-grid calendar over the filtered sessions; dates are UTC to match the
@@ -384,31 +408,30 @@ export function TestingEventsCalendar({
   const scheduled = sessions.filter(
     (session) => session.startsAt && !Number.isNaN(new Date(session.startsAt).valueOf()),
   );
+  const timeZoneId = scheduled[0]?.timeZoneId ?? "UTC";
+  const dateLocale = scheduled[0]?.dateLocale ?? "en-US";
   const [anchor, setAnchor] = useState<Date>(() =>
     scheduled.length > 0 ? new Date(scheduled[0]!.startsAt!) : new Date(),
   );
 
   const eventsByDay = new Map<string, TestingEventViewModel[]>();
   for (const session of scheduled) {
-    const key = utcDayKey(new Date(session.startsAt!));
+    const key = localDayKey(new Date(session.startsAt!), timeZoneId);
     const bucket = eventsByDay.get(key) ?? [];
     bucket.push(session);
     eventsByDay.set(key, bucket);
   }
 
-  const anchorYear = anchor.getUTCFullYear();
-  const anchorMonth = anchor.getUTCMonth();
-  const monthLabel = new Intl.DateTimeFormat("en-US", {
-    month: "long",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(anchor);
+  const anchorParts = calendarDateParts(anchor, timeZoneId);
+  const anchorYear = anchorParts.year;
+  const anchorMonth = anchorParts.month - 1;
+  const monthLabel = formatCalendarMonth(anchorYear, anchorMonth, dateLocale, { month: "long", year: "numeric" });
   const firstWeekday = new Date(Date.UTC(anchorYear, anchorMonth, 1)).getUTCDay();
   const daysInMonth = new Date(Date.UTC(anchorYear, anchorMonth + 1, 0)).getUTCDate();
-  const todayKey = utcDayKey(new Date());
+  const todayKey = localDayKey(new Date(), timeZoneId);
   const monthEventCount = scheduled.filter((session) => {
-    const date = new Date(session.startsAt!);
-    return date.getUTCFullYear() === anchorYear && date.getUTCMonth() === anchorMonth;
+    const date = calendarDateParts(new Date(session.startsAt!), timeZoneId);
+    return date.year === anchorYear && date.month === anchorMonth + 1;
   }).length;
 
   const shiftMonth = (delta: number) =>
@@ -438,16 +461,16 @@ export function TestingEventsCalendar({
   }
 
   const monthOptions = Array.from({ length: 25 }, (_, index) => {
-    const base = new Date();
+    const base = calendarDateParts(new Date(), timeZoneId);
     return new Date(
-      Date.UTC(base.getUTCFullYear(), base.getUTCMonth() - 12 + index, 1),
+      Date.UTC(base.year, base.month - 1 - 12 + index, 1),
     );
   });
-  const shortMonthLabel = new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(anchor);
+  const weekdayLabels = Array.from({ length: 7 }, (_, index) =>
+    new Intl.DateTimeFormat(dateLocale, { weekday: "short", timeZone: "UTC" })
+      .format(new Date(Date.UTC(2023, 0, 1 + index))),
+  );
+  const shortMonthLabel = formatCalendarMonth(anchorYear, anchorMonth, dateLocale, { month: "short", year: "numeric" });
 
   return (
     <div>
@@ -485,7 +508,7 @@ export function TestingEventsCalendar({
                     onClick={() => setAnchor(option)}
                     className={isActive ? "font-medium text-primary" : ""}
                   >
-                    {new Intl.DateTimeFormat("en-US", {
+                    {new Intl.DateTimeFormat(dateLocale, {
                       month: "short",
                       year: "numeric",
                       timeZone: "UTC",
@@ -520,7 +543,7 @@ export function TestingEventsCalendar({
       <div role="grid" aria-label={`${monthLabel} event calendar`}>
         <div className="mb-2 grid grid-cols-[2rem_repeat(7,minmax(0,1fr))]">
           <div />
-          {WEEKDAY_LABELS.map((label, index) => (
+              {weekdayLabels.map((label, index) => (
             <div
               key={label}
               className={`px-2 text-[11px] font-medium uppercase tracking-widest ${
@@ -546,7 +569,7 @@ export function TestingEventsCalendar({
                   {weekNumber}
                 </div>
                 {week.map((day, dayIndex) => {
-                  const key = utcDayKey(day);
+                  const key = calendarDayKey(day);
                   const dayEvents = eventsByDay.get(key) ?? [];
                   const isToday = key === todayKey;
                   const isOutside =
@@ -562,7 +585,7 @@ export function TestingEventsCalendar({
                       aria-label={
                         isOutside
                           ? undefined
-                          : new Intl.DateTimeFormat("en-US", {
+                          : new Intl.DateTimeFormat(dateLocale, {
                               month: "short",
                               day: "numeric",
                               timeZone: "UTC",
@@ -619,7 +642,7 @@ export function TestingEventsCalendar({
                               <div className="mt-3 space-y-1.5 text-xs text-muted-foreground">
                                 <p className="flex items-center gap-1.5">
                                   <Calendar className="size-3.5 shrink-0" aria-hidden="true" />
-                                  {formatDate(session.startsAt)} · {formatTime(session.startsAt)}
+                                  {formatDate(session.startsAt, session)} · {formatTime(session.startsAt, session)}
                                 </p>
                                 <p className="flex items-center gap-1.5">
                                   <MapPin className="size-3.5 shrink-0" aria-hidden="true" />

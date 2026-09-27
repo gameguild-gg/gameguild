@@ -23,7 +23,7 @@ vi.mock("@game-guild/client", () => ({
   },
 }));
 
-import { getPublishedProjects, getVisibleProject } from "./public-projects";
+import { getPublishedProjects, getPublishedProjectsPage, getVisibleProject } from "./public-projects";
 
 const apiProject = {
   id: "project-1",
@@ -70,6 +70,7 @@ describe("public Projects API queries", () => {
     });
     expect(result).toEqual([
       expect.objectContaining({
+        id: "project-1",
         slug: "api-project",
         title: "API Project",
         creatorId: "creator-1",
@@ -80,6 +81,41 @@ describe("public Projects API queries", () => {
         previewImage: "https://cdn.gameguild.gg/projects/api-project/cover.jpg",
       }),
     ]);
+  });
+
+  it("uses the requested offset for the next project page", async () => {
+    mocks.getProjectsForGetProjects.mockResolvedValue({ ok: true, data: [apiProject] });
+
+    await getPublishedProjectsPage(24, 24);
+
+    expect(mocks.getProjectsForGetProjects).toHaveBeenCalledWith({
+      status: "Published",
+      visibility: "Public",
+      skip: 24,
+      take: 24,
+      sortBy: "UpdatedAt",
+      sortDirection: "DESC",
+    });
+  });
+
+  it("exposes only safe external URLs as actionable project resources", async () => {
+    mocks.getProjectsForGetProjects.mockResolvedValue({
+      ok: true,
+      data: [{ ...apiProject, websiteUrl: "https://mothlight.example", repositoryUrl: "javascript:alert(1)" }],
+    });
+
+    const [project] = await getPublishedProjectsPage(48, 24);
+
+    expect(project?.media).toContainEqual({
+      label: "Project website",
+      detail: "https://mothlight.example",
+      href: "https://mothlight.example/",
+    });
+    expect(project?.media).toContainEqual({
+      label: "Source repository",
+      detail: "javascript:alert(1)",
+      href: undefined,
+    });
   });
 
   it("delegates slug visibility to the API and hides inaccessible projects", async () => {

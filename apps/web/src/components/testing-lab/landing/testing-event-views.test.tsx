@@ -26,7 +26,7 @@ function event(
     description: "Test the latest build.",
     mode: "Hybrid",
     status: "open",
-    statusLabel: "Open",
+    statusLabel: "Tester sign-up open",
     startsAt: "2026-09-15T18:30:00.000Z",
     endsAt: "2026-09-15T20:00:00.000Z",
     location: "Main campus - Lab 2",
@@ -35,41 +35,100 @@ function event(
     projectCount: 1,
     projectLimit: null,
     availableTesterCount: 1,
+    testerRegistrationOpen: true,
+    gameSubmissionsOpen: false,
+    gameImageUrl: null,
     scheduleCount: 1,
+    timeZoneId: "UTC",
+    dateLocale: "en-US",
+    hour12: true,
     ...overrides,
   };
 }
 
 describe("Testing event directory views", () => {
-  it("renders a card with UTC schedule, capacity, urgency, and project context", () => {
+  it("renders a single plain capacity line with event context", () => {
     render(<TestingEventCard session={event()} projectId="project / 1" />);
 
     expect(screen.getByText("Sep 15, 2026")).toBeInTheDocument();
     expect(screen.getByText("6:30 PM UTC")).toBeInTheDocument();
-    expect(screen.getByText("3/8 testers")).toBeInTheDocument();
+    expect(screen.queryByText("3/8 testers")).not.toBeInTheDocument();
     expect(screen.getByText("1 project")).toBeInTheDocument();
-    expect(screen.getByText("Only 1 tester seat left")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "View event" })).toHaveAttribute(
+    expect(screen.getByText("1 spot left")).toBeInTheDocument();
+    expect(screen.queryByText(/tester seat left/i)).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "View event: Campus playtest" })).toHaveAttribute(
       "href",
       "/testing-lab/events/event-1?projectId=project%20%2F%201",
     );
   });
 
-  it("pluralizes low capacity and hides urgency for non-open events", () => {
+  it("hides available capacity after tester sign-up closes", () => {
     const { rerender } = render(
       <TestingEventCard session={event({ availableTesterCount: 2 })} />,
     );
-    expect(screen.getByText("Only 2 tester seats left")).toBeInTheDocument();
+    expect(screen.getByText("2 spots left")).toBeInTheDocument();
 
     rerender(
       <TestingEventCard
-        session={event({ status: "completed", statusLabel: "Completed" })}
+        session={event({
+          status: "completed",
+          statusLabel: "Playtest ended",
+          testerRegistrationOpen: false,
+          availableTesterCount: 1,
+        })}
       />,
     );
-    expect(screen.queryByText(/tester seats? left/)).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "View event" })).toHaveAttribute(
+    expect(screen.queryByText(/spots? left/)).not.toBeInTheDocument();
+    expect(screen.getByText("3/8 testers")).toBeInTheDocument();
+    expect(screen.getByText("Playtest ended")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "View event: Campus playtest" })).toHaveAttribute(
       "href",
       "/testing-lab/events/event-1",
+    );
+  });
+
+  it("uses the tester's saved time zone and labels a full but open session as waitlist", () => {
+    render(
+      <TestingEventCard
+        session={event({
+          startsAt: "2026-09-15T00:30:00.000Z",
+          endsAt: "2026-09-15T02:00:00.000Z",
+          timeZoneId: "America/Los_Angeles",
+          availableTesterCount: 0,
+        })}
+      />,
+    );
+
+    expect(screen.getByText("Sep 14, 2026")).toBeInTheDocument();
+    expect(screen.getByText("5:30 PM PDT")).toBeInTheDocument();
+    expect(screen.getByText("Waitlist open")).toBeInTheDocument();
+    expect(screen.queryByText("0 spots left")).not.toBeInTheDocument();
+  });
+
+  it("distinguishes developer submissions from tester sign-up", () => {
+    render(
+      <TestingEventCard
+        session={event({
+          statusLabel: "Game submissions open",
+          testerRegistrationOpen: false,
+          gameSubmissionsOpen: true,
+          availableTesterCount: 0,
+        })}
+      />,
+    );
+
+    expect(screen.getByText("Game submissions open")).toBeInTheDocument();
+    expect(screen.queryByText(/spots? left/)).not.toBeInTheDocument();
+  });
+
+  it("uses the real game artwork instead of generated event cover art", () => {
+    const { container } = render(
+      <TestingEventCard session={event({ gameImageUrl: "/games/lantern-lake.webp" })} />,
+    );
+
+    expect(container.querySelector("img")).toHaveAttribute(
+      "src",
+      "/games/lantern-lake.webp",
     );
   });
 

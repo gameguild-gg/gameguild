@@ -9,7 +9,7 @@ import {
 } from "@/lib/testing-lab/public-event-hydration";
 import { formatSocialDate, formatSocialDateTime } from "@/lib/feed/format";
 import { EventHeroMedia } from "@/components/testing-lab/landing/event-hero-media";
-import { CalendarDays, CheckCircle2, Users } from "lucide-react";
+import { CalendarDays, CheckCircle2, Gamepad2, Users } from "lucide-react";
 import Image from "next/image";
 import * as React from "react";
 import { PostComments } from "./post-comments";
@@ -58,14 +58,32 @@ function Avatar({ name, id, url }: { name: string; id: string; url: string | nul
   );
 }
 
-/** Matches auto-published testing event announcements ("🧪 New testing event: …"). */
+/** Matches auto-published Testing Lab announcements without showing raw URLs in the feed. */
 const TESTING_EVENT_ANNOUNCEMENT =
   /🧪 New testing event:\s*(.+?)\s*Event starts\s*([^.]*)\.\s*Details:\s*(\/testing-lab\/events\/[a-z0-9-]+)/iu;
+const TESTING_GAME_JOINED_ANNOUNCEMENT =
+  /🎮\s*['"](.+?)['"]\s+just joined the testing event\s+(.+?)!\s*Follow the build and share your feedback:\s*(\/testing-lab\/events\/[a-z0-9-]+)/iu;
 
 function parseTestingEventAnnouncement(content: string) {
   const match = content.match(TESTING_EVENT_ANNOUNCEMENT);
   if (!match) return null;
-  return { name: match[1]!.trim(), startsLabel: match[2]!.trim(), href: match[3]! };
+  return {
+    kind: "games-wanted" as const,
+    name: match[1]!.trim(),
+    startsLabel: match[2]!.trim(),
+    href: match[3]!,
+  };
+}
+
+function parseTestingGameJoinedAnnouncement(content: string) {
+  const match = content.match(TESTING_GAME_JOINED_ANNOUNCEMENT);
+  if (!match) return null;
+  return {
+    kind: "game-joined" as const,
+    gameTitle: match[1]!.trim(),
+    name: match[2]!.trim(),
+    href: match[3]!,
+  };
 }
 
 /**
@@ -82,6 +100,7 @@ function TestingEventEmbed({
   registeredTesterCount,
   maxTesters,
   availableTesterCount,
+  announcement,
 }: {
   href: string;
   name: string;
@@ -90,6 +109,9 @@ function TestingEventEmbed({
   registeredTesterCount?: number;
   maxTesters?: number | null;
   availableTesterCount?: number | null;
+  announcement?:
+    | { kind: "games-wanted"; gameTitle?: never }
+    | { kind: "game-joined"; gameTitle: string };
 }) {
   const eventId = href.split("/").at(-1) ?? "";
   const [hydrated, setHydrated] = React.useState<TestingEventHydration | null>(
@@ -114,14 +136,49 @@ function TestingEventEmbed({
   const registered = registeredTesterCount ?? hydrated?.registeredTesterCount ?? null;
   const max = maxTesters ?? hydrated?.maxTesters ?? null;
   const available = availableTesterCount ?? hydrated?.availableTesterCount ?? null;
+  const featuredGame = announcement?.kind === "game-joined"
+    ? hydrated?.games.find(
+        (game) => game.title.toLocaleLowerCase() === announcement.gameTitle.toLocaleLowerCase(),
+      )
+    : null;
+  const heroImages = featuredGame?.imageUrl
+    ? [featuredGame.imageUrl]
+    : hydrated?.gameImages ?? [];
+  const gameSpots = hydrated?.availableGameCount;
+  const lineupSize = Math.max(
+    hydrated?.approvedGameCount ?? 0,
+    hydrated?.games.length ?? 0,
+  );
+  const eventFact = announcement?.kind === "games-wanted"
+    ? {
+        icon: <Gamepad2 className="size-4 shrink-0" aria-hidden="true" />,
+        label: gameSpots == null
+          ? "Game submissions"
+          : gameSpots > 0
+            ? `${gameSpots} ${gameSpots === 1 ? "game spot" : "game spots"} open`
+            : "No game spots open",
+      }
+    : announcement?.kind === "game-joined"
+      ? {
+          icon: <Gamepad2 className="size-4 shrink-0" aria-hidden="true" />,
+          label: `${lineupSize} ${lineupSize === 1 ? "game" : "games"} in the lineup`,
+        }
+      : null;
   const showCapacity = registered != null || hydrated != null;
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card">
       {/* Even pixel heights (the 21:9 ratio produced odd values like 749x321). */}
       <div className="relative h-[336px] w-full max-md:h-[152px]">
-        <EventHeroMedia seed={eventId} images={hydrated?.gameImages ?? []} />
+        <EventHeroMedia seed={eventId} images={heroImages} />
       </div>
       <div className="flex flex-col gap-2 px-4 pb-4 pt-3 sm:px-5">
+        {announcement ? (
+          <p className="text-sm font-semibold text-primary">
+            {announcement.kind === "games-wanted"
+              ? "Looking for games to test"
+              : `${announcement.gameTitle} joined the playtest`}
+          </p>
+        ) : null}
         {/* Schedule on the left, capacity on the right. */}
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-sm text-muted-foreground">
           <span className="inline-flex items-center gap-1.5">
@@ -130,7 +187,12 @@ function TestingEventEmbed({
               ? formatSocialDateTime(startsAt)
               : startsLabel || "Schedule pending"}
           </span>
-          {showCapacity ? (
+          {eventFact ? (
+            <span className="inline-flex items-center gap-1.5">
+              {eventFact.icon}
+              {eventFact.label}
+            </span>
+          ) : showCapacity ? (
             <span className="inline-flex items-center gap-3">
               <span className="inline-flex items-center gap-1.5">
                 <Users className="size-4 shrink-0" aria-hidden="true" />
@@ -151,7 +213,19 @@ function TestingEventEmbed({
         </h3>
         {hydrated?.description ? (
           <p className="line-clamp-2 text-sm leading-6 text-muted-foreground">
-            {hydrated.description}
+            {announcement?.kind === "games-wanted"
+              ? "Have a build ready for feedback? Join the playtest and submit your game."
+              : announcement?.kind === "game-joined"
+                ? featuredGame?.description || `${announcement.gameTitle} is in the lineup. Check out the build and share your feedback.`
+                : hydrated.description}
+          </p>
+        ) : announcement?.kind === "game-joined" ? (
+          <p className="line-clamp-2 text-sm leading-6 text-muted-foreground">
+            {featuredGame?.description || `${announcement.gameTitle} is in the lineup. Check out the build and share your feedback.`}
+          </p>
+        ) : announcement?.kind === "games-wanted" ? (
+          <p className="line-clamp-2 text-sm leading-6 text-muted-foreground">
+            Have a build ready for feedback? Join the playtest and submit your game.
           </p>
         ) : null}
       </div>
@@ -160,7 +234,11 @@ function TestingEventEmbed({
           href={href}
           className="inline-flex h-8 items-center rounded-md border border-border px-4 text-sm font-medium text-primary transition hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
         >
-          Join
+          {announcement?.kind === "games-wanted"
+            ? "Join playtest"
+            : announcement?.kind === "game-joined"
+              ? "View playtest"
+              : "Join"}
         </Link>
       </div>
     </div>
@@ -255,19 +333,15 @@ export function PostCard({ item, currentUserId }: { item: SocialFeedItem; curren
   if (item.kind === "TestingSession") return <TestingSessionCard item={item} currentUserId={currentUserId} />;
   const post = item.post;
   if (!post || deleted) return <></>;
-  const announcement = parseTestingEventAnnouncement(content);
+  const announcement =
+    parseTestingEventAnnouncement(content) ??
+    parseTestingGameJoinedAnnouncement(content);
 
   return (
     <article
       ref={articleRef}
       data-testid="post-card"
-      // Announcement posts let the event embed carry the visual weight; the
-      // card slab background and divider are reserved for regular posts.
-      className={
-        announcement
-          ? "py-2 text-card-foreground"
-          : "border-b border-border/35 bg-card py-2 text-card-foreground"
-      }
+      className="border-b border-border/35 bg-card py-2 text-card-foreground"
     >
       <header className="flex items-center gap-3 px-4 py-4 sm:px-6">
         <Link href={`/social/profiles/${item.author.handle || item.author.userId}`} className="rounded-full bg-gradient-to-br from-primary via-highlight to-success p-[2px]">
@@ -310,7 +384,8 @@ export function PostCard({ item, currentUserId }: { item: SocialFeedItem; curren
           <TestingEventEmbed
             href={announcement.href}
             name={announcement.name}
-            startsLabel={announcement.startsLabel}
+            startsLabel={announcement.kind === "games-wanted" ? announcement.startsLabel : undefined}
+            announcement={announcement}
           />
         ) : null}
         <PostEngagement

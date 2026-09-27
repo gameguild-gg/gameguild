@@ -1,5 +1,6 @@
 /** View model for published projects; populated by `getPublishedProjects` from the Projects API. */
 export interface PublicProject {
+  id?: string;
   slug: string;
   title: string;
   creatorId?: string;
@@ -16,7 +17,7 @@ export interface PublicProject {
   feedbackGoal: string;
   feedbackCount?: number;
   metrics: Array<{ label: string; value: string }>;
-  media: Array<{ label: string; detail: string }>;
+  media: Array<{ label: string; detail: string; href?: string }>;
 }
 
 export interface PublicMemberSpotlight {

@@ -16,6 +16,7 @@ const ALLOWED_IMAGE_HOSTS = new Set([
   "placehold.co",
   "www.python.org",
 ]);
+export const PUBLIC_PROJECT_PAGE_SIZE = 24;
 
 function getApiUrl() {
   return (
@@ -71,6 +72,16 @@ function safeProjectImage(value?: string | null) {
   }
 }
 
+function safeMediaHref(value?: string | null) {
+  if (!value) return undefined;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:" ? url.toString() : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function projectAccent(type?: ProjectsProjectApiOutput["type"]) {
   if (type === "Art" || type === "Music")
     return "from-fuchsia-400/30 via-violet-300/10 to-slate-950";
@@ -116,15 +127,15 @@ function projectMedia(
       ? { label: "Latest release", detail: latestRelease.releaseVersion }
       : null,
     project.websiteUrl
-      ? { label: "Project website", detail: project.websiteUrl }
+      ? { label: "Project website", detail: project.websiteUrl, href: safeMediaHref(project.websiteUrl) }
       : null,
     project.repositoryUrl
-      ? { label: "Source repository", detail: project.repositoryUrl }
+      ? { label: "Source repository", detail: project.repositoryUrl, href: safeMediaHref(project.repositoryUrl) }
       : null,
     project.downloadUrl
-      ? { label: "Playable build", detail: project.downloadUrl }
+      ? { label: "Playable build", detail: project.downloadUrl, href: safeMediaHref(project.downloadUrl) }
       : null,
-  ].filter((item): item is { label: string; detail: string } => item !== null);
+  ].filter((item): item is { label: string; detail: string; href?: string } => item !== null);
 
   return media.length > 0
     ? media
@@ -143,6 +154,7 @@ function mapProject(project: ProjectsProjectApiOutput): PublicProject {
   const releases = project.releases ?? [];
   const slug = project.slug || project.id || "project";
   return {
+    id: project.id,
     slug,
     title: project.title || slug,
     creatorId: projectCreatorId(project),
@@ -177,20 +189,24 @@ function mapProject(project: ProjectsProjectApiOutput): PublicProject {
   };
 }
 
-export const getPublishedProjects = cache(
-  async (): Promise<PublicProject[]> => {
+export const getPublishedProjectsPage = cache(
+  async (skip: number, take: number): Promise<PublicProject[]> => {
     const projects = await createProjectsModule();
     const result = await projects.getProjectsForGetProjects({
       status: "Published",
       visibility: "Public",
-      skip: 0,
-      take: 24,
+      skip,
+      take,
       sortBy: "UpdatedAt",
       sortDirection: "DESC",
     });
 
     return result.ok ? result.data.map(mapProject) : [];
   },
+);
+
+export const getPublishedProjects = cache(async (): Promise<PublicProject[]> =>
+  getPublishedProjectsPage(0, PUBLIC_PROJECT_PAGE_SIZE),
 );
 
 export const getVisibleProject = cache(

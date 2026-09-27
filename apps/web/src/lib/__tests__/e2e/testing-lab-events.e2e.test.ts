@@ -13,6 +13,10 @@ interface Identified {
   id: string;
 }
 
+interface PostProjection extends Identified {
+  content?: string;
+}
+
 interface EventProjection extends Identified {
   name?: string;
   status?: string;
@@ -77,6 +81,7 @@ function actorClient(accessToken: string, tenantId: string) {
 
 interface TestingEventCleanupState {
   accessToken: string;
+  eventIds: string[];
   projectIds: string[];
   tenantId: string;
 }
@@ -88,6 +93,11 @@ function trackCleanupProject(projectId: string) {
   cleanupState.projectIds.push(projectId);
 }
 
+function trackCleanupEvent(eventId: string) {
+  if (!cleanupState) throw new Error('Testing Lab E2E cleanup was not initialized.');
+  cleanupState.eventIds.push(eventId);
+}
+
 describe('Testing Lab event workflow E2E', () => {
   afterEach(async () => {
     const state = cleanupState;
@@ -96,6 +106,52 @@ describe('Testing Lab event workflow E2E', () => {
 
     const client = actorClient(state.accessToken, state.tenantId);
     const failures: string[] = [];
+
+    const postsResult = await client.request<PostProjection[]>({
+      method: 'GET',
+      path: '/v1/posts/my?skip=0&take=100',
+      requiresAuth: true,
+    });
+    if (postsResult.ok) {
+      const eventPaths = state.eventIds.map((eventId) => `/testing-lab/events/${eventId}`);
+      const generatedPosts = postsResult.data.filter((post) =>
+        eventPaths.some((eventPath) => post.content?.includes(eventPath)),
+      );
+      for (const post of generatedPosts) {
+        const result = await client.request<unknown>({
+          method: 'DELETE',
+          path: `/v1/posts/${post.id}`,
+          requiresAuth: true,
+        });
+        if (!result.ok && result.error?.status !== 404) {
+          failures.push(`announcement post ${post.id}: ${result.error?.status} ${result.error?.message}`);
+        }
+      }
+    } else if (postsResult.error?.status !== 404) {
+      failures.push(`announcement post lookup: ${postsResult.error?.status} ${postsResult.error?.message}`);
+    }
+
+    for (const eventId of [...state.eventIds].reverse()) {
+      const cancelResult = await client.request<unknown>({
+        method: 'POST',
+        path: `/v1/testing/events/${eventId}:cancel`,
+        body: { reason: 'Testing Lab E2E fixture cleanup.' },
+        requiresAuth: true,
+      });
+      if (!cancelResult.ok && cancelResult.error?.status !== 404) {
+        failures.push(`event ${eventId} cancellation: ${cancelResult.error?.status} ${cancelResult.error?.message}`);
+        continue;
+      }
+
+      const archiveResult = await client.request<unknown>({
+        method: 'POST',
+        path: `/v1/testing/events/${eventId}:archive`,
+        requiresAuth: true,
+      });
+      if (!archiveResult.ok && archiveResult.error?.status !== 404) {
+        failures.push(`event ${eventId} archive: ${archiveResult.error?.status} ${archiveResult.error?.message}`);
+      }
+    }
 
     for (const projectId of [...state.projectIds].reverse()) {
       const result = await client.request<unknown>({
@@ -173,7 +229,7 @@ describe('Testing Lab event workflow E2E', () => {
     const managerId = managerAuth.userId || managerAuth.user?.id;
     if (!managerId) throw new Error('Manager sign-in did not expose a user id.');
     const manager = actorClient(managerAuth.accessToken, tenant.id);
-    cleanupState = { accessToken: managerAuth.accessToken, projectIds: [], tenantId: tenant.id };
+    cleanupState = { accessToken: managerAuth.accessToken, eventIds: [], projectIds: [], tenantId: tenant.id };
 
     const testerEmail = `testing_event_tester_${tag}@example.com`;
     const testerSignUp = unwrap(
@@ -325,6 +381,7 @@ describe('Testing Lab event workflow E2E', () => {
       }),
       'Create Testing Lab event',
     );
+    trackCleanupEvent(event.id);
 
     const slot = unwrap(
       await manager.request<PublicSlotProjection>({

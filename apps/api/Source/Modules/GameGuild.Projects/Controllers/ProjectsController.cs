@@ -135,11 +135,12 @@ public class ProjectsController : BaseApiController {
         project.Status != ContentStatus.Archived &&
         project.Status != ContentStatus.Deleted));
     var accessibleProjects = await projects
-      .Select(project => new { project.Id, project.Title })
+      .Select(project => new { project.Id, project.Title, project.ImageUrl, project.FeaturedImageUrl })
       .ToListAsync()
       .ConfigureAwait(false);
     var projectIds = accessibleProjects.Select(project => project.Id).ToArray();
     var projectTitles = accessibleProjects.ToDictionary(project => project.Id, project => project.Title);
+    var projectImageUrls = accessibleProjects.ToDictionary(project => project.Id, project => project.FeaturedImageUrl ?? project.ImageUrl);
     var rows = await _context.Set<ProjectVersion>().AsNoTracking()
       .Where(version => projectIds.Contains(version.ProjectId) && version.DeletedAt == null)
       .OrderByDescending(version => version.UpdatedAt)
@@ -150,6 +151,7 @@ public class ProjectsController : BaseApiController {
       version.Id,
       version.ProjectId,
       projectTitles.GetValueOrDefault(version.ProjectId, string.Empty),
+      projectImageUrls.GetValueOrDefault(version.ProjectId),
       version.VersionNumber,
       version.Status,
       version.UpdatedAt)).ToList();
@@ -961,6 +963,7 @@ public sealed record ProjectVersionOptionProjection(
   Guid Id,
   Guid ProjectId,
   string ProjectTitle,
+  string? ImageUrl,
   string VersionNumber,
   ProjectVersionStatus Status,
   DateTime UpdatedAt);

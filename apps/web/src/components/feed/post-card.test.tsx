@@ -192,6 +192,22 @@ describe("PostCard", () => {
       registeredTesterCount: 0,
       maxTesters: 8,
       availableTesterCount: 8,
+      games: [
+        {
+          projectId: "mothlight-id",
+          title: "Mothlight",
+          description: "A little forest spirit restores the valley.",
+          imageUrl: "/testing-lab/seeded-games/mothlight.svg",
+        },
+        {
+          projectId: "hollow-signal-id",
+          title: "Hollow Signal",
+          description: "Follow a radio signal across the island.",
+          imageUrl: "/testing-lab/seeded-games/hollow-signal.svg",
+        },
+      ],
+      approvedGameCount: 2,
+      availableGameCount: 2,
       gameImages: ["/testing-lab/seeded-games/mothlight.svg", "/testing-lab/seeded-games/hollow-signal.svg"],
     });
     const announcement =
@@ -201,19 +217,80 @@ describe("PostCard", () => {
     expect(screen.getByText("Teste!")).toBeInTheDocument();
     expect(screen.queryByText(announcement)).not.toBeInTheDocument();
     await waitFor(() =>
-      expect(screen.getByText("Final gate playtest for the autumn jam.")).toBeInTheDocument(),
+      expect(
+        screen.getByText(
+          "Have a build ready for feedback? Join the playtest and submit your game.",
+        ),
+      ).toBeInTheDocument(),
     );
     expect(screen.getByText("Sep 18, 2026, 9:00 PM UTC")).toBeInTheDocument();
-    expect(screen.getByText("0/8 testers signed in")).toBeInTheDocument();
-    expect(screen.getByText("8 spots left")).toBeInTheDocument();
-    const eventBanner = screen.getByRole("link", { name: /join/i }).closest("div.rounded-xl");
+    expect(screen.getByText("Looking for games to test")).toBeInTheDocument();
+    expect(screen.getByText("2 game spots open")).toBeInTheDocument();
+    expect(screen.queryByText("0/8 testers signed in")).not.toBeInTheDocument();
+    const eventBanner = screen.getByRole("link", { name: "Join playtest" }).closest("div.rounded-xl");
     expect(eventBanner?.querySelector('img[src="/testing-lab/seeded-games/mothlight.svg"]')).toBeInTheDocument();
     expect(eventBanner?.querySelector('img[src="/testing-lab/seeded-games/hollow-signal.svg"]')).toBeInTheDocument();
     expect(screen.queryByText("#playtest")).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Join" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Join playtest" })).toHaveAttribute(
       "href",
       "/testing-lab/events/e112d20d-43d6-4016-bbac-5626f209053d",
     );
     expect(screen.queryByRole("link", { name: "Sign in product" })).not.toBeInTheDocument();
+  });
+
+  it("turns game-joined announcements into a game-focused playtest card", async () => {
+    vi.mocked(hydratePublicTestingEvent).mockResolvedValue({
+      name: "Game Jam Sprint Playtest",
+      description: "Community playtest for this month's builds.",
+      startsAt: "2026-09-18T21:00:00.000Z",
+      endsAt: "2026-09-18T23:00:00.000Z",
+      mode: "Online",
+      status: "ApplicationsOpen",
+      registeredTesterCount: 0,
+      maxTesters: 12,
+      availableTesterCount: 12,
+      games: [
+        {
+          projectId: "mothlight-id",
+          title: "Mothlight",
+          description: "Find your way through a greenhouse that rearranges itself at night.",
+          imageUrl: "/testing-lab/seeded-games/mothlight.svg",
+        },
+      ],
+      approvedGameCount: 1,
+      availableGameCount: 3,
+      gameImages: ["/testing-lab/seeded-games/mothlight.svg"],
+    });
+    const announcement =
+      "🎮 'Mothlight' just joined the testing event Game Jam Sprint Playtest! Follow the build and share your feedback: /testing-lab/events/490dc4af-4480-41cb-89a1-41dd5e555d62";
+
+    render(
+      <PostCard
+        item={{
+          ...item,
+          content: announcement,
+          post: { ...item.post!, content: announcement },
+        }}
+      />,
+    );
+
+    expect(screen.queryByText(announcement)).not.toBeInTheDocument();
+    expect(screen.getByText("Mothlight joined the playtest")).toBeInTheDocument();
+    expect(screen.getByText("Game Jam Sprint Playtest")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.getByText(
+          "Find your way through a greenhouse that rearranges itself at night.",
+        ),
+      ).toBeInTheDocument(),
+    );
+    expect(screen.getByRole("link", { name: "View playtest" })).toHaveAttribute(
+      "href",
+      "/testing-lab/events/490dc4af-4480-41cb-89a1-41dd5e555d62",
+    );
+    expect(
+      screen.getByRole("link", { name: "View playtest" }).closest("div.rounded-xl")
+        ?.querySelector('img[src="/testing-lab/seeded-games/mothlight.svg"]'),
+    ).toBeInTheDocument();
   });
 });

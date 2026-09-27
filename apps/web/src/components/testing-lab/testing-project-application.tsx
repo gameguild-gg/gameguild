@@ -15,8 +15,9 @@ import { Button } from '@game-guild/ui/components/button';
 import { buttonVariants } from '@game-guild/ui/components/button-variants';
 import { Label } from '@game-guild/ui/components/label';
 import { Textarea } from '@game-guild/ui/components/textarea';
-import { AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, FolderKanban, Loader2, Save } from 'lucide-react';
+import { AlertCircle, Check, CheckCircle2, ChevronLeft, ChevronRight, Gamepad2, Loader2, Save } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
+import Image from 'next/image';
 import { useState, useTransition } from 'react';
 import { QuestionnaireBuilder } from './questionnaire-builder';
 import { QuestionnaireFieldset } from './questionnaire-fieldset';
@@ -25,6 +26,7 @@ interface ProjectVersionOption {
   id: string;
   projectId: string;
   projectTitle: string;
+  imageUrl?: string | null;
   versionNumber: string;
   status: string;
 }
@@ -43,7 +45,7 @@ interface CurrentApplication {
   submissionVersionPolicy?: string | null;
 }
 
-const STEPS = ['Version', 'Test brief', 'Feedback form', 'Event questions', 'Review'] as const;
+const STEPS = ['Game & build', 'Test brief', 'Feedback form', 'Event questions', 'Review'] as const;
 const emptyBrief: TestingLabTestingProjectBrief = {
   testObjective: '',
   installationAndAccess: '',
@@ -128,11 +130,22 @@ function ApplicationWizard({
   const matchingVersions = draftProjectId
     ? projectVersions.filter((version) => version.projectId === draftProjectId)
     : projectVersions;
-  const initialVersion = application?.projectVersionId
-    ?? matchingVersions.find((version) => version.projectId === initialProjectId)?.id
-    ?? '';
+  const eligibleVersions = matchingVersions.filter((version) => ['ReadyForTesting', 'Released'].includes(version.status));
+  const initialVersion = application?.projectVersionId && eligibleVersions.some((version) => version.id === application.projectVersionId)
+    ? application.projectVersionId
+    : eligibleVersions.find((version) => version.projectId === initialProjectId)?.id ?? '';
   const [selectedVersionId, setSelectedVersionId] = useState(initialVersion);
   const selectedVersion = projectVersions.find((version) => version.id === selectedVersionId);
+  const gameGroups = Array.from(
+    eligibleVersions
+      .reduce((groups, version) => {
+        const group = groups.get(version.projectId);
+        if (group) group.versions.push(version);
+        else groups.set(version.projectId, { projectId: version.projectId, projectTitle: version.projectTitle, imageUrl: version.imageUrl, versions: [version] });
+        return groups;
+      }, new Map<string, { projectId: string; projectTitle: string; imageUrl?: string | null; versions: ProjectVersionOption[] }>())
+      .values(),
+  );
   const projectId = draftProjectId || selectedVersion?.projectId || '';
   const [step, setStep] = useState(0);
   const [brief, setBrief] = useState<TestingLabTestingProjectBrief>(application?.brief ?? emptyBrief);
@@ -206,45 +219,103 @@ function ApplicationWizard({
   }
 
   return (
-    <section className="space-y-5 rounded-md border bg-card p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Badge variant={status === 'Draft' ? 'secondary' : 'outline'}>{status}</Badge>
-          <span className="text-xs text-muted-foreground">Saved application {applicationId ? applicationId.slice(0, 8) : 'not created yet'}</span>
+    <section className={`space-y-5 ${step === 0 ? '' : 'rounded-md border bg-card p-4'}`}>
+      {applicationId ? (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Badge variant={status === 'Draft' ? 'secondary' : 'outline'}>{status}</Badge>
+            <span className="text-xs text-muted-foreground">Application {applicationId.slice(0, 8)}</span>
+          </div>
+          <Button type="button" variant="ghost" size="sm" disabled={pending || !projectId} onClick={() => persist('save')}>
+            {pending ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Save className="mr-2 size-4" />}
+            Save progress
+          </Button>
         </div>
-        <Button type="button" variant="ghost" size="sm" disabled={pending || !projectId} onClick={() => persist('save')}>
-          {pending ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Save className="mr-2 size-4" />}
-          Save progress
-        </Button>
+      ) : null}
+
+      <div className="space-y-2" aria-label="Application progress">
+        <div className="flex items-center justify-between gap-3 text-xs">
+          <span className="font-medium text-foreground">{STEPS[step]}</span>
+          <span className="text-muted-foreground">Step {step + 1} of {STEPS.length}</span>
+        </div>
+        <div className="grid grid-cols-5 gap-1" aria-hidden="true">
+          {STEPS.map((label, index) => (
+            <span key={label} className={`h-1 rounded-full ${index <= step ? 'bg-primary' : 'bg-muted'}`} />
+          ))}
+        </div>
       </div>
 
-      <ol className="grid grid-cols-5 gap-1" aria-label="Application steps">
-        {STEPS.map((label, index) => (
-          <li key={label} className={`rounded-sm px-2 py-1.5 text-center text-[11px] ${index === step ? 'bg-primary text-primary-foreground' : index < step ? 'bg-muted text-foreground' : 'text-muted-foreground'}`}>
-            <span className="hidden sm:inline">{index + 1}. </span>{label}
-          </li>
-        ))}
-      </ol>
-
       {step === 0 ? (
-        <div className="space-y-2">
-          <Label htmlFor={`testing-project-${applicationId || eventId}`}>Eligible project version</Label>
-          <div className="relative">
-            <FolderKanban className="pointer-events-none absolute left-3 top-3 size-4 text-muted-foreground" />
-            <select
-              id={`testing-project-${applicationId || eventId}`}
-              value={selectedVersionId}
-              onChange={(event) => setSelectedVersionId(event.currentTarget.value)}
-              disabled={!versionMutable}
-              className="flex h-10 w-full rounded-md border border-input bg-background py-2 pl-10 pr-3 text-sm"
-            >
-              <option value="">Select a Ready for Testing or Released version</option>
-              {matchingVersions.filter((version) => ['ReadyForTesting', 'Released'].includes(version.status)).map((version) => (
-                <option key={version.id} value={version.id}>{version.projectTitle} · {version.versionNumber} ({version.status})</option>
-              ))}
-            </select>
+        <div className="space-y-4">
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <h3 className="font-medium">Choose your game</h3>
+              <p className="mt-1 text-sm text-muted-foreground">Select the build you want players to test.</p>
+            </div>
+            {gameGroups.length > 0 ? <span className="shrink-0 text-xs text-muted-foreground">{gameGroups.length} {gameGroups.length === 1 ? 'game' : 'games'}</span> : null}
           </div>
-          <p className="text-xs text-muted-foreground">Draft versions cannot enter Testing Lab. Eligibility is verified again by the API.</p>
+
+          {gameGroups.length > 0 ? (
+            <div role="radiogroup" aria-label="Choose a game build" className="space-y-3">
+              {gameGroups.map((game) => {
+                const gameIsSelected = game.versions.some((version) => version.id === selectedVersionId);
+                return (
+                  <section key={game.projectId} className={`overflow-hidden rounded-xl border transition-colors ${gameIsSelected ? 'border-primary bg-primary/[0.04]' : 'border-border bg-card/50'}`}>
+                    <div className="flex items-center gap-3 px-3 py-3 sm:px-4">
+                      <div className="relative size-12 shrink-0 overflow-hidden rounded-lg bg-muted">
+                        {game.imageUrl ? (
+                          <Image src={game.imageUrl} alt="" fill sizes="48px" unoptimized className="object-cover" />
+                        ) : (
+                          <div className="grid size-full place-items-center text-muted-foreground"><Gamepad2 className="size-5" aria-hidden="true" /></div>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="truncate font-semibold">{game.projectTitle}</h4>
+                        <p className="text-xs text-muted-foreground">{game.versions.length} eligible {game.versions.length === 1 ? 'build' : 'builds'}</p>
+                      </div>
+                      {gameIsSelected ? <Check className="size-5 shrink-0 text-primary" aria-hidden="true" /> : null}
+                    </div>
+                    <div className="space-y-2 border-t border-border/70 p-2 sm:p-3">
+                      {game.versions.map((version) => {
+                        const selected = version.id === selectedVersionId;
+                        const eligibility = version.status === 'Released' ? 'Released' : 'Ready for testing';
+                        return (
+                          <label key={version.id} className="block cursor-pointer">
+                            <input
+                              type="radio"
+                              name={`testing-project-version-${eventId}`}
+                              value={version.id}
+                              checked={selected}
+                              disabled={!versionMutable}
+                              onChange={() => setSelectedVersionId(version.id)}
+                              aria-label={`${game.projectTitle} · ${version.versionNumber} · ${eligibility}`}
+                              className="peer sr-only"
+                            />
+                            <span className={`flex min-h-12 items-center justify-between gap-3 rounded-lg border px-3 py-2 transition-colors peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-ring ${selected ? 'border-primary/70 bg-primary/10' : 'border-transparent bg-background/60 hover:border-border hover:bg-background'} ${!versionMutable ? 'cursor-not-allowed opacity-60' : ''}`}>
+                              <span className="min-w-0">
+                                <span className="font-medium">{version.versionNumber}</span>
+                                <span className={`ml-2 inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${version.status === 'Released' ? 'bg-muted text-muted-foreground' : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'}`}>{eligibility}</span>
+                              </span>
+                              {selected ? <Check className="size-4 shrink-0 text-primary" aria-hidden="true" /> : <span className="size-4 shrink-0 rounded-full border border-muted-foreground/50" aria-hidden="true" />}
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </section>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed p-6 text-center">
+              <div className="grid size-10 place-items-center rounded-full bg-muted text-muted-foreground"><Gamepad2 className="size-5" aria-hidden="true" /></div>
+              <div className="space-y-1">
+                <p className="font-medium">No test-ready builds yet</p>
+                <p className="max-w-sm text-sm text-muted-foreground">Publish a build as Ready for Testing or Released, then come back to submit it here.</p>
+              </div>
+              <Link href="/projects" className={buttonVariants({ variant: 'outline', size: 'sm' })}>Open your projects</Link>
+            </div>
+          )}
         </div>
       ) : null}
 
@@ -294,10 +365,19 @@ function ApplicationWizard({
         </div>
       ) : null}
 
-      {step < 3 ? (
+      {step === 0 ? (
+        <div className="flex items-center justify-between gap-3 border-t pt-4">
+          <p aria-live="polite" aria-atomic="true" className="min-w-0 truncate text-sm text-muted-foreground">
+            {selectedVersion ? <><span className="font-medium text-foreground">{selectedVersion.projectTitle}</span><span> · {selectedVersion.versionNumber}</span></> : 'Choose a build to continue.'}
+          </p>
+          <Button type="button" className="shrink-0" disabled={pending || !eligibleVersions.some((version) => version.id === selectedVersionId)} onClick={() => persist('save', 1)}>
+            {pending ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}Continue<ChevronRight className="ml-2 size-4" />
+          </Button>
+        </div>
+      ) : step < 3 ? (
         <div className="flex items-center justify-between gap-2 border-t pt-4">
-          <Button type="button" variant="outline" disabled={step === 0} onClick={() => setStep((current) => Math.max(0, current - 1))}><ChevronLeft className="mr-2 size-4" />Previous</Button>
-          <Button type="button" disabled={pending || (step === 0 && !selectedVersionId)} onClick={() => persist('save', step + 1)}>
+          <Button type="button" variant="outline" onClick={() => setStep((current) => Math.max(0, current - 1))}><ChevronLeft className="mr-2 size-4" />Previous</Button>
+          <Button type="button" disabled={pending} onClick={() => persist('save', step + 1)}>
             {pending ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}Save and continue<ChevronRight className="ml-2 size-4" />
           </Button>
         </div>
@@ -324,6 +404,7 @@ export function TestingProjectApplication({
   generalRules,
   candidateInstructions,
   requiresFeedback = false,
+  signInReturnUrl,
 }: {
   eventId: string;
   isAuthenticated: boolean;
@@ -337,6 +418,7 @@ export function TestingProjectApplication({
   generalRules?: string | null;
   candidateInstructions?: string | null;
   requiresFeedback?: boolean;
+  signInReturnUrl?: string;
 }) {
   const [lastAuthenticatedData] = useState(() =>
     isAuthenticated ? { application, applications, initialProjectId, projectVersions } : null,
@@ -354,7 +436,7 @@ export function TestingProjectApplication({
     if (!acceptsApplications) {
       return <p className="text-sm text-muted-foreground">Game submissions are closed for this event. Browse the Testing Lab for another opportunity.</p>;
     }
-    const redirectTo = `/testing-lab/events/${eventId}#submit-game`;
+    const redirectTo = signInReturnUrl ?? `/testing-lab/events/${eventId}#join`;
     const signInHref = `/sign-in?redirectTo=${encodeURIComponent(redirectTo)}`;
     return (
       <div className="space-y-2">
@@ -381,7 +463,16 @@ export function TestingProjectApplication({
       {!acceptsApplications ? <p className="text-sm text-muted-foreground">Game submissions are closed for this event. You can still review any application already in progress.</p> : availableVersions.length > 0 ? (
         <ApplicationWizard eventId={eventId} projectVersions={availableVersions} initialProjectId={applicationData.initialProjectId} applicationSchema={applicationSchema} generalRules={generalRules} candidateInstructions={candidateInstructions} requiresFeedback={requiresFeedback} acceptsApplications={acceptsApplications} />
       ) : currentApplications.length === 0 ? (
-        <div className="flex flex-col items-start gap-3"><p className="text-sm text-muted-foreground">Create a Ready for Testing or Released project version before applying.</p><Link href="/projects" className={buttonVariants({ variant: 'outline' })}>Browse projects</Link></div>
+        <div className="grid gap-4 rounded-xl border border-dashed bg-card/40 p-5 sm:grid-cols-[auto_1fr] sm:items-start">
+          <div className="grid size-11 place-items-center rounded-lg bg-muted text-muted-foreground"><Gamepad2 className="size-5" aria-hidden="true" /></div>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <p className="font-semibold">No test-ready builds available</p>
+              <p className="text-sm text-muted-foreground">Choose a project with a build marked Ready for Testing or Released. You can submit it here once it is ready.</p>
+            </div>
+            <Link href="/projects" className={buttonVariants({ variant: 'outline', size: 'sm' })}>Open your projects</Link>
+          </div>
+        </div>
       ) : null}
     </div>
   );

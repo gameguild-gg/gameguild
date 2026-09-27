@@ -45,6 +45,10 @@ describe("SocialRail", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Trending now" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Explore all" })).toHaveAttribute(
+      "href",
+      "/explore",
+    );
     expect(screen.getByText("No trending tags yet.")).toBeInTheDocument();
   });
 

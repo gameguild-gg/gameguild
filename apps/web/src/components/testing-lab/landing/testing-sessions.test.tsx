@@ -73,7 +73,13 @@ function event(
     projectCount: 1,
     projectLimit: 4,
     availableTesterCount: 9,
+    testerRegistrationOpen: true,
+    gameSubmissionsOpen: false,
+    gameImageUrl: null,
     scheduleCount: 1,
+    timeZoneId: "UTC",
+    dateLocale: "en-US",
+    hour12: true,
     ...overrides,
   };
 }
@@ -123,7 +129,7 @@ describe("TestingEventsBrowser", () => {
     expect(screen.queryByLabelText("Event filters")).not.toBeInTheDocument();
   });
 
-  it("sorts cards by schedule and preserves project context", () => {
+  it("prioritizes actionable events and preserves project context", () => {
     render(
       <TestingEventsBrowser
         events={events}
@@ -135,11 +141,11 @@ describe("TestingEventsBrowser", () => {
     expect(
       screen.queryByText(/Open Events? - Join Now!/),
     ).not.toBeInTheDocument();
-    const links = screen.getAllByRole("link", { name: "View event" });
+    const links = screen.getAllByRole("link", { name: /^View event:/ });
     expect(links.map((link) => link.getAttribute("href"))).toEqual([
-      "/testing-lab/events/past?projectId=project%20%2F%201",
       "/testing-lab/events/future?projectId=project%20%2F%201",
       "/testing-lab/events/october?projectId=project%20%2F%201",
+      "/testing-lab/events/past?projectId=project%20%2F%201",
     ]);
   });
 
@@ -185,7 +191,7 @@ describe("TestingEventsBrowser", () => {
     expect(screen.getByText("Hybrid October")).toBeInTheDocument();
   });
 
-  it("sorts unscheduled events deterministically before scheduled events", () => {
+  it("places unscheduled events after scheduled events deterministically", () => {
     const { rerender } = render(
       <TestingEventsBrowser
         events={[
@@ -195,9 +201,9 @@ describe("TestingEventsBrowser", () => {
         accessIssues={[]}
       />,
     );
-    expect(screen.getAllByRole("link", { name: "View event" })[0]).toHaveAttribute(
+    expect(screen.getAllByRole("link", { name: /^View event:/ })[0]).toHaveAttribute(
       "href",
-      "/testing-lab/events/unscheduled",
+      "/testing-lab/events/scheduled",
     );
 
     rerender(
@@ -209,9 +215,9 @@ describe("TestingEventsBrowser", () => {
         accessIssues={[]}
       />,
     );
-    expect(screen.getAllByRole("link", { name: "View event" })[0]).toHaveAttribute(
+    expect(screen.getAllByRole("link", { name: /^View event:/ })[0]).toHaveAttribute(
       "href",
-      "/testing-lab/events/unscheduled",
+      "/testing-lab/events/scheduled",
     );
   });
 
@@ -243,7 +249,7 @@ describe("TestingEventsBrowser", () => {
     expect(screen.getByRole("heading", { name: "No events match your filters" })).toBeInTheDocument();
     const clearActions = screen.getAllByRole("button", { name: "Clear filters" });
     await user.click(clearActions.at(-1)!);
-    expect(screen.getAllByRole("link", { name: "View event" })).toHaveLength(3);
+    expect(screen.getAllByRole("link", { name: /^View event:/ })).toHaveLength(3);
   });
 
   it("switches between row and table views", async () => {

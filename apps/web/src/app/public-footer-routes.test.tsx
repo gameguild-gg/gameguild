@@ -24,9 +24,9 @@ const footerRoutes = [
   { href: '/jobs', page: '[locale]/(public)/jobs/page.tsx' },
   { href: '/courses', page: '[locale]/(public)/courses/page.tsx' },
   { href: '/programs', page: '[locale]/(public)/programs/page.tsx' },
-  { href: '/projects', page: '[locale]/(public)/projects/page.tsx' },
+  { href: '/projects', page: '[locale]/(social)/projects/page.tsx' },
   { href: '/testing-lab', page: '[locale]/(social)/testing-lab/page.tsx' },
-  { href: '/launch-pad', page: '[locale]/(public)/launch-pad/page.tsx' },
+  { href: '/launch-pad', page: '[locale]/(social)/launch-pad/page.tsx' },
   { href: '/about', page: '[locale]/(public)/about/page.tsx' },
   { href: '/about/roadmap', page: '[locale]/(public)/about/(project)/roadmap/page.tsx' },
   { href: '/about/contributors', page: '[locale]/(public)/about/(project)/contributors/page.tsx' },
@@ -37,7 +37,7 @@ const footerRoutes = [
 ] as const;
 
 describe('PublicWebsiteFooter routes', () => {
-  it('links only to public pages that exist in the app router', () => {
+  it('links only to app routes that exist in the app router', () => {
     render(<PublicWebsiteFooter />);
 
     for (const route of footerRoutes) {

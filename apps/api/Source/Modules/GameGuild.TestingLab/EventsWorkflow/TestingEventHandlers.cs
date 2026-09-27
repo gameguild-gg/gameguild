@@ -597,8 +597,10 @@ public sealed class TestingEventHandlers(
         if (tenantId.HasValue)
             query = query.Where(testingEvent => testingEvent.TenantId == tenantId.Value);
 
+        var now = SystemClock.UtcNow;
         var events = await query
-            .OrderBy(testingEvent => testingEvent.StartsAt)
+            .OrderBy(testingEvent => testingEvent.EndsAt <= now)
+            .ThenBy(testingEvent => testingEvent.StartsAt)
             .Skip(skip)
             .Take(take)
             .ToListAsync(cancellationToken)

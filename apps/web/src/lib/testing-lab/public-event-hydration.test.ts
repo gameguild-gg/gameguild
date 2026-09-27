@@ -14,9 +14,20 @@ describe("hydratePublicTestingEvent", () => {
   it("passes distinct game covers from the public event projection to the social banner", async () => {
     getPublicTestingEvent.mockResolvedValue({
       name: "Game Jam Sprint Playtest",
-      slots: [],
+      slots: [
+        {
+          approvedProjectCount: 2,
+          maxProjects: 4,
+          availableProjectCount: 2,
+        },
+      ],
       games: [
-        { projectId: "game-1", title: "Mothlight", imageUrl: " /testing-lab/seeded-games/mothlight.svg " },
+        {
+          projectId: "game-1",
+          title: "Mothlight",
+          description: "A little forest spirit restores the valley.",
+          imageUrl: " /testing-lab/seeded-games/mothlight.svg ",
+        },
         { projectId: "game-2", title: "Hollow Signal", imageUrl: "/testing-lab/seeded-games/hollow-signal.svg" },
         { projectId: "game-3", title: "Duplicate artwork", imageUrl: "/testing-lab/seeded-games/mothlight.svg" },
         { projectId: "game-4", title: "No cover" },
@@ -29,5 +40,15 @@ describe("hydratePublicTestingEvent", () => {
       "/testing-lab/seeded-games/mothlight.svg",
       "/testing-lab/seeded-games/hollow-signal.svg",
     ]);
+    expect(event?.games[0]).toEqual({
+      projectId: "game-1",
+      title: "Mothlight",
+      description: "A little forest spirit restores the valley.",
+      imageUrl: "/testing-lab/seeded-games/mothlight.svg",
+    });
+    expect(event).toMatchObject({
+      approvedGameCount: 2,
+      availableGameCount: 2,
+    });
   });
 });

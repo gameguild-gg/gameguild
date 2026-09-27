@@ -225,7 +225,7 @@ function readableError(
 
 async function complete<T>(
   operation: Promise<Result<T, ApiError>>,
-  message: string,
+  message: string | ((data: T) => string),
   eventId?: string,
 ): Promise<TestingEventActionResult<T>> {
   try {
@@ -239,7 +239,7 @@ async function complete<T>(
     return {
       success: true,
       data: (result.data ?? null) as ActionData<T>,
-      message,
+      message: typeof message === "function" ? message(result.data) : message,
     };
   } catch (error) {
     return {
@@ -1003,7 +1003,9 @@ export async function registerForTestingEventSlot(
         "registrationResponseJson",
       ) ?? { answers: [] },
     }),
-    "Testing slot registration submitted.",
+    (registration) => registration.status === "Waitlisted"
+      ? `You’re on the waitlist${registration.waitlistPosition ? ` at position ${registration.waitlistPosition}` : ""}. We’ll let you know if a spot opens.`
+      : "You’re registered for this playtest.",
     optionalText(formData, "eventId") ?? undefined,
   );
 }

@@ -31,6 +31,15 @@ type StatusFilter = "all" | "open" | "in-progress" | "completed";
 type ModeFilter = "all" | "Online" | "InPerson" | "Hybrid";
 type PeriodFilter = "all" | "upcoming" | "month";
 
+function monthKey(date: Date, session: TestingEventViewModel) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: session.timeZoneId,
+    year: "numeric",
+    month: "2-digit",
+  }).formatToParts(date);
+  return `${parts.find((part) => part.type === "year")?.value}-${parts.find((part) => part.type === "month")?.value}`;
+}
+
 const STATUS_OPTIONS = [
   ["all", "All"],
   ["open", "Open"],
@@ -148,14 +157,22 @@ export function TestingEventsBrowser({
         const start = new Date(session.startsAt);
         const now = new Date();
         if (period === "upcoming") return start >= now;
-        return (
-          start.getFullYear() === now.getFullYear() &&
-          start.getMonth() === now.getMonth()
-        );
+        return monthKey(start, session) === monthKey(now, session);
       })
-      .sort((left, right) =>
-        (left.startsAt ?? "").localeCompare(right.startsAt ?? ""),
-      );
+      .sort((left, right) => {
+        const priority: Record<TestingEventViewModel["status"], number> = {
+          open: 0,
+          "in-progress": 1,
+          closed: 2,
+          completed: 3,
+        };
+        const stateOrder = priority[left.status] - priority[right.status];
+        if (stateOrder !== 0) return stateOrder;
+        if (!left.startsAt && right.startsAt) return 1;
+        if (left.startsAt && !right.startsAt) return -1;
+        const chronologicalOrder = (left.startsAt ?? "").localeCompare(right.startsAt ?? "");
+        return priority[left.status] >= 2 ? -chronologicalOrder : chronologicalOrder;
+      });
   }, [mode, period, search, presentedEvents, status]);
 
   const activeFilterCount = [

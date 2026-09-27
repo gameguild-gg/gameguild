@@ -8,7 +8,7 @@ import type {
   TrendingTag,
 } from "@/lib/feed/contracts";
 import { Button } from "@game-guild/ui/components/button";
-import { CalendarDays, Users } from "lucide-react";
+import { ArrowUpRight, CalendarDays, Users } from "lucide-react";
 import * as React from "react";
 import { formatSocialDateTime } from "@/lib/feed/format";
 import { toast } from "sonner";
@@ -75,9 +75,9 @@ export function SocialRail({
   activeTab: SocialFeedTab;
 }): React.JSX.Element {
   return (
-    <aside className="sticky top-5 hidden h-fit space-y-3 xl:block">
+    <aside aria-label="Around GameGuild" className="mt-6 grid h-fit grid-cols-1 gap-3 sm:grid-cols-2 xl:sticky xl:top-5 xl:mt-0 xl:block xl:space-y-3">
       {currentProfile ? (
-        <section className="rounded-xl bg-card p-4 text-card-foreground">
+        <section className="hidden rounded-xl bg-card p-4 text-card-foreground xl:block">
           <div className="flex items-start gap-3">
             <span className="flex size-14 shrink-0 items-center justify-center rounded-full bg-highlight/15 text-sm font-bold text-foreground">
               {initials(currentProfile.displayName)}
@@ -134,14 +134,16 @@ export function SocialRail({
               <Link key={session.id} href={`/testing-lab/events/${session.id}`} className="block rounded-lg px-2 py-2.5 transition hover:bg-accent">
                 <span className="block truncate text-sm font-semibold text-foreground">{session.name}</span>
                 <span className="mt-0.5 block text-xs text-muted-foreground">{formatSocialDateTime(session.startsAt)}</span>
-                <span className="mt-1 block text-xs text-primary">{session.availableTesterCount} spots · {session.mode}</span>
+                <span className="mt-1 block text-xs text-primary">
+                  {session.availableTesterCount > 0 ? `${session.availableTesterCount} spots left` : "Waitlist open"} · {session.mode}
+                </span>
               </Link>
             ))
           )}
         </div>
       </section>
 
-      <section className="rounded-xl bg-card p-4 text-card-foreground">
+      <section className="hidden rounded-xl bg-card p-4 text-card-foreground xl:block">
         <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
           <Users className="size-4 text-highlight" aria-hidden="true" />
           Suggested creators
@@ -169,7 +171,16 @@ export function SocialRail({
       </section>
 
       <section className="rounded-xl bg-card p-4 text-card-foreground">
-        <h2 className="text-sm font-semibold text-foreground">Trending now</h2>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold text-foreground">Trending now</h2>
+          <Link
+            href="/explore"
+            className="inline-flex min-h-8 items-center gap-1 rounded-md px-2 text-xs font-medium text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            Explore all
+            <ArrowUpRight className="size-3.5" aria-hidden="true" />
+          </Link>
+        </div>
         {tags.length > 0 ? (
           <div className="mt-3 grid grid-cols-2 gap-2">
             {tags.map((tag) => (

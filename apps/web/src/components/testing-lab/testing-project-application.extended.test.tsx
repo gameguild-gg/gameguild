@@ -131,18 +131,13 @@ describe("TestingProjectApplication extended workflow", () => {
       />,
     );
 
-    expect(screen.queryByRole("option", { name: /Draft game/ })).not.toBeInTheDocument();
-    await user.selectOptions(
-      screen.getByRole("combobox", { name: "Eligible project version" }),
-      "version-2",
-    );
-    await user.selectOptions(
-      screen.getByRole("combobox", { name: "Eligible project version" }),
-      "version-1",
-    );
-    await user.click(screen.getByRole("button", { name: "Save and continue" }));
+    expect(screen.queryByRole("radio", { name: /Draft game/ })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("radio", { name: "Wayfinder · 2.0.0 · Released" }));
+    expect(screen.getByRole("radio", { name: "Wayfinder · 2.0.0 · Released" })).toBeChecked();
+    await user.click(screen.getByRole("radio", { name: "Asterion · 1.0.0 · Ready for testing" }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
     expect(await screen.findByText("Upload a playable build.")).toBeInTheDocument();
-    expect(screen.getByText(/Saved application applicat/)).toBeInTheDocument();
+    expect(screen.getByText("Application applicat")).toBeInTheDocument();
 
     await user.type(screen.getByLabelText("Test objective"), "Validate onboarding");
     await user.type(screen.getByLabelText("Installation and access"), "Download and unzip");
@@ -213,10 +208,11 @@ describe("TestingProjectApplication extended workflow", () => {
         projectVersions={[versions[0]!]}
       />,
     );
-    expect(screen.getByRole("button", { name: "Previous" })).toBeDisabled();
-    await user.click(screen.getByRole("button", { name: "Save and continue" }));
+    expect(screen.queryByRole("button", { name: "Previous" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Continue" }));
     await user.click(screen.getByRole("button", { name: "Previous" }));
-    expect(screen.getByRole("combobox", { name: "Eligible project version" })).toBeInTheDocument();
+    expect(screen.getByRole("radiogroup", { name: "Choose a game build" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Asterion · 1.0.0 · Ready for testing" })).toBeChecked();
   });
 
   it.each([
@@ -234,9 +230,9 @@ describe("TestingProjectApplication extended workflow", () => {
         projectVersions={versions}
       />,
     );
-    await user.click(screen.getByRole("button", { name: "Save progress" }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
     expect(await screen.findByText(message)).toBeInTheDocument();
-    expect(screen.getByRole("combobox", { name: "Eligible project version" })).toBeInTheDocument();
+    expect(screen.getByRole("radiogroup", { name: "Choose a game build" })).toBeInTheDocument();
   });
 
   it("handles a network failure while saving a draft", async () => {
@@ -251,7 +247,7 @@ describe("TestingProjectApplication extended workflow", () => {
         projectVersions={versions}
       />,
     );
-    await user.click(screen.getByRole("button", { name: "Save progress" }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
     expect(await screen.findByText("The application draft could not be saved.")).toBeInTheDocument();
   });
 
@@ -269,7 +265,7 @@ describe("TestingProjectApplication extended workflow", () => {
         projectVersions={versions}
       />,
     );
-    await user.click(screen.getByRole("button", { name: "Save progress" }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
     expect(await screen.findByText("The application draft could not be saved.")).toBeInTheDocument();
   });
 
@@ -285,6 +281,7 @@ describe("TestingProjectApplication extended workflow", () => {
         acceptsApplications
         projectVersions={[versions[0]!]}
         application={{ id: "application-1", projectId: "project-1", status: "Draft" }}
+        selectedApplicationId="application-1"
       />,
     );
     await user.click(screen.getByRole("button", { name: "Save progress" }));
@@ -309,10 +306,11 @@ describe("TestingProjectApplication extended workflow", () => {
           brief: {} as TestingLabTestingProjectBrief,
           feedbackQuestionnaire: {} as TestingLabQuestionnaireSchema,
         }}
+        selectedApplicationId="application-1"
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "Save and continue" }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByLabelText("Test objective")).toHaveValue("");
     expect(screen.getByLabelText("Installation and access")).toHaveValue("");
     expect(screen.getByLabelText("Controls")).toHaveValue("");
@@ -331,9 +329,10 @@ describe("TestingProjectApplication extended workflow", () => {
         acceptsApplications
         projectVersions={[versions[0]!]}
         applications={[{ id: "application-1", projectId: "project-1" }]}
+        selectedApplicationId="application-1"
       />,
     );
-    expect(screen.getAllByRole("combobox", { name: "Eligible project version" })).toHaveLength(1);
+    expect(screen.getAllByRole("radiogroup", { name: "Choose a game build" })).toHaveLength(1);
   });
 
   it("updates a pending immutable application without allowing a version change", async () => {
@@ -369,11 +368,12 @@ describe("TestingProjectApplication extended workflow", () => {
             links: [],
           },
         }}
+        selectedApplicationId="application-1"
       />,
     );
-    expect(screen.getByRole("combobox", { name: "Eligible project version" })).toBeDisabled();
+    expect(screen.getByRole("radio", { name: "Asterion · 1.0.0 · Ready for testing" })).toBeDisabled();
     for (let step = 0; step < 3; step += 1) {
-      const continueButton = screen.getByRole("button", { name: "Save and continue" });
+      const continueButton = screen.getByRole("button", { name: step === 0 ? "Continue" : "Save and continue" });
       await waitFor(() => expect(continueButton).toBeEnabled());
       await user.click(continueButton);
     }
@@ -396,10 +396,11 @@ describe("TestingProjectApplication extended workflow", () => {
         acceptsApplications={false}
         projectVersions={versions}
         application={{ id: "application-1", status: "Draft" }}
+        selectedApplicationId="application-1"
       />,
     );
     expect(screen.getByText(/package is frozen/)).toBeInTheDocument();
-    expect(screen.getByText("Applications are closed.")).toBeInTheDocument();
+    expect(screen.getByText(/Game submissions are closed for this event/)).toBeInTheDocument();
     expect(screen.queryByText(/decision rationale/i)).not.toBeInTheDocument();
   });
 
@@ -413,10 +414,11 @@ describe("TestingProjectApplication extended workflow", () => {
         applications={[
           { id: "application-1", projectId: "project-1", projectVersionId: "version-1", status: "Pending" },
         ]}
+        selectedApplicationId="application-1"
       />,
     );
     expect(screen.getAllByText("Pending")).toHaveLength(1);
-    expect(screen.getAllByRole("combobox", { name: "Eligible project version" })).toHaveLength(1);
+    expect(screen.getAllByRole("radiogroup", { name: "Choose a game build" })).toHaveLength(1);
   });
 
   it("withdraws an application and renders action failures", async () => {
@@ -429,6 +431,7 @@ describe("TestingProjectApplication extended workflow", () => {
         acceptsApplications
         projectVersions={[versions[0]!]}
         application={{ id: "application-1", projectId: "project-1", projectVersionId: "version-1", status: "UnderReview" }}
+        selectedApplicationId="application-1"
       />,
     );
     await user.click(screen.getByRole("button", { name: "Withdraw application" }));
@@ -453,6 +456,7 @@ describe("TestingProjectApplication extended workflow", () => {
         acceptsApplications
         projectVersions={[versions[0]!]}
         application={{ id: "application-1", projectId: "project-1", projectVersionId: "version-1", status: "Waitlisted" }}
+        selectedApplicationId="application-1"
       />,
     );
     await user.click(screen.getByRole("button", { name: "Withdraw application" }));

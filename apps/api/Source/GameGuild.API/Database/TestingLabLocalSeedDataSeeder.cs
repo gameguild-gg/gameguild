@@ -121,6 +121,24 @@ public static class TestingLabLocalSeedDataSeeder
                 continue;
             }
 
+            var projectVersion = await context.Set<ProjectVersion>()
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(
+                    candidate => candidate.ProjectId == game.Id && candidate.VersionNumber == "0.1.0-local",
+                    cancellationToken)
+                .ConfigureAwait(false);
+            if (projectVersion is null)
+            {
+                projectVersion = ProjectVersion.Create(
+                    game.Id,
+                    "0.1.0-local",
+                    "Local playable build for Testing Lab enrollment review.",
+                    testingEvent.ManagerUserId,
+                    testingEvent.TenantId);
+                projectVersion.MarkReadyForTesting();
+                context.Set<ProjectVersion>().Add(projectVersion);
+            }
+
             var applicationExists = await context.Set<TestingProjectApplication>()
                 .IgnoreQueryFilters()
                 .AnyAsync(
