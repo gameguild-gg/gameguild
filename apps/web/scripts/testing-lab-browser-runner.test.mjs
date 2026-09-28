@@ -214,6 +214,30 @@ test("opens public tester registration through the Join role flow", async () => 
       registrationQuestionIndex > testerRoleIndex,
   );
 });
+test("accepts the accessible playtest rules before reserving a tester seat", async () => {
+  const journey = await readFile(
+    new URL("./testing-lab-browser-e2e.mjs", import.meta.url),
+    "utf8",
+  );
+  const testerRoleIndex = journey.indexOf('name: "As a tester", exact: true');
+  const rulesLabelIndex = journey.indexOf(
+    "/agree to follow the rules for this playtest/i",
+    testerRoleIndex,
+  );
+  const rulesAcceptanceIndex = journey.indexOf(".check();", rulesLabelIndex);
+  const reserveIndex = journey.indexOf(
+    'name: "Reserve tester seat"',
+    rulesAcceptanceIndex,
+  );
+
+  assert.ok(
+    testerRoleIndex >= 0 &&
+      rulesLabelIndex > testerRoleIndex &&
+      rulesAcceptanceIndex > rulesLabelIndex &&
+      reserveIndex > rulesAcceptanceIndex,
+    "the browser journey must accept the rendered rules before reserving a seat",
+  );
+});
 test("covers the complete Testing Lab operational browser matrix", async () => {
   const journey = await readFile(
     new URL("./testing-lab-browser-e2e.mjs", import.meta.url),

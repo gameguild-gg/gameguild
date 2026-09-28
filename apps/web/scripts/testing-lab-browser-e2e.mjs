@@ -803,7 +803,9 @@ async function run() {
         exact: true,
       })
       .click();
-    await testerPage.getByLabel(/I accept the frozen rules/i).check();
+    await testerPage
+      .getByLabel(/agree to follow the rules for this playtest/i)
+      .check();
     await testerPage
       .getByRole("button", { name: "Reserve tester seat", exact: true })
       .click();
