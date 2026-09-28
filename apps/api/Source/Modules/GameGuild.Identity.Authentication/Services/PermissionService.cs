@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using System.Runtime.CompilerServices;
 using Microsoft.EntityFrameworkCore;
 using GameGuild.Identity.Authorization;
@@ -24,7 +26,27 @@ public class PermissionService(
     IPermissionAuditService? auditService = null,
     IActorContextAccessor? actorContextAccessor = null) : IPermissionService
 {
+    private static readonly Meter BulkPermissionCheckMeter = new("GameGuild.Identity.Authentication.PermissionBulkCheck", "1.0.0");
+    private static readonly Counter<long> BulkPermissionCheckBatchCounter = BulkPermissionCheckMeter.CreateCounter<long>(
+        "permission_bulk_check_batches",
+        "batches",
+        "Successfully evaluated bulk permission check batches");
+    private static readonly Counter<long> BulkPermissionCheckRequestCounter = BulkPermissionCheckMeter.CreateCounter<long>(
+        "permission_bulk_check_requests",
+        "requests",
+        "Permission decisions evaluated in bulk batches");
+    private static readonly Counter<long> BulkPermissionCheckUniqueRequestCounter = BulkPermissionCheckMeter.CreateCounter<long>(
+        "permission_bulk_check_unique_requests",
+        "requests",
+        "Distinct permission decisions evaluated in bulk batches");
+    private static readonly Histogram<double> BulkPermissionCheckDuration = BulkPermissionCheckMeter.CreateHistogram<double>(
+        "permission_bulk_check_batch_duration",
+        "ms",
+        "Elapsed time for bulk permission batch reads and evaluation");
+
     private const int MaximumBulkPermissionCheckBatchSize = 256;
+    private const int MinimumParallelBulkPermissionCheckBatchSize = 32;
+    private const int MaximumParallelBulkPermissionChecks = 4;
 
     public async Task<TenantPermission> GrantTenantPermissionAsync(Guid? userId, Guid? tenantId, PermissionType[] permissions)
     {
@@ -614,6 +636,7 @@ public class PermissionService(
         IReadOnlyList<BulkPermissionCheckRequest> requests,
         CancellationToken cancellationToken)
     {
+        var startedAt = Stopwatch.GetTimestamp();
         var userIds = requests.Select(request => request.UserId).Distinct().ToArray();
         var tenantIds = requests.Where(request => request.TenantId.HasValue)
             .Select(request => request.TenantId!.Value)
@@ -657,67 +680,123 @@ public class PermissionService(
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-        var result = new List<BulkPermissionCheckResult>(requests.Count);
-        var batchCache = new Dictionary<BulkPermissionCheckRequest, bool>();
-        foreach (var request in requests)
+        // Read through EF sequentially using the scoped DbContext, then evaluate distinct
+        // decisions in parallel. Duplicate requests share one decision and are expanded
+        // back into the original order after evaluation.
+        var distinctRequestIndexes = new Dictionary<BulkPermissionCheckRequest, int>();
+        var distinctRequests = new List<BulkPermissionCheckRequest>(requests.Count);
+        var resultIndexes = new int[requests.Count];
+        for (var index = 0; index < requests.Count; index++)
         {
-            if (batchCache.TryGetValue(request, out var cachedDecision))
+            var request = requests[index];
+            if (!distinctRequestIndexes.TryGetValue(request, out var distinctIndex))
             {
-                result.Add(new BulkPermissionCheckResult(request, cachedDecision));
+                distinctIndex = distinctRequests.Count;
+                distinctRequestIndexes.Add(request, distinctIndex);
+                distinctRequests.Add(request);
+            }
+
+            resultIndexes[index] = distinctIndex;
+        }
+
+        var decisions = new bool[distinctRequests.Count];
+        void EvaluateAt(int index)
+        {
+            decisions[index] = EvaluateBulkPermissionDecision(
+                distinctRequests[index],
+                tenantGrants,
+                contentTypeGrants,
+                resourceGrants);
+        }
+
+        if (distinctRequests.Count >= MinimumParallelBulkPermissionCheckBatchSize && Environment.ProcessorCount > 1)
+        {
+            Parallel.For(
+                0,
+                distinctRequests.Count,
+                new ParallelOptions
+                {
+                    CancellationToken = cancellationToken,
+                    MaxDegreeOfParallelism = Math.Min(Environment.ProcessorCount, MaximumParallelBulkPermissionChecks)
+                },
+                EvaluateAt);
+        }
+        else
+        {
+            for (var index = 0; index < distinctRequests.Count; index++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                EvaluateAt(index);
+            }
+        }
+
+        var result = new List<BulkPermissionCheckResult>(requests.Count);
+        for (var index = 0; index < requests.Count; index++)
+        {
+            result.Add(new BulkPermissionCheckResult(requests[index], decisions[resultIndexes[index]]));
+        }
+
+        BulkPermissionCheckBatchCounter.Add(1);
+        BulkPermissionCheckRequestCounter.Add(requests.Count);
+        BulkPermissionCheckUniqueRequestCounter.Add(distinctRequests.Count);
+        BulkPermissionCheckDuration.Record(Stopwatch.GetElapsedTime(startedAt).TotalMilliseconds);
+
+        return result;
+    }
+
+    private static bool EvaluateBulkPermissionDecision(
+        BulkPermissionCheckRequest request,
+        IReadOnlyList<TenantPermission> tenantGrants,
+        IReadOnlyList<ContentTypePermission> contentTypeGrants,
+        IReadOnlyList<GenericResourcePermission> resourceGrants)
+    {
+        var allowed = new HashSet<PermissionType>();
+        var denied = new HashSet<PermissionType>();
+
+        foreach (var grant in tenantGrants)
+        {
+            if (!grant.IsActive || grant.IsExpired() || !TenantGrantApplies(grant, request))
+            {
                 continue;
             }
 
-            var allowed = new HashSet<PermissionType>();
-            var denied = new HashSet<PermissionType>();
+            allowed.UnionWith(ToPermissionTypes(grant.Permissions));
+            denied.UnionWith(ToPermissionTypes(grant.DenyPermissions));
+        }
 
-            foreach (var grant in tenantGrants)
+        if (!string.IsNullOrWhiteSpace(request.ContentTypeName))
+        {
+            foreach (var grant in contentTypeGrants)
             {
-                if (!grant.IsActive || grant.IsExpired() || !TenantGrantApplies(grant, request))
+                if (!grant.IsEffective() ||
+                    !string.Equals(grant.ContentTypeName, request.ContentTypeName, StringComparison.Ordinal) ||
+                    !ContentTypeGrantApplies(grant, request))
                 {
                     continue;
                 }
-                allowed.UnionWith(ToPermissionTypes(grant.Permissions));
-                denied.UnionWith(ToPermissionTypes(grant.DenyPermissions));
+
+                allowed.UnionWith(grant.GetPermissionsAsEnum());
             }
-
-            if (!string.IsNullOrWhiteSpace(request.ContentTypeName))
-            {
-                foreach (var grant in contentTypeGrants)
-                {
-                    if (!grant.IsEffective() ||
-                        !string.Equals(grant.ContentTypeName, request.ContentTypeName, StringComparison.Ordinal) ||
-                        !ContentTypeGrantApplies(grant, request))
-                    {
-                        continue;
-                    }
-
-                    allowed.UnionWith(grant.GetPermissionsAsEnum());
-                }
-            }
-
-            if (request.ResourceId.HasValue)
-            {
-                foreach (var grant in resourceGrants)
-                {
-                    if (!grant.IsEffective() ||
-                        grant.UserId != request.UserId ||
-                        grant.TenantId != request.TenantId ||
-                        grant.ResourceId != request.ResourceId.Value ||
-                        !string.Equals(grant.ResourceType, request.ResourceTypeName, StringComparison.Ordinal))
-                    {
-                        continue;
-                    }
-
-                    allowed.UnionWith(grant.GetPermissionsAsEnum());
-                }
-            }
-
-            var isGranted = allowed.Contains(request.Permission) && !denied.Contains(request.Permission);
-            batchCache.Add(request, isGranted);
-            result.Add(new BulkPermissionCheckResult(request, isGranted));
         }
 
-        return result;
+        if (request.ResourceId.HasValue)
+        {
+            foreach (var grant in resourceGrants)
+            {
+                if (!grant.IsEffective() ||
+                    grant.UserId != request.UserId ||
+                    grant.TenantId != request.TenantId ||
+                    grant.ResourceId != request.ResourceId.Value ||
+                    !string.Equals(grant.ResourceType, request.ResourceTypeName, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                allowed.UnionWith(grant.GetPermissionsAsEnum());
+            }
+        }
+
+        return allowed.Contains(request.Permission) && !denied.Contains(request.Permission);
     }
 
     private static bool TenantGrantApplies(TenantPermission grant, BulkPermissionCheckRequest request)
