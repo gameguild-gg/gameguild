@@ -620,8 +620,8 @@ public class EntityAndServiceCtorTests
         var svc = new AccessReviewService(
             Mock.Of<IAccessReviewCampaignRepository>(),
             Mock.Of<IAccessReviewItemRepository>(),
-            NullLogger<AccessReviewService>.Instance
-        );
+            NullLogger<AccessReviewService>.Instance,
+            actorContextAccessor: Mock.Of<GameGuild.Identity.Context.Actors.IActorContextAccessor>());
         svc.Should().NotBeNull();
     }
 
@@ -632,8 +632,8 @@ public class EntityAndServiceCtorTests
             Mock.Of<IAccessReviewCampaignRepository>(),
             Mock.Of<IAccessReviewItemRepository>(),
             NullLogger<AccessReviewService>.Instance,
-            Mock.Of<GameGuild.CQRS.IPublisher>()
-        );
+            Mock.Of<GameGuild.CQRS.IPublisher>(),
+            Mock.Of<GameGuild.Identity.Context.Actors.IActorContextAccessor>());
         svc.Should().NotBeNull();
     }
 

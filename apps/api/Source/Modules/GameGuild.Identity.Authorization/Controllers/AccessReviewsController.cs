@@ -193,6 +193,7 @@ public class AccessReviewsController(ISender sender) : BaseApiController
     /// <summary>
     ///     Process expired campaigns (admin only)
     /// </summary>
+    [Authorize(Roles = "SystemAdmin")]
     [HttpPost("campaigns:process-expired")]
     [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
     public async Task<IActionResult> ProcessExpiredCampaigns(CancellationToken cancellationToken)
