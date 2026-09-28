@@ -484,18 +484,34 @@ public class PermissionService(
             .ConfigureAwait(false);
 
         var activeGrants = grants.Where(grant => grant.IsActive && !grant.IsExpired()).ToArray();
+        var defaultGrants = activeGrants.Where(grant => grant.UserId == null).ToArray();
         var defaultPermissions = new HashSet<PermissionType>(
-            activeGrants
-                .Where(grant => grant.UserId == null)
-                .SelectMany(grant => ToPermissionTypes(grant.Permissions)));
+            defaultGrants.SelectMany(grant => ToPermissionTypes(grant.Permissions)));
+        var deniedDefaultPermissions = new HashSet<PermissionType>(
+            defaultGrants.SelectMany(grant => ToPermissionTypes(grant.DenyPermissions)));
+        var userPermissionsById = activeGrants
+            .Where(grant => grant.UserId.HasValue)
+            .GroupBy(grant => grant.UserId!.Value)
+            .ToDictionary(
+                group => group.Key,
+                group => (
+                    Allowed: new HashSet<PermissionType>(
+                        group.SelectMany(grant => ToPermissionTypes(grant.Permissions))),
+                    Denied: new HashSet<PermissionType>(
+                        group.SelectMany(grant => ToPermissionTypes(grant.DenyPermissions)))));
 
         foreach (var userId in distinctUserIds)
         {
             var effectivePermissions = new HashSet<PermissionType>(defaultPermissions);
-            foreach (var grant in activeGrants.Where(grant => grant.UserId == userId))
+            var deniedPermissions = new HashSet<PermissionType>(deniedDefaultPermissions);
+            if (userPermissionsById.TryGetValue(userId, out var userPermissions))
             {
-                effectivePermissions.UnionWith(ToPermissionTypes(grant.Permissions));
+                effectivePermissions.UnionWith(userPermissions.Allowed);
+                deniedPermissions.UnionWith(userPermissions.Denied);
             }
+
+            // Explicit denies at any applicable layer override all matching allows.
+            effectivePermissions.ExceptWith(deniedPermissions);
 
             foreach (var permission in distinctPermissions)
             {
