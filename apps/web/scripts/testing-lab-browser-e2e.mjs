@@ -575,8 +575,10 @@ async function run() {
     await page.getByRole("heading", { name: "Schedule", exact: true }).waitFor();
     await page.getByRole("heading", { name: "Spots & feedback", exact: true }).waitFor();
     await waitForText(page, "Browser E2E Campus");
+    await page.getByRole("button", { name: "Join", exact: true }).click();
+    await page.getByRole("button", { name: "As a developer", exact: true }).click();
     await page
-      .getByRole("link", { name: "Sign in to apply", exact: true })
+      .getByRole("link", { name: "Sign in or create a free account", exact: true })
       .waitFor();
     await assertNoViewportOverflow(page, "public Testing Lab event");
 
