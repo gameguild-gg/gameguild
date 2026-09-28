@@ -40,3 +40,9 @@ One `Dry` run on the local Windows 10 / .NET 10.0.10 / EF InMemory environment m
 | 1,000 | 3.866 s | 181.2 ms | 239.5 ms |
 
 This is one cold-start sample per case, with no confidence interval. It demonstrates the query-count trend in the in-memory fixture only; it is not a PostgreSQL latency benchmark or a release threshold.
+
+The PostgreSQL integration suite also exercises 1,024 streamed requests and eight concurrent service scopes over 1,024 user grants. These checks validate bounded query batches, tenant isolation, and independent `DbContext` use under concurrent callers; they assert correctness rather than unstable wall-clock thresholds. Run them with:
+
+```powershell
+dotnet test apps/api/tests/GameGuild.API.IntegrationTests/GameGuild.API.IntegrationTests.csproj --filter "FullyQualifiedName~BulkPermissionChecksPostgreSqlTests"
+```
