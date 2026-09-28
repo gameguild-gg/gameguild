@@ -5,6 +5,7 @@ import { selectAffectedDotnetTestNames } from "../select-affected-dotnet-tests.m
 
 const availableProjects = [
   "GameGuild.API.UnitTests",
+  "GameGuild.Identity.Authorization.IntegrationTests",
   "GameGuild.Projects.UnitTests",
   "GameGuild.SharedKernel.UnitTests",
   "GameGuild.TestingLab.UnitTests",
@@ -44,7 +45,19 @@ test("falls back to core tests for API infrastructure changes", () => {
   );
 });
 
-test("ignores API test-only changes for deployment test selection", () => {
+test("selects the matching project when an API integration test changes", () => {
+  assert.deepEqual(
+    selectAffectedDotnetTestNames(
+      [
+        "apps/api/tests/GameGuild.Identity.Authorization.IntegrationTests/PermissionCacheRedisIntegrationTests.cs",
+      ],
+      availableProjects,
+    ),
+    ["GameGuild.Identity.Authorization.IntegrationTests"],
+  );
+});
+
+test("selects the matching project when an API unit test changes", () => {
   assert.deepEqual(
     selectAffectedDotnetTestNames(
       ["apps/api/tests/GameGuild.Projects.UnitTests/ProjectTests.cs"],
