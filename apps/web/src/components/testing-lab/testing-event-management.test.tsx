@@ -1291,6 +1291,48 @@ describe("TestingEventApplications", () => {
     },
   );
 
+  it("refreshes lifecycle state only after the transition succeeds", async () => {
+    const user = userEvent.setup();
+    let resolveTransition: (
+      result: { success: true; data: { id: string }; message: string },
+    ) => void = () => {};
+    mocks.transitionEvent.mockReturnValueOnce(
+      new Promise<{ success: true; data: { id: string }; message: string }>(
+        (resolve) => {
+          resolveTransition = resolve;
+        },
+      ),
+    );
+
+    render(
+      <TestingEventLifecycleActions
+        event={{
+          id: "event-1",
+          status: "Draft",
+          configuration: {
+            generalRules: "Rules",
+            candidateInstructions: "Candidates",
+            testerInstructions: "Testers",
+            projectApplicationSchema: { title: "Apply", questions: [] },
+            testerRegistrationSchema: { title: "Register", questions: [] },
+          },
+        }}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Open applications" }));
+    await waitFor(() => expect(mocks.transitionEvent).toHaveBeenCalledOnce());
+    expect(mocks.refresh).not.toHaveBeenCalled();
+
+    resolveTransition({
+      success: true,
+      data: { id: "event-1" },
+      message: "Event transitioned.",
+    });
+
+    await waitFor(() => expect(mocks.refresh).toHaveBeenCalledOnce());
+  });
+
   it("reports lifecycle failures and omits actions for events without identity", async () => {
     const user = userEvent.setup();
     mocks.transitionEvent.mockRejectedValueOnce(

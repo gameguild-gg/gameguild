@@ -1862,6 +1862,7 @@ export function TestingEventLifecycleActions({
 }: {
   event: TestingLabTestingEventProjection;
 }) {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [result, setResult] =
     useState<TestingEventActionResult<unknown> | null>(null);
@@ -1892,7 +1893,9 @@ export function TestingEventLifecycleActions({
     form.set("transition", transition);
     startTransition(async () => {
       try {
-        setResult(await transitionTestingEvent(form));
+        const nextResult = await transitionTestingEvent(form);
+        setResult(nextResult);
+        if (nextResult.success) router.refresh();
       } catch (error) {
         setResult(actionFailure(error));
       }
