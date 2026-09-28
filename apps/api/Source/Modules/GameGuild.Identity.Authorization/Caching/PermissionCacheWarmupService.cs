@@ -14,9 +14,12 @@ public sealed record PermissionCacheWarmupResult(int Requested, int Warmed, int 
 public interface IPermissionCacheWarmupService
 {
     /// <summary>Evaluates up to 500 distinct subject/resource pairs and stores their results in L1/L2.</summary>
+    Task<PermissionCacheWarmupResult> WarmAsync(IReadOnlyCollection<PermissionCacheWarmupRequest> requests);
+
+    /// <summary>Evaluates up to 500 distinct subject/resource pairs and stores their results in L1/L2.</summary>
     Task<PermissionCacheWarmupResult> WarmAsync(
         IReadOnlyCollection<PermissionCacheWarmupRequest> requests,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken);
 }
 
 /// <summary>Uses the registered ACL service so warmup follows normal authorization and cache semantics.</summary>
@@ -26,13 +29,20 @@ public sealed class PermissionCacheWarmupService(IAccessControlListService acces
     private const int MaxRequests = 500;
     private const int MaxPrincipalIds = 64;
 
+    public Task<PermissionCacheWarmupResult> WarmAsync(IReadOnlyCollection<PermissionCacheWarmupRequest> requests)
+    {
+        return WarmAsync(requests, CancellationToken.None);
+    }
+
     public async Task<PermissionCacheWarmupResult> WarmAsync(
         IReadOnlyCollection<PermissionCacheWarmupRequest> requests,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(requests);
         if (requests.Count > MaxRequests)
+        {
             throw new ArgumentOutOfRangeException(nameof(requests), $"At most {MaxRequests} cache entries can be warmed at once.");
+        }
 
         var distinctRequests = new Dictionary<WarmupKey, PermissionCacheWarmupRequest>();
         foreach (var request in requests)
@@ -60,26 +70,40 @@ public sealed class PermissionCacheWarmupService(IAccessControlListService acces
     private static void Validate(PermissionCacheWarmupRequest? request)
     {
         if (request is null)
+        {
             throw new ArgumentException("Cache warmup entries cannot be null.", nameof(request));
+        }
         if (request.TenantId == Guid.Empty)
+        {
             throw new ArgumentException("A tenant ID is required for each cache warmup entry.", nameof(request));
+        }
         ArgumentNullException.ThrowIfNull(request.Subject);
         ArgumentNullException.ThrowIfNull(request.Subject.RoleIds);
         ArgumentNullException.ThrowIfNull(request.Subject.GroupIds);
         if (request.Subject.UserId == Guid.Empty)
+        {
             throw new ArgumentException("A subject user ID cannot be empty.", nameof(request));
+        }
         if (request.Subject.RoleIds.Count > MaxPrincipalIds || request.Subject.GroupIds.Count > MaxPrincipalIds ||
             request.Subject.RoleIds.Any(id => id == Guid.Empty) || request.Subject.GroupIds.Any(id => id == Guid.Empty))
+        {
             throw new ArgumentException($"Each subject can contain at most {MaxPrincipalIds} non-empty role and group IDs.", nameof(request));
+        }
         if (!request.Subject.IsAuthenticated && (request.Subject.UserId.HasValue ||
                                                  request.Subject.RoleIds.Count > 0 || request.Subject.GroupIds.Count > 0))
+        {
             throw new ArgumentException("Anonymous subjects cannot include user, role, or group identifiers.", nameof(request));
+        }
         if (request.Subject.IsAuthenticated && !request.Subject.UserId.HasValue)
+        {
             throw new ArgumentException("Authenticated subjects require a user ID.", nameof(request));
+        }
         ArgumentException.ThrowIfNullOrWhiteSpace(request.ResourceType);
         ArgumentException.ThrowIfNullOrWhiteSpace(request.ResourceId);
         if (request.ResourceType.Length > 128 || request.ResourceId.Length > 255)
+        {
             throw new ArgumentException("Resource type and ID must be at most 128 and 255 characters.", nameof(request));
+        }
     }
 
     private readonly record struct WarmupKey(

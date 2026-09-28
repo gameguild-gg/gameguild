@@ -10,7 +10,10 @@ public interface IPermissionCacheKeyTracker
     PermissionCacheKeyTrackerStatistics GetStatistics();
 
     /// <summary>Tracks a key and removes its registration when the L1 entry expires or is evicted.</summary>
-    void Track(string key, string cacheType, MemoryCacheEntryOptions? entryOptions = null);
+    void Track(string key, string cacheType);
+
+    /// <summary>Tracks a key and removes its registration when the L1 entry expires or is evicted.</summary>
+    void Track(string key, string cacheType, MemoryCacheEntryOptions? entryOptions);
 
     /// <summary>Removes a key from the index without changing the L1 cache.</summary>
     void Forget(string key);
@@ -33,13 +36,22 @@ public sealed class PermissionCacheKeyTracker : IPermissionCacheKeyTracker
 
     public PermissionCacheKeyTracker(
         IMemoryCache memoryCache,
+        ICacheMetricsService metrics)
+        : this(memoryCache, metrics, 5000)
+    {
+    }
+
+    public PermissionCacheKeyTracker(
+        IMemoryCache memoryCache,
         ICacheMetricsService metrics,
-        int maxTrackedEntries = 5000)
+        int maxTrackedEntries)
     {
         ArgumentNullException.ThrowIfNull(memoryCache);
         ArgumentNullException.ThrowIfNull(metrics);
         if (maxTrackedEntries <= 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(maxTrackedEntries), "The cache entry limit must be positive.");
+        }
 
         _memoryCache = memoryCache;
         _metrics = metrics;
@@ -66,7 +78,13 @@ public sealed class PermissionCacheKeyTracker : IPermissionCacheKeyTracker
     }
 
     /// <inheritdoc />
-    public void Track(string key, string cacheType, MemoryCacheEntryOptions? entryOptions = null)
+    public void Track(string key, string cacheType)
+    {
+        Track(key, cacheType, null);
+    }
+
+    /// <inheritdoc />
+    public void Track(string key, string cacheType, MemoryCacheEntryOptions? entryOptions)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
         ArgumentException.ThrowIfNullOrWhiteSpace(cacheType);
@@ -78,7 +96,9 @@ public sealed class PermissionCacheKeyTracker : IPermissionCacheKeyTracker
             static (evictedKey, _, _, state) =>
             {
                 if (evictedKey is string key && state is EvictionState evictionState)
+                {
                     evictionState.Tracker.Forget(key, evictionState.RegistrationId);
+                }
             },
             new EvictionState(this, registration.RegistrationId));
 
@@ -97,7 +117,9 @@ public sealed class PermissionCacheKeyTracker : IPermissionCacheKeyTracker
         foreach (var entry in _keys)
         {
             if (!predicate(entry.Key) || !RemoveRegistration(entry.Key, entry.Value))
+            {
                 continue;
+            }
 
             _memoryCache.Remove(entry.Key);
             var cacheType = entry.Value.CacheType == "all" ? fallbackCacheType : entry.Value.CacheType;
@@ -118,7 +140,9 @@ public sealed class PermissionCacheKeyTracker : IPermissionCacheKeyTracker
     private void Forget(string key, long registrationId)
     {
         if (_keys.TryGetValue(key, out var current) && current.RegistrationId == registrationId)
+        {
             RemoveRegistration(key, current);
+        }
     }
 
     private void EvictOverCapacity(long protectedRegistrationId)
@@ -129,10 +153,14 @@ public sealed class PermissionCacheKeyTracker : IPermissionCacheKeyTracker
                 .Where(entry => entry.Value.RegistrationId != protectedRegistrationId)
                 .MinBy(entry => entry.Value.RegistrationId);
             if (oldestAvailable.Key is null)
+            {
                 return;
+            }
 
             if (!RemoveRegistration(oldestAvailable.Key, oldestAvailable.Value))
+            {
                 continue;
+            }
 
             _memoryCache.Remove(oldestAvailable.Key);
             var cacheType = oldestAvailable.Value.CacheType == "all" ? "permission" : oldestAvailable.Value.CacheType;
@@ -159,7 +187,7 @@ public sealed class PermissionCacheKeyTracker : IPermissionCacheKeyTracker
             : segments.Length >= 3 &&
               (string.Equals(segments[0], "acl", StringComparison.OrdinalIgnoreCase) ||
                string.Equals(segments[0], "perm", StringComparison.OrdinalIgnoreCase))
-                ? 2
+            ? 2
                 : -1;
 
         return userSegment >= 0 && Guid.TryParse(segments[userSegment], out var userId) ? userId : null;
