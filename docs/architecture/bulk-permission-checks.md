@@ -22,7 +22,7 @@ await foreach (var decision in permissionService.StreamBulkCheckPermissionsAsync
 }
 ```
 
-The bulk APIs query grants by the distinct users, tenants, content types, and resource IDs present in each batch, then evaluate the exact combinations in memory. Repeated identical decisions are memoized within that batch, but decisions are not cached across calls; permission changes therefore cannot leave stale cross-request results. Production database benchmarks and load tests should use the configured PostgreSQL provider and representative tenant/grant distributions. The in-memory benchmark/test fixtures are useful for comparing algorithm shape, not for setting production latency targets.
+The bulk APIs query grants by the distinct users, tenants, content types, and resource IDs present in each batch, then evaluate the exact combinations in memory. EF queries run sequentially on the scoped `DbContext`; after those reads complete, batches with at least 32 distinct requests evaluate decisions in parallel with a maximum degree of four. Repeated identical decisions are computed once per batch and expanded back in input order, but decisions are not cached across calls; permission changes therefore cannot leave stale cross-request results. The `GameGuild.Identity.Authentication.PermissionBulkCheck` meter publishes successful batch count, request count, distinct request count, and batch duration without user, tenant, or resource tags. Production database benchmarks and load tests should use the configured PostgreSQL provider and representative tenant/grant distributions. The in-memory benchmark/test fixtures are useful for comparing algorithm shape, not for setting production latency targets.
 
 Run the comparative in-memory benchmark with:
 
@@ -32,14 +32,14 @@ dotnet run --project apps/api/tests/GameGuild.Identity.Authentication.Benchmarks
 
 It compares individual checks, the existing user/permission matrix, and streamed mixed-context checks at 100 and 1,000 users. Use PostgreSQL-backed integration/load measurements before setting production performance claims.
 
-One `Dry` run on the local Windows 10 / .NET 10.0.10 / EF InMemory environment measured:
+One `Dry` run after the bounded parallel-evaluation and metrics changes on local Windows 10 / .NET 10.0.10 / EF InMemory measured:
 
 | Users | Individual checks | Bulk matrix | Streamed mixed-context |
 | ---: | ---: | ---: | ---: |
-| 100 | 255.2 ms | 174.1 ms | 181.6 ms |
-| 1,000 | 3.866 s | 181.2 ms | 239.5 ms |
+| 100 | 234.9 ms | 174.5 ms | 177.2 ms |
+| 1,000 | 5.222 s | 191.6 ms | 229.8 ms |
 
-This is one cold-start sample per case, with no confidence interval. It demonstrates the query-count trend in the in-memory fixture only; it is not a PostgreSQL latency benchmark or a release threshold.
+This is one cold-start sample per case, with no confidence interval. It demonstrates the query-count trend in the in-memory fixture only; it is not a PostgreSQL latency benchmark or a release threshold. The benchmark run used an external temporary artifact directory so the worktree's pre-existing untracked `BenchmarkDotNet.Artifacts` were left untouched.
 
 The PostgreSQL integration suite also exercises 1,024 streamed requests and eight concurrent service scopes over 1,024 user grants. These checks validate bounded query batches, tenant isolation, and independent `DbContext` use under concurrent callers; they assert correctness rather than unstable wall-clock thresholds. Run them with:
 

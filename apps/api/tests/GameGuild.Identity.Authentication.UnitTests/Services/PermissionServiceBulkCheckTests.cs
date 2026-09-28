@@ -1,3 +1,5 @@
+using System.Collections.Concurrent;
+using System.Diagnostics.Metrics;
 using GameGuild.Identity.Authorization;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -84,6 +86,58 @@ public sealed class PermissionServiceBulkCheckTests
 
         (await service.BulkCheckPermissionsAsync([], Guid.NewGuid(), [PermissionType.Read])).Should().BeEmpty();
         (await service.BulkCheckPermissionsAsync([userId], Guid.NewGuid(), [])).Should().ContainKey(userId).WhoseValue.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task BulkCheckPermissionsAsync_EmitsAggregateMetricsWithoutRequestTags()
+    {
+        var options = new DbContextOptionsBuilder<PermissionServiceDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString("N"))
+            .Options;
+        await using var context = new PermissionServiceDbContext(options);
+        var request = new BulkPermissionCheckRequest(Guid.NewGuid(), Guid.NewGuid(), PermissionType.Read);
+        var measurements = new ConcurrentDictionary<string, long>();
+        var durationRecorded = 0;
+        var taggedMeasurementObserved = 0;
+
+        using var listener = new MeterListener();
+        listener.InstrumentPublished = (instrument, meterListener) =>
+        {
+            if (instrument.Meter.Name == "GameGuild.Identity.Authentication.PermissionBulkCheck")
+            {
+                meterListener.EnableMeasurementEvents(instrument);
+            }
+        };
+        listener.SetMeasurementEventCallback<long>((instrument, measurement, tags, _) =>
+        {
+            measurements.AddOrUpdate(instrument.Name, measurement, (_, current) => current + measurement);
+            if (!tags.IsEmpty)
+            {
+                Interlocked.Exchange(ref taggedMeasurementObserved, 1);
+            }
+        });
+        listener.SetMeasurementEventCallback<double>((instrument, measurement, tags, _) =>
+        {
+            if (instrument.Name == "permission_bulk_check_batch_duration" && measurement >= 0)
+            {
+                Interlocked.Exchange(ref durationRecorded, 1);
+            }
+
+            if (!tags.IsEmpty)
+            {
+                Interlocked.Exchange(ref taggedMeasurementObserved, 1);
+            }
+        });
+        listener.Start();
+
+        var results = await new PermissionService(context).BulkCheckPermissionsAsync([request, request]);
+
+        results.Should().HaveCount(2);
+        measurements.GetValueOrDefault("permission_bulk_check_batches").Should().BeGreaterThan(0);
+        measurements.GetValueOrDefault("permission_bulk_check_requests").Should().BeGreaterThanOrEqualTo(2);
+        measurements.GetValueOrDefault("permission_bulk_check_unique_requests").Should().BeGreaterThan(0);
+        durationRecorded.Should().Be(1);
+        taggedMeasurementObserved.Should().Be(0);
     }
 
     [Fact]
@@ -230,33 +284,44 @@ public sealed class PermissionServiceBulkCheckTests
     }
 
     [Fact]
-    public async Task StreamBulkCheckPermissionsAsync_HandlesLargeRequestSetsInBoundedBatches()
+    public async Task StreamBulkCheckPermissionsAsync_EvaluatesLargeBatchesInParallelAndPreservesInputOrder()
     {
         var options = new DbContextOptionsBuilder<PermissionServiceDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString("N"))
             .Options;
         await using var context = new PermissionServiceDbContext(options);
         var tenantId = Guid.NewGuid();
+        var userIds = Enumerable.Range(0, 1_024).Select(_ => Guid.NewGuid()).ToArray();
         context.Set<TenantPermission>().Add(new TenantPermission
         {
             UserId = null,
             TenantId = tenantId,
             Permissions = [nameof(PermissionType.Read)]
         });
+        context.Set<TenantPermission>().AddRange(userIds
+            .Where((_, index) => index % 2 == 0)
+            .Select(userId => new TenantPermission
+            {
+                UserId = userId,
+                TenantId = tenantId,
+                DenyPermissions = [nameof(PermissionType.Read)]
+            }));
         await context.SaveChangesAsync();
 
-        var requests = Enumerable.Range(0, 1_024)
-            .Select(_ => new BulkPermissionCheckRequest(Guid.NewGuid(), tenantId, PermissionType.Read))
+        var requests = userIds
+            .Select(userId => new BulkPermissionCheckRequest(userId, tenantId, PermissionType.Read))
             .ToArray();
-        var resultCount = 0;
+        var results = new List<BulkPermissionCheckResult>();
 
         await foreach (var result in new PermissionService(context).StreamBulkCheckPermissionsAsync(AsAsyncEnumerable(requests), batchSize: 128))
         {
-            result.IsGranted.Should().BeTrue();
-            resultCount++;
+            results.Add(result);
         }
 
-        resultCount.Should().Be(requests.Length);
+        results.Should().HaveCount(requests.Length);
+        results.Select(result => result.Request).Should().Equal(requests);
+        results.Select(result => result.IsGranted).Should().Equal(
+            Enumerable.Range(0, requests.Length).Select(index => index % 2 != 0));
     }
 
     [Fact]
