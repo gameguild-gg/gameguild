@@ -74,6 +74,8 @@ public sealed class RedisDistributedRateLimiterIntegrationTests(
     RedisRateLimiterFixture fixture,
     ITestOutputHelper output)
 {
+    private const string ProbeHostAssemblyFileName = "GameGuild.RateLimitingProbeHost.dll";
+
     [Fact]
     public async Task SeparateApiHostsShareRedisLimitUnderConcurrentLoad()
     {
@@ -195,14 +197,14 @@ public sealed class RedisDistributedRateLimiterIntegrationTests(
     private RateLimitingProbeHost StartRateLimitingProbeHost(int port, int requestLimit)
     {
         var configuration = new DirectoryInfo(AppContext.BaseDirectory).Parent?.Name ?? "Debug";
-        var assemblyPath = Path.GetFullPath(Path.Combine(
+        var probeHostDirectory = Path.GetFullPath(Path.Combine(
             AppContext.BaseDirectory,
             "..", "..", "..", "..",
             "RateLimitingProbeHost",
             "bin",
             configuration,
-            "net10.0",
-            "GameGuild.RateLimitingProbeHost.dll"));
+            "net10.0"));
+        var assemblyPath = Path.Combine(probeHostDirectory, ProbeHostAssemblyFileName);
         if (!File.Exists(assemblyPath))
         {
             throw new FileNotFoundException("The rate-limiting probe host was not built with the integration tests.", assemblyPath);
@@ -210,17 +212,18 @@ public sealed class RedisDistributedRateLimiterIntegrationTests(
 
         var startInfo = new ProcessStartInfo("dotnet")
         {
+            WorkingDirectory = probeHostDirectory,
             UseShellExecute = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             CreateNoWindow = true
         };
-        startInfo.ArgumentList.Add(assemblyPath);
+        startInfo.ArgumentList.Add(ProbeHostAssemblyFileName);
         startInfo.Environment["GAMEGUILD_RATE_LIMIT_REDIS_ENDPOINT"] = fixture.RedisEndpoint;
         startInfo.Environment["GAMEGUILD_RATE_LIMIT_HTTP_PORT"] = port.ToString(System.Globalization.CultureInfo.InvariantCulture);
         startInfo.Environment["GAMEGUILD_RATE_LIMIT_REQUEST_LIMIT"] = requestLimit.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
-        var process = Process.Start(startInfo) // NOSONAR: fixed dotnet host, ArgumentList contains only the local assembly, and runtime settings are environment variables.
+        var process = Process.Start(startInfo) // NOSONAR: fixed executable and assembly argument; runtime settings are environment variables.
             ?? throw new InvalidOperationException("Failed to start a rate-limiting probe process.");
         var standardOutput = process.StandardOutput.ReadToEndAsync();
         var standardError = process.StandardError.ReadToEndAsync();

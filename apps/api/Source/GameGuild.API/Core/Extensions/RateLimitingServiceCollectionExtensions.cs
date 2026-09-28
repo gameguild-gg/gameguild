@@ -175,7 +175,9 @@ public static class RateLimitingServiceCollectionExtensions
                 {
                     var partitionKey = GetUserPartitionKey(httpContext);
                     if (accessOptions.IsAllowlisted(httpContext))
+                    {
                         return RateLimitPartition.GetNoLimiter($"allowlisted:{RateLimitPolicies.Internal}:{partitionKey}");
+                    }
 
                     return redisEnabled
                         ? RateLimitPartition.GetNoLimiter($"redis:{RateLimitPolicies.Internal}:{partitionKey}")
