@@ -29,17 +29,23 @@ public sealed class PermissionCacheLatencyMetricTests
         listener.SetMeasurementEventCallback<double>((instrument, measurement, tags, _) =>
         {
             if (instrument.Name != "authorization_cache_lookup_duration")
+            {
                 return;
+            }
 
             var hasExpectedCacheType = false;
             foreach (var tag in tags)
             {
                 if (tag.Key == "cache_type" && tag.Value?.ToString() == cacheType)
+                {
                     hasExpectedCacheType = true;
+                }
             }
 
             if (hasExpectedCacheType)
+            {
                 measurements.Enqueue(measurement);
+            }
         });
         listener.Start();
 
