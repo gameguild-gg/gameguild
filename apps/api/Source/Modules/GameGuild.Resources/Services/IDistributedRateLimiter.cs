@@ -44,8 +44,14 @@ public interface IDistributedRateLimiter
     Task<ConcurrencyLimitDecision> TryAcquireConcurrencyLeaseAsync(
         string key,
         int maxConcurrent,
+        TimeSpan leaseDuration)
+        => TryAcquireConcurrencyLeaseAsync(key, maxConcurrent, leaseDuration, CancellationToken.None);
+
+    Task<ConcurrencyLimitDecision> TryAcquireConcurrencyLeaseAsync(
+        string key,
+        int maxConcurrent,
         TimeSpan leaseDuration,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken);
 
     /// <summary>
     /// Returns the remaining duration of an active temporary penalty, if any.

@@ -7,12 +7,32 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Configuration;
 using StackExchange.Redis;
 
-if (args.Length != 3)
-    throw new ArgumentException("Expected Redis endpoint, HTTP port, and request limit.");
+if (args.Length != 0)
+{
+    throw new ArgumentException("The rate-limiting probe host does not accept command-line configuration.");
+}
 
-var redisEndpoint = args[0];
-var port = int.Parse(args[1], System.Globalization.CultureInfo.InvariantCulture);
-var requestLimit = int.Parse(args[2], System.Globalization.CultureInfo.InvariantCulture);
+var redisEndpoint = Environment.GetEnvironmentVariable("GAMEGUILD_RATE_LIMIT_REDIS_ENDPOINT")
+    ?? throw new InvalidOperationException("The Redis endpoint environment variable is required.");
+if (!int.TryParse(
+        Environment.GetEnvironmentVariable("GAMEGUILD_RATE_LIMIT_HTTP_PORT"),
+        System.Globalization.NumberStyles.None,
+        System.Globalization.CultureInfo.InvariantCulture,
+        out var port)
+    || port is < 1 or > 65535)
+{
+    throw new ArgumentOutOfRangeException(nameof(port), "HTTP port must be between 1 and 65535.");
+}
+
+if (!int.TryParse(
+        Environment.GetEnvironmentVariable("GAMEGUILD_RATE_LIMIT_REQUEST_LIMIT"),
+        System.Globalization.NumberStyles.None,
+        System.Globalization.CultureInfo.InvariantCulture,
+        out var requestLimit)
+    || requestLimit <= 0)
+{
+    throw new ArgumentOutOfRangeException(nameof(requestLimit), "The request limit must be greater than zero.");
+}
 
 await using var redis = await ConnectionMultiplexer.ConnectAsync(redisEndpoint);
 var builder = WebApplication.CreateBuilder([]);

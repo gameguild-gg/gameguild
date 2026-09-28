@@ -25,10 +25,9 @@ using Xunit.Abstractions;
 
 namespace GameGuild.Resources.IntegrationTests.Security;
 
-[CollectionDefinition(Name)]
+[CollectionDefinition("Redis rate limiter")]
 public sealed class RedisRateLimiterCollection : ICollectionFixture<RedisRateLimiterFixture>
 {
-    public const string Name = "Redis rate limiter";
 }
 
 public sealed class RedisRateLimiterFixture : IAsyncLifetime
@@ -68,7 +67,7 @@ public sealed class RedisRateLimiterFixture : IAsyncLifetime
     }
 }
 
-[Collection(RedisRateLimiterCollection.Name)]
+[Collection("Redis rate limiter")]
 [Trait("Category", "Integration")]
 [Trait("Infrastructure", "Redis")]
 public sealed class RedisDistributedRateLimiterIntegrationTests(
@@ -141,7 +140,9 @@ public sealed class RedisDistributedRateLimiterIntegrationTests(
         var firstPort = GetFreeTcpPort();
         var secondPort = GetFreeTcpPort();
         while (secondPort == firstPort)
+        {
             secondPort = GetFreeTcpPort();
+        }
 
         var firstHost = StartRateLimitingProbeHost(firstPort, requestLimit);
         var secondHost = StartRateLimitingProbeHost(secondPort, requestLimit);
@@ -173,7 +174,9 @@ public sealed class RedisDistributedRateLimiterIntegrationTests(
             finally
             {
                 foreach (var response in responses)
+                {
                     response.Dispose();
+                }
             }
         }
         finally
@@ -201,7 +204,9 @@ public sealed class RedisDistributedRateLimiterIntegrationTests(
             "net10.0",
             "GameGuild.RateLimitingProbeHost.dll"));
         if (!File.Exists(assemblyPath))
+        {
             throw new FileNotFoundException("The rate-limiting probe host was not built with the integration tests.", assemblyPath);
+        }
 
         var startInfo = new ProcessStartInfo("dotnet")
         {
@@ -211,9 +216,9 @@ public sealed class RedisDistributedRateLimiterIntegrationTests(
             CreateNoWindow = true
         };
         startInfo.ArgumentList.Add(assemblyPath);
-        startInfo.ArgumentList.Add(fixture.RedisEndpoint);
-        startInfo.ArgumentList.Add(port.ToString(System.Globalization.CultureInfo.InvariantCulture));
-        startInfo.ArgumentList.Add(requestLimit.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        startInfo.Environment["GAMEGUILD_RATE_LIMIT_REDIS_ENDPOINT"] = fixture.RedisEndpoint;
+        startInfo.Environment["GAMEGUILD_RATE_LIMIT_HTTP_PORT"] = port.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        startInfo.Environment["GAMEGUILD_RATE_LIMIT_REQUEST_LIMIT"] = requestLimit.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
         var process = Process.Start(startInfo)
             ?? throw new InvalidOperationException("Failed to start a rate-limiting probe process.");
@@ -243,7 +248,9 @@ public sealed class RedisDistributedRateLimiterIntegrationTests(
             {
                 using var response = await client.GetAsync(new Uri(host.BaseAddress, "/healthz"));
                 if (response.IsSuccessStatusCode)
+                {
                     return;
+                }
             }
             catch (HttpRequestException)
             {
@@ -263,7 +270,9 @@ public sealed class RedisDistributedRateLimiterIntegrationTests(
     private static async Task StopRateLimitingProbeHostAsync(RateLimitingProbeHost host)
     {
         if (!host.Process.HasExited)
+        {
             host.Process.Kill(entireProcessTree: true);
+        }
         await host.Process.WaitForExitAsync();
         await Task.WhenAll(host.StandardOutput, host.StandardError);
         host.Process.Dispose();
@@ -974,9 +983,17 @@ public sealed class RedisDistributedRateLimiterIntegrationTests(
     {
         public ConcurrentQueue<Exception> Errors { get; } = new();
 
-        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull
+        {
+            _ = state;
+            return null;
+        }
 
-        public bool IsEnabled(LogLevel logLevel) => true;
+        public bool IsEnabled(LogLevel logLevel)
+        {
+            _ = logLevel;
+            return true;
+        }
 
         public void Log<TState>(
             LogLevel logLevel,
@@ -985,6 +1002,10 @@ public sealed class RedisDistributedRateLimiterIntegrationTests(
             Exception? exception,
             Func<TState, Exception?, string> formatter)
         {
+            _ = logLevel;
+            _ = eventId;
+            _ = state;
+            _ = formatter;
             if (exception is not null)
             {
                 Errors.Enqueue(exception);

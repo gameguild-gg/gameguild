@@ -51,7 +51,7 @@ public sealed class RateLimitAccessControlMiddlewareTests
         var options = new RateLimitAccessOptions { DenylistedIpAddresses = ["192.0.2.31"] };
         options.Validate();
         var context = new DefaultHttpContext();
-        context.Connection.RemoteIpAddress = IPAddress.Parse("::ffff:192.0.2.31");
+        context.Connection.RemoteIpAddress = new IPAddress(new byte[] { 192, 0, 2, 31 }).MapToIPv6();
         var nextCalled = false;
         var middleware = new RateLimitAccessControlMiddleware(_ =>
         {

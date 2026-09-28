@@ -284,11 +284,17 @@ public class RedisDistributedRateLimiter(
         }
     }
 
+    public Task<ConcurrencyLimitDecision> TryAcquireConcurrencyLeaseAsync(
+        string key,
+        int maxConcurrent,
+        TimeSpan leaseDuration)
+        => TryAcquireConcurrencyLeaseAsync(key, maxConcurrent, leaseDuration, CancellationToken.None);
+
     public async Task<ConcurrencyLimitDecision> TryAcquireConcurrencyLeaseAsync(
         string key,
         int maxConcurrent,
         TimeSpan leaseDuration,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ValidateConcurrencyLease(key, maxConcurrent, leaseDuration);
         cancellationToken.ThrowIfCancellationRequested();
@@ -719,6 +725,7 @@ public class RedisDistributedRateLimiter(
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
+                logger.LogDebug("Redis concurrency lease renewal stopped for {LeaseId}.", leaseId);
             }
         }
     }

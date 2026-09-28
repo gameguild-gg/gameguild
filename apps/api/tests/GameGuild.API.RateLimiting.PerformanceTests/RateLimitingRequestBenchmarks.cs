@@ -81,7 +81,9 @@ public class RateLimitingRequestBenchmarks
         var app = builder.Build();
         app.UseRouting();
         if (enableRateLimiting)
+        {
             app.UseRateLimiter();
+        }
         app.MapGet("/limited", () => Results.NoContent());
 
         await app.StartAsync().ConfigureAwait(false);

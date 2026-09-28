@@ -301,7 +301,9 @@ public sealed class RedisEndpointRateLimitingMiddleware(RequestDelegate next)
                 options.PenaltyMaxDuration,
                 context.RequestAborted).ConfigureAwait(false);
             if (penalty is { } penaltyDuration && penaltyDuration > retryAfter)
+            {
                 retryAfter = penaltyDuration;
+            }
         }
         var retryAfterSeconds = Math.Max(0, retryAfter.TotalSeconds);
 

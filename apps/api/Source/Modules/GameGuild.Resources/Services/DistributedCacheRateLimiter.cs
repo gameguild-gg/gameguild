@@ -108,8 +108,14 @@ public sealed class DistributedCacheRateLimiter(
     public Task<ConcurrencyLimitDecision> TryAcquireConcurrencyLeaseAsync(
         string key,
         int maxConcurrent,
+        TimeSpan leaseDuration)
+        => TryAcquireConcurrencyLeaseAsync(key, maxConcurrent, leaseDuration, CancellationToken.None);
+
+    public Task<ConcurrencyLimitDecision> TryAcquireConcurrencyLeaseAsync(
+        string key,
+        int maxConcurrent,
         TimeSpan leaseDuration,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
         if (maxConcurrent <= 0)
