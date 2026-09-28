@@ -9,9 +9,22 @@ function normalizePath(filePath) {
   return filePath.trim().replaceAll("\\", "/").replace(/^\.\//, "");
 }
 
-export function selectAffectedDotnetTestNames(filePaths, availableProjects) {
-  const selected = new Set();
+export function selectAffectedDotnetTests(filePaths, availableProjects) {
+  const selected = new Map();
   let requiresCoreFallback = false;
+
+  function selectProject(name) {
+    selected.set(name, { name, filters: null });
+  }
+
+  function selectTestFile(name, testName) {
+    const current = selected.get(name);
+    if (current?.filters === null) return;
+
+    const filters = current?.filters ?? new Set();
+    filters.add(`FullyQualifiedName~${testName}`);
+    selected.set(name, { name, filters });
+  }
 
   for (const rawPath of filePaths) {
     const filePath = normalizePath(rawPath);
@@ -24,12 +37,17 @@ export function selectAffectedDotnetTestNames(filePaths, availableProjects) {
 
     if (moduleMatch?.[1]) {
       const testName = `${moduleMatch[1]}.UnitTests`;
-      if (availableProjects.includes(testName)) selected.add(testName);
+      if (availableProjects.includes(testName)) selectProject(testName);
       continue;
     }
 
     if (testProjectMatch?.[1] && availableProjects.includes(testProjectMatch[1])) {
-      selected.add(testProjectMatch[1]);
+      const testFile = filePath.match(/\/([^/]+)\.cs$/u)?.[1];
+      if (testFile && /(?:Test|Tests|Spec|Specs)$/u.test(testFile)) {
+        selectTestFile(testProjectMatch[1], testFile);
+      } else {
+        selectProject(testProjectMatch[1]);
+      }
       continue;
     }
 
@@ -38,11 +56,16 @@ export function selectAffectedDotnetTestNames(filePaths, availableProjects) {
 
   if (requiresCoreFallback) {
     for (const fallback of ["GameGuild.API.UnitTests", "GameGuild.SharedKernel.UnitTests"]) {
-      if (availableProjects.includes(fallback)) selected.add(fallback);
+      if (availableProjects.includes(fallback)) selectProject(fallback);
     }
   }
 
-  return [...selected].sort();
+  return [...selected.values()]
+    .map(({ name, filters }) => ({
+      name,
+      filter: filters ? [...filters].sort().join("|") : null,
+    }))
+    .sort((left, right) => left.name.localeCompare(right.name));
 }
 
 function parseArguments(argv) {
@@ -89,13 +112,13 @@ function availableTestProjects(testRoot) {
 function main() {
   const options = parseArguments(process.argv.slice(2));
   const testRoot = join(process.cwd(), "apps", "api", "tests");
-  const selected = selectAffectedDotnetTestNames(
+  const selected = selectAffectedDotnetTests(
     changedFiles(options),
     availableTestProjects(testRoot),
   );
 
-  for (const name of selected) {
-    process.stdout.write(`apps/api/tests/${name}/${name}.csproj\n`);
+  for (const { name, filter } of selected) {
+    process.stdout.write(`apps/api/tests/${name}/${name}.csproj\t${filter ?? ""}\n`);
   }
 }
 

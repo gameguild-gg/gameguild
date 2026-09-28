@@ -113,14 +113,19 @@ jobs:
       - name: Run affected API tests
         shell: bash
         run: |
-          mapfile -t projects < <(node scripts/ci/select-affected-dotnet-tests.mjs \
+          mapfile -t test_specs < <(node scripts/ci/select-affected-dotnet-tests.mjs \
             --base "${{ github.event.pull_request.base.sha }}" \
             --head "${{ github.event.pull_request.head.sha }}")
-          if ((${#projects[@]} == 0)); then
-            projects=(apps/api/tests/GameGuild.API.UnitTests/GameGuild.API.UnitTests.csproj)
+          if ((${#test_specs[@]} == 0)); then
+            test_specs=("apps/api/tests/GameGuild.API.UnitTests/GameGuild.API.UnitTests.csproj"$'\t')
           fi
-          for project in "${projects[@]}"; do
-            dotnet test "$project" -c Release --nologo --blame-hang-timeout 5m
+          for test_spec in "${test_specs[@]}"; do
+            IFS=$'\t' read -r project filter <<< "$test_spec"
+            if [[ -n "$filter" ]]; then
+              dotnet test "$project" -c Release --nologo --blame-hang-timeout 5m --filter "$filter"
+            else
+              dotnet test "$project" -c Release --nologo --blame-hang-timeout 5m
+            fi
           done
 
   testing-lab:
