@@ -251,6 +251,43 @@ public sealed class PermissionServiceBulkCheckTests
     }
 
     [Fact]
+    public async Task BulkCheckPermissionsAsync_EvaluatesMultipleResourcesAndPermissionsInOneBatch()
+    {
+        var options = new DbContextOptionsBuilder<PermissionServiceDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString("N"))
+            .Options;
+        await using var context = new PermissionServiceDbContext(options);
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var otherUserId = Guid.NewGuid();
+        var firstResourceId = Guid.NewGuid();
+        var secondResourceId = Guid.NewGuid();
+
+        var firstResourceGrant = new GenericResourcePermission(userId, tenantId, firstResourceId, "Project");
+        firstResourceGrant.SetPermissions([PermissionType.Read, PermissionType.Edit]);
+        var secondResourceGrant = new GenericResourcePermission(userId, tenantId, secondResourceId, "Project");
+        secondResourceGrant.SetPermissions([PermissionType.Read]);
+        context.Set<GenericResourcePermission>().AddRange(firstResourceGrant, secondResourceGrant);
+        await context.SaveChangesAsync();
+
+        var requests = new[]
+        {
+            new BulkPermissionCheckRequest(userId, tenantId, PermissionType.Read, ResourceId: firstResourceId, ResourceTypeName: "Project"),
+            new BulkPermissionCheckRequest(userId, tenantId, PermissionType.Edit, ResourceId: firstResourceId, ResourceTypeName: "Project"),
+            new BulkPermissionCheckRequest(userId, tenantId, PermissionType.Delete, ResourceId: firstResourceId, ResourceTypeName: "Project"),
+            new BulkPermissionCheckRequest(userId, tenantId, PermissionType.Read, ResourceId: secondResourceId, ResourceTypeName: "Project"),
+            new BulkPermissionCheckRequest(userId, tenantId, PermissionType.Edit, ResourceId: secondResourceId, ResourceTypeName: "Project"),
+            new BulkPermissionCheckRequest(otherUserId, tenantId, PermissionType.Read, ResourceId: firstResourceId, ResourceTypeName: "Project"),
+            new BulkPermissionCheckRequest(userId, tenantId, PermissionType.Read, ResourceId: firstResourceId, ResourceTypeName: "Course")
+        };
+
+        var results = await new PermissionService(context).BulkCheckPermissionsAsync(requests);
+
+        results.Select(result => result.IsGranted).Should().Equal(true, true, false, true, false, false, false);
+        results.Select(result => result.Request).Should().Equal(requests);
+    }
+
+    [Fact]
     public async Task StreamBulkCheckPermissionsAsync_ProcessesBoundedBatchesAndPreservesInputOrder()
     {
         var options = new DbContextOptionsBuilder<PermissionServiceDbContext>()
