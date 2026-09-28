@@ -572,7 +572,8 @@ async function run() {
       `/testing-lab/events/${fixture.event.id}`,
       "public Testing Lab event",
     );
-    await waitForText(page, "Schedules and tester capacity");
+    await page.getByRole("heading", { name: "Schedule", exact: true }).waitFor();
+    await page.getByRole("heading", { name: "Spots & feedback", exact: true }).waitFor();
     await waitForText(page, "Browser E2E Campus");
     await page
       .getByRole("link", { name: "Sign in to apply", exact: true })
@@ -1200,7 +1201,8 @@ async function run() {
       `/testing-lab/events/${fixture.event.id}`,
       "mobile public Testing Lab event",
     );
-    await waitForText(page, "Schedules and tester capacity");
+    await page.getByRole("heading", { name: "Schedule", exact: true }).waitFor();
+    await page.getByRole("heading", { name: "Spots & feedback", exact: true }).waitFor();
     await assertNoViewportOverflow(page, "mobile public Testing Lab event");
     await visit(
       page,
