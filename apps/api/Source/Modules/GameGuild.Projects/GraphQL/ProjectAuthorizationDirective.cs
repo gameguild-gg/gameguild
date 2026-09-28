@@ -363,7 +363,9 @@ public sealed class RequireGraphQLProjectPermissionAttribute : ObjectFieldDescri
     private static object? ReadMember(object? value, string memberName)
     {
         if (value is null)
+        {
             return null;
+        }
 
         if (value is IReadOnlyDictionary<string, object?> readOnlyDictionary)
         {
