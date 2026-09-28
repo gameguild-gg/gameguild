@@ -40,16 +40,21 @@ test("isolates the browser journey in a disposable PostgreSQL database", async (
   assert.match(runner, /postgres:16-alpine/);
   assert.match(
     runner,
-    /POSTGRES_PORT="\$\{TESTING_LAB_E2E_POSTGRES_PORT:-\$\(\(43000 \+ RANDOM % 1000\)\)\}"/,
+    /POSTGRES_PORT="\$\{TESTING_LAB_E2E_POSTGRES_PORT:-\}"/,
   );
   assert.match(
     runner,
-    /API_PORT="\$\{TESTING_LAB_E2E_API_PORT:-\$\(\(42000 \+ RANDOM % 1000\)\)\}"/,
+    /API_PORT="\$\{TESTING_LAB_E2E_API_PORT:-\}"/,
   );
   assert.match(
     runner,
-    /WEB_PORT="\$\{TESTING_LAB_E2E_WEB_PORT:-\$\(\(44000 \+ RANDOM % 1000\)\)\}"/,
+    /WEB_PORT="\$\{TESTING_LAB_E2E_WEB_PORT:-\}"/,
   );
+  assert.match(runner, /select_available_port\(\)/);
+  assert.match(runner, /server\.listen\(0, "127\.0\.0\.1"/);
+  assert.match(runner, /POSTGRES_PORT="\$\(select_available_port/);
+  assert.match(runner, /API_PORT="\$\(select_available_port/);
+  assert.match(runner, /WEB_PORT="\$\(select_available_port/);
   assert.match(runner, /TESTING_LAB_E2E_DATABASE_MODE=disposable/);
   assert.match(runner, /POSTGRES_HOST=127\.0\.0\.1/);
   assert.match(runner, /POSTGRES_PORT=\$\{POSTGRES_PORT\}/);
@@ -81,9 +86,8 @@ test("isolates the browser journey in a disposable PostgreSQL database", async (
   assert.match(runner, /stop_port_listener "\$\{API_PORT\}"/);
   assert.match(runner, /GAMEGUILD_DISABLE_WEBPACK_CACHE=1/);
   assert.match(runner, /AUTH_COOKIE_SECURE=false/);
-  assert.match(runner, /assert_port_available "\$\{POSTGRES_PORT\}"/);
-  assert.match(runner, /assert_port_available "\$\{API_PORT\}"/);
-  assert.match(runner, /assert_port_available "\$\{WEB_PORT\}"/);
+  assert.match(runner, /if \[\[ -n "\$\{WEB_PID\}" \]\]/);
+  assert.match(runner, /if \[\[ -n "\$\{API_PID\}" \]\]/);
   assert.match(runner, /trap cleanup EXIT INT TERM/);
   assert.match(
     runner,
