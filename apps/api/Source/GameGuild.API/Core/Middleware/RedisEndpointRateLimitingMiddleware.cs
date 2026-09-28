@@ -109,7 +109,9 @@ public sealed class RedisEndpointRateLimitingMiddleware(RequestDelegate next)
                             options.PenaltyMaxDuration,
                             context.RequestAborted).ConfigureAwait(false);
                         if (penalty is { } penaltyDuration && penaltyDuration > retryAfter)
+                        {
                             retryAfter = penaltyDuration;
+                        }
                     }
 
                     await WriteConcurrencyRejectionAsync(context, options.MaxConcurrentRequests, retryAfter)
@@ -135,7 +137,9 @@ public sealed class RedisEndpointRateLimitingMiddleware(RequestDelegate next)
         catch (RateLimitBackendUnavailableException)
         {
             if (context.Response.HasStarted)
+            {
                 throw;
+            }
 
             context.Response.Clear();
             context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
@@ -208,10 +212,14 @@ public sealed class RedisEndpointRateLimitingMiddleware(RequestDelegate next)
         };
 
         if (policy.PartitionKey is not null)
+        {
             return true;
+        }
 
         if (policyName is null || !options.Policies.TryGetValue(policyName, out var configuredPolicy))
+        {
             return false;
+        }
 
         policy = new DistributedPolicy(
             RateLimitingServiceCollectionExtensions.GetPartitionKey(context, configuredPolicy.PartitionBy),

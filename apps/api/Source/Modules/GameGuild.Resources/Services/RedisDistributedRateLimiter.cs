@@ -168,11 +168,14 @@ public class RedisDistributedRateLimiter(
     private readonly RedisRateLimitFailureMode _failureMode = options?.RedisFailureMode ?? RedisRateLimitFailureMode.FailOpen;
     private const string KeyPrefix = "ratelimit:";
 
+    public Task<bool> IsAllowedFixedWindowAsync(string key, int maxRequests, TimeSpan window)
+        => IsAllowedFixedWindowAsync(key, maxRequests, window, CancellationToken.None);
+
     public async Task<bool> IsAllowedFixedWindowAsync(
         string key,
         int maxRequests,
         TimeSpan window,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ValidateRequest(key, maxRequests, window);
         cancellationToken.ThrowIfCancellationRequested();
@@ -191,7 +194,9 @@ public class RedisDistributedRateLimiter(
                 [maxRequests, ttlMilliseconds]).ConfigureAwait(false)
                 ?? throw new InvalidOperationException("Redis returned no fixed-window result for the rate-limit script.");
             if (result.Length != 3)
+            {
                 throw new InvalidOperationException("Redis returned an invalid fixed-window result for the rate-limit script.");
+            }
 
             var allowed = result[0].ToString() == "1";
             var currentCount = long.Parse(result[1].ToString()!, System.Globalization.CultureInfo.InvariantCulture);
@@ -219,12 +224,19 @@ public class RedisDistributedRateLimiter(
         }
     }
 
+    public Task<RateLimitDecision> TryAcquireTokenBucketAsync(
+        string key,
+        int tokenLimit,
+        int tokensPerPeriod,
+        TimeSpan replenishmentPeriod)
+        => TryAcquireTokenBucketAsync(key, tokenLimit, tokensPerPeriod, replenishmentPeriod, CancellationToken.None);
+
     public async Task<RateLimitDecision> TryAcquireTokenBucketAsync(
         string key,
         int tokenLimit,
         int tokensPerPeriod,
         TimeSpan replenishmentPeriod,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ValidateTokenBucket(key, tokenLimit, tokensPerPeriod, replenishmentPeriod);
         cancellationToken.ThrowIfCancellationRequested();
@@ -242,7 +254,9 @@ public class RedisDistributedRateLimiter(
                 [tokenLimit, tokensPerPeriod, periodMilliseconds, retentionMilliseconds]).ConfigureAwait(false)
                 ?? throw new InvalidOperationException("Redis returned no token-bucket result for the rate-limit script.");
             if (result.Length != 3)
+            {
                 throw new InvalidOperationException("Redis returned an invalid token-bucket result for the rate-limit script.");
+            }
 
             var allowed = result[0].ToString() == "1";
             var retryAfterMilliseconds = long.Parse(result[1].ToString()!, System.Globalization.CultureInfo.InvariantCulture);
@@ -291,7 +305,9 @@ public class RedisDistributedRateLimiter(
                 [maxConcurrent, leaseMilliseconds, leaseId]).ConfigureAwait(false)
                 ?? throw new InvalidOperationException("Redis returned no concurrency-lease result.");
             if (result.Length != 2)
+            {
                 throw new InvalidOperationException("Redis returned an invalid concurrency-lease result.");
+            }
 
             var allowed = result[0].ToString() == "1";
             var retryAfterMilliseconds = long.Parse(result[1].ToString()!, System.Globalization.CultureInfo.InvariantCulture);
@@ -319,9 +335,12 @@ public class RedisDistributedRateLimiter(
         }
     }
 
+    public Task<TimeSpan?> GetActivePenaltyAsync(string key)
+        => GetActivePenaltyAsync(key, CancellationToken.None);
+
     public async Task<TimeSpan?> GetActivePenaltyAsync(
         string key,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
         cancellationToken.ThrowIfCancellationRequested();
@@ -400,7 +419,9 @@ public class RedisDistributedRateLimiter(
                 [now, windowMilliseconds, maxRequests, Guid.NewGuid().ToString("N")]).ConfigureAwait(false)
                 ?? throw new InvalidOperationException("Redis returned no admission result for the rate-limit script.");
             if (result.Length != 3)
+            {
                 throw new InvalidOperationException("Redis returned an invalid admission result for the rate-limit script.");
+            }
 
             var allowed = result[0].ToString() == "1";
             var currentCount = long.Parse(result[1].ToString()!, System.Globalization.CultureInfo.InvariantCulture);
@@ -470,7 +491,9 @@ public class RedisDistributedRateLimiter(
                 take: 1).ConfigureAwait(false);
 
             if (oldestEntries.Length == 0)
+            {
                 return null;
+            }
 
             var oldestTimestamp = (long)oldestEntries[0].Score;
             var resetTime = oldestTimestamp + (long)window.TotalMilliseconds;
@@ -516,38 +539,61 @@ public class RedisDistributedRateLimiter(
             _failureMode);
 
         if (_failureMode == RedisRateLimitFailureMode.FailClosed)
+        {
             throw new RateLimitBackendUnavailableException(operation, exception);
+        }
     }
 
     private static void ValidateRequest(string key, int maxRequests, TimeSpan window)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
         if (maxRequests <= 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(maxRequests), "The request limit must be greater than zero.");
+        }
+
         if (window <= TimeSpan.Zero)
+        {
             throw new ArgumentOutOfRangeException(nameof(window), "The rate-limit window must be greater than zero.");
+        }
+
         if (window.TotalMilliseconds < 1)
+        {
             throw new ArgumentOutOfRangeException(nameof(window), "The rate-limit window must be at least one millisecond.");
+        }
     }
 
     private static void ValidateTokenBucket(string key, int tokenLimit, int tokensPerPeriod, TimeSpan replenishmentPeriod)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
         if (tokenLimit <= 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(tokenLimit), "The token limit must be greater than zero.");
+        }
+
         if (tokensPerPeriod <= 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(tokensPerPeriod), "The replenishment token count must be greater than zero.");
+        }
+
         if (replenishmentPeriod.TotalMilliseconds < 1)
+        {
             throw new ArgumentOutOfRangeException(nameof(replenishmentPeriod), "The replenishment period must be at least one millisecond.");
+        }
     }
 
     private static void ValidateConcurrencyLease(string key, int maxConcurrent, TimeSpan leaseDuration)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
         if (maxConcurrent <= 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(maxConcurrent), "The concurrency limit must be greater than zero.");
+        }
+
         if (leaseDuration.TotalMilliseconds < 1)
+        {
             throw new ArgumentOutOfRangeException(nameof(leaseDuration), "The concurrency lease duration must be at least one millisecond.");
+        }
     }
 
     private static void ValidatePenalty(
@@ -559,13 +605,24 @@ public class RedisDistributedRateLimiter(
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
         if (violationThreshold <= 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(violationThreshold), "The violation threshold must be greater than zero.");
+        }
+
         if (decayWindow.TotalMilliseconds < 1)
+        {
             throw new ArgumentOutOfRangeException(nameof(decayWindow), "The penalty decay window must be at least one millisecond.");
+        }
+
         if (basePenalty.TotalMilliseconds < 1)
+        {
             throw new ArgumentOutOfRangeException(nameof(basePenalty), "The base penalty must be at least one millisecond.");
+        }
+
         if (maxPenalty < basePenalty)
+        {
             throw new ArgumentOutOfRangeException(nameof(maxPenalty), "The maximum penalty must not be smaller than the base penalty.");
+        }
     }
 
     private sealed class RedisConcurrencyLease : IAsyncDisposable
@@ -595,7 +652,9 @@ public class RedisDistributedRateLimiter(
         public async ValueTask DisposeAsync()
         {
             if (Interlocked.Exchange(ref _disposed, 1) != 0)
+            {
                 return;
+            }
 
             _stopRenewal.Cancel();
             try
@@ -604,6 +663,7 @@ public class RedisDistributedRateLimiter(
             }
             catch (OperationCanceledException) when (_stopRenewal.IsCancellationRequested)
             {
+                _logger.LogDebug("Redis concurrency lease renewal stopped during disposal for {LeaseId}.", _leaseId);
             }
 
             try

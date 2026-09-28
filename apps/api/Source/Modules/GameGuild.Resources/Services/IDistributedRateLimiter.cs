@@ -15,7 +15,10 @@ public interface IDistributedRateLimiter
     /// <summary>
     ///     Atomically checks and consumes a permit in the current wall-clock fixed window.
     /// </summary>
-    Task<bool> IsAllowedFixedWindowAsync(string key, int maxRequests, TimeSpan window, CancellationToken cancellationToken = default);
+    Task<bool> IsAllowedFixedWindowAsync(string key, int maxRequests, TimeSpan window)
+        => IsAllowedFixedWindowAsync(key, maxRequests, window, CancellationToken.None);
+
+    Task<bool> IsAllowedFixedWindowAsync(string key, int maxRequests, TimeSpan window, CancellationToken cancellationToken);
 
     /// <summary>
     /// Atomically consumes one token from a bucket and returns the wait time when empty.
@@ -24,8 +27,15 @@ public interface IDistributedRateLimiter
         string key,
         int tokenLimit,
         int tokensPerPeriod,
+        TimeSpan replenishmentPeriod)
+        => TryAcquireTokenBucketAsync(key, tokenLimit, tokensPerPeriod, replenishmentPeriod, CancellationToken.None);
+
+    Task<RateLimitDecision> TryAcquireTokenBucketAsync(
+        string key,
+        int tokenLimit,
+        int tokensPerPeriod,
         TimeSpan replenishmentPeriod,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken);
 
     /// <summary>
     /// Atomically acquires a concurrency permit with an expiring, renewable lease.
@@ -40,7 +50,10 @@ public interface IDistributedRateLimiter
     /// <summary>
     /// Returns the remaining duration of an active temporary penalty, if any.
     /// </summary>
-    Task<TimeSpan?> GetActivePenaltyAsync(string key, CancellationToken cancellationToken = default);
+    Task<TimeSpan?> GetActivePenaltyAsync(string key)
+        => GetActivePenaltyAsync(key, CancellationToken.None);
+
+    Task<TimeSpan?> GetActivePenaltyAsync(string key, CancellationToken cancellationToken);
 
     /// <summary>
     /// Records a violation and applies an exponentially increasing temporary penalty

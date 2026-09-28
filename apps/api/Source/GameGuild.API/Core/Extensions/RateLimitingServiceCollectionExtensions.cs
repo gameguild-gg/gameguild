@@ -46,7 +46,9 @@ public static class RateLimitingServiceCollectionExtensions
                 foreach (var trustedProxy in trustedProxies)
                 {
                     if (!forwardedHeadersOptions.KnownProxies.Contains(trustedProxy))
+                    {
                         forwardedHeadersOptions.KnownProxies.Add(trustedProxy);
+                    }
                 }
             });
         }
@@ -58,10 +60,14 @@ public static class RateLimitingServiceCollectionExtensions
                 rateLimiterOptions.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
                 {
                     if (accessOptions.IsAllowlisted(httpContext))
+                    {
                         return RateLimitPartition.GetNoLimiter($"allowlisted:global:{GetUserOrIpPartitionKey(httpContext)}");
+                    }
 
                     if (IsExemptPath(httpContext.Request.Path, options.ExemptPaths))
+                    {
                         return RateLimitPartition.GetNoLimiter($"exempt:{httpContext.Request.Path}");
+                    }
 
                     var partitionKey = GetUserOrIpPartitionKey(httpContext);
                     return redisEnabled
@@ -280,7 +286,9 @@ public static class RateLimitingServiceCollectionExtensions
                     if (accessOptions.IsAllowlisted(httpContext))
                         return RateLimitPartition.GetNoLimiter($"allowlisted:{RateLimitPolicies.Bursty}:{partitionKey}");
                     if (redisEnabled)
+                    {
                         return RateLimitPartition.GetNoLimiter($"redis:{RateLimitPolicies.Bursty}:{partitionKey}");
+                    }
 
                     return RateLimitPartition.GetTokenBucketLimiter(
                         partitionKey: partitionKey,
@@ -403,7 +411,9 @@ public static class RateLimitingServiceCollectionExtensions
     {
         var partitionKey = GetPartitionKey(httpContext, policy.PartitionBy);
         if (accessOptions.IsAllowlisted(httpContext) || redisEnabled)
+        {
             return RateLimitPartition.GetNoLimiter($"{(redisEnabled ? "redis" : "allowlisted")}:{policyName}:{partitionKey}");
+        }
 
         return policy.Algorithm switch
         {

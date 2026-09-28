@@ -14,19 +14,29 @@ public sealed class DistributedCacheRateLimiter(
     private static readonly object ConcurrencyLock = new();
     private static readonly Dictionary<string, Dictionary<string, DateTimeOffset>> ConcurrencyLeases = new(StringComparer.Ordinal);
 
+    public Task<bool> IsAllowedFixedWindowAsync(string key, int maxRequests, TimeSpan window)
+        => IsAllowedFixedWindowAsync(key, maxRequests, window, CancellationToken.None);
+
     public Task<bool> IsAllowedFixedWindowAsync(
         string key,
         int maxRequests,
         TimeSpan window,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
         => IsAllowedAsync(key, maxRequests, window, cancellationToken);
+
+    public Task<RateLimitDecision> TryAcquireTokenBucketAsync(
+        string key,
+        int tokenLimit,
+        int tokensPerPeriod,
+        TimeSpan replenishmentPeriod)
+        => TryAcquireTokenBucketAsync(key, tokenLimit, tokensPerPeriod, replenishmentPeriod, CancellationToken.None);
 
     public async Task<RateLimitDecision> TryAcquireTokenBucketAsync(
         string key,
         int tokenLimit,
         int tokensPerPeriod,
         TimeSpan replenishmentPeriod,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ValidateTokenBucket(key, tokenLimit, tokensPerPeriod, replenishmentPeriod);
         cancellationToken.ThrowIfCancellationRequested();
@@ -103,9 +113,15 @@ public sealed class DistributedCacheRateLimiter(
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
         if (maxConcurrent <= 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(maxConcurrent), "The concurrency limit must be greater than zero.");
+        }
+
         if (leaseDuration.TotalMilliseconds < 1)
+        {
             throw new ArgumentOutOfRangeException(nameof(leaseDuration), "The concurrency lease duration must be at least one millisecond.");
+        }
+
         cancellationToken.ThrowIfCancellationRequested();
 
         lock (ConcurrencyLock)
@@ -135,16 +151,21 @@ public sealed class DistributedCacheRateLimiter(
         }
     }
 
+    public Task<TimeSpan?> GetActivePenaltyAsync(string key)
+        => GetActivePenaltyAsync(key, CancellationToken.None);
+
     public async Task<TimeSpan?> GetActivePenaltyAsync(
         string key,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
         try
         {
             var expiration = await cache.GetStringAsync($"{KeyPrefix}penalty:block:{key}", cancellationToken).ConfigureAwait(false);
             if (!long.TryParse(expiration, out var expirationMilliseconds))
+            {
                 return null;
+            }
 
             var remainingMilliseconds = expirationMilliseconds - DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             return remainingMilliseconds > 0 ? TimeSpan.FromMilliseconds(remainingMilliseconds) : null;
@@ -181,7 +202,9 @@ public sealed class DistributedCacheRateLimiter(
                 cancellationToken).ConfigureAwait(false);
 
             if (violations < violationThreshold)
+            {
                 return null;
+            }
 
             var exponent = Math.Min(violations - violationThreshold, 30);
             var penaltyMilliseconds = Math.Min(maxPenalty.TotalMilliseconds, basePenalty.TotalMilliseconds * Math.Pow(2, exponent));
@@ -266,11 +289,19 @@ public sealed class DistributedCacheRateLimiter(
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
         if (tokenLimit <= 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(tokenLimit), "The token limit must be greater than zero.");
+        }
+
         if (tokensPerPeriod <= 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(tokensPerPeriod), "The replenishment token count must be greater than zero.");
+        }
+
         if (replenishmentPeriod.TotalMilliseconds < 1)
+        {
             throw new ArgumentOutOfRangeException(nameof(replenishmentPeriod), "The replenishment period must be at least one millisecond.");
+        }
     }
 
     private static void ValidatePenalty(
@@ -282,13 +313,24 @@ public sealed class DistributedCacheRateLimiter(
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
         if (violationThreshold <= 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(violationThreshold), "The violation threshold must be greater than zero.");
+        }
+
         if (decayWindow.TotalMilliseconds < 1)
+        {
             throw new ArgumentOutOfRangeException(nameof(decayWindow), "The penalty decay window must be at least one millisecond.");
+        }
+
         if (basePenalty.TotalMilliseconds < 1)
+        {
             throw new ArgumentOutOfRangeException(nameof(basePenalty), "The base penalty must be at least one millisecond.");
+        }
+
         if (maxPenalty < basePenalty)
+        {
             throw new ArgumentOutOfRangeException(nameof(maxPenalty), "The maximum penalty must not be smaller than the base penalty.");
+        }
     }
 
     private sealed class LocalConcurrencyLease(
@@ -315,7 +357,9 @@ public sealed class DistributedCacheRateLimiter(
                     {
                         leases.Remove(leaseId);
                         if (leases.Count == 0)
+                        {
                             ConcurrencyLeases.Remove(key);
+                        }
                     }
                 }
             }

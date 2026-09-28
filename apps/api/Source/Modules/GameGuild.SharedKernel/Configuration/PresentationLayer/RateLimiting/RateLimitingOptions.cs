@@ -47,19 +47,39 @@ public sealed class RateLimitPolicyOptions
     internal void Validate(string policyName)
     {
         if (PermitLimit <= 0)
+        {
             throw new InvalidOperationException($"Rate-limiting policy '{policyName}' must have a positive permit limit.");
+        }
+
         if (Window <= TimeSpan.Zero)
+        {
             throw new InvalidOperationException($"Rate-limiting policy '{policyName}' must have a positive window.");
+        }
+
         if (QueueLimit < 0)
+        {
             throw new InvalidOperationException($"Rate-limiting policy '{policyName}' cannot have a negative queue limit.");
+        }
+
         if (SlidingWindowSegments <= 0)
+        {
             throw new InvalidOperationException($"Rate-limiting policy '{policyName}' must have a positive sliding-window segment count.");
+        }
+
         if (TokensPerPeriod <= 0)
+        {
             throw new InvalidOperationException($"Rate-limiting policy '{policyName}' must replenish a positive number of tokens.");
+        }
+
         if (!Enum.IsDefined(Algorithm))
+        {
             throw new InvalidOperationException($"Rate-limiting policy '{policyName}' has an unknown algorithm.");
+        }
+
         if (!Enum.IsDefined(PartitionBy))
+        {
             throw new InvalidOperationException($"Rate-limiting policy '{policyName}' has an unknown partition strategy.");
+        }
     }
 }
 
@@ -248,14 +268,24 @@ public sealed class RateLimitingOptions : BaseOptions
         base.Validate();
 
         if (!Enum.IsDefined(RedisFailureMode))
+        {
             throw new InvalidOperationException("Rate-limiting option 'RedisFailureMode' must be FailOpen or FailClosed.");
+        }
 
         if (Limit <= 0)
+        {
             throw new InvalidOperationException("The global rate limit must be greater than zero.");
+        }
+
         if (Period <= TimeSpan.Zero)
+        {
             throw new InvalidOperationException("The global rate-limit period must be greater than zero.");
+        }
+
         if (QueueLimit < 0)
+        {
             throw new InvalidOperationException("Rate-limiting option 'QueueLimit' must not be negative.");
+        }
 
         ValidatePositive(AuthenticationRequestsPerMinute, nameof(AuthenticationRequestsPerMinute));
         ValidatePositive(AuthorizationRequestsPerMinute, nameof(AuthorizationRequestsPerMinute));
@@ -284,25 +314,45 @@ public sealed class RateLimitingOptions : BaseOptions
         ValidatePositive(PenaltyBaseDuration, nameof(PenaltyBaseDuration));
         ValidatePositive(PenaltyMaxDuration, nameof(PenaltyMaxDuration));
         if (PenaltyMaxDuration < PenaltyBaseDuration)
+        {
             throw new InvalidOperationException("Rate-limiting option 'PenaltyMaxDuration' must be greater than or equal to 'PenaltyBaseDuration'.");
+        }
 
         if (SlidingWindowSegments <= 0)
+        {
             throw new InvalidOperationException("Rate-limiting option 'SlidingWindowSegments' must be greater than zero.");
+        }
+
         if (RequestsPerMinute <= 0)
+        {
             throw new InvalidOperationException("Rate-limiting option 'RequestsPerMinute' must be greater than zero.");
+        }
+
         if (BurstSize <= 0)
+        {
             throw new InvalidOperationException("Rate-limiting option 'BurstSize' must be greater than zero.");
+        }
+
         if (ExemptPaths is null || ExemptPaths.Any(path => string.IsNullOrWhiteSpace(path) || !path.StartsWith("/", StringComparison.Ordinal)))
+        {
             throw new InvalidOperationException("Rate-limiting exempt paths must be non-empty paths beginning with '/'.");
+        }
 
         if (TrustedProxyAddresses is null || TrustedProxyAddresses.Any(address =>
                 string.IsNullOrWhiteSpace(address) || !IPAddress.TryParse(address, out _)))
+        {
             throw new InvalidOperationException("Rate-limiting trusted proxy addresses must be valid IP addresses.");
+        }
+
         if (TrustedProxyForwardLimit <= 0)
+        {
             throw new InvalidOperationException("Rate-limiting trusted proxy forward limit must be greater than zero.");
+        }
 
         if (Policies is null)
+        {
             throw new InvalidOperationException("Rate-limiting policies cannot be null.");
+        }
 
         var builtInPolicyNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -321,11 +371,19 @@ public sealed class RateLimitingOptions : BaseOptions
         foreach (var (name, policy) in Policies)
         {
             if (string.IsNullOrWhiteSpace(name) || !configuredNames.Add(name))
+            {
                 throw new InvalidOperationException("Rate-limiting policy names must be non-empty and unique, ignoring case.");
+            }
+
             if (builtInPolicyNames.Contains(name))
+            {
                 throw new InvalidOperationException($"Rate-limiting policy name '{name}' is reserved for a built-in policy.");
+            }
+
             if (policy is null)
+            {
                 throw new InvalidOperationException($"Rate-limiting policy '{name}' cannot be null.");
+            }
 
             policy.Validate(name);
         }
@@ -334,13 +392,17 @@ public sealed class RateLimitingOptions : BaseOptions
     private static void ValidatePositive(int value, string optionName)
     {
         if (value <= 0)
+        {
             throw new InvalidOperationException($"Rate-limiting option '{optionName}' must be greater than zero.");
+        }
     }
 
     private static void ValidatePositive(TimeSpan value, string optionName)
     {
         if (value <= TimeSpan.Zero)
+        {
             throw new InvalidOperationException($"Rate-limiting option '{optionName}' must be greater than zero.");
+        }
     }
 
     public static RateLimitingOptions CreateDefault() { return new RateLimitingOptions(); }
