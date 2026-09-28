@@ -199,11 +199,15 @@ public sealed class PermissionCacheKeyTracker : IPermissionCacheKeyTracker
         foreach (var segment in pattern.Split('*'))
         {
             if (segment.Length == 0)
+            {
                 continue;
+            }
 
             var matchAt = value.IndexOf(segment, searchFrom, StringComparison.OrdinalIgnoreCase);
             if (matchAt < 0)
+            {
                 return false;
+            }
 
             searchFrom = matchAt + segment.Length;
         }

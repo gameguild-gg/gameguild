@@ -48,11 +48,55 @@ public sealed class CachedAccessControlListService : IAccessControlListService
         IMemoryCache cache,
         ITenantSecurityVersionStore tenantVersionStore,
         IUserSecurityVersionStore userVersionStore,
+        IOptions<AuthorizationCacheOptions> options)
+        : this(innerService, cache, tenantVersionStore, userVersionStore, options, null, null, null, null)
+    {
+    }
+
+    public CachedAccessControlListService(
+        IAccessControlListService innerService,
+        IMemoryCache cache,
+        ITenantSecurityVersionStore tenantVersionStore,
+        IUserSecurityVersionStore userVersionStore,
         IOptions<AuthorizationCacheOptions> options,
-        IHybridPermissionCache? hybridCache = null,
-        ICacheMetricsService? metrics = null,
-        IPermissionCacheKeyTracker? keyTracker = null,
-        ICacheInvalidationService? invalidationService = null)
+        IHybridPermissionCache? hybridCache)
+        : this(innerService, cache, tenantVersionStore, userVersionStore, options, hybridCache, null, null, null)
+    {
+    }
+
+    public CachedAccessControlListService(
+        IAccessControlListService innerService,
+        IMemoryCache cache,
+        ITenantSecurityVersionStore tenantVersionStore,
+        IUserSecurityVersionStore userVersionStore,
+        IOptions<AuthorizationCacheOptions> options,
+        ICacheInvalidationService? invalidationService)
+        : this(innerService, cache, tenantVersionStore, userVersionStore, options, null, null, null, invalidationService)
+    {
+    }
+
+    public CachedAccessControlListService(
+        IAccessControlListService innerService,
+        IMemoryCache cache,
+        ITenantSecurityVersionStore tenantVersionStore,
+        IUserSecurityVersionStore userVersionStore,
+        IOptions<AuthorizationCacheOptions> options,
+        IHybridPermissionCache? hybridCache,
+        ICacheMetricsService? metrics)
+        : this(innerService, cache, tenantVersionStore, userVersionStore, options, hybridCache, metrics, null, null)
+    {
+    }
+
+    public CachedAccessControlListService(
+        IAccessControlListService innerService,
+        IMemoryCache cache,
+        ITenantSecurityVersionStore tenantVersionStore,
+        IUserSecurityVersionStore userVersionStore,
+        IOptions<AuthorizationCacheOptions> options,
+        IHybridPermissionCache? hybridCache,
+        ICacheMetricsService? metrics,
+        IPermissionCacheKeyTracker? keyTracker,
+        ICacheInvalidationService? invalidationService)
     {
         _innerService = innerService;
         _l1Cache = cache;
@@ -298,7 +342,9 @@ public sealed class CachedAccessControlListService : IAccessControlListService
     public async Task InvalidateTenantAsync(string tenantId, CancellationToken cancellationToken = default)
     {
         if (!_tenantCacheKeys.TryRemove(tenantId, out var keys))
+        {
             return;
+        }
 
         string[] keySnapshot;
         lock (keys)
@@ -312,7 +358,9 @@ public sealed class CachedAccessControlListService : IAccessControlListService
             _l1Cache.Remove(key);
             _metrics?.RecordEviction(CacheLevel.L1, CacheType);
             if (_hybridCache is not null)
+            {
                 await _hybridCache.RemoveAsync(key, CacheType, cancellationToken).ConfigureAwait(false);
+            }
         }
     }
 
@@ -409,9 +457,13 @@ public sealed class CachedAccessControlListService : IAccessControlListService
         }
 
         if (principalType == AclPrincipalType.User && principalId.HasValue)
+        {
             InvalidateUserResourceCache(principalId.Value, tenantId, resourceType, resourceId);
+        }
         else
+        {
             InvalidatePrincipalResourceCache(principalType, principalId, tenantId, resourceType, resourceId);
+        }
     }
 
     // ReSharper disable UnusedParameter.Local - Parameters reserved for future fine-grained cache invalidation

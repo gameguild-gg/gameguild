@@ -43,7 +43,9 @@ public sealed class RedisPermissionCacheInvalidationSubscriber : BackgroundServi
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         if (!_options.UseDistributedCache || !_options.UsePubSubInvalidation)
+        {
             return;
+        }
 
         if (string.IsNullOrWhiteSpace(_options.InvalidationChannelName))
         {
@@ -58,12 +60,7 @@ public sealed class RedisPermissionCacheInvalidationSubscriber : BackgroundServi
         {
             try
             {
-                await subscriber.SubscribeAsync(channel, (redisChannel, message) =>
-                {
-                    var payload = message.ToString();
-                    if (!string.IsNullOrWhiteSpace(payload))
-                        _ = HandleMessageAsync(payload);
-                }).ConfigureAwait(false);
+                await subscriber.SubscribeAsync(channel, (_, message) => QueueMessage(message)).ConfigureAwait(false);
 
                 _logger.LogInformation(
                     "Subscribed to permission cache invalidations on Redis channel {Channel}",
@@ -98,7 +95,9 @@ public sealed class RedisPermissionCacheInvalidationSubscriber : BackgroundServi
 
         if (!_options.UseDistributedCache || !_options.UsePubSubInvalidation ||
             string.IsNullOrWhiteSpace(_options.InvalidationChannelName))
+        {
             return;
+        }
 
         try
         {
@@ -138,6 +137,15 @@ public sealed class RedisPermissionCacheInvalidationSubscriber : BackgroundServi
         catch (Exception exception)
         {
             _logger.LogError(exception, "Failed to handle permission cache invalidation event");
+        }
+    }
+
+    private void QueueMessage(RedisValue message)
+    {
+        var payload = message.ToString();
+        if (!string.IsNullOrWhiteSpace(payload))
+        {
+            _ = HandleMessageAsync(payload);
         }
     }
 }
