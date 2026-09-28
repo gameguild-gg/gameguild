@@ -70,8 +70,16 @@ public interface IDistributedRateLimiter
         int violationThreshold,
         TimeSpan decayWindow,
         TimeSpan basePenalty,
+        TimeSpan maxPenalty)
+        => RecordRateLimitViolationAsync(key, violationThreshold, decayWindow, basePenalty, maxPenalty, CancellationToken.None);
+
+    Task<TimeSpan?> RecordRateLimitViolationAsync(
+        string key,
+        int violationThreshold,
+        TimeSpan decayWindow,
+        TimeSpan basePenalty,
         TimeSpan maxPenalty,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken);
 
     /// <summary>
     ///     Check if request is allowed under rate limit using sliding window algorithm

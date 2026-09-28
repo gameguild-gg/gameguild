@@ -220,7 +220,7 @@ public sealed class RedisDistributedRateLimiterIntegrationTests(
         startInfo.Environment["GAMEGUILD_RATE_LIMIT_HTTP_PORT"] = port.ToString(System.Globalization.CultureInfo.InvariantCulture);
         startInfo.Environment["GAMEGUILD_RATE_LIMIT_REQUEST_LIMIT"] = requestLimit.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
-        var process = Process.Start(startInfo)
+        var process = Process.Start(startInfo) // NOSONAR: fixed dotnet host, ArgumentList contains only the local assembly, and runtime settings are environment variables.
             ?? throw new InvalidOperationException("Failed to start a rate-limiting probe process.");
         var standardOutput = process.StandardOutput.ReadToEndAsync();
         var standardError = process.StandardError.ReadToEndAsync();

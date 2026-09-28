@@ -151,7 +151,9 @@ public static class RateLimitingServiceCollectionExtensions
                 {
                     var partitionKey = GetUserTenantPartitionKey(httpContext);
                     if (accessOptions.IsAllowlisted(httpContext))
+                    {
                         return RateLimitPartition.GetNoLimiter($"allowlisted:{RateLimitPolicies.Authorization}:{partitionKey}");
+                    }
 
                     return redisEnabled
                         ? RateLimitPartition.GetNoLimiter($"redis:{RateLimitPolicies.Authorization}:{partitionKey}")
@@ -346,7 +348,9 @@ public static class RateLimitingServiceCollectionExtensions
                         return RateLimitPartition.GetNoLimiter($"allowlisted:{RateLimitPolicies.ExpensiveOperations}:{partitionKey}");
 
                     if (redisEnabled)
+                    {
                         return RateLimitPartition.GetNoLimiter($"redis:{RateLimitPolicies.ExpensiveOperations}:{partitionKey}");
+                    }
 
                     return RateLimitPartition.GetConcurrencyLimiter(
                         partitionKey: partitionKey,

@@ -369,13 +369,21 @@ public class RedisDistributedRateLimiter(
         }
     }
 
+    public Task<TimeSpan?> RecordRateLimitViolationAsync(
+        string key,
+        int violationThreshold,
+        TimeSpan decayWindow,
+        TimeSpan basePenalty,
+        TimeSpan maxPenalty)
+        => RecordRateLimitViolationAsync(key, violationThreshold, decayWindow, basePenalty, maxPenalty, CancellationToken.None);
+
     public async Task<TimeSpan?> RecordRateLimitViolationAsync(
         string key,
         int violationThreshold,
         TimeSpan decayWindow,
         TimeSpan basePenalty,
         TimeSpan maxPenalty,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ValidatePenalty(key, violationThreshold, decayWindow, basePenalty, maxPenalty);
         cancellationToken.ThrowIfCancellationRequested();
