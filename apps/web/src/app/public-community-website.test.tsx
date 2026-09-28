@@ -53,6 +53,7 @@ vi.mock('@/i18n', () => ({
 }));
 
 vi.mock('@/lib/projects/public-projects', () => ({
+  PUBLIC_PROJECT_PAGE_SIZE: 24,
   getPublishedProjects: getPublishedProjectsMock,
   getVisibleProject: getVisibleProjectMock,
 }));
@@ -296,7 +297,7 @@ describe('public community website UX', () => {
     expect(screen.getByAltText(/real api project project preview/i)).toBeInTheDocument();
     expect(screen.getAllByText(/creator/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/playtest/i).length).toBeGreaterThan(0);
-    expect(screen.getByRole('link', { name: /join this playtest/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /browse playtests/i })).toHaveAttribute('href', '/testing-lab');
     expect(getVisibleProjectMock).toHaveBeenCalledWith('real-api-project');
   });
 

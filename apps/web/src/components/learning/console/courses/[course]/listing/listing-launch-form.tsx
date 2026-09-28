@@ -91,7 +91,14 @@ export function ListingLaunchForm({ course }: ListingLaunchFormProps) {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-2">
             <Label htmlFor="catalog-visibility">Catalog visibility</Label>
-            <Select value={visibility} onValueChange={(value) => setVisibility(value ?? 'public')}>
+            <Select
+              value={visibility}
+              items={[
+                { value: 'public', label: 'Public' },
+                { value: 'private', label: 'Private' },
+              ]}
+              onValueChange={(value) => setVisibility(value ?? 'public')}
+            >
               <SelectTrigger id="catalog-visibility">
                 <SelectValue />
               </SelectTrigger>
@@ -105,7 +112,11 @@ export function ListingLaunchForm({ course }: ListingLaunchFormProps) {
 
           <div className="space-y-2">
             <Label htmlFor="listing-enrollment-status">Enrollment status</Label>
-            <Select value={enrollmentStatus} onValueChange={(value) => setEnrollmentStatus(value ?? 'Open')}>
+            <Select
+              value={enrollmentStatus}
+              items={ENROLLMENT_STATUSES.map((value) => ({ value, label: formatEnumLabel(value) }))}
+              onValueChange={(value) => setEnrollmentStatus(value ?? 'Open')}
+            >
               <SelectTrigger id="listing-enrollment-status">
                 <SelectValue />
               </SelectTrigger>

@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import type { ComponentProps, ReactNode } from 'react';
+import { cloneElement, isValidElement, type ComponentProps, type ReactElement, type ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({ update: vi.fn(), updateStatus: vi.fn(), refresh: vi.fn() }));
@@ -21,7 +21,8 @@ vi.mock('@game-guild/ui/components/alert-dialog', () => ({
   AlertDialogFooter: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   AlertDialogHeader: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   AlertDialogTitle: ({ children }: { children: ReactNode }) => <h3>{children}</h3>,
-  AlertDialogTrigger: ({ children }: { children: ReactNode }) => children,
+  AlertDialogTrigger: ({ children, render }: { children: ReactNode; render?: ReactElement }) =>
+    isValidElement(render) ? cloneElement(render, {}, children) : children,
 }));
 
 import { CohortSettingsForm } from './cohort-settings-form';

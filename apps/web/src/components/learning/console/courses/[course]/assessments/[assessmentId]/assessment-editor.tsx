@@ -1252,6 +1252,10 @@ export function AssessmentEditor({
                     <Label htmlFor="group-set">Group set</Label>
                     <Select
                       value={groupSetId}
+                      items={[
+                        { value: GROUP_SET_NONE, label: "No group set" },
+                        ...groupSets.map((set) => ({ value: set.id, label: set.name })),
+                      ]}
                       onValueChange={(value) => handleGroupSetChange(value ?? GROUP_SET_NONE)}
                       disabled={isPolicyPending}
                     >

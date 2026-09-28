@@ -9,10 +9,6 @@ vi.mock('@/i18n/navigation', () => ({
   Link: ({ children, href, ...props }: ComponentProps<'a'> & { children: ReactNode }) => <a href={String(href)} {...props}>{children}</a>,
 }));
 vi.mock('@/lib/learner/activity-actions', () => ({ createCourseDiscussion: mocks.createDiscussion }));
-vi.mock('@game-guild/ui/components/button', () => ({
-  Button: ({ asChild, children, ...props }: ComponentProps<'button'> & { asChild?: boolean; children: ReactNode }) =>
-    asChild ? children : <button {...props}>{children}</button>,
-}));
 vi.mock('@game-guild/ui/components/dialog', () => ({
   Dialog: ({ children, onOpenChange }: { children: ReactNode; onOpenChange: (open: boolean) => void }) => (
     <div>

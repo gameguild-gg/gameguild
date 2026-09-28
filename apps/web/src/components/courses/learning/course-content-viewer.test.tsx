@@ -141,6 +141,7 @@ describe('CourseContentViewer', () => {
   });
 
   it('shows learner feedback after submitting a content report', async () => {
+    const user = userEvent.setup();
     vi.mocked(ContentReportService.createReport).mockResolvedValueOnce({
       success: true,
       message: 'Report submitted for moderation.',
@@ -150,10 +151,10 @@ describe('CourseContentViewer', () => {
     render(<CourseContentViewer courseSlug="launch-production" />);
 
     await screen.findByRole('heading', { name: /release checklist/i });
-    await userEvent.click(screen.getByRole('button', { name: /content actions/i }));
-    await userEvent.click(screen.getByRole('menuitem', { name: /report content/i }));
-    await userEvent.click(screen.getByRole('radio', { name: /technical issue/i }));
-    await userEvent.click(screen.getByRole('button', { name: /submit report/i }));
+    await user.click(screen.getByRole('button', { name: /content actions/i }));
+    await user.click(await screen.findByRole('menuitem', { name: /report content/i }));
+    await user.click(screen.getByRole('radio', { name: /technical issue/i }));
+    await user.click(screen.getByRole('button', { name: /submit report/i }));
 
     await waitFor(() => {
       expect(ContentReportService.createReport).toHaveBeenCalledWith(

@@ -136,14 +136,13 @@ describe('GoogleSignInButton', () => {
 
   /* ---------- Error path ---------- */
 
-  it('renders an error message when the public client id is missing', async () => {
+  it('does not render the Google button when the public client id is missing', () => {
     delete process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
     renderWithUser(<GoogleSignInButton />);
 
-    expect(
-      await screen.findByRole('alert')
-    ).toBeInTheDocument();
+    expect(screen.queryByTestId('google-sign-in-button')).not.toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(initializeMock).not.toHaveBeenCalled();
   });
 });

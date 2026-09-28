@@ -58,7 +58,7 @@ describe('PasswordCard', () => {
     expect(
       screen.getByText('At least 8 characters, with upper and lower case letters, a number, and a special character.'),
     ).toBeInTheDocument();
-    expect(screen.getByLabelText('Sign out other devices')).toBeChecked();
+    expect(screen.getByRole('checkbox', { name: 'Sign out other devices' })).toBeChecked();
     expect(screen.getByRole('button', { name: 'Change password' })).toBeInTheDocument();
   });
 

@@ -270,7 +270,11 @@ export function CohortScheduleWorkspace({ courseId, cohort, initialSchedule }: C
               </div>
               <div className="space-y-2">
                 <Label htmlFor="schedule-item-status">Status</Label>
-                <Select value={editValues.status} onValueChange={(value) => setEditValues({ ...editValues, status: value as LearningCohortsCohortScheduleItemStatus })}>
+                <Select
+                  value={editValues.status}
+                  items={['Draft', 'Scheduled', 'Published', 'Completed', 'Cancelled'].map((value) => ({ value, label: value }))}
+                  onValueChange={(value) => setEditValues({ ...editValues, status: value as LearningCohortsCohortScheduleItemStatus })}
+                >
                   <SelectTrigger id="schedule-item-status" className="w-full"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Draft">Draft</SelectItem><SelectItem value="Scheduled">Scheduled</SelectItem><SelectItem value="Published">Published</SelectItem><SelectItem value="Completed">Completed</SelectItem><SelectItem value="Cancelled">Cancelled</SelectItem>
@@ -279,7 +283,15 @@ export function CohortScheduleWorkspace({ courseId, cohort, initialSchedule }: C
               </div>
               <div className="space-y-2">
                 <Label htmlFor="schedule-item-visibility">Student visibility</Label>
-                <Select value={editValues.visibilityOverride} onValueChange={(value) => setEditValues({ ...editValues, visibilityOverride: value as LearningCohortsCohortVisibilityOverride })}>
+                <Select
+                  value={editValues.visibilityOverride}
+                  items={[
+                    { value: 'Inherited', label: 'Follow course content' },
+                    { value: 'Visible', label: 'Force visible' },
+                    { value: 'Hidden', label: 'Hide from students' },
+                  ]}
+                  onValueChange={(value) => setEditValues({ ...editValues, visibilityOverride: value as LearningCohortsCohortVisibilityOverride })}
+                >
                   <SelectTrigger id="schedule-item-visibility" className="w-full"><SelectValue /></SelectTrigger>
                   <SelectContent><SelectItem value="Inherited">Follow course content</SelectItem><SelectItem value="Visible">Force visible</SelectItem><SelectItem value="Hidden">Hide from students</SelectItem></SelectContent>
                 </Select>

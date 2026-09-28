@@ -9,6 +9,7 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@game-guild/ui/components/dropdown-menu';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@game-guild/ui/components/hover-card';
@@ -31,6 +32,25 @@ describe('Base UI compatibility wrappers', () => {
     await user.click(screen.getByRole('button', { name: 'Actions' }));
 
     expect(await screen.findByRole('menuitem', { name: 'View profile' })).toBeInTheDocument();
+  });
+
+  it('renders a standalone dropdown label without requiring a menu group', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <DropdownMenu>
+        <DropdownMenuTrigger render={<Button>Workspace</Button>} />
+        <DropdownMenuContent>
+          <DropdownMenuLabel>Project scope</DropdownMenuLabel>
+          <DropdownMenuItem>All projects</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Workspace' }));
+
+    expect(await screen.findByText('Project scope')).toBeInTheDocument();
+    expect(await screen.findByRole('menuitem', { name: 'All projects' })).toBeInTheDocument();
   });
 
   it('opens a hover card whose trigger uses the render prop API', async () => {

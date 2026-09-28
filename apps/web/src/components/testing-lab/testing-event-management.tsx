@@ -2637,6 +2637,12 @@ export function TestingEventLearningDialog({
           defaultValue={
             event.learningCompletionRequirement ?? "AttendanceAndFeedback"
           }
+          items={[
+            { value: "Attendance", label: "Attendance" },
+            { value: "Feedback", label: "Required feedback" },
+            { value: "AttendanceAndFeedback", label: "Attendance and feedback" },
+            { value: "ProjectTested", label: "Assigned project tested" },
+          ]}
         >
           <SelectTrigger aria-label="Completion requirement">
             <SelectValue />

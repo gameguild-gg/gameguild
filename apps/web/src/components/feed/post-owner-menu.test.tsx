@@ -1,5 +1,6 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -33,6 +34,7 @@ describe("PostOwnerMenu", () => {
   });
 
   it("edits once and applies the authoritative content", async () => {
+    const user = userEvent.setup();
     const onContentChange = vi.fn();
     let release!: (value: { id: string; content: string }) => void;
     mocks.updateSocialPost.mockImplementationOnce(() => new Promise((resolve) => { release = resolve; }));
@@ -47,12 +49,12 @@ describe("PostOwnerMenu", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Post options" }));
-    fireEvent.click(await screen.findByRole("menuitem", { name: "Edit post" }));
+    await user.click(screen.getByRole("button", { name: "Post options" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Edit post" }));
     fireEvent.change(screen.getByRole("textbox", { name: "Edit post" }), { target: { value: "Draft" } });
     const save = screen.getByRole("button", { name: "Save post changes" });
-    fireEvent.click(save);
-    fireEvent.click(save);
+    await user.click(save);
+    await user.click(save);
 
     expect(mocks.updateSocialPost).toHaveBeenCalledTimes(1);
     expect(mocks.updateSocialPost).toHaveBeenCalledWith("post-1", "Draft");
@@ -61,6 +63,7 @@ describe("PostOwnerMenu", () => {
   });
 
   it("requires confirmation and guards duplicate post deletion", async () => {
+    const user = userEvent.setup();
     const onDeleted = vi.fn();
     let release!: () => void;
     mocks.deleteSocialPost.mockImplementationOnce(() => new Promise((resolve) => {
@@ -77,12 +80,12 @@ describe("PostOwnerMenu", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Post options" }));
-    fireEvent.click(await screen.findByRole("menuitem", { name: "Delete post" }));
+    await user.click(screen.getByRole("button", { name: "Post options" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Delete post" }));
     const confirmation = await screen.findByRole("alertdialog");
     const remove = within(confirmation).getByRole("button", { name: "Delete post" });
-    fireEvent.click(remove);
-    fireEvent.click(remove);
+    await user.click(remove);
+    await user.click(remove);
 
     expect(mocks.deleteSocialPost).toHaveBeenCalledTimes(1);
     expect(remove).toBeDisabled();
@@ -91,6 +94,7 @@ describe("PostOwnerMenu", () => {
   });
 
   it("keeps a failed edit visible and retryable", async () => {
+    const user = userEvent.setup();
     mocks.updateSocialPost.mockRejectedValueOnce(new Error("Edit unavailable"));
     render(
       <PostOwnerMenu
@@ -103,8 +107,8 @@ describe("PostOwnerMenu", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Post options" }));
-    fireEvent.click(await screen.findByRole("menuitem", { name: "Edit post" }));
+    await user.click(screen.getByRole("button", { name: "Post options" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Edit post" }));
     fireEvent.change(screen.getByRole("textbox", { name: "Edit post" }), { target: { value: "Draft" } });
     fireEvent.click(screen.getByRole("button", { name: "Save post changes" }));
 

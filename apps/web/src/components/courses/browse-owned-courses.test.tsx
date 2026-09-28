@@ -58,24 +58,26 @@ describe('BrowseOwnedCoursesPage', () => {
   });
 
   it('navigates learner actions to content, certificate, and catalog routes', async () => {
+    const user = userEvent.setup();
     render(<BrowseOwnedCoursesPage courses={enrolledCourses} />);
 
-    await userEvent.click(screen.getAllByRole('button', { name: /continue/i })[0]);
+    await user.click(screen.getAllByRole('button', { name: /continue/i })[0]);
     expect(push).toHaveBeenCalledWith('/workspace/learning/courses/course-1/content/lesson-16');
 
-    await userEvent.click(screen.getByRole('button', { name: /review course/i }));
+    await user.click(screen.getByRole('button', { name: /review course/i }));
     expect(push).toHaveBeenCalledWith('/workspace/learning/courses/course-2/content');
 
-    await userEvent.click(screen.getByRole('button', { name: /open unity 3d essentials menu/i }));
-    await userEvent.click(screen.getByRole('menuitem', { name: /view certificate/i }));
+    await user.click(screen.getByRole('button', { name: /open unity 3d essentials menu/i }));
+    await user.click(await screen.findByRole('menuitem', { name: /view certificate/i }));
     expect(push).toHaveBeenCalledWith('/workspace/learning/courses/course-2/certificates');
   });
 
   it('does not render seeded courses when no live data is provided', async () => {
+    const user = userEvent.setup();
     render(<BrowseOwnedCoursesPage />);
 
     expect(screen.getByText(/you haven't enrolled in any courses yet/i)).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: /browse course catalog/i }));
+    await user.click(screen.getByRole('button', { name: /browse course catalog/i }));
     expect(push).toHaveBeenCalledWith('/courses');
   });
 });
