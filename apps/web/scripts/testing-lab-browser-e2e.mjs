@@ -602,8 +602,11 @@ async function run() {
     );
     await waitForClientHydration(ownerPage);
     await ownerPage
-      .getByLabel("Eligible project version")
-      .selectOption(fixture.projectVersion.id);
+      .getByRole("radio", {
+        name: `${fixture.project.title} · ${fixture.projectVersion.versionNumber} · Ready for testing`,
+        exact: true,
+      })
+      .check();
     await ownerPage
       .getByRole("button", { name: "Save and continue", exact: true })
       .click();
