@@ -14,7 +14,7 @@ interface ListingLaunchFormProps {
   course: CourseDetails;
 }
 
-const ENROLLMENT_STATUS_OPTIONS = [
+const ENROLLMENT_STATUS_OPTIONS: Array<{ value: string; label: string }> = [
   { value: 'Open', label: 'Open' },
   { value: 'Active', label: 'Active' },
   { value: 'Paused', label: 'Paused' },
@@ -24,7 +24,7 @@ const ENROLLMENT_STATUS_OPTIONS = [
   { value: 'Closed', label: 'Closed' },
   { value: 'InviteOnly', label: 'Invite Only' },
   { value: 'Waitlist', label: 'Waitlist' },
-] as const;
+];
 
 export function toDateTimeLocal(value: string | null): string {
   if (!value) {
@@ -71,8 +71,12 @@ export function ListingLaunchForm({ course }: ListingLaunchFormProps) {
     return value === 'private' ? 'private' : 'public';
   }
 
-  function parseEnrollmentStatus(value: unknown): (typeof ENROLLMENT_STATUS_OPTIONS)[number]['value'] {
+  function parseEnrollmentStatus(value: unknown): string {
     return ENROLLMENT_STATUS_OPTIONS.find((status) => status.value === value)?.value ?? 'Open';
+  }
+
+  function handleEnrollmentStatusChange(value: unknown): void {
+    setEnrollmentStatus(parseEnrollmentStatus(value));
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -136,9 +140,7 @@ export function ListingLaunchForm({ course }: ListingLaunchFormProps) {
             <Select
               value={enrollmentStatus}
               items={ENROLLMENT_STATUS_OPTIONS}
-              onValueChange={(value) => {
-                setEnrollmentStatus(parseEnrollmentStatus(value));
-              }}
+              onValueChange={handleEnrollmentStatusChange}
             >
               <SelectTrigger id="listing-enrollment-status">
                 <SelectValue />
