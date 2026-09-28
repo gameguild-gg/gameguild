@@ -607,12 +607,15 @@ async function run() {
     await ownerPage
       .getByRole("button", { name: "As a developer", exact: true })
       .click();
-    await ownerPage
+    const eligibleBuildRadio = ownerPage
       .getByRole("radio", {
         name: `${fixture.project.title} · ${fixture.projectVersion.versionNumber} · Ready for testing`,
         exact: true,
-      })
-      .check();
+      });
+    await eligibleBuildRadio.locator("xpath=..").click();
+    if (!(await eligibleBuildRadio.isChecked())) {
+      throw new Error("The eligible project build was not selected.");
+    }
     await ownerPage
       .getByRole("button", { name: "Save and continue", exact: true })
       .click();

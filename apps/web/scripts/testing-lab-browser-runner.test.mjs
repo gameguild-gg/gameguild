@@ -149,7 +149,7 @@ test("waits for hydration before every client-side Testing Lab mutation", async 
     [
       '"project-owner public Testing Lab event"',
       "await waitForClientHydration(ownerPage);",
-      '.getByLabel("Eligible project version")',
+      "const eligibleBuildRadio = ownerPage",
     ],
     [
       '"Testing Lab manager applications"',
