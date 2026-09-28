@@ -185,6 +185,42 @@ public sealed class PermissionCacheBatchInvalidationTests
     }
 
     [Fact]
+    public async Task HandleInvalidationEvent_GroupDependencyFromAnotherInstanceEvictsSharedEntries()
+    {
+        var tenantId = Guid.NewGuid();
+        var groupId = Guid.NewGuid();
+        var memoryCache = new MemoryCache(new MemoryCacheOptions());
+        var metrics = new Mock<ICacheMetricsService>();
+        var tracker = new PermissionCacheKeyTracker(memoryCache, metrics.Object);
+        var cache = new HybridPermissionCache(
+            memoryCache,
+            Options.Create(new AuthorizationCacheOptions()),
+            metrics.Object,
+            NullLogger<HybridPermissionCache>.Instance,
+            keyTracker: tracker);
+        var invalidation = new CacheInvalidationService(
+            memoryCache,
+            Mock.Of<ITenantSecurityVersionStore>(),
+            cache,
+            metrics.Object,
+            Options.Create(new AuthorizationCacheOptions()),
+            NullLogger<CacheInvalidationService>.Instance,
+            keyTracker: tracker);
+        var key = $"acl:subj:{tenantId}:anon:ng:{groupId}:Document:doc-group:tv0:uv0:gv0";
+        await cache.SetValueAsync(key, AccessLevel.Read, "acl");
+
+        invalidation.HandleInvalidationEvent(new CacheInvalidationEvent
+        {
+            Type = CacheInvalidationType.Batch,
+            TenantId = tenantId,
+            OriginInstanceId = "remote-node",
+            Targets = [new CacheInvalidationTarget(CacheInvalidationTargetType.Dependency, DependencyKind: "group", DependencyId: groupId)]
+        });
+
+        (await cache.GetValueAsync<AccessLevel>(key, "acl")).Found.Should().BeFalse();
+    }
+
+    [Fact]
     public async Task GlobalAclInvalidation_ChangesL1AndL2KeysForEveryTenant()
     {
         var tenantId = Guid.NewGuid();
