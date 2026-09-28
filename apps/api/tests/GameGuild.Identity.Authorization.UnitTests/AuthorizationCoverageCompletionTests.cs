@@ -1456,8 +1456,12 @@ public sealed class AuthorizationCoverageCompletionTests
         TouchRepositorySet(new DelegatedAdminScopeRepository(dbContext));
         TouchRepositorySet(new TenantPermissionRepository(Mock.Of<IApplicationDbContext>()));
         TouchRepositorySet(new PermissionAuditLogRepository(Mock.Of<IApplicationDbContext>()));
-        TouchRepositorySet(new DynamicRoleRepository(Mock.Of<IApplicationDbContext>()));
-        TouchRepositorySet(new DynamicRoleAssignmentRepository(Mock.Of<IApplicationDbContext>()));
+        TouchRepositorySet(new DynamicRoleRepository(
+            Mock.Of<IApplicationDbContext>(),
+            Mock.Of<ICacheInvalidationService>()));
+        TouchRepositorySet(new DynamicRoleAssignmentRepository(
+            Mock.Of<IApplicationDbContext>(),
+            Mock.Of<ICacheInvalidationService>()));
     }
 
     [Fact]
