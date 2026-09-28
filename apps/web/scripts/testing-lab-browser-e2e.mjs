@@ -602,6 +602,12 @@ async function run() {
     );
     await waitForClientHydration(ownerPage);
     await ownerPage
+      .getByRole("button", { name: "Join", exact: true })
+      .click();
+    await ownerPage
+      .getByRole("button", { name: "As a developer", exact: true })
+      .click();
+    await ownerPage
       .getByRole("radio", {
         name: `${fixture.project.title} · ${fixture.projectVersion.versionNumber} · Ready for testing`,
         exact: true,
