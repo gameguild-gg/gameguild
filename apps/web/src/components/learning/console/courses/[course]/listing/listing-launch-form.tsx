@@ -3,7 +3,6 @@
 import React, { useState, useTransition } from 'react';
 import { updateCourse } from '@/lib/learning/actions';
 import type { CourseDetails } from '@/lib/learning/types';
-import { formatEnumLabel } from '@/lib/learning/enums';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Input } from '@game-guild/ui/components/input';
@@ -16,15 +15,15 @@ interface ListingLaunchFormProps {
 }
 
 const ENROLLMENT_STATUS_OPTIONS = [
-  'Open',
-  'Active',
-  'Paused',
-  'Cancelled',
-  'Expired',
-  'Completed',
-  'Closed',
-  'InviteOnly',
-  'Waitlist',
+  { value: 'Open', label: 'Open' },
+  { value: 'Active', label: 'Active' },
+  { value: 'Paused', label: 'Paused' },
+  { value: 'Cancelled', label: 'Cancelled' },
+  { value: 'Expired', label: 'Expired' },
+  { value: 'Completed', label: 'Completed' },
+  { value: 'Closed', label: 'Closed' },
+  { value: 'InviteOnly', label: 'Invite Only' },
+  { value: 'Waitlist', label: 'Waitlist' },
 ] as const;
 
 export function toDateTimeLocal(value: string | null): string {
@@ -62,7 +61,7 @@ export function parseEnrollmentCap(value: string): number | null {
 export function ListingLaunchForm({ course }: ListingLaunchFormProps) {
   const [isPending, startTransition] = useTransition();
   const [visibility, setVisibility] = useState<'public' | 'private'>(course.visibility === 'public' ? 'public' : 'private');
-  const [enrollmentStatus, setEnrollmentStatus] = useState(course.enrollmentStatus || 'Open');
+  const [enrollmentStatus, setEnrollmentStatus] = useState<string>(course.enrollmentStatus || 'Open');
   const [enrollmentDeadline, setEnrollmentDeadline] = useState(toDateTimeLocal(course.enrollmentDeadline));
   const [maxEnrollments, setMaxEnrollments] = useState(course.maxEnrollments?.toString() ?? '');
   const [error, setError] = useState<string | null>(null);
@@ -72,8 +71,8 @@ export function ListingLaunchForm({ course }: ListingLaunchFormProps) {
     return value === 'private' ? 'private' : 'public';
   }
 
-  function parseEnrollmentStatus(value: unknown): (typeof ENROLLMENT_STATUS_OPTIONS)[number] {
-    return ENROLLMENT_STATUS_OPTIONS.find((status) => status === value) ?? 'Open';
+  function parseEnrollmentStatus(value: unknown): (typeof ENROLLMENT_STATUS_OPTIONS)[number]['value'] {
+    return ENROLLMENT_STATUS_OPTIONS.find((status) => status.value === value)?.value ?? 'Open';
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -136,7 +135,7 @@ export function ListingLaunchForm({ course }: ListingLaunchFormProps) {
             <Label htmlFor="listing-enrollment-status">Enrollment status</Label>
             <Select
               value={enrollmentStatus}
-              items={ENROLLMENT_STATUS_OPTIONS.map((value) => ({ value, label: formatEnumLabel(value) }))}
+              items={ENROLLMENT_STATUS_OPTIONS}
               onValueChange={(value) => {
                 setEnrollmentStatus(parseEnrollmentStatus(value));
               }}
@@ -145,9 +144,9 @@ export function ListingLaunchForm({ course }: ListingLaunchFormProps) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {ENROLLMENT_STATUS_OPTIONS.map((value) => (
+                {ENROLLMENT_STATUS_OPTIONS.map(({ value, label }) => (
                   <SelectItem key={value} value={value}>
-                    {formatEnumLabel(value)}
+                    {label}
                   </SelectItem>
                 ))}
               </SelectContent>

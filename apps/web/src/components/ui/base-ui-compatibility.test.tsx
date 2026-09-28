@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Link from 'next/link';
 import { describe, expect, it } from 'vitest';
@@ -50,10 +50,15 @@ describe('Base UI compatibility wrappers', () => {
 
     await user.click(screen.getByRole('button', { name: 'Workspace' }));
 
-    await waitFor(() => {
-      expect(screen.getByText('Project scope').textContent).toBe('Project scope');
-      expect(screen.getByRole('menuitem', { name: 'All projects' }).textContent).toBe('All projects');
-    });
+    const projectScopeLabel = await screen.findByText('Project scope');
+    if (projectScopeLabel.textContent !== 'Project scope') {
+      throw new Error('The standalone dropdown label did not render.');
+    }
+
+    const allProjectsItem = await screen.findByRole('menuitem', { name: 'All projects' });
+    if (allProjectsItem.textContent !== 'All projects') {
+      throw new Error('The menu item did not render.');
+    }
   });
 
   it('opens a hover card whose trigger uses the render prop API', async () => {
