@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Link from 'next/link';
 import { describe, it } from 'vitest';
@@ -38,9 +38,7 @@ describe('Base UI compatibility wrappers', () => {
     }
   });
 
-  it('renders a standalone dropdown label without requiring a menu group', async () => {
-    const user = userEvent.setup();
-
+  it('renders a standalone dropdown label without requiring a menu group', () => {
     render(
       <DropdownMenu>
         <DropdownMenuTrigger render={<Button>Workspace</Button>} />
@@ -51,14 +49,14 @@ describe('Base UI compatibility wrappers', () => {
       </DropdownMenu>,
     );
 
-    await user.click(screen.getByRole('button', { name: 'Workspace' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Workspace' }));
 
-    const projectScopeLabel = await screen.findByText('Project scope');
+    const projectScopeLabel = screen.getByText('Project scope');
     if (projectScopeLabel.textContent !== 'Project scope') {
       throw new Error('The standalone dropdown label did not render.');
     }
 
-    const allProjectsItem = await screen.findByRole('menuitem', { name: 'All projects' });
+    const allProjectsItem = screen.getByRole('menuitem', { name: 'All projects' });
     if (allProjectsItem.textContent !== 'All projects') {
       throw new Error('The menu item did not render.');
     }
