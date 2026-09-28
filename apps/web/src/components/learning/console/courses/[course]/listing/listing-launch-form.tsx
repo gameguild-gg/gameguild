@@ -2,7 +2,7 @@
 
 import React, { useState, useTransition } from 'react';
 import { updateCourse } from '@/lib/learning/actions';
-import type { CourseDetails } from '@/lib/learning/types';
+import type { CourseViewModel } from '@/lib/learning/view-models';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Input } from '@game-guild/ui/components/input';
@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2, Save } from 'lucide-react';
 
 interface ListingLaunchFormProps {
-  course: CourseDetails;
+  course: CourseViewModel;
 }
 
 const ENROLLMENT_STATUS_OPTIONS: { value: string; label: string }[] = [

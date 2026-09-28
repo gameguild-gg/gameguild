@@ -39,7 +39,29 @@ describe('Base UI compatibility wrappers', () => {
   });
 
   it('renders a standalone dropdown label without requiring a menu group', async () => {
-    await renderStandaloneDropdownLabelWithoutGroup();
+    const user = userEvent.setup();
+
+    render(
+      <DropdownMenu>
+        <DropdownMenuTrigger render={<Button>Workspace</Button>} />
+        <DropdownMenuContent>
+          <DropdownMenuLabel>Project scope</DropdownMenuLabel>
+          <DropdownMenuItem>All projects</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Workspace' }));
+
+    const projectScopeLabel = await screen.findByText('Project scope');
+    if (projectScopeLabel.textContent !== 'Project scope') {
+      throw new Error('The standalone dropdown label did not render.');
+    }
+
+    const allProjectsItem = await screen.findByRole('menuitem', { name: 'All projects' });
+    if (allProjectsItem.textContent !== 'All projects') {
+      throw new Error('The menu item did not render.');
+    }
   });
 
   it('opens a hover card whose trigger uses the render prop API', async () => {
@@ -60,29 +82,3 @@ describe('Base UI compatibility wrappers', () => {
     }
   });
 });
-
-async function renderStandaloneDropdownLabelWithoutGroup(): Promise<void> {
-  const user = userEvent.setup();
-
-  render(
-    <DropdownMenu>
-      <DropdownMenuTrigger render={<Button>Workspace</Button>} />
-      <DropdownMenuContent>
-        <DropdownMenuLabel>Project scope</DropdownMenuLabel>
-        <DropdownMenuItem>All projects</DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>,
-  );
-
-  await user.click(screen.getByRole('button', { name: 'Workspace' }));
-
-  const projectScopeLabel = await screen.findByText('Project scope');
-  if (projectScopeLabel.textContent !== 'Project scope') {
-    throw new Error('The standalone dropdown label did not render.');
-  }
-
-  const allProjectsItem = await screen.findByRole('menuitem', { name: 'All projects' });
-  if (allProjectsItem.textContent !== 'All projects') {
-    throw new Error('The menu item did not render.');
-  }
-}
