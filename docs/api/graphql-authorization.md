@@ -45,6 +45,21 @@ input. Repeated checks for the same project and permission share an execution-re
 cache. Authorization failures return a generic GraphQL error with a stable error code;
 the middleware logs denial and evaluation failures without returning resource details.
 
+Sensitive nullable fields can opt into null masking:
+
+```csharp
+[RequireGraphQLProjectPermission(
+    PermissionType.Read,
+    ResourceIdArgumentName = "projectId",
+    MaskUnauthorized = true)]
+public string? GetPrivateSummary(Guid projectId) => "restricted";
+```
+
+For a denied or unavailable permission check, the middleware records the denial, returns
+`null`, and does not invoke the field resolver. The GraphQL schema's normal null
+propagation applies to non-null fields, so use masking on nullable fields when the parent
+object should remain available.
+
 Denied project GraphQL authorization checks are also sent to the compliance audit service.
 The audit record includes the actor, tenant, project, schema field, required permissions,
 and a stable reason code. It is stored as a high-risk permission denial. If audit storage
@@ -58,9 +73,8 @@ apply their normal tenant and project access filters.
 ## Remaining acceptance work
 
 This is an initial framework slice, not completion of issue #335. The remaining work
-includes permission-aware introspection and schema filtering, dynamic field masking,
-field permission inheritance for additional entity types, and broader resource-level
-integration coverage. Schema versioning by
+includes permission-aware introspection and schema filtering, field permission inheritance
+for additional entity types, and broader resource-level integration coverage. Schema versioning by
 permission level and testing/debugging utilities also remain open. Keep the issue open
 until those criteria have code, tests, and operational evidence.
 

@@ -58,6 +58,8 @@ public sealed class ProjectAuthorizationDirective
 {
     public string[] Permissions { get; init; } = [];
 
+    public bool MaskUnauthorized { get; init; }
+
     public string? ResourceIdArgumentName { get; init; }
 
     public string? ResourceIdParentPropertyName { get; init; }
@@ -80,6 +82,9 @@ public sealed class ProjectAuthorizationDirectiveType : DirectiveType<ProjectAut
         descriptor.Repeatable();
         descriptor.Argument(directive => directive.Permissions)
             .Type<ListType<NonNullType<StringType>>>();
+        descriptor.Argument(directive => directive.MaskUnauthorized)
+            .Type<BooleanType>()
+            .DefaultValue(false);
         descriptor.Argument(directive => directive.ResourceIdArgumentName)
             .Type<StringType>();
         descriptor.Argument(directive => directive.ResourceIdParentPropertyName)
@@ -104,6 +109,9 @@ public sealed class RequireGraphQLProjectPermissionAttribute : ObjectFieldDescri
     private readonly PermissionType[] _permissions;
     private readonly string? _permissionSwitchArgumentName;
     private readonly PermissionType? _permissionWhenSwitchFalse;
+
+    /// <summary>Whether a denied field should be returned as null instead of a GraphQL error.</summary>
+    public bool MaskUnauthorized { get; set; }
 
     public RequireGraphQLProjectPermissionAttribute(params PermissionType[] permissions)
     {
@@ -173,6 +181,7 @@ public sealed class RequireGraphQLProjectPermissionAttribute : ObjectFieldDescri
         descriptor.Directive(new ProjectAuthorizationDirective
         {
             Permissions = permissionNames,
+            MaskUnauthorized = MaskUnauthorized,
             ResourceIdArgumentName = ResourceIdParentPropertyName is null ? ResourceIdArgumentName : null,
             ResourceIdParentPropertyName = ResourceIdParentPropertyName,
             PermissionSwitchArgumentName = _permissionSwitchArgumentName,
@@ -201,6 +210,12 @@ public sealed class RequireGraphQLProjectPermissionAttribute : ObjectFieldDescri
                 logger.LogWarning(
                     "GraphQL project authorization denied for field {FieldName} because its resource ID was unavailable.",
                     fieldName);
+                if (MaskUnauthorized)
+                {
+                    resolverContext.Result = null;
+                    return;
+                }
+
                 throw CreateAuthorizationError();
             }
 
@@ -216,6 +231,12 @@ public sealed class RequireGraphQLProjectPermissionAttribute : ObjectFieldDescri
                 logger.LogWarning(
                     "GraphQL project authorization denied for field {FieldName} because its conditional permission input was unavailable.",
                     fieldName);
+                if (MaskUnauthorized)
+                {
+                    resolverContext.Result = null;
+                    return;
+                }
+
                 throw CreateAuthorizationError();
             }
 
@@ -248,6 +269,12 @@ public sealed class RequireGraphQLProjectPermissionAttribute : ObjectFieldDescri
                     "GraphQL project authorization could not be evaluated for field {FieldName} and resource {ProjectId}.",
                     fieldName,
                     projectId.Value);
+                if (MaskUnauthorized)
+                {
+                    resolverContext.Result = null;
+                    return;
+                }
+
                 throw new GraphQLException(
                     ErrorBuilder.New()
                         .SetMessage("Authorization could not be evaluated.")
@@ -268,6 +295,12 @@ public sealed class RequireGraphQLProjectPermissionAttribute : ObjectFieldDescri
                     "GraphQL project authorization denied for field {FieldName} and resource {ProjectId}.",
                     fieldName,
                     projectId.Value);
+                if (MaskUnauthorized)
+                {
+                    resolverContext.Result = null;
+                    return;
+                }
+
                 throw CreateAuthorizationError();
             }
 

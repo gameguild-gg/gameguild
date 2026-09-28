@@ -89,6 +89,32 @@ public sealed class GraphQLProjectAuthorizationTests
     }
 
     [Fact]
+    public async Task PermissionDirective_MasksUnauthorizedFieldsAsNullWithoutInvokingTheResolver()
+    {
+        var auditSink = new GraphQLProjectAuthorizationAuditSinkFake();
+        var counters = new GraphQLProjectAuthorizationCounters();
+        await using var app = await CreateApplicationAsync(
+            new GraphQLProjectAuthorizationFake(),
+            counters,
+            auditSink);
+        using var client = app.GetTestClient();
+
+        using var request = CreateRequest(
+            "{ masked(projectId: \"b659b7bf-6281-42e6-a7ef-23d296cff5dd\") }");
+        using var response = await client.SendAsync(request);
+        var body = await response.Content.ReadAsStringAsync();
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK, body);
+        using var document = JsonDocument.Parse(body);
+        document.RootElement.GetProperty("data").GetProperty("masked").ValueKind
+            .Should().Be(JsonValueKind.Null);
+        document.RootElement.TryGetProperty("errors", out _).Should().BeFalse();
+        body.Should().NotContain("allowed");
+        counters.ResolverCount.Should().Be(0);
+        auditSink.Denials.Should().ContainSingle().Which.Reason.Should().Be("permission_denied");
+    }
+
+    [Fact]
     public async Task AuditSink_MapsActorTenantProjectAndPolicyDetailsToTheDurableAuditRecord()
     {
         CreateAuditLogRequest? recordedRequest = null;
@@ -324,15 +350,17 @@ public sealed class GraphQLProjectAuthorizationTests
 
     private sealed class GraphQLTestActorContextAccessor : IActorContextAccessor
     {
-        public ActorContext ActorContext { get; } = GameGuild.Identity.Context.Actors.ActorContext.Anonymous with
+        private ActorContext _actorContext = GameGuild.Identity.Context.Actors.ActorContext.Anonymous with
         {
             SubjectId = "4b50fdd6-2e85-42bb-a9fa-27f6cb7e97c6",
             TenantId = Guid.Parse("7b37d70c-6ecd-4eb2-9f21-c08fc9563e85"),
         };
 
-        public void SetActorContext(ActorContext context) => throw new NotSupportedException();
+        public ActorContext ActorContext => _actorContext;
 
-        public void ClearActorContext() => throw new NotSupportedException();
+        public void SetActorContext(ActorContext context) => _actorContext = context;
+
+        public void ClearActorContext() => _actorContext = GameGuild.Identity.Context.Actors.ActorContext.Anonymous;
     }
 
     private sealed class GraphQLProjectAuthorizationAuditSinkFake : IProjectGraphQLAuthorizationAuditSink
@@ -434,6 +462,12 @@ public sealed class GraphQLProjectAuthorizationTests
     {
         [RequireGraphQLProjectPermission(PermissionType.Read, ResourceIdArgumentName = "projectId")]
         public string? Guarded(Guid projectId) => counters.Resolve();
+
+        [RequireGraphQLProjectPermission(
+            PermissionType.Read,
+            ResourceIdArgumentName = "projectId",
+            MaskUnauthorized = true)]
+        public string? Masked(Guid projectId) => counters.Resolve();
 
         public GraphQLProjectAuthorizationNestedResource Resource(Guid projectId) => new(projectId);
 
