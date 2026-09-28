@@ -5,6 +5,7 @@ import {
   fireEvent,
   render,
   screen,
+  waitFor,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentProps } from "react";
@@ -2281,7 +2282,7 @@ describe("LessonAuthoringWorkspace", () => {
     await user.click(screen.getByRole("button", { name: "Open Copilot" }));
     const mode = screen.getByRole("combobox", { name: "Proposal application" });
     await user.click(mode);
-    await user.click(screen.getByRole("option", { name: "Insert at cursor" }));
+    await user.click(await screen.findByRole("option", { name: "Insert at cursor" }));
     const prompt = screen.getByRole("textbox", { name: "Ask Copilot" });
     await user.type(prompt, "Add a note");
     fireEvent.keyDown(prompt, { key: "Enter", shiftKey: true });
@@ -2299,6 +2300,7 @@ describe("LessonAuthoringWorkspace", () => {
   });
 
   it("configures a light HTML diff", async () => {
+    vi.useRealTimers();
     mocks.theme = "light";
     mocks.createRun.mockResolvedValueOnce({ success: true, data: runningRun });
     mocks.getRun.mockResolvedValueOnce({ success: true, data: completedRun });
@@ -2326,8 +2328,10 @@ describe("LessonAuthoringWorkspace", () => {
       await Promise.resolve();
     });
 
-    expect(mocks.diffEditorProps).toEqual(
-      expect.objectContaining({ language: "html", theme: "vs-light" }),
-    );
+    await waitFor(() => {
+      expect(mocks.diffEditorProps).toEqual(
+        expect.objectContaining({ language: "html", theme: "vs-light" }),
+      );
+    });
   });
 });
