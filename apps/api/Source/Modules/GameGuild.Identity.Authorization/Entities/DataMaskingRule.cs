@@ -1,3 +1,6 @@
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 using GameGuild.CQRS.Models;
 
 namespace GameGuild.Identity.Authorization;
@@ -57,7 +60,7 @@ public class DataMaskingRule
         {
             MaskingType.Full => new string(MaskCharacter, value.Length),
             MaskingType.Partial => ApplyPartialMask(value),
-            MaskingType.Hash => $"#{value.GetHashCode():X8}",
+            MaskingType.Hash => $"#{Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value))).ToLowerInvariant()}",
             MaskingType.PatternMask => ApplyPatternMask(value),
             MaskingType.Redact => "[REDACTED]",
             _ => value
@@ -93,7 +96,15 @@ public class DataMaskingRule
     public bool IsUserExempt(Guid userId)
     {
         if (string.IsNullOrEmpty(ExemptUsers)) return false;
-        return ExemptUsers.Contains(userId.ToString());
+
+        try
+        {
+            return JsonSerializer.Deserialize<Guid[]>(ExemptUsers)?.Contains(userId) == true;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
     }
 
     /// <summary>

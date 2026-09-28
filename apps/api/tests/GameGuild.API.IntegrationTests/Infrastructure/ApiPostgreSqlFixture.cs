@@ -37,7 +37,8 @@ public sealed class ApiPostgreSqlFixture : IAsyncLifetime
     public async Task DisposeAsync()
     {
         Factory?.Dispose();
-        await _container.DisposeAsync();
+        if (_container is not null)
+            await _container.DisposeAsync();
     }
 
     private static async Task ApplyMigrationsAsync(string connectionString)
