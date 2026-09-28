@@ -789,6 +789,12 @@ async function run() {
     );
     await waitForClientHydration(testerPage);
     await testerPage
+      .getByRole("button", { name: "Join", exact: true })
+      .click();
+    await testerPage
+      .getByRole("button", { name: "As a tester", exact: true })
+      .click();
+    await testerPage
       .getByLabel("Which device will you use?")
       .fill("Desktop keyboard and mouse");
     await testerPage

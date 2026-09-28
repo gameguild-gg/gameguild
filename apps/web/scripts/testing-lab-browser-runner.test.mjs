@@ -183,6 +183,37 @@ test("waits for hydration before every client-side Testing Lab mutation", async 
     );
   }
 });
+test("opens public tester registration through the Join role flow", async () => {
+  const journey = await readFile(
+    new URL("./testing-lab-browser-e2e.mjs", import.meta.url),
+    "utf8",
+  );
+  const visitIndex = journey.indexOf('"scheduled public Testing Lab event"');
+  const hydrationIndex = journey.indexOf(
+    "await waitForClientHydration(testerPage);",
+    visitIndex,
+  );
+  const joinIndex = journey.indexOf(
+    'name: "Join", exact: true',
+    hydrationIndex,
+  );
+  const testerRoleIndex = journey.indexOf(
+    'name: "As a tester", exact: true',
+    joinIndex,
+  );
+  const registrationQuestionIndex = journey.indexOf(
+    'getByLabel("Which device will you use?")',
+    testerRoleIndex,
+  );
+
+  assert.ok(
+    visitIndex >= 0 &&
+      hydrationIndex > visitIndex &&
+      joinIndex > hydrationIndex &&
+      testerRoleIndex > joinIndex &&
+      registrationQuestionIndex > testerRoleIndex,
+  );
+});
 test("covers the complete Testing Lab operational browser matrix", async () => {
   const journey = await readFile(
     new URL("./testing-lab-browser-e2e.mjs", import.meta.url),
