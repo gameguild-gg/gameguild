@@ -158,13 +158,20 @@ public class UserRepository(IApplicationDbContext context) : IUserRepository
             .ConfigureAwait(false);
     }
 
-    public async Task UpdatePasswordHashAsync(Guid userId, string passwordHash, CancellationToken cancellationToken = default)
+    public async Task<bool> UpdatePasswordHashAsync(Guid userId, string passwordHash, string? expectedCurrentPasswordHash, CancellationToken cancellationToken = default)
     {
         var user = await GetByIdAsync(userId, cancellationToken).ConfigureAwait(false);
-        if (user != null)
+        if (user is null || !string.Equals(user.PasswordHash, expectedCurrentPasswordHash, StringComparison.Ordinal)) return false;
+
+        user.SetPasswordHash(passwordHash);
+        try
         {
-            user.SetPasswordHash(passwordHash);
             await SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return true;
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return false;
         }
     }
 

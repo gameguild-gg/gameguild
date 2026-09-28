@@ -134,7 +134,7 @@ public class UserRepositoryTests
         (await repository.ExistsByUsernameAsync("AUTH.USER")).Should().BeTrue();
         (await repository.ExistsByUsernameAsync(" ")).Should().BeFalse();
 
-        await repository.UpdatePasswordHashAsync(user.Id, "hashed-password");
+        (await repository.UpdatePasswordHashAsync(user.Id, "hashed-password", user.PasswordHash)).Should().BeTrue();
         await repository.RecordLoginAsync(user.Id);
 
         var updatedUser = await repository.GetByIdAsync(user.Id);
@@ -145,6 +145,28 @@ public class UserRepositoryTests
         updatedUser.LastSeenAt.Should().NotBeNull();
 
         (await repository.GetTokenVersionAsync(user.Id)).Should().Be(originalTokenVersion + 1);
+    }
+
+    [Fact]
+    public async Task UpdatePasswordHash_WhenAnotherChangeWins_ReturnsFalseAndPreservesWinningPassword()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+        await using var staleContext = CreateContext(databaseName);
+        var user = CreateUser("concurrent-password@example.com", "Concurrent Password User");
+        user.PasswordHash = "original-hash";
+        await SeedUsersAsync(staleContext, user);
+
+        var staleRepository = new UserRepository(staleContext);
+        (await staleRepository.GetByIdAsync(user.Id))!.PasswordHash.Should().Be("original-hash");
+
+        await using var winningContext = CreateContext(databaseName);
+        var winningRepository = new UserRepository(winningContext);
+        (await winningRepository.UpdatePasswordHashAsync(user.Id, "winning-hash", "original-hash")).Should().BeTrue();
+
+        (await staleRepository.UpdatePasswordHashAsync(user.Id, "stale-hash", "original-hash")).Should().BeFalse();
+
+        await using var verificationContext = CreateContext(databaseName);
+        (await new UserRepository(verificationContext).GetByIdAsync(user.Id))!.PasswordHash.Should().Be("winning-hash");
     }
 
     [Fact]
@@ -164,10 +186,10 @@ public class UserRepositoryTests
         repository.GetQueryable().Should().BeEmpty();
     }
 
-    private static UsersRepositoryDbContext CreateContext()
+    private static UsersRepositoryDbContext CreateContext(string? databaseName = null)
     {
         var options = new DbContextOptionsBuilder<UsersRepositoryDbContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .UseInMemoryDatabase(databaseName ?? Guid.NewGuid().ToString())
             .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning))
             .Options;
 
