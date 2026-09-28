@@ -238,6 +238,18 @@ test("accepts the accessible playtest rules before reserving a tester seat", asy
     "the browser journey must accept the rendered rules before reserving a seat",
   );
 });
+test("waits for the rendered confirmation after tester seat registration", async () => {
+  const journey = await readFile(
+    new URL("./testing-lab-browser-e2e.mjs", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(
+    journey,
+    /waitForText\(testerPage, "You’re registered for this playtest\."\);/,
+  );
+  assert.match(journey, /waitForText\(testerPage, "Registered"\);/);
+});
 test("covers the complete Testing Lab operational browser matrix", async () => {
   const journey = await readFile(
     new URL("./testing-lab-browser-e2e.mjs", import.meta.url),

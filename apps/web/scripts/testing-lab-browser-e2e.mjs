@@ -809,7 +809,7 @@ async function run() {
     await testerPage
       .getByRole("button", { name: "Join playtest", exact: true })
       .click();
-    await waitForText(testerPage, "Testing slot registration submitted.");
+    await waitForText(testerPage, "You’re registered for this playtest.");
     await waitForText(testerPage, "Registered");
     await testerPage.screenshot({
       path: path.join(artifactsDirectory, "event-participation-desktop.png"),
