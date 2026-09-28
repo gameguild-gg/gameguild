@@ -171,7 +171,9 @@ public sealed class PermissionCacheRedisIntegrationTests(PermissionCacheRedisFix
                 await Task.Delay(TimeSpan.FromMilliseconds(50));
                 invalidated = true;
                 foreach (var key in cacheKeys)
+                {
                     invalidated &= await cache.GetAsync<string>(key, "permission") is null;
+                }
             }
 
             invalidated.Should().BeTrue("a remote Redis event should evict permission and ACL L1 entries from another request scope");
@@ -407,11 +409,17 @@ public sealed class PermissionCacheRedisIntegrationTests(PermissionCacheRedisFix
     {
         private readonly ConcurrentDictionary<string, long> _versions = new(StringComparer.Ordinal);
 
-        public Task<long> GetVersionAsync(string tenantId, CancellationToken _) =>
-            Task.FromResult(GetVersion(tenantId));
+        public Task<long> GetVersionAsync(string tenantId, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult(GetVersion(tenantId));
+        }
 
-        public Task<long> IncrementVersionAsync(string tenantId, CancellationToken _) =>
-            Task.FromResult(_versions.AddOrUpdate(tenantId, 1, static (_, current) => current + 1));
+        public Task<long> IncrementVersionAsync(string tenantId, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult(_versions.AddOrUpdate(tenantId, 1, static (_, current) => current + 1));
+        }
 
         public long GetVersion(string tenantId) => _versions.TryGetValue(tenantId, out var version) ? version : 0;
     }
@@ -420,14 +428,21 @@ public sealed class PermissionCacheRedisIntegrationTests(PermissionCacheRedisFix
     {
         private readonly ConcurrentDictionary<Guid, long> _versions = new();
 
-        public Task<long> GetVersionAsync(Guid userId, CancellationToken _) =>
-            Task.FromResult(_versions.TryGetValue(userId, out var version) ? version : 0);
-
-        public Task<long> IncrementVersionAsync(Guid userId, CancellationToken _) =>
-            Task.FromResult(_versions.AddOrUpdate(userId, 1, static (_, current) => current + 1));
-
-        public Task IncrementVersionsAsync(IEnumerable<Guid> userIds, CancellationToken _)
+        public Task<long> GetVersionAsync(Guid userId, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult(_versions.TryGetValue(userId, out var version) ? version : 0);
+        }
+
+        public Task<long> IncrementVersionAsync(Guid userId, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult(_versions.AddOrUpdate(userId, 1, static (_, current) => current + 1));
+        }
+
+        public Task IncrementVersionsAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
             foreach (var userId in userIds)
             {
                 _versions.AddOrUpdate(userId, 1, static (_, current) => current + 1);
