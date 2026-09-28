@@ -168,7 +168,7 @@ test("waits for hydration before every client-side Testing Lab mutation", async 
     [
       '"scheduled public Testing Lab event"',
       "await waitForClientHydration(testerPage);",
-      'name: "Reserve tester seat"',
+      'name: "Join playtest"',
     ],
   ];
 
@@ -226,7 +226,7 @@ test("accepts the accessible playtest rules before reserving a tester seat", asy
   );
   const rulesAcceptanceIndex = journey.indexOf(".check();", rulesLabelIndex);
   const reserveIndex = journey.indexOf(
-    'name: "Reserve tester seat"',
+    'name: "Join playtest"',
     rulesAcceptanceIndex,
   );
 

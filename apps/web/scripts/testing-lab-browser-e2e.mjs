@@ -807,7 +807,7 @@ async function run() {
       .getByLabel(/agree to follow the rules for this playtest/i)
       .check();
     await testerPage
-      .getByRole("button", { name: "Reserve tester seat", exact: true })
+      .getByRole("button", { name: "Join playtest", exact: true })
       .click();
     await waitForText(testerPage, "Testing slot registration submitted.");
     await waitForText(testerPage, "Registered");
