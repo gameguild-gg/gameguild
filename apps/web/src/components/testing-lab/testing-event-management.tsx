@@ -25,6 +25,7 @@ import {
 import {
   browserTimeZone,
   formatWallClockInTimeZone,
+  wallClockToUtcIso,
 } from "@/lib/date-time-zone";
 import { formatEventDateTime } from "@/lib/testing-lab/event-workspace";
 import { formatTestingEventStatus } from "@/lib/testing-lab/format";
@@ -91,9 +92,11 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
+  useCallback,
   useRef,
   useMemo,
   useState,
+  useSyncExternalStore,
   useTransition,
   type FormEvent,
   type ReactElement,
@@ -103,6 +106,8 @@ import {
 type Action = (
   formData: FormData,
 ) => Promise<TestingEventActionResult<unknown>>;
+
+const subscribeToTimeZonePreference = () => () => undefined;
 
 export interface TestingLabMemberOption {
   id: string;
@@ -129,11 +134,6 @@ export function apiDatetimeLocal(value?: string | null, timeZoneId = "UTC") {
   return formatWallClockInTimeZone(date, timeZoneId);
 }
 
-function localDatetime(date: Date) {
-  const local = new Date(date.valueOf() - date.getTimezoneOffset() * 60_000);
-  return local.toISOString().slice(0, 16);
-}
-
 type TestingEventSchedule = {
   applicationsOpenAt: string;
   applicationsCloseAt: string;
@@ -142,42 +142,109 @@ type TestingEventSchedule = {
 };
 
 const Hour = 60 * 60 * 1000;
-const Day = 24 * Hour;
+
+function wallClockDate(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return null;
+  const date = new Date(`${value}:00.000Z`);
+  return Number.isNaN(date.valueOf()) || date.toISOString().slice(0, 16) !== value
+    ? null
+    : date;
+}
+
+function addWallClockMinutes(value: string, minutes: number) {
+  const date = wallClockDate(value);
+  if (!date) return "";
+  date.setUTCMinutes(date.getUTCMinutes() + minutes);
+  return date.toISOString().slice(0, 16);
+}
+
+function nextValidWallClock(value: string, timeZoneId: string, direction = 1) {
+  for (let offset = 0; offset <= 180; offset += 1) {
+    const candidate = addWallClockMinutes(value, offset * direction);
+    if (candidate && wallClockToUtcIso(candidate, timeZoneId)) return candidate;
+  }
+  return "";
+}
+
+function localCalendarDatePart(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
 export function createTestingEventSchedule(
   now = new Date(),
   eventDate?: Date,
+  timeZoneId = browserTimeZone(),
 ): TestingEventSchedule {
-  const applicationsOpenAt = new Date(now);
-  applicationsOpenAt.setMinutes(0, 0, 0);
-  applicationsOpenAt.setHours(applicationsOpenAt.getHours() + 1);
+  const currentWallClock = formatWallClockInTimeZone(now, timeZoneId);
+  const currentWallClockDate = wallClockDate(currentWallClock);
+  if (!currentWallClockDate) {
+    return createTestingEventSchedule(now, eventDate, "UTC");
+  }
 
-  let startsAt = eventDate
-    ? new Date(
-        eventDate.getFullYear(),
-        eventDate.getMonth(),
-        eventDate.getDate(),
-        10,
-      )
-    : new Date(applicationsOpenAt.valueOf() + 2 * Day);
-  const minimumStart = new Date(applicationsOpenAt.valueOf() + 2 * Hour);
-  if (startsAt <= minimumStart) startsAt = minimumStart;
+  currentWallClockDate.setUTCMinutes(0, 0, 0);
+  currentWallClockDate.setUTCHours(currentWallClockDate.getUTCHours() + 1);
+  const applicationsOpenAt = nextValidWallClock(
+    currentWallClockDate.toISOString().slice(0, 16),
+    timeZoneId,
+  );
+  const openInstant = wallClockToUtcIso(applicationsOpenAt, timeZoneId);
+  if (!applicationsOpenAt || !openInstant) {
+    return createTestingEventSchedule(now, eventDate, "UTC");
+  }
 
-  const applicationsCloseAt = new Date(startsAt.valueOf() - Hour);
-  const endsAt = new Date(startsAt.valueOf() + 2 * Hour);
+  const selectedDate = eventDate ? localCalendarDatePart(eventDate) : null;
+  const requestedStart = selectedDate
+    ? `${selectedDate}T10:00`
+    : `${addWallClockMinutes(applicationsOpenAt, 48 * 60).slice(0, 10)}T10:00`;
+  const earliestStart = Date.parse(openInstant) + 2 * Hour;
+  let startsAt = nextValidWallClock(requestedStart, timeZoneId);
+  let startInstant = startsAt ? wallClockToUtcIso(startsAt, timeZoneId) : null;
+
+  if (!startInstant || Date.parse(startInstant) < earliestStart) {
+    const fallbackDate = addWallClockMinutes(applicationsOpenAt, 48 * 60);
+    startsAt = nextValidWallClock(`${fallbackDate.slice(0, 10)}T10:00`, timeZoneId);
+    startInstant = startsAt ? wallClockToUtcIso(startsAt, timeZoneId) : null;
+  }
+
+  if (!startsAt || !startInstant) {
+    return createTestingEventSchedule(now, eventDate, "UTC");
+  }
+
+  let applicationsCloseAt = "";
+  for (let offset = 60; offset <= 180; offset += 1) {
+    const candidate = addWallClockMinutes(startsAt, -offset);
+    const candidateInstant = candidate
+      ? wallClockToUtcIso(candidate, timeZoneId)
+      : null;
+    if (candidateInstant && Date.parse(candidateInstant) > Date.parse(openInstant)) {
+      applicationsCloseAt = candidate;
+      break;
+    }
+  }
+  if (!applicationsCloseAt) {
+    const candidate = addWallClockMinutes(applicationsOpenAt, 60);
+    applicationsCloseAt = nextValidWallClock(candidate, timeZoneId);
+  }
+
+  const endsAt = formatWallClockInTimeZone(
+    new Date(Date.parse(startInstant) + 2 * Hour),
+    timeZoneId,
+  );
 
   return {
-    applicationsOpenAt: localDatetime(applicationsOpenAt),
-    applicationsCloseAt: localDatetime(applicationsCloseAt),
-    startsAt: localDatetime(startsAt),
-    endsAt: localDatetime(endsAt),
+    applicationsOpenAt,
+    applicationsCloseAt,
+    startsAt,
+    endsAt,
   };
 }
 
 export function scheduleDate(value: string) {
   if (!value) return null;
-  const date = new Date(value);
-  return Number.isNaN(date.valueOf()) ? null : date;
+  return wallClockDate(value);
 }
 
 export function updateTestingEventSchedule(
@@ -185,36 +252,47 @@ export function updateTestingEventSchedule(
   field: keyof TestingEventSchedule,
   value: string,
 ): TestingEventSchedule {
-  const next = { ...current, [field]: value };
-  const openAt = scheduleDate(next.applicationsOpenAt);
-  let closeAt = scheduleDate(next.applicationsCloseAt);
-  let startsAt = scheduleDate(next.startsAt);
+  return { ...current, [field]: value };
+}
+
+export function validateTestingEventSchedule(
+  schedule: TestingEventSchedule,
+  timeZoneId: string,
+) {
+  const values = [
+    schedule.applicationsOpenAt,
+    schedule.applicationsCloseAt,
+    schedule.startsAt,
+    schedule.endsAt,
+  ];
 
   if (
-    field === "applicationsOpenAt" &&
-    openAt &&
-    (!closeAt || closeAt <= openAt)
+    values.some(
+      (value) => !/^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d$/.test(value),
+    )
   ) {
-    closeAt = new Date(openAt.valueOf() + Day);
-    next.applicationsCloseAt = localDatetime(closeAt);
+    return "Enter a date and a 24-hour time for every schedule field.";
   }
 
-  if (closeAt && (!startsAt || startsAt < closeAt)) {
-    startsAt = new Date(closeAt.valueOf() + Day);
-    next.startsAt = localDatetime(startsAt);
+  const instants = values.map((value) => wallClockToUtcIso(value, timeZoneId));
+  if (instants.some((value) => value === null)) {
+    return `One of these times does not exist in ${timeZoneId}. Choose another time, especially around daylight-saving changes.`;
   }
 
-  if (field === "startsAt" && startsAt) {
-    next.endsAt = localDatetime(new Date(startsAt.valueOf() + 2 * Hour));
-    return next;
+  const [openAt, closeAt, startsAt, endsAt] = instants.map((value) =>
+    Date.parse(value!),
+  );
+  if (openAt! >= closeAt!) {
+    return "Applications must close after they open.";
+  }
+  if (closeAt! > startsAt!) {
+    return "The playtest must start after applications close.";
+  }
+  if (startsAt! >= endsAt!) {
+    return "The playtest end must be later than its start.";
   }
 
-  const endsAt = scheduleDate(next.endsAt);
-  if (startsAt && (!endsAt || endsAt <= startsAt)) {
-    next.endsAt = localDatetime(new Date(startsAt.valueOf() + 2 * Hour));
-  }
-
-  return next;
+  return null;
 }
 
 function ActionMessage({
@@ -545,58 +623,42 @@ function EventTimelineFields({
 
   return (
     <div className={stacked ? "grid gap-3" : "grid gap-4 md:grid-cols-2"}>
-      <details
-        open={compact ? undefined : true}
-        className={compact ? "group min-w-0" : "min-w-0 space-y-2"}
-      >
-        <summary
-          className={
-            compact
-              ? "grid min-h-10 cursor-pointer list-none items-center gap-1.5 rounded-md px-2 hover:bg-muted/40 sm:grid-cols-[7rem_minmax(0,1fr)] sm:gap-3"
-              : "pointer-events-none list-none"
+      <p className="text-xs text-muted-foreground md:col-span-2">
+        All times use {eventTimeZone} and a 24-hour clock.
+      </p>
+      <div className={compact ? "grid min-w-0 gap-1.5" : "min-w-0 space-y-2"}>
+        <span className={compact ? "text-xs text-muted-foreground" : "text-sm font-medium"}>
+          {compact ? "Applications" : "Application window"}
+        </span>
+        <DateTimeRangePicker
+          id={`applications-window-${fieldSuffix}`}
+          label="Application window"
+          startLabel="Applications open"
+          endLabel="Applications close"
+          startName="applicationsOpenAt"
+          endName="applicationsCloseAt"
+          timeZoneId={eventTimeZone}
+          required
+          value={
+            schedule
+              ? { start: applicationsOpenAt, end: applicationsCloseAt }
+              : undefined
           }
-        >
-          <Label
-            className={compact ? "text-xs text-muted-foreground" : undefined}
-            htmlFor={`applications-window-${fieldSuffix}`}
-          >
-            {compact ? "Applications" : "Application window"}
-          </Label>
-          {compact ? (
-            <span className="text-sm text-muted-foreground group-open:hidden">
-              Set application window
-            </span>
-          ) : null}
-        </summary>
-        <div className={compact ? "mt-2 sm:ml-[7.75rem]" : undefined}>
-          <DateTimeRangePicker
-            id={`applications-window-${fieldSuffix}`}
-            label="Application window"
-            startName="applicationsOpenAt"
-            endName="applicationsCloseAt"
-            timeZoneId={eventTimeZone}
-            required
-            value={
-              schedule
-                ? { start: applicationsOpenAt, end: applicationsCloseAt }
-                : undefined
-            }
-            defaultValue={{
-              start: applicationsOpenAt,
-              end: applicationsCloseAt,
-            }}
-            onValueChange={(next) =>
-              changeRange(
-                "applicationsOpenAt",
-                "applicationsCloseAt",
-                next,
-                applicationsOpenAt,
-                applicationsCloseAt,
-              )
-            }
-          />
-        </div>
-      </details>
+          defaultValue={{
+            start: applicationsOpenAt,
+            end: applicationsCloseAt,
+          }}
+          onValueChange={(next) =>
+            changeRange(
+              "applicationsOpenAt",
+              "applicationsCloseAt",
+              next,
+              applicationsOpenAt,
+              applicationsCloseAt,
+            )
+          }
+        />
+      </div>
       <div
         className={
           compact
@@ -604,15 +666,14 @@ function EventTimelineFields({
             : "min-w-0 space-y-2"
         }
       >
-        <Label
-          className={compact ? "text-xs text-muted-foreground" : undefined}
-          htmlFor={`event-schedule-${fieldSuffix}`}
-        >
+        <span className={compact ? "text-xs text-muted-foreground" : "text-sm font-medium"}>
           {compact ? "Testing session" : "Event schedule"}
-        </Label>
+        </span>
         <DateTimeRangePicker
           id={`event-schedule-${fieldSuffix}`}
           label="Event schedule"
+          startLabel="Session starts"
+          endLabel="Session ends"
           startName="startsAt"
           endName="endsAt"
           timeZoneId={eventTimeZone}
@@ -679,21 +740,24 @@ export function testingEventRecurrenceStart(startDate: string) {
     "Friday",
     "Saturday",
   ];
-  const parsedStart = new Date(startDate);
-  return Number.isNaN(parsedStart.valueOf())
+  const datePart = startDate.match(/^(\d{4}-\d{2}-\d{2})/)?.[1];
+  const parsedStart = datePart ? new Date(`${datePart}T00:00:00.000Z`) : null;
+  return !parsedStart || Number.isNaN(parsedStart.valueOf())
     ? { day: "Monday", dayOfMonth: 1 }
     : {
-        day: allDays[parsedStart.getDay()]!,
-        dayOfMonth: parsedStart.getDate(),
+        day: allDays[parsedStart.getUTCDay()]!,
+        dayOfMonth: parsedStart.getUTCDate(),
       };
 }
 
 function EventRecurrenceFields({
   onDirty,
   startDate,
+  timeZoneId,
 }: {
   onDirty: () => void;
   startDate: string;
+  timeZoneId: string;
 }) {
   const displayDays = [
     "Monday",
@@ -882,6 +946,9 @@ function EventRecurrenceFields({
                   id="recurrence-ends-at"
                   name="recurrenceEndsAt"
                   required
+                  timeZoneId={timeZoneId}
+                  timezoneLabel={timeZoneId}
+                  onValueChange={onDirty}
                 />
               </div>
             ) : (
@@ -937,12 +1004,29 @@ export function CreateTestingEventDialog({
   const [pending, startTransition] = useTransition();
   const [result, setResult] =
     useState<TestingEventActionResult<unknown> | null>(null);
-  const [timeZoneId, setTimeZoneId] = useState(() =>
-    preferredNewEventTimeZone(defaultTimeZone),
+  const browserPreferredTimeZone = useSyncExternalStore(
+    subscribeToTimeZonePreference,
+    useCallback(
+      () => preferredNewEventTimeZone(defaultTimeZone),
+      [defaultTimeZone],
+    ),
+    useCallback(() => defaultTimeZone, [defaultTimeZone]),
   );
-  const [schedule, setSchedule] = useState<TestingEventSchedule>(() =>
-    createTestingEventSchedule(new Date(), initialDate),
+  const [timeZoneOverride, setTimeZoneOverride] = useState<string | null>(null);
+  const timeZoneId = timeZoneOverride ?? browserPreferredTimeZone;
+  const [scheduleError, setScheduleError] = useState<string | null>(null);
+  const defaultSchedule = useMemo(
+    () =>
+      createTestingEventSchedule(
+        new Date(),
+        initialDate,
+        timeZoneId,
+      ),
+    [initialDate, timeZoneId],
   );
+  const [scheduleOverride, setScheduleOverride] =
+    useState<TestingEventSchedule | null>(null);
+  const schedule = scheduleOverride ?? defaultSchedule;
 
   function setOpen(next: boolean) {
     if (controlledOpen === undefined) setInternalOpen(next);
@@ -951,8 +1035,12 @@ export function CreateTestingEventDialog({
 
   function resetDraft() {
     formRef.current?.reset();
-    setSchedule(createTestingEventSchedule(new Date(), initialDate));
-    setTimeZoneId(preferredNewEventTimeZone(defaultTimeZone));
+    const preferredTimeZone = preferredNewEventTimeZone(defaultTimeZone);
+    setScheduleOverride(
+      createTestingEventSchedule(new Date(), initialDate, preferredTimeZone),
+    );
+    setTimeZoneOverride(null);
+    setScheduleError(null);
     setDirty(false);
     setResult(null);
   }
@@ -975,11 +1063,21 @@ export function CreateTestingEventDialog({
 
   function changeSchedule(field: keyof TestingEventSchedule, value: string) {
     setDirty(true);
-    setSchedule((current) => updateTestingEventSchedule(current, field, value));
+    setScheduleError(null);
+    setScheduleOverride((current) =>
+      updateTestingEventSchedule(current ?? schedule, field, value),
+    );
   }
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const invalidSchedule = validateTestingEventSchedule(schedule, timeZoneId);
+    if (invalidSchedule) {
+      setScheduleError(invalidSchedule);
+      return;
+    }
+
+    setScheduleError(null);
     const form = event.currentTarget;
     const data = new FormData(form);
     data.set("timeZoneId", timeZoneId);
@@ -1047,7 +1145,9 @@ export function CreateTestingEventDialog({
                       id="new-event-time-zone"
                       value={timeZoneId}
                       onValueChange={(value) => {
-                        setTimeZoneId(value);
+                        setScheduleOverride(schedule);
+                        setTimeZoneOverride(value);
+                        setScheduleError(null);
                         setDirty(true);
                       }}
                     />
@@ -1059,10 +1159,16 @@ export function CreateTestingEventDialog({
                     stacked
                     compact
                   />
+                  {scheduleError ? (
+                    <p role="alert" className="text-sm text-destructive">
+                      {scheduleError}
+                    </p>
+                  ) : null}
                 </section>
 
                 <EventRecurrenceFields
                   startDate={schedule.startsAt}
+                  timeZoneId={timeZoneId}
                   onDirty={() => setDirty(true)}
                 />
                 <input type="hidden" name="requiresFeedback" value="true" />

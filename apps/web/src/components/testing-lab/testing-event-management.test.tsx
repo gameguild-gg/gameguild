@@ -76,7 +76,9 @@ import {
   TestingEventLifecycleActions,
   TestingTimeSlotPlanner,
   updateTestingEventSchedule,
+  validateTestingEventSchedule,
 } from "./testing-event-management";
+import { wallClockToUtcIso } from "@/lib/date-time-zone";
 
 describe("TestingEventApplications", () => {
   beforeEach(() => {
@@ -136,28 +138,38 @@ describe("TestingEventApplications", () => {
     );
     expect(scheduleDate("")).toBeNull();
     expect(scheduleDate("not-a-date")).toBeNull();
-    expect(scheduleDate("2030-01-01T12:00")?.getFullYear()).toBe(2030);
+    expect(scheduleDate("2030-01-01T12:00")?.toISOString()).toBe(
+      "2030-01-01T12:00:00.000Z",
+    );
   });
 
-  it("creates a chronological default schedule even for an early selected day", () => {
+  it("keeps the selected date and default schedule in the chosen time zone", () => {
+    const timeZoneId = "America/Los_Angeles";
     const schedule = createTestingEventSchedule(
-      new Date(2030, 0, 1, 8, 17),
-      new Date(2030, 0, 1),
+      new Date("2030-01-01T16:17:00.000Z"),
+      new Date(2030, 0, 5),
+      timeZoneId,
     );
 
-    expect(new Date(schedule.applicationsCloseAt).valueOf()).toBeGreaterThan(
-      new Date(schedule.applicationsOpenAt).valueOf(),
-    );
-    expect(new Date(schedule.startsAt).valueOf()).toBeGreaterThanOrEqual(
-      new Date(schedule.applicationsCloseAt).valueOf(),
+    expect(schedule.startsAt).toBe("2030-01-05T10:00");
+    expect(schedule.applicationsOpenAt).toBe("2030-01-01T09:00");
+    expect(
+      Date.parse(wallClockToUtcIso(schedule.applicationsCloseAt, timeZoneId)!),
+    ).toBeGreaterThan(
+      Date.parse(wallClockToUtcIso(schedule.applicationsOpenAt, timeZoneId)!),
     );
     expect(
-      new Date(schedule.endsAt).valueOf() -
-        new Date(schedule.startsAt).valueOf(),
+      Date.parse(wallClockToUtcIso(schedule.startsAt, timeZoneId)!),
+    ).toBeGreaterThanOrEqual(
+      Date.parse(wallClockToUtcIso(schedule.applicationsCloseAt, timeZoneId)!),
+    );
+    expect(
+      Date.parse(wallClockToUtcIso(schedule.endsAt, timeZoneId)!) -
+        Date.parse(wallClockToUtcIso(schedule.startsAt, timeZoneId)!),
     ).toBe(2 * 60 * 60 * 1000);
   });
 
-  it("repairs dependent schedule windows when dates move", () => {
+  it("does not silently change other schedule values when one date moves", () => {
     const original = {
       applicationsOpenAt: "2030-01-01T09:00",
       applicationsCloseAt: "2030-01-01T10:00",
@@ -170,16 +182,20 @@ describe("TestingEventApplications", () => {
       "applicationsOpenAt",
       "2030-01-02T09:00",
     );
-    expect(openMoved.applicationsCloseAt).toBe("2030-01-03T09:00");
-    expect(openMoved.startsAt).toBe("2030-01-04T09:00");
-    expect(openMoved.endsAt).toBe("2030-01-04T11:00");
+    expect(openMoved).toEqual({
+      ...original,
+      applicationsOpenAt: "2030-01-02T09:00",
+    });
+    expect(validateTestingEventSchedule(openMoved, "UTC")).toBe(
+      "Applications must close after they open.",
+    );
 
     const startMoved = updateTestingEventSchedule(
       original,
       "startsAt",
       "2030-01-05T12:00",
     );
-    expect(startMoved.endsAt).toBe("2030-01-05T14:00");
+    expect(startMoved.endsAt).toBe(original.endsAt);
 
     const validEnd = updateTestingEventSchedule(
       original,
@@ -187,6 +203,31 @@ describe("TestingEventApplications", () => {
       "2030-01-01T14:00",
     );
     expect(validEnd.endsAt).toBe("2030-01-01T14:00");
+  });
+
+  it("validates schedule order and rejects nonexistent timezone wall times", () => {
+    const validSchedule = {
+      applicationsOpenAt: "2026-03-07T10:00",
+      applicationsCloseAt: "2026-03-08T01:30",
+      startsAt: "2026-03-08T03:30",
+      endsAt: "2026-03-08T04:30",
+    };
+
+    expect(validateTestingEventSchedule(validSchedule, "America/New_York")).toBe(
+      null,
+    );
+    expect(
+      validateTestingEventSchedule(
+        { ...validSchedule, startsAt: "2026-03-08T02:30" },
+        "America/New_York",
+      ),
+    ).toContain("does not exist in America/New_York");
+    expect(
+      validateTestingEventSchedule(
+        { ...validSchedule, endsAt: "2026-03-08T03:00" },
+        "America/New_York",
+      ),
+    ).toBe("The playtest end must be later than its start.");
   });
 
   it("uses explicit non-UTC event time zones", () => {
@@ -318,7 +359,7 @@ describe("TestingEventApplications", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("uses range calendars and keeps the event schedule chronological", () => {
+  it("shows separate start and end dates with an explicit 24-hour clock", () => {
     render(<CreateTestingEventDialog defaultTimeZone="America/Sao_Paulo" />);
 
     fireEvent.click(screen.getByRole("button", { name: "New event" }));
@@ -329,44 +370,39 @@ describe("TestingEventApplications", () => {
     const startsAt = field("startsAt");
     const endsAt = field("endsAt");
 
-    expect(
-      document.querySelector('input[type="datetime-local"]'),
-    ).not.toBeInTheDocument();
+    expect(document.querySelector('input[type="date"]')).toBeInTheDocument();
+    expect(document.querySelector('input[type="time"]')).not.toBeInTheDocument();
     expect(applicationsOpenAt.value).not.toBe("");
     expect(applicationsCloseAt.value).not.toBe("");
     expect(startsAt.value).not.toBe("");
     expect(endsAt.value).not.toBe("");
-    expect(new Date(applicationsCloseAt.value).valueOf()).toBeGreaterThan(
-      new Date(applicationsOpenAt.value).valueOf(),
-    );
-    expect(new Date(startsAt.value).valueOf()).toBeGreaterThanOrEqual(
-      new Date(applicationsCloseAt.value).valueOf(),
-    );
-    expect(new Date(endsAt.value).valueOf()).toBeGreaterThan(
-      new Date(startsAt.value).valueOf(),
+    expect(applicationsOpenAt.value).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
+    expect(applicationsCloseAt.value).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
+    expect(startsAt.value).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
+    expect(endsAt.value).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
+    expect(
+      (screen.getByLabelText("Session starts time") as HTMLInputElement).value,
+    ).toMatch(/^(?:[01]\d|2[0-3]):[0-5]\d$/);
+    expect(screen.getByLabelText("Session ends date")).toHaveValue(
+      endsAt.value.slice(0, 10),
     );
 
+    const originalStart = startsAt.value;
     fireEvent.click(screen.getByRole("combobox", { name: "Time zone" }));
     fireEvent.change(screen.getByPlaceholderText("Search time zones…"), {
       target: { value: "America/New_York" },
     });
     fireEvent.click(screen.getByText("America/New_York"));
     expect(field("timeZoneId").value).toBe("America/New_York");
+    expect(startsAt.value).toBe(originalStart);
 
-    fireEvent.click(screen.getByRole("button", { name: "Event schedule" }));
-    const nextMinute = String(
-      new Date(startsAt.value).getMinutes() + 1,
-    ).padStart(2, "0");
-    fireEvent.change(screen.getByLabelText("Start time"), {
-      target: { value: `22:${nextMinute}` },
+    const originalEnd = endsAt.value;
+    fireEvent.change(screen.getByLabelText("Session starts time"), {
+      target: { value: "11:30" },
     });
-    fireEvent.click(
-      screen.getByRole("button", { name: "Apply event schedule" }),
-    );
-
-    expect(
-      new Date(endsAt.value).valueOf() - new Date(startsAt.value).valueOf(),
-    ).toBe(2 * 60 * 60 * 1000);
+    expect(startsAt.value.endsWith("T11:30")).toBe(true);
+    expect(endsAt.value).toBe(originalEnd);
+    expect(screen.getByText("All times use America/New_York and a 24-hour clock.")).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText("Event name"), {
       target: { value: "Community playtest" },
@@ -499,7 +535,7 @@ describe("TestingEventApplications", () => {
     ).toHaveValue("revision-2");
   });
 
-  it("presents and updates the event decisions before its two time windows", async () => {
+  it("presents event decisions before fully visible schedule fields", async () => {
     const user = userEvent.setup();
     render(<CreateTestingEventDialog defaultTimeZone="America/Sao_Paulo" />);
 
@@ -529,15 +565,23 @@ describe("TestingEventApplications", () => {
 
     const timeline = screen.getByRole("region", { name: "Schedule" });
     expect(
-      within(timeline).getByRole("button", { name: "Application window" }),
-    ).toHaveTextContent(
-      /\d{2}\/\d{2}\/\d{4} · \d{2}:\d{2}(?:–\d{2}:\d{2}| → \d{2}\/\d{2}\/\d{4} · \d{2}:\d{2})/,
-    );
+      within(timeline).getByRole("group", {
+        name: "Application window, America/Sao_Paulo, 24-hour clock",
+      }),
+    ).toBeInTheDocument();
     expect(
-      within(timeline).getByRole("button", { name: "Event schedule" }),
-    ).toHaveTextContent(
-      /\d{2}\/\d{2}\/\d{4} · \d{2}:\d{2}(?:–\d{2}:\d{2}| → \d{2}\/\d{2}\/\d{4} · \d{2}:\d{2})/,
-    );
+      within(timeline).getByRole("group", {
+        name: "Event schedule, America/Sao_Paulo, 24-hour clock",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      (within(timeline).getByLabelText("Applications open date") as HTMLInputElement)
+        .value,
+    ).not.toBe("");
+    expect(
+      (within(timeline).getByLabelText("Session starts time") as HTMLInputElement)
+        .value,
+    ).toMatch(/^(?:[01]\d|2[0-3]):[0-5]\d$/);
     expect(within(timeline).getByText("Applications")).toBeInTheDocument();
     expect(within(timeline).getByText("Testing session")).toBeInTheDocument();
     expect(
@@ -589,38 +633,27 @@ describe("TestingEventApplications", () => {
     expect(screen.getByLabelText("Number of events")).toHaveValue(4);
   });
 
-  it("updates either side of the application window without redundant schedule writes", async () => {
-    const user = userEvent.setup();
+  it("updates each application boundary independently", async () => {
     render(<CreateTestingEventDialog />);
-    await user.click(screen.getByRole("button", { name: "New event" }));
+    fireEvent.click(screen.getByRole("button", { name: "New event" }));
 
-    const applicationWindow = screen.getByRole("button", {
-      name: "Application window",
-    });
-    await user.click(applicationWindow);
-    await user.click(
-      screen.getByRole("button", { name: "Apply application window" }),
-    );
-
-    const currentEnd = document.querySelector<HTMLInputElement>(
+    const openAt = document.querySelector<HTMLInputElement>(
+      'input[name="applicationsOpenAt"]',
+    )!;
+    const closeAt = document.querySelector<HTMLInputElement>(
       'input[name="applicationsCloseAt"]',
-    )!.value;
-    await user.click(applicationWindow);
-    const nextHour = String(
-      (Number(currentEnd.slice(11, 13)) + 1) % 24,
-    ).padStart(2, "0");
-    fireEvent.change(screen.getByLabelText("End time"), {
-      target: { value: `${nextHour}:${currentEnd.slice(14, 16)}` },
+    )!;
+    const unchangedClose = closeAt.value;
+    fireEvent.change(screen.getByLabelText("Applications open time"), {
+      target: { value: "13:15" },
     });
-    await user.click(
-      screen.getByRole("button", { name: "Apply application window" }),
-    );
+    expect(openAt.value).toMatch(/T13:15$/);
+    expect(closeAt.value).toBe(unchangedClose);
 
-    expect(
-      document.querySelector<HTMLInputElement>(
-        'input[name="applicationsCloseAt"]',
-      )?.value,
-    ).not.toBe(currentEnd);
+    fireEvent.change(screen.getByLabelText("Applications close time"), {
+      target: { value: "14:45" },
+    });
+    expect(closeAt.value).toMatch(/T14:45$/);
   });
 
   it("supports every repeat preset, custom unit, weekday, and end mode", async () => {
