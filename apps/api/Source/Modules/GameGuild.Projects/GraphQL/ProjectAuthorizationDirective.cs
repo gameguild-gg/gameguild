@@ -117,7 +117,9 @@ public sealed class RequireGraphQLProjectPermissionAttribute : ObjectFieldDescri
         : this(permission)
     {
         if (string.IsNullOrWhiteSpace(permissionSwitchArgumentName))
+        {
             throw new ArgumentException("A conditional permission requires a GraphQL boolean argument name.", nameof(permissionSwitchArgumentName));
+        }
 
         _permissionSwitchArgumentName = permissionSwitchArgumentName;
         _permissionWhenSwitchFalse = permissionWhenSwitchFalse;
@@ -141,16 +143,24 @@ public sealed class RequireGraphQLProjectPermissionAttribute : ObjectFieldDescri
         MemberInfo member)
     {
         if (_permissions.Length == 0 || _permissions.Any(permission => !Enum.IsDefined(permission)))
+        {
             throw new InvalidOperationException("A GraphQL project authorization rule must require one or more valid permissions.");
+        }
 
         if (!Enum.IsDefined(Mode))
+        {
             throw new InvalidOperationException("A GraphQL project authorization rule must use a valid permission evaluation mode.");
+        }
 
         if (ResourceIdParentPropertyName is null && string.IsNullOrWhiteSpace(ResourceIdArgumentName))
+        {
             throw new InvalidOperationException("A GraphQL project authorization rule must identify the project ID argument.");
+        }
 
         if (ResourceIdParentPropertyName is not null && string.IsNullOrWhiteSpace(ResourceIdParentPropertyName))
+        {
             throw new InvalidOperationException("A GraphQL project authorization rule must identify the parent project ID property.");
+        }
 
         if (_permissionSwitchArgumentName is not null &&
             (_permissionWhenSwitchFalse is null || !Enum.IsDefined(_permissionWhenSwitchFalse.Value)))
@@ -255,10 +265,14 @@ public sealed class RequireGraphQLProjectPermissionAttribute : ObjectFieldDescri
                 cancellationToken).ConfigureAwait(false);
 
             if (Mode == ProjectPermissionEvaluationMode.All && !granted)
+            {
                 return false;
+            }
 
             if (Mode == ProjectPermissionEvaluationMode.Any && granted)
+            {
                 return true;
+            }
 
             sawAllowedPermission |= granted;
         }
@@ -269,10 +283,14 @@ public sealed class RequireGraphQLProjectPermissionAttribute : ObjectFieldDescri
     private PermissionType[]? TryResolveRequiredPermissions(IResolverContext context)
     {
         if (_permissionSwitchArgumentName is null)
+        {
             return _permissions;
+        }
 
         if (_permissionWhenSwitchFalse is null)
+        {
             return null;
+        }
 
         bool switchValue;
         try
@@ -295,7 +313,9 @@ public sealed class RequireGraphQLProjectPermissionAttribute : ObjectFieldDescri
         var path = (parentPropertyPath ?? argumentPath)
             .Split('.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         if (path.Length == 0)
+        {
             return null;
+        }
 
         object? value;
         if (parentPropertyPath is not null)
@@ -327,7 +347,9 @@ public sealed class RequireGraphQLProjectPermissionAttribute : ObjectFieldDescri
         {
             value = ReadMember(value, segment);
             if (value is null)
+            {
                 return null;
+            }
         }
 
         return value switch

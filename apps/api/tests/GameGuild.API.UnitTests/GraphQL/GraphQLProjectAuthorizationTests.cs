@@ -244,7 +244,9 @@ public sealed class GraphQLProjectAuthorizationTests
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
             if (!Request.Headers.TryGetValue("Authorization", out _))
+            {
                 return Task.FromResult(AuthenticateResult.NoResult());
+            }
 
             var identity = new ClaimsIdentity(
                 [new Claim(ClaimTypes.NameIdentifier, "4b50fdd6-2e85-42bb-a9fa-27f6cb7e97c6")],
@@ -264,8 +266,12 @@ public sealed class GraphQLProjectAuthorizationTests
 
         public int CheckCount => Volatile.Read(ref _checkCount);
 
-        public Task<bool> IsActorActiveTenantMemberAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult(true);
+        public Task<bool> IsActorActiveTenantMemberAsync(CancellationToken cancellationToken = default)
+        {
+            return cancellationToken.IsCancellationRequested
+                ? Task.FromCanceled<bool>(cancellationToken)
+                : Task.FromResult(true);
+        }
 
         public Task<bool> HasPermissionAsync(
             Guid projectId,
@@ -274,9 +280,13 @@ public sealed class GraphQLProjectAuthorizationTests
         {
             Interlocked.Increment(ref _checkCount);
             if (ErrorToThrow is { } exception)
+            {
                 return Task.FromException<bool>(exception);
+            }
 
-            return Task.FromResult(_allowed.Contains((projectId, permission)));
+            return cancellationToken.IsCancellationRequested
+                ? Task.FromCanceled<bool>(cancellationToken)
+                : Task.FromResult(_allowed.Contains((projectId, permission)));
         }
     }
 

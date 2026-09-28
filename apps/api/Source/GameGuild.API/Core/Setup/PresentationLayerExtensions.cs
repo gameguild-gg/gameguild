@@ -240,7 +240,9 @@ public static class PresentationLayerExtensions
         if (graphQlOptions.EnableGraphQL)
         {
             if (!options.EnableAuthentication || !options.EnableAuthorization)
+            {
                 throw new InvalidOperationException("GraphQL requires both authentication and authorization to be enabled.");
+            }
 
             stepStopwatch.Restart();
             services.SetupGraphQL(configuration, graphQlOptions);

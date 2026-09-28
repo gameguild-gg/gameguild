@@ -107,7 +107,9 @@ public sealed class GraphQLAuthorizationSetupTests
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
             if (!Request.Headers.TryGetValue("Authorization", out var authorization))
+            {
                 return Task.FromResult(AuthenticateResult.NoResult());
+            }
 
             var role = authorization.ToString().EndsWith("admin", StringComparison.OrdinalIgnoreCase)
                 ? "Admin"

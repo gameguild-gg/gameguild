@@ -231,7 +231,10 @@ public static class InfrastructureServiceCollectionExtensions
         options ??= OptionBuilderUtilities.CreateAndBind(configuration, "GraphQL", GraphQLOptions.CreateDefault);
         options.Validate();
 
-        if (!options.EnableGraphQL) return services;
+        if (!options.EnableGraphQL)
+        {
+            return services;
+        }
 
         services.AddSingleton(options);
         services.AddGraphQLServer()
