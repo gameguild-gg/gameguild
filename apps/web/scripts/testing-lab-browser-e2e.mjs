@@ -617,7 +617,7 @@ async function run() {
       throw new Error("The eligible project build was not selected.");
     }
     await ownerPage
-      .getByRole("button", { name: "Save and continue", exact: true })
+      .getByRole("button", { name: "Continue", exact: true })
       .click();
     await ownerPage.getByLabel("Test objective").waitFor();
     await ownerPage
