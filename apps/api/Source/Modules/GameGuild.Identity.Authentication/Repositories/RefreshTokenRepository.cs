@@ -42,6 +42,36 @@ public class RefreshTokenRepository(IApplicationDbContext context) : IRefreshTok
         return refreshToken;
     }
 
+    public async Task<bool> TryRevokeForRotationAsync(
+        Guid tokenId,
+        string expectedTokenHash,
+        string replacementTokenHash,
+        DateTime revokedAt,
+        string? revokedByIp = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (tokenId == Guid.Empty) throw new ArgumentException("Refresh token ID is required.", nameof(tokenId));
+        ArgumentException.ThrowIfNullOrWhiteSpace(expectedTokenHash);
+        ArgumentException.ThrowIfNullOrWhiteSpace(replacementTokenHash);
+
+        var affected = await RefreshTokens
+            .Where(token =>
+                token.Id == tokenId &&
+                token.Token == expectedTokenHash &&
+                !token.IsRevoked &&
+                token.ReplacedByToken == null &&
+                token.ExpiresAt > revokedAt)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(token => token.IsRevoked, true)
+                .SetProperty(token => token.RevokedAt, revokedAt)
+                .SetProperty(token => token.RevokedByIp, revokedByIp)
+                .SetProperty(token => token.ReplacedByToken, replacementTokenHash)
+                .SetProperty(token => token.UpdatedAt, revokedAt), cancellationToken)
+            .ConfigureAwait(false);
+
+        return affected == 1;
+    }
+
     public async Task RevokeAsync(string token, string? revokedByIp = null, string? replacedByToken = null, CancellationToken cancellationToken = default)
     {
         var refreshToken = await GetByTokenAsync(token, cancellationToken).ConfigureAwait(false);

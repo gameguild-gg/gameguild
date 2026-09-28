@@ -329,7 +329,7 @@ public class LocalAuthService(
         var storedToken = await refreshTokenRepository.GetByTokenAsync(hashedToken).ConfigureAwait(false);
         var now = SystemClock.UtcNow;
 
-        if (storedToken == null || storedToken.ExpiresAt <= now)
+        if (storedToken == null)
         {
             logger.LogWarning(
                 "Invalid refresh token attempt from {IpAddress}. TokenFound: {TokenFound}, IsActive: {IsActive}, ExpiresAt: {ExpiresAt}",
@@ -342,7 +342,7 @@ public class LocalAuthService(
             throw new UnauthorizedAccessException("Invalid refresh token");
         }
 
-        if (!storedToken.IsActive)
+        if (storedToken.IsRevoked || storedToken.ReplacedByToken != null)
         {
             logger.LogWarning(
                 "Rejected refresh token replay from {IpAddress}. RevokedAt: {RevokedAt}, RevokedByIp: {RevokedByIp}",
@@ -350,6 +350,19 @@ public class LocalAuthService(
                 storedToken.RevokedAt,
                 storedToken.RevokedByIp
             );
+
+            await InvalidateSessionsAfterRefreshReplayAsync(storedToken.UserId, ipAddress, cancellationToken)
+                .ConfigureAwait(false);
+
+            throw new UnauthorizedAccessException("Invalid refresh token");
+        }
+
+        if (storedToken.ExpiresAt <= now)
+        {
+            logger.LogWarning(
+                "Invalid expired refresh token attempt from {IpAddress} for user {UserId}",
+                ipAddress,
+                storedToken.UserId);
 
             throw new UnauthorizedAccessException("Invalid refresh token");
         }
@@ -386,12 +399,6 @@ public class LocalAuthService(
             sessionId,
             cancellationToken).ConfigureAwait(false);
 
-        storedToken.IsRevoked = true;
-        storedToken.RevokedAt = now;
-        storedToken.RevokedByIp = ipAddress;
-        storedToken.ReplacedByToken = replacementTokenHash;
-        await refreshTokenRepository.UpdateAsync(storedToken).ConfigureAwait(false);
-
         if (existingSession == null)
         {
             await sessionManagementService.CreateSessionAsync(
@@ -404,9 +411,30 @@ public class LocalAuthService(
                 deviceInfo.Fingerprint,
                 cancellationToken).ConfigureAwait(false);
         }
-        else
+        else if (!await sessionManagementService.RefreshSessionAsync(
+                     sessionId,
+                     replacementTokenHash,
+                     refreshTokenExpiresAt,
+                     cancellationToken).ConfigureAwait(false))
         {
-            await sessionManagementService.RefreshSessionAsync(sessionId, replacementTokenHash, refreshTokenExpiresAt, cancellationToken).ConfigureAwait(false);
+            logger.LogWarning("Refresh token session {SessionId} was no longer active for user {UserId}; invalidating sessions", sessionId, userId);
+            await InvalidateSessionsAfterRefreshReplayAsync(userId, ipAddress, cancellationToken).ConfigureAwait(false);
+            throw new UnauthorizedAccessException("Invalid refresh token");
+        }
+
+        var rotationClaimed = await refreshTokenRepository.TryRevokeForRotationAsync(
+            storedToken.Id,
+            hashedToken,
+            replacementTokenHash,
+            now,
+            ipAddress,
+            cancellationToken).ConfigureAwait(false);
+
+        if (!rotationClaimed)
+        {
+            logger.LogWarning("Refresh token rotation lost a concurrent claim for user {UserId}; invalidating sessions", userId);
+            await InvalidateSessionsAfterRefreshReplayAsync(userId, ipAddress, cancellationToken).ConfigureAwait(false);
+            throw new UnauthorizedAccessException("Invalid refresh token");
         }
 
         logger.LogInformation("Refresh token rotated for user {UserId}", userId);
@@ -430,6 +458,26 @@ public class LocalAuthService(
             TenantId = tenantAccessContext.TenantId,
             AvailableTenants = tenantAccessContext.AvailableTenants
         };
+    }
+
+    private async Task InvalidateSessionsAfterRefreshReplayAsync(
+        Guid userId,
+        string? ipAddress,
+        CancellationToken cancellationToken)
+    {
+        await refreshTokenRepository.RevokeAllForUserAsync(userId, ipAddress, cancellationToken)
+            .ConfigureAwait(false);
+        await sessionManagementService.TerminateAllUserSessionsAsync(
+            userId,
+            SessionTerminationReason.SecurityViolation,
+            cancellationToken: cancellationToken).ConfigureAwait(false);
+
+        var compromisedUser = await userRepository.GetByIdAsync(userId, cancellationToken).ConfigureAwait(false);
+        if (compromisedUser is null) return;
+
+        compromisedUser.IncrementTokenVersion();
+        await userRepository.UpdateAsync(compromisedUser, cancellationToken).ConfigureAwait(false);
+        await userRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     private static TenantAccessContext RequireActiveTenantAccess(TenantAccessContext tenantAccessContext)
