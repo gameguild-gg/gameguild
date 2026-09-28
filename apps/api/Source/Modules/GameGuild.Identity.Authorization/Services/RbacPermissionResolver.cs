@@ -87,9 +87,13 @@ public class DynamicRoleRepository(
         await context.SaveChangesAsync(ct).ConfigureAwait(false);
 
         if (existingRole is null)
+        {
             await InvalidateRoleScopesAsync(ct, role.TenantId).ConfigureAwait(false);
+        }
         else
+        {
             await InvalidateRoleScopesAsync(ct, existingRole.TenantId, role.TenantId).ConfigureAwait(false);
+        }
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
@@ -112,7 +116,9 @@ public class DynamicRoleRepository(
         }
 
         foreach (var tenantId in tenantIds.Select(id => id!.Value).Distinct())
+        {
             await invalidationService.InvalidateTenantAsync(tenantId, ct).ConfigureAwait(false);
+        }
     }
 
     public async Task<IReadOnlyList<DynamicRole>> GetRoleHierarchyAsync(Guid roleId, CancellationToken ct = default)
@@ -188,9 +194,13 @@ public class DynamicRoleAssignmentRepository(
     private async Task InvalidateAssignmentAsync(Guid userId, Guid? tenantId, CancellationToken ct)
     {
         if (tenantId is Guid tenant)
+        {
             await invalidationService.InvalidateUserAsync(userId, tenant, ct).ConfigureAwait(false);
+        }
         else
+        {
             await invalidationService.InvalidateGlobalAsync(ct).ConfigureAwait(false);
+        }
     }
 
     public async Task<int> CountByRoleAsync(Guid roleId, CancellationToken ct = default)

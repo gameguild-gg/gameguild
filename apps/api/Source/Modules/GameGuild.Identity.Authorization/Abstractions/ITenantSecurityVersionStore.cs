@@ -14,9 +14,12 @@ public interface ITenantSecurityVersionStore
     Task<long> GetVersionAsync(string tenantId, CancellationToken cancellationToken = default);
 
     /// <summary>Reads one tenant's version and the shared global version together.</summary>
+    Task<(long TenantVersion, long GlobalVersion)> GetTenantAndGlobalVersionsAsync(Guid tenantId) =>
+        GetTenantAndGlobalVersionsAsync(tenantId, CancellationToken.None);
+
     async Task<(long TenantVersion, long GlobalVersion)> GetTenantAndGlobalVersionsAsync(
         Guid tenantId,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         var tenantVersionTask = GetVersionAsync(tenantId.ToString(), cancellationToken);
         var globalVersionTask = tenantId == Guid.Empty

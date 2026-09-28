@@ -41,7 +41,10 @@ public interface ICacheInvalidationService
     Task InvalidateBatchAsync(Guid tenantId, IReadOnlyCollection<CacheInvalidationTarget> targets, CancellationToken cancellationToken);
 
     /// <summary>Invalidates ACL cache entries across tenants after a global role or permission change.</summary>
-    Task InvalidateGlobalAsync(CancellationToken cancellationToken = default);
+    Task InvalidateGlobalAsync();
+
+    /// <summary>Invalidates ACL cache entries across tenants after a global role or permission change.</summary>
+    Task InvalidateGlobalAsync(CancellationToken cancellationToken);
 
     /// <summary>
     ///     Invalidates policy caches for a tenant.
@@ -340,7 +343,10 @@ public sealed class CacheInvalidationService : ICacheInvalidationService
     }
 
     /// <inheritdoc />
-    public async Task InvalidateGlobalAsync(CancellationToken cancellationToken = default)
+    public Task InvalidateGlobalAsync() => InvalidateGlobalAsync(CancellationToken.None);
+
+    /// <inheritdoc />
+    public async Task InvalidateGlobalAsync(CancellationToken cancellationToken)
     {
         // Guid.Empty is reserved as the shared global ACL cache-version scope. It has no tenant FK.
         await _versionStore.IncrementVersionAsync(Guid.Empty.ToString(), cancellationToken).ConfigureAwait(false);
