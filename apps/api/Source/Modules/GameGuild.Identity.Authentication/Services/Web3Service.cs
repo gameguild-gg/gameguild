@@ -17,19 +17,27 @@ public class Web3Service : IWeb3Service
 {
     private const string ChallengeKeyPrefix = "web3:challenge:";
     private const string SiweConfigurationPrefix = "Authentication:Web3:Siwe";
-    private const string DefaultOrigin = "https://gameguild.gg";
+    private const string DefaultStatement = "Sign in with your Ethereum wallet.";
     private static readonly TimeSpan s_challengeLifetime = TimeSpan.FromMinutes(5);
 
     private readonly ILogger<Web3Service> _logger;
     private readonly IMemoryCache _memoryCache;
     private readonly Uri _origin;
+    private readonly string _statement;
     private readonly HashSet<string> _allowedChainIds;
 
-    public Web3Service(ILogger<Web3Service> logger, IMemoryCache memoryCache, IConfiguration? configuration = null)
+    public Web3Service(ILogger<Web3Service> logger, IMemoryCache memoryCache, IConfiguration configuration)
     {
         _logger = logger;
         _memoryCache = memoryCache;
-        _origin = ParseOrigin(configuration?[ $"{SiweConfigurationPrefix}:Origin"] ?? DefaultOrigin);
+        var origin = configuration[$"{SiweConfigurationPrefix}:Origin"];
+        if (string.IsNullOrWhiteSpace(origin))
+            throw new InvalidOperationException($"{SiweConfigurationPrefix}:Origin must be configured for SIWE authentication.");
+
+        _origin = ParseOrigin(origin);
+        _statement = string.IsNullOrWhiteSpace(configuration[$"{SiweConfigurationPrefix}:Statement"])
+            ? DefaultStatement
+            : configuration[$"{SiweConfigurationPrefix}:Statement"]!;
         _allowedChainIds = LoadAllowedChainIds(configuration);
     }
 
@@ -49,7 +57,7 @@ public class Web3Service : IWeb3Service
             // development origins include their scheme in the first line.
             Domain = _origin.Authority,
             Address = checksummedAddress,
-            Statement = "Sign in to GameGuild.",
+            Statement = _statement,
             Uri = _origin.AbsoluteUri,
             Version = "1",
             ChainId = normalizedChainId,
@@ -261,15 +269,13 @@ public class Web3Service : IWeb3Service
         return normalized;
     }
 
-    private static HashSet<string> LoadAllowedChainIds(IConfiguration? configuration)
+    private static HashSet<string> LoadAllowedChainIds(IConfiguration configuration)
     {
-        var configuredValues = configuration is null
-            ? Array.Empty<string?>()
-            : configuration.GetSection($"{SiweConfigurationPrefix}:AllowedChainIds")
-                .GetChildren()
-                .Select(child => child.Value)
-                .Where(value => !string.IsNullOrWhiteSpace(value))
-                .ToArray();
+        var configuredValues = configuration.GetSection($"{SiweConfigurationPrefix}:AllowedChainIds")
+            .GetChildren()
+            .Select(child => child.Value)
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .ToArray();
 
         if (configuredValues.Length == 0) return ["1"];
 

@@ -382,7 +382,13 @@ public class Web3ServiceTests
     public Web3ServiceTests()
     {
         _memoryCache = new MemoryCache(new MemoryCacheOptions());
-        _service = new Web3Service(NullLogger<Web3Service>.Instance, _memoryCache);
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Authentication:Web3:Siwe:Origin"] = "https://localhost"
+            })
+            .Build();
+        _service = new Web3Service(NullLogger<Web3Service>.Instance, _memoryCache, configuration);
     }
 
     [Theory]
@@ -408,7 +414,7 @@ public class Web3ServiceTests
 
         challenge.Should().NotBeNull();
         challenge.WalletAddress.Should().BeEquivalentTo(address);
-        challenge.Message.Should().Contain("GameGuild");
+        challenge.Message.Should().Contain("Sign in with your Ethereum wallet.");
         challenge.Message.Should().Contain(challenge.WalletAddress);
         challenge.Nonce.Should().NotBeNullOrEmpty();
         challenge.ExpiresAt.Should().BeAfter(challenge.IssuedAt);
