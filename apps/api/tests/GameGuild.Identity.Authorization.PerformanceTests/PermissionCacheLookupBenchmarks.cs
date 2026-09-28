@@ -43,7 +43,7 @@ public class PermissionCacheLookupBenchmarks
         var tenantId = Guid.Parse("d28d4a2e-df59-4f73-bbb0-4048f42b693a");
         var userId = Guid.Parse("fdaf2ac9-0994-47ae-9b48-208d550bec1d");
         _keys = Enumerable.Range(0, WorkingSetSize)
-            .Select(index => $"acl:{tenantId}:{userId}:Document:benchmark-{index}:tv1:uv1")
+            .Select(index => $"acl:{tenantId}:{userId}:Document:benchmark-{index}:tv1:uv1:gv1")
             .ToArray();
 
         foreach (var key in _keys)

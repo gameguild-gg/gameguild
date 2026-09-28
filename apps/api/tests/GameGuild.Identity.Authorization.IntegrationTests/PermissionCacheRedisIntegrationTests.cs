@@ -128,8 +128,8 @@ public sealed class PermissionCacheRedisIntegrationTests(PermissionCacheRedisFix
         var cacheKeys = new[]
         {
             $"perm:{tenantId}:{userId}:v0",
-            $"acl:{tenantId}:{userId}:Project:project-42:tv0:uv0",
-            $"acl:subj:{tenantId}:{userId}:nr:ng:Project:project-42:tv0:uv0"
+            $"acl:{tenantId}:{userId}:Project:project-42:tv0:uv0:gv0",
+            $"acl:subj:{tenantId}:{userId}:nr:ng:Project:project-42:tv0:uv0:gv0"
         };
         var services = new ServiceCollection();
         services.AddLogging();
@@ -205,11 +205,11 @@ public sealed class PermissionCacheRedisIntegrationTests(PermissionCacheRedisFix
         var memberUserId = Guid.NewGuid();
         var invalidatedKeys = new[]
         {
-            $"acl:subj:{tenantId}:anon:{roleId},{inheritedRoleId}:ng:Document:doc-1:tv0:uv0",
-            $"acl:subj:{tenantId}:{memberUserId}:{roleId},{inheritedRoleId}:ng:Project:project-1:tv0:uv0",
-            $"acl:subj:{tenantId}:{memberUserId}:nr:{inheritedGroupId},{unrelatedGroupId}:Project:project-2:tv0:uv0"
+            $"acl:subj:{tenantId}:anon:{roleId},{inheritedRoleId}:ng:Document:doc-1:tv0:uv0:gv0",
+            $"acl:subj:{tenantId}:{memberUserId}:{roleId},{inheritedRoleId}:ng:Project:project-1:tv0:uv0:gv0",
+            $"acl:subj:{tenantId}:{memberUserId}:nr:{inheritedGroupId},{unrelatedGroupId}:Project:project-2:tv0:uv0:gv0"
         };
-        var unaffectedKey = $"acl:subj:{tenantId}:anon:{otherRoleId}:ng:Document:doc-1:tv0:uv0";
+        var unaffectedKey = $"acl:subj:{tenantId}:anon:{otherRoleId}:ng:Document:doc-1:tv0:uv0:gv0";
 
         var services = new ServiceCollection();
         services.AddLogging();
@@ -297,7 +297,7 @@ public sealed class PermissionCacheRedisIntegrationTests(PermissionCacheRedisFix
 
         var tenantId = Guid.NewGuid();
         var userId = Guid.NewGuid();
-        var cacheKey = $"acl:{tenantId}:{userId}:Project:project-42:tv0:uv0";
+        var cacheKey = $"acl:{tenantId}:{userId}:Project:project-42:tv0:uv0:gv0";
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddMemoryCache();

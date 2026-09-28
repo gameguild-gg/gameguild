@@ -40,6 +40,9 @@ public interface ICacheInvalidationService
     /// <summary>Invalidates multiple cache targets with one version update and one distributed event.</summary>
     Task InvalidateBatchAsync(Guid tenantId, IReadOnlyCollection<CacheInvalidationTarget> targets, CancellationToken cancellationToken);
 
+    /// <summary>Invalidates ACL cache entries across tenants after a global role or permission change.</summary>
+    Task InvalidateGlobalAsync(CancellationToken cancellationToken = default);
+
     /// <summary>
     ///     Invalidates policy caches for a tenant.
     /// </summary>
@@ -156,7 +159,10 @@ public enum CacheInvalidationType
     Policy,
 
     /// <summary>Invalidate multiple dependent keys in one distributed event.</summary>
-    Batch
+    Batch,
+
+    /// <summary>Invalidate ACL cache entries across every tenant.</summary>
+    Global
 }
 
 /// <summary>
@@ -334,6 +340,21 @@ public sealed class CacheInvalidationService : ICacheInvalidationService
     }
 
     /// <inheritdoc />
+    public async Task InvalidateGlobalAsync(CancellationToken cancellationToken = default)
+    {
+        // Guid.Empty is reserved as the shared global ACL cache-version scope. It has no tenant FK.
+        await _versionStore.IncrementVersionAsync(Guid.Empty.ToString(), cancellationToken).ConfigureAwait(false);
+        ClearAllAclKeys();
+
+        await PublishInvalidationAsync(new CacheInvalidationEvent
+        {
+            Type = CacheInvalidationType.Global,
+            TenantId = Guid.Empty,
+            OriginInstanceId = _instanceId
+        }, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
     public async Task InvalidatePolicyAsync(Guid tenantId, string? policyName = null, CancellationToken cancellationToken = default)
     {
         _logger.LogDebug("Invalidating policy caches for tenant {TenantId}, policy {PolicyName}", tenantId, policyName ?? "all");
@@ -439,7 +460,19 @@ public sealed class CacheInvalidationService : ICacheInvalidationService
 
                 InvalidateTargets(invalidationEvent.TenantId, invalidationEvent.Targets);
                 break;
+
+            case CacheInvalidationType.Global:
+                ClearAllAclKeys();
+                break;
         }
+    }
+
+    private void ClearAllAclKeys()
+    {
+        _keyTracker.Invalidate(
+            key => key.StartsWith("acl:", StringComparison.OrdinalIgnoreCase),
+            "acl",
+            "global_invalidation");
     }
 
     internal static bool IsValidBatchTargets(IReadOnlyCollection<CacheInvalidationTarget>? targets)

@@ -13,6 +13,19 @@ public interface ITenantSecurityVersionStore
     /// <returns>The current version number.</returns>
     Task<long> GetVersionAsync(string tenantId, CancellationToken cancellationToken = default);
 
+    /// <summary>Reads one tenant's version and the shared global version together.</summary>
+    async Task<(long TenantVersion, long GlobalVersion)> GetTenantAndGlobalVersionsAsync(
+        Guid tenantId,
+        CancellationToken cancellationToken = default)
+    {
+        var tenantVersionTask = GetVersionAsync(tenantId.ToString(), cancellationToken);
+        var globalVersionTask = tenantId == Guid.Empty
+            ? tenantVersionTask
+            : GetVersionAsync(Guid.Empty.ToString(), cancellationToken);
+        await Task.WhenAll(tenantVersionTask, globalVersionTask).ConfigureAwait(false);
+        return (await tenantVersionTask.ConfigureAwait(false), await globalVersionTask.ConfigureAwait(false));
+    }
+
     /// <summary>
     ///     Increments the security version for a tenant (triggers cache invalidation).
     /// </summary>

@@ -119,12 +119,13 @@ public sealed class CachedAccessControlListService : IAccessControlListService
         string resourceId,
         CancellationToken cancellationToken = default)
     {
-        // Get both tenant and user versions for complete cache key
-        var tenantVersion = await _tenantVersionStore.GetVersionAsync(tenantId.ToString(), cancellationToken).ConfigureAwait(false);
+        // Include the shared global version so global role changes invalidate every tenant's ACL keys.
+        var (tenantVersion, globalVersion) = await _tenantVersionStore
+            .GetTenantAndGlobalVersionsAsync(tenantId, cancellationToken).ConfigureAwait(false);
         var userVersion = subject.UserId.HasValue 
             ? await _userVersionStore.GetVersionAsync(subject.UserId.Value, cancellationToken).ConfigureAwait(false)
             : 0;
-        var cacheKey = BuildSubjectCacheKey(subject, tenantId, resourceType, resourceId, tenantVersion, userVersion);
+        var cacheKey = BuildSubjectCacheKey(subject, tenantId, resourceType, resourceId, tenantVersion, userVersion, globalVersion);
 
         // Try L1 cache first
         if (_l1Cache.TryGetValue(cacheKey, out AccessLevel cachedLevel))
@@ -232,10 +233,11 @@ public sealed class CachedAccessControlListService : IAccessControlListService
         string resourceId,
         CancellationToken cancellationToken = default)
     {
-        // Get both tenant and user versions for complete cache key
-        var tenantVersion = await _tenantVersionStore.GetVersionAsync(tenantId.ToString(), cancellationToken).ConfigureAwait(false);
+        // Include the shared global version so global role changes invalidate every tenant's ACL keys.
+        var (tenantVersion, globalVersion) = await _tenantVersionStore
+            .GetTenantAndGlobalVersionsAsync(tenantId, cancellationToken).ConfigureAwait(false);
         var userVersion = await _userVersionStore.GetVersionAsync(userId, cancellationToken).ConfigureAwait(false);
-        var cacheKey = BuildCacheKey(userId, tenantId, resourceType, resourceId, tenantVersion, userVersion);
+        var cacheKey = BuildCacheKey(userId, tenantId, resourceType, resourceId, tenantVersion, userVersion, globalVersion);
 
         // Try L1 cache first
         if (_l1Cache.TryGetValue(cacheKey, out AccessLevel cachedLevel))
@@ -364,19 +366,33 @@ public sealed class CachedAccessControlListService : IAccessControlListService
         }
     }
 
-    private static string BuildCacheKey(Guid userId, Guid tenantId, string resourceType, string resourceId, long tenantVersion, long userVersion)
+    private static string BuildCacheKey(
+        Guid userId,
+        Guid tenantId,
+        string resourceType,
+        string resourceId,
+        long tenantVersion,
+        long userVersion,
+        long globalVersion)
     {
-        return $"acl:{tenantId}:{userId}:{resourceType}:{resourceId}:tv{tenantVersion}:uv{userVersion}";
+        return $"acl:{tenantId}:{userId}:{resourceType}:{resourceId}:tv{tenantVersion}:uv{userVersion}:gv{globalVersion}";
     }
 
-    private static string BuildSubjectCacheKey(AclSubject subject, Guid tenantId, string resourceType, string resourceId, long tenantVersion, long userVersion)
+    private static string BuildSubjectCacheKey(
+        AclSubject subject,
+        Guid tenantId,
+        string resourceType,
+        string resourceId,
+        long tenantVersion,
+        long userVersion,
+        long globalVersion)
     {
         // Build a stable cache key from subject principals
         // Includes both tenant version (for tenant-wide changes) and user version (for user-specific changes)
         var userPart = subject.UserId?.ToString() ?? "anon";
         var rolesPart = subject.RoleIds.Count > 0 ? string.Join(",", subject.RoleIds.OrderBy(r => r)) : "nr";
         var groupsPart = subject.GroupIds.Count > 0 ? string.Join(",", subject.GroupIds.OrderBy(g => g)) : "ng";
-        return $"acl:subj:{tenantId}:{userPart}:{rolesPart}:{groupsPart}:{resourceType}:{resourceId}:tv{tenantVersion}:uv{userVersion}";
+        return $"acl:subj:{tenantId}:{userPart}:{rolesPart}:{groupsPart}:{resourceType}:{resourceId}:tv{tenantVersion}:uv{userVersion}:gv{globalVersion}";
     }
 
     /// <summary>
