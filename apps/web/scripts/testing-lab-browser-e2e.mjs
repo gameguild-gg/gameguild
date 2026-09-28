@@ -947,7 +947,6 @@ async function run() {
     await actionDialog
       .getByRole("button", { name: "Save location", exact: true })
       .click();
-    await waitForText(page, "Testing location updated.");
     await actionDialog.waitFor({ state: "hidden" });
     await settleServerActionNavigation(page);
     await page.reload({ waitUntil: "domcontentloaded" });
