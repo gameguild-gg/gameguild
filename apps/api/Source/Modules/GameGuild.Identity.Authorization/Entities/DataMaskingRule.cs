@@ -97,6 +97,11 @@ public class DataMaskingRule
     {
         if (string.IsNullOrEmpty(ExemptUsers)) return false;
 
+        if (Guid.TryParse(ExemptUsers, out var exemptUserId))
+        {
+            return exemptUserId == userId;
+        }
+
         try
         {
             return JsonSerializer.Deserialize<Guid[]>(ExemptUsers)?.Contains(userId) == true;
