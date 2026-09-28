@@ -17,10 +17,9 @@ using Xunit;
 
 namespace GameGuild.Identity.Authorization.IntegrationTests;
 
-[CollectionDefinition(Name)]
+[CollectionDefinition("Permission cache Redis")]
 public sealed class PermissionCacheRedisCollection : ICollectionFixture<PermissionCacheRedisFixture>
 {
-    public const string Name = "Permission cache Redis";
 }
 
 public sealed class PermissionCacheRedisFixture : IAsyncLifetime
@@ -39,6 +38,7 @@ public sealed class PermissionCacheRedisFixture : IAsyncLifetime
     }
 
     public string ConnectionString => $"{_container.Hostname}:{_container.GetMappedPublicPort(6379)}";
+    public bool IsRedisRunning => _container.State == TestcontainersStates.Running;
 
     public Task InitializeAsync() => _container.StartAsync();
 
@@ -58,7 +58,7 @@ public sealed class PermissionCacheRedisFixture : IAsyncLifetime
     }
 }
 
-[Collection(PermissionCacheRedisCollection.Name)]
+[Collection("Permission cache Redis")]
 [Trait("Category", "Integration")]
 [Trait("Infrastructure", "Redis")]
 public sealed class PermissionCacheRedisIntegrationTests(PermissionCacheRedisFixture fixture)
@@ -140,7 +140,9 @@ public sealed class PermissionCacheRedisIntegrationTests(PermissionCacheRedisFix
         using var cacheScope = serviceProvider.CreateScope();
         var cache = cacheScope.ServiceProvider.GetRequiredService<IHybridPermissionCache>();
         foreach (var key in cacheKeys)
+        {
             await cache.SetAsync(key, "cached-permission", key.StartsWith("perm:", StringComparison.Ordinal) ? "permission" : "acl");
+        }
 
         var subscriber = new RedisPermissionCacheInvalidationSubscriber(
             subscriberConnection,
@@ -216,7 +218,9 @@ public sealed class PermissionCacheRedisIntegrationTests(PermissionCacheRedisFix
         using var writerScope = serviceProvider.CreateScope();
         var cache = writerScope.ServiceProvider.GetRequiredService<IHybridPermissionCache>();
         foreach (var key in invalidatedKeys.Append(unaffectedKey))
+        {
             await cache.SetValueAsync(key, AccessLevel.Write, "acl");
+        }
 
         var subscriber = new RedisPermissionCacheInvalidationSubscriber(
             subscriberConnection,
@@ -250,7 +254,9 @@ public sealed class PermissionCacheRedisIntegrationTests(PermissionCacheRedisFix
                 await Task.Delay(TimeSpan.FromMilliseconds(50));
                 batchEvicted = true;
                 foreach (var key in invalidatedKeys)
+                {
                     batchEvicted &= !(await cache.GetValueAsync<AccessLevel>(key, "acl")).Found;
+                }
             }
 
             batchEvicted.Should().BeTrue(
@@ -304,8 +310,6 @@ public sealed class PermissionCacheRedisIntegrationTests(PermissionCacheRedisFix
             options,
             NullLogger<RedisPermissionCacheInvalidationSubscriber>.Instance);
         await subscriber.StartAsync(CancellationToken.None);
-        var redisStopped = false;
-
         try
         {
             await cache.SetValueAsync(cacheKey, AccessLevel.Write, "acl");
@@ -313,11 +317,9 @@ public sealed class PermissionCacheRedisIntegrationTests(PermissionCacheRedisFix
 
             await cache.SetValueAsync(cacheKey, AccessLevel.Write, "acl");
             await fixture.StopRedisAsync();
-            redisStopped = true;
             await disconnected.Task.WaitAsync(TimeSpan.FromSeconds(15));
 
             await fixture.StartRedisAsync();
-            redisStopped = false;
             await restored.Task.WaitAsync(TimeSpan.FromSeconds(30));
             await cache.SetValueAsync(cacheKey, AccessLevel.Write, "acl");
 
@@ -327,8 +329,10 @@ public sealed class PermissionCacheRedisIntegrationTests(PermissionCacheRedisFix
         }
         finally
         {
-            if (redisStopped)
+            if (!fixture.IsRedisRunning)
+            {
                 await fixture.StartRedisAsync();
+            }
 
             await subscriber.StopAsync(CancellationToken.None);
         }
@@ -354,7 +358,9 @@ public sealed class PermissionCacheRedisIntegrationTests(PermissionCacheRedisFix
             await publisher.PublishAsync(invalidation);
             await Task.Delay(TimeSpan.FromMilliseconds(50));
             if (!(await cache.GetValueAsync<AccessLevel>(cacheKey, "acl")).Found)
+            {
                 return;
+            }
         }
 
         throw new TimeoutException("Redis subscriber did not evict the cached permission entry.");
@@ -401,10 +407,10 @@ public sealed class PermissionCacheRedisIntegrationTests(PermissionCacheRedisFix
     {
         private readonly ConcurrentDictionary<string, long> _versions = new(StringComparer.Ordinal);
 
-        public Task<long> GetVersionAsync(string tenantId, CancellationToken cancellationToken = default) =>
+        public Task<long> GetVersionAsync(string tenantId, CancellationToken _) =>
             Task.FromResult(GetVersion(tenantId));
 
-        public Task<long> IncrementVersionAsync(string tenantId, CancellationToken cancellationToken = default) =>
+        public Task<long> IncrementVersionAsync(string tenantId, CancellationToken _) =>
             Task.FromResult(_versions.AddOrUpdate(tenantId, 1, static (_, current) => current + 1));
 
         public long GetVersion(string tenantId) => _versions.TryGetValue(tenantId, out var version) ? version : 0;
@@ -414,16 +420,18 @@ public sealed class PermissionCacheRedisIntegrationTests(PermissionCacheRedisFix
     {
         private readonly ConcurrentDictionary<Guid, long> _versions = new();
 
-        public Task<long> GetVersionAsync(Guid userId, CancellationToken cancellationToken = default) =>
+        public Task<long> GetVersionAsync(Guid userId, CancellationToken _) =>
             Task.FromResult(_versions.TryGetValue(userId, out var version) ? version : 0);
 
-        public Task<long> IncrementVersionAsync(Guid userId, CancellationToken cancellationToken = default) =>
+        public Task<long> IncrementVersionAsync(Guid userId, CancellationToken _) =>
             Task.FromResult(_versions.AddOrUpdate(userId, 1, static (_, current) => current + 1));
 
-        public Task IncrementVersionsAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken = default)
+        public Task IncrementVersionsAsync(IEnumerable<Guid> userIds, CancellationToken _)
         {
             foreach (var userId in userIds)
+            {
                 _versions.AddOrUpdate(userId, 1, static (_, current) => current + 1);
+            }
 
             return Task.CompletedTask;
         }

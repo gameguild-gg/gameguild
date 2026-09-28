@@ -355,9 +355,13 @@ public sealed class CacheInvalidationDistributedTests
             NullLogger<CacheInvalidationService>.Instance);
 
         if (invalidationType == CacheInvalidationType.Resource)
+        {
             await service.InvalidateResourceAsync(tenantId, "Document", "document-1");
+        }
         else
+        {
             await service.InvalidatePolicyAsync(tenantId, "documents.read");
+        }
 
         versionStore.Verify(
             store => store.IncrementVersionAsync(tenantId.ToString(), It.IsAny<CancellationToken>()),

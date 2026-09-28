@@ -14,7 +14,12 @@ public interface ICacheInvalidationPublisher
     /// <summary>
     ///     Publishes an invalidation event to the configured Redis channel.
     /// </summary>
-    Task PublishAsync(CacheInvalidationEvent invalidationEvent, CancellationToken cancellationToken = default);
+    Task PublishAsync(CacheInvalidationEvent invalidationEvent);
+
+    /// <summary>
+    ///     Publishes an invalidation event with cancellation support.
+    /// </summary>
+    Task PublishAsync(CacheInvalidationEvent invalidationEvent, CancellationToken cancellationToken);
 }
 
 /// <summary>
@@ -46,15 +51,22 @@ public sealed class RedisPermissionCacheInvalidationPublisher : ICacheInvalidati
     }
 
     /// <inheritdoc />
+    public Task PublishAsync(CacheInvalidationEvent invalidationEvent)
+    {
+        return PublishAsync(invalidationEvent, CancellationToken.None);
+    }
+
     public async Task PublishAsync(
         CacheInvalidationEvent invalidationEvent,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(invalidationEvent);
         cancellationToken.ThrowIfCancellationRequested();
 
         if (string.IsNullOrWhiteSpace(_options.InvalidationChannelName))
+        {
             throw new InvalidOperationException("Authorization cache invalidation channel name is required.");
+        }
 
         var payload = JsonSerializer.Serialize(invalidationEvent, JsonOptions);
 
