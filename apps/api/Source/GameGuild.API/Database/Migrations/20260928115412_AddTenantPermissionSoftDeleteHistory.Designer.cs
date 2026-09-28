@@ -3,6 +3,7 @@ using System;
 using GameGuild.API.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GameGuild.API.Database.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260928115412_AddTenantPermissionSoftDeleteHistory")]
+    partial class AddTenantPermissionSoftDeleteHistory
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -3526,7 +3529,7 @@ namespace GameGuild.API.Database.Migrations
 
                     b.ToTable((string)null);
 
-                    b.ToSqlQuery(" SELECT \\\"Id\\\",\n     \\\"SubscriptionId\\\",\n     \\\"InvoiceNumber\\\",\n     \\\"Total\\\",\n     \\\"Currency\\\",\n     \\\"CreatedAt\\\",\n     \\\"IssuedAt\\\",\n     \\\"DueDate\\\",\n     \\\"PaidAt\\\",\n     \\\"Status\\\",\n     \\\"PaymentId\\\",\n     \\\"ExternalId\\\"\nFROM invoices");
+                    b.ToSqlQuery(" SELECT \\\"Id\\\",\r\n     \\\"SubscriptionId\\\",\r\n     \\\"InvoiceNumber\\\",\r\n     \\\"Total\\\",\r\n     \\\"Currency\\\",\r\n     \\\"CreatedAt\\\",\r\n     \\\"IssuedAt\\\",\r\n     \\\"DueDate\\\",\r\n     \\\"PaidAt\\\",\r\n     \\\"Status\\\",\r\n     \\\"PaymentId\\\",\r\n     \\\"ExternalId\\\"\r\nFROM invoices");
                 });
 
             modelBuilder.Entity("GameGuild.Commerce.Subscriptions.SubscriptionPlan", b =>
@@ -16477,8 +16480,8 @@ namespace GameGuild.API.Database.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("ContentCompletionMode")
-                        .ValueGeneratedOnAdd()
                         .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)")
                         .HasDefaultValue("on-release-and-pass");
@@ -16510,13 +16513,13 @@ namespace GameGuild.API.Database.Migrations
                     b.Property<DateTime?>("DueAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("GroupSetId")
-                        .HasColumnType("uuid");
-
                     b.Property<int>("GradingMethods")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
                         .HasDefaultValue(8);
+
+                    b.Property<Guid?>("GroupSetId")
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsRequired")
                         .HasColumnType("boolean");
@@ -16550,8 +16553,8 @@ namespace GameGuild.API.Database.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("ResultReleaseMode")
-                        .ValueGeneratedOnAdd()
                         .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasMaxLength(16)
                         .HasColumnType("character varying(16)")
                         .HasDefaultValue("manual");

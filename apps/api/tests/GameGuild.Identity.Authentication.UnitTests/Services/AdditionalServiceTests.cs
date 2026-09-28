@@ -294,7 +294,8 @@ public class PermissionServiceTests
         var userId = Guid.NewGuid();
 
         await service.SetTenantDefaultPermissionsAsync(tenantId, [PermissionType.Read]);
-        await service.GrantTenantPermissionAsync(userId, tenantId, [PermissionType.Edit]);
+        var grant = await service.GrantTenantPermissionAsync(userId, tenantId, [PermissionType.Edit]);
+        grant.Version = 1; // The lightweight InMemory context does not apply the production version interceptor.
 
         (await service.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read)).Should().BeTrue();
         (await service.HasTenantPermissionAsync(userId, tenantId, PermissionType.Edit)).Should().BeTrue();
@@ -304,6 +305,8 @@ public class PermissionServiceTests
         await service.RevokeTenantPermissionAsync(userId, tenantId, [PermissionType.Edit]);
 
         (await service.HasTenantPermissionAsync(userId, tenantId, PermissionType.Edit)).Should().BeFalse();
+        (await db.Set<TenantPermission>().IgnoreQueryFilters().SingleAsync(permission => permission.UserId == userId && permission.TenantId == tenantId))
+            .DeletedAt.Should().NotBeNull();
         (await service.JoinTenantAsync(Guid.NewGuid(), tenantId)).Permissions.Should().Contain(PermissionType.Read.ToString());
     }
 
