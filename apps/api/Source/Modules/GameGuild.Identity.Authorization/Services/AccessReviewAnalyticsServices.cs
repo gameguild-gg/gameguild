@@ -62,12 +62,16 @@ public class AccessReviewService(
         var existing = await _campaignRepository.GetByIdAsync(campaign.Id, cancellationToken).ConfigureAwait(false);
 
         if (existing == null)
+        {
             throw new InvalidOperationException($"Access review campaign {campaign.Id} not found");
+        }
 
         EnsureCanManageTenant(GetTenantId(existing));
 
         if (GetTenantId(campaign) != GetTenantId(existing))
+        {
             throw new UnauthorizedAccessException("An access review campaign cannot be moved between tenants.");
+        }
 
         // Keep workflow and audit fields server-owned; this method only edits campaign configuration.
         existing.Name = campaign.Name;
@@ -189,11 +193,15 @@ public class AccessReviewService(
                 ?? throw new UnauthorizedAccessException("A user identity is required for access reviews.");
 
             if (tenantId.HasValue && tenantId.Value != actorTenantId)
+            {
                 throw new UnauthorizedAccessException("Access reviews cannot cross tenant boundaries.");
+            }
 
             scopedTenantId = actorTenantId;
             if (reviewerId != actorId)
+            {
                 EnsureCanManageTenant(scopedTenantId);
+            }
         }
 
         return await _itemRepository
@@ -301,19 +309,25 @@ public class AccessReviewService(
     private void EnsureAuthenticated()
     {
         if (!Actor.IsAuthenticated)
+        {
             throw new UnauthorizedAccessException("An authenticated actor is required for access reviews.");
+        }
     }
 
     private void EnsureReportedActor(Guid reportedActorId)
     {
         if (Actor.SubjectIdAsGuid is not { } actorId || actorId != reportedActorId)
+        {
             throw new UnauthorizedAccessException("Access review actor IDs must match the authenticated user.");
+        }
     }
 
     private void EnsureCanManageTenant(Guid? tenantId)
     {
         if (!CanManageTenant(tenantId))
+        {
             throw new UnauthorizedAccessException(TenantAdministratorRequiredMessage);
+        }
     }
 
     private bool CanManageTenant(Guid? tenantId) =>
@@ -325,13 +339,18 @@ public class AccessReviewService(
     {
         EnsureAuthenticated();
 
-        if (Actor.IsSystemAdmin) return requestedTenantId;
+        if (Actor.IsSystemAdmin)
+        {
+            return requestedTenantId;
+        }
 
         var actorTenantId = Actor.TenantId
             ?? throw new UnauthorizedAccessException("Tenant context is required for access reviews.");
 
         if (requestedTenantId.HasValue && requestedTenantId.Value != actorTenantId)
+        {
             throw new UnauthorizedAccessException("Access reviews cannot cross tenant boundaries.");
+        }
 
         EnsureCanManageTenant(actorTenantId);
         return actorTenantId;
@@ -340,13 +359,20 @@ public class AccessReviewService(
     private void EnsureCanReviewItem(AccessReviewItem item)
     {
         if (item.Campaign == null)
+        {
             throw new UnauthorizedAccessException("The review item has no tenant context.");
+        }
 
         var tenantId = GetTenantId(item.Campaign);
-        if (Actor.IsSystemAdmin) return;
+        if (Actor.IsSystemAdmin)
+        {
+            return;
+        }
 
         if (Actor.SubjectIdAsGuid == item.ReviewerId && Actor.TenantId == tenantId)
+        {
             return;
+        }
 
         EnsureCanManageTenant(tenantId);
     }

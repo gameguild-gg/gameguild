@@ -483,10 +483,13 @@ public class AccessReviewItemRepository(DbContext context) : IAccessReviewItemRe
         .OrderByDescending(i => i.CreatedAt)
         .ToListAsync(cancellationToken);
 
+    public Task<List<AccessReviewItem>> GetPendingByReviewerAsync(Guid reviewerId, Guid? tenantId) =>
+        GetPendingByReviewerAsync(reviewerId, tenantId, CancellationToken.None);
+
     public async Task<List<AccessReviewItem>> GetPendingByReviewerAsync(
         Guid reviewerId,
         Guid? tenantId,
-        CancellationToken cancellationToken = default
+        CancellationToken cancellationToken
     )
     {
         IQueryable<AccessReviewItem> query = DbSet
@@ -494,7 +497,9 @@ public class AccessReviewItemRepository(DbContext context) : IAccessReviewItemRe
             .Where(item => item.ReviewerId == reviewerId && item.Status == AccessReviewItemStatus.Pending);
 
         if (tenantId.HasValue)
+        {
             query = query.Where(item => item.Campaign.TenantId == new TenantId(tenantId.Value));
+        }
 
         return await query
             .OrderBy(item => item.CreatedAt)

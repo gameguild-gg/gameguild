@@ -83,8 +83,11 @@ public interface IAccessReviewItemRepository
     Task<List<AccessReviewItem>> GetByReviewerAsync(Guid reviewerId, CancellationToken cancellationToken = default);
     Task<List<AccessReviewItem>> GetPendingByReviewerAsync(
         Guid reviewerId,
+        Guid? tenantId);
+    Task<List<AccessReviewItem>> GetPendingByReviewerAsync(
+        Guid reviewerId,
         Guid? tenantId,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken);
 }
 
 /// <summary>
