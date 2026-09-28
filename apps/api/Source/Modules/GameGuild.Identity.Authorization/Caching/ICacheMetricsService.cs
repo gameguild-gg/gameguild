@@ -223,7 +223,9 @@ public sealed class CacheMetricsService : ICacheMetricsService
     public void RecordLookupDuration(TimeSpan duration, string cacheType)
     {
         if (duration < TimeSpan.Zero)
+        {
             throw new ArgumentOutOfRangeException(nameof(duration), "Cache lookup duration cannot be negative.");
+        }
 
         var tags = new TagList(
         [

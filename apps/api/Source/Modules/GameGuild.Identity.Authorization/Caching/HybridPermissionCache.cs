@@ -141,16 +141,45 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
         IMemoryCache l1Cache,
         IOptions<AuthorizationCacheOptions> options,
         ICacheMetricsService metrics,
+        ILogger<HybridPermissionCache> logger)
+        : this(l1Cache, options, metrics, logger, null, new PermissionCacheKeyTracker(l1Cache, metrics))
+    {
+    }
+
+    public HybridPermissionCache(
+        IMemoryCache l1Cache,
+        IOptions<AuthorizationCacheOptions> options,
+        ICacheMetricsService metrics,
         ILogger<HybridPermissionCache> logger,
-        IDistributedCache? l2Cache = null,
-        IPermissionCacheKeyTracker? keyTracker = null)
+        IDistributedCache? l2Cache)
+        : this(l1Cache, options, metrics, logger, l2Cache, new PermissionCacheKeyTracker(l1Cache, metrics))
+    {
+    }
+
+    public HybridPermissionCache(
+        IMemoryCache l1Cache,
+        IOptions<AuthorizationCacheOptions> options,
+        ICacheMetricsService metrics,
+        ILogger<HybridPermissionCache> logger,
+        IPermissionCacheKeyTracker keyTracker)
+        : this(l1Cache, options, metrics, logger, null, keyTracker)
+    {
+    }
+
+    public HybridPermissionCache(
+        IMemoryCache l1Cache,
+        IOptions<AuthorizationCacheOptions> options,
+        ICacheMetricsService metrics,
+        ILogger<HybridPermissionCache> logger,
+        IDistributedCache? l2Cache,
+        IPermissionCacheKeyTracker keyTracker)
     {
         _l1Cache = l1Cache;
         _l2Cache = l2Cache;
         _options = options.Value;
         _metrics = metrics;
         _logger = logger;
-        _keyTracker = keyTracker ?? new PermissionCacheKeyTracker(l1Cache, metrics);
+        _keyTracker = keyTracker;
         _useL2 = _options.UseDistributedCache && _l2Cache != null;
     }
 

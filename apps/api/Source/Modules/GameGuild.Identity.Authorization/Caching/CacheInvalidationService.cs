@@ -35,7 +35,10 @@ public interface ICacheInvalidationService
     Task InvalidateResourceAsync(Guid tenantId, string resourceType, string resourceId, CancellationToken cancellationToken = default);
 
     /// <summary>Invalidates multiple cache targets with one version update and one distributed event.</summary>
-    Task InvalidateBatchAsync(Guid tenantId, IReadOnlyCollection<CacheInvalidationTarget> targets, CancellationToken cancellationToken = default);
+    Task InvalidateBatchAsync(Guid tenantId, IReadOnlyCollection<CacheInvalidationTarget> targets);
+
+    /// <summary>Invalidates multiple cache targets with one version update and one distributed event.</summary>
+    Task InvalidateBatchAsync(Guid tenantId, IReadOnlyCollection<CacheInvalidationTarget> targets, CancellationToken cancellationToken);
 
     /// <summary>
     ///     Invalidates policy caches for a tenant.
@@ -181,9 +184,44 @@ public sealed class CacheInvalidationService : ICacheInvalidationService
         IHybridPermissionCache hybridCache,
         ICacheMetricsService metrics,
         IOptions<AuthorizationCacheOptions> options,
+        ILogger<CacheInvalidationService> logger)
+        : this(memoryCache, versionStore, hybridCache, metrics, options, logger, null, null)
+    {
+    }
+
+    public CacheInvalidationService(
+        IMemoryCache memoryCache,
+        ITenantSecurityVersionStore versionStore,
+        IHybridPermissionCache hybridCache,
+        ICacheMetricsService metrics,
+        IOptions<AuthorizationCacheOptions> options,
         ILogger<CacheInvalidationService> logger,
-        ICacheInvalidationPublisher? invalidationPublisher = null,
-        IPermissionCacheKeyTracker? keyTracker = null)
+        ICacheInvalidationPublisher? invalidationPublisher)
+        : this(memoryCache, versionStore, hybridCache, metrics, options, logger, invalidationPublisher, null)
+    {
+    }
+
+    public CacheInvalidationService(
+        IMemoryCache memoryCache,
+        ITenantSecurityVersionStore versionStore,
+        IHybridPermissionCache hybridCache,
+        ICacheMetricsService metrics,
+        IOptions<AuthorizationCacheOptions> options,
+        ILogger<CacheInvalidationService> logger,
+        IPermissionCacheKeyTracker keyTracker)
+        : this(memoryCache, versionStore, hybridCache, metrics, options, logger, null, keyTracker)
+    {
+    }
+
+    public CacheInvalidationService(
+        IMemoryCache memoryCache,
+        ITenantSecurityVersionStore versionStore,
+        IHybridPermissionCache hybridCache,
+        ICacheMetricsService metrics,
+        IOptions<AuthorizationCacheOptions> options,
+        ILogger<CacheInvalidationService> logger,
+        ICacheInvalidationPublisher? invalidationPublisher,
+        IPermissionCacheKeyTracker? keyTracker)
     {
         _versionStore = versionStore;
         _hybridCache = hybridCache;
@@ -261,15 +299,26 @@ public sealed class CacheInvalidationService : ICacheInvalidationService
     }
 
     /// <inheritdoc />
+    public Task InvalidateBatchAsync(Guid tenantId, IReadOnlyCollection<CacheInvalidationTarget> targets)
+    {
+        return InvalidateBatchAsync(tenantId, targets, CancellationToken.None);
+    }
+
+    /// <inheritdoc />
     public async Task InvalidateBatchAsync(
         Guid tenantId,
         IReadOnlyCollection<CacheInvalidationTarget> targets,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         if (tenantId == Guid.Empty)
+        {
             throw new ArgumentException("A tenant ID is required for batch invalidation.", nameof(tenantId));
+        }
+
         if (!IsValidBatchTargets(targets))
+        {
             throw new ArgumentException("Batch invalidation requires 1 to 500 valid targets.", nameof(targets));
+        }
 
         var targetSnapshot = targets.ToList();
         await _versionStore.IncrementVersionAsync(tenantId.ToString(), cancellationToken).ConfigureAwait(false);
@@ -424,7 +473,9 @@ public sealed class CacheInvalidationService : ICacheInvalidationService
         var tenant = tenantId.ToString();
         var keySegments = cacheKey.Split(new[] { ':', '|' }, StringSplitOptions.RemoveEmptyEntries);
         if (!keySegments.Any(segment => segment.Equals(tenant, StringComparison.OrdinalIgnoreCase)))
+        {
             return false;
+        }
 
         return target.Type switch
         {
@@ -443,10 +494,14 @@ public sealed class CacheInvalidationService : ICacheInvalidationService
     private static bool MatchesPolicy(string cacheKey, string tenant, string? policyName)
     {
         if (!cacheKey.StartsWith("policy:", StringComparison.OrdinalIgnoreCase))
+        {
             return false;
+        }
 
         if (policyName is null)
+        {
             return true;
+        }
 
         return cacheKey.Contains($"policy:{tenant}:{policyName}:", StringComparison.OrdinalIgnoreCase) ||
                cacheKey.Contains($"policy:{policyName}:{tenant}:", StringComparison.OrdinalIgnoreCase) ||
@@ -456,7 +511,9 @@ public sealed class CacheInvalidationService : ICacheInvalidationService
     private static bool MatchesAclDependency(string cacheKey, string tenant, string? dependencyKind, Guid? dependencyId)
     {
         if (dependencyId is null || !cacheKey.StartsWith($"acl:subj:{tenant}:", StringComparison.OrdinalIgnoreCase))
+        {
             return false;
+        }
 
         var keySegments = cacheKey.Split(':');
         var dependencySegmentIndex = string.Equals(dependencyKind, "role", StringComparison.OrdinalIgnoreCase) ? 4

@@ -42,9 +42,13 @@ public sealed class WarmPermissionCacheCommandHandler(
         ArgumentNullException.ThrowIfNull(request);
         cancellationToken.ThrowIfCancellationRequested();
         if (!Actor.IsAuthenticated || !Actor.IsSystemAdmin)
+        {
             throw new UnauthorizedAccessException("Permission cache warmup requires system administration.");
+        }
         if (request.TenantId == Guid.Empty)
+        {
             throw new ArgumentException("A tenant ID is required for cache warmup.", nameof(request));
+        }
         ArgumentNullException.ThrowIfNull(request.Items);
 
         var warmupRequests = request.Items.Select(item =>
@@ -53,7 +57,9 @@ public sealed class WarmPermissionCacheCommandHandler(
             var roleIds = item.RoleIds ?? [];
             var groupIds = item.GroupIds ?? [];
             if (!item.UserId.HasValue && (roleIds.Count > 0 || groupIds.Count > 0))
+            {
                 throw new ArgumentException("Anonymous warmup entries cannot include role or group IDs.", nameof(request));
+            }
 
             var subject = item.UserId.HasValue
                 ? AclSubject.ForUser(item.UserId.Value, roleIds, groupIds)
