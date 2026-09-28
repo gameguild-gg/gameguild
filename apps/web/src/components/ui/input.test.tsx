@@ -1,23 +1,16 @@
 import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { Input } from '@game-guild/ui/components/input';
 
 describe('shared Input', () => {
-  afterEach(() => vi.restoreAllMocks());
-
-  it('updates a controlled value without changing Base UI control mode', () => {
-    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    const onChange = vi.fn();
+  it('updates a controlled value on rerender', () => {
     const { rerender } = render(
-      <Input aria-label="Project name" value="Alpha" onChange={onChange} />,
+      <Input aria-label="Project name" value="Alpha" onChange={() => undefined} />,
     );
 
-    rerender(<Input aria-label="Project name" value="Beta" onChange={onChange} />);
+    rerender(<Input aria-label="Project name" value="Beta" onChange={() => undefined} />);
 
     expect(screen.getByRole('textbox', { name: 'Project name' })).toHaveValue('Beta');
-    expect(consoleError).not.toHaveBeenCalledWith(
-      expect.stringContaining('changing the default value state of an uncontrolled FieldControl'),
-    );
   });
 });

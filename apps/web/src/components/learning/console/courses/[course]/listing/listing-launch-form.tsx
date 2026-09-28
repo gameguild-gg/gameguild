@@ -56,6 +56,14 @@ export function ListingLaunchForm({ course }: ListingLaunchFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  function parseVisibility(value: unknown): 'public' | 'private' {
+    return value === 'private' ? 'private' : 'public';
+  }
+
+  function parseEnrollmentStatus(value: unknown): string {
+    return ENROLLMENT_STATUSES.find((status) => status === value) ?? 'Open';
+  }
+
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
@@ -97,7 +105,9 @@ export function ListingLaunchForm({ course }: ListingLaunchFormProps) {
                 { value: 'public', label: 'Public' },
                 { value: 'private', label: 'Private' },
               ]}
-              onValueChange={(value) => setVisibility(value ?? 'public')}
+              onValueChange={(value) => {
+                setVisibility(parseVisibility(value));
+              }}
             >
               <SelectTrigger id="catalog-visibility">
                 <SelectValue />
@@ -115,7 +125,9 @@ export function ListingLaunchForm({ course }: ListingLaunchFormProps) {
             <Select
               value={enrollmentStatus}
               items={ENROLLMENT_STATUSES.map((value) => ({ value, label: formatEnumLabel(value) }))}
-              onValueChange={(value) => setEnrollmentStatus(value ?? 'Open')}
+              onValueChange={(value) => {
+                setEnrollmentStatus(parseEnrollmentStatus(value));
+              }}
             >
               <SelectTrigger id="listing-enrollment-status">
                 <SelectValue />
