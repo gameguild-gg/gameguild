@@ -273,6 +273,76 @@ public sealed class PermissionCacheRedisIntegrationTests(PermissionCacheRedisFix
     }
 
     [Fact]
+    public async Task GroupAclGrantAdvancesSharedVersionAndRefreshesCachedDecisionAcrossInstances()
+    {
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var groupId = Guid.NewGuid();
+        const string resourceType = "Project";
+        const string resourceId = "project-group-acl";
+        var invalidationChannel = $"gg:auth:group-write-test:{Guid.NewGuid():N}";
+        var redisPrefix = $"gg:auth:group-write:{Guid.NewGuid():N}:";
+        var tenantVersions = new SharedTenantSecurityVersionStore();
+        var userVersions = new SharedUserSecurityVersionStore();
+        await using var instanceA = CreateCacheInstance(
+            fixture.ConnectionString,
+            redisPrefix,
+            invalidationChannel,
+            tenantVersions,
+            userVersions);
+        await using var instanceB = CreateCacheInstance(
+            fixture.ConnectionString,
+            redisPrefix,
+            invalidationChannel,
+            tenantVersions,
+            userVersions);
+        using var scopeA = instanceA.CreateScope();
+        using var scopeB = instanceB.CreateScope();
+
+        var currentDatabaseAccess = AccessLevel.None;
+        var databaseAclA = new Mock<IAccessControlListService>();
+        databaseAclA.Setup(service => service.EvaluateAccessAsync(
+                It.IsAny<AclSubject>(), tenantId, resourceType, resourceId, It.IsAny<CancellationToken>()))
+            .Returns(() => Task.FromResult(currentDatabaseAccess));
+        databaseAclA.Setup(service => service.GrantAccessAsync(
+                It.IsAny<Guid>(), AclPrincipalType.Group, groupId, tenantId, resourceType, resourceId,
+                AccessLevel.Write, It.IsAny<CancellationToken>()))
+            .Callback(() => currentDatabaseAccess = AccessLevel.Write)
+            .Returns(Task.CompletedTask);
+
+        var databaseAclB = new Mock<IAccessControlListService>();
+        databaseAclB.Setup(service => service.EvaluateAccessAsync(
+                It.IsAny<AclSubject>(), tenantId, resourceType, resourceId, It.IsAny<CancellationToken>()))
+            .Returns(() => Task.FromResult(currentDatabaseAccess));
+
+        var aclCacheA = CreateAclCache(scopeA.ServiceProvider, databaseAclA.Object, tenantVersions, userVersions);
+        var aclCacheB = CreateAclCache(scopeB.ServiceProvider, databaseAclB.Object, tenantVersions, userVersions);
+
+        var subject = AclSubject.ForUser(userId, groupIds: [groupId]);
+        (await aclCacheB.EvaluateAccessAsync(subject, tenantId, resourceType, resourceId))
+            .Should().Be(AccessLevel.None);
+        databaseAclB.Verify(service => service.EvaluateAccessAsync(
+            It.IsAny<AclSubject>(), tenantId, resourceType, resourceId, It.IsAny<CancellationToken>()), Times.Once);
+
+        await aclCacheA.GrantAccessAsync(
+            Guid.NewGuid(),
+            AclPrincipalType.Group,
+            groupId,
+            tenantId,
+            resourceType,
+            resourceId,
+            AccessLevel.Write);
+
+        tenantVersions.GetVersion(tenantId.ToString()).Should().Be(1);
+
+        var observedAccess = await aclCacheB.EvaluateAccessAsync(subject, tenantId, resourceType, resourceId);
+        observedAccess.Should().Be(AccessLevel.Write,
+            "a group ACL grant must advance the shared tenant version so another instance cannot reuse its stale decision");
+        databaseAclB.Verify(service => service.EvaluateAccessAsync(
+            It.IsAny<AclSubject>(), tenantId, resourceType, resourceId, It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    [Fact]
     public async Task RedisSubscriberResubscribesAfterServerDisconnectAndRestart()
     {
         var connectionString = fixture.ConnectionString;
@@ -403,7 +473,9 @@ public sealed class PermissionCacheRedisIntegrationTests(PermissionCacheRedisFix
         userVersions,
         services.GetRequiredService<IOptions<AuthorizationCacheOptions>>(),
         services.GetRequiredService<IHybridPermissionCache>(),
-        services.GetRequiredService<ICacheMetricsService>());
+        services.GetRequiredService<ICacheMetricsService>(),
+        services.GetRequiredService<IPermissionCacheKeyTracker>(),
+        services.GetRequiredService<ICacheInvalidationService>());
 
     private sealed class SharedTenantSecurityVersionStore : ITenantSecurityVersionStore
     {
