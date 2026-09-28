@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Link from 'next/link';
 import { describe, expect, it } from 'vitest';
@@ -50,8 +50,10 @@ describe('Base UI compatibility wrappers', () => {
 
     await user.click(screen.getByRole('button', { name: 'Workspace' }));
 
-    expect(await screen.findByText('Project scope')).toBeInTheDocument();
-    expect(await screen.findByRole('menuitem', { name: 'All projects' })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Project scope').textContent).toBe('Project scope');
+      expect(screen.getByRole('menuitem', { name: 'All projects' }).textContent).toBe('All projects');
+    });
   });
 
   it('opens a hover card whose trigger uses the render prop API', async () => {

@@ -3,7 +3,7 @@
 import React, { useState, useTransition } from 'react';
 import { updateCourse } from '@/lib/learning/actions';
 import type { CourseDetails } from '@/lib/learning/types';
-import { ENROLLMENT_STATUSES, formatEnumLabel } from '@/lib/learning/enums';
+import { formatEnumLabel } from '@/lib/learning/enums';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Input } from '@game-guild/ui/components/input';
@@ -14,6 +14,18 @@ import { Loader2, Save } from 'lucide-react';
 interface ListingLaunchFormProps {
   course: CourseDetails;
 }
+
+const ENROLLMENT_STATUS_OPTIONS = [
+  'Open',
+  'Active',
+  'Paused',
+  'Cancelled',
+  'Expired',
+  'Completed',
+  'Closed',
+  'InviteOnly',
+  'Waitlist',
+] as const;
 
 export function toDateTimeLocal(value: string | null): string {
   if (!value) {
@@ -60,8 +72,8 @@ export function ListingLaunchForm({ course }: ListingLaunchFormProps) {
     return value === 'private' ? 'private' : 'public';
   }
 
-  function parseEnrollmentStatus(value: unknown): string {
-    return ENROLLMENT_STATUSES.find((status) => status === value) ?? 'Open';
+  function parseEnrollmentStatus(value: unknown): (typeof ENROLLMENT_STATUS_OPTIONS)[number] {
+    return ENROLLMENT_STATUS_OPTIONS.find((status) => status === value) ?? 'Open';
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -124,7 +136,7 @@ export function ListingLaunchForm({ course }: ListingLaunchFormProps) {
             <Label htmlFor="listing-enrollment-status">Enrollment status</Label>
             <Select
               value={enrollmentStatus}
-              items={ENROLLMENT_STATUSES.map((value) => ({ value, label: formatEnumLabel(value) }))}
+              items={ENROLLMENT_STATUS_OPTIONS.map((value) => ({ value, label: formatEnumLabel(value) }))}
               onValueChange={(value) => {
                 setEnrollmentStatus(parseEnrollmentStatus(value));
               }}
@@ -133,7 +145,7 @@ export function ListingLaunchForm({ course }: ListingLaunchFormProps) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {ENROLLMENT_STATUSES.map((value) => (
+                {ENROLLMENT_STATUS_OPTIONS.map((value) => (
                   <SelectItem key={value} value={value}>
                     {formatEnumLabel(value)}
                   </SelectItem>
