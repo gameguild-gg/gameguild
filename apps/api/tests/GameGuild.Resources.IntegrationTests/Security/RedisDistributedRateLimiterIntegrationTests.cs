@@ -2,13 +2,14 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Net;
-using System.Net.Sockets;
 using System.Security.Claims;
 using GameGuild.API;
 using GameGuild.API.Core.Middleware;
 using GameGuild.Configuration.PresentationLayer.RateLimiting;
 using DotNet.Testcontainers.Builders;
+using DotNet.Testcontainers.Configurations;
 using DotNet.Testcontainers.Containers;
+using DotNet.Testcontainers.Networks;
 using FluentAssertions;
 using GameGuild.Resources;
 using GameGuild.Identity.Authorization;
@@ -32,21 +33,37 @@ public sealed class RedisRateLimiterCollection : ICollectionFixture<RedisRateLim
 
 public sealed class RedisRateLimiterFixture : IAsyncLifetime
 {
-    private readonly IContainer _container = new ContainerBuilder()
-        .WithImage("redis:7-alpine")
-        .WithPortBinding(6379, true)
-        .WithCleanUp(true)
-        .WithWaitStrategy(Wait.ForUnixContainer().UntilCommandIsCompleted(["redis-cli", "ping"]))
-        .Build();
+    private readonly INetwork _network;
+    private readonly IContainer _container;
 
     private readonly List<IConnectionMultiplexer> _connections = [];
+
+    public RedisRateLimiterFixture()
+    {
+        _network = new NetworkBuilder()
+            .WithName($"gameguild-rate-limiter-{Guid.NewGuid():N}")
+            .Build();
+        _container = new ContainerBuilder()
+            .WithImage("redis:7-alpine")
+            .WithNetwork(_network)
+            .WithNetworkAliases("rate-limit-redis")
+            .WithPortBinding(6379, true)
+            .WithCleanUp(true)
+            .WithWaitStrategy(Wait.ForUnixContainer().UntilCommandIsCompleted(["redis-cli", "ping"]))
+            .Build();
+    }
 
     public IReadOnlyList<IConnectionMultiplexer> Connections => _connections;
 
     public string RedisEndpoint { get; private set; } = string.Empty;
 
+    public string RedisContainerEndpoint => "rate-limit-redis:6379";
+
+    public INetwork Network => _network;
+
     public async Task InitializeAsync()
     {
+        await _network.CreateAsync();
         await _container.StartAsync();
 
         RedisEndpoint = $"{_container.Hostname}:{_container.GetMappedPublicPort(6379)}";
@@ -64,6 +81,7 @@ public sealed class RedisRateLimiterFixture : IAsyncLifetime
         }
 
         await _container.DisposeAsync();
+        await _network.DisposeAsync();
     }
 }
 
@@ -134,67 +152,47 @@ public sealed class RedisDistributedRateLimiterIntegrationTests(
     }
 
     [Fact]
-    public async Task SeparateOperatingSystemProcessesShareRedisLimitUnderConcurrentLoad()
+    public async Task SeparateKestrelContainersShareRedisLimitUnderConcurrentLoad()
     {
         const int requestLimit = 20;
         const int requestCount = 200;
         var userId = Guid.NewGuid().ToString("N");
-        var firstPort = GetFreeTcpPort();
-        var secondPort = GetFreeTcpPort();
-        while (secondPort == firstPort)
-        {
-            secondPort = GetFreeTcpPort();
-        }
+        await using var firstHost = CreateRateLimitingProbeHost(requestLimit);
+        await using var secondHost = CreateRateLimitingProbeHost(requestLimit);
+        await Task.WhenAll(firstHost.StartAsync(), secondHost.StartAsync());
 
-        var firstHost = StartRateLimitingProbeHost(firstPort, requestLimit);
-        var secondHost = StartRateLimitingProbeHost(secondPort, requestLimit);
+        using var firstClient = new HttpClient { BaseAddress = GetProbeHostBaseAddress(firstHost) };
+        using var secondClient = new HttpClient { BaseAddress = GetProbeHostBaseAddress(secondHost) };
+        var responses = await Task.WhenAll(Enumerable.Range(0, requestCount).Select(async index =>
+        {
+            var client = index % 2 == 0 ? firstClient : secondClient;
+            using var request = new HttpRequestMessage(HttpMethod.Get, "/limited");
+            request.Headers.Add("X-Test-User", userId);
+            return await client.SendAsync(request);
+        }));
+
         try
         {
-            await Task.WhenAll(WaitForProbeHostAsync(firstHost), WaitForProbeHostAsync(secondHost));
-            using var firstClient = new HttpClient { BaseAddress = firstHost.BaseAddress };
-            using var secondClient = new HttpClient { BaseAddress = secondHost.BaseAddress };
-            var responses = await Task.WhenAll(Enumerable.Range(0, requestCount).Select(async index =>
-            {
-                var client = index % 2 == 0 ? firstClient : secondClient;
-                using var request = new HttpRequestMessage(HttpMethod.Get, "/limited");
-                request.Headers.Add("X-Test-User", userId);
-                return await client.SendAsync(request);
-            }));
-
-            try
-            {
-                responses.Count(response => response.StatusCode == HttpStatusCode.NoContent).Should().Be(requestLimit);
-                responses.Count(response => response.StatusCode == HttpStatusCode.TooManyRequests)
-                    .Should().Be(requestCount - requestLimit);
-                responses.Should().OnlyContain(response =>
-                    response.StatusCode == HttpStatusCode.NoContent ||
-                    response.StatusCode == HttpStatusCode.TooManyRequests);
-                output.WriteLine(
-                    "Two independent Kestrel processes enforced one Redis limit across {0} concurrent requests.",
-                    requestCount);
-            }
-            finally
-            {
-                foreach (var response in responses)
-                {
-                    response.Dispose();
-                }
-            }
+            responses.Count(response => response.StatusCode == HttpStatusCode.NoContent).Should().Be(requestLimit);
+            responses.Count(response => response.StatusCode == HttpStatusCode.TooManyRequests)
+                .Should().Be(requestCount - requestLimit);
+            responses.Should().OnlyContain(response =>
+                response.StatusCode == HttpStatusCode.NoContent ||
+                response.StatusCode == HttpStatusCode.TooManyRequests);
+            output.WriteLine(
+                "Two independent Kestrel containers enforced one Redis limit across {0} concurrent requests.",
+                requestCount);
         }
         finally
         {
-            await Task.WhenAll(StopRateLimitingProbeHostAsync(firstHost), StopRateLimitingProbeHostAsync(secondHost));
+            foreach (var response in responses)
+            {
+                response.Dispose();
+            }
         }
     }
 
-    private static int GetFreeTcpPort()
-    {
-        using var listener = new TcpListener(IPAddress.Loopback, 0);
-        listener.Start();
-        return ((IPEndPoint)listener.LocalEndpoint).Port;
-    }
-
-    private RateLimitingProbeHost StartRateLimitingProbeHost(int port, int requestLimit)
+    private IContainer CreateRateLimitingProbeHost(int requestLimit)
     {
         var configuration = new DirectoryInfo(AppContext.BaseDirectory).Parent?.Name ?? "Debug";
         var probeHostDirectory = Path.GetFullPath(Path.Combine(
@@ -210,82 +208,30 @@ public sealed class RedisDistributedRateLimiterIntegrationTests(
             throw new FileNotFoundException("The rate-limiting probe host was not built with the integration tests.", assemblyPath);
         }
 
-        var startInfo = new ProcessStartInfo("dotnet")
-        {
-            WorkingDirectory = probeHostDirectory,
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            CreateNoWindow = true
-        };
-        startInfo.ArgumentList.Add(ProbeHostAssemblyFileName);
-        startInfo.Environment["GAMEGUILD_RATE_LIMIT_REDIS_ENDPOINT"] = fixture.RedisEndpoint;
-        startInfo.Environment["GAMEGUILD_RATE_LIMIT_HTTP_PORT"] = port.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        startInfo.Environment["GAMEGUILD_RATE_LIMIT_REQUEST_LIMIT"] = requestLimit.ToString(System.Globalization.CultureInfo.InvariantCulture);
-
-        var process = Process.Start(startInfo) // NOSONAR: fixed executable and assembly argument; runtime settings are environment variables.
-            ?? throw new InvalidOperationException("Failed to start a rate-limiting probe process.");
-        var standardOutput = process.StandardOutput.ReadToEndAsync();
-        var standardError = process.StandardError.ReadToEndAsync();
-        return new RateLimitingProbeHost(
-            process,
-            new Uri($"http://127.0.0.1:{port}"),
-            standardOutput,
-            standardError);
+        return new ContainerBuilder()
+            .WithImage("mcr.microsoft.com/dotnet/aspnet:10.0")
+            .WithBindMount(probeHostDirectory, "/app", AccessMode.ReadOnly)
+            .WithWorkingDirectory("/app")
+            .WithEntrypoint(["dotnet"])
+            .WithCommand([ProbeHostAssemblyFileName])
+            .WithEnvironment("GAMEGUILD_RATE_LIMIT_REDIS_ENDPOINT", fixture.RedisContainerEndpoint)
+            .WithEnvironment("GAMEGUILD_RATE_LIMIT_HTTP_PORT", "8080")
+            .WithEnvironment("GAMEGUILD_RATE_LIMIT_HTTP_HOST", "0.0.0.0")
+            .WithEnvironment(
+                "GAMEGUILD_RATE_LIMIT_REQUEST_LIMIT",
+                requestLimit.ToString(System.Globalization.CultureInfo.InvariantCulture))
+            .WithPortBinding(8080, true)
+            .WithNetwork(fixture.Network)
+            .WithWaitStrategy(Wait.ForUnixContainer()
+                .UntilHttpRequestIsSucceeded(request => request.ForPort(8080).ForPath("/healthz")))
+            .WithCleanUp(true)
+            .Build();
     }
 
-    private static async Task WaitForProbeHostAsync(RateLimitingProbeHost host)
+    private static Uri GetProbeHostBaseAddress(IContainer host)
     {
-        using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(1) };
-        var timeout = Stopwatch.StartNew();
-        while (timeout.Elapsed < TimeSpan.FromSeconds(20))
-        {
-            if (host.Process.HasExited)
-            {
-                var error = await host.StandardError;
-                var output = await host.StandardOutput;
-                throw new InvalidOperationException($"Rate-limiting probe exited before readiness.\n{output}\n{error}");
-            }
-
-            try
-            {
-                using var response = await client.GetAsync(new Uri(host.BaseAddress, "/healthz"));
-                if (response.IsSuccessStatusCode)
-                {
-                    return;
-                }
-            }
-            catch (HttpRequestException)
-            {
-                // The child is still binding its Kestrel listener.
-            }
-            catch (TaskCanceledException)
-            {
-                // A short readiness request timed out; retry until the overall deadline.
-            }
-
-            await Task.Delay(TimeSpan.FromMilliseconds(100));
-        }
-
-        throw new TimeoutException("Rate-limiting probe did not become ready within 20 seconds.");
+        return new UriBuilder("http", host.Hostname, host.GetMappedPublicPort(8080)).Uri;
     }
-
-    private static async Task StopRateLimitingProbeHostAsync(RateLimitingProbeHost host)
-    {
-        if (!host.Process.HasExited)
-        {
-            host.Process.Kill(entireProcessTree: true);
-        }
-        await host.Process.WaitForExitAsync();
-        await Task.WhenAll(host.StandardOutput, host.StandardError);
-        host.Process.Dispose();
-    }
-
-    private sealed record RateLimitingProbeHost(
-        Process Process,
-        Uri BaseAddress,
-        Task<string> StandardOutput,
-        Task<string> StandardError);
 
     private static TimeSpan Percentile(IEnumerable<TimeSpan> latencies, double percentile)
     {

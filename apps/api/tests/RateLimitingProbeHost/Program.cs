@@ -14,6 +14,7 @@ if (args.Length != 0)
 
 var redisEndpoint = Environment.GetEnvironmentVariable("GAMEGUILD_RATE_LIMIT_REDIS_ENDPOINT")
     ?? throw new InvalidOperationException("The Redis endpoint environment variable is required.");
+var httpHost = Environment.GetEnvironmentVariable("GAMEGUILD_RATE_LIMIT_HTTP_HOST") ?? "127.0.0.1";
 if (!int.TryParse(
         Environment.GetEnvironmentVariable("GAMEGUILD_RATE_LIMIT_HTTP_PORT"),
         System.Globalization.NumberStyles.None,
@@ -67,4 +68,4 @@ app.MapGet("/limited", () => Results.NoContent());
 app.MapGet("/healthz", () => Results.Ok())
     .WithMetadata(new DisableRateLimitingAttribute());
 
-await app.RunAsync($"http://127.0.0.1:{port}");
+await app.RunAsync($"http://{httpHost}:{port}");

@@ -201,7 +201,9 @@ public static class RateLimitingServiceCollectionExtensions
                 {
                     var partitionKey = GetUserOrIpPartitionKey(httpContext);
                     if (accessOptions.IsAllowlisted(httpContext))
+                    {
                         return RateLimitPartition.GetNoLimiter($"allowlisted:{RateLimitPolicies.Api}:{partitionKey}");
+                    }
 
                     return redisEnabled
                         ? RateLimitPartition.GetNoLimiter($"redis:{RateLimitPolicies.Api}:{partitionKey}")
@@ -223,7 +225,9 @@ public static class RateLimitingServiceCollectionExtensions
                 {
                     var partitionKey = GetTenantPartitionKey(httpContext);
                     if (accessOptions.IsAllowlisted(httpContext))
+                    {
                         return RateLimitPartition.GetNoLimiter($"allowlisted:{RateLimitPolicies.PerTenant}:{partitionKey}");
+                    }
 
                     return redisEnabled
                         ? RateLimitPartition.GetNoLimiter($"redis:{RateLimitPolicies.PerTenant}:{partitionKey}")
@@ -245,7 +249,9 @@ public static class RateLimitingServiceCollectionExtensions
                 {
                     var partitionKey = GetUserPartitionKey(httpContext);
                     if (accessOptions.IsAllowlisted(httpContext))
+                    {
                         return RateLimitPartition.GetNoLimiter($"allowlisted:{RateLimitPolicies.PerUser}:{partitionKey}");
+                    }
 
                     return redisEnabled
                         ? RateLimitPartition.GetNoLimiter($"redis:{RateLimitPolicies.PerUser}:{partitionKey}")
@@ -266,7 +272,9 @@ public static class RateLimitingServiceCollectionExtensions
                 {
                     var partitionKey = GetIpPartitionKey(httpContext);
                     if (accessOptions.IsAllowlisted(httpContext))
+                    {
                         return RateLimitPartition.GetNoLimiter($"allowlisted:{RateLimitPolicies.PerIp}:{partitionKey}");
+                    }
 
                     return redisEnabled
                         ? RateLimitPartition.GetNoLimiter($"redis:{RateLimitPolicies.PerIp}:{partitionKey}")
@@ -290,7 +298,9 @@ public static class RateLimitingServiceCollectionExtensions
                 {
                     var partitionKey = GetUserOrIpPartitionKey(httpContext);
                     if (accessOptions.IsAllowlisted(httpContext))
+                    {
                         return RateLimitPartition.GetNoLimiter($"allowlisted:{RateLimitPolicies.Bursty}:{partitionKey}");
+                    }
                     if (redisEnabled)
                     {
                         return RateLimitPartition.GetNoLimiter($"redis:{RateLimitPolicies.Bursty}:{partitionKey}");
@@ -347,7 +357,9 @@ public static class RateLimitingServiceCollectionExtensions
                 {
                     var partitionKey = GetUserPartitionKey(httpContext);
                     if (accessOptions.IsAllowlisted(httpContext))
+                    {
                         return RateLimitPartition.GetNoLimiter($"allowlisted:{RateLimitPolicies.ExpensiveOperations}:{partitionKey}");
+                    }
 
                     if (redisEnabled)
                     {
