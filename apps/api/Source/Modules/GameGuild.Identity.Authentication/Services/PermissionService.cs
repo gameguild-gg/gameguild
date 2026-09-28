@@ -687,7 +687,10 @@ public class PermissionService(
                         grant.UserId != request.UserId ||
                         grant.TenantId != request.TenantId ||
                         grant.ResourceId != request.ResourceId.Value ||
-                        !string.Equals(grant.ResourceType, request.ResourceTypeName, StringComparison.Ordinal)) continue;
+                        !string.Equals(grant.ResourceType, request.ResourceTypeName, StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
 
                     allowed.UnionWith(grant.GetPermissionsAsEnum());
                 }
