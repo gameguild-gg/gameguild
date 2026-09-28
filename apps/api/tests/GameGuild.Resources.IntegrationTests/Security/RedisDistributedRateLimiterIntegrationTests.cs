@@ -2,6 +2,8 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Net;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Security.Claims;
 using GameGuild.API;
 using GameGuild.API.Core.Middleware;
@@ -157,42 +159,60 @@ public sealed class RedisDistributedRateLimiterIntegrationTests(
         const int requestLimit = 20;
         const int requestCount = 200;
         var userId = Guid.NewGuid().ToString("N");
-        await using var firstHost = CreateRateLimitingProbeHost(requestLimit);
-        await using var secondHost = CreateRateLimitingProbeHost(requestLimit);
-        await Task.WhenAll(firstHost.StartAsync(), secondHost.StartAsync());
-
-        using var firstClient = new HttpClient { BaseAddress = GetProbeHostBaseAddress(firstHost) };
-        using var secondClient = new HttpClient { BaseAddress = GetProbeHostBaseAddress(secondHost) };
-        var responses = await Task.WhenAll(Enumerable.Range(0, requestCount).Select(async index =>
-        {
-            var client = index % 2 == 0 ? firstClient : secondClient;
-            using var request = new HttpRequestMessage(HttpMethod.Get, "/limited");
-            request.Headers.Add("X-Test-User", userId);
-            return await client.SendAsync(request);
-        }));
-
+        using var certificateAuthority = CreateProbeCertificateAuthority();
+        using var serverCertificate = CreateProbeServerCertificate(certificateAuthority);
+        var certificateDirectory = Directory.CreateTempSubdirectory("gameguild-rate-limit-probe-");
+        var certificatePath = Path.Combine(certificateDirectory.FullName, "rate-limit-probe.pfx");
+        var certificatePassword = Guid.NewGuid().ToString("N");
+        var certificateBytes = serverCertificate.Export(X509ContentType.Pfx, certificatePassword);
         try
         {
-            responses.Count(response => response.StatusCode == HttpStatusCode.NoContent).Should().Be(requestLimit);
-            responses.Count(response => response.StatusCode == HttpStatusCode.TooManyRequests)
-                .Should().Be(requestCount - requestLimit);
-            responses.Should().OnlyContain(response =>
-                response.StatusCode == HttpStatusCode.NoContent ||
-                response.StatusCode == HttpStatusCode.TooManyRequests);
-            output.WriteLine(
-                "Two independent Kestrel containers enforced one Redis limit across {0} concurrent requests.",
-                requestCount);
+            await File.WriteAllBytesAsync(certificatePath, certificateBytes);
+            CryptographicOperations.ZeroMemory(certificateBytes);
+
+            await using var firstHost = CreateRateLimitingProbeHost(requestLimit, certificatePath, certificatePassword);
+            await using var secondHost = CreateRateLimitingProbeHost(requestLimit, certificatePath, certificatePassword);
+            await Task.WhenAll(firstHost.StartAsync(), secondHost.StartAsync());
+
+            using var firstClient = CreateProbeHttpClient(firstHost, certificateAuthority);
+            using var secondClient = CreateProbeHttpClient(secondHost, certificateAuthority);
+            await Task.WhenAll(WaitForProbeHostAsync(firstClient), WaitForProbeHostAsync(secondClient));
+            var responses = await Task.WhenAll(Enumerable.Range(0, requestCount).Select(async index =>
+            {
+                var client = index % 2 == 0 ? firstClient : secondClient;
+                using var request = new HttpRequestMessage(HttpMethod.Get, "/limited");
+                request.Headers.Add("X-Test-User", userId);
+                return await client.SendAsync(request);
+            }));
+
+            try
+            {
+                responses.Count(response => response.StatusCode == HttpStatusCode.NoContent).Should().Be(requestLimit);
+                responses.Count(response => response.StatusCode == HttpStatusCode.TooManyRequests)
+                    .Should().Be(requestCount - requestLimit);
+                responses.Should().OnlyContain(response =>
+                    response.StatusCode == HttpStatusCode.NoContent ||
+                    response.StatusCode == HttpStatusCode.TooManyRequests);
+                output.WriteLine(
+                    "Two independent Kestrel containers enforced one Redis limit across {0} concurrent requests over HTTPS.",
+                    requestCount);
+            }
+            finally
+            {
+                foreach (var response in responses)
+                {
+                    response.Dispose();
+                }
+            }
         }
         finally
         {
-            foreach (var response in responses)
-            {
-                response.Dispose();
-            }
+            CryptographicOperations.ZeroMemory(certificateBytes);
+            Directory.Delete(certificateDirectory.FullName, recursive: true);
         }
     }
 
-    private IContainer CreateRateLimitingProbeHost(int requestLimit)
+    private IContainer CreateRateLimitingProbeHost(int requestLimit, string certificatePath, string certificatePassword)
     {
         var configuration = new DirectoryInfo(AppContext.BaseDirectory).Parent?.Name ?? "Debug";
         var probeHostDirectory = Path.GetFullPath(Path.Combine(
@@ -215,22 +235,100 @@ public sealed class RedisDistributedRateLimiterIntegrationTests(
             .WithEntrypoint(["dotnet"])
             .WithCommand([ProbeHostAssemblyFileName])
             .WithEnvironment("GAMEGUILD_RATE_LIMIT_REDIS_ENDPOINT", fixture.RedisContainerEndpoint)
-            .WithEnvironment("GAMEGUILD_RATE_LIMIT_HTTP_PORT", "8080")
-            .WithEnvironment("GAMEGUILD_RATE_LIMIT_HTTP_HOST", "0.0.0.0")
+            .WithEnvironment("GAMEGUILD_RATE_LIMIT_HTTPS_CERTIFICATE_PATH", "/certs/rate-limit-probe.pfx")
+            .WithEnvironment("GAMEGUILD_RATE_LIMIT_HTTPS_CERTIFICATE_PASSWORD", certificatePassword)
+            .WithEnvironment("GAMEGUILD_RATE_LIMIT_HTTPS_PORT", "8443")
+            .WithEnvironment("GAMEGUILD_RATE_LIMIT_HTTPS_HOST", "0.0.0.0")
             .WithEnvironment(
                 "GAMEGUILD_RATE_LIMIT_REQUEST_LIMIT",
                 requestLimit.ToString(System.Globalization.CultureInfo.InvariantCulture))
-            .WithPortBinding(8080, true)
+            .WithBindMount(certificatePath, "/certs/rate-limit-probe.pfx", AccessMode.ReadOnly)
+            .WithPortBinding(8443, true)
             .WithNetwork(fixture.Network)
-            .WithWaitStrategy(Wait.ForUnixContainer()
-                .UntilHttpRequestIsSucceeded(request => request.ForPort(8080).ForPath("/healthz")))
+            .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8443))
             .WithCleanUp(true)
             .Build();
     }
 
-    private static Uri GetProbeHostBaseAddress(IContainer host)
+    private static HttpClient CreateProbeHttpClient(IContainer host, X509Certificate2 certificateAuthority)
     {
-        return new UriBuilder("http", host.Hostname, host.GetMappedPublicPort(8080)).Uri;
+        var chainPolicy = new X509ChainPolicy
+        {
+            TrustMode = X509ChainTrustMode.CustomRootTrust,
+            RevocationMode = X509RevocationMode.NoCheck
+        };
+        chainPolicy.CustomTrustStore.Add(certificateAuthority);
+        chainPolicy.ApplicationPolicy.Add(new Oid("1.3.6.1.5.5.7.3.1"));
+
+        var handler = new SocketsHttpHandler();
+        handler.SslOptions.CertificateChainPolicy = chainPolicy;
+
+        return new HttpClient(handler)
+        {
+            BaseAddress = new UriBuilder(Uri.UriSchemeHttps, "localhost", host.GetMappedPublicPort(8443)).Uri
+        };
+    }
+
+    private static X509Certificate2 CreateProbeCertificateAuthority()
+    {
+        using var key = RSA.Create(2048);
+        var request = new CertificateRequest("CN=GameGuild rate-limit probe root", key, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        request.CertificateExtensions.Add(new X509BasicConstraintsExtension(true, false, 0, critical: true));
+        request.CertificateExtensions.Add(new X509KeyUsageExtension(
+            X509KeyUsageFlags.KeyCertSign | X509KeyUsageFlags.CrlSign,
+            critical: true));
+
+        var now = DateTimeOffset.UtcNow;
+        return request.CreateSelfSigned(now.AddMinutes(-1), now.AddHours(1));
+    }
+
+    private static X509Certificate2 CreateProbeServerCertificate(X509Certificate2 certificateAuthority)
+    {
+        using var key = RSA.Create(2048);
+        var request = new CertificateRequest("CN=localhost", key, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        var subjectAlternativeNames = new SubjectAlternativeNameBuilder();
+        subjectAlternativeNames.AddDnsName("localhost");
+        subjectAlternativeNames.AddIpAddress(IPAddress.Loopback);
+        subjectAlternativeNames.AddIpAddress(IPAddress.IPv6Loopback);
+        request.CertificateExtensions.Add(subjectAlternativeNames.Build());
+        request.CertificateExtensions.Add(new X509BasicConstraintsExtension(false, false, 0, critical: true));
+        request.CertificateExtensions.Add(new X509KeyUsageExtension(
+            X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.KeyEncipherment,
+            critical: true));
+        var serverAuthentication = new OidCollection { new("1.3.6.1.5.5.7.3.1") };
+        request.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension(serverAuthentication, critical: false));
+
+        var now = DateTimeOffset.UtcNow;
+        using var publicCertificate = request.Create(
+            certificateAuthority,
+            now.AddMinutes(-1),
+            now.AddHours(1),
+            RandomNumberGenerator.GetBytes(16));
+        return publicCertificate.CopyWithPrivateKey(key);
+    }
+
+    private static async Task WaitForProbeHostAsync(HttpClient client)
+    {
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+        while (!timeout.IsCancellationRequested)
+        {
+            try
+            {
+                using var response = await client.GetAsync("/healthz", timeout.Token);
+                if (response.IsSuccessStatusCode)
+                {
+                    return;
+                }
+            }
+            catch (HttpRequestException)
+            {
+                // Kestrel may have opened its port before the health endpoint is ready.
+            }
+
+            await Task.Delay(TimeSpan.FromMilliseconds(100), timeout.Token);
+        }
+
+        throw new TimeoutException("The HTTPS rate-limiting probe did not become ready within 20 seconds.");
     }
 
     private static TimeSpan Percentile(IEnumerable<TimeSpan> latencies, double percentile)

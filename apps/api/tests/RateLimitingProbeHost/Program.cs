@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Security.Cryptography.X509Certificates;
 using GameGuild.API;
 using GameGuild.API.Core.Middleware;
 using GameGuild.Configuration.PresentationLayer.RateLimiting;
@@ -14,15 +15,19 @@ if (args.Length != 0)
 
 var redisEndpoint = Environment.GetEnvironmentVariable("GAMEGUILD_RATE_LIMIT_REDIS_ENDPOINT")
     ?? throw new InvalidOperationException("The Redis endpoint environment variable is required.");
-var httpHost = Environment.GetEnvironmentVariable("GAMEGUILD_RATE_LIMIT_HTTP_HOST") ?? "127.0.0.1";
+var certificatePath = Environment.GetEnvironmentVariable("GAMEGUILD_RATE_LIMIT_HTTPS_CERTIFICATE_PATH")
+    ?? throw new InvalidOperationException("The HTTPS certificate path environment variable is required.");
+var certificatePassword = Environment.GetEnvironmentVariable("GAMEGUILD_RATE_LIMIT_HTTPS_CERTIFICATE_PASSWORD")
+    ?? throw new InvalidOperationException("The HTTPS certificate password environment variable is required.");
+var httpsHost = Environment.GetEnvironmentVariable("GAMEGUILD_RATE_LIMIT_HTTPS_HOST") ?? "127.0.0.1";
 if (!int.TryParse(
-        Environment.GetEnvironmentVariable("GAMEGUILD_RATE_LIMIT_HTTP_PORT"),
+        Environment.GetEnvironmentVariable("GAMEGUILD_RATE_LIMIT_HTTPS_PORT"),
         System.Globalization.NumberStyles.None,
         System.Globalization.CultureInfo.InvariantCulture,
         out var port)
     || port is < 1 or > 65535)
 {
-    throw new ArgumentOutOfRangeException(nameof(port), "HTTP port must be between 1 and 65535.");
+    throw new ArgumentOutOfRangeException(nameof(port), "HTTPS port must be between 1 and 65535.");
 }
 
 if (!int.TryParse(
@@ -35,8 +40,11 @@ if (!int.TryParse(
     throw new ArgumentOutOfRangeException(nameof(requestLimit), "The request limit must be greater than zero.");
 }
 
+using var serverCertificate = X509CertificateLoader.LoadPkcs12FromFile(certificatePath, certificatePassword);
 await using var redis = await ConnectionMultiplexer.ConnectAsync(redisEndpoint);
 var builder = WebApplication.CreateBuilder([]);
+builder.WebHost.ConfigureKestrel(options =>
+    options.ConfigureHttpsDefaults(httpsOptions => httpsOptions.ServerCertificate = serverCertificate));
 var configuration = new ConfigurationBuilder()
     .AddInMemoryCollection(new Dictionary<string, string?> { ["Redis:Enabled"] = "true" })
     .Build();
@@ -68,4 +76,4 @@ app.MapGet("/limited", () => Results.NoContent());
 app.MapGet("/healthz", () => Results.Ok())
     .WithMetadata(new DisableRateLimitingAttribute());
 
-await app.RunAsync($"http://{httpHost}:{port}");
+await app.RunAsync($"https://{httpsHost}:{port}");
