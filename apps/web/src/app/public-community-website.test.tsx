@@ -52,7 +52,8 @@ vi.mock('@/i18n', () => ({
   ),
 }));
 
-vi.mock('@/lib/projects/public-projects', () => ({
+vi.mock('@/lib/projects/public-projects', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/projects/public-projects')>()),
   getPublishedProjects: getPublishedProjectsMock,
   getVisibleProject: getVisibleProjectMock,
 }));
@@ -279,7 +280,7 @@ describe('public community website UX', () => {
   });
 
   it('renders Projects as a searchable social gallery and keeps the project detail path', async () => {
-    render(await ShowcasePage());
+    render(await ShowcasePage({ searchParams: Promise.resolve({}) }));
 
     expect(screen.getByRole('heading', { name: 'Projects' })).toBeInTheDocument();
     expect(screen.getByAltText(/real api project artwork/i)).toBeInTheDocument();
@@ -296,7 +297,10 @@ describe('public community website UX', () => {
     expect(screen.getByAltText(/real api project project preview/i)).toBeInTheDocument();
     expect(screen.getAllByText(/creator/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/playtest/i).length).toBeGreaterThan(0);
-    expect(screen.getByRole('link', { name: /join this playtest/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /browse playtests/i })).toHaveAttribute(
+      'href',
+      '/testing-lab',
+    );
     expect(getVisibleProjectMock).toHaveBeenCalledWith('real-api-project');
   });
 
