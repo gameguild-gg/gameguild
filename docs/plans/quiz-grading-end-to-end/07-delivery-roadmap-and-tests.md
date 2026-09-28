@@ -16,7 +16,7 @@ quais testes e gates devem ser aplicados aos marcos daquela sequência.
 
 Cada marco pode ter múltiplos PRs, mas um PR não deve misturar:
 
-- alteração ampla do baseline de schema e redesign amplo de UI;
+- migration estrutural ampla e redesign amplo de UI;
 - novo handler e refatoração do lifecycle inteiro;
 - mudança de contrato sem consumidores atualizados;
 - remoção de caminho antigo antes do E2E equivalente.
@@ -27,11 +27,11 @@ Ordem interna recomendada:
 contrato e testes -> domínio API -> persistência -> endpoints -> web -> E2E
 ```
 
-Os gates são cumulativos. Depois de cada edição aprovada do baseline, o CI
-recria o banco do zero, compara o modelo global e executa os testes da fatia
-atual mais todos os contratos, testes e E2Es aprovados nas partes anteriores.
-Uma parte nova não pode reduzir a suíte da anterior nem aceitar drift fora do
-delta do `SCHEMA-GATE`.
+Os gates são cumulativos. Depois de cada migration aprovada, o CI cria o banco
+do zero, atualiza um banco populado pela migration anterior, compara o modelo e
+o catálogo globais e executa os testes da fatia atual mais todos os contratos,
+testes e E2Es aprovados nas partes anteriores. Uma parte nova não pode reduzir
+a suíte da anterior nem aceitar drift fora do delta do `SCHEMA-GATE`.
 
 ## Matriz E2E de workflows
 
@@ -252,32 +252,33 @@ Na tentativa oficial, acrescentar:
 - política de retenção mantém resolvíveis os manifests exigidos por rollback e
   regrade.
 
-## Sem legacy e sem migrations incrementais
+## Evolução incremental e compatibilidade controlada
 
-O produto não foi lançado. A implementação deve:
+O produto não foi lançado, mas migrations históricas, trabalho autoral e dados
+de desenvolvimento não são descartáveis por uma mudança ordinária. Conforme o
+[`ADR-20260903-development-database-baseline`](../../architecture/ADR-20260903-development-database-baseline.md),
+a implementação deve:
 
-- atualizar os produtores e consumidores no mesmo corte de contrato;
-- não manter aliases permanentes;
-- não criar dual-read ou dual-write;
-- não criar migration incremental, migration de dados ou backfill;
-- não migrar documentos ou registros atuais;
-- recriar bancos locais, de desenvolvimento e de teste afetados;
-- substituir as migrations históricas de desenvolvimento por um único baseline
-  EF global de criação compatível com `MigrateAsync`, ou substituir primeiro
-  esse inicializador; não anexar uma migration de transformação;
+- atualizar produtores e consumidores autoritativos no mesmo corte de contrato;
+- não manter aliases, dual-read ou dual-write permanentes;
+- criar migrations incrementais forward-only para todo delta relacional;
+- declarar conversão e backfill antes de alterar tipo, nulabilidade, nome ou
+  semântica de dado existente;
+- preservar as migrations e designers históricos e atualizar o snapshot
+  corrente somente com o novo delta; um squash futuro é uma operação
+  independente, com inventário, backup e aprovação próprios;
 - comparar o modelo global antes e depois e rejeitar drift não aprovado em
   qualquer outro módulo;
-- inventariar todo SQL ativo fora do `IModel`, incluindo funções, procedures,
-  triggers, policies, grants, views, extensões e índices especiais, e
-  reinstalar diretamente o estado aprovado no baseline limpo;
+- inventariar e preservar todo SQL ativo fora do `IModel`, incluindo funções,
+  procedures, triggers, policies, grants, views, extensões e índices especiais;
 - comparar catálogos PostgreSQL e executar testes funcionais dos artefatos SQL
   críticos; diff de snapshot EF isolado não prova equivalência do banco;
-- ajustar diretamente o mesmo baseline a cada `SCHEMA-GATE` aprovado até que
-  ele represente o contrato final;
-- remover cada caminho substituído no mesmo corte em que o novo E2E passa.
-
-Qualquer ambiente pré-lançamento que ainda contenha o schema descartado deve ser
-resetado de forma coordenada. Preservar seus dados não faz parte deste plano.
+- testar criação limpa e upgrade de banco populado pela migration anterior;
+- retirar cada caminho substituído do runtime no mesmo corte em que o novo E2E
+  passa, sem confundir isso com autorização para apagar armazenamento histórico;
+- remover coluna, tabela ou artefato somente em gate posterior que prove
+  materialização completa, inexistência de consumidores, upgrade seguro e
+  rollback/restore definido.
 
 ## Checklist final
 
@@ -335,7 +336,8 @@ resetado de forma coordenada. Preservar seus dados não faz parte deste plano.
   paralela sobre score agregado ou notificação;
 - [ ] `GradingQueueService`, `TasksService` e SpeedGrader não dependem de
   `CanonicalRow` ou submissions irmãs para sujeito coletivo;
-- [ ] banco vazio sobe no schema final sem migration incremental ou backfill;
+- [ ] banco vazio sobe pela cadeia completa e banco populado pela migration
+  anterior atualiza sem perda de dados;
 - [ ] banco vazio contém e executa todos os artefatos SQL ativos aprovados fora
   do `IModel`;
 - [ ] quiz atribuído a grupo usa uma submission, uma rodada e um resultado;

@@ -330,8 +330,8 @@ Avaliação pelo instrutor
 - [ ] manter `GradeResultFinalized` fora do contexto de test run;
 - [ ] definir contribuição canônica de tentativas e comando explícito de
   liberação;
-- [ ] fechar ADRs de publicação, score e histórico antes de alterar o baseline
-  de schema;
+- [ ] fechar ADRs de publicação, score e histórico antes de criar migration ou
+  alterar o schema;
 
 ## Critério de saída
 

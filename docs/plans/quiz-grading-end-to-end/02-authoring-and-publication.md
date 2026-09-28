@@ -68,7 +68,9 @@ reconciliação bidirecional nem preferência por "último valor salvo".
 
 `AssessmentExecutionPolicyV1` é montado pela API a partir das fontes únicas do
 agregado Assessment. Ele não é salvo como cópia mutável das mesmas colunas em
-`DefinitionPayload`; somente a revisão imutável persiste o contrato composto.
+`DefinitionPayload`; somente a revisão imutável recebe novas escritas do
+contrato composto. A coluna histórica pode permanecer inerte até um gate de
+remoção comprovar materialização, upgrade e rollback seguros.
 
 ## Caso de uso atômico
 

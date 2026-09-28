@@ -1,9 +1,10 @@
-# Catalogo SQL do baseline atual
+# Catalogo SQL anterior ao delta de grading
 
 - Banco de origem: `gameguild_schema_inventory_20260903`
-- Natureza: PostgreSQL descartavel, criado do zero pelas 130 migrations
+- Natureza: PostgreSQL de inventario, criado do zero pelas 130 migrations
 - Data da captura: 2026-09-04
-- Uso: comparar o baseline limpo da Parte 1, nunca preservar dados
+- Uso: comparar criacao limpa e upgrade incremental da Parte 1; este inventario
+  nao autoriza descartar dados nem substituir a cadeia de migrations
 
 ## Resumo canonico
 
@@ -17,10 +18,11 @@
 | Grants customizados | 1.376 | `25d4a24f42b4adf8c082e5b426a4c55e60e2cda4ae8b98410db027203d6576aa` |
 
 Os hashes de rotinas, triggers e indices devem ser recalculados pela mesma
-consulta de verificacao ao reconstruir o baseline. As categorias preservadas
-precisam manter quantidade e definicao. Os dois triggers e as duas funcoes de
-assessment sao a unica remocao aprovada e devem ser excluidos do hash esperado
-pos-corte.
+consulta de verificacao depois da migration incremental. As categorias
+preservadas precisam manter quantidade e definicao. Os dois triggers e as duas
+funcoes de assessment sao candidatos a uma remocao posterior, nao uma remocao
+autorizada por este catalogo; continuam no hash esperado ate um `SCHEMA-GATE`
+especifico provar substituto, consumidores e upgrade seguro.
 
 A consulta canonica esta em
 [`01-schema-catalog-fingerprint.sql`](./01-schema-catalog-fingerprint.sql).
@@ -44,7 +46,7 @@ Schemas proprios/ativos:
 - `gameguild.sla`;
 - `resources`.
 
-Roles de aplicacao instaladas pelo baseline:
+Roles de aplicacao instaladas pela cadeia de migrations:
 
 - `gameguild_economy_migration`;
 - `gameguild_economy_procedure_owner`;
@@ -59,17 +61,18 @@ novas tabelas academicas.
 Das 127 rotinas, 125 pertencem a `economy_private`. Elas sao instaladas pela
 sequencia de migrations Economy iniciada em
 `20260719012556_PrepareEconomyPrivateSchema` e continuada pelos partials
-`*.Security.cs`. Todas serao consolidadas no baseline sem mudanca de assinatura,
-owner ou corpo.
+`*.Security.cs`. Todas permanecem instaladas pela cadeia existente, sem mudanca
+de assinatura, owner ou corpo.
 
 As duas rotinas de `public` pertencem ao modelo antigo de assessments:
 
 - `enforce_assessment_max_score()`;
 - `enforce_assessment_submission_score()`.
 
-Origem: `20260716160000_AddAssessmentIntegrityGuards.cs`. Ambas serao removidas.
-Elas comparam submissions historicas ao `MaxScore` mutavel do draft e deixam de
-ser semanticamente validas quando a execucao referencia revisao imutavel.
+Origem: `20260716160000_AddAssessmentIntegrityGuards.cs`. Ambas podem deixar de
+ser semanticamente adequadas quando a execucao referencia revisao imutavel, mas
+isso nao basta para apaga-las. Ate um gate posterior comprovar invariantes
+substitutas e ausencia de consumidores, elas permanecem preservadas.
 
 O conjunto Economy preservado inclui todas as versoes ativas destas familias:
 
@@ -96,7 +99,7 @@ Existem 46 triggers nao internos:
   provider facts, risk consumption, top-up, payout, withdrawal e guardas do
   cutover financeiro.
 
-Os 44 triggers Economy e suas funcoes permanecem. O baseline de teste deve
+Os 44 triggers Economy e suas funcoes permanecem. O banco de teste deve
 exercitar pelo menos:
 
 - rejeicao de update/delete em registro imutavel;
@@ -121,9 +124,9 @@ Os 41 indices parciais, de expressao ou GiST atuais estao distribuidos entre:
 
 Incluem a exclusion constraint GiST
 `ex_economy_fragment_reservations_active_no_overlap` e os uniques parciais de
-estado ativo de Economy, Testing Lab, Marketplace e Projects. Todos serao
-reinstalados com a mesma definicao. Os novos indices de grading sao indices EF
-declarativos e aparecem separadamente no diff aprovado.
+estado ativo de Economy, Testing Lab, Marketplace e Projects. Todos permanecem
+com a mesma definicao. Os novos indices de grading sao indices EF declarativos
+e aparecem separadamente no diff aprovado.
 
 ## Views, policies e grants
 
@@ -131,11 +134,11 @@ declarativos e aparecem separadamente no diff aprovado.
 - policies RLS ativas: 0;
 - grants customizados: 1.179 grants de tabela e 197 grants de rotina.
 
-Os grants sao de Economy e variam por objeto. A comparacao pos-baseline usa a
+Os grants sao de Economy e variam por objeto. A comparacao pos-migration usa a
 tupla ordenada `(grantee, schema, object, privilege, grantable)`; comparar
 somente a quantidade nao e suficiente.
 
-## Ordem de reinstalacao
+## Ordem de validacao de instalacao
 
 1. extensoes;
 2. schemas;
@@ -150,11 +153,12 @@ somente a quantidade nao e suficiente.
 11. testes funcionais e comparacao canonica do catalogo.
 
 Operacoes que exigem `CREATE INDEX CONCURRENTLY` permanecem fora da transacao
-do bloco principal, mas pertencem ao mesmo baseline de instalacao.
+do bloco principal, mas pertencem a mesma cadeia de instalacao.
 
 ## Criterio de equivalencia
 
-O banco novo e aceito somente quando:
+A migration e aceita somente quando o banco criado pela cadeia completa e o
+banco atualizado a partir da migration anterior convergem para o mesmo estado e:
 
 - o modelo EF difere do inventario exclusivamente pelo delta aprovado;
 - extensoes, schemas e roles preservados possuem mesma versao e owner;
@@ -163,6 +167,7 @@ O banco novo e aceito somente quando:
 - os 1.376 grants customizados possuem as mesmas tuplas;
 - testes funcionais provam os comportamentos criticos, alem da existencia dos
   nomes;
-- as duas rotinas e os dois triggers antigos de assessment nao existem;
+- as duas rotinas e os dois triggers de assessment permanecem, salvo aprovacao
+  posterior que atualize explicitamente este catalogo e seus testes;
 - nenhuma rotina, trigger, view, policy, role ou grant novo de grading aparece
   sem um novo gate.

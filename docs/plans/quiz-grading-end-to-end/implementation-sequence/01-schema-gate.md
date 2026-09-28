@@ -2,13 +2,24 @@
 
 - Status: aprovado e implementado
 - Data do inventario: 2026-09-04
+- Reconciliado com a politica de preservacao: 2026-09-28
 - Plano executor: [`01-foundation-and-authoring.md`](./01-foundation-and-authoring.md)
 - Escopo liberado apos aprovacao: `SEQ-03` a `SEQ-06`
+- Migration incremental aplicada:
+  `20260916194905_AddAssessmentGradingWorkflow`
 
 Este documento descreve o delta estrutural completo proposto para a Parte 1.
-Ele nao autoriza migrations incrementais, conversao de dados, backfill,
-dual-read ou compatibilidade com o modelo descartado. A plataforma ainda nao
-foi lancada; o banco sera recriado a partir de um baseline global limpo.
+Ele autoriza somente a migration incremental forward-only descrita aqui, com
+conversoes e backfills explicitamente testados. A cadeia historica, os dados
+existentes e estruturas cuja remocao nao foi comprovada sao preservados. O fato
+de a plataforma ainda nao ter sido lancada nao torna esses artefatos
+descartaveis. Esta decisao segue o
+[`ADR-20260903-development-database-baseline`](../../../architecture/ADR-20260903-development-database-baseline.md).
+
+A migration aplicada nao deve ser reescrita. A configuracao EF preserva
+`DefinitionPayload`, `DefinitionSchemaVersion`, `GradingMethods`,
+`PeerReviewsRequiredCount` e `StructuredAnswerPayload` como shadow properties;
+os testes de migration devem continuar impedindo sua remocao acidental.
 
 ## Limites do corte
 
@@ -20,7 +31,7 @@ Entram neste gate:
 - raiz generica de grading, rodadas, stages, resultados por item e evidencias;
 - idempotencia e outbox academica com fan-out duravel;
 - representacao inteira de ponto fixo para valores academicos, com escala `100`;
-- substituicao do baseline global de desenvolvimento.
+- evolucao incremental do schema global sem reescrever migrations anteriores.
 
 Nao entram participantes de submission coletiva, claims e leases de
 `PeerReview`, inbox ou payload de IA, release oficial, gradebook, passback,
@@ -72,8 +83,9 @@ Nenhuma tabela funcional sera removida neste corte.
 permanecem existentes. A integracao desses modelos com o novo runtime sera
 feita pelas fatias que os possuem, sem aliases de compatibilidade no core.
 
-A cadeia historica da tabela `__EFMigrationsHistory` nao e dado funcional: ao
-recriar o banco ela passa a conter somente o novo baseline.
+A cadeia historica e a tabela `__EFMigrationsHistory` sao preservadas. Um squash
+futuro e uma operacao independente deste gate e exige inventario, backup
+verificavel e confirmacao de que nenhum ambiente depende da cadeia anterior.
 
 ## 3. Colunas alteradas
 
@@ -91,16 +103,25 @@ Novas:
 - `ResultReleaseMode varchar(16) not null`, default `manual`;
 - `ResultReleaseScheduledFor timestamptz null`.
 
-Renomeada e redefinida:
+Adicionada como nova autoridade:
 
-- `GradingMethods` vira `ReviewMethods integer`; valores antigos e aliases
-  `*Graded` deixam de existir no mesmo corte.
+- `ReviewMethods integer`, preenchida deterministicamente a partir de
+  `GradingMethods` antes de se tornar obrigatoria. Nomes `*Graded` deixam o
+  contrato e o runtime no mesmo corte, sem renomear nem apagar a coluna de
+  origem.
 
-Removidas:
+Preservadas como compatibilidade de armazenamento, sem novas leituras ou
+escritas pelo runtime:
 
 - `DefinitionPayload`;
 - `DefinitionSchemaVersion`;
+- `GradingMethods`;
 - `PeerReviewsRequiredCount`.
+
+Essas colunas ficam mapeadas como shadow properties. A remocao fisica exige
+outro `SCHEMA-GATE`, com inventario de consumidores, prova de que todos os dados
+relevantes foram materializados nas revisoes imutaveis, teste de upgrade e
+estrategia de rollback/restore.
 
 Sem mudanca de tipo para scores: `MaxScore` e `PassingScore` permanecem
 `integer`, agora definidos explicitamente como unidades `ScoreValue` escaladas
@@ -115,7 +136,9 @@ Uma revisao preparada congela ambos em `AssessmentAuthoringSourceV1`.
 
 ### `AssessmentSubmissions`
 
-- remove `StructuredAnswerPayload`;
+- preserva `StructuredAnswerPayload` como shadow property inerte durante a
+  materializacao no novo owner; novas respostas usam somente a
+  `GradingExecution`;
 - `Score` permanece `integer null` e passa a representar unidades
   `ScoreValue` escaladas por `100`;
 - `StructuredAnswer` pode continuar como modalidade declarada, mas os bytes da
@@ -129,6 +152,12 @@ Uma revisao preparada congela ambos em `AssessmentAuthoringSourceV1`.
   alias de `ProgressPercentage`;
 - o alias C# passa a ser nao mapeado e usa somente `ProgressPercentage`;
 - `ProgressPercentage` e `BestScore` passam a inteiros de escala `100`.
+
+Esta remocao e uma excecao explicitamente inventariada: a migration deve copiar
+qualquer valor ainda necessario para `ProgressPercentage` antes do `DROP`, provar
+que nao existe consumidor SQL da coluna e testar o upgrade com ambas as colunas
+populadas. Se qualquer uma dessas provas faltar, a coluna tambem deve ser
+preservada como compatibilidade inerte.
 
 As demais colunas listadas na secao 5 mudam somente de representacao e
 contrato. Campos numericos nao academicos, como tempo, contadores, valores
@@ -244,7 +273,7 @@ valida `Number.isSafeInteger` mais os limites do contrato.
 - todos os agregados mutaveis usam `Version` com concorrencia otimista;
 - autorizacao ocorre antes de consultar ou devolver receipt de replay.
 
-## 7. Reset do baseline EF global
+## 7. Evolucao incremental do schema EF global
 
 O inventario atual possui:
 
@@ -258,16 +287,23 @@ O inventario atual possui:
 A operacao aprovada sera:
 
 1. implementar o modelo final em codigo;
-2. remover a cadeia de 130 migrations, seus companions e o snapshot;
-3. gerar um unico baseline de criacao e um unico snapshot;
-4. incorporar diretamente o estado final aprovado dos 83 arquivos com SQL
-   manual, sem copiar updates, backfills ou transicoes historicas;
-5. recriar bancos locais, de desenvolvimento e teste;
-6. manter `Database.MigrateAsync()` e fazer CI criar banco vazio somente pelo
-   baseline;
-7. usar Git como rollback e recriar o banco; nao criar migration reversa.
+2. preservar as migrations anteriores e seus companions no Git;
+3. gerar uma nova migration incremental e atualizar o snapshot corrente somente
+   com o delta aprovado;
+4. executar conversoes e backfills antes de `NOT NULL`, checks ou FKs que
+   dependam dos novos valores;
+5. preservar o comportamento dos 83 arquivos com SQL manual; qualquer alteracao
+   deve estar destacada e testada, sem depender apenas do diff do `IModel`;
+6. manter `Database.MigrateAsync()` e fazer o CI provar tanto criacao do zero
+   pela cadeia completa quanto upgrade de banco populado pela migration
+   anterior;
+7. implementar `Down` somente quando a reversao for segura. Quando puder perder
+   dados, falhar explicitamente e usar um plano operacional de backup/restore;
+   Git nao e rollback de banco.
 
-Nenhum banco existente e fonte de dados a preservar.
+Bancos locais e compartilhados podem conter trabalho autoral, configuracoes e
+submissoes representativas. Nenhuma remocao e autorizada somente por o produto
+estar em pre-lancamento ou por a estrutura parecer antiga.
 
 ## 8. Diff global esperado
 
@@ -278,8 +314,9 @@ O diff funcional permitido e somente este:
 - alteracoes de `Assessments`, `AssessmentSubmissions` e
   `content_interactions` listadas na secao 3;
 - conversao das colunas da secao 5;
-- remocao das duas funcoes e dos dois triggers antigos de score de assessment,
-  substituidos por invariantes compativeis com revisao imutavel;
+- preservacao das funcoes e triggers de score de assessment ate que um gate
+  especifico prove o substituto funcional, inventarie consumidores e aprove a
+  remocao por migration incremental;
 - constraints, FKs e indices da secao 4;
 - nenhuma mudanca funcional fora dos modulos Learning, Assessments, Grading e
   LTI.
@@ -315,22 +352,24 @@ O catalogo detalhado e a estrategia de equivalencia estao em
 
 Decisao proposta:
 
-- preservar sem alteracao funcional extensoes, schemas, roles, grants, 125
-  rotinas Economy, 44 triggers Economy e os 41 indices especiais atuais;
-- remover apenas `enforce_assessment_max_score`,
-  `enforce_assessment_submission_score` e seus dois triggers, porque com
-  revisoes imutaveis uma submission nao pode ser comparada ao maximo mutavel do
-  draft atual;
+- preservar sem alteracao funcional extensoes, schemas, roles, grants, todas as
+  rotinas, triggers e os 41 indices especiais atuais;
+- tratar `enforce_assessment_max_score`,
+  `enforce_assessment_submission_score` e seus dois triggers como candidatos a
+  remocao, nao como remocoes implicitas. Eles so podem sair em gate posterior
+  depois de o novo caminho provar invariantes equivalentes, inexistencia de
+  consumidores e upgrade seguro;
 - nao criar nova funcao, trigger, view, policy ou role manual para grading na
   Parte 1;
 - expressar o novo delta por EF, checks, FKs e indices declarativos;
-- testar catalogo e comportamento antes/depois em bancos descartaveis.
+- testar catalogo e comportamento em banco vazio e em upgrade populado.
 
 ## Decisao solicitada
 
-A aprovacao deste gate autoriza exclusivamente o delta acima e a substituicao
-global do baseline descrita. Qualquer tabela, coluna ou artefato adicional
-exigira novo destaque e aprovacao antes de ser criado.
+A aprovacao deste gate autoriza exclusivamente o delta incremental acima.
+Qualquer tabela, coluna, remocao ou artefato adicional exigira novo destaque e
+aprovacao antes de ser criado, alterado ou apagado.
 
-**Gate aprovado pelo responsavel do projeto; implementar diretamente no novo
-baseline, sem migration incremental ou compatibilidade com estado anterior.**
+**Gate aprovado pelo responsavel do projeto para migration incremental
+forward-only, preservando a cadeia historica, dados existentes e colunas de
+compatibilidade inertes ate prova e aprovacao especificas de remocao.**
