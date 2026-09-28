@@ -87,6 +87,67 @@ public sealed class PermissionServiceBulkCheckTests
     }
 
     [Fact]
+    public async Task BulkCheckPermissionsAsync_DeniesOverrideGlobalTenantAndUserAllows()
+    {
+        var options = new DbContextOptionsBuilder<PermissionServiceDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString("N"))
+            .Options;
+        await using var context = new PermissionServiceDbContext(options);
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var otherUserId = Guid.NewGuid();
+
+        context.Set<TenantPermission>().AddRange(
+            new TenantPermission
+            {
+                UserId = null,
+                TenantId = null,
+                Permissions = [nameof(PermissionType.Read), nameof(PermissionType.Comment)],
+                DenyPermissions = [nameof(PermissionType.Create)]
+            },
+            new TenantPermission
+            {
+                UserId = null,
+                TenantId = tenantId,
+                Permissions = [nameof(PermissionType.Create), nameof(PermissionType.Comment), nameof(PermissionType.Publish)],
+                DenyPermissions = [nameof(PermissionType.Comment)]
+            },
+            new TenantPermission
+            {
+                UserId = userId,
+                TenantId = tenantId,
+                Permissions = [nameof(PermissionType.Create), nameof(PermissionType.Edit)],
+                DenyPermissions = [nameof(PermissionType.Read), nameof(PermissionType.Publish)]
+            });
+        await context.SaveChangesAsync();
+
+        var service = new PermissionService(context);
+        var result = await service.BulkCheckPermissionsAsync(
+            [userId, otherUserId],
+            tenantId,
+            [PermissionType.Read, PermissionType.Create, PermissionType.Comment, PermissionType.Publish, PermissionType.Edit, PermissionType.Delete]);
+
+        result[userId].Should().BeEquivalentTo(new Dictionary<PermissionType, bool>
+        {
+            [PermissionType.Read] = false,
+            [PermissionType.Create] = false,
+            [PermissionType.Comment] = false,
+            [PermissionType.Publish] = false,
+            [PermissionType.Edit] = true,
+            [PermissionType.Delete] = false
+        });
+        result[otherUserId].Should().BeEquivalentTo(new Dictionary<PermissionType, bool>
+        {
+            [PermissionType.Read] = true,
+            [PermissionType.Create] = false,
+            [PermissionType.Comment] = false,
+            [PermissionType.Publish] = true,
+            [PermissionType.Edit] = false,
+            [PermissionType.Delete] = false
+        });
+    }
+
+    [Fact]
     public async Task BulkCheckPermissionsAsync_EvaluatesTenantContentTypeAndResourceCombinations()
     {
         var options = new DbContextOptionsBuilder<PermissionServiceDbContext>()
