@@ -102,11 +102,8 @@ public sealed class FieldMaskingResultFilter(
         }
     }
 
-    private static int? GetStatusCode(IActionResult result, int currentStatusCode) => result switch
-    {
-        IStatusCodeActionResult { StatusCode: { } statusCode } => statusCode,
-        _ => currentStatusCode
-    };
+    private static int? GetStatusCode(IActionResult result, int currentStatusCode) =>
+        result is IStatusCodeActionResult { StatusCode: { } statusCode } ? statusCode : currentStatusCode;
 
     private static string GetResourceType(Type type)
     {

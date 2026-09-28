@@ -145,7 +145,9 @@ public sealed class DataMaskingPostgreSqlIntegrationTests(ApiPostgreSqlFixture f
             var actorId = Request.Headers["X-Test-Actor"].ToString();
             var tenantId = Request.Headers[TenantResolver.TenantIdHeader].ToString();
             if (!Guid.TryParse(actorId, out _) || !Guid.TryParse(tenantId, out _))
+            {
                 return Task.FromResult(AuthenticateResult.NoResult());
+            }
 
             var identity = new ClaimsIdentity(
             [

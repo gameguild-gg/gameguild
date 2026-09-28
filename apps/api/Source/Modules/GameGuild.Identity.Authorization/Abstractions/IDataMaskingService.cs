@@ -8,8 +8,13 @@ public interface IDataMaskingService
     Task<object?> ApplyAsync(
         string resourceType,
         object value,
+        JsonSerializerOptions serializerOptions);
+
+    Task<object?> ApplyAsync(
+        string resourceType,
+        object value,
         JsonSerializerOptions serializerOptions,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken);
 }
 
 /// <summary>Overrides the response resource type used to look up masking rules.</summary>

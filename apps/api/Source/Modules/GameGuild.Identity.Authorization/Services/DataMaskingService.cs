@@ -12,11 +12,17 @@ public sealed class DataMaskingService(
 {
     private ActorContext Actor => actorContextAccessor.ActorContext;
 
+    public Task<object?> ApplyAsync(
+        string resourceType,
+        object value,
+        JsonSerializerOptions serializerOptions)
+        => ApplyAsync(resourceType, value, serializerOptions, CancellationToken.None);
+
     public async Task<object?> ApplyAsync(
         string resourceType,
         object value,
         JsonSerializerOptions serializerOptions,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(resourceType);
         ArgumentNullException.ThrowIfNull(value);
@@ -78,7 +84,10 @@ public sealed class DataMaskingService(
 
     private static List<string> DeserializeStringList(string? json)
     {
-        if (string.IsNullOrWhiteSpace(json)) return new List<string>();
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return new List<string>();
+        }
 
         try
         {
@@ -143,14 +152,26 @@ public sealed class DataMaskingService(
 
     private static string? ReadScalar(JsonNode node, JsonSerializerOptions serializerOptions)
     {
-        if (node is not JsonValue value) return null;
-        if (value.TryGetValue<string>(out var stringValue)) return stringValue;
+        if (node is not JsonValue value)
+        {
+            return null;
+        }
+
+        if (value.TryGetValue<string>(out var stringValue))
+        {
+            return stringValue;
+        }
+
         return value.ToJsonString(serializerOptions);
     }
 
     private static string NormalizeFieldName(string? value)
     {
-        if (string.IsNullOrWhiteSpace(value)) return string.Empty;
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
         return string.Concat(value.Where(char.IsLetterOrDigit)).ToLower(CultureInfo.InvariantCulture);
     }
 }
