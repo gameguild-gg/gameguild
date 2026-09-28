@@ -12,7 +12,10 @@ public sealed class UserPasswordHistoryTests
     {
         var user = new User { PasswordHash = "hash-0" };
 
-        for (var index = 1; index <= 7; index++) user.SetPasswordHash($"hash-{index}");
+        for (var index = 1; index <= 7; index++)
+        {
+            user.SetPasswordHash($"hash-{index}");
+        }
 
         user.PasswordHash.Should().Be("hash-7");
         user.GetPasswordHistoryHashes().Should().Equal("hash-6", "hash-5", "hash-4", "hash-3", "hash-2");

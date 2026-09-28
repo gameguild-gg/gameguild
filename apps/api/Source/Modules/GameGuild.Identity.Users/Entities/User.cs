@@ -188,7 +188,11 @@ public class User : EntityBase, IUser
         ArgumentException.ThrowIfNullOrWhiteSpace(passwordHash);
 
         var recentHashes = new List<string>(capacity: 5);
-        if (!string.IsNullOrWhiteSpace(PasswordHash)) recentHashes.Add(PasswordHash);
+        if (!string.IsNullOrWhiteSpace(PasswordHash))
+        {
+            recentHashes.Add(PasswordHash);
+        }
+
         recentHashes.AddRange(GetPasswordHistoryHashes().Take(4));
         PasswordHistoryHashes = recentHashes.Count == 0 ? null : string.Join('\n', recentHashes);
 
@@ -203,7 +207,10 @@ public class User : EntityBase, IUser
     /// </summary>
     public IReadOnlyList<string> GetPasswordHistoryHashes()
     {
-        if (string.IsNullOrWhiteSpace(PasswordHistoryHashes)) return Array.Empty<string>();
+        if (string.IsNullOrWhiteSpace(PasswordHistoryHashes))
+        {
+            return Array.Empty<string>();
+        }
 
         return PasswordHistoryHashes.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Take(5)

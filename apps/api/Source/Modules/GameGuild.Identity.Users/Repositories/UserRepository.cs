@@ -158,10 +158,18 @@ public class UserRepository(IApplicationDbContext context) : IUserRepository
             .ConfigureAwait(false);
     }
 
-    public async Task<bool> UpdatePasswordHashAsync(Guid userId, string passwordHash, string? expectedCurrentPasswordHash, CancellationToken cancellationToken = default)
+    public Task<bool> UpdatePasswordHashAsync(Guid userId, string passwordHash, string? expectedCurrentPasswordHash)
+    {
+        return UpdatePasswordHashAsync(userId, passwordHash, expectedCurrentPasswordHash, CancellationToken.None);
+    }
+
+    public async Task<bool> UpdatePasswordHashAsync(Guid userId, string passwordHash, string? expectedCurrentPasswordHash, CancellationToken cancellationToken)
     {
         var user = await GetByIdAsync(userId, cancellationToken).ConfigureAwait(false);
-        if (user is null || !string.Equals(user.PasswordHash, expectedCurrentPasswordHash, StringComparison.Ordinal)) return false;
+        if (user is null || !string.Equals(user.PasswordHash, expectedCurrentPasswordHash, StringComparison.Ordinal))
+        {
+            return false;
+        }
 
         user.SetPasswordHash(passwordHash);
         try
