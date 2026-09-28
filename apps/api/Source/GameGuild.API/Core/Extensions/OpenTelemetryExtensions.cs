@@ -27,7 +27,9 @@ public static class OpenTelemetryExtensions
                         ? $"{productName}.API"
                         : options.ServiceName.Trim(),
                     serviceVersion: typeof(OpenTelemetryExtensions).Assembly.GetName().Version!.ToString(),
-                    serviceInstanceId: Environment.MachineName)
+                    serviceInstanceId: string.IsNullOrWhiteSpace(options.ServiceInstanceId)
+                        ? $"{Environment.MachineName}:{Environment.ProcessId}:{Guid.NewGuid():N}"
+                        : options.ServiceInstanceId.Trim())
                 .AddAttributes(new Dictionary<string, object>
                 {
                     ["deployment.environment"] = builder.Environment.EnvironmentName,
@@ -89,6 +91,24 @@ public static class OpenTelemetryExtensions
                         exporter.Protocol = ResolveProtocol(options.OtlpProtocol);
                     });
                 }
+            })
+            .WithMetrics(metrics =>
+            {
+                metrics.AddMeter("GameGuild.Identity.Authorization.Cache");
+
+                if (options.ConsoleExporterEnabled)
+                {
+                    metrics.AddConsoleExporter();
+                }
+
+                if (!string.IsNullOrWhiteSpace(options.OtlpEndpoint))
+                {
+                    metrics.AddOtlpExporter(exporter =>
+                    {
+                        exporter.Endpoint = new Uri(options.OtlpEndpoint.Trim());
+                        exporter.Protocol = ResolveProtocol(options.OtlpProtocol);
+                    });
+                }
             });
 
         return builder;
@@ -111,6 +131,7 @@ public sealed class OpenTelemetryRuntimeOptions
 
     public bool Enabled { get; set; }
     public string ServiceName { get; set; } = string.Empty;
+    public string ServiceInstanceId { get; set; } = string.Empty;
     public string? OtlpEndpoint { get; set; }
     public string? OtlpProtocol { get; set; } = "http/protobuf";
     public bool ConsoleExporterEnabled { get; set; }
