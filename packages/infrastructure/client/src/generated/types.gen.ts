@@ -5594,6 +5594,7 @@ export interface IdentityAuthenticationWeb3ChallengeOutput {
 
 export interface IdentityAuthenticationWeb3VerifyInput {
   chainId: string;
+  challenge: string;
   deviceFingerprint?: string | null;
   nonce: string;
   signature: string;
@@ -21995,6 +21996,7 @@ IdentityAuthenticationWeb3ChallengeOutputSchema = z.object({
 /** Zod schema for IdentityAuthenticationWeb3VerifyInput */
 IdentityAuthenticationWeb3VerifyInputSchema = z.object({
   chainId: z.string().min(1),
+  challenge: z.string().min(1),
   deviceFingerprint: z.string().nullable().optional(),
   nonce: z.string().min(1),
   signature: z.string().min(1),

@@ -112,7 +112,13 @@ public sealed class Web3ServiceVerificationTests
     public Web3ServiceVerificationTests()
     {
         _cache = new MemoryCache(new MemoryCacheOptions());
-        _sut = new Web3Service(Mock.Of<ILogger<Web3Service>>(), _cache);
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Authentication:Web3:Siwe:Origin"] = "https://localhost"
+            })
+            .Build();
+        _sut = new Web3Service(Mock.Of<ILogger<Web3Service>>(), _cache, configuration);
     }
 
     [Fact]

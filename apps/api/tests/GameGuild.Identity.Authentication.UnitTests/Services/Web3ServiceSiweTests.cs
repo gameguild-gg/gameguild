@@ -26,6 +26,7 @@ public sealed class Web3ServiceSiweTests
         challenge.Message.Should().StartWith("gameguild.test wants you to sign in with your Ethereum account:");
         parsed.Domain.Should().Be("gameguild.test");
         parsed.Uri.Should().Be("https://gameguild.test/");
+        parsed.Statement.Should().Be("Sign in with your Ethereum wallet.");
         parsed.Version.Should().Be("1");
         parsed.ChainId.Should().Be("5");
         parsed.Nonce.Should().Be(challenge.Nonce);
@@ -198,12 +199,42 @@ public sealed class Web3ServiceSiweTests
         await act.Should().ThrowAsync<ArgumentException>();
     }
 
-    private static Web3Service CreateService(IMemoryCache cache, string origin, params string[] chainIds)
+    [Fact]
+    public async Task GenerateChallengeAsync_ShouldUseHostConfiguredStatement()
+    {
+        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var service = CreateService(cache, "https://tenant.example", ["1"], "Authenticate to tenant.example");
+        var key = new EthECKey(TestPrivateKey);
+
+        var challenge = await service.GenerateChallengeAsync(key.GetPublicAddress());
+        var parsed = SiweMessageParser.ParseUsingAbnf(challenge.Message);
+
+        parsed.Domain.Should().Be("tenant.example");
+        parsed.Statement.Should().Be("Authenticate to tenant.example");
+    }
+
+    [Fact]
+    public void Constructor_ShouldRequireHostConfiguredOrigin()
+    {
+        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection([]).Build();
+
+        var act = () => new Web3Service(NullLogger<Web3Service>.Instance, cache, configuration);
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("*Origin must be configured*");
+    }
+
+    private static Web3Service CreateService(IMemoryCache cache, string origin, params string[] chainIds) =>
+        CreateService(cache, origin, chainIds, statement: null);
+
+    private static Web3Service CreateService(IMemoryCache cache, string origin, string[] chainIds, string? statement)
     {
         var settings = new Dictionary<string, string?>
         {
             ["Authentication:Web3:Siwe:Origin"] = origin
         };
+
+        if (statement is not null) settings["Authentication:Web3:Siwe:Statement"] = statement;
 
         for (var index = 0; index < chainIds.Length; index++)
         {
