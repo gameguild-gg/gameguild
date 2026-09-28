@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Link from 'next/link';
 import { describe, it } from 'vitest';
@@ -23,9 +23,11 @@ describe('Base UI compatibility wrappers', () => {
       <DropdownMenu>
         <DropdownMenuTrigger render={<Button>Actions</Button>} />
         <DropdownMenuContent>
+          <DropdownMenuLabel>Project scope</DropdownMenuLabel>
           <DropdownMenuGroup>
             <DropdownMenuItem>View profile</DropdownMenuItem>
           </DropdownMenuGroup>
+          <DropdownMenuItem>All projects</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>,
     );
@@ -36,20 +38,6 @@ describe('Base UI compatibility wrappers', () => {
     if (profileItem.textContent !== 'View profile') {
       throw new Error('The dropdown menu item did not render.');
     }
-  });
-
-  it('renders a standalone dropdown label without requiring a menu group', () => {
-    render(
-      <DropdownMenu>
-        <DropdownMenuTrigger render={<Button>Workspace</Button>} />
-        <DropdownMenuContent>
-          <DropdownMenuLabel>Project scope</DropdownMenuLabel>
-          <DropdownMenuItem>All projects</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>,
-    );
-
-    fireEvent.click(screen.getByRole('button', { name: 'Workspace' }));
 
     const projectScopeLabel = screen.getByText('Project scope');
     if (projectScopeLabel.textContent !== 'Project scope') {

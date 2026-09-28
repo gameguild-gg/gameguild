@@ -67,10 +67,19 @@ function parseEnrollmentStatus(value: unknown): string {
   return ENROLLMENT_STATUS_OPTIONS.find((status) => status.value === value)?.value ?? 'Open';
 }
 
+function readEnrollmentStatus(course: unknown): string {
+  if (typeof course !== 'object' || course === null) {
+    return 'Open';
+  }
+
+  const courseValues = course as Record<string, unknown>;
+  return parseEnrollmentStatus(courseValues['enrollmentStatus']);
+}
+
 export function ListingLaunchForm({ course }: ListingLaunchFormProps) {
   const [isPending, startTransition] = useTransition();
   const [visibility, setVisibility] = useState<'public' | 'private'>(course.visibility === 'public' ? 'public' : 'private');
-  const [enrollmentStatus, setEnrollmentStatus] = useState<string>(() => parseEnrollmentStatus(course.enrollmentStatus));
+  const [enrollmentStatus, setEnrollmentStatus] = useState<string>(() => readEnrollmentStatus(course));
   const [enrollmentDeadline, setEnrollmentDeadline] = useState(toDateTimeLocal(course.enrollmentDeadline));
   const [maxEnrollments, setMaxEnrollments] = useState(course.maxEnrollments?.toString() ?? '');
   const [error, setError] = useState<string | null>(null);
