@@ -14,7 +14,7 @@ interface ListingLaunchFormProps {
   course: CourseDetails;
 }
 
-const ENROLLMENT_STATUS_OPTIONS: Array<{ value: string; label: string }> = [
+const ENROLLMENT_STATUS_OPTIONS: { value: string; label: string }[] = [
   { value: 'Open', label: 'Open' },
   { value: 'Active', label: 'Active' },
   { value: 'Paused', label: 'Paused' },
@@ -58,10 +58,14 @@ export function parseEnrollmentCap(value: string): number | null {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 }
 
+function parseEnrollmentStatus(value: unknown): string {
+  return ENROLLMENT_STATUS_OPTIONS.find((status) => status.value === value)?.value ?? 'Open';
+}
+
 export function ListingLaunchForm({ course }: ListingLaunchFormProps) {
   const [isPending, startTransition] = useTransition();
   const [visibility, setVisibility] = useState<'public' | 'private'>(course.visibility === 'public' ? 'public' : 'private');
-  const [enrollmentStatus, setEnrollmentStatus] = useState<string>(course.enrollmentStatus || 'Open');
+  const [enrollmentStatus, setEnrollmentStatus] = useState<string>(() => parseEnrollmentStatus(course.enrollmentStatus));
   const [enrollmentDeadline, setEnrollmentDeadline] = useState(toDateTimeLocal(course.enrollmentDeadline));
   const [maxEnrollments, setMaxEnrollments] = useState(course.maxEnrollments?.toString() ?? '');
   const [error, setError] = useState<string | null>(null);
@@ -69,10 +73,6 @@ export function ListingLaunchForm({ course }: ListingLaunchFormProps) {
 
   function parseVisibility(value: unknown): 'public' | 'private' {
     return value === 'private' ? 'private' : 'public';
-  }
-
-  function parseEnrollmentStatus(value: unknown): string {
-    return ENROLLMENT_STATUS_OPTIONS.find((status) => status.value === value)?.value ?? 'Open';
   }
 
   function handleEnrollmentStatusChange(value: unknown): void {

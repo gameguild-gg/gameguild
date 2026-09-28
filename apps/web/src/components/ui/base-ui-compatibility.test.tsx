@@ -2,7 +2,7 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Link from 'next/link';
-import { describe, expect, it } from 'vitest';
+import { describe, it } from 'vitest';
 
 import { Button } from '@game-guild/ui/components/button';
 import {
@@ -32,7 +32,10 @@ describe('Base UI compatibility wrappers', () => {
 
     await user.click(screen.getByRole('button', { name: 'Actions' }));
 
-    expect(await screen.findByRole('menuitem', { name: 'View profile' })).toBeInTheDocument();
+    const profileItem = await screen.findByRole('menuitem', { name: 'View profile' });
+    if (profileItem.textContent !== 'View profile') {
+      throw new Error('The dropdown menu item did not render.');
+    }
   });
 
   it('renders a standalone dropdown label without requiring a menu group', async () => {
@@ -51,7 +54,10 @@ describe('Base UI compatibility wrappers', () => {
 
     await user.hover(screen.getByRole('link', { name: 'Campus playtest' }));
 
-    expect(await screen.findByText('Operational details')).toBeInTheDocument();
+    const hoverCardContent = await screen.findByText('Operational details');
+    if (hoverCardContent.textContent !== 'Operational details') {
+      throw new Error('The hover card content did not render.');
+    }
   });
 });
 
