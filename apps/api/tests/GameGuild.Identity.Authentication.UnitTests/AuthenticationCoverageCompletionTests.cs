@@ -456,9 +456,10 @@ public sealed class AuthenticationCoverageCompletionTests
 
         result.Should().BeFalse();
 
-        var emptySignatureResult = await InvokePrivateInstance<Task<bool>>(
+        var emptySignatureResult = InvokePrivateInstance<bool>(
             service,
             "VerifyEthereumSignature",
+            challenge.Message,
             "",
             address);
         emptySignatureResult.Should().BeFalse();

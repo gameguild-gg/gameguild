@@ -407,9 +407,9 @@ public class Web3ServiceTests
         var challenge = await _service.GenerateChallengeAsync(address);
 
         challenge.Should().NotBeNull();
-        challenge.WalletAddress.Should().Be(address);
+        challenge.WalletAddress.Should().BeEquivalentTo(address);
         challenge.Message.Should().Contain("GameGuild");
-        challenge.Message.Should().Contain(address);
+        challenge.Message.Should().Contain(challenge.WalletAddress);
         challenge.Nonce.Should().NotBeNullOrEmpty();
         challenge.ExpiresAt.Should().BeAfter(challenge.IssuedAt);
     }
@@ -461,9 +461,8 @@ public class Web3ServiceTests
     }
 
     [Fact]
-    public async Task VerifySignatureAsync_WithValidChallengeButUnimplementedVerification_ShouldReturnFalse()
+    public async Task VerifySignatureAsync_WithInvalidEip191Signature_ShouldReturnFalse()
     {
-        // Web3 signature verification is deliberately not implemented (returns false).
         var address = "0x742d35Cc6634C0532925a3b844Bc9e7595f2bD28";
         var challenge = await _service.GenerateChallengeAsync(address);
 
@@ -472,7 +471,6 @@ public class Web3ServiceTests
             "0x" + new string('a', 130),
             challenge.Message);
 
-        // The service always returns false because EcRecover is not implemented
         result.Should().BeFalse();
     }
 }

@@ -9,8 +9,8 @@ public sealed class GenerateWeb3ChallengeHandler(IWeb3Service web3Service) : ICo
 {
     public async Task<Web3ChallengeResponse> Handle(GenerateWeb3ChallengeCommand request, CancellationToken cancellationToken)
     {
-        var challenge = await web3Service.GenerateChallengeAsync(request.WalletAddress).ConfigureAwait(false);
+        var challenge = await web3Service.GenerateChallengeAsync(request.WalletAddress, chainId: request.ChainId).ConfigureAwait(false);
 
-        return new Web3ChallengeResponse { Challenge = challenge.Message, ExpiresAt = challenge.ExpiresAt };
+        return new Web3ChallengeResponse { Challenge = challenge.Message, Nonce = challenge.Nonce, ExpiresAt = challenge.ExpiresAt };
     }
 }
