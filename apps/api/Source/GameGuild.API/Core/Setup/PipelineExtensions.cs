@@ -1,5 +1,6 @@
 using System.Net;
 using Asp.Versioning.ApiExplorer;
+using GameGuild.Configuration.PresentationLayer.GraphQL;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Tenants;
 using GameGuild.API.Core.CostAccounting;
@@ -97,6 +98,14 @@ public static class PipelineExtensions
 
         // 19. Controller Endpoints (REST API routes via [ApiController])
         app.MapControllers();
+
+        // GraphQL is opt-in and protected at the transport boundary; field rules apply
+        // the additional operation and resource-specific DAC checks.
+        var graphQlOptions = app.Services.GetService<GraphQLOptions>();
+        if (graphQlOptions is { EnableGraphQL: true })
+        {
+            app.MapGraphQL(graphQlOptions.Endpoint).RequireAuthorization();
+        }
 
         // 20. Health Check Endpoints (disabled - HealthController provides /health, /ready, /live instead)
         // We use a controller instead of MapHealthChecks() for more control over response format,

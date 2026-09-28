@@ -10,6 +10,9 @@ using GameGuild.Configuration.PresentationLayer.ResponseCompression;
 using GameGuild.Configuration.PresentationLayer.SignalR;
 using GameGuild.API.Database;
 using GameGuild.Features;
+using GameGuild.Projects;
+using HotChocolate.Authorization;
+using HotChocolate.Types;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
@@ -228,7 +231,18 @@ public static class InfrastructureServiceCollectionExtensions
         options ??= OptionBuilderUtilities.CreateAndBind(configuration, "GraphQL", GraphQLOptions.CreateDefault);
         options.Validate();
 
-        // GraphQL services can be configured by the application layer if enabled.
+        if (!options.EnableGraphQL) return services;
+
+        services.AddSingleton(options);
+        services.AddGraphQLServer()
+            .AddAuthorization()
+            .AddDirectiveType<ProjectAuthorizationDirectiveType>()
+            .AddQueryType(descriptor => descriptor.Name("Query"))
+            .AddType<ProjectGraphQLType>()
+            .AddTypeExtension<ProjectQueries>()
+            .AddTypeExtension<ProjectPermissionsResolvers>()
+            .AddMutationType(descriptor => descriptor.Name("Mutation"))
+            .AddTypeExtension<ProjectMutations>();
 
         return services;
     }

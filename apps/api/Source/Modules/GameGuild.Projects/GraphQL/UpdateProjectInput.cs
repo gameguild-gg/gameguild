@@ -13,7 +13,7 @@ public record UpdateProjectInput(
   string? RepositoryUrl,
   string? WebsiteUrl,
   string? DownloadUrl,
-  GameGuild.ProjectType? Type,
+  ProjectType? Type,
   Guid? CategoryId,
   ContentStatus? Status,
   ContentVisibility? Visibility,
@@ -35,7 +35,7 @@ public record UpdateProjectInput(
 
   public string? DownloadUrl { get; init; } = DownloadUrl;
 
-  public GameGuild.ProjectType? Type { get; init; } = Type;
+  public ProjectType? Type { get; init; } = Type;
 
   public Guid? CategoryId { get; init; } = CategoryId;
 

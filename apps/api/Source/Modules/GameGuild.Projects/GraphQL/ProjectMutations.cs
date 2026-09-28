@@ -1,4 +1,6 @@
 using GameGuild.Identity.Context.Actors;
+using GameGuild.Identity.Authorization;
+using GraphQLAuthorize = HotChocolate.Authorization.AuthorizeAttribute;
 using HotChocolate;
 using HotChocolate.Types;
 
@@ -8,6 +10,7 @@ namespace GameGuild.Projects;
 /// GraphQL mutations for Project module using CQRS pattern
 /// </summary>
 [ExtendObjectType("Mutation")]
+[GraphQLAuthorize]
 public class ProjectMutations {
   /// <summary>
   /// Creates a new project using CQRS pattern
@@ -39,6 +42,7 @@ public class ProjectMutations {
   /// <summary>
   /// Updates an existing project using CQRS pattern
   /// </summary>
+  [RequireGraphQLProjectPermission(PermissionType.Edit, ResourceIdArgumentName = "input.projectId")]
   public async Task<Project> UpdateProject(UpdateProjectInput input, [Service] CQRS.IMediator mediator, [Service] IActorContextAccessor actorContextAccessor, CancellationToken cancellationToken) {
     var actor = actorContextAccessor.ActorContext;
     var command = new UpdateProjectCommand {
@@ -50,7 +54,7 @@ public class ProjectMutations {
       RepositoryUrl = input.RepositoryUrl,
       WebsiteUrl = input.WebsiteUrl,
       DownloadUrl = input.DownloadUrl,
-      Type = input.Type,
+      Type = input.Type is { } type ? (GameGuild.ProjectType)type : null,
       CategoryId = input.CategoryId,
       Visibility = input.Visibility,
       Status = input.Status,
@@ -66,6 +70,7 @@ public class ProjectMutations {
   /// <summary>
   /// Deletes a project using CQRS pattern
   /// </summary>
+  [RequireGraphQLProjectPermission(PermissionType.Delete, "softDelete", PermissionType.HardDelete, ResourceIdArgumentName = "projectId")]
   public async Task<bool> DeleteProject(Guid projectId, [Service] CQRS.IMediator mediator, [Service] IActorContextAccessor actorContextAccessor, bool softDelete = true, string? reason = null, CancellationToken cancellationToken = default) {
     var actor = actorContextAccessor.ActorContext;
     var command = new DeleteProjectCommand { ProjectId = projectId, DeletedBy = actor.SubjectIdAsGuid ?? Guid.Empty, SoftDelete = softDelete, Reason = reason };
@@ -78,6 +83,7 @@ public class ProjectMutations {
   /// <summary>
   /// Publishes a project using CQRS pattern
   /// </summary>
+  [RequireGraphQLProjectPermission(PermissionType.Submit, ResourceIdArgumentName = "projectId")]
   public async Task<Project> PublishProject(Guid projectId, [Service] CQRS.IMediator mediator, [Service] IActorContextAccessor actorContextAccessor, CancellationToken cancellationToken) {
     var actor = actorContextAccessor.ActorContext;
     var command = new PublishProjectCommand { ProjectId = projectId, PublishedBy = actor.SubjectIdAsGuid ?? Guid.Empty };
@@ -90,6 +96,7 @@ public class ProjectMutations {
   /// <summary>
   /// Unpublishes a project using CQRS pattern
   /// </summary>
+  [RequireGraphQLProjectPermission(PermissionType.Withdraw, ResourceIdArgumentName = "projectId")]
   public async Task<Project> UnpublishProject(Guid projectId, [Service] CQRS.IMediator mediator, [Service] IActorContextAccessor actorContextAccessor, CancellationToken cancellationToken) {
     var actor = actorContextAccessor.ActorContext;
     var command = new UnpublishProjectCommand { ProjectId = projectId, UnpublishedBy = actor.SubjectIdAsGuid ?? Guid.Empty };
@@ -102,6 +109,7 @@ public class ProjectMutations {
   /// <summary>
   /// Archives a project using CQRS pattern
   /// </summary>
+  [RequireGraphQLProjectPermission(PermissionType.Archive, ResourceIdArgumentName = "projectId")]
   public async Task<Project> ArchiveProject(Guid projectId, [Service] CQRS.IMediator mediator, [Service] IActorContextAccessor actorContextAccessor, CancellationToken cancellationToken) {
     var actor = actorContextAccessor.ActorContext;
     var command = new ArchiveProjectCommand { ProjectId = projectId, ArchivedBy = actor.SubjectIdAsGuid ?? Guid.Empty };

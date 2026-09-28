@@ -15,7 +15,14 @@ public sealed class GraphQLOptions : BaseOptions
     {
         base.Validate();
 
-        if (string.IsNullOrWhiteSpace(Endpoint)) throw new InvalidOperationException("GraphQL endpoint cannot be empty.");
+        if (string.IsNullOrWhiteSpace(Endpoint) ||
+            !Endpoint.StartsWith("/", StringComparison.Ordinal) ||
+            Endpoint.StartsWith("//", StringComparison.Ordinal) ||
+            Endpoint.Contains('?') ||
+            Endpoint.Contains('#'))
+        {
+            throw new InvalidOperationException("GraphQL endpoint must be an absolute application path without a query or fragment.");
+        }
     }
 
     public static GraphQLOptions CreateDefault() { return new GraphQLOptions(); }
