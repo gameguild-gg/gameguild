@@ -35,6 +35,8 @@ public sealed class CachedAccessControlListService : IAccessControlListService
     private readonly ITenantSecurityVersionStore _tenantVersionStore;
     private readonly IUserSecurityVersionStore _userVersionStore;
     private readonly ICacheMetricsService? _metrics;
+    private readonly IPermissionCacheKeyTracker? _keyTracker;
+    private readonly ICacheInvalidationService? _invalidationService;
     private readonly AuthorizationCacheOptions _options;
     private readonly ConcurrentDictionary<string, HashSet<string>> _tenantCacheKeys = new();
 
@@ -48,7 +50,9 @@ public sealed class CachedAccessControlListService : IAccessControlListService
         IUserSecurityVersionStore userVersionStore,
         IOptions<AuthorizationCacheOptions> options,
         IHybridPermissionCache? hybridCache = null,
-        ICacheMetricsService? metrics = null)
+        ICacheMetricsService? metrics = null,
+        IPermissionCacheKeyTracker? keyTracker = null,
+        ICacheInvalidationService? invalidationService = null)
     {
         _innerService = innerService;
         _l1Cache = cache;
@@ -57,6 +61,8 @@ public sealed class CachedAccessControlListService : IAccessControlListService
         _options = options.Value;
         _hybridCache = hybridCache;
         _metrics = metrics;
+        _keyTracker = keyTracker;
+        _invalidationService = invalidationService;
     }
 
     #region Subject-based operations (preferred)
@@ -132,7 +138,7 @@ public sealed class CachedAccessControlListService : IAccessControlListService
         await _innerService.GrantAccessAsync(grantorId, principalType, principalId, tenantId, resourceType, resourceId, accessLevel, cancellationToken).ConfigureAwait(false);
 
         // Invalidate cache for this principal/resource combination
-        InvalidatePrincipalResourceCache(principalType, principalId, tenantId, resourceType, resourceId);
+        await InvalidateAfterAclMutationAsync(principalType, principalId, tenantId, resourceType, resourceId, cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -150,7 +156,7 @@ public sealed class CachedAccessControlListService : IAccessControlListService
         await _innerService.DenyAccessAsync(grantorId, principalType, principalId, tenantId, resourceType, resourceId, accessLevel, cancellationToken).ConfigureAwait(false);
 
         // Invalidate cache for this principal/resource combination
-        InvalidatePrincipalResourceCache(principalType, principalId, tenantId, resourceType, resourceId);
+        await InvalidateAfterAclMutationAsync(principalType, principalId, tenantId, resourceType, resourceId, cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -167,7 +173,7 @@ public sealed class CachedAccessControlListService : IAccessControlListService
         await _innerService.RevokeAccessAsync(revokerId, principalType, principalId, tenantId, resourceType, resourceId, cancellationToken).ConfigureAwait(false);
 
         // Invalidate cache for this principal/resource combination
-        InvalidatePrincipalResourceCache(principalType, principalId, tenantId, resourceType, resourceId);
+        await InvalidateAfterAclMutationAsync(principalType, principalId, tenantId, resourceType, resourceId, cancellationToken).ConfigureAwait(false);
     }
 
     #endregion
@@ -229,7 +235,7 @@ public sealed class CachedAccessControlListService : IAccessControlListService
         await _innerService.GrantAccessAsync(grantorId, granteeId, tenantId, resourceType, resourceId, accessLevel, cancellationToken).ConfigureAwait(false);
 
         // Invalidate cache for this user/resource combination
-        InvalidateUserResourceCache(granteeId, tenantId, resourceType, resourceId);
+        await InvalidateAfterAclMutationAsync(AclPrincipalType.User, granteeId, tenantId, resourceType, resourceId, cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -245,7 +251,7 @@ public sealed class CachedAccessControlListService : IAccessControlListService
         await _innerService.RevokeAccessAsync(revokerId, userId, tenantId, resourceType, resourceId, cancellationToken).ConfigureAwait(false);
 
         // Invalidate cache for this user/resource combination
-        InvalidateUserResourceCache(userId, tenantId, resourceType, resourceId);
+        await InvalidateAfterAclMutationAsync(AclPrincipalType.User, userId, tenantId, resourceType, resourceId, cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -271,7 +277,11 @@ public sealed class CachedAccessControlListService : IAccessControlListService
     {
         if (_tenantCacheKeys.TryRemove(tenantId, out var keys))
         {
-            foreach (var key in keys)
+            string[] keySnapshot;
+            lock (keys)
+                keySnapshot = keys.ToArray();
+
+            foreach (var key in keySnapshot)
             {
                 _l1Cache.Remove(key);
                 _metrics?.RecordEviction(CacheLevel.L1, CacheType);
@@ -287,16 +297,22 @@ public sealed class CachedAccessControlListService : IAccessControlListService
     /// <param name="cancellationToken">Cancellation token.</param>
     public async Task InvalidateTenantAsync(string tenantId, CancellationToken cancellationToken = default)
     {
-        // Invalidate L1 cache
-        InvalidateTenant(tenantId);
+        if (!_tenantCacheKeys.TryRemove(tenantId, out var keys))
+            return;
 
-        // Invalidate L2 cache if available
-        if (_hybridCache != null && _tenantCacheKeys.TryGetValue(tenantId, out var keys))
+        string[] keySnapshot;
+        lock (keys)
         {
-            foreach (var key in keys.ToList())
-            {
+            keySnapshot = keys.ToArray();
+            keys.Clear();
+        }
+
+        foreach (var key in keySnapshot)
+        {
+            _l1Cache.Remove(key);
+            _metrics?.RecordEviction(CacheLevel.L1, CacheType);
+            if (_hybridCache is not null)
                 await _hybridCache.RemoveAsync(key, CacheType, cancellationToken).ConfigureAwait(false);
-            }
         }
     }
 
@@ -324,6 +340,7 @@ public sealed class CachedAccessControlListService : IAccessControlListService
             .SetAbsoluteExpiration(TimeSpan.FromSeconds(_options.AccessControlListTtlSeconds))
             .SetSlidingExpiration(TimeSpan.FromSeconds(_options.AccessControlListTtlSeconds / 2));
 
+        _keyTracker?.Track(cacheKey, CacheType, cacheOptions);
         _l1Cache.Set(cacheKey, level, cacheOptions);
 
         // Track cache key for tenant invalidation
@@ -358,6 +375,43 @@ public sealed class CachedAccessControlListService : IAccessControlListService
                 }
                 return existingKeys;
             });
+    }
+
+    private async Task InvalidateAfterAclMutationAsync(
+        AclPrincipalType principalType,
+        Guid? principalId,
+        Guid tenantId,
+        string resourceType,
+        string resourceId,
+        CancellationToken cancellationToken)
+    {
+        if (_invalidationService is not null)
+        {
+            var targets = new List<CacheInvalidationTarget>
+            {
+                new(CacheInvalidationTargetType.Resource, ResourceType: resourceType, ResourceId: resourceId)
+            };
+
+            if (principalType == AclPrincipalType.User && principalId.HasValue)
+            {
+                targets.Add(new CacheInvalidationTarget(CacheInvalidationTargetType.User, UserId: principalId));
+            }
+            else if ((principalType is AclPrincipalType.Role or AclPrincipalType.Group) && principalId.HasValue)
+            {
+                targets.Add(new CacheInvalidationTarget(
+                    CacheInvalidationTargetType.Dependency,
+                    DependencyKind: principalType == AclPrincipalType.Role ? "role" : "group",
+                    DependencyId: principalId));
+            }
+
+            await _invalidationService.InvalidateBatchAsync(tenantId, targets, cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        if (principalType == AclPrincipalType.User && principalId.HasValue)
+            InvalidateUserResourceCache(principalId.Value, tenantId, resourceType, resourceId);
+        else
+            InvalidatePrincipalResourceCache(principalType, principalId, tenantId, resourceType, resourceId);
     }
 
     // ReSharper disable UnusedParameter.Local - Parameters reserved for future fine-grained cache invalidation

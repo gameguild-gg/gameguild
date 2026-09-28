@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json;
 using GameGuild.Configuration.PresentationLayer.Authorization;
 using Microsoft.Extensions.Caching.Distributed;
@@ -130,6 +131,7 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
     private readonly ICacheMetricsService _metrics;
     private readonly AuthorizationCacheOptions _options;
     private readonly ILogger<HybridPermissionCache> _logger;
+    private readonly IPermissionCacheKeyTracker _keyTracker;
     private readonly bool _useL2;
 
     /// <summary>
@@ -140,94 +142,121 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
         IOptions<AuthorizationCacheOptions> options,
         ICacheMetricsService metrics,
         ILogger<HybridPermissionCache> logger,
-        IDistributedCache? l2Cache = null)
+        IDistributedCache? l2Cache = null,
+        IPermissionCacheKeyTracker? keyTracker = null)
     {
         _l1Cache = l1Cache;
         _l2Cache = l2Cache;
         _options = options.Value;
         _metrics = metrics;
         _logger = logger;
+        _keyTracker = keyTracker ?? new PermissionCacheKeyTracker(l1Cache, metrics);
         _useL2 = _options.UseDistributedCache && _l2Cache != null;
     }
 
     /// <inheritdoc />
     public async Task<T?> GetAsync<T>(string key, string cacheType, CancellationToken cancellationToken = default) where T : class
     {
-        // Try L1 first
-        if (_l1Cache.TryGetValue(key, out T? l1Value) && l1Value != null)
+        var startedAt = Stopwatch.GetTimestamp();
+        try
         {
-            _metrics.RecordHit(CacheLevel.L1, cacheType);
-            return l1Value;
-        }
-
-        // Try L2 if enabled
-        if (_useL2)
-        {
-            try
+            // Try L1 first
+            if (_l1Cache.TryGetValue(key, out T? l1Value) && l1Value != null)
             {
-                var l2Bytes = await _l2Cache!.GetAsync(key, cancellationToken).ConfigureAwait(false);
-                if (l2Bytes != null && l2Bytes.Length > 0)
+                _metrics.RecordHit(CacheLevel.L1, cacheType);
+                return l1Value;
+            }
+
+            // Try L2 if enabled
+            if (_useL2)
+            {
+                try
                 {
-                    var l2Value = JsonSerializer.Deserialize<T>(l2Bytes);
-                    if (l2Value != null)
+                    var l2Bytes = await _l2Cache!.GetAsync(key, cancellationToken).ConfigureAwait(false);
+                    if (l2Bytes != null && l2Bytes.Length > 0)
                     {
-                        _metrics.RecordHit(CacheLevel.L2, cacheType);
+                        var l2Value = JsonSerializer.Deserialize<T>(l2Bytes);
+                        if (l2Value != null)
+                        {
+                            _metrics.RecordHit(CacheLevel.L2, cacheType);
 
-                        // Promote to L1
-                        SetL1(key, l2Value);
+                            // Promote to L1
+                            SetL1(key, l2Value, cacheType);
 
-                        return l2Value;
+                            return l2Value;
+                        }
                     }
                 }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    // Treat an unavailable or unreadable L2 entry as a cache miss so the caller
+                    // can resolve the authoritative value from its backing store.
+                    _logger.LogWarning(ex, "L2 cache read failed for key {Key}, falling back to database", key);
+                }
             }
-            catch (Exception ex)
-            {
-                // L2 failure should not break the application
-                _logger.LogWarning(ex, "L2 cache read failed for key {Key}, falling back to database", key);
-                throw;
-            }
-        }
 
-        _metrics.RecordMiss(cacheType);
-        return null;
+            _metrics.RecordMiss(cacheType);
+            return null;
+
+        }
+        finally
+        {
+            _metrics.RecordLookupDuration(Stopwatch.GetElapsedTime(startedAt), cacheType);
+        }
     }
 
     /// <inheritdoc />
     public async Task<CacheResult<T>> GetValueAsync<T>(string key, string cacheType, CancellationToken cancellationToken = default) where T : struct
     {
-        // Try L1 first
-        if (_l1Cache.TryGetValue(key, out T l1Value))
+        var startedAt = Stopwatch.GetTimestamp();
+        try
         {
-            _metrics.RecordHit(CacheLevel.L1, cacheType);
-            return CacheResult<T>.Hit(l1Value);
-        }
-
-        // Try L2 if enabled
-        if (_useL2)
-        {
-            try
+            // Try L1 first
+            if (_l1Cache.TryGetValue(key, out T l1Value))
             {
-                var l2Bytes = await _l2Cache!.GetAsync(key, cancellationToken).ConfigureAwait(false);
-                if (l2Bytes != null && l2Bytes.Length > 0)
+                _metrics.RecordHit(CacheLevel.L1, cacheType);
+                return CacheResult<T>.Hit(l1Value);
+            }
+
+            // Try L2 if enabled
+            if (_useL2)
+            {
+                try
                 {
-                    var l2Value = JsonSerializer.Deserialize<T>(l2Bytes);
-                    _metrics.RecordHit(CacheLevel.L2, cacheType);
+                    var l2Bytes = await _l2Cache!.GetAsync(key, cancellationToken).ConfigureAwait(false);
+                    if (l2Bytes != null && l2Bytes.Length > 0)
+                    {
+                        var l2Value = JsonSerializer.Deserialize<T>(l2Bytes);
+                        _metrics.RecordHit(CacheLevel.L2, cacheType);
 
-                    // Promote to L1
-                    SetL1(key, l2Value);
+                        // Promote to L1
+                        SetL1(key, l2Value, cacheType);
 
-                    return CacheResult<T>.Hit(l2Value);
+                        return CacheResult<T>.Hit(l2Value);
+                    }
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "L2 cache read failed for key {Key}, falling back to database", key);
                 }
             }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "L2 cache read failed for key {Key}", key);
-                throw;
-            }
-        }
 
-        _metrics.RecordMiss(cacheType);
-        return CacheResult<T>.Miss();
+            _metrics.RecordMiss(cacheType);
+            return CacheResult<T>.Miss();
+
+        }
+        finally
+        {
+            _metrics.RecordLookupDuration(Stopwatch.GetElapsedTime(startedAt), cacheType);
+        }
     }
 
     /// <inheritdoc />
@@ -254,7 +283,7 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
         var l2Ttl = TimeSpan.FromSeconds(_options.DistributedCacheTtlSeconds);
 
         // Set in L1
-        SetL1(key, value, l1Ttl);
+        SetL1(key, value, cacheType, l1Ttl);
 
         // Set in L2 if enabled
         if (_useL2)
@@ -268,10 +297,13 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
                 };
                 await _l2Cache!.SetAsync(key, bytes, distributedOptions, cancellationToken).ConfigureAwait(false);
             }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "L2 cache write failed for key {Key}", key);
-                throw;
             }
         }
     }
@@ -281,6 +313,7 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
     {
         // Remove from L1
         _l1Cache.Remove(key);
+        _keyTracker.Forget(key);
         _metrics.RecordEviction(CacheLevel.L1, cacheType, "explicit");
 
         // Remove from L2 if enabled
@@ -291,10 +324,13 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
                 await _l2Cache!.RemoveAsync(key, cancellationToken).ConfigureAwait(false);
                 _metrics.RecordEviction(CacheLevel.L2, cacheType, "explicit");
             }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "L2 cache remove failed for key {Key}", key);
-                throw;
             }
         }
     }
@@ -302,22 +338,20 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
     /// <inheritdoc />
     public Task InvalidatePatternAsync(string pattern, string cacheType, CancellationToken cancellationToken = default)
     {
-        // Note: IDistributedCache doesn't support pattern-based deletion.
-        // Permission cache correctness comes from tenant/user security-version keys plus TTL.
-        // This avoids Redis SCAN/DEL in request paths and keeps non-Redis deployments equivalent.
-        
-        _logger.LogDebug("Pattern invalidation requested for {Pattern}. Using versioned keys and TTL expiration.", pattern);
-        
+        cancellationToken.ThrowIfCancellationRequested();
+        var removed = _keyTracker.InvalidatePattern(pattern, cacheType, "pattern_invalidation");
+        _logger.LogDebug("Invalidated {EntryCount} local cache entries matching {Pattern}; L2 remains versioned.", removed, pattern);
         return Task.CompletedTask;
     }
 
-    private void SetL1<T>(string key, T value, TimeSpan? ttl = null)
+    private void SetL1<T>(string key, T value, string cacheType, TimeSpan? ttl = null)
     {
         var cacheOptions = new MemoryCacheEntryOptions()
             .SetAbsoluteExpiration(ttl ?? TimeSpan.FromSeconds(_options.PermissionTtlSeconds))
             .SetSlidingExpiration(TimeSpan.FromSeconds(_options.PermissionTtlSeconds / 2))
             .SetSize(1);
 
+        _keyTracker.Track(key, cacheType, cacheOptions);
         _l1Cache.Set(key, value, cacheOptions);
     }
 }

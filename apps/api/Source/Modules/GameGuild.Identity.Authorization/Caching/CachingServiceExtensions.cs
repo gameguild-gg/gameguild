@@ -2,7 +2,9 @@ using GameGuild.Configuration.PresentationLayer.Authorization;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
+using StackExchange.Redis;
 
 namespace GameGuild.Identity.Authorization.Caching;
 
@@ -28,9 +30,8 @@ public static class CachingServiceExtensions
     ///     <para>
     ///         To enable Redis:
     ///         <code>
-    ///         services.AddAuthorizationCaching(options => options.UseDistributedCache = true);
-    ///         services.AddStackExchangeRedisCache(options => 
-    ///             options.Configuration = "localhost:6379");
+    ///         services.AddAuthorizationRedisCache("localhost:6379");
+    ///         services.AddAuthorizationCaching();
     ///         </code>
     ///     </para>
     /// </remarks>
@@ -43,9 +44,17 @@ public static class CachingServiceExtensions
         {
             services.Configure(configureOptions);
         }
+        else
+        {
+            services.AddOptions<AuthorizationCacheOptions>();
+        }
 
         // Cache metrics (singleton for aggregated stats)
         services.AddSingleton<ICacheMetricsService, CacheMetricsService>();
+        services.AddSingleton<IPermissionCacheKeyTracker>(sp => new PermissionCacheKeyTracker(
+            sp.GetRequiredService<IMemoryCache>(),
+            sp.GetRequiredService<ICacheMetricsService>(),
+            sp.GetRequiredService<IOptions<AuthorizationCacheOptions>>().Value.MaxL1CacheSize));
 
         // Hybrid cache (scoped to allow tenant-specific behavior)
         services.AddScoped<IHybridPermissionCache>(sp =>
@@ -54,6 +63,7 @@ public static class CachingServiceExtensions
             var options = sp.GetRequiredService<IOptions<AuthorizationCacheOptions>>();
             var metrics = sp.GetRequiredService<ICacheMetricsService>();
             var logger = sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<HybridPermissionCache>>();
+            var keyTracker = sp.GetRequiredService<IPermissionCacheKeyTracker>();
 
             // Only inject distributed cache if configured
             IDistributedCache? distributedCache = null;
@@ -62,7 +72,7 @@ public static class CachingServiceExtensions
                 distributedCache = sp.GetService<IDistributedCache>();
             }
 
-            return new HybridPermissionCache(memoryCache, options, metrics, logger, distributedCache);
+            return new HybridPermissionCache(memoryCache, options, metrics, logger, distributedCache, keyTracker);
         });
 
         // Cache invalidation service (scoped)
@@ -74,8 +84,10 @@ public static class CachingServiceExtensions
             var metrics = sp.GetRequiredService<ICacheMetricsService>();
             var options = sp.GetRequiredService<IOptions<AuthorizationCacheOptions>>();
             var logger = sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<CacheInvalidationService>>();
+            var publisher = sp.GetService<ICacheInvalidationPublisher>();
+            var keyTracker = sp.GetRequiredService<IPermissionCacheKeyTracker>();
 
-            return new CacheInvalidationService(memoryCache, versionStore, hybridCache, metrics, options, logger);
+            return new CacheInvalidationService(memoryCache, versionStore, hybridCache, metrics, options, logger, publisher, keyTracker);
         });
 
         return services;
@@ -96,6 +108,9 @@ public static class CachingServiceExtensions
         string redisConnectionString,
         string instanceName = "gg:auth:")
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(redisConnectionString);
+        ArgumentException.ThrowIfNullOrWhiteSpace(instanceName);
+
         services.AddStackExchangeRedisCache(options =>
         {
             options.Configuration = redisConnectionString;
@@ -108,6 +123,24 @@ public static class CachingServiceExtensions
             options.RedisConnectionString = redisConnectionString;
             options.RedisInstanceName = instanceName;
         });
+        services.PostConfigure<AuthorizationCacheOptions>(options =>
+        {
+            if (options.UseDistributedCache && options.UsePubSubInvalidation &&
+                string.IsNullOrWhiteSpace(options.InvalidationChannelName))
+            {
+                throw new InvalidOperationException(
+                    "InvalidationChannelName is required when Redis Pub/Sub invalidation is enabled.");
+            }
+        });
+
+        services.TryAddSingleton<IConnectionMultiplexer>(_ =>
+        {
+            var configuration = ConfigurationOptions.Parse(redisConnectionString);
+            configuration.AbortOnConnectFail = false;
+            return ConnectionMultiplexer.Connect(configuration);
+        });
+        services.TryAddSingleton<ICacheInvalidationPublisher, RedisPermissionCacheInvalidationPublisher>();
+        services.AddHostedService<RedisPermissionCacheInvalidationSubscriber>();
 
         return services;
     }
