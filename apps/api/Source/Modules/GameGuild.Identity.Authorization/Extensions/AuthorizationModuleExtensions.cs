@@ -308,6 +308,7 @@ public static class AuthorizationModuleExtensions
         services.AddScoped<IAbacPolicyRepository, AbacPolicyRepository>();
         services.AddScoped<IConditionalPolicyRepository, ConditionalPolicyRepository>();
         services.AddScoped<IDataMaskingRuleRepository, DataMaskingRuleRepository>();
+        services.AddScoped<IDataMaskingService, DataMaskingService>();
         services.AddScoped<IPolicyBundleRepository, PolicyBundleRepository>();
         services.AddScoped<IPolicyBundleDeploymentRepository, PolicyBundleDeploymentRepository>();
         services.AddScoped<IPermissionTemplateVersionRepository, PermissionTemplateVersionRepository>();
