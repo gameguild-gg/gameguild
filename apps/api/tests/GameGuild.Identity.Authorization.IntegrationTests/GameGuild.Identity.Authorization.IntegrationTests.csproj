@@ -23,6 +23,8 @@
         <PackageReference Include="FluentAssertions" />
         <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+        <PackageReference Include="StackExchange.Redis" />
+        <PackageReference Include="Testcontainers" />
     </ItemGroup>
 
     <ItemGroup>

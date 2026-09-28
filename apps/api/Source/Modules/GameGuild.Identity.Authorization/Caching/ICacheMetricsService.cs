@@ -22,6 +22,13 @@ public interface ICacheMetricsService
     void RecordMiss(string cacheType);
 
     /// <summary>
+    ///     Records the elapsed time spent looking up one cache entry across enabled cache levels.
+    /// </summary>
+    /// <param name="duration">Elapsed cache lookup time.</param>
+    /// <param name="cacheType">The cache type for metrics.</param>
+    void RecordLookupDuration(TimeSpan duration, string cacheType);
+
+    /// <summary>
     ///     Records a cache eviction.
     /// </summary>
     /// <param name="cacheLevel">The cache level (L1 or L2).</param>
@@ -145,6 +152,7 @@ public sealed class CacheMetricsService : ICacheMetricsService
     private readonly Counter<long> _hitsCounter;
     private readonly Counter<long> _missesCounter;
     private readonly Counter<long> _evictionsCounter;
+    private readonly Histogram<double> _lookupDurationHistogram;
 
     private long _l1Hits;
     private long _l2Hits;
@@ -173,6 +181,11 @@ public sealed class CacheMetricsService : ICacheMetricsService
             "authorization_cache_evictions",
             "evictions",
             "Number of cache evictions");
+
+        _lookupDurationHistogram = Meter.CreateHistogram<double>(
+            "authorization_cache_lookup_duration",
+            "ms",
+            "Time spent reading an authorization cache entry across enabled cache levels");
     }
 
     /// <inheritdoc />
@@ -207,6 +220,19 @@ public sealed class CacheMetricsService : ICacheMetricsService
     }
 
     /// <inheritdoc />
+    public void RecordLookupDuration(TimeSpan duration, string cacheType)
+    {
+        if (duration < TimeSpan.Zero)
+            throw new ArgumentOutOfRangeException(nameof(duration), "Cache lookup duration cannot be negative.");
+
+        var tags = new TagList(
+        [
+            new KeyValuePair<string, object?>("cache_type", cacheType)
+        ]);
+        _lookupDurationHistogram.Record(duration.TotalMilliseconds, tags);
+    }
+
+    /// <inheritdoc />
     public void RecordEviction(CacheLevel cacheLevel, string cacheType, string reason = "explicit")
     {
         var tags = new TagList(
@@ -231,7 +257,16 @@ public sealed class CacheMetricsService : ICacheMetricsService
                 L2Hits = _l2Hits,
                 Misses = _misses,
                 Evictions = _evictions,
-                ByType = new Dictionary<string, CacheTypeStatistics>(_typeStats)
+                ByType = _typeStats.ToDictionary(
+                    pair => pair.Key,
+                    pair => new CacheTypeStatistics
+                    {
+                        CacheType = pair.Value.CacheType,
+                        L1Hits = pair.Value.L1Hits,
+                        L2Hits = pair.Value.L2Hits,
+                        Misses = pair.Value.Misses
+                    },
+                    StringComparer.Ordinal)
             };
         }
     }
