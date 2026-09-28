@@ -14,9 +14,12 @@ public interface ITenantSecurityVersionRepository
     Task<TenantSecurityVersion?> GetByTenantIdAsync(Guid tenantId, CancellationToken cancellationToken = default);
 
     /// <summary>Reads existing versions for several tenant scopes in one query.</summary>
+    Task<IReadOnlyDictionary<Guid, long>> GetVersionsAsync(IReadOnlyCollection<Guid> tenantIds) =>
+        GetVersionsAsync(tenantIds, CancellationToken.None);
+
     async Task<IReadOnlyDictionary<Guid, long>> GetVersionsAsync(
         IReadOnlyCollection<Guid> tenantIds,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         var versions = new Dictionary<Guid, long>();
         foreach (var tenantId in tenantIds.Distinct())

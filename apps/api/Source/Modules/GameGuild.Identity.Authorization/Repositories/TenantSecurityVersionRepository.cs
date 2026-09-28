@@ -7,9 +7,12 @@ namespace GameGuild.Identity.Authorization;
 /// </summary>
 public class TenantSecurityVersionRepository(IApplicationDbContext context) : ITenantSecurityVersionRepository
 {
+    public Task<IReadOnlyDictionary<Guid, long>> GetVersionsAsync(IReadOnlyCollection<Guid> tenantIds) =>
+        GetVersionsAsync(tenantIds, CancellationToken.None);
+
     public async Task<IReadOnlyDictionary<Guid, long>> GetVersionsAsync(
         IReadOnlyCollection<Guid> tenantIds,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         var requestedTenantIds = tenantIds.Distinct().ToArray();
         if (requestedTenantIds.Length == 0)
