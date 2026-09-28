@@ -558,12 +558,8 @@ async function run() {
     console.log(
       "[testing-lab-browser-e2e] anonymous directory and event detail",
     );
-    await visit(page, "/testing-lab", "public Testing Lab landing");
-    await waitForText(page, "Game Testing Lab");
-    await page
-      .getByRole("link", { name: "Browse Events", exact: true })
-      .click();
-    await page.waitForURL(/\/testing-lab\/events/);
+    await visit(page, "/testing-lab", "public Testing Lab directory");
+    await waitForText(page, "Test. Play. Earn.");
     await waitForText(page, fixture.event.name);
     await assertNoViewportOverflow(page, "public Testing Lab directory");
     await page.screenshot({
