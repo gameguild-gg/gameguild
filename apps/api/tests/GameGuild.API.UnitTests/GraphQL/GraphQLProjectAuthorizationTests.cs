@@ -1,9 +1,13 @@
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using FluentAssertions;
+using GameGuild.API.Projects;
+using GameGuild.Compliance.Audit;
+using GameGuild.Identity.Context.Actors;
 using GameGuild.Identity.Authorization;
 using GameGuild.Projects;
 using HotChocolate;
@@ -16,6 +20,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Moq;
 
 namespace GameGuild.API.UnitTests.GraphQL;
 
@@ -26,7 +31,8 @@ public sealed class GraphQLProjectAuthorizationTests
     {
         var authorization = new GraphQLProjectAuthorizationFake();
         var counters = new GraphQLProjectAuthorizationCounters();
-        await using var app = await CreateApplicationAsync(authorization, counters);
+        var auditSink = new GraphQLProjectAuthorizationAuditSinkFake();
+        await using var app = await CreateApplicationAsync(authorization, counters, auditSink);
         using var client = app.GetTestClient();
 
         using var request = CreateRequest("{ guarded(projectId: \"b659b7bf-6281-42e6-a7ef-23d296cff5dd\") }");
@@ -43,6 +49,81 @@ public sealed class GraphQLProjectAuthorizationTests
         body.Should().NotContain("b659b7bf-6281-42e6-a7ef-23d296cff5dd");
         authorization.CheckCount.Should().Be(1);
         counters.ResolverCount.Should().Be(0);
+        auditSink.Denials.Should().ContainSingle().Which.Should().BeEquivalentTo(
+            new ProjectGraphQLAuthorizationDenial(
+                Guid.Parse("4b50fdd6-2e85-42bb-a9fa-27f6cb7e97c6"),
+                Guid.Parse("7b37d70c-6ecd-4eb2-9f21-c08fc9563e85"),
+                Guid.Parse("b659b7bf-6281-42e6-a7ef-23d296cff5dd"),
+                "guarded",
+                [PermissionType.Read.ToString()],
+                "permission_denied"));
+    }
+
+    [Fact]
+    public async Task PermissionDirective_StillDeniesWhenAuditSinkFails()
+    {
+        var auditSink = new GraphQLProjectAuthorizationAuditSinkFake
+        {
+            ErrorToThrow = new InvalidOperationException("sensitive audit storage details"),
+        };
+        var counters = new GraphQLProjectAuthorizationCounters();
+        await using var app = await CreateApplicationAsync(
+            new GraphQLProjectAuthorizationFake(),
+            counters,
+            auditSink);
+        using var client = app.GetTestClient();
+
+        using var request = CreateRequest(
+            "{ guarded(projectId: \"b659b7bf-6281-42e6-a7ef-23d296cff5dd\") }");
+        using var response = await client.SendAsync(request);
+        var body = await response.Content.ReadAsStringAsync();
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK, body);
+        using var document = JsonDocument.Parse(body);
+        document.RootElement.GetProperty("data").GetProperty("guarded").ValueKind
+            .Should().Be(JsonValueKind.Null);
+        var error = document.RootElement.GetProperty("errors").EnumerateArray().Single();
+        error.GetProperty("extensions").GetProperty("code").GetString().Should().Be("AUTHORIZATION_DENIED");
+        body.Should().NotContain("sensitive audit storage details");
+        counters.ResolverCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task AuditSink_MapsActorTenantProjectAndPolicyDetailsToTheDurableAuditRecord()
+    {
+        CreateAuditLogRequest? recordedRequest = null;
+        var auditService = new Mock<IAuditService>();
+        auditService
+            .Setup(service => service.LogAsync(It.IsAny<CreateAuditLogRequest>()))
+            .Callback<CreateAuditLogRequest>(request => recordedRequest = request)
+            .Returns(Task.CompletedTask);
+        var sink = new ProjectGraphQLAuthorizationAuditSink(auditService.Object);
+
+        await sink.RecordDeniedAsync(
+            new ProjectGraphQLAuthorizationDenial(
+                Guid.Parse("4b50fdd6-2e85-42bb-a9fa-27f6cb7e97c6"),
+                Guid.Parse("7b37d70c-6ecd-4eb2-9f21-c08fc9563e85"),
+                Guid.Parse("b659b7bf-6281-42e6-a7ef-23d296cff5dd"),
+                "guarded",
+                [PermissionType.Read.ToString(), PermissionType.Edit.ToString()],
+                "permission_denied"),
+            CancellationToken.None);
+
+        recordedRequest.Should().NotBeNull();
+        recordedRequest!.ActionType.Should().Be(AuditActionTypes.PermissionDenied);
+        recordedRequest.ResourceType.Should().Be("Project");
+        recordedRequest.ResourceId.Should().Be("b659b7bf-6281-42e6-a7ef-23d296cff5dd");
+        recordedRequest.UserId.Should().Be(Guid.Parse("4b50fdd6-2e85-42bb-a9fa-27f6cb7e97c6"));
+        recordedRequest.TenantId.Should().Be(Guid.Parse("7b37d70c-6ecd-4eb2-9f21-c08fc9563e85"));
+        recordedRequest.Success.Should().BeFalse();
+        recordedRequest.RiskLevel.Should().Be(AuditRiskLevel.High);
+        recordedRequest.Category.Should().Be(AuditCategory.Permission);
+        using var metadataDocument = JsonDocument.Parse(JsonSerializer.Serialize(recordedRequest.Metadata));
+        var metadata = metadataDocument.RootElement;
+        metadata.GetProperty("FieldName").GetString().Should().Be("guarded");
+        metadata.GetProperty("RequiredPermissions").EnumerateArray().Select(item => item.GetString())
+            .Should().Equal("Read", "Edit");
+        metadata.GetProperty("Reason").GetString().Should().Be("permission_denied");
     }
 
     [Fact]
@@ -78,7 +159,8 @@ public sealed class GraphQLProjectAuthorizationTests
         var projectId = Guid.Parse("b659b7bf-6281-42e6-a7ef-23d296cff5dd");
         var authorization = new GraphQLProjectAuthorizationFake((projectId, PermissionType.Read));
         var counters = new GraphQLProjectAuthorizationCounters();
-        await using var app = await CreateApplicationAsync(authorization, counters);
+        var auditSink = new GraphQLProjectAuthorizationAuditSinkFake();
+        await using var app = await CreateApplicationAsync(authorization, counters, auditSink);
         using var client = app.GetTestClient();
 
         using var request = CreateRequest(
@@ -93,6 +175,7 @@ public sealed class GraphQLProjectAuthorizationTests
         document.RootElement.GetProperty("data").GetProperty("second").GetString().Should().Be("allowed");
         authorization.CheckCount.Should().Be(1);
         counters.ResolverCount.Should().Be(2);
+        auditSink.Denials.Should().BeEmpty();
     }
 
     [Fact]
@@ -212,7 +295,8 @@ public sealed class GraphQLProjectAuthorizationTests
 
     private static async Task<WebApplication> CreateApplicationAsync(
         GraphQLProjectAuthorizationFake authorization,
-        GraphQLProjectAuthorizationCounters counters)
+        GraphQLProjectAuthorizationCounters counters,
+        GraphQLProjectAuthorizationAuditSinkFake? auditSink = null)
     {
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.UseTestServer();
@@ -221,6 +305,9 @@ public sealed class GraphQLProjectAuthorizationTests
         builder.Services.AddAuthorization();
         builder.Services.AddSingleton<IProjectAuthorizationService>(authorization);
         builder.Services.AddSingleton(counters);
+        builder.Services.AddSingleton<IActorContextAccessor>(new GraphQLTestActorContextAccessor());
+        builder.Services.AddSingleton<IProjectGraphQLAuthorizationAuditSink>(
+            auditSink ?? new GraphQLProjectAuthorizationAuditSinkFake());
         builder.Services.AddGraphQLServer()
             .AddAuthorization()
             .AddDirectiveType<ProjectAuthorizationDirectiveType>()
@@ -233,6 +320,46 @@ public sealed class GraphQLProjectAuthorizationTests
         app.MapGraphQL("/graphql").RequireAuthorization();
         await app.StartAsync();
         return app;
+    }
+
+    private sealed class GraphQLTestActorContextAccessor : IActorContextAccessor
+    {
+        public ActorContext ActorContext { get; } = GameGuild.Identity.Context.Actors.ActorContext.Anonymous with
+        {
+            SubjectId = "4b50fdd6-2e85-42bb-a9fa-27f6cb7e97c6",
+            TenantId = Guid.Parse("7b37d70c-6ecd-4eb2-9f21-c08fc9563e85"),
+        };
+
+        public void SetActorContext(ActorContext context) => throw new NotSupportedException();
+
+        public void ClearActorContext() => throw new NotSupportedException();
+    }
+
+    private sealed class GraphQLProjectAuthorizationAuditSinkFake : IProjectGraphQLAuthorizationAuditSink
+    {
+        private readonly ConcurrentQueue<ProjectGraphQLAuthorizationDenial> _denials = new();
+
+        public Exception? ErrorToThrow { get; init; }
+
+        public IReadOnlyCollection<ProjectGraphQLAuthorizationDenial> Denials => _denials.ToArray();
+
+        public Task RecordDeniedAsync(
+            ProjectGraphQLAuthorizationDenial denial,
+            CancellationToken cancellationToken)
+        {
+            if (ErrorToThrow is { } exception)
+            {
+                return Task.FromException(exception);
+            }
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return Task.FromCanceled(cancellationToken);
+            }
+
+            _denials.Enqueue(denial);
+            return Task.CompletedTask;
+        }
     }
 
     private sealed class GraphQLTestAuthenticationHandler(

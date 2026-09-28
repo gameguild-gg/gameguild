@@ -45,6 +45,12 @@ input. Repeated checks for the same project and permission share an execution-re
 cache. Authorization failures return a generic GraphQL error with a stable error code;
 the middleware logs denial and evaluation failures without returning resource details.
 
+Denied project GraphQL authorization checks are also sent to the compliance audit service.
+The audit record includes the actor, tenant, project, schema field, required permissions,
+and a stable reason code. It is stored as a high-risk permission denial. If audit storage
+fails, the denial remains in force and the resolver is not invoked; the storage failure is
+logged without adding internal details to the GraphQL response.
+
 Use `[RequireGraphQLProjectPermission]` on resolvers that need DAC enforcement. Root
 query authorization does not replace resource checks: query handlers must continue to
 apply their normal tenant and project access filters.
@@ -53,8 +59,8 @@ apply their normal tenant and project access filters.
 
 This is an initial framework slice, not completion of issue #335. The remaining work
 includes permission-aware introspection and schema filtering, dynamic field masking,
-field permission inheritance for additional entity types, durable authorization-denial
-audit events, and broader resource-level integration coverage. Schema versioning by
+field permission inheritance for additional entity types, and broader resource-level
+integration coverage. Schema versioning by
 permission level and testing/debugging utilities also remain open. Keep the issue open
 until those criteria have code, tests, and operational evidence.
 

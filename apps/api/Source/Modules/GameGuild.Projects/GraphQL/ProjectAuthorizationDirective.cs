@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Reflection;
+using GameGuild.Identity.Context.Actors;
 using GameGuild.Identity.Authorization;
 using HotChocolate;
 using HotChocolate.Resolvers;
@@ -169,7 +170,6 @@ public sealed class RequireGraphQLProjectPermissionAttribute : ObjectFieldDescri
         }
 
         var permissionNames = _permissions.Select(permission => permission.ToString()).ToArray();
-        var fieldName = member.Name;
         descriptor.Directive(new ProjectAuthorizationDirective
         {
             Permissions = permissionNames,
@@ -183,21 +183,36 @@ public sealed class RequireGraphQLProjectPermissionAttribute : ObjectFieldDescri
         descriptor.Use(next => async resolverContext =>
         {
             var logger = resolverContext.Service<ILogger<RequireGraphQLProjectPermissionAttribute>>();
+            var fieldName = resolverContext.Selection.Field.Name;
             var projectId = TryResolveProjectId(
                 resolverContext,
                 ResourceIdArgumentName,
                 ResourceIdParentPropertyName);
+            var requiredPermissions = TryResolveRequiredPermissions(resolverContext);
             if (projectId is null || projectId == Guid.Empty)
             {
+                await RecordDenialAsync(
+                    resolverContext,
+                    logger,
+                    fieldName,
+                    projectId,
+                    requiredPermissions ?? _permissions,
+                    "resource_id_unavailable").ConfigureAwait(false);
                 logger.LogWarning(
                     "GraphQL project authorization denied for field {FieldName} because its resource ID was unavailable.",
                     fieldName);
                 throw CreateAuthorizationError();
             }
 
-            var requiredPermissions = TryResolveRequiredPermissions(resolverContext);
             if (requiredPermissions is null)
             {
+                await RecordDenialAsync(
+                    resolverContext,
+                    logger,
+                    fieldName,
+                    projectId,
+                    _permissions,
+                    "permission_condition_unavailable").ConfigureAwait(false);
                 logger.LogWarning(
                     "GraphQL project authorization denied for field {FieldName} because its conditional permission input was unavailable.",
                     fieldName);
@@ -221,6 +236,13 @@ public sealed class RequireGraphQLProjectPermissionAttribute : ObjectFieldDescri
             }
             catch (Exception exception)
             {
+                await RecordDenialAsync(
+                    resolverContext,
+                    logger,
+                    fieldName,
+                    projectId,
+                    requiredPermissions,
+                    "authorization_evaluation_failed").ConfigureAwait(false);
                 logger.LogError(
                     exception,
                     "GraphQL project authorization could not be evaluated for field {FieldName} and resource {ProjectId}.",
@@ -235,6 +257,13 @@ public sealed class RequireGraphQLProjectPermissionAttribute : ObjectFieldDescri
 
             if (!allowed)
             {
+                await RecordDenialAsync(
+                    resolverContext,
+                    logger,
+                    fieldName,
+                    projectId,
+                    requiredPermissions,
+                    "permission_denied").ConfigureAwait(false);
                 logger.LogWarning(
                     "GraphQL project authorization denied for field {FieldName} and resource {ProjectId}.",
                     fieldName,
@@ -244,6 +273,40 @@ public sealed class RequireGraphQLProjectPermissionAttribute : ObjectFieldDescri
 
             await next(resolverContext).ConfigureAwait(false);
         });
+    }
+
+    private static async Task RecordDenialAsync(
+        IResolverContext resolverContext,
+        ILogger logger,
+        string fieldName,
+        Guid? projectId,
+        IReadOnlyCollection<PermissionType> requiredPermissions,
+        string reason)
+    {
+        try
+        {
+            var actor = resolverContext.Service<IActorContextAccessor>().ActorContext;
+            await resolverContext.Service<IProjectGraphQLAuthorizationAuditSink>().RecordDeniedAsync(
+                new ProjectGraphQLAuthorizationDenial(
+                    actor.SubjectIdAsGuid,
+                    actor.TenantId,
+                    projectId,
+                    fieldName,
+                    requiredPermissions.Select(permission => permission.ToString()).ToArray(),
+                    reason),
+                resolverContext.RequestAborted).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (resolverContext.RequestAborted.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(
+                exception,
+                "Failed to record GraphQL project authorization denial for field {FieldName}.",
+                fieldName);
+        }
     }
 
     private async Task<bool> EvaluateAsync(

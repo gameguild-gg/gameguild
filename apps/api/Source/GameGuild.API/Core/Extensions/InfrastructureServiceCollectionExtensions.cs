@@ -9,6 +9,7 @@ using GameGuild.Configuration.PresentationLayer.RequestContext;
 using GameGuild.Configuration.PresentationLayer.ResponseCompression;
 using GameGuild.Configuration.PresentationLayer.SignalR;
 using GameGuild.API.Database;
+using GameGuild.API.Projects;
 using GameGuild.Features;
 using GameGuild.Projects;
 using HotChocolate.Authorization;
@@ -237,6 +238,7 @@ public static class InfrastructureServiceCollectionExtensions
         }
 
         services.AddSingleton(options);
+        services.TryAddScoped<IProjectGraphQLAuthorizationAuditSink, ProjectGraphQLAuthorizationAuditSink>();
         services.AddGraphQLServer()
             .AddAuthorization()
             .AddDirectiveType<ProjectAuthorizationDirectiveType>()
