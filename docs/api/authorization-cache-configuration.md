@@ -48,6 +48,13 @@ fails. Publish failures are logged, and old cache entries expire through their
 configured TTLs. Pub/Sub provides prompt local cleanup. A singleton per-process key index tracks L1 entries from cache services and request scopes so received events can evict the actual local entries.
 Wildcard matching scans this in-memory index; the implementation does not issue Redis key scans for deletion.
 
+ACL keys also include a shared global security version stored under the reserved
+`Guid.Empty` version scope. Global role assignment, removal, update, and deletion
+advance this version and publish a global invalidation event. This makes prior
+ACL keys unreachable across tenants even when Pub/Sub is unavailable; received
+events also clear tracked ACL entries from the local L1 cache.
+The tenant and global versions are read together in one database query.
+
 Bulk invalidation accepts 1–500 typed targets (user, resource, policy, or role/group
 dependency), advances the tenant version once, evicts matching local L1 entries,
 and publishes one versioned Redis event. ACL grant and revoke operations publish

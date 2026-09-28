@@ -7,6 +7,16 @@ namespace GameGuild.Identity.Authorization;
 public sealed class DatabaseTenantSecurityVersionStore(ITenantSecurityVersionRepository repository) : ITenantSecurityVersionStore
 {
     /// <inheritdoc />
+    public async Task<(long TenantVersion, long GlobalVersion)> GetTenantAndGlobalVersionsAsync(
+        Guid tenantId,
+        CancellationToken cancellationToken = default)
+    {
+        var scopes = tenantId == Guid.Empty ? new[] { Guid.Empty } : new[] { tenantId, Guid.Empty };
+        var versions = await repository.GetVersionsAsync(scopes, cancellationToken).ConfigureAwait(false);
+        return (versions.GetValueOrDefault(tenantId), versions.GetValueOrDefault(Guid.Empty));
+    }
+
+    /// <inheritdoc />
     public async Task<long> GetVersionAsync(string tenantId, CancellationToken cancellationToken = default)
     {
         if (!Guid.TryParse(tenantId, out var tenantGuid))

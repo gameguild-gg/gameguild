@@ -13,6 +13,24 @@ public interface ITenantSecurityVersionRepository
     /// <returns>The security version entity, or null if not found.</returns>
     Task<TenantSecurityVersion?> GetByTenantIdAsync(Guid tenantId, CancellationToken cancellationToken = default);
 
+    /// <summary>Reads existing versions for several tenant scopes in one query.</summary>
+    async Task<IReadOnlyDictionary<Guid, long>> GetVersionsAsync(
+        IReadOnlyCollection<Guid> tenantIds,
+        CancellationToken cancellationToken = default)
+    {
+        var versions = new Dictionary<Guid, long>();
+        foreach (var tenantId in tenantIds.Distinct())
+        {
+            var version = await GetByTenantIdAsync(tenantId, cancellationToken).ConfigureAwait(false);
+            if (version is not null)
+            {
+                versions[tenantId] = version.SecurityVersion;
+            }
+        }
+
+        return versions;
+    }
+
     /// <summary>
     ///     Gets or creates a security version record for a tenant.
     /// </summary>

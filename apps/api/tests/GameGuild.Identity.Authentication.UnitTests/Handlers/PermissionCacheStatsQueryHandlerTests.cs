@@ -37,8 +37,8 @@ public sealed class PermissionCacheStatsQueryHandlerTests
             new MemoryCache(new MemoryCacheOptions()),
             metrics.Object);
         tracker.Track($"perm:{tenantId}:{firstUserId}:courses:read", "permission");
-        tracker.Track($"acl:{tenantId}:{firstUserId}:Document:doc-1:tv0:uv0", "acl");
-        tracker.Track($"acl:subj:{tenantId}:{secondUserId}:role-id:group-id:Document:doc-2:tv0:uv0", "acl");
+        tracker.Track($"acl:{tenantId}:{firstUserId}:Document:doc-1:tv0:uv0:gv0", "acl");
+        tracker.Track($"acl:subj:{tenantId}:{secondUserId}:role-id:group-id:Document:doc-2:tv0:uv0:gv0", "acl");
         tracker.Track($"policy:course-editor|{tenantId}|v0", "policy");
 
         var handler = new GetPermissionCacheStatsQueryHandler(metrics.Object, tracker);

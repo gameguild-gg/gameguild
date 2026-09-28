@@ -362,9 +362,14 @@ internal static class RolePermissionCacheInvalidation
         Guid? userId,
         CancellationToken cancellationToken)
     {
-        if (cacheInvalidationService is null || role.TenantId is not { } tenantId)
+        if (cacheInvalidationService is null)
         {
             return Task.CompletedTask;
+        }
+
+        if (role.TenantId is not { } tenantId)
+        {
+            return cacheInvalidationService.InvalidateGlobalAsync(cancellationToken);
         }
 
         var targets = userId.HasValue

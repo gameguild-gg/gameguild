@@ -2416,9 +2416,10 @@ public sealed class AuthorizationCoverageCompletionTests
                 "Document",
                 "doc-1",
                 1L,
-                1L)
+                1L,
+                0L)
             .Should().Contain("anon:nr:ng");
-        InvokePrivate<object>(cachedAcl, "CacheAccessLevel", $"acl:{cacheTenantId}:{Guid.NewGuid()}:Document:doc-1:tv1:uv1", cacheTenantId.ToString(), AccessLevel.Read, false);
+        InvokePrivate<object>(cachedAcl, "CacheAccessLevel", $"acl:{cacheTenantId}:{Guid.NewGuid()}:Document:doc-1:tv1:uv1:gv1", cacheTenantId.ToString(), AccessLevel.Read, false);
         cachedAcl.InvalidateTenant(cacheTenantId.ToString());
     }
 
@@ -2622,8 +2623,8 @@ public sealed class AuthorizationCoverageCompletionTests
         var aclUserId = Guid.NewGuid();
         aclKeys[aclTenantId.ToString()] =
         [
-            $"acl:{aclTenantId}:{aclUserId}:Document:doc-1:tv1:uv1",
-            $"acl:{aclTenantId}:subject:Document:doc-1:tv1:uv1"
+            $"acl:{aclTenantId}:{aclUserId}:Document:doc-1:tv1:uv1:gv1",
+            $"acl:{aclTenantId}:subject:Document:doc-1:tv1:uv1:gv1"
         ];
         aclWithMetrics.InvalidateTenant(aclTenantId.ToString());
         aclMetrics.Verify(m => m.RecordEviction(CacheLevel.L1, "acl"), Times.Exactly(2));
@@ -2641,11 +2642,11 @@ public sealed class AuthorizationCoverageCompletionTests
             .GetValue(aclWithoutMetrics)!;
         aclNullMetricKeys[aclTenantId.ToString()] =
         [
-            $"acl:{aclTenantId}:{aclUserId}:Document:doc-1:tv1:uv1",
-            $"acl:{aclTenantId}:subject:Document:doc-1:tv1:uv1"
+            $"acl:{aclTenantId}:{aclUserId}:Document:doc-1:tv1:uv1:gv1",
+            $"acl:{aclTenantId}:subject:Document:doc-1:tv1:uv1:gv1"
         ];
         InvokePrivate<object>(aclWithoutMetrics, "InvalidatePrincipalResourceCache", AclPrincipalType.User, aclUserId, aclTenantId, "Document", "doc-1");
-        aclNullMetricKeys[aclTenantId.ToString()] = [$"acl:{aclTenantId}:{aclUserId}:Document:doc-1:tv1:uv1"];
+        aclNullMetricKeys[aclTenantId.ToString()] = [$"acl:{aclTenantId}:{aclUserId}:Document:doc-1:tv1:uv1:gv1"];
         InvokePrivate<object>(aclWithoutMetrics, "InvalidateUserResourceCache", aclUserId, aclTenantId, "Document", "doc-1");
 
         var policyMetrics = new Mock<ICacheMetricsService>();
