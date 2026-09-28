@@ -69,11 +69,20 @@ The hidden permission administration controller exposes
 scope. The statistics response reports process-local L1 entry counts, distinct
 users represented by those keys, and the recorded L1/L2 hits, misses, evictions,
 and per-cache-type counts. It does not aggregate across instances. The legacy
-latency field in this statistics response remains empty. OpenTelemetry exports
-`authorization_cache_lookup_duration` as a millisecond histogram tagged by
-`cache_type` for L1/L2/miss cache lookup time. It measures the cache layer only;
-it does not include the authoritative database lookup a caller performs after a
-miss.
+latency field in this statistics response remains empty.
+
+Set `OpenTelemetry:Enabled` to `true` to export the authorization cache meter
+alongside traces. It uses the configured console exporter and OTLP endpoint and
+includes hit, miss, eviction, and lookup-duration instruments. Give each API
+replica a distinct `OpenTelemetry:ServiceInstanceId` (for example, its pod ID);
+when omitted, the API generates a process-unique instance ID. Aggregate the
+counters across replicas in the collector or backend. The Prometheus rules below
+assume the default translation that appends `_total` to counters and expands the
+histogram's `ms` unit to `milliseconds`. The lookup histogram measures only cache
+reads and does not include the authoritative database lookup after a miss.
+Prometheus alert examples for high miss ratio, p95 lookup latency, and capacity
+evictions are in [authorization-cache-alerts.yml](./authorization-cache-alerts.yml).
+The thresholds are starting points and should be tuned to observed workload.
 
 System administrators can prewarm up to 500 selected ACL decisions with
 `POST /v{version}/permissions/cache:warm`. Each item names a tenant resource and
@@ -94,11 +103,13 @@ DI registration, version increments, serialized event payloads, subscriber
 dispatch and retry, Redis publish failure handling, and cache availability when
 L2 reads, writes, or removals fail. The Redis integration project contains
 focused cases for stale-ACL protection, Pub/Sub dispatch, role/group dependency
-invalidation, and subscriber recovery after a Redis restart. Those integration
-cases require Docker and were not executable in environments without a running
-Docker daemon.
+invalidation, and subscriber recovery after a Redis restart. The four focused
+Redis integration tests passed locally with Docker enabled. API Verify now
+selects the integration-test project when its files change.
 
 Full network fault injection during Redis reconnects, inherited hierarchy
-invalidation, automatic popularity-based cache warming, cross-instance metric
-aggregation, production-representative performance/load measurements, and
-operational alert thresholds remain open work.
+invalidation through actual group-definition and membership mutation paths,
+automatic popularity-based cache warming, and production-representative
+database-backed performance/load measurements remain open work. Cross-instance
+metric export and example alert thresholds are implemented but still need CI
+and deployment-level validation.
