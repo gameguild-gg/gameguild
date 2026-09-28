@@ -159,7 +159,10 @@ export default async function TestingLabAccessPage() {
 
                   {!role.isSystemRole ? (
                     <div className="flex items-center gap-2 lg:justify-end">
-                      <EditTestingLabRoleDialog role={role} />
+                      <EditTestingLabRoleDialog
+                        key={`testing-lab-role:${JSON.stringify(role)}`}
+                        role={role}
+                      />
                       <TestingLabConfirmAction
                         action={deleteTestingLabRole}
                         fields={{ idOrName: role.id ?? role.name ?? "" }}

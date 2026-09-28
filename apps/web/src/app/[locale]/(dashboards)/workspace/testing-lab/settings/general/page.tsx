@@ -39,6 +39,7 @@ const operatingControls = [
 export default async function TestingLabSettingsPage() {
   const result = await getTestingLabSettings();
   const settings = result.settings;
+  const settingsRevision = JSON.stringify(settings ?? null);
   const enabledByName = {
     allowPublicSignups: settings?.allowPublicSignups,
     requireApproval: settings?.requireApproval,
@@ -62,7 +63,10 @@ export default async function TestingLabSettingsPage() {
         className="max-w-5xl space-y-8"
         actionsClassName="sticky bottom-0 z-10 flex flex-wrap justify-between gap-3 border-t bg-background/95 py-4 backdrop-blur"
       >
-        <section className="grid gap-5 border-b pb-8 lg:grid-cols-[14rem_minmax(0,1fr)]">
+        <section
+          key={`identity:${settingsRevision}`}
+          className="grid gap-5 border-b pb-8 lg:grid-cols-[14rem_minmax(0,1fr)]"
+        >
           <div>
             <h2 className="font-semibold">Identity</h2>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -103,7 +107,10 @@ export default async function TestingLabSettingsPage() {
           </div>
         </section>
 
-        <section className="grid gap-5 border-b pb-8 lg:grid-cols-[14rem_minmax(0,1fr)]">
+        <section
+          key={`schedule:${settingsRevision}`}
+          className="grid gap-5 border-b pb-8 lg:grid-cols-[14rem_minmax(0,1fr)]"
+        >
           <div>
             <h2 className="font-semibold">Scheduling defaults</h2>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -156,7 +163,10 @@ export default async function TestingLabSettingsPage() {
           </div>
         </section>
 
-        <section className="grid gap-5 lg:grid-cols-[14rem_minmax(0,1fr)]">
+        <section
+          key={`participation:${settingsRevision}`}
+          className="grid gap-5 lg:grid-cols-[14rem_minmax(0,1fr)]"
+        >
           <div>
             <h2 className="font-semibold">Participation policy</h2>
             <p className="mt-1 text-sm text-muted-foreground">

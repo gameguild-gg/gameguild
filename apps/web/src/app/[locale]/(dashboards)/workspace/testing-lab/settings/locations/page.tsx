@@ -88,7 +88,10 @@ function LocationActions({ location }: { location: TestingLocationSummary }) {
 
   return (
     <div className="flex items-center justify-end gap-2">
-      <EditTestingLocationDialog location={location} />
+      <EditTestingLocationDialog
+        key={`testing-lab-location:${JSON.stringify(location)}`}
+        location={location}
+      />
       <TestingLabConfirmAction
         action={deleteTestingLabLocation}
         fields={{ locationId: location.id }}
@@ -152,6 +155,7 @@ export default async function TestingLabLocationsPage({
       </dl>
 
       <form
+        key={`location-filters:${JSON.stringify(params)}`}
         method="get"
         className="grid gap-3 rounded-md border p-3 md:grid-cols-[minmax(15rem,1fr)_12rem_12rem_auto_auto]"
       >
