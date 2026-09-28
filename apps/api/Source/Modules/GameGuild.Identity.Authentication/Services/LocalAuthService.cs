@@ -473,7 +473,10 @@ public class LocalAuthService(
             cancellationToken: cancellationToken).ConfigureAwait(false);
 
         var compromisedUser = await userRepository.GetByIdAsync(userId, cancellationToken).ConfigureAwait(false);
-        if (compromisedUser is null) return;
+        if (compromisedUser is null)
+        {
+            return;
+        }
 
         compromisedUser.IncrementTokenVersion();
         await userRepository.UpdateAsync(compromisedUser, cancellationToken).ConfigureAwait(false);

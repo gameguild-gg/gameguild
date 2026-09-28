@@ -47,10 +47,14 @@ public class RefreshTokenRepository(IApplicationDbContext context) : IRefreshTok
         string expectedTokenHash,
         string replacementTokenHash,
         DateTime revokedAt,
-        string? revokedByIp = null,
-        CancellationToken cancellationToken = default)
+        string? revokedByIp,
+        CancellationToken cancellationToken)
     {
-        if (tokenId == Guid.Empty) throw new ArgumentException("Refresh token ID is required.", nameof(tokenId));
+        if (tokenId == Guid.Empty)
+        {
+            throw new ArgumentException("Refresh token ID is required.", nameof(tokenId));
+        }
+
         ArgumentException.ThrowIfNullOrWhiteSpace(expectedTokenHash);
         ArgumentException.ThrowIfNullOrWhiteSpace(replacementTokenHash);
 

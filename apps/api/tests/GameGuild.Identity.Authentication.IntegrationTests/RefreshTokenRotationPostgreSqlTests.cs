@@ -66,13 +66,15 @@ public sealed class RefreshTokenRotationPostgreSqlTests : IAsyncLifetime
                 "expected-refresh-hash",
                 "replacement-hash-a",
                 revokedAt,
-                "192.0.2.10"),
+                "192.0.2.10",
+                CancellationToken.None),
             secondRepository.TryRevokeForRotationAsync(
                 tokenId,
                 "expected-refresh-hash",
                 "replacement-hash-b",
                 revokedAt,
-                "192.0.2.11"));
+                "192.0.2.11",
+                CancellationToken.None));
 
         Assert.Single(results, claimed => claimed);
         Assert.Single(results, claimed => !claimed);
@@ -131,7 +133,8 @@ public sealed class RefreshTokenRotationPostgreSqlTests : IAsyncLifetime
             "different-hash",
             "replacement-hash",
             now,
-            "192.0.2.10");
+            "192.0.2.10",
+            CancellationToken.None);
 
         Assert.False(claimed);
         var persistedToken = await context.Set<RefreshToken>().AsNoTracking().SingleAsync(token => token.Id == tokenId);

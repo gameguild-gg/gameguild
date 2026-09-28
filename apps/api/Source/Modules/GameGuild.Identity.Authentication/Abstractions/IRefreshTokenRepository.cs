@@ -40,8 +40,8 @@ public interface IRefreshTokenRepository
         string expectedTokenHash,
         string replacementTokenHash,
         DateTime revokedAt,
-        string? revokedByIp = null,
-        CancellationToken cancellationToken = default);
+        string? revokedByIp,
+        CancellationToken cancellationToken);
 
     /// <summary>
     ///     Revokes a specific refresh token.
