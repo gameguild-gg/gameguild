@@ -18,7 +18,10 @@ public sealed class SemanticApiVersionParser : ApiVersionParser
 
     public override ApiVersion Parse(ReadOnlySpan<char> text)
     {
-        if (TryParseSemanticVersion(text, out var semanticVersion)) return semanticVersion;
+        if (TryParseSemanticVersion(text, out var semanticVersion))
+        {
+            return semanticVersion;
+        }
 
         return base.Parse(text);
     }
@@ -62,12 +65,18 @@ public sealed class SemanticApiVersionParser : ApiVersionParser
 
     private static bool HasValidPrereleaseIdentifiers(string? prerelease)
     {
-        if (prerelease is null) return true;
+        if (prerelease is null)
+        {
+            return true;
+        }
 
         foreach (var identifier in prerelease.Split('.'))
         {
             var isNumeric = identifier.All(char.IsAsciiDigit);
-            if (isNumeric && identifier.Length > 1 && identifier[0] == '0') return false;
+            if (isNumeric && identifier.Length > 1 && identifier[0] == '0')
+            {
+                return false;
+            }
         }
 
         return true;
