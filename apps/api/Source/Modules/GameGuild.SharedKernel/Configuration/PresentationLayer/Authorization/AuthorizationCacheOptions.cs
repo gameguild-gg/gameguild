@@ -71,7 +71,7 @@ public sealed class AuthorizationCacheOptions : BaseOptions
 
     /// <summary>
     ///     Time-to-live in seconds for L2 (distributed) cache entries.
-    ///     Should be longer than L1 TTL to reduce Redis calls.
+    ///     Should cover the longest L1 cache TTL to reduce Redis calls.
     /// </summary>
     public int DistributedCacheTtlSeconds { get; set; } = 600;
 
@@ -117,6 +117,9 @@ public sealed class AuthorizationCacheOptions : BaseOptions
         
         if (AccessControlListTtlSeconds < 0)
             throw new InvalidOperationException("AccessControlListTtlSeconds cannot be negative.");
+
+        if (RulesetTtlSeconds < 0)
+            throw new InvalidOperationException("RulesetTtlSeconds cannot be negative.");
         
         if (MaxPolicyCacheSize <= 0)
             throw new InvalidOperationException("MaxPolicyCacheSize must be positive.");
@@ -127,8 +130,11 @@ public sealed class AuthorizationCacheOptions : BaseOptions
         if (UseDistributedCache && string.IsNullOrWhiteSpace(RedisConnectionString))
             throw new InvalidOperationException("RedisConnectionString is required when UseDistributedCache is true.");
         
-        if (DistributedCacheTtlSeconds < PolicyTtlSeconds)
-            throw new InvalidOperationException("DistributedCacheTtlSeconds should be >= PolicyTtlSeconds for optimal cache efficiency.");
+        var longestL1TtlSeconds = Math.Max(
+            Math.Max(PolicyTtlSeconds, PermissionTtlSeconds),
+            Math.Max(AccessControlListTtlSeconds, RulesetTtlSeconds));
+        if (DistributedCacheTtlSeconds < longestL1TtlSeconds)
+            throw new InvalidOperationException("DistributedCacheTtlSeconds should be >= the longest L1 cache TTL for optimal cache efficiency.");
     }
 
     /// <summary>

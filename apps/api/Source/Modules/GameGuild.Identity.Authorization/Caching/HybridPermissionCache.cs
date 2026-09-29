@@ -308,7 +308,7 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
 
     private async Task SetAsyncCore<T>(string key, T value, string cacheType, int? ttlSeconds, CancellationToken cancellationToken)
     {
-        var l1Ttl = TimeSpan.FromSeconds(ttlSeconds ?? _options.PermissionTtlSeconds);
+        var l1Ttl = TimeSpan.FromSeconds(ttlSeconds ?? GetL1TtlSeconds(cacheType));
         var l2Ttl = TimeSpan.FromSeconds(_options.DistributedCacheTtlSeconds);
 
         // Set in L1
@@ -375,12 +375,38 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
 
     private void SetL1<T>(string key, T value, string cacheType, TimeSpan? ttl = null)
     {
+        var absoluteTtl = ttl ?? TimeSpan.FromSeconds(GetL1TtlSeconds(cacheType));
         var cacheOptions = new MemoryCacheEntryOptions()
-            .SetAbsoluteExpiration(ttl ?? TimeSpan.FromSeconds(_options.PermissionTtlSeconds))
-            .SetSlidingExpiration(TimeSpan.FromSeconds(_options.PermissionTtlSeconds / 2))
+            .SetAbsoluteExpiration(absoluteTtl)
             .SetSize(1);
+
+        if (absoluteTtl >= TimeSpan.FromSeconds(2))
+        {
+            cacheOptions.SetSlidingExpiration(TimeSpan.FromTicks(absoluteTtl.Ticks / 2));
+        }
 
         _keyTracker.Track(key, cacheType, cacheOptions);
         _l1Cache.Set(key, value, cacheOptions);
+    }
+
+    private int GetL1TtlSeconds(string cacheType)
+    {
+        if (string.Equals(cacheType, "policy", StringComparison.OrdinalIgnoreCase))
+        {
+            return _options.PolicyTtlSeconds;
+        }
+
+        if (string.Equals(cacheType, "acl", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(cacheType, "access-control-list", StringComparison.OrdinalIgnoreCase))
+        {
+            return _options.AccessControlListTtlSeconds;
+        }
+
+        if (string.Equals(cacheType, "ruleset", StringComparison.OrdinalIgnoreCase))
+        {
+            return _options.RulesetTtlSeconds;
+        }
+
+        return _options.PermissionTtlSeconds;
     }
 }

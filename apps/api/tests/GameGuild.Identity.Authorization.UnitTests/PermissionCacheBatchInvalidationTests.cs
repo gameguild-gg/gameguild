@@ -13,6 +13,58 @@ namespace GameGuild.Identity.Authorization.UnitTests;
 public sealed class PermissionCacheBatchInvalidationTests
 {
     [Fact]
+    public async Task CachedAclEntry_ExpiresUsingTheAclSpecificTtl()
+    {
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var tenantVersions = new Mock<ITenantSecurityVersionStore>();
+        tenantVersions.Setup(store => store.GetTenantAndGlobalVersionsAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((1L, 1L));
+        var userVersions = new Mock<IUserSecurityVersionStore>();
+        userVersions.Setup(store => store.GetVersionAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1);
+        var options = new AuthorizationCacheOptions
+        {
+            AccessControlListTtlSeconds = 2,
+            PermissionTtlSeconds = 60,
+            DistributedCacheTtlSeconds = 120
+        };
+        var memoryCache = new MemoryCache(new MemoryCacheOptions());
+        var metrics = Mock.Of<ICacheMetricsService>();
+        var tracker = new PermissionCacheKeyTracker(memoryCache, metrics);
+        var hybridCache = new HybridPermissionCache(
+            memoryCache,
+            Options.Create(options),
+            metrics,
+            NullLogger<HybridPermissionCache>.Instance,
+            keyTracker: tracker);
+        var inner = new Mock<IAccessControlListService>();
+        inner.Setup(service => service.EvaluateAccessAsync(
+                It.IsAny<AclSubject>(), tenantId, "Document", "doc-ttl", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AccessLevel.Read);
+        var service = new CachedAccessControlListService(
+            inner.Object,
+            memoryCache,
+            tenantVersions.Object,
+            userVersions.Object,
+            Options.Create(options),
+            hybridCache,
+            metrics,
+            keyTracker: tracker,
+            invalidationService: null);
+        var subject = AclSubject.ForUser(userId, [], []);
+
+        (await service.EvaluateAccessAsync(subject, tenantId, "Document", "doc-ttl"))
+            .Should().Be(AccessLevel.Read);
+        await Task.Delay(TimeSpan.FromMilliseconds(2_200));
+        (await service.EvaluateAccessAsync(subject, tenantId, "Document", "doc-ttl"))
+            .Should().Be(AccessLevel.Read);
+
+        inner.Verify(service => service.EvaluateAccessAsync(
+            It.IsAny<AclSubject>(), tenantId, "Document", "doc-ttl", It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    [Fact]
     public async Task CachedAclTenantInvalidation_RemovesL1AndL2Entries()
     {
         var tenantId = Guid.NewGuid();
