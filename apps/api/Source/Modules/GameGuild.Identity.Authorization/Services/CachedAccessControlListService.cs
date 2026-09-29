@@ -37,6 +37,7 @@ public sealed class CachedAccessControlListService : IAccessControlListService
     private readonly ICacheMetricsService? _metrics;
     private readonly IPermissionCacheKeyTracker? _keyTracker;
     private readonly ICacheInvalidationService? _invalidationService;
+    private readonly IPermissionCachePopularityTracker? _popularityTracker;
     private readonly AuthorizationCacheOptions _options;
     private readonly ConcurrentDictionary<string, HashSet<string>> _tenantCacheKeys = new();
 
@@ -96,7 +97,8 @@ public sealed class CachedAccessControlListService : IAccessControlListService
         IHybridPermissionCache? hybridCache,
         ICacheMetricsService? metrics,
         IPermissionCacheKeyTracker? keyTracker,
-        ICacheInvalidationService? invalidationService)
+        ICacheInvalidationService? invalidationService,
+        IPermissionCachePopularityTracker? popularityTracker = null)
     {
         _innerService = innerService;
         _l1Cache = cache;
@@ -107,6 +109,7 @@ public sealed class CachedAccessControlListService : IAccessControlListService
         _metrics = metrics;
         _keyTracker = keyTracker;
         _invalidationService = invalidationService;
+        _popularityTracker = popularityTracker;
     }
 
     #region Subject-based operations (preferred)
@@ -119,6 +122,8 @@ public sealed class CachedAccessControlListService : IAccessControlListService
         string resourceId,
         CancellationToken cancellationToken = default)
     {
+        _popularityTracker?.Record(new PermissionCacheWarmupRequest(tenantId, subject, resourceType, resourceId));
+
         // Include the shared global version so global role changes invalidate every tenant's ACL keys.
         var (tenantVersion, globalVersion) = await _tenantVersionStore
             .GetTenantAndGlobalVersionsAsync(tenantId, cancellationToken).ConfigureAwait(false);

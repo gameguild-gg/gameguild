@@ -83,14 +83,28 @@ reads and does not include the authoritative database lookup after a miss.
 Prometheus alert examples for high miss ratio, p95 lookup latency, and capacity
 evictions are in [authorization-cache-alerts.yml](./authorization-cache-alerts.yml).
 The thresholds are starting points and should be tuned to observed workload.
+Cache-operation counters include both request traffic and scheduled warmup lookups.
 
 System administrators can prewarm up to 500 selected ACL decisions with
 `POST /v{version}/permissions/cache:warm`. Each item names a tenant resource and
 either a user with role/group IDs or the anonymous subject. The endpoint uses
 the normal versioned ACL evaluation path and returns only requested, warmed, and
 duplicate counts; it does not return access decisions. This is explicit
-operator-selected prewarming. Automatic popularity discovery and scheduled
-predictive warming are not implemented.
+operator-selected prewarming.
+
+Automatic popularity-based warming is enabled by default for subject-based ACL
+evaluations. Each API process keeps a bounded, process-local frequency window
+(`PopularityTrackingCapacity`, default 5,000 distinct pairs). Every
+`AutomaticWarmupIntervalSeconds` (default 60), it selects up to
+`AutomaticWarmupMaxEntriesPerCycle` (default 50) pairs seen at least
+`AutomaticWarmupMinimumAccessCount` times in that window (default 5). Warmup
+evaluates the selected pairs through the normal versioned ACL path, and those
+warmup evaluations are excluded from popularity counts. If the tracking window
+is full, new distinct pairs are ignored until the next cycle; existing pairs
+continue accumulating. Configure `AutomaticWarmupEnabled` to `false` to disable
+both observation and scheduled work. Each replica ranks its own observations;
+when Redis L2 is enabled, the usual distributed cache remains shared. A failed
+cycle is logged and a later cycle continues.
 
 If an L2 read fails or contains invalid data, the hybrid cache records a warning
 and returns a miss so the calling service can load the authoritative value from
@@ -109,7 +123,6 @@ selects the integration-test project when its files change.
 
 Full network fault injection during Redis reconnects, inherited hierarchy
 invalidation through actual group-definition and membership mutation paths,
-automatic popularity-based cache warming, and production-representative
-database-backed performance/load measurements remain open work. Cross-instance
-metric export and example alert thresholds are implemented but still need CI
-and deployment-level validation.
+and production-representative database-backed performance/load measurements
+remain open work. Cross-instance metric export and example alert thresholds
+are implemented but still need CI and deployment-level validation.
