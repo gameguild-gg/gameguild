@@ -31,6 +31,7 @@ public class LocalAuthServiceTests
     private readonly Mock<ISender> _senderMock = new();
     private readonly Mock<ISessionManagementService> _sessionManagementServiceMock = new();
     private readonly IConfiguration _configuration;
+    private readonly IPasswordHasher _passwordHasher;
     private readonly LocalAuthService _sut;
 
     public LocalAuthServiceTests()
@@ -42,6 +43,7 @@ public class LocalAuthServiceTests
         _configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(configData)
             .Build();
+        _passwordHasher = new PasswordHasher(NullLogger<PasswordHasher>.Instance, _configuration);
 
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Headers.UserAgent = "TestAgent/1.0";
@@ -81,6 +83,7 @@ public class LocalAuthServiceTests
             _refreshTokenHasherMock.Object,
             _configuration,
             _authAttemptServiceMock.Object,
+            _passwordHasher,
             _anomalyDetectionMock.Object,
             _enumerationProtectionMock.Object,
             _httpContextAccessorMock.Object,
@@ -399,6 +402,7 @@ public class LocalAuthServiceTests
             _refreshTokenHasherMock.Object,
             customConfig,
             _authAttemptServiceMock.Object,
+            new PasswordHasher(NullLogger<PasswordHasher>.Instance, customConfig),
             _anomalyDetectionMock.Object,
             _enumerationProtectionMock.Object,
             _httpContextAccessorMock.Object,
@@ -439,6 +443,24 @@ public class LocalAuthServiceTests
         var request = new LocalSignUpRequest { Email = "existing@example.com", Password = "Password1!", Username = "user" };
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.LocalSignUpAsync(request));
+    }
+
+    [Fact]
+    public async Task LocalSignUpAsync_WeakPassword_RejectsBeforeCheckingEmailAvailability()
+    {
+        var request = new LocalSignUpRequest
+        {
+            Email = "weak-password@example.com",
+            Password = "weak",
+            Username = "weakpassword"
+        };
+
+        var exception = await Assert.ThrowsAsync<RequestValidationException>(() => _sut.LocalSignUpAsync(request));
+
+        exception.Errors.Should().Contain(error => error.PropertyName == "Password");
+        _userRepoMock.Verify(
+            repository => repository.ExistsByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]

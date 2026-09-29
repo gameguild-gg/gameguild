@@ -32,6 +32,11 @@ public sealed class AuthenticationOptions : BaseOptions
     public CookieAuthenticationSettings? Cookie { get; set; } = new();
 
     /// <summary>
+    ///     Password requirements for local account registration.
+    /// </summary>
+    public AuthenticationPasswordPolicySettings PasswordPolicy { get; set; } = new();
+
+    /// <summary>
     ///     Header used to submit API keys when the API key scheme is enabled.
     /// </summary>
     public string? ApiKeyHeaderName { get; set; }
@@ -82,6 +87,9 @@ public sealed class AuthenticationOptions : BaseOptions
             (Cookie ?? throw new InvalidOperationException("Cookie authentication settings are required when the cookie scheme is enabled."))
                 .Validate();
         }
+
+        (PasswordPolicy ?? throw new InvalidOperationException("Authentication password policy settings are required."))
+            .Validate();
 
         if (AllowApiKeyInQueryString && !EnableApiKeyAuthentication)
         {

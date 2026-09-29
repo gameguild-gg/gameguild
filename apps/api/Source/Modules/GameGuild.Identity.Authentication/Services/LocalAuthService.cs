@@ -21,6 +21,7 @@ public class LocalAuthService(
     IRefreshTokenHasher refreshTokenHasher,
     IConfiguration configuration,
     IAuthAttemptService authAttemptService,
+    IPasswordHasher passwordHasher,
 #pragma warning disable CS9113 // Parameter is unread - reserved for future use
     IAuthenticationAnomalyDetectionService anomalyDetectionService,
 #pragma warning restore CS9113
@@ -56,7 +57,7 @@ public class LocalAuthService(
             // Verify password if user exists
             if (user != null)
             {
-                var passwordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
+                var passwordValid = user.HasPassword && passwordHasher.VerifyPassword(user.PasswordHash!, request.Password);
 
                 if (passwordValid)
                 {
@@ -206,6 +207,13 @@ public class LocalAuthService(
 
         try
         {
+            var passwordValidation = passwordHasher.ValidatePasswordStrength(request.Password);
+            if (!passwordValidation.IsValid)
+            {
+                throw new RequestValidationException(
+                    passwordValidation.ValidationFailures.Select(failure => new ValidationError("Password", failure)));
+            }
+
             // Check for existing user
             var emailExists = await userRepository.ExistsByEmailAsync(request.Email.ToLowerInvariant(), cancellationToken).ConfigureAwait(false);
 
@@ -217,8 +225,7 @@ public class LocalAuthService(
                 throw new InvalidOperationException("User already exists");
             }
 
-            // Hash password using BCrypt
-            var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+            var passwordHash = passwordHasher.HashPassword(request.Password);
 
             // Create new user using the unified User entity
             var newUser = User.CreateWithPassword(

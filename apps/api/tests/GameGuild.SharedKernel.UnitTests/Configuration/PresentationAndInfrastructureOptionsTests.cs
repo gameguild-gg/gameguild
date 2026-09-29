@@ -294,6 +294,24 @@ public class AuthenticationOptionsTests
 
         act.Should().Throw<InvalidOperationException>().WithMessage("*Cookie authentication*disabled*");
     }
+
+    [Fact]
+    public void Validate_InvalidPasswordPolicy_ShouldThrow()
+    {
+        var options = new AuthenticationOptions
+        {
+            EnableAuthentication = false,
+            PasswordPolicy = new AuthenticationPasswordPolicySettings
+            {
+                MinPasswordLength = 16,
+                MaxPasswordLength = 12
+            }
+        };
+
+        var act = () => options.Validate();
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("*maximum password length*minimum*");
+    }
 }
 
 public class AuthorizationOptionsTests

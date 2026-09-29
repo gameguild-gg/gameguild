@@ -83,6 +83,29 @@ no-cache headers for sensitive routes. The API keeps separate policies for regul
 
 Custom header values are validated before the middleware is configured and must not contain line breaks.
 
+### Authentication Password Policy
+
+Local account registration uses the typed password policy under `PresentationLayer:Authentication:PasswordPolicy`.
+Minimum and maximum lengths are validated at startup. For compatibility, `Authentication:PasswordPolicy` and the
+older top-level `PasswordPolicy` keys remain supported as fallbacks by the password hasher.
+
+```json
+{
+  "PresentationLayer": {
+    "Authentication": {
+      "PasswordPolicy": {
+        "MinPasswordLength": 8,
+        "MaxPasswordLength": 128,
+        "RequireUppercase": true,
+        "RequireLowercase": true,
+        "RequireDigit": true,
+        "RequireSpecialChar": true
+      }
+    }
+  }
+}
+```
+
 ### Optional Cookie Authentication
 
 Cookie authentication is disabled by default and is registered as a named scheme without changing JWT bearer as the
