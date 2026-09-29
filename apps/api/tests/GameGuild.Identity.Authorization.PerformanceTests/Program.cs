@@ -1,3 +1,8 @@
 using BenchmarkDotNet.Running;
 
-BenchmarkSwitcher.FromAssembly(typeof(GameGuild.Identity.Authorization.PerformanceTests.PermissionCacheLookupBenchmarks).Assembly).Run(args);
+BenchmarkSwitcher.FromTypes(
+    [
+        typeof(GameGuild.Identity.Authorization.PerformanceTests.PermissionCacheLookupBenchmarks),
+        typeof(GameGuild.Identity.Authorization.PerformanceTests.PermissionCacheDatabaseLookupBenchmarks)
+    ])
+    .Run(args);
