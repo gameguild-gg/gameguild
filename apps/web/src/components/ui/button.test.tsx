@@ -8,7 +8,7 @@ describe('Button', () => {
     vi.restoreAllMocks();
   });
 
-  it('renders a render-prop link without Base UI native button errors', () => {
+  it('preserves link semantics for render-prop links', () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     render(
@@ -17,7 +17,7 @@ describe('Button', () => {
       </Button>,
     );
 
-    expect(screen.getByRole('button', { name: 'Open projects' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Open projects' })).toHaveAttribute(
       'href',
       '/workspace/projects',
     );
