@@ -84,6 +84,33 @@ describe("BlogEditorWorkspace format lock", () => {
   });
 });
 
+describe("BlogEditorWorkspace slug transform", () => {
+  it("slugifies the URL slug input live like lesson authoring", async () => {
+    const user = userEvent.setup();
+    mocks.changeSlug.mockResolvedValue({
+      success: true,
+      data: { ...post(), slug: "xpto-with-spaces" },
+    });
+    render(
+      <BlogEditorWorkspace
+        post={post()}
+        viewerUserId="user-primary"
+        primaryAuthorHandle="alice"
+        coauthors={[
+          { userId: "user-primary", handle: "alice", displayName: null, isPrimary: true },
+        ]}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "hello" }));
+    const slugInput = screen.getByRole("textbox", { name: "URL slug" });
+    await user.clear(slugInput);
+    await user.type(slugInput, "Xpto With Spaces");
+
+    expect(slugInput).toHaveValue("xpto-with-spaces");
+  });
+});
+
 describe("BlogEditorWorkspace copilot mount", () => {
   it("shows a Copilot tab and renders the copilot panel with the current revision", async () => {
     const user = userEvent.setup();

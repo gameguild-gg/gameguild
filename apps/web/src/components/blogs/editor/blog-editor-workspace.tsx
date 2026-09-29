@@ -21,6 +21,7 @@ import {
 } from "@game-guild/ui/components/tooltip";
 import { Bot, Loader2, PanelRightClose, PanelRightOpen, RotateCcw, Settings2 } from "lucide-react";
 import { changeSlug, reloadLatestPost, updateDraft } from "@/lib/blogs/actions";
+import { normalizeSlug, slugify } from "@/lib/slugify";
 import {
   blogEditorReducer,
   buildAutosavePayload,
@@ -198,7 +199,7 @@ export function BlogEditorWorkspace({
   };
 
   const saveSlug = async () => {
-    const next = slugValue.trim().replace(/^-+|-+$/g, "");
+    const next = normalizeSlug(slugValue);
     if (!next || next === post.slug) {
       setSlugEditing(false);
       setSlugValue(post.slug ?? "");
@@ -325,7 +326,8 @@ export function BlogEditorWorkspace({
                   <Input
                     aria-label="URL slug"
                     value={slugValue}
-                    onChange={(event) => setSlugValue(event.target.value)}
+                    onChange={(event) => setSlugValue(slugify(event.target.value))}
+                    onBlur={() => setSlugValue(normalizeSlug(slugValue))}
                     onKeyDown={(event) => {
                       if (event.key === "Enter") {
                         event.preventDefault();
