@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using GameGuild.Social.Blog.Authoring;
 using GameGuild.Social.Blog.Commands;
 using GameGuild.Social.Blog.Queries;
 using GameGuild.Social.Blog.Services;
@@ -16,6 +17,18 @@ public static class BlogDependencyInjection
         services.AddScoped<IPublicationAnnouncer, PublicationAnnouncerAdapter>();
         services.AddScoped<IBlogPostService, BlogPostService>();
         services.AddScoped<IBlogViewCounterService, BlogViewCounterService>();
+
+        services.AddSingleton<IBlogAuthoringAiRunQueue, BlogAuthoringAiRunQueue>();
+        services.AddScoped<IBlogAuthoringAiService, BlogAuthoringAiService>();
+        services.AddHostedService<BlogAuthoringAiBackgroundService>();
+        services.AddScoped<ICommandHandler<CreateBlogAiRunCommand, BlogAiRunDto>, BlogAiCommandHandler>();
+        services.AddScoped<IRequestHandler<CreateBlogAiRunCommand, BlogAiRunDto>>(sp => sp.GetRequiredService<ICommandHandler<CreateBlogAiRunCommand, BlogAiRunDto>>());
+        services.AddScoped<ICommandHandler<CancelBlogAiRunCommand, BlogAiRunDto>, BlogAiCommandHandler>();
+        services.AddScoped<IRequestHandler<CancelBlogAiRunCommand, BlogAiRunDto>>(sp => sp.GetRequiredService<ICommandHandler<CancelBlogAiRunCommand, BlogAiRunDto>>());
+        services.AddScoped<ICommandHandler<ApplyBlogAiProposalCommand, BlogPostDto>, BlogAiCommandHandler>();
+        services.AddScoped<IRequestHandler<ApplyBlogAiProposalCommand, BlogPostDto>>(sp => sp.GetRequiredService<ICommandHandler<ApplyBlogAiProposalCommand, BlogPostDto>>());
+        services.AddScoped<ICommandHandler<DiscardBlogAiProposalCommand, BlogAiProposalDto>, BlogAiCommandHandler>();
+        services.AddScoped<IRequestHandler<DiscardBlogAiProposalCommand, BlogAiProposalDto>>(sp => sp.GetRequiredService<ICommandHandler<DiscardBlogAiProposalCommand, BlogAiProposalDto>>());
 
         services.AddScoped<ICommandHandler<CreateBlogPostCommand, BlogPost>, CreateBlogPostCommandHandler>();
         services.AddScoped<IRequestHandler<CreateBlogPostCommand, BlogPost>>(sp => sp.GetRequiredService<ICommandHandler<CreateBlogPostCommand, BlogPost>>());
