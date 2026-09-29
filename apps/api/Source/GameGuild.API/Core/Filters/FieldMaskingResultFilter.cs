@@ -32,13 +32,20 @@ public sealed class FieldMaskingResultFilter(
             .OfType<DataMaskingResourceTypeAttribute>()
             .LastOrDefault()
             ?.ResourceType;
-        var resourceType = explicitResourceType ?? GetResourceType(declaredType ?? value.GetType());
+        if (explicitResourceType is null)
+        {
+            await next().ConfigureAwait(false);
+            return;
+        }
+
+        var resourceType = explicitResourceType;
 
         try
         {
             var maskedValue = await maskingService.ApplyAsync(
                     resourceType,
                     value,
+                    declaredType ?? value.GetType(),
                     jsonOptions.Value.JsonSerializerOptions,
                     context.HttpContext.RequestAborted)
                 .ConfigureAwait(false);
@@ -104,37 +111,6 @@ public sealed class FieldMaskingResultFilter(
 
     private static int? GetStatusCode(IActionResult result, int currentStatusCode) =>
         result is IStatusCodeActionResult { StatusCode: { } statusCode } ? statusCode : currentStatusCode;
-
-    private static string GetResourceType(Type type)
-    {
-        if (type.IsArray)
-        {
-            type = type.GetElementType() ?? type;
-        }
-        else if (type.IsGenericType)
-        {
-            var enumerableInterface = type.GetInterfaces()
-                .Append(type)
-                .FirstOrDefault(candidate => candidate.IsGenericType &&
-                                             candidate.GetGenericTypeDefinition() == typeof(IEnumerable<>));
-            if (enumerableInterface is not null)
-            {
-                type = enumerableInterface.GetGenericArguments()[0];
-            }
-        }
-
-        var name = type.Name;
-        foreach (var suffix in new[] { "Dto", "Response", "ViewModel" })
-        {
-            if (name.EndsWith(suffix, StringComparison.Ordinal) && name.Length > suffix.Length)
-            {
-                name = name[..^suffix.Length];
-                break;
-            }
-        }
-
-        return name;
-    }
 
     private static bool IsScalar(Type type) =>
         type.IsPrimitive || type.IsEnum || type == typeof(string) || type == typeof(decimal) ||

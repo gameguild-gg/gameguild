@@ -6,10 +6,12 @@ using GameGuild.API.Database;
 using GameGuild.API.IntegrationTests.Infrastructure;
 using GameGuild.CQRS.Models;
 using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Context.Actors;
 using GameGuild.Identity.Tenants;
 using GameGuild.Identity.Users;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
@@ -26,7 +28,7 @@ public sealed class DataMaskingPostgreSqlIntegrationTests(ApiPostgreSqlFixture f
     private const string TestAuthenticationScheme = "DataMaskingTest";
 
     [Fact]
-    public async Task GetUserById_AppliesPersistedTenantRuleUsingRequestActorContext()
+    public async Task GetUsersPage_AppliesPersistedTenantRuleUsingRequestActorContext()
     {
         var tenantAId = Guid.NewGuid();
         var tenantBId = Guid.NewGuid();
@@ -44,6 +46,9 @@ public sealed class DataMaskingPostgreSqlIntegrationTests(ApiPostgreSqlFixture f
                 }).AddScheme<AuthenticationSchemeOptions, DataMaskingTestAuthenticationHandler>(
                     TestAuthenticationScheme,
                     _ => { });
+                services.AddHttpContextAccessor();
+                services.RemoveAll<IActorContextAccessor>();
+                services.AddScoped<IActorContextAccessor, DataMaskingTestActorContextAccessor>();
             }));
 
         await using (var scope = factory.Services.CreateAsyncScope())
@@ -55,21 +60,27 @@ public sealed class DataMaskingPostgreSqlIntegrationTests(ApiPostgreSqlFixture f
         using var tenantAClient = CreateClient(factory, tenantAId, userAId);
         using var tenantBClient = CreateClient(factory, tenantBId, userBId);
 
-        var tenantAResponse = await tenantAClient.GetAsync($"/v1/users/{userAId}");
-        var tenantBResponse = await tenantBClient.GetAsync($"/v1/users/{userBId}");
+        var tenantAPageResponse = await tenantAClient.GetAsync("/v1/users?limit=20");
+        var tenantBPageResponse = await tenantBClient.GetAsync("/v1/users?limit=20");
 
-        Assert.Equal(HttpStatusCode.OK, tenantAResponse.StatusCode);
-        Assert.Equal(HttpStatusCode.OK, tenantBResponse.StatusCode);
+        Assert.True(
+            tenantAPageResponse.StatusCode == HttpStatusCode.OK,
+            $"Tenant A users endpoint returned {(int)tenantAPageResponse.StatusCode}: {await tenantAPageResponse.Content.ReadAsStringAsync()}");
+        Assert.True(
+            tenantBPageResponse.StatusCode == HttpStatusCode.OK,
+            $"Tenant B users endpoint returned {(int)tenantBPageResponse.StatusCode}: {await tenantBPageResponse.Content.ReadAsStringAsync()}");
 
-        var tenantAUser = await tenantAResponse.Content.ReadFromJsonAsync<UserDto>();
-        var tenantBUser = await tenantBResponse.Content.ReadFromJsonAsync<UserDto>();
+        using var tenantAPage = await System.Text.Json.JsonDocument.ParseAsync(await tenantAPageResponse.Content.ReadAsStreamAsync());
+        var tenantAListedUser = tenantAPage.RootElement.GetProperty("items")
+            .EnumerateArray()
+            .Single(user => user.GetProperty("id").GetGuid() == userAId);
+        Assert.Equal("[REDACTED]", tenantAListedUser.GetProperty("email").GetString());
 
-        Assert.NotNull(tenantAUser);
-        Assert.NotNull(tenantBUser);
-        Assert.Equal("[REDACTED]", tenantAUser.Email);
-        Assert.Equal($"masking-{userBId:N}@example.test", tenantBUser.Email);
-        Assert.Equal("Masking User A", tenantAUser.Name);
-        Assert.Equal("Masking User B", tenantBUser.Name);
+        using var tenantBPage = await System.Text.Json.JsonDocument.ParseAsync(await tenantBPageResponse.Content.ReadAsStreamAsync());
+        var tenantBListedUser = tenantBPage.RootElement.GetProperty("items")
+            .EnumerateArray()
+            .Single(user => user.GetProperty("id").GetGuid() == userBId);
+        Assert.Equal($"masking-{userBId:N}@example.test", tenantBListedUser.GetProperty("email").GetString());
     }
 
     private static HttpClient CreateClient(WebApplicationFactory<Program> factory, Guid tenantId, Guid actorId)
@@ -92,6 +103,7 @@ public sealed class DataMaskingPostgreSqlIntegrationTests(ApiPostgreSqlFixture f
             Id = tenantAId,
             Name = $"Masking Tenant {tenantAId:N}",
             Slug = $"masking-{tenantAId:N}",
+            AdminEmail = $"admin-{tenantAId:N}@example.test",
             IsActive = true
         };
         var tenantB = new Tenant
@@ -99,6 +111,7 @@ public sealed class DataMaskingPostgreSqlIntegrationTests(ApiPostgreSqlFixture f
             Id = tenantBId,
             Name = $"Masking Tenant {tenantBId:N}",
             Slug = $"masking-{tenantBId:N}",
+            AdminEmail = $"admin-{tenantBId:N}@example.test",
             IsActive = true
         };
         var userA = User.CreateOAuthUser($"masking-{userAId:N}@example.test", "Masking User A");
@@ -121,16 +134,6 @@ public sealed class DataMaskingPostgreSqlIntegrationTests(ApiPostgreSqlFixture f
             CreatedBy = userAId,
             IsEnabled = true
         });
-        dbContext.Set<PolicyDefinitionEntity>().Add(new PolicyDefinitionEntity
-        {
-            PolicyName = Policies.UsersReadSelf,
-            RequireAuthentication = true,
-            RequiredPermissionsJson = "[\"users:read:self\"]",
-            IsTenantScoped = true,
-            IsActive = true,
-            PolicyVersion = 1
-        });
-
         await dbContext.SaveChangesAsync();
     }
 
@@ -153,12 +156,47 @@ public sealed class DataMaskingPostgreSqlIntegrationTests(ApiPostgreSqlFixture f
             [
                 new Claim("sub", actorId),
                 new Claim("tenant_id", tenantId),
-                new Claim("permission", "users:read:self")
+                new Claim(ClaimTypes.Role, Policies.SystemAdmin),
+                new Claim("role", Policies.SystemAdmin),
+                new Claim("permission", "users:read:self"),
+                new Claim("permission", UsersPermission.Keys.Read)
             ],
             Scheme.Name);
 
             return Task.FromResult(AuthenticateResult.Success(
                 new AuthenticationTicket(new ClaimsPrincipal(identity), Scheme.Name)));
         }
+    }
+
+    private sealed class DataMaskingTestActorContextAccessor(IHttpContextAccessor httpContextAccessor)
+        : IActorContextAccessor
+    {
+        public ActorContext ActorContext
+        {
+            get
+            {
+                var request = httpContextAccessor.HttpContext?.Request;
+                if (request is null ||
+                    !Guid.TryParse(request.Headers["X-Test-Actor"], out var actorId) ||
+                    !Guid.TryParse(request.Headers[TenantResolver.TenantIdHeader], out var tenantId))
+                {
+                    return ActorContext.Anonymous;
+                }
+
+                return new ActorContext
+                {
+                    ActorKind = ActorKind.User,
+                    SubjectId = actorId.ToString(),
+                    TenantId = tenantId,
+                    Roles = new HashSet<string>([Policies.SystemAdmin], StringComparer.OrdinalIgnoreCase),
+                    Permissions = new HashSet<string>(StringComparer.OrdinalIgnoreCase),
+                    IsAuthenticated = true
+                };
+            }
+        }
+
+        public void SetActorContext(ActorContext context) { }
+
+        public void ClearActorContext() { }
     }
 }

@@ -23,7 +23,7 @@ public sealed class FieldMaskingResultFilterTests
     {
         var maskingService = new Mock<IDataMaskingService>();
         var masked = JsonNode.Parse("{\"email\":\"[REDACTED]\"}");
-        maskingService.Setup(service => service.ApplyAsync("User", It.IsAny<UserResponse>(), It.IsAny<JsonSerializerOptions>(), It.IsAny<CancellationToken>()))
+        maskingService.Setup(service => service.ApplyAsync("User", It.IsAny<object>(), typeof(UserResponse), It.IsAny<JsonSerializerOptions>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(masked);
         var filter = CreateFilter(maskingService.Object);
         var context = CreateContext(new ObjectResult(new UserResponse { Email = "person@example.com" })
@@ -42,14 +42,14 @@ public sealed class FieldMaskingResultFilterTests
         nextCalled.Should().BeTrue();
         context.Result.Should().BeOfType<ObjectResult>().Which.Value.Should().BeSameAs(masked);
         ((ObjectResult)context.Result).DeclaredType.Should().Be(typeof(JsonNode));
-        maskingService.Verify(service => service.ApplyAsync("User", It.IsAny<UserResponse>(), It.IsAny<JsonSerializerOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+        maskingService.Verify(service => service.ApplyAsync("User", It.IsAny<object>(), typeof(UserResponse), It.IsAny<JsonSerializerOptions>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task OnResultExecutionAsync_MaskingFailureReturns503InsteadOfUnmaskedResponse()
     {
         var maskingService = new Mock<IDataMaskingService>();
-        maskingService.Setup(service => service.ApplyAsync("User", It.IsAny<UserResponse>(), It.IsAny<JsonSerializerOptions>(), It.IsAny<CancellationToken>()))
+        maskingService.Setup(service => service.ApplyAsync("User", It.IsAny<object>(), typeof(UserResponse), It.IsAny<JsonSerializerOptions>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("database unavailable"));
         var filter = CreateFilter(maskingService.Object);
         var context = CreateContext(new ObjectResult(new UserResponse { Email = "person@example.com" })
@@ -88,7 +88,47 @@ public sealed class FieldMaskingResultFilterTests
 
         nextCalled.Should().BeTrue();
         context.Result.Should().BeSameAs(result);
-        maskingService.Verify(service => service.ApplyAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<JsonSerializerOptions>(), It.IsAny<CancellationToken>()), Times.Never);
+        maskingService.Verify(service => service.ApplyAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<Type>(), It.IsAny<JsonSerializerOptions>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task OnResultExecutionAsync_SkipsResponsesWithoutMaskingMetadata()
+    {
+        var maskingService = new Mock<IDataMaskingService>();
+        var result = new ObjectResult(new UserResponse { Email = "person@example.com" })
+        {
+            StatusCode = StatusCodes.Status200OK,
+            DeclaredType = typeof(UserResponse)
+        };
+        var context = CreateContext(result, new object());
+
+        await ExecuteAsync(context, CreateFilter(maskingService.Object));
+
+        context.Result.Should().BeSameAs(result);
+        maskingService.Verify(service => service.ApplyAsync(
+            It.IsAny<string>(), It.IsAny<object>(), It.IsAny<Type>(), It.IsAny<JsonSerializerOptions>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task OnResultExecutionAsync_PassesDeclaredObjectTypeToMaskingService()
+    {
+        var maskingService = new Mock<IDataMaskingService>();
+        var masked = JsonNode.Parse("{\"email\":\"[REDACTED]\"}");
+        maskingService.Setup(service => service.ApplyAsync(
+                "User", It.IsAny<object>(), typeof(UserResponse), It.IsAny<JsonSerializerOptions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(masked);
+        var response = new DerivedUserResponse { Email = "person@example.com", InternalNotes = "private" };
+        var context = CreateContext(new ObjectResult(response)
+        {
+            StatusCode = StatusCodes.Status200OK,
+            DeclaredType = typeof(UserResponse)
+        }, new DataMaskingResourceTypeAttribute("User"));
+
+        await ExecuteAsync(context, CreateFilter(maskingService.Object));
+
+        context.Result.Should().BeOfType<ObjectResult>().Which.Value.Should().BeSameAs(masked);
+        maskingService.Verify(service => service.ApplyAsync(
+            "User", response, typeof(UserResponse), It.IsAny<JsonSerializerOptions>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     private static FieldMaskingResultFilter CreateFilter(IDataMaskingService maskingService) =>
@@ -106,8 +146,17 @@ public sealed class FieldMaskingResultFilterTests
     private static ActionContext ToActionContext(ResultExecutingContext context) =>
         new(context.HttpContext, context.RouteData, context.ActionDescriptor);
 
-    private sealed class UserResponse
+    private static Task ExecuteAsync(ResultExecutingContext context, FieldMaskingResultFilter filter) =>
+        filter.OnResultExecutionAsync(context, () => Task.FromResult(
+            new ResultExecutedContext(ToActionContext(context), context.Filters, context.Result, context.Controller)));
+
+    private class UserResponse
     {
         public string Email { get; init; } = string.Empty;
+    }
+
+    private sealed class DerivedUserResponse : UserResponse
+    {
+        public string InternalNotes { get; init; } = string.Empty;
     }
 }

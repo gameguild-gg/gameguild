@@ -15,9 +15,16 @@ public interface IDataMaskingService
         object value,
         JsonSerializerOptions serializerOptions,
         CancellationToken cancellationToken);
+
+    Task<object?> ApplyAsync(
+        string resourceType,
+        object value,
+        Type serializationType,
+        JsonSerializerOptions serializerOptions,
+        CancellationToken cancellationToken);
 }
 
-/// <summary>Overrides the response resource type used to look up masking rules.</summary>
+/// <summary>Enables response masking and sets the resource type used to look up its rules.</summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, Inherited = true)]
 public sealed class DataMaskingResourceTypeAttribute(string resourceType) : Attribute
 {

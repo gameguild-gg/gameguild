@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using GameGuild.Identity.Context.Actors;
@@ -16,16 +15,25 @@ public sealed class DataMaskingService(
         string resourceType,
         object value,
         JsonSerializerOptions serializerOptions)
-        => ApplyAsync(resourceType, value, serializerOptions, CancellationToken.None);
+        => ApplyAsync(resourceType, value, value.GetType(), serializerOptions, CancellationToken.None);
+
+    public Task<object?> ApplyAsync(
+        string resourceType,
+        object value,
+        JsonSerializerOptions serializerOptions,
+        CancellationToken cancellationToken)
+        => ApplyAsync(resourceType, value, value.GetType(), serializerOptions, cancellationToken);
 
     public async Task<object?> ApplyAsync(
         string resourceType,
         object value,
+        Type serializationType,
         JsonSerializerOptions serializerOptions,
         CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(resourceType);
         ArgumentNullException.ThrowIfNull(value);
+        ArgumentNullException.ThrowIfNull(serializationType);
         ArgumentNullException.ThrowIfNull(serializerOptions);
 
         var globalRules = await ruleRepository.GetByResourceTypeAsync(resourceType, null, cancellationToken)
@@ -54,7 +62,7 @@ public sealed class DataMaskingService(
             return value;
         }
 
-        var root = JsonSerializer.SerializeToNode(value, value.GetType(), serializerOptions);
+        var root = JsonSerializer.SerializeToNode(value, serializationType, serializerOptions);
         if (root is null)
         {
             return value;
@@ -141,13 +149,14 @@ public sealed class DataMaskingService(
         string fullPath)
     {
         var normalizedPath = NormalizeFieldName(fullPath);
-        if (!string.Equals(normalizedPath, NormalizeFieldName(fieldName), StringComparison.Ordinal) &&
+        var normalizedFieldName = NormalizeFieldName(fieldName);
+        if (!string.Equals(normalizedPath, normalizedFieldName, StringComparison.Ordinal) &&
             rules.TryGetValue(normalizedPath, out var pathRule))
         {
             return pathRule;
         }
 
-        return rules.TryGetValue(NormalizeFieldName(fieldName), out var fieldRule) ? fieldRule : null;
+        return rules.TryGetValue(normalizedFieldName, out var fieldRule) ? fieldRule : null;
     }
 
     private static string? ReadScalar(JsonNode node, JsonSerializerOptions serializerOptions)
@@ -172,6 +181,7 @@ public sealed class DataMaskingService(
             return string.Empty;
         }
 
-        return string.Concat(value.Where(char.IsLetterOrDigit)).ToLower(CultureInfo.InvariantCulture);
+        return string.Join('.', value.Split('.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(segment => string.Concat(segment.Where(char.IsLetterOrDigit)).ToLowerInvariant()));
     }
 }
