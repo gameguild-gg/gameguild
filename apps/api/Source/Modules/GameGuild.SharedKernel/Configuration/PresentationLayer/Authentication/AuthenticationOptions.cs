@@ -91,7 +91,10 @@ public sealed class AuthenticationOptions : BaseOptions
 
             if (JwtExpiration <= TimeSpan.Zero) throw new InvalidOperationException("JWT expiration must be greater than zero.");
 
-            if (RefreshTokenExpirationDays <= 0) throw new InvalidOperationException("Refresh token expiration must be greater than zero.");
+            if (RefreshTokenExpirationDays <= 0)
+            {
+                throw new InvalidOperationException("Refresh token expiration must be greater than zero.");
+            }
         }
     }
 
