@@ -25,7 +25,7 @@ namespace GameGuild.Identity.Authorization;
 ///         causing old cache entries to become stale. Explicit invalidation is also performed for immediate consistency.
 ///     </para>
 /// </remarks>
-public sealed class CachedAccessControlListService : IAccessControlListService
+public sealed class CachedAccessControlListService : IAccessControlListService, IAuthorizationCacheWarmupBatchPath
 {
     private const string CacheType = "acl";
     
@@ -127,6 +127,108 @@ public sealed class CachedAccessControlListService : IAccessControlListService
     }
 
     #region Subject-based operations (preferred)
+
+    async Task IAuthorizationCacheWarmupBatchPath.WarmCacheBatchAsync(
+        IReadOnlyCollection<PermissionCacheWarmupRequest> requests,
+        CancellationToken cancellationToken)
+    {
+        if (requests.Count == 0)
+        {
+            return;
+        }
+
+        var tenantVersions = new Dictionary<Guid, (long TenantVersion, long GlobalVersion)>();
+        var userVersions = new Dictionary<Guid, long>();
+        var normalizedRequests = requests.ToArray();
+        var cacheKeys = new string[normalizedRequests.Length];
+
+        for (var index = 0; index < normalizedRequests.Length; index++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var request = normalizedRequests[index];
+            _popularityTracker?.Record(request);
+
+            if (!tenantVersions.TryGetValue(request.TenantId, out var versions))
+            {
+                versions = await _tenantVersionStore
+                    .GetTenantAndGlobalVersionsAsync(request.TenantId, cancellationToken)
+                    .ConfigureAwait(false);
+                tenantVersions.Add(request.TenantId, versions);
+            }
+
+            var userVersion = 0L;
+            if (request.Subject.UserId is { } userId)
+            {
+                if (!userVersions.TryGetValue(userId, out userVersion))
+                {
+                    userVersion = await _userVersionStore.GetVersionAsync(userId, cancellationToken).ConfigureAwait(false);
+                    userVersions.Add(userId, userVersion);
+                }
+            }
+
+            cacheKeys[index] = BuildSubjectCacheKey(
+                request.Subject,
+                request.TenantId,
+                request.ResourceType,
+                request.ResourceId,
+                versions.TenantVersion,
+                userVersion,
+                versions.GlobalVersion);
+        }
+
+        IReadOnlyDictionary<string, CacheResult<AccessLevel>>? cachedResults = null;
+        if (_hybridCache is not null)
+        {
+            cachedResults = await _hybridCache
+                .GetManyValuesAsync<AccessLevel>(cacheKeys, CacheType, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        var valuesToWrite = new Dictionary<string, AccessLevel>(StringComparer.Ordinal);
+        for (var index = 0; index < normalizedRequests.Length; index++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var request = normalizedRequests[index];
+            var cacheKey = cacheKeys[index];
+
+            if (cachedResults is not null && cachedResults.TryGetValue(cacheKey, out var cached) && cached.Found)
+            {
+                // Register the entry with this wrapper's tenant index as well as promoting it to L1.
+                CacheAccessLevel(cacheKey, request.TenantId.ToString(), cached.Value, l1Only: true);
+                continue;
+            }
+
+            if (cachedResults is null && _l1Cache.TryGetValue(cacheKey, out AccessLevel l1Value))
+            {
+                _metrics?.RecordHit(CacheLevel.L1, CacheType);
+                CacheAccessLevel(cacheKey, request.TenantId.ToString(), l1Value, l1Only: true);
+                continue;
+            }
+
+            if (cachedResults is null)
+            {
+                _metrics?.RecordMiss(CacheType);
+            }
+
+            // Database-backed ACL services can share a scoped DbContext, so evaluate misses sequentially.
+            var accessLevel = await _innerService
+                .EvaluateAccessAsync(
+                    request.Subject,
+                    request.TenantId,
+                    request.ResourceType,
+                    request.ResourceId,
+                    cancellationToken)
+                .ConfigureAwait(false);
+
+            CacheAccessLevel(cacheKey, request.TenantId.ToString(), accessLevel, l1Only: true);
+            valuesToWrite[cacheKey] = accessLevel;
+        }
+
+        if (_hybridCache is not null && valuesToWrite.Count > 0)
+        {
+            await _hybridCache.SetManyValuesAsync(valuesToWrite, CacheType, cancellationToken).ConfigureAwait(false);
+        }
+    }
 
     /// <inheritdoc />
     public async Task<AccessLevel> EvaluateAccessAsync(
