@@ -970,5 +970,6 @@ internal sealed class RecordingCacheInvalidationService : ICacheInvalidationServ
 
     public void HandleInvalidationEvent(CacheInvalidationEvent invalidationEvent)
     {
+        // These tests exercise invalidation requests; they do not simulate cache subscribers.
     }
 }
