@@ -67,7 +67,7 @@ describe('BrowseOwnedCoursesPage', () => {
     expect(push).toHaveBeenCalledWith('/workspace/learning/courses/course-2/content');
 
     await userEvent.click(screen.getByRole('button', { name: /open unity 3d essentials menu/i }));
-    await userEvent.click(screen.getByRole('menuitem', { name: /view certificate/i }));
+    await userEvent.click(await screen.findByRole('menuitem', { name: /view certificate/i }));
     expect(push).toHaveBeenCalledWith('/workspace/learning/courses/course-2/certificates');
   });
 

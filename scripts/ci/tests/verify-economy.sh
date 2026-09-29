@@ -66,6 +66,8 @@ test_shell_only_ci_policy() {
   grep -Fq 'pnpm install --frozen-lockfile --ignore-scripts' "$ci_dir/install-and-audit-pnpm.sh" || return 1
   grep -Fq 'repository pnpm lockfile is required' "$ci_dir/install-and-audit-pnpm.sh" || return 1
   grep -q 'pnpm audit --json' "$ci_dir/install-and-audit-pnpm.sh" || return 1
+  grep -Fq 'audit_stderr_report="$audit_root/audit.stderr.log"' "$ci_dir/install-and-audit-pnpm.sh" || return 1
+  grep -Fq 'pnpm audit --json >"$audit_report" 2>"$audit_stderr_report"' "$ci_dir/install-and-audit-pnpm.sh" || return 1
   grep -Fq 'pnpm install --frozen-lockfile --ignore-scripts' "$repository_root/.github/workflows/emception.yml" || return 1
   ! grep -Fq 'pnpm-lock.yaml|*/pnpm-lock.yaml' "$repository_root/scripts/repository-hygiene.sh" || return 1
   [[ -f "$repository_root/pnpm-lock.yaml" ]]

@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import type { ComponentProps, ReactNode } from 'react';
+import { cloneElement, isValidElement, type ComponentProps, type ReactElement, type ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({ createDiscussion: vi.fn(), refresh: vi.fn() }));
@@ -10,8 +10,28 @@ vi.mock('@/i18n/navigation', () => ({
 }));
 vi.mock('@/lib/learner/activity-actions', () => ({ createCourseDiscussion: mocks.createDiscussion }));
 vi.mock('@game-guild/ui/components/button', () => ({
-  Button: ({ asChild, children, ...props }: ComponentProps<'button'> & { asChild?: boolean; children: ReactNode }) =>
-    asChild ? children : <button {...props}>{children}</button>,
+  Button: (props: ComponentProps<'button'> & {
+    asChild?: boolean;
+    render?: ReactElement;
+    variant?: string;
+    size?: string;
+    children: ReactNode;
+  }) => {
+    const target = props.render ?? (props.asChild && isValidElement(props.children) ? props.children : null);
+    const buttonProps = { ...props };
+    delete buttonProps.asChild;
+    delete buttonProps.render;
+    delete buttonProps.variant;
+    delete buttonProps.size;
+    delete buttonProps.children;
+
+    return target
+      ? cloneElement(target, {
+          ...buttonProps,
+          children: props.asChild ? target.props.children : props.children,
+        } as never)
+      : <button {...buttonProps}>{props.children}</button>;
+  },
 }));
 vi.mock('@game-guild/ui/components/dialog', () => ({
   Dialog: ({ children, onOpenChange }: { children: ReactNode; onOpenChange: (open: boolean) => void }) => (
