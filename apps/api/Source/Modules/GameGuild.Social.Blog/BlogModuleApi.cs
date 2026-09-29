@@ -13,7 +13,7 @@ public static class BlogDependencyInjection
     public static IServiceCollection AddSocialBlogModule(this IServiceCollection services)
     {
         services.AddScoped<IBlogSlugService, BlogSlugService>();
-        services.AddScoped<IPublicationAnnouncer, NoOpPublicationAnnouncer>();
+        services.AddScoped<IPublicationAnnouncer, PublicationAnnouncerAdapter>();
         services.AddScoped<IBlogPostService, BlogPostService>();
         services.AddScoped<IBlogViewCounterService, BlogViewCounterService>();
 
