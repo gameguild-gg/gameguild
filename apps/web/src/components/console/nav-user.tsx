@@ -8,7 +8,6 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@game-guild/ui/components/dropdown-menu';
@@ -62,7 +61,7 @@ export function NavUser({
             align="end"
             sideOffset={4}
           >
-            <DropdownMenuLabel className="p-0 font-normal">
+            <div className="px-2 py-1.5 text-sm font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="size-8 rounded-lg">
                   <AvatarImage src={user.avatar} alt={user.name} />
@@ -82,7 +81,7 @@ export function NavUser({
                   <span className="truncate text-xs">{user.email}</span>
                 </div>
               </div>
-            </DropdownMenuLabel>
+            </div>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem>

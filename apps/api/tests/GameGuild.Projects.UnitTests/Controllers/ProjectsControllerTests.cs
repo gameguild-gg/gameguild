@@ -41,6 +41,54 @@ public class ProjectsControllerTests
         _authorizationService
             .Setup(service => service.ApplyWorkspaceAccess(It.IsAny<IQueryable<Project>>(), It.IsAny<bool>()))
             .Returns((IQueryable<Project> query, bool _) => query);
+
+        _mediator
+            .Setup(mediator => mediator.Send(It.IsAny<IRequest<ProjectVersion>>(), It.IsAny<CancellationToken>()))
+            .Returns((IRequest<ProjectVersion> request, CancellationToken _) =>
+            {
+                _context.SaveChanges();
+                return Task.FromResult(request switch
+                {
+                    CreateProjectVersionEndpointCommand command => command.Version,
+                    UpdateProjectVersionEndpointCommand command => command.Version,
+                    TransitionProjectVersionEndpointCommand command => command.Version,
+                    _ => throw new InvalidOperationException($"Unexpected project version request: {request.GetType().Name}")
+                });
+            });
+        _mediator
+            .Setup(mediator => mediator.Send(It.IsAny<IRequest<Project>>(), It.IsAny<CancellationToken>()))
+            .Returns((IRequest<Project> request, CancellationToken _) =>
+            {
+                _context.SaveChanges();
+                return Task.FromResult(request is RestoreProjectEndpointCommand command
+                    ? command.Project
+                    : throw new InvalidOperationException($"Unexpected project request: {request.GetType().Name}"));
+            });
+        _mediator
+            .Setup(mediator => mediator.Send(It.IsAny<IRequest<ProjectInvitation>>(), It.IsAny<CancellationToken>()))
+            .Returns((IRequest<ProjectInvitation> request, CancellationToken _) =>
+            {
+                _context.SaveChanges();
+                return Task.FromResult(request switch
+                {
+                    AcceptProjectInvitationEndpointCommand command => command.Invitation,
+                    DeclineProjectInvitationEndpointCommand command => command.Invitation,
+                    InviteProjectCollaboratorEndpointCommand command => command.Invitation,
+                    _ => throw new InvalidOperationException($"Unexpected project invitation request: {request.GetType().Name}")
+                });
+            });
+        _mediator
+            .Setup(mediator => mediator.Send(It.IsAny<IRequest<ProjectCollaborator>>(), It.IsAny<CancellationToken>()))
+            .Returns((IRequest<ProjectCollaborator> request, CancellationToken _) =>
+            {
+                _context.SaveChanges();
+                return Task.FromResult(request switch
+                {
+                    AddProjectCollaboratorEndpointCommand command => command.Collaborator,
+                    UpdateProjectCollaboratorEndpointCommand command => command.Collaborator,
+                    _ => throw new InvalidOperationException($"Unexpected project collaborator request: {request.GetType().Name}")
+                });
+            });
     }
 
     [Fact]

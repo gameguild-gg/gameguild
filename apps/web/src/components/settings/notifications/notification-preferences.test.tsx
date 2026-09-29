@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import enMessages from '@/i18n/messages/en-US.json';
@@ -97,21 +98,18 @@ describe('NotificationPreferences', () => {
   it('renders initially muted suppressible types as off', () => {
     renderPreferences();
 
-    const muted = screen
-      .getByTestId('type-MonthlyStatement')
-      .querySelector('button[role="switch"]');
-    expect(muted).toHaveAttribute('data-state', 'unchecked');
+    const muted = screen.getByRole('switch', { name: 'Monthly Statement' });
+    expect(muted).toHaveAttribute('aria-checked', 'false');
 
-    const active = screen.getByTestId('type-Billing').querySelector('button[role="switch"]');
-    expect(active).toHaveAttribute('data-state', 'checked');
+    const active = screen.getByRole('switch', { name: 'Billing' });
+    expect(active).toHaveAttribute('aria-checked', 'true');
   });
 
   it('unmuting a type sends the full replacement list including existing mutes', async () => {
+    const user = userEvent.setup();
     renderPreferences();
 
-    fireEvent.click(
-      screen.getByTestId('type-MonthlyStatement').querySelector('button[role="switch"]')!,
-    );
+    await user.click(screen.getByRole('switch', { name: 'Monthly Statement' }));
 
     await waitFor(() => {
       expect(actionMocks.updateMutedTypesAction).toHaveBeenCalledWith([]);
@@ -119,11 +117,10 @@ describe('NotificationPreferences', () => {
   });
 
   it('muting a type keeps already muted types in the payload', async () => {
+    const user = userEvent.setup();
     renderPreferences();
 
-    fireEvent.click(
-      screen.getByTestId('type-Billing').querySelector('button[role="switch"]')!,
-    );
+    await user.click(screen.getByRole('switch', { name: 'Billing' }));
 
     await waitFor(() => {
       expect(actionMocks.updateMutedTypesAction).toHaveBeenCalledWith([
@@ -134,9 +131,10 @@ describe('NotificationPreferences', () => {
   });
 
   it('toggling a channel sends just that flag', async () => {
+    const user = userEvent.setup();
     renderPreferences();
 
-    fireEvent.click(screen.getByTestId('channel-email').querySelector('button[role="switch"]')!);
+    await user.click(screen.getByRole('switch', { name: 'Email' }));
 
     await waitFor(() => {
       expect(actionMocks.updatePreferenceFlagsAction).toHaveBeenCalledWith({ emailEnabled: false });
@@ -144,25 +142,27 @@ describe('NotificationPreferences', () => {
   });
 
   it('rolls a failed channel toggle back to the previous state', async () => {
+    const user = userEvent.setup();
     actionMocks.updatePreferenceFlagsAction.mockResolvedValue({
       success: false,
       status: 'error',
     });
     renderPreferences();
 
-    const toggle = screen.getByTestId('channel-email').querySelector('button[role="switch"]')!;
-    fireEvent.click(toggle);
+    const toggle = screen.getByRole('switch', { name: 'Email' });
+    await user.click(toggle);
 
     await waitFor(() => {
-      expect(toggle).toHaveAttribute('data-state', 'checked');
+      expect(toggle).toHaveAttribute('aria-checked', 'true');
     });
   });
 
   it('selecting a digest frequency sends the mapped value', async () => {
+    const user = userEvent.setup();
     renderPreferences();
 
-    fireEvent.click(screen.getByRole('combobox'));
-    fireEvent.click(screen.getByRole('option', { name: 'Weekly' }));
+    await user.click(screen.getByRole('combobox'));
+    await user.click(await screen.findByRole('option', { name: 'Weekly' }));
 
     await waitFor(() => {
       expect(actionMocks.updateDigestFrequencyAction).toHaveBeenCalledWith('Weekly');

@@ -93,7 +93,7 @@ export function ListingLaunchForm({ course }: ListingLaunchFormProps) {
             <Label htmlFor="catalog-visibility">Catalog visibility</Label>
             <Select value={visibility} onValueChange={(value) => setVisibility(value ?? 'public')}>
               <SelectTrigger id="catalog-visibility">
-                <SelectValue />
+                <SelectValue>{visibility === 'public' ? 'Public' : 'Private'}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="public">Public</SelectItem>
