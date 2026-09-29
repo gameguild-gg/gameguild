@@ -16,7 +16,12 @@ public sealed class AutomaticPermissionCacheWarmupService(
     private readonly AuthorizationCacheOptions _options = options.Value;
 
     /// <summary>Runs one bounded popularity-based warmup cycle. Exposed for deterministic integration testing.</summary>
-    public async Task<PermissionCacheWarmupResult> RunCycleAsync(CancellationToken cancellationToken = default)
+    public Task<PermissionCacheWarmupResult> RunCycleAsync()
+    {
+        return RunCycleAsync(CancellationToken.None);
+    }
+
+    public async Task<PermissionCacheWarmupResult> RunCycleAsync(CancellationToken cancellationToken)
     {
         if (!_options.AutomaticWarmupEnabled)
         {

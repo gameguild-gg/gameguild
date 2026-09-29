@@ -152,16 +152,24 @@ public sealed class AuthorizationCacheOptions : BaseOptions
             throw new InvalidOperationException("MaxL1CacheSize must be positive.");
 
         if (AutomaticWarmupIntervalSeconds <= 0)
+        {
             throw new InvalidOperationException("AutomaticWarmupIntervalSeconds must be positive.");
+        }
 
         if (AutomaticWarmupMinimumAccessCount <= 0)
+        {
             throw new InvalidOperationException("AutomaticWarmupMinimumAccessCount must be positive.");
+        }
 
         if (AutomaticWarmupMaxEntriesPerCycle <= 0 || AutomaticWarmupMaxEntriesPerCycle > 500)
+        {
             throw new InvalidOperationException("AutomaticWarmupMaxEntriesPerCycle must be between 1 and 500.");
+        }
 
         if (PopularityTrackingCapacity <= 0)
+        {
             throw new InvalidOperationException("PopularityTrackingCapacity must be positive.");
+        }
         
         if (UseDistributedCache && string.IsNullOrWhiteSpace(RedisConnectionString))
             throw new InvalidOperationException("RedisConnectionString is required when UseDistributedCache is true.");

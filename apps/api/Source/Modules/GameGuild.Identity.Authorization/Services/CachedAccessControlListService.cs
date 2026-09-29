@@ -97,8 +97,22 @@ public sealed class CachedAccessControlListService : IAccessControlListService
         IHybridPermissionCache? hybridCache,
         ICacheMetricsService? metrics,
         IPermissionCacheKeyTracker? keyTracker,
+        ICacheInvalidationService? invalidationService)
+        : this(innerService, cache, tenantVersionStore, userVersionStore, options, hybridCache, metrics, keyTracker, invalidationService, null)
+    {
+    }
+
+    public CachedAccessControlListService(
+        IAccessControlListService innerService,
+        IMemoryCache cache,
+        ITenantSecurityVersionStore tenantVersionStore,
+        IUserSecurityVersionStore userVersionStore,
+        IOptions<AuthorizationCacheOptions> options,
+        IHybridPermissionCache? hybridCache,
+        ICacheMetricsService? metrics,
+        IPermissionCacheKeyTracker? keyTracker,
         ICacheInvalidationService? invalidationService,
-        IPermissionCachePopularityTracker? popularityTracker = null)
+        IPermissionCachePopularityTracker? popularityTracker)
     {
         _innerService = innerService;
         _l1Cache = cache;
