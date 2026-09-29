@@ -11279,6 +11279,7 @@ export interface ProjectsProjectVersionApiOutput {
 
 export interface ProjectsProjectVersionOptionProjection {
   id?: string;
+  imageUrl?: string | null;
   projectId?: string;
   projectTitle?: string | null;
   status?: ProjectsProjectVersionStatus;
@@ -11729,35 +11730,270 @@ export interface SocialAssetsSocialMediaSocialMediaAssetDescriptor {
 
 export type SocialAssetsSocialMediaSocialMediaProcessingState = 'Processing' | 'Ready' | 'Rejected';
 
-export interface SocialBlogBlogPostDto {
+export interface SocialBlogAuthoringApplyBlogAiProposalInput {
+  cursorOffset?: number | null;
+  postRevision?: number;
+}
+
+export interface SocialBlogAuthoringBlogAiConversationDto {
   id?: string;
-  allowComments?: boolean;
   authorId?: string;
-  commentsCount?: number;
+  blogPostId?: string;
+  lastMessageAt?: string;
+  messages?: Array<SocialBlogAuthoringBlogAiMessageDto> | null;
+}
+
+export interface SocialBlogAuthoringBlogAiCreditUsageDto {
+  availableSoftCredits?: number;
+  currency?: string | null;
+  inputTokens?: number;
+  maximumEstimatedCost?: number;
+  outputTokens?: number;
+  releasedAmount?: number;
+  settledCost?: number;
+}
+
+export interface SocialBlogAuthoringBlogAiEntitlementDto {
+  availableSoftCredits?: number;
+  currency?: string | null;
+  reservedSoftCredits?: number;
+  settledSoftCredits?: number;
+}
+
+export interface SocialBlogAuthoringBlogAiMessageDto {
+  id?: string;
   content?: string | null;
-  coverImageUrl?: string | null;
   createdAt?: string;
+  role?: string | null;
+  runId?: string | null;
+}
+
+export interface SocialBlogAuthoringBlogAiProposalDto {
+  id?: string;
+  basePostRevision?: number;
+  kind?: SocialBlogBlogAiProposalKind;
+  originalContent?: string | null;
+  proposedAt?: string;
+  proposedContent?: string | null;
+  runId?: string;
+  status?: SocialBlogBlogAiProposalStatus;
+}
+
+export interface SocialBlogAuthoringBlogAiRunDto {
+  id?: string;
+  basePostRevision?: number;
+  blogPostId?: string;
+  completedAt?: string | null;
+  conversationId?: string;
+  createdAt?: string;
+  errorCode?: string | null;
+  errorMessage?: string | null;
+  instruction?: string | null;
+  model?: string | null;
+  proposal?: SocialBlogAuthoringBlogAiProposalDto;
+  proposalKind?: SocialBlogBlogAiProposalKind;
+  provider?: string | null;
+  startedAt?: string | null;
+  status?: SocialBlogBlogAiRunStatus;
+  usage?: SocialBlogAuthoringBlogAiCreditUsageDto;
+}
+
+export interface SocialBlogAuthoringBlogAiRunInput {
+  conversationId?: string | null;
+  idempotencyKey?: string | null;
+  instruction?: string | null;
+  postRevision?: number;
+  proposalKind?: SocialBlogBlogAiProposalKind;
+  selection?: string | null;
+}
+
+export interface SocialBlogAuthoringBlogPostDto {
+  id?: string;
+  content?: string | null;
   excerpt?: string | null;
-  isFeatured?: boolean;
-  likesCount?: number;
-  publishedAt?: string | null;
-  readTimeMinutes?: number;
+  format?: SocialBlogBlogContentFormat;
+  jsonBody?: string | null;
+  metaDescription?: string | null;
+  metaTitle?: string | null;
+  ogImageUrl?: string | null;
+  revision?: number;
   slug?: string | null;
   status?: SocialBlogBlogPostStatus;
+  tags?: Array<string> | null;
+  title?: string | null;
+  twitterCard?: string | null;
+  updatedAt?: string;
+}
+
+export type SocialBlogBlogAiProposalKind = 'ReplaceDocument' | 'InsertAtCursor' | 'LexicalPatch' | 'MetadataPatch';
+
+export type SocialBlogBlogAiProposalStatus = 'Pending' | 'Applied' | 'Discarded';
+
+export type SocialBlogBlogAiRunStatus = 'Queued' | 'Reserved' | 'Running' | 'Completed' | 'Failed' | 'Cancelled';
+
+export interface SocialBlogBlogComment {
+  id?: string;
+  authorUserId?: string;
+  blogPostId?: string;
+  content?: string | null;
+  createdAt: string;
+  deletedAt?: string | null;
+  deletedByUserId?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
+  parentCommentId?: string | null;
+  tenantId?: string | null;
+  updatedAt: string;
+  version?: number;
+}
+
+export type SocialBlogBlogContentFormat = 'Markdown' | 'Lexical';
+
+export interface SocialBlogBlogPost {
+  id?: string;
+  allowComments?: boolean;
+  canonicalUrlOverride?: string | null;
+  commentsCount?: number;
+  content?: string | null;
+  createdAt: string;
+  deletedAt?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  excerpt?: string | null;
+  format?: SocialBlogBlogContentFormat;
+  integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
+  jsonBody?: string | null;
+  metaDescription?: string | null;
+  metaTitle?: string | null;
+  ogImageUrl?: string | null;
+  primaryAuthorId?: string;
+  publishedAt?: string | null;
+  readTimeMinutes?: number;
+  revision?: number;
+  slug?: string | null;
+  status?: SocialBlogBlogPostStatus;
+  structuredDataOverride?: string | null;
+  tags?: Array<string> | null;
+  tagsJson?: string | null;
   tenantId?: string | null;
   title?: string | null;
+  twitterCard?: string | null;
+  updatedAt: string;
+  version?: number;
+  viewsCount?: number;
+}
+
+export type SocialBlogBlogPostStatus = 'Draft' | 'Published';
+
+export interface SocialBlogControllersAddBlogCommentInput {
+  content?: string | null;
+  parentCommentId?: string | null;
+}
+
+export interface SocialBlogControllersBlogCoauthorInput {
+  userId?: string;
+}
+
+export interface SocialBlogControllersChangeBlogPostSlugInput {
+  newSlug?: string | null;
+}
+
+export interface SocialBlogControllersCreateBlogPostInput {
+  format?: SocialBlogBlogContentFormat;
+  tenantId?: string | null;
+  title?: string | null;
+}
+
+export interface SocialBlogControllersTransferBlogPrimaryInput {
+  newPrimaryUserId?: string;
+}
+
+export interface SocialBlogControllersUpdateBlogPostDraftInput {
+  allowComments?: boolean | null;
+  canonicalUrlOverride?: string | null;
+  content?: string | null;
+  excerpt?: string | null;
+  jsonBody?: string | null;
+  metaDescription?: string | null;
+  metaTitle?: string | null;
+  ogImageUrl?: string | null;
+  revision?: number;
+  structuredDataOverride?: string | null;
+  tags?: Array<string> | null;
+  title?: string | null;
+  twitterCard?: string | null;
+}
+
+export interface SocialBlogQueriesBlogCommentDto {
+  id?: string;
+  authorDisplayName?: string | null;
+  authorHandle?: string | null;
+  content?: string | null;
+  createdAt?: string;
+  parentCommentId?: string | null;
+}
+
+export interface SocialBlogQueriesBlogCommentPage {
+  hasMore?: boolean;
+  items?: Array<SocialBlogQueriesBlogCommentDto> | null;
+}
+
+export interface SocialBlogQueriesBlogPostDetailDto {
+  id?: string;
+  canonicalUrlOverride?: string | null;
+  coAuthorHandles?: Array<string> | null;
+  commentCount?: number;
+  content?: string | null;
+  excerpt?: string | null;
+  format?: SocialBlogBlogContentFormat;
+  jsonBody?: string | null;
+  metaDescription?: string | null;
+  metaTitle?: string | null;
+  ogImageUrl?: string | null;
+  primaryAuthorDisplayName?: string | null;
+  primaryAuthorHandle?: string | null;
+  publishedAt?: string | null;
+  reactionCount?: number;
+  readTimeMinutes?: number;
+  revision?: number;
+  slug?: string | null;
+  structuredDataOverride?: string | null;
+  tags?: Array<string> | null;
+  title?: string | null;
+  twitterCard?: string | null;
   updatedAt?: string;
   viewsCount?: number;
 }
 
-export type SocialBlogBlogPostStatus = 'Draft' | 'Published' | 'Archived';
-
-export interface SocialBlogCreateBlogPostInput {
-  authorId?: string;
-  content?: string | null;
+export interface SocialBlogQueriesBlogPostSummaryDto {
+  id?: string;
+  coAuthorHandles?: Array<string> | null;
+  commentCount?: number;
+  excerpt?: string | null;
+  ogImageUrl?: string | null;
+  primaryAuthorDisplayName?: string | null;
+  primaryAuthorHandle?: string | null;
+  publishedAt?: string | null;
+  reactionCount?: number;
+  readTimeMinutes?: number;
   slug?: string | null;
-  tenantId?: string | null;
+  tags?: Array<string> | null;
   title?: string | null;
+}
+
+export interface SocialBlogQueriesBlogPostSummaryPage {
+  hasMore?: boolean;
+  items?: Array<SocialBlogQueriesBlogPostSummaryDto> | null;
+}
+
+export interface SocialBlogQueriesBlogRouteResolutionDto {
+  handle?: string | null;
+  slug?: string | null;
 }
 
 export interface SocialFeedAddFeedItemInput {
@@ -15087,9 +15323,34 @@ export let ResourcesUsageTrendDataPointSchema: z.ZodType<ResourcesUsageTrendData
 export let ResourcesUsageTrendsResultSchema: z.ZodType<ResourcesUsageTrendsResult>;
 export let SocialAssetsSocialMediaSocialMediaAssetDescriptorSchema: z.ZodType<SocialAssetsSocialMediaSocialMediaAssetDescriptor>;
 export let SocialAssetsSocialMediaSocialMediaProcessingStateSchema: z.ZodType<SocialAssetsSocialMediaSocialMediaProcessingState>;
-export let SocialBlogBlogPostDtoSchema: z.ZodType<SocialBlogBlogPostDto>;
+export let SocialBlogAuthoringApplyBlogAiProposalInputSchema: z.ZodType<SocialBlogAuthoringApplyBlogAiProposalInput>;
+export let SocialBlogAuthoringBlogAiConversationDtoSchema: z.ZodType<SocialBlogAuthoringBlogAiConversationDto>;
+export let SocialBlogAuthoringBlogAiCreditUsageDtoSchema: z.ZodType<SocialBlogAuthoringBlogAiCreditUsageDto>;
+export let SocialBlogAuthoringBlogAiEntitlementDtoSchema: z.ZodType<SocialBlogAuthoringBlogAiEntitlementDto>;
+export let SocialBlogAuthoringBlogAiMessageDtoSchema: z.ZodType<SocialBlogAuthoringBlogAiMessageDto>;
+export let SocialBlogAuthoringBlogAiProposalDtoSchema: z.ZodType<SocialBlogAuthoringBlogAiProposalDto>;
+export let SocialBlogAuthoringBlogAiRunDtoSchema: z.ZodType<SocialBlogAuthoringBlogAiRunDto>;
+export let SocialBlogAuthoringBlogAiRunInputSchema: z.ZodType<SocialBlogAuthoringBlogAiRunInput>;
+export let SocialBlogAuthoringBlogPostDtoSchema: z.ZodType<SocialBlogAuthoringBlogPostDto>;
+export let SocialBlogBlogAiProposalKindSchema: z.ZodType<SocialBlogBlogAiProposalKind>;
+export let SocialBlogBlogAiProposalStatusSchema: z.ZodType<SocialBlogBlogAiProposalStatus>;
+export let SocialBlogBlogAiRunStatusSchema: z.ZodType<SocialBlogBlogAiRunStatus>;
+export let SocialBlogBlogCommentSchema: z.ZodType<SocialBlogBlogComment>;
+export let SocialBlogBlogContentFormatSchema: z.ZodType<SocialBlogBlogContentFormat>;
+export let SocialBlogBlogPostSchema: z.ZodType<SocialBlogBlogPost>;
 export let SocialBlogBlogPostStatusSchema: z.ZodType<SocialBlogBlogPostStatus>;
-export let SocialBlogCreateBlogPostInputSchema: z.ZodType<SocialBlogCreateBlogPostInput>;
+export let SocialBlogControllersAddBlogCommentInputSchema: z.ZodType<SocialBlogControllersAddBlogCommentInput>;
+export let SocialBlogControllersBlogCoauthorInputSchema: z.ZodType<SocialBlogControllersBlogCoauthorInput>;
+export let SocialBlogControllersChangeBlogPostSlugInputSchema: z.ZodType<SocialBlogControllersChangeBlogPostSlugInput>;
+export let SocialBlogControllersCreateBlogPostInputSchema: z.ZodType<SocialBlogControllersCreateBlogPostInput>;
+export let SocialBlogControllersTransferBlogPrimaryInputSchema: z.ZodType<SocialBlogControllersTransferBlogPrimaryInput>;
+export let SocialBlogControllersUpdateBlogPostDraftInputSchema: z.ZodType<SocialBlogControllersUpdateBlogPostDraftInput>;
+export let SocialBlogQueriesBlogCommentDtoSchema: z.ZodType<SocialBlogQueriesBlogCommentDto>;
+export let SocialBlogQueriesBlogCommentPageSchema: z.ZodType<SocialBlogQueriesBlogCommentPage>;
+export let SocialBlogQueriesBlogPostDetailDtoSchema: z.ZodType<SocialBlogQueriesBlogPostDetailDto>;
+export let SocialBlogQueriesBlogPostSummaryDtoSchema: z.ZodType<SocialBlogQueriesBlogPostSummaryDto>;
+export let SocialBlogQueriesBlogPostSummaryPageSchema: z.ZodType<SocialBlogQueriesBlogPostSummaryPage>;
+export let SocialBlogQueriesBlogRouteResolutionDtoSchema: z.ZodType<SocialBlogQueriesBlogRouteResolutionDto>;
 export let SocialFeedAddFeedItemInputSchema: z.ZodType<SocialFeedAddFeedItemInput>;
 export let SocialFeedCreateStoryInputSchema: z.ZodType<SocialFeedCreateStoryInput>;
 export let SocialFeedFeedAuthorDtoSchema: z.ZodType<SocialFeedFeedAuthorDto>;
@@ -29034,6 +29295,7 @@ ProjectsProjectVersionApiOutputSchema = z.object({
 /** Zod schema for ProjectsProjectVersionOptionProjection */
 ProjectsProjectVersionOptionProjectionSchema = z.object({
   id: z.string().uuid().optional(),
+  imageUrl: z.string().nullable().optional(),
   projectId: z.string().uuid().optional(),
   projectTitle: z.string().nullable().optional(),
   status: z.lazy(() => ProjectsProjectVersionStatusSchema).optional(),
@@ -29569,38 +29831,319 @@ SocialAssetsSocialMediaSocialMediaAssetDescriptorSchema = z.object({
 /** Zod schema for SocialAssetsSocialMediaSocialMediaProcessingState */
 SocialAssetsSocialMediaSocialMediaProcessingStateSchema = z.enum(['Processing', 'Ready', 'Rejected']);
 
-/** Zod schema for SocialBlogBlogPostDto */
-SocialBlogBlogPostDtoSchema = z.object({
+/** Zod schema for SocialBlogAuthoringApplyBlogAiProposalInput */
+SocialBlogAuthoringApplyBlogAiProposalInputSchema = z.object({
+  cursorOffset: z.number().int().nullable().optional(),
+  postRevision: z.number().int().optional(),
+});
+
+/** Zod schema for SocialBlogAuthoringBlogAiConversationDto */
+SocialBlogAuthoringBlogAiConversationDtoSchema = z.object({
   id: z.string().uuid().optional(),
-  allowComments: z.boolean().optional(),
   authorId: z.string().uuid().optional(),
-  commentsCount: z.number().int().optional(),
+  blogPostId: z.string().uuid().optional(),
+  lastMessageAt: z.string().datetime().optional(),
+  messages: z
+    .array(z.lazy(() => SocialBlogAuthoringBlogAiMessageDtoSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for SocialBlogAuthoringBlogAiCreditUsageDto */
+SocialBlogAuthoringBlogAiCreditUsageDtoSchema = z.object({
+  availableSoftCredits: z.number().int().optional(),
+  currency: z.string().nullable().optional(),
+  inputTokens: z.number().int().optional(),
+  maximumEstimatedCost: z.number().int().optional(),
+  outputTokens: z.number().int().optional(),
+  releasedAmount: z.number().int().optional(),
+  settledCost: z.number().int().optional(),
+});
+
+/** Zod schema for SocialBlogAuthoringBlogAiEntitlementDto */
+SocialBlogAuthoringBlogAiEntitlementDtoSchema = z.object({
+  availableSoftCredits: z.number().int().optional(),
+  currency: z.string().nullable().optional(),
+  reservedSoftCredits: z.number().int().optional(),
+  settledSoftCredits: z.number().int().optional(),
+});
+
+/** Zod schema for SocialBlogAuthoringBlogAiMessageDto */
+SocialBlogAuthoringBlogAiMessageDtoSchema = z.object({
+  id: z.string().uuid().optional(),
   content: z.string().nullable().optional(),
-  coverImageUrl: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
+  role: z.string().nullable().optional(),
+  runId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for SocialBlogAuthoringBlogAiProposalDto */
+SocialBlogAuthoringBlogAiProposalDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  basePostRevision: z.number().int().optional(),
+  kind: z.lazy(() => SocialBlogBlogAiProposalKindSchema).optional(),
+  originalContent: z.string().nullable().optional(),
+  proposedAt: z.string().datetime().optional(),
+  proposedContent: z.string().nullable().optional(),
+  runId: z.string().uuid().optional(),
+  status: z.lazy(() => SocialBlogBlogAiProposalStatusSchema).optional(),
+});
+
+/** Zod schema for SocialBlogAuthoringBlogAiRunDto */
+SocialBlogAuthoringBlogAiRunDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  basePostRevision: z.number().int().optional(),
+  blogPostId: z.string().uuid().optional(),
+  completedAt: z.string().datetime().nullable().optional(),
+  conversationId: z.string().uuid().optional(),
+  createdAt: z.string().datetime().optional(),
+  errorCode: z.string().nullable().optional(),
+  errorMessage: z.string().nullable().optional(),
+  instruction: z.string().nullable().optional(),
+  model: z.string().nullable().optional(),
+  proposal: z.lazy(() => SocialBlogAuthoringBlogAiProposalDtoSchema).optional(),
+  proposalKind: z.lazy(() => SocialBlogBlogAiProposalKindSchema).optional(),
+  provider: z.string().nullable().optional(),
+  startedAt: z.string().datetime().nullable().optional(),
+  status: z.lazy(() => SocialBlogBlogAiRunStatusSchema).optional(),
+  usage: z.lazy(() => SocialBlogAuthoringBlogAiCreditUsageDtoSchema).optional(),
+});
+
+/** Zod schema for SocialBlogAuthoringBlogAiRunInput */
+SocialBlogAuthoringBlogAiRunInputSchema = z.object({
+  conversationId: z.string().uuid().nullable().optional(),
+  idempotencyKey: z.string().nullable().optional(),
+  instruction: z.string().nullable().optional(),
+  postRevision: z.number().int().optional(),
+  proposalKind: z.lazy(() => SocialBlogBlogAiProposalKindSchema).optional(),
+  selection: z.string().nullable().optional(),
+});
+
+/** Zod schema for SocialBlogAuthoringBlogPostDto */
+SocialBlogAuthoringBlogPostDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  content: z.string().nullable().optional(),
   excerpt: z.string().nullable().optional(),
-  isFeatured: z.boolean().optional(),
-  likesCount: z.number().int().optional(),
-  publishedAt: z.string().datetime().nullable().optional(),
-  readTimeMinutes: z.number().int().optional(),
+  format: z.lazy(() => SocialBlogBlogContentFormatSchema).optional(),
+  jsonBody: z.string().nullable().optional(),
+  metaDescription: z.string().nullable().optional(),
+  metaTitle: z.string().nullable().optional(),
+  ogImageUrl: z.string().nullable().optional(),
+  revision: z.number().int().optional(),
   slug: z.string().nullable().optional(),
   status: z.lazy(() => SocialBlogBlogPostStatusSchema).optional(),
+  tags: z.array(z.string()).nullable().optional(),
+  title: z.string().nullable().optional(),
+  twitterCard: z.string().nullable().optional(),
+  updatedAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for SocialBlogBlogAiProposalKind */
+SocialBlogBlogAiProposalKindSchema = z.enum(['ReplaceDocument', 'InsertAtCursor', 'LexicalPatch', 'MetadataPatch']);
+
+/** Zod schema for SocialBlogBlogAiProposalStatus */
+SocialBlogBlogAiProposalStatusSchema = z.enum(['Pending', 'Applied', 'Discarded']);
+
+/** Zod schema for SocialBlogBlogAiRunStatus */
+SocialBlogBlogAiRunStatusSchema = z.enum(['Queued', 'Reserved', 'Running', 'Completed', 'Failed', 'Cancelled']);
+
+/** Zod schema for SocialBlogBlogComment */
+SocialBlogBlogCommentSchema = z.object({
+  id: z.string().uuid().optional(),
+  authorUserId: z.string().uuid().optional(),
+  blogPostId: z.string().uuid().optional(),
+  content: z.string().nullable().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  deletedByUserId: z.string().uuid().nullable().optional(),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  parentCommentId: z.string().uuid().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for SocialBlogBlogContentFormat */
+SocialBlogBlogContentFormatSchema = z.enum(['Markdown', 'Lexical']);
+
+/** Zod schema for SocialBlogBlogPost */
+SocialBlogBlogPostSchema = z.object({
+  id: z.string().uuid().optional(),
+  allowComments: z.boolean().optional(),
+  canonicalUrlOverride: z.string().nullable().optional(),
+  commentsCount: z.number().int().optional(),
+  content: z.string().nullable().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  excerpt: z.string().nullable().optional(),
+  format: z.lazy(() => SocialBlogBlogContentFormatSchema).optional(),
+  integrationEvents: z
+    .array(z.lazy(() => IDurableIntegrationEventSchema))
+    .nullable()
+    .optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  jsonBody: z.string().nullable().optional(),
+  metaDescription: z.string().nullable().optional(),
+  metaTitle: z.string().nullable().optional(),
+  ogImageUrl: z.string().nullable().optional(),
+  primaryAuthorId: z.string().uuid().optional(),
+  publishedAt: z.string().datetime().nullable().optional(),
+  readTimeMinutes: z.number().int().optional(),
+  revision: z.number().int().optional(),
+  slug: z.string().nullable().optional(),
+  status: z.lazy(() => SocialBlogBlogPostStatusSchema).optional(),
+  structuredDataOverride: z.string().nullable().optional(),
+  tags: z.array(z.string()).nullable().optional(),
+  tagsJson: z.string().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
   title: z.string().nullable().optional(),
-  updatedAt: z.string().datetime().optional(),
+  twitterCard: z.string().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
   viewsCount: z.number().int().optional(),
 });
 
 /** Zod schema for SocialBlogBlogPostStatus */
-SocialBlogBlogPostStatusSchema = z.enum(['Draft', 'Published', 'Archived']);
+SocialBlogBlogPostStatusSchema = z.enum(['Draft', 'Published']);
 
-/** Zod schema for SocialBlogCreateBlogPostInput */
-SocialBlogCreateBlogPostInputSchema = z.object({
-  authorId: z.string().uuid().optional(),
+/** Zod schema for SocialBlogControllersAddBlogCommentInput */
+SocialBlogControllersAddBlogCommentInputSchema = z.object({
   content: z.string().nullable().optional(),
-  slug: z.string().nullable().optional(),
+  parentCommentId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for SocialBlogControllersBlogCoauthorInput */
+SocialBlogControllersBlogCoauthorInputSchema = z.object({
+  userId: z.string().uuid().optional(),
+});
+
+/** Zod schema for SocialBlogControllersChangeBlogPostSlugInput */
+SocialBlogControllersChangeBlogPostSlugInputSchema = z.object({
+  newSlug: z.string().nullable().optional(),
+});
+
+/** Zod schema for SocialBlogControllersCreateBlogPostInput */
+SocialBlogControllersCreateBlogPostInputSchema = z.object({
+  format: z.lazy(() => SocialBlogBlogContentFormatSchema).optional(),
   tenantId: z.string().uuid().nullable().optional(),
   title: z.string().nullable().optional(),
+});
+
+/** Zod schema for SocialBlogControllersTransferBlogPrimaryInput */
+SocialBlogControllersTransferBlogPrimaryInputSchema = z.object({
+  newPrimaryUserId: z.string().uuid().optional(),
+});
+
+/** Zod schema for SocialBlogControllersUpdateBlogPostDraftInput */
+SocialBlogControllersUpdateBlogPostDraftInputSchema = z.object({
+  allowComments: z.boolean().nullable().optional(),
+  canonicalUrlOverride: z.string().nullable().optional(),
+  content: z.string().nullable().optional(),
+  excerpt: z.string().nullable().optional(),
+  jsonBody: z.string().nullable().optional(),
+  metaDescription: z.string().nullable().optional(),
+  metaTitle: z.string().nullable().optional(),
+  ogImageUrl: z.string().nullable().optional(),
+  revision: z.number().int().optional(),
+  structuredDataOverride: z.string().nullable().optional(),
+  tags: z.array(z.string()).nullable().optional(),
+  title: z.string().nullable().optional(),
+  twitterCard: z.string().nullable().optional(),
+});
+
+/** Zod schema for SocialBlogQueriesBlogCommentDto */
+SocialBlogQueriesBlogCommentDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  authorDisplayName: z.string().nullable().optional(),
+  authorHandle: z.string().nullable().optional(),
+  content: z.string().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  parentCommentId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for SocialBlogQueriesBlogCommentPage */
+SocialBlogQueriesBlogCommentPageSchema = z.object({
+  hasMore: z.boolean().optional(),
+  items: z
+    .array(z.lazy(() => SocialBlogQueriesBlogCommentDtoSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for SocialBlogQueriesBlogPostDetailDto */
+SocialBlogQueriesBlogPostDetailDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  canonicalUrlOverride: z.string().nullable().optional(),
+  coAuthorHandles: z.array(z.string()).nullable().optional(),
+  commentCount: z.number().int().optional(),
+  content: z.string().nullable().optional(),
+  excerpt: z.string().nullable().optional(),
+  format: z.lazy(() => SocialBlogBlogContentFormatSchema).optional(),
+  jsonBody: z.string().nullable().optional(),
+  metaDescription: z.string().nullable().optional(),
+  metaTitle: z.string().nullable().optional(),
+  ogImageUrl: z.string().nullable().optional(),
+  primaryAuthorDisplayName: z.string().nullable().optional(),
+  primaryAuthorHandle: z.string().nullable().optional(),
+  publishedAt: z.string().datetime().nullable().optional(),
+  reactionCount: z.number().int().optional(),
+  readTimeMinutes: z.number().int().optional(),
+  revision: z.number().int().optional(),
+  slug: z.string().nullable().optional(),
+  structuredDataOverride: z.string().nullable().optional(),
+  tags: z.array(z.string()).nullable().optional(),
+  title: z.string().nullable().optional(),
+  twitterCard: z.string().nullable().optional(),
+  updatedAt: z.string().datetime().optional(),
+  viewsCount: z.number().int().optional(),
+});
+
+/** Zod schema for SocialBlogQueriesBlogPostSummaryDto */
+SocialBlogQueriesBlogPostSummaryDtoSchema = z.object({
+  id: z.string().uuid().optional(),
+  coAuthorHandles: z.array(z.string()).nullable().optional(),
+  commentCount: z.number().int().optional(),
+  excerpt: z.string().nullable().optional(),
+  ogImageUrl: z.string().nullable().optional(),
+  primaryAuthorDisplayName: z.string().nullable().optional(),
+  primaryAuthorHandle: z.string().nullable().optional(),
+  publishedAt: z.string().datetime().nullable().optional(),
+  reactionCount: z.number().int().optional(),
+  readTimeMinutes: z.number().int().optional(),
+  slug: z.string().nullable().optional(),
+  tags: z.array(z.string()).nullable().optional(),
+  title: z.string().nullable().optional(),
+});
+
+/** Zod schema for SocialBlogQueriesBlogPostSummaryPage */
+SocialBlogQueriesBlogPostSummaryPageSchema = z.object({
+  hasMore: z.boolean().optional(),
+  items: z
+    .array(z.lazy(() => SocialBlogQueriesBlogPostSummaryDtoSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for SocialBlogQueriesBlogRouteResolutionDto */
+SocialBlogQueriesBlogRouteResolutionDtoSchema = z.object({
+  handle: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
 });
 
 /** Zod schema for SocialFeedAddFeedItemInput */
@@ -32559,8 +33102,28 @@ export type ResourcesContentsContentVersion = ResourcesContentsContentVersionDto
 export { ResourcesContentsContentVersionDtoSchema as ResourcesContentsContentVersionSchema };
 export type ResourcesContentsContentVersionReview = ResourcesContentsContentVersionReviewDto;
 export { ResourcesContentsContentVersionReviewDtoSchema as ResourcesContentsContentVersionReviewSchema };
-export type SocialBlogBlogPost = SocialBlogBlogPostDto;
-export { SocialBlogBlogPostDtoSchema as SocialBlogBlogPostSchema };
+export type SocialBlogAuthoringBlogAiConversation = SocialBlogAuthoringBlogAiConversationDto;
+export { SocialBlogAuthoringBlogAiConversationDtoSchema as SocialBlogAuthoringBlogAiConversationSchema };
+export type SocialBlogAuthoringBlogAiCreditUsage = SocialBlogAuthoringBlogAiCreditUsageDto;
+export { SocialBlogAuthoringBlogAiCreditUsageDtoSchema as SocialBlogAuthoringBlogAiCreditUsageSchema };
+export type SocialBlogAuthoringBlogAiEntitlement = SocialBlogAuthoringBlogAiEntitlementDto;
+export { SocialBlogAuthoringBlogAiEntitlementDtoSchema as SocialBlogAuthoringBlogAiEntitlementSchema };
+export type SocialBlogAuthoringBlogAiMessage = SocialBlogAuthoringBlogAiMessageDto;
+export { SocialBlogAuthoringBlogAiMessageDtoSchema as SocialBlogAuthoringBlogAiMessageSchema };
+export type SocialBlogAuthoringBlogAiProposal = SocialBlogAuthoringBlogAiProposalDto;
+export { SocialBlogAuthoringBlogAiProposalDtoSchema as SocialBlogAuthoringBlogAiProposalSchema };
+export type SocialBlogAuthoringBlogAiRun = SocialBlogAuthoringBlogAiRunDto;
+export { SocialBlogAuthoringBlogAiRunDtoSchema as SocialBlogAuthoringBlogAiRunSchema };
+export type SocialBlogAuthoringBlogPost = SocialBlogAuthoringBlogPostDto;
+export { SocialBlogAuthoringBlogPostDtoSchema as SocialBlogAuthoringBlogPostSchema };
+export type SocialBlogQueriesBlogComment = SocialBlogQueriesBlogCommentDto;
+export { SocialBlogQueriesBlogCommentDtoSchema as SocialBlogQueriesBlogCommentSchema };
+export type SocialBlogQueriesBlogPostDetail = SocialBlogQueriesBlogPostDetailDto;
+export { SocialBlogQueriesBlogPostDetailDtoSchema as SocialBlogQueriesBlogPostDetailSchema };
+export type SocialBlogQueriesBlogPostSummary = SocialBlogQueriesBlogPostSummaryDto;
+export { SocialBlogQueriesBlogPostSummaryDtoSchema as SocialBlogQueriesBlogPostSummarySchema };
+export type SocialBlogQueriesBlogRouteResolution = SocialBlogQueriesBlogRouteResolutionDto;
+export { SocialBlogQueriesBlogRouteResolutionDtoSchema as SocialBlogQueriesBlogRouteResolutionSchema };
 export type SocialFeedFeedAuthor = SocialFeedFeedAuthorDto;
 export { SocialFeedFeedAuthorDtoSchema as SocialFeedFeedAuthorSchema };
 export type SocialFeedFeedEngagement = SocialFeedFeedEngagementDto;

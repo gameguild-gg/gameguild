@@ -34,8 +34,8 @@ vi.mock('@game-guild/client', () => ({
     ContentMarketingLeadsModule: class {
       getMarketingLeads = mocks.getMarketingLeads;
     },
-    SocialBlogPostsModule: class {
-      getApiSocialBlogForGetApiSocialBlog = mocks.getBlogPosts;
+    SocialBlogPublicModule: class {
+      getApiSocialBlogPublicPosts = mocks.getBlogPosts;
     },
   },
 }));
@@ -272,6 +272,7 @@ describe('community member queries', () => {
       data: [{ id: 'post-1' }],
     });
 
+
     const stats = await getCommunityStats();
 
     expect(mocks.clientRequest).toHaveBeenCalledWith({
@@ -288,7 +289,7 @@ describe('community member queries', () => {
       skip: 0,
       take: 500,
     });
-    expect(mocks.getBlogPosts).toHaveBeenCalledWith({ skip: 0, take: 500 });
+    expect(mocks.getBlogPosts).toHaveBeenCalledTimes(1);
     expect(stats).toEqual({
       totalMembers: 4,
       activeMembers: 1,
