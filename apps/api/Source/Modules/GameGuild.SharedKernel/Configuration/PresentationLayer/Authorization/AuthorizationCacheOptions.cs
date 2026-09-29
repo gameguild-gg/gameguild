@@ -119,7 +119,9 @@ public sealed class AuthorizationCacheOptions : BaseOptions
             throw new InvalidOperationException("AccessControlListTtlSeconds cannot be negative.");
 
         if (RulesetTtlSeconds < 0)
+        {
             throw new InvalidOperationException("RulesetTtlSeconds cannot be negative.");
+        }
         
         if (MaxPolicyCacheSize <= 0)
             throw new InvalidOperationException("MaxPolicyCacheSize must be positive.");
@@ -134,7 +136,9 @@ public sealed class AuthorizationCacheOptions : BaseOptions
             Math.Max(PolicyTtlSeconds, PermissionTtlSeconds),
             Math.Max(AccessControlListTtlSeconds, RulesetTtlSeconds));
         if (DistributedCacheTtlSeconds < longestL1TtlSeconds)
+        {
             throw new InvalidOperationException("DistributedCacheTtlSeconds should be >= the longest L1 cache TTL for optimal cache efficiency.");
+        }
     }
 
     /// <summary>
