@@ -17,15 +17,23 @@ public interface IHybridPermissionCache
     /// <remarks>At most 500 distinct keys are accepted. Cache reads are not transactional.</remarks>
     Task<IReadOnlyDictionary<string, CacheResult<T>>> GetManyValuesAsync<T>(
         IReadOnlyCollection<string> keys,
+        string cacheType) where T : struct;
+
+    Task<IReadOnlyDictionary<string, CacheResult<T>>> GetManyValuesAsync<T>(
+        IReadOnlyCollection<string> keys,
         string cacheType,
-        CancellationToken cancellationToken = default) where T : struct;
+        CancellationToken cancellationToken) where T : struct;
 
     /// <summary>Sets multiple value-type entries with bounded concurrency.</summary>
     /// <remarks>At most 500 entries are accepted. Cache writes are not transactional.</remarks>
     Task SetManyValuesAsync<T>(
         IReadOnlyDictionary<string, T> values,
+        string cacheType) where T : struct;
+
+    Task SetManyValuesAsync<T>(
+        IReadOnlyDictionary<string, T> values,
         string cacheType,
-        CancellationToken cancellationToken = default) where T : struct;
+        CancellationToken cancellationToken) where T : struct;
 
     /// <summary>
     ///     Gets a value from the cache.
@@ -306,6 +314,12 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
     }
 
     /// <inheritdoc />
+    public Task<IReadOnlyDictionary<string, CacheResult<T>>> GetManyValuesAsync<T>(
+        IReadOnlyCollection<string> keys,
+        string cacheType) where T : struct =>
+        GetManyValuesAsync<T>(keys, cacheType, CancellationToken.None);
+
+    /// <inheritdoc />
     public async Task<IReadOnlyDictionary<string, CacheResult<T>>> GetManyValuesAsync<T>(
         IReadOnlyCollection<string> keys,
         string cacheType,
@@ -359,6 +373,10 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
     {
         return SetAsyncCore(key, value, cacheType, null, cancellationToken);
     }
+
+    /// <inheritdoc />
+    public Task SetManyValuesAsync<T>(IReadOnlyDictionary<string, T> values, string cacheType) where T : struct =>
+        SetManyValuesAsync(values, cacheType, CancellationToken.None);
 
     /// <inheritdoc />
     public async Task SetManyValuesAsync<T>(
