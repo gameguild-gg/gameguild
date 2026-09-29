@@ -1055,7 +1055,7 @@ public class Web3AuthServiceCovTests
     public async Task GenerateWeb3Challenge_ReturnsChallenge()
     {
         var challenge = new Web3Challenge { Message = "Sign this message", ExpiresAt = DateTime.UtcNow.AddMinutes(5) };
-        _web3Service.Setup(s => s.GenerateChallengeAsync("0x123", null))
+        _web3Service.Setup(s => s.GenerateChallengeAsync("0x123", "1"))
             .ReturnsAsync(challenge);
 
         var result = await _svc.GenerateWeb3ChallengeAsync(

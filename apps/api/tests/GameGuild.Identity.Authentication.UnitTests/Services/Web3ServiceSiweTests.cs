@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Security.Cryptography;
 using FluentAssertions;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
@@ -11,14 +12,12 @@ namespace GameGuild.Identity.Authentication.UnitTests.Services;
 
 public sealed class Web3ServiceSiweTests
 {
-    private const string TestPrivateKey = "0000000000000000000000000000000000000000000000000000000000000001";
-
     [Fact]
     public async Task GenerateChallengeAsync_ShouldReturnCanonicalSiweMessageBoundToConfiguredOriginAndChain()
     {
         using var cache = new MemoryCache(new MemoryCacheOptions());
         var service = CreateService(cache, "https://gameguild.test", "1", "5");
-        var key = new EthECKey(TestPrivateKey);
+        var key = CreateTestKey();
 
         var challenge = await service.GenerateChallengeAsync(key.GetPublicAddress(), chainId: "5");
         var parsed = SiweMessageParser.ParseUsingAbnf(challenge.Message);
@@ -41,7 +40,7 @@ public sealed class Web3ServiceSiweTests
     {
         using var cache = new MemoryCache(new MemoryCacheOptions());
         var service = CreateService(cache, "https://gameguild.test", "1");
-        var key = new EthECKey(TestPrivateKey);
+        var key = CreateTestKey();
         var challenge = await service.GenerateChallengeAsync(key.GetPublicAddress());
         var signature = Sign(challenge.Message, key);
 
@@ -57,8 +56,8 @@ public sealed class Web3ServiceSiweTests
     {
         using var cache = new MemoryCache(new MemoryCacheOptions());
         var service = CreateService(cache, "https://gameguild.test", "1");
-        var expectedKey = new EthECKey(TestPrivateKey);
-        var otherKey = new EthECKey("0000000000000000000000000000000000000000000000000000000000000002");
+        var expectedKey = CreateTestKey();
+        var otherKey = CreateTestKey();
         var challenge = await service.GenerateChallengeAsync(expectedKey.GetPublicAddress());
 
         var result = await service.VerifySignatureAsync(
@@ -77,7 +76,7 @@ public sealed class Web3ServiceSiweTests
         using var cache = new MemoryCache(new MemoryCacheOptions());
         var issuer = CreateService(cache, "https://gameguild.test", "1");
         var verifier = CreateService(cache, "https://attacker.test", "1");
-        var key = new EthECKey(TestPrivateKey);
+        var key = CreateTestKey();
         var challenge = await issuer.GenerateChallengeAsync(key.GetPublicAddress());
 
         var result = await verifier.VerifySignatureAsync(
@@ -95,7 +94,7 @@ public sealed class Web3ServiceSiweTests
     {
         using var cache = new MemoryCache(new MemoryCacheOptions());
         var service = CreateService(cache, "http://localhost:3000", "1");
-        var key = new EthECKey(TestPrivateKey);
+        var key = CreateTestKey();
         var challenge = await service.GenerateChallengeAsync(key.GetPublicAddress());
 
         challenge.Message.Should().StartWith("http://localhost:3000 wants you to sign in with your Ethereum account:");
@@ -114,7 +113,7 @@ public sealed class Web3ServiceSiweTests
     {
         using var cache = new MemoryCache(new MemoryCacheOptions());
         var service = CreateService(cache, "https://gameguild.test", "1", "5");
-        var key = new EthECKey(TestPrivateKey);
+        var key = CreateTestKey();
         var challenge = await service.GenerateChallengeAsync(key.GetPublicAddress());
         var signature = Sign(challenge.Message, key);
 
@@ -132,7 +131,7 @@ public sealed class Web3ServiceSiweTests
     {
         using var cache = new MemoryCache(new MemoryCacheOptions());
         var service = CreateService(cache, "https://gameguild.test", "1");
-        var key = new EthECKey(TestPrivateKey);
+        var key = CreateTestKey();
         var challenge = await service.GenerateChallengeAsync(key.GetPublicAddress());
         var issuedAt = new DateTimeOffset(challenge.IssuedAt.ToUniversalTime()).ToString("O", CultureInfo.InvariantCulture);
         var futureIssuedAt = DateTimeOffset.UtcNow.AddMinutes(10).ToString("O", CultureInfo.InvariantCulture);
@@ -153,7 +152,7 @@ public sealed class Web3ServiceSiweTests
     {
         using var cache = new MemoryCache(new MemoryCacheOptions());
         var service = CreateService(cache, "https://gameguild.test", "1");
-        var key = new EthECKey(TestPrivateKey);
+        var key = CreateTestKey();
         var challenge = await service.GenerateChallengeAsync(key.GetPublicAddress());
         var expiration = new DateTimeOffset(challenge.ExpiresAt.ToUniversalTime()).ToString("O", CultureInfo.InvariantCulture);
         var extendedExpiration = new DateTimeOffset(challenge.ExpiresAt.AddMinutes(1).ToUniversalTime()).ToString("O", CultureInfo.InvariantCulture);
@@ -174,7 +173,7 @@ public sealed class Web3ServiceSiweTests
     {
         using var cache = new MemoryCache(new MemoryCacheOptions());
         var service = CreateService(cache, "https://gameguild.test", "1", "5");
-        var key = new EthECKey(TestPrivateKey);
+        var key = CreateTestKey();
         var handler = new GenerateWeb3ChallengeHandler(service);
 
         var response = await handler.Handle(
@@ -192,7 +191,7 @@ public sealed class Web3ServiceSiweTests
     {
         using var cache = new MemoryCache(new MemoryCacheOptions());
         var service = CreateService(cache, "https://gameguild.test", "1");
-        var key = new EthECKey(TestPrivateKey);
+        var key = CreateTestKey();
 
         var act = () => service.GenerateChallengeAsync(key.GetPublicAddress(), chainId: "5");
 
@@ -204,7 +203,7 @@ public sealed class Web3ServiceSiweTests
     {
         using var cache = new MemoryCache(new MemoryCacheOptions());
         var service = CreateService(cache, "https://tenant.example", ["1"], "Authenticate to tenant.example");
-        var key = new EthECKey(TestPrivateKey);
+        var key = CreateTestKey();
 
         var challenge = await service.GenerateChallengeAsync(key.GetPublicAddress());
         var parsed = SiweMessageParser.ParseUsingAbnf(challenge.Message);
@@ -234,7 +233,10 @@ public sealed class Web3ServiceSiweTests
             ["Authentication:Web3:Siwe:Origin"] = origin
         };
 
-        if (statement is not null) settings["Authentication:Web3:Siwe:Statement"] = statement;
+        if (statement is not null)
+        {
+            settings["Authentication:Web3:Siwe:Statement"] = statement;
+        }
 
         for (var index = 0; index < chainIds.Length; index++)
         {
@@ -250,4 +252,6 @@ public sealed class Web3ServiceSiweTests
         var signature = new EthereumMessageSigner().EncodeUTF8AndSign(message, key);
         return signature.StartsWith("0x", StringComparison.Ordinal) ? signature : $"0x{signature}";
     }
+
+    private static EthECKey CreateTestKey() => new(Convert.ToHexString(RandomNumberGenerator.GetBytes(32)));
 }
