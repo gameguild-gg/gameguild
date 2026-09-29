@@ -1,10 +1,9 @@
 import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/react';
-import type { ReactNode } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { vi } from 'vitest';
 
 vi.mock('@/i18n/navigation', () => ({
-  Link: ({ children, href }: { children: ReactNode; href: string }) => <a href={href}>{children}</a>,
+  Link: ({ children, href }) => <a href={href}>{children}</a>,
 }));
 
 import NotFound from './not-found';
