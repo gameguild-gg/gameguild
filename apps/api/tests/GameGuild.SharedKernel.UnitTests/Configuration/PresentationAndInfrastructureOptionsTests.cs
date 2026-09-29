@@ -419,6 +419,30 @@ public class ApiVersioningOptionsTests
         act.Should().Throw<ArgumentException>();
     }
 
+    [Theory]
+    [InlineData("invalid.invalid")]
+    [InlineData("1.2.3")]
+    public void Validate_UnsupportedDefaultVersion_ShouldThrow(string version)
+    {
+        var options = new ApiVersioningOptions { DefaultVersion = version };
+        var act = () => options.Validate();
+
+        act.Should().Throw<ArgumentException>().WithParameterName("DefaultVersion");
+    }
+
+    [Fact]
+    public void Validate_SemanticVersionFormat_AcceptsPatchAndPrerelease()
+    {
+        var options = ApiVersioningOptions.CreateDefault();
+        options.VersionFormat = ApiVersionFormatKind.SemanticVersion;
+        options.DefaultVersion = "1.2.3-beta.1";
+        options.SunsetPolicies["1.2.4"] = new() { EffectiveAt = DateTimeOffset.UtcNow };
+
+        var act = () => options.Validate();
+
+        act.Should().NotThrow();
+    }
+
     [Fact]
     public void Validate_EmptyQueryParameterName_ShouldThrow()
     {
@@ -426,6 +450,26 @@ public class ApiVersioningOptionsTests
         var act = () => options.Validate();
 
         act.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void Validate_InvalidSunsetPolicyUrl_ShouldThrow()
+    {
+        var options = ApiVersioningOptions.CreateDefault();
+        options.SunsetPolicies["1.0"] = new() { PolicyUrl = "file:///private/policy" };
+        var act = () => options.Validate();
+
+        act.Should().Throw<ArgumentException>().WithParameterName("SunsetPolicies");
+    }
+
+    [Fact]
+    public void Validate_UnknownReadingStrategy_ShouldThrow()
+    {
+        var options = ApiVersioningOptions.CreateDefault();
+        options.ReadingStrategy = (ApiVersionReadingStrategy)int.MaxValue;
+        var act = () => options.Validate();
+
+        act.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("ReadingStrategy");
     }
 }
 

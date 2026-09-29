@@ -16,9 +16,19 @@ public sealed class ApiVersioningOptions : BaseOptions
     public string DefaultVersion { get; set; } = "1.0";
 
     /// <summary>
+    ///     Selects the accepted numeric version format. Date-based versions remain supported in either mode.
+    /// </summary>
+    public ApiVersionFormatKind VersionFormat { get; set; } = ApiVersionFormatKind.Native;
+
+    /// <summary>
     ///     Whether to assume the default version when no version is specified
     /// </summary>
     public bool AssumeDefaultVersionWhenUnspecified { get; set; } = true;
+
+    /// <summary>
+    ///     Whether responses advertise the supported and deprecated API versions.
+    /// </summary>
+    public bool ReportApiVersions { get; set; }
 
     /// <summary>
     ///     Custom query parameter name for version (default: "version")
@@ -46,17 +56,50 @@ public sealed class ApiVersioningOptions : BaseOptions
 
     public bool SubstituteApiVersionInUrl { get; set; } = true;
 
+    /// <summary>
+    ///     Sunset policies keyed by a version accepted by the configured API version parser.
+    /// </summary>
+    public Dictionary<string, ApiVersionSunsetPolicyOptions> SunsetPolicies { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
     public override void Validate()
     {
         base.Validate();
 
         if (string.IsNullOrWhiteSpace(DefaultVersion)) throw new ArgumentException("Default version cannot be null or empty.", nameof(DefaultVersion));
 
+        if (!Enum.IsDefined(VersionFormat))
+            throw new ArgumentOutOfRangeException(nameof(VersionFormat), VersionFormat, "The API version format is not supported.");
+
+        var parser = ApiVersioningOptionsBuilder.CreateParser(VersionFormat);
+
+        if (!parser.TryParse(DefaultVersion.AsSpan(), out _))
+            throw new ArgumentException("Default version is not supported by the configured API version format.", nameof(DefaultVersion));
+
         if (string.IsNullOrWhiteSpace(QueryParameterName)) throw new ArgumentException("Query parameter name cannot be null or empty.", nameof(QueryParameterName));
 
         if (string.IsNullOrWhiteSpace(HeaderName)) throw new ArgumentException("Header name cannot be null or empty.", nameof(HeaderName));
 
         if (string.IsNullOrWhiteSpace(GroupNameFormat)) throw new ArgumentException("Group name format cannot be null or empty.", nameof(GroupNameFormat));
+
+        if (!Enum.IsDefined(ReadingStrategy))
+            throw new ArgumentOutOfRangeException(nameof(ReadingStrategy), ReadingStrategy, "The API version reading strategy is not supported.");
+
+        if (SunsetPolicies is null)
+            throw new ArgumentNullException(nameof(SunsetPolicies));
+
+        foreach (var (version, policy) in SunsetPolicies)
+        {
+            if (string.IsNullOrWhiteSpace(version) || !parser.TryParse(version.AsSpan(), out _))
+                throw new ArgumentException($"Sunset policy key '{version}' is not a supported API version.", nameof(SunsetPolicies));
+
+            if (policy is null)
+                throw new ArgumentException($"Sunset policy for version '{version}' cannot be null.", nameof(SunsetPolicies));
+
+            if (!string.IsNullOrWhiteSpace(policy.PolicyUrl) &&
+                (!Uri.TryCreate(policy.PolicyUrl, UriKind.Absolute, out var policyUri) ||
+                 (policyUri.Scheme != Uri.UriSchemeHttps && policyUri.Scheme != Uri.UriSchemeHttp)))
+                throw new ArgumentException($"Sunset policy URL for version '{version}' must be an absolute HTTP or HTTPS URL.", nameof(SunsetPolicies));
+        }
     }
 
     public static ApiVersioningOptions CreateDefault() { return new ApiVersioningOptions(); }

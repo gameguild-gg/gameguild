@@ -145,7 +145,6 @@ public sealed class OpenApiSetupTests
 
     [Theory]
     [InlineData("2.3", 2, 3)]
-    [InlineData("invalid.invalid", 1, 0)]
     [InlineData("4", 4, 0)]
     public void SetupApiVersioning_ParsesConfiguredDefaultVersion(string configured, int expectedMajor, int expectedMinor)
     {
@@ -163,6 +162,86 @@ public sealed class OpenApiSetupTests
         configuredOptions.ApiVersionReader.Should().NotBeNull();
         explorerOptions.GroupNameFormat.Should().Be(options.GroupNameFormat);
         explorerOptions.SubstituteApiVersionInUrl.Should().Be(options.SubstituteApiVersionInUrl);
+    }
+
+    [Theory]
+    [InlineData("2.3-beta.1")]
+    [InlineData("2026-09-29")]
+    public void SetupApiVersioning_PreservesStatusAndDateBasedDefaultVersions(string configured)
+    {
+        var services = new ServiceCollection();
+        var options = GameGuild.Configuration.PresentationLayer.ApiVersioning.ApiVersioningOptions.CreateDefault();
+        options.DefaultVersion = configured;
+
+        services.SetupApiVersioning(new ConfigurationBuilder().Build(), options);
+
+        using var provider = services.BuildServiceProvider();
+        var actual = provider.GetRequiredService<IOptions<Asp.Versioning.ApiVersioningOptions>>().Value.DefaultApiVersion;
+
+        actual.Should().Be(ApiVersionParser.Default.Parse(configured.AsSpan()));
+    }
+
+    [Fact]
+    public void SetupApiVersioning_RejectsInvalidDefaultVersionInsteadOfFallingBack()
+    {
+        var services = new ServiceCollection();
+        var options = GameGuild.Configuration.PresentationLayer.ApiVersioning.ApiVersioningOptions.CreateDefault();
+        options.DefaultVersion = "invalid.invalid";
+
+        var act = () => services.SetupApiVersioning(new ConfigurationBuilder().Build(), options);
+
+        act.Should().Throw<ArgumentException>().WithParameterName("DefaultVersion");
+    }
+
+    [Fact]
+    public void SetupApiVersioning_ConfiguresVersionReportingAndSunsetPolicy()
+    {
+        var services = new ServiceCollection();
+        var options = GameGuild.Configuration.PresentationLayer.ApiVersioning.ApiVersioningOptions.CreateDefault();
+        var sunsetAt = new DateTimeOffset(2027, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        options.ReportApiVersions = true;
+        options.SunsetPolicies["1.0"] = new()
+        {
+            EffectiveAt = sunsetAt,
+            PolicyUrl = "https://docs.example.com/api/sunset"
+        };
+
+        services.SetupApiVersioning(new ConfigurationBuilder().Build(), options);
+
+        using var provider = services.BuildServiceProvider();
+        var configuredOptions = provider.GetRequiredService<IOptions<Asp.Versioning.ApiVersioningOptions>>().Value;
+        var policyManager = provider.GetRequiredService<ISunsetPolicyManager>();
+
+        configuredOptions.ReportApiVersions.Should().BeTrue();
+        policyManager.TryGetPolicy(new ApiVersion(1, 0), out var policy).Should().BeTrue();
+        policy.Should().NotBeNull();
+        policy!.Date.Should().Be(sunsetAt);
+        policy.HasLinks.Should().BeTrue();
+    }
+
+    [Fact]
+    public void SetupApiVersioning_RegistersSemanticParserAndAcceptsPatchDefault()
+    {
+        var services = new ServiceCollection();
+        var options = GameGuild.Configuration.PresentationLayer.ApiVersioning.ApiVersioningOptions.CreateDefault();
+        options.VersionFormat = GameGuild.Configuration.PresentationLayer.ApiVersioning.ApiVersionFormatKind.SemanticVersion;
+        options.DefaultVersion = "2.3.4-rc.1";
+        options.SunsetPolicies["2.3.4-rc.1"] = new()
+        {
+            EffectiveAt = new DateTimeOffset(2027, 1, 1, 0, 0, 0, TimeSpan.Zero),
+            PolicyUrl = "https://docs.example.com/api/sunset"
+        };
+
+        services.SetupApiVersioning(new ConfigurationBuilder().Build(), options);
+
+        using var provider = services.BuildServiceProvider();
+        provider.GetRequiredService<IApiVersionParser>().Should().BeOfType<GameGuild.Configuration.PresentationLayer.ApiVersioning.SemanticApiVersionParser>();
+        provider.GetRequiredService<IOptions<Asp.Versioning.ApiVersioningOptions>>().Value.DefaultApiVersion.ToString().Should().Be("2.3.4-rc.1");
+        provider.GetRequiredService<ISunsetPolicyManager>()
+            .TryGetPolicy(provider.GetRequiredService<IApiVersionParser>().Parse("2.3.4-rc.1".AsSpan()), out var policy)
+            .Should().BeTrue();
+        policy.Should().NotBeNull();
+        policy!.HasLinks.Should().BeTrue();
     }
 
     private static ApiDescription CreateDescription(ActionDescriptor descriptor, string? groupName)
