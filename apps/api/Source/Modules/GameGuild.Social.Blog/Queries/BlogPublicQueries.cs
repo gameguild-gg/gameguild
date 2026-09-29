@@ -87,6 +87,21 @@ public sealed record GetPublicBlogPostDetailQuery(string Handle, string Slug) : 
 /// </summary>
 public sealed record ListBlogCommentsQuery(Guid PostId, Guid? ViewerId = null, DateTime? AfterCreatedAt = null, Guid? AfterId = null) : IQuery<BlogCommentPage>;
 
+/// <summary>Canonical (handle, slug) route a stale URL resolves to, for permanent redirects.</summary>
+public sealed record BlogRouteResolutionDto(string Handle, string Slug);
+
+/// <summary>
+/// Resolves a possibly-stale (handle, slug) route to the current canonical route (history-aware),
+/// or null when no live post matches. The payload is redirect-target metadata only.
+/// </summary>
+public sealed record ResolveBlogRouteForRedirectQuery(string Handle, string Slug) : IQuery<BlogRouteResolutionDto?>;
+
+/// <summary>
+/// True when a live published post exists with the given id. Drafts, deleted posts, and unknown
+/// ids are indistinguishable (false) — the controller maps that to 404 like the detail query.
+/// </summary>
+public sealed record IsBlogPostPublishedQuery(Guid PostId) : IQuery<bool>;
+
 /// <summary>
 /// Public read-side handlers. All queries filter <c>Status == Published &amp;&amp; DeletedAt == null</c>;
 /// reaction counts come from a batched group-count over Social.Reactions (domain→domain, direct
@@ -398,4 +413,73 @@ public sealed class ListBlogCommentsQueryHandler(IApplicationDbContext context, 
 
         return new BlogCommentPage(items, page.Count > BlogPublicQueries.CommentPageSize);
     }
+}
+
+/// <summary>Handles <see cref="ResolveBlogRouteForRedirectQuery"/>.</summary>
+public sealed class ResolveBlogRouteForRedirectQueryHandler(IApplicationDbContext context)
+    : IQueryHandler<ResolveBlogRouteForRedirectQuery, BlogRouteResolutionDto?>
+{
+    /// <inheritdoc />
+    public async Task<BlogRouteResolutionDto?> Handle(ResolveBlogRouteForRedirectQuery request, CancellationToken cancellationToken)
+    {
+        var normalized = SocialProfile.NormalizeHandle(request.Handle);
+        var authorUserId = await context.Set<SocialProfile>()
+            .AsNoTracking()
+            .Where(p => p.Handle == normalized && p.DeletedAt == null)
+            .Select(p => (Guid?)p.UserId)
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+        if (authorUserId is null)
+            return null;
+
+        // Current route first; retired route via slug history otherwise.
+        var post = await BlogPublicQueries.PublishedPosts(context)
+            .Where(p => p.PrimaryAuthorId == authorUserId && p.Slug == request.Slug)
+            .Select(p => new { p.PrimaryAuthorId, p.Slug })
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+        if (post is not null)
+            return await ToResolutionAsync(context, post.PrimaryAuthorId, post.Slug, cancellationToken).ConfigureAwait(false);
+
+        var history = await context.Set<BlogSlugHistory>()
+            .AsNoTracking()
+            .Where(h => h.PreviousPrimaryAuthorId == authorUserId && h.PreviousSlug == request.Slug)
+            .Select(h => h.BlogPostId)
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+        if (history == Guid.Empty)
+            return null;
+
+        var target = await BlogPublicQueries.PublishedPosts(context)
+            .Where(p => p.Id == history)
+            .Select(p => new { p.PrimaryAuthorId, p.Slug })
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return target is null
+            ? null
+            : await ToResolutionAsync(context, target.PrimaryAuthorId, target.Slug, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static async Task<BlogRouteResolutionDto?> ToResolutionAsync(
+        IApplicationDbContext context, Guid primaryAuthorId, string slug, CancellationToken ct)
+    {
+        var handle = await context.Set<SocialProfile>()
+            .AsNoTracking()
+            .Where(p => p.UserId == primaryAuthorId && p.DeletedAt == null)
+            .Select(p => p.Handle)
+            .FirstOrDefaultAsync(ct)
+            .ConfigureAwait(false);
+        return handle is null ? null : new BlogRouteResolutionDto(handle, slug);
+    }
+}
+
+/// <summary>Handles <see cref="IsBlogPostPublishedQuery"/>.</summary>
+public sealed class IsBlogPostPublishedQueryHandler(IApplicationDbContext context)
+    : IQueryHandler<IsBlogPostPublishedQuery, bool>
+{
+    /// <inheritdoc />
+    public Task<bool> Handle(IsBlogPostPublishedQuery request, CancellationToken cancellationToken)
+        => BlogPublicQueries.PublishedPosts(context)
+            .AnyAsync(p => p.Id == request.PostId, cancellationToken);
 }

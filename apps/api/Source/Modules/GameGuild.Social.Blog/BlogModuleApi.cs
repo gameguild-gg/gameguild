@@ -74,6 +74,10 @@ public static class BlogDependencyInjection
         services.AddScoped<IRequestHandler<GetPublicBlogPostDetailQuery, BlogPostDetailDto?>>(sp => sp.GetRequiredService<IQueryHandler<GetPublicBlogPostDetailQuery, BlogPostDetailDto?>>());
         services.AddScoped<IQueryHandler<ListBlogCommentsQuery, BlogCommentPage>, ListBlogCommentsQueryHandler>();
         services.AddScoped<IRequestHandler<ListBlogCommentsQuery, BlogCommentPage>>(sp => sp.GetRequiredService<IQueryHandler<ListBlogCommentsQuery, BlogCommentPage>>());
+        services.AddScoped<IQueryHandler<ResolveBlogRouteForRedirectQuery, BlogRouteResolutionDto?>, ResolveBlogRouteForRedirectQueryHandler>();
+        services.AddScoped<IRequestHandler<ResolveBlogRouteForRedirectQuery, BlogRouteResolutionDto?>>(sp => sp.GetRequiredService<IQueryHandler<ResolveBlogRouteForRedirectQuery, BlogRouteResolutionDto?>>());
+        services.AddScoped<IQueryHandler<IsBlogPostPublishedQuery, bool>, IsBlogPostPublishedQueryHandler>();
+        services.AddScoped<IRequestHandler<IsBlogPostPublishedQuery, bool>>(sp => sp.GetRequiredService<IQueryHandler<IsBlogPostPublishedQuery, bool>>());
 
         return services;
     }
