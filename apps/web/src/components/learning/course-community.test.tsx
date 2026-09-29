@@ -1,8 +1,12 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { cloneElement, isValidElement, type ComponentProps, type ReactElement, type ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { createCourseDiscussion } from '@/lib/learner/activity-actions';
 
-const mocks = vi.hoisted(() => ({ createDiscussion: vi.fn(), refresh: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  createDiscussion: vi.fn<typeof createCourseDiscussion>(),
+  refresh: vi.fn(),
+}));
 
 vi.mock('@/i18n/navigation', () => ({
   useRouter: () => ({ refresh: mocks.refresh }),
@@ -10,6 +14,7 @@ vi.mock('@/i18n/navigation', () => ({
 }));
 vi.mock('@/lib/learner/activity-actions', () => ({ createCourseDiscussion: mocks.createDiscussion }));
 vi.mock('@game-guild/ui/components/button', () => ({
+  buttonVariants: () => '',
   Button: (props: ComponentProps<'button'> & {
     asChild?: boolean;
     render?: ReactElement;
