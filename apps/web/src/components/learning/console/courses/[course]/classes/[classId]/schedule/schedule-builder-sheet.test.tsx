@@ -150,7 +150,7 @@ describe('ScheduleBuilderSheet', () => {
     await user.clear(screen.getByLabelText('Units per period'));
     await user.type(screen.getByLabelText('Units per period'), '3');
     await user.click(screen.getByLabelText('Release policy'));
-    await user.click(screen.getByRole('option', { name: 'Immediately' }));
+    await user.click(await screen.findByRole('option', { name: 'Immediately' }));
     await user.clear(screen.getByLabelText('Assessment due offset (days)'));
     await user.type(screen.getByLabelText('Assessment due offset (days)'), '2');
     await user.type(

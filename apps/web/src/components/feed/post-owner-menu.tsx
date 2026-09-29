@@ -111,7 +111,7 @@ export function PostOwnerMenu({
         <DropdownMenuContent align="end">
           {canEdit ? (
             <DropdownMenuItem
-              onSelect={() => {
+              onClick={() => {
                 setError(null);
                 setEditContent(content);
                 setEditOpen(true);
@@ -124,7 +124,7 @@ export function PostOwnerMenu({
           {canDelete ? (
             <DropdownMenuItem
               variant="destructive"
-              onSelect={() => {
+              onClick={() => {
                 setError(null);
                 setDeleteOpen(true);
               }}

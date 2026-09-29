@@ -280,7 +280,15 @@ export function CohortScheduleWorkspace({ courseId, cohort, initialSchedule }: C
               <div className="space-y-2">
                 <Label htmlFor="schedule-item-visibility">Student visibility</Label>
                 <Select value={editValues.visibilityOverride} onValueChange={(value) => setEditValues({ ...editValues, visibilityOverride: value as LearningCohortsCohortVisibilityOverride })}>
-                  <SelectTrigger id="schedule-item-visibility" className="w-full"><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="schedule-item-visibility" className="w-full">
+                    <SelectValue>
+                      {editValues.visibilityOverride === 'Inherited'
+                        ? 'Follow course content'
+                        : editValues.visibilityOverride === 'Visible'
+                          ? 'Force visible'
+                          : 'Hide from students'}
+                    </SelectValue>
+                  </SelectTrigger>
                   <SelectContent><SelectItem value="Inherited">Follow course content</SelectItem><SelectItem value="Visible">Force visible</SelectItem><SelectItem value="Hidden">Hide from students</SelectItem></SelectContent>
                 </Select>
               </div>

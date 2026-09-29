@@ -87,7 +87,7 @@ describe("social navigation", () => {
         activeTab="foryou"
       />,
     );
-    expect(screen.getByRole("button", { name: "View profile" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "View profile" })).toHaveAttribute(
       "href",
       "/social/profiles/lin",
     );
