@@ -419,32 +419,32 @@ public class BlogReadTimeTests
     }
 
     [Fact]
-    public void UpdateDraft_MarkdownBody_RecalculatesReadTime()
+    public async Task UpdateDraft_MarkdownBody_RecalculatesReadTime()
     {
         using var h = new BlogServiceTestHarness();
-        var post = h.CreatePostAsync(title: "Read Me").Result;
+        var post = await h.CreatePostAsync(title: "Read Me");
         var body = string.Join(' ', Enumerable.Repeat("word", 500)); // 500 words → 3 min
-        var updated = h.Service.UpdateDraftAsync(h.Primary, post.Id, new UpdateBlogPostDraftCommand(post.Id, post.Revision, Content: body)).Result;
+        var updated = await h.Service.UpdateDraftAsync(h.Primary, post.Id, new UpdateBlogPostDraftCommand(post.Id, post.Revision, Content: body));
         updated.ReadTimeMinutes.Should().Be(3);
     }
 
     [Fact]
-    public void UpdateDraft_MetaOnly_DoesNotRecomputeReadTime()
+    public async Task UpdateDraft_MetaOnly_DoesNotRecomputeReadTime()
     {
         using var h = new BlogServiceTestHarness();
-        var post = h.CreatePostAsync(title: "Read Me").Result;
-        var updated = h.Service.UpdateDraftAsync(h.Primary, post.Id, new UpdateBlogPostDraftCommand(post.Id, post.Revision, MetaTitle: "just seo")).Result;
+        var post = await h.CreatePostAsync(title: "Read Me");
+        var updated = await h.Service.UpdateDraftAsync(h.Primary, post.Id, new UpdateBlogPostDraftCommand(post.Id, post.Revision, MetaTitle: "just seo"));
         updated.ReadTimeMinutes.Should().Be(1); // untouched default
     }
 
     [Fact]
-    public void UpdateDraft_LexicalBody_RecalculatesFromTextNodes()
+    public async Task UpdateDraft_LexicalBody_RecalculatesFromTextNodes()
     {
         using var h = new BlogServiceTestHarness();
-        var post = h.CreatePostAsync(title: "Rich", format: BlogContentFormat.Lexical).Result;
+        var post = await h.CreatePostAsync(title: "Rich", format: BlogContentFormat.Lexical);
         var text = string.Join(' ', Enumerable.Repeat("word", 250)); // 250 words → 2 min
         var json = """{"root":{"children":[{"children":[{"text":"REPLACED"}],"type":"paragraph"}]}}""".Replace("REPLACED", text);
-        var updated = h.Service.UpdateDraftAsync(h.Primary, post.Id, new UpdateBlogPostDraftCommand(post.Id, post.Revision, JsonBody: json)).Result;
+        var updated = await h.Service.UpdateDraftAsync(h.Primary, post.Id, new UpdateBlogPostDraftCommand(post.Id, post.Revision, JsonBody: json));
         updated.ReadTimeMinutes.Should().Be(2);
     }
 }
