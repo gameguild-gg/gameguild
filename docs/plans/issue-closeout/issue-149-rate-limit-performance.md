@@ -1,6 +1,6 @@
 # Issue 149 rate-limit performance evidence
 
-Run on 2026-09-27 with .NET 10.0.10, BenchmarkDotNet 0.14.0, Windows 10, and an Intel Xeon W-2235 host reporting one available CPU.
+Run on 2026-09-28 with .NET 10.0.10, BenchmarkDotNet 0.14.0, Windows 10, and an Intel Xeon W-2235 host reporting one available CPU (12 logical, 6 physical cores).
 
 Command:
 
@@ -12,9 +12,9 @@ The `MediumRun` used 15 measured iterations and 2 launches per scenario, after 1
 
 | Scenario | Mean | 99.9% confidence interval | Managed allocation |
 | --- | ---: | ---: | ---: |
-| Without rate limiting | 10.07 µs/request | 9.081–11.050 µs | 7.51 KB/request |
-| With in-memory global rate limiting | 12.10 µs/request | 10.716–13.491 µs | 8.84 KB/request |
+| Without rate limiting | 7.790 µs/request | 7.676–7.904 µs | 7.51 KB/request |
+| With in-memory global rate limiting | 9.441 µs/request | 9.229–9.654 µs | 8.83 KB/request |
 
-The observed mean difference was about 2.04 µs/request (about 20% of the baseline mean), with about 1.33 KB additional managed allocation. The confidence intervals overlap, and BenchmarkDotNet reported short measured iterations and outliers. Treat this run as diagnostic evidence that the benchmark exercises the configured limiter, not as a production SLO or a statistically conclusive overhead claim.
+The observed mean difference was 1.651 µs/request (about 21.2% of the baseline mean), with 1.32 KB additional managed allocation. BenchmarkDotNet reported one outlier in the unthrottled scenario and two in the limited scenario. The intervals do not overlap for this local run, but the TestServer workload and constrained host do not establish production latency or capacity. Treat it as a repeatable diagnostic comparison, not as a production SLO.
 
-The benchmark excludes authentication, database access, network transport, and Redis. Redis failure behavior is now configurable through `RateLimiting:RedisFailureMode`: `FailOpen` preserves the current availability-first behavior and `FailClosed` returns HTTP 503 Problem Details when admission cannot be checked. A Testcontainers integration test now validates the shared request limit across two independent Kestrel containers under 200 concurrent requests. Issue 149 remains open for representative production profiling and an operator-selected deployment mode.
+The benchmark excludes authentication, database access, network transport, and Redis. Redis failure behavior is configurable through `RateLimiting:RedisFailureMode`: `FailOpen` preserves the current availability-first behavior and `FailClosed` returns HTTP 503 Problem Details when admission cannot be checked. Local verification passed 32 API rate-limit tests, 14 Redis failure-mode tests, and 16 Redis Testcontainers integration tests, including shared limits across independent Kestrel hosts under concurrent load. Issue 149 remains open for representative production profiling and an operator-selected deployment mode.
