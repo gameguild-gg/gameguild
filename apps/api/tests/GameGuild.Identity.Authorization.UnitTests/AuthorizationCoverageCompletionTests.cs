@@ -2334,7 +2334,7 @@ public sealed class AuthorizationCoverageCompletionTests
         InvokePrivateStatic<Guid?>(typeof(SelfOrPermissionRuleEvaluator), "GetTargetUserIdFromResource", new { UserId = (Guid?)null }, new RuleParameters())
             .Should().BeNull();
 
-        InvokePrivateStatic<AclSubject>(typeof(OwnerOrAclRuleEvaluator), "BuildAclSubject", new ClaimsPrincipal())
+        InvokePrivateStatic<AclSubject>(typeof(OwnerOrAclRuleEvaluator), "BuildAclSubject", new ClaimsPrincipal(), "group_id")
             .IsAuthenticated.Should().BeFalse();
 
         var aclEntry = new AccessControlListEntry { PrincipalType = AclPrincipalType.User, PrincipalId = null };
@@ -2377,7 +2377,8 @@ public sealed class AuthorizationCoverageCompletionTests
         var ownerSubject = InvokePrivateStatic<AclSubject>(
             typeof(OwnerOrAclRuleEvaluator),
             "BuildAclSubject",
-            Principal(new Claim(ClaimNames.Subject, Guid.Empty.ToString()), new Claim(ClaimNames.Role, "bad"), new Claim(ClaimNames.Group, "bad")));
+            Principal(new Claim(ClaimNames.Subject, Guid.Empty.ToString()), new Claim(ClaimNames.Role, "bad"), new Claim(ClaimNames.Group, "bad")),
+            "group_id");
         ownerSubject.UserId.Should().BeNull();
         ownerSubject.IsAuthenticated.Should().BeTrue();
 
