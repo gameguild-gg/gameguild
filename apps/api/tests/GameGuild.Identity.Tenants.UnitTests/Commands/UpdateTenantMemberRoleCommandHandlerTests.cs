@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GameGuild.Identity.Authorization.Caching;
 using Moq;
 using Xunit;
 
@@ -8,13 +9,18 @@ public class UpdateTenantMemberRoleCommandHandlerTests
 {
     private readonly Mock<ITenantMemberRepository> _memberRepositoryMock;
     private readonly Mock<ITenantRepository> _tenantRepositoryMock;
+    private readonly Mock<ICacheInvalidationService> _cacheInvalidationServiceMock;
     private readonly UpdateTenantMemberRoleCommandHandler _handler;
 
     public UpdateTenantMemberRoleCommandHandlerTests()
     {
         _memberRepositoryMock = new Mock<ITenantMemberRepository>();
         _tenantRepositoryMock = new Mock<ITenantRepository>();
-        _handler = new UpdateTenantMemberRoleCommandHandler(_memberRepositoryMock.Object, _tenantRepositoryMock.Object);
+        _cacheInvalidationServiceMock = new Mock<ICacheInvalidationService>();
+        _handler = new UpdateTenantMemberRoleCommandHandler(
+            _memberRepositoryMock.Object,
+            _tenantRepositoryMock.Object,
+            _cacheInvalidationServiceMock.Object);
     }
 
     [Fact]
@@ -46,6 +52,32 @@ public class UpdateTenantMemberRoleCommandHandlerTests
         result.NewRole.Should().Be("Admin");
         member.Role.Should().Be("Admin");
         _memberRepositoryMock.Verify(r => r.UpdateAsync(member, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_WhenRoleUpdateSucceeds_ShouldPersistBeforeInvalidatingUserCache()
+    {
+        var member = new TenantMember { TenantId = Guid.NewGuid(), UserId = Guid.NewGuid(), Role = "Member" };
+        var sequence = new MockSequence();
+
+        _memberRepositoryMock.InSequence(sequence)
+            .Setup(r => r.GetByUserAndTenantAsync(member.UserId, member.TenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(member);
+        _memberRepositoryMock.InSequence(sequence)
+            .Setup(r => r.UpdateAsync(member, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(member);
+        _cacheInvalidationServiceMock.InSequence(sequence)
+            .Setup(s => s.InvalidateUserAsync(member.UserId, member.TenantId, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var result = await _handler.Handle(
+            new UpdateTenantMemberRoleCommand(member.TenantId, member.UserId, "Admin"),
+            CancellationToken.None);
+
+        result.Success.Should().BeTrue();
+        _cacheInvalidationServiceMock.Verify(
+            s => s.InvalidateUserAsync(member.UserId, member.TenantId, It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
@@ -115,6 +147,52 @@ public class UpdateTenantMemberRoleCommandHandlerTests
         defaultMembership.Role.Should().Be("SystemAdmin");
         requestedMembership.Role.Should().Be("Member");
         _memberRepositoryMock.Verify(r => r.UpdateAsync(defaultMembership, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_WhenPromotingSystemAdmin_ShouldInvalidateTheDefaultAndDemotedMembershipCaches()
+    {
+        var userId = Guid.NewGuid();
+        var staleTenant = new Tenant { Id = Guid.NewGuid(), Name = "Studio", Slug = "studio" };
+        var defaultTenant = new Tenant { Id = Guid.NewGuid(), Name = "GameGuild", Slug = "gameguild", IsDefault = true };
+        var staleMembership = new TenantMember
+        {
+            TenantId = staleTenant.Id,
+            UserId = userId,
+            Role = "SystemAdmin",
+            Tenant = staleTenant
+        };
+        var defaultMembership = new TenantMember
+        {
+            TenantId = defaultTenant.Id,
+            UserId = userId,
+            Role = "Member",
+            Tenant = defaultTenant
+        };
+
+        _memberRepositoryMock.Setup(r => r.GetByUserAndTenantAsync(userId, staleTenant.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(staleMembership);
+        _memberRepositoryMock.Setup(r => r.GetByUserIdAsync(userId, true, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([staleMembership, defaultMembership]);
+        _memberRepositoryMock.Setup(r => r.UpdateAsync(It.IsAny<TenantMember>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TenantMember member, CancellationToken _) => member);
+        _cacheInvalidationServiceMock
+            .Setup(s => s.InvalidateUserAsync(userId, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var result = await _handler.Handle(
+            new UpdateTenantMemberRoleCommand(staleTenant.Id, userId, "SystemAdmin"),
+            CancellationToken.None);
+
+        result.Success.Should().BeTrue();
+        staleMembership.Role.Should().Be(TenantRole.Admin);
+        defaultMembership.Role.Should().Be("SystemAdmin");
+        _cacheInvalidationServiceMock.Verify(
+            s => s.InvalidateUserAsync(userId, staleTenant.Id, It.IsAny<CancellationToken>()),
+            Times.Once);
+        _cacheInvalidationServiceMock.Verify(
+            s => s.InvalidateUserAsync(userId, defaultTenant.Id, It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
