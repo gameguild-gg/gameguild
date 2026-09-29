@@ -1256,7 +1256,9 @@ export function AssessmentEditor({
                       disabled={isPolicyPending}
                     >
                       <SelectTrigger id="group-set">
-                        <SelectValue />
+                        <SelectValue>
+                          {groupSets.find((set) => set.id === groupSetId)?.name ?? "No group set"}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value={GROUP_SET_NONE}>

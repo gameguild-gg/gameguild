@@ -1712,7 +1712,7 @@ describe("LessonAuthoringWorkspace", () => {
     const view = screen.getByRole("combobox", { name: "Editor view" });
 
     await user.click(view);
-    await user.click(screen.getByRole("option", { name: "Preview" }));
+    await user.click(await screen.findByRole("option", { name: "Preview" }));
     expect(screen.getByTestId("learner-renderer")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "editor" }));
