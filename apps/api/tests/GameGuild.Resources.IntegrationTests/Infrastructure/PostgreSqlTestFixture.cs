@@ -1,51 +1,46 @@
+using GameGuild.API.Database;
+using GameGuild.TestSupport.Finance.Economy;
+using Microsoft.EntityFrameworkCore;
 using Npgsql;
-using Testcontainers.PostgreSql;
 using Xunit;
 
 namespace GameGuild.Resources.IntegrationTests.Infrastructure;
 
 /// <summary>
-/// Shared fixture that manages a PostgreSQL container for integration tests.
+/// Shared fixture that manages an isolated PostgreSQL database for integration tests.
 /// This fixture is shared across all test classes in the same collection,
-/// reducing container startup overhead.
+/// using the gate-owned server in CI and a disposable container locally.
 /// </summary>
 public class PostgreSqlTestFixture : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _container;
+    private EconomyPostgreSqlTestDatabase _database = null!;
     
-    public string ConnectionString => _container.GetConnectionString();
+    public string ConnectionString => _database.ConnectionString;
     public bool IsRunning { get; private set; }
-
-    public PostgreSqlTestFixture()
-    {
-        _container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("gameguild_test")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-    }
 
     public async Task InitializeAsync()
     {
-        await _container.StartAsync();
+        _database = await EconomyPostgreSqlTestDatabase.CreateAsync("resources_integration");
+        // Resource tests create their own schema; do not inherit the full gate template.
+        await _database.ResetAsync();
+        // The full API's hosted preflight starts while WebApplicationFactory builds
+        // its host. Its schema must already exist before any factory is constructed.
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseNpgsql(ConnectionString)
+            .Options;
+        await using var context = new ApplicationDbContext(options);
+        await context.Database.MigrateAsync();
         IsRunning = true;
         
-        // Note: We don't call EnsureCreatedAsync() here because the application's
-        // EF Core model has complex configurations that require the full application
-        // context to resolve. The WebApplicationFactory will handle database setup
-        // when the app starts.
-        // 
-        // If you need to create the schema, consider:
-        // 1. Using migrations: context.Database.MigrateAsync()
-        // 2. Or ensuring the main app's model is properly configured
+        // Per-test quota databases created below remain empty so their focused
+        // contexts can create only the schema required by each quota scenario.
     }
 
     public async Task DisposeAsync()
     {
         IsRunning = false;
-        await _container.DisposeAsync();
+        if (_database is not null)
+            await _database.DisposeAsync();
     }
 
     public async Task<PostgreSqlTestDatabase> CreateDatabaseAsync(string prefix)
@@ -102,8 +97,8 @@ public sealed class PostgreSqlTestDatabase(
 }
 
 /// <summary>
-/// Collection definition for tests that share a PostgreSQL container.
-/// All test classes with [Collection("PostgreSql")] will share the same container instance.
+/// Collection definition for tests that share an isolated PostgreSQL database.
+/// All test classes with [Collection("PostgreSql")] share the same fixture instance.
 /// </summary>
 [CollectionDefinition("PostgreSql")]
 public class PostgreSqlCollectionDefinition : ICollectionFixture<PostgreSqlTestFixture>
