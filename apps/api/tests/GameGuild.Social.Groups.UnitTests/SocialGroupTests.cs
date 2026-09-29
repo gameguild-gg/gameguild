@@ -898,7 +898,10 @@ internal sealed class InMemorySocialGroupMemberRepository : ISocialGroupMemberRe
     public Task<SocialGroupMember?> GetByGroupUserAsync(Guid groupId, Guid userId, CancellationToken cancellationToken = default)
         => Task.FromResult(Members.FirstOrDefault(member => member.GroupId == groupId && member.UserId == userId));
 
-    public Task<IReadOnlyList<Guid>> ListActiveGroupIdsByUserAsync(Guid userId, Guid? tenantId, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<Guid>> ListActiveGroupIdsByUserAsync(Guid userId, Guid? tenantId)
+        => Task.FromResult<IReadOnlyList<Guid>>([]);
+
+    public Task<IReadOnlyList<Guid>> ListActiveGroupIdsByUserAsync(Guid userId, Guid? tenantId, CancellationToken cancellationToken)
         => Task.FromResult<IReadOnlyList<Guid>>([]);
 
     public Task<IReadOnlyList<SocialGroupMember>> ListByGroupAsync(Guid groupId, SocialGroupMembershipStatus? status, int skip, int take, CancellationToken cancellationToken = default)
@@ -1016,7 +1019,10 @@ internal sealed class RecordingUserAuthorizationTokenVersionService : IUserAutho
 
     public Func<Guid, CancellationToken, Task>? OnIncrement { get; set; }
 
-    public async Task IncrementAsync(Guid userId, CancellationToken cancellationToken = default)
+    public Task IncrementAsync(Guid userId)
+        => IncrementAsync(userId, CancellationToken.None);
+
+    public async Task IncrementAsync(Guid userId, CancellationToken cancellationToken)
     {
         if (OnIncrement is not null)
         {

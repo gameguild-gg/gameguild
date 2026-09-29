@@ -124,7 +124,9 @@ public interface ISocialGroupMemberRepository
 {
     Task<SocialGroupMember?> GetByGroupUserAsync(Guid groupId, Guid userId, CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<Guid>> ListActiveGroupIdsByUserAsync(Guid userId, Guid? tenantId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Guid>> ListActiveGroupIdsByUserAsync(Guid userId, Guid? tenantId);
+
+    Task<IReadOnlyList<Guid>> ListActiveGroupIdsByUserAsync(Guid userId, Guid? tenantId, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<SocialGroupMember>> ListByGroupAsync(Guid groupId, SocialGroupMembershipStatus? status, int skip, int take, CancellationToken cancellationToken = default);
 
@@ -204,10 +206,13 @@ public sealed class SocialGroupMemberRepository(IApplicationDbContext context) :
         => context.Set<SocialGroupMember>()
             .FirstOrDefaultAsync(member => member.GroupId == groupId && member.UserId == userId, cancellationToken);
 
+    public Task<IReadOnlyList<Guid>> ListActiveGroupIdsByUserAsync(Guid userId, Guid? tenantId)
+        => ListActiveGroupIdsByUserAsync(userId, tenantId, CancellationToken.None);
+
     public async Task<IReadOnlyList<Guid>> ListActiveGroupIdsByUserAsync(
         Guid userId,
         Guid? tenantId,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         var groups = context.Set<SocialGroupMember>()
             .AsNoTracking()
@@ -269,10 +274,13 @@ public sealed class SocialGroupMemberRepository(IApplicationDbContext context) :
 /// <summary>Supplies active Social Groups memberships when authentication issues an authorization token.</summary>
 public sealed class SocialGroupAuthorizationMembershipProvider(ISocialGroupMemberRepository members) : IAuthorizationGroupMembershipProvider
 {
+    public Task<IReadOnlyCollection<Guid>> GetActiveGroupIdsAsync(Guid userId, Guid? tenantId)
+        => GetActiveGroupIdsAsync(userId, tenantId, CancellationToken.None);
+
     public async Task<IReadOnlyCollection<Guid>> GetActiveGroupIdsAsync(
         Guid userId,
         Guid? tenantId,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
         => await members.ListActiveGroupIdsByUserAsync(userId, tenantId, cancellationToken).ConfigureAwait(false);
 }
 

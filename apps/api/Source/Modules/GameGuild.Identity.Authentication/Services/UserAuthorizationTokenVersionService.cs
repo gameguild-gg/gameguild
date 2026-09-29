@@ -6,7 +6,10 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>Advances the persisted token version so previously issued authorization claims stop being accepted.</summary>
 public sealed class UserAuthorizationTokenVersionService(IUserRepository userRepository) : IUserAuthorizationTokenVersionService
 {
-    public async Task IncrementAsync(Guid userId, CancellationToken cancellationToken = default)
+    public Task IncrementAsync(Guid userId)
+        => IncrementAsync(userId, CancellationToken.None);
+
+    public async Task IncrementAsync(Guid userId, CancellationToken cancellationToken)
     {
         if (userId == Guid.Empty)
         {
