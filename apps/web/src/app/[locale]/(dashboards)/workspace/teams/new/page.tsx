@@ -22,20 +22,20 @@ export default function NewTeamPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6 p-6">
       <header>
-        <h1 className="text-2xl font-semibold">Create Team</h1>
+        <h1 className="text-2xl font-semibold">Create a team</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          A Team shares Project ownership, access, and collaboration with its members.
+          Bring collaborators together to share project ownership, access, and work.
         </p>
       </header>
       <Card>
         <CardHeader>
-          <CardTitle>Team details</CardTitle>
-          <CardDescription>Fields marked with * are required.</CardDescription>
+          <CardTitle>Team profile</CardTitle>
+          <CardDescription>Only the team name and URL are required.</CardDescription>
         </CardHeader>
         <CardContent>
           <form action={createTeamForm} className="space-y-4">
             <div>
-              <Label htmlFor="team-name">Name *</Label>
+              <Label htmlFor="team-name">Team name <span aria-hidden="true">*</span></Label>
               <Input
                 id="team-name"
                 name="name"
@@ -54,7 +54,7 @@ export default function NewTeamPage() {
               />
             </div>
             <div>
-              <Label htmlFor="team-slug">Slug *</Label>
+              <Label htmlFor="team-slug">Team URL <span aria-hidden="true">*</span></Label>
               <Input
                 id="team-slug"
                 name="slug"
@@ -68,7 +68,7 @@ export default function NewTeamPage() {
                 }}
               />
               <p id="team-slug-help" className="mt-1 text-sm text-muted-foreground">
-                Used in the Team URL. You can customize it before creating the Team.
+                This becomes the team’s web address. Use lowercase letters, numbers, and hyphens.
               </p>
             </div>
             <div>
@@ -76,7 +76,7 @@ export default function NewTeamPage() {
               <Textarea id="team-description" name="description" />
             </div>
             <div>
-              <Label htmlFor="team-visibility">Visibility</Label>
+              <Label htmlFor="team-visibility">Who can discover this team?</Label>
               <select
                 id="team-visibility"
                 name="visibility"
@@ -84,15 +84,15 @@ export default function NewTeamPage() {
                 aria-describedby="team-visibility-help"
               >
                 <option>Private</option>
-                <option>Tenant</option>
+                <option value="Tenant">Workspace</option>
                 <option>Public</option>
               </select>
               <p id="team-visibility-help" className="mt-1 text-sm text-muted-foreground">
-                Private limits discovery to members; Tenant shares it in this workspace; Public makes it discoverable.
+                Private is for invited members, Workspace is visible to people in your workspace, and Public can be found by anyone.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button type="submit">Create Team</Button>
+              <Button type="submit">Create team</Button>
               <Button nativeButton={false} type="button" variant="outline" render={<Link href="/workspace/teams" />}>
                 Cancel
               </Button>

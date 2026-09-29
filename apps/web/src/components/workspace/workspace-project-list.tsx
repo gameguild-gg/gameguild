@@ -13,8 +13,41 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@game-guild/ui/components/select';
-import { FolderKanban, Search } from 'lucide-react';
+import { ArrowUpRight, FolderKanban, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
+
+const statusLabels: Record<string, string> = {
+  Draft: 'Draft',
+  Review: 'In review',
+  Published: 'Published',
+  Archived: 'Archived',
+  Deleted: 'Deleted',
+};
+
+const visibilityLabels: Record<string, string> = {
+  Private: 'Private',
+  Internal: 'Workspace only',
+  Friends: 'Connections',
+  Protected: 'Protected',
+  Public: 'Public',
+};
+
+const projectTypeLabels: Record<string, string> = {
+  Game: 'Game',
+  Tool: 'Tool',
+  Art: 'Artwork',
+  Music: 'Music',
+  Educational: 'Educational content',
+  Plugin: 'Plugin',
+  Template: 'Template',
+  Library: 'Library',
+  Other: 'Other',
+};
+
+function displayEnum(value: string | number, labels: Record<string, string>) {
+  const raw = String(value);
+  return labels[raw] ?? raw.replace(/([a-z])([A-Z])/g, '$1 $2');
+}
 
 interface WorkspaceProjectListProps {
   projects: WorkspaceProject[];
@@ -36,7 +69,7 @@ export function WorkspaceProjectList({
   const normalizedQuery = query.trim().toLocaleLowerCase();
   const filteredProjects = projects.filter((project) => {
     const matchesStatus = statusFilter === 'all' || String(project.status) === statusFilter;
-    const searchableText = [project.title, project.slug, project.shortDescription, project.description]
+    const searchableText = [project.title, project.slug, project.type, project.shortDescription, project.description]
       .filter(Boolean)
       .join(' ')
       .toLocaleLowerCase();
@@ -80,7 +113,7 @@ export function WorkspaceProjectList({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All statuses</SelectItem>
-              {statuses.map((status) => <SelectItem key={status} value={status}>{status}</SelectItem>)}
+              {statuses.map((status) => <SelectItem key={status} value={status}>{displayEnum(status, statusLabels)}</SelectItem>)}
             </SelectContent>
           </Select>
         </label>
@@ -110,7 +143,7 @@ export function WorkspaceProjectList({
                   <span className="inline-flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
                     <FolderKanban className="size-5" aria-hidden="true" />
                   </span>
-                  <Badge variant="secondary">{String(project.status)}</Badge>
+                  <Badge variant="secondary">{displayEnum(project.status, statusLabels)}</Badge>
                 </div>
                 <CardHeader className="gap-1 p-0">
                   <CardTitle className="truncate">{project.title}</CardTitle>
@@ -119,8 +152,11 @@ export function WorkspaceProjectList({
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex-row flex-wrap gap-2 p-0">
-                  <Badge variant="outline">{String(project.visibility)}</Badge>
-                  <span className="text-xs text-muted-foreground">Open project</span>
+                  {project.type ? <Badge variant="outline">{displayEnum(project.type, projectTypeLabels)}</Badge> : null}
+                  <Badge variant="outline">{displayEnum(project.visibility, visibilityLabels)}</Badge>
+                  <span className="ml-auto inline-flex items-center gap-1 text-xs font-medium text-primary">
+                    Open project <ArrowUpRight className="size-3.5" aria-hidden="true" />
+                  </span>
                 </CardContent>
               </Card>
             </Link>
