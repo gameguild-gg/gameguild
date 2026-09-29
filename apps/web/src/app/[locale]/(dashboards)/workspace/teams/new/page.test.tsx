@@ -17,9 +17,9 @@ describe('member Team creation', () => {
     const user = userEvent.setup();
     render(<NewTeamPage />);
 
-    await user.type(screen.getByRole('textbox', { name: /Name/ }), 'Space Cadets');
+    await user.type(screen.getByRole('textbox', { name: 'Team name' }), 'Space Cadets');
 
-    expect(screen.getByRole('textbox', { name: /Slug/ })).toHaveValue('space-cadets');
+    expect(screen.getByRole('textbox', { name: 'Team URL' })).toHaveValue('space-cadets');
     expect(screen.getByRole('link', { name: 'Cancel' })).toHaveAttribute(
       'href',
       '/workspace/teams',
