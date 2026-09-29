@@ -5,7 +5,6 @@ import { ChevronsUpDown, Settings2 } from 'lucide-react';
 import { Link, usePathname } from '@/i18n/navigation';
 import type { DashboardContextSummary, DashboardContextType } from '@/lib/dashboard-contexts';
 import {
-  DropdownMenuGroup,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
