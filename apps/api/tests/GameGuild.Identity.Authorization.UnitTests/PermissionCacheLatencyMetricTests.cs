@@ -31,6 +31,19 @@ public sealed class PermissionCacheLatencyMetricTests
     }
 
     [Fact]
+    public void RecordLookupDuration_AggregatesConcurrentSamplesWithoutLoss()
+    {
+        var metrics = new CacheMetricsService();
+
+        Parallel.For(0, 1000, _ => metrics.RecordLookupDuration(TimeSpan.FromMilliseconds(2), "acl"));
+
+        var statistics = metrics.GetStatistics().LookupDurationByType["acl"];
+
+        statistics.Count.Should().Be(1000);
+        statistics.AverageMilliseconds.Should().BeApproximately(2, 0.0001);
+    }
+
+    [Fact]
     public async Task CachedAclL1Hit_RecordsLookupDuration()
     {
         var tenantId = Guid.NewGuid();

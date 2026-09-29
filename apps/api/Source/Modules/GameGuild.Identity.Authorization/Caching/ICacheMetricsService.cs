@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 
@@ -170,7 +171,7 @@ public sealed class CacheMetricsService : ICacheMetricsService
     private long _evictions;
 
     private readonly Dictionary<string, CacheTypeStatistics> _typeStats = new();
-    private readonly Dictionary<string, LookupDurationAccumulator> _lookupDurations = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, LookupDurationAccumulator> _lookupDurations = new(StringComparer.Ordinal);
     private readonly object _lock = new();
 
     /// <summary>
@@ -244,16 +245,7 @@ public sealed class CacheMetricsService : ICacheMetricsService
         ]);
         _lookupDurationHistogram.Record(duration.TotalMilliseconds, tags);
 
-        lock (_lock)
-        {
-            if (!_lookupDurations.TryGetValue(cacheType, out var aggregate))
-            {
-                aggregate = new LookupDurationAccumulator();
-                _lookupDurations[cacheType] = aggregate;
-            }
-
-            aggregate.Record(duration.TotalMilliseconds);
-        }
+        _lookupDurations.GetOrAdd(cacheType, static _ => new LookupDurationAccumulator()).Record(duration.Ticks);
     }
 
     /// <inheritdoc />
@@ -293,7 +285,7 @@ public sealed class CacheMetricsService : ICacheMetricsService
                     StringComparer.Ordinal),
                 LookupDurationByType = _lookupDurations.ToDictionary(
                     pair => pair.Key,
-                    pair => new CacheLookupStatistics(pair.Value.Count, pair.Value.AverageMilliseconds),
+                    pair => pair.Value.GetSnapshot(),
                     StringComparer.Ordinal)
             };
         }
@@ -301,14 +293,24 @@ public sealed class CacheMetricsService : ICacheMetricsService
 
     private sealed class LookupDurationAccumulator
     {
-        public long Count { get; private set; }
+        private long _count;
+        private long _totalDurationTicks;
 
-        public double AverageMilliseconds { get; private set; }
-
-        public void Record(double milliseconds)
+        public void Record(long durationTicks)
         {
-            Count++;
-            AverageMilliseconds += (milliseconds - AverageMilliseconds) / Count;
+            Interlocked.Add(ref _totalDurationTicks, durationTicks);
+            Interlocked.Increment(ref _count);
+        }
+
+        public CacheLookupStatistics GetSnapshot()
+        {
+            var count = Interlocked.Read(ref _count);
+            var totalDurationTicks = Interlocked.Read(ref _totalDurationTicks);
+            var averageMilliseconds = count == 0
+                ? 0
+                : totalDurationTicks / (double)count / TimeSpan.TicksPerMillisecond;
+
+            return new CacheLookupStatistics(count, averageMilliseconds);
         }
     }
 
