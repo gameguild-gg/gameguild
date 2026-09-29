@@ -43,7 +43,7 @@ describe("TestingParticipantFilters", () => {
         name: "Filter participants by status",
       }),
     );
-    await user.click(screen.getByRole("option", { name: "Checked in" }));
+    await user.click(await screen.findByRole("option", { name: "Checked in" }));
     expect(mocks.replace).toHaveBeenLastCalledWith(
       "/workspace/testing-lab/events/event-1/participants?q=ada&status=CheckedIn",
     );
@@ -59,7 +59,7 @@ describe("TestingParticipantFilters", () => {
         name: "Filter participants by status",
       }),
     );
-    await user.click(screen.getByRole("option", { name: "All statuses" }));
+    await user.click(await screen.findByRole("option", { name: "All statuses" }));
 
     expect(mocks.replace).toHaveBeenCalledWith(
       "/workspace/testing-lab/events/event-1/participants?q=ada",
