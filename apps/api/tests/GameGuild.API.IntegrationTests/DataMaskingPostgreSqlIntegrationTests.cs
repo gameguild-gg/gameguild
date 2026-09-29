@@ -171,10 +171,17 @@ public sealed class DataMaskingPostgreSqlIntegrationTests(ApiPostgreSqlFixture f
     private sealed class DataMaskingTestActorContextAccessor(IHttpContextAccessor httpContextAccessor)
         : IActorContextAccessor
     {
+        private ActorContext? _actorContext;
+
         public ActorContext ActorContext
         {
             get
             {
+                if (_actorContext is not null)
+                {
+                    return _actorContext;
+                }
+
                 var request = httpContextAccessor.HttpContext?.Request;
                 if (request is null ||
                     !Guid.TryParse(request.Headers["X-Test-Actor"], out var actorId) ||
@@ -195,8 +202,15 @@ public sealed class DataMaskingPostgreSqlIntegrationTests(ApiPostgreSqlFixture f
             }
         }
 
-        public void SetActorContext(ActorContext context) { }
+        public void SetActorContext(ActorContext context)
+        {
+            ArgumentNullException.ThrowIfNull(context);
+            _actorContext = context;
+        }
 
-        public void ClearActorContext() { }
+        public void ClearActorContext()
+        {
+            _actorContext = null;
+        }
     }
 }
