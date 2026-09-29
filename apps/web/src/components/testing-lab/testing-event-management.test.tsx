@@ -577,10 +577,11 @@ describe("TestingEventApplications", () => {
     expect(screen.queryByLabelText("Repeat every")).not.toBeInTheDocument();
 
     await user.click(repeats);
-    expect(
-      screen.getByRole("option", { name: "Weekly on Monday" }),
-    ).toBeInTheDocument();
-    await user.click(screen.getByRole("option", { name: "Custom…" }));
+    const weeklyOption = await screen.findByRole("option", {
+      name: "Weekly on Monday",
+    });
+    expect(weeklyOption).toBeInTheDocument();
+    await user.click(await screen.findByRole("option", { name: "Custom…" }));
 
     expect(screen.getByLabelText("Repeat every")).toBeInTheDocument();
     expect(

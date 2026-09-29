@@ -151,7 +151,7 @@ describe('CourseContentViewer', () => {
 
     await screen.findByRole('heading', { name: /release checklist/i });
     await userEvent.click(screen.getByRole('button', { name: /content actions/i }));
-    await userEvent.click(screen.getByRole('menuitem', { name: /report content/i }));
+    await userEvent.click(await screen.findByRole('menuitem', { name: /report content/i }));
     await userEvent.click(screen.getByRole('radio', { name: /technical issue/i }));
     await userEvent.click(screen.getByRole('button', { name: /submit report/i }));
 

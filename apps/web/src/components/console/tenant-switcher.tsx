@@ -6,6 +6,7 @@ import { ChevronsUpDown, Plus } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -108,22 +109,24 @@ export function TenantSwitcher({
             side={isMobile ? 'bottom' : 'right'}
             sideOffset={4}
           >
-            <DropdownMenuLabel className="text-muted-foreground text-xs">
-              Tenants
-            </DropdownMenuLabel>
-            {tenants.map((tenant, index) => (
-              <DropdownMenuItem
-                key={tenant.id}
-                onClick={() => handleTenantChange(tenant)}
-                className="gap-2 p-2"
-              >
-                <div className="flex size-6 items-center justify-center rounded-md border">
-                  <tenant.logo className="size-3.5 shrink-0" />
-                </div>
-                {tenant.name}
-                <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
-              </DropdownMenuItem>
-            ))}
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="text-muted-foreground text-xs">
+                Tenants
+              </DropdownMenuLabel>
+              {tenants.map((tenant, index) => (
+                <DropdownMenuItem
+                  key={tenant.id}
+                  onClick={() => handleTenantChange(tenant)}
+                  className="gap-2 p-2"
+                >
+                  <div className="flex size-6 items-center justify-center rounded-md border">
+                    <tenant.logo className="size-3.5 shrink-0" />
+                  </div>
+                  {tenant.name}
+                  <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuGroup>
             {onAddTenant && (
               <>
                 <DropdownMenuSeparator />
