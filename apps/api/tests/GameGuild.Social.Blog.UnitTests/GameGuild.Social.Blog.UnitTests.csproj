@@ -33,6 +33,8 @@
         <ProjectReference Include="..\..\Source\Modules\GameGuild.Social.Blog\GameGuild.Social.Blog.csproj" />
         <ProjectReference Include="..\..\Source\Modules\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
         <ProjectReference Include="..\..\Source\Modules\GameGuild.Social.Profiles\GameGuild.Social.Profiles.csproj" />
+        <ProjectReference Include="..\..\Source\Modules\GameGuild.Social.Follows\GameGuild.Social.Follows.csproj" />
+        <ProjectReference Include="..\..\Source\Modules\GameGuild.Identity.Context\GameGuild.Identity.Context.csproj" />
         <ProjectReference Include="..\..\Source\Modules\GameGuild.Tags\GameGuild.Tags.csproj" />
     </ItemGroup>
 </Project>
