@@ -32,7 +32,16 @@ public static class SecurityServiceCollectionExtensions
         var isDevelopmentOrTesting = IsDevelopmentOrTesting(configuration);
         IdentityModelEventSource.ShowPII = isDevelopmentOrTesting;
 
-        var resolvedJwtOptions = JwtOptionsResolver.CreateValidated(configuration);
+        var jwtConfiguration = new ConfigurationBuilder()
+            .AddConfiguration(configuration)
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Jwt:Secret"] = options.JwtSecretKey,
+                ["Jwt:Issuer"] = options.JwtIssuer,
+                ["Jwt:Audience"] = options.JwtAudience
+            })
+            .Build();
+        var resolvedJwtOptions = JwtOptionsResolver.CreateValidated(jwtConfiguration);
 
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(resolvedJwtOptions.SecretKey))
             { KeyId = "GameGuild-jwt-key" };

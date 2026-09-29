@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text;
 using FluentAssertions;
 using GameGuild.API;
 using GameGuild.Identity.Authorization;
@@ -35,6 +36,30 @@ public sealed class SecurityServiceCollectionExtensionsTests
         bearer.TokenValidationParameters.ValidAudience.Should().Be("ProductAudience");
         bearer.TokenValidationParameters.ClockSkew.Should().Be(TimeSpan.FromSeconds(15));
         bearer.TokenValidationParameters.RoleClaimType.Should().Be("role");
+    }
+
+    [Fact]
+    public void SetupAuthentication_UsesJwtValuesFromAuthenticationOptions()
+    {
+        var services = new ServiceCollection();
+        var configuration = CreateConfiguration("Production");
+        var authenticationOptions = CreateAuthenticationOptions();
+        authenticationOptions.JwtSecretKey = new string('o', 64);
+        authenticationOptions.JwtIssuer = "OptionsIssuer";
+        authenticationOptions.JwtAudience = "OptionsAudience";
+
+        services.SetupAuthentication(configuration, authenticationOptions);
+
+        using var provider = services.BuildServiceProvider();
+        var tokenValidationParameters = provider.GetRequiredService<IOptionsMonitor<JwtBearerOptions>>()
+            .Get(JwtBearerDefaults.AuthenticationScheme)
+            .TokenValidationParameters;
+
+        tokenValidationParameters.ValidIssuer.Should().Be("OptionsIssuer");
+        tokenValidationParameters.ValidAudience.Should().Be("OptionsAudience");
+        var signingKey = tokenValidationParameters.IssuerSigningKey.Should()
+            .BeOfType<SymmetricSecurityKey>().Subject;
+        signingKey.Key.Should().Equal(Encoding.UTF8.GetBytes(authenticationOptions.JwtSecretKey));
     }
 
     [Fact]
