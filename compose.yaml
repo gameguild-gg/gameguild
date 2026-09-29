@@ -160,6 +160,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
       - ASPNETCORE_HTTP_PORTS=8080
+      - Authentication__Web3__Siwe__Origin=${WEB_PUBLIC_URL:-http://localhost:3000}
       - ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
       - DATAPROTECTION_KEYS_PATH=/app/.aspnet/DataProtection-Keys
       - ConnectionStrings__DefaultConnection=Host=${POSTGRES_CONTAINER_HOST:-postgres};Port=${POSTGRES_PORT:-5432};Database=${POSTGRES_DB:-gameguild};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres};Include Error Detail=true;Maximum Pool Size=100;Minimum Pool Size=5;Connection Idle Lifetime=300
