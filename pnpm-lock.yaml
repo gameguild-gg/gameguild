@@ -11,10 +11,11 @@ overrides:
   '@excalidraw/mermaid-to-excalidraw>mermaid': 11.16.1
   '@excalidraw/mermaid-to-excalidraw>nanoid': 5.1.16
   dompurify: 3.4.13
-  fast-uri: 3.1.6
+  fast-uri: 3.1.7
   lodash-es: 4.18.0
   syncpack>minimatch: 9.0.7
   icu-minify: 4.9.2
+  ip-address: 10.5.1
   next: 16.3.4
   postcss: 8.5.23
   qs: 6.16.0
@@ -24,6 +25,7 @@ overrides:
   react: 19.2.8
   react-dom: 19.2.8
   tsup>esbuild: 0.28.1
+  undici@7: 7.29.1
   ws: 8.21.0
 
 importers:
@@ -9452,8 +9454,8 @@ packages:
   fast-text-encoding@1.0.6:
     resolution: {integrity: sha512-VhXlQgj9ioXCqGstD37E/HBeqEGV/qOD/kmbVG8h5xKBYvM1L3lR1Zn4555cQ8GkYbJa8aJSipLPndE1k6zK2w==}
 
-  fast-uri@3.1.6:
-    resolution: {integrity: sha512-7Ical1vFEMr0onbVzEDIreM22I4khW+fzyQPwvAFWBp1iwdshSZRsL4jjRvPG9JP1uiqMHRto+YU6R2/CzDz5Q==}
+  fast-uri@3.1.7:
+    resolution: {integrity: sha512-dOvZVzjdZdz7phd9v6jCbwxrBW3fK6n8Rc0CtdmM4bumzMnxywBYhuph6J819RRw/ku+rLbelwfMunktuzVVHg==}
 
   fast-wrap-ansi@0.2.2:
     resolution: {integrity: sha512-7F2Fl+TjRSenLqlU3UjSH0iyqopqoZIu7eZVpEirP2g1GtWa2G/ecEmBdgz31+Mxr+ELclgg6sokpSFIQiZ02Q==}
@@ -10016,8 +10018,8 @@ packages:
   intl-messageformat@11.2.14:
     resolution: {integrity: sha512-9f2VD1HFuxUvMw0RxsaP8WmMns6JRTnsNB/zghTFrp11ZktiXWwVDeZBPQchBKEmo+Gx/ZhxI7Qht7YglFD4PA==}
 
-  ip-address@10.5.0:
-    resolution: {integrity: sha512-R5SnVLJmgYYvf2F2ZgwSBnelz5G4q5AxIC277GDfUaNbrZKNANcBC7RHqYYePlszf4kBolVkJauG0ZjHHFh55g==}
+  ip-address@10.5.1:
+    resolution: {integrity: sha512-EXujUp9jyOI/chPgtqk6uy7fDq8AeCB/WlfEuPg9LN0fN9lzKAKfuDYi60SMhHwgUiEhZvVYsbGZN+RUU1INiA==}
     engines: {node: '>= 12'}
 
   ipaddr.js@1.9.1:
@@ -13438,8 +13440,8 @@ packages:
   undici-types@8.9.0:
     resolution: {integrity: sha512-KTDyRTYX8sWmKXAikPHHSyc63CRPETMctyjKFupcC6OBLXT3xsN0e9aF7m+mIXutFWpUXuedtowG7iLOzp0kQg==}
 
-  undici@7.29.0:
-    resolution: {integrity: sha512-IDxfleLmmbSskfWSUATiN1nfn2rDuvnMOqb5CWR92iIfojA0Ud+ulOAAEQ57LPr9rWmsreUyf5lwyao+7GNNVw==}
+  undici@7.29.1:
+    resolution: {integrity: sha512-RYONW2MeafgYlkVOKYKkA/Ag7BmXqgIWCa8t1m0JcxrQg9pI9lEqRhAOruOBCbAohOa/gkCF+iPi9hrgvTzu6Q==}
     engines: {node: '>=20.18.1'}
 
   undici@8.11.0:
@@ -16641,7 +16643,7 @@ snapshots:
       open: 8.4.2
       picomatch: 4.0.7
       systeminformation: 5.33.5
-      undici: 7.29.0
+      undici: 7.29.1
       which: 4.0.0
       yocto-spinner: 1.2.2
 
@@ -20620,7 +20622,7 @@ snapshots:
   ajv@8.20.0:
     dependencies:
       fast-deep-equal: 3.1.3
-      fast-uri: 3.1.6
+      fast-uri: 3.1.7
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
 
@@ -22523,7 +22525,7 @@ snapshots:
     dependencies:
       debug: 4.4.3
       express: 5.2.1
-      ip-address: 10.5.0
+      ip-address: 10.5.1
     transitivePeerDependencies:
       - supports-color
 
@@ -22596,7 +22598,7 @@ snapshots:
 
   fast-text-encoding@1.0.6: {}
 
-  fast-uri@3.1.6: {}
+  fast-uri@3.1.7: {}
 
   fast-wrap-ansi@0.2.2:
     dependencies:
@@ -23258,7 +23260,7 @@ snapshots:
       '@formatjs/fast-memoize': 3.1.7
       '@formatjs/icu-messageformat-parser': 3.5.17
 
-  ip-address@10.5.0: {}
+  ip-address@10.5.1: {}
 
   ipaddr.js@1.9.1: {}
 
@@ -26855,7 +26857,7 @@ snapshots:
       stringify-object: 5.0.0
       ts-morph: 26.0.0
       tsconfig-paths: 4.2.0
-      undici: 7.29.0
+      undici: 7.29.1
       validate-npm-package-name: 7.0.2
       zod: 3.25.76
       zod-to-json-schema: 3.25.2(zod@3.25.76)
@@ -27025,7 +27027,7 @@ snapshots:
 
   socks@2.8.9:
     dependencies:
-      ip-address: 10.5.0
+      ip-address: 10.5.1
       smart-buffer: 4.2.0
 
   sonner@2.0.8(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
@@ -27713,7 +27715,7 @@ snapshots:
 
   undici-types@8.9.0: {}
 
-  undici@7.29.0: {}
+  undici@7.29.1: {}
 
   undici@8.11.0: {}
 
