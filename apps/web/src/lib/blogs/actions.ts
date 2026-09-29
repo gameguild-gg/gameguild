@@ -104,11 +104,57 @@ function path(postId: string, suffix = ''): string {
   return `/api/social/blog/posts/${encodeURIComponent(postId)}${suffix}`;
 }
 
+const REACTION_TARGET_TYPE = 'BlogPost';
+const REACTION_TYPE = 'Like';
+
+export async function fetchViewerReaction(postId: string): Promise<{ reacted: boolean }> {
+  const { token } = await getRequestAuthContext();
+  if (!token) return { reacted: false };
+  const response = await fetch(
+    `${apiBaseUrl}/api/social/reactions/me/target/${REACTION_TARGET_TYPE}/${encodeURIComponent(postId)}`,
+    { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' },
+  );
+  if (!response.ok) return { reacted: false };
+  const body = (await response.json().catch(() => null)) as { type?: string } | null;
+  return { reacted: body?.type != null };
+}
+
+export async function setReaction(postId: string, react: boolean): Promise<{ ok: boolean }> {
+  const { token, tenantId } = await getRequestAuthContext();
+  if (!token || !tenantId) return { ok: false };
+  const response = await fetch(`${apiBaseUrl}/api/social/reactions`, {
+    method: react ? 'PUT' : 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'X-Tenant-Id': tenantId,
+      ...(react ? { 'Content-Type': 'application/json' } : {}),
+    },
+    cache: 'no-store',
+    ...(react ? { body: JSON.stringify({ targetType: REACTION_TARGET_TYPE, targetId: postId, type: REACTION_TYPE }) } : { body: JSON.stringify({ targetType: REACTION_TARGET_TYPE, targetId: postId }) }),
+  });
+  return { ok: response.ok };
+}
+
 export async function createPost(input: CreateBlogPostInput) {
   return blogRequest<BlogPostDetail>('/api/social/blog/posts', {
     method: 'POST',
     body: JSON.stringify(input),
   });
+}
+
+/**
+ * Public comment page for a post. Server action wrapper so client components
+ * never import `@/lib/blogs/queries` (it chains to `@/auth` → `next/headers`,
+ * which cannot be bundled for the client).
+ */
+export async function getBlogPostCommentsPage(
+  postId: string,
+  cursor?: { afterCreatedAt?: string; afterId?: string },
+): Promise<{ items: BlogComment[]; hasMore: boolean } | null> {
+  const { getBlogPostComments } = await import('./queries');
+  const page = await getBlogPostComments(postId, cursor);
+  if (!page) return null;
+  return { items: page.items, hasMore: page.hasMore };
 }
 
 export async function updateDraft(postId: string, input: UpdateBlogPostDraftInput) {

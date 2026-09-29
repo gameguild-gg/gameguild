@@ -11945,6 +11945,7 @@ export interface SocialBlogQueriesBlogCommentPage {
 
 export interface SocialBlogQueriesBlogPostDetailDto {
   id?: string;
+  allowComments?: boolean;
   canonicalUrlOverride?: string | null;
   coAuthorHandles?: Array<string> | null;
   commentCount?: number;
@@ -30089,6 +30090,7 @@ SocialBlogQueriesBlogCommentPageSchema = z.object({
 /** Zod schema for SocialBlogQueriesBlogPostDetailDto */
 SocialBlogQueriesBlogPostDetailDtoSchema = z.object({
   id: z.string().uuid().optional(),
+  allowComments: z.boolean().optional(),
   canonicalUrlOverride: z.string().nullable().optional(),
   coAuthorHandles: z.array(z.string()).nullable().optional(),
   commentCount: z.number().int().optional(),

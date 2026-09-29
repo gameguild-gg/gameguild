@@ -1,12 +1,10 @@
 "use client";
 
+import { fetchViewerReaction, setReaction } from "@/lib/blogs/actions";
 import { Button } from "@game-guild/ui/components/button";
 import { Heart, Loader2 } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
-
-const REACTION_TARGET_TYPE = "BlogPost" as const;
-const REACTION_TYPE = "Like" as const;
 
 export interface BlogReactionsProps {
   postId: string;
@@ -15,48 +13,10 @@ export interface BlogReactionsProps {
   initialReactionCount: number;
 }
 
-interface ViewerReaction {
-  reacted: boolean;
-}
-
 export const __testHooks: {
-  fetchViewerReaction: ((postId: string) => Promise<ViewerReaction>) | null;
+  fetchViewerReaction: ((postId: string) => Promise<{ reacted: boolean }>) | null;
   setReaction: ((postId: string, react: boolean) => Promise<{ ok: boolean }>) | null;
 } = { fetchViewerReaction: null, setReaction: null };
-
-const apiBaseUrl = (process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080").replace(/\/$/, "");
-
-async function fetchViewerReaction(postId: string): Promise<ViewerReaction> {
-  "use server";
-  const { getRequestAuthContext } = await import("@/auth");
-  const { token } = await getRequestAuthContext();
-  if (!token) return { reacted: false };
-  const response = await fetch(
-    `${apiBaseUrl}/api/social/reactions/me/target/${REACTION_TARGET_TYPE}/${encodeURIComponent(postId)}`,
-    { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" },
-  );
-  if (!response.ok) return { reacted: false };
-  const body = (await response.json().catch(() => null)) as { type?: string } | null;
-  return { reacted: body?.type != null };
-}
-
-async function setReaction(postId: string, react: boolean): Promise<{ ok: boolean }> {
-  "use server";
-  const { getRequestAuthContext } = await import("@/auth");
-  const { token, tenantId } = await getRequestAuthContext();
-  if (!token || !tenantId) return { ok: false };
-  const response = await fetch(`${apiBaseUrl}/api/social/reactions`, {
-    method: react ? "PUT" : "DELETE",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "X-Tenant-Id": tenantId,
-      ...(react ? { "Content-Type": "application/json" } : {}),
-    },
-    cache: "no-store",
-    ...(react ? { body: JSON.stringify({ targetType: REACTION_TARGET_TYPE, targetId: postId, type: REACTION_TYPE }) } : { body: JSON.stringify({ targetType: REACTION_TARGET_TYPE, targetId: postId }) }),
-  });
-  return { ok: response.ok };
-}
 
 export function BlogReactions({ postId, currentUserId, initialReactionCount }: BlogReactionsProps): React.JSX.Element {
   const signedIn = currentUserId !== null;

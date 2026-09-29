@@ -214,9 +214,7 @@ export function BlogEditorWorkspace({
     setPost(saved);
     baseline.current = draftFromPost(saved);
     dispatch({ type: "saved", revision: saved.revision ?? state.revision, savedAt: new Date().toISOString() });
-    router.replace(
-      `/${primaryAuthorHandle}/${saved.slug}/edit`,
-    );
+    router.replace(`/blogs/${primaryAuthorHandle}/${saved.slug}/edit`);
   };
 
   const settingsDraft = useMemo(

@@ -1,7 +1,6 @@
 "use client";
 
-import { addComment, deleteComment } from "@/lib/blogs/actions";
-import { getBlogPostComments } from "@/lib/blogs/queries";
+import { addComment, deleteComment, getBlogPostCommentsPage } from "@/lib/blogs/actions";
 import type { BlogComment } from "@/lib/blogs/types";
 import {
   AlertDialog,
@@ -200,7 +199,7 @@ export function BlogComments(props: BlogCommentsProps): React.JSX.Element {
 
   React.useEffect(() => {
     let active = true;
-    void getBlogPostComments(postId)
+    void getBlogPostCommentsPage(postId)
       .then((page) => {
         if (!active || !page) return;
         setThreads(attach([], page.items));
@@ -228,7 +227,7 @@ export function BlogComments(props: BlogCommentsProps): React.JSX.Element {
     setPagePending(true);
     setError(null);
     try {
-      const page = await getBlogPostComments(postId, cursor);
+      const page = await getBlogPostCommentsPage(postId, cursor);
       if (page) {
         setThreads((current) => attach(current, page.items));
         setHasMore(page.hasMore);
@@ -278,7 +277,7 @@ export function BlogComments(props: BlogCommentsProps): React.JSX.Element {
     if (!commentId) return;
     setThreads((current) => detach(current, commentId));
     const reconcile = async () => {
-      const page = await getBlogPostComments(postId).catch(() => null);
+      const page = await getBlogPostCommentsPage(postId).catch(() => null);
       if (page) setThreads(attach([], page.items));
     };
     try {

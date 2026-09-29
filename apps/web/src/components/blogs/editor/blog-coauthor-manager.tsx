@@ -222,16 +222,16 @@ export function BlogCoauthorManager({
         <Tooltip>
           <TooltipTrigger
             render={
-              <Input
-                id="blog-coauthor-add"
-                placeholder="@handle"
-                disabled
-                aria-label="Add co-author (primary author only)"
-              />
+              <span className="block w-full">
+                <Input
+                  id="blog-coauthor-add"
+                  placeholder="@handle"
+                  disabled
+                  aria-label="Add co-author (primary author only)"
+                />
+              </span>
             }
-          >
-            <span />
-          </TooltipTrigger>
+          />
           <TooltipContent>
             Only the primary author can manage co-authors.
           </TooltipContent>

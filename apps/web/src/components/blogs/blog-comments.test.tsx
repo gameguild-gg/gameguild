@@ -4,16 +4,13 @@ import userEvent from '@testing-library/user-event';
 
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 
-const getBlogPostComments = vi.fn();
-vi.mock('@/lib/blogs/queries', () => ({
-  getBlogPostComments: (...args: unknown[]) => getBlogPostComments(...args),
-}));
-
 const addComment = vi.fn();
 const deleteComment = vi.fn();
+const getBlogPostCommentsPage = vi.fn();
 vi.mock('@/lib/blogs/actions', () => ({
   addComment: (...args: unknown[]) => addComment(...args),
   deleteComment: (...args: unknown[]) => deleteComment(...args),
+  getBlogPostCommentsPage: (...args: unknown[]) => getBlogPostCommentsPage(...args),
 }));
 
 const { BlogComments } = await import('@/components/blogs/blog-comments');
@@ -45,7 +42,7 @@ const baseProps: BlogCommentsProps = {
 };
 
 function seed(page = { items: [], hasMore: false }) {
-  getBlogPostComments.mockResolvedValue(page);
+  getBlogPostCommentsPage.mockResolvedValue(page);
 }
 
 beforeEach(() => {
@@ -69,7 +66,7 @@ describe('BlogComments', () => {
     await waitFor(() => expect(screen.getByText('First comment')).toBeInTheDocument());
     expect(screen.getByText('A reply')).toBeInTheDocument();
     expect(screen.getByText('Second root')).toBeInTheDocument();
-    expect(getBlogPostComments).toHaveBeenCalledWith('post-1');
+    expect(getBlogPostCommentsPage).toHaveBeenCalledWith('post-1');
   });
 
   it('hides the reply button on replies (depth-1 enforcement) while keeping it on roots', async () => {
@@ -102,7 +99,7 @@ describe('BlogComments', () => {
     await waitFor(() => expect(screen.getByText('Root one')).toBeInTheDocument());
 
     const user = userEvent.setup();
-    getBlogPostComments.mockResolvedValueOnce({
+    getBlogPostCommentsPage.mockResolvedValueOnce({
       items: [comment({ id: 'c9', content: 'Root two' })],
       hasMore: false,
     });
@@ -110,7 +107,7 @@ describe('BlogComments', () => {
     await user.click(screen.getByRole('button', { name: /load more comments/i }));
 
     await waitFor(() => expect(screen.getByText('Root two')).toBeInTheDocument());
-    expect(getBlogPostComments).toHaveBeenLastCalledWith('post-1', {
+    expect(getBlogPostCommentsPage).toHaveBeenLastCalledWith('post-1', {
       afterCreatedAt: '2026-01-01T00:00:00Z',
       afterId: 'c1',
     });
@@ -197,7 +194,7 @@ describe('BlogComments', () => {
     expect(view.getByRole('alertdialog')).toBeInTheDocument();
 
     deleteComment.mockResolvedValueOnce({ success: false, error: 'Denied', status: 403 });
-    getBlogPostComments.mockResolvedValueOnce({
+    getBlogPostCommentsPage.mockResolvedValueOnce({
       items: [comment({ id: 'c1', content: 'First comment' })],
       hasMore: false,
     });
@@ -205,7 +202,7 @@ describe('BlogComments', () => {
     await user.click(within(view.getByRole('alertdialog')).getByRole('button', { name: /confirm delete comment/i }));
 
     await waitFor(() => expect(deleteComment).toHaveBeenCalledWith('c1'));
-    await waitFor(() => expect(getBlogPostComments).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(getBlogPostCommentsPage).toHaveBeenCalledTimes(2));
     expect(await view.findByText('First comment')).toBeInTheDocument();
     await waitFor(() => expect(view.getByRole('alert')).toHaveTextContent('Denied'));
   });

@@ -2,8 +2,11 @@ import type { Metadata } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
 
 import { BlogPostView } from '@/components/blogs/blog-post-view';
+import { BlogComments } from '@/components/blogs/blog-comments';
+import { BlogReactions } from '@/components/blogs/blog-reactions';
 import { buildBlogPostMetadata, isReservedBlogSegment, type BlogAuthorProfile } from '@/lib/blogs/seo';
 import { getBlogPost } from '@/lib/blogs/queries';
+import { getViewerBlogAuthor } from '@/lib/blogs/actions';
 
 interface PostPageProps {
   readonly params: Promise<{ username: string; slug: string }>;
@@ -46,5 +49,34 @@ export default async function BlogPostPage({ params }: PostPageProps) {
     notFound();
   }
 
-  return <BlogPostView post={lookup.post} />;
+  const post = lookup.post;
+  const viewer = await getViewerBlogAuthor();
+
+  return (
+    <>
+      <BlogPostView post={post} />
+      {post.id ? (
+        <div className="mx-auto max-w-3xl px-4 pb-12">
+          <BlogReactions
+            postId={post.id}
+            currentUserId={viewer.userId}
+            initialReactionCount={post.reactionCount ?? 0}
+          />
+          <BlogComments
+            postId={post.id}
+            allowComments={post.allowComments ?? true}
+            currentUserId={viewer.userId}
+            isPostAuthor={
+              viewer.handle != null &&
+              viewer.handle.length > 0 &&
+              (viewer.handle === username ||
+                (post.coAuthorHandles ?? []).includes(viewer.handle))
+            }
+            coAuthorIds={[]}
+            currentUserHandle={viewer.handle}
+          />
+        </div>
+      ) : null}
+    </>
+  );
 }
