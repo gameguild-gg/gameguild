@@ -244,8 +244,15 @@ public static class OpenApiExtensions
                     {
                         var sunset = setup.Policies.Sunset(parser.Parse(version.AsSpan()));
 
-                        if (policy.EffectiveAt is { } effectiveAt) sunset.Effective(effectiveAt);
-                        if (!string.IsNullOrWhiteSpace(policy.PolicyUrl)) sunset.Link(new Uri(policy.PolicyUrl, UriKind.Absolute));
+                        if (policy.EffectiveAt is { } effectiveAt)
+                        {
+                            sunset.Effective(effectiveAt);
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(policy.PolicyUrl))
+                        {
+                            sunset.Link(new Uri(policy.PolicyUrl, UriKind.Absolute));
+                        }
                     }
                 }
             )

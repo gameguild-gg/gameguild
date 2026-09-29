@@ -8,12 +8,33 @@ namespace GameGuild.Configuration.PresentationLayer.ApiVersioning;
 /// </summary>
 public sealed class SemanticApiVersion : ApiVersion
 {
-    public SemanticApiVersion(int major, int minor, int patch, string? prerelease = null, string? metadata = null)
+    public SemanticApiVersion(int major, int minor, int patch)
+        : this(major, minor, patch, null, null)
+    {
+    }
+
+    public SemanticApiVersion(int major, int minor, int patch, string? prerelease)
+        : this(major, minor, patch, prerelease, null)
+    {
+    }
+
+    public SemanticApiVersion(int major, int minor, int patch, string? prerelease, string? metadata)
         : base(major, minor, GetNativeStatus(patch, prerelease))
     {
-        if (major < 0) throw new ArgumentOutOfRangeException(nameof(major));
-        if (minor < 0) throw new ArgumentOutOfRangeException(nameof(minor));
-        if (patch < 0) throw new ArgumentOutOfRangeException(nameof(patch));
+        if (major < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(major));
+        }
+
+        if (minor < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(minor));
+        }
+
+        if (patch < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(patch));
+        }
 
         Patch = patch;
         Prerelease = prerelease;
@@ -31,9 +52,15 @@ public sealed class SemanticApiVersion : ApiVersion
 
     public override int CompareTo(ApiVersion? other)
     {
-        if (other is null) return 1;
+        if (other is null)
+        {
+            return 1;
+        }
 
-        if (other.GroupVersion is not null) return base.CompareTo(other);
+        if (other.GroupVersion is not null)
+        {
+            return base.CompareTo(other);
+        }
 
         var semanticOther = other as SemanticApiVersion ?? new SemanticApiVersion(
             other.MajorVersion ?? 0,
@@ -42,20 +69,32 @@ public sealed class SemanticApiVersion : ApiVersion
             other.Status);
 
         var majorComparison = MajorVersion!.Value.CompareTo(semanticOther.MajorVersion!.Value);
-        if (majorComparison != 0) return majorComparison;
+        if (majorComparison != 0)
+        {
+            return majorComparison;
+        }
 
         var minorComparison = MinorVersion!.Value.CompareTo(semanticOther.MinorVersion!.Value);
-        if (minorComparison != 0) return minorComparison;
+        if (minorComparison != 0)
+        {
+            return minorComparison;
+        }
 
         var patchComparison = Patch.CompareTo(semanticOther.Patch);
-        if (patchComparison != 0) return patchComparison;
+        if (patchComparison != 0)
+        {
+            return patchComparison;
+        }
 
         return ComparePrerelease(Prerelease, semanticOther.Prerelease);
     }
 
     public override bool Equals(ApiVersion? other)
     {
-        if (other is null || other.GroupVersion is not null) return false;
+        if (other is null || other.GroupVersion is not null)
+        {
+            return false;
+        }
 
         var otherMajor = other.MajorVersion ?? 0;
         var otherMinor = other.MinorVersion ?? 0;
@@ -85,7 +124,10 @@ public sealed class SemanticApiVersion : ApiVersion
     {
         // ApiVersion has no patch member. Preserve patch identity in its status so equality with
         // a native 1.2 API version cannot accidentally match semantic version 1.2.3.
-        if (patch == 0) return prerelease;
+        if (patch == 0)
+        {
+            return prerelease;
+        }
 
         var patchStatus = "semver.p" + patch.ToString(CultureInfo.InvariantCulture);
         return prerelease is null ? patchStatus : patchStatus + "." + prerelease;
@@ -95,15 +137,27 @@ public sealed class SemanticApiVersion : ApiVersion
     {
         var version = string.Create(CultureInfo.InvariantCulture, $"{MajorVersion}.{MinorVersion}.{Patch}");
         var semanticVersion = Prerelease is null ? version : version + "-" + Prerelease;
-        if (Metadata is not null) semanticVersion += "+" + Metadata;
+        if (Metadata is not null)
+        {
+            semanticVersion += "+" + Metadata;
+        }
 
-        if (string.IsNullOrEmpty(format)) return semanticVersion;
+        if (string.IsNullOrEmpty(format))
+        {
+            return semanticVersion;
+        }
 
         var tokenIndex = format.IndexOf('V');
-        if (tokenIndex < 0) return semanticVersion;
+        if (tokenIndex < 0)
+        {
+            return semanticVersion;
+        }
 
         var tokenEnd = tokenIndex;
-        while (tokenEnd < format.Length && format[tokenEnd] == 'V') tokenEnd++;
+        while (tokenEnd < format.Length && format[tokenEnd] == 'V')
+        {
+            tokenEnd++;
+        }
 
         var prefix = format[..tokenIndex].Replace("'", string.Empty, StringComparison.Ordinal);
         var suffix = format[tokenEnd..].Replace("'", string.Empty, StringComparison.Ordinal);
@@ -112,8 +166,15 @@ public sealed class SemanticApiVersion : ApiVersion
 
     private static int ComparePrerelease(string? left, string? right)
     {
-        if (left is null) return right is null ? 0 : 1;
-        if (right is null) return -1;
+        if (left is null)
+        {
+            return right is null ? 0 : 1;
+        }
+
+        if (right is null)
+        {
+            return -1;
+        }
 
         var leftParts = left.Split('.');
         var rightParts = right.Split('.');
@@ -128,13 +189,22 @@ public sealed class SemanticApiVersion : ApiVersion
 
             int comparison;
             if (leftNumeric && rightNumeric)
+            {
                 comparison = CompareNumericIdentifiers(leftPart, rightPart);
+            }
             else if (leftNumeric != rightNumeric)
+            {
                 comparison = leftNumeric ? -1 : 1;
+            }
             else
+            {
                 comparison = string.Compare(leftPart, rightPart, StringComparison.Ordinal);
+            }
 
-            if (comparison != 0) return comparison;
+            if (comparison != 0)
+            {
+                return comparison;
+            }
         }
 
         return leftParts.Length.CompareTo(rightParts.Length);
