@@ -7,6 +7,14 @@ public sealed record PermissionCacheWarmupRequest(
     string ResourceType,
     string ResourceId);
 
+/// <summary>Internal bulk path used by the cached ACL wrapper to warm cache entries in batches.</summary>
+public interface IAuthorizationCacheWarmupBatchPath
+{
+    Task WarmCacheBatchAsync(
+        IReadOnlyCollection<PermissionCacheWarmupRequest> requests,
+        CancellationToken cancellationToken);
+}
+
 /// <summary>Counts work performed by an explicit permission-cache warmup request.</summary>
 public sealed record PermissionCacheWarmupResult(int Requested, int Warmed, int DuplicatesSkipped);
 
@@ -52,16 +60,24 @@ public sealed class PermissionCacheWarmupService(IAccessControlListService acces
             distinctRequests.TryAdd(key, normalizedRequest);
         }
 
-        foreach (var request in distinctRequests.Values)
+        var normalizedRequests = distinctRequests.Values.ToArray();
+        if (accessControlListService is IAuthorizationCacheWarmupBatchPath batchPath)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            await accessControlListService.EvaluateAccessAsync(
-                    request.Subject,
-                    request.TenantId,
-                    request.ResourceType,
-                    request.ResourceId,
-                    cancellationToken)
-                .ConfigureAwait(false);
+            await batchPath.WarmCacheBatchAsync(normalizedRequests, cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            foreach (var request in normalizedRequests)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await accessControlListService.EvaluateAccessAsync(
+                        request.Subject,
+                        request.TenantId,
+                        request.ResourceType,
+                        request.ResourceId,
+                        cancellationToken)
+                    .ConfigureAwait(false);
+            }
         }
 
         return new PermissionCacheWarmupResult(requests.Count, distinctRequests.Count, requests.Count - distinctRequests.Count);

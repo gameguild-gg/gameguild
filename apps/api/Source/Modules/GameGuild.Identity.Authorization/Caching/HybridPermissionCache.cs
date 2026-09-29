@@ -13,6 +13,20 @@ namespace GameGuild.Identity.Authorization.Caching;
 /// </summary>
 public interface IHybridPermissionCache
 {
+    /// <summary>Gets multiple value-type entries with bounded concurrency.</summary>
+    /// <remarks>At most 500 distinct keys are accepted. Cache reads are not transactional.</remarks>
+    Task<IReadOnlyDictionary<string, CacheResult<T>>> GetManyValuesAsync<T>(
+        IReadOnlyCollection<string> keys,
+        string cacheType,
+        CancellationToken cancellationToken = default) where T : struct;
+
+    /// <summary>Sets multiple value-type entries with bounded concurrency.</summary>
+    /// <remarks>At most 500 entries are accepted. Cache writes are not transactional.</remarks>
+    Task SetManyValuesAsync<T>(
+        IReadOnlyDictionary<string, T> values,
+        string cacheType,
+        CancellationToken cancellationToken = default) where T : struct;
+
     /// <summary>
     ///     Gets a value from the cache.
     /// </summary>
@@ -126,6 +140,9 @@ public readonly struct CacheResult<T> where T : struct
 /// </remarks>
 public sealed class HybridPermissionCache : IHybridPermissionCache
 {
+    private const int MaxBulkOperationSize = 500;
+    private const int MaxBulkOperationConcurrency = 16;
+
     private readonly IMemoryCache _l1Cache;
     private readonly IDistributedCache? _l2Cache;
     private readonly ICacheMetricsService _metrics;
@@ -289,6 +306,43 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyDictionary<string, CacheResult<T>>> GetManyValuesAsync<T>(
+        IReadOnlyCollection<string> keys,
+        string cacheType,
+        CancellationToken cancellationToken = default) where T : struct
+    {
+        ArgumentNullException.ThrowIfNull(keys);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var distinctKeys = NormalizeBulkKeys(keys);
+        if (distinctKeys.Length == 0)
+        {
+            return new Dictionary<string, CacheResult<T>>(StringComparer.Ordinal);
+        }
+
+        var results = new CacheResult<T>[distinctKeys.Length];
+        await Parallel.ForEachAsync(
+            Enumerable.Range(0, distinctKeys.Length),
+            new ParallelOptions
+            {
+                CancellationToken = cancellationToken,
+                MaxDegreeOfParallelism = Math.Min(distinctKeys.Length, MaxBulkOperationConcurrency)
+            },
+            async (index, token) =>
+            {
+                results[index] = await GetValueAsync<T>(distinctKeys[index], cacheType, token).ConfigureAwait(false);
+            }).ConfigureAwait(false);
+
+        var resultMap = new Dictionary<string, CacheResult<T>>(distinctKeys.Length, StringComparer.Ordinal);
+        for (var index = 0; index < distinctKeys.Length; index++)
+        {
+            resultMap.Add(distinctKeys[index], results[index]);
+        }
+
+        return resultMap;
+    }
+
+    /// <inheritdoc />
     public Task SetAsync<T>(string key, T value, string cacheType, CancellationToken cancellationToken = default)
     {
         return SetAsyncCore(key, value, cacheType, null, cancellationToken);
@@ -304,6 +358,61 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
     public Task SetValueAsync<T>(string key, T value, string cacheType, CancellationToken cancellationToken = default) where T : struct
     {
         return SetAsyncCore(key, value, cacheType, null, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task SetManyValuesAsync<T>(
+        IReadOnlyDictionary<string, T> values,
+        string cacheType,
+        CancellationToken cancellationToken = default) where T : struct
+    {
+        ArgumentNullException.ThrowIfNull(values);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (values.Count > MaxBulkOperationSize)
+        {
+            throw new ArgumentOutOfRangeException(nameof(values), $"At most {MaxBulkOperationSize} cache entries can be written at once.");
+        }
+
+        var entries = values.ToArray();
+        foreach (var entry in entries)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(entry.Key);
+        }
+
+        if (entries.Length == 0)
+        {
+            return;
+        }
+
+        await Parallel.ForEachAsync(
+            Enumerable.Range(0, entries.Length),
+            new ParallelOptions
+            {
+                CancellationToken = cancellationToken,
+                MaxDegreeOfParallelism = Math.Min(entries.Length, MaxBulkOperationConcurrency)
+            },
+            async (index, token) =>
+            {
+                var entry = entries[index];
+                await SetValueAsync(entry.Key, entry.Value, cacheType, token).ConfigureAwait(false);
+            }).ConfigureAwait(false);
+    }
+
+    private static string[] NormalizeBulkKeys(IReadOnlyCollection<string> keys)
+    {
+        if (keys.Count > MaxBulkOperationSize)
+        {
+            throw new ArgumentOutOfRangeException(nameof(keys), $"At most {MaxBulkOperationSize} cache entries can be read at once.");
+        }
+
+        var uniqueKeys = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var key in keys)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(key);
+            uniqueKeys.Add(key);
+        }
+
+        return uniqueKeys.ToArray();
     }
 
     private async Task SetAsyncCore<T>(string key, T value, string cacheType, int? ttlSeconds, CancellationToken cancellationToken)
