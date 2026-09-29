@@ -2,7 +2,7 @@ name: PR Verify
 
 on:
   pull_request:
-    branches: [main, develop]
+    branches: [main, develop, 'feature/**']
     types: [opened, synchronize, reopened, ready_for_review]
 
 permissions:
