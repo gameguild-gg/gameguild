@@ -1,4 +1,5 @@
 import "@testing-library/jest-dom/vitest";
+import userEvent from "@testing-library/user-event";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -32,6 +33,11 @@ vi.mock("./blog-settings-panel", () => ({
 }));
 vi.mock("./blog-coauthor-manager", () => ({
   BlogCoauthorManager: () => <div data-testid="coauthor-manager" />,
+}));
+vi.mock("./blog-copilot-panel", () => ({
+  BlogCopilotPanel: ({ postRevision }: { postRevision: number }) => (
+    <div data-testid="copilot-panel" data-revision={postRevision} />
+  ),
 }));
 
 const post = (overrides: Partial<BlogPostAuthorView> = {}): BlogPostAuthorView => ({
@@ -75,5 +81,28 @@ describe("BlogEditorWorkspace format lock", () => {
     expect(screen.queryByRole("radio", { name: /Markdown/ })).not.toBeInTheDocument();
     expect(screen.getByTestId("body-editor")).toHaveAttribute("data-format", "Lexical");
     expect(screen.getByText("Lexical")).toBeInTheDocument();
+  });
+});
+
+describe("BlogEditorWorkspace copilot mount", () => {
+  it("shows a Copilot tab and renders the copilot panel with the current revision", async () => {
+    const user = userEvent.setup();
+    render(
+      <BlogEditorWorkspace
+        post={post()}
+        viewerUserId="user-primary"
+        primaryAuthorHandle="alice"
+        coauthors={[
+          { userId: "user-primary", handle: "alice", displayName: null, isPrimary: true },
+        ]}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: /Copilot/ })).toBeInTheDocument();
+    expect(screen.queryByTestId("copilot-panel")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Copilot/ }));
+
+    expect(screen.getByTestId("copilot-panel")).toHaveAttribute("data-revision", "7");
   });
 });

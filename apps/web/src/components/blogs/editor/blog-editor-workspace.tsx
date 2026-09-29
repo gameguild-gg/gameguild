@@ -19,7 +19,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@game-guild/ui/components/tooltip";
-import { Loader2, PanelRightClose, PanelRightOpen, RotateCcw, Settings2 } from "lucide-react";
+import { Bot, Loader2, PanelRightClose, PanelRightOpen, RotateCcw, Settings2 } from "lucide-react";
 import { changeSlug, reloadLatestPost, updateDraft } from "@/lib/blogs/actions";
 import {
   blogEditorReducer,
@@ -30,6 +30,7 @@ import {
 } from "@/lib/blogs/editor-state";
 import type { BlogPostAuthorView } from "@/lib/blogs/queries";
 import { BlogBodyEditor } from "./blog-body-editor";
+import { BlogCopilotPanel } from "./blog-copilot-panel";
 import { BlogPublishBar } from "./blog-publish-bar";
 import { BlogSettingsPanel, type BlogSettingsState } from "./blog-settings-panel";
 import {
@@ -94,7 +95,7 @@ export function BlogEditorWorkspace({
   const [slugValue, setSlugValue] = useState(initialPost.slug ?? "");
   const [slugError, setSlugError] = useState<string | null>(null);
   const [rightOpen, setRightOpen] = useState(true);
-  const [rightPanel, setRightPanel] = useState<"settings" | "authors">("settings");
+  const [rightPanel, setRightPanel] = useState<"settings" | "authors" | "copilot">("settings");
 
   const viewerIsPrimary = post.primaryAuthorId === viewerUserId;
   const revisionRef = useRef(state.revision);
@@ -410,6 +411,14 @@ export function BlogEditorWorkspace({
               >
                 Authors
               </Button>
+              <Button
+                variant={rightPanel === "copilot" ? "secondary" : "ghost"}
+                size="sm"
+                className="flex-1"
+                onClick={() => setRightPanel("copilot")}
+              >
+                <Bot /> Copilot
+              </Button>
             </div>
             <div className="min-h-0 flex-1 overflow-auto">
               {rightPanel === "settings" ? (
@@ -434,6 +443,23 @@ export function BlogEditorWorkspace({
                     </div>
                   </div>
                 </>
+              ) : rightPanel === "copilot" ? (
+                <BlogCopilotPanel
+                  postId={post.id}
+                  postRevision={state.revision}
+                  format={state.draft.format}
+                  onRevisionChange={(updated) => {
+                    setPost((prev) => ({ ...prev, ...updated }));
+                    baseline.current = { ...draftFromPost({ ...post, ...updated }) };
+                    dispatch({
+                      type: "reload-latest",
+                      post: {
+                        revision: updated.revision ?? state.revision,
+                        draft: draftFromPost({ ...post, ...updated }),
+                      },
+                    });
+                  }}
+                />
               ) : (
                 <BlogCoauthorManager
                   post={post}

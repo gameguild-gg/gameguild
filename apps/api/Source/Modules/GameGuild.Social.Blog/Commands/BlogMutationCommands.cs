@@ -7,8 +7,7 @@ namespace GameGuild.Social.Blog.Commands;
 /// <summary>Creates a draft blog post; the actor becomes the primary author and the slug is auto-generated.</summary>
 /// <param name="Title">Post title.</param>
 /// <param name="Format">Authoring format (fixed for the life of the post).</param>
-/// <param name="TenantId">Optional tenant metadata (quota/policy only).</param>
-public sealed record CreateBlogPostCommand(string Title, BlogContentFormat Format, Guid? TenantId = null) : ICommand<BlogPost>;
+public sealed record CreateBlogPostCommand(string Title, BlogContentFormat Format) : ICommand<BlogPost>;
 
 /// <summary>Revision-guarded draft edit; any author (primary or co-author).</summary>
 public sealed record UpdateBlogPostDraftCommand(
@@ -57,14 +56,26 @@ public sealed record DeleteBlogCommentCommand(Guid CommentId) : ICommand<Unit>;
 /// <summary>Command handlers delegating to <see cref="IBlogPostService"/> with actor identity from <see cref="IActorContextAccessor"/>.</summary>
 public static class BlogCommandHandlers
 {
-    /// <summary>Extracts the authenticated actor user id or throws.</summary>
-    public static Guid RequireActorUserId(IActorContextAccessor actorContext)
-    {
-        var actor = actorContext.ActorContext;
-        if (!actor.IsAuthenticated || actor.SubjectIdAsGuid is not { } userId || userId == Guid.Empty)
-            throw new UnauthorizedAccessException("An authenticated user is required.");
-        return userId;
-    }
+/// <summary>
+/// Extracts the authenticated actor user id and optional tenant from the actor context
+/// (tenant from request context, never from the body — invariant #9).
+/// </summary>
+public static (Guid UserId, Guid? TenantId) RequireActorUser(IActorContextAccessor actorContext)
+{
+    var actor = actorContext.ActorContext;
+    if (!actor.IsAuthenticated || actor.SubjectIdAsGuid is not { } userId || userId == Guid.Empty)
+        throw new UnauthorizedAccessException("An authenticated user is required.");
+    return (userId, actor.TenantId);
+}
+
+/// <summary>Extracts the authenticated actor user id or throws.</summary>
+public static Guid RequireActorUserId(IActorContextAccessor actorContext)
+{
+    var actor = actorContext.ActorContext;
+    if (!actor.IsAuthenticated || actor.SubjectIdAsGuid is not { } userId || userId == Guid.Empty)
+        throw new UnauthorizedAccessException("An authenticated user is required.");
+    return userId;
+}
 }
 
 /// <summary>Handles <see cref="CreateBlogPostCommand"/>.</summary>
@@ -73,7 +84,10 @@ public sealed class CreateBlogPostCommandHandler(IBlogPostService service, IActo
 {
     /// <inheritdoc />
     public Task<BlogPost> Handle(CreateBlogPostCommand request, CancellationToken cancellationToken)
-        => service.CreateAsync(BlogCommandHandlers.RequireActorUserId(actorContext), request.Title, request.Format, request.TenantId, cancellationToken);
+    {
+        var (userId, tenantId) = BlogCommandHandlers.RequireActorUser(actorContext);
+        return service.CreateAsync(userId, request.Title, request.Format, tenantId, cancellationToken);
+    }
 }
 
 /// <summary>Handles <see cref="UpdateBlogPostDraftCommand"/>.</summary>

@@ -21,7 +21,7 @@ public sealed class BlogControllerTests
         var post = Post(Guid.NewGuid());
         var sender = Sender();
         sender.Setup(s => s.Send(
-                It.Is<CreateBlogPostCommand>(c => c.Title == "Title" && c.Format == BlogContentFormat.Markdown && c.TenantId == null),
+                It.Is<CreateBlogPostCommand>(c => c.Title == "Title" && c.Format == BlogContentFormat.Markdown),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(post);
         var controller = new BlogAuthoringController(sender.Object);

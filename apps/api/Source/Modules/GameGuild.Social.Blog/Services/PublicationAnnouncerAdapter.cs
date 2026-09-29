@@ -2,6 +2,7 @@ using GameGuild.Announcements.Contracts;
 using GameGuild.CQRS;
 using GameGuild.Social.Profiles;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Social.Blog.Services;
 
@@ -9,7 +10,7 @@ namespace GameGuild.Social.Blog.Services;
 /// Dispatches the real publication announcement via the mediator when a blog post is
 /// published. Must never fail the publish itself.
 /// </summary>
-public sealed class PublicationAnnouncerAdapter(ISender sender, IApplicationDbContext context) : IPublicationAnnouncer
+public sealed class PublicationAnnouncerAdapter(ISender sender, IApplicationDbContext context, ILogger<PublicationAnnouncerAdapter> logger) : IPublicationAnnouncer
 {
     public async Task AnnounceBlogPublishedAsync(BlogPost post, CancellationToken ct = default)
     {
@@ -51,8 +52,7 @@ public sealed class PublicationAnnouncerAdapter(ISender sender, IApplicationDbCo
         catch (Exception ex)
         {
             // Announcements must never fail the publish that dispatched them.
-            throw new InvalidOperationException(
-                $"Blog publication announcement for post {post.Id} failed; see inner exception.", ex);
+            logger.LogError(ex, "Blog publication announcement for post {PostId} failed.", post.Id);
         }
     }
 }

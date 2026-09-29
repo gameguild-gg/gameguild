@@ -29,7 +29,7 @@ public sealed class BlogAuthoringController(ISender sender) : ControllerBase
         try
         {
             var post = await sender.Send(
-                new CreateBlogPostCommand(request.Title, request.Format, request.TenantId),
+                new CreateBlogPostCommand(request.Title, request.Format),
                 cancellationToken).ConfigureAwait(false);
             return CreatedAtAction(nameof(GetById), new { id = post.Id }, post);
         }
@@ -313,8 +313,8 @@ public sealed class BlogAuthoringController(ISender sender) : ControllerBase
     });
 }
 
-/// <summary>Wire shape for <see cref="BlogAuthoringController.Create"/>; actor identity is never accepted from the body.</summary>
-public sealed record CreateBlogPostRequest(string Title, BlogContentFormat Format, Guid? TenantId = null);
+/// <summary>Wire shape for <see cref="BlogAuthoringController.Create"/>; actor identity and tenant are never accepted from the body.</summary>
+public sealed record CreateBlogPostRequest(string Title, BlogContentFormat Format);
 
 /// <summary>Wire shape for <see cref="BlogAuthoringController.Update"/>; only patch fields and the expected revision.</summary>
 public sealed record UpdateBlogPostDraftRequest(

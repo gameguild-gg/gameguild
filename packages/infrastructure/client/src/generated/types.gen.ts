@@ -11905,7 +11905,6 @@ export interface SocialBlogControllersChangeBlogPostSlugInput {
 
 export interface SocialBlogControllersCreateBlogPostInput {
   format?: SocialBlogBlogContentFormat;
-  tenantId?: string | null;
   title?: string | null;
 }
 
@@ -30042,7 +30041,6 @@ SocialBlogControllersChangeBlogPostSlugInputSchema = z.object({
 /** Zod schema for SocialBlogControllersCreateBlogPostInput */
 SocialBlogControllersCreateBlogPostInputSchema = z.object({
   format: z.lazy(() => SocialBlogBlogContentFormatSchema).optional(),
-  tenantId: z.string().uuid().nullable().optional(),
   title: z.string().nullable().optional(),
 });
 
