@@ -16,7 +16,7 @@ public sealed class ApiVersionUsageMiddleware(
     ApiVersionUsageMetrics metrics,
     ILogger<ApiVersionUsageMiddleware> logger)
 {
-    public const string CompatibleVersionsHeaderName = "X-API-Compatible-Versions";
+    public static string CompatibleVersionsHeaderName => "X-API-Compatible-Versions";
     private readonly Dictionary<ApiVersion, string> compatibleVersionHeaders = CreateCompatibilityHeaders(options);
 
     public async Task InvokeAsync(HttpContext context)

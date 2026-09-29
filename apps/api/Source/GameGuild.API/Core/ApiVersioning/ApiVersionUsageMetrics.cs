@@ -8,7 +8,7 @@ namespace GameGuild.API.Core.ApiVersioning;
 /// </summary>
 public sealed class ApiVersionUsageMetrics
 {
-    public const string MeterName = "GameGuild.API.Versioning";
+    public static string MeterName => "GameGuild.API.Versioning";
 
     private static readonly Meter Meter = new(MeterName, "1.0.0");
     private static readonly Counter<long> RequestCount = Meter.CreateCounter<long>(
