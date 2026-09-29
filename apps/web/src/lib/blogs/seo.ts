@@ -46,7 +46,6 @@ export function isReservedBlogSegment(username: string): boolean {
   return RESERVED_BLOG_SEGMENTS.has(username);
 }
 
-<<<<<<< HEAD
 /** Author display info for metadata/JSON-LD (co-authors carry handles only). */
 export interface BlogAuthorProfile {
   handle?: string | null;
