@@ -2868,6 +2868,18 @@ export const putApiSocialProfilesUsersEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetApiSocialProfilesUsersOrCreateInput {
+  userId: string;
+}
+export type GetApiSocialProfilesUsersOrCreateOutput = Types.SocialProfilesSocialProfileDto;
+export const getApiSocialProfilesUsersOrCreateEndpoint = {
+  operationId: 'getApiSocialProfilesUsersOrCreate' as const,
+  method: 'GET' as const,
+  path: '/api/social/profiles/users/{userId}/or-create' as const,
+  tags: ['SocialProfiles'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface PutApiSocialProfilesUsersPrivacyInput {
   userId: string;
   body?: Types.SocialProfilesUpdateProfilePrivacyBody;
@@ -22124,6 +22136,7 @@ export const endpoints = {
   deleteApiSocialProfilesSkills: deleteApiSocialProfilesSkillsEndpoint,
   getApiSocialProfilesUsers: getApiSocialProfilesUsersEndpoint,
   putApiSocialProfilesUsers: putApiSocialProfilesUsersEndpoint,
+  getApiSocialProfilesUsersOrCreate: getApiSocialProfilesUsersOrCreateEndpoint,
   putApiSocialProfilesUsersPrivacy: putApiSocialProfilesUsersPrivacyEndpoint,
   putApiSocialReactions: putApiSocialReactionsEndpoint,
   deleteApiSocialReactions: deleteApiSocialReactionsEndpoint,
