@@ -1,5 +1,6 @@
 using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Authorization.Caching;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -264,7 +265,8 @@ public interface ISocialGroupService
 
 public sealed class SocialGroupService(
     ISocialGroupRepository groups,
-    ISocialGroupMemberRepository members) : ISocialGroupService
+    ISocialGroupMemberRepository members,
+    ICacheInvalidationService cacheInvalidationService) : ISocialGroupService
 {
     public async Task<SocialGroupDto> CreateAsync(CreateSocialGroupCommand command, CancellationToken cancellationToken = default)
     {
@@ -280,6 +282,7 @@ public sealed class SocialGroupService(
 
         await groups.AddAsync(group, cancellationToken).ConfigureAwait(false);
         await members.AddAsync(owner, cancellationToken).ConfigureAwait(false);
+        await InvalidateMembershipCacheAsync(command.OwnerId, group, cancellationToken).ConfigureAwait(false);
 
         return ToDto(group);
     }
@@ -363,6 +366,11 @@ public sealed class SocialGroupService(
 
             await members.UpdateAsync(existing, cancellationToken).ConfigureAwait(false);
             await groups.UpdateAsync(group, cancellationToken).ConfigureAwait(false);
+            if (approveImmediately)
+            {
+                await InvalidateMembershipCacheAsync(command.UserId, group, cancellationToken).ConfigureAwait(false);
+            }
+
             return ToDto(existing);
         }
 
@@ -379,6 +387,11 @@ public sealed class SocialGroupService(
 
         await members.AddAsync(membership, cancellationToken).ConfigureAwait(false);
         await groups.UpdateAsync(group, cancellationToken).ConfigureAwait(false);
+        if (approveImmediately)
+        {
+            await InvalidateMembershipCacheAsync(command.UserId, group, cancellationToken).ConfigureAwait(false);
+        }
+
         return ToDto(membership);
     }
 
@@ -394,6 +407,7 @@ public sealed class SocialGroupService(
         state.Value.Group.RecordMembershipApproved();
         await members.UpdateAsync(state.Value.Member, cancellationToken).ConfigureAwait(false);
         await groups.UpdateAsync(state.Value.Group, cancellationToken).ConfigureAwait(false);
+        await InvalidateMembershipCacheAsync(userId, state.Value.Group, cancellationToken).ConfigureAwait(false);
         return true;
     }
 
@@ -414,14 +428,15 @@ public sealed class SocialGroupService(
 
     public async Task<bool> ChangeRoleAsync(Guid groupId, Guid userId, SocialGroupMemberRole role, CancellationToken cancellationToken = default)
     {
-        var member = await members.GetByGroupUserAsync(groupId, userId, cancellationToken).ConfigureAwait(false);
-        if (member is null || member.Status != SocialGroupMembershipStatus.Active || member.Role == SocialGroupMemberRole.Owner)
+        var state = await GetMutableMembershipAsync(groupId, userId, cancellationToken).ConfigureAwait(false);
+        if (state is null || state.Value.Member.Status != SocialGroupMembershipStatus.Active || state.Value.Member.Role == SocialGroupMemberRole.Owner)
         {
             return false;
         }
 
-        member.ChangeRole(role);
-        await members.UpdateAsync(member, cancellationToken).ConfigureAwait(false);
+        state.Value.Member.ChangeRole(role);
+        await members.UpdateAsync(state.Value.Member, cancellationToken).ConfigureAwait(false);
+        await InvalidateMembershipCacheAsync(userId, state.Value.Group, cancellationToken).ConfigureAwait(false);
         return true;
     }
 
@@ -438,6 +453,11 @@ public sealed class SocialGroupService(
         state.Value.Group.RecordMembershipRemoved(previousStatus);
         await members.UpdateAsync(state.Value.Member, cancellationToken).ConfigureAwait(false);
         await groups.UpdateAsync(state.Value.Group, cancellationToken).ConfigureAwait(false);
+        if (previousStatus == SocialGroupMembershipStatus.Active)
+        {
+            await InvalidateMembershipCacheAsync(userId, state.Value.Group, cancellationToken).ConfigureAwait(false);
+        }
+
         return true;
     }
 
@@ -457,6 +477,16 @@ public sealed class SocialGroupService(
 
         var member = await members.GetByGroupUserAsync(groupId, userId, cancellationToken).ConfigureAwait(false);
         return member is null ? null : (group, member);
+    }
+
+    private Task InvalidateMembershipCacheAsync(Guid userId, SocialGroup group, CancellationToken cancellationToken)
+    {
+        if (group.TenantId is { } tenantId && tenantId != Guid.Empty)
+        {
+            return cacheInvalidationService.InvalidateUserAsync(userId, tenantId, cancellationToken);
+        }
+
+        return cacheInvalidationService.InvalidateGlobalAsync(cancellationToken);
     }
 
     private static SocialGroupDto ToDto(SocialGroup group)

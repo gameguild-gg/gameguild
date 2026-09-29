@@ -3,6 +3,7 @@ using GameGuild;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Authorization.Caching;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using MockQueryable.Moq;
 using Moq;
 using Xunit;
@@ -55,6 +56,50 @@ public class DynamicRoleCacheInvalidationTests
 
         invalidation.Verify(service => service.InvalidateTenantAsync(previousTenantId, It.IsAny<CancellationToken>()), Times.Once);
         invalidation.Verify(service => service.InvalidateTenantAsync(currentTenantId, It.IsAny<CancellationToken>()), Times.Once);
+        invalidation.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task ChangingParentRole_InvalidatesTenantAfterPersistingTheHierarchyChange()
+    {
+        var tenantId = Guid.NewGuid();
+        var roleId = Guid.NewGuid();
+        var oldParentRoleId = Guid.NewGuid();
+        var newParentRoleId = Guid.NewGuid();
+        var persistedRole = new DynamicRole
+        {
+            Id = roleId,
+            TenantId = tenantId,
+            ParentRoleId = oldParentRoleId
+        };
+        var updatedRole = new DynamicRole
+        {
+            Id = roleId,
+            TenantId = tenantId,
+            ParentRoleId = newParentRoleId
+        };
+        var order = new List<string>();
+        var roleSet = new[] { persistedRole }.AsQueryable().BuildMockDbSet();
+        roleSet
+            .Setup(set => set.Update(It.Is<DynamicRole>(role => role.Id == roleId && role.ParentRoleId == newParentRoleId)))
+            .Callback(() => order.Add("update"))
+            .Returns((EntityEntry<DynamicRole>)null!);
+        var context = CreateContext(roleSet, order);
+        var invalidation = new Mock<ICacheInvalidationService>(MockBehavior.Strict);
+        invalidation
+            .Setup(service => service.InvalidateTenantAsync(tenantId, It.IsAny<CancellationToken>()))
+            .Callback(() => order.Add("invalidate"))
+            .Returns(Task.CompletedTask);
+
+        var repository = new DynamicRoleRepository(context.Object, invalidation.Object);
+
+        await repository.UpdateAsync(updatedRole);
+
+        roleSet.Verify(
+            set => set.Update(It.Is<DynamicRole>(role => role.Id == roleId && role.ParentRoleId == newParentRoleId)),
+            Times.Once);
+        order.Should().ContainInOrder("update", "save", "invalidate");
+        invalidation.Verify(service => service.InvalidateTenantAsync(tenantId, It.IsAny<CancellationToken>()), Times.Once);
         invalidation.VerifyNoOtherCalls();
     }
 
