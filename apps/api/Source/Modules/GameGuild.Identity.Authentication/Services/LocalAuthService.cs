@@ -1,11 +1,13 @@
 using System.Diagnostics;
 using System.Globalization;
+using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.CQRS;
 using GameGuild.Email;
 using GameGuild.Identity.Users;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace GameGuild.Identity.Authentication;
 
@@ -26,7 +28,8 @@ public class LocalAuthService(
     IHttpContextAccessor httpContextAccessor,
     ILogger<LocalAuthService> logger,
     ISender sender,
-    ISessionManagementService sessionManagementService
+    ISessionManagementService sessionManagementService,
+    IOptions<JwtOptions>? jwtOptions = null
 ) : ILocalAuthService
 {
     public async Task<SignInResponse> LocalSignInAsync(LocalSignInRequest request, CancellationToken cancellationToken = default)
@@ -130,7 +133,8 @@ public class LocalAuthService(
             var tenantAccessContext = await ResolveTenantAccessContextAsync(userId.Value, request.TenantId, cancellationToken).ConfigureAwait(false);
             RequireActiveTenantAccess(tenantAccessContext);
 
-            var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
+            var refreshTokenExpiryDays = jwtOptions?.Value.RefreshTokenExpirationDays
+                                         ?? int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7", CultureInfo.InvariantCulture);
             var refreshTokenExpiresAt = SystemClock.UtcNow.AddDays(refreshTokenExpiryDays);
             var sessionId = Guid.NewGuid();
             var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(userId.Value, deviceInfo, cancellationToken).ConfigureAwait(false);
@@ -155,7 +159,8 @@ public class LocalAuthService(
             // Record successful login attempt
             await authAttemptService.RecordSuccessfulAttemptAsync(request.Email, userId.Value, ipAddress ?? "unknown", userAgent, stopwatch.Elapsed).ConfigureAwait(false);
 
-            var accessTokenExpirationMinutes = int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60");
+            var accessTokenExpirationMinutes = jwtOptions?.Value.AccessTokenExpirationMinutes
+                                               ?? int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60", CultureInfo.InvariantCulture);
 
             return new SignInResponse
             {
@@ -244,7 +249,8 @@ public class LocalAuthService(
 
             var tenantAccessContext = await ResolveTenantAccessContextAsync(userId, request.TenantId, cancellationToken).ConfigureAwait(false);
 
-            var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
+            var refreshTokenExpiryDays = jwtOptions?.Value.RefreshTokenExpirationDays
+                                         ?? int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7", CultureInfo.InvariantCulture);
             var refreshTokenExpiresAt = SystemClock.UtcNow.AddDays(refreshTokenExpiryDays);
             var sessionId = Guid.NewGuid();
             var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(userId, deviceInfo, cancellationToken).ConfigureAwait(false);
@@ -270,7 +276,8 @@ public class LocalAuthService(
             await authAttemptService.RecordSuccessfulAttemptAsync(request.Email, userId, ipAddress ?? "unknown", userAgent, stopwatch.Elapsed).ConfigureAwait(false);
             logger.LogInformation("User {Email} successfully signed up", request.Email);
 
-            var accessTokenExpirationMinutes = int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60", CultureInfo.InvariantCulture);
+            var accessTokenExpirationMinutes = jwtOptions?.Value.AccessTokenExpirationMinutes
+                                               ?? int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60", CultureInfo.InvariantCulture);
 
             return new SignInResponse
             {
@@ -357,7 +364,8 @@ public class LocalAuthService(
 
         var existingSession = await sessionManagementService.GetSessionByRefreshTokenAsync(hashedToken, cancellationToken).ConfigureAwait(false);
         var sessionId = existingSession?.Id ?? Guid.NewGuid();
-        var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
+        var refreshTokenExpiryDays = jwtOptions?.Value.RefreshTokenExpirationDays
+                                     ?? int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7", CultureInfo.InvariantCulture);
         var newRefreshToken = await jwtTokenService.GenerateRefreshTokenAsync(userId, deviceInfo, authenticatedAt, cancellationToken).ConfigureAwait(false);
         var refreshTokenExpiresAt = now.AddDays(refreshTokenExpiryDays);
         var replacementTokenHash = refreshTokenHasher.HashToken(newRefreshToken);
@@ -396,7 +404,8 @@ public class LocalAuthService(
 
         logger.LogInformation("Refresh token rotated for user {UserId}", userId);
 
-        var accessTokenExpirationMinutes = int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60");
+        var accessTokenExpirationMinutes = jwtOptions?.Value.AccessTokenExpirationMinutes
+                                          ?? int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60", CultureInfo.InvariantCulture);
 
         return new SignInResponse
         {

@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text;
 using FluentAssertions;
+using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.API;
 using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Authentication;
@@ -47,7 +48,10 @@ public sealed class SecurityServiceCollectionExtensionsTests
         authenticationOptions.JwtSecretKey = new string('o', 64);
         authenticationOptions.JwtIssuer = "OptionsIssuer";
         authenticationOptions.JwtAudience = "OptionsAudience";
+        authenticationOptions.JwtExpiration = TimeSpan.FromMinutes(15);
+        authenticationOptions.RefreshTokenExpirationDays = 14;
 
+        services.Configure<JwtOptions>(configuration.GetSection("Jwt"));
         services.SetupAuthentication(configuration, authenticationOptions);
 
         using var provider = services.BuildServiceProvider();
@@ -60,6 +64,13 @@ public sealed class SecurityServiceCollectionExtensionsTests
         var signingKey = tokenValidationParameters.IssuerSigningKey.Should()
             .BeOfType<SymmetricSecurityKey>().Subject;
         signingKey.Key.Should().Equal(Encoding.UTF8.GetBytes(authenticationOptions.JwtSecretKey));
+
+        var issuedTokenOptions = provider.GetRequiredService<IOptions<JwtOptions>>().Value;
+        issuedTokenOptions.SecretKey.Should().Be(authenticationOptions.JwtSecretKey);
+        issuedTokenOptions.Issuer.Should().Be(authenticationOptions.JwtIssuer);
+        issuedTokenOptions.Audience.Should().Be(authenticationOptions.JwtAudience);
+        issuedTokenOptions.AccessTokenExpirationMinutes.Should().Be(15);
+        issuedTokenOptions.RefreshTokenExpirationDays.Should().Be(14);
     }
 
     [Fact]

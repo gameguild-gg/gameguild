@@ -1,10 +1,12 @@
 using System.Globalization;
+using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.CQRS;
 using GameGuild.Identity.Users;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace GameGuild.Identity.Authentication;
 
@@ -23,7 +25,8 @@ public class OAuthAuthService(
     IHttpContextAccessor httpContextAccessor,
     ISender sender,
     ISessionManagementService sessionManagementService,
-    ILogger<OAuthAuthService> logger
+    ILogger<OAuthAuthService> logger,
+    IOptions<JwtOptions>? jwtOptions = null
 ) : IOAuthAuthService
 {
     public async Task<SignInResponse> GitHubSignInAsync(OAuthSignInRequest request, CancellationToken cancellationToken = default)
@@ -136,9 +139,10 @@ public class OAuthAuthService(
         string successMessage,
         CancellationToken cancellationToken)
     {
-        var refreshTokenExpiryDays = int.Parse(
-            configuration["Jwt:RefreshTokenExpirationDays"] ?? configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7",
-            CultureInfo.InvariantCulture);
+        var refreshTokenExpiryDays = jwtOptions?.Value.RefreshTokenExpirationDays
+                                     ?? int.Parse(
+                                         configuration["Jwt:RefreshTokenExpirationDays"] ?? configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7",
+                                         CultureInfo.InvariantCulture);
         var refreshTokenExpiresAt = SystemClock.UtcNow.AddDays(refreshTokenExpiryDays);
         var sessionId = Guid.NewGuid();
         var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(user.Id, deviceInfo, cancellationToken).ConfigureAwait(false);
@@ -160,7 +164,8 @@ public class OAuthAuthService(
             deviceInfo.Fingerprint,
             cancellationToken).ConfigureAwait(false);
 
-        var accessTokenExpirationMinutes = int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60", CultureInfo.InvariantCulture);
+        var accessTokenExpirationMinutes = jwtOptions?.Value.AccessTokenExpirationMinutes
+                                           ?? int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60", CultureInfo.InvariantCulture);
 
         return new SignInResponse
         {

@@ -185,7 +185,8 @@ public class AuthenticationOptionsTests
         options.JwtSecretKey.Should().BeEmpty();
         options.JwtIssuer.Should().BeEmpty();
         options.JwtAudience.Should().BeEmpty();
-        options.JwtExpiration.Should().Be(TimeSpan.FromHours(24));
+        options.JwtExpiration.Should().Be(TimeSpan.FromHours(1));
+        options.RefreshTokenExpirationDays.Should().Be(30);
     }
 
     [Fact]

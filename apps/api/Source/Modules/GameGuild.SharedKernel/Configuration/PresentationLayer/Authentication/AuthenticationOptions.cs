@@ -43,7 +43,15 @@ public sealed class AuthenticationOptions : BaseOptions
 
     public string JwtAudience { get; set; } = string.Empty;
 
-    public TimeSpan JwtExpiration { get; set; } = TimeSpan.FromHours(24);
+    /// <summary>
+    ///     Lifetime for newly issued access tokens.
+    /// </summary>
+    public TimeSpan JwtExpiration { get; set; } = TimeSpan.FromHours(1);
+
+    /// <summary>
+    ///     Lifetime for refresh tokens, in days.
+    /// </summary>
+    public int RefreshTokenExpirationDays { get; set; } = 30;
 
     public override void Validate()
     {
@@ -82,6 +90,8 @@ public sealed class AuthenticationOptions : BaseOptions
             if (string.IsNullOrEmpty(JwtAudience)) throw new InvalidOperationException("JWT audience must be configured when authentication is enabled.");
 
             if (JwtExpiration <= TimeSpan.Zero) throw new InvalidOperationException("JWT expiration must be greater than zero.");
+
+            if (RefreshTokenExpirationDays <= 0) throw new InvalidOperationException("Refresh token expiration must be greater than zero.");
         }
     }
 

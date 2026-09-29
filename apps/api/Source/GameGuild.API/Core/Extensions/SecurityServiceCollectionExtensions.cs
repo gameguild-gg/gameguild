@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Claims;
 using System.Text;
 using GameGuild.Configuration;
@@ -32,16 +33,28 @@ public static class SecurityServiceCollectionExtensions
         var isDevelopmentOrTesting = IsDevelopmentOrTesting(configuration);
         IdentityModelEventSource.ShowPII = isDevelopmentOrTesting;
 
+        var accessTokenExpirationMinutes = checked((int)Math.Ceiling(options.JwtExpiration.TotalMinutes));
         var jwtConfiguration = new ConfigurationBuilder()
             .AddConfiguration(configuration)
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Jwt:Secret"] = options.JwtSecretKey,
                 ["Jwt:Issuer"] = options.JwtIssuer,
-                ["Jwt:Audience"] = options.JwtAudience
+                ["Jwt:Audience"] = options.JwtAudience,
+                ["Jwt:AccessTokenExpirationMinutes"] = accessTokenExpirationMinutes.ToString(CultureInfo.InvariantCulture),
+                ["Jwt:RefreshTokenExpirationDays"] = options.RefreshTokenExpirationDays.ToString(CultureInfo.InvariantCulture)
             })
             .Build();
         var resolvedJwtOptions = JwtOptionsResolver.CreateValidated(jwtConfiguration);
+
+        services.PostConfigure<JwtOptions>(jwtOptions =>
+        {
+            jwtOptions.SecretKey = resolvedJwtOptions.SecretKey;
+            jwtOptions.Issuer = resolvedJwtOptions.Issuer;
+            jwtOptions.Audience = resolvedJwtOptions.Audience;
+            jwtOptions.AccessTokenExpirationMinutes = resolvedJwtOptions.AccessTokenExpirationMinutes;
+            jwtOptions.RefreshTokenExpirationDays = resolvedJwtOptions.RefreshTokenExpirationDays;
+        });
 
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(resolvedJwtOptions.SecretKey))
             { KeyId = "GameGuild-jwt-key" };
