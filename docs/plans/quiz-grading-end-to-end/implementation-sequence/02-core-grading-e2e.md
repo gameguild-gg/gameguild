@@ -8,6 +8,16 @@ e coletivo. Esta parte contém `SEQ-07` a `SEQ-11`.
 
 Regras globais: [`08-implementation-sequence.md`](../08-implementation-sequence.md).
 
+## Estado após a primeira execução
+
+`SEQ-07` a `SEQ-11` já receberam sua primeira implementação. A auditoria
+pós-merge confirmou o núcleo entregue, mas encontrou pendências de autoridade
+peer paralela, E2E HTTP + PostgreSQL e upgrade pela cadeia real de migrations.
+
+Não reexecutar esta Parte 2 inteira. Executar somente o plano de
+[`fechamento da Parte 2`](./02a-core-grading-e2e-closeout.md) e retornar a este
+documento para aprovar o gate de saída.
+
 ## Pré-requisitos
 
 - Parte 1 concluída, testada e aprovada em seu gate de saída;
@@ -561,6 +571,12 @@ coletivo, reprocessamento idempotente, autorização negativa e reconstrução d
 projeção mínima de gradebook e progresso, além da reprodução da entrega
 concreta pelo `DeliveryHash`.
 
+Após a primeira implementação, as evidências remanescentes e o corte da
+autoridade paralela passam a ser executados exclusivamente em
+[`02a-core-grading-e2e-closeout.md`](./02a-core-grading-e2e-closeout.md). Concluir
+esse documento é parte obrigatória deste gate, não uma reexecução de `SEQ-07` a
+`SEQ-11`.
+
 ## Acompanhamento
 
 | Marco | Status | Evidência |
@@ -568,5 +584,6 @@ concreta pelo `DeliveryHash`.
 | `SEQ-07` | concluído | runtime comum, entrega imutável e `AuthorTest` isolado dos efeitos acadêmicos |
 | `SEQ-08` | concluído | `InstructorReview` executado pelo runtime, com override, regrade e trilha de auditoria |
 | `SEQ-09` | concluído | `AutomatedReview` autoritativo no servidor e paridade C#/TypeScript pelas fixtures compartilhadas |
-| `SEQ-10` | concluído | submissão individual, release durável, projeções learner-safe, gradebook e progresso idempotentes |
-| `SEQ-11` | concluído | submissão coletiva única, draft versionado, participantes congelados e projeção por participante |
+| `SEQ-10` | implementado; gate pendente | implementação funcional entregue; falta E2E HTTP + PostgreSQL e reconstrução persistida definidos em `CLOSE-02` |
+| `SEQ-11` | implementado; fechamento pendente | implementação coletiva entregue; faltam remover dependências peer de `CanonicalRow`/submissions irmãs e executar o E2E relacional |
+| fechamento da Parte 2 | pendente | executar [`CLOSE-01` a `CLOSE-04`](./02a-core-grading-e2e-closeout.md) antes da Parte 3 |
