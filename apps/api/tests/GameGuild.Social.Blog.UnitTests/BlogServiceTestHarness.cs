@@ -5,13 +5,14 @@ using GameGuild.Social.Blog.Services;
 using GameGuild.Social.Follows;
 using GameGuild.Social.Follows.Services;
 using GameGuild.Social.Profiles;
+using GameGuild.Social.Reactions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace GameGuild.Social.Blog.UnitTests;
 
 /// <summary>
-/// Service-level test fixture: InMemory context with the blog model + profiles, a mocked
+/// Service-level test fixture: InMemory context with the blog model + profiles + reactions, a mocked
 /// moderation service, and helpers for actors/posts.
 /// </summary>
 public sealed class BlogServiceTestHarness : IDisposable
@@ -25,6 +26,7 @@ public sealed class BlogServiceTestHarness : IDisposable
 
     public BlogTestDbContext Context { get; }
     public IBlogPostService Service { get; }
+    public IBlogViewCounterService ViewCounter { get; }
 
     public BlogServiceTestHarness()
     {
@@ -34,6 +36,7 @@ public sealed class BlogServiceTestHarness : IDisposable
         Context = new BlogTestDbContext(options);
         var slugService = new BlogSlugService(Context);
         Service = new BlogPostService(Context, slugService, Moderation, Announcer);
+        ViewCounter = new BlogViewCounterService(Context);
     }
 
     public async Task<BlogPost> CreatePostAsync(Guid? author = null, string title = "Hello World", BlogContentFormat format = BlogContentFormat.Markdown)
@@ -48,6 +51,13 @@ public sealed class BlogServiceTestHarness : IDisposable
     public async Task<BlogPost> PublishAsync(Guid postId)
         => await Service.PublishAsync(Primary, postId);
 
+    /// <summary>Soft-deletes via the service after faking the concurrency Version InMemory never bumps.</summary>
+    public async Task DeletePostAsync(Guid postId)
+    {
+        Context.Entry(Context.Set<BlogPost>().Single(p => p.Id == postId)).Property(p => p.Version).CurrentValue = 1;
+        await Service.DeleteAsync(Primary, postId);
+    }
+
     public SocialProfile AddProfile(Guid userId, string handle)
     {
         var profile = new SocialProfile { Id = Guid.NewGuid(), UserId = userId, Handle = SocialProfile.NormalizeHandle(handle), DisplayName = handle };
@@ -56,10 +66,18 @@ public sealed class BlogServiceTestHarness : IDisposable
         return profile;
     }
 
+    public Reaction AddReaction(Guid userId, Guid targetId, ReactionType type = ReactionType.Like)
+    {
+        var reaction = Reaction.Create(userId, targetId, ReactionTargetType.BlogPost, type);
+        Context.Set<Reaction>().Add(reaction);
+        Context.SaveChanges();
+        return reaction;
+    }
+
     public void Dispose() => Context.Dispose();
 }
 
-/// <summary>InMemory context applying the blog model plus the SocialProfile shape used for handle resolution.</summary>
+/// <summary>InMemory context applying the blog model plus the SocialProfile and Reaction shapes used by the read side.</summary>
 public sealed class BlogTestDbContext(DbContextOptions<BlogTestDbContext> options) : DbContext(options), IApplicationDbContext
 {
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -71,16 +89,19 @@ public sealed class BlogTestDbContext(DbContextOptions<BlogTestDbContext> option
             builder.Ignore(profile => profile.Skills);
             builder.Ignore(profile => profile.PortfolioItems);
         });
+        modelBuilder.Entity<Reaction>(builder => builder.HasKey(reaction => reaction.Id));
     }
 
     public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
         => throw new NotSupportedException();
 }
 
-/// <summary>Scripted moderation service for block-enforcement tests.</summary>
+/// <summary>Scripted moderation service for block/mute-enforcement tests.</summary>
 public sealed class MockModerationService : IUserModerationService
 {
     public HashSet<(Guid, Guid)> BlockedPairs { get; } = [];
+
+    public HashSet<(Guid MuterId, Guid MutedId)> MutedPairs { get; } = [];
 
     public Task<Result<bool>> AreUsersBlockedAsync(Guid userId1, Guid userId2, CancellationToken ct = default)
         => Task.FromResult(Result.Success(BlockedPairs.Contains((userId1, userId2)) || BlockedPairs.Contains((userId2, userId1))));
@@ -101,7 +122,13 @@ public sealed class MockModerationService : IUserModerationService
         => throw new NotSupportedException();
 
     public Task<Result<List<Mute>>> GetMutedUsersAsync(Guid userId, int skip = 0, int take = 50, CancellationToken ct = default)
-        => throw new NotSupportedException();
+    {
+        var mutes = MutedPairs
+            .Where(pair => pair.MuterId == userId)
+            .Select(pair => Mute.Create(pair.MuterId, pair.MutedId))
+            .ToList();
+        return Task.FromResult(Result.Success(mutes));
+    }
 
     public Task<Result<Mute>> MuteUserAsync(Guid mutingUserId, Guid mutedUserId, string? reason = null, DateTime? expiresAt = null, CancellationToken ct = default)
         => throw new NotSupportedException();

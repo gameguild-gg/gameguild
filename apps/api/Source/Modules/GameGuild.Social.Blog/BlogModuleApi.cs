@@ -15,6 +15,7 @@ public static class BlogDependencyInjection
         services.AddScoped<IBlogSlugService, BlogSlugService>();
         services.AddScoped<IPublicationAnnouncer, NoOpPublicationAnnouncer>();
         services.AddScoped<IBlogPostService, BlogPostService>();
+        services.AddScoped<IBlogViewCounterService, BlogViewCounterService>();
 
         services.AddScoped<ICommandHandler<CreateBlogPostCommand, BlogPost>, CreateBlogPostCommandHandler>();
         services.AddScoped<IRequestHandler<CreateBlogPostCommand, BlogPost>>(sp => sp.GetRequiredService<ICommandHandler<CreateBlogPostCommand, BlogPost>>());
@@ -51,6 +52,15 @@ public static class BlogDependencyInjection
         services.AddScoped<IRequestHandler<GetBlogPostPublicQuery, BlogPost?>>(sp => sp.GetRequiredService<IQueryHandler<GetBlogPostPublicQuery, BlogPost?>>());
         services.AddScoped<IQueryHandler<ListBlogIndexQuery, IReadOnlyList<BlogPost>>, ListBlogIndexQueryHandler>();
         services.AddScoped<IRequestHandler<ListBlogIndexQuery, IReadOnlyList<BlogPost>>>(sp => sp.GetRequiredService<IQueryHandler<ListBlogIndexQuery, IReadOnlyList<BlogPost>>>());
+
+        services.AddScoped<IQueryHandler<ListPublicBlogSummariesQuery, BlogPostSummaryPage>, ListPublicBlogSummariesQueryHandler>();
+        services.AddScoped<IRequestHandler<ListPublicBlogSummariesQuery, BlogPostSummaryPage>>(sp => sp.GetRequiredService<IQueryHandler<ListPublicBlogSummariesQuery, BlogPostSummaryPage>>());
+        services.AddScoped<IQueryHandler<ListAuthorBlogSummariesQuery, BlogPostSummaryPage>, ListAuthorBlogSummariesQueryHandler>();
+        services.AddScoped<IRequestHandler<ListAuthorBlogSummariesQuery, BlogPostSummaryPage>>(sp => sp.GetRequiredService<IQueryHandler<ListAuthorBlogSummariesQuery, BlogPostSummaryPage>>());
+        services.AddScoped<IQueryHandler<GetPublicBlogPostDetailQuery, BlogPostDetailDto?>, GetPublicBlogPostDetailQueryHandler>();
+        services.AddScoped<IRequestHandler<GetPublicBlogPostDetailQuery, BlogPostDetailDto?>>(sp => sp.GetRequiredService<IQueryHandler<GetPublicBlogPostDetailQuery, BlogPostDetailDto?>>());
+        services.AddScoped<IQueryHandler<ListBlogCommentsQuery, BlogCommentPage>, ListBlogCommentsQueryHandler>();
+        services.AddScoped<IRequestHandler<ListBlogCommentsQuery, BlogCommentPage>>(sp => sp.GetRequiredService<IQueryHandler<ListBlogCommentsQuery, BlogCommentPage>>());
 
         return services;
     }
