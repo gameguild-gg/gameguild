@@ -22,6 +22,17 @@ public sealed class AuthenticationOptions : BaseOptions
     public bool EnableApiKeyAuthentication { get; set; }
 
     /// <summary>
+    ///     Registers an opt-in HTTP Basic authentication scheme alongside JWT bearer authentication.
+    ///     The scheme requires HTTPS for every request.
+    /// </summary>
+    public bool EnableBasicAuthentication { get; set; }
+
+    /// <summary>
+    ///     Settings for the optional HTTP Basic scheme.
+    /// </summary>
+    public BasicAuthenticationSettings? Basic { get; set; } = new();
+
+    /// <summary>
     ///     Registers an opt-in cookie authentication scheme alongside the default JWT bearer scheme.
     /// </summary>
     public bool EnableCookieAuthentication { get; set; }
@@ -82,9 +93,20 @@ public sealed class AuthenticationOptions : BaseOptions
             throw new InvalidOperationException("Cookie authentication cannot be enabled when authentication is disabled.");
         }
 
+        if (EnableBasicAuthentication && !EnableAuthentication)
+        {
+            throw new InvalidOperationException("Basic authentication cannot be enabled when authentication is disabled.");
+        }
+
         if (EnableCookieAuthentication)
         {
             (Cookie ?? throw new InvalidOperationException("Cookie authentication settings are required when the cookie scheme is enabled."))
+                .Validate();
+        }
+
+        if (EnableBasicAuthentication)
+        {
+            (Basic ?? throw new InvalidOperationException("Basic authentication settings are required when the Basic scheme is enabled."))
                 .Validate();
         }
 

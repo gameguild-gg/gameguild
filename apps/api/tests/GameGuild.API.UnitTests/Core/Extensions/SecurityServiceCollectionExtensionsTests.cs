@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using GameGuild.Configuration.PresentationLayer.Authentication;
 using GameGuild.Configuration.PresentationLayer;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Authentication;
@@ -48,6 +49,8 @@ public sealed class SecurityServiceCollectionExtensionsTests
         Assert.Equal("role", jwtOptions.TokenValidationParameters.RoleClaimType);
         Assert.Null(await serviceProvider.GetRequiredService<IAuthenticationSchemeProvider>()
             .GetSchemeAsync(ApiKeyAuthenticationOptions.SchemeName));
+        Assert.Null(await serviceProvider.GetRequiredService<IAuthenticationSchemeProvider>()
+            .GetSchemeAsync(BasicAuthenticationSettings.DefaultSchemeName));
     }
 
     [Fact]
@@ -115,6 +118,37 @@ public sealed class SecurityServiceCollectionExtensionsTests
 
         Assert.Equal("X-API-Key", apiKeyOptions.HeaderName);
         Assert.Equal("api_key", apiKeyOptions.QueryStringParameterName);
+    }
+
+    [Fact]
+    public async Task SetupAuthentication_RegistersConfiguredBasicSchemeWithoutChangingJwtDefault()
+    {
+        var services = new ServiceCollection();
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["PresentationLayer:Authentication:JwtSecretKey"] = new string('s', 64),
+                ["PresentationLayer:Authentication:JwtIssuer"] = "GameGuild",
+                ["PresentationLayer:Authentication:JwtAudience"] = "GameGuild.Users",
+                ["PresentationLayer:Authentication:EnableBasicAuthentication"] = "true",
+                ["PresentationLayer:Authentication:Basic:SchemeName"] = "LegacyBasic",
+                ["PresentationLayer:Authentication:Basic:Realm"] = "GameGuild Legacy API"
+            })
+            .Build();
+        var options = PresentationLayerOptionsBuilder.Create(configuration).Authentication!;
+
+        services.AddLogging();
+        services.SetupAuthentication(configuration, options);
+        using var serviceProvider = services.BuildServiceProvider();
+
+        var schemeProvider = serviceProvider.GetRequiredService<IAuthenticationSchemeProvider>();
+        Assert.NotNull(await schemeProvider.GetSchemeAsync("LegacyBasic"));
+        Assert.Equal(JwtBearerDefaults.AuthenticationScheme,
+            (await schemeProvider.GetDefaultAuthenticateSchemeAsync())?.Name);
+
+        var basicOptions = serviceProvider.GetRequiredService<IOptionsMonitor<BasicAuthenticationSchemeOptions>>()
+            .Get("LegacyBasic");
+        Assert.Equal("GameGuild Legacy API", basicOptions.Realm);
     }
 
     [Fact]

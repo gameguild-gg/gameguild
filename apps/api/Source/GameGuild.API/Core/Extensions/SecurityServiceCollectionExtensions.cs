@@ -135,6 +135,15 @@ public static class SecurityServiceCollectionExtensions
             });
         }
 
+        if (options.EnableBasicAuthentication)
+        {
+            var basicSettings = options.Basic!;
+            authenticationBuilder.AddBasicAuthentication(basicSettings.SchemeName, basicOptions =>
+            {
+                basicOptions.Realm = basicSettings.Realm;
+            });
+        }
+
         if (options.EnableCookieAuthentication)
         {
             var cookieSettings = options.Cookie!;

@@ -132,6 +132,31 @@ of redirecting API clients to HTML pages.
 
 The cookie scheme is opt-in. Use HTTPS for the application host before enabling it.
 
+### Optional HTTP Basic Authentication
+
+HTTP Basic authentication is disabled by default and registers a named scheme without replacing JWT bearer as the
+default. It accepts local email or username credentials, requires HTTPS on every request, and refuses accounts with
+MFA enabled because the Basic protocol cannot complete a second-factor challenge. Protect endpoints that select this
+scheme with the configured authentication rate-limit policy; the Basic handler itself does not provide account
+lockout.
+
+```json
+{
+  "PresentationLayer": {
+    "Authentication": {
+      "EnableBasicAuthentication": true,
+      "Basic": {
+        "SchemeName": "LegacyBasic",
+        "Realm": "GameGuild Legacy API"
+      }
+    }
+  }
+}
+```
+
+The scheme is intended only for integrations that require Basic credentials. Keep it disabled unless a protected
+endpoint explicitly selects it, and enable it only after HTTPS and the authentication rate-limit policy are active.
+
 ### Basic Module Configuration
 
 ```csharp
