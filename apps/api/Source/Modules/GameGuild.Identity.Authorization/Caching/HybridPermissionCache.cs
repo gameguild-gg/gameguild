@@ -215,7 +215,18 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
         try
         {
             // Try L1 first
-            if (_l1Cache.TryGetValue(key, out T? l1Value) && l1Value != null)
+            T? l1Value = default;
+            var foundInL1 = false;
+            try
+            {
+                foundInL1 = _l1Cache.TryGetValue(key, out l1Value) && l1Value != null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "L1 cache read failed for key {Key}, falling back to L2 or database", key);
+            }
+
+            if (foundInL1)
             {
                 _metrics.RecordHit(CacheLevel.L1, cacheType);
                 return l1Value;
@@ -235,7 +246,7 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
                             _metrics.RecordHit(CacheLevel.L2, cacheType);
 
                             // Promote to L1
-                            SetL1(key, l2Value, cacheType);
+                            TryPromoteToL1(key, l2Value, cacheType);
 
                             return l2Value;
                         }
@@ -264,16 +275,37 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
     }
 
     /// <inheritdoc />
-    public async Task<CacheResult<T>> GetValueAsync<T>(string key, string cacheType, CancellationToken cancellationToken = default) where T : struct
+    public Task<CacheResult<T>> GetValueAsync<T>(string key, string cacheType, CancellationToken cancellationToken = default) where T : struct =>
+        GetValueAsyncCore<T>(key, cacheType, cancellationToken, skipL1: false, startedAtTimestamp: null);
+
+    private async Task<CacheResult<T>> GetValueAsyncCore<T>(
+        string key,
+        string cacheType,
+        CancellationToken cancellationToken,
+        bool skipL1,
+        long? startedAtTimestamp) where T : struct
     {
-        var startedAt = Stopwatch.GetTimestamp();
+        var startedAt = startedAtTimestamp ?? Stopwatch.GetTimestamp();
         try
         {
-            // Try L1 first
-            if (_l1Cache.TryGetValue(key, out T l1Value))
+            if (!skipL1)
             {
-                _metrics.RecordHit(CacheLevel.L1, cacheType);
-                return CacheResult<T>.Hit(l1Value);
+                T l1Value = default;
+                var foundInL1 = false;
+                try
+                {
+                    foundInL1 = _l1Cache.TryGetValue(key, out l1Value);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "L1 cache read failed for key {Key}, falling back to L2 or database", key);
+                }
+
+                if (foundInL1)
+                {
+                    _metrics.RecordHit(CacheLevel.L1, cacheType);
+                    return CacheResult<T>.Hit(l1Value);
+                }
             }
 
             // Try L2 if enabled
@@ -288,7 +320,7 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
                         _metrics.RecordHit(CacheLevel.L2, cacheType);
 
                         // Promote to L1
-                        SetL1(key, l2Value, cacheType);
+                        TryPromoteToL1(key, l2Value, cacheType);
 
                         return CacheResult<T>.Hit(l2Value);
                     }
@@ -335,17 +367,55 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
         }
 
         var results = new CacheResult<T>[distinctKeys.Length];
-        await Parallel.ForEachAsync(
-            Enumerable.Range(0, distinctKeys.Length),
-            new ParallelOptions
+        var l2Candidates = new List<int>(distinctKeys.Length);
+        var lookupStartTimes = new long[distinctKeys.Length];
+        for (var index = 0; index < distinctKeys.Length; index++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var startedAt = Stopwatch.GetTimestamp();
+            lookupStartTimes[index] = startedAt;
+            T l1Value = default;
+            var foundInL1 = false;
+            try
             {
-                CancellationToken = cancellationToken,
-                MaxDegreeOfParallelism = Math.Min(distinctKeys.Length, MaxBulkOperationConcurrency)
-            },
-            async (index, token) =>
+                foundInL1 = _l1Cache.TryGetValue(distinctKeys[index], out l1Value);
+            }
+            catch (Exception ex)
             {
-                results[index] = await GetValueAsync<T>(distinctKeys[index], cacheType, token).ConfigureAwait(false);
-            }).ConfigureAwait(false);
+                _logger.LogWarning(ex, "L1 cache read failed for key {Key}, falling back to L2 or database", distinctKeys[index]);
+            }
+
+            if (foundInL1)
+            {
+                _metrics.RecordHit(CacheLevel.L1, cacheType);
+                results[index] = CacheResult<T>.Hit(l1Value);
+                _metrics.RecordLookupDuration(Stopwatch.GetElapsedTime(startedAt), cacheType);
+            }
+            else
+            {
+                l2Candidates.Add(index);
+            }
+        }
+
+        if (l2Candidates.Count > 0)
+        {
+            await Parallel.ForEachAsync(
+                l2Candidates,
+                new ParallelOptions
+                {
+                    CancellationToken = cancellationToken,
+                    MaxDegreeOfParallelism = Math.Min(l2Candidates.Count, MaxBulkOperationConcurrency)
+                },
+                async (index, token) =>
+                {
+                    results[index] = await GetValueAsyncCore<T>(
+                        distinctKeys[index],
+                        cacheType,
+                        token,
+                        skipL1: true,
+                        startedAtTimestamp: lookupStartTimes[index]).ConfigureAwait(false);
+                }).ConfigureAwait(false);
+        }
 
         var resultMap = new Dictionary<string, CacheResult<T>>(distinctKeys.Length, StringComparer.Ordinal);
         for (var index = 0; index < distinctKeys.Length; index++)
@@ -514,6 +584,18 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
 
         _keyTracker.Track(key, cacheType, cacheOptions);
         _l1Cache.Set(key, value, cacheOptions);
+    }
+
+    private void TryPromoteToL1<T>(string key, T value, string cacheType)
+    {
+        try
+        {
+            SetL1(key, value, cacheType);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "L1 cache promotion failed for key {Key}; returning the L2 value", key);
+        }
     }
 
     private int GetL1TtlSeconds(string cacheType)

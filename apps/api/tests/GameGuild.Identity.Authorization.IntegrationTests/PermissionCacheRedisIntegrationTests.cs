@@ -63,6 +63,70 @@ public sealed class PermissionCacheRedisFixture : IAsyncLifetime
 [Trait("Infrastructure", "Redis")]
 public sealed class PermissionCacheRedisIntegrationTests(PermissionCacheRedisFixture fixture)
 {
+    [Theory]
+    [InlineData(AccessLevel.Write, AccessLevel.None)]
+    [InlineData(AccessLevel.None, AccessLevel.Write)]
+    public async Task ConcurrentAclLookupRetriesWhenSharedSecurityVersionChanges(
+        AccessLevel permissionBeforeMutation,
+        AccessLevel permissionAfterMutation)
+    {
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        const string resourceType = "Project";
+        const string resourceId = "concurrent-security-version";
+        var tenantVersions = new SharedTenantSecurityVersionStore();
+        var userVersions = new SharedUserSecurityVersionStore();
+        var redisPrefix = $"gg:auth:concurrent-version:{Guid.NewGuid():N}:";
+        var invalidationChannel = $"gg:auth:concurrent-version:{Guid.NewGuid():N}";
+        await using var instanceA = CreateCacheInstance(
+            fixture.ConnectionString, redisPrefix, invalidationChannel, tenantVersions, userVersions);
+        await using var instanceB = CreateCacheInstance(
+            fixture.ConnectionString, redisPrefix, invalidationChannel, tenantVersions, userVersions);
+        using var scopeA = instanceA.CreateScope();
+        using var scopeB = instanceB.CreateScope();
+
+        var initialLookupStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseInitialLookup = new TaskCompletionSource<AccessLevel>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var lookupCount = 0;
+        var currentDatabaseAccess = permissionAfterMutation;
+        var databaseAclB = new Mock<IAccessControlListService>();
+        databaseAclB.Setup(service => service.EvaluateAccessAsync(
+                It.IsAny<AclSubject>(), tenantId, resourceType, resourceId, It.IsAny<CancellationToken>()))
+            .Returns(() => Interlocked.Increment(ref lookupCount) == 1
+                ? WaitForInitialLookupAsync()
+                : Task.FromResult(currentDatabaseAccess));
+
+        var aclCacheB = CreateAclCache(
+            scopeB.ServiceProvider,
+            databaseAclB.Object,
+            tenantVersions,
+            userVersions);
+        var subject = AclSubject.ForUser(userId);
+
+        var concurrentDecision = aclCacheB.EvaluateAccessAsync(subject, tenantId, resourceType, resourceId);
+        await initialLookupStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        currentDatabaseAccess = permissionAfterMutation;
+        await scopeA.ServiceProvider.GetRequiredService<ICacheInvalidationService>()
+            .InvalidateResourceAsync(tenantId, resourceType, resourceId);
+        releaseInitialLookup.SetResult(permissionBeforeMutation);
+
+        (await concurrentDecision.WaitAsync(TimeSpan.FromSeconds(5)))
+            .Should().Be(permissionAfterMutation,
+                "a permission lookup that overlaps an invalidation must retry with the new security version");
+        lookupCount.Should().Be(2, "the stale database result must be discarded and re-evaluated");
+
+        (await aclCacheB.EvaluateAccessAsync(subject, tenantId, resourceType, resourceId))
+            .Should().Be(permissionAfterMutation);
+        lookupCount.Should().Be(2, "the stable decision should be cached under the current security version");
+
+        async Task<AccessLevel> WaitForInitialLookupAsync()
+        {
+            initialLookupStarted.TrySetResult();
+            return await releaseInitialLookup.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        }
+    }
+
     [Fact]
     public async Task SharedL2AndTenantVersionPreventStaleAclGrantsAcrossInstances()
     {
