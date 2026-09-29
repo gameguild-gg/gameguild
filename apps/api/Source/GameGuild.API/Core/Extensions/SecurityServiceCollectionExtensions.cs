@@ -4,6 +4,7 @@ using GameGuild.Configuration;
 using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.Configuration.PresentationLayer.Authentication;
 using GameGuild.Configuration.PresentationLayer.CORS;
+using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Authorization.Utilities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -36,7 +37,7 @@ public static class SecurityServiceCollectionExtensions
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(resolvedJwtOptions.SecretKey))
             { KeyId = "GameGuild-jwt-key" };
 
-        services.AddAuthentication(authOptions =>
+        var authenticationBuilder = services.AddAuthentication(authOptions =>
                 {
                     authOptions.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                     authOptions.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -86,6 +87,16 @@ public static class SecurityServiceCollectionExtensions
                     };
                 }
             );
+
+        if (options.EnableApiKeyAuthentication)
+        {
+            authenticationBuilder.AddApiKeyAuthentication(apiKeyOptions =>
+            {
+                apiKeyOptions.HeaderName = options.ApiKeyHeaderName;
+                apiKeyOptions.AllowQueryString = options.AllowApiKeyInQueryString;
+                apiKeyOptions.QueryStringParameterName = options.ApiKeyQueryStringParameterName;
+            });
+        }
 
         // Add authorization if enabled
         if (options.EnableAuthorization)

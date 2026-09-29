@@ -1,5 +1,8 @@
 using System.Security.Claims;
+using GameGuild.Configuration.PresentationLayer;
 using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Authentication;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
@@ -14,7 +17,7 @@ namespace GameGuild.API.UnitTests.Core.Extensions;
 public sealed class SecurityServiceCollectionExtensionsTests
 {
     [Fact]
-    public void SetupAuthentication_UsesTheRoleClaimTypeEmittedByJwtTokenService()
+    public async Task SetupAuthentication_UsesTheRoleClaimTypeEmittedByJwtTokenService()
     {
         var services = new ServiceCollection();
         var configuration = new ConfigurationBuilder()
@@ -41,6 +44,60 @@ public sealed class SecurityServiceCollectionExtensionsTests
 
         Assert.False(jwtOptions.MapInboundClaims);
         Assert.Equal("role", jwtOptions.TokenValidationParameters.RoleClaimType);
+        Assert.Null(await serviceProvider.GetRequiredService<IAuthenticationSchemeProvider>()
+            .GetSchemeAsync(ApiKeyAuthenticationOptions.SchemeName));
+    }
+
+    [Fact]
+    public async Task SetupAuthentication_RegistersConfiguredApiKeySchemeAlongsideJwt()
+    {
+        var services = new ServiceCollection();
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Jwt:Secret"] = new string('s', 64),
+                ["Jwt:Issuer"] = "GameGuild",
+                ["Jwt:Audience"] = "GameGuild.Users",
+                ["PresentationLayer:Authentication:JwtSecretKey"] = new string('s', 64),
+                ["PresentationLayer:Authentication:JwtIssuer"] = "GameGuild",
+                ["PresentationLayer:Authentication:JwtAudience"] = "GameGuild.Users",
+                ["PresentationLayer:Authentication:EnableApiKeyAuthentication"] = "true",
+                ["PresentationLayer:Authentication:ApiKeyHeaderName"] = "X-GameGuild-Key",
+                ["PresentationLayer:Authentication:AllowApiKeyInQueryString"] = "true",
+                ["PresentationLayer:Authentication:ApiKeyQueryStringParameterName"] = "access_key"
+            })
+            .Build();
+        var options = PresentationLayerOptionsBuilder.Create(configuration).Authentication!;
+
+        services.AddLogging();
+        services.SetupAuthentication(configuration, options);
+        using var serviceProvider = services.BuildServiceProvider();
+
+        var scheme = await serviceProvider.GetRequiredService<IAuthenticationSchemeProvider>()
+            .GetSchemeAsync(ApiKeyAuthenticationOptions.SchemeName);
+        Assert.NotNull(scheme);
+
+        var apiKeyOptions = serviceProvider.GetRequiredService<IOptionsMonitor<ApiKeyAuthenticationOptions>>()
+            .Get(ApiKeyAuthenticationOptions.SchemeName);
+        Assert.Equal("X-GameGuild-Key", apiKeyOptions.HeaderName);
+        Assert.True(apiKeyOptions.AllowQueryString);
+        Assert.Equal("access_key", apiKeyOptions.QueryStringParameterName);
+    }
+
+    [Fact]
+    public void SetupAuthentication_RejectsQueryApiKeyWhenApiKeySchemeIsDisabled()
+    {
+        var services = new ServiceCollection();
+        var configuration = new ConfigurationBuilder().Build();
+        var options = new AuthenticationOptions
+        {
+            AllowApiKeyInQueryString = true
+        };
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            services.SetupAuthentication(configuration, options));
+
+        Assert.Contains("API key scheme", exception.Message, StringComparison.Ordinal);
     }
 
     [Theory]

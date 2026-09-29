@@ -16,6 +16,27 @@ public sealed class AuthenticationOptions : BaseOptions
 
     public bool EnableDacAuthorization { get; set; } = true;
 
+    /// <summary>
+    ///     Registers the API key scheme alongside JWT bearer authentication.
+    /// </summary>
+    public bool EnableApiKeyAuthentication { get; set; }
+
+    /// <summary>
+    ///     Header used to submit API keys when the API key scheme is enabled.
+    /// </summary>
+    public string ApiKeyHeaderName { get; set; } = "X-API-Key";
+
+    /// <summary>
+    ///     Allows API keys in a query parameter. This is disabled by default because URLs are commonly logged.
+    ///     When enabled, requests must use HTTPS.
+    /// </summary>
+    public bool AllowApiKeyInQueryString { get; set; }
+
+    /// <summary>
+    ///     Query parameter used when <see cref="AllowApiKeyInQueryString"/> is enabled.
+    /// </summary>
+    public string ApiKeyQueryStringParameterName { get; set; } = "api_key";
+
     public string JwtSecretKey { get; set; } = string.Empty;
 
     public string JwtIssuer { get; set; } = string.Empty;
@@ -27,6 +48,29 @@ public sealed class AuthenticationOptions : BaseOptions
     public override void Validate()
     {
         base.Validate();
+
+        if (EnableApiKeyAuthentication && !EnableAuthentication)
+        {
+            throw new InvalidOperationException("API key authentication cannot be enabled when authentication is disabled.");
+        }
+
+        if (AllowApiKeyInQueryString && !EnableApiKeyAuthentication)
+        {
+            throw new InvalidOperationException("API key query authentication requires the API key scheme to be enabled.");
+        }
+
+        if (EnableApiKeyAuthentication)
+        {
+            if (string.IsNullOrWhiteSpace(ApiKeyHeaderName))
+            {
+                throw new InvalidOperationException("API key header name must not be empty.");
+            }
+
+            if (AllowApiKeyInQueryString && string.IsNullOrWhiteSpace(ApiKeyQueryStringParameterName))
+            {
+                throw new InvalidOperationException("API key query parameter name must not be empty when query authentication is enabled.");
+            }
+        }
 
         if (EnableAuthentication)
         {
