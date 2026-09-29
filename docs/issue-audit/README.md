@@ -23,3 +23,14 @@ Twenty-eight issues have now received an issue-level evidence review; 300 record
 ## Linked implementation pull requests
 
 The matrix links 17 issue records to 13 open implementation PRs: #28, #30, #144, #149, #251, #260, #261, #262, #308, #309, #324, #335, #353, #354, #384, #387, and #390. This includes related issue #387 on PR #584, #149 related to the #260/#261 rate-limit work in PR #582, and historical duplicate #272 associated with #144 in PR #591. PR URLs, head commits, and the last captured CI states are in the matrix; refresh checks before treating them as current. These links are evidence pointers, not closure evidence.
+
+
+## 2026-09-29 implementation follow-up
+
+Concrete implementation work in this closeout program has so far targeted #324, #353, and #354. The 17 issue records linked to 13 PRs in the inventory are evidence references across the wider issue set, not 17 completed implementations.
+
+PR #580 implements the title-level field-masking request for #324. API Verify, Web Verify on rerun, OpenAPI consistency, Codacy, and the required PR gate pass on head 015f730f; the PR is still draft and #324 remains open pending review/merge and acceptance confirmation.
+
+PR #581 advanced to head b06b96062 with bounded bulk cache reads and writes (up to 500 submitted entries, concurrency capped at 16) and batched permission warmup. The warmup deduplicates normalized subject/resource pairs, reuses tenant/user version lookups within each batch, bulk-reads/writes cache entries, and evaluates authoritative ACL misses sequentially for scoped DbContext safety. GameGuild Authorization UnitTests pass 1,625/1,625, focused bulk/warmup tests pass 6/6, and Docker-backed Redis integration tests pass 5/5. The ModuEstate mirror passes 1,597/1,597 authorization unit tests and 6/6 focused tests. Codacy and OpenAPI checks pass; API Verify and Web Verify are still running on the latest head. Issues #353 and #354 remain open for representative database-backed performance evidence, configured collector/alert validation, security-concurrency checks, and their other outstanding acceptance criteria.
+
+No issue in this program has been closed based on this work.
