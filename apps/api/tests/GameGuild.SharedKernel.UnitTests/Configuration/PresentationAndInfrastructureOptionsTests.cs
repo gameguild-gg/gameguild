@@ -463,6 +463,57 @@ public class ApiVersioningOptionsTests
     }
 
     [Fact]
+    public void Validate_CompatibilityMatrixAcceptsConfiguredCompatibleVersions()
+    {
+        var options = ApiVersioningOptions.CreateDefault();
+        options.VersionFormat = ApiVersionFormatKind.SemanticVersion;
+        options.CompatibilityMatrix["1.0.0"] = new List<string> { "1.1.0", "1.2.0" };
+
+        var act = () => options.Validate();
+
+        act.Should().NotThrow();
+    }
+
+    [Theory]
+    [InlineData("invalid", "1.1")]
+    [InlineData("1.0", "invalid")]
+    [InlineData("1.0", "1.0")]
+    public void Validate_CompatibilityMatrixRejectsInvalidOrSelfCompatibleVersions(string version, string compatibleVersion)
+    {
+        var options = ApiVersioningOptions.CreateDefault();
+        options.CompatibilityMatrix[version] = new List<string> { compatibleVersion };
+
+        var act = () => options.Validate();
+
+        act.Should().Throw<ArgumentException>().WithParameterName("CompatibilityMatrix");
+    }
+
+    [Fact]
+    public void Validate_CompatibilityMatrixRejectsSemanticallyDuplicateVersions()
+    {
+        var options = ApiVersioningOptions.CreateDefault();
+        options.VersionFormat = ApiVersionFormatKind.SemanticVersion;
+        options.CompatibilityMatrix["1.0.0"] = new List<string> { "1.0", "1.0.0" };
+
+        var act = () => options.Validate();
+
+        act.Should().Throw<ArgumentException>().WithParameterName("CompatibilityMatrix");
+    }
+
+    [Fact]
+    public void Validate_CompatibilityMatrixRejectsSemanticallyEquivalentKeys()
+    {
+        var options = ApiVersioningOptions.CreateDefault();
+        options.VersionFormat = ApiVersionFormatKind.SemanticVersion;
+        options.CompatibilityMatrix["1.0"] = new List<string> { "1.1" };
+        options.CompatibilityMatrix["1.0.0"] = new List<string> { "1.2" };
+
+        var act = () => options.Validate();
+
+        act.Should().Throw<ArgumentException>().WithParameterName("CompatibilityMatrix");
+    }
+
+    [Fact]
     public void Validate_UnknownReadingStrategy_ShouldThrow()
     {
         var options = ApiVersioningOptions.CreateDefault();

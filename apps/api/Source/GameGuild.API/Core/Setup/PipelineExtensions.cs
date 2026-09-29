@@ -2,6 +2,7 @@ using System.Net;
 using Asp.Versioning.ApiExplorer;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Tenants;
+using GameGuild.API.Core.ApiVersioning;
 using GameGuild.API.Core.CostAccounting;
 using Serilog;
 
@@ -60,6 +61,7 @@ public static class PipelineExtensions
 
         // 10. Routing (endpoint matching, required before auth)
         app.UseRouting();
+        app.UseMiddleware<ApiVersionUsageMiddleware>();
 
         // 11. CORS (Cross-Origin Resource Sharing, after routing)
         app.UseCors();

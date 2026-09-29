@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
+using GameGuild.API.Core.ApiVersioning;
 using GameGuild.Configuration;
 using GameGuild.Configuration.PresentationLayer.ApiVersioning;
 using GameGuild.Configuration.PresentationLayer.OpenAPI;
@@ -228,6 +229,8 @@ public static class OpenApiExtensions
             ApiVersioningOptions.CreateDefault);
         options.Validate();
         var parser = ApiVersioningOptionsBuilder.CreateParser(options.VersionFormat);
+        services.AddSingleton(options);
+        services.AddSingleton<ApiVersionUsageMetrics>();
 
         // AddApiVersioning registers the default parser with TryAdd. Replacing it here makes route
         // constraints, readers, and sunset policy matching use the same configured format.
