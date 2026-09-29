@@ -83,6 +83,51 @@ public sealed class DataMaskingServiceTests
     }
 
     [Fact]
+    public async Task ApplyAsync_PreservesDeclaredSerializationContractForDerivedResponses()
+    {
+        var repository = new Mock<IDataMaskingRuleRepository>();
+        repository.Setup(repo => repo.GetByResourceTypeAsync("User", null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<DataMaskingRule> { CreateRule(null, "Email", MaskingType.Redact) });
+        var actorAccessor = new Mock<IActorContextAccessor>();
+        actorAccessor.Setup(accessor => accessor.ActorContext).Returns(ActorContextBuilder.ForUser(Guid.NewGuid()).Build());
+        var service = new DataMaskingService(repository.Object, actorAccessor.Object);
+
+        var masked = (JsonObject)(await service.ApplyAsync(
+            "User",
+            new InternalUserResponse { Email = "person@example.com", InternalNotes = "private" },
+            typeof(PublicUserResponse),
+            SerializerOptions,
+            CancellationToken.None))!;
+
+        masked["email"]!.GetValue<string>().Should().Be("[REDACTED]");
+        masked.ContainsKey("internalNotes").Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ApplyAsync_DoesNotCollideNestedPathsWithFlatFieldNames()
+    {
+        var repository = new Mock<IDataMaskingRuleRepository>();
+        repository.Setup(repo => repo.GetByResourceTypeAsync("User", null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<DataMaskingRule>
+            {
+                CreateRule(null, "Profile.SSN", MaskingType.Redact),
+                CreateRule(null, "ProfileSsn", MaskingType.Partial, showFirst: 1, showLast: 1)
+            });
+        var actorAccessor = new Mock<IActorContextAccessor>();
+        actorAccessor.Setup(accessor => accessor.ActorContext).Returns(ActorContextBuilder.ForUser(Guid.NewGuid()).Build());
+        var service = new DataMaskingService(repository.Object, actorAccessor.Object);
+
+        var masked = (JsonObject)(await service.ApplyAsync("User", new
+        {
+            Profile = new { Ssn = "123456" },
+            ProfileSsn = "ABCDEFG"
+        }, SerializerOptions))!;
+
+        masked["profile"]!["ssn"]!.GetValue<string>().Should().Be("[REDACTED]");
+        masked["profileSsn"]!.GetValue<string>().Should().Be("A*****G");
+    }
+
+    [Fact]
     public async Task ApplyAsync_ExemptRoleReceivesOriginalUnmaskedValue()
     {
         var rule = CreateRule(null, "Email", MaskingType.Redact);
@@ -151,5 +196,15 @@ public sealed class DataMaskingServiceTests
     private sealed class ProfileResponse
     {
         public string Ssn { get; init; } = string.Empty;
+    }
+
+    private class PublicUserResponse
+    {
+        public string Email { get; init; } = string.Empty;
+    }
+
+    private sealed class InternalUserResponse : PublicUserResponse
+    {
+        public string InternalNotes { get; init; } = string.Empty;
     }
 }

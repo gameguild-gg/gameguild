@@ -91,6 +91,7 @@ public sealed class DataMaskingMvcIntegrationTests
 
 [ApiController]
 [Route("data-masking-probe")]
+[DataMaskingResourceType("User")]
 public sealed class DataMaskingProbeController : ControllerBase
 {
     [HttpGet("users")]
