@@ -22,8 +22,12 @@ namespace GameGuild.API;
 /// </summary>
 public static class SecurityServiceCollectionExtensions
 {
+    public static IServiceCollection SetupAuthentication(this IServiceCollection services,
+        IConfiguration configuration, AuthenticationOptions? options) =>
+        SetupAuthentication(services, configuration, options, configureAdditionalSchemes: null);
+
     public static IServiceCollection SetupAuthentication(this IServiceCollection services, IConfiguration configuration,
-        AuthenticationOptions? options, Action<AuthenticationBuilder>? configureAdditionalSchemes = null)
+        AuthenticationOptions? options, Action<AuthenticationBuilder>? configureAdditionalSchemes)
     {
         options ??= OptionBuilderUtilities.CreateAndBind(configuration, "Authentication",
             AuthenticationOptions.CreateDefault);
