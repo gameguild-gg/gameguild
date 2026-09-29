@@ -36,7 +36,7 @@ public sealed class AuthenticationEndpointHandlerTests
     {
         var method = typeof(AuthenticationEndpoint).GetMethod("SignUp", BindingFlags.NonPublic | BindingFlags.Static);
         method.Should().NotBeNull();
-        var password = "lowercase1234";
+        var password = new string('x', 16);
         var authService = new Mock<IAuthService>();
         authService
             .Setup(service => service.LocalSignUpAsync(It.IsAny<LocalSignUpRequest>(), It.IsAny<CancellationToken>()))

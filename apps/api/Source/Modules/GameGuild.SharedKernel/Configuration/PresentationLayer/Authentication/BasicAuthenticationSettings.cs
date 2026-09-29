@@ -5,7 +5,7 @@ namespace GameGuild.Configuration.PresentationLayer.Authentication;
 /// </summary>
 public sealed class BasicAuthenticationSettings
 {
-    public const string DefaultSchemeName = "Basic";
+    public static string DefaultSchemeName { get; } = "Basic";
 
     public string SchemeName { get; set; } = DefaultSchemeName;
 

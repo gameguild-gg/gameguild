@@ -177,14 +177,19 @@ public static class BasicAuthenticationExtensions
 {
     public static AuthenticationBuilder AddBasicAuthentication(
         this AuthenticationBuilder builder,
+        string schemeName) => AddBasicAuthentication(builder, schemeName, static _ => { });
+
+    public static AuthenticationBuilder AddBasicAuthentication(
+        this AuthenticationBuilder builder,
         string schemeName,
-        Action<BasicAuthenticationSchemeOptions>? configure = null)
+        Action<BasicAuthenticationSchemeOptions> configure)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(schemeName);
+        ArgumentNullException.ThrowIfNull(configure);
 
         return builder.AddScheme<BasicAuthenticationSchemeOptions, BasicAuthenticationHandler>(schemeName, options =>
         {
-            configure?.Invoke(options);
+            configure(options);
             options.Validate();
         });
     }

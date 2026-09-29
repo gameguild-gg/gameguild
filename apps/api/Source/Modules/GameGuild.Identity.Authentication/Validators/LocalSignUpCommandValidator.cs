@@ -26,7 +26,10 @@ public sealed class LocalSignUpCommandValidator : AbstractValidator<LocalSignUpC
             .WithMessage("Password cannot be null")
             .Custom((password, context) =>
             {
-                if (string.IsNullOrWhiteSpace(password)) return;
+                if (string.IsNullOrWhiteSpace(password))
+                {
+                    return;
+                }
 
                 var result = passwordHasher.ValidatePasswordStrength(password);
                 foreach (var failure in result.ValidationFailures)

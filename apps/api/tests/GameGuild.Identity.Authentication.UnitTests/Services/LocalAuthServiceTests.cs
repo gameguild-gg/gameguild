@@ -31,7 +31,6 @@ public class LocalAuthServiceTests
     private readonly Mock<ISender> _senderMock = new();
     private readonly Mock<ISessionManagementService> _sessionManagementServiceMock = new();
     private readonly IConfiguration _configuration;
-    private readonly IPasswordHasher _passwordHasher;
     private readonly LocalAuthService _sut;
 
     public LocalAuthServiceTests()
@@ -43,7 +42,7 @@ public class LocalAuthServiceTests
         _configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(configData)
             .Build();
-        _passwordHasher = new PasswordHasher(NullLogger<PasswordHasher>.Instance, _configuration);
+        var passwordHasher = new PasswordHasher(NullLogger<PasswordHasher>.Instance, _configuration);
 
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Headers.UserAgent = "TestAgent/1.0";
@@ -83,7 +82,7 @@ public class LocalAuthServiceTests
             _refreshTokenHasherMock.Object,
             _configuration,
             _authAttemptServiceMock.Object,
-            _passwordHasher,
+            passwordHasher,
             _anomalyDetectionMock.Object,
             _enumerationProtectionMock.Object,
             _httpContextAccessorMock.Object,
