@@ -24,7 +24,7 @@ public sealed class AuthenticationOptions : BaseOptions
     /// <summary>
     ///     Header used to submit API keys when the API key scheme is enabled.
     /// </summary>
-    public string ApiKeyHeaderName { get; set; } = "X-API-Key";
+    public string? ApiKeyHeaderName { get; set; }
 
     /// <summary>
     ///     Allows API keys in a query parameter. This is disabled by default because URLs are commonly logged.
@@ -35,7 +35,7 @@ public sealed class AuthenticationOptions : BaseOptions
     /// <summary>
     ///     Query parameter used when <see cref="AllowApiKeyInQueryString"/> is enabled.
     /// </summary>
-    public string ApiKeyQueryStringParameterName { get; set; } = "api_key";
+    public string? ApiKeyQueryStringParameterName { get; set; }
 
     public string JwtSecretKey { get; set; } = string.Empty;
 
@@ -61,12 +61,13 @@ public sealed class AuthenticationOptions : BaseOptions
 
         if (EnableApiKeyAuthentication)
         {
-            if (string.IsNullOrWhiteSpace(ApiKeyHeaderName))
+            if (ApiKeyHeaderName is not null && string.IsNullOrWhiteSpace(ApiKeyHeaderName))
             {
                 throw new InvalidOperationException("API key header name must not be empty.");
             }
 
-            if (AllowApiKeyInQueryString && string.IsNullOrWhiteSpace(ApiKeyQueryStringParameterName))
+            if (AllowApiKeyInQueryString && ApiKeyQueryStringParameterName is not null &&
+                string.IsNullOrWhiteSpace(ApiKeyQueryStringParameterName))
             {
                 throw new InvalidOperationException("API key query parameter name must not be empty when query authentication is enabled.");
             }

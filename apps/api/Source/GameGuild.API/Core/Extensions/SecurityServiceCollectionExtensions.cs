@@ -92,9 +92,17 @@ public static class SecurityServiceCollectionExtensions
         {
             authenticationBuilder.AddApiKeyAuthentication(apiKeyOptions =>
             {
-                apiKeyOptions.HeaderName = options.ApiKeyHeaderName;
+                if (options.ApiKeyHeaderName is not null)
+                {
+                    apiKeyOptions.HeaderName = options.ApiKeyHeaderName;
+                }
+
                 apiKeyOptions.AllowQueryString = options.AllowApiKeyInQueryString;
-                apiKeyOptions.QueryStringParameterName = options.ApiKeyQueryStringParameterName;
+
+                if (options.ApiKeyQueryStringParameterName is not null)
+                {
+                    apiKeyOptions.QueryStringParameterName = options.ApiKeyQueryStringParameterName;
+                }
             });
         }
 

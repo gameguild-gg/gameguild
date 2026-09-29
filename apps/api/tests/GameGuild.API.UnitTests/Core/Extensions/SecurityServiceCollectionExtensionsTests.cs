@@ -85,6 +85,37 @@ public sealed class SecurityServiceCollectionExtensionsTests
     }
 
     [Fact]
+    public void SetupAuthentication_UsesApiKeyHandlerDefaultsWhenNamesAreNotConfigured()
+    {
+        var services = new ServiceCollection();
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Jwt:Secret"] = new string('s', 64),
+                ["Jwt:Issuer"] = "GameGuild",
+                ["Jwt:Audience"] = "GameGuild.Users"
+            })
+            .Build();
+        var options = new AuthenticationOptions
+        {
+            JwtSecretKey = new string('s', 64),
+            JwtIssuer = "GameGuild",
+            JwtAudience = "GameGuild.Users",
+            EnableApiKeyAuthentication = true
+        };
+
+        services.AddLogging();
+        services.SetupAuthentication(configuration, options);
+        using var serviceProvider = services.BuildServiceProvider();
+
+        var apiKeyOptions = serviceProvider.GetRequiredService<IOptionsMonitor<ApiKeyAuthenticationOptions>>()
+            .Get(ApiKeyAuthenticationOptions.SchemeName);
+
+        Assert.Equal("X-API-Key", apiKeyOptions.HeaderName);
+        Assert.Equal("api_key", apiKeyOptions.QueryStringParameterName);
+    }
+
+    [Fact]
     public void SetupAuthentication_RejectsQueryApiKeyWhenApiKeySchemeIsDisabled()
     {
         var services = new ServiceCollection();
