@@ -40,7 +40,7 @@ export default async function TestingEventFeedbackPage({ params }: { params: Pro
 
   return (
     <div className="space-y-5">
-      <TestingLabPageHeader headingLevel={2} icon={BarChart3} title="Feedback review" description="Review every required tester submission, identify pending obligations, and preserve project feedback evidence." />
+      <TestingLabPageHeader headingLevel={2} icon={BarChart3} title="Feedback review" description="Read tester feedback and see which games are still waiting for responses." />
 
       <TestingLabAccessIssues issues={review.accessIssues} />
 
@@ -88,7 +88,7 @@ export default async function TestingEventFeedbackPage({ params }: { params: Pro
                     <h2 className="truncate font-semibold">{projectTitle}</h2>
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
                       <span>{testerName}</span>
-                      {slot?.startsAt ? <span className="before:mr-2 before:content-['/']">{formatEventDateTime(slot.startsAt)}</span> : null}
+                      {slot?.startsAt ? <span className="before:mr-2 before:content-['/']">{formatEventDateTime(slot.startsAt, detail.event!.timeZoneId ?? 'UTC')}</span> : null}
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">

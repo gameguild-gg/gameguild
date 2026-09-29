@@ -1,6 +1,7 @@
 "use server";
 
 import { getRequestAuthContext } from "@/auth";
+import { routing } from "@/i18n/routing";
 import { isSupportedTimeZone, wallClockToUtcIso } from "@/lib/date-time-zone";
 import {
   createServerClient,
@@ -196,13 +197,25 @@ function isoDate(formData: FormData, key: string, timeZoneId = "UTC") {
 }
 
 function revalidateEvent(eventId?: string) {
-  revalidatePath("/workspace/testing-lab");
-  revalidatePath(EVENTS_PATH);
-  revalidatePath("/workspace/testing-lab/settings/templates");
-  revalidatePath("/testing-lab");
+  const listPaths = [
+    "/workspace/testing-lab",
+    EVENTS_PATH,
+    "/workspace/testing-lab/settings/templates",
+    "/testing-lab",
+  ];
+  for (const path of listPaths) {
+    revalidatePath(path);
+    // The locale proxy rewrites public URLs to these internal route paths.
+    for (const locale of routing.locales) revalidatePath(`/${locale}${path}`);
+  }
   if (eventId) {
     revalidatePath(`${EVENTS_PATH}/${eventId}`);
     revalidatePath(`/testing-lab/events/${eventId}`);
+    for (const locale of routing.locales) {
+      // Invalidate the event layout, including schedule, testers and other tabs.
+      revalidatePath(`/${locale}${EVENTS_PATH}/${eventId}`, "layout");
+      revalidatePath(`/${locale}/testing-lab/events/${eventId}`);
+    }
   }
 }
 

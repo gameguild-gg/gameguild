@@ -6,7 +6,7 @@ import { TestingEventWorkspaceNav } from "@/components/testing-lab/testing-event
 import { TestingLabAccessIssues } from "@/components/testing-lab/testing-lab-state";
 import { Link } from "@/i18n/navigation";
 import {
-  formatEventDateTime,
+  formatEventDateRange,
   isTestingEventReadOnly,
 } from "@/lib/testing-lab/event-workspace";
 import { getTestingEventWorkspaceData } from "@/lib/testing-lab/events-queries";
@@ -63,7 +63,7 @@ export default async function TestingEventWorkspaceLayout({
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="truncate text-2xl font-semibold">
+              <h1 className="break-words text-2xl font-semibold">
                 {event.name ?? "Testing event"}
               </h1>
               <Badge>{formatTestingEventStatus(event.status)}</Badge>
@@ -75,19 +75,22 @@ export default async function TestingEventWorkspaceLayout({
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <Clock3 className="size-4" aria-hidden="true" />
-                {formatEventDateTime(event.startsAt)} to {formatEventDateTime(event.endsAt)}
+                {formatEventDateRange(event.startsAt, event.endsAt, event.timeZoneId ?? "UTC")}
               </span>
             </div>
           </div>
           {!readOnly && canManageWorkspace ? (
-            <EditTestingEventDialog event={event} />
+            <div className="flex flex-wrap items-center gap-2">
+              {event.status !== "Draft" ? <Link href={`/testing-lab/events/${eventId}`} className="px-3 text-sm text-primary hover:underline">View playtest</Link> : null}
+              <EditTestingEventDialog event={event} />
+            </div>
           ) : null}
         </div>
       </header>
 
       <TestingLabAccessIssues issues={detail.accessIssues} />
 
-      <section className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <section className="space-y-4">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline">
             {formatTestingEventStatus(event.mode)}

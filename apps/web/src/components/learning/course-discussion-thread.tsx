@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@game-guild/ui/lib/utils";
 import { Link, useRouter } from "@/i18n/navigation";
 import { createCourseDiscussionReply } from "@/lib/learner/activity-actions";
 import type {
@@ -12,7 +13,7 @@ import {
   AlertTitle,
 } from "@game-guild/ui/components/alert";
 import { Badge } from "@game-guild/ui/components/badge";
-import { Button } from "@game-guild/ui/components/button";
+import { Button, buttonVariants } from "@game-guild/ui/components/button";
 import { Textarea } from "@game-guild/ui/components/textarea";
 import {
   ArrowLeft,
@@ -71,10 +72,13 @@ export function CourseDiscussionThread({
   return (
     <div className="mx-auto w-full max-w-4xl space-y-8">
       <header className="space-y-5 border-b pb-6">
-        <Button nativeButton={false} size="sm" variant="ghost" render={<Link href={`/learn/courses/${courseSlug}/community`} />}>
+        <Link
+          href={`/learn/courses/${courseSlug}/community`}
+          className={cn(buttonVariants({ size: "sm", variant: "ghost" }))}
+        >
           <ArrowLeft className="size-4" />
           Back to community
-        </Button>
+        </Link>
         <div>
           <p className="text-sm font-medium text-primary">{courseTitle}</p>
           <div className="mt-2 flex flex-wrap items-center gap-2">

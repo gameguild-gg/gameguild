@@ -1,5 +1,6 @@
+import { cn } from "@game-guild/ui/lib/utils";
 import { CourseLandingPage } from '@/components/courses/course/course-landing-page';
-import { Button } from '@game-guild/ui/components/button';
+import { buttonVariants } from '@game-guild/ui/components/button';
 import { Link } from '@/i18n/navigation';
 import { getProductsContainingCourse } from '@/lib/courses/actions/enrollment.actions';
 import { getCourseViewerAccess } from '@/lib/courses/services/course-viewer-access';
@@ -65,12 +66,26 @@ function CourseUnavailableState({ error }: { readonly error?: string }) {
             </div>
             {error ? <p className="text-sm text-amber-300">Latest error: {error}</p> : null}
             <div className="flex flex-wrap gap-3">
-              <Button className="bg-blue-600 text-white hover:bg-blue-500" nativeButton={false} render={<Link href="/courses" />}>
+              <Link
+                href="/courses"
+                className={cn(
+                  buttonVariants({ className: "bg-blue-600 text-white hover:bg-blue-500" }),
+                )}
+              >
                 Back to catalog
-              </Button>
-              <Button variant="outline" className="border-slate-600 bg-slate-800/50 text-slate-100 hover:bg-slate-700/50 hover:text-white" nativeButton={false} render={<Link href="/courses" />}>
+              </Link>
+              <Link
+                href="/courses"
+                className={cn(
+                  buttonVariants({
+                    variant: "outline",
+                    className:
+                      "border-slate-600 bg-slate-800/50 text-slate-100 hover:bg-slate-700/50 hover:text-white",
+                  }),
+                )}
+              >
                 Try again
-              </Button>
+              </Link>
             </div>
           </div>
         </div>

@@ -5,6 +5,8 @@ namespace GameGuild.Identity.Authentication;
 /// </summary>
 public class Web3Challenge
 {
+    private int _isConsumed;
+
     /// <summary>
     ///     The challenge message to be signed by the wallet.
     /// </summary>
@@ -19,6 +21,11 @@ public class Web3Challenge
     ///     Unique nonce for this challenge (prevents replay attacks).
     /// </summary>
     public string Nonce { get; set; } = string.Empty;
+
+    /// <summary>
+    ///     EIP-155 chain ID bound to the signed challenge.
+    /// </summary>
+    public string ChainId { get; set; } = "1";
 
     /// <summary>
     ///     When the challenge was issued.
@@ -38,7 +45,12 @@ public class Web3Challenge
     /// <summary>
     ///     Gets whether the challenge is still valid (not expired).
     /// </summary>
-    public bool IsValid { get => SystemClock.UtcNow < ExpiresAt; }
+    public bool IsValid { get => Volatile.Read(ref _isConsumed) == 0 && SystemClock.UtcNow < ExpiresAt; }
+
+    /// <summary>
+    ///     Atomically claims this challenge for one successful verification.
+    /// </summary>
+    public bool TryConsume() => Interlocked.CompareExchange(ref _isConsumed, 1, 0) == 0;
 
     /// <summary>
     ///     Gets the number of seconds until expiration.

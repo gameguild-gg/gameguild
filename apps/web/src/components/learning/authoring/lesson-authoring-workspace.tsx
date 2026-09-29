@@ -71,6 +71,7 @@ import { Input } from "@game-guild/ui/components/input";
 import { Label } from "@game-guild/ui/components/label";
 import { ScrollArea } from "@game-guild/ui/components/scroll-area";
 import {
+  SelectGroup,
   Select,
   SelectContent,
   SelectItem,
@@ -1043,6 +1044,10 @@ export function LessonAuthoringWorkspace({
           </div>
         </div>
         <Select
+          items={[
+            { value: "editor", label: "Editor" },
+            { value: "preview", label: "Preview" },
+          ]}
           value={mode === "preview" ? "preview" : "editor"}
           onValueChange={(value) => setMode(value as "editor" | "preview")}
         >
@@ -1054,8 +1059,10 @@ export function LessonAuthoringWorkspace({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="editor">Editor</SelectItem>
-            <SelectItem value="preview">Preview</SelectItem>
+            <SelectGroup>
+              <SelectItem value="editor">Editor</SelectItem>
+              <SelectItem value="preview">Preview</SelectItem>
+            </SelectGroup>
           </SelectContent>
         </Select>
         <div className="hidden items-center rounded-md border bg-muted/25 p-0.5 lg:flex">
@@ -1332,6 +1339,11 @@ export function LessonAuthoringWorkspace({
                           Lesson access
                         </Label>
                         <Select
+                          items={[
+                            { value: "Public", label: "Enrolled students" },
+                            { value: "MembersOnly", label: "Members only" },
+                            { value: "Private", label: "Private" },
+                          ]}
                           value={payload.visibility}
                           onValueChange={(value) =>
                             updatePayload(
@@ -1340,20 +1352,15 @@ export function LessonAuthoringWorkspace({
                             )
                           }
                         >
-                          <SelectTrigger
-                            id="authoring-visibility"
-                            className="w-full"
-                          >
+                          <SelectTrigger id="authoring-visibility" className="w-full">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Public">
-                              Enrolled students
-                            </SelectItem>
-                            <SelectItem value="MembersOnly">
-                              Members only
-                            </SelectItem>
-                            <SelectItem value="Private">Private</SelectItem>
+                            <SelectGroup>
+                              <SelectItem value="Public">Enrolled students</SelectItem>
+                              <SelectItem value="MembersOnly">Members only</SelectItem>
+                              <SelectItem value="Private">Private</SelectItem>
+                            </SelectGroup>
                           </SelectContent>
                         </Select>
                       </div>
@@ -1643,10 +1650,12 @@ export function LessonAuthoringWorkspace({
                   format !== "Video" &&
                   format !== "ExternalLink" ? (
                     <Select
+                      items={[
+                        { value: "ReplaceDocument", label: "Replace document" },
+                        { value: "InsertAtCursor", label: "Insert at cursor" },
+                      ]}
                       value={proposalMode}
-                      onValueChange={(value) =>
-                        setProposalMode(value as AiProposalKind)
-                      }
+                      onValueChange={(value) => setProposalMode(value as AiProposalKind)}
                     >
                       <SelectTrigger
                         aria-label="Proposal application"
@@ -1655,12 +1664,10 @@ export function LessonAuthoringWorkspace({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="ReplaceDocument">
-                          Replace document
-                        </SelectItem>
-                        <SelectItem value="InsertAtCursor">
-                          Insert at cursor
-                        </SelectItem>
+                        <SelectGroup>
+                          <SelectItem value="ReplaceDocument">Replace document</SelectItem>
+                          <SelectItem value="InsertAtCursor">Insert at cursor</SelectItem>
+                        </SelectGroup>
                       </SelectContent>
                     </Select>
                   ) : null}

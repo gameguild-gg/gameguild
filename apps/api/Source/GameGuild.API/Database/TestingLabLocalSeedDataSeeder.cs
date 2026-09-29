@@ -83,6 +83,7 @@ public static class TestingLabLocalSeedDataSeeder
         }
 
         var seededProjects = 0;
+        var seededVersions = 0;
         var seededApplications = 0;
         foreach (var game in Games)
         {
@@ -124,7 +125,7 @@ public static class TestingLabLocalSeedDataSeeder
             var projectVersion = await context.Set<ProjectVersion>()
                 .IgnoreQueryFilters()
                 .FirstOrDefaultAsync(
-                    candidate => candidate.ProjectId == game.Id && candidate.VersionNumber == "0.1.0-local",
+                    candidate => candidate.ProjectId == game.Id && candidate.VersionNumber == "0.1.0-local" && candidate.DeletedAt == null,
                     cancellationToken)
                 .ConfigureAwait(false);
             if (projectVersion is null)
@@ -137,6 +138,7 @@ public static class TestingLabLocalSeedDataSeeder
                     testingEvent.TenantId);
                 projectVersion.MarkReadyForTesting();
                 context.Set<ProjectVersion>().Add(projectVersion);
+                seededVersions++;
             }
 
             var applicationExists = await context.Set<TestingProjectApplication>()
@@ -162,12 +164,14 @@ public static class TestingLabLocalSeedDataSeeder
             seededApplications++;
         }
 
-        if (seededProjects > 0 || seededApplications > 0 || context.Entry(slot).State == EntityState.Added)
+        // Build-only repairs must commit before the next event's seed queries the database.
+        if (seededProjects > 0 || seededVersions > 0 || seededApplications > 0 || context.Entry(slot).State == EntityState.Added)
             await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger?.LogInformation(
-            "Seeded {ProjectCount} local Testing Lab games and {ApplicationCount} approved applications for event {EventId}.",
+            "Seeded {ProjectCount} local Testing Lab games, {VersionCount} builds, and {ApplicationCount} approved applications for event {EventId}.",
             seededProjects,
+            seededVersions,
             seededApplications,
             testingEvent.Id);
     }

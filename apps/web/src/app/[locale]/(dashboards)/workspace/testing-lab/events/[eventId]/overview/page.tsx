@@ -5,7 +5,7 @@ import { Link } from '@/i18n/navigation';
 import { getMembers } from '@/lib/community/queries/members';
 import {
   countLabel,
-  formatEventDateTime,
+  formatEventDateRange,
   isTestingEventReadOnly,
 } from '@/lib/testing-lab/event-workspace';
 import { getTestingEventWorkspaceData } from '@/lib/testing-lab/events-queries';
@@ -32,7 +32,8 @@ export default async function TestingEventOverviewPage({
 
   if (!detail.event) notFound();
   const event = detail.event;
-  const registrations = Object.values(detail.registrationsBySlot).flat();
+  const registrations = Object.values(detail.registrationsBySlot).flat().filter((registration) => registration.status !== 'Cancelled');
+  const testerCount = new Set(registrations.map((registration) => registration.userId ?? registration.id)).size;
   const pendingApplications = detail.applications.filter((item) =>
     ['Pending', 'UnderReview', 'Waitlisted'].includes(item.status ?? 'Pending'),
   ).length;
@@ -43,16 +44,19 @@ export default async function TestingEventOverviewPage({
       label: countLabel(detail.applications.length, 'project application'),
       note: countLabel(pendingApplications, 'awaiting decision'),
       icon: ClipboardList,
+      destination: 'applications',
     },
     {
       label: countLabel(detail.slots.length, 'testing slot'),
-      note: detail.slots.length ? 'Independent capacity windows' : 'Schedule not configured',
+      note: detail.slots.length ? 'View dates and capacity' : 'Add dates and capacity',
       icon: CalendarClock,
+      destination: 'schedule',
     },
     {
-      label: countLabel(registrations.length, 'registered tester'),
-      note: 'Across every event slot',
+      label: countLabel(testerCount, 'registered tester'),
+      note: 'View participants and attendance',
       icon: UsersRound,
+      destination: 'participants',
     },
   ];
 
@@ -62,43 +66,43 @@ export default async function TestingEventOverviewPage({
         headingLevel={2}
         icon={CalendarClock}
         title="Event overview"
-        description="Review operational readiness, application demand, capacity, and governance before the event starts."
+        description="Set up the playtest, review sign-ups, and track participation."
       />
 
       <section aria-label="Event metrics" className="grid gap-3 md:grid-cols-3">
-        {metrics.map(({ label, note, icon: Icon }) => (
-          <article key={label} className="rounded-md border p-4">
+        {metrics.map(({ label, note, icon: Icon, destination }) => (
+          <Link href={`/workspace/testing-lab/events/${eventId}/${destination}`} key={label} className="rounded-md border p-4 transition-colors hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <div className="flex items-center gap-2 text-muted-foreground">
               <Icon className="size-4" />
               <p className="text-sm">{label}</p>
             </div>
             <p className="mt-3 text-sm font-medium">{note}</p>
-          </article>
+          </Link>
         ))}
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.7fr)]">
+      <section className={event.approvalMode === 'Committee' ? "grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.7fr)]" : "grid gap-4"}>
         <article className="rounded-md border p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h2 className="font-semibold">Timeline and delivery</h2>
+              <h2 className="font-semibold">Dates & sign-ups</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Application intake and event delivery are managed independently.
+                All times use {event.timeZoneId ?? "UTC"} · 24-hour clock.
               </p>
             </div>
             <Badge variant="outline">{event.mode}</Badge>
           </div>
           <dl className="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
-              <dt className="text-xs font-medium uppercase text-muted-foreground">Applications</dt>
+              <dt className="text-sm font-medium text-muted-foreground">Sign-ups open → close</dt>
               <dd className="mt-1 text-sm">
-                {formatEventDateTime(event.applicationsOpenAt)} to {formatEventDateTime(event.applicationsCloseAt)}
+                {formatEventDateRange(event.applicationsOpenAt, event.applicationsCloseAt, event.timeZoneId ?? "UTC")}
               </dd>
             </div>
             <div>
-              <dt className="text-xs font-medium uppercase text-muted-foreground">Event window</dt>
+              <dt className="text-sm font-medium text-muted-foreground">Session starts → ends</dt>
               <dd className="mt-1 text-sm">
-                {formatEventDateTime(event.startsAt)} to {formatEventDateTime(event.endsAt)}
+                {formatEventDateRange(event.startsAt, event.endsAt, event.timeZoneId ?? "UTC")}
               </dd>
             </div>
           </dl>
@@ -118,7 +122,7 @@ export default async function TestingEventOverviewPage({
           </div>
         </article>
 
-        <article className="rounded-md border p-4">
+        {event.approvalMode === 'Committee' ? <article className="rounded-md border p-4">
           <TestingEventCommittee
             event={event}
             members={memberDirectory.members.map((member) => ({
@@ -128,7 +132,7 @@ export default async function TestingEventOverviewPage({
             committee={detail.committee}
             readOnly={readOnly}
           />
-        </article>
+        </article> : null}
       </section>
 
       <TestingEventConfigurationEditor
@@ -137,7 +141,8 @@ export default async function TestingEventOverviewPage({
         configuration={event.configuration}
       />
 
-      <section className="rounded-md border p-4">
+      <details className="rounded-md border p-4">
+        <summary className="cursor-pointer text-sm font-medium">Course integration {event.courseId ? '· connected' : '· optional'}</summary>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="font-semibold">Learning evidence</h2>
@@ -154,7 +159,7 @@ export default async function TestingEventOverviewPage({
             Open learning setup <ArrowRight className="ml-2 size-4" />
           </Link>
         </div>
-      </section>
+      </details>
     </div>
   );
 }
