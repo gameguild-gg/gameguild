@@ -1,15 +1,68 @@
+using System.Diagnostics;
 using GameGuild.API.Database;
 using GameGuild.API.IntegrationTests.Infrastructure;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authorization;
 using Microsoft.Extensions.DependencyInjection;
+using Xunit.Abstractions;
 using AuthenticationPermissionService = GameGuild.Identity.Authentication.PermissionService;
 
 namespace GameGuild.API.IntegrationTests;
 
 [Collection(ApiPostgreSqlCollection.Name)]
-public sealed class BulkPermissionChecksPostgreSqlTests(ApiPostgreSqlFixture fixture)
+public sealed class BulkPermissionChecksPostgreSqlTests(ApiPostgreSqlFixture fixture, ITestOutputHelper output)
 {
+    [Theory]
+    [InlineData(100)]
+    [InlineData(1_000)]
+    public async Task BulkCheckPermissionsAsync_CompareToIndividualPostgreSqlChecks(int userCount)
+    {
+        var tenantId = Guid.NewGuid();
+        var userIds = Enumerable.Range(0, userCount).Select(_ => Guid.NewGuid()).ToArray();
+        var expectedGrantCount = (userCount + 1) / 2;
+
+        await using (var seedScope = fixture.Factory.Services.CreateAsyncScope())
+        {
+            var seedContext = seedScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            seedContext.Set<TenantPermission>().AddRange(userIds
+                .Where((_, index) => index % 2 == 0)
+                .Select(userId => new TenantPermission
+                {
+                    UserId = userId,
+                    TenantId = tenantId,
+                    Permissions = [nameof(PermissionType.Read)]
+                }));
+            await seedContext.SaveChangesAsync();
+        }
+
+        try
+        {
+            var warmupUsers = userIds.Take(Math.Min(userCount, 8)).ToArray();
+            await MeasureIndividualChecksAsync(warmupUsers, tenantId);
+            await MeasureBulkChecksAsync(warmupUsers, tenantId);
+
+            var individual = await MeasureIndividualChecksAsync(userIds, tenantId);
+            var bulk = await MeasureBulkChecksAsync(userIds, tenantId);
+
+            Assert.Equal(expectedGrantCount, individual.GrantedCount);
+            Assert.Equal(individual.GrantedCount, bulk.GrantedCount);
+            output.WriteLine(
+                "PostgreSQL permission checks at {0:N0} users: individual={1:F1} ms, one-query bulk matrix={2:F1} ms, speedup={3:F2}x",
+                userCount,
+                individual.Elapsed.TotalMilliseconds,
+                bulk.Elapsed.TotalMilliseconds,
+                individual.Elapsed.TotalMilliseconds / Math.Max(0.1, bulk.Elapsed.TotalMilliseconds));
+        }
+        finally
+        {
+            await using var cleanupScope = fixture.Factory.Services.CreateAsyncScope();
+            var cleanupContext = cleanupScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            await cleanupContext.Set<TenantPermission>()
+                .Where(grant => grant.TenantId == tenantId)
+                .ExecuteDeleteAsync();
+        }
+    }
+
     [Fact]
     public async Task BulkCheckPermissionsAsync_HandlesConcurrentLargeBatchesAgainstPostgreSql()
     {
@@ -117,5 +170,34 @@ public sealed class BulkPermissionChecksPostgreSqlTests(ApiPostgreSqlFixture fix
             yield return value;
             await Task.CompletedTask.ConfigureAwait(false);
         }
+    }
+
+    private async Task<(TimeSpan Elapsed, int GrantedCount)> MeasureIndividualChecksAsync(Guid[] userIds, Guid tenantId)
+    {
+        await using var scope = fixture.Factory.Services.CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var service = new AuthenticationPermissionService(context);
+        var grantedCount = 0;
+        var stopwatch = Stopwatch.StartNew();
+
+        foreach (var userId in userIds)
+        {
+            if (await service.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read)) grantedCount++;
+        }
+
+        stopwatch.Stop();
+        return (stopwatch.Elapsed, grantedCount);
+    }
+
+    private async Task<(TimeSpan Elapsed, int GrantedCount)> MeasureBulkChecksAsync(Guid[] userIds, Guid tenantId)
+    {
+        await using var scope = fixture.Factory.Services.CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var service = new AuthenticationPermissionService(context);
+        var stopwatch = Stopwatch.StartNew();
+        var results = await service.BulkCheckPermissionsAsync(userIds, tenantId, [PermissionType.Read]);
+        stopwatch.Stop();
+
+        return (stopwatch.Elapsed, results.Count(user => user.Value[PermissionType.Read]));
     }
 }
