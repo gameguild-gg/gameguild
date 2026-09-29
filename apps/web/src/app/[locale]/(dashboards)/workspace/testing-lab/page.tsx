@@ -47,8 +47,10 @@ export default async function TestingLabPage() {
   const attentionItems = [
     {
       count: pendingApplications.entries.length,
-      label: `${pendingApplications.entries.length} pending application${pendingApplications.entries.length === 1 ? "" : "s"}`,
-      href: "/workspace/testing-lab/events",
+      label: `Review ${pendingApplications.entries.length} pending game application${pendingApplications.entries.length === 1 ? "" : "s"}`,
+      href: pendingApplications.entries[0]?.event.id
+        ? `/workspace/testing-lab/events/${pendingApplications.entries[0].event.id}/applications?applicationStatus=Pending`
+        : "/workspace/testing-lab/events",
       Icon: ClipboardCheck,
     },
     {
