@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom/vitest";
 import userEvent from "@testing-library/user-event";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { BlogEditorWorkspace } from "./blog-editor-workspace";
@@ -21,8 +21,10 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("./blog-body-editor", () => ({
-  BlogBodyEditor: ({ format }: { format: string }) => (
-    <div data-testid="body-editor" data-format={format} />
+  BlogBodyEditor: ({ format, onMarkdownChange }: { format: string; onMarkdownChange: (value: string) => void }) => (
+    <div data-testid="body-editor" data-format={format}>
+      <button type="button" onClick={() => onMarkdownChange("Updated content")}>Edit body</button>
+    </div>
   ),
 }));
 vi.mock("./blog-publish-bar", () => ({
@@ -131,5 +133,36 @@ describe("BlogEditorWorkspace copilot mount", () => {
     await user.click(screen.getByRole("button", { name: /Copilot/ }));
 
     expect(screen.getByTestId("copilot-panel")).toHaveAttribute("data-revision", "7");
+  });
+});
+
+describe("BlogEditorWorkspace autosave", () => {
+  it("persists the current draft once and advances the visible revision", async () => {
+    const user = userEvent.setup();
+    mocks.updateDraft.mockReset();
+    mocks.updateDraft.mockResolvedValue({
+      success: true,
+      data: post({ content: "Updated content", format: "Markdown", revision: 8 }),
+    });
+
+    render(
+      <BlogEditorWorkspace
+        post={post({ format: "Markdown" })}
+        viewerUserId="user-primary"
+        primaryAuthorHandle="alice"
+        coauthors={[
+          { userId: "user-primary", handle: "alice", displayName: null, isPrimary: true },
+        ]}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Edit body" }));
+
+    await waitFor(() => expect(mocks.updateDraft).toHaveBeenCalledTimes(1), { timeout: 3500 });
+    expect(mocks.updateDraft).toHaveBeenCalledWith("post-1", expect.objectContaining({
+      content: "Updated content",
+      revision: 7,
+    }));
+    expect(await screen.findByText("Rev 8")).toBeInTheDocument();
   });
 });

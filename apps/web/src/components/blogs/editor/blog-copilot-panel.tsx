@@ -213,7 +213,6 @@ export function BlogCopilotPanel({
         );
       }
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- postId is stable per mount
   }, [postId]);
 
   const readRunStream = useCallback(
