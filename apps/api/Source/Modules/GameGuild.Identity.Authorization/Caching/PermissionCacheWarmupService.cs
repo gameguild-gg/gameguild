@@ -44,11 +44,11 @@ public sealed class PermissionCacheWarmupService(IAccessControlListService acces
             throw new ArgumentOutOfRangeException(nameof(requests), $"At most {MaxRequests} cache entries can be warmed at once.");
         }
 
-        var distinctRequests = new Dictionary<WarmupKey, PermissionCacheWarmupRequest>();
+        var distinctRequests = new Dictionary<PermissionCacheWarmupKey, PermissionCacheWarmupRequest>();
         foreach (var request in requests)
         {
             Validate(request);
-            var (key, normalizedRequest) = WarmupKey.From(request);
+            var (key, normalizedRequest) = PermissionCacheWarmupKey.From(request);
             distinctRequests.TryAdd(key, normalizedRequest);
         }
 
@@ -105,35 +105,36 @@ public sealed class PermissionCacheWarmupService(IAccessControlListService acces
             throw new ArgumentException("Resource type and ID must be at most 128 and 255 characters.", nameof(request));
         }
     }
+}
 
-    private readonly record struct WarmupKey(
-        Guid TenantId,
-        bool IsAuthenticated,
-        Guid? UserId,
-        string RoleIds,
-        string GroupIds,
-        string ResourceType,
-        string ResourceId)
+/// <summary>Builds stable keys for warmup requests despite unordered or duplicated principals.</summary>
+internal readonly record struct PermissionCacheWarmupKey(
+    Guid TenantId,
+    bool IsAuthenticated,
+    Guid? UserId,
+    string RoleIds,
+    string GroupIds,
+    string ResourceType,
+    string ResourceId)
+{
+    public static (PermissionCacheWarmupKey Key, PermissionCacheWarmupRequest Request) From(PermissionCacheWarmupRequest request)
     {
-        public static (WarmupKey Key, PermissionCacheWarmupRequest Request) From(PermissionCacheWarmupRequest request)
+        var roleIds = request.Subject.RoleIds.Distinct().Order().ToArray();
+        var groupIds = request.Subject.GroupIds.Distinct().Order().ToArray();
+        var subject = request.Subject with
         {
-            var roleIds = request.Subject.RoleIds.Distinct().Order().ToArray();
-            var groupIds = request.Subject.GroupIds.Distinct().Order().ToArray();
-            var subject = request.Subject with
-            {
-                RoleIds = roleIds,
-                GroupIds = groupIds
-            };
+            RoleIds = roleIds,
+            GroupIds = groupIds
+        };
 
-            var key = new WarmupKey(
-                request.TenantId,
-                subject.IsAuthenticated,
-                subject.UserId,
-                string.Join(',', roleIds),
-                string.Join(',', groupIds),
-                request.ResourceType,
-                request.ResourceId);
-            return (key, request with { Subject = subject });
-        }
+        var key = new PermissionCacheWarmupKey(
+            request.TenantId,
+            subject.IsAuthenticated,
+            subject.UserId,
+            string.Join(',', roleIds),
+            string.Join(',', groupIds),
+            request.ResourceType,
+            request.ResourceId);
+        return (key, request with { Subject = subject });
     }
 }
