@@ -3,7 +3,7 @@
 import { type FormEvent, useState } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { Button } from '@game-guild/ui/components/button';
+import { Button, buttonVariants } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@game-guild/ui/components/field';
 import { Input } from '@game-guild/ui/components/input';
@@ -60,9 +60,9 @@ export function ForgotPasswordForm({ className, initialEmail = '', onRequestRese
           <CardContent>
             <FieldGroup>
               <Field>
-                <Button nativeButton={false} variant="outline" render={<Link href="/sign-in" />}>
+                <Link href="/sign-in" className={cn(buttonVariants({ variant: "outline" }))}>
                   Back to Sign In
-                </Button>
+                </Link>
               </Field>
               <FieldDescription className="text-center">
                 Didn&apos;t receive the email?{' '}

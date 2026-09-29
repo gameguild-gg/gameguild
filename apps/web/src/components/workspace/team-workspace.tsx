@@ -1,3 +1,4 @@
+import { cn } from "@game-guild/ui/lib/utils";
 import { ContextWorkspaceNav } from '@/components/workspaces/context-workspace-nav';
 import { WorkspaceLibraryPanel } from '@/components/workspaces/workspace-library-panel';
 import { Link } from '@/i18n/navigation';
@@ -19,7 +20,7 @@ import {
   getWorkspaceTeamProjects,
 } from '@/lib/workspaces';
 import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
+import { Button, buttonVariants } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { Input } from '@game-guild/ui/components/input';
@@ -75,7 +76,9 @@ export async function TeamWorkspaceView({
           <h1 className="mt-2 text-3xl font-semibold">{team.name}</h1>
           <p className="mt-1 max-w-3xl text-muted-foreground">{team.description || 'Bring your collaborators, projects, and shared files together.'}</p>
         </div>
-        <Button nativeButton={false} render={<Link href={createProjectHref} />}>Create project</Button>
+        <Link href={createProjectHref} className={cn(buttonVariants({}))}>
+          Create project
+        </Link>
       </header>
       <ContextWorkspaceNav base={base} active={active} items={sections} />
 

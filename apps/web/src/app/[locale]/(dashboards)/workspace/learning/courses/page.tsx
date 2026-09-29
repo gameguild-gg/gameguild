@@ -1,6 +1,7 @@
+import { cn } from "@game-guild/ui/lib/utils";
 import { Link } from '@/i18n/navigation';
 import { getCourses } from '@/lib/learning';
-import { Button } from '@game-guild/ui/components/button';
+import { buttonVariants } from '@game-guild/ui/components/button';
 import { Card, CardContent } from '@game-guild/ui/components/card';
 import { AlertTriangle, ArrowLeft, BarChart3, BookOpen, Eye, Plus, RefreshCw } from 'lucide-react';
 import React from 'react';
@@ -21,9 +22,13 @@ export default async function Page({ params }: PageProps<'/[locale]/workspace/le
     <div className="flex flex-col gap-6 p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
-          <Button nativeButton={false} variant="ghost" size="icon" render={<Link href="/workspace/learning" locale={locale} />}>
+          <Link
+            href="/workspace/learning"
+            locale={locale}
+            className={cn(buttonVariants({ variant: "ghost", size: "icon" }))}
+          >
             <ArrowLeft className="size-5" />
-          </Button>
+          </Link>
           <div className="flex size-12 items-center justify-center rounded-lg bg-linear-to-br from-emerald-500 to-teal-600">
             <BookOpen className="size-6 text-white" />
           </div>
@@ -33,14 +38,22 @@ export default async function Page({ params }: PageProps<'/[locale]/workspace/le
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button nativeButton={false} variant="outline" render={<Link href="/courses" locale={locale} />}>
+          <Link
+            href="/courses"
+            locale={locale}
+            className={cn(buttonVariants({ variant: "outline" }))}
+          >
             <Eye className="mr-2 size-4" />
             Storefront preview
-          </Button>
-          <Button nativeButton={false} render={<Link href="/workspace/learning/courses/new" locale={locale} />}>
+          </Link>
+          <Link
+            href="/workspace/learning/courses/new"
+            locale={locale}
+            className={cn(buttonVariants({}))}
+          >
             <Plus className="mr-2 size-4" />
             Create Course
-          </Button>
+          </Link>
         </div>
       </div>
 
@@ -98,10 +111,16 @@ export default async function Page({ params }: PageProps<'/[locale]/workspace/le
                 <p className="mt-3 rounded-md bg-background/60 px-3 py-2 text-sm text-destructive">{error}</p>
               </div>
             </div>
-            <Button nativeButton={false} variant="outline" className="shrink-0" render={<Link href="/workspace/learning/courses" locale={locale} />}>
+            <Link
+              href="/workspace/learning/courses"
+              locale={locale}
+              className={cn(
+                buttonVariants({ variant: "outline", className: "shrink-0" }),
+              )}
+            >
               <RefreshCw className="mr-2 size-4" />
               Retry
-            </Button>
+            </Link>
           </CardContent>
         </Card>
       ) : null}
@@ -119,14 +138,22 @@ export default async function Page({ params }: PageProps<'/[locale]/workspace/le
               </p>
             </div>
             <div className="flex flex-wrap justify-center gap-2">
-              <Button nativeButton={false} render={<Link href="/workspace/learning/courses/new" locale={locale} />}>
+              <Link
+                href="/workspace/learning/courses/new"
+                locale={locale}
+                className={cn(buttonVariants({}))}
+              >
                 <Plus className="mr-2 size-4" />
                 Create Course
-              </Button>
-              <Button nativeButton={false} variant="outline" render={<Link href="/courses" locale={locale} />}>
+              </Link>
+              <Link
+                href="/courses"
+                locale={locale}
+                className={cn(buttonVariants({ variant: "outline" }))}
+              >
                 <Eye className="mr-2 size-4" />
                 Open storefront
-              </Button>
+              </Link>
             </div>
           </CardContent>
         </Card>

@@ -1,7 +1,8 @@
+import { cn } from "@game-guild/ui/lib/utils";
 import { Link } from '@/i18n/navigation';
 import { getMember } from '@/lib/community';
 import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
+import { buttonVariants } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { ArrowLeft, Award, BriefcaseBusiness, Calendar, Clock, Globe, Mail, MapPin, Phone, User, Users } from 'lucide-react';
 import { notFound } from 'next/navigation';
@@ -30,9 +31,12 @@ export default async function UserDetailPage({ params }: Props): Promise<React.J
     <div className="flex flex-col gap-6 p-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button nativeButton={false} variant="ghost" size="icon" render={<Link href="/console/community/members/users" />}>
+        <Link
+          href="/console/community/members/users"
+          className={cn(buttonVariants({ variant: "ghost", size: "icon" }))}
+        >
           <ArrowLeft className="size-4" />
-        </Button>
+        </Link>
         <div className="flex-1">
           <h1 className="text-3xl font-bold tracking-tight">{member.displayName}</h1>
           <p className="text-muted-foreground">@{member.handle ?? member.username}</p>

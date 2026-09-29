@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@game-guild/ui/lib/utils";
 import {
   submitAssessment,
   submitContentActivity,
@@ -18,7 +19,7 @@ import {
   AlertTitle,
 } from "@game-guild/ui/components/alert";
 import { Badge } from "@game-guild/ui/components/badge";
-import { Button } from "@game-guild/ui/components/button";
+import { Button, buttonVariants } from "@game-guild/ui/components/button";
 import { Input } from "@game-guild/ui/components/input";
 
 import { Textarea } from "@game-guild/ui/components/textarea";
@@ -252,9 +253,12 @@ export function LearnerActivityForm({
               </p>
             </div>
           </div>
-          <Button nativeButton={false} type="button" variant="outline" render={<Link href={projectsUrl} />}>
+          <Link
+            href={projectsUrl}
+            className={cn(buttonVariants({ variant: "outline" }))}
+          >
             Open projects
-          </Button>
+          </Link>
         </div>
       ) : modality === "Url" || modality === "Media" ? (
         <div className="space-y-2">

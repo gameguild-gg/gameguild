@@ -1,7 +1,8 @@
+import { cn } from "@game-guild/ui/lib/utils";
 import { Link } from '@/i18n/navigation';
 import { getPublicLaunchPadEvents } from '@/lib/launch-pad/queries';
 import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
+import { buttonVariants } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { CalendarDays, ArrowLeft, Rocket } from 'lucide-react';
 
@@ -45,7 +46,12 @@ export default async function LaunchPadEventsPage({ searchParams }: { searchPara
             Browse upcoming showcases and see how to take part as a project team or participant.
           </p>
         </div>
-        <Button nativeButton={false} variant="outline" render={<Link href="/launch-pad/participation" />}>Your participation</Button>
+        <Link
+          href="/launch-pad/participation"
+          className={cn(buttonVariants({ variant: "outline" }))}
+        >
+          Your participation
+        </Link>
       </header>
 
       {events.length === 0 ? (
@@ -76,11 +82,16 @@ export default async function LaunchPadEventsPage({ searchParams }: { searchPara
                     <p className="mt-1 text-muted-foreground">{formatUTCTimeRange(event.startsAt, event.endsAt)}</p>
                   </div>
                 </div>
-                <Button nativeButton={false} className="w-full" render={
-                  <Link href={projectId ? `/launch-pad/events/${event.id}?projectId=${encodeURIComponent(projectId)}` : `/launch-pad/events/${event.id}`} />
-                }>
-                  {event.status === 'ApplicationsOpen' ? 'See signup options' : 'View event'}
-                </Button>
+                <Link
+                  href={
+                    projectId
+                      ? `/launch-pad/events/${event.id}?projectId=${encodeURIComponent(projectId)}`
+                      : `/launch-pad/events/${event.id}`
+                  }
+                  className={cn(buttonVariants({ className: "w-full" }))}
+                >
+                  {event.status === "ApplicationsOpen" ? "See signup options" : "View event"}
+                </Link>
               </CardContent>
             </Card>
           ))}

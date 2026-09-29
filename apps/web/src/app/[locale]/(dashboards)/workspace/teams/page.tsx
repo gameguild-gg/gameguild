@@ -1,7 +1,8 @@
+import { cn } from "@game-guild/ui/lib/utils";
 import { Link } from '@/i18n/navigation';
 import { getWorkspaceTeams } from '@/lib/workspaces';
 import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
+import { buttonVariants } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { ArrowUpRight, Plus, Users } from 'lucide-react';
 
@@ -27,10 +28,10 @@ export default async function MyTeamsPage() {
             Share project ownership, coordinate work, and manage access with your collaborators.
           </p>
         </div>
-        <Button nativeButton={false} render={<Link href="/workspace/teams/new" />}>
+        <Link href="/workspace/teams/new" className={cn(buttonVariants({}))}>
           <Plus className="size-4" aria-hidden="true" />
           Create team
-        </Button>
+        </Link>
       </header>
 
       {teams.length > 0 ? (

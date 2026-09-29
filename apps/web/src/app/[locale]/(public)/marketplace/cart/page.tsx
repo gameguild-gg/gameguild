@@ -1,8 +1,9 @@
+import { cn } from "@game-guild/ui/lib/utils";
 import { MarketplaceCartWorkspace } from '@/components/marketplace/marketplace-cart-workspace';
 import { Link } from '@/i18n/navigation';
 import { getMarketplaceCart, getMarketplaceProduct } from '@/lib/marketplace/queries';
 import type { CommerceProductsProduct } from '@game-guild/client';
-import { Button } from '@game-guild/ui/components/button';
+import { buttonVariants } from '@game-guild/ui/components/button';
 import { getTranslations } from 'next-intl/server';
 
 export default async function MarketplaceCartPage() {
@@ -17,7 +18,12 @@ export default async function MarketplaceCartPage() {
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-10 sm:px-6">
       <h1 className="text-3xl font-semibold tracking-tight">{t('cart')}</h1>
       <MarketplaceCartWorkspace cart={cart} products={products} labels={{ title: t('cart'), empty: t('emptyCart'), quantity: t('quantity'), update: t('update'), remove: t('remove') }} />
-      {cart?.items?.length ? <Button nativeButton={false} className="self-end" render={<Link href="/marketplace/checkout" />}>{t('checkout')}</Button> : null}
+      {cart?.items?.length ? <Link
+        href="/marketplace/checkout"
+        className={cn(buttonVariants({ className: "self-end" }))}
+      >
+        {t("checkout")}
+      </Link> : null}
     </main>
   );
 }
