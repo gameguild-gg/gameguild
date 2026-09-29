@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom/vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import enMessages from '@/i18n/messages/en-US.json';
@@ -89,7 +90,7 @@ describe('NotificationPreferences', () => {
 
     const transactional = screen.getByTestId('type-PasswordReset');
     expect(transactional).toHaveTextContent('Always sent');
-    expect(transactional.querySelector('button[role="switch"]')).toBeNull();
+    expect(within(transactional).queryByRole('switch')).toBeNull();
 
     expect(screen.getByTestId('type-EmailVerification')).toHaveTextContent('Always sent');
   });
@@ -97,21 +98,17 @@ describe('NotificationPreferences', () => {
   it('renders initially muted suppressible types as off', () => {
     renderPreferences();
 
-    const muted = screen
-      .getByTestId('type-MonthlyStatement')
-      .querySelector('button[role="switch"]');
-    expect(muted).toHaveAttribute('data-state', 'unchecked');
+    const muted = within(screen.getByTestId('type-MonthlyStatement')).getByRole('switch');
+    expect(muted).not.toBeChecked();
 
-    const active = screen.getByTestId('type-Billing').querySelector('button[role="switch"]');
-    expect(active).toHaveAttribute('data-state', 'checked');
+    const active = within(screen.getByTestId('type-Billing')).getByRole('switch');
+    expect(active).toBeChecked();
   });
 
   it('unmuting a type sends the full replacement list including existing mutes', async () => {
     renderPreferences();
 
-    fireEvent.click(
-      screen.getByTestId('type-MonthlyStatement').querySelector('button[role="switch"]')!,
-    );
+    await userEvent.click(within(screen.getByTestId('type-MonthlyStatement')).getByRole('switch'));
 
     await waitFor(() => {
       expect(actionMocks.updateMutedTypesAction).toHaveBeenCalledWith([]);
@@ -121,9 +118,7 @@ describe('NotificationPreferences', () => {
   it('muting a type keeps already muted types in the payload', async () => {
     renderPreferences();
 
-    fireEvent.click(
-      screen.getByTestId('type-Billing').querySelector('button[role="switch"]')!,
-    );
+    await userEvent.click(within(screen.getByTestId('type-Billing')).getByRole('switch'));
 
     await waitFor(() => {
       expect(actionMocks.updateMutedTypesAction).toHaveBeenCalledWith([
@@ -136,7 +131,7 @@ describe('NotificationPreferences', () => {
   it('toggling a channel sends just that flag', async () => {
     renderPreferences();
 
-    fireEvent.click(screen.getByTestId('channel-email').querySelector('button[role="switch"]')!);
+    await userEvent.click(within(screen.getByTestId('channel-email')).getByRole('switch'));
 
     await waitFor(() => {
       expect(actionMocks.updatePreferenceFlagsAction).toHaveBeenCalledWith({ emailEnabled: false });
@@ -150,19 +145,21 @@ describe('NotificationPreferences', () => {
     });
     renderPreferences();
 
-    const toggle = screen.getByTestId('channel-email').querySelector('button[role="switch"]')!;
-    fireEvent.click(toggle);
+    const toggle = within(screen.getByTestId('channel-email')).getByRole('switch');
+    await userEvent.click(toggle);
+
+    await waitFor(() => expect(actionMocks.updatePreferenceFlagsAction).toHaveBeenCalledWith({ emailEnabled: false }));
 
     await waitFor(() => {
-      expect(toggle).toHaveAttribute('data-state', 'checked');
+      expect(toggle).toBeChecked();
     });
   });
 
   it('selecting a digest frequency sends the mapped value', async () => {
     renderPreferences();
 
-    fireEvent.click(screen.getByRole('combobox'));
-    fireEvent.click(screen.getByRole('option', { name: 'Weekly' }));
+    await userEvent.click(screen.getByRole('combobox'));
+    await userEvent.click(await screen.findByRole('option', { name: 'Weekly' }));
 
     await waitFor(() => {
       expect(actionMocks.updateDigestFrequencyAction).toHaveBeenCalledWith('Weekly');

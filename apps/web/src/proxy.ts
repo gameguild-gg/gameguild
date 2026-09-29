@@ -39,7 +39,13 @@ function redirectToPath(request: NextRequest, pathname: string): NextResponse {
 export function routeRequest(request: NextRequest): NextResponse {
   const pathname = request.nextUrl.pathname;
 
-  if (request.headers.get(INTERNAL_LOCALE_HEADER) === "1") {
+  // Server Action redirects inherit the rewritten request's headers. Only
+  // bypass routing when the destination itself already includes a locale;
+  // an unprefixed destination still needs the internal locale rewrite.
+  if (
+    request.headers.get(INTERNAL_LOCALE_HEADER) === "1" &&
+    routing.locales.some((locale) => matchesPrefix(pathname, `/${locale}`))
+  ) {
     return NextResponse.next();
   }
 

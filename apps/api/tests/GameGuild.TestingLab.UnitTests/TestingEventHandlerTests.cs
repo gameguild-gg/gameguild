@@ -733,6 +733,50 @@ public sealed class TestingEventHandlerTests : IDisposable
     }
 
     [Fact]
+    public async Task ListSlots_CountsCurrentTesterRegistrationsWithoutLegacySessions()
+    {
+        var testingEvent = AddOpenEvent(TestingEventApprovalMode.ManagerOnly);
+        var slot = TestingEventSlot.Create(testingEvent.Id, TestingEventMode.Online,
+            testingEvent.StartsAt, testingEvent.StartsAt.AddHours(1), 8, 3,
+            null, null, "https://meet.example.test/session", _tenantId);
+        _context.Add(slot);
+
+        TestingSlotRegistration Register(Guid? tenantId = null) => TestingSlotRegistration.Register(
+            testingEvent.Id, slot.Id, Guid.NewGuid(), null, tenantId ?? _tenantId);
+        var registered = Register();
+        var checkedIn = Register();
+        checkedIn.CheckIn();
+        var attended = Register();
+        attended.CheckIn();
+        attended.CheckOut();
+        var completed = Register();
+        completed.CheckIn();
+        completed.CheckOut();
+        completed.Complete();
+        var noShow = Register();
+        noShow.MarkNoShow();
+        var cancelled = Register();
+        cancelled.Cancel(cancelled.UserId, false);
+        var deleted = Register();
+        deleted.Version = 1;
+        deleted.SoftDelete();
+        var waitlisted = TestingSlotRegistration.Waitlist(testingEvent.Id, slot.Id,
+            Guid.NewGuid(), 1, null, _tenantId);
+        var otherTenant = Register(Guid.NewGuid());
+        var otherSlot = TestingSlotRegistration.Register(testingEvent.Id, Guid.NewGuid(),
+            Guid.NewGuid(), null, _tenantId);
+        _context.AddRange(registered, checkedIn, attended, completed, noShow,
+            cancelled, deleted, waitlisted, otherTenant, otherSlot);
+        await _context.SaveChangesAsync();
+
+        var result = await CreateEventHandler().Handle(new GetTestingEventSlotsQuery(testingEvent.Id), default);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().ContainSingle().Which.RegisteredTesterCount.Should().Be(5);
+        (await _context.Set<TestingSession>().CountAsync()).Should().Be(0);
+    }
+
+    [Fact]
     public async Task CreateSlots_PersistsTheCompleteTimeboxPlan()
     {
         var testingEvent = AddOpenEvent(TestingEventApprovalMode.ManagerOnly);
@@ -1244,6 +1288,7 @@ public sealed class TestingEventHandlerTests : IDisposable
         public DbSet<GameGuild.Identity.Authorization.ResourceUserPermission> ResourceUserPermissions => Set<GameGuild.Identity.Authorization.ResourceUserPermission>();
         public DbSet<TestingEvent> TestingEvents => Set<TestingEvent>();
         public DbSet<TestingEventSlot> TestingEventSlots => Set<TestingEventSlot>();
+        public DbSet<TestingSlotRegistration> TestingSlotRegistrations => Set<TestingSlotRegistration>();
         public DbSet<TestingProjectApplication> TestingProjectApplications => Set<TestingProjectApplication>();
         public DbSet<TestingLabSettings> TestingLabSettings => Set<TestingLabSettings>();
         public DbSet<TestingEventTemplate> TestingEventTemplates => Set<TestingEventTemplate>();

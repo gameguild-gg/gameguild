@@ -1,5 +1,6 @@
+import { cn } from "@game-guild/ui/lib/utils";
 import { Badge } from "@game-guild/ui/components/badge";
-import { Button } from "@game-guild/ui/components/button";
+import { Button, buttonVariants } from "@game-guild/ui/components/button";
 import { Link } from "@/i18n/navigation";
 import type { Program } from "@/lib/api/generated";
 import type { Product } from "@/lib/courses/actions/enrollment.actions";
@@ -137,14 +138,18 @@ export function CourseHeader({
       </div>
 
       <div className="container relative z-10 mx-auto flex min-h-[780px] flex-col px-4 py-10">
-        <Button
-          variant="ghost"
-          className="w-fit text-slate-300 hover:bg-white/10 hover:text-white"
-          nativeButton={false} render={<Link href="/courses" />}
+        <Link
+          href="/courses"
+          className={cn(
+            buttonVariants({
+              variant: "ghost",
+              className: "w-fit text-slate-300 hover:bg-white/10 hover:text-white",
+            }),
+          )}
         >
           <ArrowLeft />
           Back to catalog
-        </Button>
+        </Link>
 
         <div className="grid flex-1 gap-12 py-16 lg:grid-cols-[1fr_420px] lg:items-end">
           <div className="flex max-w-4xl flex-col gap-8">
@@ -193,39 +198,53 @@ export function CourseHeader({
                   buttonClassName="h-10 bg-white px-6 text-sm font-medium text-slate-950 hover:bg-slate-200 md:h-11"
                 />
               ) : primaryCta.kind === "link" && primaryCta.href ? (
-                <Button
-                  size="lg"
-                  className="bg-white text-slate-950 hover:bg-slate-200"
-                  nativeButton={false} render={<Link href={primaryCta.href} />}
+                <Link
+                  href={primaryCta.href}
+                  className={cn(
+                    buttonVariants({
+                      size: "lg",
+                      className: "bg-white text-slate-950 hover:bg-slate-200",
+                    }),
+                  )}
                 >
                   {primaryCta.label}
                   <ArrowRight />
-                </Button>
+                </Link>
               ) : (
                 <Button size="lg" disabled className="bg-white/20 text-white">
                   {primaryCta.label}
                 </Button>
               )}
               {course.videoShowcaseUrl ? (
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
-                  nativeButton={false} render={<Link href={course.videoShowcaseUrl} />}
+                <Link
+                  href={course.videoShowcaseUrl}
+                  className={cn(
+                    buttonVariants({
+                      size: "lg",
+                      variant: "outline",
+                      className:
+                        "border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white",
+                    }),
+                  )}
                 >
                   Watch preview
                   <Play />
-                </Button>
+                </Link>
               ) : null}
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
-                nativeButton={false} render={<Link href="#curriculum" />}
+              <Link
+                href="#curriculum"
+                className={cn(
+                  buttonVariants({
+                    size: "lg",
+                    variant: "outline",
+                    className:
+                      "border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white",
+                  }),
+                )}
               >
                 View curriculum
                 <Layers3 />
-              </Button>
+              </Link>
             </div>
           </div>
 
@@ -261,14 +280,19 @@ export function CourseHeader({
                 </div>
               </div>
               {course.videoShowcaseUrl ? (
-                <Button
-                  variant="outline"
-                  className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
-                  nativeButton={false} render={<Link href={course.videoShowcaseUrl} />}
+                <Link
+                  href={course.videoShowcaseUrl}
+                  className={cn(
+                    buttonVariants({
+                      variant: "outline",
+                      className:
+                        "border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white",
+                    }),
+                  )}
                 >
                   Watch preview
                   <Play />
-                </Button>
+                </Link>
               ) : null}
             </div>
           </aside>

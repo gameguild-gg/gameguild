@@ -4,6 +4,7 @@ import {
   countLabel,
   formatCapacity,
   formatEventDateTime,
+  formatEventDateRange,
   isTestingEventReadOnly,
 } from "./event-workspace";
 
@@ -21,8 +22,13 @@ describe("testing event workspace formatters", () => {
 
   it("formats valid event dates in UTC", () => {
     expect(formatEventDateTime("2026-09-15T18:30:00.000Z")).toBe(
-      "Sep 15, 2026, 6:30 PM UTC",
+      "Sep 15, 2026, 18:30 UTC",
     );
+  });
+
+  it("keeps both date-time endpoints in the event timezone, including midnight crossings", () => {
+    expect(formatEventDateRange("2026-10-07T02:30:00Z", "2026-10-07T04:15:00Z", "America/Sao_Paulo"))
+      .toBe("Oct 6, 2026, 23:30 → Oct 7, 2026, 01:15 · America/Sao_Paulo");
   });
 
   it.each([undefined, null, "not-a-date"])(

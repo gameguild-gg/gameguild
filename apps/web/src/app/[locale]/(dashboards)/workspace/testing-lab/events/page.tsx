@@ -1,6 +1,7 @@
 import { CreateTestingEventDialog, RestoreTestingEventDialog } from '@/components/testing-lab/testing-event-management';
 import { TestingEventDirectoryFilters } from '@/components/testing-lab/testing-event-directory-filters';
 import { formatTestingEventStatus } from '@/lib/testing-lab/format';
+import { countLabel, formatEventDateRange } from '@/lib/testing-lab/event-workspace';
 import { TestingLabPageHeader } from '@/components/testing-lab/testing-lab-page-header';
 import { TestingLabAccessIssues, TestingLabEmptyState } from '@/components/testing-lab/testing-lab-state';
 import { Link } from '@/i18n/navigation';
@@ -21,16 +22,8 @@ const statuses: TestingLabTestingEventStatus[] = [
   'Cancelled',
 ];
 
-function eventDate(value?: string | null) {
-  if (!value) return 'Date not set';
-  const date = new Date(value);
-  if (Number.isNaN(date.valueOf())) return 'Date not set';
-  const formatted = new Intl.DateTimeFormat('en', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-    timeZone: 'UTC',
-  }).format(date);
-  return `${formatted} UTC`;
+function eventDateRange(startsAt?: string, endsAt?: string, timeZoneId?: string | null) {
+  return formatEventDateRange(startsAt, endsAt, timeZoneId || 'UTC');
 }
 
 export default async function TestingEventsPage({
@@ -62,8 +55,8 @@ export default async function TestingEventsPage({
     <div className="flex flex-col gap-6 p-4 lg:p-6">
       <TestingLabPageHeader
         icon={CalendarDays}
-        title="Testing sessions"
-        description="Review every event and open its operational workspace."
+        title="Testing events"
+        description="Publish playtests, review game applications, and organize tester sessions."
         actions={
           <CreateTestingEventDialog
             templates={templates.templates}
@@ -93,7 +86,7 @@ export default async function TestingEventsPage({
           }
         />
       ) : (
-        <section className="divide-y border-y" aria-label="Testing session directory">
+        <section className="divide-y border-y" aria-label="Testing event directory">
           {visibleEvents.map((event) => (
             <article key={event.id} className="grid gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
               <div className="min-w-0">
@@ -104,9 +97,9 @@ export default async function TestingEventsPage({
                 </div>
                 <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{event.description ?? 'No event brief.'}</p>
                 <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1.5"><CalendarDays className="size-3.5" />{eventDate(event.startsAt)}</span>
-                  <span className="flex items-center gap-1.5"><Layers3 className="size-3.5" />{event.slotCount ?? 0} slots</span>
-                  <span className="flex items-center gap-1.5"><FlaskConical className="size-3.5" />{event.applicationCount ?? 0} applications</span>
+                  <span className="flex items-center gap-1.5"><CalendarDays className="size-3.5" />{eventDateRange(event.startsAt, event.endsAt, event.timeZoneId)}</span>
+                  <span className="flex items-center gap-1.5"><Layers3 className="size-3.5" />{event.slotCount ?? 0} {event.slotCount === 1 ? 'session' : 'sessions'}</span>
+                  <span className="flex items-center gap-1.5"><FlaskConical className="size-3.5" />{countLabel(event.applicationCount ?? 0, 'game application')}</span>
                 </div>
               </div>
               {archived ? (
@@ -116,7 +109,7 @@ export default async function TestingEventsPage({
                   href={`/workspace/testing-lab/events/${event.id}`}
                   className={buttonVariants({ variant: 'outline' })}
                 >
-                  Manage event<ChevronRight className="ml-2 size-4" />
+                  Open event workspace<ChevronRight className="ml-2 size-4" />
                 </Link>
               ) : null}
             </article>

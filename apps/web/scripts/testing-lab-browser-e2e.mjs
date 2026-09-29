@@ -555,33 +555,25 @@ async function run() {
   monitorPage(page);
 
   try {
-    console.log(
-      "[testing-lab-browser-e2e] anonymous directory and event detail",
-    );
-    await visit(page, "/testing-lab", "public Testing Lab landing");
-    await waitForText(page, "Game Testing Lab");
-    await page
-      .getByRole("link", { name: "Browse Events", exact: true })
-      .click();
-    await page.waitForURL(/\/testing-lab\/events/);
-    await waitForText(page, fixture.event.name);
-    await assertNoViewportOverflow(page, "public Testing Lab directory");
-    await page.screenshot({
-      path: path.join(artifactsDirectory, "public-directory-desktop.png"),
-      fullPage: true,
-    });
-
+    console.log("[testing-lab-browser-e2e] anonymous access requires sign-in");
+    await visit(page, "/testing-lab", "anonymous Testing Lab access guard");
+    if (!new URL(page.url()).pathname.endsWith("/sign-in")) {
+      throw new Error(
+        `Anonymous Testing Lab navigation should require sign-in, but resolved to ${page.url()}.`,
+      );
+    }
+    await page.locator('input[name="email"]').waitFor({ state: "visible" });
+    await page.locator('input[name="password"]').waitFor({ state: "visible" });
     await visit(
       page,
       `/testing-lab/events/${fixture.event.id}`,
-      "public Testing Lab event",
+      "anonymous Testing Lab event access guard",
     );
-    await waitForText(page, "Schedules and tester capacity");
-    await waitForText(page, "Browser E2E Campus");
-    await page
-      .getByRole("link", { name: "Sign in to apply", exact: true })
-      .waitFor();
-    await assertNoViewportOverflow(page, "public Testing Lab event");
+    if (!new URL(page.url()).pathname.endsWith("/sign-in")) {
+      throw new Error(
+        `Anonymous Testing Lab event navigation should require sign-in, but resolved to ${page.url()}.`,
+      );
+    }
 
     console.log("[testing-lab-browser-e2e] authenticated project candidacy");
     ownerContext = await browser.newContext({
@@ -594,20 +586,41 @@ async function run() {
     await signIn(ownerPage, fixture.owner.email, fixture.owner.password);
     await visit(
       ownerPage,
+      "/testing-lab",
+      "authenticated Testing Lab directory",
+    );
+    await waitForText(ownerPage, "Test. Play. Earn.");
+    await waitForText(ownerPage, fixture.event.name);
+    await assertNoViewportOverflow(
+      ownerPage,
+      "authenticated Testing Lab directory",
+    );
+    await ownerPage.screenshot({
+      path: path.join(artifactsDirectory, "authenticated-directory-desktop.png"),
+      fullPage: true,
+    });
+    await visit(
+      ownerPage,
       `/en-US/testing-lab/events/${fixture.event.id}`,
-      "project-owner public Testing Lab event",
+      "project-owner authenticated Testing Lab event",
     );
     await assertAuthenticatedBrowserSession(
       ownerPage,
       "Project owner event visit",
     );
     await waitForClientHydration(ownerPage);
-    await ownerPage
-      .getByLabel("Eligible project version")
-      .selectOption(fixture.projectVersion.id);
-    await ownerPage
-      .getByRole("button", { name: "Save and continue", exact: true })
+    await ownerPage.getByRole("button", { name: "Join", exact: true }).click();
+    const joinDialog = ownerPage.getByRole("dialog");
+    await joinDialog.getByText("How would you like to join?", { exact: true }).waitFor();
+    await joinDialog
+      .getByRole("button", { name: "As a developer", exact: true })
       .click();
+    await joinDialog.getByRole("radiogroup", { name: "Choose a game build" }).waitFor();
+    await joinDialog
+      .locator("label")
+      .filter({ hasText: fixture.projectVersion.versionNumber })
+      .click();
+    await joinDialog.getByRole("button", { name: "Continue", exact: true }).click();
     await ownerPage.getByLabel("Test objective").waitFor();
     await ownerPage
       .getByLabel("Test objective")
@@ -753,11 +766,11 @@ async function run() {
     await waitForText(page, "Approved");
 
     await page
-      .getByRole("button", { name: "Close applications", exact: true })
+      .getByRole("button", { name: "Close game submissions", exact: true })
       .click();
     await waitForText(page, "Applications closed");
     await page
-      .getByRole("button", { name: "Schedule event", exact: true })
+      .getByRole("button", { name: "Publish session schedule", exact: true })
       .click();
     await waitForText(page, "Scheduled");
     console.log(
@@ -774,9 +787,19 @@ async function run() {
     await visit(
       testerPage,
       `/testing-lab/events/${fixture.event.id}`,
-      "scheduled public Testing Lab event",
+      "scheduled authenticated Testing Lab event",
     );
     await waitForClientHydration(testerPage);
+    await testerPage
+      .getByRole("button", { name: "Join", exact: true })
+      .click();
+    const testerJoinDialog = testerPage.getByRole("dialog");
+    await testerJoinDialog
+      .getByText("How would you like to join?", { exact: true })
+      .waitFor();
+    await testerJoinDialog
+      .getByRole("button", { name: "As a tester", exact: true })
+      .click();
     await testerPage
       .getByLabel("Which device will you use?")
       .fill("Desktop keyboard and mouse");
@@ -786,12 +809,13 @@ async function run() {
         exact: true,
       })
       .click();
-    await testerPage.getByLabel(/I accept the frozen rules/i).check();
     await testerPage
-      .getByRole("button", { name: "Reserve tester seat", exact: true })
+      .getByLabel(/agree to follow the rules for this playtest/i)
+      .check();
+    await testerPage
+      .getByRole("button", { name: "Join playtest", exact: true })
       .click();
-    await waitForText(testerPage, "Testing slot registration submitted.");
-    await waitForText(testerPage, "Registered");
+    await waitForText(testerPage, "registered for this playtest");
     await testerPage.screenshot({
       path: path.join(artifactsDirectory, "event-participation-desktop.png"),
       fullPage: true,
@@ -800,7 +824,7 @@ async function run() {
     console.log("[testing-lab-browser-e2e] manager operations surfaces");
     for (const [pathname, title] of [
       ["/workspace/testing-lab", "Testing Lab"],
-      ["/workspace/testing-lab/events", "Testing sessions"],
+      ["/workspace/testing-lab/events", "Testing events"],
       [
         `/workspace/testing-lab/events/${fixture.event.id}/overview`,
         "Event overview",
@@ -1074,7 +1098,7 @@ async function run() {
     );
     await waitForClientHydration(page);
     await page
-      .getByRole("button", { name: "Start event", exact: true })
+      .getByRole("button", { name: "Start playtest", exact: true })
       .click();
     await waitForText(page, "Event status updated.");
     await waitForText(page, "Active");
@@ -1186,26 +1210,32 @@ async function run() {
     await page.waitForURL(/status=Active/);
     await waitForText(page, fixture.event.name);
 
-    console.log("[testing-lab-browser-e2e] mobile public and manager surfaces");
+    console.log("[testing-lab-browser-e2e] mobile authenticated and manager surfaces");
     await page.setViewportSize({ width: 390, height: 844 });
     await visit(
       page,
       "/testing-lab/events",
-      "mobile public Testing Lab directory",
+      "mobile authenticated Testing Lab directory",
     );
     await waitForText(page, fixture.event.name);
-    await assertNoViewportOverflow(page, "mobile public Testing Lab directory");
+    await assertNoViewportOverflow(
+      page,
+      "mobile authenticated Testing Lab directory",
+    );
     await page.screenshot({
-      path: path.join(artifactsDirectory, "public-directory-mobile.png"),
+      path: path.join(artifactsDirectory, "authenticated-directory-mobile.png"),
       fullPage: true,
     });
     await visit(
       page,
       `/testing-lab/events/${fixture.event.id}`,
-      "mobile public Testing Lab event",
+      "mobile authenticated Testing Lab event",
     );
-    await waitForText(page, "Schedules and tester capacity");
-    await assertNoViewportOverflow(page, "mobile public Testing Lab event");
+    await waitForText(page, "Schedule");
+    await assertNoViewportOverflow(
+      page,
+      "mobile authenticated Testing Lab event",
+    );
     await visit(
       page,
       `/workspace/testing-lab/events/${fixture.event.id}`,

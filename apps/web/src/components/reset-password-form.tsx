@@ -1,8 +1,9 @@
 'use client';
 
+import { cn } from "@game-guild/ui/lib/utils";
 import { type FormEvent, useState } from 'react';
 import Link from 'next/link';
-import { Button } from '@game-guild/ui/components/button';
+import { Button, buttonVariants } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@game-guild/ui/components/field';
 import { Input } from '@game-guild/ui/components/input';
@@ -46,9 +47,12 @@ export function ResetPasswordForm({ token, onReset }: ResetPasswordFormProps) {
           <CardDescription>You can now sign in and review your workspace invitations.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Button nativeButton={false} className="w-full" render={<Link href="/sign-in?callbackUrl=/invitations" />}>
+          <Link
+            href="/sign-in?callbackUrl=/invitations"
+            className={cn(buttonVariants({ className: "w-full" }))}
+          >
             Continue to sign in
-          </Button>
+          </Link>
         </CardContent>
       </Card>
     );

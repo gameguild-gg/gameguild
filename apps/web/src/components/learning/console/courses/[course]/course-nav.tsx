@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@game-guild/ui/lib/utils";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { buildDashboardCoursePath } from "@/lib/learning/course-route";
 import type { CourseFeatures } from "@/lib/learning/types";
@@ -9,7 +10,7 @@ import {
   unpublishCourse,
 } from "@/lib/learning/actions";
 import { Badge } from "@game-guild/ui/components/badge";
-import { Button } from "@game-guild/ui/components/button";
+import { Button, buttonVariants } from "@game-guild/ui/components/button";
 import {
   Dialog,
   DialogContent,
@@ -199,19 +200,14 @@ export function CourseNav({
       {/* Header */}
       <div className="flex min-w-0 max-w-full flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-4">
-          <Button nativeButton={false}
-            variant="ghost"
-            size="icon"
-            render={
-              <Link
-                href="/workspace/learning/courses"
-                locale={locale}
-                prefetch={false}
-              />
-            }
+          <Link
+            href="/workspace/learning/courses"
+            locale={locale}
+            prefetch={false}
+            className={cn(buttonVariants({ variant: "ghost", size: "icon" }))}
           >
             <ArrowLeft className="size-5" />
-          </Button>
+          </Link>
           <div className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-emerald-500 to-teal-600">
             <BookOpen className="size-6 text-white" />
           </div>
@@ -228,14 +224,15 @@ export function CourseNav({
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-          <Button nativeButton={false}
-            variant="outline"
-            size="sm"
-            render={<Link href={previewHref} locale={locale} prefetch={false} />}
+          <Link
+            href={previewHref}
+            locale={locale}
+            prefetch={false}
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
           >
             <Eye className="mr-2 size-4" />
             Preview
-          </Button>
+          </Link>
           <Button
             variant="outline"
             size="sm"
@@ -292,20 +289,15 @@ export function CourseNav({
               Publish
             </Button>
           )}
-          <Button nativeButton={false}
-            variant="outline"
-            size="sm"
-            render={
-              <Link
-                href={buildDashboardCoursePath(courseRouteParam, "settings")}
-                locale={locale}
-                prefetch={false}
-              />
-            }
+          <Link
+            href={buildDashboardCoursePath(courseRouteParam, "settings")}
+            locale={locale}
+            prefetch={false}
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
           >
             <Settings className="mr-2 size-4" />
             Settings
-          </Button>
+          </Link>
         </div>
       </div>
 

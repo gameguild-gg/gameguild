@@ -728,10 +728,13 @@ public sealed class TestingEventHandlers(
                     application.AssignedSlotId == slot.Id &&
                     application.Status == TestingApplicationStatus.Approved &&
                     application.DeletedAt == null),
-                context.Set<TestingSession>()
-                    .Where(session => session.EventSlotId == slot.Id && session.DeletedAt == null)
-                    .SelectMany(session => session.Registrations)
-                    .Count(registration => registration.DeletedAt == null)))
+                context.Set<TestingSlotRegistration>().Count(registration =>
+                    registration.EventId == request.EventId &&
+                    registration.SlotId == slot.Id &&
+                    registration.TenantId == actor.TenantId &&
+                    registration.DeletedAt == null &&
+                    registration.Status != TestingSlotRegistrationStatus.Waitlisted &&
+                    registration.Status != TestingSlotRegistrationStatus.Cancelled)))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
         return Result.Success<IReadOnlyList<TestingEventSlotProjection>>(slots);

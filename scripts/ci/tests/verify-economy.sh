@@ -768,6 +768,11 @@ test_canonical_json_preserves_arrays() {
   grep -q '"tags":\["Economy"\]' "$first_out"
 }
 
+test_repository_manifest_covers_discovered_projects() {
+  assert_economy_manifest "$repository_root" "$ci_dir/economy-projects.json"
+}
+
+run_test 'repository manifest covers all discovered Economy projects' test_repository_manifest_covers_discovered_projects
 run_test 'CI policy contains only shell scripts' test_shell_only_ci_policy
 run_test 'contributors visualization uses native xvfb' test_contributors_visualization_uses_native_xvfb
 run_test 'Emception publish opens a release PR to main' test_release_flow_opens_version_pr_to_main

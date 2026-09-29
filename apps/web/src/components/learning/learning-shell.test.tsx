@@ -438,7 +438,7 @@ describe("LearningShell", () => {
     renderShell();
 
     await user.click(screen.getByRole("button", { name: "Search learning" }));
-    await user.click(screen.getByRole("option", { name: "Calendar" }));
+    await user.click(await screen.findByRole("option", { name: "Calendar" }));
 
     expect(push).toHaveBeenCalledWith("/learn/calendar");
   });
@@ -462,7 +462,7 @@ describe("LearningShell", () => {
     );
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
     try {
-      await user.click(screen.getByRole("option", { name: "Browse courses" }));
+      await user.click(await screen.findByRole("option", { name: "Browse courses" }));
       await new Promise((resolve) => setTimeout(resolve, 0));
     } finally {
       consoleError.mockRestore();

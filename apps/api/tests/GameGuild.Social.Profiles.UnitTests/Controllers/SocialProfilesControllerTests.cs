@@ -62,6 +62,33 @@ public sealed class SocialProfilesControllerTests
         _sender.Verify(sender => sender.Send(It.IsAny<AddProfileSkillCommand>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    [Fact]
+    public async Task GetOrCreate_OtherUser_ReturnsForbidWithoutDispatch()
+    {
+        var controller = CreateController(Guid.NewGuid());
+
+        var result = await controller.GetOrCreate(Guid.NewGuid(), default);
+
+        result.Result.Should().BeOfType<ForbidResult>();
+        _sender.Verify(sender => sender.Send(It.IsAny<GetOrCreateSocialProfileQuery>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetOrCreate_SameUser_DispatchesQuery()
+    {
+        var userId = Guid.NewGuid();
+        _sender.Setup(sender => sender.Send(
+                It.Is<GetOrCreateSocialProfileQuery>(query => query.UserId == userId),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ProfileDto(userId));
+        var controller = CreateController(userId);
+
+        var result = await controller.GetOrCreate(userId, default);
+
+        result.Result.Should().BeOfType<OkObjectResult>();
+        _sender.VerifyAll();
+    }
+
     private SocialProfilesController CreateController(Guid userId)
     {
         var actors = new Mock<IActorContextAccessor>();

@@ -1,6 +1,7 @@
+import { cn } from "@game-guild/ui/lib/utils";
 import React from 'react';
 import Link from 'next/link';
-import { Button } from '@game-guild/ui/components/button';
+import { buttonVariants } from '@game-guild/ui/components/button';
 
 const ExploreMoreSection: React.FC = () => {
   return (
@@ -47,9 +48,17 @@ const ExploreMoreSection: React.FC = () => {
         </div>
 
         {/* CTA Button */}
-        <Button className="bg-transparent border-2 border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white transition-all duration-300 px-8 py-3 text-lg font-semibold rounded-lg" nativeButton={false} render={<Link href="/courses" />}>
+        <Link
+          href="/courses"
+          className={cn(
+            buttonVariants({
+              className:
+                "bg-transparent border-2 border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white transition-all duration-300 px-8 py-3 text-lg font-semibold rounded-lg",
+            }),
+          )}
+        >
           VIEW ALL
-        </Button>
+        </Link>
       </div>
     </section>
   );

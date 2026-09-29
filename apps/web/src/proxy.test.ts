@@ -30,6 +30,37 @@ describe("GameGuild internationalization proxy", () => {
     );
   });
 
+  it.each([
+    "/workspace/teams/new-team",
+    "/workspace/projects/new-project",
+  ])("rewrites a Server Action redirect to %s despite the inherited marker", (path) => {
+    const response = routeRequest(
+      new NextRequest(`https://gameguild.gg${path}?created=1`, {
+        headers: {
+          "x-gameguild-internal-locale-rewrite": "1",
+          "x-next-intl-locale": "en-US",
+        },
+      }),
+    );
+
+    expect(response.headers.get("x-middleware-rewrite")).toBe(
+      `https://gameguild.gg/en-US${path}?created=1`,
+    );
+    expect(response.headers.get("location")).toBeNull();
+  });
+
+  it("does not canonicalize an already rewritten internal locale route", () => {
+    const response = routeRequest(
+      new NextRequest("https://gameguild.gg/en-US/workspace/teams/new-team", {
+        headers: { "x-gameguild-internal-locale-rewrite": "1" },
+      }),
+    );
+
+    expect(response.headers.get("x-middleware-next")).toBe("1");
+    expect(response.headers.get("location")).toBeNull();
+    expect(response.headers.get("x-middleware-rewrite")).toBeNull();
+  });
+
   it("preserves an explicitly selected non-default locale", () => {
     const response = routeRequest(
       new NextRequest(

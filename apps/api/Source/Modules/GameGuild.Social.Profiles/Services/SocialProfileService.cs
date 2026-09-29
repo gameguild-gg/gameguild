@@ -3,6 +3,7 @@ namespace GameGuild.Social.Profiles;
 public interface ISocialProfileService
 {
     Task<SocialProfileDto> UpsertProfileAsync(UpdateSocialProfileCommand command, CancellationToken ct = default);
+    Task<SocialProfileDto> GetOrCreateAsync(Guid userId, CancellationToken ct = default);
     Task<SocialProfileDto?> GetByUserAsync(Guid userId, CancellationToken ct = default);
     Task<SocialProfileDto?> GetByHandleAsync(string handle, CancellationToken ct = default);
     Task<List<SocialProfileDto>> SearchAsync(string? query, int take, CancellationToken ct = default);
@@ -33,6 +34,32 @@ public sealed class SocialProfileService(
         profile.UpdateProfile(command);
         await profileRepository.UpdateAsync(profile, ct).ConfigureAwait(false);
         return profile.ToDto();
+    }
+
+    public async Task<SocialProfileDto> GetOrCreateAsync(Guid userId, CancellationToken ct = default)
+    {
+        var profile = await profileRepository.GetByUserAsync(userId, ct).ConfigureAwait(false);
+        if (profile is not null)
+        {
+            return profile.ToDto();
+        }
+
+        var displayName = $"user{userId.ToString()[..8]}";
+        var handle = await GenerateUniqueHandleAsync(displayName, ct).ConfigureAwait(false);
+        profile = new SocialProfile { UserId = userId };
+        profile.UpdateProfile(new UpdateSocialProfileCommand(userId, handle, displayName));
+        return (await profileRepository.AddAsync(profile, ct).ConfigureAwait(false)).ToDto();
+    }
+
+    private async Task<string> GenerateUniqueHandleAsync(string baseHandle, CancellationToken ct)
+    {
+        var handle = SocialProfile.NormalizeHandle(baseHandle);
+        for (var attempt = 2; await profileRepository.GetByHandleAsync(handle, ct).ConfigureAwait(false) is not null; attempt++)
+        {
+            handle = SocialProfile.NormalizeHandle($"{baseHandle}-{attempt}");
+        }
+
+        return handle;
     }
 
     public async Task<SocialProfileDto?> GetByUserAsync(Guid userId, CancellationToken ct = default)

@@ -891,7 +891,7 @@ describe("ContentItemEditor", () => {
     );
 
     await user.click(screen.getByRole("combobox", { name: /visibility/i }));
-    await user.click(screen.getByRole("option", { name: "Private" }));
+    await user.click(await screen.findByRole("option", { name: "Private" }));
     await user.click(screen.getByRole("switch", { name: /required/i }));
     await user.click(screen.getByRole("button", { name: "Auto" }));
     await user.click(screen.getByRole("button", { name: /save changes/i }));
