@@ -25,3 +25,9 @@ const RESERVED_BLOG_SEGMENTS = new Set(['rss.xml']);
 export function isReservedBlogSegment(username: string): boolean {
   return RESERVED_BLOG_SEGMENTS.has(username);
 }
+
+export const BLOG_API_BASE_URL = (
+  process.env.API_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  'http://localhost:8080'
+).replace(/\/$/, '');
