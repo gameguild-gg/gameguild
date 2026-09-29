@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using GameGuild.Configuration.PresentationLayer.Authorization;
 using GameGuild.Identity.Authorization.Caching;
 using Microsoft.Extensions.Caching.Memory;
@@ -199,8 +200,10 @@ public sealed class CachedAccessControlListService : IAccessControlListService, 
                 continue;
             }
 
+            var l1LookupStartedAt = cachedResults is null ? Stopwatch.GetTimestamp() : 0;
             if (cachedResults is null && _l1Cache.TryGetValue(cacheKey, out AccessLevel l1Value))
             {
+                _metrics?.RecordLookupDuration(Stopwatch.GetElapsedTime(l1LookupStartedAt), CacheType);
                 _metrics?.RecordHit(CacheLevel.L1, CacheType);
                 CacheAccessLevel(cacheKey, request.TenantId.ToString(), l1Value, l1Only: true);
                 continue;
@@ -208,6 +211,7 @@ public sealed class CachedAccessControlListService : IAccessControlListService, 
 
             if (cachedResults is null)
             {
+                _metrics?.RecordLookupDuration(Stopwatch.GetElapsedTime(l1LookupStartedAt), CacheType);
                 _metrics?.RecordMiss(CacheType);
             }
 
@@ -259,10 +263,16 @@ public sealed class CachedAccessControlListService : IAccessControlListService, 
                 globalVersion);
 
             // The cache key is scoped to the current tenant/global/user version snapshot.
+            var l1LookupStartedAt = Stopwatch.GetTimestamp();
             if (_l1Cache.TryGetValue(cacheKey, out AccessLevel cachedLevel))
             {
+                _metrics?.RecordLookupDuration(Stopwatch.GetElapsedTime(l1LookupStartedAt), CacheType);
                 _metrics?.RecordHit(CacheLevel.L1, CacheType);
                 return cachedLevel;
+            }
+            if (_hybridCache is null)
+            {
+                _metrics?.RecordLookupDuration(Stopwatch.GetElapsedTime(l1LookupStartedAt), CacheType);
             }
 
             // Try L2 (hybrid) cache if available
@@ -416,10 +426,16 @@ public sealed class CachedAccessControlListService : IAccessControlListService, 
         var cacheKey = BuildCacheKey(userId, tenantId, resourceType, resourceId, tenantVersion, userVersion, globalVersion);
 
         // Try L1 cache first
+        var l1LookupStartedAt = Stopwatch.GetTimestamp();
         if (_l1Cache.TryGetValue(cacheKey, out AccessLevel cachedLevel))
         {
+            _metrics?.RecordLookupDuration(Stopwatch.GetElapsedTime(l1LookupStartedAt), CacheType);
             _metrics?.RecordHit(CacheLevel.L1, CacheType);
             return cachedLevel;
+        }
+        if (_hybridCache is null)
+        {
+            _metrics?.RecordLookupDuration(Stopwatch.GetElapsedTime(l1LookupStartedAt), CacheType);
         }
 
         // Try L2 (hybrid) cache if available

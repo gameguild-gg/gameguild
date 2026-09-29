@@ -26,7 +26,7 @@ public sealed class PermissionCacheStatsDto
     /// <summary>UTC time at which this snapshot was captured.</summary>
     public DateTime LastUpdated { get; set; }
 
-    /// <summary>Latency samples; empty until cache operation duration is instrumented.</summary>
+    /// <summary>Process-local average lookup latency and sample count, grouped by cache operation.</summary>
     public List<CachePerformanceMetric> PerformanceMetrics { get; set; } = new List<CachePerformanceMetric>();
 
     public long L1Hits { get; set; }

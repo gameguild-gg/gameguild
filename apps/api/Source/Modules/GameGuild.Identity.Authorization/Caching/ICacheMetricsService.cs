@@ -107,7 +107,17 @@ public sealed class CacheStatistics
     ///     Statistics by cache type.
     /// </summary>
     public Dictionary<string, CacheTypeStatistics> ByType { get; set; } = new();
+
+    /// <summary>
+    ///     Process-local lookup-duration aggregates by cache type.
+    /// </summary>
+    public Dictionary<string, CacheLookupStatistics> LookupDurationByType { get; set; } = new(StringComparer.Ordinal);
 }
+
+/// <summary>
+///     Bounded aggregate for cache lookup durations; raw samples are not retained.
+/// </summary>
+public sealed record CacheLookupStatistics(long Count, double AverageMilliseconds);
 
 /// <summary>
 ///     Statistics for a specific cache type.
@@ -160,6 +170,7 @@ public sealed class CacheMetricsService : ICacheMetricsService
     private long _evictions;
 
     private readonly Dictionary<string, CacheTypeStatistics> _typeStats = new();
+    private readonly Dictionary<string, LookupDurationAccumulator> _lookupDurations = new(StringComparer.Ordinal);
     private readonly object _lock = new();
 
     /// <summary>
@@ -232,6 +243,17 @@ public sealed class CacheMetricsService : ICacheMetricsService
             new KeyValuePair<string, object?>("cache_type", cacheType)
         ]);
         _lookupDurationHistogram.Record(duration.TotalMilliseconds, tags);
+
+        lock (_lock)
+        {
+            if (!_lookupDurations.TryGetValue(cacheType, out var aggregate))
+            {
+                aggregate = new LookupDurationAccumulator();
+                _lookupDurations[cacheType] = aggregate;
+            }
+
+            aggregate.Record(duration.TotalMilliseconds);
+        }
     }
 
     /// <inheritdoc />
@@ -268,8 +290,25 @@ public sealed class CacheMetricsService : ICacheMetricsService
                         L2Hits = pair.Value.L2Hits,
                         Misses = pair.Value.Misses
                     },
+                    StringComparer.Ordinal),
+                LookupDurationByType = _lookupDurations.ToDictionary(
+                    pair => pair.Key,
+                    pair => new CacheLookupStatistics(pair.Value.Count, pair.Value.AverageMilliseconds),
                     StringComparer.Ordinal)
             };
+        }
+    }
+
+    private sealed class LookupDurationAccumulator
+    {
+        public long Count { get; private set; }
+
+        public double AverageMilliseconds { get; private set; }
+
+        public void Record(double milliseconds)
+        {
+            Count++;
+            AverageMilliseconds += (milliseconds - AverageMilliseconds) / Count;
         }
     }
 

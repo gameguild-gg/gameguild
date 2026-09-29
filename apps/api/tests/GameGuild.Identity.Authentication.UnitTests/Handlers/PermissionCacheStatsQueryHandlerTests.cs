@@ -30,6 +30,10 @@ public sealed class PermissionCacheStatsQueryHandlerTests
             ByType = new Dictionary<string, CacheTypeStatistics>(StringComparer.Ordinal)
             {
                 ["permission"] = new() { CacheType = "permission", L1Hits = 8, L2Hits = 2, Misses = 2 }
+            },
+            LookupDurationByType = new Dictionary<string, CacheLookupStatistics>(StringComparer.Ordinal)
+            {
+                ["acl"] = new(4, 3.5)
             }
         });
 
@@ -58,6 +62,11 @@ public sealed class PermissionCacheStatsQueryHandlerTests
         result.TotalRequests.Should().Be(12);
         result.CacheHitRate.Should().BeApproximately(10d / 12d, 0.0001);
         result.ByType.Should().ContainKey("permission");
+        result.PerformanceMetrics.Should().ContainSingle().Which.Should().Match<CachePerformanceMetric>(metric =>
+            metric.Operation == "acl" &&
+            metric.RequestCount == 4 &&
+            Math.Abs(metric.AverageTime - 3.5) < 0.0001);
+        result.PerformanceMetrics[0].Timestamp.Should().BeOnOrAfter(before).And.BeOnOrBefore(after);
         result.LastUpdated.Should().BeOnOrAfter(before).And.BeOnOrBefore(after);
     }
 

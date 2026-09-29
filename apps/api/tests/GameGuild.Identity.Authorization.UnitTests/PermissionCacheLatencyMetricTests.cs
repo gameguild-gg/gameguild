@@ -6,11 +6,77 @@ using GameGuild.Identity.Authorization.Caching;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Moq;
 
 namespace GameGuild.Identity.Authorization.UnitTests;
 
 public sealed class PermissionCacheLatencyMetricTests
 {
+    [Fact]
+    public void RecordLookupDuration_ExposesBoundedAverageAndCountByCacheType()
+    {
+        var metrics = new CacheMetricsService();
+
+        metrics.RecordLookupDuration(TimeSpan.FromMilliseconds(2), "acl");
+        metrics.RecordLookupDuration(TimeSpan.FromMilliseconds(6), "acl");
+        metrics.RecordLookupDuration(TimeSpan.FromMilliseconds(9), "permission");
+
+        var statistics = metrics.GetStatistics();
+
+        statistics.LookupDurationByType.Should().ContainKey("acl");
+        statistics.LookupDurationByType["acl"].Count.Should().Be(2);
+        statistics.LookupDurationByType["acl"].AverageMilliseconds.Should().BeApproximately(4, 0.0001);
+        statistics.LookupDurationByType["permission"].Count.Should().Be(1);
+        statistics.LookupDurationByType["permission"].AverageMilliseconds.Should().BeApproximately(9, 0.0001);
+    }
+
+    [Fact]
+    public async Task CachedAclL1Hit_RecordsLookupDuration()
+    {
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var tenantVersions = new Mock<ITenantSecurityVersionStore>();
+        tenantVersions
+            .Setup(store => store.GetTenantAndGlobalVersionsAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((1L, 1L));
+        var userVersions = new Mock<IUserSecurityVersionStore>();
+        userVersions.Setup(store => store.GetVersionAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(1L);
+        var innerService = new Mock<IAccessControlListService>();
+        innerService
+            .Setup(service => service.EvaluateAccessAsync(
+                It.IsAny<AclSubject>(),
+                tenantId,
+                "Document",
+                "latency-document",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AccessLevel.Write);
+
+        using var memoryCache = new MemoryCache(new MemoryCacheOptions { SizeLimit = 10 });
+        var metrics = new CacheMetricsService();
+        var service = new CachedAccessControlListService(
+            innerService.Object,
+            memoryCache,
+            tenantVersions.Object,
+            userVersions.Object,
+            Options.Create(new AuthorizationCacheOptions { AccessControlListTtlSeconds = 60 }),
+            hybridCache: null,
+            metrics);
+        var subject = AclSubject.ForUser(userId);
+
+        await service.EvaluateAccessAsync(subject, tenantId, "Document", "latency-document");
+        await service.EvaluateAccessAsync(subject, tenantId, "Document", "latency-document");
+
+        innerService.Verify(
+            inner => inner.EvaluateAccessAsync(
+                It.IsAny<AclSubject>(),
+                tenantId,
+                "Document",
+                "latency-document",
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+        metrics.GetStatistics().LookupDurationByType["acl"].Count.Should().Be(2);
+    }
+
     [Fact]
     public async Task CacheLookup_EmitsLatencyHistogramWithCacheType()
     {
