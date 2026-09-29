@@ -47,6 +47,34 @@ public sealed class PermissionCacheBulkOperationsTests
     }
 
     [Fact]
+    public async Task GetManyValuesAsync_FallsBackToL2WhenL1ReadFails()
+    {
+        var l1Cache = new Mock<IMemoryCache>(MockBehavior.Strict);
+        object? l1Value = null;
+        l1Cache
+            .Setup(cache => cache.TryGetValue(It.IsAny<object>(), out l1Value))
+            .Throws(new InvalidOperationException("L1 is unavailable."));
+
+        var distributed = new Mock<IDistributedCache>(MockBehavior.Strict);
+        distributed
+            .Setup(cache => cache.GetAsync("acl:read", It.IsAny<CancellationToken>()))
+            .Returns(Task.FromResult<byte[]?>(JsonSerializer.SerializeToUtf8Bytes(AccessLevel.Read)));
+
+        var cache = new HybridPermissionCache(
+            l1Cache.Object,
+            Options.Create(new AuthorizationCacheOptions { UseDistributedCache = true }),
+            new CacheMetricsService(),
+            NullLogger<HybridPermissionCache>.Instance,
+            distributed.Object,
+            Mock.Of<IPermissionCacheKeyTracker>());
+
+        var result = await cache.GetManyValuesAsync<AccessLevel>(["acl:read"], "acl");
+
+        result["acl:read"].Should().Be(CacheResult<AccessLevel>.Hit(AccessLevel.Read));
+        distributed.Verify(cache => cache.GetAsync("acl:read", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task SetManyValuesAsync_WritesEveryValueAndSubsequentReadsUseL1()
     {
         var distributed = new Mock<IDistributedCache>(MockBehavior.Strict);
