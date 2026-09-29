@@ -14,7 +14,7 @@ namespace GameGuild.Identity.Authorization.Caching;
 public interface IHybridPermissionCache
 {
     /// <summary>Gets multiple value-type entries with bounded concurrency.</summary>
-    /// <remarks>At most 500 distinct keys are accepted. Cache reads are not transactional.</remarks>
+    /// <remarks>At most 500 keys may be submitted; duplicate keys are read once. Reads are not transactional.</remarks>
     Task<IReadOnlyDictionary<string, CacheResult<T>>> GetManyValuesAsync<T>(
         IReadOnlyCollection<string> keys,
         string cacheType) where T : struct;
@@ -323,7 +323,7 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
     public async Task<IReadOnlyDictionary<string, CacheResult<T>>> GetManyValuesAsync<T>(
         IReadOnlyCollection<string> keys,
         string cacheType,
-        CancellationToken cancellationToken = default) where T : struct
+        CancellationToken cancellationToken) where T : struct
     {
         ArgumentNullException.ThrowIfNull(keys);
         cancellationToken.ThrowIfCancellationRequested();
@@ -382,7 +382,7 @@ public sealed class HybridPermissionCache : IHybridPermissionCache
     public async Task SetManyValuesAsync<T>(
         IReadOnlyDictionary<string, T> values,
         string cacheType,
-        CancellationToken cancellationToken = default) where T : struct
+        CancellationToken cancellationToken) where T : struct
     {
         ArgumentNullException.ThrowIfNull(values);
         cancellationToken.ThrowIfCancellationRequested();
