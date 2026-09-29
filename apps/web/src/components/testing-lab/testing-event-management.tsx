@@ -2048,6 +2048,7 @@ export function TestingEventLifecycleActions({
             submitLabel="Cancel event"
             action={transitionTestingEvent}
             destructive
+            onSuccess={setResult}
           >
             <input type="hidden" name="eventId" value={event.id} />
             <input type="hidden" name="transition" value="cancel" />

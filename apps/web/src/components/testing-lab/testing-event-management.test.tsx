@@ -1475,6 +1475,29 @@ describe("TestingEventApplications", () => {
     );
   });
 
+  it("keeps cancellation confirmation visible after the event becomes read-only", async () => {
+    const user = userEvent.setup();
+    mocks.transitionEvent.mockResolvedValueOnce({
+      success: true,
+      data: null,
+      message: "Event status updated.",
+    });
+    const { rerender } = render(
+      <TestingEventLifecycleActions event={{ id: "event-1", status: "Active" }} />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Cancel event" }));
+    const dialog = screen.getByRole("dialog", { name: "Cancel this testing event?" });
+    await user.type(within(dialog).getByLabelText("Cancellation reason"), "Session finished early.");
+    await user.click(within(dialog).getByRole("button", { name: "Cancel event" }));
+
+    await waitFor(() => expect(mocks.refresh).toHaveBeenCalledOnce());
+    rerender(<TestingEventLifecycleActions event={{ id: "event-1", status: "Cancelled" }} />);
+
+    expect(screen.queryByRole("button", { name: "Cancel event" })).not.toBeInTheDocument();
+    expect(screen.getByText("Event status updated.")).toBeInTheDocument();
+  });
+
   it.each([
     ["Draft", "Publish and open sign-ups", "open-applications"],
     ["ApplicationsOpen", "Close game submissions", "close-applications"],
