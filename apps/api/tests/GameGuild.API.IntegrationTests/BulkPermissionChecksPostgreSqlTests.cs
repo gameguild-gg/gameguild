@@ -182,7 +182,10 @@ public sealed class BulkPermissionChecksPostgreSqlTests(ApiPostgreSqlFixture fix
 
         foreach (var userId in userIds)
         {
-            if (await service.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read)) grantedCount++;
+            if (await service.HasTenantPermissionAsync(userId, tenantId, PermissionType.Read))
+            {
+                grantedCount++;
+            }
         }
 
         stopwatch.Stop();
