@@ -7,10 +7,12 @@ const mocks = vi.hoisted(() => ({
   publicGetPostDetail: vi.fn(),
   publicResolve: vi.fn(),
   publicGetComments: vi.fn(),
+  requestAuthContext: vi.fn(),
 }));
 
 vi.mock('@game-guild/client', () => ({
   createServerClient: mocks.createServerClient,
+  GameGuildAuth: vi.fn(() => ({})),
   GeneratedApi: {
     SocialBlogPublicModule: class {
       getApiSocialBlogPublicPosts = mocks.publicGetPosts;
@@ -19,7 +21,15 @@ vi.mock('@game-guild/client', () => ({
       getApiSocialBlogPublicResolve = mocks.publicResolve;
       getApiSocialBlogPublicPostsComments = mocks.publicGetComments;
     },
+    SocialBlogAuthoringModule: class {
+      getApiSocialBlogPostsMine = vi.fn();
+      getApiSocialBlogPosts = vi.fn();
+    },
   },
+}));
+
+vi.mock('@/auth', () => ({
+  getRequestAuthContext: mocks.requestAuthContext,
 }));
 
 import { getAuthorPosts, getBlogIndex, getBlogPost, getBlogPostComments } from './queries';

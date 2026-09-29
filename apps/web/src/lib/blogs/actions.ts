@@ -192,6 +192,72 @@ export async function cancelAiRun(postId: string, runId: string) {
   });
 }
 
+export async function getAiRun(postId: string, runId: string) {
+  return blogRequest<Record<string, unknown>>(path(postId, `/ai/runs/${encodeURIComponent(runId)}`));
+}
+
+/**
+ * Conflict recovery: re-fetches the acting user's post by its current route
+ * through the authoring API (server-only client), returning the latest
+ * revision + full draft so the editor can discard local edits.
+ */
+export async function reloadLatestPost(handle: string, slug: string) {
+  const { getMyPostBySlug } = await import('./queries');
+  const lookup = await getMyPostBySlug(handle, slug);
+  if (lookup.status !== 'ok') {
+    return { success: false as const, error: 'The latest version could not be loaded.' };
+  }
+  return { success: true as const, post: lookup.post };
+}
+
+/** Resolves a profile handle to a userId for co-author adds. */
+export async function resolveProfileByHandle(handle: string): Promise<
+  { success: true; userId: string } | { success: false; error: string }
+> {
+  const clean = handle.trim().replace(/^@/, '');
+  if (!clean) return { success: false, error: 'A handle is required.' };
+
+  const { token, tenantId } = await getRequestAuthContext();
+  const headers: Record<string, string> = {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(tenantId ? { 'X-Tenant-Id': tenantId } : {}),
+  };
+
+  const response = await fetch(`${apiBaseUrl}/api/social/profiles/@${encodeURIComponent(clean)}`, {
+    headers,
+    cache: 'no-store',
+  });
+  if (!response.ok) return { success: false, error: `No profile found for @${clean}.` };
+
+  const profile = (await response.json().catch(() => null)) as { userId?: unknown } | null;
+  if (!profile || typeof profile.userId !== 'string' || !profile.userId) {
+    return { success: false, error: `No profile found for @${clean}.` };
+  }
+  return { success: true, userId: profile.userId };
+}
+
+/** Viewer identity + handle for the blog editor surfaces. */
+export async function getViewerBlogAuthor(): Promise<{ userId: string | null; handle: string | null }> {
+  const { session } = await getRequestAuthContext();
+  const userId = session && typeof session !== 'function' ? session.user?.id ?? null : null;
+  if (!userId) return { userId: null, handle: null };
+
+  const { token, tenantId } = await getRequestAuthContext();
+  const headers: Record<string, string> = {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(tenantId ? { 'X-Tenant-Id': tenantId } : {}),
+  };
+
+  const response = await fetch(`${apiBaseUrl}/api/social/profiles/users/${encodeURIComponent(userId)}`, {
+    headers,
+    cache: 'no-store',
+  });
+  if (!response.ok) return { userId, handle: null };
+
+  const profile = (await response.json().catch(() => null)) as { handle?: unknown } | null;
+  return { userId, handle: typeof profile?.handle === 'string' ? profile.handle : null };
+}
+
 export async function applyProposal(postId: string, proposalId: string, postRevision: number, cursorOffset?: number) {
   return blogRequest<Record<string, unknown>>(path(postId, `/ai/proposals/${encodeURIComponent(proposalId)}/apply`), {
     method: 'POST',
@@ -204,7 +270,3 @@ export async function discardProposal(postId: string, proposalId: string) {
     method: 'DELETE',
   });
 }
-
-// Re-export so callers (SSE proxy route in todo 10) can build raw requests
-// against the same base URL without re-deriving env handling.
-export { apiBaseUrl as BLOG_API_BASE_URL };

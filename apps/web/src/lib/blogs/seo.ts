@@ -46,6 +46,7 @@ export function isReservedBlogSegment(username: string): boolean {
   return RESERVED_BLOG_SEGMENTS.has(username);
 }
 
+<<<<<<< HEAD
 /** Author display info for metadata/JSON-LD (co-authors carry handles only). */
 export interface BlogAuthorProfile {
   handle?: string | null;
@@ -142,3 +143,9 @@ export function resolveBlogJsonLd(post: BlogPostDetail, authorProfiles?: BlogAut
   }
   return JSON.stringify(buildBlogJsonLd(post, authorProfiles));
 }
+
+export const BLOG_API_BASE_URL = (
+  process.env.API_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  'http://localhost:8080'
+).replace(/\/$/, '');
