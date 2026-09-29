@@ -217,6 +217,52 @@ public sealed class SocialProfileServiceTests
 
     private SocialProfileService CreateSubject() => new(_profiles.Object, _skills.Object, _portfolio.Object);
 
+    [Fact]
+    public async Task GetOrCreate_WhenMissingCreatesProfileWithUniqueHandleDerivedFromUserId()
+    {
+        var userId = Guid.Parse("12345678-90ab-cdef-1234-567890abcdef");
+        _profiles.Setup(repository => repository.GetByUserAsync(userId, default)).ReturnsAsync((SocialProfile?)null);
+        _profiles.Setup(repository => repository.GetByHandleAsync("user12345678", default)).ReturnsAsync((SocialProfile?)null);
+        _profiles.Setup(repository => repository.AddAsync(It.IsAny<SocialProfile>(), default))
+            .ReturnsAsync((SocialProfile profile, CancellationToken _) => profile);
+
+        var result = await CreateSubject().GetOrCreateAsync(userId);
+
+        result.UserId.Should().Be(userId);
+        result.Handle.Should().Be("user12345678");
+        result.DisplayName.Should().Be("user12345678");
+    }
+
+    [Fact]
+    public async Task GetOrCreate_WhenHandleTakenSuffixedHandleStaysUnique()
+    {
+        var userId = Guid.Parse("12345678-90ab-cdef-1234-567890abcdef");
+        var taken = new SocialProfile { UserId = Guid.NewGuid(), Handle = "user12345678" };
+        _profiles.Setup(repository => repository.GetByUserAsync(userId, default)).ReturnsAsync((SocialProfile?)null);
+        _profiles.Setup(repository => repository.GetByHandleAsync("user12345678", default)).ReturnsAsync(taken);
+        _profiles.Setup(repository => repository.GetByHandleAsync("user12345678-2", default)).ReturnsAsync((SocialProfile?)null);
+        _profiles.Setup(repository => repository.AddAsync(It.IsAny<SocialProfile>(), default))
+            .ReturnsAsync((SocialProfile profile, CancellationToken _) => profile);
+
+        var result = await CreateSubject().GetOrCreateAsync(userId);
+
+        result.Handle.Should().Be("user12345678-2");
+    }
+
+    [Fact]
+    public async Task GetOrCreate_WhenPresentReturnsProfileWithoutCreating()
+    {
+        var userId = Guid.NewGuid();
+        var existing = new SocialProfile { UserId = userId, Handle = "existing", DisplayName = "Existing" };
+        _profiles.Setup(repository => repository.GetByUserAsync(userId, default)).ReturnsAsync(existing);
+
+        var result = await CreateSubject().GetOrCreateAsync(userId);
+
+        result.Id.Should().Be(existing.Id);
+        result.Handle.Should().Be("existing");
+        _profiles.Verify(repository => repository.AddAsync(It.IsAny<SocialProfile>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     private static UpdateSocialProfileCommand CreateUpdateCommand(string handle) => new(
         Guid.NewGuid(),
         handle,

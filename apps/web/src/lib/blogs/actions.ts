@@ -153,7 +153,7 @@ async function fetchProfileHandle(userId: string): Promise<string | null> {
   const { token, tenantId } = await getRequestAuthContext();
   if (!token || !tenantId) return null;
 
-  const response = await fetch(`${apiBaseUrl}/api/social/profiles/users/${encodeURIComponent(userId)}`, {
+  const response = await fetch(`${apiBaseUrl}/api/social/profiles/users/${encodeURIComponent(userId)}/or-create`, {
     headers: { Authorization: `Bearer ${token}`, 'X-Tenant-Id': tenantId },
     cache: 'no-store',
   });
@@ -314,7 +314,7 @@ export async function getViewerBlogAuthor(): Promise<{ userId: string | null; ha
     ...(tenantId ? { 'X-Tenant-Id': tenantId } : {}),
   };
 
-  const response = await fetch(`${apiBaseUrl}/api/social/profiles/users/${encodeURIComponent(userId)}`, {
+  const response = await fetch(`${apiBaseUrl}/api/social/profiles/users/${encodeURIComponent(userId)}/or-create`, {
     headers,
     cache: 'no-store',
   });
