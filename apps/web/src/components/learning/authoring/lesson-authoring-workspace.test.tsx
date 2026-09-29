@@ -1730,7 +1730,7 @@ describe("LessonAuthoringWorkspace", () => {
 
     const visibility = screen.getByRole("combobox", { name: "Lesson access" });
     await user.click(visibility);
-    await user.click(screen.getByRole("option", { name: "Private" }));
+    await user.click(await screen.findByRole("option", { name: "Private" }));
 
     expect(visibility).toHaveTextContent("Private");
   });
@@ -2281,7 +2281,7 @@ describe("LessonAuthoringWorkspace", () => {
     await user.click(screen.getByRole("button", { name: "Open Copilot" }));
     const mode = screen.getByRole("combobox", { name: "Proposal application" });
     await user.click(mode);
-    await user.click(screen.getByRole("option", { name: "Insert at cursor" }));
+    await user.click(await screen.findByRole("option", { name: "Insert at cursor" }));
     const prompt = screen.getByRole("textbox", { name: "Ask Copilot" });
     await user.type(prompt, "Add a note");
     fireEvent.keyDown(prompt, { key: "Enter", shiftKey: true });
