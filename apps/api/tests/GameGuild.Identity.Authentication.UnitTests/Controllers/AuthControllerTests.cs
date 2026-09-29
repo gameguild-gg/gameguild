@@ -92,4 +92,32 @@ public class AuthControllerTests
         problem.Status.Should().Be(401);
         problem.Detail.Should().Be("Invalid credentials");
     }
+
+    [Fact]
+    public async Task VerifyWeb3Signature_ShouldForwardSiweMessageNonceAndChainId()
+    {
+        var sender = new Mock<ISender>();
+        VerifyWeb3SignatureCommand? capturedCommand = null;
+        sender
+            .Setup(service => service.Send(It.IsAny<VerifyWeb3SignatureCommand>(), It.IsAny<CancellationToken>()))
+            .Callback<IRequest<SignInResponse>, CancellationToken>((command, _) => capturedCommand = (VerifyWeb3SignatureCommand)command)
+            .ReturnsAsync(new SignInResponse { Success = true, Message = "verified", Email = "wallet@example.com" });
+        var controller = new AuthController(sender.Object);
+
+        var result = await controller.VerifyWeb3Signature(new Web3VerifyRequest
+        {
+            WalletAddress = "0x1234567890abcdef1234567890abcdef12345678",
+            Challenge = "full SIWE challenge message",
+            Signature = "0xsigned-message",
+            Nonce = "nonce-12345678",
+            ChainId = "5"
+        }, CancellationToken.None);
+
+        result.Should().BeOfType<OkObjectResult>();
+        capturedCommand.Should().NotBeNull();
+        capturedCommand!.Challenge.Should().Be("full SIWE challenge message");
+        capturedCommand.Signature.Should().Be("0xsigned-message");
+        capturedCommand.Nonce.Should().Be("nonce-12345678");
+        capturedCommand.ChainId.Should().Be("5");
+    }
 }

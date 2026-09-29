@@ -44,7 +44,12 @@ public class Web3AuthServiceTests
             .Setup(x => x.GenerateRefreshTokenAsync(It.IsAny<Guid>(), It.IsAny<DeviceInfo>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("jwt-refresh-token");
         _web3ServiceMock
-            .Setup(x => x.VerifySignatureAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+            .Setup(x => x.VerifySignatureAsync(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>()))
             .ReturnsAsync(true);
 
         _sut = new Web3AuthService(

@@ -9,7 +9,14 @@ public sealed class VerifyWeb3SignatureHandler(IAuthService authService) : IComm
 {
     public async Task<SignInResponse> Handle(VerifyWeb3SignatureCommand command, CancellationToken cancellationToken)
     {
-        var verifyRequest = new Web3VerificationRequest { WalletAddress = command.WalletAddress, Signature = command.Signature, Challenge = command.Nonce };
+        var verifyRequest = new Web3VerificationRequest
+        {
+            WalletAddress = command.WalletAddress,
+            Signature = command.Signature,
+            Challenge = command.Challenge,
+            Nonce = command.Nonce,
+            ChainId = command.ChainId
+        };
 
         return await authService.VerifyWeb3SignatureAsync(verifyRequest, cancellationToken).ConfigureAwait(false);
     }
