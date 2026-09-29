@@ -1,11 +1,13 @@
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
+using GameGuild.API.Core.ApiVersioning;
 using GameGuild.Configuration;
 using GameGuild.Configuration.PresentationLayer.ApiVersioning;
 using GameGuild.Configuration.PresentationLayer.OpenAPI;
 using GameGuild.API.Setup;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
@@ -226,16 +228,35 @@ public static class OpenApiExtensions
         options ??= OptionBuilderUtilities.CreateAndBind(configuration, "ApiVersioning",
             ApiVersioningOptions.CreateDefault);
         options.Validate();
+        var parser = ApiVersioningOptionsBuilder.CreateParser(options.VersionFormat);
+        services.AddSingleton(options);
+        services.AddSingleton<ApiVersionUsageMetrics>();
+
+        // AddApiVersioning registers the default parser with TryAdd. Replacing it here makes route
+        // constraints, readers, and sunset policy matching use the same configured format.
+        services.Replace(ServiceDescriptor.Singleton<IApiVersionParser>(parser));
 
         services.AddApiVersioning(setup =>
                 {
                     setup.AssumeDefaultVersionWhenUnspecified = options.AssumeDefaultVersionWhenUnspecified;
-                    // Parse DefaultVersion (e.g., "1.0") into ApiVersion
-                    var versionParts = options.DefaultVersion.Split('.');
-                    var major = ParseVersionPart(versionParts, 0, 1);
-                    var minor = ParseVersionPart(versionParts, 1, 0);
-                    setup.DefaultApiVersion = new ApiVersion(major, minor);
+                    setup.DefaultApiVersion = parser.Parse(options.DefaultVersion.AsSpan());
                     setup.ApiVersionReader = ApiVersioningOptionsBuilder.CreateReader(options.ReadingStrategy, options);
+                    setup.ReportApiVersions = options.ReportApiVersions;
+
+                    foreach (var (version, policy) in options.SunsetPolicies)
+                    {
+                        var sunset = setup.Policies.Sunset(parser.Parse(version.AsSpan()));
+
+                        if (policy.EffectiveAt is { } effectiveAt)
+                        {
+                            sunset.Effective(effectiveAt);
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(policy.PolicyUrl))
+                        {
+                            sunset.Link(new Uri(policy.PolicyUrl, UriKind.Absolute));
+                        }
+                    }
                 }
             )
             .AddApiExplorer(setup =>
@@ -246,14 +267,6 @@ public static class OpenApiExtensions
             );
 
         return services;
-    }
-
-    private static int ParseVersionPart(IReadOnlyList<string> versionParts, int index, int fallback)
-    {
-        if (index >= versionParts.Count)
-            return fallback;
-
-        return int.TryParse(versionParts[index], out var value) ? value : fallback;
     }
 
     /// <summary>
