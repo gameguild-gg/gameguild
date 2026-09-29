@@ -63,7 +63,9 @@ public sealed class ModuleOpenApiIntegrationTests : IClassFixture<WebApplication
         paths.Should().ContainKey("/api/social/profiles/users/{userId}");
         paths.Should().ContainKey("/api/game-jams");
         paths.Should().ContainKey("/api/learning/enrollments");
-        paths.Should().ContainKey("/api/social/blog");
+        paths.Should().ContainKey("/api/social/blog/public/posts");
+        paths.Should().ContainKey("/api/social/blog/posts/mine");
+        paths.Should().NotContainKey("/api/social/blog");
         paths.Should().ContainKey("/api/social/feed/users/{userId}");
         paths.Should().ContainKey("/api/social/groups");
         paths.Should().ContainKey("/api/social/reactions");
@@ -146,7 +148,11 @@ public sealed class ModuleOpenApiIntegrationTests : IClassFixture<WebApplication
 
         types.Should().NotContain("Exam");
         types.Should().Contain(["Quiz", "Assignment", "Project", "PeerReview", "SelfAssessment"]);
-        paths.Should().ContainKey("/v1/assessments/{id}/definition");
+        paths.Should().ContainKey("/v1/assessments/course/{courseId}/content/{contentId}/draft");
+        paths.Should().ContainKey("/v1/assessments/{id}/authoring-state");
+        paths.Should().ContainKey("/v1/assessments/{id}/revisions/prepare");
+        paths.Should().ContainKey("/v1/assessments/{id}/revisions/publish");
+        paths.Should().NotContainKey("/v1/assessments/{id}/definition");
     }
 
     [Fact]

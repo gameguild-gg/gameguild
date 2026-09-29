@@ -155,7 +155,10 @@ describe("Testing Lab event actions", () => {
     expect(mocks.getRequestAuthContext).toHaveBeenCalledOnce();
   });
 
-  it("creates a draft event without requiring its participation configuration", async () => {
+  it.each([
+    { endsAt: "2026-08-08T21:00", expectedEnd: "2026-08-09T00:00:00.000Z" },
+    { endsAt: "2026-08-11T21:00", expectedEnd: "2026-08-12T00:00:00.000Z" },
+  ])("creates a draft ending at $endsAt without requiring participation configuration", async ({ endsAt, expectedEnd }) => {
     mocks.events.postTestingEvents.mockResolvedValue({
       ok: true,
       data: { id: "event-1", name: "Campus showcase" },
@@ -169,7 +172,7 @@ describe("Testing Lab event actions", () => {
       applicationsOpenAt: "2026-08-01T09:00",
       applicationsCloseAt: "2026-08-05T18:00",
       startsAt: "2026-08-08T18:00",
-      endsAt: "2026-08-08T21:00",
+      endsAt,
       requiresFeedback: "true",
     });
     data.delete("generalRules");
@@ -189,7 +192,7 @@ describe("Testing Lab event actions", () => {
         applicationsOpenAt: "2026-08-01T12:00:00.000Z",
         applicationsCloseAt: "2026-08-05T21:00:00.000Z",
         startsAt: "2026-08-08T21:00:00.000Z",
-        endsAt: "2026-08-09T00:00:00.000Z",
+        endsAt: expectedEnd,
         configuration: undefined,
       }),
     );
@@ -539,6 +542,47 @@ describe("Testing Lab event actions", () => {
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
       "/testing-lab/events/event-1",
     );
+  });
+
+  it("invalidates localized management tabs only after a registration is saved", async () => {
+    let finishSave!: (result: { ok: true; data: { id: string } }) => void;
+    mocks.participation.postTestingEventsSlotsRegistrations.mockReturnValueOnce(
+      new Promise((resolve) => { finishSave = resolve; }),
+    );
+
+    const saving = registerForTestingEventSlot(form({
+      eventId: "event-1",
+      slotId: "slot-1",
+      acceptedRules: "true",
+      registrationResponseJson: '{"answers":[]}',
+    }));
+
+    expect(mocks.revalidatePath).not.toHaveBeenCalled();
+    finishSave({ ok: true, data: { id: "registration-1" } });
+    await expect(saving).resolves.toMatchObject({ success: true });
+    for (const locale of ["en-US", "pt-BR"]) {
+      expect(mocks.revalidatePath).toHaveBeenCalledWith(
+        `/${locale}/workspace/testing-lab/events/event-1`, "layout",
+      );
+      expect(mocks.revalidatePath).toHaveBeenCalledWith(
+        `/${locale}/testing-lab/events/event-1`,
+      );
+    }
+  });
+
+  it("does not invalidate saved views when registration fails", async () => {
+    mocks.participation.postTestingEventsSlotsRegistrations.mockResolvedValueOnce({
+      ok: false,
+      error: { message: "The slot is full." },
+    });
+
+    await expect(registerForTestingEventSlot(form({
+      eventId: "event-1",
+      slotId: "slot-1",
+      acceptedRules: "true",
+      registrationResponseJson: '{"answers":[]}',
+    }))).resolves.toEqual({ success: false, error: "The slot is full." });
+    expect(mocks.revalidatePath).not.toHaveBeenCalled();
   });
 
   it("submits required structured feedback for an assigned project", async () => {

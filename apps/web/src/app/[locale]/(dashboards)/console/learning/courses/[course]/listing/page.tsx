@@ -1,3 +1,4 @@
+import { cn } from "@game-guild/ui/lib/utils";
 import { Link } from '@/i18n/navigation';
 import { buildDashboardCoursePath, getCourseRouteParam } from '@/lib/learning/course-route';
 import { getCourse, getCourseContent } from '@/lib/learning';
@@ -9,7 +10,7 @@ import {
   type StorefrontState,
 } from '@/lib/learning/course-launch';
 import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
+import { buttonVariants } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { AlertCircle, BookOpen, Edit, Globe, ImageIcon, Images, Rocket, Shield, Users } from 'lucide-react';
 import { notFound } from 'next/navigation';
@@ -200,7 +201,18 @@ export default async function ListingPage({
                   Course identity
                 </div>
                 <p className="text-sm text-muted-foreground">Title, slug, description, category, difficulty, and outcomes.</p>
-                <Button nativeButton={false} variant="outline" className="mt-4 w-full justify-start" render={<Link href={buildDashboardCoursePath(courseRouteParam, 'listing/info', 'console')} locale={locale} />}>Open identity editor</Button>
+                <Link
+                  href={buildDashboardCoursePath(courseRouteParam, "listing/info", "console")}
+                  locale={locale}
+                  className={cn(
+                    buttonVariants({
+                      variant: "outline",
+                      className: "mt-4 w-full justify-start",
+                    }),
+                  )}
+                >
+                  Open identity editor
+                </Link>
               </div>
               <div className="rounded-lg border p-4">
                 <div className="mb-2 flex items-center gap-2 text-sm font-medium">
@@ -208,7 +220,22 @@ export default async function ListingPage({
                   Media
                 </div>
                 <p className="text-sm text-muted-foreground">Cover image and promo video used across catalog and landing pages.</p>
-                <Button nativeButton={false} variant="outline" className="mt-4 w-full justify-start" render={<Link href={buildDashboardCoursePath(courseRouteParam, 'listing/media', 'console')} locale={locale} />}>Open media editor</Button>
+                <Link
+                  href={buildDashboardCoursePath(
+                    courseRouteParam,
+                    "listing/media",
+                    "console",
+                  )}
+                  locale={locale}
+                  className={cn(
+                    buttonVariants({
+                      variant: "outline",
+                      className: "mt-4 w-full justify-start",
+                    }),
+                  )}
+                >
+                  Open media editor
+                </Link>
               </div>
               <div className="rounded-lg border p-4">
                 <div className="mb-2 flex items-center gap-2 text-sm font-medium">
@@ -216,7 +243,22 @@ export default async function ListingPage({
                   Project carousel
                 </div>
                 <p className="text-sm text-muted-foreground">Portfolio project slides shown on the public course landing page.</p>
-                <Button nativeButton={false} variant="outline" className="mt-4 w-full justify-start" render={<Link href={buildDashboardCoursePath(courseRouteParam, 'listing/projects', 'console')} locale={locale} />}>Open project editor</Button>
+                <Link
+                  href={buildDashboardCoursePath(
+                    courseRouteParam,
+                    "listing/projects",
+                    "console",
+                  )}
+                  locale={locale}
+                  className={cn(
+                    buttonVariants({
+                      variant: "outline",
+                      className: "mt-4 w-full justify-start",
+                    }),
+                  )}
+                >
+                  Open project editor
+                </Link>
               </div>
               <div className="rounded-lg border p-4">
                 <div className="mb-2 flex items-center gap-2 text-sm font-medium">
@@ -224,7 +266,22 @@ export default async function ListingPage({
                   Access and enrollment
                 </div>
                 <p className="text-sm text-muted-foreground">Visibility, enrollment status, seat cap, and enrollment deadline.</p>
-                <Button nativeButton={false} variant="outline" className="mt-4 w-full justify-start" render={<Link href={buildDashboardCoursePath(courseRouteParam, 'listing/access', 'console')} locale={locale} />}>Open access controls</Button>
+                <Link
+                  href={buildDashboardCoursePath(
+                    courseRouteParam,
+                    "listing/access",
+                    "console",
+                  )}
+                  locale={locale}
+                  className={cn(
+                    buttonVariants({
+                      variant: "outline",
+                      className: "mt-4 w-full justify-start",
+                    }),
+                  )}
+                >
+                  Open access controls
+                </Link>
               </div>
             </div>
 

@@ -1,7 +1,8 @@
 'use client';
 
+import { cn } from "@game-guild/ui/lib/utils";
 import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
+import { Button, buttonVariants } from '@game-guild/ui/components/button';
 import { Link } from '@/i18n/navigation';
 import type { Program } from '@/lib/api/generated';
 import { getCourseCategoryName, getCourseLevelConfig } from '@/lib/courses/services/course.service';
@@ -116,15 +117,31 @@ export function CourseHighlightCarousel({ courses }: CourseHighlightCarouselProp
 
               <div className="flex flex-wrap gap-3">
                 {slug ? (
-                  <Button className="bg-white text-slate-950 hover:bg-slate-200" nativeButton={false} render={<Link href={`/courses/${slug}`} />}>
+                  <Link
+                    href={`/courses/${slug}`}
+                    className={cn(
+                      buttonVariants({
+                        className: "bg-white text-slate-950 hover:bg-slate-200",
+                      }),
+                    )}
+                  >
                     Open course
                     <ArrowRight />
-                  </Button>
+                  </Link>
                 ) : null}
                 {program ? (
-                  <Button variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white" nativeButton={false} render={<Link href={`/programs/${program.slug}`} />}>
+                  <Link
+                    href={`/programs/${program.slug}`}
+                    className={cn(
+                      buttonVariants({
+                        variant: "outline",
+                        className:
+                          "border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white",
+                      }),
+                    )}
+                  >
                     View package
-                  </Button>
+                  </Link>
                 ) : null}
               </div>
             </div>

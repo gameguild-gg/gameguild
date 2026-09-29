@@ -15,18 +15,20 @@ vi.mock('@/i18n/navigation', () => ({
 import NewProjectPage from './page';
 
 describe('member Project creation', () => {
-  it('explains personal and Team ownership before creation', async () => {
+  it('explains project ownership and supports opening creation from a team', async () => {
     mocks.getWorkspaceTeams.mockResolvedValue([
       { id: 'team-1', name: 'Pixel Forge', slug: 'pixel-forge' },
     ]);
 
-    render(await NewProjectPage());
+    render(await NewProjectPage({ searchParams: Promise.resolve({ teamId: 'team-1' }) }));
 
-    expect(screen.getByRole('heading', { name: 'Create Project' })).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'Project ownership' })).toHaveDisplayValue(
-      'Personal project',
+    expect(screen.getByRole('heading', { name: 'Create a project' })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Who owns this project?' })).toHaveDisplayValue(
+      'Pixel Forge',
     );
-    expect(screen.getByRole('option', { name: 'Team project · Pixel Forge' })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Project type' })).toHaveDisplayValue('Game');
+    expect(screen.getByRole('combobox', { name: 'Who can discover it?' })).toHaveDisplayValue('Private');
+    expect(screen.getByRole('option', { name: 'Pixel Forge' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Cancel' })).toHaveAttribute(
       'href',
       '/workspace/projects',

@@ -200,4 +200,39 @@ describe("member projects list page", () => {
       screen.getByText("Alpha Team is not connected to any Projects yet."),
     ).toBeInTheDocument();
   });
+
+  it("searches project names and descriptions and offers a clear action", async () => {
+    mocks.getWorkspaceProjects.mockResolvedValue([
+      ...projects,
+      {
+        id: "project-3",
+        slug: "quiet-garden",
+        title: "Quiet Garden",
+        status: "Draft",
+        visibility: "Private",
+        shortDescription: "A small puzzle game",
+        description: null,
+      },
+    ]);
+
+    render(await ProjectsPage(pageProps()));
+    fireEvent.change(screen.getByRole("searchbox", { name: "Search projects" }), {
+      target: { value: "puzzle" },
+    });
+
+    expect(screen.getByRole("link", { name: /Quiet Garden/ })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /Neon Racer/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("1 project");
+    expect(screen.getByRole("button", { name: "Clear filters" })).toBeInTheDocument();
+  });
+
+  it("shows a separate no-match state for an empty search result", async () => {
+    render(await ProjectsPage(pageProps()));
+    fireEvent.change(screen.getByRole("searchbox", { name: "Search projects" }), {
+      target: { value: "missing project" },
+    });
+
+    expect(screen.getByRole("heading", { name: "No projects match these filters" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Clear filters" })).toBeInTheDocument();
+  });
 });

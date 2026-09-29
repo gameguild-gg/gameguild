@@ -42,7 +42,12 @@ public sealed class ProjectCreationOwnershipTests : IDisposable
         var result = await Handler().Handle(new CreateProjectCommand { Title = "Solo game" }, default);
 
         result.IsSuccess.Should().BeTrue();
-        var ownerTeam = await _context.Set<ProjectTeam>().SingleAsync(candidate => candidate.ProjectId == result.Value.Id);
+        var projectId = result.Value.Id;
+        _context.ChangeTracker.Clear();
+
+        var project = await _context.Set<Project>().SingleAsync(candidate => candidate.Id == projectId);
+        project.Slug.Should().Be("solo-game");
+        var ownerTeam = await _context.Set<ProjectTeam>().SingleAsync(candidate => candidate.ProjectId == projectId);
         ownerTeam.Role.Should().Be(ProjectTeamRole.Owner);
         var team = await _context.Set<Team>().Include(candidate => candidate.Members).SingleAsync(candidate => candidate.Id == ownerTeam.TeamId);
         team.IsPersonal.Should().BeTrue();

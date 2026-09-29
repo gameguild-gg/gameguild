@@ -35,6 +35,7 @@ public class VerifyWeb3SignatureHandlerTests
         {
             WalletAddress = "0xabc123",
             Signature = "signed-payload",
+            Challenge = "full SIWE message",
             Nonce = "nonce-value",
             ChainId = "1",
             DeviceFingerprint = "device-1",
@@ -47,7 +48,9 @@ public class VerifyWeb3SignatureHandlerTests
         capturedRequest.Should().NotBeNull();
         capturedRequest!.WalletAddress.Should().Be(command.WalletAddress);
         capturedRequest.Signature.Should().Be(command.Signature);
-        capturedRequest.Challenge.Should().Be(command.Nonce);
+        capturedRequest.Challenge.Should().Be(command.Challenge);
+        capturedRequest.Nonce.Should().Be(command.Nonce);
+        capturedRequest.ChainId.Should().Be(command.ChainId);
 
         authService.Verify(
             service => service.VerifyWeb3SignatureAsync(It.IsAny<Web3VerificationRequest>(), cancellationTokenSource.Token),

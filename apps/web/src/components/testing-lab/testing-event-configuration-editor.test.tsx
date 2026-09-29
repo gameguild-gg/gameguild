@@ -2,13 +2,16 @@ import type {
   TestingLabQuestionnaireSchema,
   TestingLabTestingEventConfigurationProjection,
 } from "@game-guild/client";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   configure: vi.fn(),
+  refresh: vi.fn(),
 }));
+
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: mocks.refresh }) }));
 
 vi.mock("@/lib/testing-lab/events-actions", () => ({
   configureTestingEvent: mocks.configure,
@@ -68,6 +71,7 @@ const configuration = {
 } as TestingLabTestingEventConfigurationProjection;
 
 describe("TestingEventConfigurationEditor", () => {
+  beforeEach(() => vi.clearAllMocks());
   it("renders a frozen, read-only snapshot after draft", () => {
     render(
       <TestingEventConfigurationEditor
@@ -106,10 +110,11 @@ describe("TestingEventConfigurationEditor", () => {
     });
     render(<TestingEventConfigurationEditor eventId="event-1" />);
 
+    await user.click(screen.getByText(/Sign-up questions/));
     expect(screen.getByText("Project application: 0 questions")).toBeInTheDocument();
     expect(screen.getByText("Tester registration: 0 questions")).toBeInTheDocument();
     await user.type(screen.getByLabelText("General rules"), "Respect others");
-    await user.type(screen.getByLabelText("Candidate instructions"), "Upload build");
+    await user.type(screen.getByLabelText("Game submission instructions"), "Upload build");
     await user.type(screen.getByLabelText("Tester instructions"), "Play twice");
     await user.click(screen.getByRole("button", { name: "Add question to Project application" }));
     await user.click(screen.getByRole("button", { name: "Add question to Tester registration" }));
@@ -164,4 +169,22 @@ describe("TestingEventConfigurationEditor", () => {
     await user.click(screen.getByRole("button", { name: "Save draft configuration" }));
     expect(await screen.findByText(message)).toBeInTheDocument();
   });
+  it("refreshes publication readiness only after configuration is persisted", async () => {
+    let resolveSave!: (result: unknown) => void;
+    mocks.configure.mockReturnValue(new Promise((resolve) => { resolveSave = resolve; }));
+    render(<TestingEventConfigurationEditor eventId="qa-event" status="Draft" />);
+    fireEvent.submit(screen.getByRole("button", { name: "Save draft configuration" }).closest("form")!);
+    expect(mocks.refresh).not.toHaveBeenCalled();
+    resolveSave({ success: true, data: {}, message: "Event configuration saved." });
+    await waitFor(() => expect(mocks.refresh).toHaveBeenCalledOnce());
+  });
+
+  it("does not refresh after rejected configuration saves", async () => {
+    mocks.configure.mockResolvedValue({ success: false, error: "Rules are required." });
+    render(<TestingEventConfigurationEditor eventId="qa-event" status="Draft" />);
+    fireEvent.submit(screen.getByRole("button", { name: "Save draft configuration" }).closest("form")!);
+    expect(await screen.findByText("Rules are required.")).toBeInTheDocument();
+    expect(mocks.refresh).not.toHaveBeenCalled();
+  });
+
 });

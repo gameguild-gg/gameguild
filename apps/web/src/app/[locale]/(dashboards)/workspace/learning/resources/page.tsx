@@ -1,7 +1,8 @@
+import { cn } from "@game-guild/ui/lib/utils";
 import { Link } from '@/i18n/navigation';
 import { getLearningContentLibrary, type LearningContentLibraryItem } from '@/lib/learning';
 import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
+import { buttonVariants } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { ArrowLeft, ExternalLink, FolderOpen, LibraryBig, Plus, Timer } from 'lucide-react';
 import React from 'react';
@@ -46,10 +47,19 @@ function ResourceCard({ item }: { item: LearningContentLibraryItem }) {
             {formatDuration(item.durationMinutes)}
           </span>
         </div>
-        <Button nativeButton={false} variant="outline" size="sm" className="justify-between" render={<Link href={`/workspace/learning/courses/${item.courseSlug || item.courseId}/content/${item.slug || item.id}`} />}>
+        <Link
+          href={`/workspace/learning/courses/${item.courseSlug || item.courseId}/content/${item.slug || item.id}`}
+          className={cn(
+            buttonVariants({
+              variant: "outline",
+              size: "sm",
+              className: "justify-between",
+            }),
+          )}
+        >
           Edit resource
           <ExternalLink className="size-4" />
-        </Button>
+        </Link>
       </CardContent>
     </Card>
   );
@@ -63,9 +73,12 @@ export default async function Page(): Promise<React.JSX.Element> {
     <div className="flex flex-col gap-6 p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
-          <Button nativeButton={false} variant="ghost" size="icon" render={<Link href="/workspace/learning" />}>
+          <Link
+            href="/workspace/learning"
+            className={cn(buttonVariants({ variant: "ghost", size: "icon" }))}
+          >
             <ArrowLeft className="size-5" />
-          </Button>
+          </Link>
           <div className="flex size-12 items-center justify-center rounded-lg bg-linear-to-br from-cyan-500 to-blue-600">
             <LibraryBig className="size-6 text-white" />
           </div>
@@ -74,10 +87,10 @@ export default async function Page(): Promise<React.JSX.Element> {
             <p className="text-muted-foreground">Review every reusable lesson, exercise, download, and reference item across live courses.</p>
           </div>
         </div>
-        <Button nativeButton={false} render={<Link href="/workspace/learning/courses" />}>
+        <Link href="/workspace/learning/courses" className={cn(buttonVariants({}))}>
           <Plus className="mr-2 size-4" />
           Add course content
-        </Button>
+        </Link>
       </div>
 
       {error ? (
@@ -120,7 +133,12 @@ export default async function Page(): Promise<React.JSX.Element> {
             <FolderOpen className="mb-4 size-12 text-muted-foreground" />
             <h3 className="text-lg font-semibold">No course resources found</h3>
             <p className="max-w-md text-sm text-muted-foreground">Create course content first, then this library will show all reusable resources and direct editing links.</p>
-            <Button nativeButton={false} className="mt-5" render={<Link href="/workspace/learning/courses/new" />}>Create course</Button>
+            <Link
+              href="/workspace/learning/courses/new"
+              className={cn(buttonVariants({ className: "mt-5" }))}
+            >
+              Create course
+            </Link>
           </CardContent>
         </Card>
       ) : (

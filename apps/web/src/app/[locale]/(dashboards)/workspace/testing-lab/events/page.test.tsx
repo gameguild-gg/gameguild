@@ -46,6 +46,7 @@ describe('Testing Events page', () => {
           approvalMode: 'Committee',
           startsAt: '2026-08-12T18:00:00.000Z',
           endsAt: '2026-08-12T22:00:00.000Z',
+          timeZoneId: 'UTC',
           slotCount: 2,
           applicationCount: 5,
         },
@@ -55,7 +56,7 @@ describe('Testing Events page', () => {
 
     render(await TestingEventsPage({ searchParams: Promise.resolve({ status: 'ApplicationsOpen' }) }));
 
-    expect(screen.getByRole('heading', { name: 'Testing sessions' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Testing events' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /new event/i })).toBeInTheDocument();
     expect(
       screen.getByRole('combobox', { name: 'Filter testing events by status' }),
@@ -64,7 +65,11 @@ describe('Testing Events page', () => {
     expect(screen.queryByRole('link', { name: 'Active' })).not.toBeInTheDocument();
     expect(screen.getByText('August campus playtest')).toBeInTheDocument();
     expect(screen.getByText('Applications Open')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /manage event/i })).toHaveAttribute(
+    const schedule = screen.getByText(/Aug 12, 2026/);
+    expect(schedule).toHaveTextContent(/Aug 12, 2026, 18:00.*Aug 12, 2026, 22:00.*UTC/);
+    expect(screen.getByText('2 sessions')).toBeInTheDocument();
+    expect(screen.getByText('5 game applications')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /open event workspace/i })).toHaveAttribute(
       'href',
       '/workspace/testing-lab/events/event-1',
     );

@@ -59,7 +59,7 @@ export default async function Page({
       experience.accessIssues,
     );
     return (
-      <main className="mx-auto w-full max-w-4xl px-4 py-16 sm:px-6">
+      <div className="mx-auto w-full max-w-4xl px-4 py-16 sm:px-6">
         <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-6">
           <h1 className="text-2xl font-semibold text-foreground">
             {eventNotFound ? 'Playtest not found' : 'Event temporarily unavailable'}
@@ -73,7 +73,7 @@ export default async function Page({
             <ArrowLeft className="size-4" aria-hidden="true" /> Browse other playtests
           </Link>
         </div>
-      </main>
+      </div>
     );
   }
 
@@ -175,7 +175,7 @@ export default async function Page({
   const hour12 = localization?.timeFormat !== '24h';
 
   return (
-    <main className="grid w-full grid-cols-1 lg:grid-cols-[19rem_minmax(0,1fr)]">
+    <div className="grid w-full grid-cols-1 lg:grid-cols-[19rem_minmax(0,1fr)]">
       <aside
         id="event-info"
         aria-label="Playtest details"
@@ -354,6 +354,6 @@ export default async function Page({
           </div>
         }
       />
-    </main>
+    </div>
   );
 }

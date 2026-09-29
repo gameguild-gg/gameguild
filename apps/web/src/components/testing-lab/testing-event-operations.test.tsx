@@ -246,6 +246,53 @@ describe("Testing Lab event operations", () => {
     );
   });
 
+  it("keeps project assignment confirmation visible after the dialog closes and data refreshes", async () => {
+    const user = userEvent.setup();
+    actions.assignTestedProjectToRegistration.mockResolvedValue({
+      success: true,
+      data: null,
+      message: "Tested project assigned.",
+    });
+    const props = {
+      eventId: "event-1",
+      registrations: [
+        {
+          id: "registration-1",
+          userId: "user-1",
+          slotId: "slot-1",
+          status: "CheckedIn",
+          pendingFeedbackCount: 0,
+        },
+      ],
+      memberLabels: { "user-1": "Alex Tester" },
+      approvedApplications: [
+        {
+          id: "application-1",
+          label: "Eligible project",
+          slotId: "slot-1",
+          eligibleTesterUserIds: ["user-1"],
+        },
+      ],
+    };
+    const { rerender } = render(<TestingSlotRegistrations {...props} />);
+
+    await user.click(screen.getByRole("button", { name: "Assign tested project" }));
+    await choose(user, "Approved project", "Eligible project");
+    await user.click(screen.getByRole("button", { name: "Assign project" }));
+
+    expect(await screen.findByText("Tested project assigned.")).toBeVisible();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(router.refresh).toHaveBeenCalledOnce();
+
+    rerender(
+      <TestingSlotRegistrations
+        {...props}
+        registrations={[{ ...props.registrations[0]!, pendingFeedbackCount: 1 }]}
+      />,
+    );
+    expect(screen.getByText("Tested project assigned.")).toBeVisible();
+  });
+
   it("hides mutation controls for terminal, read-only, and unidentified registrations", () => {
     render(
       <TestingSlotRegistrations

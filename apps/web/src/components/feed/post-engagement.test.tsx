@@ -90,7 +90,7 @@ describe("PostEngagement", () => {
     fireEvent.click(screen.getByRole("button", { name: "React to post" }));
 
     await waitFor(() => expect(screen.getByRole("button", { name: "Remove Like reaction" })).toHaveTextContent("3"));
-    expect(screen.getByRole("status")).toHaveTextContent("Reaction saved");
+    expect(await screen.findByRole("status")).toHaveTextContent("Reaction saved");
     fireEvent.click(screen.getByRole("button", { name: "Retry reaction count refresh" }));
 
     await waitFor(() => expect(screen.getByRole("button", { name: "Remove Like reaction" })).toHaveTextContent("11"));

@@ -4,6 +4,7 @@ const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
   getToken: vi.fn(),
   createServerClient: vi.fn(),
+  getLocale: vi.fn(),
   request: vi.fn(),
   revalidatePath: vi.fn(),
   redirect: vi.fn(),
@@ -22,8 +23,12 @@ vi.mock('next/cache', () => ({
   revalidatePath: mocks.revalidatePath,
 }));
 
-vi.mock('next/navigation', () => ({
-  usePathname: () => '/workspace/learning',
+vi.mock('next-intl/server', () => ({
+  getLocale: mocks.getLocale,
+}));
+
+vi.mock('next/navigation', async (importOriginal) => ({
+  ...(await importOriginal()),
   redirect: mocks.redirect,
 }));
 
@@ -31,6 +36,7 @@ import {
   counterProjectAgreementForm,
   createProjectAgreementForm,
   createProjectAllocationForm,
+  createProjectForm,
   createProjectMilestoneForm,
   createProjectTaskForm,
   createTeamForm,
@@ -48,6 +54,7 @@ describe('workspace form date serialization', () => {
     mocks.getToken.mockResolvedValue('access-token');
     mocks.createServerClient.mockReturnValue({ request: mocks.request });
     mocks.request.mockResolvedValue({ ok: true, data: {} });
+    mocks.getLocale.mockResolvedValue('en-US');
   });
 
   it('sends the UTC date selected by the Team invitation picker', async () => {
@@ -89,6 +96,47 @@ describe('workspace form date serialization', () => {
         body: expect.objectContaining({ slug: 'space-cadets' }),
       }),
     );
+  });
+
+  it('creates a Team and redirects to its localized workspace detail after the API succeeds', async () => {
+    mocks.getLocale.mockResolvedValue('pt-BR');
+    mocks.request.mockResolvedValue({
+      ok: true,
+      data: { id: 'team-1', slug: 'space-cadets' },
+    });
+    const formData = new FormData();
+    formData.set('name', 'Space Cadets');
+    formData.set('slug', 'space-cadets');
+
+    await createTeamForm(formData);
+
+    expect(mocks.request).toHaveBeenCalledWith(expect.objectContaining({
+      method: 'POST',
+      path: '/v1/teams',
+      body: expect.objectContaining({ name: 'Space Cadets', slug: 'space-cadets' }),
+    }));
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/pt-BR/workspace/teams');
+    expect(mocks.redirect.mock.calls[0]?.[0]).toBe('/pt-BR/workspace/teams/space-cadets');
+  });
+
+  it('creates a Project and redirects to its localized workspace detail after the API succeeds', async () => {
+    mocks.getLocale.mockResolvedValue('pt-BR');
+    mocks.request.mockResolvedValue({
+      ok: true,
+      data: { id: 'project-1', slug: 'neon-racer' },
+    });
+    const formData = new FormData();
+    formData.set('title', 'Neon Racer');
+
+    await createProjectForm(formData);
+
+    expect(mocks.request).toHaveBeenCalledWith(expect.objectContaining({
+      method: 'POST',
+      path: '/v1/projects',
+      body: expect.objectContaining({ title: 'Neon Racer' }),
+    }));
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/pt-BR/workspace/projects');
+    expect(mocks.redirect.mock.calls[0]?.[0]).toBe('/pt-BR/workspace/projects/neon-racer');
   });
 
   it('normalizes optional task and milestone dates before calling the API', async () => {

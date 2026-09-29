@@ -62,7 +62,7 @@ describe('member teams list page', () => {
   it('links team creation to /teams/new', async () => {
     render(await TeamsPage());
 
-    expect(screen.getByRole('link', { name: /Create Team/ })).toHaveAttribute('href', '/workspace/teams/new');
+    expect(screen.getByRole('link', { name: 'Create team' })).toHaveAttribute('href', '/workspace/teams/new');
   });
 
   it('shows the empty state when no teams exist', async () => {
@@ -70,7 +70,7 @@ describe('member teams list page', () => {
 
     render(await TeamsPage());
 
-    expect(screen.getByText('No Teams yet')).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: 'Create Team' })).toHaveLength(1);
+    expect(screen.getByText('No teams yet')).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: 'Create team' })).toHaveLength(1);
   });
 });

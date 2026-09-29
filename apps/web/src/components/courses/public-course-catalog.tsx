@@ -1,7 +1,8 @@
 'use client';
 
+import { cn } from "@game-guild/ui/lib/utils";
 import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
+import { Button, buttonVariants } from '@game-guild/ui/components/button';
 import { Input } from '@game-guild/ui/components/input';
 import { Link } from '@/i18n/navigation';
 import type { Program } from '@/lib/api/generated';
@@ -112,10 +113,19 @@ function CourseCard({ course }: { course: Program }) {
         <div className="mt-auto flex items-center justify-between gap-3 border-t border-white/10 pt-4">
           <p className="truncate text-xs uppercase tracking-[0.16em] text-slate-500">{categoryName}</p>
           {courseSlug ? (
-            <Button size="sm" variant="ghost" className="shrink-0 text-white hover:bg-white/10 hover:text-white" nativeButton={false} render={<Link href={`/courses/${courseSlug}`} />}>
+            <Link
+              href={`/courses/${courseSlug}`}
+              className={cn(
+                buttonVariants({
+                  size: "sm",
+                  variant: "ghost",
+                  className: "shrink-0 text-white hover:bg-white/10 hover:text-white",
+                }),
+              )}
+            >
               Details
               <ArrowRight />
-            </Button>
+            </Link>
           ) : null}
         </div>
       </div>

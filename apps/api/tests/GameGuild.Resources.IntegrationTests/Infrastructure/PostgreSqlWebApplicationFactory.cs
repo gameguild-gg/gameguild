@@ -18,7 +18,7 @@ using Microsoft.Extensions.Options;
 namespace GameGuild.Resources.IntegrationTests.Infrastructure;
 
 /// <summary>
-/// Custom WebApplicationFactory that uses a real PostgreSQL database via Testcontainers.
+/// Custom WebApplicationFactory that uses an isolated real PostgreSQL database.
 /// This provides realistic integration testing against the actual database provider.
 /// </summary>
 public class PostgreSqlWebApplicationFactory : WebApplicationFactory<GameGuild.API.Program>
@@ -56,7 +56,7 @@ public class PostgreSqlWebApplicationFactory : WebApplicationFactory<GameGuild.A
                 services.Remove(descriptor);
             }
 
-            // Add PostgreSQL database using Testcontainers connection string
+            // Add PostgreSQL database using the fixture's isolated connection string.
             services.AddDbContext<ApplicationDbContext>(options =>
             {
                 options.UseNpgsql(_connectionString, npgsqlOptions =>

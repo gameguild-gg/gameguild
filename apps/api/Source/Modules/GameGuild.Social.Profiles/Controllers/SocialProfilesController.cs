@@ -20,6 +20,17 @@ public sealed class SocialProfilesController(
     public async Task<ActionResult<SocialProfileDto?>> GetByUser(Guid userId, CancellationToken ct)
         => Ok(await sender.Send(new GetSocialProfileByUserQuery(userId), ct).ConfigureAwait(false));
 
+    [HttpGet("users/{userId:guid}/or-create")]
+    public async Task<ActionResult<SocialProfileDto>> GetOrCreate(Guid userId, CancellationToken ct)
+    {
+        if (!IsActor(userId) && !actorContextAccessor.ActorContext.IsSystemAdmin)
+        {
+            return Forbid();
+        }
+
+        return Ok(await sender.Send(new GetOrCreateSocialProfileQuery(userId), ct).ConfigureAwait(false));
+    }
+
     [AllowAnonymous]
     [HttpGet("@{handle}")]
     public async Task<ActionResult<SocialProfileDto?>> GetByHandle(string handle, CancellationToken ct)
