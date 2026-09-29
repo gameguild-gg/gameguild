@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using GameGuild.Configuration.ApplicationLayer;
+using GameGuild.Configuration.PresentationLayer.Authorization;
 using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -21,9 +22,12 @@ public sealed class JwtTokenService(
     IRefreshTokenRepository refreshTokenRepository,
     IRefreshTokenHasher refreshTokenHasher,
     IHttpContextAccessor httpContextAccessor,
-    IOptions<JwtOptions> jwtOptions) : IJwtTokenService
+    IOptions<JwtOptions> jwtOptions,
+    IAuthorizationGroupMembershipProvider? groupMembershipProvider = null,
+    IOptions<AuthorizationTokenOptions>? authorizationTokenOptions = null) : IJwtTokenService
 {
     private readonly JwtOptions _jwtOptions = jwtOptions.Value;
+    private readonly AuthorizationTokenOptions _authorizationTokenOptions = authorizationTokenOptions?.Value ?? new AuthorizationTokenOptions();
 
     /// <summary>
     ///     Generates a JWT access token with user claims.
@@ -86,7 +90,7 @@ public sealed class JwtTokenService(
         return GenerateAccessTokenCoreAsync(userId, email, roles, tenantId, tokenVersion, authenticatedAt, sessionId, cancellationToken);
     }
 
-    private Task<string> GenerateAccessTokenCoreAsync(
+    private async Task<string> GenerateAccessTokenCoreAsync(
         Guid userId,
         string email,
         string[ ] roles,
@@ -123,6 +127,18 @@ public sealed class JwtTokenService(
             // Add tenant claim if multi-tenant
             if (tenantId.HasValue) { claims.Add(new Claim("tenant_id", tenantId.Value.ToString())); }
 
+            if (groupMembershipProvider is not null)
+            {
+                var groupIds = await groupMembershipProvider
+                    .GetActiveGroupIdsAsync(userId, tenantId, cancellationToken)
+                    .ConfigureAwait(false);
+
+                foreach (var groupId in groupIds.Where(id => id != Guid.Empty).Distinct())
+                {
+                    claims.Add(new Claim(_authorizationTokenOptions.GroupIdClaimType, groupId.ToString("D")));
+                }
+            }
+
             if (sessionId.HasValue) { claims.Add(new Claim(JwtClaimTypes.SessionId, sessionId.Value.ToString())); }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.SecretKey)) { KeyId = "GameGuild-jwt-key" };
@@ -134,7 +150,7 @@ public sealed class JwtTokenService(
 
             logger.LogInformation("Access token generated for user: {UserId}, Expires: {Expires}", userId, token.ValidTo);
 
-            return Task.FromResult(tokenString);
+            return tokenString;
         }
         catch (Exception ex)
         {
