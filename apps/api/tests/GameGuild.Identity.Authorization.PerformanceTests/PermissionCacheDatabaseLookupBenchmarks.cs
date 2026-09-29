@@ -277,10 +277,28 @@ public class PermissionCacheDatabaseLookupBenchmarks
 
     private sealed class FixedUserSecurityVersionStore : IUserSecurityVersionStore
     {
-        public Task<long> GetVersionAsync(Guid userId, CancellationToken cancellationToken = default) => Task.FromResult(1L);
+        public Task<long> GetVersionAsync(Guid userId, CancellationToken cancellationToken = default)
+        {
+            _ = userId;
+            _ = cancellationToken;
 
-        public Task<long> IncrementVersionAsync(Guid userId, CancellationToken cancellationToken = default) => Task.FromResult(2L);
+            return Task.FromResult(1L);
+        }
 
-        public Task IncrementVersionsAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task<long> IncrementVersionAsync(Guid userId, CancellationToken cancellationToken = default)
+        {
+            _ = userId;
+            _ = cancellationToken;
+
+            return Task.FromResult(2L);
+        }
+
+        public Task IncrementVersionsAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken = default)
+        {
+            _ = userIds;
+            _ = cancellationToken;
+
+            return Task.CompletedTask;
+        }
     }
 }
