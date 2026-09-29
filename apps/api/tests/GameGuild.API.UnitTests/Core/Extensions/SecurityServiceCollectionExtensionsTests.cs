@@ -3,8 +3,10 @@ using GameGuild.Configuration.PresentationLayer;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Authentication;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -113,6 +115,45 @@ public sealed class SecurityServiceCollectionExtensionsTests
 
         Assert.Equal("X-API-Key", apiKeyOptions.HeaderName);
         Assert.Equal("api_key", apiKeyOptions.QueryStringParameterName);
+    }
+
+    [Fact]
+    public async Task SetupAuthentication_RegistersAdditionalSchemesAndKeepsJwtAsDefault()
+    {
+        var services = new ServiceCollection();
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Jwt:Secret"] = new string('s', 64),
+                ["Jwt:Issuer"] = "GameGuild",
+                ["Jwt:Audience"] = "GameGuild.Users"
+            })
+            .Build();
+        var options = new AuthenticationOptions
+        {
+            JwtSecretKey = new string('s', 64),
+            JwtIssuer = "GameGuild",
+            JwtAudience = "GameGuild.Users"
+        };
+
+        services.AddLogging();
+        services.SetupAuthentication(configuration, options, builder =>
+            builder.AddCookie("interactive-cookie", cookieOptions =>
+            {
+                cookieOptions.Cookie.HttpOnly = true;
+                cookieOptions.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            }));
+        using var serviceProvider = services.BuildServiceProvider();
+
+        var schemeProvider = serviceProvider.GetRequiredService<IAuthenticationSchemeProvider>();
+        Assert.NotNull(await schemeProvider.GetSchemeAsync("interactive-cookie"));
+        Assert.Equal(JwtBearerDefaults.AuthenticationScheme,
+            (await schemeProvider.GetDefaultAuthenticateSchemeAsync())?.Name);
+
+        var cookieOptions = serviceProvider.GetRequiredService<IOptionsMonitor<CookieAuthenticationOptions>>()
+            .Get("interactive-cookie");
+        Assert.True(cookieOptions.Cookie.HttpOnly);
+        Assert.Equal(CookieSecurePolicy.Always, cookieOptions.Cookie.SecurePolicy);
     }
 
     [Fact]

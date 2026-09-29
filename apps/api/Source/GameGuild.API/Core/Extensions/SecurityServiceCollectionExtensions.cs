@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
 using AuthorizationOptions = GameGuild.Configuration.PresentationLayer.Authorization.AuthorizationOptions;
+using AuthenticationBuilder = Microsoft.AspNetCore.Authentication.AuthenticationBuilder;
 
 namespace GameGuild.API;
 
@@ -22,7 +23,7 @@ namespace GameGuild.API;
 public static class SecurityServiceCollectionExtensions
 {
     public static IServiceCollection SetupAuthentication(this IServiceCollection services, IConfiguration configuration,
-        AuthenticationOptions? options)
+        AuthenticationOptions? options, Action<AuthenticationBuilder>? configureAdditionalSchemes = null)
     {
         options ??= OptionBuilderUtilities.CreateAndBind(configuration, "Authentication",
             AuthenticationOptions.CreateDefault);
@@ -127,6 +128,8 @@ public static class SecurityServiceCollectionExtensions
                 }
             });
         }
+
+        configureAdditionalSchemes?.Invoke(authenticationBuilder);
 
         // Add authorization if enabled
         if (options.EnableAuthorization)
