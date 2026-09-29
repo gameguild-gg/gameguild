@@ -1,4 +1,5 @@
-import { Button } from '@game-guild/ui/components/button';
+import { cn } from "@game-guild/ui/lib/utils";
+import { buttonVariants } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { Link } from '@/i18n/navigation';
 import { AlertTriangle, CheckCircle2, MailX } from 'lucide-react';
@@ -128,9 +129,9 @@ export default async function Page({
           </CardDescription>
         </CardHeader>
         <CardContent className="flex justify-center">
-          <Button nativeButton={false} render={<Link href={MANAGE_PREFERENCES_PATH} />}>
+          <Link href={MANAGE_PREFERENCES_PATH} className={cn(buttonVariants({}))}>
             Manage all notification preferences
-          </Button>
+          </Link>
         </CardContent>
       </Card>
     </main>

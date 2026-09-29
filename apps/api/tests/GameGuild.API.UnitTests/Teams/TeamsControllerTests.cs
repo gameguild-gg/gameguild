@@ -46,6 +46,8 @@ public sealed class TeamsControllerTests : IDisposable
         var created = result.Result.Should().BeOfType<CreatedAtActionResult>().Which.Value
             .Should().BeOfType<TeamDto>().Subject;
         created.TenantId.Should().Be(_tenantId);
+
+        _context.ChangeTracker.Clear();
         var team = await _context.Set<Team>().Include(candidate => candidate.Members).SingleAsync();
         team.Members.Should().ContainSingle(member =>
             member.UserId == _actorId && member.Authority == TeamMemberAuthority.Owner);

@@ -212,6 +212,8 @@ describe('TestingSlotRegistration', () => {
     await user.click(screen.getByRole('button', { name: 'Join this playtest' }));
     expect(screen.getByText('Bring headphones.')).toBeInTheDocument();
     expect(screen.getByText('Respect everyone.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Confirm registration answers' })).not.toBeInTheDocument();
+    expect(screen.queryByText('This questionnaire has no questions.')).not.toBeInTheDocument();
     await user.click(screen.getByRole('checkbox', { name: /I’ve read and agree/ }));
     await user.click(screen.getByRole('button', { name: 'Join playtest' }));
 

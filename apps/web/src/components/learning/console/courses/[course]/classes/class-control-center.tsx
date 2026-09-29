@@ -1,9 +1,10 @@
 'use client';
 
+import { cn } from "@game-guild/ui/lib/utils";
 import { Link } from '@/i18n/navigation';
 import type { CourseCohortSummary } from '@/lib/learning/queries/cohorts';
 import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
+import { buttonVariants } from '@game-guild/ui/components/button';
 import { Card, CardContent } from '@game-guild/ui/components/card';
 import { Input } from '@game-guild/ui/components/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
@@ -63,10 +64,13 @@ export function ClassControlCenter({ courseId, cohorts }: ClassControlCenterProp
           <p className="mt-1 text-sm text-muted-foreground">Each class has an independent period, calendar, release cadence, and roster.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button nativeButton={false} variant="outline" render={<Link href={`${learningBase}/courses/${courseId}/classes/calendar`} />}>
+          <Link
+            href={`${learningBase}/courses/${courseId}/classes/calendar`}
+            className={cn(buttonVariants({ variant: "outline" }))}
+          >
             <CalendarDays className="size-4" />
             General calendar
-          </Button>
+          </Link>
           <NewClassSheet courseId={courseId} />
         </div>
       </div>

@@ -21,8 +21,7 @@ vi.mock('@game-guild/ui/components/alert-dialog', () => ({
   AlertDialogFooter: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   AlertDialogHeader: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   AlertDialogTitle: ({ children }: { children: ReactNode }) => <h3>{children}</h3>,
-  AlertDialogTrigger: ({ children, render }: { children: ReactNode; render: ReactElement }) =>
-    cloneElement(render, { children } as never),
+  AlertDialogTrigger: ({ children, render }: { children: ReactNode; render: ReactElement }) => cloneElement(render, undefined, children),
 }));
 
 import { CohortSettingsForm } from './cohort-settings-form';

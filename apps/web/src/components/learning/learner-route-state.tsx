@@ -1,6 +1,7 @@
 'use client';
 
-import { Button } from '@game-guild/ui/components/button';
+import { cn } from "@game-guild/ui/lib/utils";
+import { Button, buttonVariants } from '@game-guild/ui/components/button';
 import { Skeleton } from '@game-guild/ui/components/skeleton';
 import { AlertTriangle, BookX, RotateCcw } from 'lucide-react';
 import Link from 'next/link';
@@ -104,7 +105,12 @@ export function LearnerRouteNotFound({ scope = 'workspace' }: { scope?: RouteSco
       <p className="mt-2 max-w-md text-sm text-muted-foreground">
         {copy[scope].notFoundDescription}
       </p>
-      <Button nativeButton={false} className="mt-6" render={<Link href={copy[scope].returnHref} />}>{copy[scope].returnLabel}</Button>
+      <Link
+        href={copy[scope].returnHref}
+        className={cn(buttonVariants({ className: "mt-6" }))}
+      >
+        {copy[scope].returnLabel}
+      </Link>
     </section>
   );
 }

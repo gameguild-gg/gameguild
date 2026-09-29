@@ -34,8 +34,8 @@ vi.mock('@game-guild/client', () => ({
     ContentMarketingLeadsModule: class {
       getMarketingLeads = mocks.getMarketingLeads;
     },
-    SocialBlogPostsModule: class {
-      getApiSocialBlogForGetApiSocialBlog = mocks.getBlogPosts;
+    SocialBlogPublicModule: class {
+      getApiSocialBlogPublicPosts = mocks.getBlogPosts;
     },
   },
 }));
@@ -57,7 +57,7 @@ describe('community member queries', () => {
     mocks.getToken.mockResolvedValue('access-token');
     mocks.createServerClient.mockReturnValue({ request: mocks.clientRequest });
     mocks.getMarketingLeads.mockResolvedValue({ ok: true, data: [] });
-    mocks.getBlogPosts.mockResolvedValue({ ok: true, data: [] });
+    mocks.getBlogPosts.mockResolvedValue({ ok: true, data: { items: [] } });
     mocks.clientRequest.mockResolvedValue({ ok: true, data: { items: [], totalCount: 0 } });
   });
 
@@ -269,8 +269,9 @@ describe('community member queries', () => {
     });
     mocks.getBlogPosts.mockResolvedValue({
       ok: true,
-      data: [{ id: 'post-1' }],
+      data: { items: [{ id: 'post-1' }] },
     });
+
 
     const stats = await getCommunityStats();
 
@@ -288,7 +289,7 @@ describe('community member queries', () => {
       skip: 0,
       take: 500,
     });
-    expect(mocks.getBlogPosts).toHaveBeenCalledWith({ skip: 0, take: 500 });
+    expect(mocks.getBlogPosts).toHaveBeenCalledTimes(1);
     expect(stats).toEqual({
       totalMembers: 4,
       activeMembers: 1,
@@ -306,7 +307,7 @@ describe('community member queries', () => {
     });
     mocks.getApiSocialGroupsForGetApiSocialGroups.mockResolvedValue({ ok: true, data: [] });
     mocks.getMarketingLeads.mockResolvedValue({ ok: true, data: [] });
-    mocks.getBlogPosts.mockResolvedValue({ ok: true, data: [] });
+    mocks.getBlogPosts.mockResolvedValue({ ok: true, data: { items: [] } });
 
     const stats = await getCommunityStats();
 

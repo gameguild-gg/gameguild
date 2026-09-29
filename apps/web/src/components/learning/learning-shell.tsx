@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@game-guild/ui/lib/utils";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import {
@@ -14,7 +15,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@game-guild/ui/components/avatar";
-import { Button } from "@game-guild/ui/components/button";
+import { Button, buttonVariants } from "@game-guild/ui/components/button";
 import {
   CommandDialog,
   CommandEmpty,
@@ -24,9 +25,9 @@ import {
   CommandList,
 } from "@game-guild/ui/components/command";
 import {
+  DropdownMenuGroup,
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -272,25 +273,16 @@ export function LearningShell({
                   notificationItems.slice(0, 6).map((item) => (
                     <DropdownMenuItem
                       key={item.id}
-                      render={
-                        <Link
-                          href={item.actionUrl || "/"}
-                          className="flex-col items-start gap-1"
-                        />
-                      }
+                      render={<Link href={item.actionUrl || '/'} className="flex-col items-start gap-1" />}
                     >
                       <span className="font-medium">{item.title}</span>
                       {item.message ? (
-                        <span className="line-clamp-2 text-xs text-muted-foreground">
-                          {item.message}
-                        </span>
+                        <span className="line-clamp-2 text-xs text-muted-foreground">{item.message}</span>
                       ) : null}
                     </DropdownMenuItem>
                   ))
                 ) : (
-                  <DropdownMenuItem disabled>
-                    No new notifications
-                  </DropdownMenuItem>
+                  <DropdownMenuItem disabled>No new notifications</DropdownMenuItem>
                 )}
               </DropdownMenuGroup>
             </DropdownMenuContent>
@@ -317,23 +309,23 @@ export function LearningShell({
               </span>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-64">
-              <div className="px-2 py-1.5 text-sm font-normal">
-                <p className="truncate text-sm font-medium">{user.name}</p>
-                <p className="truncate text-xs text-muted-foreground">
-                  {user.email}
-                </p>
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                disabled={isLoading || signingOut}
-                onClick={(event) => {
-                  event.preventDefault();
-                  void handleSignOut();
-                }}
-              >
-                <LogOut className="size-4" />
-                {signingOut ? "Signing out..." : "Sign out"}
-              </DropdownMenuItem>
+              <DropdownMenuGroup>
+                <DropdownMenuLabel className="font-normal">
+                  <p className="truncate text-sm font-medium">{user.name}</p>
+                  <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  disabled={isLoading || signingOut}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    void handleSignOut();
+                  }}
+                >
+                  <LogOut className="size-4" />
+                  {signingOut ? 'Signing out...' : 'Sign out'}
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -382,10 +374,15 @@ export function LearningShell({
         </nav>
 
         <div className="mt-auto border-t pt-4">
-          <Button nativeButton={false} variant="outline" className="w-full justify-start" render={<Link href={catalogUrl} />}>
+          <Link
+            href={catalogUrl}
+            className={cn(
+              buttonVariants({ variant: "outline", className: "w-full justify-start" }),
+            )}
+          >
             <Library className="size-4" />
             Browse courses
-          </Button>
+          </Link>
         </div>
       </aside>
 
@@ -429,10 +426,16 @@ export function LearningShell({
             })}
           </nav>
           <div className="mt-auto border-t pt-4">
-            <Button nativeButton={false} variant="outline" className="w-full justify-start" render={<Link href={catalogUrl} onClick={() => setMobileOpen(false)} />}>
+            <Link
+              href={catalogUrl}
+              onClick={() => setMobileOpen(false)}
+              className={cn(
+                buttonVariants({ variant: "outline", className: "w-full justify-start" }),
+              )}
+            >
               <Library aria-hidden="true" className="size-4" />
               Browse courses
-            </Button>
+            </Link>
           </div>
         </SheetContent>
       </Sheet>

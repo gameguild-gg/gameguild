@@ -8,7 +8,7 @@ import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Input } from '@game-guild/ui/components/input';
 import { Label } from '@game-guild/ui/components/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
+import { SelectGroup,  Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
 import { Loader2, Save } from 'lucide-react';
 
 interface ListingLaunchFormProps {
@@ -91,13 +91,22 @@ export function ListingLaunchForm({ course }: ListingLaunchFormProps) {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-2">
             <Label htmlFor="catalog-visibility">Catalog visibility</Label>
-            <Select value={visibility} onValueChange={(value) => setVisibility(value ?? 'public')}>
+            <Select
+              items={[
+                { value: "public", label: "Public" },
+                { value: "private", label: "Private" },
+              ]}
+              value={visibility}
+              onValueChange={(value) => setVisibility(value ?? "public")}
+            >
               <SelectTrigger id="catalog-visibility">
                 <SelectValue>{visibility === 'public' ? 'Public' : 'Private'}</SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="public">Public</SelectItem>
-                <SelectItem value="private">Private</SelectItem>
+                <SelectGroup>
+                  <SelectItem value="public">Public</SelectItem>
+                  <SelectItem value="private">Private</SelectItem>
+                </SelectGroup>
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">Public courses can appear in the catalog. Private courses stay hidden.</p>
@@ -105,16 +114,27 @@ export function ListingLaunchForm({ course }: ListingLaunchFormProps) {
 
           <div className="space-y-2">
             <Label htmlFor="listing-enrollment-status">Enrollment status</Label>
-            <Select value={enrollmentStatus} onValueChange={(value) => setEnrollmentStatus(value ?? 'Open')}>
+            <Select
+              items={[
+                ...ENROLLMENT_STATUSES.map((value) => ({
+                  value: value,
+                  label: formatEnumLabel(value),
+                })),
+              ]}
+              value={enrollmentStatus}
+              onValueChange={(value) => setEnrollmentStatus(value ?? "Open")}
+            >
               <SelectTrigger id="listing-enrollment-status">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {ENROLLMENT_STATUSES.map((value) => (
-                  <SelectItem key={value} value={value}>
-                    {formatEnumLabel(value)}
-                  </SelectItem>
-                ))}
+                <SelectGroup>
+                  {ENROLLMENT_STATUSES.map((value) => (
+                    <SelectItem key={value} value={value}>
+                      {formatEnumLabel(value)}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
               </SelectContent>
             </Select>
           </div>

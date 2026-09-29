@@ -1,7 +1,7 @@
 import { getMembers } from '@/lib/community/queries/members';
 import { TestingSlotRegistrations, type TestingLabApprovedApplicationOption } from '@/components/testing-lab/testing-event-management';
 import { TestingLabPageHeader } from '@/components/testing-lab/testing-lab-page-header';
-import { formatEventDateTime, isTestingEventReadOnly } from '@/lib/testing-lab/event-workspace';
+import { formatEventDateRange, isTestingEventReadOnly } from '@/lib/testing-lab/event-workspace';
 import { getTestingApplicationTesterEligibility, getTestingEventWorkspaceData } from '@/lib/testing-lab/events-queries';
 import { getTestingProjectOptions } from '@/lib/testing-lab/queries';
 import { Badge } from '@game-guild/ui/components/badge';
@@ -56,7 +56,7 @@ export default async function TestingEventTestersPage({ params }: { params: Prom
 
   return (
     <div className="space-y-5">
-      <TestingLabPageHeader headingLevel={2} icon={UsersRound} title="Participants and attendance" description="Manage participation per slot and preserve check-in, check-out, no-show, and completion evidence." />
+      <TestingLabPageHeader headingLevel={2} icon={UsersRound} title="Participants and attendance" description="See who signed up, record attendance, and assign games to testers." />
 
       <p className="text-sm text-muted-foreground">{total === 1 ? '1 tester registered across this event.' : `${total} testers registered across this event.`}</p>
       {testerEligibility.accessIssues.length > 0 ? (
@@ -81,7 +81,7 @@ export default async function TestingEventTestersPage({ params }: { params: Prom
               <section key={slot.id} className="rounded-md border p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <h2 className="font-semibold">{formatEventDateTime(slot.startsAt)}</h2>
+                    <h2 className="font-semibold">{formatEventDateRange(slot.startsAt, slot.endsAt, detail.event!.timeZoneId ?? 'UTC')}</h2>
                     <p className="text-sm text-muted-foreground">{slot.campusName ?? slot.meetingUrl ?? slot.mode}</p>
                   </div>
                   <Badge variant="outline">{activeRegistrationCount} registered</Badge>

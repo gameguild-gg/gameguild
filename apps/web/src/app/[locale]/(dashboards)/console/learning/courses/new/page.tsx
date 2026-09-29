@@ -1,5 +1,6 @@
 'use client';
 
+import { cn } from "@game-guild/ui/lib/utils";
 import { Link, useRouter } from '@/i18n/navigation';
 import { createCourse, deleteCourse, updateCourse } from '@/lib/learning/actions';
 import { getCourseRouteParam } from '@/lib/learning/course-route';
@@ -10,7 +11,7 @@ import {
   PROGRAM_CATEGORIES,
   PROGRAM_DIFFICULTIES,
 } from '@/lib/learning/enums';
-import { Button } from '@game-guild/ui/components/button';
+import { Button, buttonVariants } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Input } from '@game-guild/ui/components/input';
 import { Label } from '@game-guild/ui/components/label';
@@ -144,9 +145,12 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/consol
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6 p-6">
       <div className="flex items-center gap-4">
-        <Button nativeButton={false} variant="ghost" size="icon" render={<Link href="/console/learning/courses" />}>
+        <Link
+          href="/console/learning/courses"
+          className={cn(buttonVariants({ variant: "ghost", size: "icon" }))}
+        >
           <ArrowLeft className="size-5" />
-        </Button>
+        </Link>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Create Course</h1>
           <p className="text-muted-foreground">
@@ -400,9 +404,17 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/consol
           <div role="alert" className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
             <p>{error}</p>
             {recoveryHref ? (
-              <Button nativeButton={false} variant="link" className="mt-2 h-auto p-0 text-red-700 underline dark:text-red-300" render={<Link href={recoveryHref} />}>
+              <Link
+                href={recoveryHref}
+                className={cn(
+                  buttonVariants({
+                    variant: "link",
+                    className: "mt-2 h-auto p-0 text-red-700 underline dark:text-red-300",
+                  }),
+                )}
+              >
                 Open the draft and finish it manually
-              </Button>
+              </Link>
             ) : null}
           </div>
         )}
@@ -433,9 +445,12 @@ export default function CreateCoursePage({ params }: PageProps<'/[locale]/consol
             </Button>
           )}
 
-          <Button nativeButton={false} type="button" variant="ghost" render={<Link href="/console/learning/courses" />}>
+          <Link
+            href="/console/learning/courses"
+            className={cn(buttonVariants({ variant: "ghost" }))}
+          >
             Cancel
-          </Button>
+          </Link>
         </div>
       </form>
     </div>

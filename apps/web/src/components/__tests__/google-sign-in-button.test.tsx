@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
+import { waitFor } from '@testing-library/react';
 import {
   createMockUseAuth,
   renderWithUser,
@@ -136,13 +136,13 @@ describe('GoogleSignInButton', () => {
 
   /* ---------- Error path ---------- */
 
-  it('omits the Google button when the public client id is missing', () => {
+  it('hides the optional Google provider when the public client id is missing', async () => {
     delete process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
-    renderWithUser(<GoogleSignInButton />);
+    const { container } = renderWithUser(<GoogleSignInButton />);
 
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('google-sign-in-button')).not.toBeInTheDocument();
+    await waitFor(() => expect(container).toBeEmptyDOMElement());
     expect(initializeMock).not.toHaveBeenCalled();
+    expect(renderButtonMock).not.toHaveBeenCalled();
   });
 });

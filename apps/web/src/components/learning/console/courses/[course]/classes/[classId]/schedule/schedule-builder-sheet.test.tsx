@@ -146,7 +146,7 @@ describe('ScheduleBuilderSheet', () => {
     await user.clear(screen.getByLabelText('Meeting duration (minutes)'));
     await user.type(screen.getByLabelText('Meeting duration (minutes)'), '120');
     await user.click(screen.getByLabelText('Pacing mode'));
-    await user.click(screen.getByRole('option', { name: 'Manual' }));
+    await user.click(await screen.findByRole('option', { name: 'Manual' }));
     await user.clear(screen.getByLabelText('Units per period'));
     await user.type(screen.getByLabelText('Units per period'), '3');
     await user.click(screen.getByLabelText('Release policy'));

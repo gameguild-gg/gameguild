@@ -1,8 +1,9 @@
+import { cn } from "@game-guild/ui/lib/utils";
 import { auth } from "@/auth";
 import { PostCard } from "@/components/feed/post-card";
 import { Link } from "@/i18n/navigation";
 import { loadSocialPost } from "@/lib/feed/queries";
-import { Button } from "@game-guild/ui/components/button";
+import { buttonVariants } from "@game-guild/ui/components/button";
 import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 
@@ -18,7 +19,12 @@ export default async function SocialPostPage({
   return (
     <main className="mx-auto min-h-[calc(100svh-4rem)] w-full max-w-[820px] bg-background pb-16">
       <div className="px-4 py-4 sm:px-6">
-        <Button nativeButton={false} variant="ghost" size="sm" render={<Link href="/" />}><ArrowLeft className="size-4" /> Back to feed</Button>
+        <Link
+          href="/"
+          className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+        >
+          <ArrowLeft className="size-4" /> Back to feed
+        </Link>
       </div>
       <PostCard item={post} currentUserId={currentUserId} />
     </main>

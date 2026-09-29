@@ -5,25 +5,21 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using GameGuild.API.Database;
 using GameGuild.API.Eventing;
+using GameGuild.TestSupport.Finance.Economy;
 using Npgsql;
-using Testcontainers.PostgreSql;
 
 namespace GameGuild.API.IntegrationTests;
 
 public sealed class DurableEventTransportPostgreSqlTests : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder()
-        .WithImage("postgres:16-alpine")
-        .WithDatabase("gameguild_events")
-        .WithUsername("test")
-        .WithPassword("test")
-        .WithCleanUp(true)
-        .Build();
+    private EconomyPostgreSqlTestDatabase _database = null!;
 
     public async Task InitializeAsync()
     {
-        await _postgres.StartAsync();
-        await using var connection = new NpgsqlConnection(_postgres.GetConnectionString());
+        _database = await EconomyPostgreSqlTestDatabase.CreateAsync("durable_events");
+        // These tests own a minimal transport schema, not the migrated gate template.
+        await _database.ResetAsync();
+        await using var connection = new NpgsqlConnection(_database.ConnectionString);
         await connection.OpenAsync();
         await using var command = connection.CreateCommand();
         command.CommandText = """
@@ -62,7 +58,11 @@ public sealed class DurableEventTransportPostgreSqlTests : IAsyncLifetime
         await command.ExecuteNonQueryAsync();
     }
 
-    public async Task DisposeAsync() => await _postgres.DisposeAsync();
+    public async Task DisposeAsync()
+    {
+        if (_database is not null)
+            await _database.DisposeAsync();
+    }
 
     [Fact]
     public async Task DispatchPendingAsync_WhenOutboxLeaseExpires_DoesNotExecuteSameConsumerConcurrently()
@@ -172,7 +172,7 @@ public sealed class DurableEventTransportPostgreSqlTests : IAsyncLifetime
     private ServiceProvider BuildProvider(MutableTimeProvider clock, Action<IServiceCollection> addHandlers)
     {
         var services = new ServiceCollection();
-        services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(_postgres.GetConnectionString()));
+        services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(_database.ConnectionString));
         services.AddSingleton<TimeProvider>(clock);
         services.AddScoped<IInboxStore, InboxStore>();
         services.AddScoped<IOutboxDispatcher, OutboxDispatcher>();
@@ -183,7 +183,7 @@ public sealed class DurableEventTransportPostgreSqlTests : IAsyncLifetime
 
     private async Task ResetAsync()
     {
-        await using var connection = new NpgsqlConnection(_postgres.GetConnectionString());
+        await using var connection = new NpgsqlConnection(_database.ConnectionString);
         await connection.OpenAsync();
         await using var command = connection.CreateCommand();
         command.CommandText = "TRUNCATE TABLE \"gameguild.integration\".\"inbox_receipts\", \"gameguild.integration\".\"outbox_messages\"";

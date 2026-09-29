@@ -13,6 +13,7 @@ import { Label } from '@game-guild/ui/components/label';
 import { Textarea } from '@game-guild/ui/components/textarea';
 import { AlertCircle, CheckCircle2, FileLock2, Loader2 } from 'lucide-react';
 import { useState, useTransition, type FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
 import { QuestionnaireBuilder } from './questionnaire-builder';
 
 function emptySchema(title: string): TestingLabQuestionnaireSchema {
@@ -29,6 +30,7 @@ export function TestingEventConfigurationEditor({
   configuration?: TestingLabTestingEventConfigurationProjection;
 }) {
   const editable = (status ?? 'Draft') === 'Draft';
+  const router = useRouter();
   const [applicationSchema, setApplicationSchema] = useState<TestingLabQuestionnaireSchema>(
     configuration?.projectApplicationSchema ?? emptySchema('Project application'),
   );
@@ -45,7 +47,9 @@ export function TestingEventConfigurationEditor({
     formData.set('testerRegistrationSchemaJson', JSON.stringify(registrationSchema));
     startTransition(async () => {
       try {
-        setResult(await configureTestingEvent(formData));
+        const saved = await configureTestingEvent(formData);
+        setResult(saved);
+        if (saved.success) router.refresh();
       } catch (error) {
         setResult({
           success: false,
@@ -70,7 +74,7 @@ export function TestingEventConfigurationEditor({
         </div>
         <div className="grid gap-5 lg:grid-cols-3">
           <ReadOnlyText title="General rules" value={configuration?.generalRules} />
-          <ReadOnlyText title="Candidate instructions" value={configuration?.candidateInstructions} />
+          <ReadOnlyText title="Game submission instructions" value={configuration?.candidateInstructions} />
           <ReadOnlyText title="Tester instructions" value={configuration?.testerInstructions} />
         </div>
         <dl className="grid gap-3 rounded-md bg-muted/40 p-4 text-sm sm:grid-cols-2">
@@ -87,25 +91,30 @@ export function TestingEventConfigurationEditor({
       <input type="hidden" name="eventId" value={eventId} />
       <div>
         <h2 id="event-configuration-heading" className="font-semibold">Rules, instructions, and forms</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Edit this draft package before opening applications. Opening applications creates an immutable snapshot.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Save the participation rules before publishing. These rules stay fixed once sign-ups open.</p>
       </div>
       <section className="grid gap-4 lg:grid-cols-3" aria-labelledby="event-copy-heading">
         <h3 id="event-copy-heading" className="sr-only">Event copy</h3>
         <TextField name="generalRules" label="General rules" defaultValue={configuration?.generalRules} placeholder="Participation, conduct, confidentiality, and completion rules." />
-        <TextField name="candidateInstructions" label="Candidate instructions" defaultValue={configuration?.candidateInstructions} placeholder="What project teams must prepare before applying." />
+        <TextField name="candidateInstructions" label="Game submission instructions" defaultValue={configuration?.candidateInstructions} placeholder="What creators need to prepare before submitting a game." />
         <TextField name="testerInstructions" label="Tester instructions" defaultValue={configuration?.testerInstructions} placeholder="What assigned testers must do during and after the session." />
       </section>
-      <section className="space-y-4 border-t pt-6" aria-labelledby="application-form-heading">
-        <div><h3 id="application-form-heading" className="font-medium">Project application form</h3><p className="text-sm text-muted-foreground">Extra event-specific questions answered by student project teams.</p></div>
-        <QuestionnaireBuilder value={applicationSchema} onChange={setApplicationSchema} />
-      </section>
-      <section className="space-y-4 border-t pt-6" aria-labelledby="registration-form-heading">
-        <div><h3 id="registration-form-heading" className="font-medium">Tester registration form</h3><p className="text-sm text-muted-foreground">Extra event-specific questions answered by testers when they register.</p></div>
-        <QuestionnaireBuilder value={registrationSchema} onChange={setRegistrationSchema} />
-      </section>
+      <details className="space-y-4 border-t pt-5">
+        <summary className="cursor-pointer text-sm font-medium">Sign-up questions <span className="font-normal text-muted-foreground">· optional</span></summary>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <section className="space-y-3" aria-labelledby="application-form-heading">
+            <div><h3 id="application-form-heading" className="font-medium">Project application form</h3><p className="text-sm text-muted-foreground">Ask creators for any extra information you need.</p></div>
+            <QuestionnaireBuilder value={applicationSchema} onChange={setApplicationSchema} />
+          </section>
+          <section className="space-y-3" aria-labelledby="registration-form-heading">
+            <div><h3 id="registration-form-heading" className="font-medium">Tester registration form</h3><p className="text-sm text-muted-foreground">Ask testers for any extra information you need.</p></div>
+            <QuestionnaireBuilder value={registrationSchema} onChange={setRegistrationSchema} />
+          </section>
+        </div>
+      </details>
       <div className="flex flex-wrap items-center gap-3 border-t pt-5">
         <Button type="submit" disabled={pending}>{pending ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}Save draft configuration</Button>
-        <p className="text-xs text-muted-foreground">Rules, instructions, and both schemas are validated again by the API.</p>
+        <p className="text-xs text-muted-foreground">After saving, use “Publish and open sign-ups” above.</p>
       </div>
       {result ? <Alert variant={result.success ? 'default' : 'destructive'}>{result.success ? <CheckCircle2 className="size-4" /> : <AlertCircle className="size-4" />}<AlertDescription>{result.success ? result.message : result.error}</AlertDescription></Alert> : null}
     </form>

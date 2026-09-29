@@ -13,6 +13,8 @@
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Relational"/>
         <PackageReference Include="Fido2"/>
+        <PackageReference Include="Nethereum.Signer"/>
+        <PackageReference Include="Nethereum.Siwe.Core"/>
         <PackageReference Include="QRCoder"/>
         <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj"/>
         <ProjectReference Include="..\GameGuild.Identity.Authorization\GameGuild.Identity.Authorization.csproj"/>

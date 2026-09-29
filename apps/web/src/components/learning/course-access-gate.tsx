@@ -1,9 +1,10 @@
 "use client";
 
+import { cn } from "@game-guild/ui/lib/utils";
 import { Link, useRouter } from "@/i18n/navigation";
 import type { CourseAccessState } from "@/lib/learner/courses";
 import { enrollInCourse } from "@/lib/learner/enrollment-actions";
-import { Button } from "@game-guild/ui/components/button";
+import { Button, buttonVariants } from "@game-guild/ui/components/button";
 import { Card, CardContent, CardHeader } from "@game-guild/ui/components/card";
 import {
   AlertCircle,
@@ -113,14 +114,17 @@ export function CourseAccessGate({ access }: { access: GateAccess }) {
             </Button>
           ) : null}
           {access.kind === "payment-required" ? (
-            <Button nativeButton={false} render={<Link href={storefrontUrl} />}>
+            <Link href={storefrontUrl} className={cn(buttonVariants({}))}>
               Continue to checkout
               <ArrowRight className="ml-2 size-4" />
-            </Button>
+            </Link>
           ) : null}
-          <Button nativeButton={false} variant="outline" render={<Link href={`${process.env.NEXT_PUBLIC_WEB_URL || "https://gameguild.gg"}/courses`} />}>
+          <Link
+            href={`${process.env.NEXT_PUBLIC_WEB_URL || "https://gameguild.gg"}/courses`}
+            className={cn(buttonVariants({ variant: "outline" }))}
+          >
             Browse catalog
-          </Button>
+          </Link>
         </CardContent>
       </Card>
     </section>

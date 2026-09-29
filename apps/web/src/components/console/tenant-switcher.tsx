@@ -4,9 +4,9 @@ import * as React from 'react';
 import { ChevronsUpDown, Plus } from 'lucide-react';
 
 import {
+  DropdownMenuGroup,
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -110,9 +110,7 @@ export function TenantSwitcher({
             sideOffset={4}
           >
             <DropdownMenuGroup>
-              <DropdownMenuLabel className="text-muted-foreground text-xs">
-                Tenants
-              </DropdownMenuLabel>
+              <DropdownMenuLabel className="text-muted-foreground text-xs">Tenants</DropdownMenuLabel>
               {tenants.map((tenant, index) => (
                 <DropdownMenuItem
                   key={tenant.id}
@@ -126,18 +124,18 @@ export function TenantSwitcher({
                   <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
                 </DropdownMenuItem>
               ))}
+              {onAddTenant && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="gap-2 p-2" onClick={onAddTenant}>
+                    <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
+                      <Plus className="size-4" />
+                    </div>
+                    <div className="text-muted-foreground font-medium">Add tenant</div>
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuGroup>
-            {onAddTenant && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="gap-2 p-2" onClick={onAddTenant}>
-                  <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
-                    <Plus className="size-4" />
-                  </div>
-                  <div className="text-muted-foreground font-medium">Add tenant</div>
-                </DropdownMenuItem>
-              </>
-            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

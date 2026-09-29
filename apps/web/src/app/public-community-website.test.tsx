@@ -2,11 +2,12 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import type { AnchorHTMLAttributes, ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { authMock, getTokenMock, requestMock, getPublishedProjectsMock, getVisibleProjectMock, publicQueriesMocks, launchPadQueriesMock } = vi.hoisted(() => ({
+const { authMock, getTokenMock, requestMock, getPublishedProjectsMock, getPublishedProjectsPageMock, getVisibleProjectMock, publicQueriesMocks, launchPadQueriesMock } = vi.hoisted(() => ({
   authMock: vi.fn(),
   getTokenMock: vi.fn(),
   requestMock: vi.fn(),
   getPublishedProjectsMock: vi.fn(),
+  getPublishedProjectsPageMock: vi.fn(),
   getVisibleProjectMock: vi.fn(),
   publicQueriesMocks: {
     getPublicPlaytests: vi.fn(),
@@ -52,9 +53,10 @@ vi.mock('@/i18n', () => ({
   ),
 }));
 
-vi.mock('@/lib/projects/public-projects', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/lib/projects/public-projects')>()),
+vi.mock('@/lib/projects/public-projects', () => ({
   getPublishedProjects: getPublishedProjectsMock,
+  getPublishedProjectsPage: getPublishedProjectsPageMock,
+  PUBLIC_PROJECT_PAGE_SIZE: 12,
   getVisibleProject: getVisibleProjectMock,
 }));
 
@@ -67,7 +69,7 @@ import JobsPage from './[locale]/(public)/jobs/page';
 import LaunchPadPage from './[locale]/(social)/launch-pad/page';
 import ShowcasePage from './[locale]/(social)/projects/page';
 import ProjectDetailPage from './[locale]/(social)/projects/[slug]/page';
-import TestingLabPage from './[locale]/(public)/testing-lab/page';
+import TestingLabPage from './[locale]/(social)/testing-lab/page';
 import HomePage from './[locale]/(public)/page';
 
 const publishedProject = {
@@ -96,6 +98,7 @@ describe('public community website UX', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     getPublishedProjectsMock.mockResolvedValue([publishedProject]);
+    getPublishedProjectsPageMock.mockResolvedValue([publishedProject]);
     getVisibleProjectMock.mockResolvedValue(publishedProject);
     publicQueriesMocks.getPublicPlaytests.mockResolvedValue([
       {
@@ -203,6 +206,7 @@ describe('public community website UX', () => {
     expect((await screen.findAllByRole('menuitem')).map((item) => item.textContent)).toEqual([
       'Workspace',
       'Projects',
+      'Blogs',
     ]);
 
     fireEvent.click(within(nav).getByRole('button', { name: 'Build' }));
@@ -287,20 +291,17 @@ describe('public community website UX', () => {
     expect(screen.getAllByRole('link', { name: /view project/i }).length).toBeGreaterThan(0);
     expect(screen.getByRole('link', { name: /manage your projects/i })).toHaveAttribute('href', '/workspace/projects');
     expect(screen.getByLabelText('Search projects')).toBeInTheDocument();
-    expect(getPublishedProjectsMock).toHaveBeenCalledOnce();
+    expect(getPublishedProjectsPageMock).toHaveBeenCalledWith(0, 13, '', undefined);
   });
 
   it('renders project detail with creator, media, playtest status, and community CTAs', async () => {
     render(await ProjectDetailPage({ params: Promise.resolve({ slug: 'real-api-project' }) }));
 
     expect(screen.getByRole('heading', { name: /real api project/i })).toBeInTheDocument();
-    expect(screen.getByAltText(/real api project project preview/i)).toBeInTheDocument();
+    expect(screen.getByAltText(/real api project project artwork/i)).toBeInTheDocument();
     expect(screen.getAllByText(/creator/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/playtest/i).length).toBeGreaterThan(0);
-    expect(screen.getByRole('link', { name: /browse playtests/i })).toHaveAttribute(
-      'href',
-      '/testing-lab',
-    );
+    expect(screen.getByRole('link', { name: /browse playtests/i })).toHaveAttribute('href', '/testing-lab');
     expect(getVisibleProjectMock).toHaveBeenCalledWith('real-api-project');
   });
 
