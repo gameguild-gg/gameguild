@@ -339,6 +339,7 @@ function EventActionDialog({
   destructive = false,
   successHref,
   submitDisabled = false,
+  onSuccess,
 }: {
   trigger: ReactElement;
   title: string;
@@ -349,6 +350,7 @@ function EventActionDialog({
   destructive?: boolean;
   successHref?: string;
   submitDisabled?: boolean;
+  onSuccess?: (result: TestingEventActionResult<unknown>) => void;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -365,6 +367,7 @@ function EventActionDialog({
         const next = await action(data);
         setResult(next);
         if (next.success) {
+          onSuccess?.(next);
           setOpen(false);
           if (successHref) router.push(successHref);
           else router.refresh();
@@ -2385,6 +2388,12 @@ export function TestingEventApplications({
                         description="Capacity is reserved only after this approval is accepted."
                         submitLabel="Approve project"
                         action={approveTestingEventApplication}
+                        onSuccess={(result) =>
+                          setReviewResult({
+                            applicationId: application.id!,
+                            result,
+                          })
+                        }
                       >
                         <input type="hidden" name="eventId" value={eventId} />
                         <input
@@ -2456,6 +2465,12 @@ export function TestingEventApplications({
                         description="The application remains eligible but does not consume project capacity."
                         submitLabel="Add to waitlist"
                         action={waitlistTestingEventApplication}
+                        onSuccess={(result) =>
+                          setReviewResult({
+                            applicationId: application.id!,
+                            result,
+                          })
+                        }
                       >
                         <input type="hidden" name="eventId" value={eventId} />
                         <input
@@ -2487,6 +2502,12 @@ export function TestingEventApplications({
                         submitLabel="Reject project"
                         action={rejectTestingEventApplication}
                         destructive
+                        onSuccess={(result) =>
+                          setReviewResult({
+                            applicationId: application.id!,
+                            result,
+                          })
+                        }
                       >
                         <input type="hidden" name="eventId" value={eventId} />
                         <input
@@ -2520,6 +2541,12 @@ export function TestingEventApplications({
                       description="Votes are auditable and cannot be silently replaced by another reviewer."
                       submitLabel="Record vote"
                       action={voteOnTestingEventApplication}
+                      onSuccess={(result) =>
+                        setReviewResult({
+                          applicationId: application.id!,
+                          result,
+                        })
+                      }
                     >
                       <input type="hidden" name="eventId" value={eventId} />
                       <input

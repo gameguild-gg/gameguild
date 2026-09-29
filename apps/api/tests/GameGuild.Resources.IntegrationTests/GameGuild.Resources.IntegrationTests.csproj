@@ -31,6 +31,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Source\GameGuild.API\GameGuild.API.csproj"/>
     <ProjectReference Include="..\..\Source\Modules\GameGuild.Resources\GameGuild.Resources.csproj"/>
+    <ProjectReference Include="..\GameGuild.TestSupport.Finance.Economy\GameGuild.TestSupport.Finance.Economy.csproj"/>
   </ItemGroup>
 
   <ItemGroup>
