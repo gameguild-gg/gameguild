@@ -9,9 +9,9 @@ This initial source inventory contains **328 unique issues** authored by or assi
 
 ## Initial issue-level pass
 
-Issues #30, #308, and #309 have an initial requirement/evidence pass. The two title-only issues (#30 and #308) have empty GitHub descriptions, so their criteria are marked as inferred from the title and linked PR and still need owner confirmation. #309 is explicitly partial. Their PRs have not merged; all three remain unresolved. The other 325 records are still untriaged.
+Eight issues have an issue-level evidence pass: closed legacy issues #8, #9, #10, #12, and #13, plus #30, #308, and #309. #8/#9/#12 are supported by current repository structure and their closure comments; #10 is obsolete under the current .NET architecture; #13 is consolidated with #72 and both current application Dockerfiles built successfully. #30 and #308 have empty GitHub descriptions, so their criteria remain inferred from the title and linked PR and need owner confirmation; #309 is explicitly partial. The other 320 records have not received an issue-level audit.
 
 
 ## Linked implementation pull requests
 
-A GitHub check snapshot identified open implementation PRs for 14 unique issues: #30, #149, #251, #260, #261, #262, #308, #309, #324, #335, #353, #354, #384, and #390. Their PR URLs, head commits, and CI gate states are recorded in the matrix. All 14 issues remain open across 11 open PRs; all linked PRs currently have a failing Web Verify and required gate, and #335 also has API Verify failing. Only #30, #308, and #309 have an initial issue-level evidence pass; the other linked PRs still need criteria-by-criteria review. The PR links are evidence pointers, not closure evidence.
+The matrix links 15 issue records to 11 open implementation PRs: #30, #149, #251, #260, #261, #262, #308, #309, #324, #335, #353, #354, #384, #387, and #390. This includes related issue #387 on PR #584 and #149 related to the #260/#261 rate-limit work in PR #582. PR URLs, head commits, and the last captured CI states are in the matrix; refresh checks before treating them as current. These links are evidence pointers, not closure evidence.
