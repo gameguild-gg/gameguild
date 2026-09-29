@@ -2611,12 +2611,15 @@ export function TestingSlotRegistrations({
   approvedApplications: TestingLabApprovedApplicationOption[];
   readOnly?: boolean;
 }) {
+  const [result, setResult] =
+    useState<TestingEventActionResult<unknown> | null>(null);
   if (registrations.length === 0)
     return (
       <p className="text-sm text-muted-foreground">No tester registrations.</p>
     );
   return (
     <div className="mt-3 divide-y border-t">
+      <ActionMessage result={result} />
       {registrations.map((registration, index) => {
         const testerLabel = registration.userId
           ? memberLabels[registration.userId]
@@ -2673,6 +2676,7 @@ export function TestingSlotRegistrations({
                     description="Create the feedback obligation for this tester after check-in."
                     submitLabel="Assign project"
                     action={assignTestedProjectToRegistration}
+                    onSuccess={setResult}
                   >
                     <input type="hidden" name="eventId" value={eventId} />
                     <input
