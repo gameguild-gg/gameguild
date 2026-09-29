@@ -1,6 +1,7 @@
 using FluentAssertions;
 using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Authorization.Caching;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -374,8 +375,18 @@ public class SocialGroupServiceTests
     {
         var groupRepository = new InMemorySocialGroupRepository();
         var memberRepository = new InMemorySocialGroupMemberRepository();
-        var service = new SocialGroupService(groupRepository, memberRepository);
         var ownerId = Guid.NewGuid();
+        var cacheInvalidation = new RecordingCacheInvalidationService
+        {
+            OnGlobalInvalidated = _ =>
+            {
+                var createdGroup = groupRepository.Groups.Single(group => group.OwnerId == ownerId);
+                memberRepository.Members.Should().ContainSingle(member =>
+                    member.GroupId == createdGroup.Id && member.UserId == ownerId && member.Role == SocialGroupMemberRole.Owner);
+                return Task.CompletedTask;
+            }
+        };
+        var service = new SocialGroupService(groupRepository, memberRepository, cacheInvalidation);
 
         var group = await service.CreateAsync(new CreateSocialGroupCommand(
             ownerId,
@@ -389,6 +400,40 @@ public class SocialGroupServiceTests
         group.OwnerId.Should().Be(ownerId);
         group.MemberCount.Should().Be(1);
         memberRepository.Members.Should().ContainSingle(member => member.GroupId == group.Id && member.Role == SocialGroupMemberRole.Owner);
+        cacheInvalidation.GlobalInvalidationCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Join_PublicGroup_InvalidatesSharedAclCacheAfterMembershipIsActive()
+    {
+        var groupRepository = new InMemorySocialGroupRepository();
+        var memberRepository = new InMemorySocialGroupMemberRepository();
+        var cacheInvalidation = new RecordingCacheInvalidationService();
+        var ownerId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var group = SocialGroup.Create(
+            ownerId,
+            "Public group",
+            "public-group",
+            SocialGroupType.StudyGroup,
+            SocialGroupVisibility.Public);
+        groupRepository.Groups.Add(group);
+        memberRepository.Members.Add(SocialGroupMember.CreateOwner(group.Id, ownerId));
+        var invalidationObservedActiveMembership = false;
+        cacheInvalidation.OnGlobalInvalidated = _ =>
+        {
+            memberRepository.Members.Single(member => member.UserId == userId)
+                .Status.Should().Be(SocialGroupMembershipStatus.Active);
+            invalidationObservedActiveMembership = true;
+            return Task.CompletedTask;
+        };
+        var service = new SocialGroupService(groupRepository, memberRepository, cacheInvalidation);
+
+        var membership = await service.JoinAsync(new JoinSocialGroupCommand(group.Id, userId, SocialGroupMemberRole.Member));
+
+        membership!.Status.Should().Be(SocialGroupMembershipStatus.Active);
+        invalidationObservedActiveMembership.Should().BeTrue();
+        cacheInvalidation.GlobalInvalidationCount.Should().Be(1);
     }
 
     [Fact]
@@ -420,6 +465,53 @@ public class SocialGroupServiceTests
         approved.Should().BeTrue();
         group.MemberCount.Should().Be(2);
         group.PendingMemberCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task ActiveMembershipMutations_InvalidateTheTenantUserCacheAfterPersistence()
+    {
+        var groupRepository = new InMemorySocialGroupRepository();
+        var memberRepository = new InMemorySocialGroupMemberRepository();
+        var cacheInvalidation = new RecordingCacheInvalidationService();
+        var tenantId = Guid.NewGuid();
+        var ownerId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var group = SocialGroup.Create(
+            ownerId,
+            "Private group",
+            "private-group",
+            SocialGroupType.StudyGroup,
+            SocialGroupVisibility.Private,
+            tenantId: tenantId);
+        groupRepository.Groups.Add(group);
+        memberRepository.Members.Add(SocialGroupMember.CreateOwner(group.Id, ownerId));
+        var persistedStatesAtInvalidation = new List<(SocialGroupMembershipStatus Status, SocialGroupMemberRole Role)>();
+        cacheInvalidation.OnUserInvalidated = (invalidatedUserId, invalidatedTenantId, _) =>
+        {
+            var persistedMembership = memberRepository.Members.Single(member => member.UserId == invalidatedUserId);
+            persistedStatesAtInvalidation.Add((persistedMembership.Status, persistedMembership.Role));
+            invalidatedTenantId.Should().Be(tenantId);
+            return Task.CompletedTask;
+        };
+        var service = new SocialGroupService(groupRepository, memberRepository, cacheInvalidation);
+
+        var pendingMembership = await service.JoinAsync(
+            new JoinSocialGroupCommand(group.Id, userId, SocialGroupMemberRole.Member));
+        cacheInvalidation.UserInvalidations.Should().BeEmpty();
+
+        (await service.ApproveMemberAsync(group.Id, userId, ownerId)).Should().BeTrue();
+        (await service.ChangeRoleAsync(group.Id, userId, SocialGroupMemberRole.Admin)).Should().BeTrue();
+        (await service.LeaveAsync(group.Id, userId)).Should().BeTrue();
+
+        pendingMembership!.Status.Should().Be(SocialGroupMembershipStatus.Pending);
+        cacheInvalidation.UserInvalidations.Should().Equal(
+            (userId, tenantId),
+            (userId, tenantId),
+            (userId, tenantId));
+        persistedStatesAtInvalidation.Should().Equal(
+            (SocialGroupMembershipStatus.Active, SocialGroupMemberRole.Member),
+            (SocialGroupMembershipStatus.Active, SocialGroupMemberRole.Admin),
+            (SocialGroupMembershipStatus.Removed, SocialGroupMemberRole.Admin));
     }
 
     [Fact]
@@ -687,6 +779,7 @@ public class SocialGroupServiceTests
         using var db = CreateDbContext();
         var services = new ServiceCollection();
         services.AddSingleton<IApplicationDbContext>(db);
+        services.AddSingleton<ICacheInvalidationService, RecordingCacheInvalidationService>();
         services.AddSocialGroupsModule();
 
         using var provider = services.BuildServiceProvider();
@@ -716,7 +809,7 @@ public class SocialGroupServiceTests
         var group = SocialGroup.Create(Guid.NewGuid(), "Seed", "seed", SocialGroupType.StudyGroup, visibility);
         groups.Groups.Add(group);
         members.Members.Add(SocialGroupMember.CreateOwner(group.Id, group.OwnerId));
-        return (new SocialGroupService(groups, members), groups, members);
+        return (new SocialGroupService(groups, members, new RecordingCacheInvalidationService()), groups, members);
     }
 
     private static TestSocialGroupsDbContext CreateDbContext()
@@ -827,4 +920,55 @@ internal sealed class FakeEndpointRouteBuilder : IEndpointRouteBuilder
     public ICollection<EndpointDataSource> DataSources { get; } = [];
 
     public IApplicationBuilder CreateApplicationBuilder() => throw new NotSupportedException();
+}
+
+internal sealed class RecordingCacheInvalidationService : ICacheInvalidationService
+{
+    public List<(Guid UserId, Guid TenantId)> UserInvalidations { get; } = [];
+    public Func<Guid, Guid, CancellationToken, Task>? OnUserInvalidated { get; set; }
+    public int GlobalInvalidationCount { get; private set; }
+    public Func<CancellationToken, Task>? OnGlobalInvalidated { get; set; }
+
+    public async Task InvalidateUserAsync(Guid userId, Guid tenantId, CancellationToken cancellationToken = default)
+    {
+        if (OnUserInvalidated is not null)
+        {
+            await OnUserInvalidated(userId, tenantId, cancellationToken);
+        }
+
+        UserInvalidations.Add((userId, tenantId));
+    }
+
+    public Task InvalidateTenantAsync(Guid tenantId, CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+    public Task InvalidateResourceAsync(Guid tenantId, string resourceType, string resourceId, CancellationToken cancellationToken = default)
+        => Task.CompletedTask;
+
+    public Task InvalidateBatchAsync(Guid tenantId, IReadOnlyCollection<CacheInvalidationTarget> targets)
+        => Task.CompletedTask;
+
+    public Task InvalidateBatchAsync(Guid tenantId, IReadOnlyCollection<CacheInvalidationTarget> targets, CancellationToken cancellationToken)
+        => Task.CompletedTask;
+
+    public Task InvalidateGlobalAsync() => InvalidateGlobalAsync(CancellationToken.None);
+
+    public async Task InvalidateGlobalAsync(CancellationToken cancellationToken)
+    {
+        if (OnGlobalInvalidated is not null)
+        {
+            await OnGlobalInvalidated(cancellationToken);
+        }
+
+        GlobalInvalidationCount++;
+    }
+
+    public Task InvalidatePolicyAsync(Guid tenantId, string? policyName = null, CancellationToken cancellationToken = default)
+        => Task.CompletedTask;
+
+    public Task PublishInvalidationAsync(CacheInvalidationEvent invalidationEvent, CancellationToken cancellationToken = default)
+        => Task.CompletedTask;
+
+    public void HandleInvalidationEvent(CacheInvalidationEvent invalidationEvent)
+    {
+    }
 }
