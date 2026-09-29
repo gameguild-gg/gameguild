@@ -157,6 +157,46 @@ public sealed class SecurityServiceCollectionExtensionsTests
     }
 
     [Fact]
+    public async Task SetupAuthentication_RegistersConfiguredCookieSchemeWithSecureDefaults()
+    {
+        var services = new ServiceCollection();
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["PresentationLayer:Authentication:JwtSecretKey"] = new string('s', 64),
+                ["PresentationLayer:Authentication:JwtIssuer"] = "GameGuild",
+                ["PresentationLayer:Authentication:JwtAudience"] = "GameGuild.Users",
+                ["PresentationLayer:Authentication:EnableCookieAuthentication"] = "true",
+                ["PresentationLayer:Authentication:Cookie:SchemeName"] = "interactive-cookie",
+                ["PresentationLayer:Authentication:Cookie:Name"] = "__Host-GameGuild.Session",
+                ["PresentationLayer:Authentication:Cookie:Expiration"] = "00:30:00",
+                ["PresentationLayer:Authentication:Cookie:SlidingExpiration"] = "true",
+                ["PresentationLayer:Authentication:Cookie:SameSite"] = "Lax"
+            })
+            .Build();
+        var options = PresentationLayerOptionsBuilder.Create(configuration).Authentication!;
+
+        services.AddLogging();
+        services.SetupAuthentication(configuration, options);
+        using var serviceProvider = services.BuildServiceProvider();
+
+        var schemeProvider = serviceProvider.GetRequiredService<IAuthenticationSchemeProvider>();
+        Assert.NotNull(await schemeProvider.GetSchemeAsync("interactive-cookie"));
+        Assert.Equal(JwtBearerDefaults.AuthenticationScheme,
+            (await schemeProvider.GetDefaultAuthenticateSchemeAsync())?.Name);
+
+        var cookieOptions = serviceProvider.GetRequiredService<IOptionsMonitor<CookieAuthenticationOptions>>()
+            .Get("interactive-cookie");
+        Assert.Equal("__Host-GameGuild.Session", cookieOptions.Cookie.Name);
+        Assert.Equal("/", cookieOptions.Cookie.Path);
+        Assert.True(cookieOptions.Cookie.HttpOnly);
+        Assert.Equal(CookieSecurePolicy.Always, cookieOptions.Cookie.SecurePolicy);
+        Assert.Equal(SameSiteMode.Lax, cookieOptions.Cookie.SameSite);
+        Assert.Equal(TimeSpan.FromMinutes(30), cookieOptions.ExpireTimeSpan);
+        Assert.True(cookieOptions.SlidingExpiration);
+    }
+
+    [Fact]
     public void SetupAuthentication_RejectsQueryApiKeyWhenApiKeySchemeIsDisabled()
     {
         var services = new ServiceCollection();

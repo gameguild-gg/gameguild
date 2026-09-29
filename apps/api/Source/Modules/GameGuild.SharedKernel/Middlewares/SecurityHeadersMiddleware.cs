@@ -101,6 +101,18 @@ public sealed class SecurityHeadersMiddleware(RequestDelegate next, SecurityHead
 public class SecurityHeadersOptions
 {
     /// <summary>
+    ///     Validates configured response header values before the middleware is added.
+    /// </summary>
+    public void Validate()
+    {
+        ValidateHeaderValue("X-Frame-Options", XFrameOptionsValue);
+        ValidateHeaderValue("Referrer-Policy", ReferrerPolicyValue);
+        ValidateHeaderValue("Content-Security-Policy", ContentSecurityPolicyValue);
+        ValidateHeaderValue("Content-Security-Policy", SwaggerContentSecurityPolicyValue);
+        ValidateHeaderValue("Permissions-Policy", PermissionsPolicyValue);
+    }
+
+    /// <summary>
     ///     Enables X-Content-Type-Options: nosniff header.
     ///     Prevents MIME-type sniffing attacks.
     /// </summary>
@@ -183,6 +195,14 @@ public class SecurityHeadersOptions
     ///     Enables no-cache headers for sensitive endpoints (auth, user, etc.)
     /// </summary>
     public bool EnableNoCacheForSensitiveEndpoints { get; set; } = true;
+
+    private static void ValidateHeaderValue(string headerName, string value)
+    {
+        if (value.Contains('\r') || value.Contains('\n'))
+        {
+            throw new InvalidOperationException($"{headerName} configuration must not contain line breaks.");
+        }
+    }
 }
 
 /// <summary>

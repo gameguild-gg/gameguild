@@ -22,6 +22,16 @@ public sealed class AuthenticationOptions : BaseOptions
     public bool EnableApiKeyAuthentication { get; set; }
 
     /// <summary>
+    ///     Registers an opt-in cookie authentication scheme alongside the default JWT bearer scheme.
+    /// </summary>
+    public bool EnableCookieAuthentication { get; set; }
+
+    /// <summary>
+    ///     Cookie scheme settings. Cookies are emitted with secure, HTTP-only defaults.
+    /// </summary>
+    public CookieAuthenticationSettings? Cookie { get; set; } = new();
+
+    /// <summary>
     ///     Header used to submit API keys when the API key scheme is enabled.
     /// </summary>
     public string? ApiKeyHeaderName { get; set; }
@@ -60,6 +70,17 @@ public sealed class AuthenticationOptions : BaseOptions
         if (EnableApiKeyAuthentication && !EnableAuthentication)
         {
             throw new InvalidOperationException("API key authentication cannot be enabled when authentication is disabled.");
+        }
+
+        if (EnableCookieAuthentication && !EnableAuthentication)
+        {
+            throw new InvalidOperationException("Cookie authentication cannot be enabled when authentication is disabled.");
+        }
+
+        if (EnableCookieAuthentication)
+        {
+            (Cookie ?? throw new InvalidOperationException("Cookie authentication settings are required when the cookie scheme is enabled."))
+                .Validate();
         }
 
         if (AllowApiKeyInQueryString && !EnableApiKeyAuthentication)

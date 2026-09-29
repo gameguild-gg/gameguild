@@ -3,6 +3,7 @@ using Asp.Versioning.ApiExplorer;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Tenants;
 using GameGuild.API.Core.CostAccounting;
+using GameGuild.Configuration.PresentationLayer;
 using Serilog;
 
 namespace GameGuild.API.Setup;
@@ -56,7 +57,10 @@ public static class PipelineExtensions
         app.UseRequestLocalization();
 
         // 09. Security Headers (X-Content-Type-Options, X-Frame-Options, CSP, Referrer-Policy, etc.)
-        app.UseSecurityHeaders();
+        var securityHeaders = PresentationLayerOptionsBuilder.Create(app.Configuration).SecurityHeaders
+                              ?? new SecurityHeadersOptions();
+        securityHeaders.Validate();
+        app.UseSecurityHeaders(securityHeaders);
 
         // 10. Routing (endpoint matching, required before auth)
         app.UseRouting();

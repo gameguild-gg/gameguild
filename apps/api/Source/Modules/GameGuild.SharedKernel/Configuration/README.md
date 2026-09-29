@@ -62,6 +62,53 @@ Base classes for configuration options:
 
 ## Usage Examples
 
+### Security Headers
+
+The API binds `PresentationLayer:SecurityHeaders` and applies those settings in the request pipeline. Defaults enable
+`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, Content Security Policy, Permissions Policy, and
+no-cache headers for sensitive routes. The API keeps separate policies for regular responses and Swagger pages.
+
+```json
+{
+  "PresentationLayer": {
+    "SecurityHeaders": {
+      "EnableXFrameOptions": true,
+      "XFrameOptionsValue": "DENY",
+      "EnableContentSecurityPolicy": true,
+      "ContentSecurityPolicyValue": "default-src 'none'; frame-ancestors 'none'"
+    }
+  }
+}
+```
+
+Custom header values are validated before the middleware is configured and must not contain line breaks.
+
+### Optional Cookie Authentication
+
+Cookie authentication is disabled by default and is registered as a named scheme without changing JWT bearer as the
+default. Cookie settings are configured under `PresentationLayer:Authentication:Cookie`; the server enforces
+`HttpOnly`, HTTPS-only transmission, `Path=/`, and no cookie domain. Authentication failures return 401/403 instead
+of redirecting API clients to HTML pages.
+
+```json
+{
+  "PresentationLayer": {
+    "Authentication": {
+      "EnableCookieAuthentication": true,
+      "Cookie": {
+        "SchemeName": "GameGuildCookie",
+        "Name": "__Host-GameGuild.Auth",
+        "Expiration": "08:00:00",
+        "SlidingExpiration": false,
+        "SameSite": "Strict"
+      }
+    }
+  }
+}
+```
+
+The cookie scheme is opt-in. Use HTTPS for the application host before enabling it.
+
 ### Basic Module Configuration
 
 ```csharp

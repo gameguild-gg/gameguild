@@ -13,6 +13,7 @@ using GameGuild.Configuration.PresentationLayer.HealthChecks;
 using GameGuild.Configuration.PresentationLayer.OpenAPI;
 using GameGuild.Configuration.PresentationLayer.RateLimiting;
 using GameGuild.Configuration.PresentationLayer.SignalR;
+using Microsoft.Extensions.Configuration;
 
 
 namespace GameGuild.Tests.SharedKernel.Unit.Configuration;
@@ -102,6 +103,41 @@ public class PresentationLayerOptionsTests
         options.Controllers.Should().NotBeNull();
         options.Endpoints.Should().NotBeNull();
         options.Authentication.Should().NotBeNull();
+        options.SecurityHeaders.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void Create_BindsSecurityHeadersFromPresentationLayerSection()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["PresentationLayer:SecurityHeaders:EnableXFrameOptions"] = "false",
+                ["PresentationLayer:SecurityHeaders:XFrameOptionsValue"] = "SAMEORIGIN"
+            })
+            .Build();
+
+        var options = PresentationLayerOptionsBuilder.Create(configuration);
+
+        options.SecurityHeaders.Should().NotBeNull();
+        options.SecurityHeaders!.EnableXFrameOptions.Should().BeFalse();
+        options.SecurityHeaders.XFrameOptionsValue.Should().Be("SAMEORIGIN");
+    }
+
+    [Fact]
+    public void Validate_RejectsInvalidNestedSecurityHeaderValues()
+    {
+        var options = new PresentationLayerOptions
+        {
+            SecurityHeaders = new SecurityHeadersOptions
+            {
+                XFrameOptionsValue = "DENY\r\nSet-Cookie: session=attacker"
+            }
+        };
+
+        var act = () => options.Validate();
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("*line breaks*");
     }
 
     [Fact]
@@ -243,6 +279,20 @@ public class AuthenticationOptionsTests
         var act = () => options.Validate();
 
         act.Should().Throw<InvalidOperationException>().WithMessage("*expiration*");
+    }
+
+    [Fact]
+    public void Validate_CookieAuthenticationRequiresAuthentication()
+    {
+        var options = new AuthenticationOptions
+        {
+            EnableAuthentication = false,
+            EnableCookieAuthentication = true
+        };
+
+        var act = () => options.Validate();
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("*Cookie authentication*disabled*");
     }
 }
 

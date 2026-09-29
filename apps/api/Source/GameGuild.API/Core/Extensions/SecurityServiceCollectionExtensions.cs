@@ -8,7 +8,9 @@ using GameGuild.Configuration.PresentationLayer.CORS;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Authorization.Utilities;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
 using AuthorizationOptions = GameGuild.Configuration.PresentationLayer.Authorization.AuthorizationOptions;
@@ -130,6 +132,33 @@ public static class SecurityServiceCollectionExtensions
                 {
                     apiKeyOptions.QueryStringParameterName = options.ApiKeyQueryStringParameterName;
                 }
+            });
+        }
+
+        if (options.EnableCookieAuthentication)
+        {
+            var cookieSettings = options.Cookie!;
+            authenticationBuilder.AddCookie(cookieSettings.SchemeName, cookieOptions =>
+            {
+                cookieOptions.Cookie.Name = cookieSettings.Name;
+                cookieOptions.Cookie.Path = "/";
+                cookieOptions.Cookie.HttpOnly = true;
+                cookieOptions.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                cookieOptions.Cookie.SameSite = cookieSettings.SameSite;
+                cookieOptions.ExpireTimeSpan = cookieSettings.Expiration;
+                cookieOptions.SlidingExpiration = cookieSettings.SlidingExpiration;
+                cookieOptions.Events.OnRedirectToLogin = context =>
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+
+                    return Task.CompletedTask;
+                };
+                cookieOptions.Events.OnRedirectToAccessDenied = context =>
+                {
+                    context.Response.StatusCode = StatusCodes.Status403Forbidden;
+
+                    return Task.CompletedTask;
+                };
             });
         }
 
