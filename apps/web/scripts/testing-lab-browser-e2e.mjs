@@ -788,13 +788,13 @@ async function run() {
     await waitForText(page, "Approved");
 
     await page
-      .getByRole("button", { name: "Close applications", exact: true })
+      .getByRole("button", { name: "Close game submissions", exact: true })
       .click();
-    await waitForText(page, "Applications closed");
+    await waitForText(page, "Game submissions are closed.");
     await page
-      .getByRole("button", { name: "Schedule event", exact: true })
+      .getByRole("button", { name: "Publish session schedule", exact: true })
       .click();
-    await waitForText(page, "Scheduled");
+    await waitForText(page, "The schedule is published.");
     console.log(
       "[testing-lab-browser-e2e] tester seat through the public experience",
     );
@@ -841,7 +841,7 @@ async function run() {
     console.log("[testing-lab-browser-e2e] manager operations surfaces");
     for (const [pathname, title] of [
       ["/workspace/testing-lab", "Testing Lab"],
-      ["/workspace/testing-lab/events", "Testing sessions"],
+      ["/workspace/testing-lab/events", "Testing events"],
       [
         `/workspace/testing-lab/events/${fixture.event.id}/overview`,
         "Event overview",
@@ -1114,7 +1114,7 @@ async function run() {
     );
     await waitForClientHydration(page);
     await page
-      .getByRole("button", { name: "Start event", exact: true })
+      .getByRole("button", { name: "Start playtest", exact: true })
       .click();
     await waitForText(page, "Event status updated.");
     await waitForText(page, "Active");
