@@ -1,6 +1,7 @@
 using System.Text.Json;
 using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
+using GameGuild.Identity.Users;
 
 namespace GameGuild.Identity.Authentication;
 
@@ -183,7 +184,8 @@ public sealed class AssignRoleToUserCommandHandler(IRoleRepository roleRepositor
 /// </summary>
 public sealed class BulkAssignRolesCommandHandler(
     IRoleRepository roleRepository,
-    IActorContextAccessor actorContextAccessor
+    IActorContextAccessor actorContextAccessor,
+    IUserRepository userRepository
 ) : ICommandHandler<BulkAssignRolesCommand, BulkRoleAssignmentResult>
 {
     private const int MaximumUsersPerRequest = 500;
@@ -228,6 +230,17 @@ public sealed class BulkAssignRolesCommandHandler(
         }
 
         var uniqueUserIds = request.UserIds.Distinct().ToArray();
+        var existingUsers = await userRepository.GetByIdsAsync(uniqueUserIds, cancellationToken)
+            .ConfigureAwait(false);
+        var existingUserIds = existingUsers.Select(user => user.Id).ToHashSet();
+        var missingUserIds = uniqueUserIds.Where(userId => !existingUserIds.Contains(userId)).ToArray();
+        if (missingUserIds.Length > 0)
+        {
+            throw new ArgumentException(
+                $"User IDs must belong to existing, non-deleted users. Invalid IDs: {string.Join(", ", missingUserIds)}",
+                nameof(request));
+        }
+
         var outcomes = await roleRepository.BulkAssignRoleToUsersAsync(
                 role.Id,
                 uniqueUserIds,
