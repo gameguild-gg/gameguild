@@ -26,11 +26,7 @@ const FORMATS: ReadonlyArray<{
   },
 ];
 
-interface NewBlogPostFormProps {
-  viewerHandle: string | null;
-}
-
-export function NewBlogPostForm({ viewerHandle }: NewBlogPostFormProps) {
+export function NewBlogPostForm() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [format, setFormat] = useState<BlogContentFormat>("Markdown");
@@ -47,14 +43,11 @@ export function NewBlogPostForm({ viewerHandle }: NewBlogPostFormProps) {
       setSubmitting(false);
       return;
     }
-    const post = result.data as { slug?: string };
-    const handle = viewerHandle;
-    if (!handle || !post.slug) {
-      setError("The post was created but its URL could not be determined.");
-      setSubmitting(false);
+    if (result.editUrl) {
+      router.replace(result.editUrl);
       return;
     }
-    router.replace(`/blogs/${handle}/${post.slug}/edit`);
+    router.push("/blogs");
   };
 
   return (

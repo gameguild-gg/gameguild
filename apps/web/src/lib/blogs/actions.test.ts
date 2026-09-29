@@ -10,7 +10,7 @@ vi.mock('react', async (importOriginal) => ({
   cache: <T extends (...args: never[]) => unknown>(fn: T) => fn,
 }));
 
-import { updateDraft } from './actions';
+import { createPost, updateDraft } from './actions';
 
 function fetchResponding(status: number, body: unknown) {
   return vi.fn().mockResolvedValue(
@@ -81,5 +81,58 @@ describe('blog action error mapping', () => {
     const result = await updateDraft('p1', { revision: 7, title: 'New title' });
 
     expect(result).toEqual({ success: true, data: { id: 'p1', revision: 8 } });
+  });
+});
+
+describe('createPost', () => {
+  it('resolves editUrl server-side from the author profile', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ id: 'p1', slug: 'devlog-2', primaryAuthorId: 'u1' }), {
+            status: 201,
+            headers: { 'Content-Type': 'application/json' },
+          }),
+        )
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ handle: 'jane' }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          }),
+        ),
+    );
+
+    const result = await createPost({ title: 'DevLog 2', format: 'Markdown' });
+
+    expect(result).toEqual({
+      success: true,
+      data: { id: 'p1', slug: 'devlog-2', primaryAuthorId: 'u1' },
+      editUrl: '/blogs/jane/devlog-2/edit',
+    });
+  });
+
+  it('returns editUrl null when handle resolution fails', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ id: 'p1', slug: 'devlog-2', primaryAuthorId: 'u1' }), {
+            status: 201,
+            headers: { 'Content-Type': 'application/json' },
+          }),
+        )
+        .mockResolvedValueOnce(new Response('not found', { status: 404 })),
+    );
+
+    const result = await createPost({ title: 'DevLog 2', format: 'Markdown' });
+
+    expect(result).toEqual({
+      success: true,
+      data: { id: 'p1', slug: 'devlog-2', primaryAuthorId: 'u1' },
+      editUrl: null,
+    });
   });
 });

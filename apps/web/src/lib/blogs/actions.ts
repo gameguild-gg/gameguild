@@ -136,10 +136,31 @@ export async function setReaction(postId: string, react: boolean): Promise<{ ok:
 }
 
 export async function createPost(input: CreateBlogPostInput) {
-  return blogRequest<BlogPostDetail>('/api/social/blog/posts', {
+  const result = await blogRequest<BlogPostDetail>('/api/social/blog/posts', {
     method: 'POST',
     body: JSON.stringify(input),
   });
+  if (!result.success) return result;
+
+  const primaryAuthorId = (result.data as { primaryAuthorId?: string }).primaryAuthorId;
+  const handle = primaryAuthorId ? await fetchProfileHandle(primaryAuthorId) : null;
+  const slug = result.data.slug;
+  const editUrl = handle && slug ? `/blogs/${encodeURIComponent(handle)}/${encodeURIComponent(slug)}/edit` : null;
+  return { success: true as const, data: result.data, editUrl };
+}
+
+async function fetchProfileHandle(userId: string): Promise<string | null> {
+  const { token, tenantId } = await getRequestAuthContext();
+  if (!token || !tenantId) return null;
+
+  const response = await fetch(`${apiBaseUrl}/api/social/profiles/users/${encodeURIComponent(userId)}`, {
+    headers: { Authorization: `Bearer ${token}`, 'X-Tenant-Id': tenantId },
+    cache: 'no-store',
+  });
+  if (!response.ok) return null;
+
+  const profile = (await response.json().catch(() => null)) as { handle?: unknown } | null;
+  return typeof profile?.handle === 'string' && profile.handle ? profile.handle : null;
 }
 
 /**
@@ -284,11 +305,10 @@ export async function resolveProfileByHandle(handle: string): Promise<
 
 /** Viewer identity + handle for the blog editor surfaces. */
 export async function getViewerBlogAuthor(): Promise<{ userId: string | null; handle: string | null }> {
-  const { session } = await getRequestAuthContext();
+  const { session, token, tenantId } = await getRequestAuthContext();
   const userId = session && typeof session !== 'function' ? session.user?.id ?? null : null;
   if (!userId) return { userId: null, handle: null };
 
-  const { token, tenantId } = await getRequestAuthContext();
   const headers: Record<string, string> = {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(tenantId ? { 'X-Tenant-Id': tenantId } : {}),
