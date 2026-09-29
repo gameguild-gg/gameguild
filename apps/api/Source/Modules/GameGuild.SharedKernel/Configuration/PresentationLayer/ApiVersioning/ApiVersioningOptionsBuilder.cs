@@ -98,4 +98,17 @@ public static class ApiVersioningOptionsBuilder
             _ => new UrlSegmentApiVersionReader()
         };
     }
+
+    /// <summary>
+    ///     Creates the parser for the configured numeric version format.
+    /// </summary>
+    public static IApiVersionParser CreateParser(ApiVersionFormatKind format)
+    {
+        return format switch
+        {
+            ApiVersionFormatKind.Native => ApiVersionParser.Default,
+            ApiVersionFormatKind.SemanticVersion => SemanticApiVersionParser.Instance,
+            _ => throw new ArgumentOutOfRangeException(nameof(format), format, "The API version format is not supported.")
+        };
+    }
 }

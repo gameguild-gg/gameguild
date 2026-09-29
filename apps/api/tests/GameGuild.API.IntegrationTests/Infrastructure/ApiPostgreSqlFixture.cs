@@ -25,6 +25,8 @@ public sealed class ApiPostgreSqlFixture : IAsyncLifetime
 
     public WebApplicationFactory<Program> Factory { get; private set; } = null!;
 
+    public string ConnectionString => _container.ConnectionString;
+
     public async Task InitializeAsync()
     {
         _container = await EconomyPostgreSqlTestDatabase.CreateAsync("api_integration");

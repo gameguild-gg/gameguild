@@ -144,5 +144,8 @@ infra/
 # Playwright MCP test artifacts
 .playwright-mcp/
 
+# BenchmarkDotNet run artifacts
+BenchmarkDotNet.Artifacts/
+
 # Local AI tooling state and generated logs
 .mimosa/

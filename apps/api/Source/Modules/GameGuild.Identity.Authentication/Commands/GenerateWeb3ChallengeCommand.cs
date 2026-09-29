@@ -9,5 +9,5 @@ public class GenerateWeb3ChallengeCommand : ICommand<Web3ChallengeResponse>
 {
     public string WalletAddress { get; set; } = string.Empty;
 
-    public string ChainId { get; set; } = string.Empty;
+    public string ChainId { get; set; } = "1";
 }

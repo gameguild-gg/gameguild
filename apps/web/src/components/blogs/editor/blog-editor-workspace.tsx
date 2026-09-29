@@ -1,17 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@game-guild/ui/components/badge";
 import { Button } from "@game-guild/ui/components/button";
 import { Input } from "@game-guild/ui/components/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@game-guild/ui/components/select";
 import { Separator } from "@game-guild/ui/components/separator";
 import { Textarea } from "@game-guild/ui/components/textarea";
 import {
@@ -80,18 +73,7 @@ export function BlogEditorWorkspace({
     { draft: draftFromPost(initialPost), revision: initialPost.revision ?? 1 },
     ({ draft, revision }) => createBlogEditorState(draft, revision),
   );
-  const baseline = useRef<BlogEditorDraft>(draftFromPost(initialPost));
-  const [settings, setSettings] = useState<BlogSettingsState>({
-    tags: initialPost.tags ?? [],
-    excerpt: initialPost.excerpt ?? "",
-    metaTitle: initialPost.metaTitle ?? "",
-    metaDescription: initialPost.metaDescription ?? "",
-    ogImageUrl: initialPost.ogImageUrl ?? "",
-    canonicalUrlOverride: initialPost.canonicalUrlOverride ?? "",
-    twitterCard: initialPost.twitterCard ?? TWITTER_CARD_DEFAULT,
-    structuredDataOverride: initialPost.structuredDataOverride ?? "",
-    allowComments: initialPost.allowComments ?? true,
-  });
+  const [baseline, setBaseline] = useState<BlogEditorDraft>(() => draftFromPost(initialPost));
   const [slugEditing, setSlugEditing] = useState(false);
   const [slugValue, setSlugValue] = useState(initialPost.slug ?? "");
   const [slugError, setSlugError] = useState<string | null>(null);
@@ -99,15 +81,10 @@ export function BlogEditorWorkspace({
   const [rightPanel, setRightPanel] = useState<"settings" | "authors" | "copilot">("settings");
 
   const viewerIsPrimary = post.primaryAuthorId === viewerUserId;
-  const revisionRef = useRef(state.revision);
-  revisionRef.current = state.revision;
-  const stateRef = useRef(state);
-  stateRef.current = state;
-
   const persist = useCallback(async () => {
-    const current = stateRef.current;
+    const current = state;
     if (current.status === "conflict") return;
-    const payload = buildAutosavePayload(current.draft, baseline.current);
+    const payload = buildAutosavePayload(current.draft, baseline);
     if (isPayloadEmpty(payload)) return;
     dispatch({ type: "saving" });
     const result = await updateDraft(post.id, {
@@ -128,14 +105,14 @@ export function BlogEditorWorkspace({
       return;
     }
     const saved = result.data as unknown as BlogPostAuthorView;
-    baseline.current = { ...current.draft };
+    setBaseline({ ...current.draft });
     dispatch({ type: "saved", revision: saved.revision ?? current.revision + 1, savedAt: new Date().toISOString() });
     setPost((prev) => ({ ...prev, revision: saved.revision, updatedAt: saved.updatedAt }));
-  }, [post.id]);
+  }, [post.id, state, baseline]);
 
   const dirty = useMemo(
-    () => !isPayloadEmpty(buildAutosavePayload(state.draft, baseline.current)),
-    [state.draft],
+    () => !isPayloadEmpty(buildAutosavePayload(state.draft, baseline)),
+    [state.draft, baseline],
   );
 
   useEffect(() => {
@@ -173,20 +150,9 @@ export function BlogEditorWorkspace({
     }
     const fresh = result.post;
     const freshDraft = draftFromPost(fresh);
-    baseline.current = { ...freshDraft };
+    setBaseline({ ...freshDraft });
     dispatch({ type: "reload-latest", post: { revision: fresh.revision ?? 1, draft: freshDraft } });
     setPost(fresh);
-    setSettings({
-      tags: freshDraft.tags,
-      excerpt: freshDraft.excerpt,
-      metaTitle: freshDraft.metaTitle,
-      metaDescription: freshDraft.metaDescription,
-      ogImageUrl: freshDraft.ogImageUrl,
-      canonicalUrlOverride: freshDraft.canonicalUrlOverride,
-      twitterCard: freshDraft.twitterCard,
-      structuredDataOverride: freshDraft.structuredDataOverride,
-      allowComments: freshDraft.allowComments,
-    });
   };
 
   const edit = (patch: Partial<Omit<BlogEditorDraft, "format">>) => {
@@ -194,7 +160,6 @@ export function BlogEditorWorkspace({
   };
 
   const editSettings = (patch: Partial<BlogSettingsState>) => {
-    setSettings((current) => ({ ...current, ...patch }));
     edit(patch);
   };
 
@@ -214,7 +179,7 @@ export function BlogEditorWorkspace({
     setSlugError(null);
     setSlugEditing(false);
     setPost(saved);
-    baseline.current = draftFromPost(saved);
+    setBaseline(draftFromPost(saved));
     dispatch({ type: "saved", revision: saved.revision ?? state.revision, savedAt: new Date().toISOString() });
     router.replace(`/blogs/${primaryAuthorHandle}/${saved.slug}/edit`);
   };
@@ -269,7 +234,7 @@ export function BlogEditorWorkspace({
           viewerUserId={viewerUserId}
           onChanged={(updated) => {
             setPost(updated);
-            baseline.current = draftFromPost(updated);
+            setBaseline(draftFromPost(updated));
             dispatch({
               type: "reload-latest",
               post: { revision: updated.revision ?? state.revision, draft: draftFromPost(updated) },
@@ -428,7 +393,7 @@ export function BlogEditorWorkspace({
                   <BlogSettingsPanel
                     postId={post.id}
                     post={post}
-                    revision={() => stateRef.current.revision}
+                    revision={() => state.revision}
                     settings={settingsDraft}
                     onChange={editSettings}
                     onPostSaved={(updated) => setPost(updated)}
@@ -452,7 +417,7 @@ export function BlogEditorWorkspace({
                   format={state.draft.format}
                   onRevisionChange={(updated) => {
                     setPost((prev) => ({ ...prev, ...updated }));
-                    baseline.current = { ...draftFromPost({ ...post, ...updated }) };
+                    setBaseline({ ...draftFromPost({ ...post, ...updated }) });
                     dispatch({
                       type: "reload-latest",
                       post: {

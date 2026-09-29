@@ -206,6 +206,7 @@ describe('public community website UX', () => {
     expect((await screen.findAllByRole('menuitem')).map((item) => item.textContent)).toEqual([
       'Workspace',
       'Projects',
+      'Blogs',
     ]);
 
     fireEvent.click(within(nav).getByRole('button', { name: 'Build' }));
