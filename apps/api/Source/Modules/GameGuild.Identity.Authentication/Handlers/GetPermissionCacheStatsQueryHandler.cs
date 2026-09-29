@@ -44,7 +44,16 @@ public sealed class GetPermissionCacheStatsQueryHandler(
                     L2Hits = pair.Value.L2Hits,
                     Misses = pair.Value.Misses
                 },
-                StringComparer.Ordinal)
+                StringComparer.Ordinal),
+            PerformanceMetrics = cache.LookupDurationByType
+                .Select(pair => new CachePerformanceMetric
+                {
+                    Operation = pair.Key,
+                    AverageTime = pair.Value.AverageMilliseconds,
+                    RequestCount = (int)Math.Min(int.MaxValue, pair.Value.Count),
+                    Timestamp = DateTime.UtcNow
+                })
+                .ToList()
         });
     }
 }

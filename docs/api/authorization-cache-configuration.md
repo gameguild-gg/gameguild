@@ -68,8 +68,10 @@ The hidden permission administration controller exposes
 `POST /v{version}/permissions/cache:clear` for the authorized user or tenant
 scope. The statistics response reports process-local L1 entry counts, distinct
 users represented by those keys, and the recorded L1/L2 hits, misses, evictions,
-and per-cache-type counts. It does not aggregate across instances. The legacy
-latency field in this statistics response remains empty.
+and per-cache-type counts. `PerformanceMetrics` includes the average measured
+cache lookup duration and sample count per cache type since process start. It
+retains no raw samples and does not aggregate across instances. The OpenTelemetry
+histogram remains the source for percentile analysis in the configured collector.
 
 Set `OpenTelemetry:Enabled` to `true` to export the authorization cache meter
 alongside traces. It uses the configured console exporter and OTLP endpoint and
