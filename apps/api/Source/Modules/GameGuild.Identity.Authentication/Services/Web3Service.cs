@@ -32,7 +32,9 @@ public class Web3Service : IWeb3Service
         _memoryCache = memoryCache;
         var origin = configuration[$"{SiweConfigurationPrefix}:Origin"];
         if (string.IsNullOrWhiteSpace(origin))
+        {
             throw new InvalidOperationException($"{SiweConfigurationPrefix}:Origin must be configured for SIWE authentication.");
+        }
 
         _origin = ParseOrigin(origin);
         _statement = string.IsNullOrWhiteSpace(configuration[$"{SiweConfigurationPrefix}:Statement"])
@@ -41,10 +43,21 @@ public class Web3Service : IWeb3Service
         _allowedChainIds = LoadAllowedChainIds(configuration);
     }
 
-    public Task<Web3Challenge> GenerateChallengeAsync(string walletAddress, Guid? tenantId = null, string chainId = "1")
+    public Task<Web3Challenge> GenerateChallengeAsync(string walletAddress) =>
+        GenerateChallengeAsync(walletAddress, tenantId: null, chainId: "1");
+
+    public Task<Web3Challenge> GenerateChallengeAsync(string walletAddress, Guid? tenantId) =>
+        GenerateChallengeAsync(walletAddress, tenantId, chainId: "1");
+
+    public Task<Web3Challenge> GenerateChallengeAsync(string walletAddress, string chainId) =>
+        GenerateChallengeAsync(walletAddress, tenantId: null, chainId);
+
+    public Task<Web3Challenge> GenerateChallengeAsync(string walletAddress, Guid? tenantId, string chainId)
     {
         if (!IsValidWalletAddress(walletAddress))
+        {
             throw new ArgumentException("Invalid Ethereum address", nameof(walletAddress));
+        }
 
         var normalizedChainId = GetAllowedChainId(chainId);
         var checksummedAddress = AddressUtil.Current.ConvertToChecksumAddress(walletAddress);
@@ -86,12 +99,22 @@ public class Web3Service : IWeb3Service
         return Task.FromResult(challenge);
     }
 
+    public Task<bool> VerifySignatureAsync(string walletAddress, string signature, string originalMessage) =>
+        VerifySignatureAsync(walletAddress, signature, originalMessage, expectedChainId: null, expectedNonce: null);
+
     public Task<bool> VerifySignatureAsync(
         string walletAddress,
         string signature,
         string originalMessage,
-        string? expectedChainId = null,
-        string? expectedNonce = null)
+        string? expectedChainId) =>
+        VerifySignatureAsync(walletAddress, signature, originalMessage, expectedChainId, expectedNonce: null);
+
+    public Task<bool> VerifySignatureAsync(
+        string walletAddress,
+        string signature,
+        string originalMessage,
+        string? expectedChainId,
+        string? expectedNonce)
     {
         if (!IsValidWalletAddress(walletAddress))
         {
@@ -230,7 +253,10 @@ public class Web3Service : IWeb3Service
                 ? value
                 : authorityHeader + value[configuredHeader.Length..];
             message = SiweMessageParser.ParseUsingAbnf(parserInput);
-            if (!message.HasRequiredFields()) return false;
+            if (!message.HasRequiredFields())
+            {
+                return false;
+            }
 
             var canonicalBody = SiweMessageStringBuilder.BuildMessage(message);
             return string.Equals(canonicalBody, parserInput, StringComparison.Ordinal);
@@ -246,7 +272,9 @@ public class Web3Service : IWeb3Service
     private bool VerifyEthereumSignature(string message, string signature, string walletAddress)
     {
         if (string.IsNullOrEmpty(signature) || signature.Length != 132 || !signature.StartsWith("0x", StringComparison.Ordinal))
+        {
             return false;
+        }
 
         try
         {
@@ -264,7 +292,9 @@ public class Web3Service : IWeb3Service
     private string GetAllowedChainId(string chainId)
     {
         if (!TryNormalizeChainId(chainId, out var normalized) || !_allowedChainIds.Contains(normalized))
+        {
             throw new ArgumentException("The requested Ethereum chain is not enabled for SIWE authentication.", nameof(chainId));
+        }
 
         return normalized;
     }
@@ -277,13 +307,18 @@ public class Web3Service : IWeb3Service
             .Where(value => !string.IsNullOrWhiteSpace(value))
             .ToArray();
 
-        if (configuredValues.Length == 0) return ["1"];
+        if (configuredValues.Length == 0)
+        {
+            return ["1"];
+        }
 
         var chainIds = new HashSet<string>(StringComparer.Ordinal);
         foreach (var configuredValue in configuredValues)
         {
             if (!TryNormalizeChainId(configuredValue, out var normalized))
+            {
                 throw new InvalidOperationException("Authentication:Web3:Siwe:AllowedChainIds contains an invalid chain ID.");
+            }
 
             chainIds.Add(normalized);
         }
