@@ -8,6 +8,7 @@ public enum PublicationKind
     ProjectPublished,
     TestingEventCreated,
     ProjectJoinedTestingEvent,
+    BlogPostPublished,
 }
 
 /// <summary>
@@ -33,4 +34,10 @@ public sealed record AnnouncePublicationCommand : ICommand<Result>
     public DateTime? StartsAt { get; init; }
 
     public Guid? TenantId { get; init; }
+
+    public IReadOnlyList<Guid> CoAuthorIds { get; init; } = [];
+
+    public string? Excerpt { get; init; }
+
+    public string? CanonicalUrl { get; init; }
 }

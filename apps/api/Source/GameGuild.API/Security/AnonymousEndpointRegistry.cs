@@ -131,6 +131,14 @@ public static class AnonymousEndpointRegistry
             ["RepliesController.GetDiscussionReplies"] = "Public replies under a public discussion.",
             ["LikesController.GetCourseLikeCount"] = "Aggregate public like count for a course.",
 
+            // ── Public blog reading surface (published content only) ──
+            ["BlogPublicController.GetAuthorPosts"] = "Public blog reading surface — published content only.",
+            ["BlogPublicController.GetPostDetail"] = "Public blog reading surface — published content only.",
+            ["BlogPublicController.ResolveRoute"] = "Public blog reading surface — published content only.",
+            ["BlogPublicController.GetIndex"] = "Public blog reading surface — published content only.",
+            ["BlogPublicController.RecordView"] = "Public blog reading surface — published content only; atomic view counter with PerIp rate limiting.",
+            ["BlogPublicController.GetComments"] = "Public blog reading surface — published content only.",
+
             // ── Public intake forms ──
             ["MarketingLeadController.CreateLead"] = "Public contact form; rate limited and validated.",
 
