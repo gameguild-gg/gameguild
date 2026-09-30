@@ -1,5 +1,7 @@
 using System.Security.Claims;
+using System.Text;
 using FluentAssertions;
+using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.API;
 using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Authentication;
@@ -35,6 +37,40 @@ public sealed class SecurityServiceCollectionExtensionsTests
         bearer.TokenValidationParameters.ValidAudience.Should().Be("ProductAudience");
         bearer.TokenValidationParameters.ClockSkew.Should().Be(TimeSpan.FromSeconds(15));
         bearer.TokenValidationParameters.RoleClaimType.Should().Be("role");
+    }
+
+    [Fact]
+    public void SetupAuthentication_UsesJwtValuesFromAuthenticationOptions()
+    {
+        var services = new ServiceCollection();
+        var configuration = CreateConfiguration("Production");
+        var authenticationOptions = CreateAuthenticationOptions();
+        authenticationOptions.JwtSecretKey = new string('o', 64);
+        authenticationOptions.JwtIssuer = "OptionsIssuer";
+        authenticationOptions.JwtAudience = "OptionsAudience";
+        authenticationOptions.JwtExpiration = TimeSpan.FromMinutes(15);
+        authenticationOptions.RefreshTokenExpirationDays = 14;
+
+        services.Configure<JwtOptions>(configuration.GetSection("Jwt"));
+        services.SetupAuthentication(configuration, authenticationOptions);
+
+        using var provider = services.BuildServiceProvider();
+        var tokenValidationParameters = provider.GetRequiredService<IOptionsMonitor<JwtBearerOptions>>()
+            .Get(JwtBearerDefaults.AuthenticationScheme)
+            .TokenValidationParameters;
+
+        tokenValidationParameters.ValidIssuer.Should().Be("OptionsIssuer");
+        tokenValidationParameters.ValidAudience.Should().Be("OptionsAudience");
+        var signingKey = tokenValidationParameters.IssuerSigningKey.Should()
+            .BeOfType<SymmetricSecurityKey>().Subject;
+        signingKey.Key.Should().Equal(Encoding.UTF8.GetBytes(authenticationOptions.JwtSecretKey));
+
+        var issuedTokenOptions = provider.GetRequiredService<IOptions<JwtOptions>>().Value;
+        issuedTokenOptions.SecretKey.Should().Be(authenticationOptions.JwtSecretKey);
+        issuedTokenOptions.Issuer.Should().Be(authenticationOptions.JwtIssuer);
+        issuedTokenOptions.Audience.Should().Be(authenticationOptions.JwtAudience);
+        issuedTokenOptions.AccessTokenExpirationMinutes.Should().Be(15);
+        issuedTokenOptions.RefreshTokenExpirationDays.Should().Be(14);
     }
 
     [Fact]

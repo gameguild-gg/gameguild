@@ -77,7 +77,8 @@ public class AuthenticationOptionsTests
         options.JwtSecretKey.Should().BeEmpty();
         options.JwtIssuer.Should().BeEmpty();
         options.JwtAudience.Should().BeEmpty();
-        options.JwtExpiration.Should().Be(TimeSpan.FromHours(24));
+        options.JwtExpiration.Should().Be(TimeSpan.FromHours(1));
+        options.RefreshTokenExpirationDays.Should().Be(30);
     }
 
     [Fact]
@@ -131,6 +132,22 @@ public class AuthenticationOptionsTests
         };
         var act = () => options.Validate();
         act.Should().Throw<InvalidOperationException>().WithMessage("*expiration*");
+    }
+
+    [Fact]
+    public void Validate_NonPositiveRefreshTokenExpiration_ShouldThrow()
+    {
+        var options = new AuthenticationOptions
+        {
+            JwtSecretKey = "key",
+            JwtIssuer = "issuer",
+            JwtAudience = "audience",
+            RefreshTokenExpirationDays = 0
+        };
+
+        var act = () => options.Validate();
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("*Refresh token expiration*");
     }
 }
 

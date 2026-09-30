@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Configuration;
 using GameGuild.CQRS;
+using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.Identity.Users;
+using Microsoft.Extensions.Options;
 
 namespace GameGuild.Identity.Authentication;
 
@@ -32,7 +34,8 @@ public sealed class WebAuthnMutationCommandHandler(
     IWebAuthnService webAuthnService,
     IJwtTokenService jwtTokenService,
     IUserRepository userRepository,
-    IConfiguration configuration) :
+    IConfiguration configuration,
+    IOptions<JwtOptions>? jwtOptions = null) :
     ICommandHandler<BeginWebAuthnRegistrationCommand, WebAuthnRegistrationOptionsResult>,
     ICommandHandler<CompleteWebAuthnRegistrationCommand, WebAuthnRegistrationResult>,
     ICommandHandler<BeginWebAuthnAuthenticationCommand, WebAuthnAuthenticationOptionsResult>,
@@ -102,10 +105,12 @@ public sealed class WebAuthnMutationCommandHandler(
             },
             cancellationToken).ConfigureAwait(false);
 
-        var accessTokenMinutes = ParsePositiveInt(configuration["Jwt:AccessTokenExpirationMinutes"], 60);
-        var refreshTokenDays = ParsePositiveInt(
-            configuration["Jwt:RefreshTokenExpirationDays"] ?? configuration["Jwt:RefreshTokenExpiryInDays"],
-            30);
+        var accessTokenMinutes = jwtOptions?.Value.AccessTokenExpirationMinutes
+                                 ?? ParsePositiveInt(configuration["Jwt:AccessTokenExpirationMinutes"], 60);
+        var refreshTokenDays = jwtOptions?.Value.RefreshTokenExpirationDays
+                               ?? ParsePositiveInt(
+                                   configuration["Jwt:RefreshTokenExpirationDays"] ?? configuration["Jwt:RefreshTokenExpiryInDays"],
+                                   30);
         result.AccessTokenExpiresAt = SystemClock.UtcNow.AddMinutes(accessTokenMinutes);
         result.RefreshTokenExpiresAt = SystemClock.UtcNow.AddDays(refreshTokenDays);
         result.ExpiresIn = accessTokenMinutes * 60;

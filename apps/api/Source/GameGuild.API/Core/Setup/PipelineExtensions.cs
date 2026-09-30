@@ -4,6 +4,7 @@ using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Tenants;
 using GameGuild.API.Core.ApiVersioning;
 using GameGuild.API.Core.CostAccounting;
+using GameGuild.Configuration.PresentationLayer;
 using GameGuild.API.Core.Middleware;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -65,7 +66,10 @@ public static class PipelineExtensions
         app.UseProblemDetailsStatusCodePages();
 
         // 09. Security Headers (X-Content-Type-Options, X-Frame-Options, CSP, Referrer-Policy, etc.)
-        app.UseSecurityHeaders();
+        var securityHeaders = PresentationLayerOptionsBuilder.Create(app.Configuration).SecurityHeaders
+                              ?? new SecurityHeadersOptions();
+        securityHeaders.Validate();
+        app.UseSecurityHeaders(securityHeaders);
 
         // 10. Routing (endpoint matching, required before auth)
         app.UseRouting();

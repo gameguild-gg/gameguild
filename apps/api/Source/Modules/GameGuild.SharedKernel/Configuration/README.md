@@ -62,6 +62,101 @@ Base classes for configuration options:
 
 ## Usage Examples
 
+### Security Headers
+
+The API binds `PresentationLayer:SecurityHeaders` and applies those settings in the request pipeline. Defaults enable
+`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, Content Security Policy, Permissions Policy, and
+no-cache headers for sensitive routes. The API keeps separate policies for regular responses and Swagger pages.
+
+```json
+{
+  "PresentationLayer": {
+    "SecurityHeaders": {
+      "EnableXFrameOptions": true,
+      "XFrameOptionsValue": "DENY",
+      "EnableContentSecurityPolicy": true,
+      "ContentSecurityPolicyValue": "default-src 'none'; frame-ancestors 'none'"
+    }
+  }
+}
+```
+
+Custom header values are validated before the middleware is configured and must not contain line breaks.
+
+### Authentication Password Policy
+
+Local account registration uses the typed password policy under `PresentationLayer:Authentication:PasswordPolicy`.
+Minimum and maximum lengths are validated at startup. For compatibility, `Authentication:PasswordPolicy` and the
+older top-level `PasswordPolicy` keys remain supported as fallbacks by the password hasher.
+
+```json
+{
+  "PresentationLayer": {
+    "Authentication": {
+      "PasswordPolicy": {
+        "MinPasswordLength": 8,
+        "MaxPasswordLength": 128,
+        "RequireUppercase": true,
+        "RequireLowercase": true,
+        "RequireDigit": true,
+        "RequireSpecialChar": true
+      }
+    }
+  }
+}
+```
+
+### Optional Cookie Authentication
+
+Cookie authentication is disabled by default and is registered as a named scheme without changing JWT bearer as the
+default. Cookie settings are configured under `PresentationLayer:Authentication:Cookie`; the server enforces
+`HttpOnly`, HTTPS-only transmission, `Path=/`, and no cookie domain. Authentication failures return 401/403 instead
+of redirecting API clients to HTML pages.
+
+```json
+{
+  "PresentationLayer": {
+    "Authentication": {
+      "EnableCookieAuthentication": true,
+      "Cookie": {
+        "SchemeName": "GameGuildCookie",
+        "Name": "__Host-GameGuild.Auth",
+        "Expiration": "08:00:00",
+        "SlidingExpiration": false,
+        "SameSite": "Strict"
+      }
+    }
+  }
+}
+```
+
+The cookie scheme is opt-in. Use HTTPS for the application host before enabling it.
+
+### Optional HTTP Basic Authentication
+
+HTTP Basic authentication is disabled by default and registers a named scheme without replacing JWT bearer as the
+default. It accepts local email or username credentials, requires HTTPS on every request, and refuses accounts with
+MFA enabled because the Basic protocol cannot complete a second-factor challenge. Protect endpoints that select this
+scheme with the configured authentication rate-limit policy; the Basic handler itself does not provide account
+lockout.
+
+```json
+{
+  "PresentationLayer": {
+    "Authentication": {
+      "EnableBasicAuthentication": true,
+      "Basic": {
+        "SchemeName": "LegacyBasic",
+        "Realm": "GameGuild Legacy API"
+      }
+    }
+  }
+}
+```
+
+The scheme is intended only for integrations that require Basic credentials. Keep it disabled unless a protected
+endpoint explicitly selects it, and enable it only after HTTPS and the authentication rate-limit policy are active.
+
 ### Basic Module Configuration
 
 ```csharp
