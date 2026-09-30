@@ -302,7 +302,7 @@ public class TasksAggregationTests
     }
 
     [Fact]
-    public async Task SubmitReview_NotifiesAllGroupMemberRowOwners_Anonymously()
+    public async Task LegacyPeerReviewSubmit_FailsClosedWithoutMutatingTheReview()
     {
         await using var db = CreateContext();
         var courseId = Guid.NewGuid();
@@ -322,19 +322,15 @@ public class TasksAggregationTests
         db.Add(review);
         await db.SaveChangesAsync();
 
-        var notifier = new RecordingNotifier();
-        var service = new PeerReviewAssignmentService(db, NullLogger<PeerReviewAssignmentService>.Instance, notifier);
+        var service = new PeerReviewAssignmentService(db, NullLogger<PeerReviewAssignmentService>.Instance);
         var result = await service.SubmitReviewAsync(review, Score(85), "clear thesis, tight argument", null);
 
-        result.IsSuccess.Should().BeTrue();
-        notifier.Sent.Should().HaveCount(3, "every owner of a row sharing the reviewed (CourseGroupId, AttemptNumber) is notified");
-        notifier.Sent.Select(s => s.Recipient).Should().BeEquivalentTo(group.Members.Select(m => m.UserId));
-        notifier.Sent.Should().OnlyContain(s =>
-            s.Message.Contains("peer feedback", StringComparison.OrdinalIgnoreCase) &&
-            s.Message.Contains(assessment.Title));
-        notifier.Sent.Should().OnlyContain(s =>
-            !s.Title.Contains("Eve") && !s.Message.Contains("Eve"),
-            "reviewer identity must never appear in student-facing notification payloads");
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Code.Should().Be("PeerReview.CanonicalRuntimeRequired");
+        var persisted = await db.Set<AssessmentPeerReview>().SingleAsync(value => value.Id == review.Id);
+        persisted.Status.Should().Be(PeerReviewStatus.Assigned);
+        persisted.Score.Should().BeNull();
+        persisted.Feedback.Should().BeNull();
     }
 
     [Fact]

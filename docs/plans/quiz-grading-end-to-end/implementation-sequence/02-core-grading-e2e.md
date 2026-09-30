@@ -14,6 +14,11 @@ Regras globais: [`08-implementation-sequence.md`](../08-implementation-sequence.
 pós-merge confirmou o núcleo entregue, mas encontrou pendências de autoridade
 peer paralela, E2E HTTP + PostgreSQL e upgrade pela cadeia real de migrations.
 
+O fechamento corretivo foi implementado em 30 de setembro de 2026. Os gates
+específicos de grading estão aprovados; o gate global permanece bloqueado por
+erros preexistentes do typecheck web em módulos externos ao escopo, registrados
+no plano de fechamento. A solução completa da API compila sem erros.
+
 Não reexecutar esta Parte 2 inteira. Executar somente o plano de
 [`fechamento da Parte 2`](./02a-core-grading-e2e-closeout.md) e retornar a este
 documento para aprovar o gate de saída.
@@ -584,6 +589,6 @@ esse documento é parte obrigatória deste gate, não uma reexecução de `SEQ-0
 | `SEQ-07` | concluído | runtime comum, entrega imutável e `AuthorTest` isolado dos efeitos acadêmicos |
 | `SEQ-08` | concluído | `InstructorReview` executado pelo runtime, com override, regrade e trilha de auditoria |
 | `SEQ-09` | concluído | `AutomatedReview` autoritativo no servidor e paridade C#/TypeScript pelas fixtures compartilhadas |
-| `SEQ-10` | implementado; gate pendente | implementação funcional entregue; falta E2E HTTP + PostgreSQL e reconstrução persistida definidos em `CLOSE-02` |
-| `SEQ-11` | implementado; fechamento pendente | implementação coletiva entregue; faltam remover dependências peer de `CanonicalRow`/submissions irmãs e executar o E2E relacional |
-| fechamento da Parte 2 | pendente | executar [`CLOSE-01` a `CLOSE-04`](./02a-core-grading-e2e-closeout.md) antes da Parte 3 |
+| `SEQ-10` | concluído | E2E individual de `InstructorReview` e `AutomatedReview` aprovado via HTTP + PostgreSQL, incluindo release e reconstrução persistida |
+| `SEQ-11` | concluído | E2E coletivo aprovado com uma submission e execução; dependências de `CanonicalRow` e submissions irmãs removidas |
+| fechamento da Parte 2 | implementação concluída; gate global bloqueado | `CLOSE-01` a `CLOSE-03` concluídos, suítes de grading e build da API aprovados; typecheck web ainda falha em módulos externos, conforme [`02a`](./02a-core-grading-e2e-closeout.md) |

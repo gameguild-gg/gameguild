@@ -1,0 +1,508 @@
+using System.Net;
+using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using FluentAssertions;
+using GameGuild.API.Database;
+using GameGuild.API.IntegrationTests.Infrastructure;
+using GameGuild.Identity.Tenants;
+using GameGuild.Identity.Users;
+using GameGuild.Learning.Assessments;
+using GameGuild.Learning.Assessments.Grading.Authoring;
+using GameGuild.Learning.Assessments.Grading.Contracts;
+using GameGuild.Learning.Assessments.Grading.Persistence;
+using GameGuild.Learning.Assessments.Grading.Runtime;
+using GameGuild.Learning.Courses;
+using GameGuild.Learning.Enrollments;
+using GameGuild.Learning.Grading.Contracts;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using CourseProgram = GameGuild.Learning.Courses.Program;
+
+namespace GameGuild.API.IntegrationTests;
+
+[Collection(ApiPostgreSqlCollection.Name)]
+public sealed class AssessmentGradingPostgreSqlHttpTests(ApiPostgreSqlFixture fixture)
+{
+    private const string AssessmentsRoute = "/v1/assessments";
+
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        Converters = { new JsonStringEnumConverter() },
+    };
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task OfficialGradingFlow_IsDurableAuthorizedAndIdempotent(
+        bool collective,
+        bool automatedReview)
+    {
+        var scenario = await CreateScenarioAsync(collective, automatedReview);
+        using var learner1 = fixture.CreateAuthenticatedClient(scenario.Learner1Id, scenario.TenantId);
+        using var learner2 = fixture.CreateAuthenticatedClient(scenario.Learner2Id, scenario.TenantId);
+        using var outsider = fixture.CreateAuthenticatedClient(scenario.OutsiderId, scenario.TenantId);
+        using var instructor = fixture.CreateAuthenticatedClient(scenario.InstructorId, scenario.TenantId);
+
+        var genericStart = await learner1.PostAsJsonAsync(
+            $"{AssessmentsRoute}/{scenario.AssessmentId}/submissions/start",
+            new StartSubmissionRequest(scenario.Enrollment1Id),
+            JsonOptions);
+        genericStart.StatusCode.Should().Be(HttpStatusCode.BadRequest,
+            "content-backed graded quizzes must fail closed on the superseded generic route");
+
+        var startKey = $"start-{Guid.NewGuid():N}";
+        AssessmentSubmissionViewV1 started;
+        if (collective)
+        {
+            var request = new StartCollectiveRuntimeSubmissionRequest(scenario.CourseGroupId!.Value, startKey);
+            started = await PostAsync<AssessmentSubmissionViewV1>(
+                learner1,
+                $"{AssessmentsRoute}/{scenario.AssessmentId}/runtime-submissions/collective",
+                request);
+            var replay = await PostAsync<AssessmentSubmissionViewV1>(
+                learner1,
+                $"{AssessmentsRoute}/{scenario.AssessmentId}/runtime-submissions/collective",
+                request);
+            replay.SubmissionId.Should().Be(started.SubmissionId);
+            replay.Execution.ExecutionId.Should().Be(started.Execution.ExecutionId);
+            replay.Execution.DeliveryHash.Should().Be(started.Execution.DeliveryHash);
+            replay.Execution.DefinitionRevisionId.Should().Be(started.Execution.DefinitionRevisionId);
+            AssertSameDelivery(replay, started);
+
+            var resumedBySecondMember = await PostAsync<AssessmentSubmissionViewV1>(
+                learner2,
+                $"{AssessmentsRoute}/{scenario.AssessmentId}/runtime-submissions/collective",
+                new StartCollectiveRuntimeSubmissionRequest(
+                    scenario.CourseGroupId.Value,
+                    $"resume-{Guid.NewGuid():N}"));
+            resumedBySecondMember.SubmissionId.Should().Be(started.SubmissionId);
+        }
+        else
+        {
+            var request = new StartIndividualRuntimeSubmissionRequest(scenario.Enrollment1Id, startKey);
+            started = await PostAsync<AssessmentSubmissionViewV1>(
+                learner1,
+                $"{AssessmentsRoute}/{scenario.AssessmentId}/runtime-submissions/individual",
+                request);
+            var replay = await PostAsync<AssessmentSubmissionViewV1>(
+                learner1,
+                $"{AssessmentsRoute}/{scenario.AssessmentId}/runtime-submissions/individual",
+                request);
+            replay.SubmissionId.Should().Be(started.SubmissionId);
+            replay.Execution.ExecutionId.Should().Be(started.Execution.ExecutionId);
+            replay.Execution.DeliveryHash.Should().Be(started.Execution.DeliveryHash);
+            replay.Execution.DefinitionRevisionId.Should().Be(started.Execution.DefinitionRevisionId);
+            AssertSameDelivery(replay, started);
+        }
+
+        var outsiderRead = await outsider.GetAsync(
+            $"{AssessmentsRoute}/runtime-submissions/{started.SubmissionId}");
+        outsiderRead.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+
+        var submittingClient = collective ? learner2 : learner1;
+        var submitKey = $"submit-{Guid.NewGuid():N}";
+        var submitRequest = new SubmitAssessmentRuntimeRequest(
+            TrueFalseAnswer(true),
+            submitKey,
+            collective ? 0 : null);
+        var submitted = await PostAsync<AssessmentSubmissionViewV1>(
+            submittingClient,
+            $"{AssessmentsRoute}/runtime-submissions/{started.SubmissionId}/submit",
+            submitRequest);
+        var submitReplay = await PostAsync<AssessmentSubmissionViewV1>(
+            submittingClient,
+            $"{AssessmentsRoute}/runtime-submissions/{started.SubmissionId}/submit",
+            submitRequest);
+        submitReplay.Execution.ActiveRoundId.Should().Be(submitted.Execution.ActiveRoundId);
+        submitted.Execution.ActiveRoundId.Should().NotBeNull();
+
+        var divergentSubmit = await submittingClient.PostAsJsonAsync(
+            $"{AssessmentsRoute}/runtime-submissions/{started.SubmissionId}/submit",
+            new SubmitAssessmentRuntimeRequest(
+                TrueFalseAnswer(false),
+                submitKey,
+                collective ? 0 : null),
+            JsonOptions);
+        divergentSubmit.StatusCode.Should().Be(HttpStatusCode.Conflict);
+
+        var learnerBeforeRelease = await GetAsync<AssessmentSubmissionViewV1>(
+            learner1,
+            $"{AssessmentsRoute}/runtime-submissions/{started.SubmissionId}");
+        learnerBeforeRelease.Execution.LearnerVisibleResult.Should().BeNull();
+        learnerBeforeRelease.Execution.InstructorVisibleResult.Should().BeNull();
+        learnerBeforeRelease.Execution.Released.Should().BeFalse();
+
+        var unauthorizedReview = await outsider.PostAsJsonAsync(
+            $"{AssessmentsRoute}/runtime-submissions/{started.SubmissionId}/instructor-review",
+            new ResolveInstructorReviewRequest(
+                Resolution(150),
+                $"unauthorized-review-{Guid.NewGuid():N}"),
+            JsonOptions);
+        unauthorizedReview.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        var unauthorizedRelease = await outsider.PostAsJsonAsync(
+            $"{AssessmentsRoute}/runtime-submissions/{started.SubmissionId}/release",
+            new ReleaseGradeResultCommand(
+                submitted.Execution.ActiveRoundId!.Value,
+                submitted.Version,
+                $"unauthorized-release-{Guid.NewGuid():N}"),
+            JsonOptions);
+        unauthorizedRelease.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+
+        AssessmentSubmissionViewV1 finalized;
+        var expectedScore = automatedReview ? 200 : 175;
+        if (automatedReview)
+        {
+            finalized = await GetAsync<AssessmentSubmissionViewV1>(
+                instructor,
+                $"{AssessmentsRoute}/runtime-submissions/{started.SubmissionId}");
+            finalized.Execution.RequiresInstructorReview.Should().BeFalse();
+        }
+        else
+        {
+            finalized = await PostAsync<AssessmentSubmissionViewV1>(
+                instructor,
+                $"{AssessmentsRoute}/runtime-submissions/{started.SubmissionId}/instructor-review",
+                new ResolveInstructorReviewRequest(
+                    Resolution(expectedScore),
+                    $"review-{Guid.NewGuid():N}"));
+            finalized.Execution.RequiresInstructorReview.Should().BeFalse();
+        }
+
+        finalized.Execution.ActiveRoundId.Should().NotBeNull();
+        finalized.Execution.InstructorVisibleResult!.Score.Should().Be(ScoreValue.FromUnits(expectedScore));
+
+        var releaseKey = $"release-{Guid.NewGuid():N}";
+        var releaseRequest = new ReleaseGradeResultCommand(
+            finalized.Execution.ActiveRoundId!.Value,
+            finalized.Version,
+            releaseKey,
+            "Approved by the integration-test instructor");
+        var released = await PostAsync<GradeResultReleaseResponse>(
+            instructor,
+            $"{AssessmentsRoute}/runtime-submissions/{started.SubmissionId}/release",
+            releaseRequest);
+        var releaseReplay = await PostAsync<GradeResultReleaseResponse>(
+            instructor,
+            $"{AssessmentsRoute}/runtime-submissions/{started.SubmissionId}/release",
+            releaseRequest);
+        releaseReplay.ReleaseId.Should().Be(released.ReleaseId);
+
+        var learnerAfterRelease = await GetAsync<AssessmentSubmissionViewV1>(
+            learner1,
+            $"{AssessmentsRoute}/runtime-submissions/{started.SubmissionId}");
+        learnerAfterRelease.Execution.Released.Should().BeTrue();
+        learnerAfterRelease.Execution.LearnerVisibleResult!.Score.Should()
+            .Be(ScoreValue.FromUnits(expectedScore));
+        learnerAfterRelease.ContentCompleted.Should().BeTrue();
+
+        if (collective)
+        {
+            var secondParticipant = await GetAsync<AssessmentSubmissionViewV1>(
+                learner2,
+                $"{AssessmentsRoute}/runtime-submissions/{started.SubmissionId}");
+            secondParticipant.Execution.LearnerVisibleResult!.Score.Should()
+                .Be(ScoreValue.FromUnits(expectedScore));
+            secondParticipant.ContentCompleted.Should().BeTrue();
+        }
+
+        await AssertPersistedStateAsync(
+            scenario,
+            started,
+            collective ? 2 : 0,
+            collective ? 2 : 1);
+    }
+
+    private async Task<Scenario> CreateScenarioAsync(bool collective, bool automatedReview)
+    {
+        await using var scope = fixture.Factory.Services.CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var authoring = scope.ServiceProvider.GetRequiredService<IAssessmentAuthoringService>();
+        var suffix = Guid.NewGuid().ToString("N");
+        var tenantId = Guid.NewGuid();
+        var instructorId = Guid.NewGuid();
+        var learner1Id = Guid.NewGuid();
+        var learner2Id = Guid.NewGuid();
+        var outsiderId = Guid.NewGuid();
+        var courseId = Guid.NewGuid();
+        var contentId = Guid.NewGuid();
+
+        var tenant = new Tenant
+        {
+            Id = tenantId,
+            Name = $"Grading E2E {suffix}",
+            Slug = $"grading-e2e-{suffix}",
+            AdminEmail = $"admin-{suffix}@grading.test",
+            IsActive = true,
+        };
+        var users = new[]
+        {
+            User(instructorId, "Instructor", suffix),
+            User(learner1Id, "Learner One", suffix),
+            User(learner2Id, "Learner Two", suffix),
+            User(outsiderId, "Outsider", suffix),
+        };
+        var memberships = users.Select(user => new TenantMember
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            UserId = user.Id,
+            Role = user.Id == instructorId ? "Instructor" : "Member",
+            IsActive = true,
+        });
+        var course = new CourseProgram
+        {
+            Id = courseId,
+            TenantId = tenantId,
+            CreatorId = instructorId,
+            Title = $"Grading course {suffix}",
+            Slug = $"grading-course-{suffix}",
+        };
+        var content = new ProgramContent
+        {
+            Id = contentId,
+            TenantId = tenantId,
+            ProgramId = courseId,
+            Title = "Quiz",
+            Slug = $"quiz-{suffix}",
+            Type = ProgramContentType.Questionnaire,
+            JsonBody = "{\"schemaVersion\":1,\"order\":[],\"blocks\":{}}",
+            LessonFormat = null,
+        };
+
+        context.Add(tenant);
+        context.AddRange(users);
+        context.AddRange(memberships);
+        context.Add(course);
+        context.Add(content);
+        await context.SaveChangesAsync();
+
+        var enrollment1 = Enrollment.Create(courseId, learner1Id);
+        enrollment1.TenantId = tenantId;
+        var enrollment2 = Enrollment.Create(courseId, learner2Id);
+        enrollment2.TenantId = tenantId;
+        context.Set<Enrollment>().AddRange(enrollment1, enrollment2);
+        await context.SaveChangesAsync();
+
+        var saved = await authoring.SaveDraftAsync(
+            courseId,
+            contentId,
+            instructorId,
+            new SaveAssessmentDraftRequest(
+                content.Version,
+                null,
+                "Quiz",
+                content.Slug,
+                null,
+                TrueFalseQuiz(),
+                Visibility.Public,
+                true,
+                null,
+                EstimatedMinutesSource.Auto,
+                automatedReview ? ReviewMethods.AutomatedReview : ReviewMethods.InstructorReview,
+                ScoreValue.FromUnits(100),
+                MaxAttempts: 1,
+                ContentCompletionMode: ContentCompletionMode.OnReleaseAndPass,
+                ResultReleaseMode: ResultReleaseMode.Manual));
+        saved.IsSuccess.Should().BeTrue(saved.IsSuccess ? string.Empty : saved.Error.Description);
+
+        var assessment = await context.Set<Assessment>()
+            .SingleAsync(value => value.Id == saved.Value.AssessmentId!.Value);
+        var gradebookGroup = AssessmentGroup.Create(
+            courseId,
+            $"Course grade {suffix}",
+            PercentValue.FromUnits(10000));
+        gradebookGroup.TenantId = tenantId;
+        context.Set<AssessmentGroup>().Add(gradebookGroup);
+        assessment.AssignToGroup(gradebookGroup.Id);
+
+        Guid? courseGroupId = null;
+        if (collective)
+        {
+            var groupSet = CourseGroupSet.Create(courseId, $"Teams {suffix}");
+            groupSet.TenantId = tenantId;
+            var group = CourseGroup.Create(groupSet.Id, "Team One", 4);
+            group.TenantId = tenantId;
+            var firstMember = CourseGroupMember.Create(group.Id, learner1Id);
+            firstMember.TenantId = tenantId;
+            var secondMember = CourseGroupMember.Create(group.Id, learner2Id);
+            secondMember.TenantId = tenantId;
+            context.Set<CourseGroupSet>().Add(groupSet);
+            context.Set<CourseGroup>().Add(group);
+            context.Set<CourseGroupMember>().AddRange(firstMember, secondMember);
+            assessment.AssignToGroupSet(groupSet.Id);
+            courseGroupId = group.Id;
+        }
+
+        await context.SaveChangesAsync();
+        await context.Entry(assessment).ReloadAsync();
+        var prepared = await authoring.PrepareAsync(
+            assessment.Id,
+            instructorId,
+            new PrepareAssessmentRevisionRequest(assessment.Version));
+        prepared.IsSuccess.Should().BeTrue(prepared.IsSuccess ? string.Empty : prepared.Error.Description);
+        await context.Entry(assessment).ReloadAsync();
+        var published = await authoring.PublishAsync(
+            assessment.Id,
+            instructorId,
+            new PublishAssessmentRevisionRequest(prepared.Value.RevisionId, assessment.Version));
+        published.IsSuccess.Should().BeTrue(published.IsSuccess ? string.Empty : published.Error.Description);
+
+        return new Scenario(
+            tenantId,
+            instructorId,
+            learner1Id,
+            learner2Id,
+            outsiderId,
+            assessment.Id,
+            enrollment1.Id,
+            courseGroupId);
+    }
+
+    private async Task AssertPersistedStateAsync(
+        Scenario scenario,
+        AssessmentSubmissionViewV1 started,
+        int participantCount,
+        int projectionCount)
+    {
+        await using var scope = fixture.Factory.Services.CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        (await context.Set<AssessmentSubmission>()
+                .AsNoTracking()
+                .CountAsync(value => value.AssessmentId == scenario.AssessmentId))
+            .Should().Be(1);
+        (await context.Set<GradingExecution>()
+                .AsNoTracking()
+                .CountAsync(value =>
+                    value.AssessmentSubmissionId == started.SubmissionId &&
+                    value.ExecutionContext == ReviewExecutionContext.OfficialSubmission))
+            .Should().Be(1);
+        (await context.Set<GradeRound>()
+                .AsNoTracking()
+                .CountAsync(value => value.GradingExecutionId == started.Execution.ExecutionId))
+            .Should().Be(1);
+        (await context.Set<GradeResultRelease>()
+                .AsNoTracking()
+                .CountAsync(value => value.GradingExecutionId == started.Execution.ExecutionId))
+            .Should().Be(1);
+        (await context.Set<AssessmentSubmissionParticipant>()
+                .AsNoTracking()
+                .CountAsync(value => value.SubmissionId == started.SubmissionId))
+            .Should().Be(participantCount);
+        (await context.Set<AssessmentGradebookEntry>()
+                .AsNoTracking()
+                .CountAsync(value => value.SubmissionId == started.SubmissionId))
+            .Should().Be(projectionCount);
+        (await context.Set<AssessmentContentCompletionProjection>()
+                .AsNoTracking()
+                .CountAsync(value => value.SubmissionId == started.SubmissionId))
+            .Should().Be(projectionCount);
+        (await context.Set<AcademicOutboxMessage>()
+                .AsNoTracking()
+                .CountAsync(value =>
+                    (value.EventType == "grade-result-finalized" ||
+                     value.EventType == "grade-result-released") &&
+                    value.PayloadCanonicalJson.Contains(started.SubmissionId.ToString())))
+            .Should().Be(2);
+    }
+
+    private static async Task<T> PostAsync<T>(HttpClient client, string uri, object request)
+    {
+        using var response = await client.PostAsJsonAsync(uri, request, JsonOptions);
+        await EnsureSuccessAsync(response);
+        return (await response.Content.ReadFromJsonAsync<T>(JsonOptions))!;
+    }
+
+    private static async Task<T> GetAsync<T>(HttpClient client, string uri)
+    {
+        using var response = await client.GetAsync(uri);
+        await EnsureSuccessAsync(response);
+        return (await response.Content.ReadFromJsonAsync<T>(JsonOptions))!;
+    }
+
+    private static async Task EnsureSuccessAsync(HttpResponseMessage response)
+    {
+        if (response.IsSuccessStatusCode)
+        {
+            return;
+        }
+
+        var body = await response.Content.ReadAsStringAsync();
+        throw new InvalidOperationException(
+            $"Expected a successful HTTP response, received {(int)response.StatusCode}: {body}");
+    }
+
+    private static User User(Guid id, string name, string suffix) => new()
+    {
+        Id = id,
+        Name = name,
+        Email = $"{name.Replace(" ", string.Empty, StringComparison.Ordinal).ToLowerInvariant()}-{id:N}@{suffix}.test",
+        Username = $"{name.Replace(" ", string.Empty, StringComparison.Ordinal).ToLowerInvariant()}-{id:N}",
+        IsActive = true,
+        IsEmailVerified = true,
+    };
+
+    private static InstructorReviewResolutionV1 Resolution(int scoreUnits) => new(
+        1,
+        [new InstructorItemResolutionV1("q1", ScoreValue.FromUnits(scoreUnits))],
+        "Reviewed by instructor");
+
+    private static void AssertSameDelivery(
+        AssessmentSubmissionViewV1 actual,
+        AssessmentSubmissionViewV1 expected)
+    {
+        var actualCanonical = CanonicalJson.Serialize(
+            JsonSerializer.SerializeToElement(actual.Execution.Delivery, GradingJson.Options));
+        var expectedCanonical = CanonicalJson.Serialize(
+            JsonSerializer.SerializeToElement(expected.Execution.Delivery, GradingJson.Options));
+        actualCanonical.Should().Be(expectedCanonical);
+    }
+
+    private static AssessmentResponseEnvelopeV1 TrueFalseAnswer(bool value) => new(
+        1,
+        "quiz",
+        "quiz-answer/v1",
+        JsonSerializer.SerializeToElement(new
+        {
+            answers = new Dictionary<string, object>
+            {
+                ["q1"] = new { type = "TRUE_FALSE", value },
+            },
+        }));
+
+    private static JsonElement TrueFalseQuiz() => Json("""
+        {
+          "schemaVersion": 1,
+          "order": [["q1", "quiz"]],
+          "blocks": {
+            "q1": {
+              "type": "TRUE_FALSE",
+              "stem": "The statement is true.",
+              "points": 200,
+              "correctAnswer": true,
+              "settings": { "allowRetry": false }
+            }
+          },
+          "grading": { "schemaVersion": 2, "items": { "q1": {} } }
+        }
+        """);
+
+    private static JsonElement Json(string value)
+    {
+        using var document = JsonDocument.Parse(value);
+        return document.RootElement.Clone();
+    }
+
+    private sealed record Scenario(
+        Guid TenantId,
+        Guid InstructorId,
+        Guid Learner1Id,
+        Guid Learner2Id,
+        Guid OutsiderId,
+        Guid AssessmentId,
+        Guid Enrollment1Id,
+        Guid? CourseGroupId);
+}

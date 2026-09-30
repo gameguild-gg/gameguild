@@ -1,6 +1,7 @@
 # Fechamento da Parte 2. E2E principal de grading
 
-Status: pendente.
+Status: implementação concluída; gate global bloqueado por falhas externas ao
+grading.
 
 ## Objetivo
 
@@ -169,6 +170,53 @@ sem ser modificada e sem executar apenas fragmentos escolhidos de seu SQL.
 - registrar no acompanhamento da Parte 2 as evidências e marcar o gate como
   concluído somente depois de todos os itens acima.
 
+## Evidências da execução em 30 de setembro de 2026
+
+- `CLOSE-01`: o submit peer anterior passa a falhar fechado com
+  `PeerReview.CanonicalRuntimeRequired`; não persiste score/feedback nem envia
+  notificação direta. Ownership, filas e tarefas coletivas usam a submission
+  única e `AssessmentSubmissionParticipant`. A busca estrutural não encontra
+  `CanonicalRow`, `AttemptRowIds`, união ou escolha de submissions irmãs;
+- `CLOSE-02`: quatro cenários passam pelo host real da API e PostgreSQL:
+  individual e coletivo, cada um com `InstructorReview` e
+  `AutomatedReview`. Os testes cobrem start/resume, replay e conflito de
+  idempotência, submit, review, release, autorização negativa, privacidade
+  antes do release e reconstrução em novo scope. Cada cenário persiste uma
+  submission, uma execução, uma rodada, uma release e exatamente os dois
+  eventos canônicos esperados;
+- `CLOSE-03`: cinco testes passam em PostgreSQL. Um banco vazio percorre toda a
+  cadeia e um banco populado na migration imediatamente anterior a
+  `AddAssessmentGradingWorkflow` é atualizado por `IMigrator` até a ponta. Os
+  dados, conversões para unidades inteiras e artefatos são verificados, sem
+  drift e sem editar migration, designer ou snapshot;
+- packages: `@game-guild/grading` passa 16 testes e
+  `@game-guild/grading-adapter-quiz` passa 10 testes; ambos passam typecheck;
+- backend: `GameGuild.Learning.Assessments.UnitTests` passa 396 testes. O
+  projeto de Assessments compila com zero warning e zero erro. A solução
+  completa da API compila com zero erro; a indisponibilidade de
+  `api.nuget.org` produz somente avisos ambientais `NU1900` na auditoria de
+  vulnerabilidades do restore;
+- web direcionada: 45 testes de autoria, lifecycle, tentativa, resultado e
+  SpeedGrader passam;
+- qualidade do diff: `git diff --check` passa e nenhum arquivo histórico de
+  migration foi alterado.
+
+### Bloqueios globais externos
+
+O gate ainda não pode ser marcado como integralmente aprovado porque o
+typecheck global exigido por `CLOSE-04` falha fora do escopo desta parte. O
+build de `apps/api/GameGuild.sln` está aprovado com zero erro; os avisos
+`NU1900` observados são causados apenas pela indisponibilidade da consulta de
+vulnerabilidades do NuGet no ambiente.
+
+O typecheck de `apps/web` não apresenta erro em grading, quiz ou assessments,
+  mas falha em tipos gerados obsoletos de `.next` e em Social/Blogs e
+  Testing Lab.
+
+Esses erros não serão corrigidos por expansão oportunista deste plano. A Parte
+3 permanece bloqueada até os owners correspondentes restaurarem as validações
+globais ou até uma nova decisão explícita de gate.
+
 ## Definição de pronto
 
 - `CLOSE-01` a `CLOSE-04` concluídos;
@@ -184,7 +232,7 @@ sem ser modificada e sem executar apenas fragmentos escolhidos de seu SQL.
 
 | Marco | Status | Evidência esperada |
 | --- | --- | --- |
-| `CLOSE-01` | pendente | busca estrutural, testes fail-closed e ausência de autoridade peer paralela |
-| `CLOSE-02` | pendente | quatro E2Es oficiais via HTTP + PostgreSQL |
-| `CLOSE-03` | pendente | criação limpa, upgrade real populado e diff sem drift |
-| `CLOSE-04` | pendente | suíte acumulada e aprovação explícita do gate |
+| `CLOSE-01` | concluído | busca estrutural limpa, submit peer fail-closed e ausência de notificação/autoridade paralela |
+| `CLOSE-02` | concluído | quatro E2Es oficiais aprovados via HTTP + PostgreSQL |
+| `CLOSE-03` | concluído | criação limpa e upgrade real populado aprovados, sem migration histórica alterada e sem drift |
+| `CLOSE-04` | bloqueado externamente | suítes direcionadas e build da API aprovados; typecheck web falha somente nos módulos externos listados acima |

@@ -1,4 +1,9 @@
+using System.Net.Http.Headers;
+using System.Security.Claims;
+using System.Text.Encodings.Web;
 using GameGuild.API.Database;
+using GameGuild.TestSupport.Finance.Economy;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -8,8 +13,9 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Npgsql;
-using GameGuild.TestSupport.Finance.Economy;
 
 namespace GameGuild.API.IntegrationTests.Infrastructure;
 
@@ -26,6 +32,23 @@ public sealed class ApiPostgreSqlFixture : IAsyncLifetime
     public WebApplicationFactory<Program> Factory { get; private set; } = null!;
 
     public string ConnectionString => _container.ConnectionString;
+
+    public HttpClient CreateAuthenticatedClient(Guid userId, Guid tenantId, bool isSystemAdmin = false)
+    {
+        var client = Factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+            ApiPostgreSqlTestAuthHandler.SchemeName,
+            "authenticated");
+        client.DefaultRequestHeaders.Add(ApiPostgreSqlTestAuthHandler.UserIdHeader, userId.ToString());
+        client.DefaultRequestHeaders.Add(ApiPostgreSqlTestAuthHandler.TenantIdHeader, tenantId.ToString());
+        client.DefaultRequestHeaders.Add("X-Tenant-Id", tenantId.ToString());
+        if (isSystemAdmin)
+        {
+            client.DefaultRequestHeaders.Add(ApiPostgreSqlTestAuthHandler.SystemAdminHeader, "true");
+        }
+
+        return client;
+    }
 
     public async Task InitializeAsync()
     {
@@ -92,8 +115,62 @@ public sealed class ApiPostgreSqlFixture : IAsyncLifetime
                         npgsql.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName));
                 });
                 services.AddScoped<DbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
+                services.AddAuthentication(options =>
+                    {
+                        options.DefaultAuthenticateScheme = ApiPostgreSqlTestAuthHandler.SchemeName;
+                        options.DefaultChallengeScheme = ApiPostgreSqlTestAuthHandler.SchemeName;
+                    })
+                    .AddScheme<AuthenticationSchemeOptions, ApiPostgreSqlTestAuthHandler>(
+                        ApiPostgreSqlTestAuthHandler.SchemeName,
+                        _ => { });
                 services.AddHttpLogging(_ => { });
             });
         }
+    }
+}
+
+internal sealed class ApiPostgreSqlTestAuthHandler(
+    IOptionsMonitor<AuthenticationSchemeOptions> options,
+    ILoggerFactory logger,
+    UrlEncoder encoder)
+    : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
+{
+    public const string SchemeName = "ApiPostgreSqlTest";
+    public const string UserIdHeader = "X-Test-User-Id";
+    public const string TenantIdHeader = "X-Test-Tenant-Id";
+    public const string SystemAdminHeader = "X-Test-System-Admin";
+
+    protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+    {
+        if (!Request.Headers.ContainsKey("Authorization"))
+        {
+            return Task.FromResult(AuthenticateResult.NoResult());
+        }
+
+        if (!Guid.TryParse(Request.Headers[UserIdHeader].FirstOrDefault(), out var userId) ||
+            !Guid.TryParse(Request.Headers[TenantIdHeader].FirstOrDefault(), out var tenantId))
+        {
+            return Task.FromResult(AuthenticateResult.Fail("The test actor headers are invalid."));
+        }
+
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, userId.ToString()),
+            new("sub", userId.ToString()),
+            new(ClaimTypes.Name, $"Integration actor {userId:N}"),
+            new("tenant_id", tenantId.ToString()),
+            new("tid", tenantId.ToString()),
+        };
+        if (string.Equals(
+                Request.Headers[SystemAdminHeader].FirstOrDefault(),
+                "true",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            claims.Add(new Claim(ClaimTypes.Role, "SystemAdmin"));
+        }
+
+        var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, SchemeName));
+        var ticket = new AuthenticationTicket(principal, SchemeName);
+        return Task.FromResult(AuthenticateResult.Success(ticket));
     }
 }
