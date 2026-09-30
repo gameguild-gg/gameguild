@@ -20,10 +20,10 @@ Regras globais: [`08-implementation-sequence.md`](../08-implementation-sequence.
 
 ## Gate de entrada `03-0`
 
-Não iniciar `SEQ-12` enquanto qualquer item `CLOSE-01` a `CLOSE-04` estiver
-pendente. O fechamento resolve somente o delta encontrado após a implementação
-da Parte 2; ele não deve antecipar `SelfReview`, o handler canônico de
-`PeerReview`, a porta de `AIReview` ou a operação avançada desta parte.
+Gate aprovado: `CLOSE-01` a `CLOSE-04` estão concluídos e `SEQ-12` pode
+começar. O fechamento resolveu somente o delta encontrado após a implementação
+da Parte 2; ele não antecipou `SelfReview`, o handler canônico de `PeerReview`,
+a porta de `AIReview` ou a operação avançada desta parte.
 
 O gate deve trazer como evidência:
 
@@ -373,7 +373,9 @@ restaram autoridades concorrentes, referências obsoletas ou lacunas na matriz.
 - a cadeia completa cria o schema final em banco vazio;
 - o upgrade de um banco populado pela migration anterior preserva dados,
   constraints e artefatos SQL ativos;
-- API, web e packages passam em CI;
+- projetos, packages e superfícies web pertencentes ao fluxo de grading passam
+  em CI. Falhas de módulos externos são registradas para seus owners e não
+  bloqueiam este gate;
 - observabilidade distingue falha técnica, espera legítima e revisão humana.
 
 ## Definição de pronto da Parte 3
@@ -393,14 +395,14 @@ restaram autoridades concorrentes, referências obsoletas ou lacunas na matriz.
   consumer obrigatório;
 - auditoria, observabilidade, mapas de serialização e matriz E2E estão
   completos;
-- toda a suíte acumulada das Partes 1, 2 e 3 passa em CI com banco criado do
-  zero e diff global sem drift depois de cada `SCHEMA-GATE`.
+- toda a suíte de grading acumulada das Partes 1, 2 e 3 passa em CI com banco
+  criado do zero e diff global sem drift depois de cada `SCHEMA-GATE`.
 
 ## Acompanhamento
 
 | Marco | Status | Evidência |
 | --- | --- | --- |
-| gate `03-0` | bloqueado pelo fechamento da Parte 2 | `CLOSE-01` a `CLOSE-04` aprovados |
+| gate `03-0` | aprovado | `CLOSE-01` a `CLOSE-04` aprovados; Parte 3 liberada |
 | `SEQ-12` | pendente | `SelfReview` individual e coletivo |
 | `SEQ-13` | pendente | `PeerReview` individual e coletivo |
 | `SEQ-14` | pendente | contract test de provider e gate condicional |
