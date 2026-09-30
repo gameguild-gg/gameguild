@@ -591,7 +591,7 @@ public class PermissionService(
 
         if (securityVersionStore is not null)
         {
-            var tenantKey = tenantId?.ToString() ?? "global";
+            var tenantKey = tenantId?.ToString() ?? Guid.Empty.ToString();
             await securityVersionStore.IncrementVersionAsync(tenantKey).ConfigureAwait(false);
         }
 
