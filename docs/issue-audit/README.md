@@ -6,6 +6,8 @@ This initial source inventory contains **328 unique issues** authored by or assi
 
 A fresh GitHub query on 2026-09-29 confirmed 316 authored and 321 assigned issues, deduplicating to 328 unique records. Current state after PRs #596, #597, #599, and #582: 182 open and 146 closed.
 
+A fresh GitHub API query on 2026-09-30 returned 316 issues created by and 321 assigned to `mathrmartins`; their union remains 328 unique issues. At query time, 179 were open and 149 were closed. The CSV and JSONL files remain the original 2026-09-28 source snapshots; these live counts do not replace issue-level evidence or dispositions.
+
 `gameguild-issues-2026-09-28.csv` preserves issue metadata and per-issue audit fields. `gameguild-issues-source-2026-09-28.jsonl` preserves each original issue body and source metadata as one JSON-escaped record per issue. Most issues still need an evidence review. A mapped PR is an evidence pointer, not proof that the acceptance criteria are complete; update issue dispositions only with current source, tests, dependencies, related issues, and the corresponding PR or rationale.
 
 
