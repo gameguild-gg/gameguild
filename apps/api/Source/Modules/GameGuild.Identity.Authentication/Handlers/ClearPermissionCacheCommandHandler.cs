@@ -78,7 +78,7 @@ public sealed class ClearPermissionCacheCommandHandler(
         else
         {
             // Neither user nor tenant: invalidate every tenant by bumping the global version.
-            const string globalKey = "global";
+            var globalKey = Guid.Empty.ToString();
             var newVersion = await securityVersionStore
                 .IncrementVersionAsync(globalKey, cancellationToken)
                 .ConfigureAwait(false);

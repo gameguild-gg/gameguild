@@ -161,6 +161,22 @@ public sealed class PermissionCommandSecurityTests
     }
 
     [Fact]
+    public async Task ApplyTemplate_SystemAdminGlobalScope_BumpsReservedGlobalVersion()
+    {
+        await using var db = new PermissionFacadeTestDb();
+        var templateId = SeedTemplate(db, isSystemTemplate: true);
+        SetActor(AuthenticatedActor(roles: ["SystemAdmin"], permissions: [], tenantId: null));
+        var handler = BuildTemplateHandler(db);
+
+        var result = await handler.Handle(
+            new ApplyPermissionTemplateCommand { UserId = Guid.NewGuid(), TenantId = null, TemplateId = templateId },
+            CancellationToken.None);
+
+        result.Success.Should().BeTrue();
+        _versionStore.Verify(v => v.IncrementVersionAsync(Guid.Empty.ToString(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task ApplyTemplate_CrossTenantTarget_IsDenied()
     {
         await using var db = new PermissionFacadeTestDb();
@@ -223,7 +239,7 @@ public sealed class PermissionCommandSecurityTests
         var result = await handler.Handle(new ClearPermissionCacheCommand(), CancellationToken.None);
 
         result.Should().BeTrue();
-        _versionStore.Verify(v => v.IncrementVersionAsync("global", It.IsAny<CancellationToken>()), Times.Once);
+        _versionStore.Verify(v => v.IncrementVersionAsync(Guid.Empty.ToString(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -327,6 +343,33 @@ public sealed class PermissionCommandSecurityTests
 
         await act.Should().ThrowAsync<UnauthorizedAccessException>()
             .WithMessage("*system:manage-global-defaults*");
+    }
+
+    [Fact]
+    public async Task BulkResourceGrant_SystemAdminGlobalScope_BumpsReservedGlobalVersion()
+    {
+        await using var db = new ResourcePermissionTestDb();
+        SetActor(AuthenticatedActor(roles: ["SystemAdmin"], permissions: [], tenantId: null));
+        var handler = new BulkGrantResourcePermissionsCommandHandler(
+            db,
+            _actorAccessor.Object,
+            _versionStore.Object,
+            _auditService.Object,
+            NullLogger<BulkGrantResourcePermissionsCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new BulkGrantResourcePermissionsCommand
+            {
+                UserIds = [Guid.NewGuid()],
+                TenantId = Guid.Empty,
+                ResourceId = Guid.NewGuid(),
+                ResourceType = "Document",
+                Permissions = [PermissionType.Read]
+            },
+            CancellationToken.None);
+
+        result.Successful.Should().Be(1);
+        _versionStore.Verify(v => v.IncrementVersionAsync(Guid.Empty.ToString(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -447,6 +490,18 @@ public sealed class PermissionCommandSecurityTests
         _versionStore.Verify(v => v.IncrementVersionAsync(tenantId.ToString(), It.IsAny<CancellationToken>()), Times.Exactly(2));
     }
 
+    [Fact]
+    public async Task LegacyPermissionService_GlobalDefaults_BumpsReservedGlobalVersion()
+    {
+        await using var db = new PermissionFacadeTestDb();
+        SetActor(AuthenticatedActor(roles: ["SystemAdmin"], permissions: [], tenantId: null));
+        var service = new PermissionService(db, _versionStore.Object, _auditService.Object, _actorAccessor.Object);
+
+        await service.SetGlobalDefaultPermissionsAsync([PermissionType.Read]);
+
+        _versionStore.Verify(v => v.IncrementVersionAsync(Guid.Empty.ToString(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     // ─── Setup helpers ───
 
     private static ActorContext AuthenticatedActor(string[] roles, string[] permissions, Guid? tenantId) => new()
@@ -507,5 +562,22 @@ public sealed class PermissionCommandSecurityTests
             modelBuilder.Entity<PermissionTemplate>().Ignore(p => p.Metadata);
             modelBuilder.Entity<TenantPermission>().Ignore(p => p.Metadata);
         }
+    }
+
+    private sealed class ResourcePermissionTestDb : DbContext, IApplicationDbContext
+    {
+        public DbSet<GenericResourcePermission> GenericResourcePermissions { get; set; } = null!;
+
+        public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+            => Database.BeginTransactionAsync(cancellationToken);
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            if (!optionsBuilder.IsConfigured)
+            {
+                optionsBuilder.UseInMemoryDatabase(Guid.NewGuid().ToString("N"));
+            }
+        }
+
     }
 }
