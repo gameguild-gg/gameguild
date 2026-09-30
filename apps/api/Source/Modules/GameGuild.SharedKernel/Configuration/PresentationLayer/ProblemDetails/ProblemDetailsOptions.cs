@@ -293,7 +293,7 @@ public sealed class ProblemDetailsOptions : BaseOptions
     }
 
     private bool IsReservedExtension(string name) =>
-        name is "type" or "title" or "status" or "detail" or "instance" or "errors" or "exception" or "code" ||
+        name is "type" or "title" or "status" or "detail" or "instance" or "errors" or "exception" or "code" or "legacy" ||
         (IncludeTraceId && string.Equals(name, TraceIdExtensionName, StringComparison.Ordinal)) ||
         (IncludeCorrelationId && string.Equals(name, CorrelationIdExtensionName, StringComparison.Ordinal));
 }

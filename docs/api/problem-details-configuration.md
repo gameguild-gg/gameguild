@@ -57,11 +57,11 @@ Localized messages are keyed by culture and message key. The current UI culture 
 
 When correlation IDs are enabled, the configured request header is returned in both the response header and the Problem Details extensions. A single printable value up to 128 characters is accepted. Missing, repeated, comma-joined, control-character, or whitespace-padded values fall back to ASP.NET's trace identifier.
 
-`CustomExtensions` adds static string values to each Problem Details response. Extension names must not replace standard RFC fields, error `code`, validation errors, exception text, or configured trace/correlation IDs. Domain errors expose their stable machine-readable code as a separate `code` extension while retaining their human-readable description in `detail`.
+`CustomExtensions` adds static string values to each Problem Details response. Extension names must not replace standard RFC fields, error `code`, validation errors, exception text, the preserved `legacy` payload, or configured trace/correlation IDs. Domain errors expose their stable machine-readable code as a separate `code` extension while retaining their human-readable description in `detail`.
 
 ## Migration guide
 
-- Existing `BadRequest()`, `NotFound()`, and other empty MVC 4xx/5xx results now include a Problem Details body. Clients should read the HTTP status and the `type` field instead of assuming the response body is empty.
+- Existing `BadRequest()`, `NotFound()`, and other MVC 4xx/5xx results now include a Problem Details body. String messages move to `detail`; other legacy response objects are preserved under the `legacy` extension. Clients should read the HTTP status and the `type` field instead of assuming the response body is empty.
 - MVC model-validation responses keep the `errors` dictionary and every field message; common trace, correlation, instance, and custom extension fields are added alongside it.
 - Existing controller-provided `ProblemDetails` keeps its explicit title, detail, and type unless `DetailLevel` is `Minimal`; shared defaults and extensions are added consistently.
 - Unhandled exceptions keep a generic public response by default. Map expected exception classes in configuration to stable problem types and safe public descriptions; do not depend on raw exception text.

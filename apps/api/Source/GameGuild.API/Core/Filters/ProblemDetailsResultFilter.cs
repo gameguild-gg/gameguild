@@ -7,7 +7,7 @@ namespace GameGuild.API.Core.Filters;
 
 /// <summary>
 /// Applies the configured ASP.NET Core Problem Details customization to MVC error results.
-/// This includes validation responses and ProblemDetails returned directly by controllers.
+/// This includes validation responses, direct ProblemDetails, status-only results, and legacy error bodies.
 /// </summary>
 public sealed class ProblemDetailsResultFilter(
     IOptions<Microsoft.AspNetCore.Http.ProblemDetailsOptions> problemDetailsOptions) : IAsyncResultFilter
@@ -24,26 +24,43 @@ public sealed class ProblemDetailsResultFilter(
             };
         }
 
-        if (context.Result is ObjectResult { Value: ProblemDetails problemDetails } objectResult)
+        if (context.Result is ObjectResult objectResult)
         {
-            var statusCode = objectResult.StatusCode ?? problemDetails.Status ?? context.HttpContext.Response.StatusCode;
+            var problemDetails = objectResult.Value as ProblemDetails;
+            var statusCode = objectResult.StatusCode ?? problemDetails?.Status ?? context.HttpContext.Response.StatusCode;
             if (statusCode is >= 400 and <= 599)
             {
+                if (problemDetails is null)
+                {
+                    problemDetails = new ProblemDetails { Status = statusCode };
+                    if (objectResult.Value is string detail)
+                    {
+                        problemDetails.Detail = detail;
+                    }
+                    else if (objectResult.Value is not null)
+                    {
+                        // Preserve the old error body while moving it under a stable RFC 7807 envelope.
+                        problemDetails.Extensions["legacy"] = objectResult.Value;
+                    }
+
+                    objectResult.Value = problemDetails;
+                    objectResult.DeclaredType = typeof(ProblemDetails);
+                }
+
                 problemDetails.Status ??= statusCode;
                 objectResult.StatusCode = problemDetails.Status;
                 context.HttpContext.Response.StatusCode = problemDetails.Status.Value;
-            }
+                problemDetailsOptions.Value.CustomizeProblemDetails?.Invoke(new ProblemDetailsContext
+                {
+                    HttpContext = context.HttpContext,
+                    ProblemDetails = problemDetails,
+                });
 
-            problemDetailsOptions.Value.CustomizeProblemDetails?.Invoke(new ProblemDetailsContext
-            {
-                HttpContext = context.HttpContext,
-                ProblemDetails = problemDetails,
-            });
-
-            if (problemDetails.Status is >= 400 and <= 599)
-            {
-                objectResult.StatusCode = problemDetails.Status;
-                context.HttpContext.Response.StatusCode = problemDetails.Status.Value;
+                if (problemDetails.Status is >= 400 and <= 599)
+                {
+                    objectResult.StatusCode = problemDetails.Status;
+                    context.HttpContext.Response.StatusCode = problemDetails.Status.Value;
+                }
             }
         }
 

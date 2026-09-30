@@ -83,4 +83,34 @@ public sealed class ProblemDetailsMvcResultFilterTests
         problem.Instance.Should().Be("/api/missing");
         problem.Extensions["traceId"].Should().Be("trace-not-found-1");
     }
+
+    [Fact]
+    public async Task OnResultExecutionAsync_ShouldPreserveLegacyErrorBodiesInsideTheProblemDetailsEnvelope()
+    {
+        var services = new ServiceCollection();
+        services.SetupProblemDetails(new ConfigurationBuilder().Build(), ProblemDetailsOptions.CreateDefault());
+        using var provider = services.BuildServiceProvider();
+        var httpContext = new DefaultHttpContext { RequestServices = provider, TraceIdentifier = "trace-legacy-1" };
+        var result = new BadRequestObjectResult(new
+        {
+            error = "invalid_request",
+            error_description = "Authorization header is missing.",
+        });
+        var actionContext = new ActionContext(httpContext, new RouteData(), new ActionDescriptor(), new ModelStateDictionary());
+        var executingContext = new ResultExecutingContext(actionContext, [], result, controller: new object());
+        var executedContext = new ResultExecutedContext(actionContext, [], result, controller: new object());
+        var filter = provider.GetRequiredService<ProblemDetailsResultFilter>();
+
+        await filter.OnResultExecutionAsync(executingContext, () => Task.FromResult(executedContext));
+
+        result.DeclaredType.Should().Be(typeof(ProblemDetails));
+        var problem = result.Value.Should().BeOfType<ProblemDetails>().Subject;
+        problem.Status.Should().Be(StatusCodes.Status400BadRequest);
+        problem.Extensions["legacy"].Should().BeEquivalentTo(new
+        {
+            error = "invalid_request",
+            error_description = "Authorization header is missing.",
+        });
+        problem.Extensions["traceId"].Should().Be("trace-legacy-1");
+    }
 }
