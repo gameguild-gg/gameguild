@@ -160,7 +160,10 @@ public class AuthenticationPerformanceTests : IDisposable
     public async Task SignUp_Validator_Performance_Should_Be_Efficient()
     {
         // Arrange
-        var validator = new LocalSignUpCommandValidator();
+        var passwordHasher = new Mock<IPasswordHasher>();
+        passwordHasher.Setup(hasher => hasher.ValidatePasswordStrength(It.IsAny<string>()))
+            .Returns(new PasswordStrengthResult { IsValid = true });
+        var validator = new LocalSignUpCommandValidator(passwordHasher.Object);
         var command = new LocalSignUpCommand
         {
             Email = "test@example.com",

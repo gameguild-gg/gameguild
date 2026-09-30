@@ -1,6 +1,6 @@
 namespace GameGuild.Identity.Authentication;
 
-public abstract class CachePerformanceMetric
+public sealed class CachePerformanceMetric
 {
     public string Operation { get; set; } = string.Empty;
 

@@ -1,4 +1,6 @@
 using GameGuild.CQRS;
+using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Authorization.Caching;
 using GameGuild.Notifications.Services.Email;
 using GameGuild.Notifications.Services.Email.Renderers;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,6 +18,7 @@ public static class DependencyInjection
     public static IServiceCollection AddAuthenticationApplication(this IServiceCollection services)
     {
         // Register Command Handlers
+        services.AddScoped<IUserAuthorizationTokenVersionService, UserAuthorizationTokenVersionService>();
         services.AddScoped<IRequestHandler<LocalSignUpCommand, SignInResponse>, LocalSignUpHandler>();
         services.AddScoped<IRequestHandler<LocalSignInCommand, SignInResponse>, LocalSignInHandler>();
         services.AddScoped<IRequestHandler<RefreshTokenCommand, SignInResponse>, RefreshTokenHandler>();
@@ -29,6 +32,8 @@ public static class DependencyInjection
         // Register Permission Template Handlers
         services.AddScoped<IQueryHandler<GetPermissionTemplatesQuery, IEnumerable<PermissionTemplateDto>>, GetPermissionTemplatesQueryHandler>();
         services.AddScoped<ICommandHandler<ApplyPermissionTemplateCommand, ApplyPermissionTemplateResult>, ApplyPermissionTemplateCommandHandler>();
+        services.AddScoped<IQueryHandler<GetPermissionCacheStatsQuery, PermissionCacheStatsDto>, GetPermissionCacheStatsQueryHandler>();
+        services.AddScoped<ICommandHandler<WarmPermissionCacheCommand, PermissionCacheWarmupResult>, WarmPermissionCacheCommandHandler>();
 
         // Register validators
         services.AddScoped<FluentValidation.IValidator<LocalSignUpCommand>, LocalSignUpCommandValidator>();

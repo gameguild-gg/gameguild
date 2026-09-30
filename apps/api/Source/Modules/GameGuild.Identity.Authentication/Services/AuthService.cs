@@ -31,6 +31,9 @@ public class AuthService(
     public Task<SignInResponse> GoogleSignInAsync(OAuthSignInRequest request, CancellationToken cancellationToken = default) =>
         oauthAuthService.GoogleSignInAsync(request, cancellationToken);
 
+    public Task<SignInResponse> MicrosoftSignInAsync(OAuthSignInRequest request, CancellationToken cancellationToken = default) =>
+        oauthAuthService.MicrosoftSignInAsync(request, cancellationToken);
+
     public Task<SignInResponse> GoogleIdTokenSignInAsync(GoogleIdTokenRequest request, CancellationToken cancellationToken = default) =>
         oauthAuthService.GoogleIdTokenSignInAsync(request, cancellationToken);
 

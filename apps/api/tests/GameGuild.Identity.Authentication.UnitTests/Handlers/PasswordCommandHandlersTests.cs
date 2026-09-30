@@ -85,8 +85,8 @@ public sealed class PasswordCommandHandlersTests
             .Returns(new PasswordStrengthResult { IsValid = true, ValidationFailures = [] });
         hasher.Setup(h => h.HashPassword("StrongPass1!"))
             .Returns("new-hash");
-        userRepository.Setup(r => r.UpdatePasswordHashAsync(userId, "new-hash", It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+        userRepository.Setup(r => r.UpdatePasswordHashAsync(userId, "new-hash", It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         var handler = new ResetPasswordCommandHandler(
             userRepository.Object,
@@ -104,7 +104,40 @@ public sealed class PasswordCommandHandlersTests
             CancellationToken.None);
 
         result.Success.Should().BeTrue();
-        userRepository.Verify(r => r.UpdatePasswordHashAsync(userId, "new-hash", It.IsAny<CancellationToken>()), Times.Once);
+        userRepository.Verify(r => r.UpdatePasswordHashAsync(userId, "new-hash", It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ResetPasswordCommandHandler_RejectsRecentlyUsedPassword()
+    {
+        var userId = Guid.NewGuid();
+        var user = new User { Id = userId, Email = "reset@test.com", PasswordHash = "current-hash" };
+        user.SetPasswordHash("new-current-hash");
+        var userRepository = new Mock<IUserRepository>();
+        var hasher = new Mock<IPasswordHasher>();
+        var emailService = new Mock<IEmailVerificationService>();
+        emailService.Setup(s => s.VerifyPasswordResetTokenAsync("token"))
+            .ReturnsAsync(new TokenValidationResult(true, userId, user.Email));
+        userRepository.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        hasher.Setup(h => h.ValidatePasswordStrength("ReusedPass1!"))
+            .Returns(new PasswordStrengthResult { IsValid = true, ValidationFailures = [] });
+        hasher.Setup(h => h.VerifyPassword("new-current-hash", "ReusedPass1!")).Returns(false);
+        hasher.Setup(h => h.VerifyPassword("current-hash", "ReusedPass1!")).Returns(true);
+
+        var handler = new ResetPasswordCommandHandler(
+            userRepository.Object,
+            hasher.Object,
+            emailService.Object,
+            NullLogger<ResetPasswordCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new ResetPasswordCommand { Token = "token", NewPassword = "ReusedPass1!", ConfirmPassword = "ReusedPass1!" },
+            CancellationToken.None);
+
+        result.Success.Should().BeFalse();
+        result.Message.Should().Contain("last 5 passwords");
+        hasher.Verify(h => h.HashPassword(It.IsAny<string>()), Times.Never);
+        userRepository.Verify(r => r.UpdatePasswordHashAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -261,8 +294,8 @@ public sealed class PasswordCommandHandlersTests
             .Returns(new PasswordStrengthResult { IsValid = true, ValidationFailures = [] });
         hasher.Setup(h => h.HashPassword("StrongPass1!"))
             .Returns("new-hash");
-        userRepository.Setup(r => r.UpdatePasswordHashAsync(userId, "new-hash", It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+        userRepository.Setup(r => r.UpdatePasswordHashAsync(userId, "new-hash", It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         var handler = new ChangePasswordCommandHandler(
             userRepository.Object,
@@ -280,7 +313,77 @@ public sealed class PasswordCommandHandlersTests
             CancellationToken.None);
 
         result.Success.Should().BeTrue();
-        userRepository.Verify(r => r.UpdatePasswordHashAsync(userId, "new-hash", It.IsAny<CancellationToken>()), Times.Once);
+        userRepository.Verify(r => r.UpdatePasswordHashAsync(userId, "new-hash", "old-hash", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ChangePasswordCommandHandler_RejectsRecentlyUsedPassword()
+    {
+        var userId = Guid.NewGuid();
+        var user = new User { Id = userId, PasswordHash = "recent-hash" };
+        user.SetPasswordHash("current-hash");
+        var userRepository = new Mock<IUserRepository>();
+        var hasher = new Mock<IPasswordHasher>();
+        userRepository.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        hasher.Setup(h => h.VerifyPassword("current-hash", "CurrentPass1!")).Returns(true);
+        hasher.Setup(h => h.VerifyPassword("current-hash", "ReusedPass1!")).Returns(false);
+        hasher.Setup(h => h.VerifyPassword("recent-hash", "ReusedPass1!")).Returns(true);
+        hasher.Setup(h => h.ValidatePasswordStrength("ReusedPass1!"))
+            .Returns(new PasswordStrengthResult { IsValid = true, ValidationFailures = [] });
+
+        var handler = new ChangePasswordCommandHandler(
+            userRepository.Object,
+            hasher.Object,
+            NullLogger<ChangePasswordCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new ChangePasswordCommand
+            {
+                UserId = userId,
+                CurrentPassword = "CurrentPass1!",
+                NewPassword = "ReusedPass1!",
+                ConfirmPassword = "ReusedPass1!"
+            },
+            CancellationToken.None);
+
+        result.Success.Should().BeFalse();
+        result.Message.Should().Contain("last 5 passwords");
+        hasher.Verify(h => h.HashPassword(It.IsAny<string>()), Times.Never);
+        userRepository.Verify(r => r.UpdatePasswordHashAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ChangePasswordCommandHandler_ConcurrentPasswordChangeRequiresRetry()
+    {
+        var userId = Guid.NewGuid();
+        var userRepository = new Mock<IUserRepository>();
+        var hasher = new Mock<IPasswordHasher>();
+        userRepository.Setup(r => r.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = userId, PasswordHash = "old-hash" });
+        hasher.Setup(h => h.VerifyPassword("old-hash", "CurrentPass1!")).Returns(true);
+        hasher.Setup(h => h.ValidatePasswordStrength("StrongPass1!"))
+            .Returns(new PasswordStrengthResult { IsValid = true, ValidationFailures = [] });
+        hasher.Setup(h => h.HashPassword("StrongPass1!")).Returns("new-hash");
+        userRepository.Setup(r => r.UpdatePasswordHashAsync(userId, "new-hash", "old-hash", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var handler = new ChangePasswordCommandHandler(
+            userRepository.Object,
+            hasher.Object,
+            NullLogger<ChangePasswordCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new ChangePasswordCommand
+            {
+                UserId = userId,
+                CurrentPassword = "CurrentPass1!",
+                NewPassword = "StrongPass1!",
+                ConfirmPassword = "StrongPass1!"
+            },
+            CancellationToken.None);
+
+        result.Success.Should().BeFalse();
+        result.Message.Should().Contain("changed during this request");
     }
 
     [Fact]
@@ -298,9 +401,9 @@ public sealed class PasswordCommandHandlersTests
             .Returns(new PasswordStrengthResult { IsValid = true, ValidationFailures = [] });
         hasher.Setup(h => h.HashPassword("StrongPass1!"))
             .Returns("new-hash");
-        userRepository.Setup(r => r.UpdatePasswordHashAsync(userId, "new-hash", It.IsAny<CancellationToken>()))
-            .Callback<Guid, string, CancellationToken>((_, hash, _) => user.SetPasswordHash(hash))
-            .Returns(Task.CompletedTask);
+        userRepository.Setup(r => r.UpdatePasswordHashAsync(userId, "new-hash", It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .Callback<Guid, string, string?, CancellationToken>((_, hash, _, _) => user.SetPasswordHash(hash))
+            .ReturnsAsync(true);
 
         var handler = new ChangePasswordCommandHandler(
             userRepository.Object,
@@ -355,7 +458,7 @@ public sealed class PasswordCommandHandlersTests
 
         result.Success.Should().BeFalse();
         result.Message.Should().Be("Current password is incorrect");
-        userRepository.Verify(r => r.UpdatePasswordHashAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        userRepository.Verify(r => r.UpdatePasswordHashAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -387,7 +490,7 @@ public sealed class PasswordCommandHandlersTests
 
         result.Success.Should().BeFalse();
         result.Message.Should().Be("Current password is incorrect");
-        userRepository.Verify(r => r.UpdatePasswordHashAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        userRepository.Verify(r => r.UpdatePasswordHashAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -405,8 +508,8 @@ public sealed class PasswordCommandHandlersTests
             .Returns(new PasswordStrengthResult { IsValid = true, ValidationFailures = [] });
         hasher.Setup(h => h.HashPassword("StrongPass1!"))
             .Returns("new-hash");
-        userRepository.Setup(r => r.UpdatePasswordHashAsync(userId, "new-hash", It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+        userRepository.Setup(r => r.UpdatePasswordHashAsync(userId, "new-hash", It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
         sessionRepository.Setup(r => r.GetActiveByUserIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(
             [
@@ -454,8 +557,8 @@ public sealed class PasswordCommandHandlersTests
             .Returns(new PasswordStrengthResult { IsValid = true, ValidationFailures = [] });
         hasher.Setup(h => h.HashPassword("StrongPass1!"))
             .Returns("new-hash");
-        userRepository.Setup(r => r.UpdatePasswordHashAsync(userId, "new-hash", It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+        userRepository.Setup(r => r.UpdatePasswordHashAsync(userId, "new-hash", It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         var handler = new ChangePasswordCommandHandler(
             userRepository.Object,
@@ -495,8 +598,8 @@ public sealed class PasswordCommandHandlersTests
             .Returns(new PasswordStrengthResult { IsValid = true, ValidationFailures = [] });
         hasher.Setup(h => h.HashPassword("StrongPass1!"))
             .Returns("new-hash");
-        userRepository.Setup(r => r.UpdatePasswordHashAsync(userId, "new-hash", It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+        userRepository.Setup(r => r.UpdatePasswordHashAsync(userId, "new-hash", It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         var handler = new ChangePasswordCommandHandler(
             userRepository.Object,
@@ -557,6 +660,6 @@ public sealed class PasswordCommandHandlersTests
 
         result.Success.Should().BeFalse();
         result.Message.Should().Be("Password must be at least 8 characters long; Password must contain an uppercase letter");
-        userRepository.Verify(r => r.UpdatePasswordHashAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        userRepository.Verify(r => r.UpdatePasswordHashAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

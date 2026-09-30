@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using GameGuild.Identity.Authorization.Caching;
 
 namespace GameGuild.Identity.Authorization;
 
@@ -33,7 +34,9 @@ public interface IDynamicRoleAssignmentRepository
 /// <summary>
 ///     Database implementation of dynamic role repository.
 /// </summary>
-public class DynamicRoleRepository(IApplicationDbContext context) : IDynamicRoleRepository
+public class DynamicRoleRepository(
+    IApplicationDbContext context,
+    ICacheInvalidationService invalidationService) : IDynamicRoleRepository
 {
     private DbSet<DynamicRole> DbSet => context.Set<DynamicRole>();
 
@@ -67,13 +70,30 @@ public class DynamicRoleRepository(IApplicationDbContext context) : IDynamicRole
     {
         DbSet.Add(role);
         await context.SaveChangesAsync(ct).ConfigureAwait(false);
+        await InvalidateRoleScopesAsync(ct, role.TenantId).ConfigureAwait(false);
         return role;
     }
 
     public async Task UpdateAsync(DynamicRole role, CancellationToken ct = default)
     {
+        // Read the persisted scope before attaching the updated role. A role can move
+        // between tenants, and a global role change affects permission caches in every tenant.
+        var existingRole = await DbSet
+            .AsNoTracking()
+            .FirstOrDefaultAsync(existing => existing.Id == role.Id, ct)
+            .ConfigureAwait(false);
+
         DbSet.Update(role);
         await context.SaveChangesAsync(ct).ConfigureAwait(false);
+
+        if (existingRole is null)
+        {
+            await InvalidateRoleScopesAsync(ct, role.TenantId).ConfigureAwait(false);
+        }
+        else
+        {
+            await InvalidateRoleScopesAsync(ct, existingRole.TenantId, role.TenantId).ConfigureAwait(false);
+        }
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
@@ -83,6 +103,21 @@ public class DynamicRoleRepository(IApplicationDbContext context) : IDynamicRole
         {
             DbSet.Remove(role);
             await context.SaveChangesAsync(ct).ConfigureAwait(false);
+            await InvalidateRoleScopesAsync(ct, role.TenantId).ConfigureAwait(false);
+        }
+    }
+
+    private async Task InvalidateRoleScopesAsync(CancellationToken ct, params Guid?[] tenantIds)
+    {
+        if (tenantIds.Length == 0 || tenantIds.Any(tenantId => tenantId is null))
+        {
+            await invalidationService.InvalidateGlobalAsync(ct).ConfigureAwait(false);
+            return;
+        }
+
+        foreach (var tenantId in tenantIds.Select(id => id!.Value).Distinct())
+        {
+            await invalidationService.InvalidateTenantAsync(tenantId, ct).ConfigureAwait(false);
         }
     }
 
@@ -114,7 +149,9 @@ public class DynamicRoleRepository(IApplicationDbContext context) : IDynamicRole
 /// <summary>
 ///     Database implementation of role assignment repository.
 /// </summary>
-public class DynamicRoleAssignmentRepository(IApplicationDbContext context) : IDynamicRoleAssignmentRepository
+public class DynamicRoleAssignmentRepository(
+    IApplicationDbContext context,
+    ICacheInvalidationService invalidationService) : IDynamicRoleAssignmentRepository
 {
     private DbSet<DynamicRoleAssignment> DbSet => context.Set<DynamicRoleAssignment>();
 
@@ -139,6 +176,7 @@ public class DynamicRoleAssignmentRepository(IApplicationDbContext context) : ID
     {
         DbSet.Add(assignment);
         await context.SaveChangesAsync(ct).ConfigureAwait(false);
+        await InvalidateAssignmentAsync(assignment.UserId, assignment.TenantId, ct).ConfigureAwait(false);
         return assignment;
     }
 
@@ -149,6 +187,19 @@ public class DynamicRoleAssignmentRepository(IApplicationDbContext context) : ID
         {
             DbSet.Remove(assignment);
             await context.SaveChangesAsync(ct).ConfigureAwait(false);
+            await InvalidateAssignmentAsync(assignment.UserId, assignment.TenantId, ct).ConfigureAwait(false);
+        }
+    }
+
+    private async Task InvalidateAssignmentAsync(Guid userId, Guid? tenantId, CancellationToken ct)
+    {
+        if (tenantId is Guid tenant)
+        {
+            await invalidationService.InvalidateUserAsync(userId, tenant, ct).ConfigureAwait(false);
+        }
+        else
+        {
+            await invalidationService.InvalidateGlobalAsync(ct).ConfigureAwait(false);
         }
     }
 

@@ -3526,7 +3526,7 @@ namespace GameGuild.API.Database.Migrations
 
                     b.ToTable((string)null);
 
-                    b.ToSqlQuery(" SELECT \\\"Id\\\",\n     \\\"SubscriptionId\\\",\n     \\\"InvoiceNumber\\\",\n     \\\"Total\\\",\n     \\\"Currency\\\",\n     \\\"CreatedAt\\\",\n     \\\"IssuedAt\\\",\n     \\\"DueDate\\\",\n     \\\"PaidAt\\\",\n     \\\"Status\\\",\n     \\\"PaymentId\\\",\n     \\\"ExternalId\\\"\nFROM invoices");
+                    b.ToSqlQuery(" SELECT \\\"Id\\\",\r\n     \\\"SubscriptionId\\\",\r\n     \\\"InvoiceNumber\\\",\r\n     \\\"Total\\\",\r\n     \\\"Currency\\\",\r\n     \\\"CreatedAt\\\",\r\n     \\\"IssuedAt\\\",\r\n     \\\"DueDate\\\",\r\n     \\\"PaidAt\\\",\r\n     \\\"Status\\\",\r\n     \\\"PaymentId\\\",\r\n     \\\"ExternalId\\\"\r\nFROM invoices");
                 });
 
             modelBuilder.Entity("GameGuild.Commerce.Subscriptions.SubscriptionPlan", b =>
@@ -15111,9 +15111,6 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.HasIndex("TenantId", "UserId")
-                        .IsUnique();
-
                     b.HasIndex(new[] { "ExpiresAt" }, "IX_TenantPermissions_ExpiresAt");
 
                     b.HasIndex(new[] { "TenantId" }, "IX_TenantPermissions_TenantId");
@@ -15121,7 +15118,8 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex(new[] { "UserId" }, "IX_TenantPermissions_UserId");
 
                     b.HasIndex(new[] { "UserId", "TenantId" }, "IX_TenantPermissions_User_Tenant")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.ToTable("TenantPermissions");
                 });
@@ -15744,8 +15742,13 @@ namespace GameGuild.API.Database.Migrations
                         .HasColumnType("character varying(100)");
 
                     b.Property<string>("PasswordHash")
+                        .IsConcurrencyToken()
                         .HasMaxLength(512)
                         .HasColumnType("character varying(512)");
+
+                    b.Property<string>("PasswordHistoryHashes")
+                        .HasMaxLength(2600)
+                        .HasColumnType("character varying(2600)");
 
                     b.Property<string>("PhoneNumber")
                         .HasMaxLength(20)

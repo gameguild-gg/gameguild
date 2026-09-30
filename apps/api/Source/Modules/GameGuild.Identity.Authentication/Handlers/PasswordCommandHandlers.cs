@@ -135,8 +135,17 @@ public sealed class ResetPasswordCommandHandler(
             };
         }
 
+        if (PasswordHistoryPolicy.WasRecentlyUsed(user, request.NewPassword, passwordHasher))
+        {
+            return new PasswordResetResult { Success = false, Message = "You cannot reuse any of your last 5 passwords." };
+        }
+
         var passwordHash = passwordHasher.HashPassword(request.NewPassword);
-        await userRepository.UpdatePasswordHashAsync(userId, passwordHash, cancellationToken).ConfigureAwait(false);
+        var updated = await userRepository.UpdatePasswordHashAsync(userId, passwordHash, user.PasswordHash, cancellationToken).ConfigureAwait(false);
+        if (!updated)
+        {
+            return new PasswordResetResult { Success = false, Message = "Your password changed during this reset. Request a new password reset link and try again." };
+        }
 
         logger.LogInformation("Password reset completed for user {UserId}", userId);
 
@@ -192,8 +201,17 @@ public sealed class ChangePasswordCommandHandler(
             };
         }
 
+        if (PasswordHistoryPolicy.WasRecentlyUsed(user, request.NewPassword, passwordHasher))
+        {
+            return new PasswordChangeResult { Success = false, Message = "You cannot reuse any of your last 5 passwords." };
+        }
+
         var passwordHash = passwordHasher.HashPassword(request.NewPassword);
-        await userRepository.UpdatePasswordHashAsync(request.UserId, passwordHash, cancellationToken).ConfigureAwait(false);
+        var updated = await userRepository.UpdatePasswordHashAsync(request.UserId, passwordHash, user.PasswordHash, cancellationToken).ConfigureAwait(false);
+        if (!updated)
+        {
+            return new PasswordChangeResult { Success = false, Message = "Your password changed during this request. Sign in again and retry." };
+        }
 
         var revokedSessions = 0;
         if (request.RevokeOtherSessions)

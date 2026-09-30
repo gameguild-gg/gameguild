@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using PresentationAuthorizationOptions = GameGuild.Configuration.PresentationLayer.Authorization.AuthorizationOptions;
 
 namespace GameGuild.Identity.Authorization;
 
@@ -26,6 +27,9 @@ public static class AuthorizationModuleExtensions
     {
         services.Configure<TenancyOptions>(
             configuration.GetSection(TenancyOptions.SectionName));
+
+        services.Configure<PresentationAuthorizationOptions>(
+            configuration.GetSection(PresentationAuthorizationOptions.SectionName));
 
         services.Configure<AuthorizationCacheOptions>(
             configuration.GetSection(AuthorizationCacheOptions.SectionName));
@@ -89,8 +93,24 @@ public static class AuthorizationModuleExtensions
                 var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<AuthorizationCacheOptions>>();
                 var hybridCache = sp.GetService<IHybridPermissionCache>();
                 var metrics = sp.GetService<ICacheMetricsService>();
-                return new CachedAccessControlListService(innerService, cache, tenantVersionStore, userVersionStore, options, hybridCache, metrics);
+                var keyTracker = sp.GetRequiredService<IPermissionCacheKeyTracker>();
+                var invalidationService = sp.GetRequiredService<ICacheInvalidationService>();
+                var popularityTracker = sp.GetService<IPermissionCachePopularityTracker>();
+                return new CachedAccessControlListService(
+                    innerService,
+                    cache,
+                    tenantVersionStore,
+                    userVersionStore,
+                    options,
+                    hybridCache,
+                    metrics,
+                    keyTracker,
+                    invalidationService,
+                    popularityTracker);
             });
+
+            services.AddScoped<IPermissionCacheWarmupService, PermissionCacheWarmupService>();
+            services.AddHostedService<AutomaticPermissionCacheWarmupService>();
         }
         else
         {

@@ -81,7 +81,13 @@ public interface IAccessReviewItemRepository
     Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
     Task<List<AccessReviewItem>> GetByCampaignAsync(Guid campaignId, CancellationToken cancellationToken = default);
     Task<List<AccessReviewItem>> GetByReviewerAsync(Guid reviewerId, CancellationToken cancellationToken = default);
-    Task<List<AccessReviewItem>> GetPendingByReviewerAsync(Guid reviewerId, CancellationToken cancellationToken = default);
+    Task<List<AccessReviewItem>> GetPendingByReviewerAsync(
+        Guid reviewerId,
+        Guid? tenantId);
+    Task<List<AccessReviewItem>> GetPendingByReviewerAsync(
+        Guid reviewerId,
+        Guid? tenantId,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>

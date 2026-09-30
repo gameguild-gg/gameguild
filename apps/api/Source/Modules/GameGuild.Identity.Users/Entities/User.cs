@@ -82,6 +82,14 @@ public class User : EntityBase, IUser
     public string? PasswordHash { get; set; }
 
     /// <summary>
+    ///     Newline-delimited BCrypt hashes of the five most recently replaced passwords.
+    ///     The hashes are never included in serialized user data.
+    /// </summary>
+    [JsonIgnore]
+    [MaxLength(2600)]
+    public string? PasswordHistoryHashes { get; private set; }
+
+    /// <summary>
     ///     Whether the user's email has been verified
     /// </summary>
     public bool IsEmailVerified { get; set; }
@@ -178,10 +186,35 @@ public class User : EntityBase, IUser
     public void SetPasswordHash(string passwordHash)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(passwordHash);
+
+        var recentHashes = new List<string>(capacity: 5);
+        if (!string.IsNullOrWhiteSpace(PasswordHash))
+        {
+            recentHashes.Add(PasswordHash);
+        }
+
+        recentHashes.AddRange(GetPasswordHistoryHashes().Take(4));
+        PasswordHistoryHashes = recentHashes.Count == 0 ? null : string.Join('\n', recentHashes);
+
         PasswordHash = passwordHash;
         // Invalidate all existing tokens when password changes
         IncrementTokenVersion();
         Touch();
+    }
+
+    /// <summary>
+    ///     Gets previously used password hashes, newest first.
+    /// </summary>
+    public IReadOnlyList<string> GetPasswordHistoryHashes()
+    {
+        if (string.IsNullOrWhiteSpace(PasswordHistoryHashes))
+        {
+            return Array.Empty<string>();
+        }
+
+        return PasswordHistoryHashes.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Take(5)
+            .ToArray();
     }
 
     /// <summary>
@@ -503,7 +536,16 @@ public class User : EntityBase, IUser
     /// <param name="email">User's email address</param>
     /// <param name="name">User's full name</param>
     /// <returns>New User instance without password</returns>
-    public static User CreateOAuthUser(string email, string name)
+    public static User CreateOAuthUser(string email, string name) => CreateOAuthUser(email, name, emailVerified: true);
+
+    /// <summary>
+    ///     Static factory method to create an OAuth-only user and preserve the provider's email verification status
+    /// </summary>
+    /// <param name="email">User's email address</param>
+    /// <param name="name">User's full name</param>
+    /// <param name="emailVerified">Whether the external provider verified the email address</param>
+    /// <returns>New User instance without password</returns>
+    public static User CreateOAuthUser(string email, string name, bool emailVerified)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(email);
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
@@ -514,7 +556,7 @@ public class User : EntityBase, IUser
             Name = name,
             PasswordHash = null, // OAuth-only user
             IsActive = true,
-            IsEmailVerified = true // OAuth emails are pre-verified
+            IsEmailVerified = emailVerified
         };
     }
 

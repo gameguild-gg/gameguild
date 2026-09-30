@@ -16,6 +16,7 @@ namespace GameGuild.Identity.Authentication;
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/access-reviews")]
 [Microsoft.AspNetCore.Http.Tags("auth/access-reviews")]
+[NonController]
 [ApiExplorerSettings(IgnoreApi = true)]
 [Authorize]
 public class AccessReviewCampaignController(IMediator mediator, ILogger<AccessReviewCampaignController> logger)
