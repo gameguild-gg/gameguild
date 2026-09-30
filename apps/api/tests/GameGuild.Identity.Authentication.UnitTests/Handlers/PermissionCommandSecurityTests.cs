@@ -484,10 +484,91 @@ public sealed class PermissionCommandSecurityTests
         SetActor(AuthenticatedActor(roles: [], permissions: [], tenantId: tenantId));
         var service = new PermissionService(db, _versionStore.Object, _auditService.Object, _actorAccessor.Object);
 
-        await service.GrantTenantPermissionAsync(userId, tenantId, [PermissionType.Read]);
+        var grant = await service.GrantTenantPermissionAsync(userId, tenantId, [PermissionType.Read]);
+        grant.Version = 1; // The lightweight InMemory context does not apply the production version interceptor.
         await service.RevokeTenantPermissionAsync(userId, tenantId, [PermissionType.Read]);
 
         _versionStore.Verify(v => v.IncrementVersionAsync(tenantId.ToString(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task RevokeTenantPermissionById_TenantAdminCannotRevokeAnotherTenantsGrant()
+    {
+        await using var db = new PermissionFacadeTestDb();
+        var grantId = Guid.NewGuid();
+        var actorTenantId = Guid.NewGuid();
+        db.TenantPermissions.Add(new TenantPermission
+        {
+            Id = grantId,
+            Version = 1,
+            UserId = Guid.NewGuid(),
+            TenantId = Guid.NewGuid(),
+            Permissions = ["tenant:read"]
+        });
+        await db.SaveChangesAsync();
+        SetActor(ActorContextBuilder.ForUser(Guid.NewGuid())
+            .WithTenantId(actorTenantId)
+            .WithRole("TenantAdmin")
+            .Build());
+        var handler = new RevokeTenantPermissionByIdHandler(
+            db, _actorAccessor.Object, _versionStore.Object, _auditService.Object);
+
+        var act = () => handler.Handle(new RevokeTenantPermissionByIdCommand { GrantId = grantId }, CancellationToken.None);
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+        db.TenantPermissions.Single(grant => grant.Id == grantId).DeletedAt.Should().BeNull();
+        _versionStore.Verify(store => store.IncrementVersionAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _auditService.Verify(audit => audit.LogPermissionChangeAsync(
+            It.IsAny<PermissionOperationType>(), It.IsAny<Guid?>(), It.IsAny<Guid>(), It.IsAny<Guid?>(),
+            It.IsAny<string?>(), It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<string?>(),
+            It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<bool>(), It.IsAny<string?>(),
+            It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RevokeTenantPermissionById_SameTenantAdminSoftDeletesAndTracksMutation()
+    {
+        await using var db = new PermissionFacadeTestDb();
+        var actorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var grantId = Guid.NewGuid();
+        db.TenantPermissions.Add(new TenantPermission
+        {
+            Id = grantId,
+            Version = 1,
+            UserId = userId,
+            TenantId = tenantId,
+            Permissions = ["tenant:read"]
+        });
+        await db.SaveChangesAsync();
+        SetActor(ActorContextBuilder.ForUser(actorId)
+            .WithTenantId(tenantId)
+            .WithRole("TenantAdmin")
+            .Build());
+        var handler = new RevokeTenantPermissionByIdHandler(
+            db, _actorAccessor.Object, _versionStore.Object, _auditService.Object);
+
+        await handler.Handle(new RevokeTenantPermissionByIdCommand { GrantId = grantId }, CancellationToken.None);
+
+        db.TenantPermissions.Single(grant => grant.Id == grantId).DeletedAt.Should().NotBeNull();
+        _versionStore.Verify(store => store.IncrementVersionAsync(tenantId.ToString(), It.IsAny<CancellationToken>()), Times.Once);
+        _auditService.Verify(audit => audit.LogPermissionChangeAsync(
+            PermissionOperationType.Revoke,
+            userId,
+            actorId,
+            tenantId,
+            "Tenant",
+            null,
+            "TenantPermission",
+            "tenant:read",
+            null,
+            "Tenant permission grant revoked by id",
+            true,
+            null,
+            null,
+            null,
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

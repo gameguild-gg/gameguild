@@ -124,7 +124,8 @@ public class PermissionService(
         grant.RemovePermissions(ToPermissionNames(permissions));
         if (grant.Permissions.Length == 0)
         {
-            context.Set<TenantPermission>().Remove(grant);
+            grant.SoftDelete();
+            context.Set<TenantPermission>().Update(grant);
         }
 
         await context.SaveChangesAsync().ConfigureAwait(false);

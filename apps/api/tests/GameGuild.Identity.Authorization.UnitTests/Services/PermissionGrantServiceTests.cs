@@ -114,6 +114,52 @@ public class PermissionGrantServiceTests
             Times.Once);
     }
 
+    [Fact]
+    public async Task GrantTenantPermissionAsync_UsesActorIdentityAndCreatesANewRowAfterDeletion()
+    {
+        var actorId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var spoofedGrantedBy = Guid.NewGuid();
+        var actor = ActorContextBuilder.ForUser(actorId).WithTenantId(tenantId).WithRole("TenantAdmin").Build();
+        _actorAccessorMock.Setup(accessor => accessor.ActorContext).Returns(actor);
+        _repoMock
+            .Setup(repository => repository.GetByUserAndTenantAsync(userId, tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TenantPermission?)null);
+        _repoMock
+            .Setup(repository => repository.CreateAsync(It.IsAny<TenantPermission>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TenantPermission permission, CancellationToken _) => permission);
+
+        var result = await _sut.GrantTenantPermissionAsync(
+            userId,
+            tenantId,
+            ["tenant:read"],
+            spoofedGrantedBy,
+            reason: "re-grant after revocation");
+
+        result.GrantedBy.Should().Be(actorId);
+        result.DeletedAt.Should().BeNull();
+        _repoMock.Verify(repository => repository.CreateAsync(
+            It.Is<TenantPermission>(permission => permission.UserId == userId && permission.TenantId == tenantId),
+            It.IsAny<CancellationToken>()), Times.Once);
+        _auditMock.Verify(audit => audit.LogPermissionChangeAsync(
+            PermissionOperationType.Grant,
+            userId,
+            actorId,
+            tenantId,
+            "Tenant",
+            null,
+            "TenantPermission",
+            null,
+            "tenant:read",
+            "re-grant after revocation",
+            true,
+            null,
+            null,
+            null,
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     // ── RevokeTenantPermissionAsync ───────────────────────────
 
     [Fact]

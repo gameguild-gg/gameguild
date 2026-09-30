@@ -868,7 +868,11 @@ public sealed class AuthenticationCoverageCompletionTests
 
         new RevokeContentTypePermissionByIdHandler(dbContext).Should().NotBeNull();
         new RevokeResourcePermissionByIdHandler(dbContext).Should().NotBeNull();
-        new RevokeTenantPermissionByIdHandler(dbContext).Should().NotBeNull();
+        new RevokeTenantPermissionByIdHandler(
+            dbContext,
+            Mock.Of<GameGuild.Identity.Context.Actors.IActorContextAccessor>(),
+            Mock.Of<GameGuild.Identity.Authorization.ITenantSecurityVersionStore>(),
+            Mock.Of<GameGuild.Identity.Authorization.IPermissionAuditService>()).Should().NotBeNull();
 
         new AuthenticationFailedEventHandler(NullLogger<AuthenticationFailedEventHandler>.Instance).Should().NotBeNull();
         new GenerateWeb3ChallengeHandler(Mock.Of<IWeb3Service>()).Should().NotBeNull();

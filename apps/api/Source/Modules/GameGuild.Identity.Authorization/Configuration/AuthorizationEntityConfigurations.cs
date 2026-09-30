@@ -265,9 +265,12 @@ public class TenantPermissionConfiguration : IEntityTypeConfiguration<TenantPerm
     public void Configure(EntityTypeBuilder<TenantPermission> builder)
     {
         builder.HasKey(e => e.Id);
+        builder.HasQueryFilter(permission => permission.DeletedAt == null);
         builder.HasIndex(e => e.TenantId);
         builder.HasIndex(e => e.UserId);
-        builder.HasIndex(e => new { e.TenantId, e.UserId }).IsUnique();
+        builder.HasIndex(e => new { e.UserId, e.TenantId }, "IX_TenantPermissions_User_Tenant")
+            .IsUnique()
+            .HasFilter("\"DeletedAt\" IS NULL");
         builder.HasIndex(e => e.ExpiresAt);
 
         builder.Property(e => e.Permissions).IsRequired();
