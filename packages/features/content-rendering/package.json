@@ -14,8 +14,8 @@
   },
   "dependencies": {
     "@game-guild/ui": "workspace:^",
-    "dompurify": "3.4.15",
-    "katex": "^0.18.6",
+    "dompurify": "3.4.16",
+    "katex": "^0.18.9",
     "mermaid": "^12.0.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
