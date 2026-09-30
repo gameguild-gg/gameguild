@@ -170,7 +170,10 @@ public static class PipelineExtensions
         {
             var httpContext = statusCodeContext.HttpContext;
             var problemDetailsService = httpContext.RequestServices.GetService<IProblemDetailsService>();
-            if (problemDetailsService is null) return;
+            if (problemDetailsService is null)
+            {
+                return;
+            }
 
             await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
             {
