@@ -1,25 +1,22 @@
 using GameGuild.API.Database;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Users;
+using GameGuild.TestSupport.Finance.Economy;
 using Microsoft.EntityFrameworkCore;
-using Testcontainers.PostgreSql;
 using Xunit;
 
 namespace GameGuild.Tests.Authentication.Integration;
 
 public sealed class RefreshTokenRotationPostgreSqlTests : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder()
-        .WithImage("postgres:16-alpine")
-        .WithDatabase("gameguild_refresh_token_rotation")
-        .WithUsername("test")
-        .WithPassword("test")
-        .WithCleanUp(true)
-        .Build();
+    private EconomyPostgreSqlTestDatabase _database = null!;
 
-    public async Task InitializeAsync() => await _postgres.StartAsync();
+    public async Task InitializeAsync()
+    {
+        _database = await EconomyPostgreSqlTestDatabase.CreateAsync("refresh_token_rotation");
+    }
 
-    public async Task DisposeAsync() => await _postgres.DisposeAsync();
+    public async Task DisposeAsync() => await _database.DisposeAsync();
 
     [Fact]
     public async Task ConcurrentRotations_OnlyOneRequestClaimsTheRefreshToken()
@@ -149,7 +146,7 @@ public sealed class RefreshTokenRotationPostgreSqlTests : IAsyncLifetime
     private DbContextOptions<ApplicationDbContext> CreateOptions()
     {
         return new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseNpgsql(_postgres.GetConnectionString())
+            .UseNpgsql(_database.ConnectionString)
             .Options;
     }
 }
