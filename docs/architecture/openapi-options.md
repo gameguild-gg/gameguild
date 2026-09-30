@@ -42,6 +42,21 @@ generated document keep their existing configuration.
       "EnableDeepLinking": true,
       "DisplayRequestDuration": true,
       "PersistAuthorization": false
+    },
+    "Extensions": {
+      "x-api-audience": "{\"roles\":[\"developer\",\"operator\"],\"public\":true}"
+    },
+    "Schemas": {
+      "Identity_Users_UserDto": {
+        "Description": "The public account profile returned by this API.",
+        "ExampleJson": "{\"id\":\"00000000-0000-0000-0000-000000000001\",\"email\":\"ada@example.com\",\"name\":\"Ada\",\"createdAt\":\"2026-09-30T12:00:00Z\"}",
+        "Properties": {
+          "id": {
+            "Description": "Stable account identifier.",
+            "ExampleJson": "\"00000000-0000-0000-0000-000000000001\""
+          }
+        }
+      }
     }
   }
 }
@@ -65,7 +80,40 @@ Swagger JSON and UI are currently served in Development and Staging. The
 `/openapi/{documentName}.json` compatibility route redirects to the corresponding
 Swashbuckle document. Versioned documents retain their existing URL structure.
 
-This configuration covers security definitions and UI options from issue #147.
-Schema examples, language-specific document generation, configurable extension
-data, and document-generation performance evidence still need separate
-acceptance work before that issue can close.
+`Extensions` maps OpenAPI `x-` names to JSON-encoded values. An extension value
+can therefore be a string, number, boolean, array, object, or `null`. The
+options validator rejects invalid names, malformed JSON, and values over 64 KiB
+on startup. `Schemas` uses the generated schema ID, not a C# type name; the
+schema IDs visible in `/swagger/v1/swagger.json` are the source of truth. A
+configured description or example replaces that schema's generated value, while
+unconfigured fields keep the existing output. `Properties` uses serialized
+property names. Examples must match the model's wire representation; JSON
+syntax is validated at startup, and the API owner must verify semantic validity.
+The default document is unchanged when these dictionaries are empty.
+
+This configuration adds structured extension data and opt-in schema descriptions
+and examples for issue #147. Language-specific documents, broad model coverage,
+and final generated-document verification remain required before that issue can
+close.
+
+## Document generation measurement
+
+The `OpenApiDocumentGenerationBenchmarks` fixture generates the full `v1`
+document with default options and with one structured extension and one schema
+override. The 2026-09-30 local BenchmarkDotNet `ShortRun` used one launch, three
+warmups, and three measured iterations on Windows 10, .NET 10.0.10, and an Intel
+Xeon W-2235. The document has 1,261 paths and 1,579 schemas.
+
+| Configuration | Mean | Error | Allocated |
+| --- | ---: | ---: | ---: |
+| Default | 708.3 ms | 376.1 ms | 223.97 MB |
+| Configured | 690.9 ms | 1,444.4 ms | 223.97 MB |
+
+The error intervals overlap substantially, so this short local run does not
+establish a speed difference. It measures document generation only, without
+HTTP startup, serialization, or downstream client generation. Reproduce it from
+the repository root with:
+
+```powershell
+dotnet run --project apps/api/tests/GameGuild.API.Versioning.PerformanceTests/GameGuild.API.Versioning.PerformanceTests.csproj --configuration Release -- --filter '*OpenApiDocumentGenerationBenchmarks*' --job Short --buildTimeout 600
+```

@@ -43,6 +43,12 @@ public sealed class OpenApiOptions : BaseOptions
     /// <summary>Additional schemes, keyed by their OpenAPI security definition names.</summary>
     public Dictionary<string, OpenApiSecuritySchemeOptions> SecuritySchemes { get; set; } = new();
 
+    /// <summary>Optional document extension values as JSON, keyed by OpenAPI x- names.</summary>
+    public Dictionary<string, string> Extensions { get; set; } = new();
+
+    /// <summary>Optional descriptions and examples keyed by generated schema IDs.</summary>
+    public Dictionary<string, OpenApiSchemaDocumentationOptions> Schemas { get; set; } = new();
+
     public OpenApiUiOptions Ui { get; set; } = new();
 
     public override void Validate()
@@ -103,6 +109,37 @@ public sealed class OpenApiOptions : BaseOptions
             }
 
             scheme.Validate(name);
+        }
+
+        if (Extensions is null)
+        {
+            throw new InvalidOperationException("OpenAPI extensions cannot be null.");
+        }
+
+        foreach (var (name, json) in Extensions)
+        {
+            if (!name.StartsWith("x-", StringComparison.Ordinal) || name.Length <= 2
+                || name.Any(character => !char.IsLetterOrDigit(character) && character is not ('-' or '_' or '.')))
+            {
+                throw new InvalidOperationException($"OpenAPI extension '{name}' must be a valid x- name.");
+            }
+
+            OpenApiSchemaDocumentationOptions.ValidateJson(json, $"extension '{name}'");
+        }
+
+        if (Schemas is null)
+        {
+            throw new InvalidOperationException("OpenAPI schema documentation cannot be null.");
+        }
+
+        foreach (var (name, schema) in Schemas)
+        {
+            if (string.IsNullOrWhiteSpace(name) || schema is null)
+            {
+                throw new InvalidOperationException("OpenAPI schema documentation requires a non-empty schema ID and options.");
+            }
+
+            schema.Validate(name);
         }
     }
 
