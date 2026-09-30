@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: { params: Promise<{ course: s
   }
 
   return {
-    title: `${course.title} | Game Guild`,
+    title: course.title,
     description: course.description,
     openGraph: {
       title: course.title,
