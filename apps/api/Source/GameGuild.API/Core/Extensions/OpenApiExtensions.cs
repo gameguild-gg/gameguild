@@ -165,6 +165,7 @@ public static class OpenApiExtensions
                 c.OperationFilter<AllowAnonymousOperationFilter>();
                 c.SchemaFilter<FlagsEnumSchemaFilter>();
                 c.DocumentFilter<OpenApiServerDocumentFilter>(options);
+                c.DocumentFilter<ConfiguredOpenApiDocumentFilter>(options);
                 c.DocumentFilter<DeterministicOpenApiDocumentFilter>();
                 ApiProductComposition.Instance.ConfigureOpenApi(c);
 
