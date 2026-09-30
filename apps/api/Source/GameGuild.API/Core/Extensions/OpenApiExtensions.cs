@@ -44,7 +44,9 @@ public static class OpenApiExtensions
         services.TryAddSingleton(options);
 
         if (!options.EnableOpenApi)
+        {
             return services;
+        }
 
         // Add native .NET 9 OpenAPI support
         // JSON serialization options are configured globally in Program.cs
@@ -337,7 +339,9 @@ internal sealed class OpenApiServerDocumentFilter : IDocumentFilter
     public void Apply(OpenApiDocument document, DocumentFilterContext context)
     {
         if (_options.Servers.Count == 0)
+        {
             return;
+        }
 
         document.Servers = _options.Servers
             .Select(server => new OpenApiServer

@@ -96,7 +96,9 @@ public static class PresentationLayerExtensions
 
         var openApiOptions = options.OpenApi ?? OpenApiOptionsBuilder.Create(configuration);
         if (!options.EnableOpenApi)
+        {
             openApiOptions.EnableOpenApi = false;
+        }
         openApiOptions.Validate();
         services.TryAddSingleton(openApiOptions);
 

@@ -42,26 +42,36 @@ public sealed class OpenApiOptions : BaseOptions
         base.Validate();
 
         if (string.IsNullOrWhiteSpace(Title))
+        {
             throw new InvalidOperationException("OpenAPI title cannot be null or empty.");
+        }
 
         if (string.IsNullOrWhiteSpace(Version))
+        {
             throw new InvalidOperationException("OpenAPI document key cannot be null or empty.");
+        }
 
         ValidateOptionalHttpUrl(ContactUrl, nameof(ContactUrl));
         ValidateOptionalHttpUrl(TermsOfServiceUrl, nameof(TermsOfServiceUrl));
         ValidateOptionalHttpUrl(LicenseUrl, nameof(LicenseUrl));
 
         if (!string.IsNullOrWhiteSpace(LicenseUrl) && string.IsNullOrWhiteSpace(LicenseName))
+        {
             throw new InvalidOperationException("An OpenAPI license URL requires a license name.");
+        }
 
         foreach (var server in Servers)
+        {
             server.Validate();
+        }
     }
 
     private static void ValidateOptionalHttpUrl(string value, string propertyName)
     {
         if (string.IsNullOrWhiteSpace(value))
+        {
             return;
+        }
 
         if (!Uri.TryCreate(value, UriKind.Absolute, out var uri)
             || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
