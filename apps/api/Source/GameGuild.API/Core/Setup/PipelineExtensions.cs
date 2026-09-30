@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
+using Swashbuckle.AspNetCore.SwaggerUI;
 
 namespace GameGuild.API.Setup;
 
@@ -158,7 +159,7 @@ public static class PipelineExtensions
         {
             app.UseSwaggerUI(options =>
             {
-                options.RoutePrefix = "documentation";
+                ConfigureOpenApiUi(options, openApiOptions?.Ui ?? new OpenApiUiOptions());
 
                 var provider = app.Services.GetService<IApiVersionDescriptionProvider>();
                 if (provider is not null)
@@ -177,6 +178,32 @@ public static class PipelineExtensions
         }
 
         return app;
+    }
+
+    internal static void ConfigureOpenApiUi(SwaggerUIOptions options, OpenApiUiOptions configured)
+    {
+        configured.Validate();
+        options.RoutePrefix = configured.RoutePrefix;
+        if (!string.IsNullOrWhiteSpace(configured.DocumentTitle))
+        {
+            options.DocumentTitle = configured.DocumentTitle;
+        }
+        if (configured.EnableDeepLinking.HasValue)
+        {
+            options.ConfigObject.DeepLinking = configured.EnableDeepLinking.Value;
+        }
+        if (configured.EnableFilter.HasValue)
+        {
+            options.ConfigObject.Filter = configured.EnableFilter.Value ? string.Empty : null;
+        }
+        if (configured.DisplayRequestDuration.HasValue)
+        {
+            options.ConfigObject.DisplayRequestDuration = configured.DisplayRequestDuration.Value;
+        }
+        if (configured.PersistAuthorization.HasValue)
+        {
+            options.ConfigObject.PersistAuthorization = configured.PersistAuthorization.Value;
+        }
     }
 
     /// <summary>
