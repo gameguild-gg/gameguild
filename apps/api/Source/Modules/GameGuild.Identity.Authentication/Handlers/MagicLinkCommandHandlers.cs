@@ -1,7 +1,9 @@
 using GameGuild.CQRS;
+using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.Identity.Users;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace GameGuild.Identity.Authentication;
 
@@ -70,7 +72,8 @@ public sealed class ConsumeMagicLinkCommandHandler(
     IEmailVerificationService emailVerificationService,
     IJwtTokenService jwtTokenService,
     IConfiguration configuration,
-    ILogger<ConsumeMagicLinkCommandHandler> logger) : ICommandHandler<ConsumeMagicLinkCommand, SignInResponse>
+    ILogger<ConsumeMagicLinkCommandHandler> logger,
+    IOptions<JwtOptions>? jwtOptions = null) : ICommandHandler<ConsumeMagicLinkCommand, SignInResponse>
 {
     public async Task<SignInResponse> Handle(ConsumeMagicLinkCommand request, CancellationToken cancellationToken)
     {
@@ -86,10 +89,12 @@ public sealed class ConsumeMagicLinkCommandHandler(
             throw new UnauthorizedAccessException("Invalid or expired magic-link token");
         }
 
-        var accessTokenMinutes = ParsePositiveInt(configuration["Jwt:AccessTokenExpirationMinutes"], 60);
-        var refreshTokenDays = ParsePositiveInt(
-            configuration["Jwt:RefreshTokenExpirationDays"] ?? configuration["Jwt:RefreshTokenExpiryInDays"],
-            30);
+        var accessTokenMinutes = jwtOptions?.Value.AccessTokenExpirationMinutes
+                                 ?? ParsePositiveInt(configuration["Jwt:AccessTokenExpirationMinutes"], 60);
+        var refreshTokenDays = jwtOptions?.Value.RefreshTokenExpirationDays
+                               ?? ParsePositiveInt(
+                                   configuration["Jwt:RefreshTokenExpirationDays"] ?? configuration["Jwt:RefreshTokenExpiryInDays"],
+                                   30);
         var now = SystemClock.UtcNow;
 
         var accessToken = await jwtTokenService.GenerateAccessTokenAsync(

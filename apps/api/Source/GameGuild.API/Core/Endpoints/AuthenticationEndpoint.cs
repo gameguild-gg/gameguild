@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using GameGuild.API.Database;
+using GameGuild.CQRS;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Users;
 using Microsoft.AspNetCore.Identity;
@@ -79,6 +80,14 @@ public static class AuthenticationEndpoint
                     }
                 }
             );
+        }
+        catch (RequestValidationException ex)
+        {
+            var errors = ex.Errors
+                .GroupBy(error => error.PropertyName)
+                .ToDictionary(group => group.Key, group => group.Select(error => error.ErrorMessage).ToArray());
+
+            return Results.ValidationProblem(errors);
         }
         catch (Exception ex)
         {

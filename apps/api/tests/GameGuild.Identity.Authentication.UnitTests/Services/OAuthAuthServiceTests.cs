@@ -909,6 +909,7 @@ public class OAuthAuthServiceTests
             refreshTokenHasher.Object,
             config,
             authAttempt.Object,
+            new PasswordHasher(NullLogger<PasswordHasher>.Instance, config),
             anomaly.Object,
             enumeration.Object,
             httpCtx.Object,

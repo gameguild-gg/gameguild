@@ -1,13 +1,23 @@
 using FluentAssertions;
 using FluentValidation.TestHelper;
 using GameGuild.Identity.Authentication;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace GameGuild.Identity.Authentication.UnitTests.Validators;
 
 public class LocalSignUpCommandValidatorTests
 {
-    private readonly LocalSignUpCommandValidator _validator = new();
+    private readonly LocalSignUpCommandValidator _validator;
+
+    public LocalSignUpCommandValidatorTests()
+    {
+        var passwordHasher = new PasswordHasher(
+            NullLogger<PasswordHasher>.Instance,
+            new ConfigurationBuilder().Build());
+        _validator = new LocalSignUpCommandValidator(passwordHasher);
+    }
 
     // ── Email ─────────────────────────────────────────────────
 
@@ -108,6 +118,50 @@ public class LocalSignUpCommandValidatorTests
         var command = new LocalSignUpCommand { Email = "test@example.com", Password = "Password1!", Username = "user1" };
         var result = _validator.TestValidate(command);
         result.ShouldNotHaveValidationErrorFor(x => x.Password);
+    }
+
+    [Fact]
+    public void Should_UseConfiguredPasswordRequirements()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["PresentationLayer:Authentication:PasswordPolicy:MinPasswordLength"] = "8",
+                ["PresentationLayer:Authentication:PasswordPolicy:MaxPasswordLength"] = "128",
+                ["PresentationLayer:Authentication:PasswordPolicy:RequireUppercase"] = "false",
+                ["PresentationLayer:Authentication:PasswordPolicy:RequireLowercase"] = "true",
+                ["PresentationLayer:Authentication:PasswordPolicy:RequireDigit"] = "false",
+                ["PresentationLayer:Authentication:PasswordPolicy:RequireSpecialChar"] = "false"
+            })
+            .Build();
+        var validator = new LocalSignUpCommandValidator(
+            new PasswordHasher(NullLogger<PasswordHasher>.Instance, configuration));
+        var command = new LocalSignUpCommand
+        {
+            Email = "user@example.com",
+            Password = "lowercase-only",
+            Username = "valid.user"
+        };
+
+        var result = validator.TestValidate(command);
+
+        result.ShouldNotHaveValidationErrorFor(x => x.Password);
+    }
+
+    [Fact]
+    public void Should_NotIncludePasswordInValidationFailureDetails()
+    {
+        var command = new LocalSignUpCommand
+        {
+            Email = "user@example.com",
+            Password = "weak",
+            Username = "valid.user"
+        };
+
+        var result = _validator.TestValidate(command);
+
+        result.ShouldHaveValidationErrorFor(x => x.Password);
+        result.Errors.Should().OnlyContain(failure => failure.AttemptedValue == null);
     }
 
     // ── Username ──────────────────────────────────────────────

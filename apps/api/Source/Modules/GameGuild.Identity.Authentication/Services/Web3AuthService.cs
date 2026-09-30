@@ -1,7 +1,9 @@
 using System.Globalization;
+using GameGuild.Configuration.ApplicationLayer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace GameGuild.Identity.Authentication;
 
@@ -15,7 +17,8 @@ public class Web3AuthService(
     IConfiguration configuration,
     IAuthAttemptService authAttemptService,
     IHttpContextAccessor httpContextAccessor,
-    ILogger<Web3AuthService> logger
+    ILogger<Web3AuthService> logger,
+    IOptions<JwtOptions>? jwtOptions = null
 ) : IWeb3AuthService
 {
     public async Task<Web3ChallengeResponse> GenerateWeb3ChallengeAsync(Web3ChallengeRequest request, CancellationToken cancellationToken = default)
@@ -52,7 +55,8 @@ public class Web3AuthService(
 
         var jwtToken = jwtTokenService.GenerateAccessToken(userId, email, roles);
         var refreshTokenValue = await jwtTokenService.GenerateRefreshTokenAsync(userId, deviceInfo, cancellationToken).ConfigureAwait(false);
-        var refreshExpiresInDays = int.Parse(configuration["Jwt:RefreshTokenExpirationDays"] ?? configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7", CultureInfo.InvariantCulture);
+        var refreshExpiresInDays = jwtOptions?.Value.RefreshTokenExpirationDays
+                                   ?? int.Parse(configuration["Jwt:RefreshTokenExpirationDays"] ?? configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7", CultureInfo.InvariantCulture);
         var refreshTokenExpiresAt = SystemClock.UtcNow.AddDays(refreshExpiresInDays);
 
         var refreshToken = new RefreshToken
@@ -67,7 +71,8 @@ public class Web3AuthService(
 
         logger.LogInformation("Web3 signature verified for wallet {WalletAddress}", request.WalletAddress);
 
-        var accessTokenExpirationMinutes = int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60", CultureInfo.InvariantCulture);
+        var accessTokenExpirationMinutes = jwtOptions?.Value.AccessTokenExpirationMinutes
+                                           ?? int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60", CultureInfo.InvariantCulture);
 
         return new SignInResponse
         {
