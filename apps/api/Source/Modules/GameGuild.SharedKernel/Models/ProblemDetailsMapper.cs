@@ -27,6 +27,11 @@ public static class ProblemDetailsMapper
             Type = RfcUrls.ForErrorType(error.Type)
         };
 
+        if (!string.IsNullOrWhiteSpace(error.Code))
+        {
+            problemDetails.Extensions["code"] = error.Code;
+        }
+
         if (error is AggregateValidationError validationError)
         {
             problemDetails.Extensions["errors"] = validationError.Errors;
