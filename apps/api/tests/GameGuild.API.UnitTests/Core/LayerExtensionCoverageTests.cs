@@ -1,6 +1,8 @@
 using System.Reflection;
 using System.Reflection.Emit;
 using FluentAssertions;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using GameGuild.API.Setup;
@@ -13,9 +15,117 @@ namespace GameGuild.API.UnitTests.Core;
 public sealed class LayerExtensionCoverageTests
 {
     [Fact]
+    public void AddApplicationLayer_WithDefaultOptions_RegistersAndReturnsBuilder()
+    {
+        var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+        {
+            EnvironmentName = "Testing"
+        });
+
+        var result = builder.AddApplicationLayer();
+
+        result.Should().BeSameAs(builder);
+        builder.Services.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public void AddApplicationLayer_WhenRequiredArgumentsAreNull_Throws()
+    {
+        WebApplicationBuilder builder = null!;
+        IServiceCollection services = null!;
+        var validBuilder = WebApplication.CreateBuilder();
+        var validServices = new ServiceCollection();
+        var logger = new Mock<ILogger>().Object;
+
+        var nullBuilderDefault = () => builder.AddApplicationLayer();
+        var nullBuilderConfigured = () => builder.AddApplicationLayer(_ => { });
+        var nullBuilderConfiguration = () => validBuilder.AddApplicationLayer(null!);
+        var nullServices = () => services.AddApplicationLayer(logger, _ => { });
+        var nullLogger = () => validServices.AddApplicationLayer(null!, _ => { });
+        var nullServiceConfiguration = () => validServices.AddApplicationLayer(logger, null!);
+
+        nullBuilderDefault.Should().Throw<ArgumentNullException>();
+        nullBuilderConfigured.Should().Throw<ArgumentNullException>();
+        nullBuilderConfiguration.Should().Throw<ArgumentNullException>();
+        nullServices.Should().Throw<ArgumentNullException>();
+        nullLogger.Should().Throw<ArgumentNullException>();
+        nullServiceConfiguration.Should().Throw<ArgumentNullException>();
+    }
+
+    [Fact]
+    public void AddApplicationLayer_WithBuilderOptions_RegistersAndReturnsBuilder()
+    {
+        var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+        {
+            EnvironmentName = "Testing"
+        });
+
+        var result = builder.AddApplicationLayer(options =>
+        {
+            options.ModuleConfiguration.EnabledModules = [];
+            options.LogHandlerStatistics = false;
+        });
+
+        result.Should().BeSameAs(builder);
+        builder.Services.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public void AddInfrastructureLayer_WithBuilderOptions_RegistersAndReturnsBuilder()
+    {
+        var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+        {
+            EnvironmentName = "Testing"
+        });
+        builder.Configuration["InfrastructureLayer:EnableDatabase"] = "false";
+
+        var result = builder.AddInfrastructureLayer(options =>
+        {
+            options.UseInMemoryDatabase = true;
+        });
+
+        result.Should().BeSameAs(builder);
+        builder.Services.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public void InfrastructureLayerSetupOptions_ShouldRoundTripConfiguredValues()
+    {
+        var options = new InfrastructureLayerSetupOptions
+        {
+            UseInMemoryDatabase = true,
+            ConnectionStringOverride = "Host=database;Database=application"
+        };
+
+        options.UseInMemoryDatabase.Should().BeTrue();
+        options.ConnectionStringOverride.Should().Be("Host=database;Database=application");
+    }
+
+    [Fact]
+    public void AddDatabase_WhenConnectionIsMissing_ThrowsClearError()
+    {
+        var method = typeof(InfrastructureLayerExtensions).GetMethod(
+            "AddDatabase",
+            BindingFlags.Static | BindingFlags.NonPublic);
+        method.Should().NotBeNull();
+
+        var action = () => method!.Invoke(
+            null,
+            [new ServiceCollection(), new ConfigurationBuilder().Build(), null]);
+
+        action.Should().Throw<TargetInvocationException>()
+            .WithInnerException<InvalidOperationException>()
+            .WithMessage("*Connection string 'DefaultConnection' not found*");
+    }
+
+    [Fact]
     public void CountHandlersAndValidators_WhenAssemblyPartiallyLoads_CountsAvailableTypes()
     {
-        var assembly = CreatePartiallyLoadedAssembly(typeof(LoadableHandlerValidator));
+        var assembly = CreatePartiallyLoadedAssembly(
+            typeof(IRequestHandler<>),
+            typeof(InfrastructureAbstractType),
+            typeof(NonGenericMarker),
+            typeof(LoadableHandlerValidator));
 
         var result = InvokePrivate<(int handlers, int validators)>(
             typeof(ApplicationLayerExtensions),
@@ -24,6 +134,88 @@ public sealed class LayerExtensionCoverageTests
 
         result.handlers.Should().Be(1);
         result.validators.Should().Be(1);
+    }
+
+    [Fact]
+    public void CountHandlersAndValidators_WhenAssemblyLoads_CountsOnlyConcreteGenericContracts()
+    {
+        var assembly = new Mock<Assembly>();
+        assembly.Setup(value => value.GetTypes()).Returns(
+        [
+            typeof(IRequestHandler<>),
+            typeof(InfrastructureAbstractType),
+            typeof(NonGenericMarker),
+            typeof(GenericMarker),
+            typeof(LoadableHandlerValidator)
+        ]);
+
+        var result = InvokePrivate<(int handlers, int validators)>(
+            typeof(ApplicationLayerExtensions),
+            "CountHandlersAndValidators",
+            assembly.Object);
+
+        result.handlers.Should().Be(1);
+        result.validators.Should().Be(1);
+    }
+
+    [Fact]
+    public void DiscoverModuleAssemblies_ReturnsEnabledAssembliesInOrdinalOrder()
+    {
+        var config = new ModuleConfiguration();
+        var logger = new Mock<ILogger>();
+
+        var assemblies = InvokePrivate<Assembly[]>(
+            typeof(ApplicationLayerExtensions),
+            "DiscoverModuleAssemblies",
+            config,
+            logger.Object);
+
+        assemblies.Should().NotBeEmpty();
+        assemblies.Select(value => value.GetName().Name)
+            .Should().BeInAscendingOrder(StringComparer.Ordinal);
+    }
+
+    [Fact]
+    public void AddApplicationLayer_WithStatisticsEnabled_RegistersAndReturnsServices()
+    {
+        var services = new ServiceCollection();
+        var logger = new Mock<ILogger>();
+
+        var result = services.AddApplicationLayer(logger.Object, options =>
+        {
+            options.ModuleConfiguration.EnabledModules = [];
+            options.LogHandlerStatistics = true;
+        });
+
+        result.Should().BeSameAs(services);
+    }
+
+    [Fact]
+    public void LogHandlerStatistics_WhenAssemblyNameIsMissing_UsesUnknownModuleName()
+    {
+        var assembly = new Mock<Assembly>();
+        assembly.Setup(value => value.GetName()).Returns(new AssemblyName());
+        assembly.Setup(value => value.GetTypes()).Returns([]);
+        var namedAssembly = new Mock<Assembly>();
+        namedAssembly.Setup(value => value.GetName()).Returns(new AssemblyName("GameGuild.Coverage"));
+        namedAssembly.Setup(value => value.GetTypes()).Returns([]);
+        var logger = new Mock<ILogger>();
+
+        InvokePrivate<object?>(
+            typeof(ApplicationLayerExtensions),
+            "LogHandlerStatistics",
+            new[] { assembly.Object, namedAssembly.Object },
+            new ModuleConfiguration(),
+            logger.Object);
+
+        logger.Verify(
+            value => value.Log(
+                LogLevel.Information,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((state, _) => state.ToString()!.Contains("Unknown", StringComparison.Ordinal)),
+                It.IsAny<Exception?>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
     }
 
     [Fact]
@@ -139,6 +331,37 @@ public sealed class LayerExtensionCoverageTests
         services.Should().NotContain(descriptor => descriptor.ImplementationType == implementation);
     }
 
+    [Fact]
+    public void AddRepositories_HandlesNonPrefixedInterfacesAndRepositoryWithoutPublicConstructor()
+    {
+        var nonPrefixedImplementation = CreateServiceWithNonPrefixedInterfaces();
+        var (repositoryInterface, repositoryImplementation) = CreateRepositoryWithoutPublicConstructor();
+        var services = new ServiceCollection();
+        var logger = new Mock<ILogger>();
+
+        InvokePrivate<object?>(
+            typeof(InfrastructureLayerExtensions),
+            "AddRepositories",
+            services,
+            logger.Object);
+
+        services.Should().NotContain(descriptor => descriptor.ImplementationType == nonPrefixedImplementation);
+        services.Should().Contain(descriptor =>
+            descriptor.ServiceType == repositoryInterface &&
+            descriptor.ImplementationType == repositoryImplementation);
+    }
+
+    [Fact]
+    public void FormatInterfaceName_CoversPrefixDecisionStates()
+    {
+        InvokePrivate<string>(typeof(InfrastructureLayerExtensions), "FormatInterfaceName", "I")
+            .Should().Be("I");
+        InvokePrivate<string>(typeof(InfrastructureLayerExtensions), "FormatInterfaceName", "IuserService")
+            .Should().Be("Iuser Service");
+        InvokePrivate<string>(typeof(InfrastructureLayerExtensions), "FormatInterfaceName", "IUserRepository")
+            .Should().Be("User Repository");
+    }
+
     private static Mock<Assembly> CreatePartiallyLoadedAssembly(params Type?[] availableTypes)
     {
         var exception = new ReflectionTypeLoadException(
@@ -222,6 +445,54 @@ public sealed class LayerExtensionCoverageTests
         return implementationBuilder.CreateType()!;
     }
 
+    private static Type CreateServiceWithNonPrefixedInterfaces()
+    {
+        var assemblyName = new AssemblyName($"GameGuild.Coverage{Guid.NewGuid():N}AI");
+        var assembly = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
+        var module = assembly.DefineDynamicModule(assemblyName.Name!);
+        var repositoryInterface = module.DefineType(
+            "CoverageRepository",
+            TypeAttributes.Interface | TypeAttributes.Abstract | TypeAttributes.Public).CreateType()!;
+        var serviceInterface = module.DefineType(
+            "CoverageService",
+            TypeAttributes.Interface | TypeAttributes.Abstract | TypeAttributes.Public).CreateType()!;
+        var readerInterface = module.DefineType(
+            "CoverageReader",
+            TypeAttributes.Interface | TypeAttributes.Abstract | TypeAttributes.Public).CreateType()!;
+        var implementationBuilder = module.DefineType(
+            "NonPrefixedConventionType",
+            TypeAttributes.Class | TypeAttributes.Public);
+        implementationBuilder.AddInterfaceImplementation(repositoryInterface);
+        implementationBuilder.AddInterfaceImplementation(serviceInterface);
+        implementationBuilder.AddInterfaceImplementation(readerInterface);
+        implementationBuilder.DefineDefaultConstructor(MethodAttributes.Public);
+        return implementationBuilder.CreateType()!;
+    }
+
+    private static (Type Interface, Type Implementation) CreateRepositoryWithoutPublicConstructor()
+    {
+        var assemblyName = new AssemblyName($"GameGuild.Coverage{Guid.NewGuid():N}AI");
+        var assembly = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
+        var module = assembly.DefineDynamicModule(assemblyName.Name!);
+        var interfaceBuilder = module.DefineType(
+            "ICoverageNoConstructorRepository",
+            TypeAttributes.Interface | TypeAttributes.Abstract | TypeAttributes.Public);
+        var repositoryInterface = interfaceBuilder.CreateType()!;
+        var implementationBuilder = module.DefineType(
+            "CoverageNoConstructorRepository",
+            TypeAttributes.Class | TypeAttributes.Public);
+        implementationBuilder.AddInterfaceImplementation(repositoryInterface);
+        var constructor = implementationBuilder.DefineConstructor(
+            MethodAttributes.Private,
+            CallingConventions.Standard,
+            Type.EmptyTypes);
+        var generator = constructor.GetILGenerator();
+        generator.Emit(OpCodes.Ldarg_0);
+        generator.Emit(OpCodes.Call, typeof(object).GetConstructor(Type.EmptyTypes)!);
+        generator.Emit(OpCodes.Ret);
+        return (repositoryInterface, implementationBuilder.CreateType()!);
+    }
+
     private static T InvokePrivate<T>(Type declaringType, string name, params object?[] arguments)
     {
         var method = declaringType.GetMethod(name, BindingFlags.Static | BindingFlags.NonPublic);
@@ -234,6 +505,12 @@ public sealed class LayerExtensionCoverageTests
 
     private interface IRequestHandler<T>;
     private interface IValidator<T>;
+    private interface INonGenericMarker;
+    private sealed class NonGenericMarker : INonGenericMarker;
+    private sealed class GenericMarker : IComparable<GenericMarker>
+    {
+        public int CompareTo(GenericMarker? other) => 0;
+    }
     private sealed class LoadableHandlerValidator : IRequestHandler<string>, IValidator<string>;
 }
 
