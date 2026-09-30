@@ -1,19 +1,19 @@
 using BenchmarkDotNet.Attributes;
 using GameGuild.Configuration.PresentationLayer.Authorization;
 using GameGuild.Identity.Authorization.Caching;
+using GameGuild.TestSupport.Finance.Economy;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Npgsql;
 using NpgsqlTypes;
-using Testcontainers.PostgreSql;
 using Moq;
 
 namespace GameGuild.Identity.Authorization.PerformanceTests;
 
 /// <summary>
 /// Compares concurrent database-backed ACL evaluation batches with warm cached ACL batches.
-/// PostgreSQL runs in a disposable Testcontainers instance and contains an indexed ACL table
+/// PostgreSQL uses the shared disposable database lifecycle and contains an indexed ACL table
 /// with 5,000 unrelated entries plus the benchmark grant. The repository adapter uses the
 /// production repository's ACL filters while keeping this benchmark independent of migrations.
 /// </summary>
@@ -26,7 +26,7 @@ public class PermissionCacheDatabaseLookupBenchmarks
     private const string ResourceType = "Document";
     private const string ResourceId = "permission-cache-benchmark";
 
-    private PostgreSqlContainer _container = null!;
+    private EconomyPostgreSqlTestDatabase _database = null!;
     private NpgsqlDataSource _dataSource = null!;
     private MemoryCache _memoryCache = null!;
     private DatabaseAccessControlListService _databaseService = null!;
@@ -39,15 +39,9 @@ public class PermissionCacheDatabaseLookupBenchmarks
     [GlobalSetup]
     public async Task SetupAsync()
     {
-        _container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("authorization_benchmarks")
-            .WithUsername("postgres")
-            .WithPassword("postgres")
-            .Build();
-        await _container.StartAsync().ConfigureAwait(false);
+        _database = await EconomyPostgreSqlTestDatabase.CreateAsync("authorization_benchmarks").ConfigureAwait(false);
 
-        _dataSource = NpgsqlDataSource.Create(_container.GetConnectionString());
+        _dataSource = NpgsqlDataSource.Create(_database.ConnectionString);
         await SeedDatabaseAsync().ConfigureAwait(false);
 
         var aclRepository = new Mock<IAccessControlListEntryRepository>();
@@ -129,9 +123,9 @@ public class PermissionCacheDatabaseLookupBenchmarks
             await _dataSource.DisposeAsync().ConfigureAwait(false);
         }
 
-        if (_container is not null)
+        if (_database is not null)
         {
-            await _container.DisposeAsync().ConfigureAwait(false);
+            await _database.DisposeAsync().ConfigureAwait(false);
         }
     }
 

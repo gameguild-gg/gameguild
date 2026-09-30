@@ -1,12 +1,12 @@
 using BenchmarkDotNet.Attributes;
 using GameGuild.Configuration.PresentationLayer.Authorization;
 using GameGuild.Identity.Authorization.Caching;
+using GameGuild.TestSupport.Finance.Economy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
-using Testcontainers.PostgreSql;
 
 namespace GameGuild.Identity.Authorization.PerformanceTests;
 
@@ -24,7 +24,7 @@ public class PermissionCacheEfDatabaseLookupBenchmarks
     private const string ResourceType = "Document";
     private const string ResourceId = "permission-cache-ef-benchmark";
 
-    private PostgreSqlContainer _container = null!;
+    private EconomyPostgreSqlTestDatabase _database = null!;
     private BenchmarkDbContextFactory _contextFactory = null!;
     private MemoryCache _memoryCache = null!;
     private IAccessControlListService _databaseService = null!;
@@ -37,16 +37,10 @@ public class PermissionCacheEfDatabaseLookupBenchmarks
     [GlobalSetup]
     public async Task SetupAsync()
     {
-        _container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("authorization_ef_benchmarks")
-            .WithUsername("postgres")
-            .WithPassword("postgres")
-            .Build();
-        await _container.StartAsync().ConfigureAwait(false);
+        _database = await EconomyPostgreSqlTestDatabase.CreateAsync("authorization_ef_benchmarks").ConfigureAwait(false);
 
         var dbOptions = new DbContextOptionsBuilder<PermissionCacheBenchmarkDbContext>()
-            .UseNpgsql(_container.GetConnectionString())
+            .UseNpgsql(_database.ConnectionString)
             .Options;
         _contextFactory = new BenchmarkDbContextFactory(dbOptions);
         await SeedDatabaseAsync().ConfigureAwait(false);
@@ -105,9 +99,9 @@ public class PermissionCacheEfDatabaseLookupBenchmarks
     public async Task CleanupAsync()
     {
         _memoryCache?.Dispose();
-        if (_container is not null)
+        if (_database is not null)
         {
-            await _container.DisposeAsync().ConfigureAwait(false);
+            await _database.DisposeAsync().ConfigureAwait(false);
         }
     }
 
