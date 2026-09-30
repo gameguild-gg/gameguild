@@ -213,6 +213,37 @@ public interface IPermissionService
     Task<Dictionary<Guid, Dictionary<PermissionType, bool>>> BulkCheckPermissionsAsync(Guid[ ] userIds, Guid? tenantId, PermissionType[ ] permissions);
 
     /// <summary>
+    ///     Evaluate a bounded batch of permission checks that may target different users,
+    ///     tenants, content types, and resources.
+    /// </summary>
+    Task<IReadOnlyList<BulkPermissionCheckResult>> BulkCheckPermissionsAsync(
+        IReadOnlyCollection<BulkPermissionCheckRequest> requests);
+
+    Task<IReadOnlyList<BulkPermissionCheckResult>> BulkCheckPermissionsAsync(
+        IReadOnlyCollection<BulkPermissionCheckRequest> requests,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    ///     Stream permission decisions in bounded batches so callers do not need to hold
+    ///     the entire request and result set in memory.
+    /// </summary>
+    IAsyncEnumerable<BulkPermissionCheckResult> StreamBulkCheckPermissionsAsync(
+        IAsyncEnumerable<BulkPermissionCheckRequest> requests);
+
+    IAsyncEnumerable<BulkPermissionCheckResult> StreamBulkCheckPermissionsAsync(
+        IAsyncEnumerable<BulkPermissionCheckRequest> requests,
+        int batchSize);
+
+    IAsyncEnumerable<BulkPermissionCheckResult> StreamBulkCheckPermissionsAsync(
+        IAsyncEnumerable<BulkPermissionCheckRequest> requests,
+        CancellationToken cancellationToken);
+
+    IAsyncEnumerable<BulkPermissionCheckResult> StreamBulkCheckPermissionsAsync(
+        IAsyncEnumerable<BulkPermissionCheckRequest> requests,
+        int batchSize,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     ///     Clean up expired permissions
     /// </summary>
     Task CleanupExpiredPermissionsAsync();

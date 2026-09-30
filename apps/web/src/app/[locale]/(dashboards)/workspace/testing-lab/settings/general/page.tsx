@@ -75,6 +75,7 @@ export default async function TestingLabSettingsPage() {
               <Input
                 id="lab-name"
                 name="labName"
+                key={settings?.labName ?? "GameGuild Testing Lab"}
                 defaultValue={settings?.labName ?? "GameGuild Testing Lab"}
                 required
               />
@@ -93,6 +94,7 @@ export default async function TestingLabSettingsPage() {
               <Input
                 id="lab-timezone"
                 name="timezone"
+                key={settings?.timezone ?? "UTC"}
                 defaultValue={settings?.timezone ?? "UTC"}
                 required
               />
@@ -121,6 +123,7 @@ export default async function TestingLabSettingsPage() {
                   type="number"
                   min="15"
                   step="15"
+                  key={settings?.defaultSessionDuration ?? 120}
                   defaultValue={settings?.defaultSessionDuration ?? 120}
                   className="pr-20"
                 />
@@ -136,6 +139,7 @@ export default async function TestingLabSettingsPage() {
                 name="maxSimultaneousSessions"
                 type="number"
                 min="1"
+                key={settings?.maxSimultaneousSessions ?? 4}
                 defaultValue={settings?.maxSimultaneousSessions ?? 4}
               />
             </div>
@@ -145,6 +149,7 @@ export default async function TestingLabSettingsPage() {
                 id="lab-reminders"
                 name="reminderDaysBefore"
                 placeholder="4,2,1"
+                key={settings?.reminderDaysBefore ?? "4,2,1"}
                 defaultValue={settings?.reminderDaysBefore ?? "4,2,1"}
                 aria-describedby="lab-reminders-help"
               />

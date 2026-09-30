@@ -71,9 +71,31 @@ public sealed class AuthorizationCacheOptions : BaseOptions
 
     /// <summary>
     ///     Time-to-live in seconds for L2 (distributed) cache entries.
-    ///     Should be longer than L1 TTL to reduce Redis calls.
+    ///     Should cover the longest L1 cache TTL to reduce Redis calls.
     /// </summary>
     public int DistributedCacheTtlSeconds { get; set; } = 600;
+
+    // ========================
+    // AUTOMATIC CACHE WARMING
+    // ========================
+
+    /// <summary>
+    ///     Whether to warm frequently accessed subject-based ACL decisions on a schedule.
+    ///     Tracking is process-local and bounded; warmed decisions still use the normal versioned L1/L2 cache path.
+    /// </summary>
+    public bool AutomaticWarmupEnabled { get; set; } = true;
+
+    /// <summary>The number of seconds between automatic warmup cycles.</summary>
+    public int AutomaticWarmupIntervalSeconds { get; set; } = 60;
+
+    /// <summary>The number of accesses within one cycle required before an ACL pair is considered popular.</summary>
+    public int AutomaticWarmupMinimumAccessCount { get; set; } = 5;
+
+    /// <summary>The maximum number of popular ACL pairs warmed during one cycle.</summary>
+    public int AutomaticWarmupMaxEntriesPerCycle { get; set; } = 50;
+
+    /// <summary>The maximum number of distinct ACL pairs retained in the current popularity window.</summary>
+    public int PopularityTrackingCapacity { get; set; } = 5000;
 
     // ========================
     // METRICS & OBSERVABILITY
@@ -117,18 +139,48 @@ public sealed class AuthorizationCacheOptions : BaseOptions
         
         if (AccessControlListTtlSeconds < 0)
             throw new InvalidOperationException("AccessControlListTtlSeconds cannot be negative.");
+
+        if (RulesetTtlSeconds < 0)
+        {
+            throw new InvalidOperationException("RulesetTtlSeconds cannot be negative.");
+        }
         
         if (MaxPolicyCacheSize <= 0)
             throw new InvalidOperationException("MaxPolicyCacheSize must be positive.");
         
         if (MaxL1CacheSize <= 0)
             throw new InvalidOperationException("MaxL1CacheSize must be positive.");
+
+        if (AutomaticWarmupIntervalSeconds <= 0)
+        {
+            throw new InvalidOperationException("AutomaticWarmupIntervalSeconds must be positive.");
+        }
+
+        if (AutomaticWarmupMinimumAccessCount <= 0)
+        {
+            throw new InvalidOperationException("AutomaticWarmupMinimumAccessCount must be positive.");
+        }
+
+        if (AutomaticWarmupMaxEntriesPerCycle <= 0 || AutomaticWarmupMaxEntriesPerCycle > 500)
+        {
+            throw new InvalidOperationException("AutomaticWarmupMaxEntriesPerCycle must be between 1 and 500.");
+        }
+
+        if (PopularityTrackingCapacity <= 0)
+        {
+            throw new InvalidOperationException("PopularityTrackingCapacity must be positive.");
+        }
         
         if (UseDistributedCache && string.IsNullOrWhiteSpace(RedisConnectionString))
             throw new InvalidOperationException("RedisConnectionString is required when UseDistributedCache is true.");
         
-        if (DistributedCacheTtlSeconds < PolicyTtlSeconds)
-            throw new InvalidOperationException("DistributedCacheTtlSeconds should be >= PolicyTtlSeconds for optimal cache efficiency.");
+        var longestL1TtlSeconds = Math.Max(
+            Math.Max(PolicyTtlSeconds, PermissionTtlSeconds),
+            Math.Max(AccessControlListTtlSeconds, RulesetTtlSeconds));
+        if (DistributedCacheTtlSeconds < longestL1TtlSeconds)
+        {
+            throw new InvalidOperationException("DistributedCacheTtlSeconds should be >= the longest L1 cache TTL for optimal cache efficiency.");
+        }
     }
 
     /// <summary>

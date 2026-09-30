@@ -1,5 +1,7 @@
 
 using Microsoft.AspNetCore.Authorization;
+using GameGuild.Configuration.PresentationLayer.Authorization;
+using Microsoft.Extensions.Options;
 
 namespace GameGuild.Identity.Authorization;
 
@@ -10,8 +12,12 @@ namespace GameGuild.Identity.Authorization;
 ///     - minimumAccessLevel: string (optional) - Minimum ACL access level ("Read", "Write", "Admin")
 ///     - allowOwner: bool (optional, default: true) - Whether owner bypasses ACL check
 /// </summary>
-public sealed class OwnerOrAclRuleEvaluator(IAccessControlListService aclService) : IRuleEvaluator
+public sealed class OwnerOrAclRuleEvaluator(
+    IAccessControlListService aclService,
+    IOptions<AuthorizationTokenOptions>? tokenOptions = null) : IRuleEvaluator
 {
+    private readonly string _groupIdClaimType = tokenOptions?.Value.GroupIdClaimType ?? "group_id";
+
     public string RuleType => RuleTypes.OwnerOrAcl;
 
     public async Task<RuleEvaluationResult> EvaluateAsync(
@@ -53,7 +59,7 @@ public sealed class OwnerOrAclRuleEvaluator(IAccessControlListService aclService
                 : AccessLevel.Read;
 
             // Build ACL subject from user claims
-            var subject = BuildAclSubject(user);
+            var subject = BuildAclSubject(user, _groupIdClaimType);
 
             // Get tenant ID from claims
             var tenantId = Utilities.ClaimsExtractor.GetTenantIdAsGuid(user);
@@ -82,7 +88,7 @@ public sealed class OwnerOrAclRuleEvaluator(IAccessControlListService aclService
         return RuleEvaluationResult.Fail("Resource does not support ownership or ACL checks");
     }
 
-    private static AclSubject BuildAclSubject(System.Security.Claims.ClaimsPrincipal user)
+    private static AclSubject BuildAclSubject(System.Security.Claims.ClaimsPrincipal user, string groupIdClaimType)
     {
         var userGuid = Utilities.ClaimsExtractor.GetUserIdAsGuid(user);
 
@@ -92,10 +98,12 @@ public sealed class OwnerOrAclRuleEvaluator(IAccessControlListService aclService
             .Select(r => r!.Value)
             .ToList();
 
-        var groupIds = user.FindAll(ClaimNames.Group)
+        var groupIds = user.FindAll(groupIdClaimType)
+            .Concat(user.FindAll(ClaimNames.Group))
             .Select(c => Guid.TryParse(c.Value, out var gid) ? gid : (Guid?)null)
             .Where(g => g.HasValue)
             .Select(g => g!.Value)
+            .Distinct()
             .ToList();
 
         return new AclSubject

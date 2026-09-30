@@ -41,10 +41,7 @@ public static class OpenApiOptionsBuilder
     public static void Validate(OpenApiOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
-
-        if (string.IsNullOrWhiteSpace(options.Title)) throw new InvalidOperationException("OpenAPI title cannot be null or empty.");
-
-        if (string.IsNullOrWhiteSpace(options.Version)) throw new InvalidOperationException("OpenAPI version cannot be null or empty.");
+        options.Validate();
     }
 
     /// <summary>

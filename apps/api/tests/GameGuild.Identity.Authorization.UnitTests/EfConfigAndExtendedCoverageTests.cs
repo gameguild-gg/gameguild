@@ -229,14 +229,18 @@ public class EfConfigAndExtendedCoverageTests
     [Fact]
     public void DynamicRoleRepository_CanBeCreated()
     {
-        var repo = new DynamicRoleRepository(Mock.Of<IApplicationDbContext>());
+        var repo = new DynamicRoleRepository(
+            Mock.Of<IApplicationDbContext>(),
+            Mock.Of<ICacheInvalidationService>());
         repo.Should().NotBeNull();
     }
 
     [Fact]
     public void DynamicRoleAssignmentRepository_CanBeCreated()
     {
-        var repo = new DynamicRoleAssignmentRepository(Mock.Of<IApplicationDbContext>());
+        var repo = new DynamicRoleAssignmentRepository(
+            Mock.Of<IApplicationDbContext>(),
+            Mock.Of<ICacheInvalidationService>());
         repo.Should().NotBeNull();
     }
 

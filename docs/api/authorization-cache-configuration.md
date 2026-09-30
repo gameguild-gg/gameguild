@@ -1,0 +1,130 @@
+# Authorization cache configuration
+
+Authorization caching uses an in-memory L1 cache and an optional Redis L2 cache.
+Register the Redis helper before the authorization cache so the same Redis
+connection and invalidation channel are available to the cache and its
+subscriber:
+
+```csharp
+var redisConnectionString = configuration.GetConnectionString("AuthorizationRedis")
+    ?? throw new InvalidOperationException("AuthorizationRedis connection is required.");
+
+services.AddAuthorizationRedisCache(redisConnectionString, instanceName: "gg:auth:");
+services.AddAuthorizationCaching(options =>
+{
+    options.PolicyTtlSeconds = 300;
+    options.PermissionTtlSeconds = 300;
+    options.AccessControlListTtlSeconds = 60;
+    options.DistributedCacheTtlSeconds = 600;
+    options.MaxL1CacheSize = 5000;
+    options.UsePubSubInvalidation = true;
+    options.InvalidationChannelName = "gg:auth:invalidate";
+});
+```
+
+Keep the Redis connection string in the deployment secret store. `AddAuthorizationRedisCache`
+configures `IDistributedCache`, enables L2, registers the StackExchange.Redis
+multiplexer used for Pub/Sub, and starts the per-instance invalidation subscriber.
+The subscriber retries subscription failures; StackExchange.Redis restores an
+active subscription after reconnecting. See the official [connection behavior
+documentation](https://github.com/StackExchange/StackExchange.Redis/blob/main/docs/Configuration.md)
+and [Pub/Sub reconnect fixes](https://github.com/StackExchange/StackExchange.Redis/blob/main/docs/ReleaseNotes.md).
+
+The cache options also include `RulesetTtlSeconds`, `MaxPolicyCacheSize`,
+`EnableMetrics`, and `MetricsLoggingIntervalSeconds`. The Redis channel must be
+non-empty when distributed Pub/Sub invalidation is enabled. Use a separate
+channel for each isolated application deployment that shares the same Redis
+server.
+
+`MaxL1CacheSize` bounds the entries registered through the authorization cache
+key tracker. When the cap is exceeded, the tracker removes a prior L1 entry and
+records a `capacity` eviction. This cap is scoped to tracked authorization
+entries; it does not set `SizeLimit` on the shared application `IMemoryCache`.
+
+Permission changes advance the shared tenant security version before publishing
+user, resource, or policy invalidation events. Cache keys include this version,
+so entries from the old version are no longer selected if a Pub/Sub publish
+fails. Publish failures are logged, and old cache entries expire through their
+configured TTLs. Pub/Sub provides prompt local cleanup. A singleton per-process key index tracks L1 entries from cache services and request scopes so received events can evict the actual local entries.
+Wildcard matching scans this in-memory index; the implementation does not issue Redis key scans for deletion.
+
+ACL keys also include a shared global security version stored under the reserved
+`Guid.Empty` version scope. Global role assignment, removal, update, and deletion
+advance this version and publish a global invalidation event. This makes prior
+ACL keys unreachable across tenants even when Pub/Sub is unavailable; received
+events also clear tracked ACL entries from the local L1 cache.
+The tenant and global versions are read together in one database query.
+
+Bulk invalidation accepts 1–500 typed targets (user, resource, policy, or role/group
+dependency), advances the tenant version once, evicts matching local L1 entries,
+and publishes one versioned Redis event. ACL grant and revoke operations publish
+the affected resource together with its role or group dependency, so cached
+subject decisions are evicted across request scopes. The subscriber validates
+batch targets before applying them. This covers direct ACL dependencies; broader
+hierarchical inheritance invalidation still needs explicit verification.
+
+The hidden permission administration controller exposes
+`GET /v{version}/permissions/cache/stats` to system administrators and
+`POST /v{version}/permissions/cache:clear` for the authorized user or tenant
+scope. The statistics response reports process-local L1 entry counts, distinct
+users represented by those keys, and the recorded L1/L2 hits, misses, evictions,
+and per-cache-type counts. `PerformanceMetrics` includes the average measured
+cache lookup duration and sample count per cache type since process start. It
+retains no raw samples and does not aggregate across instances. The OpenTelemetry
+histogram remains the source for percentile analysis in the configured collector.
+
+Set `OpenTelemetry:Enabled` to `true` to export the authorization cache meter
+alongside traces. It uses the configured console exporter and OTLP endpoint and
+includes hit, miss, eviction, and lookup-duration instruments. Give each API
+replica a distinct `OpenTelemetry:ServiceInstanceId` (for example, its pod ID);
+when omitted, the API generates a process-unique instance ID. Aggregate the
+counters across replicas in the collector or backend. The Prometheus rules below
+assume the default translation that appends `_total` to counters and expands the
+histogram's `ms` unit to `milliseconds`. The lookup histogram measures only cache
+reads and does not include the authoritative database lookup after a miss.
+Prometheus alert examples for high miss ratio, p95 lookup latency, and capacity
+evictions are in [authorization-cache-alerts.yml](./authorization-cache-alerts.yml).
+The thresholds are starting points and should be tuned to observed workload.
+Cache-operation counters include both request traffic and scheduled warmup lookups.
+
+System administrators can prewarm up to 500 selected ACL decisions with
+`POST /v{version}/permissions/cache:warm`. Each item names a tenant resource and
+either a user with role/group IDs or the anonymous subject. The endpoint uses
+the normal versioned ACL evaluation path and returns only requested, warmed, and
+duplicate counts; it does not return access decisions. This is explicit
+operator-selected prewarming.
+
+Automatic popularity-based warming is enabled by default for subject-based ACL
+evaluations. Each API process keeps a bounded, process-local frequency window
+(`PopularityTrackingCapacity`, default 5,000 distinct pairs). Every
+`AutomaticWarmupIntervalSeconds` (default 60), it selects up to
+`AutomaticWarmupMaxEntriesPerCycle` (default 50) pairs seen at least
+`AutomaticWarmupMinimumAccessCount` times in that window (default 5). Warmup
+evaluates the selected pairs through the normal versioned ACL path, and those
+warmup evaluations are excluded from popularity counts. If the tracking window
+is full, new distinct pairs are ignored until the next cycle; existing pairs
+continue accumulating. Configure `AutomaticWarmupEnabled` to `false` to disable
+both observation and scheduled work. Each replica ranks its own observations;
+when Redis L2 is enabled, the usual distributed cache remains shared. A failed
+cycle is logged and a later cycle continues.
+
+If an L2 read fails or contains invalid data, the hybrid cache records a warning
+and returns a miss so the calling service can load the authoritative value from
+its backing store. L2 write and removal failures are logged without failing the
+request; the L1 operation remains in effect. Caller-requested cancellation still
+propagates.
+
+The authorization and authentication unit suites cover the L1/L2 cache behavior,
+DI registration, version increments, serialized event payloads, subscriber
+dispatch and retry, Redis publish failure handling, and cache availability when
+L2 reads, writes, or removals fail. The Redis integration project contains
+focused cases for stale-ACL protection, Pub/Sub dispatch, role/group dependency
+invalidation, and subscriber recovery after a Redis restart. The four focused
+Redis integration tests passed locally with Docker enabled. API Verify now
+selects the integration-test project when its files change.
+
+Full network fault injection during Redis reconnects, inherited hierarchy
+invalidation through actual group-definition and membership mutation paths,
+and production-representative database-backed performance/load measurements
+remain open work. Cross-instance metric export and example alert thresholds
+are implemented but still need CI and deployment-level validation.

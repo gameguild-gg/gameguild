@@ -10,6 +10,7 @@ source "$script_dir/economy-gate.sh"
 audit_root="$repository_root/artifacts/test-results/pnpm-audit"
 audit_lock="$audit_root/pnpm-lock.yaml"
 audit_report="$audit_root/audit.json"
+audit_stderr_report="$audit_root/audit.stderr.log"
 root_lock="$repository_root/pnpm-lock.yaml"
 virtual_store_lock="$repository_root/node_modules/.pnpm/lock.yaml"
 
@@ -17,7 +18,7 @@ virtual_store_lock="$repository_root/node_modules/.pnpm/lock.yaml"
 lock_hash_before="$(sha256sum "$root_lock" | awk '{print $1}')"
 
 mkdir -p "$audit_root"
-rm -f "$audit_lock" "$audit_report"
+rm -f "$audit_lock" "$audit_report" "$audit_stderr_report"
 
 cd "$repository_root"
 export CI=true
@@ -33,7 +34,7 @@ cp "$virtual_store_lock" "$audit_lock"
 export npm_config_lockfile_dir="$audit_root"
 printf '> pnpm audit --json\n'
 set +e
-pnpm audit --json >"$audit_report" 2>&1
+pnpm audit --json >"$audit_report" 2>"$audit_stderr_report"
 audit_exit_code=$?
 set -e
 

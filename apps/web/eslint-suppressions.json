@@ -155,11 +155,6 @@
       "count": 2
     }
   },
-  "src/components/__tests__/password-card.test.tsx": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 1
-    }
-  },
   "src/components/block-content-editor/embed/block-embed-registry.tsx": {
     "@typescript-eslint/no-unused-vars": {
       "count": 2

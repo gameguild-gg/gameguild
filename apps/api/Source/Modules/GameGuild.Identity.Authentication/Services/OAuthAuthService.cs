@@ -1,10 +1,12 @@
 using System.Globalization;
+using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.CQRS;
 using GameGuild.Identity.Users;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace GameGuild.Identity.Authentication;
 
@@ -23,7 +25,8 @@ public class OAuthAuthService(
     IHttpContextAccessor httpContextAccessor,
     ISender sender,
     ISessionManagementService sessionManagementService,
-    ILogger<OAuthAuthService> logger
+    ILogger<OAuthAuthService> logger,
+    IOptions<JwtOptions>? jwtOptions = null
 ) : IOAuthAuthService
 {
     public async Task<SignInResponse> GitHubSignInAsync(OAuthSignInRequest request, CancellationToken cancellationToken = default)
@@ -68,6 +71,37 @@ public class OAuthAuthService(
         logger.LogInformation("Google OAuth sign-in successful for {Email}", email);
 
         return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Google sign-in successful", cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<SignInResponse> MicrosoftSignInAsync(OAuthSignInRequest request, CancellationToken cancellationToken = default)
+    {
+        logger.LogInformation("Processing Microsoft OAuth sign-in");
+
+        var microsoftUser = await oauthService.GetUserProfileAsync("microsoft", request.AccessToken).ConfigureAwait(false);
+        var email = microsoftUser.Email ?? throw new UnauthorizedAccessException("Email not available from Microsoft profile");
+        var user = await ResolveExternalUserAsync(
+            "microsoft", email, microsoftUser.ProviderId, microsoftUser.Name, microsoftUser.EmailVerified, cancellationToken)
+            .ConfigureAwait(false);
+        await DefaultTenantMembershipProvisioner.EnsureAsync(sender, user.Id, cancellationToken).ConfigureAwait(false);
+        var tenantAccessContext = await ResolveTenantAccessContextAsync(user.Id, request.TenantId, cancellationToken).ConfigureAwait(false);
+
+        var httpContext = httpContextAccessor.HttpContext;
+        var ipAddress = authAttemptService.GetClientIpAddress(httpContext);
+        var userAgent = httpContext?.Request.Headers.UserAgent.ToString();
+        var deviceInfo = new DeviceInfo
+        {
+            Fingerprint = Guid.NewGuid().ToString(),
+            IpAddress = ipAddress,
+            UserAgent = userAgent,
+            DeviceName = "OAuth Device",
+            DeviceType = "Web"
+        };
+
+        logger.LogInformation("Microsoft OAuth sign-in successful for {Email}", email);
+
+        return await CompleteSignInAsync(
+            user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Microsoft sign-in successful", cancellationToken)
+            .ConfigureAwait(false);
     }
 
     public async Task<SignInResponse> GoogleIdTokenSignInAsync(GoogleIdTokenRequest request, CancellationToken cancellationToken = default)
@@ -136,9 +170,10 @@ public class OAuthAuthService(
         string successMessage,
         CancellationToken cancellationToken)
     {
-        var refreshTokenExpiryDays = int.Parse(
-            configuration["Jwt:RefreshTokenExpirationDays"] ?? configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7",
-            CultureInfo.InvariantCulture);
+        var refreshTokenExpiryDays = jwtOptions?.Value.RefreshTokenExpirationDays
+                                     ?? int.Parse(
+                                         configuration["Jwt:RefreshTokenExpirationDays"] ?? configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7",
+                                         CultureInfo.InvariantCulture);
         var refreshTokenExpiresAt = SystemClock.UtcNow.AddDays(refreshTokenExpiryDays);
         var sessionId = Guid.NewGuid();
         var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(user.Id, deviceInfo, cancellationToken).ConfigureAwait(false);
@@ -160,7 +195,8 @@ public class OAuthAuthService(
             deviceInfo.Fingerprint,
             cancellationToken).ConfigureAwait(false);
 
-        var accessTokenExpirationMinutes = int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60", CultureInfo.InvariantCulture);
+        var accessTokenExpirationMinutes = jwtOptions?.Value.AccessTokenExpirationMinutes
+                                           ?? int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60", CultureInfo.InvariantCulture);
 
         return new SignInResponse
         {
@@ -212,7 +248,7 @@ public class OAuthAuthService(
         var createdNewUser = false;
         if (user == null)
         {
-            user = User.CreateOAuthUser(email, name ?? email.Split('@')[0]);
+            user = User.CreateOAuthUser(email, name ?? email.Split('@')[0], emailVerified);
             createdNewUser = true;
         }
 

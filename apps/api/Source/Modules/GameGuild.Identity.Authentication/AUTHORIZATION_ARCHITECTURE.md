@@ -1842,6 +1842,15 @@ SystemAdmin; `Guid.Empty` tenant IDs (global defaults) additionally require
 `system:manage-global-defaults`. Per-user failures are collected into the
 `BulkPermissionResult`, never swallowed.
 
+Single tenant grant, by-ID revoke, revoke, deny, deny-removal, and tenant-default commands
+apply the same authenticated same-tenant check (SystemAdmin may cross tenants). Their
+actor IDs come from `IActorContextAccessor`; legacy `GrantedBy`/`RevokedBy` fields in
+command payloads are not trusted. Permission queries are tenant-bound too, and reading
+another user's permissions requires tenant-admin or user-read access. Tenant permission
+rows are soft-deleted, excluded from normal queries, and retained as history; the
+active-only unique index permits a later grant to create a new row without erasing the
+deleted record.
+
 Only **one command type exists per operation** — permission-grant endpoints bind the
 guarded Authorization-module commands, and acting-user identity (`GrantedBy`,
 `RevokedBy`, `CreatedByUserId`, …) always comes from the authenticated actor context,

@@ -69,7 +69,7 @@ import JobsPage from './[locale]/(public)/jobs/page';
 import LaunchPadPage from './[locale]/(social)/launch-pad/page';
 import ShowcasePage from './[locale]/(social)/projects/page';
 import ProjectDetailPage from './[locale]/(social)/projects/[slug]/page';
-import TestingLabPage from './[locale]/(social)/testing-lab/page';
+import TestingLabPage from './[locale]/(public)/testing-lab/page';
 import HomePage from './[locale]/(public)/page';
 
 const publishedProject = {
@@ -206,6 +206,7 @@ describe('public community website UX', () => {
     expect((await screen.findAllByRole('menuitem')).map((item) => item.textContent)).toEqual([
       'Workspace',
       'Projects',
+      'Blogs',
     ]);
 
     fireEvent.click(within(nav).getByRole('button', { name: 'Build' }));

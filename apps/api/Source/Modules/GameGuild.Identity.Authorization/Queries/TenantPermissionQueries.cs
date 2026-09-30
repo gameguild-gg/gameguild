@@ -73,7 +73,13 @@ public sealed class GetTenantPermissionsQueryHandler(
 
     public async Task<GetTenantPermissionsResponse> Handle(GetTenantPermissionsQuery request, CancellationToken cancellationToken)
     {
-        var targetUserId = request.UserId ?? Actor.SubjectIdAsGuid ??
+        if (!Actor.IsAuthenticated)
+        {
+            throw new UnauthorizedAccessException("User not authenticated");
+        }
+
+        var actorUserId = Actor.SubjectIdAsGuid;
+        var targetUserId = request.UserId ?? actorUserId ??
             throw new UnauthorizedAccessException("User not authenticated");
 
         logger.LogInformation(
@@ -94,6 +100,19 @@ public sealed class GetTenantPermissionsQueryHandler(
             {
                 throw new InvalidOperationException("TenantId is required to retrieve tenant permissions");
             }
+        }
+
+        if (!Actor.IsSystemAdmin && Actor.TenantId != tenantId.Value)
+        {
+            throw new UnauthorizedAccessException("Tenant permission data is restricted to the actor's tenant");
+        }
+
+        if (targetUserId != actorUserId &&
+            !Actor.IsSystemAdmin &&
+            !Actor.IsTenantAdmin &&
+            !Actor.HasPermission(UsersPermission.Keys.Read))
+        {
+            throw new UnauthorizedAccessException("Reading another user's tenant permissions requires user-read access");
         }
 
         // Get permissions based on request

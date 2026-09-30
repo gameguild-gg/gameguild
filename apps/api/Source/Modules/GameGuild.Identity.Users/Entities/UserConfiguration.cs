@@ -60,5 +60,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         // Status is a computed NotMapped property
         builder.Ignore(x => x.Status);
+
+        // The original password hash guards history checks against concurrent updates.
+        builder.Property(x => x.PasswordHash).IsConcurrencyToken();
+        builder.Property(x => x.PasswordHistoryHashes).HasMaxLength(2600);
     }
 }

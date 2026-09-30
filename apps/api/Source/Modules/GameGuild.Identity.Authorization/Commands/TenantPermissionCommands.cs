@@ -65,11 +65,12 @@ public sealed class GrantTenantPermissionCommandHandler(
         var isGlobalDefault = request.TenantId.Value == Guid.Empty;
         if (isGlobalDefault)
         {
-            if (!Actor.HasPermission(SystemPermission.Keys.ManageGlobalDefaults) && !Actor.IsSystemAdmin)
+            if (!Actor.IsAuthenticated ||
+                (!Actor.HasPermission(SystemPermission.Keys.ManageGlobalDefaults) && !Actor.IsSystemAdmin))
             {
                 logger.LogWarning(
-                    "User {GrantedBy} attempted to modify global default permissions without ManageGlobalDefaults permission",
-                    request.GrantedBy);
+                    "Actor {ActorId} attempted to modify global default permissions without ManageGlobalDefaults permission",
+                    Actor.SubjectId);
 
                 throw new UnauthorizedAccessException(
                     "Modifying global default permissions requires 'system:manage-global-defaults' permission");
@@ -78,11 +79,12 @@ public sealed class GrantTenantPermissionCommandHandler(
         else
         {
             // Check if current user is tenant admin for tenant-specific grants
-            if (!Actor.IsTenantAdmin && !Actor.IsSystemAdmin)
+            if (!Actor.IsAuthenticated ||
+                (!Actor.IsSystemAdmin && (!Actor.IsTenantAdmin || Actor.TenantId != request.TenantId.Value)))
             {
                 logger.LogWarning(
-                    "User {GrantedBy} attempted to grant tenant permissions without admin privileges",
-                    request.GrantedBy);
+                    "Actor {ActorId} attempted to grant tenant permissions without same-tenant admin privileges",
+                    Actor.SubjectId);
 
                 throw new UnauthorizedAccessException("Only tenant or system administrators can grant tenant permissions");
             }
@@ -92,7 +94,7 @@ public sealed class GrantTenantPermissionCommandHandler(
                 request.UserId,
                 request.TenantId,
                 request.Permissions,
-                request.GrantedBy,
+                Actor.SubjectIdAsGuid,
                 request.ExpiresAt,
                 request.Reason,
                 cancellationToken)
@@ -162,11 +164,12 @@ public sealed class RevokeTenantPermissionCommandHandler(
         var isGlobalDefault = request.TenantId.Value == Guid.Empty;
         if (isGlobalDefault)
         {
-            if (!Actor.HasPermission(SystemPermission.Keys.ManageGlobalDefaults) && !Actor.IsSystemAdmin)
+            if (!Actor.IsAuthenticated ||
+                (!Actor.HasPermission(SystemPermission.Keys.ManageGlobalDefaults) && !Actor.IsSystemAdmin))
             {
                 logger.LogWarning(
-                    "User {RevokedBy} attempted to modify global default permissions without ManageGlobalDefaults permission",
-                    request.RevokedBy);
+                    "Actor {ActorId} attempted to modify global default permissions without ManageGlobalDefaults permission",
+                    Actor.SubjectId);
 
                 throw new UnauthorizedAccessException(
                     "Modifying global default permissions requires 'system:manage-global-defaults' permission");
@@ -175,11 +178,12 @@ public sealed class RevokeTenantPermissionCommandHandler(
         else
         {
             // Check if current user is tenant admin for tenant-specific revocations
-            if (!Actor.IsTenantAdmin && !Actor.IsSystemAdmin)
+            if (!Actor.IsAuthenticated ||
+                (!Actor.IsSystemAdmin && (!Actor.IsTenantAdmin || Actor.TenantId != request.TenantId.Value)))
             {
                 logger.LogWarning(
-                    "User {RevokedBy} attempted to revoke tenant permissions without admin privileges",
-                    request.RevokedBy);
+                    "Actor {ActorId} attempted to revoke tenant permissions without same-tenant admin privileges",
+                    Actor.SubjectId);
 
                 throw new UnauthorizedAccessException("Only tenant or system administrators can revoke tenant permissions");
             }
@@ -252,11 +256,12 @@ public sealed class SetGlobalDefaultPermissionsCommandHandler(
             string.Join(", ", request.Permissions));
 
         // SECURITY: Global defaults require ManageGlobalDefaults permission
-        if (!Actor.HasPermission(SystemPermission.Keys.ManageGlobalDefaults) && !Actor.IsSystemAdmin)
+        if (!Actor.IsAuthenticated ||
+            (!Actor.HasPermission(SystemPermission.Keys.ManageGlobalDefaults) && !Actor.IsSystemAdmin))
         {
             logger.LogWarning(
-                "User {SetBy} attempted to set global default permissions without ManageGlobalDefaults permission",
-                request.SetBy);
+                "Actor {ActorId} attempted to set global default permissions without ManageGlobalDefaults permission",
+                Actor.SubjectId);
 
             throw new UnauthorizedAccessException(
                 "Setting global default permissions requires 'system:manage-global-defaults' permission");
@@ -264,13 +269,13 @@ public sealed class SetGlobalDefaultPermissionsCommandHandler(
 
         await grantService.SetGlobalDefaultPermissionsAsync(
                 request.Permissions,
-                request.SetBy,
+                Actor.SubjectIdAsGuid,
                 cancellationToken)
             .ConfigureAwait(false);
 
         logger.LogInformation(
-            "Successfully set global default permissions by user {SetBy}",
-            request.SetBy);
+            "Successfully set global default permissions by actor {ActorId}",
+            Actor.SubjectId);
 
         return true;
     }
@@ -320,11 +325,12 @@ public sealed class SetTenantDefaultPermissionsCommandHandler(
             string.Join(", ", request.Permissions));
 
         // SECURITY: Tenant defaults require tenant admin or system admin
-        if (!Actor.IsTenantAdmin && !Actor.IsSystemAdmin)
+        if (!Actor.IsAuthenticated ||
+            (!Actor.IsSystemAdmin && (!Actor.IsTenantAdmin || Actor.TenantId != request.TenantId.Value)))
         {
             logger.LogWarning(
-                "User {SetBy} attempted to set tenant default permissions without admin privileges",
-                request.SetBy);
+                "Actor {ActorId} attempted to set tenant default permissions without same-tenant admin privileges",
+                Actor.SubjectId);
 
             throw new UnauthorizedAccessException(
                 "Setting tenant default permissions requires tenant admin or system admin privileges");
@@ -333,14 +339,14 @@ public sealed class SetTenantDefaultPermissionsCommandHandler(
         await grantService.SetTenantDefaultPermissionsAsync(
                 request.TenantId,
                 request.Permissions,
-                request.SetBy,
+                Actor.SubjectIdAsGuid,
                 cancellationToken)
             .ConfigureAwait(false);
 
         logger.LogInformation(
-            "Successfully set tenant {TenantId} default permissions by user {SetBy}",
+            "Successfully set tenant {TenantId} default permissions by actor {ActorId}",
             request.TenantId,
-            request.SetBy);
+            Actor.SubjectId);
 
         return true;
     }
@@ -406,11 +412,12 @@ public sealed class DenyTenantPermissionCommandHandler(
         var isGlobalDefault = request.TenantId.Value == Guid.Empty;
         if (isGlobalDefault)
         {
-            if (!Actor.HasPermission(SystemPermission.Keys.ManageGlobalDefaults) && !Actor.IsSystemAdmin)
+            if (!Actor.IsAuthenticated ||
+                (!Actor.HasPermission(SystemPermission.Keys.ManageGlobalDefaults) && !Actor.IsSystemAdmin))
             {
                 logger.LogWarning(
-                    "User {DeniedBy} attempted to modify global default deny permissions without ManageGlobalDefaults permission",
-                    request.DeniedBy);
+                    "Actor {ActorId} attempted to modify global default deny permissions without ManageGlobalDefaults permission",
+                    Actor.SubjectId);
 
                 throw new UnauthorizedAccessException(
                     "Modifying global default permissions requires 'system:manage-global-defaults' permission");
@@ -419,11 +426,12 @@ public sealed class DenyTenantPermissionCommandHandler(
         else
         {
             // Check if current user is tenant admin for tenant-specific denials
-            if (!Actor.IsTenantAdmin && !Actor.IsSystemAdmin)
+            if (!Actor.IsAuthenticated ||
+                (!Actor.IsSystemAdmin && (!Actor.IsTenantAdmin || Actor.TenantId != request.TenantId.Value)))
             {
                 logger.LogWarning(
-                    "User {DeniedBy} attempted to deny tenant permissions without admin privileges",
-                    request.DeniedBy);
+                    "Actor {ActorId} attempted to deny tenant permissions without same-tenant admin privileges",
+                    Actor.SubjectId);
 
                 throw new UnauthorizedAccessException("Only tenant or system administrators can deny tenant permissions");
             }
@@ -433,7 +441,7 @@ public sealed class DenyTenantPermissionCommandHandler(
                 request.UserId,
                 request.TenantId,
                 request.Permissions,
-                request.DeniedBy,
+                Actor.SubjectIdAsGuid,
                 request.Reason,
                 cancellationToken)
             ;
@@ -500,11 +508,12 @@ public sealed class RemoveDenyPermissionsCommandHandler(
         var isGlobalDefault = request.TenantId.Value == Guid.Empty;
         if (isGlobalDefault)
         {
-            if (!Actor.HasPermission(SystemPermission.Keys.ManageGlobalDefaults) && !Actor.IsSystemAdmin)
+            if (!Actor.IsAuthenticated ||
+                (!Actor.HasPermission(SystemPermission.Keys.ManageGlobalDefaults) && !Actor.IsSystemAdmin))
             {
                 logger.LogWarning(
-                    "User {RemovedBy} attempted to modify global default deny permissions without ManageGlobalDefaults permission",
-                    request.RemovedBy);
+                    "Actor {ActorId} attempted to modify global default deny permissions without ManageGlobalDefaults permission",
+                    Actor.SubjectId);
 
                 throw new UnauthorizedAccessException(
                     "Modifying global default permissions requires 'system:manage-global-defaults' permission");
@@ -513,11 +522,12 @@ public sealed class RemoveDenyPermissionsCommandHandler(
         else
         {
             // Check if current user is tenant admin for tenant-specific removals
-            if (!Actor.IsTenantAdmin && !Actor.IsSystemAdmin)
+            if (!Actor.IsAuthenticated ||
+                (!Actor.IsSystemAdmin && (!Actor.IsTenantAdmin || Actor.TenantId != request.TenantId.Value)))
             {
                 logger.LogWarning(
-                    "User {RemovedBy} attempted to remove deny permissions without admin privileges",
-                    request.RemovedBy);
+                    "Actor {ActorId} attempted to remove deny permissions without same-tenant admin privileges",
+                    Actor.SubjectId);
 
                 throw new UnauthorizedAccessException("Only tenant or system administrators can remove deny permissions");
             }

@@ -7,6 +7,25 @@ namespace GameGuild.Identity.Authorization;
 /// </summary>
 public class TenantSecurityVersionRepository(IApplicationDbContext context) : ITenantSecurityVersionRepository
 {
+    public Task<IReadOnlyDictionary<Guid, long>> GetVersionsAsync(IReadOnlyCollection<Guid> tenantIds) =>
+        GetVersionsAsync(tenantIds, CancellationToken.None);
+
+    public async Task<IReadOnlyDictionary<Guid, long>> GetVersionsAsync(
+        IReadOnlyCollection<Guid> tenantIds,
+        CancellationToken cancellationToken)
+    {
+        var requestedTenantIds = tenantIds.Distinct().ToArray();
+        if (requestedTenantIds.Length == 0)
+        {
+            return new Dictionary<Guid, long>();
+        }
+
+        return await context.Set<TenantSecurityVersion>()
+            .Where(version => requestedTenantIds.Contains(version.TenantId) && version.DeletedAt == null)
+            .ToDictionaryAsync(version => version.TenantId, version => version.SecurityVersion, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
     public async Task<TenantSecurityVersion?> GetByTenantIdAsync(Guid tenantId, CancellationToken cancellationToken = default)
     {
         return await context.Set<TenantSecurityVersion>()

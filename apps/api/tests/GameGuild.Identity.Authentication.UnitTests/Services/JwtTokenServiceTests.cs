@@ -1,5 +1,7 @@
 using FluentAssertions;
 using GameGuild.Configuration.ApplicationLayer;
+using GameGuild.Configuration.PresentationLayer.Authorization;
+using GameGuild.Identity.Authorization;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -92,6 +94,35 @@ public class JwtTokenServiceTests
         var role = jwt.Claims.Single(claim => claim.Value == "SystemAdmin");
 
         role.Type.Should().Be("role");
+    }
+
+    [Fact]
+    public async Task GenerateAccessTokenAsync_IncludesActiveTenantGroupClaims()
+    {
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var groupIds = new[] { Guid.NewGuid(), Guid.NewGuid(), Guid.Empty };
+        var groupMembershipProvider = new Mock<IAuthorizationGroupMembershipProvider>();
+        groupMembershipProvider
+            .Setup(provider => provider.GetActiveGroupIdsAsync(userId, tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(groupIds);
+        var service = new JwtTokenService(
+            _loggerMock.Object,
+            _refreshTokenRepositoryMock.Object,
+            _refreshTokenHasherMock.Object,
+            _httpContextAccessorMock.Object,
+            _jwtOptionsMock.Object,
+            groupMembershipProvider.Object,
+            Options.Create(new AuthorizationTokenOptions { GroupIdClaimType = "group_id" }));
+
+        var token = await service.GenerateAccessTokenAsync(userId, "member@example.com", ["User"], tenantId, 1);
+        var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
+
+        jwt.Claims.Where(claim => claim.Type == "group_id").Select(claim => claim.Value)
+            .Should().BeEquivalentTo(groupIds.Where(id => id != Guid.Empty).Select(id => id.ToString("D")));
+        groupMembershipProvider.Verify(
+            provider => provider.GetActiveGroupIdsAsync(userId, tenantId, It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]

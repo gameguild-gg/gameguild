@@ -8,7 +8,6 @@ namespace GameGuild.Identity.Authorization;
 ///     Tenant-wide permissions - Core permission entity for user access control
 /// </summary>
 [Table("TenantPermissions")]
-[Index(nameof(UserId), nameof(TenantId), IsUnique = true, Name = "IX_TenantPermissions_User_Tenant")]
 [Index(nameof(TenantId), Name = "IX_TenantPermissions_TenantId")]
 [Index(nameof(UserId), Name = "IX_TenantPermissions_UserId")]
 [Index(nameof(ExpiresAt), Name = "IX_TenantPermissions_ExpiresAt")]

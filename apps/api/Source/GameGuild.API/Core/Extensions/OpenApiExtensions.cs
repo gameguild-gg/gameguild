@@ -1,11 +1,13 @@
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
+using GameGuild.API.Core.ApiVersioning;
 using GameGuild.Configuration;
 using GameGuild.Configuration.PresentationLayer.ApiVersioning;
 using GameGuild.Configuration.PresentationLayer.OpenAPI;
 using GameGuild.API.Setup;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
@@ -39,6 +41,12 @@ public static class OpenApiExtensions
     {
         options ??= OptionBuilderUtilities.CreateAndBind(configuration, "OpenApi", OpenApiOptions.CreateDefault);
         options.Validate();
+        services.TryAddSingleton(options);
+
+        if (!options.EnableOpenApi)
+        {
+            return services;
+        }
 
         // Add native .NET 9 OpenAPI support
         // JSON serialization options are configured globally in Program.cs
@@ -64,18 +72,7 @@ public static class OpenApiExtensions
                     {
                         c.SwaggerDoc(
                             description.GroupName,
-                            new OpenApiInfo
-                            {
-                                Title = options.Title,
-                                Version = ReleaseVersion,
-                                Description = options.Description,
-                                Contact = new OpenApiContact
-                                {
-                                    Name = options.ContactName,
-                                    Email = options.ContactEmail,
-                                    Url = !string.IsNullOrEmpty(options.ContactUrl) ? new Uri(options.ContactUrl) : null
-                                }
-                            }
+                            CreateDocumentInfo(options)
                         );
                     }
 
@@ -99,18 +96,7 @@ public static class OpenApiExtensions
                     // Fallback to single document when versioning is not configured
                     c.SwaggerDoc(
                         options.Version,
-                        new OpenApiInfo
-                        {
-                            Title = options.Title,
-                            Version = ReleaseVersion,
-                            Description = options.Description,
-                            Contact = new OpenApiContact
-                            {
-                                Name = options.ContactName,
-                                Email = options.ContactEmail,
-                                Url = !string.IsNullOrEmpty(options.ContactUrl) ? new Uri(options.ContactUrl) : null
-                            }
-                        }
+                        CreateDocumentInfo(options)
                     );
                 }
 
@@ -177,6 +163,7 @@ public static class OpenApiExtensions
                 c.OperationFilter<ModuleControllerTagOperationFilter>();
                 c.OperationFilter<AllowAnonymousOperationFilter>();
                 c.SchemaFilter<FlagsEnumSchemaFilter>();
+                c.DocumentFilter<OpenApiServerDocumentFilter>(options);
                 c.DocumentFilter<DeterministicOpenApiDocumentFilter>();
                 ApiProductComposition.Instance.ConfigureOpenApi(c);
 
@@ -213,6 +200,32 @@ public static class OpenApiExtensions
         return services;
     }
 
+    private static OpenApiInfo CreateDocumentInfo(OpenApiOptions options)
+    {
+        return new OpenApiInfo
+        {
+            Title = options.Title,
+            Version = string.IsNullOrWhiteSpace(options.MetadataVersion) ? ReleaseVersion : options.MetadataVersion,
+            Description = options.Description,
+            TermsOfService = string.IsNullOrWhiteSpace(options.TermsOfServiceUrl)
+                ? null
+                : new Uri(options.TermsOfServiceUrl),
+            Contact = new OpenApiContact
+            {
+                Name = options.ContactName,
+                Email = options.ContactEmail,
+                Url = string.IsNullOrWhiteSpace(options.ContactUrl) ? null : new Uri(options.ContactUrl)
+            },
+            License = string.IsNullOrWhiteSpace(options.LicenseName)
+                ? null
+                : new OpenApiLicense
+                {
+                    Name = options.LicenseName,
+                    Url = string.IsNullOrWhiteSpace(options.LicenseUrl) ? null : new Uri(options.LicenseUrl)
+                }
+        };
+    }
+
     /// <summary>
     ///     Sets up API versioning with configurable options.
     /// </summary>
@@ -226,16 +239,35 @@ public static class OpenApiExtensions
         options ??= OptionBuilderUtilities.CreateAndBind(configuration, "ApiVersioning",
             ApiVersioningOptions.CreateDefault);
         options.Validate();
+        var parser = ApiVersioningOptionsBuilder.CreateParser(options.VersionFormat);
+        services.AddSingleton(options);
+        services.AddSingleton<ApiVersionUsageMetrics>();
+
+        // AddApiVersioning registers the default parser with TryAdd. Replacing it here makes route
+        // constraints, readers, and sunset policy matching use the same configured format.
+        services.Replace(ServiceDescriptor.Singleton<IApiVersionParser>(parser));
 
         services.AddApiVersioning(setup =>
                 {
                     setup.AssumeDefaultVersionWhenUnspecified = options.AssumeDefaultVersionWhenUnspecified;
-                    // Parse DefaultVersion (e.g., "1.0") into ApiVersion
-                    var versionParts = options.DefaultVersion.Split('.');
-                    var major = ParseVersionPart(versionParts, 0, 1);
-                    var minor = ParseVersionPart(versionParts, 1, 0);
-                    setup.DefaultApiVersion = new ApiVersion(major, minor);
+                    setup.DefaultApiVersion = parser.Parse(options.DefaultVersion.AsSpan());
                     setup.ApiVersionReader = ApiVersioningOptionsBuilder.CreateReader(options.ReadingStrategy, options);
+                    setup.ReportApiVersions = options.ReportApiVersions;
+
+                    foreach (var (version, policy) in options.SunsetPolicies)
+                    {
+                        var sunset = setup.Policies.Sunset(parser.Parse(version.AsSpan()));
+
+                        if (policy.EffectiveAt is { } effectiveAt)
+                        {
+                            sunset.Effective(effectiveAt);
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(policy.PolicyUrl))
+                        {
+                            sunset.Link(new Uri(policy.PolicyUrl, UriKind.Absolute));
+                        }
+                    }
                 }
             )
             .AddApiExplorer(setup =>
@@ -246,14 +278,6 @@ public static class OpenApiExtensions
             );
 
         return services;
-    }
-
-    private static int ParseVersionPart(IReadOnlyList<string> versionParts, int index, int fallback)
-    {
-        if (index >= versionParts.Count)
-            return fallback;
-
-        return int.TryParse(versionParts[index], out var value) ? value : fallback;
     }
 
     /// <summary>
@@ -300,6 +324,41 @@ internal sealed class OpenApiDocumentTransformer : Microsoft.AspNetCore.OpenApi.
     {
         // Document transformation is currently handled by the default pipeline.
         return Task.CompletedTask;
+    }
+}
+
+internal sealed class OpenApiServerDocumentFilter : IDocumentFilter
+{
+    private readonly OpenApiOptions _options;
+
+    public OpenApiServerDocumentFilter(OpenApiOptions options)
+    {
+        _options = options;
+    }
+
+    public void Apply(OpenApiDocument document, DocumentFilterContext context)
+    {
+        if (_options.Servers.Count == 0)
+        {
+            return;
+        }
+
+        document.Servers = _options.Servers
+            .Select(server => new OpenApiServer
+            {
+                Url = server.Url,
+                Description = server.Description,
+                Variables = server.Variables.ToDictionary(
+                    pair => pair.Key,
+                    pair => new OpenApiServerVariable
+                    {
+                        Default = pair.Value.Default,
+                        Description = pair.Value.Description,
+                        Enum = pair.Value.Enum.ToList()
+                    },
+                    StringComparer.Ordinal)
+            })
+            .ToList();
     }
 }
 

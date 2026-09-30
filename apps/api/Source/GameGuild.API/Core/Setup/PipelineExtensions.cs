@@ -1,8 +1,16 @@
 using System.Net;
 using Asp.Versioning.ApiExplorer;
+using GameGuild.Configuration.PresentationLayer.GraphQL;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Tenants;
+using GameGuild.API.Core.ApiVersioning;
 using GameGuild.API.Core.CostAccounting;
+using GameGuild.Configuration.PresentationLayer;
+using GameGuild.Configuration.PresentationLayer.OpenAPI;
+using GameGuild.API.Core.Middleware;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
 namespace GameGuild.API.Setup;
@@ -55,11 +63,19 @@ public static class PipelineExtensions
         // 08. Request Localization (culture/language resolution)
         app.UseRequestLocalization();
 
+        // 08a. Empty error responses (including routing and minimal API status results) use the
+        // same configured Problem Details writer as exceptions and MVC controller responses.
+        app.UseProblemDetailsStatusCodePages();
+
         // 09. Security Headers (X-Content-Type-Options, X-Frame-Options, CSP, Referrer-Policy, etc.)
-        app.UseSecurityHeaders();
+        var securityHeaders = PresentationLayerOptionsBuilder.Create(app.Configuration).SecurityHeaders
+                              ?? new SecurityHeadersOptions();
+        securityHeaders.Validate();
+        app.UseSecurityHeaders(securityHeaders);
 
         // 10. Routing (endpoint matching, required before auth)
         app.UseRouting();
+        app.UseMiddleware<ApiVersionUsageMiddleware>();
 
         // 11. CORS (Cross-Origin Resource Sharing, after routing)
         app.UseCors();
@@ -92,11 +108,24 @@ public static class PipelineExtensions
         // 18. Rate Limiting (throttle requests per client/endpoint)
         if (app.Configuration.GetValue<bool>("PresentationLayer:EnableRateLimiting"))
         {
+            app.UseMiddleware<RateLimitAccessControlMiddleware>();
             app.UseRateLimiter();
+            if (app.Configuration.GetValue<bool>("Redis:Enabled"))
+            {
+                app.UseMiddleware<RedisEndpointRateLimitingMiddleware>();
+            }
         }
 
         // 19. Controller Endpoints (REST API routes via [ApiController])
         app.MapControllers();
+
+        // GraphQL is opt-in and protected at the transport boundary; field rules apply
+        // the additional operation and resource-specific DAC checks.
+        var graphQlOptions = app.Services.GetService<GraphQLOptions>();
+        if (graphQlOptions is { EnableGraphQL: true })
+        {
+            app.MapGraphQL(graphQlOptions.Endpoint).RequireAuthorization();
+        }
 
         // 20. Health Check Endpoints (disabled - HealthController provides /health, /ready, /live instead)
         // We use a controller instead of MapHealthChecks() for more control over response format,
@@ -107,7 +136,10 @@ public static class PipelineExtensions
         app.MapEndpoints(null);
 
         // 23. Swagger JSON (Swashbuckle middleware generates /swagger/{version}/swagger.json)
-        if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
+        var openApiOptions = app.Services.GetService<OpenApiOptions>();
+        var openApiEnabled = openApiOptions?.EnableOpenApi ?? true;
+
+        if (openApiEnabled && (app.Environment.IsDevelopment() || app.Environment.IsStaging()))
         {
             app.UseSwagger();
         }
@@ -115,11 +147,14 @@ public static class PipelineExtensions
         // 24. Compatibility OpenAPI URL.
         // The native .NET OpenAPI document generator can over-recurse on a large modular API surface.
         // Keep /openapi/{document}.json stable by pointing callers to the Swashbuckle document.
-        app.MapGet("/openapi/{documentName}.json",
-            (string documentName) => Results.Redirect($"/swagger/{documentName}/swagger.json"));
+        if (openApiEnabled)
+        {
+            app.MapGet("/openapi/{documentName}.json",
+                (string documentName) => Results.Redirect($"/swagger/{documentName}/swagger.json"));
+        }
 
         // 25. Swagger UI (interactive API documentation at /documentation)
-        if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
+        if (openApiEnabled && (app.Environment.IsDevelopment() || app.Environment.IsStaging()))
         {
             app.UseSwaggerUI(options =>
             {
@@ -142,6 +177,30 @@ public static class PipelineExtensions
         }
 
         return app;
+    }
+
+    /// <summary>
+    /// Writes configured Problem Details for otherwise empty HTTP error responses.
+    /// </summary>
+    public static IApplicationBuilder UseProblemDetailsStatusCodePages(this IApplicationBuilder app)
+    {
+        ArgumentNullException.ThrowIfNull(app);
+
+        return app.UseStatusCodePages(async statusCodeContext =>
+        {
+            var httpContext = statusCodeContext.HttpContext;
+            var problemDetailsService = httpContext.RequestServices.GetService<IProblemDetailsService>();
+            if (problemDetailsService is null)
+            {
+                return;
+            }
+
+            await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
+            {
+                HttpContext = httpContext,
+                ProblemDetails = new ProblemDetails { Status = httpContext.Response.StatusCode },
+            }).ConfigureAwait(false);
+        });
     }
 
     internal static bool ShouldRedirectToHttps(HttpContext context) =>

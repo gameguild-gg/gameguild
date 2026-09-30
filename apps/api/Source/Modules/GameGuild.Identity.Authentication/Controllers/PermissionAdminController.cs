@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using GameGuild.Configuration.PresentationLayer.RateLimiting;
 using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Authorization.Caching;
 using GameGuild.CQRS;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -84,6 +85,7 @@ public class PermissionAdminController(IMediator mediator, ILogger<PermissionAdm
     ///     Get cache statistics for permission system performance monitoring
     /// </summary>
     [HttpGet("cache/stats")]
+    [Authorize(Policy = Policies.SystemAdmin)]
     [ProducesResponseType(typeof(PermissionCacheStatsDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PermissionCacheStatsDto>> GetCacheStatistics()
@@ -106,6 +108,20 @@ public class PermissionAdminController(IMediator mediator, ILogger<PermissionAdm
         await _mediator.Send(command).ConfigureAwait(false);
 
         return Ok(new { message = "Permission cache cleared successfully" });
+    }
+
+    /// <summary>Precompute selected ACL decisions before a known high-traffic period.</summary>
+    [HttpPost("cache:warm")]
+    [Authorize(Policy = Policies.SystemAdmin)]
+    [ProducesResponseType(typeof(PermissionCacheWarmupResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<PermissionCacheWarmupResult>> WarmPermissionCache(
+        [FromBody] WarmPermissionCacheCommand command,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(command, cancellationToken).ConfigureAwait(false);
+        return Ok(result);
     }
 
     #endregion

@@ -418,7 +418,7 @@ public class AccessReviewCampaignRepository(DbContext context) : IAccessReviewCa
     {
         var now = SystemClock.UtcNow;
         return await DbSet
-            .Where(c => c.Status == AccessReviewStatus.InProgress && c.EndDate >= now)
+            .Where(c => c.Status == AccessReviewStatus.InProgress && c.EndDate < now)
             .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 }
@@ -444,7 +444,10 @@ public class AccessReviewItemRepository(DbContext context) : IAccessReviewItemRe
     public async Task<AccessReviewItem?> GetByIdAsync(
         Guid id,
         CancellationToken cancellationToken = default
-    ) => await DbSet.FindAsync(new object[] { id }, cancellationToken);
+    ) => await DbSet
+        .Include(item => item.Campaign)
+        .FirstOrDefaultAsync(item => item.Id == id, cancellationToken)
+        .ConfigureAwait(false);
 
     public async Task UpdateAsync(
         AccessReviewItem item,
@@ -480,12 +483,29 @@ public class AccessReviewItemRepository(DbContext context) : IAccessReviewItemRe
         .OrderByDescending(i => i.CreatedAt)
         .ToListAsync(cancellationToken);
 
+    public Task<List<AccessReviewItem>> GetPendingByReviewerAsync(Guid reviewerId, Guid? tenantId) =>
+        GetPendingByReviewerAsync(reviewerId, tenantId, CancellationToken.None);
+
     public async Task<List<AccessReviewItem>> GetPendingByReviewerAsync(
         Guid reviewerId,
-        CancellationToken cancellationToken = default
-    ) => await DbSet.Where(i => i.ReviewerId == reviewerId && i.Status == AccessReviewItemStatus.Pending)
-        .OrderBy(i => i.CreatedAt)
-        .ToListAsync(cancellationToken);
+        Guid? tenantId,
+        CancellationToken cancellationToken
+    )
+    {
+        IQueryable<AccessReviewItem> query = DbSet
+            .Include(item => item.Campaign)
+            .Where(item => item.ReviewerId == reviewerId && item.Status == AccessReviewItemStatus.Pending);
+
+        if (tenantId.HasValue)
+        {
+            query = query.Where(item => item.Campaign.TenantId == new TenantId(tenantId.Value));
+        }
+
+        return await query
+            .OrderBy(item => item.CreatedAt)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+    }
 }
 
 /// <summary>

@@ -1,4 +1,6 @@
 using GameGuild.CQRS;
+using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Authorization.Caching;
 
 namespace GameGuild.Identity.Tenants;
 
@@ -7,7 +9,9 @@ namespace GameGuild.Identity.Tenants;
 /// </summary>
 public sealed class UpdateTenantMemberRoleCommandHandler(
     ITenantMemberRepository memberRepository,
-    ITenantRepository tenantRepository) : ICommandHandler<UpdateTenantMemberRoleCommand, UpdateTenantMemberRoleResponse>
+    ITenantRepository tenantRepository,
+    ICacheInvalidationService cacheInvalidationService,
+    IUserAuthorizationTokenVersionService tokenVersionService) : ICommandHandler<UpdateTenantMemberRoleCommand, UpdateTenantMemberRoleResponse>
 {
     public async Task<UpdateTenantMemberRoleResponse> Handle(UpdateTenantMemberRoleCommand request, CancellationToken cancellationToken)
     {
@@ -53,6 +57,10 @@ public sealed class UpdateTenantMemberRoleCommandHandler(
 
         member.UpdateRole(request.NewRole);
         await memberRepository.UpdateAsync(member, cancellationToken).ConfigureAwait(false);
+        await tokenVersionService.IncrementManyAsync([member.UserId], cancellationToken).ConfigureAwait(false);
+        await cacheInvalidationService
+            .InvalidateUserAsync(member.UserId, member.TenantId, cancellationToken)
+            .ConfigureAwait(false);
 
         return new UpdateTenantMemberRoleResponse
         {
@@ -127,7 +135,15 @@ public sealed class UpdateTenantMemberRoleCommandHandler(
         {
             staleMembership.UpdateRole(TenantRole.Admin);
             await memberRepository.UpdateAsync(staleMembership, cancellationToken).ConfigureAwait(false);
+            await cacheInvalidationService
+                .InvalidateUserAsync(staleMembership.UserId, staleMembership.TenantId, cancellationToken)
+                .ConfigureAwait(false);
         }
+
+        await tokenVersionService.IncrementManyAsync([defaultMembership.UserId], cancellationToken).ConfigureAwait(false);
+        await cacheInvalidationService
+            .InvalidateUserAsync(defaultMembership.UserId, defaultMembership.TenantId, cancellationToken)
+            .ConfigureAwait(false);
 
         return new UpdateTenantMemberRoleResponse
         {

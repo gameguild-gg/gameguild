@@ -60,6 +60,15 @@ public class UserCoverageBoostTests
     }
 
     [Fact]
+    public void CreateOAuthUser_WithUnverifiedExternalEmail_PreservesUnverifiedState()
+    {
+        var user = User.CreateOAuthUser("microsoft@example.com", "Microsoft User", emailVerified: false);
+
+        user.IsEmailVerified.Should().BeFalse();
+        user.PasswordHash.Should().BeNull();
+    }
+
+    [Fact]
     public void RecordLogin_ShouldUpdateTimestamps()
     {
         var user = User.Create("test@example.com", "Test");
