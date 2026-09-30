@@ -45,8 +45,9 @@ garante:
 
 Se o núcleo atender integralmente, registrar o gate com delta relacional zero.
 Se não atender, apresentar tabelas, colunas, constraints e índices necessários
-e obter aprovação antes de editar o baseline global e recriar os bancos
-descartáveis. Não criar migration incremental.
+e obter aprovação antes de criar uma migration incremental forward-only. Provar
+criação limpa, upgrade de banco populado pela migration anterior e preservação
+de dados e artefatos SQL ativos.
 
 ### Implementação
 
@@ -132,8 +133,9 @@ eliminadas em `SEQ-11`. Apresentar apenas eventuais mudanças necessárias para:
 Reutilizar tabelas atuais quando possuírem ownership e invariantes corretos.
 `AssessmentPeerReview` pode permanecer como registro individual de claim e
 evidência, mas não como segunda autoridade do resultado agregado.
-Qualquer mudança aprovada edita o mesmo baseline global e recria os bancos
-afetados.
+Qualquer mudança aprovada entra em nova migration incremental e preserva a
+cadeia histórica. Remover uma estrutura existente exige prova e aprovação
+específicas, não apenas a classificação de que ela é antiga.
 
 ### Implementação
 
@@ -211,7 +213,8 @@ Somente se não atenderem, apresentar mudanças para:
 - timeout, retry e estado pendente;
 - identidade e versão do modelo/provider.
 
-Mudanças aprovadas editam o baseline global; não criam migration incremental.
+Mudanças aprovadas entram em migration incremental forward-only, com criação
+limpa e upgrade populado testados.
 
 ### Implementação
 
@@ -248,7 +251,7 @@ operacionais avançados sem redefinir resultado, tentativa ou workflow.
 convertidos em `SEQ-03`. Usar outbox e projeções existentes primeiro e somente
 propor persistência nova quando consulta, retenção ou idempotência operacional
 não puderem ser atendidas corretamente. Toda proposta exige aprovação e edição
-do mesmo baseline global; se não houver delta relacional, registrar o gate com
+por migration incremental; se não houver delta relacional, registrar o gate com
 delta zero.
 
 Para release agendado, o gate deve provar se `AssessmentResultRelease` já
@@ -343,8 +346,9 @@ restaram autoridades concorrentes, referências obsoletas ou lacunas na matriz.
 - todos os itens da definição global de pronto do
   [`README`](../README.md#definição-global-de-pronto) estão satisfeitos;
 - não existe caminho paralelo que gere score oficial;
-- nenhum teste depende de banco histórico ou dado migrado;
-- o baseline cria o schema final em banco vazio;
+- a cadeia completa cria o schema final em banco vazio;
+- o upgrade de um banco populado pela migration anterior preserva dados,
+  constraints e artefatos SQL ativos;
 - API, web e packages passam em CI;
 - observabilidade distingue falha técnica, espera legítima e revisão humana.
 

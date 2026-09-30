@@ -1,4 +1,6 @@
 using GameGuild.CQRS;
+using GameGuild.Identity.Authorization;
+using GraphQLAuthorize = HotChocolate.Authorization.AuthorizeAttribute;
 using HotChocolate;
 using HotChocolate.Types;
 
@@ -6,6 +8,7 @@ namespace GameGuild.Projects;
 
 /// <summary> GraphQL queries for Project module using CQRS pattern </summary>
 [ExtendObjectType("Query")]
+[GraphQLAuthorize]
 public class ProjectQueries
 {
     private static T UnwrapResult<T>(Result<T> result) =>
@@ -19,6 +22,7 @@ public class ProjectQueries
     }
 
     /// <summary> Gets a project by its unique identifier </summary>
+    [RequireGraphQLProjectPermission(PermissionType.Read, ResourceIdArgumentName = "id")]
     public async Task<Project?> ProjectById(Guid id, [Service] IMediator mediator)
     {
         var result = await mediator.Send(new GetProjectByIdQuery { ProjectId = id }).ConfigureAwait(false);
@@ -54,6 +58,7 @@ public class ProjectQueries
     }
 
     /// <summary> Gets deleted projects (admin only) </summary>
+    [GraphQLAuthorize(Policy = "RequireAdminRole")]
     public async Task<IEnumerable<Project>> GetDeletedProjects([Service] IMediator mediator)
     {
         var result = await mediator.Send(new GetDeletedProjectsQuery()).ConfigureAwait(false);

@@ -23,7 +23,7 @@ public sealed class OpenApiServerOptions : BaseOptions
     /// <summary>
     ///     Validates the server options.
     /// </summary>
-    public new void Validate()
+    public override void Validate()
     {
         if (string.IsNullOrWhiteSpace(Url)) { throw new ArgumentException("Server URL cannot be null or empty.", nameof(Url)); }
 

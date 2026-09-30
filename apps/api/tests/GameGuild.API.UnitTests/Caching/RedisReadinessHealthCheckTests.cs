@@ -1,5 +1,7 @@
 using FluentAssertions;
 using GameGuild.API;
+using GameGuild.Configuration.PresentationLayer.Authorization;
+using GameGuild.Identity.Authorization.Caching;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -83,7 +85,12 @@ public sealed class RedisReadinessHealthCheckTests
 
         services.SetupMemoryCaching(configuration, null);
 
+        services.Should().Contain(descriptor => descriptor.ServiceType == typeof(ICacheInvalidationPublisher));
+        services.Should().Contain(descriptor => descriptor.ServiceType == typeof(Microsoft.Extensions.Hosting.IHostedService) &&
+            descriptor.ImplementationType == typeof(RedisPermissionCacheInvalidationSubscriber));
+
         using var provider = services.BuildServiceProvider();
+        provider.GetRequiredService<IOptions<AuthorizationCacheOptions>>().Value.UseDistributedCache.Should().BeTrue();
         var registrations = provider.GetRequiredService<IOptions<HealthCheckServiceOptions>>()
             .Value.Registrations;
         registrations.Any(registration => registration.Name == "redis").Should().Be(expected);

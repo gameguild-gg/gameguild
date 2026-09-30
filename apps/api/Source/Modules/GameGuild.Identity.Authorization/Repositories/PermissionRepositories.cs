@@ -37,11 +37,12 @@ public class TenantPermissionRepository(IApplicationDbContext context) : ITenant
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var permission = await TenantPermissions
-            .FirstOrDefaultAsync(p => p.Id == id, cancellationToken).ConfigureAwait(false);
+            .FirstOrDefaultAsync(p => p.Id == id && p.DeletedAt == null, cancellationToken).ConfigureAwait(false);
 
         if (permission == null) return false;
 
-        TenantPermissions.Remove(permission);
+        permission.SoftDelete();
+        TenantPermissions.Update(permission);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return true;
@@ -54,7 +55,7 @@ public class TenantPermissionRepository(IApplicationDbContext context) : ITenant
     {
         return await TenantPermissions
             .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Id == id, cancellationToken).ConfigureAwait(false);
+            .FirstOrDefaultAsync(p => p.Id == id && p.DeletedAt == null, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<TenantPermission?> GetByUserAndTenantAsync(
@@ -66,7 +67,7 @@ public class TenantPermissionRepository(IApplicationDbContext context) : ITenant
         return await TenantPermissions
             .AsNoTracking()
             .FirstOrDefaultAsync(
-                p => p.UserId == userId && p.TenantId == tenantId,
+                p => p.UserId == userId && p.TenantId == tenantId && p.DeletedAt == null,
                 cancellationToken
             ).ConfigureAwait(false);
     }
@@ -78,7 +79,7 @@ public class TenantPermissionRepository(IApplicationDbContext context) : ITenant
     {
         return await TenantPermissions
             .AsNoTracking()
-            .Where(p => p.TenantId == tenantId)
+            .Where(p => p.TenantId == tenantId && p.DeletedAt == null)
             .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
@@ -89,7 +90,7 @@ public class TenantPermissionRepository(IApplicationDbContext context) : ITenant
     {
         return await TenantPermissions
             .AsNoTracking()
-            .Where(p => p.UserId == userId)
+            .Where(p => p.UserId == userId && p.DeletedAt == null)
             .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
@@ -99,7 +100,7 @@ public class TenantPermissionRepository(IApplicationDbContext context) : ITenant
     {
         return await TenantPermissions
             .AsNoTracking()
-            .Where(p => p.ExpiresAt.HasValue && p.ExpiresAt < SystemClock.UtcNow)
+            .Where(p => p.DeletedAt == null && p.ExpiresAt.HasValue && p.ExpiresAt < SystemClock.UtcNow)
             .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 }

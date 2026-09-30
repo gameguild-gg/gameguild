@@ -13,6 +13,7 @@ using GameGuild.Configuration.PresentationLayer.HealthChecks;
 using GameGuild.Configuration.PresentationLayer.OpenAPI;
 using GameGuild.Configuration.PresentationLayer.RateLimiting;
 using GameGuild.Configuration.PresentationLayer.SignalR;
+using Microsoft.Extensions.Configuration;
 
 
 namespace GameGuild.Tests.SharedKernel.Unit.Configuration;
@@ -102,6 +103,41 @@ public class PresentationLayerOptionsTests
         options.Controllers.Should().NotBeNull();
         options.Endpoints.Should().NotBeNull();
         options.Authentication.Should().NotBeNull();
+        options.SecurityHeaders.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void Create_BindsSecurityHeadersFromPresentationLayerSection()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["PresentationLayer:SecurityHeaders:EnableXFrameOptions"] = "false",
+                ["PresentationLayer:SecurityHeaders:XFrameOptionsValue"] = "SAMEORIGIN"
+            })
+            .Build();
+
+        var options = PresentationLayerOptionsBuilder.Create(configuration);
+
+        options.SecurityHeaders.Should().NotBeNull();
+        options.SecurityHeaders!.EnableXFrameOptions.Should().BeFalse();
+        options.SecurityHeaders.XFrameOptionsValue.Should().Be("SAMEORIGIN");
+    }
+
+    [Fact]
+    public void Validate_RejectsInvalidNestedSecurityHeaderValues()
+    {
+        var options = new PresentationLayerOptions
+        {
+            SecurityHeaders = new SecurityHeadersOptions
+            {
+                XFrameOptionsValue = "DENY\r\nSet-Cookie: session=attacker"
+            }
+        };
+
+        var act = () => options.Validate();
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("*line breaks*");
     }
 
     [Fact]
@@ -185,7 +221,8 @@ public class AuthenticationOptionsTests
         options.JwtSecretKey.Should().BeEmpty();
         options.JwtIssuer.Should().BeEmpty();
         options.JwtAudience.Should().BeEmpty();
-        options.JwtExpiration.Should().Be(TimeSpan.FromHours(24));
+        options.JwtExpiration.Should().Be(TimeSpan.FromHours(1));
+        options.RefreshTokenExpirationDays.Should().Be(30);
     }
 
     [Fact]
@@ -242,6 +279,38 @@ public class AuthenticationOptionsTests
         var act = () => options.Validate();
 
         act.Should().Throw<InvalidOperationException>().WithMessage("*expiration*");
+    }
+
+    [Fact]
+    public void Validate_CookieAuthenticationRequiresAuthentication()
+    {
+        var options = new AuthenticationOptions
+        {
+            EnableAuthentication = false,
+            EnableCookieAuthentication = true
+        };
+
+        var act = () => options.Validate();
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("*Cookie authentication*disabled*");
+    }
+
+    [Fact]
+    public void Validate_InvalidPasswordPolicy_ShouldThrow()
+    {
+        var options = new AuthenticationOptions
+        {
+            EnableAuthentication = false,
+            PasswordPolicy = new AuthenticationPasswordPolicySettings
+            {
+                MinPasswordLength = 16,
+                MaxPasswordLength = 12
+            }
+        };
+
+        var act = () => options.Validate();
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("*maximum password length*minimum*");
     }
 }
 
@@ -683,6 +752,7 @@ public class OpenApiOptionsTests
         options.EnableOpenApi.Should().BeTrue();
         options.Title.Should().Be("GameGuild API");
         options.Version.Should().Be("v1");
+        options.MetadataVersion.Should().BeEmpty();
         options.Description.Should().BeEmpty();
         options.ContactName.Should().BeEmpty();
         options.ContactEmail.Should().BeEmpty();
@@ -690,6 +760,7 @@ public class OpenApiOptionsTests
         options.TermsOfServiceUrl.Should().BeEmpty();
         options.LicenseName.Should().BeEmpty();
         options.LicenseUrl.Should().BeEmpty();
+        options.Servers.Should().BeEmpty();
     }
 
     [Fact]
@@ -705,17 +776,48 @@ public class OpenApiOptionsTests
         {
             Title = "Test",
             Version = "v2",
+            MetadataVersion = "2026.09",
             Description = "desc",
             ContactName = "Name",
             ContactEmail = "email@test.com",
             ContactUrl = "https://test.com",
             TermsOfServiceUrl = "https://tos.com",
             LicenseName = "MIT",
-            LicenseUrl = "https://license.com"
+            LicenseUrl = "https://license.com",
+            Servers =
+            [
+                new OpenApiServerOptions { Url = "https://api.example.com" }
+            ]
         };
 
         options.Title.Should().Be("Test");
+        options.MetadataVersion.Should().Be("2026.09");
         options.LicenseName.Should().Be("MIT");
+        options.Servers.Should().ContainSingle();
+    }
+
+    [Theory]
+    [InlineData("ContactUrl", "javascript:alert(1)")]
+    [InlineData("TermsOfServiceUrl", "/terms")]
+    [InlineData("LicenseUrl", "ftp://example.com/license")]
+    public void Validate_RejectsNonHttpMetadataUrls(string propertyName, string value)
+    {
+        var options = new OpenApiOptions();
+        typeof(OpenApiOptions).GetProperty(propertyName)!.SetValue(options, value);
+
+        var act = () => options.Validate();
+
+        act.Should().Throw<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void Validate_RequiresLicenseNameWhenLicenseUrlIsConfigured()
+    {
+        var options = new OpenApiOptions { LicenseUrl = "https://example.com/license" };
+
+        var act = () => OpenApiOptionsBuilder.Validate(options);
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("*license name*");
     }
 }
 

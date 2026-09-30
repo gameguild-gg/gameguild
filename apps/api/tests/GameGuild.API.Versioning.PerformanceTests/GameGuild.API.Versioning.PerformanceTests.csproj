@@ -15,6 +15,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\..\Source\GameGuild.API\GameGuild.API.csproj" />
         <ProjectReference Include="..\..\Source\Modules\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
     </ItemGroup>
 

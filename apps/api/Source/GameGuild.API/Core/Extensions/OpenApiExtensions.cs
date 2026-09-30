@@ -41,6 +41,12 @@ public static class OpenApiExtensions
     {
         options ??= OptionBuilderUtilities.CreateAndBind(configuration, "OpenApi", OpenApiOptions.CreateDefault);
         options.Validate();
+        services.TryAddSingleton(options);
+
+        if (!options.EnableOpenApi)
+        {
+            return services;
+        }
 
         // Add native .NET 9 OpenAPI support
         // JSON serialization options are configured globally in Program.cs
@@ -66,18 +72,7 @@ public static class OpenApiExtensions
                     {
                         c.SwaggerDoc(
                             description.GroupName,
-                            new OpenApiInfo
-                            {
-                                Title = options.Title,
-                                Version = ReleaseVersion,
-                                Description = options.Description,
-                                Contact = new OpenApiContact
-                                {
-                                    Name = options.ContactName,
-                                    Email = options.ContactEmail,
-                                    Url = !string.IsNullOrEmpty(options.ContactUrl) ? new Uri(options.ContactUrl) : null
-                                }
-                            }
+                            CreateDocumentInfo(options)
                         );
                     }
 
@@ -101,18 +96,7 @@ public static class OpenApiExtensions
                     // Fallback to single document when versioning is not configured
                     c.SwaggerDoc(
                         options.Version,
-                        new OpenApiInfo
-                        {
-                            Title = options.Title,
-                            Version = ReleaseVersion,
-                            Description = options.Description,
-                            Contact = new OpenApiContact
-                            {
-                                Name = options.ContactName,
-                                Email = options.ContactEmail,
-                                Url = !string.IsNullOrEmpty(options.ContactUrl) ? new Uri(options.ContactUrl) : null
-                            }
-                        }
+                        CreateDocumentInfo(options)
                     );
                 }
 
@@ -177,27 +161,25 @@ public static class OpenApiExtensions
                 c.CustomOperationIds(apiDescription =>
                     apiDescription.ActionDescriptor.AttributeRouteInfo?.Name);
                 c.OperationFilter<ModuleControllerTagOperationFilter>();
+                c.OperationFilter<ConfiguredSecurityOperationFilter>(options);
                 c.OperationFilter<AllowAnonymousOperationFilter>();
                 c.SchemaFilter<FlagsEnumSchemaFilter>();
+                c.DocumentFilter<OpenApiServerDocumentFilter>(options);
                 c.DocumentFilter<DeterministicOpenApiDocumentFilter>();
                 ApiProductComposition.Instance.ConfigureOpenApi(c);
 
-                // Add security definition for JWT Bearer token
-                c.AddSecurityDefinition(
-                    "Bearer",
-                    new OpenApiSecurityScheme
+                if (options.EnableDefaultBearer)
+                {
+                    // Preserve the existing definition for generated-client compatibility.
+                    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                     {
-                        Description =
-                            "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+                        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
                         Name = "Authorization",
                         In = ParameterLocation.Header,
                         Type = SecuritySchemeType.ApiKey,
                         Scheme = "Bearer"
-                    }
-                );
-
-                c.AddSecurityRequirement(
-                    new OpenApiSecurityRequirement
+                    });
+                    c.AddSecurityRequirement(new OpenApiSecurityRequirement
                     {
                         {
                             new OpenApiSecurityScheme
@@ -207,12 +189,85 @@ public static class OpenApiExtensions
                             },
                             new List<string>()
                         }
-                    }
-                );
+                    });
+                }
+
+                foreach (var (name, scheme) in options.SecuritySchemes.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+                {
+                    c.AddSecurityDefinition(name, CreateSecurityDefinition(scheme));
+                }
             }
         );
 
         return services;
+    }
+
+    private static OpenApiSecurityScheme CreateSecurityDefinition(OpenApiSecuritySchemeOptions options)
+    {
+        return options.Kind switch
+        {
+            OpenApiSecuritySchemeKind.ApiKeyHeader => new OpenApiSecurityScheme
+            {
+                Type = SecuritySchemeType.ApiKey,
+                Name = options.HeaderName,
+                In = ParameterLocation.Header,
+                Description = options.Description
+            },
+            OpenApiSecuritySchemeKind.HttpBearer => new OpenApiSecurityScheme
+            {
+                Type = SecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "JWT",
+                Description = options.Description
+            },
+            OpenApiSecuritySchemeKind.HttpBasic => new OpenApiSecurityScheme
+            {
+                Type = SecuritySchemeType.Http,
+                Scheme = "basic",
+                Description = options.Description
+            },
+            OpenApiSecuritySchemeKind.OAuth2AuthorizationCode => new OpenApiSecurityScheme
+            {
+                Type = SecuritySchemeType.OAuth2,
+                Description = options.Description,
+                Flows = new OpenApiOAuthFlows
+                {
+                    AuthorizationCode = new OpenApiOAuthFlow
+                    {
+                        AuthorizationUrl = new Uri(options.AuthorizationUrl),
+                        TokenUrl = new Uri(options.TokenUrl),
+                        Scopes = new Dictionary<string, string>(options.Scopes)
+                    }
+                }
+            },
+            _ => throw new ArgumentOutOfRangeException(nameof(options))
+        };
+    }
+
+    private static OpenApiInfo CreateDocumentInfo(OpenApiOptions options)
+    {
+        return new OpenApiInfo
+        {
+            Title = options.Title,
+            Version = string.IsNullOrWhiteSpace(options.MetadataVersion) ? ReleaseVersion : options.MetadataVersion,
+            Description = options.Description,
+            TermsOfService = string.IsNullOrWhiteSpace(options.TermsOfServiceUrl)
+                ? null
+                : new Uri(options.TermsOfServiceUrl),
+            Contact = new OpenApiContact
+            {
+                Name = options.ContactName,
+                Email = options.ContactEmail,
+                Url = string.IsNullOrWhiteSpace(options.ContactUrl) ? null : new Uri(options.ContactUrl)
+            },
+            License = string.IsNullOrWhiteSpace(options.LicenseName)
+                ? null
+                : new OpenApiLicense
+                {
+                    Name = options.LicenseName,
+                    Url = string.IsNullOrWhiteSpace(options.LicenseUrl) ? null : new Uri(options.LicenseUrl)
+                }
+        };
     }
 
     /// <summary>
@@ -313,6 +368,41 @@ internal sealed class OpenApiDocumentTransformer : Microsoft.AspNetCore.OpenApi.
     {
         // Document transformation is currently handled by the default pipeline.
         return Task.CompletedTask;
+    }
+}
+
+internal sealed class OpenApiServerDocumentFilter : IDocumentFilter
+{
+    private readonly OpenApiOptions _options;
+
+    public OpenApiServerDocumentFilter(OpenApiOptions options)
+    {
+        _options = options;
+    }
+
+    public void Apply(OpenApiDocument document, DocumentFilterContext context)
+    {
+        if (_options.Servers.Count == 0)
+        {
+            return;
+        }
+
+        document.Servers = _options.Servers
+            .Select(server => new OpenApiServer
+            {
+                Url = server.Url,
+                Description = server.Description,
+                Variables = server.Variables.ToDictionary(
+                    pair => pair.Key,
+                    pair => new OpenApiServerVariable
+                    {
+                        Default = pair.Value.Default,
+                        Description = pair.Value.Description,
+                        Enum = pair.Value.Enum.ToList()
+                    },
+                    StringComparer.Ordinal)
+            })
+            .ToList();
     }
 }
 

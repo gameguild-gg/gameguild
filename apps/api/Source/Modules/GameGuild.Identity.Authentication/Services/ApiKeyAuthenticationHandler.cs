@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -13,7 +14,6 @@ namespace GameGuild.Identity.Authentication;
 public sealed class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthenticationOptions>
 {
     private readonly IApplicationDbContext _dbContext;
-    private const string ApiKeyHeaderName = "X-API-Key";
 
     public ApiKeyAuthenticationHandler(
         IOptionsMonitor<ApiKeyAuthenticationOptions> options,
@@ -27,16 +27,39 @@ public sealed class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAu
 
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
-        // Check for API key in header
-        if (!Request.Headers.TryGetValue(ApiKeyHeaderName, out var apiKeyHeaderValues))
+        var headerApiKey = Request.Headers[Options.HeaderName].FirstOrDefault();
+        var queryApiKey = Options.AllowQueryString
+            ? Request.Query[Options.QueryStringParameterName].FirstOrDefault()
+            : null;
+        string? customApiKey;
+        try
+        {
+            customApiKey = Options.CustomKeyResolver?.Invoke(Request);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error reading custom API key source");
+            return AuthenticateResult.Fail("Authentication error");
+        }
+
+        var configuredSources = new[] { headerApiKey, queryApiKey, customApiKey }
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .ToArray();
+
+        if (configuredSources.Length > 1)
+        {
+            return AuthenticateResult.Fail("Provide an API key through only one configured source.");
+        }
+
+        var providedApiKey = configuredSources.FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(providedApiKey))
         {
             return AuthenticateResult.NoResult();
         }
 
-        var providedApiKey = apiKeyHeaderValues.FirstOrDefault();
-        if (string.IsNullOrWhiteSpace(providedApiKey))
+        if (!string.IsNullOrWhiteSpace(queryApiKey) && !Request.IsHttps)
         {
-            return AuthenticateResult.NoResult();
+            return AuthenticateResult.Fail("API keys in query strings require HTTPS.");
         }
 
         try
@@ -124,6 +147,32 @@ public sealed class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAu
 public class ApiKeyAuthenticationOptions : AuthenticationSchemeOptions
 {
     public const string SchemeName = "ApiKey";
+
+    public string HeaderName { get; set; } = "X-API-Key";
+
+    public bool AllowQueryString { get; set; }
+
+    public string QueryStringParameterName { get; set; } = "api_key";
+
+    /// <summary>
+    ///     Optional programmatic source for deployments that retrieve API keys from a custom request location.
+    /// </summary>
+    public Func<HttpRequest, string?>? CustomKeyResolver { get; set; }
+
+    public override void Validate()
+    {
+        base.Validate();
+
+        if (string.IsNullOrWhiteSpace(HeaderName))
+        {
+            throw new InvalidOperationException("API key header name must not be empty.");
+        }
+
+        if (AllowQueryString && string.IsNullOrWhiteSpace(QueryStringParameterName))
+        {
+            throw new InvalidOperationException("API key query parameter name must not be empty when query authentication is enabled.");
+        }
+    }
 }
 
 /// <summary>
@@ -131,10 +180,19 @@ public class ApiKeyAuthenticationOptions : AuthenticationSchemeOptions
 /// </summary>
 public static class ApiKeyAuthenticationExtensions
 {
-    public static AuthenticationBuilder AddApiKeyAuthentication(this AuthenticationBuilder builder)
+    public static AuthenticationBuilder AddApiKeyAuthentication(this AuthenticationBuilder builder) =>
+        AddApiKeyAuthentication(builder, configure: null);
+
+    public static AuthenticationBuilder AddApiKeyAuthentication(
+        this AuthenticationBuilder builder,
+        Action<ApiKeyAuthenticationOptions>? configure)
     {
         return builder.AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>(
             ApiKeyAuthenticationOptions.SchemeName,
-            options => { });
+            options =>
+            {
+                configure?.Invoke(options);
+                options.Validate();
+            });
     }
 }

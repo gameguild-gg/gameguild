@@ -1,5 +1,5 @@
 {
-  "version": "4.3.0",
+  "version": "4.4.0",
   "name": "@gameguild/emception-react",
   "description": "React 19 components for emception: <EmceptionRun>, <EmceptionTerminal>, <EmceptionCanvas>, useEmception().",
   "license": "MIT",
@@ -33,8 +33,8 @@
     "clean": "node -e \"const fs=require('fs');for(const path of ['dist','tsconfig.tsbuildinfo'])fs.rmSync(path,{recursive:true,force:true})\""
   },
   "dependencies": {
-    "@gameguild/emception-browser": "4.3.0",
-    "emception": "4.3.0"
+    "@gameguild/emception-browser": "4.4.0",
+    "emception": "4.4.0"
   },
   "peerDependencies": {
     "@gameguild/emception-xterm": "^4.3.0",

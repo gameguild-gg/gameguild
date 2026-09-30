@@ -1,0 +1,44 @@
+groups:
+  - name: gameguild-authorization-cache
+    rules:
+      - alert: GameGuildAuthorizationCacheMissRatioHigh
+        expr: |
+          (
+            sum(rate(authorization_cache_misses_total[5m]))
+            /
+            clamp_min(
+              sum(rate(authorization_cache_misses_total[5m]))
+              + sum(rate(authorization_cache_hits_total[5m])),
+              1e-9
+            )
+          ) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: Authorization cache miss ratio is high
+          description: More than half of authorization cache lookups have missed for 10 minutes across the scraped GameGuild API instances.
+
+      - alert: GameGuildAuthorizationCacheLookupP95High
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (le, cache_type) (
+              rate(authorization_cache_lookup_duration_milliseconds_bucket[5m])
+            )
+          ) > 25
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: Authorization cache lookup p95 exceeds 25 ms
+          description: The p95 authorization cache read latency is above 25 ms for at least one cache type across the scraped GameGuild API instances.
+
+      - alert: GameGuildAuthorizationCacheCapacityEvictions
+        expr: sum(rate(authorization_cache_evictions_total{reason="capacity"}[5m])) > 0.2
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: Authorization cache is frequently evicting entries at capacity
+          description: Authorization cache capacity evictions exceed 12 entries per minute across the scraped GameGuild API instances.

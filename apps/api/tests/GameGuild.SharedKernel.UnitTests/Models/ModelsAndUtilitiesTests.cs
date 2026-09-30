@@ -135,6 +135,7 @@ public class ProblemDetailsMapperTests
         pd.Status.Should().Be(400);
         pd.Title.Should().Be("Test.Validation");
         pd.Detail.Should().Be("Validation failed");
+        pd.Extensions["code"].Should().Be("Test.Validation");
     }
 
     [Fact]

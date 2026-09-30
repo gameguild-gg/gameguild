@@ -1494,6 +1494,34 @@ public class SocialSignInHandlerCovTests
     }
 
     [Fact]
+    public async Task Handle_MicrosoftProvider_UsesMicrosoftSignIn()
+    {
+        var userId = Guid.NewGuid();
+        var authService = new Mock<IAuthService>();
+        authService
+            .Setup(service => service.MicrosoftSignInAsync(
+                It.Is<OAuthSignInRequest>(request => request.AccessToken == "microsoft-token" && request.TenantId == Guid.Empty),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new SignInResponse { Success = true, UserId = userId, Email = "user@example.com" });
+        var userRepo = new Mock<IUserRepository>();
+        var handler = new SocialSignInHandler(
+            authService.Object, userRepo.Object,
+            NullLogger<SocialSignInHandler>.Instance);
+
+        var result = await handler.Handle(new SocialSignInCommand
+        {
+            Provider = SocialProvider.Microsoft,
+            Token = "microsoft-token",
+            TenantId = Guid.Empty
+        }, CancellationToken.None);
+
+        result.UserId.Should().Be(userId);
+        authService.Verify(service => service.MicrosoftSignInAsync(
+            It.Is<OAuthSignInRequest>(request => request.AccessToken == "microsoft-token"),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task Handle_WithValidator_InvalidCommand_Throws()
     {
         var authService = new Mock<IAuthService>();

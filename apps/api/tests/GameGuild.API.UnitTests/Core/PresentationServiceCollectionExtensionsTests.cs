@@ -3,8 +3,10 @@ using System.Reflection;
 using FluentAssertions;
 using GameGuild.API.Setup;
 using GameGuild.Configuration.PresentationLayer.Controllers;
+using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -62,6 +64,52 @@ public class PresentationServiceCollectionExtensionsTests
         var names = manager.ApplicationParts.Select(part => part.Name).ToArray();
         names.Should().BeEquivalentTo("GameGuild.API", "GameGuild.AI");
         names.Should().OnlyHaveUniqueItems();
+        var mvc = provider.GetRequiredService<IOptions<MvcOptions>>().Value;
+        mvc.Conventions.Should().Contain(convention => convention is MinimumOrderRouteApplicationModelConvention);
+        mvc.Conventions.Should().HaveCount(2);
+        mvc.Filters.OfType<TypeFilterAttribute>().Should().NotContain(typeFilter =>
+            typeFilter.ImplementationType == typeof(ResourcePermissionAuthorizationFilter));
+    }
+
+    [Fact]
+    public void SetupControllers_WhenOptionsComeFromConfiguration_ShouldApplyMvcOptions()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Controllers:UseKebabCaseRoutes"] = "false",
+                ["Controllers:EnablePermissionAuthorizationFilter"] = "true",
+                ["Controllers:WriteIndentedJson"] = "false"
+            })
+            .Build();
+        var services = new ServiceCollection();
+
+        services.SetupControllers(configuration, null);
+
+        using var provider = services.BuildServiceProvider();
+        var mvc = provider.GetRequiredService<IOptions<MvcOptions>>().Value;
+        mvc.Conventions.Should().ContainSingle(convention =>
+            convention is MinimumOrderRouteApplicationModelConvention);
+        mvc.Filters.OfType<TypeFilterAttribute>().Should().Contain(typeFilter =>
+            typeFilter.ImplementationType == typeof(ResourcePermissionAuthorizationFilter));
+        provider.GetRequiredService<IOptions<JsonOptions>>().Value.JsonSerializerOptions.WriteIndented
+            .Should().BeFalse();
+    }
+
+    [Fact]
+    public void SetupControllers_ShouldRegisterFieldMaskingAsAGlobalResultFilter()
+    {
+        var services = new ServiceCollection();
+
+        services.SetupControllers(new ConfigurationBuilder().Build(), ControllersOptions.CreateDefault());
+
+        using var provider = services.BuildServiceProvider();
+        var registeredFilter = provider.GetRequiredService<IOptions<MvcOptions>>().Value.Filters
+            .OfType<ServiceFilterAttribute>()
+            .SingleOrDefault(filter => filter.ServiceType == typeof(FieldMaskingResultFilter));
+        registeredFilter.Should().NotBeNull();
+        services.Should().Contain(descriptor => descriptor.ServiceType == typeof(FieldMaskingResultFilter) &&
+                                                 descriptor.Lifetime == ServiceLifetime.Scoped);
     }
 
     [Theory]

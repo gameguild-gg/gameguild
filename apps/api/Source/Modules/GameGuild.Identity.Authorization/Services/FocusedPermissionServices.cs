@@ -45,33 +45,54 @@ public sealed class PermissionGrantService(
             userId,
             tenantId);
 
-        var permission = new TenantPermission
-        {
-            UserId = userId,
-            TenantId = tenantId,
-            Permissions = permissions,
-            GrantedAt = SystemClock.UtcNow,
-            GrantedBy = grantedBy,
-            ExpiresAt = expiresAt,
-            Reason = reason
-        };
+        var performedBy = Actor.SubjectIdAsGuid ?? Guid.Empty;
+        var existing = await repository.GetByUserAndTenantAsync(userId, tenantId, cancellationToken).ConfigureAwait(false);
+        var previousPermissions = existing?.Permissions.ToArray();
+        TenantPermission result;
 
-        var result = await repository.CreateAsync(permission, cancellationToken).ConfigureAwait(false);
+        if (existing is not null)
+        {
+            existing.AddPermissions(permissions);
+            existing.RemoveDenyPermissions(permissions);
+            existing.IsActive = true;
+            existing.ExpiresAt = existing.ExpiresAt.HasValue && expiresAt.HasValue
+                ? (existing.ExpiresAt.Value <= expiresAt.Value ? existing.ExpiresAt : expiresAt)
+                : existing.ExpiresAt ?? expiresAt;
+            existing.GrantedAt = SystemClock.UtcNow;
+            existing.GrantedBy = performedBy;
+            existing.Reason = reason;
+            result = await repository.UpdateAsync(existing, cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            var permission = new TenantPermission
+            {
+                UserId = userId,
+                TenantId = tenantId,
+                Permissions = Array.Empty<string>(),
+                GrantedAt = SystemClock.UtcNow,
+                GrantedBy = performedBy,
+                ExpiresAt = expiresAt,
+                Reason = reason
+            };
+            permission.AddPermissions(permissions);
+            result = await repository.CreateAsync(permission, cancellationToken).ConfigureAwait(false);
+        }
 
         // SECURITY: Increment tenant version to invalidate all cached permissions
         await InvalidateTenantCacheAsync(tenantId, cancellationToken).ConfigureAwait(false);
 
         await auditService.LogPermissionChangeAsync(
             PermissionOperationType.Grant,
+            userId,
+            performedBy,
             tenantId,
-            userId ?? Guid.Empty,
-            grantedBy,
-            null, null, null, null,
-            string.Join(",", permissions),
-            reason,
-            true,
-            null, null, null,
-            cancellationToken);
+            permissionType: "Tenant",
+            resourceType: "TenantPermission",
+            oldValue: previousPermissions is null ? null : string.Join(",", previousPermissions),
+            newValue: string.Join(",", result.Permissions),
+            reason: reason,
+            cancellationToken: cancellationToken);
 
         return result;
     }
@@ -89,6 +110,7 @@ public sealed class PermissionGrantService(
 
         if (existing == null) return false;
 
+        var previousPermissions = existing.Permissions.ToArray();
         existing.RemovePermissions(permissions);
 
         if (existing.Permissions.Length == 0)
@@ -105,15 +127,15 @@ public sealed class PermissionGrantService(
 
         await auditService.LogPermissionChangeAsync(
             PermissionOperationType.Revoke,
+            userId,
+            Actor.SubjectIdAsGuid ?? Guid.Empty,
             tenantId,
-            userId ?? Guid.Empty,
-            null, null, null, null,
-            string.Join(",", permissions),
-            null,
-            "Permissions revoked",
-            true,
-            null, null, null,
-            cancellationToken);
+            permissionType: "Tenant",
+            resourceType: "TenantPermission",
+            oldValue: string.Join(",", previousPermissions),
+            newValue: existing.Permissions.Length == 0 ? null : string.Join(",", existing.Permissions),
+            reason: "Permissions revoked",
+            cancellationToken: cancellationToken);
 
         return true;
     }
@@ -130,10 +152,12 @@ public sealed class PermissionGrantService(
         logger.LogInformation("Setting global default permissions: {Permissions}", string.Join(", ", permissions));
 
         var existing = await repository.GetByUserAndTenantAsync(null, null, cancellationToken).ConfigureAwait(false);
+        var previousPermissions = existing?.Permissions.ToArray();
 
         if (existing != null)
         {
             existing.Permissions = permissions;
+            existing.GrantedBy = Actor.SubjectIdAsGuid;
             await repository.UpdateAsync(existing, cancellationToken).ConfigureAwait(false);
         }
         else
@@ -143,7 +167,7 @@ public sealed class PermissionGrantService(
                 UserId = null,
                 TenantId = null,
                 Permissions = permissions,
-                GrantedBy = setBy,
+                GrantedBy = Actor.SubjectIdAsGuid,
                 GrantedAt = SystemClock.UtcNow,
                 Reason = "Global default permissions"
             };
@@ -151,6 +175,17 @@ public sealed class PermissionGrantService(
         }
 
         await InvalidateTenantCacheAsync(null, cancellationToken).ConfigureAwait(false);
+        await auditService.LogPermissionChangeAsync(
+            PermissionOperationType.Update,
+            null,
+            Actor.SubjectIdAsGuid ?? Guid.Empty,
+            null,
+            permissionType: "GlobalDefault",
+            resourceType: "TenantPermission",
+            oldValue: previousPermissions is null ? null : string.Join(",", previousPermissions),
+            newValue: string.Join(",", permissions),
+            reason: "Global default permissions updated",
+            cancellationToken: cancellationToken).ConfigureAwait(false);
     }
 
     public async Task SetTenantDefaultPermissionsAsync(
@@ -165,10 +200,12 @@ public sealed class PermissionGrantService(
             string.Join(", ", permissions));
 
         var existing = await repository.GetByUserAndTenantAsync(null, tenantId, cancellationToken).ConfigureAwait(false);
+        var previousPermissions = existing?.Permissions.ToArray();
 
         if (existing != null)
         {
             existing.Permissions = permissions;
+            existing.GrantedBy = Actor.SubjectIdAsGuid;
             await repository.UpdateAsync(existing, cancellationToken).ConfigureAwait(false);
         }
         else
@@ -178,7 +215,7 @@ public sealed class PermissionGrantService(
                 UserId = null,
                 TenantId = tenantId,
                 Permissions = permissions,
-                GrantedBy = setBy,
+                GrantedBy = Actor.SubjectIdAsGuid,
                 GrantedAt = SystemClock.UtcNow,
                 Reason = "Tenant default permissions"
             };
@@ -186,6 +223,17 @@ public sealed class PermissionGrantService(
         }
 
         await InvalidateTenantCacheAsync(tenantId, cancellationToken).ConfigureAwait(false);
+        await auditService.LogPermissionChangeAsync(
+            PermissionOperationType.Update,
+            null,
+            Actor.SubjectIdAsGuid ?? Guid.Empty,
+            tenantId,
+            permissionType: "TenantDefault",
+            resourceType: "TenantPermission",
+            oldValue: previousPermissions is null ? null : string.Join(",", previousPermissions),
+            newValue: string.Join(",", permissions),
+            reason: "Tenant default permissions updated",
+            cancellationToken: cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<TenantPermission> DenyTenantPermissionAsync(
@@ -206,6 +254,7 @@ public sealed class PermissionGrantService(
 
         if (existing != null)
         {
+            var previousDenyPermissions = existing.DenyPermissions.ToArray();
             existing.AddDenyPermissions(permissions);
             await repository.UpdateAsync(existing, cancellationToken).ConfigureAwait(false);
 
@@ -214,15 +263,15 @@ public sealed class PermissionGrantService(
 
             await auditService.LogPermissionChangeAsync(
                 PermissionOperationType.Deny,
+                userId,
+                Actor.SubjectIdAsGuid ?? Guid.Empty,
                 tenantId,
-                userId ?? Guid.Empty,
-                deniedBy,
-                null, null, null, null,
-                string.Join(",", permissions),
-                reason,
-                true,
-                null, null, null,
-                cancellationToken);
+                permissionType: "Tenant",
+                resourceType: "TenantPermission",
+                oldValue: string.Join(",", previousDenyPermissions),
+                newValue: string.Join(",", existing.DenyPermissions),
+                reason: reason,
+                cancellationToken: cancellationToken);
 
             return existing;
         }
@@ -234,7 +283,7 @@ public sealed class PermissionGrantService(
             TenantId = tenantId,
             Permissions = Array.Empty<string>(),
             DenyPermissions = permissions,
-            GrantedBy = deniedBy,
+            GrantedBy = Actor.SubjectIdAsGuid,
             GrantedAt = SystemClock.UtcNow,
             Reason = reason ?? "Deny permissions added"
         };
@@ -246,15 +295,15 @@ public sealed class PermissionGrantService(
 
         await auditService.LogPermissionChangeAsync(
             PermissionOperationType.Deny,
+            userId,
+            Actor.SubjectIdAsGuid ?? Guid.Empty,
             tenantId,
-            userId ?? Guid.Empty,
-            deniedBy,
-            null, null, null, null,
-            string.Join(",", permissions),
-            reason,
-            true,
-            null, null, null,
-            cancellationToken);
+            permissionType: "Tenant",
+            resourceType: "TenantPermission",
+            oldValue: null,
+            newValue: string.Join(",", result.DenyPermissions),
+            reason: reason,
+            cancellationToken: cancellationToken);
 
         return result;
     }
@@ -275,6 +324,7 @@ public sealed class PermissionGrantService(
 
         if (existing == null) return false;
 
+        var previousDenyPermissions = existing.DenyPermissions.ToArray();
         existing.RemoveDenyPermissions(permissions);
         await repository.UpdateAsync(existing, cancellationToken).ConfigureAwait(false);
 
@@ -283,22 +333,22 @@ public sealed class PermissionGrantService(
 
         await auditService.LogPermissionChangeAsync(
             PermissionOperationType.Revoke,
+            userId,
+            Actor.SubjectIdAsGuid ?? Guid.Empty,
             tenantId,
-            userId ?? Guid.Empty,
-            null, null, null, null,
-            string.Join(",", permissions),
-            null,
-            "Deny permissions removed",
-            true,
-            null, null, null,
-            cancellationToken);
+            permissionType: "Tenant",
+            resourceType: "TenantPermission",
+            oldValue: string.Join(",", previousDenyPermissions),
+            newValue: string.Join(",", existing.DenyPermissions),
+            reason: "Deny permissions removed",
+            cancellationToken: cancellationToken);
 
         return true;
     }
 
     private async Task InvalidateTenantCacheAsync(Guid? tenantId, CancellationToken cancellationToken)
     {
-        var tenantKey = tenantId?.ToString() ?? "global";
+        var tenantKey = tenantId?.ToString() ?? Guid.Empty.ToString();
 
         try
         {

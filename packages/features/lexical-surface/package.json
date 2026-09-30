@@ -1,6 +1,6 @@
 {
   "name": "@game-guild/lexical-surface",
-  "version": "4.3.0",
+  "version": "4.4.0",
   "type": "module",
   "description": "Reusable Lexical rich-document editing surface for GameGuild",
   "license": "UNLICENSED",
@@ -30,7 +30,7 @@
     "@monaco-editor/react": "^4.7.0",
     "@shikijs/monaco": "^4.4.1",
     "d3-dsv": "^3.0.1",
-    "dompurify": "3.4.15",
+    "dompurify": "3.4.16",
     "katex": "^0.18.6",
     "lexical": "^0.51.0",
     "lucide-react": "^1.47.0",

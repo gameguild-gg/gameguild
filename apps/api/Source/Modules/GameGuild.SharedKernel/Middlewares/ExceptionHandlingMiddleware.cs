@@ -2,6 +2,7 @@ using System.Net;
 using GameGuild.CQRS;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
@@ -96,7 +97,7 @@ public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Ex
         };
         problemDetails.Extensions["traceId"] = context.TraceIdentifier;
 
-        await WriteProblemDetailsAsync(context.Response, statusCode, problemDetails).ConfigureAwait(false);
+        await WriteProblemDetailsAsync(context, statusCode, problemDetails, exception).ConfigureAwait(false);
     }
 
     private static async Task HandleRequestValidationExceptionAsync(HttpContext context, RequestValidationException exception)
@@ -117,7 +118,7 @@ public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Ex
             attemptedValue = e.AttemptedValue
         });
 
-        await WriteProblemDetailsAsync(context.Response, statusCode, problemDetails).ConfigureAwait(false);
+        await WriteProblemDetailsAsync(context, statusCode, problemDetails, exception).ConfigureAwait(false);
     }
 
     private static async Task HandleDomainExceptionAsync(HttpContext context, DomainException exception)
@@ -134,7 +135,7 @@ public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Ex
         };
         problemDetails.Extensions["traceId"] = context.TraceIdentifier;
 
-        await WriteProblemDetailsAsync(context.Response, statusCode, problemDetails).ConfigureAwait(false);
+        await WriteProblemDetailsAsync(context, statusCode, problemDetails, exception).ConfigureAwait(false);
     }
 
     private static async Task HandleExceptionAsync(HttpContext context, Exception exception)
@@ -150,16 +151,36 @@ public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Ex
         };
         problemDetails.Extensions["traceId"] = context.TraceIdentifier;
 
-        await WriteProblemDetailsAsync(context.Response, statusCode, problemDetails).ConfigureAwait(false);
+        await WriteProblemDetailsAsync(context, statusCode, problemDetails, exception).ConfigureAwait(false);
     }
 
     /// <summary>
     ///     Writes a typed <see cref="ProblemDetails"/> as JSON using the shared serializer options (no per-call allocation).
     /// </summary>
-    private static async Task WriteProblemDetailsAsync(HttpResponse response, int statusCode, ProblemDetails problemDetails)
+    private static async Task WriteProblemDetailsAsync(
+        HttpContext context,
+        int statusCode,
+        ProblemDetails problemDetails,
+        Exception exception)
     {
-        response.ContentType = "application/problem+json";
+        var response = context.Response;
         response.StatusCode = statusCode;
+
+        // Use the configured ASP.NET Core Problem Details pipeline when available so exception
+        // mappings, language, correlation IDs, detail levels, and custom extensions also apply to
+        // exceptions handled by this middleware.
+        var problemDetailsService = context.RequestServices?.GetService<IProblemDetailsService>();
+        if (problemDetailsService is not null && await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
+            {
+                HttpContext = context,
+                ProblemDetails = problemDetails,
+                Exception = exception,
+            }).ConfigureAwait(false))
+        {
+            return;
+        }
+
+        response.ContentType = "application/problem+json";
         var jsonResponse = JsonSerializer.Serialize(problemDetails, SharedJsonOptions.Api);
         await response.WriteAsync(jsonResponse).ConfigureAwait(false);
     }

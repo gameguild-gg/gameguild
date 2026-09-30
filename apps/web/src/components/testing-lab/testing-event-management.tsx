@@ -2773,6 +2773,15 @@ export function TestingEventLearningDialog({
   const [selectedActivityId, setSelectedActivityId] = useState(
     initialActivity?.id ?? "",
   );
+  const [completionRequirement, setCompletionRequirement] = useState(
+    event.learningCompletionRequirement ?? "AttendanceAndFeedback",
+  );
+  const completionRequirementLabels: Record<string, string> = {
+    Attendance: "Attendance",
+    Feedback: "Required feedback",
+    AttendanceAndFeedback: "Attendance and feedback",
+    ProjectTested: "Assigned project tested",
+  };
   const selectedActivity = activities.find(
     (activity) => activity.id === selectedActivityId,
   );
@@ -2847,12 +2856,13 @@ export function TestingEventLearningDialog({
             { value: "ProjectTested", label: "Assigned project tested" },
           ]}
           name="requirement"
-          defaultValue={
-            event.learningCompletionRequirement ?? "AttendanceAndFeedback"
-          }
+          value={completionRequirement}
+          onValueChange={(value) => value && setCompletionRequirement(value)}
         >
           <SelectTrigger aria-label="Completion requirement">
-            <SelectValue />
+            <SelectValue>
+              {completionRequirementLabels[completionRequirement] ?? completionRequirement}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>

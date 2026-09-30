@@ -7,6 +7,19 @@ namespace GameGuild.Tests.SharedKernel.Unit.Middlewares;
 public class SecurityHeadersMiddlewareTests
 {
     [Fact]
+    public void SecurityHeadersOptions_RejectsResponseHeaderInjectionValues()
+    {
+        var options = new SecurityHeadersOptions
+        {
+            XFrameOptionsValue = "DENY\r\nSet-Cookie: session=attacker"
+        };
+
+        var act = () => options.Validate();
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("*line breaks*");
+    }
+
+    [Fact]
     public async Task InvokeAsync_AddsDefaultHeaders_ForRegularPath()
     {
         var options = new SecurityHeadersOptions();

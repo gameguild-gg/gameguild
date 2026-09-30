@@ -57,6 +57,24 @@ public sealed class OpenApiSetupTests
         options.ContactName = "Platform Operations";
         options.ContactEmail = "operations@example.com";
         options.ContactUrl = "https://example.com/support";
+        options.MetadataVersion = "2026.09";
+        options.TermsOfServiceUrl = "https://example.com/terms";
+        options.LicenseName = "MIT";
+        options.LicenseUrl = "https://example.com/license";
+        options.Servers.Add(new OpenApiServerOptions
+        {
+            Url = "https://api.example.com/{version}",
+            Description = "Production API",
+            Variables = new Dictionary<string, OpenApiServerVariableOptions>
+            {
+                ["version"] = new()
+                {
+                    Default = "v1",
+                    Description = "API version",
+                    Enum = ["v1", "v2"]
+                }
+            }
+        });
 
         services.SetupOpenApi(new ConfigurationBuilder().Build(), options);
 
@@ -66,6 +84,53 @@ public sealed class OpenApiSetupTests
         document.Contact.Name.Should().Be(options.ContactName);
         document.Contact.Email.Should().Be(options.ContactEmail);
         document.Contact.Url.Should().Be(options.ContactUrl);
+        document.Version.Should().Be(options.MetadataVersion);
+        document.TermsOfService.Should().Be(options.TermsOfServiceUrl);
+        document.License.Name.Should().Be(options.LicenseName);
+        document.License.Url.Should().Be(options.LicenseUrl);
+    }
+
+    [Fact]
+    public void SetupOpenApi_DisabledOptionsDoNotRegisterSwaggerServices()
+    {
+        var services = new ServiceCollection();
+        var options = OpenApiOptions.CreateDefault();
+        options.EnableOpenApi = false;
+
+        services.SetupOpenApi(new ConfigurationBuilder().Build(), options);
+
+        services.Should().Contain(descriptor => descriptor.ServiceType == typeof(OpenApiOptions));
+        services.Should().NotContain(descriptor => descriptor.ServiceType == typeof(IConfigureOptions<SwaggerGenOptions>));
+    }
+
+    [Fact]
+    public void OpenApiServerDocumentFilter_MapsConfiguredServersAndVariables()
+    {
+        var options = new OpenApiOptions
+        {
+            Servers =
+            [
+                new OpenApiServerOptions
+                {
+                    Url = "https://api.example.com/{version}",
+                    Description = "Production API",
+                    Variables = new Dictionary<string, OpenApiServerVariableOptions>
+                    {
+                        ["version"] = new() { Default = "v1", Enum = ["v1", "v2"] }
+                    }
+                }
+            ]
+        };
+        var document = new Microsoft.OpenApi.Models.OpenApiDocument();
+        var filter = new OpenApiServerDocumentFilter(options);
+
+        filter.Apply(document, context: null!);
+
+        document.Servers.Should().ContainSingle();
+        document.Servers[0].Url.Should().Be("https://api.example.com/{version}");
+        document.Servers[0].Description.Should().Be("Production API");
+        document.Servers[0].Variables["version"].Default.Should().Be("v1");
+        document.Servers[0].Variables["version"].Enum.Should().Equal("v1", "v2");
     }
 
     [Fact]
