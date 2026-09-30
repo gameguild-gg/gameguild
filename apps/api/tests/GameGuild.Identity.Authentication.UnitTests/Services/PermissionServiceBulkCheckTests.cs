@@ -199,6 +199,11 @@ public sealed class PermissionServiceBulkCheckTests
             [PermissionType.Edit] = false,
             [PermissionType.Delete] = false
         });
+
+        (await service.HasTenantPermissionAsync(userId, tenantId, PermissionType.Create)).Should().BeFalse();
+        (await service.HasTenantPermissionAsync(userId, tenantId, PermissionType.Edit)).Should().BeTrue();
+        (await service.HasPermissionAsync(userId, tenantId, PermissionType.Read)).Should().BeFalse();
+        (await service.HasPermissionAsync(otherUserId, tenantId, PermissionType.Read)).Should().BeTrue();
     }
 
     [Fact]

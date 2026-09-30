@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
+using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using Microsoft.EntityFrameworkCore;
 using GameGuild.Identity.Authorization;
@@ -88,8 +89,8 @@ public class PermissionService(
         return results;
     }
 
-    public async Task<bool> HasTenantPermissionAsync(Guid? userId, Guid? tenantId, PermissionType permission)
-        => (await GetEffectiveTenantPermissionsAsync(userId, tenantId).ConfigureAwait(false)).Contains(permission);
+    public Task<bool> HasTenantPermissionAsync(Guid? userId, Guid? tenantId, PermissionType permission)
+        => CheckPermissionAsync(userId, tenantId, permission);
 
     public async Task<IEnumerable<PermissionType>> GetTenantPermissionsAsync(Guid? userId, Guid? tenantId)
     {
@@ -216,8 +217,8 @@ public class PermissionService(
         return grant;
     }
 
-    public async Task<bool> HasContentTypePermissionAsync(Guid? userId, Guid? tenantId, string contentTypeName, PermissionType permission)
-        => (await GetEffectiveContentTypePermissionsAsync(userId, tenantId, contentTypeName).ConfigureAwait(false)).Contains(permission);
+    public Task<bool> HasContentTypePermissionAsync(Guid? userId, Guid? tenantId, string contentTypeName, PermissionType permission)
+        => CheckPermissionAsync(userId, tenantId, permission, contentTypeName);
 
     public async Task<IEnumerable<PermissionType>> GetContentTypePermissionsAsync(Guid? userId, Guid? tenantId, string contentTypeName)
     {
@@ -301,9 +302,9 @@ public class PermissionService(
         return grant;
     }
 
-    public async Task<bool> HasResourcePermissionAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid resourceId, PermissionType permission)
+    public Task<bool> HasResourcePermissionAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid resourceId, PermissionType permission)
         where TPermission : ResourcePermission<TResource>, new() where TResource : EntityBase
-        => (await GetEffectiveResourcePermissionsAsync<TPermission, TResource>(userId, tenantId, resourceId).ConfigureAwait(false)).Contains(permission);
+        => CheckPermissionAsync(userId, tenantId, permission, resourceId: resourceId, resourceTypeName: typeof(TResource).Name);
 
     public async Task<IEnumerable<PermissionType>> GetResourcePermissionsAsync<TPermission, TResource>(Guid? userId, Guid? tenantId, Guid resourceId)
         where TPermission : ResourcePermission<TResource>, new() where TResource : EntityBase
@@ -415,8 +416,8 @@ public class PermissionService(
         return permissions;
     }
 
-    public async Task<bool> HasPermissionAsync(Guid? userId, Guid? tenantId, PermissionType permission, string? contentTypeName = null, Guid? resourceId = null, string? resourceTypeName = null)
-        => (await ResolveEffectivePermissionsAsync(userId, tenantId, contentTypeName, resourceId, resourceTypeName).ConfigureAwait(false)).Contains(permission);
+    public Task<bool> HasPermissionAsync(Guid? userId, Guid? tenantId, PermissionType permission, string? contentTypeName = null, Guid? resourceId = null, string? resourceTypeName = null)
+        => CheckPermissionAsync(userId, tenantId, permission, contentTypeName, resourceId, resourceTypeName);
 
     public async Task<string> GetPermissionSourceAsync(Guid? userId, Guid? tenantId, PermissionType permission, string? contentTypeName = null, Guid? resourceId = null, string? resourceTypeName = null)
     {
@@ -634,20 +635,14 @@ public class PermissionService(
 
     private async Task<IReadOnlyList<BulkPermissionCheckResult>> EvaluateBulkPermissionCheckBatchAsync(
         IReadOnlyList<BulkPermissionCheckRequest> requests,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool recordMetrics = true)
     {
         var startedAt = Stopwatch.GetTimestamp();
-        var userIds = requests.Select(request => request.UserId).Distinct().ToArray();
-        var tenantIds = requests.Where(request => request.TenantId.HasValue)
-            .Select(request => request.TenantId!.Value)
-            .Distinct()
-            .ToArray();
 
         var tenantGrants = await context.Set<TenantPermission>()
             .AsNoTracking()
-            .Where(grant =>
-                (grant.UserId == null || userIds.Contains(grant.UserId.Value)) &&
-                (grant.TenantId == null || tenantIds.Contains(grant.TenantId.Value)))
+            .Where(BuildPermissionGrantScopePredicate<TenantPermission>(requests))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
@@ -660,23 +655,16 @@ public class PermissionService(
             ? []
             : await context.Set<ContentTypePermission>()
                 .AsNoTracking()
-                .Where(grant =>
-                    contentTypeNames.Contains(grant.ContentTypeName) &&
-                    (grant.UserId == null || userIds.Contains(grant.UserId.Value)) &&
-                    (grant.TenantId == null || tenantIds.Contains(grant.TenantId.Value)))
+                .Where(BuildContentTypeGrantPredicate(requests))
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
 
         var resourceRequests = requests.Where(request => request.ResourceId.HasValue).ToArray();
-        var resourceIds = resourceRequests.Select(request => request.ResourceId!.Value).Distinct().ToArray();
         var resourceGrants = resourceRequests.Length == 0
             ? []
             : await context.Set<GenericResourcePermission>()
                 .AsNoTracking()
-                .Where(grant =>
-                    resourceIds.Contains(grant.ResourceId) &&
-                    grant.UserId.HasValue && userIds.Contains(grant.UserId.Value) &&
-                    (grant.TenantId == null || tenantIds.Contains(grant.TenantId.Value)))
+                .Where(BuildResourceGrantPredicate(resourceRequests))
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
 
@@ -736,12 +724,134 @@ public class PermissionService(
             result.Add(new BulkPermissionCheckResult(requests[index], decisions[resultIndexes[index]]));
         }
 
-        BulkPermissionCheckBatchCounter.Add(1);
-        BulkPermissionCheckRequestCounter.Add(requests.Count);
-        BulkPermissionCheckUniqueRequestCounter.Add(distinctRequests.Count);
-        BulkPermissionCheckDuration.Record(Stopwatch.GetElapsedTime(startedAt).TotalMilliseconds);
+        if (recordMetrics)
+        {
+            BulkPermissionCheckBatchCounter.Add(1);
+            BulkPermissionCheckRequestCounter.Add(requests.Count);
+            BulkPermissionCheckUniqueRequestCounter.Add(distinctRequests.Count);
+            BulkPermissionCheckDuration.Record(Stopwatch.GetElapsedTime(startedAt).TotalMilliseconds);
+        }
 
         return result;
+    }
+
+    private async Task<bool> CheckPermissionAsync(
+        Guid? userId,
+        Guid? tenantId,
+        PermissionType permission,
+        string? contentTypeName = null,
+        Guid? resourceId = null,
+        string? resourceTypeName = null)
+    {
+        // The bulk evaluator is the single source of truth for allow/deny precedence.
+        // Guid.Empty represents a user-less check here; user grants are excluded by
+        // TenantGrantApplies and ContentTypeGrantApplies for that sentinel.
+        var request = new BulkPermissionCheckRequest(
+            userId ?? Guid.Empty,
+            tenantId,
+            permission,
+            contentTypeName,
+            resourceId,
+            resourceTypeName);
+        var result = await EvaluateBulkPermissionCheckBatchAsync([request], CancellationToken.None, recordMetrics: false)
+            .ConfigureAwait(false);
+
+        return result[0].IsGranted;
+    }
+
+    private static Expression<Func<TGrant, bool>> BuildPermissionGrantScopePredicate<TGrant>(
+        IReadOnlyList<BulkPermissionCheckRequest> requests)
+    {
+        var grant = Expression.Parameter(typeof(TGrant), "grant");
+        var userId = Expression.Property(grant, nameof(WithPermissions.UserId));
+        var tenantId = Expression.Property(grant, nameof(WithPermissions.TenantId));
+        Expression? predicate = null;
+
+        foreach (var request in requests.Distinct())
+        {
+            var applicableGrant = BuildPermissionGrantScopeExpression(userId, tenantId, request);
+
+            predicate = predicate is null ? applicableGrant : Expression.OrElse(predicate, applicableGrant);
+        }
+
+        return Expression.Lambda<Func<TGrant, bool>>(predicate ?? Expression.Constant(false), grant);
+    }
+
+    private static Expression<Func<ContentTypePermission, bool>> BuildContentTypeGrantPredicate(
+        IReadOnlyList<BulkPermissionCheckRequest> requests)
+    {
+        var grant = Expression.Parameter(typeof(ContentTypePermission), "grant");
+        var userId = Expression.Property(grant, nameof(WithPermissions.UserId));
+        var tenantId = Expression.Property(grant, nameof(WithPermissions.TenantId));
+        var contentTypeName = Expression.Property(grant, nameof(ContentTypePermission.ContentTypeName));
+        Expression? predicate = null;
+
+        foreach (var request in requests
+                     .Where(request => !string.IsNullOrWhiteSpace(request.ContentTypeName))
+                     .Distinct())
+        {
+            var sameContentType = Expression.Equal(
+                contentTypeName,
+                Expression.Constant(request.ContentTypeName, typeof(string)));
+            var applicableScope = BuildPermissionGrantScopeExpression(userId, tenantId, request);
+            var applicableGrant = Expression.AndAlso(sameContentType, applicableScope);
+            predicate = predicate is null ? applicableGrant : Expression.OrElse(predicate, applicableGrant);
+        }
+
+        return Expression.Lambda<Func<ContentTypePermission, bool>>(predicate ?? Expression.Constant(false), grant);
+    }
+
+    private static Expression BuildPermissionGrantScopeExpression(
+        Expression userId,
+        Expression tenantId,
+        BulkPermissionCheckRequest request)
+    {
+        var userIsDefault = Expression.Equal(userId, Expression.Constant(null, typeof(Guid?)));
+        var tenantIsGlobal = Expression.Equal(tenantId, Expression.Constant(null, typeof(Guid?)));
+        var globalDefault = Expression.AndAlso(userIsDefault, tenantIsGlobal);
+
+        var requestedTenant = Expression.Equal(
+            tenantId,
+            Expression.Constant(request.TenantId, typeof(Guid?)));
+        var requestedUser = Expression.OrElse(
+            userIsDefault,
+            Expression.Equal(userId, Expression.Constant((Guid?)request.UserId, typeof(Guid?))));
+        var scopedGrant = Expression.AndAlso(requestedTenant, requestedUser);
+
+        return Expression.OrElse(globalDefault, scopedGrant);
+    }
+
+    private static Expression<Func<GenericResourcePermission, bool>> BuildResourceGrantPredicate(
+        IReadOnlyList<BulkPermissionCheckRequest> requests)
+    {
+        var grant = Expression.Parameter(typeof(GenericResourcePermission), "grant");
+        var userId = Expression.Property(grant, nameof(WithPermissions.UserId));
+        var tenantId = Expression.Property(grant, nameof(WithPermissions.TenantId));
+        var resourceId = Expression.Property(grant, nameof(ResourcePermission<EntityBase>.ResourceId));
+        var resourceType = Expression.Property(grant, nameof(ResourcePermission<EntityBase>.ResourceType));
+        Expression? predicate = null;
+
+        foreach (var request in requests.Distinct())
+        {
+            if (!request.ResourceId.HasValue)
+            {
+                continue;
+            }
+
+            var matchesRequest = Expression.AndAlso(
+                Expression.Equal(userId, Expression.Constant((Guid?)request.UserId, typeof(Guid?))),
+                Expression.AndAlso(
+                    Expression.Equal(tenantId, Expression.Constant(request.TenantId, typeof(Guid?))),
+                    Expression.Equal(resourceId, Expression.Constant(request.ResourceId.Value))));
+            var exactResourceType = request.ResourceTypeName is null
+                ? matchesRequest
+                : Expression.AndAlso(
+                    matchesRequest,
+                    Expression.Equal(resourceType, Expression.Constant(request.ResourceTypeName, typeof(string))));
+            predicate = predicate is null ? exactResourceType : Expression.OrElse(predicate, exactResourceType);
+        }
+
+        return Expression.Lambda<Func<GenericResourcePermission, bool>>(predicate ?? Expression.Constant(false), grant);
     }
 
     private static bool EvaluateBulkPermissionDecision(
@@ -784,10 +894,12 @@ public class PermissionService(
             foreach (var grant in resourceGrants)
             {
                 if (!grant.IsEffective() ||
+                    request.UserId == Guid.Empty ||
                     grant.UserId != request.UserId ||
                     grant.TenantId != request.TenantId ||
                     grant.ResourceId != request.ResourceId.Value ||
-                    !string.Equals(grant.ResourceType, request.ResourceTypeName, StringComparison.Ordinal))
+                    (request.ResourceTypeName is not null &&
+                     !string.Equals(grant.ResourceType, request.ResourceTypeName, StringComparison.Ordinal)))
                 {
                     continue;
                 }
@@ -801,11 +913,13 @@ public class PermissionService(
 
     private static bool TenantGrantApplies(TenantPermission grant, BulkPermissionCheckRequest request)
         => (grant.UserId == null && grant.TenantId == null) ||
-           (grant.TenantId == request.TenantId && (grant.UserId == null || grant.UserId == request.UserId));
+           (grant.TenantId == request.TenantId &&
+            (grant.UserId == null || (request.UserId != Guid.Empty && grant.UserId == request.UserId)));
 
     private static bool ContentTypeGrantApplies(ContentTypePermission grant, BulkPermissionCheckRequest request)
         => (grant.UserId == null && grant.TenantId == null) ||
-           (grant.TenantId == request.TenantId && (grant.UserId == null || grant.UserId == request.UserId));
+           (grant.TenantId == request.TenantId &&
+            (grant.UserId == null || (request.UserId != Guid.Empty && grant.UserId == request.UserId)));
 
     private static void ValidateBulkPermissionCheckRequest(BulkPermissionCheckRequest request)
     {

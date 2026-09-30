@@ -72,7 +72,9 @@ public static class OpenTelemetryExtensions
                 metrics
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
-                    .AddMeter("GameGuild.API.RateLimiting");
+                    .AddMeter(
+                        "GameGuild.API.RateLimiting",
+                        "GameGuild.Identity.Authentication.PermissionBulkCheck");
 
                 if (options.ConsoleExporterEnabled)
                 {
