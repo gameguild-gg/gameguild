@@ -20,7 +20,9 @@ public static class ProblemDetailsOptionsBuilder
     /// <param name="configuration">The configuration to bind from</param>
     /// <param name="sectionName">The configuration section name</param>
     /// <returns>Configured problem details options</returns>
-    public static SharedKernelProblemDetailsOptions Create(IConfiguration configuration, string sectionName = "ProblemDetails")
+    public static SharedKernelProblemDetailsOptions Create(
+        IConfiguration configuration,
+        string sectionName = SharedKernelProblemDetailsOptions.SectionName)
     {
         ArgumentNullException.ThrowIfNull(configuration);
 
@@ -41,9 +43,7 @@ public static class ProblemDetailsOptionsBuilder
     public static void Validate(SharedKernelProblemDetailsOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
-
-        // No DefaultTitle property exists in SharedKernelProblemDetailsOptions
-        // Remove validation that doesn't apply
+        options.Validate();
     }
 
     /// <summary>
@@ -64,7 +64,9 @@ public static class ProblemDetailsOptionsBuilder
     /// <param name="configuration">The configuration to bind from</param>
     /// <param name="sectionName">The configuration section name</param>
     /// <returns>Validated problem details options</returns>
-    public static SharedKernelProblemDetailsOptions Build(IConfiguration configuration, string sectionName = "ProblemDetails")
+    public static SharedKernelProblemDetailsOptions Build(
+        IConfiguration configuration,
+        string sectionName = SharedKernelProblemDetailsOptions.SectionName)
     {
         var options = Create(configuration, sectionName);
         Validate(options);
