@@ -12,7 +12,8 @@ Regras globais: [`08-implementation-sequence.md`](../08-implementation-sequence.
 
 - especificações temáticas `00` a `07` revisadas;
 - autorização explícita para qualquer `SCHEMA-GATE` desta parte;
-- ambientes descartáveis identificados para a recriação do baseline global.
+- cadeia de migrations, ambientes afetados e bancos com dados representativos
+  inventariados para validar criação limpa e upgrade populado.
 
 ## Fora do escopo
 
@@ -73,15 +74,16 @@ registradas antes de qualquer mudança estrutural.
   `AssessmentTestRunSubject` e submission oficial;
 - registrar que um test run pode possuir vários subjects sintéticos, cada um
   com execução própria, para suportar `PeerReview` multipersona;
-- aprovar a estratégia global de reset do baseline do `ApplicationDbContext`,
-  incluindo inventário da cadeia atual, modelo completo, ambientes afetados e
-  verificação de drift não relacionado;
+- aprovar a estratégia de evolução incremental do `ApplicationDbContext`,
+  incluindo inventário da cadeia atual, modelo completo, ambientes afetados,
+  teste de upgrade populado e verificação de drift não relacionado. Um eventual
+  squash fica fora desta entrega e exige operação coordenada própria;
 - inventariar separadamente todo artefato ativo criado por SQL manual e não
   representado pelo `IModel`: extensões, schemas, roles, grants, policies,
   funções, procedures, triggers, views, índices parciais ou concorrentes e
-  dados estruturais indispensáveis. O baseline limpo deve reinstalar e testar
-  esses artefatos na ordem correta; descartá-los sem decisão explícita elimina
-  comportamento ativo do banco;
+  dados estruturais indispensáveis. A migration incremental deve preservar e
+  testar esses artefatos na ordem correta; descartá-los sem decisão explícita
+  elimina comportamento ativo do banco;
 - inventariar as outboxes/inboxes existentes e definir como eventos acadêmicos
   duráveis deixam de usar o dispatch em processo de `SaveChangesAsync`;
 - aprovar a política de conclusão de content avaliado e sua autoridade de
@@ -127,16 +129,16 @@ registradas antes de qualquer mudança estrutural.
 ### Gate
 
 - os ADRs estão aprovados e não se contradizem;
-- a operação global de baseline está documentada e separada do delta funcional
-  de grading;
+- a política incremental de schema está documentada e separa o delta funcional
+  de grading de qualquer squash futuro do baseline;
 - a estratégia de outbox identifica explicitamente o mecanismo reutilizado ou
   justifica uma implementação específica de Assessments e garante receipt
   durável por `(EventId, ConsumerKey)`;
 - regrade está limitado à revisão, manifest, entrega e respostas originais;
 - entrega concreta possui `itemOrder`, formato canônico persistido e regra de
   derivação de todo dado privado de correção;
-- o reset global possui catálogo dos artefatos SQL fora do `IModel`, ordem de
-  instalação e testes de equivalência em banco vazio;
+- o gate possui catálogo dos artefatos SQL fora do `IModel`, ordem de instalação
+  e testes de equivalência em banco vazio e no upgrade populado;
 - ownership de content, assessment, grading, grupo e gradebook está explícito;
 - fórmula, conjunto elegível, ponto de quantização e validação dos pesos do
   gradebook estão fechados sem cálculo alternativo por consumer;
@@ -161,8 +163,9 @@ persistência.
 - fixar a substituição atômica de `AIGraded`, `AutoGraded` e
   `InstructorGraded` por `AIReview`, `AutomatedReview` e `InstructorReview`;
 - fixar `SelfReview = 16` e os valores canônicos `1`, `2`, `4` e `8`;
-- definir `ReviewMethods` como o contrato final que substituirá
-  `GradingMethods` no corte de `SEQ-03`;
+- definir `ReviewMethods` como o contrato autoritativo que substituirá o uso de
+  `GradingMethods` no corte de `SEQ-03`; a coluna anterior permanece inerte até
+  um gate posterior comprovar sua remoção segura;
 - centralizar validação, ordenação e descrição dos nove workflows;
 - criar `packages/features/grading-adapter-quiz` com o nome público
   `@game-guild/grading-adapter-quiz` e direção de dependência
@@ -316,10 +319,13 @@ persistência.
   persistido pela fronteira registrada do content, resolve
   `IAssessmentTypeAdapter` e não contém constante, branch, mensagem ou namespace
   específico de quiz;
-- encerrar o ownership do atual `Assessment.DefinitionPayload`: remover o
-  setter e o payload genéricos. Policies complexas sem coluna só podem possuir
-  fonte mutável tipada e com nome específico se o `SCHEMA-GATE` justificar sua
-  persistência; nenhum campo relacional pode ser repetido nesse payload;
+- encerrar o ownership do atual `Assessment.DefinitionPayload`: remover o setter
+  e todas as novas leituras/escritas do payload genérico. Suas colunas ficam
+  mapeadas como shadow properties inertes até a materialização das revisões e a
+  segurança de upgrade/rollback serem comprovadas. Policies complexas sem coluna
+  só podem possuir fonte mutável tipada e com nome específico se o
+  `SCHEMA-GATE` justificar sua persistência; nenhum campo relacional pode ser
+  repetido nesse payload;
 - definir o lifecycle e os contratos de `IReviewStageHandler`;
 - fechar o contrato da projeção de progresso de content avaliado, incluindo
   evento de origem, policy de conclusão, chave idempotente, estado projetado e
@@ -453,29 +459,32 @@ Persona simulada nunca substitui o ator autenticado no registro de auditoria.
   executável entre quiz e grading; consumidores podem compô-lo, mas não repetir
   sua lógica;
 - todo comando planejado possui ator, sujeito, permissão e auditoria definidos;
-- entidades EF, baseline e tabelas permanecem inalterados;
+- entidades EF, migrations, snapshot e tabelas permanecem inalterados;
 - o código integrado atual somente será substituído no corte atômico de
-  `SEQ-03`, sem fase de compatibilidade.
+  `SEQ-03`, sem segundo caminho autoritativo de runtime.
 
-## `SEQ-02`. Aprovar o schema do núcleo e o reset global
+## `SEQ-02`. Aprovar a evolução incremental do schema do núcleo
 
 Artefato de aprovação: [`01-schema-gate.md`](./01-schema-gate.md).
 
 ### Resultado
 
 Somente a persistência necessária para autoria, revisão imutável, test run e
-runtime comum é apresentada como delta funcional. Separadamente, o gate mostra
-o impacto operacional de substituir a cadeia global do `ApplicationDbContext`.
-Estruturas específicas de peer, AI, grupo e integrações ficam para os gates de
-suas fatias.
+runtime comum é apresentada como delta funcional. O gate também mostra o
+impacto global de aplicar uma nova migration no `ApplicationDbContext`, sem
+reescrever a cadeia histórica. Estruturas específicas de peer, AI, grupo e
+integrações ficam para os gates de suas fatias.
 
 ### Inventário mínimo do núcleo
 
 - lifecycle de `Assessment`, ponteiro para revisão ativa e
   `AssessmentDefinitionRevision` imutável;
-- remoção de `Assessment.DefinitionPayload`, `DefinitionSchemaVersion` e do
-  setter genérico. Se algum payload autoral tipado continuar necessário, o gate
-  apresenta nome, schema, owner e campos e prova que não replica colunas;
+- retirada de toda autoridade de runtime de `Assessment.DefinitionPayload` e
+  `DefinitionSchemaVersion`, incluindo o setter genérico. As colunas são
+  preservadas como shadow properties de compatibilidade até um gate posterior
+  provar materialização completa e remoção segura. Se algum payload autoral
+  tipado continuar necessário, o gate apresenta nome, schema, owner e campos e
+  prova que não replica colunas;
 - `ReviewMethods` com constraint das combinações válidas;
 - `AssessmentTestRun`, seus subjects sintéticos e seu estado isolado;
 - `GradingExecution` como owner de stages, rounds, resultado por item,
@@ -532,11 +541,12 @@ Não antecipar neste gate:
 - estado acadêmico de release, que pertence à submission oficial em `SEQ-10`;
 - tabelas criadas apenas para uma UI futura.
 
-### Operação global obrigatória
+### Verificação global obrigatória
 
 Além do delta de grading, apresentar:
 
-- quantidade e finalidade das migrations e snapshots removidos;
+- quantidade e finalidade das migrations e designers preservados, além do delta
+  esperado no snapshot corrente;
 - catálogo de todos os artefatos SQL ativos fora do `IModel`, com arquivo de
   origem, dependências, owner, ordem de instalação e decisão explícita de
   incorporar ou remover cada artefato. Nenhuma remoção pode ocorrer apenas por
@@ -545,9 +555,11 @@ Além do delta de grading, apresentar:
 - diff que prove ausência de alterações não aprovadas em outros módulos;
 - diff dos catálogos PostgreSQL relevantes antes e depois, incluindo funções,
   procedures, triggers, views, policies, grants, índices especiais e extensões;
-- procedimento de recriação dos bancos locais, de desenvolvimento e teste;
+- procedimento de criação limpa e de upgrade de bancos populados pela migration
+  anterior;
 - impacto no CI, design-time factory e startup com `MigrateAsync`;
-- rollback por Git do baseline, nunca rollback de dados;
+- estratégia de `Down` somente quando segura e plano de backup/restore quando a
+  reversão puder perder dados; Git não é rollback de banco;
 - responsáveis pela coordenação com os demais módulos da API.
 
 ### Gate manual obrigatório
@@ -561,7 +573,7 @@ Apresentar ao responsável pelo projeto:
 5. entidades que deixam de persistir `decimal`, `double`, `float` ou texto e
    passam a persistir unidades `integer` acadêmicas;
 6. transações e tokens de concorrência;
-7. baseline EF global que será reescrito;
+7. migration incremental e atualização do snapshot EF propostas;
 8. diff completo do modelo global;
 9. política que retira eventos acadêmicos do publisher em processo e os grava
    na outbox dentro da transação;
@@ -570,13 +582,13 @@ Apresentar ao responsável pelo projeto:
 
 Somente uma aprovação explícita libera `SEQ-03`.
 
-## `SEQ-03`. Criar o baseline global e a persistência do núcleo
+## `SEQ-03`. Aplicar a migration incremental e criar a persistência do núcleo
 
 ### Resultado
 
-Um banco vazio nasce do modelo global aprovado, que inclui o delta do núcleo de
-grading. Não há conversão de banco anterior nem preservação de dados de
-desenvolvimento.
+Um banco vazio nasce da cadeia completa e um banco populado pela migration
+anterior chega ao mesmo modelo global aprovado sem perda silenciosa de dados ou
+artefatos. O delta do núcleo de grading entra numa migration forward-only.
 
 ### Implementação
 
@@ -588,25 +600,26 @@ desenvolvimento.
   consumidores no mesmo corte;
 - aplicar no mesmo corte os nomes `ReviewMethods`, `AIReview`,
   `AutomatedReview`, `InstructorReview` e `SelfReview` em API, web e packages;
-- remover os nomes e contratos substituídos no mesmo corte;
-- substituir, como operação global coordenada, a cadeia histórica de
-  desenvolvimento por um único baseline de criação compatível com o startup
-  que usa `MigrateAsync`;
-- incorporar ao baseline limpo, ou a módulos de instalação chamados por ele,
-  todos os artefatos SQL ativos aprovados em `SEQ-02`, preservando dependências,
-  owners, grants e operações que exigem execução fora de transação. Não copiar
-  a cadeia histórica: materializar diretamente somente o estado final aprovado;
-- não criar migration incremental, migration de dados ou backfill;
-- recriar bancos locais, de desenvolvimento e de teste afetados;
+- remover do runtime os nomes e contratos substituídos no mesmo corte, sem usar
+  essa limpeza de código como autorização para apagar armazenamento histórico;
+- preservar a cadeia de migrations e adicionar uma migration incremental
+  compatível com o startup que usa `MigrateAsync`;
+- preservar todos os artefatos SQL ativos aprovados em `SEQ-02`, incluindo
+  dependências, owners, grants e operações que exigem execução fora de
+  transação; qualquer alteração aparece explicitamente no diff do gate;
+- executar conversões e backfills antes de tornar colunas obrigatórias ou
+  instalar novas constraints;
+- validar criação limpa e upgrade de banco populado pela migration anterior;
 - implementar repositories e transações do núcleo;
 - implementar `GradingExecution` com owner relacional e concorrência otimista;
 - persistir na execução os bytes canônicos validados de
-  `AssessmentResponseEnvelopeV1` e remover
-  `AssessmentSubmission.StructuredAnswerPayload`, DTOs e mappers substituídos,
-  sem manter cópia ou alias na submission;
-- remover `Assessment.DefinitionPayload`, `DefinitionSchemaVersion`,
-  `SetDefinition` e todos os consumidores genéricos; introduzir uma fonte
-  autoral tipada específica somente se ela constar no schema aprovado;
+  `AssessmentResponseEnvelopeV1`; retirar DTOs, mappers e novas escritas de
+  `AssessmentSubmission.StructuredAnswerPayload`, mantendo a coluna histórica
+  inerte até a prova de materialização e remoção segura;
+- remover `SetDefinition` e todos os consumidores genéricos de
+  `Assessment.DefinitionPayload`/`DefinitionSchemaVersion`, mantendo as colunas
+  como shadow properties sem autoridade. Introduzir uma fonte autoral tipada
+  específica somente se ela constar no schema aprovado;
 - implementar a persistência imutável de `AssessmentExecutionDeliveryV1` dentro
   da execução como JSON canônico textual, garantindo materialização única,
   `itemOrder` explícito e leitura byte a byte idêntica em resume e retry;
@@ -715,7 +728,8 @@ uma fonte canônica estável antes de qualquer revisão ser preparada ou publica
   existe outro campo mutável capaz de preservar o valor anterior;
 - não existe mais um segundo caminho de save autoritativo;
 - o draft salvo contém toda a fonte necessária para gerar uma revisão.
-- não existe `DefinitionPayload` genérico capaz de competir com o draft tipado.
+- não existe leitura ou escrita de `DefinitionPayload` capaz de competir com o
+  draft tipado; sua eventual coluna de compatibilidade permanece inerte.
 
 Referência: [`02`](../02-authoring-and-publication.md).
 
@@ -904,8 +918,9 @@ capability `OfficialSubmission` real.
 ## Definição de pronto da Parte 1
 
 - todos os gates de `SEQ-00` a `SEQ-06` estão satisfeitos;
-- todo impacto relacional foi aprovado antes da edição e o banco vazio nasce
-  do baseline global aprovado, sem migration incremental ou dado migrado;
+- todo impacto relacional foi aprovado antes da edição, o banco vazio nasce da
+  cadeia completa e o upgrade de um banco populado pela migration anterior
+  preserva dados e artefatos aprovados;
 - contratos C# e TypeScript passam em round-trip e usam o mesmo vocabulário;
 - `@game-guild/grading` não possui dependência de quiz, e seus contratos de
   resposta e resultado não expõem campos específicos desse domínio;
@@ -921,7 +936,7 @@ capability `OfficialSubmission` real.
 - regrade permanece na revisão, manifest, entrega e respostas originais da
   execução; não existe caminho que troque definição dentro de uma rodada
   posterior;
-- todos os scores, pesos e percentuais acadêmicos já existentes no baseline,
+- todos os scores, pesos e percentuais acadêmicos já existentes no schema,
   inclusive `Program.PassingScore`, usam inteiros escalados por `100` e não
   possuem consumidor fracionário ou textual remanescente;
 - `QuizEntry.points` usa unidades inteiras e não existe outra cópia autoral
@@ -938,9 +953,9 @@ capability `OfficialSubmission` real.
 ## Gate para a Parte 2
 
 A Parte 2 só pode começar depois de uma revisão explícita das evidências acima.
-Não basta concluir os PRs: baseline, contratos publicados, fixtures, matriz de
-autorização e relatórios de teste devem estar versionados e sem pendência
-classificada como bloqueadora.
+Não basta concluir os PRs: migrations, snapshot, contratos publicados,
+fixtures, matriz de autorização e relatórios de teste devem estar versionados e
+sem pendência classificada como bloqueadora.
 
 ## Acompanhamento
 
@@ -948,8 +963,8 @@ classificada como bloqueadora.
 | --- | --- | --- |
 | `SEQ-00` | concluído | ADRs aceitos e matriz de decisões consolidada |
 | `SEQ-01` | concluído | contratos C#/TypeScript, domínio genérico e adapter de quiz isolado |
-| `SEQ-02` | concluído | schema gate aprovado e baseline global definido sem migrations incrementais |
-| `SEQ-03` | concluído | baseline limpo, persistência imutável e ausência de drift do EF verificadas |
+| `SEQ-02` | concluído | schema gate aprovado para evolução incremental e preservação da cadeia histórica |
+| `SEQ-03` | concluído | migration incremental, backfills com dados representativos, persistência imutável e ausência de drift não aprovado verificados |
 | `SEQ-04` | concluído | autoria atômica coberta por testes de API e web |
 | `SEQ-05` | concluído | fronteira learner fechada e registry/capabilities versionados |
 | `SEQ-06` | concluído | prepare, publish/unpublish e falha fechada cobertos por testes |
