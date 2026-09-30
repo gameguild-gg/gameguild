@@ -6,6 +6,7 @@ using GameGuild.Identity.Tenants;
 using GameGuild.API.Core.ApiVersioning;
 using GameGuild.API.Core.CostAccounting;
 using GameGuild.Configuration.PresentationLayer;
+using GameGuild.Configuration.PresentationLayer.OpenAPI;
 using GameGuild.API.Core.Middleware;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -135,7 +136,10 @@ public static class PipelineExtensions
         app.MapEndpoints(null);
 
         // 23. Swagger JSON (Swashbuckle middleware generates /swagger/{version}/swagger.json)
-        if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
+        var openApiOptions = app.Services.GetService<OpenApiOptions>();
+        var openApiEnabled = openApiOptions?.EnableOpenApi ?? true;
+
+        if (openApiEnabled && (app.Environment.IsDevelopment() || app.Environment.IsStaging()))
         {
             app.UseSwagger();
         }
@@ -143,11 +147,14 @@ public static class PipelineExtensions
         // 24. Compatibility OpenAPI URL.
         // The native .NET OpenAPI document generator can over-recurse on a large modular API surface.
         // Keep /openapi/{document}.json stable by pointing callers to the Swashbuckle document.
-        app.MapGet("/openapi/{documentName}.json",
-            (string documentName) => Results.Redirect($"/swagger/{documentName}/swagger.json"));
+        if (openApiEnabled)
+        {
+            app.MapGet("/openapi/{documentName}.json",
+                (string documentName) => Results.Redirect($"/swagger/{documentName}/swagger.json"));
+        }
 
         // 25. Swagger UI (interactive API documentation at /documentation)
-        if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
+        if (openApiEnabled && (app.Environment.IsDevelopment() || app.Environment.IsStaging()))
         {
             app.UseSwaggerUI(options =>
             {

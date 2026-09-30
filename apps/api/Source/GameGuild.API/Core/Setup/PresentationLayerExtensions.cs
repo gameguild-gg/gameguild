@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using GameGuild.Configuration.PresentationLayer;
 using GameGuild.Configuration.PresentationLayer.GraphQL;
+using GameGuild.Configuration.PresentationLayer.OpenAPI;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace GameGuild.API.Setup;
 
@@ -91,6 +93,14 @@ public static class PresentationLayerExtensions
         var options = PresentationLayerOptionsBuilder.Create(configuration);
         configureOptions(options);
         options.Validate();
+
+        var openApiOptions = options.OpenApi ?? OpenApiOptionsBuilder.Create(configuration);
+        if (!options.EnableOpenApi)
+        {
+            openApiOptions.EnableOpenApi = false;
+        }
+        openApiOptions.Validate();
+        services.TryAddSingleton(openApiOptions);
 
         // Presentation layer services registration order matters for some services.
 
@@ -258,10 +268,10 @@ public static class PresentationLayerExtensions
         }
 
         // 20. OpenAPI/Swagger
-        if (options.EnableOpenApi)
+        if (options.EnableOpenApi && openApiOptions.EnableOpenApi)
         {
             stepStopwatch.Restart();
-            services.SetupOpenApi(configuration, options.OpenApi);
+            services.SetupOpenApi(configuration, openApiOptions);
             logger.LogInformation("OpenApi registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
         }
 

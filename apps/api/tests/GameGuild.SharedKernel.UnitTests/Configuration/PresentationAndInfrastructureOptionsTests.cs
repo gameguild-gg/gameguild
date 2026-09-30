@@ -752,6 +752,7 @@ public class OpenApiOptionsTests
         options.EnableOpenApi.Should().BeTrue();
         options.Title.Should().Be("GameGuild API");
         options.Version.Should().Be("v1");
+        options.MetadataVersion.Should().BeEmpty();
         options.Description.Should().BeEmpty();
         options.ContactName.Should().BeEmpty();
         options.ContactEmail.Should().BeEmpty();
@@ -759,6 +760,7 @@ public class OpenApiOptionsTests
         options.TermsOfServiceUrl.Should().BeEmpty();
         options.LicenseName.Should().BeEmpty();
         options.LicenseUrl.Should().BeEmpty();
+        options.Servers.Should().BeEmpty();
     }
 
     [Fact]
@@ -774,17 +776,48 @@ public class OpenApiOptionsTests
         {
             Title = "Test",
             Version = "v2",
+            MetadataVersion = "2026.09",
             Description = "desc",
             ContactName = "Name",
             ContactEmail = "email@test.com",
             ContactUrl = "https://test.com",
             TermsOfServiceUrl = "https://tos.com",
             LicenseName = "MIT",
-            LicenseUrl = "https://license.com"
+            LicenseUrl = "https://license.com",
+            Servers =
+            [
+                new OpenApiServerOptions { Url = "https://api.example.com" }
+            ]
         };
 
         options.Title.Should().Be("Test");
+        options.MetadataVersion.Should().Be("2026.09");
         options.LicenseName.Should().Be("MIT");
+        options.Servers.Should().ContainSingle();
+    }
+
+    [Theory]
+    [InlineData("ContactUrl", "javascript:alert(1)")]
+    [InlineData("TermsOfServiceUrl", "/terms")]
+    [InlineData("LicenseUrl", "ftp://example.com/license")]
+    public void Validate_RejectsNonHttpMetadataUrls(string propertyName, string value)
+    {
+        var options = new OpenApiOptions();
+        typeof(OpenApiOptions).GetProperty(propertyName)!.SetValue(options, value);
+
+        var act = () => options.Validate();
+
+        act.Should().Throw<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void Validate_RequiresLicenseNameWhenLicenseUrlIsConfigured()
+    {
+        var options = new OpenApiOptions { LicenseUrl = "https://example.com/license" };
+
+        var act = () => OpenApiOptionsBuilder.Validate(options);
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("*license name*");
     }
 }
 
