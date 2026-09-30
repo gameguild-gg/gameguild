@@ -175,9 +175,11 @@ public class DatabaseConnectivityProbeTests
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
+            return;
         }
         catch (SocketException) when (cancellationToken.IsCancellationRequested)
         {
+            return;
         }
     }
 

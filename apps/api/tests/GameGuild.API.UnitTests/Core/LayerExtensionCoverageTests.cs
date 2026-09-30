@@ -509,7 +509,7 @@ public sealed class LayerExtensionCoverageTests
     private sealed class NonGenericMarker : INonGenericMarker;
     private sealed class GenericMarker : IComparable<GenericMarker>
     {
-        public int CompareTo(GenericMarker? other) => 0;
+        public int CompareTo(GenericMarker? other) => other is null ? 1 : 0;
     }
     private sealed class LoadableHandlerValidator : IRequestHandler<string>, IValidator<string>;
 }
