@@ -51,6 +51,14 @@ public class LocalAuthServiceTests
         _enumerationProtectionMock.Setup(x => x.GetGenericErrorMessage(It.IsAny<string>())).Returns("Authentication failed");
         _enumerationProtectionMock.Setup(x => x.AddTimingProtectionDelayAsync(It.IsAny<bool>(), It.IsAny<DateTime>())).Returns(Task.CompletedTask);
         _refreshTokenHasherMock.Setup(x => x.HashToken(It.IsAny<string>())).Returns((string token) => $"hash-{token}");
+        _refreshTokenRepoMock.Setup(x => x.TryRevokeForRotationAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<DateTime>(),
+                It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
         _publisherMock.Setup(x => x.Publish(It.IsAny<UserSignedUpNotification>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         var tenantId = Guid.NewGuid();
         _senderMock
@@ -627,21 +635,42 @@ public class LocalAuthServiceTests
     [Fact]
     public async Task RefreshTokenAsync_RevokedToken_ThrowsUnauthorizedAccessException()
     {
+        var user = User.CreateWithPassword("replay@example.com", "replay", BCrypt.Net.BCrypt.HashPassword("Password1!"));
+        var originalTokenVersion = user.TokenVersion;
         var storedToken = new RefreshToken
         {
-            UserId = Guid.NewGuid(),
+            UserId = user.Id,
             Token = "hashed",
-            ExpiresAt = DateTime.UtcNow.AddDays(1),
+            ExpiresAt = SystemClock.UtcNow.AddDays(-1),
             IsRevoked = true,
             CreatedByIp = "127.0.0.1"
         };
 
         _refreshTokenHasherMock.Setup(x => x.HashToken(It.IsAny<string>())).Returns("hashed");
         _refreshTokenRepoMock.Setup(x => x.GetByTokenAsync("hashed", default)).ReturnsAsync(storedToken);
+        _refreshTokenRepoMock.Setup(x => x.RevokeAllForUserAsync(user.Id, "127.0.0.1", It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _sessionManagementServiceMock.Setup(x => x.TerminateAllUserSessionsAsync(
+                user.Id,
+                SessionTerminationReason.SecurityViolation,
+                null,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(2);
+        _userRepoMock.Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        _userRepoMock.Setup(x => x.UpdateAsync(user, It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _userRepoMock.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
         var request = new RefreshTokenRequest { RefreshToken = "token" };
 
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _sut.RefreshTokenAsync(request));
+
+        user.TokenVersion.Should().Be(originalTokenVersion + 1);
+        _refreshTokenRepoMock.Verify(x => x.RevokeAllForUserAsync(user.Id, "127.0.0.1", It.IsAny<CancellationToken>()), Times.Once);
+        _sessionManagementServiceMock.Verify(x => x.TerminateAllUserSessionsAsync(
+            user.Id, SessionTerminationReason.SecurityViolation, null, It.IsAny<CancellationToken>()), Times.Once);
+        _userRepoMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _jwtTokenServiceMock.Verify(x => x.GenerateRefreshTokenAsync(
+            It.IsAny<Guid>(), It.IsAny<DeviceInfo>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -820,6 +849,7 @@ public class LocalAuthServiceTests
         var userId = Guid.NewGuid();
         var storedToken = new RefreshToken
         {
+            Id = Guid.NewGuid(),
             UserId = userId,
             Token = "hashed",
             ExpiresAt = DateTime.UtcNow.AddDays(5),
@@ -836,14 +866,99 @@ public class LocalAuthServiceTests
             .ReturnsAsync("at");
         _jwtTokenServiceMock.Setup(x => x.GenerateRefreshTokenAsync(It.IsAny<Guid>(), It.IsAny<DeviceInfo>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("new-rt");
-        _refreshTokenRepoMock.Setup(x => x.UpdateAsync(It.IsAny<RefreshToken>(), default))
-            .ReturnsAsync(storedToken);
+        _refreshTokenRepoMock.Setup(x => x.TryRevokeForRotationAsync(
+                storedToken.Id,
+                "old-hash",
+                "new-hash",
+                It.IsAny<DateTime>(),
+                "127.0.0.1",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         await _sut.RefreshTokenAsync(new RefreshTokenRequest { RefreshToken = "token" });
 
-        storedToken.IsRevoked.Should().BeTrue();
-        storedToken.ReplacedByToken.Should().Be("new-hash");
-        storedToken.ReplacedByToken.Should().NotBe("new-rt");
+        _refreshTokenRepoMock.Verify(x => x.TryRevokeForRotationAsync(
+            storedToken.Id,
+            "old-hash",
+            "new-hash",
+            It.IsAny<DateTime>(),
+            "127.0.0.1",
+            It.IsAny<CancellationToken>()), Times.Once);
+        _refreshTokenRepoMock.Verify(x => x.UpdateAsync(It.IsAny<RefreshToken>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RefreshTokenAsync_ConcurrentRotationClaimLost_InvalidatesSessionsAfterPersistingReplacementSession()
+    {
+        var operationOrder = new List<string>();
+        var user = User.CreateWithPassword("race@example.com", "race", BCrypt.Net.BCrypt.HashPassword("Password1!"));
+        var originalTokenVersion = user.TokenVersion;
+        var sessionId = Guid.NewGuid();
+        var existingSession = new UserSession { Id = sessionId, UserId = user.Id, IsActive = true };
+        var storedToken = new RefreshToken
+        {
+            Id = Guid.NewGuid(),
+            UserId = user.Id,
+            Token = "current-hash",
+            ExpiresAt = SystemClock.UtcNow.AddDays(5),
+            IsRevoked = false,
+            CreatedAt = SystemClock.UtcNow.AddMinutes(-2)
+        };
+
+        _refreshTokenHasherMock.Setup(x => x.HashToken("racing-token")).Returns("current-hash");
+        _refreshTokenHasherMock.Setup(x => x.HashToken("replacement-token")).Returns("replacement-hash");
+        _refreshTokenRepoMock.Setup(x => x.GetByTokenAsync("current-hash", default)).ReturnsAsync(storedToken);
+        _userRepoMock.Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        _sessionManagementServiceMock.Setup(x => x.GetSessionByRefreshTokenAsync("current-hash", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingSession);
+        _sessionManagementServiceMock.Setup(x => x.RefreshSessionAsync(
+                sessionId,
+                "replacement-hash",
+                It.IsAny<DateTime>(),
+                It.IsAny<CancellationToken>()))
+            .Callback(() => operationOrder.Add("persist-session"))
+            .ReturnsAsync(true);
+        _refreshTokenRepoMock.Setup(x => x.TryRevokeForRotationAsync(
+                storedToken.Id,
+                "current-hash",
+                "replacement-hash",
+                It.IsAny<DateTime>(),
+                "127.0.0.1",
+                It.IsAny<CancellationToken>()))
+            .Callback(() => operationOrder.Add("claim-rotation"))
+            .ReturnsAsync(false);
+        _refreshTokenRepoMock.Setup(x => x.RevokeAllForUserAsync(user.Id, "127.0.0.1", It.IsAny<CancellationToken>()))
+            .Callback(() => operationOrder.Add("revoke-refresh-tokens"))
+            .Returns(Task.CompletedTask);
+        _sessionManagementServiceMock.Setup(x => x.TerminateAllUserSessionsAsync(
+                user.Id,
+                SessionTerminationReason.SecurityViolation,
+                null,
+                It.IsAny<CancellationToken>()))
+            .Callback(() => operationOrder.Add("terminate-sessions"))
+            .ReturnsAsync(2);
+        _userRepoMock.Setup(x => x.UpdateAsync(user, It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _userRepoMock.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .Callback(() => operationOrder.Add("save-token-version"))
+            .Returns(Task.CompletedTask);
+        _jwtTokenServiceMock.Setup(x => x.GenerateAccessTokenAsync(
+                user.Id, user.Email, It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(),
+                It.IsAny<DateTimeOffset>(), sessionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync("access-token");
+        _jwtTokenServiceMock.Setup(x => x.GenerateRefreshTokenAsync(
+                user.Id, It.IsAny<DeviceInfo>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("replacement-token");
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            _sut.RefreshTokenAsync(new RefreshTokenRequest { RefreshToken = "racing-token" }));
+
+        user.TokenVersion.Should().Be(originalTokenVersion + 1);
+        operationOrder.Should().Equal(
+            "persist-session",
+            "claim-rotation",
+            "revoke-refresh-tokens",
+            "terminate-sessions",
+            "save-token-version");
     }
 
     // ── RevokeRefreshTokenAsync ───────────────────────────────
