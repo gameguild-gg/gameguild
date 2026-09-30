@@ -151,6 +151,94 @@ public class AuthenticationOptionsTests
     }
 }
 
+public class ExternalProviderOptionsTests
+{
+    [Fact]
+    public void Validate_WithEnabledProviderAndSecureEndpointOverrides_DoesNotThrow()
+    {
+        var options = new ExternalProviderOptions
+        {
+            Providers = new Dictionary<string, OAuthProviderOptions>
+            {
+                ["github"] = new()
+                {
+                    Enabled = true,
+                    ClientId = "client-id",
+                    ClientSecret = "secret",
+                    Scopes = ["read:user", "user:email"],
+                    AuthorizationEndpoint = "https://github.example.test/oauth/authorize",
+                    TokenEndpoint = "https://github.example.test/oauth/token",
+                    UserInformationEndpoint = "https://github.example.test/api/user"
+                }
+            }
+        };
+
+        var act = () => options.Validate();
+
+        act.Should().NotThrow();
+    }
+
+    [Fact]
+    public void Validate_WithEnabledProviderMissingSecret_Throws()
+    {
+        var options = new ExternalProviderOptions
+        {
+            Providers = new Dictionary<string, OAuthProviderOptions>
+            {
+                ["google"] = new() { Enabled = true, ClientId = "client-id" }
+            }
+        };
+
+        var act = () => options.Validate();
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("*client secret is required*");
+    }
+
+    [Fact]
+    public void Validate_WithPartialEndpointOverrides_Throws()
+    {
+        var options = new ExternalProviderOptions
+        {
+            Providers = new Dictionary<string, OAuthProviderOptions>
+            {
+                ["google"] = new()
+                {
+                    Enabled = true,
+                    ClientId = "client-id",
+                    ClientSecret = "secret",
+                    AuthorizationEndpoint = "https://identity.example.test/authorize"
+                }
+            }
+        };
+
+        var act = () => options.Validate();
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("*endpoint overrides*");
+    }
+
+    [Fact]
+    public void Validate_WithMicrosoftScopesMissingRequiredOpenIdScopes_Throws()
+    {
+        var options = new ExternalProviderOptions
+        {
+            Providers = new Dictionary<string, OAuthProviderOptions>
+            {
+                ["microsoft"] = new()
+                {
+                    Enabled = true,
+                    ClientId = "client-id",
+                    ClientSecret = "secret",
+                    Scopes = ["User.Read"]
+                }
+            }
+        };
+
+        var act = () => options.Validate();
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("*openid, email, and profile*");
+    }
+}
+
 public class AuthorizationOptionsTests
 {
     [Fact]

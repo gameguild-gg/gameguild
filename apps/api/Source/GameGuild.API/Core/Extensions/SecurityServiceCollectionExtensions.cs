@@ -38,6 +38,9 @@ public static class SecurityServiceCollectionExtensions
             AuthenticationOptions.CreateDefault);
         options.Validate();
 
+        // The authentication module's OAuth service uses the same validated typed settings as the API schemes.
+        services.AddSingleton(options);
+
         if (!options.EnableAuthentication) return services;
 
         var isDevelopmentOrTesting = IsDevelopmentOrTesting(configuration);
@@ -67,7 +70,7 @@ public static class SecurityServiceCollectionExtensions
         });
 
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(resolvedJwtOptions.SecretKey))
-            { KeyId = "GameGuild-jwt-key" };
+        { KeyId = "GameGuild-jwt-key" };
 
         var authenticationBuilder = services.AddAuthentication(authOptions =>
                 {

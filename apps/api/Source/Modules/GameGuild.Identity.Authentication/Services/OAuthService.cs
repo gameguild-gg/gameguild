@@ -2,6 +2,8 @@ using System.Globalization;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using GameGuild.Configuration.PresentationLayer.Authentication;
+using AuthenticationOptions = GameGuild.Configuration.PresentationLayer.Authentication.AuthenticationOptions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -10,7 +12,12 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Service for OAuth authentication with various providers
 /// </summary>
-public class OAuthService(HttpClient httpClient, IConfiguration configuration, ILogger<OAuthService> logger) : IOAuthService
+public class OAuthService(
+    HttpClient httpClient,
+    IConfiguration configuration,
+    ILogger<OAuthService> logger,
+    AuthenticationOptions? authenticationOptions = null
+) : IOAuthService
 {
     // OAuth endpoint constants
     private const string GitHubAuthUrl = "https://github.com/login/oauth/authorize";
@@ -33,19 +40,25 @@ public class OAuthService(HttpClient httpClient, IConfiguration configuration, I
 
     private const string DiscordUserUrl = "https://discord.com/api/v10/users/@me";
 
+    private const string MicrosoftUserInfoUrl = "https://graph.microsoft.com/oidc/userinfo";
+
     private readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower, PropertyNameCaseInsensitive = true };
 
-    public Task<string> GetAuthorizationUrlAsync(string provider, string redirectUri, string state, string[ ]? scopes = null)
+    public Task<string> GetAuthorizationUrlAsync(string provider, string redirectUri, string state, string[]? scopes = null)
     {
-        var clientId = configuration[$"OAuth:{provider}:ClientId"];
+        EnsureProviderEnabled(provider);
+        var clientId = GetClientId(provider);
 
         if (string.IsNullOrEmpty(clientId)) { throw new InvalidOperationException($"OAuth client ID not configured for provider: {provider}"); }
 
+        var configuredScopes = ResolveScopes(provider, scopes);
+
         var url = provider.ToLower(CultureInfo.InvariantCulture) switch
         {
-            "github" => BuildGitHubAuthUrl(clientId, redirectUri, state, scopes),
-            "google" => BuildGoogleAuthUrl(clientId, redirectUri, state, scopes),
-            "discord" => BuildDiscordAuthUrl(clientId, redirectUri, state),
+            "github" => BuildGitHubAuthUrl(clientId, redirectUri, state, configuredScopes),
+            "google" => BuildGoogleAuthUrl(clientId, redirectUri, state, configuredScopes),
+            "discord" => BuildDiscordAuthUrl(clientId, redirectUri, state, configuredScopes),
+            "microsoft" => BuildMicrosoftAuthUrl(clientId, redirectUri, state, configuredScopes),
             _ => throw new NotSupportedException($"OAuth provider not supported: {provider}")
         };
 
@@ -54,6 +67,8 @@ public class OAuthService(HttpClient httpClient, IConfiguration configuration, I
 
     public async Task<OAuthUserProfile> HandleCallbackAsync(string provider, string code, string state, string redirectUri)
     {
+        EnsureProviderEnabled(provider);
+
         // Validate state parameter for CSRF protection
         if (string.IsNullOrEmpty(state))
         {
@@ -68,11 +83,14 @@ public class OAuthService(HttpClient httpClient, IConfiguration configuration, I
 
     public async Task<OAuthUserProfile> GetUserProfileAsync(string provider, string accessToken)
     {
+        EnsureProviderEnabled(provider);
+
         return provider.ToLower(CultureInfo.InvariantCulture) switch
         {
             "github" => await GetGitHubUserProfileAsync(accessToken).ConfigureAwait(false),
             "google" => await GetGoogleUserProfileAsync(accessToken).ConfigureAwait(false),
             "discord" => await GetDiscordUserProfileAsync(accessToken).ConfigureAwait(false),
+            "microsoft" => await GetMicrosoftUserProfileAsync(accessToken).ConfigureAwait(false),
             _ => throw new NotSupportedException($"Provider not supported: {provider}")
         };
     }
@@ -105,19 +123,102 @@ public class OAuthService(HttpClient httpClient, IConfiguration configuration, I
             "github" => await ExchangeGitHubCodeAsync(code, redirectUri).ConfigureAwait(false),
             "google" => await ExchangeGoogleCodeAsync(code, redirectUri).ConfigureAwait(false),
             "discord" => await ExchangeDiscordCodeAsync(code, redirectUri).ConfigureAwait(false),
+            "microsoft" => await ExchangeMicrosoftCodeAsync(code, redirectUri).ConfigureAwait(false),
             _ => throw new NotSupportedException($"Provider not supported: {provider}")
         };
+    }
+
+    private OAuthProviderOptions? FindProviderSettings(string provider)
+    {
+        var providers = authenticationOptions?.ExternalProviders?.Providers;
+        if (providers is null)
+        {
+            return null;
+        }
+
+        return providers.FirstOrDefault(entry => entry.Key.Equals(provider, StringComparison.OrdinalIgnoreCase)).Value;
+    }
+
+    private void EnsureProviderEnabled(string provider)
+    {
+        var settings = FindProviderSettings(provider);
+        if (settings is not null && !settings.Enabled)
+        {
+            throw new InvalidOperationException($"OAuth provider '{provider}' is disabled.");
+        }
+    }
+
+    private string? GetClientId(string provider) =>
+        FindProviderSettings(provider)?.ClientId ?? GetLegacyProviderSetting(provider, "ClientId");
+
+    private string? GetClientSecret(string provider) =>
+        FindProviderSettings(provider)?.ClientSecret ?? GetLegacyProviderSetting(provider, "ClientSecret");
+
+    private string? GetLegacyProviderSetting(string provider, string settingName)
+    {
+        var legacyKey = $"OAuth:{provider}:{settingName}";
+        var value = configuration[legacyKey];
+        if (value is not null)
+        {
+            return value;
+        }
+
+        var canonicalProvider = provider.ToLowerInvariant() switch
+        {
+            "discord" => "Discord",
+            "github" => "GitHub",
+            "google" => "Google",
+            "microsoft" => "Microsoft",
+            _ => provider
+        };
+
+        return configuration[$"OAuth:{canonicalProvider}:{settingName}"];
+    }
+
+    private string GetEndpoint(string provider, string endpointName, string fallback)
+    {
+        var settings = FindProviderSettings(provider);
+        return endpointName switch
+        {
+            "authorization" => settings?.AuthorizationEndpoint ?? fallback,
+            "token" => settings?.TokenEndpoint ?? fallback,
+            "user-information" => settings?.UserInformationEndpoint ?? fallback,
+            _ => throw new ArgumentOutOfRangeException(nameof(endpointName), endpointName, "Unsupported OAuth endpoint type.")
+        };
+    }
+
+    private string[]? ResolveScopes(string provider, string[]? requestedScopes)
+    {
+        if (requestedScopes is { Length: > 0 })
+        {
+            return requestedScopes;
+        }
+
+        var configuredScopes = FindProviderSettings(provider)?.Scopes;
+        return configuredScopes is { Count: > 0 } ? configuredScopes.ToArray() : null;
+    }
+
+    private async Task<HttpResponseMessage> SendBearerRequestAsync(string uri, string accessToken, bool isGitHub = false)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, new Uri(uri));
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        if (isGitHub)
+        {
+            request.Headers.UserAgent.ParseAdd("GameGuild");
+        }
+
+        return await httpClient.SendAsync(request).ConfigureAwait(false);
     }
 
     #endregion
 
     #region GitHub OAuth
 
-    private string BuildGitHubAuthUrl(string clientId, string redirectUri, string state, string[ ]? scopes)
+    private string BuildGitHubAuthUrl(string clientId, string redirectUri, string state, string[]? scopes)
     {
         var scopeString = scopes != null && scopes.Length > 0 ? string.Join(" ", scopes) : "read:user user:email";
 
-        return $"{GitHubAuthUrl}?client_id={Uri.EscapeDataString(clientId)}" +
+        return $"{GetEndpoint("github", "authorization", GitHubAuthUrl)}?client_id={Uri.EscapeDataString(clientId)}" +
                $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
                $"&state={Uri.EscapeDataString(state)}" +
                $"&scope={Uri.EscapeDataString(scopeString)}";
@@ -125,17 +226,19 @@ public class OAuthService(HttpClient httpClient, IConfiguration configuration, I
 
     private async Task<string> ExchangeGitHubCodeAsync(string code, string redirectUri)
     {
-        var clientId = configuration["OAuth:GitHub:ClientId"];
-        var clientSecret = configuration["OAuth:GitHub:ClientSecret"];
+        var clientId = GetClientId("github");
+        var clientSecret = GetClientSecret("github");
+        if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(clientSecret))
+        {
+            throw new InvalidOperationException("OAuth client credentials are not configured for provider: github");
+        }
 
         var tokenRequest = new { client_id = clientId, client_secret = clientSecret, code, redirect_uri = redirectUri };
 
         using var content = new StringContent(JsonSerializer.Serialize(tokenRequest), Encoding.UTF8, "application/json");
-
-        httpClient.DefaultRequestHeaders.Accept.Clear();
-        httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-        using var response = await httpClient.PostAsync(new Uri(GitHubTokenUrl), content).ConfigureAwait(false);
+        using var request = new HttpRequestMessage(HttpMethod.Post, new Uri(GetEndpoint("github", "token", GitHubTokenUrl))) { Content = content };
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        using var response = await httpClient.SendAsync(request).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
         var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -146,11 +249,7 @@ public class OAuthService(HttpClient httpClient, IConfiguration configuration, I
 
     private async Task<OAuthUserProfile> GetGitHubUserProfileAsync(string accessToken)
     {
-        httpClient.DefaultRequestHeaders.Clear();
-        httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
-        httpClient.DefaultRequestHeaders.Add("User-Agent", "GameGuild");
-
-        using var response = await httpClient.GetAsync(new Uri(GitHubUserUrl)).ConfigureAwait(false);
+        using var response = await SendBearerRequestAsync(GetEndpoint("github", "user-information", GitHubUserUrl), accessToken, isGitHub: true).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -181,15 +280,25 @@ public class OAuthService(HttpClient httpClient, IConfiguration configuration, I
     {
         try
         {
-            // Ensure auth header is set with the correct access token
-            httpClient.DefaultRequestHeaders.Remove("Authorization");
-            httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
+            var settings = FindProviderSettings("github");
+            var emailEndpoint = settings?.UserEmailEndpoint;
+            if (string.IsNullOrWhiteSpace(emailEndpoint))
+            {
+                // Never send a GitHub access token to api.github.com when a custom user endpoint is configured.
+                if (!string.IsNullOrWhiteSpace(settings?.UserInformationEndpoint))
+                {
+                    return null;
+                }
 
-            using var emailResponse = await httpClient.GetAsync(new Uri(GitHubEmailUrl)).ConfigureAwait(false);
+                emailEndpoint = GitHubEmailUrl;
+            }
+
+            // Ensure auth header is set with the correct access token
+            using var emailResponse = await SendBearerRequestAsync(emailEndpoint, accessToken, isGitHub: true).ConfigureAwait(false);
             emailResponse.EnsureSuccessStatusCode();
 
             var emailContent = await emailResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var emails = JsonSerializer.Deserialize<JsonElement[ ]>(emailContent);
+            var emails = JsonSerializer.Deserialize<JsonElement[]>(emailContent);
 
             if (emails != null)
             {
@@ -211,11 +320,11 @@ public class OAuthService(HttpClient httpClient, IConfiguration configuration, I
 
     #region Google OAuth
 
-    private string BuildGoogleAuthUrl(string clientId, string redirectUri, string state, string[ ]? scopes)
+    private string BuildGoogleAuthUrl(string clientId, string redirectUri, string state, string[]? scopes)
     {
         var scopeString = scopes != null && scopes.Length > 0 ? string.Join(" ", scopes) : "openid email profile";
 
-        return $"{GoogleAuthUrl}?client_id={Uri.EscapeDataString(clientId)}" +
+        return $"{GetEndpoint("google", "authorization", GoogleAuthUrl)}?client_id={Uri.EscapeDataString(clientId)}" +
                $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
                $"&state={Uri.EscapeDataString(state)}" +
                $"&scope={Uri.EscapeDataString(scopeString)}" +
@@ -225,13 +334,17 @@ public class OAuthService(HttpClient httpClient, IConfiguration configuration, I
 
     private async Task<string> ExchangeGoogleCodeAsync(string code, string redirectUri)
     {
-        var clientId = configuration["OAuth:Google:ClientId"];
-        var clientSecret = configuration["OAuth:Google:ClientSecret"];
+        var clientId = GetClientId("google");
+        var clientSecret = GetClientSecret("google");
+        if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(clientSecret))
+        {
+            throw new InvalidOperationException("OAuth client credentials are not configured for provider: google");
+        }
 
-        var tokenRequest = new Dictionary<string, string> { { "client_id", clientId! }, { "client_secret", clientSecret! }, { "code", code }, { "grant_type", "authorization_code" }, { "redirect_uri", redirectUri } };
+        var tokenRequest = new Dictionary<string, string> { { "client_id", clientId }, { "client_secret", clientSecret }, { "code", code }, { "grant_type", "authorization_code" }, { "redirect_uri", redirectUri } };
 
         using var content = new FormUrlEncodedContent(tokenRequest);
-        using var response = await httpClient.PostAsync(new Uri(GoogleTokenUrl), content).ConfigureAwait(false);
+        using var response = await httpClient.PostAsync(new Uri(GetEndpoint("google", "token", GoogleTokenUrl)), content).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
         var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -242,10 +355,7 @@ public class OAuthService(HttpClient httpClient, IConfiguration configuration, I
 
     private async Task<OAuthUserProfile> GetGoogleUserProfileAsync(string accessToken)
     {
-        httpClient.DefaultRequestHeaders.Clear();
-        httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
-
-        using var response = await httpClient.GetAsync(new Uri(GoogleUserUrl)).ConfigureAwait(false);
+        using var response = await SendBearerRequestAsync(GetEndpoint("google", "user-information", GoogleUserUrl), accessToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -270,19 +380,21 @@ public class OAuthService(HttpClient httpClient, IConfiguration configuration, I
 
     #region Discord OAuth
 
-    private string BuildDiscordAuthUrl(string clientId, string redirectUri, string state)
+    private string BuildDiscordAuthUrl(string clientId, string redirectUri, string state, string[]? scopes)
     {
-        return $"{DiscordAuthUrl}?client_id={Uri.EscapeDataString(clientId)}" +
+        var scopeString = scopes is { Length: > 0 } ? string.Join(" ", scopes) : "identify email";
+
+        return $"{GetEndpoint("discord", "authorization", DiscordAuthUrl)}?client_id={Uri.EscapeDataString(clientId)}" +
                $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
                $"&state={Uri.EscapeDataString(state)}" +
-               $"&scope={Uri.EscapeDataString("identify email")}" +
+               $"&scope={Uri.EscapeDataString(scopeString)}" +
                $"&response_type=code";
     }
 
     private async Task<string> ExchangeDiscordCodeAsync(string code, string redirectUri)
     {
-        var clientId = configuration["OAuth:Discord:ClientId"];
-        var clientSecret = configuration["OAuth:Discord:ClientSecret"];
+        var clientId = GetClientId("discord");
+        var clientSecret = GetClientSecret("discord");
 
         if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(clientSecret)) { throw new InvalidOperationException("Discord OAuth client ID or client secret not configured"); }
 
@@ -290,7 +402,7 @@ public class OAuthService(HttpClient httpClient, IConfiguration configuration, I
         var tokenRequest = new Dictionary<string, string> { { "client_id", clientId }, { "client_secret", clientSecret }, { "grant_type", "authorization_code" }, { "code", code }, { "redirect_uri", redirectUri } };
 
         using var content = new FormUrlEncodedContent(tokenRequest);
-        using var response = await httpClient.PostAsync(new Uri(DiscordTokenUrl), content).ConfigureAwait(false);
+        using var response = await httpClient.PostAsync(new Uri(GetEndpoint("discord", "token", DiscordTokenUrl)), content).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
         var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -301,10 +413,7 @@ public class OAuthService(HttpClient httpClient, IConfiguration configuration, I
 
     private async Task<OAuthUserProfile> GetDiscordUserProfileAsync(string accessToken)
     {
-        httpClient.DefaultRequestHeaders.Clear();
-        httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
-
-        using var response = await httpClient.GetAsync(new Uri(DiscordUserUrl)).ConfigureAwait(false);
+        using var response = await SendBearerRequestAsync(GetEndpoint("discord", "user-information", DiscordUserUrl), accessToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -331,6 +440,105 @@ public class OAuthService(HttpClient httpClient, IConfiguration configuration, I
             Name = !string.IsNullOrEmpty(user.GlobalName) ? user.GlobalName : user.Username,
             Username = user.Username,
             AvatarUrl = avatarUrl,
+            AccessToken = accessToken
+        };
+    }
+
+    #endregion
+
+    #region Microsoft OAuth
+
+    private string BuildMicrosoftAuthUrl(string clientId, string redirectUri, string state, string[]? scopes)
+    {
+        var settings = FindProviderSettings("microsoft");
+        var tenant = string.IsNullOrWhiteSpace(settings?.Tenant) ? "common" : settings.Tenant;
+        var endpoint = GetEndpoint(
+            "microsoft",
+            "authorization",
+            $"https://login.microsoftonline.com/{Uri.EscapeDataString(tenant)}/oauth2/v2.0/authorize");
+        var scopeTokens = scopes is { Length: > 0 }
+            ? scopes.Distinct(StringComparer.OrdinalIgnoreCase).ToList()
+            : [];
+        foreach (var requiredScope in new[] { "openid", "email", "profile" })
+        {
+            if (!scopeTokens.Contains(requiredScope, StringComparer.OrdinalIgnoreCase))
+            {
+                scopeTokens.Add(requiredScope);
+            }
+        }
+
+        var scopeString = string.Join(" ", scopeTokens);
+
+        return $"{endpoint}?client_id={Uri.EscapeDataString(clientId)}" +
+               $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
+               $"&response_type=code" +
+               $"&response_mode=query" +
+               $"&scope={Uri.EscapeDataString(scopeString)}" +
+               $"&state={Uri.EscapeDataString(state)}";
+    }
+
+    private async Task<string> ExchangeMicrosoftCodeAsync(string code, string redirectUri)
+    {
+        var clientId = GetClientId("microsoft");
+        var clientSecret = GetClientSecret("microsoft");
+        if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(clientSecret))
+        {
+            throw new InvalidOperationException("OAuth client credentials are not configured for provider: microsoft");
+        }
+
+        var settings = FindProviderSettings("microsoft");
+        var tenant = string.IsNullOrWhiteSpace(settings?.Tenant) ? "common" : settings.Tenant;
+        var defaultEndpoint = $"https://login.microsoftonline.com/{Uri.EscapeDataString(tenant)}/oauth2/v2.0/token";
+        var tokenRequest = new Dictionary<string, string>
+        {
+            ["client_id"] = clientId,
+            ["client_secret"] = clientSecret,
+            ["code"] = code,
+            ["grant_type"] = "authorization_code",
+            ["redirect_uri"] = redirectUri
+        };
+
+        using var content = new FormUrlEncodedContent(tokenRequest);
+        using var response = await httpClient.PostAsync(new Uri(GetEndpoint("microsoft", "token", defaultEndpoint)), content).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+
+        var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+        var tokenResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
+        return tokenResponse.GetProperty("access_token").GetString()
+            ?? throw new InvalidOperationException("Failed to get access token from Microsoft");
+    }
+
+    private async Task<OAuthUserProfile> GetMicrosoftUserProfileAsync(string accessToken)
+    {
+        using var response = await SendBearerRequestAsync(
+            GetEndpoint("microsoft", "user-information", MicrosoftUserInfoUrl), accessToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+        using var document = JsonDocument.Parse(content);
+        var user = document.RootElement;
+        var providerId = user.TryGetProperty("sub", out var subject) ? subject.GetString() : null;
+        if (string.IsNullOrWhiteSpace(providerId))
+        {
+            throw new InvalidOperationException("Microsoft user information did not include a subject identifier.");
+        }
+
+        static string? ReadString(JsonElement element, string propertyName) =>
+            element.TryGetProperty(propertyName, out var value) && value.ValueKind == JsonValueKind.String
+                ? value.GetString()
+                : null;
+
+        return new OAuthUserProfile
+        {
+            ProviderId = providerId,
+            Provider = "Microsoft",
+            Email = ReadString(user, "email"),
+            // Microsoft UserInfo does not attest email verification; do not infer it from an email claim.
+            EmailVerified = false,
+            Name = ReadString(user, "name"),
+            FirstName = ReadString(user, "given_name"),
+            LastName = ReadString(user, "family_name"),
+            AvatarUrl = ReadString(user, "picture"),
             AccessToken = accessToken
         };
     }

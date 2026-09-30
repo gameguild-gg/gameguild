@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GameGuild.Configuration.PresentationLayer.Authentication;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -23,7 +24,7 @@ public class OAuthServiceTests
         _httpClient = new HttpClient(_httpMessageHandlerMock.Object);
         _configurationMock = new Mock<IConfiguration>();
         _loggerMock = new Mock<ILogger<OAuthService>>();
-        
+
         _oauthService = new OAuthService(_httpClient, _configurationMock.Object, _loggerMock.Object);
     }
 
@@ -106,6 +107,174 @@ public class OAuthServiceTests
 
         // Assert
         url.Should().Contain("scope=");
+    }
+
+    [Fact]
+    public async Task GetAuthorizationUrlAsync_UsesTypedProviderCredentialsScopesAndEndpoint()
+    {
+        var options = new AuthenticationOptions
+        {
+            ExternalProviders = new ExternalProviderOptions
+            {
+                Providers = new Dictionary<string, OAuthProviderOptions>
+                {
+                    ["github"] = new()
+                    {
+                        Enabled = true,
+                        ClientId = "typed-client",
+                        ClientSecret = "typed-secret",
+                        Scopes = ["read:user"],
+                        AuthorizationEndpoint = "https://github.example.test/oauth/authorize",
+                        TokenEndpoint = "https://github.example.test/oauth/token",
+                        UserInformationEndpoint = "https://github.example.test/api/user"
+                    }
+                }
+            }
+        };
+        var service = new OAuthService(_httpClient, _configurationMock.Object, _loggerMock.Object, options);
+
+        var url = await service.GetAuthorizationUrlAsync("GitHub", "https://example.com/callback", "csrf-state");
+
+        url.Should().StartWith("https://github.example.test/oauth/authorize?");
+        url.Should().Contain("client_id=typed-client");
+        url.Should().Contain("scope=read%3Auser");
+    }
+
+    [Fact]
+    public async Task GetAuthorizationUrlAsync_RejectsExplicitlyDisabledProviderEvenWhenLegacyCredentialsExist()
+    {
+        _configurationMock.Setup(x => x["OAuth:github:ClientId"]).Returns("legacy-client");
+        var options = new AuthenticationOptions
+        {
+            ExternalProviders = new ExternalProviderOptions
+            {
+                Providers = new Dictionary<string, OAuthProviderOptions>
+                {
+                    ["github"] = new() { Enabled = false }
+                }
+            }
+        };
+        var service = new OAuthService(_httpClient, _configurationMock.Object, _loggerMock.Object, options);
+
+        var act = () => service.GetAuthorizationUrlAsync("github", "https://example.com/callback", "state");
+
+        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*disabled*");
+    }
+
+    [Fact]
+    public async Task GetAuthorizationUrlAsync_WithMicrosoft_UsesTenantAndRequiredDefaults()
+    {
+        var options = new AuthenticationOptions
+        {
+            ExternalProviders = new ExternalProviderOptions
+            {
+                Providers = new Dictionary<string, OAuthProviderOptions>
+                {
+                    ["microsoft"] = new()
+                    {
+                        Enabled = true,
+                        ClientId = "microsoft-client",
+                        ClientSecret = "microsoft-secret",
+                        Tenant = "organizations"
+                    }
+                }
+            }
+        };
+        var service = new OAuthService(_httpClient, _configurationMock.Object, _loggerMock.Object, options);
+
+        var url = await service.GetAuthorizationUrlAsync(
+            "microsoft", "https://example.com/callback", "state", ["User.Read"]);
+
+        url.Should().StartWith("https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize?");
+        url.Should().Contain("response_type=code");
+        url.Should().Contain("scope=User.Read%20openid%20email%20profile");
+    }
+
+    [Fact]
+    public async Task GetUserProfileAsync_WithCustomGitHubEndpoint_DoesNotSendTokenToPublicGitHubEmailEndpoint()
+    {
+        HttpRequestMessage? capturedRequest = null;
+        _httpMessageHandlerMock.Protected()
+            .Setup<Task<HttpResponseMessage>>(
+                "SendAsync",
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>())
+            .Callback<HttpRequestMessage, CancellationToken>((request, _) => capturedRequest = request)
+            .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("{\"id\":123,\"login\":\"test-user\",\"name\":\"Test User\"}")
+            });
+        var options = new AuthenticationOptions
+        {
+            ExternalProviders = new ExternalProviderOptions
+            {
+                Providers = new Dictionary<string, OAuthProviderOptions>
+                {
+                    ["github"] = new()
+                    {
+                        Enabled = true,
+                        ClientId = "typed-client",
+                        ClientSecret = "typed-secret",
+                        AuthorizationEndpoint = "https://github.example.test/oauth/authorize",
+                        TokenEndpoint = "https://github.example.test/oauth/token",
+                        UserInformationEndpoint = "https://github.example.test/api/user"
+                    }
+                }
+            }
+        };
+        var service = new OAuthService(_httpClient, _configurationMock.Object, _loggerMock.Object, options);
+
+        var profile = await service.GetUserProfileAsync("github", "access-token");
+
+        profile.Email.Should().BeNullOrEmpty();
+        capturedRequest!.RequestUri!.Host.Should().Be("github.example.test");
+        _httpMessageHandlerMock.Protected().Verify(
+            "SendAsync", Times.Once(), ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task HandleCallbackAsync_WithMicrosoft_ExchangesCodeAndDoesNotAssumeEmailIsVerified()
+    {
+        _httpMessageHandlerMock.Protected()
+            .SetupSequence<Task<HttpResponseMessage>>(
+                "SendAsync",
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>())
+            .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("{\"access_token\":\"access-token\"}")
+            })
+            .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("{\"sub\":\"subject-123\",\"email\":\"user@example.com\",\"name\":\"Example User\",\"given_name\":\"Example\",\"family_name\":\"User\"}")
+            });
+        var options = new AuthenticationOptions
+        {
+            ExternalProviders = new ExternalProviderOptions
+            {
+                Providers = new Dictionary<string, OAuthProviderOptions>
+                {
+                    ["microsoft"] = new()
+                    {
+                        Enabled = true,
+                        ClientId = "microsoft-client",
+                        ClientSecret = "microsoft-secret",
+                        Tenant = "organizations"
+                    }
+                }
+            }
+        };
+        var service = new OAuthService(_httpClient, _configurationMock.Object, _loggerMock.Object, options);
+
+        var profile = await service.HandleCallbackAsync(
+            "microsoft", "authorization-code", "csrf-state", "https://example.com/callback");
+
+        profile.ProviderId.Should().Be("subject-123");
+        profile.Email.Should().Be("user@example.com");
+        profile.EmailVerified.Should().BeFalse();
+        profile.Name.Should().Be("Example User");
+        profile.AccessToken.Should().Be("access-token");
+        _httpClient.DefaultRequestHeaders.Authorization.Should().BeNull();
     }
 
     [Fact]

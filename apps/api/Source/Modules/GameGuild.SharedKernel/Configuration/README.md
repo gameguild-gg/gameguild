@@ -41,6 +41,30 @@ Base classes for configuration options:
 - `ApiVersioningOptions` - API versioning configuration
 - `MemoryCachingOptions` - Memory caching configuration
 
+External OAuth providers are configured under `Authentication:ExternalProviders:Providers`. Provider credentials are read from the application's configured secret store; the values below are placeholders:
+
+```json
+{
+  "Authentication": {
+    "ExternalProviders": {
+      "Providers": {
+        "microsoft": {
+          "Enabled": true,
+          "ClientId": "<client-id>",
+          "ClientSecret": "<secret-store-reference>",
+          "Tenant": "organizations",
+          "Scopes": [ "openid", "email", "profile" ]
+        }
+      }
+    }
+  }
+}
+```
+
+Supported provider keys are `discord`, `github`, `google`, and `microsoft`. Disabled providers are not used; enabled providers require a client ID and secret. Empty scopes use provider defaults. Endpoint overrides are optional, but if used, authorization, token, and user-information endpoints must all be absolute HTTPS URLs. Existing `OAuth:<Provider>:ClientId` and `OAuth:<Provider>:ClientSecret` configuration remains a fallback for compatibility.
+
+When using a custom GitHub API endpoint and the profile does not expose an email, set `UserEmailEndpoint` to that deployment's email-list endpoint. Without it, GameGuild skips the extra email lookup so the access token is never sent to public GitHub on behalf of a custom endpoint.
+
 ## Infrastructure Configurations
 
 ### Available Option Types
