@@ -3,6 +3,7 @@ using System;
 using GameGuild.API.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GameGuild.API.Database.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260928024931_AddUserPasswordHistory")]
+    partial class AddUserPasswordHistory
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -15111,6 +15114,9 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("UserId");
 
+                    b.HasIndex("TenantId", "UserId")
+                        .IsUnique();
+
                     b.HasIndex(new[] { "ExpiresAt" }, "IX_TenantPermissions_ExpiresAt");
 
                     b.HasIndex(new[] { "TenantId" }, "IX_TenantPermissions_TenantId");
@@ -15118,8 +15124,7 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex(new[] { "UserId" }, "IX_TenantPermissions_UserId");
 
                     b.HasIndex(new[] { "UserId", "TenantId" }, "IX_TenantPermissions_User_Tenant")
-                        .IsUnique()
-                        .HasFilter("\"DeletedAt\" IS NULL");
+                        .IsUnique();
 
                     b.ToTable("TenantPermissions");
                 });
@@ -24918,338 +24923,6 @@ namespace GameGuild.API.Database.Migrations
                     b.ToTable("usage_retention_policies", "gameguild.resources");
                 });
 
-            modelBuilder.Entity("GameGuild.Social.Blog.BlogAiConversation", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("AuthorId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("BlogPostId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTimeOffset>("LastMessageAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AuthorId", "LastMessageAt");
-
-                    b.HasIndex("TenantId", "BlogPostId", "AuthorId")
-                        .IsUnique();
-
-                    b.ToTable("social_blog_ai_conversations", (string)null);
-                });
-
-            modelBuilder.Entity("GameGuild.Social.Blog.BlogAiMessage", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("ConversationId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasMaxLength(16)
-                        .HasColumnType("character varying(16)");
-
-                    b.Property<Guid?>("RunId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RunId");
-
-                    b.HasIndex("ConversationId", "CreatedAt");
-
-                    b.ToTable("social_blog_ai_messages", (string)null);
-                });
-
-            modelBuilder.Entity("GameGuild.Social.Blog.BlogAiProposal", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("BasePostRevision")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("BlogPostId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("Kind")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("OriginalContent")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTimeOffset>("ProposedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("ProposedContent")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTimeOffset?>("ResolvedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("ResolvedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("RunId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RunId")
-                        .IsUnique();
-
-                    b.HasIndex("BlogPostId", "Status");
-
-                    b.ToTable("social_blog_ai_proposals", (string)null);
-                });
-
-            modelBuilder.Entity("GameGuild.Social.Blog.BlogAiRun", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("ActorId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("BasePostRevision")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("BlogPostId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset?>("CompletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("ConversationId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("ErrorCode")
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
-
-                    b.Property<string>("ErrorMessage")
-                        .HasColumnType("text");
-
-                    b.Property<string>("IdempotencyKey")
-                        .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
-
-                    b.Property<int>("InputTokens")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Instruction")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<long>("MaximumEstimatedCost")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("MaximumInputTokens")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("MaximumOutputTokens")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Model")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<int>("OutputTokens")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("ProposalKind")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Provider")
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<long>("ReleasedAmount")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("ResponseText")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Selection")
-                        .HasColumnType("text");
-
-                    b.Property<long>("SettledCost")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTimeOffset?>("StartedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Status");
-
-                    b.HasIndex("BlogPostId", "ActorId", "CreatedAt");
-
-                    b.HasIndex("TenantId", "ActorId", "IdempotencyKey")
-                        .IsUnique();
-
-                    b.ToTable("social_blog_ai_runs", (string)null);
-                });
-
-            modelBuilder.Entity("GameGuild.Social.Blog.BlogAiStreamEvent", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Delta")
-                        .HasColumnType("text");
-
-                    b.Property<string>("PayloadJson")
-                        .HasColumnType("jsonb");
-
-                    b.Property<Guid>("RunId")
-                        .HasColumnType("uuid");
-
-                    b.Property<long>("Sequence")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RunId", "Sequence")
-                        .IsUnique();
-
-                    b.ToTable("social_blog_ai_stream_events", (string)null);
-                });
-
-            modelBuilder.Entity("GameGuild.Social.Blog.BlogComment", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("AuthorUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("BlogPostId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("DeletedByUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("ParentCommentId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ParentCommentId");
-
-                    b.HasIndex("BlogPostId", "CreatedAt");
-
-                    b.ToTable("social_blog_comments", (string)null);
-                });
-
             modelBuilder.Entity("GameGuild.Social.Blog.BlogPost", b =>
                 {
                     b.Property<Guid>("Id")
@@ -25259,9 +24932,8 @@ namespace GameGuild.API.Database.Migrations
                     b.Property<bool>("AllowComments")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("CanonicalUrlOverride")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                    b.Property<Guid>("AuthorId")
+                        .HasColumnType("uuid");
 
                     b.Property<int>("CommentsCount")
                         .HasColumnType("integer");
@@ -25269,6 +24941,10 @@ namespace GameGuild.API.Database.Migrations
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<string>("CoverImageUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -25280,36 +24956,16 @@ namespace GameGuild.API.Database.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
-                    b.Property<string>("Format")
-                        .IsRequired()
-                        .HasMaxLength(40)
-                        .HasColumnType("character varying(40)");
+                    b.Property<bool>("IsFeatured")
+                        .HasColumnType("boolean");
 
-                    b.Property<string>("JsonBody")
-                        .HasColumnType("jsonb");
-
-                    b.Property<string>("MetaDescription")
-                        .HasMaxLength(300)
-                        .HasColumnType("character varying(300)");
-
-                    b.Property<string>("MetaTitle")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<string>("OgImageUrl")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<Guid>("PrimaryAuthorId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("LikesCount")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime?>("PublishedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("ReadTimeMinutes")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Revision")
                         .HasColumnType("integer");
 
                     b.Property<string>("Slug")
@@ -25322,14 +24978,6 @@ namespace GameGuild.API.Database.Migrations
                         .HasMaxLength(40)
                         .HasColumnType("character varying(40)");
 
-                    b.Property<string>("StructuredDataOverride")
-                        .HasColumnType("text");
-
-                    b.Property<string>("TagsJson")
-                        .IsRequired()
-                        .HasColumnType("jsonb")
-                        .HasColumnName("Tags");
-
                     b.Property<Guid?>("TenantId")
                         .HasColumnType("uuid");
 
@@ -25337,11 +24985,6 @@ namespace GameGuild.API.Database.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
-
-                    b.Property<string>("TwitterCard")
-                        .IsRequired()
-                        .HasMaxLength(40)
-                        .HasColumnType("character varying(40)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -25355,104 +24998,16 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PrimaryAuthorId", "Slug")
+                    b.HasIndex("AuthorId");
+
+                    b.HasIndex("IsFeatured");
+
+                    b.HasIndex("Slug")
                         .IsUnique();
 
-                    b.HasIndex("Status", "PublishedAt");
-
-                    b.HasIndex("PrimaryAuthorId", "Status", "PublishedAt");
+                    b.HasIndex("Status");
 
                     b.ToTable("social_blog_posts", (string)null);
-                });
-
-            modelBuilder.Entity("GameGuild.Social.Blog.BlogPostAuthor", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("AddedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("AddedByUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("BlogPostId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("BlogPostId", "UserId")
-                        .IsUnique();
-
-                    b.ToTable("social_blog_post_authors", (string)null);
-                });
-
-            modelBuilder.Entity("GameGuild.Social.Blog.BlogSlugHistory", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("BlogPostId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("ChangedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("PreviousPrimaryAuthorId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("PreviousSlug")
-                        .IsRequired()
-                        .HasMaxLength(220)
-                        .HasColumnType("character varying(220)");
-
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BlogPostId");
-
-                    b.HasIndex(new[] { "PreviousPrimaryAuthorId", "PreviousSlug" }, "IX_social_blog_slug_history_PreviousPrimaryAuthorId_PreviousSlug")
-                        .IsUnique();
-
-                    b.ToTable("social_blog_slug_history", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Social.Feed.FeedItem", b =>

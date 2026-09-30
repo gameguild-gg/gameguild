@@ -82,6 +82,14 @@ public class User : EntityBase, IUser
     public string? PasswordHash { get; set; }
 
     /// <summary>
+    ///     Newline-delimited BCrypt hashes of the five most recently replaced passwords.
+    ///     The hashes are never included in serialized user data.
+    /// </summary>
+    [JsonIgnore]
+    [MaxLength(2600)]
+    public string? PasswordHistoryHashes { get; private set; }
+
+    /// <summary>
     ///     Whether the user's email has been verified
     /// </summary>
     public bool IsEmailVerified { get; set; }
@@ -178,10 +186,35 @@ public class User : EntityBase, IUser
     public void SetPasswordHash(string passwordHash)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(passwordHash);
+
+        var recentHashes = new List<string>(capacity: 5);
+        if (!string.IsNullOrWhiteSpace(PasswordHash))
+        {
+            recentHashes.Add(PasswordHash);
+        }
+
+        recentHashes.AddRange(GetPasswordHistoryHashes().Take(4));
+        PasswordHistoryHashes = recentHashes.Count == 0 ? null : string.Join('\n', recentHashes);
+
         PasswordHash = passwordHash;
         // Invalidate all existing tokens when password changes
         IncrementTokenVersion();
         Touch();
+    }
+
+    /// <summary>
+    ///     Gets previously used password hashes, newest first.
+    /// </summary>
+    public IReadOnlyList<string> GetPasswordHistoryHashes()
+    {
+        if (string.IsNullOrWhiteSpace(PasswordHistoryHashes))
+        {
+            return Array.Empty<string>();
+        }
+
+        return PasswordHistoryHashes.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Take(5)
+            .ToArray();
     }
 
     /// <summary>
