@@ -30,8 +30,7 @@ public static class AuthorizationOptionsBuilder
     public static void Validate(AuthorizationOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
-
-        if (string.IsNullOrWhiteSpace(options.DefaultPolicy)) throw new InvalidOperationException("Default policy name cannot be null or empty.");
+        options.Validate();
     }
 
     /// <summary>
