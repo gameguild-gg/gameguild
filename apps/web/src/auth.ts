@@ -11,10 +11,17 @@ import {
 } from "@game-guild/client";
 import { cookies } from "next/headers";
 import { createSharedAuthCookieConfig } from "@/lib/auth/cross-domain-auth";
+import { createMagicLinkCredentialsAuthorize } from "@/lib/auth/magic-link-credentials";
+
+const passwordCredentials = CredentialsProvider();
 
 const result = GameGuildAuth({
   providers: [
-    CredentialsProvider(),
+    CredentialsProvider({
+      authorize: createMagicLinkCredentialsAuthorize(
+        passwordCredentials.authorize,
+      ),
+    }),
     ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
       ? [
           GoogleProvider({
