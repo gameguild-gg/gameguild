@@ -50,7 +50,9 @@ internal sealed class EconomyMigrationPrerequisite : IDatabaseMigrationPrerequis
     {
         ArgumentNullException.ThrowIfNull(db);
         if (!db.Database.IsNpgsql())
+        {
             return Task.CompletedTask;
+        }
 
         return db.Database.ExecuteSqlRawAsync(BootstrapSql, cancellationToken);
     }
