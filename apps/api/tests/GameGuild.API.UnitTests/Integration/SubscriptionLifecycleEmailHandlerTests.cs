@@ -44,6 +44,7 @@ public sealed class SubscriptionLifecycleEmailHandlerTests
             It.IsAny<Guid?>(),
             It.IsAny<string?>(),
             It.IsAny<string?>(),
+            It.IsAny<string?>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -83,6 +84,7 @@ public sealed class SubscriptionLifecycleEmailHandlerTests
             subscriptionId,
             nameof(Subscription),
             null,
+            null,
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -113,6 +115,7 @@ public sealed class SubscriptionLifecycleEmailHandlerTests
             subscriptionId,
             nameof(Subscription),
             null,
+            null,
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -136,6 +139,7 @@ public sealed class SubscriptionLifecycleEmailHandlerTests
                 It.IsAny<string?>(),
                 It.IsAny<NotificationPriority>(),
                 It.IsAny<Guid?>(),
+                It.IsAny<string?>(),
                 It.IsAny<string?>(),
                 It.IsAny<string?>(),
                 It.IsAny<CancellationToken>()))
