@@ -161,28 +161,25 @@ public static class OpenApiExtensions
                 c.CustomOperationIds(apiDescription =>
                     apiDescription.ActionDescriptor.AttributeRouteInfo?.Name);
                 c.OperationFilter<ModuleControllerTagOperationFilter>();
+                c.OperationFilter<ConfiguredSecurityOperationFilter>(options);
                 c.OperationFilter<AllowAnonymousOperationFilter>();
                 c.SchemaFilter<FlagsEnumSchemaFilter>();
                 c.DocumentFilter<OpenApiServerDocumentFilter>(options);
                 c.DocumentFilter<DeterministicOpenApiDocumentFilter>();
                 ApiProductComposition.Instance.ConfigureOpenApi(c);
 
-                // Add security definition for JWT Bearer token
-                c.AddSecurityDefinition(
-                    "Bearer",
-                    new OpenApiSecurityScheme
+                if (options.EnableDefaultBearer)
+                {
+                    // Preserve the existing definition for generated-client compatibility.
+                    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                     {
-                        Description =
-                            "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+                        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
                         Name = "Authorization",
                         In = ParameterLocation.Header,
                         Type = SecuritySchemeType.ApiKey,
                         Scheme = "Bearer"
-                    }
-                );
-
-                c.AddSecurityRequirement(
-                    new OpenApiSecurityRequirement
+                    });
+                    c.AddSecurityRequirement(new OpenApiSecurityRequirement
                     {
                         {
                             new OpenApiSecurityScheme
@@ -192,12 +189,59 @@ public static class OpenApiExtensions
                             },
                             new List<string>()
                         }
-                    }
-                );
+                    });
+                }
+
+                foreach (var (name, scheme) in options.SecuritySchemes.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+                {
+                    c.AddSecurityDefinition(name, CreateSecurityDefinition(scheme));
+                }
             }
         );
 
         return services;
+    }
+
+    private static OpenApiSecurityScheme CreateSecurityDefinition(OpenApiSecuritySchemeOptions options)
+    {
+        return options.Kind switch
+        {
+            OpenApiSecuritySchemeKind.ApiKeyHeader => new OpenApiSecurityScheme
+            {
+                Type = SecuritySchemeType.ApiKey,
+                Name = options.HeaderName,
+                In = ParameterLocation.Header,
+                Description = options.Description
+            },
+            OpenApiSecuritySchemeKind.HttpBearer => new OpenApiSecurityScheme
+            {
+                Type = SecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "JWT",
+                Description = options.Description
+            },
+            OpenApiSecuritySchemeKind.HttpBasic => new OpenApiSecurityScheme
+            {
+                Type = SecuritySchemeType.Http,
+                Scheme = "basic",
+                Description = options.Description
+            },
+            OpenApiSecuritySchemeKind.OAuth2AuthorizationCode => new OpenApiSecurityScheme
+            {
+                Type = SecuritySchemeType.OAuth2,
+                Description = options.Description,
+                Flows = new OpenApiOAuthFlows
+                {
+                    AuthorizationCode = new OpenApiOAuthFlow
+                    {
+                        AuthorizationUrl = new Uri(options.AuthorizationUrl),
+                        TokenUrl = new Uri(options.TokenUrl),
+                        Scopes = new Dictionary<string, string>(options.Scopes)
+                    }
+                }
+            },
+            _ => throw new ArgumentOutOfRangeException(nameof(options))
+        };
     }
 
     private static OpenApiInfo CreateDocumentInfo(OpenApiOptions options)

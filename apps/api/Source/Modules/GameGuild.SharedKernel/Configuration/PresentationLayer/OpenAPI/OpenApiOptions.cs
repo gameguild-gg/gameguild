@@ -37,6 +37,14 @@ public sealed class OpenApiOptions : BaseOptions
     /// </summary>
     public List<OpenApiServerOptions> Servers { get; set; } = [];
 
+    /// <summary>Retains the existing Authorization-header Bearer definition by default.</summary>
+    public bool EnableDefaultBearer { get; set; } = true;
+
+    /// <summary>Additional schemes, keyed by their OpenAPI security definition names.</summary>
+    public Dictionary<string, OpenApiSecuritySchemeOptions> SecuritySchemes { get; set; } = new();
+
+    public OpenApiUiOptions Ui { get; set; } = new();
+
     public override void Validate()
     {
         base.Validate();
@@ -63,6 +71,38 @@ public sealed class OpenApiOptions : BaseOptions
         foreach (var server in Servers)
         {
             server.Validate();
+        }
+
+        if (Ui is null)
+        {
+            throw new InvalidOperationException("OpenAPI UI options cannot be null.");
+        }
+
+        Ui.Validate();
+
+        if (SecuritySchemes is null)
+        {
+            throw new InvalidOperationException("OpenAPI security schemes cannot be null.");
+        }
+
+        if (SecuritySchemes.Keys.Distinct(StringComparer.OrdinalIgnoreCase).Count() != SecuritySchemes.Count)
+        {
+            throw new InvalidOperationException("OpenAPI security scheme names must be unique regardless of case.");
+        }
+
+        foreach (var (name, scheme) in SecuritySchemes)
+        {
+            if (EnableDefaultBearer && name.Equals("Bearer", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException("The default Bearer scheme cannot be redefined while enabled.");
+            }
+
+            if (scheme is null)
+            {
+                throw new InvalidOperationException($"OpenAPI security scheme '{name}' cannot be null.");
+            }
+
+            scheme.Validate(name);
         }
     }
 
