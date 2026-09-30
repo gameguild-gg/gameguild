@@ -147,6 +147,67 @@ public sealed class PasswordCommandHandlersTests
     }
 
     [Fact]
+    public async Task RequestMagicLinkCommandHandler_NotificationDispatchFailsStillReturnsGenericSuccess()
+    {
+        var user = new User { Id = Guid.NewGuid(), Email = "magic@test.com", Username = "magic-user" };
+        var userRepository = new Mock<IUserRepository>();
+        var emailService = new Mock<IEmailVerificationService>();
+        var publisher = new Mock<IPublisher>();
+        var configuration = new ConfigurationBuilder().Build();
+
+        userRepository.Setup(r => r.GetByEmailAsync(user.Email, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+        emailService.Setup(s => s.GenerateMagicLinkTokenAsync(user.Id, user.Email))
+            .ReturnsAsync("magic-token");
+        publisher.Setup(p => p.Publish(It.IsAny<MagicLinkRequestedNotification>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("Notification queue unavailable"));
+
+        var handler = new RequestMagicLinkCommandHandler(
+            userRepository.Object,
+            emailService.Object,
+            publisher.Object,
+            configuration,
+            NullLogger<RequestMagicLinkCommandHandler>.Instance);
+
+        var result = await handler.Handle(new RequestMagicLinkCommand { Email = user.Email }, CancellationToken.None);
+
+        result.Success.Should().BeTrue();
+        result.DevelopmentPreviewToken.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task RequestMagicLinkCommandHandler_CancellationDuringNotificationDispatchPropagates()
+    {
+        var user = new User { Id = Guid.NewGuid(), Email = "magic@test.com", Username = "magic-user" };
+        var userRepository = new Mock<IUserRepository>();
+        var emailService = new Mock<IEmailVerificationService>();
+        var publisher = new Mock<IPublisher>();
+        using var cancellationSource = new CancellationTokenSource();
+        await cancellationSource.CancelAsync();
+        var configuration = new ConfigurationBuilder().Build();
+
+        userRepository.Setup(r => r.GetByEmailAsync(user.Email, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+        emailService.Setup(s => s.GenerateMagicLinkTokenAsync(user.Id, user.Email))
+            .ReturnsAsync("magic-token");
+        publisher.Setup(p => p.Publish(It.IsAny<MagicLinkRequestedNotification>(), cancellationSource.Token))
+            .ThrowsAsync(new OperationCanceledException(cancellationSource.Token));
+
+        var handler = new RequestMagicLinkCommandHandler(
+            userRepository.Object,
+            emailService.Object,
+            publisher.Object,
+            configuration,
+            NullLogger<RequestMagicLinkCommandHandler>.Instance);
+
+        var action = () => handler.Handle(
+            new RequestMagicLinkCommand { Email = user.Email },
+            cancellationSource.Token);
+
+        await action.Should().ThrowAsync<OperationCanceledException>();
+    }
+
+    [Fact]
     public async Task ConsumeMagicLinkCommandHandler_ValidTokenIssuesTokens()
     {
         var userId = Guid.NewGuid();

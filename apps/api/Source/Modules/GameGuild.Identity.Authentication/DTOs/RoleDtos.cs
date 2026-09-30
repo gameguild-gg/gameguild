@@ -70,3 +70,31 @@ public class UserRoleDto
     public DateTime? ExpiresAt { get; set; }
     public bool IsExpired { get; set; }
 }
+
+/// <summary>Outcome for a user in a bulk role assignment.</summary>
+public sealed record BulkRoleAssignmentItemResult(
+    Guid UserId,
+    Guid AssignmentId,
+    BulkRoleAssignmentStatus Status,
+    DateTime AssignedAt,
+    DateTime? ExpiresAt);
+
+/// <summary>Result status for one requested user.</summary>
+public enum BulkRoleAssignmentStatus
+{
+    Assigned,
+    Reactivated,
+    AlreadyAssigned
+}
+
+/// <summary>Summary and per-user outcomes for a bulk role assignment.</summary>
+public sealed class BulkRoleAssignmentResult
+{
+    public Guid RoleId { get; init; }
+    public int TotalRequested { get; init; }
+    public int DuplicateUserIds { get; init; }
+    public int Assigned { get; init; }
+    public int Reactivated { get; init; }
+    public int AlreadyAssigned { get; init; }
+    public IReadOnlyList<BulkRoleAssignmentItemResult> Users { get; init; } = Array.Empty<BulkRoleAssignmentItemResult>();
+}
