@@ -271,6 +271,74 @@ public class OAuthAuthServiceTests
             Times.Never);
     }
 
+    [Fact]
+    public async Task MicrosoftSignInAsync_NewUnverifiedEmail_CreatesUnverifiedUserAndExternalLogin()
+    {
+        _oauthServiceMock
+            .Setup(x => x.GetUserProfileAsync("microsoft", "microsoft-access-token"))
+            .ReturnsAsync(new OAuthUserProfile
+            {
+                ProviderId = "microsoft-subject-1",
+                Provider = "Microsoft",
+                Email = "microsoft@example.com",
+                EmailVerified = false,
+                Name = "Microsoft User"
+            });
+        _externalLoginRepoMock
+            .Setup(x => x.GetByProviderKeyAsync("microsoft", "microsoft-subject-1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ExternalLogin?)null);
+        _userRepoMock.Setup(x => x.GetByEmailAsync("microsoft@example.com", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User?)null);
+
+        var result = await CreateSut().MicrosoftSignInAsync(new OAuthSignInRequest
+        {
+            AccessToken = "microsoft-access-token"
+        });
+
+        result.Success.Should().BeTrue();
+        _userRepoMock.Verify(
+            x => x.AddAsync(It.Is<User>(user => user.Email == "microsoft@example.com" && !user.IsEmailVerified), It.IsAny<CancellationToken>()),
+            Times.Once);
+        _externalLoginRepoMock.Verify(
+            x => x.UpsertAsync(
+                It.Is<ExternalLogin>(login => login.Provider == "microsoft" && login.ProviderKey == "microsoft-subject-1"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task MicrosoftSignInAsync_UnverifiedEmailCollision_RejectsWithoutLinkingExistingAccount()
+    {
+        var existingUser = User.CreateWithPassword(
+            "microsoft@example.com", "existing", BCrypt.Net.BCrypt.HashPassword("irrelevant"));
+        _oauthServiceMock
+            .Setup(x => x.GetUserProfileAsync("microsoft", "microsoft-access-token"))
+            .ReturnsAsync(new OAuthUserProfile
+            {
+                ProviderId = "microsoft-subject-1",
+                Provider = "Microsoft",
+                Email = "microsoft@example.com",
+                EmailVerified = false,
+                Name = "Unexpected Link"
+            });
+        _externalLoginRepoMock
+            .Setup(x => x.GetByProviderKeyAsync("microsoft", "microsoft-subject-1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ExternalLogin?)null);
+        _userRepoMock.Setup(x => x.GetByEmailAsync("microsoft@example.com", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingUser);
+
+        await CreateSut()
+            .Invoking(service => service.MicrosoftSignInAsync(new OAuthSignInRequest { AccessToken = "microsoft-access-token" }))
+            .Should()
+            .ThrowAsync<UnauthorizedAccessException>()
+            .WithMessage("*not verified*");
+
+        _userRepoMock.Verify(x => x.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
+        _externalLoginRepoMock.Verify(
+            x => x.UpsertAsync(It.IsAny<ExternalLogin>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
     // ── (4) Brand-new email → user + ExternalLogin ──────────────────────────
 
     [Fact]
