@@ -20,14 +20,14 @@ public sealed class OpenApiSecurityUiTests
     private sealed class SecuredController
     {
         [Authorize(AuthenticationSchemes = "ApiKey")]
-        public void WithApiKey() { }
+        public void WithApiKey() => throw new NotSupportedException();
 
         [Authorize(AuthenticationSchemes = "ApiKey,Bearer")]
-        public void WithApiKeyOrBearer() { }
+        public void WithApiKeyOrBearer() => throw new NotSupportedException();
 
         [Authorize(AuthenticationSchemes = "ApiKey")]
         [AllowAnonymous]
-        public void Anonymous() { }
+        public void Anonymous() => throw new NotSupportedException();
     }
 
     [Fact]
