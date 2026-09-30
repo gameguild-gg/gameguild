@@ -15,7 +15,10 @@ public sealed class UserPasswordHistoryPostgreSqlTests : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
-        if (_database is not null) await _database.DisposeAsync();
+        if (_database is not null)
+        {
+            await _database.DisposeAsync();
+        }
     }
 
     [Fact]
