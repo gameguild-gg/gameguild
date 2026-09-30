@@ -86,7 +86,10 @@ public sealed class RefreshTokenRotationPostgreSqlTests : IAsyncLifetime
         await using var verification = new ApplicationDbContext(options);
         var persistedToken = await verification.Set<RefreshToken>().SingleAsync(token => token.Id == tokenId);
         Assert.True(persistedToken.IsRevoked);
-        Assert.Equal(revokedAt, persistedToken.RevokedAt);
+        Assert.True(persistedToken.RevokedAt.HasValue);
+        var persistedRevokedAt = persistedToken.RevokedAt.GetValueOrDefault();
+        var timestampDifferenceTicks = Math.Abs((persistedRevokedAt - revokedAt).Ticks);
+        Assert.InRange(timestampDifferenceTicks, 0L, TimeSpan.TicksPerMicrosecond);
         Assert.Equal(expectedReplacementHash, persistedToken.ReplacedByToken);
         Assert.Equal(expectedIpAddress, persistedToken.RevokedByIp);
     }
