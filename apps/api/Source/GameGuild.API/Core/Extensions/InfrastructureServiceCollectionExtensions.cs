@@ -9,8 +9,10 @@ using GameGuild.Configuration.PresentationLayer.RequestContext;
 using GameGuild.Configuration.PresentationLayer.ResponseCompression;
 using GameGuild.Configuration.PresentationLayer.SignalR;
 using GameGuild.API.Database;
+using GameGuild.API.Core.Filters;
 using GameGuild.Features;
 using Microsoft.AspNetCore.HttpLogging;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -59,6 +61,13 @@ public static class InfrastructureServiceCollectionExtensions
         options ??= OptionBuilderUtilities.CreateAndBind(configuration, ProblemDetailsOptions.SectionName,
             ProblemDetailsOptions.CreateDefault);
         options.Validate();
+        options = options.CreateSnapshot();
+
+        // MVC can return ProblemDetails directly (including BaseApiController domain errors and
+        // ApiController model-state failures), so run those responses through the same formatter
+        // callback used by ASP.NET Core's ProblemDetails service.
+        services.AddScoped<ProblemDetailsResultFilter>();
+        services.Configure<MvcOptions>(mvcOptions => mvcOptions.Filters.AddService<ProblemDetailsResultFilter>());
 
         services.AddProblemDetails(problemDetailsOptions =>
             {
@@ -70,10 +79,17 @@ public static class InfrastructureServiceCollectionExtensions
                     var databaseSchemaNotReady = exception is not null &&
                                                  IsDatabaseSchemaNotReadyException(exception);
                     var mapping = exception is null ? null : FindExceptionMapping(exception, options);
+                    var problemCode = problem.Extensions.TryGetValue("code", out var codeValue)
+                        ? codeValue?.ToString()
+                        : null;
                     var messageKey = mapping?.LocalizedMessageKey ??
-                                     (databaseSchemaNotReady ? "database-schema-not-ready" : "default");
+                                     (databaseSchemaNotReady
+                                         ? "database-schema-not-ready"
+                                         : string.IsNullOrWhiteSpace(problemCode) ? "default" : problemCode);
                     var localizedText = FindLocalizedText(options, messageKey) ??
-                                        (messageKey == "default" ? null : FindLocalizedText(options, "default"));
+                                        (messageKey == "default" || !string.IsNullOrWhiteSpace(problemCode)
+                                            ? null
+                                            : FindLocalizedText(options, "default"));
 
                     problem.Instance = options.IncludeInstance ? httpContext.Request.Path : null;
 
@@ -109,7 +125,11 @@ public static class InfrastructureServiceCollectionExtensions
                         {
                             problem.Type = options.DefaultType;
                         }
-                        if (string.IsNullOrWhiteSpace(problem.Title))
+                        if (localizedText?.Title is not null && (exception is not null || string.IsNullOrWhiteSpace(problemCode)))
+                        {
+                            problem.Title = localizedText.Title;
+                        }
+                        else if (string.IsNullOrWhiteSpace(problem.Title))
                         {
                             problem.Title = localizedText?.Title ?? options.DefaultTitle;
                         }
@@ -122,6 +142,10 @@ public static class InfrastructureServiceCollectionExtensions
                         {
                             // Unmapped exception messages are not returned to clients.
                             problem.Detail = localizedText?.Detail ?? options.DefaultDetail;
+                        }
+                        else if (localizedText?.Detail is not null)
+                        {
+                            problem.Detail = localizedText.Detail;
                         }
                         else if (string.IsNullOrWhiteSpace(problem.Detail))
                         {
@@ -146,7 +170,8 @@ public static class InfrastructureServiceCollectionExtensions
                         problem.Extensions[options.CorrelationIdExtensionName] = correlationId;
                     }
 
-                    if (options.IncludeExceptionDetails &&
+                    var isDevelopment = httpContext.RequestServices?.GetService<IWebHostEnvironment>()?.IsDevelopment() == true;
+                    if (isDevelopment && options.IncludeExceptionDetails &&
                         options.DetailLevel == ProblemDetailsDetailLevel.Detailed &&
                         exception is not null)
                     {
@@ -165,10 +190,13 @@ public static class InfrastructureServiceCollectionExtensions
     {
         for (var current = exception; current is not null; current = current.InnerException)
         {
-            if (current.GetType().FullName is { } fullName &&
-                options.ExceptionMappings.TryGetValue(fullName, out var mapping))
+            for (var exceptionType = current.GetType(); exceptionType is not null; exceptionType = exceptionType.BaseType)
             {
-                return mapping;
+                if (exceptionType.FullName is { } fullName &&
+                    options.ExceptionMappings.TryGetValue(fullName, out var mapping))
+                {
+                    return mapping;
+                }
             }
         }
 

@@ -44,7 +44,7 @@ public sealed class ProblemDetailsOptions : BaseOptions
     /// The closest matching exception in the inner-exception chain is applied.
     /// </summary>
     public Dictionary<string, ProblemDetailsExceptionMapping> ExceptionMappings { get; set; } =
-        new(StringComparer.Ordinal);
+        CreateDefaultExceptionMappings();
 
     /// <summary>Static extension values added to every Problem Details response.</summary>
     public Dictionary<string, string> CustomExtensions { get; set; } = new(StringComparer.Ordinal);
@@ -176,6 +176,62 @@ public sealed class ProblemDetailsOptions : BaseOptions
     /// <summary>Creates default Problem Details options.</summary>
     public static ProblemDetailsOptions CreateDefault() => new();
 
+    /// <summary>
+    /// Creates a validated copy so request processing can safely read a fixed configuration snapshot.
+    /// </summary>
+    public ProblemDetailsOptions CreateSnapshot()
+    {
+        Validate();
+        var snapshot = (ProblemDetailsOptions)MemberwiseClone();
+        snapshot.ExceptionMappings = ExceptionMappings.ToDictionary(
+            pair => pair.Key,
+            pair => new ProblemDetailsExceptionMapping
+            {
+                StatusCode = pair.Value.StatusCode,
+                Type = pair.Value.Type,
+                Title = pair.Value.Title,
+                Detail = pair.Value.Detail,
+                LocalizedMessageKey = pair.Value.LocalizedMessageKey,
+            },
+            StringComparer.Ordinal);
+        snapshot.CustomExtensions = new Dictionary<string, string>(CustomExtensions, StringComparer.Ordinal);
+        snapshot.LocalizedMessages = LocalizedMessages.ToDictionary(
+            culture => culture.Key,
+            culture => culture.Value.ToDictionary(
+                message => message.Key,
+                message => new ProblemDetailsLocalizedText
+                {
+                    Title = message.Value.Title,
+                    Detail = message.Value.Detail,
+                },
+                StringComparer.OrdinalIgnoreCase),
+            StringComparer.OrdinalIgnoreCase);
+        snapshot.Validate();
+
+        return snapshot;
+    }
+
+    private static Dictionary<string, ProblemDetailsExceptionMapping> CreateDefaultExceptionMappings() =>
+        new(StringComparer.Ordinal)
+        {
+            [typeof(ArgumentException).FullName!] = new()
+            {
+                StatusCode = 400,
+                Type = "https://api.gameguild.gg/problems/invalid-argument",
+                Title = "Invalid request",
+                Detail = "The request contains an invalid argument.",
+                LocalizedMessageKey = "invalid-argument",
+            },
+            [typeof(System.Text.Json.JsonException).FullName!] = new()
+            {
+                StatusCode = 400,
+                Type = "https://api.gameguild.gg/problems/invalid-json",
+                Title = "Invalid JSON",
+                Detail = "The request body contains invalid JSON.",
+                LocalizedMessageKey = "invalid-json",
+            },
+        };
+
     private static void RequireText(string value, string name)
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -237,7 +293,7 @@ public sealed class ProblemDetailsOptions : BaseOptions
     }
 
     private bool IsReservedExtension(string name) =>
-        name is "type" or "title" or "status" or "detail" or "instance" or "errors" or "exception" ||
+        name is "type" or "title" or "status" or "detail" or "instance" or "errors" or "exception" or "code" ||
         (IncludeTraceId && string.Equals(name, TraceIdExtensionName, StringComparison.Ordinal)) ||
         (IncludeCorrelationId && string.Equals(name, CorrelationIdExtensionName, StringComparison.Ordinal));
 }
