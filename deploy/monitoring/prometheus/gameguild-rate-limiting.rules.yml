@@ -1,0 +1,30 @@
+groups:
+  - name: gameguild-rate-limiting
+    interval: 30s
+    rules:
+      - record: gameguild:api_rate_limit_rejections:rate5m
+        expr: sum by (job, policy, enforcement) (rate(gameguild_api_rate_limit_rejections_total[5m]))
+
+      - alert: GameGuildRateLimitRejectionBurst
+        expr: gameguild:api_rate_limit_rejections:rate5m > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Sustained rate-limit rejections for {{ $labels.policy }}
+          description: >-
+            {{ $value | printf "%.2f" }} requests per second were rejected for policy
+            {{ $labels.policy }} by {{ $labels.enforcement }} enforcement over five minutes.
+            Check client retry behavior, configured limits, and possible abuse.
+
+      - alert: GameGuildRateLimitRejectionSurge
+        expr: gameguild:api_rate_limit_rejections:rate5m > 25
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: High rate-limit rejection surge for {{ $labels.policy }}
+          description: >-
+            {{ $value | printf "%.2f" }} requests per second were rejected for policy
+            {{ $labels.policy }} by {{ $labels.enforcement }} enforcement. Check for an
+            active client outage, retry storm, or abuse event.

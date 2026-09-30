@@ -233,9 +233,9 @@ describe('CohortScheduleWorkspace', () => {
     await user.type(screen.getByLabelText('Location'), '  Studio A  ');
     await user.type(screen.getByLabelText('Meeting URL'), '  https://meet.example.test  ');
     await user.click(screen.getByLabelText('Status'));
-    await user.click(screen.getByRole('option', { name: 'Completed' }));
+    await user.click(await screen.findByRole('option', { name: 'Completed' }));
     await user.click(screen.getByLabelText('Student visibility'));
-    await user.click(screen.getByRole('option', { name: 'Hide from students' }));
+    await user.click(await screen.findByRole('option', { name: 'Hide from students' }));
     await user.click(screen.getByRole('button', { name: 'Save schedule item' }));
 
     expect(await screen.findByText('Item update was rejected.')).toBeVisible();

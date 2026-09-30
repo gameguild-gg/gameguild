@@ -1,8 +1,9 @@
 'use client';
 
+import { cn } from "@game-guild/ui/lib/utils";
 import { Link } from '@/i18n/navigation';
 import { createTeamForm } from '@/lib/workspace-actions';
-import { Button } from '@game-guild/ui/components/button';
+import { Button, buttonVariants } from '@game-guild/ui/components/button';
 import {
   Card,
   CardContent,
@@ -93,9 +94,12 @@ export default function NewTeamPage() {
             </div>
             <div className="flex flex-wrap gap-2">
               <Button type="submit">Create team</Button>
-              <Button nativeButton={false} type="button" variant="outline" render={<Link href="/workspace/teams" />}>
+              <Link
+                href="/workspace/teams"
+                className={cn(buttonVariants({ variant: "outline" }))}
+              >
                 Cancel
-              </Button>
+              </Link>
             </div>
           </form>
         </CardContent>

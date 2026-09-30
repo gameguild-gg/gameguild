@@ -1,12 +1,13 @@
 'use client';
 
+import { cn } from "@game-guild/ui/lib/utils";
 import { AssetImage } from '@/components/block-content-editor/extras/media/asset-image';
 import { getLearningAssetRepository } from '@/lib/learning/assets/learning-asset-repository';
 import { recordLessonEvent } from '@/lib/learner/lesson-interaction-actions';
 import { AssetsProvider, useResolvedAssetUrl } from '@game-guild/assets/react';
 import type { LearningCoursesLessonContentFormat } from '@game-guild/client';
 import { MarkdownRenderer } from '@game-guild/content-rendering';
-import { Button } from '@game-guild/ui/components/button';
+import { Button, buttonVariants } from '@game-guild/ui/components/button';
 import { ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
 import { lazy, Suspense, useRef, useState } from 'react';
 import { defaultUrlTransform, type Components } from 'react-markdown';
@@ -123,10 +124,15 @@ function HtmlRenderer({ content }: { content: unknown }) {
 function ExternalLinkRenderer({ content }: { content: unknown }) {
     const href = externalLinkSource(content);
     if (!href) return <p className="text-sm text-muted-foreground">This lesson resource link is unavailable.</p>;
-    return <Button nativeButton={false} render={<a href={href} target="_blank" rel="noopener noreferrer" />}>
-        Open lesson resource
-        <ExternalLink className="ml-2 h-4 w-4" />
-    </Button>;
+    return <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cn(buttonVariants({}))}
+    >
+      Open lesson resource
+      <ExternalLink className="ml-2 h-4 w-4" />
+    </a>;
 }
 
 export function LearnerLessonRenderer({ courseId, enrollmentId, itemId, format, content }: { courseId: string; enrollmentId?: string; itemId: string; format?: LearningCoursesLessonContentFormat; content: unknown }) {

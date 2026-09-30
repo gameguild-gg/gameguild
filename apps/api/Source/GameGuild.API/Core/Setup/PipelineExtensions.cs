@@ -2,8 +2,10 @@ using System.Net;
 using Asp.Versioning.ApiExplorer;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Tenants;
+using GameGuild.API.Core.ApiVersioning;
 using GameGuild.API.Core.CostAccounting;
 using GameGuild.Configuration.PresentationLayer;
+using GameGuild.API.Core.Middleware;
 using Serilog;
 
 namespace GameGuild.API.Setup;
@@ -64,6 +66,7 @@ public static class PipelineExtensions
 
         // 10. Routing (endpoint matching, required before auth)
         app.UseRouting();
+        app.UseMiddleware<ApiVersionUsageMiddleware>();
 
         // 11. CORS (Cross-Origin Resource Sharing, after routing)
         app.UseCors();
@@ -96,7 +99,12 @@ public static class PipelineExtensions
         // 18. Rate Limiting (throttle requests per client/endpoint)
         if (app.Configuration.GetValue<bool>("PresentationLayer:EnableRateLimiting"))
         {
+            app.UseMiddleware<RateLimitAccessControlMiddleware>();
             app.UseRateLimiter();
+            if (app.Configuration.GetValue<bool>("Redis:Enabled"))
+            {
+                app.UseMiddleware<RedisEndpointRateLimitingMiddleware>();
+            }
         }
 
         // 19. Controller Endpoints (REST API routes via [ApiController])

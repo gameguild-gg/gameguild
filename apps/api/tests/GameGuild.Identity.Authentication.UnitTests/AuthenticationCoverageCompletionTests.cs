@@ -483,7 +483,13 @@ public sealed class AuthenticationCoverageCompletionTests
     public async Task Web3Service_CoversImplementedSignatureRejectionPath()
     {
         using var cache = new MemoryCache(new MemoryCacheOptions());
-        var service = new Web3Service(NullLogger<Web3Service>.Instance, cache);
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Authentication:Web3:Siwe:Origin"] = "https://localhost"
+            })
+            .Build();
+        var service = new Web3Service(NullLogger<Web3Service>.Instance, cache, configuration);
         var address = "0x1234567890abcdef1234567890abcdef12345678";
         var challenge = await service.GenerateChallengeAsync(address);
 
@@ -491,9 +497,10 @@ public sealed class AuthenticationCoverageCompletionTests
 
         result.Should().BeFalse();
 
-        var emptySignatureResult = await InvokePrivateInstance<Task<bool>>(
+        var emptySignatureResult = InvokePrivateInstance<bool>(
             service,
             "VerifyEthereumSignature",
+            challenge.Message,
             "",
             address);
         emptySignatureResult.Should().BeFalse();

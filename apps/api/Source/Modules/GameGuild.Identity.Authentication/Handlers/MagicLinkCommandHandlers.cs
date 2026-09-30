@@ -24,17 +24,28 @@ public sealed class RequestMagicLinkCommandHandler(
         {
             token = await emailVerificationService.GenerateMagicLinkTokenAsync(user.Id, user.Email).ConfigureAwait(false);
 
-            await publisher.Publish(
-                new MagicLinkRequestedNotification
-                {
-                    Email = user.Email,
-                    Token = token,
-                    UserName = user.Username ?? user.Name,
-                    TenantId = request.TenantId,
-                    IpAddress = request.IpAddress,
-                    UserAgent = request.UserAgent
-                },
-                cancellationToken).ConfigureAwait(false);
+            try
+            {
+                await publisher.Publish(
+                    new MagicLinkRequestedNotification
+                    {
+                        Email = user.Email,
+                        Token = token,
+                        UserName = user.Username ?? user.Name,
+                        TenantId = request.TenantId,
+                        IpAddress = request.IpAddress,
+                        UserAgent = request.UserAgent
+                    },
+                    cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(exception, "Failed to dispatch magic-link notification for user {UserId}", user.Id);
+            }
 
             logger.LogInformation(
                 "Magic-link token generated for user {UserId} from {IpAddress}",

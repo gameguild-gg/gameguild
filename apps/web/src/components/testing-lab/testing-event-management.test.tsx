@@ -830,6 +830,91 @@ describe("TestingEventApplications", () => {
     expect(screen.getByRole("button", { name: "Review" })).toBeEnabled();
   });
 
+  it.each([
+    {
+      trigger: "Approve",
+      submit: "Approve project",
+      status: "Approved",
+      message: "Application approved.",
+    },
+    {
+      trigger: "Reject",
+      submit: "Reject project",
+      status: "Rejected",
+      message: "Application rejected.",
+    },
+    {
+      trigger: "Waitlist",
+      submit: "Add to waitlist",
+      status: "Waitlisted",
+      message: "Application waitlisted.",
+    },
+    {
+      trigger: "Vote",
+      submit: "Record vote",
+      status: "UnderReview",
+      message: "Vote recorded.",
+    },
+  ])(
+    "keeps the $trigger confirmation visible after the dialog closes and the application refreshes",
+    async ({ trigger, submit, status, message }) => {
+      const user = userEvent.setup();
+      const props = {
+        eventId: "event-1",
+        access: { canManageApplications: true, canVote: true },
+        applications: [{ id: "application-1", status: "UnderReview" }],
+        slots: [
+          {
+            id: "slot-1",
+            startsAt: "2026-08-02T12:00:00Z",
+            campusName: "Campus A",
+          },
+        ],
+      };
+      const { rerender } = render(<TestingEventApplications {...props} />);
+      await user.click(
+        screen.getByRole("button", { name: trigger, exact: true }),
+      );
+      if (trigger === "Approve") {
+        await user.click(
+          screen.getByRole("combobox", { name: "Testing slot" }),
+        );
+        await user.click(
+          await screen.findByRole("option", { name: /Campus A/ }),
+        );
+      }
+      if (trigger === "Reject") {
+        await user.type(
+          screen.getByLabelText("Rejection rationale"),
+          "Not ready",
+        );
+      }
+      if (trigger === "Vote") {
+        await user.click(screen.getByRole("combobox"));
+        await user.click(
+          await screen.findByRole("option", { name: "Approve", exact: true }),
+        );
+      }
+      await user.click(
+        screen.getByRole("button", { name: submit, exact: true }),
+      );
+      await waitFor(() =>
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+      );
+      rerender(
+        <TestingEventApplications
+          {...props}
+          applications={[{ id: "application-1", status }]}
+        />,
+      );
+      expect(screen.getByText(message)).toBeVisible();
+      expect(
+        screen.getByText(message).closest('[aria-live="polite"]'),
+      ).not.toBeNull();
+      expect(mocks.refresh).toHaveBeenCalledOnce();
+    },
+  );
+
   it("executes every application decision with meaningful slot fallbacks", async () => {
     const user = userEvent.setup();
     render(
@@ -1388,6 +1473,29 @@ describe("TestingEventApplications", () => {
     await waitFor(() =>
       expect(mocks.push).toHaveBeenCalledWith("/workspace/testing-lab/events"),
     );
+  });
+
+  it("keeps cancellation confirmation visible after the event becomes read-only", async () => {
+    const user = userEvent.setup();
+    mocks.transitionEvent.mockResolvedValueOnce({
+      success: true,
+      data: null,
+      message: "Event status updated.",
+    });
+    const { rerender } = render(
+      <TestingEventLifecycleActions event={{ id: "event-1", status: "Active" }} />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Cancel event" }));
+    const dialog = screen.getByRole("dialog", { name: "Cancel this testing event?" });
+    await user.type(within(dialog).getByLabelText("Cancellation reason"), "Session finished early.");
+    await user.click(within(dialog).getByRole("button", { name: "Cancel event" }));
+
+    await waitFor(() => expect(mocks.refresh).toHaveBeenCalledOnce());
+    rerender(<TestingEventLifecycleActions event={{ id: "event-1", status: "Cancelled" }} />);
+
+    expect(screen.queryByRole("button", { name: "Cancel event" })).not.toBeInTheDocument();
+    expect(screen.getByText("Event status updated.")).toBeInTheDocument();
   });
 
   it.each([

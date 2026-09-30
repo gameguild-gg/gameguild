@@ -25,16 +25,21 @@ public class Web3AuthService(
     {
         logger.LogInformation("Generating Web3 challenge for wallet {WalletAddress}", request.WalletAddress);
 
-        var challenge = await web3Service.GenerateChallengeAsync(request.WalletAddress).ConfigureAwait(false);
+        var challenge = await web3Service.GenerateChallengeAsync(request.WalletAddress, chainId: request.ChainId).ConfigureAwait(false);
 
-        return new Web3ChallengeResponse { Challenge = challenge.Message, ExpiresAt = challenge.ExpiresAt };
+        return new Web3ChallengeResponse { Challenge = challenge.Message, Nonce = challenge.Nonce, ExpiresAt = challenge.ExpiresAt };
     }
 
     public async Task<SignInResponse> VerifyWeb3SignatureAsync(Web3VerificationRequest request, CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Verifying Web3 signature for wallet {WalletAddress}", request.WalletAddress);
 
-        var isValid = await web3Service.VerifySignatureAsync(request.WalletAddress, request.Signature, request.Challenge).ConfigureAwait(false);
+        var isValid = await web3Service.VerifySignatureAsync(
+            request.WalletAddress,
+            request.Signature,
+            request.Challenge,
+            request.ChainId,
+            request.Nonce).ConfigureAwait(false);
 
         if (!isValid) { throw new UnauthorizedAccessException("Invalid Web3 signature"); }
 

@@ -4,6 +4,7 @@ using GameGuild.Finance.Economy.Contracts;
 using GameGuild.Finance.Economy.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Options;
 
 namespace GameGuild.Finance.Economy.Integrations.AI;
@@ -292,9 +293,19 @@ internal sealed class AiCreditWalletService(
         ValidateActor(tenantId, actorId);
         ArgumentException.ThrowIfNullOrWhiteSpace(idempotencyKey);
         var relationalContext = db as DbContext;
-        await using var transaction = relationalContext?.Database.IsRelational() == true
-            ? await db.BeginTransactionAsync(cancellationToken).ConfigureAwait(false)
-            : null;
+        // Join an ambient transaction (e.g. the CQRS use-case behavior) instead
+        // of opening a nested one; the wallet row lock below still serializes
+        // concurrent reservations on the same wallet.
+        var ownsTransaction = false;
+        IDbContextTransaction? transaction = null;
+        if (relationalContext?.Database.IsRelational() == true && relationalContext.Database.CurrentTransaction is null)
+        {
+            transaction = await db.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+            ownsTransaction = true;
+        }
+
+        try
+        {
         var (wallet, _) = await WalletAsync(tenantId, actorId, cancellationToken).ConfigureAwait(false);
         if (relationalContext is not null && transaction is not null)
         {
@@ -322,7 +333,7 @@ internal sealed class AiCreditWalletService(
                 duplicate.InputSoftUnitsPerMillion != quote.InputSoftUnitsPerMillion ||
                 duplicate.OutputSoftUnitsPerMillion != quote.OutputSoftUnitsPerMillion)
                 throw new InvalidOperationException("AI credit idempotency key is bound to another reservation request.");
-            if (transaction is not null)
+            if (ownsTransaction && transaction is not null)
                 await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
             return duplicate;
         }
@@ -337,9 +348,15 @@ internal sealed class AiCreditWalletService(
             quote.InputSoftUnitsPerMillion, quote.OutputSoftUnitsPerMillion);
         db.Set<AiCreditReservation>().Add(reservation);
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        if (transaction is not null)
+        if (ownsTransaction && transaction is not null)
             await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
         return reservation;
+        }
+        finally
+        {
+            if (ownsTransaction && transaction is not null)
+                await transaction.DisposeAsync().ConfigureAwait(false);
+        }
     }
 
     public async Task<AiCreditReservation> SettleAsync(Guid runId, int inputTokens, int outputTokens, string providerUsageId, string idempotencyKey, CancellationToken cancellationToken = default)

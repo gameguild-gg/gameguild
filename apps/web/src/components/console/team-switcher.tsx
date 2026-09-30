@@ -5,6 +5,7 @@ import { ChevronsUpDown, Settings2 } from 'lucide-react';
 import { Link, usePathname } from '@/i18n/navigation';
 import type { DashboardContextSummary, DashboardContextType } from '@/lib/dashboard-contexts';
 import {
+  DropdownMenuGroup,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -88,24 +89,26 @@ export function ContextSwitcher({ contexts }: { contexts: readonly DashboardCont
             side={isMobile ? 'bottom' : 'right'}
             sideOffset={4}
           >
-            <DropdownMenuLabel className="text-xs text-muted-foreground">Switch context</DropdownMenuLabel>
-            {available.map((context) => {
-              const Icon = contextMeta[context.type].icon;
-              return (
-                <DropdownMenuItem
-                  key={`${context.type}:${context.id ?? 'root'}`}
-                  render={<Link href={context.route} className="gap-2 p-2" />}
-                >
-                  <div className="flex size-7 items-center justify-center rounded-md border">
-                    <Icon className="size-3.5" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{context.name}</p>
-                    <p className="text-xs text-muted-foreground">{contextMeta[context.type].label}</p>
-                  </div>
-                </DropdownMenuItem>
-              );
-            })}
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="text-xs text-muted-foreground">Switch context</DropdownMenuLabel>
+              {available.map((context) => {
+                const Icon = contextMeta[context.type].icon;
+                return (
+                  <DropdownMenuItem
+                    key={`${context.type}:${context.id ?? 'root'}`}
+                    render={<Link href={context.route} className="gap-2 p-2" />}
+                  >
+                    <div className="flex size-7 items-center justify-center rounded-md border">
+                      <Icon className="size-3.5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{context.name}</p>
+                      <p className="text-xs text-muted-foreground">{contextMeta[context.type].label}</p>
+                    </div>
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

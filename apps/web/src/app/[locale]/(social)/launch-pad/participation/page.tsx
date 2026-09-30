@@ -1,9 +1,10 @@
+import { cn } from "@game-guild/ui/lib/utils";
 import { Link } from '@/i18n/navigation';
 import { cancelLaunchPadRegistrationForm, updateLaunchPadApplicationForm, withdrawLaunchPadApplicationForm } from '@/lib/launch-pad/actions';
 import { getMyLaunchPadApplications, getMyLaunchPadRegistrations } from '@/lib/launch-pad/queries';
 import { getTestingProjectVersionOptions } from '@/lib/testing-lab/queries';
 import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
+import { Button, buttonVariants } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Textarea } from '@game-guild/ui/components/textarea';
 import { ArrowLeft, ClipboardList, Users } from 'lucide-react';
@@ -28,7 +29,12 @@ export default async function LaunchPadParticipationPage() {
           <h1 className="mt-1 text-3xl font-semibold tracking-tight">Your Launch Pad</h1>
           <p className="mt-2 text-sm text-muted-foreground">Manage project applications and individual event registrations.</p>
         </div>
-        <Button nativeButton={false} variant="outline" render={<Link href="/launch-pad/events" />}>Browse events</Button>
+        <Link
+          href="/launch-pad/events"
+          className={cn(buttonVariants({ variant: "outline" }))}
+        >
+          Browse events
+        </Link>
       </header>
 
       <div className="grid items-start gap-5 lg:grid-cols-2">

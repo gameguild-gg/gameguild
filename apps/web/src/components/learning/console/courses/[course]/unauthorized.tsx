@@ -1,5 +1,6 @@
+import { cn } from "@game-guild/ui/lib/utils";
 import { Link } from '@/i18n/navigation';
-import { Button } from '@game-guild/ui/components/button';
+import { buttonVariants } from '@game-guild/ui/components/button';
 import { Lock } from 'lucide-react';
 import React from 'react';
 
@@ -11,7 +12,9 @@ export default function Unauthorized(): React.JSX.Element {
         <h2 className="text-xl font-semibold">Sign in required</h2>
         <p className="text-sm text-muted-foreground">You need to be signed in to view this course.</p>
       </div>
-      <Button nativeButton={false} render={<Link href="/sign-in" />}>Sign in</Button>
+      <Link href="/sign-in" className={cn(buttonVariants({}))}>
+        Sign in
+      </Link>
     </div>
   );
 }

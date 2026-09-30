@@ -1,5 +1,6 @@
+import { cn } from "@game-guild/ui/lib/utils";
 import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
+import { buttonVariants } from '@game-guild/ui/components/button';
 import { Link } from '@/i18n/navigation';
 import { getPublicCourseCatalog } from '@/lib/courses/services/course.service';
 import { PUBLIC_PROGRAM_PACKAGES, getCoursesForProgram, getPublicProgramPackage } from '@/lib/courses/public-programs';
@@ -57,10 +58,18 @@ export default async function ProgramDetailPage({ params }: ProgramDetailPagePro
         </div>
 
         <div className="container relative mx-auto min-h-[720px] px-4 py-10">
-          <Button variant="ghost" className="mb-16 text-slate-300 hover:bg-white/10 hover:text-white" nativeButton={false} render={<Link href="/programs" />}>
+          <Link
+            href="/programs"
+            className={cn(
+              buttonVariants({
+                variant: "ghost",
+                className: "mb-16 text-slate-300 hover:bg-white/10 hover:text-white",
+              }),
+            )}
+          >
             <ArrowLeft />
             Back to programs
-          </Button>
+          </Link>
 
           <div className="grid gap-12 lg:grid-cols-[1fr_420px] lg:items-end">
             <div className="flex max-w-4xl flex-col gap-8">
@@ -82,14 +91,32 @@ export default async function ProgramDetailPage({ params }: ProgramDetailPagePro
               </div>
 
               <div className="flex flex-wrap gap-3">
-                <Button size="lg" className="bg-white text-slate-950 hover:bg-slate-200" nativeButton={false} render={<Link href="#courses" />}>
+                <Link
+                  href="#courses"
+                  className={cn(
+                    buttonVariants({
+                      size: "lg",
+                      className: "bg-white text-slate-950 hover:bg-slate-200",
+                    }),
+                  )}
+                >
                   See courses
                   <ArrowRight />
-                </Button>
-                <Button size="lg" variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white" nativeButton={false} render={<Link href="/courses" />}>
+                </Link>
+                <Link
+                  href="/courses"
+                  className={cn(
+                    buttonVariants({
+                      size: "lg",
+                      variant: "outline",
+                      className:
+                        "border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white",
+                    }),
+                  )}
+                >
                   Full catalog
                   <BookOpen />
-                </Button>
+                </Link>
               </div>
             </div>
 
@@ -154,10 +181,19 @@ export default async function ProgramDetailPage({ params }: ProgramDetailPagePro
             <h2 className="text-4xl font-semibold tracking-tight">Courses in this package</h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400">Courses remain independent and can be taken individually, but the package shows how they fit into a larger production path.</p>
           </div>
-          <Button variant="outline" className="w-fit border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white" nativeButton={false} render={<Link href={`/courses?program=${program.slug}`} />}>
+          <Link
+            href={`/courses?program=${program.slug}`}
+            className={cn(
+              buttonVariants({
+                variant: "outline",
+                className:
+                  "w-fit border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white",
+              }),
+            )}
+          >
             Filter catalog
             <ArrowRight />
-          </Button>
+          </Link>
         </div>
 
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">

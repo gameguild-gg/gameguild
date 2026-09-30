@@ -67,6 +67,7 @@ import {
 import { Input } from "@game-guild/ui/components/input";
 import { Label } from "@game-guild/ui/components/label";
 import {
+  SelectGroup,
   Select,
   SelectContent,
   SelectItem,
@@ -338,6 +339,7 @@ function EventActionDialog({
   destructive = false,
   successHref,
   submitDisabled = false,
+  onSuccess,
 }: {
   trigger: ReactElement;
   title: string;
@@ -348,6 +350,7 @@ function EventActionDialog({
   destructive?: boolean;
   successHref?: string;
   submitDisabled?: boolean;
+  onSuccess?: (result: TestingEventActionResult<unknown>) => void;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -364,6 +367,7 @@ function EventActionDialog({
         const next = await action(data);
         setResult(next);
         if (next.success) {
+          onSuccess?.(next);
           setOpen(false);
           if (successHref) router.push(successHref);
           else router.refresh();
@@ -476,6 +480,12 @@ function EventIdentityFields({
             Calendar
           </Label>
           <Select
+            items={[
+              ...availableTemplates.map((template) => ({
+                value: template.currentRevision!.id!,
+                label: template.name?.trim() || "Untitled calendar",
+              })),
+            ]}
             name="templateRevisionId"
             defaultValue={availableTemplates[0]!.currentRevision!.id}
           >
@@ -496,14 +506,13 @@ function EventIdentityFields({
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              {availableTemplates.map((template) => (
-                <SelectItem
-                  key={template.id}
-                  value={template.currentRevision!.id!}
-                >
-                  {template.name?.trim() || "Untitled calendar"}
-                </SelectItem>
-              ))}
+              <SelectGroup>
+                {availableTemplates.map((template) => (
+                  <SelectItem key={template.id} value={template.currentRevision!.id!}>
+                    {template.name?.trim() || "Untitled calendar"}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
             </SelectContent>
           </Select>
         </div>
@@ -515,11 +524,16 @@ function EventIdentityFields({
         >
           Event format
         </Label>
-        <Select name="mode" defaultValue={event?.mode ?? "Online"}>
-          <SelectTrigger
-            id={`event-format-${fieldSuffix}`}
-            className="h-10 w-full"
-          >
+        <Select
+          items={[
+            { value: "Online", label: "Online" },
+            { value: "InPerson", label: "In person" },
+            { value: "Hybrid", label: "Hybrid" },
+          ]}
+          name="mode"
+          defaultValue={event?.mode ?? "Online"}
+        >
+          <SelectTrigger id={`event-format-${fieldSuffix}`} className="h-10 w-full">
             <SelectValue>
               {(value: string | null) =>
                 value === "InPerson"
@@ -531,9 +545,11 @@ function EventIdentityFields({
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="Online">Online</SelectItem>
-            <SelectItem value="InPerson">In person</SelectItem>
-            <SelectItem value="Hybrid">Hybrid</SelectItem>
+            <SelectGroup>
+              <SelectItem value="Online">Online</SelectItem>
+              <SelectItem value="InPerson">In person</SelectItem>
+              <SelectItem value="Hybrid">Hybrid</SelectItem>
+            </SelectGroup>
           </SelectContent>
         </Select>
       </div>
@@ -545,13 +561,14 @@ function EventIdentityFields({
           Project review
         </Label>
         <Select
+          items={[
+            { value: "ManagerOnly", label: "Event managers decide" },
+            { value: "Committee", label: "Review committee votes" },
+          ]}
           name="approvalMode"
           defaultValue={event?.approvalMode ?? "ManagerOnly"}
         >
-          <SelectTrigger
-            id={`project-review-${fieldSuffix}`}
-            className="h-10 w-full"
-          >
+          <SelectTrigger id={`project-review-${fieldSuffix}`} className="h-10 w-full">
             <SelectValue>
               {(value: string | null) =>
                 value === "Committee"
@@ -561,8 +578,10 @@ function EventIdentityFields({
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="ManagerOnly">Event managers decide</SelectItem>
-            <SelectItem value="Committee">Review committee votes</SelectItem>
+            <SelectGroup>
+              <SelectItem value="ManagerOnly">Event managers decide</SelectItem>
+              <SelectItem value="Committee">Review committee votes</SelectItem>
+            </SelectGroup>
           </SelectContent>
         </Select>
       </div>
@@ -791,6 +810,13 @@ function EventRecurrenceFields({
           Repeats
         </Label>
         <Select
+          items={[
+            { value: "none", label: "Does not repeat" },
+            { value: "Daily", label: "Daily" },
+            { value: "Weekly", label: <>Weekly on {startDay}</> },
+            { value: "Monthly", label: <>Monthly on day {startDayOfMonth}</> },
+            { value: "custom", label: "Custom…" },
+          ]}
           value={repeatOption}
           onValueChange={(value) => {
             setRepeatOption(value ?? "none");
@@ -813,13 +839,15 @@ function EventRecurrenceFields({
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="none">Does not repeat</SelectItem>
-            <SelectItem value="Daily">Daily</SelectItem>
-            <SelectItem value="Weekly">Weekly on {startDay}</SelectItem>
-            <SelectItem value="Monthly">
-              Monthly on day {startDayOfMonth}
-            </SelectItem>
-            <SelectItem value="custom">Custom…</SelectItem>
+            <SelectGroup>
+              <SelectItem value="none">Does not repeat</SelectItem>
+              <SelectItem value="Daily">Daily</SelectItem>
+              <SelectItem value="Weekly">Weekly on {startDay}</SelectItem>
+              <SelectItem value="Monthly">
+                Monthly on day {startDayOfMonth}
+              </SelectItem>
+              <SelectItem value="custom">Custom…</SelectItem>
+            </SelectGroup>
           </SelectContent>
         </Select>
         <input type="hidden" name="recurrenceFrequency" value={frequency} />
@@ -841,6 +869,11 @@ function EventRecurrenceFields({
                   required
                 />
                 <Select
+                  items={[
+                    { value: "Daily", label: "Day(s)" },
+                    { value: "Weekly", label: "Week(s)" },
+                    { value: "Monthly", label: "Month(s)" },
+                  ]}
                   value={customFrequency}
                   onValueChange={(value) => {
                     setCustomFrequency(value ?? "Weekly");
@@ -859,9 +892,11 @@ function EventRecurrenceFields({
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Daily">Day(s)</SelectItem>
-                    <SelectItem value="Weekly">Week(s)</SelectItem>
-                    <SelectItem value="Monthly">Month(s)</SelectItem>
+                    <SelectGroup>
+                      <SelectItem value="Daily">Day(s)</SelectItem>
+                      <SelectItem value="Weekly">Week(s)</SelectItem>
+                      <SelectItem value="Monthly">Month(s)</SelectItem>
+                    </SelectGroup>
                   </SelectContent>
                 </Select>
               </div>
@@ -909,6 +944,10 @@ function EventRecurrenceFields({
             <div className="space-y-2">
               <Label htmlFor="recurrence-end-mode">Ends</Label>
               <Select
+                items={[
+                  { value: "count", label: "After" },
+                  { value: "date", label: "On a date" },
+                ]}
                 value={endMode}
                 onValueChange={(value) => {
                   setEndMode(value ?? "count");
@@ -917,14 +956,14 @@ function EventRecurrenceFields({
               >
                 <SelectTrigger id="recurrence-end-mode" className="w-full">
                   <SelectValue>
-                    {(value: string | null) =>
-                      value === "date" ? "On a date" : "After"
-                    }
+                    {(value: string | null) => (value === "date" ? "On a date" : "After")}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="count">After</SelectItem>
-                  <SelectItem value="date">On a date</SelectItem>
+                  <SelectGroup>
+                    <SelectItem value="count">After</SelectItem>
+                    <SelectItem value="date">On a date</SelectItem>
+                  </SelectGroup>
                 </SelectContent>
               </Select>
               <input type="hidden" name="recurrenceEndMode" value={endMode} />
@@ -1569,21 +1608,26 @@ function TestingTimeSlotBuilder({
         <div className="space-y-1.5">
           <Label htmlFor="session-mode">Format</Label>
           <Select
+            items={[
+              { value: "InPerson", label: "In person" },
+              { value: "Online", label: "Online" },
+              { value: "Hybrid", label: "Hybrid" },
+            ]}
             name="mode"
             value={mode}
             onValueChange={(value) =>
-              setMode(
-                value as NonNullable<TestingLabTestingEventProjection["mode"]>,
-              )
+              setMode(value as NonNullable<TestingLabTestingEventProjection["mode"]>)
             }
           >
             <SelectTrigger id="session-mode">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="InPerson">In person</SelectItem>
-              <SelectItem value="Online">Online</SelectItem>
-              <SelectItem value="Hybrid">Hybrid</SelectItem>
+              <SelectGroup>
+                <SelectItem value="InPerson">In person</SelectItem>
+                <SelectItem value="Online">Online</SelectItem>
+                <SelectItem value="Hybrid">Hybrid</SelectItem>
+              </SelectGroup>
             </SelectContent>
           </Select>
         </div>
@@ -1859,12 +1903,25 @@ function TestingSlotEditorFields({ slot, eventStartsAt, eventEndsAt, timeZoneId 
       <section aria-label="Time slot delivery" className="grid gap-4 border-t pt-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor={`slot-mode-${slot.id}`}>Format</Label>
-          <Select name="mode" value={mode} onValueChange={(value) => setMode(value as typeof mode)}>
-            <SelectTrigger id={`slot-mode-${slot.id}`} className="w-full"><SelectValue /></SelectTrigger>
+          <Select
+            items={[
+              { value: "Online", label: "Online" },
+              { value: "InPerson", label: "In person" },
+              { value: "Hybrid", label: "Hybrid" },
+            ]}
+            name="mode"
+            value={mode}
+            onValueChange={(value) => setMode(value as typeof mode)}
+          >
+            <SelectTrigger id={`slot-mode-${slot.id}`} className="w-full">
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Online">Online</SelectItem>
-              <SelectItem value="InPerson">In person</SelectItem>
-              <SelectItem value="Hybrid">Hybrid</SelectItem>
+              <SelectGroup>
+                <SelectItem value="Online">Online</SelectItem>
+                <SelectItem value="InPerson">In person</SelectItem>
+                <SelectItem value="Hybrid">Hybrid</SelectItem>
+              </SelectGroup>
             </SelectContent>
           </Select>
         </div>
@@ -1991,6 +2048,7 @@ export function TestingEventLifecycleActions({
             submitLabel="Cancel event"
             action={transitionTestingEvent}
             destructive
+            onSuccess={setResult}
           >
             <input type="hidden" name="eventId" value={event.id} />
             <input type="hidden" name="transition" value="cancel" />
@@ -2110,16 +2168,24 @@ export function TestingEventCommittee({
             <input type="hidden" name="eventId" value={event.id} />
             <div className="space-y-2">
               <Label>Member</Label>
-              <Select name="userId" required>
+              <Select
+                items={[
+                  ...members.map((member) => ({ value: member.id, label: member.label })),
+                ]}
+                name="userId"
+                required
+              >
                 <SelectTrigger aria-label="Committee member">
                   <SelectValue placeholder="Choose a member" />
                 </SelectTrigger>
                 <SelectContent>
-                  {members.map((member) => (
-                    <SelectItem key={member.id} value={member.id}>
-                      {member.label}
-                    </SelectItem>
-                  ))}
+                  <SelectGroup>
+                    {members.map((member) => (
+                      <SelectItem key={member.id} value={member.id}>
+                        {member.label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
                 </SelectContent>
               </Select>
             </div>
@@ -2323,6 +2389,12 @@ export function TestingEventApplications({
                         description="Capacity is reserved only after this approval is accepted."
                         submitLabel="Approve project"
                         action={approveTestingEventApplication}
+                        onSuccess={(result) =>
+                          setReviewResult({
+                            applicationId: application.id!,
+                            result,
+                          })
+                        }
                       >
                         <input type="hidden" name="eventId" value={eventId} />
                         <input
@@ -2334,7 +2406,23 @@ export function TestingEventApplications({
                           <Label htmlFor={`approve-slot-${application.id}`}>
                             Testing slot
                           </Label>
-                          <Select name="slotId" required>
+                          <Select
+                            items={[
+                              ...slots
+                                .filter((slot) => slot.id)
+                                .map((slot) => ({
+                                  value: slot.id!,
+                                  label: (
+                                    <>
+                                      {formatEventDateTime(slot.startsAt)} ·{" "}
+                                      {slot.campusName ?? slot.meetingUrl ?? slot.mode}
+                                    </>
+                                  ),
+                                })),
+                            ]}
+                            name="slotId"
+                            required
+                          >
                             <SelectTrigger
                               id={`approve-slot-${application.id}`}
                               aria-label="Testing slot"
@@ -2342,16 +2430,16 @@ export function TestingEventApplications({
                               <SelectValue placeholder="Choose a slot" />
                             </SelectTrigger>
                             <SelectContent>
-                              {slots
-                                .filter((slot) => slot.id)
-                                .map((slot) => (
-                                  <SelectItem key={slot.id} value={slot.id!}>
-                                    {formatEventDateTime(slot.startsAt)} ·{" "}
-                                    {slot.campusName ??
-                                      slot.meetingUrl ??
-                                      slot.mode}
-                                  </SelectItem>
-                                ))}
+                              <SelectGroup>
+                                {slots
+                                  .filter((slot) => slot.id)
+                                  .map((slot) => (
+                                    <SelectItem key={slot.id} value={slot.id!}>
+                                      {formatEventDateTime(slot.startsAt)} ·{" "}
+                                      {slot.campusName ?? slot.meetingUrl ?? slot.mode}
+                                    </SelectItem>
+                                  ))}
+                              </SelectGroup>
                             </SelectContent>
                           </Select>
                         </div>
@@ -2378,6 +2466,12 @@ export function TestingEventApplications({
                         description="The application remains eligible but does not consume project capacity."
                         submitLabel="Add to waitlist"
                         action={waitlistTestingEventApplication}
+                        onSuccess={(result) =>
+                          setReviewResult({
+                            applicationId: application.id!,
+                            result,
+                          })
+                        }
                       >
                         <input type="hidden" name="eventId" value={eventId} />
                         <input
@@ -2409,6 +2503,12 @@ export function TestingEventApplications({
                         submitLabel="Reject project"
                         action={rejectTestingEventApplication}
                         destructive
+                        onSuccess={(result) =>
+                          setReviewResult({
+                            applicationId: application.id!,
+                            result,
+                          })
+                        }
                       >
                         <input type="hidden" name="eventId" value={eventId} />
                         <input
@@ -2442,6 +2542,12 @@ export function TestingEventApplications({
                       description="Votes are auditable and cannot be silently replaced by another reviewer."
                       submitLabel="Record vote"
                       action={voteOnTestingEventApplication}
+                      onSuccess={(result) =>
+                        setReviewResult({
+                          applicationId: application.id!,
+                          result,
+                        })
+                      }
                     >
                       <input type="hidden" name="eventId" value={eventId} />
                       <input
@@ -2451,13 +2557,22 @@ export function TestingEventApplications({
                       />
                       <div className="space-y-2">
                         <Label>Vote</Label>
-                        <Select name="decision" required>
+                        <Select
+                          items={[
+                            { value: "Approve", label: "Approve" },
+                            { value: "Reject", label: "Reject" },
+                          ]}
+                          name="decision"
+                          required
+                        >
                           <SelectTrigger>
                             <SelectValue placeholder="Choose decision" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Approve">Approve</SelectItem>
-                            <SelectItem value="Reject">Reject</SelectItem>
+                            <SelectGroup>
+                              <SelectItem value="Approve">Approve</SelectItem>
+                              <SelectItem value="Reject">Reject</SelectItem>
+                            </SelectGroup>
                           </SelectContent>
                         </Select>
                       </div>
@@ -2496,12 +2611,15 @@ export function TestingSlotRegistrations({
   approvedApplications: TestingLabApprovedApplicationOption[];
   readOnly?: boolean;
 }) {
+  const [result, setResult] =
+    useState<TestingEventActionResult<unknown> | null>(null);
   if (registrations.length === 0)
     return (
       <p className="text-sm text-muted-foreground">No tester registrations.</p>
     );
   return (
     <div className="mt-3 divide-y border-t">
+      <ActionMessage result={result} />
       {registrations.map((registration, index) => {
         const testerLabel = registration.userId
           ? memberLabels[registration.userId]
@@ -2558,6 +2676,7 @@ export function TestingSlotRegistrations({
                     description="Create the feedback obligation for this tester after check-in."
                     submitLabel="Assign project"
                     action={assignTestedProjectToRegistration}
+                    onSuccess={setResult}
                   >
                     <input type="hidden" name="eventId" value={eventId} />
                     <input
@@ -2567,19 +2686,27 @@ export function TestingSlotRegistrations({
                     />
                     <div className="space-y-2">
                       <Label>Approved project</Label>
-                      <Select name="applicationId" required>
+                      <Select
+                        items={[
+                          ...assignableProjects.map((application) => ({
+                            value: application.id,
+                            label: application.label,
+                          })),
+                        ]}
+                        name="applicationId"
+                        required
+                      >
                         <SelectTrigger aria-label="Approved project">
                           <SelectValue placeholder="Choose a project" />
                         </SelectTrigger>
                         <SelectContent>
-                          {assignableProjects.map((application) => (
-                            <SelectItem
-                              key={application.id}
-                              value={application.id}
-                            >
-                              {application.label}
-                            </SelectItem>
-                          ))}
+                          <SelectGroup>
+                            {assignableProjects.map((application) => (
+                              <SelectItem key={application.id} value={application.id}>
+                                {application.label}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
                         </SelectContent>
                       </Select>
                     </div>
@@ -2597,15 +2724,26 @@ export function TestingSlotRegistrations({
                     name="registrationId"
                     value={registration.id}
                   />
-                  <Select name="attendance" required>
+                  <Select
+                    items={[
+                      { value: "check-in", label: "Check in" },
+                      { value: "check-out", label: "Check out" },
+                      { value: "no-show", label: "No show" },
+                      { value: "complete", label: "Complete" },
+                    ]}
+                    name="attendance"
+                    required
+                  >
                     <SelectTrigger className="w-36" aria-label="Attendance">
                       <SelectValue placeholder="Attendance" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="check-in">Check in</SelectItem>
-                      <SelectItem value="check-out">Check out</SelectItem>
-                      <SelectItem value="no-show">No show</SelectItem>
-                      <SelectItem value="complete">Complete</SelectItem>
+                      <SelectGroup>
+                        <SelectItem value="check-in">Check in</SelectItem>
+                        <SelectItem value="check-out">Check out</SelectItem>
+                        <SelectItem value="no-show">No show</SelectItem>
+                        <SelectItem value="complete">Complete</SelectItem>
+                      </SelectGroup>
                     </SelectContent>
                   </Select>
                   <Button size="sm" type="submit">
@@ -2662,6 +2800,12 @@ export function TestingEventLearningDialog({
       <div className="space-y-2">
         <Label>Course activity</Label>
         <Select
+          items={[
+            ...activities.map((activity) => ({
+              value: activity.id,
+              label: activity.label,
+            })),
+          ]}
           name="learningActivityId"
           required
           value={selectedActivityId}
@@ -2671,14 +2815,16 @@ export function TestingEventLearningDialog({
             <SelectValue placeholder="Choose a lesson or graded activity" />
           </SelectTrigger>
           <SelectContent>
-            {activities.map((activity) => (
-              <SelectItem
-                key={`${activity.courseId}:${activity.id}`}
-                value={activity.id}
-              >
-                {activity.label}
-              </SelectItem>
-            ))}
+            <SelectGroup>
+              {activities.map((activity) => (
+                <SelectItem
+                  key={`${activity.courseId}:${activity.id}`}
+                  value={activity.id}
+                >
+                  {activity.label}
+                </SelectItem>
+              ))}
+            </SelectGroup>
           </SelectContent>
         </Select>
       </div>
@@ -2694,6 +2840,12 @@ export function TestingEventLearningDialog({
       <div className="space-y-2">
         <Label>Completion requirement</Label>
         <Select
+          items={[
+            { value: "Attendance", label: "Attendance" },
+            { value: "Feedback", label: "Required feedback" },
+            { value: "AttendanceAndFeedback", label: "Attendance and feedback" },
+            { value: "ProjectTested", label: "Assigned project tested" },
+          ]}
           name="requirement"
           defaultValue={
             event.learningCompletionRequirement ?? "AttendanceAndFeedback"
@@ -2703,14 +2855,14 @@ export function TestingEventLearningDialog({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="Attendance">Attendance</SelectItem>
-            <SelectItem value="Feedback">Required feedback</SelectItem>
-            <SelectItem value="AttendanceAndFeedback">
-              Attendance and feedback
-            </SelectItem>
-            <SelectItem value="ProjectTested">
-              Assigned project tested
-            </SelectItem>
+            <SelectGroup>
+              <SelectItem value="Attendance">Attendance</SelectItem>
+              <SelectItem value="Feedback">Required feedback</SelectItem>
+              <SelectItem value="AttendanceAndFeedback">
+                Attendance and feedback
+              </SelectItem>
+              <SelectItem value="ProjectTested">Assigned project tested</SelectItem>
+            </SelectGroup>
           </SelectContent>
         </Select>
       </div>

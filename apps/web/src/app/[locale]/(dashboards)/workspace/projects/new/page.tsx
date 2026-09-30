@@ -1,7 +1,8 @@
+import { cn } from "@game-guild/ui/lib/utils";
 import { createProjectForm } from '@/lib/workspace-actions';
 import { Link } from '@/i18n/navigation';
 import { getWorkspaceTeams } from '@/lib/workspaces';
-import { Button } from '@game-guild/ui/components/button';
+import { Button, buttonVariants } from '@game-guild/ui/components/button';
 import {
   Card,
   CardContent,
@@ -28,9 +29,9 @@ const projectTypes = [
 export default async function NewProjectPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ teamId?: string }>;
-} = {}) {
-  const { teamId } = searchParams ? await searchParams : {};
+  searchParams: Promise<{ teamId?: string }>;
+}) {
+  const { teamId } = await searchParams;
   const teams = await getWorkspaceTeams();
   const selectedTeamId = teams.some((team) => team.id === teamId) ? teamId : '';
 
@@ -106,9 +107,12 @@ export default async function NewProjectPage({
             </div>
             <div className="flex flex-wrap gap-2">
               <Button type="submit">Create project</Button>
-              <Button nativeButton={false} type="button" variant="outline" render={<Link href="/workspace/projects" />}>
+              <Link
+                href="/workspace/projects"
+                className={cn(buttonVariants({ variant: "outline" }))}
+              >
                 Cancel
-              </Button>
+              </Link>
             </div>
           </form>
         </CardContent>

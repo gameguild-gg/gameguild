@@ -1,5 +1,6 @@
+import { cn } from "@game-guild/ui/lib/utils";
 import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
+import { buttonVariants } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { ArrowLeft, ExternalLink, User } from 'lucide-react';
 import Image from 'next/image';
@@ -19,10 +20,18 @@ export default async function Page({
   return (
     <main className="min-h-screen bg-slate-950 text-white">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-8">
-        <Button nativeButton={false} variant="ghost" className="w-fit text-slate-300 hover:text-white" render={<Link href={`/${locale}/members/${member}`} />}>
+        <Link
+          href={`/${locale}/members/${member}`}
+          className={cn(
+            buttonVariants({
+              variant: "ghost",
+              className: "w-fit text-slate-300 hover:text-white",
+            }),
+          )}
+        >
           <ArrowLeft className="mr-2 size-4" />
           Back to {result.member.displayName}
-        </Button>
+        </Link>
 
         <Card className="overflow-hidden border-purple-500/20 bg-slate-900/80">
           <div className="relative h-72 bg-gradient-to-br from-blue-700 to-purple-700">
@@ -57,10 +66,15 @@ export default async function Page({
             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <CardTitle className="text-3xl text-white">{result.project.title}</CardTitle>
               {result.project.url ? (
-                <Button nativeButton={false} className="w-fit" render={<a href={result.project.url} target="_blank" rel="noreferrer" />}>
+                <a
+                  href={result.project.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={cn(buttonVariants({ className: "w-fit" }))}
+                >
                   <ExternalLink className="mr-2 size-4" />
                   Open project
-                </Button>
+                </a>
               ) : null}
             </div>
           </CardHeader>

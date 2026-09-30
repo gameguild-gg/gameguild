@@ -1840,96 +1840,355 @@ export const getApiReadyEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetApiSocialBlogForGetApiSocialBlogInput {
+export interface DeleteApiSocialBlogCommentsInput {
+  commentId: string;
+}
+export type DeleteApiSocialBlogCommentsOutput = void;
+export const deleteApiSocialBlogCommentsEndpoint = {
+  operationId: 'deleteApiSocialBlogComments' as const,
+  method: 'DELETE' as const,
+  path: '/api/social/blog/comments/{commentId}' as const,
+  tags: ['SocialBlogComments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostApiSocialBlogPostsInput {
+  body?: Types.SocialBlogControllersCreateBlogPostInput;
+}
+export type PostApiSocialBlogPostsOutput = Types.SocialBlogBlogPost;
+export const postApiSocialBlogPostsEndpoint = {
+  operationId: 'postApiSocialBlogPosts' as const,
+  method: 'POST' as const,
+  path: '/api/social/blog/posts' as const,
+  tags: ['SocialBlogAuthoring'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetApiSocialBlogPostsInput {
+  id: string;
+}
+export type GetApiSocialBlogPostsOutput = Types.SocialBlogBlogPost;
+export const getApiSocialBlogPostsEndpoint = {
+  operationId: 'getApiSocialBlogPosts' as const,
+  method: 'GET' as const,
+  path: '/api/social/blog/posts/{id}' as const,
+  tags: ['SocialBlogAuthoring'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutApiSocialBlogPostsInput {
+  id: string;
+  body?: Types.SocialBlogControllersUpdateBlogPostDraftInput;
+}
+export type PutApiSocialBlogPostsOutput = Types.SocialBlogBlogPost;
+export const putApiSocialBlogPostsEndpoint = {
+  operationId: 'putApiSocialBlogPosts' as const,
+  method: 'PUT' as const,
+  path: '/api/social/blog/posts/{id}' as const,
+  tags: ['SocialBlogAuthoring'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface DeleteApiSocialBlogPostsInput {
+  id: string;
+}
+export type DeleteApiSocialBlogPostsOutput = void;
+export const deleteApiSocialBlogPostsEndpoint = {
+  operationId: 'deleteApiSocialBlogPosts' as const,
+  method: 'DELETE' as const,
+  path: '/api/social/blog/posts/{id}' as const,
+  tags: ['SocialBlogAuthoring'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostApiSocialBlogPostsCoauthorsInput {
+  id: string;
+  body?: Types.SocialBlogControllersBlogCoauthorInput;
+}
+export type PostApiSocialBlogPostsCoauthorsOutput = void;
+export const postApiSocialBlogPostsCoauthorsEndpoint = {
+  operationId: 'postApiSocialBlogPostsCoauthors' as const,
+  method: 'POST' as const,
+  path: '/api/social/blog/posts/{id}/coauthors' as const,
+  tags: ['SocialBlogAuthoring'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface DeleteApiSocialBlogPostsCoauthorsInput {
+  id: string;
+  userId: string;
+}
+export type DeleteApiSocialBlogPostsCoauthorsOutput = void;
+export const deleteApiSocialBlogPostsCoauthorsEndpoint = {
+  operationId: 'deleteApiSocialBlogPostsCoauthors' as const,
+  method: 'DELETE' as const,
+  path: '/api/social/blog/posts/{id}/coauthors/{userId}' as const,
+  tags: ['SocialBlogAuthoring'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostApiSocialBlogPostsCommentsInput {
+  id: string;
+  body?: Types.SocialBlogControllersAddBlogCommentInput;
+}
+export type PostApiSocialBlogPostsCommentsOutput = Types.SocialBlogBlogComment;
+export const postApiSocialBlogPostsCommentsEndpoint = {
+  operationId: 'postApiSocialBlogPostsComments' as const,
+  method: 'POST' as const,
+  path: '/api/social/blog/posts/{id}/comments' as const,
+  tags: ['SocialBlogComments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostApiSocialBlogPostsPublishInput {
+  id: string;
+}
+export type PostApiSocialBlogPostsPublishOutput = Types.SocialBlogBlogPost;
+export const postApiSocialBlogPostsPublishEndpoint = {
+  operationId: 'postApiSocialBlogPostsPublish' as const,
+  method: 'POST' as const,
+  path: '/api/social/blog/posts/{id}/publish' as const,
+  tags: ['SocialBlogAuthoring'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostApiSocialBlogPostsSlugInput {
+  id: string;
+  body?: Types.SocialBlogControllersChangeBlogPostSlugInput;
+}
+export type PostApiSocialBlogPostsSlugOutput = Types.SocialBlogBlogPost;
+export const postApiSocialBlogPostsSlugEndpoint = {
+  operationId: 'postApiSocialBlogPostsSlug' as const,
+  method: 'POST' as const,
+  path: '/api/social/blog/posts/{id}/slug' as const,
+  tags: ['SocialBlogAuthoring'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostApiSocialBlogPostsTransferPrimaryInput {
+  id: string;
+  body?: Types.SocialBlogControllersTransferBlogPrimaryInput;
+}
+export type PostApiSocialBlogPostsTransferPrimaryOutput = Types.SocialBlogBlogPost;
+export const postApiSocialBlogPostsTransferPrimaryEndpoint = {
+  operationId: 'postApiSocialBlogPostsTransferPrimary' as const,
+  method: 'POST' as const,
+  path: '/api/social/blog/posts/{id}/transfer-primary' as const,
+  tags: ['SocialBlogAuthoring'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostApiSocialBlogPostsUnpublishInput {
+  id: string;
+}
+export type PostApiSocialBlogPostsUnpublishOutput = Types.SocialBlogBlogPost;
+export const postApiSocialBlogPostsUnpublishEndpoint = {
+  operationId: 'postApiSocialBlogPostsUnpublish' as const,
+  method: 'POST' as const,
+  path: '/api/social/blog/posts/{id}/unpublish' as const,
+  tags: ['SocialBlogAuthoring'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetApiSocialBlogPostsAiConversationsInput {
+  postId: string;
+}
+export type GetApiSocialBlogPostsAiConversationsOutput = Array<Types.SocialBlogAuthoringBlogAiConversationDto>;
+export const getApiSocialBlogPostsAiConversationsEndpoint = {
+  operationId: 'getApiSocialBlogPostsAiConversations' as const,
+  method: 'GET' as const,
+  path: '/api/social/blog/posts/{postId}/ai/conversations' as const,
+  tags: ['SocialBlogAi'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetApiSocialBlogPostsAiEntitlementInput {
+  postId: string;
+}
+export type GetApiSocialBlogPostsAiEntitlementOutput = Types.SocialBlogAuthoringBlogAiEntitlementDto;
+export const getApiSocialBlogPostsAiEntitlementEndpoint = {
+  operationId: 'getApiSocialBlogPostsAiEntitlement' as const,
+  method: 'GET' as const,
+  path: '/api/social/blog/posts/{postId}/ai/entitlement' as const,
+  tags: ['SocialBlogAi'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface DeleteApiSocialBlogPostsAiProposalsInput {
+  postId: string;
+  proposalId: string;
+}
+export type DeleteApiSocialBlogPostsAiProposalsOutput = Types.SocialBlogAuthoringBlogAiProposalDto;
+export const deleteApiSocialBlogPostsAiProposalsEndpoint = {
+  operationId: 'deleteApiSocialBlogPostsAiProposals' as const,
+  method: 'DELETE' as const,
+  path: '/api/social/blog/posts/{postId}/ai/proposals/{proposalId}' as const,
+  tags: ['SocialBlogAi'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostApiSocialBlogPostsAiProposalsApplyInput {
+  postId: string;
+  proposalId: string;
+  body?: Types.SocialBlogAuthoringApplyBlogAiProposalInput;
+}
+export type PostApiSocialBlogPostsAiProposalsApplyOutput = Types.SocialBlogAuthoringBlogPostDto;
+export const postApiSocialBlogPostsAiProposalsApplyEndpoint = {
+  operationId: 'postApiSocialBlogPostsAiProposalsApply' as const,
+  method: 'POST' as const,
+  path: '/api/social/blog/posts/{postId}/ai/proposals/{proposalId}/apply' as const,
+  tags: ['SocialBlogAi'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostApiSocialBlogPostsAiRunsInput {
+  postId: string;
+  body?: Types.SocialBlogAuthoringBlogAiRunInput;
+}
+export type PostApiSocialBlogPostsAiRunsOutput = Types.SocialBlogAuthoringBlogAiRunDto;
+export const postApiSocialBlogPostsAiRunsEndpoint = {
+  operationId: 'postApiSocialBlogPostsAiRuns' as const,
+  method: 'POST' as const,
+  path: '/api/social/blog/posts/{postId}/ai/runs' as const,
+  tags: ['SocialBlogAi'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetApiSocialBlogPostsAiRunsInput {
+  postId: string;
+  runId: string;
+}
+export type GetApiSocialBlogPostsAiRunsOutput = Types.SocialBlogAuthoringBlogAiRunDto;
+export const getApiSocialBlogPostsAiRunsEndpoint = {
+  operationId: 'getApiSocialBlogPostsAiRuns' as const,
+  method: 'GET' as const,
+  path: '/api/social/blog/posts/{postId}/ai/runs/{runId}' as const,
+  tags: ['SocialBlogAi'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostApiSocialBlogPostsAiRunsCancelInput {
+  postId: string;
+  runId: string;
+}
+export type PostApiSocialBlogPostsAiRunsCancelOutput = Types.SocialBlogAuthoringBlogAiRunDto;
+export const postApiSocialBlogPostsAiRunsCancelEndpoint = {
+  operationId: 'postApiSocialBlogPostsAiRunsCancel' as const,
+  method: 'POST' as const,
+  path: '/api/social/blog/posts/{postId}/ai/runs/{runId}/cancel' as const,
+  tags: ['SocialBlogAi'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetApiSocialBlogPostsAiRunsStreamInput {
+  postId: string;
+  runId: string;
+}
+export type GetApiSocialBlogPostsAiRunsStreamOutput = void;
+export const getApiSocialBlogPostsAiRunsStreamEndpoint = {
+  operationId: 'getApiSocialBlogPostsAiRunsStream' as const,
+  method: 'GET' as const,
+  path: '/api/social/blog/posts/{postId}/ai/runs/{runId}/stream' as const,
+  tags: ['SocialBlogAi'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetApiSocialBlogPostsMineInput {
   query?: {
-    authorId?: string;
-    status?: Types.SocialBlogBlogPostStatus;
-    featured?: boolean;
-    skip?: number;
-    take?: number;
+    page?: number;
   };
 }
-export type GetApiSocialBlogForGetApiSocialBlogOutput = Array<Types.SocialBlogBlogPostDto>;
-export const getApiSocialBlogForGetApiSocialBlogEndpoint = {
-  operationId: 'getApiSocialBlogForGetApiSocialBlog' as const,
+export type GetApiSocialBlogPostsMineOutput = Array<Types.SocialBlogBlogPost>;
+export const getApiSocialBlogPostsMineEndpoint = {
+  operationId: 'getApiSocialBlogPostsMine' as const,
   method: 'GET' as const,
-  path: '/api/social/blog' as const,
-  tags: ['SocialBlogPosts'] as const,
+  path: '/api/social/blog/posts/mine' as const,
+  tags: ['SocialBlogAuthoring'] as const,
   requiresAuth: true,
 } as const;
 
-export interface PostApiSocialBlogInput {
-  body?: Types.SocialBlogCreateBlogPostInput;
-}
-export type PostApiSocialBlogOutput = Types.SocialBlogBlogPostDto;
-export const postApiSocialBlogEndpoint = {
-  operationId: 'postApiSocialBlog' as const,
-  method: 'POST' as const,
-  path: '/api/social/blog' as const,
-  tags: ['SocialBlogPosts'] as const,
-  requiresAuth: true,
-} as const;
-
-export interface GetApiSocialBlogForGetApiSocialBlogByIdInput {
-  id: string;
-}
-export type GetApiSocialBlogForGetApiSocialBlogByIdOutput = void;
-export const getApiSocialBlogForGetApiSocialBlogByIdEndpoint = {
-  operationId: 'getApiSocialBlogForGetApiSocialBlogById' as const,
-  method: 'GET' as const,
-  path: '/api/social/blog/{id}' as const,
-  tags: ['SocialBlogPosts'] as const,
-  requiresAuth: true,
-} as const;
-
-export interface PostApiSocialBlogFeatureInput {
-  id: string;
+export interface GetApiSocialBlogPublicAuthorsForGetApiSocialBlogPublicAuthorsByHandleInput {
+  handle: string;
   query?: {
-    featured?: boolean;
+    beforePublishedAt?: string;
+    beforeId?: string;
   };
 }
-export type PostApiSocialBlogFeatureOutput = void;
-export const postApiSocialBlogFeatureEndpoint = {
-  operationId: 'postApiSocialBlogFeature' as const,
-  method: 'POST' as const,
-  path: '/api/social/blog/{id}/feature' as const,
-  tags: ['SocialBlogPosts'] as const,
+export type GetApiSocialBlogPublicAuthorsForGetApiSocialBlogPublicAuthorsByHandleOutput = Types.SocialBlogQueriesBlogPostSummaryPage;
+export const getApiSocialBlogPublicAuthorsForGetApiSocialBlogPublicAuthorsByHandleEndpoint = {
+  operationId: 'getApiSocialBlogPublicAuthorsForGetApiSocialBlogPublicAuthorsByHandle' as const,
+  method: 'GET' as const,
+  path: '/api/social/blog/public/authors/{handle}' as const,
+  tags: ['SocialBlogPublic'] as const,
   requiresAuth: true,
 } as const;
 
-export interface PostApiSocialBlogPublishInput {
-  id: string;
+export interface GetApiSocialBlogPublicAuthorsForGetApiSocialBlogPublicAuthorsByHandleBySlugInput {
+  handle: string;
+  slug: string;
 }
-export type PostApiSocialBlogPublishOutput = void;
-export const postApiSocialBlogPublishEndpoint = {
-  operationId: 'postApiSocialBlogPublish' as const,
-  method: 'POST' as const,
-  path: '/api/social/blog/{id}/publish' as const,
-  tags: ['SocialBlogPosts'] as const,
+export type GetApiSocialBlogPublicAuthorsForGetApiSocialBlogPublicAuthorsByHandleBySlugOutput = Types.SocialBlogQueriesBlogPostDetailDto;
+export const getApiSocialBlogPublicAuthorsForGetApiSocialBlogPublicAuthorsByHandleBySlugEndpoint = {
+  operationId: 'getApiSocialBlogPublicAuthorsForGetApiSocialBlogPublicAuthorsByHandleBySlug' as const,
+  method: 'GET' as const,
+  path: '/api/social/blog/public/authors/{handle}/{slug}' as const,
+  tags: ['SocialBlogPublic'] as const,
   requiresAuth: true,
 } as const;
 
-export interface PostApiSocialBlogUnpublishInput {
-  id: string;
+export interface GetApiSocialBlogPublicPostsInput {
+  query?: {
+    beforePublishedAt?: string;
+    beforeId?: string;
+  };
 }
-export type PostApiSocialBlogUnpublishOutput = void;
-export const postApiSocialBlogUnpublishEndpoint = {
-  operationId: 'postApiSocialBlogUnpublish' as const,
-  method: 'POST' as const,
-  path: '/api/social/blog/{id}/unpublish' as const,
-  tags: ['SocialBlogPosts'] as const,
+export type GetApiSocialBlogPublicPostsOutput = Types.SocialBlogQueriesBlogPostSummaryPage;
+export const getApiSocialBlogPublicPostsEndpoint = {
+  operationId: 'getApiSocialBlogPublicPosts' as const,
+  method: 'GET' as const,
+  path: '/api/social/blog/public/posts' as const,
+  tags: ['SocialBlogPublic'] as const,
   requiresAuth: true,
 } as const;
 
-export interface PostApiSocialBlogViewsInput {
+export interface GetApiSocialBlogPublicPostsCommentsInput {
+  id: string;
+  query?: {
+    afterCreatedAt?: string;
+    afterId?: string;
+  };
+}
+export type GetApiSocialBlogPublicPostsCommentsOutput = Types.SocialBlogQueriesBlogCommentPage;
+export const getApiSocialBlogPublicPostsCommentsEndpoint = {
+  operationId: 'getApiSocialBlogPublicPostsComments' as const,
+  method: 'GET' as const,
+  path: '/api/social/blog/public/posts/{id}/comments' as const,
+  tags: ['SocialBlogPublic'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostApiSocialBlogPublicPostsViewsInput {
   id: string;
 }
-export type PostApiSocialBlogViewsOutput = void;
-export const postApiSocialBlogViewsEndpoint = {
-  operationId: 'postApiSocialBlogViews' as const,
+export type PostApiSocialBlogPublicPostsViewsOutput = void;
+export const postApiSocialBlogPublicPostsViewsEndpoint = {
+  operationId: 'postApiSocialBlogPublicPostsViews' as const,
   method: 'POST' as const,
-  path: '/api/social/blog/{id}/views' as const,
-  tags: ['SocialBlogPosts'] as const,
+  path: '/api/social/blog/public/posts/{id}/views' as const,
+  tags: ['SocialBlogPublic'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetApiSocialBlogPublicResolveInput {
+  handle: string;
+  slug: string;
+}
+export type GetApiSocialBlogPublicResolveOutput = Types.SocialBlogQueriesBlogRouteResolutionDto;
+export const getApiSocialBlogPublicResolveEndpoint = {
+  operationId: 'getApiSocialBlogPublicResolve' as const,
+  method: 'GET' as const,
+  path: '/api/social/blog/public/resolve/{handle}/{slug}' as const,
+  tags: ['SocialBlogPublic'] as const,
   requiresAuth: true,
 } as const;
 
@@ -2605,6 +2864,18 @@ export const putApiSocialProfilesUsersEndpoint = {
   operationId: 'putApiSocialProfilesUsers' as const,
   method: 'PUT' as const,
   path: '/api/social/profiles/users/{userId}' as const,
+  tags: ['SocialProfiles'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetApiSocialProfilesUsersOrCreateInput {
+  userId: string;
+}
+export type GetApiSocialProfilesUsersOrCreateOutput = Types.SocialProfilesSocialProfileDto;
+export const getApiSocialProfilesUsersOrCreateEndpoint = {
+  operationId: 'getApiSocialProfilesUsersOrCreate' as const,
+  method: 'GET' as const,
+  path: '/api/social/profiles/users/{userId}/or-create' as const,
   tags: ['SocialProfiles'] as const,
   requiresAuth: true,
 } as const;
@@ -21786,13 +22057,34 @@ export const endpoints = {
   getApiPrerequisitesCourseWouldCreateCycle: getApiPrerequisitesCourseWouldCreateCycleEndpoint,
   getApiPrerequisitesDependents: getApiPrerequisitesDependentsEndpoint,
   getApiReady: getApiReadyEndpoint,
-  getApiSocialBlogForGetApiSocialBlog: getApiSocialBlogForGetApiSocialBlogEndpoint,
-  postApiSocialBlog: postApiSocialBlogEndpoint,
-  getApiSocialBlogForGetApiSocialBlogById: getApiSocialBlogForGetApiSocialBlogByIdEndpoint,
-  postApiSocialBlogFeature: postApiSocialBlogFeatureEndpoint,
-  postApiSocialBlogPublish: postApiSocialBlogPublishEndpoint,
-  postApiSocialBlogUnpublish: postApiSocialBlogUnpublishEndpoint,
-  postApiSocialBlogViews: postApiSocialBlogViewsEndpoint,
+  deleteApiSocialBlogComments: deleteApiSocialBlogCommentsEndpoint,
+  postApiSocialBlogPosts: postApiSocialBlogPostsEndpoint,
+  getApiSocialBlogPosts: getApiSocialBlogPostsEndpoint,
+  putApiSocialBlogPosts: putApiSocialBlogPostsEndpoint,
+  deleteApiSocialBlogPosts: deleteApiSocialBlogPostsEndpoint,
+  postApiSocialBlogPostsCoauthors: postApiSocialBlogPostsCoauthorsEndpoint,
+  deleteApiSocialBlogPostsCoauthors: deleteApiSocialBlogPostsCoauthorsEndpoint,
+  postApiSocialBlogPostsComments: postApiSocialBlogPostsCommentsEndpoint,
+  postApiSocialBlogPostsPublish: postApiSocialBlogPostsPublishEndpoint,
+  postApiSocialBlogPostsSlug: postApiSocialBlogPostsSlugEndpoint,
+  postApiSocialBlogPostsTransferPrimary: postApiSocialBlogPostsTransferPrimaryEndpoint,
+  postApiSocialBlogPostsUnpublish: postApiSocialBlogPostsUnpublishEndpoint,
+  getApiSocialBlogPostsAiConversations: getApiSocialBlogPostsAiConversationsEndpoint,
+  getApiSocialBlogPostsAiEntitlement: getApiSocialBlogPostsAiEntitlementEndpoint,
+  deleteApiSocialBlogPostsAiProposals: deleteApiSocialBlogPostsAiProposalsEndpoint,
+  postApiSocialBlogPostsAiProposalsApply: postApiSocialBlogPostsAiProposalsApplyEndpoint,
+  postApiSocialBlogPostsAiRuns: postApiSocialBlogPostsAiRunsEndpoint,
+  getApiSocialBlogPostsAiRuns: getApiSocialBlogPostsAiRunsEndpoint,
+  postApiSocialBlogPostsAiRunsCancel: postApiSocialBlogPostsAiRunsCancelEndpoint,
+  getApiSocialBlogPostsAiRunsStream: getApiSocialBlogPostsAiRunsStreamEndpoint,
+  getApiSocialBlogPostsMine: getApiSocialBlogPostsMineEndpoint,
+  getApiSocialBlogPublicAuthorsForGetApiSocialBlogPublicAuthorsByHandle: getApiSocialBlogPublicAuthorsForGetApiSocialBlogPublicAuthorsByHandleEndpoint,
+  getApiSocialBlogPublicAuthorsForGetApiSocialBlogPublicAuthorsByHandleBySlug:
+    getApiSocialBlogPublicAuthorsForGetApiSocialBlogPublicAuthorsByHandleBySlugEndpoint,
+  getApiSocialBlogPublicPosts: getApiSocialBlogPublicPostsEndpoint,
+  getApiSocialBlogPublicPostsComments: getApiSocialBlogPublicPostsCommentsEndpoint,
+  postApiSocialBlogPublicPostsViews: postApiSocialBlogPublicPostsViewsEndpoint,
+  getApiSocialBlogPublicResolve: getApiSocialBlogPublicResolveEndpoint,
   getApiSocialCoursesContentDiscussions: getApiSocialCoursesContentDiscussionsEndpoint,
   getApiSocialCoursesDiscussions: getApiSocialCoursesDiscussionsEndpoint,
   postApiSocialCoursesLike: postApiSocialCoursesLikeEndpoint,
@@ -21844,6 +22136,7 @@ export const endpoints = {
   deleteApiSocialProfilesSkills: deleteApiSocialProfilesSkillsEndpoint,
   getApiSocialProfilesUsers: getApiSocialProfilesUsersEndpoint,
   putApiSocialProfilesUsers: putApiSocialProfilesUsersEndpoint,
+  getApiSocialProfilesUsersOrCreate: getApiSocialProfilesUsersOrCreateEndpoint,
   putApiSocialProfilesUsersPrivacy: putApiSocialProfilesUsersPrivacyEndpoint,
   putApiSocialReactions: putApiSocialReactionsEndpoint,
   deleteApiSocialReactions: deleteApiSocialReactionsEndpoint,
