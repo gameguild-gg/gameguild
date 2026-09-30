@@ -66,6 +66,8 @@ test_shell_only_ci_policy() {
   grep -Fq 'pnpm install --frozen-lockfile --ignore-scripts' "$ci_dir/install-and-audit-pnpm.sh" || return 1
   grep -Fq 'repository pnpm lockfile is required' "$ci_dir/install-and-audit-pnpm.sh" || return 1
   grep -q 'pnpm audit --json' "$ci_dir/install-and-audit-pnpm.sh" || return 1
+  grep -Fq 'audit_stderr_report="$audit_root/audit.stderr.log"' "$ci_dir/install-and-audit-pnpm.sh" || return 1
+  grep -Fq 'pnpm audit --json >"$audit_report" 2>"$audit_stderr_report"' "$ci_dir/install-and-audit-pnpm.sh" || return 1
   grep -Fq 'pnpm install --frozen-lockfile --ignore-scripts' "$repository_root/.github/workflows/emception.yml" || return 1
   ! grep -Fq 'pnpm-lock.yaml|*/pnpm-lock.yaml' "$repository_root/scripts/repository-hygiene.sh" || return 1
   [[ -f "$repository_root/pnpm-lock.yaml" ]]
@@ -768,6 +770,17 @@ test_canonical_json_preserves_arrays() {
   grep -q '"tags":\["Economy"\]' "$first_out"
 }
 
+test_repository_manifest_covers_discovered_projects() {
+  assert_economy_manifest "$repository_root" "$ci_dir/economy-projects.json"
+}
+
+test_repository_test_fixtures_use_shared_postgres() {
+  ! git -C "$repository_root" grep -l 'new PostgreSqlBuilder' -- \
+    'apps/api/tests/**/*.cs' ':!apps/api/tests/GameGuild.TestSupport.Finance.Economy/**'
+}
+
+run_test 'repository manifest covers all discovered Economy projects' test_repository_manifest_covers_discovered_projects
+run_test 'PostgreSQL test fixtures use the shared database lifecycle' test_repository_test_fixtures_use_shared_postgres
 run_test 'CI policy contains only shell scripts' test_shell_only_ci_policy
 run_test 'contributors visualization uses native xvfb' test_contributors_visualization_uses_native_xvfb
 run_test 'Emception publish opens a release PR to main' test_release_flow_opens_version_pr_to_main

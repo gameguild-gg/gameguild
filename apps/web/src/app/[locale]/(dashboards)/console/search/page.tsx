@@ -1,9 +1,10 @@
 'use client';
 
+import { cn } from "@game-guild/ui/lib/utils";
 import { Link } from '@/i18n/navigation';
 import { flattenWorkspaceNavigationItems } from '@/components/console/workspace-sidebar';
 import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
+import { buttonVariants } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Search } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
@@ -58,9 +59,12 @@ export default function DashboardSearchPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <Button nativeButton={false} variant="outline" size="sm" render={<Link href={item.url} />}>
+                  <Link
+                    href={item.url}
+                    className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+                  >
                     Open result
-                  </Button>
+                  </Link>
                 </CardContent>
               </Card>
             );
@@ -75,9 +79,12 @@ export default function DashboardSearchPage() {
                   Try a shorter query or open the command palette with Ctrl+K.
                 </p>
               </div>
-              <Button nativeButton={false} variant="outline" render={<Link href="/workspace/learning/courses" />}>
+              <Link
+                href="/workspace/learning/courses"
+                className={cn(buttonVariants({ variant: "outline" }))}
+              >
                 Open courses
-              </Button>
+              </Link>
             </CardContent>
           </Card>
         )}

@@ -13,6 +13,7 @@ namespace GameGuild.Identity.Users;
 /// </summary>
 [ApiVersion("1.0")]
 [Microsoft.AspNetCore.Http.Tags("users")]
+[DataMaskingResourceType("User")]
 [Authorize]
 public sealed class UsersController(
     ISender sender,

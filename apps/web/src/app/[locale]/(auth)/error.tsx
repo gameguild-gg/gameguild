@@ -1,7 +1,8 @@
 'use client';
 
+import { cn } from "@game-guild/ui/lib/utils";
 import { Link } from '@/i18n/navigation';
-import { Button } from '@game-guild/ui/components/button';
+import { Button, buttonVariants } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import React from 'react';
 
@@ -16,9 +17,9 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
         <Button onClick={reset} variant="default">
           Try again
         </Button>
-        <Button nativeButton={false} variant="outline" render={<Link href="/sign-in" />}>
+        <Link href="/sign-in" className={cn(buttonVariants({ variant: "outline" }))}>
           Back to Sign In
-        </Button>
+        </Link>
       </CardContent>
     </Card>
   );

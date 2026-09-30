@@ -4,6 +4,11 @@ import * as React from "react"
 import { format } from "date-fns"
 import { CalendarIcon, Clock3Icon } from "lucide-react"
 
+import {
+  calendarDatePart,
+  formatWallClockInTimeZone,
+  wallClockDate,
+} from "@/lib/date-time-zone"
 import { Button } from "@game-guild/ui/components/button"
 import { Calendar } from "@game-guild/ui/components/calendar"
 import { Input } from "@game-guild/ui/components/input"
@@ -25,6 +30,7 @@ export interface DateTimePickerProps {
   required?: boolean
   disabled?: boolean
   placeholder?: string
+  timeZoneId?: string
   timezoneLabel?: string
   displayFormat?: string
   minValue?: string
@@ -33,7 +39,12 @@ export interface DateTimePickerProps {
   "aria-invalid"?: boolean | "true" | "false"
 }
 
-function parseDateTime(value: string | undefined): Date | undefined {
+function parseDateTime(
+  value: string | undefined,
+  timeZoneId?: string,
+): Date | undefined {
+  if (timeZoneId) return wallClockDate(value ?? "", timeZoneId)
+
   const match = value?.match(dateTimePattern)
   if (!match) return undefined
 
@@ -59,9 +70,26 @@ function parseDateTime(value: string | undefined): Date | undefined {
   return parsed
 }
 
-function formatDateTime(value: Date): string {
+function formatDateTime(value: Date, timeZoneId?: string): string {
+  if (timeZoneId) return formatWallClockInTimeZone(value, timeZoneId)
+
   const pad = (part: number) => String(part).padStart(2, "0")
   return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}T${pad(value.getHours())}:${pad(value.getMinutes())}`
+}
+
+function displayDateTime(
+  value: Date,
+  displayFormat: string,
+  timeZoneId?: string,
+) {
+  if (!timeZoneId) return format(value, displayFormat)
+
+  return new Intl.DateTimeFormat(undefined, {
+    timeZone: timeZoneId,
+    dateStyle: "medium",
+    timeStyle: "short",
+    hourCycle: "h23",
+  }).format(value)
 }
 
 function boundedPart(value: string, maximum: number): number {
@@ -79,7 +107,8 @@ export function DateTimePicker({
   required = false,
   disabled = false,
   placeholder = "Choose date and time",
-  timezoneLabel = "UTC",
+  timeZoneId,
+  timezoneLabel = timeZoneId ?? "UTC",
   displayFormat = "PPP 'at' HH:mm",
   minValue,
   maxValue,
@@ -91,46 +120,50 @@ export function DateTimePicker({
   const triggerRef = React.useRef<HTMLButtonElement>(null)
   const [internalValue, setInternalValue] = React.useState(defaultValue)
   const committedValue = controlled ? value : internalValue
-  const committedDate = parseDateTime(committedValue)
-  const minimumDate = parseDateTime(minValue)
-  const maximumDate = parseDateTime(maxValue)
+  const committedDate = parseDateTime(committedValue, timeZoneId)
+  const minimumDate = parseDateTime(minValue, timeZoneId)
+  const maximumDate = parseDateTime(maxValue, timeZoneId)
   const [open, setOpen] = React.useState(false)
   const [draftDate, setDraftDate] = React.useState<Date | undefined>(
     committedDate,
   )
+  const committedWallClock = committedDate
+    ? formatDateTime(committedDate, timeZoneId)
+    : ""
   const [draftHour, setDraftHour] = React.useState(
-    committedDate ? String(committedDate.getHours()).padStart(2, "0") : "00",
+    committedWallClock ? committedWallClock.slice(11, 13) : "00",
   )
   const [draftMinute, setDraftMinute] = React.useState(
-    committedDate ? String(committedDate.getMinutes()).padStart(2, "0") : "00",
+    committedWallClock ? committedWallClock.slice(14, 16) : "00",
   )
   const draftValue = React.useMemo(() => {
     if (!draftDate) return ""
-    const candidate = new Date(draftDate)
-    candidate.setHours(
-      boundedPart(draftHour, 23),
-      boundedPart(draftMinute, 59),
-      0,
-      0,
-    )
-    return formatDateTime(candidate)
-  }, [draftDate, draftHour, draftMinute])
+    const day = timeZoneId
+      ? calendarDatePart(draftDate, timeZoneId)
+      : formatDateTime(draftDate).slice(0, 10)
+    if (!day) return ""
+    const pad = (part: number) => String(part).padStart(2, "0")
+    return `${day}T${pad(boundedPart(draftHour, 23))}:${pad(boundedPart(draftMinute, 59))}`
+  }, [draftDate, draftHour, draftMinute, timeZoneId])
   const draftOutsideRange =
     (Boolean(minValue) && draftValue < minValue!) ||
     (Boolean(maxValue) && draftValue > maxValue!)
+  const draftIsInvalidInTimeZone = Boolean(
+    timeZoneId && draftValue && !wallClockDate(draftValue, timeZoneId),
+  )
 
   const rangeDescription = React.useMemo(() => {
     if (minimumDate && maximumDate) {
-      return `Choose a date and time between ${format(minimumDate, "PPP 'at' HH:mm")} and ${format(maximumDate, "PPP 'at' HH:mm")} (${timezoneLabel}).`
+      return `Choose a date and time between ${displayDateTime(minimumDate, displayFormat, timeZoneId)} and ${displayDateTime(maximumDate, displayFormat, timeZoneId)} (${timezoneLabel}).`
     }
     if (minimumDate) {
-      return `Choose a date and time on or after ${format(minimumDate, "PPP 'at' HH:mm")} (${timezoneLabel}).`
+      return `Choose a date and time on or after ${displayDateTime(minimumDate, displayFormat, timeZoneId)} (${timezoneLabel}).`
     }
     if (maximumDate) {
-      return `Choose a date and time on or before ${format(maximumDate, "PPP 'at' HH:mm")} (${timezoneLabel}).`
+      return `Choose a date and time on or before ${displayDateTime(maximumDate, displayFormat, timeZoneId)} (${timezoneLabel}).`
     }
     return ""
-  }, [maximumDate, minimumDate, timezoneLabel])
+  }, [displayFormat, maximumDate, minimumDate, timeZoneId, timezoneLabel])
 
   const commit = React.useCallback(
     (nextValue: string) => {
@@ -150,12 +183,13 @@ export function DateTimePicker({
   }, [controlled, defaultValue])
 
   const resetDraft = React.useCallback(() => {
-    const current = parseDateTime(committedValue) ?? new Date()
+    const current = parseDateTime(committedValue, timeZoneId) ?? new Date()
     current.setSeconds(0, 0)
     setDraftDate(current)
-    setDraftHour(String(current.getHours()).padStart(2, "0"))
-    setDraftMinute(String(current.getMinutes()).padStart(2, "0"))
-  }, [committedValue])
+    const wallClock = formatDateTime(current, timeZoneId)
+    setDraftHour(wallClock.slice(11, 13))
+    setDraftMinute(wallClock.slice(14, 16))
+  }, [committedValue, setDraftDate, setDraftHour, setDraftMinute, timeZoneId])
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (nextOpen) resetDraft()
@@ -163,7 +197,7 @@ export function DateTimePicker({
   }
 
   const applyDraft = () => {
-    if (!draftDate || draftOutsideRange) return
+    if (!draftDate || draftOutsideRange || draftIsInvalidInTimeZone) return
     commit(draftValue)
     setOpen(false)
   }
@@ -217,7 +251,7 @@ export function DateTimePicker({
           <CalendarIcon aria-hidden="true" />
           <span className="min-w-0 flex-1 truncate">
             {committedDate
-              ? format(committedDate, displayFormat)
+              ? displayDateTime(committedDate, displayFormat, timeZoneId)
               : placeholder}
           </span>
           <span className="shrink-0 text-xs text-muted-foreground">
@@ -229,7 +263,16 @@ export function DateTimePicker({
             mode="single"
             selected={draftDate}
             defaultMonth={draftDate ?? minimumDate}
+            timeZone={timeZoneId}
             disabled={(date) => {
+              if (timeZoneId) {
+                const day = calendarDatePart(date, timeZoneId)
+                return Boolean(
+                  (minValue && day < minValue.slice(0, 10)) ||
+                    (maxValue && day > maxValue.slice(0, 10)),
+                )
+              }
+
               const day = new Date(date.getFullYear(), date.getMonth(), date.getDate())
               const minimumDay = minimumDate
                 ? new Date(minimumDate.getFullYear(), minimumDate.getMonth(), minimumDate.getDate())
@@ -244,13 +287,12 @@ export function DateTimePicker({
             }}
             onSelect={(selected) => {
               if (!selected) return
-              selected.setHours(
-                boundedPart(draftHour, 23),
-                boundedPart(draftMinute, 59),
-                0,
-                0,
-              )
-              setDraftDate(selected)
+              const day = timeZoneId
+                ? calendarDatePart(selected, timeZoneId)
+                : formatDateTime(selected).slice(0, 10)
+              const pad = (part: number) => String(part).padStart(2, "0")
+              const nextValue = `${day}T${pad(boundedPart(draftHour, 23))}:${pad(boundedPart(draftMinute, 59))}`
+              setDraftDate(parseDateTime(nextValue, timeZoneId) ?? selected)
             }}
           />
           <div className="border-t p-3">
@@ -301,6 +343,11 @@ export function DateTimePicker({
                 {rangeDescription}
               </p>
             ) : null}
+            {draftIsInvalidInTimeZone ? (
+              <p role="alert" className="mb-3 max-w-xs text-xs text-destructive">
+                That time does not exist in {timeZoneId} because of a daylight-saving change. Choose another time.
+              </p>
+            ) : null}
             <div className="flex items-center justify-between gap-2">
               <div>
                 {!required ? (
@@ -332,7 +379,7 @@ export function DateTimePicker({
                   type="button"
                   size="sm"
                   onClick={applyDraft}
-                  disabled={!draftDate || draftOutsideRange}
+                  disabled={!draftDate || draftOutsideRange || draftIsInvalidInTimeZone}
                   aria-label="Apply date and time"
                 >
                   Apply

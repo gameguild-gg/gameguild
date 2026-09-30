@@ -9,14 +9,19 @@ using GameGuild.Configuration.PresentationLayer.RequestContext;
 using GameGuild.Configuration.PresentationLayer.ResponseCompression;
 using GameGuild.Configuration.PresentationLayer.SignalR;
 using GameGuild.API.Database;
+using GameGuild.API.Core.Filters;
 using GameGuild.Features;
 using Microsoft.AspNetCore.HttpLogging;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using OpenFeature;
+using ProblemDetailsDetailLevel = GameGuild.Configuration.PresentationLayer.ProblemDetails.ProblemDetailsDetailLevel;
+using ProblemDetailsExceptionMapping = GameGuild.Configuration.PresentationLayer.ProblemDetails.ProblemDetailsExceptionMapping;
+using ProblemDetailsLocalizedText = GameGuild.Configuration.PresentationLayer.ProblemDetails.ProblemDetailsLocalizedText;
 using HttpLoggingOptions = GameGuild.Configuration.PresentationLayer.HttpLogging.HttpLoggingOptions;
 using ProblemDetailsOptions = GameGuild.Configuration.PresentationLayer.ProblemDetails.ProblemDetailsOptions;
 
@@ -53,35 +58,195 @@ public static class InfrastructureServiceCollectionExtensions
     public static IServiceCollection SetupProblemDetails(this IServiceCollection services, IConfiguration configuration,
         ProblemDetailsOptions? options)
     {
-        options ??= OptionBuilderUtilities.CreateAndBind(configuration, "ProblemDetails",
+        options ??= OptionBuilderUtilities.CreateAndBind(configuration, ProblemDetailsOptions.SectionName,
             ProblemDetailsOptions.CreateDefault);
         options.Validate();
+        options = options.CreateSnapshot();
+
+        // MVC can return ProblemDetails directly (including BaseApiController domain errors and
+        // ApiController model-state failures), so run those responses through the same formatter
+        // callback used by ASP.NET Core's ProblemDetails service.
+        services.AddScoped<ProblemDetailsResultFilter>();
+        services.Configure<MvcOptions>(mvcOptions => mvcOptions.Filters.AddService<ProblemDetailsResultFilter>());
 
         services.AddProblemDetails(problemDetailsOptions =>
             {
                 problemDetailsOptions.CustomizeProblemDetails = context =>
                 {
-                    context.ProblemDetails.Instance = context.HttpContext.Request.Path;
-                    context.ProblemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+                    var httpContext = context.HttpContext;
+                    var problem = context.ProblemDetails;
+                    var exception = context.Exception;
+                    var databaseSchemaNotReady = exception is not null &&
+                                                 IsDatabaseSchemaNotReadyException(exception);
+                    var mapping = exception is null ? null : FindExceptionMapping(exception, options);
+                    var problemCode = problem.Extensions.TryGetValue("code", out var codeValue)
+                        ? codeValue?.ToString()
+                        : null;
+                    var messageKey = mapping?.LocalizedMessageKey ??
+                                     (databaseSchemaNotReady
+                                         ? "database-schema-not-ready"
+                                         : string.IsNullOrWhiteSpace(problemCode) ? "default" : problemCode);
+                    var localizedText = FindLocalizedText(options, messageKey) ??
+                                        (messageKey == "default" || !string.IsNullOrWhiteSpace(problemCode)
+                                            ? null
+                                            : FindLocalizedText(options, "default"));
 
-                    if (context.Exception is not null && IsDatabaseSchemaNotReadyException(context.Exception))
+                    problem.Instance = options.IncludeInstance ? httpContext.Request.Path : null;
+
+                    if (mapping is not null)
                     {
-                        context.HttpContext.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
-                        context.ProblemDetails.Type = "urn:problem-type:database-schema-not-ready";
-                        context.ProblemDetails.Title = "Database Schema Not Ready";
-                        context.ProblemDetails.Status = StatusCodes.Status503ServiceUnavailable;
-                        context.ProblemDetails.Detail = "Database schema is not ready. Apply pending migrations before retrying.";
+                        problem.Type = mapping.Type;
+                        problem.Title = localizedText?.Title ?? mapping.Title;
+                        problem.Status = mapping.StatusCode;
+                        httpContext.Response.StatusCode = mapping.StatusCode;
+                        problem.Detail = options.DetailLevel == ProblemDetailsDetailLevel.Minimal
+                            ? null
+                            : localizedText?.Detail ?? mapping.Detail ?? options.DefaultDetail;
+                    }
+                    else if (databaseSchemaNotReady)
+                    {
+                        problem.Type = options.DatabaseSchemaNotReadyType;
+                        problem.Title = localizedText?.Title ?? options.DatabaseSchemaNotReadyTitle;
+                        problem.Status = options.DatabaseSchemaNotReadyStatusCode;
+                        httpContext.Response.StatusCode = options.DatabaseSchemaNotReadyStatusCode;
+                        problem.Detail = options.DetailLevel == ProblemDetailsDetailLevel.Minimal
+                            ? null
+                            : localizedText?.Detail ?? options.DatabaseSchemaNotReadyDetail;
+                    }
+                    else
+                    {
+                        var statusCode = problem.Status ?? httpContext.Response.StatusCode;
+                        if (statusCode is < 400 or > 599)
+                        {
+                            statusCode = StatusCodes.Status500InternalServerError;
+                        }
+                        problem.Status = statusCode;
+                        if (string.IsNullOrWhiteSpace(problem.Type))
+                        {
+                            problem.Type = options.DefaultType;
+                        }
+                        if (localizedText?.Title is not null && (exception is not null || string.IsNullOrWhiteSpace(problemCode)))
+                        {
+                            problem.Title = localizedText.Title;
+                        }
+                        else if (string.IsNullOrWhiteSpace(problem.Title))
+                        {
+                            problem.Title = localizedText?.Title ?? options.DefaultTitle;
+                        }
+
+                        if (options.DetailLevel == ProblemDetailsDetailLevel.Minimal)
+                        {
+                            problem.Detail = null;
+                        }
+                        else if (exception is not null)
+                        {
+                            // Unmapped exception messages are not returned to clients.
+                            problem.Detail = localizedText?.Detail ?? options.DefaultDetail;
+                        }
+                        else if (localizedText?.Detail is not null)
+                        {
+                            problem.Detail = localizedText.Detail;
+                        }
+                        else if (string.IsNullOrWhiteSpace(problem.Detail))
+                        {
+                            problem.Detail = localizedText?.Detail ?? options.DefaultDetail;
+                        }
                     }
 
-                    if (options.IncludeExceptionDetails && context.Exception != null)
+                    foreach (var (name, value) in options.CustomExtensions)
                     {
-                        context.ProblemDetails.Extensions["exception"] = context.Exception.ToString();
+                        problem.Extensions[name] = value;
+                    }
+
+                    if (options.IncludeTraceId)
+                    {
+                        problem.Extensions[options.TraceIdExtensionName] = httpContext.TraceIdentifier;
+                    }
+
+                    if (options.IncludeCorrelationId)
+                    {
+                        var correlationId = ResolveCorrelationId(httpContext, options.CorrelationIdHeaderName);
+                        httpContext.Response.Headers[options.CorrelationIdHeaderName] = correlationId;
+                        problem.Extensions[options.CorrelationIdExtensionName] = correlationId;
+                    }
+
+                    var isDevelopment = httpContext.RequestServices?.GetService<IWebHostEnvironment>()?.IsDevelopment() == true;
+                    if (isDevelopment && options.IncludeExceptionDetails &&
+                        options.DetailLevel == ProblemDetailsDetailLevel.Detailed &&
+                        exception is not null)
+                    {
+                        problem.Extensions["exception"] = exception.ToString();
                     }
                 };
             }
         );
 
         return services;
+    }
+
+    private static ProblemDetailsExceptionMapping? FindExceptionMapping(
+        Exception exception,
+        ProblemDetailsOptions options)
+    {
+        for (var current = exception; current is not null; current = current.InnerException)
+        {
+            for (var exceptionType = current.GetType(); exceptionType is not null; exceptionType = exceptionType.BaseType)
+            {
+                if (exceptionType.FullName is { } fullName &&
+                    options.ExceptionMappings.TryGetValue(fullName, out var mapping))
+                {
+                    return mapping;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private static ProblemDetailsLocalizedText? FindLocalizedText(
+        ProblemDetailsOptions options,
+        string messageKey)
+    {
+        var culture = CultureInfo.CurrentUICulture;
+        var cultureNames = new[] { culture.Name, culture.Parent.Name }
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var cultureName in cultureNames)
+        {
+            var locale = options.LocalizedMessages.FirstOrDefault(pair =>
+                string.Equals(pair.Key, cultureName, StringComparison.OrdinalIgnoreCase)).Value;
+            if (locale is null)
+            {
+                continue;
+            }
+
+            var localized = locale.FirstOrDefault(pair =>
+                string.Equals(pair.Key, messageKey, StringComparison.OrdinalIgnoreCase)).Value;
+            if (localized is not null)
+            {
+                return localized;
+            }
+        }
+
+        return null;
+    }
+
+    private static string ResolveCorrelationId(HttpContext httpContext, string headerName)
+    {
+        var values = httpContext.Request.Headers[headerName];
+        if (values.Count == 1)
+        {
+            var candidate = values[0];
+            if (!string.IsNullOrWhiteSpace(candidate) && candidate.Length <= 128 &&
+                candidate == candidate.Trim() && !candidate.Contains(',') &&
+                !candidate.Any(char.IsControl))
+            {
+                return candidate;
+            }
+        }
+
+        return httpContext.TraceIdentifier;
     }
 
     public static bool IsDatabaseSchemaNotReadyException(Exception exception)

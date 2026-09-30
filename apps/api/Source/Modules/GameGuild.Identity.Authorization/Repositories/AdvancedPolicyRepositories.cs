@@ -217,8 +217,9 @@ public class DataMaskingRuleRepository(DbContext context) : IDataMaskingRuleRepo
     {
         var query = DbSet.Where(r => r.ResourceType == resourceType && r.IsEnabled);
 
-        if (tenantId.HasValue)
-            query = query.Where(r => r.TenantId == new TenantId(tenantId.Value));
+        query = tenantId.HasValue
+            ? query.Where(r => r.TenantId == new TenantId(tenantId.Value))
+            : query.Where(r => r.TenantId == null);
 
         return await query.ToListAsync(cancellationToken).ConfigureAwait(false);
     }

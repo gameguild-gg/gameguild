@@ -1,5 +1,6 @@
+import { cn } from "@game-guild/ui/lib/utils";
 import { Link } from '@/i18n/navigation';
-import { Button } from '@game-guild/ui/components/button';
+import { buttonVariants } from '@game-guild/ui/components/button';
 import { ShieldOff } from 'lucide-react';
 import React from 'react';
 
@@ -12,9 +13,12 @@ export default function Forbidden(): React.JSX.Element {
         <p className="text-sm text-muted-foreground">You don't have permission to view this resource.</p>
       </div>
       <div className="flex gap-2">
-        <Button nativeButton={false} variant="outline" render={<Link href="/workspace/learning/courses" />}>
+        <Link
+          href="/workspace/learning/courses"
+          className={cn(buttonVariants({ variant: "outline" }))}
+        >
           Back to courses
-        </Button>
+        </Link>
       </div>
     </div>
   );

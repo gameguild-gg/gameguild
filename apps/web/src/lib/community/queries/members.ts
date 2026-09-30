@@ -639,7 +639,7 @@ export async function getCommunityStats(): Promise<CommunityStats> {
     const client = getApiClient();
     const socialGroups = new GeneratedApi.SocialGroupsSocialGroupsModule(client);
     const marketingLeads = new GeneratedApi.ContentMarketingLeadsModule(client);
-    const blogPosts = new GeneratedApi.SocialBlogPostsModule(client);
+    const blogPosts = new GeneratedApi.SocialBlogPublicModule(client);
     const now = new Date();
 
     const [session, usersResult, groupsResult, supportResult, postsResult] = await Promise.all([
@@ -658,7 +658,7 @@ export async function getCommunityStats(): Promise<CommunityStats> {
         skip: 0,
         take: 500,
       }),
-      blogPosts.getApiSocialBlogForGetApiSocialBlog({ skip: 0, take: 500 }),
+      blogPosts.getApiSocialBlogPublicPosts(),
     ]);
 
     const fallbackMemberCount = session?.user?.id ? 1 : 0;
@@ -670,7 +670,7 @@ export async function getCommunityStats(): Promise<CommunityStats> {
       newMembersThisMonth: users.filter((user) => isDateInCurrentMonth(user.createdAt, now)).length,
       totalGroups: groupsResult.ok ? (groupsResult.data ?? []).length : 0,
       openTickets: supportResult.ok ? (supportResult.data ?? []).length : 0,
-      totalPosts: postsResult.ok ? (postsResult.data ?? []).length : 0,
+      totalPosts: postsResult.ok ? (postsResult.data.items ?? []).length : 0,
     };
   } catch {
     const session = await auth().catch(() => null);

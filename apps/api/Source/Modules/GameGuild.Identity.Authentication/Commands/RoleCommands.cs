@@ -47,6 +47,21 @@ public sealed record AssignRoleToUserCommand : ICommand<UserRoleDto>
 }
 
 /// <summary>
+///     Assigns one role to multiple users in a single bounded operation.
+/// </summary>
+public sealed record BulkAssignRolesCommand : ICommand<BulkRoleAssignmentResult>
+{
+    /// <summary>The role to assign to each user.</summary>
+    public Guid RoleId { get; init; }
+
+    /// <summary>Users receiving the role. Duplicate IDs are collapsed before processing.</summary>
+    public List<Guid> UserIds { get; init; } = new();
+
+    /// <summary>Optional expiration shared by every assignment.</summary>
+    public DateTime? ExpiresAt { get; init; }
+}
+
+/// <summary>
 ///     Command to remove a role from a user
 /// </summary>
 public sealed record RemoveRoleFromUserCommand : ICommand<bool>

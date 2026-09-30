@@ -208,6 +208,26 @@ export class SocialProfilesModule {
 
   /**
    */
+  async getApiSocialProfilesUsersOrCreate(userId: string): Promise<Result<Types.SocialProfilesSocialProfileDto, ApiError>> {
+    const url = `/api/social/profiles/users/${userId}/or-create`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.SocialProfilesSocialProfileDtoSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async putApiSocialProfilesUsersPrivacy(
     userId: string,
     body: Types.SocialProfilesUpdateProfilePrivacyBody,

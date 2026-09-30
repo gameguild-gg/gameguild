@@ -15,18 +15,28 @@ public sealed class PasswordHasher(ILogger<PasswordHasher> logger, IConfiguratio
     // Recommended: 12-14 for production (2^12 to 2^14 iterations)
     private const int BCryptWorkFactor = 12;
 
-    // Password policy — loaded from configuration section "PasswordPolicy", with secure defaults
-    private int MinPasswordLength => configuration.GetValue("PasswordPolicy:MinPasswordLength", 8);
+    // Prefer the shared presentation options; retain both prior locations for configuration compatibility.
+    private int MinPasswordLength => GetPolicyInteger("MinPasswordLength", 8);
 
-    private int MaxPasswordLength => configuration.GetValue("PasswordPolicy:MaxPasswordLength", 128);
+    private int MaxPasswordLength => GetPolicyInteger("MaxPasswordLength", 128);
 
-    private bool RequireUppercase => configuration.GetValue("PasswordPolicy:RequireUppercase", true);
+    private bool RequireUppercase => GetPolicyBoolean("RequireUppercase", true);
 
-    private bool RequireLowercase => configuration.GetValue("PasswordPolicy:RequireLowercase", true);
+    private bool RequireLowercase => GetPolicyBoolean("RequireLowercase", true);
 
-    private bool RequireDigit => configuration.GetValue("PasswordPolicy:RequireDigit", true);
+    private bool RequireDigit => GetPolicyBoolean("RequireDigit", true);
 
-    private bool RequireSpecialChar => configuration.GetValue("PasswordPolicy:RequireSpecialChar", true);
+    private bool RequireSpecialChar => GetPolicyBoolean("RequireSpecialChar", true);
+
+    private int GetPolicyInteger(string name, int defaultValue) =>
+        configuration.GetValue<int?>($"PresentationLayer:Authentication:PasswordPolicy:{name}") ??
+        configuration.GetValue<int?>($"Authentication:PasswordPolicy:{name}") ??
+        configuration.GetValue($"PasswordPolicy:{name}", defaultValue);
+
+    private bool GetPolicyBoolean(string name, bool defaultValue) =>
+        configuration.GetValue<bool?>($"PresentationLayer:Authentication:PasswordPolicy:{name}") ??
+        configuration.GetValue<bool?>($"Authentication:PasswordPolicy:{name}") ??
+        configuration.GetValue($"PasswordPolicy:{name}", defaultValue);
 
     /// <summary>
     ///     Hashes a password using BCrypt algorithm.

@@ -1,8 +1,9 @@
+import { cn } from "@game-guild/ui/lib/utils";
 import { AddToCartForm } from '@/components/marketplace/add-to-cart-form';
 import { Link } from '@/i18n/navigation';
 import { getMarketplaceProduct } from '@/lib/marketplace/queries';
 import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
+import { buttonVariants } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
@@ -24,7 +25,12 @@ export default async function MarketplaceProductPage({ params }: { params: Promi
         <CardHeader><CardTitle>{price ? `${price.currentPrice} ${price.currency}` : t('priceUnavailable')}</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <AddToCartForm product={product} labels={{ add: t('addToCart'), quantity: t('quantity'), unavailable: t('priceUnavailable') }} />
-          <Button nativeButton={false} variant="outline" className="w-full" render={<Link href="/marketplace/cart" />}>{t('viewCart')}</Button>
+          <Link
+            href="/marketplace/cart"
+            className={cn(buttonVariants({ variant: "outline", className: "w-full" }))}
+          >
+            {t("viewCart")}
+          </Link>
         </CardContent>
       </Card>
     </main>

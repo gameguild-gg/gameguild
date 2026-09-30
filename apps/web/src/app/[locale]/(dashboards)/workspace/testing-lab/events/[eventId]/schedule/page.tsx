@@ -5,7 +5,7 @@ import {
 import { TestingLabPageHeader } from "@/components/testing-lab/testing-lab-page-header";
 import {
   formatCapacity,
-  formatEventDateTime,
+  formatEventDateRange,
   isTestingEventReadOnly,
 } from "@/lib/testing-lab/event-workspace";
 import { getTestingEventWorkspaceData } from "@/lib/testing-lab/events-queries";
@@ -30,7 +30,7 @@ export default async function TestingEventSchedulePage({
         headingLevel={2}
         icon={CalendarDays}
         title="Schedule"
-        description="Turn the event window into clear testing slots and control capacity in one place."
+        description="Set session dates, tester capacity, and where to join."
       />
 
       {!readOnly ? (
@@ -64,18 +64,10 @@ export default async function TestingEventSchedulePage({
                     <span className="text-xs font-medium text-muted-foreground">
                       Slot {index + 1}
                     </span>
-                    <Badge variant="outline">{slot.mode}</Badge>
+                    <Badge variant="outline">{slot.mode === "InPerson" ? "In person" : slot.mode ?? "Online"}</Badge>
                   </div>
                   <p className="mt-1.5 text-sm font-semibold tabular-nums">
-                    {formatEventDateTime(
-                      slot.startsAt,
-                      event.timeZoneId ?? "UTC",
-                    )}
-                    <span className="mx-1.5 text-muted-foreground">to</span>
-                    {formatEventDateTime(
-                      slot.endsAt,
-                      event.timeZoneId ?? "UTC",
-                    )}
+                    {formatEventDateRange(slot.startsAt, slot.endsAt, event.timeZoneId ?? "UTC")}
                   </p>
                   <p className="mt-1.5 flex items-start gap-2 text-sm text-muted-foreground">
                     <MapPin className="mt-0.5 size-4 shrink-0" />

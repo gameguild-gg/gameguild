@@ -183,7 +183,7 @@ describe("ClassControlCenter", () => {
     await user.click(
       screen.getByRole("combobox", { name: "Filter class status" }),
     );
-    await user.click(screen.getByRole("option", { name: "Active" }));
+    await user.click(await screen.findByRole("option", { name: "Active" }));
 
     expect(screen.getByText("1 of 2")).toBeInTheDocument();
     expect(screen.getAllByText("Active class").length).toBeGreaterThan(0);

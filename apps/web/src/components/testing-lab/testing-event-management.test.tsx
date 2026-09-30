@@ -76,7 +76,10 @@ import {
   TestingEventLifecycleActions,
   TestingTimeSlotPlanner,
   updateTestingEventSchedule,
+  validateTestingEventSchedule,
+  validateTestingSlotWindow,
 } from "./testing-event-management";
+import { wallClockToUtcIso } from "@/lib/date-time-zone";
 
 describe("TestingEventApplications", () => {
   beforeEach(() => {
@@ -136,28 +139,38 @@ describe("TestingEventApplications", () => {
     );
     expect(scheduleDate("")).toBeNull();
     expect(scheduleDate("not-a-date")).toBeNull();
-    expect(scheduleDate("2030-01-01T12:00")?.getFullYear()).toBe(2030);
+    expect(scheduleDate("2030-01-01T12:00")?.toISOString()).toBe(
+      "2030-01-01T12:00:00.000Z",
+    );
   });
 
-  it("creates a chronological default schedule even for an early selected day", () => {
+  it("keeps the selected date and default schedule in the chosen time zone", () => {
+    const timeZoneId = "America/Los_Angeles";
     const schedule = createTestingEventSchedule(
-      new Date(2030, 0, 1, 8, 17),
-      new Date(2030, 0, 1),
+      new Date("2030-01-01T16:17:00.000Z"),
+      new Date(2030, 0, 5),
+      timeZoneId,
     );
 
-    expect(new Date(schedule.applicationsCloseAt).valueOf()).toBeGreaterThan(
-      new Date(schedule.applicationsOpenAt).valueOf(),
-    );
-    expect(new Date(schedule.startsAt).valueOf()).toBeGreaterThanOrEqual(
-      new Date(schedule.applicationsCloseAt).valueOf(),
+    expect(schedule.startsAt).toBe("2030-01-05T10:00");
+    expect(schedule.applicationsOpenAt).toBe("2030-01-01T09:00");
+    expect(
+      Date.parse(wallClockToUtcIso(schedule.applicationsCloseAt, timeZoneId)!),
+    ).toBeGreaterThan(
+      Date.parse(wallClockToUtcIso(schedule.applicationsOpenAt, timeZoneId)!),
     );
     expect(
-      new Date(schedule.endsAt).valueOf() -
-        new Date(schedule.startsAt).valueOf(),
+      Date.parse(wallClockToUtcIso(schedule.startsAt, timeZoneId)!),
+    ).toBeGreaterThanOrEqual(
+      Date.parse(wallClockToUtcIso(schedule.applicationsCloseAt, timeZoneId)!),
+    );
+    expect(
+      Date.parse(wallClockToUtcIso(schedule.endsAt, timeZoneId)!) -
+        Date.parse(wallClockToUtcIso(schedule.startsAt, timeZoneId)!),
     ).toBe(2 * 60 * 60 * 1000);
   });
 
-  it("repairs dependent schedule windows when dates move", () => {
+  it("does not silently change other schedule values when one date moves", () => {
     const original = {
       applicationsOpenAt: "2030-01-01T09:00",
       applicationsCloseAt: "2030-01-01T10:00",
@@ -170,16 +183,20 @@ describe("TestingEventApplications", () => {
       "applicationsOpenAt",
       "2030-01-02T09:00",
     );
-    expect(openMoved.applicationsCloseAt).toBe("2030-01-03T09:00");
-    expect(openMoved.startsAt).toBe("2030-01-04T09:00");
-    expect(openMoved.endsAt).toBe("2030-01-04T11:00");
+    expect(openMoved).toEqual({
+      ...original,
+      applicationsOpenAt: "2030-01-02T09:00",
+    });
+    expect(validateTestingEventSchedule(openMoved, "UTC")).toBe(
+      "Applications must close after they open.",
+    );
 
     const startMoved = updateTestingEventSchedule(
       original,
       "startsAt",
       "2030-01-05T12:00",
     );
-    expect(startMoved.endsAt).toBe("2030-01-05T14:00");
+    expect(startMoved.endsAt).toBe(original.endsAt);
 
     const validEnd = updateTestingEventSchedule(
       original,
@@ -187,6 +204,31 @@ describe("TestingEventApplications", () => {
       "2030-01-01T14:00",
     );
     expect(validEnd.endsAt).toBe("2030-01-01T14:00");
+  });
+
+  it("validates schedule order and rejects nonexistent timezone wall times", () => {
+    const validSchedule = {
+      applicationsOpenAt: "2026-03-07T10:00",
+      applicationsCloseAt: "2026-03-08T01:30",
+      startsAt: "2026-03-08T03:30",
+      endsAt: "2026-03-08T04:30",
+    };
+
+    expect(validateTestingEventSchedule(validSchedule, "America/New_York")).toBe(
+      null,
+    );
+    expect(
+      validateTestingEventSchedule(
+        { ...validSchedule, startsAt: "2026-03-08T02:30" },
+        "America/New_York",
+      ),
+    ).toContain("does not exist in America/New_York");
+    expect(
+      validateTestingEventSchedule(
+        { ...validSchedule, endsAt: "2026-03-08T03:00" },
+        "America/New_York",
+      ),
+    ).toBe("The playtest end must be later than its start.");
   });
 
   it("uses explicit non-UTC event time zones", () => {
@@ -318,7 +360,8 @@ describe("TestingEventApplications", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("uses range calendars and keeps the event schedule chronological", () => {
+  it("keeps the schedule compact and exposes labeled 24-hour times in the picker", async () => {
+    const user = userEvent.setup();
     render(<CreateTestingEventDialog defaultTimeZone="America/Sao_Paulo" />);
 
     fireEvent.click(screen.getByRole("button", { name: "New event" }));
@@ -329,44 +372,40 @@ describe("TestingEventApplications", () => {
     const startsAt = field("startsAt");
     const endsAt = field("endsAt");
 
-    expect(
-      document.querySelector('input[type="datetime-local"]'),
-    ).not.toBeInTheDocument();
+    expect(document.querySelector('input[type="date"]')).not.toBeInTheDocument();
+    expect(document.querySelector('input[type="time"]')).not.toBeInTheDocument();
     expect(applicationsOpenAt.value).not.toBe("");
     expect(applicationsCloseAt.value).not.toBe("");
     expect(startsAt.value).not.toBe("");
     expect(endsAt.value).not.toBe("");
-    expect(new Date(applicationsCloseAt.value).valueOf()).toBeGreaterThan(
-      new Date(applicationsOpenAt.value).valueOf(),
-    );
-    expect(new Date(startsAt.value).valueOf()).toBeGreaterThanOrEqual(
-      new Date(applicationsCloseAt.value).valueOf(),
-    );
-    expect(new Date(endsAt.value).valueOf()).toBeGreaterThan(
-      new Date(startsAt.value).valueOf(),
-    );
+    expect(applicationsOpenAt.value).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
+    expect(applicationsCloseAt.value).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
+    expect(startsAt.value).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
+    expect(endsAt.value).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
+    expect(screen.queryByLabelText("Session starts time")).not.toBeInTheDocument();
 
+    const originalStart = startsAt.value;
     fireEvent.click(screen.getByRole("combobox", { name: "Time zone" }));
     fireEvent.change(screen.getByPlaceholderText("Search time zones…"), {
       target: { value: "America/New_York" },
     });
     fireEvent.click(screen.getByText("America/New_York"));
     expect(field("timeZoneId").value).toBe("America/New_York");
+    expect(startsAt.value).toBe(originalStart);
 
-    fireEvent.click(screen.getByRole("button", { name: "Event schedule" }));
-    const nextMinute = String(
-      new Date(startsAt.value).getMinutes() + 1,
-    ).padStart(2, "0");
-    fireEvent.change(screen.getByLabelText("Start time"), {
-      target: { value: `22:${nextMinute}` },
+    const originalEnd = endsAt.value;
+    await user.click(screen.getByRole("button", { name: "Event schedule" }));
+    expect(await screen.findByLabelText("Session starts time")).toHaveValue(startsAt.value.slice(11));
+    expect(screen.getByLabelText("Session ends time")).toHaveValue(endsAt.value.slice(11));
+    fireEvent.change(screen.getByLabelText("Session starts time"), {
+      target: { value: "11:30" },
     });
-    fireEvent.click(
-      screen.getByRole("button", { name: "Apply event schedule" }),
-    );
-
-    expect(
-      new Date(endsAt.value).valueOf() - new Date(startsAt.value).valueOf(),
-    ).toBe(2 * 60 * 60 * 1000);
+    expect(startsAt.value).toBe(originalStart);
+    await user.click(screen.getByRole("button", { name: "Apply event schedule" }));
+    await waitFor(() => expect(screen.queryByLabelText("Session starts time")).not.toBeInTheDocument());
+    expect(startsAt.value.endsWith("T11:30")).toBe(true);
+    expect(endsAt.value).toBe(originalEnd);
+    expect(screen.getByText("All times use America/New_York and a 24-hour clock.")).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText("Event name"), {
       target: { value: "Community playtest" },
@@ -462,6 +501,21 @@ describe("TestingEventApplications", () => {
     ).toBe("true");
   });
 
+  it("keeps the compact schedule in one column without implicit grid tracks", () => {
+    render(<CreateTestingEventDialog />);
+    fireEvent.click(screen.getByRole("button", { name: "New event" }));
+
+    const applications = screen.getByRole("group", { name: /^Application window,/ });
+    const session = screen.getByRole("group", { name: /^Event schedule,/ });
+    const timeline = applications.parentElement!.parentElement!;
+
+    expect(session.parentElement!.parentElement).toBe(timeline);
+    expect(timeline).not.toHaveClass("md:grid-cols-2");
+    expect(timeline.querySelector("p")).not.toHaveClass("md:col-span-2");
+    expect(session.parentElement).toHaveClass("sm:grid-cols-[7rem_minmax(0,1fr)]");
+    expect(session.parentElement?.children).toHaveLength(2);
+  });
+
   it("uses named and untitled event calendar templates", async () => {
     const user = userEvent.setup();
     const templates = [
@@ -499,7 +553,7 @@ describe("TestingEventApplications", () => {
     ).toHaveValue("revision-2");
   });
 
-  it("presents and updates the event decisions before its two time windows", async () => {
+  it("restores compact aligned decisions and calendar triggers without expanding schedule fields", async () => {
     const user = userEvent.setup();
     render(<CreateTestingEventDialog defaultTimeZone="America/Sao_Paulo" />);
 
@@ -520,26 +574,25 @@ describe("TestingEventApplications", () => {
       eventFormat.compareDocumentPosition(projectReview) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
-    expect(eventFormat.closest("div")).toHaveClass(
-      "sm:grid-cols-[7rem_minmax(0,1fr)]",
-    );
-    expect(projectReview.closest("div")).toHaveClass(
-      "sm:grid-cols-[7rem_minmax(0,1fr)]",
-    );
+    expect(eventName.closest("div")).toHaveClass("mb-1");
 
     const timeline = screen.getByRole("region", { name: "Schedule" });
     expect(
-      within(timeline).getByRole("button", { name: "Application window" }),
-    ).toHaveTextContent(
-      /\d{2}\/\d{2}\/\d{4} · \d{2}:\d{2}(?:–\d{2}:\d{2}| → \d{2}\/\d{2}\/\d{4} · \d{2}:\d{2})/,
-    );
+      within(timeline).getByRole("group", {
+        name: "Application window, America/Sao_Paulo, 24-hour clock",
+      }),
+    ).toBeInTheDocument();
     expect(
-      within(timeline).getByRole("button", { name: "Event schedule" }),
-    ).toHaveTextContent(
-      /\d{2}\/\d{2}\/\d{4} · \d{2}:\d{2}(?:–\d{2}:\d{2}| → \d{2}\/\d{2}\/\d{4} · \d{2}:\d{2})/,
-    );
-    expect(within(timeline).getByText("Applications")).toBeInTheDocument();
-    expect(within(timeline).getByText("Testing session")).toBeInTheDocument();
+      within(timeline).getByRole("group", {
+        name: "Event schedule, America/Sao_Paulo, 24-hour clock",
+      }),
+    ).toBeInTheDocument();
+    expect(within(timeline).queryByLabelText("Applications open date")).not.toBeInTheDocument();
+    expect(within(timeline).queryByLabelText("Session starts time")).not.toBeInTheDocument();
+    expect(within(timeline).getByRole("button", { name: "Application window" })).toBeInTheDocument();
+    expect(within(timeline).getByRole("button", { name: "Event schedule" })).toBeInTheDocument();
+    expect(within(timeline).getByText("Applications", { exact: true })).toBeInTheDocument();
+    expect(within(timeline).getByText("Session", { exact: true })).toBeInTheDocument();
     expect(
       within(timeline).getByRole("combobox", { name: "Time zone" }),
     ).toHaveTextContent("Sao Paulo");
@@ -578,7 +631,7 @@ describe("TestingEventApplications", () => {
 
     await user.click(repeats);
     expect(
-      screen.getByRole("option", { name: "Weekly on Monday" }),
+      await screen.findByRole("option", { name: "Weekly on Monday" }),
     ).toBeInTheDocument();
     await user.click(screen.getByRole("option", { name: "Custom…" }));
 
@@ -589,38 +642,35 @@ describe("TestingEventApplications", () => {
     expect(screen.getByLabelText("Number of events")).toHaveValue(4);
   });
 
-  it("updates either side of the application window without redundant schedule writes", async () => {
+  it("updates each application boundary independently", async () => {
     const user = userEvent.setup();
     render(<CreateTestingEventDialog />);
-    await user.click(screen.getByRole("button", { name: "New event" }));
+    fireEvent.click(screen.getByRole("button", { name: "New event" }));
 
-    const applicationWindow = screen.getByRole("button", {
-      name: "Application window",
-    });
-    await user.click(applicationWindow);
-    await user.click(
-      screen.getByRole("button", { name: "Apply application window" }),
-    );
-
-    const currentEnd = document.querySelector<HTMLInputElement>(
+    const openAt = document.querySelector<HTMLInputElement>(
+      'input[name="applicationsOpenAt"]',
+    )!;
+    const closeAt = document.querySelector<HTMLInputElement>(
       'input[name="applicationsCloseAt"]',
-    )!.value;
-    await user.click(applicationWindow);
-    const nextHour = String(
-      (Number(currentEnd.slice(11, 13)) + 1) % 24,
-    ).padStart(2, "0");
-    fireEvent.change(screen.getByLabelText("End time"), {
-      target: { value: `${nextHour}:${currentEnd.slice(14, 16)}` },
+    )!;
+    const unchangedClose = closeAt.value;
+    await user.click(screen.getByRole("button", { name: "Application window" }));
+    await screen.findByLabelText("Applications open time");
+    fireEvent.change(screen.getByLabelText("Applications open time"), {
+      target: { value: "13:15" },
     });
-    await user.click(
-      screen.getByRole("button", { name: "Apply application window" }),
-    );
+    await user.click(screen.getByRole("button", { name: "Apply application window" }));
+    await waitFor(() => expect(screen.queryByLabelText("Applications open time")).not.toBeInTheDocument());
+    expect(openAt.value).toMatch(/T13:15$/);
+    expect(closeAt.value).toBe(unchangedClose);
 
-    expect(
-      document.querySelector<HTMLInputElement>(
-        'input[name="applicationsCloseAt"]',
-      )?.value,
-    ).not.toBe(currentEnd);
+    await user.click(screen.getByRole("button", { name: "Application window" }));
+    await screen.findByLabelText("Applications close time");
+    fireEvent.change(screen.getByLabelText("Applications close time"), {
+      target: { value: "14:45" },
+    });
+    await user.click(screen.getByRole("button", { name: "Apply application window" }));
+    expect(closeAt.value).toMatch(/T14:45$/);
   });
 
   it("supports every repeat preset, custom unit, weekday, and end mode", async () => {
@@ -686,13 +736,13 @@ describe("TestingEventApplications", () => {
     );
 
     expect(
-      screen.getByRole("link", { name: "Complete setup" }),
+      screen.getByRole("link", { name: "Finish event setup" }),
     ).toHaveAttribute(
       "href",
       "/workspace/testing-lab/events/event-1/overview#event-configuration-heading",
     );
     expect(
-      screen.queryByRole("button", { name: "Open applications" }),
+      screen.queryByRole("button", { name: "Publish and open sign-ups" }),
     ).not.toBeInTheDocument();
   });
 
@@ -779,6 +829,91 @@ describe("TestingEventApplications", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Review" })).toBeEnabled();
   });
+
+  it.each([
+    {
+      trigger: "Approve",
+      submit: "Approve project",
+      status: "Approved",
+      message: "Application approved.",
+    },
+    {
+      trigger: "Reject",
+      submit: "Reject project",
+      status: "Rejected",
+      message: "Application rejected.",
+    },
+    {
+      trigger: "Waitlist",
+      submit: "Add to waitlist",
+      status: "Waitlisted",
+      message: "Application waitlisted.",
+    },
+    {
+      trigger: "Vote",
+      submit: "Record vote",
+      status: "UnderReview",
+      message: "Vote recorded.",
+    },
+  ])(
+    "keeps the $trigger confirmation visible after the dialog closes and the application refreshes",
+    async ({ trigger, submit, status, message }) => {
+      const user = userEvent.setup();
+      const props = {
+        eventId: "event-1",
+        access: { canManageApplications: true, canVote: true },
+        applications: [{ id: "application-1", status: "UnderReview" }],
+        slots: [
+          {
+            id: "slot-1",
+            startsAt: "2026-08-02T12:00:00Z",
+            campusName: "Campus A",
+          },
+        ],
+      };
+      const { rerender } = render(<TestingEventApplications {...props} />);
+      await user.click(
+        screen.getByRole("button", { name: trigger, exact: true }),
+      );
+      if (trigger === "Approve") {
+        await user.click(
+          screen.getByRole("combobox", { name: "Testing slot" }),
+        );
+        await user.click(
+          await screen.findByRole("option", { name: /Campus A/ }),
+        );
+      }
+      if (trigger === "Reject") {
+        await user.type(
+          screen.getByLabelText("Rejection rationale"),
+          "Not ready",
+        );
+      }
+      if (trigger === "Vote") {
+        await user.click(screen.getByRole("combobox"));
+        await user.click(
+          await screen.findByRole("option", { name: "Approve", exact: true }),
+        );
+      }
+      await user.click(
+        screen.getByRole("button", { name: submit, exact: true }),
+      );
+      await waitFor(() =>
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+      );
+      rerender(
+        <TestingEventApplications
+          {...props}
+          applications={[{ id: "application-1", status }]}
+        />,
+      );
+      expect(screen.getByText(message)).toBeVisible();
+      expect(
+        screen.getByText(message).closest('[aria-live="polite"]'),
+      ).not.toBeNull();
+      expect(mocks.refresh).toHaveBeenCalledOnce();
+    },
+  );
 
   it("executes every application decision with meaningful slot fallbacks", async () => {
     const user = userEvent.setup();
@@ -1073,6 +1208,35 @@ describe("TestingEventApplications", () => {
     ).toEqual([]);
   });
 
+  it("blocks a session window outside the event instead of offering invalid slots", async () => {
+    render(<TestingTimeSlotPlanner event={{ id: "bounded", startsAt: "2026-10-06T17:00:00Z", endsAt: "2026-10-06T19:00:00Z", timeZoneId: "America/Sao_Paulo" }} />);
+    fireEvent.change(screen.getByLabelText("Ends time"), { target: { value: "17:00" } });
+    expect(screen.getByRole("alert")).toHaveTextContent("Keep the session within the event");
+    expect(screen.getByRole("button", { name: "Create time slots" })).toBeDisabled();
+    fireEvent.submit(screen.getByRole("button", { name: "Create time slots" }).closest("form")!);
+    expect(mocks.createSlots).not.toHaveBeenCalled();
+    fireEvent.change(screen.getByLabelText("Ends time"), { target: { value: "16:00" } });
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Create 2 time slots" })).toBeEnabled();
+  });
+
+  it("validates full session dates against event bounds and DST gaps", () => {
+    expect(validateTestingSlotWindow("2026-10-06T14:00", "2026-10-06T16:00", "2026-10-06T14:00", "2026-10-06T16:00", "America/Sao_Paulo")).toBeNull();
+    expect(validateTestingSlotWindow("2026-10-05T14:00", "2026-10-06T16:00", "2026-10-06T14:00", "2026-10-06T16:00", "America/Sao_Paulo")).toMatch(/within the event/);
+    expect(validateTestingSlotWindow("2026-10-06T14:00", "2026-10-06T13:00", "2026-10-06T14:00", "2026-10-06T16:00", "America/Sao_Paulo")).toMatch(/end after/);
+    expect(validateTestingSlotWindow("2026-03-08T02:30", "2026-03-08T04:00", "2026-03-08T01:00", "2026-03-08T05:00", "America/New_York")).toMatch(/valid start and end/);
+  });
+
+  it("shows saved schedule state rather than offering to create zero slots", () => {
+    render(<TestingTimeSlotPlanner
+      event={{ id: "saved", startsAt: "2026-10-06T17:00:00Z", endsAt: "2026-10-06T17:45:00Z", timeZoneId: "America/Sao_Paulo" }}
+      existingSlots={[{ id: "saved-slot", startsAt: "2026-10-06T17:00:00Z", endsAt: "2026-10-06T17:45:00Z" }]}
+    />);
+    expect(screen.getByRole("heading", { name: "Schedule saved" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Slots already saved" })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "Create 0 time slots" })).not.toBeInTheDocument();
+  });
+
   it("starts multi-day events with one practical four-hour session window", () => {
     expect(
       defaultTestingSessionEnd("2026-09-18T18:00", "2026-09-20T20:00"),
@@ -1103,10 +1267,10 @@ describe("TestingEventApplications", () => {
     ).toHaveValue("");
     expect(
       document.querySelector<HTMLInputElement>('input[name="campusName"]'),
-    ).toHaveValue("");
+    ).not.toBeInTheDocument();
     expect(
       document.querySelector<HTMLInputElement>('input[name="roomName"]'),
-    ).toHaveValue("");
+    ).not.toBeInTheDocument();
     expect(
       document.querySelector<HTMLInputElement>('input[name="meetingUrl"]'),
     ).toHaveValue("");
@@ -1116,6 +1280,36 @@ describe("TestingEventApplications", () => {
     expect(
       document.querySelector<HTMLInputElement>('input[name="maxProjects"]'),
     ).toHaveValue(null);
+  });
+
+  it("creates a multi-day event through the calendar without changing the application window", async () => {
+    const user = userEvent.setup();
+    render(<CreateTestingEventDialog initialDate={new Date(2030, 0, 5)} defaultTimeZone="America/Sao_Paulo" />);
+    await user.click(screen.getByRole("button", { name: "New event" }));
+    await user.type(screen.getByRole("textbox", { name: "Event name" }), "Weekend playtest");
+    const form = screen.getByRole("button", { name: "Create event" }).closest("form")!;
+    const originalApplications = new FormData(form);
+
+    await user.click(screen.getByRole("button", { name: "Event schedule" }));
+    await user.click(await screen.findByRole("button", { name: "Thursday, January 10th, 2030", exact: true }));
+    await user.click(screen.getByRole("button", { name: "Sunday, January 13th, 2030", exact: true }));
+    await user.clear(screen.getByLabelText("Session starts time"));
+    await user.type(screen.getByLabelText("Session starts time"), "18:00");
+    await user.clear(screen.getByLabelText("Session ends time"));
+    await user.type(screen.getByLabelText("Session ends time"), "21:00");
+    await user.click(screen.getByRole("button", { name: "Apply event schedule" }));
+
+    expect(screen.getByRole("button", { name: "Event schedule" }))
+      .toHaveTextContent("10/01/2030 · 18:00 → 13/01/2030 · 21:00");
+    await user.click(screen.getByRole("button", { name: "Create event" }));
+    await waitFor(() => expect(mocks.createEvent).toHaveBeenCalledOnce());
+    const submitted = mocks.createEvent.mock.calls[0]![0] as FormData;
+    expect(submitted.get("startsAt")).toBe("2030-01-10T18:00");
+    expect(submitted.get("endsAt")).toBe("2030-01-13T21:00");
+    expect(submitted.get("timeZoneId")).toBe("America/Sao_Paulo");
+    expect(submitted.get("applicationsOpenAt")).toBe(originalApplications.get("applicationsOpenAt"));
+    expect(submitted.get("applicationsCloseAt")).toBe(originalApplications.get("applicationsCloseAt"));
+    await waitFor(() => expect(mocks.push).toHaveBeenCalledWith("/workspace/testing-lab/events/event-created/overview"));
   });
 
   it("submits a new event, closes the dialog, and refreshes the route", async () => {
@@ -1131,6 +1325,32 @@ describe("TestingEventApplications", () => {
     await waitFor(() => expect(mocks.createEvent).toHaveBeenCalledOnce());
     await waitFor(() => expect(mocks.refresh).toHaveBeenCalledOnce());
     expect(screen.queryByText("New testing event")).not.toBeInTheDocument();
+  });
+
+  it("shows only relevant slot delivery fields and resets cancelled format changes", async () => {
+    const user = userEvent.setup();
+    render(<ManageTestingEventSlotDialog eventId="event-1" timeZoneId="America/Sao_Paulo" slot={{
+      id: "delivery-slot", mode: "Online", locationId: "stored-location",
+      startsAt: "2026-10-09T02:30:00Z", endsAt: "2026-10-09T03:15:00Z",
+      meetingUrl: "https://meet.example/session", maxTesters: 8, maxProjects: 3,
+    }} />);
+    await user.click(screen.getByRole("button", { name: "Edit time slot" }));
+    expect(screen.queryByLabelText("Saved location id")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Campus")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Meeting URL")).toBeRequired();
+    expect(screen.getByLabelText("Slot starts date")).toHaveValue("2026-10-08");
+    expect(screen.getByLabelText("Slot ends date")).toHaveValue("2026-10-09");
+    expect(screen.getByLabelText("Project capacity")).toHaveValue(3);
+    await user.click(screen.getByRole("combobox", { name: "Format" }));
+    await user.click(await screen.findByRole("option", { name: "In person" }));
+    expect(screen.getByLabelText("Campus")).toBeRequired();
+    expect(screen.getByLabelText("Room")).toBeRequired();
+    expect(screen.queryByLabelText("Meeting URL")).not.toBeInTheDocument();
+    expect(document.querySelector('input[name="locationId"]')).toHaveValue("stored-location");
+    await user.click(screen.getByRole("button", { name: "Cancel", exact: true }));
+    await user.click(screen.getByRole("button", { name: "Edit time slot" }));
+    expect(screen.getByRole("combobox", { name: "Format" })).toHaveTextContent("Online");
+    expect(screen.queryByLabelText("Campus")).not.toBeInTheDocument();
   });
 
   it("keeps create errors visible for returned and rejected failures", async () => {
@@ -1255,12 +1475,35 @@ describe("TestingEventApplications", () => {
     );
   });
 
+  it("keeps cancellation confirmation visible after the event becomes read-only", async () => {
+    const user = userEvent.setup();
+    mocks.transitionEvent.mockResolvedValueOnce({
+      success: true,
+      data: null,
+      message: "Event status updated.",
+    });
+    const { rerender } = render(
+      <TestingEventLifecycleActions event={{ id: "event-1", status: "Active" }} />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Cancel event" }));
+    const dialog = screen.getByRole("dialog", { name: "Cancel this testing event?" });
+    await user.type(within(dialog).getByLabelText("Cancellation reason"), "Session finished early.");
+    await user.click(within(dialog).getByRole("button", { name: "Cancel event" }));
+
+    await waitFor(() => expect(mocks.refresh).toHaveBeenCalledOnce());
+    rerender(<TestingEventLifecycleActions event={{ id: "event-1", status: "Cancelled" }} />);
+
+    expect(screen.queryByRole("button", { name: "Cancel event" })).not.toBeInTheDocument();
+    expect(screen.getByText("Event status updated.")).toBeInTheDocument();
+  });
+
   it.each([
-    ["Draft", "Open applications", "open-applications"],
-    ["ApplicationsOpen", "Close applications", "close-applications"],
-    ["ApplicationsClosed", "Schedule event", "schedule"],
-    ["Scheduled", "Start event", "activate"],
-    ["Active", "Complete event", "complete"],
+    ["Draft", "Publish and open sign-ups", "open-applications"],
+    ["ApplicationsOpen", "Close game submissions", "close-applications"],
+    ["ApplicationsClosed", "Publish session schedule", "schedule"],
+    ["Scheduled", "Start playtest", "activate"],
+    ["Active", "Complete playtest", "complete"],
   ] as const)(
     "runs the %s lifecycle transition",
     async (status, label, transition) => {
@@ -1291,6 +1534,48 @@ describe("TestingEventApplications", () => {
     },
   );
 
+  it("refreshes lifecycle state only after the transition succeeds", async () => {
+    const user = userEvent.setup();
+    let resolveTransition: (
+      result: { success: true; data: { id: string }; message: string },
+    ) => void = () => {};
+    mocks.transitionEvent.mockReturnValueOnce(
+      new Promise<{ success: true; data: { id: string }; message: string }>(
+        (resolve) => {
+          resolveTransition = resolve;
+        },
+      ),
+    );
+
+    render(
+      <TestingEventLifecycleActions
+        event={{
+          id: "event-1",
+          status: "Draft",
+          configuration: {
+            generalRules: "Rules",
+            candidateInstructions: "Candidates",
+            testerInstructions: "Testers",
+            projectApplicationSchema: { title: "Apply", questions: [] },
+            testerRegistrationSchema: { title: "Register", questions: [] },
+          },
+        }}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Publish and open sign-ups" }));
+    await waitFor(() => expect(mocks.transitionEvent).toHaveBeenCalledOnce());
+    expect(mocks.refresh).not.toHaveBeenCalled();
+
+    resolveTransition({
+      success: true,
+      data: { id: "event-1" },
+      message: "Event transitioned.",
+    });
+
+    await waitFor(() => expect(mocks.refresh).toHaveBeenCalledOnce());
+  });
+
   it("reports lifecycle failures and omits actions for events without identity", async () => {
     const user = userEvent.setup();
     mocks.transitionEvent.mockRejectedValueOnce(
@@ -1305,7 +1590,7 @@ describe("TestingEventApplications", () => {
         }}
       />,
     );
-    await user.click(screen.getByRole("button", { name: "Start event" }));
+    await user.click(screen.getByRole("button", { name: "Start playtest" }));
     expect(
       await screen.findByText("Transition unavailable"),
     ).toBeInTheDocument();
@@ -1330,7 +1615,7 @@ describe("TestingEventApplications", () => {
       />,
     );
     expect(
-      screen.getByRole("button", { name: "Open applications" }),
+      screen.getByRole("button", { name: "Publish and open sign-ups" }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Cancel event" }),

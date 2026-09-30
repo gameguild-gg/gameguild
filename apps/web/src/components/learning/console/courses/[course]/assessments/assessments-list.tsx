@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@game-guild/ui/lib/utils";
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import {
   closestCorners,
@@ -34,7 +35,7 @@ import {
 } from "@/lib/learning/assessment-grading-methods";
 import { normalizeSlug, slugify } from "@/lib/slugify";
 import { Badge } from "@game-guild/ui/components/badge";
-import { Button } from "@game-guild/ui/components/button";
+import { Button, buttonVariants } from "@game-guild/ui/components/button";
 import { Card, CardContent } from "@game-guild/ui/components/card";
 import {
   Dialog,
@@ -801,20 +802,20 @@ export function AssessmentsList({
                           </Badge>
                         </Link>
                         {canManage && (
-                           <Button nativeButton={false}
-                             variant="outline"
-                             size="sm"
-                             className="mr-4 shrink-0"
-                             render={
-                               <Link
-                                 href={`${pathname}/${assessment.id}/submissions`}
-                                 data-testid={`grade-link-${assessment.id}`}
-                               />
-                             }
+                           <Link
+                             href={`${pathname}/${assessment.id}/submissions`}
+                             data-testid={`grade-link-${assessment.id}`}
+                             className={cn(
+                               buttonVariants({
+                                 variant: "outline",
+                                 size: "sm",
+                                 className: "mr-4 shrink-0",
+                               }),
+                             )}
                            >
                              <ClipboardCheck className="mr-2 h-4 w-4" />
                              Grade
-                           </Button>
+                           </Link>
                         )}
                       </DraggableAssessmentRow>
                     ))}

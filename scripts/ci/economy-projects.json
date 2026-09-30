@@ -12,6 +12,11 @@
       "coverageAssemblies": ["GameGuild.Finance.Economy.AdRewards"]
     },
     {
+      "productionProject": "apps/api/Source/Modules/GameGuild.Finance.Economy.AiCredits/GameGuild.Finance.Economy.AiCredits.csproj",
+      "testProjects": ["apps/api/tests/GameGuild.Finance.Economy.AiCredits.UnitTests/GameGuild.Finance.Economy.AiCredits.UnitTests.csproj"],
+      "coverageAssemblies": ["GameGuild.Finance.Economy.AiCredits"]
+    },
+    {
       "productionProject": "apps/api/Source/Modules/GameGuild.Finance.Economy.Bounties/GameGuild.Finance.Economy.Bounties.csproj",
       "testProjects": ["apps/api/tests/GameGuild.Finance.Economy.Bounties.UnitTests/GameGuild.Finance.Economy.Bounties.UnitTests.csproj"],
       "coverageAssemblies": ["GameGuild.Finance.Economy.Bounties"]

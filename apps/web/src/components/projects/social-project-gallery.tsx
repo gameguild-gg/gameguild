@@ -4,86 +4,91 @@ import { ProjectCoverImage } from '@/components/projects/project-cover-image';
 import { Link } from '@/i18n/navigation';
 import type { PublicProject } from '@/lib/community/public-community';
 import { loadMorePublicProjects } from '@/lib/projects/public-project-actions';
-import { ArrowUpRight, LoaderCircle, Search, Sparkles } from 'lucide-react';
+import { isPublicProjectType, PROJECT_TYPE_OPTIONS, type PublicProjectType } from '@/lib/projects/project-types';
+import { Badge } from '@game-guild/ui/components/badge';
+import { Button, buttonVariants } from '@game-guild/ui/components/button';
+import { Card, CardContent } from '@game-guild/ui/components/card';
+import { Input } from '@game-guild/ui/components/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@game-guild/ui/components/select';
+import { ArrowUpRight, FolderKanban, LoaderCircle, Search, Sparkles } from 'lucide-react';
 import type React from 'react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 interface SocialProjectGalleryProps {
   projects: PublicProject[];
+  searchQuery?: string;
+  projectType?: PublicProjectType;
   initialHasMore?: boolean;
+  initialError?: string;
 }
 
-export function SocialProjectGallery({ projects, initialHasMore = false }: SocialProjectGalleryProps): React.JSX.Element {
+export function SocialProjectGallery({
+  projects,
+  searchQuery = '',
+  projectType,
+  initialHasMore = false,
+  initialError = '',
+}: SocialProjectGalleryProps): React.JSX.Element {
   const [loadedProjects, setLoadedProjects] = useState(projects);
   const [hasMore, setHasMore] = useState(initialHasMore);
+  const [nextOffset, setNextOffset] = useState(projects.length);
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadError, setLoadError] = useState('');
-  const [query, setQuery] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all');
+  const [query, setQuery] = useState(searchQuery);
+  const [typeFilter, setTypeFilter] = useState<PublicProjectType | 'all'>(projectType ?? 'all');
   const featuredProject = loadedProjects[0];
-  const hasFilters = query.trim().length > 0 || typeFilter !== 'all';
-  const projectTypes = useMemo(
-    () => [...new Set(loadedProjects.map((project) => project.buildType.trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b)),
-    [loadedProjects],
-  );
-
-  const visibleProjects = useMemo(() => {
-    const normalizedQuery = query.trim().toLocaleLowerCase();
-
-    return loadedProjects.filter((project) => {
-      const matchesType = typeFilter === 'all' || project.buildType === typeFilter;
-      const searchableText = [project.title, project.summary, project.creator, project.buildType, ...project.tags]
-        .join(' ')
-        .toLocaleLowerCase();
-      const matchesQuery = !normalizedQuery || searchableText.includes(normalizedQuery);
-      const featuredIsShownAbove = !hasFilters && project.slug === featuredProject?.slug;
-
-      return matchesType && matchesQuery && !featuredIsShownAbove;
-    });
-  }, [featuredProject?.slug, hasFilters, loadedProjects, query, typeFilter]);
-
-  const clearFilters = () => {
-    setQuery('');
-    setTypeFilter('all');
-  };
+  const hasFilters = searchQuery.length > 0 || projectType !== undefined;
+  const galleryProjects = hasFilters ? loadedProjects : loadedProjects.slice(1);
 
   async function loadMore() {
+    if (loadingMore) return;
+
     setLoadingMore(true);
     setLoadError('');
     try {
-      const result = await loadMorePublicProjects(loadedProjects.length);
+      const result = await loadMorePublicProjects(nextOffset, searchQuery, projectType);
       if (result.error) {
         setLoadError(result.error);
         return;
       }
+
       setLoadedProjects((current) => {
         const existingIds = new Set(current.map((project) => project.id ?? project.slug));
         return [...current, ...result.items.filter((project) => !existingIds.has(project.id ?? project.slug))];
       });
+      setNextOffset((current) => current + result.items.length);
       setHasMore(result.hasMore);
     } catch {
-      setLoadError('We couldn’t load more projects. Refresh the page and try again.');
+      setLoadError('We couldn’t load more projects. Try again.');
     } finally {
       setLoadingMore(false);
     }
   }
 
+  const retryLoadMore = () => void loadMore();
+
   return (
     <main className="mx-auto flex min-h-full w-full max-w-[1560px] flex-col gap-8 px-4 py-7 sm:px-6 lg:px-8">
-      <header className="flex flex-wrap items-end justify-between gap-4">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="mb-2 text-sm font-medium text-muted-foreground">Community directory</p>
           <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Projects</h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-            Discover games and creative work shared by the community.
+            Explore games and creative work shared by the community.
           </p>
         </div>
         <Link
           href="/workspace/projects"
-          className="inline-flex min-h-10 items-center gap-2 rounded-md px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className={buttonVariants({ variant: 'outline', className: 'w-full sm:w-auto' })}
         >
           Manage your projects
-          <ArrowUpRight className="size-4" aria-hidden="true" />
+          <ArrowUpRight aria-hidden="true" />
         </Link>
       </header>
 
@@ -91,7 +96,7 @@ export function SocialProjectGallery({ projects, initialHasMore = false }: Socia
         <section aria-labelledby="project-spotlight-title">
           <Link
             href={`/projects/${featuredProject.slug}`}
-            className="group relative block min-h-[300px] overflow-hidden rounded-xl border border-border bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-[360px] lg:min-h-[420px]"
+            className="group relative block min-h-[280px] overflow-hidden rounded-xl border border-border bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-[340px] lg:min-h-[400px]"
           >
             <ProjectCoverImage
               src={featuredProject.previewImage}
@@ -101,15 +106,15 @@ export function SocialProjectGallery({ projects, initialHasMore = false }: Socia
               sizes="(min-width: 1560px) 1480px, 100vw"
               className="object-cover transition-transform duration-500 group-hover:scale-[1.025] motion-reduce:transition-none"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-background/5" />
+            <div className="absolute inset-0 bg-gradient-to-r from-background via-background/85 to-background/10" />
             <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
-            <div className="relative flex min-h-[300px] max-w-2xl flex-col justify-end p-6 sm:min-h-[360px] sm:p-9 lg:min-h-[420px] lg:p-12">
-              <span className="mb-4 inline-flex w-fit items-center gap-2 rounded-full border border-border bg-background/75 px-3 py-1.5 text-xs font-medium text-foreground backdrop-blur">
+            <div className="relative flex min-h-[280px] max-w-2xl flex-col justify-end p-5 sm:min-h-[340px] sm:p-8 lg:min-h-[400px] lg:p-10">
+              <Badge variant="outline" className="mb-4 w-fit gap-2 bg-background/75 backdrop-blur">
                 <Sparkles className="size-3.5 text-primary" aria-hidden="true" />
                 Recently updated
-              </span>
+              </Badge>
               <p className="text-sm font-medium text-muted-foreground">{featuredProject.creator}</p>
-              <h2 id="project-spotlight-title" className="mt-1 text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
+              <h2 id="project-spotlight-title" className="mt-1 break-words text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
                 {featuredProject.title}
               </h2>
               <p className="mt-3 max-w-xl text-sm leading-6 text-foreground/85 sm:text-base">
@@ -125,61 +130,81 @@ export function SocialProjectGallery({ projects, initialHasMore = false }: Socia
       ) : null}
 
       <section aria-labelledby="project-gallery-title" className="space-y-5">
-        <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 id="project-gallery-title" className="text-xl font-semibold tracking-tight">
               {hasFilters ? 'Search results' : 'Project gallery'}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground" aria-live="polite">
-              {hasFilters
-                ? `${visibleProjects.length} ${visibleProjects.length === 1 ? 'match' : 'matches'} in ${loadedProjects.length} loaded projects`
-                : `${visibleProjects.length} more projects shown`}
+              {loadedProjects.length} {loadedProjects.length === 1 ? 'project' : 'projects'} shown
             </p>
           </div>
           {hasFilters ? (
-            <button
-              type="button"
-              onClick={clearFilters}
-              className="min-h-10 rounded-md px-3 text-sm font-medium text-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
+            <Link href="/projects" className={buttonVariants({ variant: 'ghost' })}>
               Clear filters
-            </button>
+            </Link>
           ) : null}
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-[minmax(16rem,1fr)_minmax(10rem,14rem)]">
-          <label className="relative block">
-            <span className="sr-only">Search projects</span>
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search loaded projects or creators"
-              className="h-11 w-full rounded-md border border-input bg-card pl-10 pr-3 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
-            />
+        <form method="get" className="grid gap-3 rounded-xl border border-border bg-card p-4 sm:grid-cols-[minmax(0,1fr)_14rem_auto] sm:items-end">
+          <label className="grid min-w-0 gap-2 text-sm font-medium">
+            <span>Search projects</span>
+            <span className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+              <Input
+                name="q"
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search the public catalog"
+                className="h-10 pl-10"
+              />
+            </span>
           </label>
-          <label>
-            <span className="sr-only">Filter by project type</span>
-            <select
+          <label className="grid gap-2 text-sm font-medium">
+            <span>Project type</span>
+            <Select
+              name="type"
               value={typeFilter}
-              onChange={(event) => setTypeFilter(event.target.value)}
-              className="h-11 w-full rounded-md border border-input bg-card px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              onValueChange={(value) => setTypeFilter(value && isPublicProjectType(value) ? value : 'all')}
             >
-              <option value="all">All project types</option>
-              {projectTypes.map((type) => <option key={type} value={type}>{type}</option>)}
-            </select>
+              <SelectTrigger aria-label="Project type" className="h-10 w-full">
+                <SelectValue placeholder="All project types" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All project types</SelectItem>
+                {PROJECT_TYPE_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </label>
-        </div>
+          <Button type="submit" className="w-full sm:w-auto">
+            Search
+          </Button>
+        </form>
 
-        {visibleProjects.length > 0 ? (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {visibleProjects.map((project) => (
+        {initialError ? (
+          <Card role="alert" className="border-destructive/40">
+            <CardContent className="flex flex-col items-start gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h3 className="font-semibold">Projects couldn’t load</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{initialError}</p>
+              </div>
+              <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => window.location.reload()}>
+                Try again
+              </Button>
+            </CardContent>
+          </Card>
+        ) : galleryProjects.length > 0 ? (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" aria-busy={loadingMore}>
+            {galleryProjects.map((project) => (
               <Link
-                key={project.slug}
+                key={project.id ?? project.slug}
                 href={`/projects/${project.slug}`}
-                className="group overflow-hidden rounded-lg border border-border bg-card transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="group block h-full rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
-                <article>
+                <Card className="h-full gap-0 py-0 transition-colors group-hover:bg-muted/30">
                   <div className="relative aspect-[16/10] overflow-hidden bg-muted">
                     <ProjectCoverImage
                       src={project.previewImage}
@@ -188,66 +213,68 @@ export function SocialProjectGallery({ projects, initialHasMore = false }: Socia
                       sizes="(min-width: 1280px) 30vw, (min-width: 640px) 45vw, 100vw"
                       className="object-cover transition-transform duration-500 group-hover:scale-[1.035] motion-reduce:transition-none"
                     />
-                    <span className="absolute left-3 top-3 rounded-full border border-background/15 bg-background/85 px-2.5 py-1 text-xs font-medium text-foreground backdrop-blur">
+                    <Badge variant="secondary" className="absolute left-3 top-3 max-w-[calc(100%-1.5rem)] truncate border border-background/15 bg-background/85 backdrop-blur">
                       {project.status}
-                    </span>
+                    </Badge>
                   </div>
-                  <div className="space-y-3 p-4">
-                    <div className="flex items-start justify-between gap-3">
+                  <CardContent className="gap-3 px-4 pb-4 pt-4">
+                    <div className="flex min-w-0 items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <h3 className="truncate text-base font-semibold">{project.title}</h3>
+                        <h3 className="truncate font-semibold">{project.title}</h3>
                         <p className="mt-1 truncate text-sm text-muted-foreground">{project.creator}</p>
                       </div>
                       <ArrowUpRight className="mt-0.5 size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" aria-hidden="true" />
                     </div>
                     <p className="line-clamp-2 min-h-10 text-sm leading-5 text-muted-foreground">{project.summary}</p>
                     <div className="flex flex-wrap gap-1.5">
-                      {project.tags.slice(0, 3).map((tag) => (
-                        <span key={tag} className="rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground">{tag}</span>
+                      {(project.tags.length > 0 ? project.tags.slice(0, 3) : [project.buildType]).map((tag) => (
+                        <Badge key={tag} variant="outline" className="max-w-full truncate text-xs font-normal">{tag}</Badge>
                       ))}
-                      {project.tags.length === 0 ? (
-                        <span className="rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground">{project.buildType}</span>
-                      ) : null}
                     </div>
-                  </div>
-                </article>
+                  </CardContent>
+                </Card>
               </Link>
             ))}
           </div>
-        ) : loadedProjects.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border px-6 py-12 text-center">
-            <h3 className="text-base font-semibold">No public projects yet</h3>
-            <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-              Published projects will appear here when their creators share them with the community.
-            </p>
-          </div>
+        ) : loadedProjects.length === 0 && !hasFilters ? (
+          <Card>
+            <CardContent className="flex flex-col items-center px-6 py-12 text-center">
+              <FolderKanban className="size-8 text-muted-foreground" aria-hidden="true" />
+              <h3 className="mt-4 font-semibold">No public projects yet</h3>
+              <p className="mt-2 max-w-md text-sm text-muted-foreground">
+                Published projects will appear here when their creators share them with the community.
+              </p>
+              <Link href="/workspace/projects" className={buttonVariants({ className: 'mt-5' })}>
+                Start a project
+              </Link>
+            </CardContent>
+          </Card>
         ) : hasFilters ? (
-          <div className="rounded-lg border border-dashed border-border px-6 py-12 text-center">
-            <h3 className="text-base font-semibold">No projects match these filters</h3>
-            <p className="mt-2 text-sm text-muted-foreground">Try another title, creator, or project type.</p>
-            <button
-              type="button"
-              onClick={clearFilters}
-              className="mt-4 min-h-10 rounded-md px-3 text-sm font-medium text-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              Clear filters
-            </button>
-          </div>
+          <Card>
+            <CardContent className="flex flex-col items-center px-6 py-12 text-center">
+              <h3 className="font-semibold">No projects match your search</h3>
+              <p className="mt-2 max-w-md text-sm text-muted-foreground">
+                Try a broader search or choose a different project type.
+              </p>
+            </CardContent>
+          </Card>
         ) : null}
 
-        {loadError ? <p role="alert" className="text-sm text-destructive">{loadError}</p> : null}
-        {hasMore ? (
+        {loadError ? (
+          <div role="alert" className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-destructive">{loadError}</p>
+            <Button type="button" variant="outline" size="sm" onClick={retryLoadMore} disabled={loadingMore}>
+              Try again
+            </Button>
+          </div>
+        ) : null}
+        {hasMore && !initialError && !loadError ? (
           <div className="flex flex-col items-center gap-2 pt-2">
-            <button
-              type="button"
-              onClick={() => void loadMore()}
-              disabled={loadingMore}
-              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-border px-4 text-sm font-medium transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-60"
-            >
-              {loadingMore ? <LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> : null}
+            <Button type="button" variant="outline" onClick={retryLoadMore} disabled={loadingMore}>
+              {loadingMore ? <LoaderCircle className="animate-spin" aria-hidden="true" /> : null}
               {loadingMore ? 'Loading projects…' : 'Load more projects'}
-            </button>
-            {hasFilters ? <p className="text-center text-xs text-muted-foreground">Search and filters apply to projects loaded so far.</p> : null}
+            </Button>
+            {loadingMore ? <p role="status" className="text-sm text-muted-foreground">Loading more projects</p> : null}
           </div>
         ) : null}
       </section>

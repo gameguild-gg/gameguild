@@ -1,4 +1,5 @@
 using OpenTelemetry.Exporter;
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
@@ -60,6 +61,29 @@ public static class OpenTelemetryExtensions
                 if (!string.IsNullOrWhiteSpace(options.OtlpEndpoint))
                 {
                     tracing.AddOtlpExporter(exporter =>
+                    {
+                        exporter.Endpoint = new Uri(options.OtlpEndpoint.Trim());
+                    exporter.Protocol = ResolveProtocol(options.OtlpProtocol);
+                    });
+                }
+            })
+            .WithMetrics(metrics =>
+            {
+                metrics
+                    .AddAspNetCoreInstrumentation()
+                    .AddHttpClientInstrumentation()
+                    .AddMeter(
+                        "GameGuild.API.RateLimiting",
+                        "GameGuild.Identity.Authentication.PermissionBulkCheck");
+
+                if (options.ConsoleExporterEnabled)
+                {
+                    metrics.AddConsoleExporter();
+                }
+
+                if (!string.IsNullOrWhiteSpace(options.OtlpEndpoint))
+                {
+                    metrics.AddOtlpExporter(exporter =>
                     {
                         exporter.Endpoint = new Uri(options.OtlpEndpoint.Trim());
                         exporter.Protocol = ResolveProtocol(options.OtlpProtocol);

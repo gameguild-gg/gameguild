@@ -1,7 +1,8 @@
+import { cn } from "@game-guild/ui/lib/utils";
 import { Link } from '@/i18n/navigation';
 import { getLearningContentLibrary, type LearningContentLibraryItem } from '@/lib/learning';
 import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
+import { buttonVariants } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { ArrowLeft, BookOpenCheck, ExternalLink, FileText, Plus, Timer } from 'lucide-react';
 import React from 'react';
@@ -47,10 +48,15 @@ function TutorialRow({ item, index }: { item: LearningContentLibraryItem; index:
             </div>
           </div>
         </div>
-        <Button nativeButton={false} variant="outline" size="sm" className="shrink-0" render={<Link href={`/workspace/learning/courses/${item.courseSlug || item.courseId}/content/${item.slug || item.id}`} />}>
+        <Link
+          href={`/workspace/learning/courses/${item.courseSlug || item.courseId}/content/${item.slug || item.id}`}
+          className={cn(
+            buttonVariants({ variant: "outline", size: "sm", className: "shrink-0" }),
+          )}
+        >
           Edit tutorial
           <ExternalLink className="ml-2 size-4" />
-        </Button>
+        </Link>
       </CardContent>
     </Card>
   );
@@ -64,9 +70,12 @@ export default async function Page(): Promise<React.JSX.Element> {
     <div className="flex flex-col gap-6 p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
-          <Button nativeButton={false} variant="ghost" size="icon" render={<Link href="/workspace/learning" />}>
+          <Link
+            href="/workspace/learning"
+            className={cn(buttonVariants({ variant: "ghost", size: "icon" }))}
+          >
             <ArrowLeft className="size-5" />
-          </Button>
+          </Link>
           <div className="flex size-12 items-center justify-center rounded-lg bg-linear-to-br from-violet-500 to-fuchsia-600">
             <BookOpenCheck className="size-6 text-white" />
           </div>
@@ -75,10 +84,10 @@ export default async function Page(): Promise<React.JSX.Element> {
             <p className="text-muted-foreground">Curate the hands-on lessons, walkthroughs, and challenges that power course learning paths.</p>
           </div>
         </div>
-        <Button nativeButton={false} render={<Link href="/workspace/learning/courses" />}>
+        <Link href="/workspace/learning/courses" className={cn(buttonVariants({}))}>
           <Plus className="mr-2 size-4" />
           Add tutorial content
-        </Button>
+        </Link>
       </div>
 
       {error ? (
@@ -115,7 +124,12 @@ export default async function Page(): Promise<React.JSX.Element> {
             <FileText className="mb-4 size-12 text-muted-foreground" />
             <h3 className="text-lg font-semibold">No tutorial content found</h3>
             <p className="max-w-md text-sm text-muted-foreground">Create course lessons, code exercises, or reflections and they will appear here for curation.</p>
-            <Button nativeButton={false} className="mt-5" render={<Link href="/workspace/learning/courses/new" />}>Create course</Button>
+            <Link
+              href="/workspace/learning/courses/new"
+              className={cn(buttonVariants({ className: "mt-5" }))}
+            >
+              Create course
+            </Link>
           </CardContent>
         </Card>
       ) : (

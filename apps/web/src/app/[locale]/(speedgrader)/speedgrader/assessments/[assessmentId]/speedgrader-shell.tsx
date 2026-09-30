@@ -1,12 +1,13 @@
 'use client';
 
+import { cn } from "@game-guild/ui/lib/utils";
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import { useState, type ReactNode } from 'react';
 import type { LearningAssessmentsGradingQueueItem } from '@game-guild/client';
 import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
+import { Button, buttonVariants } from '@game-guild/ui/components/button';
 import {
   ResizableHandle,
   ResizablePanel,
@@ -109,10 +110,14 @@ export function SpeedgraderShell({
         data-testid="speedgrader-header"
         className="flex flex-wrap items-center gap-2 border-b px-3 py-2"
       >
-        <Button nativeButton={false} variant="ghost" size="sm" render={<Link href={backHref} aria-label="Back to submissions" />}>
+        <Link
+          href={backHref}
+          aria-label="Back to submissions"
+          className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+        >
           <ChevronLeft className="size-4" />
           Back
-        </Button>
+        </Link>
         <h1 className="min-w-0 truncate text-sm font-semibold">{assessmentTitle}</h1>
         <Badge data-testid="needs-grading-badge" variant="secondary">
           {needsGrading} to grade

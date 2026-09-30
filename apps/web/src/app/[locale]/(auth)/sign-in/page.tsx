@@ -33,6 +33,7 @@ export default async function Page({
       <GoogleOneTap authenticated={Boolean(session)} redirectTo={redirectTo} />
       <AuthErrorNotice errorCode={errorCode} />
       <SignInForm
+        magicLinkLabel={t('magicLink')}
         providers={
           <div className="flex flex-col gap-3">
             <GoogleSignInButton redirectTo={redirectTo} />

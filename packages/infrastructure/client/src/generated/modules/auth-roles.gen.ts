@@ -68,6 +68,32 @@ export class AuthRolesModule {
 
   /**
    */
+  async postRolesBulkAssign(
+    body: Types.IdentityAuthenticationBulkAssignRolesCommand,
+  ): Promise<Result<Types.IdentityAuthenticationBulkRoleAssignmentResult, ApiError>> {
+    const url = '/v1/roles/:bulk-assign';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationBulkAssignRolesCommandSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityAuthenticationBulkRoleAssignmentResultSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async postRolesRemove(body: Types.IdentityAuthenticationRemoveRoleFromUserInput): Promise<Result<void, ApiError>> {
     const url = '/v1/roles/:remove';
 

@@ -2,7 +2,13 @@ using System.Net;
 using Asp.Versioning.ApiExplorer;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Tenants;
+using GameGuild.API.Core.ApiVersioning;
 using GameGuild.API.Core.CostAccounting;
+using GameGuild.Configuration.PresentationLayer;
+using GameGuild.API.Core.Middleware;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
 namespace GameGuild.API.Setup;
@@ -55,11 +61,19 @@ public static class PipelineExtensions
         // 08. Request Localization (culture/language resolution)
         app.UseRequestLocalization();
 
+        // 08a. Empty error responses (including routing and minimal API status results) use the
+        // same configured Problem Details writer as exceptions and MVC controller responses.
+        app.UseProblemDetailsStatusCodePages();
+
         // 09. Security Headers (X-Content-Type-Options, X-Frame-Options, CSP, Referrer-Policy, etc.)
-        app.UseSecurityHeaders();
+        var securityHeaders = PresentationLayerOptionsBuilder.Create(app.Configuration).SecurityHeaders
+                              ?? new SecurityHeadersOptions();
+        securityHeaders.Validate();
+        app.UseSecurityHeaders(securityHeaders);
 
         // 10. Routing (endpoint matching, required before auth)
         app.UseRouting();
+        app.UseMiddleware<ApiVersionUsageMiddleware>();
 
         // 11. CORS (Cross-Origin Resource Sharing, after routing)
         app.UseCors();
@@ -92,7 +106,12 @@ public static class PipelineExtensions
         // 18. Rate Limiting (throttle requests per client/endpoint)
         if (app.Configuration.GetValue<bool>("PresentationLayer:EnableRateLimiting"))
         {
+            app.UseMiddleware<RateLimitAccessControlMiddleware>();
             app.UseRateLimiter();
+            if (app.Configuration.GetValue<bool>("Redis:Enabled"))
+            {
+                app.UseMiddleware<RedisEndpointRateLimitingMiddleware>();
+            }
         }
 
         // 19. Controller Endpoints (REST API routes via [ApiController])
@@ -142,6 +161,30 @@ public static class PipelineExtensions
         }
 
         return app;
+    }
+
+    /// <summary>
+    /// Writes configured Problem Details for otherwise empty HTTP error responses.
+    /// </summary>
+    public static IApplicationBuilder UseProblemDetailsStatusCodePages(this IApplicationBuilder app)
+    {
+        ArgumentNullException.ThrowIfNull(app);
+
+        return app.UseStatusCodePages(async statusCodeContext =>
+        {
+            var httpContext = statusCodeContext.HttpContext;
+            var problemDetailsService = httpContext.RequestServices.GetService<IProblemDetailsService>();
+            if (problemDetailsService is null)
+            {
+                return;
+            }
+
+            await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
+            {
+                HttpContext = httpContext,
+                ProblemDetails = new ProblemDetails { Status = httpContext.Response.StatusCode },
+            }).ConfigureAwait(false);
+        });
     }
 
     internal static bool ShouldRedirectToHttps(HttpContext context) =>

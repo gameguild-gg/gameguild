@@ -25,8 +25,9 @@ import {
 import {
   browserTimeZone,
   formatWallClockInTimeZone,
+  wallClockToUtcIso,
 } from "@/lib/date-time-zone";
-import { formatEventDateTime } from "@/lib/testing-lab/event-workspace";
+import { formatEventDateTime, formatEventDateRange } from "@/lib/testing-lab/event-workspace";
 import { formatTestingEventStatus } from "@/lib/testing-lab/format";
 import type {
   TestingLabTestingEventCommitteeMemberProjection,
@@ -66,6 +67,7 @@ import {
 import { Input } from "@game-guild/ui/components/input";
 import { Label } from "@game-guild/ui/components/label";
 import {
+  SelectGroup,
   Select,
   SelectContent,
   SelectItem,
@@ -91,9 +93,11 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
+  useCallback,
   useRef,
   useMemo,
   useState,
+  useSyncExternalStore,
   useTransition,
   type FormEvent,
   type ReactElement,
@@ -103,6 +107,8 @@ import {
 type Action = (
   formData: FormData,
 ) => Promise<TestingEventActionResult<unknown>>;
+
+const subscribeToTimeZonePreference = () => () => undefined;
 
 export interface TestingLabMemberOption {
   id: string;
@@ -129,11 +135,6 @@ export function apiDatetimeLocal(value?: string | null, timeZoneId = "UTC") {
   return formatWallClockInTimeZone(date, timeZoneId);
 }
 
-function localDatetime(date: Date) {
-  const local = new Date(date.valueOf() - date.getTimezoneOffset() * 60_000);
-  return local.toISOString().slice(0, 16);
-}
-
 type TestingEventSchedule = {
   applicationsOpenAt: string;
   applicationsCloseAt: string;
@@ -142,42 +143,109 @@ type TestingEventSchedule = {
 };
 
 const Hour = 60 * 60 * 1000;
-const Day = 24 * Hour;
+
+function wallClockDate(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return null;
+  const date = new Date(`${value}:00.000Z`);
+  return Number.isNaN(date.valueOf()) || date.toISOString().slice(0, 16) !== value
+    ? null
+    : date;
+}
+
+function addWallClockMinutes(value: string, minutes: number) {
+  const date = wallClockDate(value);
+  if (!date) return "";
+  date.setUTCMinutes(date.getUTCMinutes() + minutes);
+  return date.toISOString().slice(0, 16);
+}
+
+function nextValidWallClock(value: string, timeZoneId: string, direction = 1) {
+  for (let offset = 0; offset <= 180; offset += 1) {
+    const candidate = addWallClockMinutes(value, offset * direction);
+    if (candidate && wallClockToUtcIso(candidate, timeZoneId)) return candidate;
+  }
+  return "";
+}
+
+function localCalendarDatePart(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
 export function createTestingEventSchedule(
   now = new Date(),
   eventDate?: Date,
+  timeZoneId = browserTimeZone(),
 ): TestingEventSchedule {
-  const applicationsOpenAt = new Date(now);
-  applicationsOpenAt.setMinutes(0, 0, 0);
-  applicationsOpenAt.setHours(applicationsOpenAt.getHours() + 1);
+  const currentWallClock = formatWallClockInTimeZone(now, timeZoneId);
+  const currentWallClockDate = wallClockDate(currentWallClock);
+  if (!currentWallClockDate) {
+    return createTestingEventSchedule(now, eventDate, "UTC");
+  }
 
-  let startsAt = eventDate
-    ? new Date(
-        eventDate.getFullYear(),
-        eventDate.getMonth(),
-        eventDate.getDate(),
-        10,
-      )
-    : new Date(applicationsOpenAt.valueOf() + 2 * Day);
-  const minimumStart = new Date(applicationsOpenAt.valueOf() + 2 * Hour);
-  if (startsAt <= minimumStart) startsAt = minimumStart;
+  currentWallClockDate.setUTCMinutes(0, 0, 0);
+  currentWallClockDate.setUTCHours(currentWallClockDate.getUTCHours() + 1);
+  const applicationsOpenAt = nextValidWallClock(
+    currentWallClockDate.toISOString().slice(0, 16),
+    timeZoneId,
+  );
+  const openInstant = wallClockToUtcIso(applicationsOpenAt, timeZoneId);
+  if (!applicationsOpenAt || !openInstant) {
+    return createTestingEventSchedule(now, eventDate, "UTC");
+  }
 
-  const applicationsCloseAt = new Date(startsAt.valueOf() - Hour);
-  const endsAt = new Date(startsAt.valueOf() + 2 * Hour);
+  const selectedDate = eventDate ? localCalendarDatePart(eventDate) : null;
+  const requestedStart = selectedDate
+    ? `${selectedDate}T10:00`
+    : `${addWallClockMinutes(applicationsOpenAt, 48 * 60).slice(0, 10)}T10:00`;
+  const earliestStart = Date.parse(openInstant) + 2 * Hour;
+  let startsAt = nextValidWallClock(requestedStart, timeZoneId);
+  let startInstant = startsAt ? wallClockToUtcIso(startsAt, timeZoneId) : null;
+
+  if (!startInstant || Date.parse(startInstant) < earliestStart) {
+    const fallbackDate = addWallClockMinutes(applicationsOpenAt, 48 * 60);
+    startsAt = nextValidWallClock(`${fallbackDate.slice(0, 10)}T10:00`, timeZoneId);
+    startInstant = startsAt ? wallClockToUtcIso(startsAt, timeZoneId) : null;
+  }
+
+  if (!startsAt || !startInstant) {
+    return createTestingEventSchedule(now, eventDate, "UTC");
+  }
+
+  let applicationsCloseAt = "";
+  for (let offset = 60; offset <= 180; offset += 1) {
+    const candidate = addWallClockMinutes(startsAt, -offset);
+    const candidateInstant = candidate
+      ? wallClockToUtcIso(candidate, timeZoneId)
+      : null;
+    if (candidateInstant && Date.parse(candidateInstant) > Date.parse(openInstant)) {
+      applicationsCloseAt = candidate;
+      break;
+    }
+  }
+  if (!applicationsCloseAt) {
+    const candidate = addWallClockMinutes(applicationsOpenAt, 60);
+    applicationsCloseAt = nextValidWallClock(candidate, timeZoneId);
+  }
+
+  const endsAt = formatWallClockInTimeZone(
+    new Date(Date.parse(startInstant) + 2 * Hour),
+    timeZoneId,
+  );
 
   return {
-    applicationsOpenAt: localDatetime(applicationsOpenAt),
-    applicationsCloseAt: localDatetime(applicationsCloseAt),
-    startsAt: localDatetime(startsAt),
-    endsAt: localDatetime(endsAt),
+    applicationsOpenAt,
+    applicationsCloseAt,
+    startsAt,
+    endsAt,
   };
 }
 
 export function scheduleDate(value: string) {
   if (!value) return null;
-  const date = new Date(value);
-  return Number.isNaN(date.valueOf()) ? null : date;
+  return wallClockDate(value);
 }
 
 export function updateTestingEventSchedule(
@@ -185,36 +253,47 @@ export function updateTestingEventSchedule(
   field: keyof TestingEventSchedule,
   value: string,
 ): TestingEventSchedule {
-  const next = { ...current, [field]: value };
-  const openAt = scheduleDate(next.applicationsOpenAt);
-  let closeAt = scheduleDate(next.applicationsCloseAt);
-  let startsAt = scheduleDate(next.startsAt);
+  return { ...current, [field]: value };
+}
+
+export function validateTestingEventSchedule(
+  schedule: TestingEventSchedule,
+  timeZoneId: string,
+) {
+  const values = [
+    schedule.applicationsOpenAt,
+    schedule.applicationsCloseAt,
+    schedule.startsAt,
+    schedule.endsAt,
+  ];
 
   if (
-    field === "applicationsOpenAt" &&
-    openAt &&
-    (!closeAt || closeAt <= openAt)
+    values.some(
+      (value) => !/^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d$/.test(value),
+    )
   ) {
-    closeAt = new Date(openAt.valueOf() + Day);
-    next.applicationsCloseAt = localDatetime(closeAt);
+    return "Enter a date and a 24-hour time for every schedule field.";
   }
 
-  if (closeAt && (!startsAt || startsAt < closeAt)) {
-    startsAt = new Date(closeAt.valueOf() + Day);
-    next.startsAt = localDatetime(startsAt);
+  const instants = values.map((value) => wallClockToUtcIso(value, timeZoneId));
+  if (instants.some((value) => value === null)) {
+    return `One of these times does not exist in ${timeZoneId}. Choose another time, especially around daylight-saving changes.`;
   }
 
-  if (field === "startsAt" && startsAt) {
-    next.endsAt = localDatetime(new Date(startsAt.valueOf() + 2 * Hour));
-    return next;
+  const [openAt, closeAt, startsAt, endsAt] = instants.map((value) =>
+    Date.parse(value!),
+  );
+  if (openAt! >= closeAt!) {
+    return "Applications must close after they open.";
+  }
+  if (closeAt! > startsAt!) {
+    return "The playtest must start after applications close.";
+  }
+  if (startsAt! >= endsAt!) {
+    return "The playtest end must be later than its start.";
   }
 
-  const endsAt = scheduleDate(next.endsAt);
-  if (startsAt && (!endsAt || endsAt <= startsAt)) {
-    next.endsAt = localDatetime(new Date(startsAt.valueOf() + 2 * Hour));
-  }
-
-  return next;
+  return null;
 }
 
 function ActionMessage({
@@ -260,6 +339,7 @@ function EventActionDialog({
   destructive = false,
   successHref,
   submitDisabled = false,
+  onSuccess,
 }: {
   trigger: ReactElement;
   title: string;
@@ -270,6 +350,7 @@ function EventActionDialog({
   destructive?: boolean;
   successHref?: string;
   submitDisabled?: boolean;
+  onSuccess?: (result: TestingEventActionResult<unknown>) => void;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -286,10 +367,10 @@ function EventActionDialog({
         const next = await action(data);
         setResult(next);
         if (next.success) {
-          form.reset();
+          onSuccess?.(next);
+          setOpen(false);
           if (successHref) router.push(successHref);
           else router.refresh();
-          window.setTimeout(() => setOpen(false), 450);
         }
       } catch (error) {
         setResult(actionFailure(error));
@@ -301,12 +382,13 @@ function EventActionDialog({
     <Dialog
       open={open}
       onOpenChange={(next) => {
+        if (pending) return;
         setOpen(next);
         setResult(null);
       }}
     >
       <DialogTrigger render={trigger} />
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-3xl">
         <form onSubmit={submit} className="space-y-5">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
@@ -342,12 +424,11 @@ type EventFieldsProps = {
   schedule?: TestingEventSchedule;
   onScheduleChange?: (field: keyof TestingEventSchedule, value: string) => void;
   timeZoneId?: string;
-  stacked?: boolean;
-  compact?: boolean;
 };
 
 type EventTimelineFieldsProps = Omit<EventFieldsProps, "timeZoneId"> & {
   timeZoneId: string;
+  compact?: boolean;
 };
 
 function EventIdentityFields({
@@ -399,6 +480,12 @@ function EventIdentityFields({
             Calendar
           </Label>
           <Select
+            items={[
+              ...availableTemplates.map((template) => ({
+                value: template.currentRevision!.id!,
+                label: template.name?.trim() || "Untitled calendar",
+              })),
+            ]}
             name="templateRevisionId"
             defaultValue={availableTemplates[0]!.currentRevision!.id}
           >
@@ -419,14 +506,13 @@ function EventIdentityFields({
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              {availableTemplates.map((template) => (
-                <SelectItem
-                  key={template.id}
-                  value={template.currentRevision!.id!}
-                >
-                  {template.name?.trim() || "Untitled calendar"}
-                </SelectItem>
-              ))}
+              <SelectGroup>
+                {availableTemplates.map((template) => (
+                  <SelectItem key={template.id} value={template.currentRevision!.id!}>
+                    {template.name?.trim() || "Untitled calendar"}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
             </SelectContent>
           </Select>
         </div>
@@ -438,11 +524,16 @@ function EventIdentityFields({
         >
           Event format
         </Label>
-        <Select name="mode" defaultValue={event?.mode ?? "Online"}>
-          <SelectTrigger
-            id={`event-format-${fieldSuffix}`}
-            className="h-10 w-full"
-          >
+        <Select
+          items={[
+            { value: "Online", label: "Online" },
+            { value: "InPerson", label: "In person" },
+            { value: "Hybrid", label: "Hybrid" },
+          ]}
+          name="mode"
+          defaultValue={event?.mode ?? "Online"}
+        >
+          <SelectTrigger id={`event-format-${fieldSuffix}`} className="h-10 w-full">
             <SelectValue>
               {(value: string | null) =>
                 value === "InPerson"
@@ -454,9 +545,11 @@ function EventIdentityFields({
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="Online">Online</SelectItem>
-            <SelectItem value="InPerson">In person</SelectItem>
-            <SelectItem value="Hybrid">Hybrid</SelectItem>
+            <SelectGroup>
+              <SelectItem value="Online">Online</SelectItem>
+              <SelectItem value="InPerson">In person</SelectItem>
+              <SelectItem value="Hybrid">Hybrid</SelectItem>
+            </SelectGroup>
           </SelectContent>
         </Select>
       </div>
@@ -468,13 +561,14 @@ function EventIdentityFields({
           Project review
         </Label>
         <Select
+          items={[
+            { value: "ManagerOnly", label: "Event managers decide" },
+            { value: "Committee", label: "Review committee votes" },
+          ]}
           name="approvalMode"
           defaultValue={event?.approvalMode ?? "ManagerOnly"}
         >
-          <SelectTrigger
-            id={`project-review-${fieldSuffix}`}
-            className="h-10 w-full"
-          >
+          <SelectTrigger id={`project-review-${fieldSuffix}`} className="h-10 w-full">
             <SelectValue>
               {(value: string | null) =>
                 value === "Committee"
@@ -484,8 +578,10 @@ function EventIdentityFields({
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="ManagerOnly">Event managers decide</SelectItem>
-            <SelectItem value="Committee">Review committee votes</SelectItem>
+            <SelectGroup>
+              <SelectItem value="ManagerOnly">Event managers decide</SelectItem>
+              <SelectItem value="Committee">Review committee votes</SelectItem>
+            </SelectGroup>
           </SelectContent>
         </Select>
       </div>
@@ -511,7 +607,6 @@ function EventTimelineFields({
   schedule,
   onScheduleChange,
   timeZoneId,
-  stacked = false,
   compact = false,
 }: EventTimelineFieldsProps) {
   const eventTimeZone = timeZoneId;
@@ -544,75 +639,50 @@ function EventTimelineFields({
   }
 
   return (
-    <div className={stacked ? "grid gap-3" : "grid gap-4 md:grid-cols-2"}>
-      <details
-        open={compact ? undefined : true}
-        className={compact ? "group min-w-0" : "min-w-0 space-y-2"}
-      >
-        <summary
-          className={
-            compact
-              ? "grid min-h-10 cursor-pointer list-none items-center gap-1.5 rounded-md px-2 hover:bg-muted/40 sm:grid-cols-[7rem_minmax(0,1fr)] sm:gap-3"
-              : "pointer-events-none list-none"
-          }
-        >
-          <Label
-            className={compact ? "text-xs text-muted-foreground" : undefined}
-            htmlFor={`applications-window-${fieldSuffix}`}
-          >
-            {compact ? "Applications" : "Application window"}
-          </Label>
-          {compact ? (
-            <span className="text-sm text-muted-foreground group-open:hidden">
-              Set application window
-            </span>
-          ) : null}
-        </summary>
-        <div className={compact ? "mt-2 sm:ml-[7.75rem]" : undefined}>
-          <DateTimeRangePicker
-            id={`applications-window-${fieldSuffix}`}
-            label="Application window"
-            startName="applicationsOpenAt"
-            endName="applicationsCloseAt"
-            timeZoneId={eventTimeZone}
-            required
-            value={
-              schedule
-                ? { start: applicationsOpenAt, end: applicationsCloseAt }
-                : undefined
-            }
-            defaultValue={{
-              start: applicationsOpenAt,
-              end: applicationsCloseAt,
-            }}
-            onValueChange={(next) =>
-              changeRange(
-                "applicationsOpenAt",
-                "applicationsCloseAt",
-                next,
-                applicationsOpenAt,
-                applicationsCloseAt,
-              )
-            }
-          />
-        </div>
-      </details>
-      <div
-        className={
-          compact
-            ? "grid min-w-0 gap-1.5 sm:grid-cols-[7rem_minmax(0,1fr)] sm:items-center sm:gap-3"
-            : "min-w-0 space-y-2"
-        }
-      >
-        <Label
-          className={compact ? "text-xs text-muted-foreground" : undefined}
-          htmlFor={`event-schedule-${fieldSuffix}`}
-        >
-          {compact ? "Testing session" : "Event schedule"}
-        </Label>
+    <div className={compact ? "grid min-w-0 gap-2.5" : "grid min-w-0 gap-5"}>
+      <p className="text-xs text-muted-foreground">
+        All times use {eventTimeZone} and a 24-hour clock.
+      </p>
+      <section aria-label="Application window" className={compact ? "grid min-w-0 gap-1.5 sm:grid-cols-[7rem_minmax(0,1fr)] sm:items-center sm:gap-3" : "min-w-0 space-y-3 border-t pt-4"}>
+        {compact ? <Label htmlFor={`applications-window-${fieldSuffix}`} className="text-xs text-muted-foreground">Applications</Label> : <h3 className="text-sm font-semibold">Sign-up window</h3>}
         <DateTimeRangePicker
+          compact={compact}
+          id={`applications-window-${fieldSuffix}`}
+          label="Application window"
+          startLabel="Applications open"
+          endLabel="Applications close"
+          startName="applicationsOpenAt"
+          endName="applicationsCloseAt"
+          timeZoneId={eventTimeZone}
+          required
+          value={
+            schedule
+              ? { start: applicationsOpenAt, end: applicationsCloseAt }
+              : undefined
+          }
+          defaultValue={{
+            start: applicationsOpenAt,
+            end: applicationsCloseAt,
+          }}
+          onValueChange={(next) =>
+            changeRange(
+              "applicationsOpenAt",
+              "applicationsCloseAt",
+              next,
+              applicationsOpenAt,
+              applicationsCloseAt,
+            )
+          }
+        />
+      </section>
+      <section aria-label="Testing session" className={compact ? "grid min-w-0 gap-1.5 sm:grid-cols-[7rem_minmax(0,1fr)] sm:items-center sm:gap-3" : "min-w-0 space-y-3 border-t pt-4"}>
+        {compact ? <Label htmlFor={`event-schedule-${fieldSuffix}`} className="text-xs text-muted-foreground">Session</Label> : <h3 className="text-sm font-semibold">Testing session</h3>}
+        <DateTimeRangePicker
+          compact={compact}
           id={`event-schedule-${fieldSuffix}`}
           label="Event schedule"
+          startLabel="Session starts"
+          endLabel="Session ends"
           startName="startsAt"
           endName="endsAt"
           timeZoneId={eventTimeZone}
@@ -623,7 +693,7 @@ function EventTimelineFields({
             changeRange("startsAt", "endsAt", next, startsAt, endsAt)
           }
         />
-      </div>
+      </section>
     </div>
   );
 }
@@ -679,21 +749,24 @@ export function testingEventRecurrenceStart(startDate: string) {
     "Friday",
     "Saturday",
   ];
-  const parsedStart = new Date(startDate);
-  return Number.isNaN(parsedStart.valueOf())
+  const datePart = startDate.match(/^(\d{4}-\d{2}-\d{2})/)?.[1];
+  const parsedStart = datePart ? new Date(`${datePart}T00:00:00.000Z`) : null;
+  return !parsedStart || Number.isNaN(parsedStart.valueOf())
     ? { day: "Monday", dayOfMonth: 1 }
     : {
-        day: allDays[parsedStart.getDay()]!,
-        dayOfMonth: parsedStart.getDate(),
+        day: allDays[parsedStart.getUTCDay()]!,
+        dayOfMonth: parsedStart.getUTCDate(),
       };
 }
 
 function EventRecurrenceFields({
   onDirty,
   startDate,
+  timeZoneId,
 }: {
   onDirty: () => void;
   startDate: string;
+  timeZoneId: string;
 }) {
   const displayDays = [
     "Monday",
@@ -737,6 +810,13 @@ function EventRecurrenceFields({
           Repeats
         </Label>
         <Select
+          items={[
+            { value: "none", label: "Does not repeat" },
+            { value: "Daily", label: "Daily" },
+            { value: "Weekly", label: <>Weekly on {startDay}</> },
+            { value: "Monthly", label: <>Monthly on day {startDayOfMonth}</> },
+            { value: "custom", label: "Custom…" },
+          ]}
           value={repeatOption}
           onValueChange={(value) => {
             setRepeatOption(value ?? "none");
@@ -759,13 +839,15 @@ function EventRecurrenceFields({
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="none">Does not repeat</SelectItem>
-            <SelectItem value="Daily">Daily</SelectItem>
-            <SelectItem value="Weekly">Weekly on {startDay}</SelectItem>
-            <SelectItem value="Monthly">
-              Monthly on day {startDayOfMonth}
-            </SelectItem>
-            <SelectItem value="custom">Custom…</SelectItem>
+            <SelectGroup>
+              <SelectItem value="none">Does not repeat</SelectItem>
+              <SelectItem value="Daily">Daily</SelectItem>
+              <SelectItem value="Weekly">Weekly on {startDay}</SelectItem>
+              <SelectItem value="Monthly">
+                Monthly on day {startDayOfMonth}
+              </SelectItem>
+              <SelectItem value="custom">Custom…</SelectItem>
+            </SelectGroup>
           </SelectContent>
         </Select>
         <input type="hidden" name="recurrenceFrequency" value={frequency} />
@@ -787,6 +869,11 @@ function EventRecurrenceFields({
                   required
                 />
                 <Select
+                  items={[
+                    { value: "Daily", label: "Day(s)" },
+                    { value: "Weekly", label: "Week(s)" },
+                    { value: "Monthly", label: "Month(s)" },
+                  ]}
                   value={customFrequency}
                   onValueChange={(value) => {
                     setCustomFrequency(value ?? "Weekly");
@@ -805,9 +892,11 @@ function EventRecurrenceFields({
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Daily">Day(s)</SelectItem>
-                    <SelectItem value="Weekly">Week(s)</SelectItem>
-                    <SelectItem value="Monthly">Month(s)</SelectItem>
+                    <SelectGroup>
+                      <SelectItem value="Daily">Day(s)</SelectItem>
+                      <SelectItem value="Weekly">Week(s)</SelectItem>
+                      <SelectItem value="Monthly">Month(s)</SelectItem>
+                    </SelectGroup>
                   </SelectContent>
                 </Select>
               </div>
@@ -855,6 +944,10 @@ function EventRecurrenceFields({
             <div className="space-y-2">
               <Label htmlFor="recurrence-end-mode">Ends</Label>
               <Select
+                items={[
+                  { value: "count", label: "After" },
+                  { value: "date", label: "On a date" },
+                ]}
                 value={endMode}
                 onValueChange={(value) => {
                   setEndMode(value ?? "count");
@@ -863,14 +956,14 @@ function EventRecurrenceFields({
               >
                 <SelectTrigger id="recurrence-end-mode" className="w-full">
                   <SelectValue>
-                    {(value: string | null) =>
-                      value === "date" ? "On a date" : "After"
-                    }
+                    {(value: string | null) => (value === "date" ? "On a date" : "After")}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="count">After</SelectItem>
-                  <SelectItem value="date">On a date</SelectItem>
+                  <SelectGroup>
+                    <SelectItem value="count">After</SelectItem>
+                    <SelectItem value="date">On a date</SelectItem>
+                  </SelectGroup>
                 </SelectContent>
               </Select>
               <input type="hidden" name="recurrenceEndMode" value={endMode} />
@@ -882,6 +975,9 @@ function EventRecurrenceFields({
                   id="recurrence-ends-at"
                   name="recurrenceEndsAt"
                   required
+                  timeZoneId={timeZoneId}
+                  timezoneLabel={timeZoneId}
+                  onValueChange={onDirty}
                 />
               </div>
             ) : (
@@ -937,12 +1033,29 @@ export function CreateTestingEventDialog({
   const [pending, startTransition] = useTransition();
   const [result, setResult] =
     useState<TestingEventActionResult<unknown> | null>(null);
-  const [timeZoneId, setTimeZoneId] = useState(() =>
-    preferredNewEventTimeZone(defaultTimeZone),
+  const browserPreferredTimeZone = useSyncExternalStore(
+    subscribeToTimeZonePreference,
+    useCallback(
+      () => preferredNewEventTimeZone(defaultTimeZone),
+      [defaultTimeZone],
+    ),
+    useCallback(() => defaultTimeZone, [defaultTimeZone]),
   );
-  const [schedule, setSchedule] = useState<TestingEventSchedule>(() =>
-    createTestingEventSchedule(new Date(), initialDate),
+  const [timeZoneOverride, setTimeZoneOverride] = useState<string | null>(null);
+  const timeZoneId = timeZoneOverride ?? browserPreferredTimeZone;
+  const [scheduleError, setScheduleError] = useState<string | null>(null);
+  const defaultSchedule = useMemo(
+    () =>
+      createTestingEventSchedule(
+        new Date(),
+        initialDate,
+        timeZoneId,
+      ),
+    [initialDate, timeZoneId],
   );
+  const [scheduleOverride, setScheduleOverride] =
+    useState<TestingEventSchedule | null>(null);
+  const schedule = scheduleOverride ?? defaultSchedule;
 
   function setOpen(next: boolean) {
     if (controlledOpen === undefined) setInternalOpen(next);
@@ -951,8 +1064,12 @@ export function CreateTestingEventDialog({
 
   function resetDraft() {
     formRef.current?.reset();
-    setSchedule(createTestingEventSchedule(new Date(), initialDate));
-    setTimeZoneId(preferredNewEventTimeZone(defaultTimeZone));
+    const preferredTimeZone = preferredNewEventTimeZone(defaultTimeZone);
+    setScheduleOverride(
+      createTestingEventSchedule(new Date(), initialDate, preferredTimeZone),
+    );
+    setTimeZoneOverride(null);
+    setScheduleError(null);
     setDirty(false);
     setResult(null);
   }
@@ -975,11 +1092,21 @@ export function CreateTestingEventDialog({
 
   function changeSchedule(field: keyof TestingEventSchedule, value: string) {
     setDirty(true);
-    setSchedule((current) => updateTestingEventSchedule(current, field, value));
+    setScheduleError(null);
+    setScheduleOverride((current) =>
+      updateTestingEventSchedule(current ?? schedule, field, value),
+    );
   }
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const invalidSchedule = validateTestingEventSchedule(schedule, timeZoneId);
+    if (invalidSchedule) {
+      setScheduleError(invalidSchedule);
+      return;
+    }
+
+    setScheduleError(null);
     const form = event.currentTarget;
     const data = new FormData(form);
     data.set("timeZoneId", timeZoneId);
@@ -988,6 +1115,7 @@ export function CreateTestingEventDialog({
         const next = await createTestingEvent(data);
         if (next.success) {
           closeDrawer();
+          if (next.data?.id) router.push(`/workspace/testing-lab/events/${next.data.id}/overview`);
           router.refresh();
           return;
         }
@@ -1022,8 +1150,7 @@ export function CreateTestingEventDialog({
             <DialogHeader className="px-5 pb-3 pt-4 text-left">
               <DialogTitle>New testing event</DialogTitle>
               <DialogDescription className="sr-only">
-                Create a testing event draft with its format, review process,
-                schedule, time zone, and recurrence.
+                Set the schedule, then finish the rules and publish from the event workspace.
               </DialogDescription>
             </DialogHeader>
             <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5">
@@ -1038,8 +1165,8 @@ export function CreateTestingEventDialog({
                 <section aria-label="Schedule" className="space-y-2.5">
                   <div className="grid min-w-0 gap-1.5 sm:grid-cols-[7rem_minmax(0,1fr)] sm:items-center sm:gap-3">
                     <Label
-                      className="text-xs text-muted-foreground"
                       htmlFor="new-event-time-zone"
+                      className="text-xs text-muted-foreground"
                     >
                       Time zone
                     </Label>
@@ -1047,28 +1174,35 @@ export function CreateTestingEventDialog({
                       id="new-event-time-zone"
                       value={timeZoneId}
                       onValueChange={(value) => {
-                        setTimeZoneId(value);
+                        setScheduleOverride(schedule);
+                        setTimeZoneOverride(value);
+                        setScheduleError(null);
                         setDirty(true);
                       }}
                     />
                   </div>
                   <EventTimelineFields
+                    compact
                     schedule={schedule}
                     onScheduleChange={changeSchedule}
                     timeZoneId={timeZoneId}
-                    stacked
-                    compact
                   />
+                  {scheduleError ? (
+                    <p role="alert" className="text-sm text-destructive">
+                      {scheduleError}
+                    </p>
+                  ) : null}
                 </section>
 
                 <EventRecurrenceFields
                   startDate={schedule.startsAt}
+                  timeZoneId={timeZoneId}
                   onDirty={() => setDirty(true)}
                 />
                 <input type="hidden" name="requiresFeedback" value="true" />
               </div>
             </div>
-            <DialogFooter className="px-5 py-3 sm:flex-row sm:justify-end">
+            <DialogFooter className="px-5 pb-4 sm:flex-row sm:justify-end">
               <Button
                 type="button"
                 variant="outline"
@@ -1261,31 +1395,19 @@ export function buildTestingTimeSlots(
   return slots;
 }
 
-function timeSlotLabel(slot: TestingTimeSlotSchedule) {
-  const date = wallClockMilliseconds(slot.startsAt);
-  const day =
-    date == null
-      ? slot.startsAt.slice(0, 10)
-      : new Intl.DateTimeFormat("en-US", {
-          weekday: "short",
-          month: "short",
-          day: "numeric",
-          timeZone: "UTC",
-        }).format(new Date(date));
-  return `${day} · ${slot.startsAt.slice(11)}–${slot.endsAt.slice(11)}`;
+export function validateTestingSlotWindow(start: string, end: string, eventStart: string, eventEnd: string, timeZoneId: string) {
+  const values = [start, end, eventStart, eventEnd].map((value) => wallClockToUtcIso(value, timeZoneId));
+  if (values.some((value) => !value)) return "Enter valid start and end dates and times.";
+  const [startsAt, endsAt, startsBound, endsBound] = values.map((value) => Date.parse(value!));
+  if (endsAt! <= startsAt!) return "The session must end after it starts.";
+  if (startsAt! < startsBound! || endsAt! > endsBound!) return "Keep the session within the event start and end dates.";
+  return null;
 }
 
-function wallClockDateTimeLabel(value: string) {
-  const date = wallClockMilliseconds(value);
-  if (date == null) return value;
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-    timeZone: "UTC",
-  }).format(new Date(date));
+function timeSlotLabel(slot: TestingTimeSlotSchedule) {
+  // These values are already in the event's wall clock; UTC here only formats
+  // the calendar components without applying a second timezone conversion.
+  return formatEventDateRange(`${slot.startsAt}Z`, `${slot.endsAt}Z`, "UTC").replace(" · UTC", "");
 }
 
 function TestingTimeSlotBuilder({
@@ -1314,6 +1436,7 @@ function TestingTimeSlotBuilder({
   const [mode, setMode] = useState<
     NonNullable<TestingLabTestingEventProjection["mode"]>
   >(event.mode ?? "Online");
+  const windowError = validateTestingSlotWindow(startsAt, endsAt, eventStartsAt, eventEndsAt, timeZoneId);
   const plannedSlots = useMemo(
     () =>
       buildTestingTimeSlots(startsAt, endsAt, durationMinutes, breakMinutes),
@@ -1332,11 +1455,18 @@ function TestingTimeSlotBuilder({
   const slots = useMemo(
     () =>
       plannedSlots.filter(
-        (slot) => !existingKeys.has(`${slot.startsAt}|${slot.endsAt}`),
+        (slot) => !windowError && !existingKeys.has(`${slot.startsAt}|${slot.endsAt}`),
       ),
-    [existingKeys, plannedSlots],
+    [existingKeys, plannedSlots, windowError],
   );
-  const duplicateCount = plannedSlots.length - slots.length;
+  const duplicateCount = windowError ? 0 : plannedSlots.length - slots.length;
+  const previewTitle = slots.length > 0
+    ? `${slots.length} slot${slots.length === 1 ? "" : "s"} ready`
+    : windowError ? "Check the session dates"
+      : duplicateCount > 0 ? "Schedule saved" : "No slots to create";
+  const createSlotsLabel = slots.length > 0
+    ? `Create ${slots.length} time slot${slots.length === 1 ? "" : "s"}`
+    : duplicateCount > 0 ? "Slots already saved" : "Create time slots";
   const rangeEnd = wallClockMilliseconds(endsAt);
   const lastPlannedEnd = plannedSlots.at(-1)?.endsAt;
   const unusedMinutes =
@@ -1357,6 +1487,7 @@ function TestingTimeSlotBuilder({
 
   function submitInline(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (windowError || slots.length === 0 || pending) return;
     const form = event.currentTarget;
     const data = new FormData(form);
     startTransition(async () => {
@@ -1388,36 +1519,20 @@ function TestingTimeSlotBuilder({
           Choose when testing runs. The range cannot leave the event window.
         </p>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <Label htmlFor="slot-plan-start">Starts</Label>
-          <DateTimePicker
-            id="slot-plan-start"
-            name="planStartsAt"
-            value={startsAt}
-            onValueChange={setStartsAt}
-            required
-            minValue={eventStartsAt || undefined}
-            maxValue={eventEndsAt || undefined}
-            timezoneLabel={timeZoneId}
-            displayFormat="MMM d, HH:mm"
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="slot-plan-end">Ends</Label>
-          <DateTimePicker
-            id="slot-plan-end"
-            name="planEndsAt"
-            value={endsAt}
-            onValueChange={setEndsAt}
-            required
-            minValue={eventStartsAt || undefined}
-            maxValue={eventEndsAt || undefined}
-            timezoneLabel={timeZoneId}
-            displayFormat="MMM d, HH:mm"
-          />
-        </div>
-      </div>
+      <DateTimeRangePicker
+        id={`slot-plan-${eventId}`}
+        label="Session window"
+        startLabel="Starts"
+        endLabel="Ends"
+        startName="planStartsAt"
+        endName="planEndsAt"
+        timeZoneId={timeZoneId}
+        value={{ start: startsAt, end: endsAt }}
+        onValueChange={(next) => { setStartsAt(next.start); setEndsAt(next.end); }}
+        required
+      />
+      <p className="text-xs text-muted-foreground">24-hour clock · {timeZoneId}</p>
+      {windowError ? <p role="alert" className="text-sm text-destructive">{windowError}</p> : null}
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="slot-duration">Testing per slot</Label>
@@ -1493,21 +1608,26 @@ function TestingTimeSlotBuilder({
         <div className="space-y-1.5">
           <Label htmlFor="session-mode">Format</Label>
           <Select
+            items={[
+              { value: "InPerson", label: "In person" },
+              { value: "Online", label: "Online" },
+              { value: "Hybrid", label: "Hybrid" },
+            ]}
             name="mode"
             value={mode}
             onValueChange={(value) =>
-              setMode(
-                value as NonNullable<TestingLabTestingEventProjection["mode"]>,
-              )
+              setMode(value as NonNullable<TestingLabTestingEventProjection["mode"]>)
             }
           >
             <SelectTrigger id="session-mode">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="InPerson">In person</SelectItem>
-              <SelectItem value="Online">Online</SelectItem>
-              <SelectItem value="Hybrid">Hybrid</SelectItem>
+              <SelectGroup>
+                <SelectItem value="InPerson">In person</SelectItem>
+                <SelectItem value="Online">Online</SelectItem>
+                <SelectItem value="Hybrid">Hybrid</SelectItem>
+              </SelectGroup>
             </SelectContent>
           </Select>
         </div>
@@ -1547,7 +1667,7 @@ function TestingTimeSlotBuilder({
             Schedule preview
           </p>
           <h3 id="slot-preview-heading" className="mt-1 text-xl font-semibold">
-            {slots.length} slot{slots.length === 1 ? "" : "s"} ready
+            {previewTitle}
           </h3>
           <p className="mt-1 text-sm text-muted-foreground">
             {durationMinutes || 0} min testing, {breakMinutes || 0} min reset
@@ -1584,9 +1704,9 @@ function TestingTimeSlotBuilder({
       ) : (
         <div className="mt-5 rounded-md border border-dashed px-4 py-8 text-center">
           <Clock3 className="mx-auto size-5 text-muted-foreground" />
-          <p className="mt-2 text-sm font-medium">No complete slot fits</p>
+          <p className="mt-2 text-sm font-medium">{windowError ? "Check the session dates" : duplicateCount > 0 ? "Already in the schedule" : "No complete slot fits"}</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Increase the session window or shorten the testing time.
+            {windowError ?? (duplicateCount > 0 ? "These time slots are saved. Change the time window to add another session." : "Increase the session window or shorten the testing time.")}
           </p>
         </div>
       )}
@@ -1619,7 +1739,7 @@ function TestingTimeSlotBuilder({
           >
             {pending
               ? "Creating slots..."
-              : `Create ${slots.length} time slot${slots.length === 1 ? "" : "s"}`}
+              : createSlotsLabel}
           </Button>
           <p className="mt-2 text-center text-xs text-muted-foreground">
             You can edit individual slots after creation.
@@ -1642,8 +1762,7 @@ function TestingTimeSlotBuilder({
           <div className="text-sm sm:text-right">
             <p className="font-medium">Event window</p>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              {wallClockDateTimeLabel(eventStartsAt)} to{" "}
-              {wallClockDateTimeLabel(eventEndsAt)} · {timeZoneId}
+              {formatEventDateRange(event.startsAt, event.endsAt, timeZoneId)}
             </p>
           </div>
         </div>
@@ -1674,7 +1793,7 @@ function TestingTimeSlotBuilder({
       }
       title="Build testing time slots"
       description="Choose one test timebox and let Testing Lab divide the session into bookable blocks."
-      submitLabel={`Create ${slots.length} time slot${slots.length === 1 ? "" : "s"}`}
+      submitLabel={createSlotsLabel}
       action={createTestingEventSlots}
       submitDisabled={slots.length === 0}
     >
@@ -1685,8 +1804,7 @@ function TestingTimeSlotBuilder({
           <div>
             <p className="font-medium">Event window</p>
             <p className="text-muted-foreground">
-              {formatEventDateTime(event.startsAt, timeZoneId)} to{" "}
-              {formatEventDateTime(event.endsAt, timeZoneId)} · {timeZoneId}
+              {formatEventDateRange(event.startsAt, event.endsAt, timeZoneId)}
             </p>
           </div>
         </div>
@@ -1713,8 +1831,6 @@ export function ManageTestingEventSlotDialog({
   timeZoneId?: string;
 }) {
   if (!slot.id) return null;
-  const minimumValue = apiDatetimeLocal(eventStartsAt, timeZoneId);
-  const maximumValue = apiDatetimeLocal(eventEndsAt, timeZoneId);
   return (
     <EventActionDialog
       trigger={
@@ -1731,110 +1847,7 @@ export function ManageTestingEventSlotDialog({
       <input type="hidden" name="eventId" value={eventId} />
       <input type="hidden" name="slotId" value={slot.id} />
       <input type="hidden" name="timeZoneId" value={timeZoneId} />
-      <div className="grid gap-4 sm:grid-cols-2">
-        {minimumValue && maximumValue ? (
-          <div className="flex gap-2 rounded-md bg-muted/50 px-3 py-2.5 text-sm sm:col-span-2">
-            <Clock3 className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-            <p>
-              This time slot must stay within the event period:{" "}
-              {formatEventDateTime(eventStartsAt, timeZoneId)} to{" "}
-              {formatEventDateTime(eventEndsAt, timeZoneId)} ({timeZoneId}).
-            </p>
-          </div>
-        ) : null}
-        <div className="space-y-2">
-          <Label htmlFor={`slot-mode-${slot.id}`}>Format</Label>
-          <Select name="mode" defaultValue={slot.mode ?? "Online"}>
-            <SelectTrigger id={`slot-mode-${slot.id}`}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="InPerson">In person</SelectItem>
-              <SelectItem value="Online">Online</SelectItem>
-              <SelectItem value="Hybrid">Hybrid</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor={`slot-location-${slot.id}`}>Saved location id</Label>
-          <Input
-            id={`slot-location-${slot.id}`}
-            name="locationId"
-            defaultValue={slot.locationId ?? ""}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor={`slot-start-${slot.id}`}>Slot starts</Label>
-          <DateTimePicker
-            id={`slot-start-${slot.id}`}
-            name="startsAt"
-            required
-            defaultValue={apiDatetimeLocal(slot.startsAt, timeZoneId)}
-            minValue={minimumValue || undefined}
-            maxValue={maximumValue || undefined}
-            timezoneLabel={timeZoneId}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor={`slot-end-${slot.id}`}>Slot ends</Label>
-          <DateTimePicker
-            id={`slot-end-${slot.id}`}
-            name="endsAt"
-            required
-            defaultValue={apiDatetimeLocal(slot.endsAt, timeZoneId)}
-            minValue={minimumValue || undefined}
-            maxValue={maximumValue || undefined}
-            timezoneLabel={timeZoneId}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor={`slot-campus-${slot.id}`}>Campus</Label>
-          <Input
-            id={`slot-campus-${slot.id}`}
-            name="campusName"
-            defaultValue={slot.campusName ?? ""}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor={`slot-room-${slot.id}`}>Room</Label>
-          <Input
-            id={`slot-room-${slot.id}`}
-            name="roomName"
-            defaultValue={slot.roomName ?? ""}
-          />
-        </div>
-        <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor={`slot-url-${slot.id}`}>Meeting URL</Label>
-          <Input
-            id={`slot-url-${slot.id}`}
-            name="meetingUrl"
-            type="url"
-            defaultValue={slot.meetingUrl ?? ""}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor={`slot-testers-${slot.id}`}>Tester capacity</Label>
-          <Input
-            id={`slot-testers-${slot.id}`}
-            name="maxTesters"
-            type="number"
-            min="1"
-            defaultValue={slot.maxTesters ?? ""}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor={`slot-projects-${slot.id}`}>
-            Approved project capacity
-          </Label>
-          <Input
-            id={`slot-projects-${slot.id}`}
-            name="maxProjects"
-            type="number"
-            min="1"
-            defaultValue={slot.maxProjects ?? ""}
-          />
-        </div>
-      </div>
+      <TestingSlotEditorFields slot={slot} eventStartsAt={eventStartsAt} eventEndsAt={eventEndsAt} timeZoneId={timeZoneId} />
       <div className="border-t pt-4">
         <EventActionDialog
           trigger={
@@ -1857,22 +1870,111 @@ export function ManageTestingEventSlotDialog({
   );
 }
 
+function TestingSlotEditorFields({ slot, eventStartsAt, eventEndsAt, timeZoneId }: {
+  slot: TestingLabTestingEventSlotProjection;
+  eventStartsAt?: string | null;
+  eventEndsAt?: string | null;
+  timeZoneId: string;
+}) {
+  // The dialog mounts these fields on open, so cancelling resets unsaved delivery choices.
+  const [mode, setMode] = useState(slot.mode ?? "Online");
+  return (
+    <div className="space-y-5">
+      <input type="hidden" name="locationId" value={mode === "Online" ? "" : slot.locationId ?? ""} />
+      {eventStartsAt && eventEndsAt ? (
+        <p className="text-xs text-muted-foreground">
+          Event window: {formatEventDateRange(eventStartsAt, eventEndsAt, timeZoneId)}
+        </p>
+      ) : null}
+      <section aria-label="Time slot dates" className="space-y-2">
+        <DateTimeRangePicker
+          id={`slot-range-${slot.id}`}
+          label="Time slot"
+          startLabel="Slot starts"
+          endLabel="Slot ends"
+          startName="startsAt"
+          endName="endsAt"
+          required
+          timeZoneId={timeZoneId}
+          defaultValue={{ start: apiDatetimeLocal(slot.startsAt, timeZoneId), end: apiDatetimeLocal(slot.endsAt, timeZoneId) }}
+        />
+        <p className="text-xs text-muted-foreground">24-hour clock · {timeZoneId}</p>
+      </section>
+      <section aria-label="Time slot delivery" className="grid gap-4 border-t pt-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor={`slot-mode-${slot.id}`}>Format</Label>
+          <Select
+            items={[
+              { value: "Online", label: "Online" },
+              { value: "InPerson", label: "In person" },
+              { value: "Hybrid", label: "Hybrid" },
+            ]}
+            name="mode"
+            value={mode}
+            onValueChange={(value) => setMode(value as typeof mode)}
+          >
+            <SelectTrigger id={`slot-mode-${slot.id}`} className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectItem value="Online">Online</SelectItem>
+                <SelectItem value="InPerson">In person</SelectItem>
+                <SelectItem value="Hybrid">Hybrid</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+        {mode !== "InPerson" ? (
+          <div className="space-y-2">
+            <Label htmlFor={`slot-url-${slot.id}`}>Meeting URL</Label>
+            <Input id={`slot-url-${slot.id}`} name="meetingUrl" type="url" required={mode === "Online"} defaultValue={slot.meetingUrl ?? ""} placeholder="https://" />
+          </div>
+        ) : null}
+        {mode !== "Online" ? (
+          <>
+            <div className="space-y-2">
+              <Label htmlFor={`slot-campus-${slot.id}`}>Campus</Label>
+              <Input id={`slot-campus-${slot.id}`} name="campusName" required defaultValue={slot.campusName ?? ""} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor={`slot-room-${slot.id}`}>Room</Label>
+              <Input id={`slot-room-${slot.id}`} name="roomName" required defaultValue={slot.roomName ?? ""} />
+            </div>
+          </>
+        ) : null}
+      </section>
+      <section aria-label="Time slot capacity" className="grid gap-4 border-t pt-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor={`slot-testers-${slot.id}`}>Tester capacity</Label>
+          <Input id={`slot-testers-${slot.id}`} name="maxTesters" type="number" min="1" defaultValue={slot.maxTesters ?? ""} placeholder="Unlimited" />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor={`slot-projects-${slot.id}`}>Project capacity</Label>
+          <Input id={`slot-projects-${slot.id}`} name="maxProjects" type="number" min="1" defaultValue={slot.maxProjects ?? ""} placeholder="Unlimited" />
+        </div>
+      </section>
+    </div>
+  );
+}
+
 export function TestingEventLifecycleActions({
   event,
 }: {
   event: TestingLabTestingEventProjection;
 }) {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [result, setResult] =
     useState<TestingEventActionResult<unknown> | null>(null);
   const nextByStatus: Partial<
     Record<TestingLabTestingEventStatus, [string, string, typeof Send]>
   > = {
-    Draft: ["open-applications", "Open applications", Send],
-    ApplicationsOpen: ["close-applications", "Close applications", CircleStop],
-    ApplicationsClosed: ["schedule", "Schedule event", Clock3],
-    Scheduled: ["activate", "Start event", Play],
-    Active: ["complete", "Complete event", CheckCircle2],
+    Draft: ["open-applications", "Publish and open sign-ups", Send],
+    ApplicationsOpen: ["close-applications", "Close game submissions", CircleStop],
+    ApplicationsClosed: ["schedule", "Publish session schedule", Clock3],
+    Scheduled: ["activate", "Start playtest", Play],
+    Active: ["complete", "Complete playtest", CheckCircle2],
   };
   const next = nextByStatus[event.status ?? "Draft"];
   const configuration = event.configuration;
@@ -1892,7 +1994,9 @@ export function TestingEventLifecycleActions({
     form.set("transition", transition);
     startTransition(async () => {
       try {
-        setResult(await transitionTestingEvent(form));
+        const nextResult = await transitionTestingEvent(form);
+        setResult(nextResult);
+        if (nextResult.success) router.refresh();
       } catch (error) {
         setResult(actionFailure(error));
       }
@@ -1900,8 +2004,22 @@ export function TestingEventLifecycleActions({
   }
 
   const NextIcon = next?.[2];
+  const lifecycleGuidance: Record<string, string> = {
+    Draft: draftConfigurationReady
+      ? "This event is private. Publish it when the rules and sign-up details are ready."
+      : "Finish the event rules and sign-up forms before publishing this event.",
+    ApplicationsOpen: "Game submissions are open. Close them when you are ready to open tester sign-ups.",
+    ApplicationsClosed: "Game submissions are closed. Testers can join saved slots. Finish project review and publish the schedule.",
+    Scheduled: "The schedule is published. Start the playtest when the first session begins.",
+    Active: "The playtest is underway. Complete it when testing and attendance updates are finished.",
+    Completed: "This playtest is complete. Its applications, attendance, and feedback remain available below.",
+    Cancelled: "This event was cancelled. Its history remains available for reference.",
+  };
   return (
-    <div className="space-y-3">
+    <div className="grid w-full gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+      <div className="min-w-0 max-w-2xl">
+        <p className="text-sm text-muted-foreground">{lifecycleGuidance[event.status ?? "Draft"]}</p>
+      </div>
       <div className="flex flex-wrap gap-2">
         {event.status === "Draft" && !draftConfigurationReady && event.id ? (
           <a
@@ -1909,7 +2027,7 @@ export function TestingEventLifecycleActions({
             className={buttonVariants({ size: "sm" })}
           >
             <Pencil className="mr-2 size-4" />
-            Complete setup
+            Finish event setup
           </a>
         ) : next && NextIcon ? (
           <Button size="sm" disabled={pending} onClick={() => run(next[0])}>
@@ -1920,7 +2038,7 @@ export function TestingEventLifecycleActions({
         {!["Completed", "Cancelled"].includes(event.status ?? "") ? (
           <EventActionDialog
             trigger={
-              <Button size="sm" variant="outline">
+              <Button size="sm" variant="ghost">
                 <CircleStop className="mr-2 size-4" />
                 Cancel event
               </Button>
@@ -1930,6 +2048,7 @@ export function TestingEventLifecycleActions({
             submitLabel="Cancel event"
             action={transitionTestingEvent}
             destructive
+            onSuccess={setResult}
           >
             <input type="hidden" name="eventId" value={event.id} />
             <input type="hidden" name="transition" value="cancel" />
@@ -1949,7 +2068,7 @@ export function TestingEventLifecycleActions({
         {event.status === "Draft" && event.id ? (
           <EventActionDialog
             trigger={
-              <Button size="sm" variant="destructive">
+              <Button size="sm" variant="ghost" className="text-muted-foreground">
                 <Trash2 className="mr-2 size-4" />
                 Delete draft
               </Button>
@@ -1982,7 +2101,7 @@ export function TestingEventLifecycleActions({
           </EventActionDialog>
         ) : null}
       </div>
-      <ActionMessage result={result} />
+      {result ? <div className="lg:col-span-2"><ActionMessage result={result} /></div> : null}
     </div>
   );
 }
@@ -2049,16 +2168,24 @@ export function TestingEventCommittee({
             <input type="hidden" name="eventId" value={event.id} />
             <div className="space-y-2">
               <Label>Member</Label>
-              <Select name="userId" required>
+              <Select
+                items={[
+                  ...members.map((member) => ({ value: member.id, label: member.label })),
+                ]}
+                name="userId"
+                required
+              >
                 <SelectTrigger aria-label="Committee member">
                   <SelectValue placeholder="Choose a member" />
                 </SelectTrigger>
                 <SelectContent>
-                  {members.map((member) => (
-                    <SelectItem key={member.id} value={member.id}>
-                      {member.label}
-                    </SelectItem>
-                  ))}
+                  <SelectGroup>
+                    {members.map((member) => (
+                      <SelectItem key={member.id} value={member.id}>
+                        {member.label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
                 </SelectContent>
               </Select>
             </div>
@@ -2262,6 +2389,12 @@ export function TestingEventApplications({
                         description="Capacity is reserved only after this approval is accepted."
                         submitLabel="Approve project"
                         action={approveTestingEventApplication}
+                        onSuccess={(result) =>
+                          setReviewResult({
+                            applicationId: application.id!,
+                            result,
+                          })
+                        }
                       >
                         <input type="hidden" name="eventId" value={eventId} />
                         <input
@@ -2273,7 +2406,23 @@ export function TestingEventApplications({
                           <Label htmlFor={`approve-slot-${application.id}`}>
                             Testing slot
                           </Label>
-                          <Select name="slotId" required>
+                          <Select
+                            items={[
+                              ...slots
+                                .filter((slot) => slot.id)
+                                .map((slot) => ({
+                                  value: slot.id!,
+                                  label: (
+                                    <>
+                                      {formatEventDateTime(slot.startsAt)} ·{" "}
+                                      {slot.campusName ?? slot.meetingUrl ?? slot.mode}
+                                    </>
+                                  ),
+                                })),
+                            ]}
+                            name="slotId"
+                            required
+                          >
                             <SelectTrigger
                               id={`approve-slot-${application.id}`}
                               aria-label="Testing slot"
@@ -2281,16 +2430,16 @@ export function TestingEventApplications({
                               <SelectValue placeholder="Choose a slot" />
                             </SelectTrigger>
                             <SelectContent>
-                              {slots
-                                .filter((slot) => slot.id)
-                                .map((slot) => (
-                                  <SelectItem key={slot.id} value={slot.id!}>
-                                    {formatEventDateTime(slot.startsAt)} ·{" "}
-                                    {slot.campusName ??
-                                      slot.meetingUrl ??
-                                      slot.mode}
-                                  </SelectItem>
-                                ))}
+                              <SelectGroup>
+                                {slots
+                                  .filter((slot) => slot.id)
+                                  .map((slot) => (
+                                    <SelectItem key={slot.id} value={slot.id!}>
+                                      {formatEventDateTime(slot.startsAt)} ·{" "}
+                                      {slot.campusName ?? slot.meetingUrl ?? slot.mode}
+                                    </SelectItem>
+                                  ))}
+                              </SelectGroup>
                             </SelectContent>
                           </Select>
                         </div>
@@ -2317,6 +2466,12 @@ export function TestingEventApplications({
                         description="The application remains eligible but does not consume project capacity."
                         submitLabel="Add to waitlist"
                         action={waitlistTestingEventApplication}
+                        onSuccess={(result) =>
+                          setReviewResult({
+                            applicationId: application.id!,
+                            result,
+                          })
+                        }
                       >
                         <input type="hidden" name="eventId" value={eventId} />
                         <input
@@ -2348,6 +2503,12 @@ export function TestingEventApplications({
                         submitLabel="Reject project"
                         action={rejectTestingEventApplication}
                         destructive
+                        onSuccess={(result) =>
+                          setReviewResult({
+                            applicationId: application.id!,
+                            result,
+                          })
+                        }
                       >
                         <input type="hidden" name="eventId" value={eventId} />
                         <input
@@ -2381,6 +2542,12 @@ export function TestingEventApplications({
                       description="Votes are auditable and cannot be silently replaced by another reviewer."
                       submitLabel="Record vote"
                       action={voteOnTestingEventApplication}
+                      onSuccess={(result) =>
+                        setReviewResult({
+                          applicationId: application.id!,
+                          result,
+                        })
+                      }
                     >
                       <input type="hidden" name="eventId" value={eventId} />
                       <input
@@ -2390,13 +2557,22 @@ export function TestingEventApplications({
                       />
                       <div className="space-y-2">
                         <Label>Vote</Label>
-                        <Select name="decision" required>
+                        <Select
+                          items={[
+                            { value: "Approve", label: "Approve" },
+                            { value: "Reject", label: "Reject" },
+                          ]}
+                          name="decision"
+                          required
+                        >
                           <SelectTrigger>
                             <SelectValue placeholder="Choose decision" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Approve">Approve</SelectItem>
-                            <SelectItem value="Reject">Reject</SelectItem>
+                            <SelectGroup>
+                              <SelectItem value="Approve">Approve</SelectItem>
+                              <SelectItem value="Reject">Reject</SelectItem>
+                            </SelectGroup>
                           </SelectContent>
                         </Select>
                       </div>
@@ -2435,12 +2611,15 @@ export function TestingSlotRegistrations({
   approvedApplications: TestingLabApprovedApplicationOption[];
   readOnly?: boolean;
 }) {
+  const [result, setResult] =
+    useState<TestingEventActionResult<unknown> | null>(null);
   if (registrations.length === 0)
     return (
       <p className="text-sm text-muted-foreground">No tester registrations.</p>
     );
   return (
     <div className="mt-3 divide-y border-t">
+      <ActionMessage result={result} />
       {registrations.map((registration, index) => {
         const testerLabel = registration.userId
           ? memberLabels[registration.userId]
@@ -2497,6 +2676,7 @@ export function TestingSlotRegistrations({
                     description="Create the feedback obligation for this tester after check-in."
                     submitLabel="Assign project"
                     action={assignTestedProjectToRegistration}
+                    onSuccess={setResult}
                   >
                     <input type="hidden" name="eventId" value={eventId} />
                     <input
@@ -2506,19 +2686,27 @@ export function TestingSlotRegistrations({
                     />
                     <div className="space-y-2">
                       <Label>Approved project</Label>
-                      <Select name="applicationId" required>
+                      <Select
+                        items={[
+                          ...assignableProjects.map((application) => ({
+                            value: application.id,
+                            label: application.label,
+                          })),
+                        ]}
+                        name="applicationId"
+                        required
+                      >
                         <SelectTrigger aria-label="Approved project">
                           <SelectValue placeholder="Choose a project" />
                         </SelectTrigger>
                         <SelectContent>
-                          {assignableProjects.map((application) => (
-                            <SelectItem
-                              key={application.id}
-                              value={application.id}
-                            >
-                              {application.label}
-                            </SelectItem>
-                          ))}
+                          <SelectGroup>
+                            {assignableProjects.map((application) => (
+                              <SelectItem key={application.id} value={application.id}>
+                                {application.label}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
                         </SelectContent>
                       </Select>
                     </div>
@@ -2536,15 +2724,26 @@ export function TestingSlotRegistrations({
                     name="registrationId"
                     value={registration.id}
                   />
-                  <Select name="attendance" required>
+                  <Select
+                    items={[
+                      { value: "check-in", label: "Check in" },
+                      { value: "check-out", label: "Check out" },
+                      { value: "no-show", label: "No show" },
+                      { value: "complete", label: "Complete" },
+                    ]}
+                    name="attendance"
+                    required
+                  >
                     <SelectTrigger className="w-36" aria-label="Attendance">
                       <SelectValue placeholder="Attendance" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="check-in">Check in</SelectItem>
-                      <SelectItem value="check-out">Check out</SelectItem>
-                      <SelectItem value="no-show">No show</SelectItem>
-                      <SelectItem value="complete">Complete</SelectItem>
+                      <SelectGroup>
+                        <SelectItem value="check-in">Check in</SelectItem>
+                        <SelectItem value="check-out">Check out</SelectItem>
+                        <SelectItem value="no-show">No show</SelectItem>
+                        <SelectItem value="complete">Complete</SelectItem>
+                      </SelectGroup>
                     </SelectContent>
                   </Select>
                   <Button size="sm" type="submit">
@@ -2574,6 +2773,15 @@ export function TestingEventLearningDialog({
   const [selectedActivityId, setSelectedActivityId] = useState(
     initialActivity?.id ?? "",
   );
+  const [completionRequirement, setCompletionRequirement] = useState(
+    event.learningCompletionRequirement ?? "AttendanceAndFeedback",
+  );
+  const completionRequirementLabels: Record<string, string> = {
+    Attendance: "Attendance",
+    Feedback: "Required feedback",
+    AttendanceAndFeedback: "Attendance and feedback",
+    ProjectTested: "Assigned project tested",
+  };
   const selectedActivity = activities.find(
     (activity) => activity.id === selectedActivityId,
   );
@@ -2601,6 +2809,12 @@ export function TestingEventLearningDialog({
       <div className="space-y-2">
         <Label>Course activity</Label>
         <Select
+          items={[
+            ...activities.map((activity) => ({
+              value: activity.id,
+              label: activity.label,
+            })),
+          ]}
           name="learningActivityId"
           required
           value={selectedActivityId}
@@ -2610,14 +2824,16 @@ export function TestingEventLearningDialog({
             <SelectValue placeholder="Choose a lesson or graded activity" />
           </SelectTrigger>
           <SelectContent>
-            {activities.map((activity) => (
-              <SelectItem
-                key={`${activity.courseId}:${activity.id}`}
-                value={activity.id}
-              >
-                {activity.label}
-              </SelectItem>
-            ))}
+            <SelectGroup>
+              {activities.map((activity) => (
+                <SelectItem
+                  key={`${activity.courseId}:${activity.id}`}
+                  value={activity.id}
+                >
+                  {activity.label}
+                </SelectItem>
+              ))}
+            </SelectGroup>
           </SelectContent>
         </Select>
       </div>
@@ -2633,23 +2849,30 @@ export function TestingEventLearningDialog({
       <div className="space-y-2">
         <Label>Completion requirement</Label>
         <Select
+          items={[
+            { value: "Attendance", label: "Attendance" },
+            { value: "Feedback", label: "Required feedback" },
+            { value: "AttendanceAndFeedback", label: "Attendance and feedback" },
+            { value: "ProjectTested", label: "Assigned project tested" },
+          ]}
           name="requirement"
-          defaultValue={
-            event.learningCompletionRequirement ?? "AttendanceAndFeedback"
-          }
+          value={completionRequirement}
+          onValueChange={(value) => value && setCompletionRequirement(value)}
         >
           <SelectTrigger aria-label="Completion requirement">
-            <SelectValue />
+            <SelectValue>
+              {completionRequirementLabels[completionRequirement] ?? completionRequirement}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="Attendance">Attendance</SelectItem>
-            <SelectItem value="Feedback">Required feedback</SelectItem>
-            <SelectItem value="AttendanceAndFeedback">
-              Attendance and feedback
-            </SelectItem>
-            <SelectItem value="ProjectTested">
-              Assigned project tested
-            </SelectItem>
+            <SelectGroup>
+              <SelectItem value="Attendance">Attendance</SelectItem>
+              <SelectItem value="Feedback">Required feedback</SelectItem>
+              <SelectItem value="AttendanceAndFeedback">
+                Attendance and feedback
+              </SelectItem>
+              <SelectItem value="ProjectTested">Assigned project tested</SelectItem>
+            </SelectGroup>
           </SelectContent>
         </Select>
       </div>

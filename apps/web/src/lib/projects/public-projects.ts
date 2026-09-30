@@ -1,5 +1,6 @@
 import { auth, getToken } from "@/auth";
 import type { PublicProject } from "@/lib/community/public-community";
+import type { PublicProjectType } from "@/lib/projects/project-types";
 import {
   createServerClient,
   GeneratedApi,
@@ -190,18 +191,26 @@ function mapProject(project: ProjectsProjectApiOutput): PublicProject {
 }
 
 export const getPublishedProjectsPage = cache(
-  async (skip: number, take: number): Promise<PublicProject[]> => {
+  async (
+    skip: number,
+    take: number,
+    searchTerm = "",
+    type?: PublicProjectType,
+  ): Promise<PublicProject[]> => {
     const projects = await createProjectsModule();
     const result = await projects.getProjectsForGetProjects({
       status: "Published",
       visibility: "Public",
+      ...(searchTerm.trim() ? { searchTerm: searchTerm.trim() } : {}),
+      ...(type ? { type } : {}),
       skip,
       take,
       sortBy: "UpdatedAt",
       sortDirection: "DESC",
     });
 
-    return result.ok ? result.data.map(mapProject) : [];
+    if (!result.ok) throw new Error("Public projects could not be loaded.");
+    return result.data.map(mapProject);
   },
 );
 
@@ -220,6 +229,8 @@ export const getVisibleProject = cache(
       includeCollaborators: true,
     });
 
-    return result.ok ? mapProject(result.data) : null;
+    if (result.ok) return mapProject(result.data);
+    if (result.error.status === 404) return null;
+    throw new Error("Public project could not be loaded.");
   },
 );

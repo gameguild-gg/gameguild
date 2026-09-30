@@ -149,7 +149,7 @@ test("waits for hydration before every client-side Testing Lab mutation", async 
     [
       '"project-owner public Testing Lab event"',
       "await waitForClientHydration(ownerPage);",
-      '.getByLabel("Eligible project version")',
+      'name: "Join", exact: true',
     ],
     [
       '"Testing Lab manager applications"',
@@ -164,7 +164,7 @@ test("waits for hydration before every client-side Testing Lab mutation", async 
     [
       '"scheduled public Testing Lab event"',
       "await waitForClientHydration(testerPage);",
-      'name: "Reserve tester seat"',
+      'name: "Join", exact: true',
     ],
   ];
 
@@ -204,7 +204,7 @@ test("covers the complete Testing Lab operational browser matrix", async () => {
     'name: "New location", exact: true',
     'name: "New role", exact: true',
     'name: "Manage access", exact: true',
-    'name: "Start event", exact: true',
+    'name: "Start playtest", exact: true',
     'name: "Assign tested project", exact: true',
     'name: "Submit required feedback", exact: true',
     'name: "Cancel event", exact: true',
