@@ -48,6 +48,11 @@ public sealed class AuthenticationOptions : BaseOptions
     public AuthenticationPasswordPolicySettings PasswordPolicy { get; set; } = new();
 
     /// <summary>
+    ///     OAuth 2.0 provider credentials and scope configuration.
+    /// </summary>
+    public ExternalProviderOptions ExternalProviders { get; set; } = new();
+
+    /// <summary>
     ///     Header used to submit API keys when the API key scheme is enabled.
     /// </summary>
     public string? ApiKeyHeaderName { get; set; }
@@ -112,6 +117,14 @@ public sealed class AuthenticationOptions : BaseOptions
 
         (PasswordPolicy ?? throw new InvalidOperationException("Authentication password policy settings are required."))
             .Validate();
+
+        (ExternalProviders ?? throw new InvalidOperationException("External provider settings are required."))
+            .Validate();
+
+        if (!EnableAuthentication && ExternalProviders.Providers.Any(provider => provider.Value.Enabled))
+        {
+            throw new InvalidOperationException("External OAuth providers cannot be enabled when authentication is disabled.");
+        }
 
         if (AllowApiKeyInQueryString && !EnableApiKeyAuthentication)
         {
