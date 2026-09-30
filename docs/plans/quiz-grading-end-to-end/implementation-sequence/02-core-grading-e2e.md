@@ -11,7 +11,8 @@ Regras globais: [`08-implementation-sequence.md`](../08-implementation-sequence.
 ## Pré-requisitos
 
 - Parte 1 concluída, testada e aprovada em seu gate de saída;
-- baseline, contratos, revisão imutável e fronteira learner-safe estáveis;
+- cadeia de migrations, contratos, revisão imutável e fronteira learner-safe
+  estáveis;
 - nenhuma capability oficial registrada por atalho fora desta parte.
 
 ## Fora do escopo
@@ -226,8 +227,9 @@ Apresentar e aprovar somente o necessário para:
   não pode deixar a rodada indefinidamente retida;
 - índices de duplo start, duplo submit e concorrência.
 
-Após aprovação, editar o mesmo baseline global e recriar os bancos afetados.
-Não criar uma migration de evolução.
+Após aprovação, adicionar uma migration incremental forward-only. Validar tanto
+a criação limpa quanto o upgrade de um banco populado pela migration anterior,
+preservando a cadeia, os dados e os artefatos SQL fora do `IModel`.
 
 ### Implementação
 
@@ -457,9 +459,11 @@ Apresentar e aprovar:
 
 Se outbox ou auditoria existente não garantir a trilha de mutações, o gate deve
 apresentar explicitamente a nova entidade, constraints, índice idempotente e
-retenção antes de qualquer edição do baseline.
+retenção antes de qualquer mudança no schema.
 
-Após aprovação, editar o mesmo baseline global e recriar os bancos afetados.
+Após aprovação, adicionar uma migration incremental forward-only e provar
+criação limpa, upgrade populado, preservação do catálogo e ausência de drift
+fora do delta aprovado.
 
 ### Implementação
 
@@ -545,9 +549,9 @@ Após aprovação, editar o mesmo baseline global e recriar os bancos afetados.
   `Program.PassingScore` ainda não participa dessa decisão;
 - o fan-out por integrante foi removido e uma submission coletiva gera uma
   única execução e um único resultado;
-- testes unitários, integração, banco vazio, segurança e E2E acumulados passam
-  em CI, com criação do banco do zero e diff global sem drift após cada edição
-  aprovada do baseline.
+- testes unitários, integração, banco vazio, upgrade populado, segurança e E2E
+  acumulados passam em CI, com diff global sem drift após cada migration
+  aprovada.
 
 ## Gate para a Parte 3
 

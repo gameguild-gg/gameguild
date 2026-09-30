@@ -7,7 +7,7 @@ suportar publicação explícita, definição imutável por execução, reviews
 interativos, score preciso, regrade e efeitos externos confiáveis.
 
 A implementação começa por quatro ADRs obrigatórios. Entidades EF, model
-configuration e baseline de schema só podem ser alterados depois da aprovação
+configuration e schema só podem ser alterados depois da aprovação
 desses documentos:
 
 1. lifecycle e revisão publicada de `Assessment`;
@@ -48,8 +48,9 @@ operacional consultável. Os scores de assessment e peer review são inteiros.
 Introduzir `ReviewMethods` em entidade, enum, DTOs e schema final sem renomear
 `PeerReviewsRequiredCount`, pois os campos representam conceitos diferentes.
 Os valores compatíveis de `GradingMethods` são copiados para a nova coluna; as
-colunas legadas permanecem disponíveis durante a janela de transição e só podem
-ser removidas por uma migration posterior com prova de materialização completa.
+colunas de compatibilidade permanecem disponíveis durante a janela de transição
+e só podem ser removidas por uma migration posterior com prova de materialização
+completa.
 Combinações antigas não suportadas pelo workflow novo recebem
 `InstructorReview`, preservando uma revisão humana em vez de falhar o deploy ou
 escolher silenciosamente um dos métodos automáticos.
@@ -85,10 +86,10 @@ O snapshot EF não descreve todo o banco atual. Antes de substituir a cadeia, o
 gate inventaria extensões, schemas, roles, grants, policies, funções,
 procedures, triggers, views, índices especiais e dados estruturais instalados
 por `migrationBuilder.Sql`. Cada artefato ativo recebe owner, dependências,
-ordem de instalação, decisão explícita e teste funcional no banco vazio. O
-baseline final reinstala diretamente o estado aprovado; deixar um artefato de
-fora apenas porque ele não aparece no `IModel` é drift destrutivo, não limpeza
-de legado.
+ordem de instalação, decisão explícita e teste funcional no banco vazio. Um
+eventual baseline futuro precisa reinstalar diretamente o estado aprovado;
+deixar um artefato de fora apenas porque ele não aparece no `IModel` é drift
+destrutivo, não limpeza técnica.
 
 ## Ownership dos contratos
 
@@ -229,8 +230,9 @@ documento [`05`](./05-learner-attempts-and-results.md). Nenhum contrato do core
 expõe `StructuredAnswer`, `contentBlockId` ou outra forma específica de quiz.
 
 O envelope validado é canonicalizado e persistido uma única vez na
-`GradingExecution`. Retry e regrade reutilizam os mesmos bytes. A coluna legada
-`AssessmentSubmission.StructuredAnswerPayload` permanece durante a transição;
+`GradingExecution`. Retry e regrade reutilizam os mesmos bytes. A coluna de
+compatibilidade `AssessmentSubmission.StructuredAnswerPayload` permanece durante
+a transição;
 uma migration posterior poderá removê-la somente após comprovar que todos os
 payloads foram materializados no novo owner e que rollback não depende dela.
 
@@ -239,8 +241,8 @@ na revisão, não um segundo draft JSON. No agregado mutável:
 
 - campos consultáveis como tentativas, tempo, datas, passing score e
   apresentação têm as colunas de `Assessment` como única fonte;
-- o atual `Assessment.DefinitionPayload` e sua versão tornam-se somente legado
-  de compatibilidade durante a materialização das revisões. Escritas novas usam
+- o atual `Assessment.DefinitionPayload` e sua versão tornam-se armazenamento
+  histórico inerte durante a materialização das revisões. Escritas novas usam
   os contratos tipados; a remoção física fica para uma migration posterior
   comprovadamente segura;
 - nenhuma propriedade pode existir simultaneamente numa coluna e nesse payload;
@@ -382,7 +384,7 @@ do gradebook e podem ser alterados sem reinterpretar respostas.
 Não reutilizar `Assessment.DefinitionPayload` como histórico sobrescrito, nem
 copiar answer key completo para cada submission. A entidade de revisão é
 justificada por identidade, retenção, referência e deduplicação entre
-tentativas. Antes de alterar o baseline, o ADR deve confirmar que não surgiu outro
+tentativas. Antes de alterar o schema, o ADR deve confirmar que não surgiu outro
 agregado genérico com essas garantias.
 
 Revisões candidatas não ativadas podem ter retenção própria. Editar o draft não
@@ -882,7 +884,7 @@ depois da transição canônica aplicável
 
 O grading não recebe lista de membros nem executa por participante. Para
 preservar integridade relacional sem um `SubjectId` polimórfico sem FK, o
-baseline deve representar o sujeito com referências mutuamente exclusivas:
+schema deve representar o sujeito com referências mutuamente exclusivas:
 
 ```text
 AssessmentSubmission

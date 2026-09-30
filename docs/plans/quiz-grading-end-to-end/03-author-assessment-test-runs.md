@@ -78,8 +78,8 @@ Essa separação evita duplicar regras e evita contaminar o modelo oficial.
 ## Persistência mínima proposta
 
 Uma estrutura autoral e uma raiz compartilhada, sujeitas aos ADRs de `SEQ-00`.
-Sua definição entra no baseline global aprovado em `SEQ-02`, sem transformação
-incremental de banco existente:
+Sua definição entra por migration incremental aprovada em `SEQ-02`, com criação
+limpa e upgrade de banco populado testados:
 
 ```text
 AssessmentTestRun
@@ -265,8 +265,8 @@ mas não substitui esse bloqueio preventivo de deploy.
 ## Tarefas
 
 - [ ] fechar o contrato `IGradingExecutionContext`;
-- [ ] decidir e revisar a persistência de `AssessmentTestRun` antes de alterar
-  o baseline de schema;
+- [ ] decidir e revisar a persistência de `AssessmentTestRun` antes de criar a
+  migration de schema;
 - [ ] criar test run vinculado a uma revisão candidata ou ativa;
 - [ ] congelar e resolver exatamente o manifest executável da revisão;
 - [ ] criar um subject sintético por alvo avaliado e uma execução por subject;

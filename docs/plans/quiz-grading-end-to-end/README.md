@@ -260,7 +260,7 @@ Leitura central do fluxo:
 | Documento | Área | Resultado esperado |
 | --- | --- | --- |
 | [00-domain-and-workflows.md](./00-domain-and-workflows.md) | domínio e UX | vocabulário, combinações, precedência e estados fechados |
-| [01-contracts-and-persistence.md](./01-contracts-and-persistence.md) | contratos e dados | schemas versionados, baseline limpo e auditoria coerente |
+| [01-contracts-and-persistence.md](./01-contracts-and-persistence.md) | contratos e dados | schemas versionados, migrations incrementais e auditoria coerente |
 | [02-authoring-and-publication.md](./02-authoring-and-publication.md) | professor | quiz, grading e assessment salvos atomicamente |
 | [03-author-assessment-test-runs.md](./03-author-assessment-test-runs.md) | professor | execução completa do assessment sem efeitos acadêmicos |
 | [04-graders-and-instructor-review.md](./04-graders-and-instructor-review.md) | handlers | cinco reviews, providers e revisão docente final |
@@ -281,13 +281,16 @@ detalha os testes e critérios transversais consumidos por essa sequência.
 ## Decisões estruturais obrigatórias
 
 As seguintes decisões fazem parte do plano e devem ser fechadas antes de alterar
-o baseline de schema do fluxo:
+o schema relacional do fluxo:
 
 1. `Assessment` mantém a definição autoral mutável. O test run usa uma
    `AssessmentDefinitionRevision` candidata e imutável; o publish ativa a mesma
    revisão, e execuções oficiais só usam a revisão ativa. O
-   `Assessment.DefinitionPayload` genérico e seu setter são removidos; fonte
-   mutável complexa só existe como contrato tipado e com ownership próprio.
+   `Assessment.DefinitionPayload` genérico deixa de receber novas escritas e seu
+   setter sai do runtime; fonte mutável complexa só existe como contrato tipado
+   e com ownership próprio. As colunas históricas permanecem como shadow
+   properties inertes até um `SCHEMA-GATE` posterior comprovar que sua remoção é
+   segura para upgrade, rollback e recuperação.
 2. A publicação é explícita: um ponteiro de revisão ativa diferencia draft,
    alterações pendentes e definição executável. `ProgramContent.Visibility`
    não substitui esse lifecycle.
@@ -295,8 +298,8 @@ o baseline de schema do fluxo:
    inclusive no banco e no JSON. `Assessment.PassingScore` é o
    limiar absoluto da submissão; `Program.PassingScore` continua sendo o
    percentual global do curso e só é aplicado na consolidação global. Todos os
-   campos acadêmicos já existentes são convertidos no baseline da fundação,
-   antes do primeiro test run.
+   campos acadêmicos já existentes são convertidos por migration incremental da
+   fundação, com `USING`/backfill e testes de upgrade, antes do primeiro test run.
 4. Review é um estágio de lifecycle. Métodos interativos aguardam evidências;
    somente avaliadores determinísticos ou externos podem concluir no start.
 5. `GradingExecution` é a raiz compartilhada de stages, rodadas, evidências e
@@ -390,8 +393,9 @@ o baseline de schema do fluxo:
     reprojeta o gradebook de forma auditada e não cria nova avaliação.
 30. Release agendado usa schedule/cancel/reagendamento idempotentes e o worker
     chama `ReleaseGradeResult` em vez de editar estado diretamente.
-31. O baseline limpo reinstala todo artefato SQL ativo aprovado fora do `IModel`,
-    com inventário, ordem de dependências e teste funcional.
+31. A cadeia incremental preserva todo artefato SQL ativo aprovado fora do
+    `IModel`, com inventário, ordem de dependências e teste funcional. Um squash
+    futuro é uma operação independente e não faz parte deste plano.
 32. Rounds, stages e handlers usam `GradeResultV1` e `GradeItemResultV1`
     genéricos. Payloads e evidências específicos de quiz pertencem ao adapter e
     nunca aparecem como tipo obrigatório no core de grading.
@@ -404,12 +408,13 @@ o baseline de schema do fluxo:
 
 Essas decisões podem justificar colunas e entidades novas. Cada fatia com
 impacto relacional exige o `SCHEMA-GATE` descrito na sequência canônica, com
-ownership, consultas, retenção e estratégia de concorrência aprovados. A
-alteração é feita diretamente no mesmo baseline global inicial pré-lançamento, seguida
-da recriação dos bancos descartáveis, sem migration incremental ou migração de
-dados. O gate compara tanto o modelo EF quanto os catálogos PostgreSQL de
-funções, procedures, triggers, policies, grants, views, extensões e índices
-especiais; preservar esses artefatos atuais não significa manter legado.
+ownership, consultas, retenção, conversão de dados e estratégia de concorrência
+aprovados. A alteração entra como migration incremental forward-only e deve
+funcionar tanto sobre banco vazio quanto sobre banco populado pela migration
+anterior. O gate compara o modelo EF e os catálogos PostgreSQL de funções,
+procedures, triggers, policies, grants, views, extensões e índices especiais.
+Preservar a cadeia histórica e estruturas ainda necessárias à recuperação não
+as torna autoridades do runtime.
 
 ## Dependências
 
@@ -421,7 +426,7 @@ fila executável indexada por
 domínio e workflows
   -> ADRs de publicação, precisão e histórico
      -> contratos e matriz de autorização
-        -> schema do núcleo e reset global do baseline
+        -> schema do núcleo por migration incremental aprovada
            -> autoria atômica
               -> projeção learner-safe, corte de rotas e capabilities
                  -> revisão imutável e publish/unpublish preparados
@@ -484,22 +489,33 @@ redaction, answer key, normalização ou correção. `@game-guild/quiz` e
 
 ## Regras de execução do plano
 
-- não criar nem executar migration incremental para transformar bancos atuais;
-- não criar migration de dados, backfill, aliases, dual-read ou dual-write;
-- tratar a substituição da cadeia histórica como operação global, pois o único
-  `ApplicationDbContext` e seu startup com `MigrateAsync` abrangem todos os
-  módulos; alternativamente, trocar primeiro o mecanismo de criação de banco;
-- editar diretamente esse mesmo baseline após cada `SCHEMA-GATE` aprovado; ao
-  final existe somente o baseline que cria o schema final;
-- inventariar e reinstalar no baseline todo SQL ativo fora do `IModel`; diff do
+Estas regras seguem o
+[`ADR-20260903-development-database-baseline`](../../architecture/ADR-20260903-development-database-baseline.md):
+
+- toda mudança relacional aprovada entra em nova migration incremental
+  forward-only; migrations e designers históricos não são reescritos nem
+  removidos, e o snapshot corrente recebe somente o delta da nova migration;
+- alterações de tipo, nulabilidade, nome ou semântica declaram conversão,
+  backfill e estratégia de rollback/restore e possuem teste com banco vazio e
+  banco populado pela migration anterior;
+- não manter aliases, dual-read ou dual-write permanentes. Uma compatibilidade
+  transitória somente existe quando o `SCHEMA-GATE` a justificar, delimitar seu
+  owner e indicar o gate posterior de remoção;
+- remover autoridade do runtime não autoriza apagar armazenamento histórico.
+  Coluna, tabela, trigger, função ou migration só pode ser removida após
+  inventário de consumidores, prova de materialização, teste de upgrade e
+  rollback/restore e aprovação explícita;
+- inventariar e preservar na cadeia todo SQL ativo fora do `IModel`; diff do
   snapshot EF sozinho não autoriza remover função, trigger, policy, grant, view,
   extensão ou índice especial de outro módulo;
-- recriar bancos locais, de desenvolvimento e de teste afetados, sem preservar
-  os dados atuais;
+- um eventual squash de migrations ou novo baseline global é uma operação
+  posterior, independente e coordenada, com backup verificável e confirmação de
+  que nenhum ambiente depende da cadeia atual;
 - publicação, precisão de score e histórico acadêmico devem estar fechados em
   ADRs antes de alterar entidades EF;
-- não haverá compatibilidade legacy ou migração de documentos, pois o produto
-  não foi lançado;
+- o fato de o produto não ter sido lançado não torna dados de desenvolvimento,
+  trabalho autoral, submissões, migrations ou estruturas desconhecidas
+  descartáveis;
 - os bits `1`, `2`, `4` e `8` permanecem por serem o contrato canônico final,
   não para preservar registros existentes;
 - cada marco deve entregar uma fatia vertical testável;

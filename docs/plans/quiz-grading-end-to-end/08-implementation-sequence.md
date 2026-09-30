@@ -61,23 +61,30 @@ capabilities de uma parte posterior.
    evidências antes de liberar a parte seguinte. Suíte acumulada significa os
    testes da parte atual mais todos os contratos, testes e E2Es aprovados nas
    partes anteriores.
-7. Não introduzir compatibilidade legacy, aliases, dual-read, dual-write,
-   backfill ou migração de dados.
-8. Não criar migration incremental. A API possui um único
-   `ApplicationDbContext`; portanto, o baseline EF é global e sua recriação é
-   uma operação coordenada de toda a API. Depois do reset aprovado, esse mesmo
-   baseline é editado diretamente a cada fatia de schema e os bancos
-   descartáveis afetados são recriados.
+7. Não introduzir aliases, dual-read ou dual-write permanentes. Compatibilidade
+   transitória só pode existir com owner, prazo e gate de remoção explícitos;
+   preservar uma coluna histórica como shadow property inerte não a torna fonte
+   autoritativa.
+8. Toda alteração relacional aprovada cria uma migration incremental
+   forward-only. As migrations e designers existentes são preservados e o
+   snapshot corrente recebe somente o novo delta; um eventual squash do
+   baseline global é outra operação, fora deste plano, e exige inventário,
+   backup e coordenação de todos os módulos do `ApplicationDbContext`.
 9. Interromper a execução em todo `SCHEMA-GATE` para apresentar o impacto e
    obter aprovação explícita antes de editar entidades EF, configurações,
-   baseline ou tabelas.
-10. Não manter dois caminhos autoritativos após uma substituição. O caminho
-    anterior é removido na mesma fatia em que seu substituto passa no E2E.
+   migrations, snapshot ou tabelas.
+10. Não manter dois caminhos autoritativos após uma substituição. O código
+    anterior deixa de ler e escrever no mesmo corte em que seu substituto passa
+    no E2E; a remoção física de armazenamento segue um gate próprio e pode ficar
+    para depois quando sua preservação for necessária a upgrade, rollback ou
+    recuperação.
 11. `SEQ-16` é auditoria final, não depósito para limpezas conhecidas que
     poderiam ter sido feitas nos marcos anteriores.
-12. Depois de toda edição aprovada do baseline, recriar o banco do zero,
-    executar o diff global de modelo e repetir a suíte acumulada. Um gate de
-    schema não está concluído enquanto uma parte anterior regredir.
+12. Depois de toda migration aprovada, testar a criação do banco do zero e o
+    upgrade de um banco populado pela migration anterior, executar o diff global
+    de modelo e repetir a suíte acumulada. Um gate de schema não está concluído
+    enquanto uma parte anterior regredir ou algum dado/artefato desaparecer sem
+    autorização.
 13. A revisão imutável fixa definição e versões executáveis; cada
     `GradingExecution` fixa separadamente a entrega concreta apresentada ao
     sujeito. A entrega possui `itemOrder` explícito e JSON canônico textual;
@@ -94,13 +101,15 @@ capabilities de uma parte posterior.
 17. Cada evento acadêmico possui confirmação durável por consumer obrigatório;
     uma falha não apaga receipts concluídos nem marca o fan-out inteiro como
     entregue.
-18. O reset do baseline preserva todo artefato SQL ativo aprovado fora do
+18. A evolução incremental preserva todo artefato SQL ativo aprovado fora do
     `IModel`. Snapshot EF e diff de tabelas não substituem o inventário e os
     testes de funções, procedures, triggers, policies, grants, views, extensões
     e índices especiais.
-19. `Assessment.DefinitionPayload` e seu setter genérico são removidos. Fonte
-    mutável de policy só existe com contrato tipado, nome próprio, ownership
-    exclusivo e aprovação no `SCHEMA-GATE`.
+19. `Assessment.DefinitionPayload` e seu setter genérico deixam de ser usados
+    pelo runtime. Fonte mutável de policy só existe com contrato tipado, nome
+    próprio, ownership exclusivo e aprovação no `SCHEMA-GATE`; as colunas
+    históricas permanecem inertes até uma remoção posterior comprovadamente
+    segura.
 20. Release persiste somente `GradeRoundId` único; a submission é derivada pelo
     owner da `GradingExecution` e validada no comando.
 21. Conclusão dependente de aprovação é `on-release-and-pass`; nenhum sinal
@@ -130,13 +139,15 @@ capabilities de uma parte posterior.
     transação da finalização. Um worker chama `ReleaseGradeResult`; finalização e
     liberação continuam transições e eventos distintos.
 
-## Política de schema pré-lançamento
+## Política de evolução do schema
 
+Esta seção segue o
+[`ADR-20260903-development-database-baseline`](../../architecture/ADR-20260903-development-database-baseline.md).
 O plano não congela antecipadamente tabelas de funcionalidades ainda não
-implementadas. Ele também não autoriza mudanças estruturais silenciosas. Como
-o contexto EF é compartilhado por todos os módulos, o primeiro gate inclui uma
-auditoria global do modelo e do histórico atual; somente o delta de grading
-aprovado pode mudar o modelo produzido.
+implementadas e não autoriza mudanças estruturais silenciosas. Como o contexto
+EF é compartilhado por todos os módulos, cada gate inclui uma auditoria global
+do modelo, da cadeia de migrations e do catálogo PostgreSQL; somente o delta de
+grading aprovado pode mudar o modelo produzido.
 
 Cada fatia que prevê impacto relacional começa por um `SCHEMA-GATE`:
 
@@ -144,23 +155,29 @@ Cada fatia que prevê impacto relacional começa por um `SCHEMA-GATE`:
 desenhar somente o necessário para a fatia
   -> apresentar tabelas, colunas, constraints, índices e remoções
     -> obter aprovação explícita
-      -> editar o mesmo baseline global inicial
-        -> recriar bancos descartáveis
-          -> provar criação do zero e constraints
+      -> adicionar migration incremental forward-only
+        -> testar criação limpa e upgrade populado
+          -> provar preservação de dados, catálogo e constraints
 ```
 
-Isso permite aprender com as fatias verticais sem criar migrations
-incrementais. Ao final, o repositório continua contendo apenas o baseline
-global limpo que cria diretamente o schema final de toda a API. Cada
-regeneração deve comparar o modelo completo e rejeitar drift fora do delta
-aprovado.
+Isso permite aprender com fatias verticais sem reescrever o passado. Ao final,
+o repositório mantém a cadeia de migrations capaz de criar o schema do zero e
+de atualizar a versão imediatamente anterior. Cada migration deve comparar o
+modelo completo e rejeitar drift fora do delta aprovado.
 
 O diff possui duas dimensões obrigatórias: `IModel`/snapshot EF e catálogo
-PostgreSQL. Antes de apagar a cadeia atual, inventariar todo SQL ativo fora do
-modelo, com arquivo de origem, owner, dependências, ordem de instalação e teste
-funcional. O baseline limpo materializa diretamente o estado final aprovado;
-não precisa manter as migrations históricas, mas não pode perder o comportamento
-de banco que elas instalaram.
+PostgreSQL. Todo SQL ativo fora do modelo deve ser inventariado com arquivo de
+origem, owner, dependências, ordem de instalação e teste funcional. Migrations
+históricas não são editadas para acomodar o novo delta. Qualquer squash futuro
+é uma operação independente, com backup verificável e confirmação de que nenhum
+ambiente ativo depende da cadeia anterior.
+
+Ausência de uso no código atual não basta para classificar armazenamento como
+removível. O gate de remoção precisa provar que todos os dados relevantes foram
+materializados no novo owner, que nenhum produtor ou consumidor continua ativo,
+que upgrade e rollback/restore são seguros e que a exclusão foi aprovada
+explicitamente. Sem essa prova, a estrutura é preservada e mantida sem autoridade
+de runtime.
 
 Para cada alteração proposta, o gate deve informar:
 
@@ -183,8 +200,8 @@ artefatos SQL fora do IModel afetados e seus testes
 | --- | --- | --- | --- | --- |
 | 1 | `SEQ-00` | ADRs e decisões fechadas | nenhuma | não |
 | 1 | `SEQ-01` | contratos, adapter de quiz, workflows e autorização | `SEQ-00` | não |
-| 1 | `SEQ-02` | schema do núcleo e reset global aprovados | `SEQ-01` | somente desenho |
-| 1 | `SEQ-03` | baseline global, núcleo e entrega por execução | aprovação de `SEQ-02` | sim, global |
+| 1 | `SEQ-02` | delta incremental do núcleo aprovado | `SEQ-01` | somente desenho |
+| 1 | `SEQ-03` | migration incremental, núcleo e entrega por execução | aprovação de `SEQ-02` | sim, global |
 | 1 | `SEQ-04` | autoria transacional no servidor | `SEQ-03` | não previsto |
 | 1 | `SEQ-05` | projeção segura, corte learner e capabilities | `SEQ-04` | não previsto |
 | 1 | `SEQ-06` | revisão imutável, publish/unpublish preparados e UX autoral | `SEQ-05` | não previsto |
@@ -231,7 +248,7 @@ Cada PR deve declarar:
 
 Não misturar no mesmo PR:
 
-- alteração do baseline e redesign amplo de UI;
+- migration estrutural ampla e redesign amplo de UI;
 - novo review handler e reescrita do lifecycle;
 - mudança de contrato sem atualizar produtores e consumidores;
 - remoção antes do E2E substituto;
@@ -251,14 +268,16 @@ A implementação deve parar e retornar ao planejamento quando:
 6. test run produzir qualquer efeito acadêmico;
 7. tentativa coletiva começar a executar grading por participante;
 8. finalização e liberação precisarem compartilhar o mesmo evento;
-9. um PR exigir migration incremental, backfill ou compatibilidade legacy;
+9. um PR exigir mudança relacional, backfill ou compatibilidade transitória sem
+   `SCHEMA-GATE` e estratégia de upgrade aprovados;
 10. score, peso ou percentual acadêmico exigir `decimal`, `float` ou `double`
     persistido;
 11. um caminho substituído continuar autoritativo depois do gate E2E;
 12. persona simulada for tratada como ator autenticado ou sujeito oficial;
 13. evento acadêmico durável continuar sendo publicado diretamente em processo
     em vez de ser gravado na outbox transacional;
-14. regenerar o baseline produzir drift não aprovado em outro módulo da API;
+14. uma migration ou atualização do snapshot produzir drift não aprovado em
+    outro módulo da API;
 15. rota learner/public ainda puder retornar DTO autoral ou answer key;
 16. capability `AuthorTest` for usada para autorizar publish ou execução
     `OfficialSubmission`;
@@ -277,8 +296,8 @@ A implementação deve parar e retornar ao planejamento quando:
 24. um artefato alcançar tráfego sem que o preflight tenha comprovado todas as
     versões exigidas por revisões ativas, revisões retidas elegíveis a regrade
     e execuções não terminais;
-25. um `SCHEMA-GATE` terminar sem recriação do banco, diff global e suíte
-    acumulada das partes já aprovadas;
+25. um `SCHEMA-GATE` terminar sem teste de banco vazio, upgrade populado, diff
+    global e suíte acumulada das partes já aprovadas;
 26. publish, start ou regrade reconstruir o manifest, trocar seus bytes ou
     alterar o `ExecutionSnapshotHash` da revisão preparada;
 27. `AssessmentSubmission.Passed` consultar `Program.PassingScore` em vez do
@@ -311,8 +330,8 @@ A implementação deve parar e retornar ao planejamento quando:
     `AwaitingInstructorResolution` e sem comando terminal auditável;
 40. uma mensagem de outbox for marcada como concluída antes da confirmação
     durável de todos os `ConsumerKey` obrigatórios capturados para ela;
-41. o baseline limpo omitir artefato SQL ativo apenas porque ele não aparece no
-    `IModel`, ou o gate não possuir teste funcional desse artefato;
+41. uma migration omitir ou remover artefato SQL ativo apenas porque ele não
+    aparece no `IModel`, ou o gate não possuir teste funcional desse artefato;
 42. `Assessment.DefinitionPayload` ou outro payload genérico continuar como
     segunda fonte mutável da definição;
 43. uma linha de release persistir `AssessmentSubmissionId` redundante ou puder
@@ -334,6 +353,10 @@ A implementação deve parar e retornar ao planejamento quando:
     aritmética SQL ou divergir da fórmula canônica por pontos;
 51. policy `immediate` depender de chamada em memória depois do commit, sem
     solicitação durável capaz de sobreviver a queda e retry.
+52. uma migration, coluna, tabela, trigger, função ou dado histórico ser removido
+    somente por ser considerado antigo, não utilizado ou anterior ao lançamento,
+    sem prova de materialização, inventário de consumidores, teste de upgrade e
+    aprovação explícita.
 
 ## Acompanhamento global
 

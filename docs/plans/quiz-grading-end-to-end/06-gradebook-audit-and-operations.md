@@ -76,7 +76,7 @@ absolutos da revisão publicada. `Program.PassingScore` é percentual e decide o
 resultado global do curso depois da soma ponderada. Nenhuma projeção pode usar
 um campo no lugar do outro.
 
-O baseline do núcleo em `SEQ-03` converte `Program.PassingScore`,
+A migration incremental do núcleo em `SEQ-03` converte `Program.PassingScore`,
 `AssessmentGroup.WeightPercent` e os demais campos acadêmicos existentes para
 os value objects inteiros de escala `100` antes de qualquer test run. O primeiro
 E2E usa `Assessment.PassingScore` para a submission e
