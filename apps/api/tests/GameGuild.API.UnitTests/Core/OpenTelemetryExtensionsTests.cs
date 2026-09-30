@@ -7,7 +7,6 @@ using Microsoft.Extensions.DependencyInjection;
 using GameGuild.API.Setup;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Exporter;
-using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 
 namespace GameGuild.API.UnitTests.Core;

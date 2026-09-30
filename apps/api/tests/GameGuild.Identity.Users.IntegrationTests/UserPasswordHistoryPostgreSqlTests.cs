@@ -1,30 +1,28 @@
 using GameGuild.API.Database;
 using GameGuild.Identity.Users;
+using GameGuild.TestSupport.Finance.Economy;
 using Microsoft.EntityFrameworkCore;
-using Testcontainers.PostgreSql;
 using Xunit;
 
 namespace GameGuild.Tests.Users.Integration;
 
 public sealed class UserPasswordHistoryPostgreSqlTests : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder()
-        .WithImage("postgres:16-alpine")
-        .WithDatabase("gameguild_user_password_history")
-        .WithUsername("test")
-        .WithPassword("test")
-        .WithCleanUp(true)
-        .Build();
+    private EconomyPostgreSqlTestDatabase? _database;
 
-    public async Task InitializeAsync() => await _postgres.StartAsync();
+    public async Task InitializeAsync() =>
+        _database = await EconomyPostgreSqlTestDatabase.CreateAsync("user_password_history");
 
-    public async Task DisposeAsync() => await _postgres.DisposeAsync();
+    public async Task DisposeAsync()
+    {
+        if (_database is not null) await _database.DisposeAsync();
+    }
 
     [Fact]
     public async Task PasswordHistoryPersistsAndConcurrentPasswordChangesAreRejected()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseNpgsql(_postgres.GetConnectionString())
+            .UseNpgsql(_database!.ConnectionString)
             .Options;
         var userId = Guid.NewGuid();
 
