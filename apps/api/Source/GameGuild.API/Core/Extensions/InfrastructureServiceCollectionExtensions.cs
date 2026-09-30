@@ -100,9 +100,15 @@ public static class InfrastructureServiceCollectionExtensions
                     else
                     {
                         var statusCode = problem.Status ?? httpContext.Response.StatusCode;
-                        if (statusCode is < 400 or > 599) statusCode = StatusCodes.Status500InternalServerError;
+                        if (statusCode is < 400 or > 599)
+                        {
+                            statusCode = StatusCodes.Status500InternalServerError;
+                        }
                         problem.Status = statusCode;
-                        if (string.IsNullOrWhiteSpace(problem.Type)) problem.Type = options.DefaultType;
+                        if (string.IsNullOrWhiteSpace(problem.Type))
+                        {
+                            problem.Type = options.DefaultType;
+                        }
                         if (string.IsNullOrWhiteSpace(problem.Title))
                         {
                             problem.Title = localizedText?.Title ?? options.DefaultTitle;
@@ -182,11 +188,17 @@ public static class InfrastructureServiceCollectionExtensions
         {
             var locale = options.LocalizedMessages.FirstOrDefault(pair =>
                 string.Equals(pair.Key, cultureName, StringComparison.OrdinalIgnoreCase)).Value;
-            if (locale is null) continue;
+            if (locale is null)
+            {
+                continue;
+            }
 
             var localized = locale.FirstOrDefault(pair =>
                 string.Equals(pair.Key, messageKey, StringComparison.OrdinalIgnoreCase)).Value;
-            if (localized is not null) return localized;
+            if (localized is not null)
+            {
+                return localized;
+            }
         }
 
         return null;

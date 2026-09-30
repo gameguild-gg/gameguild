@@ -222,7 +222,10 @@ public sealed class ProblemDetailsOptions : BaseOptions
 
     private static bool IsValidCultureName(string cultureName)
     {
-        if (string.IsNullOrWhiteSpace(cultureName)) return false;
+        if (string.IsNullOrWhiteSpace(cultureName))
+        {
+            return false;
+        }
         var parts = cultureName.Split('-');
         if (parts[0].Length is < 2 or > 8 || parts[0].Any(character => !char.IsAsciiLetter(character)))
         {
