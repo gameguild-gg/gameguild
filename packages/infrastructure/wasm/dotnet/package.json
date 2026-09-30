@@ -1,6 +1,6 @@
 {
   "name": "@game-guild/dotnet-wasm",
-  "version": "4.3.0",
+  "version": "4.4.0",
   "description": "C# compiler and runtime for browser using Mono WebAssembly and Roslyn",
   "type": "module",
   "author": "Miguel Moroni <miguelmcontato@gmail.com>",
