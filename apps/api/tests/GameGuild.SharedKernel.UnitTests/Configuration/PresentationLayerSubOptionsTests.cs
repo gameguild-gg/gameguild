@@ -198,6 +198,60 @@ public class AuthorizationOptionsTests
         var act = () => options.Validate();
         act.Should().NotThrow();
     }
+
+    [Fact]
+    public void Validate_WithConfiguredPolicyAndRoleHierarchy_ShouldNotThrow()
+    {
+        var options = new GameGuild.Configuration.PresentationLayer.Authorization.AuthorizationOptions
+        {
+            Policies = new Dictionary<string, GameGuild.Configuration.PresentationLayer.Authorization.ConfiguredAuthorizationPolicyOptions>
+            {
+                ["CanModerate"] = new() { Roles = ["Moderator"] }
+            },
+            RoleHierarchy = new Dictionary<string, List<string>>
+            {
+                ["Administrator"] = ["Moderator"],
+                ["SystemAdministrator"] = ["Administrator"]
+            }
+        };
+
+        var act = () => options.Validate();
+
+        act.Should().NotThrow();
+    }
+
+    [Fact]
+    public void Validate_WithUnsecuredPolicy_ShouldThrow()
+    {
+        var options = new GameGuild.Configuration.PresentationLayer.Authorization.AuthorizationOptions
+        {
+            Policies = new Dictionary<string, GameGuild.Configuration.PresentationLayer.Authorization.ConfiguredAuthorizationPolicyOptions>
+            {
+                ["AllowEveryone"] = new() { RequireAuthenticatedUser = false }
+            }
+        };
+
+        var act = () => options.Validate();
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("*must require authentication*");
+    }
+
+    [Fact]
+    public void Validate_WithCyclicRoleHierarchy_ShouldThrow()
+    {
+        var options = new GameGuild.Configuration.PresentationLayer.Authorization.AuthorizationOptions
+        {
+            RoleHierarchy = new Dictionary<string, List<string>>
+            {
+                ["Administrator"] = ["Editor"],
+                ["Editor"] = ["Administrator"]
+            }
+        };
+
+        var act = () => options.Validate();
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("*contains a cycle*");
+    }
 }
 
 public class HealthChecksOptionsTests

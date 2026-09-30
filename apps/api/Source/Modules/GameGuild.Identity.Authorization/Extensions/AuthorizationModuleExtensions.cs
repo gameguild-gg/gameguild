@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using PresentationAuthorizationOptions = GameGuild.Configuration.PresentationLayer.Authorization.AuthorizationOptions;
 
 namespace GameGuild.Identity.Authorization;
 
@@ -26,6 +27,9 @@ public static class AuthorizationModuleExtensions
     {
         services.Configure<TenancyOptions>(
             configuration.GetSection(TenancyOptions.SectionName));
+
+        services.Configure<PresentationAuthorizationOptions>(
+            configuration.GetSection(PresentationAuthorizationOptions.SectionName));
 
         services.Configure<AuthorizationCacheOptions>(
             configuration.GetSection(AuthorizationCacheOptions.SectionName));
