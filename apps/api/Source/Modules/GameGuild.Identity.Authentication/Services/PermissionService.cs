@@ -304,7 +304,7 @@ public class PermissionService(
 
     public Task<bool> HasResourcePermissionAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid resourceId, PermissionType permission)
         where TPermission : ResourcePermission<TResource>, new() where TResource : EntityBase
-        => CheckPermissionAsync(userId, tenantId, permission, resourceId: resourceId, resourceTypeName: typeof(TResource).Name);
+        => HasResourcePermissionWithTenantDenyAsync<TPermission, TResource>(userId, tenantId, resourceId, permission);
 
     public async Task<IEnumerable<PermissionType>> GetResourcePermissionsAsync<TPermission, TResource>(Guid? userId, Guid? tenantId, Guid resourceId)
         where TPermission : ResourcePermission<TResource>, new() where TResource : EntityBase
@@ -416,8 +416,8 @@ public class PermissionService(
         return permissions;
     }
 
-    public Task<bool> HasPermissionAsync(Guid? userId, Guid? tenantId, PermissionType permission, string? contentTypeName = null, Guid? resourceId = null, string? resourceTypeName = null)
-        => CheckPermissionAsync(userId, tenantId, permission, contentTypeName, resourceId, resourceTypeName);
+    public async Task<bool> HasPermissionAsync(Guid? userId, Guid? tenantId, PermissionType permission, string? contentTypeName = null, Guid? resourceId = null, string? resourceTypeName = null)
+        => await CheckPermissionAsync(userId, tenantId, permission, contentTypeName, resourceId, resourceTypeName).ConfigureAwait(false);
 
     public async Task<string> GetPermissionSourceAsync(Guid? userId, Guid? tenantId, PermissionType permission, string? contentTypeName = null, Guid? resourceId = null, string? resourceTypeName = null)
     {
@@ -757,6 +757,46 @@ public class PermissionService(
             .ConfigureAwait(false);
 
         return result[0].IsGranted;
+    }
+
+    private async Task<bool> HasResourcePermissionWithTenantDenyAsync<TPermission, TResource>(
+        Guid userId,
+        Guid? tenantId,
+        Guid resourceId,
+        PermissionType permission)
+        where TPermission : ResourcePermission<TResource>, new()
+        where TResource : EntityBase
+    {
+        var allowedPermissions = await GetEffectiveResourcePermissionsAsync<TPermission, TResource>(
+                userId,
+                tenantId,
+                resourceId)
+            .ConfigureAwait(false);
+
+        return allowedPermissions.Contains(permission) &&
+               !await IsDeniedByTenantPermissionAsync(userId, tenantId, permission).ConfigureAwait(false);
+    }
+
+    private async Task<bool> IsDeniedByTenantPermissionAsync(
+        Guid? userId,
+        Guid? tenantId,
+        PermissionType permission)
+    {
+        var grants = await context.Set<TenantPermission>()
+            .AsNoTracking()
+            .Where(grant =>
+                (grant.UserId == null && grant.TenantId == null) ||
+                (grant.TenantId == tenantId &&
+                 (grant.UserId == null || (userId.HasValue && grant.UserId == userId.Value))))
+            .ToListAsync()
+            .ConfigureAwait(false);
+        var request = new BulkPermissionCheckRequest(userId ?? Guid.Empty, tenantId, permission);
+
+        return grants.Any(grant =>
+            grant.IsActive &&
+            !grant.IsExpired() &&
+            TenantGrantApplies(grant, request) &&
+            ToPermissionTypes(grant.DenyPermissions).Contains(permission));
     }
 
     private static Expression<Func<TGrant, bool>> BuildPermissionGrantScopePredicate<TGrant>(

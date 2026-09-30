@@ -173,6 +173,10 @@ public sealed class PermissionServiceBulkCheckTests
                 Permissions = [nameof(PermissionType.Create), nameof(PermissionType.Edit)],
                 DenyPermissions = [nameof(PermissionType.Read), nameof(PermissionType.Publish)]
             });
+        var resourceId = Guid.NewGuid();
+        var resourceGrant = new GenericResourcePermission(userId, tenantId, resourceId, "Project");
+        resourceGrant.SetPermissions([PermissionType.Create]);
+        context.Set<GenericResourcePermission>().Add(resourceGrant);
         await context.SaveChangesAsync();
 
         var service = new PermissionService(context);
@@ -204,6 +208,11 @@ public sealed class PermissionServiceBulkCheckTests
         (await service.HasTenantPermissionAsync(userId, tenantId, PermissionType.Edit)).Should().BeTrue();
         (await service.HasPermissionAsync(userId, tenantId, PermissionType.Read)).Should().BeFalse();
         (await service.HasPermissionAsync(otherUserId, tenantId, PermissionType.Read)).Should().BeTrue();
+        (await service.HasResourcePermissionAsync<GenericResourcePermission, EntityBase>(
+            userId,
+            tenantId,
+            resourceId,
+            PermissionType.Create)).Should().BeFalse();
     }
 
     [Fact]
