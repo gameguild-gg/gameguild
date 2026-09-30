@@ -41,6 +41,10 @@ public static class OpenApiExtensions
     {
         options ??= OptionBuilderUtilities.CreateAndBind(configuration, "OpenApi", OpenApiOptions.CreateDefault);
         options.Validate();
+        services.TryAddSingleton(options);
+
+        if (!options.EnableOpenApi)
+            return services;
 
         // Add native .NET 9 OpenAPI support
         // JSON serialization options are configured globally in Program.cs
@@ -66,18 +70,7 @@ public static class OpenApiExtensions
                     {
                         c.SwaggerDoc(
                             description.GroupName,
-                            new OpenApiInfo
-                            {
-                                Title = options.Title,
-                                Version = ReleaseVersion,
-                                Description = options.Description,
-                                Contact = new OpenApiContact
-                                {
-                                    Name = options.ContactName,
-                                    Email = options.ContactEmail,
-                                    Url = !string.IsNullOrEmpty(options.ContactUrl) ? new Uri(options.ContactUrl) : null
-                                }
-                            }
+                            CreateDocumentInfo(options)
                         );
                     }
 
@@ -101,18 +94,7 @@ public static class OpenApiExtensions
                     // Fallback to single document when versioning is not configured
                     c.SwaggerDoc(
                         options.Version,
-                        new OpenApiInfo
-                        {
-                            Title = options.Title,
-                            Version = ReleaseVersion,
-                            Description = options.Description,
-                            Contact = new OpenApiContact
-                            {
-                                Name = options.ContactName,
-                                Email = options.ContactEmail,
-                                Url = !string.IsNullOrEmpty(options.ContactUrl) ? new Uri(options.ContactUrl) : null
-                            }
-                        }
+                        CreateDocumentInfo(options)
                     );
                 }
 
@@ -179,6 +161,7 @@ public static class OpenApiExtensions
                 c.OperationFilter<ModuleControllerTagOperationFilter>();
                 c.OperationFilter<AllowAnonymousOperationFilter>();
                 c.SchemaFilter<FlagsEnumSchemaFilter>();
+                c.DocumentFilter<OpenApiServerDocumentFilter>(options);
                 c.DocumentFilter<DeterministicOpenApiDocumentFilter>();
                 ApiProductComposition.Instance.ConfigureOpenApi(c);
 
@@ -213,6 +196,32 @@ public static class OpenApiExtensions
         );
 
         return services;
+    }
+
+    private static OpenApiInfo CreateDocumentInfo(OpenApiOptions options)
+    {
+        return new OpenApiInfo
+        {
+            Title = options.Title,
+            Version = string.IsNullOrWhiteSpace(options.MetadataVersion) ? ReleaseVersion : options.MetadataVersion,
+            Description = options.Description,
+            TermsOfService = string.IsNullOrWhiteSpace(options.TermsOfServiceUrl)
+                ? null
+                : new Uri(options.TermsOfServiceUrl),
+            Contact = new OpenApiContact
+            {
+                Name = options.ContactName,
+                Email = options.ContactEmail,
+                Url = string.IsNullOrWhiteSpace(options.ContactUrl) ? null : new Uri(options.ContactUrl)
+            },
+            License = string.IsNullOrWhiteSpace(options.LicenseName)
+                ? null
+                : new OpenApiLicense
+                {
+                    Name = options.LicenseName,
+                    Url = string.IsNullOrWhiteSpace(options.LicenseUrl) ? null : new Uri(options.LicenseUrl)
+                }
+        };
     }
 
     /// <summary>
@@ -313,6 +322,39 @@ internal sealed class OpenApiDocumentTransformer : Microsoft.AspNetCore.OpenApi.
     {
         // Document transformation is currently handled by the default pipeline.
         return Task.CompletedTask;
+    }
+}
+
+internal sealed class OpenApiServerDocumentFilter : IDocumentFilter
+{
+    private readonly OpenApiOptions _options;
+
+    public OpenApiServerDocumentFilter(OpenApiOptions options)
+    {
+        _options = options;
+    }
+
+    public void Apply(OpenApiDocument document, DocumentFilterContext context)
+    {
+        if (_options.Servers.Count == 0)
+            return;
+
+        document.Servers = _options.Servers
+            .Select(server => new OpenApiServer
+            {
+                Url = server.Url,
+                Description = server.Description,
+                Variables = server.Variables.ToDictionary(
+                    pair => pair.Key,
+                    pair => new OpenApiServerVariable
+                    {
+                        Default = pair.Value.Default,
+                        Description = pair.Value.Description,
+                        Enum = pair.Value.Enum.ToList()
+                    },
+                    StringComparer.Ordinal)
+            })
+            .ToList();
     }
 }
 
