@@ -4,6 +4,7 @@ using GameGuild.Configuration.InfrastructureLayer.RedisCaching;
 using GameGuild.Configuration.PresentationLayer.ResponseCaching;
 using GameGuild.CQRS;
 using GameGuild.CQRS.Implementation;
+using GameGuild.Identity.Authorization.Caching;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using StackExchange.Redis;
@@ -60,6 +61,7 @@ public static class CachingExtensions
             services.TryAddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(configurationOptions));
             services.AddSingleton(redisOptions);
             services.AddSingleton<ICacheService, RedisCacheService>();
+            services.AddAuthorizationRedisInvalidation(redisOptions.ConnectionString!, "gg:auth:");
 
             if (redisOptions.EnableHealthChecks)
             {

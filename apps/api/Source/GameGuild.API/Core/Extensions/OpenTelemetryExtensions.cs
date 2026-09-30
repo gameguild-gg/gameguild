@@ -76,25 +76,8 @@ public static class OpenTelemetryExtensions
                     .AddHttpClientInstrumentation()
                     .AddMeter(
                         "GameGuild.API.RateLimiting",
-                        "GameGuild.Identity.Authentication.PermissionBulkCheck");
-
-                if (options.ConsoleExporterEnabled)
-                {
-                    metrics.AddConsoleExporter();
-                }
-
-                if (!string.IsNullOrWhiteSpace(options.OtlpEndpoint))
-                {
-                    metrics.AddOtlpExporter(exporter =>
-                    {
-                        exporter.Endpoint = new Uri(options.OtlpEndpoint.Trim());
-                        exporter.Protocol = ResolveProtocol(options.OtlpProtocol);
-                    });
-                }
-            })
-            .WithMetrics(metrics =>
-            {
-                metrics.AddMeter("GameGuild.Identity.Authorization.Cache");
+                        "GameGuild.Identity.Authentication.PermissionBulkCheck",
+                        "GameGuild.Identity.Authorization.Cache");
 
                 if (options.ConsoleExporterEnabled)
                 {

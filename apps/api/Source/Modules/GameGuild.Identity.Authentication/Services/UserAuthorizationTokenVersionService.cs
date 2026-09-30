@@ -26,4 +26,32 @@ public sealed class UserAuthorizationTokenVersionService(IUserRepository userRep
         await userRepository.UpdateAsync(user, cancellationToken).ConfigureAwait(false);
         await userRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
+
+    public async Task IncrementManyAsync(IReadOnlyCollection<Guid> userIds, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(userIds);
+
+        var uniqueUserIds = userIds.Distinct().ToArray();
+        if (uniqueUserIds.Any(userId => userId == Guid.Empty))
+        {
+            throw new ArgumentException("User IDs cannot be empty.", nameof(userIds));
+        }
+
+        if (uniqueUserIds.Length == 0)
+        {
+            return;
+        }
+
+        var users = (await userRepository.GetByIdsAsync(uniqueUserIds, cancellationToken).ConfigureAwait(false)).ToArray();
+        foreach (var user in users)
+        {
+            user.IncrementTokenVersion();
+            await userRepository.UpdateAsync(user, cancellationToken).ConfigureAwait(false);
+        }
+
+        if (users.Length > 0)
+        {
+            await userRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+    }
 }

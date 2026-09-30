@@ -118,6 +118,20 @@ public static class CachingServiceExtensions
             options.InstanceName = instanceName;
         });
 
+        return services.AddAuthorizationRedisInvalidation(redisConnectionString, instanceName);
+    }
+
+    /// <summary>
+    ///     Adds authorization Redis Pub/Sub invalidation using the host's existing distributed cache.
+    /// </summary>
+    public static IServiceCollection AddAuthorizationRedisInvalidation(
+        this IServiceCollection services,
+        string redisConnectionString,
+        string instanceName = "gg:auth:")
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(redisConnectionString);
+        ArgumentException.ThrowIfNullOrWhiteSpace(instanceName);
+
         services.Configure<AuthorizationCacheOptions>(options =>
         {
             options.UseDistributedCache = true;
@@ -141,7 +155,8 @@ public static class CachingServiceExtensions
             return ConnectionMultiplexer.Connect(configuration);
         });
         services.TryAddSingleton<ICacheInvalidationPublisher, RedisPermissionCacheInvalidationPublisher>();
-        services.AddHostedService<RedisPermissionCacheInvalidationSubscriber>();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<Microsoft.Extensions.Hosting.IHostedService,
+            RedisPermissionCacheInvalidationSubscriber>());
 
         return services;
     }

@@ -118,9 +118,9 @@ public sealed class RedisPermissionCacheInvalidationSubscriber : BackgroundServi
         {
             var invalidationEvent = JsonSerializer.Deserialize<CacheInvalidationEvent>(payload, JsonOptions);
             if (invalidationEvent is null || !Enum.IsDefined(invalidationEvent.Type) ||
-                invalidationEvent.TenantId == Guid.Empty ||
-                invalidationEvent.Type == CacheInvalidationType.Batch &&
-                !CacheInvalidationService.IsValidBatchTargets(invalidationEvent.Targets))
+                (invalidationEvent.Type != CacheInvalidationType.Global && invalidationEvent.TenantId == Guid.Empty) ||
+                (invalidationEvent.Type == CacheInvalidationType.Batch &&
+                 !CacheInvalidationService.IsValidBatchTargets(invalidationEvent.Targets)))
             {
                 _logger.LogWarning("Ignoring malformed permission cache invalidation event");
                 return;

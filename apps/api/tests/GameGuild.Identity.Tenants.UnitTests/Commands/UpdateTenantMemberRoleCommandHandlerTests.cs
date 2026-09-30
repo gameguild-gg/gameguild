@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Authorization.Caching;
 using Moq;
 using Xunit;
@@ -10,6 +11,7 @@ public class UpdateTenantMemberRoleCommandHandlerTests
     private readonly Mock<ITenantMemberRepository> _memberRepositoryMock;
     private readonly Mock<ITenantRepository> _tenantRepositoryMock;
     private readonly Mock<ICacheInvalidationService> _cacheInvalidationServiceMock;
+    private readonly Mock<IUserAuthorizationTokenVersionService> _tokenVersionServiceMock;
     private readonly UpdateTenantMemberRoleCommandHandler _handler;
 
     public UpdateTenantMemberRoleCommandHandlerTests()
@@ -17,10 +19,15 @@ public class UpdateTenantMemberRoleCommandHandlerTests
         _memberRepositoryMock = new Mock<ITenantMemberRepository>();
         _tenantRepositoryMock = new Mock<ITenantRepository>();
         _cacheInvalidationServiceMock = new Mock<ICacheInvalidationService>();
+        _tokenVersionServiceMock = new Mock<IUserAuthorizationTokenVersionService>();
+        _tokenVersionServiceMock
+            .Setup(service => service.IncrementManyAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
         _handler = new UpdateTenantMemberRoleCommandHandler(
             _memberRepositoryMock.Object,
             _tenantRepositoryMock.Object,
-            _cacheInvalidationServiceMock.Object);
+            _cacheInvalidationServiceMock.Object,
+            _tokenVersionServiceMock.Object);
     }
 
     [Fact]
@@ -66,6 +73,11 @@ public class UpdateTenantMemberRoleCommandHandlerTests
         _memberRepositoryMock.InSequence(sequence)
             .Setup(r => r.UpdateAsync(member, It.IsAny<CancellationToken>()))
             .ReturnsAsync(member);
+        _tokenVersionServiceMock.InSequence(sequence)
+            .Setup(service => service.IncrementManyAsync(
+                It.Is<IReadOnlyCollection<Guid>>(userIds => userIds.SequenceEqual(new[] { member.UserId })),
+                It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
         _cacheInvalidationServiceMock.InSequence(sequence)
             .Setup(s => s.InvalidateUserAsync(member.UserId, member.TenantId, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
@@ -78,6 +90,9 @@ public class UpdateTenantMemberRoleCommandHandlerTests
         _cacheInvalidationServiceMock.Verify(
             s => s.InvalidateUserAsync(member.UserId, member.TenantId, It.IsAny<CancellationToken>()),
             Times.Once);
+        _tokenVersionServiceMock.Verify(service => service.IncrementManyAsync(
+            It.Is<IReadOnlyCollection<Guid>>(userIds => userIds.SequenceEqual(new[] { member.UserId })),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using GameGuild.CQRS;
+using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Identity.Users;
 using GameGuild.Identity.Authorization.Caching;
@@ -234,7 +235,9 @@ public sealed class AssignRoleToUserCommandHandler : ICommandHandler<AssignRoleT
 public sealed class BulkAssignRolesCommandHandler(
     IRoleRepository roleRepository,
     IActorContextAccessor actorContextAccessor,
-    IUserRepository userRepository
+    IUserRepository userRepository,
+    IUserAuthorizationTokenVersionService tokenVersionService,
+    ICacheInvalidationService cacheInvalidationService
 ) : ICommandHandler<BulkAssignRolesCommand, BulkRoleAssignmentResult>
 {
     private const int MaximumUsersPerRequest = 500;
@@ -298,6 +301,21 @@ public sealed class BulkAssignRolesCommandHandler(
                 cancellationToken)
             .ConfigureAwait(false);
 
+        var changedUserIds = outcomes
+            .Where(result => result.Status is BulkRoleAssignmentStatus.Assigned or BulkRoleAssignmentStatus.Reactivated)
+            .Select(result => result.UserId)
+            .Distinct()
+            .ToArray();
+        if (changedUserIds.Length > 0)
+        {
+            await tokenVersionService.IncrementManyAsync(changedUserIds, cancellationToken).ConfigureAwait(false);
+            await RolePermissionCacheInvalidation.InvalidateRoleForUsersAsync(
+                cacheInvalidationService,
+                role,
+                changedUserIds,
+                cancellationToken).ConfigureAwait(false);
+        }
+
         return new BulkRoleAssignmentResult
         {
             RoleId = role.Id,
@@ -356,6 +374,38 @@ public sealed class RemoveRoleFromUserCommandHandler : ICommandHandler<RemoveRol
 
 internal static class RolePermissionCacheInvalidation
 {
+    public static async Task InvalidateRoleForUsersAsync(
+        ICacheInvalidationService cacheInvalidationService,
+        Role role,
+        IReadOnlyCollection<Guid> userIds,
+        CancellationToken cancellationToken)
+    {
+        if (userIds.Count == 0)
+        {
+            return;
+        }
+
+        if (role.TenantId is not { } tenantId)
+        {
+            await cacheInvalidationService.InvalidateGlobalAsync(cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        // A batch is limited to 500 targets and each chunk also carries the role dependency.
+        foreach (var chunk in userIds.Chunk(499))
+        {
+            var targets = chunk
+                .Select(userId => new CacheInvalidationTarget(CacheInvalidationTargetType.User, UserId: userId))
+                .Append(new CacheInvalidationTarget(
+                    CacheInvalidationTargetType.Dependency,
+                    DependencyKind: "role",
+                    DependencyId: role.Id))
+                .ToArray();
+            await cacheInvalidationService.InvalidateBatchAsync(tenantId, targets, cancellationToken)
+                .ConfigureAwait(false);
+        }
+    }
+
     public static Task InvalidateRoleAsync(
         ICacheInvalidationService? cacheInvalidationService,
         Role role,

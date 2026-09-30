@@ -1031,4 +1031,12 @@ internal sealed class RecordingUserAuthorizationTokenVersionService : IUserAutho
 
         InvalidatedUserIds.Add(userId);
     }
+
+    public async Task IncrementManyAsync(IReadOnlyCollection<Guid> userIds, CancellationToken cancellationToken)
+    {
+        foreach (var userId in userIds.Distinct())
+        {
+            await IncrementAsync(userId, cancellationToken);
+        }
+    }
 }

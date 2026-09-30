@@ -129,9 +129,8 @@ public sealed class CacheInvalidationDistributedTests
 
         var expected = new CacheInvalidationEvent
         {
-            Type = CacheInvalidationType.User,
-            TenantId = Guid.NewGuid(),
-            UserId = Guid.NewGuid(),
+            Type = CacheInvalidationType.Global,
+            TenantId = Guid.Empty,
             OriginInstanceId = "instance-b"
         };
         var handled = new TaskCompletionSource<CacheInvalidationEvent>(

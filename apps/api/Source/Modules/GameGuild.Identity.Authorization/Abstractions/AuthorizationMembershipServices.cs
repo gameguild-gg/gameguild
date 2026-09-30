@@ -17,4 +17,7 @@ public interface IUserAuthorizationTokenVersionService
     Task IncrementAsync(Guid userId);
 
     Task IncrementAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>Advances authorization token versions for several users with one persistence operation.</summary>
+    Task IncrementManyAsync(IReadOnlyCollection<Guid> userIds, CancellationToken cancellationToken);
 }

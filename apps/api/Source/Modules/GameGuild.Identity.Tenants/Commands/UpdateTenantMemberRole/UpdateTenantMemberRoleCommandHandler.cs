@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Authorization.Caching;
 
 namespace GameGuild.Identity.Tenants;
@@ -9,7 +10,8 @@ namespace GameGuild.Identity.Tenants;
 public sealed class UpdateTenantMemberRoleCommandHandler(
     ITenantMemberRepository memberRepository,
     ITenantRepository tenantRepository,
-    ICacheInvalidationService cacheInvalidationService) : ICommandHandler<UpdateTenantMemberRoleCommand, UpdateTenantMemberRoleResponse>
+    ICacheInvalidationService cacheInvalidationService,
+    IUserAuthorizationTokenVersionService tokenVersionService) : ICommandHandler<UpdateTenantMemberRoleCommand, UpdateTenantMemberRoleResponse>
 {
     public async Task<UpdateTenantMemberRoleResponse> Handle(UpdateTenantMemberRoleCommand request, CancellationToken cancellationToken)
     {
@@ -55,6 +57,7 @@ public sealed class UpdateTenantMemberRoleCommandHandler(
 
         member.UpdateRole(request.NewRole);
         await memberRepository.UpdateAsync(member, cancellationToken).ConfigureAwait(false);
+        await tokenVersionService.IncrementManyAsync([member.UserId], cancellationToken).ConfigureAwait(false);
         await cacheInvalidationService
             .InvalidateUserAsync(member.UserId, member.TenantId, cancellationToken)
             .ConfigureAwait(false);
@@ -137,6 +140,7 @@ public sealed class UpdateTenantMemberRoleCommandHandler(
                 .ConfigureAwait(false);
         }
 
+        await tokenVersionService.IncrementManyAsync([defaultMembership.UserId], cancellationToken).ConfigureAwait(false);
         await cacheInvalidationService
             .InvalidateUserAsync(defaultMembership.UserId, defaultMembership.TenantId, cancellationToken)
             .ConfigureAwait(false);
