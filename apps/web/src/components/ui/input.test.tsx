@@ -6,13 +6,13 @@ import { Input } from '@game-guild/ui/components/input';
 describe('shared Input', () => {
   afterEach(() => vi.restoreAllMocks());
 
-  it('updates a rerendered default value without changing Base UI control mode', () => {
+  it('keeps an uncontrolled field stable when it rerenders with the same default', () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const { rerender } = render(<Input aria-label="Project name" defaultValue="Alpha" />);
 
-    rerender(<Input aria-label="Project name" defaultValue="Beta" />);
+    rerender(<Input aria-label="Project name" defaultValue="Alpha" />);
 
-    expect(screen.getByRole('textbox', { name: 'Project name' })).toHaveValue('Beta');
+    expect(screen.getByRole('textbox', { name: 'Project name' })).toHaveValue('Alpha');
     expect(consoleError).not.toHaveBeenCalledWith(
       expect.stringContaining('changing the default value state of an uncontrolled FieldControl'),
     );

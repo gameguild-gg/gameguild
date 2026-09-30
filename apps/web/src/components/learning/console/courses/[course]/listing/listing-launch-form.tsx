@@ -100,7 +100,7 @@ export function ListingLaunchForm({ course }: ListingLaunchFormProps) {
               onValueChange={(value) => setVisibility(value ?? "public")}
             >
               <SelectTrigger id="catalog-visibility">
-                <SelectValue />
+                <SelectValue>{visibility === 'public' ? 'Public' : 'Private'}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
