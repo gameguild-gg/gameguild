@@ -1,7 +1,9 @@
 using System.Text.Json;
 using GameGuild.CQRS;
+using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Identity.Users;
+using GameGuild.Identity.Authorization.Caching;
 
 namespace GameGuild.Identity.Authentication;
 
@@ -47,12 +49,25 @@ public sealed class CreateRoleCommandHandler(IRoleRepository roleRepository) : I
 /// <summary>
 ///     Handler for UpdateRoleCommand
 /// </summary>
-public sealed class UpdateRoleCommandHandler(IRoleRepository roleRepository) : ICommandHandler<UpdateRoleCommand, RoleDto>
+public sealed class UpdateRoleCommandHandler : ICommandHandler<UpdateRoleCommand, RoleDto>
 {
+    private readonly IRoleRepository _roleRepository;
+    private readonly ICacheInvalidationService? _cacheInvalidationService;
+
+    public UpdateRoleCommandHandler(IRoleRepository roleRepository) : this(roleRepository, null)
+    {
+    }
+
+    public UpdateRoleCommandHandler(IRoleRepository roleRepository, ICacheInvalidationService? cacheInvalidationService)
+    {
+        _roleRepository = roleRepository;
+        _cacheInvalidationService = cacheInvalidationService;
+    }
+
     public async Task<RoleDto> Handle(UpdateRoleCommand request, CancellationToken cancellationToken)
     {
         // Get existing role
-        var role = await roleRepository.GetByIdAsync(request.RoleId, cancellationToken).ConfigureAwait(false);
+        var role = await _roleRepository.GetByIdAsync(request.RoleId, cancellationToken).ConfigureAwait(false);
         if (role == null)
         {
             throw new InvalidOperationException($"Role with ID '{request.RoleId}' not found.");
@@ -61,7 +76,7 @@ public sealed class UpdateRoleCommandHandler(IRoleRepository roleRepository) : I
         // Check if name is being changed and if new name already exists
         if (request.Name != null && request.Name != role.Name)
         {
-            var exists = await roleRepository.ExistsByNameAsync(request.Name, role.TenantId, request.RoleId, cancellationToken).ConfigureAwait(false);
+            var exists = await _roleRepository.ExistsByNameAsync(request.Name, role.TenantId, request.RoleId, cancellationToken).ConfigureAwait(false);
             if (exists)
             {
                 throw new InvalidOperationException($"Role with name '{request.Name}' already exists in this tenant.");
@@ -86,7 +101,9 @@ public sealed class UpdateRoleCommandHandler(IRoleRepository roleRepository) : I
         }
 
         // Save changes
-        await roleRepository.UpdateAsync(role, cancellationToken).ConfigureAwait(false);
+        await _roleRepository.UpdateAsync(role, cancellationToken).ConfigureAwait(false);
+        await RolePermissionCacheInvalidation.InvalidateRoleAsync(_cacheInvalidationService, role, null, cancellationToken)
+            .ConfigureAwait(false);
 
         // Return DTO
         return new RoleDto
@@ -106,19 +123,34 @@ public sealed class UpdateRoleCommandHandler(IRoleRepository roleRepository) : I
 /// <summary>
 ///     Handler for DeleteRoleCommand
 /// </summary>
-public sealed class DeleteRoleCommandHandler(IRoleRepository roleRepository) : ICommandHandler<DeleteRoleCommand, bool>
+public sealed class DeleteRoleCommandHandler : ICommandHandler<DeleteRoleCommand, bool>
 {
+    private readonly IRoleRepository _roleRepository;
+    private readonly ICacheInvalidationService? _cacheInvalidationService;
+
+    public DeleteRoleCommandHandler(IRoleRepository roleRepository) : this(roleRepository, null)
+    {
+    }
+
+    public DeleteRoleCommandHandler(IRoleRepository roleRepository, ICacheInvalidationService? cacheInvalidationService)
+    {
+        _roleRepository = roleRepository;
+        _cacheInvalidationService = cacheInvalidationService;
+    }
+
     public async Task<bool> Handle(DeleteRoleCommand request, CancellationToken cancellationToken)
     {
         // Check if role exists
-        var role = await roleRepository.GetByIdAsync(request.RoleId, cancellationToken).ConfigureAwait(false);
+        var role = await _roleRepository.GetByIdAsync(request.RoleId, cancellationToken).ConfigureAwait(false);
         if (role == null)
         {
             throw new InvalidOperationException($"Role with ID '{request.RoleId}' not found.");
         }
 
         // Delete role
-        await roleRepository.DeleteAsync(request.RoleId, cancellationToken).ConfigureAwait(false);
+        await _roleRepository.DeleteAsync(request.RoleId, cancellationToken).ConfigureAwait(false);
+        await RolePermissionCacheInvalidation.InvalidateRoleAsync(_cacheInvalidationService, role, null, cancellationToken)
+            .ConfigureAwait(false);
 
         return true;
     }
@@ -127,19 +159,32 @@ public sealed class DeleteRoleCommandHandler(IRoleRepository roleRepository) : I
 /// <summary>
 ///     Handler for AssignRoleToUserCommand
 /// </summary>
-public sealed class AssignRoleToUserCommandHandler(IRoleRepository roleRepository) : ICommandHandler<AssignRoleToUserCommand, UserRoleDto>
+public sealed class AssignRoleToUserCommandHandler : ICommandHandler<AssignRoleToUserCommand, UserRoleDto>
 {
+    private readonly IRoleRepository _roleRepository;
+    private readonly ICacheInvalidationService? _cacheInvalidationService;
+
+    public AssignRoleToUserCommandHandler(IRoleRepository roleRepository) : this(roleRepository, null)
+    {
+    }
+
+    public AssignRoleToUserCommandHandler(IRoleRepository roleRepository, ICacheInvalidationService? cacheInvalidationService)
+    {
+        _roleRepository = roleRepository;
+        _cacheInvalidationService = cacheInvalidationService;
+    }
+
     public async Task<UserRoleDto> Handle(AssignRoleToUserCommand request, CancellationToken cancellationToken)
     {
         // Check if role exists
-        var role = await roleRepository.GetByIdAsync(request.RoleId, cancellationToken).ConfigureAwait(false);
+        var role = await _roleRepository.GetByIdAsync(request.RoleId, cancellationToken).ConfigureAwait(false);
         if (role == null)
         {
             throw new InvalidOperationException($"Role with ID '{request.RoleId}' not found.");
         }
 
         // Check if user already has this role
-        var hasRole = await roleRepository.UserHasRoleAsync(request.UserId, request.RoleId, cancellationToken).ConfigureAwait(false);
+        var hasRole = await _roleRepository.UserHasRoleAsync(request.UserId, request.RoleId, cancellationToken).ConfigureAwait(false);
         if (hasRole)
         {
             throw new InvalidOperationException($"User already has role '{role.Name}'.");
@@ -152,7 +197,12 @@ public sealed class AssignRoleToUserCommandHandler(IRoleRepository roleRepositor
         };
 
         // Save to database
-        var createdUserRole = await roleRepository.AssignRoleToUserAsync(userRole, cancellationToken).ConfigureAwait(false);
+        var createdUserRole = await _roleRepository.AssignRoleToUserAsync(userRole, cancellationToken).ConfigureAwait(false);
+        await RolePermissionCacheInvalidation.InvalidateRoleAsync(
+            _cacheInvalidationService,
+            role,
+            request.UserId,
+            cancellationToken).ConfigureAwait(false);
 
         // Return DTO
         return new UserRoleDto
@@ -185,7 +235,9 @@ public sealed class AssignRoleToUserCommandHandler(IRoleRepository roleRepositor
 public sealed class BulkAssignRolesCommandHandler(
     IRoleRepository roleRepository,
     IActorContextAccessor actorContextAccessor,
-    IUserRepository userRepository
+    IUserRepository userRepository,
+    IUserAuthorizationTokenVersionService tokenVersionService,
+    ICacheInvalidationService cacheInvalidationService
 ) : ICommandHandler<BulkAssignRolesCommand, BulkRoleAssignmentResult>
 {
     private const int MaximumUsersPerRequest = 500;
@@ -249,6 +301,21 @@ public sealed class BulkAssignRolesCommandHandler(
                 cancellationToken)
             .ConfigureAwait(false);
 
+        var changedUserIds = outcomes
+            .Where(result => result.Status is BulkRoleAssignmentStatus.Assigned or BulkRoleAssignmentStatus.Reactivated)
+            .Select(result => result.UserId)
+            .Distinct()
+            .ToArray();
+        if (changedUserIds.Length > 0)
+        {
+            await tokenVersionService.IncrementManyAsync(changedUserIds, cancellationToken).ConfigureAwait(false);
+            await RolePermissionCacheInvalidation.InvalidateRoleForUsersAsync(
+                cacheInvalidationService,
+                role,
+                changedUserIds,
+                cancellationToken).ConfigureAwait(false);
+        }
+
         return new BulkRoleAssignmentResult
         {
             RoleId = role.Id,
@@ -265,20 +332,113 @@ public sealed class BulkAssignRolesCommandHandler(
 /// <summary>
 ///     Handler for RemoveRoleFromUserCommand
 /// </summary>
-public sealed class RemoveRoleFromUserCommandHandler(IRoleRepository roleRepository) : ICommandHandler<RemoveRoleFromUserCommand, bool>
+public sealed class RemoveRoleFromUserCommandHandler : ICommandHandler<RemoveRoleFromUserCommand, bool>
 {
+    private readonly IRoleRepository _roleRepository;
+    private readonly ICacheInvalidationService? _cacheInvalidationService;
+
+    public RemoveRoleFromUserCommandHandler(IRoleRepository roleRepository) : this(roleRepository, null)
+    {
+    }
+
+    public RemoveRoleFromUserCommandHandler(IRoleRepository roleRepository, ICacheInvalidationService? cacheInvalidationService)
+    {
+        _roleRepository = roleRepository;
+        _cacheInvalidationService = cacheInvalidationService;
+    }
+
     public async Task<bool> Handle(RemoveRoleFromUserCommand request, CancellationToken cancellationToken)
     {
         // Check if user has this role
-        var hasRole = await roleRepository.UserHasRoleAsync(request.UserId, request.RoleId, cancellationToken).ConfigureAwait(false);
+        var hasRole = await _roleRepository.UserHasRoleAsync(request.UserId, request.RoleId, cancellationToken).ConfigureAwait(false);
         if (!hasRole)
         {
             throw new InvalidOperationException($"User does not have this role.");
         }
 
         // Remove role from user
-        await roleRepository.RemoveRoleFromUserAsync(request.UserId, request.RoleId, cancellationToken).ConfigureAwait(false);
+        var role = await _roleRepository.GetByIdAsync(request.RoleId, cancellationToken).ConfigureAwait(false);
+        await _roleRepository.RemoveRoleFromUserAsync(request.UserId, request.RoleId, cancellationToken).ConfigureAwait(false);
+        if (role is not null)
+        {
+            await RolePermissionCacheInvalidation.InvalidateRoleAsync(
+                _cacheInvalidationService,
+                role,
+                request.UserId,
+                cancellationToken).ConfigureAwait(false);
+        }
 
         return true;
+    }
+}
+
+internal static class RolePermissionCacheInvalidation
+{
+    public static async Task InvalidateRoleForUsersAsync(
+        ICacheInvalidationService cacheInvalidationService,
+        Role role,
+        IReadOnlyCollection<Guid> userIds,
+        CancellationToken cancellationToken)
+    {
+        if (userIds.Count == 0)
+        {
+            return;
+        }
+
+        if (role.TenantId is not { } tenantId)
+        {
+            await cacheInvalidationService.InvalidateGlobalAsync(cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        // A batch is limited to 500 targets and each chunk also carries the role dependency.
+        foreach (var chunk in userIds.Chunk(499))
+        {
+            var targets = chunk
+                .Select(userId => new CacheInvalidationTarget(CacheInvalidationTargetType.User, UserId: userId))
+                .Append(new CacheInvalidationTarget(
+                    CacheInvalidationTargetType.Dependency,
+                    DependencyKind: "role",
+                    DependencyId: role.Id))
+                .ToArray();
+            await cacheInvalidationService.InvalidateBatchAsync(tenantId, targets, cancellationToken)
+                .ConfigureAwait(false);
+        }
+    }
+
+    public static Task InvalidateRoleAsync(
+        ICacheInvalidationService? cacheInvalidationService,
+        Role role,
+        Guid? userId,
+        CancellationToken cancellationToken)
+    {
+        if (cacheInvalidationService is null)
+        {
+            return Task.CompletedTask;
+        }
+
+        if (role.TenantId is not { } tenantId)
+        {
+            return cacheInvalidationService.InvalidateGlobalAsync(cancellationToken);
+        }
+
+        var targets = userId.HasValue
+            ? new[]
+            {
+                new CacheInvalidationTarget(CacheInvalidationTargetType.User, UserId: userId),
+                new CacheInvalidationTarget(
+                    CacheInvalidationTargetType.Dependency,
+                    DependencyKind: "role",
+                    DependencyId: role.Id)
+            }
+            : new[]
+            {
+                new CacheInvalidationTarget(
+                    CacheInvalidationTargetType.Dependency,
+                    DependencyKind: "role",
+                    DependencyId: role.Id)
+            };
+
+        return cacheInvalidationService.InvalidateBatchAsync(tenantId, targets, cancellationToken);
     }
 }

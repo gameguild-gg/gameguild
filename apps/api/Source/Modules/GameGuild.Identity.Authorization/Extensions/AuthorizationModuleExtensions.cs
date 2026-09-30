@@ -89,8 +89,24 @@ public static class AuthorizationModuleExtensions
                 var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<AuthorizationCacheOptions>>();
                 var hybridCache = sp.GetService<IHybridPermissionCache>();
                 var metrics = sp.GetService<ICacheMetricsService>();
-                return new CachedAccessControlListService(innerService, cache, tenantVersionStore, userVersionStore, options, hybridCache, metrics);
+                var keyTracker = sp.GetRequiredService<IPermissionCacheKeyTracker>();
+                var invalidationService = sp.GetRequiredService<ICacheInvalidationService>();
+                var popularityTracker = sp.GetService<IPermissionCachePopularityTracker>();
+                return new CachedAccessControlListService(
+                    innerService,
+                    cache,
+                    tenantVersionStore,
+                    userVersionStore,
+                    options,
+                    hybridCache,
+                    metrics,
+                    keyTracker,
+                    invalidationService,
+                    popularityTracker);
             });
+
+            services.AddScoped<IPermissionCacheWarmupService, PermissionCacheWarmupService>();
+            services.AddHostedService<AutomaticPermissionCacheWarmupService>();
         }
         else
         {

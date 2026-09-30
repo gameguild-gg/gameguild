@@ -1,4 +1,6 @@
 using FluentAssertions;
+using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Authorization.Caching;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Identity.Users;
 using Moq;
@@ -11,6 +13,20 @@ public sealed class BulkAssignRolesCommandHandlerTests
     private readonly Mock<IRoleRepository> _repository = new();
     private readonly Mock<IActorContextAccessor> _actorAccessor = new();
     private readonly Mock<IUserRepository> _userRepository = new();
+    private readonly Mock<IUserAuthorizationTokenVersionService> _tokenVersionService = new();
+    private readonly Mock<ICacheInvalidationService> _cacheInvalidationService = new();
+
+    public BulkAssignRolesCommandHandlerTests()
+    {
+        _tokenVersionService.Setup(service => service.IncrementManyAsync(
+                It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _cacheInvalidationService.Setup(service => service.InvalidateGlobalAsync(It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _cacheInvalidationService.Setup(service => service.InvalidateBatchAsync(
+                It.IsAny<Guid>(), It.IsAny<IReadOnlyCollection<CacheInvalidationTarget>>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+    }
 
     [Fact]
     public async Task Handle_SystemAdminAssignsOnceAndReturnsPerUserOutcomes()
@@ -40,7 +56,7 @@ public sealed class BulkAssignRolesCommandHandlerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { new User { Id = firstUserId }, new User { Id = secondUserId } });
 
-        var handler = new BulkAssignRolesCommandHandler(_repository.Object, _actorAccessor.Object, _userRepository.Object);
+        var handler = CreateHandler();
         var result = await handler.Handle(new BulkAssignRolesCommand
         {
             RoleId = roleId,
@@ -61,13 +77,17 @@ public sealed class BulkAssignRolesCommandHandlerTests
             actorId,
             expiresAt,
             It.IsAny<CancellationToken>()), Times.Once);
+        _tokenVersionService.Verify(service => service.IncrementManyAsync(
+            It.Is<IReadOnlyCollection<Guid>>(userIds => userIds.SequenceEqual(new[] { firstUserId })),
+            It.IsAny<CancellationToken>()), Times.Once);
+        _cacheInvalidationService.Verify(service => service.InvalidateGlobalAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task Handle_NonSystemAdminIsDeniedBeforeRoleLookup()
     {
         SetActor(ActorContextBuilder.ForUser(Guid.NewGuid()).WithRole("TenantAdmin").Build());
-        var handler = new BulkAssignRolesCommandHandler(_repository.Object, _actorAccessor.Object, _userRepository.Object);
+        var handler = CreateHandler();
 
         var act = () => handler.Handle(new BulkAssignRolesCommand
         {
@@ -88,7 +108,7 @@ public sealed class BulkAssignRolesCommandHandlerTests
     public async Task Handle_RejectsInvalidBatchBeforeLoadingRole()
     {
         SetActor(ActorContextBuilder.ForUser(Guid.NewGuid()).WithRole("SystemAdmin").Build());
-        var handler = new BulkAssignRolesCommandHandler(_repository.Object, _actorAccessor.Object, _userRepository.Object);
+        var handler = CreateHandler();
 
         var act = () => handler.Handle(new BulkAssignRolesCommand
         {
@@ -106,7 +126,7 @@ public sealed class BulkAssignRolesCommandHandlerTests
     public async Task Handle_RejectsEmptyRoleIdBeforeRepositoryReads()
     {
         SetActor(ActorContextBuilder.ForUser(Guid.NewGuid()).WithRole("SystemAdmin").Build());
-        var handler = new BulkAssignRolesCommandHandler(_repository.Object, _actorAccessor.Object, _userRepository.Object);
+        var handler = CreateHandler();
 
         var act = () => handler.Handle(new BulkAssignRolesCommand
         {
@@ -124,7 +144,7 @@ public sealed class BulkAssignRolesCommandHandlerTests
     public async Task Handle_RejectsExpiredAssignmentBeforeRepositoryReads()
     {
         SetActor(ActorContextBuilder.ForUser(Guid.NewGuid()).WithRole("SystemAdmin").Build());
-        var handler = new BulkAssignRolesCommandHandler(_repository.Object, _actorAccessor.Object, _userRepository.Object);
+        var handler = CreateHandler();
 
         var act = () => handler.Handle(new BulkAssignRolesCommand
         {
@@ -146,7 +166,7 @@ public sealed class BulkAssignRolesCommandHandlerTests
         var roleId = Guid.NewGuid();
         _repository.Setup(repository => repository.GetByIdAsync(roleId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Role("Archived", "Inactive", null) { Id = roleId, IsActive = false });
-        var handler = new BulkAssignRolesCommandHandler(_repository.Object, _actorAccessor.Object, _userRepository.Object);
+        var handler = CreateHandler();
 
         var act = () => handler.Handle(new BulkAssignRolesCommand
         {
@@ -167,7 +187,7 @@ public sealed class BulkAssignRolesCommandHandlerTests
     public async Task Handle_RejectsBatchOutsideSupportedBoundsBeforeRepositoryReads(int count)
     {
         SetActor(ActorContextBuilder.ForUser(Guid.NewGuid()).WithRole("SystemAdmin").Build());
-        var handler = new BulkAssignRolesCommandHandler(_repository.Object, _actorAccessor.Object, _userRepository.Object);
+        var handler = CreateHandler();
 
         var act = () => handler.Handle(new BulkAssignRolesCommand
         {
@@ -193,7 +213,7 @@ public sealed class BulkAssignRolesCommandHandlerTests
         _userRepository.Setup(repository => repository.GetByIdsAsync(
                 It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { new User { Id = knownUserId } });
-        var handler = new BulkAssignRolesCommandHandler(_repository.Object, _actorAccessor.Object, _userRepository.Object);
+        var handler = CreateHandler();
 
         var act = () => handler.Handle(new BulkAssignRolesCommand
         {
@@ -226,7 +246,7 @@ public sealed class BulkAssignRolesCommandHandlerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(userIds.Select(userId => new BulkRoleAssignmentItemResult(
                 userId, Guid.NewGuid(), BulkRoleAssignmentStatus.Assigned, SystemClock.UtcNow, null)).ToArray());
-        var handler = new BulkAssignRolesCommandHandler(_repository.Object, _actorAccessor.Object, _userRepository.Object);
+        var handler = CreateHandler();
 
         var result = await handler.Handle(new BulkAssignRolesCommand { RoleId = roleId, UserIds = userIds.ToList() }, CancellationToken.None);
 
@@ -236,4 +256,8 @@ public sealed class BulkAssignRolesCommandHandlerTests
     }
 
     private void SetActor(ActorContext actor) => _actorAccessor.Setup(accessor => accessor.ActorContext).Returns(actor);
+
+    private BulkAssignRolesCommandHandler CreateHandler()
+        => new(_repository.Object, _actorAccessor.Object, _userRepository.Object,
+            _tokenVersionService.Object, _cacheInvalidationService.Object);
 }

@@ -256,6 +256,33 @@ public class DiExtensionsAndCachingTests
     }
 
     [Fact]
+    public void AuthorizationCacheOptions_Validate_RequiresDistributedTtlToCoverEveryL1CacheType()
+    {
+        var optionsWithLongerPermissionTtl = new AuthorizationCacheOptions
+        {
+            PermissionTtlSeconds = 601,
+            DistributedCacheTtlSeconds = 600
+        };
+        var optionsWithLongerAclTtl = new AuthorizationCacheOptions
+        {
+            AccessControlListTtlSeconds = 601,
+            DistributedCacheTtlSeconds = 600
+        };
+        var optionsWithLongerRulesetTtl = new AuthorizationCacheOptions
+        {
+            RulesetTtlSeconds = 601,
+            DistributedCacheTtlSeconds = 600
+        };
+
+        optionsWithLongerPermissionTtl.Invoking(options => options.Validate())
+            .Should().Throw<InvalidOperationException>();
+        optionsWithLongerAclTtl.Invoking(options => options.Validate())
+            .Should().Throw<InvalidOperationException>();
+        optionsWithLongerRulesetTtl.Invoking(options => options.Validate())
+            .Should().Throw<InvalidOperationException>();
+    }
+
+    [Fact]
     public void AuthorizationCacheOptions_SetProperties_RoundTrips()
     {
         var opts = new AuthorizationCacheOptions

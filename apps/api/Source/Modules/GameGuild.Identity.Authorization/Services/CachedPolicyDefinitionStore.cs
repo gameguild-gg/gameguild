@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using GameGuild.Configuration.PresentationLayer.Authorization;
 using GameGuild.Identity.Authorization.Caching;
 using Microsoft.Extensions.Caching.Memory;
@@ -67,10 +68,16 @@ public sealed class CachedPolicyDefinitionStore : IPolicyDefinitionStore
         var cacheKey = BuildCacheKey(policyName, effectiveTenantId, version);
 
         // Try L1 cache first
+        var l1LookupStartedAt = Stopwatch.GetTimestamp();
         if (_l1Cache.TryGetValue(cacheKey, out PolicyDefinition? cachedPolicy))
         {
+            _metrics?.RecordLookupDuration(Stopwatch.GetElapsedTime(l1LookupStartedAt), CacheType);
             _metrics?.RecordHit(CacheLevel.L1, CacheType);
             return cachedPolicy;
+        }
+        if (_hybridCache is null)
+        {
+            _metrics?.RecordLookupDuration(Stopwatch.GetElapsedTime(l1LookupStartedAt), CacheType);
         }
 
         // Try L2 (hybrid) cache if available
@@ -107,10 +114,16 @@ public sealed class CachedPolicyDefinitionStore : IPolicyDefinitionStore
         var cacheKey = $"tenant_policies:{tenantId}:v{version}";
 
         // Try L1 cache first
+        var l1LookupStartedAt = Stopwatch.GetTimestamp();
         if (_l1Cache.TryGetValue(cacheKey, out IReadOnlyList<PolicyDefinition>? cachedPolicies))
         {
+            _metrics?.RecordLookupDuration(Stopwatch.GetElapsedTime(l1LookupStartedAt), CacheType);
             _metrics?.RecordHit(CacheLevel.L1, CacheType);
             return cachedPolicies!;
+        }
+        if (_hybridCache is null)
+        {
+            _metrics?.RecordLookupDuration(Stopwatch.GetElapsedTime(l1LookupStartedAt), CacheType);
         }
 
         // Try L2 (hybrid) cache if available

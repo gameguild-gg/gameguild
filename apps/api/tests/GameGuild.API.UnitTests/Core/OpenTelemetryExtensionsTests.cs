@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using GameGuild.API.Setup;
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Exporter;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -23,6 +24,7 @@ public sealed class OpenTelemetryExtensionsTests
 
         result.Should().BeSameAs(builder);
         builder.Services.Should().NotContain(descriptor => descriptor.ServiceType == typeof(TracerProvider));
+        builder.Services.Should().NotContain(descriptor => descriptor.ServiceType == typeof(MeterProvider));
     }
 
     [Fact]
@@ -37,6 +39,7 @@ public sealed class OpenTelemetryExtensionsTests
 
         result.Should().BeSameAs(builder);
         builder.Services.Should().NotContain(descriptor => descriptor.ServiceType == typeof(TracerProvider));
+        builder.Services.Should().NotContain(descriptor => descriptor.ServiceType == typeof(MeterProvider));
     }
 
     [Theory]

@@ -1,5 +1,6 @@
 using AutoFixture;
 using FluentAssertions;
+using GameGuild.Identity.Authorization.Caching;
 using Moq;
 using Xunit;
 
@@ -152,6 +153,36 @@ public class RoleCommandHandlersTests
     }
 
     [Fact]
+    public async Task UpdateRoleCommandHandler_TenantRole_InvalidatesRoleDependentAclEntries()
+    {
+        var roleId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var role = new Role("Editor", "Before", tenantId) { Id = roleId };
+        var command = new UpdateRoleCommand { RoleId = roleId, Description = "After" };
+        var invalidation = new Mock<ICacheInvalidationService>();
+
+        _mockRepository.Setup(repository => repository.GetByIdAsync(roleId, default)).ReturnsAsync(role);
+        _mockRepository.Setup(repository => repository.UpdateAsync(role, default)).Returns(Task.CompletedTask);
+        invalidation.Setup(service => service.InvalidateBatchAsync(
+                tenantId,
+                It.Is<IReadOnlyCollection<CacheInvalidationTarget>>(targets => targets.Count == 1 &&
+                    targets.Single().Type == CacheInvalidationTargetType.Dependency &&
+                    targets.Single().DependencyKind == "role" &&
+                    targets.Single().DependencyId == roleId),
+                default))
+            .Returns(Task.CompletedTask);
+
+        var handler = new UpdateRoleCommandHandler(_mockRepository.Object, invalidation.Object);
+
+        await handler.Handle(command, default);
+
+        invalidation.Verify(service => service.InvalidateBatchAsync(
+            tenantId,
+            It.IsAny<IReadOnlyCollection<CacheInvalidationTarget>>(),
+            default), Times.Once);
+    }
+
+    [Fact]
     public async Task UpdateRoleCommandHandler_RoleNotFound_ThrowsException()
     {
         // Arrange
@@ -262,6 +293,33 @@ public class RoleCommandHandlersTests
     }
 
     [Fact]
+    public async Task DeleteRoleCommandHandler_TenantRole_InvalidatesRoleDependentAclEntries()
+    {
+        var roleId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var role = new Role("Moderator", "", tenantId) { Id = roleId };
+        var invalidation = new Mock<ICacheInvalidationService>();
+
+        _mockRepository.Setup(repository => repository.GetByIdAsync(roleId, default)).ReturnsAsync(role);
+        _mockRepository.Setup(repository => repository.DeleteAsync(roleId, default)).Returns(Task.CompletedTask);
+        invalidation.Setup(service => service.InvalidateBatchAsync(
+                tenantId,
+                It.Is<IReadOnlyCollection<CacheInvalidationTarget>>(targets => targets.Count == 1 &&
+                    targets.Single().DependencyKind == "role" && targets.Single().DependencyId == roleId),
+                default))
+            .Returns(Task.CompletedTask);
+
+        var handler = new DeleteRoleCommandHandler(_mockRepository.Object, invalidation.Object);
+
+        await handler.Handle(new DeleteRoleCommand { RoleId = roleId }, default);
+
+        invalidation.Verify(service => service.InvalidateBatchAsync(
+            tenantId,
+            It.IsAny<IReadOnlyCollection<CacheInvalidationTarget>>(),
+            default), Times.Once);
+    }
+
+    [Fact]
     public async Task DeleteRoleCommandHandler_RoleNotFound_ThrowsException()
     {
         // Arrange
@@ -331,6 +389,38 @@ public class RoleCommandHandlersTests
     }
 
     [Fact]
+    public async Task AssignRoleToUserCommandHandler_TenantRole_InvalidateUserAndRoleDependencies()
+    {
+        var userId = Guid.NewGuid();
+        var roleId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var role = new Role("Reviewer", "", tenantId) { Id = roleId };
+        var invalidation = new Mock<ICacheInvalidationService>();
+
+        _mockRepository.Setup(repository => repository.GetByIdAsync(roleId, default)).ReturnsAsync(role);
+        _mockRepository.Setup(repository => repository.UserHasRoleAsync(userId, roleId, default)).ReturnsAsync(false);
+        _mockRepository.Setup(repository => repository.AssignRoleToUserAsync(It.IsAny<UserRole>(), default))
+            .ReturnsAsync((UserRole assignment, CancellationToken _) => assignment);
+        invalidation.Setup(service => service.InvalidateBatchAsync(
+                tenantId,
+                It.Is<IReadOnlyCollection<CacheInvalidationTarget>>(targets => targets.Count == 2 &&
+                    targets.Any(target => target.Type == CacheInvalidationTargetType.User && target.UserId == userId) &&
+                    targets.Any(target => target.Type == CacheInvalidationTargetType.Dependency &&
+                        target.DependencyKind == "role" && target.DependencyId == roleId)),
+                default))
+            .Returns(Task.CompletedTask);
+
+        var handler = new AssignRoleToUserCommandHandler(_mockRepository.Object, invalidation.Object);
+
+        await handler.Handle(new AssignRoleToUserCommand { UserId = userId, RoleId = roleId }, default);
+
+        invalidation.Verify(service => service.InvalidateBatchAsync(
+            tenantId,
+            It.IsAny<IReadOnlyCollection<CacheInvalidationTarget>>(),
+            default), Times.Once);
+    }
+
+    [Fact]
     public async Task AssignRoleToUserCommandHandler_RoleNotFound_ThrowsException()
     {
         // Arrange
@@ -389,6 +479,9 @@ public class RoleCommandHandlersTests
         // Arrange
         var userId = Guid.NewGuid();
         var roleId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var role = new Role("Reviewer", "", tenantId) { Id = roleId };
+        var invalidation = new Mock<ICacheInvalidationService>();
 
         var command = new RemoveRoleFromUserCommand
         {
@@ -399,10 +492,22 @@ public class RoleCommandHandlersTests
         _mockRepository.Setup(r => r.UserHasRoleAsync(userId, roleId, default))
             .ReturnsAsync(true);
 
+        _mockRepository.Setup(r => r.GetByIdAsync(roleId, default))
+            .ReturnsAsync(role);
+
         _mockRepository.Setup(r => r.RemoveRoleFromUserAsync(userId, roleId, default))
             .Returns(Task.CompletedTask);
 
-        var handler = new RemoveRoleFromUserCommandHandler(_mockRepository.Object);
+        invalidation.Setup(service => service.InvalidateBatchAsync(
+                tenantId,
+                It.Is<IReadOnlyCollection<CacheInvalidationTarget>>(targets => targets.Count == 2 &&
+                    targets.Any(target => target.Type == CacheInvalidationTargetType.User && target.UserId == userId) &&
+                    targets.Any(target => target.Type == CacheInvalidationTargetType.Dependency &&
+                        target.DependencyKind == "role" && target.DependencyId == roleId)),
+                default))
+            .Returns(Task.CompletedTask);
+
+        var handler = new RemoveRoleFromUserCommandHandler(_mockRepository.Object, invalidation.Object);
 
         // Act
         var result = await handler.Handle(command, default);
@@ -410,6 +515,10 @@ public class RoleCommandHandlersTests
         // Assert
         result.Should().BeTrue();
         _mockRepository.Verify(r => r.RemoveRoleFromUserAsync(userId, roleId, default), Times.Once);
+        invalidation.Verify(service => service.InvalidateBatchAsync(
+            tenantId,
+            It.IsAny<IReadOnlyCollection<CacheInvalidationTarget>>(),
+            default), Times.Once);
     }
 
     [Fact]
@@ -435,6 +544,57 @@ public class RoleCommandHandlersTests
         await act.Should().ThrowAsync<InvalidOperationException>();
 
         _mockRepository.Verify(r => r.RemoveRoleFromUserAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), default), Times.Never);
+    }
+
+    [Theory]
+    [InlineData("update")]
+    [InlineData("delete")]
+    [InlineData("assign")]
+    [InlineData("remove")]
+    public async Task GlobalRoleMutation_InvalidatesSharedAclVersion(string mutation)
+    {
+        var userId = Guid.NewGuid();
+        var roleId = Guid.NewGuid();
+        var role = new Role("Global Moderator", "", tenantId: null) { Id = roleId };
+        var invalidation = new Mock<ICacheInvalidationService>();
+        invalidation.Setup(service => service.InvalidateGlobalAsync(default)).Returns(Task.CompletedTask);
+        _mockRepository.Setup(repository => repository.GetByIdAsync(roleId, default)).ReturnsAsync(role);
+        _mockRepository.Setup(repository => repository.UpdateAsync(role, default)).Returns(Task.CompletedTask);
+        _mockRepository.Setup(repository => repository.DeleteAsync(roleId, default)).Returns(Task.CompletedTask);
+        _mockRepository.Setup(repository => repository.UserHasRoleAsync(userId, roleId, default)).ReturnsAsync(true);
+        _mockRepository.Setup(repository => repository.AssignRoleToUserAsync(It.IsAny<UserRole>(), default))
+            .ReturnsAsync((UserRole assignment, CancellationToken _) => assignment);
+        _mockRepository.Setup(repository => repository.RemoveRoleFromUserAsync(userId, roleId, default))
+            .Returns(Task.CompletedTask);
+
+        switch (mutation)
+        {
+            case "update":
+                await new UpdateRoleCommandHandler(_mockRepository.Object, invalidation.Object)
+                    .Handle(new UpdateRoleCommand { RoleId = roleId, Description = "changed" }, default);
+                break;
+            case "delete":
+                await new DeleteRoleCommandHandler(_mockRepository.Object, invalidation.Object)
+                    .Handle(new DeleteRoleCommand { RoleId = roleId }, default);
+                break;
+            case "assign":
+                _mockRepository.Setup(repository => repository.UserHasRoleAsync(userId, roleId, default)).ReturnsAsync(false);
+                await new AssignRoleToUserCommandHandler(_mockRepository.Object, invalidation.Object)
+                    .Handle(new AssignRoleToUserCommand { UserId = userId, RoleId = roleId }, default);
+                break;
+            case "remove":
+                await new RemoveRoleFromUserCommandHandler(_mockRepository.Object, invalidation.Object)
+                    .Handle(new RemoveRoleFromUserCommand { UserId = userId, RoleId = roleId }, default);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(mutation), mutation, "Unknown role mutation.");
+        }
+
+        invalidation.Verify(service => service.InvalidateGlobalAsync(default), Times.Once);
+        invalidation.Verify(service => service.InvalidateBatchAsync(
+            It.IsAny<Guid>(),
+            It.IsAny<IReadOnlyCollection<CacheInvalidationTarget>>(),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     #endregion
