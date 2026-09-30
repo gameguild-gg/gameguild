@@ -937,6 +937,7 @@ export function TestingLabCalendar({
   );
   const [createDate, setCreateDate] = useState<Date | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [createDialogVersion, setCreateDialogVersion] = useState(0);
   const [selectedEvent, setSelectedEvent] =
     useState<TestingLabTestingEventProjection | null>(null);
   const eventCalendars = useMemo(
@@ -989,6 +990,7 @@ export function TestingLabCalendar({
 
   function openCreateEvent(date: Date | null) {
     setCreateDate(date);
+    setCreateDialogVersion((version) => version + 1);
     setCreateOpen(true);
   }
 
@@ -1183,7 +1185,7 @@ export function TestingLabCalendar({
       </div>
 
       <CreateTestingEventDialog
-        key={createDate?.toISOString() ?? "toolbar"}
+        key={`${createDate?.toISOString() ?? "toolbar"}-${createDialogVersion}`}
         initialDate={createDate ?? undefined}
         open={createOpen}
         onOpenChange={setCreateOpen}

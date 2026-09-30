@@ -9,6 +9,57 @@ namespace GameGuild.API.UnitTests.Database;
 public sealed class TestingLabLocalSeedDataSeederTests
 {
     [Fact]
+    public async Task SeedAsync_PersistsMissingBuilds_WhenProjectsAndApplicationsAlreadyExist()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+        await using var context = new ApplicationDbContext(options);
+        await TestingLabLocalEventSeedDataSeeder.SeedAsync(context, Guid.NewGuid(), Guid.NewGuid());
+        await TestingLabLocalSeedDataSeeder.SeedAsync(context);
+        context.Set<ProjectVersion>().RemoveRange(await context.Set<ProjectVersion>().ToListAsync());
+        await context.SaveChangesAsync();
+
+        await TestingLabLocalSeedDataSeeder.SeedAsync(context);
+
+        await using var persisted = new ApplicationDbContext(options);
+        (await persisted.Set<ProjectVersion>().CountAsync()).Should().Be(3);
+        context.ChangeTracker.HasChanges().Should().BeFalse();
+
+        await TestingLabLocalSeedDataSeeder.SeedAsync(context,
+            eventId: TestingLabLocalEventSeedDataSeeder.OpenTesterEventId);
+        await TestingLabLocalSeedDataSeeder.SeedAsync(context);
+        await using var reseeded = new ApplicationDbContext(options);
+        (await reseeded.Set<ProjectVersion>().CountAsync()).Should().Be(3);
+        (await reseeded.Set<TestingProjectApplication>().CountAsync()).Should().Be(6);
+    }
+
+    [Fact]
+    public async Task SeedAsync_DoesNotReuseSoftDeletedBuilds()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+        await using var context = new ApplicationDbContext(options);
+        await TestingLabLocalEventSeedDataSeeder.SeedAsync(context, Guid.NewGuid(), Guid.NewGuid());
+        await TestingLabLocalSeedDataSeeder.SeedAsync(context);
+        var removedBuilds = await context.Set<ProjectVersion>().ToListAsync();
+        foreach (var build in removedBuilds) build.DeletedAt = SystemClock.UtcNow;
+        await context.SaveChangesAsync();
+
+        await TestingLabLocalSeedDataSeeder.SeedAsync(context);
+        await TestingLabLocalSeedDataSeeder.SeedAsync(context,
+            eventId: TestingLabLocalEventSeedDataSeeder.OpenTesterEventId);
+
+        await using var persisted = new ApplicationDbContext(options);
+        var builds = await persisted.Set<ProjectVersion>().IgnoreQueryFilters().ToListAsync();
+        builds.Should().HaveCount(6);
+        builds.Count(build => build.DeletedAt == null).Should().Be(3);
+        builds.Where(build => removedBuilds.Select(removed => removed.Id).Contains(build.Id))
+            .Should().OnlyContain(build => build.DeletedAt != null);
+    }
+
+    [Fact]
     public async Task LocalEnrollmentSeeds_CreateTesterAndDeveloperPathsIdempotently()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()

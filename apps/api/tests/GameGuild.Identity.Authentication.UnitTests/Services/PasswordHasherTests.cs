@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
 
@@ -98,6 +99,29 @@ public class PasswordHasherTests
 
         // Assert
         result.Should().BeFalse();
+    }
+
+    [Fact]
+    public void ValidatePasswordStrength_PrefersPresentationLayerAuthenticationPolicy()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["PasswordPolicy:MinPasswordLength"] = "8",
+                ["PresentationLayer:Authentication:PasswordPolicy:MinPasswordLength"] = "14",
+                ["PresentationLayer:Authentication:PasswordPolicy:MaxPasswordLength"] = "128",
+                ["PresentationLayer:Authentication:PasswordPolicy:RequireUppercase"] = "true",
+                ["PresentationLayer:Authentication:PasswordPolicy:RequireLowercase"] = "true",
+                ["PresentationLayer:Authentication:PasswordPolicy:RequireDigit"] = "true",
+                ["PresentationLayer:Authentication:PasswordPolicy:RequireSpecialChar"] = "true"
+            })
+            .Build();
+        var hasher = new PasswordHasher(NullLogger<PasswordHasher>.Instance, configuration);
+
+        var result = hasher.ValidatePasswordStrength("Pass1!");
+
+        result.IsValid.Should().BeFalse();
+        result.ValidationFailures.Should().Contain("Password must be at least 14 characters long");
     }
 
     [Theory]

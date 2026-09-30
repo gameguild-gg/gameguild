@@ -15,9 +15,20 @@
     </ItemGroup>
 
     <ItemGroup>
+        <InternalsVisibleTo Include="GameGuild.Social.Blog.UnitTests" />
+    </ItemGroup>
+
+    <ItemGroup>
         <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
+        <ProjectReference Include="..\GameGuild.Announcements.Contracts\GameGuild.Announcements.Contracts.csproj" />
+        <ProjectReference Include="..\GameGuild.Identity.Context\GameGuild.Identity.Context.csproj" />
+        <ProjectReference Include="..\GameGuild.Social.Follows\GameGuild.Social.Follows.csproj" />
         <ProjectReference Include="..\GameGuild.Social.Profiles\GameGuild.Social.Profiles.csproj" />
+        <ProjectReference Include="..\GameGuild.Social.Reactions\GameGuild.Social.Reactions.csproj" />
         <ProjectReference Include="..\GameGuild.Tags\GameGuild.Tags.csproj" />
+        <ProjectReference Include="..\GameGuild.AI\GameGuild.AI.csproj" />
+        <ProjectReference Include="..\GameGuild.Finance.Economy.AiCredits\GameGuild.Finance.Economy.AiCredits.csproj" />
+        <ProjectReference Include="..\GameGuild.Resources\GameGuild.Resources.csproj" />
     </ItemGroup>
 
 </Project>

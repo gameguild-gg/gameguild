@@ -4,6 +4,7 @@ import * as React from 'react';
 import { ChevronsUpDown, Plus } from 'lucide-react';
 
 import {
+  DropdownMenuGroup,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -108,33 +109,33 @@ export function TenantSwitcher({
             side={isMobile ? 'bottom' : 'right'}
             sideOffset={4}
           >
-            <DropdownMenuLabel className="text-muted-foreground text-xs">
-              Tenants
-            </DropdownMenuLabel>
-            {tenants.map((tenant, index) => (
-              <DropdownMenuItem
-                key={tenant.id}
-                onClick={() => handleTenantChange(tenant)}
-                className="gap-2 p-2"
-              >
-                <div className="flex size-6 items-center justify-center rounded-md border">
-                  <tenant.logo className="size-3.5 shrink-0" />
-                </div>
-                {tenant.name}
-                <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
-              </DropdownMenuItem>
-            ))}
-            {onAddTenant && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="gap-2 p-2" onClick={onAddTenant}>
-                  <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
-                    <Plus className="size-4" />
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="text-muted-foreground text-xs">Tenants</DropdownMenuLabel>
+              {tenants.map((tenant, index) => (
+                <DropdownMenuItem
+                  key={tenant.id}
+                  onClick={() => handleTenantChange(tenant)}
+                  className="gap-2 p-2"
+                >
+                  <div className="flex size-6 items-center justify-center rounded-md border">
+                    <tenant.logo className="size-3.5 shrink-0" />
                   </div>
-                  <div className="text-muted-foreground font-medium">Add tenant</div>
+                  {tenant.name}
+                  <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
                 </DropdownMenuItem>
-              </>
-            )}
+              ))}
+              {onAddTenant && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="gap-2 p-2" onClick={onAddTenant}>
+                    <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
+                      <Plus className="size-4" />
+                    </div>
+                    <div className="text-muted-foreground font-medium">Add tenant</div>
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

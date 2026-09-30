@@ -11,6 +11,7 @@ import {
 import { Input } from '@game-guild/ui/components/input';
 import { Label } from '@game-guild/ui/components/label';
 import {
+  SelectGroup,
   Select,
   SelectContent,
   SelectItem,
@@ -267,17 +268,30 @@ export function NotificationPreferences({
           <CardDescription>{t('digest.description')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <Select value={digest} onValueChange={(value) => value !== null && changeDigest(value)} disabled={pending}>
-            <SelectTrigger className="w-full sm:w-64" aria-label={t('digest.title')}>
+          <Select
+            items={[
+              { value: "off", label: t("digest.off") },
+              ...DIGEST_OPTIONS.map((option) => ({
+                value: option,
+                label: t(`digest.${option}`),
+              })),
+            ]}
+            value={digest}
+            onValueChange={(value) => value !== null && changeDigest(value)}
+            disabled={pending}
+          >
+            <SelectTrigger className="w-full sm:w-64" aria-label={t("digest.title")}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="off">{t('digest.off')}</SelectItem>
-              {DIGEST_OPTIONS.map((option) => (
-                <SelectItem key={option} value={option}>
-                  {t(`digest.${option}`)}
-                </SelectItem>
-              ))}
+              <SelectGroup>
+                <SelectItem value="off">{t("digest.off")}</SelectItem>
+                {DIGEST_OPTIONS.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {t(`digest.${option}`)}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
             </SelectContent>
           </Select>
         </CardContent>

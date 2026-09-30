@@ -1,5 +1,6 @@
 using FluentAssertions;
 using GameGuild.API.Database;
+using GameGuild.API.IntegrationTests.Infrastructure;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -14,13 +15,16 @@ namespace GameGuild.API.IntegrationTests;
 /// <summary>
 /// Integration tests for API application startup and configuration
 /// </summary>
-public class ApplicationStartupIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
+public class ApplicationStartupIntegrationTests : IClassFixture<WebApplicationFactory<Program>>, IClassFixture<ApiPostgreSqlFixture>
 {
     private readonly WebApplicationFactory<Program> _factory;
+    private readonly ApiPostgreSqlFixture _postgres;
 
-    public ApplicationStartupIntegrationTests(WebApplicationFactory<Program> factory)
+    public ApplicationStartupIntegrationTests(WebApplicationFactory<Program> factory, ApiPostgreSqlFixture postgres)
     {
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Testing");
+
+        _postgres = postgres;
 
         _factory = factory.WithWebHostBuilder(builder =>
         {
@@ -199,7 +203,7 @@ public class ApplicationStartupIntegrationTests : IClassFixture<WebApplicationFa
     [InlineData("Production")]
     public void Application_ShouldRefuseToListen_WhenPaymentSimulationIsEnabled(string environmentName)
     {
-        using var factory = CreateCommerceConfiguredFactory(environmentName, configuration =>
+        using var factory = CreateCommerceConfiguredFactory(environmentName, _postgres.ConnectionString, configuration =>
         {
             configuration["PaymentGateways:Stripe:UseSimulation"] = "true";
         });
@@ -214,7 +218,7 @@ public class ApplicationStartupIntegrationTests : IClassFixture<WebApplicationFa
     [InlineData("Production")]
     public void Application_ShouldStart_WhenWebhookVerificationIsNotConfigured(string environmentName)
     {
-        using var factory = CreateCommerceConfiguredFactory(environmentName, configuration =>
+        using var factory = CreateCommerceConfiguredFactory(environmentName, _postgres.ConnectionString, configuration =>
         {
             configuration["Billing:Stripe:WebhookSecret"] = null;
         });
@@ -227,7 +231,7 @@ public class ApplicationStartupIntegrationTests : IClassFixture<WebApplicationFa
     [Fact]
     public void Application_ShouldStart_WithCompleteProductionCommerceConfiguration()
     {
-        using var factory = CreateCommerceConfiguredFactory("Production");
+        using var factory = CreateCommerceConfiguredFactory("Production", _postgres.ConnectionString);
 
         Action start = () => factory.CreateClient();
 
@@ -236,14 +240,13 @@ public class ApplicationStartupIntegrationTests : IClassFixture<WebApplicationFa
 
     private static WebApplicationFactory<Program> CreateCommerceConfiguredFactory(
         string environmentName,
+        string connectionString,
         Action<Dictionary<string, string?>>? customize = null)
     {
         var values = new Dictionary<string, string?>
         {
-            ["ConnectionStrings:DefaultConnection"] =
-                "Host=127.0.0.1;Port=1;Database=gameguild_startup;Username=gameguild_runtime;Password=runtime-startup-test;Timeout=1;Command Timeout=1;Pooling=false",
-            ["ConnectionStrings:MigrationConnection"] =
-                "Host=127.0.0.1;Port=1;Database=gameguild_startup;Username=gameguild_migrator;Password=migration-startup-test;Timeout=1;Command Timeout=1;Pooling=false",
+            ["ConnectionStrings:DefaultConnection"] = connectionString,
+            ["ConnectionStrings:MigrationConnection"] = connectionString,
             ["Database:RunStartupInitialization"] = "false",
             ["Jwt:SecretKey"] = "startup-test-jwt-secret-with-forty-characters",
             ["Jwt:Issuer"] = "GameGuild.StartupTests",

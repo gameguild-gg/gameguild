@@ -14,6 +14,7 @@ import { PublicAccountMenu } from './public-account-menu';
 
 const primaryNav = [
   { label: 'Community', href: '/community' },
+  { label: 'Blogs', href: '/blogs' },
   { label: 'Courses', href: '/courses' },
   { label: 'Programs', href: '/programs' },
   { label: 'Projects', href: '/projects' },
@@ -39,6 +40,7 @@ const desktopPrimaryNav = [
     label: 'More',
     items: [
       { label: 'Jobs', href: '/jobs' },
+      { label: 'Blogs', href: '/blogs' },
       { label: 'About', href: '/about' },
     ],
   },
@@ -58,6 +60,7 @@ const socialDesktopNav = [
     items: [
       { label: 'Workspace', href: '/workspace' },
       { label: 'Projects', href: '/projects' },
+      { label: 'Blogs', href: '/blogs' },
     ],
   },
   {
@@ -87,6 +90,7 @@ const footerSections = [
       { label: 'Testing Lab', href: '/testing-lab' },
       { label: 'Launch Pad', href: '/launch-pad' },
       { label: 'Project showcase', href: '/projects' },
+      { label: 'Blogs', href: '/blogs' },
     ],
   },
   {

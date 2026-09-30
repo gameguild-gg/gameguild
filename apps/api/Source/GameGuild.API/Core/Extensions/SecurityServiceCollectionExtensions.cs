@@ -1,15 +1,20 @@
+using System.Globalization;
 using System.Security.Claims;
 using System.Text;
 using GameGuild.Configuration;
 using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.Configuration.PresentationLayer.Authentication;
 using GameGuild.Configuration.PresentationLayer.CORS;
+using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Authorization.Utilities;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
 using AuthorizationOptions = GameGuild.Configuration.PresentationLayer.Authorization.AuthorizationOptions;
+using AuthenticationBuilder = Microsoft.AspNetCore.Authentication.AuthenticationBuilder;
 
 namespace GameGuild.API;
 
@@ -19,8 +24,12 @@ namespace GameGuild.API;
 /// </summary>
 public static class SecurityServiceCollectionExtensions
 {
+    public static IServiceCollection SetupAuthentication(this IServiceCollection services,
+        IConfiguration configuration, AuthenticationOptions? options) =>
+        SetupAuthentication(services, configuration, options, configureAdditionalSchemes: null);
+
     public static IServiceCollection SetupAuthentication(this IServiceCollection services, IConfiguration configuration,
-        AuthenticationOptions? options)
+        AuthenticationOptions? options, Action<AuthenticationBuilder>? configureAdditionalSchemes)
     {
         options ??= OptionBuilderUtilities.CreateAndBind(configuration, "Authentication",
             AuthenticationOptions.CreateDefault);
@@ -31,12 +40,33 @@ public static class SecurityServiceCollectionExtensions
         var isDevelopmentOrTesting = IsDevelopmentOrTesting(configuration);
         IdentityModelEventSource.ShowPII = isDevelopmentOrTesting;
 
-        var resolvedJwtOptions = JwtOptionsResolver.CreateValidated(configuration);
+        var accessTokenExpirationMinutes = checked((int)Math.Ceiling(options.JwtExpiration.TotalMinutes));
+        var jwtConfiguration = new ConfigurationBuilder()
+            .AddConfiguration(configuration)
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Jwt:Secret"] = options.JwtSecretKey,
+                ["Jwt:Issuer"] = options.JwtIssuer,
+                ["Jwt:Audience"] = options.JwtAudience,
+                ["Jwt:AccessTokenExpirationMinutes"] = accessTokenExpirationMinutes.ToString(CultureInfo.InvariantCulture),
+                ["Jwt:RefreshTokenExpirationDays"] = options.RefreshTokenExpirationDays.ToString(CultureInfo.InvariantCulture)
+            })
+            .Build();
+        var resolvedJwtOptions = JwtOptionsResolver.CreateValidated(jwtConfiguration);
+
+        services.PostConfigure<JwtOptions>(jwtOptions =>
+        {
+            jwtOptions.SecretKey = resolvedJwtOptions.SecretKey;
+            jwtOptions.Issuer = resolvedJwtOptions.Issuer;
+            jwtOptions.Audience = resolvedJwtOptions.Audience;
+            jwtOptions.AccessTokenExpirationMinutes = resolvedJwtOptions.AccessTokenExpirationMinutes;
+            jwtOptions.RefreshTokenExpirationDays = resolvedJwtOptions.RefreshTokenExpirationDays;
+        });
 
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(resolvedJwtOptions.SecretKey))
             { KeyId = "GameGuild-jwt-key" };
 
-        services.AddAuthentication(authOptions =>
+        var authenticationBuilder = services.AddAuthentication(authOptions =>
                 {
                     authOptions.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                     authOptions.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -86,6 +116,62 @@ public static class SecurityServiceCollectionExtensions
                     };
                 }
             );
+
+        if (options.EnableApiKeyAuthentication)
+        {
+            authenticationBuilder.AddApiKeyAuthentication(apiKeyOptions =>
+            {
+                if (options.ApiKeyHeaderName is not null)
+                {
+                    apiKeyOptions.HeaderName = options.ApiKeyHeaderName;
+                }
+
+                apiKeyOptions.AllowQueryString = options.AllowApiKeyInQueryString;
+
+                if (options.ApiKeyQueryStringParameterName is not null)
+                {
+                    apiKeyOptions.QueryStringParameterName = options.ApiKeyQueryStringParameterName;
+                }
+            });
+        }
+
+        if (options.EnableBasicAuthentication)
+        {
+            var basicSettings = options.Basic!;
+            authenticationBuilder.AddBasicAuthentication(basicSettings.SchemeName, basicOptions =>
+            {
+                basicOptions.Realm = basicSettings.Realm;
+            });
+        }
+
+        if (options.EnableCookieAuthentication)
+        {
+            var cookieSettings = options.Cookie!;
+            authenticationBuilder.AddCookie(cookieSettings.SchemeName, cookieOptions =>
+            {
+                cookieOptions.Cookie.Name = cookieSettings.Name;
+                cookieOptions.Cookie.Path = "/";
+                cookieOptions.Cookie.HttpOnly = true;
+                cookieOptions.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                cookieOptions.Cookie.SameSite = cookieSettings.SameSite;
+                cookieOptions.ExpireTimeSpan = cookieSettings.Expiration;
+                cookieOptions.SlidingExpiration = cookieSettings.SlidingExpiration;
+                cookieOptions.Events.OnRedirectToLogin = context =>
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+
+                    return Task.CompletedTask;
+                };
+                cookieOptions.Events.OnRedirectToAccessDenied = context =>
+                {
+                    context.Response.StatusCode = StatusCodes.Status403Forbidden;
+
+                    return Task.CompletedTask;
+                };
+            });
+        }
+
+        configureAdditionalSchemes?.Invoke(authenticationBuilder);
 
         // Add authorization if enabled
         if (options.EnableAuthorization)

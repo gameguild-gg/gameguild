@@ -607,6 +607,7 @@ public sealed class AuthController(ISender sender) : BaseApiController
         {
             WalletAddress = body.WalletAddress,
             Signature = body.Signature,
+            Challenge = body.Challenge,
             Nonce = body.Nonce,
             ChainId = body.ChainId,
             TenantId = body.TenantId,

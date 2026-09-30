@@ -112,7 +112,13 @@ public sealed class Web3ServiceVerificationTests
     public Web3ServiceVerificationTests()
     {
         _cache = new MemoryCache(new MemoryCacheOptions());
-        _sut = new Web3Service(Mock.Of<ILogger<Web3Service>>(), _cache);
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Authentication:Web3:Siwe:Origin"] = "https://localhost"
+            })
+            .Build();
+        _sut = new Web3Service(Mock.Of<ILogger<Web3Service>>(), _cache, configuration);
     }
 
     [Fact]
@@ -121,11 +127,10 @@ public sealed class Web3ServiceVerificationTests
         var address = "0x1234567890abcdef1234567890abcdef12345678";
         var challenge = await _sut.GenerateChallengeAsync(address);
 
-        // Provide a properly formatted signature (0x + 130 hex chars = 132 total)
+        // Provide a correctly sized but invalid signature.
         var signature = "0x" + new string('a', 130);
 
         var result = await _sut.VerifySignatureAsync(address, signature, challenge.Message);
-        // Returns false because VerifyEthereumSignature is not implemented
         result.Should().BeFalse();
     }
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@game-guild/ui/lib/utils";
 import { Link } from "@/i18n/navigation";
 import { followCreator } from "@/lib/feed/actions";
 import type {
@@ -7,7 +8,7 @@ import type {
   SocialProfile,
   TrendingTag,
 } from "@/lib/feed/contracts";
-import { Button } from "@game-guild/ui/components/button";
+import { Button, buttonVariants } from "@game-guild/ui/components/button";
 import { ArrowUpRight, CalendarDays, Users } from "lucide-react";
 import * as React from "react";
 import { formatSocialDateTime } from "@/lib/feed/format";
@@ -108,9 +109,18 @@ export function SocialRail({
               </div>
             ))}
           </div>
-          <Button nativeButton={false} variant="secondary" size="sm" className="mt-4 w-full" render={<Link href={`/social/profiles/${currentProfile.handle}`} />}>
+          <Link
+            href={`/social/profiles/${currentProfile.handle}`}
+            className={cn(
+              buttonVariants({
+                variant: "secondary",
+                size: "sm",
+                className: "mt-4 w-full",
+              }),
+            )}
+          >
             View profile
-          </Button>
+          </Link>
         </section>
       ) : null}
 

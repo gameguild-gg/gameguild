@@ -1,0 +1,48 @@
+# Bulk permission checks
+
+`IPermissionService` exposes two bulk read patterns:
+
+- `BulkCheckPermissionsAsync(userIds, tenantId, permissions)` evaluates the requested permission set for each user in one tenant and returns a materialized matrix. It is suitable when the caller needs the full matrix at once.
+- `StreamBulkCheckPermissionsAsync(requests, batchSize, cancellationToken)` evaluates individual user, tenant, content-type, and resource decisions in bounded batches. It preserves input order and duplicate requests and yields each result before reading the next batch.
+
+Each streamed request contains one user, tenant, and permission. `ContentTypeName` and `ResourceId` add narrower scopes. A resource check must include `ResourceTypeName`; this prevents a resource ID reused by another entity type from granting access. Global defaults apply to all tenants, tenant defaults apply only to that tenant, and user grants apply only to that user and tenant. Tenant-level deny entries override matching allows. Content-type and resource grants add permissions at their respective scopes.
+
+The streaming batch size defaults to 128 and is limited to 256 so query parameter sets and intermediate result collections remain bounded. Use the streaming API for large inputs; the collection overload deliberately materializes all results. Cancellation is passed to each database query and honored while reading the input stream.
+
+```csharp
+await foreach (var decision in permissionService.StreamBulkCheckPermissionsAsync(
+    permissionChecks,
+    batchSize: 128,
+    cancellationToken))
+{
+    if (decision.IsGranted)
+    {
+        // Process the authorized item without holding the full result set.
+    }
+}
+```
+
+The bulk APIs query grants by the distinct users, tenants, content types, and resource IDs present in each batch, then evaluate the exact combinations in memory. EF queries run sequentially on the scoped `DbContext`; after those reads complete, batches with at least 32 distinct requests evaluate decisions in parallel with a maximum degree of four. Repeated identical decisions are computed once per batch and expanded back in input order, but decisions are not cached across calls; permission changes therefore cannot leave stale cross-request results. The `GameGuild.Identity.Authentication.PermissionBulkCheck` meter publishes successful batch count, request count, distinct request count, and batch duration without user, tenant, or resource tags. Production database benchmarks and load tests should use the configured PostgreSQL provider and representative tenant/grant distributions. The in-memory benchmark/test fixtures are useful for comparing algorithm shape, not for setting production latency targets.
+
+Run the comparative in-memory benchmark with:
+
+```powershell
+dotnet run --project apps/api/tests/GameGuild.Identity.Authentication.Benchmarks -c Release -- --filter *PermissionBulkCheckBenchmarks* --job short
+```
+
+It compares individual checks, the existing user/permission matrix, and streamed mixed-context checks at 100 and 1,000 users. Use PostgreSQL-backed integration/load measurements before setting production performance claims.
+
+One `Dry` run after the bounded parallel-evaluation and metrics changes on local Windows 10 / .NET 10.0.10 / EF InMemory measured:
+
+| Users | Individual checks | Bulk matrix | Streamed mixed-context |
+| ---: | ---: | ---: | ---: |
+| 100 | 234.9 ms | 174.5 ms | 177.2 ms |
+| 1,000 | 5.222 s | 191.6 ms | 229.8 ms |
+
+This is one cold-start sample per case, with no confidence interval. It demonstrates the query-count trend in the in-memory fixture only; it is not a PostgreSQL latency benchmark or a release threshold. The benchmark run used an external temporary artifact directory so the worktree's pre-existing untracked `BenchmarkDotNet.Artifacts` were left untouched.
+
+The PostgreSQL integration suite also exercises 1,024 streamed requests and eight concurrent service scopes over 1,024 user grants. These checks validate bounded query batches, tenant isolation, and independent `DbContext` use under concurrent callers; they assert correctness rather than unstable wall-clock thresholds. Run them with:
+
+```powershell
+dotnet test apps/api/tests/GameGuild.API.IntegrationTests/GameGuild.API.IntegrationTests.csproj --filter "FullyQualifiedName~BulkPermissionChecksPostgreSqlTests"
+```

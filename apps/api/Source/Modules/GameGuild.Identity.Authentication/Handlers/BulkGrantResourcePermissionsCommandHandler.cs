@@ -95,7 +95,7 @@ public sealed class BulkGrantResourcePermissionsCommandHandler(
         {
             await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-            var tenantKey = request.TenantId == Guid.Empty ? "global" : request.TenantId.ToString();
+            var tenantKey = request.TenantId == Guid.Empty ? Guid.Empty.ToString() : request.TenantId.ToString();
             await securityVersionStore.IncrementVersionAsync(tenantKey, cancellationToken).ConfigureAwait(false);
 
             await auditService.LogPermissionChangeAsync(

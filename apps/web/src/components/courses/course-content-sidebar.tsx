@@ -1,7 +1,7 @@
 'use client';
 
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { Button } from '@game-guild/ui/components/button';
+import { buttonVariants } from '@game-guild/ui/components/button';
 import { ProgramContent } from '@/lib/api/generated/types.gen';
 import { cn } from '@/lib/utils';
 import { BarChart3, ClipboardList, Code, FileText, Flag, Folder, FolderOpen, HelpCircle, MessageSquare } from 'lucide-react';
@@ -240,14 +240,18 @@ export function CourseContentSidebar({ courseSlug, courseTitle, content }: Cours
             </h2>
             <div className="flex items-center gap-2">
               <ThemeToggle />
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground hover:text-foreground"
-                nativeButton={false} render={<Link href="/courses" />}
+              <Link
+                href="/courses"
+                className={cn(
+                  buttonVariants({
+                    variant: "ghost",
+                    size: "sm",
+                    className: "text-muted-foreground hover:text-foreground",
+                  }),
+                )}
               >
                 ← Courses
-              </Button>
+              </Link>
             </div>
           </div>
         </div>

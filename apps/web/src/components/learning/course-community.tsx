@@ -1,11 +1,12 @@
 'use client';
 
+import { cn } from "@game-guild/ui/lib/utils";
 import { Link, useRouter } from '@/i18n/navigation';
 import { createCourseDiscussion } from '@/lib/learner/activity-actions';
 import type { LearningExperienceSocialServicesCourseDiscussion } from '@game-guild/client';
 import { Alert, AlertDescription, AlertTitle } from '@game-guild/ui/components/alert';
 import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
+import { Button, buttonVariants } from '@game-guild/ui/components/button';
 import { Card, CardContent } from '@game-guild/ui/components/card';
 import {
   Dialog,
@@ -164,10 +165,13 @@ export function CourseCommunity({
                   <MessageCircle className="size-3.5" />
                   {discussion.replyCount ?? 0} replies
                 </p>
-                <Button nativeButton={false} size="sm" variant="ghost" render={<Link href={`/learn/courses/${courseSlug}/community/${discussion.id}`} />}>
+                <Link
+                  href={`/learn/courses/${courseSlug}/community/${discussion.id}`}
+                  className={cn(buttonVariants({ size: "sm", variant: "ghost" }))}
+                >
                   Open discussion
                   <ArrowRight className="size-4" />
-                </Button>
+                </Link>
               </div>
             </article>
           ))}

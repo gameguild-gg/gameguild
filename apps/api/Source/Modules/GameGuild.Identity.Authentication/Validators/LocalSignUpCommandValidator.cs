@@ -7,7 +7,7 @@ namespace GameGuild.Identity.Authentication;
 /// </summary>
 public sealed class LocalSignUpCommandValidator : AbstractValidator<LocalSignUpCommand>
 {
-    public LocalSignUpCommandValidator()
+    public LocalSignUpCommandValidator(IPasswordHasher passwordHasher)
     {
         RuleFor(x => x.Email)
             .NotEmpty()
@@ -24,12 +24,22 @@ public sealed class LocalSignUpCommandValidator : AbstractValidator<LocalSignUpC
             .WithMessage("Password is required")
             .NotNull()
             .WithMessage("Password cannot be null")
-            .MinimumLength(8)
-            .WithMessage("Password must be at least 8 characters long")
-            .MaximumLength(128)
-            .WithMessage("Password is too long")
-            .Matches(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]")
-            .WithMessage("Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character");
+            .Custom((password, context) =>
+            {
+                if (string.IsNullOrWhiteSpace(password))
+                {
+                    return;
+                }
+
+                var result = passwordHasher.ValidatePasswordStrength(password);
+                foreach (var failure in result.ValidationFailures)
+                {
+                    context.AddFailure(new FluentValidation.Results.ValidationFailure(nameof(LocalSignUpCommand.Password), failure)
+                    {
+                        AttemptedValue = null
+                    });
+                }
+            });
 
         RuleFor(x => x.Username)
             .NotEmpty()

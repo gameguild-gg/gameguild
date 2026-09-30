@@ -407,6 +407,72 @@ public class RoleRepositoryTests
     }
 
     [Fact]
+    public async Task BulkAssignRoleToUsersAsync_ReturnsOutcomesAndPersistsAllChangesOnce()
+    {
+        var roleId = Guid.NewGuid();
+        var assignedBy = Guid.NewGuid();
+        var activeUserId = Guid.NewGuid();
+        var expiredUserId = Guid.NewGuid();
+        var newUserId = Guid.NewGuid();
+        var activeAssignment = new UserRole(activeUserId, roleId, Guid.NewGuid())
+        {
+            Id = Guid.NewGuid(),
+            AssignedAt = SystemClock.UtcNow.AddDays(-2)
+        };
+        var expiredAssignment = new UserRole(expiredUserId, roleId, Guid.NewGuid())
+        {
+            Id = Guid.NewGuid(),
+            AssignedAt = SystemClock.UtcNow.AddDays(-4),
+            ExpiresAt = SystemClock.UtcNow.AddDays(-1)
+        };
+        var userRoles = new List<UserRole> { activeAssignment, expiredAssignment }.AsQueryable();
+        var mockSet = CreateMockDbSet(userRoles);
+        _mockContext.Setup(context => context.Set<UserRole>()).Returns(mockSet.Object);
+        _mockContext.Setup(context => context.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        var repository = new RoleRepository(_mockContext.Object);
+        var expiresAt = SystemClock.UtcNow.AddDays(15);
+
+        var result = await repository.BulkAssignRoleToUsersAsync(
+            roleId,
+            [activeUserId, expiredUserId, newUserId, newUserId],
+            assignedBy,
+            expiresAt,
+            CancellationToken.None);
+
+        result.Should().HaveCount(3);
+        result.Select(item => item.Status).Should().Equal(
+            BulkRoleAssignmentStatus.AlreadyAssigned,
+            BulkRoleAssignmentStatus.Reactivated,
+            BulkRoleAssignmentStatus.Assigned);
+        result[0].AssignmentId.Should().Be(activeAssignment.Id);
+        result[1].AssignmentId.Should().Be(expiredAssignment.Id);
+        result[2].AssignmentId.Should().NotBeEmpty();
+        expiredAssignment.AssignedBy.Should().Be(assignedBy);
+        expiredAssignment.ExpiresAt.Should().Be(expiresAt);
+        mockSet.Verify(set => set.Add(It.Is<UserRole>(assignment => assignment.UserId == newUserId && assignment.RoleId == roleId)), Times.Once);
+        _mockContext.Verify(context => context.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task BulkAssignRoleToUsersAsync_OnlyActiveAssignments_DoesNotSave()
+    {
+        var roleId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var userRoles = new List<UserRole>
+        {
+            new(userId, roleId, null) { Id = Guid.NewGuid() }
+        }.AsQueryable();
+        var mockSet = CreateMockDbSet(userRoles);
+        _mockContext.Setup(context => context.Set<UserRole>()).Returns(mockSet.Object);
+        var repository = new RoleRepository(_mockContext.Object);
+
+        var result = await repository.BulkAssignRoleToUsersAsync(roleId, [userId], null, null, CancellationToken.None);
+
+        result.Should().ContainSingle().Which.Status.Should().Be(BulkRoleAssignmentStatus.AlreadyAssigned);
+        _mockContext.Verify(context => context.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task UserHasRoleAsync_WhenUserHasRole_ReturnsTrue()
     {
         // Arrange

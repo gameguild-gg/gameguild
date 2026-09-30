@@ -149,6 +149,69 @@ public class RoleRepository(IApplicationDbContext context) : IRoleRepository
         return userRole;
     }
 
+    public async Task<IReadOnlyList<BulkRoleAssignmentItemResult>> BulkAssignRoleToUsersAsync(
+        Guid roleId,
+        IReadOnlyCollection<Guid> userIds,
+        Guid? assignedBy,
+        DateTime? expiresAt,
+        CancellationToken cancellationToken)
+    {
+        var uniqueUserIds = userIds.Distinct().ToArray();
+        if (uniqueUserIds.Length == 0)
+        {
+            return Array.Empty<BulkRoleAssignmentItemResult>();
+        }
+
+        var existingAssignments = await UserRoles
+            .Where(userRole => userRole.RoleId == roleId && uniqueUserIds.Contains(userRole.UserId))
+            .ToDictionaryAsync(userRole => userRole.UserId, cancellationToken)
+            .ConfigureAwait(false);
+
+        var now = SystemClock.UtcNow;
+        var results = new List<BulkRoleAssignmentItemResult>(uniqueUserIds.Length);
+        var hasChanges = false;
+
+        foreach (var userId in uniqueUserIds)
+        {
+            if (existingAssignments.TryGetValue(userId, out var existing))
+            {
+                if (!existing.ExpiresAt.HasValue || existing.ExpiresAt.Value > now)
+                {
+                    results.Add(new BulkRoleAssignmentItemResult(
+                        userId, existing.Id, BulkRoleAssignmentStatus.AlreadyAssigned, existing.AssignedAt, existing.ExpiresAt));
+                    continue;
+                }
+
+                existing.AssignedBy = assignedBy;
+                existing.AssignedAt = now;
+                existing.ExpiresAt = expiresAt;
+                existing.Touch();
+                hasChanges = true;
+                results.Add(new BulkRoleAssignmentItemResult(
+                    userId, existing.Id, BulkRoleAssignmentStatus.Reactivated, existing.AssignedAt, existing.ExpiresAt));
+                continue;
+            }
+
+            var assignment = new UserRole(userId, roleId, assignedBy)
+            {
+                Id = Guid.NewGuid(),
+                ExpiresAt = expiresAt
+            };
+            assignment.Touch();
+            UserRoles.Add(assignment);
+            hasChanges = true;
+            results.Add(new BulkRoleAssignmentItemResult(
+                userId, assignment.Id, BulkRoleAssignmentStatus.Assigned, assignment.AssignedAt, assignment.ExpiresAt));
+        }
+
+        if (hasChanges)
+        {
+            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        return results;
+    }
+
     public async Task RemoveRoleFromUserAsync(Guid userId, Guid roleId, CancellationToken cancellationToken = default)
     {
         var userRole = await UserRoles

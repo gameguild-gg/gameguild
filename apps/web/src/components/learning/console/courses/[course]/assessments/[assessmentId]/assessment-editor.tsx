@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@game-guild/ui/lib/utils";
 import React, { useCallback, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -9,11 +10,12 @@ import {
   CardTitle,
 } from "@game-guild/ui/components/card";
 import { Badge } from "@game-guild/ui/components/badge";
-import { Button } from "@game-guild/ui/components/button";
+import { Button, buttonVariants } from "@game-guild/ui/components/button";
 import { Input } from "@game-guild/ui/components/input";
 import { Label } from "@game-guild/ui/components/label";
 import { Textarea } from "@game-guild/ui/components/textarea";
 import {
+  SelectGroup,
   Select,
   SelectContent,
   SelectItem,
@@ -626,34 +628,24 @@ export function AssessmentEditor({
           <h1 className="text-2xl font-bold">{assessment.title}</h1>
         </div>
         {canManage && (
-          <Button nativeButton={false}
-            variant="outline"
-            size="sm"
-            render={
-              <Link
-                href={`/speedgrader/assessments/${assessment.id}?course=${encodeURIComponent(courseId)}`}
-                data-testid="start-speedgrader-button"
-              />
-            }
+          <Link
+            href={`/speedgrader/assessments/${assessment.id}?course=${encodeURIComponent(courseId)}`}
+            data-testid="start-speedgrader-button"
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
           >
             <Gauge className="mr-2 h-4 w-4" />
             SpeedGrader
-          </Button>
+          </Link>
         )}
         {canManage && (
-          <Button nativeButton={false}
-            variant="outline"
-            size="sm"
-            render={
-              <Link
-                href={`${learningBase}/courses/${encodeURIComponent(courseId)}/assessments/${assessment.slug}/submissions`}
-                data-testid="grade-submissions-button"
-              />
-            }
+          <Link
+            href={`${learningBase}/courses/${encodeURIComponent(courseId)}/assessments/${assessment.slug}/submissions`}
+            data-testid="grade-submissions-button"
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
           >
             <ClipboardCheck className="mr-2 h-4 w-4" />
             Grade submissions
-          </Button>
+          </Link>
         )}
         <Badge variant="secondary">{typeLabel}</Badge>
         <Badge variant={assessmentRole === "Gradebook" ? "default" : "outline"}>
@@ -951,16 +943,27 @@ export function AssessmentEditor({
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Type</Label>
-                <Select value={assessment.type} disabled>
+                <Select
+                  items={[
+                    ...ASSESSMENT_TYPE_OPTIONS.map((opt) => ({
+                      value: opt.value,
+                      label: opt.label,
+                    })),
+                  ]}
+                  value={assessment.type}
+                  disabled
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {ASSESSMENT_TYPE_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
+                    <SelectGroup>
+                      {ASSESSMENT_TYPE_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
                   </SelectContent>
                 </Select>
                 <p className="text-muted-foreground text-xs">
@@ -973,6 +976,13 @@ export function AssessmentEditor({
               <div className="space-y-2">
                 <Label htmlFor="grade-group">Grading group</Label>
                 <Select
+                  items={[
+                    { value: "none", label: "No group" },
+                    ...assessmentGroups.map((group) => ({
+                      value: group.id,
+                      label: `${group.name} (${formatWeight(group.weightPercent)})`,
+                    })),
+                  ]}
                   value={assessmentGroupId}
                   onValueChange={(value) => setAssessmentGroupId(value ?? "none")}
                 >
@@ -980,12 +990,14 @@ export function AssessmentEditor({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">No group</SelectItem>
-                    {assessmentGroups.map((group) => (
-                      <SelectItem key={group.id} value={group.id}>
-                        {group.name} ({formatWeight(group.weightPercent)})
-                      </SelectItem>
-                    ))}
+                    <SelectGroup>
+                      <SelectItem value="none">No group</SelectItem>
+                      {assessmentGroups.map((group) => (
+                        <SelectItem key={group.id} value={group.id}>
+                          {group.name} ({formatWeight(group.weightPercent)})
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
                   </SelectContent>
                 </Select>
                 <p className="text-muted-foreground text-xs">
@@ -1177,6 +1189,12 @@ export function AssessmentEditor({
                 <div className="space-y-2">
                   <Label htmlFor="primary-review-method">Primary review</Label>
                   <Select
+                    items={[
+                      ...ASSESSMENT_PRIMARY_REVIEW_METHODS.map((method) => ({
+                        value: method,
+                        label: REVIEW_METHOD_LABELS[method],
+                      })),
+                    ]}
                     value={primaryReviewMethod}
                     onValueChange={(value) => {
                       const method = value as AssessmentReviewMethod;
@@ -1189,18 +1207,19 @@ export function AssessmentEditor({
                     <SelectTrigger id="primary-review-method">
                       <SelectValue>
                         {(value) =>
-                          REVIEW_METHOD_LABELS[
-                            value as AssessmentReviewMethod
-                          ] ?? "Select review method"
+                          REVIEW_METHOD_LABELS[value as AssessmentReviewMethod] ??
+                          "Select review method"
                         }
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      {ASSESSMENT_PRIMARY_REVIEW_METHODS.map((method) => (
-                        <SelectItem key={method} value={method}>
-                          {REVIEW_METHOD_LABELS[method]}
-                        </SelectItem>
-                      ))}
+                      <SelectGroup>
+                        {ASSESSMENT_PRIMARY_REVIEW_METHODS.map((method) => (
+                          <SelectItem key={method} value={method}>
+                            {REVIEW_METHOD_LABELS[method]}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
                     </SelectContent>
                   </Select>
                 </div>
@@ -1251,22 +1270,28 @@ export function AssessmentEditor({
                   <div className="space-y-2">
                     <Label htmlFor="group-set">Group set</Label>
                     <Select
+                      items={[
+                        { value: GROUP_SET_NONE, label: "No group set" },
+                        ...groupSets.map((set) => ({ value: set.id, label: set.name })),
+                      ]}
                       value={groupSetId}
                       onValueChange={(value) => handleGroupSetChange(value ?? GROUP_SET_NONE)}
                       disabled={isPolicyPending}
                     >
                       <SelectTrigger id="group-set">
-                        <SelectValue />
+                        <SelectValue>
+                          {groupSets.find((set) => set.id === groupSetId)?.name ?? "No group set"}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value={GROUP_SET_NONE}>
-                          No group set
-                        </SelectItem>
-                        {groupSets.map((set) => (
-                          <SelectItem key={set.id} value={set.id}>
-                            {set.name}
-                          </SelectItem>
-                        ))}
+                        <SelectGroup>
+                          <SelectItem value={GROUP_SET_NONE}>No group set</SelectItem>
+                          {groupSets.map((set) => (
+                            <SelectItem key={set.id} value={set.id}>
+                              {set.name}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
                       </SelectContent>
                     </Select>
                     <p className="text-muted-foreground text-xs">
@@ -1304,6 +1329,10 @@ export function AssessmentEditor({
               <div className="space-y-2">
                 <Label htmlFor="result-release-mode">Result release</Label>
                 <Select
+                  items={[
+                    { value: "immediate", label: "Immediate" },
+                    { value: "manual", label: "Manual" },
+                  ]}
                   value={resultReleaseMode}
                   onValueChange={(value) => setResultReleaseMode(value ?? "manual")}
                 >
@@ -1311,8 +1340,10 @@ export function AssessmentEditor({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="immediate">Immediate</SelectItem>
-                    <SelectItem value="manual">Manual</SelectItem>
+                    <SelectGroup>
+                      <SelectItem value="immediate">Immediate</SelectItem>
+                      <SelectItem value="manual">Manual</SelectItem>
+                    </SelectGroup>
                   </SelectContent>
                 </Select>
               </div>
@@ -1322,23 +1353,27 @@ export function AssessmentEditor({
                   Content completion
                 </Label>
                 <Select
+                  items={[
+                    { value: "on-submit", label: "On submission" },
+                    { value: "on-finalize", label: "On final result" },
+                    { value: "on-release", label: "On result release" },
+                    { value: "on-release-and-pass", label: "On released passing result" },
+                  ]}
                   value={contentCompletionMode}
-                  onValueChange={(value) =>
-                    setContentCompletionMode(value ?? "on-submit")
-                  }
+                  onValueChange={(value) => setContentCompletionMode(value ?? "on-submit")}
                 >
                   <SelectTrigger id="content-completion-mode">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="on-submit">On submission</SelectItem>
-                    <SelectItem value="on-finalize">On final result</SelectItem>
-                    <SelectItem value="on-release">
-                      On result release
-                    </SelectItem>
-                    <SelectItem value="on-release-and-pass">
-                      On released passing result
-                    </SelectItem>
+                    <SelectGroup>
+                      <SelectItem value="on-submit">On submission</SelectItem>
+                      <SelectItem value="on-finalize">On final result</SelectItem>
+                      <SelectItem value="on-release">On result release</SelectItem>
+                      <SelectItem value="on-release-and-pass">
+                        On released passing result
+                      </SelectItem>
+                    </SelectGroup>
                   </SelectContent>
                 </Select>
               </div>
@@ -1350,6 +1385,10 @@ export function AssessmentEditor({
                   <div className="space-y-2">
                     <Label htmlFor="presentation-mode">Presentation</Label>
                     <Select
+                      items={[
+                        { value: "Continuous", label: "Continuous list" },
+                        { value: "SingleStep", label: "One at a time" },
+                      ]}
                       value={presentationMode}
                       onValueChange={(value) =>
                         setPresentationMode(value as AssessmentPresentationMode)
@@ -1359,12 +1398,10 @@ export function AssessmentEditor({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Continuous">
-                          Continuous list
-                        </SelectItem>
-                        <SelectItem value="SingleStep">
-                          One at a time
-                        </SelectItem>
+                        <SelectGroup>
+                          <SelectItem value="Continuous">Continuous list</SelectItem>
+                          <SelectItem value="SingleStep">One at a time</SelectItem>
+                        </SelectGroup>
                       </SelectContent>
                     </Select>
                   </div>

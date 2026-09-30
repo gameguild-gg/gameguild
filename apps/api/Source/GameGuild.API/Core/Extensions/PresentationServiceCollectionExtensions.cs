@@ -46,6 +46,7 @@ public static class PresentationServiceCollectionExtensions
         var mvcBuilder = services.AddControllers(mvcOptions =>
             {
                 mvcOptions.Conventions.Add(new MinimumOrderRouteApplicationModelConvention());
+                mvcOptions.Filters.AddService<FieldMaskingResultFilter>();
 
                 if (options.UseKebabCaseRoutes)
                 {
@@ -60,6 +61,8 @@ public static class PresentationServiceCollectionExtensions
                 }
             })
             .ConfigureApplicationPartManager(manager => manager.ApplicationParts.Clear());
+
+        services.AddScoped<FieldMaskingResultFilter>();
 
         foreach (var assembly in applicationAssemblies)
         {

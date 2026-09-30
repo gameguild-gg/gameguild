@@ -348,7 +348,7 @@ public sealed class PermissionGrantService(
 
     private async Task InvalidateTenantCacheAsync(Guid? tenantId, CancellationToken cancellationToken)
     {
-        var tenantKey = tenantId?.ToString() ?? "global";
+        var tenantKey = tenantId?.ToString() ?? Guid.Empty.ToString();
 
         try
         {

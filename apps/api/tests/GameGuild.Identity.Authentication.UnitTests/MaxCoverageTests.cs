@@ -1055,7 +1055,7 @@ public class Web3AuthServiceCovTests
     public async Task GenerateWeb3Challenge_ReturnsChallenge()
     {
         var challenge = new Web3Challenge { Message = "Sign this message", ExpiresAt = DateTime.UtcNow.AddMinutes(5) };
-        _web3Service.Setup(s => s.GenerateChallengeAsync("0x123", null))
+        _web3Service.Setup(s => s.GenerateChallengeAsync("0x123", "1"))
             .ReturnsAsync(challenge);
 
         var result = await _svc.GenerateWeb3ChallengeAsync(
@@ -1068,7 +1068,7 @@ public class Web3AuthServiceCovTests
     [Fact]
     public async Task VerifyWeb3Signature_Invalid_Throws()
     {
-        _web3Service.Setup(s => s.VerifySignatureAsync("0xabc", "sig", "msg"))
+        _web3Service.Setup(s => s.VerifySignatureAsync("0xabc", "sig", "msg", "1", ""))
             .ReturnsAsync(false);
 
         var act = async () => await _svc.VerifyWeb3SignatureAsync(
@@ -1080,7 +1080,7 @@ public class Web3AuthServiceCovTests
     [Fact]
     public async Task VerifyWeb3Signature_Valid_ReturnsSignInResponse()
     {
-        _web3Service.Setup(s => s.VerifySignatureAsync("0xdef", "valid-sig", "challenge"))
+        _web3Service.Setup(s => s.VerifySignatureAsync("0xdef", "valid-sig", "challenge", "1", ""))
             .ReturnsAsync(true);
         _jwtService.Setup(s => s.GenerateAccessToken(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string[]>()))
             .Returns("jwt-token");

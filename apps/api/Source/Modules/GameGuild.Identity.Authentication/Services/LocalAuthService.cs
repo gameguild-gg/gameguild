@@ -1,11 +1,13 @@
 using System.Diagnostics;
 using System.Globalization;
+using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.CQRS;
 using GameGuild.Email;
 using GameGuild.Identity.Users;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace GameGuild.Identity.Authentication;
 
@@ -19,6 +21,7 @@ public class LocalAuthService(
     IRefreshTokenHasher refreshTokenHasher,
     IConfiguration configuration,
     IAuthAttemptService authAttemptService,
+    IPasswordHasher passwordHasher,
 #pragma warning disable CS9113 // Parameter is unread - reserved for future use
     IAuthenticationAnomalyDetectionService anomalyDetectionService,
 #pragma warning restore CS9113
@@ -26,7 +29,8 @@ public class LocalAuthService(
     IHttpContextAccessor httpContextAccessor,
     ILogger<LocalAuthService> logger,
     ISender sender,
-    ISessionManagementService sessionManagementService
+    ISessionManagementService sessionManagementService,
+    IOptions<JwtOptions>? jwtOptions = null
 ) : ILocalAuthService
 {
     public async Task<SignInResponse> LocalSignInAsync(LocalSignInRequest request, CancellationToken cancellationToken = default)
@@ -53,7 +57,7 @@ public class LocalAuthService(
             // Verify password if user exists
             if (user != null)
             {
-                var passwordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
+                var passwordValid = user.HasPassword && passwordHasher.VerifyPassword(user.PasswordHash!, request.Password);
 
                 if (passwordValid)
                 {
@@ -130,7 +134,8 @@ public class LocalAuthService(
             var tenantAccessContext = await ResolveTenantAccessContextAsync(userId.Value, request.TenantId, cancellationToken).ConfigureAwait(false);
             RequireActiveTenantAccess(tenantAccessContext);
 
-            var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
+            var refreshTokenExpiryDays = jwtOptions?.Value.RefreshTokenExpirationDays
+                                         ?? int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7", CultureInfo.InvariantCulture);
             var refreshTokenExpiresAt = SystemClock.UtcNow.AddDays(refreshTokenExpiryDays);
             var sessionId = Guid.NewGuid();
             var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(userId.Value, deviceInfo, cancellationToken).ConfigureAwait(false);
@@ -155,7 +160,8 @@ public class LocalAuthService(
             // Record successful login attempt
             await authAttemptService.RecordSuccessfulAttemptAsync(request.Email, userId.Value, ipAddress ?? "unknown", userAgent, stopwatch.Elapsed).ConfigureAwait(false);
 
-            var accessTokenExpirationMinutes = int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60");
+            var accessTokenExpirationMinutes = jwtOptions?.Value.AccessTokenExpirationMinutes
+                                               ?? int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60", CultureInfo.InvariantCulture);
 
             return new SignInResponse
             {
@@ -201,6 +207,13 @@ public class LocalAuthService(
 
         try
         {
+            var passwordValidation = passwordHasher.ValidatePasswordStrength(request.Password);
+            if (!passwordValidation.IsValid)
+            {
+                throw new RequestValidationException(
+                    passwordValidation.ValidationFailures.Select(failure => new ValidationError("Password", failure)));
+            }
+
             // Check for existing user
             var emailExists = await userRepository.ExistsByEmailAsync(request.Email.ToLowerInvariant(), cancellationToken).ConfigureAwait(false);
 
@@ -212,8 +225,7 @@ public class LocalAuthService(
                 throw new InvalidOperationException("User already exists");
             }
 
-            // Hash password using BCrypt
-            var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+            var passwordHash = passwordHasher.HashPassword(request.Password);
 
             // Create new user using the unified User entity
             var newUser = User.CreateWithPassword(
@@ -244,7 +256,8 @@ public class LocalAuthService(
 
             var tenantAccessContext = await ResolveTenantAccessContextAsync(userId, request.TenantId, cancellationToken).ConfigureAwait(false);
 
-            var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
+            var refreshTokenExpiryDays = jwtOptions?.Value.RefreshTokenExpirationDays
+                                         ?? int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7", CultureInfo.InvariantCulture);
             var refreshTokenExpiresAt = SystemClock.UtcNow.AddDays(refreshTokenExpiryDays);
             var sessionId = Guid.NewGuid();
             var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(userId, deviceInfo, cancellationToken).ConfigureAwait(false);
@@ -270,7 +283,8 @@ public class LocalAuthService(
             await authAttemptService.RecordSuccessfulAttemptAsync(request.Email, userId, ipAddress ?? "unknown", userAgent, stopwatch.Elapsed).ConfigureAwait(false);
             logger.LogInformation("User {Email} successfully signed up", request.Email);
 
-            var accessTokenExpirationMinutes = int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60", CultureInfo.InvariantCulture);
+            var accessTokenExpirationMinutes = jwtOptions?.Value.AccessTokenExpirationMinutes
+                                               ?? int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60", CultureInfo.InvariantCulture);
 
             return new SignInResponse
             {
@@ -315,7 +329,7 @@ public class LocalAuthService(
         var storedToken = await refreshTokenRepository.GetByTokenAsync(hashedToken).ConfigureAwait(false);
         var now = SystemClock.UtcNow;
 
-        if (storedToken == null || storedToken.ExpiresAt <= now)
+        if (storedToken == null)
         {
             logger.LogWarning(
                 "Invalid refresh token attempt from {IpAddress}. TokenFound: {TokenFound}, IsActive: {IsActive}, ExpiresAt: {ExpiresAt}",
@@ -328,7 +342,7 @@ public class LocalAuthService(
             throw new UnauthorizedAccessException("Invalid refresh token");
         }
 
-        if (!storedToken.IsActive)
+        if (storedToken.IsRevoked || storedToken.ReplacedByToken != null)
         {
             logger.LogWarning(
                 "Rejected refresh token replay from {IpAddress}. RevokedAt: {RevokedAt}, RevokedByIp: {RevokedByIp}",
@@ -336,6 +350,19 @@ public class LocalAuthService(
                 storedToken.RevokedAt,
                 storedToken.RevokedByIp
             );
+
+            await InvalidateSessionsAfterRefreshReplayAsync(storedToken.UserId, ipAddress, cancellationToken)
+                .ConfigureAwait(false);
+
+            throw new UnauthorizedAccessException("Invalid refresh token");
+        }
+
+        if (storedToken.ExpiresAt <= now)
+        {
+            logger.LogWarning(
+                "Invalid expired refresh token attempt from {IpAddress} for user {UserId}",
+                ipAddress,
+                storedToken.UserId);
 
             throw new UnauthorizedAccessException("Invalid refresh token");
         }
@@ -357,7 +384,8 @@ public class LocalAuthService(
 
         var existingSession = await sessionManagementService.GetSessionByRefreshTokenAsync(hashedToken, cancellationToken).ConfigureAwait(false);
         var sessionId = existingSession?.Id ?? Guid.NewGuid();
-        var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
+        var refreshTokenExpiryDays = jwtOptions?.Value.RefreshTokenExpirationDays
+                                     ?? int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7", CultureInfo.InvariantCulture);
         var newRefreshToken = await jwtTokenService.GenerateRefreshTokenAsync(userId, deviceInfo, authenticatedAt, cancellationToken).ConfigureAwait(false);
         var refreshTokenExpiresAt = now.AddDays(refreshTokenExpiryDays);
         var replacementTokenHash = refreshTokenHasher.HashToken(newRefreshToken);
@@ -371,12 +399,6 @@ public class LocalAuthService(
             sessionId,
             cancellationToken).ConfigureAwait(false);
 
-        storedToken.IsRevoked = true;
-        storedToken.RevokedAt = now;
-        storedToken.RevokedByIp = ipAddress;
-        storedToken.ReplacedByToken = replacementTokenHash;
-        await refreshTokenRepository.UpdateAsync(storedToken).ConfigureAwait(false);
-
         if (existingSession == null)
         {
             await sessionManagementService.CreateSessionAsync(
@@ -389,14 +411,36 @@ public class LocalAuthService(
                 deviceInfo.Fingerprint,
                 cancellationToken).ConfigureAwait(false);
         }
-        else
+        else if (!await sessionManagementService.RefreshSessionAsync(
+                     sessionId,
+                     replacementTokenHash,
+                     refreshTokenExpiresAt,
+                     cancellationToken).ConfigureAwait(false))
         {
-            await sessionManagementService.RefreshSessionAsync(sessionId, replacementTokenHash, refreshTokenExpiresAt, cancellationToken).ConfigureAwait(false);
+            logger.LogWarning("Refresh token session {SessionId} was no longer active for user {UserId}; invalidating sessions", sessionId, userId);
+            await InvalidateSessionsAfterRefreshReplayAsync(userId, ipAddress, cancellationToken).ConfigureAwait(false);
+            throw new UnauthorizedAccessException("Invalid refresh token");
+        }
+
+        var rotationClaimed = await refreshTokenRepository.TryRevokeForRotationAsync(
+            storedToken.Id,
+            hashedToken,
+            replacementTokenHash,
+            now,
+            ipAddress,
+            cancellationToken).ConfigureAwait(false);
+
+        if (!rotationClaimed)
+        {
+            logger.LogWarning("Refresh token rotation lost a concurrent claim for user {UserId}; invalidating sessions", userId);
+            await InvalidateSessionsAfterRefreshReplayAsync(userId, ipAddress, cancellationToken).ConfigureAwait(false);
+            throw new UnauthorizedAccessException("Invalid refresh token");
         }
 
         logger.LogInformation("Refresh token rotated for user {UserId}", userId);
 
-        var accessTokenExpirationMinutes = int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60");
+        var accessTokenExpirationMinutes = jwtOptions?.Value.AccessTokenExpirationMinutes
+                                          ?? int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60", CultureInfo.InvariantCulture);
 
         return new SignInResponse
         {
@@ -414,6 +458,29 @@ public class LocalAuthService(
             TenantId = tenantAccessContext.TenantId,
             AvailableTenants = tenantAccessContext.AvailableTenants
         };
+    }
+
+    private async Task InvalidateSessionsAfterRefreshReplayAsync(
+        Guid userId,
+        string? ipAddress,
+        CancellationToken cancellationToken)
+    {
+        await refreshTokenRepository.RevokeAllForUserAsync(userId, ipAddress, cancellationToken)
+            .ConfigureAwait(false);
+        await sessionManagementService.TerminateAllUserSessionsAsync(
+            userId,
+            SessionTerminationReason.SecurityViolation,
+            cancellationToken: cancellationToken).ConfigureAwait(false);
+
+        var compromisedUser = await userRepository.GetByIdAsync(userId, cancellationToken).ConfigureAwait(false);
+        if (compromisedUser is null)
+        {
+            return;
+        }
+
+        compromisedUser.IncrementTokenVersion();
+        await userRepository.UpdateAsync(compromisedUser, cancellationToken).ConfigureAwait(false);
+        await userRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     private static TenantAccessContext RequireActiveTenantAccess(TenantAccessContext tenantAccessContext)

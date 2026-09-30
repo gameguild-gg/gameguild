@@ -152,13 +152,19 @@ public sealed record Web3VerifyRequest
     public required string WalletAddress { get; init; }
 
     /// <summary>
-    ///     Signed message/signature
+    /// Full SIWE challenge message returned by the challenge endpoint and signed by the wallet.
+    /// </summary>
+    [Required]
+    public required string Challenge { get; init; }
+
+    /// <summary>
+    ///     EIP-191 signature over the SIWE challenge message
     /// </summary>
     [Required]
     public required string Signature { get; init; }
 
     /// <summary>
-    ///     Nonce/challenge that was signed
+    ///     Nonce contained in the SIWE challenge message
     /// </summary>
     [Required]
     public required string Nonce { get; init; }

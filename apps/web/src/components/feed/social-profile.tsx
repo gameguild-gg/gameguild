@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@game-guild/ui/lib/utils";
 import { Link } from "@/i18n/navigation";
 import { followCreator } from "@/lib/feed/actions";
 import type {
@@ -7,7 +8,7 @@ import type {
   SocialProfilePost,
   SocialProfileProject,
 } from "@/lib/feed/contracts";
-import { Button } from "@game-guild/ui/components/button";
+import { Button, buttonVariants } from "@game-guild/ui/components/button";
 import { ArrowLeft, BadgeCheck, ExternalLink, MapPin } from "lucide-react";
 import Image from "next/image";
 import * as React from "react";
@@ -65,9 +66,12 @@ export function SocialProfileView({
   return (
     <main className="mx-auto min-h-[calc(100svh-4rem)] w-full max-w-[820px] bg-background pb-16 text-foreground">
       <div className="px-4 py-4 sm:px-6">
-        <Button nativeButton={false} variant="ghost" size="sm" render={<Link href="/" />}>
+        <Link
+          href="/"
+          className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+        >
           <ArrowLeft className="size-4" /> Back to feed
-        </Button>
+        </Link>
       </div>
 
       <section className="overflow-hidden bg-card text-card-foreground">
@@ -97,7 +101,12 @@ export function SocialProfileView({
                 {following ? "Following" : "Follow"}
               </Button>
             ) : (
-              <Button nativeButton={false} variant="secondary" render={<Link href="/workspace/settings/profile" />}>Edit profile</Button>
+              <Link
+                href="/workspace/settings/profile"
+                className={cn(buttonVariants({ variant: "secondary" }))}
+              >
+                Edit profile
+              </Link>
             )}
           </div>
 

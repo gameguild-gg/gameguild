@@ -1,7 +1,8 @@
+import { cn } from "@game-guild/ui/lib/utils";
 import { Link } from '@/i18n/navigation';
 import type { WorkspaceProjectVersion } from '@/lib/workspaces';
 import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
+import { buttonVariants } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { CheckCircle2, Circle, TestTube2 } from 'lucide-react';
 
@@ -58,9 +59,9 @@ export function ProjectTestingReadiness({ projectId, projectSlug, versions }: Pr
             </li>
           ))}
         </ol>
-        <Button nativeButton={false} render={<Link href={action.href} />}>
+        <Link href={action.href} className={cn(buttonVariants({}))}>
           {action.label}
-        </Button>
+        </Link>
       </CardContent>
     </Card>
   );
