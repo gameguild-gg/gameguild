@@ -29,7 +29,10 @@ describe("createMagicLinkCredentialsAuthorize", () => {
     const request = new Request(
       "https://gameguild.example/api/auth/signin/credentials",
     );
-    const authorize = createMagicLinkCredentialsAuthorize(passwordAuthorize);
+    const authorize = createMagicLinkCredentialsAuthorize(
+      passwordAuthorize,
+      "https://api.gameguild.example",
+    );
 
     await expect(authorize(credentials, request)).resolves.toEqual({
       user: { id: "user-123" },
@@ -46,13 +49,16 @@ describe("createMagicLinkCredentialsAuthorize", () => {
         new Response(JSON.stringify(signInResponse), { status: 200 }),
       );
     vi.stubGlobal("fetch", fetchMock);
-    const authorize = createMagicLinkCredentialsAuthorize(passwordAuthorize);
+    const authorize = createMagicLinkCredentialsAuthorize(
+      passwordAuthorize,
+      "https://api.gameguild.example/",
+    );
 
     const result = await authorize(
       {
         magicLinkToken: " one-time-token ",
         tenantId: "tenant-789",
-        __apiUrl: "https://api.gameguild.example/",
+        __apiUrl: "http://127.0.0.1:8080",
       },
       new Request("https://gameguild.example/api/auth/signin/credentials", {
         headers: { "user-agent": "GameGuild test browser" },
@@ -60,7 +66,7 @@ describe("createMagicLinkCredentialsAuthorize", () => {
     );
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "https://api.gameguild.example/v1/auth/magic-link:consume",
+      new URL("https://api.gameguild.example/v1/auth/magic-link:consume"),
       expect.objectContaining({
         method: "POST",
         cache: "no-store",
@@ -87,12 +93,12 @@ describe("createMagicLinkCredentialsAuthorize", () => {
     vi.stubGlobal("fetch", fetchMock);
     const authorize = createMagicLinkCredentialsAuthorize(
       CredentialsProvider().authorize,
+      "https://api.gameguild.example",
     );
 
     await expect(
       authorize({
         magicLinkToken: " ",
-        __apiUrl: "https://api.gameguild.example",
       }),
     ).rejects.toBeInstanceOf(CredentialsSignInError);
     expect(fetchMock).not.toHaveBeenCalled();
@@ -110,12 +116,12 @@ describe("createMagicLinkCredentialsAuthorize", () => {
     vi.stubGlobal("fetch", fetchMock);
     const authorize = createMagicLinkCredentialsAuthorize(
       CredentialsProvider().authorize,
+      "https://api.gameguild.example",
     );
 
     await expect(
       authorize({
         magicLinkToken: "bad-token",
-        __apiUrl: "https://api.gameguild.example",
       }),
     ).rejects.toThrow("This sign-in link is invalid or has expired.");
   });
@@ -127,12 +133,12 @@ describe("createMagicLinkCredentialsAuthorize", () => {
     vi.stubGlobal("fetch", fetchMock);
     const authorize = createMagicLinkCredentialsAuthorize(
       CredentialsProvider().authorize,
+      "https://api.gameguild.example",
     );
 
     await expect(
       authorize({
         magicLinkToken: "valid-token",
-        __apiUrl: "https://api.gameguild.example",
       }),
     ).rejects.toBeInstanceOf(AuthServiceUnavailableError);
   });

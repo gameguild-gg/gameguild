@@ -15,6 +15,7 @@ const MAGIC_LINK_CONSUME_PATH = "/v1/auth/magic-link:consume";
  */
 export function createMagicLinkCredentialsAuthorize(
   passwordAuthorize: CredentialsAuthorize,
+  apiUrl: string,
 ): CredentialsAuthorize {
   return async (credentials, request) => {
     const rawToken = credentials.magicLinkToken;
@@ -23,13 +24,6 @@ export function createMagicLinkCredentialsAuthorize(
     if (typeof rawToken !== "string" || rawToken.trim().length === 0) {
       throw new CredentialsSignInError(
         "This sign-in link is invalid or has expired.",
-      );
-    }
-
-    const apiUrl = credentials.__apiUrl;
-    if (typeof apiUrl !== "string" || apiUrl.trim().length === 0) {
-      throw new AuthServiceUnavailableError(
-        "The authentication service is not configured.",
       );
     }
 
@@ -48,7 +42,7 @@ export function createMagicLinkCredentialsAuthorize(
     let response: Response;
     try {
       response = await fetch(
-        `${apiUrl.replace(/\/+$/, "")}${MAGIC_LINK_CONSUME_PATH}`,
+        new URL(MAGIC_LINK_CONSUME_PATH, apiUrl),
         {
           method: "POST",
           headers,

@@ -14,12 +14,17 @@ import { createSharedAuthCookieConfig } from "@/lib/auth/cross-domain-auth";
 import { createMagicLinkCredentialsAuthorize } from "@/lib/auth/magic-link-credentials";
 
 const passwordCredentials = CredentialsProvider();
+const apiUrl =
+  process.env.API_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://localhost:8080";
 
 const result = GameGuildAuth({
   providers: [
     CredentialsProvider({
       authorize: createMagicLinkCredentialsAuthorize(
         passwordCredentials.authorize,
+        apiUrl,
       ),
     }),
     ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
@@ -43,10 +48,7 @@ const result = GameGuildAuth({
     // Callback failures redirect here with ?error=; the page renders it inline.
     error: "/sign-in",
   },
-  apiUrl:
-    process.env.API_URL ||
-    process.env.NEXT_PUBLIC_API_URL ||
-    "http://localhost:8080",
+  apiUrl,
   secret:
     process.env.AUTH_SECRET ||
     (process.env.NEXT_PHASE === "phase-production-build"
