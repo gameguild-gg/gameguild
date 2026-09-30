@@ -5047,6 +5047,32 @@ export interface IdentityAuthenticationBeginWebAuthnRegistrationInput {
   preferredAuthenticatorType?: IdentityAuthenticationWebAuthnAuthenticatorType;
 }
 
+export interface IdentityAuthenticationBulkAssignRolesCommand {
+  expiresAt?: string | null;
+  roleId?: string;
+  userIds?: Array<string> | null;
+}
+
+export interface IdentityAuthenticationBulkRoleAssignmentItemResult {
+  assignedAt?: string;
+  assignmentId?: string;
+  expiresAt?: string | null;
+  status?: IdentityAuthenticationBulkRoleAssignmentStatus;
+  userId?: string;
+}
+
+export interface IdentityAuthenticationBulkRoleAssignmentResult {
+  alreadyAssigned?: number;
+  assigned?: number;
+  duplicateUserIds?: number;
+  reactivated?: number;
+  roleId?: string;
+  totalRequested?: number;
+  users?: Array<IdentityAuthenticationBulkRoleAssignmentItemResult> | null;
+}
+
+export type IdentityAuthenticationBulkRoleAssignmentStatus = 'Assigned' | 'Reactivated' | 'AlreadyAssigned';
+
 export interface IdentityAuthenticationCleanupKeysInput {
   retentionDays?: number | null;
 }
@@ -14573,6 +14599,10 @@ export let IdentityAuthenticationBackupCodesOutputSchema: z.ZodType<IdentityAuth
 export let IdentityAuthenticationBackupCodesStatusOutputSchema: z.ZodType<IdentityAuthenticationBackupCodesStatusOutput>;
 export let IdentityAuthenticationBeginWebAuthnAuthenticationInputSchema: z.ZodType<IdentityAuthenticationBeginWebAuthnAuthenticationInput>;
 export let IdentityAuthenticationBeginWebAuthnRegistrationInputSchema: z.ZodType<IdentityAuthenticationBeginWebAuthnRegistrationInput>;
+export let IdentityAuthenticationBulkAssignRolesCommandSchema: z.ZodType<IdentityAuthenticationBulkAssignRolesCommand>;
+export let IdentityAuthenticationBulkRoleAssignmentItemResultSchema: z.ZodType<IdentityAuthenticationBulkRoleAssignmentItemResult>;
+export let IdentityAuthenticationBulkRoleAssignmentResultSchema: z.ZodType<IdentityAuthenticationBulkRoleAssignmentResult>;
+export let IdentityAuthenticationBulkRoleAssignmentStatusSchema: z.ZodType<IdentityAuthenticationBulkRoleAssignmentStatus>;
 export let IdentityAuthenticationCleanupKeysInputSchema: z.ZodType<IdentityAuthenticationCleanupKeysInput>;
 export let IdentityAuthenticationCleanupResultSchema: z.ZodType<IdentityAuthenticationCleanupResult>;
 export let IdentityAuthenticationClientCredentialsTokenOutputSchema: z.ZodType<IdentityAuthenticationClientCredentialsTokenOutput>;
@@ -21621,6 +21651,39 @@ IdentityAuthenticationBeginWebAuthnRegistrationInputSchema = z.object({
   email: z.string().nullable().optional(),
   preferredAuthenticatorType: z.lazy(() => IdentityAuthenticationWebAuthnAuthenticatorTypeSchema).optional(),
 });
+
+/** Zod schema for IdentityAuthenticationBulkAssignRolesCommand */
+IdentityAuthenticationBulkAssignRolesCommandSchema = z.object({
+  expiresAt: z.string().datetime().nullable().optional(),
+  roleId: z.string().uuid().optional(),
+  userIds: z.array(z.string().uuid()).nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationBulkRoleAssignmentItemResult */
+IdentityAuthenticationBulkRoleAssignmentItemResultSchema = z.object({
+  assignedAt: z.string().datetime().optional(),
+  assignmentId: z.string().uuid().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
+  status: z.lazy(() => IdentityAuthenticationBulkRoleAssignmentStatusSchema).optional(),
+  userId: z.string().uuid().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationBulkRoleAssignmentResult */
+IdentityAuthenticationBulkRoleAssignmentResultSchema = z.object({
+  alreadyAssigned: z.number().int().optional(),
+  assigned: z.number().int().optional(),
+  duplicateUserIds: z.number().int().optional(),
+  reactivated: z.number().int().optional(),
+  roleId: z.string().uuid().optional(),
+  totalRequested: z.number().int().optional(),
+  users: z
+    .array(z.lazy(() => IdentityAuthenticationBulkRoleAssignmentItemResultSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for IdentityAuthenticationBulkRoleAssignmentStatus */
+IdentityAuthenticationBulkRoleAssignmentStatusSchema = z.enum(['Assigned', 'Reactivated', 'AlreadyAssigned']);
 
 /** Zod schema for IdentityAuthenticationCleanupKeysInput */
 IdentityAuthenticationCleanupKeysInputSchema = z.object({
