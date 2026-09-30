@@ -73,6 +73,37 @@ public class OAuthAuthService(
         return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Google sign-in successful", cancellationToken).ConfigureAwait(false);
     }
 
+    public async Task<SignInResponse> MicrosoftSignInAsync(OAuthSignInRequest request, CancellationToken cancellationToken = default)
+    {
+        logger.LogInformation("Processing Microsoft OAuth sign-in");
+
+        var microsoftUser = await oauthService.GetUserProfileAsync("microsoft", request.AccessToken).ConfigureAwait(false);
+        var email = microsoftUser.Email ?? throw new UnauthorizedAccessException("Email not available from Microsoft profile");
+        var user = await ResolveExternalUserAsync(
+            "microsoft", email, microsoftUser.ProviderId, microsoftUser.Name, microsoftUser.EmailVerified, cancellationToken)
+            .ConfigureAwait(false);
+        await DefaultTenantMembershipProvisioner.EnsureAsync(sender, user.Id, cancellationToken).ConfigureAwait(false);
+        var tenantAccessContext = await ResolveTenantAccessContextAsync(user.Id, request.TenantId, cancellationToken).ConfigureAwait(false);
+
+        var httpContext = httpContextAccessor.HttpContext;
+        var ipAddress = authAttemptService.GetClientIpAddress(httpContext);
+        var userAgent = httpContext?.Request.Headers.UserAgent.ToString();
+        var deviceInfo = new DeviceInfo
+        {
+            Fingerprint = Guid.NewGuid().ToString(),
+            IpAddress = ipAddress,
+            UserAgent = userAgent,
+            DeviceName = "OAuth Device",
+            DeviceType = "Web"
+        };
+
+        logger.LogInformation("Microsoft OAuth sign-in successful for {Email}", email);
+
+        return await CompleteSignInAsync(
+            user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Microsoft sign-in successful", cancellationToken)
+            .ConfigureAwait(false);
+    }
+
     public async Task<SignInResponse> GoogleIdTokenSignInAsync(GoogleIdTokenRequest request, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(request.IdToken)) { throw new UnauthorizedAccessException("ID token is required"); }
@@ -217,7 +248,7 @@ public class OAuthAuthService(
         var createdNewUser = false;
         if (user == null)
         {
-            user = User.CreateOAuthUser(email, name ?? email.Split('@')[0]);
+            user = User.CreateOAuthUser(email, name ?? email.Split('@')[0], emailVerified);
             createdNewUser = true;
         }
 
