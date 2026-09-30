@@ -170,6 +170,7 @@ public sealed class RolesControllerTests
             nameof(RolesController.Delete),
             nameof(RolesController.GetUserRoles),
             nameof(RolesController.AssignRoleToUser),
+            nameof(RolesController.BulkAssignRoles),
             nameof(RolesController.RemoveRoleFromUser)
         };
 
@@ -411,6 +412,38 @@ public sealed class RolesControllerTests
         created.ActionName.Should().Be(nameof(RolesController.GetUserRoles));
         created.RouteValues!["userId"].Should().Be(request.UserId);
         created.Value.Should().BeSameAs(userRole);
+    }
+
+    [Fact]
+    public async Task BulkAssignRoles_ShouldForwardCommandAndReturnOutcomes()
+    {
+        var sender = new Mock<ISender>();
+        var command = new BulkAssignRolesCommand
+        {
+            RoleId = Guid.NewGuid(),
+            UserIds = [Guid.NewGuid(), Guid.NewGuid()],
+            ExpiresAt = DateTime.UtcNow.AddDays(7)
+        };
+        var response = new BulkRoleAssignmentResult
+        {
+            RoleId = command.RoleId,
+            TotalRequested = command.UserIds.Count,
+            Assigned = command.UserIds.Count
+        };
+        BulkAssignRolesCommand? captured = null;
+
+        sender
+            .Setup(x => x.Send(It.IsAny<BulkAssignRolesCommand>(), It.IsAny<CancellationToken>()))
+            .Callback<object, CancellationToken>((requestValue, _) => captured = (BulkAssignRolesCommand)requestValue)
+            .ReturnsAsync(response);
+
+        var controller = new RolesController(NullLogger<RolesController>.Instance, sender.Object);
+
+        var result = await controller.BulkAssignRoles(command, CancellationToken.None);
+
+        captured.Should().BeSameAs(command);
+        var ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        ok.Value.Should().BeSameAs(response);
     }
 
     [Fact]

@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using GameGuild.API.Setup;
 using OpenTelemetry.Exporter;
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 
 namespace GameGuild.API.UnitTests.Core;
@@ -61,6 +62,7 @@ public sealed class OpenTelemetryExtensionsTests
         using var provider = builder.Services.BuildServiceProvider();
 
         provider.GetRequiredService<TracerProvider>().Should().NotBeNull();
+        provider.GetRequiredService<MeterProvider>().Should().NotBeNull();
     }
 
     [Theory]

@@ -1,6 +1,7 @@
 "use client";
 
-import { Button } from "@game-guild/ui/components/button";
+import { cn } from "@game-guild/ui/lib/utils";
+import { buttonVariants } from "@game-guild/ui/components/button";
 import {
   getPathname,
   Link,
@@ -37,9 +38,9 @@ export function LearningAuthRedirect() {
         <p className="mt-2 text-sm text-muted-foreground">
           Your learning destination will be restored after authentication.
         </p>
-        <Button nativeButton={false} className="mt-6" render={<Link href={href} />}>
+        <Link href={href} className={cn(buttonVariants({ className: "mt-6" }))}>
           Continue to sign in
-        </Button>
+        </Link>
       </div>
     </main>
   );

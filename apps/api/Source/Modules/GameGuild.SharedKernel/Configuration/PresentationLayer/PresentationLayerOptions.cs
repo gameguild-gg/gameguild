@@ -91,6 +91,8 @@ public sealed class PresentationLayerOptions : BaseOptions
 
     public AuthenticationOptions? Authentication { get; set; }
 
+    public global::GameGuild.SecurityHeadersOptions? SecurityHeaders { get; set; }
+
     public AuthorizationOptions? Authorization { get; set; }
 
     public RequestContextOptions? RequestContext { get; set; }
@@ -129,6 +131,7 @@ public sealed class PresentationLayerOptions : BaseOptions
         ResponseCaching?.Validate();
         ResponseCompression?.Validate();
         Authentication?.Validate();
+        SecurityHeaders?.Validate();
         Authorization?.Validate();
         RequestContext?.Validate();
         RateLimiting?.Validate();
@@ -156,6 +159,7 @@ public sealed class PresentationLayerOptions : BaseOptions
             ResponseCaching = ResponseCachingOptions.CreateDefault(),
             ResponseCompression = ResponseCompressionOptions.CreateDefault(),
             Authentication = AuthenticationOptions.CreateDefault(),
+            SecurityHeaders = new global::GameGuild.SecurityHeadersOptions(),
             Authorization = AuthorizationOptions.CreateDefault(),
             RequestContext = RequestContextOptions.CreateDefault(),
             RateLimiting = RateLimitingOptions.CreateDefault(),

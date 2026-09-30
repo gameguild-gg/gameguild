@@ -1,5 +1,6 @@
+import { cn } from "@game-guild/ui/lib/utils";
 import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
+import { Button, buttonVariants } from '@game-guild/ui/components/button';
 import { Link } from '@/i18n/navigation';
 import type { Program, ProgramContent } from '@/lib/api/generated';
 import { ProgramContentType } from '@/lib/api/generated';
@@ -465,10 +466,19 @@ export function CourseLandingPage({ course, viewerAccess, products = [] }: Cours
                   The course work should feel like a production path, not disconnected lessons. Each milestone becomes a visible project checkpoint with a
                   concrete deliverable.
                 </p>
-                <Button variant="outline" className="mt-8 border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white" nativeButton={false} render={<Link href="#curriculum" />}>
+                <Link
+                  href="#curriculum"
+                  className={cn(
+                    buttonVariants({
+                      variant: "outline",
+                      className:
+                        "mt-8 border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white",
+                    }),
+                  )}
+                >
                   View learning path
                   <ArrowRight />
-                </Button>
+                </Link>
               </div>
 
               <CourseProjectCarousel courseTitle={title} projects={projectSlides} />
@@ -558,18 +568,36 @@ export function CourseLandingPage({ course, viewerAccess, products = [] }: Cours
                   ) : viewerCta.kind === 'enroll' && course.slug ? (
                     <CourseSelfEnrollButton courseSlug={course.slug} />
                   ) : viewerCta.href ? (
-                    <Button size="lg" className="bg-white text-slate-950 hover:bg-slate-200" nativeButton={false} render={<Link href={viewerCta.href} />}>
+                    <Link
+                      href={viewerCta.href}
+                      className={cn(
+                        buttonVariants({
+                          size: "lg",
+                          className: "bg-white text-slate-950 hover:bg-slate-200",
+                        }),
+                      )}
+                    >
                       {viewerCta.label}
                       <ArrowRight />
-                    </Button>
+                    </Link>
                   ) : (
                     <Button size="lg" disabled className="bg-white/20 text-white">
                       {viewerCta.label}
                     </Button>
                   )}
-                  <Button size="lg" variant="outline" className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white" nativeButton={false} render={<Link href="/courses" />}>
+                  <Link
+                    href="/courses"
+                    className={cn(
+                      buttonVariants({
+                        size: "lg",
+                        variant: "outline",
+                        className:
+                          "border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white",
+                      }),
+                    )}
+                  >
                     Browse catalog
-                  </Button>
+                  </Link>
                 </div>
               </div>
               <div className="grid border-t border-white/10 md:grid-cols-4">
@@ -646,10 +674,19 @@ export function CourseLandingPage({ course, viewerAccess, products = [] }: Cours
                         </span>
                       ))}
                     </div>
-                    <Button variant="outline" className="mt-8 w-fit border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white" nativeButton={false} render={<Link href={`/programs/${program.slug}`} />}>
+                    <Link
+                      href={`/programs/${program.slug}`}
+                      className={cn(
+                        buttonVariants({
+                          variant: "outline",
+                          className:
+                            "mt-8 w-fit border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white",
+                        }),
+                      )}
+                    >
                       Explore package
                       <ArrowRight />
-                    </Button>
+                    </Link>
                   </div>
                 </div>
               </section>

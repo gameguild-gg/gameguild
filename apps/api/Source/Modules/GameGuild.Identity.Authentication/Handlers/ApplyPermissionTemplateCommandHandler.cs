@@ -233,7 +233,7 @@ public sealed class ApplyPermissionTemplateCommandHandler(
 
     private async Task InvalidateTenantCacheAsync(Guid? tenantId, CancellationToken cancellationToken)
     {
-        var tenantKey = tenantId?.ToString() ?? "global";
+        var tenantKey = tenantId?.ToString() ?? Guid.Empty.ToString();
 
         var newVersion = await securityVersionStore.IncrementVersionAsync(tenantKey, cancellationToken).ConfigureAwait(false);
         logger.LogDebug(

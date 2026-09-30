@@ -186,13 +186,13 @@ export function TestingSlotRegistration({
           {testerInstructions?.trim() ? (
             <Alert><AlertDescription><span className="font-medium">Host’s note: </span>{testerInstructions}</AlertDescription></Alert>
           ) : null}
-          <QuestionnaireFieldset
+          {(registrationSchema?.questions?.length ?? 0) > 0 ? <QuestionnaireFieldset
             schema={registrationSchema}
             value={responses}
             onChange={(value) => { setResponses(value); setQuestionnaireComplete(false); }}
             onComplete={() => setQuestionnaireComplete(true)}
             submitLabel="Confirm registration answers"
-          />
+          /> : null}
           <div className="max-h-48 overflow-y-auto rounded-md border bg-muted/20 p-3 text-sm leading-6 whitespace-pre-wrap">
             <p className="mb-1 font-medium">Playtest rules</p>
             {generalRules?.trim() || 'No event-specific rules have been published.'}

@@ -181,7 +181,10 @@ describe("testing lab dashboard page", () => {
     expect(
       screen.getByRole("region", { name: "Testing Lab attention" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("1 pending application")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Review 1 pending game application" })).toHaveAttribute(
+      "href",
+      "/workspace/testing-lab/events/event-1/applications?applicationStatus=Pending",
+    );
     expect(screen.queryByText(/incomplete session/i)).not.toBeInTheDocument();
     expect(mocks.getTestingLabDashboard).not.toHaveBeenCalled();
     expect(

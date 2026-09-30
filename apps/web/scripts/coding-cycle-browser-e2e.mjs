@@ -628,30 +628,29 @@ async function seedFixture() {
   );
   if (!content.id) throw new Error("Create content returned no id.");
 
-  // Assessment linked to the content, modality Code.
+  // Create the coding assignment through the content authoring route. That route
+  // owns and synchronizes the linked assessment; the general assessment endpoint
+  // deliberately rejects direct creation with a contentId.
   const maxScore = 100;
-  const assessment = unwrap(
-    await new GeneratedApi.LearningAssessmentsModule(adminClient).postAssessments({
-      courseId: course.id,
-      title: "Add two integers",
-      description: "Implement add(a,b) and a main that prints add(2,3).",
-      type: "Assignment",
-      maxScore,
-      isRequired: true,
-      submissionModalities: "Code",
-      presentationMode: "SingleStep",
-      contentId: content.id,
-    }),
-    "Create assessment",
-  );
-  if (!assessment.id) throw new Error("Create assessment returned no id.");
-
-  // PUT v1 coding-assignment content (Public + Private tests + files).
   await rawRequest(
     adminClient,
     `/v1.0/courses/${course.id}/content/${content.id}/coding-assignment`,
     { method: "PUT", body: buildCodingContent(maxScore) },
   );
+
+  const courseAssessments = unwrap(
+    await adminClient.request({
+      method: "GET",
+      path: `/v1/assessments/course/${course.id}`,
+    }),
+    "List course assessments",
+  );
+  const assessment = courseAssessments.find(
+    (candidate) => candidate.contentId === content.id,
+  );
+  if (!assessment?.id) {
+    throw new Error("Coding assignment did not create its linked assessment.");
+  }
 
   // Lifecycle: submit → approve → publish.
   const lifecycle = new GeneratedApi.LearningCoursesProgramLifecycleModule(adminClient);
@@ -661,6 +660,7 @@ async function seedFixture() {
 
   // Rubric: 2 criteria summing to maxScore. Points live here so the grader
   // UI fill step reads them from the fixture instead of hardcoding 60/40.
+  // API ScoreValue integers are hundredths of a point; the grader UI uses points.
   const criterionPoints = [60, 40];
   const rubric = unwrap(
     await new GeneratedApi.LearningAssessmentsRubricsModule(adminClient).putAssessmentsRubric(
@@ -668,8 +668,8 @@ async function seedFixture() {
       {
         title: "Add two integers rubric",
         criteria: [
-          { description: "Correctness", points: criterionPoints[0], order: 0 },
-          { description: "Code quality", points: criterionPoints[1], order: 1 },
+          { description: "Correctness", points: criterionPoints[0] * 100, order: 0 },
+          { description: "Code quality", points: criterionPoints[1] * 100, order: 1 },
         ],
       },
     ),

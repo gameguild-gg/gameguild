@@ -32,7 +32,7 @@ describe("TestingEventDirectoryFilters", () => {
     expect(statusFilter).toHaveTextContent("Applications open");
 
     await user.click(statusFilter);
-    await user.click(screen.getByRole("option", { name: "Active" }));
+    await user.click(await screen.findByRole("option", { name: "Active" }));
 
     expect(mocks.replace).toHaveBeenCalledWith(
       "/workspace/testing-lab/events?q=campus&status=Active",
@@ -76,7 +76,7 @@ describe("TestingEventDirectoryFilters", () => {
     await user.click(
       screen.getByRole("combobox", { name: "Filter testing events by status" }),
     );
-    await user.click(screen.getByRole("option", { name: "Archived" }));
+    await user.click(await screen.findByRole("option", { name: "Archived" }));
     expect(mocks.replace).toHaveBeenCalledWith(
       "/workspace/testing-lab/events?archived=true",
     );

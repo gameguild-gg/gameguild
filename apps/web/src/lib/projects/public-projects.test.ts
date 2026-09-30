@@ -98,6 +98,32 @@ describe("public Projects API queries", () => {
     });
   });
 
+  it("sends search and type filters to the public API", async () => {
+    mocks.getProjectsForGetProjects.mockResolvedValue({ ok: true, data: [apiProject] });
+
+    await getPublishedProjectsPage(0, 25, " mothlight ", "Game");
+
+    expect(mocks.getProjectsForGetProjects).toHaveBeenCalledWith({
+      status: "Published",
+      visibility: "Public",
+      searchTerm: "mothlight",
+      type: "Game",
+      skip: 0,
+      take: 25,
+      sortBy: "UpdatedAt",
+      sortDirection: "DESC",
+    });
+  });
+
+  it("surfaces public catalog API failures instead of returning an empty list", async () => {
+    mocks.getProjectsForGetProjects.mockResolvedValue({
+      ok: false,
+      error: { name: "ApiError", message: "Unavailable", status: 503 },
+    });
+
+    await expect(getPublishedProjectsPage(0, 25)).rejects.toThrow("Public projects could not be loaded.");
+  });
+
   it("exposes only safe external URLs as actionable project resources", async () => {
     mocks.getProjectsForGetProjects.mockResolvedValue({
       ok: true,
@@ -130,5 +156,14 @@ describe("public Projects API queries", () => {
       includeReleases: true,
       includeCollaborators: true,
     });
+  });
+
+  it("surfaces project API failures that are not a not-found response", async () => {
+    mocks.getProjectsSlug.mockResolvedValue({
+      ok: false,
+      error: { name: "ApiError", message: "Unavailable", status: 503 },
+    });
+
+    await expect(getVisibleProject("mothlight")).rejects.toThrow("Public project could not be loaded.");
   });
 });

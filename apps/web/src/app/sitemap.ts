@@ -2,6 +2,8 @@ import type { MetadataRoute } from 'next';
 import { PUBLIC_PROGRAM_PACKAGES } from '@/lib/courses/public-programs';
 import { getPublicCourseCatalog } from '@/lib/courses/services/course.service';
 import { getPublishedProjects } from '@/lib/projects/public-projects';
+import { getBlogIndex } from '@/lib/blogs/queries';
+import { buildBlogAbsoluteCanonicalUrl, BLOG_SITE_BASE_URL } from '@/lib/blogs/seo';
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://gameguild.gg';
 const staticRoutes = [
@@ -34,9 +36,10 @@ export async function generateSitemaps() {
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
-  const [projects, catalog] = await Promise.all([
+  const [projects, catalog, blogIndex] = await Promise.all([
     getPublishedProjects().catch(() => []),
     getPublicCourseCatalog(),
+    getBlogIndex().catch(() => null),
   ]);
   const courseRoutes = catalog.success
     ? catalog.data
@@ -70,5 +73,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     })),
     ...courseRoutes,
+    ...(blogIndex?.items ?? [])
+      .filter((post) => post.slug && post.primaryAuthorHandle)
+      .map((post) => ({
+        url: buildBlogAbsoluteCanonicalUrl(BLOG_SITE_BASE_URL, post.primaryAuthorHandle ?? '', post.slug ?? ''),
+        lastModified: post.publishedAt ? new Date(post.publishedAt) : now,
+        changeFrequency: 'weekly' as const,
+        priority: 0.6,
+      })),
   ];
 }

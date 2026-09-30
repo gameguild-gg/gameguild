@@ -27,10 +27,12 @@ const subscribeToHydration = () => () => undefined
 export function SignInForm({
   className,
   redirectTo = "/",
+  magicLinkLabel,
   providers,
   ...props
 }: React.ComponentProps<"div"> & {
   redirectTo?: string
+  magicLinkLabel?: string
   providers?: React.ReactNode
 }) {
   const { signIn, isLoading, error, clearError } = useAuth()
@@ -158,6 +160,16 @@ export function SignInForm({
                     Sign up
                   </Link>
                 </FieldDescription>
+                {magicLinkLabel ? (
+                  <FieldDescription className="text-center text-slate-300">
+                    <Link
+                      href="/magic-link"
+                      className="text-sky-200 underline-offset-4 hover:underline"
+                    >
+                      {magicLinkLabel}
+                    </Link>
+                  </FieldDescription>
+                ) : null}
               </Field>
             </FieldGroup>
           </form>

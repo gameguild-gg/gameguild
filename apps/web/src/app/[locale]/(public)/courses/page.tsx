@@ -1,6 +1,7 @@
+import { cn } from "@game-guild/ui/lib/utils";
 import { CourseHighlightCarousel } from '@/components/courses/course-highlight-carousel';
 import { PublicCourseCatalog } from '@/components/courses/public-course-catalog';
-import { Button } from '@game-guild/ui/components/button';
+import { buttonVariants } from '@game-guild/ui/components/button';
 import { Link } from '@/i18n/navigation';
 import { getPublicPlaytests } from '@/lib/community/public-community-queries';
 import { getPublicCourseCatalog } from '@/lib/courses/services/course.service';
@@ -31,14 +32,32 @@ export default async function CoursesPage() {
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <Button size="lg" className="bg-white text-slate-950 hover:bg-slate-200" nativeButton={false} render={<Link href="#catalog" />}>
+              <Link
+                href="#catalog"
+                className={cn(
+                  buttonVariants({
+                    size: "lg",
+                    className: "bg-white text-slate-950 hover:bg-slate-200",
+                  }),
+                )}
+              >
                 Explore courses
                 <ArrowRight />
-              </Button>
-              <Button size="lg" variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white" nativeButton={false} render={<Link href="/courses" />}>
+              </Link>
+              <Link
+                href="/courses"
+                className={cn(
+                  buttonVariants({
+                    size: "lg",
+                    variant: "outline",
+                    className:
+                      "border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white",
+                  }),
+                )}
+              >
                 View programs
                 <Layers3 />
-              </Button>
+              </Link>
             </div>
 
             <div className="grid max-w-2xl grid-cols-3 gap-3">
@@ -74,10 +93,19 @@ export default async function CoursesPage() {
               Courses connect into community outcomes: projects enter the showcase, testing sessions produce feedback,
               and launch-ready work becomes portfolio evidence.
             </p>
-            <Button variant="outline" className="mt-6 w-fit border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white" nativeButton={false} render={<Link href="/projects" />}>
+            <Link
+              href="/projects"
+              className={cn(
+                buttonVariants({
+                  variant: "outline",
+                  className:
+                    "mt-6 w-fit border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white",
+                }),
+              )}
+            >
               View student projects
               <ArrowRight />
-            </Button>
+            </Link>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">

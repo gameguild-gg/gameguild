@@ -78,7 +78,7 @@ const projects: PublicProject[] = [
 describe('social Projects gallery', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('shows a single art-led spotlight and the remaining projects as catalog cards', () => {
+  it('shows one spotlight and the remaining projects as catalog cards', () => {
     render(<SocialProjectGallery projects={projects} />);
 
     expect(screen.getByRole('heading', { name: 'Projects' })).toBeInTheDocument();
@@ -87,36 +87,54 @@ describe('social Projects gallery', () => {
     expect(screen.getByRole('heading', { name: 'Hollow Signal' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Level Editor' })).toBeInTheDocument();
     expect(screen.getAllByText('Mothlight')).toHaveLength(1);
+    expect(screen.getByRole('link', { name: /Manage your projects/ })).toHaveAttribute('href', '/workspace/projects');
   });
 
-  it('filters by project text and includes the spotlight only once in search results', () => {
-    render(<SocialProjectGallery projects={projects} />);
-    fireEvent.change(screen.getByLabelText('Search projects'), { target: { value: 'mothlight' } });
+  it('keeps submitted search and type filters visible in the form', () => {
+    render(<SocialProjectGallery projects={[projects[2]]} searchQuery="level editor" projectType="Tool" />);
 
     expect(screen.getByRole('heading', { name: 'Search results' })).toBeInTheDocument();
-    expect(screen.getAllByText('Mothlight')).toHaveLength(1);
-    expect(screen.queryByText('Hollow Signal')).not.toBeInTheDocument();
+    expect(screen.getByRole('searchbox', { name: 'Search projects' })).toHaveValue('level editor');
+    expect(screen.getByRole('combobox', { name: 'Project type' })).toHaveTextContent('Tool');
+    expect(screen.getByRole('link', { name: 'Clear filters' })).toHaveAttribute('href', '/projects');
   });
 
-  it('filters project cards by the type returned by the API', () => {
-    render(<SocialProjectGallery projects={projects} />);
-    fireEvent.change(screen.getByLabelText('Filter by project type'), { target: { value: 'Tool' } });
-
-    expect(screen.getByText('Level Editor')).toBeInTheDocument();
-    expect(screen.queryByText('Hollow Signal')).not.toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Mothlight' })).not.toBeInTheDocument();
-  });
-
-  it('loads the next page and extends the local search catalog', async () => {
+  it('loads the next matching page and appends it to the gallery', async () => {
     mocks.loadMorePublicProjects.mockResolvedValueOnce({
       items: [{ ...projects[0], id: 'project-4', slug: 'starling', title: 'Starling' }],
       hasMore: false,
     });
-    render(<SocialProjectGallery projects={projects} initialHasMore />);
+    render(<SocialProjectGallery projects={projects} searchQuery="game" projectType="Game" initialHasMore />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Load more projects' }));
     expect(await screen.findByRole('heading', { name: 'Starling' })).toBeInTheDocument();
-    expect(mocks.loadMorePublicProjects).toHaveBeenCalledWith(3);
+    expect(mocks.loadMorePublicProjects).toHaveBeenCalledWith(3, 'game', 'Game');
     expect(screen.queryByRole('button', { name: 'Load more projects' })).not.toBeInTheDocument();
+  });
+
+  it('shows a retry action when loading another page fails', async () => {
+    mocks.loadMorePublicProjects.mockResolvedValueOnce({ items: [], hasMore: false, error: 'Temporary failure.' });
+    render(<SocialProjectGallery projects={projects} initialHasMore />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Load more projects' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Temporary failure.');
+    expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
+  });
+
+  it('distinguishes a true empty catalog from an API error', () => {
+    const { rerender } = render(<SocialProjectGallery projects={[]} />);
+    expect(screen.getByRole('heading', { name: 'No public projects yet' })).toBeInTheDocument();
+
+    rerender(<SocialProjectGallery projects={[]} initialError="The catalog is unavailable." />);
+    expect(screen.getByRole('alert')).toHaveTextContent('The catalog is unavailable.');
+    expect(screen.queryByRole('heading', { name: 'No public projects yet' })).not.toBeInTheDocument();
+  });
+
+  it('offers a helpful empty result state for a search with no matches', () => {
+    render(<SocialProjectGallery projects={[]} searchQuery="no such project" />);
+
+    expect(screen.getByRole('heading', { name: 'No projects match your search' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Clear filters' })).toHaveAttribute('href', '/projects');
   });
 });

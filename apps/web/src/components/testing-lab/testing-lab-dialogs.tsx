@@ -619,7 +619,11 @@ export function EditTestingLocationDialog({ location }: { location: TestingLocat
       action={updateTestingLabLocation}
     >
       <input type="hidden" name="locationId" value={location.id} />
-      <TestingLocationFields idPrefix={'edit-location-' + location.id} location={location} />
+      <TestingLocationFields
+        key={JSON.stringify(location)}
+        idPrefix={'edit-location-' + location.id}
+        location={location}
+      />
     </ActionDialog>
   );
 }
@@ -642,7 +646,7 @@ export function EditTestingLabRoleDialog({ role }: { role: TestingLabTestingLabR
       <div className="grid gap-4">
         <div className="space-y-2">
           <Label htmlFor="edit-testing-lab-role-name">Role name</Label>
-          <Input id="edit-testing-lab-role-name" name="name" required defaultValue={role.name ?? ''} />
+          <Input id="edit-testing-lab-role-name" name="name" required key={role.name ?? ''} defaultValue={role.name ?? ''} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="edit-testing-lab-role-description">Description</Label>

@@ -217,6 +217,23 @@ public class PermissionGrantServiceTests
     }
 
     [Fact]
+    public async Task SetGlobalDefaultPermissionsAsync_BumpsReservedGlobalVersion()
+    {
+        _repoMock
+            .Setup(x => x.GetByUserAndTenantAsync(null, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TenantPermission?)null);
+        _repoMock
+            .Setup(x => x.CreateAsync(It.IsAny<TenantPermission>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TenantPermission permission, CancellationToken _) => permission);
+
+        await _sut.SetGlobalDefaultPermissionsAsync(["read"]);
+
+        _versionStoreMock.Verify(
+            x => x.IncrementVersionAsync(Guid.Empty.ToString(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
     public async Task SetGlobalDefaultPermissionsAsync_SystemAdministrator_IsAuthorized()
     {
         _actorAccessorMock.Setup(instance => instance.ActorContext)

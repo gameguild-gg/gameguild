@@ -332,7 +332,7 @@ describe("TestingLabCalendar", () => {
 
     await user.clear(screen.getByRole("searchbox", { name: "Search events" }));
     await user.click(screen.getByRole("combobox", { name: "Filter events" }));
-    await user.click(screen.getByRole("option", { name: "Scheduled" }));
+    await user.click(await screen.findByRole("option", { name: "Scheduled" }));
 
     expect(screen.getByText("Campus playtest")).toBeInTheDocument();
     expect(screen.queryByText("Remote build review")).not.toBeInTheDocument();

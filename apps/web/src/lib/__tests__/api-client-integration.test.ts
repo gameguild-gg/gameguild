@@ -199,7 +199,8 @@ describe('API Client Package Integration', () => {
         aiPromptTemplates: new GeneratedApi.AiPromptTemplatesModule(client),
         ferpa: new GeneratedApi.ComplianceFerpaModule(client),
         socialProfiles: new GeneratedApi.SocialProfilesModule(client),
-        socialBlog: new GeneratedApi.SocialBlogPostsModule(client),
+        socialBlog: new GeneratedApi.SocialBlogPublicModule(client),
+        socialBlogAuthoring: new GeneratedApi.SocialBlogAuthoringModule(client),
         socialFeed: new GeneratedApi.SocialFeedModule(client),
         socialGroups: new GeneratedApi.SocialGroupsSocialGroupsModule(client),
         socialReactions: new GeneratedApi.SocialReactionsModule(client),
@@ -211,7 +212,8 @@ describe('API Client Package Integration', () => {
       expect(modules.aiPromptTemplates.getAiPromptTemplatesForGetAiPromptTemplates).toBeTypeOf('function');
       expect(modules.ferpa.getApiComplianceFerpaStudentsRecords).toBeTypeOf('function');
       expect(modules.socialProfiles.getApiSocialProfilesUsers).toBeTypeOf('function');
-      expect(modules.socialBlog.getApiSocialBlogForGetApiSocialBlog).toBeTypeOf('function');
+      expect(modules.socialBlog.getApiSocialBlogPublicPosts).toBeTypeOf('function');
+      expect(modules.socialBlogAuthoring.getApiSocialBlogPostsMine).toBeTypeOf('function');
       expect(modules.socialFeed.getApiSocialFeedUsers).toBeTypeOf('function');
       expect(modules.socialGroups.getApiSocialGroupsForGetApiSocialGroups).toBeTypeOf('function');
       expect(modules.socialGroups.postApiSocialGroupsMembers).toBeTypeOf('function');

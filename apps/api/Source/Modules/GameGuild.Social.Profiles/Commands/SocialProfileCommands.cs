@@ -60,6 +60,7 @@ public sealed record UpdateProfilePortfolioItemCommand(
 public sealed record RemoveProfilePortfolioItemCommand(Guid ItemId) : ICommand<bool>;
 
 public sealed record GetSocialProfileByUserQuery(Guid UserId) : IQuery<SocialProfileDto?>;
+public sealed record GetOrCreateSocialProfileQuery(Guid UserId) : IQuery<SocialProfileDto>;
 public sealed record GetSocialProfileByHandleQuery(string Handle) : IQuery<SocialProfileDto?>;
 public sealed record SearchSocialProfilesQuery(string? Query = null, int Take = 20) : IQuery<List<SocialProfileDto>>;
 
@@ -115,6 +116,12 @@ public sealed class GetSocialProfileByUserQueryHandler(ISocialProfileService ser
 {
     public Task<SocialProfileDto?> Handle(GetSocialProfileByUserQuery request, CancellationToken cancellationToken)
         => service.GetByUserAsync(request.UserId, cancellationToken);
+}
+
+public sealed class GetOrCreateSocialProfileQueryHandler(ISocialProfileService service) : IQueryHandler<GetOrCreateSocialProfileQuery, SocialProfileDto>
+{
+    public Task<SocialProfileDto> Handle(GetOrCreateSocialProfileQuery request, CancellationToken cancellationToken)
+        => service.GetOrCreateAsync(request.UserId, cancellationToken);
 }
 
 public sealed class GetSocialProfileByHandleQueryHandler(ISocialProfileService service) : IQueryHandler<GetSocialProfileByHandleQuery, SocialProfileDto?>

@@ -94,6 +94,19 @@ public class MetricsController(ILogger<MetricsController> logger) : ControllerBa
         metrics.AppendLine("# TYPE app_info gauge");
         metrics.AppendLine($"app_info{{version=\"{version}\",runtime=\"{RuntimeInformation.FrameworkDescription}\"}} 1");
 
+        metrics.AppendLine("# HELP gameguild_api_rate_limit_rejections_total Number of requests rejected by API rate limits.");
+        metrics.AppendLine("# TYPE gameguild_api_rate_limit_rejections_total counter");
+        foreach (var rejection in RateLimitingMetrics.GetRejectionSnapshot())
+        {
+            metrics.AppendLine(
+                $"gameguild_api_rate_limit_rejections_total{{policy=\"{EscapePrometheusLabel(rejection.Policy)}\",enforcement=\"{EscapePrometheusLabel(rejection.Enforcement)}\"}} {rejection.Count}");
+        }
+
         return Content(metrics.ToString().ReplaceLineEndings("\n"), "text/plain; version=0.0.4; charset=utf-8");
     }
+
+    private static string EscapePrometheusLabel(string value)
+        => value.Replace("\\", "\\\\", StringComparison.Ordinal)
+            .Replace("\"", "\\\"", StringComparison.Ordinal)
+            .Replace("\n", "\\n", StringComparison.Ordinal);
 }

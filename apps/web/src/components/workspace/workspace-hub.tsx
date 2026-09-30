@@ -6,6 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game
 import { CheckSquare2, FolderKanban, Mail, Plus, Users } from 'lucide-react';
 import React from 'react';
 
+function projectStatusLabel(value: string | number) {
+  const labels: Record<string, string> = { Draft: 'Draft', Review: 'In review', Published: 'Published', Archived: 'Archived' };
+  return labels[String(value)] ?? String(value).replace(/([a-z])([A-Z])/g, '$1 $2');
+}
+
 export async function WorkspaceHub(): Promise<React.JSX.Element> {
   const [teams, projects, invitations] = await Promise.all([
     getWorkspaceTeams(),
@@ -60,7 +65,7 @@ export async function WorkspaceHub(): Promise<React.JSX.Element> {
             {projects.slice(0, 5).map((project) => (
               <Link key={project.id} href={`/workspace/projects/${project.slug}`} className="flex items-center justify-between rounded-lg border p-3 transition hover:bg-muted/50">
                 <span className="font-medium">{project.title}</span>
-                <Badge variant="secondary">{String(project.status)}</Badge>
+                <Badge variant="secondary">{projectStatusLabel(project.status)}</Badge>
               </Link>
             ))}
             {projects.length === 0 && <Empty message="Create a project or join a team project." />}

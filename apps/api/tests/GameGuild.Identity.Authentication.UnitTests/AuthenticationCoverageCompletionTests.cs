@@ -131,6 +131,41 @@ public sealed class AuthenticationCoverageCompletionTests
     }
 
     [Fact]
+    public async Task ApiKeyAuthentication_RejectsQueryStringCredentialsOverHttp()
+    {
+        var apiKeyOptions = new ApiKeyAuthenticationOptions
+        {
+            AllowQueryString = true,
+            QueryStringParameterName = "access_key"
+        };
+        var options = new Mock<IOptionsMonitor<ApiKeyAuthenticationOptions>>();
+        options.Setup(x => x.Get(It.IsAny<string>())).Returns(apiKeyOptions);
+        options.SetupGet(x => x.CurrentValue).Returns(apiKeyOptions);
+
+        using var loggerFactory = LoggerFactory.Create(_ => { });
+        var handler = new ApiKeyAuthenticationHandler(
+            options.Object,
+            loggerFactory,
+            UrlEncoder.Default,
+            Mock.Of<IApplicationDbContext>());
+        var context = new DefaultHttpContext();
+        context.Request.Scheme = "http";
+        context.Request.QueryString = new QueryString("?access_key=secret");
+
+        await handler.InitializeAsync(
+            new AuthenticationScheme(
+                ApiKeyAuthenticationOptions.SchemeName,
+                ApiKeyAuthenticationOptions.SchemeName,
+                typeof(ApiKeyAuthenticationHandler)),
+            context);
+
+        var result = await handler.AuthenticateAsync();
+
+        result.Failure.Should().NotBeNull();
+        result.Failure!.Message.Should().Contain("HTTPS");
+    }
+
+    [Fact]
     public void PasswordHasher_CoversRemainingPolicyBranches()
     {
         var hasher = new PasswordHasher(NullLogger<PasswordHasher>.Instance, EmptyConfiguration());
@@ -448,7 +483,13 @@ public sealed class AuthenticationCoverageCompletionTests
     public async Task Web3Service_CoversImplementedSignatureRejectionPath()
     {
         using var cache = new MemoryCache(new MemoryCacheOptions());
-        var service = new Web3Service(NullLogger<Web3Service>.Instance, cache);
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Authentication:Web3:Siwe:Origin"] = "https://localhost"
+            })
+            .Build();
+        var service = new Web3Service(NullLogger<Web3Service>.Instance, cache, configuration);
         var address = "0x1234567890abcdef1234567890abcdef12345678";
         var challenge = await service.GenerateChallengeAsync(address);
 
@@ -456,9 +497,10 @@ public sealed class AuthenticationCoverageCompletionTests
 
         result.Should().BeFalse();
 
-        var emptySignatureResult = await InvokePrivateInstance<Task<bool>>(
+        var emptySignatureResult = InvokePrivateInstance<bool>(
             service,
             "VerifyEthereumSignature",
+            challenge.Message,
             "",
             address);
         emptySignatureResult.Should().BeFalse();

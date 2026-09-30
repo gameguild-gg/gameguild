@@ -103,7 +103,7 @@ describe('team workspace page (member surface)', () => {
 
     expect(screen.getByRole('link', { name: 'Create project' })).toHaveAttribute(
       'href',
-      '/workspace/projects/new',
+      '/workspace/projects/new?teamId=team-1',
     );
   });
 

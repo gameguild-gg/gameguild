@@ -11,6 +11,8 @@ public class VerifyWeb3SignatureCommand : ICommand<SignInResponse>
 
     public string Signature { get; set; } = string.Empty;
 
+    public string Challenge { get; set; } = string.Empty;
+
     public string Nonce { get; set; } = string.Empty;
 
     public string ChainId { get; set; } = string.Empty;

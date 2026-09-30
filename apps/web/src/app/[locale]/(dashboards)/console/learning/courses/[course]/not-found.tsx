@@ -1,5 +1,6 @@
+import { cn } from "@game-guild/ui/lib/utils";
 import { Link } from '@/i18n/navigation';
-import { Button } from '@game-guild/ui/components/button';
+import { buttonVariants } from '@game-guild/ui/components/button';
 import { SearchX } from 'lucide-react';
 import React from 'react';
 
@@ -11,9 +12,12 @@ export default function NotFound(): React.JSX.Element {
         <h2 className="text-xl font-semibold">Course not found</h2>
         <p className="text-sm text-muted-foreground">This course doesn't exist or you don't have access to it.</p>
       </div>
-      <Button nativeButton={false} variant="outline" render={<Link href="/console/learning/courses" />}>
+      <Link
+        href="/console/learning/courses"
+        className={cn(buttonVariants({ variant: "outline" }))}
+      >
         Back to courses
-      </Button>
+      </Link>
     </div>
   );
 }

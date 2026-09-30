@@ -1,3 +1,4 @@
+import { cn } from "@game-guild/ui/lib/utils";
 import React from 'react';
 import { Link } from '@/i18n/navigation';
 import { getGroups } from '@/lib/community';
@@ -6,7 +7,7 @@ import { Alert, AlertDescription, AlertTitle } from '@game-guild/ui/components/a
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@game-guild/ui/components/table';
-import { Button } from '@game-guild/ui/components/button';
+import { Button, buttonVariants } from '@game-guild/ui/components/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@game-guild/ui/components/dialog';
 import { Input } from '@game-guild/ui/components/input';
 import { Label } from '@game-guild/ui/components/label';
@@ -158,10 +159,13 @@ export default async function Page({ searchParams }: Props): Promise<React.JSX.E
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{new Date(group.createdAt).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right">
-                      <Button nativeButton={false} variant="outline" size="sm" render={<Link href={`/console/community/members/groups/${group.id}`} />}>
+                      <Link
+                        href={`/console/community/members/groups/${group.id}`}
+                        className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+                      >
                         Manage
                         <ArrowRight className="ml-2 size-4" />
-                      </Button>
+                      </Link>
                     </TableCell>
                   </TableRow>
                 ))}

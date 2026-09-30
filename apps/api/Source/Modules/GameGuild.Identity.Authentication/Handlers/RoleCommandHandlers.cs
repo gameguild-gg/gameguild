@@ -1,5 +1,7 @@
 using System.Text.Json;
 using GameGuild.CQRS;
+using GameGuild.Identity.Context.Actors;
+using GameGuild.Identity.Users;
 
 namespace GameGuild.Identity.Authentication;
 
@@ -173,6 +175,89 @@ public sealed class AssignRoleToUserCommandHandler(IRoleRepository roleRepositor
             AssignedAt = createdUserRole.AssignedAt,
             ExpiresAt = createdUserRole.ExpiresAt,
             IsExpired = createdUserRole.IsExpired()
+        };
+    }
+}
+
+/// <summary>
+///     Handles bounded, atomic bulk assignment of one active role to multiple users.
+/// </summary>
+public sealed class BulkAssignRolesCommandHandler(
+    IRoleRepository roleRepository,
+    IActorContextAccessor actorContextAccessor,
+    IUserRepository userRepository
+) : ICommandHandler<BulkAssignRolesCommand, BulkRoleAssignmentResult>
+{
+    private const int MaximumUsersPerRequest = 500;
+    private ActorContext Actor => actorContextAccessor.ActorContext;
+
+    public async Task<BulkRoleAssignmentResult> Handle(BulkAssignRolesCommand request, CancellationToken cancellationToken)
+    {
+        if (!Actor.IsAuthenticated)
+        {
+            throw new UnauthorizedAccessException("User is not authenticated");
+        }
+
+        if (!Actor.IsSystemAdmin)
+        {
+            throw new UnauthorizedAccessException("Bulk role assignment requires system administration");
+        }
+
+        if (request.RoleId == Guid.Empty)
+        {
+            throw new ArgumentException("A role ID is required", nameof(request));
+        }
+
+        if (request.UserIds is null || request.UserIds.Count is 0 or > MaximumUsersPerRequest)
+        {
+            throw new ArgumentException($"Between 1 and {MaximumUsersPerRequest} users must be specified", nameof(request));
+        }
+
+        if (request.UserIds.Any(userId => userId == Guid.Empty))
+        {
+            throw new ArgumentException("User IDs cannot be empty", nameof(request));
+        }
+
+        if (request.ExpiresAt.HasValue && request.ExpiresAt.Value <= SystemClock.UtcNow)
+        {
+            throw new ArgumentException("Role expiration must be in the future", nameof(request));
+        }
+
+        var role = await roleRepository.GetByIdAsync(request.RoleId, cancellationToken).ConfigureAwait(false);
+        if (role is null || !role.IsActive)
+        {
+            throw new InvalidOperationException($"Active role with ID '{request.RoleId}' was not found.");
+        }
+
+        var uniqueUserIds = request.UserIds.Distinct().ToArray();
+        var existingUsers = await userRepository.GetByIdsAsync(uniqueUserIds, cancellationToken)
+            .ConfigureAwait(false);
+        var existingUserIds = existingUsers.Select(user => user.Id).ToHashSet();
+        var missingUserIds = uniqueUserIds.Where(userId => !existingUserIds.Contains(userId)).ToArray();
+        if (missingUserIds.Length > 0)
+        {
+            throw new ArgumentException(
+                $"User IDs must belong to existing, non-deleted users. Invalid IDs: {string.Join(", ", missingUserIds)}",
+                nameof(request));
+        }
+
+        var outcomes = await roleRepository.BulkAssignRoleToUsersAsync(
+                role.Id,
+                uniqueUserIds,
+                Actor.SubjectIdAsGuid,
+                request.ExpiresAt,
+                cancellationToken)
+            .ConfigureAwait(false);
+
+        return new BulkRoleAssignmentResult
+        {
+            RoleId = role.Id,
+            TotalRequested = uniqueUserIds.Length,
+            DuplicateUserIds = request.UserIds.Count - uniqueUserIds.Length,
+            Assigned = outcomes.Count(result => result.Status == BulkRoleAssignmentStatus.Assigned),
+            Reactivated = outcomes.Count(result => result.Status == BulkRoleAssignmentStatus.Reactivated),
+            AlreadyAssigned = outcomes.Count(result => result.Status == BulkRoleAssignmentStatus.AlreadyAssigned),
+            Users = outcomes
         };
     }
 }
