@@ -258,12 +258,16 @@ public static class SecurityServiceCollectionExtensions
             foreach (var (name, configuredPolicy) in options.Policies)
             {
                 if (Policies.IsValid(name))
+                {
                     throw new InvalidOperationException(
                         $"Authorization policy '{name}' is database-backed and cannot be replaced by static configuration.");
+                }
 
                 if (authzOptions.GetPolicy(name) is not null)
+                {
                     throw new InvalidOperationException(
                         $"Authorization policy '{name}' is reserved and cannot be replaced by static configuration.");
+                }
 
                 authzOptions.AddPolicy(name, policy => ConfigurePolicy(policy, configuredPolicy, options.RoleHierarchy));
             }
@@ -277,17 +281,26 @@ public static class SecurityServiceCollectionExtensions
         ConfiguredAuthorizationPolicyOptions configuredPolicy,
         IReadOnlyDictionary<string, List<string>> roleHierarchy)
     {
-        if (configuredPolicy.RequireAuthenticatedUser) policy.RequireAuthenticatedUser();
+        if (configuredPolicy.RequireAuthenticatedUser)
+        {
+            policy.RequireAuthenticatedUser();
+        }
 
         if (configuredPolicy.Roles.Count > 0)
+        {
             policy.RequireRole(ExpandRoles(configuredPolicy.Roles, roleHierarchy));
+        }
 
         foreach (var claim in configuredPolicy.Claims)
         {
             if (claim.AllowedValues.Count == 0)
+            {
                 policy.RequireClaim(claim.Type);
+            }
             else
+            {
                 policy.RequireClaim(claim.Type, claim.AllowedValues);
+            }
         }
 
         policy.AddAuthenticationSchemes(configuredPolicy.AuthenticationSchemes.ToArray());
@@ -303,7 +316,9 @@ public static class SecurityServiceCollectionExtensions
         {
             if (requiredRoles.Any(requiredRole => InheritsRole(candidateRole, requiredRole, roleHierarchy,
                     new HashSet<string>(StringComparer.OrdinalIgnoreCase))))
+            {
                 acceptedRoles.Add(candidateRole);
+            }
         }
 
         return acceptedRoles.OrderBy(role => role, StringComparer.OrdinalIgnoreCase).ToArray();
@@ -315,9 +330,20 @@ public static class SecurityServiceCollectionExtensions
         IReadOnlyDictionary<string, List<string>> roleHierarchy,
         HashSet<string> visited)
     {
-        if (string.Equals(candidateRole, requiredRole, StringComparison.OrdinalIgnoreCase)) return true;
-        if (!visited.Add(candidateRole)) return false;
-        if (!roleHierarchy.TryGetValue(candidateRole, out var inheritedRoles)) return false;
+        if (string.Equals(candidateRole, requiredRole, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (!visited.Add(candidateRole))
+        {
+            return false;
+        }
+
+        if (!roleHierarchy.TryGetValue(candidateRole, out var inheritedRoles))
+        {
+            return false;
+        }
 
         return inheritedRoles.Any(inheritedRole =>
             InheritsRole(inheritedRole, requiredRole, roleHierarchy, visited));

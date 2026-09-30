@@ -51,71 +51,114 @@ public sealed class AuthorizationOptions : BaseOptions
 
     private void ValidatePolicies()
     {
-        if (Policies is null) throw new InvalidOperationException("Authorization policies cannot be null.");
+        if (Policies is null)
+        {
+            throw new InvalidOperationException("Authorization policies cannot be null.");
+        }
 
         if (Policies.Keys.Any(string.IsNullOrWhiteSpace))
+        {
             throw new InvalidOperationException("Authorization policy names cannot be null or empty.");
+        }
 
         if (Policies.Keys.GroupBy(name => name, StringComparer.OrdinalIgnoreCase).Any(group => group.Count() > 1))
+        {
             throw new InvalidOperationException("Authorization policy names must be unique, ignoring case.");
+        }
 
         foreach (var (name, policy) in Policies)
         {
-            if (policy is null) throw new InvalidOperationException($"Authorization policy '{name}' cannot be null.");
+            if (policy is null)
+            {
+                throw new InvalidOperationException($"Authorization policy '{name}' cannot be null.");
+            }
 
             if (policy.Roles is null || policy.Claims is null || policy.AuthenticationSchemes is null)
+            {
                 throw new InvalidOperationException($"Authorization policy '{name}' contains a null collection.");
+            }
 
             if (policy.Roles.Any(string.IsNullOrWhiteSpace))
+            {
                 throw new InvalidOperationException($"Authorization policy '{name}' contains an empty role.");
+            }
 
             if (policy.AuthenticationSchemes.Any(string.IsNullOrWhiteSpace))
+            {
                 throw new InvalidOperationException($"Authorization policy '{name}' contains an empty authentication scheme.");
+            }
 
             if (policy.Claims.Any(claim => claim is null || string.IsNullOrWhiteSpace(claim.Type) || claim.AllowedValues is null))
+            {
                 throw new InvalidOperationException($"Authorization policy '{name}' contains an invalid claim requirement.");
+            }
 
             if (!policy.RequireAuthenticatedUser && policy.Roles.Count == 0 && policy.Claims.Count == 0)
+            {
                 throw new InvalidOperationException(
                     $"Authorization policy '{name}' must require authentication, a role, or a claim.");
+            }
         }
     }
 
     private void ValidateRoleHierarchy()
     {
-        if (RoleHierarchy is null) throw new InvalidOperationException("Authorization role hierarchy cannot be null.");
+        if (RoleHierarchy is null)
+        {
+            throw new InvalidOperationException("Authorization role hierarchy cannot be null.");
+        }
 
         if (RoleHierarchy.Keys.Any(string.IsNullOrWhiteSpace))
+        {
             throw new InvalidOperationException("Authorization role names cannot be null or empty.");
+        }
 
         if (RoleHierarchy.Keys.GroupBy(role => role, StringComparer.OrdinalIgnoreCase).Any(group => group.Count() > 1))
+        {
             throw new InvalidOperationException("Authorization role names must be unique, ignoring case.");
+        }
 
         foreach (var (role, inheritedRoles) in RoleHierarchy)
         {
             if (inheritedRoles is null || inheritedRoles.Any(string.IsNullOrWhiteSpace))
+            {
                 throw new InvalidOperationException($"Role '{role}' contains an invalid inherited role.");
+            }
 
             if (inheritedRoles.Contains(role, StringComparer.OrdinalIgnoreCase))
+            {
                 throw new InvalidOperationException($"Role '{role}' cannot inherit itself.");
+            }
         }
 
         var visiting = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        foreach (var role in RoleHierarchy.Keys) Visit(role);
+        foreach (var role in RoleHierarchy.Keys)
+        {
+            Visit(role);
+        }
 
         void Visit(string role)
         {
-            if (visited.Contains(role)) return;
+            if (visited.Contains(role))
+            {
+                return;
+            }
+
             if (!visiting.Add(role))
+            {
                 throw new InvalidOperationException($"Authorization role hierarchy contains a cycle at '{role}'.");
+            }
 
             if (RoleHierarchy.TryGetValue(role, out var inheritedRoles))
             {
                 foreach (var inheritedRole in inheritedRoles)
                 {
-                    if (RoleHierarchy.ContainsKey(inheritedRole)) Visit(inheritedRole);
+                    if (RoleHierarchy.ContainsKey(inheritedRole))
+                    {
+                        Visit(inheritedRole);
+                    }
                 }
             }
 
