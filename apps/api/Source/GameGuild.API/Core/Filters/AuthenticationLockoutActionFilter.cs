@@ -189,7 +189,6 @@ public sealed class AuthenticationLockoutActionFilter : IAsyncActionFilter
                 var unlocked = await command.ExecuteScalarAsync(CancellationToken.None).ConfigureAwait(false);
                 if (unlocked is not true)
                 {
-                    discardPool = true;
                     throw new InvalidOperationException("The PostgreSQL account lockout advisory lock was not held at release time.");
                 }
             }
