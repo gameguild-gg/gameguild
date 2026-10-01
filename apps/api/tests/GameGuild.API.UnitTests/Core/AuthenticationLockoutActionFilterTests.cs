@@ -150,6 +150,7 @@ public sealed class AuthenticationLockoutActionFilterTests
         AuthenticationSecurityOptions options)
     {
         var services = new ServiceCollection();
+        services.AddSingleton(database);
         services.AddSingleton<IApplicationDbContext>(database);
         services.AddSingleton(options);
         return (new AuthenticationLockoutActionFilter(), services.BuildServiceProvider());

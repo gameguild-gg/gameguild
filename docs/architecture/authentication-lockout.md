@@ -22,3 +22,12 @@ disclose whether the account exists or is locked.
 The policy is applied before the local sign-in action. The authentication attempt table must therefore be available
 for the local sign-in route; a database read error fails the request instead of bypassing the lockout check. Other
 authentication schemes continue to use their endpoint's configured authentication rate-limit policy.
+
+On PostgreSQL, the filter also acquires a session-level advisory lock derived from the normalized email and holds it
+from the failure-count query through completion of the local sign-in action. This serializes the check and the
+persisted attempt across API instances without replacing the command's normal transaction. If another request for
+the same email is already being processed, the new request receives the same generic `401` and does not run the
+credential check; the client may retry. The lock is released before the database connection returns to its pool.
+
+Non-relational providers use striped in-process locks for tests and single-process development. An unsupported
+relational provider fails closed instead of silently providing only per-process protection.
