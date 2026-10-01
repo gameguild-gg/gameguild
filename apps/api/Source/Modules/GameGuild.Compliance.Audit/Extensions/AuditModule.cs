@@ -42,6 +42,7 @@ public static class AuditModule
 
         // Register audit services
         services.AddScoped<IAuditService, AuditService>();
+        services.AddSingleton<IAuditExportProgressTracker, DistributedAuditExportProgressTracker>();
         services.AddScoped<ITamperEvidentAuditService, TamperEvidentAuditService>();
         services.AddSingleton<ICryptographicSigningService, EcdsaCryptographicSigningService>();
 

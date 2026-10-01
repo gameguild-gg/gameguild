@@ -4,7 +4,16 @@ namespace GameGuild.Compliance.Audit;
 
 public sealed record ExportAuditLogsCommand(
     Guid AdminUserId,
-    AuditExportRequest Request) : ICommand<List<AuditLog>>;
+    Guid ExportId,
+    AuditExportRequest Request) : ICommand<AuditLogExportData>;
+
+public sealed record AuditLogExportData(
+    Guid ExportId,
+    int TotalCount,
+    int? PageNumber,
+    int? PageSize,
+    IAsyncEnumerable<AuditLog> Records);
+
 public sealed record ExportSecurityAuditLogsCommand(
     Guid AdminUserId,
     UnifiedSecurityAuditRequest Request) : ICommand<byte[]>;
@@ -12,10 +21,10 @@ public sealed record ExportSecurityAuditLogsCommand(
 public sealed class AuditExportCommandHandler(
     IAuditService auditService,
     ISecurityAuditAggregator auditAggregator) :
-    ICommandHandler<ExportAuditLogsCommand, List<AuditLog>>,
+    ICommandHandler<ExportAuditLogsCommand, AuditLogExportData>,
     ICommandHandler<ExportSecurityAuditLogsCommand, byte[]>
 {
-    public async Task<List<AuditLog>> Handle(
+    public async Task<AuditLogExportData> Handle(
         ExportAuditLogsCommand command,
         CancellationToken cancellationToken)
     {
@@ -25,7 +34,7 @@ public sealed class AuditExportCommandHandler(
             "Admin exported audit logs",
             new { ExportRequest = command.Request, RequestedBy = command.AdminUserId }).ConfigureAwait(false);
 
-        return await auditService.GetAuditLogsAsync(new AuditLogQuery
+        var query = new AuditLogQuery
         {
             UserId = command.Request.UserId,
             TenantId = command.Request.TenantId,
@@ -37,8 +46,21 @@ public sealed class AuditExportCommandHandler(
             StartDate = command.Request.StartDate,
             EndDate = command.Request.EndDate,
             IpAddress = command.Request.IpAddress,
-            Take = 0
-        }).ConfigureAwait(false);
+            Skip = command.Request.PageNumber.HasValue && command.Request.PageSize.HasValue
+                ? (command.Request.PageNumber.Value - 1) * command.Request.PageSize.Value
+                : 0,
+            Take = command.Request.PageSize ?? 0
+        };
+
+        var totalCount = await auditService.GetAuditLogCountAsync(query).ConfigureAwait(false);
+        var records = auditService.StreamAuditLogsAsync(query, cancellationToken);
+
+        return new AuditLogExportData(
+            command.ExportId,
+            totalCount,
+            command.Request.PageNumber,
+            command.Request.PageSize,
+            records);
     }
 
     public async Task<byte[]> Handle(

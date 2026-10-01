@@ -19,6 +19,8 @@ public interface IAuditService
 
     Task<List<AuditLog>> GetAuditLogsAsync(AuditLogQuery query);
 
+    IAsyncEnumerable<AuditLog> StreamAuditLogsAsync(AuditLogQuery query, CancellationToken cancellationToken);
+
     Task<int> GetAuditLogCountAsync(AuditLogQuery query);
 
     // Tenant-specific audit methods
