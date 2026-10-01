@@ -52,6 +52,7 @@ export interface AIAiConversationHistoryEntryDto {
   userId?: string | null;
 }
 
+/** Data model for AI Ai Generated Content Draft Request. */
 export interface AIAiGeneratedContentDraftInput {
   audience?: string | null;
   context?: string | null;
@@ -62,6 +63,7 @@ export interface AIAiGeneratedContentDraftInput {
   tone?: string | null;
 }
 
+/** Data model for AI Ai Generated Content Request. */
 export interface AIAiGeneratedContentInput {
   audience?: string | null;
   context?: string | null;
@@ -73,6 +75,7 @@ export interface AIAiGeneratedContentInput {
   tone?: string | null;
 }
 
+/** OpenAPI schema for AI Ai Generated Content Kind. */
 export type AIAiGeneratedContentKind = 'Email' | 'Report' | 'ListingDescription';
 
 /** Canonical request shape for single-prompt generation. */
@@ -85,6 +88,7 @@ export interface AIAiGenerateInput {
   temperature?: number | null;
 }
 
+/** Data model for AI Ai Prompt Template Dto. */
 export interface AIAiPromptTemplateDto {
   id?: string;
   category?: string | null;
@@ -102,6 +106,7 @@ export interface AIAiPromptTemplateDto {
   updatedByUserId?: string | null;
 }
 
+/** Data model for AI Ai Prompt Template Generate Request. */
 export interface AIAiPromptTemplateGenerateInput {
   maxTokens?: number | null;
   model?: string | null;
@@ -110,10 +115,12 @@ export interface AIAiPromptTemplateGenerateInput {
   variables?: Record<string, string | null> | null;
 }
 
+/** Data model for AI Ai Prompt Template Render Request. */
 export interface AIAiPromptTemplateRenderInput {
   variables?: Record<string, string | null> | null;
 }
 
+/** Data model for AI Ai Prompt Template Render Response. */
 export interface AIAiPromptTemplateRenderOutput {
   key?: string | null;
   prompt?: string | null;
@@ -122,6 +129,7 @@ export interface AIAiPromptTemplateRenderOutput {
   variables?: Record<string, string | null> | null;
 }
 
+/** Data model for AI Ai Provider Status Dto. */
 export interface AIAiProviderStatusDto {
   baseUrl?: string | null;
   configured?: boolean;
@@ -130,6 +138,7 @@ export interface AIAiProviderStatusDto {
   provider?: string | null;
 }
 
+/** Data model for AI Ai Quota Status Dto. */
 export interface AIAiQuotaStatusDto {
   currentUsage?: number;
   hardLimit?: number | null;
@@ -143,12 +152,14 @@ export interface AIAiQuotaStatusDto {
   usagePercent?: number;
 }
 
+/** Data model for AI Ai Quota Status Response. */
 export interface AIAiQuotaStatusOutput {
   generatedAtUtc?: string;
   quotas?: Array<AIAiQuotaStatusDto> | null;
   tenantId?: string;
 }
 
+/** Data model for AI Ai Status Response. */
 export interface AIAiStatusOutput {
   allowTenantOverrides?: boolean;
   defaultProvider?: string | null;
@@ -163,6 +174,7 @@ export interface AIAiUsageDto {
   totalTokens?: number | null;
 }
 
+/** Data model for AI Create Ai Prompt Template Request. */
 export interface AICreateAiPromptTemplateInput {
   category?: string | null;
   description?: string | null;
@@ -173,6 +185,7 @@ export interface AICreateAiPromptTemplateInput {
   systemPrompt?: string | null;
 }
 
+/** Data model for AI Update Ai Prompt Template Request. */
 export interface AIUpdateAiPromptTemplateInput {
   category?: string | null;
   description?: string | null;
@@ -182,6 +195,7 @@ export interface AIUpdateAiPromptTemplateInput {
   systemPrompt?: string | null;
 }
 
+/** Data model for Analytics Analytics Warehouse Fact Dto. */
 export interface AnalyticsAnalyticsWarehouseFactDto {
   id?: string;
   amountUsd?: number | null;
@@ -194,12 +208,14 @@ export interface AnalyticsAnalyticsWarehouseFactDto {
   timestamp?: string;
 }
 
+/** Data model for Analytics Analytics Warehouse Run Request. */
 export interface AnalyticsAnalyticsWarehouseRunInput {
   asOfUtc?: string | null;
   lookbackDays?: number | null;
   tenantId?: string | null;
 }
 
+/** Data model for Analytics Analytics Warehouse Run Response. */
 export interface AnalyticsAnalyticsWarehouseRunOutput {
   asOfUtc?: string;
   factsByName?: Record<string, number> | null;
@@ -209,6 +225,7 @@ export interface AnalyticsAnalyticsWarehouseRunOutput {
   tenantId?: string | null;
 }
 
+/** Data model for Analytics Analyze Funnel Query. */
 export interface AnalyticsAnalyzeFunnelQuery {
   endDate?: string;
   startDate?: string;
@@ -216,6 +233,7 @@ export interface AnalyticsAnalyzeFunnelQuery {
   tenantId?: string | null;
 }
 
+/** Data model for Analytics Create Dashboard Request. */
 export interface AnalyticsCreateDashboardInput {
   description?: string | null;
   isDefault?: boolean;
@@ -225,6 +243,7 @@ export interface AnalyticsCreateDashboardInput {
   widgets?: Array<AnalyticsDashboardWidgetInput> | null;
 }
 
+/** Data model for Analytics Dashboard Dto. */
 export interface AnalyticsDashboardDto {
   id?: string;
   createdAt?: string;
@@ -237,6 +256,7 @@ export interface AnalyticsDashboardDto {
   widgets?: Array<AnalyticsDashboardWidgetDto> | null;
 }
 
+/** Data model for Analytics Dashboard Widget Dto. */
 export interface AnalyticsDashboardWidgetDto {
   id?: string;
   configuration?: string | null;
@@ -245,6 +265,7 @@ export interface AnalyticsDashboardWidgetDto {
   type?: AnalyticsWidgetType;
 }
 
+/** Data model for Analytics Dashboard Widget Request. */
 export interface AnalyticsDashboardWidgetInput {
   configuration?: string | null;
   sortOrder?: number;
@@ -252,6 +273,7 @@ export interface AnalyticsDashboardWidgetInput {
   type?: AnalyticsWidgetType;
 }
 
+/** Data model for Analytics Product Capacity Metrics. */
 export interface AnalyticsProductCapacityMetrics {
   totalApiCallsLimit?: number;
   totalStorageMbLimit?: number;
@@ -261,6 +283,7 @@ export interface AnalyticsProductCapacityMetrics {
   unlimitedUserPlans?: number;
 }
 
+/** Data model for Analytics Product Catalog Metrics. */
 export interface AnalyticsProductCatalogMetrics {
   bundles?: number;
   draftProducts?: number;
@@ -268,8 +291,10 @@ export interface AnalyticsProductCatalogMetrics {
   totalProducts?: number;
 }
 
+/** OpenAPI schema for Analytics Product Metrics Export Format. */
 export type AnalyticsProductMetricsExportFormat = 'Csv' | 'Json';
 
+/** Data model for Analytics Product Metrics Response. */
 export interface AnalyticsProductMetricsOutput {
   capacity?: AnalyticsProductCapacityMetrics;
   catalog?: AnalyticsProductCatalogMetrics;
@@ -282,6 +307,7 @@ export interface AnalyticsProductMetricsOutput {
   thresholds?: Array<AnalyticsProductMetricThreshold> | null;
 }
 
+/** Data model for Analytics Product Metric Threshold. */
 export interface AnalyticsProductMetricThreshold {
   criticalAt?: number;
   key?: string | null;
@@ -291,8 +317,10 @@ export interface AnalyticsProductMetricThreshold {
   warningAt?: number;
 }
 
+/** OpenAPI schema for Analytics Product Metric Threshold Status. */
 export type AnalyticsProductMetricThresholdStatus = 'Healthy' | 'Warning' | 'Critical';
 
+/** Data model for Analytics Product Revenue Metrics. */
 export interface AnalyticsProductRevenueMetrics {
   annualRecurringRevenue?: number;
   currency?: string | null;
@@ -300,6 +328,7 @@ export interface AnalyticsProductRevenueMetrics {
   salesVolume?: number;
 }
 
+/** Data model for Analytics Product Subscription Metrics. */
 export interface AnalyticsProductSubscriptionMetrics {
   activeSubscribers?: number;
   cancelledInPeriod?: number;
@@ -311,8 +340,10 @@ export interface AnalyticsProductSubscriptionMetrics {
   trialSubscribers?: number;
 }
 
+/** OpenAPI schema for Analytics Time Series Granularity. */
 export type AnalyticsTimeSeriesGranularity = 'Hour' | 'Day' | 'Week' | 'Month';
 
+/** Data model for Analytics Track Analytics Event Command. */
 export interface AnalyticsTrackAnalyticsEventCommand {
   eventName?: string | null;
   propertiesJson?: string | null;
@@ -320,6 +351,7 @@ export interface AnalyticsTrackAnalyticsEventCommand {
   userId?: string | null;
 }
 
+/** Data model for Analytics Update Dashboard Request. */
 export interface AnalyticsUpdateDashboardInput {
   description?: string | null;
   isDefault?: boolean;
@@ -328,18 +360,22 @@ export interface AnalyticsUpdateDashboardInput {
   widgets?: Array<AnalyticsDashboardWidgetInput> | null;
 }
 
+/** OpenAPI schema for Analytics Widget Type. */
 export type AnalyticsWidgetType = 'Counter' | 'Chart' | 'Table' | 'Gauge' | 'TimeSeries' | 'Funnel';
 
+/** Data model for API Access Access Capabilities Response. */
 export interface APIAccessAccessCapabilitiesOutput {
   capabilities?: Array<string> | null;
 }
 
+/** Data model for API Controllers Activate Economy Kill Switch Request. */
 export interface APIControllersActivateEconomyKillSwitchInput {
   id?: string;
   capability?: FinanceEconomyRiskEconomyValueMovementCapability;
   reason?: string | null;
 }
 
+/** Data model for API Controllers Ad Reward Protected Operation Failure Response. */
 export interface APIControllersAdRewardProtectedOperationFailureOutput {
   diagnostics?: Array<string> | null;
   reviewId?: string | null;
@@ -363,27 +399,33 @@ export interface APIControllersApplicationInfoOutput {
   timestamp?: string;
 }
 
+/** Data model for API Controllers Approve Economy Policy Request. */
 export interface APIControllersApproveEconomyPolicyInput {
   stepUpReceipt?: string | null;
 }
 
+/** Data model for API Controllers Approve Legacy Economy Cutover Request. */
 export interface APIControllersApproveLegacyEconomyCutoverInput {
   stepUpReceipt?: string | null;
 }
 
+/** Data model for API Controllers Approve Treasury Withdrawal Request. */
 export interface APIControllersApproveTreasuryWithdrawalInput {
   expectedVersion?: number;
   stepUpReceipt?: string | null;
 }
 
+/** Data model for API Controllers Assign Financial Crime Case Request. */
 export interface APIControllersAssignFinancialCrimeCaseInput {
   expectedVersion?: number;
 }
 
+/** Data model for API Controllers Assign Trust Safety Appeal Request. */
 export interface APIControllersAssignTrustSafetyAppealInput {
   expectedVersion?: number;
 }
 
+/** Data model for API Controllers Backfill Legacy Economy Wallet Request. */
 export interface APIControllersBackfillLegacyEconomyWalletInput {
   legacyWalletId?: string;
   operationFingerprint?: string | null;
@@ -397,11 +439,13 @@ export interface APIControllersBuildDetails {
   timestamp?: string | null;
 }
 
+/** Data model for API Controllers Capture Legacy Economy Migration Request. */
 export interface APIControllersCaptureLegacyEconomyMigrationInput {
   batchId?: string;
   jurisdictionCode?: string | null;
 }
 
+/** Data model for API Controllers Complete My Ad Reward Session Request. */
 export interface APIControllersCompleteMyAdRewardSessionInput {
   idempotencyKey?: string | null;
   playback?: FinanceEconomyAdRewardsAdPlaybackEvidence;
@@ -409,10 +453,12 @@ export interface APIControllersCompleteMyAdRewardSessionInput {
   token?: string | null;
 }
 
+/** Data model for API Controllers Complete My Bounty Request. */
 export interface APIControllersCompleteMyBountyInput {
   idempotencyKey?: string | null;
 }
 
+/** Data model for API Controllers Create My Bounty Request. */
 export interface APIControllersCreateMyBountyInput {
   amountUnits?: number;
   currency?: FinanceEconomyContractsCurrencyCode;
@@ -423,10 +469,12 @@ export interface APIControllersCreateMyBountyInput {
   requiresPrerequisite?: boolean;
 }
 
+/** Data model for API Controllers Create My Kyc Access Token Request. */
 export interface APIControllersCreateMyKycAccessTokenInput {
   lifetimeSeconds?: number;
 }
 
+/** Data model for API Controllers Decide Financial Crime Case Request. */
 export interface APIControllersDecideFinancialCrimeCaseInput {
   id?: string;
   evidenceHash?: string | null;
@@ -439,6 +487,7 @@ export interface APIControllersDecideFinancialCrimeCaseInput {
   version?: number;
 }
 
+/** Data model for API Controllers Decide Trust Safety Appeal Request. */
 export interface APIControllersDecideTrustSafetyAppealInput {
   evidenceHash?: string | null;
   expectedVersion?: number;
@@ -469,16 +518,19 @@ export interface APIControllersDependencyHealthOutput {
   unhealthyCount?: number;
 }
 
+/** Data model for API Controllers Dispatch Payout Execution Request. */
 export interface APIControllersDispatchPayoutExecutionInput {
   expectedVersion?: number;
   stepUpReceipt?: string | null;
 }
 
+/** Data model for API Controllers Dispatch Treasury Withdrawal Request. */
 export interface APIControllersDispatchTreasuryWithdrawalInput {
   expectedVersion?: number;
   stepUpReceipt?: string | null;
 }
 
+/** Data model for API Controllers Economy Kyc Status Dto. */
 export interface APIControllersEconomyKycStatusDto {
   expiresAt?: string | null;
   hasEvidence?: boolean;
@@ -488,6 +540,7 @@ export interface APIControllersEconomyKycStatusDto {
   version?: number | null;
 }
 
+/** Data model for API Controllers Economy Payout Execution Operation Dto. */
 export interface APIControllersEconomyPayoutExecutionOperationDto {
   id?: string;
   createdAt?: string;
@@ -507,21 +560,25 @@ export interface APIControllersEconomyPayoutExecutionOperationDto {
   walletId?: string;
 }
 
+/** Data model for API Controllers Economy Self Service Capability Dto. */
 export interface APIControllersEconomySelfServiceCapabilityDto {
   capability?: FinanceEconomyRiskEconomyValueMovementCapability;
   diagnostics?: Array<string> | null;
   state?: APISetupEconomyCapabilityReadinessState;
 }
 
+/** Data model for API Controllers Economy Step Up Request. */
 export interface APIControllersEconomyStepUpInput {
   stepUpReceipt?: string | null;
 }
 
+/** Data model for API Controllers Economy Top Up Failure Response. */
 export interface APIControllersEconomyTopUpFailureOutput {
   message?: string | null;
   state?: string | null;
 }
 
+/** Data model for API Controllers Economy Transfer Protected Operation Failure Response. */
 export interface APIControllersEconomyTransferProtectedOperationFailureOutput {
   diagnostics?: Array<string> | null;
   reviewId?: string | null;
@@ -551,6 +608,7 @@ export interface APIControllersHealthinessResponseItem {
   status?: string | null;
 }
 
+/** Data model for API Controllers Inspect Economy Capability Readiness Request. */
 export interface APIControllersInspectEconomyCapabilityReadinessInput {
   capability?: FinanceEconomyRiskEconomyValueMovementCapability;
   destinationHash?: string | null;
@@ -571,18 +629,21 @@ export interface APIControllersLivenessOutput {
   version?: string | null;
 }
 
+/** Data model for API Controllers Marketplace Protected Operation Failure Response. */
 export interface APIControllersMarketplaceProtectedOperationFailureOutput {
   diagnostics?: Array<string> | null;
   reviewId?: string | null;
   state?: FinanceEconomyRiskEconomyProtectedOperationState;
 }
 
+/** Data model for API Controllers Payout Protected Operation Failure Response. */
 export interface APIControllersPayoutProtectedOperationFailureOutput {
   diagnostics?: Array<string> | null;
   reviewId?: string | null;
   state?: FinanceEconomyRiskEconomyProtectedOperationState;
 }
 
+/** Data model for API Controllers Platform Kpis Response. */
 export interface APIControllersPlatformKpisOutput {
   activeTenants?: number;
   calculatedAt?: string;
@@ -596,6 +657,7 @@ export interface APIControllersProcessDetails {
   uptime?: string;
 }
 
+/** Data model for API Controllers Propose Economy Policy Request. */
 export interface APIControllersProposeEconomyPolicyInput {
   id?: string;
   capability?: FinanceEconomyRiskEconomyValueMovementCapability;
@@ -607,6 +669,7 @@ export interface APIControllersProposeEconomyPolicyInput {
   version?: number;
 }
 
+/** Data model for API Controllers Propose Economy Reserve Request. */
 export interface APIControllersProposeEconomyReserveInput {
   id?: string;
   authorizationEpoch?: number;
@@ -621,11 +684,13 @@ export interface APIControllersProposeEconomyReserveInput {
   version?: number;
 }
 
+/** Data model for API Controllers Propose Legacy Economy Cutover Request. */
 export interface APIControllersProposeLegacyEconomyCutoverInput {
   reason?: string | null;
   stepUpReceipt?: string | null;
 }
 
+/** Data model for API Controllers Propose Treasury Withdrawal Request. */
 export interface APIControllersProposeTreasuryWithdrawalInput {
   amountUnits?: number;
   destinationHash?: string | null;
@@ -634,6 +699,7 @@ export interface APIControllersProposeTreasuryWithdrawalInput {
   stepUpReceipt?: string | null;
 }
 
+/** Data model for API Controllers Publish Economy Anchor Request. */
 export interface APIControllersPublishEconomyAnchorInput {
   dispatchSnapshotHash?: string | null;
 }
@@ -647,27 +713,32 @@ export interface APIControllersReadinessOutput {
   timestamp?: string;
 }
 
+/** Data model for API Controllers Record Regulatory Reference Request. */
 export interface APIControllersRecordRegulatoryReferenceInput {
   jurisdictionCode?: string | null;
   kind?: string | null;
   referenceHash?: string | null;
 }
 
+/** Data model for API Controllers Refund Marketplace Settlement Request. */
 export interface APIControllersRefundMarketplaceSettlementInput {
   idempotencyKey?: string | null;
   quantity?: number;
   reasonCode?: string | null;
 }
 
+/** Data model for API Controllers Reserve Approved Payout Execution Request. */
 export interface APIControllersReserveApprovedPayoutExecutionInput {
   stepUpReceipt?: string | null;
 }
 
+/** Data model for API Controllers Resolve Economy Risk Review Request. */
 export interface APIControllersResolveEconomyRiskReviewInput {
   decisionCode?: FinanceEconomyRiskRiskManualDecisionCode;
   resolution?: string | null;
 }
 
+/** Data model for API Controllers Rollback Legacy Economy Cutover Request. */
 export interface APIControllersRollbackLegacyEconomyCutoverInput {
   reason?: string | null;
   stepUpReceipt?: string | null;
@@ -681,11 +752,13 @@ export interface APIControllersRuntimeDetails {
   processArchitecture?: string | null;
 }
 
+/** Data model for API Controllers Settle My Marketplace Order Request. */
 export interface APIControllersSettleMyMarketplaceOrderInput {
   currencyChoice?: FinanceEconomyMarketplaceMarketplaceCurrencyChoice;
   idempotencyKey?: string | null;
 }
 
+/** Data model for API Controllers Start My Ad Reward Session Request. */
 export interface APIControllersStartMyAdRewardSessionInput {
   creativeId?: string | null;
   idempotencyKey?: string | null;
@@ -693,10 +766,12 @@ export interface APIControllersStartMyAdRewardSessionInput {
   requiredDurationSeconds?: number;
 }
 
+/** Data model for API Controllers Start My Kyc Request. */
 export interface APIControllersStartMyKycInput {
   idempotencyKey?: string | null;
 }
 
+/** Data model for API Eventing Dead Letter Event. */
 export interface APIEventingDeadLetterEvent {
   attemptCount?: number;
   consumerName?: string | null;
@@ -706,6 +781,7 @@ export interface APIEventingDeadLetterEvent {
   lastError?: string | null;
 }
 
+/** Data model for API Eventing Event Transport Status. */
 export interface APIEventingEventTransportStatus {
   completed?: number;
   deadLettered?: number;
@@ -713,6 +789,7 @@ export interface APIEventingEventTransportStatus {
   pending?: number;
 }
 
+/** Data model for API Projects Add Project Team Request. */
 export interface APIProjectsAddProjectTeamInput {
   contributionPercentage?: number;
   notes?: string | null;
@@ -722,6 +799,7 @@ export interface APIProjectsAddProjectTeamInput {
   teamId?: string;
 }
 
+/** Data model for API Projects Counter Project Team Agreement Request. */
 export interface APIProjectsCounterProjectTeamAgreementInput {
   deliverables?: string | null;
   endsAt?: string;
@@ -729,6 +807,7 @@ export interface APIProjectsCounterProjectTeamAgreementInput {
   startsAt?: string;
 }
 
+/** Data model for API Projects Create Project Allocation Request. */
 export interface APIProjectsCreateProjectAllocationInput {
   capacityPercentage?: number;
   endsAt?: string | null;
@@ -738,6 +817,7 @@ export interface APIProjectsCreateProjectAllocationInput {
   userId?: string;
 }
 
+/** Data model for API Projects Create Project Team Agreement Request. */
 export interface APIProjectsCreateProjectTeamAgreementInput {
   deliverables?: string | null;
   endsAt?: string;
@@ -747,6 +827,7 @@ export interface APIProjectsCreateProjectTeamAgreementInput {
   startsAt?: string;
 }
 
+/** Data model for API Projects Project Allocation Dto. */
 export interface APIProjectsProjectAllocationDto {
   id?: string;
   capacityPercentage?: number;
@@ -758,6 +839,7 @@ export interface APIProjectsProjectAllocationDto {
   userId?: string;
 }
 
+/** Data model for API Projects Project Ownership Dto. */
 export interface APIProjectsProjectOwnershipDto {
   agreements?: Array<APIProjectsProjectTeamAgreementDto> | null;
   allocations?: Array<APIProjectsProjectAllocationDto> | null;
@@ -765,6 +847,7 @@ export interface APIProjectsProjectOwnershipDto {
   teams?: Array<APIProjectsProjectTeamOwnershipDto> | null;
 }
 
+/** Data model for API Projects Project Team Agreement Dto. */
 export interface APIProjectsProjectTeamAgreementDto {
   id?: string;
   acceptedByUserId?: string | null;
@@ -779,6 +862,7 @@ export interface APIProjectsProjectTeamAgreementDto {
   status?: ProjectsProjectTeamAgreementStatus;
 }
 
+/** Data model for API Projects Project Team Ownership Dto. */
 export interface APIProjectsProjectTeamOwnershipDto {
   id?: string;
   assignedAt?: string;
@@ -792,10 +876,12 @@ export interface APIProjectsProjectTeamOwnershipDto {
   teamSlug?: string | null;
 }
 
+/** Data model for API Projects Transfer Project Owner Team Request. */
 export interface APIProjectsTransferProjectOwnerTeamInput {
   teamId?: string;
 }
 
+/** Data model for API Projects Update Project Allocation Request. */
 export interface APIProjectsUpdateProjectAllocationInput {
   capacityPercentage?: number;
   endsAt?: string | null;
@@ -804,6 +890,7 @@ export interface APIProjectsUpdateProjectAllocationInput {
   startsAt?: string;
 }
 
+/** Data model for API Projects Update Project Team Request. */
 export interface APIProjectsUpdateProjectTeamInput {
   contributionPercentage?: number;
   notes?: string | null;
@@ -812,18 +899,22 @@ export interface APIProjectsUpdateProjectTeamInput {
   role?: ProjectsProjectTeamRole;
 }
 
+/** Data model for API Project Work Add Project Task Checklist Request. */
 export interface APIProjectWorkAddProjectTaskChecklistInput {
   text?: string | null;
 }
 
+/** Data model for API Project Work Add Project Task Comment Request. */
 export interface APIProjectWorkAddProjectTaskCommentInput {
   body?: string | null;
 }
 
+/** Data model for API Project Work Add Project Task Dependency Request. */
 export interface APIProjectWorkAddProjectTaskDependencyInput {
   dependsOnTaskId?: string;
 }
 
+/** Data model for API Project Work Configure Project Work Column Request. */
 export interface APIProjectWorkConfigureProjectWorkColumnInput {
   kind?: ProjectWorkProjectWorkColumnKind;
   name?: string | null;
@@ -831,17 +922,20 @@ export interface APIProjectWorkConfigureProjectWorkColumnInput {
   workInProgressLimit?: number | null;
 }
 
+/** Data model for API Project Work Create Project Milestone Request. */
 export interface APIProjectWorkCreateProjectMilestoneInput {
   description?: string | null;
   dueAt?: string | null;
   name?: string | null;
 }
 
+/** Data model for API Project Work Create Project Task Label Request. */
 export interface APIProjectWorkCreateProjectTaskLabelInput {
   color?: string | null;
   name?: string | null;
 }
 
+/** Data model for API Project Work Create Project Work Task Request. */
 export interface APIProjectWorkCreateProjectWorkTaskInput {
   assigneeUserId?: string | null;
   columnId?: string;
@@ -852,11 +946,13 @@ export interface APIProjectWorkCreateProjectWorkTaskInput {
   title?: string | null;
 }
 
+/** Data model for API Project Work Move Project Work Task Request. */
 export interface APIProjectWorkMoveProjectWorkTaskInput {
   columnId?: string;
   position?: number;
 }
 
+/** Data model for API Project Work Project Board Dto. */
 export interface APIProjectWorkProjectBoardDto {
   id?: string;
   columns?: Array<APIProjectWorkProjectWorkColumnDto> | null;
@@ -864,6 +960,7 @@ export interface APIProjectWorkProjectBoardDto {
   projectId?: string;
 }
 
+/** Data model for API Project Work Project Checklist Item Dto. */
 export interface APIProjectWorkProjectChecklistItemDto {
   id?: string;
   isCompleted?: boolean;
@@ -871,6 +968,7 @@ export interface APIProjectWorkProjectChecklistItemDto {
   text?: string | null;
 }
 
+/** Data model for API Project Work Project Milestone Dto. */
 export interface APIProjectWorkProjectMilestoneDto {
   id?: string;
   completedAt?: string | null;
@@ -879,6 +977,7 @@ export interface APIProjectWorkProjectMilestoneDto {
   name?: string | null;
 }
 
+/** Data model for API Project Work Project Task Comment Dto. */
 export interface APIProjectWorkProjectTaskCommentDto {
   id?: string;
   authorUserId?: string;
@@ -887,17 +986,20 @@ export interface APIProjectWorkProjectTaskCommentDto {
   editedAt?: string | null;
 }
 
+/** Data model for API Project Work Project Task Dependency Dto. */
 export interface APIProjectWorkProjectTaskDependencyDto {
   id?: string;
   dependsOnTaskId?: string;
 }
 
+/** Data model for API Project Work Project Task Label Dto. */
 export interface APIProjectWorkProjectTaskLabelDto {
   id?: string;
   color?: string | null;
   name?: string | null;
 }
 
+/** Data model for API Project Work Project Work Column Dto. */
 export interface APIProjectWorkProjectWorkColumnDto {
   id?: string;
   kind?: ProjectWorkProjectWorkColumnKind;
@@ -907,6 +1009,7 @@ export interface APIProjectWorkProjectWorkColumnDto {
   workInProgressLimit?: number | null;
 }
 
+/** Data model for API Project Work Project Work History Dto. */
 export interface APIProjectWorkProjectWorkHistoryDto {
   id?: string;
   action?: string | null;
@@ -916,6 +1019,7 @@ export interface APIProjectWorkProjectWorkHistoryDto {
   taskId?: string | null;
 }
 
+/** Data model for API Project Work Project Work Task Details Dto. */
 export interface APIProjectWorkProjectWorkTaskDetailsDto {
   checklist?: Array<APIProjectWorkProjectChecklistItemDto> | null;
   comments?: Array<APIProjectWorkProjectTaskCommentDto> | null;
@@ -924,6 +1028,7 @@ export interface APIProjectWorkProjectWorkTaskDetailsDto {
   task?: APIProjectWorkProjectWorkTaskDto;
 }
 
+/** Data model for API Project Work Project Work Task Dto. */
 export interface APIProjectWorkProjectWorkTaskDto {
   id?: string;
   assigneeUserId?: string | null;
@@ -938,6 +1043,7 @@ export interface APIProjectWorkProjectWorkTaskDto {
   title?: string | null;
 }
 
+/** Data model for API Project Work Update Project Milestone Request. */
 export interface APIProjectWorkUpdateProjectMilestoneInput {
   completedAt?: string | null;
   description?: string | null;
@@ -945,14 +1051,17 @@ export interface APIProjectWorkUpdateProjectMilestoneInput {
   name?: string | null;
 }
 
+/** Data model for API Project Work Update Project Task Checklist Request. */
 export interface APIProjectWorkUpdateProjectTaskChecklistInput {
   isCompleted?: boolean;
 }
 
+/** Data model for API Project Work Update Project Task Comment Request. */
 export interface APIProjectWorkUpdateProjectTaskCommentInput {
   body?: string | null;
 }
 
+/** Data model for API Project Work Update Project Work Task Request. */
 export interface APIProjectWorkUpdateProjectWorkTaskInput {
   assigneeUserId?: string | null;
   description?: string | null;
@@ -962,23 +1071,28 @@ export interface APIProjectWorkUpdateProjectWorkTaskInput {
   title?: string | null;
 }
 
+/** OpenAPI schema for API Setup Economy Capability Readiness State. */
 export type APISetupEconomyCapabilityReadinessState = 'Disabled' | 'Ready' | 'ProviderNotReady' | 'InvalidConfiguration';
 
+/** Data model for API Teams Accept Team Invitation Request. */
 export interface APITeamsAcceptTeamInvitationInput {
   token?: string | null;
 }
 
+/** Data model for API Teams Add Team Member Request. */
 export interface APITeamsAddTeamMemberInput {
   authority?: TeamsTeamMemberAuthority;
   professionalTitle?: string | null;
   userId?: string;
 }
 
+/** Data model for API Teams Change Team Member Request. */
 export interface APITeamsChangeTeamMemberInput {
   authority?: TeamsTeamMemberAuthority;
   professionalTitle?: string | null;
 }
 
+/** Data model for API Teams Create Team Request. */
 export interface APITeamsCreateTeamInput {
   description?: string | null;
   name?: string | null;
@@ -987,6 +1101,7 @@ export interface APITeamsCreateTeamInput {
   visibility?: TeamsTeamVisibility;
 }
 
+/** Data model for API Teams Create Team Invitation Request. */
 export interface APITeamsCreateTeamInvitationInput {
   authority?: TeamsTeamMemberAuthority;
   email?: string | null;
@@ -994,6 +1109,7 @@ export interface APITeamsCreateTeamInvitationInput {
   userId?: string | null;
 }
 
+/** Data model for API Teams My Team Invitation Dto. */
 export interface APITeamsMyTeamInvitationDto {
   id?: string;
   authority?: TeamsTeamMemberAuthority;
@@ -1003,6 +1119,7 @@ export interface APITeamsMyTeamInvitationDto {
   teamSlug?: string | null;
 }
 
+/** Data model for API Teams Team Dto. */
 export interface APITeamsTeamDto {
   id?: string;
   description?: string | null;
@@ -1015,12 +1132,14 @@ export interface APITeamsTeamDto {
   visibility?: TeamsTeamVisibility;
 }
 
+/** Data model for API Teams Team Invitation Created Dto. */
 export interface APITeamsTeamInvitationCreatedDto {
   id?: string;
   expiresAt?: string;
   token?: string | null;
 }
 
+/** Data model for API Teams Team Invitation Dto. */
 export interface APITeamsTeamInvitationDto {
   id?: string;
   authority?: TeamsTeamMemberAuthority;
@@ -1032,6 +1151,7 @@ export interface APITeamsTeamInvitationDto {
   usedAt?: string | null;
 }
 
+/** Data model for API Teams Team Member Dto. */
 export interface APITeamsTeamMemberDto {
   authority?: TeamsTeamMemberAuthority;
   isActive?: boolean;
@@ -1040,6 +1160,7 @@ export interface APITeamsTeamMemberDto {
   userId?: string;
 }
 
+/** Data model for API Teams Team Project Summary. */
 export interface APITeamsTeamProjectSummary {
   id?: string;
   participationMode?: ProjectsProjectTeamParticipationMode;
@@ -1051,6 +1172,7 @@ export interface APITeamsTeamProjectSummary {
   visibility?: ContentVisibility;
 }
 
+/** Data model for API Teams Update Team Request. */
 export interface APITeamsUpdateTeamInput {
   description?: string | null;
   name?: string | null;
@@ -1070,6 +1192,7 @@ export interface AssetsAssetAccessUrl {
   url?: string | null;
 }
 
+/** OpenAPI schema for Assets Asset Folder Restriction Mode. */
 export type AssetsAssetFolderRestrictionMode = 'None' | 'SelectedTeams' | 'TeamAuthorities' | 'AllocatedProjectMembers';
 
 /** Asset content classification. */
@@ -1096,6 +1219,7 @@ export interface AssetsChunkedUploadSession {
   userId?: string;
 }
 
+/** Data model for Assets Commands Bulk Delete Asset Item. */
 export interface AssetsCommandsBulkDeleteAssetItem {
   assetReferenceId?: string;
   contentMarkedForDeletion?: boolean;
@@ -1103,6 +1227,7 @@ export interface AssetsCommandsBulkDeleteAssetItem {
   success?: boolean;
 }
 
+/** Data model for Assets Commands Bulk Delete Assets Response. */
 export interface AssetsCommandsBulkDeleteAssetsOutput {
   failed?: number;
   items?: Array<AssetsCommandsBulkDeleteAssetItem> | null;
@@ -1110,6 +1235,7 @@ export interface AssetsCommandsBulkDeleteAssetsOutput {
   totalRequested?: number;
 }
 
+/** Data model for Assets Commands Bulk Upload Asset Item. */
 export interface AssetsCommandsBulkUploadAssetItem {
   assetContentId?: string | null;
   assetReferenceId?: string | null;
@@ -1118,6 +1244,7 @@ export interface AssetsCommandsBulkUploadAssetItem {
   success?: boolean;
 }
 
+/** Data model for Assets Commands Bulk Upload Assets Response. */
 export interface AssetsCommandsBulkUploadAssetsOutput {
   failed?: number;
   items?: Array<AssetsCommandsBulkUploadAssetItem> | null;
@@ -1125,6 +1252,7 @@ export interface AssetsCommandsBulkUploadAssetsOutput {
   totalRequested?: number;
 }
 
+/** Data model for Assets Controllers Asset Extracted Text Response. */
 export interface AssetsControllersAssetExtractedTextOutput {
   assetId?: string;
   isPartial?: boolean;
@@ -1136,56 +1264,67 @@ export interface AssetsControllersAssetExtractedTextOutput {
   usedOcr?: boolean;
 }
 
+/** Data model for Assets Controllers Bulk Asset Access Url Request. */
 export interface AssetsControllersBulkAssetAccessUrlInput {
   assetIds?: Array<string> | null;
   directStorageUrl?: boolean;
 }
 
+/** Data model for Assets Controllers Bulk Delete Assets Request. */
 export interface AssetsControllersBulkDeleteAssetsInput {
   assetIds?: Array<string> | null;
 }
 
+/** Data model for Assets Controllers Content Moderation Request. */
 export interface AssetsControllersContentModerationInput {
   labels?: Array<string> | null;
   notes?: string | null;
   status?: AssetsModerationStatus;
 }
 
+/** Data model for Assets Controllers Copy Asset Reference Request. */
 export interface AssetsControllersCopyAssetReferenceInput {
   displayName?: string | null;
   folderId?: string | null;
 }
 
+/** Data model for Assets Controllers Create Asset Folder Request. */
 export interface AssetsControllersCreateAssetFolderInput {
   name?: string | null;
   parentFolderId?: string | null;
 }
 
+/** Data model for Assets Controllers Mark Non Deletable Request. */
 export interface AssetsControllersMarkNonDeletableInput {
   reason?: string | null;
 }
 
+/** Data model for Assets Controllers Report Asset Request. */
 export interface AssetsControllersReportAssetInput {
   description?: string | null;
   reason?: AssetsReportReason;
 }
 
+/** Data model for Assets Controllers Restrict Asset Folder Request. */
 export interface AssetsControllersRestrictAssetFolderInput {
   authorities?: Array<string> | null;
   mode?: AssetsAssetFolderRestrictionMode;
   teamIds?: Array<string> | null;
 }
 
+/** Data model for Assets Controllers Review Report Request. */
 export interface AssetsControllersReviewReportInput {
   decision?: AssetsReviewDecision;
   notes?: string | null;
 }
 
+/** Data model for Assets Controllers Update Asset Request. */
 export interface AssetsControllersUpdateAssetInput {
   accessPolicy?: AssetsAssetAccessPolicy;
   displayName?: string | null;
 }
 
+/** Data model for Assets Controllers Update Virus Scan Request. */
 export interface AssetsControllersUpdateVirusScanInput {
   scanResult?: string | null;
   status?: AssetsVirusScanStatus;
@@ -1200,6 +1339,7 @@ export type AssetsImageFormat = 'Original' | 'Jpeg' | 'Png' | 'Webp' | 'Avif' | 
 /** Content moderation status. */
 export type AssetsModerationStatus = 'Pending' | 'Processing' | 'Approved' | 'Rejected' | 'NeedsReview' | 'ApprovedWithWarning' | 'Blocked';
 
+/** Data model for Assets Queries Asset Preview Response. */
 export interface AssetsQueriesAssetPreviewOutput {
   assetContentId?: string;
   assetReferenceId?: string;
@@ -1218,6 +1358,7 @@ export interface AssetsQueriesAssetPreviewOutput {
   warnings?: Array<string> | null;
 }
 
+/** Data model for Assets Queries Asset Retention Candidate Response. */
 export interface AssetsQueriesAssetRetentionCandidateOutput {
   assetContentId?: string;
   bucketName?: string | null;
@@ -1227,6 +1368,7 @@ export interface AssetsQueriesAssetRetentionCandidateOutput {
   sizeBytes?: number;
 }
 
+/** Data model for Assets Queries Asset Retention Report Response. */
 export interface AssetsQueriesAssetRetentionReportOutput {
   candidateBytes?: number;
   candidates?: number;
@@ -1237,12 +1379,14 @@ export interface AssetsQueriesAssetRetentionReportOutput {
   onLegalHold?: number;
 }
 
+/** Data model for Assets Queries Asset Search Response. */
 export interface AssetsQueriesAssetSearchOutput {
   items?: Array<AssetsQueriesAssetSearchResult> | null;
   returned?: number;
   totalMatched?: number;
 }
 
+/** Data model for Assets Queries Asset Search Result. */
 export interface AssetsQueriesAssetSearchResult {
   accessCount?: number;
   assetContentId?: string;
@@ -1258,6 +1402,7 @@ export interface AssetsQueriesAssetSearchResult {
   sizeBytes?: number;
 }
 
+/** Data model for Assets Queries Asset Statistics Response. */
 export interface AssetsQueriesAssetStatisticsOutput {
   blockedOrRejected?: number;
   documentAssets?: number;
@@ -1273,6 +1418,7 @@ export interface AssetsQueriesAssetStatisticsOutput {
   videoAssets?: number;
 }
 
+/** Data model for Assets Queries Bulk Asset Access Url Item. */
 export interface AssetsQueriesBulkAssetAccessUrlItem {
   assetReferenceId?: string;
   error?: string | null;
@@ -1283,6 +1429,7 @@ export interface AssetsQueriesBulkAssetAccessUrlItem {
   url?: string | null;
 }
 
+/** Data model for Assets Queries Bulk Asset Access Urls Response. */
 export interface AssetsQueriesBulkAssetAccessUrlsOutput {
   failed?: number;
   items?: Array<AssetsQueriesBulkAssetAccessUrlItem> | null;
@@ -1336,6 +1483,7 @@ export interface BulkOperationOutput {
   totalRequested?: number;
 }
 
+/** Data model for Commerce Billing Invoice Payment Retry Result. */
 export interface CommerceBillingInvoicePaymentRetryResult {
   accepted?: boolean;
   code?: string | null;
@@ -1349,8 +1497,10 @@ export interface CommerceBillingInvoicePaymentRetryResult {
 /** Invoice status enumeration with monotonic transitions */
 export type CommerceBillingInvoiceStatus = 'Draft' | 'Open' | 'Paid' | 'Void' | 'PastDue' | 'Uncollectible';
 
+/** OpenAPI schema for Commerce Order Charge State. */
 export type CommerceOrderChargeState = 'Succeeded' | 'Failed' | 'Processing' | 'RequiresAction' | 'RequiresReconciliation';
 
+/** Data model for Commerce Order Payment Intent Preparation. */
 export interface CommerceOrderPaymentIntentPreparation {
   clientSecret?: string | null;
   failureReason?: string | null;
@@ -1359,6 +1509,7 @@ export interface CommerceOrderPaymentIntentPreparation {
   success?: boolean;
 }
 
+/** Data model for Commerce Orders Add Marketplace Cart Item Input. */
 export interface CommerceOrdersAddMarketplaceCartItemInput {
   idempotencyKey?: string | null;
   productId?: string;
@@ -1381,6 +1532,7 @@ export interface CommerceOrdersCaptureOrderInput {
   paymentMethodId?: string | null;
 }
 
+/** Data model for Commerce Orders Checkout Marketplace Cart Input. */
 export interface CommerceOrdersCheckoutMarketplaceCartInput {
   expectedVersion?: number;
   idempotencyKey?: string | null;
@@ -1397,6 +1549,7 @@ export interface CommerceOrdersCompleteOrderInput {
   paymentProviderReference?: string | null;
 }
 
+/** Data model for Commerce Orders Complete Order Marketplace Settlement. */
 export interface CommerceOrdersCompleteOrderMarketplaceSettlement {
   currencyChoice?: CommerceOrdersOrderMarketplaceCurrencyChoice;
   idempotencyKey?: string | null;
@@ -1407,6 +1560,7 @@ export interface CommerceOrdersCreateOrderInput {
   idempotencyKey?: string | null;
 }
 
+/** Data model for Commerce Orders Marketplace Cart Dto. */
 export interface CommerceOrdersMarketplaceCartDto {
   id?: string | null;
   items?: Array<CommerceOrdersMarketplaceCartItemDto> | null;
@@ -1416,6 +1570,7 @@ export interface CommerceOrdersMarketplaceCartDto {
   version?: number;
 }
 
+/** Data model for Commerce Orders Marketplace Cart Item Dto. */
 export interface CommerceOrdersMarketplaceCartItemDto {
   id?: string;
   productId?: string;
@@ -1424,13 +1579,16 @@ export interface CommerceOrdersMarketplaceCartItemDto {
   quantity?: number;
 }
 
+/** OpenAPI schema for Commerce Orders Marketplace Cart State. */
 export type CommerceOrdersMarketplaceCartState = 'Active' | 'CheckedOut' | 'Abandoned';
 
+/** Data model for Commerce Orders Marketplace Checkout Dto. */
 export interface CommerceOrdersMarketplaceCheckoutDto {
   cartId?: string;
   orders?: Array<CommerceOrdersMarketplaceCheckoutOrderDto> | null;
 }
 
+/** Data model for Commerce Orders Marketplace Checkout Order Dto. */
 export interface CommerceOrdersMarketplaceCheckoutOrderDto {
   currency?: string | null;
   orderId?: string;
@@ -1504,6 +1662,7 @@ export interface CommerceOrdersOrderLineItemDto {
   unitPrice?: number;
 }
 
+/** OpenAPI schema for Commerce Orders Order Marketplace Currency Choice. */
 export type CommerceOrdersOrderMarketplaceCurrencyChoice = 'Hard' | 'Soft' | 'FixedMix';
 
 /** Order status enumeration with explicit economic states.
@@ -1511,16 +1670,19 @@ Follows monotonic FSM - no backward economic transitions allowed. */
 export type CommerceOrdersOrderStatus =
   'Pending' | 'Processing' | 'Completed' | 'Failed' | 'Cancelled' | 'Refunded' | 'PartiallyRefunded' | 'Disputed' | 'Paid' | 'Fulfilled' | 'OnHold';
 
+/** Data model for Commerce Orders Set Marketplace Cart Item Quantity Input. */
 export interface CommerceOrdersSetMarketplaceCartItemQuantityInput {
   expectedVersion?: number;
   quantity?: number;
 }
 
+/** Data model for Commerce Payments Billing Charges Controller+Cancel Billing Charge Request. */
 export interface CommercePaymentsBillingChargesControllerCancelBillingChargeInput {
   canceledBy?: string | null;
   cancellationReason?: string | null;
 }
 
+/** Data model for Commerce Payments Billing Charges Controller+Create Billing Charge Request. */
 export interface CommercePaymentsBillingChargesControllerCreateBillingChargeInput {
   amount?: number;
   paymentMethodId?: string | null;
@@ -1528,6 +1690,7 @@ export interface CommercePaymentsBillingChargesControllerCreateBillingChargeInpu
   tenantId?: string;
 }
 
+/** Data model for Commerce Payments Billing Charges Controller+Refund Billing Charge Request. */
 export interface CommercePaymentsBillingChargesControllerRefundBillingChargeInput {
   amount?: number | null;
   reason?: string | null;
@@ -1567,6 +1730,7 @@ export interface CommercePaymentsCreateTaxRuleInput {
   rate?: number;
 }
 
+/** Data model for Commerce Payments Create Wallet Request. */
 export interface CommercePaymentsCreateWalletInput {
   currency?: string | null;
 }
@@ -1574,6 +1738,7 @@ export interface CommercePaymentsCreateWalletInput {
 /** Customer types */
 export type CommercePaymentsCustomerType = 'B2C' | 'B2B';
 
+/** Data model for Commerce Payments Lock Wallet Request. */
 export interface CommercePaymentsLockWalletInput {
   reason: string | null;
 }
@@ -1655,18 +1820,21 @@ export interface CommercePaymentsPaymentRetryResult {
   success?: boolean;
 }
 
+/** Data model for Commerce Payments Payments Controller+Cancel Payment Request. */
 export interface CommercePaymentsPaymentsControllerCancelPaymentInput {
   canceledBy?: string | null;
   cancellationReason?: string | null;
   notes?: string | null;
 }
 
+/** Data model for Commerce Payments Payments Controller+Complete Subscription Checkout Request. */
 export interface CommercePaymentsPaymentsControllerCompleteSubscriptionCheckoutInput {
   paymentMethodId?: string | null;
   subscriptionId?: string;
   tenantId?: string;
 }
 
+/** Data model for Commerce Payments Payments Controller+Create Setup Intent Request. */
 export interface CommercePaymentsPaymentsControllerCreateSetupIntentInput {
   customerEmail?: string | null;
   customerName?: string | null;
@@ -1674,6 +1842,7 @@ export interface CommercePaymentsPaymentsControllerCreateSetupIntentInput {
   tenantId?: string;
 }
 
+/** Data model for Commerce Payments Payments Controller+Create Setup Intent Response. */
 export interface CommercePaymentsPaymentsControllerCreateSetupIntentOutput {
   clientSecret?: string | null;
   customerId?: string | null;
@@ -1681,6 +1850,7 @@ export interface CommercePaymentsPaymentsControllerCreateSetupIntentOutput {
   subscriptionId?: string;
 }
 
+/** Data model for Commerce Payments Payments Controller+Process Payment Request. */
 export interface CommercePaymentsPaymentsControllerProcessPaymentInput {
   amount?: number;
   paymentMethodId?: string | null;
@@ -1688,6 +1858,7 @@ export interface CommercePaymentsPaymentsControllerProcessPaymentInput {
   tenantId?: string;
 }
 
+/** Data model for Commerce Payments Payments Controller+Refund Request. */
 export interface CommercePaymentsPaymentsControllerRefundInput {
   amount?: number | null;
   reason?: string | null;
@@ -2066,10 +2237,12 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
 /** Wallet transaction types */
 export type CommercePaymentsWalletTransactionType = 'Credit' | 'Debit' | 'TransferIn' | 'TransferOut' | 'Refund' | 'Fee' | 'Adjustment';
 
+/** Data model for Commerce Products Add My Support Ticket Message Request. */
 export interface CommerceProductsAddMySupportTicketMessageInput {
   body?: string | null;
 }
 
+/** Data model for Commerce Products Add Support Ticket Message Request. */
 export interface CommerceProductsAddSupportTicketMessageInput {
   body?: string | null;
   isInternal?: boolean;
@@ -2092,6 +2265,7 @@ export interface CommerceProductsApplyPromoCodesInput {
   promoCodes?: Array<string> | null;
 }
 
+/** Data model for Commerce Products Assign Support Ticket Request. */
 export interface CommerceProductsAssignSupportTicketInput {
   agentUserId?: string;
 }
@@ -2116,6 +2290,7 @@ export interface CommerceProductsBatchProductCreateItem {
   type?: CommerceProductsProductType;
 }
 
+/** Data model for Commerce Products Change Support Ticket Priority Request. */
 export interface CommerceProductsChangeSupportTicketPriorityInput {
   priority?: CommerceProductsSupportTicketPriority;
 }
@@ -2125,10 +2300,12 @@ export interface CommerceProductsCheckMultipleAccessInput {
   productIds?: Array<string> | null;
 }
 
+/** Data model for Commerce Products Close Support Ticket Request. */
 export interface CommerceProductsCloseSupportTicketInput {
   closingNotes?: string | null;
 }
 
+/** Data model for Commerce Products Create My Support Ticket Request. */
 export interface CommerceProductsCreateMySupportTicketInput {
   body?: string | null;
   category?: string | null;
@@ -2170,6 +2347,7 @@ export interface CommerceProductsCreatePromoCodeInput {
   validUntil?: string | null;
 }
 
+/** Data model for Commerce Products Create Support Ticket Request. */
 export interface CommerceProductsCreateSupportTicketInput {
   body?: string | null;
   category?: string | null;
@@ -2431,6 +2609,7 @@ export interface CommerceProductsRejectedPromoCode {
   reason?: string | null;
 }
 
+/** Data model for Commerce Products Resolve Support Ticket Request. */
 export interface CommerceProductsResolveSupportTicketInput {
   resolutionSummary?: string | null;
 }
@@ -2442,6 +2621,7 @@ export interface CommerceProductsRevokeEntitlementInput {
   userId?: string;
 }
 
+/** Data model for Commerce Products Set Product Pricing Request. */
 export interface CommerceProductsSetProductPricingInput {
   basePrice?: number;
   currency?: string | null;
@@ -2453,12 +2633,14 @@ export interface CommerceProductsSetProductPricingInput {
   saleStartDate?: string | null;
 }
 
+/** Data model for Commerce Products Support Agent Dto. */
 export interface CommerceProductsSupportAgentDto {
   email?: string | null;
   name?: string | null;
   userId?: string;
 }
 
+/** Data model for Commerce Products Support Ticket Dto. */
 export interface CommerceProductsSupportTicketDto {
   id?: string;
   assignedToName?: string | null;
@@ -2485,8 +2667,10 @@ export interface CommerceProductsSupportTicketDto {
   tenantId?: string | null;
 }
 
+/** OpenAPI schema for Commerce Products Support Ticket Message Author Type. */
 export type CommerceProductsSupportTicketMessageAuthorType = 'Customer' | 'Agent' | 'System';
 
+/** Data model for Commerce Products Support Ticket Message Dto. */
 export interface CommerceProductsSupportTicketMessageDto {
   id?: string;
   authorEmail?: string | null;
@@ -2499,10 +2683,13 @@ export interface CommerceProductsSupportTicketMessageDto {
   ticketId?: string;
 }
 
+/** OpenAPI schema for Commerce Products Support Ticket Priority. */
 export type CommerceProductsSupportTicketPriority = 'Low' | 'Normal' | 'High' | 'Urgent';
 
+/** OpenAPI schema for Commerce Products Support Ticket Status. */
 export type CommerceProductsSupportTicketStatus = 'Open' | 'InProgress' | 'Resolved' | 'Closed' | 'Cancelled';
 
+/** Data model for Commerce Products Support Ticket Summary Dto. */
 export interface CommerceProductsSupportTicketSummaryDto {
   highOrUrgent?: number;
   inProgress?: number;
@@ -2564,12 +2751,14 @@ export interface CommerceSubscriptionsBillingHistoryDto {
   subscriptionId?: string;
 }
 
+/** Data model for Commerce Subscriptions Billing Subscriptions Controller+Cancel Billing Subscription Request. */
 export interface CommerceSubscriptionsBillingSubscriptionsControllerCancelBillingSubscriptionInput {
   effectiveDate?: string | null;
   note?: string | null;
   reason?: CommerceSubscriptionsCancellationReason;
 }
 
+/** Data model for Commerce Subscriptions Billing Subscriptions Controller+Create Billing Subscription Request. */
 export interface CommerceSubscriptionsBillingSubscriptionsControllerCreateBillingSubscriptionInput {
   amount?: number;
   billingCycle?: BillingCycle;
@@ -2585,12 +2774,14 @@ export interface CommerceSubscriptionsBillingSubscriptionsControllerCreateBillin
 export type CommerceSubscriptionsCancellationReason =
   'UserRequested' | 'PaymentFailed' | 'PlanDiscontinued' | 'PolicyViolation' | 'Downgrade' | 'TrialEnded' | 'Custom' | 'ExternalRequest';
 
+/** Data model for Commerce Subscriptions Client Modules Response. */
 export interface CommerceSubscriptionsClientModulesOutput {
   clientId?: string;
   featureFlags?: Record<string, boolean> | null;
   subscriptions?: PagedResultSubscription;
 }
 
+/** Data model for Commerce Subscriptions Create Client Request. */
 export interface CommerceSubscriptionsCreateClientInput {
   adminEmail?: string | null;
   cnpj?: string | null;
@@ -2693,6 +2884,7 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   version?: number;
 }
 
+/** Data model for Commerce Subscriptions Subscription Churn Report Dto. */
 export interface CommerceSubscriptionsSubscriptionChurnReportDto {
   activeSubscriptions?: number;
   cancelledInPeriod?: number;
@@ -2716,25 +2908,30 @@ export interface CommerceSubscriptionsSubscriptionDowngradeResult {
   updatedSubscription?: CommerceSubscriptionsSubscription;
 }
 
+/** Data model for Commerce Subscriptions Subscription Lifecycle Controller+Auto Renew Request. */
 export interface CommerceSubscriptionsSubscriptionLifecycleControllerAutoRenewInput {
   autoRenew?: boolean;
 }
 
+/** Data model for Commerce Subscriptions Subscription Lifecycle Controller+Cancel Request. */
 export interface CommerceSubscriptionsSubscriptionLifecycleControllerCancelInput {
   effectiveDate?: string | null;
   note?: string | null;
   reason?: string | null;
 }
 
+/** Data model for Commerce Subscriptions Subscription Lifecycle Controller+Downgrade Request. */
 export interface CommerceSubscriptionsSubscriptionLifecycleControllerDowngradeInput {
   effectiveDate?: string | null;
   newPlanId?: string;
 }
 
+/** Data model for Commerce Subscriptions Subscription Lifecycle Controller+End Trial Request. */
 export interface CommerceSubscriptionsSubscriptionLifecycleControllerEndTrialInput {
   convertToPaid?: boolean;
 }
 
+/** Data model for Commerce Subscriptions Subscription Lifecycle Controller+External Ids Request. */
 export interface CommerceSubscriptionsSubscriptionLifecycleControllerExternalIdsInput {
   externalCustomerId?: string | null;
   externalSubscriptionId?: string | null;
@@ -2746,19 +2943,23 @@ export interface CommerceSubscriptionsSubscriptionLifecycleControllerPauseSubscr
   reason?: string | null;
 }
 
+/** Data model for Commerce Subscriptions Subscription Lifecycle Controller+Start Trial Request. */
 export interface CommerceSubscriptionsSubscriptionLifecycleControllerStartTrialInput {
   trialDays?: number;
 }
 
+/** Data model for Commerce Subscriptions Subscription Lifecycle Controller+Suspend Request. */
 export interface CommerceSubscriptionsSubscriptionLifecycleControllerSuspendInput {
   reason?: string | null;
 }
 
+/** Data model for Commerce Subscriptions Subscription Lifecycle Controller+Upgrade Request. */
 export interface CommerceSubscriptionsSubscriptionLifecycleControllerUpgradeInput {
   effectiveDate?: string | null;
   newPlanId?: string;
 }
 
+/** Data model for Commerce Subscriptions Subscription Notification Dto. */
 export interface CommerceSubscriptionsSubscriptionNotificationDto {
   id?: string;
   channel?: string | null;
@@ -2772,6 +2973,7 @@ export interface CommerceSubscriptionsSubscriptionNotificationDto {
   title?: string | null;
 }
 
+/** Data model for Commerce Subscriptions Subscription Notifications Controller+Resend Subscription Notification Request. */
 export interface CommerceSubscriptionsSubscriptionNotificationsControllerResendSubscriptionNotificationInput {
   channel?: NotificationsNotificationChannel;
 }
@@ -2844,19 +3046,23 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   version?: number;
 }
 
+/** Data model for Commerce Subscriptions Subscription Plan Operations Controller+Clone Subscription Plan Request. */
 export interface CommerceSubscriptionsSubscriptionPlanOperationsControllerCloneSubscriptionPlanInput {
   newName?: string | null;
   newSlug?: string | null;
 }
 
+/** Data model for Commerce Subscriptions Subscription Plan Operations Controller+Set External Id Request. */
 export interface CommerceSubscriptionsSubscriptionPlanOperationsControllerSetExternalIdInput {
   externalId?: string | null;
 }
 
+/** Data model for Commerce Subscriptions Subscription Plan Operations Controller+Set Featured Request. */
 export interface CommerceSubscriptionsSubscriptionPlanOperationsControllerSetFeaturedInput {
   featured?: boolean;
 }
 
+/** Data model for Commerce Subscriptions Subscription Plan Operations Controller+Update Details Request. */
 export interface CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateDetailsInput {
   description?: string | null;
   name?: string | null;
@@ -2864,6 +3070,7 @@ export interface CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdate
   sortOrder?: number | null;
 }
 
+/** Data model for Commerce Subscriptions Subscription Plan Operations Controller+Update Features Request. */
 export interface CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateFeaturesInput {
   features?: string | null;
   hasAdvancedAnalytics?: boolean | null;
@@ -2871,28 +3078,33 @@ export interface CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdate
   hasPrioritySupport?: boolean | null;
 }
 
+/** Data model for Commerce Subscriptions Subscription Plan Operations Controller+Update Limits Request. */
 export interface CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateLimitsInput {
   maxApiCallsPerMonth?: number | null;
   maxStorageMb?: number | null;
   maxUsers?: number | null;
 }
 
+/** Data model for Commerce Subscriptions Subscription Plan Operations Controller+Update Pricing Request. */
 export interface CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdatePricingInput {
   annualPriceInCents?: number | null;
   monthlyPriceInCents?: number;
 }
 
+/** Data model for Commerce Subscriptions Subscription Plan Operations Controller+Validate Limits Request. */
 export interface CommerceSubscriptionsSubscriptionPlanOperationsControllerValidateLimitsInput {
   apiCalls?: number;
   storageMb?: number;
   users?: number;
 }
 
+/** Data model for Commerce Subscriptions Subscription Plans Crud Controller+Compare Plans Request. */
 export interface CommerceSubscriptionsSubscriptionPlansCrudControllerComparePlansInput {
   basePlanId?: string;
   comparePlanIds?: Array<string> | null;
 }
 
+/** Data model for Commerce Subscriptions Subscription Plans Crud Controller+Create Plan Request. */
 export interface CommerceSubscriptionsSubscriptionPlansCrudControllerCreatePlanInput {
   currency?: string | null;
   description?: string | null;
@@ -2901,6 +3113,7 @@ export interface CommerceSubscriptionsSubscriptionPlansCrudControllerCreatePlanI
   slug?: string | null;
 }
 
+/** Data model for Commerce Subscriptions Subscription Plans Crud Controller+Put Subscription Plan Request. */
 export interface CommerceSubscriptionsSubscriptionPlansCrudControllerPutSubscriptionPlanInput {
   annualPriceInCents?: number | null;
   description?: string | null;
@@ -2986,6 +3199,7 @@ export interface CommerceSubscriptionsSubscriptionUsageDto {
 export type ComplianceAuditAuditCategory =
   'General' | 'Authentication' | 'Authorization' | 'Permission' | 'User' | 'Admin' | 'Security' | 'Data' | 'System' | 'Tenant' | 'Privacy';
 
+/** Data model for Compliance Audit Audit Export Request. */
 export interface ComplianceAuditAuditExportInput {
   actionType?: string | null;
   category?: ComplianceAuditAuditCategory;
@@ -2999,6 +3213,7 @@ export interface ComplianceAuditAuditExportInput {
   userId?: string | null;
 }
 
+/** Data model for Compliance Audit Audit Log Dto. */
 export interface ComplianceAuditAuditLogDto {
   id?: string;
   actionType?: string | null;
@@ -3018,6 +3233,7 @@ export interface ComplianceAuditAuditLogDto {
   userId?: string | null;
 }
 
+/** Data model for Compliance Audit Audit Log Response. */
 export interface ComplianceAuditAuditLogOutput {
   logs?: Array<ComplianceAuditAuditLogDto> | null;
   skip?: number;
@@ -3028,6 +3244,7 @@ export interface ComplianceAuditAuditLogOutput {
 /** Risk level for audit events */
 export type ComplianceAuditAuditRiskLevel = 'Low' | 'Medium' | 'High' | 'Critical';
 
+/** Data model for Compliance Audit Audit Statistics Response. */
 export interface ComplianceAuditAuditStatisticsOutput {
   authenticationEvents?: number;
   endDate?: string;
@@ -3065,6 +3282,7 @@ export interface ComplianceAuditAuthenticationAuditOutput {
   uniqueIpAddresses?: number;
 }
 
+/** Data model for Compliance Audit Daily Activity Trend. */
 export interface ComplianceAuditDailyActivityTrend {
   authenticationEvents?: number;
   date?: string;
@@ -3073,6 +3291,7 @@ export interface ComplianceAuditDailyActivityTrend {
   totalEvents?: number;
 }
 
+/** Data model for Compliance Audit Failure Reason Count. */
 export interface ComplianceAuditFailureReasonCount {
   count?: number;
   reason?: string | null;
@@ -3135,6 +3354,7 @@ export interface ComplianceAuditSecurityAuditDashboard {
 /** Source type for security audit entries. */
 export type ComplianceAuditSecurityAuditSourceType = 'Authentication' | 'Permission' | 'General' | 'All';
 
+/** Data model for Compliance Audit Top Ip Activity. */
 export interface ComplianceAuditTopIpActivity {
   eventCount?: number;
   failedAttempts?: number;
@@ -3142,6 +3362,7 @@ export interface ComplianceAuditTopIpActivity {
   uniqueUsers?: number;
 }
 
+/** Data model for Compliance Audit Top User Activity. */
 export interface ComplianceAuditTopUserActivity {
   email?: string | null;
   eventCount?: number;
@@ -3229,6 +3450,7 @@ export interface ComplianceAuditUnifiedSecurityAuditOutput {
   totalCount?: number;
 }
 
+/** Data model for Compliance Consent Consent Policy Dto. */
 export interface ComplianceConsentConsentPolicyDto {
   id?: string;
   currentVersion?: string | null;
@@ -3238,8 +3460,10 @@ export interface ComplianceConsentConsentPolicyDto {
   policyType?: ComplianceConsentPolicyType;
 }
 
+/** OpenAPI schema for Compliance Consent Content Type. */
 export type ComplianceConsentContentType = 'PlainText' | 'Html' | 'Markdown' | 'Url';
 
+/** Data model for Compliance Consent Create Consent Policy Command. */
 export interface ComplianceConsentCreateConsentPolicyCommand {
   description?: string | null;
   isMandatory?: boolean;
@@ -3247,6 +3471,7 @@ export interface ComplianceConsentCreateConsentPolicyCommand {
   policyType?: ComplianceConsentPolicyType;
 }
 
+/** Data model for Compliance Consent Data Subject Request Dto. */
 export interface ComplianceConsentDataSubjectRequestDto {
   id?: string;
   deadline?: string;
@@ -3257,10 +3482,13 @@ export interface ComplianceConsentDataSubjectRequestDto {
   userId?: string;
 }
 
+/** OpenAPI schema for Compliance Consent Data Subject Request Status. */
 export type ComplianceConsentDataSubjectRequestStatus = 'Pending' | 'InProgress' | 'Completed' | 'Rejected' | 'Expired';
 
+/** OpenAPI schema for Compliance Consent Data Subject Request Type. */
 export type ComplianceConsentDataSubjectRequestType = 'Access' | 'Erasure' | 'Portability' | 'Rectification' | 'Restriction' | 'Objection';
 
+/** Data model for Compliance Consent Grant Consent Command. */
 export interface ComplianceConsentGrantConsentCommand {
   consentMethod?: string | null;
   ipAddress?: string | null;
@@ -3269,9 +3497,11 @@ export interface ComplianceConsentGrantConsentCommand {
   userId?: string;
 }
 
+/** OpenAPI schema for Compliance Consent Policy Type. */
 export type ComplianceConsentPolicyType =
   'PrivacyPolicy' | 'TermsOfService' | 'CookiePolicy' | 'DataProcessingAgreement' | 'MarketingConsent' | 'ThirdPartySharing' | 'Custom';
 
+/** Data model for Compliance Consent Policy Version Dto. */
 export interface ComplianceConsentPolicyVersionDto {
   id?: string;
   contentType?: ComplianceConsentContentType;
@@ -3281,28 +3511,33 @@ export interface ComplianceConsentPolicyVersionDto {
   versionNumber?: string | null;
 }
 
+/** Data model for Compliance Consent Process Request Body. */
 export interface ComplianceConsentProcessRequestBody {
   notes?: string | null;
   processedByUserId?: string;
 }
 
+/** Data model for Compliance Consent Publish Version Request. */
 export interface ComplianceConsentPublishVersionInput {
   content?: string | null;
   contentType?: ComplianceConsentContentType;
   versionNumber?: string | null;
 }
 
+/** Data model for Compliance Consent Revoke Consent Command. */
 export interface ComplianceConsentRevokeConsentCommand {
   policyVersionId?: string;
   userId?: string;
 }
 
+/** Data model for Compliance Consent Submit Data Subject Request Command. */
 export interface ComplianceConsentSubmitDataSubjectRequestCommand {
   description?: string | null;
   requestType?: ComplianceConsentDataSubjectRequestType;
   userId?: string;
 }
 
+/** Data model for Compliance Consent User Consent Dto. */
 export interface ComplianceConsentUserConsentDto {
   id?: string;
   consentGivenAt?: string;
@@ -3313,15 +3548,18 @@ export interface ComplianceConsentUserConsentDto {
   userId?: string;
 }
 
+/** Data model for Compliance FERPA Complete Ferpa Inspection Request Body. */
 export interface ComplianceFERPACompleteFerpaInspectionRequestBody {
   approved?: boolean;
   notes?: string | null;
   processedByUserId?: string;
 }
 
+/** OpenAPI schema for Compliance FERPA Education Record Kind. */
 export type ComplianceFERPAEducationRecordKind =
   'CourseEnrollment' | 'AssessmentSubmission' | 'Grade' | 'Certificate' | 'Attendance' | 'Communication' | 'SupportCase' | 'Custom';
 
+/** Data model for Compliance FERPA Ferpa Directory Information Policy Dto. */
 export interface ComplianceFERPAFerpaDirectoryInformationPolicyDto {
   id?: string;
   allowedFieldsJson?: string | null;
@@ -3331,6 +3569,7 @@ export interface ComplianceFERPAFerpaDirectoryInformationPolicyDto {
   tenantId?: string | null;
 }
 
+/** OpenAPI schema for Compliance FERPA Ferpa Disclosure Basis. */
 export type ComplianceFERPAFerpaDisclosureBasis =
   | 'StudentConsent'
   | 'GuardianConsent'
@@ -3342,6 +3581,7 @@ export type ComplianceFERPAFerpaDisclosureBasis =
   | 'DirectoryInformation'
   | 'Other';
 
+/** Data model for Compliance FERPA Ferpa Disclosure Consent Dto. */
 export interface ComplianceFERPAFerpaDisclosureConsentDto {
   id?: string;
   effectiveFrom?: string;
@@ -3355,6 +3595,7 @@ export interface ComplianceFERPAFerpaDisclosureConsentDto {
   studentUserId?: string;
 }
 
+/** Data model for Compliance FERPA Ferpa Disclosure Log Dto. */
 export interface ComplianceFERPAFerpaDisclosureLogDto {
   id?: string;
   basis?: ComplianceFERPAFerpaDisclosureBasis;
@@ -3366,6 +3607,7 @@ export interface ComplianceFERPAFerpaDisclosureLogDto {
   studentUserId?: string;
 }
 
+/** Data model for Compliance FERPA Ferpa Education Record Dto. */
 export interface ComplianceFERPAFerpaEducationRecordDto {
   id?: string;
   createdAt?: string;
@@ -3379,6 +3621,7 @@ export interface ComplianceFERPAFerpaEducationRecordDto {
   title?: string | null;
 }
 
+/** Data model for Compliance FERPA Ferpa Inspection Request Dto. */
 export interface ComplianceFERPAFerpaInspectionRequestDto {
   id?: string;
   deadline?: string;
@@ -3390,10 +3633,13 @@ export interface ComplianceFERPAFerpaInspectionRequestDto {
   studentUserId?: string;
 }
 
+/** OpenAPI schema for Compliance FERPA Ferpa Record Protection Level. */
 export type ComplianceFERPAFerpaRecordProtectionLevel = 'DirectoryInformation' | 'EducationRecord' | 'SensitiveEducationRecord' | 'Restricted';
 
+/** OpenAPI schema for Compliance FERPA Ferpa Request Status. */
 export type ComplianceFERPAFerpaRequestStatus = 'Pending' | 'InReview' | 'Completed' | 'Denied' | 'Expired';
 
+/** Data model for Compliance FERPA Grant Ferpa Disclosure Consent Command. */
 export interface ComplianceFERPAGrantFerpaDisclosureConsentCommand {
   effectiveFrom?: string;
   expiresAt?: string | null;
@@ -3404,6 +3650,7 @@ export interface ComplianceFERPAGrantFerpaDisclosureConsentCommand {
   studentUserId?: string;
 }
 
+/** Data model for Compliance FERPA Record Ferpa Disclosure Command. */
 export interface ComplianceFERPARecordFerpaDisclosureCommand {
   basis?: ComplianceFERPAFerpaDisclosureBasis;
   disclosedAt?: string;
@@ -3415,6 +3662,7 @@ export interface ComplianceFERPARecordFerpaDisclosureCommand {
   studentUserId?: string;
 }
 
+/** Data model for Compliance FERPA Register Education Record Command. */
 export interface ComplianceFERPARegisterEducationRecordCommand {
   externalRecordId?: string | null;
   isDirectoryInformation?: boolean;
@@ -3427,6 +3675,7 @@ export interface ComplianceFERPARegisterEducationRecordCommand {
   title?: string | null;
 }
 
+/** Data model for Compliance FERPA Submit Ferpa Inspection Request Command. */
 export interface ComplianceFERPASubmitFerpaInspectionRequestCommand {
   deadline?: string;
   description?: string | null;
@@ -3434,6 +3683,7 @@ export interface ComplianceFERPASubmitFerpaInspectionRequestCommand {
   studentUserId?: string;
 }
 
+/** Data model for Compliance FERPA Upsert Directory Information Policy Command. */
 export interface ComplianceFERPAUpsertDirectoryInformationPolicyCommand {
   allowedFieldsJson?: string | null;
   annualNoticeSentAt?: string | null;
@@ -3442,6 +3692,7 @@ export interface ComplianceFERPAUpsertDirectoryInformationPolicyCommand {
   tenantId?: string | null;
 }
 
+/** Data model for Compliance Financial Crime Financial Crime Case. */
 export interface ComplianceFinancialCrimeFinancialCrimeCase {
   id?: string;
   assignedTo?: string | null;
@@ -3456,6 +3707,7 @@ export interface ComplianceFinancialCrimeFinancialCrimeCase {
   version?: number;
 }
 
+/** Data model for Compliance Financial Crime Financial Crime Case Decision. */
 export interface ComplianceFinancialCrimeFinancialCrimeCaseDecision {
   id?: string;
   caseId?: string;
@@ -3472,6 +3724,7 @@ export interface ComplianceFinancialCrimeFinancialCrimeCaseDecision {
   version?: number;
 }
 
+/** Data model for Compliance Financial Crime Financial Crime Case Details. */
 export interface ComplianceFinancialCrimeFinancialCrimeCaseDetails {
   case?: ComplianceFinancialCrimeFinancialCrimeCase;
   decisions?: Array<ComplianceFinancialCrimeFinancialCrimeCaseDecision> | null;
@@ -3479,6 +3732,7 @@ export interface ComplianceFinancialCrimeFinancialCrimeCaseDetails {
   regulatoryReferences?: Array<ComplianceFinancialCrimeFinancialCrimeRegulatoryReference> | null;
 }
 
+/** Data model for Compliance Financial Crime Financial Crime Case Event. */
 export interface ComplianceFinancialCrimeFinancialCrimeCaseEvent {
   id?: string;
   actorId?: string | null;
@@ -3490,10 +3744,13 @@ export interface ComplianceFinancialCrimeFinancialCrimeCaseEvent {
   sequence?: number;
 }
 
+/** OpenAPI schema for Compliance Financial Crime Financial Crime Case State. */
 export type ComplianceFinancialCrimeFinancialCrimeCaseState = 'Open' | 'Assigned' | 'NeedsReview' | 'Closed';
 
+/** OpenAPI schema for Compliance Financial Crime Financial Crime Outcome. */
 export type ComplianceFinancialCrimeFinancialCrimeOutcome = 'Approved' | 'Rejected' | 'NeedsReview' | 'Unavailable';
 
+/** Data model for Compliance Financial Crime Financial Crime Regulatory Reference. */
 export interface ComplianceFinancialCrimeFinancialCrimeRegulatoryReference {
   id?: string;
   caseId?: string;
@@ -3504,11 +3761,13 @@ export interface ComplianceFinancialCrimeFinancialCrimeRegulatoryReference {
   referenceHash?: string | null;
 }
 
+/** Data model for Compliance KYC Kyc Aml Access Token. */
 export interface ComplianceKYCKycAmlAccessToken {
   externalUserId?: string | null;
   token?: string | null;
 }
 
+/** Data model for Compliance KYC Kyc Aml Onboarding. */
 export interface ComplianceKYCKycAmlOnboarding {
   applicantId?: string | null;
   jurisdictionCode?: string | null;
@@ -3517,10 +3776,13 @@ export interface ComplianceKYCKycAmlOnboarding {
   updatedAt?: string;
 }
 
+/** OpenAPI schema for Compliance KYC Kyc Aml State. */
 export type ComplianceKYCKycAmlState = 'Created' | 'ApplicantPending' | 'InReview' | 'Approved' | 'Rejected' | 'NeedsReview' | 'Expired';
 
+/** OpenAPI schema for Compliance KYC Kyc Evidence Ingestion Status. */
 export type ComplianceKYCKycEvidenceIngestionStatus = 'Published' | 'Duplicate' | 'Deferred' | 'Rejected';
 
+/** Data model for Compliance KYC Sum Sub Webhook Ingestion Result. */
 export interface ComplianceKYCSumSubWebhookIngestionResult {
   evidenceId?: string | null;
   providerEventId?: string | null;
@@ -3528,6 +3790,7 @@ export interface ComplianceKYCSumSubWebhookIngestionResult {
   status?: ComplianceKYCKycEvidenceIngestionStatus;
 }
 
+/** Data model for Content Pages Content Resource Dto. */
 export interface ContentPagesContentResourceDto {
   id?: string;
   authorId?: string | null;
@@ -3568,6 +3831,7 @@ export type ContentPagesContentResourceStatus = 'Draft' | 'InReview' | 'Publishe
 /** The type of content resource. */
 export type ContentPagesContentResourceType = 'Article' | 'Tutorial' | 'Documentation' | 'Video' | 'Download' | 'ExternalLink' | 'Course' | 'Custom';
 
+/** Data model for Content Pages Create Content Resource Dto. */
 export interface ContentPagesCreateContentResourceDto {
   body?: string | null;
   categorySlug?: string | null;
@@ -3593,6 +3857,7 @@ export interface ContentPagesCreateContentResourceDto {
   videoUrl?: string | null;
 }
 
+/** Data model for Content Pages Create Marketing Lead Dto. */
 export interface ContentPagesCreateMarketingLeadDto {
   company?: string | null;
   email: string;
@@ -3607,6 +3872,7 @@ export interface ContentPagesCreateMarketingLeadDto {
   userAgent?: string | null;
 }
 
+/** Data model for Content Pages Create Page Dto. */
 export interface ContentPagesCreatePageDto {
   body?: string | null;
   canonicalUrl?: string | null;
@@ -3631,6 +3897,7 @@ export interface ContentPagesCreatePageDto {
   twitterSite?: string | null;
 }
 
+/** Data model for Content Pages Create Page Section Dto. */
 export interface ContentPagesCreatePageSectionDto {
   cssClasses?: string | null;
   data?: string | null;
@@ -3641,6 +3908,7 @@ export interface ContentPagesCreatePageSectionDto {
   subheading?: string | null;
 }
 
+/** Data model for Content Pages Marketing Lead Dto. */
 export interface ContentPagesMarketingLeadDto {
   id?: string;
   company?: string | null;
@@ -3675,6 +3943,7 @@ export interface ContentPagesOpenGraphMetadataDto {
   twitterSite?: string | null;
 }
 
+/** Data model for Content Pages Page Dto. */
 export interface ContentPagesPageDto {
   id?: string;
   body?: string | null;
@@ -3706,6 +3975,7 @@ export interface ContentPagesPageDto {
   updatedAt?: string | null;
 }
 
+/** Data model for Content Pages Page Section Dto. */
 export interface ContentPagesPageSectionDto {
   id?: string;
   createdAt?: string;
@@ -3751,6 +4021,7 @@ export interface ContentPagesSitemapEntryDto {
   updatedAt?: string | null;
 }
 
+/** Data model for Content Pages Update Content Resource Dto. */
 export interface ContentPagesUpdateContentResourceDto {
   body?: string | null;
   categorySlug?: string | null;
@@ -3778,6 +4049,7 @@ export interface ContentPagesUpdateContentResourceDto {
   videoUrl?: string | null;
 }
 
+/** Data model for Content Pages Update Page Dto. */
 export interface ContentPagesUpdatePageDto {
   body?: string | null;
   canonicalUrl?: string | null;
@@ -3804,6 +4076,7 @@ export interface ContentPagesUpdatePageDto {
   twitterSite?: string | null;
 }
 
+/** Data model for Content Pages Update Page Section Dto. */
 export interface ContentPagesUpdatePageSectionDto {
   cssClasses?: string | null;
   data?: string | null;
@@ -3832,6 +4105,7 @@ export interface CQRSIDomainEvent {
   version?: number;
 }
 
+/** Data model for CQRS Models Tenant Id. */
 export interface CQRSModelsTenantId {
   value?: string;
 }
@@ -3978,6 +4252,7 @@ export interface FeaturesUpdateFeatureInput {
   rolloutPercentage?: number | null;
 }
 
+/** Data model for Fido2 Net Lib Assertion Options. */
 export interface Fido2NetLibAssertionOptions {
   allowCredentials?: Array<ObjectsPublicKeyCredentialDescriptor> | null;
   challenge?: string | null;
@@ -3988,6 +4263,7 @@ export interface Fido2NetLibAssertionOptions {
   userVerification?: ObjectsUserVerificationRequirement;
 }
 
+/** Data model for Fido2 Net Lib Authenticator Selection. */
 export interface Fido2NetLibAuthenticatorSelection {
   authenticatorAttachment?: ObjectsAuthenticatorAttachment;
   requireResidentKey?: boolean;
@@ -3995,6 +4271,7 @@ export interface Fido2NetLibAuthenticatorSelection {
   userVerification?: ObjectsUserVerificationRequirement;
 }
 
+/** Data model for Fido2 Net Lib Credential Create Options. */
 export interface Fido2NetLibCredentialCreateOptions {
   attestation?: ObjectsAttestationConveyancePreference;
   attestationFormats?: Array<ObjectsAttestationStatementFormatIdentifier> | null;
@@ -4009,23 +4286,27 @@ export interface Fido2NetLibCredentialCreateOptions {
   user: Fido2NetLibFido2User;
 }
 
+/** Data model for Fido2 Net Lib Fido2 User. */
 export interface Fido2NetLibFido2User {
   id?: string | null;
   displayName?: string | null;
   name?: string | null;
 }
 
+/** Data model for Fido2 Net Lib Pub Key Cred Param. */
 export interface Fido2NetLibPubKeyCredParam {
   alg?: ObjectsCOSEAlgorithm;
   type?: ObjectsPublicKeyCredentialType;
 }
 
+/** Data model for Fido2 Net Lib Public Key Credential Rp Entity. */
 export interface Fido2NetLibPublicKeyCredentialRpEntity {
   id?: string | null;
   icon?: string | null;
   name?: string | null;
 }
 
+/** Data model for Finance Economy Ad Rewards Ad Playback Evidence. */
 export interface FinanceEconomyAdRewardsAdPlaybackEvidence {
   completedAt?: string;
   focusLoss?: string;
@@ -4035,6 +4316,7 @@ export interface FinanceEconomyAdRewardsAdPlaybackEvidence {
   visibleDuration?: string;
 }
 
+/** Data model for Finance Economy Ad Rewards Ad Provider Report. */
 export interface FinanceEconomyAdRewardsAdProviderReport {
   actualRevenueUsdNanos?: number;
   batchId?: string | null;
@@ -4049,6 +4331,7 @@ export interface FinanceEconomyAdRewardsAdProviderReport {
   version?: number;
 }
 
+/** Data model for Finance Economy Ad Rewards Ad Reward Completion Operational Status. */
 export interface FinanceEconomyAdRewardsAdRewardCompletionOperationalStatus {
   completedAt?: string;
   jurisdictionCode?: string | null;
@@ -4059,8 +4342,10 @@ export interface FinanceEconomyAdRewardsAdRewardCompletionOperationalStatus {
   state?: FinanceEconomyAdRewardsAdRewardCompletionState;
 }
 
+/** OpenAPI schema for Finance Economy Ad Rewards Ad Reward Completion State. */
 export type FinanceEconomyAdRewardsAdRewardCompletionState = 'Issued' | 'PendingProviderReport' | 'AccumulatedRemainder';
 
+/** Data model for Finance Economy Ad Rewards Ad Reward Milestone Operational Status. */
 export interface FinanceEconomyAdRewardsAdRewardMilestoneOperationalStatus {
   id?: string;
   evidenceHash?: string | null;
@@ -4069,6 +4354,7 @@ export interface FinanceEconomyAdRewardsAdRewardMilestoneOperationalStatus {
   sequence?: number;
 }
 
+/** Data model for Finance Economy Ad Rewards Ad Reward Pending Claim Operational Status. */
 export interface FinanceEconomyAdRewardsAdRewardPendingClaimOperationalStatus {
   confirmedAt?: string | null;
   deferredAt?: string;
@@ -4078,6 +4364,7 @@ export interface FinanceEconomyAdRewardsAdRewardPendingClaimOperationalStatus {
   tenantId?: string;
 }
 
+/** Data model for Finance Economy Ad Rewards Ad Reward Reconciliation. */
 export interface FinanceEconomyAdRewardsAdRewardReconciliation {
   actualDeltaUsdNanos?: number;
   actualRevenueUsdNanos?: number;
@@ -4092,6 +4379,7 @@ export interface FinanceEconomyAdRewardsAdRewardReconciliation {
   version?: number;
 }
 
+/** Data model for Finance Economy Ad Rewards Ad Reward Reconciliation Operational Status. */
 export interface FinanceEconomyAdRewardsAdRewardReconciliationOperationalStatus {
   id?: string;
   actualRevenueUsdNanos?: number;
@@ -4107,6 +4395,7 @@ export interface FinanceEconomyAdRewardsAdRewardReconciliationOperationalStatus 
   version?: number;
 }
 
+/** Data model for Finance Economy Ad Rewards Ad Reward Session Event Operational Status. */
 export interface FinanceEconomyAdRewardsAdRewardSessionEventOperationalStatus {
   id?: string;
   evidenceHash?: string | null;
@@ -4115,6 +4404,7 @@ export interface FinanceEconomyAdRewardsAdRewardSessionEventOperationalStatus {
   state?: FinanceEconomyAdRewardsDurableAdRewardSessionState;
 }
 
+/** Data model for Finance Economy Ad Rewards Ad Reward Session Operational Details. */
 export interface FinanceEconomyAdRewardsAdRewardSessionOperationalDetails {
   completion?: FinanceEconomyAdRewardsAdRewardCompletionOperationalStatus;
   events?: Array<FinanceEconomyAdRewardsAdRewardSessionEventOperationalStatus> | null;
@@ -4122,6 +4412,7 @@ export interface FinanceEconomyAdRewardsAdRewardSessionOperationalDetails {
   summary?: FinanceEconomyAdRewardsAdRewardSessionOperationalSummary;
 }
 
+/** Data model for Finance Economy Ad Rewards Ad Reward Session Operational Summary. */
 export interface FinanceEconomyAdRewardsAdRewardSessionOperationalSummary {
   id?: string;
   creativeId?: string | null;
@@ -4135,6 +4426,7 @@ export interface FinanceEconomyAdRewardsAdRewardSessionOperationalSummary {
   userId?: string;
 }
 
+/** Data model for Finance Economy Ad Rewards Durable Ad Provider Report Import Result. */
 export interface FinanceEconomyAdRewardsDurableAdProviderReportImportResult {
   isDuplicate?: boolean;
   providerReportId?: string;
@@ -4142,6 +4434,7 @@ export interface FinanceEconomyAdRewardsDurableAdProviderReportImportResult {
   verifiedPendingSessions?: Array<string> | null;
 }
 
+/** Data model for Finance Economy Ad Rewards Durable Ad Provider Report Status. */
 export interface FinanceEconomyAdRewardsDurableAdProviderReportStatus {
   actualRevenueUsdNanos?: number;
   batchId?: string | null;
@@ -4160,6 +4453,7 @@ export interface FinanceEconomyAdRewardsDurableAdProviderReportStatus {
   version?: number;
 }
 
+/** Data model for Finance Economy Ad Rewards Durable Ad Reward Completion Result. */
 export interface FinanceEconomyAdRewardsDurableAdRewardCompletionResult {
   completedAt?: string;
   isDuplicate?: boolean;
@@ -4170,6 +4464,7 @@ export interface FinanceEconomyAdRewardsDurableAdRewardCompletionResult {
   state?: FinanceEconomyAdRewardsAdRewardCompletionState;
 }
 
+/** Data model for Finance Economy Ad Rewards Durable Ad Reward Reconciliation Status. */
 export interface FinanceEconomyAdRewardsDurableAdRewardReconciliationStatus {
   actualDeltaUsdNanos?: number;
   actualRevenueUsdNanos?: number;
@@ -4180,6 +4475,7 @@ export interface FinanceEconomyAdRewardsDurableAdRewardReconciliationStatus {
   varianceUsdNanos?: number;
 }
 
+/** Data model for Finance Economy Ad Rewards Durable Ad Reward Session Claims. */
 export interface FinanceEconomyAdRewardsDurableAdRewardSessionClaims {
   asnRiskHash?: string | null;
   creativeId?: string | null;
@@ -4197,14 +4493,17 @@ export interface FinanceEconomyAdRewardsDurableAdRewardSessionClaims {
   walletId?: FinanceEconomyContractsWalletId;
 }
 
+/** Data model for Finance Economy Ad Rewards Durable Ad Reward Session Result. */
 export interface FinanceEconomyAdRewardsDurableAdRewardSessionResult {
   claims?: FinanceEconomyAdRewardsDurableAdRewardSessionClaims;
   isDuplicate?: boolean;
   token?: FinanceEconomyAdRewardsSignedAdRewardSession;
 }
 
+/** OpenAPI schema for Finance Economy Ad Rewards Durable Ad Reward Session State. */
 export type FinanceEconomyAdRewardsDurableAdRewardSessionState = 'Issued' | 'Active' | 'ProofPending' | 'Verified' | 'Posted' | 'Deferred' | 'Rejected';
 
+/** Data model for Finance Economy Ad Rewards Durable Ad Reward Session Status. */
 export interface FinanceEconomyAdRewardsDurableAdRewardSessionStatus {
   creativeId?: string | null;
   expiresAt?: string;
@@ -4217,6 +4516,7 @@ export interface FinanceEconomyAdRewardsDurableAdRewardSessionStatus {
   updatedAt?: string;
 }
 
+/** Data model for Finance Economy Ad Rewards Provider Completion Proof. */
 export interface FinanceEconomyAdRewardsProviderCompletionProof {
   completedAt?: string;
   creativeId?: string | null;
@@ -4227,20 +4527,24 @@ export interface FinanceEconomyAdRewardsProviderCompletionProof {
   signature?: string | null;
 }
 
+/** Data model for Finance Economy Ad Rewards Signed Ad Reward Session. */
 export interface FinanceEconomyAdRewardsSignedAdRewardSession {
   value?: string | null;
 }
 
+/** Data model for Finance Economy Bounties Bounty Eligibility Requirements. */
 export interface FinanceEconomyBountiesBountyEligibilityRequirements {
   minimumReputation?: number;
   requiresInstructorVerification?: boolean;
   requiresPrerequisite?: boolean;
 }
 
+/** Data model for Finance Economy Bounties Bounty Id. */
 export interface FinanceEconomyBountiesBountyId {
   value?: string;
 }
 
+/** OpenAPI schema for Finance Economy Bounties Bounty Status. */
 export type FinanceEconomyBountiesBountyStatus = 'Open' | 'Expired' | 'Claimed' | 'Reclaimed';
 
 /** Immutable evidence of a materialized terminal output. Monetary authority remains the
@@ -4256,6 +4560,7 @@ export interface FinanceEconomyBountiesBountyTerminalOutputLot {
   walletId?: FinanceEconomyContractsWalletId;
 }
 
+/** Data model for Finance Economy Bounties Durable Bounty View. */
 export interface FinanceEconomyBountiesDurableBountyView {
   id?: FinanceEconomyBountiesBountyId;
   amount?: FinanceEconomyContractsCoinAmount;
@@ -4289,25 +4594,30 @@ export interface FinanceEconomyBountiesPersistedBountyTerminalEvent {
   tenantId?: string;
 }
 
+/** Data model for Finance Economy Commands Convert My Hard To Soft Request. */
 export interface FinanceEconomyCommandsConvertMyHardToSoftInput {
   idempotencyKey?: string | null;
   principalHardCoinUnits?: number;
 }
 
+/** Data model for Finance Economy Commands Create My Hard Coin Top Up Request. */
 export interface FinanceEconomyCommandsCreateMyHardCoinTopUpInput {
   hardCoinUnits?: number;
   idempotencyKey?: string | null;
 }
 
+/** Data model for Finance Economy Contracts Coin Amount. */
 export interface FinanceEconomyContractsCoinAmount {
   currency?: FinanceEconomyContractsCurrencyCode;
   units?: number;
 }
 
+/** Data model for Finance Economy Contracts Credit Lot Id. */
 export interface FinanceEconomyContractsCreditLotId {
   value?: string;
 }
 
+/** OpenAPI schema for Finance Economy Contracts Currency Code. */
 export type FinanceEconomyContractsCurrencyCode = 'HardCoin' | 'SoftCoin';
 
 /** Read-only, actor-scoped view of a wallet projection. The individual source lots and
@@ -4347,22 +4657,28 @@ export interface FinanceEconomyContractsEconomyWalletTransactionDto {
   templateKind?: FinanceEconomyContractsPostingTemplateKind;
 }
 
+/** OpenAPI schema for Finance Economy Contracts Entry Side. */
 export type FinanceEconomyContractsEntrySide = 'Debit' | 'Credit';
 
+/** Data model for Finance Economy Contracts Idempotency Key. */
 export interface FinanceEconomyContractsIdempotencyKey {
   value?: string | null;
 }
 
+/** Data model for Finance Economy Contracts Policy Version. */
 export interface FinanceEconomyContractsPolicyVersion {
   value?: number;
 }
 
+/** Data model for Finance Economy Contracts Posting Id. */
 export interface FinanceEconomyContractsPostingId {
   value?: string;
 }
 
+/** OpenAPI schema for Finance Economy Contracts Posting Status. */
 export type FinanceEconomyContractsPostingStatus = 'Accepted' | 'Rejected' | 'Duplicate';
 
+/** OpenAPI schema for Finance Economy Contracts Posting Template Kind. */
 export type FinanceEconomyContractsPostingTemplateKind =
   | 'ConfirmedTopUpMint'
   | 'ProviderReversalFull'
@@ -4391,26 +4707,33 @@ export type FinanceEconomyContractsPostingTemplateKind =
   | 'MarketplaceSettlement'
   | 'MarketplaceRefund';
 
+/** OpenAPI schema for Finance Economy Contracts Provenance Kind. */
 export type FinanceEconomyContractsProvenanceKind =
   'PurchasedHard' | 'EarnedHard' | 'ConvertedSoft' | 'AdRewardSoft' | 'SystemGrantSoft' | 'RefundRestoration' | 'EscrowReturn' | 'MarketplaceSoft';
 
+/** Data model for Finance Economy Contracts Reserve Version. */
 export interface FinanceEconomyContractsReserveVersion {
   value?: number;
 }
 
+/** Data model for Finance Economy Contracts Source Stamp Id. */
 export interface FinanceEconomyContractsSourceStampId {
   value?: string;
 }
 
+/** Data model for Finance Economy Contracts Wallet Id. */
 export interface FinanceEconomyContractsWalletId {
   value?: string;
 }
 
+/** OpenAPI schema for Finance Economy Contracts Wallet Lifecycle State. */
 export type FinanceEconomyContractsWalletLifecycleState = 'Active' | 'Frozen' | 'Closed' | 'UnderReview';
 
+/** OpenAPI schema for Finance Economy Funding Economy Top Up Provider Status. */
 export type FinanceEconomyFundingEconomyTopUpProviderStatus =
   'Prepared' | 'RequiresAction' | 'Processing' | 'ProviderSucceeded' | 'Posted' | 'Failed' | 'Cancelled' | 'Ambiguous' | 'Held' | 'Reversed';
 
+/** Data model for Finance Economy Funding Economy Top Up Status Dto. */
 export interface FinanceEconomyFundingEconomyTopUpStatusDto {
   currency?: string | null;
   hardCoinUnits?: number;
@@ -4422,6 +4745,7 @@ export interface FinanceEconomyFundingEconomyTopUpStatusDto {
   usdMinorUnits?: number;
 }
 
+/** Data model for Finance Economy Funding Self Service Hard Coin Top Up Receipt. */
 export interface FinanceEconomyFundingSelfServiceHardCoinTopUpReceipt {
   clientSecret?: string | null;
   currency?: string | null;
@@ -4435,6 +4759,7 @@ export interface FinanceEconomyFundingSelfServiceHardCoinTopUpReceipt {
   usdMinorUnits?: number;
 }
 
+/** Data model for Finance Economy Funding Self Service Hard To Soft Conversion Receipt. */
 export interface FinanceEconomyFundingSelfServiceHardToSoftConversionReceipt {
   feePostingId?: string | null;
   isDuplicate?: boolean;
@@ -4443,11 +4768,13 @@ export interface FinanceEconomyFundingSelfServiceHardToSoftConversionReceipt {
   principalPostingId?: string;
 }
 
+/** Data model for Finance Economy Ledger Anchor Verification Run Result. */
 export interface FinanceEconomyLedgerAnchorVerificationRunResult {
   failed?: number;
   verified?: number;
 }
 
+/** Data model for Finance Economy Ledger Economy Anchor Publication Result. */
 export interface FinanceEconomyLedgerEconomyAnchorPublicationResult {
   anchorId?: string;
   eTag?: string | null;
@@ -4460,6 +4787,7 @@ export interface FinanceEconomyLedgerEconomyAnchorPublicationResult {
   retainUntil?: string;
 }
 
+/** OpenAPI schema for Finance Economy Ledger Journal Integrity Failure Code. */
 export type FinanceEconomyLedgerJournalIntegrityFailureCode =
   | 'None'
   | 'SequenceGap'
@@ -4475,14 +4803,17 @@ export type FinanceEconomyLedgerJournalIntegrityFailureCode =
   | 'RootRangeInvalid'
   | 'CumulativeReversalInvalid';
 
+/** Data model for Finance Economy Ledger Journal Integrity Run Result. */
 export interface FinanceEconomyLedgerJournalIntegrityRunResult {
   fencingToken?: number;
   status?: FinanceEconomyLedgerJournalIntegrityRunStatus;
   verification?: FinanceEconomyLedgerJournalIntegrityVerificationResult;
 }
 
+/** OpenAPI schema for Finance Economy Ledger Journal Integrity Run Status. */
 export type FinanceEconomyLedgerJournalIntegrityRunStatus = 'Verified' | 'Failed' | 'LeaseUnavailable';
 
+/** Data model for Finance Economy Ledger Journal Integrity Verification Result. */
 export interface FinanceEconomyLedgerJournalIntegrityVerificationResult {
   currentHash?: string | null;
   failureCode?: FinanceEconomyLedgerJournalIntegrityFailureCode;
@@ -4491,6 +4822,7 @@ export interface FinanceEconomyLedgerJournalIntegrityVerificationResult {
   toSequence?: number;
 }
 
+/** Data model for Finance Economy Marketplace Durable Marketplace Refund Debt. */
 export interface FinanceEconomyMarketplaceDurableMarketplaceRefundDebt {
   currency?: FinanceEconomyContractsCurrencyCode;
   evidenceHash?: string | null;
@@ -4498,6 +4830,7 @@ export interface FinanceEconomyMarketplaceDurableMarketplaceRefundDebt {
   units?: number;
 }
 
+/** Data model for Finance Economy Marketplace Durable Marketplace Refund Result. */
 export interface FinanceEconomyMarketplaceDurableMarketplaceRefundResult {
   cumulativeRefundedQuantity?: number;
   debts?: Array<FinanceEconomyMarketplaceDurableMarketplaceRefundDebt> | null;
@@ -4514,6 +4847,7 @@ export interface FinanceEconomyMarketplaceDurableMarketplaceRefundResult {
   settlementStatus?: FinanceEconomyMarketplaceMarketplaceSettlementStatus;
 }
 
+/** Data model for Finance Economy Marketplace Durable Marketplace Settlement Result. */
 export interface FinanceEconomyMarketplaceDurableMarketplaceSettlementResult {
   buyerId?: string;
   entitlementStatus?: FinanceEconomyMarketplaceMarketplaceEntitlementStatus;
@@ -4530,10 +4864,13 @@ export interface FinanceEconomyMarketplaceDurableMarketplaceSettlementResult {
   status?: FinanceEconomyMarketplaceMarketplaceSettlementStatus;
 }
 
+/** OpenAPI schema for Finance Economy Marketplace Marketplace Currency Choice. */
 export type FinanceEconomyMarketplaceMarketplaceCurrencyChoice = 'Hard' | 'Soft' | 'FixedMix';
 
+/** OpenAPI schema for Finance Economy Marketplace Marketplace Entitlement Status. */
 export type FinanceEconomyMarketplaceMarketplaceEntitlementStatus = 'PendingGrant' | 'Granted' | 'Revoked';
 
+/** Data model for Finance Economy Marketplace Marketplace Event Operational Status. */
 export interface FinanceEconomyMarketplaceMarketplaceEventOperationalStatus {
   id?: string;
   evidenceHash?: string | null;
@@ -4542,6 +4879,7 @@ export interface FinanceEconomyMarketplaceMarketplaceEventOperationalStatus {
   sequence?: number;
 }
 
+/** Data model for Finance Economy Marketplace Marketplace Outbox Operational Status. */
 export interface FinanceEconomyMarketplaceMarketplaceOutboxOperationalStatus {
   id?: string;
   attemptCount?: number;
@@ -4555,6 +4893,7 @@ export interface FinanceEconomyMarketplaceMarketplaceOutboxOperationalStatus {
   tenantId?: string;
 }
 
+/** Data model for Finance Economy Marketplace Marketplace Price Leg Snapshot. */
 export interface FinanceEconomyMarketplaceMarketplacePriceLegSnapshot {
   amount?: FinanceEconomyContractsCoinAmount;
   currency?: FinanceEconomyContractsCurrencyCode;
@@ -4563,6 +4902,7 @@ export interface FinanceEconomyMarketplaceMarketplacePriceLegSnapshot {
   units?: number;
 }
 
+/** Data model for Finance Economy Marketplace Marketplace Refund Operational Status. */
 export interface FinanceEconomyMarketplaceMarketplaceRefundOperationalStatus {
   id?: string;
   buyerId?: string;
@@ -4577,6 +4917,7 @@ export interface FinanceEconomyMarketplaceMarketplaceRefundOperationalStatus {
   tenantId?: string;
 }
 
+/** Data model for Finance Economy Marketplace Marketplace Settlement Leg Operational Status. */
 export interface FinanceEconomyMarketplaceMarketplaceSettlementLegOperationalStatus {
   currency?: FinanceEconomyContractsCurrencyCode;
   platformFeeUnits?: number;
@@ -4585,6 +4926,7 @@ export interface FinanceEconomyMarketplaceMarketplaceSettlementLegOperationalSta
   units?: number;
 }
 
+/** Data model for Finance Economy Marketplace Marketplace Settlement Operational Details. */
 export interface FinanceEconomyMarketplaceMarketplaceSettlementOperationalDetails {
   events?: Array<FinanceEconomyMarketplaceMarketplaceEventOperationalStatus> | null;
   legs?: Array<FinanceEconomyMarketplaceMarketplaceSettlementLegOperationalStatus> | null;
@@ -4593,6 +4935,7 @@ export interface FinanceEconomyMarketplaceMarketplaceSettlementOperationalDetail
   summary?: FinanceEconomyMarketplaceMarketplaceSettlementOperationalSummary;
 }
 
+/** Data model for Finance Economy Marketplace Marketplace Settlement Operational Summary. */
 export interface FinanceEconomyMarketplaceMarketplaceSettlementOperationalSummary {
   id?: string;
   buyerId?: string;
@@ -4616,21 +4959,26 @@ export interface FinanceEconomyMarketplaceMarketplaceSettlementOperationalSummar
   updatedAt?: string;
 }
 
+/** OpenAPI schema for Finance Economy Marketplace Marketplace Settlement Status. */
 export type FinanceEconomyMarketplaceMarketplaceSettlementStatus = 'Settled' | 'PartiallyRefunded' | 'Refunded';
 
+/** OpenAPI schema for Finance Economy Marketplace Product Currency Mode. */
 export type FinanceEconomyMarketplaceProductCurrencyMode = 'HardOnly' | 'SoftOnly' | 'Either' | 'FixedMix';
 
+/** Data model for Finance Economy Operations Economy Active Reserve Operational Details. */
 export interface FinanceEconomyOperationsEconomyActiveReserveOperationalDetails {
   allocations?: Array<FinanceEconomyOperationsEconomyReserveAssetAllocationOperationalStatus> | null;
   head?: FinanceEconomyOperationsEconomyReserveOperationalStatus;
   reconciliation?: FinanceEconomyOperationsEconomyCustodyReconciliationOperationalStatus;
 }
 
+/** Data model for Finance Economy Operations Economy Anchor Operational Details. */
 export interface FinanceEconomyOperationsEconomyAnchorOperationalDetails {
   dispatchSnapshotHash?: string | null;
   summary?: FinanceEconomyOperationsEconomyAnchorOperationalStatus;
 }
 
+/** Data model for Finance Economy Operations Economy Anchor Operational Status. */
 export interface FinanceEconomyOperationsEconomyAnchorOperationalStatus {
   id?: string;
   anchoredAt?: string;
@@ -4643,6 +4991,7 @@ export interface FinanceEconomyOperationsEconomyAnchorOperationalStatus {
   verifiedAt?: string | null;
 }
 
+/** Data model for Finance Economy Operations Economy Anchor Verification Operational Status. */
 export interface FinanceEconomyOperationsEconomyAnchorVerificationOperationalStatus {
   id?: string;
   eTag?: string | null;
@@ -4655,11 +5004,13 @@ export interface FinanceEconomyOperationsEconomyAnchorVerificationOperationalSta
   verifiedAt?: string;
 }
 
+/** Data model for Finance Economy Operations Economy Capability Configuration Snapshot. */
 export interface FinanceEconomyOperationsEconomyCapabilityConfigurationSnapshot {
   killSwitches?: Array<FinanceEconomyOperationsEconomyKillSwitchOperationalStatus> | null;
   policies?: Array<FinanceEconomyOperationsEconomyCapabilityPolicyOperationalStatus> | null;
 }
 
+/** Data model for Finance Economy Operations Economy Capability Policy Operational Status. */
 export interface FinanceEconomyOperationsEconomyCapabilityPolicyOperationalStatus {
   id?: string;
   capability?: FinanceEconomyRiskEconomyValueMovementCapability;
@@ -4674,6 +5025,7 @@ export interface FinanceEconomyOperationsEconomyCapabilityPolicyOperationalStatu
   version?: number;
 }
 
+/** Data model for Finance Economy Operations Economy Custody Observation Operational Status. */
 export interface FinanceEconomyOperationsEconomyCustodyObservationOperationalStatus {
   id?: string;
   assetKey?: string | null;
@@ -4687,6 +5039,7 @@ export interface FinanceEconomyOperationsEconomyCustodyObservationOperationalSta
   version?: number;
 }
 
+/** Data model for Finance Economy Operations Economy Custody Reconciliation Operational Status. */
 export interface FinanceEconomyOperationsEconomyCustodyReconciliationOperationalStatus {
   id?: string;
   eligibleAssetUsdNanos?: number;
@@ -4698,12 +5051,14 @@ export interface FinanceEconomyOperationsEconomyCustodyReconciliationOperational
   varianceUsdNanos?: number;
 }
 
+/** Data model for Finance Economy Operations Economy Journal Head Status. */
 export interface FinanceEconomyOperationsEconomyJournalHeadStatus {
   hash?: string | null;
   sequence?: number;
   updatedAt?: string;
 }
 
+/** Data model for Finance Economy Operations Economy Journal Verification Run Details. */
 export interface FinanceEconomyOperationsEconomyJournalVerificationRunDetails {
   id?: string;
   completedAt?: string;
@@ -4717,6 +5072,7 @@ export interface FinanceEconomyOperationsEconomyJournalVerificationRunDetails {
   toSequence?: number;
 }
 
+/** Data model for Finance Economy Operations Economy Journal Verification Status. */
 export interface FinanceEconomyOperationsEconomyJournalVerificationStatus {
   completedAt?: string;
   currentHash?: string | null;
@@ -4727,6 +5083,7 @@ export interface FinanceEconomyOperationsEconomyJournalVerificationStatus {
   toSequence?: number;
 }
 
+/** Data model for Finance Economy Operations Economy Kill Switch Operational Status. */
 export interface FinanceEconomyOperationsEconomyKillSwitchOperationalStatus {
   id?: string;
   activatedAt?: string;
@@ -4740,6 +5097,7 @@ export interface FinanceEconomyOperationsEconomyKillSwitchOperationalStatus {
   scope?: FinanceEconomyRiskEconomyKillSwitchScope;
 }
 
+/** Data model for Finance Economy Operations Economy Ledger Health Snapshot. */
 export interface FinanceEconomyOperationsEconomyLedgerHealthSnapshot {
   activeProjection?: FinanceEconomyOperationsEconomyProjectionOperationalStatus;
   activeReserve?: FinanceEconomyOperationsEconomyReserveOperationalStatus;
@@ -4753,71 +5111,85 @@ export interface FinanceEconomyOperationsEconomyLedgerHealthSnapshot {
   latestVerification?: FinanceEconomyOperationsEconomyJournalVerificationStatus;
 }
 
+/** Data model for Finance Economy Operations Economy Operational Page Ad Reward Pending Claim Operational Status. */
 export interface FinanceEconomyOperationsEconomyOperationalPageAdRewardPendingClaimOperationalStatus {
   items?: Array<FinanceEconomyAdRewardsAdRewardPendingClaimOperationalStatus> | null;
   nextCursor?: string | null;
 }
 
+/** Data model for Finance Economy Operations Economy Operational Page Ad Reward Reconciliation Operational Status. */
 export interface FinanceEconomyOperationsEconomyOperationalPageAdRewardReconciliationOperationalStatus {
   items?: Array<FinanceEconomyAdRewardsAdRewardReconciliationOperationalStatus> | null;
   nextCursor?: string | null;
 }
 
+/** Data model for Finance Economy Operations Economy Operational Page Ad Reward Session Operational Summary. */
 export interface FinanceEconomyOperationsEconomyOperationalPageAdRewardSessionOperationalSummary {
   items?: Array<FinanceEconomyAdRewardsAdRewardSessionOperationalSummary> | null;
   nextCursor?: string | null;
 }
 
+/** Data model for Finance Economy Operations Economy Operational Page Economy Anchor Operational Details. */
 export interface FinanceEconomyOperationsEconomyOperationalPageEconomyAnchorOperationalDetails {
   items?: Array<FinanceEconomyOperationsEconomyAnchorOperationalDetails> | null;
   nextCursor?: string | null;
 }
 
+/** Data model for Finance Economy Operations Economy Operational Page Economy Capability Policy Operational Status. */
 export interface FinanceEconomyOperationsEconomyOperationalPageEconomyCapabilityPolicyOperationalStatus {
   items?: Array<FinanceEconomyOperationsEconomyCapabilityPolicyOperationalStatus> | null;
   nextCursor?: string | null;
 }
 
+/** Data model for Finance Economy Operations Economy Operational Page Economy Custody Observation Operational Status. */
 export interface FinanceEconomyOperationsEconomyOperationalPageEconomyCustodyObservationOperationalStatus {
   items?: Array<FinanceEconomyOperationsEconomyCustodyObservationOperationalStatus> | null;
   nextCursor?: string | null;
 }
 
+/** Data model for Finance Economy Operations Economy Operational Page Economy Journal Verification Run Details. */
 export interface FinanceEconomyOperationsEconomyOperationalPageEconomyJournalVerificationRunDetails {
   items?: Array<FinanceEconomyOperationsEconomyJournalVerificationRunDetails> | null;
   nextCursor?: string | null;
 }
 
+/** Data model for Finance Economy Operations Economy Operational Page Economy Projection Generation Operational Details. */
 export interface FinanceEconomyOperationsEconomyOperationalPageEconomyProjectionGenerationOperationalDetails {
   items?: Array<FinanceEconomyOperationsEconomyProjectionGenerationOperationalDetails> | null;
   nextCursor?: string | null;
 }
 
+/** Data model for Finance Economy Operations Economy Operational Page Economy Reserve Proposal Operational Status. */
 export interface FinanceEconomyOperationsEconomyOperationalPageEconomyReserveProposalOperationalStatus {
   items?: Array<FinanceEconomyOperationsEconomyReserveProposalOperationalStatus> | null;
   nextCursor?: string | null;
 }
 
+/** Data model for Finance Economy Operations Economy Operational Page Legacy Economy Shadow Batch Summary. */
 export interface FinanceEconomyOperationsEconomyOperationalPageLegacyEconomyShadowBatchSummary {
   items?: Array<FinanceEconomyOperationsLegacyEconomyShadowBatchSummary> | null;
   nextCursor?: string | null;
 }
 
+/** Data model for Finance Economy Operations Economy Operational Page Marketplace Outbox Operational Status. */
 export interface FinanceEconomyOperationsEconomyOperationalPageMarketplaceOutboxOperationalStatus {
   items?: Array<FinanceEconomyMarketplaceMarketplaceOutboxOperationalStatus> | null;
   nextCursor?: string | null;
 }
 
+/** Data model for Finance Economy Operations Economy Operational Page Marketplace Refund Operational Status. */
 export interface FinanceEconomyOperationsEconomyOperationalPageMarketplaceRefundOperationalStatus {
   items?: Array<FinanceEconomyMarketplaceMarketplaceRefundOperationalStatus> | null;
   nextCursor?: string | null;
 }
 
+/** Data model for Finance Economy Operations Economy Operational Page Marketplace Settlement Operational Summary. */
 export interface FinanceEconomyOperationsEconomyOperationalPageMarketplaceSettlementOperationalSummary {
   items?: Array<FinanceEconomyMarketplaceMarketplaceSettlementOperationalSummary> | null;
   nextCursor?: string | null;
 }
 
+/** Data model for Finance Economy Operations Economy Policy Audit Entry. */
 export interface FinanceEconomyOperationsEconomyPolicyAuditEntry {
   actorId?: string;
   evidenceHash?: string | null;
@@ -4825,6 +5197,7 @@ export interface FinanceEconomyOperationsEconomyPolicyAuditEntry {
   occurredAt?: string;
 }
 
+/** Data model for Finance Economy Operations Economy Policy Operational Details. */
 export interface FinanceEconomyOperationsEconomyPolicyOperationalDetails {
   approvedAt?: string | null;
   approvedBy?: string | null;
@@ -4834,6 +5207,7 @@ export interface FinanceEconomyOperationsEconomyPolicyOperationalDetails {
   summary?: FinanceEconomyOperationsEconomyCapabilityPolicyOperationalStatus;
 }
 
+/** Data model for Finance Economy Operations Economy Projection Approval Audit Entry. */
 export interface FinanceEconomyOperationsEconomyProjectionApprovalAuditEntry {
   id?: string;
   actorId?: string;
@@ -4841,6 +5215,7 @@ export interface FinanceEconomyOperationsEconomyProjectionApprovalAuditEntry {
   evidenceHash?: string | null;
 }
 
+/** Data model for Finance Economy Operations Economy Projection Generation Operational Details. */
 export interface FinanceEconomyOperationsEconomyProjectionGenerationOperationalDetails {
   completedAt?: string | null;
   fromSequence?: number;
@@ -4849,6 +5224,7 @@ export interface FinanceEconomyOperationsEconomyProjectionGenerationOperationalD
   summary?: FinanceEconomyOperationsEconomyProjectionOperationalStatus;
 }
 
+/** Data model for Finance Economy Operations Economy Projection Operational Status. */
 export interface FinanceEconomyOperationsEconomyProjectionOperationalStatus {
   activatedAt?: string | null;
   approvedBy?: string | null;
@@ -4862,6 +5238,7 @@ export interface FinanceEconomyOperationsEconomyProjectionOperationalStatus {
   toSequence?: number;
 }
 
+/** Data model for Finance Economy Operations Economy Reserve Asset Allocation Operational Status. */
 export interface FinanceEconomyOperationsEconomyReserveAssetAllocationOperationalStatus {
   id?: string;
   assetKey?: string | null;
@@ -4869,6 +5246,7 @@ export interface FinanceEconomyOperationsEconomyReserveAssetAllocationOperationa
   purpose?: FinanceEconomyReservesReserveBackingPurpose;
 }
 
+/** Data model for Finance Economy Operations Economy Reserve Operational Status. */
 export interface FinanceEconomyOperationsEconomyReserveOperationalStatus {
   authorizationEpoch?: number;
   coverage?: FinanceEconomyReservesReserveCoverageState;
@@ -4882,6 +5260,7 @@ export interface FinanceEconomyOperationsEconomyReserveOperationalStatus {
   version?: number;
 }
 
+/** Data model for Finance Economy Operations Economy Reserve Proposal Operational Status. */
 export interface FinanceEconomyOperationsEconomyReserveProposalOperationalStatus {
   id?: string;
   approvedAt?: string | null;
@@ -4904,6 +5283,7 @@ export interface FinanceEconomyOperationsEconomyReserveProposalOperationalStatus
   version?: number;
 }
 
+/** Data model for Finance Economy Operations Legacy Economy Shadow Batch Summary. */
 export interface FinanceEconomyOperationsLegacyEconomyShadowBatchSummary {
   id?: string;
   backfilledHardUnits?: number;
@@ -4922,6 +5302,7 @@ export interface FinanceEconomyOperationsLegacyEconomyShadowBatchSummary {
   walletCount?: number;
 }
 
+/** Data model for Finance Economy Operations Legacy Economy Shadow Batch View. */
 export interface FinanceEconomyOperationsLegacyEconomyShadowBatchView {
   id?: string;
   backfilledHardUnits?: number;
@@ -4940,9 +5321,11 @@ export interface FinanceEconomyOperationsLegacyEconomyShadowBatchView {
   walletSnapshotHash?: string | null;
 }
 
+/** OpenAPI schema for Finance Economy Operations Legacy Economy Shadow State. */
 export type FinanceEconomyOperationsLegacyEconomyShadowState =
   'Captured' | 'Backfilling' | 'Backfilled' | 'Reconciled' | 'CutoverProposed' | 'CutoverActive' | 'RolledBack' | 'Failed';
 
+/** Data model for Finance Economy Operations Legacy Economy Shadow Wallet View. */
 export interface FinanceEconomyOperationsLegacyEconomyShadowWalletView {
   completedCreditsMinorUnits?: number;
   completedDebitsMinorUnits?: number;
@@ -4959,15 +5342,18 @@ export interface FinanceEconomyOperationsLegacyEconomyShadowWalletView {
   transactionCount?: number;
 }
 
+/** Data model for Finance Economy Payouts Commands Create My Payout Request Request. */
 export interface FinanceEconomyPayoutsCommandsCreateMyPayoutRequestInput {
   hardCoinUnits?: number;
   idempotencyKey?: string | null;
 }
 
+/** Data model for Finance Economy Payouts Commands Review Payout Request Request. */
 export interface FinanceEconomyPayoutsCommandsReviewPayoutRequestInput {
   reason?: string | null;
 }
 
+/** Data model for Finance Economy Payouts Connect Account Snapshot. */
 export interface FinanceEconomyPayoutsConnectAccountSnapshot {
   chargesEnabled?: boolean;
   destinationHash?: string | null;
@@ -4981,13 +5367,16 @@ export interface FinanceEconomyPayoutsConnectAccountSnapshot {
   version?: number;
 }
 
+/** OpenAPI schema for Finance Economy Payouts Connect Account State. */
 export type FinanceEconomyPayoutsConnectAccountState = 'Pending' | 'Restricted' | 'Ready' | 'Disabled';
 
+/** Data model for Finance Economy Payouts Connect Onboarding Result. */
 export interface FinanceEconomyPayoutsConnectOnboardingResult {
   account?: FinanceEconomyPayoutsConnectAccountSnapshot;
   onboardingUri?: string | null;
 }
 
+/** OpenAPI schema for Finance Economy Payouts Payout Operation State. */
 export type FinanceEconomyPayoutsPayoutOperationState = 'Reserved' | 'Dispatching' | 'Ambiguous' | 'Succeeded' | 'Failed' | 'Cancelled';
 
 /** A user-submitted intent to withdraw earned value. It is deliberately separate from a
@@ -4995,6 +5384,7 @@ GameGuild.Finance.Economy.Payouts.PayoutOperation: no funds are reserved or sent
 the later KYC, risk, provider, and FIFO reservation steps. */
 export type FinanceEconomyPayoutsPayoutRequestState = 'Submitted' | 'Cancelled' | 'Approved' | 'Rejected' | 'AwaitingSecondApproval';
 
+/** Data model for Finance Economy Payouts Queries Economy Payout Operation Dto. */
 export interface FinanceEconomyPayoutsQueriesEconomyPayoutOperationDto {
   id?: string;
   createdAt?: string;
@@ -5003,6 +5393,7 @@ export interface FinanceEconomyPayoutsQueriesEconomyPayoutOperationDto {
   updatedAt?: string;
 }
 
+/** Data model for Finance Economy Payouts Queries Economy Payout Request Dto. */
 export interface FinanceEconomyPayoutsQueriesEconomyPayoutRequestDto {
   id?: string;
   createdAt?: string;
@@ -5011,6 +5402,7 @@ export interface FinanceEconomyPayoutsQueriesEconomyPayoutRequestDto {
   updatedAt?: string;
 }
 
+/** Data model for Finance Economy Payouts Queries Economy Payout Request Review Audit Dto. */
 export interface FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewAuditDto {
   id?: string;
   actorId?: string;
@@ -5019,6 +5411,7 @@ export interface FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewAuditDto 
   reason?: string | null;
 }
 
+/** Data model for Finance Economy Payouts Queries Economy Payout Request Review Dto. */
 export interface FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewDto {
   id?: string;
   createdAt?: string;
@@ -5030,6 +5423,7 @@ export interface FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewDto {
   walletId?: string;
 }
 
+/** Data model for Finance Economy Projections Projection Generation State. */
 export interface FinanceEconomyProjectionsProjectionGenerationState {
   approvedBy?: Array<string> | null;
   generation?: number;
@@ -5042,6 +5436,7 @@ export interface FinanceEconomyProjectionsProjectionGenerationState {
   toSequence?: number;
 }
 
+/** Data model for Finance Economy Reserves Custody Observation Command. */
 export interface FinanceEconomyReservesCustodyObservationCommand {
   id?: string;
   assetKey?: string | null;
@@ -5056,6 +5451,7 @@ export interface FinanceEconomyReservesCustodyObservationCommand {
   version?: number;
 }
 
+/** Data model for Finance Economy Reserves Durable Custody Observation. */
 export interface FinanceEconomyReservesDurableCustodyObservation {
   id?: string;
   assetKey?: string | null;
@@ -5070,6 +5466,7 @@ export interface FinanceEconomyReservesDurableCustodyObservation {
   version?: number;
 }
 
+/** Data model for Finance Economy Reserves Durable Reserve Proposal State. */
 export interface FinanceEconomyReservesDurableReserveProposalState {
   id?: string;
   approvedBy?: string | null;
@@ -5086,6 +5483,7 @@ export interface FinanceEconomyReservesDurableReserveProposalState {
   version?: number;
 }
 
+/** Data model for Finance Economy Reserves Economy Liability Snapshot. */
 export interface FinanceEconomyReservesEconomyLiabilitySnapshot {
   journalHash?: string | null;
   journalSequence?: number;
@@ -5094,14 +5492,17 @@ export interface FinanceEconomyReservesEconomyLiabilitySnapshot {
   outstandingSoftUnits?: number;
 }
 
+/** Data model for Finance Economy Reserves External Reserve Asset. */
 export interface FinanceEconomyReservesExternalReserveAsset {
   assetKey?: string | null;
   eligibleUsdNanos?: number;
   purpose?: FinanceEconomyReservesReserveBackingPurpose;
 }
 
+/** OpenAPI schema for Finance Economy Reserves Reserve Backing Purpose. */
 export type FinanceEconomyReservesReserveBackingPurpose = 'HardCoin' | 'SoftCoin';
 
+/** Data model for Finance Economy Reserves Reserve Buffer Position. */
 export interface FinanceEconomyReservesReserveBufferPosition {
   adEstimateVarianceBufferUsdNanos?: number;
   chargebackRefundBufferUsdMinor?: number;
@@ -5112,8 +5513,10 @@ export interface FinanceEconomyReservesReserveBufferPosition {
   softOperatingLiquidityBufferUsdNanos?: number;
 }
 
+/** OpenAPI schema for Finance Economy Reserves Reserve Coverage State. */
 export type FinanceEconomyReservesReserveCoverageState = 'Covered' | 'Shortfall';
 
+/** Data model for Finance Economy Reserves Reserve Head. */
 export interface FinanceEconomyReservesReserveHead {
   assetAllocations?: Array<FinanceEconomyReservesExternalReserveAsset> | null;
   authorizationEpoch?: number;
@@ -5128,6 +5531,7 @@ export interface FinanceEconomyReservesReserveHead {
   version?: FinanceEconomyContractsReserveVersion;
 }
 
+/** Data model for Finance Economy Reserves Reserve Requirement Snapshot. */
 export interface FinanceEconomyReservesReserveRequirementSnapshot {
   hardFaceValueUsdMinor?: number;
   requiredHardReserveUsdMinor?: number;
@@ -5136,6 +5540,7 @@ export interface FinanceEconomyReservesReserveRequirementSnapshot {
   stressedExpectedRedemptionCostUsdNanos?: number;
 }
 
+/** Data model for Finance Economy Reserves Reserve Service Observation. */
 export interface FinanceEconomyReservesReserveServiceObservation {
   currentProviderCostUsdNanos?: number;
   currentServicePriceSoftUnits?: number;
@@ -5148,6 +5553,7 @@ export interface FinanceEconomyReservesReserveServiceObservation {
   trailingHighPercentileCostUsdNanos?: number;
 }
 
+/** Data model for Finance Economy Risk Capability Authorization Receipt. */
 export interface FinanceEconomyRiskCapabilityAuthorizationReceipt {
   id?: string;
   actorId?: string;
@@ -5171,8 +5577,10 @@ export interface FinanceEconomyRiskCapabilityAuthorizationReceipt {
   tenantId?: string;
 }
 
+/** OpenAPI schema for Finance Economy Risk Compliance Evidence Result. */
 export type FinanceEconomyRiskComplianceEvidenceResult = 'Approved' | 'Rejected' | 'NeedsReview' | 'Unavailable';
 
+/** Data model for Finance Economy Risk Compliance Hold. */
 export interface FinanceEconomyRiskComplianceHold {
   id?: string;
   activatedAt?: string;
@@ -5186,6 +5594,7 @@ export interface FinanceEconomyRiskComplianceHold {
   scope?: FinanceEconomyRiskComplianceHoldScope;
 }
 
+/** Data model for Finance Economy Risk Compliance Hold Administration State. */
 export interface FinanceEconomyRiskComplianceHoldAdministrationState {
   hold?: FinanceEconomyRiskComplianceHold;
   releaseApprovers?: Array<string> | null;
@@ -5195,6 +5604,7 @@ export interface FinanceEconomyRiskComplianceHoldAdministrationState {
   requiredReleaseApprovals?: number | null;
 }
 
+/** Data model for Finance Economy Risk Compliance Hold Event. */
 export interface FinanceEconomyRiskComplianceHoldEvent {
   actorId?: string;
   evidenceHash?: string | null;
@@ -5204,11 +5614,13 @@ export interface FinanceEconomyRiskComplianceHoldEvent {
   sequence?: number;
 }
 
+/** Data model for Finance Economy Risk Compliance Hold Page. */
 export interface FinanceEconomyRiskComplianceHoldPage {
   items?: Array<FinanceEconomyRiskComplianceHoldAdministrationState> | null;
   nextCursor?: string | null;
 }
 
+/** Data model for Finance Economy Risk Compliance Hold Scope. */
 export interface FinanceEconomyRiskComplianceHoldScope {
   capability?: FinanceEconomyRiskEconomyValueMovementCapability;
   key?: string | null;
@@ -5216,6 +5628,7 @@ export interface FinanceEconomyRiskComplianceHoldScope {
   tenantId?: string;
 }
 
+/** Data model for Finance Economy Risk Economy Capability Evaluation Result. */
 export interface FinanceEconomyRiskEconomyCapabilityEvaluationResult {
   diagnostics?: Array<string> | null;
   isReady?: boolean;
@@ -5223,6 +5636,7 @@ export interface FinanceEconomyRiskEconomyCapabilityEvaluationResult {
   state?: FinanceEconomyRiskEconomyCapabilityReadinessStatus;
 }
 
+/** Data model for Finance Economy Risk Economy Capability Policy. */
 export interface FinanceEconomyRiskEconomyCapabilityPolicy {
   id?: string;
   approvedAt?: string | null;
@@ -5244,8 +5658,10 @@ export interface FinanceEconomyRiskEconomyCapabilityPolicy {
   version?: number;
 }
 
+/** OpenAPI schema for Finance Economy Risk Economy Capability Policy State. */
 export type FinanceEconomyRiskEconomyCapabilityPolicyState = 'PendingApproval' | 'Approved' | 'Active' | 'Expired';
 
+/** OpenAPI schema for Finance Economy Risk Economy Capability Readiness Status. */
 export type FinanceEconomyRiskEconomyCapabilityReadinessStatus =
   | 'Disabled'
   | 'Ready'
@@ -5262,12 +5678,14 @@ export type FinanceEconomyRiskEconomyCapabilityReadinessStatus =
   | 'ProviderNotReady'
   | 'KillSwitchActive';
 
+/** Data model for Finance Economy Risk Economy Kill Switch Scope. */
 export interface FinanceEconomyRiskEconomyKillSwitchScope {
   capability?: FinanceEconomyRiskEconomyValueMovementCapability;
   scopeKey?: string | null;
   tenantId?: string | null;
 }
 
+/** Data model for Finance Economy Risk Economy Kill Switch State. */
 export interface FinanceEconomyRiskEconomyKillSwitchState {
   id?: string;
   activatedAt?: string;
@@ -5282,9 +5700,11 @@ export interface FinanceEconomyRiskEconomyKillSwitchState {
   scope?: FinanceEconomyRiskEconomyKillSwitchScope;
 }
 
+/** OpenAPI schema for Finance Economy Risk Economy Protected Operation State. */
 export type FinanceEconomyRiskEconomyProtectedOperationState =
   'Ready' | 'ReviewRequired' | 'Hold' | 'Challenge' | 'Denied' | 'ComplianceUnavailable' | 'ComplianceStale' | 'InvalidPolicy' | 'ReserveInsufficient';
 
+/** OpenAPI schema for Finance Economy Risk Economy Value Movement Capability. */
 export type FinanceEconomyRiskEconomyValueMovementCapability =
   | 'ConfirmHardCoinFunding'
   | 'ConvertHardToSoft'
@@ -5300,8 +5720,10 @@ export type FinanceEconomyRiskEconomyValueMovementCapability =
   | 'BountyReclaim'
   | 'LegacyBalanceBackfill';
 
+/** OpenAPI schema for Finance Economy Risk Risk Manual Decision Code. */
 export type FinanceEconomyRiskRiskManualDecisionCode = 'EvidenceVerified' | 'RiskAccepted' | 'PolicyViolation' | 'FraudConfirmed';
 
+/** Data model for Finance Economy Risk Risk Review Case. */
 export interface FinanceEconomyRiskRiskReviewCase {
   id?: string;
   appealOf?: string | null;
@@ -5316,6 +5738,7 @@ export interface FinanceEconomyRiskRiskReviewCase {
   submittedBy?: string;
 }
 
+/** Data model for Finance Economy Risk Risk Review Event. */
 export interface FinanceEconomyRiskRiskReviewEvent {
   actorId?: string;
   decisionCode?: FinanceEconomyRiskRiskManualDecisionCode;
@@ -5327,15 +5750,19 @@ export interface FinanceEconomyRiskRiskReviewEvent {
   sequence?: number;
 }
 
+/** OpenAPI schema for Finance Economy Risk Risk Review Event Kind. */
 export type FinanceEconomyRiskRiskReviewEventKind = 'Submitted' | 'ApprovalRecorded' | 'Approved' | 'Rejected' | 'AppealSubmitted';
 
+/** Data model for Finance Economy Risk Risk Review Page. */
 export interface FinanceEconomyRiskRiskReviewPage {
   items?: Array<FinanceEconomyRiskRiskReviewCase> | null;
   nextCursor?: string | null;
 }
 
+/** OpenAPI schema for Finance Economy Risk Risk Review Status. */
 export type FinanceEconomyRiskRiskReviewStatus = 'Pending' | 'Approved' | 'Rejected';
 
+/** Data model for Finance Economy Transfers Self Service Economy Transfer Request. */
 export interface FinanceEconomyTransfersSelfServiceEconomyTransferInput {
   amountUnits?: number;
   currency?: FinanceEconomyContractsCurrencyCode;
@@ -5344,6 +5771,7 @@ export interface FinanceEconomyTransfersSelfServiceEconomyTransferInput {
   transferType?: FinanceEconomyTransfersSelfServiceEconomyTransferType;
 }
 
+/** Data model for Finance Economy Transfers Self Service Economy Transfer Receipt. */
 export interface FinanceEconomyTransfersSelfServiceEconomyTransferReceipt {
   amountUnits?: number;
   currency?: FinanceEconomyContractsCurrencyCode;
@@ -5355,8 +5783,10 @@ export interface FinanceEconomyTransfersSelfServiceEconomyTransferReceipt {
   transferType?: FinanceEconomyTransfersSelfServiceEconomyTransferType;
 }
 
+/** OpenAPI schema for Finance Economy Transfers Self Service Economy Transfer Type. */
 export type FinanceEconomyTransfersSelfServiceEconomyTransferType = 'Tip' | 'Gift' | 'CreatorSupport';
 
+/** Data model for Finance Economy Treasury Admin Withdrawal Audit Event. */
 export interface FinanceEconomyTreasuryAdminWithdrawalAuditEvent {
   actorId?: string | null;
   evidence?: string | null;
@@ -5368,12 +5798,14 @@ export interface FinanceEconomyTreasuryAdminWithdrawalAuditEvent {
   sequence?: number;
 }
 
+/** Data model for Finance Economy Treasury Admin Withdrawal Audit View. */
 export interface FinanceEconomyTreasuryAdminWithdrawalAuditView {
   events?: Array<FinanceEconomyTreasuryAdminWithdrawalAuditEvent> | null;
   integrityValid?: boolean;
   runId?: string;
 }
 
+/** Data model for Finance Economy Treasury Admin Withdrawal Run. */
 export interface FinanceEconomyTreasuryAdminWithdrawalRun {
   id?: string;
   amount?: FinanceEconomyContractsCoinAmount;
@@ -5399,8 +5831,10 @@ export interface FinanceEconomyTreasuryAdminWithdrawalRun {
   version?: number;
 }
 
+/** OpenAPI schema for Finance Economy Treasury Admin Withdrawal Run State. */
 export type FinanceEconomyTreasuryAdminWithdrawalRunState = 'PendingApproval' | 'Approved' | 'Dispatching' | 'Ambiguous' | 'Succeeded' | 'Failed' | 'Cancelled';
 
+/** Data model for Game Jams Add Jam Criteria Request. */
 export interface GameJamsAddJamCriteriaInput {
   description?: string | null;
   maxScore?: number;
@@ -5408,6 +5842,7 @@ export interface GameJamsAddJamCriteriaInput {
   weight?: number;
 }
 
+/** Data model for Game Jams Create Jam Request. */
 export interface GameJamsCreateJamInput {
   createdBy?: string;
   description?: string | null;
@@ -5422,6 +5857,7 @@ export interface GameJamsCreateJamInput {
   votingEndDate?: string | null;
 }
 
+/** Data model for Game Jams Jam. */
 export interface GameJamsJam {
   /** Unique identifier for the entity.
 Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
@@ -5463,6 +5899,7 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   votingEndDate?: string | null;
 }
 
+/** Data model for Game Jams Jam Criteria Dto. */
 export interface GameJamsJamCriteriaDto {
   id?: string;
   description?: string | null;
@@ -5472,6 +5909,7 @@ export interface GameJamsJamCriteriaDto {
   weight?: number;
 }
 
+/** Data model for Game Jams Jam Dto. */
 export interface GameJamsJamDto {
   id?: string;
   createdBy?: string;
@@ -5487,6 +5925,7 @@ export interface GameJamsJamDto {
   votingEndDate?: string | null;
 }
 
+/** Data model for Game Jams Jam Score. */
 export interface GameJamsJamScore {
   /** Unique identifier for the entity.
 Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
@@ -5520,6 +5959,7 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   version?: number;
 }
 
+/** Data model for Game Jams Jam Score Dto. */
 export interface GameJamsJamScoreDto {
   id?: string;
   criteriaId?: string;
@@ -5529,8 +5969,10 @@ export interface GameJamsJamScoreDto {
   submissionId?: string;
 }
 
+/** OpenAPI schema for Game Jams Jam Status. */
 export type GameJamsJamStatus = 'Upcoming' | 'Active' | 'Voting' | 'Completed' | 'Cancelled';
 
+/** Data model for Game Jams Jam Submission Dto. */
 export interface GameJamsJamSubmissionDto {
   id?: string;
   jamId?: string;
@@ -5539,6 +5981,7 @@ export interface GameJamsJamSubmissionDto {
   userId?: string;
 }
 
+/** Data model for Game Jams Score Jam Submission Request. */
 export interface GameJamsScoreJamSubmissionInput {
   criteriaId?: string;
   feedback?: string | null;
@@ -5546,12 +5989,14 @@ export interface GameJamsScoreJamSubmissionInput {
   score?: number;
 }
 
+/** Data model for Game Jams Submit Jam Entry Request. */
 export interface GameJamsSubmitJamEntryInput {
   notes?: string | null;
   projectVersionId?: string;
   userId?: string;
 }
 
+/** Data model for Identity Authentication Api Key Dto. */
 export interface IdentityAuthenticationApiKeyDto {
   id?: string;
   createdAt?: string;
@@ -5699,6 +6144,7 @@ export interface IdentityAuthenticationConsumeMagicLinkInput {
   token: string;
 }
 
+/** Data model for Identity Authentication Create Api Key Command. */
 export interface IdentityAuthenticationCreateApiKeyCommand {
   expiresAt?: string | null;
   ipWhitelist?: string | null;
@@ -5706,6 +6152,7 @@ export interface IdentityAuthenticationCreateApiKeyCommand {
   scopes: Array<string> | null;
 }
 
+/** Data model for Identity Authentication Create Api Key Response. */
 export interface IdentityAuthenticationCreateApiKeyOutput {
   id?: string;
   apiKey?: string | null;
@@ -5734,6 +6181,7 @@ export interface IdentityAuthenticationCreateServiceAccountInput {
   tenantId?: string | null;
 }
 
+/** Data model for Identity Authentication Create Step Up Challenge Request. */
 export interface IdentityAuthenticationCreateStepUpChallengeInput {
   operationType?: string | null;
   payloadHash?: string | null;
@@ -5937,6 +6385,7 @@ export interface IdentityAuthenticationLockServiceAccountInput {
   reason?: string | null;
 }
 
+/** Data model for Identity Authentication Magic Link Request Result. */
 export interface IdentityAuthenticationMagicLinkRequestResult {
   developmentPreviewToken?: string | null;
   expiresInMinutes?: number;
@@ -6092,6 +6541,7 @@ export interface IdentityAuthenticationRequestPasswordResetInput {
   tenantId?: string | null;
 }
 
+/** Data model for Identity Authentication Revoke Api Key Request. */
 export interface IdentityAuthenticationRevokeApiKeyInput {
   reason?: string | null;
 }
@@ -6283,11 +6733,13 @@ export interface IdentityAuthenticationSmsMfaSetupOutput {
   phoneNumberMasked: string | null;
 }
 
+/** Data model for Identity Authentication Step Up Challenge Response. */
 export interface IdentityAuthenticationStepUpChallengeOutput {
   challengeId?: string;
   expiresAt?: string;
 }
 
+/** Data model for Identity Authentication Step Up Receipt Response. */
 export interface IdentityAuthenticationStepUpReceiptOutput {
   expiresAt?: string;
   receipt?: string | null;
@@ -6356,6 +6808,7 @@ export interface IdentityAuthenticationVerifyMfaInput {
   userId?: string;
 }
 
+/** Data model for Identity Authentication Verify Step Up Challenge Request. */
 export interface IdentityAuthenticationVerifyStepUpChallengeInput {
   evidence?: string | null;
   method?: IdentityAuthenticationMfaMethod;
@@ -6613,46 +7066,55 @@ export interface IdentityAuthorizationCommandsRequestJitElevationCommand {
   tenantId?: string | null;
 }
 
+/** Data model for Identity Authorization Controllers Approve Elevation Request. */
 export interface IdentityAuthorizationControllersApproveElevationInput {
   comments?: string | null;
   reviewerId?: string;
 }
 
+/** Data model for Identity Authorization Controllers Approve Item Request. */
 export interface IdentityAuthorizationControllersApproveItemInput {
   notes?: string | null;
   reason?: string | null;
 }
 
+/** Data model for Identity Authorization Controllers Complete Campaign Request. */
 export interface IdentityAuthorizationControllersCompleteCampaignInput {
   completedBy?: string;
 }
 
+/** Data model for Identity Authorization Controllers Deny Elevation Request. */
 export interface IdentityAuthorizationControllersDenyElevationInput {
   comments?: string | null;
   reviewerId?: string;
 }
 
+/** Data model for Identity Authorization Controllers Grant Exception Request. */
 export interface IdentityAuthorizationControllersGrantExceptionInput {
   approvedBy?: string;
   justification?: string | null;
 }
 
+/** Data model for Identity Authorization Controllers Resolve Violation Request. */
 export interface IdentityAuthorizationControllersResolveViolationInput {
   action?: IdentityAuthorizationSoDResolutionAction;
   notes?: string | null;
   resolvedBy?: string;
 }
 
+/** Data model for Identity Authorization Controllers Revoke Elevation Request. */
 export interface IdentityAuthorizationControllersRevokeElevationInput {
   reason?: string | null;
   revokedBy?: string;
 }
 
+/** Data model for Identity Authorization Controllers Revoke Item Request. */
 export interface IdentityAuthorizationControllersRevokeItemInput {
   notes?: string | null;
   reason?: string | null;
 }
 
+/** Data model for Identity Authorization Controllers Update So DRule Request. */
 export interface IdentityAuthorizationControllersUpdateSoDRuleInput {
   conflictingPermissions?: Array<string> | null;
   description?: string | null;
@@ -6852,6 +7314,7 @@ export interface IdentityAuthorizationJitElevationInput {
   updatedAt?: string | null;
 }
 
+/** Data model for Identity Authorization Permission Analytics Report. */
 export interface IdentityAuthorizationPermissionAnalyticsReport {
   activeUsers?: number;
   anomalies?: Array<IdentityAuthorizationPermissionAnomaly> | null;
@@ -6864,6 +7327,7 @@ export interface IdentityAuthorizationPermissionAnalyticsReport {
   totalRevokes?: number;
 }
 
+/** Data model for Identity Authorization Permission Anomaly. */
 export interface IdentityAuthorizationPermissionAnomaly {
   anomalyType?: string | null;
   description?: string | null;
@@ -6892,6 +7356,7 @@ export interface IdentityAuthorizationPermissionDelegation {
   usageLimit?: number | null;
 }
 
+/** Data model for Identity Authorization Permission Trend. */
 export interface IdentityAuthorizationPermissionTrend {
   activePermissions?: number;
   date?: string;
@@ -7014,6 +7479,7 @@ export interface IdentityAuthorizationPermissionUpdateResult {
   userId?: string;
 }
 
+/** Data model for Identity Authorization Permission Usage Metrics. */
 export interface IdentityAuthorizationPermissionUsageMetrics {
   lastUsed?: string;
   permission?: string | null;
@@ -7047,6 +7513,7 @@ export interface IdentityAuthorizationRemoveUserAccessCommand {
   tenantId: CQRSModelsTenantId;
 }
 
+/** Data model for Identity Authorization Resource Access Pattern. */
 export interface IdentityAuthorizationResourceAccessPattern {
   accessCount?: number;
   resourceId?: string;
@@ -7251,6 +7718,7 @@ export interface IdentityAuthorizationUpdateUserPermissionsCommand {
   updatedByUserId: string;
 }
 
+/** Data model for Identity Authorization User Activity Summary. */
 export interface IdentityAuthorizationUserActivitySummary {
   lastActivity?: string;
   permissionChanges?: number;
@@ -7412,10 +7880,12 @@ export interface IdentityTenantsReplaceTenantSettingsInput {
   userInterfaceSettings?: IdentityTenantsUpdateTenantUiSettingsInput;
 }
 
+/** Data model for Identity Tenants Set Tenant Membership Status Request. */
 export interface IdentityTenantsSetTenantMembershipStatusInput {
   reason?: string | null;
 }
 
+/** Data model for Identity Tenants Set Tenant Membership Status Response. */
 export interface IdentityTenantsSetTenantMembershipStatusOutput {
   isActive?: boolean;
   memberId?: string;
@@ -8031,6 +8501,7 @@ export interface IdentityTenantsUpdateTenantIntegrationSettingsInput {
   webhookSettings?: Record<string, Record<string, unknown> | null> | null;
 }
 
+/** Data model for Identity Tenants Update Tenant Member Invite Response. */
 export interface IdentityTenantsUpdateTenantMemberInviteOutput {
   inviteStatus?: string | null;
   memberId?: string | null;
@@ -9083,6 +9554,7 @@ export interface IdentityUsersUserStatus {
   isSuspended?: boolean;
 }
 
+/** Data model for IDurable Integration Event. */
 export interface IDurableIntegrationEvent {
   actorId?: string;
   aggregateId?: string | null;
@@ -9100,11 +9572,13 @@ export interface IDurableIntegrationEvent {
   tenantId?: string;
 }
 
+/** Data model for Key Value Pair String Authentication Extensions PRFValues. */
 export interface KeyValuePairStringAuthenticationExtensionsPRFValues {
   key?: string | null;
   value?: ObjectsAuthenticationExtensionsPRFValues;
 }
 
+/** Data model for Launch Pad Create Launch Pad Event Request. */
 export interface LaunchPadCreateLaunchPadEventInput {
   applicationsCloseAt?: string | null;
   applicationsOpenAt?: string | null;
@@ -9114,6 +9588,7 @@ export interface LaunchPadCreateLaunchPadEventInput {
   startsAt?: string;
 }
 
+/** Data model for Launch Pad Create Launch Pad Slot Request. */
 export interface LaunchPadCreateLaunchPadSlotInput {
   capacity?: number;
   endsAt?: string;
@@ -9122,6 +9597,7 @@ export interface LaunchPadCreateLaunchPadSlotInput {
   startsAt?: string;
 }
 
+/** Data model for Launch Pad Create Launch Plan Request. */
 export interface LaunchPadCreateLaunchPlanInput {
   channels?: Array<string> | null;
   checklistItems?: Array<LaunchPadLaunchChecklistItemInput> | null;
@@ -9131,6 +9607,7 @@ export interface LaunchPadCreateLaunchPlanInput {
   targetLaunchAt?: string | null;
 }
 
+/** Data model for Launch Pad Launch Checklist Item. */
 export interface LaunchPadLaunchChecklistItem {
   /** Unique identifier for the entity.
 Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
@@ -9166,6 +9643,7 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   version?: number;
 }
 
+/** Data model for Launch Pad Launch Checklist Item Input. */
 export interface LaunchPadLaunchChecklistItemInput {
   category?: string | null;
   isComplete?: boolean;
@@ -9173,6 +9651,7 @@ export interface LaunchPadLaunchChecklistItemInput {
   title?: string | null;
 }
 
+/** Data model for Launch Pad Launch Pad Analytics Projection. */
 export interface LaunchPadLaunchPadAnalyticsProjection {
   applications?: number;
   approvedApplications?: number;
@@ -9182,6 +9661,7 @@ export interface LaunchPadLaunchPadAnalyticsProjection {
   registrations?: number;
 }
 
+/** Data model for Launch Pad Launch Pad Application. */
 export interface LaunchPadLaunchPadApplication {
   /** Unique identifier for the entity.
 Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
@@ -9226,6 +9706,7 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   version?: number;
 }
 
+/** Data model for Launch Pad Launch Pad Application Projection. */
 export interface LaunchPadLaunchPadApplicationProjection {
   id?: string;
   eventId?: string;
@@ -9239,8 +9720,10 @@ export interface LaunchPadLaunchPadApplicationProjection {
   submittedByUserId?: string;
 }
 
+/** OpenAPI schema for Launch Pad Launch Pad Application Status. */
 export type LaunchPadLaunchPadApplicationStatus = 'Draft' | 'Submitted' | 'UnderReview' | 'Waitlisted' | 'Approved' | 'Rejected' | 'Withdrawn';
 
+/** Data model for Launch Pad Launch Pad Event. */
 export interface LaunchPadLaunchPadEvent {
   /** Unique identifier for the entity.
 Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
@@ -9278,11 +9761,13 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   version?: number;
 }
 
+/** Data model for Launch Pad Launch Pad Event Detail Projection. */
 export interface LaunchPadLaunchPadEventDetailProjection {
   event?: LaunchPadLaunchPadEventProjection;
   slots?: Array<LaunchPadLaunchPadSlotProjection> | null;
 }
 
+/** Data model for Launch Pad Launch Pad Event Projection. */
 export interface LaunchPadLaunchPadEventProjection {
   id?: string;
   applicationsCloseAt?: string | null;
@@ -9294,9 +9779,11 @@ export interface LaunchPadLaunchPadEventProjection {
   status?: LaunchPadLaunchPadEventStatus;
 }
 
+/** OpenAPI schema for Launch Pad Launch Pad Event Status. */
 export type LaunchPadLaunchPadEventStatus =
   'Draft' | 'ApplicationsOpen' | 'ApplicationsClosed' | 'Scheduled' | 'Active' | 'Completed' | 'Cancelled' | 'Archived';
 
+/** Data model for Launch Pad Launch Pad Participant Registration. */
 export interface LaunchPadLaunchPadParticipantRegistration {
   /** Unique identifier for the entity.
 Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
@@ -9333,8 +9820,10 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   version?: number;
 }
 
+/** OpenAPI schema for Launch Pad Launch Pad Participant Role. */
 export type LaunchPadLaunchPadParticipantRole = 'Participant' | 'Mentor' | 'Audience' | 'Presenter';
 
+/** Data model for Launch Pad Launch Pad Participant Slot. */
 export interface LaunchPadLaunchPadParticipantSlot {
   /** Unique identifier for the entity.
 Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
@@ -9373,8 +9862,10 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   version?: number;
 }
 
+/** OpenAPI schema for Launch Pad Launch Pad Participant Status. */
 export type LaunchPadLaunchPadParticipantStatus = 'Registered' | 'Waitlisted' | 'CheckedIn' | 'Attended' | 'Completed' | 'Cancelled' | 'NoShow';
 
+/** Data model for Launch Pad Launch Pad Registration Projection. */
 export interface LaunchPadLaunchPadRegistrationProjection {
   id?: string;
   checkedInAt?: string | null;
@@ -9385,6 +9876,7 @@ export interface LaunchPadLaunchPadRegistrationProjection {
   userId?: string;
 }
 
+/** Data model for Launch Pad Launch Pad Settings Projection. */
 export interface LaunchPadLaunchPadSettingsProjection {
   id?: string;
   tenantId?: string;
@@ -9392,6 +9884,7 @@ export interface LaunchPadLaunchPadSettingsProjection {
   versionSubmissionPolicy?: ProjectsVersionSubmissionPolicy;
 }
 
+/** Data model for Launch Pad Launch Pad Slot Projection. */
 export interface LaunchPadLaunchPadSlotProjection {
   id?: string;
   capacity?: number;
@@ -9403,6 +9896,7 @@ export interface LaunchPadLaunchPadSlotProjection {
   startsAt?: string;
 }
 
+/** Data model for Launch Pad Launch Plan. */
 export interface LaunchPadLaunchPlan {
   /** Unique identifier for the entity.
 Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
@@ -9447,13 +9941,16 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   version?: number;
 }
 
+/** OpenAPI schema for Launch Pad Launch Plan Status. */
 export type LaunchPadLaunchPlanStatus = 'Draft' | 'Preparing' | 'Ready' | 'Launched' | 'Paused';
 
+/** Data model for Launch Pad Review Launch Pad Application Request. */
 export interface LaunchPadReviewLaunchPadApplicationInput {
   launchPlanName?: string | null;
   status?: LaunchPadLaunchPadApplicationStatus;
 }
 
+/** Data model for Launch Pad Submit Launch Pad Application Request. */
 export interface LaunchPadSubmitLaunchPadApplicationInput {
   pitch?: string | null;
   projectId?: string;
@@ -9461,20 +9958,24 @@ export interface LaunchPadSubmitLaunchPadApplicationInput {
   submittedAssetReferenceIds?: Array<string> | null;
 }
 
+/** Data model for Launch Pad Transition Launch Pad Event Request. */
 export interface LaunchPadTransitionLaunchPadEventInput {
   status?: LaunchPadLaunchPadEventStatus;
 }
 
+/** Data model for Launch Pad Transition Launch Pad Registration Request. */
 export interface LaunchPadTransitionLaunchPadRegistrationInput {
   status?: LaunchPadLaunchPadParticipantStatus;
 }
 
+/** Data model for Launch Pad Update Launch Pad Application Request. */
 export interface LaunchPadUpdateLaunchPadApplicationInput {
   pitch?: string | null;
   projectVersionId?: string;
   submittedAssetReferenceIds?: Array<string> | null;
 }
 
+/** Data model for Launch Pad Update Launch Pad Event Request. */
 export interface LaunchPadUpdateLaunchPadEventInput {
   applicationsCloseAt?: string | null;
   applicationsOpenAt?: string | null;
@@ -9484,16 +9985,19 @@ export interface LaunchPadUpdateLaunchPadEventInput {
   startsAt?: string;
 }
 
+/** Data model for Launch Pad Update Launch Pad Settings Request. */
 export interface LaunchPadUpdateLaunchPadSettingsInput {
   versionSubmissionPolicy?: ProjectsVersionSubmissionPolicy;
 }
 
+/** Data model for Learning Assessments Anonymous Review Assessment Dto. */
 export interface LearningAssessmentsAnonymousReviewAssessmentDto {
   id?: string;
   maxScore?: LearningGradingContractsScoreValue;
   title?: string | null;
 }
 
+/** Data model for Learning Assessments Anonymous Review Rubric Dto. */
 export interface LearningAssessmentsAnonymousReviewRubricDto {
   criteria?: Array<LearningAssessmentsRubricCriterionDto> | null;
 }
@@ -9517,6 +10021,7 @@ export interface LearningAssessmentsAnonymousReviewSubmissionDto {
   urlPayload?: string | null;
 }
 
+/** Data model for Learning Assessments Assessment Dto. */
 export interface LearningAssessmentsAssessmentDto {
   id?: string;
   allowLateSubmissions?: boolean;
@@ -9554,6 +10059,7 @@ export interface LearningAssessmentsAssessmentDto {
   version?: number;
 }
 
+/** Data model for Learning Assessments Assessment Group Analytics Dto. */
 export interface LearningAssessmentsAssessmentGroupAnalyticsDto {
   assessmentCount?: number;
   averagePercent?: LearningGradingContractsPercentValue;
@@ -9566,6 +10072,7 @@ export interface LearningAssessmentsAssessmentGroupAnalyticsDto {
   weightPercent?: LearningGradingContractsPercentValue | null;
 }
 
+/** Data model for Learning Assessments Assessment Group Dto. */
 export interface LearningAssessmentsAssessmentGroupDto {
   id?: string;
   courseId?: string;
@@ -9579,6 +10086,7 @@ export interface LearningAssessmentsAssessmentGroupDto {
 Values are persisted and must remain stable. */
 export type LearningAssessmentsAssessmentPresentationMode = 'SingleStep' | 'Continuous';
 
+/** Data model for Learning Assessments Assessment Score Bucket Dto. */
 export interface LearningAssessmentsAssessmentScoreBucketDto {
   count?: number;
   label?: string | null;
@@ -9586,6 +10094,7 @@ export interface LearningAssessmentsAssessmentScoreBucketDto {
   minPercent?: number;
 }
 
+/** Data model for Learning Assessments Assessment Submission Dto. */
 export interface LearningAssessmentsAssessmentSubmissionDto {
   id?: string;
   assessmentId?: string;
@@ -9610,6 +10119,7 @@ export interface LearningAssessmentsAssessmentSubmissionDto {
   userId?: string | null;
 }
 
+/** OpenAPI schema for Learning Assessments Assessment Type. */
 export type LearningAssessmentsAssessmentType = 'Quiz' | 'Assignment' | 'Project' | 'PeerReview' | 'SelfAssessment';
 
 /** Request to assign or clear an assessment group. */
@@ -9618,11 +10128,13 @@ export interface LearningAssessmentsAssignAssessmentGroupInput {
   clearAssessmentGroup?: boolean;
 }
 
+/** Data model for Learning Assessments Can Attempt Response. */
 export interface LearningAssessmentsCanAttemptOutput {
   canAttempt?: boolean;
   currentAttemptCount?: number;
 }
 
+/** Data model for Learning Assessments Course Assessment Analytics Dto. */
 export interface LearningAssessmentsCourseAssessmentAnalyticsDto {
   assessmentCount?: number;
   averagePercent?: LearningGradingContractsPercentValue;
@@ -9678,12 +10190,14 @@ export interface LearningAssessmentsCreateGroupSetInput {
   name?: string | null;
 }
 
+/** Data model for Learning Assessments Grade Result Release Response. */
 export interface LearningAssessmentsGradeResultReleaseOutput {
   gradeRoundId?: string;
   releasedAt?: string;
   releaseId?: string;
 }
 
+/** Data model for Learning Assessments Grading Authoring Assessment Authoring State Result. */
 export interface LearningAssessmentsGradingAuthoringAssessmentAuthoringStateResult {
   assessmentId?: string;
   assessmentVersion?: number;
@@ -9697,12 +10211,14 @@ export interface LearningAssessmentsGradingAuthoringAssessmentAuthoringStateResu
   publishedMatchesDraft?: boolean;
 }
 
+/** Data model for Learning Assessments Grading Authoring Assessment Capability State Result. */
 export interface LearningAssessmentsGradingAuthoringAssessmentCapabilityStateResult {
   available?: boolean;
   code?: string | null;
   message?: string | null;
 }
 
+/** Data model for Learning Assessments Grading Authoring Assessment Draft Result. */
 export interface LearningAssessmentsGradingAuthoringAssessmentDraftResult {
   assessmentId?: string | null;
   assessmentVersion?: number | null;
@@ -9710,6 +10226,7 @@ export interface LearningAssessmentsGradingAuthoringAssessmentDraftResult {
   contentVersion?: number;
 }
 
+/** Data model for Learning Assessments Grading Authoring Assessment Revision State Result. */
 export interface LearningAssessmentsGradingAuthoringAssessmentRevisionStateResult {
   authoringSourceHash?: string | null;
   createdAt?: string;
@@ -9718,10 +10235,12 @@ export interface LearningAssessmentsGradingAuthoringAssessmentRevisionStateResul
   revisionNumber?: number;
 }
 
+/** Data model for Learning Assessments Grading Authoring Prepare Assessment Revision Request. */
 export interface LearningAssessmentsGradingAuthoringPrepareAssessmentRevisionInput {
   expectedAssessmentVersion?: number;
 }
 
+/** Data model for Learning Assessments Grading Authoring Prepared Assessment Revision Result. */
 export interface LearningAssessmentsGradingAuthoringPreparedAssessmentRevisionResult {
   authoringSourceHash?: string | null;
   executionSnapshotHash?: string | null;
@@ -9729,11 +10248,13 @@ export interface LearningAssessmentsGradingAuthoringPreparedAssessmentRevisionRe
   revisionNumber?: number;
 }
 
+/** Data model for Learning Assessments Grading Authoring Publish Assessment Revision Request. */
 export interface LearningAssessmentsGradingAuthoringPublishAssessmentRevisionInput {
   expectedAssessmentVersion?: number;
   revisionId?: string;
 }
 
+/** Data model for Learning Assessments Grading Authoring Save Assessment Draft Request. */
 export interface LearningAssessmentsGradingAuthoringSaveAssessmentDraftInput {
   attemptContributionMode?: LearningAssessmentsGradingContractsAttemptContributionMode | null;
   contentCompletionMode?: LearningAssessmentsGradingContractsContentCompletionMode;
@@ -9757,18 +10278,21 @@ export interface LearningAssessmentsGradingAuthoringSaveAssessmentDraftInput {
   visibility?: LearningCoursesVisibility;
 }
 
+/** Data model for Learning Assessments Grading Authoring Unpublish Assessment Revision Request. */
 export interface LearningAssessmentsGradingAuthoringUnpublishAssessmentRevisionInput {
   expectedAssessmentVersion?: number;
   expectedRevisionId?: string;
   idempotencyKey?: string | null;
 }
 
+/** Data model for Learning Assessments Grading Contracts Assessment Execution Delivery Item V1. */
 export interface LearningAssessmentsGradingContractsAssessmentExecutionDeliveryItemV1 {
   adapterKey?: string | null;
   adapterVersion?: string | null;
   learnerPayload?: Record<string, unknown>;
 }
 
+/** Data model for Learning Assessments Grading Contracts Assessment Execution Delivery V1. */
 export interface LearningAssessmentsGradingContractsAssessmentExecutionDeliveryV1 {
   definitionRevisionId?: string;
   executionSnapshotHash?: string | null;
@@ -9777,6 +10301,7 @@ export interface LearningAssessmentsGradingContractsAssessmentExecutionDeliveryV
   schemaVersion?: number;
 }
 
+/** Data model for Learning Assessments Grading Contracts Assessment Response Envelope V1. */
 export interface LearningAssessmentsGradingContractsAssessmentResponseEnvelopeV1 {
   contentType?: string | null;
   payload?: Record<string, unknown>;
@@ -9784,10 +10309,13 @@ export interface LearningAssessmentsGradingContractsAssessmentResponseEnvelopeV1
   schemaVersion?: number;
 }
 
+/** OpenAPI schema for Learning Assessments Grading Contracts Attempt Contribution Mode. */
 export type LearningAssessmentsGradingContractsAttemptContributionMode = 'first-finalized' | 'last-finalized' | 'highest-finalized';
 
+/** OpenAPI schema for Learning Assessments Grading Contracts Content Completion Mode. */
 export type LearningAssessmentsGradingContractsContentCompletionMode = 'on-submit' | 'on-finalize' | 'on-release' | 'on-release-and-pass';
 
+/** Data model for Learning Assessments Grading Contracts Grade Item Result V1. */
 export interface LearningAssessmentsGradingContractsGradeItemResultV1 {
   evidenceRefs?: Array<string> | null;
   feedback?: string | null;
@@ -9801,8 +10329,10 @@ export interface LearningAssessmentsGradingContractsGradeItemResultV1 {
   state?: LearningAssessmentsGradingContractsGradeItemState;
 }
 
+/** OpenAPI schema for Learning Assessments Grading Contracts Grade Item State. */
 export type LearningAssessmentsGradingContractsGradeItemState = 'graded' | 'pending' | 'unsupported';
 
+/** Data model for Learning Assessments Grading Contracts Grade Result V1. */
 export interface LearningAssessmentsGradingContractsGradeResultV1 {
   evidenceRefs?: Array<string> | null;
   feedback?: string | null;
@@ -9813,20 +10343,26 @@ export interface LearningAssessmentsGradingContractsGradeResultV1 {
   state?: string | null;
 }
 
+/** OpenAPI schema for Learning Assessments Grading Contracts Result Release Mode. */
 export type LearningAssessmentsGradingContractsResultReleaseMode = 'immediate' | 'manual' | 'scheduled';
 
+/** OpenAPI schema for Learning Assessments Grading Contracts Review Execution Context. */
 export type LearningAssessmentsGradingContractsReviewExecutionContext = 'author-test' | 'official-submission';
 
+/** OpenAPI schema for Learning Assessments Grading Contracts Review Method. */
 export type LearningAssessmentsGradingContractsReviewMethod = 'PeerReview' | 'AIReview' | 'AutomatedReview' | 'InstructorReview' | 'SelfReview';
 
 /** Numeric review-workflow bitmask. Valid values are 0, 1, 2, 4, 8, 9, 10, 12, 16, and 24. */
 export type LearningAssessmentsGradingContractsReviewMethods = 0 | 1 | 2 | 4 | 8 | 9 | 10 | 12 | 16 | 24;
 
+/** OpenAPI schema for Learning Assessments Grading Persistence Assessment Test Run Status. */
 export type LearningAssessmentsGradingPersistenceAssessmentTestRunStatus = 'Draft' | 'Running' | 'Completed' | 'Cancelled';
 
+/** OpenAPI schema for Learning Assessments Grading Persistence Persisted Grade Round Status. */
 export type LearningAssessmentsGradingPersistencePersistedGradeRoundStatus =
   'Pending' | 'Running' | 'AwaitingEvidence' | 'AwaitingInstructorResolution' | 'Failed' | 'Finalized';
 
+/** OpenAPI schema for Learning Assessments Grading Persistence Persisted Grading Execution Status. */
 export type LearningAssessmentsGradingPersistencePersistedGradingExecutionStatus = 'Pending' | 'Running' | 'AwaitingReview' | 'Completed' | 'Failed';
 
 /** Assessment summary fields the SpeedGrader header and grading panel need. */
@@ -9874,6 +10410,7 @@ export interface LearningAssessmentsGradingQueueItemDto {
   userId?: string | null;
 }
 
+/** Data model for Learning Assessments Grading Runtime Assessment Execution View V1. */
 export interface LearningAssessmentsGradingRuntimeAssessmentExecutionViewV1 {
   activeRoundId?: string | null;
   context?: LearningAssessmentsGradingContractsReviewExecutionContext;
@@ -9892,6 +10429,7 @@ export interface LearningAssessmentsGradingRuntimeAssessmentExecutionViewV1 {
   submittedResponse?: LearningAssessmentsGradingContractsAssessmentResponseEnvelopeV1;
 }
 
+/** Data model for Learning Assessments Grading Runtime Assessment Submission View V1. */
 export interface LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1 {
   assessmentId?: string;
   attemptNumber?: number;
@@ -9909,6 +10447,7 @@ export interface LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1 {
   version?: number;
 }
 
+/** Data model for Learning Assessments Grading Runtime Assessment Test Run View V1. */
 export interface LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1 {
   assessmentId?: string;
   candidateStillMatchesDraft?: boolean;
@@ -9922,6 +10461,7 @@ export interface LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1 {
   testRunId?: string;
 }
 
+/** Data model for Learning Assessments Grading Runtime Gradebook Assessment Projection V1. */
 export interface LearningAssessmentsGradingRuntimeGradebookAssessmentProjectionV1 {
   assessmentId?: string;
   capturedMaxScore?: LearningGradingContractsScoreValue;
@@ -9931,6 +10471,7 @@ export interface LearningAssessmentsGradingRuntimeGradebookAssessmentProjectionV
   submissionId?: string;
 }
 
+/** Data model for Learning Assessments Grading Runtime Gradebook Course Projection V1. */
 export interface LearningAssessmentsGradingRuntimeGradebookCourseProjectionV1 {
   courseId?: string;
   coursePercentUnits?: number | null;
@@ -9940,6 +10481,7 @@ export interface LearningAssessmentsGradingRuntimeGradebookCourseProjectionV1 {
   learnerVisible?: boolean;
 }
 
+/** Data model for Learning Assessments Grading Runtime Gradebook Group Projection V1. */
 export interface LearningAssessmentsGradingRuntimeGradebookGroupProjectionV1 {
   assessmentGroupId?: string;
   assessments?: Array<LearningAssessmentsGradingRuntimeGradebookAssessmentProjectionV1> | null;
@@ -9948,6 +10490,7 @@ export interface LearningAssessmentsGradingRuntimeGradebookGroupProjectionV1 {
   weightPercent?: LearningGradingContractsPercentValue;
 }
 
+/** Data model for Learning Assessments Grading Runtime Grade Round View V1. */
 export interface LearningAssessmentsGradingRuntimeGradeRoundViewV1 {
   finalizedAt?: string | null;
   initiatedByActorId?: string | null;
@@ -9962,12 +10505,14 @@ export interface LearningAssessmentsGradingRuntimeGradeRoundViewV1 {
   status?: LearningAssessmentsGradingPersistencePersistedGradeRoundStatus;
 }
 
+/** Data model for Learning Assessments Grading Runtime Instructor Item Resolution V1. */
 export interface LearningAssessmentsGradingRuntimeInstructorItemResolutionV1 {
   feedback?: string | null;
   itemId?: string | null;
   score?: LearningGradingContractsScoreValue;
 }
 
+/** Data model for Learning Assessments Grading Runtime Instructor Review Resolution V1. */
 export interface LearningAssessmentsGradingRuntimeInstructorReviewResolutionV1 {
   feedback?: string | null;
   items?: Array<LearningAssessmentsGradingRuntimeInstructorItemResolutionV1> | null;
@@ -9975,11 +10520,13 @@ export interface LearningAssessmentsGradingRuntimeInstructorReviewResolutionV1 {
   schemaVersion?: number;
 }
 
+/** Data model for Learning Assessments Grading Runtime Regrade Execution Command. */
 export interface LearningAssessmentsGradingRuntimeRegradeExecutionCommand {
   idempotencyKey?: string | null;
   reason?: string | null;
 }
 
+/** Data model for Learning Assessments Grading Runtime Release Grade Result Command. */
 export interface LearningAssessmentsGradingRuntimeReleaseGradeResultCommand {
   expectedRoundId?: string;
   expectedSubmissionVersion?: number;
@@ -9996,6 +10543,7 @@ export interface LearningAssessmentsGroupDetailDto {
   name?: string | null;
 }
 
+/** Data model for Learning Assessments Group Dto. */
 export interface LearningAssessmentsGroupDto {
   id?: string;
   capacity?: number;
@@ -10009,6 +10557,7 @@ export interface LearningAssessmentsGroupMemberDto {
   userId?: string;
 }
 
+/** Data model for Learning Assessments Group Membership Dto. */
 export interface LearningAssessmentsGroupMembershipDto {
   id?: string;
   groupId?: string;
@@ -10016,6 +10565,7 @@ export interface LearningAssessmentsGroupMembershipDto {
   userId?: string;
 }
 
+/** Data model for Learning Assessments Group Set Dto. */
 export interface LearningAssessmentsGroupSetDto {
   id?: string;
   courseId?: string;
@@ -10037,6 +10587,7 @@ export interface LearningAssessmentsGroupSummaryDto {
   name?: string | null;
 }
 
+/** Data model for Learning Assessments Idempotent Runtime Request. */
 export interface LearningAssessmentsIdempotentRuntimeInput {
   idempotencyKey?: string | null;
 }
@@ -10052,6 +10603,7 @@ export interface LearningAssessmentsInstructorPeerReviewDto {
   submittedAt?: string | null;
 }
 
+/** Data model for Learning Assessments Interactive Video Assessment Cue Dto. */
 export interface LearningAssessmentsInteractiveVideoAssessmentCueDto {
   id?: string;
   assessmentId?: string;
@@ -10060,10 +10612,12 @@ export interface LearningAssessmentsInteractiveVideoAssessmentCueDto {
   cuePositionSeconds?: number | null;
 }
 
+/** Data model for Learning Assessments Learner Assessment Attempt Dto. */
 export interface LearningAssessmentsLearnerAssessmentAttemptDto {
   submission?: LearningAssessmentsLearnerAssessmentSubmissionDto;
 }
 
+/** Data model for Learning Assessments Learner Assessment Submission Dto. */
 export interface LearningAssessmentsLearnerAssessmentSubmissionDto {
   id?: string;
   assessmentId?: string;
@@ -10086,6 +10640,7 @@ export interface LearningAssessmentsLearnerAssessmentSubmissionDto {
   urlPayload?: string | null;
 }
 
+/** Data model for Learning Assessments Learner Interactive Video Assessment Cue Dto. */
 export interface LearningAssessmentsLearnerInteractiveVideoAssessmentCueDto {
   cueId?: string | null;
   cuePositionSeconds?: number | null;
@@ -10105,6 +10660,7 @@ export interface LearningAssessmentsPeerReviewClaimDto {
   reviewId?: string;
 }
 
+/** OpenAPI schema for Learning Assessments Peer Review Status. */
 export type LearningAssessmentsPeerReviewStatus = 'Assigned' | 'Submitted';
 
 /** Body of a peer review submit: plain score XOR rubric scores (rubric rules enforced server-side),
@@ -10125,6 +10681,7 @@ export interface LearningAssessmentsReceivedPeerReviewDto {
   submittedAt?: string | null;
 }
 
+/** Data model for Learning Assessments Resolve Instructor Review Request. */
 export interface LearningAssessmentsResolveInstructorReviewInput {
   idempotencyKey?: string | null;
   resolution?: LearningAssessmentsGradingRuntimeInstructorReviewResolutionV1;
@@ -10145,6 +10702,7 @@ export interface LearningAssessmentsRubricDto {
   title?: string | null;
 }
 
+/** Data model for Learning Assessments Save Collective Runtime Draft Request. */
 export interface LearningAssessmentsSaveCollectiveRuntimeDraftInput {
   expectedVersion?: number;
   idempotencyKey?: string | null;
@@ -10164,6 +10722,7 @@ export interface LearningAssessmentsSaveRubricInput {
   title?: string | null;
 }
 
+/** Data model for Learning Assessments Start Assessment Test Run Request. */
 export interface LearningAssessmentsStartAssessmentTestRunInput {
   idempotencyKey?: string | null;
   personaDisplayName?: string | null;
@@ -10171,20 +10730,24 @@ export interface LearningAssessmentsStartAssessmentTestRunInput {
   revisionId?: string;
 }
 
+/** Data model for Learning Assessments Start Collective Runtime Submission Request. */
 export interface LearningAssessmentsStartCollectiveRuntimeSubmissionInput {
   courseGroupId?: string;
   idempotencyKey?: string | null;
 }
 
+/** Data model for Learning Assessments Start Content Runtime Submission Request. */
 export interface LearningAssessmentsStartContentRuntimeSubmissionInput {
   idempotencyKey?: string | null;
 }
 
+/** Data model for Learning Assessments Start Individual Runtime Submission Request. */
 export interface LearningAssessmentsStartIndividualRuntimeSubmissionInput {
   enrollmentId?: string;
   idempotencyKey?: string | null;
 }
 
+/** Data model for Learning Assessments Start Submission Request. */
 export interface LearningAssessmentsStartSubmissionInput {
   enrollmentId?: string;
 }
@@ -10192,6 +10755,7 @@ export interface LearningAssessmentsStartSubmissionInput {
 /** A comma-separated combination of the declared flag names. */
 export type LearningAssessmentsSubmissionModality = string;
 
+/** OpenAPI schema for Learning Assessments Submission Status. */
 export type LearningAssessmentsSubmissionStatus = 'InProgress' | 'Submitted' | 'Graded' | 'Returned' | 'Late';
 
 /** Persists one or more answer payloads when a learner submits an assessment. */
@@ -10204,6 +10768,7 @@ export interface LearningAssessmentsSubmitAssessmentInput {
   urlPayload?: string | null;
 }
 
+/** Data model for Learning Assessments Submit Assessment Runtime Request. */
 export interface LearningAssessmentsSubmitAssessmentRuntimeInput {
   expectedDraftVersion?: number | null;
   idempotencyKey?: string | null;
@@ -10223,6 +10788,7 @@ export interface LearningAssessmentsTaskItemDto {
   type?: string | null;
 }
 
+/** Data model for Learning Assessments Tasks Dto. */
 export interface LearningAssessmentsTasksDto {
   items?: Array<LearningAssessmentsTaskItemDto> | null;
 }
@@ -10288,6 +10854,7 @@ export interface LearningCertificatesCertificateDto {
   userId?: string;
 }
 
+/** OpenAPI schema for Learning Certificates Certificate Status. */
 export type LearningCertificatesCertificateStatus = 'Active' | 'Expired' | 'Revoked';
 
 /** DTO for certificate template editing and preview */
@@ -10360,12 +10927,14 @@ export interface LearningCertificatesUpdateCertificateTemplateInput {
   templateStyles?: string | null;
 }
 
+/** Data model for Learning Cohorts Apply Cohort Schedule Request. */
 export interface LearningCohortsApplyCohortScheduleInput {
   confirmAdvisories?: boolean;
   expectedVersion?: number;
   rules?: LearningCohortsPreviewCohortScheduleInput;
 }
 
+/** Data model for Learning Cohorts Available Cohort Content Dto. */
 export interface LearningCohortsAvailableCohortContentDto {
   availableFrom?: string | null;
   availableUntil?: string | null;
@@ -10380,6 +10949,7 @@ export interface LearningCohortsAvailableCohortContentDto {
   type?: LearningCoursesProgramContentType;
 }
 
+/** Data model for Learning Cohorts Cohort Calendar Entry Dto. */
 export interface LearningCohortsCohortCalendarEntryDto {
   availableFrom?: string | null;
   cohortId?: string;
@@ -10393,6 +10963,7 @@ export interface LearningCohortsCohortCalendarEntryDto {
   type?: LearningCohortsCohortScheduleItemType;
 }
 
+/** Data model for Learning Cohorts Cohort Dto. */
 export interface LearningCohortsCohortDto {
   id?: string;
   availableSpots?: number;
@@ -10415,10 +10986,13 @@ export interface LearningCohortsCohortDto {
   tenantId?: string | null;
 }
 
+/** OpenAPI schema for Learning Cohorts Cohort Pacing Mode. */
 export type LearningCohortsCohortPacingMode = 'OneModulePerWeek' | 'OneLessonPerMeeting' | 'FixedLessonsPerWeek' | 'Manual';
 
+/** OpenAPI schema for Learning Cohorts Cohort Release Policy. */
 export type LearningCohortsCohortReleasePolicy = 'Weekly' | 'BeforeMeeting' | 'Manual' | 'Immediately';
 
+/** Data model for Learning Cohorts Cohort Schedule Conflict Dto. */
 export interface LearningCohortsCohortScheduleConflictDto {
   assessmentId?: string | null;
   code?: string | null;
@@ -10427,6 +11001,7 @@ export interface LearningCohortsCohortScheduleConflictDto {
   severity?: LearningCohortsScheduleConflictSeverity;
 }
 
+/** Data model for Learning Cohorts Cohort Schedule Dto. */
 export interface LearningCohortsCohortScheduleDto {
   id?: string;
   cohortId?: string;
@@ -10442,6 +11017,7 @@ export interface LearningCohortsCohortScheduleDto {
   version?: number;
 }
 
+/** Data model for Learning Cohorts Cohort Schedule Item Dto. */
 export interface LearningCohortsCohortScheduleItemDto {
   id?: string;
   assessmentId?: string | null;
@@ -10461,10 +11037,13 @@ export interface LearningCohortsCohortScheduleItemDto {
   visibilityOverride?: LearningCohortsCohortVisibilityOverride;
 }
 
+/** OpenAPI schema for Learning Cohorts Cohort Schedule Item Status. */
 export type LearningCohortsCohortScheduleItemStatus = 'Draft' | 'Scheduled' | 'Published' | 'Completed' | 'Cancelled';
 
+/** OpenAPI schema for Learning Cohorts Cohort Schedule Item Type. */
 export type LearningCohortsCohortScheduleItemType = 'ContentRelease' | 'LiveSession' | 'AssessmentWindow' | 'Milestone';
 
+/** Data model for Learning Cohorts Cohort Schedule Preview Dto. */
 export interface LearningCohortsCohortSchedulePreviewDto {
   calculatedEndDate?: string;
   conflicts?: Array<LearningCohortsCohortScheduleConflictDto> | null;
@@ -10472,6 +11051,7 @@ export interface LearningCohortsCohortSchedulePreviewDto {
   items?: Array<LearningCohortsCohortSchedulePreviewItemDto> | null;
 }
 
+/** Data model for Learning Cohorts Cohort Schedule Preview Item Dto. */
 export interface LearningCohortsCohortSchedulePreviewItemDto {
   assessmentId?: string | null;
   availableFrom?: string | null;
@@ -10486,6 +11066,7 @@ export interface LearningCohortsCohortSchedulePreviewItemDto {
   type?: LearningCohortsCohortScheduleItemType;
 }
 
+/** Data model for Learning Cohorts Cohort Schedule Summary Dto. */
 export interface LearningCohortsCohortScheduleSummaryDto {
   itemCount?: number;
   meetingDays?: Array<SystemDayOfWeek> | null;
@@ -10496,10 +11077,13 @@ export interface LearningCohortsCohortScheduleSummaryDto {
   version?: number;
 }
 
+/** OpenAPI schema for Learning Cohorts Cohort Status. */
 export type LearningCohortsCohortStatus = 'Scheduled' | 'Active' | 'Completed' | 'Cancelled';
 
+/** OpenAPI schema for Learning Cohorts Cohort Visibility Override. */
 export type LearningCohortsCohortVisibilityOverride = 'Inherited' | 'Hidden' | 'Visible';
 
+/** Data model for Learning Cohorts Course Cohort Calendar Dto. */
 export interface LearningCohortsCourseCohortCalendarDto {
   courseId?: string;
   entries?: Array<LearningCohortsCohortCalendarEntryDto> | null;
@@ -10518,6 +11102,7 @@ export interface LearningCohortsCreateCohortInput {
   tenantId?: string | null;
 }
 
+/** Data model for Learning Cohorts Preview Cohort Schedule Request. */
 export interface LearningCohortsPreviewCohortScheduleInput {
   assessmentDueOffsetDays?: number;
   cohortEndDate?: string;
@@ -10532,10 +11117,13 @@ export interface LearningCohortsPreviewCohortScheduleInput {
   unitsPerPeriod?: number;
 }
 
+/** OpenAPI schema for Learning Cohorts Schedule Conflict Severity. */
 export type LearningCohortsScheduleConflictSeverity = 'Advisory' | 'Blocking';
 
+/** OpenAPI schema for Learning Cohorts Schedule Shift Scope. */
 export type LearningCohortsScheduleShiftScope = 'Single' | 'Following';
 
+/** Data model for Learning Cohorts Shift Cohort Schedule Request. */
 export interface LearningCohortsShiftCohortScheduleInput {
   days?: number;
   expectedVersion?: number;
@@ -10553,11 +11141,13 @@ export interface LearningCohortsUpdateCohortInput {
   startDate?: string | null;
 }
 
+/** Data model for Learning Cohorts Update Cohort Schedule Request. */
 export interface LearningCohortsUpdateCohortScheduleInput {
   expectedVersion?: number;
   item?: LearningCohortsUpdateCohortScheduleItemInput;
 }
 
+/** Data model for Learning Cohorts Update Cohort Schedule Item Request. */
 export interface LearningCohortsUpdateCohortScheduleItemInput {
   availableFrom?: string | null;
   availableUntil?: string | null;
@@ -10592,8 +11182,11 @@ export interface LearningCoursesActivityGradeDto {
   updatedAt?: string;
 }
 
-export interface LearningCoursesActivitySettings {}
+/** Polymorphic activity settings selected by the kind discriminator. */
+export type LearningCoursesActivitySettings =
+  LearningCoursesDiscussionActivitySettings | LearningCoursesReflectionActivitySettings | LearningCoursesSurveyActivitySettings;
 
+/** Data model for Learning Courses Ai Authoring Conversation Dto. */
 export interface LearningCoursesAiAuthoringConversationDto {
   id?: string;
   authorId?: string;
@@ -10602,6 +11195,7 @@ export interface LearningCoursesAiAuthoringConversationDto {
   messages?: Array<LearningCoursesAiAuthoringMessageDto> | null;
 }
 
+/** Data model for Learning Courses Ai Authoring Message Dto. */
 export interface LearningCoursesAiAuthoringMessageDto {
   id?: string;
   content?: string | null;
@@ -10610,6 +11204,7 @@ export interface LearningCoursesAiAuthoringMessageDto {
   runId?: string | null;
 }
 
+/** Data model for Learning Courses Ai Authoring Run Dto. */
 export interface LearningCoursesAiAuthoringRunDto {
   id?: string;
   baseDraftRevision?: number;
@@ -10629,6 +11224,7 @@ export interface LearningCoursesAiAuthoringRunDto {
   usage?: LearningCoursesAiCreditUsageDto;
 }
 
+/** Data model for Learning Courses Ai Authoring Run Request. */
 export interface LearningCoursesAiAuthoringRunInput {
   conversationId?: string | null;
   draftRevision?: number;
@@ -10638,8 +11234,10 @@ export interface LearningCoursesAiAuthoringRunInput {
   selection?: string | null;
 }
 
+/** OpenAPI schema for Learning Courses Ai Authoring Run Status. */
 export type LearningCoursesAiAuthoringRunStatus = 'Queued' | 'Reserved' | 'Running' | 'Completed' | 'Failed' | 'Cancelled';
 
+/** Data model for Learning Courses Ai Credit Usage Dto. */
 export interface LearningCoursesAiCreditUsageDto {
   availableSoftCredits?: number;
   currency?: string | null;
@@ -10650,6 +11248,7 @@ export interface LearningCoursesAiCreditUsageDto {
   settledCost?: number;
 }
 
+/** Data model for Learning Courses Ai Entitlement Dto. */
 export interface LearningCoursesAiEntitlementDto {
   availableSoftCredits?: number;
   currency?: string | null;
@@ -10657,6 +11256,7 @@ export interface LearningCoursesAiEntitlementDto {
   settledSoftCredits?: number;
 }
 
+/** Data model for Learning Courses Ai Proposal Dto. */
 export interface LearningCoursesAiProposalDto {
   id?: string;
   baseDraftRevision?: number;
@@ -10668,15 +11268,19 @@ export interface LearningCoursesAiProposalDto {
   status?: LearningCoursesAiProposalStatus;
 }
 
+/** OpenAPI schema for Learning Courses Ai Proposal Kind. */
 export type LearningCoursesAiProposalKind = 'ReplaceDocument' | 'InsertAtCursor' | 'LexicalPatch' | 'QuizPatch' | 'MetadataPatch';
 
+/** OpenAPI schema for Learning Courses Ai Proposal Status. */
 export type LearningCoursesAiProposalStatus = 'Pending' | 'Applied' | 'Discarded';
 
+/** Data model for Learning Courses Apply Ai Proposal Request. */
 export interface LearningCoursesApplyAiProposalInput {
   cursorOffset?: number | null;
   draftRevision?: number;
 }
 
+/** Data model for Learning Courses Authoring Content Payload. */
 export interface LearningCoursesAuthoringContentPayload {
   activitySettings?: LearningCoursesActivitySettings;
   body?: string | null;
@@ -10692,6 +11296,7 @@ export interface LearningCoursesAuthoringContentPayload {
   visibility?: LearningCoursesVisibility;
 }
 
+/** Data model for Learning Courses Authoring Draft Dto. */
 export interface LearningCoursesAuthoringDraftDto {
   id?: string;
   basePublishedVersion?: number;
@@ -10716,10 +11321,12 @@ export interface LearningCoursesBundleFileMeta {
   visibility?: string | null;
 }
 
+/** Data model for Learning Courses Circular Dependency Check Result. */
 export interface LearningCoursesCircularDependencyCheckResult {
   wouldCreateCycle?: boolean;
 }
 
+/** Data model for Learning Courses Clone Program Dto. */
 export interface LearningCoursesCloneProgramDto {
   newDescription?: string | null;
   newTitle?: string | null;
@@ -10748,17 +11355,20 @@ export interface LearningCoursesCodingEnvironment {
   tools: string | null;
 }
 
+/** Data model for Learning Courses Complete Content Request. */
 export interface LearningCoursesCompleteContentInput {
   contentId?: string;
   programUserId?: string;
 }
 
+/** Data model for Learning Courses Complete Course Checkout Request. */
 export interface LearningCoursesCompleteCourseCheckoutInput {
   paymentMethod?: string | null;
   paymentProviderReference?: string | null;
   productId?: string;
 }
 
+/** Data model for Learning Courses Complete Course Checkout Response. */
 export interface LearningCoursesCompleteCourseCheckoutOutput {
   alreadyHadAccess?: boolean;
   amount?: number;
@@ -10771,6 +11381,7 @@ export interface LearningCoursesCompleteCourseCheckoutOutput {
   productId?: string;
 }
 
+/** Data model for Learning Courses Completion Rates Dto. */
 export interface LearningCoursesCompletionRatesDto {
   completionTrends?: Array<LearningCoursesCompletionTrendDto> | null;
   contentCompletionRates?: Record<string, number> | null;
@@ -10778,6 +11389,7 @@ export interface LearningCoursesCompletionRatesDto {
   programId?: string;
 }
 
+/** Data model for Learning Courses Completion Trend Dto. */
 export interface LearningCoursesCompletionTrendDto {
   completedCount?: number;
   date?: string;
@@ -10810,6 +11422,7 @@ export interface LearningCoursesContentInteractionDto {
   updatedAt?: string;
 }
 
+/** Data model for Learning Courses Content Interaction Event Dto. */
 export interface LearningCoursesContentInteractionEventDto {
   id?: string;
   durationSeconds?: number | null;
@@ -10838,6 +11451,7 @@ export interface LearningCoursesContentInteractionSummaryDto {
   submittedAt?: string | null;
 }
 
+/** Data model for Learning Courses Content Progress Dto. */
 export interface LearningCoursesContentProgressDto {
   completedAt?: string | null;
   completionPercentage?: LearningGradingContractsPercentValue;
@@ -10880,6 +11494,7 @@ export interface LearningCoursesContentSummaryDto {
   title?: string | null;
 }
 
+/** Data model for Learning Courses Course Support Ticket Message Request. */
 export interface LearningCoursesCourseSupportTicketMessageInput {
   isInternal?: boolean;
   message?: string | null;
@@ -10895,6 +11510,7 @@ export interface LearningCoursesCreateActivityGradeDto {
   points?: LearningGradingContractsScoreValue;
 }
 
+/** Data model for Learning Courses Create Course Support Ticket Request. */
 export interface LearningCoursesCreateCourseSupportTicketInput {
   body?: string | null;
   category?: string | null;
@@ -10902,6 +11518,7 @@ export interface LearningCoursesCreateCourseSupportTicketInput {
   subject?: string | null;
 }
 
+/** Data model for Learning Courses Create Prerequisite Api Request. */
 export interface LearningCoursesCreatePrerequisiteApiInput {
   courseId?: string;
   description?: string | null;
@@ -10912,6 +11529,7 @@ export interface LearningCoursesCreatePrerequisiteApiInput {
   type?: LearningCoursesPrerequisiteType;
 }
 
+/** Data model for Learning Courses Create Product From Program Dto. */
 export interface LearningCoursesCreateProductFromProgramDto {
   basePrice?: number;
   currency?: string | null;
@@ -10938,6 +11556,7 @@ export interface LearningCoursesCreateProgramContentDto {
   visibility?: LearningCoursesVisibility;
 }
 
+/** Data model for Learning Courses Create Program Dto. */
 export interface LearningCoursesCreateProgramDto {
   creatorId?: string | null;
   description?: string | null;
@@ -10947,6 +11566,17 @@ export interface LearningCoursesCreateProgramDto {
   title?: string | null;
 }
 
+/** Data model for Learning Courses Discussion Activity Settings. */
+export interface LearningCoursesDiscussionActivitySettings {
+  allowReplies?: boolean;
+  /** Identifies the activity settings type. */
+  kind: 'discussion';
+  maximumBodyLength?: number;
+  minimumBodyLength?: number;
+  requireThreadRoot?: boolean;
+}
+
+/** Data model for Learning Courses Engagement Metrics Dto. */
 export interface LearningCoursesEngagementMetricsDto {
   averageSessionDuration?: string;
   contentEngagement?: Record<string, number> | null;
@@ -10961,6 +11591,7 @@ export interface LearningCoursesEngagementMetricsDto {
 /** Represents the enrollment status for a program enrollment */
 export type LearningCoursesEnrollmentStatus = 'Open' | 'Active' | 'Paused' | 'Cancelled' | 'Expired' | 'Completed' | 'Closed' | 'InviteOnly' | 'Waitlist';
 
+/** Data model for Learning Courses Enroll Program User Request. */
 export interface LearningCoursesEnrollProgramUserInput {
   userReference?: string | null;
 }
@@ -10998,6 +11629,7 @@ export interface LearningCoursesGradingConfig {
 /** Defines how a lesson body is authored and rendered. Values are persisted and must remain stable. */
 export type LearningCoursesLessonContentFormat = 'Markdown' | 'Lexical' | 'RevealJs' | 'Video' | 'Html' | 'ExternalLink';
 
+/** Data model for Learning Courses Monetization Dto. */
 export interface LearningCoursesMonetizationDto {
   currency?: string | null;
   isSubscription?: boolean;
@@ -11012,11 +11644,13 @@ export interface LearningCoursesMoveContentDto {
   newSortOrder: number;
 }
 
+/** Data model for Learning Courses Prerequisite Check Result Dto. */
 export interface LearningCoursesPrerequisiteCheckResultDto {
   isSatisfied?: boolean;
   prerequisites?: Array<LearningCoursesPrerequisiteStatusDto> | null;
 }
 
+/** Data model for Learning Courses Prerequisite Dto. */
 export interface LearningCoursesPrerequisiteDto {
   id?: string;
   courseId?: string;
@@ -11031,6 +11665,7 @@ export interface LearningCoursesPrerequisiteDto {
   type?: LearningCoursesPrerequisiteType;
 }
 
+/** Data model for Learning Courses Prerequisite Status Dto. */
 export interface LearningCoursesPrerequisiteStatusDto {
   achievedGrade?: LearningGradingContractsPercentValue | null;
   courseName?: string | null;
@@ -11045,6 +11680,7 @@ export interface LearningCoursesPrerequisiteStatusDto {
 /** Type of prerequisite requirement */
 export type LearningCoursesPrerequisiteType = 'Required' | 'Recommended' | 'Corequisite';
 
+/** Data model for Learning Courses Pricing Dto. */
 export interface LearningCoursesPricingDto {
   currency?: string | null;
   isMonetizationEnabled?: boolean;
@@ -11053,6 +11689,7 @@ export interface LearningCoursesPricingDto {
   subscriptionDurationDays?: number | null;
 }
 
+/** Data model for Learning Courses Program Analytics Dto. */
 export interface LearningCoursesProgramAnalyticsDto {
   activeUsers?: number;
   additionalMetrics?: Record<string, Record<string, unknown>> | null;
@@ -11140,15 +11777,18 @@ export interface LearningCoursesProgramUserSummaryDto {
 /** Represents the progress status of a content item */
 export type LearningCoursesProgressStatus = 'NotStarted' | 'InProgress' | 'Completed' | 'Submitted';
 
+/** Data model for Learning Courses Publish Authoring Draft Request. */
 export interface LearningCoursesPublishAuthoringDraftInput {
   revision?: number;
 }
 
+/** Data model for Learning Courses Publish Authoring Result. */
 export interface LearningCoursesPublishAuthoringResult {
   draft?: LearningCoursesAuthoringDraftDto;
   publishedContent?: LearningCoursesProgramContentDto;
 }
 
+/** Data model for Learning Courses Record Content Interaction Event Request. */
 export interface LearningCoursesRecordContentInteractionEventInput {
   durationSeconds?: number | null;
   idempotencyKey?: string | null;
@@ -11159,6 +11799,15 @@ export interface LearningCoursesRecordContentInteractionEventInput {
   type?: LearningCoursesContentInteractionEventType;
 }
 
+/** Data model for Learning Courses Reflection Activity Settings. */
+export interface LearningCoursesReflectionActivitySettings {
+  /** Identifies the activity settings type. */
+  kind: 'reflection';
+  maximumBodyLength?: number;
+  minimumBodyLength?: number;
+  privateToInstructors?: boolean;
+}
+
 /** Reflection response projection. Learner views deliberately omit respondent identity. */
 export interface LearningCoursesReflectionResponseResultDto {
   body?: string | null;
@@ -11167,22 +11816,27 @@ export interface LearningCoursesReflectionResponseResultDto {
   submittedAt?: string | null;
 }
 
+/** Data model for Learning Courses Reject Program Dto. */
 export interface LearningCoursesRejectProgramDto {
   reason?: string | null;
 }
 
+/** Data model for Learning Courses Reorder Content Dto. */
 export interface LearningCoursesReorderContentDto {
   contentIds?: Array<string> | null;
 }
 
+/** Data model for Learning Courses Reorder Prerequisites Request. */
 export interface LearningCoursesReorderPrerequisitesInput {
   prerequisiteIds?: Array<string> | null;
 }
 
+/** Data model for Learning Courses Resolve Course Support Ticket Request. */
 export interface LearningCoursesResolveCourseSupportTicketInput {
   summary?: string | null;
 }
 
+/** Data model for Learning Courses Revenue Analytics Dto. */
 export interface LearningCoursesRevenueAnalyticsDto {
   averageRevenuePerUser?: number;
   conversionRate?: number;
@@ -11194,17 +11848,20 @@ export interface LearningCoursesRevenueAnalyticsDto {
   totalRevenue?: number;
 }
 
+/** Data model for Learning Courses Revenue Chart Dto. */
 export interface LearningCoursesRevenueChartDto {
   date?: string;
   purchases?: number;
   revenue?: number;
 }
 
+/** Data model for Learning Courses Save Authoring Draft Request. */
 export interface LearningCoursesSaveAuthoringDraftInput {
   payload?: LearningCoursesAuthoringContentPayload;
   revision?: number;
 }
 
+/** Data model for Learning Courses Schedule Program Dto. */
 export interface LearningCoursesScheduleProgramDto {
   publishAt?: string;
 }
@@ -11219,12 +11876,14 @@ export interface LearningCoursesSearchContentDto {
   visibility?: LearningCoursesVisibility;
 }
 
+/** Data model for Learning Courses Send Course Student Message Request. */
 export interface LearningCoursesSendCourseStudentMessageInput {
   message?: string | null;
   subject?: string | null;
   userIds?: Array<string> | null;
 }
 
+/** Data model for Learning Courses Send Course Student Message Response. */
 export interface LearningCoursesSendCourseStudentMessageOutput {
   sent?: number;
 }
@@ -11242,14 +11901,25 @@ export interface LearningCoursesStudentSummaryDto {
   userEmail?: string | null;
 }
 
+/** Data model for Learning Courses Submit Content Request. */
 export interface LearningCoursesSubmitContentInput {
   contentId?: string;
   programUserId?: string;
   submissionData?: string | null;
 }
 
+/** Data model for Learning Courses Submit User Content Dto. */
 export interface LearningCoursesSubmitUserContentDto {
   submissionData: string;
+}
+
+/** Data model for Learning Courses Survey Activity Settings. */
+export interface LearningCoursesSurveyActivitySettings {
+  allowMultipleResponses?: boolean;
+  isAnonymous?: boolean;
+  /** Identifies the activity settings type. */
+  kind: 'survey';
+  resultsVisibility?: LearningCoursesSurveyResultsVisibility;
 }
 
 /** Survey result projection. It deliberately excludes learner and enrollment identifiers. */
@@ -11259,6 +11929,9 @@ export interface LearningCoursesSurveyResponseResultDto {
   responseId?: string;
   submittedAt?: string | null;
 }
+
+/** OpenAPI schema for Learning Courses Survey Results Visibility. */
+export type LearningCoursesSurveyResultsVisibility = 'AfterSubmission' | 'AfterClose' | 'Never';
 
 /** Polymorphic base record for coding-assignment tests. Discriminator is the lowercase `kind` field
 (values `"standard"`, `"functional"`). */
@@ -11284,6 +11957,7 @@ export interface LearningCoursesUpdateActivityGradeDto {
   points?: LearningGradingContractsScoreValue | null;
 }
 
+/** Data model for Learning Courses Update Prerequisite Api Request. */
 export interface LearningCoursesUpdatePrerequisiteApiInput {
   description?: string | null;
   displayOrder?: number | null;
@@ -11292,6 +11966,7 @@ export interface LearningCoursesUpdatePrerequisiteApiInput {
   type?: LearningCoursesPrerequisiteType;
 }
 
+/** Data model for Learning Courses Update Pricing Dto. */
 export interface LearningCoursesUpdatePricingDto {
   currency?: string | null;
   isSubscription?: boolean | null;
@@ -11317,6 +11992,7 @@ export interface LearningCoursesUpdateProgramContentDto {
   visibility?: LearningCoursesVisibility;
 }
 
+/** Data model for Learning Courses Update Program Dto. */
 export interface LearningCoursesUpdateProgramDto {
   category?: ProgramCategory;
   clearEnrollmentDeadline?: boolean;
@@ -11339,24 +12015,28 @@ export interface LearningCoursesUpdateProgramDto {
   visibility?: ContentVisibility;
 }
 
+/** Data model for Learning Courses Update Progress Dto. */
 export interface LearningCoursesUpdateProgressDto {
   additionalData?: Record<string, Record<string, unknown>> | null;
   lastAccessedAt?: string | null;
   status?: LearningCoursesProgressStatus;
 }
 
+/** Data model for Learning Courses Update Progress Request. */
 export interface LearningCoursesUpdateProgressInput {
   completionPercentage?: LearningGradingContractsPercentValue;
   contentId?: string;
   programUserId?: string;
 }
 
+/** Data model for Learning Courses Update Time Spent Request. */
 export interface LearningCoursesUpdateTimeSpentInput {
   additionalMinutes?: number;
   contentId?: string;
   programUserId?: string;
 }
 
+/** Data model for Learning Courses User Progress Dto. */
 export interface LearningCoursesUserProgressDto {
   completedAt?: string | null;
   completionPercentage?: LearningGradingContractsPercentValue;
@@ -11378,6 +12058,7 @@ export interface LearningCoursesWorkspaceData {
   files?: Record<string, LearningCoursesBundleFileMeta> | null;
 }
 
+/** Data model for Learning Enrollments Enrollment Dto. */
 export interface LearningEnrollmentsEnrollmentDto {
   id?: string;
   cohortId?: string | null;
@@ -11391,18 +12072,22 @@ export interface LearningEnrollmentsEnrollmentDto {
   userId?: string;
 }
 
+/** OpenAPI schema for Learning Enrollments Enrollment Status. */
 export type LearningEnrollmentsEnrollmentStatus = 'Active' | 'Paused' | 'Completed' | 'Dropped' | 'Expired';
 
+/** Data model for Learning Enrollments Enroll User Request. */
 export interface LearningEnrollmentsEnrollUserInput {
   cohortId?: string | null;
   courseId?: string;
   userId?: string;
 }
 
+/** Data model for Learning Enrollments Update Enrollment Progress Request. */
 export interface LearningEnrollmentsUpdateEnrollmentProgressInput {
   progress?: number;
 }
 
+/** OpenAPI schema for Learning Experience Discovery Collection Type. */
 export type LearningExperienceDiscoveryCollectionType = 'Curated' | 'Category' | 'Skill' | 'Career' | 'Trending' | 'NewReleases';
 
 /** DTO for course collection response */
@@ -11465,6 +12150,7 @@ export interface LearningExperienceDiscoveryFeaturedContentDto {
   updatedAt?: string;
 }
 
+/** OpenAPI schema for Learning Experience Discovery Featured Content Type. */
 export type LearningExperienceDiscoveryFeaturedContentType =
   'HeroBanner' | 'CategoryHighlight' | 'NewRelease' | 'TopRated' | 'TrendingNow' | 'StaffPick' | 'SeasonalPromotion';
 
@@ -11570,6 +12256,7 @@ export interface LearningExperienceLearningPathsLearningPathDetailDto {
   updatedAt?: string;
 }
 
+/** OpenAPI schema for Learning Experience Learning Paths Learning Path Difficulty. */
 export type LearningExperienceLearningPathsLearningPathDifficulty = 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';
 
 /** DTO for learning path summary */
@@ -11607,6 +12294,7 @@ export interface LearningExperienceLearningPathsLearningPathEnrollmentDto {
   userId?: string;
 }
 
+/** OpenAPI schema for Learning Experience Learning Paths Learning Path Enrollment Status. */
 export type LearningExperienceLearningPathsLearningPathEnrollmentStatus = 'InProgress' | 'Completed' | 'Abandoned';
 
 /** DTO for learning path statistics */
@@ -11698,6 +12386,7 @@ export interface LearningExperienceRecommendationsRecommendationStatisticsDto {
   viewedCount?: number;
 }
 
+/** OpenAPI schema for Learning Experience Recommendations Recommendation Type. */
 export type LearningExperienceRecommendationsRecommendationType =
   'PersonalizedAI' | 'PopularInCategory' | 'TrendingNow' | 'BasedOnHistory' | 'SimilarToCompleted' | 'NextInPath' | 'InstructorFollowed' | 'PeerRecommended';
 
@@ -11739,6 +12428,7 @@ export interface LearningExperienceRecommendationsUserLearningProfileDto {
   userId?: string;
 }
 
+/** Data model for Learning Experience Social Controllers Update Review Moderation Request. */
 export interface LearningExperienceSocialControllersUpdateReviewModerationInput {
   isApproved?: boolean;
   isFeatured?: boolean;
@@ -11903,6 +12593,7 @@ export interface LearningLtiCreateLtiLineItemInput {
   maxScore?: LearningGradingContractsScoreValue;
 }
 
+/** Data model for Learning Workspaces Learner Announcement Dto. */
 export interface LearningWorkspacesLearnerAnnouncementDto {
   content?: string | null;
   courseId?: string;
@@ -11914,6 +12605,7 @@ export interface LearningWorkspacesLearnerAnnouncementDto {
   title?: string | null;
 }
 
+/** Data model for Learning Workspaces Learner Assessment Deadline Dto. */
 export interface LearningWorkspacesLearnerAssessmentDeadlineDto {
   assessmentId?: string;
   availableFrom?: string | null;
@@ -11930,6 +12622,7 @@ export interface LearningWorkspacesLearnerAssessmentDeadlineDto {
   type?: string | null;
 }
 
+/** Data model for Learning Workspaces Learner Assessment Dto. */
 export interface LearningWorkspacesLearnerAssessmentDto {
   allowLateSubmissions?: boolean;
   assessmentId?: string;
@@ -11951,6 +12644,7 @@ export interface LearningWorkspacesLearnerAssessmentDto {
   type?: string | null;
 }
 
+/** Data model for Learning Workspaces Learner Assessment Group Dto. */
 export interface LearningWorkspacesLearnerAssessmentGroupDto {
   description?: string | null;
   groupId?: string;
@@ -11959,6 +12653,7 @@ export interface LearningWorkspacesLearnerAssessmentGroupDto {
   weightPercent?: LearningGradingContractsPercentValue;
 }
 
+/** Data model for Learning Workspaces Learner Assessment Submission Dto. */
 export interface LearningWorkspacesLearnerAssessmentSubmissionDto {
   assessmentId?: string;
   attemptNumber?: number;
@@ -11974,6 +12669,7 @@ export interface LearningWorkspacesLearnerAssessmentSubmissionDto {
   submittedAt?: string | null;
 }
 
+/** Data model for Learning Workspaces Learner Certificate Dto. */
 export interface LearningWorkspacesLearnerCertificateDto {
   certificateId?: string;
   certificateNumber?: string | null;
@@ -11987,6 +12683,7 @@ export interface LearningWorkspacesLearnerCertificateDto {
   verificationUrl?: string | null;
 }
 
+/** Data model for Learning Workspaces Learner Cohort Dto. */
 export interface LearningWorkspacesLearnerCohortDto {
   cohortId?: string;
   currentEnrollmentCount?: number;
@@ -12000,6 +12697,7 @@ export interface LearningWorkspacesLearnerCohortDto {
   status?: string | null;
 }
 
+/** Data model for Learning Workspaces Learner Content Dto. */
 export interface LearningWorkspacesLearnerContentDto {
   activitySettings?: string | null;
   body?: string | null;
@@ -12015,6 +12713,7 @@ export interface LearningWorkspacesLearnerContentDto {
   visibility?: string | null;
 }
 
+/** Data model for Learning Workspaces Learner Content Progress Dto. */
 export interface LearningWorkspacesLearnerContentProgressDto {
   attempts?: number;
   completedAt?: string | null;
@@ -12028,6 +12727,7 @@ export interface LearningWorkspacesLearnerContentProgressDto {
   timeSpentSeconds?: number;
 }
 
+/** Data model for Learning Workspaces Learner Course Summary Dto. */
 export interface LearningWorkspacesLearnerCourseSummaryDto {
   category?: string | null;
   completedItems?: number;
@@ -12051,6 +12751,7 @@ export interface LearningWorkspacesLearnerCourseSummaryDto {
   totalItems?: number;
 }
 
+/** Data model for Learning Workspaces Learner Course Workspace Dto. */
 export interface LearningWorkspacesLearnerCourseWorkspaceDto {
   assessmentGroups?: Array<LearningWorkspacesLearnerAssessmentGroupDto> | null;
   assessments?: Array<LearningWorkspacesLearnerAssessmentDto> | null;
@@ -12064,6 +12765,7 @@ export interface LearningWorkspacesLearnerCourseWorkspaceDto {
   submissions?: Array<LearningWorkspacesLearnerAssessmentSubmissionDto> | null;
 }
 
+/** Data model for Learning Workspaces Learner Dashboard Dto. */
 export interface LearningWorkspacesLearnerDashboardDto {
   announcements?: Array<LearningWorkspacesLearnerAnnouncementDto> | null;
   certificates?: Array<LearningWorkspacesLearnerCertificateDto> | null;
@@ -12073,6 +12775,7 @@ export interface LearningWorkspacesLearnerDashboardDto {
   upcoming?: Array<LearningWorkspacesLearnerScheduleEntryDto> | null;
 }
 
+/** Data model for Learning Workspaces Learner Discussion Dto. */
 export interface LearningWorkspacesLearnerDiscussionDto {
   authorId?: string;
   content?: string | null;
@@ -12087,6 +12790,7 @@ export interface LearningWorkspacesLearnerDiscussionDto {
   viewCount?: number;
 }
 
+/** Data model for Learning Workspaces Learner Grade Item Dto. */
 export interface LearningWorkspacesLearnerGradeItemDto {
   assessmentId?: string;
   availableFrom?: string | null;
@@ -12104,6 +12808,7 @@ export interface LearningWorkspacesLearnerGradeItemDto {
   type?: string | null;
 }
 
+/** Data model for Learning Workspaces Learner Grade Summary Dto. */
 export interface LearningWorkspacesLearnerGradeSummaryDto {
   courseId?: string;
   courseSlug?: string | null;
@@ -12118,6 +12823,7 @@ export interface LearningWorkspacesLearnerGradeSummaryDto {
   totalAssessments?: number;
 }
 
+/** Data model for Learning Workspaces Learner Schedule Entry Dto. */
 export interface LearningWorkspacesLearnerScheduleEntryDto {
   assessmentId?: string | null;
   availableFrom?: string | null;
@@ -12139,6 +12845,7 @@ export interface LearningWorkspacesLearnerScheduleEntryDto {
   type?: string | null;
 }
 
+/** Data model for Learning Workspaces Learner Search Result Dto. */
 export interface LearningWorkspacesLearnerSearchResultDto {
   id?: string;
   courseId?: string;
@@ -12155,6 +12862,7 @@ export interface Money {
   currency?: string | null;
 }
 
+/** Data model for Monitoring SLA Create Slo Command. */
 export interface MonitoringSLACreateSloCommand {
   alertThresholdPercentage?: number;
   description?: string | null;
@@ -12202,6 +12910,7 @@ export interface MonitoringSLAErrorBudgetDto {
   windowStart?: string;
 }
 
+/** Data model for Monitoring SLA Record Sli Metric Command. */
 export interface MonitoringSLARecordSliMetricCommand {
   endpoint?: string | null;
   errorMessage?: string | null;
@@ -12333,6 +13042,7 @@ export interface MonitoringSLASloViolationDto {
   targetValue?: number;
 }
 
+/** Data model for Monitoring SLA Update Slo Command. */
 export interface MonitoringSLAUpdateSloCommand {
   id?: string;
   alertThresholdPercentage?: number;
@@ -12349,6 +13059,7 @@ export interface MonitoringSLAUpdateSloCommand {
 /** Represents the severity level of an SLO violation */
 export type MonitoringSLAViolationSeverity = 'Low' | 'Medium' | 'High' | 'Critical';
 
+/** Data model for Mvc Problem Details. */
 export interface MvcProblemDetails {
   detail?: string | null;
   instance?: string | null;
@@ -12358,6 +13069,7 @@ export interface MvcProblemDetails {
   [key: string]: any;
 }
 
+/** Data model for Notifications Controllers Dead Letter Dto. */
 export interface NotificationsControllersDeadLetterDto {
   id?: string;
   attemptCount?: number;
@@ -12371,14 +13083,17 @@ export interface NotificationsControllersDeadLetterDto {
   type?: string | null;
 }
 
+/** Data model for Notifications Controllers Deleted Count Response. */
 export interface NotificationsControllersDeletedCountOutput {
   deletedCount?: number;
 }
 
+/** Data model for Notifications Controllers Digest Frequency Response. */
 export interface NotificationsControllersDigestFrequencyOutput {
   emailDigestFrequency?: string | null;
 }
 
+/** Data model for Notifications Controllers Email Delivery Event Dto. */
 export interface NotificationsControllersEmailDeliveryEventDto {
   id?: string;
   bounceType?: string | null;
@@ -12390,6 +13105,7 @@ export interface NotificationsControllersEmailDeliveryEventDto {
   recipientEmail?: string | null;
 }
 
+/** Data model for Notifications Controllers Email Suppression Dto. */
 export interface NotificationsControllersEmailSuppressionDto {
   id?: string;
   bounceType?: string | null;
@@ -12401,10 +13117,12 @@ export interface NotificationsControllersEmailSuppressionDto {
   suppressedAt?: string;
 }
 
+/** Data model for Notifications Controllers Muted Types Response. */
 export interface NotificationsControllersMutedTypesOutput {
   mutedTypes?: Array<string> | null;
 }
 
+/** Data model for Notifications Controllers Notification Dto. */
 export interface NotificationsControllersNotificationDto {
   id?: string;
   actionUrl?: string | null;
@@ -12421,6 +13139,7 @@ export interface NotificationsControllersNotificationDto {
   type?: string | null;
 }
 
+/** Data model for Notifications Controllers Notification Preference Dto. */
 export interface NotificationsControllersNotificationPreferenceDto {
   achievementsEnabled?: boolean;
   emailDigestFrequency?: string | null;
@@ -12437,12 +13156,14 @@ export interface NotificationsControllersNotificationPreferenceDto {
   timezone?: string | null;
 }
 
+/** Data model for Notifications Controllers Notification Timeline Dto. */
 export interface NotificationsControllersNotificationTimelineDto {
   events?: Array<NotificationsControllersEmailDeliveryEventDto> | null;
   notificationId?: string;
   providerMessageId?: string | null;
 }
 
+/** Data model for Notifications Controllers Notification Type Catalog Entry. */
 export interface NotificationsControllersNotificationTypeCatalogEntry {
   category?: string | null;
   displayName?: string | null;
@@ -12450,22 +13171,26 @@ export interface NotificationsControllersNotificationTypeCatalogEntry {
   type?: string | null;
 }
 
+/** Data model for Notifications Controllers Requeue Response. */
 export interface NotificationsControllersRequeueOutput {
   id?: string;
   deliveryStatus?: string | null;
   requeueCount?: number;
 }
 
+/** Data model for Notifications Controllers Set Quiet Hours Request. */
 export interface NotificationsControllersSetQuietHoursInput {
   end?: string | null;
   start?: string | null;
   timezone?: string | null;
 }
 
+/** Data model for Notifications Controllers Unread Count Response. */
 export interface NotificationsControllersUnreadCountOutput {
   count?: number;
 }
 
+/** Data model for Notifications Controllers Unsubscribe Response. */
 export interface NotificationsControllersUnsubscribeOutput {
   manageUrl?: string | null;
   scope?: string | null;
@@ -12473,19 +13198,23 @@ export interface NotificationsControllersUnsubscribeOutput {
   value?: string | null;
 }
 
+/** Data model for Notifications Controllers Unsuppress Response. */
 export interface NotificationsControllersUnsuppressOutput {
   emailAddress?: string | null;
   wasActive?: boolean;
 }
 
+/** Data model for Notifications Controllers Update Digest Frequency Request. */
 export interface NotificationsControllersUpdateDigestFrequencyInput {
   frequency?: string | null;
 }
 
+/** Data model for Notifications Controllers Update Muted Types Request. */
 export interface NotificationsControllersUpdateMutedTypesInput {
   types?: Array<string> | null;
 }
 
+/** Data model for Notifications Controllers Update Preferences Request. */
 export interface NotificationsControllersUpdatePreferencesInput {
   achievementsEnabled?: boolean | null;
   emailEnabled?: boolean | null;
@@ -12500,10 +13229,13 @@ export interface NotificationsControllersUpdatePreferencesInput {
 /** Delivery channels for notifications */
 export type NotificationsNotificationChannel = 'InApp' | 'Email' | 'Push' | 'Sms' | 'Slack' | 'Discord' | 'Webhook';
 
+/** OpenAPI schema for Objects Attestation Conveyance Preference. */
 export type ObjectsAttestationConveyancePreference = 'None' | 'Indirect' | 'Direct' | 'Enterprise';
 
+/** OpenAPI schema for Objects Attestation Statement Format Identifier. */
 export type ObjectsAttestationStatementFormatIdentifier = 'Packed' | 'Tpm' | 'AndroidKey' | 'AndroidSafetyNet' | 'FidoU2f' | 'Apple' | 'None';
 
+/** Data model for Objects Authentication Extensions Client Inputs. */
 export interface ObjectsAuthenticationExtensionsClientInputs {
   credentialProtectionPolicy?: ObjectsCredentialProtectionPolicy;
   credProps?: boolean | null;
@@ -12515,44 +13247,57 @@ export interface ObjectsAuthenticationExtensionsClientInputs {
   uvm?: boolean | null;
 }
 
+/** Data model for Objects Authentication Extensions Large Blob Inputs. */
 export interface ObjectsAuthenticationExtensionsLargeBlobInputs {
   read?: boolean;
   support?: ObjectsLargeBlobSupport;
   write?: string | null;
 }
 
+/** Data model for Objects Authentication Extensions PRFInputs. */
 export interface ObjectsAuthenticationExtensionsPRFInputs {
   eval?: ObjectsAuthenticationExtensionsPRFValues;
   evalByCredential?: KeyValuePairStringAuthenticationExtensionsPRFValues;
 }
 
+/** Data model for Objects Authentication Extensions PRFValues. */
 export interface ObjectsAuthenticationExtensionsPRFValues {
   first: string | null;
   second?: string | null;
 }
 
+/** OpenAPI schema for Objects Authenticator Attachment. */
 export type ObjectsAuthenticatorAttachment = 'Platform' | 'CrossPlatform';
 
+/** OpenAPI schema for Objects Authenticator Transport. */
 export type ObjectsAuthenticatorTransport = 'Usb' | 'Nfc' | 'Ble' | 'SmartCard' | 'Hybrid' | 'Internal';
 
+/** OpenAPI schema for Objects COSE+Algorithm. */
 export type ObjectsCOSEAlgorithm = 'RS1' | 'RS512' | 'RS384' | 'RS256' | 'ES256K' | 'PS512' | 'PS384' | 'PS256' | 'ES512' | 'ES384' | 'EdDSA' | 'ES256';
 
+/** OpenAPI schema for Objects Credential Protection Policy. */
 export type ObjectsCredentialProtectionPolicy = 'UserVerificationOptional' | 'UserVerificationOptionalWithCredentialIdList' | 'UserVerificationRequired';
 
+/** OpenAPI schema for Objects Large Blob Support. */
 export type ObjectsLargeBlobSupport = 'Required' | 'Preferred';
 
+/** Data model for Objects Public Key Credential Descriptor. */
 export interface ObjectsPublicKeyCredentialDescriptor {
   id?: string | null;
   transports?: Array<ObjectsAuthenticatorTransport> | null;
   type?: ObjectsPublicKeyCredentialType;
 }
 
+/** OpenAPI schema for Objects Public Key Credential Hint. */
 export type ObjectsPublicKeyCredentialHint = 'SecurityKey' | 'ClientDevice' | 'Hybrid';
 
+/** OpenAPI schema for Objects Public Key Credential Type. */
 export type ObjectsPublicKeyCredentialType = 'PublicKey' | 'Invalid';
 
+/** OpenAPI schema for Objects Resident Key Requirement. */
 export type ObjectsResidentKeyRequirement = 'Required' | 'Preferred' | 'Discouraged';
 
+/** OpenAPI schema for Objects User Verification Requirement. */
 export type ObjectsUserVerificationRequirement = 'Required' | 'Preferred' | 'Discouraged';
 
 /** Represents a paginated result set with full pagination metadata.
@@ -12920,6 +13665,7 @@ export interface ProjectsCreateProjectInput {
   websiteUrl?: string | null;
 }
 
+/** Data model for Projects Create Project Version Request. */
 export interface ProjectsCreateProjectVersionInput {
   releaseNotes?: string | null;
   status?: ProjectsProjectVersionStatus;
@@ -12945,6 +13691,7 @@ export interface ProjectsInvitationResult {
   success?: boolean;
 }
 
+/** Data model for Projects Invite Project Collaborator Request. */
 export interface ProjectsInviteProjectCollaboratorInput {
   email?: string | null;
   expiresAt?: string | null;
@@ -12953,6 +13700,7 @@ export interface ProjectsInviteProjectCollaboratorInput {
   userId?: string | null;
 }
 
+/** Data model for Projects Link Project Store Product Request. */
 export interface ProjectsLinkProjectStoreProductInput {
   productId?: string;
 }
@@ -13131,6 +13879,7 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   version?: number;
 }
 
+/** Data model for Projects Project Category Api Response. */
 export interface ProjectsProjectCategoryApiOutput {
   id?: string;
   name?: string | null;
@@ -13180,6 +13929,7 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   version?: number;
 }
 
+/** Data model for Projects Project Collaborator Api Response. */
 export interface ProjectsProjectCollaboratorApiOutput {
   id?: string;
   isActive?: boolean;
@@ -13302,6 +14052,7 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   version?: number;
 }
 
+/** Data model for Projects Project Invitation Dto. */
 export interface ProjectsProjectInvitationDto {
   id?: string;
   expiresAt?: string | null;
@@ -13318,6 +14069,7 @@ export interface ProjectsProjectInvitationDto {
   token?: string | null;
 }
 
+/** OpenAPI schema for Projects Project Invitation Status. */
 export type ProjectsProjectInvitationStatus = 'Pending' | 'Accepted' | 'Declined' | 'Revoked' | 'Expired';
 
 /** Represents a project submitted to a game jam */
@@ -13372,6 +14124,7 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   version?: number;
 }
 
+/** Data model for Projects Project Member Allocation. */
 export interface ProjectsProjectMemberAllocation {
   /** Unique identifier for the entity.
 Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
@@ -13442,6 +14195,7 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   viewCount?: number;
 }
 
+/** Data model for Projects Project Metadata Api Response. */
 export interface ProjectsProjectMetadataApiOutput {
   id?: string;
   downloadCount?: number;
@@ -13513,6 +14267,7 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   version?: number;
 }
 
+/** Data model for Projects Project Release Api Response. */
 export interface ProjectsProjectReleaseApiOutput {
   id?: string;
   buildNumber?: string | null;
@@ -13577,6 +14332,7 @@ export interface ProjectsProjectStatistics {
   viewsLast30Days?: number;
 }
 
+/** Data model for Projects Project Store Product Projection. */
 export interface ProjectsProjectStoreProductProjection {
   linkId?: string;
   productId?: string;
@@ -13632,6 +14388,7 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   version?: number;
 }
 
+/** Data model for Projects Project Team Agreement. */
 export interface ProjectsProjectTeamAgreement {
   /** Unique identifier for the entity.
 Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
@@ -13674,8 +14431,10 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   version?: number;
 }
 
+/** OpenAPI schema for Projects Project Team Agreement Status. */
 export type ProjectsProjectTeamAgreementStatus = 'Proposed' | 'CounterProposed' | 'Accepted' | 'Cancelled' | 'Completed';
 
+/** Data model for Projects Project Team Api Response. */
 export interface ProjectsProjectTeamApiOutput {
   id?: string;
   assignedAt?: string;
@@ -13691,13 +14450,16 @@ export interface ProjectsProjectTeamApiOutput {
   teamId?: string;
 }
 
+/** OpenAPI schema for Projects Project Team Participation Mode. */
 export type ProjectsProjectTeamParticipationMode = 'AllMembers' | 'SelectedMembers';
 
+/** OpenAPI schema for Projects Project Team Role. */
 export type ProjectsProjectTeamRole = 'Owner' | 'CoOwner' | 'Contributor' | 'Guest';
 
 /** Types of projects in the game guild platform */
 export type ProjectsProjectType = 'Game' | 'Tool' | 'Art' | 'Music' | 'Educational' | 'Plugin' | 'Template' | 'Library' | 'Other';
 
+/** Data model for Projects Project User Api Response. */
 export interface ProjectsProjectUserApiOutput {
   id?: string;
   name?: string | null;
@@ -13742,6 +14504,7 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   versionNumber: string;
 }
 
+/** Data model for Projects Project Version Api Response. */
 export interface ProjectsProjectVersionApiOutput {
   id?: string;
   createdAt?: string;
@@ -13754,6 +14517,7 @@ export interface ProjectsProjectVersionApiOutput {
   versionNumber?: string | null;
 }
 
+/** Data model for Projects Project Version Option Projection. */
 export interface ProjectsProjectVersionOptionProjection {
   id?: string;
   imageUrl?: string | null;
@@ -13764,6 +14528,7 @@ export interface ProjectsProjectVersionOptionProjection {
   versionNumber?: string | null;
 }
 
+/** OpenAPI schema for Projects Project Version Status. */
 export type ProjectsProjectVersionStatus = 'Draft' | 'ReadyForTesting' | 'Released' | 'Archived';
 
 /** Request to share a project */
@@ -13804,6 +14569,7 @@ export interface ProjectsUpdateProjectCollaboratorInput {
   role?: string | null;
 }
 
+/** Data model for Projects Update Project Request. */
 export interface ProjectsUpdateProjectInput {
   categoryId?: string | null;
   description?: string | null;
@@ -13819,17 +14585,22 @@ export interface ProjectsUpdateProjectInput {
   websiteUrl?: string | null;
 }
 
+/** Data model for Projects Update Project Version Request. */
 export interface ProjectsUpdateProjectVersionInput {
   releaseNotes?: string | null;
   versionNumber: string;
 }
 
+/** OpenAPI schema for Projects Version Submission Policy. */
 export type ProjectsVersionSubmissionPolicy = 'ReadyMutableUntilReview' | 'ReleasedImmutable';
 
+/** OpenAPI schema for Project Work Project Work Column Kind. */
 export type ProjectWorkProjectWorkColumnKind = 'Backlog' | 'Ready' | 'InProgress' | 'InReview' | 'Done' | 'Custom';
 
+/** OpenAPI schema for Project Work Project Work Task Priority. */
 export type ProjectWorkProjectWorkTaskPriority = 'Low' | 'Normal' | 'High' | 'Urgent';
 
+/** OpenAPI schema for Project Work Project Work Task Status. */
 export type ProjectWorkProjectWorkTaskStatus = 'Backlog' | 'Ready' | 'InProgress' | 'InReview' | 'Done' | 'Cancelled';
 
 /** Request DTO for archiving old resource usage records */
@@ -13848,17 +14619,20 @@ export interface ResourcesCleanupOrphanedResourcesInput {
   resourceTypes?: Array<ResourcesResourceUsageType> | null;
 }
 
+/** Data model for Resources Contents Add Review Request. */
 export interface ResourcesContentsAddReviewInput {
   decision?: ResourcesContentsContentReviewDecision;
   feedback?: string | null;
   suggestions?: string | null;
 }
 
+/** Data model for Resources Contents Bulk Generate Contracts Request. */
 export interface ResourcesContentsBulkGenerateContractsInput {
   continueOnError?: boolean;
   contracts?: Array<ResourcesContentsGenerateContractInput> | null;
 }
 
+/** Data model for Resources Contents Bulk Generated Contract Item Response. */
 export interface ResourcesContentsBulkGeneratedContractItemOutput {
   contract?: ResourcesContentsGeneratedContractOutput;
   error?: Error;
@@ -13866,6 +14640,7 @@ export interface ResourcesContentsBulkGeneratedContractItemOutput {
   success?: boolean;
 }
 
+/** Data model for Resources Contents Bulk Generated Contracts Response. */
 export interface ResourcesContentsBulkGeneratedContractsOutput {
   failed?: number;
   hasFailures?: boolean;
@@ -13892,6 +14667,7 @@ export interface ResourcesContentsContentVersionDiff {
   version2Number?: number;
 }
 
+/** Data model for Resources Contents Content Version Dto. */
 export interface ResourcesContentsContentVersionDto {
   id?: string;
   body?: string | null;
@@ -13915,6 +14691,7 @@ export interface ResourcesContentsContentVersionDto {
   versionNumber?: number;
 }
 
+/** Data model for Resources Contents Content Version Review Dto. */
 export interface ResourcesContentsContentVersionReviewDto {
   id?: string;
   contentVersionId?: string;
@@ -13928,6 +14705,7 @@ export interface ResourcesContentsContentVersionReviewDto {
 /** Status of a content version */
 export type ResourcesContentsContentVersionStatus = 'Draft' | 'PendingReview' | 'Approved' | 'Rejected' | 'Scheduled' | 'Published' | 'Archived';
 
+/** Data model for Resources Contents Create Draft Request. */
 export interface ResourcesContentsCreateDraftInput {
   body?: string | null;
   changeNotes?: string | null;
@@ -13939,6 +14717,7 @@ export interface ResourcesContentsCreateDraftInput {
   title?: string | null;
 }
 
+/** Data model for Resources Contents Generate Contract Request. */
 export interface ResourcesContentsGenerateContractInput {
   allowMissingVariables?: boolean;
   documentTemplateId?: string;
@@ -13950,6 +14729,7 @@ export interface ResourcesContentsGenerateContractInput {
   variables?: Record<string, string | null> | null;
 }
 
+/** Data model for Resources Contents Generated Contract Response. */
 export interface ResourcesContentsGeneratedContractOutput {
   content?: string | null;
   contentVersionId?: string;
@@ -13965,19 +14745,23 @@ export interface ResourcesContentsGeneratedContractOutput {
   versionNumber?: number;
 }
 
+/** Data model for Resources Contents Review Request. */
 export interface ResourcesContentsReviewInput {
   reviewNotes?: string | null;
 }
 
+/** Data model for Resources Contents Rollback Request. */
 export interface ResourcesContentsRollbackInput {
   reason?: string | null;
   targetVersionNumber?: number;
 }
 
+/** Data model for Resources Contents Schedule Request. */
 export interface ResourcesContentsScheduleInput {
   scheduledAt?: string;
 }
 
+/** Data model for Resources Contents Update Draft Request. */
 export interface ResourcesContentsUpdateDraftInput {
   body?: string | null;
   changeNotes?: string | null;
@@ -14324,6 +15108,7 @@ export interface ResourcesUsageTrendsResult {
   type?: ResourcesResourceUsageType;
 }
 
+/** Data model for Social Assets Social Media Social Media Asset Descriptor. */
 export interface SocialAssetsSocialMediaSocialMediaAssetDescriptor {
   assetReferenceId?: string;
   deliveryUrl?: string | null;
@@ -14332,6 +15117,7 @@ export interface SocialAssetsSocialMediaSocialMediaAssetDescriptor {
   state?: SocialAssetsSocialMediaSocialMediaProcessingState;
 }
 
+/** OpenAPI schema for Social Assets Social Media Social Media Processing State. */
 export type SocialAssetsSocialMediaSocialMediaProcessingState = 'Processing' | 'Ready' | 'Rejected';
 
 /** Applies a pending proposal to the post at the given revision (with cursor insert offset). */
@@ -14443,10 +15229,13 @@ export interface SocialBlogAuthoringBlogPostDto {
   updatedAt?: string;
 }
 
+/** OpenAPI schema for Social Blog Blog Ai Proposal Kind. */
 export type SocialBlogBlogAiProposalKind = 'ReplaceDocument' | 'InsertAtCursor' | 'LexicalPatch' | 'MetadataPatch';
 
+/** OpenAPI schema for Social Blog Blog Ai Proposal Status. */
 export type SocialBlogBlogAiProposalStatus = 'Pending' | 'Applied' | 'Discarded';
 
+/** OpenAPI schema for Social Blog Blog Ai Run Status. */
 export type SocialBlogBlogAiRunStatus = 'Queued' | 'Reserved' | 'Running' | 'Completed' | 'Failed' | 'Cancelled';
 
 /** A comment on a published blog post. Depth ≤ 1 (top-level or one reply level) is
@@ -14539,6 +15328,7 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   viewsCount?: number;
 }
 
+/** OpenAPI schema for Social Blog Blog Post Status. */
 export type SocialBlogBlogPostStatus = 'Draft' | 'Published';
 
 /** Wire shape for M:GameGuild.Social.Blog.Controllers.BlogCommentsController.Add(System.Guid,GameGuild.Social.Blog.Controllers.AddBlogCommentRequest,System.Threading.CancellationToken); the author comes from the actor context. */
@@ -14660,6 +15450,7 @@ export interface SocialBlogQueriesBlogRouteResolutionDto {
   slug?: string | null;
 }
 
+/** Data model for Social Feed Add Feed Item Request. */
 export interface SocialFeedAddFeedItemInput {
   contentCreatedAt?: string | null;
   contentId?: string;
@@ -14668,11 +15459,13 @@ export interface SocialFeedAddFeedItemInput {
   relevanceScore?: number;
 }
 
+/** Data model for Social Feed Create Story Request. */
 export interface SocialFeedCreateStoryInput {
   assetReferenceId?: string;
   caption?: string | null;
 }
 
+/** Data model for Social Feed Feed Author Dto. */
 export interface SocialFeedFeedAuthorDto {
   avatarUrl?: string | null;
   displayName?: string | null;
@@ -14681,8 +15474,10 @@ export interface SocialFeedFeedAuthorDto {
   userId?: string;
 }
 
+/** OpenAPI schema for Social Feed Feed Content Type. */
 export type SocialFeedFeedContentType = 'Post' | 'BlogPost' | 'CourseReview' | 'ProjectUpdate' | 'Achievement' | 'CourseCompletion';
 
+/** Data model for Social Feed Feed Engagement Dto. */
 export interface SocialFeedFeedEngagementDto {
   commentsCount?: number;
   reactionsCount?: number;
@@ -14690,6 +15485,7 @@ export interface SocialFeedFeedEngagementDto {
   viewsCount?: number;
 }
 
+/** Data model for Social Feed Feed Item Dto. */
 export interface SocialFeedFeedItemDto {
   id?: string;
   authorId?: string;
@@ -14704,8 +15500,10 @@ export interface SocialFeedFeedItemDto {
   userId?: string;
 }
 
+/** OpenAPI schema for Social Feed Feed Item Reason. */
 export type SocialFeedFeedItemReason = 'Following' | 'Trending' | 'Recommended' | 'Mentioned' | 'Replied' | 'Liked' | 'InNetwork';
 
+/** Data model for Social Feed Feed Viewer State Dto. */
 export interface SocialFeedFeedViewerStateDto {
   canDelete?: boolean;
   canEdit?: boolean;
@@ -14715,6 +15513,7 @@ export interface SocialFeedFeedViewerStateDto {
   reaction?: string | null;
 }
 
+/** Data model for Social Feed Original Post Dto. */
 export interface SocialFeedOriginalPostDto {
   id?: string;
   author?: SocialFeedFeedAuthorDto;
@@ -14724,11 +15523,13 @@ export interface SocialFeedOriginalPostDto {
   mediaUrl?: string | null;
 }
 
+/** Data model for Social Feed Saved Post State Dto. */
 export interface SocialFeedSavedPostStateDto {
   isSaved?: boolean;
   postId?: string;
 }
 
+/** Data model for Social Feed Social Feed Item Dto. */
 export interface SocialFeedSocialFeedItemDto {
   id?: string;
   author?: SocialFeedFeedAuthorDto;
@@ -14741,13 +15542,16 @@ export interface SocialFeedSocialFeedItemDto {
   viewer?: SocialFeedFeedViewerStateDto;
 }
 
+/** OpenAPI schema for Social Feed Social Feed Item Kind. */
 export type SocialFeedSocialFeedItemKind = 'Post' | 'Repost' | 'TestingSession';
 
+/** Data model for Social Feed Social Feed Page Dto. */
 export interface SocialFeedSocialFeedPageDto {
   items?: Array<SocialFeedSocialFeedItemDto> | null;
   nextCursor?: string | null;
 }
 
+/** Data model for Social Feed Social Feed Profile Dto. */
 export interface SocialFeedSocialFeedProfileDto {
   id?: string;
   availabilityStatus?: string | null;
@@ -14769,6 +15573,7 @@ export interface SocialFeedSocialFeedProfileDto {
   websiteUrl?: string | null;
 }
 
+/** Data model for Social Feed Social Post Content Dto. */
 export interface SocialFeedSocialPostContentDto {
   content?: string | null;
   editedAt?: string | null;
@@ -14779,6 +15584,7 @@ export interface SocialFeedSocialPostContentDto {
   visibility?: string | null;
 }
 
+/** Data model for Social Feed Story Dto. */
 export interface SocialFeedStoryDto {
   id?: string;
   assetReferenceId?: string;
@@ -14791,6 +15597,7 @@ export interface SocialFeedStoryDto {
   mediaUrl?: string | null;
 }
 
+/** Data model for Social Feed Testing Session Feed Dto. */
 export interface SocialFeedTestingSessionFeedDto {
   availableTesterCount?: number;
   endsAt?: string;
@@ -14802,16 +15609,19 @@ export interface SocialFeedTestingSessionFeedDto {
   status?: string | null;
 }
 
+/** Data model for Social Follows Controllers Batch Counts Request. */
 export interface SocialFollowsControllersBatchCountsInput {
   entityIds?: Array<string> | null;
   entityType?: string | null;
 }
 
+/** Data model for Social Follows Controllers Batch Status Request. */
 export interface SocialFollowsControllersBatchStatusInput {
   entityIds?: Array<string> | null;
   entityType?: string | null;
 }
 
+/** Data model for Social Follows Controllers Block Dto. */
 export interface SocialFollowsControllersBlockDto {
   id?: string;
   blockedAt?: string;
@@ -14820,11 +15630,13 @@ export interface SocialFollowsControllersBlockDto {
   reason?: string | null;
 }
 
+/** Data model for Social Follows Controllers Block Request. */
 export interface SocialFollowsControllersBlockInput {
   blockedUserId?: string;
   reason?: string | null;
 }
 
+/** Data model for Social Follows Controllers Follow Dto. */
 export interface SocialFollowsControllersFollowDto {
   id?: string;
   followedAt?: string;
@@ -14834,12 +15646,14 @@ export interface SocialFollowsControllersFollowDto {
   notificationsEnabled?: boolean;
 }
 
+/** Data model for Social Follows Controllers Follow Request. */
 export interface SocialFollowsControllersFollowInput {
   entityId?: string;
   entityType?: string | null;
   notificationsEnabled?: boolean;
 }
 
+/** Data model for Social Follows Controllers Follow Privacy Settings Dto. */
 export interface SocialFollowsControllersFollowPrivacySettingsDto {
   id?: string;
   allowFollowers?: boolean;
@@ -14851,6 +15665,7 @@ export interface SocialFollowsControllersFollowPrivacySettingsDto {
   userId?: string;
 }
 
+/** Data model for Social Follows Controllers Mute Dto. */
 export interface SocialFollowsControllersMuteDto {
   id?: string;
   expiresAt?: string | null;
@@ -14860,18 +15675,21 @@ export interface SocialFollowsControllersMuteDto {
   reason?: string | null;
 }
 
+/** Data model for Social Follows Controllers Mute Request. */
 export interface SocialFollowsControllersMuteInput {
   expiresAt?: string | null;
   mutedUserId?: string;
   reason?: string | null;
 }
 
+/** Data model for Social Follows Controllers Update Notifications Request. */
 export interface SocialFollowsControllersUpdateNotificationsInput {
   entityId?: string;
   entityType?: string | null;
   notificationsEnabled?: boolean;
 }
 
+/** Data model for Social Follows Controllers Update Privacy Settings Request. */
 export interface SocialFollowsControllersUpdatePrivacySettingsInput {
   allowFollowers?: boolean;
   isFollowerListPublic?: boolean;
@@ -14881,14 +15699,17 @@ export interface SocialFollowsControllersUpdatePrivacySettingsInput {
   showFollowingCount?: boolean;
 }
 
+/** Data model for Social Groups Approve Social Group Member Request. */
 export interface SocialGroupsApproveSocialGroupMemberInput {
   approvedByUserId?: string;
 }
 
+/** Data model for Social Groups Change Social Group Member Role Request. */
 export interface SocialGroupsChangeSocialGroupMemberRoleInput {
   role?: SocialGroupsSocialGroupMemberRole;
 }
 
+/** Data model for Social Groups Create Social Group Request. */
 export interface SocialGroupsCreateSocialGroupInput {
   description?: string | null;
   name?: string | null;
@@ -14899,11 +15720,13 @@ export interface SocialGroupsCreateSocialGroupInput {
   visibility?: SocialGroupsSocialGroupVisibility;
 }
 
+/** Data model for Social Groups Join Social Group Request. */
 export interface SocialGroupsJoinSocialGroupInput {
   requestedRole?: SocialGroupsSocialGroupMemberRole;
   userId?: string;
 }
 
+/** Data model for Social Groups Social Group Dto. */
 export interface SocialGroupsSocialGroupDto {
   id?: string;
   createdAt?: string;
@@ -14920,6 +15743,7 @@ export interface SocialGroupsSocialGroupDto {
   visibility?: SocialGroupsSocialGroupVisibility;
 }
 
+/** Data model for Social Groups Social Group Member Dto. */
 export interface SocialGroupsSocialGroupMemberDto {
   id?: string;
   approvedByUserId?: string | null;
@@ -14932,16 +15756,22 @@ export interface SocialGroupsSocialGroupMemberDto {
   userId?: string;
 }
 
+/** OpenAPI schema for Social Groups Social Group Member Role. */
 export type SocialGroupsSocialGroupMemberRole = 'Owner' | 'Admin' | 'Moderator' | 'Member';
 
+/** OpenAPI schema for Social Groups Social Group Membership Status. */
 export type SocialGroupsSocialGroupMembershipStatus = 'Pending' | 'Active' | 'Rejected' | 'Removed';
 
+/** OpenAPI schema for Social Groups Social Group Status. */
 export type SocialGroupsSocialGroupStatus = 'Active' | 'Archived' | 'Suspended';
 
+/** OpenAPI schema for Social Groups Social Group Type. */
 export type SocialGroupsSocialGroupType = 'StudyGroup' | 'ProjectTeam' | 'InterestCommunity' | 'CourseCohort' | 'Institution' | 'GameJamTeam';
 
+/** OpenAPI schema for Social Groups Social Group Visibility. */
 export type SocialGroupsSocialGroupVisibility = 'Public' | 'Private' | 'InviteOnly';
 
+/** Data model for Social Groups Update Social Group Request. */
 export interface SocialGroupsUpdateSocialGroupInput {
   description?: string | null;
   name?: string | null;
@@ -14950,11 +15780,13 @@ export interface SocialGroupsUpdateSocialGroupInput {
   visibility?: SocialGroupsSocialGroupVisibility;
 }
 
+/** Data model for Social Posts Controllers Add Comment Request. */
 export interface SocialPostsControllersAddCommentInput {
   content?: string | null;
   parentCommentId?: string | null;
 }
 
+/** Data model for Social Posts Controllers Create Post Request. */
 export interface SocialPostsControllersCreatePostInput {
   assetReferenceId?: string | null;
   content?: string | null;
@@ -14962,10 +15794,12 @@ export interface SocialPostsControllersCreatePostInput {
   visibility?: SocialPostsPostVisibility;
 }
 
+/** Data model for Social Posts Controllers Create Repost Request. */
 export interface SocialPostsControllersCreateRepostInput {
   content?: string | null;
 }
 
+/** Data model for Social Posts Controllers Follow Post Request. */
 export interface SocialPostsControllersFollowPostInput {
   notifyOnComments?: boolean;
   notifyOnLikes?: boolean;
@@ -14973,16 +15807,20 @@ export interface SocialPostsControllersFollowPostInput {
   notifyOnUpdates?: boolean;
 }
 
+/** Data model for Social Posts Controllers Update Comment Request. */
 export interface SocialPostsControllersUpdateCommentInput {
   content?: string | null;
 }
 
+/** Data model for Social Posts Controllers Update Post Request. */
 export interface SocialPostsControllersUpdatePostInput {
   content?: string | null;
 }
 
+/** OpenAPI schema for Social Posts Post Visibility. */
 export type SocialPostsPostVisibility = 'Public' | 'Followers' | 'Private' | 'Unlisted';
 
+/** Data model for Social Profiles Add Profile Portfolio Item Body. */
 export interface SocialProfilesAddProfilePortfolioItemBody {
   description?: string | null;
   displayOrder?: number;
@@ -14993,14 +15831,17 @@ export interface SocialProfilesAddProfilePortfolioItemBody {
   url?: string | null;
 }
 
+/** Data model for Social Profiles Add Profile Skill Body. */
 export interface SocialProfilesAddProfileSkillBody {
   displayOrder?: number;
   name?: string | null;
   proficiency?: SocialProfilesProfileSkillProficiency;
 }
 
+/** OpenAPI schema for Social Profiles Profile Availability Status. */
 export type SocialProfilesProfileAvailabilityStatus = 'NotSet' | 'OpenToWork' | 'OpenToCollaborate' | 'Busy' | 'Hidden';
 
+/** Data model for Social Profiles Profile Portfolio Item Dto. */
 export interface SocialProfilesProfilePortfolioItemDto {
   id?: string;
   description?: string | null;
@@ -15013,6 +15854,7 @@ export interface SocialProfilesProfilePortfolioItemDto {
   url?: string | null;
 }
 
+/** Data model for Social Profiles Profile Skill Dto. */
 export interface SocialProfilesProfileSkillDto {
   id?: string;
   displayOrder?: number;
@@ -15021,10 +15863,13 @@ export interface SocialProfilesProfileSkillDto {
   profileId?: string;
 }
 
+/** OpenAPI schema for Social Profiles Profile Skill Proficiency. */
 export type SocialProfilesProfileSkillProficiency = 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';
 
+/** OpenAPI schema for Social Profiles Profile Visibility. */
 export type SocialProfilesProfileVisibility = 'Private' | 'Connections' | 'Public';
 
+/** Data model for Social Profiles Social Profile Dto. */
 export interface SocialProfilesSocialProfileDto {
   id?: string;
   availabilityStatus?: SocialProfilesProfileAvailabilityStatus;
@@ -15053,6 +15898,7 @@ export interface SocialProfilesSocialProfileDto {
   websiteUrl?: string | null;
 }
 
+/** Data model for Social Profiles Update Profile Portfolio Item Body. */
 export interface SocialProfilesUpdateProfilePortfolioItemBody {
   description?: string | null;
   displayOrder?: number;
@@ -15062,6 +15908,7 @@ export interface SocialProfilesUpdateProfilePortfolioItemBody {
   url?: string | null;
 }
 
+/** Data model for Social Profiles Update Profile Privacy Body. */
 export interface SocialProfilesUpdateProfilePrivacyBody {
   showActivity?: boolean;
   showPortfolio?: boolean;
@@ -15069,6 +15916,7 @@ export interface SocialProfilesUpdateProfilePrivacyBody {
   visibility?: SocialProfilesProfileVisibility;
 }
 
+/** Data model for Social Profiles Update Social Profile Body. */
 export interface SocialProfilesUpdateSocialProfileBody {
   availabilityStatus?: SocialProfilesProfileAvailabilityStatus;
   avatarUrl?: string | null;
@@ -15083,6 +15931,7 @@ export interface SocialProfilesUpdateSocialProfileBody {
   websiteUrl?: string | null;
 }
 
+/** Data model for Social Reactions Reaction Dto. */
 export interface SocialReactionsReactionDto {
   id?: string;
   createdAt?: string;
@@ -15093,21 +15942,26 @@ export interface SocialReactionsReactionDto {
   userId?: string;
 }
 
+/** OpenAPI schema for Social Reactions Reaction Target Type. */
 export type SocialReactionsReactionTargetType = 'Post' | 'Comment' | 'BlogPost' | 'CourseReview' | 'Discussion' | 'Reply';
 
+/** OpenAPI schema for Social Reactions Reaction Type. */
 export type SocialReactionsReactionType = 'Like' | 'Love' | 'Insightful' | 'Celebrate' | 'Support' | 'Curious';
 
+/** Data model for Social Reactions Remove Reaction Request. */
 export interface SocialReactionsRemoveReactionInput {
   targetId?: string;
   targetType?: SocialReactionsReactionTargetType;
 }
 
+/** Data model for Social Reactions Set Reaction Request. */
 export interface SocialReactionsSetReactionInput {
   targetId?: string;
   targetType?: SocialReactionsReactionTargetType;
   type?: SocialReactionsReactionType;
 }
 
+/** Data model for Social Reactions Target Reaction Summary Dto. */
 export interface SocialReactionsTargetReactionSummaryDto {
   counts?: { Celebrate?: number; Curious?: number; Insightful?: number; Like?: number; Love?: number; Support?: number } | null;
   targetId?: string;
@@ -15115,8 +15969,10 @@ export interface SocialReactionsTargetReactionSummaryDto {
   total?: number;
 }
 
+/** OpenAPI schema for System Day Of Week. */
 export type SystemDayOfWeek = 'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';
 
+/** Data model for Teams Team. */
 export interface TeamsTeam {
   /** Unique identifier for the entity.
 Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
@@ -15154,6 +16010,7 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   visibility?: TeamsTeamVisibility;
 }
 
+/** Data model for Teams Team Invitation. */
 export interface TeamsTeamInvitation {
   /** Unique identifier for the entity.
 Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
@@ -15193,6 +16050,7 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   version?: number;
 }
 
+/** Data model for Teams Team Member. */
 export interface TeamsTeamMember {
   /** Unique identifier for the entity.
 Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
@@ -15230,10 +16088,13 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   version?: number;
 }
 
+/** OpenAPI schema for Teams Team Member Authority. */
 export type TeamsTeamMemberAuthority = 'Viewer' | 'Member' | 'Manager' | 'Owner';
 
+/** OpenAPI schema for Teams Team Status. */
 export type TeamsTeamStatus = 'Active' | 'Archived';
 
+/** OpenAPI schema for Teams Team Visibility. */
 export type TeamsTeamVisibility = 'Private' | 'Tenant' | 'Public';
 
 /** Lightweight tenant information for cross-module queries.
@@ -15245,36 +16106,44 @@ export interface TenantInfo {
   slug?: string | null;
 }
 
+/** Data model for Testing Lab Add Testing Event Committee Member Request. */
 export interface TestingLabAddTestingEventCommitteeMemberInput {
   isChair?: boolean;
   userId?: string;
 }
 
+/** Data model for Testing Lab Assign Testing Lab Role Request. */
 export interface TestingLabAssignTestingLabRoleInput {
   expiresAt?: string | null;
   roleName?: string | null;
   tenantId?: string | null;
 }
 
+/** Data model for Testing Lab Assign Testing Project Application Slot Request. */
 export interface TestingLabAssignTestingProjectApplicationSlotInput {
   slotId?: string;
 }
 
+/** Data model for Testing Lab Assign Testing Project To Tester Request. */
 export interface TestingLabAssignTestingProjectToTesterInput {
   applicationId?: string;
 }
 
+/** OpenAPI schema for Testing Lab Attendance Status. */
 export type TestingLabAttendanceStatus = 'Registered' | 'Present' | 'Completed' | 'NoShow';
 
+/** Data model for Testing Lab Cancel Testing Event Request. */
 export interface TestingLabCancelTestingEventInput {
   reason?: string | null;
 }
 
+/** Data model for Testing Lab Cast Testing Application Vote Request. */
 export interface TestingLabCastTestingApplicationVoteInput {
   comments?: string | null;
   decision?: TestingLabTestingApplicationVoteDecision;
 }
 
+/** Data model for Testing Lab Configure Testing Event Request. */
 export interface TestingLabConfigureTestingEventInput {
   candidateInstructions?: string | null;
   generalRules?: string | null;
@@ -15283,6 +16152,7 @@ export interface TestingLabConfigureTestingEventInput {
   testerRegistrationSchema?: TestingLabQuestionnaireSchema;
 }
 
+/** Data model for Testing Lab Configure Testing Event Learning Request. */
 export interface TestingLabConfigureTestingEventLearningInput {
   cohortId?: string | null;
   courseId?: string;
@@ -15312,6 +16182,7 @@ export interface TestingLabCreateSimpleTestingRequestDto {
   versionNumber: string;
 }
 
+/** Data model for Testing Lab Create Testing Event Request. */
 export interface TestingLabCreateTestingEventInput {
   applicationsCloseAt?: string;
   applicationsOpenAt?: string;
@@ -15328,10 +16199,12 @@ export interface TestingLabCreateTestingEventInput {
   timeZoneId?: string | null;
 }
 
+/** Data model for Testing Lab Create Testing Event Slots Request. */
 export interface TestingLabCreateTestingEventSlotsInput {
   slots?: Array<TestingLabUpsertTestingEventSlotInput> | null;
 }
 
+/** Data model for Testing Lab Create Testing Lab Role Request. */
 export interface TestingLabCreateTestingLabRoleInput {
   description?: string | null;
   name?: string | null;
@@ -15361,6 +16234,7 @@ export interface TestingLabCreateTestingLabSettingsDto {
   versionSubmissionPolicy?: ProjectsVersionSubmissionPolicy;
 }
 
+/** Data model for Testing Lab Create Testing Location Dto. */
 export interface TestingLabCreateTestingLocationDto {
   address?: string | null;
   city?: string | null;
@@ -15379,10 +16253,12 @@ export interface TestingLabCreateTestingLocationDto {
   virtualUrl?: string | null;
 }
 
+/** Data model for Testing Lab Create Testing Project Application Draft Request. */
 export interface TestingLabCreateTestingProjectApplicationDraftInput {
   projectId?: string;
 }
 
+/** Data model for Testing Lab Create Testing Request Dto. */
 export interface TestingLabCreateTestingRequestDto {
   description?: string | null;
   /** URL to download the game build */
@@ -15401,6 +16277,7 @@ export interface TestingLabCreateTestingRequestDto {
   title: string;
 }
 
+/** Data model for Testing Lab Create Testing Session Dto. */
 export interface TestingLabCreateTestingSessionDto {
   endTime: string;
   locationId: string;
@@ -15414,13 +16291,16 @@ export interface TestingLabCreateTestingSessionDto {
   testingRequestId: string;
 }
 
+/** Data model for Testing Lab Decide Testing Project Application Request. */
 export interface TestingLabDecideTestingProjectApplicationInput {
   rationale?: string | null;
   slotId?: string | null;
 }
 
+/** OpenAPI schema for Testing Lab Feedback Form Type. */
 export type TestingLabFeedbackFormType = 'General' | 'BugReport' | 'Usability' | 'Performance' | 'Accessibility';
 
+/** Data model for Testing Lab Feedback Request. */
 export interface TestingLabFeedbackInput {
   additionalNotes?: string | null;
   feedbackData?: string | null;
@@ -15476,22 +16356,27 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   version?: number;
 }
 
+/** Data model for Testing Lab Grant Resource Permission Request. */
 export interface TestingLabGrantResourcePermissionInput {
   action?: string | null;
   expiresAt?: string | null;
   tenantId?: string | null;
 }
 
+/** OpenAPI schema for Testing Lab Instruction Type. */
 export type TestingLabInstructionType = 'Text' | 'Url' | 'File';
 
+/** Data model for Testing Lab Link Session Project Request. */
 export interface TestingLabLinkSessionProjectInput {
   notes?: string | null;
   projectId?: string;
   projectVersionId?: string | null;
 }
 
+/** OpenAPI schema for Testing Lab Location Status. */
 export type TestingLabLocationStatus = 'Active' | 'Maintenance' | 'Inactive';
 
+/** OpenAPI schema for Testing Lab Participation Status. */
 export type TestingLabParticipationStatus = 'Registered' | 'Active' | 'Completed' | 'Withdrawn' | 'Suspended';
 
 /** A deliberately small, event-scoped preview of a game approved for public
@@ -15505,6 +16390,7 @@ export interface TestingLabPublicTestingEventGameProjection {
   title?: string | null;
 }
 
+/** Data model for Testing Lab Public Testing Event Projection. */
 export interface TestingLabPublicTestingEventProjection {
   id?: string;
   applicationCount?: number;
@@ -15524,6 +16410,7 @@ export interface TestingLabPublicTestingEventProjection {
   timeZoneId?: string | null;
 }
 
+/** Data model for Testing Lab Public Testing Event Slot Projection. */
 export interface TestingLabPublicTestingEventSlotProjection {
   id?: string;
   approvedProjectCount?: number;
@@ -15540,29 +16427,35 @@ export interface TestingLabPublicTestingEventSlotProjection {
   startsAt?: string;
 }
 
+/** Data model for Testing Lab Questionnaire Answer. */
 export interface TestingLabQuestionnaireAnswer {
   questionId?: string | null;
   selectedOptionIds?: Array<string> | null;
   textValue?: string | null;
 }
 
+/** Data model for Testing Lab Questionnaire Condition. */
 export interface TestingLabQuestionnaireCondition {
   operator?: TestingLabQuestionnaireConditionOperator;
   questionId?: string | null;
   value?: string | null;
 }
 
+/** OpenAPI schema for Testing Lab Questionnaire Condition Operator. */
 export type TestingLabQuestionnaireConditionOperator = 'Equals' | 'NotEquals' | 'Includes';
 
+/** Data model for Testing Lab Questionnaire Option. */
 export interface TestingLabQuestionnaireOption {
   id?: string | null;
   label?: string | null;
 }
 
+/** Data model for Testing Lab Questionnaire Response. */
 export interface TestingLabQuestionnaireOutput {
   answers?: Array<TestingLabQuestionnaireAnswer> | null;
 }
 
+/** Data model for Testing Lab Questionnaire Question. */
 export interface TestingLabQuestionnaireQuestion {
   id?: string | null;
   condition?: TestingLabQuestionnaireCondition;
@@ -15572,31 +16465,39 @@ export interface TestingLabQuestionnaireQuestion {
   type?: TestingLabQuestionnaireQuestionType;
 }
 
+/** OpenAPI schema for Testing Lab Questionnaire Question Type. */
 export type TestingLabQuestionnaireQuestionType = 'FreeText' | 'SingleChoice' | 'MultipleChoice';
 
+/** Data model for Testing Lab Questionnaire Schema. */
 export interface TestingLabQuestionnaireSchema {
   questions?: Array<TestingLabQuestionnaireQuestion> | null;
   title?: string | null;
 }
 
+/** Data model for Testing Lab Rate Feedback Quality Dto. */
 export interface TestingLabRateFeedbackQualityDto {
   quality?: TestingLabFeedbackQuality;
 }
 
+/** Data model for Testing Lab Register Testing Event Slot Request. */
 export interface TestingLabRegisterTestingEventSlotInput {
   acceptedRules?: boolean;
   notes?: string | null;
   registrationResponse?: TestingLabQuestionnaireOutput;
 }
 
+/** OpenAPI schema for Testing Lab Registration Status. */
 export type TestingLabRegistrationStatus = 'Registered' | 'Confirmed' | 'Cancelled' | 'Attended' | 'NoShow';
 
+/** OpenAPI schema for Testing Lab Registration Type. */
 export type TestingLabRegistrationType = 'ProjectMember' | 'Tester';
 
+/** Data model for Testing Lab Report Feedback Dto. */
 export interface TestingLabReportFeedbackDto {
   reason?: string | null;
 }
 
+/** Data model for Testing Lab Save Testing Project Application Draft Request. */
 export interface TestingLabSaveTestingProjectApplicationDraftInput {
   acceptedRules?: boolean | null;
   brief?: TestingLabTestingProjectBrief;
@@ -15607,6 +16508,7 @@ export interface TestingLabSaveTestingProjectApplicationDraftInput {
   submittedAssetReferenceIds?: Array<string> | null;
 }
 
+/** Data model for Testing Lab Session Project Projection. */
 export interface TestingLabSessionProjectProjection {
   isActive?: boolean;
   linkId?: string;
@@ -15674,13 +16576,16 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   version?: number;
 }
 
+/** Data model for Testing Lab Session Registration Request. */
 export interface TestingLabSessionRegistrationInput {
   notes?: string | null;
   registrationType?: TestingLabRegistrationType;
 }
 
+/** OpenAPI schema for Testing Lab Session Status. */
 export type TestingLabSessionStatus = 'Scheduled' | 'Active' | 'Completed' | 'Cancelled';
 
+/** Data model for Testing Lab Session Waitlist. */
 export interface TestingLabSessionWaitlist {
   /** Unique identifier for the entity.
 Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
@@ -15733,6 +16638,7 @@ export interface TestingLabSubmitFeedbackDto {
   wouldRecommend?: boolean | null;
 }
 
+/** Data model for Testing Lab Submit Testing Event Feedback Request. */
 export interface TestingLabSubmitTestingEventFeedbackInput {
   additionalNotes?: string | null;
   feedbackData?: string | null;
@@ -15742,6 +16648,7 @@ export interface TestingLabSubmitTestingEventFeedbackInput {
   wouldRecommend?: boolean | null;
 }
 
+/** Data model for Testing Lab Submit Testing Project Application Request. */
 export interface TestingLabSubmitTestingProjectApplicationInput {
   acceptedRules?: boolean;
   brief?: TestingLabTestingProjectBrief;
@@ -15753,6 +16660,7 @@ export interface TestingLabSubmitTestingProjectApplicationInput {
   submittedAssetReferenceIds?: Array<string> | null;
 }
 
+/** Data model for Testing Lab Testing Application Review Asset Projection. */
 export interface TestingLabTestingApplicationReviewAssetProjection {
   accessUrl?: string | null;
   assetReferenceId?: string;
@@ -15761,6 +16669,7 @@ export interface TestingLabTestingApplicationReviewAssetProjection {
   mimeType?: string | null;
 }
 
+/** Data model for Testing Lab Testing Application Review Package Projection. */
 export interface TestingLabTestingApplicationReviewPackageProjection {
   applicationId?: string;
   assets?: Array<TestingLabTestingApplicationReviewAssetProjection> | null;
@@ -15773,13 +16682,16 @@ export interface TestingLabTestingApplicationReviewPackageProjection {
   versionStatus?: ProjectsProjectVersionStatus;
 }
 
+/** OpenAPI schema for Testing Lab Testing Application Status. */
 export type TestingLabTestingApplicationStatus = 'Draft' | 'Pending' | 'UnderReview' | 'Approved' | 'Rejected' | 'Waitlisted' | 'Withdrawn';
 
+/** Data model for Testing Lab Testing Application Tester Eligibility Projection. */
 export interface TestingLabTestingApplicationTesterEligibilityProjection {
   eligibleApplicationIds?: Array<string> | null;
   testerUserId?: string;
 }
 
+/** Data model for Testing Lab Testing Application Vote. */
 export interface TestingLabTestingApplicationVote {
   /** Unique identifier for the entity.
 Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
@@ -15814,8 +16726,10 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   version?: number;
 }
 
+/** OpenAPI schema for Testing Lab Testing Application Vote Decision. */
 export type TestingLabTestingApplicationVoteDecision = 'Approve' | 'Reject' | 'Abstain';
 
+/** Data model for Testing Lab Testing Application Vote Projection. */
 export interface TestingLabTestingApplicationVoteProjection {
   id?: string;
   comments?: string | null;
@@ -15824,6 +16738,7 @@ export interface TestingLabTestingApplicationVoteProjection {
   reviewerId?: string;
 }
 
+/** Data model for Testing Lab Testing Committee Member. */
 export interface TestingLabTestingCommitteeMember {
   /** Unique identifier for the entity.
 Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
@@ -15858,8 +16773,10 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   version?: number;
 }
 
+/** OpenAPI schema for Testing Lab Testing Context. */
 export type TestingLabTestingContext = 'Online' | 'InPerson';
 
+/** Data model for Testing Lab Testing Event. */
 export interface TestingLabTestingEvent {
   /** Unique identifier for the entity.
 Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
@@ -15929,14 +16846,17 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   version?: number;
 }
 
+/** Data model for Testing Lab Testing Event Application Access Projection. */
 export interface TestingLabTestingEventApplicationAccessProjection {
   canManageApplications?: boolean;
   canViewApplications?: boolean;
   canVote?: boolean;
 }
 
+/** OpenAPI schema for Testing Lab Testing Event Approval Mode. */
 export type TestingLabTestingEventApprovalMode = 'ManagerOnly' | 'Committee';
 
+/** Data model for Testing Lab Testing Event Committee Member Projection. */
 export interface TestingLabTestingEventCommitteeMemberProjection {
   id?: string;
   eventId?: string;
@@ -15947,6 +16867,7 @@ export interface TestingLabTestingEventCommitteeMemberProjection {
   userName?: string | null;
 }
 
+/** Data model for Testing Lab Testing Event Configuration Projection. */
 export interface TestingLabTestingEventConfigurationProjection {
   candidateInstructions?: string | null;
   frozenAt?: string | null;
@@ -15958,6 +16879,7 @@ export interface TestingLabTestingEventConfigurationProjection {
   testerRegistrationSchema?: TestingLabQuestionnaireSchema;
 }
 
+/** Data model for Testing Lab Testing Event Feedback Projection. */
 export interface TestingLabTestingEventFeedbackProjection {
   id?: string;
   additionalNotes?: string | null;
@@ -15972,6 +16894,7 @@ export interface TestingLabTestingEventFeedbackProjection {
   wouldRecommend?: boolean | null;
 }
 
+/** Data model for Testing Lab Testing Event Feedback Review Projection. */
 export interface TestingLabTestingEventFeedbackReviewProjection {
   applicationId?: string;
   eventId?: string;
@@ -15983,8 +16906,10 @@ export interface TestingLabTestingEventFeedbackReviewProjection {
   testerUserId?: string;
 }
 
+/** OpenAPI schema for Testing Lab Testing Event Mode. */
 export type TestingLabTestingEventMode = 'Online' | 'InPerson' | 'Hybrid';
 
+/** Data model for Testing Lab Testing Event Projection. */
 export interface TestingLabTestingEventProjection {
   id?: string;
   applicationCount?: number;
@@ -16016,8 +16941,10 @@ export interface TestingLabTestingEventProjection {
   timeZoneId?: string | null;
 }
 
+/** OpenAPI schema for Testing Lab Testing Event Recurrence Frequency. */
 export type TestingLabTestingEventRecurrenceFrequency = 'Daily' | 'Weekly' | 'Monthly';
 
+/** Data model for Testing Lab Testing Event Recurrence Request. */
 export interface TestingLabTestingEventRecurrenceInput {
   daysOfWeek?: Array<SystemDayOfWeek> | null;
   endsAt?: string | null;
@@ -16026,6 +16953,7 @@ export interface TestingLabTestingEventRecurrenceInput {
   occurrenceCount?: number | null;
 }
 
+/** Data model for Testing Lab Testing Event Slot. */
 export interface TestingLabTestingEventSlot {
   /** Unique identifier for the entity.
 Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
@@ -16068,6 +16996,7 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   version?: number;
 }
 
+/** Data model for Testing Lab Testing Event Slot Projection. */
 export interface TestingLabTestingEventSlotProjection {
   id?: string;
   approvedProjectCount?: number;
@@ -16084,8 +17013,10 @@ export interface TestingLabTestingEventSlotProjection {
   startsAt?: string;
 }
 
+/** OpenAPI schema for Testing Lab Testing Event Status. */
 export type TestingLabTestingEventStatus = 'Draft' | 'ApplicationsOpen' | 'ApplicationsClosed' | 'Scheduled' | 'Active' | 'Completed' | 'Cancelled';
 
+/** Data model for Testing Lab Testing Event Template Projection. */
 export interface TestingLabTestingEventTemplateProjection {
   id?: string;
   currentRevision?: TestingLabTestingEventTemplateRevisionProjection;
@@ -16096,6 +17027,7 @@ export interface TestingLabTestingEventTemplateProjection {
   tenantId?: string;
 }
 
+/** Data model for Testing Lab Testing Event Template Revision Projection. */
 export interface TestingLabTestingEventTemplateRevisionProjection {
   id?: string;
   candidateInstructions?: string | null;
@@ -16189,6 +17121,7 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   wouldRecommend?: boolean | null;
 }
 
+/** Data model for Testing Lab Testing Feedback Directory Item. */
 export interface TestingLabTestingFeedbackDirectoryItem {
   id?: string;
   additionalNotes?: string | null;
@@ -16218,6 +17151,7 @@ export interface TestingLabTestingFeedbackDirectoryItem {
   wouldRecommend?: boolean | null;
 }
 
+/** Data model for Testing Lab Testing Feedback Directory Page. */
 export interface TestingLabTestingFeedbackDirectoryPage {
   items?: Array<TestingLabTestingFeedbackDirectoryItem> | null;
   skip?: number;
@@ -16278,6 +17212,7 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   version?: number;
 }
 
+/** Data model for Testing Lab Testing Feedback Obligation Projection. */
 export interface TestingLabTestingFeedbackObligationProjection {
   id?: string;
   applicationId?: string;
@@ -16290,8 +17225,10 @@ export interface TestingLabTestingFeedbackObligationProjection {
   testerUserId?: string;
 }
 
+/** OpenAPI schema for Testing Lab Testing Feedback Obligation Status. */
 export type TestingLabTestingFeedbackObligationStatus = 'Pending' | 'Fulfilled' | 'Waived';
 
+/** OpenAPI schema for Testing Lab Testing Feedback Source. */
 export type TestingLabTestingFeedbackSource = 'Request' | 'Event';
 
 /** Represents a request for testing and quality assurance */
@@ -16376,6 +17313,7 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   version?: number;
 }
 
+/** Data model for Testing Lab Testing Lab Analytics Report Projection. */
 export interface TestingLabTestingLabAnalyticsReportProjection {
   current?: TestingLabTestingLabAnalyticsSummaryProjection;
   events?: Array<TestingLabTestingLabEventAnalyticsProjection> | null;
@@ -16387,6 +17325,7 @@ export interface TestingLabTestingLabAnalyticsReportProjection {
   trend?: Array<TestingLabTestingLabAnalyticsTrendProjection> | null;
 }
 
+/** Data model for Testing Lab Testing Lab Analytics Summary Projection. */
 export interface TestingLabTestingLabAnalyticsSummaryProjection {
   applications?: number;
   approvedProjects?: number;
@@ -16401,6 +17340,7 @@ export interface TestingLabTestingLabAnalyticsSummaryProjection {
   registeredTesters?: number;
 }
 
+/** Data model for Testing Lab Testing Lab Analytics Trend Projection. */
 export interface TestingLabTestingLabAnalyticsTrendProjection {
   applications?: number;
   attendance?: number;
@@ -16410,6 +17350,7 @@ export interface TestingLabTestingLabAnalyticsTrendProjection {
   registrations?: number;
 }
 
+/** Data model for Testing Lab Testing Lab Event Analytics Projection. */
 export interface TestingLabTestingLabEventAnalyticsProjection {
   applications?: number;
   approvedProjects?: number;
@@ -16426,11 +17367,13 @@ export interface TestingLabTestingLabEventAnalyticsProjection {
   status?: TestingLabTestingEventStatus;
 }
 
+/** Data model for Testing Lab Testing Lab Location Analytics Projection. */
 export interface TestingLabTestingLabLocationAnalyticsProjection {
   active?: number;
   total?: number;
 }
 
+/** Data model for Testing Lab Testing Lab Permissions Dto. */
 export interface TestingLabTestingLabPermissionsDto {
   canApproveApplications?: boolean;
   canApproveRequests?: boolean;
@@ -16462,6 +17405,7 @@ export interface TestingLabTestingLabPermissionsDto {
   canViewSessions?: boolean;
 }
 
+/** Data model for Testing Lab Testing Lab Resource Permission Dto. */
 export interface TestingLabTestingLabResourcePermissionDto {
   action?: string | null;
   expiresAt?: string | null;
@@ -16469,6 +17413,7 @@ export interface TestingLabTestingLabResourcePermissionDto {
   resourceType?: string | null;
 }
 
+/** Data model for Testing Lab Testing Lab Role Template. */
 export interface TestingLabTestingLabRoleTemplate {
   id?: string;
   description?: string | null;
@@ -16579,6 +17524,7 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   virtualUrl?: string | null;
 }
 
+/** OpenAPI schema for Testing Lab Testing Mode. */
 export type TestingLabTestingMode = 'Online' | 'InPerson' | 'Hybrid';
 
 /** Represents a participant in testing sessions and QA activities */
@@ -16642,6 +17588,7 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   version?: number;
 }
 
+/** Data model for Testing Lab Testing Participant Directory Item Projection. */
 export interface TestingLabTestingParticipantDirectoryItemProjection {
   avatarUrl?: string | null;
   campusName?: string | null;
@@ -16666,6 +17613,7 @@ export interface TestingLabTestingParticipantDirectoryItemProjection {
   waitlistPosition?: number | null;
 }
 
+/** Data model for Testing Lab Testing Participant Directory Projection. */
 export interface TestingLabTestingParticipantDirectoryProjection {
   attendedCount?: number;
   checkedInCount?: number;
@@ -16677,6 +17625,7 @@ export interface TestingLabTestingParticipantDirectoryProjection {
   waitlistedCount?: number;
 }
 
+/** Data model for Testing Lab Testing Participant Mutation Projection. */
 export interface TestingLabTestingParticipantMutationProjection {
   id?: string;
   startedAt?: string;
@@ -16685,8 +17634,10 @@ export interface TestingLabTestingParticipantMutationProjection {
   userId?: string;
 }
 
+/** OpenAPI schema for Testing Lab Testing Priority. */
 export type TestingLabTestingPriority = 'Low' | 'Medium' | 'High' | 'Critical';
 
+/** Data model for Testing Lab Testing Project Application. */
 export interface TestingLabTestingProjectApplication {
   /** Unique identifier for the entity.
 Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
@@ -16742,6 +17693,7 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   votes?: Array<TestingLabTestingApplicationVote> | null;
 }
 
+/** Data model for Testing Lab Testing Project Application Projection. */
 export interface TestingLabTestingProjectApplicationProjection {
   id?: string;
   assignedSlotId?: string | null;
@@ -16764,6 +17716,7 @@ export interface TestingLabTestingProjectApplicationProjection {
   votes?: Array<TestingLabTestingApplicationVoteProjection> | null;
 }
 
+/** Data model for Testing Lab Testing Project Brief. */
 export interface TestingLabTestingProjectBrief {
   controls?: string | null;
   installationAndAccess?: string | null;
@@ -16773,6 +17726,7 @@ export interface TestingLabTestingProjectBrief {
   testTasks?: Array<string> | null;
 }
 
+/** Data model for Testing Lab Testing Questionnaire Revision. */
 export interface TestingLabTestingQuestionnaireRevision {
   /** Unique identifier for the entity.
 Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
@@ -16806,6 +17760,7 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   version?: number;
 }
 
+/** Data model for Testing Lab Testing Request Detail Projection. */
 export interface TestingLabTestingRequestDetailProjection {
   id?: string;
   currentTesterCount?: number;
@@ -16832,6 +17787,7 @@ export interface TestingLabTestingRequestProjectProjection {
   title?: string | null;
 }
 
+/** Data model for Testing Lab Testing Request Project Version Projection. */
 export interface TestingLabTestingRequestProjectVersionProjection {
   id?: string;
   project?: TestingLabTestingRequestProjectProjection;
@@ -16840,6 +17796,7 @@ export interface TestingLabTestingRequestProjectVersionProjection {
   versionNumber?: string | null;
 }
 
+/** OpenAPI schema for Testing Lab Testing Request Status. */
 export type TestingLabTestingRequestStatus = 'Draft' | 'Open' | 'Active' | 'InProgress' | 'Paused' | 'Completed' | 'Cancelled';
 
 /** Represents a testing session for quality assurance and user feedback collection */
@@ -16922,6 +17879,7 @@ Protected setter prevents direct manipulation outside the entity hierarchy; EF C
   version?: number;
 }
 
+/** Data model for Testing Lab Testing Slot Registration Projection. */
 export interface TestingLabTestingSlotRegistrationProjection {
   id?: string;
   checkedInAt?: string | null;
@@ -16941,13 +17899,16 @@ export interface TestingLabTestingSlotRegistrationProjection {
   waitlistPosition?: number | null;
 }
 
+/** OpenAPI schema for Testing Lab Testing Slot Registration Status. */
 export type TestingLabTestingSlotRegistrationStatus = 'Registered' | 'Waitlisted' | 'CheckedIn' | 'Attended' | 'Completed' | 'Cancelled' | 'NoShow';
 
+/** Data model for Testing Lab Update Attendance Dto. */
 export interface TestingLabUpdateAttendanceDto {
   attendanceStatus?: TestingLabAttendanceStatus;
   userId?: string;
 }
 
+/** Data model for Testing Lab Update Testing Event Request. */
 export interface TestingLabUpdateTestingEventInput {
   applicationsCloseAt?: string;
   applicationsOpenAt?: string;
@@ -16961,6 +17922,7 @@ export interface TestingLabUpdateTestingEventInput {
   timeZoneId?: string | null;
 }
 
+/** Data model for Testing Lab Update Testing Lab Role Request. */
 export interface TestingLabUpdateTestingLabRoleInput {
   description?: string | null;
   name?: string | null;
@@ -16990,6 +17952,7 @@ export interface TestingLabUpdateTestingLabSettingsDto {
   versionSubmissionPolicy?: ProjectsVersionSubmissionPolicy;
 }
 
+/** Data model for Testing Lab Update Testing Location Dto. */
 export interface TestingLabUpdateTestingLocationDto {
   address?: string | null;
   city?: string | null;
@@ -17008,12 +17971,14 @@ export interface TestingLabUpdateTestingLocationDto {
   virtualUrl?: string | null;
 }
 
+/** Data model for Testing Lab Update Testing Project Application Request. */
 export interface TestingLabUpdateTestingProjectApplicationInput {
   preferredAvailability?: string | null;
   projectVersionId?: string;
   submittedAssetReferenceIds?: Array<string> | null;
 }
 
+/** Data model for Testing Lab Update Testing Request Dto. */
 export interface TestingLabUpdateTestingRequestDto {
   description?: string | null;
   downloadUrl?: string | null;
@@ -17030,6 +17995,7 @@ export interface TestingLabUpdateTestingRequestDto {
   title?: string | null;
 }
 
+/** Data model for Testing Lab Upsert Testing Event Slot Request. */
 export interface TestingLabUpsertTestingEventSlotInput {
   campusName?: string | null;
   endsAt?: string;
@@ -17042,6 +18008,7 @@ export interface TestingLabUpsertTestingEventSlotInput {
   startsAt?: string;
 }
 
+/** Data model for Testing Lab Upsert Testing Event Template Request. */
 export interface TestingLabUpsertTestingEventTemplateInput {
   candidateInstructions?: string | null;
   defaultApprovalMode?: TestingLabTestingEventApprovalMode;
@@ -17055,6 +18022,7 @@ export interface TestingLabUpsertTestingEventTemplateInput {
   testerRegistrationSchema?: TestingLabQuestionnaireSchema;
 }
 
+/** Data model for Testing Lab User Testing Lab Permissions. */
 export interface TestingLabUserTestingLabPermissions {
   assignedRoles?: Array<string> | null;
   permissions?: TestingLabTestingLabPermissionsDto;
@@ -17063,6 +18031,7 @@ export interface TestingLabUserTestingLabPermissions {
   userId?: string;
 }
 
+/** Data model for Trust Safety Trust Safety Appeal. */
 export interface TrustSafetyTrustSafetyAppeal {
   id?: string;
   assignedTo?: string | null;
@@ -17080,6 +18049,7 @@ export interface TrustSafetyTrustSafetyAppeal {
   version?: number;
 }
 
+/** OpenAPI schema for Trust Safety Trust Safety Appeal State. */
 export type TrustSafetyTrustSafetyAppealState = 'Submitted' | 'Assigned' | 'Upheld' | 'Overturned';
 
 // Zod Schema Declarations (to handle circular references)
@@ -18155,6 +19125,7 @@ export let LearningCoursesCreatePrerequisiteApiInputSchema: z.ZodType<LearningCo
 export let LearningCoursesCreateProductFromProgramDtoSchema: z.ZodType<LearningCoursesCreateProductFromProgramDto>;
 export let LearningCoursesCreateProgramContentDtoSchema: z.ZodType<LearningCoursesCreateProgramContentDto>;
 export let LearningCoursesCreateProgramDtoSchema: z.ZodType<LearningCoursesCreateProgramDto>;
+export let LearningCoursesDiscussionActivitySettingsSchema: z.ZodType<LearningCoursesDiscussionActivitySettings>;
 export let LearningCoursesEngagementMetricsDtoSchema: z.ZodType<LearningCoursesEngagementMetricsDto>;
 export let LearningCoursesEnrollmentStatusSchema: z.ZodType<LearningCoursesEnrollmentStatus>;
 export let LearningCoursesEnrollProgramUserInputSchema: z.ZodType<LearningCoursesEnrollProgramUserInput>;
@@ -18180,6 +19151,7 @@ export let LearningCoursesProgressStatusSchema: z.ZodType<LearningCoursesProgres
 export let LearningCoursesPublishAuthoringDraftInputSchema: z.ZodType<LearningCoursesPublishAuthoringDraftInput>;
 export let LearningCoursesPublishAuthoringResultSchema: z.ZodType<LearningCoursesPublishAuthoringResult>;
 export let LearningCoursesRecordContentInteractionEventInputSchema: z.ZodType<LearningCoursesRecordContentInteractionEventInput>;
+export let LearningCoursesReflectionActivitySettingsSchema: z.ZodType<LearningCoursesReflectionActivitySettings>;
 export let LearningCoursesReflectionResponseResultDtoSchema: z.ZodType<LearningCoursesReflectionResponseResultDto>;
 export let LearningCoursesRejectProgramDtoSchema: z.ZodType<LearningCoursesRejectProgramDto>;
 export let LearningCoursesReorderContentDtoSchema: z.ZodType<LearningCoursesReorderContentDto>;
@@ -18196,7 +19168,9 @@ export let LearningCoursesStartContentInputSchema: z.ZodType<LearningCoursesStar
 export let LearningCoursesStudentSummaryDtoSchema: z.ZodType<LearningCoursesStudentSummaryDto>;
 export let LearningCoursesSubmitContentInputSchema: z.ZodType<LearningCoursesSubmitContentInput>;
 export let LearningCoursesSubmitUserContentDtoSchema: z.ZodType<LearningCoursesSubmitUserContentDto>;
+export let LearningCoursesSurveyActivitySettingsSchema: z.ZodType<LearningCoursesSurveyActivitySettings>;
 export let LearningCoursesSurveyResponseResultDtoSchema: z.ZodType<LearningCoursesSurveyResponseResultDto>;
+export let LearningCoursesSurveyResultsVisibilitySchema: z.ZodType<LearningCoursesSurveyResultsVisibility>;
 export let LearningCoursesTestSchema: z.ZodType<LearningCoursesTest>;
 export let LearningCoursesTestSuiteSchema: z.ZodType<LearningCoursesTestSuite>;
 export let LearningCoursesUpdateActivityGradeDtoSchema: z.ZodType<LearningCoursesUpdateActivityGradeDto>;
@@ -18710,7 +19684,7 @@ AIAiConversationHistoryEntryDtoSchema = z.object({
   userId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for AIAiGeneratedContentDraftInput */
+/** Zod schema for AIAiGeneratedContentDraftInput. Data model for AI Ai Generated Content Draft Request. */
 AIAiGeneratedContentDraftInputSchema = z.object({
   audience: z.string().nullable().optional(),
   context: z.string().nullable().optional(),
@@ -18721,7 +19695,7 @@ AIAiGeneratedContentDraftInputSchema = z.object({
   tone: z.string().nullable().optional(),
 });
 
-/** Zod schema for AIAiGeneratedContentInput */
+/** Zod schema for AIAiGeneratedContentInput. Data model for AI Ai Generated Content Request. */
 AIAiGeneratedContentInputSchema = z.object({
   audience: z.string().nullable().optional(),
   context: z.string().nullable().optional(),
@@ -18733,7 +19707,7 @@ AIAiGeneratedContentInputSchema = z.object({
   tone: z.string().nullable().optional(),
 });
 
-/** Zod schema for AIAiGeneratedContentKind */
+/** Zod schema for AIAiGeneratedContentKind. OpenAPI schema for AI Ai Generated Content Kind. */
 AIAiGeneratedContentKindSchema = z.enum(['Email', 'Report', 'ListingDescription']);
 
 /** Zod schema for AIAiGenerateInput. Canonical request shape for single-prompt generation. */
@@ -18746,7 +19720,7 @@ AIAiGenerateInputSchema = z.object({
   temperature: z.number().nullable().optional(),
 });
 
-/** Zod schema for AIAiPromptTemplateDto */
+/** Zod schema for AIAiPromptTemplateDto. Data model for AI Ai Prompt Template Dto. */
 AIAiPromptTemplateDtoSchema = z.object({
   id: z.string().uuid().optional(),
   category: z.string().nullable().optional(),
@@ -18764,7 +19738,7 @@ AIAiPromptTemplateDtoSchema = z.object({
   updatedByUserId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for AIAiPromptTemplateGenerateInput */
+/** Zod schema for AIAiPromptTemplateGenerateInput. Data model for AI Ai Prompt Template Generate Request. */
 AIAiPromptTemplateGenerateInputSchema = z.object({
   maxTokens: z.number().int().nullable().optional(),
   model: z.string().nullable().optional(),
@@ -18773,12 +19747,12 @@ AIAiPromptTemplateGenerateInputSchema = z.object({
   variables: z.record(z.string(), z.string().nullable()).nullable().optional(),
 });
 
-/** Zod schema for AIAiPromptTemplateRenderInput */
+/** Zod schema for AIAiPromptTemplateRenderInput. Data model for AI Ai Prompt Template Render Request. */
 AIAiPromptTemplateRenderInputSchema = z.object({
   variables: z.record(z.string(), z.string().nullable()).nullable().optional(),
 });
 
-/** Zod schema for AIAiPromptTemplateRenderOutput */
+/** Zod schema for AIAiPromptTemplateRenderOutput. Data model for AI Ai Prompt Template Render Response. */
 AIAiPromptTemplateRenderOutputSchema = z.object({
   key: z.string().nullable().optional(),
   prompt: z.string().nullable().optional(),
@@ -18787,7 +19761,7 @@ AIAiPromptTemplateRenderOutputSchema = z.object({
   variables: z.record(z.string(), z.string().nullable()).nullable().optional(),
 });
 
-/** Zod schema for AIAiProviderStatusDto */
+/** Zod schema for AIAiProviderStatusDto. Data model for AI Ai Provider Status Dto. */
 AIAiProviderStatusDtoSchema = z.object({
   baseUrl: z.string().nullable().optional(),
   configured: z.boolean().optional(),
@@ -18796,7 +19770,7 @@ AIAiProviderStatusDtoSchema = z.object({
   provider: z.string().nullable().optional(),
 });
 
-/** Zod schema for AIAiQuotaStatusDto */
+/** Zod schema for AIAiQuotaStatusDto. Data model for AI Ai Quota Status Dto. */
 AIAiQuotaStatusDtoSchema = z.object({
   currentUsage: z.number().int().optional(),
   hardLimit: z.number().int().nullable().optional(),
@@ -18810,7 +19784,7 @@ AIAiQuotaStatusDtoSchema = z.object({
   usagePercent: z.number().optional(),
 });
 
-/** Zod schema for AIAiQuotaStatusOutput */
+/** Zod schema for AIAiQuotaStatusOutput. Data model for AI Ai Quota Status Response. */
 AIAiQuotaStatusOutputSchema = z.object({
   generatedAtUtc: z.string().datetime().optional(),
   quotas: z
@@ -18820,7 +19794,7 @@ AIAiQuotaStatusOutputSchema = z.object({
   tenantId: z.string().uuid().optional(),
 });
 
-/** Zod schema for AIAiStatusOutput */
+/** Zod schema for AIAiStatusOutput. Data model for AI Ai Status Response. */
 AIAiStatusOutputSchema = z.object({
   allowTenantOverrides: z.boolean().optional(),
   defaultProvider: z.string().nullable().optional(),
@@ -18838,7 +19812,7 @@ AIAiUsageDtoSchema = z.object({
   totalTokens: z.number().int().nullable().optional(),
 });
 
-/** Zod schema for AICreateAiPromptTemplateInput */
+/** Zod schema for AICreateAiPromptTemplateInput. Data model for AI Create Ai Prompt Template Request. */
 AICreateAiPromptTemplateInputSchema = z.object({
   category: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
@@ -18849,7 +19823,7 @@ AICreateAiPromptTemplateInputSchema = z.object({
   systemPrompt: z.string().nullable().optional(),
 });
 
-/** Zod schema for AIUpdateAiPromptTemplateInput */
+/** Zod schema for AIUpdateAiPromptTemplateInput. Data model for AI Update Ai Prompt Template Request. */
 AIUpdateAiPromptTemplateInputSchema = z.object({
   category: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
@@ -18859,7 +19833,7 @@ AIUpdateAiPromptTemplateInputSchema = z.object({
   systemPrompt: z.string().nullable().optional(),
 });
 
-/** Zod schema for AnalyticsAnalyticsWarehouseFactDto */
+/** Zod schema for AnalyticsAnalyticsWarehouseFactDto. Data model for Analytics Analytics Warehouse Fact Dto. */
 AnalyticsAnalyticsWarehouseFactDtoSchema = z.object({
   id: z.string().uuid().optional(),
   amountUsd: z.number().nullable().optional(),
@@ -18872,14 +19846,14 @@ AnalyticsAnalyticsWarehouseFactDtoSchema = z.object({
   timestamp: z.string().datetime().optional(),
 });
 
-/** Zod schema for AnalyticsAnalyticsWarehouseRunInput */
+/** Zod schema for AnalyticsAnalyticsWarehouseRunInput. Data model for Analytics Analytics Warehouse Run Request. */
 AnalyticsAnalyticsWarehouseRunInputSchema = z.object({
   asOfUtc: z.string().datetime().nullable().optional(),
   lookbackDays: z.number().int().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for AnalyticsAnalyticsWarehouseRunOutput */
+/** Zod schema for AnalyticsAnalyticsWarehouseRunOutput. Data model for Analytics Analytics Warehouse Run Response. */
 AnalyticsAnalyticsWarehouseRunOutputSchema = z.object({
   asOfUtc: z.string().datetime().optional(),
   factsByName: z.record(z.string(), z.number().int()).nullable().optional(),
@@ -18889,7 +19863,7 @@ AnalyticsAnalyticsWarehouseRunOutputSchema = z.object({
   tenantId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for AnalyticsAnalyzeFunnelQuery */
+/** Zod schema for AnalyticsAnalyzeFunnelQuery. Data model for Analytics Analyze Funnel Query. */
 AnalyticsAnalyzeFunnelQuerySchema = z.object({
   endDate: z.string().datetime().optional(),
   startDate: z.string().datetime().optional(),
@@ -18897,7 +19871,7 @@ AnalyticsAnalyzeFunnelQuerySchema = z.object({
   tenantId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for AnalyticsCreateDashboardInput */
+/** Zod schema for AnalyticsCreateDashboardInput. Data model for Analytics Create Dashboard Request. */
 AnalyticsCreateDashboardInputSchema = z.object({
   description: z.string().nullable().optional(),
   isDefault: z.boolean().optional(),
@@ -18910,7 +19884,7 @@ AnalyticsCreateDashboardInputSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for AnalyticsDashboardDto */
+/** Zod schema for AnalyticsDashboardDto. Data model for Analytics Dashboard Dto. */
 AnalyticsDashboardDtoSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
@@ -18926,7 +19900,7 @@ AnalyticsDashboardDtoSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for AnalyticsDashboardWidgetDto */
+/** Zod schema for AnalyticsDashboardWidgetDto. Data model for Analytics Dashboard Widget Dto. */
 AnalyticsDashboardWidgetDtoSchema = z.object({
   id: z.string().uuid().optional(),
   configuration: z.string().nullable().optional(),
@@ -18935,7 +19909,7 @@ AnalyticsDashboardWidgetDtoSchema = z.object({
   type: z.lazy(() => AnalyticsWidgetTypeSchema).optional(),
 });
 
-/** Zod schema for AnalyticsDashboardWidgetInput */
+/** Zod schema for AnalyticsDashboardWidgetInput. Data model for Analytics Dashboard Widget Request. */
 AnalyticsDashboardWidgetInputSchema = z.object({
   configuration: z.string().nullable().optional(),
   sortOrder: z.number().int().optional(),
@@ -18943,7 +19917,7 @@ AnalyticsDashboardWidgetInputSchema = z.object({
   type: z.lazy(() => AnalyticsWidgetTypeSchema).optional(),
 });
 
-/** Zod schema for AnalyticsProductCapacityMetrics */
+/** Zod schema for AnalyticsProductCapacityMetrics. Data model for Analytics Product Capacity Metrics. */
 AnalyticsProductCapacityMetricsSchema = z.object({
   totalApiCallsLimit: z.number().int().optional(),
   totalStorageMbLimit: z.number().int().optional(),
@@ -18953,7 +19927,7 @@ AnalyticsProductCapacityMetricsSchema = z.object({
   unlimitedUserPlans: z.number().int().optional(),
 });
 
-/** Zod schema for AnalyticsProductCatalogMetrics */
+/** Zod schema for AnalyticsProductCatalogMetrics. Data model for Analytics Product Catalog Metrics. */
 AnalyticsProductCatalogMetricsSchema = z.object({
   bundles: z.number().int().optional(),
   draftProducts: z.number().int().optional(),
@@ -18961,10 +19935,10 @@ AnalyticsProductCatalogMetricsSchema = z.object({
   totalProducts: z.number().int().optional(),
 });
 
-/** Zod schema for AnalyticsProductMetricsExportFormat */
+/** Zod schema for AnalyticsProductMetricsExportFormat. OpenAPI schema for Analytics Product Metrics Export Format. */
 AnalyticsProductMetricsExportFormatSchema = z.enum(['Csv', 'Json']);
 
-/** Zod schema for AnalyticsProductMetricsOutput */
+/** Zod schema for AnalyticsProductMetricsOutput. Data model for Analytics Product Metrics Response. */
 AnalyticsProductMetricsOutputSchema = z.object({
   capacity: z.lazy(() => AnalyticsProductCapacityMetricsSchema).optional(),
   catalog: z.lazy(() => AnalyticsProductCatalogMetricsSchema).optional(),
@@ -18980,7 +19954,7 @@ AnalyticsProductMetricsOutputSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for AnalyticsProductMetricThreshold */
+/** Zod schema for AnalyticsProductMetricThreshold. Data model for Analytics Product Metric Threshold. */
 AnalyticsProductMetricThresholdSchema = z.object({
   criticalAt: z.number().optional(),
   key: z.string().nullable().optional(),
@@ -18990,10 +19964,10 @@ AnalyticsProductMetricThresholdSchema = z.object({
   warningAt: z.number().optional(),
 });
 
-/** Zod schema for AnalyticsProductMetricThresholdStatus */
+/** Zod schema for AnalyticsProductMetricThresholdStatus. OpenAPI schema for Analytics Product Metric Threshold Status. */
 AnalyticsProductMetricThresholdStatusSchema = z.enum(['Healthy', 'Warning', 'Critical']);
 
-/** Zod schema for AnalyticsProductRevenueMetrics */
+/** Zod schema for AnalyticsProductRevenueMetrics. Data model for Analytics Product Revenue Metrics. */
 AnalyticsProductRevenueMetricsSchema = z.object({
   annualRecurringRevenue: z.number().optional(),
   currency: z.string().nullable().optional(),
@@ -19001,7 +19975,7 @@ AnalyticsProductRevenueMetricsSchema = z.object({
   salesVolume: z.number().optional(),
 });
 
-/** Zod schema for AnalyticsProductSubscriptionMetrics */
+/** Zod schema for AnalyticsProductSubscriptionMetrics. Data model for Analytics Product Subscription Metrics. */
 AnalyticsProductSubscriptionMetricsSchema = z.object({
   activeSubscribers: z.number().int().optional(),
   cancelledInPeriod: z.number().int().optional(),
@@ -19013,10 +19987,10 @@ AnalyticsProductSubscriptionMetricsSchema = z.object({
   trialSubscribers: z.number().int().optional(),
 });
 
-/** Zod schema for AnalyticsTimeSeriesGranularity */
+/** Zod schema for AnalyticsTimeSeriesGranularity. OpenAPI schema for Analytics Time Series Granularity. */
 AnalyticsTimeSeriesGranularitySchema = z.enum(['Hour', 'Day', 'Week', 'Month']);
 
-/** Zod schema for AnalyticsTrackAnalyticsEventCommand */
+/** Zod schema for AnalyticsTrackAnalyticsEventCommand. Data model for Analytics Track Analytics Event Command. */
 AnalyticsTrackAnalyticsEventCommandSchema = z.object({
   eventName: z.string().nullable().optional(),
   propertiesJson: z.string().nullable().optional(),
@@ -19024,7 +19998,7 @@ AnalyticsTrackAnalyticsEventCommandSchema = z.object({
   userId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for AnalyticsUpdateDashboardInput */
+/** Zod schema for AnalyticsUpdateDashboardInput. Data model for Analytics Update Dashboard Request. */
 AnalyticsUpdateDashboardInputSchema = z.object({
   description: z.string().nullable().optional(),
   isDefault: z.boolean().optional(),
@@ -19036,22 +20010,22 @@ AnalyticsUpdateDashboardInputSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for AnalyticsWidgetType */
+/** Zod schema for AnalyticsWidgetType. OpenAPI schema for Analytics Widget Type. */
 AnalyticsWidgetTypeSchema = z.enum(['Counter', 'Chart', 'Table', 'Gauge', 'TimeSeries', 'Funnel']);
 
-/** Zod schema for APIAccessAccessCapabilitiesOutput */
+/** Zod schema for APIAccessAccessCapabilitiesOutput. Data model for API Access Access Capabilities Response. */
 APIAccessAccessCapabilitiesOutputSchema = z.object({
   capabilities: z.array(z.string()).nullable().optional(),
 });
 
-/** Zod schema for APIControllersActivateEconomyKillSwitchInput */
+/** Zod schema for APIControllersActivateEconomyKillSwitchInput. Data model for API Controllers Activate Economy Kill Switch Request. */
 APIControllersActivateEconomyKillSwitchInputSchema = z.object({
   id: z.string().uuid().optional(),
   capability: z.lazy(() => FinanceEconomyRiskEconomyValueMovementCapabilitySchema).optional(),
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIControllersAdRewardProtectedOperationFailureOutput */
+/** Zod schema for APIControllersAdRewardProtectedOperationFailureOutput. Data model for API Controllers Ad Reward Protected Operation Failure Response. */
 APIControllersAdRewardProtectedOperationFailureOutputSchema = z.object({
   diagnostics: z.array(z.string()).nullable().optional(),
   reviewId: z.string().uuid().nullable().optional(),
@@ -19075,33 +20049,33 @@ APIControllersApplicationInfoOutputSchema = z.object({
   timestamp: z.string().datetime().optional(),
 });
 
-/** Zod schema for APIControllersApproveEconomyPolicyInput */
+/** Zod schema for APIControllersApproveEconomyPolicyInput. Data model for API Controllers Approve Economy Policy Request. */
 APIControllersApproveEconomyPolicyInputSchema = z.object({
   stepUpReceipt: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIControllersApproveLegacyEconomyCutoverInput */
+/** Zod schema for APIControllersApproveLegacyEconomyCutoverInput. Data model for API Controllers Approve Legacy Economy Cutover Request. */
 APIControllersApproveLegacyEconomyCutoverInputSchema = z.object({
   stepUpReceipt: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIControllersApproveTreasuryWithdrawalInput */
+/** Zod schema for APIControllersApproveTreasuryWithdrawalInput. Data model for API Controllers Approve Treasury Withdrawal Request. */
 APIControllersApproveTreasuryWithdrawalInputSchema = z.object({
   expectedVersion: z.number().int().optional(),
   stepUpReceipt: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIControllersAssignFinancialCrimeCaseInput */
+/** Zod schema for APIControllersAssignFinancialCrimeCaseInput. Data model for API Controllers Assign Financial Crime Case Request. */
 APIControllersAssignFinancialCrimeCaseInputSchema = z.object({
   expectedVersion: z.number().int().optional(),
 });
 
-/** Zod schema for APIControllersAssignTrustSafetyAppealInput */
+/** Zod schema for APIControllersAssignTrustSafetyAppealInput. Data model for API Controllers Assign Trust Safety Appeal Request. */
 APIControllersAssignTrustSafetyAppealInputSchema = z.object({
   expectedVersion: z.number().int().optional(),
 });
 
-/** Zod schema for APIControllersBackfillLegacyEconomyWalletInput */
+/** Zod schema for APIControllersBackfillLegacyEconomyWalletInput. Data model for API Controllers Backfill Legacy Economy Wallet Request. */
 APIControllersBackfillLegacyEconomyWalletInputSchema = z.object({
   legacyWalletId: z.string().uuid().optional(),
   operationFingerprint: z.string().nullable().optional(),
@@ -19115,13 +20089,13 @@ APIControllersBuildDetailsSchema = z.object({
   timestamp: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for APIControllersCaptureLegacyEconomyMigrationInput */
+/** Zod schema for APIControllersCaptureLegacyEconomyMigrationInput. Data model for API Controllers Capture Legacy Economy Migration Request. */
 APIControllersCaptureLegacyEconomyMigrationInputSchema = z.object({
   batchId: z.string().uuid().optional(),
   jurisdictionCode: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIControllersCompleteMyAdRewardSessionInput */
+/** Zod schema for APIControllersCompleteMyAdRewardSessionInput. Data model for API Controllers Complete My Ad Reward Session Request. */
 APIControllersCompleteMyAdRewardSessionInputSchema = z.object({
   idempotencyKey: z.string().nullable().optional(),
   playback: z.lazy(() => FinanceEconomyAdRewardsAdPlaybackEvidenceSchema).optional(),
@@ -19129,12 +20103,12 @@ APIControllersCompleteMyAdRewardSessionInputSchema = z.object({
   token: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIControllersCompleteMyBountyInput */
+/** Zod schema for APIControllersCompleteMyBountyInput. Data model for API Controllers Complete My Bounty Request. */
 APIControllersCompleteMyBountyInputSchema = z.object({
   idempotencyKey: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIControllersCreateMyBountyInput */
+/** Zod schema for APIControllersCreateMyBountyInput. Data model for API Controllers Create My Bounty Request. */
 APIControllersCreateMyBountyInputSchema = z.object({
   amountUnits: z.number().int().optional(),
   currency: z.lazy(() => FinanceEconomyContractsCurrencyCodeSchema).optional(),
@@ -19145,12 +20119,12 @@ APIControllersCreateMyBountyInputSchema = z.object({
   requiresPrerequisite: z.boolean().optional(),
 });
 
-/** Zod schema for APIControllersCreateMyKycAccessTokenInput */
+/** Zod schema for APIControllersCreateMyKycAccessTokenInput. Data model for API Controllers Create My Kyc Access Token Request. */
 APIControllersCreateMyKycAccessTokenInputSchema = z.object({
   lifetimeSeconds: z.number().int().optional(),
 });
 
-/** Zod schema for APIControllersDecideFinancialCrimeCaseInput */
+/** Zod schema for APIControllersDecideFinancialCrimeCaseInput. Data model for API Controllers Decide Financial Crime Case Request. */
 APIControllersDecideFinancialCrimeCaseInputSchema = z.object({
   id: z.string().uuid().optional(),
   evidenceHash: z.string().nullable().optional(),
@@ -19163,7 +20137,7 @@ APIControllersDecideFinancialCrimeCaseInputSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for APIControllersDecideTrustSafetyAppealInput */
+/** Zod schema for APIControllersDecideTrustSafetyAppealInput. Data model for API Controllers Decide Trust Safety Appeal Request. */
 APIControllersDecideTrustSafetyAppealInputSchema = z.object({
   evidenceHash: z.string().nullable().optional(),
   expectedVersion: z.number().int().optional(),
@@ -19197,19 +20171,19 @@ APIControllersDependencyHealthOutputSchema = z.object({
   unhealthyCount: z.number().int().optional(),
 });
 
-/** Zod schema for APIControllersDispatchPayoutExecutionInput */
+/** Zod schema for APIControllersDispatchPayoutExecutionInput. Data model for API Controllers Dispatch Payout Execution Request. */
 APIControllersDispatchPayoutExecutionInputSchema = z.object({
   expectedVersion: z.number().int().optional(),
   stepUpReceipt: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIControllersDispatchTreasuryWithdrawalInput */
+/** Zod schema for APIControllersDispatchTreasuryWithdrawalInput. Data model for API Controllers Dispatch Treasury Withdrawal Request. */
 APIControllersDispatchTreasuryWithdrawalInputSchema = z.object({
   expectedVersion: z.number().int().optional(),
   stepUpReceipt: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIControllersEconomyKycStatusDto */
+/** Zod schema for APIControllersEconomyKycStatusDto. Data model for API Controllers Economy Kyc Status Dto. */
 APIControllersEconomyKycStatusDtoSchema = z.object({
   expiresAt: z.string().datetime().nullable().optional(),
   hasEvidence: z.boolean().optional(),
@@ -19219,7 +20193,7 @@ APIControllersEconomyKycStatusDtoSchema = z.object({
   version: z.number().int().nullable().optional(),
 });
 
-/** Zod schema for APIControllersEconomyPayoutExecutionOperationDto */
+/** Zod schema for APIControllersEconomyPayoutExecutionOperationDto. Data model for API Controllers Economy Payout Execution Operation Dto. */
 APIControllersEconomyPayoutExecutionOperationDtoSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
@@ -19239,25 +20213,25 @@ APIControllersEconomyPayoutExecutionOperationDtoSchema = z.object({
   walletId: z.string().uuid().optional(),
 });
 
-/** Zod schema for APIControllersEconomySelfServiceCapabilityDto */
+/** Zod schema for APIControllersEconomySelfServiceCapabilityDto. Data model for API Controllers Economy Self Service Capability Dto. */
 APIControllersEconomySelfServiceCapabilityDtoSchema = z.object({
   capability: z.lazy(() => FinanceEconomyRiskEconomyValueMovementCapabilitySchema).optional(),
   diagnostics: z.array(z.string()).nullable().optional(),
   state: z.lazy(() => APISetupEconomyCapabilityReadinessStateSchema).optional(),
 });
 
-/** Zod schema for APIControllersEconomyStepUpInput */
+/** Zod schema for APIControllersEconomyStepUpInput. Data model for API Controllers Economy Step Up Request. */
 APIControllersEconomyStepUpInputSchema = z.object({
   stepUpReceipt: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIControllersEconomyTopUpFailureOutput */
+/** Zod schema for APIControllersEconomyTopUpFailureOutput. Data model for API Controllers Economy Top Up Failure Response. */
 APIControllersEconomyTopUpFailureOutputSchema = z.object({
   message: z.string().nullable().optional(),
   state: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIControllersEconomyTransferProtectedOperationFailureOutput */
+/** Zod schema for APIControllersEconomyTransferProtectedOperationFailureOutput. Data model for API Controllers Economy Transfer Protected Operation Failure Response. */
 APIControllersEconomyTransferProtectedOperationFailureOutputSchema = z.object({
   diagnostics: z.array(z.string()).nullable().optional(),
   reviewId: z.string().uuid().nullable().optional(),
@@ -19293,7 +20267,7 @@ APIControllersHealthinessResponseItemSchema = z.object({
   status: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIControllersInspectEconomyCapabilityReadinessInput */
+/** Zod schema for APIControllersInspectEconomyCapabilityReadinessInput. Data model for API Controllers Inspect Economy Capability Readiness Request. */
 APIControllersInspectEconomyCapabilityReadinessInputSchema = z.object({
   capability: z.lazy(() => FinanceEconomyRiskEconomyValueMovementCapabilitySchema).optional(),
   destinationHash: z.string().nullable().optional(),
@@ -19314,21 +20288,21 @@ APIControllersLivenessOutputSchema = z.object({
   version: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIControllersMarketplaceProtectedOperationFailureOutput */
+/** Zod schema for APIControllersMarketplaceProtectedOperationFailureOutput. Data model for API Controllers Marketplace Protected Operation Failure Response. */
 APIControllersMarketplaceProtectedOperationFailureOutputSchema = z.object({
   diagnostics: z.array(z.string()).nullable().optional(),
   reviewId: z.string().uuid().nullable().optional(),
   state: z.lazy(() => FinanceEconomyRiskEconomyProtectedOperationStateSchema).optional(),
 });
 
-/** Zod schema for APIControllersPayoutProtectedOperationFailureOutput */
+/** Zod schema for APIControllersPayoutProtectedOperationFailureOutput. Data model for API Controllers Payout Protected Operation Failure Response. */
 APIControllersPayoutProtectedOperationFailureOutputSchema = z.object({
   diagnostics: z.array(z.string()).nullable().optional(),
   reviewId: z.string().uuid().nullable().optional(),
   state: z.lazy(() => FinanceEconomyRiskEconomyProtectedOperationStateSchema).optional(),
 });
 
-/** Zod schema for APIControllersPlatformKpisOutput */
+/** Zod schema for APIControllersPlatformKpisOutput. Data model for API Controllers Platform Kpis Response. */
 APIControllersPlatformKpisOutputSchema = z.object({
   activeTenants: z.number().int().optional(),
   calculatedAt: z.string().datetime().optional(),
@@ -19342,7 +20316,7 @@ APIControllersProcessDetailsSchema = z.object({
   uptime: z.string().optional(),
 });
 
-/** Zod schema for APIControllersProposeEconomyPolicyInput */
+/** Zod schema for APIControllersProposeEconomyPolicyInput. Data model for API Controllers Propose Economy Policy Request. */
 APIControllersProposeEconomyPolicyInputSchema = z.object({
   id: z.string().uuid().optional(),
   capability: z.lazy(() => FinanceEconomyRiskEconomyValueMovementCapabilitySchema).optional(),
@@ -19354,7 +20328,7 @@ APIControllersProposeEconomyPolicyInputSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for APIControllersProposeEconomyReserveInput */
+/** Zod schema for APIControllersProposeEconomyReserveInput. Data model for API Controllers Propose Economy Reserve Request. */
 APIControllersProposeEconomyReserveInputSchema = z.object({
   id: z.string().uuid().optional(),
   authorizationEpoch: z.number().int().optional(),
@@ -19372,13 +20346,13 @@ APIControllersProposeEconomyReserveInputSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for APIControllersProposeLegacyEconomyCutoverInput */
+/** Zod schema for APIControllersProposeLegacyEconomyCutoverInput. Data model for API Controllers Propose Legacy Economy Cutover Request. */
 APIControllersProposeLegacyEconomyCutoverInputSchema = z.object({
   reason: z.string().nullable().optional(),
   stepUpReceipt: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIControllersProposeTreasuryWithdrawalInput */
+/** Zod schema for APIControllersProposeTreasuryWithdrawalInput. Data model for API Controllers Propose Treasury Withdrawal Request. */
 APIControllersProposeTreasuryWithdrawalInputSchema = z.object({
   amountUnits: z.number().int().optional(),
   destinationHash: z.string().nullable().optional(),
@@ -19387,7 +20361,7 @@ APIControllersProposeTreasuryWithdrawalInputSchema = z.object({
   stepUpReceipt: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIControllersPublishEconomyAnchorInput */
+/** Zod schema for APIControllersPublishEconomyAnchorInput. Data model for API Controllers Publish Economy Anchor Request. */
 APIControllersPublishEconomyAnchorInputSchema = z.object({
   dispatchSnapshotHash: z.string().nullable().optional(),
 });
@@ -19401,32 +20375,32 @@ APIControllersReadinessOutputSchema = z.object({
   timestamp: z.string().datetime().optional(),
 });
 
-/** Zod schema for APIControllersRecordRegulatoryReferenceInput */
+/** Zod schema for APIControllersRecordRegulatoryReferenceInput. Data model for API Controllers Record Regulatory Reference Request. */
 APIControllersRecordRegulatoryReferenceInputSchema = z.object({
   jurisdictionCode: z.string().nullable().optional(),
   kind: z.string().nullable().optional(),
   referenceHash: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIControllersRefundMarketplaceSettlementInput */
+/** Zod schema for APIControllersRefundMarketplaceSettlementInput. Data model for API Controllers Refund Marketplace Settlement Request. */
 APIControllersRefundMarketplaceSettlementInputSchema = z.object({
   idempotencyKey: z.string().nullable().optional(),
   quantity: z.number().int().optional(),
   reasonCode: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIControllersReserveApprovedPayoutExecutionInput */
+/** Zod schema for APIControllersReserveApprovedPayoutExecutionInput. Data model for API Controllers Reserve Approved Payout Execution Request. */
 APIControllersReserveApprovedPayoutExecutionInputSchema = z.object({
   stepUpReceipt: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIControllersResolveEconomyRiskReviewInput */
+/** Zod schema for APIControllersResolveEconomyRiskReviewInput. Data model for API Controllers Resolve Economy Risk Review Request. */
 APIControllersResolveEconomyRiskReviewInputSchema = z.object({
   decisionCode: z.lazy(() => FinanceEconomyRiskRiskManualDecisionCodeSchema).optional(),
   resolution: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIControllersRollbackLegacyEconomyCutoverInput */
+/** Zod schema for APIControllersRollbackLegacyEconomyCutoverInput. Data model for API Controllers Rollback Legacy Economy Cutover Request. */
 APIControllersRollbackLegacyEconomyCutoverInputSchema = z.object({
   reason: z.string().nullable().optional(),
   stepUpReceipt: z.string().nullable().optional(),
@@ -19440,13 +20414,13 @@ APIControllersRuntimeDetailsSchema = z.object({
   processArchitecture: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIControllersSettleMyMarketplaceOrderInput */
+/** Zod schema for APIControllersSettleMyMarketplaceOrderInput. Data model for API Controllers Settle My Marketplace Order Request. */
 APIControllersSettleMyMarketplaceOrderInputSchema = z.object({
   currencyChoice: z.lazy(() => FinanceEconomyMarketplaceMarketplaceCurrencyChoiceSchema).optional(),
   idempotencyKey: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIControllersStartMyAdRewardSessionInput */
+/** Zod schema for APIControllersStartMyAdRewardSessionInput. Data model for API Controllers Start My Ad Reward Session Request. */
 APIControllersStartMyAdRewardSessionInputSchema = z.object({
   creativeId: z.string().nullable().optional(),
   idempotencyKey: z.string().nullable().optional(),
@@ -19454,12 +20428,12 @@ APIControllersStartMyAdRewardSessionInputSchema = z.object({
   requiredDurationSeconds: z.number().optional(),
 });
 
-/** Zod schema for APIControllersStartMyKycInput */
+/** Zod schema for APIControllersStartMyKycInput. Data model for API Controllers Start My Kyc Request. */
 APIControllersStartMyKycInputSchema = z.object({
   idempotencyKey: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIEventingDeadLetterEvent */
+/** Zod schema for APIEventingDeadLetterEvent. Data model for API Eventing Dead Letter Event. */
 APIEventingDeadLetterEventSchema = z.object({
   attemptCount: z.number().int().optional(),
   consumerName: z.string().nullable().optional(),
@@ -19469,7 +20443,7 @@ APIEventingDeadLetterEventSchema = z.object({
   lastError: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIEventingEventTransportStatus */
+/** Zod schema for APIEventingEventTransportStatus. Data model for API Eventing Event Transport Status. */
 APIEventingEventTransportStatusSchema = z.object({
   completed: z.number().int().optional(),
   deadLettered: z.number().int().optional(),
@@ -19477,7 +20451,7 @@ APIEventingEventTransportStatusSchema = z.object({
   pending: z.number().int().optional(),
 });
 
-/** Zod schema for APIProjectsAddProjectTeamInput */
+/** Zod schema for APIProjectsAddProjectTeamInput. Data model for API Projects Add Project Team Request. */
 APIProjectsAddProjectTeamInputSchema = z.object({
   contributionPercentage: z.number().optional(),
   notes: z.string().nullable().optional(),
@@ -19490,7 +20464,7 @@ APIProjectsAddProjectTeamInputSchema = z.object({
   teamId: z.string().uuid().optional(),
 });
 
-/** Zod schema for APIProjectsCounterProjectTeamAgreementInput */
+/** Zod schema for APIProjectsCounterProjectTeamAgreementInput. Data model for API Projects Counter Project Team Agreement Request. */
 APIProjectsCounterProjectTeamAgreementInputSchema = z.object({
   deliverables: z.string().nullable().optional(),
   endsAt: z.string().datetime().optional(),
@@ -19498,7 +20472,7 @@ APIProjectsCounterProjectTeamAgreementInputSchema = z.object({
   startsAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for APIProjectsCreateProjectAllocationInput */
+/** Zod schema for APIProjectsCreateProjectAllocationInput. Data model for API Projects Create Project Allocation Request. */
 APIProjectsCreateProjectAllocationInputSchema = z.object({
   capacityPercentage: z.number().optional(),
   endsAt: z.string().datetime().nullable().optional(),
@@ -19508,7 +20482,7 @@ APIProjectsCreateProjectAllocationInputSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for APIProjectsCreateProjectTeamAgreementInput */
+/** Zod schema for APIProjectsCreateProjectTeamAgreementInput. Data model for API Projects Create Project Team Agreement Request. */
 APIProjectsCreateProjectTeamAgreementInputSchema = z.object({
   deliverables: z.string().nullable().optional(),
   endsAt: z.string().datetime().optional(),
@@ -19518,7 +20492,7 @@ APIProjectsCreateProjectTeamAgreementInputSchema = z.object({
   startsAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for APIProjectsProjectAllocationDto */
+/** Zod schema for APIProjectsProjectAllocationDto. Data model for API Projects Project Allocation Dto. */
 APIProjectsProjectAllocationDtoSchema = z.object({
   id: z.string().uuid().optional(),
   capacityPercentage: z.number().optional(),
@@ -19530,7 +20504,7 @@ APIProjectsProjectAllocationDtoSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for APIProjectsProjectOwnershipDto */
+/** Zod schema for APIProjectsProjectOwnershipDto. Data model for API Projects Project Ownership Dto. */
 APIProjectsProjectOwnershipDtoSchema = z.object({
   agreements: z
     .array(z.lazy(() => APIProjectsProjectTeamAgreementDtoSchema))
@@ -19547,7 +20521,7 @@ APIProjectsProjectOwnershipDtoSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for APIProjectsProjectTeamAgreementDto */
+/** Zod schema for APIProjectsProjectTeamAgreementDto. Data model for API Projects Project Team Agreement Dto. */
 APIProjectsProjectTeamAgreementDtoSchema = z.object({
   id: z.string().uuid().optional(),
   acceptedByUserId: z.string().uuid().nullable().optional(),
@@ -19562,7 +20536,7 @@ APIProjectsProjectTeamAgreementDtoSchema = z.object({
   status: z.lazy(() => ProjectsProjectTeamAgreementStatusSchema).optional(),
 });
 
-/** Zod schema for APIProjectsProjectTeamOwnershipDto */
+/** Zod schema for APIProjectsProjectTeamOwnershipDto. Data model for API Projects Project Team Ownership Dto. */
 APIProjectsProjectTeamOwnershipDtoSchema = z.object({
   id: z.string().uuid().optional(),
   assignedAt: z.string().datetime().optional(),
@@ -19576,12 +20550,12 @@ APIProjectsProjectTeamOwnershipDtoSchema = z.object({
   teamSlug: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIProjectsTransferProjectOwnerTeamInput */
+/** Zod schema for APIProjectsTransferProjectOwnerTeamInput. Data model for API Projects Transfer Project Owner Team Request. */
 APIProjectsTransferProjectOwnerTeamInputSchema = z.object({
   teamId: z.string().uuid().optional(),
 });
 
-/** Zod schema for APIProjectsUpdateProjectAllocationInput */
+/** Zod schema for APIProjectsUpdateProjectAllocationInput. Data model for API Projects Update Project Allocation Request. */
 APIProjectsUpdateProjectAllocationInputSchema = z.object({
   capacityPercentage: z.number().optional(),
   endsAt: z.string().datetime().nullable().optional(),
@@ -19590,7 +20564,7 @@ APIProjectsUpdateProjectAllocationInputSchema = z.object({
   startsAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for APIProjectsUpdateProjectTeamInput */
+/** Zod schema for APIProjectsUpdateProjectTeamInput. Data model for API Projects Update Project Team Request. */
 APIProjectsUpdateProjectTeamInputSchema = z.object({
   contributionPercentage: z.number().optional(),
   notes: z.string().nullable().optional(),
@@ -19602,22 +20576,22 @@ APIProjectsUpdateProjectTeamInputSchema = z.object({
   role: z.lazy(() => ProjectsProjectTeamRoleSchema).optional(),
 });
 
-/** Zod schema for APIProjectWorkAddProjectTaskChecklistInput */
+/** Zod schema for APIProjectWorkAddProjectTaskChecklistInput. Data model for API Project Work Add Project Task Checklist Request. */
 APIProjectWorkAddProjectTaskChecklistInputSchema = z.object({
   text: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIProjectWorkAddProjectTaskCommentInput */
+/** Zod schema for APIProjectWorkAddProjectTaskCommentInput. Data model for API Project Work Add Project Task Comment Request. */
 APIProjectWorkAddProjectTaskCommentInputSchema = z.object({
   body: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIProjectWorkAddProjectTaskDependencyInput */
+/** Zod schema for APIProjectWorkAddProjectTaskDependencyInput. Data model for API Project Work Add Project Task Dependency Request. */
 APIProjectWorkAddProjectTaskDependencyInputSchema = z.object({
   dependsOnTaskId: z.string().uuid().optional(),
 });
 
-/** Zod schema for APIProjectWorkConfigureProjectWorkColumnInput */
+/** Zod schema for APIProjectWorkConfigureProjectWorkColumnInput. Data model for API Project Work Configure Project Work Column Request. */
 APIProjectWorkConfigureProjectWorkColumnInputSchema = z.object({
   kind: z.lazy(() => ProjectWorkProjectWorkColumnKindSchema).optional(),
   name: z.string().nullable().optional(),
@@ -19625,20 +20599,20 @@ APIProjectWorkConfigureProjectWorkColumnInputSchema = z.object({
   workInProgressLimit: z.number().int().nullable().optional(),
 });
 
-/** Zod schema for APIProjectWorkCreateProjectMilestoneInput */
+/** Zod schema for APIProjectWorkCreateProjectMilestoneInput. Data model for API Project Work Create Project Milestone Request. */
 APIProjectWorkCreateProjectMilestoneInputSchema = z.object({
   description: z.string().nullable().optional(),
   dueAt: z.string().datetime().nullable().optional(),
   name: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIProjectWorkCreateProjectTaskLabelInput */
+/** Zod schema for APIProjectWorkCreateProjectTaskLabelInput. Data model for API Project Work Create Project Task Label Request. */
 APIProjectWorkCreateProjectTaskLabelInputSchema = z.object({
   color: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIProjectWorkCreateProjectWorkTaskInput */
+/** Zod schema for APIProjectWorkCreateProjectWorkTaskInput. Data model for API Project Work Create Project Work Task Request. */
 APIProjectWorkCreateProjectWorkTaskInputSchema = z.object({
   assigneeUserId: z.string().uuid().nullable().optional(),
   columnId: z.string().uuid().optional(),
@@ -19649,13 +20623,13 @@ APIProjectWorkCreateProjectWorkTaskInputSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIProjectWorkMoveProjectWorkTaskInput */
+/** Zod schema for APIProjectWorkMoveProjectWorkTaskInput. Data model for API Project Work Move Project Work Task Request. */
 APIProjectWorkMoveProjectWorkTaskInputSchema = z.object({
   columnId: z.string().uuid().optional(),
   position: z.number().int().optional(),
 });
 
-/** Zod schema for APIProjectWorkProjectBoardDto */
+/** Zod schema for APIProjectWorkProjectBoardDto. Data model for API Project Work Project Board Dto. */
 APIProjectWorkProjectBoardDtoSchema = z.object({
   id: z.string().uuid().optional(),
   columns: z
@@ -19666,7 +20640,7 @@ APIProjectWorkProjectBoardDtoSchema = z.object({
   projectId: z.string().uuid().optional(),
 });
 
-/** Zod schema for APIProjectWorkProjectChecklistItemDto */
+/** Zod schema for APIProjectWorkProjectChecklistItemDto. Data model for API Project Work Project Checklist Item Dto. */
 APIProjectWorkProjectChecklistItemDtoSchema = z.object({
   id: z.string().uuid().optional(),
   isCompleted: z.boolean().optional(),
@@ -19674,7 +20648,7 @@ APIProjectWorkProjectChecklistItemDtoSchema = z.object({
   text: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIProjectWorkProjectMilestoneDto */
+/** Zod schema for APIProjectWorkProjectMilestoneDto. Data model for API Project Work Project Milestone Dto. */
 APIProjectWorkProjectMilestoneDtoSchema = z.object({
   id: z.string().uuid().optional(),
   completedAt: z.string().datetime().nullable().optional(),
@@ -19683,7 +20657,7 @@ APIProjectWorkProjectMilestoneDtoSchema = z.object({
   name: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIProjectWorkProjectTaskCommentDto */
+/** Zod schema for APIProjectWorkProjectTaskCommentDto. Data model for API Project Work Project Task Comment Dto. */
 APIProjectWorkProjectTaskCommentDtoSchema = z.object({
   id: z.string().uuid().optional(),
   authorUserId: z.string().uuid().optional(),
@@ -19692,20 +20666,20 @@ APIProjectWorkProjectTaskCommentDtoSchema = z.object({
   editedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for APIProjectWorkProjectTaskDependencyDto */
+/** Zod schema for APIProjectWorkProjectTaskDependencyDto. Data model for API Project Work Project Task Dependency Dto. */
 APIProjectWorkProjectTaskDependencyDtoSchema = z.object({
   id: z.string().uuid().optional(),
   dependsOnTaskId: z.string().uuid().optional(),
 });
 
-/** Zod schema for APIProjectWorkProjectTaskLabelDto */
+/** Zod schema for APIProjectWorkProjectTaskLabelDto. Data model for API Project Work Project Task Label Dto. */
 APIProjectWorkProjectTaskLabelDtoSchema = z.object({
   id: z.string().uuid().optional(),
   color: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIProjectWorkProjectWorkColumnDto */
+/** Zod schema for APIProjectWorkProjectWorkColumnDto. Data model for API Project Work Project Work Column Dto. */
 APIProjectWorkProjectWorkColumnDtoSchema = z.object({
   id: z.string().uuid().optional(),
   kind: z.lazy(() => ProjectWorkProjectWorkColumnKindSchema).optional(),
@@ -19718,7 +20692,7 @@ APIProjectWorkProjectWorkColumnDtoSchema = z.object({
   workInProgressLimit: z.number().int().nullable().optional(),
 });
 
-/** Zod schema for APIProjectWorkProjectWorkHistoryDto */
+/** Zod schema for APIProjectWorkProjectWorkHistoryDto. Data model for API Project Work Project Work History Dto. */
 APIProjectWorkProjectWorkHistoryDtoSchema = z.object({
   id: z.string().uuid().optional(),
   action: z.string().nullable().optional(),
@@ -19728,7 +20702,7 @@ APIProjectWorkProjectWorkHistoryDtoSchema = z.object({
   taskId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for APIProjectWorkProjectWorkTaskDetailsDto */
+/** Zod schema for APIProjectWorkProjectWorkTaskDetailsDto. Data model for API Project Work Project Work Task Details Dto. */
 APIProjectWorkProjectWorkTaskDetailsDtoSchema = z.object({
   checklist: z
     .array(z.lazy(() => APIProjectWorkProjectChecklistItemDtoSchema))
@@ -19749,7 +20723,7 @@ APIProjectWorkProjectWorkTaskDetailsDtoSchema = z.object({
   task: z.lazy(() => APIProjectWorkProjectWorkTaskDtoSchema).optional(),
 });
 
-/** Zod schema for APIProjectWorkProjectWorkTaskDto */
+/** Zod schema for APIProjectWorkProjectWorkTaskDto. Data model for API Project Work Project Work Task Dto. */
 APIProjectWorkProjectWorkTaskDtoSchema = z.object({
   id: z.string().uuid().optional(),
   assigneeUserId: z.string().uuid().nullable().optional(),
@@ -19764,7 +20738,7 @@ APIProjectWorkProjectWorkTaskDtoSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIProjectWorkUpdateProjectMilestoneInput */
+/** Zod schema for APIProjectWorkUpdateProjectMilestoneInput. Data model for API Project Work Update Project Milestone Request. */
 APIProjectWorkUpdateProjectMilestoneInputSchema = z.object({
   completedAt: z.string().datetime().nullable().optional(),
   description: z.string().nullable().optional(),
@@ -19772,17 +20746,17 @@ APIProjectWorkUpdateProjectMilestoneInputSchema = z.object({
   name: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIProjectWorkUpdateProjectTaskChecklistInput */
+/** Zod schema for APIProjectWorkUpdateProjectTaskChecklistInput. Data model for API Project Work Update Project Task Checklist Request. */
 APIProjectWorkUpdateProjectTaskChecklistInputSchema = z.object({
   isCompleted: z.boolean().optional(),
 });
 
-/** Zod schema for APIProjectWorkUpdateProjectTaskCommentInput */
+/** Zod schema for APIProjectWorkUpdateProjectTaskCommentInput. Data model for API Project Work Update Project Task Comment Request. */
 APIProjectWorkUpdateProjectTaskCommentInputSchema = z.object({
   body: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIProjectWorkUpdateProjectWorkTaskInput */
+/** Zod schema for APIProjectWorkUpdateProjectWorkTaskInput. Data model for API Project Work Update Project Work Task Request. */
 APIProjectWorkUpdateProjectWorkTaskInputSchema = z.object({
   assigneeUserId: z.string().uuid().nullable().optional(),
   description: z.string().nullable().optional(),
@@ -19792,28 +20766,28 @@ APIProjectWorkUpdateProjectWorkTaskInputSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for APISetupEconomyCapabilityReadinessState */
+/** Zod schema for APISetupEconomyCapabilityReadinessState. OpenAPI schema for API Setup Economy Capability Readiness State. */
 APISetupEconomyCapabilityReadinessStateSchema = z.enum(['Disabled', 'Ready', 'ProviderNotReady', 'InvalidConfiguration']);
 
-/** Zod schema for APITeamsAcceptTeamInvitationInput */
+/** Zod schema for APITeamsAcceptTeamInvitationInput. Data model for API Teams Accept Team Invitation Request. */
 APITeamsAcceptTeamInvitationInputSchema = z.object({
   token: z.string().nullable().optional(),
 });
 
-/** Zod schema for APITeamsAddTeamMemberInput */
+/** Zod schema for APITeamsAddTeamMemberInput. Data model for API Teams Add Team Member Request. */
 APITeamsAddTeamMemberInputSchema = z.object({
   authority: z.lazy(() => TeamsTeamMemberAuthoritySchema).optional(),
   professionalTitle: z.string().nullable().optional(),
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for APITeamsChangeTeamMemberInput */
+/** Zod schema for APITeamsChangeTeamMemberInput. Data model for API Teams Change Team Member Request. */
 APITeamsChangeTeamMemberInputSchema = z.object({
   authority: z.lazy(() => TeamsTeamMemberAuthoritySchema).optional(),
   professionalTitle: z.string().nullable().optional(),
 });
 
-/** Zod schema for APITeamsCreateTeamInput */
+/** Zod schema for APITeamsCreateTeamInput. Data model for API Teams Create Team Request. */
 APITeamsCreateTeamInputSchema = z.object({
   description: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
@@ -19822,7 +20796,7 @@ APITeamsCreateTeamInputSchema = z.object({
   visibility: z.lazy(() => TeamsTeamVisibilitySchema).optional(),
 });
 
-/** Zod schema for APITeamsCreateTeamInvitationInput */
+/** Zod schema for APITeamsCreateTeamInvitationInput. Data model for API Teams Create Team Invitation Request. */
 APITeamsCreateTeamInvitationInputSchema = z.object({
   authority: z.lazy(() => TeamsTeamMemberAuthoritySchema).optional(),
   email: z.string().nullable().optional(),
@@ -19830,7 +20804,7 @@ APITeamsCreateTeamInvitationInputSchema = z.object({
   userId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for APITeamsMyTeamInvitationDto */
+/** Zod schema for APITeamsMyTeamInvitationDto. Data model for API Teams My Team Invitation Dto. */
 APITeamsMyTeamInvitationDtoSchema = z.object({
   id: z.string().uuid().optional(),
   authority: z.lazy(() => TeamsTeamMemberAuthoritySchema).optional(),
@@ -19840,7 +20814,7 @@ APITeamsMyTeamInvitationDtoSchema = z.object({
   teamSlug: z.string().nullable().optional(),
 });
 
-/** Zod schema for APITeamsTeamDto */
+/** Zod schema for APITeamsTeamDto. Data model for API Teams Team Dto. */
 APITeamsTeamDtoSchema = z.object({
   id: z.string().uuid().optional(),
   description: z.string().nullable().optional(),
@@ -19856,14 +20830,14 @@ APITeamsTeamDtoSchema = z.object({
   visibility: z.lazy(() => TeamsTeamVisibilitySchema).optional(),
 });
 
-/** Zod schema for APITeamsTeamInvitationCreatedDto */
+/** Zod schema for APITeamsTeamInvitationCreatedDto. Data model for API Teams Team Invitation Created Dto. */
 APITeamsTeamInvitationCreatedDtoSchema = z.object({
   id: z.string().uuid().optional(),
   expiresAt: z.string().datetime().optional(),
   token: z.string().nullable().optional(),
 });
 
-/** Zod schema for APITeamsTeamInvitationDto */
+/** Zod schema for APITeamsTeamInvitationDto. Data model for API Teams Team Invitation Dto. */
 APITeamsTeamInvitationDtoSchema = z.object({
   id: z.string().uuid().optional(),
   authority: z.lazy(() => TeamsTeamMemberAuthoritySchema).optional(),
@@ -19875,7 +20849,7 @@ APITeamsTeamInvitationDtoSchema = z.object({
   usedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for APITeamsTeamMemberDto */
+/** Zod schema for APITeamsTeamMemberDto. Data model for API Teams Team Member Dto. */
 APITeamsTeamMemberDtoSchema = z.object({
   authority: z.lazy(() => TeamsTeamMemberAuthoritySchema).optional(),
   isActive: z.boolean().optional(),
@@ -19884,7 +20858,7 @@ APITeamsTeamMemberDtoSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for APITeamsTeamProjectSummary */
+/** Zod schema for APITeamsTeamProjectSummary. Data model for API Teams Team Project Summary. */
 APITeamsTeamProjectSummarySchema = z.object({
   id: z.string().uuid().optional(),
   participationMode: z.lazy(() => ProjectsProjectTeamParticipationModeSchema).optional(),
@@ -19896,7 +20870,7 @@ APITeamsTeamProjectSummarySchema = z.object({
   visibility: z.lazy(() => ContentVisibilitySchema).optional(),
 });
 
-/** Zod schema for APITeamsUpdateTeamInput */
+/** Zod schema for APITeamsUpdateTeamInput. Data model for API Teams Update Team Request. */
 APITeamsUpdateTeamInputSchema = z.object({
   description: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
@@ -19925,7 +20899,7 @@ AssetsAssetAccessUrlSchema = z.object({
   url: z.string().nullable().optional(),
 });
 
-/** Zod schema for AssetsAssetFolderRestrictionMode */
+/** Zod schema for AssetsAssetFolderRestrictionMode. OpenAPI schema for Assets Asset Folder Restriction Mode. */
 AssetsAssetFolderRestrictionModeSchema = z.enum(['None', 'SelectedTeams', 'TeamAuthorities', 'AllocatedProjectMembers']);
 
 /** Zod schema for AssetsAssetKind. Asset content classification. */
@@ -19952,7 +20926,7 @@ AssetsChunkedUploadSessionSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for AssetsCommandsBulkDeleteAssetItem */
+/** Zod schema for AssetsCommandsBulkDeleteAssetItem. Data model for Assets Commands Bulk Delete Asset Item. */
 AssetsCommandsBulkDeleteAssetItemSchema = z.object({
   assetReferenceId: z.string().uuid().optional(),
   contentMarkedForDeletion: z.boolean().optional(),
@@ -19960,7 +20934,7 @@ AssetsCommandsBulkDeleteAssetItemSchema = z.object({
   success: z.boolean().optional(),
 });
 
-/** Zod schema for AssetsCommandsBulkDeleteAssetsOutput */
+/** Zod schema for AssetsCommandsBulkDeleteAssetsOutput. Data model for Assets Commands Bulk Delete Assets Response. */
 AssetsCommandsBulkDeleteAssetsOutputSchema = z.object({
   failed: z.number().int().optional(),
   items: z
@@ -19971,7 +20945,7 @@ AssetsCommandsBulkDeleteAssetsOutputSchema = z.object({
   totalRequested: z.number().int().optional(),
 });
 
-/** Zod schema for AssetsCommandsBulkUploadAssetItem */
+/** Zod schema for AssetsCommandsBulkUploadAssetItem. Data model for Assets Commands Bulk Upload Asset Item. */
 AssetsCommandsBulkUploadAssetItemSchema = z.object({
   assetContentId: z.string().uuid().nullable().optional(),
   assetReferenceId: z.string().uuid().nullable().optional(),
@@ -19980,7 +20954,7 @@ AssetsCommandsBulkUploadAssetItemSchema = z.object({
   success: z.boolean().optional(),
 });
 
-/** Zod schema for AssetsCommandsBulkUploadAssetsOutput */
+/** Zod schema for AssetsCommandsBulkUploadAssetsOutput. Data model for Assets Commands Bulk Upload Assets Response. */
 AssetsCommandsBulkUploadAssetsOutputSchema = z.object({
   failed: z.number().int().optional(),
   items: z
@@ -19991,7 +20965,7 @@ AssetsCommandsBulkUploadAssetsOutputSchema = z.object({
   totalRequested: z.number().int().optional(),
 });
 
-/** Zod schema for AssetsControllersAssetExtractedTextOutput */
+/** Zod schema for AssetsControllersAssetExtractedTextOutput. Data model for Assets Controllers Asset Extracted Text Response. */
 AssetsControllersAssetExtractedTextOutputSchema = z.object({
   assetId: z.string().uuid().optional(),
   isPartial: z.boolean().optional(),
@@ -20003,67 +20977,67 @@ AssetsControllersAssetExtractedTextOutputSchema = z.object({
   usedOcr: z.boolean().optional(),
 });
 
-/** Zod schema for AssetsControllersBulkAssetAccessUrlInput */
+/** Zod schema for AssetsControllersBulkAssetAccessUrlInput. Data model for Assets Controllers Bulk Asset Access Url Request. */
 AssetsControllersBulkAssetAccessUrlInputSchema = z.object({
   assetIds: z.array(z.string().uuid()).nullable().optional(),
   directStorageUrl: z.boolean().optional(),
 });
 
-/** Zod schema for AssetsControllersBulkDeleteAssetsInput */
+/** Zod schema for AssetsControllersBulkDeleteAssetsInput. Data model for Assets Controllers Bulk Delete Assets Request. */
 AssetsControllersBulkDeleteAssetsInputSchema = z.object({
   assetIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
-/** Zod schema for AssetsControllersContentModerationInput */
+/** Zod schema for AssetsControllersContentModerationInput. Data model for Assets Controllers Content Moderation Request. */
 AssetsControllersContentModerationInputSchema = z.object({
   labels: z.array(z.string()).nullable().optional(),
   notes: z.string().nullable().optional(),
   status: z.lazy(() => AssetsModerationStatusSchema).optional(),
 });
 
-/** Zod schema for AssetsControllersCopyAssetReferenceInput */
+/** Zod schema for AssetsControllersCopyAssetReferenceInput. Data model for Assets Controllers Copy Asset Reference Request. */
 AssetsControllersCopyAssetReferenceInputSchema = z.object({
   displayName: z.string().nullable().optional(),
   folderId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for AssetsControllersCreateAssetFolderInput */
+/** Zod schema for AssetsControllersCreateAssetFolderInput. Data model for Assets Controllers Create Asset Folder Request. */
 AssetsControllersCreateAssetFolderInputSchema = z.object({
   name: z.string().nullable().optional(),
   parentFolderId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for AssetsControllersMarkNonDeletableInput */
+/** Zod schema for AssetsControllersMarkNonDeletableInput. Data model for Assets Controllers Mark Non Deletable Request. */
 AssetsControllersMarkNonDeletableInputSchema = z.object({
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for AssetsControllersReportAssetInput */
+/** Zod schema for AssetsControllersReportAssetInput. Data model for Assets Controllers Report Asset Request. */
 AssetsControllersReportAssetInputSchema = z.object({
   description: z.string().nullable().optional(),
   reason: z.lazy(() => AssetsReportReasonSchema).optional(),
 });
 
-/** Zod schema for AssetsControllersRestrictAssetFolderInput */
+/** Zod schema for AssetsControllersRestrictAssetFolderInput. Data model for Assets Controllers Restrict Asset Folder Request. */
 AssetsControllersRestrictAssetFolderInputSchema = z.object({
   authorities: z.array(z.string()).nullable().optional(),
   mode: z.lazy(() => AssetsAssetFolderRestrictionModeSchema).optional(),
   teamIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
-/** Zod schema for AssetsControllersReviewReportInput */
+/** Zod schema for AssetsControllersReviewReportInput. Data model for Assets Controllers Review Report Request. */
 AssetsControllersReviewReportInputSchema = z.object({
   decision: z.lazy(() => AssetsReviewDecisionSchema).optional(),
   notes: z.string().nullable().optional(),
 });
 
-/** Zod schema for AssetsControllersUpdateAssetInput */
+/** Zod schema for AssetsControllersUpdateAssetInput. Data model for Assets Controllers Update Asset Request. */
 AssetsControllersUpdateAssetInputSchema = z.object({
   accessPolicy: z.lazy(() => AssetsAssetAccessPolicySchema).optional(),
   displayName: z.string().nullable().optional(),
 });
 
-/** Zod schema for AssetsControllersUpdateVirusScanInput */
+/** Zod schema for AssetsControllersUpdateVirusScanInput. Data model for Assets Controllers Update Virus Scan Request. */
 AssetsControllersUpdateVirusScanInputSchema = z.object({
   scanResult: z.string().nullable().optional(),
   status: z.lazy(() => AssetsVirusScanStatusSchema).optional(),
@@ -20078,7 +21052,7 @@ AssetsImageFormatSchema = z.enum(['Original', 'Jpeg', 'Png', 'Webp', 'Avif', 'Gi
 /** Zod schema for AssetsModerationStatus. Content moderation status. */
 AssetsModerationStatusSchema = z.enum(['Pending', 'Processing', 'Approved', 'Rejected', 'NeedsReview', 'ApprovedWithWarning', 'Blocked']);
 
-/** Zod schema for AssetsQueriesAssetPreviewOutput */
+/** Zod schema for AssetsQueriesAssetPreviewOutput. Data model for Assets Queries Asset Preview Response. */
 AssetsQueriesAssetPreviewOutputSchema = z.object({
   assetContentId: z.string().uuid().optional(),
   assetReferenceId: z.string().uuid().optional(),
@@ -20097,7 +21071,7 @@ AssetsQueriesAssetPreviewOutputSchema = z.object({
   warnings: z.array(z.string()).nullable().optional(),
 });
 
-/** Zod schema for AssetsQueriesAssetRetentionCandidateOutput */
+/** Zod schema for AssetsQueriesAssetRetentionCandidateOutput. Data model for Assets Queries Asset Retention Candidate Response. */
 AssetsQueriesAssetRetentionCandidateOutputSchema = z.object({
   assetContentId: z.string().uuid().optional(),
   bucketName: z.string().nullable().optional(),
@@ -20107,7 +21081,7 @@ AssetsQueriesAssetRetentionCandidateOutputSchema = z.object({
   sizeBytes: z.number().int().optional(),
 });
 
-/** Zod schema for AssetsQueriesAssetRetentionReportOutput */
+/** Zod schema for AssetsQueriesAssetRetentionReportOutput. Data model for Assets Queries Asset Retention Report Response. */
 AssetsQueriesAssetRetentionReportOutputSchema = z.object({
   candidateBytes: z.number().int().optional(),
   candidates: z.number().int().optional(),
@@ -20121,7 +21095,7 @@ AssetsQueriesAssetRetentionReportOutputSchema = z.object({
   onLegalHold: z.number().int().optional(),
 });
 
-/** Zod schema for AssetsQueriesAssetSearchOutput */
+/** Zod schema for AssetsQueriesAssetSearchOutput. Data model for Assets Queries Asset Search Response. */
 AssetsQueriesAssetSearchOutputSchema = z.object({
   items: z
     .array(z.lazy(() => AssetsQueriesAssetSearchResultSchema))
@@ -20131,7 +21105,7 @@ AssetsQueriesAssetSearchOutputSchema = z.object({
   totalMatched: z.number().int().optional(),
 });
 
-/** Zod schema for AssetsQueriesAssetSearchResult */
+/** Zod schema for AssetsQueriesAssetSearchResult. Data model for Assets Queries Asset Search Result. */
 AssetsQueriesAssetSearchResultSchema = z.object({
   accessCount: z.number().int().optional(),
   assetContentId: z.string().uuid().optional(),
@@ -20147,7 +21121,7 @@ AssetsQueriesAssetSearchResultSchema = z.object({
   sizeBytes: z.number().int().optional(),
 });
 
-/** Zod schema for AssetsQueriesAssetStatisticsOutput */
+/** Zod schema for AssetsQueriesAssetStatisticsOutput. Data model for Assets Queries Asset Statistics Response. */
 AssetsQueriesAssetStatisticsOutputSchema = z.object({
   blockedOrRejected: z.number().int().optional(),
   documentAssets: z.number().int().optional(),
@@ -20163,7 +21137,7 @@ AssetsQueriesAssetStatisticsOutputSchema = z.object({
   videoAssets: z.number().int().optional(),
 });
 
-/** Zod schema for AssetsQueriesBulkAssetAccessUrlItem */
+/** Zod schema for AssetsQueriesBulkAssetAccessUrlItem. Data model for Assets Queries Bulk Asset Access Url Item. */
 AssetsQueriesBulkAssetAccessUrlItemSchema = z.object({
   assetReferenceId: z.string().uuid().optional(),
   error: z.string().nullable().optional(),
@@ -20174,7 +21148,7 @@ AssetsQueriesBulkAssetAccessUrlItemSchema = z.object({
   url: z.string().nullable().optional(),
 });
 
-/** Zod schema for AssetsQueriesBulkAssetAccessUrlsOutput */
+/** Zod schema for AssetsQueriesBulkAssetAccessUrlsOutput. Data model for Assets Queries Bulk Asset Access Urls Response. */
 AssetsQueriesBulkAssetAccessUrlsOutputSchema = z.object({
   failed: z.number().int().optional(),
   items: z
@@ -20224,7 +21198,7 @@ BulkOperationOutputSchema = z.object({
   totalRequested: z.number().int().optional(),
 });
 
-/** Zod schema for CommerceBillingInvoicePaymentRetryResult */
+/** Zod schema for CommerceBillingInvoicePaymentRetryResult. Data model for Commerce Billing Invoice Payment Retry Result. */
 CommerceBillingInvoicePaymentRetryResultSchema = z.object({
   accepted: z.boolean().optional(),
   code: z.string().nullable().optional(),
@@ -20238,10 +21212,10 @@ CommerceBillingInvoicePaymentRetryResultSchema = z.object({
 /** Zod schema for CommerceBillingInvoiceStatus. Invoice status enumeration with monotonic transitions */
 CommerceBillingInvoiceStatusSchema = z.enum(['Draft', 'Open', 'Paid', 'Void', 'PastDue', 'Uncollectible']);
 
-/** Zod schema for CommerceOrderChargeState */
+/** Zod schema for CommerceOrderChargeState. OpenAPI schema for Commerce Order Charge State. */
 CommerceOrderChargeStateSchema = z.enum(['Succeeded', 'Failed', 'Processing', 'RequiresAction', 'RequiresReconciliation']);
 
-/** Zod schema for CommerceOrderPaymentIntentPreparation */
+/** Zod schema for CommerceOrderPaymentIntentPreparation. Data model for Commerce Order Payment Intent Preparation. */
 CommerceOrderPaymentIntentPreparationSchema = z.object({
   clientSecret: z.string().nullable().optional(),
   failureReason: z.string().nullable().optional(),
@@ -20250,7 +21224,7 @@ CommerceOrderPaymentIntentPreparationSchema = z.object({
   success: z.boolean().optional(),
 });
 
-/** Zod schema for CommerceOrdersAddMarketplaceCartItemInput */
+/** Zod schema for CommerceOrdersAddMarketplaceCartItemInput. Data model for Commerce Orders Add Marketplace Cart Item Input. */
 CommerceOrdersAddMarketplaceCartItemInputSchema = z.object({
   idempotencyKey: z.string().nullable().optional(),
   productId: z.string().uuid().optional(),
@@ -20273,7 +21247,7 @@ CommerceOrdersCaptureOrderInputSchema = z.object({
   paymentMethodId: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommerceOrdersCheckoutMarketplaceCartInput */
+/** Zod schema for CommerceOrdersCheckoutMarketplaceCartInput. Data model for Commerce Orders Checkout Marketplace Cart Input. */
 CommerceOrdersCheckoutMarketplaceCartInputSchema = z.object({
   expectedVersion: z.number().int().optional(),
   idempotencyKey: z.string().nullable().optional(),
@@ -20287,7 +21261,7 @@ CommerceOrdersCompleteOrderInputSchema = z.object({
   paymentProviderReference: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommerceOrdersCompleteOrderMarketplaceSettlement */
+/** Zod schema for CommerceOrdersCompleteOrderMarketplaceSettlement. Data model for Commerce Orders Complete Order Marketplace Settlement. */
 CommerceOrdersCompleteOrderMarketplaceSettlementSchema = z.object({
   currencyChoice: z.lazy(() => CommerceOrdersOrderMarketplaceCurrencyChoiceSchema).optional(),
   idempotencyKey: z.string().nullable().optional(),
@@ -20298,7 +21272,7 @@ CommerceOrdersCreateOrderInputSchema = z.object({
   idempotencyKey: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommerceOrdersMarketplaceCartDto */
+/** Zod schema for CommerceOrdersMarketplaceCartDto. Data model for Commerce Orders Marketplace Cart Dto. */
 CommerceOrdersMarketplaceCartDtoSchema = z.object({
   id: z.string().uuid().nullable().optional(),
   items: z
@@ -20311,7 +21285,7 @@ CommerceOrdersMarketplaceCartDtoSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for CommerceOrdersMarketplaceCartItemDto */
+/** Zod schema for CommerceOrdersMarketplaceCartItemDto. Data model for Commerce Orders Marketplace Cart Item Dto. */
 CommerceOrdersMarketplaceCartItemDtoSchema = z.object({
   id: z.string().uuid().optional(),
   productId: z.string().uuid().optional(),
@@ -20320,10 +21294,10 @@ CommerceOrdersMarketplaceCartItemDtoSchema = z.object({
   quantity: z.number().int().optional(),
 });
 
-/** Zod schema for CommerceOrdersMarketplaceCartState */
+/** Zod schema for CommerceOrdersMarketplaceCartState. OpenAPI schema for Commerce Orders Marketplace Cart State. */
 CommerceOrdersMarketplaceCartStateSchema = z.enum(['Active', 'CheckedOut', 'Abandoned']);
 
-/** Zod schema for CommerceOrdersMarketplaceCheckoutDto */
+/** Zod schema for CommerceOrdersMarketplaceCheckoutDto. Data model for Commerce Orders Marketplace Checkout Dto. */
 CommerceOrdersMarketplaceCheckoutDtoSchema = z.object({
   cartId: z.string().uuid().optional(),
   orders: z
@@ -20332,7 +21306,7 @@ CommerceOrdersMarketplaceCheckoutDtoSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for CommerceOrdersMarketplaceCheckoutOrderDto */
+/** Zod schema for CommerceOrdersMarketplaceCheckoutOrderDto. Data model for Commerce Orders Marketplace Checkout Order Dto. */
 CommerceOrdersMarketplaceCheckoutOrderDtoSchema = z.object({
   currency: z.string().nullable().optional(),
   orderId: z.string().uuid().optional(),
@@ -20412,7 +21386,7 @@ CommerceOrdersOrderLineItemDtoSchema = z.object({
   unitPrice: z.number().optional(),
 });
 
-/** Zod schema for CommerceOrdersOrderMarketplaceCurrencyChoice */
+/** Zod schema for CommerceOrdersOrderMarketplaceCurrencyChoice. OpenAPI schema for Commerce Orders Order Marketplace Currency Choice. */
 CommerceOrdersOrderMarketplaceCurrencyChoiceSchema = z.enum(['Hard', 'Soft', 'FixedMix']);
 
 /** Zod schema for CommerceOrdersOrderStatus. Order status enumeration with explicit economic states.
@@ -20431,19 +21405,19 @@ CommerceOrdersOrderStatusSchema = z.enum([
   'OnHold',
 ]);
 
-/** Zod schema for CommerceOrdersSetMarketplaceCartItemQuantityInput */
+/** Zod schema for CommerceOrdersSetMarketplaceCartItemQuantityInput. Data model for Commerce Orders Set Marketplace Cart Item Quantity Input. */
 CommerceOrdersSetMarketplaceCartItemQuantityInputSchema = z.object({
   expectedVersion: z.number().int().optional(),
   quantity: z.number().int().optional(),
 });
 
-/** Zod schema for CommercePaymentsBillingChargesControllerCancelBillingChargeInput */
+/** Zod schema for CommercePaymentsBillingChargesControllerCancelBillingChargeInput. Data model for Commerce Payments Billing Charges Controller+Cancel Billing Charge Request. */
 CommercePaymentsBillingChargesControllerCancelBillingChargeInputSchema = z.object({
   canceledBy: z.string().uuid().nullable().optional(),
   cancellationReason: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommercePaymentsBillingChargesControllerCreateBillingChargeInput */
+/** Zod schema for CommercePaymentsBillingChargesControllerCreateBillingChargeInput. Data model for Commerce Payments Billing Charges Controller+Create Billing Charge Request. */
 CommercePaymentsBillingChargesControllerCreateBillingChargeInputSchema = z.object({
   amount: z.number().optional(),
   paymentMethodId: z.string().nullable().optional(),
@@ -20451,7 +21425,7 @@ CommercePaymentsBillingChargesControllerCreateBillingChargeInputSchema = z.objec
   tenantId: z.string().uuid().optional(),
 });
 
-/** Zod schema for CommercePaymentsBillingChargesControllerRefundBillingChargeInput */
+/** Zod schema for CommercePaymentsBillingChargesControllerRefundBillingChargeInput. Data model for Commerce Payments Billing Charges Controller+Refund Billing Charge Request. */
 CommercePaymentsBillingChargesControllerRefundBillingChargeInputSchema = z.object({
   amount: z.number().nullable().optional(),
   reason: z.string().nullable().optional(),
@@ -20491,7 +21465,7 @@ CommercePaymentsCreateTaxRuleInputSchema = z.object({
   rate: z.number().optional(),
 });
 
-/** Zod schema for CommercePaymentsCreateWalletInput */
+/** Zod schema for CommercePaymentsCreateWalletInput. Data model for Commerce Payments Create Wallet Request. */
 CommercePaymentsCreateWalletInputSchema = z.object({
   currency: z.string().nullable().optional(),
 });
@@ -20499,7 +21473,7 @@ CommercePaymentsCreateWalletInputSchema = z.object({
 /** Zod schema for CommercePaymentsCustomerType. Customer types */
 CommercePaymentsCustomerTypeSchema = z.enum(['B2C', 'B2B']);
 
-/** Zod schema for CommercePaymentsLockWalletInput */
+/** Zod schema for CommercePaymentsLockWalletInput. Data model for Commerce Payments Lock Wallet Request. */
 CommercePaymentsLockWalletInputSchema = z.object({
   reason: z.string().nullable(),
 });
@@ -20569,21 +21543,21 @@ CommercePaymentsPaymentRetryResultSchema = z.object({
   success: z.boolean().optional(),
 });
 
-/** Zod schema for CommercePaymentsPaymentsControllerCancelPaymentInput */
+/** Zod schema for CommercePaymentsPaymentsControllerCancelPaymentInput. Data model for Commerce Payments Payments Controller+Cancel Payment Request. */
 CommercePaymentsPaymentsControllerCancelPaymentInputSchema = z.object({
   canceledBy: z.string().uuid().nullable().optional(),
   cancellationReason: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommercePaymentsPaymentsControllerCompleteSubscriptionCheckoutInput */
+/** Zod schema for CommercePaymentsPaymentsControllerCompleteSubscriptionCheckoutInput. Data model for Commerce Payments Payments Controller+Complete Subscription Checkout Request. */
 CommercePaymentsPaymentsControllerCompleteSubscriptionCheckoutInputSchema = z.object({
   paymentMethodId: z.string().nullable().optional(),
   subscriptionId: z.string().uuid().optional(),
   tenantId: z.string().uuid().optional(),
 });
 
-/** Zod schema for CommercePaymentsPaymentsControllerCreateSetupIntentInput */
+/** Zod schema for CommercePaymentsPaymentsControllerCreateSetupIntentInput. Data model for Commerce Payments Payments Controller+Create Setup Intent Request. */
 CommercePaymentsPaymentsControllerCreateSetupIntentInputSchema = z.object({
   customerEmail: z.string().nullable().optional(),
   customerName: z.string().nullable().optional(),
@@ -20591,7 +21565,7 @@ CommercePaymentsPaymentsControllerCreateSetupIntentInputSchema = z.object({
   tenantId: z.string().uuid().optional(),
 });
 
-/** Zod schema for CommercePaymentsPaymentsControllerCreateSetupIntentOutput */
+/** Zod schema for CommercePaymentsPaymentsControllerCreateSetupIntentOutput. Data model for Commerce Payments Payments Controller+Create Setup Intent Response. */
 CommercePaymentsPaymentsControllerCreateSetupIntentOutputSchema = z.object({
   clientSecret: z.string().nullable().optional(),
   customerId: z.string().nullable().optional(),
@@ -20599,7 +21573,7 @@ CommercePaymentsPaymentsControllerCreateSetupIntentOutputSchema = z.object({
   subscriptionId: z.string().uuid().optional(),
 });
 
-/** Zod schema for CommercePaymentsPaymentsControllerProcessPaymentInput */
+/** Zod schema for CommercePaymentsPaymentsControllerProcessPaymentInput. Data model for Commerce Payments Payments Controller+Process Payment Request. */
 CommercePaymentsPaymentsControllerProcessPaymentInputSchema = z.object({
   amount: z.number().optional(),
   paymentMethodId: z.string().nullable().optional(),
@@ -20607,7 +21581,7 @@ CommercePaymentsPaymentsControllerProcessPaymentInputSchema = z.object({
   tenantId: z.string().uuid().optional(),
 });
 
-/** Zod schema for CommercePaymentsPaymentsControllerRefundInput */
+/** Zod schema for CommercePaymentsPaymentsControllerRefundInput. Data model for Commerce Payments Payments Controller+Refund Request. */
 CommercePaymentsPaymentsControllerRefundInputSchema = z.object({
   amount: z.number().nullable().optional(),
   reason: z.string().nullable().optional(),
@@ -20897,12 +21871,12 @@ CommercePaymentsWalletTransactionSchema = z.object({
 /** Zod schema for CommercePaymentsWalletTransactionType. Wallet transaction types */
 CommercePaymentsWalletTransactionTypeSchema = z.enum(['Credit', 'Debit', 'TransferIn', 'TransferOut', 'Refund', 'Fee', 'Adjustment']);
 
-/** Zod schema for CommerceProductsAddMySupportTicketMessageInput */
+/** Zod schema for CommerceProductsAddMySupportTicketMessageInput. Data model for Commerce Products Add My Support Ticket Message Request. */
 CommerceProductsAddMySupportTicketMessageInputSchema = z.object({
   body: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommerceProductsAddSupportTicketMessageInput */
+/** Zod schema for CommerceProductsAddSupportTicketMessageInput. Data model for Commerce Products Add Support Ticket Message Request. */
 CommerceProductsAddSupportTicketMessageInputSchema = z.object({
   body: z.string().nullable().optional(),
   isInternal: z.boolean().optional(),
@@ -20922,7 +21896,7 @@ CommerceProductsApplyPromoCodesInputSchema = z.object({
   promoCodes: z.array(z.string()).nullable().optional(),
 });
 
-/** Zod schema for CommerceProductsAssignSupportTicketInput */
+/** Zod schema for CommerceProductsAssignSupportTicketInput. Data model for Commerce Products Assign Support Ticket Request. */
 CommerceProductsAssignSupportTicketInputSchema = z.object({
   agentUserId: z.string().uuid().optional(),
 });
@@ -20950,7 +21924,7 @@ CommerceProductsBatchProductCreateItemSchema = z.object({
   type: z.lazy(() => CommerceProductsProductTypeSchema).optional(),
 });
 
-/** Zod schema for CommerceProductsChangeSupportTicketPriorityInput */
+/** Zod schema for CommerceProductsChangeSupportTicketPriorityInput. Data model for Commerce Products Change Support Ticket Priority Request. */
 CommerceProductsChangeSupportTicketPriorityInputSchema = z.object({
   priority: z.lazy(() => CommerceProductsSupportTicketPrioritySchema).optional(),
 });
@@ -20960,12 +21934,12 @@ CommerceProductsCheckMultipleAccessInputSchema = z.object({
   productIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
-/** Zod schema for CommerceProductsCloseSupportTicketInput */
+/** Zod schema for CommerceProductsCloseSupportTicketInput. Data model for Commerce Products Close Support Ticket Request. */
 CommerceProductsCloseSupportTicketInputSchema = z.object({
   closingNotes: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommerceProductsCreateMySupportTicketInput */
+/** Zod schema for CommerceProductsCreateMySupportTicketInput. Data model for Commerce Products Create My Support Ticket Request. */
 CommerceProductsCreateMySupportTicketInputSchema = z.object({
   body: z.string().nullable().optional(),
   category: z.string().nullable().optional(),
@@ -21007,7 +21981,7 @@ CommerceProductsCreatePromoCodeInputSchema = z.object({
   validUntil: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for CommerceProductsCreateSupportTicketInput */
+/** Zod schema for CommerceProductsCreateSupportTicketInput. Data model for Commerce Products Create Support Ticket Request. */
 CommerceProductsCreateSupportTicketInputSchema = z.object({
   body: z.string().nullable().optional(),
   category: z.string().nullable().optional(),
@@ -21211,7 +22185,7 @@ CommerceProductsRejectedPromoCodeSchema = z.object({
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommerceProductsResolveSupportTicketInput */
+/** Zod schema for CommerceProductsResolveSupportTicketInput. Data model for Commerce Products Resolve Support Ticket Request. */
 CommerceProductsResolveSupportTicketInputSchema = z.object({
   resolutionSummary: z.string().nullable().optional(),
 });
@@ -21223,7 +22197,7 @@ CommerceProductsRevokeEntitlementInputSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for CommerceProductsSetProductPricingInput */
+/** Zod schema for CommerceProductsSetProductPricingInput. Data model for Commerce Products Set Product Pricing Request. */
 CommerceProductsSetProductPricingInputSchema = z.object({
   basePrice: z.number().optional(),
   currency: z.string().nullable().optional(),
@@ -21235,14 +22209,14 @@ CommerceProductsSetProductPricingInputSchema = z.object({
   saleStartDate: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for CommerceProductsSupportAgentDto */
+/** Zod schema for CommerceProductsSupportAgentDto. Data model for Commerce Products Support Agent Dto. */
 CommerceProductsSupportAgentDtoSchema = z.object({
   email: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for CommerceProductsSupportTicketDto */
+/** Zod schema for CommerceProductsSupportTicketDto. Data model for Commerce Products Support Ticket Dto. */
 CommerceProductsSupportTicketDtoSchema = z.object({
   id: z.string().uuid().optional(),
   assignedToName: z.string().nullable().optional(),
@@ -21272,10 +22246,10 @@ CommerceProductsSupportTicketDtoSchema = z.object({
   tenantId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for CommerceProductsSupportTicketMessageAuthorType */
+/** Zod schema for CommerceProductsSupportTicketMessageAuthorType. OpenAPI schema for Commerce Products Support Ticket Message Author Type. */
 CommerceProductsSupportTicketMessageAuthorTypeSchema = z.enum(['Customer', 'Agent', 'System']);
 
-/** Zod schema for CommerceProductsSupportTicketMessageDto */
+/** Zod schema for CommerceProductsSupportTicketMessageDto. Data model for Commerce Products Support Ticket Message Dto. */
 CommerceProductsSupportTicketMessageDtoSchema = z.object({
   id: z.string().uuid().optional(),
   authorEmail: z.string().nullable().optional(),
@@ -21288,13 +22262,13 @@ CommerceProductsSupportTicketMessageDtoSchema = z.object({
   ticketId: z.string().uuid().optional(),
 });
 
-/** Zod schema for CommerceProductsSupportTicketPriority */
+/** Zod schema for CommerceProductsSupportTicketPriority. OpenAPI schema for Commerce Products Support Ticket Priority. */
 CommerceProductsSupportTicketPrioritySchema = z.enum(['Low', 'Normal', 'High', 'Urgent']);
 
-/** Zod schema for CommerceProductsSupportTicketStatus */
+/** Zod schema for CommerceProductsSupportTicketStatus. OpenAPI schema for Commerce Products Support Ticket Status. */
 CommerceProductsSupportTicketStatusSchema = z.enum(['Open', 'InProgress', 'Resolved', 'Closed', 'Cancelled']);
 
-/** Zod schema for CommerceProductsSupportTicketSummaryDto */
+/** Zod schema for CommerceProductsSupportTicketSummaryDto. Data model for Commerce Products Support Ticket Summary Dto. */
 CommerceProductsSupportTicketSummaryDtoSchema = z.object({
   highOrUrgent: z.number().int().optional(),
   inProgress: z.number().int().optional(),
@@ -21356,14 +22330,14 @@ CommerceSubscriptionsBillingHistoryDtoSchema = z.object({
   subscriptionId: z.string().uuid().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsBillingSubscriptionsControllerCancelBillingSubscriptionInput */
+/** Zod schema for CommerceSubscriptionsBillingSubscriptionsControllerCancelBillingSubscriptionInput. Data model for Commerce Subscriptions Billing Subscriptions Controller+Cancel Billing Subscription Request. */
 CommerceSubscriptionsBillingSubscriptionsControllerCancelBillingSubscriptionInputSchema = z.object({
   effectiveDate: z.string().datetime().nullable().optional(),
   note: z.string().nullable().optional(),
   reason: z.lazy(() => CommerceSubscriptionsCancellationReasonSchema).optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsBillingSubscriptionsControllerCreateBillingSubscriptionInput */
+/** Zod schema for CommerceSubscriptionsBillingSubscriptionsControllerCreateBillingSubscriptionInput. Data model for Commerce Subscriptions Billing Subscriptions Controller+Create Billing Subscription Request. */
 CommerceSubscriptionsBillingSubscriptionsControllerCreateBillingSubscriptionInputSchema = z.object({
   amount: z.number().optional(),
   billingCycle: z.lazy(() => BillingCycleSchema).optional(),
@@ -21387,14 +22361,14 @@ CommerceSubscriptionsCancellationReasonSchema = z.enum([
   'ExternalRequest',
 ]);
 
-/** Zod schema for CommerceSubscriptionsClientModulesOutput */
+/** Zod schema for CommerceSubscriptionsClientModulesOutput. Data model for Commerce Subscriptions Client Modules Response. */
 CommerceSubscriptionsClientModulesOutputSchema = z.object({
   clientId: z.string().uuid().optional(),
   featureFlags: z.record(z.string(), z.boolean()).nullable().optional(),
   subscriptions: z.lazy(() => PagedResultSubscriptionSchema).optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsCreateClientInput */
+/** Zod schema for CommerceSubscriptionsCreateClientInput. Data model for Commerce Subscriptions Create Client Request. */
 CommerceSubscriptionsCreateClientInputSchema = z.object({
   adminEmail: z.string().nullable().optional(),
   cnpj: z.string().nullable().optional(),
@@ -21457,7 +22431,7 @@ CommerceSubscriptionsSubscriptionSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionChurnReportDto */
+/** Zod schema for CommerceSubscriptionsSubscriptionChurnReportDto. Data model for Commerce Subscriptions Subscription Churn Report Dto. */
 CommerceSubscriptionsSubscriptionChurnReportDtoSchema = z.object({
   activeSubscriptions: z.number().int().optional(),
   cancelledInPeriod: z.number().int().optional(),
@@ -21481,30 +22455,30 @@ CommerceSubscriptionsSubscriptionDowngradeResultSchema = z.object({
   updatedSubscription: z.lazy(() => CommerceSubscriptionsSubscriptionSchema).optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerAutoRenewInput */
+/** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerAutoRenewInput. Data model for Commerce Subscriptions Subscription Lifecycle Controller+Auto Renew Request. */
 CommerceSubscriptionsSubscriptionLifecycleControllerAutoRenewInputSchema = z.object({
   autoRenew: z.boolean().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerCancelInput */
+/** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerCancelInput. Data model for Commerce Subscriptions Subscription Lifecycle Controller+Cancel Request. */
 CommerceSubscriptionsSubscriptionLifecycleControllerCancelInputSchema = z.object({
   effectiveDate: z.string().datetime().nullable().optional(),
   note: z.string().nullable().optional(),
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerDowngradeInput */
+/** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerDowngradeInput. Data model for Commerce Subscriptions Subscription Lifecycle Controller+Downgrade Request. */
 CommerceSubscriptionsSubscriptionLifecycleControllerDowngradeInputSchema = z.object({
   effectiveDate: z.string().datetime().nullable().optional(),
   newPlanId: z.string().uuid().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerEndTrialInput */
+/** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerEndTrialInput. Data model for Commerce Subscriptions Subscription Lifecycle Controller+End Trial Request. */
 CommerceSubscriptionsSubscriptionLifecycleControllerEndTrialInputSchema = z.object({
   convertToPaid: z.boolean().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerExternalIdsInput */
+/** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerExternalIdsInput. Data model for Commerce Subscriptions Subscription Lifecycle Controller+External Ids Request. */
 CommerceSubscriptionsSubscriptionLifecycleControllerExternalIdsInputSchema = z.object({
   externalCustomerId: z.string().nullable().optional(),
   externalSubscriptionId: z.string().nullable().optional(),
@@ -21516,23 +22490,23 @@ CommerceSubscriptionsSubscriptionLifecycleControllerPauseSubscriptionInputSchema
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerStartTrialInput */
+/** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerStartTrialInput. Data model for Commerce Subscriptions Subscription Lifecycle Controller+Start Trial Request. */
 CommerceSubscriptionsSubscriptionLifecycleControllerStartTrialInputSchema = z.object({
   trialDays: z.number().int().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerSuspendInput */
+/** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerSuspendInput. Data model for Commerce Subscriptions Subscription Lifecycle Controller+Suspend Request. */
 CommerceSubscriptionsSubscriptionLifecycleControllerSuspendInputSchema = z.object({
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerUpgradeInput */
+/** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerUpgradeInput. Data model for Commerce Subscriptions Subscription Lifecycle Controller+Upgrade Request. */
 CommerceSubscriptionsSubscriptionLifecycleControllerUpgradeInputSchema = z.object({
   effectiveDate: z.string().datetime().nullable().optional(),
   newPlanId: z.string().uuid().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionNotificationDto */
+/** Zod schema for CommerceSubscriptionsSubscriptionNotificationDto. Data model for Commerce Subscriptions Subscription Notification Dto. */
 CommerceSubscriptionsSubscriptionNotificationDtoSchema = z.object({
   id: z.string().uuid().optional(),
   channel: z.string().nullable().optional(),
@@ -21546,7 +22520,7 @@ CommerceSubscriptionsSubscriptionNotificationDtoSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionNotificationsControllerResendSubscriptionNotificationInput */
+/** Zod schema for CommerceSubscriptionsSubscriptionNotificationsControllerResendSubscriptionNotificationInput. Data model for Commerce Subscriptions Subscription Notifications Controller+Resend Subscription Notification Request. */
 CommerceSubscriptionsSubscriptionNotificationsControllerResendSubscriptionNotificationInputSchema = z.object({
   channel: z.lazy(() => NotificationsNotificationChannelSchema).optional(),
 });
@@ -21595,23 +22569,23 @@ CommerceSubscriptionsSubscriptionPlanSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerCloneSubscriptionPlanInput */
+/** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerCloneSubscriptionPlanInput. Data model for Commerce Subscriptions Subscription Plan Operations Controller+Clone Subscription Plan Request. */
 CommerceSubscriptionsSubscriptionPlanOperationsControllerCloneSubscriptionPlanInputSchema = z.object({
   newName: z.string().nullable().optional(),
   newSlug: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerSetExternalIdInput */
+/** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerSetExternalIdInput. Data model for Commerce Subscriptions Subscription Plan Operations Controller+Set External Id Request. */
 CommerceSubscriptionsSubscriptionPlanOperationsControllerSetExternalIdInputSchema = z.object({
   externalId: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerSetFeaturedInput */
+/** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerSetFeaturedInput. Data model for Commerce Subscriptions Subscription Plan Operations Controller+Set Featured Request. */
 CommerceSubscriptionsSubscriptionPlanOperationsControllerSetFeaturedInputSchema = z.object({
   featured: z.boolean().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateDetailsInput */
+/** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateDetailsInput. Data model for Commerce Subscriptions Subscription Plan Operations Controller+Update Details Request. */
 CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateDetailsInputSchema = z.object({
   description: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
@@ -21619,7 +22593,7 @@ CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateDetailsInputSchem
   sortOrder: z.number().int().nullable().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateFeaturesInput */
+/** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateFeaturesInput. Data model for Commerce Subscriptions Subscription Plan Operations Controller+Update Features Request. */
 CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateFeaturesInputSchema = z.object({
   features: z.string().nullable().optional(),
   hasAdvancedAnalytics: z.boolean().nullable().optional(),
@@ -21627,33 +22601,33 @@ CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateFeaturesInputSche
   hasPrioritySupport: z.boolean().nullable().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateLimitsInput */
+/** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateLimitsInput. Data model for Commerce Subscriptions Subscription Plan Operations Controller+Update Limits Request. */
 CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateLimitsInputSchema = z.object({
   maxApiCallsPerMonth: z.number().int().nullable().optional(),
   maxStorageMb: z.number().int().nullable().optional(),
   maxUsers: z.number().int().nullable().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdatePricingInput */
+/** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdatePricingInput. Data model for Commerce Subscriptions Subscription Plan Operations Controller+Update Pricing Request. */
 CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdatePricingInputSchema = z.object({
   annualPriceInCents: z.number().int().nullable().optional(),
   monthlyPriceInCents: z.number().int().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerValidateLimitsInput */
+/** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerValidateLimitsInput. Data model for Commerce Subscriptions Subscription Plan Operations Controller+Validate Limits Request. */
 CommerceSubscriptionsSubscriptionPlanOperationsControllerValidateLimitsInputSchema = z.object({
   apiCalls: z.number().int().optional(),
   storageMb: z.number().int().optional(),
   users: z.number().int().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionPlansCrudControllerComparePlansInput */
+/** Zod schema for CommerceSubscriptionsSubscriptionPlansCrudControllerComparePlansInput. Data model for Commerce Subscriptions Subscription Plans Crud Controller+Compare Plans Request. */
 CommerceSubscriptionsSubscriptionPlansCrudControllerComparePlansInputSchema = z.object({
   basePlanId: z.string().uuid().optional(),
   comparePlanIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionPlansCrudControllerCreatePlanInput */
+/** Zod schema for CommerceSubscriptionsSubscriptionPlansCrudControllerCreatePlanInput. Data model for Commerce Subscriptions Subscription Plans Crud Controller+Create Plan Request. */
 CommerceSubscriptionsSubscriptionPlansCrudControllerCreatePlanInputSchema = z.object({
   currency: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
@@ -21662,7 +22636,7 @@ CommerceSubscriptionsSubscriptionPlansCrudControllerCreatePlanInputSchema = z.ob
   slug: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionPlansCrudControllerPutSubscriptionPlanInput */
+/** Zod schema for CommerceSubscriptionsSubscriptionPlansCrudControllerPutSubscriptionPlanInput. Data model for Commerce Subscriptions Subscription Plans Crud Controller+Put Subscription Plan Request. */
 CommerceSubscriptionsSubscriptionPlansCrudControllerPutSubscriptionPlanInputSchema = z.object({
   annualPriceInCents: z.number().int().nullable().optional(),
   description: z.string().nullable().optional(),
@@ -21751,7 +22725,7 @@ ComplianceAuditAuditCategorySchema = z.enum([
   'Privacy',
 ]);
 
-/** Zod schema for ComplianceAuditAuditExportInput */
+/** Zod schema for ComplianceAuditAuditExportInput. Data model for Compliance Audit Audit Export Request. */
 ComplianceAuditAuditExportInputSchema = z.object({
   actionType: z.string().nullable().optional(),
   category: z.lazy(() => ComplianceAuditAuditCategorySchema).optional(),
@@ -21765,7 +22739,7 @@ ComplianceAuditAuditExportInputSchema = z.object({
   userId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for ComplianceAuditAuditLogDto */
+/** Zod schema for ComplianceAuditAuditLogDto. Data model for Compliance Audit Audit Log Dto. */
 ComplianceAuditAuditLogDtoSchema = z.object({
   id: z.string().uuid().optional(),
   actionType: z.string().nullable().optional(),
@@ -21785,7 +22759,7 @@ ComplianceAuditAuditLogDtoSchema = z.object({
   userId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for ComplianceAuditAuditLogOutput */
+/** Zod schema for ComplianceAuditAuditLogOutput. Data model for Compliance Audit Audit Log Response. */
 ComplianceAuditAuditLogOutputSchema = z.object({
   logs: z
     .array(z.lazy(() => ComplianceAuditAuditLogDtoSchema))
@@ -21799,7 +22773,7 @@ ComplianceAuditAuditLogOutputSchema = z.object({
 /** Zod schema for ComplianceAuditAuditRiskLevel. Risk level for audit events */
 ComplianceAuditAuditRiskLevelSchema = z.enum(['Low', 'Medium', 'High', 'Critical']);
 
-/** Zod schema for ComplianceAuditAuditStatisticsOutput */
+/** Zod schema for ComplianceAuditAuditStatisticsOutput. Data model for Compliance Audit Audit Statistics Response. */
 ComplianceAuditAuditStatisticsOutputSchema = z.object({
   authenticationEvents: z.number().int().optional(),
   endDate: z.string().datetime().optional(),
@@ -21840,7 +22814,7 @@ ComplianceAuditAuthenticationAuditOutputSchema = z.object({
   uniqueIpAddresses: z.number().int().optional(),
 });
 
-/** Zod schema for ComplianceAuditDailyActivityTrend */
+/** Zod schema for ComplianceAuditDailyActivityTrend. Data model for Compliance Audit Daily Activity Trend. */
 ComplianceAuditDailyActivityTrendSchema = z.object({
   authenticationEvents: z.number().int().optional(),
   date: z.string().datetime().optional(),
@@ -21849,7 +22823,7 @@ ComplianceAuditDailyActivityTrendSchema = z.object({
   totalEvents: z.number().int().optional(),
 });
 
-/** Zod schema for ComplianceAuditFailureReasonCount */
+/** Zod schema for ComplianceAuditFailureReasonCount. Data model for Compliance Audit Failure Reason Count. */
 ComplianceAuditFailureReasonCountSchema = z.object({
   count: z.number().int().optional(),
   reason: z.string().nullable().optional(),
@@ -21927,7 +22901,7 @@ ComplianceAuditSecurityAuditDashboardSchema = z.object({
 /** Zod schema for ComplianceAuditSecurityAuditSourceType. Source type for security audit entries. */
 ComplianceAuditSecurityAuditSourceTypeSchema = z.enum(['Authentication', 'Permission', 'General', 'All']);
 
-/** Zod schema for ComplianceAuditTopIpActivity */
+/** Zod schema for ComplianceAuditTopIpActivity. Data model for Compliance Audit Top Ip Activity. */
 ComplianceAuditTopIpActivitySchema = z.object({
   eventCount: z.number().int().optional(),
   failedAttempts: z.number().int().optional(),
@@ -21935,7 +22909,7 @@ ComplianceAuditTopIpActivitySchema = z.object({
   uniqueUsers: z.number().int().optional(),
 });
 
-/** Zod schema for ComplianceAuditTopUserActivity */
+/** Zod schema for ComplianceAuditTopUserActivity. Data model for Compliance Audit Top User Activity. */
 ComplianceAuditTopUserActivitySchema = z.object({
   email: z.string().nullable().optional(),
   eventCount: z.number().int().optional(),
@@ -22002,7 +22976,7 @@ ComplianceAuditUnifiedSecurityAuditOutputSchema = z.object({
   totalCount: z.number().int().optional(),
 });
 
-/** Zod schema for ComplianceConsentConsentPolicyDto */
+/** Zod schema for ComplianceConsentConsentPolicyDto. Data model for Compliance Consent Consent Policy Dto. */
 ComplianceConsentConsentPolicyDtoSchema = z.object({
   id: z.string().uuid().optional(),
   currentVersion: z.string().nullable().optional(),
@@ -22012,10 +22986,10 @@ ComplianceConsentConsentPolicyDtoSchema = z.object({
   policyType: z.lazy(() => ComplianceConsentPolicyTypeSchema).optional(),
 });
 
-/** Zod schema for ComplianceConsentContentType */
+/** Zod schema for ComplianceConsentContentType. OpenAPI schema for Compliance Consent Content Type. */
 ComplianceConsentContentTypeSchema = z.enum(['PlainText', 'Html', 'Markdown', 'Url']);
 
-/** Zod schema for ComplianceConsentCreateConsentPolicyCommand */
+/** Zod schema for ComplianceConsentCreateConsentPolicyCommand. Data model for Compliance Consent Create Consent Policy Command. */
 ComplianceConsentCreateConsentPolicyCommandSchema = z.object({
   description: z.string().nullable().optional(),
   isMandatory: z.boolean().optional(),
@@ -22023,7 +22997,7 @@ ComplianceConsentCreateConsentPolicyCommandSchema = z.object({
   policyType: z.lazy(() => ComplianceConsentPolicyTypeSchema).optional(),
 });
 
-/** Zod schema for ComplianceConsentDataSubjectRequestDto */
+/** Zod schema for ComplianceConsentDataSubjectRequestDto. Data model for Compliance Consent Data Subject Request Dto. */
 ComplianceConsentDataSubjectRequestDtoSchema = z.object({
   id: z.string().uuid().optional(),
   deadline: z.string().datetime().optional(),
@@ -22034,13 +23008,13 @@ ComplianceConsentDataSubjectRequestDtoSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for ComplianceConsentDataSubjectRequestStatus */
+/** Zod schema for ComplianceConsentDataSubjectRequestStatus. OpenAPI schema for Compliance Consent Data Subject Request Status. */
 ComplianceConsentDataSubjectRequestStatusSchema = z.enum(['Pending', 'InProgress', 'Completed', 'Rejected', 'Expired']);
 
-/** Zod schema for ComplianceConsentDataSubjectRequestType */
+/** Zod schema for ComplianceConsentDataSubjectRequestType. OpenAPI schema for Compliance Consent Data Subject Request Type. */
 ComplianceConsentDataSubjectRequestTypeSchema = z.enum(['Access', 'Erasure', 'Portability', 'Rectification', 'Restriction', 'Objection']);
 
-/** Zod schema for ComplianceConsentGrantConsentCommand */
+/** Zod schema for ComplianceConsentGrantConsentCommand. Data model for Compliance Consent Grant Consent Command. */
 ComplianceConsentGrantConsentCommandSchema = z.object({
   consentMethod: z.string().nullable().optional(),
   ipAddress: z.string().nullable().optional(),
@@ -22049,7 +23023,7 @@ ComplianceConsentGrantConsentCommandSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for ComplianceConsentPolicyType */
+/** Zod schema for ComplianceConsentPolicyType. OpenAPI schema for Compliance Consent Policy Type. */
 ComplianceConsentPolicyTypeSchema = z.enum([
   'PrivacyPolicy',
   'TermsOfService',
@@ -22060,7 +23034,7 @@ ComplianceConsentPolicyTypeSchema = z.enum([
   'Custom',
 ]);
 
-/** Zod schema for ComplianceConsentPolicyVersionDto */
+/** Zod schema for ComplianceConsentPolicyVersionDto. Data model for Compliance Consent Policy Version Dto. */
 ComplianceConsentPolicyVersionDtoSchema = z.object({
   id: z.string().uuid().optional(),
   contentType: z.lazy(() => ComplianceConsentContentTypeSchema).optional(),
@@ -22070,33 +23044,33 @@ ComplianceConsentPolicyVersionDtoSchema = z.object({
   versionNumber: z.string().nullable().optional(),
 });
 
-/** Zod schema for ComplianceConsentProcessRequestBody */
+/** Zod schema for ComplianceConsentProcessRequestBody. Data model for Compliance Consent Process Request Body. */
 ComplianceConsentProcessRequestBodySchema = z.object({
   notes: z.string().nullable().optional(),
   processedByUserId: z.string().uuid().optional(),
 });
 
-/** Zod schema for ComplianceConsentPublishVersionInput */
+/** Zod schema for ComplianceConsentPublishVersionInput. Data model for Compliance Consent Publish Version Request. */
 ComplianceConsentPublishVersionInputSchema = z.object({
   content: z.string().nullable().optional(),
   contentType: z.lazy(() => ComplianceConsentContentTypeSchema).optional(),
   versionNumber: z.string().nullable().optional(),
 });
 
-/** Zod schema for ComplianceConsentRevokeConsentCommand */
+/** Zod schema for ComplianceConsentRevokeConsentCommand. Data model for Compliance Consent Revoke Consent Command. */
 ComplianceConsentRevokeConsentCommandSchema = z.object({
   policyVersionId: z.string().uuid().optional(),
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for ComplianceConsentSubmitDataSubjectRequestCommand */
+/** Zod schema for ComplianceConsentSubmitDataSubjectRequestCommand. Data model for Compliance Consent Submit Data Subject Request Command. */
 ComplianceConsentSubmitDataSubjectRequestCommandSchema = z.object({
   description: z.string().nullable().optional(),
   requestType: z.lazy(() => ComplianceConsentDataSubjectRequestTypeSchema).optional(),
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for ComplianceConsentUserConsentDto */
+/** Zod schema for ComplianceConsentUserConsentDto. Data model for Compliance Consent User Consent Dto. */
 ComplianceConsentUserConsentDtoSchema = z.object({
   id: z.string().uuid().optional(),
   consentGivenAt: z.string().datetime().optional(),
@@ -22107,14 +23081,14 @@ ComplianceConsentUserConsentDtoSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for ComplianceFERPACompleteFerpaInspectionRequestBody */
+/** Zod schema for ComplianceFERPACompleteFerpaInspectionRequestBody. Data model for Compliance FERPA Complete Ferpa Inspection Request Body. */
 ComplianceFERPACompleteFerpaInspectionRequestBodySchema = z.object({
   approved: z.boolean().optional(),
   notes: z.string().nullable().optional(),
   processedByUserId: z.string().uuid().optional(),
 });
 
-/** Zod schema for ComplianceFERPAEducationRecordKind */
+/** Zod schema for ComplianceFERPAEducationRecordKind. OpenAPI schema for Compliance FERPA Education Record Kind. */
 ComplianceFERPAEducationRecordKindSchema = z.enum([
   'CourseEnrollment',
   'AssessmentSubmission',
@@ -22126,7 +23100,7 @@ ComplianceFERPAEducationRecordKindSchema = z.enum([
   'Custom',
 ]);
 
-/** Zod schema for ComplianceFERPAFerpaDirectoryInformationPolicyDto */
+/** Zod schema for ComplianceFERPAFerpaDirectoryInformationPolicyDto. Data model for Compliance FERPA Ferpa Directory Information Policy Dto. */
 ComplianceFERPAFerpaDirectoryInformationPolicyDtoSchema = z.object({
   id: z.string().uuid().optional(),
   allowedFieldsJson: z.string().nullable().optional(),
@@ -22136,7 +23110,7 @@ ComplianceFERPAFerpaDirectoryInformationPolicyDtoSchema = z.object({
   tenantId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for ComplianceFERPAFerpaDisclosureBasis */
+/** Zod schema for ComplianceFERPAFerpaDisclosureBasis. OpenAPI schema for Compliance FERPA Ferpa Disclosure Basis. */
 ComplianceFERPAFerpaDisclosureBasisSchema = z.enum([
   'StudentConsent',
   'GuardianConsent',
@@ -22149,7 +23123,7 @@ ComplianceFERPAFerpaDisclosureBasisSchema = z.enum([
   'Other',
 ]);
 
-/** Zod schema for ComplianceFERPAFerpaDisclosureConsentDto */
+/** Zod schema for ComplianceFERPAFerpaDisclosureConsentDto. Data model for Compliance FERPA Ferpa Disclosure Consent Dto. */
 ComplianceFERPAFerpaDisclosureConsentDtoSchema = z.object({
   id: z.string().uuid().optional(),
   effectiveFrom: z.string().datetime().optional(),
@@ -22163,7 +23137,7 @@ ComplianceFERPAFerpaDisclosureConsentDtoSchema = z.object({
   studentUserId: z.string().uuid().optional(),
 });
 
-/** Zod schema for ComplianceFERPAFerpaDisclosureLogDto */
+/** Zod schema for ComplianceFERPAFerpaDisclosureLogDto. Data model for Compliance FERPA Ferpa Disclosure Log Dto. */
 ComplianceFERPAFerpaDisclosureLogDtoSchema = z.object({
   id: z.string().uuid().optional(),
   basis: z.lazy(() => ComplianceFERPAFerpaDisclosureBasisSchema).optional(),
@@ -22175,7 +23149,7 @@ ComplianceFERPAFerpaDisclosureLogDtoSchema = z.object({
   studentUserId: z.string().uuid().optional(),
 });
 
-/** Zod schema for ComplianceFERPAFerpaEducationRecordDto */
+/** Zod schema for ComplianceFERPAFerpaEducationRecordDto. Data model for Compliance FERPA Ferpa Education Record Dto. */
 ComplianceFERPAFerpaEducationRecordDtoSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
@@ -22189,7 +23163,7 @@ ComplianceFERPAFerpaEducationRecordDtoSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for ComplianceFERPAFerpaInspectionRequestDto */
+/** Zod schema for ComplianceFERPAFerpaInspectionRequestDto. Data model for Compliance FERPA Ferpa Inspection Request Dto. */
 ComplianceFERPAFerpaInspectionRequestDtoSchema = z.object({
   id: z.string().uuid().optional(),
   deadline: z.string().datetime().optional(),
@@ -22201,13 +23175,13 @@ ComplianceFERPAFerpaInspectionRequestDtoSchema = z.object({
   studentUserId: z.string().uuid().optional(),
 });
 
-/** Zod schema for ComplianceFERPAFerpaRecordProtectionLevel */
+/** Zod schema for ComplianceFERPAFerpaRecordProtectionLevel. OpenAPI schema for Compliance FERPA Ferpa Record Protection Level. */
 ComplianceFERPAFerpaRecordProtectionLevelSchema = z.enum(['DirectoryInformation', 'EducationRecord', 'SensitiveEducationRecord', 'Restricted']);
 
-/** Zod schema for ComplianceFERPAFerpaRequestStatus */
+/** Zod schema for ComplianceFERPAFerpaRequestStatus. OpenAPI schema for Compliance FERPA Ferpa Request Status. */
 ComplianceFERPAFerpaRequestStatusSchema = z.enum(['Pending', 'InReview', 'Completed', 'Denied', 'Expired']);
 
-/** Zod schema for ComplianceFERPAGrantFerpaDisclosureConsentCommand */
+/** Zod schema for ComplianceFERPAGrantFerpaDisclosureConsentCommand. Data model for Compliance FERPA Grant Ferpa Disclosure Consent Command. */
 ComplianceFERPAGrantFerpaDisclosureConsentCommandSchema = z.object({
   effectiveFrom: z.string().datetime().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
@@ -22218,7 +23192,7 @@ ComplianceFERPAGrantFerpaDisclosureConsentCommandSchema = z.object({
   studentUserId: z.string().uuid().optional(),
 });
 
-/** Zod schema for ComplianceFERPARecordFerpaDisclosureCommand */
+/** Zod schema for ComplianceFERPARecordFerpaDisclosureCommand. Data model for Compliance FERPA Record Ferpa Disclosure Command. */
 ComplianceFERPARecordFerpaDisclosureCommandSchema = z.object({
   basis: z.lazy(() => ComplianceFERPAFerpaDisclosureBasisSchema).optional(),
   disclosedAt: z.string().datetime().optional(),
@@ -22230,7 +23204,7 @@ ComplianceFERPARecordFerpaDisclosureCommandSchema = z.object({
   studentUserId: z.string().uuid().optional(),
 });
 
-/** Zod schema for ComplianceFERPARegisterEducationRecordCommand */
+/** Zod schema for ComplianceFERPARegisterEducationRecordCommand. Data model for Compliance FERPA Register Education Record Command. */
 ComplianceFERPARegisterEducationRecordCommandSchema = z.object({
   externalRecordId: z.string().nullable().optional(),
   isDirectoryInformation: z.boolean().optional(),
@@ -22243,7 +23217,7 @@ ComplianceFERPARegisterEducationRecordCommandSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for ComplianceFERPASubmitFerpaInspectionRequestCommand */
+/** Zod schema for ComplianceFERPASubmitFerpaInspectionRequestCommand. Data model for Compliance FERPA Submit Ferpa Inspection Request Command. */
 ComplianceFERPASubmitFerpaInspectionRequestCommandSchema = z.object({
   deadline: z.string().datetime().optional(),
   description: z.string().nullable().optional(),
@@ -22251,7 +23225,7 @@ ComplianceFERPASubmitFerpaInspectionRequestCommandSchema = z.object({
   studentUserId: z.string().uuid().optional(),
 });
 
-/** Zod schema for ComplianceFERPAUpsertDirectoryInformationPolicyCommand */
+/** Zod schema for ComplianceFERPAUpsertDirectoryInformationPolicyCommand. Data model for Compliance FERPA Upsert Directory Information Policy Command. */
 ComplianceFERPAUpsertDirectoryInformationPolicyCommandSchema = z.object({
   allowedFieldsJson: z.string().nullable().optional(),
   annualNoticeSentAt: z.string().datetime().nullable().optional(),
@@ -22260,7 +23234,7 @@ ComplianceFERPAUpsertDirectoryInformationPolicyCommandSchema = z.object({
   tenantId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for ComplianceFinancialCrimeFinancialCrimeCase */
+/** Zod schema for ComplianceFinancialCrimeFinancialCrimeCase. Data model for Compliance Financial Crime Financial Crime Case. */
 ComplianceFinancialCrimeFinancialCrimeCaseSchema = z.object({
   id: z.string().uuid().optional(),
   assignedTo: z.string().uuid().nullable().optional(),
@@ -22275,7 +23249,7 @@ ComplianceFinancialCrimeFinancialCrimeCaseSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for ComplianceFinancialCrimeFinancialCrimeCaseDecision */
+/** Zod schema for ComplianceFinancialCrimeFinancialCrimeCaseDecision. Data model for Compliance Financial Crime Financial Crime Case Decision. */
 ComplianceFinancialCrimeFinancialCrimeCaseDecisionSchema = z.object({
   id: z.string().uuid().optional(),
   caseId: z.string().uuid().optional(),
@@ -22292,7 +23266,7 @@ ComplianceFinancialCrimeFinancialCrimeCaseDecisionSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for ComplianceFinancialCrimeFinancialCrimeCaseDetails */
+/** Zod schema for ComplianceFinancialCrimeFinancialCrimeCaseDetails. Data model for Compliance Financial Crime Financial Crime Case Details. */
 ComplianceFinancialCrimeFinancialCrimeCaseDetailsSchema = z.object({
   case: z.lazy(() => ComplianceFinancialCrimeFinancialCrimeCaseSchema).optional(),
   decisions: z
@@ -22309,7 +23283,7 @@ ComplianceFinancialCrimeFinancialCrimeCaseDetailsSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for ComplianceFinancialCrimeFinancialCrimeCaseEvent */
+/** Zod schema for ComplianceFinancialCrimeFinancialCrimeCaseEvent. Data model for Compliance Financial Crime Financial Crime Case Event. */
 ComplianceFinancialCrimeFinancialCrimeCaseEventSchema = z.object({
   id: z.string().uuid().optional(),
   actorId: z.string().uuid().nullable().optional(),
@@ -22321,13 +23295,13 @@ ComplianceFinancialCrimeFinancialCrimeCaseEventSchema = z.object({
   sequence: z.number().int().optional(),
 });
 
-/** Zod schema for ComplianceFinancialCrimeFinancialCrimeCaseState */
+/** Zod schema for ComplianceFinancialCrimeFinancialCrimeCaseState. OpenAPI schema for Compliance Financial Crime Financial Crime Case State. */
 ComplianceFinancialCrimeFinancialCrimeCaseStateSchema = z.enum(['Open', 'Assigned', 'NeedsReview', 'Closed']);
 
-/** Zod schema for ComplianceFinancialCrimeFinancialCrimeOutcome */
+/** Zod schema for ComplianceFinancialCrimeFinancialCrimeOutcome. OpenAPI schema for Compliance Financial Crime Financial Crime Outcome. */
 ComplianceFinancialCrimeFinancialCrimeOutcomeSchema = z.enum(['Approved', 'Rejected', 'NeedsReview', 'Unavailable']);
 
-/** Zod schema for ComplianceFinancialCrimeFinancialCrimeRegulatoryReference */
+/** Zod schema for ComplianceFinancialCrimeFinancialCrimeRegulatoryReference. Data model for Compliance Financial Crime Financial Crime Regulatory Reference. */
 ComplianceFinancialCrimeFinancialCrimeRegulatoryReferenceSchema = z.object({
   id: z.string().uuid().optional(),
   caseId: z.string().uuid().optional(),
@@ -22338,13 +23312,13 @@ ComplianceFinancialCrimeFinancialCrimeRegulatoryReferenceSchema = z.object({
   referenceHash: z.string().nullable().optional(),
 });
 
-/** Zod schema for ComplianceKYCKycAmlAccessToken */
+/** Zod schema for ComplianceKYCKycAmlAccessToken. Data model for Compliance KYC Kyc Aml Access Token. */
 ComplianceKYCKycAmlAccessTokenSchema = z.object({
   externalUserId: z.string().nullable().optional(),
   token: z.string().nullable().optional(),
 });
 
-/** Zod schema for ComplianceKYCKycAmlOnboarding */
+/** Zod schema for ComplianceKYCKycAmlOnboarding. Data model for Compliance KYC Kyc Aml Onboarding. */
 ComplianceKYCKycAmlOnboardingSchema = z.object({
   applicantId: z.string().nullable().optional(),
   jurisdictionCode: z.string().nullable().optional(),
@@ -22353,13 +23327,13 @@ ComplianceKYCKycAmlOnboardingSchema = z.object({
   updatedAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for ComplianceKYCKycAmlState */
+/** Zod schema for ComplianceKYCKycAmlState. OpenAPI schema for Compliance KYC Kyc Aml State. */
 ComplianceKYCKycAmlStateSchema = z.enum(['Created', 'ApplicantPending', 'InReview', 'Approved', 'Rejected', 'NeedsReview', 'Expired']);
 
-/** Zod schema for ComplianceKYCKycEvidenceIngestionStatus */
+/** Zod schema for ComplianceKYCKycEvidenceIngestionStatus. OpenAPI schema for Compliance KYC Kyc Evidence Ingestion Status. */
 ComplianceKYCKycEvidenceIngestionStatusSchema = z.enum(['Published', 'Duplicate', 'Deferred', 'Rejected']);
 
-/** Zod schema for ComplianceKYCSumSubWebhookIngestionResult */
+/** Zod schema for ComplianceKYCSumSubWebhookIngestionResult. Data model for Compliance KYC Sum Sub Webhook Ingestion Result. */
 ComplianceKYCSumSubWebhookIngestionResultSchema = z.object({
   evidenceId: z.string().uuid().nullable().optional(),
   providerEventId: z.string().nullable().optional(),
@@ -22367,7 +23341,7 @@ ComplianceKYCSumSubWebhookIngestionResultSchema = z.object({
   status: z.lazy(() => ComplianceKYCKycEvidenceIngestionStatusSchema).optional(),
 });
 
-/** Zod schema for ContentPagesContentResourceDto */
+/** Zod schema for ContentPagesContentResourceDto. Data model for Content Pages Content Resource Dto. */
 ContentPagesContentResourceDtoSchema = z.object({
   id: z.string().uuid().optional(),
   authorId: z.string().uuid().nullable().optional(),
@@ -22408,7 +23382,7 @@ ContentPagesContentResourceStatusSchema = z.enum(['Draft', 'InReview', 'Publishe
 /** Zod schema for ContentPagesContentResourceType. The type of content resource. */
 ContentPagesContentResourceTypeSchema = z.enum(['Article', 'Tutorial', 'Documentation', 'Video', 'Download', 'ExternalLink', 'Course', 'Custom']);
 
-/** Zod schema for ContentPagesCreateContentResourceDto */
+/** Zod schema for ContentPagesCreateContentResourceDto. Data model for Content Pages Create Content Resource Dto. */
 ContentPagesCreateContentResourceDtoSchema = z.object({
   body: z.string().nullable().optional(),
   categorySlug: z.string().nullable().optional(),
@@ -22434,7 +23408,7 @@ ContentPagesCreateContentResourceDtoSchema = z.object({
   videoUrl: z.string().nullable().optional(),
 });
 
-/** Zod schema for ContentPagesCreateMarketingLeadDto */
+/** Zod schema for ContentPagesCreateMarketingLeadDto. Data model for Content Pages Create Marketing Lead Dto. */
 ContentPagesCreateMarketingLeadDtoSchema = z.object({
   company: z.string().max(200).nullable().optional(),
   email: z.string().email().min(1).max(200),
@@ -22449,7 +23423,7 @@ ContentPagesCreateMarketingLeadDtoSchema = z.object({
   userAgent: z.string().max(500).nullable().optional(),
 });
 
-/** Zod schema for ContentPagesCreatePageDto */
+/** Zod schema for ContentPagesCreatePageDto. Data model for Content Pages Create Page Dto. */
 ContentPagesCreatePageDtoSchema = z.object({
   body: z.string().nullable().optional(),
   canonicalUrl: z.string().nullable().optional(),
@@ -22474,7 +23448,7 @@ ContentPagesCreatePageDtoSchema = z.object({
   twitterSite: z.string().nullable().optional(),
 });
 
-/** Zod schema for ContentPagesCreatePageSectionDto */
+/** Zod schema for ContentPagesCreatePageSectionDto. Data model for Content Pages Create Page Section Dto. */
 ContentPagesCreatePageSectionDtoSchema = z.object({
   cssClasses: z.string().nullable().optional(),
   data: z.string().nullable().optional(),
@@ -22485,7 +23459,7 @@ ContentPagesCreatePageSectionDtoSchema = z.object({
   subheading: z.string().nullable().optional(),
 });
 
-/** Zod schema for ContentPagesMarketingLeadDto */
+/** Zod schema for ContentPagesMarketingLeadDto. Data model for Content Pages Marketing Lead Dto. */
 ContentPagesMarketingLeadDtoSchema = z.object({
   id: z.string().uuid().optional(),
   company: z.string().nullable().optional(),
@@ -22520,7 +23494,7 @@ ContentPagesOpenGraphMetadataDtoSchema = z.object({
   twitterSite: z.string().nullable().optional(),
 });
 
-/** Zod schema for ContentPagesPageDto */
+/** Zod schema for ContentPagesPageDto. Data model for Content Pages Page Dto. */
 ContentPagesPageDtoSchema = z.object({
   id: z.string().uuid().optional(),
   body: z.string().nullable().optional(),
@@ -22555,7 +23529,7 @@ ContentPagesPageDtoSchema = z.object({
   updatedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for ContentPagesPageSectionDto */
+/** Zod schema for ContentPagesPageSectionDto. Data model for Content Pages Page Section Dto. */
 ContentPagesPageSectionDtoSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
@@ -22602,7 +23576,7 @@ ContentPagesSitemapEntryDtoSchema = z.object({
   updatedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for ContentPagesUpdateContentResourceDto */
+/** Zod schema for ContentPagesUpdateContentResourceDto. Data model for Content Pages Update Content Resource Dto. */
 ContentPagesUpdateContentResourceDtoSchema = z.object({
   body: z.string().nullable().optional(),
   categorySlug: z.string().nullable().optional(),
@@ -22630,7 +23604,7 @@ ContentPagesUpdateContentResourceDtoSchema = z.object({
   videoUrl: z.string().nullable().optional(),
 });
 
-/** Zod schema for ContentPagesUpdatePageDto */
+/** Zod schema for ContentPagesUpdatePageDto. Data model for Content Pages Update Page Dto. */
 ContentPagesUpdatePageDtoSchema = z.object({
   body: z.string().nullable().optional(),
   canonicalUrl: z.string().nullable().optional(),
@@ -22657,7 +23631,7 @@ ContentPagesUpdatePageDtoSchema = z.object({
   twitterSite: z.string().nullable().optional(),
 });
 
-/** Zod schema for ContentPagesUpdatePageSectionDto */
+/** Zod schema for ContentPagesUpdatePageSectionDto. Data model for Content Pages Update Page Section Dto. */
 ContentPagesUpdatePageSectionDtoSchema = z.object({
   cssClasses: z.string().nullable().optional(),
   data: z.string().nullable().optional(),
@@ -22683,7 +23657,7 @@ CQRSIDomainEventSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for CQRSModelsTenantId */
+/** Zod schema for CQRSModelsTenantId. Data model for CQRS Models Tenant Id. */
 CQRSModelsTenantIdSchema = z.object({
   value: z.string().uuid().optional(),
 });
@@ -22824,7 +23798,7 @@ FeaturesUpdateFeatureInputSchema = z.object({
   rolloutPercentage: z.number().int().nullable().optional(),
 });
 
-/** Zod schema for Fido2NetLibAssertionOptions */
+/** Zod schema for Fido2NetLibAssertionOptions. Data model for Fido2 Net Lib Assertion Options. */
 Fido2NetLibAssertionOptionsSchema = z.object({
   allowCredentials: z
     .array(z.lazy(() => ObjectsPublicKeyCredentialDescriptorSchema))
@@ -22841,7 +23815,7 @@ Fido2NetLibAssertionOptionsSchema = z.object({
   userVerification: z.lazy(() => ObjectsUserVerificationRequirementSchema).optional(),
 });
 
-/** Zod schema for Fido2NetLibAuthenticatorSelection */
+/** Zod schema for Fido2NetLibAuthenticatorSelection. Data model for Fido2 Net Lib Authenticator Selection. */
 Fido2NetLibAuthenticatorSelectionSchema = z.object({
   authenticatorAttachment: z.lazy(() => ObjectsAuthenticatorAttachmentSchema).optional(),
   requireResidentKey: z.boolean().optional(),
@@ -22849,7 +23823,7 @@ Fido2NetLibAuthenticatorSelectionSchema = z.object({
   userVerification: z.lazy(() => ObjectsUserVerificationRequirementSchema).optional(),
 });
 
-/** Zod schema for Fido2NetLibCredentialCreateOptions */
+/** Zod schema for Fido2NetLibCredentialCreateOptions. Data model for Fido2 Net Lib Credential Create Options. */
 Fido2NetLibCredentialCreateOptionsSchema = z.object({
   attestation: z.lazy(() => ObjectsAttestationConveyancePreferenceSchema).optional(),
   attestationFormats: z
@@ -22873,27 +23847,27 @@ Fido2NetLibCredentialCreateOptionsSchema = z.object({
   user: z.lazy(() => Fido2NetLibFido2UserSchema),
 });
 
-/** Zod schema for Fido2NetLibFido2User */
+/** Zod schema for Fido2NetLibFido2User. Data model for Fido2 Net Lib Fido2 User. */
 Fido2NetLibFido2UserSchema = z.object({
   id: z.string().nullable().optional(),
   displayName: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
 });
 
-/** Zod schema for Fido2NetLibPubKeyCredParam */
+/** Zod schema for Fido2NetLibPubKeyCredParam. Data model for Fido2 Net Lib Pub Key Cred Param. */
 Fido2NetLibPubKeyCredParamSchema = z.object({
   alg: z.lazy(() => ObjectsCOSEAlgorithmSchema).optional(),
   type: z.lazy(() => ObjectsPublicKeyCredentialTypeSchema).optional(),
 });
 
-/** Zod schema for Fido2NetLibPublicKeyCredentialRpEntity */
+/** Zod schema for Fido2NetLibPublicKeyCredentialRpEntity. Data model for Fido2 Net Lib Public Key Credential Rp Entity. */
 Fido2NetLibPublicKeyCredentialRpEntitySchema = z.object({
   id: z.string().nullable().optional(),
   icon: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
 });
 
-/** Zod schema for FinanceEconomyAdRewardsAdPlaybackEvidence */
+/** Zod schema for FinanceEconomyAdRewardsAdPlaybackEvidence. Data model for Finance Economy Ad Rewards Ad Playback Evidence. */
 FinanceEconomyAdRewardsAdPlaybackEvidenceSchema = z.object({
   completedAt: z.string().datetime().optional(),
   focusLoss: z.string().optional(),
@@ -22903,7 +23877,7 @@ FinanceEconomyAdRewardsAdPlaybackEvidenceSchema = z.object({
   visibleDuration: z.string().optional(),
 });
 
-/** Zod schema for FinanceEconomyAdRewardsAdProviderReport */
+/** Zod schema for FinanceEconomyAdRewardsAdProviderReport. Data model for Finance Economy Ad Rewards Ad Provider Report. */
 FinanceEconomyAdRewardsAdProviderReportSchema = z.object({
   actualRevenueUsdNanos: z.number().int().optional(),
   batchId: z.string().nullable().optional(),
@@ -22918,7 +23892,7 @@ FinanceEconomyAdRewardsAdProviderReportSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyAdRewardsAdRewardCompletionOperationalStatus */
+/** Zod schema for FinanceEconomyAdRewardsAdRewardCompletionOperationalStatus. Data model for Finance Economy Ad Rewards Ad Reward Completion Operational Status. */
 FinanceEconomyAdRewardsAdRewardCompletionOperationalStatusSchema = z.object({
   completedAt: z.string().datetime().optional(),
   jurisdictionCode: z.string().nullable().optional(),
@@ -22929,10 +23903,10 @@ FinanceEconomyAdRewardsAdRewardCompletionOperationalStatusSchema = z.object({
   state: z.lazy(() => FinanceEconomyAdRewardsAdRewardCompletionStateSchema).optional(),
 });
 
-/** Zod schema for FinanceEconomyAdRewardsAdRewardCompletionState */
+/** Zod schema for FinanceEconomyAdRewardsAdRewardCompletionState. OpenAPI schema for Finance Economy Ad Rewards Ad Reward Completion State. */
 FinanceEconomyAdRewardsAdRewardCompletionStateSchema = z.enum(['Issued', 'PendingProviderReport', 'AccumulatedRemainder']);
 
-/** Zod schema for FinanceEconomyAdRewardsAdRewardMilestoneOperationalStatus */
+/** Zod schema for FinanceEconomyAdRewardsAdRewardMilestoneOperationalStatus. Data model for Finance Economy Ad Rewards Ad Reward Milestone Operational Status. */
 FinanceEconomyAdRewardsAdRewardMilestoneOperationalStatusSchema = z.object({
   id: z.string().uuid().optional(),
   evidenceHash: z.string().nullable().optional(),
@@ -22941,7 +23915,7 @@ FinanceEconomyAdRewardsAdRewardMilestoneOperationalStatusSchema = z.object({
   sequence: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyAdRewardsAdRewardPendingClaimOperationalStatus */
+/** Zod schema for FinanceEconomyAdRewardsAdRewardPendingClaimOperationalStatus. Data model for Finance Economy Ad Rewards Ad Reward Pending Claim Operational Status. */
 FinanceEconomyAdRewardsAdRewardPendingClaimOperationalStatusSchema = z.object({
   confirmedAt: z.string().datetime().nullable().optional(),
   deferredAt: z.string().datetime().optional(),
@@ -22951,7 +23925,7 @@ FinanceEconomyAdRewardsAdRewardPendingClaimOperationalStatusSchema = z.object({
   tenantId: z.string().uuid().optional(),
 });
 
-/** Zod schema for FinanceEconomyAdRewardsAdRewardReconciliation */
+/** Zod schema for FinanceEconomyAdRewardsAdRewardReconciliation. Data model for Finance Economy Ad Rewards Ad Reward Reconciliation. */
 FinanceEconomyAdRewardsAdRewardReconciliationSchema = z.object({
   actualDeltaUsdNanos: z.number().int().optional(),
   actualRevenueUsdNanos: z.number().int().optional(),
@@ -22966,7 +23940,7 @@ FinanceEconomyAdRewardsAdRewardReconciliationSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyAdRewardsAdRewardReconciliationOperationalStatus */
+/** Zod schema for FinanceEconomyAdRewardsAdRewardReconciliationOperationalStatus. Data model for Finance Economy Ad Rewards Ad Reward Reconciliation Operational Status. */
 FinanceEconomyAdRewardsAdRewardReconciliationOperationalStatusSchema = z.object({
   id: z.string().uuid().optional(),
   actualRevenueUsdNanos: z.number().int().optional(),
@@ -22982,7 +23956,7 @@ FinanceEconomyAdRewardsAdRewardReconciliationOperationalStatusSchema = z.object(
   version: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyAdRewardsAdRewardSessionEventOperationalStatus */
+/** Zod schema for FinanceEconomyAdRewardsAdRewardSessionEventOperationalStatus. Data model for Finance Economy Ad Rewards Ad Reward Session Event Operational Status. */
 FinanceEconomyAdRewardsAdRewardSessionEventOperationalStatusSchema = z.object({
   id: z.string().uuid().optional(),
   evidenceHash: z.string().nullable().optional(),
@@ -22991,7 +23965,7 @@ FinanceEconomyAdRewardsAdRewardSessionEventOperationalStatusSchema = z.object({
   state: z.lazy(() => FinanceEconomyAdRewardsDurableAdRewardSessionStateSchema).optional(),
 });
 
-/** Zod schema for FinanceEconomyAdRewardsAdRewardSessionOperationalDetails */
+/** Zod schema for FinanceEconomyAdRewardsAdRewardSessionOperationalDetails. Data model for Finance Economy Ad Rewards Ad Reward Session Operational Details. */
 FinanceEconomyAdRewardsAdRewardSessionOperationalDetailsSchema = z.object({
   completion: z.lazy(() => FinanceEconomyAdRewardsAdRewardCompletionOperationalStatusSchema).optional(),
   events: z
@@ -23005,7 +23979,7 @@ FinanceEconomyAdRewardsAdRewardSessionOperationalDetailsSchema = z.object({
   summary: z.lazy(() => FinanceEconomyAdRewardsAdRewardSessionOperationalSummarySchema).optional(),
 });
 
-/** Zod schema for FinanceEconomyAdRewardsAdRewardSessionOperationalSummary */
+/** Zod schema for FinanceEconomyAdRewardsAdRewardSessionOperationalSummary. Data model for Finance Economy Ad Rewards Ad Reward Session Operational Summary. */
 FinanceEconomyAdRewardsAdRewardSessionOperationalSummarySchema = z.object({
   id: z.string().uuid().optional(),
   creativeId: z.string().nullable().optional(),
@@ -23019,7 +23993,7 @@ FinanceEconomyAdRewardsAdRewardSessionOperationalSummarySchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for FinanceEconomyAdRewardsDurableAdProviderReportImportResult */
+/** Zod schema for FinanceEconomyAdRewardsDurableAdProviderReportImportResult. Data model for Finance Economy Ad Rewards Durable Ad Provider Report Import Result. */
 FinanceEconomyAdRewardsDurableAdProviderReportImportResultSchema = z.object({
   isDuplicate: z.boolean().optional(),
   providerReportId: z.string().uuid().optional(),
@@ -23027,7 +24001,7 @@ FinanceEconomyAdRewardsDurableAdProviderReportImportResultSchema = z.object({
   verifiedPendingSessions: z.array(z.string().uuid()).nullable().optional(),
 });
 
-/** Zod schema for FinanceEconomyAdRewardsDurableAdProviderReportStatus */
+/** Zod schema for FinanceEconomyAdRewardsDurableAdProviderReportStatus. Data model for Finance Economy Ad Rewards Durable Ad Provider Report Status. */
 FinanceEconomyAdRewardsDurableAdProviderReportStatusSchema = z.object({
   actualRevenueUsdNanos: z.number().int().optional(),
   batchId: z.string().nullable().optional(),
@@ -23046,7 +24020,7 @@ FinanceEconomyAdRewardsDurableAdProviderReportStatusSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyAdRewardsDurableAdRewardCompletionResult */
+/** Zod schema for FinanceEconomyAdRewardsDurableAdRewardCompletionResult. Data model for Finance Economy Ad Rewards Durable Ad Reward Completion Result. */
 FinanceEconomyAdRewardsDurableAdRewardCompletionResultSchema = z.object({
   completedAt: z.string().datetime().optional(),
   isDuplicate: z.boolean().optional(),
@@ -23057,7 +24031,7 @@ FinanceEconomyAdRewardsDurableAdRewardCompletionResultSchema = z.object({
   state: z.lazy(() => FinanceEconomyAdRewardsAdRewardCompletionStateSchema).optional(),
 });
 
-/** Zod schema for FinanceEconomyAdRewardsDurableAdRewardReconciliationStatus */
+/** Zod schema for FinanceEconomyAdRewardsDurableAdRewardReconciliationStatus. Data model for Finance Economy Ad Rewards Durable Ad Reward Reconciliation Status. */
 FinanceEconomyAdRewardsDurableAdRewardReconciliationStatusSchema = z.object({
   actualDeltaUsdNanos: z.number().int().optional(),
   actualRevenueUsdNanos: z.number().int().optional(),
@@ -23068,7 +24042,7 @@ FinanceEconomyAdRewardsDurableAdRewardReconciliationStatusSchema = z.object({
   varianceUsdNanos: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyAdRewardsDurableAdRewardSessionClaims */
+/** Zod schema for FinanceEconomyAdRewardsDurableAdRewardSessionClaims. Data model for Finance Economy Ad Rewards Durable Ad Reward Session Claims. */
 FinanceEconomyAdRewardsDurableAdRewardSessionClaimsSchema = z.object({
   asnRiskHash: z.string().nullable().optional(),
   creativeId: z.string().nullable().optional(),
@@ -23086,17 +24060,17 @@ FinanceEconomyAdRewardsDurableAdRewardSessionClaimsSchema = z.object({
   walletId: z.lazy(() => FinanceEconomyContractsWalletIdSchema).optional(),
 });
 
-/** Zod schema for FinanceEconomyAdRewardsDurableAdRewardSessionResult */
+/** Zod schema for FinanceEconomyAdRewardsDurableAdRewardSessionResult. Data model for Finance Economy Ad Rewards Durable Ad Reward Session Result. */
 FinanceEconomyAdRewardsDurableAdRewardSessionResultSchema = z.object({
   claims: z.lazy(() => FinanceEconomyAdRewardsDurableAdRewardSessionClaimsSchema).optional(),
   isDuplicate: z.boolean().optional(),
   token: z.lazy(() => FinanceEconomyAdRewardsSignedAdRewardSessionSchema).optional(),
 });
 
-/** Zod schema for FinanceEconomyAdRewardsDurableAdRewardSessionState */
+/** Zod schema for FinanceEconomyAdRewardsDurableAdRewardSessionState. OpenAPI schema for Finance Economy Ad Rewards Durable Ad Reward Session State. */
 FinanceEconomyAdRewardsDurableAdRewardSessionStateSchema = z.enum(['Issued', 'Active', 'ProofPending', 'Verified', 'Posted', 'Deferred', 'Rejected']);
 
-/** Zod schema for FinanceEconomyAdRewardsDurableAdRewardSessionStatus */
+/** Zod schema for FinanceEconomyAdRewardsDurableAdRewardSessionStatus. Data model for Finance Economy Ad Rewards Durable Ad Reward Session Status. */
 FinanceEconomyAdRewardsDurableAdRewardSessionStatusSchema = z.object({
   creativeId: z.string().nullable().optional(),
   expiresAt: z.string().datetime().optional(),
@@ -23109,7 +24083,7 @@ FinanceEconomyAdRewardsDurableAdRewardSessionStatusSchema = z.object({
   updatedAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for FinanceEconomyAdRewardsProviderCompletionProof */
+/** Zod schema for FinanceEconomyAdRewardsProviderCompletionProof. Data model for Finance Economy Ad Rewards Provider Completion Proof. */
 FinanceEconomyAdRewardsProviderCompletionProofSchema = z.object({
   completedAt: z.string().datetime().optional(),
   creativeId: z.string().nullable().optional(),
@@ -23120,24 +24094,24 @@ FinanceEconomyAdRewardsProviderCompletionProofSchema = z.object({
   signature: z.string().nullable().optional(),
 });
 
-/** Zod schema for FinanceEconomyAdRewardsSignedAdRewardSession */
+/** Zod schema for FinanceEconomyAdRewardsSignedAdRewardSession. Data model for Finance Economy Ad Rewards Signed Ad Reward Session. */
 FinanceEconomyAdRewardsSignedAdRewardSessionSchema = z.object({
   value: z.string().nullable().optional(),
 });
 
-/** Zod schema for FinanceEconomyBountiesBountyEligibilityRequirements */
+/** Zod schema for FinanceEconomyBountiesBountyEligibilityRequirements. Data model for Finance Economy Bounties Bounty Eligibility Requirements. */
 FinanceEconomyBountiesBountyEligibilityRequirementsSchema = z.object({
   minimumReputation: z.number().int().optional(),
   requiresInstructorVerification: z.boolean().optional(),
   requiresPrerequisite: z.boolean().optional(),
 });
 
-/** Zod schema for FinanceEconomyBountiesBountyId */
+/** Zod schema for FinanceEconomyBountiesBountyId. Data model for Finance Economy Bounties Bounty Id. */
 FinanceEconomyBountiesBountyIdSchema = z.object({
   value: z.string().uuid().optional(),
 });
 
-/** Zod schema for FinanceEconomyBountiesBountyStatus */
+/** Zod schema for FinanceEconomyBountiesBountyStatus. OpenAPI schema for Finance Economy Bounties Bounty Status. */
 FinanceEconomyBountiesBountyStatusSchema = z.enum(['Open', 'Expired', 'Claimed', 'Reclaimed']);
 
 /** Zod schema for FinanceEconomyBountiesBountyTerminalOutputLot. Immutable evidence of a materialized terminal output. Monetary authority remains the
@@ -23153,7 +24127,7 @@ FinanceEconomyBountiesBountyTerminalOutputLotSchema = z.object({
   walletId: z.lazy(() => FinanceEconomyContractsWalletIdSchema).optional(),
 });
 
-/** Zod schema for FinanceEconomyBountiesDurableBountyView */
+/** Zod schema for FinanceEconomyBountiesDurableBountyView. Data model for Finance Economy Bounties Durable Bounty View. */
 FinanceEconomyBountiesDurableBountyViewSchema = z.object({
   id: z.lazy(() => FinanceEconomyBountiesBountyIdSchema).optional(),
   amount: z.lazy(() => FinanceEconomyContractsCoinAmountSchema).optional(),
@@ -23190,30 +24164,30 @@ FinanceEconomyBountiesPersistedBountyTerminalEventSchema = z.object({
   tenantId: z.string().uuid().optional(),
 });
 
-/** Zod schema for FinanceEconomyCommandsConvertMyHardToSoftInput */
+/** Zod schema for FinanceEconomyCommandsConvertMyHardToSoftInput. Data model for Finance Economy Commands Convert My Hard To Soft Request. */
 FinanceEconomyCommandsConvertMyHardToSoftInputSchema = z.object({
   idempotencyKey: z.string().nullable().optional(),
   principalHardCoinUnits: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyCommandsCreateMyHardCoinTopUpInput */
+/** Zod schema for FinanceEconomyCommandsCreateMyHardCoinTopUpInput. Data model for Finance Economy Commands Create My Hard Coin Top Up Request. */
 FinanceEconomyCommandsCreateMyHardCoinTopUpInputSchema = z.object({
   hardCoinUnits: z.number().int().optional(),
   idempotencyKey: z.string().nullable().optional(),
 });
 
-/** Zod schema for FinanceEconomyContractsCoinAmount */
+/** Zod schema for FinanceEconomyContractsCoinAmount. Data model for Finance Economy Contracts Coin Amount. */
 FinanceEconomyContractsCoinAmountSchema = z.object({
   currency: z.lazy(() => FinanceEconomyContractsCurrencyCodeSchema).optional(),
   units: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyContractsCreditLotId */
+/** Zod schema for FinanceEconomyContractsCreditLotId. Data model for Finance Economy Contracts Credit Lot Id. */
 FinanceEconomyContractsCreditLotIdSchema = z.object({
   value: z.string().uuid().optional(),
 });
 
-/** Zod schema for FinanceEconomyContractsCurrencyCode */
+/** Zod schema for FinanceEconomyContractsCurrencyCode. OpenAPI schema for Finance Economy Contracts Currency Code. */
 FinanceEconomyContractsCurrencyCodeSchema = z.enum(['HardCoin', 'SoftCoin']);
 
 /** Zod schema for FinanceEconomyContractsEconomyWalletSummaryDto. Read-only, actor-scoped view of a wallet projection. The individual source lots and
@@ -23253,28 +24227,28 @@ FinanceEconomyContractsEconomyWalletTransactionDtoSchema = z.object({
   templateKind: z.lazy(() => FinanceEconomyContractsPostingTemplateKindSchema).optional(),
 });
 
-/** Zod schema for FinanceEconomyContractsEntrySide */
+/** Zod schema for FinanceEconomyContractsEntrySide. OpenAPI schema for Finance Economy Contracts Entry Side. */
 FinanceEconomyContractsEntrySideSchema = z.enum(['Debit', 'Credit']);
 
-/** Zod schema for FinanceEconomyContractsIdempotencyKey */
+/** Zod schema for FinanceEconomyContractsIdempotencyKey. Data model for Finance Economy Contracts Idempotency Key. */
 FinanceEconomyContractsIdempotencyKeySchema = z.object({
   value: z.string().nullable().optional(),
 });
 
-/** Zod schema for FinanceEconomyContractsPolicyVersion */
+/** Zod schema for FinanceEconomyContractsPolicyVersion. Data model for Finance Economy Contracts Policy Version. */
 FinanceEconomyContractsPolicyVersionSchema = z.object({
   value: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyContractsPostingId */
+/** Zod schema for FinanceEconomyContractsPostingId. Data model for Finance Economy Contracts Posting Id. */
 FinanceEconomyContractsPostingIdSchema = z.object({
   value: z.string().uuid().optional(),
 });
 
-/** Zod schema for FinanceEconomyContractsPostingStatus */
+/** Zod schema for FinanceEconomyContractsPostingStatus. OpenAPI schema for Finance Economy Contracts Posting Status. */
 FinanceEconomyContractsPostingStatusSchema = z.enum(['Accepted', 'Rejected', 'Duplicate']);
 
-/** Zod schema for FinanceEconomyContractsPostingTemplateKind */
+/** Zod schema for FinanceEconomyContractsPostingTemplateKind. OpenAPI schema for Finance Economy Contracts Posting Template Kind. */
 FinanceEconomyContractsPostingTemplateKindSchema = z.enum([
   'ConfirmedTopUpMint',
   'ProviderReversalFull',
@@ -23304,7 +24278,7 @@ FinanceEconomyContractsPostingTemplateKindSchema = z.enum([
   'MarketplaceRefund',
 ]);
 
-/** Zod schema for FinanceEconomyContractsProvenanceKind */
+/** Zod schema for FinanceEconomyContractsProvenanceKind. OpenAPI schema for Finance Economy Contracts Provenance Kind. */
 FinanceEconomyContractsProvenanceKindSchema = z.enum([
   'PurchasedHard',
   'EarnedHard',
@@ -23316,25 +24290,25 @@ FinanceEconomyContractsProvenanceKindSchema = z.enum([
   'MarketplaceSoft',
 ]);
 
-/** Zod schema for FinanceEconomyContractsReserveVersion */
+/** Zod schema for FinanceEconomyContractsReserveVersion. Data model for Finance Economy Contracts Reserve Version. */
 FinanceEconomyContractsReserveVersionSchema = z.object({
   value: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyContractsSourceStampId */
+/** Zod schema for FinanceEconomyContractsSourceStampId. Data model for Finance Economy Contracts Source Stamp Id. */
 FinanceEconomyContractsSourceStampIdSchema = z.object({
   value: z.string().uuid().optional(),
 });
 
-/** Zod schema for FinanceEconomyContractsWalletId */
+/** Zod schema for FinanceEconomyContractsWalletId. Data model for Finance Economy Contracts Wallet Id. */
 FinanceEconomyContractsWalletIdSchema = z.object({
   value: z.string().uuid().optional(),
 });
 
-/** Zod schema for FinanceEconomyContractsWalletLifecycleState */
+/** Zod schema for FinanceEconomyContractsWalletLifecycleState. OpenAPI schema for Finance Economy Contracts Wallet Lifecycle State. */
 FinanceEconomyContractsWalletLifecycleStateSchema = z.enum(['Active', 'Frozen', 'Closed', 'UnderReview']);
 
-/** Zod schema for FinanceEconomyFundingEconomyTopUpProviderStatus */
+/** Zod schema for FinanceEconomyFundingEconomyTopUpProviderStatus. OpenAPI schema for Finance Economy Funding Economy Top Up Provider Status. */
 FinanceEconomyFundingEconomyTopUpProviderStatusSchema = z.enum([
   'Prepared',
   'RequiresAction',
@@ -23348,7 +24322,7 @@ FinanceEconomyFundingEconomyTopUpProviderStatusSchema = z.enum([
   'Reversed',
 ]);
 
-/** Zod schema for FinanceEconomyFundingEconomyTopUpStatusDto */
+/** Zod schema for FinanceEconomyFundingEconomyTopUpStatusDto. Data model for Finance Economy Funding Economy Top Up Status Dto. */
 FinanceEconomyFundingEconomyTopUpStatusDtoSchema = z.object({
   currency: z.string().nullable().optional(),
   hardCoinUnits: z.number().int().optional(),
@@ -23360,7 +24334,7 @@ FinanceEconomyFundingEconomyTopUpStatusDtoSchema = z.object({
   usdMinorUnits: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyFundingSelfServiceHardCoinTopUpReceipt */
+/** Zod schema for FinanceEconomyFundingSelfServiceHardCoinTopUpReceipt. Data model for Finance Economy Funding Self Service Hard Coin Top Up Receipt. */
 FinanceEconomyFundingSelfServiceHardCoinTopUpReceiptSchema = z.object({
   clientSecret: z.string().nullable().optional(),
   currency: z.string().nullable().optional(),
@@ -23374,7 +24348,7 @@ FinanceEconomyFundingSelfServiceHardCoinTopUpReceiptSchema = z.object({
   usdMinorUnits: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyFundingSelfServiceHardToSoftConversionReceipt */
+/** Zod schema for FinanceEconomyFundingSelfServiceHardToSoftConversionReceipt. Data model for Finance Economy Funding Self Service Hard To Soft Conversion Receipt. */
 FinanceEconomyFundingSelfServiceHardToSoftConversionReceiptSchema = z.object({
   feePostingId: z.string().uuid().nullable().optional(),
   isDuplicate: z.boolean().optional(),
@@ -23383,13 +24357,13 @@ FinanceEconomyFundingSelfServiceHardToSoftConversionReceiptSchema = z.object({
   principalPostingId: z.string().uuid().optional(),
 });
 
-/** Zod schema for FinanceEconomyLedgerAnchorVerificationRunResult */
+/** Zod schema for FinanceEconomyLedgerAnchorVerificationRunResult. Data model for Finance Economy Ledger Anchor Verification Run Result. */
 FinanceEconomyLedgerAnchorVerificationRunResultSchema = z.object({
   failed: z.number().int().optional(),
   verified: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyLedgerEconomyAnchorPublicationResult */
+/** Zod schema for FinanceEconomyLedgerEconomyAnchorPublicationResult. Data model for Finance Economy Ledger Economy Anchor Publication Result. */
 FinanceEconomyLedgerEconomyAnchorPublicationResultSchema = z.object({
   anchorId: z.string().uuid().optional(),
   eTag: z.string().nullable().optional(),
@@ -23402,7 +24376,7 @@ FinanceEconomyLedgerEconomyAnchorPublicationResultSchema = z.object({
   retainUntil: z.string().datetime().optional(),
 });
 
-/** Zod schema for FinanceEconomyLedgerJournalIntegrityFailureCode */
+/** Zod schema for FinanceEconomyLedgerJournalIntegrityFailureCode. OpenAPI schema for Finance Economy Ledger Journal Integrity Failure Code. */
 FinanceEconomyLedgerJournalIntegrityFailureCodeSchema = z.enum([
   'None',
   'SequenceGap',
@@ -23419,17 +24393,17 @@ FinanceEconomyLedgerJournalIntegrityFailureCodeSchema = z.enum([
   'CumulativeReversalInvalid',
 ]);
 
-/** Zod schema for FinanceEconomyLedgerJournalIntegrityRunResult */
+/** Zod schema for FinanceEconomyLedgerJournalIntegrityRunResult. Data model for Finance Economy Ledger Journal Integrity Run Result. */
 FinanceEconomyLedgerJournalIntegrityRunResultSchema = z.object({
   fencingToken: z.number().int().optional(),
   status: z.lazy(() => FinanceEconomyLedgerJournalIntegrityRunStatusSchema).optional(),
   verification: z.lazy(() => FinanceEconomyLedgerJournalIntegrityVerificationResultSchema).optional(),
 });
 
-/** Zod schema for FinanceEconomyLedgerJournalIntegrityRunStatus */
+/** Zod schema for FinanceEconomyLedgerJournalIntegrityRunStatus. OpenAPI schema for Finance Economy Ledger Journal Integrity Run Status. */
 FinanceEconomyLedgerJournalIntegrityRunStatusSchema = z.enum(['Verified', 'Failed', 'LeaseUnavailable']);
 
-/** Zod schema for FinanceEconomyLedgerJournalIntegrityVerificationResult */
+/** Zod schema for FinanceEconomyLedgerJournalIntegrityVerificationResult. Data model for Finance Economy Ledger Journal Integrity Verification Result. */
 FinanceEconomyLedgerJournalIntegrityVerificationResultSchema = z.object({
   currentHash: z.string().nullable().optional(),
   failureCode: z.lazy(() => FinanceEconomyLedgerJournalIntegrityFailureCodeSchema).optional(),
@@ -23438,7 +24412,7 @@ FinanceEconomyLedgerJournalIntegrityVerificationResultSchema = z.object({
   toSequence: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyMarketplaceDurableMarketplaceRefundDebt */
+/** Zod schema for FinanceEconomyMarketplaceDurableMarketplaceRefundDebt. Data model for Finance Economy Marketplace Durable Marketplace Refund Debt. */
 FinanceEconomyMarketplaceDurableMarketplaceRefundDebtSchema = z.object({
   currency: z.lazy(() => FinanceEconomyContractsCurrencyCodeSchema).optional(),
   evidenceHash: z.string().nullable().optional(),
@@ -23446,7 +24420,7 @@ FinanceEconomyMarketplaceDurableMarketplaceRefundDebtSchema = z.object({
   units: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyMarketplaceDurableMarketplaceRefundResult */
+/** Zod schema for FinanceEconomyMarketplaceDurableMarketplaceRefundResult. Data model for Finance Economy Marketplace Durable Marketplace Refund Result. */
 FinanceEconomyMarketplaceDurableMarketplaceRefundResultSchema = z.object({
   cumulativeRefundedQuantity: z.number().int().optional(),
   debts: z
@@ -23469,7 +24443,7 @@ FinanceEconomyMarketplaceDurableMarketplaceRefundResultSchema = z.object({
   settlementStatus: z.lazy(() => FinanceEconomyMarketplaceMarketplaceSettlementStatusSchema).optional(),
 });
 
-/** Zod schema for FinanceEconomyMarketplaceDurableMarketplaceSettlementResult */
+/** Zod schema for FinanceEconomyMarketplaceDurableMarketplaceSettlementResult. Data model for Finance Economy Marketplace Durable Marketplace Settlement Result. */
 FinanceEconomyMarketplaceDurableMarketplaceSettlementResultSchema = z.object({
   buyerId: z.string().uuid().optional(),
   entitlementStatus: z.lazy(() => FinanceEconomyMarketplaceMarketplaceEntitlementStatusSchema).optional(),
@@ -23489,13 +24463,13 @@ FinanceEconomyMarketplaceDurableMarketplaceSettlementResultSchema = z.object({
   status: z.lazy(() => FinanceEconomyMarketplaceMarketplaceSettlementStatusSchema).optional(),
 });
 
-/** Zod schema for FinanceEconomyMarketplaceMarketplaceCurrencyChoice */
+/** Zod schema for FinanceEconomyMarketplaceMarketplaceCurrencyChoice. OpenAPI schema for Finance Economy Marketplace Marketplace Currency Choice. */
 FinanceEconomyMarketplaceMarketplaceCurrencyChoiceSchema = z.enum(['Hard', 'Soft', 'FixedMix']);
 
-/** Zod schema for FinanceEconomyMarketplaceMarketplaceEntitlementStatus */
+/** Zod schema for FinanceEconomyMarketplaceMarketplaceEntitlementStatus. OpenAPI schema for Finance Economy Marketplace Marketplace Entitlement Status. */
 FinanceEconomyMarketplaceMarketplaceEntitlementStatusSchema = z.enum(['PendingGrant', 'Granted', 'Revoked']);
 
-/** Zod schema for FinanceEconomyMarketplaceMarketplaceEventOperationalStatus */
+/** Zod schema for FinanceEconomyMarketplaceMarketplaceEventOperationalStatus. Data model for Finance Economy Marketplace Marketplace Event Operational Status. */
 FinanceEconomyMarketplaceMarketplaceEventOperationalStatusSchema = z.object({
   id: z.string().uuid().optional(),
   evidenceHash: z.string().nullable().optional(),
@@ -23504,7 +24478,7 @@ FinanceEconomyMarketplaceMarketplaceEventOperationalStatusSchema = z.object({
   sequence: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyMarketplaceMarketplaceOutboxOperationalStatus */
+/** Zod schema for FinanceEconomyMarketplaceMarketplaceOutboxOperationalStatus. Data model for Finance Economy Marketplace Marketplace Outbox Operational Status. */
 FinanceEconomyMarketplaceMarketplaceOutboxOperationalStatusSchema = z.object({
   id: z.string().uuid().optional(),
   attemptCount: z.number().int().optional(),
@@ -23518,7 +24492,7 @@ FinanceEconomyMarketplaceMarketplaceOutboxOperationalStatusSchema = z.object({
   tenantId: z.string().uuid().optional(),
 });
 
-/** Zod schema for FinanceEconomyMarketplaceMarketplacePriceLegSnapshot */
+/** Zod schema for FinanceEconomyMarketplaceMarketplacePriceLegSnapshot. Data model for Finance Economy Marketplace Marketplace Price Leg Snapshot. */
 FinanceEconomyMarketplaceMarketplacePriceLegSnapshotSchema = z.object({
   amount: z.lazy(() => FinanceEconomyContractsCoinAmountSchema).optional(),
   currency: z.lazy(() => FinanceEconomyContractsCurrencyCodeSchema).optional(),
@@ -23527,7 +24501,7 @@ FinanceEconomyMarketplaceMarketplacePriceLegSnapshotSchema = z.object({
   units: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyMarketplaceMarketplaceRefundOperationalStatus */
+/** Zod schema for FinanceEconomyMarketplaceMarketplaceRefundOperationalStatus. Data model for Finance Economy Marketplace Marketplace Refund Operational Status. */
 FinanceEconomyMarketplaceMarketplaceRefundOperationalStatusSchema = z.object({
   id: z.string().uuid().optional(),
   buyerId: z.string().uuid().optional(),
@@ -23542,7 +24516,7 @@ FinanceEconomyMarketplaceMarketplaceRefundOperationalStatusSchema = z.object({
   tenantId: z.string().uuid().optional(),
 });
 
-/** Zod schema for FinanceEconomyMarketplaceMarketplaceSettlementLegOperationalStatus */
+/** Zod schema for FinanceEconomyMarketplaceMarketplaceSettlementLegOperationalStatus. Data model for Finance Economy Marketplace Marketplace Settlement Leg Operational Status. */
 FinanceEconomyMarketplaceMarketplaceSettlementLegOperationalStatusSchema = z.object({
   currency: z.lazy(() => FinanceEconomyContractsCurrencyCodeSchema).optional(),
   platformFeeUnits: z.number().int().optional(),
@@ -23551,7 +24525,7 @@ FinanceEconomyMarketplaceMarketplaceSettlementLegOperationalStatusSchema = z.obj
   units: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyMarketplaceMarketplaceSettlementOperationalDetails */
+/** Zod schema for FinanceEconomyMarketplaceMarketplaceSettlementOperationalDetails. Data model for Finance Economy Marketplace Marketplace Settlement Operational Details. */
 FinanceEconomyMarketplaceMarketplaceSettlementOperationalDetailsSchema = z.object({
   events: z
     .array(z.lazy(() => FinanceEconomyMarketplaceMarketplaceEventOperationalStatusSchema))
@@ -23572,7 +24546,7 @@ FinanceEconomyMarketplaceMarketplaceSettlementOperationalDetailsSchema = z.objec
   summary: z.lazy(() => FinanceEconomyMarketplaceMarketplaceSettlementOperationalSummarySchema).optional(),
 });
 
-/** Zod schema for FinanceEconomyMarketplaceMarketplaceSettlementOperationalSummary */
+/** Zod schema for FinanceEconomyMarketplaceMarketplaceSettlementOperationalSummary. Data model for Finance Economy Marketplace Marketplace Settlement Operational Summary. */
 FinanceEconomyMarketplaceMarketplaceSettlementOperationalSummarySchema = z.object({
   id: z.string().uuid().optional(),
   buyerId: z.string().uuid().optional(),
@@ -23596,13 +24570,13 @@ FinanceEconomyMarketplaceMarketplaceSettlementOperationalSummarySchema = z.objec
   updatedAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for FinanceEconomyMarketplaceMarketplaceSettlementStatus */
+/** Zod schema for FinanceEconomyMarketplaceMarketplaceSettlementStatus. OpenAPI schema for Finance Economy Marketplace Marketplace Settlement Status. */
 FinanceEconomyMarketplaceMarketplaceSettlementStatusSchema = z.enum(['Settled', 'PartiallyRefunded', 'Refunded']);
 
-/** Zod schema for FinanceEconomyMarketplaceProductCurrencyMode */
+/** Zod schema for FinanceEconomyMarketplaceProductCurrencyMode. OpenAPI schema for Finance Economy Marketplace Product Currency Mode. */
 FinanceEconomyMarketplaceProductCurrencyModeSchema = z.enum(['HardOnly', 'SoftOnly', 'Either', 'FixedMix']);
 
-/** Zod schema for FinanceEconomyOperationsEconomyActiveReserveOperationalDetails */
+/** Zod schema for FinanceEconomyOperationsEconomyActiveReserveOperationalDetails. Data model for Finance Economy Operations Economy Active Reserve Operational Details. */
 FinanceEconomyOperationsEconomyActiveReserveOperationalDetailsSchema = z.object({
   allocations: z
     .array(z.lazy(() => FinanceEconomyOperationsEconomyReserveAssetAllocationOperationalStatusSchema))
@@ -23612,13 +24586,13 @@ FinanceEconomyOperationsEconomyActiveReserveOperationalDetailsSchema = z.object(
   reconciliation: z.lazy(() => FinanceEconomyOperationsEconomyCustodyReconciliationOperationalStatusSchema).optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsEconomyAnchorOperationalDetails */
+/** Zod schema for FinanceEconomyOperationsEconomyAnchorOperationalDetails. Data model for Finance Economy Operations Economy Anchor Operational Details. */
 FinanceEconomyOperationsEconomyAnchorOperationalDetailsSchema = z.object({
   dispatchSnapshotHash: z.string().nullable().optional(),
   summary: z.lazy(() => FinanceEconomyOperationsEconomyAnchorOperationalStatusSchema).optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsEconomyAnchorOperationalStatus */
+/** Zod schema for FinanceEconomyOperationsEconomyAnchorOperationalStatus. Data model for Finance Economy Operations Economy Anchor Operational Status. */
 FinanceEconomyOperationsEconomyAnchorOperationalStatusSchema = z.object({
   id: z.string().uuid().optional(),
   anchoredAt: z.string().datetime().optional(),
@@ -23631,7 +24605,7 @@ FinanceEconomyOperationsEconomyAnchorOperationalStatusSchema = z.object({
   verifiedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsEconomyAnchorVerificationOperationalStatus */
+/** Zod schema for FinanceEconomyOperationsEconomyAnchorVerificationOperationalStatus. Data model for Finance Economy Operations Economy Anchor Verification Operational Status. */
 FinanceEconomyOperationsEconomyAnchorVerificationOperationalStatusSchema = z.object({
   id: z.string().uuid().optional(),
   eTag: z.string().nullable().optional(),
@@ -23644,7 +24618,7 @@ FinanceEconomyOperationsEconomyAnchorVerificationOperationalStatusSchema = z.obj
   verifiedAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsEconomyCapabilityConfigurationSnapshot */
+/** Zod schema for FinanceEconomyOperationsEconomyCapabilityConfigurationSnapshot. Data model for Finance Economy Operations Economy Capability Configuration Snapshot. */
 FinanceEconomyOperationsEconomyCapabilityConfigurationSnapshotSchema = z.object({
   killSwitches: z
     .array(z.lazy(() => FinanceEconomyOperationsEconomyKillSwitchOperationalStatusSchema))
@@ -23656,7 +24630,7 @@ FinanceEconomyOperationsEconomyCapabilityConfigurationSnapshotSchema = z.object(
     .optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsEconomyCapabilityPolicyOperationalStatus */
+/** Zod schema for FinanceEconomyOperationsEconomyCapabilityPolicyOperationalStatus. Data model for Finance Economy Operations Economy Capability Policy Operational Status. */
 FinanceEconomyOperationsEconomyCapabilityPolicyOperationalStatusSchema = z.object({
   id: z.string().uuid().optional(),
   capability: z.lazy(() => FinanceEconomyRiskEconomyValueMovementCapabilitySchema).optional(),
@@ -23671,7 +24645,7 @@ FinanceEconomyOperationsEconomyCapabilityPolicyOperationalStatusSchema = z.objec
   version: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsEconomyCustodyObservationOperationalStatus */
+/** Zod schema for FinanceEconomyOperationsEconomyCustodyObservationOperationalStatus. Data model for Finance Economy Operations Economy Custody Observation Operational Status. */
 FinanceEconomyOperationsEconomyCustodyObservationOperationalStatusSchema = z.object({
   id: z.string().uuid().optional(),
   assetKey: z.string().nullable().optional(),
@@ -23685,7 +24659,7 @@ FinanceEconomyOperationsEconomyCustodyObservationOperationalStatusSchema = z.obj
   version: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsEconomyCustodyReconciliationOperationalStatus */
+/** Zod schema for FinanceEconomyOperationsEconomyCustodyReconciliationOperationalStatus. Data model for Finance Economy Operations Economy Custody Reconciliation Operational Status. */
 FinanceEconomyOperationsEconomyCustodyReconciliationOperationalStatusSchema = z.object({
   id: z.string().uuid().optional(),
   eligibleAssetUsdNanos: z.number().int().optional(),
@@ -23697,14 +24671,14 @@ FinanceEconomyOperationsEconomyCustodyReconciliationOperationalStatusSchema = z.
   varianceUsdNanos: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsEconomyJournalHeadStatus */
+/** Zod schema for FinanceEconomyOperationsEconomyJournalHeadStatus. Data model for Finance Economy Operations Economy Journal Head Status. */
 FinanceEconomyOperationsEconomyJournalHeadStatusSchema = z.object({
   hash: z.string().nullable().optional(),
   sequence: z.number().int().optional(),
   updatedAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsEconomyJournalVerificationRunDetails */
+/** Zod schema for FinanceEconomyOperationsEconomyJournalVerificationRunDetails. Data model for Finance Economy Operations Economy Journal Verification Run Details. */
 FinanceEconomyOperationsEconomyJournalVerificationRunDetailsSchema = z.object({
   id: z.string().uuid().optional(),
   completedAt: z.string().datetime().optional(),
@@ -23718,7 +24692,7 @@ FinanceEconomyOperationsEconomyJournalVerificationRunDetailsSchema = z.object({
   toSequence: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsEconomyJournalVerificationStatus */
+/** Zod schema for FinanceEconomyOperationsEconomyJournalVerificationStatus. Data model for Finance Economy Operations Economy Journal Verification Status. */
 FinanceEconomyOperationsEconomyJournalVerificationStatusSchema = z.object({
   completedAt: z.string().datetime().optional(),
   currentHash: z.string().nullable().optional(),
@@ -23729,7 +24703,7 @@ FinanceEconomyOperationsEconomyJournalVerificationStatusSchema = z.object({
   toSequence: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsEconomyKillSwitchOperationalStatus */
+/** Zod schema for FinanceEconomyOperationsEconomyKillSwitchOperationalStatus. Data model for Finance Economy Operations Economy Kill Switch Operational Status. */
 FinanceEconomyOperationsEconomyKillSwitchOperationalStatusSchema = z.object({
   id: z.string().uuid().optional(),
   activatedAt: z.string().datetime().optional(),
@@ -23743,7 +24717,7 @@ FinanceEconomyOperationsEconomyKillSwitchOperationalStatusSchema = z.object({
   scope: z.lazy(() => FinanceEconomyRiskEconomyKillSwitchScopeSchema).optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsEconomyLedgerHealthSnapshot */
+/** Zod schema for FinanceEconomyOperationsEconomyLedgerHealthSnapshot. Data model for Finance Economy Operations Economy Ledger Health Snapshot. */
 FinanceEconomyOperationsEconomyLedgerHealthSnapshotSchema = z.object({
   activeProjection: z.lazy(() => FinanceEconomyOperationsEconomyProjectionOperationalStatusSchema).optional(),
   activeReserve: z.lazy(() => FinanceEconomyOperationsEconomyReserveOperationalStatusSchema).optional(),
@@ -23757,7 +24731,7 @@ FinanceEconomyOperationsEconomyLedgerHealthSnapshotSchema = z.object({
   latestVerification: z.lazy(() => FinanceEconomyOperationsEconomyJournalVerificationStatusSchema).optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageAdRewardPendingClaimOperationalStatus */
+/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageAdRewardPendingClaimOperationalStatus. Data model for Finance Economy Operations Economy Operational Page Ad Reward Pending Claim Operational Status. */
 FinanceEconomyOperationsEconomyOperationalPageAdRewardPendingClaimOperationalStatusSchema = z.object({
   items: z
     .array(z.lazy(() => FinanceEconomyAdRewardsAdRewardPendingClaimOperationalStatusSchema))
@@ -23766,7 +24740,7 @@ FinanceEconomyOperationsEconomyOperationalPageAdRewardPendingClaimOperationalSta
   nextCursor: z.string().nullable().optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageAdRewardReconciliationOperationalStatus */
+/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageAdRewardReconciliationOperationalStatus. Data model for Finance Economy Operations Economy Operational Page Ad Reward Reconciliation Operational Status. */
 FinanceEconomyOperationsEconomyOperationalPageAdRewardReconciliationOperationalStatusSchema = z.object({
   items: z
     .array(z.lazy(() => FinanceEconomyAdRewardsAdRewardReconciliationOperationalStatusSchema))
@@ -23775,7 +24749,7 @@ FinanceEconomyOperationsEconomyOperationalPageAdRewardReconciliationOperationalS
   nextCursor: z.string().nullable().optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageAdRewardSessionOperationalSummary */
+/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageAdRewardSessionOperationalSummary. Data model for Finance Economy Operations Economy Operational Page Ad Reward Session Operational Summary. */
 FinanceEconomyOperationsEconomyOperationalPageAdRewardSessionOperationalSummarySchema = z.object({
   items: z
     .array(z.lazy(() => FinanceEconomyAdRewardsAdRewardSessionOperationalSummarySchema))
@@ -23784,7 +24758,7 @@ FinanceEconomyOperationsEconomyOperationalPageAdRewardSessionOperationalSummaryS
   nextCursor: z.string().nullable().optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageEconomyAnchorOperationalDetails */
+/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageEconomyAnchorOperationalDetails. Data model for Finance Economy Operations Economy Operational Page Economy Anchor Operational Details. */
 FinanceEconomyOperationsEconomyOperationalPageEconomyAnchorOperationalDetailsSchema = z.object({
   items: z
     .array(z.lazy(() => FinanceEconomyOperationsEconomyAnchorOperationalDetailsSchema))
@@ -23793,7 +24767,7 @@ FinanceEconomyOperationsEconomyOperationalPageEconomyAnchorOperationalDetailsSch
   nextCursor: z.string().nullable().optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageEconomyCapabilityPolicyOperationalStatus */
+/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageEconomyCapabilityPolicyOperationalStatus. Data model for Finance Economy Operations Economy Operational Page Economy Capability Policy Operational Status. */
 FinanceEconomyOperationsEconomyOperationalPageEconomyCapabilityPolicyOperationalStatusSchema = z.object({
   items: z
     .array(z.lazy(() => FinanceEconomyOperationsEconomyCapabilityPolicyOperationalStatusSchema))
@@ -23802,7 +24776,7 @@ FinanceEconomyOperationsEconomyOperationalPageEconomyCapabilityPolicyOperational
   nextCursor: z.string().nullable().optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageEconomyCustodyObservationOperationalStatus */
+/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageEconomyCustodyObservationOperationalStatus. Data model for Finance Economy Operations Economy Operational Page Economy Custody Observation Operational Status. */
 FinanceEconomyOperationsEconomyOperationalPageEconomyCustodyObservationOperationalStatusSchema = z.object({
   items: z
     .array(z.lazy(() => FinanceEconomyOperationsEconomyCustodyObservationOperationalStatusSchema))
@@ -23811,7 +24785,7 @@ FinanceEconomyOperationsEconomyOperationalPageEconomyCustodyObservationOperation
   nextCursor: z.string().nullable().optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageEconomyJournalVerificationRunDetails */
+/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageEconomyJournalVerificationRunDetails. Data model for Finance Economy Operations Economy Operational Page Economy Journal Verification Run Details. */
 FinanceEconomyOperationsEconomyOperationalPageEconomyJournalVerificationRunDetailsSchema = z.object({
   items: z
     .array(z.lazy(() => FinanceEconomyOperationsEconomyJournalVerificationRunDetailsSchema))
@@ -23820,7 +24794,7 @@ FinanceEconomyOperationsEconomyOperationalPageEconomyJournalVerificationRunDetai
   nextCursor: z.string().nullable().optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageEconomyProjectionGenerationOperationalDetails */
+/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageEconomyProjectionGenerationOperationalDetails. Data model for Finance Economy Operations Economy Operational Page Economy Projection Generation Operational Details. */
 FinanceEconomyOperationsEconomyOperationalPageEconomyProjectionGenerationOperationalDetailsSchema = z.object({
   items: z
     .array(z.lazy(() => FinanceEconomyOperationsEconomyProjectionGenerationOperationalDetailsSchema))
@@ -23829,7 +24803,7 @@ FinanceEconomyOperationsEconomyOperationalPageEconomyProjectionGenerationOperati
   nextCursor: z.string().nullable().optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageEconomyReserveProposalOperationalStatus */
+/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageEconomyReserveProposalOperationalStatus. Data model for Finance Economy Operations Economy Operational Page Economy Reserve Proposal Operational Status. */
 FinanceEconomyOperationsEconomyOperationalPageEconomyReserveProposalOperationalStatusSchema = z.object({
   items: z
     .array(z.lazy(() => FinanceEconomyOperationsEconomyReserveProposalOperationalStatusSchema))
@@ -23838,7 +24812,7 @@ FinanceEconomyOperationsEconomyOperationalPageEconomyReserveProposalOperationalS
   nextCursor: z.string().nullable().optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageLegacyEconomyShadowBatchSummary */
+/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageLegacyEconomyShadowBatchSummary. Data model for Finance Economy Operations Economy Operational Page Legacy Economy Shadow Batch Summary. */
 FinanceEconomyOperationsEconomyOperationalPageLegacyEconomyShadowBatchSummarySchema = z.object({
   items: z
     .array(z.lazy(() => FinanceEconomyOperationsLegacyEconomyShadowBatchSummarySchema))
@@ -23847,7 +24821,7 @@ FinanceEconomyOperationsEconomyOperationalPageLegacyEconomyShadowBatchSummarySch
   nextCursor: z.string().nullable().optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageMarketplaceOutboxOperationalStatus */
+/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageMarketplaceOutboxOperationalStatus. Data model for Finance Economy Operations Economy Operational Page Marketplace Outbox Operational Status. */
 FinanceEconomyOperationsEconomyOperationalPageMarketplaceOutboxOperationalStatusSchema = z.object({
   items: z
     .array(z.lazy(() => FinanceEconomyMarketplaceMarketplaceOutboxOperationalStatusSchema))
@@ -23856,7 +24830,7 @@ FinanceEconomyOperationsEconomyOperationalPageMarketplaceOutboxOperationalStatus
   nextCursor: z.string().nullable().optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageMarketplaceRefundOperationalStatus */
+/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageMarketplaceRefundOperationalStatus. Data model for Finance Economy Operations Economy Operational Page Marketplace Refund Operational Status. */
 FinanceEconomyOperationsEconomyOperationalPageMarketplaceRefundOperationalStatusSchema = z.object({
   items: z
     .array(z.lazy(() => FinanceEconomyMarketplaceMarketplaceRefundOperationalStatusSchema))
@@ -23865,7 +24839,7 @@ FinanceEconomyOperationsEconomyOperationalPageMarketplaceRefundOperationalStatus
   nextCursor: z.string().nullable().optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageMarketplaceSettlementOperationalSummary */
+/** Zod schema for FinanceEconomyOperationsEconomyOperationalPageMarketplaceSettlementOperationalSummary. Data model for Finance Economy Operations Economy Operational Page Marketplace Settlement Operational Summary. */
 FinanceEconomyOperationsEconomyOperationalPageMarketplaceSettlementOperationalSummarySchema = z.object({
   items: z
     .array(z.lazy(() => FinanceEconomyMarketplaceMarketplaceSettlementOperationalSummarySchema))
@@ -23874,7 +24848,7 @@ FinanceEconomyOperationsEconomyOperationalPageMarketplaceSettlementOperationalSu
   nextCursor: z.string().nullable().optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsEconomyPolicyAuditEntry */
+/** Zod schema for FinanceEconomyOperationsEconomyPolicyAuditEntry. Data model for Finance Economy Operations Economy Policy Audit Entry. */
 FinanceEconomyOperationsEconomyPolicyAuditEntrySchema = z.object({
   actorId: z.string().uuid().optional(),
   evidenceHash: z.string().nullable().optional(),
@@ -23882,7 +24856,7 @@ FinanceEconomyOperationsEconomyPolicyAuditEntrySchema = z.object({
   occurredAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsEconomyPolicyOperationalDetails */
+/** Zod schema for FinanceEconomyOperationsEconomyPolicyOperationalDetails. Data model for Finance Economy Operations Economy Policy Operational Details. */
 FinanceEconomyOperationsEconomyPolicyOperationalDetailsSchema = z.object({
   approvedAt: z.string().datetime().nullable().optional(),
   approvedBy: z.string().uuid().nullable().optional(),
@@ -23892,7 +24866,7 @@ FinanceEconomyOperationsEconomyPolicyOperationalDetailsSchema = z.object({
   summary: z.lazy(() => FinanceEconomyOperationsEconomyCapabilityPolicyOperationalStatusSchema).optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsEconomyProjectionApprovalAuditEntry */
+/** Zod schema for FinanceEconomyOperationsEconomyProjectionApprovalAuditEntry. Data model for Finance Economy Operations Economy Projection Approval Audit Entry. */
 FinanceEconomyOperationsEconomyProjectionApprovalAuditEntrySchema = z.object({
   id: z.string().uuid().optional(),
   actorId: z.string().uuid().optional(),
@@ -23900,7 +24874,7 @@ FinanceEconomyOperationsEconomyProjectionApprovalAuditEntrySchema = z.object({
   evidenceHash: z.string().nullable().optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsEconomyProjectionGenerationOperationalDetails */
+/** Zod schema for FinanceEconomyOperationsEconomyProjectionGenerationOperationalDetails. Data model for Finance Economy Operations Economy Projection Generation Operational Details. */
 FinanceEconomyOperationsEconomyProjectionGenerationOperationalDetailsSchema = z.object({
   completedAt: z.string().datetime().nullable().optional(),
   fromSequence: z.number().int().optional(),
@@ -23909,7 +24883,7 @@ FinanceEconomyOperationsEconomyProjectionGenerationOperationalDetailsSchema = z.
   summary: z.lazy(() => FinanceEconomyOperationsEconomyProjectionOperationalStatusSchema).optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsEconomyProjectionOperationalStatus */
+/** Zod schema for FinanceEconomyOperationsEconomyProjectionOperationalStatus. Data model for Finance Economy Operations Economy Projection Operational Status. */
 FinanceEconomyOperationsEconomyProjectionOperationalStatusSchema = z.object({
   activatedAt: z.string().datetime().nullable().optional(),
   approvedBy: z.string().uuid().nullable().optional(),
@@ -23923,7 +24897,7 @@ FinanceEconomyOperationsEconomyProjectionOperationalStatusSchema = z.object({
   toSequence: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsEconomyReserveAssetAllocationOperationalStatus */
+/** Zod schema for FinanceEconomyOperationsEconomyReserveAssetAllocationOperationalStatus. Data model for Finance Economy Operations Economy Reserve Asset Allocation Operational Status. */
 FinanceEconomyOperationsEconomyReserveAssetAllocationOperationalStatusSchema = z.object({
   id: z.string().uuid().optional(),
   assetKey: z.string().nullable().optional(),
@@ -23931,7 +24905,7 @@ FinanceEconomyOperationsEconomyReserveAssetAllocationOperationalStatusSchema = z
   purpose: z.lazy(() => FinanceEconomyReservesReserveBackingPurposeSchema).optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsEconomyReserveOperationalStatus */
+/** Zod schema for FinanceEconomyOperationsEconomyReserveOperationalStatus. Data model for Finance Economy Operations Economy Reserve Operational Status. */
 FinanceEconomyOperationsEconomyReserveOperationalStatusSchema = z.object({
   authorizationEpoch: z.number().int().optional(),
   coverage: z.lazy(() => FinanceEconomyReservesReserveCoverageStateSchema).optional(),
@@ -23945,7 +24919,7 @@ FinanceEconomyOperationsEconomyReserveOperationalStatusSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsEconomyReserveProposalOperationalStatus */
+/** Zod schema for FinanceEconomyOperationsEconomyReserveProposalOperationalStatus. Data model for Finance Economy Operations Economy Reserve Proposal Operational Status. */
 FinanceEconomyOperationsEconomyReserveProposalOperationalStatusSchema = z.object({
   id: z.string().uuid().optional(),
   approvedAt: z.string().datetime().nullable().optional(),
@@ -23968,7 +24942,7 @@ FinanceEconomyOperationsEconomyReserveProposalOperationalStatusSchema = z.object
   version: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsLegacyEconomyShadowBatchSummary */
+/** Zod schema for FinanceEconomyOperationsLegacyEconomyShadowBatchSummary. Data model for Finance Economy Operations Legacy Economy Shadow Batch Summary. */
 FinanceEconomyOperationsLegacyEconomyShadowBatchSummarySchema = z.object({
   id: z.string().uuid().optional(),
   backfilledHardUnits: z.number().int().optional(),
@@ -23987,7 +24961,7 @@ FinanceEconomyOperationsLegacyEconomyShadowBatchSummarySchema = z.object({
   walletCount: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsLegacyEconomyShadowBatchView */
+/** Zod schema for FinanceEconomyOperationsLegacyEconomyShadowBatchView. Data model for Finance Economy Operations Legacy Economy Shadow Batch View. */
 FinanceEconomyOperationsLegacyEconomyShadowBatchViewSchema = z.object({
   id: z.string().uuid().optional(),
   backfilledHardUnits: z.number().int().optional(),
@@ -24009,7 +24983,7 @@ FinanceEconomyOperationsLegacyEconomyShadowBatchViewSchema = z.object({
   walletSnapshotHash: z.string().nullable().optional(),
 });
 
-/** Zod schema for FinanceEconomyOperationsLegacyEconomyShadowState */
+/** Zod schema for FinanceEconomyOperationsLegacyEconomyShadowState. OpenAPI schema for Finance Economy Operations Legacy Economy Shadow State. */
 FinanceEconomyOperationsLegacyEconomyShadowStateSchema = z.enum([
   'Captured',
   'Backfilling',
@@ -24021,7 +24995,7 @@ FinanceEconomyOperationsLegacyEconomyShadowStateSchema = z.enum([
   'Failed',
 ]);
 
-/** Zod schema for FinanceEconomyOperationsLegacyEconomyShadowWalletView */
+/** Zod schema for FinanceEconomyOperationsLegacyEconomyShadowWalletView. Data model for Finance Economy Operations Legacy Economy Shadow Wallet View. */
 FinanceEconomyOperationsLegacyEconomyShadowWalletViewSchema = z.object({
   completedCreditsMinorUnits: z.number().int().optional(),
   completedDebitsMinorUnits: z.number().int().optional(),
@@ -24038,18 +25012,18 @@ FinanceEconomyOperationsLegacyEconomyShadowWalletViewSchema = z.object({
   transactionCount: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyPayoutsCommandsCreateMyPayoutRequestInput */
+/** Zod schema for FinanceEconomyPayoutsCommandsCreateMyPayoutRequestInput. Data model for Finance Economy Payouts Commands Create My Payout Request Request. */
 FinanceEconomyPayoutsCommandsCreateMyPayoutRequestInputSchema = z.object({
   hardCoinUnits: z.number().int().optional(),
   idempotencyKey: z.string().nullable().optional(),
 });
 
-/** Zod schema for FinanceEconomyPayoutsCommandsReviewPayoutRequestInput */
+/** Zod schema for FinanceEconomyPayoutsCommandsReviewPayoutRequestInput. Data model for Finance Economy Payouts Commands Review Payout Request Request. */
 FinanceEconomyPayoutsCommandsReviewPayoutRequestInputSchema = z.object({
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for FinanceEconomyPayoutsConnectAccountSnapshot */
+/** Zod schema for FinanceEconomyPayoutsConnectAccountSnapshot. Data model for Finance Economy Payouts Connect Account Snapshot. */
 FinanceEconomyPayoutsConnectAccountSnapshotSchema = z.object({
   chargesEnabled: z.boolean().optional(),
   destinationHash: z.string().nullable().optional(),
@@ -24063,16 +25037,16 @@ FinanceEconomyPayoutsConnectAccountSnapshotSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyPayoutsConnectAccountState */
+/** Zod schema for FinanceEconomyPayoutsConnectAccountState. OpenAPI schema for Finance Economy Payouts Connect Account State. */
 FinanceEconomyPayoutsConnectAccountStateSchema = z.enum(['Pending', 'Restricted', 'Ready', 'Disabled']);
 
-/** Zod schema for FinanceEconomyPayoutsConnectOnboardingResult */
+/** Zod schema for FinanceEconomyPayoutsConnectOnboardingResult. Data model for Finance Economy Payouts Connect Onboarding Result. */
 FinanceEconomyPayoutsConnectOnboardingResultSchema = z.object({
   account: z.lazy(() => FinanceEconomyPayoutsConnectAccountSnapshotSchema).optional(),
   onboardingUri: z.string().url().nullable().optional(),
 });
 
-/** Zod schema for FinanceEconomyPayoutsPayoutOperationState */
+/** Zod schema for FinanceEconomyPayoutsPayoutOperationState. OpenAPI schema for Finance Economy Payouts Payout Operation State. */
 FinanceEconomyPayoutsPayoutOperationStateSchema = z.enum(['Reserved', 'Dispatching', 'Ambiguous', 'Succeeded', 'Failed', 'Cancelled']);
 
 /** Zod schema for FinanceEconomyPayoutsPayoutRequestState. A user-submitted intent to withdraw earned value. It is deliberately separate from a
@@ -24080,7 +25054,7 @@ GameGuild.Finance.Economy.Payouts.PayoutOperation: no funds are reserved or sent
 the later KYC, risk, provider, and FIFO reservation steps. */
 FinanceEconomyPayoutsPayoutRequestStateSchema = z.enum(['Submitted', 'Cancelled', 'Approved', 'Rejected', 'AwaitingSecondApproval']);
 
-/** Zod schema for FinanceEconomyPayoutsQueriesEconomyPayoutOperationDto */
+/** Zod schema for FinanceEconomyPayoutsQueriesEconomyPayoutOperationDto. Data model for Finance Economy Payouts Queries Economy Payout Operation Dto. */
 FinanceEconomyPayoutsQueriesEconomyPayoutOperationDtoSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
@@ -24089,7 +25063,7 @@ FinanceEconomyPayoutsQueriesEconomyPayoutOperationDtoSchema = z.object({
   updatedAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for FinanceEconomyPayoutsQueriesEconomyPayoutRequestDto */
+/** Zod schema for FinanceEconomyPayoutsQueriesEconomyPayoutRequestDto. Data model for Finance Economy Payouts Queries Economy Payout Request Dto. */
 FinanceEconomyPayoutsQueriesEconomyPayoutRequestDtoSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
@@ -24098,7 +25072,7 @@ FinanceEconomyPayoutsQueriesEconomyPayoutRequestDtoSchema = z.object({
   updatedAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewAuditDto */
+/** Zod schema for FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewAuditDto. Data model for Finance Economy Payouts Queries Economy Payout Request Review Audit Dto. */
 FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewAuditDtoSchema = z.object({
   id: z.string().uuid().optional(),
   actorId: z.string().uuid().optional(),
@@ -24107,7 +25081,7 @@ FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewAuditDtoSchema = z.object(
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewDto */
+/** Zod schema for FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewDto. Data model for Finance Economy Payouts Queries Economy Payout Request Review Dto. */
 FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewDtoSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
@@ -24119,7 +25093,7 @@ FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewDtoSchema = z.object({
   walletId: z.string().uuid().optional(),
 });
 
-/** Zod schema for FinanceEconomyProjectionsProjectionGenerationState */
+/** Zod schema for FinanceEconomyProjectionsProjectionGenerationState. Data model for Finance Economy Projections Projection Generation State. */
 FinanceEconomyProjectionsProjectionGenerationStateSchema = z.object({
   approvedBy: z.array(z.string().uuid()).nullable().optional(),
   generation: z.number().int().optional(),
@@ -24132,7 +25106,7 @@ FinanceEconomyProjectionsProjectionGenerationStateSchema = z.object({
   toSequence: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyReservesCustodyObservationCommand */
+/** Zod schema for FinanceEconomyReservesCustodyObservationCommand. Data model for Finance Economy Reserves Custody Observation Command. */
 FinanceEconomyReservesCustodyObservationCommandSchema = z.object({
   id: z.string().uuid().optional(),
   assetKey: z.string().nullable().optional(),
@@ -24147,7 +25121,7 @@ FinanceEconomyReservesCustodyObservationCommandSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyReservesDurableCustodyObservation */
+/** Zod schema for FinanceEconomyReservesDurableCustodyObservation. Data model for Finance Economy Reserves Durable Custody Observation. */
 FinanceEconomyReservesDurableCustodyObservationSchema = z.object({
   id: z.string().uuid().optional(),
   assetKey: z.string().nullable().optional(),
@@ -24162,7 +25136,7 @@ FinanceEconomyReservesDurableCustodyObservationSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyReservesDurableReserveProposalState */
+/** Zod schema for FinanceEconomyReservesDurableReserveProposalState. Data model for Finance Economy Reserves Durable Reserve Proposal State. */
 FinanceEconomyReservesDurableReserveProposalStateSchema = z.object({
   id: z.string().uuid().optional(),
   approvedBy: z.string().uuid().nullable().optional(),
@@ -24179,7 +25153,7 @@ FinanceEconomyReservesDurableReserveProposalStateSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyReservesEconomyLiabilitySnapshot */
+/** Zod schema for FinanceEconomyReservesEconomyLiabilitySnapshot. Data model for Finance Economy Reserves Economy Liability Snapshot. */
 FinanceEconomyReservesEconomyLiabilitySnapshotSchema = z.object({
   journalHash: z.string().nullable().optional(),
   journalSequence: z.number().int().optional(),
@@ -24188,17 +25162,17 @@ FinanceEconomyReservesEconomyLiabilitySnapshotSchema = z.object({
   outstandingSoftUnits: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyReservesExternalReserveAsset */
+/** Zod schema for FinanceEconomyReservesExternalReserveAsset. Data model for Finance Economy Reserves External Reserve Asset. */
 FinanceEconomyReservesExternalReserveAssetSchema = z.object({
   assetKey: z.string().nullable().optional(),
   eligibleUsdNanos: z.number().int().optional(),
   purpose: z.lazy(() => FinanceEconomyReservesReserveBackingPurposeSchema).optional(),
 });
 
-/** Zod schema for FinanceEconomyReservesReserveBackingPurpose */
+/** Zod schema for FinanceEconomyReservesReserveBackingPurpose. OpenAPI schema for Finance Economy Reserves Reserve Backing Purpose. */
 FinanceEconomyReservesReserveBackingPurposeSchema = z.enum(['HardCoin', 'SoftCoin']);
 
-/** Zod schema for FinanceEconomyReservesReserveBufferPosition */
+/** Zod schema for FinanceEconomyReservesReserveBufferPosition. Data model for Finance Economy Reserves Reserve Buffer Position. */
 FinanceEconomyReservesReserveBufferPositionSchema = z.object({
   adEstimateVarianceBufferUsdNanos: z.number().int().optional(),
   chargebackRefundBufferUsdMinor: z.number().int().optional(),
@@ -24209,10 +25183,10 @@ FinanceEconomyReservesReserveBufferPositionSchema = z.object({
   softOperatingLiquidityBufferUsdNanos: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyReservesReserveCoverageState */
+/** Zod schema for FinanceEconomyReservesReserveCoverageState. OpenAPI schema for Finance Economy Reserves Reserve Coverage State. */
 FinanceEconomyReservesReserveCoverageStateSchema = z.enum(['Covered', 'Shortfall']);
 
-/** Zod schema for FinanceEconomyReservesReserveHead */
+/** Zod schema for FinanceEconomyReservesReserveHead. Data model for Finance Economy Reserves Reserve Head. */
 FinanceEconomyReservesReserveHeadSchema = z.object({
   assetAllocations: z
     .array(z.lazy(() => FinanceEconomyReservesExternalReserveAssetSchema))
@@ -24230,7 +25204,7 @@ FinanceEconomyReservesReserveHeadSchema = z.object({
   version: z.lazy(() => FinanceEconomyContractsReserveVersionSchema).optional(),
 });
 
-/** Zod schema for FinanceEconomyReservesReserveRequirementSnapshot */
+/** Zod schema for FinanceEconomyReservesReserveRequirementSnapshot. Data model for Finance Economy Reserves Reserve Requirement Snapshot. */
 FinanceEconomyReservesReserveRequirementSnapshotSchema = z.object({
   hardFaceValueUsdMinor: z.number().int().optional(),
   requiredHardReserveUsdMinor: z.number().int().optional(),
@@ -24239,7 +25213,7 @@ FinanceEconomyReservesReserveRequirementSnapshotSchema = z.object({
   stressedExpectedRedemptionCostUsdNanos: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyReservesReserveServiceObservation */
+/** Zod schema for FinanceEconomyReservesReserveServiceObservation. Data model for Finance Economy Reserves Reserve Service Observation. */
 FinanceEconomyReservesReserveServiceObservationSchema = z.object({
   currentProviderCostUsdNanos: z.number().int().optional(),
   currentServicePriceSoftUnits: z.number().int().optional(),
@@ -24252,7 +25226,7 @@ FinanceEconomyReservesReserveServiceObservationSchema = z.object({
   trailingHighPercentileCostUsdNanos: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyRiskCapabilityAuthorizationReceipt */
+/** Zod schema for FinanceEconomyRiskCapabilityAuthorizationReceipt. Data model for Finance Economy Risk Capability Authorization Receipt. */
 FinanceEconomyRiskCapabilityAuthorizationReceiptSchema = z.object({
   id: z.string().uuid().optional(),
   actorId: z.string().uuid().optional(),
@@ -24276,10 +25250,10 @@ FinanceEconomyRiskCapabilityAuthorizationReceiptSchema = z.object({
   tenantId: z.string().uuid().optional(),
 });
 
-/** Zod schema for FinanceEconomyRiskComplianceEvidenceResult */
+/** Zod schema for FinanceEconomyRiskComplianceEvidenceResult. OpenAPI schema for Finance Economy Risk Compliance Evidence Result. */
 FinanceEconomyRiskComplianceEvidenceResultSchema = z.enum(['Approved', 'Rejected', 'NeedsReview', 'Unavailable']);
 
-/** Zod schema for FinanceEconomyRiskComplianceHold */
+/** Zod schema for FinanceEconomyRiskComplianceHold. Data model for Finance Economy Risk Compliance Hold. */
 FinanceEconomyRiskComplianceHoldSchema = z.object({
   id: z.string().uuid().optional(),
   activatedAt: z.string().datetime().optional(),
@@ -24293,7 +25267,7 @@ FinanceEconomyRiskComplianceHoldSchema = z.object({
   scope: z.lazy(() => FinanceEconomyRiskComplianceHoldScopeSchema).optional(),
 });
 
-/** Zod schema for FinanceEconomyRiskComplianceHoldAdministrationState */
+/** Zod schema for FinanceEconomyRiskComplianceHoldAdministrationState. Data model for Finance Economy Risk Compliance Hold Administration State. */
 FinanceEconomyRiskComplianceHoldAdministrationStateSchema = z.object({
   hold: z.lazy(() => FinanceEconomyRiskComplianceHoldSchema).optional(),
   releaseApprovers: z.array(z.string().uuid()).nullable().optional(),
@@ -24303,7 +25277,7 @@ FinanceEconomyRiskComplianceHoldAdministrationStateSchema = z.object({
   requiredReleaseApprovals: z.number().int().nullable().optional(),
 });
 
-/** Zod schema for FinanceEconomyRiskComplianceHoldEvent */
+/** Zod schema for FinanceEconomyRiskComplianceHoldEvent. Data model for Finance Economy Risk Compliance Hold Event. */
 FinanceEconomyRiskComplianceHoldEventSchema = z.object({
   actorId: z.string().uuid().optional(),
   evidenceHash: z.string().nullable().optional(),
@@ -24313,7 +25287,7 @@ FinanceEconomyRiskComplianceHoldEventSchema = z.object({
   sequence: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyRiskComplianceHoldPage */
+/** Zod schema for FinanceEconomyRiskComplianceHoldPage. Data model for Finance Economy Risk Compliance Hold Page. */
 FinanceEconomyRiskComplianceHoldPageSchema = z.object({
   items: z
     .array(z.lazy(() => FinanceEconomyRiskComplianceHoldAdministrationStateSchema))
@@ -24322,7 +25296,7 @@ FinanceEconomyRiskComplianceHoldPageSchema = z.object({
   nextCursor: z.string().nullable().optional(),
 });
 
-/** Zod schema for FinanceEconomyRiskComplianceHoldScope */
+/** Zod schema for FinanceEconomyRiskComplianceHoldScope. Data model for Finance Economy Risk Compliance Hold Scope. */
 FinanceEconomyRiskComplianceHoldScopeSchema = z.object({
   capability: z.lazy(() => FinanceEconomyRiskEconomyValueMovementCapabilitySchema).optional(),
   key: z.string().nullable().optional(),
@@ -24330,7 +25304,7 @@ FinanceEconomyRiskComplianceHoldScopeSchema = z.object({
   tenantId: z.string().uuid().optional(),
 });
 
-/** Zod schema for FinanceEconomyRiskEconomyCapabilityEvaluationResult */
+/** Zod schema for FinanceEconomyRiskEconomyCapabilityEvaluationResult. Data model for Finance Economy Risk Economy Capability Evaluation Result. */
 FinanceEconomyRiskEconomyCapabilityEvaluationResultSchema = z.object({
   diagnostics: z.array(z.string()).nullable().optional(),
   isReady: z.boolean().optional(),
@@ -24338,7 +25312,7 @@ FinanceEconomyRiskEconomyCapabilityEvaluationResultSchema = z.object({
   state: z.lazy(() => FinanceEconomyRiskEconomyCapabilityReadinessStatusSchema).optional(),
 });
 
-/** Zod schema for FinanceEconomyRiskEconomyCapabilityPolicy */
+/** Zod schema for FinanceEconomyRiskEconomyCapabilityPolicy. Data model for Finance Economy Risk Economy Capability Policy. */
 FinanceEconomyRiskEconomyCapabilityPolicySchema = z.object({
   id: z.string().uuid().optional(),
   approvedAt: z.string().datetime().nullable().optional(),
@@ -24360,10 +25334,10 @@ FinanceEconomyRiskEconomyCapabilityPolicySchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyRiskEconomyCapabilityPolicyState */
+/** Zod schema for FinanceEconomyRiskEconomyCapabilityPolicyState. OpenAPI schema for Finance Economy Risk Economy Capability Policy State. */
 FinanceEconomyRiskEconomyCapabilityPolicyStateSchema = z.enum(['PendingApproval', 'Approved', 'Active', 'Expired']);
 
-/** Zod schema for FinanceEconomyRiskEconomyCapabilityReadinessStatus */
+/** Zod schema for FinanceEconomyRiskEconomyCapabilityReadinessStatus. OpenAPI schema for Finance Economy Risk Economy Capability Readiness Status. */
 FinanceEconomyRiskEconomyCapabilityReadinessStatusSchema = z.enum([
   'Disabled',
   'Ready',
@@ -24381,14 +25355,14 @@ FinanceEconomyRiskEconomyCapabilityReadinessStatusSchema = z.enum([
   'KillSwitchActive',
 ]);
 
-/** Zod schema for FinanceEconomyRiskEconomyKillSwitchScope */
+/** Zod schema for FinanceEconomyRiskEconomyKillSwitchScope. Data model for Finance Economy Risk Economy Kill Switch Scope. */
 FinanceEconomyRiskEconomyKillSwitchScopeSchema = z.object({
   capability: z.lazy(() => FinanceEconomyRiskEconomyValueMovementCapabilitySchema).optional(),
   scopeKey: z.string().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for FinanceEconomyRiskEconomyKillSwitchState */
+/** Zod schema for FinanceEconomyRiskEconomyKillSwitchState. Data model for Finance Economy Risk Economy Kill Switch State. */
 FinanceEconomyRiskEconomyKillSwitchStateSchema = z.object({
   id: z.string().uuid().optional(),
   activatedAt: z.string().datetime().optional(),
@@ -24403,7 +25377,7 @@ FinanceEconomyRiskEconomyKillSwitchStateSchema = z.object({
   scope: z.lazy(() => FinanceEconomyRiskEconomyKillSwitchScopeSchema).optional(),
 });
 
-/** Zod schema for FinanceEconomyRiskEconomyProtectedOperationState */
+/** Zod schema for FinanceEconomyRiskEconomyProtectedOperationState. OpenAPI schema for Finance Economy Risk Economy Protected Operation State. */
 FinanceEconomyRiskEconomyProtectedOperationStateSchema = z.enum([
   'Ready',
   'ReviewRequired',
@@ -24416,7 +25390,7 @@ FinanceEconomyRiskEconomyProtectedOperationStateSchema = z.enum([
   'ReserveInsufficient',
 ]);
 
-/** Zod schema for FinanceEconomyRiskEconomyValueMovementCapability */
+/** Zod schema for FinanceEconomyRiskEconomyValueMovementCapability. OpenAPI schema for Finance Economy Risk Economy Value Movement Capability. */
 FinanceEconomyRiskEconomyValueMovementCapabilitySchema = z.enum([
   'ConfirmHardCoinFunding',
   'ConvertHardToSoft',
@@ -24433,10 +25407,10 @@ FinanceEconomyRiskEconomyValueMovementCapabilitySchema = z.enum([
   'LegacyBalanceBackfill',
 ]);
 
-/** Zod schema for FinanceEconomyRiskRiskManualDecisionCode */
+/** Zod schema for FinanceEconomyRiskRiskManualDecisionCode. OpenAPI schema for Finance Economy Risk Risk Manual Decision Code. */
 FinanceEconomyRiskRiskManualDecisionCodeSchema = z.enum(['EvidenceVerified', 'RiskAccepted', 'PolicyViolation', 'FraudConfirmed']);
 
-/** Zod schema for FinanceEconomyRiskRiskReviewCase */
+/** Zod schema for FinanceEconomyRiskRiskReviewCase. Data model for Finance Economy Risk Risk Review Case. */
 FinanceEconomyRiskRiskReviewCaseSchema = z.object({
   id: z.string().uuid().optional(),
   appealOf: z.string().uuid().nullable().optional(),
@@ -24451,7 +25425,7 @@ FinanceEconomyRiskRiskReviewCaseSchema = z.object({
   submittedBy: z.string().uuid().optional(),
 });
 
-/** Zod schema for FinanceEconomyRiskRiskReviewEvent */
+/** Zod schema for FinanceEconomyRiskRiskReviewEvent. Data model for Finance Economy Risk Risk Review Event. */
 FinanceEconomyRiskRiskReviewEventSchema = z.object({
   actorId: z.string().uuid().optional(),
   decisionCode: z.lazy(() => FinanceEconomyRiskRiskManualDecisionCodeSchema).optional(),
@@ -24463,10 +25437,10 @@ FinanceEconomyRiskRiskReviewEventSchema = z.object({
   sequence: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyRiskRiskReviewEventKind */
+/** Zod schema for FinanceEconomyRiskRiskReviewEventKind. OpenAPI schema for Finance Economy Risk Risk Review Event Kind. */
 FinanceEconomyRiskRiskReviewEventKindSchema = z.enum(['Submitted', 'ApprovalRecorded', 'Approved', 'Rejected', 'AppealSubmitted']);
 
-/** Zod schema for FinanceEconomyRiskRiskReviewPage */
+/** Zod schema for FinanceEconomyRiskRiskReviewPage. Data model for Finance Economy Risk Risk Review Page. */
 FinanceEconomyRiskRiskReviewPageSchema = z.object({
   items: z
     .array(z.lazy(() => FinanceEconomyRiskRiskReviewCaseSchema))
@@ -24475,10 +25449,10 @@ FinanceEconomyRiskRiskReviewPageSchema = z.object({
   nextCursor: z.string().nullable().optional(),
 });
 
-/** Zod schema for FinanceEconomyRiskRiskReviewStatus */
+/** Zod schema for FinanceEconomyRiskRiskReviewStatus. OpenAPI schema for Finance Economy Risk Risk Review Status. */
 FinanceEconomyRiskRiskReviewStatusSchema = z.enum(['Pending', 'Approved', 'Rejected']);
 
-/** Zod schema for FinanceEconomyTransfersSelfServiceEconomyTransferInput */
+/** Zod schema for FinanceEconomyTransfersSelfServiceEconomyTransferInput. Data model for Finance Economy Transfers Self Service Economy Transfer Request. */
 FinanceEconomyTransfersSelfServiceEconomyTransferInputSchema = z.object({
   amountUnits: z.number().int().optional(),
   currency: z.lazy(() => FinanceEconomyContractsCurrencyCodeSchema).optional(),
@@ -24487,7 +25461,7 @@ FinanceEconomyTransfersSelfServiceEconomyTransferInputSchema = z.object({
   transferType: z.lazy(() => FinanceEconomyTransfersSelfServiceEconomyTransferTypeSchema).optional(),
 });
 
-/** Zod schema for FinanceEconomyTransfersSelfServiceEconomyTransferReceipt */
+/** Zod schema for FinanceEconomyTransfersSelfServiceEconomyTransferReceipt. Data model for Finance Economy Transfers Self Service Economy Transfer Receipt. */
 FinanceEconomyTransfersSelfServiceEconomyTransferReceiptSchema = z.object({
   amountUnits: z.number().int().optional(),
   currency: z.lazy(() => FinanceEconomyContractsCurrencyCodeSchema).optional(),
@@ -24499,10 +25473,10 @@ FinanceEconomyTransfersSelfServiceEconomyTransferReceiptSchema = z.object({
   transferType: z.lazy(() => FinanceEconomyTransfersSelfServiceEconomyTransferTypeSchema).optional(),
 });
 
-/** Zod schema for FinanceEconomyTransfersSelfServiceEconomyTransferType */
+/** Zod schema for FinanceEconomyTransfersSelfServiceEconomyTransferType. OpenAPI schema for Finance Economy Transfers Self Service Economy Transfer Type. */
 FinanceEconomyTransfersSelfServiceEconomyTransferTypeSchema = z.enum(['Tip', 'Gift', 'CreatorSupport']);
 
-/** Zod schema for FinanceEconomyTreasuryAdminWithdrawalAuditEvent */
+/** Zod schema for FinanceEconomyTreasuryAdminWithdrawalAuditEvent. Data model for Finance Economy Treasury Admin Withdrawal Audit Event. */
 FinanceEconomyTreasuryAdminWithdrawalAuditEventSchema = z.object({
   actorId: z.string().uuid().nullable().optional(),
   evidence: z.string().nullable().optional(),
@@ -24514,7 +25488,7 @@ FinanceEconomyTreasuryAdminWithdrawalAuditEventSchema = z.object({
   sequence: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyTreasuryAdminWithdrawalAuditView */
+/** Zod schema for FinanceEconomyTreasuryAdminWithdrawalAuditView. Data model for Finance Economy Treasury Admin Withdrawal Audit View. */
 FinanceEconomyTreasuryAdminWithdrawalAuditViewSchema = z.object({
   events: z
     .array(z.lazy(() => FinanceEconomyTreasuryAdminWithdrawalAuditEventSchema))
@@ -24524,7 +25498,7 @@ FinanceEconomyTreasuryAdminWithdrawalAuditViewSchema = z.object({
   runId: z.string().uuid().optional(),
 });
 
-/** Zod schema for FinanceEconomyTreasuryAdminWithdrawalRun */
+/** Zod schema for FinanceEconomyTreasuryAdminWithdrawalRun. Data model for Finance Economy Treasury Admin Withdrawal Run. */
 FinanceEconomyTreasuryAdminWithdrawalRunSchema = z.object({
   id: z.string().uuid().optional(),
   amount: z.lazy(() => FinanceEconomyContractsCoinAmountSchema).optional(),
@@ -24550,10 +25524,10 @@ FinanceEconomyTreasuryAdminWithdrawalRunSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyTreasuryAdminWithdrawalRunState */
+/** Zod schema for FinanceEconomyTreasuryAdminWithdrawalRunState. OpenAPI schema for Finance Economy Treasury Admin Withdrawal Run State. */
 FinanceEconomyTreasuryAdminWithdrawalRunStateSchema = z.enum(['PendingApproval', 'Approved', 'Dispatching', 'Ambiguous', 'Succeeded', 'Failed', 'Cancelled']);
 
-/** Zod schema for GameJamsAddJamCriteriaInput */
+/** Zod schema for GameJamsAddJamCriteriaInput. Data model for Game Jams Add Jam Criteria Request. */
 GameJamsAddJamCriteriaInputSchema = z.object({
   description: z.string().nullable().optional(),
   maxScore: z.number().int().optional(),
@@ -24561,7 +25535,7 @@ GameJamsAddJamCriteriaInputSchema = z.object({
   weight: z.number().optional(),
 });
 
-/** Zod schema for GameJamsCreateJamInput */
+/** Zod schema for GameJamsCreateJamInput. Data model for Game Jams Create Jam Request. */
 GameJamsCreateJamInputSchema = z.object({
   createdBy: z.string().uuid().optional(),
   description: z.string().nullable().optional(),
@@ -24576,7 +25550,7 @@ GameJamsCreateJamInputSchema = z.object({
   votingEndDate: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for GameJamsJam */
+/** Zod schema for GameJamsJam. Data model for Game Jams Jam. */
 GameJamsJamSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
@@ -24610,7 +25584,7 @@ GameJamsJamSchema = z.object({
   votingEndDate: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for GameJamsJamCriteriaDto */
+/** Zod schema for GameJamsJamCriteriaDto. Data model for Game Jams Jam Criteria Dto. */
 GameJamsJamCriteriaDtoSchema = z.object({
   id: z.string().uuid().optional(),
   description: z.string().nullable().optional(),
@@ -24620,7 +25594,7 @@ GameJamsJamCriteriaDtoSchema = z.object({
   weight: z.number().optional(),
 });
 
-/** Zod schema for GameJamsJamDto */
+/** Zod schema for GameJamsJamDto. Data model for Game Jams Jam Dto. */
 GameJamsJamDtoSchema = z.object({
   id: z.string().uuid().optional(),
   createdBy: z.string().uuid().optional(),
@@ -24636,7 +25610,7 @@ GameJamsJamDtoSchema = z.object({
   votingEndDate: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for GameJamsJamScore */
+/** Zod schema for GameJamsJamScore. Data model for Game Jams Jam Score. */
 GameJamsJamScoreSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
@@ -24662,7 +25636,7 @@ GameJamsJamScoreSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for GameJamsJamScoreDto */
+/** Zod schema for GameJamsJamScoreDto. Data model for Game Jams Jam Score Dto. */
 GameJamsJamScoreDtoSchema = z.object({
   id: z.string().uuid().optional(),
   criteriaId: z.string().uuid().optional(),
@@ -24672,10 +25646,10 @@ GameJamsJamScoreDtoSchema = z.object({
   submissionId: z.string().uuid().optional(),
 });
 
-/** Zod schema for GameJamsJamStatus */
+/** Zod schema for GameJamsJamStatus. OpenAPI schema for Game Jams Jam Status. */
 GameJamsJamStatusSchema = z.enum(['Upcoming', 'Active', 'Voting', 'Completed', 'Cancelled']);
 
-/** Zod schema for GameJamsJamSubmissionDto */
+/** Zod schema for GameJamsJamSubmissionDto. Data model for Game Jams Jam Submission Dto. */
 GameJamsJamSubmissionDtoSchema = z.object({
   id: z.string().uuid().optional(),
   jamId: z.string().uuid().optional(),
@@ -24684,7 +25658,7 @@ GameJamsJamSubmissionDtoSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for GameJamsScoreJamSubmissionInput */
+/** Zod schema for GameJamsScoreJamSubmissionInput. Data model for Game Jams Score Jam Submission Request. */
 GameJamsScoreJamSubmissionInputSchema = z.object({
   criteriaId: z.string().uuid().optional(),
   feedback: z.string().nullable().optional(),
@@ -24692,14 +25666,14 @@ GameJamsScoreJamSubmissionInputSchema = z.object({
   score: z.number().int().optional(),
 });
 
-/** Zod schema for GameJamsSubmitJamEntryInput */
+/** Zod schema for GameJamsSubmitJamEntryInput. Data model for Game Jams Submit Jam Entry Request. */
 GameJamsSubmitJamEntryInputSchema = z.object({
   notes: z.string().nullable().optional(),
   projectVersionId: z.string().uuid().optional(),
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationApiKeyDto */
+/** Zod schema for IdentityAuthenticationApiKeyDto. Data model for Identity Authentication Api Key Dto. */
 IdentityAuthenticationApiKeyDtoSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
@@ -24829,7 +25803,7 @@ IdentityAuthenticationConsumeMagicLinkInputSchema = z.object({
   token: z.string().min(1),
 });
 
-/** Zod schema for IdentityAuthenticationCreateApiKeyCommand */
+/** Zod schema for IdentityAuthenticationCreateApiKeyCommand. Data model for Identity Authentication Create Api Key Command. */
 IdentityAuthenticationCreateApiKeyCommandSchema = z.object({
   expiresAt: z.string().datetime().nullable().optional(),
   ipWhitelist: z.string().nullable().optional(),
@@ -24837,7 +25811,7 @@ IdentityAuthenticationCreateApiKeyCommandSchema = z.object({
   scopes: z.array(z.string()).nullable(),
 });
 
-/** Zod schema for IdentityAuthenticationCreateApiKeyOutput */
+/** Zod schema for IdentityAuthenticationCreateApiKeyOutput. Data model for Identity Authentication Create Api Key Response. */
 IdentityAuthenticationCreateApiKeyOutputSchema = z.object({
   id: z.string().uuid().optional(),
   apiKey: z.string().nullable().optional(),
@@ -24866,7 +25840,7 @@ IdentityAuthenticationCreateServiceAccountInputSchema = z.object({
   tenantId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationCreateStepUpChallengeInput */
+/** Zod schema for IdentityAuthenticationCreateStepUpChallengeInput. Data model for Identity Authentication Create Step Up Challenge Request. */
 IdentityAuthenticationCreateStepUpChallengeInputSchema = z.object({
   operationType: z.string().nullable().optional(),
   payloadHash: z.string().nullable().optional(),
@@ -25020,7 +25994,7 @@ IdentityAuthenticationLockServiceAccountInputSchema = z.object({
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationMagicLinkRequestResult */
+/** Zod schema for IdentityAuthenticationMagicLinkRequestResult. Data model for Identity Authentication Magic Link Request Result. */
 IdentityAuthenticationMagicLinkRequestResultSchema = z.object({
   developmentPreviewToken: z.string().nullable().optional(),
   expiresInMinutes: z.number().int().optional(),
@@ -25149,7 +26123,7 @@ IdentityAuthenticationRequestPasswordResetInputSchema = z.object({
   tenantId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationRevokeApiKeyInput */
+/** Zod schema for IdentityAuthenticationRevokeApiKeyInput. Data model for Identity Authentication Revoke Api Key Request. */
 IdentityAuthenticationRevokeApiKeyInputSchema = z.object({
   reason: z.string().nullable().optional(),
 });
@@ -25318,13 +26292,13 @@ IdentityAuthenticationSmsMfaSetupOutputSchema = z.object({
   phoneNumberMasked: z.string().nullable(),
 });
 
-/** Zod schema for IdentityAuthenticationStepUpChallengeOutput */
+/** Zod schema for IdentityAuthenticationStepUpChallengeOutput. Data model for Identity Authentication Step Up Challenge Response. */
 IdentityAuthenticationStepUpChallengeOutputSchema = z.object({
   challengeId: z.string().uuid().optional(),
   expiresAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationStepUpReceiptOutput */
+/** Zod schema for IdentityAuthenticationStepUpReceiptOutput. Data model for Identity Authentication Step Up Receipt Response. */
 IdentityAuthenticationStepUpReceiptOutputSchema = z.object({
   expiresAt: z.string().datetime().optional(),
   receipt: z.string().nullable().optional(),
@@ -25390,7 +26364,7 @@ IdentityAuthenticationVerifyMfaInputSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationVerifyStepUpChallengeInput */
+/** Zod schema for IdentityAuthenticationVerifyStepUpChallengeInput. Data model for Identity Authentication Verify Step Up Challenge Request. */
 IdentityAuthenticationVerifyStepUpChallengeInputSchema = z.object({
   evidence: z.string().nullable().optional(),
   method: z.lazy(() => IdentityAuthenticationMfaMethodSchema).optional(),
@@ -25628,55 +26602,55 @@ IdentityAuthorizationCommandsRequestJitElevationCommandSchema = z.object({
   tenantId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthorizationControllersApproveElevationInput */
+/** Zod schema for IdentityAuthorizationControllersApproveElevationInput. Data model for Identity Authorization Controllers Approve Elevation Request. */
 IdentityAuthorizationControllersApproveElevationInputSchema = z.object({
   comments: z.string().nullable().optional(),
   reviewerId: z.string().uuid().optional(),
 });
 
-/** Zod schema for IdentityAuthorizationControllersApproveItemInput */
+/** Zod schema for IdentityAuthorizationControllersApproveItemInput. Data model for Identity Authorization Controllers Approve Item Request. */
 IdentityAuthorizationControllersApproveItemInputSchema = z.object({
   notes: z.string().nullable().optional(),
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthorizationControllersCompleteCampaignInput */
+/** Zod schema for IdentityAuthorizationControllersCompleteCampaignInput. Data model for Identity Authorization Controllers Complete Campaign Request. */
 IdentityAuthorizationControllersCompleteCampaignInputSchema = z.object({
   completedBy: z.string().uuid().optional(),
 });
 
-/** Zod schema for IdentityAuthorizationControllersDenyElevationInput */
+/** Zod schema for IdentityAuthorizationControllersDenyElevationInput. Data model for Identity Authorization Controllers Deny Elevation Request. */
 IdentityAuthorizationControllersDenyElevationInputSchema = z.object({
   comments: z.string().nullable().optional(),
   reviewerId: z.string().uuid().optional(),
 });
 
-/** Zod schema for IdentityAuthorizationControllersGrantExceptionInput */
+/** Zod schema for IdentityAuthorizationControllersGrantExceptionInput. Data model for Identity Authorization Controllers Grant Exception Request. */
 IdentityAuthorizationControllersGrantExceptionInputSchema = z.object({
   approvedBy: z.string().uuid().optional(),
   justification: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthorizationControllersResolveViolationInput */
+/** Zod schema for IdentityAuthorizationControllersResolveViolationInput. Data model for Identity Authorization Controllers Resolve Violation Request. */
 IdentityAuthorizationControllersResolveViolationInputSchema = z.object({
   action: z.lazy(() => IdentityAuthorizationSoDResolutionActionSchema).optional(),
   notes: z.string().nullable().optional(),
   resolvedBy: z.string().uuid().optional(),
 });
 
-/** Zod schema for IdentityAuthorizationControllersRevokeElevationInput */
+/** Zod schema for IdentityAuthorizationControllersRevokeElevationInput. Data model for Identity Authorization Controllers Revoke Elevation Request. */
 IdentityAuthorizationControllersRevokeElevationInputSchema = z.object({
   reason: z.string().nullable().optional(),
   revokedBy: z.string().uuid().optional(),
 });
 
-/** Zod schema for IdentityAuthorizationControllersRevokeItemInput */
+/** Zod schema for IdentityAuthorizationControllersRevokeItemInput. Data model for Identity Authorization Controllers Revoke Item Request. */
 IdentityAuthorizationControllersRevokeItemInputSchema = z.object({
   notes: z.string().nullable().optional(),
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthorizationControllersUpdateSoDRuleInput */
+/** Zod schema for IdentityAuthorizationControllersUpdateSoDRuleInput. Data model for Identity Authorization Controllers Update So DRule Request. */
 IdentityAuthorizationControllersUpdateSoDRuleInputSchema = z.object({
   conflictingPermissions: z.array(z.string()).nullable().optional(),
   description: z.string().nullable().optional(),
@@ -25840,7 +26814,7 @@ IdentityAuthorizationJitElevationInputSchema = z.object({
   updatedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthorizationPermissionAnalyticsReport */
+/** Zod schema for IdentityAuthorizationPermissionAnalyticsReport. Data model for Identity Authorization Permission Analytics Report. */
 IdentityAuthorizationPermissionAnalyticsReportSchema = z.object({
   activeUsers: z.number().int().optional(),
   anomalies: z
@@ -25862,7 +26836,7 @@ IdentityAuthorizationPermissionAnalyticsReportSchema = z.object({
   totalRevokes: z.number().int().optional(),
 });
 
-/** Zod schema for IdentityAuthorizationPermissionAnomaly */
+/** Zod schema for IdentityAuthorizationPermissionAnomaly. Data model for Identity Authorization Permission Anomaly. */
 IdentityAuthorizationPermissionAnomalySchema = z.object({
   anomalyType: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
@@ -25891,7 +26865,7 @@ IdentityAuthorizationPermissionDelegationSchema = z.object({
   usageLimit: z.number().int().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthorizationPermissionTrend */
+/** Zod schema for IdentityAuthorizationPermissionTrend. Data model for Identity Authorization Permission Trend. */
 IdentityAuthorizationPermissionTrendSchema = z.object({
   activePermissions: z.number().int().optional(),
   date: z.string().datetime().optional(),
@@ -26015,7 +26989,7 @@ IdentityAuthorizationPermissionUpdateResultSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for IdentityAuthorizationPermissionUsageMetrics */
+/** Zod schema for IdentityAuthorizationPermissionUsageMetrics. Data model for Identity Authorization Permission Usage Metrics. */
 IdentityAuthorizationPermissionUsageMetricsSchema = z.object({
   lastUsed: z.string().datetime().optional(),
   permission: z.string().nullable().optional(),
@@ -26041,7 +27015,7 @@ IdentityAuthorizationRemoveUserAccessCommandSchema = z.object({
   tenantId: z.lazy(() => CQRSModelsTenantIdSchema),
 });
 
-/** Zod schema for IdentityAuthorizationResourceAccessPattern */
+/** Zod schema for IdentityAuthorizationResourceAccessPattern. Data model for Identity Authorization Resource Access Pattern. */
 IdentityAuthorizationResourceAccessPatternSchema = z.object({
   accessCount: z.number().int().optional(),
   resourceId: z.string().uuid().optional(),
@@ -26217,7 +27191,7 @@ IdentityAuthorizationUpdateUserPermissionsCommandSchema = z.object({
   updatedByUserId: z.string().uuid(),
 });
 
-/** Zod schema for IdentityAuthorizationUserActivitySummary */
+/** Zod schema for IdentityAuthorizationUserActivitySummary. Data model for Identity Authorization User Activity Summary. */
 IdentityAuthorizationUserActivitySummarySchema = z.object({
   lastActivity: z.string().datetime().optional(),
   permissionChanges: z.number().int().optional(),
@@ -26357,12 +27331,12 @@ IdentityTenantsReplaceTenantSettingsInputSchema = z.object({
   userInterfaceSettings: z.lazy(() => IdentityTenantsUpdateTenantUiSettingsInputSchema).optional(),
 });
 
-/** Zod schema for IdentityTenantsSetTenantMembershipStatusInput */
+/** Zod schema for IdentityTenantsSetTenantMembershipStatusInput. Data model for Identity Tenants Set Tenant Membership Status Request. */
 IdentityTenantsSetTenantMembershipStatusInputSchema = z.object({
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsSetTenantMembershipStatusOutput */
+/** Zod schema for IdentityTenantsSetTenantMembershipStatusOutput. Data model for Identity Tenants Set Tenant Membership Status Response. */
 IdentityTenantsSetTenantMembershipStatusOutputSchema = z.object({
   isActive: z.boolean().optional(),
   memberId: z.string().uuid().optional(),
@@ -26803,7 +27777,7 @@ IdentityTenantsUpdateTenantIntegrationSettingsInputSchema = z.object({
   webhookSettings: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsUpdateTenantMemberInviteOutput */
+/** Zod schema for IdentityTenantsUpdateTenantMemberInviteOutput. Data model for Identity Tenants Update Tenant Member Invite Response. */
 IdentityTenantsUpdateTenantMemberInviteOutputSchema = z.object({
   inviteStatus: z.string().nullable().optional(),
   memberId: z.string().uuid().nullable().optional(),
@@ -27544,7 +28518,7 @@ IdentityUsersUserStatusSchema = z.object({
   isSuspended: z.boolean().optional(),
 });
 
-/** Zod schema for IDurableIntegrationEvent */
+/** Zod schema for IDurableIntegrationEvent. Data model for IDurable Integration Event. */
 IDurableIntegrationEventSchema = z.object({
   actorId: z.string().uuid().optional(),
   aggregateId: z.string().nullable().optional(),
@@ -27559,13 +28533,13 @@ IDurableIntegrationEventSchema = z.object({
   tenantId: z.string().uuid().optional(),
 });
 
-/** Zod schema for KeyValuePairStringAuthenticationExtensionsPRFValues */
+/** Zod schema for KeyValuePairStringAuthenticationExtensionsPRFValues. Data model for Key Value Pair String Authentication Extensions PRFValues. */
 KeyValuePairStringAuthenticationExtensionsPRFValuesSchema = z.object({
   key: z.string().nullable().optional(),
   value: z.lazy(() => ObjectsAuthenticationExtensionsPRFValuesSchema).optional(),
 });
 
-/** Zod schema for LaunchPadCreateLaunchPadEventInput */
+/** Zod schema for LaunchPadCreateLaunchPadEventInput. Data model for Launch Pad Create Launch Pad Event Request. */
 LaunchPadCreateLaunchPadEventInputSchema = z.object({
   applicationsCloseAt: z.string().datetime().nullable().optional(),
   applicationsOpenAt: z.string().datetime().nullable().optional(),
@@ -27575,7 +28549,7 @@ LaunchPadCreateLaunchPadEventInputSchema = z.object({
   startsAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for LaunchPadCreateLaunchPadSlotInput */
+/** Zod schema for LaunchPadCreateLaunchPadSlotInput. Data model for Launch Pad Create Launch Pad Slot Request. */
 LaunchPadCreateLaunchPadSlotInputSchema = z.object({
   capacity: z.number().int().optional(),
   endsAt: z.string().datetime().optional(),
@@ -27584,7 +28558,7 @@ LaunchPadCreateLaunchPadSlotInputSchema = z.object({
   startsAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for LaunchPadCreateLaunchPlanInput */
+/** Zod schema for LaunchPadCreateLaunchPlanInput. Data model for Launch Pad Create Launch Plan Request. */
 LaunchPadCreateLaunchPlanInputSchema = z.object({
   channels: z.array(z.string()).nullable().optional(),
   checklistItems: z
@@ -27597,7 +28571,7 @@ LaunchPadCreateLaunchPlanInputSchema = z.object({
   targetLaunchAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for LaunchPadLaunchChecklistItem */
+/** Zod schema for LaunchPadLaunchChecklistItem. Data model for Launch Pad Launch Checklist Item. */
 LaunchPadLaunchChecklistItemSchema = z.object({
   id: z.string().uuid().optional(),
   category: z.string().min(1).max(100),
@@ -27625,7 +28599,7 @@ LaunchPadLaunchChecklistItemSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for LaunchPadLaunchChecklistItemInput */
+/** Zod schema for LaunchPadLaunchChecklistItemInput. Data model for Launch Pad Launch Checklist Item Input. */
 LaunchPadLaunchChecklistItemInputSchema = z.object({
   category: z.string().nullable().optional(),
   isComplete: z.boolean().optional(),
@@ -27633,7 +28607,7 @@ LaunchPadLaunchChecklistItemInputSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for LaunchPadLaunchPadAnalyticsProjection */
+/** Zod schema for LaunchPadLaunchPadAnalyticsProjection. Data model for Launch Pad Launch Pad Analytics Projection. */
 LaunchPadLaunchPadAnalyticsProjectionSchema = z.object({
   applications: z.number().int().optional(),
   approvedApplications: z.number().int().optional(),
@@ -27643,7 +28617,7 @@ LaunchPadLaunchPadAnalyticsProjectionSchema = z.object({
   registrations: z.number().int().optional(),
 });
 
-/** Zod schema for LaunchPadLaunchPadApplication */
+/** Zod schema for LaunchPadLaunchPadApplication. Data model for Launch Pad Launch Pad Application. */
 LaunchPadLaunchPadApplicationSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
@@ -27680,7 +28654,7 @@ LaunchPadLaunchPadApplicationSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for LaunchPadLaunchPadApplicationProjection */
+/** Zod schema for LaunchPadLaunchPadApplicationProjection. Data model for Launch Pad Launch Pad Application Projection. */
 LaunchPadLaunchPadApplicationProjectionSchema = z.object({
   id: z.string().uuid().optional(),
   eventId: z.string().uuid().optional(),
@@ -27694,10 +28668,10 @@ LaunchPadLaunchPadApplicationProjectionSchema = z.object({
   submittedByUserId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LaunchPadLaunchPadApplicationStatus */
+/** Zod schema for LaunchPadLaunchPadApplicationStatus. OpenAPI schema for Launch Pad Launch Pad Application Status. */
 LaunchPadLaunchPadApplicationStatusSchema = z.enum(['Draft', 'Submitted', 'UnderReview', 'Waitlisted', 'Approved', 'Rejected', 'Withdrawn']);
 
-/** Zod schema for LaunchPadLaunchPadEvent */
+/** Zod schema for LaunchPadLaunchPadEvent. Data model for Launch Pad Launch Pad Event. */
 LaunchPadLaunchPadEventSchema = z.object({
   id: z.string().uuid().optional(),
   applications: z
@@ -27733,7 +28707,7 @@ LaunchPadLaunchPadEventSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for LaunchPadLaunchPadEventDetailProjection */
+/** Zod schema for LaunchPadLaunchPadEventDetailProjection. Data model for Launch Pad Launch Pad Event Detail Projection. */
 LaunchPadLaunchPadEventDetailProjectionSchema = z.object({
   event: z.lazy(() => LaunchPadLaunchPadEventProjectionSchema).optional(),
   slots: z
@@ -27742,7 +28716,7 @@ LaunchPadLaunchPadEventDetailProjectionSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for LaunchPadLaunchPadEventProjection */
+/** Zod schema for LaunchPadLaunchPadEventProjection. Data model for Launch Pad Launch Pad Event Projection. */
 LaunchPadLaunchPadEventProjectionSchema = z.object({
   id: z.string().uuid().optional(),
   applicationsCloseAt: z.string().datetime().nullable().optional(),
@@ -27754,10 +28728,10 @@ LaunchPadLaunchPadEventProjectionSchema = z.object({
   status: z.lazy(() => LaunchPadLaunchPadEventStatusSchema).optional(),
 });
 
-/** Zod schema for LaunchPadLaunchPadEventStatus */
+/** Zod schema for LaunchPadLaunchPadEventStatus. OpenAPI schema for Launch Pad Launch Pad Event Status. */
 LaunchPadLaunchPadEventStatusSchema = z.enum(['Draft', 'ApplicationsOpen', 'ApplicationsClosed', 'Scheduled', 'Active', 'Completed', 'Cancelled', 'Archived']);
 
-/** Zod schema for LaunchPadLaunchPadParticipantRegistration */
+/** Zod schema for LaunchPadLaunchPadParticipantRegistration. Data model for Launch Pad Launch Pad Participant Registration. */
 LaunchPadLaunchPadParticipantRegistrationSchema = z.object({
   id: z.string().uuid().optional(),
   checkedInAt: z.string().datetime().nullable().optional(),
@@ -27786,10 +28760,10 @@ LaunchPadLaunchPadParticipantRegistrationSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for LaunchPadLaunchPadParticipantRole */
+/** Zod schema for LaunchPadLaunchPadParticipantRole. OpenAPI schema for Launch Pad Launch Pad Participant Role. */
 LaunchPadLaunchPadParticipantRoleSchema = z.enum(['Participant', 'Mentor', 'Audience', 'Presenter']);
 
-/** Zod schema for LaunchPadLaunchPadParticipantSlot */
+/** Zod schema for LaunchPadLaunchPadParticipantSlot. Data model for Launch Pad Launch Pad Participant Slot. */
 LaunchPadLaunchPadParticipantSlotSchema = z.object({
   id: z.string().uuid().optional(),
   capacity: z.number().int().optional(),
@@ -27823,10 +28797,10 @@ LaunchPadLaunchPadParticipantSlotSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for LaunchPadLaunchPadParticipantStatus */
+/** Zod schema for LaunchPadLaunchPadParticipantStatus. OpenAPI schema for Launch Pad Launch Pad Participant Status. */
 LaunchPadLaunchPadParticipantStatusSchema = z.enum(['Registered', 'Waitlisted', 'CheckedIn', 'Attended', 'Completed', 'Cancelled', 'NoShow']);
 
-/** Zod schema for LaunchPadLaunchPadRegistrationProjection */
+/** Zod schema for LaunchPadLaunchPadRegistrationProjection. Data model for Launch Pad Launch Pad Registration Projection. */
 LaunchPadLaunchPadRegistrationProjectionSchema = z.object({
   id: z.string().uuid().optional(),
   checkedInAt: z.string().datetime().nullable().optional(),
@@ -27837,7 +28811,7 @@ LaunchPadLaunchPadRegistrationProjectionSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LaunchPadLaunchPadSettingsProjection */
+/** Zod schema for LaunchPadLaunchPadSettingsProjection. Data model for Launch Pad Launch Pad Settings Projection. */
 LaunchPadLaunchPadSettingsProjectionSchema = z.object({
   id: z.string().uuid().optional(),
   tenantId: z.string().uuid().optional(),
@@ -27845,7 +28819,7 @@ LaunchPadLaunchPadSettingsProjectionSchema = z.object({
   versionSubmissionPolicy: z.lazy(() => ProjectsVersionSubmissionPolicySchema).optional(),
 });
 
-/** Zod schema for LaunchPadLaunchPadSlotProjection */
+/** Zod schema for LaunchPadLaunchPadSlotProjection. Data model for Launch Pad Launch Pad Slot Projection. */
 LaunchPadLaunchPadSlotProjectionSchema = z.object({
   id: z.string().uuid().optional(),
   capacity: z.number().int().optional(),
@@ -27857,7 +28831,7 @@ LaunchPadLaunchPadSlotProjectionSchema = z.object({
   startsAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for LaunchPadLaunchPlan */
+/** Zod schema for LaunchPadLaunchPlan. Data model for Launch Pad Launch Plan. */
 LaunchPadLaunchPlanSchema = z.object({
   id: z.string().uuid().optional(),
   channels: z.array(z.string()).nullable().optional(),
@@ -27897,16 +28871,16 @@ LaunchPadLaunchPlanSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for LaunchPadLaunchPlanStatus */
+/** Zod schema for LaunchPadLaunchPlanStatus. OpenAPI schema for Launch Pad Launch Plan Status. */
 LaunchPadLaunchPlanStatusSchema = z.enum(['Draft', 'Preparing', 'Ready', 'Launched', 'Paused']);
 
-/** Zod schema for LaunchPadReviewLaunchPadApplicationInput */
+/** Zod schema for LaunchPadReviewLaunchPadApplicationInput. Data model for Launch Pad Review Launch Pad Application Request. */
 LaunchPadReviewLaunchPadApplicationInputSchema = z.object({
   launchPlanName: z.string().nullable().optional(),
   status: z.lazy(() => LaunchPadLaunchPadApplicationStatusSchema).optional(),
 });
 
-/** Zod schema for LaunchPadSubmitLaunchPadApplicationInput */
+/** Zod schema for LaunchPadSubmitLaunchPadApplicationInput. Data model for Launch Pad Submit Launch Pad Application Request. */
 LaunchPadSubmitLaunchPadApplicationInputSchema = z.object({
   pitch: z.string().nullable().optional(),
   projectId: z.string().uuid().optional(),
@@ -27914,24 +28888,24 @@ LaunchPadSubmitLaunchPadApplicationInputSchema = z.object({
   submittedAssetReferenceIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
-/** Zod schema for LaunchPadTransitionLaunchPadEventInput */
+/** Zod schema for LaunchPadTransitionLaunchPadEventInput. Data model for Launch Pad Transition Launch Pad Event Request. */
 LaunchPadTransitionLaunchPadEventInputSchema = z.object({
   status: z.lazy(() => LaunchPadLaunchPadEventStatusSchema).optional(),
 });
 
-/** Zod schema for LaunchPadTransitionLaunchPadRegistrationInput */
+/** Zod schema for LaunchPadTransitionLaunchPadRegistrationInput. Data model for Launch Pad Transition Launch Pad Registration Request. */
 LaunchPadTransitionLaunchPadRegistrationInputSchema = z.object({
   status: z.lazy(() => LaunchPadLaunchPadParticipantStatusSchema).optional(),
 });
 
-/** Zod schema for LaunchPadUpdateLaunchPadApplicationInput */
+/** Zod schema for LaunchPadUpdateLaunchPadApplicationInput. Data model for Launch Pad Update Launch Pad Application Request. */
 LaunchPadUpdateLaunchPadApplicationInputSchema = z.object({
   pitch: z.string().nullable().optional(),
   projectVersionId: z.string().uuid().optional(),
   submittedAssetReferenceIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
-/** Zod schema for LaunchPadUpdateLaunchPadEventInput */
+/** Zod schema for LaunchPadUpdateLaunchPadEventInput. Data model for Launch Pad Update Launch Pad Event Request. */
 LaunchPadUpdateLaunchPadEventInputSchema = z.object({
   applicationsCloseAt: z.string().datetime().nullable().optional(),
   applicationsOpenAt: z.string().datetime().nullable().optional(),
@@ -27941,19 +28915,19 @@ LaunchPadUpdateLaunchPadEventInputSchema = z.object({
   startsAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for LaunchPadUpdateLaunchPadSettingsInput */
+/** Zod schema for LaunchPadUpdateLaunchPadSettingsInput. Data model for Launch Pad Update Launch Pad Settings Request. */
 LaunchPadUpdateLaunchPadSettingsInputSchema = z.object({
   versionSubmissionPolicy: z.lazy(() => ProjectsVersionSubmissionPolicySchema).optional(),
 });
 
-/** Zod schema for LearningAssessmentsAnonymousReviewAssessmentDto */
+/** Zod schema for LearningAssessmentsAnonymousReviewAssessmentDto. Data model for Learning Assessments Anonymous Review Assessment Dto. */
 LearningAssessmentsAnonymousReviewAssessmentDtoSchema = z.object({
   id: z.string().uuid().optional(),
   maxScore: z.lazy(() => LearningGradingContractsScoreValueSchema).optional(),
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsAnonymousReviewRubricDto */
+/** Zod schema for LearningAssessmentsAnonymousReviewRubricDto. Data model for Learning Assessments Anonymous Review Rubric Dto. */
 LearningAssessmentsAnonymousReviewRubricDtoSchema = z.object({
   criteria: z
     .array(z.lazy(() => LearningAssessmentsRubricCriterionDtoSchema))
@@ -27980,7 +28954,7 @@ LearningAssessmentsAnonymousReviewSubmissionDtoSchema = z.object({
   urlPayload: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsAssessmentDto */
+/** Zod schema for LearningAssessmentsAssessmentDto. Data model for Learning Assessments Assessment Dto. */
 LearningAssessmentsAssessmentDtoSchema = z.object({
   id: z.string().uuid().optional(),
   allowLateSubmissions: z.boolean().optional(),
@@ -28024,7 +28998,7 @@ LearningAssessmentsAssessmentDtoSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for LearningAssessmentsAssessmentGroupAnalyticsDto */
+/** Zod schema for LearningAssessmentsAssessmentGroupAnalyticsDto. Data model for Learning Assessments Assessment Group Analytics Dto. */
 LearningAssessmentsAssessmentGroupAnalyticsDtoSchema = z.object({
   assessmentCount: z.number().int().optional(),
   averagePercent: z.lazy(() => LearningGradingContractsPercentValueSchema).optional(),
@@ -28043,7 +29017,7 @@ LearningAssessmentsAssessmentGroupAnalyticsDtoSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for LearningAssessmentsAssessmentGroupDto */
+/** Zod schema for LearningAssessmentsAssessmentGroupDto. Data model for Learning Assessments Assessment Group Dto. */
 LearningAssessmentsAssessmentGroupDtoSchema = z.object({
   id: z.string().uuid().optional(),
   courseId: z.string().uuid().optional(),
@@ -28057,7 +29031,7 @@ LearningAssessmentsAssessmentGroupDtoSchema = z.object({
 Values are persisted and must remain stable. */
 LearningAssessmentsAssessmentPresentationModeSchema = z.enum(['SingleStep', 'Continuous']);
 
-/** Zod schema for LearningAssessmentsAssessmentScoreBucketDto */
+/** Zod schema for LearningAssessmentsAssessmentScoreBucketDto. Data model for Learning Assessments Assessment Score Bucket Dto. */
 LearningAssessmentsAssessmentScoreBucketDtoSchema = z.object({
   count: z.number().int().optional(),
   label: z.string().nullable().optional(),
@@ -28065,7 +29039,7 @@ LearningAssessmentsAssessmentScoreBucketDtoSchema = z.object({
   minPercent: z.number().int().optional(),
 });
 
-/** Zod schema for LearningAssessmentsAssessmentSubmissionDto */
+/** Zod schema for LearningAssessmentsAssessmentSubmissionDto. Data model for Learning Assessments Assessment Submission Dto. */
 LearningAssessmentsAssessmentSubmissionDtoSchema = z.object({
   id: z.string().uuid().optional(),
   assessmentId: z.string().uuid().optional(),
@@ -28093,7 +29067,7 @@ LearningAssessmentsAssessmentSubmissionDtoSchema = z.object({
   userId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsAssessmentType */
+/** Zod schema for LearningAssessmentsAssessmentType. OpenAPI schema for Learning Assessments Assessment Type. */
 LearningAssessmentsAssessmentTypeSchema = z.enum(['Quiz', 'Assignment', 'Project', 'PeerReview', 'SelfAssessment']);
 
 /** Zod schema for LearningAssessmentsAssignAssessmentGroupInput. Request to assign or clear an assessment group. */
@@ -28102,13 +29076,13 @@ LearningAssessmentsAssignAssessmentGroupInputSchema = z.object({
   clearAssessmentGroup: z.boolean().optional(),
 });
 
-/** Zod schema for LearningAssessmentsCanAttemptOutput */
+/** Zod schema for LearningAssessmentsCanAttemptOutput. Data model for Learning Assessments Can Attempt Response. */
 LearningAssessmentsCanAttemptOutputSchema = z.object({
   canAttempt: z.boolean().optional(),
   currentAttemptCount: z.number().int().optional(),
 });
 
-/** Zod schema for LearningAssessmentsCourseAssessmentAnalyticsDto */
+/** Zod schema for LearningAssessmentsCourseAssessmentAnalyticsDto. Data model for Learning Assessments Course Assessment Analytics Dto. */
 LearningAssessmentsCourseAssessmentAnalyticsDtoSchema = z.object({
   assessmentCount: z.number().int().optional(),
   averagePercent: z.lazy(() => LearningGradingContractsPercentValueSchema).optional(),
@@ -28173,14 +29147,14 @@ LearningAssessmentsCreateGroupSetInputSchema = z.object({
   name: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGradeResultReleaseOutput */
+/** Zod schema for LearningAssessmentsGradeResultReleaseOutput. Data model for Learning Assessments Grade Result Release Response. */
 LearningAssessmentsGradeResultReleaseOutputSchema = z.object({
   gradeRoundId: z.string().uuid().optional(),
   releasedAt: z.string().datetime().optional(),
   releaseId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGradingAuthoringAssessmentAuthoringStateResult */
+/** Zod schema for LearningAssessmentsGradingAuthoringAssessmentAuthoringStateResult. Data model for Learning Assessments Grading Authoring Assessment Authoring State Result. */
 LearningAssessmentsGradingAuthoringAssessmentAuthoringStateResultSchema = z.object({
   assessmentId: z.string().uuid().optional(),
   assessmentVersion: z.number().int().optional(),
@@ -28194,14 +29168,14 @@ LearningAssessmentsGradingAuthoringAssessmentAuthoringStateResultSchema = z.obje
   publishedMatchesDraft: z.boolean().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGradingAuthoringAssessmentCapabilityStateResult */
+/** Zod schema for LearningAssessmentsGradingAuthoringAssessmentCapabilityStateResult. Data model for Learning Assessments Grading Authoring Assessment Capability State Result. */
 LearningAssessmentsGradingAuthoringAssessmentCapabilityStateResultSchema = z.object({
   available: z.boolean().optional(),
   code: z.string().nullable().optional(),
   message: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGradingAuthoringAssessmentDraftResult */
+/** Zod schema for LearningAssessmentsGradingAuthoringAssessmentDraftResult. Data model for Learning Assessments Grading Authoring Assessment Draft Result. */
 LearningAssessmentsGradingAuthoringAssessmentDraftResultSchema = z.object({
   assessmentId: z.string().uuid().nullable().optional(),
   assessmentVersion: z.number().int().nullable().optional(),
@@ -28209,7 +29183,7 @@ LearningAssessmentsGradingAuthoringAssessmentDraftResultSchema = z.object({
   contentVersion: z.number().int().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGradingAuthoringAssessmentRevisionStateResult */
+/** Zod schema for LearningAssessmentsGradingAuthoringAssessmentRevisionStateResult. Data model for Learning Assessments Grading Authoring Assessment Revision State Result. */
 LearningAssessmentsGradingAuthoringAssessmentRevisionStateResultSchema = z.object({
   authoringSourceHash: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
@@ -28218,12 +29192,12 @@ LearningAssessmentsGradingAuthoringAssessmentRevisionStateResultSchema = z.objec
   revisionNumber: z.number().int().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGradingAuthoringPrepareAssessmentRevisionInput */
+/** Zod schema for LearningAssessmentsGradingAuthoringPrepareAssessmentRevisionInput. Data model for Learning Assessments Grading Authoring Prepare Assessment Revision Request. */
 LearningAssessmentsGradingAuthoringPrepareAssessmentRevisionInputSchema = z.object({
   expectedAssessmentVersion: z.number().int().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGradingAuthoringPreparedAssessmentRevisionResult */
+/** Zod schema for LearningAssessmentsGradingAuthoringPreparedAssessmentRevisionResult. Data model for Learning Assessments Grading Authoring Prepared Assessment Revision Result. */
 LearningAssessmentsGradingAuthoringPreparedAssessmentRevisionResultSchema = z.object({
   authoringSourceHash: z.string().nullable().optional(),
   executionSnapshotHash: z.string().nullable().optional(),
@@ -28231,13 +29205,13 @@ LearningAssessmentsGradingAuthoringPreparedAssessmentRevisionResultSchema = z.ob
   revisionNumber: z.number().int().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGradingAuthoringPublishAssessmentRevisionInput */
+/** Zod schema for LearningAssessmentsGradingAuthoringPublishAssessmentRevisionInput. Data model for Learning Assessments Grading Authoring Publish Assessment Revision Request. */
 LearningAssessmentsGradingAuthoringPublishAssessmentRevisionInputSchema = z.object({
   expectedAssessmentVersion: z.number().int().optional(),
   revisionId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGradingAuthoringSaveAssessmentDraftInput */
+/** Zod schema for LearningAssessmentsGradingAuthoringSaveAssessmentDraftInput. Data model for Learning Assessments Grading Authoring Save Assessment Draft Request. */
 LearningAssessmentsGradingAuthoringSaveAssessmentDraftInputSchema = z.object({
   attemptContributionMode: z
     .lazy(() => LearningAssessmentsGradingContractsAttemptContributionModeSchema)
@@ -28270,21 +29244,21 @@ LearningAssessmentsGradingAuthoringSaveAssessmentDraftInputSchema = z.object({
   visibility: z.lazy(() => LearningCoursesVisibilitySchema).optional(),
 });
 
-/** Zod schema for LearningAssessmentsGradingAuthoringUnpublishAssessmentRevisionInput */
+/** Zod schema for LearningAssessmentsGradingAuthoringUnpublishAssessmentRevisionInput. Data model for Learning Assessments Grading Authoring Unpublish Assessment Revision Request. */
 LearningAssessmentsGradingAuthoringUnpublishAssessmentRevisionInputSchema = z.object({
   expectedAssessmentVersion: z.number().int().optional(),
   expectedRevisionId: z.string().uuid().optional(),
   idempotencyKey: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGradingContractsAssessmentExecutionDeliveryItemV1 */
+/** Zod schema for LearningAssessmentsGradingContractsAssessmentExecutionDeliveryItemV1. Data model for Learning Assessments Grading Contracts Assessment Execution Delivery Item V1. */
 LearningAssessmentsGradingContractsAssessmentExecutionDeliveryItemV1Schema = z.object({
   adapterKey: z.string().nullable().optional(),
   adapterVersion: z.string().nullable().optional(),
   learnerPayload: z.record(z.string(), z.unknown()).optional(),
 });
 
-/** Zod schema for LearningAssessmentsGradingContractsAssessmentExecutionDeliveryV1 */
+/** Zod schema for LearningAssessmentsGradingContractsAssessmentExecutionDeliveryV1. Data model for Learning Assessments Grading Contracts Assessment Execution Delivery V1. */
 LearningAssessmentsGradingContractsAssessmentExecutionDeliveryV1Schema = z.object({
   definitionRevisionId: z.string().uuid().optional(),
   executionSnapshotHash: z.string().nullable().optional(),
@@ -28299,7 +29273,7 @@ LearningAssessmentsGradingContractsAssessmentExecutionDeliveryV1Schema = z.objec
   schemaVersion: z.number().int().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGradingContractsAssessmentResponseEnvelopeV1 */
+/** Zod schema for LearningAssessmentsGradingContractsAssessmentResponseEnvelopeV1. Data model for Learning Assessments Grading Contracts Assessment Response Envelope V1. */
 LearningAssessmentsGradingContractsAssessmentResponseEnvelopeV1Schema = z.object({
   contentType: z.string().nullable().optional(),
   payload: z.record(z.string(), z.unknown()).optional(),
@@ -28307,13 +29281,13 @@ LearningAssessmentsGradingContractsAssessmentResponseEnvelopeV1Schema = z.object
   schemaVersion: z.number().int().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGradingContractsAttemptContributionMode */
+/** Zod schema for LearningAssessmentsGradingContractsAttemptContributionMode. OpenAPI schema for Learning Assessments Grading Contracts Attempt Contribution Mode. */
 LearningAssessmentsGradingContractsAttemptContributionModeSchema = z.enum(['first-finalized', 'last-finalized', 'highest-finalized']);
 
-/** Zod schema for LearningAssessmentsGradingContractsContentCompletionMode */
+/** Zod schema for LearningAssessmentsGradingContractsContentCompletionMode. OpenAPI schema for Learning Assessments Grading Contracts Content Completion Mode. */
 LearningAssessmentsGradingContractsContentCompletionModeSchema = z.enum(['on-submit', 'on-finalize', 'on-release', 'on-release-and-pass']);
 
-/** Zod schema for LearningAssessmentsGradingContractsGradeItemResultV1 */
+/** Zod schema for LearningAssessmentsGradingContractsGradeItemResultV1. Data model for Learning Assessments Grading Contracts Grade Item Result V1. */
 LearningAssessmentsGradingContractsGradeItemResultV1Schema = z.object({
   evidenceRefs: z.array(z.string()).nullable().optional(),
   feedback: z.string().nullable().optional(),
@@ -28330,10 +29304,10 @@ LearningAssessmentsGradingContractsGradeItemResultV1Schema = z.object({
   state: z.lazy(() => LearningAssessmentsGradingContractsGradeItemStateSchema).optional(),
 });
 
-/** Zod schema for LearningAssessmentsGradingContractsGradeItemState */
+/** Zod schema for LearningAssessmentsGradingContractsGradeItemState. OpenAPI schema for Learning Assessments Grading Contracts Grade Item State. */
 LearningAssessmentsGradingContractsGradeItemStateSchema = z.enum(['graded', 'pending', 'unsupported']);
 
-/** Zod schema for LearningAssessmentsGradingContractsGradeResultV1 */
+/** Zod schema for LearningAssessmentsGradingContractsGradeResultV1. Data model for Learning Assessments Grading Contracts Grade Result V1. */
 LearningAssessmentsGradingContractsGradeResultV1Schema = z.object({
   evidenceRefs: z.array(z.string()).nullable().optional(),
   feedback: z.string().nullable().optional(),
@@ -28350,13 +29324,13 @@ LearningAssessmentsGradingContractsGradeResultV1Schema = z.object({
   state: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGradingContractsResultReleaseMode */
+/** Zod schema for LearningAssessmentsGradingContractsResultReleaseMode. OpenAPI schema for Learning Assessments Grading Contracts Result Release Mode. */
 LearningAssessmentsGradingContractsResultReleaseModeSchema = z.enum(['immediate', 'manual', 'scheduled']);
 
-/** Zod schema for LearningAssessmentsGradingContractsReviewExecutionContext */
+/** Zod schema for LearningAssessmentsGradingContractsReviewExecutionContext. OpenAPI schema for Learning Assessments Grading Contracts Review Execution Context. */
 LearningAssessmentsGradingContractsReviewExecutionContextSchema = z.enum(['author-test', 'official-submission']);
 
-/** Zod schema for LearningAssessmentsGradingContractsReviewMethod */
+/** Zod schema for LearningAssessmentsGradingContractsReviewMethod. OpenAPI schema for Learning Assessments Grading Contracts Review Method. */
 LearningAssessmentsGradingContractsReviewMethodSchema = z.enum(['PeerReview', 'AIReview', 'AutomatedReview', 'InstructorReview', 'SelfReview']);
 
 /** Zod schema for LearningAssessmentsGradingContractsReviewMethods. Numeric review-workflow bitmask. Valid values are 0, 1, 2, 4, 8, 9, 10, 12, 16, and 24. */
@@ -28373,10 +29347,10 @@ LearningAssessmentsGradingContractsReviewMethodsSchema = z.union([
   z.literal(24),
 ]);
 
-/** Zod schema for LearningAssessmentsGradingPersistenceAssessmentTestRunStatus */
+/** Zod schema for LearningAssessmentsGradingPersistenceAssessmentTestRunStatus. OpenAPI schema for Learning Assessments Grading Persistence Assessment Test Run Status. */
 LearningAssessmentsGradingPersistenceAssessmentTestRunStatusSchema = z.enum(['Draft', 'Running', 'Completed', 'Cancelled']);
 
-/** Zod schema for LearningAssessmentsGradingPersistencePersistedGradeRoundStatus */
+/** Zod schema for LearningAssessmentsGradingPersistencePersistedGradeRoundStatus. OpenAPI schema for Learning Assessments Grading Persistence Persisted Grade Round Status. */
 LearningAssessmentsGradingPersistencePersistedGradeRoundStatusSchema = z.enum([
   'Pending',
   'Running',
@@ -28386,7 +29360,7 @@ LearningAssessmentsGradingPersistencePersistedGradeRoundStatusSchema = z.enum([
   'Finalized',
 ]);
 
-/** Zod schema for LearningAssessmentsGradingPersistencePersistedGradingExecutionStatus */
+/** Zod schema for LearningAssessmentsGradingPersistencePersistedGradingExecutionStatus. OpenAPI schema for Learning Assessments Grading Persistence Persisted Grading Execution Status. */
 LearningAssessmentsGradingPersistencePersistedGradingExecutionStatusSchema = z.enum(['Pending', 'Running', 'AwaitingReview', 'Completed', 'Failed']);
 
 /** Zod schema for LearningAssessmentsGradingQueueAssessmentDto. Assessment summary fields the SpeedGrader header and grading panel need. */
@@ -28440,7 +29414,7 @@ LearningAssessmentsGradingQueueItemDtoSchema = z.object({
   userId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGradingRuntimeAssessmentExecutionViewV1 */
+/** Zod schema for LearningAssessmentsGradingRuntimeAssessmentExecutionViewV1. Data model for Learning Assessments Grading Runtime Assessment Execution View V1. */
 LearningAssessmentsGradingRuntimeAssessmentExecutionViewV1Schema = z.object({
   activeRoundId: z.string().uuid().nullable().optional(),
   context: z.lazy(() => LearningAssessmentsGradingContractsReviewExecutionContextSchema).optional(),
@@ -28468,7 +29442,7 @@ LearningAssessmentsGradingRuntimeAssessmentExecutionViewV1Schema = z.object({
   submittedResponse: z.lazy(() => LearningAssessmentsGradingContractsAssessmentResponseEnvelopeV1Schema).optional(),
 });
 
-/** Zod schema for LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1 */
+/** Zod schema for LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1. Data model for Learning Assessments Grading Runtime Assessment Submission View V1. */
 LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1Schema = z.object({
   assessmentId: z.string().uuid().optional(),
   attemptNumber: z.number().int().optional(),
@@ -28486,7 +29460,7 @@ LearningAssessmentsGradingRuntimeAssessmentSubmissionViewV1Schema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1 */
+/** Zod schema for LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1. Data model for Learning Assessments Grading Runtime Assessment Test Run View V1. */
 LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1Schema = z.object({
   assessmentId: z.string().uuid().optional(),
   candidateStillMatchesDraft: z.boolean().optional(),
@@ -28500,7 +29474,7 @@ LearningAssessmentsGradingRuntimeAssessmentTestRunViewV1Schema = z.object({
   testRunId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGradingRuntimeGradebookAssessmentProjectionV1 */
+/** Zod schema for LearningAssessmentsGradingRuntimeGradebookAssessmentProjectionV1. Data model for Learning Assessments Grading Runtime Gradebook Assessment Projection V1. */
 LearningAssessmentsGradingRuntimeGradebookAssessmentProjectionV1Schema = z.object({
   assessmentId: z.string().uuid().optional(),
   capturedMaxScore: z.lazy(() => LearningGradingContractsScoreValueSchema).optional(),
@@ -28510,7 +29484,7 @@ LearningAssessmentsGradingRuntimeGradebookAssessmentProjectionV1Schema = z.objec
   submissionId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGradingRuntimeGradebookCourseProjectionV1 */
+/** Zod schema for LearningAssessmentsGradingRuntimeGradebookCourseProjectionV1. Data model for Learning Assessments Grading Runtime Gradebook Course Projection V1. */
 LearningAssessmentsGradingRuntimeGradebookCourseProjectionV1Schema = z.object({
   courseId: z.string().uuid().optional(),
   coursePercentUnits: z.number().int().nullable().optional(),
@@ -28523,7 +29497,7 @@ LearningAssessmentsGradingRuntimeGradebookCourseProjectionV1Schema = z.object({
   learnerVisible: z.boolean().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGradingRuntimeGradebookGroupProjectionV1 */
+/** Zod schema for LearningAssessmentsGradingRuntimeGradebookGroupProjectionV1. Data model for Learning Assessments Grading Runtime Gradebook Group Projection V1. */
 LearningAssessmentsGradingRuntimeGradebookGroupProjectionV1Schema = z.object({
   assessmentGroupId: z.string().uuid().optional(),
   assessments: z
@@ -28535,7 +29509,7 @@ LearningAssessmentsGradingRuntimeGradebookGroupProjectionV1Schema = z.object({
   weightPercent: z.lazy(() => LearningGradingContractsPercentValueSchema).optional(),
 });
 
-/** Zod schema for LearningAssessmentsGradingRuntimeGradeRoundViewV1 */
+/** Zod schema for LearningAssessmentsGradingRuntimeGradeRoundViewV1. Data model for Learning Assessments Grading Runtime Grade Round View V1. */
 LearningAssessmentsGradingRuntimeGradeRoundViewV1Schema = z.object({
   finalizedAt: z.string().datetime().nullable().optional(),
   initiatedByActorId: z.string().uuid().nullable().optional(),
@@ -28550,14 +29524,14 @@ LearningAssessmentsGradingRuntimeGradeRoundViewV1Schema = z.object({
   status: z.lazy(() => LearningAssessmentsGradingPersistencePersistedGradeRoundStatusSchema).optional(),
 });
 
-/** Zod schema for LearningAssessmentsGradingRuntimeInstructorItemResolutionV1 */
+/** Zod schema for LearningAssessmentsGradingRuntimeInstructorItemResolutionV1. Data model for Learning Assessments Grading Runtime Instructor Item Resolution V1. */
 LearningAssessmentsGradingRuntimeInstructorItemResolutionV1Schema = z.object({
   feedback: z.string().nullable().optional(),
   itemId: z.string().nullable().optional(),
   score: z.lazy(() => LearningGradingContractsScoreValueSchema).optional(),
 });
 
-/** Zod schema for LearningAssessmentsGradingRuntimeInstructorReviewResolutionV1 */
+/** Zod schema for LearningAssessmentsGradingRuntimeInstructorReviewResolutionV1. Data model for Learning Assessments Grading Runtime Instructor Review Resolution V1. */
 LearningAssessmentsGradingRuntimeInstructorReviewResolutionV1Schema = z.object({
   feedback: z.string().nullable().optional(),
   items: z
@@ -28568,13 +29542,13 @@ LearningAssessmentsGradingRuntimeInstructorReviewResolutionV1Schema = z.object({
   schemaVersion: z.number().int().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGradingRuntimeRegradeExecutionCommand */
+/** Zod schema for LearningAssessmentsGradingRuntimeRegradeExecutionCommand. Data model for Learning Assessments Grading Runtime Regrade Execution Command. */
 LearningAssessmentsGradingRuntimeRegradeExecutionCommandSchema = z.object({
   idempotencyKey: z.string().nullable().optional(),
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGradingRuntimeReleaseGradeResultCommand */
+/** Zod schema for LearningAssessmentsGradingRuntimeReleaseGradeResultCommand. Data model for Learning Assessments Grading Runtime Release Grade Result Command. */
 LearningAssessmentsGradingRuntimeReleaseGradeResultCommandSchema = z.object({
   expectedRoundId: z.string().uuid().optional(),
   expectedSubmissionVersion: z.number().int().optional(),
@@ -28594,7 +29568,7 @@ LearningAssessmentsGroupDetailDtoSchema = z.object({
   name: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGroupDto */
+/** Zod schema for LearningAssessmentsGroupDto. Data model for Learning Assessments Group Dto. */
 LearningAssessmentsGroupDtoSchema = z.object({
   id: z.string().uuid().optional(),
   capacity: z.number().int().optional(),
@@ -28608,7 +29582,7 @@ LearningAssessmentsGroupMemberDtoSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGroupMembershipDto */
+/** Zod schema for LearningAssessmentsGroupMembershipDto. Data model for Learning Assessments Group Membership Dto. */
 LearningAssessmentsGroupMembershipDtoSchema = z.object({
   id: z.string().uuid().optional(),
   groupId: z.string().uuid().optional(),
@@ -28616,7 +29590,7 @@ LearningAssessmentsGroupMembershipDtoSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGroupSetDto */
+/** Zod schema for LearningAssessmentsGroupSetDto. Data model for Learning Assessments Group Set Dto. */
 LearningAssessmentsGroupSetDtoSchema = z.object({
   id: z.string().uuid().optional(),
   courseId: z.string().uuid().optional(),
@@ -28641,7 +29615,7 @@ LearningAssessmentsGroupSummaryDtoSchema = z.object({
   name: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsIdempotentRuntimeInput */
+/** Zod schema for LearningAssessmentsIdempotentRuntimeInput. Data model for Learning Assessments Idempotent Runtime Request. */
 LearningAssessmentsIdempotentRuntimeInputSchema = z.object({
   idempotencyKey: z.string().nullable().optional(),
 });
@@ -28660,7 +29634,7 @@ LearningAssessmentsInstructorPeerReviewDtoSchema = z.object({
   submittedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsInteractiveVideoAssessmentCueDto */
+/** Zod schema for LearningAssessmentsInteractiveVideoAssessmentCueDto. Data model for Learning Assessments Interactive Video Assessment Cue Dto. */
 LearningAssessmentsInteractiveVideoAssessmentCueDtoSchema = z.object({
   id: z.string().uuid().optional(),
   assessmentId: z.string().uuid().optional(),
@@ -28669,12 +29643,12 @@ LearningAssessmentsInteractiveVideoAssessmentCueDtoSchema = z.object({
   cuePositionSeconds: z.number().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsLearnerAssessmentAttemptDto */
+/** Zod schema for LearningAssessmentsLearnerAssessmentAttemptDto. Data model for Learning Assessments Learner Assessment Attempt Dto. */
 LearningAssessmentsLearnerAssessmentAttemptDtoSchema = z.object({
   submission: z.lazy(() => LearningAssessmentsLearnerAssessmentSubmissionDtoSchema).optional(),
 });
 
-/** Zod schema for LearningAssessmentsLearnerAssessmentSubmissionDto */
+/** Zod schema for LearningAssessmentsLearnerAssessmentSubmissionDto. Data model for Learning Assessments Learner Assessment Submission Dto. */
 LearningAssessmentsLearnerAssessmentSubmissionDtoSchema = z.object({
   id: z.string().uuid().optional(),
   assessmentId: z.string().uuid().optional(),
@@ -28700,7 +29674,7 @@ LearningAssessmentsLearnerAssessmentSubmissionDtoSchema = z.object({
   urlPayload: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsLearnerInteractiveVideoAssessmentCueDto */
+/** Zod schema for LearningAssessmentsLearnerInteractiveVideoAssessmentCueDto. Data model for Learning Assessments Learner Interactive Video Assessment Cue Dto. */
 LearningAssessmentsLearnerInteractiveVideoAssessmentCueDtoSchema = z.object({
   cueId: z.string().nullable().optional(),
   cuePositionSeconds: z.number().nullable().optional(),
@@ -28720,7 +29694,7 @@ LearningAssessmentsPeerReviewClaimDtoSchema = z.object({
   reviewId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningAssessmentsPeerReviewStatus */
+/** Zod schema for LearningAssessmentsPeerReviewStatus. OpenAPI schema for Learning Assessments Peer Review Status. */
 LearningAssessmentsPeerReviewStatusSchema = z.enum(['Assigned', 'Submitted']);
 
 /** Zod schema for LearningAssessmentsPeerReviewSubmitInput. Body of a peer review submit: plain score XOR rubric scores (rubric rules enforced server-side),
@@ -28747,7 +29721,7 @@ LearningAssessmentsReceivedPeerReviewDtoSchema = z.object({
   submittedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsResolveInstructorReviewInput */
+/** Zod schema for LearningAssessmentsResolveInstructorReviewInput. Data model for Learning Assessments Resolve Instructor Review Request. */
 LearningAssessmentsResolveInstructorReviewInputSchema = z.object({
   idempotencyKey: z.string().nullable().optional(),
   resolution: z.lazy(() => LearningAssessmentsGradingRuntimeInstructorReviewResolutionV1Schema).optional(),
@@ -28771,7 +29745,7 @@ LearningAssessmentsRubricDtoSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsSaveCollectiveRuntimeDraftInput */
+/** Zod schema for LearningAssessmentsSaveCollectiveRuntimeDraftInput. Data model for Learning Assessments Save Collective Runtime Draft Request. */
 LearningAssessmentsSaveCollectiveRuntimeDraftInputSchema = z.object({
   expectedVersion: z.number().int().optional(),
   idempotencyKey: z.string().nullable().optional(),
@@ -28794,7 +29768,7 @@ LearningAssessmentsSaveRubricInputSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsStartAssessmentTestRunInput */
+/** Zod schema for LearningAssessmentsStartAssessmentTestRunInput. Data model for Learning Assessments Start Assessment Test Run Request. */
 LearningAssessmentsStartAssessmentTestRunInputSchema = z.object({
   idempotencyKey: z.string().nullable().optional(),
   personaDisplayName: z.string().nullable().optional(),
@@ -28802,24 +29776,24 @@ LearningAssessmentsStartAssessmentTestRunInputSchema = z.object({
   revisionId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningAssessmentsStartCollectiveRuntimeSubmissionInput */
+/** Zod schema for LearningAssessmentsStartCollectiveRuntimeSubmissionInput. Data model for Learning Assessments Start Collective Runtime Submission Request. */
 LearningAssessmentsStartCollectiveRuntimeSubmissionInputSchema = z.object({
   courseGroupId: z.string().uuid().optional(),
   idempotencyKey: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsStartContentRuntimeSubmissionInput */
+/** Zod schema for LearningAssessmentsStartContentRuntimeSubmissionInput. Data model for Learning Assessments Start Content Runtime Submission Request. */
 LearningAssessmentsStartContentRuntimeSubmissionInputSchema = z.object({
   idempotencyKey: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsStartIndividualRuntimeSubmissionInput */
+/** Zod schema for LearningAssessmentsStartIndividualRuntimeSubmissionInput. Data model for Learning Assessments Start Individual Runtime Submission Request. */
 LearningAssessmentsStartIndividualRuntimeSubmissionInputSchema = z.object({
   enrollmentId: z.string().uuid().optional(),
   idempotencyKey: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsStartSubmissionInput */
+/** Zod schema for LearningAssessmentsStartSubmissionInput. Data model for Learning Assessments Start Submission Request. */
 LearningAssessmentsStartSubmissionInputSchema = z.object({
   enrollmentId: z.string().uuid().optional(),
 });
@@ -28827,7 +29801,7 @@ LearningAssessmentsStartSubmissionInputSchema = z.object({
 /** Zod schema for LearningAssessmentsSubmissionModality. A comma-separated combination of the declared flag names. */
 LearningAssessmentsSubmissionModalitySchema = z.string();
 
-/** Zod schema for LearningAssessmentsSubmissionStatus */
+/** Zod schema for LearningAssessmentsSubmissionStatus. OpenAPI schema for Learning Assessments Submission Status. */
 LearningAssessmentsSubmissionStatusSchema = z.enum(['InProgress', 'Submitted', 'Graded', 'Returned', 'Late']);
 
 /** Zod schema for LearningAssessmentsSubmitAssessmentInput. Persists one or more answer payloads when a learner submits an assessment. */
@@ -28840,7 +29814,7 @@ LearningAssessmentsSubmitAssessmentInputSchema = z.object({
   urlPayload: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsSubmitAssessmentRuntimeInput */
+/** Zod schema for LearningAssessmentsSubmitAssessmentRuntimeInput. Data model for Learning Assessments Submit Assessment Runtime Request. */
 LearningAssessmentsSubmitAssessmentRuntimeInputSchema = z.object({
   expectedDraftVersion: z.number().int().nullable().optional(),
   idempotencyKey: z.string().nullable().optional(),
@@ -28860,7 +29834,7 @@ LearningAssessmentsTaskItemDtoSchema = z.object({
   type: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsTasksDto */
+/** Zod schema for LearningAssessmentsTasksDto. Data model for Learning Assessments Tasks Dto. */
 LearningAssessmentsTasksDtoSchema = z.object({
   items: z
     .array(z.lazy(() => LearningAssessmentsTaskItemDtoSchema))
@@ -28950,7 +29924,7 @@ LearningCertificatesCertificateDtoSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningCertificatesCertificateStatus */
+/** Zod schema for LearningCertificatesCertificateStatus. OpenAPI schema for Learning Certificates Certificate Status. */
 LearningCertificatesCertificateStatusSchema = z.enum(['Active', 'Expired', 'Revoked']);
 
 /** Zod schema for LearningCertificatesCertificateTemplateDetailDto. DTO for certificate template editing and preview */
@@ -29023,14 +29997,14 @@ LearningCertificatesUpdateCertificateTemplateInputSchema = z.object({
   templateStyles: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningCohortsApplyCohortScheduleInput */
+/** Zod schema for LearningCohortsApplyCohortScheduleInput. Data model for Learning Cohorts Apply Cohort Schedule Request. */
 LearningCohortsApplyCohortScheduleInputSchema = z.object({
   confirmAdvisories: z.boolean().optional(),
   expectedVersion: z.number().int().optional(),
   rules: z.lazy(() => LearningCohortsPreviewCohortScheduleInputSchema).optional(),
 });
 
-/** Zod schema for LearningCohortsAvailableCohortContentDto */
+/** Zod schema for LearningCohortsAvailableCohortContentDto. Data model for Learning Cohorts Available Cohort Content Dto. */
 LearningCohortsAvailableCohortContentDtoSchema = z.object({
   availableFrom: z.string().datetime().nullable().optional(),
   availableUntil: z.string().datetime().nullable().optional(),
@@ -29045,7 +30019,7 @@ LearningCohortsAvailableCohortContentDtoSchema = z.object({
   type: z.lazy(() => LearningCoursesProgramContentTypeSchema).optional(),
 });
 
-/** Zod schema for LearningCohortsCohortCalendarEntryDto */
+/** Zod schema for LearningCohortsCohortCalendarEntryDto. Data model for Learning Cohorts Cohort Calendar Entry Dto. */
 LearningCohortsCohortCalendarEntryDtoSchema = z.object({
   availableFrom: z.string().datetime().nullable().optional(),
   cohortId: z.string().uuid().optional(),
@@ -29059,7 +30033,7 @@ LearningCohortsCohortCalendarEntryDtoSchema = z.object({
   type: z.lazy(() => LearningCohortsCohortScheduleItemTypeSchema).optional(),
 });
 
-/** Zod schema for LearningCohortsCohortDto */
+/** Zod schema for LearningCohortsCohortDto. Data model for Learning Cohorts Cohort Dto. */
 LearningCohortsCohortDtoSchema = z.object({
   id: z.string().uuid().optional(),
   availableSpots: z.number().int().optional(),
@@ -29082,13 +30056,13 @@ LearningCohortsCohortDtoSchema = z.object({
   tenantId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for LearningCohortsCohortPacingMode */
+/** Zod schema for LearningCohortsCohortPacingMode. OpenAPI schema for Learning Cohorts Cohort Pacing Mode. */
 LearningCohortsCohortPacingModeSchema = z.enum(['OneModulePerWeek', 'OneLessonPerMeeting', 'FixedLessonsPerWeek', 'Manual']);
 
-/** Zod schema for LearningCohortsCohortReleasePolicy */
+/** Zod schema for LearningCohortsCohortReleasePolicy. OpenAPI schema for Learning Cohorts Cohort Release Policy. */
 LearningCohortsCohortReleasePolicySchema = z.enum(['Weekly', 'BeforeMeeting', 'Manual', 'Immediately']);
 
-/** Zod schema for LearningCohortsCohortScheduleConflictDto */
+/** Zod schema for LearningCohortsCohortScheduleConflictDto. Data model for Learning Cohorts Cohort Schedule Conflict Dto. */
 LearningCohortsCohortScheduleConflictDtoSchema = z.object({
   assessmentId: z.string().uuid().nullable().optional(),
   code: z.string().nullable().optional(),
@@ -29097,7 +30071,7 @@ LearningCohortsCohortScheduleConflictDtoSchema = z.object({
   severity: z.lazy(() => LearningCohortsScheduleConflictSeveritySchema).optional(),
 });
 
-/** Zod schema for LearningCohortsCohortScheduleDto */
+/** Zod schema for LearningCohortsCohortScheduleDto. Data model for Learning Cohorts Cohort Schedule Dto. */
 LearningCohortsCohortScheduleDtoSchema = z.object({
   id: z.string().uuid().optional(),
   cohortId: z.string().uuid().optional(),
@@ -29119,7 +30093,7 @@ LearningCohortsCohortScheduleDtoSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for LearningCohortsCohortScheduleItemDto */
+/** Zod schema for LearningCohortsCohortScheduleItemDto. Data model for Learning Cohorts Cohort Schedule Item Dto. */
 LearningCohortsCohortScheduleItemDtoSchema = z.object({
   id: z.string().uuid().optional(),
   assessmentId: z.string().uuid().nullable().optional(),
@@ -29139,13 +30113,13 @@ LearningCohortsCohortScheduleItemDtoSchema = z.object({
   visibilityOverride: z.lazy(() => LearningCohortsCohortVisibilityOverrideSchema).optional(),
 });
 
-/** Zod schema for LearningCohortsCohortScheduleItemStatus */
+/** Zod schema for LearningCohortsCohortScheduleItemStatus. OpenAPI schema for Learning Cohorts Cohort Schedule Item Status. */
 LearningCohortsCohortScheduleItemStatusSchema = z.enum(['Draft', 'Scheduled', 'Published', 'Completed', 'Cancelled']);
 
-/** Zod schema for LearningCohortsCohortScheduleItemType */
+/** Zod schema for LearningCohortsCohortScheduleItemType. OpenAPI schema for Learning Cohorts Cohort Schedule Item Type. */
 LearningCohortsCohortScheduleItemTypeSchema = z.enum(['ContentRelease', 'LiveSession', 'AssessmentWindow', 'Milestone']);
 
-/** Zod schema for LearningCohortsCohortSchedulePreviewDto */
+/** Zod schema for LearningCohortsCohortSchedulePreviewDto. Data model for Learning Cohorts Cohort Schedule Preview Dto. */
 LearningCohortsCohortSchedulePreviewDtoSchema = z.object({
   calculatedEndDate: z.string().date().optional(),
   conflicts: z
@@ -29159,7 +30133,7 @@ LearningCohortsCohortSchedulePreviewDtoSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for LearningCohortsCohortSchedulePreviewItemDto */
+/** Zod schema for LearningCohortsCohortSchedulePreviewItemDto. Data model for Learning Cohorts Cohort Schedule Preview Item Dto. */
 LearningCohortsCohortSchedulePreviewItemDtoSchema = z.object({
   assessmentId: z.string().uuid().nullable().optional(),
   availableFrom: z.string().datetime().nullable().optional(),
@@ -29174,7 +30148,7 @@ LearningCohortsCohortSchedulePreviewItemDtoSchema = z.object({
   type: z.lazy(() => LearningCohortsCohortScheduleItemTypeSchema).optional(),
 });
 
-/** Zod schema for LearningCohortsCohortScheduleSummaryDto */
+/** Zod schema for LearningCohortsCohortScheduleSummaryDto. Data model for Learning Cohorts Cohort Schedule Summary Dto. */
 LearningCohortsCohortScheduleSummaryDtoSchema = z.object({
   itemCount: z.number().int().optional(),
   meetingDays: z
@@ -29188,13 +30162,13 @@ LearningCohortsCohortScheduleSummaryDtoSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for LearningCohortsCohortStatus */
+/** Zod schema for LearningCohortsCohortStatus. OpenAPI schema for Learning Cohorts Cohort Status. */
 LearningCohortsCohortStatusSchema = z.enum(['Scheduled', 'Active', 'Completed', 'Cancelled']);
 
-/** Zod schema for LearningCohortsCohortVisibilityOverride */
+/** Zod schema for LearningCohortsCohortVisibilityOverride. OpenAPI schema for Learning Cohorts Cohort Visibility Override. */
 LearningCohortsCohortVisibilityOverrideSchema = z.enum(['Inherited', 'Hidden', 'Visible']);
 
-/** Zod schema for LearningCohortsCourseCohortCalendarDto */
+/** Zod schema for LearningCohortsCourseCohortCalendarDto. Data model for Learning Cohorts Course Cohort Calendar Dto. */
 LearningCohortsCourseCohortCalendarDtoSchema = z.object({
   courseId: z.string().uuid().optional(),
   entries: z
@@ -29216,7 +30190,7 @@ LearningCohortsCreateCohortInputSchema = z.object({
   tenantId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for LearningCohortsPreviewCohortScheduleInput */
+/** Zod schema for LearningCohortsPreviewCohortScheduleInput. Data model for Learning Cohorts Preview Cohort Schedule Request. */
 LearningCohortsPreviewCohortScheduleInputSchema = z.object({
   assessmentDueOffsetDays: z.number().int().optional(),
   cohortEndDate: z.string().date().optional(),
@@ -29234,13 +30208,13 @@ LearningCohortsPreviewCohortScheduleInputSchema = z.object({
   unitsPerPeriod: z.number().int().optional(),
 });
 
-/** Zod schema for LearningCohortsScheduleConflictSeverity */
+/** Zod schema for LearningCohortsScheduleConflictSeverity. OpenAPI schema for Learning Cohorts Schedule Conflict Severity. */
 LearningCohortsScheduleConflictSeveritySchema = z.enum(['Advisory', 'Blocking']);
 
-/** Zod schema for LearningCohortsScheduleShiftScope */
+/** Zod schema for LearningCohortsScheduleShiftScope. OpenAPI schema for Learning Cohorts Schedule Shift Scope. */
 LearningCohortsScheduleShiftScopeSchema = z.enum(['Single', 'Following']);
 
-/** Zod schema for LearningCohortsShiftCohortScheduleInput */
+/** Zod schema for LearningCohortsShiftCohortScheduleInput. Data model for Learning Cohorts Shift Cohort Schedule Request. */
 LearningCohortsShiftCohortScheduleInputSchema = z.object({
   days: z.number().int().optional(),
   expectedVersion: z.number().int().optional(),
@@ -29258,13 +30232,13 @@ LearningCohortsUpdateCohortInputSchema = z.object({
   startDate: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for LearningCohortsUpdateCohortScheduleInput */
+/** Zod schema for LearningCohortsUpdateCohortScheduleInput. Data model for Learning Cohorts Update Cohort Schedule Request. */
 LearningCohortsUpdateCohortScheduleInputSchema = z.object({
   expectedVersion: z.number().int().optional(),
   item: z.lazy(() => LearningCohortsUpdateCohortScheduleItemInputSchema).optional(),
 });
 
-/** Zod schema for LearningCohortsUpdateCohortScheduleItemInput */
+/** Zod schema for LearningCohortsUpdateCohortScheduleItemInput. Data model for Learning Cohorts Update Cohort Schedule Item Request. */
 LearningCohortsUpdateCohortScheduleItemInputSchema = z.object({
   availableFrom: z.string().datetime().nullable().optional(),
   availableUntil: z.string().datetime().nullable().optional(),
@@ -29308,10 +30282,14 @@ LearningCoursesActivityGradeDtoSchema = z.object({
   updatedAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for LearningCoursesActivitySettings */
-LearningCoursesActivitySettingsSchema = z.object({});
+/** Zod schema for LearningCoursesActivitySettings. Polymorphic activity settings selected by the kind discriminator. */
+LearningCoursesActivitySettingsSchema = z.union([
+  z.lazy(() => LearningCoursesDiscussionActivitySettingsSchema),
+  z.lazy(() => LearningCoursesReflectionActivitySettingsSchema),
+  z.lazy(() => LearningCoursesSurveyActivitySettingsSchema),
+]);
 
-/** Zod schema for LearningCoursesAiAuthoringConversationDto */
+/** Zod schema for LearningCoursesAiAuthoringConversationDto. Data model for Learning Courses Ai Authoring Conversation Dto. */
 LearningCoursesAiAuthoringConversationDtoSchema = z.object({
   id: z.string().uuid().optional(),
   authorId: z.string().uuid().optional(),
@@ -29323,7 +30301,7 @@ LearningCoursesAiAuthoringConversationDtoSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for LearningCoursesAiAuthoringMessageDto */
+/** Zod schema for LearningCoursesAiAuthoringMessageDto. Data model for Learning Courses Ai Authoring Message Dto. */
 LearningCoursesAiAuthoringMessageDtoSchema = z.object({
   id: z.string().uuid().optional(),
   content: z.string().nullable().optional(),
@@ -29332,7 +30310,7 @@ LearningCoursesAiAuthoringMessageDtoSchema = z.object({
   runId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesAiAuthoringRunDto */
+/** Zod schema for LearningCoursesAiAuthoringRunDto. Data model for Learning Courses Ai Authoring Run Dto. */
 LearningCoursesAiAuthoringRunDtoSchema = z.object({
   id: z.string().uuid().optional(),
   baseDraftRevision: z.number().int().optional(),
@@ -29352,7 +30330,7 @@ LearningCoursesAiAuthoringRunDtoSchema = z.object({
   usage: z.lazy(() => LearningCoursesAiCreditUsageDtoSchema).optional(),
 });
 
-/** Zod schema for LearningCoursesAiAuthoringRunInput */
+/** Zod schema for LearningCoursesAiAuthoringRunInput. Data model for Learning Courses Ai Authoring Run Request. */
 LearningCoursesAiAuthoringRunInputSchema = z.object({
   conversationId: z.string().uuid().nullable().optional(),
   draftRevision: z.number().int().optional(),
@@ -29362,10 +30340,10 @@ LearningCoursesAiAuthoringRunInputSchema = z.object({
   selection: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesAiAuthoringRunStatus */
+/** Zod schema for LearningCoursesAiAuthoringRunStatus. OpenAPI schema for Learning Courses Ai Authoring Run Status. */
 LearningCoursesAiAuthoringRunStatusSchema = z.enum(['Queued', 'Reserved', 'Running', 'Completed', 'Failed', 'Cancelled']);
 
-/** Zod schema for LearningCoursesAiCreditUsageDto */
+/** Zod schema for LearningCoursesAiCreditUsageDto. Data model for Learning Courses Ai Credit Usage Dto. */
 LearningCoursesAiCreditUsageDtoSchema = z.object({
   availableSoftCredits: z.number().int().optional(),
   currency: z.string().nullable().optional(),
@@ -29376,7 +30354,7 @@ LearningCoursesAiCreditUsageDtoSchema = z.object({
   settledCost: z.number().int().optional(),
 });
 
-/** Zod schema for LearningCoursesAiEntitlementDto */
+/** Zod schema for LearningCoursesAiEntitlementDto. Data model for Learning Courses Ai Entitlement Dto. */
 LearningCoursesAiEntitlementDtoSchema = z.object({
   availableSoftCredits: z.number().int().optional(),
   currency: z.string().nullable().optional(),
@@ -29384,7 +30362,7 @@ LearningCoursesAiEntitlementDtoSchema = z.object({
   settledSoftCredits: z.number().int().optional(),
 });
 
-/** Zod schema for LearningCoursesAiProposalDto */
+/** Zod schema for LearningCoursesAiProposalDto. Data model for Learning Courses Ai Proposal Dto. */
 LearningCoursesAiProposalDtoSchema = z.object({
   id: z.string().uuid().optional(),
   baseDraftRevision: z.number().int().optional(),
@@ -29396,19 +30374,19 @@ LearningCoursesAiProposalDtoSchema = z.object({
   status: z.lazy(() => LearningCoursesAiProposalStatusSchema).optional(),
 });
 
-/** Zod schema for LearningCoursesAiProposalKind */
+/** Zod schema for LearningCoursesAiProposalKind. OpenAPI schema for Learning Courses Ai Proposal Kind. */
 LearningCoursesAiProposalKindSchema = z.enum(['ReplaceDocument', 'InsertAtCursor', 'LexicalPatch', 'QuizPatch', 'MetadataPatch']);
 
-/** Zod schema for LearningCoursesAiProposalStatus */
+/** Zod schema for LearningCoursesAiProposalStatus. OpenAPI schema for Learning Courses Ai Proposal Status. */
 LearningCoursesAiProposalStatusSchema = z.enum(['Pending', 'Applied', 'Discarded']);
 
-/** Zod schema for LearningCoursesApplyAiProposalInput */
+/** Zod schema for LearningCoursesApplyAiProposalInput. Data model for Learning Courses Apply Ai Proposal Request. */
 LearningCoursesApplyAiProposalInputSchema = z.object({
   cursorOffset: z.number().int().nullable().optional(),
   draftRevision: z.number().int().optional(),
 });
 
-/** Zod schema for LearningCoursesAuthoringContentPayload */
+/** Zod schema for LearningCoursesAuthoringContentPayload. Data model for Learning Courses Authoring Content Payload. */
 LearningCoursesAuthoringContentPayloadSchema = z.object({
   activitySettings: z.lazy(() => LearningCoursesActivitySettingsSchema).optional(),
   body: z.string().nullable().optional(),
@@ -29424,7 +30402,7 @@ LearningCoursesAuthoringContentPayloadSchema = z.object({
   visibility: z.lazy(() => LearningCoursesVisibilitySchema).optional(),
 });
 
-/** Zod schema for LearningCoursesAuthoringDraftDto */
+/** Zod schema for LearningCoursesAuthoringDraftDto. Data model for Learning Courses Authoring Draft Dto. */
 LearningCoursesAuthoringDraftDtoSchema = z.object({
   id: z.string().uuid().optional(),
   basePublishedVersion: z.number().int().optional(),
@@ -29445,12 +30423,12 @@ LearningCoursesBundleFileMetaSchema = z.object({
   visibility: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesCircularDependencyCheckResult */
+/** Zod schema for LearningCoursesCircularDependencyCheckResult. Data model for Learning Courses Circular Dependency Check Result. */
 LearningCoursesCircularDependencyCheckResultSchema = z.object({
   wouldCreateCycle: z.boolean().optional(),
 });
 
-/** Zod schema for LearningCoursesCloneProgramDto */
+/** Zod schema for LearningCoursesCloneProgramDto. Data model for Learning Courses Clone Program Dto. */
 LearningCoursesCloneProgramDtoSchema = z.object({
   newDescription: z.string().nullable().optional(),
   newTitle: z.string().nullable().optional(),
@@ -29475,20 +30453,20 @@ LearningCoursesCodingEnvironmentSchema = z.object({
   tools: z.string().nullable(),
 });
 
-/** Zod schema for LearningCoursesCompleteContentInput */
+/** Zod schema for LearningCoursesCompleteContentInput. Data model for Learning Courses Complete Content Request. */
 LearningCoursesCompleteContentInputSchema = z.object({
   contentId: z.string().uuid().optional(),
   programUserId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningCoursesCompleteCourseCheckoutInput */
+/** Zod schema for LearningCoursesCompleteCourseCheckoutInput. Data model for Learning Courses Complete Course Checkout Request. */
 LearningCoursesCompleteCourseCheckoutInputSchema = z.object({
   paymentMethod: z.string().nullable().optional(),
   paymentProviderReference: z.string().nullable().optional(),
   productId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningCoursesCompleteCourseCheckoutOutput */
+/** Zod schema for LearningCoursesCompleteCourseCheckoutOutput. Data model for Learning Courses Complete Course Checkout Response. */
 LearningCoursesCompleteCourseCheckoutOutputSchema = z.object({
   alreadyHadAccess: z.boolean().optional(),
   amount: z.number().optional(),
@@ -29501,7 +30479,7 @@ LearningCoursesCompleteCourseCheckoutOutputSchema = z.object({
   productId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningCoursesCompletionRatesDto */
+/** Zod schema for LearningCoursesCompletionRatesDto. Data model for Learning Courses Completion Rates Dto. */
 LearningCoursesCompletionRatesDtoSchema = z.object({
   completionTrends: z
     .array(z.lazy(() => LearningCoursesCompletionTrendDtoSchema))
@@ -29512,7 +30490,7 @@ LearningCoursesCompletionRatesDtoSchema = z.object({
   programId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningCoursesCompletionTrendDto */
+/** Zod schema for LearningCoursesCompletionTrendDto. Data model for Learning Courses Completion Trend Dto. */
 LearningCoursesCompletionTrendDtoSchema = z.object({
   completedCount: z.number().int().optional(),
   date: z.string().datetime().optional(),
@@ -29545,7 +30523,7 @@ LearningCoursesContentInteractionDtoSchema = z.object({
   updatedAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for LearningCoursesContentInteractionEventDto */
+/** Zod schema for LearningCoursesContentInteractionEventDto. Data model for Learning Courses Content Interaction Event Dto. */
 LearningCoursesContentInteractionEventDtoSchema = z.object({
   id: z.string().uuid().optional(),
   durationSeconds: z.number().int().nullable().optional(),
@@ -29586,7 +30564,7 @@ LearningCoursesContentInteractionSummaryDtoSchema = z.object({
   submittedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesContentProgressDto */
+/** Zod schema for LearningCoursesContentProgressDto. Data model for Learning Courses Content Progress Dto. */
 LearningCoursesContentProgressDtoSchema = z.object({
   completedAt: z.string().datetime().nullable().optional(),
   completionPercentage: z.lazy(() => LearningGradingContractsPercentValueSchema).optional(),
@@ -29640,7 +30618,7 @@ LearningCoursesContentSummaryDtoSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesCourseSupportTicketMessageInput */
+/** Zod schema for LearningCoursesCourseSupportTicketMessageInput. Data model for Learning Courses Course Support Ticket Message Request. */
 LearningCoursesCourseSupportTicketMessageInputSchema = z.object({
   isInternal: z.boolean().optional(),
   message: z.string().nullable().optional(),
@@ -29656,7 +30634,7 @@ LearningCoursesCreateActivityGradeDtoSchema = z.object({
   points: z.lazy(() => LearningGradingContractsScoreValueSchema).optional(),
 });
 
-/** Zod schema for LearningCoursesCreateCourseSupportTicketInput */
+/** Zod schema for LearningCoursesCreateCourseSupportTicketInput. Data model for Learning Courses Create Course Support Ticket Request. */
 LearningCoursesCreateCourseSupportTicketInputSchema = z.object({
   body: z.string().nullable().optional(),
   category: z.string().nullable().optional(),
@@ -29664,7 +30642,7 @@ LearningCoursesCreateCourseSupportTicketInputSchema = z.object({
   subject: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesCreatePrerequisiteApiInput */
+/** Zod schema for LearningCoursesCreatePrerequisiteApiInput. Data model for Learning Courses Create Prerequisite Api Request. */
 LearningCoursesCreatePrerequisiteApiInputSchema = z.object({
   courseId: z.string().uuid().optional(),
   description: z.string().nullable().optional(),
@@ -29678,7 +30656,7 @@ LearningCoursesCreatePrerequisiteApiInputSchema = z.object({
   type: z.lazy(() => LearningCoursesPrerequisiteTypeSchema).optional(),
 });
 
-/** Zod schema for LearningCoursesCreateProductFromProgramDto */
+/** Zod schema for LearningCoursesCreateProductFromProgramDto. Data model for Learning Courses Create Product From Program Dto. */
 LearningCoursesCreateProductFromProgramDtoSchema = z.object({
   basePrice: z.number().optional(),
   currency: z.string().nullable().optional(),
@@ -29705,7 +30683,7 @@ LearningCoursesCreateProgramContentDtoSchema = z.object({
   visibility: z.lazy(() => LearningCoursesVisibilitySchema).optional(),
 });
 
-/** Zod schema for LearningCoursesCreateProgramDto */
+/** Zod schema for LearningCoursesCreateProgramDto. Data model for Learning Courses Create Program Dto. */
 LearningCoursesCreateProgramDtoSchema = z.object({
   creatorId: z.string().uuid().nullable().optional(),
   description: z.string().nullable().optional(),
@@ -29715,7 +30693,16 @@ LearningCoursesCreateProgramDtoSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesEngagementMetricsDto */
+/** Zod schema for LearningCoursesDiscussionActivitySettings. Data model for Learning Courses Discussion Activity Settings. */
+LearningCoursesDiscussionActivitySettingsSchema = z.object({
+  allowReplies: z.boolean().optional(),
+  kind: z.enum(['discussion']),
+  maximumBodyLength: z.number().int().optional(),
+  minimumBodyLength: z.number().int().optional(),
+  requireThreadRoot: z.boolean().optional(),
+});
+
+/** Zod schema for LearningCoursesEngagementMetricsDto. Data model for Learning Courses Engagement Metrics Dto. */
 LearningCoursesEngagementMetricsDtoSchema = z.object({
   averageSessionDuration: z.string().optional(),
   contentEngagement: z.record(z.string(), z.number().int()).nullable().optional(),
@@ -29730,7 +30717,7 @@ LearningCoursesEngagementMetricsDtoSchema = z.object({
 /** Zod schema for LearningCoursesEnrollmentStatus. Represents the enrollment status for a program enrollment */
 LearningCoursesEnrollmentStatusSchema = z.enum(['Open', 'Active', 'Paused', 'Cancelled', 'Expired', 'Completed', 'Closed', 'InviteOnly', 'Waitlist']);
 
-/** Zod schema for LearningCoursesEnrollProgramUserInput */
+/** Zod schema for LearningCoursesEnrollProgramUserInput. Data model for Learning Courses Enroll Program User Request. */
 LearningCoursesEnrollProgramUserInputSchema = z.object({
   userReference: z.string().nullable().optional(),
 });
@@ -29768,7 +30755,7 @@ LearningCoursesGradingConfigSchema = z.object({
 /** Zod schema for LearningCoursesLessonContentFormat. Defines how a lesson body is authored and rendered. Values are persisted and must remain stable. */
 LearningCoursesLessonContentFormatSchema = z.enum(['Markdown', 'Lexical', 'RevealJs', 'Video', 'Html', 'ExternalLink']);
 
-/** Zod schema for LearningCoursesMonetizationDto */
+/** Zod schema for LearningCoursesMonetizationDto. Data model for Learning Courses Monetization Dto. */
 LearningCoursesMonetizationDtoSchema = z.object({
   currency: z.string().nullable().optional(),
   isSubscription: z.boolean().optional(),
@@ -29783,7 +30770,7 @@ LearningCoursesMoveContentDtoSchema = z.object({
   newSortOrder: z.number().int(),
 });
 
-/** Zod schema for LearningCoursesPrerequisiteCheckResultDto */
+/** Zod schema for LearningCoursesPrerequisiteCheckResultDto. Data model for Learning Courses Prerequisite Check Result Dto. */
 LearningCoursesPrerequisiteCheckResultDtoSchema = z.object({
   isSatisfied: z.boolean().optional(),
   prerequisites: z
@@ -29792,7 +30779,7 @@ LearningCoursesPrerequisiteCheckResultDtoSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for LearningCoursesPrerequisiteDto */
+/** Zod schema for LearningCoursesPrerequisiteDto. Data model for Learning Courses Prerequisite Dto. */
 LearningCoursesPrerequisiteDtoSchema = z.object({
   id: z.string().uuid().optional(),
   courseId: z.string().uuid().optional(),
@@ -29810,7 +30797,7 @@ LearningCoursesPrerequisiteDtoSchema = z.object({
   type: z.lazy(() => LearningCoursesPrerequisiteTypeSchema).optional(),
 });
 
-/** Zod schema for LearningCoursesPrerequisiteStatusDto */
+/** Zod schema for LearningCoursesPrerequisiteStatusDto. Data model for Learning Courses Prerequisite Status Dto. */
 LearningCoursesPrerequisiteStatusDtoSchema = z.object({
   achievedGrade: z
     .lazy(() => LearningGradingContractsPercentValueSchema)
@@ -29831,7 +30818,7 @@ LearningCoursesPrerequisiteStatusDtoSchema = z.object({
 /** Zod schema for LearningCoursesPrerequisiteType. Type of prerequisite requirement */
 LearningCoursesPrerequisiteTypeSchema = z.enum(['Required', 'Recommended', 'Corequisite']);
 
-/** Zod schema for LearningCoursesPricingDto */
+/** Zod schema for LearningCoursesPricingDto. Data model for Learning Courses Pricing Dto. */
 LearningCoursesPricingDtoSchema = z.object({
   currency: z.string().nullable().optional(),
   isMonetizationEnabled: z.boolean().optional(),
@@ -29840,7 +30827,7 @@ LearningCoursesPricingDtoSchema = z.object({
   subscriptionDurationDays: z.number().int().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesProgramAnalyticsDto */
+/** Zod schema for LearningCoursesProgramAnalyticsDto. Data model for Learning Courses Program Analytics Dto. */
 LearningCoursesProgramAnalyticsDtoSchema = z.object({
   activeUsers: z.number().int().optional(),
   additionalMetrics: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
@@ -29930,18 +30917,18 @@ LearningCoursesProgramUserSummaryDtoSchema = z.object({
 /** Zod schema for LearningCoursesProgressStatus. Represents the progress status of a content item */
 LearningCoursesProgressStatusSchema = z.enum(['NotStarted', 'InProgress', 'Completed', 'Submitted']);
 
-/** Zod schema for LearningCoursesPublishAuthoringDraftInput */
+/** Zod schema for LearningCoursesPublishAuthoringDraftInput. Data model for Learning Courses Publish Authoring Draft Request. */
 LearningCoursesPublishAuthoringDraftInputSchema = z.object({
   revision: z.number().int().optional(),
 });
 
-/** Zod schema for LearningCoursesPublishAuthoringResult */
+/** Zod schema for LearningCoursesPublishAuthoringResult. Data model for Learning Courses Publish Authoring Result. */
 LearningCoursesPublishAuthoringResultSchema = z.object({
   draft: z.lazy(() => LearningCoursesAuthoringDraftDtoSchema).optional(),
   publishedContent: z.lazy(() => LearningCoursesProgramContentDtoSchema).optional(),
 });
 
-/** Zod schema for LearningCoursesRecordContentInteractionEventInput */
+/** Zod schema for LearningCoursesRecordContentInteractionEventInput. Data model for Learning Courses Record Content Interaction Event Request. */
 LearningCoursesRecordContentInteractionEventInputSchema = z.object({
   durationSeconds: z.number().int().nullable().optional(),
   idempotencyKey: z.string().nullable().optional(),
@@ -29955,6 +30942,14 @@ LearningCoursesRecordContentInteractionEventInputSchema = z.object({
   type: z.lazy(() => LearningCoursesContentInteractionEventTypeSchema).optional(),
 });
 
+/** Zod schema for LearningCoursesReflectionActivitySettings. Data model for Learning Courses Reflection Activity Settings. */
+LearningCoursesReflectionActivitySettingsSchema = z.object({
+  kind: z.enum(['reflection']),
+  maximumBodyLength: z.number().int().optional(),
+  minimumBodyLength: z.number().int().optional(),
+  privateToInstructors: z.boolean().optional(),
+});
+
 /** Zod schema for LearningCoursesReflectionResponseResultDto. Reflection response projection. Learner views deliberately omit respondent identity. */
 LearningCoursesReflectionResponseResultDtoSchema = z.object({
   body: z.string().nullable().optional(),
@@ -29963,27 +30958,27 @@ LearningCoursesReflectionResponseResultDtoSchema = z.object({
   submittedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesRejectProgramDto */
+/** Zod schema for LearningCoursesRejectProgramDto. Data model for Learning Courses Reject Program Dto. */
 LearningCoursesRejectProgramDtoSchema = z.object({
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesReorderContentDto */
+/** Zod schema for LearningCoursesReorderContentDto. Data model for Learning Courses Reorder Content Dto. */
 LearningCoursesReorderContentDtoSchema = z.object({
   contentIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesReorderPrerequisitesInput */
+/** Zod schema for LearningCoursesReorderPrerequisitesInput. Data model for Learning Courses Reorder Prerequisites Request. */
 LearningCoursesReorderPrerequisitesInputSchema = z.object({
   prerequisiteIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesResolveCourseSupportTicketInput */
+/** Zod schema for LearningCoursesResolveCourseSupportTicketInput. Data model for Learning Courses Resolve Course Support Ticket Request. */
 LearningCoursesResolveCourseSupportTicketInputSchema = z.object({
   summary: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesRevenueAnalyticsDto */
+/** Zod schema for LearningCoursesRevenueAnalyticsDto. Data model for Learning Courses Revenue Analytics Dto. */
 LearningCoursesRevenueAnalyticsDtoSchema = z.object({
   averageRevenuePerUser: z.number().optional(),
   conversionRate: z.number().optional(),
@@ -29998,20 +30993,20 @@ LearningCoursesRevenueAnalyticsDtoSchema = z.object({
   totalRevenue: z.number().optional(),
 });
 
-/** Zod schema for LearningCoursesRevenueChartDto */
+/** Zod schema for LearningCoursesRevenueChartDto. Data model for Learning Courses Revenue Chart Dto. */
 LearningCoursesRevenueChartDtoSchema = z.object({
   date: z.string().datetime().optional(),
   purchases: z.number().int().optional(),
   revenue: z.number().optional(),
 });
 
-/** Zod schema for LearningCoursesSaveAuthoringDraftInput */
+/** Zod schema for LearningCoursesSaveAuthoringDraftInput. Data model for Learning Courses Save Authoring Draft Request. */
 LearningCoursesSaveAuthoringDraftInputSchema = z.object({
   payload: z.lazy(() => LearningCoursesAuthoringContentPayloadSchema).optional(),
   revision: z.number().int().optional(),
 });
 
-/** Zod schema for LearningCoursesScheduleProgramDto */
+/** Zod schema for LearningCoursesScheduleProgramDto. Data model for Learning Courses Schedule Program Dto. */
 LearningCoursesScheduleProgramDtoSchema = z.object({
   publishAt: z.string().datetime().optional(),
 });
@@ -30026,14 +31021,14 @@ LearningCoursesSearchContentDtoSchema = z.object({
   visibility: z.lazy(() => LearningCoursesVisibilitySchema).optional(),
 });
 
-/** Zod schema for LearningCoursesSendCourseStudentMessageInput */
+/** Zod schema for LearningCoursesSendCourseStudentMessageInput. Data model for Learning Courses Send Course Student Message Request. */
 LearningCoursesSendCourseStudentMessageInputSchema = z.object({
   message: z.string().nullable().optional(),
   subject: z.string().nullable().optional(),
   userIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesSendCourseStudentMessageOutput */
+/** Zod schema for LearningCoursesSendCourseStudentMessageOutput. Data model for Learning Courses Send Course Student Message Response. */
 LearningCoursesSendCourseStudentMessageOutputSchema = z.object({
   sent: z.number().int().optional(),
 });
@@ -30051,16 +31046,24 @@ LearningCoursesStudentSummaryDtoSchema = z.object({
   userEmail: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesSubmitContentInput */
+/** Zod schema for LearningCoursesSubmitContentInput. Data model for Learning Courses Submit Content Request. */
 LearningCoursesSubmitContentInputSchema = z.object({
   contentId: z.string().uuid().optional(),
   programUserId: z.string().uuid().optional(),
   submissionData: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesSubmitUserContentDto */
+/** Zod schema for LearningCoursesSubmitUserContentDto. Data model for Learning Courses Submit User Content Dto. */
 LearningCoursesSubmitUserContentDtoSchema = z.object({
   submissionData: z.string().min(1),
+});
+
+/** Zod schema for LearningCoursesSurveyActivitySettings. Data model for Learning Courses Survey Activity Settings. */
+LearningCoursesSurveyActivitySettingsSchema = z.object({
+  allowMultipleResponses: z.boolean().optional(),
+  isAnonymous: z.boolean().optional(),
+  kind: z.enum(['survey']),
+  resultsVisibility: z.lazy(() => LearningCoursesSurveyResultsVisibilitySchema).optional(),
 });
 
 /** Zod schema for LearningCoursesSurveyResponseResultDto. Survey result projection. It deliberately excludes learner and enrollment identifiers. */
@@ -30070,6 +31073,9 @@ LearningCoursesSurveyResponseResultDtoSchema = z.object({
   responseId: z.string().uuid().optional(),
   submittedAt: z.string().datetime().nullable().optional(),
 });
+
+/** Zod schema for LearningCoursesSurveyResultsVisibility. OpenAPI schema for Learning Courses Survey Results Visibility. */
+LearningCoursesSurveyResultsVisibilitySchema = z.enum(['AfterSubmission', 'AfterClose', 'Never']);
 
 /** Zod schema for LearningCoursesTest. Polymorphic base record for coding-assignment tests. Discriminator is the lowercase `kind` field
 (values `"standard"`, `"functional"`). */
@@ -30105,7 +31111,7 @@ LearningCoursesUpdateActivityGradeDtoSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for LearningCoursesUpdatePrerequisiteApiInput */
+/** Zod schema for LearningCoursesUpdatePrerequisiteApiInput. Data model for Learning Courses Update Prerequisite Api Request. */
 LearningCoursesUpdatePrerequisiteApiInputSchema = z.object({
   description: z.string().nullable().optional(),
   displayOrder: z.number().int().nullable().optional(),
@@ -30117,7 +31123,7 @@ LearningCoursesUpdatePrerequisiteApiInputSchema = z.object({
   type: z.lazy(() => LearningCoursesPrerequisiteTypeSchema).optional(),
 });
 
-/** Zod schema for LearningCoursesUpdatePricingDto */
+/** Zod schema for LearningCoursesUpdatePricingDto. Data model for Learning Courses Update Pricing Dto. */
 LearningCoursesUpdatePricingDtoSchema = z.object({
   currency: z.string().nullable().optional(),
   isSubscription: z.boolean().nullable().optional(),
@@ -30143,7 +31149,7 @@ LearningCoursesUpdateProgramContentDtoSchema = z.object({
   visibility: z.lazy(() => LearningCoursesVisibilitySchema).optional(),
 });
 
-/** Zod schema for LearningCoursesUpdateProgramDto */
+/** Zod schema for LearningCoursesUpdateProgramDto. Data model for Learning Courses Update Program Dto. */
 LearningCoursesUpdateProgramDtoSchema = z.object({
   category: z.lazy(() => ProgramCategorySchema).optional(),
   clearEnrollmentDeadline: z.boolean().optional(),
@@ -30169,28 +31175,28 @@ LearningCoursesUpdateProgramDtoSchema = z.object({
   visibility: z.lazy(() => ContentVisibilitySchema).optional(),
 });
 
-/** Zod schema for LearningCoursesUpdateProgressDto */
+/** Zod schema for LearningCoursesUpdateProgressDto. Data model for Learning Courses Update Progress Dto. */
 LearningCoursesUpdateProgressDtoSchema = z.object({
   additionalData: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   lastAccessedAt: z.string().datetime().nullable().optional(),
   status: z.lazy(() => LearningCoursesProgressStatusSchema).optional(),
 });
 
-/** Zod schema for LearningCoursesUpdateProgressInput */
+/** Zod schema for LearningCoursesUpdateProgressInput. Data model for Learning Courses Update Progress Request. */
 LearningCoursesUpdateProgressInputSchema = z.object({
   completionPercentage: z.lazy(() => LearningGradingContractsPercentValueSchema).optional(),
   contentId: z.string().uuid().optional(),
   programUserId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningCoursesUpdateTimeSpentInput */
+/** Zod schema for LearningCoursesUpdateTimeSpentInput. Data model for Learning Courses Update Time Spent Request. */
 LearningCoursesUpdateTimeSpentInputSchema = z.object({
   additionalMinutes: z.number().int().optional(),
   contentId: z.string().uuid().optional(),
   programUserId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningCoursesUserProgressDto */
+/** Zod schema for LearningCoursesUserProgressDto. Data model for Learning Courses User Progress Dto. */
 LearningCoursesUserProgressDtoSchema = z.object({
   completedAt: z.string().datetime().nullable().optional(),
   completionPercentage: z.lazy(() => LearningGradingContractsPercentValueSchema).optional(),
@@ -30221,7 +31227,7 @@ LearningCoursesWorkspaceDataSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for LearningEnrollmentsEnrollmentDto */
+/** Zod schema for LearningEnrollmentsEnrollmentDto. Data model for Learning Enrollments Enrollment Dto. */
 LearningEnrollmentsEnrollmentDtoSchema = z.object({
   id: z.string().uuid().optional(),
   cohortId: z.string().uuid().nullable().optional(),
@@ -30235,22 +31241,22 @@ LearningEnrollmentsEnrollmentDtoSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningEnrollmentsEnrollmentStatus */
+/** Zod schema for LearningEnrollmentsEnrollmentStatus. OpenAPI schema for Learning Enrollments Enrollment Status. */
 LearningEnrollmentsEnrollmentStatusSchema = z.enum(['Active', 'Paused', 'Completed', 'Dropped', 'Expired']);
 
-/** Zod schema for LearningEnrollmentsEnrollUserInput */
+/** Zod schema for LearningEnrollmentsEnrollUserInput. Data model for Learning Enrollments Enroll User Request. */
 LearningEnrollmentsEnrollUserInputSchema = z.object({
   cohortId: z.string().uuid().nullable().optional(),
   courseId: z.string().uuid().optional(),
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningEnrollmentsUpdateEnrollmentProgressInput */
+/** Zod schema for LearningEnrollmentsUpdateEnrollmentProgressInput. Data model for Learning Enrollments Update Enrollment Progress Request. */
 LearningEnrollmentsUpdateEnrollmentProgressInputSchema = z.object({
   progress: z.number().int().optional(),
 });
 
-/** Zod schema for LearningExperienceDiscoveryCollectionType */
+/** Zod schema for LearningExperienceDiscoveryCollectionType. OpenAPI schema for Learning Experience Discovery Collection Type. */
 LearningExperienceDiscoveryCollectionTypeSchema = z.enum(['Curated', 'Category', 'Skill', 'Career', 'Trending', 'NewReleases']);
 
 /** Zod schema for LearningExperienceDiscoveryCourseCollectionDto. DTO for course collection response */
@@ -30313,7 +31319,7 @@ LearningExperienceDiscoveryFeaturedContentDtoSchema = z.object({
   updatedAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for LearningExperienceDiscoveryFeaturedContentType */
+/** Zod schema for LearningExperienceDiscoveryFeaturedContentType. OpenAPI schema for Learning Experience Discovery Featured Content Type. */
 LearningExperienceDiscoveryFeaturedContentTypeSchema = z.enum([
   'HeroBanner',
   'CategoryHighlight',
@@ -30429,7 +31435,7 @@ LearningExperienceLearningPathsLearningPathDetailDtoSchema = z.object({
   updatedAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for LearningExperienceLearningPathsLearningPathDifficulty */
+/** Zod schema for LearningExperienceLearningPathsLearningPathDifficulty. OpenAPI schema for Learning Experience Learning Paths Learning Path Difficulty. */
 LearningExperienceLearningPathsLearningPathDifficultySchema = z.enum(['Beginner', 'Intermediate', 'Advanced', 'Expert']);
 
 /** Zod schema for LearningExperienceLearningPathsLearningPathDto. DTO for learning path summary */
@@ -30467,7 +31473,7 @@ LearningExperienceLearningPathsLearningPathEnrollmentDtoSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningExperienceLearningPathsLearningPathEnrollmentStatus */
+/** Zod schema for LearningExperienceLearningPathsLearningPathEnrollmentStatus. OpenAPI schema for Learning Experience Learning Paths Learning Path Enrollment Status. */
 LearningExperienceLearningPathsLearningPathEnrollmentStatusSchema = z.enum(['InProgress', 'Completed', 'Abandoned']);
 
 /** Zod schema for LearningExperienceLearningPathsLearningPathStatisticsDto. DTO for learning path statistics */
@@ -30565,7 +31571,7 @@ LearningExperienceRecommendationsRecommendationStatisticsDtoSchema = z.object({
   viewedCount: z.number().int().optional(),
 });
 
-/** Zod schema for LearningExperienceRecommendationsRecommendationType */
+/** Zod schema for LearningExperienceRecommendationsRecommendationType. OpenAPI schema for Learning Experience Recommendations Recommendation Type. */
 LearningExperienceRecommendationsRecommendationTypeSchema = z.enum([
   'PersonalizedAI',
   'PopularInCategory',
@@ -30615,7 +31621,7 @@ LearningExperienceRecommendationsUserLearningProfileDtoSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningExperienceSocialControllersUpdateReviewModerationInput */
+/** Zod schema for LearningExperienceSocialControllersUpdateReviewModerationInput. Data model for Learning Experience Social Controllers Update Review Moderation Request. */
 LearningExperienceSocialControllersUpdateReviewModerationInputSchema = z.object({
   isApproved: z.boolean().optional(),
   isFeatured: z.boolean().optional(),
@@ -30781,7 +31787,7 @@ LearningLtiCreateLtiLineItemInputSchema = z.object({
   maxScore: z.lazy(() => LearningGradingContractsScoreValueSchema).optional(),
 });
 
-/** Zod schema for LearningWorkspacesLearnerAnnouncementDto */
+/** Zod schema for LearningWorkspacesLearnerAnnouncementDto. Data model for Learning Workspaces Learner Announcement Dto. */
 LearningWorkspacesLearnerAnnouncementDtoSchema = z.object({
   content: z.string().nullable().optional(),
   courseId: z.string().uuid().optional(),
@@ -30793,7 +31799,7 @@ LearningWorkspacesLearnerAnnouncementDtoSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningWorkspacesLearnerAssessmentDeadlineDto */
+/** Zod schema for LearningWorkspacesLearnerAssessmentDeadlineDto. Data model for Learning Workspaces Learner Assessment Deadline Dto. */
 LearningWorkspacesLearnerAssessmentDeadlineDtoSchema = z.object({
   assessmentId: z.string().uuid().optional(),
   availableFrom: z.string().datetime().nullable().optional(),
@@ -30810,7 +31816,7 @@ LearningWorkspacesLearnerAssessmentDeadlineDtoSchema = z.object({
   type: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningWorkspacesLearnerAssessmentDto */
+/** Zod schema for LearningWorkspacesLearnerAssessmentDto. Data model for Learning Workspaces Learner Assessment Dto. */
 LearningWorkspacesLearnerAssessmentDtoSchema = z.object({
   allowLateSubmissions: z.boolean().optional(),
   assessmentId: z.string().uuid().optional(),
@@ -30832,7 +31838,7 @@ LearningWorkspacesLearnerAssessmentDtoSchema = z.object({
   type: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningWorkspacesLearnerAssessmentGroupDto */
+/** Zod schema for LearningWorkspacesLearnerAssessmentGroupDto. Data model for Learning Workspaces Learner Assessment Group Dto. */
 LearningWorkspacesLearnerAssessmentGroupDtoSchema = z.object({
   description: z.string().nullable().optional(),
   groupId: z.string().uuid().optional(),
@@ -30841,7 +31847,7 @@ LearningWorkspacesLearnerAssessmentGroupDtoSchema = z.object({
   weightPercent: z.lazy(() => LearningGradingContractsPercentValueSchema).optional(),
 });
 
-/** Zod schema for LearningWorkspacesLearnerAssessmentSubmissionDto */
+/** Zod schema for LearningWorkspacesLearnerAssessmentSubmissionDto. Data model for Learning Workspaces Learner Assessment Submission Dto. */
 LearningWorkspacesLearnerAssessmentSubmissionDtoSchema = z.object({
   assessmentId: z.string().uuid().optional(),
   attemptNumber: z.number().int().optional(),
@@ -30860,7 +31866,7 @@ LearningWorkspacesLearnerAssessmentSubmissionDtoSchema = z.object({
   submittedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for LearningWorkspacesLearnerCertificateDto */
+/** Zod schema for LearningWorkspacesLearnerCertificateDto. Data model for Learning Workspaces Learner Certificate Dto. */
 LearningWorkspacesLearnerCertificateDtoSchema = z.object({
   certificateId: z.string().uuid().optional(),
   certificateNumber: z.string().nullable().optional(),
@@ -30874,7 +31880,7 @@ LearningWorkspacesLearnerCertificateDtoSchema = z.object({
   verificationUrl: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningWorkspacesLearnerCohortDto */
+/** Zod schema for LearningWorkspacesLearnerCohortDto. Data model for Learning Workspaces Learner Cohort Dto. */
 LearningWorkspacesLearnerCohortDtoSchema = z.object({
   cohortId: z.string().uuid().optional(),
   currentEnrollmentCount: z.number().int().optional(),
@@ -30888,7 +31894,7 @@ LearningWorkspacesLearnerCohortDtoSchema = z.object({
   status: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningWorkspacesLearnerContentDto */
+/** Zod schema for LearningWorkspacesLearnerContentDto. Data model for Learning Workspaces Learner Content Dto. */
 LearningWorkspacesLearnerContentDtoSchema = z.object({
   activitySettings: z.string().nullable().optional(),
   body: z.string().nullable().optional(),
@@ -30904,7 +31910,7 @@ LearningWorkspacesLearnerContentDtoSchema = z.object({
   visibility: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningWorkspacesLearnerContentProgressDto */
+/** Zod schema for LearningWorkspacesLearnerContentProgressDto. Data model for Learning Workspaces Learner Content Progress Dto. */
 LearningWorkspacesLearnerContentProgressDtoSchema = z.object({
   attempts: z.number().int().optional(),
   completedAt: z.string().datetime().nullable().optional(),
@@ -30924,7 +31930,7 @@ LearningWorkspacesLearnerContentProgressDtoSchema = z.object({
   timeSpentSeconds: z.number().int().optional(),
 });
 
-/** Zod schema for LearningWorkspacesLearnerCourseSummaryDto */
+/** Zod schema for LearningWorkspacesLearnerCourseSummaryDto. Data model for Learning Workspaces Learner Course Summary Dto. */
 LearningWorkspacesLearnerCourseSummaryDtoSchema = z.object({
   category: z.string().nullable().optional(),
   completedItems: z.number().int().optional(),
@@ -30951,7 +31957,7 @@ LearningWorkspacesLearnerCourseSummaryDtoSchema = z.object({
   totalItems: z.number().int().optional(),
 });
 
-/** Zod schema for LearningWorkspacesLearnerCourseWorkspaceDto */
+/** Zod schema for LearningWorkspacesLearnerCourseWorkspaceDto. Data model for Learning Workspaces Learner Course Workspace Dto. */
 LearningWorkspacesLearnerCourseWorkspaceDtoSchema = z.object({
   assessmentGroups: z
     .array(z.lazy(() => LearningWorkspacesLearnerAssessmentGroupDtoSchema))
@@ -30989,7 +31995,7 @@ LearningWorkspacesLearnerCourseWorkspaceDtoSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for LearningWorkspacesLearnerDashboardDto */
+/** Zod schema for LearningWorkspacesLearnerDashboardDto. Data model for Learning Workspaces Learner Dashboard Dto. */
 LearningWorkspacesLearnerDashboardDtoSchema = z.object({
   announcements: z
     .array(z.lazy(() => LearningWorkspacesLearnerAnnouncementDtoSchema))
@@ -31017,7 +32023,7 @@ LearningWorkspacesLearnerDashboardDtoSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for LearningWorkspacesLearnerDiscussionDto */
+/** Zod schema for LearningWorkspacesLearnerDiscussionDto. Data model for Learning Workspaces Learner Discussion Dto. */
 LearningWorkspacesLearnerDiscussionDtoSchema = z.object({
   authorId: z.string().uuid().optional(),
   content: z.string().nullable().optional(),
@@ -31032,7 +32038,7 @@ LearningWorkspacesLearnerDiscussionDtoSchema = z.object({
   viewCount: z.number().int().optional(),
 });
 
-/** Zod schema for LearningWorkspacesLearnerGradeItemDto */
+/** Zod schema for LearningWorkspacesLearnerGradeItemDto. Data model for Learning Workspaces Learner Grade Item Dto. */
 LearningWorkspacesLearnerGradeItemDtoSchema = z.object({
   assessmentId: z.string().uuid().optional(),
   availableFrom: z.string().datetime().nullable().optional(),
@@ -31053,7 +32059,7 @@ LearningWorkspacesLearnerGradeItemDtoSchema = z.object({
   type: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningWorkspacesLearnerGradeSummaryDto */
+/** Zod schema for LearningWorkspacesLearnerGradeSummaryDto. Data model for Learning Workspaces Learner Grade Summary Dto. */
 LearningWorkspacesLearnerGradeSummaryDtoSchema = z.object({
   courseId: z.string().uuid().optional(),
   courseSlug: z.string().nullable().optional(),
@@ -31086,7 +32092,7 @@ LearningWorkspacesLearnerGradeSummaryDtoSchema = z.object({
   totalAssessments: z.number().int().optional(),
 });
 
-/** Zod schema for LearningWorkspacesLearnerScheduleEntryDto */
+/** Zod schema for LearningWorkspacesLearnerScheduleEntryDto. Data model for Learning Workspaces Learner Schedule Entry Dto. */
 LearningWorkspacesLearnerScheduleEntryDtoSchema = z.object({
   assessmentId: z.string().uuid().nullable().optional(),
   availableFrom: z.string().datetime().nullable().optional(),
@@ -31108,7 +32114,7 @@ LearningWorkspacesLearnerScheduleEntryDtoSchema = z.object({
   type: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningWorkspacesLearnerSearchResultDto */
+/** Zod schema for LearningWorkspacesLearnerSearchResultDto. Data model for Learning Workspaces Learner Search Result Dto. */
 LearningWorkspacesLearnerSearchResultDtoSchema = z.object({
   id: z.string().uuid().optional(),
   courseId: z.string().uuid().optional(),
@@ -31125,7 +32131,7 @@ MoneySchema = z.object({
   currency: z.string().nullable().optional(),
 });
 
-/** Zod schema for MonitoringSLACreateSloCommand */
+/** Zod schema for MonitoringSLACreateSloCommand. Data model for Monitoring SLA Create Slo Command. */
 MonitoringSLACreateSloCommandSchema = z.object({
   alertThresholdPercentage: z.number().optional(),
   description: z.string().nullable().optional(),
@@ -31157,7 +32163,7 @@ MonitoringSLAErrorBudgetDtoSchema = z.object({
   windowStart: z.string().datetime().optional(),
 });
 
-/** Zod schema for MonitoringSLARecordSliMetricCommand */
+/** Zod schema for MonitoringSLARecordSliMetricCommand. Data model for Monitoring SLA Record Sli Metric Command. */
 MonitoringSLARecordSliMetricCommandSchema = z.object({
   endpoint: z.string().nullable().optional(),
   errorMessage: z.string().nullable().optional(),
@@ -31242,7 +32248,7 @@ MonitoringSLASloViolationDtoSchema = z.object({
   targetValue: z.number().optional(),
 });
 
-/** Zod schema for MonitoringSLAUpdateSloCommand */
+/** Zod schema for MonitoringSLAUpdateSloCommand. Data model for Monitoring SLA Update Slo Command. */
 MonitoringSLAUpdateSloCommandSchema = z.object({
   id: z.string().uuid().optional(),
   alertThresholdPercentage: z.number().optional(),
@@ -31259,7 +32265,7 @@ MonitoringSLAUpdateSloCommandSchema = z.object({
 /** Zod schema for MonitoringSLAViolationSeverity. Represents the severity level of an SLO violation */
 MonitoringSLAViolationSeveritySchema = z.enum(['Low', 'Medium', 'High', 'Critical']);
 
-/** Zod schema for MvcProblemDetails */
+/** Zod schema for MvcProblemDetails. Data model for Mvc Problem Details. */
 MvcProblemDetailsSchema = z
   .object({
     detail: z.string().nullable().optional(),
@@ -31270,7 +32276,7 @@ MvcProblemDetailsSchema = z
   })
   .catchall(z.record(z.string(), z.unknown()));
 
-/** Zod schema for NotificationsControllersDeadLetterDto */
+/** Zod schema for NotificationsControllersDeadLetterDto. Data model for Notifications Controllers Dead Letter Dto. */
 NotificationsControllersDeadLetterDtoSchema = z.object({
   id: z.string().uuid().optional(),
   attemptCount: z.number().int().optional(),
@@ -31284,17 +32290,17 @@ NotificationsControllersDeadLetterDtoSchema = z.object({
   type: z.string().nullable().optional(),
 });
 
-/** Zod schema for NotificationsControllersDeletedCountOutput */
+/** Zod schema for NotificationsControllersDeletedCountOutput. Data model for Notifications Controllers Deleted Count Response. */
 NotificationsControllersDeletedCountOutputSchema = z.object({
   deletedCount: z.number().int().optional(),
 });
 
-/** Zod schema for NotificationsControllersDigestFrequencyOutput */
+/** Zod schema for NotificationsControllersDigestFrequencyOutput. Data model for Notifications Controllers Digest Frequency Response. */
 NotificationsControllersDigestFrequencyOutputSchema = z.object({
   emailDigestFrequency: z.string().nullable().optional(),
 });
 
-/** Zod schema for NotificationsControllersEmailDeliveryEventDto */
+/** Zod schema for NotificationsControllersEmailDeliveryEventDto. Data model for Notifications Controllers Email Delivery Event Dto. */
 NotificationsControllersEmailDeliveryEventDtoSchema = z.object({
   id: z.string().uuid().optional(),
   bounceType: z.string().nullable().optional(),
@@ -31306,7 +32312,7 @@ NotificationsControllersEmailDeliveryEventDtoSchema = z.object({
   recipientEmail: z.string().nullable().optional(),
 });
 
-/** Zod schema for NotificationsControllersEmailSuppressionDto */
+/** Zod schema for NotificationsControllersEmailSuppressionDto. Data model for Notifications Controllers Email Suppression Dto. */
 NotificationsControllersEmailSuppressionDtoSchema = z.object({
   id: z.string().uuid().optional(),
   bounceType: z.string().nullable().optional(),
@@ -31318,12 +32324,12 @@ NotificationsControllersEmailSuppressionDtoSchema = z.object({
   suppressedAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for NotificationsControllersMutedTypesOutput */
+/** Zod schema for NotificationsControllersMutedTypesOutput. Data model for Notifications Controllers Muted Types Response. */
 NotificationsControllersMutedTypesOutputSchema = z.object({
   mutedTypes: z.array(z.string()).nullable().optional(),
 });
 
-/** Zod schema for NotificationsControllersNotificationDto */
+/** Zod schema for NotificationsControllersNotificationDto. Data model for Notifications Controllers Notification Dto. */
 NotificationsControllersNotificationDtoSchema = z.object({
   id: z.string().uuid().optional(),
   actionUrl: z.string().nullable().optional(),
@@ -31340,7 +32346,7 @@ NotificationsControllersNotificationDtoSchema = z.object({
   type: z.string().nullable().optional(),
 });
 
-/** Zod schema for NotificationsControllersNotificationPreferenceDto */
+/** Zod schema for NotificationsControllersNotificationPreferenceDto. Data model for Notifications Controllers Notification Preference Dto. */
 NotificationsControllersNotificationPreferenceDtoSchema = z.object({
   achievementsEnabled: z.boolean().optional(),
   emailDigestFrequency: z.string().nullable().optional(),
@@ -31357,7 +32363,7 @@ NotificationsControllersNotificationPreferenceDtoSchema = z.object({
   timezone: z.string().nullable().optional(),
 });
 
-/** Zod schema for NotificationsControllersNotificationTimelineDto */
+/** Zod schema for NotificationsControllersNotificationTimelineDto. Data model for Notifications Controllers Notification Timeline Dto. */
 NotificationsControllersNotificationTimelineDtoSchema = z.object({
   events: z
     .array(z.lazy(() => NotificationsControllersEmailDeliveryEventDtoSchema))
@@ -31367,7 +32373,7 @@ NotificationsControllersNotificationTimelineDtoSchema = z.object({
   providerMessageId: z.string().nullable().optional(),
 });
 
-/** Zod schema for NotificationsControllersNotificationTypeCatalogEntry */
+/** Zod schema for NotificationsControllersNotificationTypeCatalogEntry. Data model for Notifications Controllers Notification Type Catalog Entry. */
 NotificationsControllersNotificationTypeCatalogEntrySchema = z.object({
   category: z.string().nullable().optional(),
   displayName: z.string().nullable().optional(),
@@ -31375,26 +32381,26 @@ NotificationsControllersNotificationTypeCatalogEntrySchema = z.object({
   type: z.string().nullable().optional(),
 });
 
-/** Zod schema for NotificationsControllersRequeueOutput */
+/** Zod schema for NotificationsControllersRequeueOutput. Data model for Notifications Controllers Requeue Response. */
 NotificationsControllersRequeueOutputSchema = z.object({
   id: z.string().uuid().optional(),
   deliveryStatus: z.string().nullable().optional(),
   requeueCount: z.number().int().optional(),
 });
 
-/** Zod schema for NotificationsControllersSetQuietHoursInput */
+/** Zod schema for NotificationsControllersSetQuietHoursInput. Data model for Notifications Controllers Set Quiet Hours Request. */
 NotificationsControllersSetQuietHoursInputSchema = z.object({
   end: z.string().nullable().optional(),
   start: z.string().nullable().optional(),
   timezone: z.string().nullable().optional(),
 });
 
-/** Zod schema for NotificationsControllersUnreadCountOutput */
+/** Zod schema for NotificationsControllersUnreadCountOutput. Data model for Notifications Controllers Unread Count Response. */
 NotificationsControllersUnreadCountOutputSchema = z.object({
   count: z.number().int().optional(),
 });
 
-/** Zod schema for NotificationsControllersUnsubscribeOutput */
+/** Zod schema for NotificationsControllersUnsubscribeOutput. Data model for Notifications Controllers Unsubscribe Response. */
 NotificationsControllersUnsubscribeOutputSchema = z.object({
   manageUrl: z.string().nullable().optional(),
   scope: z.string().nullable().optional(),
@@ -31402,23 +32408,23 @@ NotificationsControllersUnsubscribeOutputSchema = z.object({
   value: z.string().nullable().optional(),
 });
 
-/** Zod schema for NotificationsControllersUnsuppressOutput */
+/** Zod schema for NotificationsControllersUnsuppressOutput. Data model for Notifications Controllers Unsuppress Response. */
 NotificationsControllersUnsuppressOutputSchema = z.object({
   emailAddress: z.string().nullable().optional(),
   wasActive: z.boolean().optional(),
 });
 
-/** Zod schema for NotificationsControllersUpdateDigestFrequencyInput */
+/** Zod schema for NotificationsControllersUpdateDigestFrequencyInput. Data model for Notifications Controllers Update Digest Frequency Request. */
 NotificationsControllersUpdateDigestFrequencyInputSchema = z.object({
   frequency: z.string().nullable().optional(),
 });
 
-/** Zod schema for NotificationsControllersUpdateMutedTypesInput */
+/** Zod schema for NotificationsControllersUpdateMutedTypesInput. Data model for Notifications Controllers Update Muted Types Request. */
 NotificationsControllersUpdateMutedTypesInputSchema = z.object({
   types: z.array(z.string()).nullable().optional(),
 });
 
-/** Zod schema for NotificationsControllersUpdatePreferencesInput */
+/** Zod schema for NotificationsControllersUpdatePreferencesInput. Data model for Notifications Controllers Update Preferences Request. */
 NotificationsControllersUpdatePreferencesInputSchema = z.object({
   achievementsEnabled: z.boolean().nullable().optional(),
   emailEnabled: z.boolean().nullable().optional(),
@@ -31433,13 +32439,13 @@ NotificationsControllersUpdatePreferencesInputSchema = z.object({
 /** Zod schema for NotificationsNotificationChannel. Delivery channels for notifications */
 NotificationsNotificationChannelSchema = z.enum(['InApp', 'Email', 'Push', 'Sms', 'Slack', 'Discord', 'Webhook']);
 
-/** Zod schema for ObjectsAttestationConveyancePreference */
+/** Zod schema for ObjectsAttestationConveyancePreference. OpenAPI schema for Objects Attestation Conveyance Preference. */
 ObjectsAttestationConveyancePreferenceSchema = z.enum(['None', 'Indirect', 'Direct', 'Enterprise']);
 
-/** Zod schema for ObjectsAttestationStatementFormatIdentifier */
+/** Zod schema for ObjectsAttestationStatementFormatIdentifier. OpenAPI schema for Objects Attestation Statement Format Identifier. */
 ObjectsAttestationStatementFormatIdentifierSchema = z.enum(['Packed', 'Tpm', 'AndroidKey', 'AndroidSafetyNet', 'FidoU2f', 'Apple', 'None']);
 
-/** Zod schema for ObjectsAuthenticationExtensionsClientInputs */
+/** Zod schema for ObjectsAuthenticationExtensionsClientInputs. Data model for Objects Authentication Extensions Client Inputs. */
 ObjectsAuthenticationExtensionsClientInputsSchema = z.object({
   credentialProtectionPolicy: z.lazy(() => ObjectsCredentialProtectionPolicySchema).optional(),
   credProps: z.boolean().nullable().optional(),
@@ -31451,41 +32457,41 @@ ObjectsAuthenticationExtensionsClientInputsSchema = z.object({
   uvm: z.boolean().nullable().optional(),
 });
 
-/** Zod schema for ObjectsAuthenticationExtensionsLargeBlobInputs */
+/** Zod schema for ObjectsAuthenticationExtensionsLargeBlobInputs. Data model for Objects Authentication Extensions Large Blob Inputs. */
 ObjectsAuthenticationExtensionsLargeBlobInputsSchema = z.object({
   read: z.boolean().optional(),
   support: z.lazy(() => ObjectsLargeBlobSupportSchema).optional(),
   write: z.string().nullable().optional(),
 });
 
-/** Zod schema for ObjectsAuthenticationExtensionsPRFInputs */
+/** Zod schema for ObjectsAuthenticationExtensionsPRFInputs. Data model for Objects Authentication Extensions PRFInputs. */
 ObjectsAuthenticationExtensionsPRFInputsSchema = z.object({
   eval: z.lazy(() => ObjectsAuthenticationExtensionsPRFValuesSchema).optional(),
   evalByCredential: z.lazy(() => KeyValuePairStringAuthenticationExtensionsPRFValuesSchema).optional(),
 });
 
-/** Zod schema for ObjectsAuthenticationExtensionsPRFValues */
+/** Zod schema for ObjectsAuthenticationExtensionsPRFValues. Data model for Objects Authentication Extensions PRFValues. */
 ObjectsAuthenticationExtensionsPRFValuesSchema = z.object({
   first: z.string().nullable(),
   second: z.string().nullable().optional(),
 });
 
-/** Zod schema for ObjectsAuthenticatorAttachment */
+/** Zod schema for ObjectsAuthenticatorAttachment. OpenAPI schema for Objects Authenticator Attachment. */
 ObjectsAuthenticatorAttachmentSchema = z.enum(['Platform', 'CrossPlatform']);
 
-/** Zod schema for ObjectsAuthenticatorTransport */
+/** Zod schema for ObjectsAuthenticatorTransport. OpenAPI schema for Objects Authenticator Transport. */
 ObjectsAuthenticatorTransportSchema = z.enum(['Usb', 'Nfc', 'Ble', 'SmartCard', 'Hybrid', 'Internal']);
 
-/** Zod schema for ObjectsCOSEAlgorithm */
+/** Zod schema for ObjectsCOSEAlgorithm. OpenAPI schema for Objects COSE+Algorithm. */
 ObjectsCOSEAlgorithmSchema = z.enum(['RS1', 'RS512', 'RS384', 'RS256', 'ES256K', 'PS512', 'PS384', 'PS256', 'ES512', 'ES384', 'EdDSA', 'ES256']);
 
-/** Zod schema for ObjectsCredentialProtectionPolicy */
+/** Zod schema for ObjectsCredentialProtectionPolicy. OpenAPI schema for Objects Credential Protection Policy. */
 ObjectsCredentialProtectionPolicySchema = z.enum(['UserVerificationOptional', 'UserVerificationOptionalWithCredentialIdList', 'UserVerificationRequired']);
 
-/** Zod schema for ObjectsLargeBlobSupport */
+/** Zod schema for ObjectsLargeBlobSupport. OpenAPI schema for Objects Large Blob Support. */
 ObjectsLargeBlobSupportSchema = z.enum(['Required', 'Preferred']);
 
-/** Zod schema for ObjectsPublicKeyCredentialDescriptor */
+/** Zod schema for ObjectsPublicKeyCredentialDescriptor. Data model for Objects Public Key Credential Descriptor. */
 ObjectsPublicKeyCredentialDescriptorSchema = z.object({
   id: z.string().nullable().optional(),
   transports: z
@@ -31495,16 +32501,16 @@ ObjectsPublicKeyCredentialDescriptorSchema = z.object({
   type: z.lazy(() => ObjectsPublicKeyCredentialTypeSchema).optional(),
 });
 
-/** Zod schema for ObjectsPublicKeyCredentialHint */
+/** Zod schema for ObjectsPublicKeyCredentialHint. OpenAPI schema for Objects Public Key Credential Hint. */
 ObjectsPublicKeyCredentialHintSchema = z.enum(['SecurityKey', 'ClientDevice', 'Hybrid']);
 
-/** Zod schema for ObjectsPublicKeyCredentialType */
+/** Zod schema for ObjectsPublicKeyCredentialType. OpenAPI schema for Objects Public Key Credential Type. */
 ObjectsPublicKeyCredentialTypeSchema = z.enum(['PublicKey', 'Invalid']);
 
-/** Zod schema for ObjectsResidentKeyRequirement */
+/** Zod schema for ObjectsResidentKeyRequirement. OpenAPI schema for Objects Resident Key Requirement. */
 ObjectsResidentKeyRequirementSchema = z.enum(['Required', 'Preferred', 'Discouraged']);
 
-/** Zod schema for ObjectsUserVerificationRequirement */
+/** Zod schema for ObjectsUserVerificationRequirement. OpenAPI schema for Objects User Verification Requirement. */
 ObjectsUserVerificationRequirementSchema = z.enum(['Required', 'Preferred', 'Discouraged']);
 
 /** Zod schema for PagedResultDeadLetterDto. Represents a paginated result set with full pagination metadata.
@@ -31798,7 +32804,7 @@ ProjectsCreateProjectInputSchema = z.object({
   websiteUrl: z.string().url().nullable().optional(),
 });
 
-/** Zod schema for ProjectsCreateProjectVersionInput */
+/** Zod schema for ProjectsCreateProjectVersionInput. Data model for Projects Create Project Version Request. */
 ProjectsCreateProjectVersionInputSchema = z.object({
   releaseNotes: z.string().max(10000).nullable().optional(),
   status: z.lazy(() => ProjectsProjectVersionStatusSchema).optional(),
@@ -31827,7 +32833,7 @@ ProjectsInvitationResultSchema = z.object({
   success: z.boolean().optional(),
 });
 
-/** Zod schema for ProjectsInviteProjectCollaboratorInput */
+/** Zod schema for ProjectsInviteProjectCollaboratorInput. Data model for Projects Invite Project Collaborator Request. */
 ProjectsInviteProjectCollaboratorInputSchema = z.object({
   email: z.string().nullable().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
@@ -31836,7 +32842,7 @@ ProjectsInviteProjectCollaboratorInputSchema = z.object({
   userId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for ProjectsLinkProjectStoreProductInput */
+/** Zod schema for ProjectsLinkProjectStoreProductInput. Data model for Projects Link Project Store Product Request. */
 ProjectsLinkProjectStoreProductInputSchema = z.object({
   productId: z.string().uuid().optional(),
 });
@@ -32013,7 +33019,7 @@ ProjectsProjectCategorySchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for ProjectsProjectCategoryApiOutput */
+/** Zod schema for ProjectsProjectCategoryApiOutput. Data model for Projects Project Category Api Response. */
 ProjectsProjectCategoryApiOutputSchema = z.object({
   id: z.string().uuid().optional(),
   name: z.string().nullable().optional(),
@@ -32048,7 +33054,7 @@ ProjectsProjectCollaboratorSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for ProjectsProjectCollaboratorApiOutput */
+/** Zod schema for ProjectsProjectCollaboratorApiOutput. Data model for Projects Project Collaborator Api Response. */
 ProjectsProjectCollaboratorApiOutputSchema = z.object({
   id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
@@ -32140,7 +33146,7 @@ ProjectsProjectFollowerSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for ProjectsProjectInvitationDto */
+/** Zod schema for ProjectsProjectInvitationDto. Data model for Projects Project Invitation Dto. */
 ProjectsProjectInvitationDtoSchema = z.object({
   id: z.string().uuid().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
@@ -32157,7 +33163,7 @@ ProjectsProjectInvitationDtoSchema = z.object({
   token: z.string().nullable().optional(),
 });
 
-/** Zod schema for ProjectsProjectInvitationStatus */
+/** Zod schema for ProjectsProjectInvitationStatus. OpenAPI schema for Projects Project Invitation Status. */
 ProjectsProjectInvitationStatusSchema = z.enum(['Pending', 'Accepted', 'Declined', 'Revoked', 'Expired']);
 
 /** Zod schema for ProjectsProjectJamSubmission. Represents a project submitted to a game jam */
@@ -32196,7 +33202,7 @@ ProjectsProjectJamSubmissionSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for ProjectsProjectMemberAllocation */
+/** Zod schema for ProjectsProjectMemberAllocation. Data model for Projects Project Member Allocation. */
 ProjectsProjectMemberAllocationSchema = z.object({
   id: z.string().uuid().optional(),
   capacityPercentage: z.number().min(1).max(100).optional(),
@@ -32250,7 +33256,7 @@ ProjectsProjectMetadataSchema = z.object({
   viewCount: z.number().int().optional(),
 });
 
-/** Zod schema for ProjectsProjectMetadataApiOutput */
+/** Zod schema for ProjectsProjectMetadataApiOutput. Data model for Projects Project Metadata Api Response. */
 ProjectsProjectMetadataApiOutputSchema = z.object({
   id: z.string().uuid().optional(),
   downloadCount: z.number().int().optional(),
@@ -32297,7 +33303,7 @@ ProjectsProjectReleaseSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for ProjectsProjectReleaseApiOutput */
+/** Zod schema for ProjectsProjectReleaseApiOutput. Data model for Projects Project Release Api Response. */
 ProjectsProjectReleaseApiOutputSchema = z.object({
   id: z.string().uuid().optional(),
   buildNumber: z.string().nullable().optional(),
@@ -32349,7 +33355,7 @@ ProjectsProjectStatisticsSchema = z.object({
   viewsLast30Days: z.number().int().optional(),
 });
 
-/** Zod schema for ProjectsProjectStoreProductProjection */
+/** Zod schema for ProjectsProjectStoreProductProjection. Data model for Projects Project Store Product Projection. */
 ProjectsProjectStoreProductProjectionSchema = z.object({
   linkId: z.string().uuid().optional(),
   productId: z.string().uuid().optional(),
@@ -32392,7 +33398,7 @@ ProjectsProjectTeamSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for ProjectsProjectTeamAgreement */
+/** Zod schema for ProjectsProjectTeamAgreement. Data model for Projects Project Team Agreement. */
 ProjectsProjectTeamAgreementSchema = z.object({
   id: z.string().uuid().optional(),
   acceptedAt: z.string().datetime().nullable().optional(),
@@ -32427,10 +33433,10 @@ ProjectsProjectTeamAgreementSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for ProjectsProjectTeamAgreementStatus */
+/** Zod schema for ProjectsProjectTeamAgreementStatus. OpenAPI schema for Projects Project Team Agreement Status. */
 ProjectsProjectTeamAgreementStatusSchema = z.enum(['Proposed', 'CounterProposed', 'Accepted', 'Cancelled', 'Completed']);
 
-/** Zod schema for ProjectsProjectTeamApiOutput */
+/** Zod schema for ProjectsProjectTeamApiOutput. Data model for Projects Project Team Api Response. */
 ProjectsProjectTeamApiOutputSchema = z.object({
   id: z.string().uuid().optional(),
   assignedAt: z.string().datetime().optional(),
@@ -32446,16 +33452,16 @@ ProjectsProjectTeamApiOutputSchema = z.object({
   teamId: z.string().uuid().optional(),
 });
 
-/** Zod schema for ProjectsProjectTeamParticipationMode */
+/** Zod schema for ProjectsProjectTeamParticipationMode. OpenAPI schema for Projects Project Team Participation Mode. */
 ProjectsProjectTeamParticipationModeSchema = z.enum(['AllMembers', 'SelectedMembers']);
 
-/** Zod schema for ProjectsProjectTeamRole */
+/** Zod schema for ProjectsProjectTeamRole. OpenAPI schema for Projects Project Team Role. */
 ProjectsProjectTeamRoleSchema = z.enum(['Owner', 'CoOwner', 'Contributor', 'Guest']);
 
 /** Zod schema for ProjectsProjectType. Types of projects in the game guild platform */
 ProjectsProjectTypeSchema = z.enum(['Game', 'Tool', 'Art', 'Music', 'Educational', 'Plugin', 'Template', 'Library', 'Other']);
 
-/** Zod schema for ProjectsProjectUserApiOutput */
+/** Zod schema for ProjectsProjectUserApiOutput. Data model for Projects Project User Api Response. */
 ProjectsProjectUserApiOutputSchema = z.object({
   id: z.string().uuid().optional(),
   name: z.string().nullable().optional(),
@@ -32489,7 +33495,7 @@ ProjectsProjectVersionSchema = z.object({
   versionNumber: z.string().min(1).max(50),
 });
 
-/** Zod schema for ProjectsProjectVersionApiOutput */
+/** Zod schema for ProjectsProjectVersionApiOutput. Data model for Projects Project Version Api Response. */
 ProjectsProjectVersionApiOutputSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
@@ -32502,7 +33508,7 @@ ProjectsProjectVersionApiOutputSchema = z.object({
   versionNumber: z.string().nullable().optional(),
 });
 
-/** Zod schema for ProjectsProjectVersionOptionProjection */
+/** Zod schema for ProjectsProjectVersionOptionProjection. Data model for Projects Project Version Option Projection. */
 ProjectsProjectVersionOptionProjectionSchema = z.object({
   id: z.string().uuid().optional(),
   imageUrl: z.string().nullable().optional(),
@@ -32513,7 +33519,7 @@ ProjectsProjectVersionOptionProjectionSchema = z.object({
   versionNumber: z.string().nullable().optional(),
 });
 
-/** Zod schema for ProjectsProjectVersionStatus */
+/** Zod schema for ProjectsProjectVersionStatus. OpenAPI schema for Projects Project Version Status. */
 ProjectsProjectVersionStatusSchema = z.enum(['Draft', 'ReadyForTesting', 'Released', 'Archived']);
 
 /** Zod schema for ProjectsShareProjectInput. Request to share a project */
@@ -32557,7 +33563,7 @@ ProjectsUpdateProjectCollaboratorInputSchema = z.object({
   role: z.string().nullable().optional(),
 });
 
-/** Zod schema for ProjectsUpdateProjectInput */
+/** Zod schema for ProjectsUpdateProjectInput. Data model for Projects Update Project Request. */
 ProjectsUpdateProjectInputSchema = z.object({
   categoryId: z.string().uuid().nullable().optional(),
   description: z.string().nullable().optional(),
@@ -32573,22 +33579,22 @@ ProjectsUpdateProjectInputSchema = z.object({
   websiteUrl: z.string().nullable().optional(),
 });
 
-/** Zod schema for ProjectsUpdateProjectVersionInput */
+/** Zod schema for ProjectsUpdateProjectVersionInput. Data model for Projects Update Project Version Request. */
 ProjectsUpdateProjectVersionInputSchema = z.object({
   releaseNotes: z.string().max(10000).nullable().optional(),
   versionNumber: z.string().min(1).max(50),
 });
 
-/** Zod schema for ProjectsVersionSubmissionPolicy */
+/** Zod schema for ProjectsVersionSubmissionPolicy. OpenAPI schema for Projects Version Submission Policy. */
 ProjectsVersionSubmissionPolicySchema = z.enum(['ReadyMutableUntilReview', 'ReleasedImmutable']);
 
-/** Zod schema for ProjectWorkProjectWorkColumnKind */
+/** Zod schema for ProjectWorkProjectWorkColumnKind. OpenAPI schema for Project Work Project Work Column Kind. */
 ProjectWorkProjectWorkColumnKindSchema = z.enum(['Backlog', 'Ready', 'InProgress', 'InReview', 'Done', 'Custom']);
 
-/** Zod schema for ProjectWorkProjectWorkTaskPriority */
+/** Zod schema for ProjectWorkProjectWorkTaskPriority. OpenAPI schema for Project Work Project Work Task Priority. */
 ProjectWorkProjectWorkTaskPrioritySchema = z.enum(['Low', 'Normal', 'High', 'Urgent']);
 
-/** Zod schema for ProjectWorkProjectWorkTaskStatus */
+/** Zod schema for ProjectWorkProjectWorkTaskStatus. OpenAPI schema for Project Work Project Work Task Status. */
 ProjectWorkProjectWorkTaskStatusSchema = z.enum(['Backlog', 'Ready', 'InProgress', 'InReview', 'Done', 'Cancelled']);
 
 /** Zod schema for ResourcesArchiveResourceUsageRecordsInput. Request DTO for archiving old resource usage records */
@@ -32610,14 +33616,14 @@ ResourcesCleanupOrphanedResourcesInputSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for ResourcesContentsAddReviewInput */
+/** Zod schema for ResourcesContentsAddReviewInput. Data model for Resources Contents Add Review Request. */
 ResourcesContentsAddReviewInputSchema = z.object({
   decision: z.lazy(() => ResourcesContentsContentReviewDecisionSchema).optional(),
   feedback: z.string().nullable().optional(),
   suggestions: z.string().nullable().optional(),
 });
 
-/** Zod schema for ResourcesContentsBulkGenerateContractsInput */
+/** Zod schema for ResourcesContentsBulkGenerateContractsInput. Data model for Resources Contents Bulk Generate Contracts Request. */
 ResourcesContentsBulkGenerateContractsInputSchema = z.object({
   continueOnError: z.boolean().optional(),
   contracts: z
@@ -32626,7 +33632,7 @@ ResourcesContentsBulkGenerateContractsInputSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for ResourcesContentsBulkGeneratedContractItemOutput */
+/** Zod schema for ResourcesContentsBulkGeneratedContractItemOutput. Data model for Resources Contents Bulk Generated Contract Item Response. */
 ResourcesContentsBulkGeneratedContractItemOutputSchema = z.object({
   contract: z.lazy(() => ResourcesContentsGeneratedContractOutputSchema).optional(),
   error: z.lazy(() => ErrorSchema).optional(),
@@ -32634,7 +33640,7 @@ ResourcesContentsBulkGeneratedContractItemOutputSchema = z.object({
   success: z.boolean().optional(),
 });
 
-/** Zod schema for ResourcesContentsBulkGeneratedContractsOutput */
+/** Zod schema for ResourcesContentsBulkGeneratedContractsOutput. Data model for Resources Contents Bulk Generated Contracts Response. */
 ResourcesContentsBulkGeneratedContractsOutputSchema = z.object({
   failed: z.number().int().optional(),
   hasFailures: z.boolean().optional(),
@@ -32664,7 +33670,7 @@ ResourcesContentsContentVersionDiffSchema = z.object({
   version2Number: z.number().int().optional(),
 });
 
-/** Zod schema for ResourcesContentsContentVersionDto */
+/** Zod schema for ResourcesContentsContentVersionDto. Data model for Resources Contents Content Version Dto. */
 ResourcesContentsContentVersionDtoSchema = z.object({
   id: z.string().uuid().optional(),
   body: z.string().nullable().optional(),
@@ -32688,7 +33694,7 @@ ResourcesContentsContentVersionDtoSchema = z.object({
   versionNumber: z.number().int().optional(),
 });
 
-/** Zod schema for ResourcesContentsContentVersionReviewDto */
+/** Zod schema for ResourcesContentsContentVersionReviewDto. Data model for Resources Contents Content Version Review Dto. */
 ResourcesContentsContentVersionReviewDtoSchema = z.object({
   id: z.string().uuid().optional(),
   contentVersionId: z.string().uuid().optional(),
@@ -32702,7 +33708,7 @@ ResourcesContentsContentVersionReviewDtoSchema = z.object({
 /** Zod schema for ResourcesContentsContentVersionStatus. Status of a content version */
 ResourcesContentsContentVersionStatusSchema = z.enum(['Draft', 'PendingReview', 'Approved', 'Rejected', 'Scheduled', 'Published', 'Archived']);
 
-/** Zod schema for ResourcesContentsCreateDraftInput */
+/** Zod schema for ResourcesContentsCreateDraftInput. Data model for Resources Contents Create Draft Request. */
 ResourcesContentsCreateDraftInputSchema = z.object({
   body: z.string().nullable().optional(),
   changeNotes: z.string().nullable().optional(),
@@ -32714,7 +33720,7 @@ ResourcesContentsCreateDraftInputSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for ResourcesContentsGenerateContractInput */
+/** Zod schema for ResourcesContentsGenerateContractInput. Data model for Resources Contents Generate Contract Request. */
 ResourcesContentsGenerateContractInputSchema = z.object({
   allowMissingVariables: z.boolean().optional(),
   documentTemplateId: z.string().uuid().optional(),
@@ -32726,7 +33732,7 @@ ResourcesContentsGenerateContractInputSchema = z.object({
   variables: z.record(z.string(), z.string().nullable()).nullable().optional(),
 });
 
-/** Zod schema for ResourcesContentsGeneratedContractOutput */
+/** Zod schema for ResourcesContentsGeneratedContractOutput. Data model for Resources Contents Generated Contract Response. */
 ResourcesContentsGeneratedContractOutputSchema = z.object({
   content: z.string().nullable().optional(),
   contentVersionId: z.string().uuid().optional(),
@@ -32742,23 +33748,23 @@ ResourcesContentsGeneratedContractOutputSchema = z.object({
   versionNumber: z.number().int().optional(),
 });
 
-/** Zod schema for ResourcesContentsReviewInput */
+/** Zod schema for ResourcesContentsReviewInput. Data model for Resources Contents Review Request. */
 ResourcesContentsReviewInputSchema = z.object({
   reviewNotes: z.string().nullable().optional(),
 });
 
-/** Zod schema for ResourcesContentsRollbackInput */
+/** Zod schema for ResourcesContentsRollbackInput. Data model for Resources Contents Rollback Request. */
 ResourcesContentsRollbackInputSchema = z.object({
   reason: z.string().nullable().optional(),
   targetVersionNumber: z.number().int().optional(),
 });
 
-/** Zod schema for ResourcesContentsScheduleInput */
+/** Zod schema for ResourcesContentsScheduleInput. Data model for Resources Contents Schedule Request. */
 ResourcesContentsScheduleInputSchema = z.object({
   scheduledAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for ResourcesContentsUpdateDraftInput */
+/** Zod schema for ResourcesContentsUpdateDraftInput. Data model for Resources Contents Update Draft Request. */
 ResourcesContentsUpdateDraftInputSchema = z.object({
   body: z.string().nullable().optional(),
   changeNotes: z.string().nullable().optional(),
@@ -33034,7 +34040,7 @@ ResourcesUsageTrendsResultSchema = z.object({
   type: z.lazy(() => ResourcesResourceUsageTypeSchema).optional(),
 });
 
-/** Zod schema for SocialAssetsSocialMediaSocialMediaAssetDescriptor */
+/** Zod schema for SocialAssetsSocialMediaSocialMediaAssetDescriptor. Data model for Social Assets Social Media Social Media Asset Descriptor. */
 SocialAssetsSocialMediaSocialMediaAssetDescriptorSchema = z.object({
   assetReferenceId: z.string().uuid().optional(),
   deliveryUrl: z.string().nullable().optional(),
@@ -33043,7 +34049,7 @@ SocialAssetsSocialMediaSocialMediaAssetDescriptorSchema = z.object({
   state: z.lazy(() => SocialAssetsSocialMediaSocialMediaProcessingStateSchema).optional(),
 });
 
-/** Zod schema for SocialAssetsSocialMediaSocialMediaProcessingState */
+/** Zod schema for SocialAssetsSocialMediaSocialMediaProcessingState. OpenAPI schema for Social Assets Social Media Social Media Processing State. */
 SocialAssetsSocialMediaSocialMediaProcessingStateSchema = z.enum(['Processing', 'Ready', 'Rejected']);
 
 /** Zod schema for SocialBlogAuthoringApplyBlogAiProposalInput. Applies a pending proposal to the post at the given revision (with cursor insert offset). */
@@ -33153,13 +34159,13 @@ SocialBlogAuthoringBlogPostDtoSchema = z.object({
   updatedAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for SocialBlogBlogAiProposalKind */
+/** Zod schema for SocialBlogBlogAiProposalKind. OpenAPI schema for Social Blog Blog Ai Proposal Kind. */
 SocialBlogBlogAiProposalKindSchema = z.enum(['ReplaceDocument', 'InsertAtCursor', 'LexicalPatch', 'MetadataPatch']);
 
-/** Zod schema for SocialBlogBlogAiProposalStatus */
+/** Zod schema for SocialBlogBlogAiProposalStatus. OpenAPI schema for Social Blog Blog Ai Proposal Status. */
 SocialBlogBlogAiProposalStatusSchema = z.enum(['Pending', 'Applied', 'Discarded']);
 
-/** Zod schema for SocialBlogBlogAiRunStatus */
+/** Zod schema for SocialBlogBlogAiRunStatus. OpenAPI schema for Social Blog Blog Ai Run Status. */
 SocialBlogBlogAiRunStatusSchema = z.enum(['Queued', 'Reserved', 'Running', 'Completed', 'Failed', 'Cancelled']);
 
 /** Zod schema for SocialBlogBlogComment. A comment on a published blog post. Depth ≤ 1 (top-level or one reply level) is
@@ -33237,7 +34243,7 @@ SocialBlogBlogPostSchema = z.object({
   viewsCount: z.number().int().optional(),
 });
 
-/** Zod schema for SocialBlogBlogPostStatus */
+/** Zod schema for SocialBlogBlogPostStatus. OpenAPI schema for Social Blog Blog Post Status. */
 SocialBlogBlogPostStatusSchema = z.enum(['Draft', 'Published']);
 
 /** Zod schema for SocialBlogControllersAddBlogCommentInput. Wire shape for M:GameGuild.Social.Blog.Controllers.BlogCommentsController.Add(System.Guid,GameGuild.Social.Blog.Controllers.AddBlogCommentRequest,System.Threading.CancellationToken); the author comes from the actor context. */
@@ -33365,7 +34371,7 @@ SocialBlogQueriesBlogRouteResolutionDtoSchema = z.object({
   slug: z.string().nullable().optional(),
 });
 
-/** Zod schema for SocialFeedAddFeedItemInput */
+/** Zod schema for SocialFeedAddFeedItemInput. Data model for Social Feed Add Feed Item Request. */
 SocialFeedAddFeedItemInputSchema = z.object({
   contentCreatedAt: z.string().datetime().nullable().optional(),
   contentId: z.string().uuid().optional(),
@@ -33374,13 +34380,13 @@ SocialFeedAddFeedItemInputSchema = z.object({
   relevanceScore: z.number().optional(),
 });
 
-/** Zod schema for SocialFeedCreateStoryInput */
+/** Zod schema for SocialFeedCreateStoryInput. Data model for Social Feed Create Story Request. */
 SocialFeedCreateStoryInputSchema = z.object({
   assetReferenceId: z.string().uuid().optional(),
   caption: z.string().nullable().optional(),
 });
 
-/** Zod schema for SocialFeedFeedAuthorDto */
+/** Zod schema for SocialFeedFeedAuthorDto. Data model for Social Feed Feed Author Dto. */
 SocialFeedFeedAuthorDtoSchema = z.object({
   avatarUrl: z.string().nullable().optional(),
   displayName: z.string().nullable().optional(),
@@ -33389,10 +34395,10 @@ SocialFeedFeedAuthorDtoSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for SocialFeedFeedContentType */
+/** Zod schema for SocialFeedFeedContentType. OpenAPI schema for Social Feed Feed Content Type. */
 SocialFeedFeedContentTypeSchema = z.enum(['Post', 'BlogPost', 'CourseReview', 'ProjectUpdate', 'Achievement', 'CourseCompletion']);
 
-/** Zod schema for SocialFeedFeedEngagementDto */
+/** Zod schema for SocialFeedFeedEngagementDto. Data model for Social Feed Feed Engagement Dto. */
 SocialFeedFeedEngagementDtoSchema = z.object({
   commentsCount: z.number().int().optional(),
   reactionsCount: z.number().int().optional(),
@@ -33400,7 +34406,7 @@ SocialFeedFeedEngagementDtoSchema = z.object({
   viewsCount: z.number().int().optional(),
 });
 
-/** Zod schema for SocialFeedFeedItemDto */
+/** Zod schema for SocialFeedFeedItemDto. Data model for Social Feed Feed Item Dto. */
 SocialFeedFeedItemDtoSchema = z.object({
   id: z.string().uuid().optional(),
   authorId: z.string().uuid().optional(),
@@ -33415,10 +34421,10 @@ SocialFeedFeedItemDtoSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for SocialFeedFeedItemReason */
+/** Zod schema for SocialFeedFeedItemReason. OpenAPI schema for Social Feed Feed Item Reason. */
 SocialFeedFeedItemReasonSchema = z.enum(['Following', 'Trending', 'Recommended', 'Mentioned', 'Replied', 'Liked', 'InNetwork']);
 
-/** Zod schema for SocialFeedFeedViewerStateDto */
+/** Zod schema for SocialFeedFeedViewerStateDto. Data model for Social Feed Feed Viewer State Dto. */
 SocialFeedFeedViewerStateDtoSchema = z.object({
   canDelete: z.boolean().optional(),
   canEdit: z.boolean().optional(),
@@ -33428,7 +34434,7 @@ SocialFeedFeedViewerStateDtoSchema = z.object({
   reaction: z.string().nullable().optional(),
 });
 
-/** Zod schema for SocialFeedOriginalPostDto */
+/** Zod schema for SocialFeedOriginalPostDto. Data model for Social Feed Original Post Dto. */
 SocialFeedOriginalPostDtoSchema = z.object({
   id: z.string().uuid().optional(),
   author: z.lazy(() => SocialFeedFeedAuthorDtoSchema).optional(),
@@ -33438,13 +34444,13 @@ SocialFeedOriginalPostDtoSchema = z.object({
   mediaUrl: z.string().nullable().optional(),
 });
 
-/** Zod schema for SocialFeedSavedPostStateDto */
+/** Zod schema for SocialFeedSavedPostStateDto. Data model for Social Feed Saved Post State Dto. */
 SocialFeedSavedPostStateDtoSchema = z.object({
   isSaved: z.boolean().optional(),
   postId: z.string().uuid().optional(),
 });
 
-/** Zod schema for SocialFeedSocialFeedItemDto */
+/** Zod schema for SocialFeedSocialFeedItemDto. Data model for Social Feed Social Feed Item Dto. */
 SocialFeedSocialFeedItemDtoSchema = z.object({
   id: z.string().uuid().optional(),
   author: z.lazy(() => SocialFeedFeedAuthorDtoSchema).optional(),
@@ -33457,10 +34463,10 @@ SocialFeedSocialFeedItemDtoSchema = z.object({
   viewer: z.lazy(() => SocialFeedFeedViewerStateDtoSchema).optional(),
 });
 
-/** Zod schema for SocialFeedSocialFeedItemKind */
+/** Zod schema for SocialFeedSocialFeedItemKind. OpenAPI schema for Social Feed Social Feed Item Kind. */
 SocialFeedSocialFeedItemKindSchema = z.enum(['Post', 'Repost', 'TestingSession']);
 
-/** Zod schema for SocialFeedSocialFeedPageDto */
+/** Zod schema for SocialFeedSocialFeedPageDto. Data model for Social Feed Social Feed Page Dto. */
 SocialFeedSocialFeedPageDtoSchema = z.object({
   items: z
     .array(z.lazy(() => SocialFeedSocialFeedItemDtoSchema))
@@ -33469,7 +34475,7 @@ SocialFeedSocialFeedPageDtoSchema = z.object({
   nextCursor: z.string().nullable().optional(),
 });
 
-/** Zod schema for SocialFeedSocialFeedProfileDto */
+/** Zod schema for SocialFeedSocialFeedProfileDto. Data model for Social Feed Social Feed Profile Dto. */
 SocialFeedSocialFeedProfileDtoSchema = z.object({
   id: z.string().uuid().optional(),
   availabilityStatus: z.string().nullable().optional(),
@@ -33491,7 +34497,7 @@ SocialFeedSocialFeedProfileDtoSchema = z.object({
   websiteUrl: z.string().nullable().optional(),
 });
 
-/** Zod schema for SocialFeedSocialPostContentDto */
+/** Zod schema for SocialFeedSocialPostContentDto. Data model for Social Feed Social Post Content Dto. */
 SocialFeedSocialPostContentDtoSchema = z.object({
   content: z.string().nullable().optional(),
   editedAt: z.string().datetime().nullable().optional(),
@@ -33502,7 +34508,7 @@ SocialFeedSocialPostContentDtoSchema = z.object({
   visibility: z.string().nullable().optional(),
 });
 
-/** Zod schema for SocialFeedStoryDto */
+/** Zod schema for SocialFeedStoryDto. Data model for Social Feed Story Dto. */
 SocialFeedStoryDtoSchema = z.object({
   id: z.string().uuid().optional(),
   assetReferenceId: z.string().uuid().optional(),
@@ -33515,7 +34521,7 @@ SocialFeedStoryDtoSchema = z.object({
   mediaUrl: z.string().nullable().optional(),
 });
 
-/** Zod schema for SocialFeedTestingSessionFeedDto */
+/** Zod schema for SocialFeedTestingSessionFeedDto. Data model for Social Feed Testing Session Feed Dto. */
 SocialFeedTestingSessionFeedDtoSchema = z.object({
   availableTesterCount: z.number().int().optional(),
   endsAt: z.string().datetime().optional(),
@@ -33527,19 +34533,19 @@ SocialFeedTestingSessionFeedDtoSchema = z.object({
   status: z.string().nullable().optional(),
 });
 
-/** Zod schema for SocialFollowsControllersBatchCountsInput */
+/** Zod schema for SocialFollowsControllersBatchCountsInput. Data model for Social Follows Controllers Batch Counts Request. */
 SocialFollowsControllersBatchCountsInputSchema = z.object({
   entityIds: z.array(z.string().uuid()).nullable().optional(),
   entityType: z.string().nullable().optional(),
 });
 
-/** Zod schema for SocialFollowsControllersBatchStatusInput */
+/** Zod schema for SocialFollowsControllersBatchStatusInput. Data model for Social Follows Controllers Batch Status Request. */
 SocialFollowsControllersBatchStatusInputSchema = z.object({
   entityIds: z.array(z.string().uuid()).nullable().optional(),
   entityType: z.string().nullable().optional(),
 });
 
-/** Zod schema for SocialFollowsControllersBlockDto */
+/** Zod schema for SocialFollowsControllersBlockDto. Data model for Social Follows Controllers Block Dto. */
 SocialFollowsControllersBlockDtoSchema = z.object({
   id: z.string().uuid().optional(),
   blockedAt: z.string().datetime().optional(),
@@ -33548,13 +34554,13 @@ SocialFollowsControllersBlockDtoSchema = z.object({
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for SocialFollowsControllersBlockInput */
+/** Zod schema for SocialFollowsControllersBlockInput. Data model for Social Follows Controllers Block Request. */
 SocialFollowsControllersBlockInputSchema = z.object({
   blockedUserId: z.string().uuid().optional(),
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for SocialFollowsControllersFollowDto */
+/** Zod schema for SocialFollowsControllersFollowDto. Data model for Social Follows Controllers Follow Dto. */
 SocialFollowsControllersFollowDtoSchema = z.object({
   id: z.string().uuid().optional(),
   followedAt: z.string().datetime().optional(),
@@ -33564,14 +34570,14 @@ SocialFollowsControllersFollowDtoSchema = z.object({
   notificationsEnabled: z.boolean().optional(),
 });
 
-/** Zod schema for SocialFollowsControllersFollowInput */
+/** Zod schema for SocialFollowsControllersFollowInput. Data model for Social Follows Controllers Follow Request. */
 SocialFollowsControllersFollowInputSchema = z.object({
   entityId: z.string().uuid().optional(),
   entityType: z.string().nullable().optional(),
   notificationsEnabled: z.boolean().optional(),
 });
 
-/** Zod schema for SocialFollowsControllersFollowPrivacySettingsDto */
+/** Zod schema for SocialFollowsControllersFollowPrivacySettingsDto. Data model for Social Follows Controllers Follow Privacy Settings Dto. */
 SocialFollowsControllersFollowPrivacySettingsDtoSchema = z.object({
   id: z.string().uuid().optional(),
   allowFollowers: z.boolean().optional(),
@@ -33583,7 +34589,7 @@ SocialFollowsControllersFollowPrivacySettingsDtoSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for SocialFollowsControllersMuteDto */
+/** Zod schema for SocialFollowsControllersMuteDto. Data model for Social Follows Controllers Mute Dto. */
 SocialFollowsControllersMuteDtoSchema = z.object({
   id: z.string().uuid().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
@@ -33593,21 +34599,21 @@ SocialFollowsControllersMuteDtoSchema = z.object({
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for SocialFollowsControllersMuteInput */
+/** Zod schema for SocialFollowsControllersMuteInput. Data model for Social Follows Controllers Mute Request. */
 SocialFollowsControllersMuteInputSchema = z.object({
   expiresAt: z.string().datetime().nullable().optional(),
   mutedUserId: z.string().uuid().optional(),
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for SocialFollowsControllersUpdateNotificationsInput */
+/** Zod schema for SocialFollowsControllersUpdateNotificationsInput. Data model for Social Follows Controllers Update Notifications Request. */
 SocialFollowsControllersUpdateNotificationsInputSchema = z.object({
   entityId: z.string().uuid().optional(),
   entityType: z.string().nullable().optional(),
   notificationsEnabled: z.boolean().optional(),
 });
 
-/** Zod schema for SocialFollowsControllersUpdatePrivacySettingsInput */
+/** Zod schema for SocialFollowsControllersUpdatePrivacySettingsInput. Data model for Social Follows Controllers Update Privacy Settings Request. */
 SocialFollowsControllersUpdatePrivacySettingsInputSchema = z.object({
   allowFollowers: z.boolean().optional(),
   isFollowerListPublic: z.boolean().optional(),
@@ -33617,17 +34623,17 @@ SocialFollowsControllersUpdatePrivacySettingsInputSchema = z.object({
   showFollowingCount: z.boolean().optional(),
 });
 
-/** Zod schema for SocialGroupsApproveSocialGroupMemberInput */
+/** Zod schema for SocialGroupsApproveSocialGroupMemberInput. Data model for Social Groups Approve Social Group Member Request. */
 SocialGroupsApproveSocialGroupMemberInputSchema = z.object({
   approvedByUserId: z.string().uuid().optional(),
 });
 
-/** Zod schema for SocialGroupsChangeSocialGroupMemberRoleInput */
+/** Zod schema for SocialGroupsChangeSocialGroupMemberRoleInput. Data model for Social Groups Change Social Group Member Role Request. */
 SocialGroupsChangeSocialGroupMemberRoleInputSchema = z.object({
   role: z.lazy(() => SocialGroupsSocialGroupMemberRoleSchema).optional(),
 });
 
-/** Zod schema for SocialGroupsCreateSocialGroupInput */
+/** Zod schema for SocialGroupsCreateSocialGroupInput. Data model for Social Groups Create Social Group Request. */
 SocialGroupsCreateSocialGroupInputSchema = z.object({
   description: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
@@ -33638,13 +34644,13 @@ SocialGroupsCreateSocialGroupInputSchema = z.object({
   visibility: z.lazy(() => SocialGroupsSocialGroupVisibilitySchema).optional(),
 });
 
-/** Zod schema for SocialGroupsJoinSocialGroupInput */
+/** Zod schema for SocialGroupsJoinSocialGroupInput. Data model for Social Groups Join Social Group Request. */
 SocialGroupsJoinSocialGroupInputSchema = z.object({
   requestedRole: z.lazy(() => SocialGroupsSocialGroupMemberRoleSchema).optional(),
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for SocialGroupsSocialGroupDto */
+/** Zod schema for SocialGroupsSocialGroupDto. Data model for Social Groups Social Group Dto. */
 SocialGroupsSocialGroupDtoSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
@@ -33661,7 +34667,7 @@ SocialGroupsSocialGroupDtoSchema = z.object({
   visibility: z.lazy(() => SocialGroupsSocialGroupVisibilitySchema).optional(),
 });
 
-/** Zod schema for SocialGroupsSocialGroupMemberDto */
+/** Zod schema for SocialGroupsSocialGroupMemberDto. Data model for Social Groups Social Group Member Dto. */
 SocialGroupsSocialGroupMemberDtoSchema = z.object({
   id: z.string().uuid().optional(),
   approvedByUserId: z.string().uuid().nullable().optional(),
@@ -33674,22 +34680,22 @@ SocialGroupsSocialGroupMemberDtoSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for SocialGroupsSocialGroupMemberRole */
+/** Zod schema for SocialGroupsSocialGroupMemberRole. OpenAPI schema for Social Groups Social Group Member Role. */
 SocialGroupsSocialGroupMemberRoleSchema = z.enum(['Owner', 'Admin', 'Moderator', 'Member']);
 
-/** Zod schema for SocialGroupsSocialGroupMembershipStatus */
+/** Zod schema for SocialGroupsSocialGroupMembershipStatus. OpenAPI schema for Social Groups Social Group Membership Status. */
 SocialGroupsSocialGroupMembershipStatusSchema = z.enum(['Pending', 'Active', 'Rejected', 'Removed']);
 
-/** Zod schema for SocialGroupsSocialGroupStatus */
+/** Zod schema for SocialGroupsSocialGroupStatus. OpenAPI schema for Social Groups Social Group Status. */
 SocialGroupsSocialGroupStatusSchema = z.enum(['Active', 'Archived', 'Suspended']);
 
-/** Zod schema for SocialGroupsSocialGroupType */
+/** Zod schema for SocialGroupsSocialGroupType. OpenAPI schema for Social Groups Social Group Type. */
 SocialGroupsSocialGroupTypeSchema = z.enum(['StudyGroup', 'ProjectTeam', 'InterestCommunity', 'CourseCohort', 'Institution', 'GameJamTeam']);
 
-/** Zod schema for SocialGroupsSocialGroupVisibility */
+/** Zod schema for SocialGroupsSocialGroupVisibility. OpenAPI schema for Social Groups Social Group Visibility. */
 SocialGroupsSocialGroupVisibilitySchema = z.enum(['Public', 'Private', 'InviteOnly']);
 
-/** Zod schema for SocialGroupsUpdateSocialGroupInput */
+/** Zod schema for SocialGroupsUpdateSocialGroupInput. Data model for Social Groups Update Social Group Request. */
 SocialGroupsUpdateSocialGroupInputSchema = z.object({
   description: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
@@ -33698,13 +34704,13 @@ SocialGroupsUpdateSocialGroupInputSchema = z.object({
   visibility: z.lazy(() => SocialGroupsSocialGroupVisibilitySchema).optional(),
 });
 
-/** Zod schema for SocialPostsControllersAddCommentInput */
+/** Zod schema for SocialPostsControllersAddCommentInput. Data model for Social Posts Controllers Add Comment Request. */
 SocialPostsControllersAddCommentInputSchema = z.object({
   content: z.string().nullable().optional(),
   parentCommentId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for SocialPostsControllersCreatePostInput */
+/** Zod schema for SocialPostsControllersCreatePostInput. Data model for Social Posts Controllers Create Post Request. */
 SocialPostsControllersCreatePostInputSchema = z.object({
   assetReferenceId: z.string().uuid().nullable().optional(),
   content: z.string().nullable().optional(),
@@ -33712,12 +34718,12 @@ SocialPostsControllersCreatePostInputSchema = z.object({
   visibility: z.lazy(() => SocialPostsPostVisibilitySchema).optional(),
 });
 
-/** Zod schema for SocialPostsControllersCreateRepostInput */
+/** Zod schema for SocialPostsControllersCreateRepostInput. Data model for Social Posts Controllers Create Repost Request. */
 SocialPostsControllersCreateRepostInputSchema = z.object({
   content: z.string().nullable().optional(),
 });
 
-/** Zod schema for SocialPostsControllersFollowPostInput */
+/** Zod schema for SocialPostsControllersFollowPostInput. Data model for Social Posts Controllers Follow Post Request. */
 SocialPostsControllersFollowPostInputSchema = z.object({
   notifyOnComments: z.boolean().optional(),
   notifyOnLikes: z.boolean().optional(),
@@ -33725,20 +34731,20 @@ SocialPostsControllersFollowPostInputSchema = z.object({
   notifyOnUpdates: z.boolean().optional(),
 });
 
-/** Zod schema for SocialPostsControllersUpdateCommentInput */
+/** Zod schema for SocialPostsControllersUpdateCommentInput. Data model for Social Posts Controllers Update Comment Request. */
 SocialPostsControllersUpdateCommentInputSchema = z.object({
   content: z.string().nullable().optional(),
 });
 
-/** Zod schema for SocialPostsControllersUpdatePostInput */
+/** Zod schema for SocialPostsControllersUpdatePostInput. Data model for Social Posts Controllers Update Post Request. */
 SocialPostsControllersUpdatePostInputSchema = z.object({
   content: z.string().nullable().optional(),
 });
 
-/** Zod schema for SocialPostsPostVisibility */
+/** Zod schema for SocialPostsPostVisibility. OpenAPI schema for Social Posts Post Visibility. */
 SocialPostsPostVisibilitySchema = z.enum(['Public', 'Followers', 'Private', 'Unlisted']);
 
-/** Zod schema for SocialProfilesAddProfilePortfolioItemBody */
+/** Zod schema for SocialProfilesAddProfilePortfolioItemBody. Data model for Social Profiles Add Profile Portfolio Item Body. */
 SocialProfilesAddProfilePortfolioItemBodySchema = z.object({
   description: z.string().nullable().optional(),
   displayOrder: z.number().int().optional(),
@@ -33749,17 +34755,17 @@ SocialProfilesAddProfilePortfolioItemBodySchema = z.object({
   url: z.string().nullable().optional(),
 });
 
-/** Zod schema for SocialProfilesAddProfileSkillBody */
+/** Zod schema for SocialProfilesAddProfileSkillBody. Data model for Social Profiles Add Profile Skill Body. */
 SocialProfilesAddProfileSkillBodySchema = z.object({
   displayOrder: z.number().int().optional(),
   name: z.string().nullable().optional(),
   proficiency: z.lazy(() => SocialProfilesProfileSkillProficiencySchema).optional(),
 });
 
-/** Zod schema for SocialProfilesProfileAvailabilityStatus */
+/** Zod schema for SocialProfilesProfileAvailabilityStatus. OpenAPI schema for Social Profiles Profile Availability Status. */
 SocialProfilesProfileAvailabilityStatusSchema = z.enum(['NotSet', 'OpenToWork', 'OpenToCollaborate', 'Busy', 'Hidden']);
 
-/** Zod schema for SocialProfilesProfilePortfolioItemDto */
+/** Zod schema for SocialProfilesProfilePortfolioItemDto. Data model for Social Profiles Profile Portfolio Item Dto. */
 SocialProfilesProfilePortfolioItemDtoSchema = z.object({
   id: z.string().uuid().optional(),
   description: z.string().nullable().optional(),
@@ -33772,7 +34778,7 @@ SocialProfilesProfilePortfolioItemDtoSchema = z.object({
   url: z.string().nullable().optional(),
 });
 
-/** Zod schema for SocialProfilesProfileSkillDto */
+/** Zod schema for SocialProfilesProfileSkillDto. Data model for Social Profiles Profile Skill Dto. */
 SocialProfilesProfileSkillDtoSchema = z.object({
   id: z.string().uuid().optional(),
   displayOrder: z.number().int().optional(),
@@ -33781,13 +34787,13 @@ SocialProfilesProfileSkillDtoSchema = z.object({
   profileId: z.string().uuid().optional(),
 });
 
-/** Zod schema for SocialProfilesProfileSkillProficiency */
+/** Zod schema for SocialProfilesProfileSkillProficiency. OpenAPI schema for Social Profiles Profile Skill Proficiency. */
 SocialProfilesProfileSkillProficiencySchema = z.enum(['Beginner', 'Intermediate', 'Advanced', 'Expert']);
 
-/** Zod schema for SocialProfilesProfileVisibility */
+/** Zod schema for SocialProfilesProfileVisibility. OpenAPI schema for Social Profiles Profile Visibility. */
 SocialProfilesProfileVisibilitySchema = z.enum(['Private', 'Connections', 'Public']);
 
-/** Zod schema for SocialProfilesSocialProfileDto */
+/** Zod schema for SocialProfilesSocialProfileDto. Data model for Social Profiles Social Profile Dto. */
 SocialProfilesSocialProfileDtoSchema = z.object({
   id: z.string().uuid().optional(),
   availabilityStatus: z.lazy(() => SocialProfilesProfileAvailabilityStatusSchema).optional(),
@@ -33822,7 +34828,7 @@ SocialProfilesSocialProfileDtoSchema = z.object({
   websiteUrl: z.string().nullable().optional(),
 });
 
-/** Zod schema for SocialProfilesUpdateProfilePortfolioItemBody */
+/** Zod schema for SocialProfilesUpdateProfilePortfolioItemBody. Data model for Social Profiles Update Profile Portfolio Item Body. */
 SocialProfilesUpdateProfilePortfolioItemBodySchema = z.object({
   description: z.string().nullable().optional(),
   displayOrder: z.number().int().optional(),
@@ -33832,7 +34838,7 @@ SocialProfilesUpdateProfilePortfolioItemBodySchema = z.object({
   url: z.string().nullable().optional(),
 });
 
-/** Zod schema for SocialProfilesUpdateProfilePrivacyBody */
+/** Zod schema for SocialProfilesUpdateProfilePrivacyBody. Data model for Social Profiles Update Profile Privacy Body. */
 SocialProfilesUpdateProfilePrivacyBodySchema = z.object({
   showActivity: z.boolean().optional(),
   showPortfolio: z.boolean().optional(),
@@ -33840,7 +34846,7 @@ SocialProfilesUpdateProfilePrivacyBodySchema = z.object({
   visibility: z.lazy(() => SocialProfilesProfileVisibilitySchema).optional(),
 });
 
-/** Zod schema for SocialProfilesUpdateSocialProfileBody */
+/** Zod schema for SocialProfilesUpdateSocialProfileBody. Data model for Social Profiles Update Social Profile Body. */
 SocialProfilesUpdateSocialProfileBodySchema = z.object({
   availabilityStatus: z.lazy(() => SocialProfilesProfileAvailabilityStatusSchema).optional(),
   avatarUrl: z.string().nullable().optional(),
@@ -33855,7 +34861,7 @@ SocialProfilesUpdateSocialProfileBodySchema = z.object({
   websiteUrl: z.string().nullable().optional(),
 });
 
-/** Zod schema for SocialReactionsReactionDto */
+/** Zod schema for SocialReactionsReactionDto. Data model for Social Reactions Reaction Dto. */
 SocialReactionsReactionDtoSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
@@ -33866,26 +34872,26 @@ SocialReactionsReactionDtoSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for SocialReactionsReactionTargetType */
+/** Zod schema for SocialReactionsReactionTargetType. OpenAPI schema for Social Reactions Reaction Target Type. */
 SocialReactionsReactionTargetTypeSchema = z.enum(['Post', 'Comment', 'BlogPost', 'CourseReview', 'Discussion', 'Reply']);
 
-/** Zod schema for SocialReactionsReactionType */
+/** Zod schema for SocialReactionsReactionType. OpenAPI schema for Social Reactions Reaction Type. */
 SocialReactionsReactionTypeSchema = z.enum(['Like', 'Love', 'Insightful', 'Celebrate', 'Support', 'Curious']);
 
-/** Zod schema for SocialReactionsRemoveReactionInput */
+/** Zod schema for SocialReactionsRemoveReactionInput. Data model for Social Reactions Remove Reaction Request. */
 SocialReactionsRemoveReactionInputSchema = z.object({
   targetId: z.string().uuid().optional(),
   targetType: z.lazy(() => SocialReactionsReactionTargetTypeSchema).optional(),
 });
 
-/** Zod schema for SocialReactionsSetReactionInput */
+/** Zod schema for SocialReactionsSetReactionInput. Data model for Social Reactions Set Reaction Request. */
 SocialReactionsSetReactionInputSchema = z.object({
   targetId: z.string().uuid().optional(),
   targetType: z.lazy(() => SocialReactionsReactionTargetTypeSchema).optional(),
   type: z.lazy(() => SocialReactionsReactionTypeSchema).optional(),
 });
 
-/** Zod schema for SocialReactionsTargetReactionSummaryDto */
+/** Zod schema for SocialReactionsTargetReactionSummaryDto. Data model for Social Reactions Target Reaction Summary Dto. */
 SocialReactionsTargetReactionSummaryDtoSchema = z.object({
   counts: z
     .object({
@@ -33903,10 +34909,10 @@ SocialReactionsTargetReactionSummaryDtoSchema = z.object({
   total: z.number().int().optional(),
 });
 
-/** Zod schema for SystemDayOfWeek */
+/** Zod schema for SystemDayOfWeek. OpenAPI schema for System Day Of Week. */
 SystemDayOfWeekSchema = z.enum(['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']);
 
-/** Zod schema for TeamsTeam */
+/** Zod schema for TeamsTeam. Data model for Teams Team. */
 TeamsTeamSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
@@ -33942,7 +34948,7 @@ TeamsTeamSchema = z.object({
   visibility: z.lazy(() => TeamsTeamVisibilitySchema).optional(),
 });
 
-/** Zod schema for TeamsTeamInvitation */
+/** Zod schema for TeamsTeamInvitation. Data model for Teams Team Invitation. */
 TeamsTeamInvitationSchema = z.object({
   id: z.string().uuid().optional(),
   acceptedByUserId: z.string().uuid().nullable().optional(),
@@ -33974,7 +34980,7 @@ TeamsTeamInvitationSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for TeamsTeamMember */
+/** Zod schema for TeamsTeamMember. Data model for Teams Team Member. */
 TeamsTeamMemberSchema = z.object({
   id: z.string().uuid().optional(),
   authority: z.lazy(() => TeamsTeamMemberAuthoritySchema).optional(),
@@ -34004,13 +35010,13 @@ TeamsTeamMemberSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for TeamsTeamMemberAuthority */
+/** Zod schema for TeamsTeamMemberAuthority. OpenAPI schema for Teams Team Member Authority. */
 TeamsTeamMemberAuthoritySchema = z.enum(['Viewer', 'Member', 'Manager', 'Owner']);
 
-/** Zod schema for TeamsTeamStatus */
+/** Zod schema for TeamsTeamStatus. OpenAPI schema for Teams Team Status. */
 TeamsTeamStatusSchema = z.enum(['Active', 'Archived']);
 
-/** Zod schema for TeamsTeamVisibility */
+/** Zod schema for TeamsTeamVisibility. OpenAPI schema for Teams Team Visibility. */
 TeamsTeamVisibilitySchema = z.enum(['Private', 'Tenant', 'Public']);
 
 /** Zod schema for TenantInfo. Lightweight tenant information for cross-module queries.
@@ -34022,44 +35028,44 @@ TenantInfoSchema = z.object({
   slug: z.string().nullable().optional(),
 });
 
-/** Zod schema for TestingLabAddTestingEventCommitteeMemberInput */
+/** Zod schema for TestingLabAddTestingEventCommitteeMemberInput. Data model for Testing Lab Add Testing Event Committee Member Request. */
 TestingLabAddTestingEventCommitteeMemberInputSchema = z.object({
   isChair: z.boolean().optional(),
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for TestingLabAssignTestingLabRoleInput */
+/** Zod schema for TestingLabAssignTestingLabRoleInput. Data model for Testing Lab Assign Testing Lab Role Request. */
 TestingLabAssignTestingLabRoleInputSchema = z.object({
   expiresAt: z.string().datetime().nullable().optional(),
   roleName: z.string().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for TestingLabAssignTestingProjectApplicationSlotInput */
+/** Zod schema for TestingLabAssignTestingProjectApplicationSlotInput. Data model for Testing Lab Assign Testing Project Application Slot Request. */
 TestingLabAssignTestingProjectApplicationSlotInputSchema = z.object({
   slotId: z.string().uuid().optional(),
 });
 
-/** Zod schema for TestingLabAssignTestingProjectToTesterInput */
+/** Zod schema for TestingLabAssignTestingProjectToTesterInput. Data model for Testing Lab Assign Testing Project To Tester Request. */
 TestingLabAssignTestingProjectToTesterInputSchema = z.object({
   applicationId: z.string().uuid().optional(),
 });
 
-/** Zod schema for TestingLabAttendanceStatus */
+/** Zod schema for TestingLabAttendanceStatus. OpenAPI schema for Testing Lab Attendance Status. */
 TestingLabAttendanceStatusSchema = z.enum(['Registered', 'Present', 'Completed', 'NoShow']);
 
-/** Zod schema for TestingLabCancelTestingEventInput */
+/** Zod schema for TestingLabCancelTestingEventInput. Data model for Testing Lab Cancel Testing Event Request. */
 TestingLabCancelTestingEventInputSchema = z.object({
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for TestingLabCastTestingApplicationVoteInput */
+/** Zod schema for TestingLabCastTestingApplicationVoteInput. Data model for Testing Lab Cast Testing Application Vote Request. */
 TestingLabCastTestingApplicationVoteInputSchema = z.object({
   comments: z.string().nullable().optional(),
   decision: z.lazy(() => TestingLabTestingApplicationVoteDecisionSchema).optional(),
 });
 
-/** Zod schema for TestingLabConfigureTestingEventInput */
+/** Zod schema for TestingLabConfigureTestingEventInput. Data model for Testing Lab Configure Testing Event Request. */
 TestingLabConfigureTestingEventInputSchema = z.object({
   candidateInstructions: z.string().nullable().optional(),
   generalRules: z.string().nullable().optional(),
@@ -34068,7 +35074,7 @@ TestingLabConfigureTestingEventInputSchema = z.object({
   testerRegistrationSchema: z.lazy(() => TestingLabQuestionnaireSchemaSchema).optional(),
 });
 
-/** Zod schema for TestingLabConfigureTestingEventLearningInput */
+/** Zod schema for TestingLabConfigureTestingEventLearningInput. Data model for Testing Lab Configure Testing Event Learning Request. */
 TestingLabConfigureTestingEventLearningInputSchema = z.object({
   cohortId: z.string().uuid().nullable().optional(),
   courseId: z.string().uuid().optional(),
@@ -34093,7 +35099,7 @@ TestingLabCreateSimpleTestingRequestDtoSchema = z.object({
   versionNumber: z.string().min(1).max(50),
 });
 
-/** Zod schema for TestingLabCreateTestingEventInput */
+/** Zod schema for TestingLabCreateTestingEventInput. Data model for Testing Lab Create Testing Event Request. */
 TestingLabCreateTestingEventInputSchema = z.object({
   applicationsCloseAt: z.string().datetime().optional(),
   applicationsOpenAt: z.string().datetime().optional(),
@@ -34110,7 +35116,7 @@ TestingLabCreateTestingEventInputSchema = z.object({
   timeZoneId: z.string().nullable().optional(),
 });
 
-/** Zod schema for TestingLabCreateTestingEventSlotsInput */
+/** Zod schema for TestingLabCreateTestingEventSlotsInput. Data model for Testing Lab Create Testing Event Slots Request. */
 TestingLabCreateTestingEventSlotsInputSchema = z.object({
   slots: z
     .array(z.lazy(() => TestingLabUpsertTestingEventSlotInputSchema))
@@ -34118,7 +35124,7 @@ TestingLabCreateTestingEventSlotsInputSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for TestingLabCreateTestingLabRoleInput */
+/** Zod schema for TestingLabCreateTestingLabRoleInput. Data model for Testing Lab Create Testing Lab Role Request. */
 TestingLabCreateTestingLabRoleInputSchema = z.object({
   description: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
@@ -34139,7 +35145,7 @@ TestingLabCreateTestingLabSettingsDtoSchema = z.object({
   versionSubmissionPolicy: z.lazy(() => ProjectsVersionSubmissionPolicySchema).optional(),
 });
 
-/** Zod schema for TestingLabCreateTestingLocationDto */
+/** Zod schema for TestingLabCreateTestingLocationDto. Data model for Testing Lab Create Testing Location Dto. */
 TestingLabCreateTestingLocationDtoSchema = z.object({
   address: z.string().nullable().optional(),
   city: z.string().nullable().optional(),
@@ -34158,12 +35164,12 @@ TestingLabCreateTestingLocationDtoSchema = z.object({
   virtualUrl: z.string().nullable().optional(),
 });
 
-/** Zod schema for TestingLabCreateTestingProjectApplicationDraftInput */
+/** Zod schema for TestingLabCreateTestingProjectApplicationDraftInput. Data model for Testing Lab Create Testing Project Application Draft Request. */
 TestingLabCreateTestingProjectApplicationDraftInputSchema = z.object({
   projectId: z.string().uuid().optional(),
 });
 
-/** Zod schema for TestingLabCreateTestingRequestDto */
+/** Zod schema for TestingLabCreateTestingRequestDto. Data model for Testing Lab Create Testing Request Dto. */
 TestingLabCreateTestingRequestDtoSchema = z.object({
   description: z.string().nullable().optional(),
   downloadUrl: z.string().max(1000).nullable().optional(),
@@ -34180,7 +35186,7 @@ TestingLabCreateTestingRequestDtoSchema = z.object({
   title: z.string().min(1).max(255),
 });
 
-/** Zod schema for TestingLabCreateTestingSessionDto */
+/** Zod schema for TestingLabCreateTestingSessionDto. Data model for Testing Lab Create Testing Session Dto. */
 TestingLabCreateTestingSessionDtoSchema = z.object({
   endTime: z.string().datetime(),
   locationId: z.string().uuid(),
@@ -34194,16 +35200,16 @@ TestingLabCreateTestingSessionDtoSchema = z.object({
   testingRequestId: z.string().uuid(),
 });
 
-/** Zod schema for TestingLabDecideTestingProjectApplicationInput */
+/** Zod schema for TestingLabDecideTestingProjectApplicationInput. Data model for Testing Lab Decide Testing Project Application Request. */
 TestingLabDecideTestingProjectApplicationInputSchema = z.object({
   rationale: z.string().nullable().optional(),
   slotId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for TestingLabFeedbackFormType */
+/** Zod schema for TestingLabFeedbackFormType. OpenAPI schema for Testing Lab Feedback Form Type. */
 TestingLabFeedbackFormTypeSchema = z.enum(['General', 'BugReport', 'Usability', 'Performance', 'Accessibility']);
 
-/** Zod schema for TestingLabFeedbackInput */
+/** Zod schema for TestingLabFeedbackInput. Data model for Testing Lab Feedback Request. */
 TestingLabFeedbackInputSchema = z.object({
   additionalNotes: z.string().nullable().optional(),
   feedbackData: z.string().nullable().optional(),
@@ -34244,27 +35250,27 @@ TestingLabFeedbackQualityRatingSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for TestingLabGrantResourcePermissionInput */
+/** Zod schema for TestingLabGrantResourcePermissionInput. Data model for Testing Lab Grant Resource Permission Request. */
 TestingLabGrantResourcePermissionInputSchema = z.object({
   action: z.string().nullable().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for TestingLabInstructionType */
+/** Zod schema for TestingLabInstructionType. OpenAPI schema for Testing Lab Instruction Type. */
 TestingLabInstructionTypeSchema = z.enum(['Text', 'Url', 'File']);
 
-/** Zod schema for TestingLabLinkSessionProjectInput */
+/** Zod schema for TestingLabLinkSessionProjectInput. Data model for Testing Lab Link Session Project Request. */
 TestingLabLinkSessionProjectInputSchema = z.object({
   notes: z.string().nullable().optional(),
   projectId: z.string().uuid().optional(),
   projectVersionId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for TestingLabLocationStatus */
+/** Zod schema for TestingLabLocationStatus. OpenAPI schema for Testing Lab Location Status. */
 TestingLabLocationStatusSchema = z.enum(['Active', 'Maintenance', 'Inactive']);
 
-/** Zod schema for TestingLabParticipationStatus */
+/** Zod schema for TestingLabParticipationStatus. OpenAPI schema for Testing Lab Participation Status. */
 TestingLabParticipationStatusSchema = z.enum(['Registered', 'Active', 'Completed', 'Withdrawn', 'Suspended']);
 
 /** Zod schema for TestingLabPublicTestingEventGameProjection. A deliberately small, event-scoped preview of a game approved for public
@@ -34278,7 +35284,7 @@ TestingLabPublicTestingEventGameProjectionSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for TestingLabPublicTestingEventProjection */
+/** Zod schema for TestingLabPublicTestingEventProjection. Data model for Testing Lab Public Testing Event Projection. */
 TestingLabPublicTestingEventProjectionSchema = z.object({
   id: z.string().uuid().optional(),
   applicationCount: z.number().int().optional(),
@@ -34304,7 +35310,7 @@ TestingLabPublicTestingEventProjectionSchema = z.object({
   timeZoneId: z.string().nullable().optional(),
 });
 
-/** Zod schema for TestingLabPublicTestingEventSlotProjection */
+/** Zod schema for TestingLabPublicTestingEventSlotProjection. Data model for Testing Lab Public Testing Event Slot Projection. */
 TestingLabPublicTestingEventSlotProjectionSchema = z.object({
   id: z.string().uuid().optional(),
   approvedProjectCount: z.number().int().optional(),
@@ -34321,30 +35327,30 @@ TestingLabPublicTestingEventSlotProjectionSchema = z.object({
   startsAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for TestingLabQuestionnaireAnswer */
+/** Zod schema for TestingLabQuestionnaireAnswer. Data model for Testing Lab Questionnaire Answer. */
 TestingLabQuestionnaireAnswerSchema = z.object({
   questionId: z.string().nullable().optional(),
   selectedOptionIds: z.array(z.string()).nullable().optional(),
   textValue: z.string().nullable().optional(),
 });
 
-/** Zod schema for TestingLabQuestionnaireCondition */
+/** Zod schema for TestingLabQuestionnaireCondition. Data model for Testing Lab Questionnaire Condition. */
 TestingLabQuestionnaireConditionSchema = z.object({
   operator: z.lazy(() => TestingLabQuestionnaireConditionOperatorSchema).optional(),
   questionId: z.string().nullable().optional(),
   value: z.string().nullable().optional(),
 });
 
-/** Zod schema for TestingLabQuestionnaireConditionOperator */
+/** Zod schema for TestingLabQuestionnaireConditionOperator. OpenAPI schema for Testing Lab Questionnaire Condition Operator. */
 TestingLabQuestionnaireConditionOperatorSchema = z.enum(['Equals', 'NotEquals', 'Includes']);
 
-/** Zod schema for TestingLabQuestionnaireOption */
+/** Zod schema for TestingLabQuestionnaireOption. Data model for Testing Lab Questionnaire Option. */
 TestingLabQuestionnaireOptionSchema = z.object({
   id: z.string().nullable().optional(),
   label: z.string().nullable().optional(),
 });
 
-/** Zod schema for TestingLabQuestionnaireOutput */
+/** Zod schema for TestingLabQuestionnaireOutput. Data model for Testing Lab Questionnaire Response. */
 TestingLabQuestionnaireOutputSchema = z.object({
   answers: z
     .array(z.lazy(() => TestingLabQuestionnaireAnswerSchema))
@@ -34352,7 +35358,7 @@ TestingLabQuestionnaireOutputSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for TestingLabQuestionnaireQuestion */
+/** Zod schema for TestingLabQuestionnaireQuestion. Data model for Testing Lab Questionnaire Question. */
 TestingLabQuestionnaireQuestionSchema = z.object({
   id: z.string().nullable().optional(),
   condition: z.lazy(() => TestingLabQuestionnaireConditionSchema).optional(),
@@ -34365,10 +35371,10 @@ TestingLabQuestionnaireQuestionSchema = z.object({
   type: z.lazy(() => TestingLabQuestionnaireQuestionTypeSchema).optional(),
 });
 
-/** Zod schema for TestingLabQuestionnaireQuestionType */
+/** Zod schema for TestingLabQuestionnaireQuestionType. OpenAPI schema for Testing Lab Questionnaire Question Type. */
 TestingLabQuestionnaireQuestionTypeSchema = z.enum(['FreeText', 'SingleChoice', 'MultipleChoice']);
 
-/** Zod schema for TestingLabQuestionnaireSchema */
+/** Zod schema for TestingLabQuestionnaireSchema. Data model for Testing Lab Questionnaire Schema. */
 TestingLabQuestionnaireSchemaSchema = z.object({
   questions: z
     .array(z.lazy(() => TestingLabQuestionnaireQuestionSchema))
@@ -34377,30 +35383,30 @@ TestingLabQuestionnaireSchemaSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for TestingLabRateFeedbackQualityDto */
+/** Zod schema for TestingLabRateFeedbackQualityDto. Data model for Testing Lab Rate Feedback Quality Dto. */
 TestingLabRateFeedbackQualityDtoSchema = z.object({
   quality: z.lazy(() => TestingLabFeedbackQualitySchema).optional(),
 });
 
-/** Zod schema for TestingLabRegisterTestingEventSlotInput */
+/** Zod schema for TestingLabRegisterTestingEventSlotInput. Data model for Testing Lab Register Testing Event Slot Request. */
 TestingLabRegisterTestingEventSlotInputSchema = z.object({
   acceptedRules: z.boolean().optional(),
   notes: z.string().nullable().optional(),
   registrationResponse: z.lazy(() => TestingLabQuestionnaireOutputSchema).optional(),
 });
 
-/** Zod schema for TestingLabRegistrationStatus */
+/** Zod schema for TestingLabRegistrationStatus. OpenAPI schema for Testing Lab Registration Status. */
 TestingLabRegistrationStatusSchema = z.enum(['Registered', 'Confirmed', 'Cancelled', 'Attended', 'NoShow']);
 
-/** Zod schema for TestingLabRegistrationType */
+/** Zod schema for TestingLabRegistrationType. OpenAPI schema for Testing Lab Registration Type. */
 TestingLabRegistrationTypeSchema = z.enum(['ProjectMember', 'Tester']);
 
-/** Zod schema for TestingLabReportFeedbackDto */
+/** Zod schema for TestingLabReportFeedbackDto. Data model for Testing Lab Report Feedback Dto. */
 TestingLabReportFeedbackDtoSchema = z.object({
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for TestingLabSaveTestingProjectApplicationDraftInput */
+/** Zod schema for TestingLabSaveTestingProjectApplicationDraftInput. Data model for Testing Lab Save Testing Project Application Draft Request. */
 TestingLabSaveTestingProjectApplicationDraftInputSchema = z.object({
   acceptedRules: z.boolean().nullable().optional(),
   brief: z.lazy(() => TestingLabTestingProjectBriefSchema).optional(),
@@ -34411,7 +35417,7 @@ TestingLabSaveTestingProjectApplicationDraftInputSchema = z.object({
   submittedAssetReferenceIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
-/** Zod schema for TestingLabSessionProjectProjection */
+/** Zod schema for TestingLabSessionProjectProjection. Data model for Testing Lab Session Project Projection. */
 TestingLabSessionProjectProjectionSchema = z.object({
   isActive: z.boolean().optional(),
   linkId: z.string().uuid().optional(),
@@ -34459,16 +35465,16 @@ TestingLabSessionRegistrationSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for TestingLabSessionRegistrationInput */
+/** Zod schema for TestingLabSessionRegistrationInput. Data model for Testing Lab Session Registration Request. */
 TestingLabSessionRegistrationInputSchema = z.object({
   notes: z.string().nullable().optional(),
   registrationType: z.lazy(() => TestingLabRegistrationTypeSchema).optional(),
 });
 
-/** Zod schema for TestingLabSessionStatus */
+/** Zod schema for TestingLabSessionStatus. OpenAPI schema for Testing Lab Session Status. */
 TestingLabSessionStatusSchema = z.enum(['Scheduled', 'Active', 'Completed', 'Cancelled']);
 
-/** Zod schema for TestingLabSessionWaitlist */
+/** Zod schema for TestingLabSessionWaitlist. Data model for Testing Lab Session Waitlist. */
 TestingLabSessionWaitlistSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
@@ -34506,7 +35512,7 @@ TestingLabSubmitFeedbackDtoSchema = z.object({
   wouldRecommend: z.boolean().nullable().optional(),
 });
 
-/** Zod schema for TestingLabSubmitTestingEventFeedbackInput */
+/** Zod schema for TestingLabSubmitTestingEventFeedbackInput. Data model for Testing Lab Submit Testing Event Feedback Request. */
 TestingLabSubmitTestingEventFeedbackInputSchema = z.object({
   additionalNotes: z.string().nullable().optional(),
   feedbackData: z.string().nullable().optional(),
@@ -34516,7 +35522,7 @@ TestingLabSubmitTestingEventFeedbackInputSchema = z.object({
   wouldRecommend: z.boolean().nullable().optional(),
 });
 
-/** Zod schema for TestingLabSubmitTestingProjectApplicationInput */
+/** Zod schema for TestingLabSubmitTestingProjectApplicationInput. Data model for Testing Lab Submit Testing Project Application Request. */
 TestingLabSubmitTestingProjectApplicationInputSchema = z.object({
   acceptedRules: z.boolean().optional(),
   brief: z.lazy(() => TestingLabTestingProjectBriefSchema).optional(),
@@ -34528,7 +35534,7 @@ TestingLabSubmitTestingProjectApplicationInputSchema = z.object({
   submittedAssetReferenceIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
-/** Zod schema for TestingLabTestingApplicationReviewAssetProjection */
+/** Zod schema for TestingLabTestingApplicationReviewAssetProjection. Data model for Testing Lab Testing Application Review Asset Projection. */
 TestingLabTestingApplicationReviewAssetProjectionSchema = z.object({
   accessUrl: z.string().nullable().optional(),
   assetReferenceId: z.string().uuid().optional(),
@@ -34537,7 +35543,7 @@ TestingLabTestingApplicationReviewAssetProjectionSchema = z.object({
   mimeType: z.string().nullable().optional(),
 });
 
-/** Zod schema for TestingLabTestingApplicationReviewPackageProjection */
+/** Zod schema for TestingLabTestingApplicationReviewPackageProjection. Data model for Testing Lab Testing Application Review Package Projection. */
 TestingLabTestingApplicationReviewPackageProjectionSchema = z.object({
   applicationId: z.string().uuid().optional(),
   assets: z
@@ -34553,16 +35559,16 @@ TestingLabTestingApplicationReviewPackageProjectionSchema = z.object({
   versionStatus: z.lazy(() => ProjectsProjectVersionStatusSchema).optional(),
 });
 
-/** Zod schema for TestingLabTestingApplicationStatus */
+/** Zod schema for TestingLabTestingApplicationStatus. OpenAPI schema for Testing Lab Testing Application Status. */
 TestingLabTestingApplicationStatusSchema = z.enum(['Draft', 'Pending', 'UnderReview', 'Approved', 'Rejected', 'Waitlisted', 'Withdrawn']);
 
-/** Zod schema for TestingLabTestingApplicationTesterEligibilityProjection */
+/** Zod schema for TestingLabTestingApplicationTesterEligibilityProjection. Data model for Testing Lab Testing Application Tester Eligibility Projection. */
 TestingLabTestingApplicationTesterEligibilityProjectionSchema = z.object({
   eligibleApplicationIds: z.array(z.string().uuid()).nullable().optional(),
   testerUserId: z.string().uuid().optional(),
 });
 
-/** Zod schema for TestingLabTestingApplicationVote */
+/** Zod schema for TestingLabTestingApplicationVote. Data model for Testing Lab Testing Application Vote. */
 TestingLabTestingApplicationVoteSchema = z.object({
   id: z.string().uuid().optional(),
   application: z.lazy(() => TestingLabTestingProjectApplicationSchema).optional(),
@@ -34589,10 +35595,10 @@ TestingLabTestingApplicationVoteSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for TestingLabTestingApplicationVoteDecision */
+/** Zod schema for TestingLabTestingApplicationVoteDecision. OpenAPI schema for Testing Lab Testing Application Vote Decision. */
 TestingLabTestingApplicationVoteDecisionSchema = z.enum(['Approve', 'Reject', 'Abstain']);
 
-/** Zod schema for TestingLabTestingApplicationVoteProjection */
+/** Zod schema for TestingLabTestingApplicationVoteProjection. Data model for Testing Lab Testing Application Vote Projection. */
 TestingLabTestingApplicationVoteProjectionSchema = z.object({
   id: z.string().uuid().optional(),
   comments: z.string().nullable().optional(),
@@ -34601,7 +35607,7 @@ TestingLabTestingApplicationVoteProjectionSchema = z.object({
   reviewerId: z.string().uuid().optional(),
 });
 
-/** Zod schema for TestingLabTestingCommitteeMember */
+/** Zod schema for TestingLabTestingCommitteeMember. Data model for Testing Lab Testing Committee Member. */
 TestingLabTestingCommitteeMemberSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
@@ -34628,10 +35634,10 @@ TestingLabTestingCommitteeMemberSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for TestingLabTestingContext */
+/** Zod schema for TestingLabTestingContext. OpenAPI schema for Testing Lab Testing Context. */
 TestingLabTestingContextSchema = z.enum(['Online', 'InPerson']);
 
-/** Zod schema for TestingLabTestingEvent */
+/** Zod schema for TestingLabTestingEvent. Data model for Testing Lab Testing Event. */
 TestingLabTestingEventSchema = z.object({
   id: z.string().uuid().optional(),
   applications: z
@@ -34702,17 +35708,17 @@ TestingLabTestingEventSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for TestingLabTestingEventApplicationAccessProjection */
+/** Zod schema for TestingLabTestingEventApplicationAccessProjection. Data model for Testing Lab Testing Event Application Access Projection. */
 TestingLabTestingEventApplicationAccessProjectionSchema = z.object({
   canManageApplications: z.boolean().optional(),
   canViewApplications: z.boolean().optional(),
   canVote: z.boolean().optional(),
 });
 
-/** Zod schema for TestingLabTestingEventApprovalMode */
+/** Zod schema for TestingLabTestingEventApprovalMode. OpenAPI schema for Testing Lab Testing Event Approval Mode. */
 TestingLabTestingEventApprovalModeSchema = z.enum(['ManagerOnly', 'Committee']);
 
-/** Zod schema for TestingLabTestingEventCommitteeMemberProjection */
+/** Zod schema for TestingLabTestingEventCommitteeMemberProjection. Data model for Testing Lab Testing Event Committee Member Projection. */
 TestingLabTestingEventCommitteeMemberProjectionSchema = z.object({
   id: z.string().uuid().optional(),
   eventId: z.string().uuid().optional(),
@@ -34723,7 +35729,7 @@ TestingLabTestingEventCommitteeMemberProjectionSchema = z.object({
   userName: z.string().nullable().optional(),
 });
 
-/** Zod schema for TestingLabTestingEventConfigurationProjection */
+/** Zod schema for TestingLabTestingEventConfigurationProjection. Data model for Testing Lab Testing Event Configuration Projection. */
 TestingLabTestingEventConfigurationProjectionSchema = z.object({
   candidateInstructions: z.string().nullable().optional(),
   frozenAt: z.string().datetime().nullable().optional(),
@@ -34735,7 +35741,7 @@ TestingLabTestingEventConfigurationProjectionSchema = z.object({
   testerRegistrationSchema: z.lazy(() => TestingLabQuestionnaireSchemaSchema).optional(),
 });
 
-/** Zod schema for TestingLabTestingEventFeedbackProjection */
+/** Zod schema for TestingLabTestingEventFeedbackProjection. Data model for Testing Lab Testing Event Feedback Projection. */
 TestingLabTestingEventFeedbackProjectionSchema = z.object({
   id: z.string().uuid().optional(),
   additionalNotes: z.string().nullable().optional(),
@@ -34750,7 +35756,7 @@ TestingLabTestingEventFeedbackProjectionSchema = z.object({
   wouldRecommend: z.boolean().nullable().optional(),
 });
 
-/** Zod schema for TestingLabTestingEventFeedbackReviewProjection */
+/** Zod schema for TestingLabTestingEventFeedbackReviewProjection. Data model for Testing Lab Testing Event Feedback Review Projection. */
 TestingLabTestingEventFeedbackReviewProjectionSchema = z.object({
   applicationId: z.string().uuid().optional(),
   eventId: z.string().uuid().optional(),
@@ -34762,10 +35768,10 @@ TestingLabTestingEventFeedbackReviewProjectionSchema = z.object({
   testerUserId: z.string().uuid().optional(),
 });
 
-/** Zod schema for TestingLabTestingEventMode */
+/** Zod schema for TestingLabTestingEventMode. OpenAPI schema for Testing Lab Testing Event Mode. */
 TestingLabTestingEventModeSchema = z.enum(['Online', 'InPerson', 'Hybrid']);
 
-/** Zod schema for TestingLabTestingEventProjection */
+/** Zod schema for TestingLabTestingEventProjection. Data model for Testing Lab Testing Event Projection. */
 TestingLabTestingEventProjectionSchema = z.object({
   id: z.string().uuid().optional(),
   applicationCount: z.number().int().optional(),
@@ -34800,10 +35806,10 @@ TestingLabTestingEventProjectionSchema = z.object({
   timeZoneId: z.string().nullable().optional(),
 });
 
-/** Zod schema for TestingLabTestingEventRecurrenceFrequency */
+/** Zod schema for TestingLabTestingEventRecurrenceFrequency. OpenAPI schema for Testing Lab Testing Event Recurrence Frequency. */
 TestingLabTestingEventRecurrenceFrequencySchema = z.enum(['Daily', 'Weekly', 'Monthly']);
 
-/** Zod schema for TestingLabTestingEventRecurrenceInput */
+/** Zod schema for TestingLabTestingEventRecurrenceInput. Data model for Testing Lab Testing Event Recurrence Request. */
 TestingLabTestingEventRecurrenceInputSchema = z.object({
   daysOfWeek: z
     .array(z.lazy(() => SystemDayOfWeekSchema))
@@ -34815,7 +35821,7 @@ TestingLabTestingEventRecurrenceInputSchema = z.object({
   occurrenceCount: z.number().int().nullable().optional(),
 });
 
-/** Zod schema for TestingLabTestingEventSlot */
+/** Zod schema for TestingLabTestingEventSlot. Data model for Testing Lab Testing Event Slot. */
 TestingLabTestingEventSlotSchema = z.object({
   id: z.string().uuid().optional(),
   campusName: z.string().max(200).nullable().optional(),
@@ -34850,7 +35856,7 @@ TestingLabTestingEventSlotSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for TestingLabTestingEventSlotProjection */
+/** Zod schema for TestingLabTestingEventSlotProjection. Data model for Testing Lab Testing Event Slot Projection. */
 TestingLabTestingEventSlotProjectionSchema = z.object({
   id: z.string().uuid().optional(),
   approvedProjectCount: z.number().int().optional(),
@@ -34867,10 +35873,10 @@ TestingLabTestingEventSlotProjectionSchema = z.object({
   startsAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for TestingLabTestingEventStatus */
+/** Zod schema for TestingLabTestingEventStatus. OpenAPI schema for Testing Lab Testing Event Status. */
 TestingLabTestingEventStatusSchema = z.enum(['Draft', 'ApplicationsOpen', 'ApplicationsClosed', 'Scheduled', 'Active', 'Completed', 'Cancelled']);
 
-/** Zod schema for TestingLabTestingEventTemplateProjection */
+/** Zod schema for TestingLabTestingEventTemplateProjection. Data model for Testing Lab Testing Event Template Projection. */
 TestingLabTestingEventTemplateProjectionSchema = z.object({
   id: z.string().uuid().optional(),
   currentRevision: z.lazy(() => TestingLabTestingEventTemplateRevisionProjectionSchema).optional(),
@@ -34881,7 +35887,7 @@ TestingLabTestingEventTemplateProjectionSchema = z.object({
   tenantId: z.string().uuid().optional(),
 });
 
-/** Zod schema for TestingLabTestingEventTemplateRevisionProjection */
+/** Zod schema for TestingLabTestingEventTemplateRevisionProjection. Data model for Testing Lab Testing Event Template Revision Projection. */
 TestingLabTestingEventTemplateRevisionProjectionSchema = z.object({
   id: z.string().uuid().optional(),
   candidateInstructions: z.string().nullable().optional(),
@@ -34953,7 +35959,7 @@ TestingLabTestingFeedbackSchema = z.object({
   wouldRecommend: z.boolean().nullable().optional(),
 });
 
-/** Zod schema for TestingLabTestingFeedbackDirectoryItem */
+/** Zod schema for TestingLabTestingFeedbackDirectoryItem. Data model for Testing Lab Testing Feedback Directory Item. */
 TestingLabTestingFeedbackDirectoryItemSchema = z.object({
   id: z.string().uuid().optional(),
   additionalNotes: z.string().nullable().optional(),
@@ -34983,7 +35989,7 @@ TestingLabTestingFeedbackDirectoryItemSchema = z.object({
   wouldRecommend: z.boolean().nullable().optional(),
 });
 
-/** Zod schema for TestingLabTestingFeedbackDirectoryPage */
+/** Zod schema for TestingLabTestingFeedbackDirectoryPage. Data model for Testing Lab Testing Feedback Directory Page. */
 TestingLabTestingFeedbackDirectoryPageSchema = z.object({
   items: z
     .array(z.lazy(() => TestingLabTestingFeedbackDirectoryItemSchema))
@@ -35032,7 +36038,7 @@ TestingLabTestingFeedbackFormSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for TestingLabTestingFeedbackObligationProjection */
+/** Zod schema for TestingLabTestingFeedbackObligationProjection. Data model for Testing Lab Testing Feedback Obligation Projection. */
 TestingLabTestingFeedbackObligationProjectionSchema = z.object({
   id: z.string().uuid().optional(),
   applicationId: z.string().uuid().optional(),
@@ -35045,10 +36051,10 @@ TestingLabTestingFeedbackObligationProjectionSchema = z.object({
   testerUserId: z.string().uuid().optional(),
 });
 
-/** Zod schema for TestingLabTestingFeedbackObligationStatus */
+/** Zod schema for TestingLabTestingFeedbackObligationStatus. OpenAPI schema for Testing Lab Testing Feedback Obligation Status. */
 TestingLabTestingFeedbackObligationStatusSchema = z.enum(['Pending', 'Fulfilled', 'Waived']);
 
-/** Zod schema for TestingLabTestingFeedbackSource */
+/** Zod schema for TestingLabTestingFeedbackSource. OpenAPI schema for Testing Lab Testing Feedback Source. */
 TestingLabTestingFeedbackSourceSchema = z.enum(['Request', 'Event']);
 
 /** Zod schema for TestingLabTestingInput. Represents a request for testing and quality assurance */
@@ -35113,7 +36119,7 @@ TestingLabTestingInputSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for TestingLabTestingLabAnalyticsReportProjection */
+/** Zod schema for TestingLabTestingLabAnalyticsReportProjection. Data model for Testing Lab Testing Lab Analytics Report Projection. */
 TestingLabTestingLabAnalyticsReportProjectionSchema = z.object({
   current: z.lazy(() => TestingLabTestingLabAnalyticsSummaryProjectionSchema).optional(),
   events: z
@@ -35131,7 +36137,7 @@ TestingLabTestingLabAnalyticsReportProjectionSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for TestingLabTestingLabAnalyticsSummaryProjection */
+/** Zod schema for TestingLabTestingLabAnalyticsSummaryProjection. Data model for Testing Lab Testing Lab Analytics Summary Projection. */
 TestingLabTestingLabAnalyticsSummaryProjectionSchema = z.object({
   applications: z.number().int().optional(),
   approvedProjects: z.number().int().optional(),
@@ -35146,7 +36152,7 @@ TestingLabTestingLabAnalyticsSummaryProjectionSchema = z.object({
   registeredTesters: z.number().int().optional(),
 });
 
-/** Zod schema for TestingLabTestingLabAnalyticsTrendProjection */
+/** Zod schema for TestingLabTestingLabAnalyticsTrendProjection. Data model for Testing Lab Testing Lab Analytics Trend Projection. */
 TestingLabTestingLabAnalyticsTrendProjectionSchema = z.object({
   applications: z.number().int().optional(),
   attendance: z.number().int().optional(),
@@ -35156,7 +36162,7 @@ TestingLabTestingLabAnalyticsTrendProjectionSchema = z.object({
   registrations: z.number().int().optional(),
 });
 
-/** Zod schema for TestingLabTestingLabEventAnalyticsProjection */
+/** Zod schema for TestingLabTestingLabEventAnalyticsProjection. Data model for Testing Lab Testing Lab Event Analytics Projection. */
 TestingLabTestingLabEventAnalyticsProjectionSchema = z.object({
   applications: z.number().int().optional(),
   approvedProjects: z.number().int().optional(),
@@ -35173,13 +36179,13 @@ TestingLabTestingLabEventAnalyticsProjectionSchema = z.object({
   status: z.lazy(() => TestingLabTestingEventStatusSchema).optional(),
 });
 
-/** Zod schema for TestingLabTestingLabLocationAnalyticsProjection */
+/** Zod schema for TestingLabTestingLabLocationAnalyticsProjection. Data model for Testing Lab Testing Lab Location Analytics Projection. */
 TestingLabTestingLabLocationAnalyticsProjectionSchema = z.object({
   active: z.number().int().optional(),
   total: z.number().int().optional(),
 });
 
-/** Zod schema for TestingLabTestingLabPermissionsDto */
+/** Zod schema for TestingLabTestingLabPermissionsDto. Data model for Testing Lab Testing Lab Permissions Dto. */
 TestingLabTestingLabPermissionsDtoSchema = z.object({
   canApproveApplications: z.boolean().optional(),
   canApproveRequests: z.boolean().optional(),
@@ -35211,7 +36217,7 @@ TestingLabTestingLabPermissionsDtoSchema = z.object({
   canViewSessions: z.boolean().optional(),
 });
 
-/** Zod schema for TestingLabTestingLabResourcePermissionDto */
+/** Zod schema for TestingLabTestingLabResourcePermissionDto. Data model for Testing Lab Testing Lab Resource Permission Dto. */
 TestingLabTestingLabResourcePermissionDtoSchema = z.object({
   action: z.string().nullable().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
@@ -35219,7 +36225,7 @@ TestingLabTestingLabResourcePermissionDtoSchema = z.object({
   resourceType: z.string().nullable().optional(),
 });
 
-/** Zod schema for TestingLabTestingLabRoleTemplate */
+/** Zod schema for TestingLabTestingLabRoleTemplate. Data model for Testing Lab Testing Lab Role Template. */
 TestingLabTestingLabRoleTemplateSchema = z.object({
   id: z.string().uuid().optional(),
   description: z.string().nullable().optional(),
@@ -35294,7 +36300,7 @@ TestingLabTestingLocationSchema = z.object({
   virtualUrl: z.string().max(500).nullable().optional(),
 });
 
-/** Zod schema for TestingLabTestingMode */
+/** Zod schema for TestingLabTestingMode. OpenAPI schema for Testing Lab Testing Mode. */
 TestingLabTestingModeSchema = z.enum(['Online', 'InPerson', 'Hybrid']);
 
 /** Zod schema for TestingLabTestingParticipant. Represents a participant in testing sessions and QA activities */
@@ -35338,7 +36344,7 @@ TestingLabTestingParticipantSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for TestingLabTestingParticipantDirectoryItemProjection */
+/** Zod schema for TestingLabTestingParticipantDirectoryItemProjection. Data model for Testing Lab Testing Participant Directory Item Projection. */
 TestingLabTestingParticipantDirectoryItemProjectionSchema = z.object({
   avatarUrl: z.string().nullable().optional(),
   campusName: z.string().nullable().optional(),
@@ -35363,7 +36369,7 @@ TestingLabTestingParticipantDirectoryItemProjectionSchema = z.object({
   waitlistPosition: z.number().int().nullable().optional(),
 });
 
-/** Zod schema for TestingLabTestingParticipantDirectoryProjection */
+/** Zod schema for TestingLabTestingParticipantDirectoryProjection. Data model for Testing Lab Testing Participant Directory Projection. */
 TestingLabTestingParticipantDirectoryProjectionSchema = z.object({
   attendedCount: z.number().int().optional(),
   checkedInCount: z.number().int().optional(),
@@ -35378,7 +36384,7 @@ TestingLabTestingParticipantDirectoryProjectionSchema = z.object({
   waitlistedCount: z.number().int().optional(),
 });
 
-/** Zod schema for TestingLabTestingParticipantMutationProjection */
+/** Zod schema for TestingLabTestingParticipantMutationProjection. Data model for Testing Lab Testing Participant Mutation Projection. */
 TestingLabTestingParticipantMutationProjectionSchema = z.object({
   id: z.string().uuid().optional(),
   startedAt: z.string().datetime().optional(),
@@ -35387,10 +36393,10 @@ TestingLabTestingParticipantMutationProjectionSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for TestingLabTestingPriority */
+/** Zod schema for TestingLabTestingPriority. OpenAPI schema for Testing Lab Testing Priority. */
 TestingLabTestingPrioritySchema = z.enum(['Low', 'Medium', 'High', 'Critical']);
 
-/** Zod schema for TestingLabTestingProjectApplication */
+/** Zod schema for TestingLabTestingProjectApplication. Data model for Testing Lab Testing Project Application. */
 TestingLabTestingProjectApplicationSchema = z.object({
   id: z.string().uuid().optional(),
   assignedSlot: z.lazy(() => TestingLabTestingEventSlotSchema).optional(),
@@ -35444,7 +36450,7 @@ TestingLabTestingProjectApplicationSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for TestingLabTestingProjectApplicationProjection */
+/** Zod schema for TestingLabTestingProjectApplicationProjection. Data model for Testing Lab Testing Project Application Projection. */
 TestingLabTestingProjectApplicationProjectionSchema = z.object({
   id: z.string().uuid().optional(),
   assignedSlotId: z.string().uuid().nullable().optional(),
@@ -35470,7 +36476,7 @@ TestingLabTestingProjectApplicationProjectionSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for TestingLabTestingProjectBrief */
+/** Zod schema for TestingLabTestingProjectBrief. Data model for Testing Lab Testing Project Brief. */
 TestingLabTestingProjectBriefSchema = z.object({
   controls: z.string().nullable().optional(),
   installationAndAccess: z.string().nullable().optional(),
@@ -35480,7 +36486,7 @@ TestingLabTestingProjectBriefSchema = z.object({
   testTasks: z.array(z.string()).nullable().optional(),
 });
 
-/** Zod schema for TestingLabTestingQuestionnaireRevision */
+/** Zod schema for TestingLabTestingQuestionnaireRevision. Data model for Testing Lab Testing Questionnaire Revision. */
 TestingLabTestingQuestionnaireRevisionSchema = z.object({
   id: z.string().uuid().optional(),
   applicationId: z.string().uuid().optional(),
@@ -35506,7 +36512,7 @@ TestingLabTestingQuestionnaireRevisionSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for TestingLabTestingRequestDetailProjection */
+/** Zod schema for TestingLabTestingRequestDetailProjection. Data model for Testing Lab Testing Request Detail Projection. */
 TestingLabTestingRequestDetailProjectionSchema = z.object({
   id: z.string().uuid().optional(),
   currentTesterCount: z.number().int().optional(),
@@ -35533,7 +36539,7 @@ TestingLabTestingRequestProjectProjectionSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for TestingLabTestingRequestProjectVersionProjection */
+/** Zod schema for TestingLabTestingRequestProjectVersionProjection. Data model for Testing Lab Testing Request Project Version Projection. */
 TestingLabTestingRequestProjectVersionProjectionSchema = z.object({
   id: z.string().uuid().optional(),
   project: z.lazy(() => TestingLabTestingRequestProjectProjectionSchema).optional(),
@@ -35542,7 +36548,7 @@ TestingLabTestingRequestProjectVersionProjectionSchema = z.object({
   versionNumber: z.string().nullable().optional(),
 });
 
-/** Zod schema for TestingLabTestingRequestStatus */
+/** Zod schema for TestingLabTestingRequestStatus. OpenAPI schema for Testing Lab Testing Request Status. */
 TestingLabTestingRequestStatusSchema = z.enum(['Draft', 'Open', 'Active', 'InProgress', 'Paused', 'Completed', 'Cancelled']);
 
 /** Zod schema for TestingLabTestingSession. Represents a testing session for quality assurance and user feedback collection */
@@ -35600,7 +36606,7 @@ TestingLabTestingSessionSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for TestingLabTestingSlotRegistrationProjection */
+/** Zod schema for TestingLabTestingSlotRegistrationProjection. Data model for Testing Lab Testing Slot Registration Projection. */
 TestingLabTestingSlotRegistrationProjectionSchema = z.object({
   id: z.string().uuid().optional(),
   checkedInAt: z.string().datetime().nullable().optional(),
@@ -35620,16 +36626,16 @@ TestingLabTestingSlotRegistrationProjectionSchema = z.object({
   waitlistPosition: z.number().int().nullable().optional(),
 });
 
-/** Zod schema for TestingLabTestingSlotRegistrationStatus */
+/** Zod schema for TestingLabTestingSlotRegistrationStatus. OpenAPI schema for Testing Lab Testing Slot Registration Status. */
 TestingLabTestingSlotRegistrationStatusSchema = z.enum(['Registered', 'Waitlisted', 'CheckedIn', 'Attended', 'Completed', 'Cancelled', 'NoShow']);
 
-/** Zod schema for TestingLabUpdateAttendanceDto */
+/** Zod schema for TestingLabUpdateAttendanceDto. Data model for Testing Lab Update Attendance Dto. */
 TestingLabUpdateAttendanceDtoSchema = z.object({
   attendanceStatus: z.lazy(() => TestingLabAttendanceStatusSchema).optional(),
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for TestingLabUpdateTestingEventInput */
+/** Zod schema for TestingLabUpdateTestingEventInput. Data model for Testing Lab Update Testing Event Request. */
 TestingLabUpdateTestingEventInputSchema = z.object({
   applicationsCloseAt: z.string().datetime().optional(),
   applicationsOpenAt: z.string().datetime().optional(),
@@ -35643,7 +36649,7 @@ TestingLabUpdateTestingEventInputSchema = z.object({
   timeZoneId: z.string().nullable().optional(),
 });
 
-/** Zod schema for TestingLabUpdateTestingLabRoleInput */
+/** Zod schema for TestingLabUpdateTestingLabRoleInput. Data model for Testing Lab Update Testing Lab Role Request. */
 TestingLabUpdateTestingLabRoleInputSchema = z.object({
   description: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
@@ -35664,7 +36670,7 @@ TestingLabUpdateTestingLabSettingsDtoSchema = z.object({
   versionSubmissionPolicy: z.lazy(() => ProjectsVersionSubmissionPolicySchema).optional(),
 });
 
-/** Zod schema for TestingLabUpdateTestingLocationDto */
+/** Zod schema for TestingLabUpdateTestingLocationDto. Data model for Testing Lab Update Testing Location Dto. */
 TestingLabUpdateTestingLocationDtoSchema = z.object({
   address: z.string().nullable().optional(),
   city: z.string().nullable().optional(),
@@ -35683,14 +36689,14 @@ TestingLabUpdateTestingLocationDtoSchema = z.object({
   virtualUrl: z.string().nullable().optional(),
 });
 
-/** Zod schema for TestingLabUpdateTestingProjectApplicationInput */
+/** Zod schema for TestingLabUpdateTestingProjectApplicationInput. Data model for Testing Lab Update Testing Project Application Request. */
 TestingLabUpdateTestingProjectApplicationInputSchema = z.object({
   preferredAvailability: z.string().nullable().optional(),
   projectVersionId: z.string().uuid().optional(),
   submittedAssetReferenceIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
-/** Zod schema for TestingLabUpdateTestingRequestDto */
+/** Zod schema for TestingLabUpdateTestingRequestDto. Data model for Testing Lab Update Testing Request Dto. */
 TestingLabUpdateTestingRequestDtoSchema = z.object({
   description: z.string().nullable().optional(),
   downloadUrl: z.string().max(500).nullable().optional(),
@@ -35707,7 +36713,7 @@ TestingLabUpdateTestingRequestDtoSchema = z.object({
   title: z.string().max(255).nullable().optional(),
 });
 
-/** Zod schema for TestingLabUpsertTestingEventSlotInput */
+/** Zod schema for TestingLabUpsertTestingEventSlotInput. Data model for Testing Lab Upsert Testing Event Slot Request. */
 TestingLabUpsertTestingEventSlotInputSchema = z.object({
   campusName: z.string().nullable().optional(),
   endsAt: z.string().datetime().optional(),
@@ -35720,7 +36726,7 @@ TestingLabUpsertTestingEventSlotInputSchema = z.object({
   startsAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for TestingLabUpsertTestingEventTemplateInput */
+/** Zod schema for TestingLabUpsertTestingEventTemplateInput. Data model for Testing Lab Upsert Testing Event Template Request. */
 TestingLabUpsertTestingEventTemplateInputSchema = z.object({
   candidateInstructions: z.string().nullable().optional(),
   defaultApprovalMode: z.lazy(() => TestingLabTestingEventApprovalModeSchema).optional(),
@@ -35734,7 +36740,7 @@ TestingLabUpsertTestingEventTemplateInputSchema = z.object({
   testerRegistrationSchema: z.lazy(() => TestingLabQuestionnaireSchemaSchema).optional(),
 });
 
-/** Zod schema for TestingLabUserTestingLabPermissions */
+/** Zod schema for TestingLabUserTestingLabPermissions. Data model for Testing Lab User Testing Lab Permissions. */
 TestingLabUserTestingLabPermissionsSchema = z.object({
   assignedRoles: z.array(z.string()).nullable().optional(),
   permissions: z.lazy(() => TestingLabTestingLabPermissionsDtoSchema).optional(),
@@ -35746,7 +36752,7 @@ TestingLabUserTestingLabPermissionsSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for TrustSafetyTrustSafetyAppeal */
+/** Zod schema for TrustSafetyTrustSafetyAppeal. Data model for Trust Safety Trust Safety Appeal. */
 TrustSafetyTrustSafetyAppealSchema = z.object({
   id: z.string().uuid().optional(),
   assignedTo: z.string().uuid().nullable().optional(),
@@ -35764,7 +36770,7 @@ TrustSafetyTrustSafetyAppealSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for TrustSafetyTrustSafetyAppealState */
+/** Zod schema for TrustSafetyTrustSafetyAppealState. OpenAPI schema for Trust Safety Trust Safety Appeal State. */
 TrustSafetyTrustSafetyAppealStateSchema = z.enum(['Submitted', 'Assigned', 'Upheld', 'Overturned']);
 
 // Backwards-compatible aliases for names generated before DTO identity was preserved

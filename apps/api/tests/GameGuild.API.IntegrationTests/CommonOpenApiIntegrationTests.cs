@@ -98,5 +98,20 @@ public sealed class CommonOpenApiIntegrationTests : IClassFixture<WebApplication
         activitySettings["oneOf"]!.AsArray().Should().HaveCount(3);
         activitySettings["discriminator"]!["propertyName"]!.GetValue<string>().Should().Be("kind");
         activitySettings["example"]!["kind"]!.GetValue<string>().Should().Be("discussion");
+
+        foreach (var (schemaId, discriminatorValue) in new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["Learning_Courses_DiscussionActivitySettings"] = "discussion",
+            ["Learning_Courses_ReflectionActivitySettings"] = "reflection",
+            ["Learning_Courses_SurveyActivitySettings"] = "survey"
+        })
+        {
+            var variant = schemas[schemaId]!.AsObject();
+            variant["required"]!.AsArray().Select(value => value!.GetValue<string>())
+                .Should().Contain("kind");
+            variant["properties"]!["kind"]!["enum"]!.AsArray()
+                .Select(value => value!.GetValue<string>()).Should().ContainSingle()
+                .Which.Should().Be(discriminatorValue);
+        }
     }
 }

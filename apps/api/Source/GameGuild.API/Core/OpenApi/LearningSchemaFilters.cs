@@ -76,12 +76,16 @@ internal sealed class LearningContractSchemaFilter : ISchemaFilter
         schema.Required?.Clear();
         schema.AdditionalProperties = null;
         schema.AdditionalPropertiesAllowed = true;
-        schema.OneOf =
-        [
-            context.SchemaGenerator.GenerateSchema(typeof(DiscussionActivitySettings), context.SchemaRepository),
-            context.SchemaGenerator.GenerateSchema(typeof(ReflectionActivitySettings), context.SchemaRepository),
-            context.SchemaGenerator.GenerateSchema(typeof(SurveyActivitySettings), context.SchemaRepository)
-        ];
+
+        var discussionSchema = context.SchemaGenerator.GenerateSchema(typeof(DiscussionActivitySettings), context.SchemaRepository);
+        var reflectionSchema = context.SchemaGenerator.GenerateSchema(typeof(ReflectionActivitySettings), context.SchemaRepository);
+        var surveySchema = context.SchemaGenerator.GenerateSchema(typeof(SurveyActivitySettings), context.SchemaRepository);
+
+        ApplyActivitySettingsDiscriminator(discussionSchema, context.SchemaRepository, "discussion");
+        ApplyActivitySettingsDiscriminator(reflectionSchema, context.SchemaRepository, "reflection");
+        ApplyActivitySettingsDiscriminator(surveySchema, context.SchemaRepository, "survey");
+
+        schema.OneOf = [discussionSchema, reflectionSchema, surveySchema];
         schema.Discriminator = new OpenApiDiscriminator
         {
             PropertyName = "kind",
@@ -93,6 +97,29 @@ internal sealed class LearningContractSchemaFilter : ISchemaFilter
             }
         };
         schema.Description = "Polymorphic activity settings selected by the kind discriminator.";
+    }
+
+    private static void ApplyActivitySettingsDiscriminator(
+        OpenApiSchema schemaReference,
+        SchemaRepository schemaRepository,
+        string discriminatorValue)
+    {
+        if (schemaReference.Reference?.Id is not { } schemaId
+            || !schemaRepository.Schemas.TryGetValue(schemaId, out var schema))
+        {
+            return;
+        }
+
+        schema.Properties ??= new Dictionary<string, OpenApiSchema>(StringComparer.Ordinal);
+        schema.Properties["kind"] = new OpenApiSchema
+        {
+            Type = "string",
+            Description = "Identifies the activity settings type.",
+            Enum = [new OpenApiString(discriminatorValue)],
+            Example = new OpenApiString(discriminatorValue)
+        };
+        schema.Required ??= new HashSet<string>(StringComparer.Ordinal);
+        schema.Required.Add("kind");
     }
 
     private static void ApplyReviewMethods(OpenApiSchema schema)
