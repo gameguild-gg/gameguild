@@ -59,3 +59,35 @@ The second stash's `MediumRun` report measured 7.790 µs per TestServer request
 without the in-memory global limiter and 9.441 µs with it. Its host, iteration
 count, confidence intervals, allocation data, and limitations were already
 recorded in [issue 149 performance evidence](issue-149-rate-limit-performance.md).
+
+## Older archived snapshot audit (2026-10-01)
+
+The canonical checkout has no entries in `git stash list`; ten older snapshots
+remain preserved under `refs/archive/stashes`. They were compared with the
+current `develop` tree before deciding whether to import them:
+
+| Archived ref | Snapshot contents | Disposition |
+| --- | --- | --- |
+| `2026-09-13/0-common-module-wip` | One PNG audit screenshot; no source files. | Keep as audit evidence; nothing to merge. |
+| `2026-09-13/1-common-module-pre-consolidation` | 307 files, 8,422 additions and 7,884 deletions across API, tests, clients, manifests, and lockfile. | Do not apply wholesale. The current tree already contains many of these files, while changed API/client contracts and the removed `packages/infrastructure/ui` paths do not apply to the current architecture. No isolated, issue-scoped source delta was identified. |
+| `2026-09-13/2-social-feed-audit-pre-consolidation` | Empty tracked worktree diff. | Nothing to merge. |
+| `2026-09-13/3-main-dependabot-auto-stash` | Three dependency files, including unresolved conflict markers in the package manifest and lockfile. | Not an authored feature change; do not import a conflicted dependency snapshot. |
+| `2026-09-13/4-web-route-auto-stash-newer` | External-login endpoint and generated-client metadata. | Already represented by `develop` commit `171ebe955` (the endpoint is `HEAD` and reports linked providers in a response header). Nothing to merge. |
+| `2026-09-13/5-web-route-auto-stash-older` | 18 older auth/client files, including generated clients and tests. | Current auth and client implementations have moved on; the snapshot does not apply cleanly to current files and no safe, still-missing delta was identified. |
+| `develop-20260814-182216` | 47 files, 27,003 additions and 1,415 deletions. | Old August auto-stash; changed files conflict with the current API/package state. No safe wholesale merge. |
+| `develop-20260814-204335` | 106 files, 28,737 additions and 3,120 deletions. | Old August auto-stash; overlaps current migrations, manifests, and generated clients. No safe wholesale merge. |
+| `develop-20260815-084013` | 436 files, 112,517 additions and 40,265 deletions. | Old August auto-stash; broad snapshot with extensive current-tree overlap and conflicts. No safe wholesale merge. |
+| `develop-20260815-112834` | 440 files, 113,787 additions and 40,246 deletions. | Old August auto-stash; broad snapshot with extensive current-tree overlap and conflicts. No safe wholesale merge. |
+
+The four `develop-*` snapshots were created against August commits that have
+since diverged substantially from current `develop`. A patch applicability
+check fails on current file shapes; applying them wholesale would restore stale
+generated output and migrations. The refs remain intact so any future specific
+requirement can be reviewed against its original snapshot. No source patch was
+applied from these ten refs.
+
+The three separate permission-cache/bulk-check/rate-limit stash commits listed
+earlier in this report are not among these ten refs. Their tracked-source audit
+found no pending implementation: the permission-cache and bulk-check snapshots
+contain benchmark evidence only, and the cache performance-test files in the
+remaining snapshot are byte-identical to current `develop`.
