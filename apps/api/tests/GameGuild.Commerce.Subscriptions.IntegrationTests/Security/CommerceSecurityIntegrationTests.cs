@@ -70,6 +70,7 @@ public class CommerceSecurityIntegrationTests : IClassFixture<WebApplicationFact
                 {
                     options.UseInMemoryDatabase(DatabaseName);
                 });
+                services.AddScoped<DbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
 
                 services.AddHttpLogging(o => { });
 

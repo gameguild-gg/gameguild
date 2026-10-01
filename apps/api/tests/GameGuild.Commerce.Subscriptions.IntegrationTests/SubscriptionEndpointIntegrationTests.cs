@@ -54,6 +54,7 @@ public class SubscriptionEndpointIntegrationTests : IClassFixture<WebApplication
                 services.AddSingleton(options);
                 services.AddScoped<SubscriptionTestDbContext>();
                 services.AddScoped<ApplicationDbContext>(p => p.GetRequiredService<SubscriptionTestDbContext>());
+                services.AddScoped<DbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
 
                 // Add HTTP logging services (required by the pipeline)
                 services.AddHttpLogging(o => { });

@@ -47,6 +47,7 @@ public class AuditIntegrationTests : IClassFixture<WebApplicationFactory<GameGui
                 {
                     options.UseInMemoryDatabase(databaseName);
                 });
+                services.AddScoped<DbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
             });
         });
 

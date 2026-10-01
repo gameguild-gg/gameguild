@@ -46,6 +46,7 @@ public class PaymentEndpointsIntegrationTests : IClassFixture<WebApplicationFact
                 {
                     options.UseInMemoryDatabase(DatabaseName);
                 });
+                services.AddScoped<DbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
                 services.AddDefaultTenantMembership();
 
                 services.AddAuthentication(options =>
