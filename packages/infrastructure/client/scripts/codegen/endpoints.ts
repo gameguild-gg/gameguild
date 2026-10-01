@@ -8,7 +8,7 @@ import type { OpenApiSpec } from '../fetch-spec.js';
 import type { OpenAPIV3 } from 'openapi-types';
 import { BaseGenerator } from './core/BaseGenerator.js';
 import { TypeMapperChain } from './strategies/SchemaTypeMapper.js';
-import { HTTP_METHODS, SUCCESS_STATUS_PREFIX, CONTENT_TYPES, PARAMETER_LOCATIONS } from './constants.js';
+import { HTTP_METHODS, SUCCESS_STATUS_PREFIX, CONTENT_TYPES, PARAMETER_LOCATIONS, ALLOW_ANONYMOUS_EXTENSION } from './constants.js';
 import { toPascalCase } from '../utils/naming.js';
 import { qualifyType } from '../utils/type-qualify.js';
 
@@ -23,6 +23,7 @@ interface EndpointInfo {
   requestBody?: RequestBodyInfo;
   responses: ResponseInfo[];
   security: string[][];
+  allowAnonymous: boolean;
 }
 
 interface ParameterInfo {
@@ -107,6 +108,7 @@ class EndpointsGenerator extends BaseGenerator {
           requestBody: this.extractRequestBody(operation),
           responses: this.extractResponses(operation),
           security: this.extractSecurity(operation),
+          allowAnonymous: this.extractAllowAnonymous(operation),
         };
 
         endpoints.push(endpoint);
@@ -212,6 +214,17 @@ class EndpointsGenerator extends BaseGenerator {
     return security.map((req) => Object.keys(req));
   }
 
+  /**
+   * The API stamps [AllowAnonymous] endpoints with this extension so clients
+   * can call them without a token even when the document carries a global
+   * security requirement.
+   */
+  private extractAllowAnonymous(operation: OpenAPIV3.OperationObject): boolean {
+    return (operation as { [key: string]: unknown })[
+      ALLOW_ANONYMOUS_EXTENSION
+    ] === true;
+  }
+
 
 
   /**
@@ -246,7 +259,7 @@ class EndpointsGenerator extends BaseGenerator {
     lines.push(`  method: '${endpoint.method}' as const,`);
     lines.push(`  path: '${endpoint.path}' as const,`);
     lines.push(`  tags: ${JSON.stringify(endpoint.tags)} as const,`);
-    lines.push(`  requiresAuth: ${endpoint.security.length > 0},`);
+    lines.push(`  requiresAuth: ${endpoint.security.length > 0 && !endpoint.allowAnonymous},`);
     lines.push(`} as const;`);
 
     return lines.join('\n');
