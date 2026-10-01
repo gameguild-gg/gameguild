@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.Identity.Authentication;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -48,7 +49,7 @@ public class SessionManagementServiceTests
         result.UserAgent.Should().Be(userAgent);
         result.IsActive.Should().BeTrue();
         result.DeviceFingerprint.Should().NotBeNullOrEmpty();
-        result.ExpiresAt.Should().BeCloseTo(DateTime.UtcNow.AddDays(30), TimeSpan.FromSeconds(5));
+        result.ExpiresAt.Should().BeCloseTo(DateTime.UtcNow.AddDays(1), TimeSpan.FromSeconds(5));
         _sessionRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<UserSession>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -72,11 +73,67 @@ public class SessionManagementServiceTests
     }
 
     [Fact]
+    public async Task CreateSessionAsync_EnforcesConfiguredConcurrentSessionLimit()
+    {
+        var userId = Guid.NewGuid();
+        var existingSession = new UserSession
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            IsActive = true,
+            CreatedAt = SystemClock.UtcNow.AddHours(-1),
+            LastUsedAt = SystemClock.UtcNow.AddMinutes(-10)
+        };
+        _sessionRepositoryMock
+            .Setup(repository => repository.GetActiveByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([existingSession]);
+        _sessionRepositoryMock
+            .Setup(repository => repository.UpdateAsync(existingSession, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingSession);
+        _sessionRepositoryMock
+            .Setup(repository => repository.CreateAsync(It.IsAny<UserSession>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((UserSession session, CancellationToken _) => session);
+
+        var service = new SessionManagementService(
+            _loggerMock.Object,
+            _sessionRepositoryMock.Object,
+            _trustedDeviceRepositoryMock.Object,
+            new SessionOptions { MaxConcurrentSessions = 1 });
+
+        await service.CreateSessionAsync(userId, "192.0.2.1", "test-agent");
+
+        existingSession.IsActive.Should().BeFalse();
+        existingSession.TerminationReason.Should().Be(SessionTerminationReason.MaxSessionsExceeded.ToString());
+        _sessionRepositoryMock.Verify(repository => repository.UpdateAsync(existingSession, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateSessionAsync_RespectsFingerprintAndLocationPrivacySettings()
+    {
+        var userId = Guid.NewGuid();
+        var service = new SessionManagementService(
+            _loggerMock.Object,
+            _sessionRepositoryMock.Object,
+            _trustedDeviceRepositoryMock.Object,
+            new SessionOptions { EnableDeviceFingerprinting = false, EnableLocationTracking = false });
+        _sessionRepositoryMock
+            .Setup(repository => repository.CreateAsync(It.IsAny<UserSession>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((UserSession session, CancellationToken _) => session);
+
+        var session = await service.CreateSessionAsync(userId, "192.0.2.1", "test-agent", "provided-fingerprint");
+
+        session.IpAddress.Should().Be("unknown");
+        session.DeviceFingerprint.Should().BeEmpty();
+        (await service.TrustDeviceAsync(userId, "provided-fingerprint", "test-device")).Should().BeFalse();
+    }
+
+    [Fact]
     public async Task CreateSessionAsync_WithAuthenticationState_PreservesSessionAndRefreshTokenHash()
     {
         var sessionId = Guid.NewGuid();
         var userId = Guid.NewGuid();
-        var expiresAt = SystemClock.UtcNow.AddDays(7);
+        var createdAt = SystemClock.UtcNow;
+        var expiresAt = createdAt.AddDays(7);
 
         _sessionRepositoryMock
             .Setup(x => x.CreateAsync(It.IsAny<UserSession>(), It.IsAny<CancellationToken>()))
@@ -94,7 +151,7 @@ public class SessionManagementServiceTests
         result.Id.Should().Be(sessionId);
         result.UserId.Should().Be(userId);
         result.RefreshToken.Should().Be("refresh-token-hash");
-        result.ExpiresAt.Should().Be(expiresAt);
+        result.ExpiresAt.Should().BeCloseTo(createdAt.AddDays(1), TimeSpan.FromMilliseconds(100));
         result.CreatedAt.Should().NotBe(default);
     }
 
@@ -102,8 +159,17 @@ public class SessionManagementServiceTests
     public async Task RefreshSessionAsync_WithAuthenticationState_RotatesRefreshTokenHash()
     {
         var sessionId = Guid.NewGuid();
-        var expiresAt = SystemClock.UtcNow.AddDays(7);
-        var session = new UserSession { Id = sessionId, IsActive = true, RefreshToken = "old-hash" };
+        var now = SystemClock.UtcNow;
+        var expiresAt = now.AddDays(7);
+        var session = new UserSession
+        {
+            Id = sessionId,
+            IsActive = true,
+            RefreshToken = "old-hash",
+            CreatedAt = now.AddMinutes(-10),
+            LastUsedAt = now.AddMinutes(-5),
+            ExpiresAt = expiresAt
+        };
 
         _sessionRepositoryMock
             .Setup(x => x.GetByIdAsync(sessionId, It.IsAny<CancellationToken>()))
@@ -116,7 +182,7 @@ public class SessionManagementServiceTests
 
         result.Should().BeTrue();
         session.RefreshToken.Should().Be("new-hash");
-        session.ExpiresAt.Should().Be(expiresAt);
+        session.ExpiresAt.Should().Be(session.CreatedAt.AddDays(1));
     }
 
     [Fact]
@@ -203,12 +269,15 @@ public class SessionManagementServiceTests
     {
         // Arrange
         var sessionId = Guid.NewGuid();
-        var session = new UserSession 
-        { 
+        var now = SystemClock.UtcNow;
+        var session = new UserSession
+        {
             Id = sessionId, 
             UserId = Guid.NewGuid(), 
             IsActive = true,
-            ExpiresAt = DateTime.UtcNow.AddDays(1)
+            CreatedAt = now,
+            LastUsedAt = now,
+            ExpiresAt = now.AddDays(1)
         };
 
         _sessionRepositoryMock.Setup(x => x.GetByIdAsync(sessionId, It.IsAny<CancellationToken>()))
@@ -270,17 +339,49 @@ public class SessionManagementServiceTests
     }
 
     [Fact]
+    public async Task ValidateSessionAsync_ExpiresIdleSessionUsingConfiguredTimeout()
+    {
+        var now = SystemClock.UtcNow;
+        var sessionId = Guid.NewGuid();
+        var session = new UserSession
+        {
+            Id = sessionId,
+            IsActive = true,
+            CreatedAt = now.AddHours(-1),
+            LastUsedAt = now.AddMinutes(-11),
+            ExpiresAt = now.AddDays(1)
+        };
+        _sessionRepositoryMock
+            .Setup(repository => repository.GetByIdAsync(sessionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(session);
+        _sessionRepositoryMock
+            .Setup(repository => repository.UpdateAsync(session, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(session);
+        var service = new SessionManagementService(
+            _loggerMock.Object,
+            _sessionRepositoryMock.Object,
+            _trustedDeviceRepositoryMock.Object,
+            new SessionOptions { IdleTimeoutMinutes = 10 });
+
+        (await service.ValidateSessionAsync(sessionId)).Should().BeFalse();
+        session.IsActive.Should().BeFalse();
+        session.TerminationReason.Should().Be(SessionTerminationReason.Expired.ToString());
+    }
+
+    [Fact]
     public async Task RefreshSessionAsync_WithValidSession_ShouldUpdateTimestamps()
     {
         // Arrange
         var sessionId = Guid.NewGuid();
-        var session = new UserSession 
-        { 
+        var now = SystemClock.UtcNow;
+        var session = new UserSession
+        {
             Id = sessionId, 
             UserId = Guid.NewGuid(), 
             IsActive = true,
-            LastUsedAt = DateTime.UtcNow.AddHours(-1),
-            ExpiresAt = DateTime.UtcNow.AddDays(29)
+            CreatedAt = now.AddMinutes(-10),
+            LastUsedAt = now.AddMinutes(-5),
+            ExpiresAt = now.AddDays(29)
         };
 
         _sessionRepositoryMock.Setup(x => x.GetByIdAsync(sessionId, It.IsAny<CancellationToken>()))
@@ -292,7 +393,7 @@ public class SessionManagementServiceTests
         // Assert
         result.Should().BeTrue();
         session.LastUsedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
-        session.ExpiresAt.Should().BeCloseTo(DateTime.UtcNow.AddDays(30), TimeSpan.FromSeconds(5));
+        session.ExpiresAt.Should().Be(session.CreatedAt.AddDays(1));
         _sessionRepositoryMock.Verify(x => x.UpdateAsync(session, It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -412,6 +513,46 @@ public class SessionManagementServiceTests
     }
 
     [Fact]
+    public async Task TrustDeviceAsync_UsesConfiguredExpirationAndRevokesOldestAtCapacity()
+    {
+        var userId = Guid.NewGuid();
+        var existingDevice = new TrustedDevice
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            DeviceFingerprint = "old-device",
+            IsActive = true,
+            TrustedAt = SystemClock.UtcNow.AddDays(-10),
+            LastUsedAt = SystemClock.UtcNow.AddDays(-8)
+        };
+        TrustedDevice? createdDevice = null;
+        _trustedDeviceRepositoryMock
+            .Setup(repository => repository.GetByUserAndFingerprintAsync(userId, "new-device", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TrustedDevice?)null);
+        _trustedDeviceRepositoryMock
+            .Setup(repository => repository.GetActiveByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([existingDevice]);
+        _trustedDeviceRepositoryMock
+            .Setup(repository => repository.UpdateAsync(existingDevice, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingDevice);
+        _trustedDeviceRepositoryMock
+            .Setup(repository => repository.CreateAsync(It.IsAny<TrustedDevice>(), It.IsAny<CancellationToken>()))
+            .Callback<TrustedDevice, CancellationToken>((device, _) => createdDevice = device)
+            .ReturnsAsync((TrustedDevice device, CancellationToken _) => device);
+        var service = new SessionManagementService(
+            _loggerMock.Object,
+            _sessionRepositoryMock.Object,
+            _trustedDeviceRepositoryMock.Object,
+            new SessionOptions { TrustedDeviceDurationDays = 7, MaxTrustedDevices = 1 });
+
+        await service.TrustDeviceAsync(userId, "new-device", "new trusted device");
+
+        existingDevice.IsActive.Should().BeFalse();
+        createdDevice.Should().NotBeNull();
+        createdDevice!.ExpiresAt.Should().BeCloseTo(SystemClock.UtcNow.AddDays(7), TimeSpan.FromSeconds(5));
+    }
+
+    [Fact]
     public async Task TrustDeviceAsync_WithExistingActiveDevice_ShouldReturnTrue()
     {
         // Arrange
@@ -434,7 +575,8 @@ public class SessionManagementServiceTests
         // Assert
         result.Should().BeTrue();
         _trustedDeviceRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<TrustedDevice>(), It.IsAny<CancellationToken>()), Times.Never);
-        _trustedDeviceRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<TrustedDevice>(), It.IsAny<CancellationToken>()), Times.Never);
+        _trustedDeviceRepositoryMock.Verify(x => x.UpdateAsync(existingDevice, It.IsAny<CancellationToken>()), Times.Once);
+        existingDevice.ExpiresAt.Should().BeCloseTo(SystemClock.UtcNow.AddDays(30), TimeSpan.FromSeconds(5));
     }
 
     [Fact]

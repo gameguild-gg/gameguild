@@ -1,3 +1,4 @@
+using GameGuild.Configuration.ApplicationLayer;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
@@ -10,8 +11,11 @@ public sealed class MfaService(
     ILogger<MfaService> logger,
     ITotpMfaService totpMfaService,
     IBackupCodeMfaService backupCodeMfaService,
-    IMfaAttemptTrackingService attemptTrackingService) : IMfaService
+    IMfaAttemptTrackingService attemptTrackingService,
+    MfaOptions? mfaOptions = null) : IMfaService
 {
+    private readonly MfaOptions _mfaOptions = mfaOptions ?? new MfaOptions();
+
     /// <inheritdoc />
     public Task<MfaConfigurationResponse> GetMfaConfigurationAsync(Guid userId, CancellationToken cancellationToken = default) =>
         attemptTrackingService.GetMfaConfigurationAsync(userId, cancellationToken);
@@ -23,7 +27,7 @@ public sealed class MfaService(
 
         // Generate backup codes during setup
         var backupCodes = new List<string>();
-        for (var i = 0; i < 10; i++)
+        for (var i = 0; i < _mfaOptions.BackupCodesCount; i++)
         {
             backupCodes.Add(backupCodeMfaService.GenerateBackupCode());
         }
