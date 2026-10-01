@@ -48,6 +48,7 @@ public class WalletEndpointsIntegrationTests : IClassFixture<WebApplicationFacto
                 {
                     options.UseInMemoryDatabase(DatabaseName);
                 });
+                services.AddScoped<DbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
                 services.AddDefaultTenantMembership();
 
                 // Authorization matrix tests intentionally exercise permission claims from

@@ -46,6 +46,7 @@ public class ProductCatalogIntegrationTests : IClassFixture<WebApplicationFactor
                 {
                     options.UseInMemoryDatabase(DatabaseName);
                 });
+                services.AddScoped<DbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
             });
         });
 
