@@ -78,10 +78,10 @@ export function BlogPostView({ post, authorProfiles }: { post: BlogPostDetail; a
     <article className="mx-auto max-w-3xl px-4 py-12">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: resolveBlogJsonLd(post, authorProfiles) }} />
 
-      <header className="flex flex-col gap-4 border-b border-white/10 pb-8">
-        <h1 className="text-4xl font-semibold leading-tight tracking-tight text-white md:text-5xl">{post.title}</h1>
-        <div className="flex flex-wrap items-center gap-2 text-sm text-slate-400">
-          {authors.length > 0 ? <span className="text-slate-300">{authors.join(', ')}</span> : null}
+      <header className="flex flex-col gap-4 border-b border-border pb-8">
+        <h1 className="text-4xl font-semibold leading-tight tracking-tight text-foreground md:text-5xl">{post.title}</h1>
+        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+          {authors.length > 0 ? <span className="text-foreground/80">{authors.join(', ')}</span> : null}
           {published ? (
             <>
               <span aria-hidden="true">·</span>
@@ -97,7 +97,7 @@ export function BlogPostView({ post, authorProfiles }: { post: BlogPostDetail; a
         </div>
       </header>
 
-      <div className="prose prose-invert max-w-none py-8">
+      <div className="prose max-w-none py-8 dark:prose-invert">
         {post.format === 'Lexical' && post.jsonBody ? (
           <PostLexical content={post.jsonBody} />
         ) : post.content ? (
@@ -111,7 +111,7 @@ export function BlogPostView({ post, authorProfiles }: { post: BlogPostDetail; a
         <footer>
           <ul className="flex flex-wrap gap-2">
             {post.tags.map((tag) => (
-              <li key={tag} className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-slate-300">
+              <li key={tag} className="rounded-full border border-border bg-muted px-3 py-1 text-sm text-muted-foreground">
                 {tag}
               </li>
             ))}

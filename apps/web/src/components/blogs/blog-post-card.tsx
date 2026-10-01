@@ -19,9 +19,9 @@ export function BlogPostCard({ post }: { post: BlogPostSummary }) {
   ].filter((n): n is string => Boolean(n));
 
   return (
-    <article className="group relative flex h-full flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.045] p-6 backdrop-blur transition-colors hover:border-white/20">
-      <div className="flex flex-wrap items-center gap-2 text-sm text-slate-400">
-        {authors.length > 0 ? <span className="text-slate-300">{authors.join(', ')}</span> : null}
+    <article className="group relative flex h-full flex-col gap-3 rounded-2xl border border-border bg-card p-6 transition-colors hover:border-muted-foreground/40">
+      <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+        {authors.length > 0 ? <span className="text-foreground/80">{authors.join(', ')}</span> : null}
         {published ? <span aria-hidden="true">·</span> : null}
         {published ? <time dateTime={post.publishedAt ?? undefined}>{published}</time> : null}
         {post.readTimeMinutes ? (
@@ -32,19 +32,19 @@ export function BlogPostCard({ post }: { post: BlogPostSummary }) {
         ) : null}
       </div>
 
-      <h2 className="text-xl font-semibold leading-snug tracking-tight text-white">
+      <h2 className="text-xl font-semibold leading-snug tracking-tight text-foreground">
         <Link href={href} className="focus-visible:outline-none">
           <span className="absolute inset-0" aria-hidden="true" />
           {post.title}
         </Link>
       </h2>
 
-      {post.excerpt ? <p className="line-clamp-3 text-sm leading-6 text-slate-300">{post.excerpt}</p> : null}
+      {post.excerpt ? <p className="line-clamp-3 text-sm leading-6 text-muted-foreground">{post.excerpt}</p> : null}
 
       {post.tags && post.tags.length > 0 ? (
         <ul className="mt-auto flex flex-wrap gap-2 pt-2">
           {post.tags.map((tag) => (
-            <li key={tag} className="rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-xs text-slate-300">
+            <li key={tag} className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs text-muted-foreground">
               {tag}
             </li>
           ))}
