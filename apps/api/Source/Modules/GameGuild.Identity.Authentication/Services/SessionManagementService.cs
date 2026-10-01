@@ -93,7 +93,10 @@ public sealed class SessionManagementService(
             return false;
         }
 
-        if (!IsExpired(session, SystemClock.UtcNow)) return true;
+        if (!IsExpired(session, SystemClock.UtcNow))
+        {
+            return true;
+        }
 
         session.IsActive = false;
         session.TerminationReason = SessionTerminationReason.Expired.ToString();
@@ -107,7 +110,10 @@ public sealed class SessionManagementService(
     {
         var session = await sessionRepository.GetByIdAsync(sessionId, cancellationToken).ConfigureAwait(false);
 
-        if (session is not { IsActive: true }) return false;
+        if (session is not { IsActive: true })
+        {
+            return false;
+        }
 
         var now = SystemClock.UtcNow;
         if (IsExpired(session, now))
@@ -128,7 +134,10 @@ public sealed class SessionManagementService(
     {
         var session = await sessionRepository.GetByIdAsync(sessionId, cancellationToken).ConfigureAwait(false);
 
-        if (session is not { IsActive: true }) return false;
+        if (session is not { IsActive: true })
+        {
+            return false;
+        }
 
         var now = SystemClock.UtcNow;
         if (IsExpired(session, now))
@@ -157,7 +166,10 @@ public sealed class SessionManagementService(
     {
         var session = await sessionRepository.GetByIdAsync(sessionId, cancellationToken).ConfigureAwait(false);
 
-        if (session == null) return false;
+        if (session == null)
+        {
+            return false;
+        }
 
         session.IsActive = false;
         session.TerminationReason = reason.ToString();
@@ -239,13 +251,22 @@ public sealed class SessionManagementService(
 
     public async Task<bool> IsDeviceTrustedAsync(Guid userId, string deviceFingerprint, CancellationToken cancellationToken = default)
     {
-        if (!_sessionOptions.EnableDeviceFingerprinting || string.IsNullOrWhiteSpace(deviceFingerprint)) return false;
+        if (!_sessionOptions.EnableDeviceFingerprinting || string.IsNullOrWhiteSpace(deviceFingerprint))
+        {
+            return false;
+        }
 
         var trustedDevice = await trustedDeviceRepository.GetByUserAndFingerprintAsync(userId, deviceFingerprint, cancellationToken).ConfigureAwait(false);
 
-        if (trustedDevice is not { IsActive: true }) return false;
+        if (trustedDevice is not { IsActive: true })
+        {
+            return false;
+        }
 
-        if (trustedDevice.ExpiresAt.HasValue && trustedDevice.ExpiresAt.Value < SystemClock.UtcNow) return false;
+        if (trustedDevice.ExpiresAt.HasValue && trustedDevice.ExpiresAt.Value < SystemClock.UtcNow)
+        {
+            return false;
+        }
 
         return true;
     }
@@ -261,7 +282,10 @@ public sealed class SessionManagementService(
     {
         var device = await trustedDeviceRepository.GetByIdAsync(deviceId, cancellationToken).ConfigureAwait(false);
 
-        if (device == null || device.UserId != userId) return false;
+        if (device == null || device.UserId != userId)
+        {
+            return false;
+        }
 
         device.IsActive = false;
         device.UpdatedAt = SystemClock.UtcNow;
@@ -346,9 +370,15 @@ public sealed class SessionManagementService(
 
         var riskLevel = RiskLevel.Low;
 
-        if (uniqueIps > 10 || uniqueDevices > 5) riskLevel = RiskLevel.Medium;
+        if (uniqueIps > 10 || uniqueDevices > 5)
+        {
+            riskLevel = RiskLevel.Medium;
+        }
 
-        if (activeCount > 10) riskLevel = RiskLevel.High;
+        if (activeCount > 10)
+        {
+            riskLevel = RiskLevel.High;
+        }
 
         return new SessionSecurityAnalysis
         {

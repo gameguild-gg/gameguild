@@ -74,21 +74,45 @@ public sealed class MfaOptions : BaseOptions
     {
         var errors = new List<string>();
 
-        if (MaxFailedAttempts < 1 || MaxFailedAttempts > 100) errors.Add("MaxFailedAttempts must be between 1 and 100");
+        if (MaxFailedAttempts < 1 || MaxFailedAttempts > 100)
+        {
+            errors.Add("MaxFailedAttempts must be between 1 and 100");
+        }
 
-        if (LockoutDurationMinutes < 1 || LockoutDurationMinutes > 1440) errors.Add("LockoutDurationMinutes must be between 1 and 1440 (24 hours)");
+        if (LockoutDurationMinutes < 1 || LockoutDurationMinutes > 1440)
+        {
+            errors.Add("LockoutDurationMinutes must be between 1 and 1440 (24 hours)");
+        }
 
-        if (BackupCodesCount < 1 || BackupCodesCount > 20) errors.Add("BackupCodesCount must be between 1 and 20");
+        if (BackupCodesCount < 1 || BackupCodesCount > 20)
+        {
+            errors.Add("BackupCodesCount must be between 1 and 20");
+        }
 
-        if (BackupCodeLength < 6 || BackupCodeLength > 16) errors.Add("BackupCodeLength must be between 6 and 16");
+        if (BackupCodeLength < 6 || BackupCodeLength > 16)
+        {
+            errors.Add("BackupCodeLength must be between 6 and 16");
+        }
 
-        if (TotpTimeStepSeconds < 15 || TotpTimeStepSeconds > 60) errors.Add("TotpTimeStepSeconds must be between 15 and 60");
+        if (TotpTimeStepSeconds < 15 || TotpTimeStepSeconds > 60)
+        {
+            errors.Add("TotpTimeStepSeconds must be between 15 and 60");
+        }
 
-        if (TotpClockSkew < 0 || TotpClockSkew > 5) errors.Add("TotpClockSkew must be between 0 and 5");
+        if (TotpClockSkew < 0 || TotpClockSkew > 5)
+        {
+            errors.Add("TotpClockSkew must be between 0 and 5");
+        }
 
-        if (SetupSessionDurationMinutes < 1 || SetupSessionDurationMinutes > 60) errors.Add("SetupSessionDurationMinutes must be between 1 and 60");
+        if (SetupSessionDurationMinutes < 1 || SetupSessionDurationMinutes > 60)
+        {
+            errors.Add("SetupSessionDurationMinutes must be between 1 and 60");
+        }
 
-        if (string.IsNullOrWhiteSpace(TotpIssuer)) errors.Add("TotpIssuer is required");
+        if (string.IsNullOrWhiteSpace(TotpIssuer))
+        {
+            errors.Add("TotpIssuer is required");
+        }
 
         if (!Enabled && RequireMfaByDefault)
         {

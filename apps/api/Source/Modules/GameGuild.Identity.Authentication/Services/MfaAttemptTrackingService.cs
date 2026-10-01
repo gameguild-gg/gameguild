@@ -229,7 +229,12 @@ public sealed class MfaAttemptTrackingService(
     /// <summary>
     ///     Records MFA attempt for auditing and analytics.
     /// </summary>
-    public async Task RecordMfaAttemptAsync(Guid userId, MfaMethod method, bool success, string? failureReason, string? deviceId, CancellationToken cancellationToken = default)
+    public Task RecordMfaAttemptAsync(Guid userId, MfaMethod method, bool success, string? failureReason, string? deviceId)
+    {
+        return RecordMfaAttemptAsync(userId, method, success, failureReason, deviceId, CancellationToken.None);
+    }
+
+    public async Task RecordMfaAttemptAsync(Guid userId, MfaMethod method, bool success, string? failureReason, string? deviceId, CancellationToken cancellationToken)
     {
         try
         {
