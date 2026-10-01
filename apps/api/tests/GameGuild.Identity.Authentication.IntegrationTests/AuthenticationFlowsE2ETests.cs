@@ -29,7 +29,6 @@ public class AuthenticationFlowsE2ETests : IClassFixture<AuthenticationApiFactor
     private readonly ApplicationDbContext _dbContext;
     private readonly IAuthService _authService;
     private readonly IMfaService _mfaService;
-    private readonly IRefreshTokenHasher _refreshTokenHasher;
 
     public AuthenticationFlowsE2ETests(AuthenticationApiFactory factory)
     {
@@ -40,7 +39,6 @@ public class AuthenticationFlowsE2ETests : IClassFixture<AuthenticationApiFactor
         _dbContext = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         _authService = _scope.ServiceProvider.GetRequiredService<IAuthService>();
         _mfaService = _scope.ServiceProvider.GetRequiredService<IMfaService>();
-        _refreshTokenHasher = _scope.ServiceProvider.GetRequiredService<IRefreshTokenHasher>();
 
         // Ensure database is created
         _dbContext.Database.EnsureCreated();
@@ -48,73 +46,6 @@ public class AuthenticationFlowsE2ETests : IClassFixture<AuthenticationApiFactor
     }
 
     #region Local Authentication E2E Tests
-
-    [Fact]
-    public async Task LocalAuth_CompleteFlow_SignUpSignInRefreshRevoke_ShouldWorkCorrectly()
-    {
-        // Arrange
-        var email = $"local.flow.{Guid.NewGuid()}@test.com";
-        var password = "SecurePassword123!";
-
-        // Act 1: Sign Up
-        var signUpRequest = new LocalSignUpRequest
-        {
-            Email = email,
-            Username = $"user_{Guid.NewGuid():N}",
-            Password = password
-        };
-
-        var signUpResult = await _authService.LocalSignUpAsync(signUpRequest);
-
-        // Assert Sign Up
-        signUpResult.Should().NotBeNull();
-        signUpResult.AccessToken.Should().NotBeNullOrEmpty();
-        signUpResult.RefreshToken.Should().NotBeNullOrEmpty();
-
-        var userId = signUpResult.UserId;
-
-        // Act 2: Sign In
-        var signInRequest = new LocalSignInRequest
-        {
-            Email = email,
-            Password = password
-        };
-
-        var signInResult = await _authService.LocalSignInAsync(signInRequest);
-
-        // Assert Sign In
-        signInResult.Should().NotBeNull();
-        signInResult.AccessToken.Should().NotBeNullOrEmpty();
-        signInResult.RefreshToken.Should().NotBeNullOrEmpty();
-        signInResult.UserId.Should().Be(userId);
-
-        var originalRefreshToken = signInResult.RefreshToken;
-
-        // Act 3: Refresh Token
-        var refreshRequest = new RefreshTokenRequest
-        {
-            RefreshToken = originalRefreshToken
-        };
-
-        var refreshResult = await _authService.RefreshTokenAsync(refreshRequest);
-
-        // Assert Refresh
-        refreshResult.Should().NotBeNull();
-        refreshResult.AccessToken.Should().NotBeNullOrEmpty();
-        refreshResult.RefreshToken.Should().NotBeNullOrEmpty();
-        refreshResult.RefreshToken.Should().NotBe(originalRefreshToken); // Should be a new token
-
-        // Act 4: Revoke Token
-        await _authService.RevokeRefreshTokenAsync(refreshResult.RefreshToken, "127.0.0.1");
-
-        // Assert Revoke - Token should no longer work
-        var revokedTokenHash = _refreshTokenHasher.HashToken(refreshResult.RefreshToken);
-        var revokedToken = await _dbContext.Set<RefreshToken>()
-            .FirstOrDefaultAsync(rt => rt.Token == revokedTokenHash);
-
-        revokedToken.Should().NotBeNull();
-        revokedToken!.IsRevoked.Should().BeTrue();
-    }
 
     [Fact]
     public async Task LocalAuth_WithInvalidCredentials_ShouldFail()

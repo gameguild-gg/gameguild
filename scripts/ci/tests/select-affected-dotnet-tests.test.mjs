@@ -53,3 +53,16 @@ test("ignores API test-only changes for deployment test selection", () => {
     ["GameGuild.Projects.UnitTests"],
   );
 });
+
+test("selects the matching integration test project for a changed test", () => {
+  assert.deepEqual(
+    selectAffectedDotnetTestNames(
+      ["apps/api/tests/GameGuild.Identity.Authentication.IntegrationTests/RefreshTokenPostgreSqlFlowTests.cs"],
+      [
+        ...availableProjects,
+        "GameGuild.Identity.Authentication.IntegrationTests",
+      ],
+    ),
+    ["GameGuild.Identity.Authentication.IntegrationTests"],
+  );
+});

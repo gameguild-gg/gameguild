@@ -110,39 +110,6 @@ public class AuthenticationIntegrationTests : IClassFixture<AuthenticationApiFac
     }
 
     [Fact]
-    public async Task RefreshToken_ShouldReturnNewToken_WhenValidRefreshTokenProvided() {
-        // Arrange - Create user and get refresh token
-        var authService = _scope.ServiceProvider.GetRequiredService<IAuthService>();
-
-        var signUpRequest = new LocalSignUpRequest {
-            Email = "refresh.test@example.com",
-            Username = "refreshtest",
-            Password = "RefreshTest123!"
-        };
-
-        var signUpResult = await authService.LocalSignUpAsync(signUpRequest);
-        var refreshToken = signUpResult.RefreshToken;
-
-        var refreshCommand = new RefreshTokenRequest {
-            RefreshToken = refreshToken
-        };
-
-        // Act
-        var response = await _client.PostAsJsonAsync("/v1/auth/tokens:refresh", refreshCommand);
-
-        // Assert
-        response.Should().NotBeNull();
-        var refreshContent = await response.Content.ReadAsStringAsync();
-        response.IsSuccessStatusCode.Should().BeTrue($"Response status: {response.StatusCode}, Content: {refreshContent}");
-
-        var refreshResponse = await response.Content.ReadFromJsonAsync<SignInResponse>();
-        refreshResponse.Should().NotBeNull();
-        refreshResponse!.AccessToken.Should().NotBeNullOrEmpty();
-        refreshResponse.RefreshToken.Should().NotBeNullOrEmpty();
-        refreshResponse.UserId.Should().NotBeEmpty();
-    }
-
-    [Fact]
     public async Task RevokeToken_ShouldInvalidateRefreshToken() {
         // Arrange - Create user and get refresh token
         var authService = _scope.ServiceProvider.GetRequiredService<IAuthService>();
