@@ -1,7 +1,11 @@
 using System.Diagnostics;
 using System.Reflection;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using FluentAssertions;
+using GameGuild.API.Core.Filters;
 using GameGuild.API.Setup;
+using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.Configuration.PresentationLayer.Controllers;
 using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,8 +15,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Moq;
 
 namespace GameGuild.API.UnitTests.Core;
@@ -109,6 +111,32 @@ public class PresentationServiceCollectionExtensionsTests
             .SingleOrDefault(filter => filter.ServiceType == typeof(FieldMaskingResultFilter));
         registeredFilter.Should().NotBeNull();
         services.Should().Contain(descriptor => descriptor.ServiceType == typeof(FieldMaskingResultFilter) &&
+                                                 descriptor.Lifetime == ServiceLifetime.Scoped);
+    }
+
+    [Fact]
+    public void SetupControllers_ShouldBindAndRegisterLocalAuthenticationLockoutPolicy()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["AuthenticationSecurity:MaxFailedAttemptsPerHour"] = "3",
+                ["AuthenticationSecurity:AccountLockoutDurationMinutes"] = "20"
+            })
+            .Build();
+        var services = new ServiceCollection();
+
+        services.SetupControllers(configuration, ControllersOptions.CreateDefault());
+
+        using var provider = services.BuildServiceProvider();
+        var options = provider.GetRequiredService<AuthenticationSecurityOptions>();
+        options.MaxFailedAttemptsPerHour.Should().Be(3);
+        options.AccountLockoutDurationMinutes.Should().Be(20);
+
+        provider.GetRequiredService<IOptions<MvcOptions>>().Value.Filters
+            .OfType<ServiceFilterAttribute>()
+            .Should().ContainSingle(filter => filter.ServiceType == typeof(AuthenticationLockoutActionFilter));
+        services.Should().Contain(descriptor => descriptor.ServiceType == typeof(AuthenticationLockoutActionFilter) &&
                                                  descriptor.Lifetime == ServiceLifetime.Scoped);
     }
 

@@ -1,8 +1,10 @@
 using System.Diagnostics;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using GameGuild.API.Core.Filters;
 using GameGuild.API.Setup;
 using GameGuild.Configuration;
+using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.Configuration.PresentationLayer.Controllers;
 using GameGuild.Configuration.PresentationLayer.Endpoints;
 using GameGuild.Identity.Authorization;
@@ -32,6 +34,21 @@ public static class PresentationServiceCollectionExtensions
             ControllersOptions.CreateDefault);
         options.Validate();
 
+        var authenticationSecurityOptions = OptionBuilderUtilities.CreateAndBind(
+            configuration,
+            AuthenticationSecurityOptions.SectionName,
+            static () => new AuthenticationSecurityOptions());
+        var authenticationSecurityValidation = authenticationSecurityOptions.Validate();
+        if (!authenticationSecurityValidation.IsValid)
+        {
+            throw new InvalidOperationException(
+                $"Invalid {AuthenticationSecurityOptions.SectionName} configuration: " +
+                string.Join("; ", authenticationSecurityValidation.Errors));
+        }
+
+        services.AddSingleton(authenticationSecurityOptions);
+        services.AddScoped<AuthenticationLockoutActionFilter>();
+
         var moduleConfiguration = new ModuleConfiguration();
         var modulesSection = configuration.GetSection("Modules");
         modulesSection.Bind(moduleConfiguration);
@@ -47,6 +64,7 @@ public static class PresentationServiceCollectionExtensions
             {
                 mvcOptions.Conventions.Add(new MinimumOrderRouteApplicationModelConvention());
                 mvcOptions.Filters.AddService<FieldMaskingResultFilter>();
+                mvcOptions.Filters.AddService<AuthenticationLockoutActionFilter>();
 
                 if (options.UseKebabCaseRoutes)
                 {
