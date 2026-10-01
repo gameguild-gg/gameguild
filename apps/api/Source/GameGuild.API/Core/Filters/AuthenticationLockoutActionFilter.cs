@@ -172,7 +172,6 @@ public sealed class AuthenticationLockoutActionFilter : IAsyncActionFilter
         public async ValueTask DisposeAsync()
         {
             var connection = database.Database.GetDbConnection();
-            var discardPool = false;
 
             try
             {
@@ -194,16 +193,15 @@ public sealed class AuthenticationLockoutActionFilter : IAsyncActionFilter
             }
             catch
             {
-                discardPool = true;
-                throw;
-            }
-            finally
-            {
-                if (discardPool && connection is NpgsqlConnection npgsqlConnection)
+                if (connection is NpgsqlConnection npgsqlConnection)
                 {
                     NpgsqlConnection.ClearPool(npgsqlConnection);
                 }
 
+                throw;
+            }
+            finally
+            {
                 await database.Database.CloseConnectionAsync().ConfigureAwait(false);
             }
         }
