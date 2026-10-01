@@ -13,15 +13,29 @@ export function BlogPostCard({ post }: { post: BlogPostSummary }) {
   const slug = post.slug ?? '';
   const href = buildBlogCanonicalPath(handle, slug);
   const published = formatDate(post.publishedAt);
-  const authors = [
-    ...(post.primaryAuthorDisplayName ?? post.primaryAuthorHandle ? [post.primaryAuthorDisplayName ?? post.primaryAuthorHandle] : []),
-    ...(post.coAuthorHandles ?? []),
-  ].filter((n): n is string => Boolean(n));
+  const authorLinks = [
+    ...(post.primaryAuthorHandle
+      ? [{ handle: post.primaryAuthorHandle, label: post.primaryAuthorDisplayName ?? post.primaryAuthorHandle }]
+      : []),
+    ...(post.coAuthorHandles ?? []).map((authorHandle) => ({ handle: authorHandle, label: authorHandle })),
+  ].filter((a): a is { handle: string; label: string } => Boolean(a.handle && a.label));
 
   return (
     <article className="group relative flex h-full flex-col gap-3 rounded-2xl border border-border bg-card p-6 transition-colors hover:border-muted-foreground/40">
       <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-        {authors.length > 0 ? <span className="text-foreground/80">{authors.join(', ')}</span> : null}
+        {authorLinks.length > 0 ? (
+          <span className="flex flex-wrap items-center gap-2">
+            {authorLinks.map((author, index) => (
+              <span key={author.handle} className="flex items-center gap-2">
+                {index > 0 ? <span aria-hidden="true">,</span> : null}
+                {/* z-10 keeps the author link clickable over the card's stretched-link overlay */}
+                <Link href={`/social/profiles/${author.handle}`} className="z-10 font-medium text-foreground/80 underline-offset-4 hover:underline">
+                  {author.label}
+                </Link>
+              </span>
+            ))}
+          </span>
+        ) : null}
         {published ? <span aria-hidden="true">·</span> : null}
         {published ? <time dateTime={post.publishedAt ?? undefined}>{published}</time> : null}
         {post.readTimeMinutes ? (
