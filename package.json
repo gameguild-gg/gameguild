@@ -8,6 +8,7 @@
   "private": true,
   "scripts": {
     "dev": "node scripts/dev.mjs",
+    "dev:learning": "node scripts/dev-learning.mjs",
     "dev:api": "dotenv -e .env -v DOTNET_USE_POLLING_FILE_WATCHER=true -- dotnet watch --project apps/api/Source/GameGuild.API/GameGuild.API.csproj run --urls http://localhost:8080",
     "dev:compose": "docker compose -f compose.yaml --profile app up -d --build",
     "dev:compose:down": "docker compose -f compose.yaml down --remove-orphans",
@@ -60,7 +61,7 @@
     "ci:web:build": "pnpm --filter @game-guild/web build",
     "ci:playwright:smoke": "pnpm --filter @game-guild/web test:browser:public",
     "ci:playwright:learning-student": "pnpm --filter @game-guild/web test:browser:learning-student",
-    "clean:generated": "rimraf --glob ./.turbo ./apps/web/.next ./apps/web/.turbo \"./apps/web/*.tsbuildinfo\" ./packages/infrastructure/client/dist ./packages/infrastructure/client/.turbo \"./apps/api/**/bin\" \"./apps/api/**/obj\"",
+    "clean:generated": "rimraf --glob ./.turbo ./apps/web/.next ./apps/web/.next-learning ./apps/web/.turbo \"./apps/web/*.tsbuildinfo\" ./packages/infrastructure/client/dist ./packages/infrastructure/client/.turbo \"./apps/api/**/bin\" \"./apps/api/**/obj\"",
     "clean": "rimraf --glob ./**/node_modules ./**/dist ./**/coverage ./**/build ./**/.next ./**/.turbo"
   },
   "packageManager": "pnpm@10.0.0",

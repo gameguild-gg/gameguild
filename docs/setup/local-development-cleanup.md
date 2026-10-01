@@ -1,112 +1,118 @@
-# Limpeza e recuperação do ambiente de desenvolvimento local
+# Local Development Cleanup and Recovery
 
-Este guia descreve como encerrar, diagnosticar e recuperar o ambiente iniciado
-por `pnpm run dev`. Execute os comandos a partir da raiz do repositório.
+This guide explains how to stop, diagnose, and recover the local environment
+started by `pnpm run dev`. Run all commands from the repository root.
 
-## Como o ambiente local funciona
+For the precompiled Learning environment, see
+[`dev-learning.md`](./dev-learning.md).
 
-`pnpm run dev` inicia dois grupos de processos:
+## How the local environment works
 
-1. o Docker Compose mantém PostgreSQL, Redis, Garage e `garage-init`;
-2. a máquina local executa API, web e os watchers do client gerado.
+`pnpm run dev` starts two groups of processes:
 
-| Componente | Execução padrão | Porta local |
+1. Docker Compose runs PostgreSQL, Redis, Garage, and `garage-init`;
+2. the host machine runs the API, web application, and generated-client
+   watchers.
+
+| Component | Default execution | Local port |
 | --- | --- | --- |
-| Web | processo local do Next.js | `3000` |
-| API | processo local do .NET | `8080` |
+| Web | local Next.js process | `3000` |
+| API | local .NET process | `8080` |
 | PostgreSQL | Docker Compose | `5432` |
 | Redis | Docker Compose | `6379` |
 | Garage S3 | Docker Compose | `3900` |
-| Garage RPC, web e admin | Docker Compose | `3901` a `3903` |
+| Garage RPC, web, and admin | Docker Compose | `3901` through `3903` |
 
-Os containers `api` e `web` do Compose pertencem ao profile `app` e não são
-iniciados pelo `pnpm run dev` normal. Não execute `pnpm run dev` e
-`pnpm run dev:compose` ao mesmo tempo, pois ambos podem disputar as portas
-`3000` e `8080`.
+The Compose `api` and `web` containers belong to the `app` profile and are not
+started by the standard `pnpm run dev` command. Do not run `pnpm run dev` and
+`pnpm run dev:compose` at the same time because both may contend for ports
+`3000` and `8080`.
 
-## Encerramento normal
+## Normal shutdown
 
-No terminal que executa o ambiente, pressione `Ctrl+C` uma vez e aguarde a
-mensagem `[dev] shutting down...`. O orquestrador encerra API, web e watchers.
+In the terminal running the environment, press `Ctrl+C` once and wait for the
+`[dev] shutting down...` message. The orchestrator stops the API, web process,
+and client watchers.
 
-Os containers de infraestrutura permanecem ativos intencionalmente para
-acelerar a próxima inicialização. Para encerrar também esses containers:
+Infrastructure containers intentionally remain active to make the next startup
+faster. To stop those containers as well, run:
 
 ```bash
 pnpm run dev:stop
 ```
 
-Esse comando:
+This command:
 
-- encerra os processos que escutam nas portas `3000` e `8080`;
-- executa `docker compose down --remove-orphans`;
-- preserva os volumes e, portanto, os dados locais.
+- stops processes listening on ports `3000` and `8080`;
+- runs `docker compose down --remove-orphans`;
+- preserves local volumes and their data.
 
-Evite pressionar `Ctrl+C` duas vezes em sequência. A segunda interrupção força
-a saída imediata e pode não dar tempo para o encerramento normal dos filhos.
+Avoid pressing `Ctrl+C` twice in quick succession. The second interrupt forces
+an immediate exit and may prevent child processes from shutting down cleanly.
 
-## Recuperação recomendada
+## Recommended recovery
 
-Quando uma execução anterior deixou processos órfãos, quando houve merge com
-mudanças grandes ou quando `.next`, client gerado ou artefatos .NET ficaram
-obsoletos, execute:
+Use the following sequence after a previous execution left orphaned processes,
+after a large merge, or when `.next`, generated-client, or .NET artifacts have
+become stale:
 
 ```bash
 pnpm run dev:repair
 pnpm run dev
 ```
 
-`dev:repair` executa `dev:stop` e remove somente artefatos regeneráveis:
+`dev:repair` runs `dev:stop` and removes only regenerable artifacts:
 
 - `.turbo`;
-- `apps/web/.next` e `apps/web/.turbo`;
-- arquivos `tsconfig*.tsbuildinfo` de `apps/web`;
-- `packages/infrastructure/client/dist` e seu cache do Turbo;
-- diretórios `bin` e `obj` da API.
+- `apps/web/.next`, `apps/web/.next-learning`, and `apps/web/.turbo`;
+- `apps/web` `tsconfig*.tsbuildinfo` files;
+- `packages/infrastructure/client/dist` and its Turbo cache;
+- API `bin` and `obj` directories.
 
-Ele não remove:
+It does not remove:
 
-- `.env` ou configurações locais;
+- `.env` files or local configuration;
 - `node_modules`;
-- volumes do Docker;
-- dados do PostgreSQL, Redis ou Garage;
-- arquivos versionados.
+- Docker volumes;
+- PostgreSQL, Redis, or Garage data;
+- tracked files.
 
-A primeira inicialização após o reparo pode demorar mais porque a API, o client
-e a web serão recompilados.
+The first startup after a repair may take longer because the API, client, and
+web application must be rebuilt.
 
-## Reset completo dos dados locais
+## Full local data reset
 
-Use esta opção somente quando os dados locais puderem ser descartados:
+Use this option only when all local data can be discarded:
 
 ```bash
 pnpm run dev:reset:data
 pnpm run dev
 ```
 
-Além da limpeza de artefatos, esse comando executa
-`docker compose down --remove-orphans --volumes` e apaga os volumes locais
-declarados pelo projeto, incluindo:
+In addition to removing generated artifacts, this command runs
+`docker compose down --remove-orphans --volumes` and deletes the local volumes
+declared by this project, including:
 
-- banco PostgreSQL;
-- estado do Redis;
-- objetos do Garage;
-- chaves locais de data protection.
+- the PostgreSQL database;
+- Redis state;
+- Garage objects;
+- local data-protection keys.
 
-Um erro de porta, cache ou compilação não exige reset do banco. Antes de apagar
-os volumes por um erro de API, verifique os logs. O reset também não deve ser
-usado para ocultar defeitos em migrations ou no modelo EF.
+Port, cache, or compilation errors do not require a database reset. Inspect the
+logs before deleting volumes because of an API error. Do not use a reset to
+hide defects in migrations or the EF model.
 
-## Reinstalação de dependências
+## Reinstalling dependencies
 
-Se o erro indicar dependências ausentes ou inconsistentes depois de uma mudança
-no lockfile, tente primeiro:
+If an error indicates missing or inconsistent dependencies after a lockfile
+change, first run:
 
 ```bash
 pnpm install --frozen-lockfile
 ```
 
-Se houver evidência de instalação corrompida, faça a limpeza profunda:
+If there is evidence that the installation itself is corrupted, perform a deep
+cleanup:
 
 ```bash
 pnpm run clean
@@ -114,11 +120,11 @@ pnpm install --frozen-lockfile
 pnpm run dev
 ```
 
-`pnpm run clean` remove `node_modules`, `dist`, `coverage`, `build`, `.next` e
-`.turbo` em todo o monorepo. Ele é mais caro que `dev:repair` e não deve fazer
-parte da rotina diária.
+`pnpm run clean` removes `node_modules`, `dist`, `coverage`, `build`, `.next`,
+and `.turbo` throughout the monorepo. It is more expensive than `dev:repair`
+and should not be part of the normal daily workflow.
 
-## Diagnóstico
+## Diagnostics
 
 ### Containers
 
@@ -128,10 +134,10 @@ docker compose -f compose.yaml ps -a
 docker compose -f compose.yaml logs --tail=200 postgres redis garage garage-init
 ```
 
-No modo normal, a API roda localmente. Portanto, seus erros aparecem no terminal
-de `pnpm run dev`, e não em `docker compose logs api`.
+In the standard mode, the API runs on the host. Its errors therefore appear in
+the `pnpm run dev` terminal, not in `docker compose logs api`.
 
-### Portas
+### Ports
 
 ```bash
 lsof -nP -iTCP:3000 -sTCP:LISTEN
@@ -141,22 +147,22 @@ lsof -nP -iTCP:6379 -sTCP:LISTEN
 lsof -nP -iTCP:3900 -sTCP:LISTEN
 ```
 
-Para encerrar apenas os listeners locais da web e da API:
+To stop only the local web and API listeners, run:
 
 ```bash
 pnpm run kill:ports
 ```
 
-O comando consulta cada porta separadamente, restringe a seleção a sockets TCP
-em estado `LISTEN` e não chama `kill` quando não encontra PID. Ele usa `SIGKILL`
-porque é destinado à recuperação de processos órfãos; prefira `Ctrl+C` para o
-encerramento normal.
+The command checks each port independently, restricts the selection to TCP
+sockets in the `LISTEN` state, and does not invoke `kill` when no PID is found.
+It uses `SIGKILL` because it is intended to recover orphaned processes; prefer
+`Ctrl+C` for a normal shutdown.
 
-Não mate automaticamente processos nas portas de PostgreSQL, Redis ou Garage.
-Primeiro identifique se a porta pertence aos containers deste projeto ou a
-outro serviço local.
+Do not automatically kill processes on the PostgreSQL, Redis, or Garage ports.
+First determine whether a port belongs to this project's containers or to a
+different local service.
 
-### Saúde da API e da web
+### API and web health
 
 ```bash
 curl -i http://localhost:8080/live
@@ -164,58 +170,61 @@ curl -i http://localhost:8080/health
 curl -i http://localhost:3000/api/health
 ```
 
-### Rede externa do Compose
+### External Compose network
 
-O Compose espera a rede externa `web-development-public`. Se ela não existir:
+Compose expects the external `web-development-public` network. Create it when
+it does not exist:
 
 ```bash
 docker network inspect web-development-public >/dev/null 2>&1 || \
   docker network create web-development-public
 ```
 
-## Guia rápido por sintoma
+## Quick symptom guide
 
-| Sintoma | Primeira ação |
+| Symptom | First action |
 | --- | --- |
 | `port 8080 is already in use` | `pnpm run dev:repair` |
-| Next.js informa que já existe servidor em `3000` | `pnpm run dev:repair` |
-| aviso de container órfão, como MailHog antigo | `pnpm run dev:stop` |
-| tipos de rotas antigas em `.next/types` | `pnpm run dev:repair` |
-| client gerado ou `dist` inconsistente | `pnpm run dev:repair` |
-| dependências não correspondem ao lockfile | `pnpm install --frozen-lockfile` |
-| instalação de dependências corrompida | `pnpm run clean`, reinstalar e iniciar |
-| schema local descartável incompatível após análise dos logs | `pnpm run dev:reset:data` |
-| Compose não encontra a rede externa | criar `web-development-public` |
+| Next.js reports an existing server on `3000` | `pnpm run dev:repair` |
+| orphaned-container warning, such as an old MailHog container | `pnpm run dev:stop` |
+| stale route types in `.next/types` | `pnpm run dev:repair` |
+| inconsistent generated client or `dist` | `pnpm run dev:repair` |
+| dependencies do not match the lockfile | `pnpm install --frozen-lockfile` |
+| corrupted dependency installation | `pnpm run clean`, reinstall, and start again |
+| disposable local schema is incompatible after inspecting logs | `pnpm run dev:reset:data` |
+| Compose cannot find its external network | create `web-development-public` |
 
-## Comandos que devem ser evitados
+## Commands to avoid
 
-Não use indiscriminadamente:
+Do not use these commands indiscriminately:
 
 ```bash
 git clean -fdX
 docker system prune -a --volumes
 ```
 
-`git clean -fdX` remove tudo que o Git considera ignorado. Neste repositório,
-isso pode incluir `.env` e diretórios de código mantidos fora do índice atual,
-não apenas caches. Para apenas inspecionar o que seria removido, sem apagar:
+`git clean -fdX` removes everything Git considers ignored. In this repository,
+that may include `.env` files and code directories kept outside the current
+index, not only caches. To inspect what would be removed without deleting it,
+run:
 
 ```bash
 git clean -ndX
 ```
 
-`docker system prune -a --volumes` afeta todos os projetos da máquina. Para
-este repositório, use os comandos `dev:stop` e `dev:reset:data`, que limitam a
-operação ao Compose do Game Guild.
+`docker system prune -a --volumes` affects every project on the machine. For
+this repository, use `dev:stop` and `dev:reset:data`, which limit the operation
+to the Game Guild Compose project.
 
-## Sequência padrão após problemas
+## Standard recovery sequence
 
-Use esta ordem e avance somente se a etapa anterior não resolver:
+Follow this order and continue only when the previous step did not solve the
+problem:
 
-1. `pnpm run dev:stop`;
-2. `pnpm run dev:repair` e `pnpm run dev`;
-3. inspecionar logs, portas e endpoints de saúde;
-4. `pnpm install --frozen-lockfile` se houve mudança de dependências;
-5. `pnpm run clean` apenas se a instalação estiver corrompida;
-6. `pnpm run dev:reset:data` somente após confirmar que os dados podem ser
-   descartados e que o problema está relacionado ao estado persistido local.
+1. run `pnpm run dev:stop`;
+2. run `pnpm run dev:repair`, then `pnpm run dev`;
+3. inspect logs, ports, and health endpoints;
+4. run `pnpm install --frozen-lockfile` when dependencies changed;
+5. run `pnpm run clean` only when the installation is corrupted;
+6. run `pnpm run dev:reset:data` only after confirming that local data can be
+   discarded and the problem is related to persisted local state.
