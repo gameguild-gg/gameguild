@@ -1,9 +1,10 @@
 import { Link } from '@/i18n/navigation';
+import { listMyBlogPosts } from '@/lib/blogs/queries';
 import { getWorkspaceMyTeamInvitations, getWorkspaceProjects, getWorkspaceTeams } from '@/lib/workspaces';
 import { Badge } from '@game-guild/ui/components/badge';
 import { buttonVariants } from '@game-guild/ui/components/button-variants';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { CheckSquare2, FolderKanban, Mail, Plus, Users } from 'lucide-react';
+import { CheckSquare2, FileText, FolderKanban, Mail, Plus, Users } from 'lucide-react';
 import React from 'react';
 
 function projectStatusLabel(value: string | number) {
@@ -11,11 +12,22 @@ function projectStatusLabel(value: string | number) {
   return labels[String(value)] ?? String(value).replace(/([a-z])([A-Z])/g, '$1 $2');
 }
 
+function postStatusLabel(value: string | number) {
+  const labels: Record<string, string> = { Draft: 'Draft', Published: 'Published' };
+  return labels[String(value)] ?? String(value).replace(/([a-z])([A-Z])/g, '$1 $2');
+}
+
+function postEditedAt(post: { publishedAt: string | null; updatedAt: string }) {
+  const at = post.publishedAt ?? post.updatedAt;
+  return new Date(at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
 export async function WorkspaceHub(): Promise<React.JSX.Element> {
-  const [teams, projects, invitations] = await Promise.all([
+  const [teams, projects, invitations, blogPosts] = await Promise.all([
     getWorkspaceTeams(),
     getWorkspaceProjects(),
     getWorkspaceMyTeamInvitations(),
+    listMyBlogPosts(),
   ]);
 
   return (
@@ -31,6 +43,7 @@ export async function WorkspaceHub(): Promise<React.JSX.Element> {
         <div className="flex gap-2">
           <Link href="/workspace/teams/new" className={buttonVariants({ variant: 'outline' })}><Plus className="size-4" />Team</Link>
           <Link href="/workspace/projects/new" className={buttonVariants()}><Plus className="size-4" />Project</Link>
+          <Link href="/blog/new" className={buttonVariants({ variant: 'outline' })}><Plus className="size-4" />Post</Link>
         </div>
       </header>
 
@@ -38,6 +51,7 @@ export async function WorkspaceHub(): Promise<React.JSX.Element> {
         <Metric icon={<Users className="size-4" />} label="Teams" value={teams.length} />
         <Metric icon={<FolderKanban className="size-4" />} label="Projects" value={projects.length} />
         <Metric icon={<Mail className="size-4" />} label="Invitations" value={invitations.length} />
+        <Metric icon={<FileText className="size-4" />} label="Blog posts" value={blogPosts.length} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -74,6 +88,37 @@ export async function WorkspaceHub(): Promise<React.JSX.Element> {
       </div>
 
       <Card>
+        <CardHeader className="flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle className="flex items-center gap-2"><FileText className="size-4" />Recent blog posts</CardTitle>
+            <CardDescription>Drafts and published articles under your handle.</CardDescription>
+          </div>
+          <Link href="/blog/new" className={buttonVariants({ size: 'sm', variant: 'ghost' })}>New post</Link>
+        </CardHeader>
+        <CardContent>
+          <div className="max-h-72 space-y-2 overflow-y-auto">
+            {blogPosts.map((post) => {
+              const href = post.primaryAuthorHandle && post.slug ? `/blogs/${post.primaryAuthorHandle}/${post.slug}/edit` : '/blogs';
+              return (
+                <Link key={post.id} href={href} className="flex items-center justify-between gap-4 rounded-lg border p-3 transition hover:bg-muted/50">
+                  <span className="min-w-0 truncate font-medium">{post.title}</span>
+                  <span className="flex shrink-0 items-center gap-3 text-sm text-muted-foreground">
+                    {postEditedAt(post)}
+                    <Badge variant="secondary">{postStatusLabel(post.status)}</Badge>
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+          {blogPosts.length === 0 && (
+            <Empty message="No posts yet.">
+              <Link href="/blog/new" className={buttonVariants({ variant: 'outline' })}><Plus className="size-4" />New post</Link>
+            </Empty>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><CheckSquare2 className="size-4" />My work</CardTitle>
           <CardDescription>Tasks live inside the project that owns them.</CardDescription>
@@ -88,6 +133,11 @@ function Metric({ icon, label, value }: { icon: React.ReactNode; label: string; 
   return <Card><CardHeader className="flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{label}</CardTitle>{icon}</CardHeader><CardContent><p className="text-2xl font-semibold">{value}</p></CardContent></Card>;
 }
 
-function Empty({ message }: { message: string }) {
-  return <p className="py-6 text-center text-sm text-muted-foreground">{message}</p>;
+function Empty({ message, children }: { message: string; children?: React.ReactNode }) {
+  return (
+    <div className="py-6 text-center">
+      <p className="text-sm text-muted-foreground">{message}</p>
+      {children && <div className="mt-3 flex justify-center">{children}</div>}
+    </div>
+  );
 }

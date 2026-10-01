@@ -1,4 +1,4 @@
-import { auth, getToken } from "@/auth";
+import { getRequestAuthContext } from "@/auth";
 import type { PublicProject } from "@/lib/community/public-community";
 import type { PublicProjectType } from "@/lib/projects/project-types";
 import {
@@ -28,11 +28,13 @@ function getApiUrl() {
 }
 
 async function createProjectsModule() {
-  const session = await auth().catch(() => null);
+  const { token, tenantId } = await getRequestAuthContext();
   const client = createServerClient({
     baseUrl: getApiUrl(),
-    auth: { getAccessToken: () => getToken() },
-    tenant: { getTenantId: async () => session?.tenantId ?? null },
+    // With a null token the generated client short-circuits 401 before the
+    // request, so public [AllowAnonymous] endpoints need the provider omitted.
+    ...(token ? { auth: { getAccessToken: async () => token } } : {}),
+    tenant: { getTenantId: async () => tenantId },
   });
 
   return new GeneratedApi.ProjectsModule(client);
