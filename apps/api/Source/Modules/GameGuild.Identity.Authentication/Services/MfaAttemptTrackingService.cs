@@ -92,7 +92,10 @@ public sealed class MfaAttemptTrackingService(
     /// </summary>
     public async Task<bool> GetMfaStatusAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        if (!_mfaOptions.Enabled) return false;
+        if (!_mfaOptions.Enabled)
+        {
+            return false;
+        }
 
         try
         {
@@ -257,8 +260,17 @@ public sealed class MfaAttemptTrackingService(
         UserMfaConfiguration configuration,
         MfaMethod method,
         string failureReason,
+        string? deviceId)
+    {
+        await RecordFailedMfaAttemptAsync(configuration, method, failureReason, deviceId, CancellationToken.None).ConfigureAwait(false);
+    }
+
+    public async Task RecordFailedMfaAttemptAsync(
+        UserMfaConfiguration configuration,
+        MfaMethod method,
+        string failureReason,
         string? deviceId,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(configuration);
         configuration.FailedAttempts++;
@@ -296,7 +308,10 @@ public sealed class MfaAttemptTrackingService(
     /// </summary>
     public Task<bool> IsMfaRequiredByPolicyAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        if (!_mfaOptions.Enabled) return Task.FromResult(false);
+        if (!_mfaOptions.Enabled)
+        {
+            return Task.FromResult(false);
+        }
 
         // Check if the current user has an elevated role that should require MFA.
         // This inspects the ClaimsPrincipal from HttpContext (populated by JWT middleware).

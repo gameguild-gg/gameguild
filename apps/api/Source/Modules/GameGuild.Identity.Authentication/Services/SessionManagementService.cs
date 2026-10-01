@@ -88,7 +88,10 @@ public sealed class SessionManagementService(
     {
         var session = await sessionRepository.GetByIdAsync(sessionId, cancellationToken).ConfigureAwait(false);
 
-        if (session is not { IsActive: true }) return false;
+        if (session is not { IsActive: true })
+        {
+            return false;
+        }
 
         if (!IsExpired(session, SystemClock.UtcNow)) return true;
 
@@ -187,7 +190,10 @@ public sealed class SessionManagementService(
 
     public async Task<bool> TrustDeviceAsync(Guid userId, string deviceFingerprint, string deviceName, CancellationToken cancellationToken = default)
     {
-        if (!_sessionOptions.EnableDeviceFingerprinting || string.IsNullOrWhiteSpace(deviceFingerprint)) return false;
+        if (!_sessionOptions.EnableDeviceFingerprinting || string.IsNullOrWhiteSpace(deviceFingerprint))
+        {
+            return false;
+        }
 
         var now = SystemClock.UtcNow;
         var existingDevice = await trustedDeviceRepository.GetByUserAndFingerprintAsync(userId, deviceFingerprint, cancellationToken).ConfigureAwait(false);

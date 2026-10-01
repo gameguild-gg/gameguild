@@ -90,7 +90,10 @@ public sealed class MfaOptions : BaseOptions
 
         if (string.IsNullOrWhiteSpace(TotpIssuer)) errors.Add("TotpIssuer is required");
 
-        if (!Enabled && RequireMfaByDefault) errors.Add("RequireMfaByDefault cannot be enabled when MFA is disabled");
+        if (!Enabled && RequireMfaByDefault)
+        {
+            errors.Add("RequireMfaByDefault cannot be enabled when MFA is disabled");
+        }
 
         return (errors.Count == 0, errors.ToArray());
     }
