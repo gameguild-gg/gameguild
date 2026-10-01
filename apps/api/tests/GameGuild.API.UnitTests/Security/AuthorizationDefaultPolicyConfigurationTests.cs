@@ -15,6 +15,63 @@ namespace GameGuild.API.UnitTests.Security;
 public sealed class AuthorizationDefaultPolicyConfigurationTests
 {
     [Fact]
+    public void SetupAuthorization_LeavesFallbackPolicyUnsetWhenNotConfigured()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.SetupAuthorization(new ConfigurationBuilder().Build(), new PresentationAuthorizationOptions());
+
+        using var provider = services.BuildServiceProvider();
+        var fallbackPolicy = provider.GetRequiredService<IOptions<RuntimeAuthorizationOptions>>().Value.FallbackPolicy;
+
+        fallbackPolicy.Should().BeNull();
+    }
+
+    [Fact]
+    public void SetupAuthorization_UsesConfiguredFallbackPolicyForEndpointsWithoutAuthorizationMetadata()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Authorization:FallbackPolicyName"] = "CanAccessApi",
+                ["Authorization:Policies:CanAccessApi:Roles:0"] = "User"
+            })
+            .Build();
+        var options = AuthorizationOptionsBuilder.Build(configuration);
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.SetupAuthorization(configuration, options);
+
+        using var provider = services.BuildServiceProvider();
+        var fallbackPolicy = provider.GetRequiredService<IOptions<RuntimeAuthorizationOptions>>().Value.FallbackPolicy;
+
+        fallbackPolicy.Should().NotBeNull();
+        fallbackPolicy!.Requirements.OfType<DenyAnonymousAuthorizationRequirement>().Should().ContainSingle();
+        fallbackPolicy.Requirements.OfType<RolesAuthorizationRequirement>().Single().AllowedRoles.Should().ContainSingle()
+            .Which.Should().Be("User");
+    }
+
+    [Fact]
+    public void SetupAuthorization_RejectsUnknownConfiguredFallbackPolicy()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Authorization:FallbackPolicyName"] = "MissingPolicy"
+            })
+            .Build();
+        var options = AuthorizationOptionsBuilder.Build(configuration);
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.SetupAuthorization(configuration, options);
+
+        using var provider = services.BuildServiceProvider();
+        var act = () => provider.GetRequiredService<IOptions<RuntimeAuthorizationOptions>>().Value;
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("*MissingPolicy*not registered*");
+    }
+
+    [Fact]
     public void SetupAuthorization_UsesConfiguredPolicyNamedByDefaultPolicy()
     {
         var options = new PresentationAuthorizationOptions

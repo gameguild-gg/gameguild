@@ -9,6 +9,12 @@ public sealed class AuthorizationOptions : BaseOptions
 
     public string DefaultPolicy { get; set; } = "Default";
 
+    /// <summary>
+    ///     Name of a registered static policy applied to endpoints without authorization metadata.
+    ///     When unset, ASP.NET Core keeps its default behavior for such endpoints.
+    /// </summary>
+    public string? FallbackPolicyName { get; set; }
+
     public bool RequireAuthenticatedUser { get; set; } = true;
 
     /// <summary>
@@ -39,6 +45,11 @@ public sealed class AuthorizationOptions : BaseOptions
         base.Validate();
 
         if (string.IsNullOrWhiteSpace(DefaultPolicy)) throw new InvalidOperationException("Default policy cannot be null or empty.");
+
+        if (FallbackPolicyName is not null && string.IsNullOrWhiteSpace(FallbackPolicyName))
+        {
+            throw new InvalidOperationException("Fallback policy name cannot be empty when configured.");
+        }
         
         if (SystemAccountId == Guid.Empty)
             throw new InvalidOperationException("SystemAccountId cannot be empty GUID.");
