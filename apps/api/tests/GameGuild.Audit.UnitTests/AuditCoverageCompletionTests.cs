@@ -882,6 +882,8 @@ public class AuditFacadeAndModuleCoverageTests
 
         returned.Should().BeSameAs(services);
         services.Should().Contain(descriptor => descriptor.ServiceType == typeof(IAuditService) && descriptor.ImplementationType == typeof(AuditService));
+        services.Should().Contain(descriptor => descriptor.ServiceType == typeof(ITamperEvidentAuditService) && descriptor.ImplementationType == typeof(TamperEvidentAuditService));
+        services.Should().Contain(descriptor => descriptor.ServiceType == typeof(ICryptographicSigningService) && descriptor.ImplementationType == typeof(EcdsaCryptographicSigningService));
         services.Should().Contain(descriptor => descriptor.ServiceType == typeof(IAuditLogQueryService) && descriptor.ImplementationType == typeof(AuditLogQueryService));
         services.Should().Contain(descriptor => descriptor.ServiceType == typeof(IAuditReportService) && descriptor.ImplementationType == typeof(AuditReportService));
         services.Should().Contain(descriptor => descriptor.ServiceType == typeof(ISecurityAuditAggregator) && descriptor.ImplementationType == typeof(SecurityAuditAggregator));

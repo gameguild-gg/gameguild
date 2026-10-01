@@ -16,17 +16,61 @@ public interface ITamperEvidentAuditService {
         string changes,
         string riskLevel,
         string ipAddress,
+        string userAgent);
+    Task<Result<TamperEvidentAuditLog>> CreateAuditLogAsync(
+        Guid tenantId,
+        Guid? userId,
+        string action,
+        string entityType,
+        Guid? entityId,
+        string? beforeSnapshot,
+        string? afterSnapshot,
+        string changes,
+        string riskLevel,
+        string ipAddress,
         string userAgent,
-        string? country = null,
-        string? region = null,
-        string? city = null,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken);
+    Task<Result<TamperEvidentAuditLog>> CreateAuditLogAsync(
+        Guid tenantId,
+        Guid? userId,
+        string action,
+        string entityType,
+        Guid? entityId,
+        string? beforeSnapshot,
+        string? afterSnapshot,
+        string changes,
+        string riskLevel,
+        string ipAddress,
+        string userAgent,
+        AuditEventMetadata metadata,
+        CancellationToken cancellationToken);
 
-    Task<Result<bool>> VerifyChainIntegrityAsync(Guid tenantId, CancellationToken cancellationToken = default);
-    Task<Result<TamperEvidentAuditLog>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
-    Task<Result<IEnumerable<TamperEvidentAuditLog>>> GetByTenantAsync(Guid tenantId, int skip = 0, int take = 100, CancellationToken cancellationToken = default);
-    Task<Result<IEnumerable<TamperEvidentAuditLog>>> GetUnverifiedAsync(Guid tenantId, CancellationToken cancellationToken = default);
-    Task<Result> MarkAsVerifiedAsync(Guid id, string? notes = null, CancellationToken cancellationToken = default);
+    Task<Result<bool>> VerifyChainIntegrityAsync(Guid tenantId);
+    Task<Result<bool>> VerifyChainIntegrityAsync(Guid tenantId, CancellationToken cancellationToken);
+    Task<Result<TamperEvidentAuditLog>> GetByIdAsync(Guid id);
+    Task<Result<TamperEvidentAuditLog>> GetByIdAsync(Guid id, CancellationToken cancellationToken);
+    Task<Result<IEnumerable<TamperEvidentAuditLog>>> GetByTenantAsync(Guid tenantId);
+    Task<Result<IEnumerable<TamperEvidentAuditLog>>> GetByTenantAsync(Guid tenantId, CancellationToken cancellationToken);
+    Task<Result<IEnumerable<TamperEvidentAuditLog>>> GetByTenantAsync(Guid tenantId, int skip, int take);
+    Task<Result<IEnumerable<TamperEvidentAuditLog>>> GetByTenantAsync(Guid tenantId, int skip, int take, CancellationToken cancellationToken);
+    Task<Result<IEnumerable<TamperEvidentAuditLog>>> GetUnverifiedAsync(Guid tenantId);
+    Task<Result<IEnumerable<TamperEvidentAuditLog>>> GetUnverifiedAsync(Guid tenantId, CancellationToken cancellationToken);
+    Task<Result> MarkAsVerifiedAsync(Guid id);
+    Task<Result> MarkAsVerifiedAsync(Guid id, CancellationToken cancellationToken);
+    Task<Result> MarkAsVerifiedAsync(Guid id, string? notes);
+    Task<Result> MarkAsVerifiedAsync(Guid id, string? notes, CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// Optional location and correlation fields associated with an audit event.
+/// </summary>
+public sealed record AuditEventMetadata
+{
+    public string? Country { get; init; }
+    public string? Region { get; init; }
+    public string? City { get; init; }
+    public Guid? SessionId { get; init; }
+    public string? CorrelationId { get; init; }
 }
 
 /// <summary>
@@ -34,12 +78,15 @@ public interface ITamperEvidentAuditService {
 /// Uses RSA/ECDSA digital signatures with SHA-256 hashing.
 /// </summary>
 public interface ICryptographicSigningService {
+    string GetActiveKeyId();
     string ComputeContentHash(string content);
     string ComputeChainHash(string contentHash, string previousHash, long sequenceNumber);
     string SignData(string data, string keyId);
     bool VerifySignature(string data, string signature, string keyId);
-    Task<Result<string>> GetPublicKeyAsync(string keyId, CancellationToken cancellationToken = default);
-    Task<Result> RotateSigningKeyAsync(string newKeyId, CancellationToken cancellationToken = default);
+    Task<Result<string>> GetPublicKeyAsync(string keyId);
+    Task<Result<string>> GetPublicKeyAsync(string keyId, CancellationToken cancellationToken);
+    Task<Result> RotateSigningKeyAsync(string newKeyId);
+    Task<Result> RotateSigningKeyAsync(string newKeyId, CancellationToken cancellationToken);
 }
 
 /// <summary>
