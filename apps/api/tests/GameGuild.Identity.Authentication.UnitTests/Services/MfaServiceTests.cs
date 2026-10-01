@@ -105,6 +105,30 @@ public class MfaServiceTests
     }
 
     [Fact]
+    public async Task InitiateMfaSetupAsync_ShouldUseConfiguredBackupCodeCount()
+    {
+        var userId = Guid.NewGuid();
+        _totpMfaServiceMock
+            .Setup(x => x.SetupTotpAsync(userId, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(("otpauth://totp/GameGuild:user@example.com?secret=ABC123", "ABC123"));
+        _backupCodeMfaServiceMock.Setup(x => x.GenerateBackupCode()).Returns("ABCD1234");
+        _backupCodeMfaServiceMock
+            .Setup(x => x.StoreBackupCodesForSetupAsync(userId, It.IsAny<IReadOnlyList<string>>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        var service = new MfaService(
+            _loggerMock.Object,
+            _totpMfaServiceMock.Object,
+            _backupCodeMfaServiceMock.Object,
+            _attemptTrackingServiceMock.Object,
+            new GameGuild.Configuration.ApplicationLayer.MfaOptions { BackupCodesCount = 4 });
+
+        var result = await service.InitiateMfaSetupAsync(userId, "user@example.com");
+
+        result.BackupCodes.Should().HaveCount(4);
+        _backupCodeMfaServiceMock.Verify(x => x.GenerateBackupCode(), Times.Exactly(4));
+    }
+
+    [Fact]
     public async Task InitiateMfaSetupAsync_WhenTotpSetupFails_ShouldThrow()
     {
         // Arrange

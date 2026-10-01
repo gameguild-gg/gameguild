@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using GameGuild.Configuration.ApplicationLayer;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
@@ -11,15 +12,30 @@ public sealed class MfaAttemptTrackingService(
     ILogger<MfaAttemptTrackingService> logger,
     IUserMfaConfigurationRepository mfaConfigRepository,
     IMfaAttemptRepository mfaAttemptRepository,
-    IHttpContextAccessor httpContextAccessor) : IMfaAttemptTrackingService
+    IHttpContextAccessor httpContextAccessor,
+    MfaOptions? mfaOptions = null,
+    SessionOptions? sessionOptions = null,
+    ISessionManagementService? sessionManagementService = null) : IMfaAttemptTrackingService
 {
-    private const int MaxFailedAttempts = 5;
+    private readonly MfaOptions _mfaOptions = mfaOptions ?? new MfaOptions();
+    private readonly SessionOptions _sessionOptions = sessionOptions ?? new SessionOptions();
 
     /// <summary>
     ///     Gets the MFA configuration for a user including enabled methods and backup codes remaining.
     /// </summary>
     public async Task<MfaConfigurationResponse> GetMfaConfigurationAsync(Guid userId, CancellationToken cancellationToken = default)
     {
+        if (!_mfaOptions.Enabled)
+        {
+            return new MfaConfigurationResponse
+            {
+                IsEnabled = false,
+                EnabledMethods = [],
+                EnabledAt = null,
+                BackupCodesRemaining = 0
+            };
+        }
+
         logger.LogInformation("Getting MFA configuration for user: {UserId}", userId);
 
         try
@@ -76,11 +92,13 @@ public sealed class MfaAttemptTrackingService(
     /// </summary>
     public async Task<bool> GetMfaStatusAsync(Guid userId, CancellationToken cancellationToken = default)
     {
+        if (!_mfaOptions.Enabled) return false;
+
         try
         {
             var mfaConfig = await mfaConfigRepository.GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
 
-            return mfaConfig?.IsEnabled == true;
+            return _mfaOptions.Enabled && mfaConfig?.IsEnabled == true;
         }
         catch (Exception ex)
         {
@@ -135,6 +153,14 @@ public sealed class MfaAttemptTrackingService(
             mfaConfig.FailedAttempts = 0;
 
             await mfaConfigRepository.UpdateAsync(mfaConfig, cancellationToken).ConfigureAwait(false);
+
+            if (_sessionOptions.TerminateSessionsOnMfaDisable && sessionManagementService is not null)
+            {
+                await sessionManagementService.TerminateAllUserSessionsAsync(
+                    userId,
+                    SessionTerminationReason.MfaDisabled,
+                    cancellationToken: cancellationToken).ConfigureAwait(false);
+            }
 
             logger.LogInformation("MFA disabled for user: {UserId}", userId);
 
@@ -227,12 +253,37 @@ public sealed class MfaAttemptTrackingService(
         }
     }
 
+    public async Task RecordFailedMfaAttemptAsync(
+        UserMfaConfiguration configuration,
+        MfaMethod method,
+        string failureReason,
+        string? deviceId,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+        configuration.FailedAttempts++;
+        if (configuration.FailedAttempts >= _mfaOptions.MaxFailedAttempts)
+        {
+            configuration.LockedOutUntil = SystemClock.UtcNow.AddMinutes(_mfaOptions.LockoutDurationMinutes);
+        }
+
+        await mfaConfigRepository.UpdateAsync(configuration, cancellationToken).ConfigureAwait(false);
+
+        await RecordMfaAttemptAsync(
+            configuration.UserId,
+            method,
+            false,
+            failureReason,
+            deviceId,
+            cancellationToken).ConfigureAwait(false);
+    }
+
     /// <summary>
     ///     Checks if user is currently locked out due to failed MFA attempts.
     /// </summary>
     public bool IsLockedOut(UserMfaConfiguration mfaConfig)
     {
-        if (mfaConfig.FailedAttempts < MaxFailedAttempts) { return false; }
+        if (mfaConfig.FailedAttempts < _mfaOptions.MaxFailedAttempts) { return false; }
 
         if (!mfaConfig.LockedOutUntil.HasValue) { return false; }
 
@@ -245,6 +296,8 @@ public sealed class MfaAttemptTrackingService(
     /// </summary>
     public Task<bool> IsMfaRequiredByPolicyAsync(Guid userId, CancellationToken cancellationToken = default)
     {
+        if (!_mfaOptions.Enabled) return Task.FromResult(false);
+
         // Check if the current user has an elevated role that should require MFA.
         // This inspects the ClaimsPrincipal from HttpContext (populated by JWT middleware).
         var user = httpContextAccessor.HttpContext?.User;
@@ -256,8 +309,6 @@ public sealed class MfaAttemptTrackingService(
             return Task.FromResult(true);
         }
 
-        // NOTE: Tenant-level MFA policies should be checked here once
-        // tenant configuration includes an MFA requirement flag.
-        return Task.FromResult(false);
+        return Task.FromResult(_mfaOptions.RequireMfaByDefault);
     }
 }

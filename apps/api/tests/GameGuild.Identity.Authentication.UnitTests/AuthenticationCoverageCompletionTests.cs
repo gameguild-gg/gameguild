@@ -720,7 +720,7 @@ public sealed class AuthenticationCoverageCompletionTests
         var timeStep = DateTimeOffset.UtcNow.ToUnixTimeSeconds() / 30;
         var code = InvokePrivateStatic<string>(typeof(TotpMfaService), "GenerateTotpCode", secret, timeStep);
 
-        InvokePrivateStatic<bool>(typeof(TotpMfaService), "VerifyTotpCode", secret, code, 0).Should().BeTrue();
+        InvokePrivateStatic<bool>(typeof(TotpMfaService), "VerifyTotpCode", secret, code, 0, 30).Should().BeTrue();
 
         var act = () => InvokePrivateStatic<byte[]>(typeof(TotpMfaService), "Base32Decode", "INVALID!");
         act.Should().Throw<TargetInvocationException>()
