@@ -16,6 +16,7 @@ export class SocialBlogCommentsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Soft-deletes a comment (comment author, post primary, or any co-author; others → 403).
    */
   async deleteApiSocialBlogComments(commentId: string): Promise<Result<void, ApiError>> {
     const url = `/api/social/blog/comments/${commentId}`;
@@ -30,6 +31,8 @@ export class SocialBlogCommentsModule {
   }
 
   /**
+   * Adds a comment on a published post (any authenticated user; depth ≤ 1; block-enforced;
+   * disabled-comment and depth-2 violations map to 400, blocks to 403).
    */
   async postApiSocialBlogPostsComments(
     id: string,

@@ -16,6 +16,7 @@ export class SocialBlogPublicModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Public author listing by handle (published only), keyset-paged newest-first.
    */
   async getApiSocialBlogPublicAuthorsForGetApiSocialBlogPublicAuthorsByHandle(
     handle: string,
@@ -40,6 +41,7 @@ export class SocialBlogPublicModule {
   }
 
   /**
+   * Public post detail by (handle, slug); unpublished/missing → indistinguishable 404.
    */
   async getApiSocialBlogPublicAuthorsForGetApiSocialBlogPublicAuthorsByHandleBySlug(
     handle: string,
@@ -63,6 +65,7 @@ export class SocialBlogPublicModule {
   }
 
   /**
+   * Global public blog index (published only), keyset-paged newest-first.
    */
   async getApiSocialBlogPublicPosts(query?: {
     beforePublishedAt?: string;
@@ -87,6 +90,7 @@ export class SocialBlogPublicModule {
   }
 
   /**
+   * Public comments of a published post, oldest-first; unpublished/missing post → 404.
    */
   async getApiSocialBlogPublicPostsComments(
     id: string,
@@ -111,6 +115,7 @@ export class SocialBlogPublicModule {
   }
 
   /**
+   * View beacon: atomically increments the published post's counter; PerIp rate-limited.
    */
   async postApiSocialBlogPublicPostsViews(id: string): Promise<Result<void, ApiError>> {
     const url = `/api/social/blog/public/posts/${id}/views`;
@@ -125,6 +130,7 @@ export class SocialBlogPublicModule {
   }
 
   /**
+   * Resolves a possibly-stale (handle, slug) route to the canonical route, or 404.
    */
   async getApiSocialBlogPublicResolve(handle: string, slug: string): Promise<Result<Types.SocialBlogQueriesBlogRouteResolutionDto, ApiError>> {
     const url = `/api/social/blog/public/resolve/${handle}/${slug}`;

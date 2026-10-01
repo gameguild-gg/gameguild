@@ -16,6 +16,8 @@ export class LearningAssessmentsRubricsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Get the assessment's rubric. Open to course managers and reviewers
+   * (used by the grading panel and peer-review workspace).
    */
   async getAssessmentsRubric(assessmentId: string): Promise<Result<Types.LearningAssessmentsRubricDto, ApiError>> {
     const url = `/v1/assessments/${assessmentId}/rubric`;
@@ -36,6 +38,8 @@ export class LearningAssessmentsRubricsModule {
   }
 
   /**
+   * Create or fully replace the assessment's rubric. Instructor only.
+   * Locked (409) once any submission of the assessment is graded.
    */
   async putAssessmentsRubric(
     assessmentId: string,
@@ -63,6 +67,7 @@ export class LearningAssessmentsRubricsModule {
   }
 
   /**
+   * Remove the rubric from the assessment. Instructor only. Locked once grading started.
    */
   async deleteAssessmentsRubric(assessmentId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/assessments/${assessmentId}/rubric`;

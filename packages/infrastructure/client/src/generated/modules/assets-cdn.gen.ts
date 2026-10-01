@@ -16,6 +16,13 @@ export class AssetsCdnModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Serve asset content with path-based token (CDN-friendly).
+   *
+   * URL format: /assets/{referenceId}/{token}
+   * This format is more CDN-friendly than query-string tokens because:
+   * - Path-based URLs are consistently cached
+   * - No query string parsing issues
+   * - Works with CDNs that strip query strings
    */
   async getAssetsForGetAssetsByReferenceIdByToken(referenceId: string, token: string): Promise<Result<void, ApiError>> {
     const url = `/assets/${referenceId}/${token}`;
@@ -30,6 +37,11 @@ export class AssetsCdnModule {
   }
 
   /**
+   * Serve ephemeral asset (short-lived URL with embedded reference).
+   *
+   * URL format: /e/{token}
+   * The token contains the encrypted asset reference ID and expiration.
+   * Useful for temporary share links and secure downloads.
    */
   async getE(token: string): Promise<Result<void, ApiError>> {
     const url = `/e/${token}`;
@@ -44,6 +56,10 @@ export class AssetsCdnModule {
   }
 
   /**
+   * Serve transformed asset (resized, cropped, etc.) with CDN caching.
+   *
+   * URL format: /t/{transformation}/{referenceId}/{token}
+   * Transformations use standard format: w=100,h=100,fit=cover
    */
   async getT(transformation: string, referenceId: string, token: string): Promise<Result<void, ApiError>> {
     const url = `/t/${transformation}/${referenceId}/${token}`;

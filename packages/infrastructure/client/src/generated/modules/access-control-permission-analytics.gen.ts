@@ -16,6 +16,7 @@ export class AccessControlPermissionAnalyticsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Detect permission anomalies
    */
   async getPermissionAnalyticsAnomalies(query?: {
     tenantId?: string;
@@ -34,6 +35,7 @@ export class AccessControlPermissionAnalyticsModule {
   }
 
   /**
+   * Generate a permission analytics report
    */
   async getPermissionAnalyticsReport(query?: {
     tenantId?: string;
@@ -59,6 +61,7 @@ export class AccessControlPermissionAnalyticsModule {
   }
 
   /**
+   * Get resource access patterns
    */
   async getPermissionAnalyticsResourcePatterns(query?: {
     tenantId?: string;
@@ -79,6 +82,7 @@ export class AccessControlPermissionAnalyticsModule {
   }
 
   /**
+   * Get permission trends
    */
   async getPermissionAnalyticsTrends(query?: {
     tenantId?: string;
@@ -98,6 +102,7 @@ export class AccessControlPermissionAnalyticsModule {
   }
 
   /**
+   * Get permission usage metrics
    */
   async getPermissionAnalyticsUsage(query?: {
     tenantId?: string;
@@ -117,6 +122,7 @@ export class AccessControlPermissionAnalyticsModule {
   }
 
   /**
+   * Get user activity summary
    */
   async getPermissionAnalyticsUserActivity(query?: {
     tenantId?: string;

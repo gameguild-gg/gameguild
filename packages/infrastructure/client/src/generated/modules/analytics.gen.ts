@@ -67,6 +67,7 @@ export class AnalyticsModule {
   }
 
   /**
+   * Returns top-level platform KPIs for the dashboard.
    */
   async getApiAnalyticsPlatformKpis(): Promise<Result<Types.APIControllersPlatformKpisOutput, ApiError>> {
     const url = '/api/analytics/platform-kpis';

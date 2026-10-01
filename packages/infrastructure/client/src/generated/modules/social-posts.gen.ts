@@ -16,6 +16,7 @@ export class SocialPostsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Get paginated list of public posts
    */
   async getPostsForGetPosts(query?: { skip?: number; take?: number }): Promise<Result<void, ApiError>> {
     const url = '/api/v1/posts';
@@ -31,6 +32,7 @@ export class SocialPostsModule {
   }
 
   /**
+   * Create a new post
    */
   async postPosts(body: Types.SocialPostsControllersCreatePostInput): Promise<Result<void, ApiError>> {
     const url = '/api/v1/posts';
@@ -49,6 +51,7 @@ export class SocialPostsModule {
   }
 
   /**
+   * Get a single post by ID
    */
   async getPostsForGetPostsByPostId(postId: string): Promise<Result<void, ApiError>> {
     const url = `/api/v1/posts/${postId}`;
@@ -63,6 +66,7 @@ export class SocialPostsModule {
   }
 
   /**
+   * Update a post
    */
   async putPosts(postId: string, body: Types.SocialPostsControllersUpdatePostInput): Promise<Result<void, ApiError>> {
     const url = `/api/v1/posts/${postId}`;
@@ -81,6 +85,7 @@ export class SocialPostsModule {
   }
 
   /**
+   * Delete a post
    */
   async deletePosts(postId: string): Promise<Result<void, ApiError>> {
     const url = `/api/v1/posts/${postId}`;
@@ -95,6 +100,7 @@ export class SocialPostsModule {
   }
 
   /**
+   * Get posts by a specific author
    */
   async getPostsAuthor(authorId: string, query?: { skip?: number; take?: number }): Promise<Result<void, ApiError>> {
     const url = `/api/v1/posts/author/${authorId}`;
@@ -110,6 +116,7 @@ export class SocialPostsModule {
   }
 
   /**
+   * Get posts for the current user's feed
    */
   async getPostsFeed(query?: { skip?: number; take?: number }): Promise<Result<void, ApiError>> {
     const url = '/api/v1/posts/feed';
@@ -125,6 +132,7 @@ export class SocialPostsModule {
   }
 
   /**
+   * Get current user's posts
    */
   async getPostsMy(query?: { skip?: number; take?: number }): Promise<Result<void, ApiError>> {
     const url = '/api/v1/posts/my';
@@ -140,6 +148,7 @@ export class SocialPostsModule {
   }
 
   /**
+   * Search posts by content
    */
   async getPostsSearch(query?: { q?: string; skip?: number; take?: number }): Promise<Result<void, ApiError>> {
     const url = '/api/v1/posts/search';
@@ -155,6 +164,7 @@ export class SocialPostsModule {
   }
 
   /**
+   * Get trending posts
    */
   async getPostsTrending(query?: { skip?: number; take?: number }): Promise<Result<void, ApiError>> {
     const url = '/api/v1/posts/trending';

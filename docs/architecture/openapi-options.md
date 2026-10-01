@@ -91,10 +91,21 @@ property names. Examples must match the model's wire representation; JSON
 syntax is validated at startup, and the API owner must verify semantic validity.
 The default document is unchanged when these dictionaries are empty.
 
-This configuration adds structured extension data and opt-in schema descriptions
-and examples for issue #147. Language-specific documents, broad model coverage,
-and final generated-document verification remain required before that issue can
-close.
+Swashbuckle also reads the `GameGuild.*.xml` compiler documentation files next
+to the API assemblies. Existing type and member summaries become schema,
+property, and operation descriptions. A configured `Schemas` value still takes
+precedence over the corresponding XML summary. The TypeScript client must be
+regenerated whenever these descriptions change.
+
+In the 2026-09-30 `v1` export, schema descriptions increased from 6 to 641 of
+1,579, property descriptions from 0 to 1,986 of 9,186, and operation summaries
+from 359 to 1,017 of 1,544. Paths, schemas, and every non-documentation field
+were unchanged. This makes existing comments visible without inventing text for
+undocumented models. The XML comments do not supply examples in this export.
+
+Structured extension data, opt-in examples, and compiler XML comments advance
+issue #147. Descriptions and examples for the remaining models,
+language-specific documents, and final acceptance remain before it can close.
 
 ## Document generation measurement
 
@@ -102,7 +113,8 @@ The `OpenApiDocumentGenerationBenchmarks` fixture generates the full `v1`
 document with default options and with one structured extension and one schema
 override. The 2026-09-30 local BenchmarkDotNet `ShortRun` used one launch, three
 warmups, and three measured iterations on Windows 10, .NET 10.0.10, and an Intel
-Xeon W-2235. The document has 1,261 paths and 1,579 schemas.
+Xeon W-2235. The document has 1,261 paths and 1,579 schemas. Before XML comment
+loading, the results were:
 
 | Configuration | Mean | Error | Allocated |
 | --- | ---: | ---: | ---: |
@@ -117,3 +129,19 @@ the repository root with:
 ```powershell
 dotnet run --project apps/api/tests/GameGuild.API.Versioning.PerformanceTests/GameGuild.API.Versioning.PerformanceTests.csproj --configuration Release -- --filter '*OpenApiDocumentGenerationBenchmarks*' --job Short --buildTimeout 600
 ```
+
+Loading all 69 XML files as separate Swashbuckle filter sets was rejected after
+the same local job measured 2.624 s and 2.58 GB allocated for the default
+document. The implementation combines the files into one immutable XML index
+and registers one filter set. With that implementation, a repeat `ShortRun`
+measured:
+
+| Configuration with XML comments | Mean | Error | Allocated |
+| --- | ---: | ---: | ---: |
+| Default | 754.1 ms | 1,112.2 ms | 326.08 MB |
+| Configured | 1,067.2 ms | 2,034.3 ms | 325.65 MB |
+
+These small local samples have wide error intervals and are not production
+latency targets. They show that the one-index implementation avoids the large
+allocation observed with 69 filter sets; they do not establish a precise
+performance difference from the pre-XML implementation.

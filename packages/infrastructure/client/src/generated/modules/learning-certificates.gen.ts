@@ -16,6 +16,7 @@ export class LearningCertificatesModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Get a certificate by ID
    */
   async getApiCertificates(id: string): Promise<Result<Types.LearningCertificatesCertificateDto, ApiError>> {
     const url = `/api/certificates/${id}`;
@@ -36,6 +37,7 @@ export class LearningCertificatesModule {
   }
 
   /**
+   * Revoke a certificate
    */
   async postApiCertificatesRevoke(id: string, body: Types.LearningCertificatesRevokeCertificateInput): Promise<Result<void, ApiError>> {
     const url = `/api/certificates/${id}/revoke`;
@@ -54,6 +56,7 @@ export class LearningCertificatesModule {
   }
 
   /**
+   * Get certificates for a specific course
    */
   async getApiCertificatesCourse(courseId: string): Promise<Result<Array<Types.LearningCertificatesCertificateDto>, ApiError>> {
     const url = `/api/certificates/course/${courseId}`;
@@ -68,6 +71,7 @@ export class LearningCertificatesModule {
   }
 
   /**
+   * Get certificates expiring within the specified days
    */
   async getApiCertificatesExpiring(query?: { days?: number }): Promise<Result<Array<Types.LearningCertificatesCertificateDto>, ApiError>> {
     const url = '/api/certificates/expiring';
@@ -83,6 +87,7 @@ export class LearningCertificatesModule {
   }
 
   /**
+   * Issue a certificate for an enrollment
    */
   async postApiCertificatesIssue(body: Types.LearningCertificatesIssueCertificateInput): Promise<Result<Types.LearningCertificatesCertificateDto, ApiError>> {
     const url = '/api/certificates/issue';
@@ -107,6 +112,7 @@ export class LearningCertificatesModule {
   }
 
   /**
+   * Get certificates for the current user
    */
   async getApiCertificatesMy(): Promise<Result<Array<Types.LearningCertificatesCertificateDto>, ApiError>> {
     const url = '/api/certificates/my';
@@ -121,6 +127,7 @@ export class LearningCertificatesModule {
   }
 
   /**
+   * Create a certificate template for a course
    */
   async postApiCertificatesTemplates(
     body: Types.LearningCertificatesCreateCertificateTemplateInput,
@@ -147,6 +154,7 @@ export class LearningCertificatesModule {
   }
 
   /**
+   * Get a certificate template by ID
    */
   async getApiCertificatesTemplates(templateId: string): Promise<Result<Types.LearningCertificatesCertificateTemplateDetailDto, ApiError>> {
     const url = `/api/certificates/templates/${templateId}`;
@@ -167,6 +175,7 @@ export class LearningCertificatesModule {
   }
 
   /**
+   * Update a certificate template and its course-default state
    */
   async putApiCertificatesTemplates(
     templateId: string,
@@ -194,6 +203,7 @@ export class LearningCertificatesModule {
   }
 
   /**
+   * Delete a certificate template
    */
   async deleteApiCertificatesTemplates(templateId: string): Promise<Result<void, ApiError>> {
     const url = `/api/certificates/templates/${templateId}`;
@@ -208,6 +218,7 @@ export class LearningCertificatesModule {
   }
 
   /**
+   * Get certificate templates for a specific course
    */
   async getApiCertificatesTemplatesCourse(courseId: string): Promise<Result<Array<Types.LearningCertificatesCertificateTemplateDto>, ApiError>> {
     const url = `/api/certificates/templates/course/${courseId}`;
@@ -222,6 +233,7 @@ export class LearningCertificatesModule {
   }
 
   /**
+   * Verify a certificate by its number (public endpoint)
    */
   async getApiCertificatesVerify(certificateNumber: string): Promise<Result<Types.LearningCertificatesCertificateVerificationResult, ApiError>> {
     const url = `/api/certificates/verify/${certificateNumber}`;

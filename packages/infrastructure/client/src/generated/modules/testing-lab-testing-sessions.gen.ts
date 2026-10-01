@@ -30,6 +30,7 @@ export class TestingLabTestingSessionsModule {
   }
 
   /**
+   * Public endpoint returning "published" testing sessions (Scheduled or Active). No authentication required.
    */
   async getTestingPublicSessions(query?: { take?: number }): Promise<Result<Array<Types.TestingLabTestingSession>, ApiError>> {
     const url = '/v1/testing/public/sessions';

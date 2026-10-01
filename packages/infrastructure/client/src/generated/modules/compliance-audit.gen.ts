@@ -16,6 +16,7 @@ export class ComplianceAuditModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Get audit logs with filtering and pagination
    */
   async getAdminAuditLogs(query?: {
     UserId?: string;
@@ -50,6 +51,7 @@ export class ComplianceAuditModule {
   }
 
   /**
+   * Export audit logs (admin only)
    */
   async postAdminAuditLogsExport(body: Types.ComplianceAuditAuditExportInput): Promise<Result<void, ApiError>> {
     const url = '/v1/admin/audit-logs/:export';
@@ -68,6 +70,7 @@ export class ComplianceAuditModule {
   }
 
   /**
+   * Get audit log statistics
    */
   async getAdminAuditLogsStatistics(query?: { StartDate?: string; EndDate?: string }): Promise<Result<Types.ComplianceAuditAuditStatisticsOutput, ApiError>> {
     const url = '/v1/admin/audit-logs/statistics';

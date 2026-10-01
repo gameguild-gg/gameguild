@@ -16,6 +16,7 @@ export class CommerceProductsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Get paginated list of products
    */
   async getProductsForGetProducts(query?: {
     type?: Types.CommerceProductsProductType;
@@ -47,6 +48,7 @@ export class CommerceProductsModule {
   }
 
   /**
+   * Create a new product
    */
   async postProducts(body: Types.CommerceProductsCreateProductInput): Promise<Result<Types.CommerceProductsProductDto, ApiError>> {
     const url = '/v1/products';
@@ -71,6 +73,7 @@ export class CommerceProductsModule {
   }
 
   /**
+   * Batch create multiple products
    */
   async postProductsBatchCreate(body: Types.CommerceProductsBatchCreateProductsInput): Promise<Result<Array<Types.CommerceProductsProductDto>, ApiError>> {
     const url = '/v1/products/:batch-create';
@@ -89,6 +92,7 @@ export class CommerceProductsModule {
   }
 
   /**
+   * Get product by ID
    */
   async getProductsForGetProductsByProductId(
     productId: string,
@@ -113,6 +117,7 @@ export class CommerceProductsModule {
   }
 
   /**
+   * Update an existing product (full update)
    */
   async putProducts(productId: string, body: Types.CommerceProductsUpdateProductInput): Promise<Result<Types.CommerceProductsProductDto, ApiError>> {
     const url = `/v1/products/${productId}`;
@@ -137,6 +142,7 @@ export class CommerceProductsModule {
   }
 
   /**
+   * Delete a product
    */
   async deleteProducts(productId: string, query?: { softDelete?: boolean; reason?: string }): Promise<Result<void, ApiError>> {
     const url = `/v1/products/${productId}`;
@@ -152,6 +158,7 @@ export class CommerceProductsModule {
   }
 
   /**
+   * Partially update a product (PATCH)
    */
   async patchProducts(productId: string, body: Types.CommerceProductsPatchProductInput): Promise<Result<Types.CommerceProductsProductDto, ApiError>> {
     const url = `/v1/products/${productId}`;
@@ -176,6 +183,7 @@ export class CommerceProductsModule {
   }
 
   /**
+   * Check if a product exists
    */
   async headProducts(productId: string, query?: { includeUnpublished?: boolean }): Promise<Result<void, ApiError>> {
     const url = `/v1/products/${productId}`;
@@ -191,6 +199,7 @@ export class CommerceProductsModule {
   }
 
   /**
+   * Activate a product
    */
   async postProductsActivate(productId: string): Promise<Result<Types.CommerceProductsProductDto, ApiError>> {
     const url = `/v1/products/${productId}:activate`;
@@ -211,6 +220,7 @@ export class CommerceProductsModule {
   }
 
   /**
+   * Archive a product (soft delete)
    */
   async postProductsArchive(productId: string): Promise<Result<Types.CommerceProductsProductDto, ApiError>> {
     const url = `/v1/products/${productId}:archive`;
@@ -231,6 +241,7 @@ export class CommerceProductsModule {
   }
 
   /**
+   * Deactivate a product
    */
   async postProductsDeactivate(productId: string): Promise<Result<Types.CommerceProductsProductDto, ApiError>> {
     const url = `/v1/products/${productId}:deactivate`;
@@ -251,6 +262,7 @@ export class CommerceProductsModule {
   }
 
   /**
+   * Get pricing options for a product
    */
   async getProductsPricing(
     productId: string,

@@ -59,6 +59,12 @@ public sealed class OpenApiConfiguredDocumentationTests
         schema.Description.Should().Be("Documented account profile.");
         schema.Example.Should().BeOfType<OpenApiObject>();
         schema.Properties["id"].Description.Should().Be("Account ID.");
+        schema.Properties["email"].Description.Should().Be("User email address");
+        document.Components.Schemas["AI_AiChatMessage"].Description
+            .Should().Be("Chat message payload for AI requests.");
+        document.Paths.Values.SelectMany(path => path.Operations.Values)
+            .Count(operation => !string.IsNullOrWhiteSpace(operation.Summary))
+            .Should().BeGreaterThan(500);
     }
 
     [Fact]
@@ -71,6 +77,9 @@ public sealed class OpenApiConfiguredDocumentationTests
         var descriptors = provider.GetRequiredService<IOptions<SwaggerGenOptions>>().Value.DocumentFilterDescriptors;
 
         descriptors.Should().Contain(descriptor => descriptor.Type == typeof(ConfiguredOpenApiDocumentFilter));
+        provider.GetRequiredService<IOptions<SwaggerGenOptions>>().Value.SchemaFilterDescriptors
+            .Count(descriptor => descriptor.Type.Name == "XmlCommentsSchemaFilter")
+            .Should().Be(1);
     }
 
     [Fact]

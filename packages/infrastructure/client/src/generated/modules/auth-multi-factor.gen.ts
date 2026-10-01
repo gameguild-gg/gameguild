@@ -16,7 +16,7 @@ export class AuthMultiFactorModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
-   * Get MFA configuration
+   * Get current user's MFA configuration
    *
    * Retrieves the current user's multi-factor authentication configuration and enabled methods.
    */
@@ -39,7 +39,7 @@ export class AuthMultiFactorModule {
   }
 
   /**
-   * Disable MFA
+   * Disable MFA for the current user
    *
    * Disables multi-factor authentication for the current user after password verification.
    */
@@ -66,7 +66,7 @@ export class AuthMultiFactorModule {
   }
 
   /**
-   * Get backup codes
+   * Get backup codes (masked for security)
    *
    * Retrieves the user's backup codes status. Codes are not returned for security; use regenerate to get new codes.
    */
@@ -89,7 +89,7 @@ export class AuthMultiFactorModule {
   }
 
   /**
-   * Regenerate backup codes
+   * Generate new backup codes (invalidates existing ones)
    *
    * Generates a new set of backup codes, invalidating any previously generated codes.
    */
@@ -112,7 +112,7 @@ export class AuthMultiFactorModule {
   }
 
   /**
-   * List MFA methods
+   * List available MFA methods
    *
    * Returns all available MFA methods and their configuration status for the current user.
    */
@@ -135,7 +135,7 @@ export class AuthMultiFactorModule {
   }
 
   /**
-   * Complete SMS MFA setup
+   * Complete SMS MFA setup by verifying the code
    *
    * Completes SMS MFA setup by verifying the code sent to the user's phone.
    */
@@ -164,7 +164,7 @@ export class AuthMultiFactorModule {
   }
 
   /**
-   * Setup SMS MFA
+   * Initiate SMS-based MFA setup
    *
    * Initiates SMS-based MFA setup by sending a verification code to the provided phone number.
    */
@@ -191,7 +191,7 @@ export class AuthMultiFactorModule {
   }
 
   /**
-   * Complete TOTP setup
+   * Complete TOTP MFA setup by verifying the code
    *
    * Completes TOTP setup by verifying a code from the user's authenticator app.
    */
@@ -220,7 +220,7 @@ export class AuthMultiFactorModule {
   }
 
   /**
-   * Initiate TOTP setup
+   * Initiate TOTP MFA setup
    *
    * Initiates Time-based One-Time Password (TOTP) setup, returning a secret key and QR code URI for authenticator apps.
    */
@@ -243,7 +243,7 @@ export class AuthMultiFactorModule {
   }
 
   /**
-   * Verify MFA code
+   * Verify MFA code during authentication
    *
    * Verifies an MFA code during the authentication flow. Used after initial sign-in when MFA is required.
    */

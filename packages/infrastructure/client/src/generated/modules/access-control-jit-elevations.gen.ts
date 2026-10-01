@@ -16,6 +16,7 @@ export class AccessControlJitElevationsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Request a JIT elevation for a permission
    */
   async postJitElevations(
     body: Types.IdentityAuthorizationCommandsRequestJitElevationCommand,
@@ -42,6 +43,7 @@ export class AccessControlJitElevationsModule {
   }
 
   /**
+   * Cleanup expired elevations (admin only)
    */
   async postJitElevationsCleanup(): Promise<Result<number, ApiError>> {
     const url = '/v1/jit-elevations/:cleanup';
@@ -56,6 +58,7 @@ export class AccessControlJitElevationsModule {
   }
 
   /**
+   * Get a JIT elevation request by ID
    */
   async getJitElevations(id: string): Promise<Result<Types.IdentityAuthorizationJitElevationInput, ApiError>> {
     const url = `/v1/jit-elevations/${id}`;
@@ -76,6 +79,7 @@ export class AccessControlJitElevationsModule {
   }
 
   /**
+   * Approve a pending JIT elevation request
    */
   async postJitElevationsApprove(
     id: string,
@@ -103,6 +107,7 @@ export class AccessControlJitElevationsModule {
   }
 
   /**
+   * Deny a pending JIT elevation request
    */
   async postJitElevationsDeny(
     id: string,
@@ -130,6 +135,7 @@ export class AccessControlJitElevationsModule {
   }
 
   /**
+   * Revoke an active JIT elevation
    */
   async postJitElevationsRevoke(id: string, body: Types.IdentityAuthorizationControllersRevokeElevationInput): Promise<Result<void, ApiError>> {
     const url = `/v1/jit-elevations/${id}:revoke`;
@@ -148,6 +154,7 @@ export class AccessControlJitElevationsModule {
   }
 
   /**
+   * Get pending JIT elevation requests
    */
   async getJitElevationsPending(query?: { tenantId?: string }): Promise<Result<Array<Types.IdentityAuthorizationJitElevationInput>, ApiError>> {
     const url = '/v1/jit-elevations/pending';
@@ -163,6 +170,7 @@ export class AccessControlJitElevationsModule {
   }
 
   /**
+   * Get JIT elevation requests for a user
    */
   async getJitElevationsUser(userId: string, query?: { tenantId?: string }): Promise<Result<Array<Types.IdentityAuthorizationJitElevationInput>, ApiError>> {
     const url = `/v1/jit-elevations/user/${userId}`;
@@ -178,6 +186,7 @@ export class AccessControlJitElevationsModule {
   }
 
   /**
+   * Get active JIT elevations for a user
    */
   async getJitElevationsUserActive(
     userId: string,
@@ -196,6 +205,7 @@ export class AccessControlJitElevationsModule {
   }
 
   /**
+   * Check if user has active elevation for a permission
    */
   async getJitElevationsUserCheck(userId: string, query?: { permission?: string; tenantId?: string; resourceId?: string }): Promise<Result<boolean, ApiError>> {
     const url = `/v1/jit-elevations/user/${userId}/check`;

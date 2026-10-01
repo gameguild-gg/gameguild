@@ -16,7 +16,7 @@ export class AuthTrustedDevicesModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
-   * Get trusted devices
+   * Get trusted devices for the current user
    *
    * Retrieves a list of devices that have been marked as trusted for the current user.
    */
@@ -33,7 +33,7 @@ export class AuthTrustedDevicesModule {
   }
 
   /**
-   * Trust current device
+   * Trust the current device
    *
    * Marks the current device as trusted, allowing faster authentication in the future.
    */
@@ -62,7 +62,7 @@ export class AuthTrustedDevicesModule {
   }
 
   /**
-   * Revoke device trust
+   * Revoke trust for a specific device
    *
    * Removes a device from the trusted devices list.
    */

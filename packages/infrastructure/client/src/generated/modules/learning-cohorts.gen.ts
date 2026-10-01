@@ -16,6 +16,7 @@ export class LearningCohortsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Create a new cohort
    */
   async postApiCohorts(body: Types.LearningCohortsCreateCohortInput): Promise<Result<Types.LearningCohortsCohortDto, ApiError>> {
     const url = '/api/cohorts';
@@ -40,6 +41,7 @@ export class LearningCohortsModule {
   }
 
   /**
+   * Get a cohort by ID
    */
   async getApiCohorts(id: string): Promise<Result<Types.LearningCohortsCohortDto, ApiError>> {
     const url = `/api/cohorts/${id}`;
@@ -60,6 +62,7 @@ export class LearningCohortsModule {
   }
 
   /**
+   * Update a cohort
    */
   async putApiCohorts(id: string, body: Types.LearningCohortsUpdateCohortInput): Promise<Result<Types.LearningCohortsCohortDto, ApiError>> {
     const url = `/api/cohorts/${id}`;
@@ -84,6 +87,7 @@ export class LearningCohortsModule {
   }
 
   /**
+   * Delete a cohort
    */
   async deleteApiCohorts(id: string): Promise<Result<void, ApiError>> {
     const url = `/api/cohorts/${id}`;
@@ -98,6 +102,7 @@ export class LearningCohortsModule {
   }
 
   /**
+   * Cancel a cohort
    */
   async postApiCohortsCancel(id: string): Promise<Result<Types.LearningCohortsCohortDto, ApiError>> {
     const url = `/api/cohorts/${id}/cancel`;
@@ -118,6 +123,7 @@ export class LearningCohortsModule {
   }
 
   /**
+   * Close a cohort for enrollment
    */
   async postApiCohortsClose(id: string): Promise<Result<Types.LearningCohortsCohortDto, ApiError>> {
     const url = `/api/cohorts/${id}/close`;
@@ -138,6 +144,7 @@ export class LearningCohortsModule {
   }
 
   /**
+   * Mark a cohort as completed
    */
   async postApiCohortsComplete(id: string): Promise<Result<Types.LearningCohortsCohortDto, ApiError>> {
     const url = `/api/cohorts/${id}/complete`;
@@ -158,6 +165,7 @@ export class LearningCohortsModule {
   }
 
   /**
+   * Open a cohort for enrollment
    */
   async postApiCohortsOpen(id: string): Promise<Result<Types.LearningCohortsCohortDto, ApiError>> {
     const url = `/api/cohorts/${id}/open`;
@@ -178,6 +186,7 @@ export class LearningCohortsModule {
   }
 
   /**
+   * Get all cohorts for a course
    */
   async getApiCohortsCourse(courseId: string): Promise<Result<Array<Types.LearningCohortsCohortDto>, ApiError>> {
     const url = `/api/cohorts/course/${courseId}`;
@@ -192,6 +201,7 @@ export class LearningCohortsModule {
   }
 
   /**
+   * Get active cohorts for a course
    */
   async getApiCohortsCourseActive(courseId: string): Promise<Result<Array<Types.LearningCohortsCohortDto>, ApiError>> {
     const url = `/api/cohorts/course/${courseId}/active`;
@@ -206,6 +216,7 @@ export class LearningCohortsModule {
   }
 
   /**
+   * Get enrollable cohorts for a course (open with capacity)
    */
   async getApiCohortsCourseEnrollable(courseId: string): Promise<Result<Array<Types.LearningCohortsCohortDto>, ApiError>> {
     const url = `/api/cohorts/course/${courseId}/enrollable`;

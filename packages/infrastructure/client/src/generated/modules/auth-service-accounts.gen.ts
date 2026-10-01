@@ -16,6 +16,7 @@ export class AuthServiceAccountsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Gets all service accounts with optional tenant filtering.
    */
   async getAuthServiceAccountsForGetAuthServiceAccounts(query?: {
     tenantId?: string;
@@ -33,6 +34,9 @@ export class AuthServiceAccountsModule {
   }
 
   /**
+   * Creates a new service account.
+   *
+   * The client secret is only returned once during creation. Store it securely.
    */
   async postAuthServiceAccounts(
     body: Types.IdentityAuthenticationCreateServiceAccountInput,
@@ -59,6 +63,7 @@ export class AuthServiceAccountsModule {
   }
 
   /**
+   * Gets a service account by ID.
    */
   async getAuthServiceAccountsForGetAuthServiceAccountsByServiceAccountId(
     serviceAccountId: string,
@@ -81,6 +86,7 @@ export class AuthServiceAccountsModule {
   }
 
   /**
+   * Deletes a service account.
    */
   async deleteAuthServiceAccounts(serviceAccountId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/auth/service-accounts/${serviceAccountId}`;
@@ -95,7 +101,7 @@ export class AuthServiceAccountsModule {
   }
 
   /**
-   * Partially update service account
+   * Partially updates a service account.
    *
    * Updates specific fields of a service account. Only provided fields are updated.
    */
@@ -116,7 +122,7 @@ export class AuthServiceAccountsModule {
   }
 
   /**
-   * Check if service account exists
+   * Checks if a service account exists by ID.
    *
    * Checks if a service account exists without returning the body.
    */
@@ -133,6 +139,7 @@ export class AuthServiceAccountsModule {
   }
 
   /**
+   * Deactivates a service account.
    */
   async postAuthServiceAccountsDeactivate(serviceAccountId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/auth/service-accounts/${serviceAccountId}:deactivate`;
@@ -147,7 +154,7 @@ export class AuthServiceAccountsModule {
   }
 
   /**
-   * Lock service account
+   * Locks a service account to prevent authentication.
    *
    * Locks a service account to prevent it from authenticating.
    */
@@ -168,6 +175,7 @@ export class AuthServiceAccountsModule {
   }
 
   /**
+   * Reactivates a deactivated service account.
    */
   async postAuthServiceAccountsReactivate(serviceAccountId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/auth/service-accounts/${serviceAccountId}:reactivate`;
@@ -182,6 +190,10 @@ export class AuthServiceAccountsModule {
   }
 
   /**
+   * Rotates the client secret for a service account.
+   *
+   * The new client secret is only returned once. Store it securely.
+   * The old secret is immediately invalidated.
    */
   async postAuthServiceAccountsRotateSecret(serviceAccountId: string): Promise<Result<Types.IdentityAuthenticationSecretRotationOutput, ApiError>> {
     const url = `/v1/auth/service-accounts/${serviceAccountId}:rotate-secret`;
@@ -202,6 +214,7 @@ export class AuthServiceAccountsModule {
   }
 
   /**
+   * Unlocks a locked service account.
    */
   async postAuthServiceAccountsUnlock(serviceAccountId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/auth/service-accounts/${serviceAccountId}:unlock`;
@@ -216,7 +229,7 @@ export class AuthServiceAccountsModule {
   }
 
   /**
-   * Get service account audit log
+   * Gets the audit log for a service account.
    *
    * Retrieves the audit log of actions performed on or by a service account.
    */
@@ -243,6 +256,7 @@ export class AuthServiceAccountsModule {
   }
 
   /**
+   * Updates the scopes for a service account.
    */
   async patchAuthServiceAccountsScopes(serviceAccountId: string, body: Types.IdentityAuthenticationUpdateScopesInput): Promise<Result<void, ApiError>> {
     const url = `/v1/auth/service-accounts/${serviceAccountId}/scopes`;

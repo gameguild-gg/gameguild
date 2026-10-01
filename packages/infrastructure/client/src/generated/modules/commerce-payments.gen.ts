@@ -18,7 +18,26 @@ export class CommercePaymentsModule {
   /**
    * Retrieve all payment transactions with optional filtering
    *
-   * Retrieves a paginated list of all payment transactions with support for filtering by tenant, status, and date range. This is the primary endpoint for payment administration and reporting.
+   * Retrieves a paginated list of all payment transactions with support for filtering by tenant, status,
+   * and date range. This is the primary endpoint for payment administration and reporting.
+   * Supported status filters:
+   * - pending: Payments currently being processed
+   * - completed: Successfully processed payments
+   * - failed: Payments that encountered errors
+   * - cancelled: Payments cancelled before completion
+   * - refunded: Payments that have been refunded
+   * Query Parameters:
+   * - tenantId: Filter payments for specific tenant
+   * - status: Filter by payment status
+   * - startDate: Include payments from this date onwards (ISO 8601 format)
+   * - endDate: Include payments up to this date (ISO 8601 format)
+   * - page: Pagination page number (1-based)
+   * - pageSize: Items per page (1-100)
+   * Use cases:
+   * - Financial reporting and reconciliation
+   * - Payment monitoring and analytics
+   * - Administrative payment management
+   * - Audit trail generation
    */
   async getPayments(query?: {
     tenantId?: string;
@@ -43,7 +62,21 @@ export class CommercePaymentsModule {
   /**
    * Process a new payment transaction
    *
-   * Initiates a new payment transaction for a subscription. This endpoint handles the complete payment processing workflow including payment method validation, amount verification, and transaction execution. Returns the payment result immediately with a transaction ID that can be used to track payment status.
+   * Initiates a new payment transaction for a subscription. This endpoint handles the complete payment
+   * processing workflow including payment method validation, amount verification, and transaction execution.
+   * Returns the payment result immediately with a transaction ID that can be used to track payment status.
+   * Processing workflow:
+   * 1. Validate payment method and amount
+   * 2. Verify subscription and tenant information
+   * 3. Process payment through configured payment gateway
+   * 4. Update subscription status based on result
+   * 5. Generate transaction record
+   * Request body must include:
+   * - TenantId: Organization identifier
+   * - SubscriptionId: Target subscription
+   * - Amount: Payment amount in base currency units
+   * - PaymentMethodId: Stripe payment method identifier starting with pm_
+   * Returns CreatedAtRoute with payment details for successful transactions.
    */
   async postPayments(body: Types.CommercePaymentsPaymentsControllerProcessPaymentInput): Promise<Result<Types.CommercePaymentsPaymentResult, ApiError>> {
     const url = '/api/v1/payments';
@@ -70,7 +103,16 @@ export class CommercePaymentsModule {
   /**
    * Retrieve a specific payment by its unique identifier
    *
-   * Retrieves detailed information about a specific payment transaction, including its current status, amount, payment method, and processing details. Use this endpoint to track payment progress and verify transaction completion.
+   * Retrieves detailed information about a specific payment transaction, including its current status,
+   * amount, payment method, and processing details. Use this endpoint to track payment progress
+   * and verify transaction completion.
+   * Response includes:
+   * - Payment ID and transaction details
+   * - Current payment status (pending, completed, failed, etc.)
+   * - Payment method information
+   * - Amount and currency
+   * - Timestamps for creation and updates
+   * - Associated subscription and tenant information
    */
   async getPaymentById(paymentId: string): Promise<Result<Types.CommercePaymentsPaymentResult, ApiError>> {
     const url = `/api/v1/payments/${paymentId}`;
@@ -93,7 +135,31 @@ export class CommercePaymentsModule {
   /**
    * Cancel a payment transaction
    *
-   * Cancels a payment transaction that is in progress or pending. Custom action per Google API guidelines. Once canceled, a payment cannot be processed and may require a new payment attempt.
+   * Cancels a payment transaction that is in progress or pending. This endpoint can be used to
+   * cancel payments before they are processed, or to handle user-initiated cancellations during checkout.
+   * Once canceled, a payment cannot be processed and may require a new payment attempt.
+   * Cancellation scenarios:
+   * - User abandons checkout process
+   * - Administrative cancellation
+   * - Fraud prevention trigger
+   * - Duplicate transaction prevention
+   * - Session timeout or expiration
+   * - Payment method validation failure
+   * Cancellation handling:
+   * - Updates payment status to "canceled"
+   * - Records cancellation reason and timestamp
+   * - Releases any held resources or reservations
+   * - Notifies relevant systems of cancellation
+   * - Provides audit trail for investigation
+   * Request body options:
+   * - CancellationReason: Required reason for audit trail
+   * - CanceledBy: Optional user ID for tracking
+   * - Notes: Optional additional context
+   * Important notes:
+   * - Only pending or processing payments can be canceled
+   * - Completed payments cannot be canceled (use refund instead)
+   * - Cancellation is immediate and irreversible
+   * - Some payment methods may have specific cancellation rules
    */
   async postPaymentsCancel(
     paymentId: string,
@@ -123,7 +189,23 @@ export class CommercePaymentsModule {
   /**
    * Process a refund for a completed payment
    *
-   * Processes a full or partial refund for a completed payment. Custom action per Google API guidelines. Refunds are processed back to the original payment method.
+   * Processes a full or partial refund for a previously completed payment transaction.
+   * If no amount is specified, a full refund will be processed. The refund reason is optional
+   * but recommended for record keeping and customer service purposes. Refunds are processed
+   * back to the original payment method and may take several business days to appear.
+   * Refund types:
+   * - Full refund: Refunds the entire payment amount
+   * - Partial refund: Refunds a specified portion of the payment
+   * Request body options:
+   * - Amount: Specific refund amount (null for full refund)
+   * - Reason: Optional reason for audit and customer service
+   * Processing notes:
+   * - Refunds are processed to the original payment method
+   * - Processing time varies by payment processor (2-10 business days)
+   * - Refund fees may apply depending on payment method
+   * - Only successful payments can be refunded
+   * - Multiple partial refunds allowed up to original amount
+   * Response includes refund ID for tracking and customer communication.
    */
   async postPaymentsRefund(
     paymentId: string,
@@ -153,7 +235,22 @@ export class CommercePaymentsModule {
   /**
    * Retry a failed payment transaction
    *
-   * Retries a failed payment using the original payment method. Custom action per Google API guidelines. Creates a new transaction attempt while maintaining the link to the original payment record.
+   * Attempts to reprocess a previously failed payment transaction using the same payment method and amount.
+   * This is useful when payments fail due to temporary issues like network problems or insufficient funds
+   * that have since been resolved. The retry operation creates a new transaction attempt while maintaining
+   * the link to the original payment record.
+   * Retry scenarios:
+   * - Temporary network connectivity issues resolved
+   * - Insufficient funds now available
+   * - Payment gateway was temporarily unavailable
+   * - Rate limiting issues have cleared
+   * - Card issuer temporary restrictions lifted
+   * Important notes:
+   * - Only failed payments can be retried
+   * - Successful payments will return a 400 Bad Request
+   * - Retry preserves original payment details
+   * - New transaction ID is generated for the retry attempt
+   * - Original payment record maintains audit trail
    */
   async postPaymentsRetry(paymentId: string): Promise<Result<Types.CommercePaymentsPaymentRetryResult, ApiError>> {
     const url = `/api/v1/payments/${paymentId}:retry`;
@@ -174,7 +271,7 @@ export class CommercePaymentsModule {
   }
 
   /**
-   * Create a Stripe SetupIntent for subscription checkout
+   * Creates a Stripe SetupIntent for a subscription checkout.
    *
    * Creates or reuses a Stripe customer for the subscription and returns a SetupIntent client secret for PaymentElement-based card collection.
    */
@@ -203,7 +300,7 @@ export class CommercePaymentsModule {
   }
 
   /**
-   * Complete subscription checkout after setup confirmation
+   * Completes a subscription checkout after Stripe confirms the SetupIntent.
    *
    * Sets the confirmed Stripe payment method as the customer's default and processes the first subscription charge.
    */

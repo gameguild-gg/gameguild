@@ -30,6 +30,8 @@ export class LearningLtiModule {
   }
 
   /**
+   * LTI 1.3 launch: the platform form-POSTs the signed id_token here.
+   * id_token in the query string is rejected outright (leaks into logs/history).
    */
   async postLtiLaunch(): Promise<Result<void, ApiError>> {
     const url = '/lti/launch';
@@ -44,6 +46,10 @@ export class LearningLtiModule {
   }
 
   /**
+   * OIDC third-party-initiated login. Validates the platform against registered
+   * active deployments, then redirects to the deployment's configured authorization
+   * endpoint with state+nonce. All redirect targets come from admin-configured
+   * deployment records — never from request input.
    */
   async postLtiLogin(): Promise<Result<void, ApiError>> {
     const url = '/lti/login';

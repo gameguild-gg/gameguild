@@ -16,6 +16,7 @@ export class CommercePaymentsTaxJurisdictionsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Get all tax jurisdictions
    */
   async getTaxJurisdictionsForGetTaxJurisdictions(): Promise<Result<Array<Types.CommercePaymentsTaxRate>, ApiError>> {
     const url = '/api/v1/tax-jurisdictions';
@@ -30,7 +31,7 @@ export class CommercePaymentsTaxJurisdictionsModule {
   }
 
   /**
-   * Create tax jurisdiction
+   * Create a new tax jurisdiction
    *
    * Creates a new tax jurisdiction with the provided information.
    */
@@ -74,7 +75,7 @@ export class CommercePaymentsTaxJurisdictionsModule {
   }
 
   /**
-   * Delete tax jurisdiction
+   * Delete a tax jurisdiction
    *
    * Deletes a tax jurisdiction by ID.
    */
@@ -91,7 +92,7 @@ export class CommercePaymentsTaxJurisdictionsModule {
   }
 
   /**
-   * Partially update tax jurisdiction
+   * Partially update a tax jurisdiction
    *
    * Updates specific fields of a tax jurisdiction.
    */

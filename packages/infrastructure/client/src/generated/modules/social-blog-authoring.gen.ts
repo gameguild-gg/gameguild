@@ -16,6 +16,7 @@ export class SocialBlogAuthoringModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Creates a draft post; the actor becomes the primary author.
    */
   async postApiSocialBlogPosts(body: Types.SocialBlogControllersCreateBlogPostInput): Promise<Result<Types.SocialBlogBlogPost, ApiError>> {
     const url = '/api/social/blog/posts';
@@ -40,6 +41,7 @@ export class SocialBlogAuthoringModule {
   }
 
   /**
+   * Fetches one post for an author (primary or co-author) with full draft access.
    */
   async getApiSocialBlogPosts(id: string): Promise<Result<Types.SocialBlogBlogPost, ApiError>> {
     const url = `/api/social/blog/posts/${id}`;
@@ -60,6 +62,7 @@ export class SocialBlogAuthoringModule {
   }
 
   /**
+   * Revision-guarded draft update; any author (primary or co-author). Stale revision → 409.
    */
   async putApiSocialBlogPosts(id: string, body: Types.SocialBlogControllersUpdateBlogPostDraftInput): Promise<Result<Types.SocialBlogBlogPost, ApiError>> {
     const url = `/api/social/blog/posts/${id}`;
@@ -84,6 +87,7 @@ export class SocialBlogAuthoringModule {
   }
 
   /**
+   * Soft-deletes the post (primary only).
    */
   async deleteApiSocialBlogPosts(id: string): Promise<Result<void, ApiError>> {
     const url = `/api/social/blog/posts/${id}`;
@@ -98,6 +102,7 @@ export class SocialBlogAuthoringModule {
   }
 
   /**
+   * Adds a co-author (primary only).
    */
   async postApiSocialBlogPostsCoauthors(id: string, body: Types.SocialBlogControllersBlogCoauthorInput): Promise<Result<void, ApiError>> {
     const url = `/api/social/blog/posts/${id}/coauthors`;
@@ -116,6 +121,7 @@ export class SocialBlogAuthoringModule {
   }
 
   /**
+   * Removes a co-author (primary only).
    */
   async deleteApiSocialBlogPostsCoauthors(id: string, userId: string): Promise<Result<void, ApiError>> {
     const url = `/api/social/blog/posts/${id}/coauthors/${userId}`;
@@ -130,6 +136,7 @@ export class SocialBlogAuthoringModule {
   }
 
   /**
+   * Publishes the post (primary only); fans out the publication announcement.
    */
   async postApiSocialBlogPostsPublish(id: string): Promise<Result<Types.SocialBlogBlogPost, ApiError>> {
     const url = `/api/social/blog/posts/${id}/publish`;
@@ -150,6 +157,7 @@ export class SocialBlogAuthoringModule {
   }
 
   /**
+   * Changes the post slug (primary only); the old route 301-redirects forever.
    */
   async postApiSocialBlogPostsSlug(id: string, body: Types.SocialBlogControllersChangeBlogPostSlugInput): Promise<Result<Types.SocialBlogBlogPost, ApiError>> {
     const url = `/api/social/blog/posts/${id}/slug`;
@@ -174,6 +182,7 @@ export class SocialBlogAuthoringModule {
   }
 
   /**
+   * Transfers primary authorship to a current co-author (primary only).
    */
   async postApiSocialBlogPostsTransferPrimary(
     id: string,
@@ -201,6 +210,7 @@ export class SocialBlogAuthoringModule {
   }
 
   /**
+   * Unpublishes the post back to draft (primary only).
    */
   async postApiSocialBlogPostsUnpublish(id: string): Promise<Result<Types.SocialBlogBlogPost, ApiError>> {
     const url = `/api/social/blog/posts/${id}/unpublish`;
@@ -221,6 +231,7 @@ export class SocialBlogAuthoringModule {
   }
 
   /**
+   * Lists the acting user's posts (authored + co-authored), newest edit first.
    */
   async getApiSocialBlogPostsMine(query?: { page?: number }): Promise<Result<Array<Types.SocialBlogBlogPost>, ApiError>> {
     const url = '/api/social/blog/posts/mine';

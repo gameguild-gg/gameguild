@@ -313,7 +313,11 @@ export class TenantsModule {
   /**
    * Validate tenant data before creation
    *
-   * Validates tenant data without creating. Returns errors, warnings, and suggestions.
+   * Validates tenant data without creating the tenant. Useful for:
+   * - Checking if a slug is available
+   * - Validating email format
+   * - Checking for naming conflicts
+   * - Getting alternative slug suggestions
    */
   async postTenantsValidate(body: Types.IdentityTenantsValidateTenantInput): Promise<Result<Types.IdentityTenantsTenantValidationOutput, ApiError>> {
     const url = '/v1/tenants:validate';
@@ -536,7 +540,14 @@ export class TenantsModule {
   /**
    * Get tenant audit log
    *
-   * Retrieves the audit log for a tenant showing all changes, actions, and who performed them.
+   * Retrieves the audit log for a specific tenant, showing all changes and actions performed.
+   * Audit entries include:
+   * - Timestamp of the action
+   * - Action type (create, update, delete, settings change, etc.)
+   * - Actor who performed the action
+   * - Before and after values for changes
+   * - IP address and user agent (when available)
+   * - Correlation ID for request tracking
    */
   async getTenantsAuditLog(
     tenantId: string,

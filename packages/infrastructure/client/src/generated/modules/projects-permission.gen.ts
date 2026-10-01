@@ -16,6 +16,7 @@ export class ProjectsPermissionModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Share project with multiple users using a role template
    */
   async postProjectsPermissionsShareWithRole(
     projectId: string,
@@ -43,6 +44,7 @@ export class ProjectsPermissionModule {
   }
 
   /**
+   * Get all collaborators on the project
    */
   async getProjectsPermissionsCollaborators(projectId: string): Promise<Result<Array<Types.ProjectsProjectCollaboratorDto>, ApiError>> {
     const url = `/v1/projects/${projectId}/permissions/collaborators`;
@@ -57,6 +59,7 @@ export class ProjectsPermissionModule {
   }
 
   /**
+   * Add a collaborator to the project
    */
   async postProjectsPermissionsCollaborators(
     projectId: string,
@@ -84,6 +87,7 @@ export class ProjectsPermissionModule {
   }
 
   /**
+   * Update collaborator permissions
    */
   async putProjectsPermissionsCollaborators(
     projectId: string,
@@ -112,6 +116,7 @@ export class ProjectsPermissionModule {
   }
 
   /**
+   * Remove a collaborator from the project
    */
   async deleteProjectsPermissionsCollaborators(projectId: string, collaboratorUserId: string): Promise<Result<Types.ProjectsPermissionUpdateResult, ApiError>> {
     const url = `/v1/projects/${projectId}/permissions/collaborators/${collaboratorUserId}`;
@@ -132,6 +137,7 @@ export class ProjectsPermissionModule {
   }
 
   /**
+   * Get current user's permissions on the project
    */
   async getProjectsPermissionsMyPermissions(projectId: string): Promise<Result<Array<Types.ProjectsEffectivePermission>, ApiError>> {
     const url = `/v1/projects/${projectId}/permissions/my-permissions`;
@@ -146,6 +152,7 @@ export class ProjectsPermissionModule {
   }
 
   /**
+   * Get project permission templates for common roles
    */
   async getProjectsPermissionsRoleTemplates(projectId: string): Promise<Result<Array<Types.ProjectsProjectRoleTemplate>, ApiError>> {
     const url = `/v1/projects/${projectId}/permissions/role-templates`;

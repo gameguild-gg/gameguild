@@ -16,6 +16,7 @@ export class LearningAssessmentsGroupSetsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * List a course's group sets with per-group summaries. Open to any active course member.
    */
   async getCoursesGroupSets(courseId: string): Promise<Result<Array<Types.LearningAssessmentsGroupSetSummaryDto>, ApiError>> {
     const url = `/v1/courses/${courseId}/group-sets`;
@@ -30,6 +31,7 @@ export class LearningAssessmentsGroupSetsModule {
   }
 
   /**
+   * Create a group set for a course. Instructor only.
    */
   async postCoursesGroupSets(
     courseId: string,
@@ -57,6 +59,7 @@ export class LearningAssessmentsGroupSetsModule {
   }
 
   /**
+   * List the groups of one group set with member display names. Open to any active course member.
    */
   async getCoursesGroupSetsGroups(courseId: string, setId: string): Promise<Result<Array<Types.LearningAssessmentsGroupDetailDto>, ApiError>> {
     const url = `/v1/courses/${courseId}/group-sets/${setId}/groups`;
@@ -71,6 +74,7 @@ export class LearningAssessmentsGroupSetsModule {
   }
 
   /**
+   * Create a group inside a group set. Instructor only.
    */
   async postCoursesGroupSetsGroups(
     courseId: string,
@@ -99,6 +103,7 @@ export class LearningAssessmentsGroupSetsModule {
   }
 
   /**
+   * Student self-signup into a group.
    */
   async postCoursesGroupSetsGroupsJoin(courseId: string, groupId: string): Promise<Result<Types.LearningAssessmentsGroupMembershipDto, ApiError>> {
     const url = `/v1/courses/${courseId}/group-sets/groups/${groupId}/join`;
@@ -119,6 +124,7 @@ export class LearningAssessmentsGroupSetsModule {
   }
 
   /**
+   * Instructor manual add of a user to a group (bypasses the lock-at-due rule, not capacity).
    */
   async postCoursesGroupSetsGroupsMembers(
     courseId: string,
@@ -143,6 +149,7 @@ export class LearningAssessmentsGroupSetsModule {
   }
 
   /**
+   * Instructor manual remove of a member from a group (bypasses the lock-at-due rule).
    */
   async deleteCoursesGroupSetsGroupsMembers(courseId: string, groupId: string, userId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/courses/${courseId}/group-sets/groups/${groupId}/members/${userId}`;
@@ -157,6 +164,7 @@ export class LearningAssessmentsGroupSetsModule {
   }
 
   /**
+   * Student leaves their own membership in a group.
    */
   async deleteCoursesGroupSetsGroupsMembership(courseId: string, groupId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/courses/${courseId}/group-sets/groups/${groupId}/membership`;

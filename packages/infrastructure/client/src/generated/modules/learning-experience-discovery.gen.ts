@@ -16,6 +16,7 @@ export class LearningExperienceDiscoveryModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Get all published course collections
    */
   async getDiscoveryCollectionsForGetDiscoveryCollections(query?: {
     tenantId?: string;
@@ -36,6 +37,7 @@ export class LearningExperienceDiscoveryModule {
   }
 
   /**
+   * Create a new course collection
    */
   async postDiscoveryCollections(
     body: Types.LearningExperienceDiscoveryCreateCourseCollectionDto,
@@ -64,6 +66,7 @@ export class LearningExperienceDiscoveryModule {
   }
 
   /**
+   * Get a course collection by ID
    */
   async getDiscoveryCollectionsForGetDiscoveryCollectionsById(id: string): Promise<Result<Types.LearningExperienceDiscoveryCourseCollectionDto, ApiError>> {
     const url = `/v1/discovery/collections/${id}`;
@@ -84,6 +87,7 @@ export class LearningExperienceDiscoveryModule {
   }
 
   /**
+   * Update a course collection
    */
   async putDiscoveryCollections(
     id: string,
@@ -111,6 +115,7 @@ export class LearningExperienceDiscoveryModule {
   }
 
   /**
+   * Delete a course collection
    */
   async deleteDiscoveryCollections(id: string): Promise<Result<void, ApiError>> {
     const url = `/v1/discovery/collections/${id}`;
@@ -125,6 +130,7 @@ export class LearningExperienceDiscoveryModule {
   }
 
   /**
+   * Publish a course collection
    */
   async postDiscoveryCollectionsPublish(id: string): Promise<Result<Types.LearningExperienceDiscoveryCourseCollectionDto, ApiError>> {
     const url = `/v1/discovery/collections/${id}/publish`;
@@ -145,6 +151,7 @@ export class LearningExperienceDiscoveryModule {
   }
 
   /**
+   * Unpublish a course collection
    */
   async postDiscoveryCollectionsUnpublish(id: string): Promise<Result<Types.LearningExperienceDiscoveryCourseCollectionDto, ApiError>> {
     const url = `/v1/discovery/collections/${id}/unpublish`;
@@ -165,6 +172,7 @@ export class LearningExperienceDiscoveryModule {
   }
 
   /**
+   * Get collections created by a specific curator
    */
   async getDiscoveryCollectionsCurator(
     curatorId: string,
@@ -183,6 +191,7 @@ export class LearningExperienceDiscoveryModule {
   }
 
   /**
+   * Get featured course collections
    */
   async getDiscoveryCollectionsFeatured(query?: {
     tenantId?: string;
@@ -201,6 +210,7 @@ export class LearningExperienceDiscoveryModule {
   }
 
   /**
+   * Get a course collection by slug
    */
   async getDiscoveryCollectionsSlug(
     slug: string,
@@ -225,6 +235,7 @@ export class LearningExperienceDiscoveryModule {
   }
 
   /**
+   * Get all currently active featured content
    */
   async getDiscoveryFeaturedForGetDiscoveryFeatured(query?: {
     tenantId?: string;
@@ -244,6 +255,7 @@ export class LearningExperienceDiscoveryModule {
   }
 
   /**
+   * Create new featured content (admin)
    */
   async postDiscoveryFeatured(
     body: Types.LearningExperienceDiscoveryCreateFeaturedContentDto,
@@ -272,6 +284,7 @@ export class LearningExperienceDiscoveryModule {
   }
 
   /**
+   * Get a specific featured content item by ID
    */
   async getDiscoveryFeaturedForGetDiscoveryFeaturedById(id: string): Promise<Result<Types.LearningExperienceDiscoveryFeaturedContentDto, ApiError>> {
     const url = `/v1/discovery/featured/${id}`;
@@ -292,6 +305,7 @@ export class LearningExperienceDiscoveryModule {
   }
 
   /**
+   * Update featured content (admin)
    */
   async putDiscoveryFeatured(
     id: string,
@@ -319,6 +333,7 @@ export class LearningExperienceDiscoveryModule {
   }
 
   /**
+   * Delete featured content (admin)
    */
   async deleteDiscoveryFeatured(id: string): Promise<Result<void, ApiError>> {
     const url = `/v1/discovery/featured/${id}`;
@@ -333,6 +348,7 @@ export class LearningExperienceDiscoveryModule {
   }
 
   /**
+   * Toggle featured content active state (admin)
    */
   async patchDiscoveryFeaturedToggle(
     id: string,
@@ -357,6 +373,7 @@ export class LearningExperienceDiscoveryModule {
   }
 
   /**
+   * Get featured content by type (e.g., HeroBanner, NewRelease)
    */
   async getDiscoveryFeaturedType(
     type: Types.LearningExperienceDiscoveryFeaturedContentType,
@@ -375,6 +392,7 @@ export class LearningExperienceDiscoveryModule {
   }
 
   /**
+   * Record a click from search results
    */
   async postDiscoverySearchClick(searchId: string, body: Types.LearningExperienceDiscoveryRecordSearchClickDto): Promise<Result<void, ApiError>> {
     const url = `/v1/discovery/search/${searchId}/click`;
@@ -393,6 +411,7 @@ export class LearningExperienceDiscoveryModule {
   }
 
   /**
+   * Get search history for a user
    */
   async getDiscoverySearchHistory(
     userId: string,
@@ -411,6 +430,7 @@ export class LearningExperienceDiscoveryModule {
   }
 
   /**
+   * Get popular searches (admin analytics)
    */
   async getDiscoverySearchPopular(query?: {
     daysBack?: number;
@@ -429,6 +449,7 @@ export class LearningExperienceDiscoveryModule {
   }
 
   /**
+   * Record a search query (for analytics)
    */
   async postDiscoverySearchRecord(
     body: Types.LearningExperienceDiscoveryRecordSearchDto,

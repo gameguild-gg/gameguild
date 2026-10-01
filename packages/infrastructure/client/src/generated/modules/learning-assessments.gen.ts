@@ -16,6 +16,7 @@ export class LearningAssessmentsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Create a new assessment for a course
    */
   async postAssessments(body: Types.LearningAssessmentsCreateAssessmentInput): Promise<Result<Types.LearningAssessmentsAssessmentDto, ApiError>> {
     const url = '/v1/assessments';
@@ -40,6 +41,7 @@ export class LearningAssessmentsModule {
   }
 
   /**
+   * Check if user can attempt an assessment
    */
   async getAssessmentsCanAttempt(assessmentId: string, enrollmentId: string): Promise<Result<Types.LearningAssessmentsCanAttemptOutput, ApiError>> {
     const url = `/v1/assessments/${assessmentId}/can-attempt/${enrollmentId}`;
@@ -60,6 +62,9 @@ export class LearningAssessmentsModule {
   }
 
   /**
+   * Get the SpeedGrader navigation queue for an assessment (instructor-only):
+   * one item per student/group representing the target's latest gradeable attempt,
+   * excluding InProgress-only targets.
    */
   async getAssessmentsGradingQueue(assessmentId: string): Promise<Result<Types.LearningAssessmentsGradingQueueDto, ApiError>> {
     const url = `/v1/assessments/${assessmentId}/grading-queue`;
@@ -80,6 +85,7 @@ export class LearningAssessmentsModule {
   }
 
   /**
+   * Gets delivery-safe active cues for an enrolled learner and one video content item.
    */
   async getAssessmentsInteractiveVideoCuesContentEnrollments(
     assessmentId: string,
@@ -98,6 +104,7 @@ export class LearningAssessmentsModule {
   }
 
   /**
+   * Get all submissions for an assessment
    */
   async getAssessmentsSubmissionsForGetAssessmentsByAssessmentIdSubmissions(
     assessmentId: string,
@@ -114,6 +121,7 @@ export class LearningAssessmentsModule {
   }
 
   /**
+   * Start a new assessment attempt
    */
   async postAssessmentsSubmissionsStart(
     assessmentId: string,
@@ -141,6 +149,7 @@ export class LearningAssessmentsModule {
   }
 
   /**
+   * Get an assessment by ID
    */
   async getAssessments(id: string): Promise<Result<Types.LearningAssessmentsAssessmentDto, ApiError>> {
     const url = `/v1/assessments/${id}`;
@@ -161,6 +170,7 @@ export class LearningAssessmentsModule {
   }
 
   /**
+   * Update an assessment
    */
   async putAssessments(id: string, body: Types.LearningAssessmentsUpdateAssessmentInput): Promise<Result<Types.LearningAssessmentsAssessmentDto, ApiError>> {
     const url = `/v1/assessments/${id}`;
@@ -185,6 +195,7 @@ export class LearningAssessmentsModule {
   }
 
   /**
+   * Delete an assessment
    */
   async deleteAssessments(id: string): Promise<Result<void, ApiError>> {
     const url = `/v1/assessments/${id}`;
@@ -199,6 +210,7 @@ export class LearningAssessmentsModule {
   }
 
   /**
+   * Prepares an immutable candidate revision for instructor testing.
    */
   async getAssessmentsAuthoringState(id: string): Promise<Result<Types.LearningAssessmentsGradingAuthoringAssessmentAuthoringStateResult, ApiError>> {
     const url = `/v1/assessments/${id}/authoring-state`;
@@ -219,6 +231,7 @@ export class LearningAssessmentsModule {
   }
 
   /**
+   * Assign an assessment to a weighted group or clear the assignment.
    */
   async putAssessmentsGroup(
     id: string,
@@ -246,6 +259,7 @@ export class LearningAssessmentsModule {
   }
 
   /**
+   * Gets the interactive-video cue links for this assessment.
    */
   async getAssessmentsInteractiveVideoCues(id: string): Promise<Result<Array<Types.LearningAssessmentsInteractiveVideoAssessmentCueDto>, ApiError>> {
     const url = `/v1/assessments/${id}/interactive-video-cues`;
@@ -260,6 +274,7 @@ export class LearningAssessmentsModule {
   }
 
   /**
+   * Links this assessment to a cue in an interactive-video lesson.
    */
   async postAssessmentsInteractiveVideoCues(
     id: string,
@@ -287,6 +302,7 @@ export class LearningAssessmentsModule {
   }
 
   /**
+   * Removes a manager-configured interactive-video cue link.
    */
   async deleteAssessmentsInteractiveVideoCues(id: string, cueId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/assessments/${id}/interactive-video-cues/${cueId}`;
@@ -301,6 +317,7 @@ export class LearningAssessmentsModule {
   }
 
   /**
+   * Restore a soft-deleted assessment
    */
   async postAssessmentsRestore(id: string): Promise<Result<void, ApiError>> {
     const url = `/v1/assessments/${id}/restore`;
@@ -315,6 +332,7 @@ export class LearningAssessmentsModule {
   }
 
   /**
+   * Prepares an immutable candidate revision for instructor testing.
    */
   async postAssessmentsRevisionsPrepare(
     id: string,
@@ -342,6 +360,7 @@ export class LearningAssessmentsModule {
   }
 
   /**
+   * Publishes exactly the prepared revision after official capability validation.
    */
   async postAssessmentsRevisionsPublish(
     id: string,
@@ -369,6 +388,7 @@ export class LearningAssessmentsModule {
   }
 
   /**
+   * Stops new official starts without deleting revisions or existing executions.
    */
   async postAssessmentsRevisionsUnpublish(
     id: string,
@@ -471,6 +491,8 @@ export class LearningAssessmentsModule {
   }
 
   /**
+   * Starts or resumes the current learner's official attempt for graded content.
+   * The server resolves both the linked assessment and the active course membership.
    */
   async postAssessmentsContentRuntimeSubmissionsIndividual(
     contentId: string,
@@ -498,6 +520,7 @@ export class LearningAssessmentsModule {
   }
 
   /**
+   * Get all assessments for a course
    */
   async getAssessmentsCourse(courseId: string): Promise<Result<Array<Types.LearningAssessmentsAssessmentDto>, ApiError>> {
     const url = `/v1/assessments/course/${courseId}`;
@@ -512,6 +535,7 @@ export class LearningAssessmentsModule {
   }
 
   /**
+   * Get assessment score distribution and weighted group performance for a course.
    */
   async getAssessmentsCourseAnalytics(courseId: string): Promise<Result<Types.LearningAssessmentsCourseAssessmentAnalyticsDto, ApiError>> {
     const url = `/v1/assessments/course/${courseId}/analytics`;
@@ -532,6 +556,7 @@ export class LearningAssessmentsModule {
   }
 
   /**
+   * Atomically saves assessable content and its assessment policy.
    */
   async putAssessmentsCourseContentDraft(
     courseId: string,
@@ -560,6 +585,7 @@ export class LearningAssessmentsModule {
   }
 
   /**
+   * Returns the single canonical gradebook projection for one course enrollment.
    */
   async getAssessmentsCourseGradebook(
     courseId: string,
@@ -583,6 +609,7 @@ export class LearningAssessmentsModule {
   }
 
   /**
+   * Get weighted assessment groups for a course.
    */
   async getAssessmentsCourseGroups(courseId: string): Promise<Result<Array<Types.LearningAssessmentsAssessmentGroupDto>, ApiError>> {
     const url = `/v1/assessments/course/${courseId}/groups`;
@@ -597,6 +624,7 @@ export class LearningAssessmentsModule {
   }
 
   /**
+   * Create a weighted assessment group.
    */
   async postAssessmentsGroups(
     body: Types.LearningAssessmentsCreateAssessmentGroupInput,
@@ -623,6 +651,7 @@ export class LearningAssessmentsModule {
   }
 
   /**
+   * Update a weighted assessment group.
    */
   async putAssessmentsGroups(
     id: string,
@@ -650,6 +679,7 @@ export class LearningAssessmentsModule {
   }
 
   /**
+   * Delete a weighted assessment group.
    */
   async deleteAssessmentsGroups(id: string): Promise<Result<void, ApiError>> {
     const url = `/v1/assessments/groups/${id}`;
@@ -664,6 +694,7 @@ export class LearningAssessmentsModule {
   }
 
   /**
+   * Get my submissions for an enrollment
    */
   async getAssessmentsMySubmissions(enrollmentId: string): Promise<Result<Array<Types.LearningAssessmentsLearnerAssessmentSubmissionDto>, ApiError>> {
     const url = `/v1/assessments/my-submissions/${enrollmentId}`;
@@ -833,6 +864,7 @@ export class LearningAssessmentsModule {
   }
 
   /**
+   * Get a submission by ID
    */
   async getAssessmentsSubmissionsForGetAssessmentsSubmissionsBySubmissionId(submissionId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/assessments/submissions/${submissionId}`;
@@ -847,6 +879,7 @@ export class LearningAssessmentsModule {
   }
 
   /**
+   * Submit a completed assessment
    */
   async postAssessmentsSubmissionsSubmit(
     submissionId: string,

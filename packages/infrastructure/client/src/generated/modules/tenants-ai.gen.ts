@@ -16,7 +16,7 @@ export class TenantsAiModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
-   * Get tenant AI history
+   * Retrieve recent AI conversation history for a tenant.
    *
    * Retrieves recent AI conversation history for a specific tenant.
    */

@@ -16,6 +16,7 @@ export class LearningAssessmentsPeerReviewsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Claim the next peer review: a random submission among those tied for the fewest existing reviews.
    */
   async postAssessmentsPeerReviewsClaim(assessmentId: string): Promise<Result<Types.LearningAssessmentsPeerReviewClaimDto, ApiError>> {
     const url = `/v1/assessments/${assessmentId}/peer-reviews/claim`;
@@ -36,6 +37,7 @@ export class LearningAssessmentsPeerReviewsModule {
   }
 
   /**
+   * Get the anonymous submission a claimed review refers to. Reviewer-only.
    */
   async getAssessmentsPeerReviews(reviewId: string): Promise<Result<Types.LearningAssessmentsAnonymousReviewSubmissionDto, ApiError>> {
     const url = `/v1/assessments/peer-reviews/${reviewId}`;
@@ -56,6 +58,8 @@ export class LearningAssessmentsPeerReviewsModule {
   }
 
   /**
+   * Submit a claimed peer review. Feedback is mandatory; scores follow the assessment's
+   * rubric rules (rubric grid when one exists, plain 0..MaxScore otherwise).
    */
   async postAssessmentsPeerReviewsSubmit(reviewId: string, body: Types.LearningAssessmentsPeerReviewSubmitInput): Promise<Result<void, ApiError>> {
     const url = `/v1/assessments/peer-reviews/${reviewId}/submit`;
@@ -74,6 +78,7 @@ export class LearningAssessmentsPeerReviewsModule {
   }
 
   /**
+   * Same reviews for instructors, with reviewer names. CanManageCourse-only.
    */
   async getAssessmentsSubmissionsPeerReviews(submissionId: string): Promise<Result<Array<Types.LearningAssessmentsInstructorPeerReviewDto>, ApiError>> {
     const url = `/v1/assessments/submissions/${submissionId}/peer-reviews`;
@@ -88,6 +93,8 @@ export class LearningAssessmentsPeerReviewsModule {
   }
 
   /**
+   * Reviews received on a submission (own row, or the group's rows for group submissions).
+   * Owner-only, anonymized: no reviewer identity exists in the DTO at all.
    */
   async getAssessmentsSubmissionsReceivedPeerReviews(submissionId: string): Promise<Result<Array<Types.LearningAssessmentsReceivedPeerReviewDto>, ApiError>> {
     const url = `/v1/assessments/submissions/${submissionId}/received-peer-reviews`;

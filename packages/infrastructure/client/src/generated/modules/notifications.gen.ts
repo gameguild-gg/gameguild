@@ -16,6 +16,7 @@ export class NotificationsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Gets the current user's notifications
    */
   async getApiNotificationsForGetApiNotifications(query?: {
     skip?: number;
@@ -35,6 +36,7 @@ export class NotificationsModule {
   }
 
   /**
+   * Gets a specific notification by ID
    */
   async getApiNotificationsForGetApiNotificationsById(id: string): Promise<Result<Types.NotificationsControllersNotificationDto, ApiError>> {
     const url = `/api/notifications/${id}`;
@@ -55,6 +57,7 @@ export class NotificationsModule {
   }
 
   /**
+   * Deletes a notification
    */
   async deleteApiNotifications(id: string): Promise<Result<void, ApiError>> {
     const url = `/api/notifications/${id}`;
@@ -69,6 +72,7 @@ export class NotificationsModule {
   }
 
   /**
+   * Marks a notification as read
    */
   async postApiNotificationsRead(id: string): Promise<Result<void, ApiError>> {
     const url = `/api/notifications/${id}/read`;
@@ -83,6 +87,7 @@ export class NotificationsModule {
   }
 
   /**
+   * Marks a notification as unread
    */
   async postApiNotificationsUnread(id: string): Promise<Result<void, ApiError>> {
     const url = `/api/notifications/${id}/unread`;
@@ -97,6 +102,7 @@ export class NotificationsModule {
   }
 
   /**
+   * Gets the current user's notification preferences
    */
   async getApiNotificationsPreferences(): Promise<Result<Types.NotificationsControllersNotificationPreferenceDto, ApiError>> {
     const url = '/api/notifications/preferences';
@@ -117,6 +123,7 @@ export class NotificationsModule {
   }
 
   /**
+   * Updates the current user's notification preferences
    */
   async putApiNotificationsPreferences(
     body: Types.NotificationsControllersUpdatePreferencesInput,
@@ -143,6 +150,7 @@ export class NotificationsModule {
   }
 
   /**
+   * Sets the current user's email digest frequency (null, Daily, Weekly or BiWeekly)
    */
   async putApiNotificationsPreferencesDigestFrequency(
     body: Types.NotificationsControllersUpdateDigestFrequencyInput,
@@ -169,6 +177,7 @@ export class NotificationsModule {
   }
 
   /**
+   * Replaces the current user's muted notification types (full replace; empty list clears all mutes)
    */
   async putApiNotificationsPreferencesMutedTypes(
     body: Types.NotificationsControllersUpdateMutedTypesInput,
@@ -195,6 +204,7 @@ export class NotificationsModule {
   }
 
   /**
+   * Sets quiet hours for the current user
    */
   async putApiNotificationsPreferencesQuietHours(body: Types.NotificationsControllersSetQuietHoursInput): Promise<Result<void, ApiError>> {
     const url = '/api/notifications/preferences/quiet-hours';
@@ -213,6 +223,7 @@ export class NotificationsModule {
   }
 
   /**
+   * Deletes all read notifications for the current user
    */
   async deleteApiNotificationsRead(): Promise<Result<Types.NotificationsControllersDeletedCountOutput, ApiError>> {
     const url = '/api/notifications/read';
@@ -233,6 +244,7 @@ export class NotificationsModule {
   }
 
   /**
+   * Marks all notifications as read for the current user
    */
   async postApiNotificationsReadAll(): Promise<Result<void, ApiError>> {
     const url = '/api/notifications/read-all';
@@ -247,6 +259,7 @@ export class NotificationsModule {
   }
 
   /**
+   * Gets the catalog of notification types with category and suppressibility classification (drives the preferences UI)
    */
   async getApiNotificationsTypesCatalog(): Promise<Result<Array<Types.NotificationsControllersNotificationTypeCatalogEntry>, ApiError>> {
     const url = '/api/notifications/types-catalog';
@@ -261,6 +274,7 @@ export class NotificationsModule {
   }
 
   /**
+   * Gets the unread notification count for the current user
    */
   async getApiNotificationsUnreadCount(): Promise<Result<Types.NotificationsControllersUnreadCountOutput, ApiError>> {
     const url = '/api/notifications/unread-count';
@@ -281,6 +295,7 @@ export class NotificationsModule {
   }
 
   /**
+   * Gets dead-lettered notifications (newest first), filterable by notification type and recipient email
    */
   async getEmailDeliveryDeadletters(query?: {
     skip?: number;
@@ -307,6 +322,7 @@ export class NotificationsModule {
   }
 
   /**
+   * Gets the delivery event feed (newest first), filterable by event type, recipient email and provider message id
    */
   async getEmailDeliveryEmailEvents(query?: {
     skip?: number;
@@ -334,6 +350,7 @@ export class NotificationsModule {
   }
 
   /**
+   * Requeues a dead-lettered notification for another delivery attempt
    */
   async postEmailDeliveryNotificationsRequeue(id: string): Promise<Result<Types.NotificationsControllersRequeueOutput, ApiError>> {
     const url = `/api/v1/email-delivery/notifications/${id}:requeue`;
@@ -354,6 +371,7 @@ export class NotificationsModule {
   }
 
   /**
+   * Gets the delivery timeline of a notification (its provider events, oldest first); empty when the row has no provider correlation id
    */
   async getEmailDeliveryNotificationsTimeline(id: string): Promise<Result<Types.NotificationsControllersNotificationTimelineDto, ApiError>> {
     const url = `/api/v1/email-delivery/notifications/${id}/timeline`;
@@ -374,6 +392,7 @@ export class NotificationsModule {
   }
 
   /**
+   * Gets suppressions (newest first); active-only unless includeReleased is true
    */
   async getEmailDeliverySuppressions(query?: {
     skip?: number;
@@ -399,6 +418,7 @@ export class NotificationsModule {
   }
 
   /**
+   * Releases the active suppression for an address (admin unsuppress). Idempotent: returns 200 when no active suppression exists.
    */
   async deleteEmailDeliverySuppressions(email: string): Promise<Result<Types.NotificationsControllersUnsuppressOutput, ApiError>> {
     const url = `/api/v1/email-delivery/suppressions/${email}`;
@@ -419,7 +439,7 @@ export class NotificationsModule {
   }
 
   /**
-   * SES email delivery events webhook (public, SNS signature-verified)
+   * Receives SNS notifications for SES delivery events (send, delivery, bounce, complaint, open)
    */
   async postNotificationsEmailEvents(): Promise<Result<void, ApiError>> {
     const url = '/api/v1/notifications/email-events';
@@ -434,7 +454,7 @@ export class NotificationsModule {
   }
 
   /**
-   * One-click unsubscribe (public, signed token)
+   * Processes a one-click unsubscribe: mutes a type, disables a category, or turns off email entirely
    */
   async getNotificationsUnsubscribe(query?: { token?: string }): Promise<Result<Types.NotificationsControllersUnsubscribeOutput, ApiError>> {
     const url = '/api/v1/notifications/unsubscribe';
