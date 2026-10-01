@@ -20,6 +20,8 @@ public interface ITamperEvidentAuditService {
         string? country = null,
         string? region = null,
         string? city = null,
+        Guid? sessionId = null,
+        string? correlationId = null,
         CancellationToken cancellationToken = default);
 
     Task<Result<bool>> VerifyChainIntegrityAsync(Guid tenantId, CancellationToken cancellationToken = default);
@@ -34,6 +36,7 @@ public interface ITamperEvidentAuditService {
 /// Uses RSA/ECDSA digital signatures with SHA-256 hashing.
 /// </summary>
 public interface ICryptographicSigningService {
+    string GetActiveKeyId();
     string ComputeContentHash(string content);
     string ComputeChainHash(string contentHash, string previousHash, long sequenceNumber);
     string SignData(string data, string keyId);

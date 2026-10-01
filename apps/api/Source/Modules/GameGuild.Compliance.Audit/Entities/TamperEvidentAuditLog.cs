@@ -7,6 +7,8 @@ namespace GameGuild.Compliance.Audit;
 /// </summary>
 public sealed class TamperEvidentAuditLog : EntityBase {
     public Guid? UserId { get; private set; }
+    public Guid? SessionId { get; private set; }
+    public string? CorrelationId { get; private set; }
     public string Action { get; private set; } = string.Empty;
     public string EntityType { get; private set; } = string.Empty;
     public Guid? EntityId { get; private set; }
@@ -63,11 +65,15 @@ public sealed class TamperEvidentAuditLog : EntityBase {
         string? region,
         string? city,
         string previousHash,
-        long sequenceNumber) {
+        long sequenceNumber,
+        Guid? sessionId = null,
+        string? correlationId = null) {
         return new TamperEvidentAuditLog {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
             UserId = userId,
+            SessionId = sessionId,
+            CorrelationId = correlationId,
             Action = action,
             EntityType = entityType,
             EntityId = entityId,
