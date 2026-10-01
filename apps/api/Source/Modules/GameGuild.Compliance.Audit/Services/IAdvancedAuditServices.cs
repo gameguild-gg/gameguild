@@ -53,7 +53,8 @@ public interface ITamperEvidentAuditService {
     Task<Result<IEnumerable<TamperEvidentAuditLog>>> GetByTenantAsync(Guid tenantId, CancellationToken cancellationToken);
     Task<Result<IEnumerable<TamperEvidentAuditLog>>> GetByTenantAsync(Guid tenantId, int skip, int take);
     Task<Result<IEnumerable<TamperEvidentAuditLog>>> GetByTenantAsync(Guid tenantId, int skip, int take, CancellationToken cancellationToken);
-    Task<Result<IEnumerable<TamperEvidentAuditLog>>> GetUnverifiedAsync(Guid tenantId, CancellationToken cancellationToken = default);
+    Task<Result<IEnumerable<TamperEvidentAuditLog>>> GetUnverifiedAsync(Guid tenantId);
+    Task<Result<IEnumerable<TamperEvidentAuditLog>>> GetUnverifiedAsync(Guid tenantId, CancellationToken cancellationToken);
     Task<Result> MarkAsVerifiedAsync(Guid id);
     Task<Result> MarkAsVerifiedAsync(Guid id, CancellationToken cancellationToken);
     Task<Result> MarkAsVerifiedAsync(Guid id, string? notes);

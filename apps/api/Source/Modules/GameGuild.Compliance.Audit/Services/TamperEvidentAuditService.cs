@@ -276,9 +276,12 @@ public sealed class TamperEvidentAuditService(
         return Result.Success<IEnumerable<TamperEvidentAuditLog>>(entries);
     }
 
+    public Task<Result<IEnumerable<TamperEvidentAuditLog>>> GetUnverifiedAsync(Guid tenantId)
+        => GetUnverifiedAsync(tenantId, CancellationToken.None);
+
     public async Task<Result<IEnumerable<TamperEvidentAuditLog>>> GetUnverifiedAsync(
         Guid tenantId,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         if (tenantId == Guid.Empty)
         {
