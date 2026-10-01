@@ -16,6 +16,8 @@ export class ContentPagesOpenGraphModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Resolve OpenGraph metadata for a given slug.
+   * Checks pages first, then content resources.
    */
   async getOg(slug: string): Promise<Result<Types.ContentPagesOpenGraphMetadataDto, ApiError>> {
     const url = `/v1/og/${slug}`;

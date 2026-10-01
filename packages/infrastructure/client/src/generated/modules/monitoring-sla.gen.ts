@@ -16,6 +16,7 @@ export class MonitoringSlaModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Record a service level indicator metric.
    */
   async postSlaSlis(body: Types.MonitoringSLARecordSliMetricCommand): Promise<Result<void, ApiError>> {
     const url = '/api/v1/sla/slis';
@@ -34,6 +35,7 @@ export class MonitoringSlaModule {
   }
 
   /**
+   * Get all service level objectives with optional filtering.
    */
   async getSlaSlosForGetSlaSlos(query?: {
     tenantId?: string;
@@ -55,6 +57,7 @@ export class MonitoringSlaModule {
   }
 
   /**
+   * Create a new service level objective.
    */
   async postSlaSlos(body: Types.MonitoringSLACreateSloCommand): Promise<Result<Types.MonitoringSLASloDto, ApiError>> {
     const url = '/api/v1/sla/slos';
@@ -79,6 +82,7 @@ export class MonitoringSlaModule {
   }
 
   /**
+   * Get a service level objective by ID.
    */
   async getSlaSlosForGetSlaSlosById(id: string): Promise<Result<Types.MonitoringSLASloDto, ApiError>> {
     const url = `/api/v1/sla/slos/${id}`;
@@ -99,6 +103,7 @@ export class MonitoringSlaModule {
   }
 
   /**
+   * Update an existing service level objective.
    */
   async putSlaSlos(id: string, body: Types.MonitoringSLAUpdateSloCommand): Promise<Result<Types.MonitoringSLASloDto, ApiError>> {
     const url = `/api/v1/sla/slos/${id}`;
@@ -123,6 +128,7 @@ export class MonitoringSlaModule {
   }
 
   /**
+   * Delete a service level objective.
    */
   async deleteSlaSlos(id: string): Promise<Result<void, ApiError>> {
     const url = `/api/v1/sla/slos/${id}`;
@@ -137,6 +143,7 @@ export class MonitoringSlaModule {
   }
 
   /**
+   * Get compliance information for an SLO over a time period.
    */
   async getSlaSlosCompliance(id: string, query?: { startDate?: string; endDate?: string }): Promise<Result<Types.MonitoringSLASloComplianceDto, ApiError>> {
     const url = `/api/v1/sla/slos/${id}/compliance`;
@@ -158,6 +165,7 @@ export class MonitoringSlaModule {
   }
 
   /**
+   * Get error budget information for an SLO.
    */
   async getSlaSlosErrorBudget(id: string): Promise<Result<Types.MonitoringSLAErrorBudgetDto, ApiError>> {
     const url = `/api/v1/sla/slos/${id}/error-budget`;
@@ -178,6 +186,7 @@ export class MonitoringSlaModule {
   }
 
   /**
+   * Get SLO violations with optional filtering.
    */
   async getSlaViolations(query?: {
     sloId?: string;
@@ -201,6 +210,7 @@ export class MonitoringSlaModule {
   }
 
   /**
+   * Resolve an SLO violation.
    */
   async postSlaViolationsResolve(id: string, body: Types.MonitoringSLAResolveSloViolationCommand): Promise<Result<void, ApiError>> {
     const url = `/api/v1/sla/violations/${id}/resolve`;

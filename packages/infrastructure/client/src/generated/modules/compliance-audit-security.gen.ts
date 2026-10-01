@@ -16,6 +16,7 @@ export class ComplianceAuditSecurityModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Get unified security audit logs from all sources with filtering and pagination.
    */
   async getAdminSecurityAudit(query?: {
     SourceType?: Types.ComplianceAuditSecurityAuditSourceType;
@@ -52,6 +53,7 @@ export class ComplianceAuditSecurityModule {
   }
 
   /**
+   * Export unified security audit logs to CSV.
    */
   async postAdminSecurityAuditExport(body: Types.ComplianceAuditUnifiedSecurityAuditInput): Promise<Result<Blob, ApiError>> {
     const url = '/v1/admin/security-audit/:export';
@@ -70,6 +72,7 @@ export class ComplianceAuditSecurityModule {
   }
 
   /**
+   * Get authentication attempt logs specifically.
    */
   async getAdminSecurityAuditAuthentication(query?: {
     UserId?: string;
@@ -101,6 +104,7 @@ export class ComplianceAuditSecurityModule {
   }
 
   /**
+   * Get security audit dashboard with aggregated statistics.
    */
   async getAdminSecurityAuditDashboard(query?: {
     startDate?: string;
@@ -126,6 +130,7 @@ export class ComplianceAuditSecurityModule {
   }
 
   /**
+   * Get permission audit logs specifically.
    */
   async getAdminSecurityAuditPermissions(query?: {
     UserId?: string;

@@ -16,6 +16,7 @@ export class LearningCoursesPrerequisitesModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Create a new prerequisite for a course
    */
   async postApiPrerequisites(body: Types.LearningCoursesCreatePrerequisiteApiInput): Promise<Result<Types.LearningCoursesPrerequisiteDto, ApiError>> {
     const url = '/api/prerequisites';
@@ -40,6 +41,7 @@ export class LearningCoursesPrerequisitesModule {
   }
 
   /**
+   * Get a prerequisite by ID
    */
   async getApiPrerequisites(id: string): Promise<Result<Types.LearningCoursesPrerequisiteDto, ApiError>> {
     const url = `/api/prerequisites/${id}`;
@@ -60,6 +62,7 @@ export class LearningCoursesPrerequisitesModule {
   }
 
   /**
+   * Update a prerequisite
    */
   async putApiPrerequisites(
     id: string,
@@ -87,6 +90,7 @@ export class LearningCoursesPrerequisitesModule {
   }
 
   /**
+   * Delete a prerequisite
    */
   async deleteApiPrerequisites(id: string): Promise<Result<void, ApiError>> {
     const url = `/api/prerequisites/${id}`;
@@ -101,6 +105,7 @@ export class LearningCoursesPrerequisitesModule {
   }
 
   /**
+   * Get all prerequisites for a course
    */
   async getApiPrerequisitesCourse(courseId: string): Promise<Result<Array<Types.LearningCoursesPrerequisiteDto>, ApiError>> {
     const url = `/api/prerequisites/course/${courseId}`;
@@ -115,6 +120,7 @@ export class LearningCoursesPrerequisitesModule {
   }
 
   /**
+   * Get the full prerequisite chain for a course (all nested prerequisites)
    */
   async getApiPrerequisitesCourseChain(courseId: string): Promise<Result<Array<Types.LearningCoursesPrerequisiteDto>, ApiError>> {
     const url = `/api/prerequisites/course/${courseId}/chain`;
@@ -129,6 +135,7 @@ export class LearningCoursesPrerequisitesModule {
   }
 
   /**
+   * Check if the current user satisfies all prerequisites for a course
    */
   async getApiPrerequisitesCourseCheckForGetApiPrerequisitesCourseByCourseIdCheck(
     courseId: string,
@@ -151,6 +158,7 @@ export class LearningCoursesPrerequisitesModule {
   }
 
   /**
+   * Check if a specific user satisfies all prerequisites for a course (admin)
    */
   async getApiPrerequisitesCourseCheckForGetApiPrerequisitesCourseByCourseIdCheckByUserId(
     courseId: string,
@@ -174,6 +182,7 @@ export class LearningCoursesPrerequisitesModule {
   }
 
   /**
+   * Reorder prerequisites for a course
    */
   async postApiPrerequisitesCourseReorder(courseId: string, body: Types.LearningCoursesReorderPrerequisitesInput): Promise<Result<void, ApiError>> {
     const url = `/api/prerequisites/course/${courseId}/reorder`;
@@ -192,6 +201,7 @@ export class LearningCoursesPrerequisitesModule {
   }
 
   /**
+   * Check if adding a prerequisite would create a circular dependency
    */
   async getApiPrerequisitesCourseWouldCreateCycle(
     courseId: string,
@@ -215,6 +225,7 @@ export class LearningCoursesPrerequisitesModule {
   }
 
   /**
+   * Get courses that depend on a specific course as a prerequisite
    */
   async getApiPrerequisitesDependents(courseId: string): Promise<Result<Array<Types.LearningCoursesPrerequisiteDto>, ApiError>> {
     const url = `/api/prerequisites/dependents/${courseId}`;

@@ -16,6 +16,7 @@ export class LearningExperienceSocialWishlistsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Adds a course to the current user's wishlist
    */
   async postApiSocialWishlist(
     courseId: string,
@@ -40,6 +41,7 @@ export class LearningExperienceSocialWishlistsModule {
   }
 
   /**
+   * Removes a course from the current user's wishlist
    */
   async deleteApiSocialWishlist(courseId: string): Promise<Result<void, ApiError>> {
     const url = `/api/social/wishlist/${courseId}`;
@@ -54,6 +56,7 @@ export class LearningExperienceSocialWishlistsModule {
   }
 
   /**
+   * Checks if a course is in the current user's wishlist
    */
   async getApiSocialWishlistCheck(courseId: string): Promise<Result<boolean, ApiError>> {
     const url = `/api/social/wishlist/${courseId}/check`;
@@ -68,6 +71,7 @@ export class LearningExperienceSocialWishlistsModule {
   }
 
   /**
+   * Updates wishlist notification preferences
    */
   async putApiSocialWishlistPreferences(
     courseId: string,
@@ -95,6 +99,7 @@ export class LearningExperienceSocialWishlistsModule {
   }
 
   /**
+   * Gets the current user's wishlist
    */
   async getApiSocialWishlistMe(query?: {
     skip?: number;

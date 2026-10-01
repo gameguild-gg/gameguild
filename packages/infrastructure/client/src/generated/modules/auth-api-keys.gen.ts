@@ -16,7 +16,7 @@ export class AuthApiKeysModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
-   * List all API keys
+   * List all API keys for the current user
    */
   async getAuthApiKeys(): Promise<Result<Array<Types.IdentityAuthenticationApiKeyDto>, ApiError>> {
     const url = '/v1/auth/api-keys';

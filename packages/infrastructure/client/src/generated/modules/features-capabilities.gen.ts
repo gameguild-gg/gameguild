@@ -16,6 +16,24 @@ export class FeaturesCapabilitiesModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Gets all capabilities for a tenant with their enabled states.
+   * Returns a dictionary mapping capability keys to boolean enabled states.
+   *
+   * Example response:
+   * ```json
+   * {
+   *   "lms.courses.basic": true,
+   *   "lms.enrollments": true,
+   *   "lms.certificates": false,
+   *   "lxp.discovery": true,
+   *   "lxp.learningPaths": false,
+   *   "lxp.recommendations.basic": false,
+   *   "lxp.recommendations.ai": false,
+   *   "lxp.skills": false,
+   *   "analytics.advanced": false,
+   *   "branding.custom": false
+   * }
+   * ```
    */
   async getTenantsCapabilitiesForGetTenantsByTenantIdCapabilities(tenantId: string): Promise<Result<Record<string, boolean>, ApiError>> {
     const url = `/v1/tenants/${tenantId}/capabilities`;
@@ -30,6 +48,8 @@ export class FeaturesCapabilitiesModule {
   }
 
   /**
+   * Sets or updates a capability override for a tenant.
+   * Only accessible by tenant admins or platform administrators.
    */
   async postTenantsCapabilities(tenantId: string, body: Types.FeaturesSetCapabilityOverrideInput): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}/capabilities`;
@@ -48,6 +68,7 @@ export class FeaturesCapabilitiesModule {
   }
 
   /**
+   * Checks if a specific capability is enabled for a tenant.
    */
   async getTenantsCapabilitiesForGetTenantsByTenantIdCapabilitiesByCapability(
     tenantId: string,
@@ -71,6 +92,7 @@ export class FeaturesCapabilitiesModule {
   }
 
   /**
+   * Removes a capability override, reverting to the subscription plan default.
    */
   async deleteTenantsCapabilities(tenantId: string, capability: string, query?: { reason?: string }): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}/capabilities/${capability}`;
@@ -86,6 +108,7 @@ export class FeaturesCapabilitiesModule {
   }
 
   /**
+   * Gets the audit log for capability changes.
    */
   async getTenantsCapabilitiesAuditLog(
     tenantId: string,
@@ -104,6 +127,8 @@ export class FeaturesCapabilitiesModule {
   }
 
   /**
+   * Syncs capabilities from the tenant's current subscription plan.
+   * Useful after subscription changes or plan upgrades.
    */
   async postTenantsCapabilitiesSync(tenantId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}/capabilities/sync`;

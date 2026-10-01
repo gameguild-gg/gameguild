@@ -268,7 +268,7 @@ export class UsersPreferencesModule {
   }
 
   /**
-   * Get notification settings for user
+   * Get notification settings for user (deprecated: use /api/notifications/preferences)
    */
   async getUsersPreferencesNotifications(userId: string): Promise<Result<Types.IdentityUsersUserNotificationPreferencesDto, ApiError>> {
     const url = `/v1/users/${userId}/preferences/notifications`;
@@ -289,7 +289,7 @@ export class UsersPreferencesModule {
   }
 
   /**
-   * Replace notification preferences for user (full update)
+   * Replace notification preferences for user (full update) (deprecated: use /api/notifications/preferences)
    */
   async putUsersPreferencesNotifications(userId: string, body: Types.IdentityUsersReplaceUserNotificationPreferencesInput): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/preferences/notifications`;
@@ -308,7 +308,7 @@ export class UsersPreferencesModule {
   }
 
   /**
-   * Partially update notification preferences for user
+   * Partially update notification preferences for user (deprecated: use /api/notifications/preferences)
    */
   async patchUsersPreferencesNotifications(userId: string, body: Types.IdentityUsersUpdateUserNotificationPreferencesInput): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/preferences/notifications`;
@@ -327,7 +327,7 @@ export class UsersPreferencesModule {
   }
 
   /**
-   * Check if notification preferences exist
+   * Check if notification preferences exist (deprecated: use /api/notifications/preferences)
    */
   async headUsersPreferencesNotifications(userId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/preferences/notifications`;
@@ -342,7 +342,7 @@ export class UsersPreferencesModule {
   }
 
   /**
-   * Reset notification preferences to defaults
+   * Reset notification preferences to defaults (deprecated: use /api/notifications/preferences)
    */
   async postUsersPreferencesNotificationsReset(userId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/preferences/notifications:reset`;

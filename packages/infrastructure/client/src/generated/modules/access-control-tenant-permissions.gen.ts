@@ -16,6 +16,7 @@ export class AccessControlTenantPermissionsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Checks if a user has a specific tenant-level permission.
    */
   async getAuthorizationTenantsHasPermission(tenantId: string, query?: { permission?: string; userId?: string }): Promise<Result<boolean, ApiError>> {
     const url = `/api/v1/authorization/tenants/${tenantId}/has-permission`;
@@ -31,6 +32,7 @@ export class AccessControlTenantPermissionsModule {
   }
 
   /**
+   * Gets all tenant-level permissions for a user.
    */
   async getAuthorizationTenantsPermissions(
     tenantId: string,
@@ -55,6 +57,7 @@ export class AccessControlTenantPermissionsModule {
   }
 
   /**
+   * Sets tenant default permissions applied to all users in a tenant.
    */
   async postAuthorizationTenantsDefaults(body: Types.IdentityAuthorizationSetTenantDefaultPermissionsCommand): Promise<Result<boolean, ApiError>> {
     const url = '/api/v1/authorization/tenants/defaults';
@@ -73,6 +76,7 @@ export class AccessControlTenantPermissionsModule {
   }
 
   /**
+   * Denies tenant-level permissions for a user (DENY-WINS).
    */
   async postAuthorizationTenantsDeny(body: Types.IdentityAuthorizationDenyTenantPermissionCommand): Promise<Result<string, ApiError>> {
     const url = '/api/v1/authorization/tenants/deny';
@@ -91,6 +95,7 @@ export class AccessControlTenantPermissionsModule {
   }
 
   /**
+   * Removes deny entries from a user's permissions.
    */
   async postAuthorizationTenantsDenyRemove(body: Types.IdentityAuthorizationRemoveDenyPermissionsCommand): Promise<Result<boolean, ApiError>> {
     const url = '/api/v1/authorization/tenants/deny/remove';
@@ -109,6 +114,7 @@ export class AccessControlTenantPermissionsModule {
   }
 
   /**
+   * Sets global default permissions applied to all users.
    */
   async postAuthorizationTenantsGlobalDefaults(body: Types.IdentityAuthorizationSetGlobalDefaultPermissionsCommand): Promise<Result<boolean, ApiError>> {
     const url = '/api/v1/authorization/tenants/global/defaults';
@@ -127,6 +133,7 @@ export class AccessControlTenantPermissionsModule {
   }
 
   /**
+   * Grants tenant-level permissions to a user.
    */
   async postAuthorizationTenantsGrant(body: Types.IdentityAuthorizationGrantTenantPermissionCommand): Promise<Result<string, ApiError>> {
     const url = '/api/v1/authorization/tenants/grant';
@@ -145,6 +152,7 @@ export class AccessControlTenantPermissionsModule {
   }
 
   /**
+   * Revokes tenant-level permissions from a user.
    */
   async postAuthorizationTenantsRevoke(body: Types.IdentityAuthorizationRevokeTenantPermissionCommand): Promise<Result<boolean, ApiError>> {
     const url = '/api/v1/authorization/tenants/revoke';

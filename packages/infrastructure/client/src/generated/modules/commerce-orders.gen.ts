@@ -16,6 +16,9 @@ export class CommerceOrdersModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * List orders with optional filtering.
+   * Use owner=me to get current user's orders.
+   * Admin users can list all orders without owner filter.
    */
   async getOrdersForGetOrders(query?: {
     owner?: string;
@@ -34,6 +37,7 @@ export class CommerceOrdersModule {
   }
 
   /**
+   * Create a new order with idempotency protection
    */
   async postOrders(body: Types.CommerceOrdersCreateOrderInput): Promise<Result<Types.CommerceOrdersOrderDto, ApiError>> {
     const url = '/v1/orders';
@@ -58,6 +62,7 @@ export class CommerceOrdersModule {
   }
 
   /**
+   * Get an order by ID
    */
   async getOrdersForGetOrdersByOrderId(orderId: string): Promise<Result<Types.CommerceOrdersOrderDto, ApiError>> {
     const url = `/v1/orders/${orderId}`;
@@ -78,6 +83,7 @@ export class CommerceOrdersModule {
   }
 
   /**
+   * Capture payment for an authorized order
    */
   async postOrdersCapture(orderId: string, body: Types.CommerceOrdersCaptureOrderInput): Promise<Result<Types.CommerceOrdersOrderCaptureDto, ApiError>> {
     const url = `/v1/orders/${orderId}:capture`;
@@ -102,6 +108,7 @@ export class CommerceOrdersModule {
   }
 
   /**
+   * Complete an order (process payment, grant entitlements)
    */
   async postOrdersComplete(orderId: string, body: Types.CommerceOrdersCompleteOrderInput): Promise<Result<Types.CommerceOrdersOrderDto, ApiError>> {
     const url = `/v1/orders/${orderId}:complete`;
@@ -146,6 +153,7 @@ export class CommerceOrdersModule {
   }
 
   /**
+   * Add a product to an existing order
    */
   async postOrdersItems(orderId: string, body: Types.CommerceOrdersAddOrderItemInput): Promise<Result<Types.CommerceOrdersOrderDto, ApiError>> {
     const url = `/v1/orders/${orderId}/items`;

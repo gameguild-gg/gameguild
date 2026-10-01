@@ -8,6 +8,7 @@ import type { OpenApiSpec } from '../fetch-spec.js';
 import type { OpenAPIV3 } from 'openapi-types';
 import { toPascalCase, toCamelCase } from '../utils/naming.js';
 import { qualifyType } from '../utils/type-qualify.js';
+import { formatJsDocLines } from '../utils/jsdoc.js';
 import { TypeMapperChain } from './strategies/SchemaTypeMapper.js';
 import { HTTP_METHODS } from './constants.js';
 
@@ -201,12 +202,12 @@ function generateEndpointMethod(endpoint: ModuleEndpoint): string {
 
   // JSDoc
   lines.push('  /**');
-  if (endpoint.summary) {
-    lines.push(`   * ${endpoint.summary}`);
+  if (endpoint.summary?.trim()) {
+    lines.push(...formatJsDocLines(endpoint.summary, '  '));
   }
-  if (endpoint.description && endpoint.description !== endpoint.summary) {
+  if (endpoint.description?.trim() && endpoint.description !== endpoint.summary) {
     lines.push('   *');
-    lines.push(`   * ${endpoint.description}`);
+    lines.push(...formatJsDocLines(endpoint.description, '  '));
   }
   lines.push('   */');
 

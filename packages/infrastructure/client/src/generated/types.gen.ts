@@ -9,6 +9,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from 'zod';
 
+/** Canonical request shape for conversational completions. */
 export interface AIAiChatInput {
   maxTokens?: number | null;
   messages?: Array<AIAiChatMessage> | null;
@@ -18,11 +19,13 @@ export interface AIAiChatInput {
   temperature?: number | null;
 }
 
+/** Chat message payload for AI requests. */
 export interface AIAiChatMessage {
   content?: string | null;
   role?: string | null;
 }
 
+/** Canonical completion response shape exposed by the GameGuild API. */
 export interface AIAiCompletionOutput {
   finishReason?: string | null;
   model?: string | null;
@@ -31,6 +34,7 @@ export interface AIAiCompletionOutput {
   usage?: AIAiUsageDto;
 }
 
+/** Conversation history entry returned by the AI history endpoint. */
 export interface AIAiConversationHistoryEntryDto {
   id?: string;
   finishReason?: string | null;
@@ -71,6 +75,7 @@ export interface AIAiGeneratedContentInput {
 
 export type AIAiGeneratedContentKind = 'Email' | 'Report' | 'ListingDescription';
 
+/** Canonical request shape for single-prompt generation. */
 export interface AIAiGenerateInput {
   maxTokens?: number | null;
   model?: string | null;
@@ -151,6 +156,7 @@ export interface AIAiStatusOutput {
   providers?: Array<AIAiProviderStatusDto> | null;
 }
 
+/** Normalized token usage information returned by a provider. */
 export interface AIAiUsageDto {
   inputTokens?: number | null;
   outputTokens?: number | null;
@@ -340,6 +346,7 @@ export interface APIControllersAdRewardProtectedOperationFailureOutput {
   state?: FinanceEconomyRiskEconomyProtectedOperationState;
 }
 
+/** Application details */
 export interface APIControllersApplicationDetails {
   description?: string | null;
   informationalVersion?: string | null;
@@ -347,6 +354,7 @@ export interface APIControllersApplicationDetails {
   version?: string | null;
 }
 
+/** Application info response model */
 export interface APIControllersApplicationInfoOutput {
   application?: APIControllersApplicationDetails;
   build?: APIControllersBuildDetails;
@@ -382,6 +390,7 @@ export interface APIControllersBackfillLegacyEconomyWalletInput {
   riskDecisionId?: string;
 }
 
+/** Build details */
 export interface APIControllersBuildDetails {
   configuration?: string | null;
   framework?: string | null;
@@ -437,6 +446,7 @@ export interface APIControllersDecideTrustSafetyAppealInput {
   reasonCode?: string | null;
 }
 
+/** Individual dependency health item */
 export interface APIControllersDependencyHealthItem {
   data?: Record<string, string> | null;
   description?: string | null;
@@ -448,6 +458,7 @@ export interface APIControllersDependencyHealthItem {
   tags?: Array<string> | null;
 }
 
+/** Dependency health check response model */
 export interface APIControllersDependencyHealthOutput {
   dependencies?: Array<APIControllersDependencyHealthItem> | null;
   error?: string | null;
@@ -517,6 +528,7 @@ export interface APIControllersEconomyTransferProtectedOperationFailureOutput {
   state?: FinanceEconomyRiskEconomyProtectedOperationState;
 }
 
+/** Health check response model */
 export interface APIControllersHealthinessOutput {
   builtAt?: string | null;
   checks?: Record<string, APIControllersHealthinessResponseItem> | null;
@@ -531,6 +543,7 @@ export interface APIControllersHealthinessOutput {
   version?: string | null;
 }
 
+/** Individual health check item */
 export interface APIControllersHealthinessResponseItem {
   data?: Record<string, Record<string, unknown>> | null;
   description?: string | null;
@@ -549,6 +562,7 @@ export interface APIControllersInspectEconomyCapabilityReadinessInput {
   subjectReference?: string | null;
 }
 
+/** Liveness check response model */
 export interface APIControllersLivenessOutput {
   alive?: boolean;
   status?: string | null;
@@ -576,6 +590,7 @@ export interface APIControllersPlatformKpisOutput {
   mrr?: number;
 }
 
+/** Process details */
 export interface APIControllersProcessDetails {
   startTime?: string;
   uptime?: string;
@@ -623,6 +638,7 @@ export interface APIControllersPublishEconomyAnchorInput {
   dispatchSnapshotHash?: string | null;
 }
 
+/** Readiness check response model */
 export interface APIControllersReadinessOutput {
   error?: string | null;
   ready?: boolean;
@@ -657,6 +673,7 @@ export interface APIControllersRollbackLegacyEconomyCutoverInput {
   stepUpReceipt?: string | null;
 }
 
+/** Runtime details */
 export interface APIControllersRuntimeDetails {
   dotNetVersion?: string | null;
   osArchitecture?: string | null;
@@ -1041,9 +1058,11 @@ export interface APITeamsUpdateTeamInput {
   visibility?: TeamsTeamVisibility;
 }
 
+/** Access policy for asset references. */
 export type AssetsAssetAccessPolicy =
   'Private' | 'SignedUrl' | 'TenantPublic' | 'Public' | 'PaidContent' | 'OwnerOnly' | 'Authenticated' | 'Unlisted' | 'Inherited';
 
+/** Generated access URL for an asset. */
 export interface AssetsAssetAccessUrl {
   expiresAt?: string;
   mimeType?: string | null;
@@ -1053,8 +1072,10 @@ export interface AssetsAssetAccessUrl {
 
 export type AssetsAssetFolderRestrictionMode = 'None' | 'SelectedTeams' | 'TeamAuthorities' | 'AllocatedProjectMembers';
 
+/** Asset content classification. */
 export type AssetsAssetKind = 'Image' | 'Video' | 'Audio' | 'Document' | 'Archive' | 'Other';
 
+/** Result of an asset upload. */
 export interface AssetsAssetUploadResult {
   assetContentId?: string | null;
   assetReferenceId?: string | null;
@@ -1062,6 +1083,7 @@ export interface AssetsAssetUploadResult {
   success?: boolean;
 }
 
+/** Session for chunked upload. */
 export interface AssetsChunkedUploadSession {
   expiresAt?: string;
   fileName?: string | null;
@@ -1169,10 +1191,13 @@ export interface AssetsControllersUpdateVirusScanInput {
   status?: AssetsVirusScanStatus;
 }
 
+/** Image fit mode for transformations. */
 export type AssetsImageFit = 'Contain' | 'Cover' | 'Fill' | 'Inside' | 'Outside';
 
+/** Output image format for transformations. */
 export type AssetsImageFormat = 'Original' | 'Jpeg' | 'Png' | 'Webp' | 'Avif' | 'Gif';
 
+/** Content moderation status. */
 export type AssetsModerationStatus = 'Pending' | 'Processing' | 'Approved' | 'Rejected' | 'NeedsReview' | 'ApprovedWithWarning' | 'Blocked';
 
 export interface AssetsQueriesAssetPreviewOutput {
@@ -1265,32 +1290,49 @@ export interface AssetsQueriesBulkAssetAccessUrlsOutput {
   totalRequested?: number;
 }
 
+/** Report reason categories. */
 export type AssetsReportReason = 'Inappropriate' | 'Copyright' | 'Spam' | 'Violence' | 'Harassment' | 'Misinformation' | 'Other';
 
+/** Moderator review decision. */
 export type AssetsReviewDecision = 'NoAction' | 'ContentRemoved' | 'ContentHidden' | 'UserWarned' | 'UserSuspended' | 'BlockContent';
 
+/** Request for access URL generation. */
 export interface AssetsSecurityAccessUrlInput {
   directStorage?: boolean;
   transform?: string | null;
 }
 
+/** Virus scan status. */
 export type AssetsVirusScanStatus = 'Pending' | 'Scanning' | 'Clean' | 'Infected' | 'ScanFailed';
 
+/** Billing cycle enumeration */
 export type BillingCycle = 'Weekly' | 'Monthly' | 'Quarterly' | 'SemiAnnually' | 'Annually' | 'Biannually';
 
+/** Error details for failed bulk operations */
 export interface BulkOperationError {
+  /** Machine-readable error code for programmatic handling. */
   errorCode?: string | null;
+  /** Human-readable description of why the operation failed. */
   errorMessage?: string | null;
+  /** Identifier of the tenant the failed operation belongs to. */
   tenantId?: string;
+  /** Display name of the tenant for logging/reporting. */
   tenantName?: string | null;
 }
 
+/** Response for bulk operations */
 export interface BulkOperationOutput {
+  /** Per-item error details for failed operations. */
   errors?: Array<BulkOperationError> | null;
+  /** Number of items that failed. */
   failedOperations?: number;
+  /** Whether every item in the batch succeeded. */
   isComplete?: boolean;
+  /** Number of items that completed successfully. */
   successfulOperations?: number;
+  /** Ratio of successful operations to total requested (0.0–1.0). */
   successRate?: number;
+  /** Total number of items submitted for processing. */
   totalRequested?: number;
 }
 
@@ -1304,6 +1346,7 @@ export interface CommerceBillingInvoicePaymentRetryResult {
   retryScheduledAt?: string | null;
 }
 
+/** Invoice status enumeration with monotonic transitions */
 export type CommerceBillingInvoiceStatus = 'Draft' | 'Open' | 'Paid' | 'Void' | 'PastDue' | 'Uncollectible';
 
 export type CommerceOrderChargeState = 'Succeeded' | 'Failed' | 'Processing' | 'RequiresAction' | 'RequiresReconciliation';
@@ -1324,6 +1367,7 @@ export interface CommerceOrdersAddMarketplaceCartItemInput {
   quantity?: number;
 }
 
+/** Request to add an item to an order */
 export interface CommerceOrdersAddOrderItemInput {
   productId?: string;
   productPricingId?: string;
@@ -1332,6 +1376,7 @@ export interface CommerceOrdersAddOrderItemInput {
   quantity?: number;
 }
 
+/** Request to capture payment for an order */
 export interface CommerceOrdersCaptureOrderInput {
   paymentMethodId?: string | null;
 }
@@ -1341,10 +1386,14 @@ export interface CommerceOrdersCheckoutMarketplaceCartInput {
   idempotencyKey?: string | null;
 }
 
+/** Request to complete an order */
 export interface CommerceOrdersCompleteOrderInput {
   marketplaceSettlement?: CommerceOrdersCompleteOrderMarketplaceSettlement;
+  /** Optional internal Payment entity ID for Payment→Order linkage */
   paymentId?: string | null;
+  /** Optional payment method description (e.g., "card", "bank_transfer") */
   paymentMethod?: string | null;
+  /** Optional external payment provider reference */
   paymentProviderReference?: string | null;
 }
 
@@ -1353,6 +1402,7 @@ export interface CommerceOrdersCompleteOrderMarketplaceSettlement {
   idempotencyKey?: string | null;
 }
 
+/** Request to create a new order */
 export interface CommerceOrdersCreateOrderInput {
   idempotencyKey?: string | null;
 }
@@ -1387,6 +1437,7 @@ export interface CommerceOrdersMarketplaceCheckoutOrderDto {
   total?: number;
 }
 
+/** Order capture result including any client-side payment action. */
 export interface CommerceOrdersOrderCaptureDto {
   id?: string;
   clientActionToken?: string | null;
@@ -1412,6 +1463,7 @@ export interface CommerceOrdersOrderCaptureDto {
   userId?: string;
 }
 
+/** Order DTO */
 export interface CommerceOrdersOrderDto {
   id?: string;
   createdAt?: string;
@@ -1433,6 +1485,7 @@ export interface CommerceOrdersOrderDto {
   userId?: string;
 }
 
+/** Order line item DTO */
 export interface CommerceOrdersOrderLineItemDto {
   id?: string;
   basePrice?: number;
@@ -1453,6 +1506,8 @@ export interface CommerceOrdersOrderLineItemDto {
 
 export type CommerceOrdersOrderMarketplaceCurrencyChoice = 'Hard' | 'Soft' | 'FixedMix';
 
+/** Order status enumeration with explicit economic states.
+Follows monotonic FSM - no backward economic transitions allowed. */
 export type CommerceOrdersOrderStatus =
   'Pending' | 'Processing' | 'Completed' | 'Failed' | 'Cancelled' | 'Refunded' | 'PartiallyRefunded' | 'Disputed' | 'Paid' | 'Fulfilled' | 'OnHold';
 
@@ -1478,6 +1533,7 @@ export interface CommercePaymentsBillingChargesControllerRefundBillingChargeInpu
   reason?: string | null;
 }
 
+/** Tax calculation request DTO */
 export interface CommercePaymentsCalculateTaxInput {
   amount: number;
   applicableExemptions?: Array<string> | null;
@@ -1490,6 +1546,7 @@ export interface CommercePaymentsCalculateTaxInput {
   transactionDate?: string | null;
 }
 
+/** Request to create a tax jurisdiction */
 export interface CommercePaymentsCreateTaxJurisdictionInput {
   code?: string | null;
   country?: string | null;
@@ -1499,6 +1556,7 @@ export interface CommercePaymentsCreateTaxJurisdictionInput {
   taxType?: string | null;
 }
 
+/** Request to create a tax rule */
 export interface CommercePaymentsCreateTaxRuleInput {
   customerType?: string | null;
   description?: string | null;
@@ -1513,22 +1571,26 @@ export interface CommercePaymentsCreateWalletInput {
   currency?: string | null;
 }
 
+/** Customer types */
 export type CommercePaymentsCustomerType = 'B2C' | 'B2B';
 
 export interface CommercePaymentsLockWalletInput {
   reason: string | null;
 }
 
+/** Request to freeze a wallet */
 export interface CommercePaymentsModelsFreezeWalletInput {
   reason?: string | null;
 }
 
+/** Request to update wallet settings */
 export interface CommercePaymentsModelsPatchWalletInput {
   currency?: string | null;
   dailyLimit?: number | null;
   monthlyLimit?: number | null;
 }
 
+/** Request to partially update a tax jurisdiction */
 export interface CommercePaymentsPatchTaxJurisdictionInput {
   defaultRate?: number | null;
   isActive?: boolean | null;
@@ -1536,6 +1598,7 @@ export interface CommercePaymentsPatchTaxJurisdictionInput {
   taxType?: string | null;
 }
 
+/** Request to partially update a tax rule */
 export interface CommercePaymentsPatchTaxRuleInput {
   description?: string | null;
   effectiveFrom?: string | null;
@@ -1544,30 +1607,45 @@ export interface CommercePaymentsPatchTaxRuleInput {
   rate?: number | null;
 }
 
+/** Result of a payment cancellation operation */
 export interface CommercePaymentsPaymentCancellationResult {
+  /** When the payment was canceled */
   canceledAt: string;
+  /** The user who canceled the payment (optional for system cancellations) */
   canceledBy?: string | null;
+  /** The reason for the payment cancellation */
   cancellationReason: string | null;
+  /** Any error message if the cancellation failed */
   errorMessage?: string | null;
+  /** The unique identifier of the canceled payment */
   paymentId: string;
+  /** The amount refunded if applicable */
   refundAmount?: number | null;
+  /** Whether any refund was processed as part of the cancellation */
   refundProcessed?: boolean;
+  /** Whether the cancellation was successful */
   success: boolean;
 }
 
+/** Result of payment processing */
 export interface CommercePaymentsPaymentResult {
   amount?: Money;
   failureReason?: string | null;
+  /** Invoice ID that this payment was applied to.
+Links payment to specific invoice for audit trail and preventing duplicate applications. */
   invoiceId?: string | null;
+  /** Internal or provider payment identifier */
   paymentId?: string | null;
   paymentMethodId?: string | null;
   processedAt?: string | null;
   status?: CommercePaymentsPaymentStatus;
   success?: boolean;
+  /** Tenant that owns the payment. Required for authorization at API boundaries. */
   tenantId?: string;
   transactionId?: string | null;
 }
 
+/** Result of payment retry */
 export interface CommercePaymentsPaymentRetryResult {
   failureReason?: string | null;
   maxRetriesReached?: boolean;
@@ -1615,24 +1693,39 @@ export interface CommercePaymentsPaymentsControllerRefundInput {
   reason?: string | null;
 }
 
+/** Payment processing status */
 export type CommercePaymentsPaymentStatus = 'Pending' | 'Processing' | 'Succeeded' | 'Failed' | 'Cancelled' | 'RequiresAction' | 'Refunded' | 'Disputed';
 
+/** Result model for refund processing operations */
 export interface CommercePaymentsProcessRefundResult {
+  /** Currency of the refunded amount */
   currency: string | null;
+  /** Error message if refund failed */
   errorMessage?: string | null;
+  /** Estimated time for refund to be completed */
   estimatedCompletionDate?: string | null;
+  /** Whether the refund operation was successful */
   isSuccess?: boolean;
+  /** Success indicator (computed from status) */
   isSuccessful?: boolean;
+  /** Reference to the original payment ID */
   paymentId: string;
+  /** Timestamp when the refund was processed */
   processedAt: string;
+  /** Any additional processing fees */
   processingFee?: number;
+  /** Reason for the refund */
   reason: string | null;
+  /** Reference number for tracking the refund */
   referenceNumber?: string | null;
+  /** Amount that was refunded */
   refundedAmount: number;
+  /** Unique identifier for the refund transaction */
   refundId: string;
   status: CommercePaymentsTransactionStatus;
 }
 
+/** Individual tax breakdown (for compound/multiple taxes) */
 export interface CommercePaymentsTaxBreakdown {
   description?: string | null;
   jurisdictionCode?: string | null;
@@ -1642,6 +1735,7 @@ export interface CommercePaymentsTaxBreakdown {
   taxType?: CommercePaymentsTaxType;
 }
 
+/** Tax calculation result */
 export interface CommercePaymentsTaxCalculationResult {
   effectiveTaxRate?: number;
   exemptionReason?: string | null;
@@ -1657,6 +1751,7 @@ export interface CommercePaymentsTaxCalculationResult {
   totalAmount?: number;
 }
 
+/** Result of tax exemption validation */
 export interface CommercePaymentsTaxExemptionValidationResult {
   exemptionRate?: number;
   exemptionType?: string | null;
@@ -1667,30 +1762,54 @@ export interface CommercePaymentsTaxExemptionValidationResult {
   warnings?: Array<string> | null;
 }
 
+/** Entity representing a tax jurisdiction */
 export interface CommercePaymentsTaxJurisdiction {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Navigation property to child jurisdictions */
   childJurisdictions?: Array<CommercePaymentsTaxJurisdiction> | null;
+  /** Jurisdiction code */
   code: string;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Whether this jurisdiction is active */
   isActive?: boolean;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** Whether reverse charge is applicable */
   isReverseChargeApplicable?: boolean;
+  /** Jurisdiction name */
   name: string;
   parentJurisdiction?: CommercePaymentsTaxJurisdiction;
+  /** Parent jurisdiction ID */
   parentJurisdictionId?: string | null;
+  /** Tax registration number */
   taxRegistrationNumber?: string | null;
+  /** Navigation property to tax rules */
   taxRules?: Array<CommercePaymentsTaxRule> | null;
   tenantId?: string | null;
   type?: CommercePaymentsTaxJurisdictionType;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
+/** DTO for tax jurisdiction */
 export interface CommercePaymentsTaxJurisdictionDto {
   id?: string;
   code?: string | null;
@@ -1702,65 +1821,120 @@ export interface CommercePaymentsTaxJurisdictionDto {
   taxType?: string | null;
 }
 
+/** Tax jurisdiction types */
 export type CommercePaymentsTaxJurisdictionType = 'Country' | 'State' | 'Province' | 'Region' | 'City' | 'County' | 'District';
 
+/** Entity representing a tax rate */
 export interface CommercePaymentsTaxRate {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Rate description */
   description?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  /** Effective from date */
   effectiveFrom?: string;
+  /** Effective to date */
   effectiveTo?: string | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Whether this rate is active */
   isActive?: boolean;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** Maximum taxable amount */
   maximumTaxableAmount?: number | null;
+  /** Minimum taxable amount */
   minimumTaxableAmount?: number | null;
+  /** Product category */
   productCategory?: string | null;
+  /** Tax rate */
   rate?: number;
   taxJurisdiction?: CommercePaymentsTaxJurisdiction;
+  /** Foreign key to tax jurisdiction */
   taxJurisdictionId: string;
   taxType?: CommercePaymentsTaxType;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
+/** Entity representing a tax rule */
 export interface CommercePaymentsTaxRule {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
   customerTypeFilter?: CommercePaymentsCustomerType;
   defaultTaxRate?: CommercePaymentsTaxRate;
+  /** Default tax rate ID */
   defaultTaxRateId?: string | null;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Rule description */
   description?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  /** Effective from date */
   effectiveFrom?: string | null;
+  /** Effective to date */
   effectiveTo?: string | null;
+  /** Exemption conditions (JSON) */
   exemptionConditions?: string | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Whether this rule is active */
   isActive?: boolean;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** Whether reverse charge applies */
   isReverseCharge?: boolean;
+  /** Whether tax is inclusive */
   isTaxInclusive?: boolean;
+  /** Maximum amount */
   maximumAmount?: number | null;
+  /** Minimum amount */
   minimumAmount?: number | null;
+  /** Rule name */
   name: string;
+  /** Rule priority */
   priority?: number;
+  /** Product categories (JSON array) */
   productCategories?: string | null;
   ruleType?: CommercePaymentsTaxRuleType;
   taxJurisdiction?: CommercePaymentsTaxJurisdiction;
+  /** Foreign key to tax jurisdiction */
   taxJurisdictionId: string;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
+/** DTO for tax rule */
 export interface CommercePaymentsTaxRuleDto {
   id?: string;
   customerType?: string | null;
@@ -1773,36 +1947,65 @@ export interface CommercePaymentsTaxRuleDto {
   rate?: number;
 }
 
+/** Tax rule types */
 export type CommercePaymentsTaxRuleType = 'Standard' | 'Reduced' | 'ZeroRated' | 'Exempt' | 'ReverseCharge' | 'WithholdingTax' | 'Compound' | 'Custom';
 
+/** Tax types */
 export type CommercePaymentsTaxType = 'VAT' | 'GST' | 'SalesTax' | 'ServiceTax' | 'WithholdingTax' | 'ExciseTax' | 'CustomsDuty' | 'Other';
 
+/** Transaction status */
 export type CommercePaymentsTransactionStatus = 'Pending' | 'Processing' | 'Completed' | 'Failed' | 'Cancelled' | 'Reversed';
 
+/** Entity representing a user's wallet */
 export interface CommercePaymentsUserWallet {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Current balance */
   balance?: number;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Currency code */
   currency: string;
+  /** Daily spending limit (null = no limit) */
   dailyLimit?: number | null;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Whether this wallet is active */
   isActive?: boolean;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Whether this wallet is locked */
   isLocked?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** Last transaction timestamp */
   lastTransactionAt?: string | null;
+  /** Reason for lock (if locked) */
   lockReason?: string | null;
+  /** Monthly spending limit (null = no limit) */
   monthlyLimit?: number | null;
   tenantId?: string | null;
+  /** Navigation property to wallet transactions */
   transactions?: Array<CommercePaymentsWalletTransaction> | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Foreign key to the User entity */
   userId: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
+/** Request to validate tax exemption */
 export interface CommercePaymentsValidateTaxExemptionInput {
   customerId?: string | null;
   customerVatNumber?: string | null;
@@ -1812,31 +2015,55 @@ export interface CommercePaymentsValidateTaxExemptionInput {
   transactionDate?: string | null;
 }
 
+/** Entity representing a wallet transaction */
 export interface CommercePaymentsWalletTransaction {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Transaction amount */
   amount?: number;
+  /** Balance after this transaction */
   balanceAfter?: number;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Transaction description */
   description: string;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** Transaction metadata (JSON) */
   metadata?: string | null;
+  /** Processing notes */
   notes?: string | null;
+  /** Processed timestamp */
   processedAt?: string | null;
+  /** Reference ID (e.g., order ID, payment ID) */
   referenceId?: string | null;
   status?: CommercePaymentsTransactionStatus;
   tenantId?: string | null;
   type?: CommercePaymentsWalletTransactionType;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
   wallet?: CommercePaymentsUserWallet;
+  /** Foreign key to the UserWallet entity */
   walletId: string;
 }
 
+/** Wallet transaction types */
 export type CommercePaymentsWalletTransactionType = 'Credit' | 'Debit' | 'TransferIn' | 'TransferOut' | 'Refund' | 'Fee' | 'Adjustment';
 
 export interface CommerceProductsAddMySupportTicketMessageInput {
@@ -1848,12 +2075,17 @@ export interface CommerceProductsAddSupportTicketMessageInput {
   isInternal?: boolean;
 }
 
+/** Details of an applied promo code */
 export interface CommerceProductsAppliedPromoCode {
+  /** The promo code */
   code?: string | null;
+  /** Discount amount from this code */
   discountAmount?: number;
+  /** Discount percentage from this code */
   discountPercentage?: number | null;
 }
 
+/** Request to apply promo codes */
 export interface CommerceProductsApplyPromoCodesInput {
   orderAmount?: number;
   productId?: string | null;
@@ -1864,10 +2096,12 @@ export interface CommerceProductsAssignSupportTicketInput {
   agentUserId?: string;
 }
 
+/** Request model for batch creating products */
 export interface CommerceProductsBatchCreateProductsInput {
   products?: Array<CommerceProductsBatchProductCreateItem> | null;
 }
 
+/** Item for batch product creation */
 export interface CommerceProductsBatchProductCreateItem {
   affiliateCommissionPercentage?: number;
   bundleItems?: Array<string> | null;
@@ -1886,6 +2120,7 @@ export interface CommerceProductsChangeSupportTicketPriorityInput {
   priority?: CommerceProductsSupportTicketPriority;
 }
 
+/** Request to check multiple product access */
 export interface CommerceProductsCheckMultipleAccessInput {
   productIds?: Array<string> | null;
 }
@@ -1901,6 +2136,7 @@ export interface CommerceProductsCreateMySupportTicketInput {
   subject?: string | null;
 }
 
+/** Request model for creating a product */
 export interface CommerceProductsCreateProductInput {
   affiliateCommissionPercentage?: number;
   bundleItems?: Array<string> | null;
@@ -1914,6 +2150,7 @@ export interface CommerceProductsCreateProductInput {
   type?: CommerceProductsProductType;
 }
 
+/** Request to create a promo code */
 export interface CommerceProductsCreatePromoCodeInput {
   code?: string | null;
   currency?: string | null;
@@ -1941,11 +2178,13 @@ export interface CommerceProductsCreateSupportTicketInput {
   subject?: string | null;
 }
 
+/** Result of an entitlement check */
 export interface CommerceProductsEntitlementCheckResult {
   hasAccess?: boolean;
   productId?: string;
 }
 
+/** Entitlement info DTO */
 export interface CommerceProductsEntitlementInfoDto {
   accessEndDate?: string | null;
   accessStartDate?: string | null;
@@ -1959,6 +2198,7 @@ export interface CommerceProductsEntitlementInfoDto {
   subscriptionStatus?: string | null;
 }
 
+/** Request to grant an entitlement */
 export interface CommerceProductsGrantEntitlementInput {
   acquisitionType?: CommerceProductsProductAcquisitionType;
   currency?: string | null;
@@ -1968,6 +2208,7 @@ export interface CommerceProductsGrantEntitlementInput {
   userId?: string;
 }
 
+/** Request model for partial product update (PATCH) */
 export interface CommerceProductsPatchProductInput {
   affiliateCommissionPercentage?: number | null;
   bundleItems?: Array<string> | null;
@@ -1982,6 +2223,7 @@ export interface CommerceProductsPatchProductInput {
   type?: CommerceProductsProductType;
 }
 
+/** Request to partially update a promo code (PATCH) */
 export interface CommerceProductsPatchPromoCodeInput {
   currency?: string | null;
   description?: string | null;
@@ -2000,42 +2242,73 @@ export interface CommerceProductsPatchPromoCodeInput {
   validUntil?: string | null;
 }
 
+/** Represents how a user acquired access to a product */
 export type CommerceProductsProductAcquisitionType = 'Purchase' | 'Subscription' | 'Grant' | 'PromoCode' | 'Bundle' | 'Trial' | 'Referral' | 'Free' | 'Gift';
 
+/** Product Data Transfer Object for API responses */
 export interface CommerceProductsProductDto {
+  /** Product ID */
   id?: string;
+  /** Affiliate commission percentage */
   affiliateCommissionPercentage?: number;
+  /** Bundle item IDs */
   bundleItems?: Array<string> | null;
+  /** Creation timestamp */
   createdAt?: string;
+  /** Creator user ID */
   creatorId?: string | null;
+  /** Product description */
   description?: string | null;
+  /** Image URL */
   imageUrl?: string | null;
+  /** Whether product is a bundle */
   isBundle?: boolean;
+  /** Whether product is publicly visible */
   isPublished?: boolean;
+  /** Max affiliate discount */
   maxAffiliateDiscount?: number;
+  /** Product name */
   name?: string | null;
+  /** Pricing information (optional) */
   pricing?: Array<CommerceProductsProductPricingDto> | null;
+  /** Referral commission percentage */
   referralCommissionPercentage?: number;
+  /** Short description */
   shortDescription?: string | null;
   type?: CommerceProductsProductType;
+  /** Last update timestamp */
   updatedAt?: string;
 }
 
+/** Product Pricing Data Transfer Object */
 export interface CommerceProductsProductPricingDto {
+  /** Pricing ID */
   id?: string;
+  /** Base price */
   basePrice?: number;
+  /** Currency code */
   currency?: string | null;
+  /** Current effective price */
   currentPrice?: number;
+  /** Immutable current pricing version used by checkout */
   currentVersionId?: string | null;
+  /** Whether this is the default pricing */
   isDefault?: boolean;
+  /** Whether sale is currently active */
   isSaleActive?: boolean;
+  /** Pricing option name */
   name?: string | null;
+  /** Associated product ID */
   productId?: string;
+  /** Sale end date */
   saleEndDate?: string | null;
+  /** Sale price (if applicable) */
   salePrice?: number | null;
+  /** Sale start date */
   saleStartDate?: string | null;
 }
 
+/** Product type enumeration */
 export type CommerceProductsProductType =
   | 'Program'
   | 'Course'
@@ -2052,62 +2325,109 @@ export type CommerceProductsProductType =
   | 'LearningPathway'
   | 'Other';
 
+/** Result of applying one or more promo codes */
 export interface CommerceProductsPromoCodeApplicationResult {
+  /** List of codes that were applied */
   appliedCodes?: Array<CommerceProductsAppliedPromoCode> | null;
+  /** Amount after discounts */
   finalAmount?: number;
+  /** Original order amount */
   originalAmount?: number;
+  /** List of codes that were rejected with reasons */
   rejectedCodes?: Array<CommerceProductsRejectedPromoCode> | null;
+  /** Total discount applied */
   totalDiscount?: number;
 }
 
+/** Promo code data transfer object */
 export interface CommerceProductsPromoCodeDto {
+  /** Promo code ID */
   id?: string;
+  /** The promo code string */
   code?: string | null;
+  /** Creation timestamp */
   createdAt?: string;
+  /** Currency code */
   currency?: string | null;
+  /** Description of the promo */
   description?: string | null;
+  /** Fixed amount discount (for fixed type) */
   discountAmount?: number | null;
+  /** Percentage discount (for percentage type) */
   discountPercentage?: number | null;
+  /** Whether the code is active */
   isActive?: boolean;
+  /** Whether the code cannot be stacked */
   isExclusive?: boolean;
+  /** Maximum total uses */
   maxUses?: number | null;
+  /** Maximum uses per user */
   maxUsesPerUser?: number | null;
+  /** Minimum order amount required */
   minimumOrderAmount?: number | null;
+  /** Display name */
   name?: string | null;
+  /** Specific product ID (null = all products) */
   productId?: string | null;
+  /** Priority for stacking */
   stackingPriority?: number;
   type?: CommerceProductsPromoCodeType;
+  /** Last update timestamp */
   updatedAt?: string;
+  /** Current usage count */
   usageCount?: number;
+  /** Start date */
   validFrom?: string | null;
+  /** End date */
   validUntil?: string | null;
 }
 
+/** Represents the type of promo code discount */
 export type CommerceProductsPromoCodeType = 'PercentageOff' | 'FixedAmountOff' | 'FreeTrial' | 'BuyOneGetOne' | 'FreeShipping';
 
+/** Promo code usage statistics DTO */
 export interface CommerceProductsPromoCodeUsageDto {
+  /** Average discount per use */
   averageDiscountPerUse?: number;
+  /** Promo code string */
   code?: string | null;
+  /** First usage timestamp */
   firstUsedAt?: string | null;
+  /** Last usage timestamp */
   lastUsedAt?: string | null;
+  /** Maximum allowed uses (null = unlimited) */
   maxUses?: number | null;
+  /** Promo code ID */
   promoCodeId?: string;
+  /** Remaining uses (null = unlimited) */
   remainingUses?: number | null;
+  /** Total discount amount given */
   totalDiscountGiven?: number;
+  /** Total number of times the code has been used */
   totalUses?: number;
+  /** Number of unique users who used the code */
   uniqueUsers?: number;
 }
 
+/** Result of validating a promo code */
 export interface CommerceProductsPromoCodeValidationResult {
+  /** The promo code if valid */
   code?: string | null;
+  /** Calculated discount amount */
   discountAmount?: number;
+  /** Discount percentage applied */
   discountPercentage?: number | null;
+  /** Error message if invalid */
   errorMessage?: string | null;
+  /** Whether the code is valid */
   isValid?: boolean;
 }
 
+/** Details of a rejected promo code */
 export interface CommerceProductsRejectedPromoCode {
+  /** The promo code */
   code?: string | null;
+  /** Reason for rejection */
   reason?: string | null;
 }
 
@@ -2115,6 +2435,7 @@ export interface CommerceProductsResolveSupportTicketInput {
   resolutionSummary?: string | null;
 }
 
+/** Request to revoke an entitlement */
 export interface CommerceProductsRevokeEntitlementInput {
   productId?: string;
   reason?: string | null;
@@ -2189,6 +2510,7 @@ export interface CommerceProductsSupportTicketSummaryDto {
   resolvedToday?: number;
 }
 
+/** Request model for updating a product */
 export interface CommerceProductsUpdateProductInput {
   affiliateCommissionPercentage?: number | null;
   bundleItems?: Array<string> | null;
@@ -2203,6 +2525,7 @@ export interface CommerceProductsUpdateProductInput {
   type?: CommerceProductsProductType;
 }
 
+/** Request to update a promo code */
 export interface CommerceProductsUpdatePromoCodeInput {
   currency?: string | null;
   description?: string | null;
@@ -2221,12 +2544,14 @@ export interface CommerceProductsUpdatePromoCodeInput {
   validUntil?: string | null;
 }
 
+/** Request to validate a promo code */
 export interface CommerceProductsValidatePromoCodeInput {
   code?: string | null;
   orderAmount?: number;
   productId?: string | null;
 }
 
+/** DTO for billing history information */
 export interface CommerceSubscriptionsBillingHistoryDto {
   id?: string;
   amount?: number;
@@ -2256,6 +2581,7 @@ export interface CommerceSubscriptionsBillingSubscriptionsControllerCreateBillin
   trialDays?: number | null;
 }
 
+/** Cancellation reason enumeration */
 export type CommerceSubscriptionsCancellationReason =
   'UserRequested' | 'PaymentFailed' | 'PlanDiscontinued' | 'PolicyViolation' | 'Downgrade' | 'TrialEnded' | 'Custom' | 'ExternalRequest';
 
@@ -2275,48 +2601,95 @@ export interface CommerceSubscriptionsCreateClientInput {
   taxId?: string | null;
 }
 
+/** Represents a subscription linking a tenant to a subscription plan */
 export interface CommerceSubscriptionsSubscription {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
   amount?: Money;
+  /** Whether this subscription auto-renews */
   autoRenew?: boolean;
   billingCycle?: BillingCycle;
+  /** Number of billing cycles processed */
   billingCycleCount?: number;
+  /** Additional notes about cancellation */
   cancellationNote?: string | null;
   cancellationReason?: CommerceSubscriptionsCancellationReason;
+  /** When the subscription was cancelled */
   cancelledAt?: string | null;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Reference to the user who created/manages this subscription */
   createdByUserId: string;
+  /** Current billing period end */
   currentPeriodEnd?: string;
+  /** Current billing period start */
   currentPeriodStart?: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  /** When the subscription ends (null for active subscriptions) */
   endDate?: string | null;
+  /** External customer ID for payment provider */
   externalCustomerId?: string | null;
+  /** External ID for payment provider integration (Stripe subscription ID, etc.) */
   externalId?: string | null;
+  /** ID of the fulfilled order that created this subscription.
+Required for audit trail - no subscription without payment proof.
+Null only for legacy/migrated subscriptions. */
   fulfilledOrderId?: string | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if the subscription is currently active */
   isActive?: boolean;
+  /** Checks if the subscription is cancelled */
   isCancelled?: boolean;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** Checks if the subscription is in trial */
   isTrialing?: boolean;
+  /** ID of the most recent order that modified this subscription.
+Updated on upgrades, downgrades, renewals. */
   lastModifyingOrderId?: string | null;
+  /** Last successful payment date */
   lastPaymentAt?: string | null;
+  /** Last payment idempotency key (prevents duplicate payment recording) */
   lastPaymentIdempotencyKey?: string | null;
+  /** Last processed billing cycle number (prevents out-of-order payment corruption).
+Payments are only accepted if they advance or match this value. */
   lastProcessedBillingCycle?: number;
+  /** Last processed renewal idempotency key (prevents duplicate charges) */
   lastRenewalIdempotencyKey?: string | null;
+  /** Locked price version ID (ensures subscription uses contracted rate, not current plan price).
+If null, the subscription uses the current plan price on renewal. */
   lockedPriceVersionId?: string | null;
+  /** Additional metadata (JSON serialized) */
   metadata?: string | null;
+  /** When the next billing cycle occurs */
   nextBillingDate?: string;
   plan?: CommerceSubscriptionsSubscriptionPlan;
+  /** Reference to the subscription plan */
   planId: string;
+  /** Row version for optimistic concurrency control.
+Prevents payment processing race conditions (e.g., concurrent renewal and cancellation). */
   rowVersion?: string | null;
+  /** When the subscription started/became active */
   startDate?: string;
   status?: CommerceSubscriptionsSubscriptionStatus;
   tenantId?: string | null;
+  /** Trial end date (if applicable) */
   trialEndDate?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
@@ -2334,6 +2707,7 @@ export interface CommerceSubscriptionsSubscriptionChurnReportDto {
   totalSubscriptions?: number;
 }
 
+/** Result of subscription downgrade */
 export interface CommerceSubscriptionsSubscriptionDowngradeResult {
   creditIssued?: Money;
   effectiveDate?: string | null;
@@ -2366,6 +2740,7 @@ export interface CommerceSubscriptionsSubscriptionLifecycleControllerExternalIds
   externalSubscriptionId?: string | null;
 }
 
+/** Request to pause subscription billing */
 export interface CommerceSubscriptionsSubscriptionLifecycleControllerPauseSubscriptionInput {
   pauseUntil?: string | null;
   reason?: string | null;
@@ -2401,37 +2776,71 @@ export interface CommerceSubscriptionsSubscriptionNotificationsControllerResendS
   channel?: NotificationsNotificationChannel;
 }
 
+/** Represents a subscription plan that defines features, limits, and pricing for tenants */
 export interface CommerceSubscriptionsSubscriptionPlan {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Annual price in the smallest currency unit (with potential discount) */
   annualPriceInCents?: number | null;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Currency code (ISO 4217) */
   currency: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Detailed description of the plan */
   description?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  /** External ID for integration with payment providers (Stripe, etc.) */
   externalId?: string | null;
+  /** Features included in this plan (JSON serialized list of feature codes) */
   features?: string | null;
+  /** Whether this plan includes advanced analytics */
   hasAdvancedAnalytics?: boolean;
+  /** Whether this plan includes custom branding */
   hasCustomBranding?: boolean;
+  /** Whether this plan includes priority support */
   hasPrioritySupport?: boolean;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Whether this plan is currently available for new subscriptions */
   isActive?: boolean;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
+  /** Whether this plan is featured/highlighted */
   isFeatured?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** Maximum number of API calls per month (null = unlimited) */
   maxApiCallsPerMonth?: number | null;
+  /** Maximum storage in MB allowed in this plan (null = unlimited) */
   maxStorageMb?: number | null;
+  /** Maximum number of users allowed in this plan (null = unlimited) */
   maxUsers?: number | null;
+  /** Additional metadata for the plan (JSON serialized) */
   metadata?: string | null;
+  /** Monthly price in the smallest currency unit (cents for USD, pence for GBP, etc.) */
   monthlyPriceInCents?: number;
+  /** Display name of the plan */
   name: string;
+  /** URL-friendly slug for the plan */
   slug: string;
+  /** Display order for sorting plans */
   sortOrder?: number;
   subscriptions?: Array<CommerceSubscriptionsSubscription> | null;
   tenantId?: string | null;
+  /** Trial period in days (0 = no trial) */
   trialPeriodDays?: number;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
@@ -2508,18 +2917,28 @@ export interface CommerceSubscriptionsSubscriptionPlansCrudControllerPutSubscrip
   sortOrder?: number | null;
 }
 
+/** Request to create a subscription */
 export interface CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInput {
+  /** The subscription amount */
   amount?: number;
   billingCycle?: BillingCycle;
+  /** The user who created the subscription */
   createdByUserId?: string;
+  /** The currency code */
   currency?: string | null;
+  /** Optional Order ID that triggered this subscription (Economic Model: Order→Subscription causality) */
   fulfilledOrderId?: string | null;
+  /** The subscription plan ID */
   planId?: string;
+  /** Optional start date */
   startDate?: string | null;
+  /** The tenant ID */
   tenantId?: string;
+  /** Optional trial period in days */
   trialDays?: number | null;
 }
 
+/** Request to partially update a subscription */
 export interface CommerceSubscriptionsSubscriptionsControllerPatchSubscriptionInput {
   autoRenew?: boolean | null;
   billingCycle?: BillingCycle;
@@ -2528,6 +2947,7 @@ export interface CommerceSubscriptionsSubscriptionsControllerPatchSubscriptionIn
   metadata?: string | null;
 }
 
+/** Request to fully update a subscription */
 export interface CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInput {
   amount?: number;
   autoRenew?: boolean;
@@ -2537,8 +2957,10 @@ export interface CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInpu
   planId?: string;
 }
 
+/** Subscription status enumeration */
 export type CommerceSubscriptionsSubscriptionStatus = 'PendingActivation' | 'Active' | 'Trialing' | 'PastDue' | 'Suspended' | 'Cancelled' | 'Expired';
 
+/** Result of subscription upgrade */
 export interface CommerceSubscriptionsSubscriptionUpgradeResult {
   creditApplied?: Money;
   failureReason?: string | null;
@@ -2547,6 +2969,7 @@ export interface CommerceSubscriptionsSubscriptionUpgradeResult {
   updatedSubscription?: CommerceSubscriptionsSubscription;
 }
 
+/** Simplified DTO for subscription usage information */
 export interface CommerceSubscriptionsSubscriptionUsageDto {
   apiCallsThisMonth?: number;
   isOverLimit?: boolean;
@@ -2559,6 +2982,7 @@ export interface CommerceSubscriptionsSubscriptionUsageDto {
   usersCount?: number;
 }
 
+/** Category of audit events */
 export type ComplianceAuditAuditCategory =
   'General' | 'Authentication' | 'Authorization' | 'Permission' | 'User' | 'Admin' | 'Security' | 'Data' | 'System' | 'Tenant' | 'Privacy';
 
@@ -2601,6 +3025,7 @@ export interface ComplianceAuditAuditLogOutput {
   totalCount?: number;
 }
 
+/** Risk level for audit events */
 export type ComplianceAuditAuditRiskLevel = 'Low' | 'Medium' | 'High' | 'Critical';
 
 export interface ComplianceAuditAuditStatisticsOutput {
@@ -2614,6 +3039,7 @@ export interface ComplianceAuditAuditStatisticsOutput {
   totalEvents?: number;
 }
 
+/** Authentication audit entry. */
 export interface ComplianceAuditAuthenticationAuditEntry {
   id?: string;
   attemptedAt?: string;
@@ -2628,6 +3054,7 @@ export interface ComplianceAuditAuthenticationAuditEntry {
   userId?: string | null;
 }
 
+/** Response for authentication audit logs. */
 export interface ComplianceAuditAuthenticationAuditOutput {
   entries?: Array<ComplianceAuditAuthenticationAuditEntry> | null;
   failedLogins?: number;
@@ -2651,6 +3078,7 @@ export interface ComplianceAuditFailureReasonCount {
   reason?: string | null;
 }
 
+/** Permission audit entry. */
 export interface ComplianceAuditPermissionAuditEntry {
   id?: string;
   errorMessage?: string | null;
@@ -2669,6 +3097,7 @@ export interface ComplianceAuditPermissionAuditEntry {
   userId?: string | null;
 }
 
+/** Response for permission audit logs. */
 export interface ComplianceAuditPermissionAuditOutput {
   denyOperations?: number;
   entries?: Array<ComplianceAuditPermissionAuditEntry> | null;
@@ -2679,6 +3108,7 @@ export interface ComplianceAuditPermissionAuditOutput {
   totalCount?: number;
 }
 
+/** Security audit dashboard with aggregated statistics. */
 export interface ComplianceAuditSecurityAuditDashboard {
   crossTenantAttempts?: number;
   dailyTrends?: Array<ComplianceAuditDailyActivityTrend> | null;
@@ -2702,6 +3132,7 @@ export interface ComplianceAuditSecurityAuditDashboard {
   uniqueUsersAuthenticated?: number;
 }
 
+/** Source type for security audit entries. */
 export type ComplianceAuditSecurityAuditSourceType = 'Authentication' | 'Permission' | 'General' | 'All';
 
 export interface ComplianceAuditTopIpActivity {
@@ -2718,48 +3149,83 @@ export interface ComplianceAuditTopUserActivity {
   userId?: string;
 }
 
+/** A unified security audit log entry combining data from multiple sources. */
 export interface ComplianceAuditUnifiedSecurityAuditEntry {
+  /** Unique identifier. */
   id?: string;
+  /** Type of action performed. */
   actionType?: string | null;
+  /** Description or reason for the event. */
   description?: string | null;
+  /** Error message if operation failed. */
   errorMessage?: string | null;
+  /** IP address of the request. */
   ipAddress?: string | null;
+  /** Additional metadata as JSON. */
   metadata?: string | null;
+  /** Resource ID affected (if applicable). */
   resourceId?: string | null;
+  /** Resource type affected (if applicable). */
   resourceType?: string | null;
   riskLevel?: ComplianceAuditAuditRiskLevel;
+  /** Original source table/entity name. */
   sourceEntity?: string | null;
   sourceType?: ComplianceAuditSecurityAuditSourceType;
+  /** Whether the operation was successful. */
   success?: boolean;
+  /** Tenant ID associated with the event. */
   tenantId?: string | null;
+  /** Timestamp of the event. */
   timestamp?: string;
+  /** User agent string. */
   userAgent?: string | null;
+  /** User email (if available). */
   userEmail?: string | null;
+  /** User ID associated with the event. */
   userId?: string | null;
 }
 
+/** Request for unified security audit logs. */
 export interface ComplianceAuditUnifiedSecurityAuditInput {
+  /** Filter by action type (e.g., Login, Logout, PermissionGrant). */
   actionType?: string | null;
+  /** Filter events until this date. */
   endDate?: string | null;
+  /** Filter by IP address. */
   ipAddress?: string | null;
   riskLevel?: ComplianceAuditAuditRiskLevel;
+  /** Search in description/reason fields. */
   searchText?: string | null;
+  /** Number of records to skip (for pagination). */
   skip?: number;
+  /** Sort field. */
   sortBy?: string | null;
+  /** Sort direction (asc/desc). */
   sortDirection?: string | null;
   sourceType?: ComplianceAuditSecurityAuditSourceType;
+  /** Filter events starting from this date. */
   startDate?: string | null;
+  /** Filter by success/failure status. */
   success?: boolean | null;
+  /** Number of records to take (max 1000). */
   take?: number;
+  /** Filter by tenant ID. */
   tenantId?: string | null;
+  /** Filter by specific user ID. */
   userId?: string | null;
 }
 
+/** Response containing unified security audit logs. */
 export interface ComplianceAuditUnifiedSecurityAuditOutput {
+  /** The audit log entries. */
   entries?: Array<ComplianceAuditUnifiedSecurityAuditEntry> | null;
+  /** Number of records skipped. */
   skip?: number;
+  /** Breakdown by source type. */
   sourceBreakdown?: { All?: number; Authentication?: number; General?: number; Permission?: number } | null;
+  /** Number of records returned. */
   take?: number;
+  /** Total count of matching records. */
   totalCount?: number;
 }
 
@@ -3096,8 +3562,10 @@ export interface ContentPagesContentResourceDto {
   viewCount?: number;
 }
 
+/** Publication status for a content resource. */
 export type ContentPagesContentResourceStatus = 'Draft' | 'InReview' | 'Published' | 'Archived';
 
+/** The type of content resource. */
 export type ContentPagesContentResourceType = 'Article' | 'Tutorial' | 'Documentation' | 'Video' | 'Download' | 'ExternalLink' | 'Course' | 'Custom';
 
 export interface ContentPagesCreateContentResourceDto {
@@ -3191,6 +3659,7 @@ export interface ContentPagesMarketingLeadDto {
   userAgent?: string | null;
 }
 
+/** Resolved OpenGraph / SEO metadata for a given slug — returned by the public OG endpoint. */
 export interface ContentPagesOpenGraphMetadataDto {
   canonicalUrl?: string | null;
   description?: string | null;
@@ -3251,10 +3720,13 @@ export interface ContentPagesPageSectionDto {
   updatedAt?: string | null;
 }
 
+/** Publication status of a page. */
 export type ContentPagesPageStatus = 'Draft' | 'Published' | 'Archived';
 
+/** The type of page — determines its purpose and rendering strategy. */
 export type ContentPagesPageType = 'Landing' | 'Legal' | 'ResourceIndex' | 'Resource' | 'Custom';
 
+/** The type of section — drives frontend rendering. */
 export type ContentPagesSectionType =
   | 'Hero'
   | 'Features'
@@ -3272,6 +3744,7 @@ export type ContentPagesSectionType =
   | 'ResourceCards'
   | 'Custom';
 
+/** Lightweight entry for the public sitemap feed. */
 export interface ContentPagesSitemapEntryDto {
   locale?: string | null;
   slug?: string | null;
@@ -3341,13 +3814,21 @@ export interface ContentPagesUpdatePageSectionDto {
   subheading?: string | null;
 }
 
+/** Represents the publication status of content */
 export type ContentStatus = 'Draft' | 'Review' | 'Published' | 'Archived' | 'Deleted';
 
+/** Represents the visibility level of content (who can see it).
+Not to be confused with `GameGuild.Identity.Authorization.AccessLevel` which represents permission levels (None/Read/Write/Admin). */
 export type ContentVisibility = 'Private' | 'Internal' | 'Friends' | 'Protected' | 'Public';
 
+/** Marker interface for domain events that follow DDD principles.
+Domain events represent something important that happened in the domain. */
 export interface CQRSIDomainEvent {
+  /** Unique identifier for the event */
   eventId?: string;
+  /** When the event occurred */
   occurredAt?: string;
+  /** Version of the event for compatibility */
   version?: number;
 }
 
@@ -3355,19 +3836,25 @@ export interface CQRSModelsTenantId {
   value?: string;
 }
 
+/** Represents a domain error with a machine-readable code, human-readable description, and type.
+Use the static factory methods to create errors of the appropriate type. */
 export interface Error {
   code?: string | null;
   description?: string | null;
   type?: ErrorType;
 }
 
+/** Categorizes domain errors so they can be mapped to HTTP status codes or similar transport-level responses. */
 export type ErrorType = 'Failure' | 'Validation' | 'Problem' | 'NotFound' | 'Conflict' | 'Unauthorized' | 'Forbidden' | 'None';
 
+/** Request for bulk evaluation of multiple feature flags */
 export interface FeaturesBulkEvaluationInput {
   context?: FeaturesFeatureContext;
+  /** List of feature keys to evaluate */
   featureKeys?: Array<string> | null;
 }
 
+/** DTO for capability audit log entries. */
 export interface FeaturesCapabilityAuditLogDto {
   id?: string;
   capabilityKey?: string | null;
@@ -3382,11 +3869,13 @@ export interface FeaturesCapabilityAuditLogDto {
   tenantId?: string;
 }
 
+/** Response for capability check endpoint. */
 export interface FeaturesCapabilityCheckOutput {
   capability?: string | null;
   isEnabled?: boolean;
 }
 
+/** Request model for creating a new feature flag */
 export interface FeaturesCreateFeatureInput {
   description?: string | null;
   isEnabled?: boolean;
@@ -3395,11 +3884,13 @@ export interface FeaturesCreateFeatureInput {
   tenantId?: string | null;
 }
 
+/** Advanced context for feature flag evaluation */
 export interface FeaturesFeatureContext {
   country?: string | null;
   customAttributes?: Record<string, Record<string, unknown>> | null;
   environment?: string | null;
   ipAddress?: string | null;
+  /** User permissions for permission-based targeting */
   permissions?: Array<string> | null;
   requestTime?: string;
   subscriptionPlanId?: string | null;
@@ -3408,12 +3899,16 @@ export interface FeaturesFeatureContext {
   userId?: string | null;
 }
 
+/** Request for evaluating a single feature flag */
 export interface FeaturesFeatureEvaluationInput {
   context?: FeaturesFeatureContext;
+  /** Default value to return if evaluation fails */
   defaultValue?: Record<string, unknown> | null;
+  /** The feature flag key to evaluate */
   featureKey?: string | null;
 }
 
+/** Data Transfer Object for FeatureFlag */
 export interface FeaturesFeatureFlagDto {
   id: string;
   createdAt: string;
@@ -3430,6 +3925,7 @@ export interface FeaturesFeatureFlagDto {
   updatedAt?: string | null;
 }
 
+/** Data Transfer Object for FeatureFlagTarget */
 export interface FeaturesFeatureFlagTargetDto {
   id: string;
   createdAt: string;
@@ -3445,8 +3941,10 @@ export interface FeaturesFeatureFlagTargetDto {
   updatedAt?: string | null;
 }
 
+/** Represents the different types of feature flags */
 export type FeaturesFeatureFlagType = 'Toggle' | 'Numeric' | 'String' | 'Percentage' | 'UserSegment';
 
+/** Request for setting a capability override. */
 export interface FeaturesSetCapabilityOverrideInput {
   capability?: string | null;
   expiresAt?: string | null;
@@ -3455,14 +3953,22 @@ export interface FeaturesSetCapabilityOverrideInput {
   source?: string | null;
 }
 
+/** Request for toggling a feature flag on/off */
 export interface FeaturesToggleFeatureInput {
+  /** Optional environment (for environment-specific toggles) */
   environment?: string | null;
+  /** The feature flag key */
   featureKey?: string | null;
+  /** Whether to enable or disable the feature */
   isEnabled?: boolean;
+  /** Optional reason for the toggle */
   reason?: string | null;
+  /** Optional tenant ID (for tenant-specific toggles) */
   tenantId?: string | null;
 }
 
+/** Request model for updating an existing feature flag.
+All properties are optional; only provided values will be updated. */
 export interface FeaturesUpdateFeatureInput {
   defaultValue?: string | null;
   description?: string | null;
@@ -3737,6 +4243,8 @@ export interface FinanceEconomyBountiesBountyId {
 
 export type FinanceEconomyBountiesBountyStatus = 'Open' | 'Expired' | 'Claimed' | 'Reclaimed';
 
+/** Immutable evidence of a materialized terminal output. Monetary authority remains the
+append-only journal, lots, and lineage rather than this read model. */
 export interface FinanceEconomyBountiesBountyTerminalOutputLot {
   amount?: FinanceEconomyContractsCoinAmount;
   cashOutEligible?: boolean;
@@ -3761,6 +4269,8 @@ export interface FinanceEconomyBountiesDurableBountyView {
   version?: number;
 }
 
+/** Immutable terminal evidence for a bounty. The terminal writer stores this only after the
+corresponding registered posting has been accepted in the same database transaction. */
 export interface FinanceEconomyBountiesPersistedBountyTerminalEvent {
   id?: string;
   actorId?: string;
@@ -3800,6 +4310,8 @@ export interface FinanceEconomyContractsCreditLotId {
 
 export type FinanceEconomyContractsCurrencyCode = 'HardCoin' | 'SoftCoin';
 
+/** Read-only, actor-scoped view of a wallet projection. The individual source lots and
+fragment lineage remain internal to the Economy writer and are never selected by clients. */
 export interface FinanceEconomyContractsEconomyWalletSummaryDto {
   availableHardToSpend?: number;
   availableSoftToSpend?: number;
@@ -3820,6 +4332,8 @@ export interface FinanceEconomyContractsEconomyWalletSummaryDto {
   withdrawableHard?: number;
 }
 
+/** A projected line from the immutable Economy journal. It is suitable for a wallet history,
+but carries no provider references, source hashes, or fragment ranges. */
 export interface FinanceEconomyContractsEconomyWalletTransactionDto {
   amountUnits?: number;
   currency?: FinanceEconomyContractsCurrencyCode;
@@ -4476,6 +4990,9 @@ export interface FinanceEconomyPayoutsConnectOnboardingResult {
 
 export type FinanceEconomyPayoutsPayoutOperationState = 'Reserved' | 'Dispatching' | 'Ambiguous' | 'Succeeded' | 'Failed' | 'Cancelled';
 
+/** A user-submitted intent to withdraw earned value. It is deliberately separate from a
+GameGuild.Finance.Economy.Payouts.PayoutOperation: no funds are reserved or sent until the request has passed
+the later KYC, risk, provider, and FIFO reservation steps. */
 export type FinanceEconomyPayoutsPayoutRequestState = 'Submitted' | 'Cancelled' | 'Approved' | 'Rejected' | 'AwaitingSecondApproval';
 
 export interface FinanceEconomyPayoutsQueriesEconomyPayoutOperationDto {
@@ -4906,16 +5423,25 @@ export interface GameJamsCreateJamInput {
 }
 
 export interface GameJamsJam {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
   createdBy: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
   description?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   endDate: string;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
   maxParticipants?: number | null;
   name: string;
@@ -4927,7 +5453,12 @@ export interface GameJamsJam {
   submissionCriteria?: string | null;
   tenantId?: string | null;
   theme?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
   votingEndDate?: string | null;
 }
@@ -4957,21 +5488,35 @@ export interface GameJamsJamDto {
 }
 
 export interface GameJamsJamScore {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
   criteriaId: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   feedback?: string | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
   judgeUserId: string;
   score: number;
   submissionId: string;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
@@ -5019,40 +5564,57 @@ export interface IdentityAuthenticationApiKeyDto {
   usageCount?: number;
 }
 
+/** Request DTO for assigning a role to a user */
 export interface IdentityAuthenticationAssignRoleToUserInput {
   expiresAt?: string | null;
   roleId?: string;
   userId?: string;
 }
 
+/** Backup codes response */
 export interface IdentityAuthenticationBackupCodesOutput {
   codes?: Array<string> | null;
   generatedAt?: string;
 }
 
+/** Response containing backup codes status */
 export interface IdentityAuthenticationBackupCodesStatusOutput {
+  /** Whether the user has any backup codes */
   hasBackupCodes: boolean;
+  /** Number of codes remaining (unused) */
   remainingCount: number;
+  /** Total number of backup codes generated */
   totalCount: number;
+  /** Number of codes that have been used */
   usedCount: number;
 }
 
+/** Request to begin WebAuthn authentication. */
 export interface IdentityAuthenticationBeginWebAuthnAuthenticationInput {
+  /** Optional email to filter credentials (for username-first flow). */
   email?: string | null;
 }
 
+/** Request to begin WebAuthn registration. */
 export interface IdentityAuthenticationBeginWebAuthnRegistrationInput {
+  /** Display name for the credential. */
   displayName?: string | null;
+  /** User's email address. */
   email?: string | null;
   preferredAuthenticatorType?: IdentityAuthenticationWebAuthnAuthenticatorType;
 }
 
+/** Assigns one role to multiple users in a single bounded operation. */
 export interface IdentityAuthenticationBulkAssignRolesCommand {
+  /** Optional expiration shared by every assignment. */
   expiresAt?: string | null;
+  /** The role to assign to each user. */
   roleId?: string;
+  /** Users receiving the role. Duplicate IDs are collapsed before processing. */
   userIds?: Array<string> | null;
 }
 
+/** Outcome for a user in a bulk role assignment. */
 export interface IdentityAuthenticationBulkRoleAssignmentItemResult {
   assignedAt?: string;
   assignmentId?: string;
@@ -5061,6 +5623,7 @@ export interface IdentityAuthenticationBulkRoleAssignmentItemResult {
   userId?: string;
 }
 
+/** Summary and per-user outcomes for a bulk role assignment. */
 export interface IdentityAuthenticationBulkRoleAssignmentResult {
   alreadyAssigned?: number;
   assigned?: number;
@@ -5071,16 +5634,20 @@ export interface IdentityAuthenticationBulkRoleAssignmentResult {
   users?: Array<IdentityAuthenticationBulkRoleAssignmentItemResult> | null;
 }
 
+/** Result status for one requested user. */
 export type IdentityAuthenticationBulkRoleAssignmentStatus = 'Assigned' | 'Reactivated' | 'AlreadyAssigned';
 
+/** Request to cleanup expired keys */
 export interface IdentityAuthenticationCleanupKeysInput {
   retentionDays?: number | null;
 }
 
+/** Result of cleanup operation */
 export interface IdentityAuthenticationCleanupResult {
   deletedCount?: number;
 }
 
+/** OAuth2 token response. */
 export interface IdentityAuthenticationClientCredentialsTokenOutput {
   accessToken?: string | null;
   expiresIn?: number;
@@ -5088,31 +5655,47 @@ export interface IdentityAuthenticationClientCredentialsTokenOutput {
   tokenType?: string | null;
 }
 
+/** Request to complete MFA setup */
 export interface IdentityAuthenticationCompleteMfaSetupInput {
   code: string;
   secretKey: string;
 }
 
+/** Request to complete password reset */
 export interface IdentityAuthenticationCompletePasswordResetInput {
+  /** Password confirmation */
   confirmPassword: string;
+  /** New password */
   newPassword: string;
+  /** Optional tenant context */
   tenantId?: string | null;
+  /** Reset token from email link */
   token: string;
 }
 
+/** Request to complete WebAuthn authentication. */
 export interface IdentityAuthenticationCompleteWebAuthnAuthenticationInput {
+  /** The JSON assertion response from navigator.credentials.get(). */
   assertionResponse?: string | null;
 }
 
+/** Request to complete WebAuthn registration. */
 export interface IdentityAuthenticationCompleteWebAuthnRegistrationInput {
+  /** The JSON attestation response from navigator.credentials.create(). */
   attestationResponse?: string | null;
+  /** Optional friendly name for the credential. */
   friendlyName?: string | null;
+  /** Whether this credential can be used for passwordless authentication. */
   isPasswordless?: boolean;
 }
 
+/** Request to consume a passwordless magic sign-in link. */
 export interface IdentityAuthenticationConsumeMagicLinkInput {
+  /** Optional device fingerprint for refresh-token session tracking. */
   deviceFingerprint?: string | null;
+  /** Optional tenant context. */
   tenantId?: string | null;
+  /** One-time token from the magic link. */
   token: string;
 }
 
@@ -5133,6 +5716,7 @@ export interface IdentityAuthenticationCreateApiKeyOutput {
   scopes?: Array<string> | null;
 }
 
+/** Request DTO for creating a new role */
 export interface IdentityAuthenticationCreateRoleInput {
   description?: string | null;
   name?: string | null;
@@ -5140,6 +5724,7 @@ export interface IdentityAuthenticationCreateRoleInput {
   tenantId?: string | null;
 }
 
+/** Request to create a service account. */
 export interface IdentityAuthenticationCreateServiceAccountInput {
   allowedIpAddresses?: string | null;
   description?: string | null;
@@ -5155,80 +5740,125 @@ export interface IdentityAuthenticationCreateStepUpChallengeInput {
   targetReference?: string | null;
 }
 
+/** Represents detailed device information for security tracking. */
 export interface IdentityAuthenticationDeviceInfo {
+  /** Browser name (Chrome, Firefox, Safari, etc.). */
   browser?: string | null;
+  /** Browser version. */
   browserVersion?: string | null;
+  /** Unique device identifier (derived from fingerprint or other sources). */
   deviceId?: string | null;
+  /** User-friendly device name (e.g., "John's iPhone"). */
   deviceName?: string | null;
+  /** Device type (Desktop, Mobile, Tablet, etc.). */
   deviceType?: string | null;
+  /** Unique device fingerprint. */
   fingerprint?: string | null;
+  /** IP address of the device making the request. */
   ipAddress?: string | null;
+  /** Whether the device is a bot or automated system. */
   isBot?: boolean;
+  /** Whether the device is a mobile device. */
   isMobile?: boolean;
+  /** Device language/locale. */
   language?: string | null;
+  /** Operating system (Windows, macOS, iOS, Android, Linux). */
   operatingSystem?: string | null;
+  /** OS version. */
   osVersion?: string | null;
+  /** Screen resolution. */
   screenResolution?: string | null;
+  /** Device timezone. */
   timezone?: string | null;
+  /** Full user agent string. */
   userAgent?: string | null;
 }
 
+/** Request to disable MFA */
 export interface IdentityAuthenticationDisableMfaInput {
   password: string;
 }
 
+/** Request to initiate Discord OAuth sign-in */
 export interface IdentityAuthenticationDiscordAuthorizeInput {
+  /** The redirect URI registered for the Discord application */
   redirectUri: string;
 }
 
+/** Request body for the Discord OAuth callback endpoint */
 export interface IdentityAuthenticationDiscordCallbackRequestDto {
+  /** OAuth authorization code from the Discord callback */
   code: string;
+  /** The same redirect URI used in the authorization request */
   redirectUri: string;
+  /** OAuth state parameter for CSRF protection (validated web-side against the signed state cookie) */
   state: string;
+  /** Optional tenant context */
   tenantId?: string | null;
 }
 
+/** Request to start the Discord link flow. */
 export interface IdentityAuthenticationDiscordLinkAuthorizeInput {
   redirectUri: string;
 }
 
+/** Response for the Discord link-authorize endpoint. */
 export interface IdentityAuthenticationDiscordLinkAuthorizeOutput {
+  /** Discord OAuth authorization URL (state embedded). */
   authUrl: string | null;
+  /** Per-request state parameter to validate at the callback. */
   state: string | null;
 }
 
+/** Request to complete the Discord link flow. */
 export interface IdentityAuthenticationDiscordLinkCallbackInput {
   code: string;
   redirectUri: string;
   state: string;
 }
 
+/** Response for Discord sign-in initiation */
 export interface IdentityAuthenticationDiscordSignInOutput {
+  /** Discord OAuth authorization URL */
   authUrl: string | null;
+  /** CSRF state parameter embedded in the authorization URL (also returned separately
+so the caller can stash it in its state cookie) */
   state: string | null;
 }
 
+/** Response for email verification request */
 export interface IdentityAuthenticationEmailVerificationOutput {
+  /** Success message */
   message: string | null;
 }
 
+/** Result of email verification */
 export interface IdentityAuthenticationEmailVerificationResult {
+  /** The email address that was verified */
   email?: string | null;
+  /** Status message */
   message?: string | null;
+  /** Whether verification was successful */
   success?: boolean;
+  /** User ID whose email was verified */
   userId?: string | null;
+  /** When the verification was completed */
   verifiedAt?: string | null;
 }
 
+/** Response for GitHub sign-in initiation */
 export interface IdentityAuthenticationGitHubSignInOutput {
+  /** GitHub OAuth authorization URL */
   authUrl: string | null;
 }
 
+/** Request for Google ID token sign-in */
 export interface IdentityAuthenticationGoogleIdTokenRequestDto {
   idToken: string;
   tenantId?: string | null;
 }
 
+/** DTO for JWT signing key information (without exposing key material) */
 export interface IdentityAuthenticationJwtKeyInfoDto {
   algorithm?: string | null;
   expiresAt?: string;
@@ -5240,46 +5870,69 @@ export interface IdentityAuthenticationJwtKeyInfoDto {
   validFrom?: string;
 }
 
+/** Request to link the signed-in user's Google account via an ID token. */
 export interface IdentityAuthenticationLinkGoogleAccountInput {
   idToken: string;
 }
 
+/** Request DTO for local sign-in */
 export interface IdentityAuthenticationLocalSignInInput {
+  /** Device fingerprint for trusted device tracking */
   deviceFingerprint?: string | null;
   email: string;
+  /** Alias for Email to support polymorphic sign-in scenarios */
   emailOrUsername?: string | null;
   password: string;
+  /** Optional tenant ID to use for the sign-in. If not provided, will use the first available tenant for the user */
   tenantId?: string | null;
   username?: string | null;
 }
 
+/** Request DTO for local sign-up */
 export interface IdentityAuthenticationLocalSignUpInput {
   email: string;
   firstName?: string | null;
   lastName?: string | null;
   password: string;
   phoneNumber?: string | null;
+  /** Optional tenant ID to use for the sign-up. If not provided, a default tenant may be assigned */
   tenantId?: string | null;
   username: string;
 }
 
+/** Represents geographic location information for security tracking. */
 export interface IdentityAuthenticationLocationInfo {
+  /** City name. */
   city?: string | null;
+  /** Country name. */
   country?: string | null;
+  /** ISO country code (US, GB, etc.). */
   countryCode?: string | null;
+  /** Gets a human-readable location string. */
   displayLocation?: string | null;
+  /** IP address. */
   ipAddress?: string | null;
+  /** Whether the IP is from a known hosting provider. */
   isHosting?: boolean | null;
+  /** Internet Service Provider name. */
   isp?: string | null;
+  /** Whether the IP is from a known proxy/VPN. */
   isProxy?: boolean | null;
+  /** Geographic latitude coordinate. */
   latitude?: number | null;
+  /** Geographic longitude coordinate. */
   longitude?: number | null;
+  /** Organization owning the IP range. */
   organization?: string | null;
+  /** Postal/ZIP code. */
   postalCode?: string | null;
+  /** State or province. */
   region?: string | null;
+  /** Timezone identifier (America/New_York, Europe/London, etc.). */
   timezone?: string | null;
 }
 
+/** Request to lock a service account. */
 export interface IdentityAuthenticationLockServiceAccountInput {
   reason?: string | null;
 }
@@ -5291,6 +5944,7 @@ export interface IdentityAuthenticationMagicLinkRequestResult {
   success?: boolean;
 }
 
+/** MFA configuration response */
 export interface IdentityAuthenticationMfaConfigurationOutput {
   backupCodesRemaining?: number;
   enabledAt?: string | null;
@@ -5298,26 +5952,38 @@ export interface IdentityAuthenticationMfaConfigurationOutput {
   isEnabled?: boolean;
 }
 
+/** Error response for MFA operations */
 export interface IdentityAuthenticationMfaErrorOutput {
+  /** Error message */
   error: string | null;
 }
 
+/** Supported MFA methods */
 export type IdentityAuthenticationMfaMethod = 'Totp' | 'BackupCode' | 'Sms' | 'Email' | 'WebAuthn';
 
+/** Information about an MFA method */
 export interface IdentityAuthenticationMfaMethodInfo {
+  /** Description of the method */
   description: string | null;
+  /** Whether this method is available (e.g., SMS requires phone) */
   isAvailable: boolean;
+  /** Whether this method is enabled for the user */
   isEnabled: boolean;
   method: IdentityAuthenticationMfaMethod;
+  /** Display name of the method */
   name: string | null;
+  /** Priority order for this method (lower = higher priority) */
   priority: number;
 }
 
+/** Response listing available MFA methods */
 export interface IdentityAuthenticationMfaMethodsOutput {
   defaultMethod?: IdentityAuthenticationMfaMethod;
+  /** List of all MFA methods */
   methods: Array<IdentityAuthenticationMfaMethodInfo> | null;
 }
 
+/** Response of MFA setup operation */
 export interface IdentityAuthenticationMfaSetupOutput {
   backupCodes?: Array<string> | null;
   errorMessage?: string | null;
@@ -5327,46 +5993,70 @@ export interface IdentityAuthenticationMfaSetupOutput {
   secretKey?: string | null;
 }
 
+/** Success response for MFA operations */
 export interface IdentityAuthenticationMfaSuccessOutput {
+  /** Success message */
   message: string | null;
 }
 
+/** MFA verification response */
 export interface IdentityAuthenticationMfaVerificationOutput {
   accessToken?: string | null;
   isValid?: boolean;
   refreshToken?: string | null;
 }
 
+/** OAuth2 error response. */
 export interface IdentityAuthenticationOAuth2ErrorOutput {
   error?: string | null;
   errorDescription?: string | null;
 }
 
+/** Request to change password for authenticated user */
 export interface IdentityAuthenticationPasswordChangeInput {
+  /** Password confirmation */
   confirmPassword: string;
+  /** Current password for verification. Optional: omit or send empty when the account
+has no password yet (OAuth-only) to set an initial password; any non-empty value
+is always verified against the existing password hash. */
   currentPassword?: string | null;
+  /** New password */
   newPassword: string;
+  /** Whether to revoke all other sessions */
   revokeOtherSessions?: boolean;
 }
 
+/** Result of password change */
 export interface IdentityAuthenticationPasswordChangeResult {
+  /** Status message */
   message?: string | null;
+  /** Number of sessions revoked (if RevokeOtherSessions was true) */
   sessionsRevoked?: number;
+  /** Whether password was successfully changed */
   success?: boolean;
 }
 
+/** Result of password reset request */
 export interface IdentityAuthenticationPasswordResetRequestResult {
+  /** Token expiry time in minutes */
   expiresInMinutes?: number;
+  /** Generic message (same regardless of whether email exists for security) */
   message?: string | null;
+  /** Whether the request was processed (always true for security - don't reveal if email exists) */
   success?: boolean;
 }
 
+/** Result of password reset */
 export interface IdentityAuthenticationPasswordResetResult {
+  /** Status message */
   message?: string | null;
+  /** Whether password was successfully reset */
   success?: boolean;
+  /** User ID whose password was reset */
   userId?: string | null;
 }
 
+/** Request to partially update a service account. */
 export interface IdentityAuthenticationPatchServiceAccountInput {
   description?: string | null;
   expiresAt?: string | null;
@@ -5374,23 +6064,31 @@ export interface IdentityAuthenticationPatchServiceAccountInput {
   scopes?: string | null;
 }
 
+/** Request DTO for refreshing tokens */
 export interface IdentityAuthenticationRefreshTokenInput {
   refreshToken: string;
   tenantId?: string | null;
 }
 
+/** Request DTO for removing a role from a user */
 export interface IdentityAuthenticationRemoveRoleFromUserInput {
   roleId?: string;
   userId?: string;
 }
 
+/** Request to send a passwordless magic sign-in link. */
 export interface IdentityAuthenticationRequestMagicLinkInput {
+  /** Email address to send the magic link to. */
   email: string;
+  /** Optional tenant context. */
   tenantId?: string | null;
 }
 
+/** Request to initiate password reset */
 export interface IdentityAuthenticationRequestPasswordResetInput {
+  /** Email address to send reset link to */
   email: string;
+  /** Optional tenant context */
   tenantId?: string | null;
 }
 
@@ -5398,28 +6096,34 @@ export interface IdentityAuthenticationRevokeApiKeyInput {
   reason?: string | null;
 }
 
+/** Request for revoking a refresh token */
 export interface IdentityAuthenticationRevokeRefreshTokenInput {
   ipAddress?: string | null;
   reason?: string | null;
   token: string;
 }
 
+/** Risk level for session security and anomaly detection */
 export type IdentityAuthenticationRiskLevel = 'Low' | 'Medium' | 'High' | 'Critical';
 
+/** Request to manually rotate signing key */
 export interface IdentityAuthenticationRotateKeyInput {
   reason?: string | null;
   validityDays?: number | null;
 }
 
+/** Response when secret is rotated. */
 export interface IdentityAuthenticationSecretRotationOutput {
   clientSecret?: string | null;
   warning?: string | null;
 }
 
+/** Send email verification request */
 export interface IdentityAuthenticationSendEmailVerificationInput {
   email: string;
 }
 
+/** Single entry in service account audit log. */
 export interface IdentityAuthenticationServiceAccountAuditEntry {
   id?: string;
   action?: string | null;
@@ -5429,6 +6133,7 @@ export interface IdentityAuthenticationServiceAccountAuditEntry {
   timestamp?: string;
 }
 
+/** Response for service account audit log. */
 export interface IdentityAuthenticationServiceAccountAuditLogOutput {
   entries?: Array<IdentityAuthenticationServiceAccountAuditEntry> | null;
   page?: number;
@@ -5437,6 +6142,7 @@ export interface IdentityAuthenticationServiceAccountAuditLogOutput {
   totalCount?: number;
 }
 
+/** Response when a service account is created (includes secret). */
 export interface IdentityAuthenticationServiceAccountCreatedOutput {
   id?: string;
   clientId?: string | null;
@@ -5450,6 +6156,7 @@ export interface IdentityAuthenticationServiceAccountCreatedOutput {
   warning?: string | null;
 }
 
+/** Response for service account (excludes secret). */
 export interface IdentityAuthenticationServiceAccountOutput {
   id?: string;
   authenticationCount?: number;
@@ -5467,6 +6174,7 @@ export interface IdentityAuthenticationServiceAccountOutput {
   tenantId?: string | null;
 }
 
+/** Session response */
 export interface IdentityAuthenticationSessionOutput {
   id?: string;
   createdAt?: string;
@@ -5479,6 +6187,7 @@ export interface IdentityAuthenticationSessionOutput {
   location?: IdentityAuthenticationLocationInfo;
 }
 
+/** Security analysis result for a session */
 export interface IdentityAuthenticationSessionSecurityAnalysis {
   activeSessionCount?: number;
   analyzedAt?: string;
@@ -5494,49 +6203,83 @@ export interface IdentityAuthenticationSessionSecurityAnalysis {
   userId?: string;
 }
 
+/** Success response for session operations */
 export interface IdentityAuthenticationSessionSuccessOutput {
+  /** Success message */
   message: string | null;
 }
 
+/** Response for session termination operations */
 export interface IdentityAuthenticationSessionTerminationOutput {
+  /** Success message */
   message: string | null;
+  /** Number of sessions terminated */
   terminatedCount: number;
 }
 
+/** DTO for sign-in response */
 export interface IdentityAuthenticationSignInOutput {
+  /** JWT access token */
   accessToken?: string | null;
+  /** When the access token expires (short-lived) */
   accessTokenExpiresAt?: string;
+  /** Available step-up authentication methods */
   availableMethods?: Array<string> | null;
+  /** List of tenants the user has access to */
   availableTenants?: Array<TenantInfo> | null;
+  /** User email */
   email?: string | null;
+  /** Backward compatible field: originally represented refresh token expiry (or conflated); prefer using AccessTokenExpiresAt / RefreshTokenExpiresAt. */
   expiresAt?: string;
+  /** Expiration in seconds */
   expiresIn?: number;
+  /** Response message */
   message?: string | null;
+  /** MFA session ID if MFA is required */
   mfaSessionId?: string | null;
+  /** MFA token */
   mfaToken?: string | null;
+  /** Refresh token */
   refreshToken?: string | null;
+  /** When the refresh token expires (long-lived) */
   refreshTokenExpiresAt?: string;
+  /** Whether MFA is required */
   requiresMfa?: boolean;
+  /** Whether step-up authentication is required due to high-risk login */
   requiresStepUp?: boolean;
+  /** List of risk factors detected */
   riskFactors?: Array<string> | null;
   riskLevel?: IdentityAuthenticationRiskLevel;
+  /** Session ID */
   sessionId?: string;
+  /** When the step-up token expires */
   stepUpExpiresAt?: string | null;
+  /** Temporary token for completing step-up authentication */
   stepUpToken?: string | null;
+  /** Whether sign-in was successful */
   success?: boolean;
+  /** Temporary token for MFA flows */
   tempToken?: string | null;
+  /** Current tenant ID */
   tenantId?: string | null;
   user?: IdentityAuthenticationUserDto;
+  /** User ID */
   userId?: string;
 }
 
+/** Request to setup SMS MFA */
 export interface IdentityAuthenticationSmsMfaSetupInput {
+  /** Phone number to receive SMS codes */
   phoneNumber: string | null;
 }
 
+/** Response for SMS MFA setup initiation */
 export interface IdentityAuthenticationSmsMfaSetupOutput {
+  /** Time in seconds until code expires */
   expiresInSeconds: number;
+  /** Status message */
   message: string | null;
+  /** Masked phone number for confirmation */
   phoneNumberMasked: string | null;
 }
 
@@ -5550,10 +6293,12 @@ export interface IdentityAuthenticationStepUpReceiptOutput {
   receipt?: string | null;
 }
 
+/** Request to trust a device */
 export interface IdentityAuthenticationTrustDeviceInput {
   deviceName?: string | null;
 }
 
+/** Trusted device response */
 export interface IdentityAuthenticationTrustedDeviceOutput {
   id?: string;
   deviceInfo?: IdentityAuthenticationDeviceInfo;
@@ -5563,10 +6308,13 @@ export interface IdentityAuthenticationTrustedDeviceOutput {
   trustedAt?: string;
 }
 
+/** Request to update a credential's friendly name. */
 export interface IdentityAuthenticationUpdateCredentialNameInput {
+  /** The new friendly name. */
   friendlyName?: string | null;
 }
 
+/** Request DTO for updating an existing role */
 export interface IdentityAuthenticationUpdateRoleInput {
   description?: string | null;
   isActive?: boolean | null;
@@ -5574,10 +6322,12 @@ export interface IdentityAuthenticationUpdateRoleInput {
   permissions?: Array<string> | null;
 }
 
+/** Request to update scopes. */
 export interface IdentityAuthenticationUpdateScopesInput {
   scopes?: string | null;
 }
 
+/** User data transfer object */
 export interface IdentityAuthenticationUserDto {
   id?: string;
   createdAt?: string;
@@ -5591,11 +6341,15 @@ export interface IdentityAuthenticationUserDto {
   username?: string | null;
 }
 
+/** Request to verify email with token */
 export interface IdentityAuthenticationVerifyEmailInput {
+  /** Optional tenant context */
   tenantId?: string | null;
+  /** Verification token received via email */
   token: string;
 }
 
+/** Request to verify MFA code */
 export interface IdentityAuthenticationVerifyMfaInput {
   code: string;
   method?: IdentityAuthenticationMfaMethod;
@@ -5607,51 +6361,76 @@ export interface IdentityAuthenticationVerifyStepUpChallengeInput {
   method?: IdentityAuthenticationMfaMethod;
 }
 
+/** Request for Web3 challenge generation */
 export interface IdentityAuthenticationWeb3ChallengeInput {
   chainId?: string | null;
   walletAddress: string;
 }
 
+/** Response containing Web3 challenge data */
 export interface IdentityAuthenticationWeb3ChallengeOutput {
   challenge?: string | null;
   expiresAt?: string;
   nonce?: string | null;
 }
 
+/** Request to verify Web3 wallet signature */
 export interface IdentityAuthenticationWeb3VerifyInput {
+  /** Blockchain chain ID */
   chainId: string;
+  /** Full SIWE challenge message returned by the challenge endpoint and signed by the wallet. */
   challenge: string;
+  /** Device fingerprint for session tracking */
   deviceFingerprint?: string | null;
+  /** Nonce contained in the SIWE challenge message */
   nonce: string;
+  /** EIP-191 signature over the SIWE challenge message */
   signature: string;
+  /** Optional tenant context */
   tenantId?: string | null;
+  /** Wallet address */
   walletAddress: string;
 }
 
+/** Result of beginning WebAuthn authentication. */
 export interface IdentityAuthenticationWebAuthnAuthenticationOptionsResult {
   error?: string | null;
   options?: Fido2NetLibAssertionOptions;
+  /** JSON options to pass to navigator.credentials.get(). */
   optionsJson?: string | null;
+  /** The challenge session ID to correlate with completion. */
   sessionId?: string | null;
   success?: boolean;
 }
 
+/** Result of completing WebAuthn authentication. */
 export interface IdentityAuthenticationWebAuthnAuthenticationResult {
+  /** JWT access token issued after successful WebAuthn authentication. */
   accessToken?: string | null;
+  /** Access token expiration timestamp. */
   accessTokenExpiresAt?: string | null;
+  /** The credential that was used. */
   credentialId?: string | null;
+  /** Authenticated user's email address. */
   email?: string | null;
   error?: string | null;
+  /** Access token lifetime in seconds. */
   expiresIn?: number;
+  /** Whether this was a passwordless authentication. */
   isPasswordless?: boolean;
+  /** Refresh token issued after successful WebAuthn authentication. */
   refreshToken?: string | null;
+  /** Refresh token expiration timestamp. */
   refreshTokenExpiresAt?: string | null;
   success?: boolean;
+  /** The authenticated user ID. */
   userId?: string | null;
 }
 
+/** Type of WebAuthn authenticator. */
 export type IdentityAuthenticationWebAuthnAuthenticatorType = 'Platform' | 'CrossPlatform';
 
+/** Information about a user's WebAuthn credential. */
 export interface IdentityAuthenticationWebAuthnCredentialInfo {
   id?: string;
   authenticatorType?: IdentityAuthenticationWebAuthnAuthenticatorType;
@@ -5663,39 +6442,55 @@ export interface IdentityAuthenticationWebAuthnCredentialInfo {
   lastUsedAt?: string | null;
 }
 
+/** Result of verifying a WebAuthn credential. */
 export interface IdentityAuthenticationWebAuthnCredentialVerifyResult {
   error?: string | null;
   isExpired?: boolean;
   isRevoked?: boolean;
   isValid?: boolean;
   lastUsedAt?: string | null;
+  /** Signature counter for replay attack protection (increases with each use). */
   signatureCount?: number;
   success?: boolean;
 }
 
+/** Result of beginning WebAuthn registration. */
 export interface IdentityAuthenticationWebAuthnRegistrationOptionsResult {
   error?: string | null;
   options?: Fido2NetLibCredentialCreateOptions;
+  /** JSON options to pass to navigator.credentials.create(). */
   optionsJson?: string | null;
+  /** The challenge session ID to correlate with completion. */
   sessionId?: string | null;
   success?: boolean;
 }
 
+/** Result of completing WebAuthn registration. */
 export interface IdentityAuthenticationWebAuthnRegistrationResult {
+  /** The ID of the newly created credential. */
   credentialId?: string | null;
   error?: string | null;
+  /** Friendly name assigned to the credential. */
   friendlyName?: string | null;
   success?: boolean;
 }
 
+/** Response for WebAuthn status check. */
 export interface IdentityAuthenticationWebAuthnStatusOutput {
+  /** Number of registered credentials. */
   credentialCount?: number;
+  /** Whether user has at least one passwordless credential. */
   hasPasswordlessCredential?: boolean;
+  /** Whether user has a platform authenticator (Touch ID, Windows Hello). */
   hasPlatformAuthenticator?: boolean;
+  /** Whether user has a security key. */
   hasSecurityKey?: boolean;
+  /** Whether WebAuthn is enabled for this user. */
   isEnabled?: boolean;
 }
 
+/** Represents an access review/certification campaign
+Enables periodic review of user access rights to ensure compliance */
 export interface IdentityAuthorizationAccessReviewCampaign {
   id?: string;
   approvedItems?: number;
@@ -5722,8 +6517,10 @@ export interface IdentityAuthorizationAccessReviewCampaign {
   updatedAt?: string | null;
 }
 
+/** Decision made on review item */
 export type IdentityAuthorizationAccessReviewDecision = 'None' | 'Approve' | 'Revoke' | 'ModifyAndApprove';
 
+/** Individual item within an access review campaign */
 export interface IdentityAuthorizationAccessReviewItem {
   id?: string;
   campaign?: IdentityAuthorizationAccessReviewCampaign;
@@ -5744,16 +6541,21 @@ export interface IdentityAuthorizationAccessReviewItem {
   updatedAt?: string | null;
 }
 
+/** Status of individual review item */
 export type IdentityAuthorizationAccessReviewItemStatus = 'None' | 'Pending' | 'Reviewed' | 'Approved' | 'Revoked' | 'Expired';
 
+/** Scope of access review campaign */
 export type IdentityAuthorizationAccessReviewScope =
   'None' | 'AllUsers' | 'Department' | 'Team' | 'Role' | 'Resource' | 'HighPrivilege' | 'External' | 'Custom';
 
+/** Access review campaign status */
 export type IdentityAuthorizationAccessReviewStatus = 'None' | 'Draft' | 'Active' | 'InProgress' | 'Completed' | 'Expired';
 
+/** Type of access review/certification campaign */
 export type IdentityAuthorizationAccessReviewType =
   'None' | 'PermissionReview' | 'RoleReview' | 'ResourceAccessReview' | 'UserAccessReview' | 'ComplianceAttestation';
 
+/** Command to create an access review campaign */
 export interface IdentityAuthorizationCommandsCreateAccessReviewCampaignCommand {
   createdBy?: string;
   description?: string | null;
@@ -5764,6 +6566,7 @@ export interface IdentityAuthorizationCommandsCreateAccessReviewCampaignCommand 
   tenantId?: string | null;
 }
 
+/** Command to create a new SoD rule */
 export interface IdentityAuthorizationCommandsCreateSoDRuleCommand {
   conflictingPermissions?: Array<string> | null;
   description?: string | null;
@@ -5773,6 +6576,7 @@ export interface IdentityAuthorizationCommandsCreateSoDRuleCommand {
   tenantId?: string | null;
 }
 
+/** Command to delegate permissions to another user */
 export interface IdentityAuthorizationCommandsDelegatePermissionsCommand {
   canSubDelegate?: boolean;
   delegateUserId?: string;
@@ -5785,6 +6589,7 @@ export interface IdentityAuthorizationCommandsDelegatePermissionsCommand {
   usageLimit?: number | null;
 }
 
+/** Command to grant delegated admin scope */
 export interface IdentityAuthorizationCommandsGrantDelegatedAdminCommand {
   adminUserId?: string;
   allowedOperations?: Array<string> | null;
@@ -5796,6 +6601,7 @@ export interface IdentityAuthorizationCommandsGrantDelegatedAdminCommand {
   tenantId?: string | null;
 }
 
+/** Command to request a Just-in-Time permission elevation */
 export interface IdentityAuthorizationCommandsRequestJitElevationCommand {
   durationMinutes?: number;
   justification?: string | null;
@@ -5855,10 +6661,13 @@ export interface IdentityAuthorizationControllersUpdateSoDRuleInput {
   ruleType?: IdentityAuthorizationSoDRuleType;
 }
 
+/** Request payload for declining an invitation. */
 export interface IdentityAuthorizationDeclineInvitationInput {
+  /** Optional reason for declining. */
   reason?: string | null;
 }
 
+/** Delegated administration scope definition */
 export interface IdentityAuthorizationDelegatedAdminScope {
   id?: string;
   adminUserId?: string;
@@ -5886,79 +6695,128 @@ export interface IdentityAuthorizationDelegatedAdminScope {
   updatedAt?: string | null;
 }
 
+/** Type of delegated admin scope */
 export type IdentityAuthorizationDelegatedAdminScopeType = 'None' | 'Department' | 'Team' | 'Role' | 'Resource' | 'Custom';
 
+/** Command to deny tenant-level permissions from a user.
+Denied permissions take precedence over allowed permissions (DENY-WINS). */
 export interface IdentityAuthorizationDenyTenantPermissionCommand {
+  /** Gets the ID of the user denying the permissions. */
   deniedBy: string;
+  /** Gets the permissions to deny. */
   permissions: Array<string> | null;
+  /** Gets the optional reason for denying permissions. */
   reason?: string | null;
   tenantId: CQRSModelsTenantId;
+  /** Gets the user ID to deny permissions for. */
   userId: string;
 }
 
+/** Represents a single effective permission with its source. */
 export interface IdentityAuthorizationEffectivePermissionDto {
+  /** Gets whether the permission has an expiration date. */
   expiresAt?: string | null;
+  /** Gets when the permission was granted. */
   grantedAt?: string | null;
+  /** Gets the permission name. */
   permission: string | null;
+  /** Gets the source of the permission (e.g., "Direct", "Role", "Group", "Tenant"). */
   source: string | null;
 }
 
+/** Response containing all effective permissions for a user on a resource. */
 export interface IdentityAuthorizationEffectivePermissionsOutput {
+  /** Gets whether the user has full access to the resource. */
   hasFullAccess?: boolean;
+  /** Gets whether the user is the owner of the resource. */
   isOwner?: boolean;
+  /** Gets the list of effective permissions. */
   permissions: Array<IdentityAuthorizationEffectivePermissionDto> | null;
+  /** Gets the resource ID. */
   resourceId: string;
+  /** Gets the resource type. */
   resourceType: string | null;
+  /** Gets the user ID. */
   userId: string;
 }
 
+/** Status of JIT elevation request */
 export type IdentityAuthorizationElevationRequestStatus = 'None' | 'Pending' | 'Approved' | 'Denied' | 'Active' | 'Expired' | 'Revoked';
 
+/** Response containing pending invitations for the current user. */
 export interface IdentityAuthorizationGetPendingResourceInvitationsOutput {
   invitations: Array<IdentityAuthorizationResourceInvitationDto> | null;
   totalCount?: number;
 }
 
+/** Response containing a single invitation. */
 export interface IdentityAuthorizationGetResourceInvitationOutput {
   invitation: IdentityAuthorizationResourceInvitationDto;
 }
 
+/** Response containing all users with access to a resource. */
 export interface IdentityAuthorizationGetResourceUsersOutput {
+  /** Gets the count of users with owner access. */
   ownerCount?: number;
+  /** Gets the resource ID. */
   resourceId: string | null;
+  /** Gets the resource type. */
   resourceType: string | null;
+  /** Gets the total count of users. */
   totalCount?: number;
+  /** Gets the list of users with access. */
   users: Array<IdentityAuthorizationResourceUser> | null;
 }
 
+/** Response containing tenant permissions for a user. */
 export interface IdentityAuthorizationGetTenantPermissionsOutput {
+  /** Gets whether the user is a system admin. */
   isSystemAdmin?: boolean;
+  /** Gets whether the user is a tenant admin. */
   isTenantAdmin?: boolean;
+  /** Gets the list of permissions. */
   permissions: Array<string> | null;
+  /** Gets the tenant ID. */
   tenantId: string;
+  /** Gets the user ID. */
   userId: string;
 }
 
+/** Command to grant tenant-level permissions to a user. */
 export interface IdentityAuthorizationGrantTenantPermissionCommand {
+  /** Gets the optional expiration date for the permissions. */
   expiresAt?: string | null;
+  /** Gets the ID of the user granting the permissions. */
   grantedBy: string;
+  /** Gets the permissions to grant. */
   permissions: Array<string> | null;
+  /** Gets the optional reason for granting permissions. */
   reason?: string | null;
   tenantId: CQRSModelsTenantId;
+  /** Gets the user ID to grant permissions to. */
   userId: string;
 }
 
+/** Response indicating whether the user has the requested permission. */
 export interface IdentityAuthorizationHasPermissionOutput {
+  /** Gets the reason if permission was denied. */
   denialReason?: string | null;
+  /** Gets whether the permission is granted. */
   hasPermission: boolean;
+  /** Gets the permission that was checked. */
   permission: string | null;
+  /** Gets the resource ID. */
   resourceId: string;
+  /** Gets the resource type. */
   resourceType: string | null;
+  /** Gets the user ID that was checked. */
   userId: string;
 }
 
+/** Impact severity level */
 export type IdentityAuthorizationImpactSeverity = 'Low' | 'Medium' | 'High' | 'Critical';
 
+/** Result of performing an invitation lifecycle action. */
 export interface IdentityAuthorizationInvitationActionResult {
   errorMessage?: string | null;
   invitationId?: string;
@@ -5969,6 +6827,8 @@ export interface IdentityAuthorizationInvitationActionResult {
   tenantId?: string | null;
 }
 
+/** Entity for Just-in-Time (JIT) permission elevation requests
+Enables time-bound temporary permission grants with approval workflow */
 export interface IdentityAuthorizationJitElevationInput {
   id?: string;
   activatedAt?: string | null;
@@ -6012,6 +6872,7 @@ export interface IdentityAuthorizationPermissionAnomaly {
   userId?: string;
 }
 
+/** Permission delegation allows users to delegate their permissions to other users */
 export interface IdentityAuthorizationPermissionDelegation {
   id?: string;
   canSubDelegate?: boolean;
@@ -6038,6 +6899,9 @@ export interface IdentityAuthorizationPermissionTrend {
   revokes?: number;
 }
 
+/** Comprehensive enumeration of permission types in the GameGuild system
+Represents the various operations that can be controlled through permissions
+Defines the complete platform permission system */
 export type IdentityAuthorizationPermissionType =
   | 'Read'
   | 'Comment'
@@ -6142,6 +7006,7 @@ export type IdentityAuthorizationPermissionType =
   | 'UserManagement'
   | 'Configure';
 
+/** Result of updating permissions. */
 export interface IdentityAuthorizationPermissionUpdateResult {
   errorMessage?: string | null;
   success?: boolean;
@@ -6156,18 +7021,28 @@ export interface IdentityAuthorizationPermissionUsageMetrics {
   usageCount?: number;
 }
 
+/** Command to remove deny entries from a user's permissions. */
 export interface IdentityAuthorizationRemoveDenyPermissionsCommand {
+  /** Gets the deny permissions to remove. */
   permissions: Array<string> | null;
+  /** Gets the ID of the user removing the deny permissions. */
   removedBy: string;
   tenantId: CQRSModelsTenantId;
+  /** Gets the user ID to remove deny permissions from. */
   userId: string;
 }
 
+/** Command to remove a user's access to a resource by revoking all their permissions. */
 export interface IdentityAuthorizationRemoveUserAccessCommand {
+  /** Gets the optional reason for removing access. */
   reason?: string | null;
+  /** Gets the ID of the user removing the access. */
   removedByUserId: string;
+  /** Gets the ID of the resource. */
   resourceId: string | null;
+  /** Gets the type of resource. */
   resourceType: string | null;
+  /** Gets the ID of the user whose access is being removed. */
   targetUserId: string;
   tenantId: CQRSModelsTenantId;
 }
@@ -6179,66 +7054,114 @@ export interface IdentityAuthorizationResourceAccessPattern {
   uniqueUsers?: number;
 }
 
+/** DTO for invitation-centric endpoints. */
 export interface IdentityAuthorizationResourceInvitationDto {
+  /** The invited email address. */
   email?: string | null;
+  /** When the invitation expires. */
   expiresAt?: string | null;
+  /** The invitation ID. */
   invitationId?: string;
+  /** When the invitation was sent. */
   invitedAt?: string;
+  /** The display name of the inviter. */
   invitedByUserName?: string | null;
+  /** Optional invitation message. */
   message?: string | null;
+  /** The permissions to be granted when accepted. */
   permissions?: Array<string> | null;
+  /** The shared resource identifier. */
   resourceId?: string | null;
+  /** The shared resource type. */
   resourceType?: string | null;
+  /** The current invitation status. */
   status?: string | null;
+  /** The tenant the invitation belongs to. */
   tenantId?: string;
 }
 
+/** Represents a user who has access to a resource. */
 export interface IdentityAuthorizationResourceUser {
+  /** Gets when the permissions expire (if applicable). */
   expiresAt?: string | null;
+  /** Gets when the permissions were granted. */
   grantedAt: string;
+  /** Gets who granted the permissions. */
   grantedByUserId: string;
+  /** Gets whether the permissions are currently active. */
   isActive?: boolean;
+  /** Gets whether the user is an owner of this resource. */
   isOwner?: boolean;
+  /** Gets when the user last accessed the resource. */
   lastAccessedAt?: string | null;
+  /** Gets the permissions the user has. */
   permissions: Array<string> | null;
+  /** Gets the resource ID. */
   resourceId: string | null;
+  /** Gets the resource type. */
   resourceType: string | null;
+  /** Gets the user ID. */
   userId: string;
 }
 
+/** Command to revoke tenant-level permissions from a user. */
 export interface IdentityAuthorizationRevokeTenantPermissionCommand {
+  /** Gets the permissions to revoke. */
   permissions: Array<string> | null;
+  /** Gets the optional reason for revoking permissions. */
   reason?: string | null;
+  /** Gets the ID of the user revoking the permissions. */
   revokedBy: string;
   tenantId: CQRSModelsTenantId;
+  /** Gets the user ID to revoke permissions from. */
   userId: string;
 }
 
+/** Command to set global default permissions.
+These are baseline permissions applied to all users across all tenants. */
 export interface IdentityAuthorizationSetGlobalDefaultPermissionsCommand {
+  /** Gets the permissions to set as global defaults. */
   permissions: Array<string> | null;
+  /** Gets the ID of the user setting the permissions. */
   setBy: string;
 }
 
+/** Command to set tenant default permissions.
+These are baseline permissions applied to all users in a specific tenant. */
 export interface IdentityAuthorizationSetTenantDefaultPermissionsCommand {
+  /** Gets the permissions to set as tenant defaults. */
   permissions: Array<string> | null;
+  /** Gets the ID of the user setting the permissions. */
   setBy: string;
   tenantId: CQRSModelsTenantId;
 }
 
+/** Command to share a resource with one or more users by granting them permissions. */
 export interface IdentityAuthorizationShareResourceCommand {
+  /** Gets the optional expiration date for the granted permissions. */
   expiresAt?: string | null;
+  /** Gets the ID of the user who is sharing the resource. */
   grantedByUserId: string;
+  /** Gets the optional message to include with the share. */
   message?: string | null;
+  /** Gets whether to notify users about the share via email/notification. */
   notifyUsers?: boolean;
+  /** Gets the permissions to grant to the users. */
   permissions: Array<string> | null;
+  /** Gets whether the users must accept the share before gaining access. */
   requireAcceptance?: boolean;
+  /** Gets the ID of the resource being shared. */
   resourceId: string | null;
+  /** Gets the type of resource being shared. */
   resourceType: string | null;
   tenantId: CQRSModelsTenantId;
+  /** Gets the email addresses of users to share with (alternative to UserIds). */
   userEmails?: Array<string> | null;
+  /** Gets the IDs of users to share the resource with. */
   userIds: Array<string> | null;
 }
 
+/** Result of sharing a resource. */
 export interface IdentityAuthorizationShareResult {
   email?: string | null;
   errorMessage?: string | null;
@@ -6249,9 +7172,11 @@ export interface IdentityAuthorizationShareResult {
   userId?: string | null;
 }
 
+/** Action taken to resolve SoD violation */
 export type IdentityAuthorizationSoDResolutionAction =
   'None' | 'RevokePermission' | 'RevokeRole' | 'GrantException' | 'ImplementCompensatingControl' | 'TransferOwnership' | 'NoAction';
 
+/** Represents a Separation of Duties (SoD) rule */
 export interface IdentityAuthorizationSoDRule {
   id?: string;
   allowedExceptions?: string | null;
@@ -6275,11 +7200,14 @@ export interface IdentityAuthorizationSoDRule {
   violations?: Array<IdentityAuthorizationSoDViolation> | null;
 }
 
+/** Type of SoD rule */
 export type IdentityAuthorizationSoDRuleType =
   'None' | 'PermissionConflict' | 'RoleConflict' | 'ResourceConflict' | 'BusinessProcessConflict' | 'FunctionalConflict';
 
+/** Severity of SoD rule */
 export type IdentityAuthorizationSoDSeverity = 'None' | 'Low' | 'Medium' | 'High' | 'Critical';
 
+/** Represents a detected SoD violation */
 export interface IdentityAuthorizationSoDViolation {
   id?: string;
   approvedAt?: string | null;
@@ -6303,15 +7231,23 @@ export interface IdentityAuthorizationSoDViolation {
   violationDetails?: string | null;
 }
 
+/** Status of SoD violation */
 export type IdentityAuthorizationSoDViolationStatus = 'None' | 'Active' | 'Acknowledged' | 'Mitigated' | 'Resolved' | 'Excepted' | 'FalsePositive';
 
+/** Command to update a specific user's permissions on a resource. */
 export interface IdentityAuthorizationUpdateUserPermissionsCommand {
+  /** Gets the optional expiration date for the permissions. */
   expiresAt?: string | null;
+  /** Gets the new set of permissions to grant to the user. */
   permissions: Array<string> | null;
+  /** Gets the ID of the resource. */
   resourceId: string | null;
+  /** Gets the type of resource. */
   resourceType: string | null;
+  /** Gets the ID of the user whose permissions are being updated. */
   targetUserId: string;
   tenantId: CQRSModelsTenantId;
+  /** Gets the ID of the user making the update. */
   updatedByUserId: string;
 }
 
@@ -6322,102 +7258,152 @@ export interface IdentityAuthorizationUserActivitySummary {
   userId?: string;
 }
 
+/** Response for adding a tenant member */
 export interface IdentityTenantsAddTenantMemberOutput {
   memberId?: string | null;
   message?: string | null;
   success?: boolean;
 }
 
+/** Request body for adding a user membership. */
 export interface IdentityTenantsAddUserMembershipInput {
+  /** Optional inviter identifier for audit trail purposes. */
   invitedByEmail?: string | null;
+  /** Email of the user receiving an invite, used for delivery and audit metadata. */
   inviteeEmail?: string | null;
+  /** Display name of the user receiving an invite. */
   inviteeName?: string | null;
+  /** Whether the invited user must accept the membership before gaining active access. */
   requiresAcceptance?: boolean;
+  /** Role assigned in the tenant. */
   role?: string | null;
+  /** Tenant to join. */
   tenantId?: string;
 }
 
+/** Request model for archiving a tenant */
 export interface IdentityTenantsArchiveInput {
+  /** Reason for archiving the tenant */
   reason?: string | null;
 }
 
+/** Command to perform bulk activation of tenants */
 export interface IdentityTenantsBulkActivateTenantsCommand {
   tenantIds?: Array<string> | null;
 }
 
+/** Command to perform bulk archival of tenants */
 export interface IdentityTenantsBulkArchiveTenantsCommand {
   tenantIds?: Array<string> | null;
 }
 
+/** Data for a single tenant to create in a bulk operation */
 export interface IdentityTenantsBulkCreateTenantItem {
+  /** Administrator email address */
   adminEmail?: string | null;
+  /** Optional tenant description */
   description?: string | null;
+  /** Tenant name */
   name?: string | null;
+  /** Tenant slug (unique identifier) */
   slug?: string | null;
 }
 
+/** Command to create multiple tenants at once */
 export interface IdentityTenantsBulkCreateTenantsCommand {
+  /** Collection of tenant data to create */
   tenants?: Array<IdentityTenantsBulkCreateTenantItem> | null;
 }
 
+/** Command to perform bulk deactivation of tenants */
 export interface IdentityTenantsBulkDeactivateTenantsCommand {
   tenantIds?: Array<string> | null;
 }
 
+/** Command to perform bulk deletion of tenants */
 export interface IdentityTenantsBulkDeleteTenantsCommand {
   hardDelete?: boolean;
   tenantIds?: Array<string> | null;
 }
 
+/** Command to permanently purge multiple tenants (irreversible hard delete) */
 export interface IdentityTenantsBulkPurgeTenantsCommand {
+  /** Collection of tenant IDs to permanently delete */
   tenantIds?: Array<string> | null;
 }
 
+/** Command to restore multiple soft-deleted tenants at once */
 export interface IdentityTenantsBulkUndeleteTenantsCommand {
+  /** Collection of tenant IDs to restore */
   tenantIds?: Array<string> | null;
 }
 
+/** Data for a single tenant update in a bulk operation */
 export interface IdentityTenantsBulkUpdateTenantItem {
+  /** New tenant description */
   description?: string | null;
+  /** New tenant name */
   name?: string | null;
+  /** Tenant ID to update */
   tenantId?: string;
 }
 
+/** Command to update multiple tenants at once */
 export interface IdentityTenantsBulkUpdateTenantsCommand {
+  /** Collection of tenant updates */
   updates?: Array<IdentityTenantsBulkUpdateTenantItem> | null;
 }
 
+/** Request model for creating a tenant */
 export interface IdentityTenantsCreateTenantInput {
+  /** Administrator email address */
   adminEmail?: string | null;
+  /** Optional tenant description */
   description?: string | null;
+  /** Tenant name */
   name?: string | null;
+  /** Tenant slug (unique identifier) */
   slug?: string | null;
 }
 
+/** Response containing all tenant memberships for a user. */
 export interface IdentityTenantsGetUserMembershipsOutput {
+  /** List of tenant memberships the user belongs to */
   memberships?: Array<IdentityTenantsUserMembershipDto> | null;
+  /** Total count of memberships */
   totalCount?: number;
 }
 
+/** Response containing membership count */
 export interface IdentityTenantsMembershipCountOutput {
+  /** Number of active memberships */
   count?: number;
 }
 
+/** Request model for recovering a soft-deleted tenant */
 export interface IdentityTenantsRecoverInput {
+  /** Reason for recovering the tenant */
   reason?: string | null;
 }
 
+/** Request model for replacing entire tenant metadata */
 export interface IdentityTenantsReplaceTenantMetadataInput {
+  /** Administrative notes */
   adminNotes?: string | null;
   businessInfo?: IdentityTenantsUpdateTenantBusinessInfoInput;
   contactInfo?: IdentityTenantsUpdateTenantContactInfoInput;
+  /** Complete set of custom metadata fields */
   customFields?: Record<string, Record<string, unknown> | null> | null;
+  /** Complete set of external references */
   externalReferences?: Record<string, string> | null;
+  /** Complete set of tags */
   tags?: Array<string> | null;
 }
 
+/** Request model for replacing tenant settings */
 export interface IdentityTenantsReplaceTenantSettingsInput {
   businessRules?: IdentityTenantsUpdateTenantBusinessRulesInput;
+  /** Complete feature flags */
   featureFlags?: Record<string, boolean> | null;
   integrationSettings?: IdentityTenantsUpdateTenantIntegrationSettingsInput;
   securitySettings?: IdentityTenantsUpdateTenantSecuritySettingsInput;
@@ -6438,50 +7424,90 @@ export interface IdentityTenantsSetTenantMembershipStatusOutput {
   success?: boolean;
 }
 
+/** Slug validation result */
 export interface IdentityTenantsSlugValidation {
   isAvailable?: boolean;
   isValid?: boolean;
   suggestedAlternatives?: Array<string> | null;
 }
 
+/** Represents a tenant in a multi-tenant system.
+This is the aggregate root for the Tenant bounded context, managing all tenant-related entities.
+Inherits from EntityBase to provide UUID IDs, version control, timestamps, and soft delete functionality. */
 export interface IdentityTenantsTenant {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Gets the count of active members in this tenant. */
   activeMemberCount?: number;
+  /** Administrative email for the tenant */
   adminEmail?: string | null;
+  /** When the tenant was archived (null if not archived) */
   archivedAt?: string | null;
+  /** Validates that the tenant can accept new members. */
   canAcceptMembers?: boolean;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Description of the tenant */
   description?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  /** Checks if the tenant has any active members. */
   hasActiveMembers?: boolean;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Whether this tenant is currently active */
   isActive?: boolean;
+  /** Whether this tenant is archived (distinct from deleted) */
   isArchived?: boolean;
+  /** Whether this is the default tenant (for null tenant scenarios)
+PostgreSQL filtered unique index ensures only one tenant can be default */
   isDefault?: boolean;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** Name of the tenant */
   name: string;
+  /** Slug for the tenant (URL-friendly unique identifier) */
   slug: string;
+  /** Navigation property to tenant domains */
   tenantDomains?: Array<IdentityTenantsTenantDomain> | null;
   tenantId?: string | null;
+  /** Navigation property to tenant members */
   tenantMembers?: Array<IdentityTenantsTenantMember> | null;
   tenantSettings?: IdentityTenantsTenantSettings;
   tenantStatistics?: IdentityTenantsTenantStatistics;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Navigation property to usage tracking records */
   usageTrackingRecords?: Array<IdentityTenantsUsageTracking> | null;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
+/** Address information data transfer object */
 export interface IdentityTenantsTenantAddressDto {
+  /** City name */
   city?: string | null;
+  /** Country name */
   country?: string | null;
+  /** Postal or ZIP code */
   postalCode?: string | null;
+  /** State or province */
   state?: string | null;
+  /** Street address */
   street?: string | null;
 }
 
+/** Tenant audit log entry */
 export interface IdentityTenantsTenantAuditLogEntry {
   id?: string;
   action?: string | null;
@@ -6498,214 +7524,393 @@ export interface IdentityTenantsTenantAuditLogEntry {
   userAgent?: string | null;
 }
 
+/** Branding settings data transfer object */
 export interface IdentityTenantsTenantBrandingDto {
+  /** Company name for branding */
   companyName?: string | null;
+  /** URL to the favicon */
   faviconUrl?: string | null;
+  /** URL to the organization logo */
   logoUrl?: string | null;
+  /** Primary brand color */
   primaryColor?: string | null;
+  /** Secondary brand color */
   secondaryColor?: string | null;
 }
 
+/** Business information data transfer object for tenant classification */
 export interface IdentityTenantsTenantBusinessInfoDto {
+  /** Compliance and regulatory requirements */
   complianceRequirements?: Array<string> | null;
+  /** Geographic location and regulatory information */
   geographicRegion?: string | null;
+  /** Industry sector and vertical market */
   industry?: string | null;
+  /** Organization size classification */
   organizationSize?: string | null;
+  /** Type and category of the tenant */
   tenantType?: string | null;
 }
 
+/** Business rules data transfer object */
 export interface IdentityTenantsTenantBusinessRulesDto {
+  /** Approval process and authorization rules */
   approvalRules?: Record<string, Record<string, unknown> | null> | null;
+  /** Notification and alerting rules */
   notificationRules?: Record<string, Record<string, unknown> | null> | null;
+  /** Data validation and business logic rules */
   validationRules?: Record<string, Record<string, unknown> | null> | null;
+  /** Workflow and process automation rules */
   workflowRules?: Record<string, Record<string, unknown> | null> | null;
 }
 
+/** Contact information data transfer object for tenant organizational data */
 export interface IdentityTenantsTenantContactInfoDto {
   address?: IdentityTenantsTenantAddressDto;
+  /** Name of the organization */
   organizationName?: string | null;
+  /** Email address of the primary contact */
   primaryContactEmail?: string | null;
+  /** Name of the primary contact person */
   primaryContactName?: string | null;
+  /** Phone number of the primary contact */
   primaryContactPhone?: string | null;
+  /** Website URL of the organization */
   website?: string | null;
 }
 
+/** Currency settings data transfer object */
 export interface IdentityTenantsTenantCurrencySettingsDto {
+  /** Number of decimal places for currency */
   decimalPlaces?: number;
+  /** Default currency code (ISO 4217) */
   defaultCurrency?: string | null;
+  /** Currency display format */
   displayFormat?: string | null;
 }
 
+/** Represents a domain (top-level or subdomain) associated with a tenant for automatic user grouping.
+Each tenant can have multiple domains with one designated as the main/principal domain.
+Domains can be top-level (e.g., "estate.com") or subdomains (e.g., "admin.estate.com"). */
 export interface IdentityTenantsTenantDomain {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  /** Gets the full domain string including subdomain if present */
   fullDomain?: string | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Whether this is the main/principal domain for the tenant (only one per tenant) */
   isMainDomain?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** Whether this is a secondary domain for the tenant (can have multiple per tenant) */
   isSecondaryDomain?: boolean;
+  /** Optional subdomain prefix (e.g., "admin" for "admin.estate.com", "api" for "api.estate.com") */
   subdomain?: string | null;
   tenant?: IdentityTenantsTenant;
+  /** ID of the tenant this domain belongs to */
   tenantId: string;
+  /** The top-level domain name (e.g., "estate.com", "realestate.com") */
   topLevelDomain: string;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** ID of the user group that users with this domain should be automatically added to */
   userGroupId?: string | null;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
+/** Integration settings data transfer object */
 export interface IdentityTenantsTenantIntegrationSettingsDto {
+  /** API key management and settings */
   apiKeys?: Record<string, string> | null;
+  /** External service configurations */
   externalServices?: Record<string, Record<string, unknown> | null> | null;
+  /** Single sign-on configuration */
   ssoConfiguration?: Record<string, Record<string, unknown> | null> | null;
+  /** Webhook endpoints and configurations */
   webhookSettings?: Record<string, Record<string, unknown> | null> | null;
 }
 
+/** Represents a user's membership in a tenant with role and status tracking.
+Links users to tenants with specific roles and membership lifecycle management.
+Supports hierarchical relationships for organizational structures. */
 export interface IdentityTenantsTenantMember {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Collection of child members in the organizational hierarchy. */
   childMembers?: Array<IdentityTenantsTenantMember> | null;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Whether this membership is currently active */
   isActive?: boolean;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** When the user joined the tenant */
   joinedAt?: string;
+  /** Reason for leaving (if applicable) */
   leaveReason?: string | null;
+  /** When the user left the tenant (null if still a member) */
   leftAt?: string | null;
+  /** Additional metadata for the membership */
   metadata?: string | null;
   parentMember?: IdentityTenantsTenantMember;
+  /** ID of the parent member in the organizational hierarchy (null for root/top-level members). */
   parentMemberId?: string | null;
+  /** Role of the member within the tenant */
   role: string;
   tenant?: IdentityTenantsTenant;
+  /** ID of the tenant the user belongs to */
   tenantId: string;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** ID of the user who is a member */
   userId: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
+/** Data transfer object representing tenant metadata information */
 export interface IdentityTenantsTenantMetadataDto {
+  /** Unique identifier for the tenant */
   id?: string;
+  /** Administrative notes and documentation */
   adminNotes?: string | null;
   businessInfo?: IdentityTenantsTenantBusinessInfoDto;
   contactInfo?: IdentityTenantsTenantContactInfoDto;
+  /** Timestamp when the metadata was created */
   createdAt?: string;
+  /** Dictionary of custom metadata fields specific to the tenant */
   customFields?: Record<string, Record<string, unknown> | null> | null;
+  /** External system identifiers and references */
   externalReferences?: Record<string, string> | null;
+  /** Collection of tags for categorization and filtering */
   tags?: Array<string> | null;
+  /** Timestamp when the metadata was last updated */
   updatedAt?: string;
 }
 
+/** Security settings data transfer object */
 export interface IdentityTenantsTenantSecuritySettingsDto {
+  /** API rate limiting settings */
   apiRateLimits?: Record<string, number> | null;
+  /** IP address whitelist for access control */
   ipWhitelist?: Array<string> | null;
+  /** Password requirements and policies */
   passwordPolicy?: Record<string, Record<string, unknown> | null> | null;
+  /** Session timeout settings */
   sessionTimeout?: number;
+  /** Whether two-factor authentication is required */
   twoFactorRequired?: boolean;
 }
 
+/** Tenant-specific settings and configuration
+Provides tenant-level customization for features, UI, localization, and business logic */
 export interface IdentityTenantsTenantSettings {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Enable/disable user self-registration for this tenant */
   allowUserRegistration?: boolean;
+  /** Custom branding settings (JSON) */
   brandingSettings?: string | null;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Default currency code for the tenant (e.g., "USD", "BRL") */
   defaultCurrency?: string | null;
+  /** Default language code for the tenant (e.g., "en-US", "pt-BR") */
   defaultLanguage?: string | null;
+  /** Default timezone for the tenant (e.g., "UTC", "America/New_York") */
   defaultTimezone?: string | null;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  /** Enable/disable API access for this tenant */
   enableApiAccess?: boolean;
+  /** Enable/disable audit logging for this tenant */
   enableAuditLogging?: boolean;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Integration settings (JSON)
+Stores external service configuration, API keys, and SSO settings. */
   integrationSettingsJson?: string | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** Maximum number of users allowed for this tenant (null = unlimited) */
   maxUsers?: number | null;
+  /** Notification settings (JSON) */
   notificationSettings?: string | null;
+  /** Require admin approval for new user registrations */
   requireRegistrationApproval?: boolean;
+  /** Enable/disable two-factor authentication requirement */
   requireTwoFactorAuth?: boolean;
+  /** Security settings (JSON) */
   securitySettings?: string | null;
+  /** Maximum storage quota in bytes (null = unlimited) */
   storageQuota?: number | null;
   tenant?: IdentityTenantsTenant;
+  /** ID of the tenant these settings belong to */
   tenantId: string;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
+/** Data transfer object representing tenant settings */
 export interface IdentityTenantsTenantSettingsDto {
+  /** Unique identifier for the tenant */
   id?: string;
   businessRules?: IdentityTenantsTenantBusinessRulesDto;
+  /** Timestamp when the settings were created */
   createdAt?: string;
+  /** Feature toggles and experimental features */
   featureFlags?: Record<string, boolean> | null;
   integrationSettings?: IdentityTenantsTenantIntegrationSettingsDto;
   securitySettings?: IdentityTenantsTenantSecuritySettingsDto;
   systemConfiguration?: IdentityTenantsTenantSystemConfigurationDto;
   systemLimits?: IdentityTenantsTenantSystemLimitsDto;
+  /** Timestamp when the settings were last updated */
   updatedAt?: string;
   userInterfaceSettings?: IdentityTenantsTenantUiSettingsDto;
 }
 
+/** Tenant statistics and usage metrics
+Provides analytics and insights for tenant performance and usage */
 export interface IdentityTenantsTenantStatistics {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Number of active members */
   activeMembers?: number;
+  /** Number of API calls for this period */
   apiCalls?: number;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Additional metrics as JSON */
   customMetrics?: string | null;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  /** Number of inactive members */
   inactiveMembers?: number;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** Number of members who left in this period */
   membersLeft?: number;
+  /** Number of new members added in this period */
   newMembers?: number;
+  /** Date for these statistics */
   statisticDate?: string;
+  /** Total storage used in bytes */
   storageUsed?: number;
   tenant?: IdentityTenantsTenant;
+  /** ID of the tenant these statistics belong to */
   tenantId: string;
+  /** Total number of members */
   totalMembers?: number;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
+/** System configuration data transfer object */
 export interface IdentityTenantsTenantSystemConfigurationDto {
   currencySettings?: IdentityTenantsTenantCurrencySettingsDto;
+  /** Additional custom configuration settings */
   customConfiguration?: Record<string, Record<string, unknown> | null> | null;
+  /** Default date format preference */
   dateFormat?: string | null;
+  /** Default locale and language settings */
   locale?: string | null;
+  /** Default number format preference */
   numberFormat?: string | null;
+  /** Default time zone for the tenant */
   timeZone?: string | null;
 }
 
+/** System limits data transfer object */
 export interface IdentityTenantsTenantSystemLimitsDto {
+  /** Additional custom resource limits */
   customLimits?: Record<string, number> | null;
+  /** Maximum API calls per period */
   maxApiCalls?: number;
+  /** Maximum number of projects */
   maxProjects?: number;
+  /** Maximum storage limit in bytes */
   maxStorage?: number;
+  /** Maximum number of users allowed */
   maxUsers?: number;
 }
 
+/** User interface settings data transfer object */
 export interface IdentityTenantsTenantUiSettingsDto {
   branding?: IdentityTenantsTenantBrandingDto;
+  /** Component-specific settings */
   componentSettings?: Record<string, Record<string, unknown> | null> | null;
+  /** Custom CSS overrides */
   customCss?: string | null;
+  /** Layout preferences and customizations */
   layout?: Record<string, Record<string, unknown> | null> | null;
+  /** UI theme and color scheme */
   theme?: string | null;
 }
 
+/** Validation error detail */
 export interface IdentityTenantsTenantValidationError {
   code?: string | null;
   field?: string | null;
   message?: string | null;
 }
 
+/** Tenant validation response */
 export interface IdentityTenantsTenantValidationOutput {
   errors?: Array<IdentityTenantsTenantValidationError> | null;
   isValid?: boolean;
@@ -6714,71 +7919,115 @@ export interface IdentityTenantsTenantValidationOutput {
   warnings?: Array<IdentityTenantsTenantValidationWarning> | null;
 }
 
+/** Validation warning detail */
 export interface IdentityTenantsTenantValidationWarning {
   code?: string | null;
   field?: string | null;
   message?: string | null;
 }
 
+/** Request model for updating tenant address information */
 export interface IdentityTenantsUpdateTenantAddressInput {
+  /** City name */
   city?: string | null;
+  /** Country name */
   country?: string | null;
+  /** Postal or ZIP code */
   postalCode?: string | null;
+  /** State or province */
   state?: string | null;
+  /** Street address */
   street?: string | null;
 }
 
+/** Request model for updating branding */
 export interface IdentityTenantsUpdateTenantBrandingInput {
+  /** Company name to update */
   companyName?: string | null;
+  /** Favicon URL to update */
   faviconUrl?: string | null;
+  /** Logo URL to update */
   logoUrl?: string | null;
+  /** Primary color to update */
   primaryColor?: string | null;
+  /** Secondary color to update */
   secondaryColor?: string | null;
 }
 
+/** Request model for updating tenant business information */
 export interface IdentityTenantsUpdateTenantBusinessInfoInput {
+  /** Compliance requirements */
   complianceRequirements?: Array<string> | null;
+  /** Geographic region */
   geographicRegion?: string | null;
+  /** Industry sector */
   industry?: string | null;
+  /** Organization size */
   organizationSize?: string | null;
+  /** Tenant type */
   tenantType?: string | null;
 }
 
+/** Request model for updating business rules */
 export interface IdentityTenantsUpdateTenantBusinessRulesInput {
+  /** Approval rules to update */
   approvalRules?: Record<string, Record<string, unknown> | null> | null;
+  /** Notification rules to update */
   notificationRules?: Record<string, Record<string, unknown> | null> | null;
+  /** Validation rules to update */
   validationRules?: Record<string, Record<string, unknown> | null> | null;
+  /** Workflow rules to update */
   workflowRules?: Record<string, Record<string, unknown> | null> | null;
 }
 
+/** Request model for updating tenant contact information */
 export interface IdentityTenantsUpdateTenantContactInfoInput {
   address?: IdentityTenantsUpdateTenantAddressInput;
+  /** Organization name */
   organizationName?: string | null;
+  /** Primary contact email */
   primaryContactEmail?: string | null;
+  /** Primary contact name */
   primaryContactName?: string | null;
+  /** Primary contact phone */
   primaryContactPhone?: string | null;
+  /** Organization website */
   website?: string | null;
 }
 
+/** Request model for updating currency settings */
 export interface IdentityTenantsUpdateTenantCurrencySettingsInput {
+  /** Decimal places to update */
   decimalPlaces?: number | null;
+  /** Default currency to update */
   defaultCurrency?: string | null;
+  /** Display format to update */
   displayFormat?: string | null;
 }
 
+/** Request model for updating feature flags */
 export interface IdentityTenantsUpdateTenantFeatureFlagsInput {
+  /** Feature flags to update */
   featureFlags?: Record<string, boolean> | null;
 }
 
+/** Request model for updating tenant information */
 export interface IdentityTenantsUpdateTenantInput {
+  /** New tenant description */
   description?: string | null;
+  /** New tenant name */
   name?: string | null;
 }
 
+/** Request model for updating integration settings */
 export interface IdentityTenantsUpdateTenantIntegrationSettingsInput {
+  /** API keys to update */
   apiKeys?: Record<string, string> | null;
+  /** External services to update */
   externalServices?: Record<string, Record<string, unknown> | null> | null;
+  /** SSO configuration to update */
   ssoConfiguration?: Record<string, Record<string, unknown> | null> | null;
+  /** Webhook settings to update */
   webhookSettings?: Record<string, Record<string, unknown> | null> | null;
 }
 
@@ -6789,6 +8038,7 @@ export interface IdentityTenantsUpdateTenantMemberInviteOutput {
   success?: boolean;
 }
 
+/** Response for updating tenant member role */
 export interface IdentityTenantsUpdateTenantMemberRoleOutput {
   memberId?: string;
   message?: string | null;
@@ -6797,25 +8047,38 @@ export interface IdentityTenantsUpdateTenantMemberRoleOutput {
   tenantId?: string;
 }
 
+/** Request model for updating tenant metadata */
 export interface IdentityTenantsUpdateTenantMetadataInput {
+  /** Administrative notes to update */
   adminNotes?: string | null;
   businessInfo?: IdentityTenantsUpdateTenantBusinessInfoInput;
   contactInfo?: IdentityTenantsUpdateTenantContactInfoInput;
+  /** Custom metadata fields to update (partial update) */
   customFields?: Record<string, Record<string, unknown> | null> | null;
+  /** External references to update */
   externalReferences?: Record<string, string> | null;
+  /** Tags to add or update */
   tags?: Array<string> | null;
 }
 
+/** Request model for updating security settings */
 export interface IdentityTenantsUpdateTenantSecuritySettingsInput {
+  /** API rate limits to update */
   apiRateLimits?: Record<string, number> | null;
+  /** IP whitelist to update */
   ipWhitelist?: Array<string> | null;
+  /** Password policy to update */
   passwordPolicy?: Record<string, Record<string, unknown> | null> | null;
+  /** Session timeout to update */
   sessionTimeout?: number | null;
+  /** Two-factor requirement to update */
   twoFactorRequired?: boolean | null;
 }
 
+/** Request model for updating tenant settings */
 export interface IdentityTenantsUpdateTenantSettingsInput {
   businessRules?: IdentityTenantsUpdateTenantBusinessRulesInput;
+  /** Feature flags to update */
   featureFlags?: Record<string, boolean> | null;
   integrationSettings?: IdentityTenantsUpdateTenantIntegrationSettingsInput;
   securitySettings?: IdentityTenantsUpdateTenantSecuritySettingsInput;
@@ -6824,560 +8087,999 @@ export interface IdentityTenantsUpdateTenantSettingsInput {
   userInterfaceSettings?: IdentityTenantsUpdateTenantUiSettingsInput;
 }
 
+/** Request model for updating system configuration */
 export interface IdentityTenantsUpdateTenantSystemConfigurationInput {
   currencySettings?: IdentityTenantsUpdateTenantCurrencySettingsInput;
+  /** Custom configuration to update */
   customConfiguration?: Record<string, Record<string, unknown> | null> | null;
+  /** Date format to update */
   dateFormat?: string | null;
+  /** Locale to update */
   locale?: string | null;
+  /** Number format to update */
   numberFormat?: string | null;
+  /** Time zone to update */
   timeZone?: string | null;
 }
 
+/** Request model for updating system limits */
 export interface IdentityTenantsUpdateTenantSystemLimitsInput {
+  /** Custom limits to update */
   customLimits?: Record<string, number> | null;
+  /** Max API calls to update */
   maxApiCalls?: number | null;
+  /** Max projects to update */
   maxProjects?: number | null;
+  /** Max storage to update */
   maxStorage?: number | null;
+  /** Max users to update */
   maxUsers?: number | null;
 }
 
+/** Request model for updating tenant tags */
 export interface IdentityTenantsUpdateTenantTagsInput {
+  /** List of tags to set */
   tags?: Array<string> | null;
 }
 
+/** Request model for updating UI settings */
 export interface IdentityTenantsUpdateTenantUiSettingsInput {
   branding?: IdentityTenantsUpdateTenantBrandingInput;
+  /** Component settings to update */
   componentSettings?: Record<string, Record<string, unknown> | null> | null;
+  /** Custom CSS to update */
   customCss?: string | null;
+  /** Layout to update */
   layout?: Record<string, Record<string, unknown> | null> | null;
+  /** Theme to update */
   theme?: string | null;
 }
 
+/** Request body for membership invite actions. */
 export interface IdentityTenantsUpdateUserMembershipInviteInput {
+  /** Optional operator email for audit trail purposes. */
   actorEmail?: string | null;
 }
 
+/** Request body for changing a user's tenant role. */
 export interface IdentityTenantsUpdateUserMembershipRoleInput {
+  /** New role assigned in the tenant. */
   role?: string | null;
 }
 
+/** Usage tracking for tenant resources and activities
+Provides detailed tracking of tenant resource consumption */
 export interface IdentityTenantsUsageTracking {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Cost associated with this usage */
   cost?: number;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Date of usage */
   date?: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** Additional metadata as JSON */
   metadata?: string | null;
+  /** Type of resource being tracked */
   resourceType: string;
   tenant?: IdentityTenantsTenant;
+  /** ID of the tenant this usage tracking belongs to */
   tenantId: string;
+  /** Unit of measurement (e.g., "bytes", "calls", "requests") */
   unit?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Amount of resource used */
   usageAmount?: number;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
+/** DTO representing a user's membership in a tenant.
+Provides tenant information along with the user's role and status. */
 export interface IdentityTenantsUserMembershipDto {
+  /** When the invite was accepted. */
   acceptedAt?: string | null;
+  /** When the invite was cancelled. */
   cancelledAt?: string | null;
+  /** When the invite was created. */
   invitedAt?: string | null;
+  /** Email of the operator who sent the invite. */
   invitedByEmail?: string | null;
+  /** Email of the user who received the invite. */
   inviteeEmail?: string | null;
+  /** Display name of the user who received the invite. */
   inviteeName?: string | null;
+  /** Number of times the invite has been sent. */
   inviteResendCount?: number;
+  /** Invitation workflow status, when this membership was created as an invite. */
   inviteStatus?: string | null;
+  /** Whether this membership is currently active */
   isActive?: boolean;
+  /** When the user joined this tenant */
   joinedAt?: string;
+  /** When the invite was last sent. */
   lastInviteSentAt?: string | null;
+  /** When the user left this tenant (null if still a member) */
   leftAt?: string | null;
+  /** The membership ID */
   membershipId?: string;
+  /** The user's role within this tenant */
   role?: string | null;
+  /** Optional tenant description */
   tenantDescription?: string | null;
+  /** The tenant ID */
   tenantId?: string;
+  /** Whether the tenant is currently active. */
   tenantIsActive?: boolean;
+  /** Whether this is the platform's mandatory default tenant. */
   tenantIsDefault?: boolean;
+  /** The tenant name */
   tenantName?: string | null;
+  /** The tenant slug (URL-friendly identifier) */
   tenantSlug?: string | null;
 }
 
+/** Validate tenant request */
 export interface IdentityTenantsValidateTenantInput {
   adminEmail?: string | null;
   name?: string | null;
   slug?: string | null;
 }
 
+/** Request model for bulk activating users via API */
 export interface IdentityUsersBulkActivateUsersInput {
+  /** Collection of user IDs to activate */
   userIds?: Array<string> | null;
 }
 
+/** Response of bulk activate users operation */
 export interface IdentityUsersBulkActivateUsersOutput {
+  /** Successfully activated users */
   activatedUsers?: Array<IdentityUsersUserDto> | null;
+  /** User IDs that failed to activate */
   failedUserIds?: Array<string> | null;
 }
 
+/** Request model for bulk creating users via API */
 export interface IdentityUsersBulkCreateUsersInput {
+  /** Collection of users to create */
   users?: Array<IdentityUsersCreateUserRequestItem> | null;
 }
 
+/** Response of bulk create users operation */
 export interface IdentityUsersBulkCreateUsersOutput {
+  /** Successfully created user IDs */
   createdUserIds?: Array<string> | null;
+  /** Email addresses that failed to create */
   failedEmails?: Array<string> | null;
 }
 
+/** Request model for bulk deactivating users via API */
 export interface IdentityUsersBulkDeactivateUsersInput {
+  /** Collection of user IDs to deactivate */
   userIds?: Array<string> | null;
 }
 
+/** Response of bulk deactivate users operation */
 export interface IdentityUsersBulkDeactivateUsersOutput {
+  /** Successfully deactivated users */
   deactivatedUsers?: Array<IdentityUsersUserDto> | null;
+  /** User IDs that failed to deactivate */
   failedUserIds?: Array<string> | null;
 }
 
+/** Request model for bulk deleting users via API */
 export interface IdentityUsersBulkDeleteUsersInput {
+  /** Collection of user IDs to delete */
   userIds?: Array<string> | null;
 }
 
+/** Request model for bulk notification operations */
 export interface IdentityUsersBulkNotificationInput {
   filterCriteria?: IdentityUsersNotificationFilterCriteria;
+  /** IDs of notifications to operate on */
   notificationIds?: Array<string> | null;
+  /** Operation to perform */
   operation?: string | null;
 }
 
+/** Request model for bulk purge users operation */
 export interface IdentityUsersBulkPurgeUsersInput {
   strategy?: IdentityUsersPurgeStrategy;
+  /** Collection of user IDs to permanently delete */
   userIds?: Array<string> | null;
 }
 
+/** Request model for bulk restore users operation */
 export interface IdentityUsersBulkRestoreUsersInput {
+  /** Collection of user IDs to restore */
   userIds?: Array<string> | null;
 }
 
+/** Response of bulk restore users operation */
 export interface IdentityUsersBulkRestoreUsersOutput {
+  /** User IDs that failed to restore */
   failedUserIds?: Array<string> | null;
+  /** Successfully restored users */
   restoredUsers?: Array<IdentityUsersUserDto> | null;
 }
 
+/** Request model for bulk suspending users via API */
 export interface IdentityUsersBulkSuspendUsersInput {
+  /** Collection of user IDs to suspend */
   userIds?: Array<string> | null;
 }
 
+/** Response of bulk suspend users operation */
 export interface IdentityUsersBulkSuspendUsersOutput {
+  /** User IDs that failed to suspend */
   failedUserIds?: Array<string> | null;
+  /** Successfully suspended users */
   suspendedUsers?: Array<IdentityUsersUserDto> | null;
 }
 
+/** Request model for bulk unsuspending users via API */
 export interface IdentityUsersBulkUnsuspendUsersInput {
+  /** Collection of user IDs to unsuspend */
   userIds?: Array<string> | null;
 }
 
+/** Response of bulk unsuspend users operation */
 export interface IdentityUsersBulkUnsuspendUsersOutput {
+  /** User IDs that failed to unsuspend */
   failedUserIds?: Array<string> | null;
+  /** Successfully unsuspended users */
   unsuspendedUsers?: Array<IdentityUsersUserDto> | null;
 }
 
+/** Request model for bulk updating users via API */
 export interface IdentityUsersBulkUpdateUsersInput {
+  /** Collection of user updates */
   updates?: Array<IdentityUsersUpdateUserRequestItem> | null;
 }
 
+/** Request model for creating a user via API */
 export interface IdentityUsersCreateUserInput {
+  /** User's email address */
   email?: string | null;
+  /** User's full name */
   name?: string | null;
+  /** Optional phone number */
   phoneNumber?: string | null;
 }
 
+/** API request item for creating a user in bulk operations */
 export interface IdentityUsersCreateUserRequestItem {
+  /** User's email address */
   email?: string | null;
+  /** User's full name */
   name?: string | null;
+  /** Optional phone number */
   phoneNumber?: string | null;
 }
 
+/** Data transfer object for notification action */
 export interface IdentityUsersNotificationActionDto {
+  /** Action identifier */
   id?: string | null;
+  /** Whether this is the primary action */
   isPrimary?: boolean;
+  /** Action display text */
   text?: string | null;
+  /** Action type */
   type?: string | null;
+  /** Action URL */
   url?: string | null;
 }
 
+/** Filter criteria for notifications */
 export interface IdentityUsersNotificationFilterCriteria {
+  /** Filter by categories */
   categories?: Array<string> | null;
+  /** Filter by creation date from */
   dateFrom?: string | null;
+  /** Filter by creation date to */
   dateTo?: string | null;
+  /** Filter by archived status */
   isArchived?: boolean | null;
+  /** Filter by read status */
   isRead?: boolean | null;
+  /** Filter by priorities */
   priorities?: Array<string> | null;
+  /** Filter by types */
   types?: Array<string> | null;
 }
 
+/** Notification priority levels */
 export type IdentityUsersNotificationPriority = 'Low' | 'Normal' | 'High' | 'Urgent' | 'Critical';
 
+/** Profile visibility options */
 export type IdentityUsersProfileVisibility = 'Private' | 'FriendsOnly' | 'Public';
 
+/** Strategy for purging users */
 export type IdentityUsersPurgeStrategy = 'Immediate' | 'Scheduled' | 'GracePeriod';
 
+/** Request model for replacing user accessibility preferences */
 export interface IdentityUsersReplaceUserAccessibilityPreferencesInput {
+  /** Complete set of accessibility preferences */
   accessibilityPreferences?: Record<string, Record<string, unknown>> | null;
 }
 
+/** Request model for replacing user localization preferences */
 export interface IdentityUsersReplaceUserLocalizationPreferencesInput {
+  /** Complete set of localization preferences */
   localizationPreferences?: Record<string, Record<string, unknown>> | null;
 }
 
+/** Request model for completely replacing user metadata */
 export interface IdentityUsersReplaceUserMetadataInput {
+  /** Complete set of custom fields */
   customFields?: Record<string, Record<string, unknown>> | null;
+  /** Complete set of external references */
   externalReferences?: Record<string, string> | null;
+  /** Complete set of tags */
   tags?: Array<string> | null;
 }
 
+/** Request model for replacing user notification preferences */
 export interface IdentityUsersReplaceUserNotificationPreferencesInput {
+  /** Complete set of notification preferences */
   notificationPreferences?: Record<string, Record<string, unknown>> | null;
 }
 
+/** Request model for completely replacing user preferences */
 export interface IdentityUsersReplaceUserPreferencesInput {
+  /** Complete set of accessibility preferences */
   accessibilityPreferences?: Record<string, Record<string, unknown>> | null;
+  /** Complete set of general preferences */
   generalPreferences?: Record<string, Record<string, unknown>> | null;
+  /** Complete set of notification preferences */
   notificationPreferences?: Record<string, Record<string, unknown>> | null;
+  /** Complete set of privacy preferences */
   privacyPreferences?: Record<string, Record<string, unknown>> | null;
 }
 
+/** Request model for replacing user privacy preferences */
 export interface IdentityUsersReplaceUserPrivacyPreferencesInput {
+  /** Complete set of privacy preferences */
   privacyPreferences?: Record<string, Record<string, unknown>> | null;
 }
 
+/** Request model for completely replacing user profile */
 export interface IdentityUsersReplaceUserProfileInput {
+  /** Biography */
   bio?: string | null;
+  /** Company or organization */
   company?: string | null;
+  /** Display name */
   displayName?: string | null;
+  /** Job title */
   jobTitle?: string | null;
+  /** Preferred language */
   language?: string | null;
+  /** Location */
   location?: string | null;
+  /** Profile visibility setting */
   profileVisibility?: string | null;
+  /** Whether to show email in profile */
   showEmail?: boolean;
+  /** Whether to show location in profile */
   showLocation?: boolean;
+  /** Preferred timezone */
   timeZone?: string | null;
+  /** Website URL */
   website?: string | null;
 }
 
+/** Request model for updating user accessibility preferences */
 export interface IdentityUsersUpdateUserAccessibilityPreferencesInput {
+  /** Accessibility preferences to update */
   accessibilityPreferences?: Record<string, Record<string, unknown>> | null;
 }
 
+/** Request model for updating a user via API */
 export interface IdentityUsersUpdateUserInput {
+  /** Updated user name */
   name?: string | null;
+  /** Updated phone number */
   phoneNumber?: string | null;
 }
 
+/** Request model for updating user localization preferences */
 export interface IdentityUsersUpdateUserLocalizationPreferencesInput {
+  /** Localization preferences to update */
   localizationPreferences?: Record<string, Record<string, unknown>> | null;
 }
 
+/** Request model for updating user metadata */
 export interface IdentityUsersUpdateUserMetadataInput {
+  /** Custom fields to update (only provided keys are modified) */
   customFields?: Record<string, Record<string, unknown>> | null;
+  /** External references to update */
   externalReferences?: Record<string, string> | null;
+  /** Tags to add to the user */
   tagsToAdd?: Array<string> | null;
+  /** Tags to remove from the user */
   tagsToRemove?: Array<string> | null;
 }
 
+/** Request model for updating user notification preferences */
 export interface IdentityUsersUpdateUserNotificationPreferencesInput {
+  /** Notification preferences to update */
   notificationPreferences?: Record<string, Record<string, unknown>> | null;
 }
 
+/** Request model for updating user preferences */
 export interface IdentityUsersUpdateUserPreferencesInput {
+  /** Accessibility preferences to update */
   accessibilityPreferences?: Record<string, Record<string, unknown>> | null;
+  /** General preferences to update */
   generalPreferences?: Record<string, Record<string, unknown>> | null;
+  /** Notification preferences to update */
   notificationPreferences?: Record<string, Record<string, unknown>> | null;
+  /** Privacy preferences to update */
   privacyPreferences?: Record<string, Record<string, unknown>> | null;
 }
 
+/** Request model for updating user privacy preferences */
 export interface IdentityUsersUpdateUserPrivacyPreferencesInput {
+  /** Privacy preferences to update */
   privacyPreferences?: Record<string, Record<string, unknown>> | null;
 }
 
+/** Request model for updating user profile */
 export interface IdentityUsersUpdateUserProfileInput {
+  /** Biography to update */
   bio?: string | null;
+  /** Company or organization to update */
   company?: string | null;
+  /** Display name to update */
   displayName?: string | null;
+  /** Job title to update */
   jobTitle?: string | null;
+  /** Language to update */
   language?: string | null;
+  /** Location to update */
   location?: string | null;
+  /** Profile visibility to update */
   profileVisibility?: string | null;
+  /** Whether to show email */
   showEmail?: boolean | null;
+  /** Whether to show location */
   showLocation?: boolean | null;
+  /** Timezone to update */
   timeZone?: string | null;
+  /** Website to update */
   website?: string | null;
 }
 
+/** API request item for updating a user in bulk operations */
 export interface IdentityUsersUpdateUserRequestItem {
+  /** Updated user name */
   name?: string | null;
+  /** Updated phone number */
   phoneNumber?: string | null;
+  /** User's unique identifier */
   userId?: string;
 }
 
+/** Represents a unified user in the system combining identity and authentication.
+Inherits from EntityBase to provide GUID IDs, version control, timestamps, and soft delete functionality. */
 export interface IdentityUsersUser {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Checks if user can perform actions (active and not suspended) */
   canPerformActions?: boolean;
+  /** Checks if user can sign in (active, even if suspended for warning display) */
   canSignIn?: boolean;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  /** Email address of the user (unique) */
   email: string;
+  /** Check if the user has a password set (vs OAuth-only) */
   hasPassword?: boolean;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Whether this user is currently active */
   isActive?: boolean;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
+  /** Whether the user's email has been verified */
   isEmailVerified?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** Whether this user is suspended */
   isSuspended?: boolean;
+  /** Date and time of the user's last login */
   lastLoginAt?: string | null;
+  /** Date and time when the user was last seen/logged in */
   lastSeenAt?: string | null;
   metadata?: IdentityUsersUserMetadata;
+  /** Full name of the user */
   name: string;
+  /** Collection of notifications for this user. */
   notifications?: Array<IdentityUsersUserNotification> | null;
+  /** Optional phone number */
   phoneNumber?: string | null;
   preferences?: IdentityUsersUserPreferences;
   profile?: IdentityUsersUserProfile;
   status?: IdentityUsersUserStatus;
   tenantId?: string | null;
+  /** Collection of tenant memberships for this user.
+Provides direct navigation to all tenants the user belongs to. */
   tenantMemberships?: Array<IdentityTenantsTenantMember> | null;
+  /** Token version for immediate session invalidation.
+Increment this when: user changes password, signs out all sessions,
+or admin forces logout. JWT tokens with older versions are rejected. */
   tokenVersion?: number;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Optional username for display (unique if set) */
   username?: string | null;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
+/** Data transfer object for user accessibility preferences */
 export interface IdentityUsersUserAccessibilityPreferencesDto {
+  /** Preferred color scheme */
   colorScheme?: string | null;
+  /** Custom accessibility settings */
   customSettings?: Record<string, Record<string, unknown>> | null;
+  /** Preferred font size */
   fontSize?: number;
+  /** Whether high contrast mode is enabled */
   highContrast?: boolean;
+  /** Whether keyboard navigation is preferred */
   keyboardNavigation?: boolean;
+  /** Whether large text mode is enabled */
   largeText?: boolean;
+  /** Whether reduced motion is preferred */
   reducedMotion?: boolean;
+  /** Whether screen reader support is enabled */
   screenReader?: boolean;
 }
 
+/** User data transfer object */
 export interface IdentityUsersUserDto {
+  /** User unique identifier */
   id?: string;
+  /** When the user was created */
   createdAt?: string;
+  /** User email address */
   email?: string | null;
+  /** Whether the user is active */
   isActive?: boolean;
+  /** When the user was last seen/logged in */
   lastSeenAt?: string | null;
+  /** User full name */
   name?: string | null;
+  /** Optional phone number */
   phoneNumber?: string | null;
+  /** When the user was last updated */
   updatedAt?: string | null;
 }
 
+/** Data transfer object for user localization preferences */
 export interface IdentityUsersUserLocalizationPreferencesDto {
+  /** Preferred currency code (e.g., USD, EUR) */
   currency?: string | null;
+  /** Custom localization settings */
   customSettings?: Record<string, Record<string, unknown>> | null;
+  /** Preferred date format (e.g., MM/dd/yyyy, dd/MM/yyyy) */
   dateFormat?: string | null;
+  /** Preferred language code (e.g., en-US, es-ES) */
   language?: string | null;
+  /** Number formatting preferences */
   numberFormat?: Record<string, Record<string, unknown>> | null;
+  /** Preferred time format (12h or 24h) */
   timeFormat?: string | null;
+  /** Preferred timezone (e.g., UTC, America/New_York) */
   timezone?: string | null;
 }
 
+/** User metadata entity for storing custom fields, tags, and external references */
 export interface IdentityUsersUserMetadata {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Custom fields as JSON (key-value pairs) */
   customFields?: string | null;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  /** External system references and IDs */
   externalReferences?: string | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** Additional metadata notes */
   notes?: string | null;
+  /** User tags for categorization and filtering */
   tags?: string | null;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
   user?: IdentityUsersUser;
+  /** ID of the user this metadata belongs to */
   userId: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
+/** Data transfer object for user metadata */
 export interface IdentityUsersUserMetadataDto {
+  /** The unique identifier for the user metadata */
   id?: string;
+  /** When the metadata was created */
   createdAt?: string;
+  /** Dictionary of custom field keys and values */
   customFields?: Record<string, Record<string, unknown>> | null;
+  /** Dictionary of external system references */
   externalReferences?: Record<string, string> | null;
+  /** List of tags associated with the user */
   tags?: Array<string> | null;
+  /** When the metadata was last updated */
   updatedAt?: string | null;
+  /** The user identifier that this metadata belongs to */
   userId?: string;
+  /** Version for optimistic concurrency control */
   version?: string | null;
 }
 
+/** User notifications entity for storing notification history and settings */
 export interface IdentityUsersUserNotification {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Action URL or deep link */
   actionUrl?: string | null;
+  /** When the notification was archived */
   archivedAt?: string | null;
+  /** Notification content/message */
   content: string;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Whether the notification is archived */
   isArchived?: boolean;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** Whether the notification has been read */
   isRead?: boolean;
+  /** Additional metadata as JSON */
   metadata?: string | null;
   priority?: IdentityUsersNotificationPriority;
+  /** When the notification was read */
   readAt?: string | null;
+  /** Related entity ID (if applicable) */
   relatedEntityId?: string | null;
+  /** Related entity type (if applicable) */
   relatedEntityType?: string | null;
+  /** Sender ID (if applicable) */
   senderId?: string | null;
+  /** Source system or module that generated the notification */
   source?: string | null;
   tenantId?: string | null;
+  /** Notification title */
   title: string;
+  /** Notification type/category */
   type: string;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
   user?: IdentityUsersUser;
+  /** ID of the user this notification belongs to */
   userId: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
+/** Data transfer object for detailed notification information */
 export interface IdentityUsersUserNotificationDetailDto {
+  /** Available actions for the notification */
   actions?: Array<IdentityUsersNotificationActionDto> | null;
   notification?: IdentityUsersUserNotificationDto;
+  /** Related notifications */
   relatedNotifications?: Array<IdentityUsersUserNotificationDto> | null;
 }
 
+/** Data transfer object for user notification */
 export interface IdentityUsersUserNotificationDto {
+  /** The unique identifier for the notification */
   id?: string;
+  /** Text for notification action */
   actionText?: string | null;
+  /** URL for notification action */
   actionUrl?: string | null;
+  /** When the notification was archived */
   archivedAt?: string | null;
+  /** Notification category */
   category?: string | null;
+  /** When the notification was created */
   createdAt?: string;
+  /** When the notification expires */
   expiresAt?: string | null;
+  /** URL to notification image */
   imageUrl?: string | null;
+  /** Whether the notification is archived */
   isArchived?: boolean;
+  /** Whether the notification has been read */
   isRead?: boolean;
+  /** Notification message content */
   message?: string | null;
+  /** Additional notification metadata */
   metadata?: Record<string, Record<string, unknown>> | null;
+  /** Notification priority level */
   priority?: string | null;
+  /** When the notification was read */
   readAt?: string | null;
+  /** Notification title */
   title?: string | null;
+  /** Type of notification */
   type?: string | null;
+  /** When the notification was last updated */
   updatedAt?: string | null;
+  /** The user identifier that this notification belongs to */
   userId?: string;
+  /** Version for optimistic concurrency control */
   version?: string | null;
 }
 
+/** Data transfer object for user notification preferences */
 export interface IdentityUsersUserNotificationPreferencesDto {
+  /** Notification preferences by category */
   categoryPreferences?: Record<string, Record<string, unknown>> | null;
+  /** Whether email notifications are enabled */
   emailEnabled?: boolean;
+  /** Notification frequency preference */
   frequency?: string | null;
+  /** Whether in-app notifications are enabled */
   inAppEnabled?: boolean;
+  /** Whether push notifications are enabled */
   pushEnabled?: boolean;
+  /** Quiet hours configuration */
   quietHours?: Record<string, Record<string, unknown>> | null;
+  /** Whether SMS notifications are enabled */
   smsEnabled?: boolean;
 }
 
+/** User preferences entity for storing general, notification, accessibility, and privacy preferences */
 export interface IdentityUsersUserPreferences {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Accessibility preferences (font size, contrast, screen reader) */
   accessibilityPreferences?: string | null;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  /** General application preferences (theme, language, timezone) */
   generalPreferences?: string | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** Localization preferences (language, timezone, date/time formats) */
   localizationPreferences?: string | null;
+  /** Notification preferences (email, push, in-app) */
   notificationPreferences?: string | null;
+  /** Privacy preferences (profile visibility, data sharing) */
   privacyPreferences?: string | null;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
   user?: IdentityUsersUser;
+  /** ID of the user these preferences belong to */
   userId: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
+/** Data transfer object for user preferences */
 export interface IdentityUsersUserPreferencesDto {
+  /** The unique identifier for the user preferences */
   id?: string;
+  /** Accessibility-specific preferences */
   accessibilityPreferences?: Record<string, Record<string, unknown>> | null;
+  /** When the preferences were created */
   createdAt?: string;
+  /** General user preferences */
   generalPreferences?: Record<string, Record<string, unknown>> | null;
+  /** Localization-specific preferences */
   localizationPreferences?: Record<string, Record<string, unknown>> | null;
+  /** Notification-specific preferences */
   notificationPreferences?: Record<string, Record<string, unknown>> | null;
+  /** Privacy-specific preferences */
   privacyPreferences?: Record<string, Record<string, unknown>> | null;
+  /** When the preferences were last updated */
   updatedAt?: string | null;
+  /** The user identifier that these preferences belong to */
   userId?: string;
+  /** Version for optimistic concurrency control */
   version?: string | null;
 }
 
+/** Data transfer object for user privacy preferences */
 export interface IdentityUsersUserPrivacyPreferencesDto {
+  /** Whether activity tracking is allowed */
   activityTracking?: boolean;
+  /** Whether analytics cookies are allowed */
   analyticsCookies?: boolean;
+  /** Custom privacy settings */
   customSettings?: Record<string, Record<string, unknown>> | null;
+  /** Data collection preferences */
   dataCollection?: Record<string, Record<string, unknown>> | null;
+  /** Whether marketing emails are allowed */
   marketingEmails?: boolean;
+  /** Whether personalized content is allowed */
   personalizedContent?: boolean;
+  /** Profile visibility setting */
   profileVisibility?: string | null;
+  /** Third-party sharing preferences */
   thirdPartySharing?: Record<string, Record<string, unknown>> | null;
 }
 
+/** User profile entity for storing profile information, avatar, banner, and social links */
 export interface IdentityUsersUserProfile {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Avatar image URL or file path */
   avatarUrl?: string | null;
+  /** Banner/cover image URL or file path */
   bannerUrl?: string | null;
+  /** User biography or description */
   bio?: string | null;
+  /** User's company or organization */
   company?: string | null;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Date of birth */
   dateOfBirth?: string | null;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Display name for the profile (can be different from User.Name) */
   displayName?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  /** User's gender */
   gender?: string | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** Whether the profile is verified */
   isVerified?: boolean;
+  /** User's job title or profession */
   jobTitle?: string | null;
+  /** User's location */
   location?: string | null;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
   user?: IdentityUsersUser;
+  /** ID of the user this profile belongs to */
   userId: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
   visibility?: IdentityUsersProfileVisibility;
+  /** User's website URL */
   website?: string | null;
 }
 
+/** Data transfer object for user profile */
 export interface IdentityUsersUserProfileDto {
+  /** The unique identifier for the user profile */
   id?: string;
+  /** URL to user's avatar image */
   avatarUrl?: string | null;
+  /** URL to user's banner image */
   bannerUrl?: string | null;
+  /** User's biography */
   bio?: string | null;
+  /** User's company or organization */
   company?: string | null;
+  /** When the profile was created */
   createdAt?: string;
+  /** User's display name */
   displayName?: string | null;
+  /** User's job title */
   jobTitle?: string | null;
+  /** User's preferred language */
   language?: string | null;
+  /** User's location */
   location?: string | null;
+  /** Profile visibility setting */
   profileVisibility?: string | null;
+  /** Whether to show email in profile */
   showEmail?: boolean;
+  /** Whether to show location in profile */
   showLocation?: boolean;
+  /** User's preferred timezone */
   timeZone?: string | null;
+  /** When the profile was last updated */
   updatedAt?: string | null;
+  /** The user identifier that this profile belongs to */
   userId?: string;
+  /** Version for optimistic concurrency control */
   version?: string | null;
+  /** User's website URL */
   website?: string | null;
 }
 
+/** Value object representing user account status with state machine semantics.
+Encapsulates IsActive/IsSuspended logic and enforces valid state transitions. */
 export interface IdentityUsersUserStatus {
+  /** Whether the user account is active */
   isActive?: boolean;
+  /** Whether the user account is suspended */
   isSuspended?: boolean;
 }
 
@@ -7387,10 +9089,13 @@ export interface IDurableIntegrationEvent {
   aggregateType?: string | null;
   causationId?: string | null;
   correlationId?: string;
+  /** Gets the unique identifier for this event instance. */
   eventId?: string;
   eventName?: string | null;
+  /** Gets the timestamp when this event occurred. */
   occurredAt?: string;
   schemaVersion?: number;
+  /** Gets the name of the module that published this event. */
   sourceModule?: string | null;
   tenantId?: string;
 }
@@ -7427,23 +9132,37 @@ export interface LaunchPadCreateLaunchPlanInput {
 }
 
 export interface LaunchPadLaunchChecklistItem {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
   category: string;
   completedAt?: string | null;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isComplete?: boolean;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
   isRequired?: boolean;
   launchPlan?: LaunchPadLaunchPlan;
   launchPlanId?: string;
   tenantId?: string | null;
   title: string;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
@@ -7464,13 +9183,22 @@ export interface LaunchPadLaunchPadAnalyticsProjection {
 }
 
 export interface LaunchPadLaunchPadApplication {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
   launchPadEvent?: LaunchPadLaunchPadEvent;
   launchPadEventId?: string;
@@ -7489,7 +9217,12 @@ export interface LaunchPadLaunchPadApplication {
   submittedByUser?: IdentityUsersUser;
   submittedByUserId?: string;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
@@ -7509,25 +9242,39 @@ export interface LaunchPadLaunchPadApplicationProjection {
 export type LaunchPadLaunchPadApplicationStatus = 'Draft' | 'Submitted' | 'UnderReview' | 'Waitlisted' | 'Approved' | 'Rejected' | 'Withdrawn';
 
 export interface LaunchPadLaunchPadEvent {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
   applications?: Array<LaunchPadLaunchPadApplication> | null;
   applicationsCloseAt?: string | null;
   applicationsOpenAt?: string | null;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
   description?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   endsAt?: string;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
   name: string;
   slots?: Array<LaunchPadLaunchPadParticipantSlot> | null;
   startsAt?: string;
   status?: LaunchPadLaunchPadEventStatus;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
@@ -7551,40 +9298,63 @@ export type LaunchPadLaunchPadEventStatus =
   'Draft' | 'ApplicationsOpen' | 'ApplicationsClosed' | 'Scheduled' | 'Active' | 'Completed' | 'Cancelled' | 'Archived';
 
 export interface LaunchPadLaunchPadParticipantRegistration {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
   checkedInAt?: string | null;
   completedAt?: string | null;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
   launchPadParticipantSlot?: LaunchPadLaunchPadParticipantSlot;
   launchPadParticipantSlotId?: string;
   registeredAt?: string;
   status?: LaunchPadLaunchPadParticipantStatus;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
   user?: IdentityUsersUser;
   userId?: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
 export type LaunchPadLaunchPadParticipantRole = 'Participant' | 'Mentor' | 'Audience' | 'Presenter';
 
 export interface LaunchPadLaunchPadParticipantSlot {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
   capacity?: number;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   endsAt?: string;
   hasCapacity?: boolean;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
   launchPadEvent?: LaunchPadLaunchPadEvent;
   launchPadEventId?: string;
@@ -7594,7 +9364,12 @@ export interface LaunchPadLaunchPadParticipantSlot {
   role?: LaunchPadLaunchPadParticipantRole;
   startsAt?: string;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
@@ -7629,15 +9404,24 @@ export interface LaunchPadLaunchPadSlotProjection {
 }
 
 export interface LaunchPadLaunchPlan {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
   channels?: Array<string> | null;
   checklistItems?: Array<LaunchPadLaunchChecklistItem> | null;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
   launchedAt?: string | null;
   launchPadApplication?: LaunchPadLaunchPadApplication;
@@ -7654,7 +9438,12 @@ export interface LaunchPadLaunchPlan {
   status?: LaunchPadLaunchPlanStatus;
   targetLaunchAt?: string | null;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
@@ -7709,6 +9498,9 @@ export interface LearningAssessmentsAnonymousReviewRubricDto {
   criteria?: Array<LearningAssessmentsRubricCriterionDto> | null;
 }
 
+/** THE anonymity boundary for reviewers: the reviewee's submission stripped of every identity,
+grade, and instructor-feedback field. Never add UserId/EnrollmentId/Score/Passed/Feedback/
+GradedBy/GradedAt/CourseGroupId here; the reviewee's name must never appear either. */
 export interface LearningAssessmentsAnonymousReviewSubmissionDto {
   assessment?: LearningAssessmentsAnonymousReviewAssessmentDto;
   attemptNumber?: number;
@@ -7783,6 +9575,8 @@ export interface LearningAssessmentsAssessmentGroupDto {
   weightPercent?: LearningGradingContractsPercentValue;
 }
 
+/** Defines whether an assessment is delivered one step at a time or as a continuous experience.
+Values are persisted and must remain stable. */
 export type LearningAssessmentsAssessmentPresentationMode = 'SingleStep' | 'Continuous';
 
 export interface LearningAssessmentsAssessmentScoreBucketDto {
@@ -7818,6 +9612,7 @@ export interface LearningAssessmentsAssessmentSubmissionDto {
 
 export type LearningAssessmentsAssessmentType = 'Quiz' | 'Assignment' | 'Project' | 'PeerReview' | 'SelfAssessment';
 
+/** Request to assign or clear an assessment group. */
 export interface LearningAssessmentsAssignAssessmentGroupInput {
   assessmentGroupId?: string | null;
   clearAssessmentGroup?: boolean;
@@ -7839,6 +9634,7 @@ export interface LearningAssessmentsCourseAssessmentAnalyticsDto {
   ungradedCount?: number;
 }
 
+/** Request to create a weighted assessment group. */
 export interface LearningAssessmentsCreateAssessmentGroupInput {
   courseId?: string;
   description?: string | null;
@@ -7847,6 +9643,7 @@ export interface LearningAssessmentsCreateAssessmentGroupInput {
   weightPercent?: LearningGradingContractsPercentValue;
 }
 
+/** Request to create a new assessment */
 export interface LearningAssessmentsCreateAssessmentInput {
   allowLateSubmissions?: boolean;
   assessmentGroupId?: string | null;
@@ -7870,11 +9667,13 @@ export interface LearningAssessmentsCreateAssessmentInput {
   type?: LearningAssessmentsAssessmentType;
 }
 
+/** Request to create a group inside a group set. */
 export interface LearningAssessmentsCreateGroupInput {
   capacity?: number;
   name?: string | null;
 }
 
+/** Request to create a group set. */
 export interface LearningAssessmentsCreateGroupSetInput {
   name?: string | null;
 }
@@ -8030,6 +9829,7 @@ export type LearningAssessmentsGradingPersistencePersistedGradeRoundStatus =
 
 export type LearningAssessmentsGradingPersistencePersistedGradingExecutionStatus = 'Pending' | 'Running' | 'AwaitingReview' | 'Completed' | 'Failed';
 
+/** Assessment summary fields the SpeedGrader header and grading panel need. */
 export interface LearningAssessmentsGradingQueueAssessmentDto {
   id?: string;
   groupSetId?: string | null;
@@ -8041,6 +9841,8 @@ export interface LearningAssessmentsGradingQueueAssessmentDto {
   type?: LearningAssessmentsAssessmentType;
 }
 
+/** SpeedGrader navigation bundle: assessment summary plus one queue item per student/group.
+No peer-review data here — SpeedGrader fetches reviews per submission. */
 export interface LearningAssessmentsGradingQueueDto {
   assessment?: LearningAssessmentsGradingQueueAssessmentDto;
   items?: Array<LearningAssessmentsGradingQueueItemDto> | null;
@@ -8048,6 +9850,12 @@ export interface LearningAssessmentsGradingQueueDto {
   total?: number;
 }
 
+/** One navigable queue entry = one student or group. SubmissionId is the row the grader opens:
+the target's LATEST attempt's row (the single row for individuals, the canonical Min(Id)
+row for groups; CanonicalSubmissionId mirrors it so clients can address group items by
+their canonical id). AssignmentScore/AssignmentPassed are the assignment-level grade from
+the target's LATEST GRADED attempt — they persist across resubmissions until a newer
+attempt is graded (one grade per assignment; regrades land on a fresh submission). */
 export interface LearningAssessmentsGradingQueueItemDto {
   assignmentPassed?: boolean | null;
   assignmentScore?: LearningGradingContractsScoreValue | null;
@@ -8179,6 +9987,7 @@ export interface LearningAssessmentsGradingRuntimeReleaseGradeResultCommand {
   reason?: string | null;
 }
 
+/** Group detail with member display names. */
 export interface LearningAssessmentsGroupDetailDto {
   id?: string;
   capacity?: number;
@@ -8194,6 +10003,7 @@ export interface LearningAssessmentsGroupDto {
   name?: string | null;
 }
 
+/** Group member with display name resolved from Users; falls back to the raw user id. */
 export interface LearningAssessmentsGroupMemberDto {
   displayName?: string | null;
   userId?: string;
@@ -8212,12 +10022,14 @@ export interface LearningAssessmentsGroupSetDto {
   name?: string | null;
 }
 
+/** Group set listing entry with per-group summary. */
 export interface LearningAssessmentsGroupSetSummaryDto {
   id?: string;
   groups?: Array<LearningAssessmentsGroupSummaryDto> | null;
   name?: string | null;
 }
 
+/** Group summary (no member identities). */
 export interface LearningAssessmentsGroupSummaryDto {
   id?: string;
   capacity?: number;
@@ -8229,6 +10041,7 @@ export interface LearningAssessmentsIdempotentRuntimeInput {
   idempotencyKey?: string | null;
 }
 
+/** Instructor-only view of the same reviews, with reviewer identity (SpeedGrader peer panel). */
 export interface LearningAssessmentsInstructorPeerReviewDto {
   feedback?: string | null;
   reviewerName?: string | null;
@@ -8278,12 +10091,15 @@ export interface LearningAssessmentsLearnerInteractiveVideoAssessmentCueDto {
   cuePositionSeconds?: number | null;
 }
 
+/** Links a graded assessment to a stable cue in a delivery-owned interactive video. */
 export interface LearningAssessmentsLinkInteractiveVideoCueInput {
   contentId?: string;
   cueId?: string | null;
   cuePositionSeconds?: number | null;
 }
 
+/** Claim response. Deliberately carries no reviewee identity (no userId, no group id/name)
+and no submission id — only the review to work on and its masked descriptor. */
 export interface LearningAssessmentsPeerReviewClaimDto {
   maskedSubmission?: string | null;
   reviewId?: string;
@@ -8291,12 +10107,16 @@ export interface LearningAssessmentsPeerReviewClaimDto {
 
 export type LearningAssessmentsPeerReviewStatus = 'Assigned' | 'Submitted';
 
+/** Body of a peer review submit: plain score XOR rubric scores (rubric rules enforced server-side),
+plus the mandatory feedback comment. */
 export interface LearningAssessmentsPeerReviewSubmitInput {
   feedback?: string | null;
   rubricScores?: string | null;
   score?: LearningGradingContractsScoreValue | null;
 }
 
+/** THE anonymity boundary for reviewees: what a student sees of reviews they received.
+Reviewer identity is absent from the DTO, not merely null. */
 export interface LearningAssessmentsReceivedPeerReviewDto {
   feedback?: string | null;
   reviewId?: string;
@@ -8310,6 +10130,7 @@ export interface LearningAssessmentsResolveInstructorReviewInput {
   resolution?: LearningAssessmentsGradingRuntimeInstructorReviewResolutionV1;
 }
 
+/** Rubric criterion read shape. */
 export interface LearningAssessmentsRubricCriterionDto {
   id?: string;
   description?: string | null;
@@ -8317,6 +10138,7 @@ export interface LearningAssessmentsRubricCriterionDto {
   points?: LearningGradingContractsScoreValue;
 }
 
+/** Rubric read shape with criteria ordered by GameGuild.Learning.Assessments.RubricCriterionDto.Order. */
 export interface LearningAssessmentsRubricDto {
   id?: string;
   criteria?: Array<LearningAssessmentsRubricCriterionDto> | null;
@@ -8329,12 +10151,14 @@ export interface LearningAssessmentsSaveCollectiveRuntimeDraftInput {
   response?: LearningAssessmentsGradingContractsAssessmentResponseEnvelopeV1;
 }
 
+/** One criterion row of a rubric save request. */
 export interface LearningAssessmentsSaveRubricCriterionInput {
   description?: string | null;
   order?: number;
   points?: LearningGradingContractsScoreValue;
 }
 
+/** Request to create or fully replace an assessment rubric. */
 export interface LearningAssessmentsSaveRubricInput {
   criteria?: Array<LearningAssessmentsSaveRubricCriterionInput> | null;
   title?: string | null;
@@ -8370,6 +10194,7 @@ export type LearningAssessmentsSubmissionModality = string;
 
 export type LearningAssessmentsSubmissionStatus = 'InProgress' | 'Submitted' | 'Graded' | 'Returned' | 'Late';
 
+/** Persists one or more answer payloads when a learner submits an assessment. */
 export interface LearningAssessmentsSubmitAssessmentInput {
   codePayload?: string | null;
   filePayload?: string | null;
@@ -8385,6 +10210,7 @@ export interface LearningAssessmentsSubmitAssessmentRuntimeInput {
   response?: LearningAssessmentsGradingContractsAssessmentResponseEnvelopeV1;
 }
 
+/** One task item. Variant fields are null outside their type (GradingQueueItemDto precedent). */
 export interface LearningAssessmentsTaskItemDto {
   assessmentId?: string;
   assessmentTitle?: string | null;
@@ -8401,6 +10227,7 @@ export interface LearningAssessmentsTasksDto {
   items?: Array<LearningAssessmentsTaskItemDto> | null;
 }
 
+/** Request to update a weighted assessment group. */
 export interface LearningAssessmentsUpdateAssessmentGroupInput {
   description?: string | null;
   name?: string | null;
@@ -8408,6 +10235,7 @@ export interface LearningAssessmentsUpdateAssessmentGroupInput {
   weightPercent?: LearningGradingContractsPercentValue | null;
 }
 
+/** Request to update an assessment */
 export interface LearningAssessmentsUpdateAssessmentInput {
   allowLateSubmissions?: boolean | null;
   assessmentGroupId?: string | null;
@@ -8445,6 +10273,7 @@ export interface LearningAssessmentsUpdateAssessmentInput {
   title?: string | null;
 }
 
+/** DTO for certificate display */
 export interface LearningCertificatesCertificateDto {
   id?: string;
   certificateNumber?: string | null;
@@ -8461,6 +10290,7 @@ export interface LearningCertificatesCertificateDto {
 
 export type LearningCertificatesCertificateStatus = 'Active' | 'Expired' | 'Revoked';
 
+/** DTO for certificate template editing and preview */
 export interface LearningCertificatesCertificateTemplateDetailDto {
   id?: string;
   courseId?: string;
@@ -8475,6 +10305,7 @@ export interface LearningCertificatesCertificateTemplateDetailDto {
   updatedAt?: string;
 }
 
+/** DTO for certificate template list display */
 export interface LearningCertificatesCertificateTemplateDto {
   id?: string;
   courseId?: string;
@@ -8487,6 +10318,7 @@ export interface LearningCertificatesCertificateTemplateDto {
   updatedAt?: string;
 }
 
+/** Result of certificate verification */
 export interface LearningCertificatesCertificateVerificationResult {
   certificateNumber?: string | null;
   courseName?: string | null;
@@ -8498,12 +10330,14 @@ export interface LearningCertificatesCertificateVerificationResult {
   status?: LearningCertificatesCertificateStatus;
 }
 
+/** Request to create a certificate template */
 export interface LearningCertificatesCreateCertificateTemplateInput {
   courseId?: string;
   name?: string | null;
   templateHtml?: string | null;
 }
 
+/** Request to issue a certificate */
 export interface LearningCertificatesIssueCertificateInput {
   courseId?: string;
   enrollmentId?: string;
@@ -8511,10 +10345,12 @@ export interface LearningCertificatesIssueCertificateInput {
   userId?: string;
 }
 
+/** Request to revoke a certificate */
 export interface LearningCertificatesRevokeCertificateInput {
   reason?: string | null;
 }
 
+/** Request to update a certificate template */
 export interface LearningCertificatesUpdateCertificateTemplateInput {
   description?: string | null;
   isActive?: boolean;
@@ -8669,6 +10505,7 @@ export interface LearningCohortsCourseCohortCalendarDto {
   entries?: Array<LearningCohortsCohortCalendarEntryDto> | null;
 }
 
+/** Request to create a new cohort */
 export interface LearningCohortsCreateCohortInput {
   courseId?: string;
   description?: string | null;
@@ -8705,6 +10542,7 @@ export interface LearningCohortsShiftCohortScheduleInput {
   scope?: LearningCohortsScheduleShiftScope;
 }
 
+/** Request to update a cohort */
 export interface LearningCohortsUpdateCohortInput {
   description?: string | null;
   endDate?: string | null;
@@ -8733,6 +10571,7 @@ export interface LearningCohortsUpdateCohortScheduleItemInput {
   visibilityOverride?: LearningCohortsCohortVisibilityOverride;
 }
 
+/** DTO for ActivityGrade responses - avoids circular references for Swagger/OpenAPI */
 export interface LearningCoursesActivityGradeDto {
   id?: string;
   contentInteraction?: LearningCoursesContentInteractionSummaryDto;
@@ -8865,10 +10704,15 @@ export interface LearningCoursesAuthoringDraftDto {
   revision?: number;
 }
 
+/** Metadata for one bundled file in a coding assignment workspace. */
 export interface LearningCoursesBundleFileMeta {
+  /** Raw file content (text or base64-encoded bytes). */
   content: string | null;
+  /** "text" or "base64". */
   encoding?: string | null;
+  /** Whether the learner may edit this file. Private + Modifiable is rejected. */
   modifiable?: boolean;
+  /** "Public" (visible to learner) or "Private" (hidden). "Solution" is rejected server-side. */
   visibility?: string | null;
 }
 
@@ -8881,6 +10725,8 @@ export interface LearningCoursesCloneProgramDto {
   newTitle?: string | null;
 }
 
+/** v1 coding-assignment content stored in GameGuild.Learning.Courses.ProgramContent.JsonBody.
+Discriminator root: `Type == "coding-assignment"`, `Version == 1`. */
 export interface LearningCoursesCodingAssignmentContent {
   data: LearningCoursesWorkspaceData;
   environment: LearningCoursesCodingEnvironment;
@@ -8890,10 +10736,15 @@ export interface LearningCoursesCodingAssignmentContent {
   version?: number;
 }
 
+/** Workspace runtime environment for a coding assignment. */
 export interface LearningCoursesCodingEnvironment {
+  /** Whether the learner may create new files in the workspace. */
   allowStudentCreateFiles?: boolean;
+  /** One of: cpp, c, sdl-cpp, raylib-cpp, allegro-cpp (validator-enforced). */
   language: string | null;
+  /** Optional pre-bundled library (sdl3, raylib, allegro, ...). */
   libBundle?: string | null;
+  /** Toolset id (e.g. "clang"). */
   tools: string | null;
 }
 
@@ -8934,6 +10785,7 @@ export interface LearningCoursesCompletionTrendDto {
   totalCount?: number;
 }
 
+/** DTO for ContentInteraction responses - avoids circular references for Swagger/OpenAPI */
 export interface LearningCoursesContentInteractionDto {
   id?: string;
   canModify?: boolean;
@@ -8970,9 +10822,12 @@ export interface LearningCoursesContentInteractionEventDto {
   type?: LearningCoursesContentInteractionEventType;
 }
 
+/** Fine-grained events emitted while a learner consumes lesson content.
+Values are persisted and must remain stable. */
 export type LearningCoursesContentInteractionEventType =
   'Opened' | 'Heartbeat' | 'Progressed' | 'Paused' | 'Resumed' | 'Seeked' | 'Completed' | 'QuizPresented' | 'QuizAnswered';
 
+/** Simplified content interaction information to avoid circular references */
 export interface LearningCoursesContentInteractionSummaryDto {
   id?: string;
   content?: LearningCoursesContentSummaryDto;
@@ -8993,6 +10848,7 @@ export interface LearningCoursesContentProgressDto {
   title?: string | null;
 }
 
+/** DTO for content statistics */
 export interface LearningCoursesContentStatsDto {
   contentByType?: {
     Assignment?: number;
@@ -9016,6 +10872,7 @@ export interface LearningCoursesContentStatsDto {
   totalContent?: number;
 }
 
+/** Simplified content information to avoid circular references */
 export interface LearningCoursesContentSummaryDto {
   id?: string;
   contentType?: string | null;
@@ -9028,6 +10885,7 @@ export interface LearningCoursesCourseSupportTicketMessageInput {
   message?: string | null;
 }
 
+/** DTO for creating new activity grades */
 export interface LearningCoursesCreateActivityGradeDto {
   contentInteractionId?: string;
   feedback?: string | null;
@@ -9061,6 +10919,7 @@ export interface LearningCoursesCreateProductFromProgramDto {
   name?: string | null;
 }
 
+/** DTO for creating new program content */
 export interface LearningCoursesCreateProgramContentDto {
   activitySettings?: LearningCoursesActivitySettings;
   body?: string | null;
@@ -9099,14 +10958,19 @@ export interface LearningCoursesEngagementMetricsDto {
   weeklyActiveUsers?: number;
 }
 
+/** Represents the enrollment status for a program enrollment */
 export type LearningCoursesEnrollmentStatus = 'Open' | 'Active' | 'Paused' | 'Cancelled' | 'Expired' | 'Completed' | 'Closed' | 'InviteOnly' | 'Waitlist';
 
 export interface LearningCoursesEnrollProgramUserInput {
   userReference?: string | null;
 }
 
+/** Discriminates whether GameGuild.Learning.Courses.ProgramContent.EstimatedMinutes was computed automatically
+(200 words-per-minute word count, recomputed on every save) or pinned manually by an author
+(preserved verbatim across saves). */
 export type LearningCoursesEstimatedMinutesSource = 'Auto' | 'Manual';
 
+/** Simplified grader information to avoid circular references */
 export interface LearningCoursesGraderSummaryDto {
   id?: string;
   role?: string | null;
@@ -9114,6 +10978,7 @@ export interface LearningCoursesGraderSummaryDto {
   userEmail?: string | null;
 }
 
+/** DTO for grade statistics responses */
 export interface LearningCoursesGradeStatisticsDto {
   averageGrade?: LearningGradingContractsPercentValue;
   averageGradeFormatted?: string | null;
@@ -9125,10 +10990,12 @@ export interface LearningCoursesGradeStatisticsDto {
   totalGrades?: number;
 }
 
+/** Grading configuration for a coding assignment. */
 export interface LearningCoursesGradingConfig {
   maxScore?: number;
 }
 
+/** Defines how a lesson body is authored and rendered. Values are persisted and must remain stable. */
 export type LearningCoursesLessonContentFormat = 'Markdown' | 'Lexical' | 'RevealJs' | 'Video' | 'Html' | 'ExternalLink';
 
 export interface LearningCoursesMonetizationDto {
@@ -9138,6 +11005,7 @@ export interface LearningCoursesMonetizationDto {
   subscriptionDurationDays?: number | null;
 }
 
+/** DTO for moving content to a new parent/position */
 export interface LearningCoursesMoveContentDto {
   contentId: string;
   newParentId?: string | null;
@@ -9174,6 +11042,7 @@ export interface LearningCoursesPrerequisiteStatusDto {
   type?: LearningCoursesPrerequisiteType;
 }
 
+/** Type of prerequisite requirement */
 export type LearningCoursesPrerequisiteType = 'Required' | 'Recommended' | 'Corequisite';
 
 export interface LearningCoursesPricingDto {
@@ -9197,6 +11066,7 @@ export interface LearningCoursesProgramAnalyticsDto {
   totalViews?: number;
 }
 
+/** DTO for program content responses */
 export interface LearningCoursesProgramContentDto {
   id?: string;
   activitySettings?: LearningCoursesActivitySettings;
@@ -9223,12 +11093,15 @@ export interface LearningCoursesProgramContentDto {
   visibility?: LearningCoursesVisibility;
 }
 
-/** Legacy values Page and Challenge are normalized on read and are not valid for new content. */
+/** Content types defining the nature and interaction model of program materials Legacy values Page and Challenge are normalized on read and are not valid for new content. */
 export type LearningCoursesProgramContentType =
   'Lesson' | 'Assignment' | 'Questionnaire' | 'Discussion' | 'Code' | 'Reflection' | 'Survey' | 'Project' | 'Module';
 
+/** Learning difficulty levels for appropriate program selection and progression */
 export type LearningCoursesProgramDifficulty = 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';
 
+/** Response DTO for Program entity — prevents domain entity exposure via API.
+Maps scalar and computed properties only; excludes navigation collections and audit internals. */
 export interface LearningCoursesProgramDto {
   id?: string;
   averageRating?: number;
@@ -9257,12 +11130,14 @@ export interface LearningCoursesProgramDto {
   visibility?: ContentVisibility;
 }
 
+/** Simplified program user information to avoid circular references */
 export interface LearningCoursesProgramUserSummaryDto {
   id?: string;
   userDisplayName?: string | null;
   userEmail?: string | null;
 }
 
+/** Represents the progress status of a content item */
 export type LearningCoursesProgressStatus = 'NotStarted' | 'InProgress' | 'Completed' | 'Submitted';
 
 export interface LearningCoursesPublishAuthoringDraftInput {
@@ -9284,6 +11159,7 @@ export interface LearningCoursesRecordContentInteractionEventInput {
   type?: LearningCoursesContentInteractionEventType;
 }
 
+/** Reflection response projection. Learner views deliberately omit respondent identity. */
 export interface LearningCoursesReflectionResponseResultDto {
   body?: string | null;
   respondentUserId?: string | null;
@@ -9333,6 +11209,7 @@ export interface LearningCoursesScheduleProgramDto {
   publishAt?: string;
 }
 
+/** DTO for content search operations */
 export interface LearningCoursesSearchContentDto {
   isRequired?: boolean | null;
   parentId?: string | null;
@@ -9352,11 +11229,13 @@ export interface LearningCoursesSendCourseStudentMessageOutput {
   sent?: number;
 }
 
+/** Request DTOs for ContentInteraction endpoints */
 export interface LearningCoursesStartContentInput {
   contentId?: string;
   programUserId?: string;
 }
 
+/** Simplified student information to avoid circular references */
 export interface LearningCoursesStudentSummaryDto {
   id?: string;
   userDisplayName?: string | null;
@@ -9373,6 +11252,7 @@ export interface LearningCoursesSubmitUserContentDto {
   submissionData: string;
 }
 
+/** Survey result projection. It deliberately excludes learner and enrollment identifiers. */
 export interface LearningCoursesSurveyResponseResultDto {
   answers?: Record<string, Record<string, unknown>> | null;
   respondentUserId?: string | null;
@@ -9380,16 +11260,23 @@ export interface LearningCoursesSurveyResponseResultDto {
   submittedAt?: string | null;
 }
 
+/** Polymorphic base record for coding-assignment tests. Discriminator is the lowercase `kind` field
+(values `"standard"`, `"functional"`). */
 export interface LearningCoursesTest {
+  /** Optional human-readable test name. */
   name?: string | null;
+  /** Relative weight used to compute total score. Defaults to 1.0; must be >= 0. */
   weight?: number;
 }
 
+/** Test buckets for a coding assignment. Field names are PascalCase on the wire (deliberate divergence from the draft).
+Visibility values match `TestVisibilityType` from the draft: `"Public"`, `"Private"`. */
 export interface LearningCoursesTestSuite {
   private?: Array<LearningCoursesTest> | null;
   public?: Array<LearningCoursesTest> | null;
 }
 
+/** DTO for updating existing activity grades */
 export interface LearningCoursesUpdateActivityGradeDto {
   feedback?: string | null;
   gradingDetails?: string | null;
@@ -9412,6 +11299,7 @@ export interface LearningCoursesUpdatePricingDto {
   subscriptionDurationDays?: number | null;
 }
 
+/** DTO for updating existing program content */
 export interface LearningCoursesUpdateProgramContentDto {
   id: string;
   activitySettings?: LearningCoursesActivitySettings;
@@ -9482,8 +11370,10 @@ export interface LearningCoursesUserProgressDto {
   userName?: string | null;
 }
 
+/** Content visibility levels */
 export type LearningCoursesVisibility = 'Public' | 'Internal' | 'Private' | 'Restricted';
 
+/** Workspace file map for a coding assignment: path → metadata. */
 export interface LearningCoursesWorkspaceData {
   files?: Record<string, LearningCoursesBundleFileMeta> | null;
 }
@@ -9515,6 +11405,7 @@ export interface LearningEnrollmentsUpdateEnrollmentProgressInput {
 
 export type LearningExperienceDiscoveryCollectionType = 'Curated' | 'Category' | 'Skill' | 'Career' | 'Trending' | 'NewReleases';
 
+/** DTO for course collection response */
 export interface LearningExperienceDiscoveryCourseCollectionDto {
   id?: string;
   courseCount?: number;
@@ -9531,6 +11422,7 @@ export interface LearningExperienceDiscoveryCourseCollectionDto {
   updatedAt?: string;
 }
 
+/** DTO for creating a course collection */
 export interface LearningExperienceDiscoveryCreateCourseCollectionDto {
   description?: string | null;
   imageUrl?: string | null;
@@ -9538,6 +11430,7 @@ export interface LearningExperienceDiscoveryCreateCourseCollectionDto {
   type?: LearningExperienceDiscoveryCollectionType;
 }
 
+/** DTO for creating featured content */
 export interface LearningExperienceDiscoveryCreateFeaturedContentDto {
   courseId?: string | null;
   displayOrder?: number;
@@ -9552,6 +11445,7 @@ export interface LearningExperienceDiscoveryCreateFeaturedContentDto {
   type?: LearningExperienceDiscoveryFeaturedContentType;
 }
 
+/** DTO for featured content response */
 export interface LearningExperienceDiscoveryFeaturedContentDto {
   id?: string;
   courseId?: string | null;
@@ -9574,6 +11468,7 @@ export interface LearningExperienceDiscoveryFeaturedContentDto {
 export type LearningExperienceDiscoveryFeaturedContentType =
   'HeroBanner' | 'CategoryHighlight' | 'NewRelease' | 'TopRated' | 'TrendingNow' | 'StaffPick' | 'SeasonalPromotion';
 
+/** Result for popular searches query */
 export interface LearningExperienceDiscoveryPopularSearchResult {
   clickThroughRate?: number;
   query?: string | null;
@@ -9581,17 +11476,20 @@ export interface LearningExperienceDiscoveryPopularSearchResult {
   totalClicks?: number;
 }
 
+/** DTO for recording a search click */
 export interface LearningExperienceDiscoveryRecordSearchClickDto {
   clickedCourseId?: string;
   searchId?: string;
 }
 
+/** DTO for recording a search */
 export interface LearningExperienceDiscoveryRecordSearchDto {
   filters?: string | null;
   query?: string | null;
   resultCount?: number;
 }
 
+/** DTO for search history (analytics) */
 export interface LearningExperienceDiscoverySearchHistoryDto {
   id?: string;
   clickedCourseId?: string | null;
@@ -9602,6 +11500,7 @@ export interface LearningExperienceDiscoverySearchHistoryDto {
   userId?: string | null;
 }
 
+/** DTO for updating a course collection */
 export interface LearningExperienceDiscoveryUpdateCourseCollectionDto {
   description?: string | null;
   imageUrl?: string | null;
@@ -9609,6 +11508,7 @@ export interface LearningExperienceDiscoveryUpdateCourseCollectionDto {
   title?: string | null;
 }
 
+/** DTO for updating featured content */
 export interface LearningExperienceDiscoveryUpdateFeaturedContentDto {
   displayOrder?: number | null;
   endsAt?: string | null;
@@ -9621,17 +11521,20 @@ export interface LearningExperienceDiscoveryUpdateFeaturedContentDto {
   title?: string | null;
 }
 
+/** DTO for adding a course to a learning path */
 export interface LearningExperienceLearningPathsAddCourseToPathDto {
   courseId?: string;
   isRequired?: boolean;
   order?: number;
 }
 
+/** DTO for course order */
 export interface LearningExperienceLearningPathsCourseOrderDto {
   courseId?: string;
   order?: number;
 }
 
+/** DTO for creating a learning path */
 export interface LearningExperienceLearningPathsCreateLearningPathDto {
   description?: string | null;
   difficulty?: LearningExperienceLearningPathsLearningPathDifficulty;
@@ -9640,12 +11543,14 @@ export interface LearningExperienceLearningPathsCreateLearningPathDto {
   title?: string | null;
 }
 
+/** DTO for a course in a learning path */
 export interface LearningExperienceLearningPathsLearningPathCourseDto {
   courseId?: string;
   isRequired?: boolean;
   order?: number;
 }
 
+/** DTO for learning path with courses */
 export interface LearningExperienceLearningPathsLearningPathDetailDto {
   id?: string;
   completionCount?: number;
@@ -9667,6 +11572,7 @@ export interface LearningExperienceLearningPathsLearningPathDetailDto {
 
 export type LearningExperienceLearningPathsLearningPathDifficulty = 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';
 
+/** DTO for learning path summary */
 export interface LearningExperienceLearningPathsLearningPathDto {
   id?: string;
   completionCount?: number;
@@ -9686,6 +11592,7 @@ export interface LearningExperienceLearningPathsLearningPathDto {
   updatedAt?: string;
 }
 
+/** DTO for learning path enrollment */
 export interface LearningExperienceLearningPathsLearningPathEnrollmentDto {
   id?: string;
   completedAt?: string | null;
@@ -9702,6 +11609,7 @@ export interface LearningExperienceLearningPathsLearningPathEnrollmentDto {
 
 export type LearningExperienceLearningPathsLearningPathEnrollmentStatus = 'InProgress' | 'Completed' | 'Abandoned';
 
+/** DTO for learning path statistics */
 export interface LearningExperienceLearningPathsLearningPathStatisticsDto {
   activeEnrollments?: number;
   averageCompletionTime?: string;
@@ -9712,10 +11620,12 @@ export interface LearningExperienceLearningPathsLearningPathStatisticsDto {
   totalEnrollments?: number;
 }
 
+/** DTO for reordering courses in a learning path */
 export interface LearningExperienceLearningPathsReorderCoursesDto {
   courses?: Array<LearningExperienceLearningPathsCourseOrderDto> | null;
 }
 
+/** DTO for updating a learning path */
 export interface LearningExperienceLearningPathsUpdateLearningPathDto {
   description?: string | null;
   difficulty?: LearningExperienceLearningPathsLearningPathDifficulty;
@@ -9725,14 +11635,17 @@ export interface LearningExperienceLearningPathsUpdateLearningPathDto {
   title?: string | null;
 }
 
+/** DTO for updating enrollment progress */
 export interface LearningExperienceLearningPathsUpdatePathProgressDto {
   coursesCompleted?: number;
 }
 
+/** Request DTO for adding a skill */
 export interface LearningExperienceRecommendationsAddSkillInput {
   skill?: string | null;
 }
 
+/** DTO for creating/updating user learning profile */
 export interface LearningExperienceRecommendationsCreateOrUpdateLearningProfileDto {
   learningGoals?: Array<string> | null;
   preferredCategories?: Array<string> | null;
@@ -9741,6 +11654,7 @@ export interface LearningExperienceRecommendationsCreateOrUpdateLearningProfileD
   skills?: Array<string> | null;
 }
 
+/** DTO for popular course result */
 export interface LearningExperienceRecommendationsPopularCourseDto {
   averageRating?: number;
   category?: string | null;
@@ -9752,6 +11666,7 @@ export interface LearningExperienceRecommendationsPopularCourseDto {
   totalRatings?: number;
 }
 
+/** DTO for a course recommendation */
 export interface LearningExperienceRecommendationsRecommendationDto {
   id?: string;
   courseId?: string;
@@ -9765,6 +11680,7 @@ export interface LearningExperienceRecommendationsRecommendationDto {
   userId?: string;
 }
 
+/** DTO for recommendation statistics */
 export interface LearningExperienceRecommendationsRecommendationStatisticsDto {
   byType?: {
     BasedOnHistory?: number;
@@ -9785,6 +11701,7 @@ export interface LearningExperienceRecommendationsRecommendationStatisticsDto {
 export type LearningExperienceRecommendationsRecommendationType =
   'PersonalizedAI' | 'PopularInCategory' | 'TrendingNow' | 'BasedOnHistory' | 'SimilarToCompleted' | 'NextInPath' | 'InstructorFollowed' | 'PeerRecommended';
 
+/** DTO for similar course result */
 export interface LearningExperienceRecommendationsSimilarCourseDto {
   category?: string | null;
   courseId?: string;
@@ -9795,6 +11712,7 @@ export interface LearningExperienceRecommendationsSimilarCourseDto {
   title?: string | null;
 }
 
+/** DTO for trending course result */
 export interface LearningExperienceRecommendationsTrendingCourseDto {
   category?: string | null;
   courseId?: string;
@@ -9805,6 +11723,7 @@ export interface LearningExperienceRecommendationsTrendingCourseDto {
   trendScore?: number;
 }
 
+/** DTO for user learning profile */
 export interface LearningExperienceRecommendationsUserLearningProfileDto {
   id?: string;
   createdAt?: string;
@@ -9825,6 +11744,7 @@ export interface LearningExperienceSocialControllersUpdateReviewModerationInput 
   isFeatured?: boolean;
 }
 
+/** Types of items that can appear in a personalized feed */
 export type LearningExperienceSocialFeedItemType =
   | 'NewCourse'
   | 'PopularCourse'
@@ -9837,6 +11757,7 @@ export type LearningExperienceSocialFeedItemType =
   | 'AchievementUnlocked'
   | 'SkillMilestone';
 
+/** DTO for discussion response */
 export interface LearningExperienceSocialServicesCourseDiscussionDto {
   id?: string;
   authorId?: string;
@@ -9852,6 +11773,7 @@ export interface LearningExperienceSocialServicesCourseDiscussionDto {
   viewCount?: number;
 }
 
+/** DTO for course like response */
 export interface LearningExperienceSocialServicesCourseLikeDto {
   id?: string;
   courseId?: string;
@@ -9859,6 +11781,7 @@ export interface LearningExperienceSocialServicesCourseLikeDto {
   userId?: string;
 }
 
+/** Course rating statistics */
 export interface LearningExperienceSocialServicesCourseRatingStats {
   averageRating?: number;
   courseId?: string;
@@ -9871,6 +11794,7 @@ export interface LearningExperienceSocialServicesCourseRatingStats {
   twoStarCount?: number;
 }
 
+/** DTO for course review response */
 export interface LearningExperienceSocialServicesCourseReviewDto {
   id?: string;
   content?: string | null;
@@ -9885,6 +11809,7 @@ export interface LearningExperienceSocialServicesCourseReviewDto {
   userId?: string;
 }
 
+/** DTO for wishlist item response */
 export interface LearningExperienceSocialServicesCourseWishlistDto {
   id?: string;
   courseId?: string;
@@ -9894,6 +11819,7 @@ export interface LearningExperienceSocialServicesCourseWishlistDto {
   userId?: string;
 }
 
+/** DTO for creating a discussion */
 export interface LearningExperienceSocialServicesCreateDiscussionInput {
   content?: string | null;
   contentId?: string | null;
@@ -9901,12 +11827,14 @@ export interface LearningExperienceSocialServicesCreateDiscussionInput {
   title?: string | null;
 }
 
+/** DTO for creating a reply */
 export interface LearningExperienceSocialServicesCreateReplyInput {
   content?: string | null;
   discussionId?: string;
   parentReplyId?: string | null;
 }
 
+/** DTO for creating a review */
 export interface LearningExperienceSocialServicesCreateReviewInput {
   content?: string | null;
   courseId?: string;
@@ -9915,6 +11843,7 @@ export interface LearningExperienceSocialServicesCreateReviewInput {
   title?: string | null;
 }
 
+/** DTO for discussion reply response */
 export interface LearningExperienceSocialServicesDiscussionReplyDto {
   id?: string;
   authorId?: string;
@@ -9926,6 +11855,7 @@ export interface LearningExperienceSocialServicesDiscussionReplyDto {
   upvoteCount?: number;
 }
 
+/** DTO for personalized feed item response */
 export interface LearningExperienceSocialServicesPersonalizedFeedItemDto {
   id?: string;
   courseId?: string | null;
@@ -9940,6 +11870,7 @@ export interface LearningExperienceSocialServicesPersonalizedFeedItemDto {
   reviewId?: string | null;
 }
 
+/** DTO for wishlist preferences */
 export interface LearningExperienceSocialServicesWishlistPreferencesInput {
   notifyOnSale?: boolean;
   notifyOnUpdate?: boolean;
@@ -9951,6 +11882,7 @@ export type LearningGradingContractsPercentValue = number;
 /** Score in non-negative integer units scaled by 100 (100 units = 1 point). */
 export type LearningGradingContractsScoreValue = number;
 
+/** Admin request to register a platform deployment. PrivateKeyPem is accepted on write and never returned. */
 export interface LearningLtiCreateLtiDeploymentInput {
   active?: boolean;
   authorizationUrl?: string | null;
@@ -9963,6 +11895,7 @@ export interface LearningLtiCreateLtiDeploymentInput {
   privateKeyPem?: string | null;
 }
 
+/** Admin request to link an assessment to a platform AGS line item. */
 export interface LearningLtiCreateLtiLineItemInput {
   assessmentId?: string;
   lineItemId?: string | null;
@@ -10216,6 +12149,7 @@ export interface LearningWorkspacesLearnerSearchResultDto {
   title?: string | null;
 }
 
+/** Represents a money value with currency */
 export interface Money {
   amount?: number;
   currency?: string | null;
@@ -10232,22 +12166,39 @@ export interface MonitoringSLACreateSloCommand {
   timeWindowDays?: number;
 }
 
+/** Data transfer object for error budget information */
 export interface MonitoringSLAErrorBudgetDto {
+  /** Current actual performance percentage */
   actualPercentage?: number;
+  /** Number of allowed failures based on error budget */
   allowedFailures?: number;
+  /** Rate at which the error budget is being consumed (failures per day) */
   burnRate?: number;
+  /** Error budget percentage (100 - Target) */
   errorBudgetPercentage?: number;
+  /** Number of failed requests */
   failedRequests?: number;
+  /** Whether the error budget is healthy */
   isHealthy?: boolean;
+  /** Remaining error budget count */
   remainingBudget?: number;
+  /** Remaining error budget as a percentage */
   remainingBudgetPercentage?: number;
+  /** SLO identifier */
   serviceLevelObjectiveId?: string;
+  /** Number of successful requests */
   successfulRequests?: number;
+  /** Target percentage (e.g., 99.9) */
   targetPercentage?: number;
+  /** Estimated time until error budget is exhausted (in hours) */
   timeToExhaustionHours?: number | null;
+  /** Time window in days */
   timeWindowDays?: number;
+  /** Total number of requests in the time window */
   totalRequests?: number;
+  /** End of the current time window */
   windowEnd?: string;
+  /** Start of the current time window */
   windowStart?: string;
 }
 
@@ -10263,70 +12214,122 @@ export interface MonitoringSLARecordSliMetricCommand {
   value?: number;
 }
 
+/** Command to resolve an SLO violation. */
 export interface MonitoringSLAResolveSloViolationCommand {
   resolutionNotes?: string | null;
   tenantId?: string;
   violationId?: string;
 }
 
+/** Data transfer object for SLO compliance information */
 export interface MonitoringSLASloComplianceDto {
+  /** Actual percentage achieved */
   actualPercentage?: number;
+  /** When this was last calculated */
   calculatedAt?: string;
+  /** Whether the SLO is in compliance */
   isCompliant?: boolean;
+  /** SLO name */
   name?: string | null;
+  /** End of the compliance period */
   periodEnd?: string;
+  /** Start of the compliance period */
   periodStart?: string;
+  /** Remaining error budget percentage */
   remainingErrorBudget?: number | null;
+  /** SLO identifier */
   serviceLevelObjectiveId?: string;
+  /** Service name */
   serviceName?: string | null;
   status?: MonitoringSLASloStatus;
+  /** Successful measurements */
   successfulMeasurements?: number;
+  /** Target percentage */
   targetPercentage?: number;
+  /** Time window for compliance calculation */
   timeWindowDays?: number;
+  /** Total downtime in the period (minutes) */
   totalDowntimeMinutes?: number;
+  /** Total measurements in the period */
   totalMeasurements?: number;
+  /** Number of violations in the period */
   violationCount?: number;
 }
 
+/** Data transfer object for Service Level Objective */
 export interface MonitoringSLASloDto {
+  /** SLO identifier */
   id?: string;
+  /** Alert threshold percentage */
   alertThresholdPercentage?: number;
+  /** Created timestamp */
   createdAt?: string;
+  /** Current actual percentage */
   currentActualPercentage?: number | null;
+  /** Description */
   description?: string | null;
+  /** Error budget percentage */
   errorBudgetPercentage?: number;
+  /** Whether enabled */
   isEnabled?: boolean;
+  /** Last evaluated timestamp */
   lastEvaluatedAt?: string | null;
+  /** SLO name */
   name?: string | null;
+  /** Remaining error budget percentage */
   remainingErrorBudget?: number | null;
+  /** Service name */
   serviceName?: string | null;
   status?: MonitoringSLASloStatus;
+  /** Target percentage */
   targetPercentage?: number;
+  /** Tenant identifier */
   tenantId?: string;
+  /** Time window in days */
   timeWindowDays?: number;
+  /** Updated timestamp */
   updatedAt?: string | null;
 }
 
+/** Represents the status of a Service Level Objective */
 export type MonitoringSLASloStatus = 'Active' | 'Breached' | 'AtRisk' | 'Disabled' | 'Violated' | 'Warning' | 'Inactive';
 
+/** Data transfer object for SLO violation */
 export interface MonitoringSLASloViolationDto {
+  /** Violation identifier */
   id?: string;
+  /** When acknowledged */
   acknowledgedAt?: string | null;
+  /** Who acknowledged */
   acknowledgedByUserId?: string | null;
+  /** Actual value during violation */
   actualValue?: number;
+  /** When alert was sent */
   alertSentAt?: string | null;
+  /** Whether alert was triggered */
   alertTriggered?: boolean;
+  /** Description */
   description?: string | null;
+  /** Duration in minutes */
   durationMinutes?: number;
+  /** When violation ended (null if ongoing) */
   endedAt?: string | null;
+  /** Whether acknowledged */
   isAcknowledged?: boolean;
+  /** Whether this is an ongoing violation */
   isOngoing?: boolean;
+  /** Acknowledgment notes */
   notes?: string | null;
+  /** SLO identifier */
   serviceLevelObjectiveId?: string;
+  /** Service name */
   serviceName?: string | null;
   severity?: MonitoringSLAViolationSeverity;
+  /** SLO name */
   sloName?: string | null;
+  /** When violation started */
   startedAt?: string;
+  /** Target value */
   targetValue?: number;
 }
 
@@ -10343,6 +12346,7 @@ export interface MonitoringSLAUpdateSloCommand {
   timeWindowDays?: number;
 }
 
+/** Represents the severity level of an SLO violation */
 export type MonitoringSLAViolationSeverity = 'Low' | 'Medium' | 'High' | 'Critical';
 
 export interface MvcProblemDetails {
@@ -10493,6 +12497,7 @@ export interface NotificationsControllersUpdatePreferencesInput {
   socialEnabled?: boolean | null;
 }
 
+/** Delivery channels for notifications */
 export type NotificationsNotificationChannel = 'InApp' | 'Email' | 'Push' | 'Sms' | 'Slack' | 'Discord' | 'Webhook';
 
 export type ObjectsAttestationConveyancePreference = 'None' | 'Indirect' | 'Direct' | 'Enterprise';
@@ -10550,162 +12555,306 @@ export type ObjectsResidentKeyRequirement = 'Required' | 'Preferred' | 'Discoura
 
 export type ObjectsUserVerificationRequirement = 'Required' | 'Preferred' | 'Discouraged';
 
+/** Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
 export interface PagedResultDeadLetterDto {
+  /** Whether there are more items after this page. */
   hasNextPage?: boolean;
+  /** Whether there are pages before this one. */
   hasPreviousPage?: boolean;
+  /** The items in the current page. */
   items?: Array<NotificationsControllersDeadLetterDto> | null;
+  /** Current page number (1-based). */
   pageNumber?: number;
+  /** Number of items per page. */
   pageSize?: number;
+  /** Number of items skipped (offset). */
   skip?: number;
+  /** Number of items requested per page (alias for GameGuild.PagedResult`1.PageSize). */
   take?: number;
+  /** Total number of items across all pages. */
   totalCount?: number;
+  /** Total number of pages. */
   totalPages?: number;
 }
 
+/** Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
 export interface PagedResultEmailDeliveryEventDto {
+  /** Whether there are more items after this page. */
   hasNextPage?: boolean;
+  /** Whether there are pages before this one. */
   hasPreviousPage?: boolean;
+  /** The items in the current page. */
   items?: Array<NotificationsControllersEmailDeliveryEventDto> | null;
+  /** Current page number (1-based). */
   pageNumber?: number;
+  /** Number of items per page. */
   pageSize?: number;
+  /** Number of items skipped (offset). */
   skip?: number;
+  /** Number of items requested per page (alias for GameGuild.PagedResult`1.PageSize). */
   take?: number;
+  /** Total number of items across all pages. */
   totalCount?: number;
+  /** Total number of pages. */
   totalPages?: number;
 }
 
+/** Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
 export interface PagedResultEmailSuppressionDto {
+  /** Whether there are more items after this page. */
   hasNextPage?: boolean;
+  /** Whether there are pages before this one. */
   hasPreviousPage?: boolean;
+  /** The items in the current page. */
   items?: Array<NotificationsControllersEmailSuppressionDto> | null;
+  /** Current page number (1-based). */
   pageNumber?: number;
+  /** Number of items per page. */
   pageSize?: number;
+  /** Number of items skipped (offset). */
   skip?: number;
+  /** Number of items requested per page (alias for GameGuild.PagedResult`1.PageSize). */
   take?: number;
+  /** Total number of items across all pages. */
   totalCount?: number;
+  /** Total number of pages. */
   totalPages?: number;
 }
 
+/** Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
 export interface PagedResultProductDto {
+  /** Whether there are more items after this page. */
   hasNextPage?: boolean;
+  /** Whether there are pages before this one. */
   hasPreviousPage?: boolean;
+  /** The items in the current page. */
   items?: Array<CommerceProductsProductDto> | null;
+  /** Current page number (1-based). */
   pageNumber?: number;
+  /** Number of items per page. */
   pageSize?: number;
+  /** Number of items skipped (offset). */
   skip?: number;
+  /** Number of items requested per page (alias for GameGuild.PagedResult`1.PageSize). */
   take?: number;
+  /** Total number of items across all pages. */
   totalCount?: number;
+  /** Total number of pages. */
   totalPages?: number;
 }
 
+/** Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
 export interface PagedResultPromoCodeDto {
+  /** Whether there are more items after this page. */
   hasNextPage?: boolean;
+  /** Whether there are pages before this one. */
   hasPreviousPage?: boolean;
+  /** The items in the current page. */
   items?: Array<CommerceProductsPromoCodeDto> | null;
+  /** Current page number (1-based). */
   pageNumber?: number;
+  /** Number of items per page. */
   pageSize?: number;
+  /** Number of items skipped (offset). */
   skip?: number;
+  /** Number of items requested per page (alias for GameGuild.PagedResult`1.PageSize). */
   take?: number;
+  /** Total number of items across all pages. */
   totalCount?: number;
+  /** Total number of pages. */
   totalPages?: number;
 }
 
+/** Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
 export interface PagedResultSubscription {
+  /** Whether there are more items after this page. */
   hasNextPage?: boolean;
+  /** Whether there are pages before this one. */
   hasPreviousPage?: boolean;
+  /** The items in the current page. */
   items?: Array<CommerceSubscriptionsSubscription> | null;
+  /** Current page number (1-based). */
   pageNumber?: number;
+  /** Number of items per page. */
   pageSize?: number;
+  /** Number of items skipped (offset). */
   skip?: number;
+  /** Number of items requested per page (alias for GameGuild.PagedResult`1.PageSize). */
   take?: number;
+  /** Total number of items across all pages. */
   totalCount?: number;
+  /** Total number of pages. */
   totalPages?: number;
 }
 
+/** Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
 export interface PagedResultSubscriptionNotificationDto {
+  /** Whether there are more items after this page. */
   hasNextPage?: boolean;
+  /** Whether there are pages before this one. */
   hasPreviousPage?: boolean;
+  /** The items in the current page. */
   items?: Array<CommerceSubscriptionsSubscriptionNotificationDto> | null;
+  /** Current page number (1-based). */
   pageNumber?: number;
+  /** Number of items per page. */
   pageSize?: number;
+  /** Number of items skipped (offset). */
   skip?: number;
+  /** Number of items requested per page (alias for GameGuild.PagedResult`1.PageSize). */
   take?: number;
+  /** Total number of items across all pages. */
   totalCount?: number;
+  /** Total number of pages. */
   totalPages?: number;
 }
 
+/** Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
 export interface PagedResultSupportTicketDto {
+  /** Whether there are more items after this page. */
   hasNextPage?: boolean;
+  /** Whether there are pages before this one. */
   hasPreviousPage?: boolean;
+  /** The items in the current page. */
   items?: Array<CommerceProductsSupportTicketDto> | null;
+  /** Current page number (1-based). */
   pageNumber?: number;
+  /** Number of items per page. */
   pageSize?: number;
+  /** Number of items skipped (offset). */
   skip?: number;
+  /** Number of items requested per page (alias for GameGuild.PagedResult`1.PageSize). */
   take?: number;
+  /** Total number of items across all pages. */
   totalCount?: number;
+  /** Total number of pages. */
   totalPages?: number;
 }
 
+/** Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
 export interface PagedResultTenant {
+  /** Whether there are more items after this page. */
   hasNextPage?: boolean;
+  /** Whether there are pages before this one. */
   hasPreviousPage?: boolean;
+  /** The items in the current page. */
   items?: Array<IdentityTenantsTenant> | null;
+  /** Current page number (1-based). */
   pageNumber?: number;
+  /** Number of items per page. */
   pageSize?: number;
+  /** Number of items skipped (offset). */
   skip?: number;
+  /** Number of items requested per page (alias for GameGuild.PagedResult`1.PageSize). */
   take?: number;
+  /** Total number of items across all pages. */
   totalCount?: number;
+  /** Total number of pages. */
   totalPages?: number;
 }
 
+/** Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
 export interface PagedResultTenantAuditLogEntry {
+  /** Whether there are more items after this page. */
   hasNextPage?: boolean;
+  /** Whether there are pages before this one. */
   hasPreviousPage?: boolean;
+  /** The items in the current page. */
   items?: Array<IdentityTenantsTenantAuditLogEntry> | null;
+  /** Current page number (1-based). */
   pageNumber?: number;
+  /** Number of items per page. */
   pageSize?: number;
+  /** Number of items skipped (offset). */
   skip?: number;
+  /** Number of items requested per page (alias for GameGuild.PagedResult`1.PageSize). */
   take?: number;
+  /** Total number of items across all pages. */
   totalCount?: number;
+  /** Total number of pages. */
   totalPages?: number;
 }
 
+/** Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
 export interface PagedResultUserDto {
+  /** Whether there are more items after this page. */
   hasNextPage?: boolean;
+  /** Whether there are pages before this one. */
   hasPreviousPage?: boolean;
+  /** The items in the current page. */
   items?: Array<IdentityUsersUserDto> | null;
+  /** Current page number (1-based). */
   pageNumber?: number;
+  /** Number of items per page. */
   pageSize?: number;
+  /** Number of items skipped (offset). */
   skip?: number;
+  /** Number of items requested per page (alias for GameGuild.PagedResult`1.PageSize). */
   take?: number;
+  /** Total number of items across all pages. */
   totalCount?: number;
+  /** Total number of pages. */
   totalPages?: number;
 }
 
+/** Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
 export interface PagedResultUserNotificationDto {
+  /** Whether there are more items after this page. */
   hasNextPage?: boolean;
+  /** Whether there are pages before this one. */
   hasPreviousPage?: boolean;
+  /** The items in the current page. */
   items?: Array<IdentityUsersUserNotificationDto> | null;
+  /** Current page number (1-based). */
   pageNumber?: number;
+  /** Number of items per page. */
   pageSize?: number;
+  /** Number of items skipped (offset). */
   skip?: number;
+  /** Number of items requested per page (alias for GameGuild.PagedResult`1.PageSize). */
   take?: number;
+  /** Total number of items across all pages. */
   totalCount?: number;
+  /** Total number of pages. */
   totalPages?: number;
 }
 
+/** Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
 export interface PagedResultUserProfileDto {
+  /** Whether there are more items after this page. */
   hasNextPage?: boolean;
+  /** Whether there are pages before this one. */
   hasPreviousPage?: boolean;
+  /** The items in the current page. */
   items?: Array<IdentityUsersUserProfileDto> | null;
+  /** Current page number (1-based). */
   pageNumber?: number;
+  /** Number of items per page. */
   pageSize?: number;
+  /** Number of items skipped (offset). */
   skip?: number;
+  /** Number of items requested per page (alias for GameGuild.PagedResult`1.PageSize). */
   take?: number;
+  /** Total number of items across all pages. */
   totalCount?: number;
+  /** Total number of pages. */
   totalPages?: number;
 }
 
+/** Educational program categorization for discovery and organization */
 export type ProgramCategory =
   | 'General'
   | 'Programming'
@@ -10727,6 +12876,7 @@ export type ProgramCategory =
   | 'Language'
   | 'Other';
 
+/** Request to add a collaborator to a project */
 export interface ProjectsAddCollaboratorInput {
   email?: string | null;
   expiresAt?: string | null;
@@ -10735,12 +12885,14 @@ export interface ProjectsAddCollaboratorInput {
   requireAcceptance?: boolean;
 }
 
+/** Request to add a project collaborator by ID */
 export interface ProjectsAddProjectCollaboratorInput {
   permissions?: string | null;
   role?: string | null;
   userId: string;
 }
 
+/** DTO for collaborator responses */
 export interface ProjectsCollaboratorDto {
   id?: string;
   isActive?: boolean;
@@ -10751,6 +12903,7 @@ export interface ProjectsCollaboratorDto {
   userName?: string | null;
 }
 
+/** Request DTOs for REST API */
 export interface ProjectsCreateProjectInput {
   categoryId?: string | null;
   description?: string | null;
@@ -10773,8 +12926,10 @@ export interface ProjectsCreateProjectVersionInput {
   versionNumber: string;
 }
 
+/** Development status of a project */
 export type ProjectsDevelopmentStatus = 'Planning' | 'InDevelopment' | 'Alpha' | 'Beta' | 'Released' | 'Completed' | 'OnHold' | 'Cancelled' | 'Archived';
 
+/** Effective permissions returned by the project compatibility API. */
 export interface ProjectsEffectivePermission {
   expiresAt?: string | null;
   isOwner?: boolean;
@@ -10783,6 +12938,7 @@ export interface ProjectsEffectivePermission {
   resourceType?: string | null;
 }
 
+/** Result of an invitation operation. */
 export interface ProjectsInvitationResult {
   errorMessage?: string | null;
   invitationId?: string | null;
@@ -10801,63 +12957,108 @@ export interface ProjectsLinkProjectStoreProductInput {
   productId?: string;
 }
 
+/** Result of a permission update operation. */
 export interface ProjectsPermissionUpdateResult {
   errorMessage?: string | null;
   success?: boolean;
 }
 
+/** Represents a project (game, tool, art, etc.) Enhanced with improved validation, indexing, and relationships */
 export interface ProjectsProject {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
   allocations?: Array<ProjectsProjectMemberAllocation> | null;
+  /** Computed property: Average rating from feedback */
   averageRating?: number | null;
   category?: ProjectsProjectCategory;
   categoryId?: string | null;
+  /** Navigation property to project collaborators */
   collaborators?: Array<ProjectsProjectCollaborator> | null;
+  /** Copyright information */
   copyright?: string | null;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
   createdById?: string | null;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Full description or content body (HTML or Markdown) */
   description?: string | null;
   developmentStatus?: ProjectsDevelopmentStatus;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  /** Download URL or platform links */
   downloadUrl?: string | null;
+  /** Featured image or thumbnail URL */
   featuredImageUrl?: string | null;
+  /** Computed property: Total feedback count */
   feedbackCount?: number;
+  /** Navigation property to project feedback/reviews */
   feedbacks?: Array<ProjectsProjectFeedback> | null;
+  /** Computed property: Number of followers */
   followerCount?: number;
+  /** Navigation property to project followers */
   followers?: Array<ProjectsProjectFollower> | null;
+  /** Project image/logo URL */
   imageUrl?: string | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Computed property: Is the project active */
   isActive?: boolean;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Computed property: Whether the project is part of active jams */
   isInJam?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** Navigation property to jam submissions */
   jamSubmissions?: Array<ProjectsProjectJamSubmission> | null;
   latestVersion?: ProjectsProjectVersion;
+  /** License type for the project */
   license?: string | null;
   projectMetadata?: ProjectsProjectMetadata;
+  /** When the project was published */
   publishedAt?: string | null;
+  /** Navigation property to project releases */
   releases?: Array<ProjectsProjectRelease> | null;
+  /** Repository URL */
   repositoryUrl?: string | null;
+  /** Short description (max 500 chars) */
   shortDescription?: string | null;
+  /** URL-friendly slug for the project */
   slug: string;
+  /** Social links (JSON string) */
   socialLinks?: string | null;
   status: ContentStatus;
+  /** Project tags (JSON array) */
   tags?: string | null;
   teamAgreements?: Array<ProjectsProjectTeamAgreement> | null;
+  /** Computed property: Number of teams working on this project */
   teamCount?: number;
+  /** Navigation property to project teams */
   teams?: Array<ProjectsProjectTeam> | null;
   tenantId?: string | null;
+  /** Project title */
   title: string;
   type?: ProjectsProjectType;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
+  /** Navigation property to project versions */
   versions?: Array<ProjectsProjectVersion> | null;
   visibility: ContentVisibility;
+  /** Website URL */
   websiteUrl?: string | null;
 }
 
+/** Stable HTTP contract for Projects. Persistence entities and their navigation graphs are
+intentionally not exposed by REST endpoints. */
 export interface ProjectsProjectApiOutput {
   id?: string;
   averageRating?: number | null;
@@ -10898,19 +13099,35 @@ export interface ProjectsProjectApiOutput {
   websiteUrl?: string | null;
 }
 
+/** Represents a project category (game, tool, art, etc.) */
 export interface ProjectsProjectCategory {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
   name: string;
+  /** Projects in this category */
   projects?: Array<ProjectsProject> | null;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
@@ -10919,25 +13136,47 @@ export interface ProjectsProjectCategoryApiOutput {
   name?: string | null;
 }
 
+/** Represents a collaborator on a project */
 export interface ProjectsProjectCollaborator {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Whether the collaborator is active */
   isActive?: boolean;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** Date when the collaboration started */
   joinedAt?: string;
+  /** Date when the collaboration ended (if applicable) */
   leftAt?: string | null;
+  /** Permissions granted to this collaborator */
   permissions: string;
+  /** Project ID */
   projectId?: string;
+  /** Role of the collaborator in the project */
   role: string;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
   user?: IdentityUsersUser;
+  /** User ID */
   userId?: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
@@ -10952,6 +13191,7 @@ export interface ProjectsProjectCollaboratorApiOutput {
   userName?: string | null;
 }
 
+/** Project collaborator information for API responses */
 export interface ProjectsProjectCollaboratorDto {
   email?: string | null;
   expiresAt?: string | null;
@@ -10965,52 +13205,100 @@ export interface ProjectsProjectCollaboratorDto {
   userName?: string | null;
 }
 
+/** Represents feedback/review for a project */
 export interface ProjectsProjectFeedback {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Feedback categories (JSON array) */
   categories?: string | null;
+  /** Review content */
   content?: string | null;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  /** Number of helpful votes */
   helpfulVotes?: number;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
+  /** Whether this feedback is featured */
   isFeatured?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** Whether this feedback has been verified (e.g., from actual user) */
   isVerified?: boolean;
+  /** Platform where the project was experienced (if applicable) */
   platform?: string | null;
+  /** Project being reviewed */
   projectId?: string;
+  /** Version of the project this feedback is for */
   projectVersion?: string | null;
+  /** Rating (1-5 stars) */
   rating?: number;
   status?: ContentStatus;
   tenantId?: string | null;
+  /** Review title */
   title: string;
+  /** Number of total votes */
   totalVotes?: number;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
   user?: IdentityUsersUser;
+  /** User providing feedback */
   userId?: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
+/** Represents a user following a project */
 export interface ProjectsProjectFollower {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  /** Whether the follower wants email notifications */
   emailNotifications?: boolean;
+  /** Date when the user started following */
   followedAt?: string;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** Notification preferences for this follow */
   notificationSettings?: string | null;
+  /** Project being followed */
   projectId?: string;
+  /** Whether the follower wants push notifications */
   pushNotifications?: boolean;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
   user?: IdentityUsersUser;
+  /** User following the project */
   userId?: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
@@ -11032,69 +13320,125 @@ export interface ProjectsProjectInvitationDto {
 
 export type ProjectsProjectInvitationStatus = 'Pending' | 'Accepted' | 'Declined' | 'Revoked' | 'Expired';
 
+/** Represents a project submitted to a game jam */
 export interface ProjectsProjectJamSubmission {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Award details (JSON) */
   awardDetails?: string | null;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  /** Final score calculated from all ratings */
   finalScore?: number | null;
+  /** Whether this submission won an award */
   hasAward?: boolean;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
+  /** Whether the submission is eligible for judging */
   isEligible?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
   jam?: GameJamsJam;
+  /** Jam the project is submitted to */
   jamId?: string | null;
+  /** Additional submission metadata */
   metadata?: string | null;
+  /** Project being submitted */
   projectId?: string;
+  /** Ranking in the jam (if calculated) */
   ranking?: number | null;
+  /** Navigation property to jam scores */
   scores?: Array<GameJamsJamScore> | null;
+  /** Submission notes or description */
   submissionNotes?: string | null;
+  /** Date when the project was submitted to the jam */
   submittedAt?: string;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
 export interface ProjectsProjectMemberAllocation {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
   capacityPercentage?: number;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   endsAt?: string | null;
   function: string;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isActive?: boolean;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
   projectId?: string;
   projectTeamId?: string;
   startsAt?: string;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
   userId?: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
+/** Stores statistics and metadata for a project. */
 export interface ProjectsProjectMetadata {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   downloadCount?: number;
   followerCount?: number;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
   projectId?: string;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
+  /** Project statistics */
   viewCount?: number;
 }
 
@@ -11105,35 +13449,67 @@ export interface ProjectsProjectMetadataApiOutput {
   viewCount?: number;
 }
 
+/** Represents a release/version of a project */
 export interface ProjectsProjectRelease {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Build number or commit hash */
   buildNumber?: string | null;
+  /** Checksum/hash of the release file */
   checksum?: string | null;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Release description */
   description?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  /** Number of downloads for this release */
   downloadCount?: number;
+  /** Download URL for this release */
   downloadUrl?: string | null;
+  /** File size in bytes */
   fileSize?: number | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Whether this is the latest release */
   isLatest?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** Whether this is a pre-release (alpha, beta, etc.) */
   isPrerelease?: boolean;
+  /** Project this release belongs to */
   projectId?: string;
+  /** Date when this version was released */
   releasedAt?: string;
+  /** Additional release metadata (JSON) */
   releaseMetadata?: string | null;
+  /** Release notes in markdown format */
   releaseNotes?: string | null;
+  /** Release type (stable, beta, alpha, etc.) */
   releaseType?: string | null;
+  /** Release version string (e.g., "1.0.0", "2.1.3-beta") */
   releaseVersion: string;
   status?: ContentStatus;
+  /** Supported platforms (JSON array) */
   supportedPlatforms?: string | null;
+  /** Minimum system requirements */
   systemRequirements?: string | null;
   tenantId?: string | null;
+  /** Release title */
   title: string;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
@@ -11158,28 +13534,46 @@ export interface ProjectsProjectReleaseApiOutput {
   title?: string | null;
 }
 
+/** Project role template */
 export interface ProjectsProjectRoleTemplate {
   description?: string | null;
   name?: string | null;
   permissions?: Array<IdentityAuthorizationPermissionType> | null;
 }
 
+/** Statistics and analytics DTO for a project */
 export interface ProjectsProjectStatistics {
+  /** Number of active teams working on the project */
   activeTeamCount?: number;
+  /** Average rating (1-5 stars) */
   averageRating?: number | null;
+  /** Number of awards won in jams */
   awardCount?: number;
+  /** Date when statistics were calculated */
   calculatedAt?: string;
+  /** Number of collaborators */
   collaboratorCount?: number;
+  /** Downloads in the last 30 days */
   downloadsLast30Days?: number;
+  /** Total number of feedback/reviews */
   feedbackCount?: number;
+  /** Total number of followers */
   followerCount?: number;
+  /** Number of jam submissions */
   jamSubmissionCount?: number;
+  /** New followers in the last 30 days */
   newFollowersLast30Days?: number;
+  /** Popularity rank among all projects */
   popularityRank?: number | null;
+  /** Project ID */
   projectId?: string;
+  /** Number of releases */
   releaseCount?: number;
+  /** Total number of downloads across all releases */
   totalDownloads?: number;
+  /** Trending score (calculated based on recent activity) */
   trendingScore?: number;
+  /** Views/visits in the last 30 days */
   viewsLast30Days?: number;
 }
 
@@ -11189,46 +13583,78 @@ export interface ProjectsProjectStoreProductProjection {
   projectId?: string;
 }
 
+/** Represents a team working on a project */
 export interface ProjectsProjectTeam {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
   allocations?: Array<ProjectsProjectMemberAllocation> | null;
+  /** Date when the team was assigned to the project */
   assignedAt?: string;
+  /** Team's contribution percentage (0-100) */
   contributionPercentage?: number;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  /** Date when the team's involvement ended (if applicable) */
   endedAt?: string | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Whether the team is currently active on this project */
   isActive?: boolean;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** Notes about the team's involvement */
   notes?: string | null;
   participationMode?: ProjectsProjectTeamParticipationMode;
+  /** Permissions granted to this team for the project */
   permissions?: string | null;
+  /** Project the team is working on */
   projectId?: string;
   role?: ProjectsProjectTeamRole;
   team?: TeamsTeam;
+  /** Team working on the project */
   teamId?: string;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
 export interface ProjectsProjectTeamAgreement {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
   acceptedAt?: string | null;
   acceptedByUserId?: string | null;
   cancelledAt?: string | null;
   completedAt?: string | null;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
   deliverables: string;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   endsAt?: string;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
   projectId?: string;
   proposedByUserId?: string;
@@ -11239,7 +13665,12 @@ export interface ProjectsProjectTeamAgreement {
   startsAt?: string;
   status?: ProjectsProjectTeamAgreementStatus;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
@@ -11264,6 +13695,7 @@ export type ProjectsProjectTeamParticipationMode = 'AllMembers' | 'SelectedMembe
 
 export type ProjectsProjectTeamRole = 'Owner' | 'CoOwner' | 'Contributor' | 'Guest';
 
+/** Types of projects in the game guild platform */
 export type ProjectsProjectType = 'Game' | 'Tool' | 'Art' | 'Music' | 'Educational' | 'Plugin' | 'Template' | 'Library' | 'Other';
 
 export interface ProjectsProjectUserApiOutput {
@@ -11272,23 +13704,41 @@ export interface ProjectsProjectUserApiOutput {
   username?: string | null;
 }
 
+/** Represents a version/release of a project */
 export interface ProjectsProjectVersion {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
   createdById?: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  /** Download count */
   downloadCount?: number;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
   projectId?: string;
+  /** Release notes */
   releaseNotes?: string | null;
   status: ProjectsProjectVersionStatus;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
+  /** Version number (e.g., "1.0.0", "alpha-0.1") */
   versionNumber: string;
 }
 
@@ -11316,12 +13766,14 @@ export interface ProjectsProjectVersionOptionProjection {
 
 export type ProjectsProjectVersionStatus = 'Draft' | 'ReadyForTesting' | 'Released' | 'Archived';
 
+/** Request to share a project */
 export interface ProjectsShareProjectInput {
   permissions?: string | null;
   role?: string | null;
   userId: string;
 }
 
+/** Request to share project with specific role */
 export interface ProjectsShareProjectWithRoleInput {
   expiresAt?: string | null;
   message?: string | null;
@@ -11332,6 +13784,7 @@ export interface ProjectsShareProjectWithRoleInput {
   userIds?: Array<string> | null;
 }
 
+/** Result of a bulk share operation. */
 export interface ProjectsShareResult {
   errorMessage?: string | null;
   failureCount?: number;
@@ -11339,11 +13792,13 @@ export interface ProjectsShareResult {
   successCount?: number;
 }
 
+/** Request to update collaborator permissions */
 export interface ProjectsUpdateCollaboratorInput {
   expiresAt?: string | null;
   permissions?: Array<IdentityAuthorizationPermissionType> | null;
 }
 
+/** Request to update a project collaborator */
 export interface ProjectsUpdateProjectCollaboratorInput {
   permissions?: string | null;
   role?: string | null;
@@ -11377,14 +13832,17 @@ export type ProjectWorkProjectWorkTaskPriority = 'Low' | 'Normal' | 'High' | 'Ur
 
 export type ProjectWorkProjectWorkTaskStatus = 'Backlog' | 'Ready' | 'InProgress' | 'InReview' | 'Done' | 'Cancelled';
 
+/** Request DTO for archiving old resource usage records */
 export interface ResourcesArchiveResourceUsageRecordsInput {
   olderThan?: string;
 }
 
+/** Request model for checking resource quota enforcement */
 export interface ResourcesCheckResourceQuotaInput {
   amount?: number;
 }
 
+/** Request to cleanup orphaned resources */
 export interface ResourcesCleanupOrphanedResourcesInput {
   dryRun?: boolean;
   resourceTypes?: Array<ResourcesResourceUsageType> | null;
@@ -11416,8 +13874,10 @@ export interface ResourcesContentsBulkGeneratedContractsOutput {
   totalRequested?: number;
 }
 
+/** Review decision for content */
 export type ResourcesContentsContentReviewDecision = 'Pending' | 'Approve' | 'RequestChanges' | 'Reject';
 
+/** Represents a diff between two content versions */
 export interface ResourcesContentsContentVersionDiff {
   bodyChanged?: boolean;
   bodyDiff?: string | null;
@@ -11465,6 +13925,7 @@ export interface ResourcesContentsContentVersionReviewDto {
   suggestions?: string | null;
 }
 
+/** Status of a content version */
 export type ResourcesContentsContentVersionStatus = 'Draft' | 'PendingReview' | 'Approved' | 'Rejected' | 'Scheduled' | 'Published' | 'Archived';
 
 export interface ResourcesContentsCreateDraftInput {
@@ -11525,12 +13986,14 @@ export interface ResourcesContentsUpdateDraftInput {
   title?: string | null;
 }
 
+/** Response model for effective setting value */
 export interface ResourcesEffectiveSettingOutput {
   isUserOverride?: boolean;
   key?: string | null;
   value?: string | null;
 }
 
+/** Request model for recording tenant resource usage (without tenantId in body) */
 export interface ResourcesRecordTenantResourceUsageInput {
   count?: number;
   metadata?: Record<string, string> | null;
@@ -11539,6 +14002,7 @@ export interface ResourcesRecordTenantResourceUsageInput {
   resourceUsageType?: ResourcesResourceUsageType;
 }
 
+/** Request model for recording user resource usage (without userId in body) */
 export interface ResourcesRecordUserResourceUsageInput {
   count?: number;
   metadata?: Record<string, string> | null;
@@ -11547,46 +14011,93 @@ export interface ResourcesRecordUserResourceUsageInput {
   resourceUsageType?: ResourcesResourceUsageType;
 }
 
+/** Stores metadata about resource types and their configurations */
 export interface ResourcesResourceMetadata {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Category for grouping related metadata entries */
   category?: string | null;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Data type of the value (String, Number, Boolean, JSON, etc.) */
   dataType?: string | null;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Human-readable description of this metadata */
   description?: string | null;
+  /** Display order for UI purposes */
   displayOrder?: number;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Whether this metadata entry is active */
   isActive?: boolean;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** Whether this metadata is system-managed (read-only for users) */
   isSystemManaged?: boolean;
+  /** Unique key/name for the metadata entry */
   key: string;
+  /** Resource ID if this metadata is for a specific resource */
   resourceId?: string | null;
+  /** Row version for optimistic concurrency control */
   rowVersion?: string | null;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** User ID if this is user-specific metadata (null for tenant/global) */
   userId?: string | null;
+  /** Value of the metadata entry (JSON) */
   value?: string | null;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
+/** Result of resource quota enforcement check.
+
+<b>ADVISORY:</b> This result indicates the current quota state at the time of query.
+Under concurrent access, quota state may change between this check and actual operation.
+For authoritative enforcement, use commands decorated with `[RequiresQuota]`. */
 export interface ResourcesResourceQuotaEnforcementResult {
+  /** Current usage amount */
   currentUsage?: number;
+  /** Amount that would be exceeded if the request is processed */
   excessAmount?: number;
+  /** Hard limit amount (if set) */
   hardLimit?: number | null;
+  /** Whether the request is allowed based on quota limits.
+
+<b>ADVISORY:</b> This is a point-in-time check. For guaranteed enforcement,
+use `[RequiresQuota]` attribute which uses atomic operations. */
   isAllowed?: boolean;
+  /** Whether hard limit has been exceeded */
   isHardLimitExceeded?: boolean;
+  /** Whether soft limit has been exceeded (warning threshold) */
   isSoftLimitExceeded?: boolean;
+  /** Message explaining the enforcement result */
   message?: string | null;
+  /** When the quota will reset next */
   nextReset?: string | null;
+  /** Remaining quota before hard limit is reached.
+Returns null if no hard limit is set (unlimited). */
   remainingQuota?: number | null;
+  /** Soft limit amount (if set) */
   softLimit?: number | null;
   type?: ResourcesResourceUsageType;
+  /** Percentage of quota used (0-100) */
   usagePercentage?: number;
 }
 
+/** Response model for resource quota information */
 export interface ResourcesResourceQuotaOutput {
   id?: string;
   currentUsage?: number;
@@ -11608,35 +14119,66 @@ export interface ResourcesResourceQuotaOutput {
   usagePercentage?: number;
 }
 
+/** Defines the period for resource quota resets */
 export type ResourcesResourceQuotaPeriod = 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Yearly' | 'Unlimited';
 
+/** Stores configuration settings for resource management */
 export interface ResourcesResourceSettings {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Whether users can override this setting at user level */
   allowUserOverride?: boolean;
+  /** Category for grouping related settings */
   category?: string | null;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Data type of the value (String, Number, Boolean, JSON, etc.) */
   dataType?: string | null;
+  /** Default value if no override is set */
   defaultValue?: string | null;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Human-readable description of this setting */
   description?: string | null;
+  /** Display order for UI purposes */
   displayOrder?: number;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Whether this setting is active/enabled */
   isActive?: boolean;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** Whether this setting is system-managed (read-only for users) */
   isSystemManaged?: boolean;
+  /** Unique key/name for the setting */
   key: string;
+  /** Row version for optimistic concurrency control */
   rowVersion?: string | null;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** User ID if this is a user-level setting override (null for tenant/global) */
   userId?: string | null;
+  /** Validation rules for the setting value (JSON schema or regex) */
   validationRules?: string | null;
+  /** Value of the setting (JSON) */
   value?: string | null;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
+/** Types of resource usage that can be tracked and limited.
+Each type represents a quota-controlled resource in the system. */
 export type ResourcesResourceUsageType =
   | 'Users'
   | 'Projects'
@@ -11669,6 +14211,7 @@ export type ResourcesResourceUsageType =
   | 'AiTokens'
   | 'Teams';
 
+/** Request model for setting a quota (without tenantId and type in body) */
 export interface ResourcesSetQuotaInput {
   hardLimit?: number | null;
   isActive?: boolean;
@@ -11677,6 +14220,7 @@ export interface ResourcesSetQuotaInput {
   softLimit?: number | null;
 }
 
+/** Request model for setting resource metadata */
 export interface ResourcesSetResourceMetadataInput {
   category?: string | null;
   dataType?: string | null;
@@ -11685,6 +14229,7 @@ export interface ResourcesSetResourceMetadataInput {
   value?: string | null;
 }
 
+/** Request model for setting resource settings (tenant level) */
 export interface ResourcesSetResourceSettingsInput {
   allowUserOverride?: boolean | null;
   category?: string | null;
@@ -11696,49 +14241,81 @@ export interface ResourcesSetResourceSettingsInput {
   value?: string | null;
 }
 
+/** Request model for setting user resource settings override */
 export interface ResourcesSetUserResourceSettingsInput {
   value?: string | null;
 }
 
+/** Request DTO for toggling a resource quota */
 export interface ResourcesToggleResourceQuotaInput {
   isActive?: boolean;
 }
 
+/** Granularity for trend data aggregation */
 export type ResourcesTrendGranularity = 'Daily' | 'Weekly' | 'Monthly';
 
+/** Tracks resource usage over time for analytics and monitoring */
 export interface ResourcesUsageRecord {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Average usage per day in this period */
   averagePerDay?: number | null;
+  /** Usage count for this period */
   count?: number;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** Additional context or metadata about this usage (JSON) */
   metadata?: string | null;
+  /** Peak usage in a single day during this period */
   peakUsage?: number | null;
+  /** Date when peak usage occurred */
   peakUsageDate?: string | null;
+  /** End of the tracking period */
   periodEnd?: string;
+  /** Start of the tracking period */
   periodStart?: string;
+  /** Resource identifier that was used (if applicable) */
   resourceId?: string | null;
+  /** Resource quota associated with this usage record (if applicable) */
   resourceQuotaId?: string | null;
+  /** Source of the usage (API, UI, System, etc.) */
   source?: string | null;
   tenantId?: string | null;
   type?: ResourcesResourceUsageType;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Usage amount (alias for Count for backward compatibility) */
   usageAmount?: number;
+  /** User who generated this usage (if applicable) */
   userId?: string | null;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
+/** Single data point in usage trend */
 export interface ResourcesUsageTrendDataPoint {
   period?: string;
   tenantCount?: number;
   totalUsage?: number;
 }
 
+/** Result of usage trends query */
 export interface ResourcesUsageTrendsResult {
   dataPoints?: Array<ResourcesUsageTrendDataPoint> | null;
   endDate?: string;
@@ -11757,11 +14334,13 @@ export interface SocialAssetsSocialMediaSocialMediaAssetDescriptor {
 
 export type SocialAssetsSocialMediaSocialMediaProcessingState = 'Processing' | 'Ready' | 'Rejected';
 
+/** Applies a pending proposal to the post at the given revision (with cursor insert offset). */
 export interface SocialBlogAuthoringApplyBlogAiProposalInput {
   cursorOffset?: number | null;
   postRevision?: number;
 }
 
+/** A copilot conversation scoped to one post and author. */
 export interface SocialBlogAuthoringBlogAiConversationDto {
   id?: string;
   authorId?: string;
@@ -11770,6 +14349,7 @@ export interface SocialBlogAuthoringBlogAiConversationDto {
   messages?: Array<SocialBlogAuthoringBlogAiMessageDto> | null;
 }
 
+/** Credit accounting snapshot for a run or wallet. */
 export interface SocialBlogAuthoringBlogAiCreditUsageDto {
   availableSoftCredits?: number;
   currency?: string | null;
@@ -11780,6 +14360,7 @@ export interface SocialBlogAuthoringBlogAiCreditUsageDto {
   settledCost?: number;
 }
 
+/** The author's wallet snapshot for copilot UI badges. */
 export interface SocialBlogAuthoringBlogAiEntitlementDto {
   availableSoftCredits?: number;
   currency?: string | null;
@@ -11787,6 +14368,7 @@ export interface SocialBlogAuthoringBlogAiEntitlementDto {
   settledSoftCredits?: number;
 }
 
+/** A conversation message (user instruction or assistant output). */
 export interface SocialBlogAuthoringBlogAiMessageDto {
   id?: string;
   content?: string | null;
@@ -11795,6 +14377,7 @@ export interface SocialBlogAuthoringBlogAiMessageDto {
   runId?: string | null;
 }
 
+/** An AI-proposed change awaiting author apply/discard. */
 export interface SocialBlogAuthoringBlogAiProposalDto {
   id?: string;
   basePostRevision?: number;
@@ -11806,6 +14389,7 @@ export interface SocialBlogAuthoringBlogAiProposalDto {
   status?: SocialBlogBlogAiProposalStatus;
 }
 
+/** A single AI authoring run with usage and (when complete) its proposal. */
 export interface SocialBlogAuthoringBlogAiRunDto {
   id?: string;
   basePostRevision?: number;
@@ -11825,15 +14409,22 @@ export interface SocialBlogAuthoringBlogAiRunDto {
   usage?: SocialBlogAuthoringBlogAiCreditUsageDto;
 }
 
+/** Request to start an AI authoring run against a post draft revision. */
 export interface SocialBlogAuthoringBlogAiRunInput {
+  /** Optional existing conversation to continue. */
   conversationId?: string | null;
+  /** Client-supplied deduplication key. */
   idempotencyKey?: string | null;
+  /** The author's natural-language instruction. */
   instruction?: string | null;
+  /** The post revision the instruction was written against. */
   postRevision?: number;
   proposalKind?: SocialBlogBlogAiProposalKind;
+  /** Optional selected body text for context. */
   selection?: string | null;
 }
 
+/** Post view returned after applying an AI proposal (presentation fields + revision). */
 export interface SocialBlogAuthoringBlogPostDto {
   id?: string;
   content?: string | null;
@@ -11858,41 +14449,68 @@ export type SocialBlogBlogAiProposalStatus = 'Pending' | 'Applied' | 'Discarded'
 
 export type SocialBlogBlogAiRunStatus = 'Queued' | 'Reserved' | 'Running' | 'Completed' | 'Failed' | 'Cancelled';
 
+/** A comment on a published blog post. Depth ≤ 1 (top-level or one reply level) is
+enforced by the comment service. Soft delete is moderation. */
 export interface SocialBlogBlogComment {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
   authorUserId?: string;
   blogPostId?: string;
   content?: string | null;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
   deletedAt?: string | null;
   deletedByUserId?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
   parentCommentId?: string | null;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
+/** Defines how a blog post body is authored and rendered. Values are persisted and must remain stable. */
 export type SocialBlogBlogContentFormat = 'Markdown' | 'Lexical';
 
+/** A long-form blog article. The post row IS the draft — GameGuild.Social.Blog.BlogPost.Revision guards
+concurrent co-author edits. TenantId is quota/policy metadata only; blog content is
+global and user-scoped. */
 export interface SocialBlogBlogPost {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
   allowComments?: boolean;
   canonicalUrlOverride?: string | null;
   commentsCount?: number;
   content?: string | null;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   excerpt?: string | null;
   format?: SocialBlogBlogContentFormat;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
   jsonBody?: string | null;
   metaDescription?: string | null;
@@ -11906,39 +14524,51 @@ export interface SocialBlogBlogPost {
   status?: SocialBlogBlogPostStatus;
   structuredDataOverride?: string | null;
   tags?: Array<string> | null;
+  /** Serialized tags for persistence (jsonb column). */
   tagsJson?: string | null;
   tenantId?: string | null;
   title?: string | null;
   twitterCard?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
   viewsCount?: number;
 }
 
 export type SocialBlogBlogPostStatus = 'Draft' | 'Published';
 
+/** Wire shape for M:GameGuild.Social.Blog.Controllers.BlogCommentsController.Add(System.Guid,GameGuild.Social.Blog.Controllers.AddBlogCommentRequest,System.Threading.CancellationToken); the author comes from the actor context. */
 export interface SocialBlogControllersAddBlogCommentInput {
   content?: string | null;
   parentCommentId?: string | null;
 }
 
+/** Wire shape for M:GameGuild.Social.Blog.Controllers.BlogAuthoringController.AddCoauthor(System.Guid,GameGuild.Social.Blog.Controllers.BlogCoauthorRequest,System.Threading.CancellationToken). */
 export interface SocialBlogControllersBlogCoauthorInput {
   userId?: string;
 }
 
+/** Wire shape for M:GameGuild.Social.Blog.Controllers.BlogAuthoringController.ChangeSlug(System.Guid,GameGuild.Social.Blog.Controllers.ChangeBlogPostSlugRequest,System.Threading.CancellationToken). */
 export interface SocialBlogControllersChangeBlogPostSlugInput {
   newSlug?: string | null;
 }
 
+/** Wire shape for M:GameGuild.Social.Blog.Controllers.BlogAuthoringController.Create(GameGuild.Social.Blog.Controllers.CreateBlogPostRequest,System.Threading.CancellationToken); actor identity and tenant are never accepted from the body. */
 export interface SocialBlogControllersCreateBlogPostInput {
   format?: SocialBlogBlogContentFormat;
   title?: string | null;
 }
 
+/** Wire shape for M:GameGuild.Social.Blog.Controllers.BlogAuthoringController.TransferPrimary(System.Guid,GameGuild.Social.Blog.Controllers.TransferBlogPrimaryRequest,System.Threading.CancellationToken). */
 export interface SocialBlogControllersTransferBlogPrimaryInput {
   newPrimaryUserId?: string;
 }
 
+/** Wire shape for M:GameGuild.Social.Blog.Controllers.BlogAuthoringController.Update(System.Guid,GameGuild.Social.Blog.Controllers.UpdateBlogPostDraftRequest,System.Threading.CancellationToken); only patch fields and the expected revision. */
 export interface SocialBlogControllersUpdateBlogPostDraftInput {
   allowComments?: boolean | null;
   canonicalUrlOverride?: string | null;
@@ -11955,6 +14585,7 @@ export interface SocialBlogControllersUpdateBlogPostDraftInput {
   twitterCard?: string | null;
 }
 
+/** A published comment with its author handle resolved via Social.Profiles. */
 export interface SocialBlogQueriesBlogCommentDto {
   id?: string;
   authorDisplayName?: string | null;
@@ -11964,11 +14595,13 @@ export interface SocialBlogQueriesBlogCommentDto {
   parentCommentId?: string | null;
 }
 
+/** Page of comments, oldest-first, with depth-1 replies flattened under their parents. */
 export interface SocialBlogQueriesBlogCommentPage {
   hasMore?: boolean;
   items?: Array<SocialBlogQueriesBlogCommentDto> | null;
 }
 
+/** Full public post detail: body, format, SEO fields, revision, and updated timestamp. */
 export interface SocialBlogQueriesBlogPostDetailDto {
   id?: string;
   allowComments?: boolean;
@@ -11997,6 +14630,8 @@ export interface SocialBlogQueriesBlogPostDetailDto {
   viewsCount?: number;
 }
 
+/** Feed/list card summary of a published post. Deliberately excludes body fields
+(Content/JsonBody) — list surfaces never ship the body. */
 export interface SocialBlogQueriesBlogPostSummaryDto {
   id?: string;
   coAuthorHandles?: Array<string> | null;
@@ -12013,11 +14648,13 @@ export interface SocialBlogQueriesBlogPostSummaryDto {
   title?: string | null;
 }
 
+/** Page of published posts ordered newest-first (keyset on PublishedAt, then Id). */
 export interface SocialBlogQueriesBlogPostSummaryPage {
   hasMore?: boolean;
   items?: Array<SocialBlogQueriesBlogPostSummaryDto> | null;
 }
 
+/** Canonical (handle, slug) route a stale URL resolves to, for permanent redirects. */
 export interface SocialBlogQueriesBlogRouteResolutionDto {
   handle?: string | null;
   slug?: string | null;
@@ -12481,16 +15118,25 @@ export interface SocialReactionsTargetReactionSummaryDto {
 export type SystemDayOfWeek = 'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';
 
 export interface TeamsTeam {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
   description?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
   invitations?: Array<TeamsTeamInvitation> | null;
   isActive?: boolean;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
   isPersonal?: boolean;
   members?: Array<TeamsTeamMember> | null;
@@ -12498,46 +15144,74 @@ export interface TeamsTeam {
   slug: string;
   status?: TeamsTeamStatus;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
   visibility?: TeamsTeamVisibility;
 }
 
 export interface TeamsTeamInvitation {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
   acceptedByUserId?: string | null;
   authority?: TeamsTeamMemberAuthority;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   expiresAt?: string;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
   invitedByUserId?: string;
   invitedEmail?: string | null;
   invitedUserId?: string | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
   revokedAt?: string | null;
   team?: TeamsTeam;
   teamId?: string;
   tenantId?: string | null;
   tokenHash: string;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
   usedAt?: string | null;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
 export interface TeamsTeamMember {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
   authority?: TeamsTeamMemberAuthority;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isActive?: boolean;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
   joinedAt?: string;
   leftAt?: string | null;
@@ -12545,9 +15219,14 @@ export interface TeamsTeamMember {
   team?: TeamsTeam;
   teamId?: string;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
   user?: IdentityUsersUser;
   userId?: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
@@ -12557,6 +15236,8 @@ export type TeamsTeamStatus = 'Active' | 'Archived';
 
 export type TeamsTeamVisibility = 'Private' | 'Tenant' | 'Public';
 
+/** Lightweight tenant information for cross-module queries.
+Contains only the essential tenant data needed by other modules. */
 export interface TenantInfo {
   id?: string;
   isActive?: boolean;
@@ -12609,19 +15290,25 @@ export interface TestingLabConfigureTestingEventLearningInput {
   requirement?: TestingLabTestingLearningCompletionRequirement;
 }
 
+/** Simplified DTO for students to submit versions directly without pre-existing ProjectVersion */
 export interface TestingLabCreateSimpleTestingRequestDto {
   description?: string | null;
+  /** URL to download the game build */
   downloadUrl?: string | null;
   endDate?: string | null;
+  /** Simple feedback form content (plain text questions) */
   feedbackFormContent?: string | null;
   instructionsContent?: string | null;
   instructionsType: TestingLabInstructionType;
   instructionsUrl?: string | null;
   maxTesters?: number | null;
+  /** Existing project that owns this testing build. Dashboard submissions are project-backed. */
   projectId?: string | null;
   startDate?: string | null;
+  /** Legacy team identifier fallback for older clients. Prefer ProjectId for new submissions. */
   teamIdentifier?: string | null;
   title: string;
+  /** Version number for this submission */
   versionNumber: string;
 }
 
@@ -12651,15 +15338,25 @@ export interface TestingLabCreateTestingLabRoleInput {
   permissions?: TestingLabTestingLabPermissionsDto;
 }
 
+/** Data Transfer Object for creating TestingLabSettings */
 export interface TestingLabCreateTestingLabSettingsDto {
+  /** Whether to allow public signups for testing sessions */
   allowPublicSignups?: boolean;
+  /** Default session duration in minutes */
   defaultSessionDuration: number;
+  /** Description of the testing lab */
   description?: string | null;
+  /** Whether to enable email notifications for session updates */
   enableNotifications?: boolean;
+  /** Name of the testing lab */
   labName: string;
+  /** Maximum number of simultaneous sessions allowed */
   maxSimultaneousSessions: number;
+  /** Days before an event starts when reminders are sent (CSV, e.g. "4,2,1") */
   reminderDaysBefore?: string | null;
+  /** Whether manager approval is required for new testing participants */
   requireApproval?: boolean;
+  /** Timezone for the testing lab (e.g., "UTC", "America/New_York") */
   timezone: string;
   versionSubmissionPolicy?: ProjectsVersionSubmissionPolicy;
 }
@@ -12688,8 +15385,10 @@ export interface TestingLabCreateTestingProjectApplicationDraftInput {
 
 export interface TestingLabCreateTestingRequestDto {
   description?: string | null;
+  /** URL to download the game build */
   downloadUrl?: string | null;
   endDate: string;
+  /** Simple feedback form content (plain text questions) */
   feedbackFormContent?: string | null;
   instructionsContent?: string | null;
   instructionsFileId?: string | null;
@@ -12730,27 +15429,50 @@ export interface TestingLabFeedbackInput {
   testingContext?: TestingLabTestingContext;
 }
 
+/** Qualitative rating applied to submitted testing feedback. */
 export type TestingLabFeedbackQuality = 'Low' | 'Medium' | 'High';
 
+/** Represents feedback quality rating given by users to evaluate feedback usefulness */
 export interface TestingLabFeedbackQualityRating {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   feedback?: TestingLabTestingFeedback;
+  /** Foreign key to the feedback being rated */
   feedbackId: string;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
+  /** Whether this rating is global (tenant-independent) */
   isGlobal?: boolean;
+  /** Whether this is a negative quality rating */
   isNegative?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** Whether this is a positive quality rating */
   isPositive?: boolean;
+  /** Quality rating (1-5 scale) */
   qualityRating: number;
   ratedBy?: IdentityUsersUser;
+  /** Foreign key to the user giving the rating */
   ratedByUserId: string;
+  /** Reason for the quality rating */
   reason?: string | null;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
@@ -12772,6 +15494,9 @@ export type TestingLabLocationStatus = 'Active' | 'Maintenance' | 'Inactive';
 
 export type TestingLabParticipationStatus = 'Registered' | 'Active' | 'Completed' | 'Withdrawn' | 'Suspended';
 
+/** A deliberately small, event-scoped preview of a game approved for public
+playtesting. Private project metadata and submitted application details are
+not included in the public event contract. */
 export interface TestingLabPublicTestingEventGameProjection {
   description?: string | null;
   imageUrl?: string | null;
@@ -12890,35 +15615,62 @@ export interface TestingLabSessionProjectProjection {
   sessionId?: string;
 }
 
+/** Represents a registration for a testing session */
 export interface TestingLabSessionRegistration {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Duration of attendance */
   attendanceDuration?: string | null;
   attendanceStatus?: TestingLabAttendanceStatus;
   attendedAt?: string | null;
+  /** When the user checked in */
   checkedInAt?: string | null;
+  /** When the user checked out */
   checkedOutAt?: string | null;
+  /** When the user confirmed attendance */
   confirmedAt?: string | null;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Whether the user has checked in */
   isCheckedIn?: boolean;
+  /** Whether the user has checked out */
   isCheckedOut?: boolean;
+  /** Whether the user has confirmed attendance */
   isConfirmed?: boolean;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
+  /** Whether this registration is global (tenant-independent) */
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** Notes about the registration */
   notes?: string | null;
+  /** When the registration was made */
   registeredAt: string;
   registrationNotes?: string | null;
   registrationType?: TestingLabRegistrationType;
   session?: TestingLabTestingSession;
+  /** Foreign key to the testing session */
   sessionId: string;
   status?: TestingLabRegistrationStatus;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
   user?: IdentityUsersUser;
+  /** Foreign key to the user */
   userId: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
@@ -12930,32 +15682,54 @@ export interface TestingLabSessionRegistrationInput {
 export type TestingLabSessionStatus = 'Scheduled' | 'Active' | 'Completed' | 'Cancelled';
 
 export interface TestingLabSessionWaitlist {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
   position: number;
   registrationNotes?: string | null;
   registrationType: TestingLabRegistrationType;
   session?: TestingLabTestingSession;
+  /** Foreign key to the session */
   sessionId?: string;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
   user?: IdentityUsersUser;
+  /** Foreign key to the user */
   userId?: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
+/** DTO for submitting simple feedback for a testing request */
 export interface TestingLabSubmitFeedbackDto {
+  /** Additional notes from the tester */
   additionalNotes?: string | null;
+  /** JSON string containing feedback responses Key-value pairs where key is the question and value is the response */
   feedbackResponses: string;
+  /** Overall rating (1-10) */
   overallRating?: number | null;
+  /** Optional session ID if this feedback was given during a testing session */
   sessionId?: string | null;
   testingRequestId: string;
+  /** Would the tester recommend this game */
   wouldRecommend?: boolean | null;
 }
 
@@ -13007,22 +15781,36 @@ export interface TestingLabTestingApplicationTesterEligibilityProjection {
 }
 
 export interface TestingLabTestingApplicationVote {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
   application?: TestingLabTestingProjectApplication;
   applicationId?: string;
   comments?: string | null;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
   decision?: TestingLabTestingApplicationVoteDecision;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
   reviewer?: IdentityUsersUser;
   reviewerId?: string;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
@@ -13037,28 +15825,44 @@ export interface TestingLabTestingApplicationVoteProjection {
 }
 
 export interface TestingLabTestingCommitteeMember {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   event?: TestingLabTestingEvent;
   eventId?: string;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
   isActive?: boolean;
   isChair?: boolean;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
   user?: IdentityUsersUser;
   userId?: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
 export type TestingLabTestingContext = 'Online' | 'InPerson';
 
 export interface TestingLabTestingEvent {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
   applications?: Array<TestingLabTestingProjectApplication> | null;
   applicationsCloseAt?: string;
@@ -13071,15 +15875,22 @@ export interface TestingLabTestingEvent {
   committeeMembers?: Array<TestingLabTestingCommitteeMember> | null;
   configurationFrozenAt?: string | null;
   courseId?: string | null;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
   description?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   endsAt?: string;
   generalRules?: string | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
   learningActivityId?: string | null;
   learningCompletionRequirement?: TestingLabTestingLearningCompletionRequirement;
@@ -13109,7 +15920,12 @@ export interface TestingLabTestingEvent {
   testerRegistrationSchema?: TestingLabQuestionnaireSchema;
   testerRegistrationSchemaJson?: string | null;
   timeZoneId: string;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
@@ -13211,17 +16027,26 @@ export interface TestingLabTestingEventRecurrenceInput {
 }
 
 export interface TestingLabTestingEventSlot {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
   campusName?: string | null;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   endsAt?: string;
   event?: TestingLabTestingEvent;
   eventId?: string;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
   isProjectCapacityUnlimited?: boolean;
   isTesterCapacityUnlimited?: boolean;
@@ -13234,7 +16059,12 @@ export interface TestingLabTestingEventSlot {
   roomName?: string | null;
   startsAt?: string;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
@@ -13282,48 +16112,80 @@ export interface TestingLabTestingEventTemplateRevisionProjection {
   testerRegistrationSchema?: TestingLabQuestionnaireSchema;
 }
 
+/** Represents feedback collected from testing sessions and QA activities */
 export interface TestingLabTestingFeedback {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Additional notes from tester */
   additionalNotes?: string | null;
   application?: TestingLabTestingProjectApplication;
   applicationId?: string | null;
+  /** Average quality rating from other users */
   averageQualityRating?: number | null;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   event?: TestingLabTestingEvent;
   eventId?: string | null;
+  /** Feedback data in JSON format */
   feedbackData: string;
   feedbackForm?: TestingLabTestingFeedbackForm;
+  /** Foreign key to the feedback form */
   feedbackFormId?: string | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
+  /** Whether this feedback is global (tenant-independent) */
   isGlobal?: boolean;
+  /** Whether this is negative feedback */
   isNegative?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** Whether this is positive feedback */
   isPositive?: boolean;
+  /** Whether this feedback has been reported as inappropriate */
   isReported?: boolean;
+  /** Overall rating (1-10) */
   overallRating?: number | null;
   qualityRating?: TestingLabFeedbackQuality;
+  /** Quality ratings for this feedback */
   qualityRatings?: Array<TestingLabFeedbackQualityRating> | null;
   questionnaireRevisionId?: string | null;
+  /** When this feedback was reported */
   reportedAt?: string | null;
   reportedBy?: IdentityUsersUser;
+  /** Who reported this feedback */
   reportedById?: string | null;
   reportedByUserId?: string | null;
+  /** Reason for reporting this feedback */
   reportReason?: string | null;
   session?: TestingLabTestingSession;
+  /** Optional foreign key to the testing session */
   sessionId?: string | null;
   structuredResponses?: TestingLabQuestionnaireOutput;
   structuredResponsesJson?: string | null;
   tenantId?: string | null;
   testingContext: TestingLabTestingContext;
   testingRequest?: TestingLabTestingInput;
+  /** Foreign key to the testing request */
   testingRequestId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
   user?: IdentityUsersUser;
+  /** Foreign key to the user who provided feedback */
   userId: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
+  /** Would the tester recommend this product */
   wouldRecommend?: boolean | null;
 }
 
@@ -13363,31 +16225,56 @@ export interface TestingLabTestingFeedbackDirectoryPage {
   totalCount?: number;
 }
 
+/** Represents a feedback form template for collecting structured QA feedback */
 export interface TestingLabTestingFeedbackForm {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Form description */
   description?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  /** Feedback submissions using this form */
   feedback?: Array<TestingLabTestingFeedback> | null;
+  /** Form structure in JSON format */
   formData: string;
   formSchema?: string | null;
   formType?: TestingLabFeedbackFormType;
+  /** Version number of this form */
   formVersion?: number;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Whether this form is currently active */
   isActive?: boolean;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isForOnline?: boolean;
   isForSessions?: boolean;
+  /** Whether this form is global (tenant-independent) */
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** Form name */
   name: string;
+  /** Number of feedback submissions */
   submissionCount?: number;
+  /** Tags as array */
   tagArray?: Array<string> | null;
+  /** Tags for categorization */
   tags?: string | null;
   tenantId?: string | null;
   testingRequestId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
@@ -13407,46 +16294,85 @@ export type TestingLabTestingFeedbackObligationStatus = 'Pending' | 'Fulfilled' 
 
 export type TestingLabTestingFeedbackSource = 'Request' | 'Event';
 
+/** Represents a request for testing and quality assurance */
 export interface TestingLabTestingInput {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Whether this request accepts new testers */
   acceptsNewTesters?: boolean;
+  /** Available tester spots */
   availableSpots?: number | null;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
   createdBy?: IdentityUsersUser;
+  /** Foreign key to the user who created this request */
   createdById: string;
+  /** Current number of testers */
   currentTesterCount?: number;
+  /** Days remaining for testing */
   daysRemaining?: number | null;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Request description */
   description?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  /** URL to download the product/game build */
   downloadUrl?: string | null;
+  /** Testing duration */
   duration?: string;
+  /** Testing end date */
   endDate: string;
+  /** Estimated testing duration in hours */
   estimatedDurationHours?: number | null;
+  /** Feedback collected for this request */
   feedback?: Array<TestingLabTestingFeedback> | null;
+  /** Simple feedback form content (plain text questions) */
   feedbackFormContent?: string | null;
+  /** Feedback forms associated with this request */
   feedbackForms?: Array<TestingLabTestingFeedbackForm> | null;
+  /** Instructions content (text format) */
   instructionsContent?: string | null;
+  /** File ID for instruction documents */
   instructionsFileId?: string | null;
   instructionsType: TestingLabInstructionType;
+  /** URL for instructions */
   instructionsUrl?: string | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Whether this request is currently active */
   isActive?: boolean;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
+  /** Whether this request is global (tenant-independent) */
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** Maximum number of testers */
   maxTesters?: number | null;
   mode?: TestingLabTestingMode;
+  /** Participants in this testing request */
   participants?: Array<TestingLabTestingParticipant> | null;
   priority?: TestingLabTestingPriority;
   projectVersion?: ProjectsProjectVersion;
+  /** Foreign key to the project version (optional - can be standalone testing) */
   projectVersionId?: string | null;
+  /** Testing sessions for this request */
   sessions?: Array<TestingLabTestingSession> | null;
+  /** Testing start date */
   startDate: string;
   status: TestingLabTestingRequestStatus;
   tenantId?: string | null;
+  /** Request title */
   title: string;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
@@ -13551,19 +16477,33 @@ export interface TestingLabTestingLabRoleTemplate {
   permissions?: TestingLabTestingLabPermissionsDto;
 }
 
+/** Data Transfer Object for TestingLabSettings responses */
 export interface TestingLabTestingLabSettingsDto {
+  /** Unique identifier for the settings */
   id?: string;
+  /** Whether to allow public signups for testing sessions */
   allowPublicSignups?: boolean;
+  /** Timestamp when the settings were created */
   createdAt?: string;
+  /** Default session duration in minutes */
   defaultSessionDuration?: number;
+  /** Description of the testing lab */
   description?: string | null;
+  /** Whether to enable email notifications for session updates */
   enableNotifications?: boolean;
+  /** Name of the testing lab */
   labName?: string | null;
+  /** Maximum number of simultaneous sessions allowed */
   maxSimultaneousSessions?: number;
+  /** Days before an event starts when reminders are sent (CSV, e.g. "4,2,1") */
   reminderDaysBefore?: string | null;
+  /** Whether manager approval is required for new testing participants */
   requireApproval?: boolean;
+  /** ID of the tenant this settings belongs to */
   tenantId?: string | null;
+  /** Timezone for the testing lab */
   timezone?: string | null;
+  /** Timestamp when the settings were last updated */
   updatedAt?: string;
   versionSubmissionPolicy?: ProjectsVersionSubmissionPolicy;
 }
@@ -13571,71 +16511,134 @@ export interface TestingLabTestingLabSettingsDto {
 /** A comma-separated combination of the declared flag names. */
 export type TestingLabTestingLearningCompletionRequirement = string;
 
+/** Represents a testing location where QA sessions can be conducted */
 export interface TestingLabTestingLocation {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Number of active sessions */
   activeSessionCount?: number;
+  /** Street address */
   address?: string | null;
+  /** Maximum capacity for testers */
   capacity?: number | null;
+  /** City */
   city?: string | null;
+  /** Contact email for this location */
   contactEmail?: string | null;
+  /** Contact phone for this location */
   contactPhone?: string | null;
+  /** Country */
   country?: string | null;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Location description */
   description?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  /** Available equipment/resources */
   equipment?: string | null;
   equipmentAvailable?: string | null;
+  /** Full address as string */
   fullAddress?: string | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Whether this location is currently available */
   isAvailable?: boolean;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
+  /** Whether this location is global (tenant-independent) */
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** Whether this is a virtual location (online testing) */
   isVirtual?: boolean;
   maxProjectsCapacity?: number;
   maxTestersCapacity?: number;
+  /** Location name */
   name: string;
+  /** Postal code */
   postalCode?: string | null;
+  /** Testing sessions at this location */
   sessions?: Array<TestingLabTestingSession> | null;
+  /** State/Province */
   state?: string | null;
   status?: TestingLabLocationStatus;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
+  /** Virtual meeting URL or platform info */
   virtualUrl?: string | null;
 }
 
 export type TestingLabTestingMode = 'Online' | 'InPerson' | 'Hybrid';
 
+/** Represents a participant in testing sessions and QA activities */
 export interface TestingLabTestingParticipant {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Whether participant can provide feedback */
   canProvideFeedback?: boolean;
+  /** When participation was completed */
   completedAt?: string | null;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  /** Feedback provided by this participant */
   feedback?: Array<TestingLabTestingFeedback> | null;
+  /** Number of feedback submissions */
   feedbackCount?: number;
+  /** Whether instructions have been acknowledged */
   instructionsAcknowledged: boolean;
+  /** When instructions were acknowledged */
   instructionsAcknowledgedAt?: string | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Whether participation is active */
   isActive?: boolean;
+  /** Whether participation is completed */
   isCompleted?: boolean;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
+  /** Whether this participant is global (tenant-independent) */
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
+  /** Notes about the participation */
   notes?: string | null;
+  /** Duration of participation */
   participationDuration?: string | null;
+  /** When participation started */
   startedAt: string;
   status?: TestingLabParticipationStatus;
   tenantId?: string | null;
   testingRequest?: TestingLabTestingInput;
+  /** Foreign key to the testing request */
   testingRequestId: string;
+  /** Time spent testing in minutes */
   timeSpentMinutes?: number | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
   user?: IdentityUsersUser;
+  /** Foreign key to the user */
   userId: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
@@ -13685,26 +16688,35 @@ export interface TestingLabTestingParticipantMutationProjection {
 export type TestingLabTestingPriority = 'Low' | 'Medium' | 'High' | 'Critical';
 
 export interface TestingLabTestingProjectApplication {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
   assignedSlot?: TestingLabTestingEventSlot;
   assignedSlotId?: string | null;
   brief?: TestingLabTestingProjectBrief;
   briefJson?: string | null;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
   currentQuestionnaireRevisionId?: string | null;
   decidedAt?: string | null;
   decidedBy?: IdentityUsersUser;
   decidedByUserId?: string | null;
   decisionRationale?: string | null;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   event?: TestingLabTestingEvent;
   eventApplicationResponse?: TestingLabQuestionnaireOutput;
   eventApplicationResponseJson?: string | null;
   eventId?: string;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
   preferredAvailability?: string | null;
   project?: ProjectsProject;
@@ -13720,7 +16732,12 @@ export interface TestingLabTestingProjectApplication {
   submittedBy?: IdentityUsersUser;
   submittedByUserId?: string;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
   votes?: Array<TestingLabTestingApplicationVote> | null;
 }
@@ -13757,21 +16774,35 @@ export interface TestingLabTestingProjectBrief {
 }
 
 export interface TestingLabTestingQuestionnaireRevision {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
   applicationId?: string;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
   createdByUserId?: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
   revisionNumber?: number;
   schema?: TestingLabQuestionnaireSchema;
   schemaJson: string;
   tenantId?: string | null;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
@@ -13792,6 +16823,9 @@ export interface TestingLabTestingRequestDetailProjection {
   title?: string | null;
 }
 
+/** Stable read model for a Testing Lab project request.
+It intentionally omits EF navigation collections so an optional project version
+cannot make the API response unparseable for the dashboard client. */
 export interface TestingLabTestingRequestProjectProjection {
   id?: string;
   slug?: string | null;
@@ -13808,45 +16842,83 @@ export interface TestingLabTestingRequestProjectVersionProjection {
 
 export type TestingLabTestingRequestStatus = 'Draft' | 'Open' | 'Active' | 'InProgress' | 'Paused' | 'Completed' | 'Cancelled';
 
+/** Represents a testing session for quality assurance and user feedback collection */
 export interface TestingLabTestingSession {
+  /** Unique identifier for the entity.
+Setter is public for EF Core materialization; prefer constructor or factory methods for domain code. */
   id?: string;
+  /** Whether the session allows new registrations */
   allowsRegistration?: boolean;
+  /** Available spots for testers */
   availableSpots?: number;
+  /** Timestamp when the entity was created.
+Protected setter prevents modification after initial creation; EF Core uses backing field. */
   createdAt: string;
   createdBy?: IdentityUsersUser;
+  /** Foreign key to the user who created this session */
   createdById: string;
+  /** Timestamp when the entity was soft-deleted (null if not deleted).
+Protected setter — use M:GameGuild.EntityBase`1.SoftDelete/M:GameGuild.EntityBase`1.Restore. EF Core uses backing field. */
   deletedAt?: string | null;
+  /** Domain events raised by this entity */
   domainEvents?: Array<CQRSIDomainEvent> | null;
+  /** Session duration */
   duration?: string;
+  /** Session end time */
   endTime: string;
   eventSlot?: TestingLabTestingEventSlot;
+  /** Optional event slot that scheduled this operational session. */
   eventSlotId?: string | null;
+  /** Testing feedback for this session */
   feedback?: Array<TestingLabTestingFeedback> | null;
   integrationEvents?: Array<IDurableIntegrationEvent> | null;
+  /** Whether the session is currently active */
   isActive?: boolean;
+  /** Whether the session is completed */
   isCompleted?: boolean;
+  /** Checks if this entity is soft-deleted */
   isDeleted?: boolean;
+  /** Whether this session is global (tenant-independent) */
   isGlobal?: boolean;
+  /** Checks if this entity is newly created (not yet persisted to a database) */
   isNew?: boolean;
   location?: TestingLabTestingLocation;
+  /** Foreign key to the testing location */
   locationId: string;
   manager?: IdentityUsersUser;
+  /** Foreign key to the session manager */
   managerId: string;
+  /** Additional foreign key to the session manager (for backward compatibility) */
   managerUserId?: string;
+  /** Maximum number of projects */
   maxProjects: number;
+  /** Maximum number of testers */
   maxTesters: number;
+  /** Number of registered projects */
   registeredProjectCount?: number;
+  /** Number of registered project members */
   registeredProjectMemberCount?: number;
+  /** Number of registered testers */
   registeredTesterCount?: number;
+  /** Session registrations */
   registrations?: Array<TestingLabSessionRegistration> | null;
+  /** Session date */
   sessionDate: string;
+  /** Session name */
   sessionName: string;
+  /** Session start time */
   startTime: string;
   status: TestingLabSessionStatus;
   tenantId?: string | null;
   testingRequest?: TestingLabTestingInput;
+  /** Foreign key to the testing request */
   testingRequestId: string;
+  /** Timestamp when the entity was last updated.
+Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
+  /** Version number for optimistic concurrency control.
+Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
+Protected setter prevents direct manipulation outside the entity hierarchy; EF Core uses backing field. */
   version?: number;
 }
 
@@ -13895,15 +16967,25 @@ export interface TestingLabUpdateTestingLabRoleInput {
   permissions?: TestingLabTestingLabPermissionsDto;
 }
 
+/** Data Transfer Object for updating TestingLabSettings */
 export interface TestingLabUpdateTestingLabSettingsDto {
+  /** Whether to allow public signups for testing sessions */
   allowPublicSignups?: boolean | null;
+  /** Default session duration in minutes */
   defaultSessionDuration?: number | null;
+  /** Description of the testing lab */
   description?: string | null;
+  /** Whether to enable email notifications for session updates */
   enableNotifications?: boolean | null;
+  /** Name of the testing lab */
   labName?: string | null;
+  /** Maximum number of simultaneous sessions allowed */
   maxSimultaneousSessions?: number | null;
+  /** Days before an event starts when reminders are sent (CSV, e.g. "4,2,1") */
   reminderDaysBefore?: string | null;
+  /** Whether manager approval is required for new testing participants */
   requireApproval?: boolean | null;
+  /** Timezone for the testing lab (e.g., "UTC", "America/New_York") */
   timezone?: string | null;
   versionSubmissionPolicy?: ProjectsVersionSubmissionPolicy;
 }
@@ -15582,7 +18664,7 @@ export let TrustSafetyTrustSafetyAppealSchema: z.ZodType<TrustSafetyTrustSafetyA
 export let TrustSafetyTrustSafetyAppealStateSchema: z.ZodType<TrustSafetyTrustSafetyAppealState>;
 
 // Zod Schema Definitions
-/** Zod schema for AIAiChatInput */
+/** Zod schema for AIAiChatInput. Canonical request shape for conversational completions. */
 AIAiChatInputSchema = z.object({
   maxTokens: z.number().int().nullable().optional(),
   messages: z
@@ -15595,13 +18677,13 @@ AIAiChatInputSchema = z.object({
   temperature: z.number().nullable().optional(),
 });
 
-/** Zod schema for AIAiChatMessage */
+/** Zod schema for AIAiChatMessage. Chat message payload for AI requests. */
 AIAiChatMessageSchema = z.object({
   content: z.string().nullable().optional(),
   role: z.string().nullable().optional(),
 });
 
-/** Zod schema for AIAiCompletionOutput */
+/** Zod schema for AIAiCompletionOutput. Canonical completion response shape exposed by the GameGuild API. */
 AIAiCompletionOutputSchema = z.object({
   finishReason: z.string().nullable().optional(),
   model: z.string().nullable().optional(),
@@ -15610,7 +18692,7 @@ AIAiCompletionOutputSchema = z.object({
   usage: z.lazy(() => AIAiUsageDtoSchema).optional(),
 });
 
-/** Zod schema for AIAiConversationHistoryEntryDto */
+/** Zod schema for AIAiConversationHistoryEntryDto. Conversation history entry returned by the AI history endpoint. */
 AIAiConversationHistoryEntryDtoSchema = z.object({
   id: z.string().uuid().optional(),
   finishReason: z.string().nullable().optional(),
@@ -15654,7 +18736,7 @@ AIAiGeneratedContentInputSchema = z.object({
 /** Zod schema for AIAiGeneratedContentKind */
 AIAiGeneratedContentKindSchema = z.enum(['Email', 'Report', 'ListingDescription']);
 
-/** Zod schema for AIAiGenerateInput */
+/** Zod schema for AIAiGenerateInput. Canonical request shape for single-prompt generation. */
 AIAiGenerateInputSchema = z.object({
   maxTokens: z.number().int().nullable().optional(),
   model: z.string().nullable().optional(),
@@ -15749,7 +18831,7 @@ AIAiStatusOutputSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for AIAiUsageDto */
+/** Zod schema for AIAiUsageDto. Normalized token usage information returned by a provider. */
 AIAiUsageDtoSchema = z.object({
   inputTokens: z.number().int().nullable().optional(),
   outputTokens: z.number().int().nullable().optional(),
@@ -15976,7 +19058,7 @@ APIControllersAdRewardProtectedOperationFailureOutputSchema = z.object({
   state: z.lazy(() => FinanceEconomyRiskEconomyProtectedOperationStateSchema).optional(),
 });
 
-/** Zod schema for APIControllersApplicationDetails */
+/** Zod schema for APIControllersApplicationDetails. Application details */
 APIControllersApplicationDetailsSchema = z.object({
   description: z.string().nullable().optional(),
   informationalVersion: z.string().nullable().optional(),
@@ -15984,7 +19066,7 @@ APIControllersApplicationDetailsSchema = z.object({
   version: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIControllersApplicationInfoOutput */
+/** Zod schema for APIControllersApplicationInfoOutput. Application info response model */
 APIControllersApplicationInfoOutputSchema = z.object({
   application: z.lazy(() => APIControllersApplicationDetailsSchema).optional(),
   build: z.lazy(() => APIControllersBuildDetailsSchema).optional(),
@@ -16026,7 +19108,7 @@ APIControllersBackfillLegacyEconomyWalletInputSchema = z.object({
   riskDecisionId: z.string().uuid().optional(),
 });
 
-/** Zod schema for APIControllersBuildDetails */
+/** Zod schema for APIControllersBuildDetails. Build details */
 APIControllersBuildDetailsSchema = z.object({
   configuration: z.string().nullable().optional(),
   framework: z.string().nullable().optional(),
@@ -16089,7 +19171,7 @@ APIControllersDecideTrustSafetyAppealInputSchema = z.object({
   reasonCode: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIControllersDependencyHealthItem */
+/** Zod schema for APIControllersDependencyHealthItem. Individual dependency health item */
 APIControllersDependencyHealthItemSchema = z.object({
   data: z.record(z.string(), z.string()).nullable().optional(),
   description: z.string().nullable().optional(),
@@ -16101,7 +19183,7 @@ APIControllersDependencyHealthItemSchema = z.object({
   tags: z.array(z.string()).nullable().optional(),
 });
 
-/** Zod schema for APIControllersDependencyHealthOutput */
+/** Zod schema for APIControllersDependencyHealthOutput. Dependency health check response model */
 APIControllersDependencyHealthOutputSchema = z.object({
   dependencies: z
     .array(z.lazy(() => APIControllersDependencyHealthItemSchema))
@@ -16182,7 +19264,7 @@ APIControllersEconomyTransferProtectedOperationFailureOutputSchema = z.object({
   state: z.lazy(() => FinanceEconomyRiskEconomyProtectedOperationStateSchema).optional(),
 });
 
-/** Zod schema for APIControllersHealthinessOutput */
+/** Zod schema for APIControllersHealthinessOutput. Health check response model */
 APIControllersHealthinessOutputSchema = z.object({
   builtAt: z.string().nullable().optional(),
   checks: z
@@ -16203,7 +19285,7 @@ APIControllersHealthinessOutputSchema = z.object({
   version: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIControllersHealthinessResponseItem */
+/** Zod schema for APIControllersHealthinessResponseItem. Individual health check item */
 APIControllersHealthinessResponseItemSchema = z.object({
   data: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   description: z.string().nullable().optional(),
@@ -16223,7 +19305,7 @@ APIControllersInspectEconomyCapabilityReadinessInputSchema = z.object({
   subjectReference: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIControllersLivenessOutput */
+/** Zod schema for APIControllersLivenessOutput. Liveness check response model */
 APIControllersLivenessOutputSchema = z.object({
   alive: z.boolean().optional(),
   status: z.string().nullable().optional(),
@@ -16254,7 +19336,7 @@ APIControllersPlatformKpisOutputSchema = z.object({
   mrr: z.number().optional(),
 });
 
-/** Zod schema for APIControllersProcessDetails */
+/** Zod schema for APIControllersProcessDetails. Process details */
 APIControllersProcessDetailsSchema = z.object({
   startTime: z.string().datetime().optional(),
   uptime: z.string().optional(),
@@ -16310,7 +19392,7 @@ APIControllersPublishEconomyAnchorInputSchema = z.object({
   dispatchSnapshotHash: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIControllersReadinessOutput */
+/** Zod schema for APIControllersReadinessOutput. Readiness check response model */
 APIControllersReadinessOutputSchema = z.object({
   error: z.string().nullable().optional(),
   ready: z.boolean().optional(),
@@ -16350,7 +19432,7 @@ APIControllersRollbackLegacyEconomyCutoverInputSchema = z.object({
   stepUpReceipt: z.string().nullable().optional(),
 });
 
-/** Zod schema for APIControllersRuntimeDetails */
+/** Zod schema for APIControllersRuntimeDetails. Runtime details */
 APIControllersRuntimeDetailsSchema = z.object({
   dotNetVersion: z.string().nullable().optional(),
   osArchitecture: z.string().nullable().optional(),
@@ -16822,7 +19904,7 @@ APITeamsUpdateTeamInputSchema = z.object({
   visibility: z.lazy(() => TeamsTeamVisibilitySchema).optional(),
 });
 
-/** Zod schema for AssetsAssetAccessPolicy */
+/** Zod schema for AssetsAssetAccessPolicy. Access policy for asset references. */
 AssetsAssetAccessPolicySchema = z.enum([
   'Private',
   'SignedUrl',
@@ -16835,7 +19917,7 @@ AssetsAssetAccessPolicySchema = z.enum([
   'Inherited',
 ]);
 
-/** Zod schema for AssetsAssetAccessUrl */
+/** Zod schema for AssetsAssetAccessUrl. Generated access URL for an asset. */
 AssetsAssetAccessUrlSchema = z.object({
   expiresAt: z.string().datetime().optional(),
   mimeType: z.string().nullable().optional(),
@@ -16846,10 +19928,10 @@ AssetsAssetAccessUrlSchema = z.object({
 /** Zod schema for AssetsAssetFolderRestrictionMode */
 AssetsAssetFolderRestrictionModeSchema = z.enum(['None', 'SelectedTeams', 'TeamAuthorities', 'AllocatedProjectMembers']);
 
-/** Zod schema for AssetsAssetKind */
+/** Zod schema for AssetsAssetKind. Asset content classification. */
 AssetsAssetKindSchema = z.enum(['Image', 'Video', 'Audio', 'Document', 'Archive', 'Other']);
 
-/** Zod schema for AssetsAssetUploadResult */
+/** Zod schema for AssetsAssetUploadResult. Result of an asset upload. */
 AssetsAssetUploadResultSchema = z.object({
   assetContentId: z.string().uuid().nullable().optional(),
   assetReferenceId: z.string().uuid().nullable().optional(),
@@ -16857,7 +19939,7 @@ AssetsAssetUploadResultSchema = z.object({
   success: z.boolean().optional(),
 });
 
-/** Zod schema for AssetsChunkedUploadSession */
+/** Zod schema for AssetsChunkedUploadSession. Session for chunked upload. */
 AssetsChunkedUploadSessionSchema = z.object({
   expiresAt: z.string().datetime().optional(),
   fileName: z.string().nullable().optional(),
@@ -16987,13 +20069,13 @@ AssetsControllersUpdateVirusScanInputSchema = z.object({
   status: z.lazy(() => AssetsVirusScanStatusSchema).optional(),
 });
 
-/** Zod schema for AssetsImageFit */
+/** Zod schema for AssetsImageFit. Image fit mode for transformations. */
 AssetsImageFitSchema = z.enum(['Contain', 'Cover', 'Fill', 'Inside', 'Outside']);
 
-/** Zod schema for AssetsImageFormat */
+/** Zod schema for AssetsImageFormat. Output image format for transformations. */
 AssetsImageFormatSchema = z.enum(['Original', 'Jpeg', 'Png', 'Webp', 'Avif', 'Gif']);
 
-/** Zod schema for AssetsModerationStatus */
+/** Zod schema for AssetsModerationStatus. Content moderation status. */
 AssetsModerationStatusSchema = z.enum(['Pending', 'Processing', 'Approved', 'Rejected', 'NeedsReview', 'ApprovedWithWarning', 'Blocked']);
 
 /** Zod schema for AssetsQueriesAssetPreviewOutput */
@@ -17103,25 +20185,25 @@ AssetsQueriesBulkAssetAccessUrlsOutputSchema = z.object({
   totalRequested: z.number().int().optional(),
 });
 
-/** Zod schema for AssetsReportReason */
+/** Zod schema for AssetsReportReason. Report reason categories. */
 AssetsReportReasonSchema = z.enum(['Inappropriate', 'Copyright', 'Spam', 'Violence', 'Harassment', 'Misinformation', 'Other']);
 
-/** Zod schema for AssetsReviewDecision */
+/** Zod schema for AssetsReviewDecision. Moderator review decision. */
 AssetsReviewDecisionSchema = z.enum(['NoAction', 'ContentRemoved', 'ContentHidden', 'UserWarned', 'UserSuspended', 'BlockContent']);
 
-/** Zod schema for AssetsSecurityAccessUrlInput */
+/** Zod schema for AssetsSecurityAccessUrlInput. Request for access URL generation. */
 AssetsSecurityAccessUrlInputSchema = z.object({
   directStorage: z.boolean().optional(),
   transform: z.string().nullable().optional(),
 });
 
-/** Zod schema for AssetsVirusScanStatus */
+/** Zod schema for AssetsVirusScanStatus. Virus scan status. */
 AssetsVirusScanStatusSchema = z.enum(['Pending', 'Scanning', 'Clean', 'Infected', 'ScanFailed']);
 
-/** Zod schema for BillingCycle */
+/** Zod schema for BillingCycle. Billing cycle enumeration */
 BillingCycleSchema = z.enum(['Weekly', 'Monthly', 'Quarterly', 'SemiAnnually', 'Annually', 'Biannually']);
 
-/** Zod schema for BulkOperationError */
+/** Zod schema for BulkOperationError. Error details for failed bulk operations */
 BulkOperationErrorSchema = z.object({
   errorCode: z.string().nullable().optional(),
   errorMessage: z.string().nullable().optional(),
@@ -17129,7 +20211,7 @@ BulkOperationErrorSchema = z.object({
   tenantName: z.string().nullable().optional(),
 });
 
-/** Zod schema for BulkOperationOutput */
+/** Zod schema for BulkOperationOutput. Response for bulk operations */
 BulkOperationOutputSchema = z.object({
   errors: z
     .array(z.lazy(() => BulkOperationErrorSchema))
@@ -17153,7 +20235,7 @@ CommerceBillingInvoicePaymentRetryResultSchema = z.object({
   retryScheduledAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for CommerceBillingInvoiceStatus */
+/** Zod schema for CommerceBillingInvoiceStatus. Invoice status enumeration with monotonic transitions */
 CommerceBillingInvoiceStatusSchema = z.enum(['Draft', 'Open', 'Paid', 'Void', 'PastDue', 'Uncollectible']);
 
 /** Zod schema for CommerceOrderChargeState */
@@ -17177,7 +20259,7 @@ CommerceOrdersAddMarketplaceCartItemInputSchema = z.object({
   quantity: z.number().int().optional(),
 });
 
-/** Zod schema for CommerceOrdersAddOrderItemInput */
+/** Zod schema for CommerceOrdersAddOrderItemInput. Request to add an item to an order */
 CommerceOrdersAddOrderItemInputSchema = z.object({
   productId: z.string().uuid().optional(),
   productPricingId: z.string().uuid().optional(),
@@ -17186,7 +20268,7 @@ CommerceOrdersAddOrderItemInputSchema = z.object({
   quantity: z.number().int().optional(),
 });
 
-/** Zod schema for CommerceOrdersCaptureOrderInput */
+/** Zod schema for CommerceOrdersCaptureOrderInput. Request to capture payment for an order */
 CommerceOrdersCaptureOrderInputSchema = z.object({
   paymentMethodId: z.string().nullable().optional(),
 });
@@ -17197,7 +20279,7 @@ CommerceOrdersCheckoutMarketplaceCartInputSchema = z.object({
   idempotencyKey: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommerceOrdersCompleteOrderInput */
+/** Zod schema for CommerceOrdersCompleteOrderInput. Request to complete an order */
 CommerceOrdersCompleteOrderInputSchema = z.object({
   marketplaceSettlement: z.lazy(() => CommerceOrdersCompleteOrderMarketplaceSettlementSchema).optional(),
   paymentId: z.string().uuid().nullable().optional(),
@@ -17211,7 +20293,7 @@ CommerceOrdersCompleteOrderMarketplaceSettlementSchema = z.object({
   idempotencyKey: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommerceOrdersCreateOrderInput */
+/** Zod schema for CommerceOrdersCreateOrderInput. Request to create a new order */
 CommerceOrdersCreateOrderInputSchema = z.object({
   idempotencyKey: z.string().nullable().optional(),
 });
@@ -17257,7 +20339,7 @@ CommerceOrdersMarketplaceCheckoutOrderDtoSchema = z.object({
   total: z.number().optional(),
 });
 
-/** Zod schema for CommerceOrdersOrderCaptureDto */
+/** Zod schema for CommerceOrdersOrderCaptureDto. Order capture result including any client-side payment action. */
 CommerceOrdersOrderCaptureDtoSchema = z.object({
   id: z.string().uuid().optional(),
   clientActionToken: z.string().nullable().optional(),
@@ -17286,7 +20368,7 @@ CommerceOrdersOrderCaptureDtoSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for CommerceOrdersOrderDto */
+/** Zod schema for CommerceOrdersOrderDto. Order DTO */
 CommerceOrdersOrderDtoSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
@@ -17311,7 +20393,7 @@ CommerceOrdersOrderDtoSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for CommerceOrdersOrderLineItemDto */
+/** Zod schema for CommerceOrdersOrderLineItemDto. Order line item DTO */
 CommerceOrdersOrderLineItemDtoSchema = z.object({
   id: z.string().uuid().optional(),
   basePrice: z.number().optional(),
@@ -17333,7 +20415,8 @@ CommerceOrdersOrderLineItemDtoSchema = z.object({
 /** Zod schema for CommerceOrdersOrderMarketplaceCurrencyChoice */
 CommerceOrdersOrderMarketplaceCurrencyChoiceSchema = z.enum(['Hard', 'Soft', 'FixedMix']);
 
-/** Zod schema for CommerceOrdersOrderStatus */
+/** Zod schema for CommerceOrdersOrderStatus. Order status enumeration with explicit economic states.
+Follows monotonic FSM - no backward economic transitions allowed. */
 CommerceOrdersOrderStatusSchema = z.enum([
   'Pending',
   'Processing',
@@ -17374,7 +20457,7 @@ CommercePaymentsBillingChargesControllerRefundBillingChargeInputSchema = z.objec
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommercePaymentsCalculateTaxInput */
+/** Zod schema for CommercePaymentsCalculateTaxInput. Tax calculation request DTO */
 CommercePaymentsCalculateTaxInputSchema = z.object({
   amount: z.number(),
   applicableExemptions: z.array(z.string()).nullable().optional(),
@@ -17387,7 +20470,7 @@ CommercePaymentsCalculateTaxInputSchema = z.object({
   transactionDate: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for CommercePaymentsCreateTaxJurisdictionInput */
+/** Zod schema for CommercePaymentsCreateTaxJurisdictionInput. Request to create a tax jurisdiction */
 CommercePaymentsCreateTaxJurisdictionInputSchema = z.object({
   code: z.string().nullable().optional(),
   country: z.string().nullable().optional(),
@@ -17397,7 +20480,7 @@ CommercePaymentsCreateTaxJurisdictionInputSchema = z.object({
   taxType: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommercePaymentsCreateTaxRuleInput */
+/** Zod schema for CommercePaymentsCreateTaxRuleInput. Request to create a tax rule */
 CommercePaymentsCreateTaxRuleInputSchema = z.object({
   customerType: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
@@ -17413,7 +20496,7 @@ CommercePaymentsCreateWalletInputSchema = z.object({
   currency: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommercePaymentsCustomerType */
+/** Zod schema for CommercePaymentsCustomerType. Customer types */
 CommercePaymentsCustomerTypeSchema = z.enum(['B2C', 'B2B']);
 
 /** Zod schema for CommercePaymentsLockWalletInput */
@@ -17421,19 +20504,19 @@ CommercePaymentsLockWalletInputSchema = z.object({
   reason: z.string().nullable(),
 });
 
-/** Zod schema for CommercePaymentsModelsFreezeWalletInput */
+/** Zod schema for CommercePaymentsModelsFreezeWalletInput. Request to freeze a wallet */
 CommercePaymentsModelsFreezeWalletInputSchema = z.object({
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommercePaymentsModelsPatchWalletInput */
+/** Zod schema for CommercePaymentsModelsPatchWalletInput. Request to update wallet settings */
 CommercePaymentsModelsPatchWalletInputSchema = z.object({
   currency: z.string().nullable().optional(),
   dailyLimit: z.number().nullable().optional(),
   monthlyLimit: z.number().nullable().optional(),
 });
 
-/** Zod schema for CommercePaymentsPatchTaxJurisdictionInput */
+/** Zod schema for CommercePaymentsPatchTaxJurisdictionInput. Request to partially update a tax jurisdiction */
 CommercePaymentsPatchTaxJurisdictionInputSchema = z.object({
   defaultRate: z.number().nullable().optional(),
   isActive: z.boolean().nullable().optional(),
@@ -17441,7 +20524,7 @@ CommercePaymentsPatchTaxJurisdictionInputSchema = z.object({
   taxType: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommercePaymentsPatchTaxRuleInput */
+/** Zod schema for CommercePaymentsPatchTaxRuleInput. Request to partially update a tax rule */
 CommercePaymentsPatchTaxRuleInputSchema = z.object({
   description: z.string().nullable().optional(),
   effectiveFrom: z.string().datetime().nullable().optional(),
@@ -17450,7 +20533,7 @@ CommercePaymentsPatchTaxRuleInputSchema = z.object({
   rate: z.number().nullable().optional(),
 });
 
-/** Zod schema for CommercePaymentsPaymentCancellationResult */
+/** Zod schema for CommercePaymentsPaymentCancellationResult. Result of a payment cancellation operation */
 CommercePaymentsPaymentCancellationResultSchema = z.object({
   canceledAt: z.string().datetime(),
   canceledBy: z.string().uuid().nullable().optional(),
@@ -17462,7 +20545,7 @@ CommercePaymentsPaymentCancellationResultSchema = z.object({
   success: z.boolean(),
 });
 
-/** Zod schema for CommercePaymentsPaymentResult */
+/** Zod schema for CommercePaymentsPaymentResult. Result of payment processing */
 CommercePaymentsPaymentResultSchema = z.object({
   amount: z.lazy(() => MoneySchema).optional(),
   failureReason: z.string().nullable().optional(),
@@ -17476,7 +20559,7 @@ CommercePaymentsPaymentResultSchema = z.object({
   transactionId: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommercePaymentsPaymentRetryResult */
+/** Zod schema for CommercePaymentsPaymentRetryResult. Result of payment retry */
 CommercePaymentsPaymentRetryResultSchema = z.object({
   failureReason: z.string().nullable().optional(),
   maxRetriesReached: z.boolean().optional(),
@@ -17530,10 +20613,10 @@ CommercePaymentsPaymentsControllerRefundInputSchema = z.object({
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommercePaymentsPaymentStatus */
+/** Zod schema for CommercePaymentsPaymentStatus. Payment processing status */
 CommercePaymentsPaymentStatusSchema = z.enum(['Pending', 'Processing', 'Succeeded', 'Failed', 'Cancelled', 'RequiresAction', 'Refunded', 'Disputed']);
 
-/** Zod schema for CommercePaymentsProcessRefundResult */
+/** Zod schema for CommercePaymentsProcessRefundResult. Result model for refund processing operations */
 CommercePaymentsProcessRefundResultSchema = z.object({
   currency: z.string().nullable(),
   errorMessage: z.string().nullable().optional(),
@@ -17550,7 +20633,7 @@ CommercePaymentsProcessRefundResultSchema = z.object({
   status: z.lazy(() => CommercePaymentsTransactionStatusSchema),
 });
 
-/** Zod schema for CommercePaymentsTaxBreakdown */
+/** Zod schema for CommercePaymentsTaxBreakdown. Individual tax breakdown (for compound/multiple taxes) */
 CommercePaymentsTaxBreakdownSchema = z.object({
   description: z.string().nullable().optional(),
   jurisdictionCode: z.string().nullable().optional(),
@@ -17560,7 +20643,7 @@ CommercePaymentsTaxBreakdownSchema = z.object({
   taxType: z.lazy(() => CommercePaymentsTaxTypeSchema).optional(),
 });
 
-/** Zod schema for CommercePaymentsTaxCalculationResult */
+/** Zod schema for CommercePaymentsTaxCalculationResult. Tax calculation result */
 CommercePaymentsTaxCalculationResultSchema = z.object({
   effectiveTaxRate: z.number().optional(),
   exemptionReason: z.string().nullable().optional(),
@@ -17579,7 +20662,7 @@ CommercePaymentsTaxCalculationResultSchema = z.object({
   totalAmount: z.number().optional(),
 });
 
-/** Zod schema for CommercePaymentsTaxExemptionValidationResult */
+/** Zod schema for CommercePaymentsTaxExemptionValidationResult. Result of tax exemption validation */
 CommercePaymentsTaxExemptionValidationResultSchema = z.object({
   exemptionRate: z.number().optional(),
   exemptionType: z.string().nullable().optional(),
@@ -17590,7 +20673,7 @@ CommercePaymentsTaxExemptionValidationResultSchema = z.object({
   warnings: z.array(z.string()).nullable().optional(),
 });
 
-/** Zod schema for CommercePaymentsTaxJurisdiction */
+/** Zod schema for CommercePaymentsTaxJurisdiction. Entity representing a tax jurisdiction */
 CommercePaymentsTaxJurisdictionSchema = z.object({
   id: z.string().uuid().optional(),
   childJurisdictions: z
@@ -17627,7 +20710,7 @@ CommercePaymentsTaxJurisdictionSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for CommercePaymentsTaxJurisdictionDto */
+/** Zod schema for CommercePaymentsTaxJurisdictionDto. DTO for tax jurisdiction */
 CommercePaymentsTaxJurisdictionDtoSchema = z.object({
   id: z.string().uuid().optional(),
   code: z.string().nullable().optional(),
@@ -17639,10 +20722,10 @@ CommercePaymentsTaxJurisdictionDtoSchema = z.object({
   taxType: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommercePaymentsTaxJurisdictionType */
+/** Zod schema for CommercePaymentsTaxJurisdictionType. Tax jurisdiction types */
 CommercePaymentsTaxJurisdictionTypeSchema = z.enum(['Country', 'State', 'Province', 'Region', 'City', 'County', 'District']);
 
-/** Zod schema for CommercePaymentsTaxRate */
+/** Zod schema for CommercePaymentsTaxRate. Entity representing a tax rate */
 CommercePaymentsTaxRateSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
@@ -17674,7 +20757,7 @@ CommercePaymentsTaxRateSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for CommercePaymentsTaxRule */
+/** Zod schema for CommercePaymentsTaxRule. Entity representing a tax rule */
 CommercePaymentsTaxRuleSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
@@ -17713,7 +20796,7 @@ CommercePaymentsTaxRuleSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for CommercePaymentsTaxRuleDto */
+/** Zod schema for CommercePaymentsTaxRuleDto. DTO for tax rule */
 CommercePaymentsTaxRuleDtoSchema = z.object({
   id: z.string().uuid().optional(),
   customerType: z.string().nullable().optional(),
@@ -17726,16 +20809,16 @@ CommercePaymentsTaxRuleDtoSchema = z.object({
   rate: z.number().optional(),
 });
 
-/** Zod schema for CommercePaymentsTaxRuleType */
+/** Zod schema for CommercePaymentsTaxRuleType. Tax rule types */
 CommercePaymentsTaxRuleTypeSchema = z.enum(['Standard', 'Reduced', 'ZeroRated', 'Exempt', 'ReverseCharge', 'WithholdingTax', 'Compound', 'Custom']);
 
-/** Zod schema for CommercePaymentsTaxType */
+/** Zod schema for CommercePaymentsTaxType. Tax types */
 CommercePaymentsTaxTypeSchema = z.enum(['VAT', 'GST', 'SalesTax', 'ServiceTax', 'WithholdingTax', 'ExciseTax', 'CustomsDuty', 'Other']);
 
-/** Zod schema for CommercePaymentsTransactionStatus */
+/** Zod schema for CommercePaymentsTransactionStatus. Transaction status */
 CommercePaymentsTransactionStatusSchema = z.enum(['Pending', 'Processing', 'Completed', 'Failed', 'Cancelled', 'Reversed']);
 
-/** Zod schema for CommercePaymentsUserWallet */
+/** Zod schema for CommercePaymentsUserWallet. Entity representing a user's wallet */
 CommercePaymentsUserWalletSchema = z.object({
   id: z.string().uuid().optional(),
   balance: z.number().optional(),
@@ -17769,7 +20852,7 @@ CommercePaymentsUserWalletSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for CommercePaymentsValidateTaxExemptionInput */
+/** Zod schema for CommercePaymentsValidateTaxExemptionInput. Request to validate tax exemption */
 CommercePaymentsValidateTaxExemptionInputSchema = z.object({
   customerId: z.string().uuid().nullable().optional(),
   customerVatNumber: z.string().nullable().optional(),
@@ -17779,7 +20862,7 @@ CommercePaymentsValidateTaxExemptionInputSchema = z.object({
   transactionDate: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for CommercePaymentsWalletTransaction */
+/** Zod schema for CommercePaymentsWalletTransaction. Entity representing a wallet transaction */
 CommercePaymentsWalletTransactionSchema = z.object({
   id: z.string().uuid().optional(),
   amount: z.number().optional(),
@@ -17811,7 +20894,7 @@ CommercePaymentsWalletTransactionSchema = z.object({
   walletId: z.string().uuid(),
 });
 
-/** Zod schema for CommercePaymentsWalletTransactionType */
+/** Zod schema for CommercePaymentsWalletTransactionType. Wallet transaction types */
 CommercePaymentsWalletTransactionTypeSchema = z.enum(['Credit', 'Debit', 'TransferIn', 'TransferOut', 'Refund', 'Fee', 'Adjustment']);
 
 /** Zod schema for CommerceProductsAddMySupportTicketMessageInput */
@@ -17825,14 +20908,14 @@ CommerceProductsAddSupportTicketMessageInputSchema = z.object({
   isInternal: z.boolean().optional(),
 });
 
-/** Zod schema for CommerceProductsAppliedPromoCode */
+/** Zod schema for CommerceProductsAppliedPromoCode. Details of an applied promo code */
 CommerceProductsAppliedPromoCodeSchema = z.object({
   code: z.string().nullable().optional(),
   discountAmount: z.number().optional(),
   discountPercentage: z.number().nullable().optional(),
 });
 
-/** Zod schema for CommerceProductsApplyPromoCodesInput */
+/** Zod schema for CommerceProductsApplyPromoCodesInput. Request to apply promo codes */
 CommerceProductsApplyPromoCodesInputSchema = z.object({
   orderAmount: z.number().optional(),
   productId: z.string().uuid().nullable().optional(),
@@ -17844,7 +20927,7 @@ CommerceProductsAssignSupportTicketInputSchema = z.object({
   agentUserId: z.string().uuid().optional(),
 });
 
-/** Zod schema for CommerceProductsBatchCreateProductsInput */
+/** Zod schema for CommerceProductsBatchCreateProductsInput. Request model for batch creating products */
 CommerceProductsBatchCreateProductsInputSchema = z.object({
   products: z
     .array(z.lazy(() => CommerceProductsBatchProductCreateItemSchema))
@@ -17852,7 +20935,7 @@ CommerceProductsBatchCreateProductsInputSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for CommerceProductsBatchProductCreateItem */
+/** Zod schema for CommerceProductsBatchProductCreateItem. Item for batch product creation */
 CommerceProductsBatchProductCreateItemSchema = z.object({
   affiliateCommissionPercentage: z.number().optional(),
   bundleItems: z.array(z.string().uuid()).nullable().optional(),
@@ -17872,7 +20955,7 @@ CommerceProductsChangeSupportTicketPriorityInputSchema = z.object({
   priority: z.lazy(() => CommerceProductsSupportTicketPrioritySchema).optional(),
 });
 
-/** Zod schema for CommerceProductsCheckMultipleAccessInput */
+/** Zod schema for CommerceProductsCheckMultipleAccessInput. Request to check multiple product access */
 CommerceProductsCheckMultipleAccessInputSchema = z.object({
   productIds: z.array(z.string().uuid()).nullable().optional(),
 });
@@ -17890,7 +20973,7 @@ CommerceProductsCreateMySupportTicketInputSchema = z.object({
   subject: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommerceProductsCreateProductInput */
+/** Zod schema for CommerceProductsCreateProductInput. Request model for creating a product */
 CommerceProductsCreateProductInputSchema = z.object({
   affiliateCommissionPercentage: z.number().optional(),
   bundleItems: z.array(z.string().uuid()).nullable().optional(),
@@ -17904,7 +20987,7 @@ CommerceProductsCreateProductInputSchema = z.object({
   type: z.lazy(() => CommerceProductsProductTypeSchema).optional(),
 });
 
-/** Zod schema for CommerceProductsCreatePromoCodeInput */
+/** Zod schema for CommerceProductsCreatePromoCodeInput. Request to create a promo code */
 CommerceProductsCreatePromoCodeInputSchema = z.object({
   code: z.string().nullable().optional(),
   currency: z.string().nullable().optional(),
@@ -17933,13 +21016,13 @@ CommerceProductsCreateSupportTicketInputSchema = z.object({
   subject: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommerceProductsEntitlementCheckResult */
+/** Zod schema for CommerceProductsEntitlementCheckResult. Result of an entitlement check */
 CommerceProductsEntitlementCheckResultSchema = z.object({
   hasAccess: z.boolean().optional(),
   productId: z.string().uuid().optional(),
 });
 
-/** Zod schema for CommerceProductsEntitlementInfoDto */
+/** Zod schema for CommerceProductsEntitlementInfoDto. Entitlement info DTO */
 CommerceProductsEntitlementInfoDtoSchema = z.object({
   accessEndDate: z.string().datetime().nullable().optional(),
   accessStartDate: z.string().datetime().nullable().optional(),
@@ -17953,7 +21036,7 @@ CommerceProductsEntitlementInfoDtoSchema = z.object({
   subscriptionStatus: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommerceProductsGrantEntitlementInput */
+/** Zod schema for CommerceProductsGrantEntitlementInput. Request to grant an entitlement */
 CommerceProductsGrantEntitlementInputSchema = z.object({
   acquisitionType: z.lazy(() => CommerceProductsProductAcquisitionTypeSchema).optional(),
   currency: z.string().nullable().optional(),
@@ -17963,7 +21046,7 @@ CommerceProductsGrantEntitlementInputSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for CommerceProductsPatchProductInput */
+/** Zod schema for CommerceProductsPatchProductInput. Request model for partial product update (PATCH) */
 CommerceProductsPatchProductInputSchema = z.object({
   affiliateCommissionPercentage: z.number().nullable().optional(),
   bundleItems: z.array(z.string().uuid()).nullable().optional(),
@@ -17978,7 +21061,7 @@ CommerceProductsPatchProductInputSchema = z.object({
   type: z.lazy(() => CommerceProductsProductTypeSchema).optional(),
 });
 
-/** Zod schema for CommerceProductsPatchPromoCodeInput */
+/** Zod schema for CommerceProductsPatchPromoCodeInput. Request to partially update a promo code (PATCH) */
 CommerceProductsPatchPromoCodeInputSchema = z.object({
   currency: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
@@ -17997,10 +21080,10 @@ CommerceProductsPatchPromoCodeInputSchema = z.object({
   validUntil: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for CommerceProductsProductAcquisitionType */
+/** Zod schema for CommerceProductsProductAcquisitionType. Represents how a user acquired access to a product */
 CommerceProductsProductAcquisitionTypeSchema = z.enum(['Purchase', 'Subscription', 'Grant', 'PromoCode', 'Bundle', 'Trial', 'Referral', 'Free', 'Gift']);
 
-/** Zod schema for CommerceProductsProductDto */
+/** Zod schema for CommerceProductsProductDto. Product Data Transfer Object for API responses */
 CommerceProductsProductDtoSchema = z.object({
   id: z.string().uuid().optional(),
   affiliateCommissionPercentage: z.number().optional(),
@@ -18023,7 +21106,7 @@ CommerceProductsProductDtoSchema = z.object({
   updatedAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for CommerceProductsProductPricingDto */
+/** Zod schema for CommerceProductsProductPricingDto. Product Pricing Data Transfer Object */
 CommerceProductsProductPricingDtoSchema = z.object({
   id: z.string().uuid().optional(),
   basePrice: z.number().optional(),
@@ -18039,7 +21122,7 @@ CommerceProductsProductPricingDtoSchema = z.object({
   saleStartDate: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for CommerceProductsProductType */
+/** Zod schema for CommerceProductsProductType. Product type enumeration */
 CommerceProductsProductTypeSchema = z.enum([
   'Program',
   'Course',
@@ -18057,7 +21140,7 @@ CommerceProductsProductTypeSchema = z.enum([
   'Other',
 ]);
 
-/** Zod schema for CommerceProductsPromoCodeApplicationResult */
+/** Zod schema for CommerceProductsPromoCodeApplicationResult. Result of applying one or more promo codes */
 CommerceProductsPromoCodeApplicationResultSchema = z.object({
   appliedCodes: z
     .array(z.lazy(() => CommerceProductsAppliedPromoCodeSchema))
@@ -18072,7 +21155,7 @@ CommerceProductsPromoCodeApplicationResultSchema = z.object({
   totalDiscount: z.number().optional(),
 });
 
-/** Zod schema for CommerceProductsPromoCodeDto */
+/** Zod schema for CommerceProductsPromoCodeDto. Promo code data transfer object */
 CommerceProductsPromoCodeDtoSchema = z.object({
   id: z.string().uuid().optional(),
   code: z.string().nullable().optional(),
@@ -18096,10 +21179,10 @@ CommerceProductsPromoCodeDtoSchema = z.object({
   validUntil: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for CommerceProductsPromoCodeType */
+/** Zod schema for CommerceProductsPromoCodeType. Represents the type of promo code discount */
 CommerceProductsPromoCodeTypeSchema = z.enum(['PercentageOff', 'FixedAmountOff', 'FreeTrial', 'BuyOneGetOne', 'FreeShipping']);
 
-/** Zod schema for CommerceProductsPromoCodeUsageDto */
+/** Zod schema for CommerceProductsPromoCodeUsageDto. Promo code usage statistics DTO */
 CommerceProductsPromoCodeUsageDtoSchema = z.object({
   averageDiscountPerUse: z.number().optional(),
   code: z.string().nullable().optional(),
@@ -18113,7 +21196,7 @@ CommerceProductsPromoCodeUsageDtoSchema = z.object({
   uniqueUsers: z.number().int().optional(),
 });
 
-/** Zod schema for CommerceProductsPromoCodeValidationResult */
+/** Zod schema for CommerceProductsPromoCodeValidationResult. Result of validating a promo code */
 CommerceProductsPromoCodeValidationResultSchema = z.object({
   code: z.string().nullable().optional(),
   discountAmount: z.number().optional(),
@@ -18122,7 +21205,7 @@ CommerceProductsPromoCodeValidationResultSchema = z.object({
   isValid: z.boolean().optional(),
 });
 
-/** Zod schema for CommerceProductsRejectedPromoCode */
+/** Zod schema for CommerceProductsRejectedPromoCode. Details of a rejected promo code */
 CommerceProductsRejectedPromoCodeSchema = z.object({
   code: z.string().nullable().optional(),
   reason: z.string().nullable().optional(),
@@ -18133,7 +21216,7 @@ CommerceProductsResolveSupportTicketInputSchema = z.object({
   resolutionSummary: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommerceProductsRevokeEntitlementInput */
+/** Zod schema for CommerceProductsRevokeEntitlementInput. Request to revoke an entitlement */
 CommerceProductsRevokeEntitlementInputSchema = z.object({
   productId: z.string().uuid().optional(),
   reason: z.string().nullable().optional(),
@@ -18219,7 +21302,7 @@ CommerceProductsSupportTicketSummaryDtoSchema = z.object({
   resolvedToday: z.number().int().optional(),
 });
 
-/** Zod schema for CommerceProductsUpdateProductInput */
+/** Zod schema for CommerceProductsUpdateProductInput. Request model for updating a product */
 CommerceProductsUpdateProductInputSchema = z.object({
   affiliateCommissionPercentage: z.number().nullable().optional(),
   bundleItems: z.array(z.string().uuid()).nullable().optional(),
@@ -18234,7 +21317,7 @@ CommerceProductsUpdateProductInputSchema = z.object({
   type: z.lazy(() => CommerceProductsProductTypeSchema).optional(),
 });
 
-/** Zod schema for CommerceProductsUpdatePromoCodeInput */
+/** Zod schema for CommerceProductsUpdatePromoCodeInput. Request to update a promo code */
 CommerceProductsUpdatePromoCodeInputSchema = z.object({
   currency: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
@@ -18253,14 +21336,14 @@ CommerceProductsUpdatePromoCodeInputSchema = z.object({
   validUntil: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for CommerceProductsValidatePromoCodeInput */
+/** Zod schema for CommerceProductsValidatePromoCodeInput. Request to validate a promo code */
 CommerceProductsValidatePromoCodeInputSchema = z.object({
   code: z.string().nullable().optional(),
   orderAmount: z.number().optional(),
   productId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsBillingHistoryDto */
+/** Zod schema for CommerceSubscriptionsBillingHistoryDto. DTO for billing history information */
 CommerceSubscriptionsBillingHistoryDtoSchema = z.object({
   id: z.string().uuid().optional(),
   amount: z.number().optional(),
@@ -18292,7 +21375,7 @@ CommerceSubscriptionsBillingSubscriptionsControllerCreateBillingSubscriptionInpu
   trialDays: z.number().int().nullable().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsCancellationReason */
+/** Zod schema for CommerceSubscriptionsCancellationReason. Cancellation reason enumeration */
 CommerceSubscriptionsCancellationReasonSchema = z.enum([
   'UserRequested',
   'PaymentFailed',
@@ -18322,7 +21405,7 @@ CommerceSubscriptionsCreateClientInputSchema = z.object({
   taxId: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscription */
+/** Zod schema for CommerceSubscriptionsSubscription. Represents a subscription linking a tenant to a subscription plan */
 CommerceSubscriptionsSubscriptionSchema = z.object({
   id: z.string().uuid().optional(),
   amount: z.lazy(() => MoneySchema).optional(),
@@ -18389,7 +21472,7 @@ CommerceSubscriptionsSubscriptionChurnReportDtoSchema = z.object({
   totalSubscriptions: z.number().int().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionDowngradeResult */
+/** Zod schema for CommerceSubscriptionsSubscriptionDowngradeResult. Result of subscription downgrade */
 CommerceSubscriptionsSubscriptionDowngradeResultSchema = z.object({
   creditIssued: z.lazy(() => MoneySchema).optional(),
   effectiveDate: z.string().datetime().nullable().optional(),
@@ -18427,7 +21510,7 @@ CommerceSubscriptionsSubscriptionLifecycleControllerExternalIdsInputSchema = z.o
   externalSubscriptionId: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerPauseSubscriptionInput */
+/** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerPauseSubscriptionInput. Request to pause subscription billing */
 CommerceSubscriptionsSubscriptionLifecycleControllerPauseSubscriptionInputSchema = z.object({
   pauseUntil: z.string().datetime().nullable().optional(),
   reason: z.string().nullable().optional(),
@@ -18468,7 +21551,7 @@ CommerceSubscriptionsSubscriptionNotificationsControllerResendSubscriptionNotifi
   channel: z.lazy(() => NotificationsNotificationChannelSchema).optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionPlan */
+/** Zod schema for CommerceSubscriptionsSubscriptionPlan. Represents a subscription plan that defines features, limits, and pricing for tenants */
 CommerceSubscriptionsSubscriptionPlanSchema = z.object({
   id: z.string().uuid().optional(),
   annualPriceInCents: z.number().int().nullable().optional(),
@@ -18596,7 +21679,7 @@ CommerceSubscriptionsSubscriptionPlansCrudControllerPutSubscriptionPlanInputSche
   sortOrder: z.number().int().nullable().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInput */
+/** Zod schema for CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInput. Request to create a subscription */
 CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInputSchema = z.object({
   amount: z.number().optional(),
   billingCycle: z.lazy(() => BillingCycleSchema).optional(),
@@ -18609,7 +21692,7 @@ CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInputSchema = z.ob
   trialDays: z.number().int().nullable().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionsControllerPatchSubscriptionInput */
+/** Zod schema for CommerceSubscriptionsSubscriptionsControllerPatchSubscriptionInput. Request to partially update a subscription */
 CommerceSubscriptionsSubscriptionsControllerPatchSubscriptionInputSchema = z.object({
   autoRenew: z.boolean().nullable().optional(),
   billingCycle: z.lazy(() => BillingCycleSchema).optional(),
@@ -18618,7 +21701,7 @@ CommerceSubscriptionsSubscriptionsControllerPatchSubscriptionInputSchema = z.obj
   metadata: z.string().nullable().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInput */
+/** Zod schema for CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInput. Request to fully update a subscription */
 CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInputSchema = z.object({
   amount: z.number().optional(),
   autoRenew: z.boolean().optional(),
@@ -18628,10 +21711,10 @@ CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInputSchema = z.objec
   planId: z.string().uuid().optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionStatus */
+/** Zod schema for CommerceSubscriptionsSubscriptionStatus. Subscription status enumeration */
 CommerceSubscriptionsSubscriptionStatusSchema = z.enum(['PendingActivation', 'Active', 'Trialing', 'PastDue', 'Suspended', 'Cancelled', 'Expired']);
 
-/** Zod schema for CommerceSubscriptionsSubscriptionUpgradeResult */
+/** Zod schema for CommerceSubscriptionsSubscriptionUpgradeResult. Result of subscription upgrade */
 CommerceSubscriptionsSubscriptionUpgradeResultSchema = z.object({
   creditApplied: z.lazy(() => MoneySchema).optional(),
   failureReason: z.string().nullable().optional(),
@@ -18640,7 +21723,7 @@ CommerceSubscriptionsSubscriptionUpgradeResultSchema = z.object({
   updatedSubscription: z.lazy(() => CommerceSubscriptionsSubscriptionSchema).optional(),
 });
 
-/** Zod schema for CommerceSubscriptionsSubscriptionUsageDto */
+/** Zod schema for CommerceSubscriptionsSubscriptionUsageDto. Simplified DTO for subscription usage information */
 CommerceSubscriptionsSubscriptionUsageDtoSchema = z.object({
   apiCallsThisMonth: z.number().int().optional(),
   isOverLimit: z.boolean().optional(),
@@ -18653,7 +21736,7 @@ CommerceSubscriptionsSubscriptionUsageDtoSchema = z.object({
   usersCount: z.number().int().optional(),
 });
 
-/** Zod schema for ComplianceAuditAuditCategory */
+/** Zod schema for ComplianceAuditAuditCategory. Category of audit events */
 ComplianceAuditAuditCategorySchema = z.enum([
   'General',
   'Authentication',
@@ -18713,7 +21796,7 @@ ComplianceAuditAuditLogOutputSchema = z.object({
   totalCount: z.number().int().optional(),
 });
 
-/** Zod schema for ComplianceAuditAuditRiskLevel */
+/** Zod schema for ComplianceAuditAuditRiskLevel. Risk level for audit events */
 ComplianceAuditAuditRiskLevelSchema = z.enum(['Low', 'Medium', 'High', 'Critical']);
 
 /** Zod schema for ComplianceAuditAuditStatisticsOutput */
@@ -18728,7 +21811,7 @@ ComplianceAuditAuditStatisticsOutputSchema = z.object({
   totalEvents: z.number().int().optional(),
 });
 
-/** Zod schema for ComplianceAuditAuthenticationAuditEntry */
+/** Zod schema for ComplianceAuditAuthenticationAuditEntry. Authentication audit entry. */
 ComplianceAuditAuthenticationAuditEntrySchema = z.object({
   id: z.string().uuid().optional(),
   attemptedAt: z.string().datetime().optional(),
@@ -18743,7 +21826,7 @@ ComplianceAuditAuthenticationAuditEntrySchema = z.object({
   userId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for ComplianceAuditAuthenticationAuditOutput */
+/** Zod schema for ComplianceAuditAuthenticationAuditOutput. Response for authentication audit logs. */
 ComplianceAuditAuthenticationAuditOutputSchema = z.object({
   entries: z
     .array(z.lazy(() => ComplianceAuditAuthenticationAuditEntrySchema))
@@ -18772,7 +21855,7 @@ ComplianceAuditFailureReasonCountSchema = z.object({
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for ComplianceAuditPermissionAuditEntry */
+/** Zod schema for ComplianceAuditPermissionAuditEntry. Permission audit entry. */
 ComplianceAuditPermissionAuditEntrySchema = z.object({
   id: z.string().uuid().optional(),
   errorMessage: z.string().nullable().optional(),
@@ -18791,7 +21874,7 @@ ComplianceAuditPermissionAuditEntrySchema = z.object({
   userId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for ComplianceAuditPermissionAuditOutput */
+/** Zod schema for ComplianceAuditPermissionAuditOutput. Response for permission audit logs. */
 ComplianceAuditPermissionAuditOutputSchema = z.object({
   denyOperations: z.number().int().optional(),
   entries: z
@@ -18805,7 +21888,7 @@ ComplianceAuditPermissionAuditOutputSchema = z.object({
   totalCount: z.number().int().optional(),
 });
 
-/** Zod schema for ComplianceAuditSecurityAuditDashboard */
+/** Zod schema for ComplianceAuditSecurityAuditDashboard. Security audit dashboard with aggregated statistics. */
 ComplianceAuditSecurityAuditDashboardSchema = z.object({
   crossTenantAttempts: z.number().int().optional(),
   dailyTrends: z
@@ -18841,7 +21924,7 @@ ComplianceAuditSecurityAuditDashboardSchema = z.object({
   uniqueUsersAuthenticated: z.number().int().optional(),
 });
 
-/** Zod schema for ComplianceAuditSecurityAuditSourceType */
+/** Zod schema for ComplianceAuditSecurityAuditSourceType. Source type for security audit entries. */
 ComplianceAuditSecurityAuditSourceTypeSchema = z.enum(['Authentication', 'Permission', 'General', 'All']);
 
 /** Zod schema for ComplianceAuditTopIpActivity */
@@ -18860,7 +21943,7 @@ ComplianceAuditTopUserActivitySchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for ComplianceAuditUnifiedSecurityAuditEntry */
+/** Zod schema for ComplianceAuditUnifiedSecurityAuditEntry. A unified security audit log entry combining data from multiple sources. */
 ComplianceAuditUnifiedSecurityAuditEntrySchema = z.object({
   id: z.string().uuid().optional(),
   actionType: z.string().nullable().optional(),
@@ -18881,7 +21964,7 @@ ComplianceAuditUnifiedSecurityAuditEntrySchema = z.object({
   userId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for ComplianceAuditUnifiedSecurityAuditInput */
+/** Zod schema for ComplianceAuditUnifiedSecurityAuditInput. Request for unified security audit logs. */
 ComplianceAuditUnifiedSecurityAuditInputSchema = z.object({
   actionType: z.string().nullable().optional(),
   endDate: z.string().datetime().nullable().optional(),
@@ -18899,7 +21982,7 @@ ComplianceAuditUnifiedSecurityAuditInputSchema = z.object({
   userId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for ComplianceAuditUnifiedSecurityAuditOutput */
+/** Zod schema for ComplianceAuditUnifiedSecurityAuditOutput. Response containing unified security audit logs. */
 ComplianceAuditUnifiedSecurityAuditOutputSchema = z.object({
   entries: z
     .array(z.lazy(() => ComplianceAuditUnifiedSecurityAuditEntrySchema))
@@ -19319,10 +22402,10 @@ ContentPagesContentResourceDtoSchema = z.object({
   viewCount: z.number().int().optional(),
 });
 
-/** Zod schema for ContentPagesContentResourceStatus */
+/** Zod schema for ContentPagesContentResourceStatus. Publication status for a content resource. */
 ContentPagesContentResourceStatusSchema = z.enum(['Draft', 'InReview', 'Published', 'Archived']);
 
-/** Zod schema for ContentPagesContentResourceType */
+/** Zod schema for ContentPagesContentResourceType. The type of content resource. */
 ContentPagesContentResourceTypeSchema = z.enum(['Article', 'Tutorial', 'Documentation', 'Video', 'Download', 'ExternalLink', 'Course', 'Custom']);
 
 /** Zod schema for ContentPagesCreateContentResourceDto */
@@ -19421,7 +22504,7 @@ ContentPagesMarketingLeadDtoSchema = z.object({
   userAgent: z.string().nullable().optional(),
 });
 
-/** Zod schema for ContentPagesOpenGraphMetadataDto */
+/** Zod schema for ContentPagesOpenGraphMetadataDto. Resolved OpenGraph / SEO metadata for a given slug — returned by the public OG endpoint. */
 ContentPagesOpenGraphMetadataDtoSchema = z.object({
   canonicalUrl: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
@@ -19487,13 +22570,13 @@ ContentPagesPageSectionDtoSchema = z.object({
   updatedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for ContentPagesPageStatus */
+/** Zod schema for ContentPagesPageStatus. Publication status of a page. */
 ContentPagesPageStatusSchema = z.enum(['Draft', 'Published', 'Archived']);
 
-/** Zod schema for ContentPagesPageType */
+/** Zod schema for ContentPagesPageType. The type of page — determines its purpose and rendering strategy. */
 ContentPagesPageTypeSchema = z.enum(['Landing', 'Legal', 'ResourceIndex', 'Resource', 'Custom']);
 
-/** Zod schema for ContentPagesSectionType */
+/** Zod schema for ContentPagesSectionType. The type of section — drives frontend rendering. */
 ContentPagesSectionTypeSchema = z.enum([
   'Hero',
   'Features',
@@ -19512,7 +22595,7 @@ ContentPagesSectionTypeSchema = z.enum([
   'Custom',
 ]);
 
-/** Zod schema for ContentPagesSitemapEntryDto */
+/** Zod schema for ContentPagesSitemapEntryDto. Lightweight entry for the public sitemap feed. */
 ContentPagesSitemapEntryDtoSchema = z.object({
   locale: z.string().nullable().optional(),
   slug: z.string().nullable().optional(),
@@ -19585,13 +22668,15 @@ ContentPagesUpdatePageSectionDtoSchema = z.object({
   subheading: z.string().nullable().optional(),
 });
 
-/** Zod schema for ContentStatus */
+/** Zod schema for ContentStatus. Represents the publication status of content */
 ContentStatusSchema = z.enum(['Draft', 'Review', 'Published', 'Archived', 'Deleted']);
 
-/** Zod schema for ContentVisibility */
+/** Zod schema for ContentVisibility. Represents the visibility level of content (who can see it).
+Not to be confused with `GameGuild.Identity.Authorization.AccessLevel` which represents permission levels (None/Read/Write/Admin). */
 ContentVisibilitySchema = z.enum(['Private', 'Internal', 'Friends', 'Protected', 'Public']);
 
-/** Zod schema for CQRSIDomainEvent */
+/** Zod schema for CQRSIDomainEvent. Marker interface for domain events that follow DDD principles.
+Domain events represent something important that happened in the domain. */
 CQRSIDomainEventSchema = z.object({
   eventId: z.string().uuid().optional(),
   occurredAt: z.string().datetime().optional(),
@@ -19603,23 +22688,24 @@ CQRSModelsTenantIdSchema = z.object({
   value: z.string().uuid().optional(),
 });
 
-/** Zod schema for Error */
+/** Zod schema for Error. Represents a domain error with a machine-readable code, human-readable description, and type.
+Use the static factory methods to create errors of the appropriate type. */
 ErrorSchema = z.object({
   code: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   type: z.lazy(() => ErrorTypeSchema).optional(),
 });
 
-/** Zod schema for ErrorType */
+/** Zod schema for ErrorType. Categorizes domain errors so they can be mapped to HTTP status codes or similar transport-level responses. */
 ErrorTypeSchema = z.enum(['Failure', 'Validation', 'Problem', 'NotFound', 'Conflict', 'Unauthorized', 'Forbidden', 'None']);
 
-/** Zod schema for FeaturesBulkEvaluationInput */
+/** Zod schema for FeaturesBulkEvaluationInput. Request for bulk evaluation of multiple feature flags */
 FeaturesBulkEvaluationInputSchema = z.object({
   context: z.lazy(() => FeaturesFeatureContextSchema).optional(),
   featureKeys: z.array(z.string()).nullable().optional(),
 });
 
-/** Zod schema for FeaturesCapabilityAuditLogDto */
+/** Zod schema for FeaturesCapabilityAuditLogDto. DTO for capability audit log entries. */
 FeaturesCapabilityAuditLogDtoSchema = z.object({
   id: z.string().uuid().optional(),
   capabilityKey: z.string().nullable().optional(),
@@ -19634,13 +22720,13 @@ FeaturesCapabilityAuditLogDtoSchema = z.object({
   tenantId: z.string().uuid().optional(),
 });
 
-/** Zod schema for FeaturesCapabilityCheckOutput */
+/** Zod schema for FeaturesCapabilityCheckOutput. Response for capability check endpoint. */
 FeaturesCapabilityCheckOutputSchema = z.object({
   capability: z.string().nullable().optional(),
   isEnabled: z.boolean().optional(),
 });
 
-/** Zod schema for FeaturesCreateFeatureInput */
+/** Zod schema for FeaturesCreateFeatureInput. Request model for creating a new feature flag */
 FeaturesCreateFeatureInputSchema = z.object({
   description: z.string().nullable().optional(),
   isEnabled: z.boolean().optional(),
@@ -19649,7 +22735,7 @@ FeaturesCreateFeatureInputSchema = z.object({
   tenantId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for FeaturesFeatureContext */
+/** Zod schema for FeaturesFeatureContext. Advanced context for feature flag evaluation */
 FeaturesFeatureContextSchema = z.object({
   country: z.string().nullable().optional(),
   customAttributes: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
@@ -19663,14 +22749,14 @@ FeaturesFeatureContextSchema = z.object({
   userId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for FeaturesFeatureEvaluationInput */
+/** Zod schema for FeaturesFeatureEvaluationInput. Request for evaluating a single feature flag */
 FeaturesFeatureEvaluationInputSchema = z.object({
   context: z.lazy(() => FeaturesFeatureContextSchema).optional(),
   defaultValue: z.record(z.string(), z.unknown()).nullable().optional(),
   featureKey: z.string().nullable().optional(),
 });
 
-/** Zod schema for FeaturesFeatureFlagDto */
+/** Zod schema for FeaturesFeatureFlagDto. Data Transfer Object for FeatureFlag */
 FeaturesFeatureFlagDtoSchema = z.object({
   id: z.string().uuid(),
   createdAt: z.string().datetime(),
@@ -19690,7 +22776,7 @@ FeaturesFeatureFlagDtoSchema = z.object({
   updatedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for FeaturesFeatureFlagTargetDto */
+/** Zod schema for FeaturesFeatureFlagTargetDto. Data Transfer Object for FeatureFlagTarget */
 FeaturesFeatureFlagTargetDtoSchema = z.object({
   id: z.string().uuid(),
   createdAt: z.string().datetime(),
@@ -19706,10 +22792,10 @@ FeaturesFeatureFlagTargetDtoSchema = z.object({
   updatedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for FeaturesFeatureFlagType */
+/** Zod schema for FeaturesFeatureFlagType. Represents the different types of feature flags */
 FeaturesFeatureFlagTypeSchema = z.enum(['Toggle', 'Numeric', 'String', 'Percentage', 'UserSegment']);
 
-/** Zod schema for FeaturesSetCapabilityOverrideInput */
+/** Zod schema for FeaturesSetCapabilityOverrideInput. Request for setting a capability override. */
 FeaturesSetCapabilityOverrideInputSchema = z.object({
   capability: z.string().nullable().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
@@ -19718,7 +22804,7 @@ FeaturesSetCapabilityOverrideInputSchema = z.object({
   source: z.string().nullable().optional(),
 });
 
-/** Zod schema for FeaturesToggleFeatureInput */
+/** Zod schema for FeaturesToggleFeatureInput. Request for toggling a feature flag on/off */
 FeaturesToggleFeatureInputSchema = z.object({
   environment: z.string().nullable().optional(),
   featureKey: z.string().nullable().optional(),
@@ -19727,7 +22813,8 @@ FeaturesToggleFeatureInputSchema = z.object({
   tenantId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for FeaturesUpdateFeatureInput */
+/** Zod schema for FeaturesUpdateFeatureInput. Request model for updating an existing feature flag.
+All properties are optional; only provided values will be updated. */
 FeaturesUpdateFeatureInputSchema = z.object({
   defaultValue: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
@@ -20053,7 +23140,8 @@ FinanceEconomyBountiesBountyIdSchema = z.object({
 /** Zod schema for FinanceEconomyBountiesBountyStatus */
 FinanceEconomyBountiesBountyStatusSchema = z.enum(['Open', 'Expired', 'Claimed', 'Reclaimed']);
 
-/** Zod schema for FinanceEconomyBountiesBountyTerminalOutputLot */
+/** Zod schema for FinanceEconomyBountiesBountyTerminalOutputLot. Immutable evidence of a materialized terminal output. Monetary authority remains the
+append-only journal, lots, and lineage rather than this read model. */
 FinanceEconomyBountiesBountyTerminalOutputLotSchema = z.object({
   amount: z.lazy(() => FinanceEconomyContractsCoinAmountSchema).optional(),
   cashOutEligible: z.boolean().optional(),
@@ -20079,7 +23167,8 @@ FinanceEconomyBountiesDurableBountyViewSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyBountiesPersistedBountyTerminalEvent */
+/** Zod schema for FinanceEconomyBountiesPersistedBountyTerminalEvent. Immutable terminal evidence for a bounty. The terminal writer stores this only after the
+corresponding registered posting has been accepted in the same database transaction. */
 FinanceEconomyBountiesPersistedBountyTerminalEventSchema = z.object({
   id: z.string().uuid().optional(),
   actorId: z.string().uuid().optional(),
@@ -20127,7 +23216,8 @@ FinanceEconomyContractsCreditLotIdSchema = z.object({
 /** Zod schema for FinanceEconomyContractsCurrencyCode */
 FinanceEconomyContractsCurrencyCodeSchema = z.enum(['HardCoin', 'SoftCoin']);
 
-/** Zod schema for FinanceEconomyContractsEconomyWalletSummaryDto */
+/** Zod schema for FinanceEconomyContractsEconomyWalletSummaryDto. Read-only, actor-scoped view of a wallet projection. The individual source lots and
+fragment lineage remain internal to the Economy writer and are never selected by clients. */
 FinanceEconomyContractsEconomyWalletSummaryDtoSchema = z.object({
   availableHardToSpend: z.number().int().optional(),
   availableSoftToSpend: z.number().int().optional(),
@@ -20148,7 +23238,8 @@ FinanceEconomyContractsEconomyWalletSummaryDtoSchema = z.object({
   withdrawableHard: z.number().int().optional(),
 });
 
-/** Zod schema for FinanceEconomyContractsEconomyWalletTransactionDto */
+/** Zod schema for FinanceEconomyContractsEconomyWalletTransactionDto. A projected line from the immutable Economy journal. It is suitable for a wallet history,
+but carries no provider references, source hashes, or fragment ranges. */
 FinanceEconomyContractsEconomyWalletTransactionDtoSchema = z.object({
   amountUnits: z.number().int().optional(),
   currency: z.lazy(() => FinanceEconomyContractsCurrencyCodeSchema).optional(),
@@ -20984,7 +24075,9 @@ FinanceEconomyPayoutsConnectOnboardingResultSchema = z.object({
 /** Zod schema for FinanceEconomyPayoutsPayoutOperationState */
 FinanceEconomyPayoutsPayoutOperationStateSchema = z.enum(['Reserved', 'Dispatching', 'Ambiguous', 'Succeeded', 'Failed', 'Cancelled']);
 
-/** Zod schema for FinanceEconomyPayoutsPayoutRequestState */
+/** Zod schema for FinanceEconomyPayoutsPayoutRequestState. A user-submitted intent to withdraw earned value. It is deliberately separate from a
+GameGuild.Finance.Economy.Payouts.PayoutOperation: no funds are reserved or sent until the request has passed
+the later KYC, risk, provider, and FIFO reservation steps. */
 FinanceEconomyPayoutsPayoutRequestStateSchema = z.enum(['Submitted', 'Cancelled', 'Approved', 'Rejected', 'AwaitingSecondApproval']);
 
 /** Zod schema for FinanceEconomyPayoutsQueriesEconomyPayoutOperationDto */
@@ -21619,20 +24712,20 @@ IdentityAuthenticationApiKeyDtoSchema = z.object({
   usageCount: z.number().int().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationAssignRoleToUserInput */
+/** Zod schema for IdentityAuthenticationAssignRoleToUserInput. Request DTO for assigning a role to a user */
 IdentityAuthenticationAssignRoleToUserInputSchema = z.object({
   expiresAt: z.string().datetime().nullable().optional(),
   roleId: z.string().uuid().optional(),
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationBackupCodesOutput */
+/** Zod schema for IdentityAuthenticationBackupCodesOutput. Backup codes response */
 IdentityAuthenticationBackupCodesOutputSchema = z.object({
   codes: z.array(z.string()).nullable().optional(),
   generatedAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationBackupCodesStatusOutput */
+/** Zod schema for IdentityAuthenticationBackupCodesStatusOutput. Response containing backup codes status */
 IdentityAuthenticationBackupCodesStatusOutputSchema = z.object({
   hasBackupCodes: z.boolean(),
   remainingCount: z.number().int(),
@@ -21640,26 +24733,26 @@ IdentityAuthenticationBackupCodesStatusOutputSchema = z.object({
   usedCount: z.number().int(),
 });
 
-/** Zod schema for IdentityAuthenticationBeginWebAuthnAuthenticationInput */
+/** Zod schema for IdentityAuthenticationBeginWebAuthnAuthenticationInput. Request to begin WebAuthn authentication. */
 IdentityAuthenticationBeginWebAuthnAuthenticationInputSchema = z.object({
   email: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationBeginWebAuthnRegistrationInput */
+/** Zod schema for IdentityAuthenticationBeginWebAuthnRegistrationInput. Request to begin WebAuthn registration. */
 IdentityAuthenticationBeginWebAuthnRegistrationInputSchema = z.object({
   displayName: z.string().nullable().optional(),
   email: z.string().nullable().optional(),
   preferredAuthenticatorType: z.lazy(() => IdentityAuthenticationWebAuthnAuthenticatorTypeSchema).optional(),
 });
 
-/** Zod schema for IdentityAuthenticationBulkAssignRolesCommand */
+/** Zod schema for IdentityAuthenticationBulkAssignRolesCommand. Assigns one role to multiple users in a single bounded operation. */
 IdentityAuthenticationBulkAssignRolesCommandSchema = z.object({
   expiresAt: z.string().datetime().nullable().optional(),
   roleId: z.string().uuid().optional(),
   userIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationBulkRoleAssignmentItemResult */
+/** Zod schema for IdentityAuthenticationBulkRoleAssignmentItemResult. Outcome for a user in a bulk role assignment. */
 IdentityAuthenticationBulkRoleAssignmentItemResultSchema = z.object({
   assignedAt: z.string().datetime().optional(),
   assignmentId: z.string().uuid().optional(),
@@ -21668,7 +24761,7 @@ IdentityAuthenticationBulkRoleAssignmentItemResultSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationBulkRoleAssignmentResult */
+/** Zod schema for IdentityAuthenticationBulkRoleAssignmentResult. Summary and per-user outcomes for a bulk role assignment. */
 IdentityAuthenticationBulkRoleAssignmentResultSchema = z.object({
   alreadyAssigned: z.number().int().optional(),
   assigned: z.number().int().optional(),
@@ -21682,20 +24775,20 @@ IdentityAuthenticationBulkRoleAssignmentResultSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for IdentityAuthenticationBulkRoleAssignmentStatus */
+/** Zod schema for IdentityAuthenticationBulkRoleAssignmentStatus. Result status for one requested user. */
 IdentityAuthenticationBulkRoleAssignmentStatusSchema = z.enum(['Assigned', 'Reactivated', 'AlreadyAssigned']);
 
-/** Zod schema for IdentityAuthenticationCleanupKeysInput */
+/** Zod schema for IdentityAuthenticationCleanupKeysInput. Request to cleanup expired keys */
 IdentityAuthenticationCleanupKeysInputSchema = z.object({
   retentionDays: z.number().int().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationCleanupResult */
+/** Zod schema for IdentityAuthenticationCleanupResult. Result of cleanup operation */
 IdentityAuthenticationCleanupResultSchema = z.object({
   deletedCount: z.number().int().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationClientCredentialsTokenOutput */
+/** Zod schema for IdentityAuthenticationClientCredentialsTokenOutput. OAuth2 token response. */
 IdentityAuthenticationClientCredentialsTokenOutputSchema = z.object({
   accessToken: z.string().nullable().optional(),
   expiresIn: z.number().int().optional(),
@@ -21703,13 +24796,13 @@ IdentityAuthenticationClientCredentialsTokenOutputSchema = z.object({
   tokenType: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationCompleteMfaSetupInput */
+/** Zod schema for IdentityAuthenticationCompleteMfaSetupInput. Request to complete MFA setup */
 IdentityAuthenticationCompleteMfaSetupInputSchema = z.object({
   code: z.string().min(1),
   secretKey: z.string().min(1),
 });
 
-/** Zod schema for IdentityAuthenticationCompletePasswordResetInput */
+/** Zod schema for IdentityAuthenticationCompletePasswordResetInput. Request to complete password reset */
 IdentityAuthenticationCompletePasswordResetInputSchema = z.object({
   confirmPassword: z.string().min(1),
   newPassword: z.string().min(8),
@@ -21717,19 +24810,19 @@ IdentityAuthenticationCompletePasswordResetInputSchema = z.object({
   token: z.string().min(1),
 });
 
-/** Zod schema for IdentityAuthenticationCompleteWebAuthnAuthenticationInput */
+/** Zod schema for IdentityAuthenticationCompleteWebAuthnAuthenticationInput. Request to complete WebAuthn authentication. */
 IdentityAuthenticationCompleteWebAuthnAuthenticationInputSchema = z.object({
   assertionResponse: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationCompleteWebAuthnRegistrationInput */
+/** Zod schema for IdentityAuthenticationCompleteWebAuthnRegistrationInput. Request to complete WebAuthn registration. */
 IdentityAuthenticationCompleteWebAuthnRegistrationInputSchema = z.object({
   attestationResponse: z.string().nullable().optional(),
   friendlyName: z.string().nullable().optional(),
   isPasswordless: z.boolean().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationConsumeMagicLinkInput */
+/** Zod schema for IdentityAuthenticationConsumeMagicLinkInput. Request to consume a passwordless magic sign-in link. */
 IdentityAuthenticationConsumeMagicLinkInputSchema = z.object({
   deviceFingerprint: z.string().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
@@ -21755,7 +24848,7 @@ IdentityAuthenticationCreateApiKeyOutputSchema = z.object({
   scopes: z.array(z.string()).nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationCreateRoleInput */
+/** Zod schema for IdentityAuthenticationCreateRoleInput. Request DTO for creating a new role */
 IdentityAuthenticationCreateRoleInputSchema = z.object({
   description: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
@@ -21763,7 +24856,7 @@ IdentityAuthenticationCreateRoleInputSchema = z.object({
   tenantId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationCreateServiceAccountInput */
+/** Zod schema for IdentityAuthenticationCreateServiceAccountInput. Request to create a service account. */
 IdentityAuthenticationCreateServiceAccountInputSchema = z.object({
   allowedIpAddresses: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
@@ -21780,7 +24873,7 @@ IdentityAuthenticationCreateStepUpChallengeInputSchema = z.object({
   targetReference: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationDeviceInfo */
+/** Zod schema for IdentityAuthenticationDeviceInfo. Represents detailed device information for security tracking. */
 IdentityAuthenticationDeviceInfoSchema = z.object({
   browser: z.string().nullable().optional(),
   browserVersion: z.string().nullable().optional(),
@@ -21799,17 +24892,17 @@ IdentityAuthenticationDeviceInfoSchema = z.object({
   userAgent: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationDisableMfaInput */
+/** Zod schema for IdentityAuthenticationDisableMfaInput. Request to disable MFA */
 IdentityAuthenticationDisableMfaInputSchema = z.object({
   password: z.string().min(1),
 });
 
-/** Zod schema for IdentityAuthenticationDiscordAuthorizeInput */
+/** Zod schema for IdentityAuthenticationDiscordAuthorizeInput. Request to initiate Discord OAuth sign-in */
 IdentityAuthenticationDiscordAuthorizeInputSchema = z.object({
   redirectUri: z.string().min(1),
 });
 
-/** Zod schema for IdentityAuthenticationDiscordCallbackRequestDto */
+/** Zod schema for IdentityAuthenticationDiscordCallbackRequestDto. Request body for the Discord OAuth callback endpoint */
 IdentityAuthenticationDiscordCallbackRequestDtoSchema = z.object({
   code: z.string().min(1),
   redirectUri: z.string().min(1),
@@ -21817,36 +24910,36 @@ IdentityAuthenticationDiscordCallbackRequestDtoSchema = z.object({
   tenantId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationDiscordLinkAuthorizeInput */
+/** Zod schema for IdentityAuthenticationDiscordLinkAuthorizeInput. Request to start the Discord link flow. */
 IdentityAuthenticationDiscordLinkAuthorizeInputSchema = z.object({
   redirectUri: z.string().min(1),
 });
 
-/** Zod schema for IdentityAuthenticationDiscordLinkAuthorizeOutput */
+/** Zod schema for IdentityAuthenticationDiscordLinkAuthorizeOutput. Response for the Discord link-authorize endpoint. */
 IdentityAuthenticationDiscordLinkAuthorizeOutputSchema = z.object({
   authUrl: z.string().nullable(),
   state: z.string().nullable(),
 });
 
-/** Zod schema for IdentityAuthenticationDiscordLinkCallbackInput */
+/** Zod schema for IdentityAuthenticationDiscordLinkCallbackInput. Request to complete the Discord link flow. */
 IdentityAuthenticationDiscordLinkCallbackInputSchema = z.object({
   code: z.string().min(1),
   redirectUri: z.string().min(1),
   state: z.string().min(1),
 });
 
-/** Zod schema for IdentityAuthenticationDiscordSignInOutput */
+/** Zod schema for IdentityAuthenticationDiscordSignInOutput. Response for Discord sign-in initiation */
 IdentityAuthenticationDiscordSignInOutputSchema = z.object({
   authUrl: z.string().nullable(),
   state: z.string().nullable(),
 });
 
-/** Zod schema for IdentityAuthenticationEmailVerificationOutput */
+/** Zod schema for IdentityAuthenticationEmailVerificationOutput. Response for email verification request */
 IdentityAuthenticationEmailVerificationOutputSchema = z.object({
   message: z.string().nullable(),
 });
 
-/** Zod schema for IdentityAuthenticationEmailVerificationResult */
+/** Zod schema for IdentityAuthenticationEmailVerificationResult. Result of email verification */
 IdentityAuthenticationEmailVerificationResultSchema = z.object({
   email: z.string().nullable().optional(),
   message: z.string().nullable().optional(),
@@ -21855,18 +24948,18 @@ IdentityAuthenticationEmailVerificationResultSchema = z.object({
   verifiedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationGitHubSignInOutput */
+/** Zod schema for IdentityAuthenticationGitHubSignInOutput. Response for GitHub sign-in initiation */
 IdentityAuthenticationGitHubSignInOutputSchema = z.object({
   authUrl: z.string().nullable(),
 });
 
-/** Zod schema for IdentityAuthenticationGoogleIdTokenRequestDto */
+/** Zod schema for IdentityAuthenticationGoogleIdTokenRequestDto. Request for Google ID token sign-in */
 IdentityAuthenticationGoogleIdTokenRequestDtoSchema = z.object({
   idToken: z.string().min(1),
   tenantId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationJwtKeyInfoDto */
+/** Zod schema for IdentityAuthenticationJwtKeyInfoDto. DTO for JWT signing key information (without exposing key material) */
 IdentityAuthenticationJwtKeyInfoDtoSchema = z.object({
   algorithm: z.string().nullable().optional(),
   expiresAt: z.string().datetime().optional(),
@@ -21878,12 +24971,12 @@ IdentityAuthenticationJwtKeyInfoDtoSchema = z.object({
   validFrom: z.string().datetime().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationLinkGoogleAccountInput */
+/** Zod schema for IdentityAuthenticationLinkGoogleAccountInput. Request to link the signed-in user's Google account via an ID token. */
 IdentityAuthenticationLinkGoogleAccountInputSchema = z.object({
   idToken: z.string().min(1),
 });
 
-/** Zod schema for IdentityAuthenticationLocalSignInInput */
+/** Zod schema for IdentityAuthenticationLocalSignInInput. Request DTO for local sign-in */
 IdentityAuthenticationLocalSignInInputSchema = z.object({
   deviceFingerprint: z.string().nullable().optional(),
   email: z.string().email().min(1),
@@ -21893,7 +24986,7 @@ IdentityAuthenticationLocalSignInInputSchema = z.object({
   username: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationLocalSignUpInput */
+/** Zod schema for IdentityAuthenticationLocalSignUpInput. Request DTO for local sign-up */
 IdentityAuthenticationLocalSignUpInputSchema = z.object({
   email: z.string().email().min(1),
   firstName: z.string().nullable().optional(),
@@ -21904,7 +24997,7 @@ IdentityAuthenticationLocalSignUpInputSchema = z.object({
   username: z.string().min(1),
 });
 
-/** Zod schema for IdentityAuthenticationLocationInfo */
+/** Zod schema for IdentityAuthenticationLocationInfo. Represents geographic location information for security tracking. */
 IdentityAuthenticationLocationInfoSchema = z.object({
   city: z.string().nullable().optional(),
   country: z.string().nullable().optional(),
@@ -21922,7 +25015,7 @@ IdentityAuthenticationLocationInfoSchema = z.object({
   timezone: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationLockServiceAccountInput */
+/** Zod schema for IdentityAuthenticationLockServiceAccountInput. Request to lock a service account. */
 IdentityAuthenticationLockServiceAccountInputSchema = z.object({
   reason: z.string().nullable().optional(),
 });
@@ -21935,7 +25028,7 @@ IdentityAuthenticationMagicLinkRequestResultSchema = z.object({
   success: z.boolean().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationMfaConfigurationOutput */
+/** Zod schema for IdentityAuthenticationMfaConfigurationOutput. MFA configuration response */
 IdentityAuthenticationMfaConfigurationOutputSchema = z.object({
   backupCodesRemaining: z.number().int().optional(),
   enabledAt: z.string().datetime().nullable().optional(),
@@ -21943,15 +25036,15 @@ IdentityAuthenticationMfaConfigurationOutputSchema = z.object({
   isEnabled: z.boolean().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationMfaErrorOutput */
+/** Zod schema for IdentityAuthenticationMfaErrorOutput. Error response for MFA operations */
 IdentityAuthenticationMfaErrorOutputSchema = z.object({
   error: z.string().nullable(),
 });
 
-/** Zod schema for IdentityAuthenticationMfaMethod */
+/** Zod schema for IdentityAuthenticationMfaMethod. Supported MFA methods */
 IdentityAuthenticationMfaMethodSchema = z.enum(['Totp', 'BackupCode', 'Sms', 'Email', 'WebAuthn']);
 
-/** Zod schema for IdentityAuthenticationMfaMethodInfo */
+/** Zod schema for IdentityAuthenticationMfaMethodInfo. Information about an MFA method */
 IdentityAuthenticationMfaMethodInfoSchema = z.object({
   description: z.string().nullable(),
   isAvailable: z.boolean(),
@@ -21961,13 +25054,13 @@ IdentityAuthenticationMfaMethodInfoSchema = z.object({
   priority: z.number().int(),
 });
 
-/** Zod schema for IdentityAuthenticationMfaMethodsOutput */
+/** Zod schema for IdentityAuthenticationMfaMethodsOutput. Response listing available MFA methods */
 IdentityAuthenticationMfaMethodsOutputSchema = z.object({
   defaultMethod: z.lazy(() => IdentityAuthenticationMfaMethodSchema).optional(),
   methods: z.array(z.lazy(() => IdentityAuthenticationMfaMethodInfoSchema)).nullable(),
 });
 
-/** Zod schema for IdentityAuthenticationMfaSetupOutput */
+/** Zod schema for IdentityAuthenticationMfaSetupOutput. Response of MFA setup operation */
 IdentityAuthenticationMfaSetupOutputSchema = z.object({
   backupCodes: z.array(z.string()).nullable().optional(),
   errorMessage: z.string().nullable().optional(),
@@ -21977,25 +25070,25 @@ IdentityAuthenticationMfaSetupOutputSchema = z.object({
   secretKey: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationMfaSuccessOutput */
+/** Zod schema for IdentityAuthenticationMfaSuccessOutput. Success response for MFA operations */
 IdentityAuthenticationMfaSuccessOutputSchema = z.object({
   message: z.string().nullable(),
 });
 
-/** Zod schema for IdentityAuthenticationMfaVerificationOutput */
+/** Zod schema for IdentityAuthenticationMfaVerificationOutput. MFA verification response */
 IdentityAuthenticationMfaVerificationOutputSchema = z.object({
   accessToken: z.string().nullable().optional(),
   isValid: z.boolean().optional(),
   refreshToken: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationOAuth2ErrorOutput */
+/** Zod schema for IdentityAuthenticationOAuth2ErrorOutput. OAuth2 error response. */
 IdentityAuthenticationOAuth2ErrorOutputSchema = z.object({
   error: z.string().nullable().optional(),
   errorDescription: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationPasswordChangeInput */
+/** Zod schema for IdentityAuthenticationPasswordChangeInput. Request to change password for authenticated user */
 IdentityAuthenticationPasswordChangeInputSchema = z.object({
   confirmPassword: z.string().min(1),
   currentPassword: z.string().nullable().optional(),
@@ -22003,28 +25096,28 @@ IdentityAuthenticationPasswordChangeInputSchema = z.object({
   revokeOtherSessions: z.boolean().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationPasswordChangeResult */
+/** Zod schema for IdentityAuthenticationPasswordChangeResult. Result of password change */
 IdentityAuthenticationPasswordChangeResultSchema = z.object({
   message: z.string().nullable().optional(),
   sessionsRevoked: z.number().int().optional(),
   success: z.boolean().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationPasswordResetRequestResult */
+/** Zod schema for IdentityAuthenticationPasswordResetRequestResult. Result of password reset request */
 IdentityAuthenticationPasswordResetRequestResultSchema = z.object({
   expiresInMinutes: z.number().int().optional(),
   message: z.string().nullable().optional(),
   success: z.boolean().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationPasswordResetResult */
+/** Zod schema for IdentityAuthenticationPasswordResetResult. Result of password reset */
 IdentityAuthenticationPasswordResetResultSchema = z.object({
   message: z.string().nullable().optional(),
   success: z.boolean().optional(),
   userId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationPatchServiceAccountInput */
+/** Zod schema for IdentityAuthenticationPatchServiceAccountInput. Request to partially update a service account. */
 IdentityAuthenticationPatchServiceAccountInputSchema = z.object({
   description: z.string().nullable().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
@@ -22032,25 +25125,25 @@ IdentityAuthenticationPatchServiceAccountInputSchema = z.object({
   scopes: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationRefreshTokenInput */
+/** Zod schema for IdentityAuthenticationRefreshTokenInput. Request DTO for refreshing tokens */
 IdentityAuthenticationRefreshTokenInputSchema = z.object({
   refreshToken: z.string().min(1),
   tenantId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationRemoveRoleFromUserInput */
+/** Zod schema for IdentityAuthenticationRemoveRoleFromUserInput. Request DTO for removing a role from a user */
 IdentityAuthenticationRemoveRoleFromUserInputSchema = z.object({
   roleId: z.string().uuid().optional(),
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationRequestMagicLinkInput */
+/** Zod schema for IdentityAuthenticationRequestMagicLinkInput. Request to send a passwordless magic sign-in link. */
 IdentityAuthenticationRequestMagicLinkInputSchema = z.object({
   email: z.string().email().min(1),
   tenantId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationRequestPasswordResetInput */
+/** Zod schema for IdentityAuthenticationRequestPasswordResetInput. Request to initiate password reset */
 IdentityAuthenticationRequestPasswordResetInputSchema = z.object({
   email: z.string().email().min(1),
   tenantId: z.string().uuid().nullable().optional(),
@@ -22061,34 +25154,34 @@ IdentityAuthenticationRevokeApiKeyInputSchema = z.object({
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationRevokeRefreshTokenInput */
+/** Zod schema for IdentityAuthenticationRevokeRefreshTokenInput. Request for revoking a refresh token */
 IdentityAuthenticationRevokeRefreshTokenInputSchema = z.object({
   ipAddress: z.string().nullable().optional(),
   reason: z.string().nullable().optional(),
   token: z.string().min(1),
 });
 
-/** Zod schema for IdentityAuthenticationRiskLevel */
+/** Zod schema for IdentityAuthenticationRiskLevel. Risk level for session security and anomaly detection */
 IdentityAuthenticationRiskLevelSchema = z.enum(['Low', 'Medium', 'High', 'Critical']);
 
-/** Zod schema for IdentityAuthenticationRotateKeyInput */
+/** Zod schema for IdentityAuthenticationRotateKeyInput. Request to manually rotate signing key */
 IdentityAuthenticationRotateKeyInputSchema = z.object({
   reason: z.string().nullable().optional(),
   validityDays: z.number().int().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationSecretRotationOutput */
+/** Zod schema for IdentityAuthenticationSecretRotationOutput. Response when secret is rotated. */
 IdentityAuthenticationSecretRotationOutputSchema = z.object({
   clientSecret: z.string().nullable().optional(),
   warning: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationSendEmailVerificationInput */
+/** Zod schema for IdentityAuthenticationSendEmailVerificationInput. Send email verification request */
 IdentityAuthenticationSendEmailVerificationInputSchema = z.object({
   email: z.string().email().min(1),
 });
 
-/** Zod schema for IdentityAuthenticationServiceAccountAuditEntry */
+/** Zod schema for IdentityAuthenticationServiceAccountAuditEntry. Single entry in service account audit log. */
 IdentityAuthenticationServiceAccountAuditEntrySchema = z.object({
   id: z.string().uuid().optional(),
   action: z.string().nullable().optional(),
@@ -22098,7 +25191,7 @@ IdentityAuthenticationServiceAccountAuditEntrySchema = z.object({
   timestamp: z.string().datetime().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationServiceAccountAuditLogOutput */
+/** Zod schema for IdentityAuthenticationServiceAccountAuditLogOutput. Response for service account audit log. */
 IdentityAuthenticationServiceAccountAuditLogOutputSchema = z.object({
   entries: z
     .array(z.lazy(() => IdentityAuthenticationServiceAccountAuditEntrySchema))
@@ -22110,7 +25203,7 @@ IdentityAuthenticationServiceAccountAuditLogOutputSchema = z.object({
   totalCount: z.number().int().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationServiceAccountCreatedOutput */
+/** Zod schema for IdentityAuthenticationServiceAccountCreatedOutput. Response when a service account is created (includes secret). */
 IdentityAuthenticationServiceAccountCreatedOutputSchema = z.object({
   id: z.string().uuid().optional(),
   clientId: z.string().nullable().optional(),
@@ -22124,7 +25217,7 @@ IdentityAuthenticationServiceAccountCreatedOutputSchema = z.object({
   warning: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationServiceAccountOutput */
+/** Zod schema for IdentityAuthenticationServiceAccountOutput. Response for service account (excludes secret). */
 IdentityAuthenticationServiceAccountOutputSchema = z.object({
   id: z.string().uuid().optional(),
   authenticationCount: z.number().int().optional(),
@@ -22142,7 +25235,7 @@ IdentityAuthenticationServiceAccountOutputSchema = z.object({
   tenantId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationSessionOutput */
+/** Zod schema for IdentityAuthenticationSessionOutput. Session response */
 IdentityAuthenticationSessionOutputSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
@@ -22155,7 +25248,7 @@ IdentityAuthenticationSessionOutputSchema = z.object({
   location: z.lazy(() => IdentityAuthenticationLocationInfoSchema).optional(),
 });
 
-/** Zod schema for IdentityAuthenticationSessionSecurityAnalysis */
+/** Zod schema for IdentityAuthenticationSessionSecurityAnalysis. Security analysis result for a session */
 IdentityAuthenticationSessionSecurityAnalysisSchema = z.object({
   activeSessionCount: z.number().int().optional(),
   analyzedAt: z.string().datetime().optional(),
@@ -22171,18 +25264,18 @@ IdentityAuthenticationSessionSecurityAnalysisSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationSessionSuccessOutput */
+/** Zod schema for IdentityAuthenticationSessionSuccessOutput. Success response for session operations */
 IdentityAuthenticationSessionSuccessOutputSchema = z.object({
   message: z.string().nullable(),
 });
 
-/** Zod schema for IdentityAuthenticationSessionTerminationOutput */
+/** Zod schema for IdentityAuthenticationSessionTerminationOutput. Response for session termination operations */
 IdentityAuthenticationSessionTerminationOutputSchema = z.object({
   message: z.string().nullable(),
   terminatedCount: z.number().int(),
 });
 
-/** Zod schema for IdentityAuthenticationSignInOutput */
+/** Zod schema for IdentityAuthenticationSignInOutput. DTO for sign-in response */
 IdentityAuthenticationSignInOutputSchema = z.object({
   accessToken: z.string().nullable().optional(),
   accessTokenExpiresAt: z.string().datetime().optional(),
@@ -22213,12 +25306,12 @@ IdentityAuthenticationSignInOutputSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationSmsMfaSetupInput */
+/** Zod schema for IdentityAuthenticationSmsMfaSetupInput. Request to setup SMS MFA */
 IdentityAuthenticationSmsMfaSetupInputSchema = z.object({
   phoneNumber: z.string().nullable(),
 });
 
-/** Zod schema for IdentityAuthenticationSmsMfaSetupOutput */
+/** Zod schema for IdentityAuthenticationSmsMfaSetupOutput. Response for SMS MFA setup initiation */
 IdentityAuthenticationSmsMfaSetupOutputSchema = z.object({
   expiresInSeconds: z.number().int(),
   message: z.string().nullable(),
@@ -22237,12 +25330,12 @@ IdentityAuthenticationStepUpReceiptOutputSchema = z.object({
   receipt: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationTrustDeviceInput */
+/** Zod schema for IdentityAuthenticationTrustDeviceInput. Request to trust a device */
 IdentityAuthenticationTrustDeviceInputSchema = z.object({
   deviceName: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationTrustedDeviceOutput */
+/** Zod schema for IdentityAuthenticationTrustedDeviceOutput. Trusted device response */
 IdentityAuthenticationTrustedDeviceOutputSchema = z.object({
   id: z.string().uuid().optional(),
   deviceInfo: z.lazy(() => IdentityAuthenticationDeviceInfoSchema).optional(),
@@ -22252,12 +25345,12 @@ IdentityAuthenticationTrustedDeviceOutputSchema = z.object({
   trustedAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationUpdateCredentialNameInput */
+/** Zod schema for IdentityAuthenticationUpdateCredentialNameInput. Request to update a credential's friendly name. */
 IdentityAuthenticationUpdateCredentialNameInputSchema = z.object({
   friendlyName: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationUpdateRoleInput */
+/** Zod schema for IdentityAuthenticationUpdateRoleInput. Request DTO for updating an existing role */
 IdentityAuthenticationUpdateRoleInputSchema = z.object({
   description: z.string().nullable().optional(),
   isActive: z.boolean().nullable().optional(),
@@ -22265,12 +25358,12 @@ IdentityAuthenticationUpdateRoleInputSchema = z.object({
   permissions: z.array(z.string()).nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationUpdateScopesInput */
+/** Zod schema for IdentityAuthenticationUpdateScopesInput. Request to update scopes. */
 IdentityAuthenticationUpdateScopesInputSchema = z.object({
   scopes: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationUserDto */
+/** Zod schema for IdentityAuthenticationUserDto. User data transfer object */
 IdentityAuthenticationUserDtoSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
@@ -22284,13 +25377,13 @@ IdentityAuthenticationUserDtoSchema = z.object({
   username: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationVerifyEmailInput */
+/** Zod schema for IdentityAuthenticationVerifyEmailInput. Request to verify email with token */
 IdentityAuthenticationVerifyEmailInputSchema = z.object({
   tenantId: z.string().uuid().nullable().optional(),
   token: z.string().min(1),
 });
 
-/** Zod schema for IdentityAuthenticationVerifyMfaInput */
+/** Zod schema for IdentityAuthenticationVerifyMfaInput. Request to verify MFA code */
 IdentityAuthenticationVerifyMfaInputSchema = z.object({
   code: z.string().min(1),
   method: z.lazy(() => IdentityAuthenticationMfaMethodSchema).optional(),
@@ -22303,20 +25396,20 @@ IdentityAuthenticationVerifyStepUpChallengeInputSchema = z.object({
   method: z.lazy(() => IdentityAuthenticationMfaMethodSchema).optional(),
 });
 
-/** Zod schema for IdentityAuthenticationWeb3ChallengeInput */
+/** Zod schema for IdentityAuthenticationWeb3ChallengeInput. Request for Web3 challenge generation */
 IdentityAuthenticationWeb3ChallengeInputSchema = z.object({
   chainId: z.string().nullable().optional(),
   walletAddress: z.string().min(1),
 });
 
-/** Zod schema for IdentityAuthenticationWeb3ChallengeOutput */
+/** Zod schema for IdentityAuthenticationWeb3ChallengeOutput. Response containing Web3 challenge data */
 IdentityAuthenticationWeb3ChallengeOutputSchema = z.object({
   challenge: z.string().nullable().optional(),
   expiresAt: z.string().datetime().optional(),
   nonce: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationWeb3VerifyInput */
+/** Zod schema for IdentityAuthenticationWeb3VerifyInput. Request to verify Web3 wallet signature */
 IdentityAuthenticationWeb3VerifyInputSchema = z.object({
   chainId: z.string().min(1),
   challenge: z.string().min(1),
@@ -22327,7 +25420,7 @@ IdentityAuthenticationWeb3VerifyInputSchema = z.object({
   walletAddress: z.string().min(1),
 });
 
-/** Zod schema for IdentityAuthenticationWebAuthnAuthenticationOptionsResult */
+/** Zod schema for IdentityAuthenticationWebAuthnAuthenticationOptionsResult. Result of beginning WebAuthn authentication. */
 IdentityAuthenticationWebAuthnAuthenticationOptionsResultSchema = z.object({
   error: z.string().nullable().optional(),
   options: z.lazy(() => Fido2NetLibAssertionOptionsSchema).optional(),
@@ -22336,7 +25429,7 @@ IdentityAuthenticationWebAuthnAuthenticationOptionsResultSchema = z.object({
   success: z.boolean().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationWebAuthnAuthenticationResult */
+/** Zod schema for IdentityAuthenticationWebAuthnAuthenticationResult. Result of completing WebAuthn authentication. */
 IdentityAuthenticationWebAuthnAuthenticationResultSchema = z.object({
   accessToken: z.string().nullable().optional(),
   accessTokenExpiresAt: z.string().datetime().nullable().optional(),
@@ -22351,10 +25444,10 @@ IdentityAuthenticationWebAuthnAuthenticationResultSchema = z.object({
   userId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationWebAuthnAuthenticatorType */
+/** Zod schema for IdentityAuthenticationWebAuthnAuthenticatorType. Type of WebAuthn authenticator. */
 IdentityAuthenticationWebAuthnAuthenticatorTypeSchema = z.enum(['Platform', 'CrossPlatform']);
 
-/** Zod schema for IdentityAuthenticationWebAuthnCredentialInfo */
+/** Zod schema for IdentityAuthenticationWebAuthnCredentialInfo. Information about a user's WebAuthn credential. */
 IdentityAuthenticationWebAuthnCredentialInfoSchema = z.object({
   id: z.string().uuid().optional(),
   authenticatorType: z.lazy(() => IdentityAuthenticationWebAuthnAuthenticatorTypeSchema).optional(),
@@ -22366,7 +25459,7 @@ IdentityAuthenticationWebAuthnCredentialInfoSchema = z.object({
   lastUsedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationWebAuthnCredentialVerifyResult */
+/** Zod schema for IdentityAuthenticationWebAuthnCredentialVerifyResult. Result of verifying a WebAuthn credential. */
 IdentityAuthenticationWebAuthnCredentialVerifyResultSchema = z.object({
   error: z.string().nullable().optional(),
   isExpired: z.boolean().optional(),
@@ -22377,7 +25470,7 @@ IdentityAuthenticationWebAuthnCredentialVerifyResultSchema = z.object({
   success: z.boolean().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationWebAuthnRegistrationOptionsResult */
+/** Zod schema for IdentityAuthenticationWebAuthnRegistrationOptionsResult. Result of beginning WebAuthn registration. */
 IdentityAuthenticationWebAuthnRegistrationOptionsResultSchema = z.object({
   error: z.string().nullable().optional(),
   options: z.lazy(() => Fido2NetLibCredentialCreateOptionsSchema).optional(),
@@ -22386,7 +25479,7 @@ IdentityAuthenticationWebAuthnRegistrationOptionsResultSchema = z.object({
   success: z.boolean().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationWebAuthnRegistrationResult */
+/** Zod schema for IdentityAuthenticationWebAuthnRegistrationResult. Result of completing WebAuthn registration. */
 IdentityAuthenticationWebAuthnRegistrationResultSchema = z.object({
   credentialId: z.string().uuid().nullable().optional(),
   error: z.string().nullable().optional(),
@@ -22394,7 +25487,7 @@ IdentityAuthenticationWebAuthnRegistrationResultSchema = z.object({
   success: z.boolean().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationWebAuthnStatusOutput */
+/** Zod schema for IdentityAuthenticationWebAuthnStatusOutput. Response for WebAuthn status check. */
 IdentityAuthenticationWebAuthnStatusOutputSchema = z.object({
   credentialCount: z.number().int().optional(),
   hasPasswordlessCredential: z.boolean().optional(),
@@ -22403,7 +25496,8 @@ IdentityAuthenticationWebAuthnStatusOutputSchema = z.object({
   isEnabled: z.boolean().optional(),
 });
 
-/** Zod schema for IdentityAuthorizationAccessReviewCampaign */
+/** Zod schema for IdentityAuthorizationAccessReviewCampaign. Represents an access review/certification campaign
+Enables periodic review of user access rights to ensure compliance */
 IdentityAuthorizationAccessReviewCampaignSchema = z.object({
   id: z.string().uuid().optional(),
   approvedItems: z.number().int().optional(),
@@ -22433,10 +25527,10 @@ IdentityAuthorizationAccessReviewCampaignSchema = z.object({
   updatedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthorizationAccessReviewDecision */
+/** Zod schema for IdentityAuthorizationAccessReviewDecision. Decision made on review item */
 IdentityAuthorizationAccessReviewDecisionSchema = z.enum(['None', 'Approve', 'Revoke', 'ModifyAndApprove']);
 
-/** Zod schema for IdentityAuthorizationAccessReviewItem */
+/** Zod schema for IdentityAuthorizationAccessReviewItem. Individual item within an access review campaign */
 IdentityAuthorizationAccessReviewItemSchema = z.object({
   id: z.string().uuid().optional(),
   campaign: z.lazy(() => IdentityAuthorizationAccessReviewCampaignSchema).optional(),
@@ -22457,16 +25551,16 @@ IdentityAuthorizationAccessReviewItemSchema = z.object({
   updatedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthorizationAccessReviewItemStatus */
+/** Zod schema for IdentityAuthorizationAccessReviewItemStatus. Status of individual review item */
 IdentityAuthorizationAccessReviewItemStatusSchema = z.enum(['None', 'Pending', 'Reviewed', 'Approved', 'Revoked', 'Expired']);
 
-/** Zod schema for IdentityAuthorizationAccessReviewScope */
+/** Zod schema for IdentityAuthorizationAccessReviewScope. Scope of access review campaign */
 IdentityAuthorizationAccessReviewScopeSchema = z.enum(['None', 'AllUsers', 'Department', 'Team', 'Role', 'Resource', 'HighPrivilege', 'External', 'Custom']);
 
-/** Zod schema for IdentityAuthorizationAccessReviewStatus */
+/** Zod schema for IdentityAuthorizationAccessReviewStatus. Access review campaign status */
 IdentityAuthorizationAccessReviewStatusSchema = z.enum(['None', 'Draft', 'Active', 'InProgress', 'Completed', 'Expired']);
 
-/** Zod schema for IdentityAuthorizationAccessReviewType */
+/** Zod schema for IdentityAuthorizationAccessReviewType. Type of access review/certification campaign */
 IdentityAuthorizationAccessReviewTypeSchema = z.enum([
   'None',
   'PermissionReview',
@@ -22476,7 +25570,7 @@ IdentityAuthorizationAccessReviewTypeSchema = z.enum([
   'ComplianceAttestation',
 ]);
 
-/** Zod schema for IdentityAuthorizationCommandsCreateAccessReviewCampaignCommand */
+/** Zod schema for IdentityAuthorizationCommandsCreateAccessReviewCampaignCommand. Command to create an access review campaign */
 IdentityAuthorizationCommandsCreateAccessReviewCampaignCommandSchema = z.object({
   createdBy: z.string().uuid().optional(),
   description: z.string().nullable().optional(),
@@ -22487,7 +25581,7 @@ IdentityAuthorizationCommandsCreateAccessReviewCampaignCommandSchema = z.object(
   tenantId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthorizationCommandsCreateSoDRuleCommand */
+/** Zod schema for IdentityAuthorizationCommandsCreateSoDRuleCommand. Command to create a new SoD rule */
 IdentityAuthorizationCommandsCreateSoDRuleCommandSchema = z.object({
   conflictingPermissions: z.array(z.string()).nullable().optional(),
   description: z.string().nullable().optional(),
@@ -22497,7 +25591,7 @@ IdentityAuthorizationCommandsCreateSoDRuleCommandSchema = z.object({
   tenantId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthorizationCommandsDelegatePermissionsCommand */
+/** Zod schema for IdentityAuthorizationCommandsDelegatePermissionsCommand. Command to delegate permissions to another user */
 IdentityAuthorizationCommandsDelegatePermissionsCommandSchema = z.object({
   canSubDelegate: z.boolean().optional(),
   delegateUserId: z.string().uuid().optional(),
@@ -22510,7 +25604,7 @@ IdentityAuthorizationCommandsDelegatePermissionsCommandSchema = z.object({
   usageLimit: z.number().int().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthorizationCommandsGrantDelegatedAdminCommand */
+/** Zod schema for IdentityAuthorizationCommandsGrantDelegatedAdminCommand. Command to grant delegated admin scope */
 IdentityAuthorizationCommandsGrantDelegatedAdminCommandSchema = z.object({
   adminUserId: z.string().uuid().optional(),
   allowedOperations: z.array(z.string()).nullable().optional(),
@@ -22522,7 +25616,7 @@ IdentityAuthorizationCommandsGrantDelegatedAdminCommandSchema = z.object({
   tenantId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthorizationCommandsRequestJitElevationCommand */
+/** Zod schema for IdentityAuthorizationCommandsRequestJitElevationCommand. Command to request a Just-in-Time permission elevation */
 IdentityAuthorizationCommandsRequestJitElevationCommandSchema = z.object({
   durationMinutes: z.number().int().optional(),
   justification: z.string().nullable().optional(),
@@ -22591,12 +25685,12 @@ IdentityAuthorizationControllersUpdateSoDRuleInputSchema = z.object({
   ruleType: z.lazy(() => IdentityAuthorizationSoDRuleTypeSchema).optional(),
 });
 
-/** Zod schema for IdentityAuthorizationDeclineInvitationInput */
+/** Zod schema for IdentityAuthorizationDeclineInvitationInput. Request payload for declining an invitation. */
 IdentityAuthorizationDeclineInvitationInputSchema = z.object({
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthorizationDelegatedAdminScope */
+/** Zod schema for IdentityAuthorizationDelegatedAdminScope. Delegated administration scope definition */
 IdentityAuthorizationDelegatedAdminScopeSchema = z.object({
   id: z.string().uuid().optional(),
   adminUserId: z.string().uuid().optional(),
@@ -22624,10 +25718,11 @@ IdentityAuthorizationDelegatedAdminScopeSchema = z.object({
   updatedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthorizationDelegatedAdminScopeType */
+/** Zod schema for IdentityAuthorizationDelegatedAdminScopeType. Type of delegated admin scope */
 IdentityAuthorizationDelegatedAdminScopeTypeSchema = z.enum(['None', 'Department', 'Team', 'Role', 'Resource', 'Custom']);
 
-/** Zod schema for IdentityAuthorizationDenyTenantPermissionCommand */
+/** Zod schema for IdentityAuthorizationDenyTenantPermissionCommand. Command to deny tenant-level permissions from a user.
+Denied permissions take precedence over allowed permissions (DENY-WINS). */
 IdentityAuthorizationDenyTenantPermissionCommandSchema = z.object({
   deniedBy: z.string().uuid(),
   permissions: z.array(z.string()).nullable(),
@@ -22636,7 +25731,7 @@ IdentityAuthorizationDenyTenantPermissionCommandSchema = z.object({
   userId: z.string().uuid(),
 });
 
-/** Zod schema for IdentityAuthorizationEffectivePermissionDto */
+/** Zod schema for IdentityAuthorizationEffectivePermissionDto. Represents a single effective permission with its source. */
 IdentityAuthorizationEffectivePermissionDtoSchema = z.object({
   expiresAt: z.string().datetime().nullable().optional(),
   grantedAt: z.string().datetime().nullable().optional(),
@@ -22644,7 +25739,7 @@ IdentityAuthorizationEffectivePermissionDtoSchema = z.object({
   source: z.string().nullable(),
 });
 
-/** Zod schema for IdentityAuthorizationEffectivePermissionsOutput */
+/** Zod schema for IdentityAuthorizationEffectivePermissionsOutput. Response containing all effective permissions for a user on a resource. */
 IdentityAuthorizationEffectivePermissionsOutputSchema = z.object({
   hasFullAccess: z.boolean().optional(),
   isOwner: z.boolean().optional(),
@@ -22654,21 +25749,21 @@ IdentityAuthorizationEffectivePermissionsOutputSchema = z.object({
   userId: z.string().uuid(),
 });
 
-/** Zod schema for IdentityAuthorizationElevationRequestStatus */
+/** Zod schema for IdentityAuthorizationElevationRequestStatus. Status of JIT elevation request */
 IdentityAuthorizationElevationRequestStatusSchema = z.enum(['None', 'Pending', 'Approved', 'Denied', 'Active', 'Expired', 'Revoked']);
 
-/** Zod schema for IdentityAuthorizationGetPendingResourceInvitationsOutput */
+/** Zod schema for IdentityAuthorizationGetPendingResourceInvitationsOutput. Response containing pending invitations for the current user. */
 IdentityAuthorizationGetPendingResourceInvitationsOutputSchema = z.object({
   invitations: z.array(z.lazy(() => IdentityAuthorizationResourceInvitationDtoSchema)).nullable(),
   totalCount: z.number().int().optional(),
 });
 
-/** Zod schema for IdentityAuthorizationGetResourceInvitationOutput */
+/** Zod schema for IdentityAuthorizationGetResourceInvitationOutput. Response containing a single invitation. */
 IdentityAuthorizationGetResourceInvitationOutputSchema = z.object({
   invitation: z.lazy(() => IdentityAuthorizationResourceInvitationDtoSchema),
 });
 
-/** Zod schema for IdentityAuthorizationGetResourceUsersOutput */
+/** Zod schema for IdentityAuthorizationGetResourceUsersOutput. Response containing all users with access to a resource. */
 IdentityAuthorizationGetResourceUsersOutputSchema = z.object({
   ownerCount: z.number().int().optional(),
   resourceId: z.string().nullable(),
@@ -22677,7 +25772,7 @@ IdentityAuthorizationGetResourceUsersOutputSchema = z.object({
   users: z.array(z.lazy(() => IdentityAuthorizationResourceUserSchema)).nullable(),
 });
 
-/** Zod schema for IdentityAuthorizationGetTenantPermissionsOutput */
+/** Zod schema for IdentityAuthorizationGetTenantPermissionsOutput. Response containing tenant permissions for a user. */
 IdentityAuthorizationGetTenantPermissionsOutputSchema = z.object({
   isSystemAdmin: z.boolean().optional(),
   isTenantAdmin: z.boolean().optional(),
@@ -22686,7 +25781,7 @@ IdentityAuthorizationGetTenantPermissionsOutputSchema = z.object({
   userId: z.string().uuid(),
 });
 
-/** Zod schema for IdentityAuthorizationGrantTenantPermissionCommand */
+/** Zod schema for IdentityAuthorizationGrantTenantPermissionCommand. Command to grant tenant-level permissions to a user. */
 IdentityAuthorizationGrantTenantPermissionCommandSchema = z.object({
   expiresAt: z.string().datetime().nullable().optional(),
   grantedBy: z.string().uuid(),
@@ -22696,7 +25791,7 @@ IdentityAuthorizationGrantTenantPermissionCommandSchema = z.object({
   userId: z.string().uuid(),
 });
 
-/** Zod schema for IdentityAuthorizationHasPermissionOutput */
+/** Zod schema for IdentityAuthorizationHasPermissionOutput. Response indicating whether the user has the requested permission. */
 IdentityAuthorizationHasPermissionOutputSchema = z.object({
   denialReason: z.string().nullable().optional(),
   hasPermission: z.boolean(),
@@ -22706,10 +25801,10 @@ IdentityAuthorizationHasPermissionOutputSchema = z.object({
   userId: z.string().uuid(),
 });
 
-/** Zod schema for IdentityAuthorizationImpactSeverity */
+/** Zod schema for IdentityAuthorizationImpactSeverity. Impact severity level */
 IdentityAuthorizationImpactSeveritySchema = z.enum(['Low', 'Medium', 'High', 'Critical']);
 
-/** Zod schema for IdentityAuthorizationInvitationActionResult */
+/** Zod schema for IdentityAuthorizationInvitationActionResult. Result of performing an invitation lifecycle action. */
 IdentityAuthorizationInvitationActionResultSchema = z.object({
   errorMessage: z.string().nullable().optional(),
   invitationId: z.string().uuid().optional(),
@@ -22720,7 +25815,8 @@ IdentityAuthorizationInvitationActionResultSchema = z.object({
   tenantId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthorizationJitElevationInput */
+/** Zod schema for IdentityAuthorizationJitElevationInput. Entity for Just-in-Time (JIT) permission elevation requests
+Enables time-bound temporary permission grants with approval workflow */
 IdentityAuthorizationJitElevationInputSchema = z.object({
   id: z.string().uuid().optional(),
   activatedAt: z.string().datetime().nullable().optional(),
@@ -22775,7 +25871,7 @@ IdentityAuthorizationPermissionAnomalySchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for IdentityAuthorizationPermissionDelegation */
+/** Zod schema for IdentityAuthorizationPermissionDelegation. Permission delegation allows users to delegate their permissions to other users */
 IdentityAuthorizationPermissionDelegationSchema = z.object({
   id: z.string().uuid().optional(),
   canSubDelegate: z.boolean().optional(),
@@ -22803,7 +25899,9 @@ IdentityAuthorizationPermissionTrendSchema = z.object({
   revokes: z.number().int().optional(),
 });
 
-/** Zod schema for IdentityAuthorizationPermissionType */
+/** Zod schema for IdentityAuthorizationPermissionType. Comprehensive enumeration of permission types in the GameGuild system
+Represents the various operations that can be controlled through permissions
+Defines the complete platform permission system */
 IdentityAuthorizationPermissionTypeSchema = z.enum([
   'Read',
   'Comment',
@@ -22909,7 +26007,7 @@ IdentityAuthorizationPermissionTypeSchema = z.enum([
   'Configure',
 ]);
 
-/** Zod schema for IdentityAuthorizationPermissionUpdateResult */
+/** Zod schema for IdentityAuthorizationPermissionUpdateResult. Result of updating permissions. */
 IdentityAuthorizationPermissionUpdateResultSchema = z.object({
   errorMessage: z.string().nullable().optional(),
   success: z.boolean().optional(),
@@ -22925,7 +26023,7 @@ IdentityAuthorizationPermissionUsageMetricsSchema = z.object({
   usageCount: z.number().int().optional(),
 });
 
-/** Zod schema for IdentityAuthorizationRemoveDenyPermissionsCommand */
+/** Zod schema for IdentityAuthorizationRemoveDenyPermissionsCommand. Command to remove deny entries from a user's permissions. */
 IdentityAuthorizationRemoveDenyPermissionsCommandSchema = z.object({
   permissions: z.array(z.string()).nullable(),
   removedBy: z.string().uuid(),
@@ -22933,7 +26031,7 @@ IdentityAuthorizationRemoveDenyPermissionsCommandSchema = z.object({
   userId: z.string().uuid(),
 });
 
-/** Zod schema for IdentityAuthorizationRemoveUserAccessCommand */
+/** Zod schema for IdentityAuthorizationRemoveUserAccessCommand. Command to remove a user's access to a resource by revoking all their permissions. */
 IdentityAuthorizationRemoveUserAccessCommandSchema = z.object({
   reason: z.string().nullable().optional(),
   removedByUserId: z.string().uuid(),
@@ -22951,7 +26049,7 @@ IdentityAuthorizationResourceAccessPatternSchema = z.object({
   uniqueUsers: z.number().int().optional(),
 });
 
-/** Zod schema for IdentityAuthorizationResourceInvitationDto */
+/** Zod schema for IdentityAuthorizationResourceInvitationDto. DTO for invitation-centric endpoints. */
 IdentityAuthorizationResourceInvitationDtoSchema = z.object({
   email: z.string().nullable().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
@@ -22966,7 +26064,7 @@ IdentityAuthorizationResourceInvitationDtoSchema = z.object({
   tenantId: z.string().uuid().optional(),
 });
 
-/** Zod schema for IdentityAuthorizationResourceUser */
+/** Zod schema for IdentityAuthorizationResourceUser. Represents a user who has access to a resource. */
 IdentityAuthorizationResourceUserSchema = z.object({
   expiresAt: z.string().datetime().nullable().optional(),
   grantedAt: z.string().datetime(),
@@ -22980,7 +26078,7 @@ IdentityAuthorizationResourceUserSchema = z.object({
   userId: z.string().uuid(),
 });
 
-/** Zod schema for IdentityAuthorizationRevokeTenantPermissionCommand */
+/** Zod schema for IdentityAuthorizationRevokeTenantPermissionCommand. Command to revoke tenant-level permissions from a user. */
 IdentityAuthorizationRevokeTenantPermissionCommandSchema = z.object({
   permissions: z.array(z.string()).nullable(),
   reason: z.string().nullable().optional(),
@@ -22989,20 +26087,22 @@ IdentityAuthorizationRevokeTenantPermissionCommandSchema = z.object({
   userId: z.string().uuid(),
 });
 
-/** Zod schema for IdentityAuthorizationSetGlobalDefaultPermissionsCommand */
+/** Zod schema for IdentityAuthorizationSetGlobalDefaultPermissionsCommand. Command to set global default permissions.
+These are baseline permissions applied to all users across all tenants. */
 IdentityAuthorizationSetGlobalDefaultPermissionsCommandSchema = z.object({
   permissions: z.array(z.string()).nullable(),
   setBy: z.string().uuid(),
 });
 
-/** Zod schema for IdentityAuthorizationSetTenantDefaultPermissionsCommand */
+/** Zod schema for IdentityAuthorizationSetTenantDefaultPermissionsCommand. Command to set tenant default permissions.
+These are baseline permissions applied to all users in a specific tenant. */
 IdentityAuthorizationSetTenantDefaultPermissionsCommandSchema = z.object({
   permissions: z.array(z.string()).nullable(),
   setBy: z.string().uuid(),
   tenantId: z.lazy(() => CQRSModelsTenantIdSchema),
 });
 
-/** Zod schema for IdentityAuthorizationShareResourceCommand */
+/** Zod schema for IdentityAuthorizationShareResourceCommand. Command to share a resource with one or more users by granting them permissions. */
 IdentityAuthorizationShareResourceCommandSchema = z.object({
   expiresAt: z.string().datetime().nullable().optional(),
   grantedByUserId: z.string().uuid(),
@@ -23017,7 +26117,7 @@ IdentityAuthorizationShareResourceCommandSchema = z.object({
   userIds: z.array(z.string().uuid()).nullable(),
 });
 
-/** Zod schema for IdentityAuthorizationShareResult */
+/** Zod schema for IdentityAuthorizationShareResult. Result of sharing a resource. */
 IdentityAuthorizationShareResultSchema = z.object({
   email: z.string().nullable().optional(),
   errorMessage: z.string().nullable().optional(),
@@ -23028,7 +26128,7 @@ IdentityAuthorizationShareResultSchema = z.object({
   userId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthorizationSoDResolutionAction */
+/** Zod schema for IdentityAuthorizationSoDResolutionAction. Action taken to resolve SoD violation */
 IdentityAuthorizationSoDResolutionActionSchema = z.enum([
   'None',
   'RevokePermission',
@@ -23039,7 +26139,7 @@ IdentityAuthorizationSoDResolutionActionSchema = z.enum([
   'NoAction',
 ]);
 
-/** Zod schema for IdentityAuthorizationSoDRule */
+/** Zod schema for IdentityAuthorizationSoDRule. Represents a Separation of Duties (SoD) rule */
 IdentityAuthorizationSoDRuleSchema = z.object({
   id: z.string().uuid().optional(),
   allowedExceptions: z.string().nullable().optional(),
@@ -23066,7 +26166,7 @@ IdentityAuthorizationSoDRuleSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for IdentityAuthorizationSoDRuleType */
+/** Zod schema for IdentityAuthorizationSoDRuleType. Type of SoD rule */
 IdentityAuthorizationSoDRuleTypeSchema = z.enum([
   'None',
   'PermissionConflict',
@@ -23076,10 +26176,10 @@ IdentityAuthorizationSoDRuleTypeSchema = z.enum([
   'FunctionalConflict',
 ]);
 
-/** Zod schema for IdentityAuthorizationSoDSeverity */
+/** Zod schema for IdentityAuthorizationSoDSeverity. Severity of SoD rule */
 IdentityAuthorizationSoDSeveritySchema = z.enum(['None', 'Low', 'Medium', 'High', 'Critical']);
 
-/** Zod schema for IdentityAuthorizationSoDViolation */
+/** Zod schema for IdentityAuthorizationSoDViolation. Represents a detected SoD violation */
 IdentityAuthorizationSoDViolationSchema = z.object({
   id: z.string().uuid().optional(),
   approvedAt: z.string().datetime().nullable().optional(),
@@ -23103,10 +26203,10 @@ IdentityAuthorizationSoDViolationSchema = z.object({
   violationDetails: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthorizationSoDViolationStatus */
+/** Zod schema for IdentityAuthorizationSoDViolationStatus. Status of SoD violation */
 IdentityAuthorizationSoDViolationStatusSchema = z.enum(['None', 'Active', 'Acknowledged', 'Mitigated', 'Resolved', 'Excepted', 'FalsePositive']);
 
-/** Zod schema for IdentityAuthorizationUpdateUserPermissionsCommand */
+/** Zod schema for IdentityAuthorizationUpdateUserPermissionsCommand. Command to update a specific user's permissions on a resource. */
 IdentityAuthorizationUpdateUserPermissionsCommandSchema = z.object({
   expiresAt: z.string().datetime().nullable().optional(),
   permissions: z.array(z.string()).nullable(),
@@ -23125,14 +26225,14 @@ IdentityAuthorizationUserActivitySummarySchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for IdentityTenantsAddTenantMemberOutput */
+/** Zod schema for IdentityTenantsAddTenantMemberOutput. Response for adding a tenant member */
 IdentityTenantsAddTenantMemberOutputSchema = z.object({
   memberId: z.string().uuid().nullable().optional(),
   message: z.string().nullable().optional(),
   success: z.boolean().optional(),
 });
 
-/** Zod schema for IdentityTenantsAddUserMembershipInput */
+/** Zod schema for IdentityTenantsAddUserMembershipInput. Request body for adding a user membership. */
 IdentityTenantsAddUserMembershipInputSchema = z.object({
   invitedByEmail: z.string().nullable().optional(),
   inviteeEmail: z.string().nullable().optional(),
@@ -23142,22 +26242,22 @@ IdentityTenantsAddUserMembershipInputSchema = z.object({
   tenantId: z.string().uuid().optional(),
 });
 
-/** Zod schema for IdentityTenantsArchiveInput */
+/** Zod schema for IdentityTenantsArchiveInput. Request model for archiving a tenant */
 IdentityTenantsArchiveInputSchema = z.object({
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsBulkActivateTenantsCommand */
+/** Zod schema for IdentityTenantsBulkActivateTenantsCommand. Command to perform bulk activation of tenants */
 IdentityTenantsBulkActivateTenantsCommandSchema = z.object({
   tenantIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsBulkArchiveTenantsCommand */
+/** Zod schema for IdentityTenantsBulkArchiveTenantsCommand. Command to perform bulk archival of tenants */
 IdentityTenantsBulkArchiveTenantsCommandSchema = z.object({
   tenantIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsBulkCreateTenantItem */
+/** Zod schema for IdentityTenantsBulkCreateTenantItem. Data for a single tenant to create in a bulk operation */
 IdentityTenantsBulkCreateTenantItemSchema = z.object({
   adminEmail: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
@@ -23165,7 +26265,7 @@ IdentityTenantsBulkCreateTenantItemSchema = z.object({
   slug: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsBulkCreateTenantsCommand */
+/** Zod schema for IdentityTenantsBulkCreateTenantsCommand. Command to create multiple tenants at once */
 IdentityTenantsBulkCreateTenantsCommandSchema = z.object({
   tenants: z
     .array(z.lazy(() => IdentityTenantsBulkCreateTenantItemSchema))
@@ -23173,35 +26273,35 @@ IdentityTenantsBulkCreateTenantsCommandSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for IdentityTenantsBulkDeactivateTenantsCommand */
+/** Zod schema for IdentityTenantsBulkDeactivateTenantsCommand. Command to perform bulk deactivation of tenants */
 IdentityTenantsBulkDeactivateTenantsCommandSchema = z.object({
   tenantIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsBulkDeleteTenantsCommand */
+/** Zod schema for IdentityTenantsBulkDeleteTenantsCommand. Command to perform bulk deletion of tenants */
 IdentityTenantsBulkDeleteTenantsCommandSchema = z.object({
   hardDelete: z.boolean().optional(),
   tenantIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsBulkPurgeTenantsCommand */
+/** Zod schema for IdentityTenantsBulkPurgeTenantsCommand. Command to permanently purge multiple tenants (irreversible hard delete) */
 IdentityTenantsBulkPurgeTenantsCommandSchema = z.object({
   tenantIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsBulkUndeleteTenantsCommand */
+/** Zod schema for IdentityTenantsBulkUndeleteTenantsCommand. Command to restore multiple soft-deleted tenants at once */
 IdentityTenantsBulkUndeleteTenantsCommandSchema = z.object({
   tenantIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsBulkUpdateTenantItem */
+/** Zod schema for IdentityTenantsBulkUpdateTenantItem. Data for a single tenant update in a bulk operation */
 IdentityTenantsBulkUpdateTenantItemSchema = z.object({
   description: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
   tenantId: z.string().uuid().optional(),
 });
 
-/** Zod schema for IdentityTenantsBulkUpdateTenantsCommand */
+/** Zod schema for IdentityTenantsBulkUpdateTenantsCommand. Command to update multiple tenants at once */
 IdentityTenantsBulkUpdateTenantsCommandSchema = z.object({
   updates: z
     .array(z.lazy(() => IdentityTenantsBulkUpdateTenantItemSchema))
@@ -23209,7 +26309,7 @@ IdentityTenantsBulkUpdateTenantsCommandSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for IdentityTenantsCreateTenantInput */
+/** Zod schema for IdentityTenantsCreateTenantInput. Request model for creating a tenant */
 IdentityTenantsCreateTenantInputSchema = z.object({
   adminEmail: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
@@ -23217,7 +26317,7 @@ IdentityTenantsCreateTenantInputSchema = z.object({
   slug: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsGetUserMembershipsOutput */
+/** Zod schema for IdentityTenantsGetUserMembershipsOutput. Response containing all tenant memberships for a user. */
 IdentityTenantsGetUserMembershipsOutputSchema = z.object({
   memberships: z
     .array(z.lazy(() => IdentityTenantsUserMembershipDtoSchema))
@@ -23226,17 +26326,17 @@ IdentityTenantsGetUserMembershipsOutputSchema = z.object({
   totalCount: z.number().int().optional(),
 });
 
-/** Zod schema for IdentityTenantsMembershipCountOutput */
+/** Zod schema for IdentityTenantsMembershipCountOutput. Response containing membership count */
 IdentityTenantsMembershipCountOutputSchema = z.object({
   count: z.number().int().optional(),
 });
 
-/** Zod schema for IdentityTenantsRecoverInput */
+/** Zod schema for IdentityTenantsRecoverInput. Request model for recovering a soft-deleted tenant */
 IdentityTenantsRecoverInputSchema = z.object({
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsReplaceTenantMetadataInput */
+/** Zod schema for IdentityTenantsReplaceTenantMetadataInput. Request model for replacing entire tenant metadata */
 IdentityTenantsReplaceTenantMetadataInputSchema = z.object({
   adminNotes: z.string().nullable().optional(),
   businessInfo: z.lazy(() => IdentityTenantsUpdateTenantBusinessInfoInputSchema).optional(),
@@ -23246,7 +26346,7 @@ IdentityTenantsReplaceTenantMetadataInputSchema = z.object({
   tags: z.array(z.string()).nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsReplaceTenantSettingsInput */
+/** Zod schema for IdentityTenantsReplaceTenantSettingsInput. Request model for replacing tenant settings */
 IdentityTenantsReplaceTenantSettingsInputSchema = z.object({
   businessRules: z.lazy(() => IdentityTenantsUpdateTenantBusinessRulesInputSchema).optional(),
   featureFlags: z.record(z.string(), z.boolean()).nullable().optional(),
@@ -23271,14 +26371,16 @@ IdentityTenantsSetTenantMembershipStatusOutputSchema = z.object({
   success: z.boolean().optional(),
 });
 
-/** Zod schema for IdentityTenantsSlugValidation */
+/** Zod schema for IdentityTenantsSlugValidation. Slug validation result */
 IdentityTenantsSlugValidationSchema = z.object({
   isAvailable: z.boolean().optional(),
   isValid: z.boolean().optional(),
   suggestedAlternatives: z.array(z.string()).nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsTenant */
+/** Zod schema for IdentityTenantsTenant. Represents a tenant in a multi-tenant system.
+This is the aggregate root for the Tenant bounded context, managing all tenant-related entities.
+Inherits from EntityBase to provide UUID IDs, version control, timestamps, and soft delete functionality. */
 IdentityTenantsTenantSchema = z.object({
   id: z.string().uuid().optional(),
   activeMemberCount: z.number().int().optional(),
@@ -23324,7 +26426,7 @@ IdentityTenantsTenantSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for IdentityTenantsTenantAddressDto */
+/** Zod schema for IdentityTenantsTenantAddressDto. Address information data transfer object */
 IdentityTenantsTenantAddressDtoSchema = z.object({
   city: z.string().nullable().optional(),
   country: z.string().nullable().optional(),
@@ -23333,7 +26435,7 @@ IdentityTenantsTenantAddressDtoSchema = z.object({
   street: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsTenantAuditLogEntry */
+/** Zod schema for IdentityTenantsTenantAuditLogEntry. Tenant audit log entry */
 IdentityTenantsTenantAuditLogEntrySchema = z.object({
   id: z.string().uuid().optional(),
   action: z.string().nullable().optional(),
@@ -23350,7 +26452,7 @@ IdentityTenantsTenantAuditLogEntrySchema = z.object({
   userAgent: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsTenantBrandingDto */
+/** Zod schema for IdentityTenantsTenantBrandingDto. Branding settings data transfer object */
 IdentityTenantsTenantBrandingDtoSchema = z.object({
   companyName: z.string().nullable().optional(),
   faviconUrl: z.string().nullable().optional(),
@@ -23359,7 +26461,7 @@ IdentityTenantsTenantBrandingDtoSchema = z.object({
   secondaryColor: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsTenantBusinessInfoDto */
+/** Zod schema for IdentityTenantsTenantBusinessInfoDto. Business information data transfer object for tenant classification */
 IdentityTenantsTenantBusinessInfoDtoSchema = z.object({
   complianceRequirements: z.array(z.string()).nullable().optional(),
   geographicRegion: z.string().nullable().optional(),
@@ -23368,7 +26470,7 @@ IdentityTenantsTenantBusinessInfoDtoSchema = z.object({
   tenantType: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsTenantBusinessRulesDto */
+/** Zod schema for IdentityTenantsTenantBusinessRulesDto. Business rules data transfer object */
 IdentityTenantsTenantBusinessRulesDtoSchema = z.object({
   approvalRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   notificationRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
@@ -23376,7 +26478,7 @@ IdentityTenantsTenantBusinessRulesDtoSchema = z.object({
   workflowRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsTenantContactInfoDto */
+/** Zod schema for IdentityTenantsTenantContactInfoDto. Contact information data transfer object for tenant organizational data */
 IdentityTenantsTenantContactInfoDtoSchema = z.object({
   address: z.lazy(() => IdentityTenantsTenantAddressDtoSchema).optional(),
   organizationName: z.string().nullable().optional(),
@@ -23386,14 +26488,16 @@ IdentityTenantsTenantContactInfoDtoSchema = z.object({
   website: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsTenantCurrencySettingsDto */
+/** Zod schema for IdentityTenantsTenantCurrencySettingsDto. Currency settings data transfer object */
 IdentityTenantsTenantCurrencySettingsDtoSchema = z.object({
   decimalPlaces: z.number().int().optional(),
   defaultCurrency: z.string().nullable().optional(),
   displayFormat: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsTenantDomain */
+/** Zod schema for IdentityTenantsTenantDomain. Represents a domain (top-level or subdomain) associated with a tenant for automatic user grouping.
+Each tenant can have multiple domains with one designated as the main/principal domain.
+Domains can be top-level (e.g., "estate.com") or subdomains (e.g., "admin.estate.com"). */
 IdentityTenantsTenantDomainSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
@@ -23421,7 +26525,7 @@ IdentityTenantsTenantDomainSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for IdentityTenantsTenantIntegrationSettingsDto */
+/** Zod schema for IdentityTenantsTenantIntegrationSettingsDto. Integration settings data transfer object */
 IdentityTenantsTenantIntegrationSettingsDtoSchema = z.object({
   apiKeys: z.record(z.string(), z.string()).nullable().optional(),
   externalServices: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
@@ -23429,7 +26533,9 @@ IdentityTenantsTenantIntegrationSettingsDtoSchema = z.object({
   webhookSettings: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsTenantMember */
+/** Zod schema for IdentityTenantsTenantMember. Represents a user's membership in a tenant with role and status tracking.
+Links users to tenants with specific roles and membership lifecycle management.
+Supports hierarchical relationships for organizational structures. */
 IdentityTenantsTenantMemberSchema = z.object({
   id: z.string().uuid().optional(),
   childMembers: z
@@ -23464,7 +26570,7 @@ IdentityTenantsTenantMemberSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for IdentityTenantsTenantMetadataDto */
+/** Zod schema for IdentityTenantsTenantMetadataDto. Data transfer object representing tenant metadata information */
 IdentityTenantsTenantMetadataDtoSchema = z.object({
   id: z.string().uuid().optional(),
   adminNotes: z.string().nullable().optional(),
@@ -23477,7 +26583,7 @@ IdentityTenantsTenantMetadataDtoSchema = z.object({
   updatedAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for IdentityTenantsTenantSecuritySettingsDto */
+/** Zod schema for IdentityTenantsTenantSecuritySettingsDto. Security settings data transfer object */
 IdentityTenantsTenantSecuritySettingsDtoSchema = z.object({
   apiRateLimits: z.record(z.string(), z.number().int()).nullable().optional(),
   ipWhitelist: z.array(z.string()).nullable().optional(),
@@ -23486,7 +26592,8 @@ IdentityTenantsTenantSecuritySettingsDtoSchema = z.object({
   twoFactorRequired: z.boolean().optional(),
 });
 
-/** Zod schema for IdentityTenantsTenantSettings */
+/** Zod schema for IdentityTenantsTenantSettings. Tenant-specific settings and configuration
+Provides tenant-level customization for features, UI, localization, and business logic */
 IdentityTenantsTenantSettingsSchema = z.object({
   id: z.string().uuid().optional(),
   allowUserRegistration: z.boolean().optional(),
@@ -23522,7 +26629,7 @@ IdentityTenantsTenantSettingsSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for IdentityTenantsTenantSettingsDto */
+/** Zod schema for IdentityTenantsTenantSettingsDto. Data transfer object representing tenant settings */
 IdentityTenantsTenantSettingsDtoSchema = z.object({
   id: z.string().uuid().optional(),
   businessRules: z.lazy(() => IdentityTenantsTenantBusinessRulesDtoSchema).optional(),
@@ -23536,7 +26643,8 @@ IdentityTenantsTenantSettingsDtoSchema = z.object({
   userInterfaceSettings: z.lazy(() => IdentityTenantsTenantUiSettingsDtoSchema).optional(),
 });
 
-/** Zod schema for IdentityTenantsTenantStatistics */
+/** Zod schema for IdentityTenantsTenantStatistics. Tenant statistics and usage metrics
+Provides analytics and insights for tenant performance and usage */
 IdentityTenantsTenantStatisticsSchema = z.object({
   id: z.string().uuid().optional(),
   activeMembers: z.number().int().optional(),
@@ -23567,7 +26675,7 @@ IdentityTenantsTenantStatisticsSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for IdentityTenantsTenantSystemConfigurationDto */
+/** Zod schema for IdentityTenantsTenantSystemConfigurationDto. System configuration data transfer object */
 IdentityTenantsTenantSystemConfigurationDtoSchema = z.object({
   currencySettings: z.lazy(() => IdentityTenantsTenantCurrencySettingsDtoSchema).optional(),
   customConfiguration: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
@@ -23577,7 +26685,7 @@ IdentityTenantsTenantSystemConfigurationDtoSchema = z.object({
   timeZone: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsTenantSystemLimitsDto */
+/** Zod schema for IdentityTenantsTenantSystemLimitsDto. System limits data transfer object */
 IdentityTenantsTenantSystemLimitsDtoSchema = z.object({
   customLimits: z.record(z.string(), z.number().int()).nullable().optional(),
   maxApiCalls: z.number().int().optional(),
@@ -23586,7 +26694,7 @@ IdentityTenantsTenantSystemLimitsDtoSchema = z.object({
   maxUsers: z.number().int().optional(),
 });
 
-/** Zod schema for IdentityTenantsTenantUiSettingsDto */
+/** Zod schema for IdentityTenantsTenantUiSettingsDto. User interface settings data transfer object */
 IdentityTenantsTenantUiSettingsDtoSchema = z.object({
   branding: z.lazy(() => IdentityTenantsTenantBrandingDtoSchema).optional(),
   componentSettings: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
@@ -23595,14 +26703,14 @@ IdentityTenantsTenantUiSettingsDtoSchema = z.object({
   theme: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsTenantValidationError */
+/** Zod schema for IdentityTenantsTenantValidationError. Validation error detail */
 IdentityTenantsTenantValidationErrorSchema = z.object({
   code: z.string().nullable().optional(),
   field: z.string().nullable().optional(),
   message: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsTenantValidationOutput */
+/** Zod schema for IdentityTenantsTenantValidationOutput. Tenant validation response */
 IdentityTenantsTenantValidationOutputSchema = z.object({
   errors: z
     .array(z.lazy(() => IdentityTenantsTenantValidationErrorSchema))
@@ -23617,14 +26725,14 @@ IdentityTenantsTenantValidationOutputSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for IdentityTenantsTenantValidationWarning */
+/** Zod schema for IdentityTenantsTenantValidationWarning. Validation warning detail */
 IdentityTenantsTenantValidationWarningSchema = z.object({
   code: z.string().nullable().optional(),
   field: z.string().nullable().optional(),
   message: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsUpdateTenantAddressInput */
+/** Zod schema for IdentityTenantsUpdateTenantAddressInput. Request model for updating tenant address information */
 IdentityTenantsUpdateTenantAddressInputSchema = z.object({
   city: z.string().nullable().optional(),
   country: z.string().nullable().optional(),
@@ -23633,7 +26741,7 @@ IdentityTenantsUpdateTenantAddressInputSchema = z.object({
   street: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsUpdateTenantBrandingInput */
+/** Zod schema for IdentityTenantsUpdateTenantBrandingInput. Request model for updating branding */
 IdentityTenantsUpdateTenantBrandingInputSchema = z.object({
   companyName: z.string().nullable().optional(),
   faviconUrl: z.string().nullable().optional(),
@@ -23642,7 +26750,7 @@ IdentityTenantsUpdateTenantBrandingInputSchema = z.object({
   secondaryColor: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsUpdateTenantBusinessInfoInput */
+/** Zod schema for IdentityTenantsUpdateTenantBusinessInfoInput. Request model for updating tenant business information */
 IdentityTenantsUpdateTenantBusinessInfoInputSchema = z.object({
   complianceRequirements: z.array(z.string()).nullable().optional(),
   geographicRegion: z.string().nullable().optional(),
@@ -23651,7 +26759,7 @@ IdentityTenantsUpdateTenantBusinessInfoInputSchema = z.object({
   tenantType: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsUpdateTenantBusinessRulesInput */
+/** Zod schema for IdentityTenantsUpdateTenantBusinessRulesInput. Request model for updating business rules */
 IdentityTenantsUpdateTenantBusinessRulesInputSchema = z.object({
   approvalRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   notificationRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
@@ -23659,7 +26767,7 @@ IdentityTenantsUpdateTenantBusinessRulesInputSchema = z.object({
   workflowRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsUpdateTenantContactInfoInput */
+/** Zod schema for IdentityTenantsUpdateTenantContactInfoInput. Request model for updating tenant contact information */
 IdentityTenantsUpdateTenantContactInfoInputSchema = z.object({
   address: z.lazy(() => IdentityTenantsUpdateTenantAddressInputSchema).optional(),
   organizationName: z.string().nullable().optional(),
@@ -23669,25 +26777,25 @@ IdentityTenantsUpdateTenantContactInfoInputSchema = z.object({
   website: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsUpdateTenantCurrencySettingsInput */
+/** Zod schema for IdentityTenantsUpdateTenantCurrencySettingsInput. Request model for updating currency settings */
 IdentityTenantsUpdateTenantCurrencySettingsInputSchema = z.object({
   decimalPlaces: z.number().int().nullable().optional(),
   defaultCurrency: z.string().nullable().optional(),
   displayFormat: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsUpdateTenantFeatureFlagsInput */
+/** Zod schema for IdentityTenantsUpdateTenantFeatureFlagsInput. Request model for updating feature flags */
 IdentityTenantsUpdateTenantFeatureFlagsInputSchema = z.object({
   featureFlags: z.record(z.string(), z.boolean()).nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsUpdateTenantInput */
+/** Zod schema for IdentityTenantsUpdateTenantInput. Request model for updating tenant information */
 IdentityTenantsUpdateTenantInputSchema = z.object({
   description: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsUpdateTenantIntegrationSettingsInput */
+/** Zod schema for IdentityTenantsUpdateTenantIntegrationSettingsInput. Request model for updating integration settings */
 IdentityTenantsUpdateTenantIntegrationSettingsInputSchema = z.object({
   apiKeys: z.record(z.string(), z.string()).nullable().optional(),
   externalServices: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
@@ -23703,7 +26811,7 @@ IdentityTenantsUpdateTenantMemberInviteOutputSchema = z.object({
   success: z.boolean().optional(),
 });
 
-/** Zod schema for IdentityTenantsUpdateTenantMemberRoleOutput */
+/** Zod schema for IdentityTenantsUpdateTenantMemberRoleOutput. Response for updating tenant member role */
 IdentityTenantsUpdateTenantMemberRoleOutputSchema = z.object({
   memberId: z.string().uuid().optional(),
   message: z.string().nullable().optional(),
@@ -23712,7 +26820,7 @@ IdentityTenantsUpdateTenantMemberRoleOutputSchema = z.object({
   tenantId: z.string().uuid().optional(),
 });
 
-/** Zod schema for IdentityTenantsUpdateTenantMetadataInput */
+/** Zod schema for IdentityTenantsUpdateTenantMetadataInput. Request model for updating tenant metadata */
 IdentityTenantsUpdateTenantMetadataInputSchema = z.object({
   adminNotes: z.string().nullable().optional(),
   businessInfo: z.lazy(() => IdentityTenantsUpdateTenantBusinessInfoInputSchema).optional(),
@@ -23722,7 +26830,7 @@ IdentityTenantsUpdateTenantMetadataInputSchema = z.object({
   tags: z.array(z.string()).nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsUpdateTenantSecuritySettingsInput */
+/** Zod schema for IdentityTenantsUpdateTenantSecuritySettingsInput. Request model for updating security settings */
 IdentityTenantsUpdateTenantSecuritySettingsInputSchema = z.object({
   apiRateLimits: z.record(z.string(), z.number().int()).nullable().optional(),
   ipWhitelist: z.array(z.string()).nullable().optional(),
@@ -23731,7 +26839,7 @@ IdentityTenantsUpdateTenantSecuritySettingsInputSchema = z.object({
   twoFactorRequired: z.boolean().nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsUpdateTenantSettingsInput */
+/** Zod schema for IdentityTenantsUpdateTenantSettingsInput. Request model for updating tenant settings */
 IdentityTenantsUpdateTenantSettingsInputSchema = z.object({
   businessRules: z.lazy(() => IdentityTenantsUpdateTenantBusinessRulesInputSchema).optional(),
   featureFlags: z.record(z.string(), z.boolean()).nullable().optional(),
@@ -23742,7 +26850,7 @@ IdentityTenantsUpdateTenantSettingsInputSchema = z.object({
   userInterfaceSettings: z.lazy(() => IdentityTenantsUpdateTenantUiSettingsInputSchema).optional(),
 });
 
-/** Zod schema for IdentityTenantsUpdateTenantSystemConfigurationInput */
+/** Zod schema for IdentityTenantsUpdateTenantSystemConfigurationInput. Request model for updating system configuration */
 IdentityTenantsUpdateTenantSystemConfigurationInputSchema = z.object({
   currencySettings: z.lazy(() => IdentityTenantsUpdateTenantCurrencySettingsInputSchema).optional(),
   customConfiguration: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
@@ -23752,7 +26860,7 @@ IdentityTenantsUpdateTenantSystemConfigurationInputSchema = z.object({
   timeZone: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsUpdateTenantSystemLimitsInput */
+/** Zod schema for IdentityTenantsUpdateTenantSystemLimitsInput. Request model for updating system limits */
 IdentityTenantsUpdateTenantSystemLimitsInputSchema = z.object({
   customLimits: z.record(z.string(), z.number().int()).nullable().optional(),
   maxApiCalls: z.number().int().nullable().optional(),
@@ -23761,12 +26869,12 @@ IdentityTenantsUpdateTenantSystemLimitsInputSchema = z.object({
   maxUsers: z.number().int().nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsUpdateTenantTagsInput */
+/** Zod schema for IdentityTenantsUpdateTenantTagsInput. Request model for updating tenant tags */
 IdentityTenantsUpdateTenantTagsInputSchema = z.object({
   tags: z.array(z.string()).nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsUpdateTenantUiSettingsInput */
+/** Zod schema for IdentityTenantsUpdateTenantUiSettingsInput. Request model for updating UI settings */
 IdentityTenantsUpdateTenantUiSettingsInputSchema = z.object({
   branding: z.lazy(() => IdentityTenantsUpdateTenantBrandingInputSchema).optional(),
   componentSettings: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
@@ -23775,17 +26883,18 @@ IdentityTenantsUpdateTenantUiSettingsInputSchema = z.object({
   theme: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsUpdateUserMembershipInviteInput */
+/** Zod schema for IdentityTenantsUpdateUserMembershipInviteInput. Request body for membership invite actions. */
 IdentityTenantsUpdateUserMembershipInviteInputSchema = z.object({
   actorEmail: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsUpdateUserMembershipRoleInput */
+/** Zod schema for IdentityTenantsUpdateUserMembershipRoleInput. Request body for changing a user's tenant role. */
 IdentityTenantsUpdateUserMembershipRoleInputSchema = z.object({
   role: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsUsageTracking */
+/** Zod schema for IdentityTenantsUsageTracking. Usage tracking for tenant resources and activities
+Provides detailed tracking of tenant resource consumption */
 IdentityTenantsUsageTrackingSchema = z.object({
   id: z.string().uuid().optional(),
   cost: z.number().optional(),
@@ -23813,7 +26922,8 @@ IdentityTenantsUsageTrackingSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for IdentityTenantsUserMembershipDto */
+/** Zod schema for IdentityTenantsUserMembershipDto. DTO representing a user's membership in a tenant.
+Provides tenant information along with the user's role and status. */
 IdentityTenantsUserMembershipDtoSchema = z.object({
   acceptedAt: z.string().datetime().nullable().optional(),
   cancelledAt: z.string().datetime().nullable().optional(),
@@ -23837,19 +26947,19 @@ IdentityTenantsUserMembershipDtoSchema = z.object({
   tenantSlug: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityTenantsValidateTenantInput */
+/** Zod schema for IdentityTenantsValidateTenantInput. Validate tenant request */
 IdentityTenantsValidateTenantInputSchema = z.object({
   adminEmail: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
   slug: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersBulkActivateUsersInput */
+/** Zod schema for IdentityUsersBulkActivateUsersInput. Request model for bulk activating users via API */
 IdentityUsersBulkActivateUsersInputSchema = z.object({
   userIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersBulkActivateUsersOutput */
+/** Zod schema for IdentityUsersBulkActivateUsersOutput. Response of bulk activate users operation */
 IdentityUsersBulkActivateUsersOutputSchema = z.object({
   activatedUsers: z
     .array(z.lazy(() => IdentityUsersUserDtoSchema))
@@ -23858,7 +26968,7 @@ IdentityUsersBulkActivateUsersOutputSchema = z.object({
   failedUserIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersBulkCreateUsersInput */
+/** Zod schema for IdentityUsersBulkCreateUsersInput. Request model for bulk creating users via API */
 IdentityUsersBulkCreateUsersInputSchema = z.object({
   users: z
     .array(z.lazy(() => IdentityUsersCreateUserRequestItemSchema))
@@ -23866,18 +26976,18 @@ IdentityUsersBulkCreateUsersInputSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for IdentityUsersBulkCreateUsersOutput */
+/** Zod schema for IdentityUsersBulkCreateUsersOutput. Response of bulk create users operation */
 IdentityUsersBulkCreateUsersOutputSchema = z.object({
   createdUserIds: z.array(z.string().uuid()).nullable().optional(),
   failedEmails: z.array(z.string()).nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersBulkDeactivateUsersInput */
+/** Zod schema for IdentityUsersBulkDeactivateUsersInput. Request model for bulk deactivating users via API */
 IdentityUsersBulkDeactivateUsersInputSchema = z.object({
   userIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersBulkDeactivateUsersOutput */
+/** Zod schema for IdentityUsersBulkDeactivateUsersOutput. Response of bulk deactivate users operation */
 IdentityUsersBulkDeactivateUsersOutputSchema = z.object({
   deactivatedUsers: z
     .array(z.lazy(() => IdentityUsersUserDtoSchema))
@@ -23886,30 +26996,30 @@ IdentityUsersBulkDeactivateUsersOutputSchema = z.object({
   failedUserIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersBulkDeleteUsersInput */
+/** Zod schema for IdentityUsersBulkDeleteUsersInput. Request model for bulk deleting users via API */
 IdentityUsersBulkDeleteUsersInputSchema = z.object({
   userIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersBulkNotificationInput */
+/** Zod schema for IdentityUsersBulkNotificationInput. Request model for bulk notification operations */
 IdentityUsersBulkNotificationInputSchema = z.object({
   filterCriteria: z.lazy(() => IdentityUsersNotificationFilterCriteriaSchema).optional(),
   notificationIds: z.array(z.string().uuid()).nullable().optional(),
   operation: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersBulkPurgeUsersInput */
+/** Zod schema for IdentityUsersBulkPurgeUsersInput. Request model for bulk purge users operation */
 IdentityUsersBulkPurgeUsersInputSchema = z.object({
   strategy: z.lazy(() => IdentityUsersPurgeStrategySchema).optional(),
   userIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersBulkRestoreUsersInput */
+/** Zod schema for IdentityUsersBulkRestoreUsersInput. Request model for bulk restore users operation */
 IdentityUsersBulkRestoreUsersInputSchema = z.object({
   userIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersBulkRestoreUsersOutput */
+/** Zod schema for IdentityUsersBulkRestoreUsersOutput. Response of bulk restore users operation */
 IdentityUsersBulkRestoreUsersOutputSchema = z.object({
   failedUserIds: z.array(z.string().uuid()).nullable().optional(),
   restoredUsers: z
@@ -23918,12 +27028,12 @@ IdentityUsersBulkRestoreUsersOutputSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for IdentityUsersBulkSuspendUsersInput */
+/** Zod schema for IdentityUsersBulkSuspendUsersInput. Request model for bulk suspending users via API */
 IdentityUsersBulkSuspendUsersInputSchema = z.object({
   userIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersBulkSuspendUsersOutput */
+/** Zod schema for IdentityUsersBulkSuspendUsersOutput. Response of bulk suspend users operation */
 IdentityUsersBulkSuspendUsersOutputSchema = z.object({
   failedUserIds: z.array(z.string().uuid()).nullable().optional(),
   suspendedUsers: z
@@ -23932,12 +27042,12 @@ IdentityUsersBulkSuspendUsersOutputSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for IdentityUsersBulkUnsuspendUsersInput */
+/** Zod schema for IdentityUsersBulkUnsuspendUsersInput. Request model for bulk unsuspending users via API */
 IdentityUsersBulkUnsuspendUsersInputSchema = z.object({
   userIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersBulkUnsuspendUsersOutput */
+/** Zod schema for IdentityUsersBulkUnsuspendUsersOutput. Response of bulk unsuspend users operation */
 IdentityUsersBulkUnsuspendUsersOutputSchema = z.object({
   failedUserIds: z.array(z.string().uuid()).nullable().optional(),
   unsuspendedUsers: z
@@ -23946,7 +27056,7 @@ IdentityUsersBulkUnsuspendUsersOutputSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for IdentityUsersBulkUpdateUsersInput */
+/** Zod schema for IdentityUsersBulkUpdateUsersInput. Request model for bulk updating users via API */
 IdentityUsersBulkUpdateUsersInputSchema = z.object({
   updates: z
     .array(z.lazy(() => IdentityUsersUpdateUserRequestItemSchema))
@@ -23954,21 +27064,21 @@ IdentityUsersBulkUpdateUsersInputSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for IdentityUsersCreateUserInput */
+/** Zod schema for IdentityUsersCreateUserInput. Request model for creating a user via API */
 IdentityUsersCreateUserInputSchema = z.object({
   email: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
   phoneNumber: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersCreateUserRequestItem */
+/** Zod schema for IdentityUsersCreateUserRequestItem. API request item for creating a user in bulk operations */
 IdentityUsersCreateUserRequestItemSchema = z.object({
   email: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
   phoneNumber: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersNotificationActionDto */
+/** Zod schema for IdentityUsersNotificationActionDto. Data transfer object for notification action */
 IdentityUsersNotificationActionDtoSchema = z.object({
   id: z.string().nullable().optional(),
   isPrimary: z.boolean().optional(),
@@ -23977,7 +27087,7 @@ IdentityUsersNotificationActionDtoSchema = z.object({
   url: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersNotificationFilterCriteria */
+/** Zod schema for IdentityUsersNotificationFilterCriteria. Filter criteria for notifications */
 IdentityUsersNotificationFilterCriteriaSchema = z.object({
   categories: z.array(z.string()).nullable().optional(),
   dateFrom: z.string().datetime().nullable().optional(),
@@ -23988,38 +27098,38 @@ IdentityUsersNotificationFilterCriteriaSchema = z.object({
   types: z.array(z.string()).nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersNotificationPriority */
+/** Zod schema for IdentityUsersNotificationPriority. Notification priority levels */
 IdentityUsersNotificationPrioritySchema = z.enum(['Low', 'Normal', 'High', 'Urgent', 'Critical']);
 
-/** Zod schema for IdentityUsersProfileVisibility */
+/** Zod schema for IdentityUsersProfileVisibility. Profile visibility options */
 IdentityUsersProfileVisibilitySchema = z.enum(['Private', 'FriendsOnly', 'Public']);
 
-/** Zod schema for IdentityUsersPurgeStrategy */
+/** Zod schema for IdentityUsersPurgeStrategy. Strategy for purging users */
 IdentityUsersPurgeStrategySchema = z.enum(['Immediate', 'Scheduled', 'GracePeriod']);
 
-/** Zod schema for IdentityUsersReplaceUserAccessibilityPreferencesInput */
+/** Zod schema for IdentityUsersReplaceUserAccessibilityPreferencesInput. Request model for replacing user accessibility preferences */
 IdentityUsersReplaceUserAccessibilityPreferencesInputSchema = z.object({
   accessibilityPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersReplaceUserLocalizationPreferencesInput */
+/** Zod schema for IdentityUsersReplaceUserLocalizationPreferencesInput. Request model for replacing user localization preferences */
 IdentityUsersReplaceUserLocalizationPreferencesInputSchema = z.object({
   localizationPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersReplaceUserMetadataInput */
+/** Zod schema for IdentityUsersReplaceUserMetadataInput. Request model for completely replacing user metadata */
 IdentityUsersReplaceUserMetadataInputSchema = z.object({
   customFields: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   externalReferences: z.record(z.string(), z.string()).nullable().optional(),
   tags: z.array(z.string()).nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersReplaceUserNotificationPreferencesInput */
+/** Zod schema for IdentityUsersReplaceUserNotificationPreferencesInput. Request model for replacing user notification preferences */
 IdentityUsersReplaceUserNotificationPreferencesInputSchema = z.object({
   notificationPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersReplaceUserPreferencesInput */
+/** Zod schema for IdentityUsersReplaceUserPreferencesInput. Request model for completely replacing user preferences */
 IdentityUsersReplaceUserPreferencesInputSchema = z.object({
   accessibilityPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   generalPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
@@ -24027,12 +27137,12 @@ IdentityUsersReplaceUserPreferencesInputSchema = z.object({
   privacyPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersReplaceUserPrivacyPreferencesInput */
+/** Zod schema for IdentityUsersReplaceUserPrivacyPreferencesInput. Request model for replacing user privacy preferences */
 IdentityUsersReplaceUserPrivacyPreferencesInputSchema = z.object({
   privacyPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersReplaceUserProfileInput */
+/** Zod schema for IdentityUsersReplaceUserProfileInput. Request model for completely replacing user profile */
 IdentityUsersReplaceUserProfileInputSchema = z.object({
   bio: z.string().nullable().optional(),
   company: z.string().nullable().optional(),
@@ -24047,23 +27157,23 @@ IdentityUsersReplaceUserProfileInputSchema = z.object({
   website: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersUpdateUserAccessibilityPreferencesInput */
+/** Zod schema for IdentityUsersUpdateUserAccessibilityPreferencesInput. Request model for updating user accessibility preferences */
 IdentityUsersUpdateUserAccessibilityPreferencesInputSchema = z.object({
   accessibilityPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersUpdateUserInput */
+/** Zod schema for IdentityUsersUpdateUserInput. Request model for updating a user via API */
 IdentityUsersUpdateUserInputSchema = z.object({
   name: z.string().nullable().optional(),
   phoneNumber: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersUpdateUserLocalizationPreferencesInput */
+/** Zod schema for IdentityUsersUpdateUserLocalizationPreferencesInput. Request model for updating user localization preferences */
 IdentityUsersUpdateUserLocalizationPreferencesInputSchema = z.object({
   localizationPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersUpdateUserMetadataInput */
+/** Zod schema for IdentityUsersUpdateUserMetadataInput. Request model for updating user metadata */
 IdentityUsersUpdateUserMetadataInputSchema = z.object({
   customFields: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   externalReferences: z.record(z.string(), z.string()).nullable().optional(),
@@ -24071,12 +27181,12 @@ IdentityUsersUpdateUserMetadataInputSchema = z.object({
   tagsToRemove: z.array(z.string()).nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersUpdateUserNotificationPreferencesInput */
+/** Zod schema for IdentityUsersUpdateUserNotificationPreferencesInput. Request model for updating user notification preferences */
 IdentityUsersUpdateUserNotificationPreferencesInputSchema = z.object({
   notificationPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersUpdateUserPreferencesInput */
+/** Zod schema for IdentityUsersUpdateUserPreferencesInput. Request model for updating user preferences */
 IdentityUsersUpdateUserPreferencesInputSchema = z.object({
   accessibilityPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   generalPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
@@ -24084,12 +27194,12 @@ IdentityUsersUpdateUserPreferencesInputSchema = z.object({
   privacyPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersUpdateUserPrivacyPreferencesInput */
+/** Zod schema for IdentityUsersUpdateUserPrivacyPreferencesInput. Request model for updating user privacy preferences */
 IdentityUsersUpdateUserPrivacyPreferencesInputSchema = z.object({
   privacyPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersUpdateUserProfileInput */
+/** Zod schema for IdentityUsersUpdateUserProfileInput. Request model for updating user profile */
 IdentityUsersUpdateUserProfileInputSchema = z.object({
   bio: z.string().nullable().optional(),
   company: z.string().nullable().optional(),
@@ -24104,14 +27214,15 @@ IdentityUsersUpdateUserProfileInputSchema = z.object({
   website: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersUpdateUserRequestItem */
+/** Zod schema for IdentityUsersUpdateUserRequestItem. API request item for updating a user in bulk operations */
 IdentityUsersUpdateUserRequestItemSchema = z.object({
   name: z.string().nullable().optional(),
   phoneNumber: z.string().nullable().optional(),
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for IdentityUsersUser */
+/** Zod schema for IdentityUsersUser. Represents a unified user in the system combining identity and authentication.
+Inherits from EntityBase to provide GUID IDs, version control, timestamps, and soft delete functionality. */
 IdentityUsersUserSchema = z.object({
   id: z.string().uuid().optional(),
   canPerformActions: z.boolean().optional(),
@@ -24157,7 +27268,7 @@ IdentityUsersUserSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for IdentityUsersUserAccessibilityPreferencesDto */
+/** Zod schema for IdentityUsersUserAccessibilityPreferencesDto. Data transfer object for user accessibility preferences */
 IdentityUsersUserAccessibilityPreferencesDtoSchema = z.object({
   colorScheme: z.string().nullable().optional(),
   customSettings: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
@@ -24169,7 +27280,7 @@ IdentityUsersUserAccessibilityPreferencesDtoSchema = z.object({
   screenReader: z.boolean().optional(),
 });
 
-/** Zod schema for IdentityUsersUserDto */
+/** Zod schema for IdentityUsersUserDto. User data transfer object */
 IdentityUsersUserDtoSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
@@ -24181,7 +27292,7 @@ IdentityUsersUserDtoSchema = z.object({
   updatedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersUserLocalizationPreferencesDto */
+/** Zod schema for IdentityUsersUserLocalizationPreferencesDto. Data transfer object for user localization preferences */
 IdentityUsersUserLocalizationPreferencesDtoSchema = z.object({
   currency: z.string().nullable().optional(),
   customSettings: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
@@ -24192,7 +27303,7 @@ IdentityUsersUserLocalizationPreferencesDtoSchema = z.object({
   timezone: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersUserMetadata */
+/** Zod schema for IdentityUsersUserMetadata. User metadata entity for storing custom fields, tags, and external references */
 IdentityUsersUserMetadataSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
@@ -24219,7 +27330,7 @@ IdentityUsersUserMetadataSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for IdentityUsersUserMetadataDto */
+/** Zod schema for IdentityUsersUserMetadataDto. Data transfer object for user metadata */
 IdentityUsersUserMetadataDtoSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
@@ -24231,7 +27342,7 @@ IdentityUsersUserMetadataDtoSchema = z.object({
   version: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersUserNotification */
+/** Zod schema for IdentityUsersUserNotification. User notifications entity for storing notification history and settings */
 IdentityUsersUserNotificationSchema = z.object({
   id: z.string().uuid().optional(),
   actionUrl: z.string().max(500).nullable().optional(),
@@ -24268,7 +27379,7 @@ IdentityUsersUserNotificationSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for IdentityUsersUserNotificationDetailDto */
+/** Zod schema for IdentityUsersUserNotificationDetailDto. Data transfer object for detailed notification information */
 IdentityUsersUserNotificationDetailDtoSchema = z.object({
   actions: z
     .array(z.lazy(() => IdentityUsersNotificationActionDtoSchema))
@@ -24281,7 +27392,7 @@ IdentityUsersUserNotificationDetailDtoSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for IdentityUsersUserNotificationDto */
+/** Zod schema for IdentityUsersUserNotificationDto. Data transfer object for user notification */
 IdentityUsersUserNotificationDtoSchema = z.object({
   id: z.string().uuid().optional(),
   actionText: z.string().nullable().optional(),
@@ -24304,7 +27415,7 @@ IdentityUsersUserNotificationDtoSchema = z.object({
   version: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersUserNotificationPreferencesDto */
+/** Zod schema for IdentityUsersUserNotificationPreferencesDto. Data transfer object for user notification preferences */
 IdentityUsersUserNotificationPreferencesDtoSchema = z.object({
   categoryPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   emailEnabled: z.boolean().optional(),
@@ -24315,7 +27426,7 @@ IdentityUsersUserNotificationPreferencesDtoSchema = z.object({
   smsEnabled: z.boolean().optional(),
 });
 
-/** Zod schema for IdentityUsersUserPreferences */
+/** Zod schema for IdentityUsersUserPreferences. User preferences entity for storing general, notification, accessibility, and privacy preferences */
 IdentityUsersUserPreferencesSchema = z.object({
   id: z.string().uuid().optional(),
   accessibilityPreferences: z.string().max(10000).nullable().optional(),
@@ -24343,7 +27454,7 @@ IdentityUsersUserPreferencesSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for IdentityUsersUserPreferencesDto */
+/** Zod schema for IdentityUsersUserPreferencesDto. Data transfer object for user preferences */
 IdentityUsersUserPreferencesDtoSchema = z.object({
   id: z.string().uuid().optional(),
   accessibilityPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
@@ -24357,7 +27468,7 @@ IdentityUsersUserPreferencesDtoSchema = z.object({
   version: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersUserPrivacyPreferencesDto */
+/** Zod schema for IdentityUsersUserPrivacyPreferencesDto. Data transfer object for user privacy preferences */
 IdentityUsersUserPrivacyPreferencesDtoSchema = z.object({
   activityTracking: z.boolean().optional(),
   analyticsCookies: z.boolean().optional(),
@@ -24369,7 +27480,7 @@ IdentityUsersUserPrivacyPreferencesDtoSchema = z.object({
   thirdPartySharing: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersUserProfile */
+/** Zod schema for IdentityUsersUserProfile. User profile entity for storing profile information, avatar, banner, and social links */
 IdentityUsersUserProfileSchema = z.object({
   id: z.string().uuid().optional(),
   avatarUrl: z.string().max(500).nullable().optional(),
@@ -24404,7 +27515,7 @@ IdentityUsersUserProfileSchema = z.object({
   website: z.string().max(255).nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersUserProfileDto */
+/** Zod schema for IdentityUsersUserProfileDto. Data transfer object for user profile */
 IdentityUsersUserProfileDtoSchema = z.object({
   id: z.string().uuid().optional(),
   avatarUrl: z.string().nullable().optional(),
@@ -24426,7 +27537,8 @@ IdentityUsersUserProfileDtoSchema = z.object({
   website: z.string().nullable().optional(),
 });
 
-/** Zod schema for IdentityUsersUserStatus */
+/** Zod schema for IdentityUsersUserStatus. Value object representing user account status with state machine semantics.
+Encapsulates IsActive/IsSuspended logic and enforces valid state transitions. */
 IdentityUsersUserStatusSchema = z.object({
   isActive: z.boolean().optional(),
   isSuspended: z.boolean().optional(),
@@ -24849,7 +27961,9 @@ LearningAssessmentsAnonymousReviewRubricDtoSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for LearningAssessmentsAnonymousReviewSubmissionDto */
+/** Zod schema for LearningAssessmentsAnonymousReviewSubmissionDto. THE anonymity boundary for reviewers: the reviewee's submission stripped of every identity,
+grade, and instructor-feedback field. Never add UserId/EnrollmentId/Score/Passed/Feedback/
+GradedBy/GradedAt/CourseGroupId here; the reviewee's name must never appear either. */
 LearningAssessmentsAnonymousReviewSubmissionDtoSchema = z.object({
   assessment: z.lazy(() => LearningAssessmentsAnonymousReviewAssessmentDtoSchema).optional(),
   attemptNumber: z.number().int().optional(),
@@ -24939,7 +28053,8 @@ LearningAssessmentsAssessmentGroupDtoSchema = z.object({
   weightPercent: z.lazy(() => LearningGradingContractsPercentValueSchema).optional(),
 });
 
-/** Zod schema for LearningAssessmentsAssessmentPresentationMode */
+/** Zod schema for LearningAssessmentsAssessmentPresentationMode. Defines whether an assessment is delivered one step at a time or as a continuous experience.
+Values are persisted and must remain stable. */
 LearningAssessmentsAssessmentPresentationModeSchema = z.enum(['SingleStep', 'Continuous']);
 
 /** Zod schema for LearningAssessmentsAssessmentScoreBucketDto */
@@ -24981,7 +28096,7 @@ LearningAssessmentsAssessmentSubmissionDtoSchema = z.object({
 /** Zod schema for LearningAssessmentsAssessmentType */
 LearningAssessmentsAssessmentTypeSchema = z.enum(['Quiz', 'Assignment', 'Project', 'PeerReview', 'SelfAssessment']);
 
-/** Zod schema for LearningAssessmentsAssignAssessmentGroupInput */
+/** Zod schema for LearningAssessmentsAssignAssessmentGroupInput. Request to assign or clear an assessment group. */
 LearningAssessmentsAssignAssessmentGroupInputSchema = z.object({
   assessmentGroupId: z.string().uuid().nullable().optional(),
   clearAssessmentGroup: z.boolean().optional(),
@@ -25011,7 +28126,7 @@ LearningAssessmentsCourseAssessmentAnalyticsDtoSchema = z.object({
   ungradedCount: z.number().int().optional(),
 });
 
-/** Zod schema for LearningAssessmentsCreateAssessmentGroupInput */
+/** Zod schema for LearningAssessmentsCreateAssessmentGroupInput. Request to create a weighted assessment group. */
 LearningAssessmentsCreateAssessmentGroupInputSchema = z.object({
   courseId: z.string().uuid().optional(),
   description: z.string().nullable().optional(),
@@ -25020,7 +28135,7 @@ LearningAssessmentsCreateAssessmentGroupInputSchema = z.object({
   weightPercent: z.lazy(() => LearningGradingContractsPercentValueSchema).optional(),
 });
 
-/** Zod schema for LearningAssessmentsCreateAssessmentInput */
+/** Zod schema for LearningAssessmentsCreateAssessmentInput. Request to create a new assessment */
 LearningAssessmentsCreateAssessmentInputSchema = z.object({
   allowLateSubmissions: z.boolean().optional(),
   assessmentGroupId: z.string().uuid().nullable().optional(),
@@ -25047,13 +28162,13 @@ LearningAssessmentsCreateAssessmentInputSchema = z.object({
   type: z.lazy(() => LearningAssessmentsAssessmentTypeSchema).optional(),
 });
 
-/** Zod schema for LearningAssessmentsCreateGroupInput */
+/** Zod schema for LearningAssessmentsCreateGroupInput. Request to create a group inside a group set. */
 LearningAssessmentsCreateGroupInputSchema = z.object({
   capacity: z.number().int().optional(),
   name: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsCreateGroupSetInput */
+/** Zod schema for LearningAssessmentsCreateGroupSetInput. Request to create a group set. */
 LearningAssessmentsCreateGroupSetInputSchema = z.object({
   name: z.string().nullable().optional(),
 });
@@ -25274,7 +28389,7 @@ LearningAssessmentsGradingPersistencePersistedGradeRoundStatusSchema = z.enum([
 /** Zod schema for LearningAssessmentsGradingPersistencePersistedGradingExecutionStatus */
 LearningAssessmentsGradingPersistencePersistedGradingExecutionStatusSchema = z.enum(['Pending', 'Running', 'AwaitingReview', 'Completed', 'Failed']);
 
-/** Zod schema for LearningAssessmentsGradingQueueAssessmentDto */
+/** Zod schema for LearningAssessmentsGradingQueueAssessmentDto. Assessment summary fields the SpeedGrader header and grading panel need. */
 LearningAssessmentsGradingQueueAssessmentDtoSchema = z.object({
   id: z.string().uuid().optional(),
   groupSetId: z.string().uuid().nullable().optional(),
@@ -25286,7 +28401,8 @@ LearningAssessmentsGradingQueueAssessmentDtoSchema = z.object({
   type: z.lazy(() => LearningAssessmentsAssessmentTypeSchema).optional(),
 });
 
-/** Zod schema for LearningAssessmentsGradingQueueDto */
+/** Zod schema for LearningAssessmentsGradingQueueDto. SpeedGrader navigation bundle: assessment summary plus one queue item per student/group.
+No peer-review data here — SpeedGrader fetches reviews per submission. */
 LearningAssessmentsGradingQueueDtoSchema = z.object({
   assessment: z.lazy(() => LearningAssessmentsGradingQueueAssessmentDtoSchema).optional(),
   items: z
@@ -25297,7 +28413,12 @@ LearningAssessmentsGradingQueueDtoSchema = z.object({
   total: z.number().int().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGradingQueueItemDto */
+/** Zod schema for LearningAssessmentsGradingQueueItemDto. One navigable queue entry = one student or group. SubmissionId is the row the grader opens:
+the target's LATEST attempt's row (the single row for individuals, the canonical Min(Id)
+row for groups; CanonicalSubmissionId mirrors it so clients can address group items by
+their canonical id). AssignmentScore/AssignmentPassed are the assignment-level grade from
+the target's LATEST GRADED attempt — they persist across resubmissions until a newer
+attempt is graded (one grade per assignment; regrades land on a fresh submission). */
 LearningAssessmentsGradingQueueItemDtoSchema = z.object({
   assignmentPassed: z.boolean().nullable().optional(),
   assignmentScore: z
@@ -25461,7 +28582,7 @@ LearningAssessmentsGradingRuntimeReleaseGradeResultCommandSchema = z.object({
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGroupDetailDto */
+/** Zod schema for LearningAssessmentsGroupDetailDto. Group detail with member display names. */
 LearningAssessmentsGroupDetailDtoSchema = z.object({
   id: z.string().uuid().optional(),
   capacity: z.number().int().optional(),
@@ -25481,7 +28602,7 @@ LearningAssessmentsGroupDtoSchema = z.object({
   name: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGroupMemberDto */
+/** Zod schema for LearningAssessmentsGroupMemberDto. Group member with display name resolved from Users; falls back to the raw user id. */
 LearningAssessmentsGroupMemberDtoSchema = z.object({
   displayName: z.string().nullable().optional(),
   userId: z.string().uuid().optional(),
@@ -25502,7 +28623,7 @@ LearningAssessmentsGroupSetDtoSchema = z.object({
   name: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGroupSetSummaryDto */
+/** Zod schema for LearningAssessmentsGroupSetSummaryDto. Group set listing entry with per-group summary. */
 LearningAssessmentsGroupSetSummaryDtoSchema = z.object({
   id: z.string().uuid().optional(),
   groups: z
@@ -25512,7 +28633,7 @@ LearningAssessmentsGroupSetSummaryDtoSchema = z.object({
   name: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsGroupSummaryDto */
+/** Zod schema for LearningAssessmentsGroupSummaryDto. Group summary (no member identities). */
 LearningAssessmentsGroupSummaryDtoSchema = z.object({
   id: z.string().uuid().optional(),
   capacity: z.number().int().optional(),
@@ -25525,7 +28646,7 @@ LearningAssessmentsIdempotentRuntimeInputSchema = z.object({
   idempotencyKey: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsInstructorPeerReviewDto */
+/** Zod schema for LearningAssessmentsInstructorPeerReviewDto. Instructor-only view of the same reviews, with reviewer identity (SpeedGrader peer panel). */
 LearningAssessmentsInstructorPeerReviewDtoSchema = z.object({
   feedback: z.string().nullable().optional(),
   reviewerName: z.string().nullable().optional(),
@@ -25585,14 +28706,15 @@ LearningAssessmentsLearnerInteractiveVideoAssessmentCueDtoSchema = z.object({
   cuePositionSeconds: z.number().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsLinkInteractiveVideoCueInput */
+/** Zod schema for LearningAssessmentsLinkInteractiveVideoCueInput. Links a graded assessment to a stable cue in a delivery-owned interactive video. */
 LearningAssessmentsLinkInteractiveVideoCueInputSchema = z.object({
   contentId: z.string().uuid().optional(),
   cueId: z.string().nullable().optional(),
   cuePositionSeconds: z.number().nullable().optional(),
 });
 
-/** Zod schema for LearningAssessmentsPeerReviewClaimDto */
+/** Zod schema for LearningAssessmentsPeerReviewClaimDto. Claim response. Deliberately carries no reviewee identity (no userId, no group id/name)
+and no submission id — only the review to work on and its masked descriptor. */
 LearningAssessmentsPeerReviewClaimDtoSchema = z.object({
   maskedSubmission: z.string().nullable().optional(),
   reviewId: z.string().uuid().optional(),
@@ -25601,7 +28723,8 @@ LearningAssessmentsPeerReviewClaimDtoSchema = z.object({
 /** Zod schema for LearningAssessmentsPeerReviewStatus */
 LearningAssessmentsPeerReviewStatusSchema = z.enum(['Assigned', 'Submitted']);
 
-/** Zod schema for LearningAssessmentsPeerReviewSubmitInput */
+/** Zod schema for LearningAssessmentsPeerReviewSubmitInput. Body of a peer review submit: plain score XOR rubric scores (rubric rules enforced server-side),
+plus the mandatory feedback comment. */
 LearningAssessmentsPeerReviewSubmitInputSchema = z.object({
   feedback: z.string().nullable().optional(),
   rubricScores: z.string().nullable().optional(),
@@ -25611,7 +28734,8 @@ LearningAssessmentsPeerReviewSubmitInputSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for LearningAssessmentsReceivedPeerReviewDto */
+/** Zod schema for LearningAssessmentsReceivedPeerReviewDto. THE anonymity boundary for reviewees: what a student sees of reviews they received.
+Reviewer identity is absent from the DTO, not merely null. */
 LearningAssessmentsReceivedPeerReviewDtoSchema = z.object({
   feedback: z.string().nullable().optional(),
   reviewId: z.string().uuid().optional(),
@@ -25629,7 +28753,7 @@ LearningAssessmentsResolveInstructorReviewInputSchema = z.object({
   resolution: z.lazy(() => LearningAssessmentsGradingRuntimeInstructorReviewResolutionV1Schema).optional(),
 });
 
-/** Zod schema for LearningAssessmentsRubricCriterionDto */
+/** Zod schema for LearningAssessmentsRubricCriterionDto. Rubric criterion read shape. */
 LearningAssessmentsRubricCriterionDtoSchema = z.object({
   id: z.string().uuid().optional(),
   description: z.string().nullable().optional(),
@@ -25637,7 +28761,7 @@ LearningAssessmentsRubricCriterionDtoSchema = z.object({
   points: z.lazy(() => LearningGradingContractsScoreValueSchema).optional(),
 });
 
-/** Zod schema for LearningAssessmentsRubricDto */
+/** Zod schema for LearningAssessmentsRubricDto. Rubric read shape with criteria ordered by GameGuild.Learning.Assessments.RubricCriterionDto.Order. */
 LearningAssessmentsRubricDtoSchema = z.object({
   id: z.string().uuid().optional(),
   criteria: z
@@ -25654,14 +28778,14 @@ LearningAssessmentsSaveCollectiveRuntimeDraftInputSchema = z.object({
   response: z.lazy(() => LearningAssessmentsGradingContractsAssessmentResponseEnvelopeV1Schema).optional(),
 });
 
-/** Zod schema for LearningAssessmentsSaveRubricCriterionInput */
+/** Zod schema for LearningAssessmentsSaveRubricCriterionInput. One criterion row of a rubric save request. */
 LearningAssessmentsSaveRubricCriterionInputSchema = z.object({
   description: z.string().nullable().optional(),
   order: z.number().int().optional(),
   points: z.lazy(() => LearningGradingContractsScoreValueSchema).optional(),
 });
 
-/** Zod schema for LearningAssessmentsSaveRubricInput */
+/** Zod schema for LearningAssessmentsSaveRubricInput. Request to create or fully replace an assessment rubric. */
 LearningAssessmentsSaveRubricInputSchema = z.object({
   criteria: z
     .array(z.lazy(() => LearningAssessmentsSaveRubricCriterionInputSchema))
@@ -25706,7 +28830,7 @@ LearningAssessmentsSubmissionModalitySchema = z.string();
 /** Zod schema for LearningAssessmentsSubmissionStatus */
 LearningAssessmentsSubmissionStatusSchema = z.enum(['InProgress', 'Submitted', 'Graded', 'Returned', 'Late']);
 
-/** Zod schema for LearningAssessmentsSubmitAssessmentInput */
+/** Zod schema for LearningAssessmentsSubmitAssessmentInput. Persists one or more answer payloads when a learner submits an assessment. */
 LearningAssessmentsSubmitAssessmentInputSchema = z.object({
   codePayload: z.string().nullable().optional(),
   filePayload: z.string().nullable().optional(),
@@ -25723,7 +28847,7 @@ LearningAssessmentsSubmitAssessmentRuntimeInputSchema = z.object({
   response: z.lazy(() => LearningAssessmentsGradingContractsAssessmentResponseEnvelopeV1Schema).optional(),
 });
 
-/** Zod schema for LearningAssessmentsTaskItemDto */
+/** Zod schema for LearningAssessmentsTaskItemDto. One task item. Variant fields are null outside their type (GradingQueueItemDto precedent). */
 LearningAssessmentsTaskItemDtoSchema = z.object({
   assessmentId: z.string().uuid().optional(),
   assessmentTitle: z.string().nullable().optional(),
@@ -25744,7 +28868,7 @@ LearningAssessmentsTasksDtoSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for LearningAssessmentsUpdateAssessmentGroupInput */
+/** Zod schema for LearningAssessmentsUpdateAssessmentGroupInput. Request to update a weighted assessment group. */
 LearningAssessmentsUpdateAssessmentGroupInputSchema = z.object({
   description: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
@@ -25755,7 +28879,7 @@ LearningAssessmentsUpdateAssessmentGroupInputSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for LearningAssessmentsUpdateAssessmentInput */
+/** Zod schema for LearningAssessmentsUpdateAssessmentInput. Request to update an assessment */
 LearningAssessmentsUpdateAssessmentInputSchema = z.object({
   allowLateSubmissions: z.boolean().nullable().optional(),
   assessmentGroupId: z.string().uuid().nullable().optional(),
@@ -25811,7 +28935,7 @@ LearningAssessmentsUpdateAssessmentInputSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningCertificatesCertificateDto */
+/** Zod schema for LearningCertificatesCertificateDto. DTO for certificate display */
 LearningCertificatesCertificateDtoSchema = z.object({
   id: z.string().uuid().optional(),
   certificateNumber: z.string().nullable().optional(),
@@ -25829,7 +28953,7 @@ LearningCertificatesCertificateDtoSchema = z.object({
 /** Zod schema for LearningCertificatesCertificateStatus */
 LearningCertificatesCertificateStatusSchema = z.enum(['Active', 'Expired', 'Revoked']);
 
-/** Zod schema for LearningCertificatesCertificateTemplateDetailDto */
+/** Zod schema for LearningCertificatesCertificateTemplateDetailDto. DTO for certificate template editing and preview */
 LearningCertificatesCertificateTemplateDetailDtoSchema = z.object({
   id: z.string().uuid().optional(),
   courseId: z.string().uuid().optional(),
@@ -25844,7 +28968,7 @@ LearningCertificatesCertificateTemplateDetailDtoSchema = z.object({
   updatedAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for LearningCertificatesCertificateTemplateDto */
+/** Zod schema for LearningCertificatesCertificateTemplateDto. DTO for certificate template list display */
 LearningCertificatesCertificateTemplateDtoSchema = z.object({
   id: z.string().uuid().optional(),
   courseId: z.string().uuid().optional(),
@@ -25857,7 +28981,7 @@ LearningCertificatesCertificateTemplateDtoSchema = z.object({
   updatedAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for LearningCertificatesCertificateVerificationResult */
+/** Zod schema for LearningCertificatesCertificateVerificationResult. Result of certificate verification */
 LearningCertificatesCertificateVerificationResultSchema = z.object({
   certificateNumber: z.string().nullable().optional(),
   courseName: z.string().nullable().optional(),
@@ -25869,14 +28993,14 @@ LearningCertificatesCertificateVerificationResultSchema = z.object({
   status: z.lazy(() => LearningCertificatesCertificateStatusSchema).optional(),
 });
 
-/** Zod schema for LearningCertificatesCreateCertificateTemplateInput */
+/** Zod schema for LearningCertificatesCreateCertificateTemplateInput. Request to create a certificate template */
 LearningCertificatesCreateCertificateTemplateInputSchema = z.object({
   courseId: z.string().uuid().optional(),
   name: z.string().nullable().optional(),
   templateHtml: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningCertificatesIssueCertificateInput */
+/** Zod schema for LearningCertificatesIssueCertificateInput. Request to issue a certificate */
 LearningCertificatesIssueCertificateInputSchema = z.object({
   courseId: z.string().uuid().optional(),
   enrollmentId: z.string().uuid().optional(),
@@ -25884,12 +29008,12 @@ LearningCertificatesIssueCertificateInputSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningCertificatesRevokeCertificateInput */
+/** Zod schema for LearningCertificatesRevokeCertificateInput. Request to revoke a certificate */
 LearningCertificatesRevokeCertificateInputSchema = z.object({
   reason: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningCertificatesUpdateCertificateTemplateInput */
+/** Zod schema for LearningCertificatesUpdateCertificateTemplateInput. Request to update a certificate template */
 LearningCertificatesUpdateCertificateTemplateInputSchema = z.object({
   description: z.string().nullable().optional(),
   isActive: z.boolean().optional(),
@@ -26079,7 +29203,7 @@ LearningCohortsCourseCohortCalendarDtoSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for LearningCohortsCreateCohortInput */
+/** Zod schema for LearningCohortsCreateCohortInput. Request to create a new cohort */
 LearningCohortsCreateCohortInputSchema = z.object({
   courseId: z.string().uuid().optional(),
   description: z.string().nullable().optional(),
@@ -26123,7 +29247,7 @@ LearningCohortsShiftCohortScheduleInputSchema = z.object({
   scope: z.lazy(() => LearningCohortsScheduleShiftScopeSchema).optional(),
 });
 
-/** Zod schema for LearningCohortsUpdateCohortInput */
+/** Zod schema for LearningCohortsUpdateCohortInput. Request to update a cohort */
 LearningCohortsUpdateCohortInputSchema = z.object({
   description: z.string().nullable().optional(),
   endDate: z.string().datetime().nullable().optional(),
@@ -26154,7 +29278,7 @@ LearningCohortsUpdateCohortScheduleItemInputSchema = z.object({
   visibilityOverride: z.lazy(() => LearningCohortsCohortVisibilityOverrideSchema).optional(),
 });
 
-/** Zod schema for LearningCoursesActivityGradeDto */
+/** Zod schema for LearningCoursesActivityGradeDto. DTO for ActivityGrade responses - avoids circular references for Swagger/OpenAPI */
 LearningCoursesActivityGradeDtoSchema = z.object({
   id: z.string().uuid().optional(),
   contentInteraction: z.lazy(() => LearningCoursesContentInteractionSummaryDtoSchema).optional(),
@@ -26313,7 +29437,7 @@ LearningCoursesAuthoringDraftDtoSchema = z.object({
   revision: z.number().int().optional(),
 });
 
-/** Zod schema for LearningCoursesBundleFileMeta */
+/** Zod schema for LearningCoursesBundleFileMeta. Metadata for one bundled file in a coding assignment workspace. */
 LearningCoursesBundleFileMetaSchema = z.object({
   content: z.string().nullable(),
   encoding: z.string().nullable().optional(),
@@ -26332,7 +29456,8 @@ LearningCoursesCloneProgramDtoSchema = z.object({
   newTitle: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesCodingAssignmentContent */
+/** Zod schema for LearningCoursesCodingAssignmentContent. v1 coding-assignment content stored in GameGuild.Learning.Courses.ProgramContent.JsonBody.
+Discriminator root: `Type == "coding-assignment"`, `Version == 1`. */
 LearningCoursesCodingAssignmentContentSchema = z.object({
   data: z.lazy(() => LearningCoursesWorkspaceDataSchema),
   environment: z.lazy(() => LearningCoursesCodingEnvironmentSchema),
@@ -26342,7 +29467,7 @@ LearningCoursesCodingAssignmentContentSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for LearningCoursesCodingEnvironment */
+/** Zod schema for LearningCoursesCodingEnvironment. Workspace runtime environment for a coding assignment. */
 LearningCoursesCodingEnvironmentSchema = z.object({
   allowStudentCreateFiles: z.boolean().optional(),
   language: z.string().nullable(),
@@ -26395,7 +29520,7 @@ LearningCoursesCompletionTrendDtoSchema = z.object({
   totalCount: z.number().int().optional(),
 });
 
-/** Zod schema for LearningCoursesContentInteractionDto */
+/** Zod schema for LearningCoursesContentInteractionDto. DTO for ContentInteraction responses - avoids circular references for Swagger/OpenAPI */
 LearningCoursesContentInteractionDtoSchema = z.object({
   id: z.string().uuid().optional(),
   canModify: z.boolean().optional(),
@@ -26436,7 +29561,8 @@ LearningCoursesContentInteractionEventDtoSchema = z.object({
   type: z.lazy(() => LearningCoursesContentInteractionEventTypeSchema).optional(),
 });
 
-/** Zod schema for LearningCoursesContentInteractionEventType */
+/** Zod schema for LearningCoursesContentInteractionEventType. Fine-grained events emitted while a learner consumes lesson content.
+Values are persisted and must remain stable. */
 LearningCoursesContentInteractionEventTypeSchema = z.enum([
   'Opened',
   'Heartbeat',
@@ -26449,7 +29575,7 @@ LearningCoursesContentInteractionEventTypeSchema = z.enum([
   'QuizAnswered',
 ]);
 
-/** Zod schema for LearningCoursesContentInteractionSummaryDto */
+/** Zod schema for LearningCoursesContentInteractionSummaryDto. Simplified content interaction information to avoid circular references */
 LearningCoursesContentInteractionSummaryDtoSchema = z.object({
   id: z.string().uuid().optional(),
   content: z.lazy(() => LearningCoursesContentSummaryDtoSchema).optional(),
@@ -26471,7 +29597,7 @@ LearningCoursesContentProgressDtoSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesContentStatsDto */
+/** Zod schema for LearningCoursesContentStatsDto. DTO for content statistics */
 LearningCoursesContentStatsDtoSchema = z.object({
   contentByType: z
     .object({
@@ -26506,7 +29632,7 @@ LearningCoursesContentStatsDtoSchema = z.object({
   totalContent: z.number().int().optional(),
 });
 
-/** Zod schema for LearningCoursesContentSummaryDto */
+/** Zod schema for LearningCoursesContentSummaryDto. Simplified content information to avoid circular references */
 LearningCoursesContentSummaryDtoSchema = z.object({
   id: z.string().uuid().optional(),
   contentType: z.string().nullable().optional(),
@@ -26520,7 +29646,7 @@ LearningCoursesCourseSupportTicketMessageInputSchema = z.object({
   message: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesCreateActivityGradeDto */
+/** Zod schema for LearningCoursesCreateActivityGradeDto. DTO for creating new activity grades */
 LearningCoursesCreateActivityGradeDtoSchema = z.object({
   contentInteractionId: z.string().uuid().optional(),
   feedback: z.string().nullable().optional(),
@@ -26560,7 +29686,7 @@ LearningCoursesCreateProductFromProgramDtoSchema = z.object({
   name: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesCreateProgramContentDto */
+/** Zod schema for LearningCoursesCreateProgramContentDto. DTO for creating new program content */
 LearningCoursesCreateProgramContentDtoSchema = z.object({
   activitySettings: z.lazy(() => LearningCoursesActivitySettingsSchema).optional(),
   body: z.string().nullable().optional(),
@@ -26601,7 +29727,7 @@ LearningCoursesEngagementMetricsDtoSchema = z.object({
   weeklyActiveUsers: z.number().int().optional(),
 });
 
-/** Zod schema for LearningCoursesEnrollmentStatus */
+/** Zod schema for LearningCoursesEnrollmentStatus. Represents the enrollment status for a program enrollment */
 LearningCoursesEnrollmentStatusSchema = z.enum(['Open', 'Active', 'Paused', 'Cancelled', 'Expired', 'Completed', 'Closed', 'InviteOnly', 'Waitlist']);
 
 /** Zod schema for LearningCoursesEnrollProgramUserInput */
@@ -26609,10 +29735,12 @@ LearningCoursesEnrollProgramUserInputSchema = z.object({
   userReference: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesEstimatedMinutesSource */
+/** Zod schema for LearningCoursesEstimatedMinutesSource. Discriminates whether GameGuild.Learning.Courses.ProgramContent.EstimatedMinutes was computed automatically
+(200 words-per-minute word count, recomputed on every save) or pinned manually by an author
+(preserved verbatim across saves). */
 LearningCoursesEstimatedMinutesSourceSchema = z.enum(['Auto', 'Manual']);
 
-/** Zod schema for LearningCoursesGraderSummaryDto */
+/** Zod schema for LearningCoursesGraderSummaryDto. Simplified grader information to avoid circular references */
 LearningCoursesGraderSummaryDtoSchema = z.object({
   id: z.string().uuid().optional(),
   role: z.string().nullable().optional(),
@@ -26620,7 +29748,7 @@ LearningCoursesGraderSummaryDtoSchema = z.object({
   userEmail: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesGradeStatisticsDto */
+/** Zod schema for LearningCoursesGradeStatisticsDto. DTO for grade statistics responses */
 LearningCoursesGradeStatisticsDtoSchema = z.object({
   averageGrade: z.lazy(() => LearningGradingContractsPercentValueSchema).optional(),
   averageGradeFormatted: z.string().nullable().optional(),
@@ -26632,12 +29760,12 @@ LearningCoursesGradeStatisticsDtoSchema = z.object({
   totalGrades: z.number().int().optional(),
 });
 
-/** Zod schema for LearningCoursesGradingConfig */
+/** Zod schema for LearningCoursesGradingConfig. Grading configuration for a coding assignment. */
 LearningCoursesGradingConfigSchema = z.object({
   maxScore: z.number().int().optional(),
 });
 
-/** Zod schema for LearningCoursesLessonContentFormat */
+/** Zod schema for LearningCoursesLessonContentFormat. Defines how a lesson body is authored and rendered. Values are persisted and must remain stable. */
 LearningCoursesLessonContentFormatSchema = z.enum(['Markdown', 'Lexical', 'RevealJs', 'Video', 'Html', 'ExternalLink']);
 
 /** Zod schema for LearningCoursesMonetizationDto */
@@ -26648,7 +29776,7 @@ LearningCoursesMonetizationDtoSchema = z.object({
   subscriptionDurationDays: z.number().int().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesMoveContentDto */
+/** Zod schema for LearningCoursesMoveContentDto. DTO for moving content to a new parent/position */
 LearningCoursesMoveContentDtoSchema = z.object({
   contentId: z.string().uuid(),
   newParentId: z.string().uuid().nullable().optional(),
@@ -26700,7 +29828,7 @@ LearningCoursesPrerequisiteStatusDtoSchema = z.object({
   type: z.lazy(() => LearningCoursesPrerequisiteTypeSchema).optional(),
 });
 
-/** Zod schema for LearningCoursesPrerequisiteType */
+/** Zod schema for LearningCoursesPrerequisiteType. Type of prerequisite requirement */
 LearningCoursesPrerequisiteTypeSchema = z.enum(['Required', 'Recommended', 'Corequisite']);
 
 /** Zod schema for LearningCoursesPricingDto */
@@ -26726,7 +29854,7 @@ LearningCoursesProgramAnalyticsDtoSchema = z.object({
   totalViews: z.number().int().optional(),
 });
 
-/** Zod schema for LearningCoursesProgramContentDto */
+/** Zod schema for LearningCoursesProgramContentDto. DTO for program content responses */
 LearningCoursesProgramContentDtoSchema = z.object({
   id: z.string().uuid().optional(),
   activitySettings: z.lazy(() => LearningCoursesActivitySettingsSchema).optional(),
@@ -26756,13 +29884,14 @@ LearningCoursesProgramContentDtoSchema = z.object({
   visibility: z.lazy(() => LearningCoursesVisibilitySchema).optional(),
 });
 
-/** Zod schema for LearningCoursesProgramContentType. Legacy values Page and Challenge are normalized on read and are not valid for new content. */
+/** Zod schema for LearningCoursesProgramContentType. Content types defining the nature and interaction model of program materials Legacy values Page and Challenge are normalized on read and are not valid for new content. */
 LearningCoursesProgramContentTypeSchema = z.enum(['Lesson', 'Assignment', 'Questionnaire', 'Discussion', 'Code', 'Reflection', 'Survey', 'Project', 'Module']);
 
-/** Zod schema for LearningCoursesProgramDifficulty */
+/** Zod schema for LearningCoursesProgramDifficulty. Learning difficulty levels for appropriate program selection and progression */
 LearningCoursesProgramDifficultySchema = z.enum(['Beginner', 'Intermediate', 'Advanced', 'Expert']);
 
-/** Zod schema for LearningCoursesProgramDto */
+/** Zod schema for LearningCoursesProgramDto. Response DTO for Program entity — prevents domain entity exposure via API.
+Maps scalar and computed properties only; excludes navigation collections and audit internals. */
 LearningCoursesProgramDtoSchema = z.object({
   id: z.string().uuid().optional(),
   averageRating: z.number().optional(),
@@ -26791,14 +29920,14 @@ LearningCoursesProgramDtoSchema = z.object({
   visibility: z.lazy(() => ContentVisibilitySchema).optional(),
 });
 
-/** Zod schema for LearningCoursesProgramUserSummaryDto */
+/** Zod schema for LearningCoursesProgramUserSummaryDto. Simplified program user information to avoid circular references */
 LearningCoursesProgramUserSummaryDtoSchema = z.object({
   id: z.string().uuid().optional(),
   userDisplayName: z.string().nullable().optional(),
   userEmail: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesProgressStatus */
+/** Zod schema for LearningCoursesProgressStatus. Represents the progress status of a content item */
 LearningCoursesProgressStatusSchema = z.enum(['NotStarted', 'InProgress', 'Completed', 'Submitted']);
 
 /** Zod schema for LearningCoursesPublishAuthoringDraftInput */
@@ -26826,7 +29955,7 @@ LearningCoursesRecordContentInteractionEventInputSchema = z.object({
   type: z.lazy(() => LearningCoursesContentInteractionEventTypeSchema).optional(),
 });
 
-/** Zod schema for LearningCoursesReflectionResponseResultDto */
+/** Zod schema for LearningCoursesReflectionResponseResultDto. Reflection response projection. Learner views deliberately omit respondent identity. */
 LearningCoursesReflectionResponseResultDtoSchema = z.object({
   body: z.string().nullable().optional(),
   respondentUserId: z.string().uuid().nullable().optional(),
@@ -26887,7 +30016,7 @@ LearningCoursesScheduleProgramDtoSchema = z.object({
   publishAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for LearningCoursesSearchContentDto */
+/** Zod schema for LearningCoursesSearchContentDto. DTO for content search operations */
 LearningCoursesSearchContentDtoSchema = z.object({
   isRequired: z.boolean().nullable().optional(),
   parentId: z.string().uuid().nullable().optional(),
@@ -26909,13 +30038,13 @@ LearningCoursesSendCourseStudentMessageOutputSchema = z.object({
   sent: z.number().int().optional(),
 });
 
-/** Zod schema for LearningCoursesStartContentInput */
+/** Zod schema for LearningCoursesStartContentInput. Request DTOs for ContentInteraction endpoints */
 LearningCoursesStartContentInputSchema = z.object({
   contentId: z.string().uuid().optional(),
   programUserId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningCoursesStudentSummaryDto */
+/** Zod schema for LearningCoursesStudentSummaryDto. Simplified student information to avoid circular references */
 LearningCoursesStudentSummaryDtoSchema = z.object({
   id: z.string().uuid().optional(),
   userDisplayName: z.string().nullable().optional(),
@@ -26934,7 +30063,7 @@ LearningCoursesSubmitUserContentDtoSchema = z.object({
   submissionData: z.string().min(1),
 });
 
-/** Zod schema for LearningCoursesSurveyResponseResultDto */
+/** Zod schema for LearningCoursesSurveyResponseResultDto. Survey result projection. It deliberately excludes learner and enrollment identifiers. */
 LearningCoursesSurveyResponseResultDtoSchema = z.object({
   answers: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   respondentUserId: z.string().uuid().nullable().optional(),
@@ -26942,13 +30071,15 @@ LearningCoursesSurveyResponseResultDtoSchema = z.object({
   submittedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesTest */
+/** Zod schema for LearningCoursesTest. Polymorphic base record for coding-assignment tests. Discriminator is the lowercase `kind` field
+(values `"standard"`, `"functional"`). */
 LearningCoursesTestSchema = z.object({
   name: z.string().nullable().optional(),
   weight: z.number().optional(),
 });
 
-/** Zod schema for LearningCoursesTestSuite */
+/** Zod schema for LearningCoursesTestSuite. Test buckets for a coding assignment. Field names are PascalCase on the wire (deliberate divergence from the draft).
+Visibility values match `TestVisibilityType` from the draft: `"Public"`, `"Private"`. */
 LearningCoursesTestSuiteSchema = z.object({
   private: z
     .array(z.lazy(() => LearningCoursesTestSchema))
@@ -26960,7 +30091,7 @@ LearningCoursesTestSuiteSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for LearningCoursesUpdateActivityGradeDto */
+/** Zod schema for LearningCoursesUpdateActivityGradeDto. DTO for updating existing activity grades */
 LearningCoursesUpdateActivityGradeDtoSchema = z.object({
   feedback: z.string().nullable().optional(),
   gradingDetails: z.string().nullable().optional(),
@@ -26994,7 +30125,7 @@ LearningCoursesUpdatePricingDtoSchema = z.object({
   subscriptionDurationDays: z.number().int().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesUpdateProgramContentDto */
+/** Zod schema for LearningCoursesUpdateProgramContentDto. DTO for updating existing program content */
 LearningCoursesUpdateProgramContentDtoSchema = z.object({
   id: z.string().uuid(),
   activitySettings: z.lazy(() => LearningCoursesActivitySettingsSchema).optional(),
@@ -27076,10 +30207,10 @@ LearningCoursesUserProgressDtoSchema = z.object({
   userName: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningCoursesVisibility */
+/** Zod schema for LearningCoursesVisibility. Content visibility levels */
 LearningCoursesVisibilitySchema = z.enum(['Public', 'Internal', 'Private', 'Restricted']);
 
-/** Zod schema for LearningCoursesWorkspaceData */
+/** Zod schema for LearningCoursesWorkspaceData. Workspace file map for a coding assignment: path → metadata. */
 LearningCoursesWorkspaceDataSchema = z.object({
   files: z
     .record(
@@ -27122,7 +30253,7 @@ LearningEnrollmentsUpdateEnrollmentProgressInputSchema = z.object({
 /** Zod schema for LearningExperienceDiscoveryCollectionType */
 LearningExperienceDiscoveryCollectionTypeSchema = z.enum(['Curated', 'Category', 'Skill', 'Career', 'Trending', 'NewReleases']);
 
-/** Zod schema for LearningExperienceDiscoveryCourseCollectionDto */
+/** Zod schema for LearningExperienceDiscoveryCourseCollectionDto. DTO for course collection response */
 LearningExperienceDiscoveryCourseCollectionDtoSchema = z.object({
   id: z.string().uuid().optional(),
   courseCount: z.number().int().optional(),
@@ -27139,7 +30270,7 @@ LearningExperienceDiscoveryCourseCollectionDtoSchema = z.object({
   updatedAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for LearningExperienceDiscoveryCreateCourseCollectionDto */
+/** Zod schema for LearningExperienceDiscoveryCreateCourseCollectionDto. DTO for creating a course collection */
 LearningExperienceDiscoveryCreateCourseCollectionDtoSchema = z.object({
   description: z.string().nullable().optional(),
   imageUrl: z.string().nullable().optional(),
@@ -27147,7 +30278,7 @@ LearningExperienceDiscoveryCreateCourseCollectionDtoSchema = z.object({
   type: z.lazy(() => LearningExperienceDiscoveryCollectionTypeSchema).optional(),
 });
 
-/** Zod schema for LearningExperienceDiscoveryCreateFeaturedContentDto */
+/** Zod schema for LearningExperienceDiscoveryCreateFeaturedContentDto. DTO for creating featured content */
 LearningExperienceDiscoveryCreateFeaturedContentDtoSchema = z.object({
   courseId: z.string().uuid().nullable().optional(),
   displayOrder: z.number().int().optional(),
@@ -27162,7 +30293,7 @@ LearningExperienceDiscoveryCreateFeaturedContentDtoSchema = z.object({
   type: z.lazy(() => LearningExperienceDiscoveryFeaturedContentTypeSchema).optional(),
 });
 
-/** Zod schema for LearningExperienceDiscoveryFeaturedContentDto */
+/** Zod schema for LearningExperienceDiscoveryFeaturedContentDto. DTO for featured content response */
 LearningExperienceDiscoveryFeaturedContentDtoSchema = z.object({
   id: z.string().uuid().optional(),
   courseId: z.string().uuid().nullable().optional(),
@@ -27193,7 +30324,7 @@ LearningExperienceDiscoveryFeaturedContentTypeSchema = z.enum([
   'SeasonalPromotion',
 ]);
 
-/** Zod schema for LearningExperienceDiscoveryPopularSearchResult */
+/** Zod schema for LearningExperienceDiscoveryPopularSearchResult. Result for popular searches query */
 LearningExperienceDiscoveryPopularSearchResultSchema = z.object({
   clickThroughRate: z.number().optional(),
   query: z.string().nullable().optional(),
@@ -27201,20 +30332,20 @@ LearningExperienceDiscoveryPopularSearchResultSchema = z.object({
   totalClicks: z.number().int().optional(),
 });
 
-/** Zod schema for LearningExperienceDiscoveryRecordSearchClickDto */
+/** Zod schema for LearningExperienceDiscoveryRecordSearchClickDto. DTO for recording a search click */
 LearningExperienceDiscoveryRecordSearchClickDtoSchema = z.object({
   clickedCourseId: z.string().uuid().optional(),
   searchId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningExperienceDiscoveryRecordSearchDto */
+/** Zod schema for LearningExperienceDiscoveryRecordSearchDto. DTO for recording a search */
 LearningExperienceDiscoveryRecordSearchDtoSchema = z.object({
   filters: z.string().nullable().optional(),
   query: z.string().nullable().optional(),
   resultCount: z.number().int().optional(),
 });
 
-/** Zod schema for LearningExperienceDiscoverySearchHistoryDto */
+/** Zod schema for LearningExperienceDiscoverySearchHistoryDto. DTO for search history (analytics) */
 LearningExperienceDiscoverySearchHistoryDtoSchema = z.object({
   id: z.string().uuid().optional(),
   clickedCourseId: z.string().uuid().nullable().optional(),
@@ -27225,7 +30356,7 @@ LearningExperienceDiscoverySearchHistoryDtoSchema = z.object({
   userId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for LearningExperienceDiscoveryUpdateCourseCollectionDto */
+/** Zod schema for LearningExperienceDiscoveryUpdateCourseCollectionDto. DTO for updating a course collection */
 LearningExperienceDiscoveryUpdateCourseCollectionDtoSchema = z.object({
   description: z.string().nullable().optional(),
   imageUrl: z.string().nullable().optional(),
@@ -27233,7 +30364,7 @@ LearningExperienceDiscoveryUpdateCourseCollectionDtoSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningExperienceDiscoveryUpdateFeaturedContentDto */
+/** Zod schema for LearningExperienceDiscoveryUpdateFeaturedContentDto. DTO for updating featured content */
 LearningExperienceDiscoveryUpdateFeaturedContentDtoSchema = z.object({
   displayOrder: z.number().int().nullable().optional(),
   endsAt: z.string().datetime().nullable().optional(),
@@ -27246,20 +30377,20 @@ LearningExperienceDiscoveryUpdateFeaturedContentDtoSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningExperienceLearningPathsAddCourseToPathDto */
+/** Zod schema for LearningExperienceLearningPathsAddCourseToPathDto. DTO for adding a course to a learning path */
 LearningExperienceLearningPathsAddCourseToPathDtoSchema = z.object({
   courseId: z.string().uuid().optional(),
   isRequired: z.boolean().optional(),
   order: z.number().int().optional(),
 });
 
-/** Zod schema for LearningExperienceLearningPathsCourseOrderDto */
+/** Zod schema for LearningExperienceLearningPathsCourseOrderDto. DTO for course order */
 LearningExperienceLearningPathsCourseOrderDtoSchema = z.object({
   courseId: z.string().uuid().optional(),
   order: z.number().int().optional(),
 });
 
-/** Zod schema for LearningExperienceLearningPathsCreateLearningPathDto */
+/** Zod schema for LearningExperienceLearningPathsCreateLearningPathDto. DTO for creating a learning path */
 LearningExperienceLearningPathsCreateLearningPathDtoSchema = z.object({
   description: z.string().nullable().optional(),
   difficulty: z.lazy(() => LearningExperienceLearningPathsLearningPathDifficultySchema).optional(),
@@ -27268,14 +30399,14 @@ LearningExperienceLearningPathsCreateLearningPathDtoSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningExperienceLearningPathsLearningPathCourseDto */
+/** Zod schema for LearningExperienceLearningPathsLearningPathCourseDto. DTO for a course in a learning path */
 LearningExperienceLearningPathsLearningPathCourseDtoSchema = z.object({
   courseId: z.string().uuid().optional(),
   isRequired: z.boolean().optional(),
   order: z.number().int().optional(),
 });
 
-/** Zod schema for LearningExperienceLearningPathsLearningPathDetailDto */
+/** Zod schema for LearningExperienceLearningPathsLearningPathDetailDto. DTO for learning path with courses */
 LearningExperienceLearningPathsLearningPathDetailDtoSchema = z.object({
   id: z.string().uuid().optional(),
   completionCount: z.number().int().optional(),
@@ -27301,7 +30432,7 @@ LearningExperienceLearningPathsLearningPathDetailDtoSchema = z.object({
 /** Zod schema for LearningExperienceLearningPathsLearningPathDifficulty */
 LearningExperienceLearningPathsLearningPathDifficultySchema = z.enum(['Beginner', 'Intermediate', 'Advanced', 'Expert']);
 
-/** Zod schema for LearningExperienceLearningPathsLearningPathDto */
+/** Zod schema for LearningExperienceLearningPathsLearningPathDto. DTO for learning path summary */
 LearningExperienceLearningPathsLearningPathDtoSchema = z.object({
   id: z.string().uuid().optional(),
   completionCount: z.number().int().optional(),
@@ -27321,7 +30452,7 @@ LearningExperienceLearningPathsLearningPathDtoSchema = z.object({
   updatedAt: z.string().datetime().optional(),
 });
 
-/** Zod schema for LearningExperienceLearningPathsLearningPathEnrollmentDto */
+/** Zod schema for LearningExperienceLearningPathsLearningPathEnrollmentDto. DTO for learning path enrollment */
 LearningExperienceLearningPathsLearningPathEnrollmentDtoSchema = z.object({
   id: z.string().uuid().optional(),
   completedAt: z.string().datetime().nullable().optional(),
@@ -27339,7 +30470,7 @@ LearningExperienceLearningPathsLearningPathEnrollmentDtoSchema = z.object({
 /** Zod schema for LearningExperienceLearningPathsLearningPathEnrollmentStatus */
 LearningExperienceLearningPathsLearningPathEnrollmentStatusSchema = z.enum(['InProgress', 'Completed', 'Abandoned']);
 
-/** Zod schema for LearningExperienceLearningPathsLearningPathStatisticsDto */
+/** Zod schema for LearningExperienceLearningPathsLearningPathStatisticsDto. DTO for learning path statistics */
 LearningExperienceLearningPathsLearningPathStatisticsDtoSchema = z.object({
   activeEnrollments: z.number().int().optional(),
   averageCompletionTime: z.string().optional(),
@@ -27350,7 +30481,7 @@ LearningExperienceLearningPathsLearningPathStatisticsDtoSchema = z.object({
   totalEnrollments: z.number().int().optional(),
 });
 
-/** Zod schema for LearningExperienceLearningPathsReorderCoursesDto */
+/** Zod schema for LearningExperienceLearningPathsReorderCoursesDto. DTO for reordering courses in a learning path */
 LearningExperienceLearningPathsReorderCoursesDtoSchema = z.object({
   courses: z
     .array(z.lazy(() => LearningExperienceLearningPathsCourseOrderDtoSchema))
@@ -27358,7 +30489,7 @@ LearningExperienceLearningPathsReorderCoursesDtoSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for LearningExperienceLearningPathsUpdateLearningPathDto */
+/** Zod schema for LearningExperienceLearningPathsUpdateLearningPathDto. DTO for updating a learning path */
 LearningExperienceLearningPathsUpdateLearningPathDtoSchema = z.object({
   description: z.string().nullable().optional(),
   difficulty: z.lazy(() => LearningExperienceLearningPathsLearningPathDifficultySchema).optional(),
@@ -27368,17 +30499,17 @@ LearningExperienceLearningPathsUpdateLearningPathDtoSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningExperienceLearningPathsUpdatePathProgressDto */
+/** Zod schema for LearningExperienceLearningPathsUpdatePathProgressDto. DTO for updating enrollment progress */
 LearningExperienceLearningPathsUpdatePathProgressDtoSchema = z.object({
   coursesCompleted: z.number().int().optional(),
 });
 
-/** Zod schema for LearningExperienceRecommendationsAddSkillInput */
+/** Zod schema for LearningExperienceRecommendationsAddSkillInput. Request DTO for adding a skill */
 LearningExperienceRecommendationsAddSkillInputSchema = z.object({
   skill: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningExperienceRecommendationsCreateOrUpdateLearningProfileDto */
+/** Zod schema for LearningExperienceRecommendationsCreateOrUpdateLearningProfileDto. DTO for creating/updating user learning profile */
 LearningExperienceRecommendationsCreateOrUpdateLearningProfileDtoSchema = z.object({
   learningGoals: z.array(z.string()).nullable().optional(),
   preferredCategories: z.array(z.string()).nullable().optional(),
@@ -27387,7 +30518,7 @@ LearningExperienceRecommendationsCreateOrUpdateLearningProfileDtoSchema = z.obje
   skills: z.array(z.string()).nullable().optional(),
 });
 
-/** Zod schema for LearningExperienceRecommendationsPopularCourseDto */
+/** Zod schema for LearningExperienceRecommendationsPopularCourseDto. DTO for popular course result */
 LearningExperienceRecommendationsPopularCourseDtoSchema = z.object({
   averageRating: z.number().optional(),
   category: z.string().nullable().optional(),
@@ -27399,7 +30530,7 @@ LearningExperienceRecommendationsPopularCourseDtoSchema = z.object({
   totalRatings: z.number().int().optional(),
 });
 
-/** Zod schema for LearningExperienceRecommendationsRecommendationDto */
+/** Zod schema for LearningExperienceRecommendationsRecommendationDto. DTO for a course recommendation */
 LearningExperienceRecommendationsRecommendationDtoSchema = z.object({
   id: z.string().uuid().optional(),
   courseId: z.string().uuid().optional(),
@@ -27413,7 +30544,7 @@ LearningExperienceRecommendationsRecommendationDtoSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningExperienceRecommendationsRecommendationStatisticsDto */
+/** Zod schema for LearningExperienceRecommendationsRecommendationStatisticsDto. DTO for recommendation statistics */
 LearningExperienceRecommendationsRecommendationStatisticsDtoSchema = z.object({
   byType: z
     .object({
@@ -27446,7 +30577,7 @@ LearningExperienceRecommendationsRecommendationTypeSchema = z.enum([
   'PeerRecommended',
 ]);
 
-/** Zod schema for LearningExperienceRecommendationsSimilarCourseDto */
+/** Zod schema for LearningExperienceRecommendationsSimilarCourseDto. DTO for similar course result */
 LearningExperienceRecommendationsSimilarCourseDtoSchema = z.object({
   category: z.string().nullable().optional(),
   courseId: z.string().uuid().optional(),
@@ -27457,7 +30588,7 @@ LearningExperienceRecommendationsSimilarCourseDtoSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningExperienceRecommendationsTrendingCourseDto */
+/** Zod schema for LearningExperienceRecommendationsTrendingCourseDto. DTO for trending course result */
 LearningExperienceRecommendationsTrendingCourseDtoSchema = z.object({
   category: z.string().nullable().optional(),
   courseId: z.string().uuid().optional(),
@@ -27468,7 +30599,7 @@ LearningExperienceRecommendationsTrendingCourseDtoSchema = z.object({
   trendScore: z.number().optional(),
 });
 
-/** Zod schema for LearningExperienceRecommendationsUserLearningProfileDto */
+/** Zod schema for LearningExperienceRecommendationsUserLearningProfileDto. DTO for user learning profile */
 LearningExperienceRecommendationsUserLearningProfileDtoSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
@@ -27490,7 +30621,7 @@ LearningExperienceSocialControllersUpdateReviewModerationInputSchema = z.object(
   isFeatured: z.boolean().optional(),
 });
 
-/** Zod schema for LearningExperienceSocialFeedItemType */
+/** Zod schema for LearningExperienceSocialFeedItemType. Types of items that can appear in a personalized feed */
 LearningExperienceSocialFeedItemTypeSchema = z.enum([
   'NewCourse',
   'PopularCourse',
@@ -27504,7 +30635,7 @@ LearningExperienceSocialFeedItemTypeSchema = z.enum([
   'SkillMilestone',
 ]);
 
-/** Zod schema for LearningExperienceSocialServicesCourseDiscussionDto */
+/** Zod schema for LearningExperienceSocialServicesCourseDiscussionDto. DTO for discussion response */
 LearningExperienceSocialServicesCourseDiscussionDtoSchema = z.object({
   id: z.string().uuid().optional(),
   authorId: z.string().uuid().optional(),
@@ -27520,7 +30651,7 @@ LearningExperienceSocialServicesCourseDiscussionDtoSchema = z.object({
   viewCount: z.number().int().optional(),
 });
 
-/** Zod schema for LearningExperienceSocialServicesCourseLikeDto */
+/** Zod schema for LearningExperienceSocialServicesCourseLikeDto. DTO for course like response */
 LearningExperienceSocialServicesCourseLikeDtoSchema = z.object({
   id: z.string().uuid().optional(),
   courseId: z.string().uuid().optional(),
@@ -27528,7 +30659,7 @@ LearningExperienceSocialServicesCourseLikeDtoSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningExperienceSocialServicesCourseRatingStats */
+/** Zod schema for LearningExperienceSocialServicesCourseRatingStats. Course rating statistics */
 LearningExperienceSocialServicesCourseRatingStatsSchema = z.object({
   averageRating: z.number().optional(),
   courseId: z.string().uuid().optional(),
@@ -27541,7 +30672,7 @@ LearningExperienceSocialServicesCourseRatingStatsSchema = z.object({
   twoStarCount: z.number().int().optional(),
 });
 
-/** Zod schema for LearningExperienceSocialServicesCourseReviewDto */
+/** Zod schema for LearningExperienceSocialServicesCourseReviewDto. DTO for course review response */
 LearningExperienceSocialServicesCourseReviewDtoSchema = z.object({
   id: z.string().uuid().optional(),
   content: z.string().nullable().optional(),
@@ -27556,7 +30687,7 @@ LearningExperienceSocialServicesCourseReviewDtoSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningExperienceSocialServicesCourseWishlistDto */
+/** Zod schema for LearningExperienceSocialServicesCourseWishlistDto. DTO for wishlist item response */
 LearningExperienceSocialServicesCourseWishlistDtoSchema = z.object({
   id: z.string().uuid().optional(),
   courseId: z.string().uuid().optional(),
@@ -27566,7 +30697,7 @@ LearningExperienceSocialServicesCourseWishlistDtoSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for LearningExperienceSocialServicesCreateDiscussionInput */
+/** Zod schema for LearningExperienceSocialServicesCreateDiscussionInput. DTO for creating a discussion */
 LearningExperienceSocialServicesCreateDiscussionInputSchema = z.object({
   content: z.string().nullable().optional(),
   contentId: z.string().uuid().nullable().optional(),
@@ -27574,14 +30705,14 @@ LearningExperienceSocialServicesCreateDiscussionInputSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningExperienceSocialServicesCreateReplyInput */
+/** Zod schema for LearningExperienceSocialServicesCreateReplyInput. DTO for creating a reply */
 LearningExperienceSocialServicesCreateReplyInputSchema = z.object({
   content: z.string().nullable().optional(),
   discussionId: z.string().uuid().optional(),
   parentReplyId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for LearningExperienceSocialServicesCreateReviewInput */
+/** Zod schema for LearningExperienceSocialServicesCreateReviewInput. DTO for creating a review */
 LearningExperienceSocialServicesCreateReviewInputSchema = z.object({
   content: z.string().nullable().optional(),
   courseId: z.string().uuid().optional(),
@@ -27590,7 +30721,7 @@ LearningExperienceSocialServicesCreateReviewInputSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningExperienceSocialServicesDiscussionReplyDto */
+/** Zod schema for LearningExperienceSocialServicesDiscussionReplyDto. DTO for discussion reply response */
 LearningExperienceSocialServicesDiscussionReplyDtoSchema = z.object({
   id: z.string().uuid().optional(),
   authorId: z.string().uuid().optional(),
@@ -27602,7 +30733,7 @@ LearningExperienceSocialServicesDiscussionReplyDtoSchema = z.object({
   upvoteCount: z.number().int().optional(),
 });
 
-/** Zod schema for LearningExperienceSocialServicesPersonalizedFeedItemDto */
+/** Zod schema for LearningExperienceSocialServicesPersonalizedFeedItemDto. DTO for personalized feed item response */
 LearningExperienceSocialServicesPersonalizedFeedItemDtoSchema = z.object({
   id: z.string().uuid().optional(),
   courseId: z.string().uuid().nullable().optional(),
@@ -27617,7 +30748,7 @@ LearningExperienceSocialServicesPersonalizedFeedItemDtoSchema = z.object({
   reviewId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for LearningExperienceSocialServicesWishlistPreferencesInput */
+/** Zod schema for LearningExperienceSocialServicesWishlistPreferencesInput. DTO for wishlist preferences */
 LearningExperienceSocialServicesWishlistPreferencesInputSchema = z.object({
   notifyOnSale: z.boolean().optional(),
   notifyOnUpdate: z.boolean().optional(),
@@ -27629,7 +30760,7 @@ LearningGradingContractsPercentValueSchema = z.number().int().min(0).max(10000);
 /** Zod schema for LearningGradingContractsScoreValue. Score in non-negative integer units scaled by 100 (100 units = 1 point). */
 LearningGradingContractsScoreValueSchema = z.number().int().min(0).max(2147483647);
 
-/** Zod schema for LearningLtiCreateLtiDeploymentInput */
+/** Zod schema for LearningLtiCreateLtiDeploymentInput. Admin request to register a platform deployment. PrivateKeyPem is accepted on write and never returned. */
 LearningLtiCreateLtiDeploymentInputSchema = z.object({
   active: z.boolean().optional(),
   authorizationUrl: z.string().nullable().optional(),
@@ -27642,7 +30773,7 @@ LearningLtiCreateLtiDeploymentInputSchema = z.object({
   privateKeyPem: z.string().nullable().optional(),
 });
 
-/** Zod schema for LearningLtiCreateLtiLineItemInput */
+/** Zod schema for LearningLtiCreateLtiLineItemInput. Admin request to link an assessment to a platform AGS line item. */
 LearningLtiCreateLtiLineItemInputSchema = z.object({
   assessmentId: z.string().uuid().optional(),
   lineItemId: z.string().nullable().optional(),
@@ -27988,7 +31119,7 @@ LearningWorkspacesLearnerSearchResultDtoSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for Money */
+/** Zod schema for Money. Represents a money value with currency */
 MoneySchema = z.object({
   amount: z.number().optional(),
   currency: z.string().nullable().optional(),
@@ -28006,7 +31137,7 @@ MonitoringSLACreateSloCommandSchema = z.object({
   timeWindowDays: z.number().int().optional(),
 });
 
-/** Zod schema for MonitoringSLAErrorBudgetDto */
+/** Zod schema for MonitoringSLAErrorBudgetDto. Data transfer object for error budget information */
 MonitoringSLAErrorBudgetDtoSchema = z.object({
   actualPercentage: z.number().optional(),
   allowedFailures: z.number().int().optional(),
@@ -28039,14 +31170,14 @@ MonitoringSLARecordSliMetricCommandSchema = z.object({
   value: z.number().optional(),
 });
 
-/** Zod schema for MonitoringSLAResolveSloViolationCommand */
+/** Zod schema for MonitoringSLAResolveSloViolationCommand. Command to resolve an SLO violation. */
 MonitoringSLAResolveSloViolationCommandSchema = z.object({
   resolutionNotes: z.string().nullable().optional(),
   tenantId: z.string().uuid().optional(),
   violationId: z.string().uuid().optional(),
 });
 
-/** Zod schema for MonitoringSLASloComplianceDto */
+/** Zod schema for MonitoringSLASloComplianceDto. Data transfer object for SLO compliance information */
 MonitoringSLASloComplianceDtoSchema = z.object({
   actualPercentage: z.number().optional(),
   calculatedAt: z.string().datetime().optional(),
@@ -28066,7 +31197,7 @@ MonitoringSLASloComplianceDtoSchema = z.object({
   violationCount: z.number().int().optional(),
 });
 
-/** Zod schema for MonitoringSLASloDto */
+/** Zod schema for MonitoringSLASloDto. Data transfer object for Service Level Objective */
 MonitoringSLASloDtoSchema = z.object({
   id: z.string().uuid().optional(),
   alertThresholdPercentage: z.number().optional(),
@@ -28086,10 +31217,10 @@ MonitoringSLASloDtoSchema = z.object({
   updatedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for MonitoringSLASloStatus */
+/** Zod schema for MonitoringSLASloStatus. Represents the status of a Service Level Objective */
 MonitoringSLASloStatusSchema = z.enum(['Active', 'Breached', 'AtRisk', 'Disabled', 'Violated', 'Warning', 'Inactive']);
 
-/** Zod schema for MonitoringSLASloViolationDto */
+/** Zod schema for MonitoringSLASloViolationDto. Data transfer object for SLO violation */
 MonitoringSLASloViolationDtoSchema = z.object({
   id: z.string().uuid().optional(),
   acknowledgedAt: z.string().datetime().nullable().optional(),
@@ -28125,7 +31256,7 @@ MonitoringSLAUpdateSloCommandSchema = z.object({
   timeWindowDays: z.number().int().optional(),
 });
 
-/** Zod schema for MonitoringSLAViolationSeverity */
+/** Zod schema for MonitoringSLAViolationSeverity. Represents the severity level of an SLO violation */
 MonitoringSLAViolationSeveritySchema = z.enum(['Low', 'Medium', 'High', 'Critical']);
 
 /** Zod schema for MvcProblemDetails */
@@ -28299,7 +31430,7 @@ NotificationsControllersUpdatePreferencesInputSchema = z.object({
   socialEnabled: z.boolean().nullable().optional(),
 });
 
-/** Zod schema for NotificationsNotificationChannel */
+/** Zod schema for NotificationsNotificationChannel. Delivery channels for notifications */
 NotificationsNotificationChannelSchema = z.enum(['InApp', 'Email', 'Push', 'Sms', 'Slack', 'Discord', 'Webhook']);
 
 /** Zod schema for ObjectsAttestationConveyancePreference */
@@ -28376,7 +31507,8 @@ ObjectsResidentKeyRequirementSchema = z.enum(['Required', 'Preferred', 'Discoura
 /** Zod schema for ObjectsUserVerificationRequirement */
 ObjectsUserVerificationRequirementSchema = z.enum(['Required', 'Preferred', 'Discouraged']);
 
-/** Zod schema for PagedResultDeadLetterDto */
+/** Zod schema for PagedResultDeadLetterDto. Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
 PagedResultDeadLetterDtoSchema = z.object({
   hasNextPage: z.boolean().optional(),
   hasPreviousPage: z.boolean().optional(),
@@ -28392,7 +31524,8 @@ PagedResultDeadLetterDtoSchema = z.object({
   totalPages: z.number().int().optional(),
 });
 
-/** Zod schema for PagedResultEmailDeliveryEventDto */
+/** Zod schema for PagedResultEmailDeliveryEventDto. Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
 PagedResultEmailDeliveryEventDtoSchema = z.object({
   hasNextPage: z.boolean().optional(),
   hasPreviousPage: z.boolean().optional(),
@@ -28408,7 +31541,8 @@ PagedResultEmailDeliveryEventDtoSchema = z.object({
   totalPages: z.number().int().optional(),
 });
 
-/** Zod schema for PagedResultEmailSuppressionDto */
+/** Zod schema for PagedResultEmailSuppressionDto. Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
 PagedResultEmailSuppressionDtoSchema = z.object({
   hasNextPage: z.boolean().optional(),
   hasPreviousPage: z.boolean().optional(),
@@ -28424,7 +31558,8 @@ PagedResultEmailSuppressionDtoSchema = z.object({
   totalPages: z.number().int().optional(),
 });
 
-/** Zod schema for PagedResultProductDto */
+/** Zod schema for PagedResultProductDto. Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
 PagedResultProductDtoSchema = z.object({
   hasNextPage: z.boolean().optional(),
   hasPreviousPage: z.boolean().optional(),
@@ -28440,7 +31575,8 @@ PagedResultProductDtoSchema = z.object({
   totalPages: z.number().int().optional(),
 });
 
-/** Zod schema for PagedResultPromoCodeDto */
+/** Zod schema for PagedResultPromoCodeDto. Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
 PagedResultPromoCodeDtoSchema = z.object({
   hasNextPage: z.boolean().optional(),
   hasPreviousPage: z.boolean().optional(),
@@ -28456,7 +31592,8 @@ PagedResultPromoCodeDtoSchema = z.object({
   totalPages: z.number().int().optional(),
 });
 
-/** Zod schema for PagedResultSubscription */
+/** Zod schema for PagedResultSubscription. Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
 PagedResultSubscriptionSchema = z.object({
   hasNextPage: z.boolean().optional(),
   hasPreviousPage: z.boolean().optional(),
@@ -28472,7 +31609,8 @@ PagedResultSubscriptionSchema = z.object({
   totalPages: z.number().int().optional(),
 });
 
-/** Zod schema for PagedResultSubscriptionNotificationDto */
+/** Zod schema for PagedResultSubscriptionNotificationDto. Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
 PagedResultSubscriptionNotificationDtoSchema = z.object({
   hasNextPage: z.boolean().optional(),
   hasPreviousPage: z.boolean().optional(),
@@ -28488,7 +31626,8 @@ PagedResultSubscriptionNotificationDtoSchema = z.object({
   totalPages: z.number().int().optional(),
 });
 
-/** Zod schema for PagedResultSupportTicketDto */
+/** Zod schema for PagedResultSupportTicketDto. Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
 PagedResultSupportTicketDtoSchema = z.object({
   hasNextPage: z.boolean().optional(),
   hasPreviousPage: z.boolean().optional(),
@@ -28504,7 +31643,8 @@ PagedResultSupportTicketDtoSchema = z.object({
   totalPages: z.number().int().optional(),
 });
 
-/** Zod schema for PagedResultTenant */
+/** Zod schema for PagedResultTenant. Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
 PagedResultTenantSchema = z.object({
   hasNextPage: z.boolean().optional(),
   hasPreviousPage: z.boolean().optional(),
@@ -28520,7 +31660,8 @@ PagedResultTenantSchema = z.object({
   totalPages: z.number().int().optional(),
 });
 
-/** Zod schema for PagedResultTenantAuditLogEntry */
+/** Zod schema for PagedResultTenantAuditLogEntry. Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
 PagedResultTenantAuditLogEntrySchema = z.object({
   hasNextPage: z.boolean().optional(),
   hasPreviousPage: z.boolean().optional(),
@@ -28536,7 +31677,8 @@ PagedResultTenantAuditLogEntrySchema = z.object({
   totalPages: z.number().int().optional(),
 });
 
-/** Zod schema for PagedResultUserDto */
+/** Zod schema for PagedResultUserDto. Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
 PagedResultUserDtoSchema = z.object({
   hasNextPage: z.boolean().optional(),
   hasPreviousPage: z.boolean().optional(),
@@ -28552,7 +31694,8 @@ PagedResultUserDtoSchema = z.object({
   totalPages: z.number().int().optional(),
 });
 
-/** Zod schema for PagedResultUserNotificationDto */
+/** Zod schema for PagedResultUserNotificationDto. Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
 PagedResultUserNotificationDtoSchema = z.object({
   hasNextPage: z.boolean().optional(),
   hasPreviousPage: z.boolean().optional(),
@@ -28568,7 +31711,8 @@ PagedResultUserNotificationDtoSchema = z.object({
   totalPages: z.number().int().optional(),
 });
 
-/** Zod schema for PagedResultUserProfileDto */
+/** Zod schema for PagedResultUserProfileDto. Represents a paginated result set with full pagination metadata.
+This is the single canonical pagination type — use it everywhere. */
 PagedResultUserProfileDtoSchema = z.object({
   hasNextPage: z.boolean().optional(),
   hasPreviousPage: z.boolean().optional(),
@@ -28584,7 +31728,7 @@ PagedResultUserProfileDtoSchema = z.object({
   totalPages: z.number().int().optional(),
 });
 
-/** Zod schema for ProgramCategory */
+/** Zod schema for ProgramCategory. Educational program categorization for discovery and organization */
 ProgramCategorySchema = z.enum([
   'General',
   'Programming',
@@ -28607,7 +31751,7 @@ ProgramCategorySchema = z.enum([
   'Other',
 ]);
 
-/** Zod schema for ProjectsAddCollaboratorInput */
+/** Zod schema for ProjectsAddCollaboratorInput. Request to add a collaborator to a project */
 ProjectsAddCollaboratorInputSchema = z.object({
   email: z.string().nullable().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
@@ -28619,14 +31763,14 @@ ProjectsAddCollaboratorInputSchema = z.object({
   requireAcceptance: z.boolean().optional(),
 });
 
-/** Zod schema for ProjectsAddProjectCollaboratorInput */
+/** Zod schema for ProjectsAddProjectCollaboratorInput. Request to add a project collaborator by ID */
 ProjectsAddProjectCollaboratorInputSchema = z.object({
   permissions: z.string().nullable().optional(),
   role: z.string().nullable().optional(),
   userId: z.string().uuid(),
 });
 
-/** Zod schema for ProjectsCollaboratorDto */
+/** Zod schema for ProjectsCollaboratorDto. DTO for collaborator responses */
 ProjectsCollaboratorDtoSchema = z.object({
   id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
@@ -28637,7 +31781,7 @@ ProjectsCollaboratorDtoSchema = z.object({
   userName: z.string().nullable().optional(),
 });
 
-/** Zod schema for ProjectsCreateProjectInput */
+/** Zod schema for ProjectsCreateProjectInput. Request DTOs for REST API */
 ProjectsCreateProjectInputSchema = z.object({
   categoryId: z.string().uuid().nullable().optional(),
   description: z.string().min(0).max(2000).nullable().optional(),
@@ -28661,10 +31805,10 @@ ProjectsCreateProjectVersionInputSchema = z.object({
   versionNumber: z.string().min(1).max(50),
 });
 
-/** Zod schema for ProjectsDevelopmentStatus */
+/** Zod schema for ProjectsDevelopmentStatus. Development status of a project */
 ProjectsDevelopmentStatusSchema = z.enum(['Planning', 'InDevelopment', 'Alpha', 'Beta', 'Released', 'Completed', 'OnHold', 'Cancelled', 'Archived']);
 
-/** Zod schema for ProjectsEffectivePermission */
+/** Zod schema for ProjectsEffectivePermission. Effective permissions returned by the project compatibility API. */
 ProjectsEffectivePermissionSchema = z.object({
   expiresAt: z.string().datetime().nullable().optional(),
   isOwner: z.boolean().optional(),
@@ -28676,7 +31820,7 @@ ProjectsEffectivePermissionSchema = z.object({
   resourceType: z.string().nullable().optional(),
 });
 
-/** Zod schema for ProjectsInvitationResult */
+/** Zod schema for ProjectsInvitationResult. Result of an invitation operation. */
 ProjectsInvitationResultSchema = z.object({
   errorMessage: z.string().nullable().optional(),
   invitationId: z.string().uuid().nullable().optional(),
@@ -28697,13 +31841,13 @@ ProjectsLinkProjectStoreProductInputSchema = z.object({
   productId: z.string().uuid().optional(),
 });
 
-/** Zod schema for ProjectsPermissionUpdateResult */
+/** Zod schema for ProjectsPermissionUpdateResult. Result of a permission update operation. */
 ProjectsPermissionUpdateResultSchema = z.object({
   errorMessage: z.string().nullable().optional(),
   success: z.boolean().optional(),
 });
 
-/** Zod schema for ProjectsProject */
+/** Zod schema for ProjectsProject. Represents a project (game, tool, art, etc.) Enhanced with improved validation, indexing, and relationships */
 ProjectsProjectSchema = z.object({
   id: z.string().uuid().optional(),
   allocations: z
@@ -28789,7 +31933,8 @@ ProjectsProjectSchema = z.object({
   websiteUrl: z.string().max(500).nullable().optional(),
 });
 
-/** Zod schema for ProjectsProjectApiOutput */
+/** Zod schema for ProjectsProjectApiOutput. Stable HTTP contract for Projects. Persistence entities and their navigation graphs are
+intentionally not exposed by REST endpoints. */
 ProjectsProjectApiOutputSchema = z.object({
   id: z.string().uuid().optional(),
   averageRating: z.number().nullable().optional(),
@@ -28842,7 +31987,7 @@ ProjectsProjectApiOutputSchema = z.object({
   websiteUrl: z.string().nullable().optional(),
 });
 
-/** Zod schema for ProjectsProjectCategory */
+/** Zod schema for ProjectsProjectCategory. Represents a project category (game, tool, art, etc.) */
 ProjectsProjectCategorySchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
@@ -28874,7 +32019,7 @@ ProjectsProjectCategoryApiOutputSchema = z.object({
   name: z.string().nullable().optional(),
 });
 
-/** Zod schema for ProjectsProjectCollaborator */
+/** Zod schema for ProjectsProjectCollaborator. Represents a collaborator on a project */
 ProjectsProjectCollaboratorSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
@@ -28915,7 +32060,7 @@ ProjectsProjectCollaboratorApiOutputSchema = z.object({
   userName: z.string().nullable().optional(),
 });
 
-/** Zod schema for ProjectsProjectCollaboratorDto */
+/** Zod schema for ProjectsProjectCollaboratorDto. Project collaborator information for API responses */
 ProjectsProjectCollaboratorDtoSchema = z.object({
   email: z.string().nullable().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
@@ -28932,7 +32077,7 @@ ProjectsProjectCollaboratorDtoSchema = z.object({
   userName: z.string().nullable().optional(),
 });
 
-/** Zod schema for ProjectsProjectFeedback */
+/** Zod schema for ProjectsProjectFeedback. Represents feedback/review for a project */
 ProjectsProjectFeedbackSchema = z.object({
   id: z.string().uuid().optional(),
   categories: z.string().max(500).nullable().optional(),
@@ -28967,7 +32112,7 @@ ProjectsProjectFeedbackSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for ProjectsProjectFollower */
+/** Zod schema for ProjectsProjectFollower. Represents a user following a project */
 ProjectsProjectFollowerSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
@@ -29015,7 +32160,7 @@ ProjectsProjectInvitationDtoSchema = z.object({
 /** Zod schema for ProjectsProjectInvitationStatus */
 ProjectsProjectInvitationStatusSchema = z.enum(['Pending', 'Accepted', 'Declined', 'Revoked', 'Expired']);
 
-/** Zod schema for ProjectsProjectJamSubmission */
+/** Zod schema for ProjectsProjectJamSubmission. Represents a project submitted to a game jam */
 ProjectsProjectJamSubmissionSchema = z.object({
   id: z.string().uuid().optional(),
   awardDetails: z.string().max(1000).nullable().optional(),
@@ -29080,7 +32225,7 @@ ProjectsProjectMemberAllocationSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for ProjectsProjectMetadata */
+/** Zod schema for ProjectsProjectMetadata. Stores statistics and metadata for a project. */
 ProjectsProjectMetadataSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
@@ -29113,7 +32258,7 @@ ProjectsProjectMetadataApiOutputSchema = z.object({
   viewCount: z.number().int().optional(),
 });
 
-/** Zod schema for ProjectsProjectRelease */
+/** Zod schema for ProjectsProjectRelease. Represents a release/version of a project */
 ProjectsProjectReleaseSchema = z.object({
   id: z.string().uuid().optional(),
   buildNumber: z.string().max(100).nullable().optional(),
@@ -29174,7 +32319,7 @@ ProjectsProjectReleaseApiOutputSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for ProjectsProjectRoleTemplate */
+/** Zod schema for ProjectsProjectRoleTemplate. Project role template */
 ProjectsProjectRoleTemplateSchema = z.object({
   description: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
@@ -29184,7 +32329,7 @@ ProjectsProjectRoleTemplateSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for ProjectsProjectStatistics */
+/** Zod schema for ProjectsProjectStatistics. Statistics and analytics DTO for a project */
 ProjectsProjectStatisticsSchema = z.object({
   activeTeamCount: z.number().int().optional(),
   averageRating: z.number().nullable().optional(),
@@ -29211,7 +32356,7 @@ ProjectsProjectStoreProductProjectionSchema = z.object({
   projectId: z.string().uuid().optional(),
 });
 
-/** Zod schema for ProjectsProjectTeam */
+/** Zod schema for ProjectsProjectTeam. Represents a team working on a project */
 ProjectsProjectTeamSchema = z.object({
   id: z.string().uuid().optional(),
   allocations: z
@@ -29307,7 +32452,7 @@ ProjectsProjectTeamParticipationModeSchema = z.enum(['AllMembers', 'SelectedMemb
 /** Zod schema for ProjectsProjectTeamRole */
 ProjectsProjectTeamRoleSchema = z.enum(['Owner', 'CoOwner', 'Contributor', 'Guest']);
 
-/** Zod schema for ProjectsProjectType */
+/** Zod schema for ProjectsProjectType. Types of projects in the game guild platform */
 ProjectsProjectTypeSchema = z.enum(['Game', 'Tool', 'Art', 'Music', 'Educational', 'Plugin', 'Template', 'Library', 'Other']);
 
 /** Zod schema for ProjectsProjectUserApiOutput */
@@ -29317,7 +32462,7 @@ ProjectsProjectUserApiOutputSchema = z.object({
   username: z.string().nullable().optional(),
 });
 
-/** Zod schema for ProjectsProjectVersion */
+/** Zod schema for ProjectsProjectVersion. Represents a version/release of a project */
 ProjectsProjectVersionSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
@@ -29371,14 +32516,14 @@ ProjectsProjectVersionOptionProjectionSchema = z.object({
 /** Zod schema for ProjectsProjectVersionStatus */
 ProjectsProjectVersionStatusSchema = z.enum(['Draft', 'ReadyForTesting', 'Released', 'Archived']);
 
-/** Zod schema for ProjectsShareProjectInput */
+/** Zod schema for ProjectsShareProjectInput. Request to share a project */
 ProjectsShareProjectInputSchema = z.object({
   permissions: z.string().nullable().optional(),
   role: z.string().nullable().optional(),
   userId: z.string().uuid(),
 });
 
-/** Zod schema for ProjectsShareProjectWithRoleInput */
+/** Zod schema for ProjectsShareProjectWithRoleInput. Request to share project with specific role */
 ProjectsShareProjectWithRoleInputSchema = z.object({
   expiresAt: z.string().datetime().nullable().optional(),
   message: z.string().nullable().optional(),
@@ -29389,7 +32534,7 @@ ProjectsShareProjectWithRoleInputSchema = z.object({
   userIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
-/** Zod schema for ProjectsShareResult */
+/** Zod schema for ProjectsShareResult. Result of a bulk share operation. */
 ProjectsShareResultSchema = z.object({
   errorMessage: z.string().nullable().optional(),
   failureCount: z.number().int().optional(),
@@ -29397,7 +32542,7 @@ ProjectsShareResultSchema = z.object({
   successCount: z.number().int().optional(),
 });
 
-/** Zod schema for ProjectsUpdateCollaboratorInput */
+/** Zod schema for ProjectsUpdateCollaboratorInput. Request to update collaborator permissions */
 ProjectsUpdateCollaboratorInputSchema = z.object({
   expiresAt: z.string().datetime().nullable().optional(),
   permissions: z
@@ -29406,7 +32551,7 @@ ProjectsUpdateCollaboratorInputSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for ProjectsUpdateProjectCollaboratorInput */
+/** Zod schema for ProjectsUpdateProjectCollaboratorInput. Request to update a project collaborator */
 ProjectsUpdateProjectCollaboratorInputSchema = z.object({
   permissions: z.string().nullable().optional(),
   role: z.string().nullable().optional(),
@@ -29446,17 +32591,17 @@ ProjectWorkProjectWorkTaskPrioritySchema = z.enum(['Low', 'Normal', 'High', 'Urg
 /** Zod schema for ProjectWorkProjectWorkTaskStatus */
 ProjectWorkProjectWorkTaskStatusSchema = z.enum(['Backlog', 'Ready', 'InProgress', 'InReview', 'Done', 'Cancelled']);
 
-/** Zod schema for ResourcesArchiveResourceUsageRecordsInput */
+/** Zod schema for ResourcesArchiveResourceUsageRecordsInput. Request DTO for archiving old resource usage records */
 ResourcesArchiveResourceUsageRecordsInputSchema = z.object({
   olderThan: z.string().datetime().optional(),
 });
 
-/** Zod schema for ResourcesCheckResourceQuotaInput */
+/** Zod schema for ResourcesCheckResourceQuotaInput. Request model for checking resource quota enforcement */
 ResourcesCheckResourceQuotaInputSchema = z.object({
   amount: z.number().int().optional(),
 });
 
-/** Zod schema for ResourcesCleanupOrphanedResourcesInput */
+/** Zod schema for ResourcesCleanupOrphanedResourcesInput. Request to cleanup orphaned resources */
 ResourcesCleanupOrphanedResourcesInputSchema = z.object({
   dryRun: z.boolean().optional(),
   resourceTypes: z
@@ -29501,10 +32646,10 @@ ResourcesContentsBulkGeneratedContractsOutputSchema = z.object({
   totalRequested: z.number().int().optional(),
 });
 
-/** Zod schema for ResourcesContentsContentReviewDecision */
+/** Zod schema for ResourcesContentsContentReviewDecision. Review decision for content */
 ResourcesContentsContentReviewDecisionSchema = z.enum(['Pending', 'Approve', 'RequestChanges', 'Reject']);
 
-/** Zod schema for ResourcesContentsContentVersionDiff */
+/** Zod schema for ResourcesContentsContentVersionDiff. Represents a diff between two content versions */
 ResourcesContentsContentVersionDiffSchema = z.object({
   bodyChanged: z.boolean().optional(),
   bodyDiff: z.string().nullable().optional(),
@@ -29554,7 +32699,7 @@ ResourcesContentsContentVersionReviewDtoSchema = z.object({
   suggestions: z.string().nullable().optional(),
 });
 
-/** Zod schema for ResourcesContentsContentVersionStatus */
+/** Zod schema for ResourcesContentsContentVersionStatus. Status of a content version */
 ResourcesContentsContentVersionStatusSchema = z.enum(['Draft', 'PendingReview', 'Approved', 'Rejected', 'Scheduled', 'Published', 'Archived']);
 
 /** Zod schema for ResourcesContentsCreateDraftInput */
@@ -29622,14 +32767,14 @@ ResourcesContentsUpdateDraftInputSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for ResourcesEffectiveSettingOutput */
+/** Zod schema for ResourcesEffectiveSettingOutput. Response model for effective setting value */
 ResourcesEffectiveSettingOutputSchema = z.object({
   isUserOverride: z.boolean().optional(),
   key: z.string().nullable().optional(),
   value: z.string().nullable().optional(),
 });
 
-/** Zod schema for ResourcesRecordTenantResourceUsageInput */
+/** Zod schema for ResourcesRecordTenantResourceUsageInput. Request model for recording tenant resource usage (without tenantId in body) */
 ResourcesRecordTenantResourceUsageInputSchema = z.object({
   count: z.number().int().optional(),
   metadata: z.record(z.string(), z.string()).nullable().optional(),
@@ -29638,7 +32783,7 @@ ResourcesRecordTenantResourceUsageInputSchema = z.object({
   resourceUsageType: z.lazy(() => ResourcesResourceUsageTypeSchema).optional(),
 });
 
-/** Zod schema for ResourcesRecordUserResourceUsageInput */
+/** Zod schema for ResourcesRecordUserResourceUsageInput. Request model for recording user resource usage (without userId in body) */
 ResourcesRecordUserResourceUsageInputSchema = z.object({
   count: z.number().int().optional(),
   metadata: z.record(z.string(), z.string()).nullable().optional(),
@@ -29647,7 +32792,7 @@ ResourcesRecordUserResourceUsageInputSchema = z.object({
   resourceUsageType: z.lazy(() => ResourcesResourceUsageTypeSchema).optional(),
 });
 
-/** Zod schema for ResourcesResourceMetadata */
+/** Zod schema for ResourcesResourceMetadata. Stores metadata about resource types and their configurations */
 ResourcesResourceMetadataSchema = z.object({
   id: z.string().uuid().optional(),
   category: z.string().max(100).nullable().optional(),
@@ -29679,7 +32824,11 @@ ResourcesResourceMetadataSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for ResourcesResourceQuotaEnforcementResult */
+/** Zod schema for ResourcesResourceQuotaEnforcementResult. Result of resource quota enforcement check.
+
+<b>ADVISORY:</b> This result indicates the current quota state at the time of query.
+Under concurrent access, quota state may change between this check and actual operation.
+For authoritative enforcement, use commands decorated with `[RequiresQuota]`. */
 ResourcesResourceQuotaEnforcementResultSchema = z.object({
   currentUsage: z.number().int().optional(),
   excessAmount: z.number().int().optional(),
@@ -29695,7 +32844,7 @@ ResourcesResourceQuotaEnforcementResultSchema = z.object({
   usagePercentage: z.number().optional(),
 });
 
-/** Zod schema for ResourcesResourceQuotaOutput */
+/** Zod schema for ResourcesResourceQuotaOutput. Response model for resource quota information */
 ResourcesResourceQuotaOutputSchema = z.object({
   id: z.string().uuid().optional(),
   currentUsage: z.number().int().optional(),
@@ -29717,10 +32866,10 @@ ResourcesResourceQuotaOutputSchema = z.object({
   usagePercentage: z.number().optional(),
 });
 
-/** Zod schema for ResourcesResourceQuotaPeriod */
+/** Zod schema for ResourcesResourceQuotaPeriod. Defines the period for resource quota resets */
 ResourcesResourceQuotaPeriodSchema = z.enum(['Daily', 'Weekly', 'Monthly', 'Quarterly', 'Yearly', 'Unlimited']);
 
-/** Zod schema for ResourcesResourceSettings */
+/** Zod schema for ResourcesResourceSettings. Stores configuration settings for resource management */
 ResourcesResourceSettingsSchema = z.object({
   id: z.string().uuid().optional(),
   allowUserOverride: z.boolean().optional(),
@@ -29754,7 +32903,8 @@ ResourcesResourceSettingsSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for ResourcesResourceUsageType */
+/** Zod schema for ResourcesResourceUsageType. Types of resource usage that can be tracked and limited.
+Each type represents a quota-controlled resource in the system. */
 ResourcesResourceUsageTypeSchema = z.enum([
   'Users',
   'Projects',
@@ -29788,7 +32938,7 @@ ResourcesResourceUsageTypeSchema = z.enum([
   'Teams',
 ]);
 
-/** Zod schema for ResourcesSetQuotaInput */
+/** Zod schema for ResourcesSetQuotaInput. Request model for setting a quota (without tenantId and type in body) */
 ResourcesSetQuotaInputSchema = z.object({
   hardLimit: z.number().int().nullable().optional(),
   isActive: z.boolean().optional(),
@@ -29797,7 +32947,7 @@ ResourcesSetQuotaInputSchema = z.object({
   softLimit: z.number().int().nullable().optional(),
 });
 
-/** Zod schema for ResourcesSetResourceMetadataInput */
+/** Zod schema for ResourcesSetResourceMetadataInput. Request model for setting resource metadata */
 ResourcesSetResourceMetadataInputSchema = z.object({
   category: z.string().nullable().optional(),
   dataType: z.string().nullable().optional(),
@@ -29806,7 +32956,7 @@ ResourcesSetResourceMetadataInputSchema = z.object({
   value: z.string().nullable().optional(),
 });
 
-/** Zod schema for ResourcesSetResourceSettingsInput */
+/** Zod schema for ResourcesSetResourceSettingsInput. Request model for setting resource settings (tenant level) */
 ResourcesSetResourceSettingsInputSchema = z.object({
   allowUserOverride: z.boolean().nullable().optional(),
   category: z.string().nullable().optional(),
@@ -29818,20 +32968,20 @@ ResourcesSetResourceSettingsInputSchema = z.object({
   value: z.string().nullable().optional(),
 });
 
-/** Zod schema for ResourcesSetUserResourceSettingsInput */
+/** Zod schema for ResourcesSetUserResourceSettingsInput. Request model for setting user resource settings override */
 ResourcesSetUserResourceSettingsInputSchema = z.object({
   value: z.string().nullable().optional(),
 });
 
-/** Zod schema for ResourcesToggleResourceQuotaInput */
+/** Zod schema for ResourcesToggleResourceQuotaInput. Request DTO for toggling a resource quota */
 ResourcesToggleResourceQuotaInputSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
-/** Zod schema for ResourcesTrendGranularity */
+/** Zod schema for ResourcesTrendGranularity. Granularity for trend data aggregation */
 ResourcesTrendGranularitySchema = z.enum(['Daily', 'Weekly', 'Monthly']);
 
-/** Zod schema for ResourcesUsageRecord */
+/** Zod schema for ResourcesUsageRecord. Tracks resource usage over time for analytics and monitoring */
 ResourcesUsageRecordSchema = z.object({
   id: z.string().uuid().optional(),
   averagePerDay: z.number().nullable().optional(),
@@ -29865,14 +33015,14 @@ ResourcesUsageRecordSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for ResourcesUsageTrendDataPoint */
+/** Zod schema for ResourcesUsageTrendDataPoint. Single data point in usage trend */
 ResourcesUsageTrendDataPointSchema = z.object({
   period: z.string().datetime().optional(),
   tenantCount: z.number().int().optional(),
   totalUsage: z.number().int().optional(),
 });
 
-/** Zod schema for ResourcesUsageTrendsResult */
+/** Zod schema for ResourcesUsageTrendsResult. Result of usage trends query */
 ResourcesUsageTrendsResultSchema = z.object({
   dataPoints: z
     .array(z.lazy(() => ResourcesUsageTrendDataPointSchema))
@@ -29896,13 +33046,13 @@ SocialAssetsSocialMediaSocialMediaAssetDescriptorSchema = z.object({
 /** Zod schema for SocialAssetsSocialMediaSocialMediaProcessingState */
 SocialAssetsSocialMediaSocialMediaProcessingStateSchema = z.enum(['Processing', 'Ready', 'Rejected']);
 
-/** Zod schema for SocialBlogAuthoringApplyBlogAiProposalInput */
+/** Zod schema for SocialBlogAuthoringApplyBlogAiProposalInput. Applies a pending proposal to the post at the given revision (with cursor insert offset). */
 SocialBlogAuthoringApplyBlogAiProposalInputSchema = z.object({
   cursorOffset: z.number().int().nullable().optional(),
   postRevision: z.number().int().optional(),
 });
 
-/** Zod schema for SocialBlogAuthoringBlogAiConversationDto */
+/** Zod schema for SocialBlogAuthoringBlogAiConversationDto. A copilot conversation scoped to one post and author. */
 SocialBlogAuthoringBlogAiConversationDtoSchema = z.object({
   id: z.string().uuid().optional(),
   authorId: z.string().uuid().optional(),
@@ -29914,7 +33064,7 @@ SocialBlogAuthoringBlogAiConversationDtoSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for SocialBlogAuthoringBlogAiCreditUsageDto */
+/** Zod schema for SocialBlogAuthoringBlogAiCreditUsageDto. Credit accounting snapshot for a run or wallet. */
 SocialBlogAuthoringBlogAiCreditUsageDtoSchema = z.object({
   availableSoftCredits: z.number().int().optional(),
   currency: z.string().nullable().optional(),
@@ -29925,7 +33075,7 @@ SocialBlogAuthoringBlogAiCreditUsageDtoSchema = z.object({
   settledCost: z.number().int().optional(),
 });
 
-/** Zod schema for SocialBlogAuthoringBlogAiEntitlementDto */
+/** Zod schema for SocialBlogAuthoringBlogAiEntitlementDto. The author's wallet snapshot for copilot UI badges. */
 SocialBlogAuthoringBlogAiEntitlementDtoSchema = z.object({
   availableSoftCredits: z.number().int().optional(),
   currency: z.string().nullable().optional(),
@@ -29933,7 +33083,7 @@ SocialBlogAuthoringBlogAiEntitlementDtoSchema = z.object({
   settledSoftCredits: z.number().int().optional(),
 });
 
-/** Zod schema for SocialBlogAuthoringBlogAiMessageDto */
+/** Zod schema for SocialBlogAuthoringBlogAiMessageDto. A conversation message (user instruction or assistant output). */
 SocialBlogAuthoringBlogAiMessageDtoSchema = z.object({
   id: z.string().uuid().optional(),
   content: z.string().nullable().optional(),
@@ -29942,7 +33092,7 @@ SocialBlogAuthoringBlogAiMessageDtoSchema = z.object({
   runId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for SocialBlogAuthoringBlogAiProposalDto */
+/** Zod schema for SocialBlogAuthoringBlogAiProposalDto. An AI-proposed change awaiting author apply/discard. */
 SocialBlogAuthoringBlogAiProposalDtoSchema = z.object({
   id: z.string().uuid().optional(),
   basePostRevision: z.number().int().optional(),
@@ -29954,7 +33104,7 @@ SocialBlogAuthoringBlogAiProposalDtoSchema = z.object({
   status: z.lazy(() => SocialBlogBlogAiProposalStatusSchema).optional(),
 });
 
-/** Zod schema for SocialBlogAuthoringBlogAiRunDto */
+/** Zod schema for SocialBlogAuthoringBlogAiRunDto. A single AI authoring run with usage and (when complete) its proposal. */
 SocialBlogAuthoringBlogAiRunDtoSchema = z.object({
   id: z.string().uuid().optional(),
   basePostRevision: z.number().int().optional(),
@@ -29974,7 +33124,7 @@ SocialBlogAuthoringBlogAiRunDtoSchema = z.object({
   usage: z.lazy(() => SocialBlogAuthoringBlogAiCreditUsageDtoSchema).optional(),
 });
 
-/** Zod schema for SocialBlogAuthoringBlogAiRunInput */
+/** Zod schema for SocialBlogAuthoringBlogAiRunInput. Request to start an AI authoring run against a post draft revision. */
 SocialBlogAuthoringBlogAiRunInputSchema = z.object({
   conversationId: z.string().uuid().nullable().optional(),
   idempotencyKey: z.string().nullable().optional(),
@@ -29984,7 +33134,7 @@ SocialBlogAuthoringBlogAiRunInputSchema = z.object({
   selection: z.string().nullable().optional(),
 });
 
-/** Zod schema for SocialBlogAuthoringBlogPostDto */
+/** Zod schema for SocialBlogAuthoringBlogPostDto. Post view returned after applying an AI proposal (presentation fields + revision). */
 SocialBlogAuthoringBlogPostDtoSchema = z.object({
   id: z.string().uuid().optional(),
   content: z.string().nullable().optional(),
@@ -30012,7 +33162,8 @@ SocialBlogBlogAiProposalStatusSchema = z.enum(['Pending', 'Applied', 'Discarded'
 /** Zod schema for SocialBlogBlogAiRunStatus */
 SocialBlogBlogAiRunStatusSchema = z.enum(['Queued', 'Reserved', 'Running', 'Completed', 'Failed', 'Cancelled']);
 
-/** Zod schema for SocialBlogBlogComment */
+/** Zod schema for SocialBlogBlogComment. A comment on a published blog post. Depth ≤ 1 (top-level or one reply level) is
+enforced by the comment service. Soft delete is moderation. */
 SocialBlogBlogCommentSchema = z.object({
   id: z.string().uuid().optional(),
   authorUserId: z.string().uuid().optional(),
@@ -30038,10 +33189,12 @@ SocialBlogBlogCommentSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for SocialBlogBlogContentFormat */
+/** Zod schema for SocialBlogBlogContentFormat. Defines how a blog post body is authored and rendered. Values are persisted and must remain stable. */
 SocialBlogBlogContentFormatSchema = z.enum(['Markdown', 'Lexical']);
 
-/** Zod schema for SocialBlogBlogPost */
+/** Zod schema for SocialBlogBlogPost. A long-form blog article. The post row IS the draft — GameGuild.Social.Blog.BlogPost.Revision guards
+concurrent co-author edits. TenantId is quota/policy metadata only; blog content is
+global and user-scoped. */
 SocialBlogBlogPostSchema = z.object({
   id: z.string().uuid().optional(),
   allowComments: z.boolean().optional(),
@@ -30087,34 +33240,34 @@ SocialBlogBlogPostSchema = z.object({
 /** Zod schema for SocialBlogBlogPostStatus */
 SocialBlogBlogPostStatusSchema = z.enum(['Draft', 'Published']);
 
-/** Zod schema for SocialBlogControllersAddBlogCommentInput */
+/** Zod schema for SocialBlogControllersAddBlogCommentInput. Wire shape for M:GameGuild.Social.Blog.Controllers.BlogCommentsController.Add(System.Guid,GameGuild.Social.Blog.Controllers.AddBlogCommentRequest,System.Threading.CancellationToken); the author comes from the actor context. */
 SocialBlogControllersAddBlogCommentInputSchema = z.object({
   content: z.string().nullable().optional(),
   parentCommentId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for SocialBlogControllersBlogCoauthorInput */
+/** Zod schema for SocialBlogControllersBlogCoauthorInput. Wire shape for M:GameGuild.Social.Blog.Controllers.BlogAuthoringController.AddCoauthor(System.Guid,GameGuild.Social.Blog.Controllers.BlogCoauthorRequest,System.Threading.CancellationToken). */
 SocialBlogControllersBlogCoauthorInputSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-/** Zod schema for SocialBlogControllersChangeBlogPostSlugInput */
+/** Zod schema for SocialBlogControllersChangeBlogPostSlugInput. Wire shape for M:GameGuild.Social.Blog.Controllers.BlogAuthoringController.ChangeSlug(System.Guid,GameGuild.Social.Blog.Controllers.ChangeBlogPostSlugRequest,System.Threading.CancellationToken). */
 SocialBlogControllersChangeBlogPostSlugInputSchema = z.object({
   newSlug: z.string().nullable().optional(),
 });
 
-/** Zod schema for SocialBlogControllersCreateBlogPostInput */
+/** Zod schema for SocialBlogControllersCreateBlogPostInput. Wire shape for M:GameGuild.Social.Blog.Controllers.BlogAuthoringController.Create(GameGuild.Social.Blog.Controllers.CreateBlogPostRequest,System.Threading.CancellationToken); actor identity and tenant are never accepted from the body. */
 SocialBlogControllersCreateBlogPostInputSchema = z.object({
   format: z.lazy(() => SocialBlogBlogContentFormatSchema).optional(),
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for SocialBlogControllersTransferBlogPrimaryInput */
+/** Zod schema for SocialBlogControllersTransferBlogPrimaryInput. Wire shape for M:GameGuild.Social.Blog.Controllers.BlogAuthoringController.TransferPrimary(System.Guid,GameGuild.Social.Blog.Controllers.TransferBlogPrimaryRequest,System.Threading.CancellationToken). */
 SocialBlogControllersTransferBlogPrimaryInputSchema = z.object({
   newPrimaryUserId: z.string().uuid().optional(),
 });
 
-/** Zod schema for SocialBlogControllersUpdateBlogPostDraftInput */
+/** Zod schema for SocialBlogControllersUpdateBlogPostDraftInput. Wire shape for M:GameGuild.Social.Blog.Controllers.BlogAuthoringController.Update(System.Guid,GameGuild.Social.Blog.Controllers.UpdateBlogPostDraftRequest,System.Threading.CancellationToken); only patch fields and the expected revision. */
 SocialBlogControllersUpdateBlogPostDraftInputSchema = z.object({
   allowComments: z.boolean().nullable().optional(),
   canonicalUrlOverride: z.string().nullable().optional(),
@@ -30131,7 +33284,7 @@ SocialBlogControllersUpdateBlogPostDraftInputSchema = z.object({
   twitterCard: z.string().nullable().optional(),
 });
 
-/** Zod schema for SocialBlogQueriesBlogCommentDto */
+/** Zod schema for SocialBlogQueriesBlogCommentDto. A published comment with its author handle resolved via Social.Profiles. */
 SocialBlogQueriesBlogCommentDtoSchema = z.object({
   id: z.string().uuid().optional(),
   authorDisplayName: z.string().nullable().optional(),
@@ -30141,7 +33294,7 @@ SocialBlogQueriesBlogCommentDtoSchema = z.object({
   parentCommentId: z.string().uuid().nullable().optional(),
 });
 
-/** Zod schema for SocialBlogQueriesBlogCommentPage */
+/** Zod schema for SocialBlogQueriesBlogCommentPage. Page of comments, oldest-first, with depth-1 replies flattened under their parents. */
 SocialBlogQueriesBlogCommentPageSchema = z.object({
   hasMore: z.boolean().optional(),
   items: z
@@ -30150,7 +33303,7 @@ SocialBlogQueriesBlogCommentPageSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for SocialBlogQueriesBlogPostDetailDto */
+/** Zod schema for SocialBlogQueriesBlogPostDetailDto. Full public post detail: body, format, SEO fields, revision, and updated timestamp. */
 SocialBlogQueriesBlogPostDetailDtoSchema = z.object({
   id: z.string().uuid().optional(),
   allowComments: z.boolean().optional(),
@@ -30179,7 +33332,8 @@ SocialBlogQueriesBlogPostDetailDtoSchema = z.object({
   viewsCount: z.number().int().optional(),
 });
 
-/** Zod schema for SocialBlogQueriesBlogPostSummaryDto */
+/** Zod schema for SocialBlogQueriesBlogPostSummaryDto. Feed/list card summary of a published post. Deliberately excludes body fields
+(Content/JsonBody) — list surfaces never ship the body. */
 SocialBlogQueriesBlogPostSummaryDtoSchema = z.object({
   id: z.string().uuid().optional(),
   coAuthorHandles: z.array(z.string()).nullable().optional(),
@@ -30196,7 +33350,7 @@ SocialBlogQueriesBlogPostSummaryDtoSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for SocialBlogQueriesBlogPostSummaryPage */
+/** Zod schema for SocialBlogQueriesBlogPostSummaryPage. Page of published posts ordered newest-first (keyset on PublishedAt, then Id). */
 SocialBlogQueriesBlogPostSummaryPageSchema = z.object({
   hasMore: z.boolean().optional(),
   items: z
@@ -30205,7 +33359,7 @@ SocialBlogQueriesBlogPostSummaryPageSchema = z.object({
     .optional(),
 });
 
-/** Zod schema for SocialBlogQueriesBlogRouteResolutionDto */
+/** Zod schema for SocialBlogQueriesBlogRouteResolutionDto. Canonical (handle, slug) route a stale URL resolves to, for permanent redirects. */
 SocialBlogQueriesBlogRouteResolutionDtoSchema = z.object({
   handle: z.string().nullable().optional(),
   slug: z.string().nullable().optional(),
@@ -30859,7 +34013,8 @@ TeamsTeamStatusSchema = z.enum(['Active', 'Archived']);
 /** Zod schema for TeamsTeamVisibility */
 TeamsTeamVisibilitySchema = z.enum(['Private', 'Tenant', 'Public']);
 
-/** Zod schema for TenantInfo */
+/** Zod schema for TenantInfo. Lightweight tenant information for cross-module queries.
+Contains only the essential tenant data needed by other modules. */
 TenantInfoSchema = z.object({
   id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
@@ -30921,7 +34076,7 @@ TestingLabConfigureTestingEventLearningInputSchema = z.object({
   requirement: z.lazy(() => TestingLabTestingLearningCompletionRequirementSchema).optional(),
 });
 
-/** Zod schema for TestingLabCreateSimpleTestingRequestDto */
+/** Zod schema for TestingLabCreateSimpleTestingRequestDto. Simplified DTO for students to submit versions directly without pre-existing ProjectVersion */
 TestingLabCreateSimpleTestingRequestDtoSchema = z.object({
   description: z.string().nullable().optional(),
   downloadUrl: z.string().max(1000).nullable().optional(),
@@ -30970,7 +34125,7 @@ TestingLabCreateTestingLabRoleInputSchema = z.object({
   permissions: z.lazy(() => TestingLabTestingLabPermissionsDtoSchema).optional(),
 });
 
-/** Zod schema for TestingLabCreateTestingLabSettingsDto */
+/** Zod schema for TestingLabCreateTestingLabSettingsDto. Data Transfer Object for creating TestingLabSettings */
 TestingLabCreateTestingLabSettingsDtoSchema = z.object({
   allowPublicSignups: z.boolean().optional(),
   defaultSessionDuration: z.number().int().min(15).max(480),
@@ -31057,10 +34212,10 @@ TestingLabFeedbackInputSchema = z.object({
   testingContext: z.lazy(() => TestingLabTestingContextSchema).optional(),
 });
 
-/** Zod schema for TestingLabFeedbackQuality */
+/** Zod schema for TestingLabFeedbackQuality. Qualitative rating applied to submitted testing feedback. */
 TestingLabFeedbackQualitySchema = z.enum(['Low', 'Medium', 'High']);
 
-/** Zod schema for TestingLabFeedbackQualityRating */
+/** Zod schema for TestingLabFeedbackQualityRating. Represents feedback quality rating given by users to evaluate feedback usefulness */
 TestingLabFeedbackQualityRatingSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
@@ -31112,7 +34267,9 @@ TestingLabLocationStatusSchema = z.enum(['Active', 'Maintenance', 'Inactive']);
 /** Zod schema for TestingLabParticipationStatus */
 TestingLabParticipationStatusSchema = z.enum(['Registered', 'Active', 'Completed', 'Withdrawn', 'Suspended']);
 
-/** Zod schema for TestingLabPublicTestingEventGameProjection */
+/** Zod schema for TestingLabPublicTestingEventGameProjection. A deliberately small, event-scoped preview of a game approved for public
+playtesting. Private project metadata and submitted application details are
+not included in the public event contract. */
 TestingLabPublicTestingEventGameProjectionSchema = z.object({
   description: z.string().nullable().optional(),
   imageUrl: z.string().nullable().optional(),
@@ -31263,7 +34420,7 @@ TestingLabSessionProjectProjectionSchema = z.object({
   sessionId: z.string().uuid().optional(),
 });
 
-/** Zod schema for TestingLabSessionRegistration */
+/** Zod schema for TestingLabSessionRegistration. Represents a registration for a testing session */
 TestingLabSessionRegistrationSchema = z.object({
   id: z.string().uuid().optional(),
   attendanceDuration: z.string().nullable().optional(),
@@ -31339,7 +34496,7 @@ TestingLabSessionWaitlistSchema = z.object({
   version: z.number().int().optional(),
 });
 
-/** Zod schema for TestingLabSubmitFeedbackDto */
+/** Zod schema for TestingLabSubmitFeedbackDto. DTO for submitting simple feedback for a testing request */
 TestingLabSubmitFeedbackDtoSchema = z.object({
   additionalNotes: z.string().nullable().optional(),
   feedbackResponses: z.string().min(1),
@@ -31741,7 +34898,7 @@ TestingLabTestingEventTemplateRevisionProjectionSchema = z.object({
   testerRegistrationSchema: z.lazy(() => TestingLabQuestionnaireSchemaSchema).optional(),
 });
 
-/** Zod schema for TestingLabTestingFeedback */
+/** Zod schema for TestingLabTestingFeedback. Represents feedback collected from testing sessions and QA activities */
 TestingLabTestingFeedbackSchema = z.object({
   id: z.string().uuid().optional(),
   additionalNotes: z.string().nullable().optional(),
@@ -31837,7 +34994,7 @@ TestingLabTestingFeedbackDirectoryPageSchema = z.object({
   totalCount: z.number().int().optional(),
 });
 
-/** Zod schema for TestingLabTestingFeedbackForm */
+/** Zod schema for TestingLabTestingFeedbackForm. Represents a feedback form template for collecting structured QA feedback */
 TestingLabTestingFeedbackFormSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
@@ -31894,7 +35051,7 @@ TestingLabTestingFeedbackObligationStatusSchema = z.enum(['Pending', 'Fulfilled'
 /** Zod schema for TestingLabTestingFeedbackSource */
 TestingLabTestingFeedbackSourceSchema = z.enum(['Request', 'Event']);
 
-/** Zod schema for TestingLabTestingInput */
+/** Zod schema for TestingLabTestingInput. Represents a request for testing and quality assurance */
 TestingLabTestingInputSchema = z.object({
   id: z.string().uuid().optional(),
   acceptsNewTesters: z.boolean().optional(),
@@ -32071,7 +35228,7 @@ TestingLabTestingLabRoleTemplateSchema = z.object({
   permissions: z.lazy(() => TestingLabTestingLabPermissionsDtoSchema).optional(),
 });
 
-/** Zod schema for TestingLabTestingLabSettingsDto */
+/** Zod schema for TestingLabTestingLabSettingsDto. Data Transfer Object for TestingLabSettings responses */
 TestingLabTestingLabSettingsDtoSchema = z.object({
   id: z.string().uuid().optional(),
   allowPublicSignups: z.boolean().optional(),
@@ -32092,7 +35249,7 @@ TestingLabTestingLabSettingsDtoSchema = z.object({
 /** Zod schema for TestingLabTestingLearningCompletionRequirement. A comma-separated combination of the declared flag names. */
 TestingLabTestingLearningCompletionRequirementSchema = z.string();
 
-/** Zod schema for TestingLabTestingLocation */
+/** Zod schema for TestingLabTestingLocation. Represents a testing location where QA sessions can be conducted */
 TestingLabTestingLocationSchema = z.object({
   id: z.string().uuid().optional(),
   activeSessionCount: z.number().int().optional(),
@@ -32140,7 +35297,7 @@ TestingLabTestingLocationSchema = z.object({
 /** Zod schema for TestingLabTestingMode */
 TestingLabTestingModeSchema = z.enum(['Online', 'InPerson', 'Hybrid']);
 
-/** Zod schema for TestingLabTestingParticipant */
+/** Zod schema for TestingLabTestingParticipant. Represents a participant in testing sessions and QA activities */
 TestingLabTestingParticipantSchema = z.object({
   id: z.string().uuid().optional(),
   canProvideFeedback: z.boolean().optional(),
@@ -32367,7 +35524,9 @@ TestingLabTestingRequestDetailProjectionSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
-/** Zod schema for TestingLabTestingRequestProjectProjection */
+/** Zod schema for TestingLabTestingRequestProjectProjection. Stable read model for a Testing Lab project request.
+It intentionally omits EF navigation collections so an optional project version
+cannot make the API response unparseable for the dashboard client. */
 TestingLabTestingRequestProjectProjectionSchema = z.object({
   id: z.string().uuid().optional(),
   slug: z.string().nullable().optional(),
@@ -32386,7 +35545,7 @@ TestingLabTestingRequestProjectVersionProjectionSchema = z.object({
 /** Zod schema for TestingLabTestingRequestStatus */
 TestingLabTestingRequestStatusSchema = z.enum(['Draft', 'Open', 'Active', 'InProgress', 'Paused', 'Completed', 'Cancelled']);
 
-/** Zod schema for TestingLabTestingSession */
+/** Zod schema for TestingLabTestingSession. Represents a testing session for quality assurance and user feedback collection */
 TestingLabTestingSessionSchema = z.object({
   id: z.string().uuid().optional(),
   allowsRegistration: z.boolean().optional(),
@@ -32491,7 +35650,7 @@ TestingLabUpdateTestingLabRoleInputSchema = z.object({
   permissions: z.lazy(() => TestingLabTestingLabPermissionsDtoSchema).optional(),
 });
 
-/** Zod schema for TestingLabUpdateTestingLabSettingsDto */
+/** Zod schema for TestingLabUpdateTestingLabSettingsDto. Data Transfer Object for updating TestingLabSettings */
 TestingLabUpdateTestingLabSettingsDtoSchema = z.object({
   allowPublicSignups: z.boolean().nullable().optional(),
   defaultSessionDuration: z.number().int().min(15).max(480).nullable().optional(),

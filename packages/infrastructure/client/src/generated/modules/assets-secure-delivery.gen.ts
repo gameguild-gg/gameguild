@@ -16,6 +16,12 @@ export class AssetsSecureDeliveryModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Gets asset access URL with security checks.
+   *
+   * Intentionally anonymous: URL generation is authorized per request by
+   * M:GameGuild.Assets.IAssetAccessService.ValidateAccessAsync(System.Guid,System.Nullable{System.Guid},System.Nullable{System.Guid},System.Threading.CancellationToken,System.Boolean) against the asset's access
+   * policy — public/unlisted assets are reachable, protected policies require an
+   * authenticated (and tenant-verified) caller.
    */
   async postApiAssetsAccessUrl(assetId: string, body: Types.AssetsSecurityAccessUrlInput): Promise<Result<Types.AssetsAssetAccessUrl, ApiError>> {
     const url = `/api/assets/${assetId}/access-url`;
@@ -40,6 +46,12 @@ export class AssetsSecureDeliveryModule {
   }
 
   /**
+   * Serves asset content with full security checks.
+   *
+   * Intentionally anonymous: content delivery is authenticated by the signed,
+   * expiring asset token (plus rate limiting and access-policy validation inside).
+   * Assets without a token must pass M:GameGuild.Assets.IAssetAccessService.ValidateAccessAsync(System.Guid,System.Nullable{System.Guid},System.Nullable{System.Guid},System.Threading.CancellationToken,System.Boolean),
+   * which denies protected policies to unauthenticated callers.
    */
   async getApiAssetsContent(assetId: string, query?: { token?: string; transform?: string }): Promise<Result<void, ApiError>> {
     const url = `/api/assets/${assetId}/content`;

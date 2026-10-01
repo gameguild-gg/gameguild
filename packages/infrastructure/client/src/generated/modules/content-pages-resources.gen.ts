@@ -16,6 +16,7 @@ export class ContentPagesResourcesModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * List content resources with filtering and search.
    */
   async getContentResourcesForGetContentResources(query?: {
     type?: Types.ContentPagesContentResourceType;
@@ -40,6 +41,7 @@ export class ContentPagesResourcesModule {
   }
 
   /**
+   * Create a new content resource.
    */
   async postContentResources(body: Types.ContentPagesCreateContentResourceDto): Promise<Result<Types.ContentPagesContentResourceDto, ApiError>> {
     const url = '/v1/content-resources';
@@ -64,6 +66,7 @@ export class ContentPagesResourcesModule {
   }
 
   /**
+   * Get a content resource by ID.
    */
   async getContentResourcesForGetContentResourcesById(id: string): Promise<Result<Types.ContentPagesContentResourceDto, ApiError>> {
     const url = `/v1/content-resources/${id}`;
@@ -84,6 +87,7 @@ export class ContentPagesResourcesModule {
   }
 
   /**
+   * Update a content resource.
    */
   async putContentResources(id: string, body: Types.ContentPagesUpdateContentResourceDto): Promise<Result<Types.ContentPagesContentResourceDto, ApiError>> {
     const url = `/v1/content-resources/${id}`;
@@ -108,6 +112,7 @@ export class ContentPagesResourcesModule {
   }
 
   /**
+   * Soft-delete a content resource.
    */
   async deleteContentResources(id: string): Promise<Result<void, ApiError>> {
     const url = `/v1/content-resources/${id}`;
@@ -122,6 +127,7 @@ export class ContentPagesResourcesModule {
   }
 
   /**
+   * Publish a content resource.
    */
   async postContentResourcesPublish(id: string): Promise<Result<Types.ContentPagesContentResourceDto, ApiError>> {
     const url = `/v1/content-resources/${id}/publish`;
@@ -142,6 +148,7 @@ export class ContentPagesResourcesModule {
   }
 
   /**
+   * Get a content resource by slug. Publicly returns published resources only.
    */
   async getContentResourcesBySlug(slug: string): Promise<Result<Types.ContentPagesContentResourceDto, ApiError>> {
     const url = `/v1/content-resources/by-slug/${slug}`;

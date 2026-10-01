@@ -16,6 +16,7 @@ export class AccessControlPermissionDelegationsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Delegate permissions to another user
    */
   async postPermissionDelegations(
     body: Types.IdentityAuthorizationCommandsDelegatePermissionsCommand,
@@ -42,6 +43,7 @@ export class AccessControlPermissionDelegationsModule {
   }
 
   /**
+   * Cleanup expired delegations (admin only)
    */
   async postPermissionDelegationsCleanup(): Promise<Result<number, ApiError>> {
     const url = '/v1/permission-delegations/:cleanup';
@@ -56,6 +58,7 @@ export class AccessControlPermissionDelegationsModule {
   }
 
   /**
+   * Get a delegation by ID
    */
   async getPermissionDelegations(id: string): Promise<Result<Types.IdentityAuthorizationPermissionDelegation, ApiError>> {
     const url = `/v1/permission-delegations/${id}`;
@@ -76,6 +79,7 @@ export class AccessControlPermissionDelegationsModule {
   }
 
   /**
+   * Revoke a permission delegation
    */
   async deletePermissionDelegations(id: string): Promise<Result<void, ApiError>> {
     const url = `/v1/permission-delegations/${id}`;
@@ -90,6 +94,7 @@ export class AccessControlPermissionDelegationsModule {
   }
 
   /**
+   * Check if user has a delegated permission
    */
   async getPermissionDelegationsCheck(query?: {
     delegateUserId?: string;
@@ -110,6 +115,7 @@ export class AccessControlPermissionDelegationsModule {
   }
 
   /**
+   * Get active delegations for a delegate user
    */
   async getPermissionDelegationsDelegate(
     delegateUserId: string,
@@ -128,6 +134,7 @@ export class AccessControlPermissionDelegationsModule {
   }
 
   /**
+   * Get delegations made by a delegator
    */
   async getPermissionDelegationsDelegator(
     delegatorUserId: string,

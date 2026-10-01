@@ -16,6 +16,7 @@ export class LearningExperienceSocialRepliesModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Gets replies for a discussion
    */
   async getApiSocialDiscussionsReplies(
     discussionId: string,
@@ -34,6 +35,7 @@ export class LearningExperienceSocialRepliesModule {
   }
 
   /**
+   * Creates a reply to a discussion
    */
   async postApiSocialDiscussionsReplies(
     discussionId: string,
@@ -61,6 +63,7 @@ export class LearningExperienceSocialRepliesModule {
   }
 
   /**
+   * Deletes a reply (owner only)
    */
   async deleteApiSocialReplies(id: string): Promise<Result<void, ApiError>> {
     const url = `/api/social/replies/${id}`;
@@ -75,6 +78,7 @@ export class LearningExperienceSocialRepliesModule {
   }
 
   /**
+   * Accepts a reply as the answer (discussion author only)
    */
   async postApiSocialRepliesAccept(id: string): Promise<Result<Types.LearningExperienceSocialServicesDiscussionReplyDto, ApiError>> {
     const url = `/api/social/replies/${id}/accept`;
@@ -95,6 +99,7 @@ export class LearningExperienceSocialRepliesModule {
   }
 
   /**
+   * Upvotes a reply
    */
   async postApiSocialRepliesUpvote(id: string): Promise<Result<Types.LearningExperienceSocialServicesDiscussionReplyDto, ApiError>> {
     const url = `/api/social/replies/${id}/upvote`;
