@@ -9,6 +9,7 @@ using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Authorization.Utilities;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
@@ -274,6 +275,21 @@ public static class SecurityServiceCollectionExtensions
 
                 authzOptions.AddPolicy(name, policy => ConfigurePolicy(policy, configuredPolicy, options.RoleHierarchy));
             }
+
+            var configuredDefaultPolicy = authzOptions.GetPolicy(options.DefaultPolicy);
+            var defaultPolicyBuilder = new AuthorizationPolicyBuilder();
+            if (configuredDefaultPolicy is not null)
+            {
+                defaultPolicyBuilder.Combine(configuredDefaultPolicy);
+            }
+
+            if (options.RequireAuthenticatedUser &&
+                configuredDefaultPolicy?.Requirements.OfType<DenyAnonymousAuthorizationRequirement>().Any() != true)
+            {
+                defaultPolicyBuilder.RequireAuthenticatedUser();
+            }
+
+            authzOptions.DefaultPolicy = defaultPolicyBuilder.Build();
         });
 
         return services;
