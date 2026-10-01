@@ -18,13 +18,17 @@ public sealed class OpenApiLocalizationOptions
     public void Validate()
     {
         if (Locales is null)
+        {
             throw new ArgumentException("OpenAPI locales cannot be null.", nameof(Locales));
+        }
 
         var normalizedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var (name, document) in Locales)
         {
             if (string.IsNullOrWhiteSpace(name))
+            {
                 throw new ArgumentException("OpenAPI locale names cannot be empty.", nameof(Locales));
+            }
 
             CultureInfo culture;
             try
@@ -37,13 +41,19 @@ public sealed class OpenApiLocalizationOptions
             }
 
             if (culture.Name.Length == 0)
+            {
                 throw new ArgumentException("The invariant culture cannot be used as an OpenAPI locale.", nameof(Locales));
+            }
 
             if (!normalizedNames.Add(culture.Name))
+            {
                 throw new ArgumentException($"OpenAPI locale '{culture.Name}' is configured more than once.", nameof(Locales));
+            }
 
             if (document is null)
+            {
                 throw new ArgumentException($"OpenAPI locale '{culture.Name}' has no translation options.", nameof(Locales));
+            }
 
             document.Validate(culture.Name);
         }
@@ -71,7 +81,9 @@ public sealed class OpenApiLocalizationOptions
         {
             var suffix = $".{locale}";
             if (documentName.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+            {
                 return documentName[..^suffix.Length];
+            }
         }
 
         return documentName;
@@ -105,26 +117,34 @@ public sealed class OpenApiLocalizedDocumentOptions
         ValidateTranslations(Tags, $"OpenAPI locale '{locale}' tags");
 
         if (Operations is null)
+        {
             throw new ArgumentException($"OpenAPI locale '{locale}' operations cannot be null.");
+        }
 
         foreach (var (key, operation) in Operations)
         {
             ValidateKey(key, $"OpenAPI locale '{locale}' operation");
             if (operation is null)
+            {
                 throw new ArgumentException($"OpenAPI locale '{locale}' operation '{key}' has no translation options.");
+            }
 
             ValidateOptionalText(operation.Summary, $"OpenAPI locale '{locale}' operation '{key}' summary");
             ValidateOptionalText(operation.Description, $"OpenAPI locale '{locale}' operation '{key}' description");
         }
 
         if (Schemas is null)
+        {
             throw new ArgumentException($"OpenAPI locale '{locale}' schemas cannot be null.");
+        }
 
         foreach (var (key, schema) in Schemas)
         {
             ValidateKey(key, $"OpenAPI locale '{locale}' schema");
             if (schema is null)
+            {
                 throw new ArgumentException($"OpenAPI locale '{locale}' schema '{key}' has no translation options.");
+            }
 
             ValidateOptionalText(schema.Description, $"OpenAPI locale '{locale}' schema '{key}' description");
             ValidateTranslations(schema.Properties, $"OpenAPI locale '{locale}' schema '{key}' properties");
@@ -134,7 +154,9 @@ public sealed class OpenApiLocalizedDocumentOptions
     private static void ValidateTranslations(IDictionary<string, string>? translations, string name)
     {
         if (translations is null)
+        {
             throw new ArgumentException($"{name} cannot be null.");
+        }
 
         foreach (var (key, value) in translations)
         {
@@ -146,13 +168,17 @@ public sealed class OpenApiLocalizedDocumentOptions
     private static void ValidateKey(string? key, string name)
     {
         if (string.IsNullOrWhiteSpace(key))
+        {
             throw new ArgumentException($"{name} keys cannot be empty.");
+        }
     }
 
     private static void ValidateOptionalText(string? value, string name)
     {
         if (value is not null && string.IsNullOrWhiteSpace(value))
+        {
             throw new ArgumentException($"{name} cannot be empty when specified.");
+        }
     }
 }
 

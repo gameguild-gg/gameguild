@@ -38,10 +38,21 @@ public static class OpenApiExtensions
     /// <param name="services">The service collection</param>
     /// <param name="configuration">The application configuration</param>
     /// <param name="options">OpenAPI options</param>
+    /// <returns>The service collection for chaining</returns>
+    public static IServiceCollection SetupOpenApi(this IServiceCollection services, IConfiguration configuration,
+        OpenApiOptions? options)
+        => SetupOpenApi(services, configuration, options, localizationOptions: null);
+
+    /// <summary>
+    ///     Sets up OpenAPI/Swagger with configurable options and localized documents.
+    /// </summary>
+    /// <param name="services">The service collection</param>
+    /// <param name="configuration">The application configuration</param>
+    /// <param name="options">OpenAPI options</param>
     /// <param name="localizationOptions">Optional localized document translations</param>
     /// <returns>The service collection for chaining</returns>
     public static IServiceCollection SetupOpenApi(this IServiceCollection services, IConfiguration configuration,
-        OpenApiOptions? options, OpenApiLocalizationOptions? localizationOptions = null)
+        OpenApiOptions? options, OpenApiLocalizationOptions? localizationOptions)
     {
         options ??= OptionBuilderUtilities.CreateAndBind(configuration, "OpenApi", OpenApiOptions.CreateDefault);
         options.Validate();
