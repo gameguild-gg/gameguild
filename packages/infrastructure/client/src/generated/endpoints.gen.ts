@@ -18,7 +18,7 @@ export const getWellKnownJwksJsonEndpoint = {
   method: 'GET' as const,
   path: '/.well-known/jwks.json' as const,
   tags: ['LearningLti'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetApiAnalyticsDashboardsInput {
@@ -199,7 +199,7 @@ export const postApiAssetsAccessUrlEndpoint = {
   method: 'POST' as const,
   path: '/api/assets/{assetId}/access-url' as const,
   tags: ['AssetsSecureDelivery'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetApiAssetsContentInput {
@@ -215,7 +215,7 @@ export const getApiAssetsContentEndpoint = {
   method: 'GET' as const,
   path: '/api/assets/{assetId}/content' as const,
   tags: ['AssetsSecureDelivery'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetApiCertificatesInput {
@@ -361,7 +361,7 @@ export const getApiCertificatesVerifyEndpoint = {
   method: 'GET' as const,
   path: '/api/certificates/verify/{certificateNumber}' as const,
   tags: ['LearningCertificates'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PostApiCohortsInput {
@@ -914,7 +914,7 @@ export const getApiContentsVersioningEntityCurrentEndpoint = {
   method: 'GET' as const,
   path: '/api/contents/versioning/entity/{entityType}/{entityId}/current' as const,
   tags: ['ResourcesContentsVersioning'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetApiContentsVersioningEntityHistoryInput {
@@ -983,7 +983,7 @@ export const postApiFollowersBatchCountsEndpoint = {
   method: 'POST' as const,
   path: '/api/followers/batch/counts' as const,
   tags: ['SocialFollowsFollowers'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PostApiFollowersBatchStatusInput {
@@ -1037,7 +1037,7 @@ export const getApiFollowersCountFollowersEndpoint = {
   method: 'GET' as const,
   path: '/api/followers/count/followers/{entityId}' as const,
   tags: ['SocialFollowsFollowers'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetApiFollowersCountFollowingInput {
@@ -1080,7 +1080,7 @@ export const getApiFollowersFollowersEndpoint = {
   method: 'GET' as const,
   path: '/api/followers/followers/{entityId}' as const,
   tags: ['SocialFollowsFollowers'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetApiFollowersFollowingInput {
@@ -1381,7 +1381,7 @@ export const getApiHealthEndpoint = {
   method: 'GET' as const,
   path: '/api/health' as const,
   tags: ['Health'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -1396,7 +1396,7 @@ export const getApiHealthDependenciesEndpoint = {
   method: 'GET' as const,
   path: '/api/health/dependencies' as const,
   tags: ['Health'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PostApiLearningEnrollmentsInput {
@@ -1491,7 +1491,7 @@ export const getApiLiveEndpoint = {
   method: 'GET' as const,
   path: '/api/live' as const,
   tags: ['Health'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetApiMetricsProductInput {
@@ -1837,7 +1837,7 @@ export const getApiReadyEndpoint = {
   method: 'GET' as const,
   path: '/api/ready' as const,
   tags: ['Health'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface DeleteApiSocialBlogCommentsInput {
@@ -2120,7 +2120,7 @@ export const getApiSocialBlogPublicAuthorsForGetApiSocialBlogPublicAuthorsByHand
   method: 'GET' as const,
   path: '/api/social/blog/public/authors/{handle}' as const,
   tags: ['SocialBlogPublic'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetApiSocialBlogPublicAuthorsForGetApiSocialBlogPublicAuthorsByHandleBySlugInput {
@@ -2133,7 +2133,7 @@ export const getApiSocialBlogPublicAuthorsForGetApiSocialBlogPublicAuthorsByHand
   method: 'GET' as const,
   path: '/api/social/blog/public/authors/{handle}/{slug}' as const,
   tags: ['SocialBlogPublic'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetApiSocialBlogPublicPostsInput {
@@ -2148,7 +2148,7 @@ export const getApiSocialBlogPublicPostsEndpoint = {
   method: 'GET' as const,
   path: '/api/social/blog/public/posts' as const,
   tags: ['SocialBlogPublic'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetApiSocialBlogPublicPostsCommentsInput {
@@ -2164,7 +2164,7 @@ export const getApiSocialBlogPublicPostsCommentsEndpoint = {
   method: 'GET' as const,
   path: '/api/social/blog/public/posts/{id}/comments' as const,
   tags: ['SocialBlogPublic'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PostApiSocialBlogPublicPostsViewsInput {
@@ -2176,7 +2176,7 @@ export const postApiSocialBlogPublicPostsViewsEndpoint = {
   method: 'POST' as const,
   path: '/api/social/blog/public/posts/{id}/views' as const,
   tags: ['SocialBlogPublic'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetApiSocialBlogPublicResolveInput {
@@ -2189,7 +2189,7 @@ export const getApiSocialBlogPublicResolveEndpoint = {
   method: 'GET' as const,
   path: '/api/social/blog/public/resolve/{handle}/{slug}' as const,
   tags: ['SocialBlogPublic'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetApiSocialCoursesContentDiscussionsInput {
@@ -2206,7 +2206,7 @@ export const getApiSocialCoursesContentDiscussionsEndpoint = {
   method: 'GET' as const,
   path: '/api/social/courses/{courseId}/content/{contentId}/discussions' as const,
   tags: ['LearningExperienceSocialDiscussions'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetApiSocialCoursesDiscussionsInput {
@@ -2223,7 +2223,7 @@ export const getApiSocialCoursesDiscussionsEndpoint = {
   method: 'GET' as const,
   path: '/api/social/courses/{courseId}/discussions' as const,
   tags: ['LearningExperienceSocialDiscussions'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PostApiSocialCoursesLikeInput {
@@ -2271,7 +2271,7 @@ export const getApiSocialCoursesLikeCountEndpoint = {
   method: 'GET' as const,
   path: '/api/social/courses/{courseId}/like/count' as const,
   tags: ['LearningExperienceSocialLikes'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetApiSocialCoursesRatingStatsInput {
@@ -2283,7 +2283,7 @@ export const getApiSocialCoursesRatingStatsEndpoint = {
   method: 'GET' as const,
   path: '/api/social/courses/{courseId}/rating-stats' as const,
   tags: ['LearningExperienceSocialReviews'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetApiSocialCoursesReviewsInput {
@@ -2300,7 +2300,7 @@ export const getApiSocialCoursesReviewsEndpoint = {
   method: 'GET' as const,
   path: '/api/social/courses/{courseId}/reviews' as const,
   tags: ['LearningExperienceSocialReviews'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PostApiSocialDiscussionsInput {
@@ -2328,7 +2328,7 @@ export const getApiSocialDiscussionsRepliesEndpoint = {
   method: 'GET' as const,
   path: '/api/social/discussions/{discussionId}/replies' as const,
   tags: ['LearningExperienceSocialReplies'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PostApiSocialDiscussionsRepliesInput {
@@ -2353,7 +2353,7 @@ export const getApiSocialDiscussionsEndpoint = {
   method: 'GET' as const,
   path: '/api/social/discussions/{id}' as const,
   tags: ['LearningExperienceSocialDiscussions'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface DeleteApiSocialDiscussionsInput {
@@ -2788,7 +2788,7 @@ export const getApiSocialProfilesEndpoint = {
   method: 'GET' as const,
   path: '/api/social/profiles/@{handle}' as const,
   tags: ['SocialProfiles'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PutApiSocialProfilesPortfolioInput {
@@ -2828,7 +2828,7 @@ export const getApiSocialProfilesSearchEndpoint = {
   method: 'GET' as const,
   path: '/api/social/profiles/search' as const,
   tags: ['SocialProfiles'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface DeleteApiSocialProfilesSkillsInput {
@@ -3000,7 +3000,7 @@ export const getApiSocialReviewsEndpoint = {
   method: 'GET' as const,
   path: '/api/social/reviews/{id}' as const,
   tags: ['LearningExperienceSocialReviews'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface DeleteApiSocialReviewsInput {
@@ -5111,7 +5111,7 @@ export const postBillingWebhooksApplePayEndpoint = {
   method: 'POST' as const,
   path: '/api/v1/billing/webhooks/apple-pay' as const,
   tags: ['CommerceBillingWebhooks'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -5126,7 +5126,7 @@ export const postBillingWebhooksGooglePayEndpoint = {
   method: 'POST' as const,
   path: '/api/v1/billing/webhooks/google-pay' as const,
   tags: ['CommerceBillingWebhooks'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -5141,7 +5141,7 @@ export const postBillingWebhooksPaypalEndpoint = {
   method: 'POST' as const,
   path: '/api/v1/billing/webhooks/paypal' as const,
   tags: ['CommerceBillingWebhooks'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -5156,7 +5156,7 @@ export const postBillingWebhooksStripeEndpoint = {
   method: 'POST' as const,
   path: '/api/v1/billing/webhooks/stripe' as const,
   tags: ['CommerceBillingWebhooks'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -5173,7 +5173,7 @@ export const getBillingWebhooksWebhookEventsEndpoint = {
   method: 'GET' as const,
   path: '/api/v1/billing/webhooks/webhook-events/{eventId}' as const,
   tags: ['CommerceBillingWebhooks'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -5190,7 +5190,7 @@ export const postBillingWebhooksWebhookEventsRetryEndpoint = {
   method: 'POST' as const,
   path: '/api/v1/billing/webhooks/webhook-events/{eventId}:retry' as const,
   tags: ['CommerceBillingWebhooks'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PostEconomyAdRewardsSessionsInput {
@@ -5679,7 +5679,7 @@ export const postIntegrationsEconomyStripeConnectWebhookEndpoint = {
   method: 'POST' as const,
   path: '/api/v1/integrations/economy/stripe-connect/webhook' as const,
   tags: ['EconomyIntegrations'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export type PostIntegrationsEconomySumsubWebhookInput = void;
@@ -5689,7 +5689,7 @@ export const postIntegrationsEconomySumsubWebhookEndpoint = {
   method: 'POST' as const,
   path: '/api/v1/integrations/economy/sumsub/webhook' as const,
   tags: ['EconomyIntegrations'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -5702,7 +5702,7 @@ export const postNotificationsEmailEventsEndpoint = {
   method: 'POST' as const,
   path: '/api/v1/notifications/email-events' as const,
   tags: ['Notifications'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -5761,7 +5761,7 @@ export const getNotificationsUnsubscribeEndpoint = {
   method: 'GET' as const,
   path: '/api/v1/notifications/unsubscribe' as const,
   tags: ['Notifications'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -5967,7 +5967,7 @@ export const getPostsForGetPostsEndpoint = {
   method: 'GET' as const,
   path: '/api/v1/posts' as const,
   tags: ['SocialPosts'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PostPostsInput {
@@ -5991,7 +5991,7 @@ export const getPostsForGetPostsByPostIdEndpoint = {
   method: 'GET' as const,
   path: '/api/v1/posts/{postId}' as const,
   tags: ['SocialPosts'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PutPostsInput {
@@ -6033,7 +6033,7 @@ export const getPostsCommentsEndpoint = {
   method: 'GET' as const,
   path: '/api/v1/posts/{postId}/comments' as const,
   tags: ['SocialPostsComments'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PostPostsCommentsInput {
@@ -6162,7 +6162,7 @@ export const postPostsShareEndpoint = {
   method: 'POST' as const,
   path: '/api/v1/posts/{postId}/share' as const,
   tags: ['SocialPostsInteractions'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetPostsStatisticsInput {
@@ -6174,7 +6174,7 @@ export const getPostsStatisticsEndpoint = {
   method: 'GET' as const,
   path: '/api/v1/posts/{postId}/statistics' as const,
   tags: ['SocialPostsInteractions'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetPostsTagsInput {
@@ -6186,7 +6186,7 @@ export const getPostsTagsEndpoint = {
   method: 'GET' as const,
   path: '/api/v1/posts/{postId}/tags' as const,
   tags: ['SocialPostsComments'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PostPostsViewInput {
@@ -6198,7 +6198,7 @@ export const postPostsViewEndpoint = {
   method: 'POST' as const,
   path: '/api/v1/posts/{postId}/view' as const,
   tags: ['SocialPostsInteractions'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetPostsAuthorInput {
@@ -6214,7 +6214,7 @@ export const getPostsAuthorEndpoint = {
   method: 'GET' as const,
   path: '/api/v1/posts/author/{authorId}' as const,
   tags: ['SocialPosts'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetPostsFeedInput {
@@ -6260,7 +6260,7 @@ export const getPostsSearchEndpoint = {
   method: 'GET' as const,
   path: '/api/v1/posts/search' as const,
   tags: ['SocialPosts'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetPostsTagsPopularInput {
@@ -6274,7 +6274,7 @@ export const getPostsTagsPopularEndpoint = {
   method: 'GET' as const,
   path: '/api/v1/posts/tags/popular' as const,
   tags: ['SocialPostsComments'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetPostsTagsSearchInput {
@@ -6290,7 +6290,7 @@ export const getPostsTagsSearchEndpoint = {
   method: 'GET' as const,
   path: '/api/v1/posts/tags/search' as const,
   tags: ['SocialPostsComments'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetPostsTrendingInput {
@@ -6305,7 +6305,7 @@ export const getPostsTrendingEndpoint = {
   method: 'GET' as const,
   path: '/api/v1/posts/trending' as const,
   tags: ['SocialPosts'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -7573,7 +7573,7 @@ export const getAssetsForGetAssetsByReferenceIdByTokenEndpoint = {
   method: 'GET' as const,
   path: '/assets/{referenceId}/{token}' as const,
   tags: ['AssetsCdn'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetEInput {
@@ -7585,7 +7585,7 @@ export const getEEndpoint = {
   method: 'GET' as const,
   path: '/e/{token}' as const,
   tags: ['AssetsCdn'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -7600,7 +7600,7 @@ export const getHealthEndpoint = {
   method: 'GET' as const,
   path: '/health' as const,
   tags: ['Health'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -7615,7 +7615,7 @@ export const getHealthDependenciesEndpoint = {
   method: 'GET' as const,
   path: '/health/dependencies' as const,
   tags: ['Health'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -7645,7 +7645,7 @@ export const getLiveEndpoint = {
   method: 'GET' as const,
   path: '/live' as const,
   tags: ['Health'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export type PostLtiLaunchInput = void;
@@ -7655,7 +7655,7 @@ export const postLtiLaunchEndpoint = {
   method: 'POST' as const,
   path: '/lti/launch' as const,
   tags: ['LearningLti'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export type PostLtiLoginInput = void;
@@ -7665,7 +7665,7 @@ export const postLtiLoginEndpoint = {
   method: 'POST' as const,
   path: '/lti/login' as const,
   tags: ['LearningLti'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -7680,7 +7680,7 @@ export const getMetricsEndpoint = {
   method: 'GET' as const,
   path: '/metrics' as const,
   tags: ['Health'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -7695,7 +7695,7 @@ export const getReadyEndpoint = {
   method: 'GET' as const,
   path: '/ready' as const,
   tags: ['Health'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetTInput {
@@ -7709,7 +7709,7 @@ export const getTEndpoint = {
   method: 'GET' as const,
   path: '/t/{transformation}/{referenceId}/{token}' as const,
   tags: ['AssetsCdn'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PostVCoursesCheckoutCompleteInput {
@@ -9419,7 +9419,7 @@ export const getAssetsForGetAssetsByIdEndpoint = {
   method: 'GET' as const,
   path: '/v1/assets/{id}' as const,
   tags: ['Assets'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface DeleteAssetsInput {
@@ -9459,7 +9459,7 @@ export const getSignedAssetExtractedTextEndpoint = {
   method: 'GET' as const,
   path: '/v1/assets/{id}:extracted-text' as const,
   tags: ['Assets'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PostAssetsGenerateAccessUrlInput {
@@ -9479,7 +9479,7 @@ export const postAssetsGenerateAccessUrlEndpoint = {
   method: 'POST' as const,
   path: '/v1/assets/{id}:generate-access-url' as const,
   tags: ['Assets'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PostAssetsReportInput {
@@ -9508,7 +9508,7 @@ export const getAssetsContentEndpoint = {
   method: 'GET' as const,
   path: '/v1/assets/{id}/content' as const,
   tags: ['Assets'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetAssetExtractedTextInput {
@@ -9746,7 +9746,7 @@ export const postAuthDiscordSignInAuthorizeEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/discord:sign-in-authorize' as const,
   tags: ['Auth'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -9763,7 +9763,7 @@ export const postAuthDiscordSignInCallbackEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/discord:sign-in-callback' as const,
   tags: ['Auth'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -9780,7 +9780,7 @@ export const postAuthEmailSendVerificationEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/email:send-verification' as const,
   tags: ['Auth'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -9797,7 +9797,7 @@ export const postAuthEmailVerifyEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/email:verify' as const,
   tags: ['Auth'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -9899,7 +9899,7 @@ export const getAuthGithubAuthorizeEndpoint = {
   method: 'GET' as const,
   path: '/v1/auth/github:authorize' as const,
   tags: ['Auth'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -9919,7 +9919,7 @@ export const getAuthGithubCallbackEndpoint = {
   method: 'GET' as const,
   path: '/v1/auth/github:callback' as const,
   tags: ['Auth'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -9936,7 +9936,7 @@ export const postAuthGoogleSignInEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/google:sign-in' as const,
   tags: ['Auth'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -9953,7 +9953,7 @@ export const postAuthMagicLinkConsumeEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/magic-link:consume' as const,
   tags: ['Auth'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -9970,7 +9970,7 @@ export const postAuthMagicLinkRequestEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/magic-link:request' as const,
   tags: ['Auth'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -10130,7 +10130,7 @@ export const postAuthMfaVerifyEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/mfa/verify' as const,
   tags: ['AuthMultiFactor'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -10164,7 +10164,7 @@ export const postAuthPasswordResetEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/password:reset' as const,
   tags: ['Auth'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -10181,7 +10181,7 @@ export const postAuthPasswordResetRequestEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/password:reset-request' as const,
   tags: ['Auth'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetAuthServiceAccountsForGetAuthServiceAccountsInput {
@@ -10475,7 +10475,7 @@ export const postAuthSignInEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/sign-in' as const,
   tags: ['Auth'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -10492,7 +10492,7 @@ export const postAuthSignUpEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/sign-up' as const,
   tags: ['Auth'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -10599,7 +10599,7 @@ export const postAuthTokensRefreshEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/tokens:refresh' as const,
   tags: ['Auth'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -10682,7 +10682,7 @@ export const postAuthWeb3VerifyEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/web3:verify' as const,
   tags: ['Auth'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -10699,7 +10699,7 @@ export const postAuthWeb3ChallengeEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/web3/challenge' as const,
   tags: ['Auth'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export type GetAuthWebauthnInput = void;
@@ -10721,7 +10721,7 @@ export const postAuthWebauthnAuthenticationBeginEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/webauthn/authentication:begin' as const,
   tags: ['AuthWebauthn'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PostAuthWebauthnAuthenticationCompleteInput {
@@ -10733,7 +10733,7 @@ export const postAuthWebauthnAuthenticationCompleteEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/webauthn/authentication:complete' as const,
   tags: ['AuthWebauthn'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export type GetAuthWebauthnCredentialsForGetAuthWebauthnCredentialsInput = void;
@@ -10989,7 +10989,7 @@ export const getContentResourcesForGetContentResourcesEndpoint = {
   method: 'GET' as const,
   path: '/v1/content-resources' as const,
   tags: ['ContentPagesResources'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PostContentResourcesInput {
@@ -11062,7 +11062,7 @@ export const getContentResourcesBySlugEndpoint = {
   method: 'GET' as const,
   path: '/v1/content-resources/by-slug/{slug}' as const,
   tags: ['ContentPagesResources'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PostCourseInteractionsInput {
@@ -11914,7 +11914,7 @@ export const getCoursesProductsEndpoint = {
   method: 'GET' as const,
   path: '/v1/courses/{id}/products' as const,
   tags: ['LearningCoursesProgram'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetCoursesUsersInput {
@@ -12166,7 +12166,7 @@ export const getCoursesContentEndpoint = {
   method: 'GET' as const,
   path: '/v1/courses/{programId}/content' as const,
   tags: ['LearningCoursesProgramContent'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PostCoursesContentInput {
@@ -12344,7 +12344,7 @@ export const getCoursesContentByIdEndpoint = {
   method: 'GET' as const,
   path: '/v1/courses/{programId}/content/{id}' as const,
   tags: ['LearningCoursesProgramContent'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PutCoursesContentInput {
@@ -12580,7 +12580,7 @@ export const getCoursesPublicEndpoint = {
   method: 'GET' as const,
   path: '/v1/courses/public' as const,
   tags: ['LearningCoursesProgram'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetCoursesSlugInput {
@@ -12592,7 +12592,7 @@ export const getCoursesSlugEndpoint = {
   method: 'GET' as const,
   path: '/v1/courses/slug/{slug}' as const,
   tags: ['LearningCoursesProgram'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PostDelegatedAdminInput {
@@ -13642,7 +13642,7 @@ export const getLaunchPadEventsPublicForGetLaunchPadEventsPublicEndpoint = {
   method: 'GET' as const,
   path: '/v1/launch-pad/events/public' as const,
   tags: ['LaunchPadEvents'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetLaunchPadEventsPublicForGetLaunchPadEventsPublicByIdInput {
@@ -13654,7 +13654,7 @@ export const getLaunchPadEventsPublicForGetLaunchPadEventsPublicByIdEndpoint = {
   method: 'GET' as const,
   path: '/v1/launch-pad/events/public/{id}' as const,
   tags: ['LaunchPadEvents'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PostLaunchPadEventsRegistrationsCancelInput {
@@ -14231,7 +14231,7 @@ export const postMarketingLeadsEndpoint = {
   method: 'POST' as const,
   path: '/v1/marketing/leads' as const,
   tags: ['ContentMarketingLeads'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetMarketingLeadByIdInput {
@@ -14265,7 +14265,7 @@ export const postOauthTokenEndpoint = {
   method: 'POST' as const,
   path: '/v1/oauth/token' as const,
   tags: ['AuthServiceAccountsTokens'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetOgInput {
@@ -14277,7 +14277,7 @@ export const getOgEndpoint = {
   method: 'GET' as const,
   path: '/v1/og/{slug}' as const,
   tags: ['ContentPagesOpenGraph'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetOrdersForGetOrdersInput {
@@ -14549,7 +14549,7 @@ export const getPagesBySlugEndpoint = {
   method: 'GET' as const,
   path: '/v1/pages/by-slug/{slug}' as const,
   tags: ['ContentPages'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetPagesSitemapInput {
@@ -14563,7 +14563,7 @@ export const getPagesSitemapEndpoint = {
   method: 'GET' as const,
   path: '/v1/pages/sitemap' as const,
   tags: ['ContentPages'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetPermissionAnalyticsAnomaliesInput {
@@ -14775,7 +14775,7 @@ export const getProductsForGetProductsEndpoint = {
   method: 'GET' as const,
   path: '/v1/products' as const,
   tags: ['CommerceProducts'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PostProductsInput {
@@ -14815,7 +14815,7 @@ export const getProductsForGetProductsByProductIdEndpoint = {
   method: 'GET' as const,
   path: '/v1/products/{productId}' as const,
   tags: ['CommerceProducts'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PutProductsInput {
@@ -14872,7 +14872,7 @@ export const headProductsEndpoint = {
   method: 'HEAD' as const,
   path: '/v1/products/{productId}' as const,
   tags: ['CommerceProducts'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PostProductsActivateInput {
@@ -14923,7 +14923,7 @@ export const getProductsPricingEndpoint = {
   method: 'GET' as const,
   path: '/v1/products/{productId}/pricing' as const,
   tags: ['CommerceProducts'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PutProductsPricingInput {
@@ -14964,7 +14964,7 @@ export const getProjectsForGetProjectsEndpoint = {
   method: 'GET' as const,
   path: '/v1/projects' as const,
   tags: ['Projects'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PostProjectsInput {
@@ -14994,7 +14994,7 @@ export const getProjectsForGetProjectsByIdEndpoint = {
   method: 'GET' as const,
   path: '/v1/projects/{id}' as const,
   tags: ['Projects'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PutProjectsInput {
@@ -15165,7 +15165,7 @@ export const getProjectsStatisticsEndpoint = {
   method: 'GET' as const,
   path: '/v1/projects/{id}/statistics' as const,
   tags: ['Projects'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetProjectsVersionsInput {
@@ -15938,7 +15938,7 @@ export const getProjectsCategoryEndpoint = {
   method: 'GET' as const,
   path: '/v1/projects/category/{categoryId}' as const,
   tags: ['Projects'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetProjectsCreatorInput {
@@ -15955,7 +15955,7 @@ export const getProjectsCreatorEndpoint = {
   method: 'GET' as const,
   path: '/v1/projects/creator/{creatorId}' as const,
   tags: ['Projects'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetProjectsFeaturedInput {
@@ -15970,7 +15970,7 @@ export const getProjectsFeaturedEndpoint = {
   method: 'GET' as const,
   path: '/v1/projects/featured' as const,
   tags: ['Projects'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PostProjectsInvitationsAcceptInput {
@@ -16035,7 +16035,7 @@ export const getProjectsPopularEndpoint = {
   method: 'GET' as const,
   path: '/v1/projects/popular' as const,
   tags: ['Projects'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetProjectsRecentInput {
@@ -16050,7 +16050,7 @@ export const getProjectsRecentEndpoint = {
   method: 'GET' as const,
   path: '/v1/projects/recent' as const,
   tags: ['Projects'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export type GetProjectsRoleTemplatesInput = void;
@@ -16060,7 +16060,7 @@ export const getProjectsRoleTemplatesEndpoint = {
   method: 'GET' as const,
   path: '/v1/projects/role-templates' as const,
   tags: ['Projects'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetProjectsRolesPermissionsInput {
@@ -16072,7 +16072,7 @@ export const getProjectsRolesPermissionsEndpoint = {
   method: 'GET' as const,
   path: '/v1/projects/roles/{roleName}/permissions' as const,
   tags: ['Projects'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetProjectsSearchInput {
@@ -16094,7 +16094,7 @@ export const getProjectsSearchEndpoint = {
   method: 'GET' as const,
   path: '/v1/projects/search' as const,
   tags: ['Projects'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetProjectsSlugInput {
@@ -16111,7 +16111,7 @@ export const getProjectsSlugEndpoint = {
   method: 'GET' as const,
   path: '/v1/projects/slug/{slug}' as const,
   tags: ['Projects'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetPromoCodesForGetPromoCodesInput {
@@ -16317,7 +16317,7 @@ export const getRecommendationsCoursesSimilarEndpoint = {
   method: 'GET' as const,
   path: '/v1/recommendations/courses/{courseId}/similar' as const,
   tags: ['LearningExperienceRecommendations'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetRecommendationsMeInput {
@@ -16437,7 +16437,7 @@ export const getRecommendationsPopularEndpoint = {
   method: 'GET' as const,
   path: '/v1/recommendations/popular' as const,
   tags: ['LearningExperienceRecommendations'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetRecommendationsTrendingInput {
@@ -16454,7 +16454,7 @@ export const getRecommendationsTrendingEndpoint = {
   method: 'GET' as const,
   path: '/v1/recommendations/trending' as const,
   tags: ['LearningExperienceRecommendations'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -16806,7 +16806,7 @@ export const getStoreProductsProjectsEndpoint = {
   method: 'GET' as const,
   path: '/v1/store/products/{productId}/projects' as const,
   tags: ['ProjectsStoreProducts'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -16833,7 +16833,7 @@ export const getSubscriptionPlansForGetSubscriptionPlansEndpoint = {
   method: 'GET' as const,
   path: '/v1/subscription-plans' as const,
   tags: ['CommerceSubscriptionsPlans'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -19395,7 +19395,7 @@ export const getTestingEventsPublicForGetTestingEventsPublicEndpoint = {
   method: 'GET' as const,
   path: '/v1/testing/events/public' as const,
   tags: ['TestingLabTestingEvents'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetTestingEventsPublicForGetTestingEventsPublicByEventIdInput {
@@ -19407,7 +19407,7 @@ export const getTestingEventsPublicForGetTestingEventsPublicByEventIdEndpoint = 
   method: 'GET' as const,
   path: '/v1/testing/events/public/{eventId}' as const,
   tags: ['TestingLabTestingEvents'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface DeleteTestingEventsRegistrationsInput {
@@ -19695,7 +19695,7 @@ export const getTestingPublicSessionsEndpoint = {
   method: 'GET' as const,
   path: '/v1/testing/public/sessions' as const,
   tags: ['TestingLabTestingSessions'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetTestingRequestsForGetTestingRequestsInput {
