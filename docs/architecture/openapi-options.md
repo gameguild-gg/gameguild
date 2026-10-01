@@ -91,6 +91,46 @@ property names. Examples must match the model's wire representation; JSON
 syntax is validated at startup, and the API owner must verify semantic validity.
 The default document is unchanged when these dictionaries are empty.
 
+Localized documents are opt-in under `OpenApi:Locales`. Each configured locale
+adds a separate document named `{apiVersion}.{culture}`, such as
+`/swagger/v1.pt-BR/swagger.json`, and an entry in Swagger UI. Locale keys must
+be valid non-invariant .NET culture names and cannot normalize to the same
+culture. Missing translations fall back to the existing generated text. The
+base document URL and contents stay unchanged. Supported translation keys are
+the document `Title` and `Description`, tag names under `Tags`, operation IDs
+or `HTTP-METHOD /path` keys under `Operations`, and generated schema IDs under
+`Schemas`; schema `Properties` keys are serialized wire-format property names.
+
+```json
+{
+  "OpenApi": {
+    "Locales": {
+      "pt-BR": {
+        "Title": "API GameGuild",
+        "Description": "Documentação para desenvolvedores.",
+        "Tags": {
+          "ai": "Inteligência artificial"
+        },
+        "Operations": {
+          "GET /v1/ai/status": {
+            "Summary": "Verificar o status da IA",
+            "Description": "Mostra os provedores configurados."
+          }
+        },
+        "Schemas": {
+          "Identity_Users_UserDto": {
+            "Description": "Perfil público da conta.",
+            "Properties": {
+              "id": "Identificador da conta."
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
 Swashbuckle also reads the `GameGuild.*.xml` compiler documentation files next
 to the API assemblies. Existing type and member summaries become schema,
 property, and operation descriptions. A configured `Schemas` value still takes
@@ -103,9 +143,10 @@ from 359 to 1,017 of 1,544. Paths, schemas, and every non-documentation field
 were unchanged. This makes existing comments visible without inventing text for
 undocumented models. The XML comments do not supply examples in this export.
 
-Structured extension data, opt-in examples, and compiler XML comments advance
-issue #147. Descriptions and examples for the remaining models,
-language-specific documents, and final acceptance remain before it can close.
+Structured extension data, opt-in examples, compiler XML comments, and
+configurable locale-specific documents advance issue #147. Descriptions and
+examples for the remaining models and final acceptance remain before it can
+close.
 
 ## Document generation measurement
 

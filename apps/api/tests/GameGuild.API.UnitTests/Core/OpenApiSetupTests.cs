@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using GameGuild.CQRS;
+using GameGuild.API.Core.OpenApi;
 using GameGuild.Configuration.PresentationLayer.OpenAPI;
 using GameGuild.Identity.Tenants;
 using Moq;
@@ -76,7 +77,14 @@ public sealed class OpenApiSetupTests
             }
         });
 
-        services.SetupOpenApi(new ConfigurationBuilder().Build(), options);
+        var localizationOptions = new OpenApiLocalizationOptions
+        {
+            Locales = new Dictionary<string, OpenApiLocalizedDocumentOptions>
+            {
+                ["pt-BR"] = new() { Title = "API GameGuild" }
+            }
+        };
+        services.SetupOpenApi(new ConfigurationBuilder().Build(), options, localizationOptions);
 
         using var provider = services.BuildServiceProvider();
         var swagger = provider.GetRequiredService<IOptions<SwaggerGenOptions>>().Value;
@@ -88,6 +96,11 @@ public sealed class OpenApiSetupTests
         document.TermsOfService.Should().Be(options.TermsOfServiceUrl);
         document.License.Name.Should().Be(options.LicenseName);
         document.License.Url.Should().Be(options.LicenseUrl);
+        swagger.SwaggerGeneratorOptions.SwaggerDocs["v1.pt-BR"].Title.Should().Be("API GameGuild");
+        var predicate = swagger.SwaggerGeneratorOptions.DocInclusionPredicate;
+        predicate("v1.pt-BR", CreateDescription(new ActionDescriptor(), null)).Should().BeTrue();
+        predicate("v1.pt-BR", CreateDescription(new ActionDescriptor(), "v1")).Should().BeTrue();
+        predicate("v1.pt-BR", CreateDescription(new ActionDescriptor(), "v2")).Should().BeFalse();
     }
 
     [Fact]
