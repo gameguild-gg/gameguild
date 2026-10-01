@@ -16,6 +16,7 @@ export class SocialPostsCommentsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Get comments for a post
    */
   async getPostsComments(postId: string, query?: { skip?: number; take?: number; parentCommentId?: string }): Promise<Result<void, ApiError>> {
     const url = `/api/v1/posts/${postId}/comments`;
@@ -31,6 +32,7 @@ export class SocialPostsCommentsModule {
   }
 
   /**
+   * Add a comment to a post
    */
   async postPostsComments(postId: string, body: Types.SocialPostsControllersAddCommentInput): Promise<Result<void, ApiError>> {
     const url = `/api/v1/posts/${postId}/comments`;
@@ -49,6 +51,7 @@ export class SocialPostsCommentsModule {
   }
 
   /**
+   * Update a comment
    */
   async putPostsComments(postId: string, commentId: string, body: Types.SocialPostsControllersUpdateCommentInput): Promise<Result<void, ApiError>> {
     const url = `/api/v1/posts/${postId}/comments/${commentId}`;
@@ -67,6 +70,7 @@ export class SocialPostsCommentsModule {
   }
 
   /**
+   * Delete a comment
    */
   async deletePostsComments(postId: string, commentId: string): Promise<Result<void, ApiError>> {
     const url = `/api/v1/posts/${postId}/comments/${commentId}`;
@@ -81,6 +85,7 @@ export class SocialPostsCommentsModule {
   }
 
   /**
+   * Get tags for a post
    */
   async getPostsTags(postId: string): Promise<Result<void, ApiError>> {
     const url = `/api/v1/posts/${postId}/tags`;
@@ -95,6 +100,7 @@ export class SocialPostsCommentsModule {
   }
 
   /**
+   * Get popular tags
    */
   async getPostsTagsPopular(query?: { count?: number }): Promise<Result<void, ApiError>> {
     const url = '/api/v1/posts/tags/popular';
@@ -110,6 +116,7 @@ export class SocialPostsCommentsModule {
   }
 
   /**
+   * Search posts by tags
    */
   async getPostsTagsSearch(query?: { tags?: Array<string>; skip?: number; take?: number }): Promise<Result<void, ApiError>> {
     const url = '/api/v1/posts/tags/search';

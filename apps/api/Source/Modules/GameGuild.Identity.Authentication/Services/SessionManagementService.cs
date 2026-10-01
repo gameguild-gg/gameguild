@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using GameGuild.Configuration.ApplicationLayer;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
@@ -7,8 +8,14 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Session management service handling user sessions and trusted devices.
 /// </summary>
-public sealed class SessionManagementService(ILogger<SessionManagementService> logger, IUserSessionRepository sessionRepository, ITrustedDeviceRepository trustedDeviceRepository) : ISessionManagementService
+public sealed class SessionManagementService(
+    ILogger<SessionManagementService> logger,
+    IUserSessionRepository sessionRepository,
+    ITrustedDeviceRepository trustedDeviceRepository,
+    SessionOptions? sessionOptions = null) : ISessionManagementService
 {
+    private readonly SessionOptions _sessionOptions = sessionOptions ?? new SessionOptions();
+
     public async Task<UserSession> CreateSessionAsync(Guid userId, string ipAddress, string userAgent, string? deviceFingerprint = null, CancellationToken cancellationToken = default)
     {
         var now = SystemClock.UtcNow;
@@ -19,7 +26,7 @@ public sealed class SessionManagementService(ILogger<SessionManagementService> l
             ipAddress,
             userAgent,
             string.Empty,
-            now.AddDays(30),
+            now.AddMinutes(_sessionOptions.AbsoluteTimeoutMinutes),
             deviceFingerprint,
             cancellationToken).ConfigureAwait(false);
     }
@@ -36,20 +43,25 @@ public sealed class SessionManagementService(ILogger<SessionManagementService> l
     {
         logger.LogInformation("Creating session for user {UserId}", userId);
 
-        deviceFingerprint ??= GenerateDeviceFingerprint(ipAddress, userAgent);
         var now = SystemClock.UtcNow;
+        await EnforceMaxConcurrentSessionsAsync(userId, cancellationToken).ConfigureAwait(false);
+
+        deviceFingerprint = _sessionOptions.EnableDeviceFingerprinting
+            ? deviceFingerprint ?? GenerateDeviceFingerprint(ipAddress, userAgent)
+            : string.Empty;
+
         var session = new UserSession
         {
             Id = sessionId,
             UserId = userId,
             RefreshToken = refreshTokenHash,
-            IpAddress = ipAddress,
+            IpAddress = _sessionOptions.EnableLocationTracking ? ipAddress : "unknown",
             UserAgent = userAgent,
             DeviceFingerprint = deviceFingerprint,
             CreatedAt = now,
             UpdatedAt = now,
             LastUsedAt = now,
-            ExpiresAt = expiresAt,
+            ExpiresAt = CapAbsoluteExpiration(expiresAt, now),
             IsActive = true
         };
 
@@ -76,11 +88,19 @@ public sealed class SessionManagementService(ILogger<SessionManagementService> l
     {
         var session = await sessionRepository.GetByIdAsync(sessionId, cancellationToken).ConfigureAwait(false);
 
-        if (session is not { IsActive: true }) return false;
+        if (session is not { IsActive: true })
+        {
+            return false;
+        }
 
-        if (session.ExpiresAt >= SystemClock.UtcNow) return true;
+        if (!IsExpired(session, SystemClock.UtcNow))
+        {
+            return true;
+        }
 
         session.IsActive = false;
+        session.TerminationReason = SessionTerminationReason.Expired.ToString();
+        session.TerminatedAt = SystemClock.UtcNow;
         await sessionRepository.UpdateAsync(session, cancellationToken).ConfigureAwait(false);
 
         return false;
@@ -90,10 +110,20 @@ public sealed class SessionManagementService(ILogger<SessionManagementService> l
     {
         var session = await sessionRepository.GetByIdAsync(sessionId, cancellationToken).ConfigureAwait(false);
 
-        if (session is not { IsActive: true }) return false;
+        if (session is not { IsActive: true })
+        {
+            return false;
+        }
 
-        session.LastUsedAt = SystemClock.UtcNow;
-        session.ExpiresAt = SystemClock.UtcNow.AddDays(30);
+        var now = SystemClock.UtcNow;
+        if (IsExpired(session, now))
+        {
+            await TerminateExpiredSessionAsync(session, cancellationToken).ConfigureAwait(false);
+            return false;
+        }
+
+        session.LastUsedAt = now;
+        session.ExpiresAt = CapAbsoluteExpiration(now.AddMinutes(_sessionOptions.AbsoluteTimeoutMinutes), session.CreatedAt);
 
         await sessionRepository.UpdateAsync(session, cancellationToken).ConfigureAwait(false);
 
@@ -104,11 +134,28 @@ public sealed class SessionManagementService(ILogger<SessionManagementService> l
     {
         var session = await sessionRepository.GetByIdAsync(sessionId, cancellationToken).ConfigureAwait(false);
 
-        if (session is not { IsActive: true }) return false;
+        if (session is not { IsActive: true })
+        {
+            return false;
+        }
+
+        var now = SystemClock.UtcNow;
+        if (IsExpired(session, now))
+        {
+            await TerminateExpiredSessionAsync(session, cancellationToken).ConfigureAwait(false);
+            return false;
+        }
+
+        var effectiveExpiration = CapAbsoluteExpiration(expiresAt, session.CreatedAt);
+        if (effectiveExpiration <= now)
+        {
+            await TerminateExpiredSessionAsync(session, cancellationToken).ConfigureAwait(false);
+            return false;
+        }
 
         session.RefreshToken = refreshTokenHash;
-        session.LastUsedAt = SystemClock.UtcNow;
-        session.ExpiresAt = expiresAt;
+        session.LastUsedAt = now;
+        session.ExpiresAt = effectiveExpiration;
 
         await sessionRepository.UpdateAsync(session, cancellationToken).ConfigureAwait(false);
 
@@ -119,7 +166,10 @@ public sealed class SessionManagementService(ILogger<SessionManagementService> l
     {
         var session = await sessionRepository.GetByIdAsync(sessionId, cancellationToken).ConfigureAwait(false);
 
-        if (session == null) return false;
+        if (session == null)
+        {
+            return false;
+        }
 
         session.IsActive = false;
         session.TerminationReason = reason.ToString();
@@ -152,20 +202,33 @@ public sealed class SessionManagementService(ILogger<SessionManagementService> l
 
     public async Task<bool> TrustDeviceAsync(Guid userId, string deviceFingerprint, string deviceName, CancellationToken cancellationToken = default)
     {
+        if (!_sessionOptions.EnableDeviceFingerprinting || string.IsNullOrWhiteSpace(deviceFingerprint))
+        {
+            return false;
+        }
+
+        var now = SystemClock.UtcNow;
         var existingDevice = await trustedDeviceRepository.GetByUserAndFingerprintAsync(userId, deviceFingerprint, cancellationToken).ConfigureAwait(false);
 
         if (existingDevice != null)
         {
-            if (!existingDevice.IsActive)
+            var expired = existingDevice.ExpiresAt.HasValue && existingDevice.ExpiresAt.Value <= now;
+            if (!existingDevice.IsActive || expired)
             {
+                await EnforceMaxTrustedDevicesAsync(userId, cancellationToken).ConfigureAwait(false);
                 existingDevice.IsActive = true;
-                existingDevice.UpdatedAt = SystemClock.UtcNow;
-                await trustedDeviceRepository.UpdateAsync(existingDevice, cancellationToken).ConfigureAwait(false);
             }
+
+            existingDevice.DeviceName = deviceName;
+            existingDevice.LastUsedAt = now;
+            existingDevice.ExpiresAt = now.AddDays(_sessionOptions.TrustedDeviceDurationDays);
+            existingDevice.UpdatedAt = now;
+            await trustedDeviceRepository.UpdateAsync(existingDevice, cancellationToken).ConfigureAwait(false);
 
             return true;
         }
 
+        await EnforceMaxTrustedDevicesAsync(userId, cancellationToken).ConfigureAwait(false);
         var trustedDevice = new TrustedDevice
         {
             Id = Guid.NewGuid(),
@@ -173,8 +236,9 @@ public sealed class SessionManagementService(ILogger<SessionManagementService> l
             DeviceFingerprint = deviceFingerprint,
             DeviceName = deviceName,
             DeviceInfo = string.Empty,
-            TrustedAt = SystemClock.UtcNow, LastUsedAt = SystemClock.UtcNow,
-            ExpiresAt = SystemClock.UtcNow.AddDays(90),
+            TrustedAt = now,
+            LastUsedAt = now,
+            ExpiresAt = now.AddDays(_sessionOptions.TrustedDeviceDurationDays),
             IsActive = true
         };
 
@@ -187,11 +251,22 @@ public sealed class SessionManagementService(ILogger<SessionManagementService> l
 
     public async Task<bool> IsDeviceTrustedAsync(Guid userId, string deviceFingerprint, CancellationToken cancellationToken = default)
     {
+        if (!_sessionOptions.EnableDeviceFingerprinting || string.IsNullOrWhiteSpace(deviceFingerprint))
+        {
+            return false;
+        }
+
         var trustedDevice = await trustedDeviceRepository.GetByUserAndFingerprintAsync(userId, deviceFingerprint, cancellationToken).ConfigureAwait(false);
 
-        if (trustedDevice is not { IsActive: true }) return false;
+        if (trustedDevice is not { IsActive: true })
+        {
+            return false;
+        }
 
-        if (trustedDevice.ExpiresAt.HasValue && trustedDevice.ExpiresAt.Value < SystemClock.UtcNow) return false;
+        if (trustedDevice.ExpiresAt.HasValue && trustedDevice.ExpiresAt.Value < SystemClock.UtcNow)
+        {
+            return false;
+        }
 
         return true;
     }
@@ -207,7 +282,10 @@ public sealed class SessionManagementService(ILogger<SessionManagementService> l
     {
         var device = await trustedDeviceRepository.GetByIdAsync(deviceId, cancellationToken).ConfigureAwait(false);
 
-        if (device == null || device.UserId != userId) return false;
+        if (device == null || device.UserId != userId)
+        {
+            return false;
+        }
 
         device.IsActive = false;
         device.UpdatedAt = SystemClock.UtcNow;
@@ -217,6 +295,62 @@ public sealed class SessionManagementService(ILogger<SessionManagementService> l
         logger.LogInformation("Trusted device {DeviceId} revoked for user {UserId}", deviceId, userId);
 
         return true;
+    }
+
+    private async Task EnforceMaxConcurrentSessionsAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var activeSessions = await sessionRepository.GetActiveByUserIdAsync(userId, cancellationToken).ConfigureAwait(false) ?? [];
+        var sessionsToTerminate = activeSessions
+            .OrderBy(session => session.LastUsedAt)
+            .ThenBy(session => session.CreatedAt)
+            .Take(Math.Max(0, activeSessions.Count - _sessionOptions.MaxConcurrentSessions + 1));
+
+        foreach (var session in sessionsToTerminate)
+        {
+            session.IsActive = false;
+            session.TerminationReason = SessionTerminationReason.MaxSessionsExceeded.ToString();
+            session.TerminatedAt = SystemClock.UtcNow;
+            await sessionRepository.UpdateAsync(session, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    private async Task EnforceMaxTrustedDevicesAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var activeDevices = ((await trustedDeviceRepository.GetActiveByUserIdAsync(userId, cancellationToken).ConfigureAwait(false)) ?? [])
+            .OrderBy(device => device.LastUsedAt)
+            .ThenBy(device => device.TrustedAt)
+            .ToList();
+
+        var devicesToRevoke = activeDevices
+            .Take(Math.Max(0, activeDevices.Count - _sessionOptions.MaxTrustedDevices + 1));
+
+        foreach (var device in devicesToRevoke)
+        {
+            device.IsActive = false;
+            device.UpdatedAt = SystemClock.UtcNow;
+            await trustedDeviceRepository.UpdateAsync(device, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    private bool IsExpired(UserSession session, DateTime now)
+    {
+        return session.ExpiresAt <= now ||
+               now - session.LastUsedAt >= TimeSpan.FromMinutes(_sessionOptions.IdleTimeoutMinutes) ||
+               now >= session.CreatedAt.AddMinutes(_sessionOptions.AbsoluteTimeoutMinutes);
+    }
+
+    private DateTime CapAbsoluteExpiration(DateTime requestedExpiration, DateTime createdAt)
+    {
+        var absoluteExpiration = createdAt.AddMinutes(_sessionOptions.AbsoluteTimeoutMinutes);
+        return requestedExpiration < absoluteExpiration ? requestedExpiration : absoluteExpiration;
+    }
+
+    private async Task TerminateExpiredSessionAsync(UserSession session, CancellationToken cancellationToken)
+    {
+        session.IsActive = false;
+        session.TerminationReason = SessionTerminationReason.Expired.ToString();
+        session.TerminatedAt = SystemClock.UtcNow;
+        await sessionRepository.UpdateAsync(session, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task CleanupExpiredSessionsAsync(CancellationToken cancellationToken = default)
@@ -236,9 +370,15 @@ public sealed class SessionManagementService(ILogger<SessionManagementService> l
 
         var riskLevel = RiskLevel.Low;
 
-        if (uniqueIps > 10 || uniqueDevices > 5) riskLevel = RiskLevel.Medium;
+        if (uniqueIps > 10 || uniqueDevices > 5)
+        {
+            riskLevel = RiskLevel.Medium;
+        }
 
-        if (activeCount > 10) riskLevel = RiskLevel.High;
+        if (activeCount > 10)
+        {
+            riskLevel = RiskLevel.High;
+        }
 
         return new SessionSecurityAnalysis
         {

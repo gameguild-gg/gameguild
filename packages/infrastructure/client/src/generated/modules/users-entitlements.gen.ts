@@ -16,6 +16,7 @@ export class UsersEntitlementsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Get entitlements for a specific user (admin only)
    */
   async getUsersEntitlements(userId: string): Promise<Result<Array<Types.CommerceProductsEntitlementInfoDto>, ApiError>> {
     const url = `/v1/users/${userId}/entitlements`;
@@ -30,6 +31,7 @@ export class UsersEntitlementsModule {
   }
 
   /**
+   * Get current user's entitlements
    */
   async getUsersMeEntitlements(): Promise<Result<Array<Types.CommerceProductsEntitlementInfoDto>, ApiError>> {
     const url = '/v1/users/me/entitlements';

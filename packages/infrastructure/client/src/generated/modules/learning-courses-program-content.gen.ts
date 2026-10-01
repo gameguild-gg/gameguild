@@ -16,6 +16,10 @@ export class LearningCoursesProgramContentModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Get all content for a course with optional filtering (resource-level Read permission required on parent Program)
+   *
+   * Supports filtering via query parameters:
+   * - level=top: Get only top-level content
    */
   async getCoursesContent(programId: string, query?: { level?: string }): Promise<Result<Array<Types.LearningCoursesProgramContentDto>, ApiError>> {
     const url = `/v1/courses/${programId}/content`;
@@ -31,6 +35,7 @@ export class LearningCoursesProgramContentModule {
   }
 
   /**
+   * Create new program content (resource-level Create permission required on parent Program)
    */
   async postCoursesContent(
     programId: string,
@@ -58,6 +63,7 @@ export class LearningCoursesProgramContentModule {
   }
 
   /**
+   * Get specific program content by ID (resource-level Read permission required on parent Program)
    */
   async getCoursesContentById(programId: string, id: string): Promise<Result<Types.LearningCoursesProgramContentDto, ApiError>> {
     const url = `/v1/courses/${programId}/content/${id}`;
@@ -78,6 +84,7 @@ export class LearningCoursesProgramContentModule {
   }
 
   /**
+   * Update program content (resource-level Edit permission required on parent Program)
    */
   async putCoursesContent(
     programId: string,
@@ -106,6 +113,7 @@ export class LearningCoursesProgramContentModule {
   }
 
   /**
+   * Delete program content (resource-level Delete permission required on parent Program)
    */
   async deleteCoursesContent(programId: string, id: string): Promise<Result<void, ApiError>> {
     const url = `/v1/courses/${programId}/content/${id}`;
@@ -120,6 +128,7 @@ export class LearningCoursesProgramContentModule {
   }
 
   /**
+   * Student view of a coding assignment: Private tests stripped, Private files filtered out.
    */
   async getCoursesContentCodingAssignment(programId: string, id: string): Promise<Result<Types.LearningCoursesCodingAssignmentContent, ApiError>> {
     const url = `/v1/courses/${programId}/content/${id}/coding-assignment`;
@@ -140,6 +149,7 @@ export class LearningCoursesProgramContentModule {
   }
 
   /**
+   * Author a coding assignment: UPSERT onto ProgramContent.JsonBody + sync grading to linked Assessment.
    */
   async putCoursesContentCodingAssignment(
     programId: string,
@@ -168,6 +178,7 @@ export class LearningCoursesProgramContentModule {
   }
 
   /**
+   * Instructor view of a coding assignment: full content including Private tests and files.
    */
   async getCoursesContentCodingAssignmentFull(programId: string, id: string): Promise<Result<Types.LearningCoursesCodingAssignmentContent, ApiError>> {
     const url = `/v1/courses/${programId}/content/${id}/coding-assignment/full`;
@@ -188,6 +199,7 @@ export class LearningCoursesProgramContentModule {
   }
 
   /**
+   * Move content to a new parent/position (resource-level Edit permission required on parent Program)
    */
   async postCoursesContentMove(programId: string, id: string, body: Types.LearningCoursesMoveContentDto): Promise<Result<void, ApiError>> {
     const url = `/v1/courses/${programId}/content/${id}/move`;
@@ -206,6 +218,7 @@ export class LearningCoursesProgramContentModule {
   }
 
   /**
+   * Submit work for the current learner on a course content item.
    */
   async postCoursesContentSubmit(
     programId: string,
@@ -234,6 +247,7 @@ export class LearningCoursesProgramContentModule {
   }
 
   /**
+   * Get child content for a specific parent (resource-level Read permission required on parent Program)
    */
   async getCoursesContentChildren(programId: string, parentId: string): Promise<Result<Array<Types.LearningCoursesProgramContentDto>, ApiError>> {
     const url = `/v1/courses/${programId}/content/${parentId}/children`;
@@ -248,6 +262,7 @@ export class LearningCoursesProgramContentModule {
   }
 
   /**
+   * Get content by type (resource-level Read permission required on parent Program)
    */
   async getCoursesContentByType(
     programId: string,
@@ -265,6 +280,7 @@ export class LearningCoursesProgramContentModule {
   }
 
   /**
+   * Get content by visibility (resource-level Read permission required on parent Program)
    */
   async getCoursesContentByVisibility(
     programId: string,
@@ -282,6 +298,7 @@ export class LearningCoursesProgramContentModule {
   }
 
   /**
+   * Reorder content within a program (resource-level Edit permission required on parent Program)
    */
   async postCoursesContentReorder(programId: string, body: Types.LearningCoursesReorderContentDto): Promise<Result<void, ApiError>> {
     const url = `/v1/courses/${programId}/content/reorder`;
@@ -300,6 +317,7 @@ export class LearningCoursesProgramContentModule {
   }
 
   /**
+   * Get required content for a program (resource-level Read permission required on parent Program)
    */
   async getCoursesContentRequired(programId: string): Promise<Result<Array<Types.LearningCoursesProgramContentDto>, ApiError>> {
     const url = `/v1/courses/${programId}/content/required`;
@@ -314,6 +332,7 @@ export class LearningCoursesProgramContentModule {
   }
 
   /**
+   * Search content within a program (resource-level Read permission required on parent Program)
    */
   async postCoursesContentSearch(
     programId: string,
@@ -335,6 +354,7 @@ export class LearningCoursesProgramContentModule {
   }
 
   /**
+   * Get content statistics for a program (resource-level Read permission required on parent Program)
    */
   async getCoursesContentStats(programId: string): Promise<Result<Types.LearningCoursesContentStatsDto, ApiError>> {
     const url = `/v1/courses/${programId}/content/stats`;

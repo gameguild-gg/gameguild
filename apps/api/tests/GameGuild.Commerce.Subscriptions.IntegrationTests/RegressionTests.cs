@@ -50,6 +50,7 @@ public class RegressionTests : IClassFixture<WebApplicationFactory<GameGuild.API
                 {
                     options.UseInMemoryDatabase(DatabaseName);
                 });
+                services.AddScoped<DbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
 
                 services.AddHttpLogging(o => { });
 

@@ -16,6 +16,7 @@ export class TestingLabPermissionModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Get all TestingLab role templates
    */
   async getApiTestingLabPermissionsRoleTemplates(): Promise<Result<Array<Types.TestingLabTestingLabRoleTemplate>, ApiError>> {
     const url = '/api/testing-lab/permissions/role-templates';
@@ -30,6 +31,7 @@ export class TestingLabPermissionModule {
   }
 
   /**
+   * Create a new TestingLab role template
    */
   async postApiTestingLabPermissionsRoleTemplates(
     body: Types.TestingLabCreateTestingLabRoleInput,
@@ -56,6 +58,7 @@ export class TestingLabPermissionModule {
   }
 
   /**
+   * Update an existing TestingLab role template
    */
   async putApiTestingLabPermissionsRoleTemplates(
     idOrName: string,
@@ -83,6 +86,7 @@ export class TestingLabPermissionModule {
   }
 
   /**
+   * Delete a TestingLab role template
    */
   async deleteApiTestingLabPermissionsRoleTemplates(idOrName: string): Promise<Result<void, ApiError>> {
     const url = `/api/testing-lab/permissions/role-templates/${idOrName}`;
@@ -97,6 +101,7 @@ export class TestingLabPermissionModule {
   }
 
   /**
+   * Delete a TestingLab role template by name (legacy compatibility for clients that don't yet have Ids)
    */
   async deleteApiTestingLabPermissionsRoleTemplatesByName(name: string): Promise<Result<void, ApiError>> {
     const url = `/api/testing-lab/permissions/role-templates/by-name/${name}`;
@@ -111,6 +116,7 @@ export class TestingLabPermissionModule {
   }
 
   /**
+   * Get TestingLab permissions for a specific user
    */
   async getApiTestingLabPermissionsUsers(userId: string, query?: { tenantId?: string }): Promise<Result<Types.TestingLabUserTestingLabPermissions, ApiError>> {
     const url = `/api/testing-lab/permissions/users/${userId}`;
@@ -132,6 +138,7 @@ export class TestingLabPermissionModule {
   }
 
   /**
+   * Check if a user can perform an action on a TestingLab resource
    */
   async getApiTestingLabPermissionsUsersCheck(
     userId: string,
@@ -151,6 +158,7 @@ export class TestingLabPermissionModule {
   }
 
   /**
+   * Grant permission to a specific TestingLab resource
    */
   async postApiTestingLabPermissionsUsersResources(
     userId: string,
@@ -174,6 +182,7 @@ export class TestingLabPermissionModule {
   }
 
   /**
+   * Revoke permission from a specific TestingLab resource
    */
   async deleteApiTestingLabPermissionsUsersResources(
     userId: string,
@@ -194,6 +203,7 @@ export class TestingLabPermissionModule {
   }
 
   /**
+   * Assign a TestingLab role to a user
    */
   async postApiTestingLabPermissionsUsersRoles(userId: string, body: Types.TestingLabAssignTestingLabRoleInput): Promise<Result<void, ApiError>> {
     const url = `/api/testing-lab/permissions/users/${userId}/roles`;
@@ -212,6 +222,7 @@ export class TestingLabPermissionModule {
   }
 
   /**
+   * Revoke a TestingLab role from a user
    */
   async deleteApiTestingLabPermissionsUsersRoles(userId: string, roleName: string, query?: { tenantId?: string }): Promise<Result<void, ApiError>> {
     const url = `/api/testing-lab/permissions/users/${userId}/roles/${roleName}`;

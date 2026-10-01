@@ -272,6 +272,19 @@ public class AuthorizationOptionsTests
     }
 
     [Fact]
+    public void Validate_WithEmptyFallbackPolicyName_ShouldThrow()
+    {
+        var options = new GameGuild.Configuration.PresentationLayer.Authorization.AuthorizationOptions
+        {
+            FallbackPolicyName = " "
+        };
+
+        var act = () => options.Validate();
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("*Fallback policy name*");
+    }
+
+    [Fact]
     public void Validate_WithEmptyGuidSystemAccount_ShouldThrow()
     {
         var options = new GameGuild.Configuration.PresentationLayer.Authorization.AuthorizationOptions { SystemAccountId = Guid.Empty };

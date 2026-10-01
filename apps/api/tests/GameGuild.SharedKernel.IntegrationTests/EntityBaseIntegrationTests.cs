@@ -45,6 +45,7 @@ public class EntityBaseIntegrationTests : IClassFixture<WebApplicationFactory<Ga
                 {
                     options.UseInMemoryDatabase($"EntityBaseTestDb_{Guid.NewGuid()}");
                 });
+                services.AddScoped<DbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
 
                 // Add HTTP logging services (required by the pipeline)
                 services.AddHttpLogging(o => { });

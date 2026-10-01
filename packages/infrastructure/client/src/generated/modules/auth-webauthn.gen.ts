@@ -16,6 +16,7 @@ export class AuthWebauthnModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Check if current user has WebAuthn enabled.
    */
   async getAuthWebauthn(): Promise<Result<Types.IdentityAuthenticationWebAuthnStatusOutput, ApiError>> {
     const url = '/v1/auth/webauthn';
@@ -36,6 +37,7 @@ export class AuthWebauthnModule {
   }
 
   /**
+   * Begin WebAuthn authentication (passwordless login).
    */
   async postAuthWebauthnAuthenticationBegin(
     body: Types.IdentityAuthenticationBeginWebAuthnAuthenticationInput,
@@ -62,6 +64,7 @@ export class AuthWebauthnModule {
   }
 
   /**
+   * Complete WebAuthn authentication (passwordless login).
    */
   async postAuthWebauthnAuthenticationComplete(
     body: Types.IdentityAuthenticationCompleteWebAuthnAuthenticationInput,
@@ -88,6 +91,7 @@ export class AuthWebauthnModule {
   }
 
   /**
+   * Get all WebAuthn credentials for the current user.
    */
   async getAuthWebauthnCredentialsForGetAuthWebauthnCredentials(): Promise<Result<Array<Types.IdentityAuthenticationWebAuthnCredentialInfo>, ApiError>> {
     const url = '/v1/auth/webauthn/credentials';
@@ -102,6 +106,7 @@ export class AuthWebauthnModule {
   }
 
   /**
+   * Get a single WebAuthn credential by ID.
    */
   async getAuthWebauthnCredentialsForGetAuthWebauthnCredentialsByCredentialId(
     credentialId: string,
@@ -124,6 +129,7 @@ export class AuthWebauthnModule {
   }
 
   /**
+   * Delete a WebAuthn credential.
    */
   async deleteAuthWebauthnCredentials(credentialId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/auth/webauthn/credentials/${credentialId}`;
@@ -138,6 +144,7 @@ export class AuthWebauthnModule {
   }
 
   /**
+   * Update a WebAuthn credential's friendly name.
    */
   async patchAuthWebauthnCredentials(credentialId: string, body: Types.IdentityAuthenticationUpdateCredentialNameInput): Promise<Result<void, ApiError>> {
     const url = `/v1/auth/webauthn/credentials/${credentialId}`;
@@ -156,6 +163,7 @@ export class AuthWebauthnModule {
   }
 
   /**
+   * Check if a WebAuthn credential exists.
    */
   async headAuthWebauthnCredentials(credentialId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/auth/webauthn/credentials/${credentialId}`;
@@ -170,6 +178,7 @@ export class AuthWebauthnModule {
   }
 
   /**
+   * Verify a WebAuthn credential is valid and can be used for authentication.
    */
   async postAuthWebauthnCredentialsVerify(credentialId: string): Promise<Result<Types.IdentityAuthenticationWebAuthnCredentialVerifyResult, ApiError>> {
     const url = `/v1/auth/webauthn/credentials/${credentialId}:verify`;
@@ -190,6 +199,7 @@ export class AuthWebauthnModule {
   }
 
   /**
+   * Begin WebAuthn credential registration.
    */
   async postAuthWebauthnRegistrationBegin(
     body: Types.IdentityAuthenticationBeginWebAuthnRegistrationInput,
@@ -216,6 +226,7 @@ export class AuthWebauthnModule {
   }
 
   /**
+   * Complete WebAuthn credential registration.
    */
   async postAuthWebauthnRegistrationComplete(
     body: Types.IdentityAuthenticationCompleteWebAuthnRegistrationInput,

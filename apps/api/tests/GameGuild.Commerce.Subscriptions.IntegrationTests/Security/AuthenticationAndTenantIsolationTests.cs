@@ -69,6 +69,7 @@ public class AuthenticationAndTenantIsolationTests : IClassFixture<WebApplicatio
                 {
                     options.UseInMemoryDatabase(DatabaseName);
                 });
+                services.AddScoped<DbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
 
                 services.AddHttpLogging(o => { });
 

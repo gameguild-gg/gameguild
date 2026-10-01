@@ -16,6 +16,7 @@ export class LearningCoursesActivityGradeModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Grade a content interaction (Program-level Edit permission required)
    */
   async postCoursesActivityGrades(
     programId: string,
@@ -43,6 +44,7 @@ export class LearningCoursesActivityGradeModule {
   }
 
   /**
+   * Update an existing grade (Program-level Edit permission required)
    */
   async putCoursesActivityGrades(
     programId: string,
@@ -71,6 +73,7 @@ export class LearningCoursesActivityGradeModule {
   }
 
   /**
+   * Delete a grade (Program-level Delete permission required)
    */
   async deleteCoursesActivityGrades(programId: string, gradeId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/courses/${programId}/activity-grades/${gradeId}`;
@@ -85,6 +88,7 @@ export class LearningCoursesActivityGradeModule {
   }
 
   /**
+   * Get all grades for a specific content item (Program-level Read permission required)
    */
   async getCoursesActivityGradesContent(programId: string, contentId: string): Promise<Result<Array<Types.LearningCoursesActivityGradeDto>, ApiError>> {
     const url = `/v1/courses/${programId}/activity-grades/content/${contentId}`;
@@ -99,6 +103,7 @@ export class LearningCoursesActivityGradeModule {
   }
 
   /**
+   * Get all grades given by a specific grader (Program-level Read permission required)
    */
   async getCoursesActivityGradesGrader(
     programId: string,
@@ -116,6 +121,7 @@ export class LearningCoursesActivityGradeModule {
   }
 
   /**
+   * Get grade for a specific content interaction (Program-level Read permission required)
    */
   async getCoursesActivityGradesInteraction(programId: string, contentInteractionId: string): Promise<Result<Types.LearningCoursesActivityGradeDto, ApiError>> {
     const url = `/v1/courses/${programId}/activity-grades/interaction/${contentInteractionId}`;
@@ -136,6 +142,7 @@ export class LearningCoursesActivityGradeModule {
   }
 
   /**
+   * Get pending grades for a program (content interactions needing grading) (Program-level Read permission required)
    */
   async getCoursesActivityGradesPending(programId: string): Promise<Result<Array<Types.LearningCoursesContentInteractionDto>, ApiError>> {
     const url = `/v1/courses/${programId}/activity-grades/pending`;
@@ -150,6 +157,7 @@ export class LearningCoursesActivityGradeModule {
   }
 
   /**
+   * Get grade statistics for a program (Program-level Read permission required)
    */
   async getCoursesActivityGradesStatistics(programId: string): Promise<Result<Types.LearningCoursesGradeStatisticsDto, ApiError>> {
     const url = `/v1/courses/${programId}/activity-grades/statistics`;
@@ -170,6 +178,7 @@ export class LearningCoursesActivityGradeModule {
   }
 
   /**
+   * Get all grades received by a specific student (Program-level Read permission required)
    */
   async getCoursesActivityGradesStudent(programId: string, programUserId: string): Promise<Result<Array<Types.LearningCoursesActivityGradeDto>, ApiError>> {
     const url = `/v1/courses/${programId}/activity-grades/student/${programUserId}`;

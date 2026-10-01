@@ -16,6 +16,7 @@ export class CommerceProductsPromoCodesModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Get all promo codes (paginated) with optional status filter
    */
   async getPromoCodesForGetPromoCodes(query?: {
     status?: string;
@@ -45,6 +46,7 @@ export class CommerceProductsPromoCodesModule {
   }
 
   /**
+   * Create a new promo code
    */
   async postPromoCodes(body: Types.CommerceProductsCreatePromoCodeInput): Promise<Result<Types.CommerceProductsPromoCodeDto, ApiError>> {
     const url = '/v1/promo-codes';
@@ -69,6 +71,7 @@ export class CommerceProductsPromoCodesModule {
   }
 
   /**
+   * Apply promo codes to an order
    */
   async postPromoCodesApply(body: Types.CommerceProductsApplyPromoCodesInput): Promise<Result<Types.CommerceProductsPromoCodeApplicationResult, ApiError>> {
     const url = '/v1/promo-codes/:apply';
@@ -93,6 +96,7 @@ export class CommerceProductsPromoCodesModule {
   }
 
   /**
+   * Validate a promo code
    */
   async postPromoCodesValidate(body: Types.CommerceProductsValidatePromoCodeInput): Promise<Result<Types.CommerceProductsPromoCodeValidationResult, ApiError>> {
     const url = '/v1/promo-codes/:validate';
@@ -117,6 +121,7 @@ export class CommerceProductsPromoCodesModule {
   }
 
   /**
+   * Get a promo code by ID
    */
   async getPromoCodesForGetPromoCodesByPromoCodeId(promoCodeId: string): Promise<Result<Types.CommerceProductsPromoCodeDto, ApiError>> {
     const url = `/v1/promo-codes/${promoCodeId}`;
@@ -137,6 +142,7 @@ export class CommerceProductsPromoCodesModule {
   }
 
   /**
+   * Update an existing promo code (full update)
    */
   async putPromoCodes(promoCodeId: string, body: Types.CommerceProductsUpdatePromoCodeInput): Promise<Result<Types.CommerceProductsPromoCodeDto, ApiError>> {
     const url = `/v1/promo-codes/${promoCodeId}`;
@@ -161,6 +167,7 @@ export class CommerceProductsPromoCodesModule {
   }
 
   /**
+   * Delete a promo code
    */
   async deletePromoCodes(promoCodeId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/promo-codes/${promoCodeId}`;
@@ -175,6 +182,7 @@ export class CommerceProductsPromoCodesModule {
   }
 
   /**
+   * Partially update a promo code (PATCH)
    */
   async patchPromoCodes(promoCodeId: string, body: Types.CommerceProductsPatchPromoCodeInput): Promise<Result<Types.CommerceProductsPromoCodeDto, ApiError>> {
     const url = `/v1/promo-codes/${promoCodeId}`;
@@ -199,6 +207,7 @@ export class CommerceProductsPromoCodesModule {
   }
 
   /**
+   * Check if a promo code exists
    */
   async headPromoCodes(promoCodeId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/promo-codes/${promoCodeId}`;
@@ -213,6 +222,7 @@ export class CommerceProductsPromoCodesModule {
   }
 
   /**
+   * Activate a promo code
    */
   async postPromoCodesActivate(promoCodeId: string): Promise<Result<Types.CommerceProductsPromoCodeDto, ApiError>> {
     const url = `/v1/promo-codes/${promoCodeId}:activate`;
@@ -233,6 +243,7 @@ export class CommerceProductsPromoCodesModule {
   }
 
   /**
+   * Deactivate a promo code
    */
   async postPromoCodesDeactivate(promoCodeId: string): Promise<Result<Types.CommerceProductsPromoCodeDto, ApiError>> {
     const url = `/v1/promo-codes/${promoCodeId}:deactivate`;
@@ -253,6 +264,7 @@ export class CommerceProductsPromoCodesModule {
   }
 
   /**
+   * Get usage statistics for a promo code
    */
   async getPromoCodesUsage(promoCodeId: string): Promise<Result<Types.CommerceProductsPromoCodeUsageDto, ApiError>> {
     const url = `/v1/promo-codes/${promoCodeId}/usage`;
@@ -273,6 +285,7 @@ export class CommerceProductsPromoCodesModule {
   }
 
   /**
+   * Get a promo code by its code string
    */
   async getPromoCodesByCode(code: string): Promise<Result<Types.CommerceProductsPromoCodeDto, ApiError>> {
     const url = `/v1/promo-codes/by-code/${code}`;

@@ -16,6 +16,7 @@ export class SocialBlogAiModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Lists the author's copilot conversations for the post.
    */
   async getApiSocialBlogPostsAiConversations(postId: string): Promise<Result<Array<Types.SocialBlogAuthoringBlogAiConversationDto>, ApiError>> {
     const url = `/api/social/blog/posts/${postId}/ai/conversations`;
@@ -30,6 +31,7 @@ export class SocialBlogAiModule {
   }
 
   /**
+   * Returns the acting author's AI credit wallet snapshot.
    */
   async getApiSocialBlogPostsAiEntitlement(postId: string): Promise<Result<Types.SocialBlogAuthoringBlogAiEntitlementDto, ApiError>> {
     const url = `/api/social/blog/posts/${postId}/ai/entitlement`;
@@ -50,6 +52,7 @@ export class SocialBlogAiModule {
   }
 
   /**
+   * Discards a pending proposal without changing the post.
    */
   async deleteApiSocialBlogPostsAiProposals(postId: string, proposalId: string): Promise<Result<Types.SocialBlogAuthoringBlogAiProposalDto, ApiError>> {
     const url = `/api/social/blog/posts/${postId}/ai/proposals/${proposalId}`;
@@ -70,6 +73,7 @@ export class SocialBlogAiModule {
   }
 
   /**
+   * Applies a pending proposal to the post (revision-guarded).
    */
   async postApiSocialBlogPostsAiProposalsApply(
     postId: string,
@@ -98,6 +102,7 @@ export class SocialBlogAiModule {
   }
 
   /**
+   * Starts (or idempotently replays) an AI run against the post's current revision.
    */
   async postApiSocialBlogPostsAiRuns(
     postId: string,
@@ -125,6 +130,7 @@ export class SocialBlogAiModule {
   }
 
   /**
+   * Fetches one run owned by the acting author.
    */
   async getApiSocialBlogPostsAiRuns(postId: string, runId: string): Promise<Result<Types.SocialBlogAuthoringBlogAiRunDto, ApiError>> {
     const url = `/api/social/blog/posts/${postId}/ai/runs/${runId}`;
@@ -145,6 +151,7 @@ export class SocialBlogAiModule {
   }
 
   /**
+   * Cancels a queued, reserved, or running run and releases its reservation.
    */
   async postApiSocialBlogPostsAiRunsCancel(postId: string, runId: string): Promise<Result<Types.SocialBlogAuthoringBlogAiRunDto, ApiError>> {
     const url = `/api/social/blog/posts/${postId}/ai/runs/${runId}/cancel`;
@@ -165,6 +172,7 @@ export class SocialBlogAiModule {
   }
 
   /**
+   * Streams persisted run events (SSE) until the run reaches a terminal state.
    */
   async getApiSocialBlogPostsAiRunsStream(postId: string, runId: string): Promise<Result<void, ApiError>> {
     const url = `/api/social/blog/posts/${postId}/ai/runs/${runId}/stream`;

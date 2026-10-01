@@ -16,6 +16,7 @@ export class LearningExperienceSocialReviewsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Gets rating statistics for a course
    */
   async getApiSocialCoursesRatingStats(courseId: string): Promise<Result<Types.LearningExperienceSocialServicesCourseRatingStats, ApiError>> {
     const url = `/api/social/courses/${courseId}/rating-stats`;
@@ -36,6 +37,7 @@ export class LearningExperienceSocialReviewsModule {
   }
 
   /**
+   * Gets all reviews for a course
    */
   async getApiSocialCoursesReviews(
     courseId: string,
@@ -54,6 +56,7 @@ export class LearningExperienceSocialReviewsModule {
   }
 
   /**
+   * Creates a new course review
    */
   async postApiSocialReviews(
     body: Types.LearningExperienceSocialServicesCreateReviewInput,
@@ -80,6 +83,7 @@ export class LearningExperienceSocialReviewsModule {
   }
 
   /**
+   * Gets a review by ID
    */
   async getApiSocialReviews(id: string): Promise<Result<Types.LearningExperienceSocialServicesCourseReviewDto, ApiError>> {
     const url = `/api/social/reviews/${id}`;
@@ -100,6 +104,7 @@ export class LearningExperienceSocialReviewsModule {
   }
 
   /**
+   * Deletes a review (owner only)
    */
   async deleteApiSocialReviews(id: string): Promise<Result<void, ApiError>> {
     const url = `/api/social/reviews/${id}`;
@@ -114,6 +119,7 @@ export class LearningExperienceSocialReviewsModule {
   }
 
   /**
+   * Approves a review (admin only)
    */
   async postApiSocialReviewsApprove(id: string): Promise<Result<Types.LearningExperienceSocialServicesCourseReviewDto, ApiError>> {
     const url = `/api/social/reviews/${id}/approve`;
@@ -134,6 +140,7 @@ export class LearningExperienceSocialReviewsModule {
   }
 
   /**
+   * Features a review (admin only)
    */
   async postApiSocialReviewsFeature(id: string): Promise<Result<Types.LearningExperienceSocialServicesCourseReviewDto, ApiError>> {
     const url = `/api/social/reviews/${id}/feature`;
@@ -154,6 +161,7 @@ export class LearningExperienceSocialReviewsModule {
   }
 
   /**
+   * Marks a review as helpful
    */
   async postApiSocialReviewsHelpful(id: string): Promise<Result<Types.LearningExperienceSocialServicesCourseReviewDto, ApiError>> {
     const url = `/api/social/reviews/${id}/helpful`;
@@ -174,6 +182,7 @@ export class LearningExperienceSocialReviewsModule {
   }
 
   /**
+   * Updates review approval and storefront featured state.
    */
   async patchApiSocialReviewsModeration(
     id: string,
@@ -201,6 +210,7 @@ export class LearningExperienceSocialReviewsModule {
   }
 
   /**
+   * Gets the current user's reviews
    */
   async getApiSocialReviewsMe(query?: {
     skip?: number;

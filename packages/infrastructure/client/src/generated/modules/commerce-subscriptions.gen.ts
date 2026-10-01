@@ -97,7 +97,7 @@ export class CommerceSubscriptionsModule {
   }
 
   /**
-   * Full update subscription
+   * Full update of a subscription
    *
    * Performs a full replacement of subscription data. All fields will be updated.
    */
@@ -121,7 +121,7 @@ export class CommerceSubscriptionsModule {
   }
 
   /**
-   * Delete subscription
+   * Delete a subscription
    *
    * Permanently deletes a subscription. Use cancel action for soft removal.
    */
@@ -138,7 +138,7 @@ export class CommerceSubscriptionsModule {
   }
 
   /**
-   * Partially update subscription
+   * Partially update a subscription
    *
    * Updates specific fields of a subscription. Only provided fields are updated.
    */
@@ -380,7 +380,7 @@ export class CommerceSubscriptionsModule {
   }
 
   /**
-   * Resume subscription billing
+   * Resume paused subscription billing
    *
    * Resumes billing for a paused subscription.
    */

@@ -16,7 +16,7 @@ export class AuthSigningKeysModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
-   * Get signing keys
+   * Get signing keys with optional status filter
    *
    * Retrieves signing keys with optional status filtering. Use status=active for current signing key, status=valid for all keys usable for validation.
    */
@@ -34,7 +34,7 @@ export class AuthSigningKeysModule {
   }
 
   /**
-   * Cleanup expired keys
+   * Clean up expired keys
    *
    * Removes signing keys that have been expired beyond the retention period.
    */
@@ -61,7 +61,7 @@ export class AuthSigningKeysModule {
   }
 
   /**
-   * Rotate signing key
+   * Manually rotate to a new signing key
    *
    * Manually rotates to a new signing key. Previous keys remain valid for token validation during grace period.
    */

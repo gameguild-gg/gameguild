@@ -16,6 +16,7 @@ export class AccessControlSeparationOfDutiesModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Get all SoD rules for a tenant
    */
   async getSodRulesForGetSodRules(query?: { tenantId?: string; activeOnly?: boolean }): Promise<Result<Array<Types.IdentityAuthorizationSoDRule>, ApiError>> {
     const url = '/v1/sod/rules';
@@ -31,6 +32,7 @@ export class AccessControlSeparationOfDutiesModule {
   }
 
   /**
+   * Create a new SoD rule
    */
   async postSodRules(body: Types.IdentityAuthorizationCommandsCreateSoDRuleCommand): Promise<Result<Types.IdentityAuthorizationSoDRule, ApiError>> {
     const url = '/v1/sod/rules';
@@ -55,6 +57,7 @@ export class AccessControlSeparationOfDutiesModule {
   }
 
   /**
+   * Get a SoD rule by ID
    */
   async getSodRulesForGetSodRulesById(id: string): Promise<Result<Types.IdentityAuthorizationSoDRule, ApiError>> {
     const url = `/v1/sod/rules/${id}`;
@@ -75,6 +78,7 @@ export class AccessControlSeparationOfDutiesModule {
   }
 
   /**
+   * Update an existing SoD rule
    */
   async putSodRules(id: string, body: Types.IdentityAuthorizationControllersUpdateSoDRuleInput): Promise<Result<Types.IdentityAuthorizationSoDRule, ApiError>> {
     const url = `/v1/sod/rules/${id}`;
@@ -99,6 +103,7 @@ export class AccessControlSeparationOfDutiesModule {
   }
 
   /**
+   * Delete a SoD rule
    */
   async deleteSodRules(id: string): Promise<Result<void, ApiError>> {
     const url = `/v1/sod/rules/${id}`;
@@ -113,6 +118,7 @@ export class AccessControlSeparationOfDutiesModule {
   }
 
   /**
+   * Scan for SoD violations (admin only)
    */
   async postSodViolationsScan(query?: { tenantId?: string }): Promise<Result<number, ApiError>> {
     const url = '/v1/sod/violations:scan';
@@ -128,6 +134,7 @@ export class AccessControlSeparationOfDutiesModule {
   }
 
   /**
+   * Grant an exception for a SoD violation
    */
   async postSodViolationsException(
     id: string,
@@ -155,6 +162,7 @@ export class AccessControlSeparationOfDutiesModule {
   }
 
   /**
+   * Resolve a SoD violation
    */
   async postSodViolationsResolve(
     id: string,
@@ -182,6 +190,7 @@ export class AccessControlSeparationOfDutiesModule {
   }
 
   /**
+   * Get active SoD violations
    */
   async getSodViolationsActive(query?: { tenantId?: string }): Promise<Result<Array<Types.IdentityAuthorizationSoDViolation>, ApiError>> {
     const url = '/v1/sod/violations/active';
@@ -197,6 +206,7 @@ export class AccessControlSeparationOfDutiesModule {
   }
 
   /**
+   * Detect SoD violations for a user
    */
   async getSodViolationsDetect(userId: string, query?: { tenantId?: string }): Promise<Result<Array<Types.IdentityAuthorizationSoDViolation>, ApiError>> {
     const url = `/v1/sod/violations/detect/${userId}`;
@@ -212,6 +222,7 @@ export class AccessControlSeparationOfDutiesModule {
   }
 
   /**
+   * Get SoD violations for a user
    */
   async getSodViolationsUser(userId: string, query?: { tenantId?: string }): Promise<Result<Array<Types.IdentityAuthorizationSoDViolation>, ApiError>> {
     const url = `/v1/sod/violations/user/${userId}`;

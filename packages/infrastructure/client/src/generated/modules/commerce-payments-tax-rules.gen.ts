@@ -16,6 +16,7 @@ export class CommercePaymentsTaxRulesModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Get tax rules for a jurisdiction
    */
   async getTaxRulesForGetTaxRules(query?: {
     jurisdictionCode?: string;
@@ -35,7 +36,7 @@ export class CommercePaymentsTaxRulesModule {
   }
 
   /**
-   * Create tax rule
+   * Create a new tax rule
    *
    * Creates a new tax rule with the provided information.
    */
@@ -79,7 +80,7 @@ export class CommercePaymentsTaxRulesModule {
   }
 
   /**
-   * Delete tax rule
+   * Delete a tax rule
    *
    * Deletes a tax rule by ID.
    */
@@ -96,7 +97,7 @@ export class CommercePaymentsTaxRulesModule {
   }
 
   /**
-   * Partially update tax rule
+   * Partially update a tax rule
    *
    * Updates specific fields of a tax rule.
    */

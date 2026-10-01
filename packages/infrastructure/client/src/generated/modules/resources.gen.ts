@@ -58,7 +58,7 @@ export class ResourcesModule {
   }
 
   /**
-   * Get resource usage by type
+   * Get resource usage filtered by type
    *
    * Retrieves aggregated resource usage across all tenants within the specified date range for the given resource type.
    */

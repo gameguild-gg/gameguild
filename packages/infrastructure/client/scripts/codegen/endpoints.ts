@@ -11,6 +11,7 @@ import { TypeMapperChain } from './strategies/SchemaTypeMapper.js';
 import { HTTP_METHODS, SUCCESS_STATUS_PREFIX, CONTENT_TYPES, PARAMETER_LOCATIONS, ALLOW_ANONYMOUS_EXTENSION } from './constants.js';
 import { toPascalCase } from '../utils/naming.js';
 import { qualifyType } from '../utils/type-qualify.js';
+import { formatJsDocLines } from '../utils/jsdoc.js';
 
 interface EndpointInfo {
   operationId: string;
@@ -234,12 +235,12 @@ class EndpointsGenerator extends BaseGenerator {
     const lines: string[] = [];
 
     // JSDoc
-    if (endpoint.summary || endpoint.description) {
+    if (endpoint.summary?.trim() || endpoint.description?.trim()) {
       lines.push('/**');
-      if (endpoint.summary) lines.push(` * ${endpoint.summary}`);
-      if (endpoint.description && endpoint.description !== endpoint.summary) {
-        lines.push(` * `);
-        lines.push(` * ${endpoint.description}`);
+      if (endpoint.summary?.trim()) lines.push(...formatJsDocLines(endpoint.summary));
+      if (endpoint.description?.trim() && endpoint.description !== endpoint.summary) {
+        if (endpoint.summary?.trim()) lines.push(' *');
+        lines.push(...formatJsDocLines(endpoint.description));
       }
       lines.push(' */');
     }

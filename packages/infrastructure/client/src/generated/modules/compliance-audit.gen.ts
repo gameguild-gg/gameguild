@@ -16,6 +16,7 @@ export class ComplianceAuditModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Get audit logs with filtering and pagination
    */
   async getAdminAuditLogs(query?: {
     UserId?: string;
@@ -50,6 +51,7 @@ export class ComplianceAuditModule {
   }
 
   /**
+   * Export audit logs (admin only)
    */
   async postAdminAuditLogsExport(body: Types.ComplianceAuditAuditExportInput): Promise<Result<void, ApiError>> {
     const url = '/v1/admin/audit-logs/:export';
@@ -68,6 +70,72 @@ export class ComplianceAuditModule {
   }
 
   /**
+   * Returns the current state of an export started by the authenticated administrator.
+   */
+  async getAdminAuditLogsExportProgress(exportId: string): Promise<Result<Types.ComplianceAuditAuditExportProgressOutput, ApiError>> {
+    const url = `/v1/admin/audit-logs/export/${exportId}/progress`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.ComplianceAuditAuditExportProgressOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Export audit logs (admin only)
+   */
+  async postAdminAuditLogsExportCsv(body: Types.ComplianceAuditAuditExportInput): Promise<Result<void, ApiError>> {
+    const url = '/v1/admin/audit-logs/export/csv';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.ComplianceAuditAuditExportInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Streams a versioned JSON audit export with pagination metadata.
+   */
+  async postAdminAuditLogsExportJson(body: Types.ComplianceAuditAuditExportInput): Promise<Result<Types.ComplianceAuditAuditJsonExportDocument, ApiError>> {
+    const url = '/v1/admin/audit-logs/export/json';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.ComplianceAuditAuditExportInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.ComplianceAuditAuditJsonExportDocumentSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Get audit log statistics
    */
   async getAdminAuditLogsStatistics(query?: { StartDate?: string; EndDate?: string }): Promise<Result<Types.ComplianceAuditAuditStatisticsOutput, ApiError>> {
     const url = '/v1/admin/audit-logs/statistics';

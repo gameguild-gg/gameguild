@@ -17,5 +17,7 @@ public enum SessionTerminationReason
 
     LocationChanged,
 
-    MaxSessionsExceeded
+    MaxSessionsExceeded,
+
+    MfaDisabled
 }

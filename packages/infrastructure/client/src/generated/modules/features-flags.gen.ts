@@ -16,6 +16,7 @@ export class FeaturesFlagsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Evaluate a feature flag for runtime decisions
    */
   async postFeaturesEvaluate(body: Types.FeaturesFeatureEvaluationInput): Promise<Result<void, ApiError>> {
     const url = '/v1/features/:evaluate';
@@ -34,6 +35,7 @@ export class FeaturesFlagsModule {
   }
 
   /**
+   * Bulk evaluate multiple feature flags for runtime decisions
    */
   async postFeaturesEvaluateBulk(body: Types.FeaturesBulkEvaluationInput): Promise<Result<void, ApiError>> {
     const url = '/v1/features/:evaluate-bulk';
@@ -52,6 +54,7 @@ export class FeaturesFlagsModule {
   }
 
   /**
+   * Get feature value (boolean/string/number) as resolved for the current context
    */
   async getFeaturesValue(
     key: string,
@@ -70,6 +73,7 @@ export class FeaturesFlagsModule {
   }
 
   /**
+   * Get all enabled feature flags for the current context
    */
   async getFeaturesEnabled(query?: { userId?: string; tenantId?: string; environment?: string }): Promise<Result<void, ApiError>> {
     const url = '/v1/features/enabled';

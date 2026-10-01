@@ -1,4 +1,5 @@
 using Fido2NetLib;
+using GameGuild.Configuration;
 using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.CQRS;
 using Microsoft.Extensions.Configuration;
@@ -44,6 +45,31 @@ public static class DataDependencyInjection
     /// </summary>
     private static void RegisterAuthenticationServices(IServiceCollection services, IConfiguration configuration)
     {
+        var mfaOptions = OptionBuilderUtilities.CreateAndBind(
+            configuration,
+            MfaOptions.SectionName,
+            static () => new MfaOptions());
+        var mfaValidation = mfaOptions.Validate();
+        if (!mfaValidation.IsValid)
+        {
+            throw new InvalidOperationException(
+                $"Invalid {MfaOptions.SectionName} configuration: {string.Join("; ", mfaValidation.Errors)}");
+        }
+
+        var sessionOptions = OptionBuilderUtilities.CreateAndBind(
+            configuration,
+            SessionOptions.SectionName,
+            static () => new SessionOptions());
+        var sessionValidation = sessionOptions.Validate();
+        if (!sessionValidation.IsValid)
+        {
+            throw new InvalidOperationException(
+                $"Invalid {SessionOptions.SectionName} configuration: {string.Join("; ", sessionValidation.Errors)}");
+        }
+
+        services.AddSingleton(mfaOptions);
+        services.AddSingleton(sessionOptions);
+
         // Configure JWT options from configuration
         services.Configure<JwtOptions>(configuration.GetSection("Jwt"));
 

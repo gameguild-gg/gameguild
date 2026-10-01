@@ -16,6 +16,7 @@ export class SocialFollowsFollowersModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Batch get follower counts for multiple entities
    */
   async postApiFollowersBatchCounts(body: Types.SocialFollowsControllersBatchCountsInput): Promise<Result<Record<string, number>, ApiError>> {
     const url = '/api/followers/batch/counts';
@@ -34,6 +35,7 @@ export class SocialFollowsFollowersModule {
   }
 
   /**
+   * Batch get follow status for multiple entities
    */
   async postApiFollowersBatchStatus(body: Types.SocialFollowsControllersBatchStatusInput): Promise<Result<Record<string, boolean>, ApiError>> {
     const url = '/api/followers/batch/status';
@@ -52,6 +54,7 @@ export class SocialFollowsFollowersModule {
   }
 
   /**
+   * Block a user
    */
   async postApiFollowersBlock(body: Types.SocialFollowsControllersBlockInput): Promise<Result<Types.SocialFollowsControllersBlockDto, ApiError>> {
     const url = '/api/followers/block';
@@ -76,6 +79,7 @@ export class SocialFollowsFollowersModule {
   }
 
   /**
+   * Get current user's blocked users list
    */
   async getApiFollowersBlockedUsers(query?: { skip?: number; take?: number }): Promise<Result<Array<Types.SocialFollowsControllersBlockDto>, ApiError>> {
     const url = '/api/followers/blocked-users';
@@ -91,6 +95,7 @@ export class SocialFollowsFollowersModule {
   }
 
   /**
+   * Get follower count for an entity
    */
   async getApiFollowersCountFollowers(entityId: string, query?: { entityType?: string }): Promise<Result<number, ApiError>> {
     const url = `/api/followers/count/followers/${entityId}`;
@@ -106,6 +111,7 @@ export class SocialFollowsFollowersModule {
   }
 
   /**
+   * Get following count for current user
    */
   async getApiFollowersCountFollowing(query?: { entityType?: string }): Promise<Result<number, ApiError>> {
     const url = '/api/followers/count/following';
@@ -121,6 +127,7 @@ export class SocialFollowsFollowersModule {
   }
 
   /**
+   * Follow an entity
    */
   async postApiFollowersFollow(body: Types.SocialFollowsControllersFollowInput): Promise<Result<Types.SocialFollowsControllersFollowDto, ApiError>> {
     const url = '/api/followers/follow';
@@ -145,6 +152,7 @@ export class SocialFollowsFollowersModule {
   }
 
   /**
+   * Get followers for an entity
    */
   async getApiFollowersFollowers(
     entityId: string,
@@ -163,6 +171,7 @@ export class SocialFollowsFollowersModule {
   }
 
   /**
+   * Get entities the current user is following
    */
   async getApiFollowersFollowing(query?: {
     entityType?: string;
@@ -182,6 +191,7 @@ export class SocialFollowsFollowersModule {
   }
 
   /**
+   * Check if current user has blocked a user
    */
   async getApiFollowersIsBlocked(blockedUserId: string): Promise<Result<boolean, ApiError>> {
     const url = `/api/followers/is-blocked/${blockedUserId}`;
@@ -196,6 +206,7 @@ export class SocialFollowsFollowersModule {
   }
 
   /**
+   * Check if current user is following an entity
    */
   async getApiFollowersIsFollowing(query?: { entityId?: string; entityType?: string }): Promise<Result<boolean, ApiError>> {
     const url = '/api/followers/is-following';
@@ -211,6 +222,7 @@ export class SocialFollowsFollowersModule {
   }
 
   /**
+   * Check if current user has muted a user
    */
   async getApiFollowersIsMuted(mutedUserId: string): Promise<Result<boolean, ApiError>> {
     const url = `/api/followers/is-muted/${mutedUserId}`;
@@ -225,6 +237,7 @@ export class SocialFollowsFollowersModule {
   }
 
   /**
+   * Mute a user
    */
   async postApiFollowersMute(body: Types.SocialFollowsControllersMuteInput): Promise<Result<Types.SocialFollowsControllersMuteDto, ApiError>> {
     const url = '/api/followers/mute';
@@ -249,6 +262,7 @@ export class SocialFollowsFollowersModule {
   }
 
   /**
+   * Get current user's muted users list
    */
   async getApiFollowersMutedUsers(query?: { skip?: number; take?: number }): Promise<Result<Array<Types.SocialFollowsControllersMuteDto>, ApiError>> {
     const url = '/api/followers/muted-users';
@@ -264,6 +278,7 @@ export class SocialFollowsFollowersModule {
   }
 
   /**
+   * Check if two users are mutual followers
    */
   async getApiFollowersMutual(query?: { userId1?: string; userId2?: string }): Promise<Result<boolean, ApiError>> {
     const url = '/api/followers/mutual';
@@ -279,6 +294,7 @@ export class SocialFollowsFollowersModule {
   }
 
   /**
+   * Update notification settings for a follow relationship
    */
   async putApiFollowersNotifications(
     body: Types.SocialFollowsControllersUpdateNotificationsInput,
@@ -305,6 +321,7 @@ export class SocialFollowsFollowersModule {
   }
 
   /**
+   * Get current user's privacy settings
    */
   async getApiFollowersPrivacySettings(): Promise<Result<Types.SocialFollowsControllersFollowPrivacySettingsDto, ApiError>> {
     const url = '/api/followers/privacy-settings';
@@ -325,6 +342,7 @@ export class SocialFollowsFollowersModule {
   }
 
   /**
+   * Update current user's privacy settings
    */
   async putApiFollowersPrivacySettings(
     body: Types.SocialFollowsControllersUpdatePrivacySettingsInput,
@@ -351,6 +369,7 @@ export class SocialFollowsFollowersModule {
   }
 
   /**
+   * Unblock a user
    */
   async deleteApiFollowersUnblock(blockedUserId: string): Promise<Result<void, ApiError>> {
     const url = `/api/followers/unblock/${blockedUserId}`;
@@ -365,6 +384,7 @@ export class SocialFollowsFollowersModule {
   }
 
   /**
+   * Unfollow an entity
    */
   async deleteApiFollowersUnfollow(query?: { entityId?: string; entityType?: string }): Promise<Result<void, ApiError>> {
     const url = '/api/followers/unfollow';
@@ -380,6 +400,7 @@ export class SocialFollowsFollowersModule {
   }
 
   /**
+   * Unmute a user
    */
   async deleteApiFollowersUnmute(mutedUserId: string): Promise<Result<void, ApiError>> {
     const url = `/api/followers/unmute/${mutedUserId}`;

@@ -300,6 +300,8 @@ export class ApiTeamsModule {
   }
 
   /**
+   * Gets Teams where the authenticated user has an active membership.
+   * This endpoint remains personal even when the actor has administrative capabilities.
    */
   async getTeamsMine(query?: {
     includeArchived?: boolean;

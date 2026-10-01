@@ -16,6 +16,8 @@ export class AssetsAdminModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * List admin assets with optional status filter.
+   * Use status=pending-virus-scan or status=pending-moderation to filter.
    */
   async getAdminAssets(query?: { status?: string; limit?: number }): Promise<Result<void, ApiError>> {
     const url = '/v1/admin/assets';
@@ -31,6 +33,10 @@ export class AssetsAdminModule {
   }
 
   /**
+   * Trigger manual garbage collection.
+   *
+   * Runs the garbage collection process manually instead of waiting for the scheduled background job.
+   * Only deletes content that has been marked for deletion and past the grace period.
    */
   async postAdminAssetsRunGc(query?: { gracePeriodHours?: number; limit?: number; dryRun?: boolean }): Promise<Result<void, ApiError>> {
     const url = '/v1/admin/assets/:run-gc';
@@ -46,6 +52,10 @@ export class AssetsAdminModule {
   }
 
   /**
+   * Mark an asset content as non-deletable (legal hold).
+   *
+   * Prevents the asset from being garbage collected, even if all references are deleted.
+   * Use for legal holds, compliance requirements, or audit preservation.
    */
   async postAdminAssetsMarkUndeletable(contentId: string, body: Types.AssetsControllersMarkNonDeletableInput): Promise<Result<void, ApiError>> {
     const url = `/v1/admin/assets/${contentId}:mark-undeletable`;
@@ -64,6 +74,10 @@ export class AssetsAdminModule {
   }
 
   /**
+   * Review and moderate content directly.
+   *
+   * Unlike report review which handles user reports, this endpoint allows
+   * direct moderation of content by admins for proactive moderation workflows.
    */
   async postAdminAssetsReviewModeration(contentId: string, body: Types.AssetsControllersContentModerationInput): Promise<Result<void, ApiError>> {
     const url = `/v1/admin/assets/${contentId}:review-moderation`;
@@ -82,6 +96,7 @@ export class AssetsAdminModule {
   }
 
   /**
+   * Run virus scan on an asset.
    */
   async postAdminAssetsRunVirusScan(contentId: string, body: Types.AssetsControllersUpdateVirusScanInput): Promise<Result<void, ApiError>> {
     const url = `/v1/admin/assets/${contentId}:run-virus-scan`;
@@ -100,6 +115,7 @@ export class AssetsAdminModule {
   }
 
   /**
+   * Remove the non-deletable flag from an asset.
    */
   async postAdminAssetsUnmarkUndeletable(contentId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/admin/assets/${contentId}:unmark-undeletable`;
@@ -114,6 +130,7 @@ export class AssetsAdminModule {
   }
 
   /**
+   * Force delete an asset (admin override).
    */
   async postAdminAssetsForceDelete(id: string): Promise<Result<void, ApiError>> {
     const url = `/v1/admin/assets/${id}:force-delete`;
@@ -128,6 +145,7 @@ export class AssetsAdminModule {
   }
 
   /**
+   * Get reports for an asset.
    */
   async getAdminAssetsReports(id: string): Promise<Result<void, ApiError>> {
     const url = `/v1/admin/assets/${id}/reports`;
@@ -142,6 +160,7 @@ export class AssetsAdminModule {
   }
 
   /**
+   * Get garbage collection candidates.
    */
   async getAdminAssetsGcCandidates(query?: { gracePeriodHours?: number; limit?: number }): Promise<Result<void, ApiError>> {
     const url = '/v1/admin/assets/gc-candidates';
@@ -157,6 +176,7 @@ export class AssetsAdminModule {
   }
 
   /**
+   * Get moderation queue.
    */
   async getAdminAssetsModerationQueue(query?: { limit?: number }): Promise<Result<void, ApiError>> {
     const url = '/v1/admin/assets/moderation-queue';
@@ -172,6 +192,7 @@ export class AssetsAdminModule {
   }
 
   /**
+   * Review a moderation report.
    */
   async postAdminAssetsReportsReview(reportId: string, body: Types.AssetsControllersReviewReportInput): Promise<Result<void, ApiError>> {
     const url = `/v1/admin/assets/reports/${reportId}:review`;
@@ -190,6 +211,7 @@ export class AssetsAdminModule {
   }
 
   /**
+   * Get the current retention candidate report.
    */
   async getAdminAssetsRetention(query?: {
     gracePeriodHours?: number;
@@ -214,6 +236,10 @@ export class AssetsAdminModule {
   }
 
   /**
+   * Trigger manual garbage collection.
+   *
+   * Runs the garbage collection process manually instead of waiting for the scheduled background job.
+   * Only deletes content that has been marked for deletion and past the grace period.
    */
   async postAdminAssetsRetentionRun(query?: { gracePeriodHours?: number; limit?: number; dryRun?: boolean }): Promise<Result<void, ApiError>> {
     const url = '/v1/admin/assets/retention:run';
@@ -229,6 +255,7 @@ export class AssetsAdminModule {
   }
 
   /**
+   * Get asset/document statistics for document center dashboards.
    */
   async getAdminAssetsStatistics(): Promise<Result<Types.AssetsQueriesAssetStatisticsOutput, ApiError>> {
     const url = '/v1/admin/assets/statistics';
@@ -249,6 +276,7 @@ export class AssetsAdminModule {
   }
 
   /**
+   * Export asset/document statistics as CSV or PDF.
    */
   async getAdminAssetsStatisticsExport(query?: { format?: string }): Promise<Result<Blob, ApiError>> {
     const url = '/v1/admin/assets/statistics:export';

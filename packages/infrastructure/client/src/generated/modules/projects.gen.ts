@@ -16,6 +16,13 @@ export class ProjectsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Get all projects with filtering and pagination
+   *
+   * Use query parameters to filter results:
+   * - `featured=true` to get featured projects
+   * - `popular=true` to get popular projects (sorted by popularity score)
+   * - `recent=true` to get recently created/updated projects
+   * - `sortBy=CreatedAt` with `sortDirection=DESC` for manual sorting
    */
   async getProjectsForGetProjects(query?: {
     type?: Types.ProjectsProjectType;
@@ -47,6 +54,7 @@ export class ProjectsModule {
   }
 
   /**
+   * Create a new project
    */
   async postProjects(body: Types.ProjectsCreateProjectInput): Promise<Result<Types.ProjectsProjectApiOutput, ApiError>> {
     const url = '/v1/projects';
@@ -71,6 +79,7 @@ export class ProjectsModule {
   }
 
   /**
+   * Get project by ID
    */
   async getProjectsForGetProjectsById(
     id: string,
@@ -95,6 +104,7 @@ export class ProjectsModule {
   }
 
   /**
+   * Update an existing project
    */
   async putProjects(id: string, body: Types.ProjectsUpdateProjectInput): Promise<Result<Types.ProjectsProjectApiOutput, ApiError>> {
     const url = `/v1/projects/${id}`;
@@ -119,6 +129,7 @@ export class ProjectsModule {
   }
 
   /**
+   * Delete a project
    */
   async deleteProjects(id: string, query?: { softDelete?: boolean; reason?: string }): Promise<Result<boolean, ApiError>> {
     const url = `/v1/projects/${id}`;
@@ -134,6 +145,7 @@ export class ProjectsModule {
   }
 
   /**
+   * Archive a project
    */
   async postProjectsArchive(id: string): Promise<Result<Types.ProjectsProjectApiOutput, ApiError>> {
     const url = `/v1/projects/${id}:archive`;
@@ -154,6 +166,7 @@ export class ProjectsModule {
   }
 
   /**
+   * Publish a project
    */
   async postProjectsPublish(id: string): Promise<Result<Types.ProjectsProjectApiOutput, ApiError>> {
     const url = `/v1/projects/${id}:publish`;
@@ -174,6 +187,7 @@ export class ProjectsModule {
   }
 
   /**
+   * Restore an archived or soft-deleted project
    */
   async postProjectsRestore(id: string): Promise<Result<Types.ProjectsProjectApiOutput, ApiError>> {
     const url = `/v1/projects/${id}:restore`;
@@ -194,6 +208,7 @@ export class ProjectsModule {
   }
 
   /**
+   * Share project with a user by assigning a role
    */
   async postProjectsShare(id: string, body: Types.ProjectsShareProjectInput): Promise<Result<Types.ProjectsCollaboratorDto, ApiError>> {
     const url = `/v1/projects/${id}:share`;
@@ -218,6 +233,7 @@ export class ProjectsModule {
   }
 
   /**
+   * Unpublish a project
    */
   async postProjectsUnpublish(id: string): Promise<Result<Types.ProjectsProjectApiOutput, ApiError>> {
     const url = `/v1/projects/${id}:unpublish`;
@@ -238,6 +254,7 @@ export class ProjectsModule {
   }
 
   /**
+   * Get project collaborators
    */
   async getProjectsCollaborators(id: string): Promise<Result<Array<Types.ProjectsCollaboratorDto>, ApiError>> {
     const url = `/v1/projects/${id}/collaborators`;
@@ -252,6 +269,7 @@ export class ProjectsModule {
   }
 
   /**
+   * Add project collaborator
    */
   async postProjectsCollaborators(id: string, body: Types.ProjectsAddProjectCollaboratorInput): Promise<Result<Types.ProjectsCollaboratorDto, ApiError>> {
     const url = `/v1/projects/${id}/collaborators`;
@@ -276,6 +294,7 @@ export class ProjectsModule {
   }
 
   /**
+   * Update project collaborator
    */
   async putProjectsCollaborators(
     id: string,
@@ -304,6 +323,7 @@ export class ProjectsModule {
   }
 
   /**
+   * Remove project collaborator
    */
   async deleteProjectsCollaborators(id: string, collaboratorId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/projects/${id}/collaborators/${collaboratorId}`;
@@ -318,6 +338,7 @@ export class ProjectsModule {
   }
 
   /**
+   * Invite a user to collaborate on a project without granting access until acceptance
    */
   async postProjectsInvitations(id: string, body: Types.ProjectsInviteProjectCollaboratorInput): Promise<Result<Types.ProjectsProjectInvitationDto, ApiError>> {
     const url = `/v1/projects/${id}/invitations`;
@@ -342,6 +363,7 @@ export class ProjectsModule {
   }
 
   /**
+   * Get project statistics
    */
   async getProjectsStatistics(id: string, query?: { fromDate?: string; toDate?: string }): Promise<Result<Types.ProjectsProjectStatistics, ApiError>> {
     const url = `/v1/projects/${id}/statistics`;
@@ -504,6 +526,7 @@ export class ProjectsModule {
   }
 
   /**
+   * Get projects by category
    */
   async getProjectsCategory(
     categoryId: string,
@@ -522,6 +545,7 @@ export class ProjectsModule {
   }
 
   /**
+   * Get projects by creator
    */
   async getProjectsCreator(
     creatorId: string,
@@ -540,6 +564,7 @@ export class ProjectsModule {
   }
 
   /**
+   * Get featured projects
    */
   async getProjectsFeatured(query?: { type?: Types.ProjectsProjectType; take?: number }): Promise<Result<Array<Types.ProjectsProjectApiOutput>, ApiError>> {
     const url = '/v1/projects/featured';
@@ -555,6 +580,7 @@ export class ProjectsModule {
   }
 
   /**
+   * Accept a project invitation
    */
   async postProjectsInvitationsAccept(invitationToken: string): Promise<Result<Types.ProjectsProjectInvitationDto, ApiError>> {
     const url = `/v1/projects/invitations/${invitationToken}:accept`;
@@ -575,6 +601,7 @@ export class ProjectsModule {
   }
 
   /**
+   * Decline a project invitation
    */
   async postProjectsInvitationsDecline(invitationToken: string): Promise<Result<Types.ProjectsProjectInvitationDto, ApiError>> {
     const url = `/v1/projects/invitations/${invitationToken}:decline`;
@@ -595,6 +622,8 @@ export class ProjectsModule {
   }
 
   /**
+   * Gets the Projects that belong to the authenticated user's actual workspace relationship.
+   * This scope intentionally does not expand for tenant or system administrators.
    */
   async getProjectsMine(query?: { includeArchived?: boolean; skip?: number; take?: number }): Promise<Result<Array<Types.ProjectsProjectApiOutput>, ApiError>> {
     const url = '/v1/projects/mine';
@@ -610,6 +639,7 @@ export class ProjectsModule {
   }
 
   /**
+   * Get current user's project invitations
    */
   async getProjectsMyInvitations(): Promise<Result<Array<Types.ProjectsProjectInvitationDto>, ApiError>> {
     const url = '/v1/projects/my-invitations';
@@ -624,6 +654,7 @@ export class ProjectsModule {
   }
 
   /**
+   * Get popular projects
    */
   async getProjectsPopular(query?: { type?: Types.ProjectsProjectType; take?: number }): Promise<Result<Array<Types.ProjectsProjectApiOutput>, ApiError>> {
     const url = '/v1/projects/popular';
@@ -639,6 +670,7 @@ export class ProjectsModule {
   }
 
   /**
+   * Get recent projects
    */
   async getProjectsRecent(query?: { type?: Types.ProjectsProjectType; take?: number }): Promise<Result<Array<Types.ProjectsProjectApiOutput>, ApiError>> {
     const url = '/v1/projects/recent';
@@ -654,6 +686,7 @@ export class ProjectsModule {
   }
 
   /**
+   * Get available role templates for projects
    */
   async getProjectsRoleTemplates(): Promise<Result<Array<Record<string, unknown>>, ApiError>> {
     const url = '/v1/projects/role-templates';
@@ -668,6 +701,7 @@ export class ProjectsModule {
   }
 
   /**
+   * Get permissions for a specific role
    */
   async getProjectsRolesPermissions(roleName: string): Promise<Result<Array<Types.IdentityAuthorizationPermissionType>, ApiError>> {
     const url = `/v1/projects/roles/${roleName}/permissions`;
@@ -682,6 +716,7 @@ export class ProjectsModule {
   }
 
   /**
+   * Search projects
    */
   async getProjectsSearch(query?: {
     searchTerm?: string;
@@ -707,6 +742,7 @@ export class ProjectsModule {
   }
 
   /**
+   * Get project by slug
    */
   async getProjectsSlug(
     slug: string,
