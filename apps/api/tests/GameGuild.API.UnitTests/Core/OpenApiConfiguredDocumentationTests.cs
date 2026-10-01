@@ -190,6 +190,55 @@ public sealed class OpenApiConfiguredDocumentationTests
     }
 
     [Fact]
+    public async Task DefaultConfiguration_DocumentsEveryGeneratedSchemaWithAnExample()
+    {
+        var builder = WebApplication.CreateSlimBuilder(new WebApplicationOptions
+        {
+            ApplicationName = typeof(OpenApiExtensions).Assembly.GetName().Name,
+            EnvironmentName = "Testing",
+            ContentRootPath = AppContext.BaseDirectory,
+            Args = []
+        });
+        builder.Configuration.Sources.Clear();
+        builder.Services.SetupControllers(builder.Configuration, null);
+        builder.Services.SetupApiVersioning(builder.Configuration, null);
+        builder.Services.SetupApiExplorer(builder.Configuration, null);
+        builder.Services.SetupOpenApi(builder.Configuration, null);
+
+        await using var app = builder.Build();
+        var document = app.Services.GetRequiredService<ISwaggerProvider>().GetSwagger("v1");
+        var schemas = document.Components.Schemas;
+
+        schemas.Should().NotBeEmpty();
+        schemas.Should().OnlyContain(pair =>
+            !string.IsNullOrWhiteSpace(pair.Value.Description) && pair.Value.Example != null);
+
+        var identitySchemas = schemas.Where(pair =>
+            pair.Value.Type == "object"
+            && (pair.Key.StartsWith("Identity_", StringComparison.Ordinal)
+                || pair.Key.StartsWith("Authorization_", StringComparison.Ordinal))).ToArray();
+        identitySchemas.Should().NotBeEmpty();
+        identitySchemas.Should().OnlyContain(pair =>
+            !string.IsNullOrWhiteSpace(pair.Value.Description) && pair.Value.Example != null);
+
+        var apiKeyResponse = schemas["Identity_Authentication_CreateApiKeyResponse"].Example
+            .Should().BeOfType<OpenApiObject>().Subject;
+        apiKeyResponse["apiKey"].Should().BeOfType<OpenApiString>()
+            .Which.Value.Should().Be("gg_example_not-a-valid-secret");
+        schemas["Identity_Authentication_VerifyStepUpChallengeRequest"].Example
+            .Should().BeOfType<OpenApiObject>().Which["method"]
+            .Should().BeOfType<OpenApiString>().Which.Value.Should().Be("Totp");
+
+        using var output = new StringWriter(CultureInfo.InvariantCulture);
+        document.SerializeAsV3(new OpenApiJsonWriter(output));
+        using var serialized = JsonDocument.Parse(output.ToString());
+        serialized.RootElement.GetProperty("components").GetProperty("schemas")
+            .GetProperty("Identity_Authentication_CreateApiKeyResponse")
+            .GetProperty("example").GetProperty("apiKey").GetString()
+            .Should().Be("gg_example_not-a-valid-secret");
+    }
+
+    [Fact]
     public void SetupOpenApi_RegistersConfiguredDocumentFilter()
     {
         var services = new ServiceCollection();
