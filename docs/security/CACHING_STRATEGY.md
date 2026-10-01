@@ -1,257 +1,33 @@
-# Security Cache Invalidation Strategy
+# Authorization cache and invalidation strategy
 
-**Module:** GameGuild.Identity.Authorization  
-**Last Updated:** January 2026  
-**Criticality:** ⚠️ P1 - Security-relevant caching
+**Module:** `GameGuild.Identity.Authorization`
+**Last updated:** October 2026
+**Criticality:** Security relevant
 
----
+## Current implementation
 
-## Overview
+Authorization caching uses `HybridPermissionCache`: a process-local L1 `IMemoryCache` and an optional Redis-backed L2 `IDistributedCache`. The L2 layer is enabled with `AddAuthorizationRedisCache`; the authorization module can also run with L1 only.
 
-The authorization system uses a **version-based cache invalidation** strategy to ensure security data (permissions, ACLs, policies) remains consistent while providing high-performance lookups.
+ACL cache keys include tenant, user, and shared tenant/global security versions. The tenant and reserved global versions are read together from the database-backed `DatabaseTenantSecurityVersionStore`. Policy cache entries are versioned by tenant. This means a warm ACL lookup still reads the authoritative security versions before selecting a cached decision; the cache does not trade away revocation correctness for an unverified local version.
 
----
+Permission changes use `ICacheInvalidationService`. Tenant, user, resource, policy, batch, and global invalidations advance the applicable shared version before local eviction and Redis Pub/Sub publication. Versioned keys make old decisions unreachable if publication fails; Pub/Sub gives other instances prompt L1 cleanup. The Redis subscriber validates incoming events and retries after subscription failures. Batch invalidation accepts up to 500 typed user, resource, policy, or role/group dependency targets.
 
-## Cache Architecture
+Redis L2 read failures or invalid serialized values are treated as cache misses so the calling service can query its authoritative store. L2 write and removal failures are logged without failing the request. Cancellation requested by the caller still propagates. Database/version-store failures are not converted into cache hits.
 
-### Cache Layers
+## Capacity, expiration, and warming
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    APPLICATION LAYER                                │
-│                                                                     │
-│  ┌──────────────────────┐    ┌──────────────────────┐              │
-│  │ CachedAccessControl  │    │ CachedPolicyDefinition│              │
-│  │ ListService          │    │ Store                 │              │
-│  │                      │    │                       │              │
-│  │ - ACL lookups        │    │ - Policy definitions  │              │
-│  │ - Resource perms     │    │ - ABAC rules          │              │
-│  └──────────┬───────────┘    └───────────┬───────────┘              │
-│             │                            │                          │
-│             └──────────┬─────────────────┘                          │
-│                        ▼                                            │
-│  ┌──────────────────────────────────────────────────────────────┐  │
-│  │                    IMemoryCache                               │  │
-│  │    Per-tenant cache keys include version number               │  │
-│  │    Key format: "acl:{tenantId}:{subjectId}:v{version}"       │  │
-│  └──────────────────────────────────────────────────────────────┘  │
-│                        ▲                                            │
-│                        │                                            │
-│  ┌──────────────────────────────────────────────────────────────┐  │
-│  │              ITenantSecurityVersionStore                      │  │
-│  │                                                               │  │
-│  │    GetVersionAsync(tenantId) → Returns current version       │  │
-│  │    IncrementVersionAsync(tenantId) → Triggers invalidation   │  │
-│  │                                                               │  │
-│  │    Implementations:                                           │  │
-│  │    • InMemoryTenantSecurityVersionStore (single instance)    │  │
-│  │    • DatabaseTenantSecurityVersionStore (distributed)        │  │
-│  └──────────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────────┘
-```
+Configure `AuthorizationCacheOptions` in `apps/api/Source/Modules/GameGuild.SharedKernel/Configuration/PresentationLayer/Authorization/AuthorizationCacheOptions.cs`. It provides TTLs for policies, permissions, ACLs, and rulesets; an L1 tracked-entry bound; an L2 TTL; Redis/Pub/Sub options; and automatic warming limits. The tracked-entry cap applies to authorization keys managed by `PermissionCacheKeyTracker`; it does not set a size limit on the application's shared `IMemoryCache`.
 
----
+`PermissionCacheWarmupService` supports explicit bounded warming through the system-admin endpoint. `AutomaticPermissionCacheWarmupService` maintains a bounded, process-local popularity window and periodically preloads frequently accessed subject/resource pairs through the ordinary versioned ACL path. Automatic warming can be disabled in configuration.
 
-## How Version-Based Invalidation Works
+## Administration and observability
 
-### 1. Cache Key Construction
+The hidden permission administration controller exposes:
 
-Every cache key includes the current security version for the tenant:
+- `GET /v{version}/permissions/cache/stats` for system administrators;
+- `POST /v{version}/permissions/cache:clear` for system administrators or an administrator of the targeted tenant;
+- `POST /v{version}/permissions/cache:warm` for system administrators.
 
-```csharp
-private async Task<string> BuildCacheKeyAsync(Guid tenantId, Guid subjectId)
-{
-    var version = await _versionStore.GetVersionAsync(tenantId);
-    return $"acl:{tenantId}:{subjectId}:v{version}";
-}
-```
+Cache counters and lookup-duration instruments use the `GameGuild.Identity.Authorization.Cache` meter. When OpenTelemetry is enabled, API configuration exports the meter through the selected exporter. The statistics endpoint reports process-local L1 entry counts and counters; use the configured telemetry collector for aggregation across replicas and percentile analysis. Example Prometheus rules live in [`docs/api/authorization-cache-alerts.yml`](../api/authorization-cache-alerts.yml). They are templates: thresholds and alert delivery still require validation in the deployment's telemetry and notification setup.
 
-### 2. Cache Invalidation
-
-When permissions change, the version is incremented. Old cache entries naturally become stale because new lookups use the new version in the key:
-
-```csharp
-// When granting/revoking permissions:
-await _permissionRepository.GrantPermissionAsync(userId, permission);
-await _versionStore.IncrementVersionAsync(tenantId);  // Triggers invalidation
-
-// Next cache lookup will use new version:
-// Old key: "acl:{tenantId}:{subjectId}:v5"
-// New key: "acl:{tenantId}:{subjectId}:v6"
-// Old cached data is effectively invalidated (never looked up again)
-```
-
-### 3. Automatic Cleanup
-
-Old cache entries expire via the cache's TTL policy. The `IMemoryCache` uses sliding/absolute expiration so stale entries are eventually evicted:
-
-```csharp
-_cache.Set(cacheKey, permissions, new MemoryCacheEntryOptions
-{
-    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15),
-    SlidingExpiration = TimeSpan.FromMinutes(5)
-});
-```
-
----
-
-## Services Using This Pattern
-
-### CachedAccessControlListService
-
-**Purpose:** Caches ACL entries for resource-based access checks.
-
-**Cache Key Pattern:** `acl:{tenantId}:{subjectId}:{resourceType}:{resourceId}:v{version}`
-
-**Invalidation Events:**
-- ACL entry created
-- ACL entry updated
-- ACL entry deleted
-- User's role changed
-
-### CachedPolicyDefinitionStore
-
-**Purpose:** Caches ABAC policy definitions.
-
-**Cache Key Pattern:** `policy:{tenantId}:{policyId}:v{version}`
-
-**Invalidation Events:**
-- Policy definition created
-- Policy definition updated
-- Policy definition deleted
-
-### CachedPermissionService (if applicable)
-
-**Purpose:** Caches effective permissions for users.
-
-**Cache Key Pattern:** `perms:{tenantId}:{userId}:v{version}`
-
-**Invalidation Events:**
-- Direct permission grant/revoke
-- Role assignment changes
-- Role permission changes
-
----
-
-## When to Increment Version
-
-Call `IncrementVersionAsync` after any security-relevant change:
-
-```csharp
-// In command handlers:
-public async Task Handle(GrantPermissionCommand command)
-{
-    await _permissionRepository.GrantAsync(command.UserId, command.Permission);
-    
-    // CRITICAL: Increment version to invalidate cached permissions
-    await _versionStore.IncrementVersionAsync(command.TenantId);
-}
-
-public async Task Handle(RevokePermissionCommand command)
-{
-    await _permissionRepository.RevokeAsync(command.UserId, command.Permission);
-    
-    // CRITICAL: Increment version to ensure revocation takes effect immediately
-    await _versionStore.IncrementVersionAsync(command.TenantId);
-}
-
-public async Task Handle(UpdateRolePermissionsCommand command)
-{
-    await _roleRepository.UpdatePermissionsAsync(command.RoleId, command.Permissions);
-    
-    // Increment version for all affected tenants
-    foreach (var tenantId in affectedTenantIds)
-    {
-        await _versionStore.IncrementVersionAsync(tenantId);
-    }
-}
-```
-
----
-
-## Distributed Deployment Considerations
-
-### Single Instance (Development/Small Deployments)
-
-Use `InMemoryTenantSecurityVersionStore`:
-- Fast, no external dependencies
-- Version stored in static dictionary
-- Lost on application restart (cache rebuilt from DB)
-
-### Multi-Instance (Production/Scaled Deployments)
-
-Use `DatabaseTenantSecurityVersionStore`:
-- Version stored in `TenantSecurityVersion` table
-- All instances read from same source
-- Consistent across application restarts
-
-**Future Enhancement:** For high-throughput scenarios, consider Redis-backed implementation with pub/sub for real-time invalidation broadcasts.
-
----
-
-## Security Guarantees
-
-### Fail-Safe Behavior
-
-1. **Cache Miss:** Falls through to database (fresh data)
-2. **Version Mismatch:** Old cache key never hit (new version in key)
-3. **Store Failure:** Returns version 0, effectively bypassing cache
-
-### Revocation Latency
-
-- **Best Case:** Immediate (version increment propagates instantly)
-- **Worst Case:** Single request may see stale data if read occurs between permission change and version increment
-
-**Mitigation:** Permission changes should increment version in the same transaction or immediately after:
-
-```csharp
-// Preferred pattern - increment in same transaction
-await using var transaction = await _context.Database.BeginTransactionAsync();
-await _permissionRepository.RevokeAsync(userId, permission);
-await _versionStore.IncrementVersionAsync(tenantId);
-await transaction.CommitAsync();
-```
-
----
-
-## Monitoring and Debugging
-
-### Key Metrics to Track
-
-1. **Cache Hit Rate:** Should be >90% for stable systems
-2. **Version Increment Rate:** Spikes indicate permission churn
-3. **Cache Size:** Monitor for memory pressure
-
-### Debug Logging
-
-Enable debug logging to trace cache behavior:
-
-```csharp
-_logger.LogDebug(
-    "Cache lookup for tenant {TenantId}, subject {SubjectId}, version {Version}",
-    tenantId, subjectId, version);
-    
-_logger.LogDebug(
-    "Cache miss - fetching from database for key {CacheKey}",
-    cacheKey);
-```
-
----
-
-## Summary
-
-| Concern | Solution |
-|---------|----------|
-| **Cache Coherence** | Version-based keys ensure stale data is never returned |
-| **Invalidation** | `IncrementVersionAsync` invalidates all cached data for tenant |
-| **Distributed Sync** | `DatabaseTenantSecurityVersionStore` for multi-instance |
-| **Memory Management** | TTL expiration cleans up old versioned entries |
-| **Fail-Safe** | Cache miss falls through to authoritative database source |
-
----
-
-## Related Documentation
-
-- [MIDDLEWARE_ORDER.md](./MIDDLEWARE_ORDER.md) - Security middleware execution order
-- [ACTORCONTEXT_FAILCLOSED_ERROR_HANDLING.md](./ACTORCONTEXT_FAILCLOSED_ERROR_HANDLING.md) - Error handling in ActorContext
-- [STRONGLY_TYPED_PERMISSIONS.md](./STRONGLY_TYPED_PERMISSIONS.md) - Permission type safety
+The detailed setup, failure behavior, and endpoint guidance are in [`docs/api/authorization-cache-configuration.md`](../api/authorization-cache-configuration.md). Comparative local benchmark results and their limits are in [`apps/api/tests/GameGuild.Identity.Authorization.PerformanceTests/README.md`](../../apps/api/tests/GameGuild.Identity.Authorization.PerformanceTests/README.md). Current local fixtures do not establish a consistent latency improvement or production capacity; repeat measurements with representative data and deployment topology before making those claims.

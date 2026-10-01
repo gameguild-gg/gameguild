@@ -54,6 +54,9 @@ public sealed class PermissionCommandSecurityTests
         _cacheInvalidation
             .Setup(c => c.InvalidateUserAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
+        _cacheInvalidation
+            .Setup(c => c.InvalidateGlobalAsync(It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
         _bulkService
             .Setup(b => b.BulkGrantTenantPermissionAsync(
                 It.IsAny<Guid[]>(),
@@ -220,7 +223,7 @@ public sealed class PermissionCommandSecurityTests
     {
         SetActor(AuthenticatedActor(roles: [], permissions: [], tenantId: Guid.NewGuid()));
         var handler = new ClearPermissionCacheCommandHandler(
-            _actorAccessor.Object, _versionStore.Object, _cacheInvalidation.Object,
+            _actorAccessor.Object, _cacheInvalidation.Object,
             NullLogger<ClearPermissionCacheCommandHandler>.Instance);
 
         var act = () => handler.Handle(new ClearPermissionCacheCommand(), CancellationToken.None);
@@ -229,26 +232,27 @@ public sealed class PermissionCommandSecurityTests
     }
 
     [Fact]
-    public async Task ClearCache_SystemAdminGlobalClear_BumpsGlobalVersion()
+    public async Task ClearCache_SystemAdminGlobalClear_UsesDistributedInvalidation()
     {
         SetActor(AuthenticatedActor(roles: ["SystemAdmin"], permissions: [], tenantId: null));
         var handler = new ClearPermissionCacheCommandHandler(
-            _actorAccessor.Object, _versionStore.Object, _cacheInvalidation.Object,
+            _actorAccessor.Object, _cacheInvalidation.Object,
             NullLogger<ClearPermissionCacheCommandHandler>.Instance);
 
         var result = await handler.Handle(new ClearPermissionCacheCommand(), CancellationToken.None);
 
         result.Should().BeTrue();
-        _versionStore.Verify(v => v.IncrementVersionAsync(Guid.Empty.ToString(), It.IsAny<CancellationToken>()), Times.Once);
+        _cacheInvalidation.Verify(c => c.InvalidateGlobalAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _versionStore.Verify(v => v.IncrementVersionAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
-    public async Task ClearCache_TenantAdminOfTargetTenant_BumpsVersionAndEvictsL1()
+    public async Task ClearCache_TenantAdminOfTargetTenant_UsesTenantInvalidationOnce()
     {
         var tenantId = Guid.NewGuid();
         SetActor(AuthenticatedActor(roles: ["TenantAdmin"], permissions: [], tenantId: tenantId));
         var handler = new ClearPermissionCacheCommandHandler(
-            _actorAccessor.Object, _versionStore.Object, _cacheInvalidation.Object,
+            _actorAccessor.Object, _cacheInvalidation.Object,
             NullLogger<ClearPermissionCacheCommandHandler>.Instance);
 
         var result = await handler.Handle(
@@ -256,8 +260,27 @@ public sealed class PermissionCommandSecurityTests
             CancellationToken.None);
 
         result.Should().BeTrue();
-        _versionStore.Verify(v => v.IncrementVersionAsync(tenantId.ToString(), It.IsAny<CancellationToken>()), Times.Once);
         _cacheInvalidation.Verify(c => c.InvalidateTenantAsync(tenantId, It.IsAny<CancellationToken>()), Times.Once);
+        _versionStore.Verify(v => v.IncrementVersionAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ClearCache_TenantAdminUserScope_UsesUserInvalidationOnce()
+    {
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        SetActor(AuthenticatedActor(roles: ["TenantAdmin"], permissions: [], tenantId: tenantId));
+        var handler = new ClearPermissionCacheCommandHandler(
+            _actorAccessor.Object, _cacheInvalidation.Object,
+            NullLogger<ClearPermissionCacheCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new ClearPermissionCacheCommand { TenantId = tenantId, UserId = userId },
+            CancellationToken.None);
+
+        result.Should().BeTrue();
+        _cacheInvalidation.Verify(c => c.InvalidateUserAsync(userId, tenantId, It.IsAny<CancellationToken>()), Times.Once);
+        _versionStore.Verify(v => v.IncrementVersionAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -265,7 +288,7 @@ public sealed class PermissionCommandSecurityTests
     {
         SetActor(AuthenticatedActor(roles: ["SystemAdmin"], permissions: [], tenantId: null));
         var handler = new ClearPermissionCacheCommandHandler(
-            _actorAccessor.Object, _versionStore.Object, _cacheInvalidation.Object,
+            _actorAccessor.Object, _cacheInvalidation.Object,
             NullLogger<ClearPermissionCacheCommandHandler>.Instance);
 
         var act = () => handler.Handle(
