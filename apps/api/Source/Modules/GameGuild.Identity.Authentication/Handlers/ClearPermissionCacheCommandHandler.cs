@@ -28,7 +28,6 @@ namespace GameGuild.Identity.Authentication;
 /// </remarks>
 public sealed class ClearPermissionCacheCommandHandler(
     IActorContextAccessor actorContextAccessor,
-    ITenantSecurityVersionStore securityVersionStore,
     ICacheInvalidationService cacheInvalidationService,
     ILogger<ClearPermissionCacheCommandHandler> logger
 ) : ICommandHandler<ClearPermissionCacheCommand, bool>
@@ -41,13 +40,8 @@ public sealed class ClearPermissionCacheCommandHandler(
 
         if (request.TenantId.HasValue)
         {
-            // Bump the tenant security version: entries stamped with older versions are stale.
-            var tenantKey = request.TenantId.Value.ToString();
-            var newVersion = await securityVersionStore
-                .IncrementVersionAsync(tenantKey, cancellationToken)
-                .ConfigureAwait(false);
-
-            // Evict local L1 entries for this tenant (and the targeted user, if any).
+            // The invalidation service advances the shared version and publishes the
+            // distributed event. Calling both the store and service would bump twice.
             if (request.UserId.HasValue)
             {
                 await cacheInvalidationService
@@ -62,10 +56,9 @@ public sealed class ClearPermissionCacheCommandHandler(
             }
 
             logger.LogInformation(
-                "Cleared permission caches for tenant {TenantId} (user: {UserId}); security version is now {Version}",
+                "Cleared permission caches for tenant {TenantId} (user: {UserId})",
                 request.TenantId,
-                request.UserId,
-                newVersion);
+                request.UserId);
 
         }
         else if (request.UserId.HasValue)
@@ -77,15 +70,13 @@ public sealed class ClearPermissionCacheCommandHandler(
         }
         else
         {
-            // Neither user nor tenant: invalidate every tenant by bumping the global version.
-            const string globalKey = "global";
-            var newVersion = await securityVersionStore
-                .IncrementVersionAsync(globalKey, cancellationToken)
+            // Use the unified path so every instance receives the global L1 eviction
+            // event in addition to observing the new shared version in its cache keys.
+            await cacheInvalidationService
+                .InvalidateGlobalAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            logger.LogInformation(
-                "Cleared global permission caches; global security version is now {Version}",
-                newVersion);
+            logger.LogInformation("Cleared global permission caches");
         }
 
         return true;

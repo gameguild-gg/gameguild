@@ -16,6 +16,7 @@ export class LearningExperienceSocialFeedModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Dismisses a feed item
    */
   async postApiSocialFeedDismiss(id: string): Promise<Result<Types.LearningExperienceSocialServicesPersonalizedFeedItemDto, ApiError>> {
     const url = `/api/social/feed/${id}/dismiss`;
@@ -36,6 +37,7 @@ export class LearningExperienceSocialFeedModule {
   }
 
   /**
+   * Marks a feed item as viewed
    */
   async postApiSocialFeedViewed(id: string): Promise<Result<Types.LearningExperienceSocialServicesPersonalizedFeedItemDto, ApiError>> {
     const url = `/api/social/feed/${id}/viewed`;
@@ -56,6 +58,7 @@ export class LearningExperienceSocialFeedModule {
   }
 
   /**
+   * Gets the current user's personalized feed
    */
   async getApiSocialFeedMe(query?: {
     skip?: number;
@@ -75,6 +78,7 @@ export class LearningExperienceSocialFeedModule {
   }
 
   /**
+   * Generates new feed items for the current user
    */
   async postApiSocialFeedMeGenerate(): Promise<Result<number, ApiError>> {
     const url = '/api/social/feed/me/generate';

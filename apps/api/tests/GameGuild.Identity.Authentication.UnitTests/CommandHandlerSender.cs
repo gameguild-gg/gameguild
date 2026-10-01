@@ -1,6 +1,8 @@
 using System.Reflection;
 using System.Runtime.ExceptionServices;
+using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.CQRS;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace GameGuild.Identity.Authentication.UnitTests;
@@ -14,6 +16,10 @@ internal sealed class CommandHandlerSender(params object[] dependencies) : ISend
         foreach (var dependency in dependencies)
             foreach (var contract in dependency.GetType().GetInterfaces())
                 services.AddSingleton(contract, dependency);
+        if (dependencies.OfType<IConfiguration>().FirstOrDefault() is { } configuration)
+        {
+            services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
+        }
         using var provider = services.BuildServiceProvider();
         var handlerContract = typeof(IRequestHandler<,>).MakeGenericType(request.GetType(), typeof(TResponse));
         var handlerType = typeof(StepUpCommandHandler).Assembly.GetTypes().Single(type =>

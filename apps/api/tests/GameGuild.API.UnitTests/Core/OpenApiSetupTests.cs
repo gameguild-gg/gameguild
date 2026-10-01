@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using GameGuild.CQRS;
+using GameGuild.API.Core.OpenApi;
 using GameGuild.Configuration.PresentationLayer.OpenAPI;
 using GameGuild.Identity.Tenants;
 using Moq;
@@ -57,8 +58,33 @@ public sealed class OpenApiSetupTests
         options.ContactName = "Platform Operations";
         options.ContactEmail = "operations@example.com";
         options.ContactUrl = "https://example.com/support";
+        options.MetadataVersion = "2026.09";
+        options.TermsOfServiceUrl = "https://example.com/terms";
+        options.LicenseName = "MIT";
+        options.LicenseUrl = "https://example.com/license";
+        options.Servers.Add(new OpenApiServerOptions
+        {
+            Url = "https://api.example.com/{version}",
+            Description = "Production API",
+            Variables = new Dictionary<string, OpenApiServerVariableOptions>
+            {
+                ["version"] = new()
+                {
+                    Default = "v1",
+                    Description = "API version",
+                    Enum = ["v1", "v2"]
+                }
+            }
+        });
 
-        services.SetupOpenApi(new ConfigurationBuilder().Build(), options);
+        var localizationOptions = new OpenApiLocalizationOptions
+        {
+            Locales = new Dictionary<string, OpenApiLocalizedDocumentOptions>
+            {
+                ["pt-BR"] = new() { Title = "API GameGuild" }
+            }
+        };
+        services.SetupOpenApi(new ConfigurationBuilder().Build(), options, localizationOptions);
 
         using var provider = services.BuildServiceProvider();
         var swagger = provider.GetRequiredService<IOptions<SwaggerGenOptions>>().Value;
@@ -66,6 +92,58 @@ public sealed class OpenApiSetupTests
         document.Contact.Name.Should().Be(options.ContactName);
         document.Contact.Email.Should().Be(options.ContactEmail);
         document.Contact.Url.Should().Be(options.ContactUrl);
+        document.Version.Should().Be(options.MetadataVersion);
+        document.TermsOfService.Should().Be(options.TermsOfServiceUrl);
+        document.License.Name.Should().Be(options.LicenseName);
+        document.License.Url.Should().Be(options.LicenseUrl);
+        swagger.SwaggerGeneratorOptions.SwaggerDocs["v1.pt-BR"].Title.Should().Be("API GameGuild");
+        var predicate = swagger.SwaggerGeneratorOptions.DocInclusionPredicate;
+        predicate("v1.pt-BR", CreateDescription(new ActionDescriptor(), null)).Should().BeTrue();
+        predicate("v1.pt-BR", CreateDescription(new ActionDescriptor(), "v1")).Should().BeTrue();
+        predicate("v1.pt-BR", CreateDescription(new ActionDescriptor(), "v2")).Should().BeFalse();
+    }
+
+    [Fact]
+    public void SetupOpenApi_DisabledOptionsDoNotRegisterSwaggerServices()
+    {
+        var services = new ServiceCollection();
+        var options = OpenApiOptions.CreateDefault();
+        options.EnableOpenApi = false;
+
+        services.SetupOpenApi(new ConfigurationBuilder().Build(), options);
+
+        services.Should().Contain(descriptor => descriptor.ServiceType == typeof(OpenApiOptions));
+        services.Should().NotContain(descriptor => descriptor.ServiceType == typeof(IConfigureOptions<SwaggerGenOptions>));
+    }
+
+    [Fact]
+    public void OpenApiServerDocumentFilter_MapsConfiguredServersAndVariables()
+    {
+        var options = new OpenApiOptions
+        {
+            Servers =
+            [
+                new OpenApiServerOptions
+                {
+                    Url = "https://api.example.com/{version}",
+                    Description = "Production API",
+                    Variables = new Dictionary<string, OpenApiServerVariableOptions>
+                    {
+                        ["version"] = new() { Default = "v1", Enum = ["v1", "v2"] }
+                    }
+                }
+            ]
+        };
+        var document = new Microsoft.OpenApi.Models.OpenApiDocument();
+        var filter = new OpenApiServerDocumentFilter(options);
+
+        filter.Apply(document, context: null!);
+
+        document.Servers.Should().ContainSingle();
+        document.Servers[0].Url.Should().Be("https://api.example.com/{version}");
+        document.Servers[0].Description.Should().Be("Production API");
+        document.Servers[0].Variables["version"].Default.Should().Be("v1");
+        document.Servers[0].Variables["version"].Enum.Should().Equal("v1", "v2");
     }
 
     [Fact]
@@ -145,7 +223,6 @@ public sealed class OpenApiSetupTests
 
     [Theory]
     [InlineData("2.3", 2, 3)]
-    [InlineData("invalid.invalid", 1, 0)]
     [InlineData("4", 4, 0)]
     public void SetupApiVersioning_ParsesConfiguredDefaultVersion(string configured, int expectedMajor, int expectedMinor)
     {
@@ -163,6 +240,86 @@ public sealed class OpenApiSetupTests
         configuredOptions.ApiVersionReader.Should().NotBeNull();
         explorerOptions.GroupNameFormat.Should().Be(options.GroupNameFormat);
         explorerOptions.SubstituteApiVersionInUrl.Should().Be(options.SubstituteApiVersionInUrl);
+    }
+
+    [Theory]
+    [InlineData("2.3-beta.1")]
+    [InlineData("2026-09-29")]
+    public void SetupApiVersioning_PreservesStatusAndDateBasedDefaultVersions(string configured)
+    {
+        var services = new ServiceCollection();
+        var options = GameGuild.Configuration.PresentationLayer.ApiVersioning.ApiVersioningOptions.CreateDefault();
+        options.DefaultVersion = configured;
+
+        services.SetupApiVersioning(new ConfigurationBuilder().Build(), options);
+
+        using var provider = services.BuildServiceProvider();
+        var actual = provider.GetRequiredService<IOptions<Asp.Versioning.ApiVersioningOptions>>().Value.DefaultApiVersion;
+
+        actual.Should().Be(ApiVersionParser.Default.Parse(configured.AsSpan()));
+    }
+
+    [Fact]
+    public void SetupApiVersioning_RejectsInvalidDefaultVersionInsteadOfFallingBack()
+    {
+        var services = new ServiceCollection();
+        var options = GameGuild.Configuration.PresentationLayer.ApiVersioning.ApiVersioningOptions.CreateDefault();
+        options.DefaultVersion = "invalid.invalid";
+
+        var act = () => services.SetupApiVersioning(new ConfigurationBuilder().Build(), options);
+
+        act.Should().Throw<ArgumentException>().WithParameterName("DefaultVersion");
+    }
+
+    [Fact]
+    public void SetupApiVersioning_ConfiguresVersionReportingAndSunsetPolicy()
+    {
+        var services = new ServiceCollection();
+        var options = GameGuild.Configuration.PresentationLayer.ApiVersioning.ApiVersioningOptions.CreateDefault();
+        var sunsetAt = new DateTimeOffset(2027, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        options.ReportApiVersions = true;
+        options.SunsetPolicies["1.0"] = new()
+        {
+            EffectiveAt = sunsetAt,
+            PolicyUrl = "https://docs.example.com/api/sunset"
+        };
+
+        services.SetupApiVersioning(new ConfigurationBuilder().Build(), options);
+
+        using var provider = services.BuildServiceProvider();
+        var configuredOptions = provider.GetRequiredService<IOptions<Asp.Versioning.ApiVersioningOptions>>().Value;
+        var policyManager = provider.GetRequiredService<ISunsetPolicyManager>();
+
+        configuredOptions.ReportApiVersions.Should().BeTrue();
+        policyManager.TryGetPolicy(new ApiVersion(1, 0), out var policy).Should().BeTrue();
+        policy.Should().NotBeNull();
+        policy!.Date.Should().Be(sunsetAt);
+        policy.HasLinks.Should().BeTrue();
+    }
+
+    [Fact]
+    public void SetupApiVersioning_RegistersSemanticParserAndAcceptsPatchDefault()
+    {
+        var services = new ServiceCollection();
+        var options = GameGuild.Configuration.PresentationLayer.ApiVersioning.ApiVersioningOptions.CreateDefault();
+        options.VersionFormat = GameGuild.Configuration.PresentationLayer.ApiVersioning.ApiVersionFormatKind.SemanticVersion;
+        options.DefaultVersion = "2.3.4-rc.1";
+        options.SunsetPolicies["2.3.4-rc.1"] = new()
+        {
+            EffectiveAt = new DateTimeOffset(2027, 1, 1, 0, 0, 0, TimeSpan.Zero),
+            PolicyUrl = "https://docs.example.com/api/sunset"
+        };
+
+        services.SetupApiVersioning(new ConfigurationBuilder().Build(), options);
+
+        using var provider = services.BuildServiceProvider();
+        provider.GetRequiredService<IApiVersionParser>().Should().BeOfType<GameGuild.Configuration.PresentationLayer.ApiVersioning.SemanticApiVersionParser>();
+        provider.GetRequiredService<IOptions<Asp.Versioning.ApiVersioningOptions>>().Value.DefaultApiVersion.ToString().Should().Be("2.3.4-rc.1");
+        provider.GetRequiredService<ISunsetPolicyManager>()
+            .TryGetPolicy(provider.GetRequiredService<IApiVersionParser>().Parse("2.3.4-rc.1".AsSpan()), out var policy)
+            .Should().BeTrue();
+        policy.Should().NotBeNull();
+        policy!.HasLinks.Should().BeTrue();
     }
 
     private static ApiDescription CreateDescription(ActionDescriptor descriptor, string? groupName)

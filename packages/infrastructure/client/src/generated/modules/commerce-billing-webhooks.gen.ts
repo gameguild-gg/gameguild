@@ -16,9 +16,12 @@ export class CommerceBillingWebhooksModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
-   * Handle Apple Pay webhook events for transaction notifications
+   * Handle Apple Pay webhook events
    *
-   * Processes Apple Pay webhook notifications for payment completions and transaction status updates.
+   * Processes Apple Pay webhook notifications for payment processing and transaction updates.
+   * Required Headers:
+   * - Apple-Pay-Merchant-Id: Merchant identifier for validation
+   * - Apple-Pay-Signature: Signature for webhook verification
    */
   async postBillingWebhooksApplePay(): Promise<Result<Record<string, unknown>, ApiError>> {
     const url = '/api/v1/billing/webhooks/apple-pay';
@@ -35,7 +38,22 @@ export class CommerceBillingWebhooksModule {
   /**
    * Handle Google Pay webhook events for transaction notifications
    *
-   * Processes Google Pay webhook notifications for payment processing, subscription billing, and transaction status updates. Google Pay webhooks provide real-time notifications for payment completions, failures, refunds, and subscription lifecycle events.
+   * Processes Google Pay webhook notifications for payment processing, subscription billing,
+   * and transaction status updates. Google Pay webhooks provide real-time notifications for
+   * payment completions, failures, refunds, and subscription lifecycle events.
+   * Google Pay webhook events include:
+   * - Payment authorization and capture events
+   * - Subscription creation and renewal notifications
+   * - Refund and chargeback notifications
+   * - Payment method updates and changes
+   * - Account and billing profile modifications
+   * Authentication and Security:
+   * - Google Pay webhooks use JWT-based authentication
+   * - Webhook signatures should be verified using Google's public keys
+   * - Payload verification ensures event authenticity and prevents replay attacks
+   * Required Headers:
+   * - Authorization: Bearer token for webhook authentication
+   * - Google-Cloud-Project-Id: Project identifier for multi-tenant validation
    */
   async postBillingWebhooksGooglePay(): Promise<Result<Record<string, unknown>, ApiError>> {
     const url = '/api/v1/billing/webhooks/google-pay';
@@ -52,7 +70,10 @@ export class CommerceBillingWebhooksModule {
   /**
    * Handle PayPal IPN (Instant Payment Notification) webhook events
    *
-   * Processes PayPal Instant Payment Notification (IPN) webhook events for subscription billing, payment confirmations, and account updates. PayPal IPN provides real-time transaction status updates and subscription lifecycle management for PayPal-based billing integrations.
+   * Processes PayPal Instant Payment Notification (IPN) webhook events for subscription billing,
+   * payment confirmations, and account updates. PayPal IPN provides real-time transaction status
+   * updates and subscription lifecycle management for PayPal-based billing integrations.
+   * Note: PayPal IPN requires additional verification by sending the payload back to PayPal for validation.
    */
   async postBillingWebhooksPaypal(): Promise<Result<Record<string, unknown>, ApiError>> {
     const url = '/api/v1/billing/webhooks/paypal';
@@ -69,7 +90,11 @@ export class CommerceBillingWebhooksModule {
   /**
    * Handle Stripe webhook events with signature verification
    *
-   * Processes Stripe webhook notifications with enhanced security through signature verification. Handles subscription lifecycle events, payment confirmations, invoice updates, and customer changes. Stripe signatures are verified using the webhook signing secret to ensure event authenticity.
+   * Processes Stripe webhook notifications with enhanced security through signature verification.
+   * Handles subscription lifecycle events, payment confirmations, invoice updates, and customer changes.
+   * Stripe signatures are verified using the webhook signing secret to ensure event authenticity.
+   * Required Headers:
+   * - Stripe-Signature: The signature provided by Stripe for webhook verification
    */
   async postBillingWebhooksStripe(): Promise<Result<Record<string, unknown>, ApiError>> {
     const url = '/api/v1/billing/webhooks/stripe';
@@ -86,7 +111,15 @@ export class CommerceBillingWebhooksModule {
   /**
    * Retrieve webhook event details by event ID
    *
-   * Retrieves detailed information about a specific webhook event for debugging and monitoring purposes. Shows event payload, processing status, timestamps, and any error messages. Useful for troubleshooting webhook processing issues and verifying event delivery.
+   * Retrieves detailed information about a specific webhook event for debugging and monitoring purposes.
+   * Shows event payload, processing status, timestamps, and any error messages.
+   * Useful for troubleshooting webhook processing issues and verifying event delivery.
+   * Response includes:
+   * - Event ID and timestamp
+   * - Original webhook payload
+   * - Processing status and results
+   * - Error messages (if any)
+   * - Provider information
    */
   async getBillingWebhooksWebhookEvents(eventId: string): Promise<Result<Record<string, unknown>, ApiError>> {
     const url = `/api/v1/billing/webhooks/webhook-events/${eventId}`;
@@ -103,7 +136,15 @@ export class CommerceBillingWebhooksModule {
   /**
    * Retry failed webhook event processing
    *
-   * Manually retries processing of a previously failed webhook event. Useful for handling temporary failures such as downstream service unavailability, network timeouts, or transient processing errors. The retry operation uses the original event payload and applies current business logic.
+   * Manually retries processing of a previously failed webhook event. Useful for handling temporary failures
+   * such as downstream service unavailability, network timeouts, or transient processing errors.
+   * The retry operation uses the original event payload and applies current business logic.
+   * Common retry scenarios:
+   * - Temporary network connectivity issues
+   * - Downstream service unavailability
+   * - Database connection timeouts
+   * - Rate limiting from external services
+   * Note: Only failed events can be retried. Successfully processed events will return an error.
    */
   async postBillingWebhooksWebhookEventsRetry(eventId: string): Promise<Result<Record<string, unknown>, ApiError>> {
     const url = `/api/v1/billing/webhooks/webhook-events/${eventId}:retry`;

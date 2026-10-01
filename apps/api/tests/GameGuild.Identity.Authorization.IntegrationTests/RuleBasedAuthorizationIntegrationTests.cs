@@ -42,6 +42,7 @@ public class RuleBasedAuthorizationIntegrationTests : IClassFixture<WebApplicati
                 }
 
                 services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase(DatabaseName));
+                services.AddScoped<DbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
             });
         });
 

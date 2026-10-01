@@ -39,7 +39,22 @@ public interface IMfaAttemptTrackingService
     /// <summary>
     ///     Records MFA attempt for auditing and analytics.
     /// </summary>
-    Task RecordMfaAttemptAsync(Guid userId, MfaMethod method, bool success, string? failureReason, string? deviceId, CancellationToken cancellationToken = default);
+    Task RecordMfaAttemptAsync(Guid userId, MfaMethod method, bool success, string? failureReason, string? deviceId);
+
+    /// <summary>
+    ///     Records MFA attempt for auditing and analytics.
+    /// </summary>
+    Task RecordMfaAttemptAsync(Guid userId, MfaMethod method, bool success, string? failureReason, string? deviceId, CancellationToken cancellationToken);
+
+    /// <summary>
+    ///     Records a failed verification and applies the configured MFA lockout policy.
+    /// </summary>
+    Task RecordFailedMfaAttemptAsync(UserMfaConfiguration configuration, MfaMethod method, string failureReason, string? deviceId);
+
+    /// <summary>
+    ///     Records a failed verification and applies the configured MFA lockout policy.
+    /// </summary>
+    Task RecordFailedMfaAttemptAsync(UserMfaConfiguration configuration, MfaMethod method, string failureReason, string? deviceId, CancellationToken cancellationToken);
 
     /// <summary>
     ///     Checks if user is currently locked out due to failed MFA attempts.

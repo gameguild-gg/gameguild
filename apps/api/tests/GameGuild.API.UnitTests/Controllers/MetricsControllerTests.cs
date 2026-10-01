@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GameGuild.API;
 using GameGuild.API.Controllers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -85,5 +86,17 @@ public class MetricsControllerTests
         var result = controller.GetMetrics() as ContentResult;
 
         result!.Content.Should().Contain("process_num_threads");
+    }
+
+    [Fact]
+    public void GetMetrics_ShouldExposeEscapedRateLimitRejectionCounters()
+    {
+        RateLimitingMetrics.RecordRejection("test\\policy\"line\nnext", "redis");
+
+        var controller = new MetricsController(_loggerMock.Object);
+        var result = controller.GetMetrics() as ContentResult;
+
+        result!.Content.Should().Contain("# TYPE gameguild_api_rate_limit_rejections_total counter");
+        result.Content.Should().Contain("gameguild_api_rate_limit_rejections_total{policy=\"test\\\\policy\\\"line\\nnext\",enforcement=\"redis\"} 1");
     }
 }

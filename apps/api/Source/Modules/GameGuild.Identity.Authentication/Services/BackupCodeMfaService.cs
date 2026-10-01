@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using GameGuild.Configuration.ApplicationLayer;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
@@ -11,15 +12,21 @@ namespace GameGuild.Identity.Authentication;
 public sealed class BackupCodeMfaService(
     ILogger<BackupCodeMfaService> logger,
     IUserMfaConfigurationRepository mfaConfigRepository,
-    IMfaAttemptTrackingService attemptTrackingService) : IBackupCodeMfaService
+    IMfaAttemptTrackingService attemptTrackingService,
+    MfaOptions? mfaOptions = null) : IBackupCodeMfaService
 {
-    private const int BackupCodesCount = 10;
+    private readonly MfaOptions _mfaOptions = mfaOptions ?? new MfaOptions();
 
     /// <summary>
     ///     Generates backup codes for account recovery.
     /// </summary>
     public async Task<string[]> GenerateBackupCodesAsync(Guid userId, CancellationToken cancellationToken = default)
     {
+        if (!_mfaOptions.Enabled)
+        {
+            throw new InvalidOperationException("Multi-factor authentication is disabled.");
+        }
+
         logger.LogInformation("Generating backup codes for user: {UserId}", userId);
 
         try
@@ -36,7 +43,7 @@ public sealed class BackupCodeMfaService(
             // Generate backup codes (8 characters, alphanumeric)
             var backupCodes = new List<string>();
 
-            for (var i = 0; i < BackupCodesCount; i++) { backupCodes.Add(GenerateBackupCode()); }
+            for (var i = 0; i < _mfaOptions.BackupCodesCount; i++) { backupCodes.Add(GenerateBackupCode()); }
 
             // Hash backup codes before storing (like passwords)
             var hashedCodes = new List<string>();
@@ -71,6 +78,11 @@ public sealed class BackupCodeMfaService(
     /// </summary>
     public async Task<bool> VerifyBackupCodeAsync(Guid userId, string backupCode, string? deviceId = null, CancellationToken cancellationToken = default)
     {
+        if (!_mfaOptions.Enabled)
+        {
+            return false;
+        }
+
         logger.LogInformation("Verifying backup code for user: {UserId}", userId);
 
         try
@@ -121,6 +133,7 @@ public sealed class BackupCodeMfaService(
 
                 // Reset failed attempts
                 mfaConfig.FailedAttempts = 0;
+                mfaConfig.LockedOutUntil = null;
 
                 await mfaConfigRepository.UpdateAsync(mfaConfig, cancellationToken).ConfigureAwait(false);
 
@@ -131,11 +144,12 @@ public sealed class BackupCodeMfaService(
                 return true;
             }
 
-            // Increment failed attempts
-            mfaConfig.FailedAttempts++;
-            await mfaConfigRepository.UpdateAsync(mfaConfig, cancellationToken).ConfigureAwait(false);
-
-            await attemptTrackingService.RecordMfaAttemptAsync(userId, MfaMethod.BackupCode, false, "Invalid code", deviceId, cancellationToken).ConfigureAwait(false);
+            await attemptTrackingService.RecordFailedMfaAttemptAsync(
+                mfaConfig,
+                MfaMethod.BackupCode,
+                "Invalid code",
+                deviceId,
+                cancellationToken).ConfigureAwait(false);
 
             logger.LogWarning("Invalid backup code for user: {UserId}, Failed attempts: {FailedAttempts}", userId, mfaConfig.FailedAttempts);
 
@@ -151,15 +165,14 @@ public sealed class BackupCodeMfaService(
     }
 
     /// <summary>
-    ///     Generates a random 8-character alphanumeric backup code.
+    ///     Generates a cryptographically random alphanumeric backup code.
     /// </summary>
     public string GenerateBackupCode()
     {
         const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Excludes similar-looking characters
-        var random = new Random();
-        var code = new char[8];
+        var code = new char[_mfaOptions.BackupCodeLength];
 
-        for (var i = 0; i < code.Length; i++) { code[i] = chars[random.Next(chars.Length)]; }
+        for (var i = 0; i < code.Length; i++) { code[i] = chars[RandomNumberGenerator.GetInt32(chars.Length)]; }
 
         return new string(code);
     }

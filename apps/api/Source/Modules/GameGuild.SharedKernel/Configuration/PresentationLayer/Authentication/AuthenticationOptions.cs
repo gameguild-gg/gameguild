@@ -16,17 +16,134 @@ public sealed class AuthenticationOptions : BaseOptions
 
     public bool EnableDacAuthorization { get; set; } = true;
 
+    /// <summary>
+    ///     Registers the API key scheme alongside JWT bearer authentication.
+    /// </summary>
+    public bool EnableApiKeyAuthentication { get; set; }
+
+    /// <summary>
+    ///     Registers an opt-in HTTP Basic authentication scheme alongside JWT bearer authentication.
+    ///     The scheme requires HTTPS for every request.
+    /// </summary>
+    public bool EnableBasicAuthentication { get; set; }
+
+    /// <summary>
+    ///     Settings for the optional HTTP Basic scheme.
+    /// </summary>
+    public BasicAuthenticationSettings? Basic { get; set; } = new();
+
+    /// <summary>
+    ///     Registers an opt-in cookie authentication scheme alongside the default JWT bearer scheme.
+    /// </summary>
+    public bool EnableCookieAuthentication { get; set; }
+
+    /// <summary>
+    ///     Cookie scheme settings. Cookies are emitted with secure, HTTP-only defaults.
+    /// </summary>
+    public CookieAuthenticationSettings? Cookie { get; set; } = new();
+
+    /// <summary>
+    ///     Password requirements for local account registration.
+    /// </summary>
+    public AuthenticationPasswordPolicySettings PasswordPolicy { get; set; } = new();
+
+    /// <summary>
+    ///     OAuth 2.0 provider credentials and scope configuration.
+    /// </summary>
+    public ExternalProviderOptions ExternalProviders { get; set; } = new();
+
+    /// <summary>
+    ///     Header used to submit API keys when the API key scheme is enabled.
+    /// </summary>
+    public string? ApiKeyHeaderName { get; set; }
+
+    /// <summary>
+    ///     Allows API keys in a query parameter. This is disabled by default because URLs are commonly logged.
+    ///     When enabled, requests must use HTTPS.
+    /// </summary>
+    public bool AllowApiKeyInQueryString { get; set; }
+
+    /// <summary>
+    ///     Query parameter used when <see cref="AllowApiKeyInQueryString"/> is enabled.
+    /// </summary>
+    public string? ApiKeyQueryStringParameterName { get; set; }
+
     public string JwtSecretKey { get; set; } = string.Empty;
 
     public string JwtIssuer { get; set; } = string.Empty;
 
     public string JwtAudience { get; set; } = string.Empty;
 
-    public TimeSpan JwtExpiration { get; set; } = TimeSpan.FromHours(24);
+    /// <summary>
+    ///     Lifetime for newly issued access tokens.
+    /// </summary>
+    public TimeSpan JwtExpiration { get; set; } = TimeSpan.FromHours(1);
+
+    /// <summary>
+    ///     Lifetime for refresh tokens, in days.
+    /// </summary>
+    public int RefreshTokenExpirationDays { get; set; } = 30;
 
     public override void Validate()
     {
         base.Validate();
+
+        if (EnableApiKeyAuthentication && !EnableAuthentication)
+        {
+            throw new InvalidOperationException("API key authentication cannot be enabled when authentication is disabled.");
+        }
+
+        if (EnableCookieAuthentication && !EnableAuthentication)
+        {
+            throw new InvalidOperationException("Cookie authentication cannot be enabled when authentication is disabled.");
+        }
+
+        if (EnableBasicAuthentication && !EnableAuthentication)
+        {
+            throw new InvalidOperationException("Basic authentication cannot be enabled when authentication is disabled.");
+        }
+
+        if (EnableCookieAuthentication)
+        {
+            (Cookie ?? throw new InvalidOperationException("Cookie authentication settings are required when the cookie scheme is enabled."))
+                .Validate();
+        }
+
+        if (EnableBasicAuthentication)
+        {
+            (Basic ?? throw new InvalidOperationException("Basic authentication settings are required when the Basic scheme is enabled."))
+                .Validate();
+        }
+
+        (PasswordPolicy ?? throw new InvalidOperationException("Authentication password policy settings are required."))
+            .Validate();
+
+        (ExternalProviders ?? throw new InvalidOperationException("External provider settings are required."))
+            .Validate();
+
+        if (!EnableAuthentication && ExternalProviders.Providers.Any(provider => provider.Value.Enabled))
+        {
+            throw new InvalidOperationException("External OAuth providers cannot be enabled when authentication is disabled.");
+        }
+
+        if (AllowApiKeyInQueryString && !EnableApiKeyAuthentication)
+        {
+            throw new InvalidOperationException("API key query authentication requires the API key scheme to be enabled.");
+        }
+
+        if (EnableApiKeyAuthentication)
+        {
+            if (ApiKeyHeaderName is not null && string.IsNullOrWhiteSpace(ApiKeyHeaderName))
+            {
+                throw new InvalidOperationException("API key header name must not be empty.");
+            }
+
+            if (AllowApiKeyInQueryString && ApiKeyQueryStringParameterName is not null &&
+                string.IsNullOrWhiteSpace(ApiKeyQueryStringParameterName))
+            {
+                throw new InvalidOperationException("API key query parameter name must not be empty when query authentication is enabled.");
+            }
+        }
 
         if (EnableAuthentication)
         {
@@ -37,6 +154,11 @@ public sealed class AuthenticationOptions : BaseOptions
             if (string.IsNullOrEmpty(JwtAudience)) throw new InvalidOperationException("JWT audience must be configured when authentication is enabled.");
 
             if (JwtExpiration <= TimeSpan.Zero) throw new InvalidOperationException("JWT expiration must be greater than zero.");
+
+            if (RefreshTokenExpirationDays <= 0)
+            {
+                throw new InvalidOperationException("Refresh token expiration must be greater than zero.");
+            }
         }
     }
 

@@ -44,6 +44,7 @@ public class TenantCrudIntegrationTests : IClassFixture<WebApplicationFactory<Ga
                 {
                     options.UseInMemoryDatabase($"TenantTestDb_{Guid.NewGuid()}");
                 });
+                services.AddScoped<DbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
             });
         });
 

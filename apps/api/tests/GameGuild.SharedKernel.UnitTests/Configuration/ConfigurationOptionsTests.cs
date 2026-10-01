@@ -368,6 +368,16 @@ public class MfaOptionsTests
         isValid.Should().BeFalse();
         errors.Length.Should().BeGreaterThan(0);
     }
+
+    [Fact]
+    public void Validate_RequiredMfaCannotBeDisabledGlobally()
+    {
+        var options = new MfaOptions { Enabled = false, RequireMfaByDefault = true };
+        var (isValid, errors) = options.Validate();
+
+        isValid.Should().BeFalse();
+        errors.Should().Contain(error => error.Contains("RequireMfaByDefault"));
+    }
 }
 
 public class EncryptionOptionsTests

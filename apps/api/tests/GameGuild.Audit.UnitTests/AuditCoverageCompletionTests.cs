@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -665,24 +666,119 @@ public class AuditControllerCoverageCompletionTests
     }
 
     [Fact]
-    public async Task ExportAuditLogs_ShouldReturnCsvFile()
+    public async Task ExportAuditLogs_ShouldStreamEscapedCsvAndHonorSelectedColumnOrder()
     {
         var userId = Guid.NewGuid();
+        var auditService = new Mock<IAuditService>();
+        var auditLog = CreateAuditLog(userId, Guid.NewGuid());
+        auditLog.Description = "changed, \"quoted\"\r\nline";
+        auditService
+            .Setup(service => service.LogAdminActionAsync(userId, "ExportAuditLogs", "Admin exported audit logs", It.IsAny<object?>()))
+            .Returns(Task.CompletedTask);
+        auditService
+            .Setup(service => service.GetAuditLogCountAsync(It.Is<AuditLogQuery>(query => query.ActionType == "Update")))
+            .ReturnsAsync(1);
+        auditService
+            .Setup(service => service.StreamAuditLogsAsync(
+                It.Is<AuditLogQuery>(query => query.ActionType == "Update" && query.Take == 0),
+                It.IsAny<CancellationToken>()))
+            .Returns(ToAsyncEnumerable([auditLog]));
+        var controller = CreateAuditController(CreateActor(userId), auditService.Object);
+        var responseBody = new MemoryStream();
+        controller.HttpContext.Response.Body = responseBody;
+
+        var result = await controller.ExportAuditLogs(new AuditExportRequest
+        {
+            ActionType = "Update",
+            Columns = ["Description", "ActionType"]
+        });
+
+        result.Should().BeOfType<EmptyResult>();
+        controller.HttpContext.Response.ContentType.Should().Be("text/csv; charset=utf-8");
+        controller.HttpContext.Response.Headers["Content-Disposition"].ToString().Should().Contain("audit-logs-").And.Contain(".csv");
+        controller.HttpContext.Response.Headers["X-Audit-Total-Records"].ToString().Should().Be("1");
+
+        responseBody.Position = 0;
+        var csv = Encoding.UTF8.GetString(responseBody.ToArray());
+        csv.Should().Be("Description,ActionType\r\n\"changed, \"\"quoted\"\"\r\nline\",Update\r\n");
+    }
+
+    [Fact]
+    public async Task ExportAuditLogsJson_ShouldStreamNestedSchemaWithPaginationAndFilters()
+    {
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var auditLog = CreateAuditLog(userId, tenantId);
+        auditLog.ActionType = "SignIn";
+        auditLog.Metadata = "{\"requestId\":\"req-42\"}";
         var auditService = new Mock<IAuditService>();
         auditService
             .Setup(service => service.LogAdminActionAsync(userId, "ExportAuditLogs", "Admin exported audit logs", It.IsAny<object?>()))
             .Returns(Task.CompletedTask);
         auditService
-            .Setup(service => service.GetAuditLogsAsync(It.Is<AuditLogQuery>(query => query.Take == 0)))
-            .ReturnsAsync([CreateAuditLog(userId, Guid.NewGuid())]);
+            .Setup(service => service.GetAuditLogCountAsync(It.Is<AuditLogQuery>(query => query.Skip == 5 && query.Take == 5)))
+            .ReturnsAsync(11);
+        auditService
+            .Setup(service => service.StreamAuditLogsAsync(
+                It.Is<AuditLogQuery>(query => query.UserId == userId
+                    && query.ActionType == "SignIn"
+                    && query.RiskLevel == AuditRiskLevel.High
+                    && query.Skip == 5
+                    && query.Take == 5),
+                It.IsAny<CancellationToken>()))
+            .Returns(ToAsyncEnumerable([auditLog]));
         var controller = CreateAuditController(CreateActor(userId), auditService.Object);
 
-        var result = await controller.ExportAuditLogs(new AuditExportRequest { ActionType = "Update" });
+        var result = await controller.ExportAuditLogsJson(new AuditExportRequest
+        {
+            UserId = userId,
+            ActionType = "SignIn",
+            RiskLevel = AuditRiskLevel.High,
+            PageNumber = 2,
+            PageSize = 5
+        });
 
-        var file = result.Should().BeOfType<FileContentResult>().Subject;
-        file.ContentType.Should().Be("text/csv");
-        file.FileDownloadName.Should().StartWith("audit-logs-");
-        Encoding.UTF8.GetString(file.FileContents).Should().Contain("Id,ActionType").And.Contain("Update");
+        var document = result.Should().BeOfType<OkObjectResult>().Subject.Value.Should()
+            .BeOfType<AuditJsonExportDocument>().Subject;
+        document.SchemaVersion.Should().Be("1.0");
+        document.Pagination.Should().Be(new AuditJsonExportPagination(2, 5, 11, 3));
+        controller.HttpContext.Response.ContentType.Should().Be("application/json; charset=utf-8");
+
+        await using var jsonStream = new MemoryStream();
+        await JsonSerializer.SerializeAsync(jsonStream, document, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        using var json = JsonDocument.Parse(jsonStream.ToArray());
+        var firstRecord = json.RootElement.GetProperty("records")[0];
+        firstRecord.GetProperty("event").GetProperty("actionType").GetString().Should().Be("SignIn");
+        firstRecord.GetProperty("actor").GetProperty("userId").GetGuid().Should().Be(userId);
+        firstRecord.GetProperty("actor").GetProperty("tenantId").GetGuid().Should().Be(tenantId);
+        firstRecord.GetProperty("resource").GetProperty("resourceType").GetString().Should().Be("Lease");
+        firstRecord.GetProperty("metadata").GetProperty("requestId").GetString().Should().Be("req-42");
+    }
+
+    [Theory]
+    [InlineData("42", "value", "42")]
+    [InlineData("legacy metadata", "raw", "legacy metadata")]
+    public void AuditJsonExportMapper_ShouldKeepMetadataCompatibleWithObjectSchema(
+        string metadata,
+        string propertyName,
+        string expectedValue)
+    {
+        var auditLog = CreateAuditLog(Guid.NewGuid(), Guid.NewGuid());
+        auditLog.Metadata = metadata;
+        var record = AuditJsonExportMapper.Map(auditLog);
+
+        record.Metadata.Should().NotBeNull();
+        record.Metadata!.Value.ValueKind.Should().Be(JsonValueKind.Object);
+        record.Metadata.Value.GetProperty(propertyName).ToString().Should().Be(expectedValue);
+    }
+
+    private static async IAsyncEnumerable<T> ToAsyncEnumerable<T>(IEnumerable<T> values)
+    {
+        foreach (var value in values)
+        {
+            yield return value;
+            await Task.Yield();
+        }
     }
 
     private static AuditController CreateAuditController(ActorContext actorContext, IAuditService? auditService = null)
@@ -694,10 +790,29 @@ public class AuditControllerCoverageCompletionTests
             auditService ?? Mock.Of<IAuditService>(),
             actorAccessor.Object,
             NullLogger<AuditController>.Instance,
-            new CommandHandlerSender(auditService ?? Mock.Of<IAuditService>(), Mock.Of<ISecurityAuditAggregator>(), actorAccessor.Object))
+            new CommandHandlerSender(auditService ?? Mock.Of<IAuditService>(), Mock.Of<ISecurityAuditAggregator>(), actorAccessor.Object),
+            CreateProgressTracker())
         {
             ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
         };
+    }
+
+    private static IAuditExportProgressTracker CreateProgressTracker()
+    {
+        var tracker = new Mock<IAuditExportProgressTracker>();
+        tracker.Setup(service => service.BeginAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        tracker.Setup(service => service.ReportAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<Guid>(),
+                It.IsAny<int>(),
+                It.IsAny<AuditExportProgressStatus>(),
+                It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        tracker.Setup(service => service.GetAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AuditExportProgressResponse?)null);
+        return tracker.Object;
     }
 
     private static AuditLog CreateAuditLog(Guid userId, Guid tenantId)
@@ -882,6 +997,8 @@ public class AuditFacadeAndModuleCoverageTests
 
         returned.Should().BeSameAs(services);
         services.Should().Contain(descriptor => descriptor.ServiceType == typeof(IAuditService) && descriptor.ImplementationType == typeof(AuditService));
+        services.Should().Contain(descriptor => descriptor.ServiceType == typeof(ITamperEvidentAuditService) && descriptor.ImplementationType == typeof(TamperEvidentAuditService));
+        services.Should().Contain(descriptor => descriptor.ServiceType == typeof(ICryptographicSigningService) && descriptor.ImplementationType == typeof(EcdsaCryptographicSigningService));
         services.Should().Contain(descriptor => descriptor.ServiceType == typeof(IAuditLogQueryService) && descriptor.ImplementationType == typeof(AuditLogQueryService));
         services.Should().Contain(descriptor => descriptor.ServiceType == typeof(IAuditReportService) && descriptor.ImplementationType == typeof(AuditReportService));
         services.Should().Contain(descriptor => descriptor.ServiceType == typeof(ISecurityAuditAggregator) && descriptor.ImplementationType == typeof(SecurityAuditAggregator));

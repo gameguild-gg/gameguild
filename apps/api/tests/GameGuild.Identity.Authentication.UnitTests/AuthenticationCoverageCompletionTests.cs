@@ -131,6 +131,41 @@ public sealed class AuthenticationCoverageCompletionTests
     }
 
     [Fact]
+    public async Task ApiKeyAuthentication_RejectsQueryStringCredentialsOverHttp()
+    {
+        var apiKeyOptions = new ApiKeyAuthenticationOptions
+        {
+            AllowQueryString = true,
+            QueryStringParameterName = "access_key"
+        };
+        var options = new Mock<IOptionsMonitor<ApiKeyAuthenticationOptions>>();
+        options.Setup(x => x.Get(It.IsAny<string>())).Returns(apiKeyOptions);
+        options.SetupGet(x => x.CurrentValue).Returns(apiKeyOptions);
+
+        using var loggerFactory = LoggerFactory.Create(_ => { });
+        var handler = new ApiKeyAuthenticationHandler(
+            options.Object,
+            loggerFactory,
+            UrlEncoder.Default,
+            Mock.Of<IApplicationDbContext>());
+        var context = new DefaultHttpContext();
+        context.Request.Scheme = "http";
+        context.Request.QueryString = new QueryString("?access_key=secret");
+
+        await handler.InitializeAsync(
+            new AuthenticationScheme(
+                ApiKeyAuthenticationOptions.SchemeName,
+                ApiKeyAuthenticationOptions.SchemeName,
+                typeof(ApiKeyAuthenticationHandler)),
+            context);
+
+        var result = await handler.AuthenticateAsync();
+
+        result.Failure.Should().NotBeNull();
+        result.Failure!.Message.Should().Contain("HTTPS");
+    }
+
+    [Fact]
     public void PasswordHasher_CoversRemainingPolicyBranches()
     {
         var hasher = new PasswordHasher(NullLogger<PasswordHasher>.Instance, EmptyConfiguration());
@@ -685,7 +720,7 @@ public sealed class AuthenticationCoverageCompletionTests
         var timeStep = DateTimeOffset.UtcNow.ToUnixTimeSeconds() / 30;
         var code = InvokePrivateStatic<string>(typeof(TotpMfaService), "GenerateTotpCode", secret, timeStep);
 
-        InvokePrivateStatic<bool>(typeof(TotpMfaService), "VerifyTotpCode", secret, code, 0).Should().BeTrue();
+        InvokePrivateStatic<bool>(typeof(TotpMfaService), "VerifyTotpCode", secret, code, 0, 30).Should().BeTrue();
 
         var act = () => InvokePrivateStatic<byte[]>(typeof(TotpMfaService), "Base32Decode", "INVALID!");
         act.Should().Throw<TargetInvocationException>()
@@ -833,7 +868,11 @@ public sealed class AuthenticationCoverageCompletionTests
 
         new RevokeContentTypePermissionByIdHandler(dbContext).Should().NotBeNull();
         new RevokeResourcePermissionByIdHandler(dbContext).Should().NotBeNull();
-        new RevokeTenantPermissionByIdHandler(dbContext).Should().NotBeNull();
+        new RevokeTenantPermissionByIdHandler(
+            dbContext,
+            Mock.Of<GameGuild.Identity.Context.Actors.IActorContextAccessor>(),
+            Mock.Of<GameGuild.Identity.Authorization.ITenantSecurityVersionStore>(),
+            Mock.Of<GameGuild.Identity.Authorization.IPermissionAuditService>()).Should().NotBeNull();
 
         new AuthenticationFailedEventHandler(NullLogger<AuthenticationFailedEventHandler>.Instance).Should().NotBeNull();
         new GenerateWeb3ChallengeHandler(Mock.Of<IWeb3Service>()).Should().NotBeNull();

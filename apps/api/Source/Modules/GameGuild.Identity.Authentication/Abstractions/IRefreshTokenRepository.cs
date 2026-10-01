@@ -32,6 +32,18 @@ public interface IRefreshTokenRepository
     Task<RefreshToken> UpdateAsync(RefreshToken refreshToken, CancellationToken cancellationToken = default);
 
     /// <summary>
+    ///     Atomically claims a one-time refresh-token rotation. Only one concurrent
+    ///     request can replace an active token.
+    /// </summary>
+    Task<bool> TryRevokeForRotationAsync(
+        Guid tokenId,
+        string expectedTokenHash,
+        string replacementTokenHash,
+        DateTime revokedAt,
+        string? revokedByIp,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     ///     Revokes a specific refresh token.
     /// </summary>
     Task RevokeAsync(string token, string? revokedByIp = null, string? replacedByToken = null, CancellationToken cancellationToken = default);

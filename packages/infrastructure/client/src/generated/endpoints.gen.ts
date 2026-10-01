@@ -4,7 +4,7 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  *
  * Generated from: GameGuild API
- * API Version: 4.3.0
+ * API Version: 4.4.0
  */
 import type * as Types from './types.gen.js';
 
@@ -113,6 +113,9 @@ export const getApiAnalyticsKpiEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Returns top-level platform KPIs for the dashboard.
+ */
 export type GetApiAnalyticsPlatformKpisInput = void;
 export type GetApiAnalyticsPlatformKpisOutput = Types.APIControllersPlatformKpisOutput;
 export const getApiAnalyticsPlatformKpisEndpoint = {
@@ -189,6 +192,14 @@ export const postApiAnalyticsWarehouseRunEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets asset access URL with security checks.
+ *
+ * Intentionally anonymous: URL generation is authorized per request by
+ * M:GameGuild.Assets.IAssetAccessService.ValidateAccessAsync(System.Guid,System.Nullable{System.Guid},System.Nullable{System.Guid},System.Threading.CancellationToken,System.Boolean) against the asset's access
+ * policy — public/unlisted assets are reachable, protected policies require an
+ * authenticated (and tenant-verified) caller.
+ */
 export interface PostApiAssetsAccessUrlInput {
   assetId: string;
   body?: Types.AssetsSecurityAccessUrlInput;
@@ -202,6 +213,14 @@ export const postApiAssetsAccessUrlEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Serves asset content with full security checks.
+ *
+ * Intentionally anonymous: content delivery is authenticated by the signed,
+ * expiring asset token (plus rate limiting and access-policy validation inside).
+ * Assets without a token must pass M:GameGuild.Assets.IAssetAccessService.ValidateAccessAsync(System.Guid,System.Nullable{System.Guid},System.Nullable{System.Guid},System.Threading.CancellationToken,System.Boolean),
+ * which denies protected policies to unauthenticated callers.
+ */
 export interface GetApiAssetsContentInput {
   assetId: string;
   query?: {
@@ -218,6 +237,9 @@ export const getApiAssetsContentEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get a certificate by ID
+ */
 export interface GetApiCertificatesInput {
   id: string;
 }
@@ -230,6 +252,9 @@ export const getApiCertificatesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Revoke a certificate
+ */
 export interface PostApiCertificatesRevokeInput {
   id: string;
   body?: Types.LearningCertificatesRevokeCertificateInput;
@@ -243,6 +268,9 @@ export const postApiCertificatesRevokeEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get certificates for a specific course
+ */
 export interface GetApiCertificatesCourseInput {
   courseId: string;
 }
@@ -255,6 +283,9 @@ export const getApiCertificatesCourseEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get certificates expiring within the specified days
+ */
 export interface GetApiCertificatesExpiringInput {
   query?: {
     days?: number;
@@ -269,6 +300,9 @@ export const getApiCertificatesExpiringEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Issue a certificate for an enrollment
+ */
 export interface PostApiCertificatesIssueInput {
   body?: Types.LearningCertificatesIssueCertificateInput;
 }
@@ -281,6 +315,9 @@ export const postApiCertificatesIssueEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get certificates for the current user
+ */
 export type GetApiCertificatesMyInput = void;
 export type GetApiCertificatesMyOutput = Array<Types.LearningCertificatesCertificateDto>;
 export const getApiCertificatesMyEndpoint = {
@@ -291,6 +328,9 @@ export const getApiCertificatesMyEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Create a certificate template for a course
+ */
 export interface PostApiCertificatesTemplatesInput {
   body?: Types.LearningCertificatesCreateCertificateTemplateInput;
 }
@@ -303,6 +343,9 @@ export const postApiCertificatesTemplatesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get a certificate template by ID
+ */
 export interface GetApiCertificatesTemplatesInput {
   templateId: string;
 }
@@ -315,6 +358,9 @@ export const getApiCertificatesTemplatesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update a certificate template and its course-default state
+ */
 export interface PutApiCertificatesTemplatesInput {
   templateId: string;
   body?: Types.LearningCertificatesUpdateCertificateTemplateInput;
@@ -328,6 +374,9 @@ export const putApiCertificatesTemplatesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Delete a certificate template
+ */
 export interface DeleteApiCertificatesTemplatesInput {
   templateId: string;
 }
@@ -340,6 +389,9 @@ export const deleteApiCertificatesTemplatesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get certificate templates for a specific course
+ */
 export interface GetApiCertificatesTemplatesCourseInput {
   courseId: string;
 }
@@ -352,6 +404,9 @@ export const getApiCertificatesTemplatesCourseEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Verify a certificate by its number (public endpoint)
+ */
 export interface GetApiCertificatesVerifyInput {
   certificateNumber: string;
 }
@@ -364,6 +419,9 @@ export const getApiCertificatesVerifyEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Create a new cohort
+ */
 export interface PostApiCohortsInput {
   body?: Types.LearningCohortsCreateCohortInput;
 }
@@ -376,6 +434,9 @@ export const postApiCohortsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get a cohort by ID
+ */
 export interface GetApiCohortsInput {
   id: string;
 }
@@ -388,6 +449,9 @@ export const getApiCohortsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update a cohort
+ */
 export interface PutApiCohortsInput {
   id: string;
   body?: Types.LearningCohortsUpdateCohortInput;
@@ -401,6 +465,9 @@ export const putApiCohortsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Delete a cohort
+ */
 export interface DeleteApiCohortsInput {
   id: string;
 }
@@ -413,6 +480,9 @@ export const deleteApiCohortsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Cancel a cohort
+ */
 export interface PostApiCohortsCancelInput {
   id: string;
 }
@@ -425,6 +495,9 @@ export const postApiCohortsCancelEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Close a cohort for enrollment
+ */
 export interface PostApiCohortsCloseInput {
   id: string;
 }
@@ -437,6 +510,9 @@ export const postApiCohortsCloseEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Mark a cohort as completed
+ */
 export interface PostApiCohortsCompleteInput {
   id: string;
 }
@@ -449,6 +525,9 @@ export const postApiCohortsCompleteEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Open a cohort for enrollment
+ */
 export interface PostApiCohortsOpenInput {
   id: string;
 }
@@ -461,6 +540,9 @@ export const postApiCohortsOpenEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get all cohorts for a course
+ */
 export interface GetApiCohortsCourseInput {
   courseId: string;
 }
@@ -473,6 +555,9 @@ export const getApiCohortsCourseEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get active cohorts for a course
+ */
 export interface GetApiCohortsCourseActiveInput {
   courseId: string;
 }
@@ -485,6 +570,9 @@ export const getApiCohortsCourseActiveEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get enrollable cohorts for a course (open with capacity)
+ */
 export interface GetApiCohortsCourseEnrollableInput {
   courseId: string;
 }
@@ -764,6 +852,9 @@ export const getApiComplianceFerpaStudentsRecordsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get a specific version
+ */
 export interface GetApiContentsVersioningInput {
   versionId: string;
 }
@@ -776,6 +867,9 @@ export const getApiContentsVersioningEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Approve a version
+ */
 export interface PostApiContentsVersioningApproveInput {
   versionId: string;
   body?: Types.ResourcesContentsReviewInput;
@@ -789,6 +883,9 @@ export const postApiContentsVersioningApproveEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Cancel scheduled publishing
+ */
 export interface PostApiContentsVersioningCancelScheduleInput {
   versionId: string;
 }
@@ -801,6 +898,9 @@ export const postApiContentsVersioningCancelScheduleEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Publish a version
+ */
 export interface PostApiContentsVersioningPublishInput {
   versionId: string;
 }
@@ -813,6 +913,9 @@ export const postApiContentsVersioningPublishEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Reject a version
+ */
 export interface PostApiContentsVersioningRejectInput {
   versionId: string;
   body?: Types.ResourcesContentsReviewInput;
@@ -826,6 +929,9 @@ export const postApiContentsVersioningRejectEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Add a review to a version
+ */
 export interface PostApiContentsVersioningReviewsInput {
   versionId: string;
   body?: Types.ResourcesContentsAddReviewInput;
@@ -839,6 +945,9 @@ export const postApiContentsVersioningReviewsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Schedule a version for publishing
+ */
 export interface PostApiContentsVersioningScheduleInput {
   versionId: string;
   body?: Types.ResourcesContentsScheduleInput;
@@ -852,6 +961,9 @@ export const postApiContentsVersioningScheduleEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Submit a draft for review
+ */
 export interface PostApiContentsVersioningSubmitForReviewInput {
   versionId: string;
 }
@@ -864,6 +976,9 @@ export const postApiContentsVersioningSubmitForReviewEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Compare two versions
+ */
 export interface GetApiContentsVersioningCompareInput {
   query?: {
     versionId1?: string;
@@ -879,6 +994,9 @@ export const getApiContentsVersioningCompareEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Create a new draft version
+ */
 export interface PostApiContentsVersioningDraftsInput {
   body?: Types.ResourcesContentsCreateDraftInput;
 }
@@ -891,6 +1009,9 @@ export const postApiContentsVersioningDraftsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update a draft version
+ */
 export interface PutApiContentsVersioningDraftsInput {
   versionId: string;
   body?: Types.ResourcesContentsUpdateDraftInput;
@@ -904,6 +1025,9 @@ export const putApiContentsVersioningDraftsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get the current published version for an entity
+ */
 export interface GetApiContentsVersioningEntityCurrentInput {
   entityType: string;
   entityId: string;
@@ -917,6 +1041,9 @@ export const getApiContentsVersioningEntityCurrentEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get version history for an entity
+ */
 export interface GetApiContentsVersioningEntityHistoryInput {
   entityType: string;
   entityId: string;
@@ -930,6 +1057,9 @@ export const getApiContentsVersioningEntityHistoryEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Rollback to a previous version
+ */
 export interface PostApiContentsVersioningEntityRollbackInput {
   entityType: string;
   entityId: string;
@@ -944,6 +1074,9 @@ export const postApiContentsVersioningEntityRollbackEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get a specific version by number
+ */
 export interface GetApiContentsVersioningEntityVersionInput {
   entityType: string;
   entityId: string;
@@ -958,6 +1091,9 @@ export const getApiContentsVersioningEntityVersionEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get versions pending review
+ */
 export interface GetApiContentsVersioningPendingReviewInput {
   query?: {
     entityType?: string;
@@ -974,6 +1110,9 @@ export const getApiContentsVersioningPendingReviewEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Batch get follower counts for multiple entities
+ */
 export interface PostApiFollowersBatchCountsInput {
   body?: Types.SocialFollowsControllersBatchCountsInput;
 }
@@ -986,6 +1125,9 @@ export const postApiFollowersBatchCountsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Batch get follow status for multiple entities
+ */
 export interface PostApiFollowersBatchStatusInput {
   body?: Types.SocialFollowsControllersBatchStatusInput;
 }
@@ -998,6 +1140,9 @@ export const postApiFollowersBatchStatusEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Block a user
+ */
 export interface PostApiFollowersBlockInput {
   body?: Types.SocialFollowsControllersBlockInput;
 }
@@ -1010,6 +1155,9 @@ export const postApiFollowersBlockEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get current user's blocked users list
+ */
 export interface GetApiFollowersBlockedUsersInput {
   query?: {
     skip?: number;
@@ -1025,6 +1173,9 @@ export const getApiFollowersBlockedUsersEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get follower count for an entity
+ */
 export interface GetApiFollowersCountFollowersInput {
   entityId: string;
   query?: {
@@ -1040,6 +1191,9 @@ export const getApiFollowersCountFollowersEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get following count for current user
+ */
 export interface GetApiFollowersCountFollowingInput {
   query?: {
     entityType?: string;
@@ -1054,6 +1208,9 @@ export const getApiFollowersCountFollowingEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Follow an entity
+ */
 export interface PostApiFollowersFollowInput {
   body?: Types.SocialFollowsControllersFollowInput;
 }
@@ -1066,6 +1223,9 @@ export const postApiFollowersFollowEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get followers for an entity
+ */
 export interface GetApiFollowersFollowersInput {
   entityId: string;
   query?: {
@@ -1083,6 +1243,9 @@ export const getApiFollowersFollowersEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get entities the current user is following
+ */
 export interface GetApiFollowersFollowingInput {
   query?: {
     entityType?: string;
@@ -1099,6 +1262,9 @@ export const getApiFollowersFollowingEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Check if current user has blocked a user
+ */
 export interface GetApiFollowersIsBlockedInput {
   blockedUserId: string;
 }
@@ -1111,6 +1277,9 @@ export const getApiFollowersIsBlockedEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Check if current user is following an entity
+ */
 export interface GetApiFollowersIsFollowingInput {
   query?: {
     entityId?: string;
@@ -1126,6 +1295,9 @@ export const getApiFollowersIsFollowingEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Check if current user has muted a user
+ */
 export interface GetApiFollowersIsMutedInput {
   mutedUserId: string;
 }
@@ -1138,6 +1310,9 @@ export const getApiFollowersIsMutedEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Mute a user
+ */
 export interface PostApiFollowersMuteInput {
   body?: Types.SocialFollowsControllersMuteInput;
 }
@@ -1150,6 +1325,9 @@ export const postApiFollowersMuteEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get current user's muted users list
+ */
 export interface GetApiFollowersMutedUsersInput {
   query?: {
     skip?: number;
@@ -1165,6 +1343,9 @@ export const getApiFollowersMutedUsersEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Check if two users are mutual followers
+ */
 export interface GetApiFollowersMutualInput {
   query?: {
     userId1?: string;
@@ -1180,6 +1361,9 @@ export const getApiFollowersMutualEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update notification settings for a follow relationship
+ */
 export interface PutApiFollowersNotificationsInput {
   body?: Types.SocialFollowsControllersUpdateNotificationsInput;
 }
@@ -1192,6 +1376,9 @@ export const putApiFollowersNotificationsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get current user's privacy settings
+ */
 export type GetApiFollowersPrivacySettingsInput = void;
 export type GetApiFollowersPrivacySettingsOutput = Types.SocialFollowsControllersFollowPrivacySettingsDto;
 export const getApiFollowersPrivacySettingsEndpoint = {
@@ -1202,6 +1389,9 @@ export const getApiFollowersPrivacySettingsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update current user's privacy settings
+ */
 export interface PutApiFollowersPrivacySettingsInput {
   body?: Types.SocialFollowsControllersUpdatePrivacySettingsInput;
 }
@@ -1214,6 +1404,9 @@ export const putApiFollowersPrivacySettingsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Unblock a user
+ */
 export interface DeleteApiFollowersUnblockInput {
   blockedUserId: string;
 }
@@ -1226,6 +1419,9 @@ export const deleteApiFollowersUnblockEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Unfollow an entity
+ */
 export interface DeleteApiFollowersUnfollowInput {
   query?: {
     entityId?: string;
@@ -1241,6 +1437,9 @@ export const deleteApiFollowersUnfollowEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Unmute a user
+ */
 export interface DeleteApiFollowersUnmuteInput {
   mutedUserId: string;
 }
@@ -1370,9 +1569,16 @@ export const postApiGameJamsSubmissionsScoresEndpoint = {
 } as const;
 
 /**
- * Comprehensive application health check
+ * Comprehensive health check endpoint for application monitoring
  *
- * Performs a comprehensive health check of all registered services and dependencies. Returns detailed status information for monitoring systems, load balancers, and orchestration platforms.
+ * Performs a comprehensive health check of all registered services and dependencies including:
+ * - Database connectivity
+ * - External service availability
+ * - Cache systems (Redis, etc.)
+ * - Message queues
+ * - File systems
+ * Returns HTTP 200 when all checks are healthy, HTTP 503 when any check fails.
+ * Used by monitoring systems, load balancers, and orchestration platforms to determine application health.
  */
 export type GetApiHealthInput = void;
 export type GetApiHealthOutput = Types.APIControllersHealthinessOutput;
@@ -1385,9 +1591,20 @@ export const getApiHealthEndpoint = {
 } as const;
 
 /**
- * Detailed dependency health check
+ * Get detailed dependency health status
  *
- * Provides comprehensive health status of all external dependencies including databases, APIs, caches, and message queues.
+ * Provides detailed health information for all registered external dependencies including:
+ * - Database connections (PostgreSQL, Redis, etc.)
+ * - External APIs and services
+ * - Message queues
+ * - File storage systems
+ * - Cache systems
+ *
+ * Each dependency includes:
+ * - Current status (Healthy, Degraded, Unhealthy)
+ * - Response time
+ * - Connection details (sanitized)
+ * - Error information if unhealthy
  */
 export type GetApiHealthDependenciesInput = void;
 export type GetApiHealthDependenciesOutput = Types.APIControllersDependencyHealthOutput;
@@ -1480,9 +1697,20 @@ export const getApiLearningEnrollmentsUsersEndpoint = {
 } as const;
 
 /**
- * Liveness probe for container restart decisions
+ * Kubernetes-style liveness probe for container restart decisions
  *
- * Kubernetes-style liveness probe that indicates whether the application process is running correctly. Used by orchestration platforms to determine if containers should be restarted.
+ * Liveness probes determine whether the application process is running and functioning.
+ * This is a lightweight check that verifies the application hasn't deadlocked or crashed.
+ * Kubernetes uses this endpoint to:
+ * - Restart containers that are in a broken state
+ * - Detect application deadlocks or memory leaks
+ * - Ensure long-running processes remain healthy
+ * Always returns HTTP 200 if the process is running. Includes:
+ * - Application uptime since startup
+ * - Current timestamp
+ * - Application version information
+ * - Basic process health indicators
+ * This check is intentionally simple and should not depend on external services.
  */
 export type GetApiLiveInput = void;
 export type GetApiLiveOutput = Types.APIControllersLivenessOutput;
@@ -1527,6 +1755,9 @@ export const getApiMetricsProductExportEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets the current user's notifications
+ */
 export interface GetApiNotificationsForGetApiNotificationsInput {
   query?: {
     skip?: number;
@@ -1543,6 +1774,9 @@ export const getApiNotificationsForGetApiNotificationsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets a specific notification by ID
+ */
 export interface GetApiNotificationsForGetApiNotificationsByIdInput {
   id: string;
 }
@@ -1555,6 +1789,9 @@ export const getApiNotificationsForGetApiNotificationsByIdEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Deletes a notification
+ */
 export interface DeleteApiNotificationsInput {
   id: string;
 }
@@ -1567,6 +1804,9 @@ export const deleteApiNotificationsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Marks a notification as read
+ */
 export interface PostApiNotificationsReadInput {
   id: string;
 }
@@ -1579,6 +1819,9 @@ export const postApiNotificationsReadEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Marks a notification as unread
+ */
 export interface PostApiNotificationsUnreadInput {
   id: string;
 }
@@ -1591,6 +1834,9 @@ export const postApiNotificationsUnreadEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets the current user's notification preferences
+ */
 export type GetApiNotificationsPreferencesInput = void;
 export type GetApiNotificationsPreferencesOutput = Types.NotificationsControllersNotificationPreferenceDto;
 export const getApiNotificationsPreferencesEndpoint = {
@@ -1601,6 +1847,9 @@ export const getApiNotificationsPreferencesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Updates the current user's notification preferences
+ */
 export interface PutApiNotificationsPreferencesInput {
   body?: Types.NotificationsControllersUpdatePreferencesInput;
 }
@@ -1613,6 +1862,9 @@ export const putApiNotificationsPreferencesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Sets the current user's email digest frequency (null, Daily, Weekly or BiWeekly)
+ */
 export interface PutApiNotificationsPreferencesDigestFrequencyInput {
   body?: Types.NotificationsControllersUpdateDigestFrequencyInput;
 }
@@ -1625,6 +1877,9 @@ export const putApiNotificationsPreferencesDigestFrequencyEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Replaces the current user's muted notification types (full replace; empty list clears all mutes)
+ */
 export interface PutApiNotificationsPreferencesMutedTypesInput {
   body?: Types.NotificationsControllersUpdateMutedTypesInput;
 }
@@ -1637,6 +1892,9 @@ export const putApiNotificationsPreferencesMutedTypesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Sets quiet hours for the current user
+ */
 export interface PutApiNotificationsPreferencesQuietHoursInput {
   body?: Types.NotificationsControllersSetQuietHoursInput;
 }
@@ -1649,6 +1907,9 @@ export const putApiNotificationsPreferencesQuietHoursEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Deletes all read notifications for the current user
+ */
 export type DeleteApiNotificationsReadInput = void;
 export type DeleteApiNotificationsReadOutput = Types.NotificationsControllersDeletedCountOutput;
 export const deleteApiNotificationsReadEndpoint = {
@@ -1659,6 +1920,9 @@ export const deleteApiNotificationsReadEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Marks all notifications as read for the current user
+ */
 export type PostApiNotificationsReadAllInput = void;
 export type PostApiNotificationsReadAllOutput = void;
 export const postApiNotificationsReadAllEndpoint = {
@@ -1669,6 +1933,9 @@ export const postApiNotificationsReadAllEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets the catalog of notification types with category and suppressibility classification (drives the preferences UI)
+ */
 export type GetApiNotificationsTypesCatalogInput = void;
 export type GetApiNotificationsTypesCatalogOutput = Array<Types.NotificationsControllersNotificationTypeCatalogEntry>;
 export const getApiNotificationsTypesCatalogEndpoint = {
@@ -1679,6 +1946,9 @@ export const getApiNotificationsTypesCatalogEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets the unread notification count for the current user
+ */
 export type GetApiNotificationsUnreadCountInput = void;
 export type GetApiNotificationsUnreadCountOutput = Types.NotificationsControllersUnreadCountOutput;
 export const getApiNotificationsUnreadCountEndpoint = {
@@ -1689,6 +1959,9 @@ export const getApiNotificationsUnreadCountEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Create a new prerequisite for a course
+ */
 export interface PostApiPrerequisitesInput {
   body?: Types.LearningCoursesCreatePrerequisiteApiInput;
 }
@@ -1701,6 +1974,9 @@ export const postApiPrerequisitesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get a prerequisite by ID
+ */
 export interface GetApiPrerequisitesInput {
   id: string;
 }
@@ -1713,6 +1989,9 @@ export const getApiPrerequisitesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update a prerequisite
+ */
 export interface PutApiPrerequisitesInput {
   id: string;
   body?: Types.LearningCoursesUpdatePrerequisiteApiInput;
@@ -1726,6 +2005,9 @@ export const putApiPrerequisitesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Delete a prerequisite
+ */
 export interface DeleteApiPrerequisitesInput {
   id: string;
 }
@@ -1738,6 +2020,9 @@ export const deleteApiPrerequisitesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get all prerequisites for a course
+ */
 export interface GetApiPrerequisitesCourseInput {
   courseId: string;
 }
@@ -1750,6 +2035,9 @@ export const getApiPrerequisitesCourseEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get the full prerequisite chain for a course (all nested prerequisites)
+ */
 export interface GetApiPrerequisitesCourseChainInput {
   courseId: string;
 }
@@ -1762,6 +2050,9 @@ export const getApiPrerequisitesCourseChainEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Check if the current user satisfies all prerequisites for a course
+ */
 export interface GetApiPrerequisitesCourseCheckForGetApiPrerequisitesCourseByCourseIdCheckInput {
   courseId: string;
 }
@@ -1774,6 +2065,9 @@ export const getApiPrerequisitesCourseCheckForGetApiPrerequisitesCourseByCourseI
   requiresAuth: true,
 } as const;
 
+/**
+ * Check if a specific user satisfies all prerequisites for a course (admin)
+ */
 export interface GetApiPrerequisitesCourseCheckForGetApiPrerequisitesCourseByCourseIdCheckByUserIdInput {
   courseId: string;
   userId: string;
@@ -1787,6 +2081,9 @@ export const getApiPrerequisitesCourseCheckForGetApiPrerequisitesCourseByCourseI
   requiresAuth: true,
 } as const;
 
+/**
+ * Reorder prerequisites for a course
+ */
 export interface PostApiPrerequisitesCourseReorderInput {
   courseId: string;
   body?: Types.LearningCoursesReorderPrerequisitesInput;
@@ -1800,6 +2097,9 @@ export const postApiPrerequisitesCourseReorderEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Check if adding a prerequisite would create a circular dependency
+ */
 export interface GetApiPrerequisitesCourseWouldCreateCycleInput {
   courseId: string;
   prerequisiteCourseId: string;
@@ -1813,6 +2113,9 @@ export const getApiPrerequisitesCourseWouldCreateCycleEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get courses that depend on a specific course as a prerequisite
+ */
 export interface GetApiPrerequisitesDependentsInput {
   courseId: string;
 }
@@ -1826,9 +2129,17 @@ export const getApiPrerequisitesDependentsEndpoint = {
 } as const;
 
 /**
- * Readiness probe for traffic routing decisions
+ * Kubernetes-style readiness probe for traffic routing decisions
  *
- * Kubernetes-style readiness probe that determines whether the application is ready to serve traffic. Checks all dependencies and services required for proper request handling.
+ * Readiness probes determine whether the application is ready to serve traffic.
+ * Unlike liveness probes, readiness checks verify that all dependencies are available
+ * and the application can handle requests properly.
+ * Kubernetes uses this endpoint to:
+ * - Remove pods from service endpoints when not ready
+ * - Prevent traffic routing to initializing instances
+ * - Handle rolling deployments gracefully
+ * Returns HTTP 200 when ready to serve traffic, HTTP 503 when not ready.
+ * Checks services tagged with "ready" in health check registration.
  */
 export type GetApiReadyInput = void;
 export type GetApiReadyOutput = Types.APIControllersReadinessOutput;
@@ -1840,6 +2151,9 @@ export const getApiReadyEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Soft-deletes a comment (comment author, post primary, or any co-author; others → 403).
+ */
 export interface DeleteApiSocialBlogCommentsInput {
   commentId: string;
 }
@@ -1852,6 +2166,9 @@ export const deleteApiSocialBlogCommentsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Creates a draft post; the actor becomes the primary author.
+ */
 export interface PostApiSocialBlogPostsInput {
   body?: Types.SocialBlogControllersCreateBlogPostInput;
 }
@@ -1864,6 +2181,9 @@ export const postApiSocialBlogPostsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Fetches one post for an author (primary or co-author) with full draft access.
+ */
 export interface GetApiSocialBlogPostsInput {
   id: string;
 }
@@ -1876,6 +2196,9 @@ export const getApiSocialBlogPostsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Revision-guarded draft update; any author (primary or co-author). Stale revision → 409.
+ */
 export interface PutApiSocialBlogPostsInput {
   id: string;
   body?: Types.SocialBlogControllersUpdateBlogPostDraftInput;
@@ -1889,6 +2212,9 @@ export const putApiSocialBlogPostsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Soft-deletes the post (primary only).
+ */
 export interface DeleteApiSocialBlogPostsInput {
   id: string;
 }
@@ -1901,6 +2227,9 @@ export const deleteApiSocialBlogPostsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Adds a co-author (primary only).
+ */
 export interface PostApiSocialBlogPostsCoauthorsInput {
   id: string;
   body?: Types.SocialBlogControllersBlogCoauthorInput;
@@ -1914,6 +2243,9 @@ export const postApiSocialBlogPostsCoauthorsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Removes a co-author (primary only).
+ */
 export interface DeleteApiSocialBlogPostsCoauthorsInput {
   id: string;
   userId: string;
@@ -1927,6 +2259,10 @@ export const deleteApiSocialBlogPostsCoauthorsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Adds a comment on a published post (any authenticated user; depth ≤ 1; block-enforced;
+ * disabled-comment and depth-2 violations map to 400, blocks to 403).
+ */
 export interface PostApiSocialBlogPostsCommentsInput {
   id: string;
   body?: Types.SocialBlogControllersAddBlogCommentInput;
@@ -1940,6 +2276,9 @@ export const postApiSocialBlogPostsCommentsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Publishes the post (primary only); fans out the publication announcement.
+ */
 export interface PostApiSocialBlogPostsPublishInput {
   id: string;
 }
@@ -1952,6 +2291,9 @@ export const postApiSocialBlogPostsPublishEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Changes the post slug (primary only); the old route 301-redirects forever.
+ */
 export interface PostApiSocialBlogPostsSlugInput {
   id: string;
   body?: Types.SocialBlogControllersChangeBlogPostSlugInput;
@@ -1965,6 +2307,9 @@ export const postApiSocialBlogPostsSlugEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Transfers primary authorship to a current co-author (primary only).
+ */
 export interface PostApiSocialBlogPostsTransferPrimaryInput {
   id: string;
   body?: Types.SocialBlogControllersTransferBlogPrimaryInput;
@@ -1978,6 +2323,9 @@ export const postApiSocialBlogPostsTransferPrimaryEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Unpublishes the post back to draft (primary only).
+ */
 export interface PostApiSocialBlogPostsUnpublishInput {
   id: string;
 }
@@ -1990,6 +2338,9 @@ export const postApiSocialBlogPostsUnpublishEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Lists the author's copilot conversations for the post.
+ */
 export interface GetApiSocialBlogPostsAiConversationsInput {
   postId: string;
 }
@@ -2002,6 +2353,9 @@ export const getApiSocialBlogPostsAiConversationsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Returns the acting author's AI credit wallet snapshot.
+ */
 export interface GetApiSocialBlogPostsAiEntitlementInput {
   postId: string;
 }
@@ -2014,6 +2368,9 @@ export const getApiSocialBlogPostsAiEntitlementEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Discards a pending proposal without changing the post.
+ */
 export interface DeleteApiSocialBlogPostsAiProposalsInput {
   postId: string;
   proposalId: string;
@@ -2027,6 +2384,9 @@ export const deleteApiSocialBlogPostsAiProposalsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Applies a pending proposal to the post (revision-guarded).
+ */
 export interface PostApiSocialBlogPostsAiProposalsApplyInput {
   postId: string;
   proposalId: string;
@@ -2041,6 +2401,9 @@ export const postApiSocialBlogPostsAiProposalsApplyEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Starts (or idempotently replays) an AI run against the post's current revision.
+ */
 export interface PostApiSocialBlogPostsAiRunsInput {
   postId: string;
   body?: Types.SocialBlogAuthoringBlogAiRunInput;
@@ -2054,6 +2417,9 @@ export const postApiSocialBlogPostsAiRunsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Fetches one run owned by the acting author.
+ */
 export interface GetApiSocialBlogPostsAiRunsInput {
   postId: string;
   runId: string;
@@ -2067,6 +2433,9 @@ export const getApiSocialBlogPostsAiRunsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Cancels a queued, reserved, or running run and releases its reservation.
+ */
 export interface PostApiSocialBlogPostsAiRunsCancelInput {
   postId: string;
   runId: string;
@@ -2080,6 +2449,9 @@ export const postApiSocialBlogPostsAiRunsCancelEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Streams persisted run events (SSE) until the run reaches a terminal state.
+ */
 export interface GetApiSocialBlogPostsAiRunsStreamInput {
   postId: string;
   runId: string;
@@ -2093,6 +2465,9 @@ export const getApiSocialBlogPostsAiRunsStreamEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Lists the acting user's posts (authored + co-authored), newest edit first.
+ */
 export interface GetApiSocialBlogPostsMineInput {
   query?: {
     page?: number;
@@ -2107,6 +2482,9 @@ export const getApiSocialBlogPostsMineEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Public author listing by handle (published only), keyset-paged newest-first.
+ */
 export interface GetApiSocialBlogPublicAuthorsForGetApiSocialBlogPublicAuthorsByHandleInput {
   handle: string;
   query?: {
@@ -2123,6 +2501,9 @@ export const getApiSocialBlogPublicAuthorsForGetApiSocialBlogPublicAuthorsByHand
   requiresAuth: true,
 } as const;
 
+/**
+ * Public post detail by (handle, slug); unpublished/missing → indistinguishable 404.
+ */
 export interface GetApiSocialBlogPublicAuthorsForGetApiSocialBlogPublicAuthorsByHandleBySlugInput {
   handle: string;
   slug: string;
@@ -2136,6 +2517,9 @@ export const getApiSocialBlogPublicAuthorsForGetApiSocialBlogPublicAuthorsByHand
   requiresAuth: true,
 } as const;
 
+/**
+ * Global public blog index (published only), keyset-paged newest-first.
+ */
 export interface GetApiSocialBlogPublicPostsInput {
   query?: {
     beforePublishedAt?: string;
@@ -2151,6 +2535,9 @@ export const getApiSocialBlogPublicPostsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Public comments of a published post, oldest-first; unpublished/missing post → 404.
+ */
 export interface GetApiSocialBlogPublicPostsCommentsInput {
   id: string;
   query?: {
@@ -2167,6 +2554,9 @@ export const getApiSocialBlogPublicPostsCommentsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * View beacon: atomically increments the published post's counter; PerIp rate-limited.
+ */
 export interface PostApiSocialBlogPublicPostsViewsInput {
   id: string;
 }
@@ -2179,6 +2569,9 @@ export const postApiSocialBlogPublicPostsViewsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Resolves a possibly-stale (handle, slug) route to the canonical route, or 404.
+ */
 export interface GetApiSocialBlogPublicResolveInput {
   handle: string;
   slug: string;
@@ -2192,6 +2585,9 @@ export const getApiSocialBlogPublicResolveEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets discussions for specific content within a course
+ */
 export interface GetApiSocialCoursesContentDiscussionsInput {
   courseId: string;
   contentId: string;
@@ -2209,6 +2605,9 @@ export const getApiSocialCoursesContentDiscussionsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets discussions for a course
+ */
 export interface GetApiSocialCoursesDiscussionsInput {
   courseId: string;
   query?: {
@@ -2226,6 +2625,9 @@ export const getApiSocialCoursesDiscussionsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Likes a course
+ */
 export interface PostApiSocialCoursesLikeInput {
   courseId: string;
 }
@@ -2238,6 +2640,9 @@ export const postApiSocialCoursesLikeEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Unlikes a course
+ */
 export interface DeleteApiSocialCoursesLikeInput {
   courseId: string;
 }
@@ -2250,6 +2655,9 @@ export const deleteApiSocialCoursesLikeEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Checks if the current user has liked a course
+ */
 export interface GetApiSocialCoursesLikeCheckInput {
   courseId: string;
 }
@@ -2262,6 +2670,9 @@ export const getApiSocialCoursesLikeCheckEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets the like count for a course
+ */
 export interface GetApiSocialCoursesLikeCountInput {
   courseId: string;
 }
@@ -2274,6 +2685,9 @@ export const getApiSocialCoursesLikeCountEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets rating statistics for a course
+ */
 export interface GetApiSocialCoursesRatingStatsInput {
   courseId: string;
 }
@@ -2286,6 +2700,9 @@ export const getApiSocialCoursesRatingStatsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets all reviews for a course
+ */
 export interface GetApiSocialCoursesReviewsInput {
   courseId: string;
   query?: {
@@ -2303,6 +2720,9 @@ export const getApiSocialCoursesReviewsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Creates a new discussion thread
+ */
 export interface PostApiSocialDiscussionsInput {
   body?: Types.LearningExperienceSocialServicesCreateDiscussionInput;
 }
@@ -2315,6 +2735,9 @@ export const postApiSocialDiscussionsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets replies for a discussion
+ */
 export interface GetApiSocialDiscussionsRepliesInput {
   discussionId: string;
   query?: {
@@ -2331,6 +2754,9 @@ export const getApiSocialDiscussionsRepliesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Creates a reply to a discussion
+ */
 export interface PostApiSocialDiscussionsRepliesInput {
   discussionId: string;
   body?: Types.LearningExperienceSocialServicesCreateReplyInput;
@@ -2344,6 +2770,9 @@ export const postApiSocialDiscussionsRepliesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets a discussion by ID
+ */
 export interface GetApiSocialDiscussionsInput {
   id: string;
 }
@@ -2356,6 +2785,9 @@ export const getApiSocialDiscussionsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Deletes a discussion (owner only)
+ */
 export interface DeleteApiSocialDiscussionsInput {
   id: string;
 }
@@ -2368,6 +2800,9 @@ export const deleteApiSocialDiscussionsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Pins a discussion (instructor/admin only)
+ */
 export interface PostApiSocialDiscussionsPinInput {
   id: string;
 }
@@ -2380,6 +2815,9 @@ export const postApiSocialDiscussionsPinEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Marks a discussion as resolved
+ */
 export interface PostApiSocialDiscussionsResolveInput {
   id: string;
 }
@@ -2392,6 +2830,9 @@ export const postApiSocialDiscussionsResolveEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Unpins a discussion
+ */
 export interface PostApiSocialDiscussionsUnpinInput {
   id: string;
 }
@@ -2433,6 +2874,9 @@ export const postApiSocialFeedEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Dismisses a feed item
+ */
 export interface PostApiSocialFeedDismissInput {
   id: string;
 }
@@ -2469,6 +2913,9 @@ export const postApiSocialFeedReadEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Marks a feed item as viewed
+ */
 export interface PostApiSocialFeedViewedInput {
   id: string;
 }
@@ -2481,6 +2928,9 @@ export const postApiSocialFeedViewedEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets the current user's personalized feed
+ */
 export interface GetApiSocialFeedMeInput {
   query?: {
     skip?: number;
@@ -2497,6 +2947,9 @@ export const getApiSocialFeedMeEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Generates new feed items for the current user
+ */
 export type PostApiSocialFeedMeGenerateInput = void;
 export type PostApiSocialFeedMeGenerateOutput = number;
 export const postApiSocialFeedMeGenerateEndpoint = {
@@ -2738,6 +3191,9 @@ export const postApiSocialGroupsSuspendEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets the current user's liked courses
+ */
 export interface GetApiSocialLikesMeInput {
   query?: {
     skip?: number;
@@ -2943,6 +3399,9 @@ export const getApiSocialReactionsTargetEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Deletes a reply (owner only)
+ */
 export interface DeleteApiSocialRepliesInput {
   id: string;
 }
@@ -2955,6 +3414,9 @@ export const deleteApiSocialRepliesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Accepts a reply as the answer (discussion author only)
+ */
 export interface PostApiSocialRepliesAcceptInput {
   id: string;
 }
@@ -2967,6 +3429,9 @@ export const postApiSocialRepliesAcceptEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Upvotes a reply
+ */
 export interface PostApiSocialRepliesUpvoteInput {
   id: string;
 }
@@ -2979,6 +3444,9 @@ export const postApiSocialRepliesUpvoteEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Creates a new course review
+ */
 export interface PostApiSocialReviewsInput {
   body?: Types.LearningExperienceSocialServicesCreateReviewInput;
 }
@@ -2991,6 +3459,9 @@ export const postApiSocialReviewsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets a review by ID
+ */
 export interface GetApiSocialReviewsInput {
   id: string;
 }
@@ -3003,6 +3474,9 @@ export const getApiSocialReviewsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Deletes a review (owner only)
+ */
 export interface DeleteApiSocialReviewsInput {
   id: string;
 }
@@ -3015,6 +3489,9 @@ export const deleteApiSocialReviewsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Approves a review (admin only)
+ */
 export interface PostApiSocialReviewsApproveInput {
   id: string;
 }
@@ -3027,6 +3504,9 @@ export const postApiSocialReviewsApproveEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Features a review (admin only)
+ */
 export interface PostApiSocialReviewsFeatureInput {
   id: string;
 }
@@ -3039,6 +3519,9 @@ export const postApiSocialReviewsFeatureEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Marks a review as helpful
+ */
 export interface PostApiSocialReviewsHelpfulInput {
   id: string;
 }
@@ -3051,6 +3534,9 @@ export const postApiSocialReviewsHelpfulEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Updates review approval and storefront featured state.
+ */
 export interface PatchApiSocialReviewsModerationInput {
   id: string;
   body?: Types.LearningExperienceSocialControllersUpdateReviewModerationInput;
@@ -3064,6 +3550,9 @@ export const patchApiSocialReviewsModerationEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets the current user's reviews
+ */
 export interface GetApiSocialReviewsMeInput {
   query?: {
     skip?: number;
@@ -3161,6 +3650,9 @@ export const postApiSocialStoriesViewsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Adds a course to the current user's wishlist
+ */
 export interface PostApiSocialWishlistInput {
   courseId: string;
   query?: {
@@ -3177,6 +3669,9 @@ export const postApiSocialWishlistEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Removes a course from the current user's wishlist
+ */
 export interface DeleteApiSocialWishlistInput {
   courseId: string;
 }
@@ -3189,6 +3684,9 @@ export const deleteApiSocialWishlistEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Checks if a course is in the current user's wishlist
+ */
 export interface GetApiSocialWishlistCheckInput {
   courseId: string;
 }
@@ -3201,6 +3699,9 @@ export const getApiSocialWishlistCheckEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Updates wishlist notification preferences
+ */
 export interface PutApiSocialWishlistPreferencesInput {
   courseId: string;
   body?: Types.LearningExperienceSocialServicesWishlistPreferencesInput;
@@ -3214,6 +3715,9 @@ export const putApiSocialWishlistPreferencesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets the current user's wishlist
+ */
 export interface GetApiSocialWishlistMeInput {
   query?: {
     skip?: number;
@@ -3229,6 +3733,9 @@ export const getApiSocialWishlistMeEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get all TestingLab role templates
+ */
 export type GetApiTestingLabPermissionsRoleTemplatesInput = void;
 export type GetApiTestingLabPermissionsRoleTemplatesOutput = Array<Types.TestingLabTestingLabRoleTemplate>;
 export const getApiTestingLabPermissionsRoleTemplatesEndpoint = {
@@ -3239,6 +3746,9 @@ export const getApiTestingLabPermissionsRoleTemplatesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Create a new TestingLab role template
+ */
 export interface PostApiTestingLabPermissionsRoleTemplatesInput {
   body?: Types.TestingLabCreateTestingLabRoleInput;
 }
@@ -3251,6 +3761,9 @@ export const postApiTestingLabPermissionsRoleTemplatesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update an existing TestingLab role template
+ */
 export interface PutApiTestingLabPermissionsRoleTemplatesInput {
   idOrName: string;
   body?: Types.TestingLabUpdateTestingLabRoleInput;
@@ -3264,6 +3777,9 @@ export const putApiTestingLabPermissionsRoleTemplatesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Delete a TestingLab role template
+ */
 export interface DeleteApiTestingLabPermissionsRoleTemplatesInput {
   idOrName: string;
 }
@@ -3276,6 +3792,9 @@ export const deleteApiTestingLabPermissionsRoleTemplatesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Delete a TestingLab role template by name (legacy compatibility for clients that don't yet have Ids)
+ */
 export interface DeleteApiTestingLabPermissionsRoleTemplatesByNameInput {
   name: string;
 }
@@ -3288,6 +3807,9 @@ export const deleteApiTestingLabPermissionsRoleTemplatesByNameEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get TestingLab permissions for a specific user
+ */
 export interface GetApiTestingLabPermissionsUsersInput {
   userId: string;
   query?: {
@@ -3303,6 +3825,9 @@ export const getApiTestingLabPermissionsUsersEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Check if a user can perform an action on a TestingLab resource
+ */
 export interface GetApiTestingLabPermissionsUsersCheckInput {
   userId: string;
   resourceType: string;
@@ -3321,6 +3846,9 @@ export const getApiTestingLabPermissionsUsersCheckEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Grant permission to a specific TestingLab resource
+ */
 export interface PostApiTestingLabPermissionsUsersResourcesInput {
   userId: string;
   resourceType: string;
@@ -3336,6 +3864,9 @@ export const postApiTestingLabPermissionsUsersResourcesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Revoke permission from a specific TestingLab resource
+ */
 export interface DeleteApiTestingLabPermissionsUsersResourcesInput {
   userId: string;
   resourceType: string;
@@ -3354,6 +3885,9 @@ export const deleteApiTestingLabPermissionsUsersResourcesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Assign a TestingLab role to a user
+ */
 export interface PostApiTestingLabPermissionsUsersRolesInput {
   userId: string;
   body?: Types.TestingLabAssignTestingLabRoleInput;
@@ -3367,6 +3901,9 @@ export const postApiTestingLabPermissionsUsersRolesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Revoke a TestingLab role from a user
+ */
 export interface DeleteApiTestingLabPermissionsUsersRolesInput {
   userId: string;
   roleName: string;
@@ -3383,6 +3920,9 @@ export const deleteApiTestingLabPermissionsUsersRolesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get testing lab settings for the current tenant or global settings if no tenant context Creates default settings if none exist
+ */
 export type GetApiTestingLabSettingsInput = void;
 export type GetApiTestingLabSettingsOutput = Types.TestingLabTestingLabSettingsDto;
 export const getApiTestingLabSettingsEndpoint = {
@@ -3393,6 +3933,9 @@ export const getApiTestingLabSettingsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Create or update testing lab settings for the current tenant
+ */
 export interface PutApiTestingLabSettingsInput {
   body?: Types.TestingLabCreateTestingLabSettingsDto;
 }
@@ -3405,6 +3948,9 @@ export const putApiTestingLabSettingsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update testing lab settings for the current tenant (partial update)
+ */
 export interface PatchApiTestingLabSettingsInput {
   body?: Types.TestingLabUpdateTestingLabSettingsDto;
 }
@@ -3417,6 +3963,9 @@ export const patchApiTestingLabSettingsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Check if testing lab settings exist for the current tenant
+ */
 export type GetApiTestingLabSettingsExistsInput = void;
 export type GetApiTestingLabSettingsExistsOutput = boolean;
 export const getApiTestingLabSettingsExistsEndpoint = {
@@ -3427,6 +3976,9 @@ export const getApiTestingLabSettingsExistsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Reset testing lab settings to default values for the current tenant
+ */
 export type PostApiTestingLabSettingsResetInput = void;
 export type PostApiTestingLabSettingsResetOutput = Types.TestingLabTestingLabSettingsDto;
 export const postApiTestingLabSettingsResetEndpoint = {
@@ -4643,6 +5195,9 @@ export const postAdminEconomyTreasuryWithdrawalsReconcileEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Checks if a user has a specific permission on a resource.
+ */
 export interface GetAuthorizationResourcesHasPermissionInput {
   resourceType: string;
   resourceId: string;
@@ -4661,6 +5216,9 @@ export const getAuthorizationResourcesHasPermissionEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets all effective permissions for a user on a specific resource.
+ */
 export interface GetAuthorizationResourcesPermissionsInput {
   resourceType: string;
   resourceId: string;
@@ -4678,6 +5236,9 @@ export const getAuthorizationResourcesPermissionsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets all users who have access to a specific resource.
+ */
 export interface GetAuthorizationResourcesUsersInput {
   resourceType: string;
   resourceId: string;
@@ -4696,6 +5257,9 @@ export const getAuthorizationResourcesUsersEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets a specific invitation if it is visible to the current user.
+ */
 export interface GetAuthorizationResourcesInvitationsInput {
   invitationId: string;
 }
@@ -4708,6 +5272,9 @@ export const getAuthorizationResourcesInvitationsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Revokes a pending invitation.
+ */
 export interface DeleteAuthorizationResourcesInvitationsInput {
   invitationId: string;
 }
@@ -4720,6 +5287,9 @@ export const deleteAuthorizationResourcesInvitationsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Accepts an invitation addressed to the current user.
+ */
 export interface PostAuthorizationResourcesInvitationsAcceptInput {
   invitationId: string;
 }
@@ -4732,6 +5302,9 @@ export const postAuthorizationResourcesInvitationsAcceptEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Declines an invitation addressed to the current user.
+ */
 export interface PostAuthorizationResourcesInvitationsDeclineInput {
   invitationId: string;
   body?: Types.IdentityAuthorizationDeclineInvitationInput;
@@ -4745,6 +5318,9 @@ export const postAuthorizationResourcesInvitationsDeclineEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets all pending invitations addressed to the current user.
+ */
 export type GetAuthorizationResourcesInvitationsPendingInput = void;
 export type GetAuthorizationResourcesInvitationsPendingOutput = Types.IdentityAuthorizationGetPendingResourceInvitationsOutput;
 export const getAuthorizationResourcesInvitationsPendingEndpoint = {
@@ -4755,6 +5331,9 @@ export const getAuthorizationResourcesInvitationsPendingEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Shares a resource with one or more users by granting them permissions.
+ */
 export interface PostAuthorizationResourcesShareInput {
   body?: Types.IdentityAuthorizationShareResourceCommand;
 }
@@ -4767,6 +5346,9 @@ export const postAuthorizationResourcesShareEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Removes all access for a user on a specific resource.
+ */
 export interface DeleteAuthorizationResourcesUsersAccessInput {
   body?: Types.IdentityAuthorizationRemoveUserAccessCommand;
 }
@@ -4779,6 +5361,9 @@ export const deleteAuthorizationResourcesUsersAccessEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Updates a specific user's permissions on a resource.
+ */
 export interface PutAuthorizationResourcesUsersPermissionsInput {
   body?: Types.IdentityAuthorizationUpdateUserPermissionsCommand;
 }
@@ -4791,6 +5376,9 @@ export const putAuthorizationResourcesUsersPermissionsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Checks if a user has a specific tenant-level permission.
+ */
 export interface GetAuthorizationTenantsHasPermissionInput {
   tenantId: string;
   query?: {
@@ -4807,6 +5395,9 @@ export const getAuthorizationTenantsHasPermissionEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets all tenant-level permissions for a user.
+ */
 export interface GetAuthorizationTenantsPermissionsInput {
   tenantId: string;
   query?: {
@@ -4823,6 +5414,9 @@ export const getAuthorizationTenantsPermissionsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Sets tenant default permissions applied to all users in a tenant.
+ */
 export interface PostAuthorizationTenantsDefaultsInput {
   body?: Types.IdentityAuthorizationSetTenantDefaultPermissionsCommand;
 }
@@ -4835,6 +5429,9 @@ export const postAuthorizationTenantsDefaultsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Denies tenant-level permissions for a user (DENY-WINS).
+ */
 export interface PostAuthorizationTenantsDenyInput {
   body?: Types.IdentityAuthorizationDenyTenantPermissionCommand;
 }
@@ -4847,6 +5444,9 @@ export const postAuthorizationTenantsDenyEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Removes deny entries from a user's permissions.
+ */
 export interface PostAuthorizationTenantsDenyRemoveInput {
   body?: Types.IdentityAuthorizationRemoveDenyPermissionsCommand;
 }
@@ -4859,6 +5459,9 @@ export const postAuthorizationTenantsDenyRemoveEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Sets global default permissions applied to all users.
+ */
 export interface PostAuthorizationTenantsGlobalDefaultsInput {
   body?: Types.IdentityAuthorizationSetGlobalDefaultPermissionsCommand;
 }
@@ -4871,6 +5474,9 @@ export const postAuthorizationTenantsGlobalDefaultsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Grants tenant-level permissions to a user.
+ */
 export interface PostAuthorizationTenantsGrantInput {
   body?: Types.IdentityAuthorizationGrantTenantPermissionCommand;
 }
@@ -4883,6 +5489,9 @@ export const postAuthorizationTenantsGrantEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Revokes tenant-level permissions from a user.
+ */
 export interface PostAuthorizationTenantsRevokeInput {
   body?: Types.IdentityAuthorizationRevokeTenantPermissionCommand;
 }
@@ -5100,9 +5709,12 @@ export const postBillingSubscriptionsRenewEndpoint = {
 } as const;
 
 /**
- * Handle Apple Pay webhook events for transaction notifications
+ * Handle Apple Pay webhook events
  *
- * Processes Apple Pay webhook notifications for payment completions and transaction status updates.
+ * Processes Apple Pay webhook notifications for payment processing and transaction updates.
+ * Required Headers:
+ * - Apple-Pay-Merchant-Id: Merchant identifier for validation
+ * - Apple-Pay-Signature: Signature for webhook verification
  */
 export type PostBillingWebhooksApplePayInput = void;
 export type PostBillingWebhooksApplePayOutput = Record<string, unknown>;
@@ -5117,7 +5729,22 @@ export const postBillingWebhooksApplePayEndpoint = {
 /**
  * Handle Google Pay webhook events for transaction notifications
  *
- * Processes Google Pay webhook notifications for payment processing, subscription billing, and transaction status updates. Google Pay webhooks provide real-time notifications for payment completions, failures, refunds, and subscription lifecycle events.
+ * Processes Google Pay webhook notifications for payment processing, subscription billing,
+ * and transaction status updates. Google Pay webhooks provide real-time notifications for
+ * payment completions, failures, refunds, and subscription lifecycle events.
+ * Google Pay webhook events include:
+ * - Payment authorization and capture events
+ * - Subscription creation and renewal notifications
+ * - Refund and chargeback notifications
+ * - Payment method updates and changes
+ * - Account and billing profile modifications
+ * Authentication and Security:
+ * - Google Pay webhooks use JWT-based authentication
+ * - Webhook signatures should be verified using Google's public keys
+ * - Payload verification ensures event authenticity and prevents replay attacks
+ * Required Headers:
+ * - Authorization: Bearer token for webhook authentication
+ * - Google-Cloud-Project-Id: Project identifier for multi-tenant validation
  */
 export type PostBillingWebhooksGooglePayInput = void;
 export type PostBillingWebhooksGooglePayOutput = Record<string, unknown>;
@@ -5132,7 +5759,10 @@ export const postBillingWebhooksGooglePayEndpoint = {
 /**
  * Handle PayPal IPN (Instant Payment Notification) webhook events
  *
- * Processes PayPal Instant Payment Notification (IPN) webhook events for subscription billing, payment confirmations, and account updates. PayPal IPN provides real-time transaction status updates and subscription lifecycle management for PayPal-based billing integrations.
+ * Processes PayPal Instant Payment Notification (IPN) webhook events for subscription billing,
+ * payment confirmations, and account updates. PayPal IPN provides real-time transaction status
+ * updates and subscription lifecycle management for PayPal-based billing integrations.
+ * Note: PayPal IPN requires additional verification by sending the payload back to PayPal for validation.
  */
 export type PostBillingWebhooksPaypalInput = void;
 export type PostBillingWebhooksPaypalOutput = Record<string, unknown>;
@@ -5147,7 +5777,11 @@ export const postBillingWebhooksPaypalEndpoint = {
 /**
  * Handle Stripe webhook events with signature verification
  *
- * Processes Stripe webhook notifications with enhanced security through signature verification. Handles subscription lifecycle events, payment confirmations, invoice updates, and customer changes. Stripe signatures are verified using the webhook signing secret to ensure event authenticity.
+ * Processes Stripe webhook notifications with enhanced security through signature verification.
+ * Handles subscription lifecycle events, payment confirmations, invoice updates, and customer changes.
+ * Stripe signatures are verified using the webhook signing secret to ensure event authenticity.
+ * Required Headers:
+ * - Stripe-Signature: The signature provided by Stripe for webhook verification
  */
 export type PostBillingWebhooksStripeInput = void;
 export type PostBillingWebhooksStripeOutput = Record<string, unknown>;
@@ -5162,7 +5796,15 @@ export const postBillingWebhooksStripeEndpoint = {
 /**
  * Retrieve webhook event details by event ID
  *
- * Retrieves detailed information about a specific webhook event for debugging and monitoring purposes. Shows event payload, processing status, timestamps, and any error messages. Useful for troubleshooting webhook processing issues and verifying event delivery.
+ * Retrieves detailed information about a specific webhook event for debugging and monitoring purposes.
+ * Shows event payload, processing status, timestamps, and any error messages.
+ * Useful for troubleshooting webhook processing issues and verifying event delivery.
+ * Response includes:
+ * - Event ID and timestamp
+ * - Original webhook payload
+ * - Processing status and results
+ * - Error messages (if any)
+ * - Provider information
  */
 export interface GetBillingWebhooksWebhookEventsInput {
   eventId: string;
@@ -5179,7 +5821,15 @@ export const getBillingWebhooksWebhookEventsEndpoint = {
 /**
  * Retry failed webhook event processing
  *
- * Manually retries processing of a previously failed webhook event. Useful for handling temporary failures such as downstream service unavailability, network timeouts, or transient processing errors. The retry operation uses the original event payload and applies current business logic.
+ * Manually retries processing of a previously failed webhook event. Useful for handling temporary failures
+ * such as downstream service unavailability, network timeouts, or transient processing errors.
+ * The retry operation uses the original event payload and applies current business logic.
+ * Common retry scenarios:
+ * - Temporary network connectivity issues
+ * - Downstream service unavailability
+ * - Database connection timeouts
+ * - Rate limiting from external services
+ * Note: Only failed events can be retried. Successfully processed events will return an error.
  */
 export interface PostBillingWebhooksWebhookEventsRetryInput {
   eventId: string;
@@ -5585,6 +6235,9 @@ export const getEconomyWalletTransactionsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets dead-lettered notifications (newest first), filterable by notification type and recipient email
+ */
 export interface GetEmailDeliveryDeadlettersInput {
   query?: {
     skip?: number;
@@ -5602,6 +6255,9 @@ export const getEmailDeliveryDeadlettersEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets the delivery event feed (newest first), filterable by event type, recipient email and provider message id
+ */
 export interface GetEmailDeliveryEmailEventsInput {
   query?: {
     skip?: number;
@@ -5620,6 +6276,9 @@ export const getEmailDeliveryEmailEventsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Requeues a dead-lettered notification for another delivery attempt
+ */
 export interface PostEmailDeliveryNotificationsRequeueInput {
   id: string;
 }
@@ -5632,6 +6291,9 @@ export const postEmailDeliveryNotificationsRequeueEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets the delivery timeline of a notification (its provider events, oldest first); empty when the row has no provider correlation id
+ */
 export interface GetEmailDeliveryNotificationsTimelineInput {
   id: string;
 }
@@ -5644,6 +6306,9 @@ export const getEmailDeliveryNotificationsTimelineEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets suppressions (newest first); active-only unless includeReleased is true
+ */
 export interface GetEmailDeliverySuppressionsInput {
   query?: {
     skip?: number;
@@ -5660,6 +6325,9 @@ export const getEmailDeliverySuppressionsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Releases the active suppression for an address (admin unsuppress). Idempotent: returns 200 when no active suppression exists.
+ */
 export interface DeleteEmailDeliverySuppressionsInput {
   email: string;
 }
@@ -5693,7 +6361,7 @@ export const postIntegrationsEconomySumsubWebhookEndpoint = {
 } as const;
 
 /**
- * SES email delivery events webhook (public, SNS signature-verified)
+ * Receives SNS notifications for SES delivery events (send, delivery, bounce, complaint, open)
  */
 export type PostNotificationsEmailEventsInput = void;
 export type PostNotificationsEmailEventsOutput = void;
@@ -5748,7 +6416,7 @@ export const postNotificationsSubscriptionsResendEndpoint = {
 } as const;
 
 /**
- * One-click unsubscribe (public, signed token)
+ * Processes a one-click unsubscribe: mutes a type, disables a category, or turns off email entirely
  */
 export interface GetNotificationsUnsubscribeInput {
   query?: {
@@ -5767,7 +6435,26 @@ export const getNotificationsUnsubscribeEndpoint = {
 /**
  * Retrieve all payment transactions with optional filtering
  *
- * Retrieves a paginated list of all payment transactions with support for filtering by tenant, status, and date range. This is the primary endpoint for payment administration and reporting.
+ * Retrieves a paginated list of all payment transactions with support for filtering by tenant, status,
+ * and date range. This is the primary endpoint for payment administration and reporting.
+ * Supported status filters:
+ * - pending: Payments currently being processed
+ * - completed: Successfully processed payments
+ * - failed: Payments that encountered errors
+ * - cancelled: Payments cancelled before completion
+ * - refunded: Payments that have been refunded
+ * Query Parameters:
+ * - tenantId: Filter payments for specific tenant
+ * - status: Filter by payment status
+ * - startDate: Include payments from this date onwards (ISO 8601 format)
+ * - endDate: Include payments up to this date (ISO 8601 format)
+ * - page: Pagination page number (1-based)
+ * - pageSize: Items per page (1-100)
+ * Use cases:
+ * - Financial reporting and reconciliation
+ * - Payment monitoring and analytics
+ * - Administrative payment management
+ * - Audit trail generation
  */
 export interface GetPaymentsInput {
   query?: {
@@ -5791,7 +6478,21 @@ export const getPaymentsEndpoint = {
 /**
  * Process a new payment transaction
  *
- * Initiates a new payment transaction for a subscription. This endpoint handles the complete payment processing workflow including payment method validation, amount verification, and transaction execution. Returns the payment result immediately with a transaction ID that can be used to track payment status.
+ * Initiates a new payment transaction for a subscription. This endpoint handles the complete payment
+ * processing workflow including payment method validation, amount verification, and transaction execution.
+ * Returns the payment result immediately with a transaction ID that can be used to track payment status.
+ * Processing workflow:
+ * 1. Validate payment method and amount
+ * 2. Verify subscription and tenant information
+ * 3. Process payment through configured payment gateway
+ * 4. Update subscription status based on result
+ * 5. Generate transaction record
+ * Request body must include:
+ * - TenantId: Organization identifier
+ * - SubscriptionId: Target subscription
+ * - Amount: Payment amount in base currency units
+ * - PaymentMethodId: Stripe payment method identifier starting with pm_
+ * Returns CreatedAtRoute with payment details for successful transactions.
  */
 export interface PostPaymentsInput {
   body?: Types.CommercePaymentsPaymentsControllerProcessPaymentInput;
@@ -5808,7 +6509,16 @@ export const postPaymentsEndpoint = {
 /**
  * Retrieve a specific payment by its unique identifier
  *
- * Retrieves detailed information about a specific payment transaction, including its current status, amount, payment method, and processing details. Use this endpoint to track payment progress and verify transaction completion.
+ * Retrieves detailed information about a specific payment transaction, including its current status,
+ * amount, payment method, and processing details. Use this endpoint to track payment progress
+ * and verify transaction completion.
+ * Response includes:
+ * - Payment ID and transaction details
+ * - Current payment status (pending, completed, failed, etc.)
+ * - Payment method information
+ * - Amount and currency
+ * - Timestamps for creation and updates
+ * - Associated subscription and tenant information
  */
 export interface GetPaymentByIdInput {
   paymentId: string;
@@ -5825,7 +6535,31 @@ export const getPaymentByIdEndpoint = {
 /**
  * Cancel a payment transaction
  *
- * Cancels a payment transaction that is in progress or pending. Custom action per Google API guidelines. Once canceled, a payment cannot be processed and may require a new payment attempt.
+ * Cancels a payment transaction that is in progress or pending. This endpoint can be used to
+ * cancel payments before they are processed, or to handle user-initiated cancellations during checkout.
+ * Once canceled, a payment cannot be processed and may require a new payment attempt.
+ * Cancellation scenarios:
+ * - User abandons checkout process
+ * - Administrative cancellation
+ * - Fraud prevention trigger
+ * - Duplicate transaction prevention
+ * - Session timeout or expiration
+ * - Payment method validation failure
+ * Cancellation handling:
+ * - Updates payment status to "canceled"
+ * - Records cancellation reason and timestamp
+ * - Releases any held resources or reservations
+ * - Notifies relevant systems of cancellation
+ * - Provides audit trail for investigation
+ * Request body options:
+ * - CancellationReason: Required reason for audit trail
+ * - CanceledBy: Optional user ID for tracking
+ * - Notes: Optional additional context
+ * Important notes:
+ * - Only pending or processing payments can be canceled
+ * - Completed payments cannot be canceled (use refund instead)
+ * - Cancellation is immediate and irreversible
+ * - Some payment methods may have specific cancellation rules
  */
 export interface PostPaymentsCancelInput {
   paymentId: string;
@@ -5843,7 +6577,23 @@ export const postPaymentsCancelEndpoint = {
 /**
  * Process a refund for a completed payment
  *
- * Processes a full or partial refund for a completed payment. Custom action per Google API guidelines. Refunds are processed back to the original payment method.
+ * Processes a full or partial refund for a previously completed payment transaction.
+ * If no amount is specified, a full refund will be processed. The refund reason is optional
+ * but recommended for record keeping and customer service purposes. Refunds are processed
+ * back to the original payment method and may take several business days to appear.
+ * Refund types:
+ * - Full refund: Refunds the entire payment amount
+ * - Partial refund: Refunds a specified portion of the payment
+ * Request body options:
+ * - Amount: Specific refund amount (null for full refund)
+ * - Reason: Optional reason for audit and customer service
+ * Processing notes:
+ * - Refunds are processed to the original payment method
+ * - Processing time varies by payment processor (2-10 business days)
+ * - Refund fees may apply depending on payment method
+ * - Only successful payments can be refunded
+ * - Multiple partial refunds allowed up to original amount
+ * Response includes refund ID for tracking and customer communication.
  */
 export interface PostPaymentsRefundInput {
   paymentId: string;
@@ -5861,7 +6611,22 @@ export const postPaymentsRefundEndpoint = {
 /**
  * Retry a failed payment transaction
  *
- * Retries a failed payment using the original payment method. Custom action per Google API guidelines. Creates a new transaction attempt while maintaining the link to the original payment record.
+ * Attempts to reprocess a previously failed payment transaction using the same payment method and amount.
+ * This is useful when payments fail due to temporary issues like network problems or insufficient funds
+ * that have since been resolved. The retry operation creates a new transaction attempt while maintaining
+ * the link to the original payment record.
+ * Retry scenarios:
+ * - Temporary network connectivity issues resolved
+ * - Insufficient funds now available
+ * - Payment gateway was temporarily unavailable
+ * - Rate limiting issues have cleared
+ * - Card issuer temporary restrictions lifted
+ * Important notes:
+ * - Only failed payments can be retried
+ * - Successful payments will return a 400 Bad Request
+ * - Retry preserves original payment details
+ * - New transaction ID is generated for the retry attempt
+ * - Original payment record maintains audit trail
  */
 export interface PostPaymentsRetryInput {
   paymentId: string;
@@ -5876,7 +6641,7 @@ export const postPaymentsRetryEndpoint = {
 } as const;
 
 /**
- * Create a Stripe SetupIntent for subscription checkout
+ * Creates a Stripe SetupIntent for a subscription checkout.
  *
  * Creates or reuses a Stripe customer for the subscription and returns a SetupIntent client secret for PaymentElement-based card collection.
  */
@@ -5893,7 +6658,7 @@ export const postPaymentsSetupIntentsEndpoint = {
 } as const;
 
 /**
- * Complete subscription checkout after setup confirmation
+ * Completes a subscription checkout after Stripe confirms the SetupIntent.
  *
  * Sets the confirmed Stripe payment method as the customer's default and processes the first subscription charge.
  */
@@ -5909,6 +6674,9 @@ export const postPaymentsSubscriptionCheckoutsCompleteEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Calculate tax for a transaction
+ */
 export interface PostPaymentsTaxCalculateInput {
   body?: Types.CommercePaymentsCalculateTaxInput;
 }
@@ -5922,7 +6690,7 @@ export const postPaymentsTaxCalculateEndpoint = {
 } as const;
 
 /**
- * Validate tax exemption
+ * Validate a tax exemption
  *
  * Validates whether a tax exemption certificate or status is valid for a given transaction.
  */
@@ -5939,7 +6707,7 @@ export const postPaymentsTaxValidateExemptionEndpoint = {
 } as const;
 
 /**
- * Validate tax exemption
+ * Validate a tax exemption
  *
  * Validates whether a tax exemption certificate or status is valid for a given transaction.
  */
@@ -5955,6 +6723,9 @@ export const postPaymentsTaxValidateVatEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get paginated list of public posts
+ */
 export interface GetPostsForGetPostsInput {
   query?: {
     skip?: number;
@@ -5970,6 +6741,9 @@ export const getPostsForGetPostsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Create a new post
+ */
 export interface PostPostsInput {
   body?: Types.SocialPostsControllersCreatePostInput;
 }
@@ -5982,6 +6756,9 @@ export const postPostsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get a single post by ID
+ */
 export interface GetPostsForGetPostsByPostIdInput {
   postId: string;
 }
@@ -5994,6 +6771,9 @@ export const getPostsForGetPostsByPostIdEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update a post
+ */
 export interface PutPostsInput {
   postId: string;
   body?: Types.SocialPostsControllersUpdatePostInput;
@@ -6007,6 +6787,9 @@ export const putPostsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Delete a post
+ */
 export interface DeletePostsInput {
   postId: string;
 }
@@ -6019,6 +6802,9 @@ export const deletePostsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get comments for a post
+ */
 export interface GetPostsCommentsInput {
   postId: string;
   query?: {
@@ -6036,6 +6822,9 @@ export const getPostsCommentsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Add a comment to a post
+ */
 export interface PostPostsCommentsInput {
   postId: string;
   body?: Types.SocialPostsControllersAddCommentInput;
@@ -6049,6 +6838,9 @@ export const postPostsCommentsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update a comment
+ */
 export interface PutPostsCommentsInput {
   postId: string;
   commentId: string;
@@ -6063,6 +6855,9 @@ export const putPostsCommentsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Delete a comment
+ */
 export interface DeletePostsCommentsInput {
   postId: string;
   commentId: string;
@@ -6076,6 +6871,9 @@ export const deletePostsCommentsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Check if current user is following a post
+ */
 export interface GetPostsFollowInput {
   postId: string;
 }
@@ -6088,6 +6886,9 @@ export const getPostsFollowEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Follow a post for notifications
+ */
 export interface PostPostsFollowInput {
   postId: string;
   body?: Types.SocialPostsControllersFollowPostInput;
@@ -6101,6 +6902,9 @@ export const postPostsFollowEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Unfollow a post
+ */
 export interface DeletePostsFollowInput {
   postId: string;
 }
@@ -6113,6 +6917,9 @@ export const deletePostsFollowEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Toggle like on a post
+ */
 export interface PostPostsLikeInput {
   postId: string;
   query?: {
@@ -6128,6 +6935,9 @@ export const postPostsLikeEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Toggle pin on a post (author only)
+ */
 export interface PostPostsPinInput {
   postId: string;
 }
@@ -6140,6 +6950,9 @@ export const postPostsPinEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Repost a public post once for the current user
+ */
 export interface PostPostsRepostsInput {
   postId: string;
   body?: Types.SocialPostsControllersCreateRepostInput;
@@ -6153,6 +6966,9 @@ export const postPostsRepostsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Record a share of the post
+ */
 export interface PostPostsShareInput {
   postId: string;
 }
@@ -6165,6 +6981,9 @@ export const postPostsShareEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get statistics for a post
+ */
 export interface GetPostsStatisticsInput {
   postId: string;
 }
@@ -6177,6 +6996,9 @@ export const getPostsStatisticsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get tags for a post
+ */
 export interface GetPostsTagsInput {
   postId: string;
 }
@@ -6189,6 +7011,9 @@ export const getPostsTagsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Record a view of the post
+ */
 export interface PostPostsViewInput {
   postId: string;
 }
@@ -6201,6 +7026,9 @@ export const postPostsViewEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get posts by a specific author
+ */
 export interface GetPostsAuthorInput {
   authorId: string;
   query?: {
@@ -6217,6 +7045,9 @@ export const getPostsAuthorEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get posts for the current user's feed
+ */
 export interface GetPostsFeedInput {
   query?: {
     skip?: number;
@@ -6232,6 +7063,9 @@ export const getPostsFeedEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get current user's posts
+ */
 export interface GetPostsMyInput {
   query?: {
     skip?: number;
@@ -6247,6 +7081,9 @@ export const getPostsMyEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Search posts by content
+ */
 export interface GetPostsSearchInput {
   query?: {
     q?: string;
@@ -6263,6 +7100,9 @@ export const getPostsSearchEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get popular tags
+ */
 export interface GetPostsTagsPopularInput {
   query?: {
     count?: number;
@@ -6277,6 +7117,9 @@ export const getPostsTagsPopularEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Search posts by tags
+ */
 export interface GetPostsTagsSearchInput {
   query?: {
     tags?: Array<string>;
@@ -6293,6 +7136,9 @@ export const getPostsTagsSearchEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get trending posts
+ */
 export interface GetPostsTrendingInput {
   query?: {
     skip?: number;
@@ -6329,6 +7175,9 @@ export const getReportsChurnEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Record a service level indicator metric.
+ */
 export interface PostSlaSlisInput {
   body?: Types.MonitoringSLARecordSliMetricCommand;
 }
@@ -6341,6 +7190,9 @@ export const postSlaSlisEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get all service level objectives with optional filtering.
+ */
 export interface GetSlaSlosForGetSlaSlosInput {
   query?: {
     tenantId?: string;
@@ -6359,6 +7211,9 @@ export const getSlaSlosForGetSlaSlosEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Create a new service level objective.
+ */
 export interface PostSlaSlosInput {
   body?: Types.MonitoringSLACreateSloCommand;
 }
@@ -6371,6 +7226,9 @@ export const postSlaSlosEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get a service level objective by ID.
+ */
 export interface GetSlaSlosForGetSlaSlosByIdInput {
   id: string;
 }
@@ -6383,6 +7241,9 @@ export const getSlaSlosForGetSlaSlosByIdEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update an existing service level objective.
+ */
 export interface PutSlaSlosInput {
   id: string;
   body?: Types.MonitoringSLAUpdateSloCommand;
@@ -6396,6 +7257,9 @@ export const putSlaSlosEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Delete a service level objective.
+ */
 export interface DeleteSlaSlosInput {
   id: string;
 }
@@ -6408,6 +7272,9 @@ export const deleteSlaSlosEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get compliance information for an SLO over a time period.
+ */
 export interface GetSlaSlosComplianceInput {
   id: string;
   query?: {
@@ -6424,6 +7291,9 @@ export const getSlaSlosComplianceEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get error budget information for an SLO.
+ */
 export interface GetSlaSlosErrorBudgetInput {
   id: string;
 }
@@ -6436,6 +7306,9 @@ export const getSlaSlosErrorBudgetEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get SLO violations with optional filtering.
+ */
 export interface GetSlaViolationsInput {
   query?: {
     sloId?: string;
@@ -6456,6 +7329,9 @@ export const getSlaViolationsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Resolve an SLO violation.
+ */
 export interface PostSlaViolationsResolveInput {
   id: string;
   body?: Types.MonitoringSLAResolveSloViolationCommand;
@@ -6799,7 +7675,7 @@ export const getSubscriptionsForGetSubscriptionsBySubscriptionIdEndpoint = {
 } as const;
 
 /**
- * Full update subscription
+ * Full update of a subscription
  *
  * Performs a full replacement of subscription data. All fields will be updated.
  */
@@ -6817,7 +7693,7 @@ export const putSubscriptionsEndpoint = {
 } as const;
 
 /**
- * Delete subscription
+ * Delete a subscription
  *
  * Permanently deletes a subscription. Use cancel action for soft removal.
  */
@@ -6834,7 +7710,7 @@ export const deleteSubscriptionsEndpoint = {
 } as const;
 
 /**
- * Partially update subscription
+ * Partially update a subscription
  *
  * Updates specific fields of a subscription. Only provided fields are updated.
  */
@@ -7028,7 +7904,7 @@ export const postSubscriptionsRenewEndpoint = {
 } as const;
 
 /**
- * Resume subscription billing
+ * Resume paused subscription billing
  *
  * Resumes billing for a paused subscription.
  */
@@ -7153,6 +8029,9 @@ export const getSubscriptionsUsageEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get all tax jurisdictions
+ */
 export type GetTaxJurisdictionsForGetTaxJurisdictionsInput = void;
 export type GetTaxJurisdictionsForGetTaxJurisdictionsOutput = Array<Types.CommercePaymentsTaxRate>;
 export const getTaxJurisdictionsForGetTaxJurisdictionsEndpoint = {
@@ -7164,7 +8043,7 @@ export const getTaxJurisdictionsForGetTaxJurisdictionsEndpoint = {
 } as const;
 
 /**
- * Create tax jurisdiction
+ * Create a new tax jurisdiction
  *
  * Creates a new tax jurisdiction with the provided information.
  */
@@ -7198,7 +8077,7 @@ export const getTaxJurisdictionsForGetTaxJurisdictionsByJurisdictionIdEndpoint =
 } as const;
 
 /**
- * Delete tax jurisdiction
+ * Delete a tax jurisdiction
  *
  * Deletes a tax jurisdiction by ID.
  */
@@ -7215,7 +8094,7 @@ export const deleteTaxJurisdictionsEndpoint = {
 } as const;
 
 /**
- * Partially update tax jurisdiction
+ * Partially update a tax jurisdiction
  *
  * Updates specific fields of a tax jurisdiction.
  */
@@ -7232,6 +8111,9 @@ export const patchTaxJurisdictionsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get tax rules for a jurisdiction
+ */
 export interface GetTaxRulesForGetTaxRulesInput {
   query?: {
     jurisdictionCode?: string;
@@ -7249,7 +8131,7 @@ export const getTaxRulesForGetTaxRulesEndpoint = {
 } as const;
 
 /**
- * Create tax rule
+ * Create a new tax rule
  *
  * Creates a new tax rule with the provided information.
  */
@@ -7283,7 +8165,7 @@ export const getTaxRulesForGetTaxRulesByRuleIdEndpoint = {
 } as const;
 
 /**
- * Delete tax rule
+ * Delete a tax rule
  *
  * Deletes a tax rule by ID.
  */
@@ -7300,7 +8182,7 @@ export const deleteTaxRulesEndpoint = {
 } as const;
 
 /**
- * Partially update tax rule
+ * Partially update a tax rule
  *
  * Updates specific fields of a tax rule.
  */
@@ -7317,6 +8199,9 @@ export const patchTaxRulesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Calculate tax for a transaction
+ */
 export interface PostTaxesCalculateInput {
   body?: Types.CommercePaymentsCalculateTaxInput;
 }
@@ -7330,7 +8215,7 @@ export const postTaxesCalculateEndpoint = {
 } as const;
 
 /**
- * Validate tax exemption
+ * Validate a tax exemption
  *
  * Validates whether a tax exemption certificate or status is valid for a given transaction.
  */
@@ -7347,7 +8232,7 @@ export const postTaxesValidateExemptionEndpoint = {
 } as const;
 
 /**
- * Validate tax exemption
+ * Validate a tax exemption
  *
  * Validates whether a tax exemption certificate or status is valid for a given transaction.
  */
@@ -7563,6 +8448,15 @@ export const getWalletsAuditLogEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Serve asset content with path-based token (CDN-friendly).
+ *
+ * URL format: /assets/{referenceId}/{token}
+ * This format is more CDN-friendly than query-string tokens because:
+ * - Path-based URLs are consistently cached
+ * - No query string parsing issues
+ * - Works with CDNs that strip query strings
+ */
 export interface GetAssetsForGetAssetsByReferenceIdByTokenInput {
   referenceId: string;
   token: string;
@@ -7576,6 +8470,13 @@ export const getAssetsForGetAssetsByReferenceIdByTokenEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Serve ephemeral asset (short-lived URL with embedded reference).
+ *
+ * URL format: /e/{token}
+ * The token contains the encrypted asset reference ID and expiration.
+ * Useful for temporary share links and secure downloads.
+ */
 export interface GetEInput {
   token: string;
 }
@@ -7589,9 +8490,16 @@ export const getEEndpoint = {
 } as const;
 
 /**
- * Comprehensive application health check
+ * Comprehensive health check endpoint for application monitoring
  *
- * Performs a comprehensive health check of all registered services and dependencies. Returns detailed status information for monitoring systems, load balancers, and orchestration platforms.
+ * Performs a comprehensive health check of all registered services and dependencies including:
+ * - Database connectivity
+ * - External service availability
+ * - Cache systems (Redis, etc.)
+ * - Message queues
+ * - File systems
+ * Returns HTTP 200 when all checks are healthy, HTTP 503 when any check fails.
+ * Used by monitoring systems, load balancers, and orchestration platforms to determine application health.
  */
 export type GetHealthInput = void;
 export type GetHealthOutput = Types.APIControllersHealthinessOutput;
@@ -7604,9 +8512,20 @@ export const getHealthEndpoint = {
 } as const;
 
 /**
- * Detailed dependency health check
+ * Get detailed dependency health status
  *
- * Provides comprehensive health status of all external dependencies including databases, APIs, caches, and message queues.
+ * Provides detailed health information for all registered external dependencies including:
+ * - Database connections (PostgreSQL, Redis, etc.)
+ * - External APIs and services
+ * - Message queues
+ * - File storage systems
+ * - Cache systems
+ *
+ * Each dependency includes:
+ * - Current status (Healthy, Degraded, Unhealthy)
+ * - Response time
+ * - Connection details (sanitized)
+ * - Error information if unhealthy
  */
 export type GetHealthDependenciesInput = void;
 export type GetHealthDependenciesOutput = Types.APIControllersDependencyHealthOutput;
@@ -7619,9 +8538,19 @@ export const getHealthDependenciesEndpoint = {
 } as const;
 
 /**
- * Application information endpoint
+ * Get application information including version and build details
  *
- * Provides application version, build details, and runtime information for debugging and deployment monitoring.
+ * Provides comprehensive application information for debugging and monitoring:
+ * - Application name and version
+ * - Build timestamp and commit hash (if available)
+ * - Runtime and framework versions
+ * - Environment information
+ * - Feature flags and configuration (non-sensitive)
+ *
+ * Useful for:
+ * - Debugging version mismatches
+ * - Monitoring deployments
+ * - Correlating logs with specific builds
  */
 export type GetInfoInput = void;
 export type GetInfoOutput = Types.APIControllersApplicationInfoOutput;
@@ -7634,9 +8563,20 @@ export const getInfoEndpoint = {
 } as const;
 
 /**
- * Liveness probe for container restart decisions
+ * Kubernetes-style liveness probe for container restart decisions
  *
- * Kubernetes-style liveness probe that indicates whether the application process is running correctly. Used by orchestration platforms to determine if containers should be restarted.
+ * Liveness probes determine whether the application process is running and functioning.
+ * This is a lightweight check that verifies the application hasn't deadlocked or crashed.
+ * Kubernetes uses this endpoint to:
+ * - Restart containers that are in a broken state
+ * - Detect application deadlocks or memory leaks
+ * - Ensure long-running processes remain healthy
+ * Always returns HTTP 200 if the process is running. Includes:
+ * - Application uptime since startup
+ * - Current timestamp
+ * - Application version information
+ * - Basic process health indicators
+ * This check is intentionally simple and should not depend on external services.
  */
 export type GetLiveInput = void;
 export type GetLiveOutput = Types.APIControllersLivenessOutput;
@@ -7648,6 +8588,10 @@ export const getLiveEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * LTI 1.3 launch: the platform form-POSTs the signed id_token here.
+ * id_token in the query string is rejected outright (leaks into logs/history).
+ */
 export type PostLtiLaunchInput = void;
 export type PostLtiLaunchOutput = void;
 export const postLtiLaunchEndpoint = {
@@ -7658,6 +8602,12 @@ export const postLtiLaunchEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * OIDC third-party-initiated login. Validates the platform against registered
+ * active deployments, then redirects to the deployment's configured authorization
+ * endpoint with state+nonce. All redirect targets come from admin-configured
+ * deployment records — never from request input.
+ */
 export type PostLtiLoginInput = void;
 export type PostLtiLoginOutput = void;
 export const postLtiLoginEndpoint = {
@@ -7669,9 +8619,17 @@ export const postLtiLoginEndpoint = {
 } as const;
 
 /**
- * Prometheus metrics endpoint
+ * Get application metrics in Prometheus format
  *
- * Exposes application metrics in Prometheus text format for monitoring, alerting, and observability dashboards.
+ * Exposes application metrics in Prometheus text format for scraping by monitoring systems.
+ * Metrics include:
+ * - HTTP request counts and durations
+ * - Database connection pool statistics
+ * - Memory and CPU usage
+ * - Custom business metrics
+ * - Error rates and counts
+ *
+ * This endpoint is designed for use with Prometheus, Grafana, and other CNCF monitoring tools.
  */
 export type GetMetricsInput = void;
 export type GetMetricsOutput = void;
@@ -7684,9 +8642,17 @@ export const getMetricsEndpoint = {
 } as const;
 
 /**
- * Readiness probe for traffic routing decisions
+ * Kubernetes-style readiness probe for traffic routing decisions
  *
- * Kubernetes-style readiness probe that determines whether the application is ready to serve traffic. Checks all dependencies and services required for proper request handling.
+ * Readiness probes determine whether the application is ready to serve traffic.
+ * Unlike liveness probes, readiness checks verify that all dependencies are available
+ * and the application can handle requests properly.
+ * Kubernetes uses this endpoint to:
+ * - Remove pods from service endpoints when not ready
+ * - Prevent traffic routing to initializing instances
+ * - Handle rolling deployments gracefully
+ * Returns HTTP 200 when ready to serve traffic, HTTP 503 when not ready.
+ * Checks services tagged with "ready" in health check registration.
  */
 export type GetReadyInput = void;
 export type GetReadyOutput = Types.APIControllersReadinessOutput;
@@ -7698,6 +8664,12 @@ export const getReadyEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Serve transformed asset (resized, cropped, etc.) with CDN caching.
+ *
+ * URL format: /t/{transformation}/{referenceId}/{token}
+ * Transformations use standard format: w=100,h=100,fit=cover
+ */
 export interface GetTInput {
   transformation: string;
   referenceId: string;
@@ -7876,6 +8848,9 @@ export const getVTestingTemplatesRevisionsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Create a new access review campaign
+ */
 export interface PostAccessReviewsCampaignsInput {
   body?: Types.IdentityAuthorizationCommandsCreateAccessReviewCampaignCommand;
 }
@@ -7888,6 +8863,9 @@ export const postAccessReviewsCampaignsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Process expired campaigns (admin only)
+ */
 export type PostAccessReviewsCampaignsProcessExpiredInput = void;
 export type PostAccessReviewsCampaignsProcessExpiredOutput = number;
 export const postAccessReviewsCampaignsProcessExpiredEndpoint = {
@@ -7898,6 +8876,9 @@ export const postAccessReviewsCampaignsProcessExpiredEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get a campaign by ID
+ */
 export interface GetAccessReviewsCampaignsInput {
   id: string;
 }
@@ -7910,6 +8891,9 @@ export const getAccessReviewsCampaignsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Cancel a campaign
+ */
 export interface PostAccessReviewsCampaignsCancelInput {
   id: string;
 }
@@ -7922,6 +8906,9 @@ export const postAccessReviewsCampaignsCancelEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Complete a campaign
+ */
 export interface PostAccessReviewsCampaignsCompleteInput {
   id: string;
   body?: Types.IdentityAuthorizationControllersCompleteCampaignInput;
@@ -7935,6 +8922,9 @@ export const postAccessReviewsCampaignsCompleteEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Send reminders for a campaign
+ */
 export interface PostAccessReviewsCampaignsSendRemindersInput {
   id: string;
 }
@@ -7947,6 +8937,9 @@ export const postAccessReviewsCampaignsSendRemindersEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Start a campaign
+ */
 export interface PostAccessReviewsCampaignsStartInput {
   id: string;
 }
@@ -7959,6 +8952,9 @@ export const postAccessReviewsCampaignsStartEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get active campaigns
+ */
 export interface GetAccessReviewsCampaignsActiveInput {
   query?: {
     tenantId?: string;
@@ -7973,6 +8969,9 @@ export const getAccessReviewsCampaignsActiveEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Approve an access review item
+ */
 export interface PostAccessReviewsItemsApproveInput {
   id: string;
   body?: Types.IdentityAuthorizationControllersApproveItemInput;
@@ -7986,6 +8985,9 @@ export const postAccessReviewsItemsApproveEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Revoke access for a review item
+ */
 export interface PostAccessReviewsItemsRevokeInput {
   id: string;
   body?: Types.IdentityAuthorizationControllersRevokeItemInput;
@@ -7999,6 +9001,9 @@ export const postAccessReviewsItemsRevokeEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get pending review items for a reviewer
+ */
 export interface GetAccessReviewsItemsPendingInput {
   query?: {
     reviewerId?: string;
@@ -8024,6 +9029,10 @@ export const getAccessCapabilitiesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * List admin assets with optional status filter.
+ * Use status=pending-virus-scan or status=pending-moderation to filter.
+ */
 export interface GetAdminAssetsInput {
   query?: {
     status?: string;
@@ -8039,6 +9048,12 @@ export const getAdminAssetsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Trigger manual garbage collection.
+ *
+ * Runs the garbage collection process manually instead of waiting for the scheduled background job.
+ * Only deletes content that has been marked for deletion and past the grace period.
+ */
 export interface PostAdminAssetsRunGcInput {
   query?: {
     gracePeriodHours?: number;
@@ -8055,6 +9070,12 @@ export const postAdminAssetsRunGcEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Mark an asset content as non-deletable (legal hold).
+ *
+ * Prevents the asset from being garbage collected, even if all references are deleted.
+ * Use for legal holds, compliance requirements, or audit preservation.
+ */
 export interface PostAdminAssetsMarkUndeletableInput {
   contentId: string;
   body?: Types.AssetsControllersMarkNonDeletableInput;
@@ -8068,6 +9089,12 @@ export const postAdminAssetsMarkUndeletableEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Review and moderate content directly.
+ *
+ * Unlike report review which handles user reports, this endpoint allows
+ * direct moderation of content by admins for proactive moderation workflows.
+ */
 export interface PostAdminAssetsReviewModerationInput {
   contentId: string;
   body?: Types.AssetsControllersContentModerationInput;
@@ -8081,6 +9108,9 @@ export const postAdminAssetsReviewModerationEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Run virus scan on an asset.
+ */
 export interface PostAdminAssetsRunVirusScanInput {
   contentId: string;
   body?: Types.AssetsControllersUpdateVirusScanInput;
@@ -8094,6 +9124,9 @@ export const postAdminAssetsRunVirusScanEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Remove the non-deletable flag from an asset.
+ */
 export interface PostAdminAssetsUnmarkUndeletableInput {
   contentId: string;
 }
@@ -8106,6 +9139,9 @@ export const postAdminAssetsUnmarkUndeletableEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Force delete an asset (admin override).
+ */
 export interface PostAdminAssetsForceDeleteInput {
   id: string;
 }
@@ -8118,6 +9154,9 @@ export const postAdminAssetsForceDeleteEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get reports for an asset.
+ */
 export interface GetAdminAssetsReportsInput {
   id: string;
 }
@@ -8130,6 +9169,9 @@ export const getAdminAssetsReportsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get garbage collection candidates.
+ */
 export interface GetAdminAssetsGcCandidatesInput {
   query?: {
     gracePeriodHours?: number;
@@ -8145,6 +9187,9 @@ export const getAdminAssetsGcCandidatesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get moderation queue.
+ */
 export interface GetAdminAssetsModerationQueueInput {
   query?: {
     limit?: number;
@@ -8159,6 +9204,9 @@ export const getAdminAssetsModerationQueueEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Review a moderation report.
+ */
 export interface PostAdminAssetsReportsReviewInput {
   reportId: string;
   body?: Types.AssetsControllersReviewReportInput;
@@ -8172,6 +9220,9 @@ export const postAdminAssetsReportsReviewEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get the current retention candidate report.
+ */
 export interface GetAdminAssetsRetentionInput {
   query?: {
     gracePeriodHours?: number;
@@ -8187,6 +9238,12 @@ export const getAdminAssetsRetentionEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Trigger manual garbage collection.
+ *
+ * Runs the garbage collection process manually instead of waiting for the scheduled background job.
+ * Only deletes content that has been marked for deletion and past the grace period.
+ */
 export interface PostAdminAssetsRetentionRunInput {
   query?: {
     gracePeriodHours?: number;
@@ -8203,6 +9260,9 @@ export const postAdminAssetsRetentionRunEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get asset/document statistics for document center dashboards.
+ */
 export type GetAdminAssetsStatisticsInput = void;
 export type GetAdminAssetsStatisticsOutput = Types.AssetsQueriesAssetStatisticsOutput;
 export const getAdminAssetsStatisticsEndpoint = {
@@ -8213,6 +9273,9 @@ export const getAdminAssetsStatisticsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Export asset/document statistics as CSV or PDF.
+ */
 export interface GetAdminAssetsStatisticsExportInput {
   query?: {
     format?: string;
@@ -8227,6 +9290,9 @@ export const getAdminAssetsStatisticsExportEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get audit logs with filtering and pagination
+ */
 export interface GetAdminAuditLogsInput {
   query?: {
     UserId?: string;
@@ -8252,6 +9318,9 @@ export const getAdminAuditLogsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Export audit logs (admin only)
+ */
 export interface PostAdminAuditLogsExportInput {
   body?: Types.ComplianceAuditAuditExportInput;
 }
@@ -8264,6 +9333,54 @@ export const postAdminAuditLogsExportEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Returns the current state of an export started by the authenticated administrator.
+ */
+export interface GetAdminAuditLogsExportProgressInput {
+  exportId: string;
+}
+export type GetAdminAuditLogsExportProgressOutput = Types.ComplianceAuditAuditExportProgressOutput;
+export const getAdminAuditLogsExportProgressEndpoint = {
+  operationId: 'getAdminAuditLogsExportProgress' as const,
+  method: 'GET' as const,
+  path: '/v1/admin/audit-logs/export/{exportId}/progress' as const,
+  tags: ['ComplianceAudit'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Export audit logs (admin only)
+ */
+export interface PostAdminAuditLogsExportCsvInput {
+  body?: Types.ComplianceAuditAuditExportInput;
+}
+export type PostAdminAuditLogsExportCsvOutput = void;
+export const postAdminAuditLogsExportCsvEndpoint = {
+  operationId: 'postAdminAuditLogsExportCsv' as const,
+  method: 'POST' as const,
+  path: '/v1/admin/audit-logs/export/csv' as const,
+  tags: ['ComplianceAudit'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Streams a versioned JSON audit export with pagination metadata.
+ */
+export interface PostAdminAuditLogsExportJsonInput {
+  body?: Types.ComplianceAuditAuditExportInput;
+}
+export type PostAdminAuditLogsExportJsonOutput = Types.ComplianceAuditAuditJsonExportDocument;
+export const postAdminAuditLogsExportJsonEndpoint = {
+  operationId: 'postAdminAuditLogsExportJson' as const,
+  method: 'POST' as const,
+  path: '/v1/admin/audit-logs/export/json' as const,
+  tags: ['ComplianceAudit'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Get audit log statistics
+ */
 export interface GetAdminAuditLogsStatisticsInput {
   query?: {
     StartDate?: string;
@@ -8314,6 +9431,9 @@ export const getAdminEventsStatusEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get unified security audit logs from all sources with filtering and pagination.
+ */
 export interface GetAdminSecurityAuditInput {
   query?: {
     SourceType?: Types.ComplianceAuditSecurityAuditSourceType;
@@ -8341,6 +9461,9 @@ export const getAdminSecurityAuditEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Export unified security audit logs to CSV.
+ */
 export interface PostAdminSecurityAuditExportInput {
   body?: Types.ComplianceAuditUnifiedSecurityAuditInput;
 }
@@ -8353,6 +9476,9 @@ export const postAdminSecurityAuditExportEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get authentication attempt logs specifically.
+ */
 export interface GetAdminSecurityAuditAuthenticationInput {
   query?: {
     UserId?: string;
@@ -8375,6 +9501,9 @@ export const getAdminSecurityAuditAuthenticationEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get security audit dashboard with aggregated statistics.
+ */
 export interface GetAdminSecurityAuditDashboardInput {
   query?: {
     startDate?: string;
@@ -8391,6 +9520,9 @@ export const getAdminSecurityAuditDashboardEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get permission audit logs specifically.
+ */
 export interface GetAdminSecurityAuditPermissionsInput {
   query?: {
     UserId?: string;
@@ -8414,6 +9546,9 @@ export const getAdminSecurityAuditPermissionsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Execute a conversational completion request.
+ */
 export interface PostAiChatInput {
   body?: Types.AIAiChatInput;
 }
@@ -8438,6 +9573,9 @@ export const postAiEmailEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Execute a single-prompt generation request.
+ */
 export interface PostAiGenerateInput {
   body?: Types.AIAiGenerateInput;
 }
@@ -8498,6 +9636,9 @@ export const postAiGenerateContentReportEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Retrieve recent AI conversation history for the active tenant.
+ */
 export interface GetAiHistoryInput {
   query?: {
     take?: number;
@@ -8649,6 +9790,9 @@ export const getAiStatusEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Create a new assessment for a course
+ */
 export interface PostAssessmentsInput {
   body?: Types.LearningAssessmentsCreateAssessmentInput;
 }
@@ -8661,6 +9805,9 @@ export const postAssessmentsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Check if user can attempt an assessment
+ */
 export interface GetAssessmentsCanAttemptInput {
   assessmentId: string;
   enrollmentId: string;
@@ -8674,6 +9821,11 @@ export const getAssessmentsCanAttemptEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get the SpeedGrader navigation queue for an assessment (instructor-only):
+ * one item per student/group representing the target's latest gradeable attempt,
+ * excluding InProgress-only targets.
+ */
 export interface GetAssessmentsGradingQueueInput {
   assessmentId: string;
 }
@@ -8686,6 +9838,9 @@ export const getAssessmentsGradingQueueEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets delivery-safe active cues for an enrolled learner and one video content item.
+ */
 export interface GetAssessmentsInteractiveVideoCuesContentEnrollmentsInput {
   assessmentId: string;
   contentId: string;
@@ -8700,6 +9855,9 @@ export const getAssessmentsInteractiveVideoCuesContentEnrollmentsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Claim the next peer review: a random submission among those tied for the fewest existing reviews.
+ */
 export interface PostAssessmentsPeerReviewsClaimInput {
   assessmentId: string;
 }
@@ -8712,6 +9870,10 @@ export const postAssessmentsPeerReviewsClaimEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get the assessment's rubric. Open to course managers and reviewers
+ * (used by the grading panel and peer-review workspace).
+ */
 export interface GetAssessmentsRubricInput {
   assessmentId: string;
 }
@@ -8724,6 +9886,10 @@ export const getAssessmentsRubricEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Create or fully replace the assessment's rubric. Instructor only.
+ * Locked (409) once any submission of the assessment is graded.
+ */
 export interface PutAssessmentsRubricInput {
   assessmentId: string;
   body?: Types.LearningAssessmentsSaveRubricInput;
@@ -8737,6 +9903,9 @@ export const putAssessmentsRubricEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Remove the rubric from the assessment. Instructor only. Locked once grading started.
+ */
 export interface DeleteAssessmentsRubricInput {
   assessmentId: string;
 }
@@ -8749,6 +9918,9 @@ export const deleteAssessmentsRubricEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get all submissions for an assessment
+ */
 export interface GetAssessmentsSubmissionsForGetAssessmentsByAssessmentIdSubmissionsInput {
   assessmentId: string;
 }
@@ -8761,6 +9933,9 @@ export const getAssessmentsSubmissionsForGetAssessmentsByAssessmentIdSubmissions
   requiresAuth: true,
 } as const;
 
+/**
+ * Start a new assessment attempt
+ */
 export interface PostAssessmentsSubmissionsStartInput {
   assessmentId: string;
   body?: Types.LearningAssessmentsStartSubmissionInput;
@@ -8774,6 +9949,9 @@ export const postAssessmentsSubmissionsStartEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get an assessment by ID
+ */
 export interface GetAssessmentsInput {
   id: string;
 }
@@ -8786,6 +9964,9 @@ export const getAssessmentsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update an assessment
+ */
 export interface PutAssessmentsInput {
   id: string;
   body?: Types.LearningAssessmentsUpdateAssessmentInput;
@@ -8799,6 +9980,9 @@ export const putAssessmentsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Delete an assessment
+ */
 export interface DeleteAssessmentsInput {
   id: string;
 }
@@ -8811,6 +9995,9 @@ export const deleteAssessmentsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Prepares an immutable candidate revision for instructor testing.
+ */
 export interface GetAssessmentsAuthoringStateInput {
   id: string;
 }
@@ -8823,6 +10010,9 @@ export const getAssessmentsAuthoringStateEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Assign an assessment to a weighted group or clear the assignment.
+ */
 export interface PutAssessmentsGroupInput {
   id: string;
   body?: Types.LearningAssessmentsAssignAssessmentGroupInput;
@@ -8836,6 +10026,9 @@ export const putAssessmentsGroupEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets the interactive-video cue links for this assessment.
+ */
 export interface GetAssessmentsInteractiveVideoCuesInput {
   id: string;
 }
@@ -8848,6 +10041,9 @@ export const getAssessmentsInteractiveVideoCuesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Links this assessment to a cue in an interactive-video lesson.
+ */
 export interface PostAssessmentsInteractiveVideoCuesInput {
   id: string;
   body?: Types.LearningAssessmentsLinkInteractiveVideoCueInput;
@@ -8861,6 +10057,9 @@ export const postAssessmentsInteractiveVideoCuesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Removes a manager-configured interactive-video cue link.
+ */
 export interface DeleteAssessmentsInteractiveVideoCuesInput {
   id: string;
   cueId: string;
@@ -8874,6 +10073,9 @@ export const deleteAssessmentsInteractiveVideoCuesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Restore a soft-deleted assessment
+ */
 export interface PostAssessmentsRestoreInput {
   id: string;
 }
@@ -8886,6 +10088,9 @@ export const postAssessmentsRestoreEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Prepares an immutable candidate revision for instructor testing.
+ */
 export interface PostAssessmentsRevisionsPrepareInput {
   id: string;
   body?: Types.LearningAssessmentsGradingAuthoringPrepareAssessmentRevisionInput;
@@ -8899,6 +10104,9 @@ export const postAssessmentsRevisionsPrepareEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Publishes exactly the prepared revision after official capability validation.
+ */
 export interface PostAssessmentsRevisionsPublishInput {
   id: string;
   body?: Types.LearningAssessmentsGradingAuthoringPublishAssessmentRevisionInput;
@@ -8912,6 +10120,9 @@ export const postAssessmentsRevisionsPublishEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Stops new official starts without deleting revisions or existing executions.
+ */
 export interface PostAssessmentsRevisionsUnpublishInput {
   id: string;
   body?: Types.LearningAssessmentsGradingAuthoringUnpublishAssessmentRevisionInput;
@@ -8964,6 +10175,10 @@ export const postAssessmentsTestRunsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Starts or resumes the current learner's official attempt for graded content.
+ * The server resolves both the linked assessment and the active course membership.
+ */
 export interface PostAssessmentsContentRuntimeSubmissionsIndividualInput {
   contentId: string;
   body?: Types.LearningAssessmentsStartContentRuntimeSubmissionInput;
@@ -8977,6 +10192,9 @@ export const postAssessmentsContentRuntimeSubmissionsIndividualEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get all assessments for a course
+ */
 export interface GetAssessmentsCourseInput {
   courseId: string;
 }
@@ -8989,6 +10207,9 @@ export const getAssessmentsCourseEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get assessment score distribution and weighted group performance for a course.
+ */
 export interface GetAssessmentsCourseAnalyticsInput {
   courseId: string;
 }
@@ -9001,6 +10222,9 @@ export const getAssessmentsCourseAnalyticsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Atomically saves assessable content and its assessment policy.
+ */
 export interface PutAssessmentsCourseContentDraftInput {
   courseId: string;
   contentId: string;
@@ -9015,6 +10239,9 @@ export const putAssessmentsCourseContentDraftEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Returns the single canonical gradebook projection for one course enrollment.
+ */
 export interface GetAssessmentsCourseGradebookInput {
   courseId: string;
   enrollmentId: string;
@@ -9028,6 +10255,9 @@ export const getAssessmentsCourseGradebookEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get weighted assessment groups for a course.
+ */
 export interface GetAssessmentsCourseGroupsInput {
   courseId: string;
 }
@@ -9040,6 +10270,9 @@ export const getAssessmentsCourseGroupsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Create a weighted assessment group.
+ */
 export interface PostAssessmentsGroupsInput {
   body?: Types.LearningAssessmentsCreateAssessmentGroupInput;
 }
@@ -9052,6 +10285,9 @@ export const postAssessmentsGroupsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update a weighted assessment group.
+ */
 export interface PutAssessmentsGroupsInput {
   id: string;
   body?: Types.LearningAssessmentsUpdateAssessmentGroupInput;
@@ -9065,6 +10301,9 @@ export const putAssessmentsGroupsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Delete a weighted assessment group.
+ */
 export interface DeleteAssessmentsGroupsInput {
   id: string;
 }
@@ -9077,6 +10316,9 @@ export const deleteAssessmentsGroupsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get my submissions for an enrollment
+ */
 export interface GetAssessmentsMySubmissionsInput {
   enrollmentId: string;
 }
@@ -9089,6 +10331,9 @@ export const getAssessmentsMySubmissionsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get the anonymous submission a claimed review refers to. Reviewer-only.
+ */
 export interface GetAssessmentsPeerReviewsInput {
   reviewId: string;
 }
@@ -9101,6 +10346,10 @@ export const getAssessmentsPeerReviewsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Submit a claimed peer review. Feedback is mandatory; scores follow the assessment's
+ * rubric rules (rubric grid when one exists, plain 0..MaxScore otherwise).
+ */
 export interface PostAssessmentsPeerReviewsSubmitInput {
   reviewId: string;
   body?: Types.LearningAssessmentsPeerReviewSubmitInput;
@@ -9191,6 +10440,9 @@ export const postAssessmentsRuntimeSubmissionsSubmitEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get a submission by ID
+ */
 export interface GetAssessmentsSubmissionsForGetAssessmentsSubmissionsBySubmissionIdInput {
   submissionId: string;
 }
@@ -9203,6 +10455,9 @@ export const getAssessmentsSubmissionsForGetAssessmentsSubmissionsBySubmissionId
   requiresAuth: true,
 } as const;
 
+/**
+ * Same reviews for instructors, with reviewer names. CanManageCourse-only.
+ */
 export interface GetAssessmentsSubmissionsPeerReviewsInput {
   submissionId: string;
 }
@@ -9215,6 +10470,10 @@ export const getAssessmentsSubmissionsPeerReviewsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Reviews received on a submission (own row, or the group's rows for group submissions).
+ * Owner-only, anonymized: no reviewer identity exists in the DTO at all.
+ */
 export interface GetAssessmentsSubmissionsReceivedPeerReviewsInput {
   submissionId: string;
 }
@@ -9227,6 +10486,9 @@ export const getAssessmentsSubmissionsReceivedPeerReviewsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Submit a completed assessment
+ */
 export interface PostAssessmentsSubmissionsSubmitInput {
   submissionId: string;
   body?: Types.LearningAssessmentsSubmitAssessmentInput;
@@ -9369,6 +10631,11 @@ export const putAssetLibrariesFoldersRestrictionEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * List assets with optional filtering.
+ * Use owner=me to get current user's assets.
+ * Use parentType and parentId to filter by parent resource.
+ */
 export interface GetAssetsForGetAssetsInput {
   query?: {
     owner?: string;
@@ -9387,6 +10654,9 @@ export const getAssetsForGetAssetsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Upload a new asset.
+ */
 export interface PostAssetsInput {
   query?: {
     displayName?: string;
@@ -9407,6 +10677,9 @@ export const postAssetsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get an asset by ID.
+ */
 export interface GetAssetsForGetAssetsByIdInput {
   id: string;
   query?: {
@@ -9422,6 +10695,9 @@ export const getAssetsForGetAssetsByIdEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Delete an asset.
+ */
 export interface DeleteAssetsInput {
   id: string;
 }
@@ -9434,6 +10710,9 @@ export const deleteAssetsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update asset metadata.
+ */
 export interface PatchAssetsInput {
   id: string;
   body?: Types.AssetsControllersUpdateAssetInput;
@@ -9447,6 +10726,9 @@ export const patchAssetsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get extracted searchable text for an asset.
+ */
 export interface GetSignedAssetExtractedTextInput {
   id: string;
   query?: {
@@ -9462,6 +10744,9 @@ export const getSignedAssetExtractedTextEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Generate an access URL for an asset.
+ */
 export interface PostAssetsGenerateAccessUrlInput {
   id: string;
   query?: {
@@ -9482,6 +10767,9 @@ export const postAssetsGenerateAccessUrlEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Report an asset for moderation.
+ */
 export interface PostAssetsReportInput {
   id: string;
   body?: Types.AssetsControllersReportAssetInput;
@@ -9495,6 +10783,9 @@ export const postAssetsReportEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get asset content (serve the actual file).
+ */
 export interface GetAssetsContentInput {
   id: string;
   query?: {
@@ -9511,6 +10802,9 @@ export const getAssetsContentEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Extract text from an asset when the MIME type supports direct parsing or OCR.
+ */
 export interface GetAssetExtractedTextInput {
   id: string;
 }
@@ -9523,6 +10817,9 @@ export const getAssetExtractedTextEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get the inline preview contract for a document or media asset.
+ */
 export interface GetAssetsPreviewInput {
   id: string;
   query?: {
@@ -9540,6 +10837,9 @@ export const getAssetsPreviewEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Delete multiple asset references in one request.
+ */
 export interface PostAssetsBulkDeleteInput {
   body?: Types.AssetsControllersBulkDeleteAssetsInput;
 }
@@ -9552,6 +10852,9 @@ export const postAssetsBulkDeleteEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Generate secure access URLs for multiple assets.
+ */
 export interface PostAssetsBulkDownloadInput {
   body?: Types.AssetsControllersBulkAssetAccessUrlInput;
 }
@@ -9564,6 +10867,9 @@ export const postAssetsBulkDownloadEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Upload multiple assets in one request.
+ */
 export interface PostAssetsBulkUploadInput {
   query?: {
     accessPolicy?: Types.AssetsAssetAccessPolicy;
@@ -9582,6 +10888,9 @@ export const postAssetsBulkUploadEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Initialize a chunked upload for large files.
+ */
 export interface PostAssetsChunkedUploadsInput {
   query?: {
     fileName?: string;
@@ -9598,6 +10907,9 @@ export const postAssetsChunkedUploadsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Abort an in-progress chunked upload.
+ */
 export interface DeleteAssetsChunkedUploadsInput {
   uploadId: string;
 }
@@ -9610,6 +10922,9 @@ export const deleteAssetsChunkedUploadsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Complete a chunked upload and create the asset.
+ */
 export interface PostAssetsChunkedUploadsCompleteInput {
   uploadId: string;
   query?: {
@@ -9629,6 +10944,9 @@ export const postAssetsChunkedUploadsCompleteEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Upload a chunk for an in-progress chunked upload.
+ */
 export interface PostAssetsChunkedUploadsPartsInput {
   uploadId: string;
   query?: {
@@ -9645,6 +10963,9 @@ export const postAssetsChunkedUploadsPartsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Search document and media assets by metadata, parent, MIME type, and storage key.
+ */
 export interface GetAssetsSearchInput {
   query?: {
     q?: string;
@@ -9689,7 +11010,7 @@ export const getAssetsSocialMediaEndpoint = {
 } as const;
 
 /**
- * List all API keys
+ * List all API keys for the current user
  */
 export type GetAuthApiKeysInput = void;
 export type GetAuthApiKeysOutput = Array<Types.IdentityAuthenticationApiKeyDto>;
@@ -9750,7 +11071,7 @@ export const postAuthDiscordSignInAuthorizeEndpoint = {
 } as const;
 
 /**
- * Discord OAuth sign-in callback
+ * Handle Discord OAuth callback
  *
  * Exchanges the Discord OAuth authorization code for access and refresh tokens, applying the same account matching and auto-link policy as Google sign-in. Account-linking counterpart: POST /v1/auth/external-logins/discord:link-callback.
  */
@@ -9767,7 +11088,7 @@ export const postAuthDiscordSignInCallbackEndpoint = {
 } as const;
 
 /**
- * Send email verification
+ * Send email verification to user
  *
  * Sends a verification email to the specified email address to confirm ownership.
  */
@@ -9784,7 +11105,7 @@ export const postAuthEmailSendVerificationEndpoint = {
 } as const;
 
 /**
- * Verify email with token
+ * Verify email address with token
  *
  * Verifies the user's email address using a token received via email.
  */
@@ -9801,7 +11122,7 @@ export const postAuthEmailVerifyEndpoint = {
 } as const;
 
 /**
- * List linked external logins
+ * List the external logins linked to the current user, newest first.
  *
  * HEAD request per Google REST guidance: safe, metadata-only response with no body. Linked providers and their linked-at timestamps are conveyed in the X-Linked-Providers response header as comma-separated 'provider=iso8601-timestamp' pairs, newest first. The header is omitted when no providers are linked.
  */
@@ -9816,7 +11137,7 @@ export const headAuthExternalLoginsEndpoint = {
 } as const;
 
 /**
- * Unlink external login
+ * Unlink an external provider from the current user.
  *
  * Removes the external login link for the given provider. Refused with 400 when it is the user's last sign-in method and no password is set.
  */
@@ -9833,7 +11154,7 @@ export const deleteAuthExternalLoginsEndpoint = {
 } as const;
 
 /**
- * Start Discord account link
+ * Start the Discord link flow for the current user.
  *
  * Returns the Discord OAuth authorization URL plus the state parameter to validate at the callback.
  */
@@ -9850,7 +11171,7 @@ export const postAuthExternalLoginsDiscordLinkAuthorizeEndpoint = {
 } as const;
 
 /**
- * Complete Discord account link
+ * Complete the Discord link flow for the current user.
  *
  * Exchanges the Discord authorization code for the user profile and links the Discord identity to the authenticated user. Idempotent when already linked to the same user.
  */
@@ -9867,7 +11188,7 @@ export const postAuthExternalLoginsDiscordLinkCallbackEndpoint = {
 } as const;
 
 /**
- * Link Google account
+ * Link the current user's Google account from a Google ID token.
  *
  * Verifies a Google ID token and links the Google identity to the authenticated user. Idempotent when already linked to the same user.
  */
@@ -9903,7 +11224,7 @@ export const getAuthGithubAuthorizeEndpoint = {
 } as const;
 
 /**
- * GitHub OAuth callback
+ * Handle GitHub OAuth callback
  *
  * Handles the GitHub OAuth callback, exchanging the authorization code for tokens.
  */
@@ -9923,7 +11244,7 @@ export const getAuthGithubCallbackEndpoint = {
 } as const;
 
 /**
- * Sign in with Google ID Token
+ * Authenticate a user using Google ID Token
  *
  * Authenticates a user using a Google ID Token (for NextAuth.js integration), returning access and refresh tokens. Account-linking counterpart: POST /v1/auth/external-logins/google.
  */
@@ -9940,7 +11261,7 @@ export const postAuthGoogleSignInEndpoint = {
 } as const;
 
 /**
- * Consume magic sign-in link
+ * Consume a passwordless magic sign-in link.
  *
  * Consumes a short-lived one-time magic-link token and returns access and refresh tokens.
  */
@@ -9957,7 +11278,7 @@ export const postAuthMagicLinkConsumeEndpoint = {
 } as const;
 
 /**
- * Request magic sign-in link
+ * Request a passwordless magic sign-in link.
  *
  * Generates a short-lived one-time sign-in token and dispatches the magic-link notification. Always returns a generic success response to prevent user enumeration.
  */
@@ -9974,7 +11295,7 @@ export const postAuthMagicLinkRequestEndpoint = {
 } as const;
 
 /**
- * Get MFA configuration
+ * Get current user's MFA configuration
  *
  * Retrieves the current user's multi-factor authentication configuration and enabled methods.
  */
@@ -9989,7 +11310,7 @@ export const getAuthMfaEndpoint = {
 } as const;
 
 /**
- * Disable MFA
+ * Disable MFA for the current user
  *
  * Disables multi-factor authentication for the current user after password verification.
  */
@@ -10006,7 +11327,7 @@ export const postAuthMfaDisableEndpoint = {
 } as const;
 
 /**
- * Get backup codes
+ * Get backup codes (masked for security)
  *
  * Retrieves the user's backup codes status. Codes are not returned for security; use regenerate to get new codes.
  */
@@ -10021,7 +11342,7 @@ export const getAuthMfaBackupCodesEndpoint = {
 } as const;
 
 /**
- * Regenerate backup codes
+ * Generate new backup codes (invalidates existing ones)
  *
  * Generates a new set of backup codes, invalidating any previously generated codes.
  */
@@ -10036,7 +11357,7 @@ export const postAuthMfaBackupCodesRegenerateEndpoint = {
 } as const;
 
 /**
- * List MFA methods
+ * List available MFA methods
  *
  * Returns all available MFA methods and their configuration status for the current user.
  */
@@ -10051,7 +11372,7 @@ export const getAuthMfaMethodsEndpoint = {
 } as const;
 
 /**
- * Complete SMS MFA setup
+ * Complete SMS MFA setup by verifying the code
  *
  * Completes SMS MFA setup by verifying the code sent to the user's phone.
  */
@@ -10068,7 +11389,7 @@ export const postAuthMfaSmsCompleteEndpoint = {
 } as const;
 
 /**
- * Setup SMS MFA
+ * Initiate SMS-based MFA setup
  *
  * Initiates SMS-based MFA setup by sending a verification code to the provided phone number.
  */
@@ -10085,7 +11406,7 @@ export const postAuthMfaSmsSetupEndpoint = {
 } as const;
 
 /**
- * Complete TOTP setup
+ * Complete TOTP MFA setup by verifying the code
  *
  * Completes TOTP setup by verifying a code from the user's authenticator app.
  */
@@ -10102,7 +11423,7 @@ export const postAuthMfaTotpCompleteEndpoint = {
 } as const;
 
 /**
- * Initiate TOTP setup
+ * Initiate TOTP MFA setup
  *
  * Initiates Time-based One-Time Password (TOTP) setup, returning a secret key and QR code URI for authenticator apps.
  */
@@ -10117,7 +11438,7 @@ export const postAuthMfaTotpSetupEndpoint = {
 } as const;
 
 /**
- * Verify MFA code
+ * Verify MFA code during authentication
  *
  * Verifies an MFA code during the authentication flow. Used after initial sign-in when MFA is required.
  */
@@ -10134,7 +11455,7 @@ export const postAuthMfaVerifyEndpoint = {
 } as const;
 
 /**
- * Change password
+ * Change password for authenticated user
  *
  * Changes the password for the currently authenticated user.
  */
@@ -10151,7 +11472,7 @@ export const postAuthPasswordChangeEndpoint = {
 } as const;
 
 /**
- * Complete password reset
+ * Complete password reset with token
  *
  * Resets the user's password using a token received via email.
  */
@@ -10184,6 +11505,9 @@ export const postAuthPasswordResetRequestEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets all service accounts with optional tenant filtering.
+ */
 export interface GetAuthServiceAccountsForGetAuthServiceAccountsInput {
   query?: {
     tenantId?: string;
@@ -10198,6 +11522,11 @@ export const getAuthServiceAccountsForGetAuthServiceAccountsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Creates a new service account.
+ *
+ * The client secret is only returned once during creation. Store it securely.
+ */
 export interface PostAuthServiceAccountsInput {
   body?: Types.IdentityAuthenticationCreateServiceAccountInput;
 }
@@ -10210,6 +11539,9 @@ export const postAuthServiceAccountsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets a service account by ID.
+ */
 export interface GetAuthServiceAccountsForGetAuthServiceAccountsByServiceAccountIdInput {
   serviceAccountId: string;
 }
@@ -10222,6 +11554,9 @@ export const getAuthServiceAccountsForGetAuthServiceAccountsByServiceAccountIdEn
   requiresAuth: true,
 } as const;
 
+/**
+ * Deletes a service account.
+ */
 export interface DeleteAuthServiceAccountsInput {
   serviceAccountId: string;
 }
@@ -10235,7 +11570,7 @@ export const deleteAuthServiceAccountsEndpoint = {
 } as const;
 
 /**
- * Partially update service account
+ * Partially updates a service account.
  *
  * Updates specific fields of a service account. Only provided fields are updated.
  */
@@ -10253,7 +11588,7 @@ export const patchAuthServiceAccountsEndpoint = {
 } as const;
 
 /**
- * Check if service account exists
+ * Checks if a service account exists by ID.
  *
  * Checks if a service account exists without returning the body.
  */
@@ -10269,6 +11604,9 @@ export const headAuthServiceAccountsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Deactivates a service account.
+ */
 export interface PostAuthServiceAccountsDeactivateInput {
   serviceAccountId: string;
 }
@@ -10282,7 +11620,7 @@ export const postAuthServiceAccountsDeactivateEndpoint = {
 } as const;
 
 /**
- * Lock service account
+ * Locks a service account to prevent authentication.
  *
  * Locks a service account to prevent it from authenticating.
  */
@@ -10299,6 +11637,9 @@ export const postAuthServiceAccountsLockEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Reactivates a deactivated service account.
+ */
 export interface PostAuthServiceAccountsReactivateInput {
   serviceAccountId: string;
 }
@@ -10311,6 +11652,12 @@ export const postAuthServiceAccountsReactivateEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Rotates the client secret for a service account.
+ *
+ * The new client secret is only returned once. Store it securely.
+ * The old secret is immediately invalidated.
+ */
 export interface PostAuthServiceAccountsRotateSecretInput {
   serviceAccountId: string;
 }
@@ -10323,6 +11670,9 @@ export const postAuthServiceAccountsRotateSecretEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Unlocks a locked service account.
+ */
 export interface PostAuthServiceAccountsUnlockInput {
   serviceAccountId: string;
 }
@@ -10336,7 +11686,7 @@ export const postAuthServiceAccountsUnlockEndpoint = {
 } as const;
 
 /**
- * Get service account audit log
+ * Gets the audit log for a service account.
  *
  * Retrieves the audit log of actions performed on or by a service account.
  */
@@ -10356,6 +11706,9 @@ export const getAuthServiceAccountsAuditLogEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Updates the scopes for a service account.
+ */
 export interface PatchAuthServiceAccountsScopesInput {
   serviceAccountId: string;
   body?: Types.IdentityAuthenticationUpdateScopesInput;
@@ -10370,7 +11723,7 @@ export const patchAuthServiceAccountsScopesEndpoint = {
 } as const;
 
 /**
- * Get active sessions
+ * Get current user's active sessions
  *
  * Retrieves a list of all active sessions for the current user, including device and location information.
  */
@@ -10400,7 +11753,7 @@ export const getAuthSessionsAnalyzeSecurityEndpoint = {
 } as const;
 
 /**
- * Refresh current session
+ * Refresh the current session
  *
  * Extends the current session's expiration time.
  */
@@ -10415,7 +11768,7 @@ export const postAuthSessionsRefreshEndpoint = {
 } as const;
 
 /**
- * Terminate all sessions
+ * Terminate all sessions (including current)
  *
  * Terminates all active sessions including the current one. User will need to sign in again.
  */
@@ -10430,7 +11783,7 @@ export const postAuthSessionsTerminateAllEndpoint = {
 } as const;
 
 /**
- * Terminate other sessions
+ * Terminate all sessions except the current one
  *
  * Terminates all active sessions except the current one.
  */
@@ -10445,7 +11798,7 @@ export const postAuthSessionsTerminateOthersEndpoint = {
 } as const;
 
 /**
- * Terminate a session
+ * Terminate a specific session
  *
  * Terminates a specific session by its identifier. The session must belong to the current user.
  */
@@ -10462,7 +11815,7 @@ export const deleteAuthSessionsEndpoint = {
 } as const;
 
 /**
- * Sign in with email and password
+ * Authenticate a user with email and password
  *
  * Authenticates a user with email and password credentials, returning access and refresh tokens.
  */
@@ -10479,7 +11832,7 @@ export const postAuthSignInEndpoint = {
 } as const;
 
 /**
- * Register a new user
+ * Register a new user with email and password
  *
  * Creates a new user account with email and password credentials, returning authentication tokens on success.
  */
@@ -10496,7 +11849,7 @@ export const postAuthSignUpEndpoint = {
 } as const;
 
 /**
- * Get signing keys
+ * Get signing keys with optional status filter
  *
  * Retrieves signing keys with optional status filtering. Use status=active for current signing key, status=valid for all keys usable for validation.
  */
@@ -10515,7 +11868,7 @@ export const getAuthSigningKeysEndpoint = {
 } as const;
 
 /**
- * Cleanup expired keys
+ * Clean up expired keys
  *
  * Removes signing keys that have been expired beyond the retention period.
  */
@@ -10532,7 +11885,7 @@ export const postAuthSigningKeysCleanupEndpoint = {
 } as const;
 
 /**
- * Rotate signing key
+ * Manually rotate to a new signing key
  *
  * Manually rotates to a new signing key. Previous keys remain valid for token validation during grace period.
  */
@@ -10586,7 +11939,7 @@ export const postAuthStepUpChallengesWebauthnOptionsEndpoint = {
 } as const;
 
 /**
- * Refresh access token
+ * Refresh access token using a valid refresh token
  *
  * Exchanges a valid refresh token for a new access token and refresh token pair.
  */
@@ -10603,7 +11956,7 @@ export const postAuthTokensRefreshEndpoint = {
 } as const;
 
 /**
- * Revoke refresh token
+ * Revoke a refresh token to invalidate it
  *
  * Invalidates a refresh token, preventing it from being used to obtain new access tokens.
  */
@@ -10620,7 +11973,7 @@ export const postAuthTokensRevokeEndpoint = {
 } as const;
 
 /**
- * Get trusted devices
+ * Get trusted devices for the current user
  *
  * Retrieves a list of devices that have been marked as trusted for the current user.
  */
@@ -10635,7 +11988,7 @@ export const getAuthTrustedDevicesEndpoint = {
 } as const;
 
 /**
- * Trust current device
+ * Trust the current device
  *
  * Marks the current device as trusted, allowing faster authentication in the future.
  */
@@ -10652,7 +12005,7 @@ export const postAuthTrustedDevicesEndpoint = {
 } as const;
 
 /**
- * Revoke device trust
+ * Revoke trust for a specific device
  *
  * Removes a device from the trusted devices list.
  */
@@ -10669,7 +12022,7 @@ export const deleteAuthTrustedDevicesEndpoint = {
 } as const;
 
 /**
- * Verify Web3 signature
+ * Verify Web3 wallet signature and authenticate
  *
  * Verifies a Web3 wallet signature against a previously issued challenge and returns authentication tokens.
  */
@@ -10686,7 +12039,7 @@ export const postAuthWeb3VerifyEndpoint = {
 } as const;
 
 /**
- * Generate Web3 authentication challenge
+ * Generate Web3 challenge for wallet authentication
  *
  * Generates a cryptographic challenge that must be signed by the user's wallet to prove ownership.
  */
@@ -10702,6 +12055,9 @@ export const postAuthWeb3ChallengeEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Check if current user has WebAuthn enabled.
+ */
 export type GetAuthWebauthnInput = void;
 export type GetAuthWebauthnOutput = Types.IdentityAuthenticationWebAuthnStatusOutput;
 export const getAuthWebauthnEndpoint = {
@@ -10712,6 +12068,9 @@ export const getAuthWebauthnEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Begin WebAuthn authentication (passwordless login).
+ */
 export interface PostAuthWebauthnAuthenticationBeginInput {
   body?: Types.IdentityAuthenticationBeginWebAuthnAuthenticationInput;
 }
@@ -10724,6 +12083,9 @@ export const postAuthWebauthnAuthenticationBeginEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Complete WebAuthn authentication (passwordless login).
+ */
 export interface PostAuthWebauthnAuthenticationCompleteInput {
   body?: Types.IdentityAuthenticationCompleteWebAuthnAuthenticationInput;
 }
@@ -10736,6 +12098,9 @@ export const postAuthWebauthnAuthenticationCompleteEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get all WebAuthn credentials for the current user.
+ */
 export type GetAuthWebauthnCredentialsForGetAuthWebauthnCredentialsInput = void;
 export type GetAuthWebauthnCredentialsForGetAuthWebauthnCredentialsOutput = Array<Types.IdentityAuthenticationWebAuthnCredentialInfo>;
 export const getAuthWebauthnCredentialsForGetAuthWebauthnCredentialsEndpoint = {
@@ -10746,6 +12111,9 @@ export const getAuthWebauthnCredentialsForGetAuthWebauthnCredentialsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get a single WebAuthn credential by ID.
+ */
 export interface GetAuthWebauthnCredentialsForGetAuthWebauthnCredentialsByCredentialIdInput {
   credentialId: string;
 }
@@ -10758,6 +12126,9 @@ export const getAuthWebauthnCredentialsForGetAuthWebauthnCredentialsByCredential
   requiresAuth: true,
 } as const;
 
+/**
+ * Delete a WebAuthn credential.
+ */
 export interface DeleteAuthWebauthnCredentialsInput {
   credentialId: string;
 }
@@ -10770,6 +12141,9 @@ export const deleteAuthWebauthnCredentialsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update a WebAuthn credential's friendly name.
+ */
 export interface PatchAuthWebauthnCredentialsInput {
   credentialId: string;
   body?: Types.IdentityAuthenticationUpdateCredentialNameInput;
@@ -10783,6 +12157,9 @@ export const patchAuthWebauthnCredentialsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Check if a WebAuthn credential exists.
+ */
 export interface HeadAuthWebauthnCredentialsInput {
   credentialId: string;
 }
@@ -10795,6 +12172,9 @@ export const headAuthWebauthnCredentialsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Verify a WebAuthn credential is valid and can be used for authentication.
+ */
 export interface PostAuthWebauthnCredentialsVerifyInput {
   credentialId: string;
 }
@@ -10807,6 +12187,9 @@ export const postAuthWebauthnCredentialsVerifyEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Begin WebAuthn credential registration.
+ */
 export interface PostAuthWebauthnRegistrationBeginInput {
   body?: Types.IdentityAuthenticationBeginWebAuthnRegistrationInput;
 }
@@ -10819,6 +12202,9 @@ export const postAuthWebauthnRegistrationBeginEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Complete WebAuthn credential registration.
+ */
 export interface PostAuthWebauthnRegistrationCompleteInput {
   body?: Types.IdentityAuthenticationCompleteWebAuthnRegistrationInput;
 }
@@ -10971,6 +12357,9 @@ export const patchClientsModulesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * List content resources with filtering and search.
+ */
 export interface GetContentResourcesForGetContentResourcesInput {
   query?: {
     type?: Types.ContentPagesContentResourceType;
@@ -10992,6 +12381,9 @@ export const getContentResourcesForGetContentResourcesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Create a new content resource.
+ */
 export interface PostContentResourcesInput {
   body?: Types.ContentPagesCreateContentResourceDto;
 }
@@ -11004,6 +12396,9 @@ export const postContentResourcesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get a content resource by ID.
+ */
 export interface GetContentResourcesForGetContentResourcesByIdInput {
   id: string;
 }
@@ -11016,6 +12411,9 @@ export const getContentResourcesForGetContentResourcesByIdEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update a content resource.
+ */
 export interface PutContentResourcesInput {
   id: string;
   body?: Types.ContentPagesUpdateContentResourceDto;
@@ -11029,6 +12427,9 @@ export const putContentResourcesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Soft-delete a content resource.
+ */
 export interface DeleteContentResourcesInput {
   id: string;
 }
@@ -11041,6 +12442,9 @@ export const deleteContentResourcesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Publish a content resource.
+ */
 export interface PostContentResourcesPublishInput {
   id: string;
 }
@@ -11053,6 +12457,9 @@ export const postContentResourcesPublishEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get a content resource by slug. Publicly returns published resources only.
+ */
 export interface GetContentResourcesBySlugInput {
   slug: string;
 }
@@ -11065,6 +12472,10 @@ export const getContentResourcesBySlugEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Create or resume a content interaction
+ * Requires Read permission on the parent Program
+ */
 export interface PostCourseInteractionsInput {
   query?: {
     programId?: string;
@@ -11080,6 +12491,10 @@ export const postCourseInteractionsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Mark content as completed
+ * Requires Edit permission on the parent Program
+ */
 export interface PostCourseInteractionsCompleteInput {
   interactionId: string;
   query?: {
@@ -11096,6 +12511,10 @@ export const postCourseInteractionsCompleteEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update progress for a content interaction
+ * Requires Edit permission on the parent Program
+ */
 export interface PutCourseInteractionsProgressInput {
   interactionId: string;
   query?: {
@@ -11112,6 +12531,10 @@ export const putCourseInteractionsProgressEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Submit content interaction (makes it immutable)
+ * Requires Edit permission on the parent Program
+ */
 export interface PostCourseInteractionsSubmitInput {
   interactionId: string;
   query?: {
@@ -11128,6 +12551,10 @@ export const postCourseInteractionsSubmitEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update time spent on content
+ * Requires Edit permission on the parent Program
+ */
 export interface PutCourseInteractionsTimeSpentInput {
   interactionId: string;
   query?: {
@@ -11174,6 +12601,9 @@ export const getCourseInteractionsContentReflectionResponsesVisibleEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get identity-free survey result records for course managers.
+ */
 export interface GetCourseInteractionsContentSurveyResultsInput {
   contentId: string;
   query?: {
@@ -11204,6 +12634,10 @@ export const getCourseInteractionsContentSurveyResultsVisibleEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get all interactions for a user in a program
+ * Requires Read permission on the parent Program
+ */
 export interface GetCourseInteractionsUserInput {
   programUserId: string;
   query?: {
@@ -11219,6 +12653,10 @@ export const getCourseInteractionsUserEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get interaction for specific user and content
+ * Requires Read permission on the parent Program
+ */
 export interface GetCourseInteractionsUserContentInput {
   programUserId: string;
   contentId: string;
@@ -11235,6 +12673,9 @@ export const getCourseInteractionsUserContentEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get all courses with optional filtering (content-type level read permission). Non-manage actors are DAC-scoped to their own courses.
+ */
 export interface GetCoursesForGetCoursesInput {
   query?: {
     status?: string;
@@ -11256,6 +12697,9 @@ export const getCoursesForGetCoursesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Create a new program (content-type level draft permission)
+ */
 export interface PostCoursesInput {
   body?: Types.LearningCoursesCreateProgramDto;
 }
@@ -11369,6 +12813,9 @@ export const getCoursesCohortsCalendarEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * List a course's group sets with per-group summaries. Open to any active course member.
+ */
 export interface GetCoursesGroupSetsInput {
   courseId: string;
 }
@@ -11381,6 +12828,9 @@ export const getCoursesGroupSetsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Create a group set for a course. Instructor only.
+ */
 export interface PostCoursesGroupSetsInput {
   courseId: string;
   body?: Types.LearningAssessmentsCreateGroupSetInput;
@@ -11394,6 +12844,9 @@ export const postCoursesGroupSetsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * List the groups of one group set with member display names. Open to any active course member.
+ */
 export interface GetCoursesGroupSetsGroupsInput {
   courseId: string;
   setId: string;
@@ -11407,6 +12860,9 @@ export const getCoursesGroupSetsGroupsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Create a group inside a group set. Instructor only.
+ */
 export interface PostCoursesGroupSetsGroupsInput {
   courseId: string;
   setId: string;
@@ -11421,6 +12877,9 @@ export const postCoursesGroupSetsGroupsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Student self-signup into a group.
+ */
 export interface PostCoursesGroupSetsGroupsJoinInput {
   courseId: string;
   groupId: string;
@@ -11434,6 +12893,9 @@ export const postCoursesGroupSetsGroupsJoinEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Instructor manual add of a user to a group (bypasses the lock-at-due rule, not capacity).
+ */
 export interface PostCoursesGroupSetsGroupsMembersInput {
   courseId: string;
   groupId: string;
@@ -11448,6 +12910,9 @@ export const postCoursesGroupSetsGroupsMembersEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Instructor manual remove of a member from a group (bypasses the lock-at-due rule).
+ */
 export interface DeleteCoursesGroupSetsGroupsMembersInput {
   courseId: string;
   groupId: string;
@@ -11462,6 +12927,9 @@ export const deleteCoursesGroupSetsGroupsMembersEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Student leaves their own membership in a group.
+ */
 export interface DeleteCoursesGroupSetsGroupsMembershipInput {
   courseId: string;
   groupId: string;
@@ -11558,6 +13026,9 @@ export const postCoursesSupportTicketsMessagesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get a specific program by ID (resource-level read permission)
+ */
 export interface GetCoursesForGetCoursesByIdInput {
   id: string;
 }
@@ -11570,6 +13041,9 @@ export const getCoursesForGetCoursesByIdEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update a program (resource-level edit permission)
+ */
 export interface PutCoursesInput {
   id: string;
   body?: Types.LearningCoursesUpdateProgramDto;
@@ -11583,6 +13057,9 @@ export const putCoursesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Delete a program (resource-level delete permission)
+ */
 export interface DeleteCoursesInput {
   id: string;
 }
@@ -11595,6 +13072,9 @@ export const deleteCoursesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Approve a program (resource-level approve permission)
+ */
 export interface PostCoursesApproveInput {
   id: string;
 }
@@ -11607,6 +13087,9 @@ export const postCoursesApproveEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Archive a program (resource-level archive permission)
+ */
 export interface PostCoursesArchiveInput {
   id: string;
 }
@@ -11619,6 +13102,9 @@ export const postCoursesArchiveEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Clone/duplicate a program (resource-level clone permission)
+ */
 export interface PostCoursesCloneInput {
   id: string;
   body?: Types.LearningCoursesCloneProgramDto;
@@ -11632,6 +13118,9 @@ export const postCoursesCloneEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Create a product from a program (resource-level edit permission for program, content-type level draft permission for product)
+ */
 export interface PostCoursesCreateProductInput {
   id: string;
   body?: Types.LearningCoursesCreateProductFromProgramDto;
@@ -11645,6 +13134,9 @@ export const postCoursesCreateProductEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Disable monetization for a program (resource-level monetize permission)
+ */
 export interface PostCoursesDisableMonetizationInput {
   id: string;
 }
@@ -11657,6 +13149,9 @@ export const postCoursesDisableMonetizationEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Link a program to an existing product (resource-level edit permission)
+ */
 export interface PostCoursesLinkProductInput {
   id: string;
   productId: string;
@@ -11670,6 +13165,9 @@ export const postCoursesLinkProductEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Enable monetization for a program (resource-level monetize permission)
+ */
 export interface PostCoursesMonetizeInput {
   id: string;
   body?: Types.LearningCoursesMonetizationDto;
@@ -11683,6 +13181,9 @@ export const postCoursesMonetizeEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Publish a program (resource-level publish permission)
+ */
 export interface PostCoursesPublishInput {
   id: string;
 }
@@ -11695,6 +13196,9 @@ export const postCoursesPublishEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Reject a program (resource-level reject permission)
+ */
 export interface PostCoursesRejectInput {
   id: string;
   body?: Types.LearningCoursesRejectProgramDto;
@@ -11708,6 +13212,9 @@ export const postCoursesRejectEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Restore an archived program (resource-level restore permission)
+ */
 export interface PostCoursesRestoreInput {
   id: string;
 }
@@ -11720,6 +13227,9 @@ export const postCoursesRestoreEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Schedule a program for publishing (resource-level schedule permission)
+ */
 export interface PostCoursesScheduleInput {
   id: string;
   body?: Types.LearningCoursesScheduleProgramDto;
@@ -11733,6 +13243,9 @@ export const postCoursesScheduleEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Self-enroll the current authenticated user in a published public course.
+ */
 export interface PostCoursesSelfEnrollInput {
   id: string;
 }
@@ -11745,6 +13258,9 @@ export const postCoursesSelfEnrollEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Submit a program for review (resource-level submit permission)
+ */
 export interface PostCoursesSubmitInput {
   id: string;
 }
@@ -11757,6 +13273,9 @@ export const postCoursesSubmitEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Unlink a program from a product (resource-level edit permission)
+ */
 export interface DeleteCoursesUnlinkProductInput {
   id: string;
   productId: string;
@@ -11770,6 +13289,9 @@ export const deleteCoursesUnlinkProductEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Unpublish a program (resource-level unpublish permission)
+ */
 export interface PostCoursesUnpublishInput {
   id: string;
 }
@@ -11782,6 +13304,9 @@ export const postCoursesUnpublishEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Withdraw a program from review (resource-level withdraw permission)
+ */
 export interface PostCoursesWithdrawInput {
   id: string;
 }
@@ -11794,6 +13319,9 @@ export const postCoursesWithdrawEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get program analytics (resource-level analytics permission)
+ */
 export interface GetCoursesAnalyticsInput {
   id: string;
 }
@@ -11806,6 +13334,9 @@ export const getCoursesAnalyticsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get user completion rates for a program (resource-level analytics permission)
+ */
 export interface GetCoursesAnalyticsCompletionRatesInput {
   id: string;
 }
@@ -11818,6 +13349,9 @@ export const getCoursesAnalyticsCompletionRatesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get program engagement metrics (resource-level analytics permission)
+ */
 export interface GetCoursesAnalyticsEngagementInput {
   id: string;
 }
@@ -11830,6 +13364,9 @@ export const getCoursesAnalyticsEngagementEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get program revenue analytics (resource-level revenue permission)
+ */
 export interface GetCoursesAnalyticsRevenueInput {
   id: string;
 }
@@ -11842,6 +13379,9 @@ export const getCoursesAnalyticsRevenueEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Mark content as completed for the current learner.
+ */
 export interface PostCoursesMeContentCompleteInput {
   id: string;
   contentId: string;
@@ -11855,6 +13395,9 @@ export const postCoursesMeContentCompleteEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get the current learner's progress in a program.
+ */
 export interface GetCoursesMeProgressInput {
   id: string;
 }
@@ -11867,6 +13410,9 @@ export const getCoursesMeProgressEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update the current learner's progress in a program.
+ */
 export interface PutCoursesMeProgressInput {
   id: string;
   body?: Types.LearningCoursesUpdateProgressDto;
@@ -11880,6 +13426,9 @@ export const putCoursesMeProgressEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get program pricing information (resource-level read permission)
+ */
 export interface GetCoursesPricingInput {
   id: string;
 }
@@ -11892,6 +13441,9 @@ export const getCoursesPricingEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update program pricing (resource-level pricing permission)
+ */
 export interface PutCoursesPricingInput {
   id: string;
   body?: Types.LearningCoursesUpdatePricingDto;
@@ -11905,6 +13457,9 @@ export const putCoursesPricingEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get all products linked to a program (resource-level read permission)
+ */
 export interface GetCoursesProductsInput {
   id: string;
 }
@@ -11917,6 +13472,9 @@ export const getCoursesProductsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get all users in a program (resource-level read permission)
+ */
 export interface GetCoursesUsersInput {
   id: string;
   query?: {
@@ -11933,6 +13491,11 @@ export const getCoursesUsersEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Resolve a tenant-scoped user reference and add that user to a program.
+ * This keeps user discovery behind the program's resource-level edit permission,
+ * so course owners do not need tenant-wide user administration privileges.
+ */
 export interface PostCoursesUsersEnrollInput {
   id: string;
   body?: Types.LearningCoursesEnrollProgramUserInput;
@@ -11946,6 +13509,9 @@ export const postCoursesUsersEnrollEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Add a user to a program (resource-level edit permission)
+ */
 export interface PostCoursesUsersInput {
   id: string;
   userId: string;
@@ -11959,6 +13525,9 @@ export const postCoursesUsersEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Remove a user from a program (resource-level edit permission)
+ */
 export interface DeleteCoursesUsersInput {
   id: string;
   userId: string;
@@ -11972,6 +13541,9 @@ export const deleteCoursesUsersEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Reset user progress in a program (resource-level edit permission)
+ */
 export interface PostCoursesUsersResetInput {
   id: string;
   userId: string;
@@ -11985,6 +13557,9 @@ export const postCoursesUsersResetEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Mark content as completed for a user (resource-level edit permission)
+ */
 export interface PostCoursesUsersContentCompleteInput {
   id: string;
   userId: string;
@@ -11999,6 +13574,9 @@ export const postCoursesUsersContentCompleteEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get a specific user's progress in a program (resource-level read permission)
+ */
 export interface GetCoursesUsersProgressInput {
   id: string;
   userId: string;
@@ -12012,6 +13590,9 @@ export const getCoursesUsersProgressEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update a user's progress in a program (resource-level edit permission)
+ */
 export interface PutCoursesUsersProgressInput {
   id: string;
   userId: string;
@@ -12026,6 +13607,9 @@ export const putCoursesUsersProgressEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get a specific program with all content included (resource-level read permission)
+ */
 export interface GetCoursesWithContentInput {
   id: string;
 }
@@ -12038,6 +13622,9 @@ export const getCoursesWithContentEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Grade a content interaction (Program-level Edit permission required)
+ */
 export interface PostCoursesActivityGradesInput {
   programId: string;
   body?: Types.LearningCoursesCreateActivityGradeDto;
@@ -12051,6 +13638,9 @@ export const postCoursesActivityGradesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update an existing grade (Program-level Edit permission required)
+ */
 export interface PutCoursesActivityGradesInput {
   programId: string;
   gradeId: string;
@@ -12065,6 +13655,9 @@ export const putCoursesActivityGradesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Delete a grade (Program-level Delete permission required)
+ */
 export interface DeleteCoursesActivityGradesInput {
   programId: string;
   gradeId: string;
@@ -12078,6 +13671,9 @@ export const deleteCoursesActivityGradesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get all grades for a specific content item (Program-level Read permission required)
+ */
 export interface GetCoursesActivityGradesContentInput {
   programId: string;
   contentId: string;
@@ -12091,6 +13687,9 @@ export const getCoursesActivityGradesContentEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get all grades given by a specific grader (Program-level Read permission required)
+ */
 export interface GetCoursesActivityGradesGraderInput {
   programId: string;
   graderProgramUserId: string;
@@ -12104,6 +13703,9 @@ export const getCoursesActivityGradesGraderEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get grade for a specific content interaction (Program-level Read permission required)
+ */
 export interface GetCoursesActivityGradesInteractionInput {
   programId: string;
   contentInteractionId: string;
@@ -12117,6 +13719,9 @@ export const getCoursesActivityGradesInteractionEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get pending grades for a program (content interactions needing grading) (Program-level Read permission required)
+ */
 export interface GetCoursesActivityGradesPendingInput {
   programId: string;
 }
@@ -12129,6 +13734,9 @@ export const getCoursesActivityGradesPendingEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get grade statistics for a program (Program-level Read permission required)
+ */
 export interface GetCoursesActivityGradesStatisticsInput {
   programId: string;
 }
@@ -12141,6 +13749,9 @@ export const getCoursesActivityGradesStatisticsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get all grades received by a specific student (Program-level Read permission required)
+ */
 export interface GetCoursesActivityGradesStudentInput {
   programId: string;
   programUserId: string;
@@ -12154,6 +13765,12 @@ export const getCoursesActivityGradesStudentEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get all content for a course with optional filtering (resource-level Read permission required on parent Program)
+ *
+ * Supports filtering via query parameters:
+ * - level=top: Get only top-level content
+ */
 export interface GetCoursesContentInput {
   programId: string;
   query?: {
@@ -12169,6 +13786,9 @@ export const getCoursesContentEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Create new program content (resource-level Create permission required on parent Program)
+ */
 export interface PostCoursesContentInput {
   programId: string;
   body?: Types.LearningCoursesCreateProgramContentDto;
@@ -12334,6 +13954,9 @@ export const postCoursesContentAuthoringPublishEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get specific program content by ID (resource-level Read permission required on parent Program)
+ */
 export interface GetCoursesContentByIdInput {
   programId: string;
   id: string;
@@ -12347,6 +13970,9 @@ export const getCoursesContentByIdEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update program content (resource-level Edit permission required on parent Program)
+ */
 export interface PutCoursesContentInput {
   programId: string;
   id: string;
@@ -12361,6 +13987,9 @@ export const putCoursesContentEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Delete program content (resource-level Delete permission required on parent Program)
+ */
 export interface DeleteCoursesContentInput {
   programId: string;
   id: string;
@@ -12374,6 +14003,9 @@ export const deleteCoursesContentEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Student view of a coding assignment: Private tests stripped, Private files filtered out.
+ */
 export interface GetCoursesContentCodingAssignmentInput {
   programId: string;
   id: string;
@@ -12387,6 +14019,9 @@ export const getCoursesContentCodingAssignmentEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Author a coding assignment: UPSERT onto ProgramContent.JsonBody + sync grading to linked Assessment.
+ */
 export interface PutCoursesContentCodingAssignmentInput {
   programId: string;
   id: string;
@@ -12401,6 +14036,9 @@ export const putCoursesContentCodingAssignmentEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Instructor view of a coding assignment: full content including Private tests and files.
+ */
 export interface GetCoursesContentCodingAssignmentFullInput {
   programId: string;
   id: string;
@@ -12414,6 +14052,9 @@ export const getCoursesContentCodingAssignmentFullEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Move content to a new parent/position (resource-level Edit permission required on parent Program)
+ */
 export interface PostCoursesContentMoveInput {
   programId: string;
   id: string;
@@ -12428,6 +14069,9 @@ export const postCoursesContentMoveEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Submit work for the current learner on a course content item.
+ */
 export interface PostCoursesContentSubmitInput {
   programId: string;
   id: string;
@@ -12442,6 +14086,9 @@ export const postCoursesContentSubmitEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get child content for a specific parent (resource-level Read permission required on parent Program)
+ */
 export interface GetCoursesContentChildrenInput {
   programId: string;
   parentId: string;
@@ -12455,6 +14102,9 @@ export const getCoursesContentChildrenEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get content by type (resource-level Read permission required on parent Program)
+ */
 export interface GetCoursesContentByTypeInput {
   programId: string;
   type: Types.LearningCoursesProgramContentType;
@@ -12468,6 +14118,9 @@ export const getCoursesContentByTypeEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get content by visibility (resource-level Read permission required on parent Program)
+ */
 export interface GetCoursesContentByVisibilityInput {
   programId: string;
   visibility: Types.LearningCoursesVisibility;
@@ -12481,6 +14134,9 @@ export const getCoursesContentByVisibilityEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Reorder content within a program (resource-level Edit permission required on parent Program)
+ */
 export interface PostCoursesContentReorderInput {
   programId: string;
   body?: Types.LearningCoursesReorderContentDto;
@@ -12494,6 +14150,9 @@ export const postCoursesContentReorderEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get required content for a program (resource-level Read permission required on parent Program)
+ */
 export interface GetCoursesContentRequiredInput {
   programId: string;
 }
@@ -12506,6 +14165,9 @@ export const getCoursesContentRequiredEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Search content within a program (resource-level Read permission required on parent Program)
+ */
 export interface PostCoursesContentSearchInput {
   programId: string;
   body?: Types.LearningCoursesSearchContentDto;
@@ -12519,6 +14181,9 @@ export const postCoursesContentSearchEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get content statistics for a program (resource-level Read permission required on parent Program)
+ */
 export interface GetCoursesContentStatsInput {
   programId: string;
 }
@@ -12558,6 +14223,9 @@ export const postCoursesInteractionsEventsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get every course in which the current user has an active enrollment.
+ */
 export type GetCoursesMeInput = void;
 export type GetCoursesMeOutput = Array<Types.LearningCoursesProgramDto>;
 export const getCoursesMeEndpoint = {
@@ -12568,6 +14236,9 @@ export const getCoursesMeEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get published public courses for the public catalog.
+ */
 export interface GetCoursesPublicInput {
   query?: {
     skip?: number;
@@ -12583,6 +14254,9 @@ export const getCoursesPublicEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get a specific program by slug (public access for published programs)
+ */
 export interface GetCoursesSlugInput {
   slug: string;
 }
@@ -12595,6 +14269,9 @@ export const getCoursesSlugEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Grant delegated admin scope to a user
+ */
 export interface PostDelegatedAdminInput {
   body?: Types.IdentityAuthorizationCommandsGrantDelegatedAdminCommand;
 }
@@ -12607,6 +14284,9 @@ export const postDelegatedAdminEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get a delegated admin scope by ID
+ */
 export interface GetDelegatedAdminInput {
   id: string;
 }
@@ -12619,6 +14299,9 @@ export const getDelegatedAdminEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Revoke delegated admin scope
+ */
 export interface DeleteDelegatedAdminInput {
   id: string;
 }
@@ -12631,6 +14314,9 @@ export const deleteDelegatedAdminEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Check if admin can manage a resource type
+ */
 export interface GetDelegatedAdminUserCanManageResourceInput {
   adminUserId: string;
   query?: {
@@ -12647,6 +14333,9 @@ export const getDelegatedAdminUserCanManageResourceEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Check if admin can manage a user
+ */
 export interface GetDelegatedAdminUserCanManageUserInput {
   adminUserId: string;
   targetUserId: string;
@@ -12663,6 +14352,9 @@ export const getDelegatedAdminUserCanManageUserEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get managed resource types for an admin
+ */
 export interface GetDelegatedAdminUserManagedResourcesInput {
   adminUserId: string;
   query?: {
@@ -12678,6 +14370,9 @@ export const getDelegatedAdminUserManagedResourcesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get managed users for an admin
+ */
 export interface GetDelegatedAdminUserManagedUsersInput {
   adminUserId: string;
   query?: {
@@ -12693,6 +14388,9 @@ export const getDelegatedAdminUserManagedUsersEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get admin scopes for a user
+ */
 export interface GetDelegatedAdminUserScopesInput {
   adminUserId: string;
   query?: {
@@ -12708,6 +14406,9 @@ export const getDelegatedAdminUserScopesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get all published course collections
+ */
 export interface GetDiscoveryCollectionsForGetDiscoveryCollectionsInput {
   query?: {
     tenantId?: string;
@@ -12725,6 +14426,9 @@ export const getDiscoveryCollectionsForGetDiscoveryCollectionsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Create a new course collection
+ */
 export interface PostDiscoveryCollectionsInput {
   query?: {
     curatorId?: string;
@@ -12741,6 +14445,9 @@ export const postDiscoveryCollectionsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get a course collection by ID
+ */
 export interface GetDiscoveryCollectionsForGetDiscoveryCollectionsByIdInput {
   id: string;
 }
@@ -12753,6 +14460,9 @@ export const getDiscoveryCollectionsForGetDiscoveryCollectionsByIdEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update a course collection
+ */
 export interface PutDiscoveryCollectionsInput {
   id: string;
   body?: Types.LearningExperienceDiscoveryUpdateCourseCollectionDto;
@@ -12766,6 +14476,9 @@ export const putDiscoveryCollectionsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Delete a course collection
+ */
 export interface DeleteDiscoveryCollectionsInput {
   id: string;
 }
@@ -12778,6 +14491,9 @@ export const deleteDiscoveryCollectionsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Publish a course collection
+ */
 export interface PostDiscoveryCollectionsPublishInput {
   id: string;
 }
@@ -12790,6 +14506,9 @@ export const postDiscoveryCollectionsPublishEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Unpublish a course collection
+ */
 export interface PostDiscoveryCollectionsUnpublishInput {
   id: string;
 }
@@ -12802,6 +14521,9 @@ export const postDiscoveryCollectionsUnpublishEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get collections created by a specific curator
+ */
 export interface GetDiscoveryCollectionsCuratorInput {
   curatorId: string;
   query?: {
@@ -12819,6 +14541,9 @@ export const getDiscoveryCollectionsCuratorEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get featured course collections
+ */
 export interface GetDiscoveryCollectionsFeaturedInput {
   query?: {
     tenantId?: string;
@@ -12834,6 +14559,9 @@ export const getDiscoveryCollectionsFeaturedEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get a course collection by slug
+ */
 export interface GetDiscoveryCollectionsSlugInput {
   slug: string;
   query?: {
@@ -12849,6 +14577,9 @@ export const getDiscoveryCollectionsSlugEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get all currently active featured content
+ */
 export interface GetDiscoveryFeaturedForGetDiscoveryFeaturedInput {
   query?: {
     tenantId?: string;
@@ -12865,6 +14596,9 @@ export const getDiscoveryFeaturedForGetDiscoveryFeaturedEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Create new featured content (admin)
+ */
 export interface PostDiscoveryFeaturedInput {
   query?: {
     tenantId?: string;
@@ -12880,6 +14614,9 @@ export const postDiscoveryFeaturedEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get a specific featured content item by ID
+ */
 export interface GetDiscoveryFeaturedForGetDiscoveryFeaturedByIdInput {
   id: string;
 }
@@ -12892,6 +14629,9 @@ export const getDiscoveryFeaturedForGetDiscoveryFeaturedByIdEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update featured content (admin)
+ */
 export interface PutDiscoveryFeaturedInput {
   id: string;
   body?: Types.LearningExperienceDiscoveryUpdateFeaturedContentDto;
@@ -12905,6 +14645,9 @@ export const putDiscoveryFeaturedEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Delete featured content (admin)
+ */
 export interface DeleteDiscoveryFeaturedInput {
   id: string;
 }
@@ -12917,6 +14660,9 @@ export const deleteDiscoveryFeaturedEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Toggle featured content active state (admin)
+ */
 export interface PatchDiscoveryFeaturedToggleInput {
   id: string;
   query?: {
@@ -12932,6 +14678,9 @@ export const patchDiscoveryFeaturedToggleEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get featured content by type (e.g., HeroBanner, NewRelease)
+ */
 export interface GetDiscoveryFeaturedTypeInput {
   type: Types.LearningExperienceDiscoveryFeaturedContentType;
   query?: {
@@ -12949,6 +14698,9 @@ export const getDiscoveryFeaturedTypeEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Record a click from search results
+ */
 export interface PostDiscoverySearchClickInput {
   searchId: string;
   body?: Types.LearningExperienceDiscoveryRecordSearchClickDto;
@@ -12962,6 +14714,9 @@ export const postDiscoverySearchClickEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get search history for a user
+ */
 export interface GetDiscoverySearchHistoryInput {
   userId: string;
   query?: {
@@ -12977,6 +14732,9 @@ export const getDiscoverySearchHistoryEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get popular searches (admin analytics)
+ */
 export interface GetDiscoverySearchPopularInput {
   query?: {
     daysBack?: number;
@@ -12992,6 +14750,9 @@ export const getDiscoverySearchPopularEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Record a search query (for analytics)
+ */
 export interface PostDiscoverySearchRecordInput {
   query?: {
     userId?: string;
@@ -13031,6 +14792,9 @@ export const postDocumentContractsGenerateBulkEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * List entitlements with optional status filter
+ */
 export interface GetEntitlementsInput {
   query?: {
     status?: string;
@@ -13046,6 +14810,9 @@ export const getEntitlementsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Grant entitlement to a user (create)
+ */
 export interface PostEntitlementsInput {
   body?: Types.CommerceProductsGrantEntitlementInput;
 }
@@ -13058,6 +14825,9 @@ export const postEntitlementsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Check if current user has access to a product
+ */
 export interface GetEntitlementsCheckInput {
   query?: {
     productId?: string;
@@ -13072,6 +14842,9 @@ export const getEntitlementsCheckEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Check if current user has access to multiple products
+ */
 export interface PostEntitlementsCheckBatchInput {
   body?: Types.CommerceProductsCheckMultipleAccessInput;
 }
@@ -13084,6 +14857,9 @@ export const postEntitlementsCheckBatchEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Revoke an entitlement (admin only)
+ */
 export interface PostEntitlementsRevokeInput {
   entitlementId: string;
   body?: Types.CommerceProductsRevokeEntitlementInput;
@@ -13123,6 +14899,9 @@ export const postFeaturesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Evaluate a feature flag for runtime decisions
+ */
 export interface PostFeaturesEvaluateInput {
   body?: Types.FeaturesFeatureEvaluationInput;
 }
@@ -13135,6 +14914,9 @@ export const postFeaturesEvaluateEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Bulk evaluate multiple feature flags for runtime decisions
+ */
 export interface PostFeaturesEvaluateBulkInput {
   body?: Types.FeaturesBulkEvaluationInput;
 }
@@ -13236,6 +15018,9 @@ export const getFeaturesExistsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get feature value (boolean/string/number) as resolved for the current context
+ */
 export interface GetFeaturesValueInput {
   key: string;
   query?: {
@@ -13254,6 +15039,9 @@ export const getFeaturesValueEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get all enabled feature flags for the current context
+ */
 export interface GetFeaturesEnabledInput {
   query?: {
     userId?: string;
@@ -13270,6 +15058,9 @@ export const getFeaturesEnabledEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Request a JIT elevation for a permission
+ */
 export interface PostJitElevationsInput {
   body?: Types.IdentityAuthorizationCommandsRequestJitElevationCommand;
 }
@@ -13282,6 +15073,9 @@ export const postJitElevationsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Cleanup expired elevations (admin only)
+ */
 export type PostJitElevationsCleanupInput = void;
 export type PostJitElevationsCleanupOutput = number;
 export const postJitElevationsCleanupEndpoint = {
@@ -13292,6 +15086,9 @@ export const postJitElevationsCleanupEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get a JIT elevation request by ID
+ */
 export interface GetJitElevationsInput {
   id: string;
 }
@@ -13304,6 +15101,9 @@ export const getJitElevationsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Approve a pending JIT elevation request
+ */
 export interface PostJitElevationsApproveInput {
   id: string;
   body?: Types.IdentityAuthorizationControllersApproveElevationInput;
@@ -13317,6 +15117,9 @@ export const postJitElevationsApproveEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Deny a pending JIT elevation request
+ */
 export interface PostJitElevationsDenyInput {
   id: string;
   body?: Types.IdentityAuthorizationControllersDenyElevationInput;
@@ -13330,6 +15133,9 @@ export const postJitElevationsDenyEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Revoke an active JIT elevation
+ */
 export interface PostJitElevationsRevokeInput {
   id: string;
   body?: Types.IdentityAuthorizationControllersRevokeElevationInput;
@@ -13343,6 +15149,9 @@ export const postJitElevationsRevokeEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get pending JIT elevation requests
+ */
 export interface GetJitElevationsPendingInput {
   query?: {
     tenantId?: string;
@@ -13357,6 +15166,9 @@ export const getJitElevationsPendingEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get JIT elevation requests for a user
+ */
 export interface GetJitElevationsUserInput {
   userId: string;
   query?: {
@@ -13372,6 +15184,9 @@ export const getJitElevationsUserEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get active JIT elevations for a user
+ */
 export interface GetJitElevationsUserActiveInput {
   userId: string;
   query?: {
@@ -13387,6 +15202,9 @@ export const getJitElevationsUserActiveEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Check if user has active elevation for a permission
+ */
 export interface GetJitElevationsUserCheckInput {
   userId: string;
   query?: {
@@ -13763,6 +15581,9 @@ export const putLaunchPadSettingsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get all published learning paths
+ */
 export interface GetLearningPathsForGetLearningPathsInput {
   query?: {
     tenantId?: string;
@@ -13780,6 +15601,9 @@ export const getLearningPathsForGetLearningPathsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Create a new learning path
+ */
 export interface PostLearningPathsInput {
   query?: {
     creatorId?: string;
@@ -13796,6 +15620,9 @@ export const postLearningPathsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get a learning path by ID
+ */
 export interface GetLearningPathsForGetLearningPathsByIdInput {
   id: string;
 }
@@ -13808,6 +15635,9 @@ export const getLearningPathsForGetLearningPathsByIdEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update a learning path
+ */
 export interface PutLearningPathsInput {
   id: string;
   body?: Types.LearningExperienceLearningPathsUpdateLearningPathDto;
@@ -13821,6 +15651,9 @@ export const putLearningPathsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Delete a learning path
+ */
 export interface DeleteLearningPathsInput {
   id: string;
 }
@@ -13833,6 +15666,9 @@ export const deleteLearningPathsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Abandon a learning path enrollment
+ */
 export interface PostLearningPathsAbandonInput {
   id: string;
   query?: {
@@ -13848,6 +15684,9 @@ export const postLearningPathsAbandonEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Mark a learning path as completed
+ */
 export interface PostLearningPathsCompleteInput {
   id: string;
   query?: {
@@ -13863,6 +15702,9 @@ export const postLearningPathsCompleteEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Add a course to a learning path
+ */
 export interface PostLearningPathsCoursesInput {
   id: string;
   body?: Types.LearningExperienceLearningPathsAddCourseToPathDto;
@@ -13876,6 +15718,9 @@ export const postLearningPathsCoursesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Remove a course from a learning path
+ */
 export interface DeleteLearningPathsCoursesInput {
   id: string;
   courseId: string;
@@ -13889,6 +15734,9 @@ export const deleteLearningPathsCoursesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Reorder courses in a learning path
+ */
 export interface PutLearningPathsCoursesOrderInput {
   id: string;
   body?: Types.LearningExperienceLearningPathsReorderCoursesDto;
@@ -13902,6 +15750,9 @@ export const putLearningPathsCoursesOrderEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Enroll current user in a learning path
+ */
 export interface PostLearningPathsEnrollInput {
   id: string;
   query?: {
@@ -13917,6 +15768,9 @@ export const postLearningPathsEnrollEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get user's enrollment in a specific path
+ */
 export interface GetLearningPathsEnrollmentInput {
   id: string;
   userId: string;
@@ -13930,6 +15784,9 @@ export const getLearningPathsEnrollmentEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Check if user is enrolled in a path
+ */
 export interface GetLearningPathsEnrollmentCheckInput {
   id: string;
   userId: string;
@@ -13943,6 +15800,9 @@ export const getLearningPathsEnrollmentCheckEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get all enrollments for a learning path (admin)
+ */
 export interface GetLearningPathsEnrollmentsInput {
   id: string;
   query?: {
@@ -13960,6 +15820,9 @@ export const getLearningPathsEnrollmentsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update user's progress in a learning path
+ */
 export interface PutLearningPathsProgressInput {
   id: string;
   query?: {
@@ -13976,6 +15839,9 @@ export const putLearningPathsProgressEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Publish a learning path
+ */
 export interface PostLearningPathsPublishInput {
   id: string;
 }
@@ -13988,6 +15854,9 @@ export const postLearningPathsPublishEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get statistics for a learning path
+ */
 export interface GetLearningPathsStatisticsInput {
   id: string;
 }
@@ -14000,6 +15869,9 @@ export const getLearningPathsStatisticsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Unenroll user from a learning path
+ */
 export interface PostLearningPathsUnenrollInput {
   id: string;
   query?: {
@@ -14015,6 +15887,9 @@ export const postLearningPathsUnenrollEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Unpublish a learning path
+ */
 export interface PostLearningPathsUnpublishInput {
   id: string;
 }
@@ -14027,6 +15902,9 @@ export const postLearningPathsUnpublishEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get learning paths by creator
+ */
 export interface GetLearningPathsCreatorInput {
   creatorId: string;
   query?: {
@@ -14044,6 +15922,9 @@ export const getLearningPathsCreatorEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get featured learning paths
+ */
 export interface GetLearningPathsFeaturedInput {
   query?: {
     tenantId?: string;
@@ -14059,6 +15940,9 @@ export const getLearningPathsFeaturedEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get popular learning paths
+ */
 export interface GetLearningPathsPopularInput {
   query?: {
     tenantId?: string;
@@ -14075,6 +15959,9 @@ export const getLearningPathsPopularEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Search learning paths
+ */
 export interface GetLearningPathsSearchInput {
   query?: {
     q?: string;
@@ -14093,6 +15980,9 @@ export const getLearningPathsSearchEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get a learning path by slug
+ */
 export interface GetLearningPathsSlugInput {
   slug: string;
   query?: {
@@ -14108,6 +15998,9 @@ export const getLearningPathsSlugEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get completed paths for a user
+ */
 export interface GetLearningPathsUserCompletedInput {
   userId: string;
   query?: {
@@ -14124,6 +16017,9 @@ export const getLearningPathsUserCompletedEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get all enrolled paths for a user
+ */
 export interface GetLearningPathsUserEnrollmentsInput {
   userId: string;
   query?: {
@@ -14256,6 +16152,12 @@ export const getMeTasksEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * OAuth2 client_credentials grant - authenticates a service account and returns a JWT token.
+ *
+ * This endpoint implements the OAuth2 client_credentials flow for machine-to-machine authentication.
+ * The returned access token can be used to authenticate API requests.
+ */
 export interface PostOauthTokenInput {
   body?: FormData;
 }
@@ -14268,6 +16170,10 @@ export const postOauthTokenEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Resolve OpenGraph metadata for a given slug.
+ * Checks pages first, then content resources.
+ */
 export interface GetOgInput {
   slug: string;
 }
@@ -14280,6 +16186,11 @@ export const getOgEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * List orders with optional filtering.
+ * Use owner=me to get current user's orders.
+ * Admin users can list all orders without owner filter.
+ */
 export interface GetOrdersForGetOrdersInput {
   query?: {
     owner?: string;
@@ -14295,6 +16206,9 @@ export const getOrdersForGetOrdersEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Create a new order with idempotency protection
+ */
 export interface PostOrdersInput {
   body?: Types.CommerceOrdersCreateOrderInput;
 }
@@ -14307,6 +16221,9 @@ export const postOrdersEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get an order by ID
+ */
 export interface GetOrdersForGetOrdersByOrderIdInput {
   orderId: string;
 }
@@ -14319,6 +16236,9 @@ export const getOrdersForGetOrdersByOrderIdEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Capture payment for an authorized order
+ */
 export interface PostOrdersCaptureInput {
   orderId: string;
   body?: Types.CommerceOrdersCaptureOrderInput;
@@ -14332,6 +16252,9 @@ export const postOrdersCaptureEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Complete an order (process payment, grant entitlements)
+ */
 export interface PostOrdersCompleteInput {
   orderId: string;
   body?: Types.CommerceOrdersCompleteOrderInput;
@@ -14357,6 +16280,9 @@ export const postOrdersPaymentIntentEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Add a product to an existing order
+ */
 export interface PostOrdersItemsInput {
   orderId: string;
   body?: Types.CommerceOrdersAddOrderItemInput;
@@ -14370,6 +16296,9 @@ export const postOrdersItemsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * List pages with optional filtering.
+ */
 export interface GetPagesForGetPagesInput {
   query?: {
     type?: Types.ContentPagesPageType;
@@ -14389,6 +16318,9 @@ export const getPagesForGetPagesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Create a new page.
+ */
 export interface PostPagesInput {
   body?: Types.ContentPagesCreatePageDto;
 }
@@ -14401,6 +16333,9 @@ export const postPagesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get a page by ID (including sections).
+ */
 export interface GetPagesForGetPagesByIdInput {
   id: string;
 }
@@ -14413,6 +16348,9 @@ export const getPagesForGetPagesByIdEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update an existing page.
+ */
 export interface PutPagesInput {
   id: string;
   body?: Types.ContentPagesUpdatePageDto;
@@ -14426,6 +16364,9 @@ export const putPagesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Soft-delete a page.
+ */
 export interface DeletePagesInput {
   id: string;
 }
@@ -14438,6 +16379,9 @@ export const deletePagesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Publish a page.
+ */
 export interface PostPagesPublishInput {
   id: string;
 }
@@ -14450,6 +16394,9 @@ export const postPagesPublishEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Unpublish a page (back to Draft).
+ */
 export interface PostPagesUnpublishInput {
   id: string;
 }
@@ -14462,6 +16409,9 @@ export const postPagesUnpublishEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * List sections for a page.
+ */
 export interface GetPagesSectionsForGetPagesByPageIdSectionsInput {
   pageId: string;
 }
@@ -14474,6 +16424,9 @@ export const getPagesSectionsForGetPagesByPageIdSectionsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Create a section within a page.
+ */
 export interface PostPagesSectionsInput {
   pageId: string;
   body?: Types.ContentPagesCreatePageSectionDto;
@@ -14487,6 +16440,9 @@ export const postPagesSectionsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get a specific section.
+ */
 export interface GetPagesSectionsForGetPagesByPageIdSectionsBySectionIdInput {
   pageId: string;
   sectionId: string;
@@ -14500,6 +16456,9 @@ export const getPagesSectionsForGetPagesByPageIdSectionsBySectionIdEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update a section.
+ */
 export interface PutPagesSectionsInput {
   pageId: string;
   sectionId: string;
@@ -14514,6 +16473,9 @@ export const putPagesSectionsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Delete a section.
+ */
 export interface DeletePagesSectionsInput {
   pageId: string;
   sectionId: string;
@@ -14527,6 +16489,9 @@ export const deletePagesSectionsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Reorder sections within a page.
+ */
 export interface PostPagesSectionsReorderInput {
   pageId: string;
   body?: Array<string>;
@@ -14540,6 +16505,9 @@ export const postPagesSectionsReorderEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get a page by slug (including sections). Publicly returns published pages only.
+ */
 export interface GetPagesBySlugInput {
   slug: string;
 }
@@ -14552,6 +16520,10 @@ export const getPagesBySlugEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Public sitemap feed of published pages — slug + last-modified — for
+ * SEO crawlers and the marketing site's `sitemap.xml`.
+ */
 export interface GetPagesSitemapInput {
   query?: {
     locale?: string;
@@ -14566,6 +16538,9 @@ export const getPagesSitemapEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Detect permission anomalies
+ */
 export interface GetPermissionAnalyticsAnomaliesInput {
   query?: {
     tenantId?: string;
@@ -14581,6 +16556,9 @@ export const getPermissionAnalyticsAnomaliesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Generate a permission analytics report
+ */
 export interface GetPermissionAnalyticsReportInput {
   query?: {
     tenantId?: string;
@@ -14597,6 +16575,9 @@ export const getPermissionAnalyticsReportEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get resource access patterns
+ */
 export interface GetPermissionAnalyticsResourcePatternsInput {
   query?: {
     tenantId?: string;
@@ -14614,6 +16595,9 @@ export const getPermissionAnalyticsResourcePatternsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get permission trends
+ */
 export interface GetPermissionAnalyticsTrendsInput {
   query?: {
     tenantId?: string;
@@ -14630,6 +16614,9 @@ export const getPermissionAnalyticsTrendsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get permission usage metrics
+ */
 export interface GetPermissionAnalyticsUsageInput {
   query?: {
     tenantId?: string;
@@ -14646,6 +16633,9 @@ export const getPermissionAnalyticsUsageEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get user activity summary
+ */
 export interface GetPermissionAnalyticsUserActivityInput {
   query?: {
     tenantId?: string;
@@ -14663,6 +16653,9 @@ export const getPermissionAnalyticsUserActivityEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Delegate permissions to another user
+ */
 export interface PostPermissionDelegationsInput {
   body?: Types.IdentityAuthorizationCommandsDelegatePermissionsCommand;
 }
@@ -14675,6 +16668,9 @@ export const postPermissionDelegationsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Cleanup expired delegations (admin only)
+ */
 export type PostPermissionDelegationsCleanupInput = void;
 export type PostPermissionDelegationsCleanupOutput = number;
 export const postPermissionDelegationsCleanupEndpoint = {
@@ -14685,6 +16681,9 @@ export const postPermissionDelegationsCleanupEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get a delegation by ID
+ */
 export interface GetPermissionDelegationsInput {
   id: string;
 }
@@ -14697,6 +16696,9 @@ export const getPermissionDelegationsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Revoke a permission delegation
+ */
 export interface DeletePermissionDelegationsInput {
   id: string;
 }
@@ -14709,6 +16711,9 @@ export const deletePermissionDelegationsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Check if user has a delegated permission
+ */
 export interface GetPermissionDelegationsCheckInput {
   query?: {
     delegateUserId?: string;
@@ -14726,6 +16731,9 @@ export const getPermissionDelegationsCheckEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get active delegations for a delegate user
+ */
 export interface GetPermissionDelegationsDelegateInput {
   delegateUserId: string;
   query?: {
@@ -14741,6 +16749,9 @@ export const getPermissionDelegationsDelegateEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get delegations made by a delegator
+ */
 export interface GetPermissionDelegationsDelegatorInput {
   delegatorUserId: string;
   query?: {
@@ -14756,6 +16767,9 @@ export const getPermissionDelegationsDelegatorEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get paginated list of products
+ */
 export interface GetProductsForGetProductsInput {
   query?: {
     type?: Types.CommerceProductsProductType;
@@ -14778,6 +16792,9 @@ export const getProductsForGetProductsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Create a new product
+ */
 export interface PostProductsInput {
   body?: Types.CommerceProductsCreateProductInput;
 }
@@ -14790,6 +16807,9 @@ export const postProductsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Batch create multiple products
+ */
 export interface PostProductsBatchCreateInput {
   body?: Types.CommerceProductsBatchCreateProductsInput;
 }
@@ -14802,6 +16822,9 @@ export const postProductsBatchCreateEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get product by ID
+ */
 export interface GetProductsForGetProductsByProductIdInput {
   productId: string;
   query?: {
@@ -14818,6 +16841,9 @@ export const getProductsForGetProductsByProductIdEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update an existing product (full update)
+ */
 export interface PutProductsInput {
   productId: string;
   body?: Types.CommerceProductsUpdateProductInput;
@@ -14831,6 +16857,9 @@ export const putProductsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Delete a product
+ */
 export interface DeleteProductsInput {
   productId: string;
   query?: {
@@ -14847,6 +16876,9 @@ export const deleteProductsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Partially update a product (PATCH)
+ */
 export interface PatchProductsInput {
   productId: string;
   body?: Types.CommerceProductsPatchProductInput;
@@ -14860,6 +16892,9 @@ export const patchProductsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Check if a product exists
+ */
 export interface HeadProductsInput {
   productId: string;
   query?: {
@@ -14875,6 +16910,9 @@ export const headProductsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Activate a product
+ */
 export interface PostProductsActivateInput {
   productId: string;
 }
@@ -14887,6 +16925,9 @@ export const postProductsActivateEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Archive a product (soft delete)
+ */
 export interface PostProductsArchiveInput {
   productId: string;
 }
@@ -14899,6 +16940,9 @@ export const postProductsArchiveEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Deactivate a product
+ */
 export interface PostProductsDeactivateInput {
   productId: string;
 }
@@ -14911,6 +16955,9 @@ export const postProductsDeactivateEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get pricing options for a product
+ */
 export interface GetProductsPricingInput {
   productId: string;
   query?: {
@@ -14939,6 +16986,15 @@ export const putProductsPricingEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get all projects with filtering and pagination
+ *
+ * Use query parameters to filter results:
+ * - `featured=true` to get featured projects
+ * - `popular=true` to get popular projects (sorted by popularity score)
+ * - `recent=true` to get recently created/updated projects
+ * - `sortBy=CreatedAt` with `sortDirection=DESC` for manual sorting
+ */
 export interface GetProjectsForGetProjectsInput {
   query?: {
     type?: Types.ProjectsProjectType;
@@ -14967,6 +17023,9 @@ export const getProjectsForGetProjectsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Create a new project
+ */
 export interface PostProjectsInput {
   body?: Types.ProjectsCreateProjectInput;
 }
@@ -14979,6 +17038,9 @@ export const postProjectsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get project by ID
+ */
 export interface GetProjectsForGetProjectsByIdInput {
   id: string;
   query?: {
@@ -14997,6 +17059,9 @@ export const getProjectsForGetProjectsByIdEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update an existing project
+ */
 export interface PutProjectsInput {
   id: string;
   body?: Types.ProjectsUpdateProjectInput;
@@ -15010,6 +17075,9 @@ export const putProjectsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Delete a project
+ */
 export interface DeleteProjectsInput {
   id: string;
   query?: {
@@ -15026,6 +17094,9 @@ export const deleteProjectsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Archive a project
+ */
 export interface PostProjectsArchiveInput {
   id: string;
 }
@@ -15038,6 +17109,9 @@ export const postProjectsArchiveEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Publish a project
+ */
 export interface PostProjectsPublishInput {
   id: string;
 }
@@ -15050,6 +17124,9 @@ export const postProjectsPublishEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Restore an archived or soft-deleted project
+ */
 export interface PostProjectsRestoreInput {
   id: string;
 }
@@ -15062,6 +17139,9 @@ export const postProjectsRestoreEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Share project with a user by assigning a role
+ */
 export interface PostProjectsShareInput {
   id: string;
   body?: Types.ProjectsShareProjectInput;
@@ -15075,6 +17155,9 @@ export const postProjectsShareEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Unpublish a project
+ */
 export interface PostProjectsUnpublishInput {
   id: string;
 }
@@ -15087,6 +17170,9 @@ export const postProjectsUnpublishEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get project collaborators
+ */
 export interface GetProjectsCollaboratorsInput {
   id: string;
 }
@@ -15099,6 +17185,9 @@ export const getProjectsCollaboratorsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Add project collaborator
+ */
 export interface PostProjectsCollaboratorsInput {
   id: string;
   body?: Types.ProjectsAddProjectCollaboratorInput;
@@ -15112,6 +17201,9 @@ export const postProjectsCollaboratorsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update project collaborator
+ */
 export interface PutProjectsCollaboratorsInput {
   id: string;
   collaboratorId: string;
@@ -15126,6 +17218,9 @@ export const putProjectsCollaboratorsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Remove project collaborator
+ */
 export interface DeleteProjectsCollaboratorsInput {
   id: string;
   collaboratorId: string;
@@ -15139,6 +17234,9 @@ export const deleteProjectsCollaboratorsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Invite a user to collaborate on a project without granting access until acceptance
+ */
 export interface PostProjectsInvitationsInput {
   id: string;
   body?: Types.ProjectsInviteProjectCollaboratorInput;
@@ -15152,6 +17250,9 @@ export const postProjectsInvitationsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get project statistics
+ */
 export interface GetProjectsStatisticsInput {
   id: string;
   query?: {
@@ -15417,6 +17518,9 @@ export const deleteProjectsOwnershipTeamsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Share project with multiple users using a role template
+ */
 export interface PostProjectsPermissionsShareWithRoleInput {
   projectId: string;
   body?: Types.ProjectsShareProjectWithRoleInput;
@@ -15430,6 +17534,9 @@ export const postProjectsPermissionsShareWithRoleEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get all collaborators on the project
+ */
 export interface GetProjectsPermissionsCollaboratorsInput {
   projectId: string;
 }
@@ -15442,6 +17549,9 @@ export const getProjectsPermissionsCollaboratorsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Add a collaborator to the project
+ */
 export interface PostProjectsPermissionsCollaboratorsInput {
   projectId: string;
   body?: Types.ProjectsAddCollaboratorInput;
@@ -15455,6 +17565,9 @@ export const postProjectsPermissionsCollaboratorsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update collaborator permissions
+ */
 export interface PutProjectsPermissionsCollaboratorsInput {
   projectId: string;
   collaboratorUserId: string;
@@ -15469,6 +17582,9 @@ export const putProjectsPermissionsCollaboratorsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Remove a collaborator from the project
+ */
 export interface DeleteProjectsPermissionsCollaboratorsInput {
   projectId: string;
   collaboratorUserId: string;
@@ -15482,6 +17598,9 @@ export const deleteProjectsPermissionsCollaboratorsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get current user's permissions on the project
+ */
 export interface GetProjectsPermissionsMyPermissionsInput {
   projectId: string;
 }
@@ -15494,6 +17613,9 @@ export const getProjectsPermissionsMyPermissionsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get project permission templates for common roles
+ */
 export interface GetProjectsPermissionsRoleTemplatesInput {
   projectId: string;
 }
@@ -15924,6 +18046,9 @@ export const getProjectsAccessibleVersionsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get projects by category
+ */
 export interface GetProjectsCategoryInput {
   categoryId: string;
   query?: {
@@ -15941,6 +18066,9 @@ export const getProjectsCategoryEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get projects by creator
+ */
 export interface GetProjectsCreatorInput {
   creatorId: string;
   query?: {
@@ -15958,6 +18086,9 @@ export const getProjectsCreatorEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get featured projects
+ */
 export interface GetProjectsFeaturedInput {
   query?: {
     type?: Types.ProjectsProjectType;
@@ -15973,6 +18104,9 @@ export const getProjectsFeaturedEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Accept a project invitation
+ */
 export interface PostProjectsInvitationsAcceptInput {
   invitationToken: string;
 }
@@ -15985,6 +18119,9 @@ export const postProjectsInvitationsAcceptEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Decline a project invitation
+ */
 export interface PostProjectsInvitationsDeclineInput {
   invitationToken: string;
 }
@@ -15997,6 +18134,10 @@ export const postProjectsInvitationsDeclineEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets the Projects that belong to the authenticated user's actual workspace relationship.
+ * This scope intentionally does not expand for tenant or system administrators.
+ */
 export interface GetProjectsMineInput {
   query?: {
     includeArchived?: boolean;
@@ -16013,6 +18154,9 @@ export const getProjectsMineEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get current user's project invitations
+ */
 export type GetProjectsMyInvitationsInput = void;
 export type GetProjectsMyInvitationsOutput = Array<Types.ProjectsProjectInvitationDto>;
 export const getProjectsMyInvitationsEndpoint = {
@@ -16023,6 +18167,9 @@ export const getProjectsMyInvitationsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get popular projects
+ */
 export interface GetProjectsPopularInput {
   query?: {
     type?: Types.ProjectsProjectType;
@@ -16038,6 +18185,9 @@ export const getProjectsPopularEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get recent projects
+ */
 export interface GetProjectsRecentInput {
   query?: {
     type?: Types.ProjectsProjectType;
@@ -16053,6 +18203,9 @@ export const getProjectsRecentEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get available role templates for projects
+ */
 export type GetProjectsRoleTemplatesInput = void;
 export type GetProjectsRoleTemplatesOutput = Array<Record<string, unknown>>;
 export const getProjectsRoleTemplatesEndpoint = {
@@ -16063,6 +18216,9 @@ export const getProjectsRoleTemplatesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get permissions for a specific role
+ */
 export interface GetProjectsRolesPermissionsInput {
   roleName: string;
 }
@@ -16075,6 +18231,9 @@ export const getProjectsRolesPermissionsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Search projects
+ */
 export interface GetProjectsSearchInput {
   query?: {
     searchTerm?: string;
@@ -16097,6 +18256,9 @@ export const getProjectsSearchEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get project by slug
+ */
 export interface GetProjectsSlugInput {
   slug: string;
   query?: {
@@ -16114,6 +18276,9 @@ export const getProjectsSlugEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get all promo codes (paginated) with optional status filter
+ */
 export interface GetPromoCodesForGetPromoCodesInput {
   query?: {
     status?: string;
@@ -16134,6 +18299,9 @@ export const getPromoCodesForGetPromoCodesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Create a new promo code
+ */
 export interface PostPromoCodesInput {
   body?: Types.CommerceProductsCreatePromoCodeInput;
 }
@@ -16146,6 +18314,9 @@ export const postPromoCodesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Apply promo codes to an order
+ */
 export interface PostPromoCodesApplyInput {
   body?: Types.CommerceProductsApplyPromoCodesInput;
 }
@@ -16158,6 +18329,9 @@ export const postPromoCodesApplyEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Validate a promo code
+ */
 export interface PostPromoCodesValidateInput {
   body?: Types.CommerceProductsValidatePromoCodeInput;
 }
@@ -16170,6 +18344,9 @@ export const postPromoCodesValidateEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get a promo code by ID
+ */
 export interface GetPromoCodesForGetPromoCodesByPromoCodeIdInput {
   promoCodeId: string;
 }
@@ -16182,6 +18359,9 @@ export const getPromoCodesForGetPromoCodesByPromoCodeIdEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update an existing promo code (full update)
+ */
 export interface PutPromoCodesInput {
   promoCodeId: string;
   body?: Types.CommerceProductsUpdatePromoCodeInput;
@@ -16195,6 +18375,9 @@ export const putPromoCodesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Delete a promo code
+ */
 export interface DeletePromoCodesInput {
   promoCodeId: string;
 }
@@ -16207,6 +18390,9 @@ export const deletePromoCodesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Partially update a promo code (PATCH)
+ */
 export interface PatchPromoCodesInput {
   promoCodeId: string;
   body?: Types.CommerceProductsPatchPromoCodeInput;
@@ -16220,6 +18406,9 @@ export const patchPromoCodesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Check if a promo code exists
+ */
 export interface HeadPromoCodesInput {
   promoCodeId: string;
 }
@@ -16232,6 +18421,9 @@ export const headPromoCodesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Activate a promo code
+ */
 export interface PostPromoCodesActivateInput {
   promoCodeId: string;
 }
@@ -16244,6 +18436,9 @@ export const postPromoCodesActivateEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Deactivate a promo code
+ */
 export interface PostPromoCodesDeactivateInput {
   promoCodeId: string;
 }
@@ -16256,6 +18451,9 @@ export const postPromoCodesDeactivateEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get usage statistics for a promo code
+ */
 export interface GetPromoCodesUsageInput {
   promoCodeId: string;
 }
@@ -16268,6 +18466,9 @@ export const getPromoCodesUsageEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get a promo code by its code string
+ */
 export interface GetPromoCodesByCodeInput {
   code: string;
 }
@@ -16280,6 +18481,9 @@ export const getPromoCodesByCodeEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Dismiss a recommendation
+ */
 export interface PostRecommendationsDismissInput {
   id: string;
 }
@@ -16292,6 +18496,9 @@ export const postRecommendationsDismissEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Mark a recommendation as viewed
+ */
 export interface PostRecommendationsViewedInput {
   id: string;
 }
@@ -16304,6 +18511,11 @@ export const postRecommendationsViewedEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get courses similar to a specific course
+ *
+ * Intentionally anonymous: similarity suggestions over published courses only.
+ */
 export interface GetRecommendationsCoursesSimilarInput {
   courseId: string;
   query?: {
@@ -16320,6 +18532,9 @@ export const getRecommendationsCoursesSimilarEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get personalized recommendations for the current user
+ */
 export interface GetRecommendationsMeInput {
   query?: {
     tenantId?: string;
@@ -16338,6 +18553,9 @@ export const getRecommendationsMeEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Generate new recommendations for the current user
+ */
 export interface PostRecommendationsMeGenerateInput {
   query?: {
     tenantId?: string;
@@ -16353,6 +18571,9 @@ export const postRecommendationsMeGenerateEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get the current user's learning profile
+ */
 export type GetRecommendationsMeProfileInput = void;
 export type GetRecommendationsMeProfileOutput = Types.LearningExperienceRecommendationsUserLearningProfileDto;
 export const getRecommendationsMeProfileEndpoint = {
@@ -16363,6 +18584,9 @@ export const getRecommendationsMeProfileEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update the current user's learning profile
+ */
 export interface PutRecommendationsMeProfileInput {
   body?: Types.LearningExperienceRecommendationsCreateOrUpdateLearningProfileDto;
 }
@@ -16375,6 +18599,9 @@ export const putRecommendationsMeProfileEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Add a skill to the current user's profile
+ */
 export interface PostRecommendationsMeProfileSkillsInput {
   body?: Types.LearningExperienceRecommendationsAddSkillInput;
 }
@@ -16387,6 +18614,9 @@ export const postRecommendationsMeProfileSkillsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Remove a skill from the current user's profile
+ */
 export interface DeleteRecommendationsMeProfileSkillsInput {
   skill: string;
 }
@@ -16399,6 +18629,9 @@ export const deleteRecommendationsMeProfileSkillsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Refresh recommendations (clear expired, generate new)
+ */
 export interface PostRecommendationsMeRefreshInput {
   query?: {
     tenantId?: string;
@@ -16413,6 +18646,9 @@ export const postRecommendationsMeRefreshEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get recommendation statistics for the current user
+ */
 export type GetRecommendationsMeStatisticsInput = void;
 export type GetRecommendationsMeStatisticsOutput = Types.LearningExperienceRecommendationsRecommendationStatisticsDto;
 export const getRecommendationsMeStatisticsEndpoint = {
@@ -16423,6 +18659,12 @@ export const getRecommendationsMeStatisticsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get popular courses across the platform
+ *
+ * Intentionally anonymous: non-personalized discovery over published courses only;
+ * the personalized recommendation endpoints stay authenticated.
+ */
 export interface GetRecommendationsPopularInput {
   query?: {
     tenantId?: string;
@@ -16440,6 +18682,11 @@ export const getRecommendationsPopularEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get trending courses (high recent enrollment velocity)
+ *
+ * Intentionally anonymous: aggregate discovery data over published courses only.
+ */
 export interface GetRecommendationsTrendingInput {
   query?: {
     tenantId?: string;
@@ -16492,7 +18739,7 @@ export const postResourcesCleanupEndpoint = {
 } as const;
 
 /**
- * Get resource usage by type
+ * Get resource usage filtered by type
  *
  * Retrieves aggregated resource usage across all tenants within the specified date range for the given resource type.
  */
@@ -16534,6 +18781,9 @@ export const getResourcesUsageTrendsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get all roles in the system
+ */
 export interface GetRolesForGetRolesInput {
   query?: {
     tenantId?: string;
@@ -16549,6 +18799,9 @@ export const getRolesForGetRolesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Create a new role
+ */
 export interface PostRolesInput {
   body?: Types.IdentityAuthenticationCreateRoleInput;
 }
@@ -16561,6 +18814,9 @@ export const postRolesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Assign a role to a user
+ */
 export interface PostRolesAssignInput {
   body?: Types.IdentityAuthenticationAssignRoleToUserInput;
 }
@@ -16573,6 +18829,24 @@ export const postRolesAssignEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Assign one active role to multiple users in a single bounded operation.
+ */
+export interface PostRolesBulkAssignInput {
+  body?: Types.IdentityAuthenticationBulkAssignRolesCommand;
+}
+export type PostRolesBulkAssignOutput = Types.IdentityAuthenticationBulkRoleAssignmentResult;
+export const postRolesBulkAssignEndpoint = {
+  operationId: 'postRolesBulkAssign' as const,
+  method: 'POST' as const,
+  path: '/v1/roles/:bulk-assign' as const,
+  tags: ['AuthRoles'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Remove a role from a user
+ */
 export interface PostRolesRemoveInput {
   body?: Types.IdentityAuthenticationRemoveRoleFromUserInput;
 }
@@ -16585,6 +18859,9 @@ export const postRolesRemoveEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get a specific role by ID
+ */
 export interface GetRolesForGetRolesByRoleIdInput {
   roleId: string;
 }
@@ -16597,6 +18874,9 @@ export const getRolesForGetRolesByRoleIdEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update an existing role
+ */
 export interface PutRolesInput {
   roleId: string;
   body?: Types.IdentityAuthenticationUpdateRoleInput;
@@ -16610,6 +18890,9 @@ export const putRolesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Delete a role
+ */
 export interface DeleteRolesInput {
   roleId: string;
 }
@@ -16622,6 +18905,9 @@ export const deleteRolesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get all roles assigned to a user
+ */
 export interface GetRolesUserInput {
   userId: string;
   query?: {
@@ -16637,6 +18923,9 @@ export const getRolesUserEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get all SoD rules for a tenant
+ */
 export interface GetSodRulesForGetSodRulesInput {
   query?: {
     tenantId?: string;
@@ -16652,6 +18941,9 @@ export const getSodRulesForGetSodRulesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Create a new SoD rule
+ */
 export interface PostSodRulesInput {
   body?: Types.IdentityAuthorizationCommandsCreateSoDRuleCommand;
 }
@@ -16664,6 +18956,9 @@ export const postSodRulesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get a SoD rule by ID
+ */
 export interface GetSodRulesForGetSodRulesByIdInput {
   id: string;
 }
@@ -16676,6 +18971,9 @@ export const getSodRulesForGetSodRulesByIdEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Update an existing SoD rule
+ */
 export interface PutSodRulesInput {
   id: string;
   body?: Types.IdentityAuthorizationControllersUpdateSoDRuleInput;
@@ -16689,6 +18987,9 @@ export const putSodRulesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Delete a SoD rule
+ */
 export interface DeleteSodRulesInput {
   id: string;
 }
@@ -16701,6 +19002,9 @@ export const deleteSodRulesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Scan for SoD violations (admin only)
+ */
 export interface PostSodViolationsScanInput {
   query?: {
     tenantId?: string;
@@ -16715,6 +19019,9 @@ export const postSodViolationsScanEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Grant an exception for a SoD violation
+ */
 export interface PostSodViolationsExceptionInput {
   id: string;
   body?: Types.IdentityAuthorizationControllersGrantExceptionInput;
@@ -16728,6 +19035,9 @@ export const postSodViolationsExceptionEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Resolve a SoD violation
+ */
 export interface PostSodViolationsResolveInput {
   id: string;
   body?: Types.IdentityAuthorizationControllersResolveViolationInput;
@@ -16741,6 +19051,9 @@ export const postSodViolationsResolveEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get active SoD violations
+ */
 export interface GetSodViolationsActiveInput {
   query?: {
     tenantId?: string;
@@ -16755,6 +19068,9 @@ export const getSodViolationsActiveEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Detect SoD violations for a user
+ */
 export interface GetSodViolationsDetectInput {
   userId: string;
   query?: {
@@ -16770,6 +19086,9 @@ export const getSodViolationsDetectEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get SoD violations for a user
+ */
 export interface GetSodViolationsUserInput {
   userId: string;
   query?: {
@@ -16876,7 +19195,7 @@ export const getSubscriptionPlansForGetSubscriptionPlansByPlanIdEndpoint = {
 } as const;
 
 /**
- * Full update subscription plan
+ * Full update of a subscription plan
  *
  * Performs a full replacement of subscription plan data. All fields will be updated.
  */
@@ -17328,6 +19647,10 @@ export const postTeamsInvitationsAcceptForPostTeamsInvitationsAcceptEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets Teams where the authenticated user has an active membership.
+ * This endpoint remains personal even when the actor has administrative capabilities.
+ */
 export interface GetTeamsMineInput {
   query?: {
     includeArchived?: boolean;
@@ -17550,7 +19873,11 @@ export const postTenantsUpdateEndpoint = {
 /**
  * Validate tenant data before creation
  *
- * Validates tenant data without creating. Returns errors, warnings, and suggestions.
+ * Validates tenant data without creating the tenant. Useful for:
+ * - Checking if a slug is available
+ * - Validating email format
+ * - Checking for naming conflicts
+ * - Getting alternative slug suggestions
  */
 export interface PostTenantsValidateInput {
   body?: Types.IdentityTenantsValidateTenantInput;
@@ -17740,7 +20067,7 @@ export const postTenantsUndeleteForPostTenantsByTenantIdUndeleteEndpoint = {
 } as const;
 
 /**
- * Get tenant AI history
+ * Retrieve recent AI conversation history for a tenant.
  *
  * Retrieves recent AI conversation history for a specific tenant.
  */
@@ -17796,7 +20123,14 @@ export const getTenantsAiQuotasEndpoint = {
 /**
  * Get tenant audit log
  *
- * Retrieves the audit log for a tenant showing all changes, actions, and who performed them.
+ * Retrieves the audit log for a specific tenant, showing all changes and actions performed.
+ * Audit entries include:
+ * - Timestamp of the action
+ * - Action type (create, update, delete, settings change, etc.)
+ * - Actor who performed the action
+ * - Before and after values for changes
+ * - IP address and user agent (when available)
+ * - Correlation ID for request tracking
  */
 export interface GetTenantsAuditLogInput {
   tenantId: string;
@@ -17818,6 +20152,26 @@ export const getTenantsAuditLogEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets all capabilities for a tenant with their enabled states.
+ * Returns a dictionary mapping capability keys to boolean enabled states.
+ *
+ * Example response:
+ * ```json
+ * {
+ *   "lms.courses.basic": true,
+ *   "lms.enrollments": true,
+ *   "lms.certificates": false,
+ *   "lxp.discovery": true,
+ *   "lxp.learningPaths": false,
+ *   "lxp.recommendations.basic": false,
+ *   "lxp.recommendations.ai": false,
+ *   "lxp.skills": false,
+ *   "analytics.advanced": false,
+ *   "branding.custom": false
+ * }
+ * ```
+ */
 export interface GetTenantsCapabilitiesForGetTenantsByTenantIdCapabilitiesInput {
   tenantId: string;
 }
@@ -17830,6 +20184,10 @@ export const getTenantsCapabilitiesForGetTenantsByTenantIdCapabilitiesEndpoint =
   requiresAuth: true,
 } as const;
 
+/**
+ * Sets or updates a capability override for a tenant.
+ * Only accessible by tenant admins or platform administrators.
+ */
 export interface PostTenantsCapabilitiesInput {
   tenantId: string;
   body?: Types.FeaturesSetCapabilityOverrideInput;
@@ -17843,6 +20201,9 @@ export const postTenantsCapabilitiesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Checks if a specific capability is enabled for a tenant.
+ */
 export interface GetTenantsCapabilitiesForGetTenantsByTenantIdCapabilitiesByCapabilityInput {
   tenantId: string;
   capability: string;
@@ -17856,6 +20217,9 @@ export const getTenantsCapabilitiesForGetTenantsByTenantIdCapabilitiesByCapabili
   requiresAuth: true,
 } as const;
 
+/**
+ * Removes a capability override, reverting to the subscription plan default.
+ */
 export interface DeleteTenantsCapabilitiesInput {
   tenantId: string;
   capability: string;
@@ -17872,6 +20236,9 @@ export const deleteTenantsCapabilitiesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Gets the audit log for capability changes.
+ */
 export interface GetTenantsCapabilitiesAuditLogInput {
   tenantId: string;
   query?: {
@@ -17889,6 +20256,10 @@ export const getTenantsCapabilitiesAuditLogEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Syncs capabilities from the tenant's current subscription plan.
+ * Useful after subscription changes or plan upgrades.
+ */
 export interface PostTenantsCapabilitiesSyncInput {
   tenantId: string;
 }
@@ -18449,7 +20820,7 @@ export const deleteTenantsResourcesSettingsEndpoint = {
 } as const;
 
 /**
- * Get effective value for a setting
+ * Get effective value for a setting (considering user overrides)
  *
  * Retrieves the effective value for a setting, considering user-level overrides if a user ID is provided.
  */
@@ -19672,6 +22043,9 @@ export const getTestingMyRequestsEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Public endpoint returning "published" testing sessions (Scheduled or Active). No authentication required.
+ */
 export interface GetTestingPublicSessionsInput {
   query?: {
     take?: number;
@@ -20628,6 +23002,9 @@ export const postUsersUnsuspendForPostUsersByUserIdUnsuspendEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get entitlements for a specific user (admin only)
+ */
 export interface GetUsersEntitlementsInput {
   userId: string;
 }
@@ -20641,7 +23018,9 @@ export const getUsersEntitlementsEndpoint = {
 } as const;
 
 /**
- * Get all tenant memberships for a user
+ * Get all tenant memberships for a user.
+ * Returns a list of all tenants the user belongs to with their role and status.
+ * Similar to Discord's server list showing which servers you're a member of.
  *
  * Returns all tenants the user belongs to, with role and membership status. Similar to Discord's 'My Servers' view.
  */
@@ -20661,7 +23040,8 @@ export const getUsersMembershipsEndpoint = {
 } as const;
 
 /**
- * Add a tenant membership for a user
+ * Add a user to a tenant membership.
+ * Useful for assigning a user to a workspace they can actively switch into.
  *
  * Adds the specified user to a tenant with the requested role so the user can access that workspace.
  */
@@ -20679,7 +23059,7 @@ export const postUsersMembershipsEndpoint = {
 } as const;
 
 /**
- * Check if user has any tenant memberships
+ * Check if user has any memberships
  */
 export interface HeadUsersMembershipsInput {
   userId: string;
@@ -20694,7 +23074,7 @@ export const headUsersMembershipsEndpoint = {
 } as const;
 
 /**
- * Get count of user's active tenant memberships
+ * Get count of user's active memberships
  */
 export interface GetUsersMembershipsCountInput {
   userId: string;
@@ -20746,7 +23126,7 @@ export const postUsersMembershipsDeactivateEndpoint = {
 } as const;
 
 /**
- * Accept tenant membership invite
+ * Accept a pending membership invite and activate the membership.
  */
 export interface PostUsersMembershipsInviteAcceptInput {
   userId: string;
@@ -20763,7 +23143,7 @@ export const postUsersMembershipsInviteAcceptEndpoint = {
 } as const;
 
 /**
- * Cancel tenant membership invite
+ * Cancel a pending membership invite without deleting the audit trail.
  */
 export interface PostUsersMembershipsInviteCancelInput {
   userId: string;
@@ -20780,7 +23160,7 @@ export const postUsersMembershipsInviteCancelEndpoint = {
 } as const;
 
 /**
- * Resend tenant membership invite
+ * Resend a pending membership invite.
  */
 export interface PostUsersMembershipsInviteResendInput {
   userId: string;
@@ -20797,7 +23177,8 @@ export const postUsersMembershipsInviteResendEndpoint = {
 } as const;
 
 /**
- * Update tenant membership role
+ * Update a user's tenant role.
+ * This is an operator/admin action used to promote or demote console access.
  *
  * Updates the user's role in the specified tenant/workspace. Use this for console promotion/demotion flows.
  */
@@ -21267,7 +23648,7 @@ export const postUsersPreferencesLocalizationResetEndpoint = {
 } as const;
 
 /**
- * Get notification settings for user
+ * Get notification settings for user (deprecated: use /api/notifications/preferences)
  */
 export interface GetUsersPreferencesNotificationsInput {
   userId: string;
@@ -21282,7 +23663,7 @@ export const getUsersPreferencesNotificationsEndpoint = {
 } as const;
 
 /**
- * Replace notification preferences for user (full update)
+ * Replace notification preferences for user (full update) (deprecated: use /api/notifications/preferences)
  */
 export interface PutUsersPreferencesNotificationsInput {
   userId: string;
@@ -21298,7 +23679,7 @@ export const putUsersPreferencesNotificationsEndpoint = {
 } as const;
 
 /**
- * Partially update notification preferences for user
+ * Partially update notification preferences for user (deprecated: use /api/notifications/preferences)
  */
 export interface PatchUsersPreferencesNotificationsInput {
   userId: string;
@@ -21314,7 +23695,7 @@ export const patchUsersPreferencesNotificationsEndpoint = {
 } as const;
 
 /**
- * Check if notification preferences exist
+ * Check if notification preferences exist (deprecated: use /api/notifications/preferences)
  */
 export interface HeadUsersPreferencesNotificationsInput {
   userId: string;
@@ -21329,7 +23710,7 @@ export const headUsersPreferencesNotificationsEndpoint = {
 } as const;
 
 /**
- * Reset notification preferences to defaults
+ * Reset notification preferences to defaults (deprecated: use /api/notifications/preferences)
  */
 export interface PostUsersPreferencesNotificationsResetInput {
   userId: string;
@@ -21880,6 +24261,9 @@ export const getUsersResourcesUsageSummaryEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Get current user's entitlements
+ */
 export type GetUsersMeEntitlementsInput = void;
 export type GetUsersMeEntitlementsOutput = Array<Types.CommerceProductsEntitlementInfoDto>;
 export const getUsersMeEntitlementsEndpoint = {
@@ -22528,6 +24912,9 @@ export const endpoints = {
   getAdminAssetsStatisticsExport: getAdminAssetsStatisticsExportEndpoint,
   getAdminAuditLogs: getAdminAuditLogsEndpoint,
   postAdminAuditLogsExport: postAdminAuditLogsExportEndpoint,
+  getAdminAuditLogsExportProgress: getAdminAuditLogsExportProgressEndpoint,
+  postAdminAuditLogsExportCsv: postAdminAuditLogsExportCsvEndpoint,
+  postAdminAuditLogsExportJson: postAdminAuditLogsExportJsonEndpoint,
   getAdminAuditLogsStatistics: getAdminAuditLogsStatisticsEndpoint,
   postAdminEventsReplay: postAdminEventsReplayEndpoint,
   getAdminEventsDeadLetters: getAdminEventsDeadLettersEndpoint,
@@ -23131,6 +25518,7 @@ export const endpoints = {
   getRolesForGetRoles: getRolesForGetRolesEndpoint,
   postRoles: postRolesEndpoint,
   postRolesAssign: postRolesAssignEndpoint,
+  postRolesBulkAssign: postRolesBulkAssignEndpoint,
   postRolesRemove: postRolesRemoveEndpoint,
   getRolesForGetRolesByRoleId: getRolesForGetRolesByRoleIdEndpoint,
   putRoles: putRolesEndpoint,

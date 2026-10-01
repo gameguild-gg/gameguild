@@ -16,6 +16,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Get all published learning paths
    */
   async getLearningPathsForGetLearningPaths(query?: {
     tenantId?: string;
@@ -36,6 +37,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
   }
 
   /**
+   * Create a new learning path
    */
   async postLearningPaths(
     body: Types.LearningExperienceLearningPathsCreateLearningPathDto,
@@ -64,6 +66,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
   }
 
   /**
+   * Get a learning path by ID
    */
   async getLearningPathsForGetLearningPathsById(id: string): Promise<Result<Types.LearningExperienceLearningPathsLearningPathDetailDto, ApiError>> {
     const url = `/v1/learning-paths/${id}`;
@@ -84,6 +87,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
   }
 
   /**
+   * Update a learning path
    */
   async putLearningPaths(
     id: string,
@@ -111,6 +115,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
   }
 
   /**
+   * Delete a learning path
    */
   async deleteLearningPaths(id: string): Promise<Result<void, ApiError>> {
     const url = `/v1/learning-paths/${id}`;
@@ -125,6 +130,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
   }
 
   /**
+   * Abandon a learning path enrollment
    */
   async postLearningPathsAbandon(id: string, query?: { userId?: string }): Promise<Result<void, ApiError>> {
     const url = `/v1/learning-paths/${id}/abandon`;
@@ -140,6 +146,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
   }
 
   /**
+   * Mark a learning path as completed
    */
   async postLearningPathsComplete(
     id: string,
@@ -164,6 +171,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
   }
 
   /**
+   * Add a course to a learning path
    */
   async postLearningPathsCourses(
     id: string,
@@ -191,6 +199,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
   }
 
   /**
+   * Remove a course from a learning path
    */
   async deleteLearningPathsCourses(id: string, courseId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/learning-paths/${id}/courses/${courseId}`;
@@ -205,6 +214,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
   }
 
   /**
+   * Reorder courses in a learning path
    */
   async putLearningPathsCoursesOrder(
     id: string,
@@ -232,6 +242,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
   }
 
   /**
+   * Enroll current user in a learning path
    */
   async postLearningPathsEnroll(
     id: string,
@@ -256,6 +267,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
   }
 
   /**
+   * Get user's enrollment in a specific path
    */
   async getLearningPathsEnrollment(id: string, userId: string): Promise<Result<Types.LearningExperienceLearningPathsLearningPathEnrollmentDto, ApiError>> {
     const url = `/v1/learning-paths/${id}/enrollment/${userId}`;
@@ -276,6 +288,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
   }
 
   /**
+   * Check if user is enrolled in a path
    */
   async getLearningPathsEnrollmentCheck(id: string, userId: string): Promise<Result<boolean, ApiError>> {
     const url = `/v1/learning-paths/${id}/enrollment/${userId}/check`;
@@ -290,6 +303,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
   }
 
   /**
+   * Get all enrollments for a learning path (admin)
    */
   async getLearningPathsEnrollments(
     id: string,
@@ -308,6 +322,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
   }
 
   /**
+   * Update user's progress in a learning path
    */
   async putLearningPathsProgress(
     id: string,
@@ -337,6 +352,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
   }
 
   /**
+   * Publish a learning path
    */
   async postLearningPathsPublish(id: string): Promise<Result<Types.LearningExperienceLearningPathsLearningPathDto, ApiError>> {
     const url = `/v1/learning-paths/${id}/publish`;
@@ -357,6 +373,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
   }
 
   /**
+   * Get statistics for a learning path
    */
   async getLearningPathsStatistics(id: string): Promise<Result<Types.LearningExperienceLearningPathsLearningPathStatisticsDto, ApiError>> {
     const url = `/v1/learning-paths/${id}/statistics`;
@@ -377,6 +394,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
   }
 
   /**
+   * Unenroll user from a learning path
    */
   async postLearningPathsUnenroll(id: string, query?: { userId?: string }): Promise<Result<void, ApiError>> {
     const url = `/v1/learning-paths/${id}/unenroll`;
@@ -392,6 +410,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
   }
 
   /**
+   * Unpublish a learning path
    */
   async postLearningPathsUnpublish(id: string): Promise<Result<Types.LearningExperienceLearningPathsLearningPathDto, ApiError>> {
     const url = `/v1/learning-paths/${id}/unpublish`;
@@ -412,6 +431,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
   }
 
   /**
+   * Get learning paths by creator
    */
   async getLearningPathsCreator(
     creatorId: string,
@@ -430,6 +450,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
   }
 
   /**
+   * Get featured learning paths
    */
   async getLearningPathsFeatured(query?: {
     tenantId?: string;
@@ -448,6 +469,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
   }
 
   /**
+   * Get popular learning paths
    */
   async getLearningPathsPopular(query?: {
     tenantId?: string;
@@ -467,6 +489,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
   }
 
   /**
+   * Search learning paths
    */
   async getLearningPathsSearch(query?: {
     q?: string;
@@ -488,6 +511,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
   }
 
   /**
+   * Get a learning path by slug
    */
   async getLearningPathsSlug(
     slug: string,
@@ -512,6 +536,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
   }
 
   /**
+   * Get completed paths for a user
    */
   async getLearningPathsUserCompleted(
     userId: string,
@@ -530,6 +555,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
   }
 
   /**
+   * Get all enrolled paths for a user
    */
   async getLearningPathsUserEnrollments(
     userId: string,

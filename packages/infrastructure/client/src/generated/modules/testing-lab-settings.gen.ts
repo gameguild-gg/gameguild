@@ -16,6 +16,7 @@ export class TestingLabSettingsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Get testing lab settings for the current tenant or global settings if no tenant context Creates default settings if none exist
    */
   async getApiTestingLabSettings(): Promise<Result<Types.TestingLabTestingLabSettingsDto, ApiError>> {
     const url = '/api/testing-lab/settings';
@@ -36,6 +37,7 @@ export class TestingLabSettingsModule {
   }
 
   /**
+   * Create or update testing lab settings for the current tenant
    */
   async putApiTestingLabSettings(body: Types.TestingLabCreateTestingLabSettingsDto): Promise<Result<Types.TestingLabTestingLabSettingsDto, ApiError>> {
     const url = '/api/testing-lab/settings';
@@ -60,6 +62,7 @@ export class TestingLabSettingsModule {
   }
 
   /**
+   * Update testing lab settings for the current tenant (partial update)
    */
   async patchApiTestingLabSettings(body: Types.TestingLabUpdateTestingLabSettingsDto): Promise<Result<Types.TestingLabTestingLabSettingsDto, ApiError>> {
     const url = '/api/testing-lab/settings';
@@ -84,6 +87,7 @@ export class TestingLabSettingsModule {
   }
 
   /**
+   * Check if testing lab settings exist for the current tenant
    */
   async getApiTestingLabSettingsExists(): Promise<Result<boolean, ApiError>> {
     const url = '/api/testing-lab/settings/exists';
@@ -98,6 +102,7 @@ export class TestingLabSettingsModule {
   }
 
   /**
+   * Reset testing lab settings to default values for the current tenant
    */
   async postApiTestingLabSettingsReset(): Promise<Result<Types.TestingLabTestingLabSettingsDto, ApiError>> {
     const url = '/api/testing-lab/settings/reset';

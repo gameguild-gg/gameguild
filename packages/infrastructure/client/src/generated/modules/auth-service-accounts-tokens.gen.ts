@@ -16,6 +16,10 @@ export class AuthServiceAccountsTokensModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * OAuth2 client_credentials grant - authenticates a service account and returns a JWT token.
+   *
+   * This endpoint implements the OAuth2 client_credentials flow for machine-to-machine authentication.
+   * The returned access token can be used to authenticate API requests.
    */
   async postOauthToken(): Promise<Result<Types.IdentityAuthenticationClientCredentialsTokenOutput, ApiError>> {
     const url = '/v1/oauth/token';

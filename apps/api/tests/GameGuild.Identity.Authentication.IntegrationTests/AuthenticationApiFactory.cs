@@ -28,6 +28,7 @@ public sealed class AuthenticationApiFactory : WebApplicationFactory<GameGuild.A
                 services.Remove(descriptor);
 
             services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase(_databaseName));
+            services.AddScoped<DbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
             services.AddMemoryCache();
             services.AddHttpLogging(_ => { });
         });

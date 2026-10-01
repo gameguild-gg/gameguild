@@ -1,5 +1,5 @@
--- Canonical fingerprints for schema checks before and after incremental migrations.
--- Requires pgcrypto, which is already installed by the historical migration chain.
+-- Canonical fingerprints for the disposable pre-cut baseline database.
+-- Requires pgcrypto, which is already part of the baseline.
 
 WITH catalog_rows AS (
     SELECT table_schema || '|' || table_name || '|' || ordinal_position || '|' ||

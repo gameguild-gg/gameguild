@@ -1,7 +1,9 @@
 using GameGuild.CQRS;
+using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.Identity.Users;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace GameGuild.Identity.Authentication;
 
@@ -22,17 +24,28 @@ public sealed class RequestMagicLinkCommandHandler(
         {
             token = await emailVerificationService.GenerateMagicLinkTokenAsync(user.Id, user.Email).ConfigureAwait(false);
 
-            await publisher.Publish(
-                new MagicLinkRequestedNotification
-                {
-                    Email = user.Email,
-                    Token = token,
-                    UserName = user.Username ?? user.Name,
-                    TenantId = request.TenantId,
-                    IpAddress = request.IpAddress,
-                    UserAgent = request.UserAgent
-                },
-                cancellationToken).ConfigureAwait(false);
+            try
+            {
+                await publisher.Publish(
+                    new MagicLinkRequestedNotification
+                    {
+                        Email = user.Email,
+                        Token = token,
+                        UserName = user.Username ?? user.Name,
+                        TenantId = request.TenantId,
+                        IpAddress = request.IpAddress,
+                        UserAgent = request.UserAgent
+                    },
+                    cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(exception, "Failed to dispatch magic-link notification for user {UserId}", user.Id);
+            }
 
             logger.LogInformation(
                 "Magic-link token generated for user {UserId} from {IpAddress}",
@@ -59,7 +72,8 @@ public sealed class ConsumeMagicLinkCommandHandler(
     IEmailVerificationService emailVerificationService,
     IJwtTokenService jwtTokenService,
     IConfiguration configuration,
-    ILogger<ConsumeMagicLinkCommandHandler> logger) : ICommandHandler<ConsumeMagicLinkCommand, SignInResponse>
+    ILogger<ConsumeMagicLinkCommandHandler> logger,
+    IOptions<JwtOptions>? jwtOptions = null) : ICommandHandler<ConsumeMagicLinkCommand, SignInResponse>
 {
     public async Task<SignInResponse> Handle(ConsumeMagicLinkCommand request, CancellationToken cancellationToken)
     {
@@ -75,10 +89,12 @@ public sealed class ConsumeMagicLinkCommandHandler(
             throw new UnauthorizedAccessException("Invalid or expired magic-link token");
         }
 
-        var accessTokenMinutes = ParsePositiveInt(configuration["Jwt:AccessTokenExpirationMinutes"], 60);
-        var refreshTokenDays = ParsePositiveInt(
-            configuration["Jwt:RefreshTokenExpirationDays"] ?? configuration["Jwt:RefreshTokenExpiryInDays"],
-            30);
+        var accessTokenMinutes = jwtOptions?.Value.AccessTokenExpirationMinutes
+                                 ?? ParsePositiveInt(configuration["Jwt:AccessTokenExpirationMinutes"], 60);
+        var refreshTokenDays = jwtOptions?.Value.RefreshTokenExpirationDays
+                               ?? ParsePositiveInt(
+                                   configuration["Jwt:RefreshTokenExpirationDays"] ?? configuration["Jwt:RefreshTokenExpiryInDays"],
+                                   30);
         var now = SystemClock.UtcNow;
 
         var accessToken = await jwtTokenService.GenerateAccessTokenAsync(

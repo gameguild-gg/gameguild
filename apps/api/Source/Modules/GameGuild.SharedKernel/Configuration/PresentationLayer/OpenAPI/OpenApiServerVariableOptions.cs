@@ -3,7 +3,7 @@ namespace GameGuild.Configuration.PresentationLayer.OpenAPI;
 /// <summary>
 ///     Configuration for OpenAPI server variables.
 /// </summary>
-public sealed class OpenApiServerVariableOptions: BaseOptions
+public sealed class OpenApiServerVariableOptions : BaseOptions
 {
     /// <summary>
     ///     The default value for the variable.
@@ -18,12 +18,12 @@ public sealed class OpenApiServerVariableOptions: BaseOptions
     /// <summary>
     ///     Possible values for the variable.
     /// </summary>
-    public string[ ] Enum { get; set; } = Array.Empty<string>();
+    public string[] Enum { get; set; } = Array.Empty<string>();
 
     /// <summary>
     ///     Validates the server variable options.
     /// </summary>
-    public new void Validate()
+    public override void Validate()
     {
         if (string.IsNullOrWhiteSpace(Default)) { throw new ArgumentException("Server variable default value cannot be null or empty.", nameof(Default)); }
     }

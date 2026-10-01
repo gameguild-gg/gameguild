@@ -402,7 +402,7 @@ export class CommerceSubscriptionsPlansModule {
   }
 
   /**
-   * Full update subscription plan
+   * Full update of a subscription plan
    *
    * Performs a full replacement of subscription plan data. All fields will be updated.
    */

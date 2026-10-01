@@ -16,6 +16,7 @@ export class AccessControlDelegatedAdminModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Grant delegated admin scope to a user
    */
   async postDelegatedAdmin(
     body: Types.IdentityAuthorizationCommandsGrantDelegatedAdminCommand,
@@ -42,6 +43,7 @@ export class AccessControlDelegatedAdminModule {
   }
 
   /**
+   * Get a delegated admin scope by ID
    */
   async getDelegatedAdmin(id: string): Promise<Result<Types.IdentityAuthorizationDelegatedAdminScope, ApiError>> {
     const url = `/v1/delegated-admin/${id}`;
@@ -62,6 +64,7 @@ export class AccessControlDelegatedAdminModule {
   }
 
   /**
+   * Revoke delegated admin scope
    */
   async deleteDelegatedAdmin(id: string): Promise<Result<void, ApiError>> {
     const url = `/v1/delegated-admin/${id}`;
@@ -76,6 +79,7 @@ export class AccessControlDelegatedAdminModule {
   }
 
   /**
+   * Check if admin can manage a resource type
    */
   async getDelegatedAdminUserCanManageResource(adminUserId: string, query?: { resourceType?: string; tenantId?: string }): Promise<Result<boolean, ApiError>> {
     const url = `/v1/delegated-admin/user/${adminUserId}/can-manage-resource`;
@@ -91,6 +95,7 @@ export class AccessControlDelegatedAdminModule {
   }
 
   /**
+   * Check if admin can manage a user
    */
   async getDelegatedAdminUserCanManageUser(adminUserId: string, targetUserId: string, query?: { tenantId?: string }): Promise<Result<boolean, ApiError>> {
     const url = `/v1/delegated-admin/user/${adminUserId}/can-manage-user/${targetUserId}`;
@@ -106,6 +111,7 @@ export class AccessControlDelegatedAdminModule {
   }
 
   /**
+   * Get managed resource types for an admin
    */
   async getDelegatedAdminUserManagedResources(adminUserId: string, query?: { tenantId?: string }): Promise<Result<Array<string>, ApiError>> {
     const url = `/v1/delegated-admin/user/${adminUserId}/managed-resources`;
@@ -121,6 +127,7 @@ export class AccessControlDelegatedAdminModule {
   }
 
   /**
+   * Get managed users for an admin
    */
   async getDelegatedAdminUserManagedUsers(adminUserId: string, query?: { tenantId?: string }): Promise<Result<Array<string>, ApiError>> {
     const url = `/v1/delegated-admin/user/${adminUserId}/managed-users`;
@@ -136,6 +143,7 @@ export class AccessControlDelegatedAdminModule {
   }
 
   /**
+   * Get admin scopes for a user
    */
   async getDelegatedAdminUserScopes(
     adminUserId: string,

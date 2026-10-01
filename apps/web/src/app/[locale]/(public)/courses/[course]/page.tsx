@@ -4,7 +4,7 @@ import { buttonVariants } from '@game-guild/ui/components/button';
 import { Link } from '@/i18n/navigation';
 import { getProductsContainingCourse } from '@/lib/courses/actions/enrollment.actions';
 import { getCourseViewerAccess } from '@/lib/courses/services/course-viewer-access';
-import { getCourseBySlug } from '@/lib/courses/services/course.service';
+import { getCachedPublicCourseBySlug } from '@/lib/courses/cached-public-course';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
@@ -12,7 +12,7 @@ import { Suspense } from 'react';
 // Generate metadata for SEO
 export async function generateMetadata({ params }: { params: Promise<{ course: string }> }) {
   const { course: slug } = await params;
-  const result = await getCourseBySlug(slug);
+  const result = await getCachedPublicCourseBySlug(slug);
 
   if (!result.success) {
     if (result.reason === 'unavailable') {
@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: { params: Promise<{ course: s
   }
 
   return {
-    title: `${course.title} | Game Guild`,
+    title: course.title,
     description: course.description,
     openGraph: {
       title: course.title,
@@ -95,7 +95,7 @@ function CourseUnavailableState({ error }: { readonly error?: string }) {
 }
 
 async function CourseContent({ slug }: { slug: string }): Promise<React.JSX.Element> {
-  const result = await getCourseBySlug(slug);
+  const result = await getCachedPublicCourseBySlug(slug);
 
   if (!result.success) {
     if (result.reason === 'not-found') {

@@ -1378,7 +1378,7 @@ public class ServiceConstructorTests5
         var campaignRepo = new Mock<IAccessReviewCampaignRepository>();
         var itemRepo = new Mock<IAccessReviewItemRepository>();
         var logger = NullLogger<AccessReviewService>.Instance;
-        var svc = new AccessReviewService(campaignRepo.Object, itemRepo.Object, logger);
+        var svc = new AccessReviewService(campaignRepo.Object, itemRepo.Object, logger, actorContextAccessor: Mock.Of<GameGuild.Identity.Context.Actors.IActorContextAccessor>());
         svc.Should().NotBeNull();
     }
 

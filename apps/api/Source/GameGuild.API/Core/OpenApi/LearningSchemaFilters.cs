@@ -41,6 +41,12 @@ internal sealed class LearningContractSchemaFilter : ISchemaFilter
     {
         ApplyNullableValueTypeProperties(schema, context.Type);
 
+        if (context.Type == typeof(ActivitySettings))
+        {
+            ApplyActivitySettings(schema, context);
+            return;
+        }
+
         if (context.Type == typeof(ReviewMethods))
         {
             ApplyReviewMethods(schema);
@@ -60,6 +66,60 @@ internal sealed class LearningContractSchemaFilter : ISchemaFilter
         schema.Description = context.Type == typeof(PercentValue)
             ? "Percentage in integer units scaled by 100 (100 units = 1%, range 0..10000)."
             : "Score in non-negative integer units scaled by 100 (100 units = 1 point).";
+    }
+
+    private static void ApplyActivitySettings(OpenApiSchema schema, SchemaFilterContext context)
+    {
+        schema.Type = null;
+        schema.Format = null;
+        schema.Properties?.Clear();
+        schema.Required?.Clear();
+        schema.AdditionalProperties = null;
+        schema.AdditionalPropertiesAllowed = true;
+
+        var discussionSchema = context.SchemaGenerator.GenerateSchema(typeof(DiscussionActivitySettings), context.SchemaRepository);
+        var reflectionSchema = context.SchemaGenerator.GenerateSchema(typeof(ReflectionActivitySettings), context.SchemaRepository);
+        var surveySchema = context.SchemaGenerator.GenerateSchema(typeof(SurveyActivitySettings), context.SchemaRepository);
+
+        ApplyActivitySettingsDiscriminator(discussionSchema, context.SchemaRepository, "discussion");
+        ApplyActivitySettingsDiscriminator(reflectionSchema, context.SchemaRepository, "reflection");
+        ApplyActivitySettingsDiscriminator(surveySchema, context.SchemaRepository, "survey");
+
+        schema.OneOf = [discussionSchema, reflectionSchema, surveySchema];
+        schema.Discriminator = new OpenApiDiscriminator
+        {
+            PropertyName = "kind",
+            Mapping = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["discussion"] = "#/components/schemas/Learning_Courses_DiscussionActivitySettings",
+                ["reflection"] = "#/components/schemas/Learning_Courses_ReflectionActivitySettings",
+                ["survey"] = "#/components/schemas/Learning_Courses_SurveyActivitySettings"
+            }
+        };
+        schema.Description = "Polymorphic activity settings selected by the kind discriminator.";
+    }
+
+    private static void ApplyActivitySettingsDiscriminator(
+        OpenApiSchema schemaReference,
+        SchemaRepository schemaRepository,
+        string discriminatorValue)
+    {
+        if (schemaReference.Reference?.Id is not { } schemaId
+            || !schemaRepository.Schemas.TryGetValue(schemaId, out var schema))
+        {
+            return;
+        }
+
+        schema.Properties ??= new Dictionary<string, OpenApiSchema>(StringComparer.Ordinal);
+        schema.Properties["kind"] = new OpenApiSchema
+        {
+            Type = "string",
+            Description = "Identifies the activity settings type.",
+            Enum = [new OpenApiString(discriminatorValue)],
+            Example = new OpenApiString(discriminatorValue)
+        };
+        schema.Required ??= new HashSet<string>(StringComparer.Ordinal);
+        schema.Required.Add("kind");
     }
 
     private static void ApplyReviewMethods(OpenApiSchema schema)

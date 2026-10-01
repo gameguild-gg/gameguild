@@ -16,7 +16,7 @@ export class AuthSessionsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
-   * Get active sessions
+   * Get current user's active sessions
    *
    * Retrieves a list of all active sessions for the current user, including device and location information.
    */
@@ -56,7 +56,7 @@ export class AuthSessionsModule {
   }
 
   /**
-   * Refresh current session
+   * Refresh the current session
    *
    * Extends the current session's expiration time.
    */
@@ -79,7 +79,7 @@ export class AuthSessionsModule {
   }
 
   /**
-   * Terminate all sessions
+   * Terminate all sessions (including current)
    *
    * Terminates all active sessions including the current one. User will need to sign in again.
    */
@@ -102,7 +102,7 @@ export class AuthSessionsModule {
   }
 
   /**
-   * Terminate other sessions
+   * Terminate all sessions except the current one
    *
    * Terminates all active sessions except the current one.
    */
@@ -125,7 +125,7 @@ export class AuthSessionsModule {
   }
 
   /**
-   * Terminate a session
+   * Terminate a specific session
    *
    * Terminates a specific session by its identifier. The session must belong to the current user.
    */

@@ -358,4 +358,61 @@ public class AuditServiceTests : IDisposable
         auditLog.Category.Should().Be(AuditCategory.Tenant);
         auditLog.Metadata.Should().NotBeNull();
     }
+
+    [Fact]
+    public async Task StreamAuditLogsAsync_ShouldApplyFiltersAndPaginationWithoutMaterializingAllRows()
+    {
+        var userId = Guid.NewGuid();
+        var otherUserId = Guid.NewGuid();
+        var start = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var expected = new AuditLog
+        {
+            UserId = userId,
+            ActionType = "Exported",
+            ResourceType = "Report",
+            CreatedAt = start.AddHours(2)
+        };
+        var newest = new AuditLog
+        {
+            UserId = userId,
+            ActionType = "Exported",
+            ResourceType = "Report",
+            CreatedAt = start.AddHours(3)
+        };
+        var outsideDateRange = new AuditLog
+        {
+            UserId = userId,
+            ActionType = "Exported",
+            ResourceType = "Report",
+            CreatedAt = start.AddDays(1)
+        };
+        var otherUser = new AuditLog
+        {
+            UserId = otherUserId,
+            ActionType = "Exported",
+            ResourceType = "Report",
+            CreatedAt = start.AddHours(2)
+        };
+
+        _context.Set<AuditLog>().AddRange(expected, newest, outsideDateRange, otherUser);
+        await _context.SaveChangesAsync();
+
+        var streamed = new List<AuditLog>();
+        await foreach (var auditLog in _auditService.StreamAuditLogsAsync(
+                           new AuditLogQuery
+                           {
+                               UserId = userId,
+                               ActionType = "Exported",
+                               StartDate = start,
+                               EndDate = start.AddHours(5),
+                               Skip = 1,
+                               Take = 1
+                           },
+                           CancellationToken.None))
+        {
+            streamed.Add(auditLog);
+        }
+
+        streamed.Should().ContainSingle().Which.Id.Should().Be(expected.Id);
+    }
 }

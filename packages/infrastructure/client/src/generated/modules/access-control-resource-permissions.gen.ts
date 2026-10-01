@@ -16,6 +16,7 @@ export class AccessControlResourcePermissionsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Checks if a user has a specific permission on a resource.
    */
   async getAuthorizationResourcesHasPermission(
     resourceType: string,
@@ -41,6 +42,7 @@ export class AccessControlResourcePermissionsModule {
   }
 
   /**
+   * Gets all effective permissions for a user on a specific resource.
    */
   async getAuthorizationResourcesPermissions(
     resourceType: string,
@@ -66,6 +68,7 @@ export class AccessControlResourcePermissionsModule {
   }
 
   /**
+   * Gets all users who have access to a specific resource.
    */
   async getAuthorizationResourcesUsers(
     resourceType: string,
@@ -91,6 +94,7 @@ export class AccessControlResourcePermissionsModule {
   }
 
   /**
+   * Gets a specific invitation if it is visible to the current user.
    */
   async getAuthorizationResourcesInvitations(invitationId: string): Promise<Result<Types.IdentityAuthorizationGetResourceInvitationOutput, ApiError>> {
     const url = `/api/v1/authorization/resources/invitations/${invitationId}`;
@@ -111,6 +115,7 @@ export class AccessControlResourcePermissionsModule {
   }
 
   /**
+   * Revokes a pending invitation.
    */
   async deleteAuthorizationResourcesInvitations(invitationId: string): Promise<Result<Types.IdentityAuthorizationInvitationActionResult, ApiError>> {
     const url = `/api/v1/authorization/resources/invitations/${invitationId}`;
@@ -131,6 +136,7 @@ export class AccessControlResourcePermissionsModule {
   }
 
   /**
+   * Accepts an invitation addressed to the current user.
    */
   async postAuthorizationResourcesInvitationsAccept(invitationId: string): Promise<Result<Types.IdentityAuthorizationInvitationActionResult, ApiError>> {
     const url = `/api/v1/authorization/resources/invitations/${invitationId}/accept`;
@@ -151,6 +157,7 @@ export class AccessControlResourcePermissionsModule {
   }
 
   /**
+   * Declines an invitation addressed to the current user.
    */
   async postAuthorizationResourcesInvitationsDecline(
     invitationId: string,
@@ -178,6 +185,7 @@ export class AccessControlResourcePermissionsModule {
   }
 
   /**
+   * Gets all pending invitations addressed to the current user.
    */
   async getAuthorizationResourcesInvitationsPending(): Promise<Result<Types.IdentityAuthorizationGetPendingResourceInvitationsOutput, ApiError>> {
     const url = '/api/v1/authorization/resources/invitations/pending';
@@ -198,6 +206,7 @@ export class AccessControlResourcePermissionsModule {
   }
 
   /**
+   * Shares a resource with one or more users by granting them permissions.
    */
   async postAuthorizationResourcesShare(
     body: Types.IdentityAuthorizationShareResourceCommand,
@@ -224,6 +233,7 @@ export class AccessControlResourcePermissionsModule {
   }
 
   /**
+   * Removes all access for a user on a specific resource.
    */
   async deleteAuthorizationResourcesUsersAccess(
     body: Types.IdentityAuthorizationRemoveUserAccessCommand,
@@ -250,6 +260,7 @@ export class AccessControlResourcePermissionsModule {
   }
 
   /**
+   * Updates a specific user's permissions on a resource.
    */
   async putAuthorizationResourcesUsersPermissions(
     body: Types.IdentityAuthorizationUpdateUserPermissionsCommand,

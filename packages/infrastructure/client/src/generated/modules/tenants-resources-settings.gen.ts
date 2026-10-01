@@ -111,7 +111,7 @@ export class TenantsResourcesSettingsModule {
   }
 
   /**
-   * Get effective value for a setting
+   * Get effective value for a setting (considering user overrides)
    *
    * Retrieves the effective value for a setting, considering user-level overrides if a user ID is provided.
    */

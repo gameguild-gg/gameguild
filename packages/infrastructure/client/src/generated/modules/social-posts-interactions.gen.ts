@@ -16,6 +16,7 @@ export class SocialPostsInteractionsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Check if current user is following a post
    */
   async getPostsFollow(postId: string): Promise<Result<void, ApiError>> {
     const url = `/api/v1/posts/${postId}/follow`;
@@ -30,6 +31,7 @@ export class SocialPostsInteractionsModule {
   }
 
   /**
+   * Follow a post for notifications
    */
   async postPostsFollow(postId: string, body: Types.SocialPostsControllersFollowPostInput): Promise<Result<void, ApiError>> {
     const url = `/api/v1/posts/${postId}/follow`;
@@ -48,6 +50,7 @@ export class SocialPostsInteractionsModule {
   }
 
   /**
+   * Unfollow a post
    */
   async deletePostsFollow(postId: string): Promise<Result<void, ApiError>> {
     const url = `/api/v1/posts/${postId}/follow`;
@@ -62,6 +65,7 @@ export class SocialPostsInteractionsModule {
   }
 
   /**
+   * Toggle like on a post
    */
   async postPostsLike(postId: string, query?: { reactionType?: string }): Promise<Result<void, ApiError>> {
     const url = `/api/v1/posts/${postId}/like`;
@@ -77,6 +81,7 @@ export class SocialPostsInteractionsModule {
   }
 
   /**
+   * Toggle pin on a post (author only)
    */
   async postPostsPin(postId: string): Promise<Result<void, ApiError>> {
     const url = `/api/v1/posts/${postId}/pin`;
@@ -91,6 +96,7 @@ export class SocialPostsInteractionsModule {
   }
 
   /**
+   * Repost a public post once for the current user
    */
   async postPostsReposts(postId: string, body: Types.SocialPostsControllersCreateRepostInput): Promise<Result<void, ApiError>> {
     const url = `/api/v1/posts/${postId}/reposts`;
@@ -109,6 +115,7 @@ export class SocialPostsInteractionsModule {
   }
 
   /**
+   * Record a share of the post
    */
   async postPostsShare(postId: string): Promise<Result<void, ApiError>> {
     const url = `/api/v1/posts/${postId}/share`;
@@ -123,6 +130,7 @@ export class SocialPostsInteractionsModule {
   }
 
   /**
+   * Get statistics for a post
    */
   async getPostsStatistics(postId: string): Promise<Result<void, ApiError>> {
     const url = `/api/v1/posts/${postId}/statistics`;
@@ -137,6 +145,7 @@ export class SocialPostsInteractionsModule {
   }
 
   /**
+   * Record a view of the post
    */
   async postPostsView(postId: string): Promise<Result<void, ApiError>> {
     const url = `/api/v1/posts/${postId}/view`;

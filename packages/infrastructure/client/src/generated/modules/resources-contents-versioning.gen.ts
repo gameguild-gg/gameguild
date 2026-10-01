@@ -16,6 +16,7 @@ export class ResourcesContentsVersioningModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Get a specific version
    */
   async getApiContentsVersioning(versionId: string): Promise<Result<Types.ResourcesContentsContentVersionDto, ApiError>> {
     const url = `/api/contents/versioning/${versionId}`;
@@ -36,6 +37,7 @@ export class ResourcesContentsVersioningModule {
   }
 
   /**
+   * Approve a version
    */
   async postApiContentsVersioningApprove(
     versionId: string,
@@ -63,6 +65,7 @@ export class ResourcesContentsVersioningModule {
   }
 
   /**
+   * Cancel scheduled publishing
    */
   async postApiContentsVersioningCancelSchedule(versionId: string): Promise<Result<Types.ResourcesContentsContentVersionDto, ApiError>> {
     const url = `/api/contents/versioning/${versionId}/cancel-schedule`;
@@ -83,6 +86,7 @@ export class ResourcesContentsVersioningModule {
   }
 
   /**
+   * Publish a version
    */
   async postApiContentsVersioningPublish(versionId: string): Promise<Result<Types.ResourcesContentsContentVersionDto, ApiError>> {
     const url = `/api/contents/versioning/${versionId}/publish`;
@@ -103,6 +107,7 @@ export class ResourcesContentsVersioningModule {
   }
 
   /**
+   * Reject a version
    */
   async postApiContentsVersioningReject(
     versionId: string,
@@ -130,6 +135,7 @@ export class ResourcesContentsVersioningModule {
   }
 
   /**
+   * Add a review to a version
    */
   async postApiContentsVersioningReviews(
     versionId: string,
@@ -157,6 +163,7 @@ export class ResourcesContentsVersioningModule {
   }
 
   /**
+   * Schedule a version for publishing
    */
   async postApiContentsVersioningSchedule(
     versionId: string,
@@ -184,6 +191,7 @@ export class ResourcesContentsVersioningModule {
   }
 
   /**
+   * Submit a draft for review
    */
   async postApiContentsVersioningSubmitForReview(versionId: string): Promise<Result<Types.ResourcesContentsContentVersionDto, ApiError>> {
     const url = `/api/contents/versioning/${versionId}/submit-for-review`;
@@ -204,6 +212,7 @@ export class ResourcesContentsVersioningModule {
   }
 
   /**
+   * Compare two versions
    */
   async getApiContentsVersioningCompare(query?: {
     versionId1?: string;
@@ -228,6 +237,7 @@ export class ResourcesContentsVersioningModule {
   }
 
   /**
+   * Create a new draft version
    */
   async postApiContentsVersioningDrafts(body: Types.ResourcesContentsCreateDraftInput): Promise<Result<Types.ResourcesContentsContentVersionDto, ApiError>> {
     const url = '/api/contents/versioning/drafts';
@@ -252,6 +262,7 @@ export class ResourcesContentsVersioningModule {
   }
 
   /**
+   * Update a draft version
    */
   async putApiContentsVersioningDrafts(
     versionId: string,
@@ -279,6 +290,7 @@ export class ResourcesContentsVersioningModule {
   }
 
   /**
+   * Get the current published version for an entity
    */
   async getApiContentsVersioningEntityCurrent(entityType: string, entityId: string): Promise<Result<Types.ResourcesContentsContentVersionDto, ApiError>> {
     const url = `/api/contents/versioning/entity/${entityType}/${entityId}/current`;
@@ -299,6 +311,7 @@ export class ResourcesContentsVersioningModule {
   }
 
   /**
+   * Get version history for an entity
    */
   async getApiContentsVersioningEntityHistory(
     entityType: string,
@@ -316,6 +329,7 @@ export class ResourcesContentsVersioningModule {
   }
 
   /**
+   * Rollback to a previous version
    */
   async postApiContentsVersioningEntityRollback(
     entityType: string,
@@ -344,6 +358,7 @@ export class ResourcesContentsVersioningModule {
   }
 
   /**
+   * Get a specific version by number
    */
   async getApiContentsVersioningEntityVersion(
     entityType: string,
@@ -368,6 +383,7 @@ export class ResourcesContentsVersioningModule {
   }
 
   /**
+   * Get versions pending review
    */
   async getApiContentsVersioningPendingReview(query?: {
     entityType?: string;

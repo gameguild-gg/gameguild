@@ -54,6 +54,9 @@ public sealed class PermissionCommandSecurityTests
         _cacheInvalidation
             .Setup(c => c.InvalidateUserAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
+        _cacheInvalidation
+            .Setup(c => c.InvalidateGlobalAsync(It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
         _bulkService
             .Setup(b => b.BulkGrantTenantPermissionAsync(
                 It.IsAny<Guid[]>(),
@@ -161,6 +164,22 @@ public sealed class PermissionCommandSecurityTests
     }
 
     [Fact]
+    public async Task ApplyTemplate_SystemAdminGlobalScope_BumpsReservedGlobalVersion()
+    {
+        await using var db = new PermissionFacadeTestDb();
+        var templateId = SeedTemplate(db, isSystemTemplate: true);
+        SetActor(AuthenticatedActor(roles: ["SystemAdmin"], permissions: [], tenantId: null));
+        var handler = BuildTemplateHandler(db);
+
+        var result = await handler.Handle(
+            new ApplyPermissionTemplateCommand { UserId = Guid.NewGuid(), TenantId = null, TemplateId = templateId },
+            CancellationToken.None);
+
+        result.Success.Should().BeTrue();
+        _versionStore.Verify(v => v.IncrementVersionAsync(Guid.Empty.ToString(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task ApplyTemplate_CrossTenantTarget_IsDenied()
     {
         await using var db = new PermissionFacadeTestDb();
@@ -204,7 +223,7 @@ public sealed class PermissionCommandSecurityTests
     {
         SetActor(AuthenticatedActor(roles: [], permissions: [], tenantId: Guid.NewGuid()));
         var handler = new ClearPermissionCacheCommandHandler(
-            _actorAccessor.Object, _versionStore.Object, _cacheInvalidation.Object,
+            _actorAccessor.Object, _cacheInvalidation.Object,
             NullLogger<ClearPermissionCacheCommandHandler>.Instance);
 
         var act = () => handler.Handle(new ClearPermissionCacheCommand(), CancellationToken.None);
@@ -213,26 +232,27 @@ public sealed class PermissionCommandSecurityTests
     }
 
     [Fact]
-    public async Task ClearCache_SystemAdminGlobalClear_BumpsGlobalVersion()
+    public async Task ClearCache_SystemAdminGlobalClear_UsesDistributedInvalidation()
     {
         SetActor(AuthenticatedActor(roles: ["SystemAdmin"], permissions: [], tenantId: null));
         var handler = new ClearPermissionCacheCommandHandler(
-            _actorAccessor.Object, _versionStore.Object, _cacheInvalidation.Object,
+            _actorAccessor.Object, _cacheInvalidation.Object,
             NullLogger<ClearPermissionCacheCommandHandler>.Instance);
 
         var result = await handler.Handle(new ClearPermissionCacheCommand(), CancellationToken.None);
 
         result.Should().BeTrue();
-        _versionStore.Verify(v => v.IncrementVersionAsync("global", It.IsAny<CancellationToken>()), Times.Once);
+        _cacheInvalidation.Verify(c => c.InvalidateGlobalAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _versionStore.Verify(v => v.IncrementVersionAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
-    public async Task ClearCache_TenantAdminOfTargetTenant_BumpsVersionAndEvictsL1()
+    public async Task ClearCache_TenantAdminOfTargetTenant_UsesTenantInvalidationOnce()
     {
         var tenantId = Guid.NewGuid();
         SetActor(AuthenticatedActor(roles: ["TenantAdmin"], permissions: [], tenantId: tenantId));
         var handler = new ClearPermissionCacheCommandHandler(
-            _actorAccessor.Object, _versionStore.Object, _cacheInvalidation.Object,
+            _actorAccessor.Object, _cacheInvalidation.Object,
             NullLogger<ClearPermissionCacheCommandHandler>.Instance);
 
         var result = await handler.Handle(
@@ -240,8 +260,27 @@ public sealed class PermissionCommandSecurityTests
             CancellationToken.None);
 
         result.Should().BeTrue();
-        _versionStore.Verify(v => v.IncrementVersionAsync(tenantId.ToString(), It.IsAny<CancellationToken>()), Times.Once);
         _cacheInvalidation.Verify(c => c.InvalidateTenantAsync(tenantId, It.IsAny<CancellationToken>()), Times.Once);
+        _versionStore.Verify(v => v.IncrementVersionAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ClearCache_TenantAdminUserScope_UsesUserInvalidationOnce()
+    {
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        SetActor(AuthenticatedActor(roles: ["TenantAdmin"], permissions: [], tenantId: tenantId));
+        var handler = new ClearPermissionCacheCommandHandler(
+            _actorAccessor.Object, _cacheInvalidation.Object,
+            NullLogger<ClearPermissionCacheCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new ClearPermissionCacheCommand { TenantId = tenantId, UserId = userId },
+            CancellationToken.None);
+
+        result.Should().BeTrue();
+        _cacheInvalidation.Verify(c => c.InvalidateUserAsync(userId, tenantId, It.IsAny<CancellationToken>()), Times.Once);
+        _versionStore.Verify(v => v.IncrementVersionAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -249,7 +288,7 @@ public sealed class PermissionCommandSecurityTests
     {
         SetActor(AuthenticatedActor(roles: ["SystemAdmin"], permissions: [], tenantId: null));
         var handler = new ClearPermissionCacheCommandHandler(
-            _actorAccessor.Object, _versionStore.Object, _cacheInvalidation.Object,
+            _actorAccessor.Object, _cacheInvalidation.Object,
             NullLogger<ClearPermissionCacheCommandHandler>.Instance);
 
         var act = () => handler.Handle(
@@ -327,6 +366,33 @@ public sealed class PermissionCommandSecurityTests
 
         await act.Should().ThrowAsync<UnauthorizedAccessException>()
             .WithMessage("*system:manage-global-defaults*");
+    }
+
+    [Fact]
+    public async Task BulkResourceGrant_SystemAdminGlobalScope_BumpsReservedGlobalVersion()
+    {
+        await using var db = new ResourcePermissionTestDb();
+        SetActor(AuthenticatedActor(roles: ["SystemAdmin"], permissions: [], tenantId: null));
+        var handler = new BulkGrantResourcePermissionsCommandHandler(
+            db,
+            _actorAccessor.Object,
+            _versionStore.Object,
+            _auditService.Object,
+            NullLogger<BulkGrantResourcePermissionsCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new BulkGrantResourcePermissionsCommand
+            {
+                UserIds = [Guid.NewGuid()],
+                TenantId = Guid.Empty,
+                ResourceId = Guid.NewGuid(),
+                ResourceType = "Document",
+                Permissions = [PermissionType.Read]
+            },
+            CancellationToken.None);
+
+        result.Successful.Should().Be(1);
+        _versionStore.Verify(v => v.IncrementVersionAsync(Guid.Empty.ToString(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -441,10 +507,103 @@ public sealed class PermissionCommandSecurityTests
         SetActor(AuthenticatedActor(roles: [], permissions: [], tenantId: tenantId));
         var service = new PermissionService(db, _versionStore.Object, _auditService.Object, _actorAccessor.Object);
 
-        await service.GrantTenantPermissionAsync(userId, tenantId, [PermissionType.Read]);
+        var grant = await service.GrantTenantPermissionAsync(userId, tenantId, [PermissionType.Read]);
+        grant.Version = 1; // The lightweight InMemory context does not apply the production version interceptor.
         await service.RevokeTenantPermissionAsync(userId, tenantId, [PermissionType.Read]);
 
         _versionStore.Verify(v => v.IncrementVersionAsync(tenantId.ToString(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task RevokeTenantPermissionById_TenantAdminCannotRevokeAnotherTenantsGrant()
+    {
+        await using var db = new PermissionFacadeTestDb();
+        var grantId = Guid.NewGuid();
+        var actorTenantId = Guid.NewGuid();
+        db.TenantPermissions.Add(new TenantPermission
+        {
+            Id = grantId,
+            Version = 1,
+            UserId = Guid.NewGuid(),
+            TenantId = Guid.NewGuid(),
+            Permissions = ["tenant:read"]
+        });
+        await db.SaveChangesAsync();
+        SetActor(ActorContextBuilder.ForUser(Guid.NewGuid())
+            .WithTenantId(actorTenantId)
+            .WithRole("TenantAdmin")
+            .Build());
+        var handler = new RevokeTenantPermissionByIdHandler(
+            db, _actorAccessor.Object, _versionStore.Object, _auditService.Object);
+
+        var act = () => handler.Handle(new RevokeTenantPermissionByIdCommand { GrantId = grantId }, CancellationToken.None);
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+        db.TenantPermissions.Single(grant => grant.Id == grantId).DeletedAt.Should().BeNull();
+        _versionStore.Verify(store => store.IncrementVersionAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _auditService.Verify(audit => audit.LogPermissionChangeAsync(
+            It.IsAny<PermissionOperationType>(), It.IsAny<Guid?>(), It.IsAny<Guid>(), It.IsAny<Guid?>(),
+            It.IsAny<string?>(), It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<string?>(),
+            It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<bool>(), It.IsAny<string?>(),
+            It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RevokeTenantPermissionById_SameTenantAdminSoftDeletesAndTracksMutation()
+    {
+        await using var db = new PermissionFacadeTestDb();
+        var actorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var grantId = Guid.NewGuid();
+        db.TenantPermissions.Add(new TenantPermission
+        {
+            Id = grantId,
+            Version = 1,
+            UserId = userId,
+            TenantId = tenantId,
+            Permissions = ["tenant:read"]
+        });
+        await db.SaveChangesAsync();
+        SetActor(ActorContextBuilder.ForUser(actorId)
+            .WithTenantId(tenantId)
+            .WithRole("TenantAdmin")
+            .Build());
+        var handler = new RevokeTenantPermissionByIdHandler(
+            db, _actorAccessor.Object, _versionStore.Object, _auditService.Object);
+
+        await handler.Handle(new RevokeTenantPermissionByIdCommand { GrantId = grantId }, CancellationToken.None);
+
+        db.TenantPermissions.Single(grant => grant.Id == grantId).DeletedAt.Should().NotBeNull();
+        _versionStore.Verify(store => store.IncrementVersionAsync(tenantId.ToString(), It.IsAny<CancellationToken>()), Times.Once);
+        _auditService.Verify(audit => audit.LogPermissionChangeAsync(
+            PermissionOperationType.Revoke,
+            userId,
+            actorId,
+            tenantId,
+            "Tenant",
+            null,
+            "TenantPermission",
+            "tenant:read",
+            null,
+            "Tenant permission grant revoked by id",
+            true,
+            null,
+            null,
+            null,
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task LegacyPermissionService_GlobalDefaults_BumpsReservedGlobalVersion()
+    {
+        await using var db = new PermissionFacadeTestDb();
+        SetActor(AuthenticatedActor(roles: ["SystemAdmin"], permissions: [], tenantId: null));
+        var service = new PermissionService(db, _versionStore.Object, _auditService.Object, _actorAccessor.Object);
+
+        await service.SetGlobalDefaultPermissionsAsync([PermissionType.Read]);
+
+        _versionStore.Verify(v => v.IncrementVersionAsync(Guid.Empty.ToString(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     // ─── Setup helpers ───
@@ -507,5 +666,22 @@ public sealed class PermissionCommandSecurityTests
             modelBuilder.Entity<PermissionTemplate>().Ignore(p => p.Metadata);
             modelBuilder.Entity<TenantPermission>().Ignore(p => p.Metadata);
         }
+    }
+
+    private sealed class ResourcePermissionTestDb : DbContext, IApplicationDbContext
+    {
+        public DbSet<GenericResourcePermission> GenericResourcePermissions { get; set; } = null!;
+
+        public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+            => Database.BeginTransactionAsync(cancellationToken);
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            if (!optionsBuilder.IsConfigured)
+            {
+                optionsBuilder.UseInMemoryDatabase(Guid.NewGuid().ToString("N"));
+            }
+        }
+
     }
 }

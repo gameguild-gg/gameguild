@@ -16,6 +16,7 @@ export class LearningCoursesProgramModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Get all courses with optional filtering (content-type level read permission). Non-manage actors are DAC-scoped to their own courses.
    */
   async getCoursesForGetCourses(query?: {
     status?: string;
@@ -40,6 +41,7 @@ export class LearningCoursesProgramModule {
   }
 
   /**
+   * Create a new program (content-type level draft permission)
    */
   async postCourses(body: Types.LearningCoursesCreateProgramDto): Promise<Result<Types.LearningCoursesProgramDto, ApiError>> {
     const url = '/v1/courses';
@@ -64,6 +66,7 @@ export class LearningCoursesProgramModule {
   }
 
   /**
+   * Get a specific program by ID (resource-level read permission)
    */
   async getCoursesForGetCoursesById(id: string): Promise<Result<Types.LearningCoursesProgramDto, ApiError>> {
     const url = `/v1/courses/${id}`;
@@ -84,6 +87,7 @@ export class LearningCoursesProgramModule {
   }
 
   /**
+   * Update a program (resource-level edit permission)
    */
   async putCourses(id: string, body: Types.LearningCoursesUpdateProgramDto): Promise<Result<Types.LearningCoursesProgramDto, ApiError>> {
     const url = `/v1/courses/${id}`;
@@ -108,6 +112,7 @@ export class LearningCoursesProgramModule {
   }
 
   /**
+   * Delete a program (resource-level delete permission)
    */
   async deleteCourses(id: string): Promise<Result<void, ApiError>> {
     const url = `/v1/courses/${id}`;
@@ -122,6 +127,7 @@ export class LearningCoursesProgramModule {
   }
 
   /**
+   * Clone/duplicate a program (resource-level clone permission)
    */
   async postCoursesClone(id: string, body: Types.LearningCoursesCloneProgramDto): Promise<Result<Types.LearningCoursesProgramDto, ApiError>> {
     const url = `/v1/courses/${id}:clone`;
@@ -146,6 +152,7 @@ export class LearningCoursesProgramModule {
   }
 
   /**
+   * Create a product from a program (resource-level edit permission for program, content-type level draft permission for product)
    */
   async postCoursesCreateProduct(id: string, body: Types.LearningCoursesCreateProductFromProgramDto): Promise<Result<string, ApiError>> {
     const url = `/v1/courses/${id}:create-product`;
@@ -164,6 +171,7 @@ export class LearningCoursesProgramModule {
   }
 
   /**
+   * Disable monetization for a program (resource-level monetize permission)
    */
   async postCoursesDisableMonetization(id: string): Promise<Result<Types.LearningCoursesProgramDto, ApiError>> {
     const url = `/v1/courses/${id}:disable-monetization`;
@@ -184,6 +192,7 @@ export class LearningCoursesProgramModule {
   }
 
   /**
+   * Link a program to an existing product (resource-level edit permission)
    */
   async postCoursesLinkProduct(id: string, productId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/courses/${id}:link-product/${productId}`;
@@ -198,6 +207,7 @@ export class LearningCoursesProgramModule {
   }
 
   /**
+   * Enable monetization for a program (resource-level monetize permission)
    */
   async postCoursesMonetize(id: string, body: Types.LearningCoursesMonetizationDto): Promise<Result<Types.LearningCoursesProgramDto, ApiError>> {
     const url = `/v1/courses/${id}:monetize`;
@@ -222,6 +232,7 @@ export class LearningCoursesProgramModule {
   }
 
   /**
+   * Self-enroll the current authenticated user in a published public course.
    */
   async postCoursesSelfEnroll(id: string): Promise<Result<Types.LearningCoursesUserProgressDto, ApiError>> {
     const url = `/v1/courses/${id}:self-enroll`;
@@ -242,6 +253,7 @@ export class LearningCoursesProgramModule {
   }
 
   /**
+   * Unlink a program from a product (resource-level edit permission)
    */
   async deleteCoursesUnlinkProduct(id: string, productId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/courses/${id}:unlink-product/${productId}`;
@@ -256,6 +268,7 @@ export class LearningCoursesProgramModule {
   }
 
   /**
+   * Get program analytics (resource-level analytics permission)
    */
   async getCoursesAnalytics(id: string): Promise<Result<Types.LearningCoursesProgramAnalyticsDto, ApiError>> {
     const url = `/v1/courses/${id}/analytics`;
@@ -276,6 +289,7 @@ export class LearningCoursesProgramModule {
   }
 
   /**
+   * Get user completion rates for a program (resource-level analytics permission)
    */
   async getCoursesAnalyticsCompletionRates(id: string): Promise<Result<Types.LearningCoursesCompletionRatesDto, ApiError>> {
     const url = `/v1/courses/${id}/analytics/completion-rates`;
@@ -296,6 +310,7 @@ export class LearningCoursesProgramModule {
   }
 
   /**
+   * Get program engagement metrics (resource-level analytics permission)
    */
   async getCoursesAnalyticsEngagement(id: string): Promise<Result<Types.LearningCoursesEngagementMetricsDto, ApiError>> {
     const url = `/v1/courses/${id}/analytics/engagement`;
@@ -316,6 +331,7 @@ export class LearningCoursesProgramModule {
   }
 
   /**
+   * Get program revenue analytics (resource-level revenue permission)
    */
   async getCoursesAnalyticsRevenue(id: string): Promise<Result<Types.LearningCoursesRevenueAnalyticsDto, ApiError>> {
     const url = `/v1/courses/${id}/analytics/revenue`;
@@ -336,6 +352,7 @@ export class LearningCoursesProgramModule {
   }
 
   /**
+   * Mark content as completed for the current learner.
    */
   async postCoursesMeContentComplete(id: string, contentId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/courses/${id}/me/content/${contentId}:complete`;
@@ -350,6 +367,7 @@ export class LearningCoursesProgramModule {
   }
 
   /**
+   * Get the current learner's progress in a program.
    */
   async getCoursesMeProgress(id: string): Promise<Result<Types.LearningCoursesUserProgressDto, ApiError>> {
     const url = `/v1/courses/${id}/me/progress`;
@@ -370,6 +388,7 @@ export class LearningCoursesProgramModule {
   }
 
   /**
+   * Update the current learner's progress in a program.
    */
   async putCoursesMeProgress(id: string, body: Types.LearningCoursesUpdateProgressDto): Promise<Result<Types.LearningCoursesUserProgressDto, ApiError>> {
     const url = `/v1/courses/${id}/me/progress`;
@@ -394,6 +413,7 @@ export class LearningCoursesProgramModule {
   }
 
   /**
+   * Get program pricing information (resource-level read permission)
    */
   async getCoursesPricing(id: string): Promise<Result<Types.LearningCoursesPricingDto, ApiError>> {
     const url = `/v1/courses/${id}/pricing`;
@@ -414,6 +434,7 @@ export class LearningCoursesProgramModule {
   }
 
   /**
+   * Update program pricing (resource-level pricing permission)
    */
   async putCoursesPricing(id: string, body: Types.LearningCoursesUpdatePricingDto): Promise<Result<Types.LearningCoursesPricingDto, ApiError>> {
     const url = `/v1/courses/${id}/pricing`;
@@ -438,6 +459,7 @@ export class LearningCoursesProgramModule {
   }
 
   /**
+   * Get all products linked to a program (resource-level read permission)
    */
   async getCoursesProducts(id: string): Promise<Result<Array<string>, ApiError>> {
     const url = `/v1/courses/${id}/products`;
@@ -452,6 +474,7 @@ export class LearningCoursesProgramModule {
   }
 
   /**
+   * Get all users in a program (resource-level read permission)
    */
   async getCoursesUsers(id: string, query?: { skip?: number; take?: number }): Promise<Result<Array<Types.LearningCoursesUserProgressDto>, ApiError>> {
     const url = `/v1/courses/${id}/users`;
@@ -467,6 +490,9 @@ export class LearningCoursesProgramModule {
   }
 
   /**
+   * Resolve a tenant-scoped user reference and add that user to a program.
+   * This keeps user discovery behind the program's resource-level edit permission,
+   * so course owners do not need tenant-wide user administration privileges.
    */
   async postCoursesUsersEnroll(id: string, body: Types.LearningCoursesEnrollProgramUserInput): Promise<Result<Types.LearningCoursesUserProgressDto, ApiError>> {
     const url = `/v1/courses/${id}/users:enroll`;
@@ -491,6 +517,7 @@ export class LearningCoursesProgramModule {
   }
 
   /**
+   * Add a user to a program (resource-level edit permission)
    */
   async postCoursesUsers(id: string, userId: string): Promise<Result<Types.LearningCoursesUserProgressDto, ApiError>> {
     const url = `/v1/courses/${id}/users/${userId}`;
@@ -511,6 +538,7 @@ export class LearningCoursesProgramModule {
   }
 
   /**
+   * Remove a user from a program (resource-level edit permission)
    */
   async deleteCoursesUsers(id: string, userId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/courses/${id}/users/${userId}`;
@@ -525,6 +553,7 @@ export class LearningCoursesProgramModule {
   }
 
   /**
+   * Reset user progress in a program (resource-level edit permission)
    */
   async postCoursesUsersReset(id: string, userId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/courses/${id}/users/${userId}:reset`;
@@ -539,6 +568,7 @@ export class LearningCoursesProgramModule {
   }
 
   /**
+   * Mark content as completed for a user (resource-level edit permission)
    */
   async postCoursesUsersContentComplete(id: string, userId: string, contentId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/courses/${id}/users/${userId}/content/${contentId}:complete`;
@@ -553,6 +583,7 @@ export class LearningCoursesProgramModule {
   }
 
   /**
+   * Get a specific user's progress in a program (resource-level read permission)
    */
   async getCoursesUsersProgress(id: string, userId: string): Promise<Result<Types.LearningCoursesUserProgressDto, ApiError>> {
     const url = `/v1/courses/${id}/users/${userId}/progress`;
@@ -573,6 +604,7 @@ export class LearningCoursesProgramModule {
   }
 
   /**
+   * Update a user's progress in a program (resource-level edit permission)
    */
   async putCoursesUsersProgress(
     id: string,
@@ -601,6 +633,7 @@ export class LearningCoursesProgramModule {
   }
 
   /**
+   * Get a specific program with all content included (resource-level read permission)
    */
   async getCoursesWithContent(id: string): Promise<Result<Types.LearningCoursesProgramDto, ApiError>> {
     const url = `/v1/courses/${id}/with-content`;
@@ -621,6 +654,7 @@ export class LearningCoursesProgramModule {
   }
 
   /**
+   * Get every course in which the current user has an active enrollment.
    */
   async getCoursesMe(): Promise<Result<Array<Types.LearningCoursesProgramDto>, ApiError>> {
     const url = '/v1/courses/me';
@@ -635,6 +669,7 @@ export class LearningCoursesProgramModule {
   }
 
   /**
+   * Get published public courses for the public catalog.
    */
   async getCoursesPublic(query?: { skip?: number; take?: number }): Promise<Result<Array<Types.LearningCoursesProgramDto>, ApiError>> {
     const url = '/v1/courses/public';
@@ -650,6 +685,7 @@ export class LearningCoursesProgramModule {
   }
 
   /**
+   * Get a specific program by slug (public access for published programs)
    */
   async getCoursesSlug(slug: string): Promise<Result<Types.LearningCoursesProgramDto, ApiError>> {
     const url = `/v1/courses/slug/${slug}`;

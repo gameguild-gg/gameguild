@@ -45,6 +45,7 @@ public class UserCrudIntegrationTests : IClassFixture<WebApplicationFactory<Game
                 {
                     options.UseInMemoryDatabase($"UserTestDb_{Guid.NewGuid()}");
                 });
+                services.AddScoped<DbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
             });
         });
 

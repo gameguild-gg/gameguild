@@ -16,6 +16,7 @@ export class LearningExperienceRecommendationsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Dismiss a recommendation
    */
   async postRecommendationsDismiss(id: string): Promise<Result<void, ApiError>> {
     const url = `/v1/recommendations/${id}/dismiss`;
@@ -30,6 +31,7 @@ export class LearningExperienceRecommendationsModule {
   }
 
   /**
+   * Mark a recommendation as viewed
    */
   async postRecommendationsViewed(id: string): Promise<Result<void, ApiError>> {
     const url = `/v1/recommendations/${id}/viewed`;
@@ -44,6 +46,9 @@ export class LearningExperienceRecommendationsModule {
   }
 
   /**
+   * Get courses similar to a specific course
+   *
+   * Intentionally anonymous: similarity suggestions over published courses only.
    */
   async getRecommendationsCoursesSimilar(
     courseId: string,
@@ -62,6 +67,7 @@ export class LearningExperienceRecommendationsModule {
   }
 
   /**
+   * Get personalized recommendations for the current user
    */
   async getRecommendationsMe(query?: {
     tenantId?: string;
@@ -83,6 +89,7 @@ export class LearningExperienceRecommendationsModule {
   }
 
   /**
+   * Generate new recommendations for the current user
    */
   async postRecommendationsMeGenerate(query?: {
     tenantId?: string;
@@ -101,6 +108,7 @@ export class LearningExperienceRecommendationsModule {
   }
 
   /**
+   * Get the current user's learning profile
    */
   async getRecommendationsMeProfile(): Promise<Result<Types.LearningExperienceRecommendationsUserLearningProfileDto, ApiError>> {
     const url = '/v1/recommendations/me/profile';
@@ -121,6 +129,7 @@ export class LearningExperienceRecommendationsModule {
   }
 
   /**
+   * Update the current user's learning profile
    */
   async putRecommendationsMeProfile(
     body: Types.LearningExperienceRecommendationsCreateOrUpdateLearningProfileDto,
@@ -147,6 +156,7 @@ export class LearningExperienceRecommendationsModule {
   }
 
   /**
+   * Add a skill to the current user's profile
    */
   async postRecommendationsMeProfileSkills(
     body: Types.LearningExperienceRecommendationsAddSkillInput,
@@ -173,6 +183,7 @@ export class LearningExperienceRecommendationsModule {
   }
 
   /**
+   * Remove a skill from the current user's profile
    */
   async deleteRecommendationsMeProfileSkills(skill: string): Promise<Result<Types.LearningExperienceRecommendationsUserLearningProfileDto, ApiError>> {
     const url = `/v1/recommendations/me/profile/skills/${skill}`;
@@ -193,6 +204,7 @@ export class LearningExperienceRecommendationsModule {
   }
 
   /**
+   * Refresh recommendations (clear expired, generate new)
    */
   async postRecommendationsMeRefresh(query?: { tenantId?: string }): Promise<Result<void, ApiError>> {
     const url = '/v1/recommendations/me/refresh';
@@ -208,6 +220,7 @@ export class LearningExperienceRecommendationsModule {
   }
 
   /**
+   * Get recommendation statistics for the current user
    */
   async getRecommendationsMeStatistics(): Promise<Result<Types.LearningExperienceRecommendationsRecommendationStatisticsDto, ApiError>> {
     const url = '/v1/recommendations/me/statistics';
@@ -228,6 +241,10 @@ export class LearningExperienceRecommendationsModule {
   }
 
   /**
+   * Get popular courses across the platform
+   *
+   * Intentionally anonymous: non-personalized discovery over published courses only;
+   * the personalized recommendation endpoints stay authenticated.
    */
   async getRecommendationsPopular(query?: {
     tenantId?: string;
@@ -248,6 +265,9 @@ export class LearningExperienceRecommendationsModule {
   }
 
   /**
+   * Get trending courses (high recent enrollment velocity)
+   *
+   * Intentionally anonymous: aggregate discovery data over published courses only.
    */
   async getRecommendationsTrending(query?: {
     tenantId?: string;

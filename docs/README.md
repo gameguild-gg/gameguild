@@ -21,6 +21,10 @@ This directory contains the cleaned and consolidated project documentation migra
 - `modules/posts-module.md` – Domain event driven posts
 - `modules/base-entity.md` – Entity base abstraction
 
+## API Configuration
+
+- `api/problem-details-configuration.md` – RFC 7807 responses, exception mappings, detail levels, localization, and correlation IDs
+
 ## Frontend
 
 - `frontend/dashboard.md` – Dashboard architecture & server actions

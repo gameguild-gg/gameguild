@@ -16,6 +16,7 @@ export class AuthRolesModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Get all roles in the system
    */
   async getRolesForGetRoles(query?: { tenantId?: string; includeInactive?: boolean }): Promise<Result<void, ApiError>> {
     const url = '/v1/roles';
@@ -31,6 +32,7 @@ export class AuthRolesModule {
   }
 
   /**
+   * Create a new role
    */
   async postRoles(body: Types.IdentityAuthenticationCreateRoleInput): Promise<Result<void, ApiError>> {
     const url = '/v1/roles';
@@ -49,6 +51,7 @@ export class AuthRolesModule {
   }
 
   /**
+   * Assign a role to a user
    */
   async postRolesAssign(body: Types.IdentityAuthenticationAssignRoleToUserInput): Promise<Result<void, ApiError>> {
     const url = '/v1/roles/:assign';
@@ -67,6 +70,34 @@ export class AuthRolesModule {
   }
 
   /**
+   * Assign one active role to multiple users in a single bounded operation.
+   */
+  async postRolesBulkAssign(
+    body: Types.IdentityAuthenticationBulkAssignRolesCommand,
+  ): Promise<Result<Types.IdentityAuthenticationBulkRoleAssignmentResult, ApiError>> {
+    const url = '/v1/roles/:bulk-assign';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationBulkAssignRolesCommandSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityAuthenticationBulkRoleAssignmentResultSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Remove a role from a user
    */
   async postRolesRemove(body: Types.IdentityAuthenticationRemoveRoleFromUserInput): Promise<Result<void, ApiError>> {
     const url = '/v1/roles/:remove';
@@ -85,6 +116,7 @@ export class AuthRolesModule {
   }
 
   /**
+   * Get a specific role by ID
    */
   async getRolesForGetRolesByRoleId(roleId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/roles/${roleId}`;
@@ -99,6 +131,7 @@ export class AuthRolesModule {
   }
 
   /**
+   * Update an existing role
    */
   async putRoles(roleId: string, body: Types.IdentityAuthenticationUpdateRoleInput): Promise<Result<void, ApiError>> {
     const url = `/v1/roles/${roleId}`;
@@ -117,6 +150,7 @@ export class AuthRolesModule {
   }
 
   /**
+   * Delete a role
    */
   async deleteRoles(roleId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/roles/${roleId}`;
@@ -131,6 +165,7 @@ export class AuthRolesModule {
   }
 
   /**
+   * Get all roles assigned to a user
    */
   async getRolesUser(userId: string, query?: { includeExpired?: boolean }): Promise<Result<void, ApiError>> {
     const url = `/v1/roles/user/${userId}`;

@@ -16,6 +16,7 @@ export class ContentPagesModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * List pages with optional filtering.
    */
   async getPagesForGetPages(query?: {
     type?: Types.ContentPagesPageType;
@@ -38,6 +39,7 @@ export class ContentPagesModule {
   }
 
   /**
+   * Create a new page.
    */
   async postPages(body: Types.ContentPagesCreatePageDto): Promise<Result<Types.ContentPagesPageDto, ApiError>> {
     const url = '/v1/pages';
@@ -62,6 +64,7 @@ export class ContentPagesModule {
   }
 
   /**
+   * Get a page by ID (including sections).
    */
   async getPagesForGetPagesById(id: string): Promise<Result<Types.ContentPagesPageDto, ApiError>> {
     const url = `/v1/pages/${id}`;
@@ -82,6 +85,7 @@ export class ContentPagesModule {
   }
 
   /**
+   * Update an existing page.
    */
   async putPages(id: string, body: Types.ContentPagesUpdatePageDto): Promise<Result<Types.ContentPagesPageDto, ApiError>> {
     const url = `/v1/pages/${id}`;
@@ -106,6 +110,7 @@ export class ContentPagesModule {
   }
 
   /**
+   * Soft-delete a page.
    */
   async deletePages(id: string): Promise<Result<void, ApiError>> {
     const url = `/v1/pages/${id}`;
@@ -120,6 +125,7 @@ export class ContentPagesModule {
   }
 
   /**
+   * Publish a page.
    */
   async postPagesPublish(id: string): Promise<Result<Types.ContentPagesPageDto, ApiError>> {
     const url = `/v1/pages/${id}/publish`;
@@ -140,6 +146,7 @@ export class ContentPagesModule {
   }
 
   /**
+   * Unpublish a page (back to Draft).
    */
   async postPagesUnpublish(id: string): Promise<Result<Types.ContentPagesPageDto, ApiError>> {
     const url = `/v1/pages/${id}/unpublish`;
@@ -160,6 +167,7 @@ export class ContentPagesModule {
   }
 
   /**
+   * List sections for a page.
    */
   async getPagesSectionsForGetPagesByPageIdSections(pageId: string): Promise<Result<Array<Types.ContentPagesPageSectionDto>, ApiError>> {
     const url = `/v1/pages/${pageId}/sections`;
@@ -174,6 +182,7 @@ export class ContentPagesModule {
   }
 
   /**
+   * Create a section within a page.
    */
   async postPagesSections(pageId: string, body: Types.ContentPagesCreatePageSectionDto): Promise<Result<Types.ContentPagesPageSectionDto, ApiError>> {
     const url = `/v1/pages/${pageId}/sections`;
@@ -198,6 +207,7 @@ export class ContentPagesModule {
   }
 
   /**
+   * Get a specific section.
    */
   async getPagesSectionsForGetPagesByPageIdSectionsBySectionId(pageId: string, sectionId: string): Promise<Result<Types.ContentPagesPageSectionDto, ApiError>> {
     const url = `/v1/pages/${pageId}/sections/${sectionId}`;
@@ -218,6 +228,7 @@ export class ContentPagesModule {
   }
 
   /**
+   * Update a section.
    */
   async putPagesSections(
     pageId: string,
@@ -246,6 +257,7 @@ export class ContentPagesModule {
   }
 
   /**
+   * Delete a section.
    */
   async deletePagesSections(pageId: string, sectionId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/pages/${pageId}/sections/${sectionId}`;
@@ -260,6 +272,7 @@ export class ContentPagesModule {
   }
 
   /**
+   * Reorder sections within a page.
    */
   async postPagesSectionsReorder(pageId: string, body: Array<string>): Promise<Result<void, ApiError>> {
     const url = `/v1/pages/${pageId}/sections/reorder`;
@@ -275,6 +288,7 @@ export class ContentPagesModule {
   }
 
   /**
+   * Get a page by slug (including sections). Publicly returns published pages only.
    */
   async getPagesBySlug(slug: string): Promise<Result<Types.ContentPagesPageDto, ApiError>> {
     const url = `/v1/pages/by-slug/${slug}`;
@@ -295,6 +309,8 @@ export class ContentPagesModule {
   }
 
   /**
+   * Public sitemap feed of published pages — slug + last-modified — for
+   * SEO crawlers and the marketing site's `sitemap.xml`.
    */
   async getPagesSitemap(query?: { locale?: string }): Promise<Result<Array<Types.ContentPagesSitemapEntryDto>, ApiError>> {
     const url = '/v1/pages/sitemap';

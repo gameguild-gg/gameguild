@@ -16,6 +16,7 @@ export class LearningExperienceSocialDiscussionsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Gets discussions for specific content within a course
    */
   async getApiSocialCoursesContentDiscussions(
     courseId: string,
@@ -35,6 +36,7 @@ export class LearningExperienceSocialDiscussionsModule {
   }
 
   /**
+   * Gets discussions for a course
    */
   async getApiSocialCoursesDiscussions(
     courseId: string,
@@ -53,6 +55,7 @@ export class LearningExperienceSocialDiscussionsModule {
   }
 
   /**
+   * Creates a new discussion thread
    */
   async postApiSocialDiscussions(
     body: Types.LearningExperienceSocialServicesCreateDiscussionInput,
@@ -79,6 +82,7 @@ export class LearningExperienceSocialDiscussionsModule {
   }
 
   /**
+   * Gets a discussion by ID
    */
   async getApiSocialDiscussions(id: string): Promise<Result<Types.LearningExperienceSocialServicesCourseDiscussionDto, ApiError>> {
     const url = `/api/social/discussions/${id}`;
@@ -99,6 +103,7 @@ export class LearningExperienceSocialDiscussionsModule {
   }
 
   /**
+   * Deletes a discussion (owner only)
    */
   async deleteApiSocialDiscussions(id: string): Promise<Result<void, ApiError>> {
     const url = `/api/social/discussions/${id}`;
@@ -113,6 +118,7 @@ export class LearningExperienceSocialDiscussionsModule {
   }
 
   /**
+   * Pins a discussion (instructor/admin only)
    */
   async postApiSocialDiscussionsPin(id: string): Promise<Result<Types.LearningExperienceSocialServicesCourseDiscussionDto, ApiError>> {
     const url = `/api/social/discussions/${id}/pin`;
@@ -133,6 +139,7 @@ export class LearningExperienceSocialDiscussionsModule {
   }
 
   /**
+   * Marks a discussion as resolved
    */
   async postApiSocialDiscussionsResolve(id: string): Promise<Result<Types.LearningExperienceSocialServicesCourseDiscussionDto, ApiError>> {
     const url = `/api/social/discussions/${id}/resolve`;
@@ -153,6 +160,7 @@ export class LearningExperienceSocialDiscussionsModule {
   }
 
   /**
+   * Unpins a discussion
    */
   async postApiSocialDiscussionsUnpin(id: string): Promise<Result<Types.LearningExperienceSocialServicesCourseDiscussionDto, ApiError>> {
     const url = `/api/social/discussions/${id}/unpin`;

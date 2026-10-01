@@ -45,7 +45,7 @@ export class AuthModule {
   }
 
   /**
-   * Discord OAuth sign-in callback
+   * Handle Discord OAuth callback
    *
    * Exchanges the Discord OAuth authorization code for access and refresh tokens, applying the same account matching and auto-link policy as Google sign-in. Account-linking counterpart: POST /v1/auth/external-logins/discord:link-callback.
    */
@@ -74,7 +74,7 @@ export class AuthModule {
   }
 
   /**
-   * Send email verification
+   * Send email verification to user
    *
    * Sends a verification email to the specified email address to confirm ownership.
    */
@@ -103,7 +103,7 @@ export class AuthModule {
   }
 
   /**
-   * Verify email with token
+   * Verify email address with token
    *
    * Verifies the user's email address using a token received via email.
    */
@@ -132,7 +132,7 @@ export class AuthModule {
   }
 
   /**
-   * List linked external logins
+   * List the external logins linked to the current user, newest first.
    *
    * HEAD request per Google REST guidance: safe, metadata-only response with no body. Linked providers and their linked-at timestamps are conveyed in the X-Linked-Providers response header as comma-separated 'provider=iso8601-timestamp' pairs, newest first. The header is omitted when no providers are linked.
    */
@@ -149,7 +149,7 @@ export class AuthModule {
   }
 
   /**
-   * Unlink external login
+   * Unlink an external provider from the current user.
    *
    * Removes the external login link for the given provider. Refused with 400 when it is the user's last sign-in method and no password is set.
    */
@@ -166,7 +166,7 @@ export class AuthModule {
   }
 
   /**
-   * Start Discord account link
+   * Start the Discord link flow for the current user.
    *
    * Returns the Discord OAuth authorization URL plus the state parameter to validate at the callback.
    */
@@ -195,7 +195,7 @@ export class AuthModule {
   }
 
   /**
-   * Complete Discord account link
+   * Complete the Discord link flow for the current user.
    *
    * Exchanges the Discord authorization code for the user profile and links the Discord identity to the authenticated user. Idempotent when already linked to the same user.
    */
@@ -216,7 +216,7 @@ export class AuthModule {
   }
 
   /**
-   * Link Google account
+   * Link the current user's Google account from a Google ID token.
    *
    * Verifies a Google ID token and links the Google identity to the authenticated user. Idempotent when already linked to the same user.
    */
@@ -261,7 +261,7 @@ export class AuthModule {
   }
 
   /**
-   * GitHub OAuth callback
+   * Handle GitHub OAuth callback
    *
    * Handles the GitHub OAuth callback, exchanging the authorization code for tokens.
    */
@@ -285,7 +285,7 @@ export class AuthModule {
   }
 
   /**
-   * Sign in with Google ID Token
+   * Authenticate a user using Google ID Token
    *
    * Authenticates a user using a Google ID Token (for NextAuth.js integration), returning access and refresh tokens. Account-linking counterpart: POST /v1/auth/external-logins/google.
    */
@@ -312,7 +312,7 @@ export class AuthModule {
   }
 
   /**
-   * Consume magic sign-in link
+   * Consume a passwordless magic sign-in link.
    *
    * Consumes a short-lived one-time magic-link token and returns access and refresh tokens.
    */
@@ -339,7 +339,7 @@ export class AuthModule {
   }
 
   /**
-   * Request magic sign-in link
+   * Request a passwordless magic sign-in link.
    *
    * Generates a short-lived one-time sign-in token and dispatches the magic-link notification. Always returns a generic success response to prevent user enumeration.
    */
@@ -368,7 +368,7 @@ export class AuthModule {
   }
 
   /**
-   * Change password
+   * Change password for authenticated user
    *
    * Changes the password for the currently authenticated user.
    */
@@ -397,7 +397,7 @@ export class AuthModule {
   }
 
   /**
-   * Complete password reset
+   * Complete password reset with token
    *
    * Resets the user's password using a token received via email.
    */
@@ -455,7 +455,7 @@ export class AuthModule {
   }
 
   /**
-   * Sign in with email and password
+   * Authenticate a user with email and password
    *
    * Authenticates a user with email and password credentials, returning access and refresh tokens.
    */
@@ -482,7 +482,7 @@ export class AuthModule {
   }
 
   /**
-   * Register a new user
+   * Register a new user with email and password
    *
    * Creates a new user account with email and password credentials, returning authentication tokens on success.
    */
@@ -509,7 +509,7 @@ export class AuthModule {
   }
 
   /**
-   * Refresh access token
+   * Refresh access token using a valid refresh token
    *
    * Exchanges a valid refresh token for a new access token and refresh token pair.
    */
@@ -536,7 +536,7 @@ export class AuthModule {
   }
 
   /**
-   * Revoke refresh token
+   * Revoke a refresh token to invalidate it
    *
    * Invalidates a refresh token, preventing it from being used to obtain new access tokens.
    */
@@ -557,7 +557,7 @@ export class AuthModule {
   }
 
   /**
-   * Verify Web3 signature
+   * Verify Web3 wallet signature and authenticate
    *
    * Verifies a Web3 wallet signature against a previously issued challenge and returns authentication tokens.
    */
@@ -584,7 +584,7 @@ export class AuthModule {
   }
 
   /**
-   * Generate Web3 authentication challenge
+   * Generate Web3 challenge for wallet authentication
    *
    * Generates a cryptographic challenge that must be signed by the user's wallet to prove ownership.
    */

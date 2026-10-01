@@ -16,6 +16,7 @@ export class AiModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Execute a conversational completion request.
    */
   async postAiChat(body: Types.AIAiChatInput): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
     const url = '/v1/ai/chat';
@@ -64,6 +65,7 @@ export class AiModule {
   }
 
   /**
+   * Execute a single-prompt generation request.
    */
   async postAiGenerate(body: Types.AIAiGenerateInput): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
     const url = '/v1/ai/generate';
@@ -184,6 +186,7 @@ export class AiModule {
   }
 
   /**
+   * Retrieve recent AI conversation history for the active tenant.
    */
   async getAiHistory(query?: { take?: number }): Promise<Result<Array<Types.AIAiConversationHistoryEntryDto>, ApiError>> {
     const url = '/v1/ai/history';

@@ -16,6 +16,7 @@ export class AccessControlAccessReviewsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Create a new access review campaign
    */
   async postAccessReviewsCampaigns(
     body: Types.IdentityAuthorizationCommandsCreateAccessReviewCampaignCommand,
@@ -42,6 +43,7 @@ export class AccessControlAccessReviewsModule {
   }
 
   /**
+   * Process expired campaigns (admin only)
    */
   async postAccessReviewsCampaignsProcessExpired(): Promise<Result<number, ApiError>> {
     const url = '/v1/access-reviews/campaigns:process-expired';
@@ -56,6 +58,7 @@ export class AccessControlAccessReviewsModule {
   }
 
   /**
+   * Get a campaign by ID
    */
   async getAccessReviewsCampaigns(id: string): Promise<Result<Types.IdentityAuthorizationAccessReviewCampaign, ApiError>> {
     const url = `/v1/access-reviews/campaigns/${id}`;
@@ -76,6 +79,7 @@ export class AccessControlAccessReviewsModule {
   }
 
   /**
+   * Cancel a campaign
    */
   async postAccessReviewsCampaignsCancel(id: string): Promise<Result<void, ApiError>> {
     const url = `/v1/access-reviews/campaigns/${id}:cancel`;
@@ -90,6 +94,7 @@ export class AccessControlAccessReviewsModule {
   }
 
   /**
+   * Complete a campaign
    */
   async postAccessReviewsCampaignsComplete(id: string, body: Types.IdentityAuthorizationControllersCompleteCampaignInput): Promise<Result<void, ApiError>> {
     const url = `/v1/access-reviews/campaigns/${id}:complete`;
@@ -108,6 +113,7 @@ export class AccessControlAccessReviewsModule {
   }
 
   /**
+   * Send reminders for a campaign
    */
   async postAccessReviewsCampaignsSendReminders(id: string): Promise<Result<number, ApiError>> {
     const url = `/v1/access-reviews/campaigns/${id}:send-reminders`;
@@ -122,6 +128,7 @@ export class AccessControlAccessReviewsModule {
   }
 
   /**
+   * Start a campaign
    */
   async postAccessReviewsCampaignsStart(id: string): Promise<Result<void, ApiError>> {
     const url = `/v1/access-reviews/campaigns/${id}:start`;
@@ -136,6 +143,7 @@ export class AccessControlAccessReviewsModule {
   }
 
   /**
+   * Get active campaigns
    */
   async getAccessReviewsCampaignsActive(query?: { tenantId?: string }): Promise<Result<Array<Types.IdentityAuthorizationAccessReviewCampaign>, ApiError>> {
     const url = '/v1/access-reviews/campaigns/active';
@@ -151,6 +159,7 @@ export class AccessControlAccessReviewsModule {
   }
 
   /**
+   * Approve an access review item
    */
   async postAccessReviewsItemsApprove(
     id: string,
@@ -178,6 +187,7 @@ export class AccessControlAccessReviewsModule {
   }
 
   /**
+   * Revoke access for a review item
    */
   async postAccessReviewsItemsRevoke(
     id: string,
@@ -205,6 +215,7 @@ export class AccessControlAccessReviewsModule {
   }
 
   /**
+   * Get pending review items for a reviewer
    */
   async getAccessReviewsItemsPending(query?: {
     reviewerId?: string;

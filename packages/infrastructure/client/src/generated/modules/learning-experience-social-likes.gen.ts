@@ -16,6 +16,7 @@ export class LearningExperienceSocialLikesModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Likes a course
    */
   async postApiSocialCoursesLike(courseId: string): Promise<Result<Types.LearningExperienceSocialServicesCourseLikeDto, ApiError>> {
     const url = `/api/social/courses/${courseId}/like`;
@@ -36,6 +37,7 @@ export class LearningExperienceSocialLikesModule {
   }
 
   /**
+   * Unlikes a course
    */
   async deleteApiSocialCoursesLike(courseId: string): Promise<Result<void, ApiError>> {
     const url = `/api/social/courses/${courseId}/like`;
@@ -50,6 +52,7 @@ export class LearningExperienceSocialLikesModule {
   }
 
   /**
+   * Checks if the current user has liked a course
    */
   async getApiSocialCoursesLikeCheck(courseId: string): Promise<Result<boolean, ApiError>> {
     const url = `/api/social/courses/${courseId}/like/check`;
@@ -64,6 +67,7 @@ export class LearningExperienceSocialLikesModule {
   }
 
   /**
+   * Gets the like count for a course
    */
   async getApiSocialCoursesLikeCount(courseId: string): Promise<Result<number, ApiError>> {
     const url = `/api/social/courses/${courseId}/like/count`;
@@ -78,6 +82,7 @@ export class LearningExperienceSocialLikesModule {
   }
 
   /**
+   * Gets the current user's liked courses
    */
   async getApiSocialLikesMe(query?: { skip?: number; take?: number }): Promise<Result<Array<Types.LearningExperienceSocialServicesCourseLikeDto>, ApiError>> {
     const url = '/api/social/likes/me';

@@ -367,15 +367,15 @@ public class HybridPermissionCacheTests
     }
 
     [Fact]
-    public async Task GetAsync_L2Error_ShouldThrow()
+    public async Task GetAsync_L2Error_ShouldReturnMiss()
     {
         _l2CacheMock.Setup(c => c.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("L2 failure"));
 
         var cache = CreateCache(useL2: true);
 
-        var act = async () => await cache.GetAsync<string>("key1", "test");
-        await act.Should().ThrowAsync<InvalidOperationException>();
+        var result = await cache.GetAsync<string>("key1", "test");
+        result.Should().BeNull();
     }
 
     [Fact]
@@ -415,15 +415,15 @@ public class HybridPermissionCacheTests
     }
 
     [Fact]
-    public async Task GetValueAsync_L2Error_ShouldThrow()
+    public async Task GetValueAsync_L2Error_ShouldReturnMiss()
     {
         _l2CacheMock.Setup(c => c.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("fail"));
 
         var cache = CreateCache(useL2: true);
 
-        var act = async () => await cache.GetValueAsync<int>("key", "test");
-        await act.Should().ThrowAsync<InvalidOperationException>();
+        var result = await cache.GetValueAsync<int>("key", "test");
+        result.Found.Should().BeFalse();
     }
 
     [Fact]
@@ -449,7 +449,7 @@ public class HybridPermissionCacheTests
     }
 
     [Fact]
-    public async Task SetAsync_L2Error_ShouldThrow()
+    public async Task SetAsync_L2Error_ShouldKeepL1Value()
     {
         _l2CacheMock.Setup(c => c.SetAsync(
             It.IsAny<string>(), It.IsAny<byte[]>(),
@@ -459,8 +459,10 @@ public class HybridPermissionCacheTests
 
         var cache = CreateCache(useL2: true);
 
-        var act = async () => await cache.SetAsync("k", "v", "test");
-        await act.Should().ThrowAsync<InvalidOperationException>();
+        await cache.SetAsync("k", "v", "test");
+
+        var result = await cache.GetAsync<string>("k", "test");
+        result.Should().Be("v");
     }
 
     [Fact]
@@ -489,15 +491,18 @@ public class HybridPermissionCacheTests
     }
 
     [Fact]
-    public async Task RemoveAsync_L2Error_ShouldThrow()
+    public async Task RemoveAsync_L2Error_ShouldStillRemoveL1Value()
     {
         _l2CacheMock.Setup(c => c.RemoveAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("fail"));
 
         var cache = CreateCache(useL2: true);
 
-        var act = async () => await cache.RemoveAsync("k", "test");
-        await act.Should().ThrowAsync<InvalidOperationException>();
+        await cache.SetAsync("k", "v", "test");
+        await cache.RemoveAsync("k", "test");
+
+        var result = await cache.GetAsync<string>("k", "test");
+        result.Should().BeNull();
     }
 
     [Fact]
@@ -507,7 +512,7 @@ public class HybridPermissionCacheTests
 
         await cache.InvalidatePatternAsync("pattern:*", "test");
 
-        // InvalidatePattern is a placeholder, just returns Task.CompletedTask
+        // Pattern invalidation removes matching entries from the tracked L1 cache.
     }
 
     [Fact]

@@ -16,7 +16,9 @@ export class UsersMembershipsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
-   * Get all tenant memberships for a user
+   * Get all tenant memberships for a user.
+   * Returns a list of all tenants the user belongs to with their role and status.
+   * Similar to Discord's server list showing which servers you're a member of.
    *
    * Returns all tenants the user belongs to, with role and membership status. Similar to Discord's 'My Servers' view.
    */
@@ -40,7 +42,8 @@ export class UsersMembershipsModule {
   }
 
   /**
-   * Add a tenant membership for a user
+   * Add a user to a tenant membership.
+   * Useful for assigning a user to a workspace they can actively switch into.
    *
    * Adds the specified user to a tenant with the requested role so the user can access that workspace.
    */
@@ -70,7 +73,7 @@ export class UsersMembershipsModule {
   }
 
   /**
-   * Check if user has any tenant memberships
+   * Check if user has any memberships
    */
   async headUsersMemberships(userId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/memberships`;
@@ -85,7 +88,7 @@ export class UsersMembershipsModule {
   }
 
   /**
-   * Get count of user's active tenant memberships
+   * Get count of user's active memberships
    */
   async getUsersMembershipsCount(userId: string): Promise<Result<Types.IdentityTenantsMembershipCountOutput, ApiError>> {
     const url = `/v1/users/${userId}/memberships:count`;
@@ -160,7 +163,7 @@ export class UsersMembershipsModule {
   }
 
   /**
-   * Accept tenant membership invite
+   * Accept a pending membership invite and activate the membership.
    */
   async postUsersMembershipsInviteAccept(
     userId: string,
@@ -189,7 +192,7 @@ export class UsersMembershipsModule {
   }
 
   /**
-   * Cancel tenant membership invite
+   * Cancel a pending membership invite without deleting the audit trail.
    */
   async postUsersMembershipsInviteCancel(
     userId: string,
@@ -218,7 +221,7 @@ export class UsersMembershipsModule {
   }
 
   /**
-   * Resend tenant membership invite
+   * Resend a pending membership invite.
    */
   async postUsersMembershipsInviteResend(
     userId: string,
@@ -247,7 +250,8 @@ export class UsersMembershipsModule {
   }
 
   /**
-   * Update tenant membership role
+   * Update a user's tenant role.
+   * This is an operator/admin action used to promote or demote console access.
    *
    * Updates the user's role in the specified tenant/workspace. Use this for console promotion/demotion flows.
    */

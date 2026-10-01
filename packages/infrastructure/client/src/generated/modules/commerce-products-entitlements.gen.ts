@@ -16,6 +16,7 @@ export class CommerceProductsEntitlementsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * List entitlements with optional status filter
    */
   async getEntitlements(query?: { status?: string; days?: number }): Promise<Result<Array<Types.CommerceProductsEntitlementInfoDto>, ApiError>> {
     const url = '/v1/entitlements';
@@ -31,6 +32,7 @@ export class CommerceProductsEntitlementsModule {
   }
 
   /**
+   * Grant entitlement to a user (create)
    */
   async postEntitlements(body: Types.CommerceProductsGrantEntitlementInput): Promise<Result<Types.CommerceProductsEntitlementInfoDto, ApiError>> {
     const url = '/v1/entitlements';
@@ -55,6 +57,7 @@ export class CommerceProductsEntitlementsModule {
   }
 
   /**
+   * Check if current user has access to a product
    */
   async getEntitlementsCheck(query?: { productId?: string }): Promise<Result<Types.CommerceProductsEntitlementCheckResult, ApiError>> {
     const url = '/v1/entitlements/:check';
@@ -76,6 +79,7 @@ export class CommerceProductsEntitlementsModule {
   }
 
   /**
+   * Check if current user has access to multiple products
    */
   async postEntitlementsCheckBatch(body: Types.CommerceProductsCheckMultipleAccessInput): Promise<Result<Record<string, boolean>, ApiError>> {
     const url = '/v1/entitlements/:check-batch';
@@ -94,6 +98,7 @@ export class CommerceProductsEntitlementsModule {
   }
 
   /**
+   * Revoke an entitlement (admin only)
    */
   async postEntitlementsRevoke(entitlementId: string, body: Types.CommerceProductsRevokeEntitlementInput): Promise<Result<void, ApiError>> {
     const url = `/v1/entitlements/${entitlementId}:revoke`;

@@ -16,6 +16,7 @@ export class LearningCoursesProgramLifecycleModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Approve a program (resource-level approve permission)
    */
   async postCoursesApprove(id: string): Promise<Result<Types.LearningCoursesProgramDto, ApiError>> {
     const url = `/v1/courses/${id}:approve`;
@@ -36,6 +37,7 @@ export class LearningCoursesProgramLifecycleModule {
   }
 
   /**
+   * Archive a program (resource-level archive permission)
    */
   async postCoursesArchive(id: string): Promise<Result<Types.LearningCoursesProgramDto, ApiError>> {
     const url = `/v1/courses/${id}:archive`;
@@ -56,6 +58,7 @@ export class LearningCoursesProgramLifecycleModule {
   }
 
   /**
+   * Publish a program (resource-level publish permission)
    */
   async postCoursesPublish(id: string): Promise<Result<Types.LearningCoursesProgramDto, ApiError>> {
     const url = `/v1/courses/${id}:publish`;
@@ -76,6 +79,7 @@ export class LearningCoursesProgramLifecycleModule {
   }
 
   /**
+   * Reject a program (resource-level reject permission)
    */
   async postCoursesReject(id: string, body: Types.LearningCoursesRejectProgramDto): Promise<Result<Types.LearningCoursesProgramDto, ApiError>> {
     const url = `/v1/courses/${id}:reject`;
@@ -100,6 +104,7 @@ export class LearningCoursesProgramLifecycleModule {
   }
 
   /**
+   * Restore an archived program (resource-level restore permission)
    */
   async postCoursesRestore(id: string): Promise<Result<Types.LearningCoursesProgramDto, ApiError>> {
     const url = `/v1/courses/${id}:restore`;
@@ -120,6 +125,7 @@ export class LearningCoursesProgramLifecycleModule {
   }
 
   /**
+   * Schedule a program for publishing (resource-level schedule permission)
    */
   async postCoursesSchedule(id: string, body: Types.LearningCoursesScheduleProgramDto): Promise<Result<Types.LearningCoursesProgramDto, ApiError>> {
     const url = `/v1/courses/${id}:schedule`;
@@ -144,6 +150,7 @@ export class LearningCoursesProgramLifecycleModule {
   }
 
   /**
+   * Submit a program for review (resource-level submit permission)
    */
   async postCoursesSubmit(id: string): Promise<Result<Types.LearningCoursesProgramDto, ApiError>> {
     const url = `/v1/courses/${id}:submit`;
@@ -164,6 +171,7 @@ export class LearningCoursesProgramLifecycleModule {
   }
 
   /**
+   * Unpublish a program (resource-level unpublish permission)
    */
   async postCoursesUnpublish(id: string): Promise<Result<Types.LearningCoursesProgramDto, ApiError>> {
     const url = `/v1/courses/${id}:unpublish`;
@@ -184,6 +192,7 @@ export class LearningCoursesProgramLifecycleModule {
   }
 
   /**
+   * Withdraw a program from review (resource-level withdraw permission)
    */
   async postCoursesWithdraw(id: string): Promise<Result<Types.LearningCoursesProgramDto, ApiError>> {
     const url = `/v1/courses/${id}:withdraw`;

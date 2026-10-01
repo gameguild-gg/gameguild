@@ -84,3 +84,84 @@ public sealed class TenantAdminPolicyTests
         policy.Should().BeNull();
     }
 }
+
+public sealed class AuthorizationOptionsConfigurationTests
+{
+    [Fact]
+    public async Task SetupAuthorization_ConfiguresStaticPolicyClaimsSchemesAndInheritedRoles()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Authorization:SystemAccountId"] = "11111111-2222-3333-4444-555555555555",
+                ["Authorization:RoleHierarchy:Administrator:0"] = "Moderator",
+                ["Authorization:RoleHierarchy:SystemAdministrator:0"] = "Administrator",
+                ["Authorization:Policies:CanModerate:Roles:0"] = "Moderator",
+                ["Authorization:Policies:CanModerate:Claims:0:Type"] = "tenant_access",
+                ["Authorization:Policies:CanModerate:Claims:0:AllowedValues:0"] = "write",
+                ["Authorization:Policies:CanModerate:AuthenticationSchemes:0"] = "Bearer"
+            })
+            .Build();
+        var options = GameGuild.Configuration.PresentationLayer.Authorization.AuthorizationOptionsBuilder
+            .Build(configuration);
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton<IPolicyCache>(Mock.Of<IPolicyCache>());
+        services.AddSingleton<IPolicyMerger>(Mock.Of<IPolicyMerger>());
+
+        services.SetupAuthorization(configuration, options);
+
+        using var providerRoot = services.BuildServiceProvider();
+        providerRoot.GetRequiredService<IOptions<GameGuild.Configuration.PresentationLayer.Authorization.AuthorizationOptions>>()
+            .Value.SystemAccountId.Should().Be(Guid.Parse("11111111-2222-3333-4444-555555555555"));
+        var runtimeOptions = providerRoot.GetRequiredService<IOptions<RuntimeAuthorizationOptions>>().Value;
+        var policyProvider = providerRoot.GetRequiredService<IAuthorizationPolicyProvider>();
+
+        var policy = await policyProvider.GetPolicyAsync("CanModerate");
+
+        policy.Should().NotBeNull();
+        policy!.AuthenticationSchemes.Should().Contain("Bearer");
+        policy.Requirements.OfType<RolesAuthorizationRequirement>().Single().AllowedRoles.Should()
+            .BeEquivalentTo("Moderator", "Administrator", "SystemAdministrator");
+        var claimRequirement = policy.Requirements.OfType<ClaimsAuthorizationRequirement>().Single();
+        claimRequirement.ClaimType.Should().Be("tenant_access");
+        claimRequirement.AllowedValues.Should().ContainSingle().Which.Should().Be("write");
+
+        var inheritedRoleUser = new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim(ClaimTypes.Role, "SystemAdministrator"), new Claim("tenant_access", "write")], "test"));
+        var deniedUser = new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim(ClaimTypes.Role, "Moderator"), new Claim("tenant_access", "read")], "test"));
+        var allowedContext = new AuthorizationHandlerContext(policy.Requirements, inheritedRoleUser, resource: null);
+        var deniedContext = new AuthorizationHandlerContext(policy.Requirements, deniedUser, resource: null);
+
+        foreach (var handler in policy.Requirements.OfType<IAuthorizationHandler>())
+        {
+            await handler.HandleAsync(allowedContext);
+            await handler.HandleAsync(deniedContext);
+        }
+
+        allowedContext.HasSucceeded.Should().BeTrue();
+        deniedContext.HasSucceeded.Should().BeFalse();
+    }
+
+    [Fact]
+    public void SetupAuthorization_RejectsStaticOverridesOfDatabasePolicies()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Authorization:Policies:TenantAdmin:Roles:0"] = "TenantAdmin"
+            })
+            .Build();
+        var options = GameGuild.Configuration.PresentationLayer.Authorization.AuthorizationOptionsBuilder
+            .Build(configuration);
+        var services = new ServiceCollection();
+
+        services.SetupAuthorization(configuration, options);
+
+        using var provider = services.BuildServiceProvider();
+        var act = () => provider.GetRequiredService<IOptions<RuntimeAuthorizationOptions>>().Value;
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("*database-backed*");
+    }
+}

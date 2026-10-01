@@ -154,7 +154,20 @@ public static class InfrastructureLayerExtensions
 
         // 03y. Compliance Audit Module (unified audit queries + ELK-ready structured audit services)
         stepStopwatch.Restart();
-        services.AddAuditServices();
+        services.AddAuditServices(signingOptions =>
+        {
+            var signingSection = configuration.GetSection(AuditSigningOptions.SectionName);
+            signingOptions.ActiveKeyId = signingSection["ActiveKeyId"];
+
+            foreach (var keySection in signingSection.GetSection("Keys").GetChildren())
+            {
+                signingOptions.Keys[keySection.Key] = new AuditSigningKeyOptions
+                {
+                    PrivateKeyPem = keySection["PrivateKeyPem"],
+                    PublicKeyPem = keySection["PublicKeyPem"]
+                };
+            }
+        });
         logger.LogInformation("Compliance Audit Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
         // 03a. Authentication Application (command handlers, validators, core auth services)

@@ -1,5 +1,8 @@
 using System.Diagnostics;
 using GameGuild.Configuration.PresentationLayer;
+using GameGuild.Configuration.PresentationLayer.GraphQL;
+using GameGuild.Configuration.PresentationLayer.OpenAPI;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace GameGuild.API.Setup;
 
@@ -90,6 +93,14 @@ public static class PresentationLayerExtensions
         var options = PresentationLayerOptionsBuilder.Create(configuration);
         configureOptions(options);
         options.Validate();
+
+        var openApiOptions = options.OpenApi ?? OpenApiOptionsBuilder.Create(configuration);
+        if (!options.EnableOpenApi)
+        {
+            openApiOptions.EnableOpenApi = false;
+        }
+        openApiOptions.Validate();
+        services.TryAddSingleton(openApiOptions);
 
         // Presentation layer services registration order matters for some services.
 
@@ -234,6 +245,20 @@ public static class PresentationLayerExtensions
             logger.LogInformation("SignalR registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
         }
 
+        var graphQlOptions = options.GraphQL ?? GraphQLOptionsBuilder.Create(configuration);
+        graphQlOptions.EnableGraphQL |= options.EnableGraphQL;
+        if (graphQlOptions.EnableGraphQL)
+        {
+            if (!options.EnableAuthentication || !options.EnableAuthorization)
+            {
+                throw new InvalidOperationException("GraphQL requires both authentication and authorization to be enabled.");
+            }
+
+            stepStopwatch.Restart();
+            services.SetupGraphQL(configuration, graphQlOptions);
+            logger.LogInformation("GraphQL registered at {Endpoint} in {ElapsedMs}ms", graphQlOptions.Endpoint, stepStopwatch.ElapsedMilliseconds);
+        }
+
         // 19. API Explorer - MUST be called AFTER controllers and application parts are registered
         if (options.EnableApiExplorer)
         {
@@ -243,10 +268,10 @@ public static class PresentationLayerExtensions
         }
 
         // 20. OpenAPI/Swagger
-        if (options.EnableOpenApi)
+        if (options.EnableOpenApi && openApiOptions.EnableOpenApi)
         {
             stepStopwatch.Restart();
-            services.SetupOpenApi(configuration, options.OpenApi);
+            services.SetupOpenApi(configuration, openApiOptions);
             logger.LogInformation("OpenApi registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
         }
 

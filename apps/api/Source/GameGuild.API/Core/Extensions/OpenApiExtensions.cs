@@ -1,15 +1,20 @@
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
+using GameGuild.API.Core.ApiVersioning;
+using GameGuild.API.Core.OpenApi;
 using GameGuild.Configuration;
 using GameGuild.Configuration.PresentationLayer.ApiVersioning;
 using GameGuild.Configuration.PresentationLayer.OpenAPI;
 using GameGuild.API.Setup;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
 using System.Text;
+using System.Xml.Linq;
+using System.Xml.XPath;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using ApiVersioningOptions = GameGuild.Configuration.PresentationLayer.ApiVersioning.ApiVersioningOptions;
 
@@ -36,9 +41,34 @@ public static class OpenApiExtensions
     /// <returns>The service collection for chaining</returns>
     public static IServiceCollection SetupOpenApi(this IServiceCollection services, IConfiguration configuration,
         OpenApiOptions? options)
+        => SetupOpenApi(services, configuration, options, localizationOptions: null);
+
+    /// <summary>
+    ///     Sets up OpenAPI/Swagger with configurable options and localized documents.
+    /// </summary>
+    /// <param name="services">The service collection</param>
+    /// <param name="configuration">The application configuration</param>
+    /// <param name="options">OpenAPI options</param>
+    /// <param name="localizationOptions">Optional localized document translations</param>
+    /// <returns>The service collection for chaining</returns>
+    public static IServiceCollection SetupOpenApi(this IServiceCollection services, IConfiguration configuration,
+        OpenApiOptions? options, OpenApiLocalizationOptions? localizationOptions)
     {
         options ??= OptionBuilderUtilities.CreateAndBind(configuration, "OpenApi", OpenApiOptions.CreateDefault);
         options.Validate();
+        services.TryAddSingleton(options);
+
+        localizationOptions ??= OptionBuilderUtilities.CreateAndBind(
+            configuration,
+            "OpenApi",
+            static () => new OpenApiLocalizationOptions());
+        localizationOptions.Validate();
+        services.TryAddSingleton(localizationOptions);
+
+        if (!options.EnableOpenApi)
+        {
+            return services;
+        }
 
         // Add native .NET 9 OpenAPI support
         // JSON serialization options are configured globally in Program.cs
@@ -57,6 +87,7 @@ public static class OpenApiExtensions
                 // If API Versioning is enabled, register a Swagger document per discovered API version
                 using var providerScope = services.BuildServiceProvider();
                 var provider = providerScope.GetService<IApiVersionDescriptionProvider>();
+                var locales = localizationOptions.GetNormalizedLocales();
 
                 if (provider is not null)
                 {
@@ -64,33 +95,30 @@ public static class OpenApiExtensions
                     {
                         c.SwaggerDoc(
                             description.GroupName,
-                            new OpenApiInfo
-                            {
-                                Title = options.Title,
-                                Version = ReleaseVersion,
-                                Description = options.Description,
-                                Contact = new OpenApiContact
-                                {
-                                    Name = options.ContactName,
-                                    Email = options.ContactEmail,
-                                    Url = !string.IsNullOrEmpty(options.ContactUrl) ? new Uri(options.ContactUrl) : null
-                                }
-                            }
+                            CreateDocumentInfo(options)
                         );
+
+                        foreach (var (locale, translations) in locales)
+                        {
+                            c.SwaggerDoc(
+                                OpenApiLocalizationOptions.GetLocalizedDocumentName(description.GroupName, locale),
+                                CreateDocumentInfo(options, translations));
+                        }
                     }
 
                     // Ensure only endpoints from the corresponding API version are included in each document
                     // Check API version instead of GroupName to allow custom ApiExplorerSettings GroupName
                     c.DocInclusionPredicate((docName, apiDesc) =>
                         {
+                            var baseDocumentName = OpenApiLocalizationOptions.GetBaseDocumentName(docName, locales);
                             if (apiDesc.ActionDescriptor is not ControllerActionDescriptor cad)
-                                return string.Equals(apiDesc.GroupName, docName, StringComparison.OrdinalIgnoreCase);
+                                return string.Equals(apiDesc.GroupName, baseDocumentName, StringComparison.OrdinalIgnoreCase);
 
                             if (cad.ControllerTypeInfo.GetCustomAttributes(typeof(ApiVersionAttribute), false)
                                     .FirstOrDefault() is not ApiVersionAttribute apiVersionAttr)
-                                return string.Equals(apiDesc.GroupName, docName, StringComparison.OrdinalIgnoreCase);
+                                return string.Equals(apiDesc.GroupName, baseDocumentName, StringComparison.OrdinalIgnoreCase);
                             return apiVersionAttr.Versions.Any(version =>
-                                docName.Equals($"v{version.MajorVersion}", StringComparison.OrdinalIgnoreCase));
+                                baseDocumentName.Equals($"v{version.MajorVersion}", StringComparison.OrdinalIgnoreCase));
                         }
                     );
                 }
@@ -99,19 +127,22 @@ public static class OpenApiExtensions
                     // Fallback to single document when versioning is not configured
                     c.SwaggerDoc(
                         options.Version,
-                        new OpenApiInfo
-                        {
-                            Title = options.Title,
-                            Version = ReleaseVersion,
-                            Description = options.Description,
-                            Contact = new OpenApiContact
-                            {
-                                Name = options.ContactName,
-                                Email = options.ContactEmail,
-                                Url = !string.IsNullOrEmpty(options.ContactUrl) ? new Uri(options.ContactUrl) : null
-                            }
-                        }
+                        CreateDocumentInfo(options)
                     );
+
+                    foreach (var (locale, translations) in locales)
+                    {
+                        c.SwaggerDoc(
+                            OpenApiLocalizationOptions.GetLocalizedDocumentName(options.Version, locale),
+                            CreateDocumentInfo(options, translations));
+                    }
+
+                    c.DocInclusionPredicate((docName, apiDesc) =>
+                        apiDesc.GroupName is null ||
+                        string.Equals(
+                            apiDesc.GroupName,
+                            OpenApiLocalizationOptions.GetBaseDocumentName(docName, locales),
+                            StringComparison.OrdinalIgnoreCase));
                 }
 
                 // Configure schema ID generator to use full module path for guaranteed uniqueness
@@ -175,27 +206,35 @@ public static class OpenApiExtensions
                 c.CustomOperationIds(apiDescription =>
                     apiDescription.ActionDescriptor.AttributeRouteInfo?.Name);
                 c.OperationFilter<ModuleControllerTagOperationFilter>();
+                c.OperationFilter<ConfiguredSecurityOperationFilter>(options);
                 c.OperationFilter<AllowAnonymousOperationFilter>();
+                var xmlPaths = Directory.EnumerateFiles(AppContext.BaseDirectory, "GameGuild.*.xml")
+                    .OrderBy(path => path, StringComparer.Ordinal)
+                    .ToArray();
+                if (xmlPaths.Length > 0)
+                {
+                    var xmlComments = new Lazy<XPathDocument>(() => CombineXmlComments(xmlPaths));
+                    c.IncludeXmlComments(() => xmlComments.Value);
+                }
                 c.SchemaFilter<FlagsEnumSchemaFilter>();
+                c.DocumentFilter<OpenApiServerDocumentFilter>(options);
+                c.DocumentFilter<ConfiguredOpenApiDocumentFilter>(options);
                 c.DocumentFilter<DeterministicOpenApiDocumentFilter>();
+                c.DocumentFilter<OpenApiLocalizedDocumentFilter>(localizationOptions);
                 ApiProductComposition.Instance.ConfigureOpenApi(c);
 
-                // Add security definition for JWT Bearer token
-                c.AddSecurityDefinition(
-                    "Bearer",
-                    new OpenApiSecurityScheme
+                if (options.EnableDefaultBearer)
+                {
+                    // Preserve the existing definition for generated-client compatibility.
+                    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                     {
-                        Description =
-                            "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+                        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
                         Name = "Authorization",
                         In = ParameterLocation.Header,
                         Type = SecuritySchemeType.ApiKey,
                         Scheme = "Bearer"
-                    }
-                );
-
-                c.AddSecurityRequirement(
-                    new OpenApiSecurityRequirement
+                    });
+                    c.AddSecurityRequirement(new OpenApiSecurityRequirement
                     {
                         {
                             new OpenApiSecurityScheme
@@ -205,12 +244,114 @@ public static class OpenApiExtensions
                             },
                             new List<string>()
                         }
-                    }
-                );
+                    });
+                }
+
+                foreach (var (name, scheme) in options.SecuritySchemes.OrderBy(pair => pair.Key, StringComparer.Ordinal))
+                {
+                    c.AddSecurityDefinition(name, CreateSecurityDefinition(scheme));
+                }
             }
         );
 
         return services;
+    }
+
+    private static XPathDocument CombineXmlComments(IEnumerable<string> xmlPaths)
+    {
+        var members = new XElement("members");
+        var names = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var path in xmlPaths)
+        {
+            var sourceMembers = XDocument.Load(path).Root?.Element("members")?.Elements("member");
+            if (sourceMembers is null)
+            {
+                continue;
+            }
+
+            foreach (var member in sourceMembers)
+            {
+                var name = (string?)member.Attribute("name");
+                if (name is not null && names.Add(name))
+                {
+                    members.Add(new XElement(member));
+                }
+            }
+        }
+
+        using var reader = new XDocument(new XElement("doc", members)).CreateReader();
+        return new XPathDocument(reader);
+    }
+
+    private static OpenApiSecurityScheme CreateSecurityDefinition(OpenApiSecuritySchemeOptions options)
+    {
+        return options.Kind switch
+        {
+            OpenApiSecuritySchemeKind.ApiKeyHeader => new OpenApiSecurityScheme
+            {
+                Type = SecuritySchemeType.ApiKey,
+                Name = options.HeaderName,
+                In = ParameterLocation.Header,
+                Description = options.Description
+            },
+            OpenApiSecuritySchemeKind.HttpBearer => new OpenApiSecurityScheme
+            {
+                Type = SecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "JWT",
+                Description = options.Description
+            },
+            OpenApiSecuritySchemeKind.HttpBasic => new OpenApiSecurityScheme
+            {
+                Type = SecuritySchemeType.Http,
+                Scheme = "basic",
+                Description = options.Description
+            },
+            OpenApiSecuritySchemeKind.OAuth2AuthorizationCode => new OpenApiSecurityScheme
+            {
+                Type = SecuritySchemeType.OAuth2,
+                Description = options.Description,
+                Flows = new OpenApiOAuthFlows
+                {
+                    AuthorizationCode = new OpenApiOAuthFlow
+                    {
+                        AuthorizationUrl = new Uri(options.AuthorizationUrl),
+                        TokenUrl = new Uri(options.TokenUrl),
+                        Scopes = new Dictionary<string, string>(options.Scopes)
+                    }
+                }
+            },
+            _ => throw new ArgumentOutOfRangeException(nameof(options))
+        };
+    }
+
+    private static OpenApiInfo CreateDocumentInfo(
+        OpenApiOptions options,
+        OpenApiLocalizedDocumentOptions? translations = null)
+    {
+        return new OpenApiInfo
+        {
+            Title = translations?.Title ?? options.Title,
+            Version = string.IsNullOrWhiteSpace(options.MetadataVersion) ? ReleaseVersion : options.MetadataVersion,
+            Description = translations?.Description ?? options.Description,
+            TermsOfService = string.IsNullOrWhiteSpace(options.TermsOfServiceUrl)
+                ? null
+                : new Uri(options.TermsOfServiceUrl),
+            Contact = new OpenApiContact
+            {
+                Name = options.ContactName,
+                Email = options.ContactEmail,
+                Url = string.IsNullOrWhiteSpace(options.ContactUrl) ? null : new Uri(options.ContactUrl)
+            },
+            License = string.IsNullOrWhiteSpace(options.LicenseName)
+                ? null
+                : new OpenApiLicense
+                {
+                    Name = options.LicenseName,
+                    Url = string.IsNullOrWhiteSpace(options.LicenseUrl) ? null : new Uri(options.LicenseUrl)
+                }
+        };
     }
 
     /// <summary>
@@ -226,16 +367,35 @@ public static class OpenApiExtensions
         options ??= OptionBuilderUtilities.CreateAndBind(configuration, "ApiVersioning",
             ApiVersioningOptions.CreateDefault);
         options.Validate();
+        var parser = ApiVersioningOptionsBuilder.CreateParser(options.VersionFormat);
+        services.AddSingleton(options);
+        services.AddSingleton<ApiVersionUsageMetrics>();
+
+        // AddApiVersioning registers the default parser with TryAdd. Replacing it here makes route
+        // constraints, readers, and sunset policy matching use the same configured format.
+        services.Replace(ServiceDescriptor.Singleton<IApiVersionParser>(parser));
 
         services.AddApiVersioning(setup =>
                 {
                     setup.AssumeDefaultVersionWhenUnspecified = options.AssumeDefaultVersionWhenUnspecified;
-                    // Parse DefaultVersion (e.g., "1.0") into ApiVersion
-                    var versionParts = options.DefaultVersion.Split('.');
-                    var major = ParseVersionPart(versionParts, 0, 1);
-                    var minor = ParseVersionPart(versionParts, 1, 0);
-                    setup.DefaultApiVersion = new ApiVersion(major, minor);
+                    setup.DefaultApiVersion = parser.Parse(options.DefaultVersion.AsSpan());
                     setup.ApiVersionReader = ApiVersioningOptionsBuilder.CreateReader(options.ReadingStrategy, options);
+                    setup.ReportApiVersions = options.ReportApiVersions;
+
+                    foreach (var (version, policy) in options.SunsetPolicies)
+                    {
+                        var sunset = setup.Policies.Sunset(parser.Parse(version.AsSpan()));
+
+                        if (policy.EffectiveAt is { } effectiveAt)
+                        {
+                            sunset.Effective(effectiveAt);
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(policy.PolicyUrl))
+                        {
+                            sunset.Link(new Uri(policy.PolicyUrl, UriKind.Absolute));
+                        }
+                    }
                 }
             )
             .AddApiExplorer(setup =>
@@ -246,14 +406,6 @@ public static class OpenApiExtensions
             );
 
         return services;
-    }
-
-    private static int ParseVersionPart(IReadOnlyList<string> versionParts, int index, int fallback)
-    {
-        if (index >= versionParts.Count)
-            return fallback;
-
-        return int.TryParse(versionParts[index], out var value) ? value : fallback;
     }
 
     /// <summary>
@@ -300,6 +452,41 @@ internal sealed class OpenApiDocumentTransformer : Microsoft.AspNetCore.OpenApi.
     {
         // Document transformation is currently handled by the default pipeline.
         return Task.CompletedTask;
+    }
+}
+
+internal sealed class OpenApiServerDocumentFilter : IDocumentFilter
+{
+    private readonly OpenApiOptions _options;
+
+    public OpenApiServerDocumentFilter(OpenApiOptions options)
+    {
+        _options = options;
+    }
+
+    public void Apply(OpenApiDocument document, DocumentFilterContext context)
+    {
+        if (_options.Servers.Count == 0)
+        {
+            return;
+        }
+
+        document.Servers = _options.Servers
+            .Select(server => new OpenApiServer
+            {
+                Url = server.Url,
+                Description = server.Description,
+                Variables = server.Variables.ToDictionary(
+                    pair => pair.Key,
+                    pair => new OpenApiServerVariable
+                    {
+                        Default = pair.Value.Default,
+                        Description = pair.Value.Description,
+                        Enum = pair.Value.Enum.ToList()
+                    },
+                    StringComparer.Ordinal)
+            })
+            .ToList();
     }
 }
 

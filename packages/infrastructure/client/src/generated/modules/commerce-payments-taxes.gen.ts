@@ -16,6 +16,7 @@ export class CommercePaymentsTaxesModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Calculate tax for a transaction
    */
   async postPaymentsTaxCalculate(body: Types.CommercePaymentsCalculateTaxInput): Promise<Result<Types.CommercePaymentsTaxCalculationResult, ApiError>> {
     const url = '/api/v1/payments/tax/calculate';
@@ -40,7 +41,7 @@ export class CommercePaymentsTaxesModule {
   }
 
   /**
-   * Validate tax exemption
+   * Validate a tax exemption
    *
    * Validates whether a tax exemption certificate or status is valid for a given transaction.
    */
@@ -69,7 +70,7 @@ export class CommercePaymentsTaxesModule {
   }
 
   /**
-   * Validate tax exemption
+   * Validate a tax exemption
    *
    * Validates whether a tax exemption certificate or status is valid for a given transaction.
    */
@@ -98,6 +99,7 @@ export class CommercePaymentsTaxesModule {
   }
 
   /**
+   * Calculate tax for a transaction
    */
   async postTaxesCalculate(body: Types.CommercePaymentsCalculateTaxInput): Promise<Result<Types.CommercePaymentsTaxCalculationResult, ApiError>> {
     const url = '/api/v1/taxes/calculate';
@@ -122,7 +124,7 @@ export class CommercePaymentsTaxesModule {
   }
 
   /**
-   * Validate tax exemption
+   * Validate a tax exemption
    *
    * Validates whether a tax exemption certificate or status is valid for a given transaction.
    */
@@ -151,7 +153,7 @@ export class CommercePaymentsTaxesModule {
   }
 
   /**
-   * Validate tax exemption
+   * Validate a tax exemption
    *
    * Validates whether a tax exemption certificate or status is valid for a given transaction.
    */

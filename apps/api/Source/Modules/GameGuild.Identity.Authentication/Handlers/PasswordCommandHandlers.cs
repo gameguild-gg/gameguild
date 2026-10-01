@@ -1,5 +1,6 @@
 using GameGuild.CQRS;
 using GameGuild.Identity.Users;
+using GameGuild.Configuration.ApplicationLayer;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
@@ -96,7 +97,9 @@ public sealed class ResetPasswordCommandHandler(
     IUserRepository userRepository,
     IPasswordHasher passwordHasher,
     IEmailVerificationService emailVerificationService,
-    ILogger<ResetPasswordCommandHandler> logger) : ICommandHandler<ResetPasswordCommand, PasswordResetResult>
+    ILogger<ResetPasswordCommandHandler> logger,
+    IUserSessionRepository? userSessionRepository = null,
+    SessionOptions? sessionOptions = null) : ICommandHandler<ResetPasswordCommand, PasswordResetResult>
 {
     public async Task<PasswordResetResult> Handle(ResetPasswordCommand request, CancellationToken cancellationToken)
     {
@@ -135,8 +138,25 @@ public sealed class ResetPasswordCommandHandler(
             };
         }
 
+        if (PasswordHistoryPolicy.WasRecentlyUsed(user, request.NewPassword, passwordHasher))
+        {
+            return new PasswordResetResult { Success = false, Message = "You cannot reuse any of your last 5 passwords." };
+        }
+
         var passwordHash = passwordHasher.HashPassword(request.NewPassword);
-        await userRepository.UpdatePasswordHashAsync(userId, passwordHash, cancellationToken).ConfigureAwait(false);
+        var updated = await userRepository.UpdatePasswordHashAsync(userId, passwordHash, user.PasswordHash, cancellationToken).ConfigureAwait(false);
+        if (!updated)
+        {
+            return new PasswordResetResult { Success = false, Message = "Your password changed during this reset. Request a new password reset link and try again." };
+        }
+
+        if (sessionOptions?.TerminateSessionsOnPasswordChange == true && userSessionRepository is not null)
+        {
+            await userSessionRepository.TerminateAllForUserAsync(
+                userId,
+                SessionTerminationReason.SecurityViolation.ToString(),
+                cancellationToken).ConfigureAwait(false);
+        }
 
         logger.LogInformation("Password reset completed for user {UserId}", userId);
 
@@ -153,7 +173,8 @@ public sealed class ChangePasswordCommandHandler(
     IUserRepository userRepository,
     IPasswordHasher passwordHasher,
     ILogger<ChangePasswordCommandHandler> logger,
-    IUserSessionRepository? userSessionRepository = null) : ICommandHandler<ChangePasswordCommand, PasswordChangeResult>
+    IUserSessionRepository? userSessionRepository = null,
+    SessionOptions? sessionOptions = null) : ICommandHandler<ChangePasswordCommand, PasswordChangeResult>
 {
     public async Task<PasswordChangeResult> Handle(ChangePasswordCommand request, CancellationToken cancellationToken)
     {
@@ -192,22 +213,41 @@ public sealed class ChangePasswordCommandHandler(
             };
         }
 
+        if (PasswordHistoryPolicy.WasRecentlyUsed(user, request.NewPassword, passwordHasher))
+        {
+            return new PasswordChangeResult { Success = false, Message = "You cannot reuse any of your last 5 passwords." };
+        }
+
         var passwordHash = passwordHasher.HashPassword(request.NewPassword);
-        await userRepository.UpdatePasswordHashAsync(request.UserId, passwordHash, cancellationToken).ConfigureAwait(false);
+        var updated = await userRepository.UpdatePasswordHashAsync(request.UserId, passwordHash, user.PasswordHash, cancellationToken).ConfigureAwait(false);
+        if (!updated)
+        {
+            return new PasswordChangeResult { Success = false, Message = "Your password changed during this request. Sign in again and retry." };
+        }
 
         var revokedSessions = 0;
-        if (request.RevokeOtherSessions)
+        if (userSessionRepository is not null && sessionOptions?.TerminateSessionsOnPasswordChange == true)
         {
-            if (request.CurrentSessionId is { } keepSessionId && userSessionRepository is not null)
-            {
-                var activeSessions = await userSessionRepository.GetActiveByUserIdAsync(request.UserId, cancellationToken).ConfigureAwait(false);
-                revokedSessions = activeSessions.Count(s => s.Id != keepSessionId);
-                await userSessionRepository.TerminateAllExceptAsync(request.UserId, keepSessionId, "password_changed", cancellationToken).ConfigureAwait(false);
-            }
-            else
-            {
-                logger.LogInformation("Skipping session revocation for user {UserId}: no session id in token", request.UserId);
-            }
+            var activeSessions = await userSessionRepository.GetActiveByUserIdAsync(request.UserId, cancellationToken).ConfigureAwait(false);
+            revokedSessions = activeSessions.Count;
+            await userSessionRepository.TerminateAllForUserAsync(
+                request.UserId,
+                SessionTerminationReason.SecurityViolation.ToString(),
+                cancellationToken).ConfigureAwait(false);
+        }
+        else if (request.RevokeOtherSessions && userSessionRepository is not null && request.CurrentSessionId is { } keepSessionId)
+        {
+            var activeSessions = await userSessionRepository.GetActiveByUserIdAsync(request.UserId, cancellationToken).ConfigureAwait(false);
+            revokedSessions = activeSessions.Count(s => s.Id != keepSessionId);
+            await userSessionRepository.TerminateAllExceptAsync(
+                request.UserId,
+                keepSessionId,
+                "password_changed",
+                cancellationToken).ConfigureAwait(false);
+        }
+        else if (request.RevokeOtherSessions)
+        {
+            logger.LogInformation("Skipping session revocation for user {UserId}: no session id or session repository", request.UserId);
         }
 
         logger.LogInformation("Password changed for user {UserId}; revoked sessions: {RevokedSessions}", request.UserId, revokedSessions);

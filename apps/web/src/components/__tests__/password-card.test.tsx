@@ -1,7 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
-import userEvent from '@testing-library/user-event';
 import { renderWithUser } from '@/test/auth-test-helpers';
 import enMessages from '@/i18n/messages/en-US.json';
 

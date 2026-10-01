@@ -16,6 +16,9 @@ export class AssetsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * List assets with optional filtering.
+   * Use owner=me to get current user's assets.
+   * Use parentType and parentId to filter by parent resource.
    */
   async getAssetsForGetAssets(query?: {
     owner?: string;
@@ -37,6 +40,7 @@ export class AssetsModule {
   }
 
   /**
+   * Upload a new asset.
    */
   async postAssets(query?: {
     displayName?: string;
@@ -59,6 +63,7 @@ export class AssetsModule {
   }
 
   /**
+   * Get an asset by ID.
    */
   async getAssetsForGetAssetsById(id: string, query?: { includeContent?: boolean }): Promise<Result<void, ApiError>> {
     const url = `/v1/assets/${id}`;
@@ -74,6 +79,7 @@ export class AssetsModule {
   }
 
   /**
+   * Delete an asset.
    */
   async deleteAssets(id: string): Promise<Result<void, ApiError>> {
     const url = `/v1/assets/${id}`;
@@ -88,6 +94,7 @@ export class AssetsModule {
   }
 
   /**
+   * Update asset metadata.
    */
   async patchAssets(id: string, body: Types.AssetsControllersUpdateAssetInput): Promise<Result<void, ApiError>> {
     const url = `/v1/assets/${id}`;
@@ -106,6 +113,7 @@ export class AssetsModule {
   }
 
   /**
+   * Get extracted searchable text for an asset.
    */
   async getSignedAssetExtractedText(id: string, query?: { token?: string }): Promise<Result<void, ApiError>> {
     const url = `/v1/assets/${id}:extracted-text`;
@@ -121,6 +129,7 @@ export class AssetsModule {
   }
 
   /**
+   * Generate an access URL for an asset.
    */
   async postAssetsGenerateAccessUrl(
     id: string,
@@ -139,6 +148,7 @@ export class AssetsModule {
   }
 
   /**
+   * Report an asset for moderation.
    */
   async postAssetsReport(id: string, body: Types.AssetsControllersReportAssetInput): Promise<Result<void, ApiError>> {
     const url = `/v1/assets/${id}:report`;
@@ -157,6 +167,7 @@ export class AssetsModule {
   }
 
   /**
+   * Get asset content (serve the actual file).
    */
   async getAssetsContent(id: string, query?: { token?: string; transform?: string }): Promise<Result<void, ApiError>> {
     const url = `/v1/assets/${id}/content`;
@@ -172,6 +183,7 @@ export class AssetsModule {
   }
 
   /**
+   * Extract text from an asset when the MIME type supports direct parsing or OCR.
    */
   async getAssetExtractedText(id: string): Promise<Result<Types.AssetsControllersAssetExtractedTextOutput, ApiError>> {
     const url = `/v1/assets/${id}/extracted-text`;
@@ -192,6 +204,7 @@ export class AssetsModule {
   }
 
   /**
+   * Get the inline preview contract for a document or media asset.
    */
   async getAssetsPreview(
     id: string,
@@ -216,6 +229,7 @@ export class AssetsModule {
   }
 
   /**
+   * Delete multiple asset references in one request.
    */
   async postAssetsBulkDelete(body: Types.AssetsControllersBulkDeleteAssetsInput): Promise<Result<Types.AssetsCommandsBulkDeleteAssetsOutput, ApiError>> {
     const url = '/v1/assets/bulk-delete';
@@ -240,6 +254,7 @@ export class AssetsModule {
   }
 
   /**
+   * Generate secure access URLs for multiple assets.
    */
   async postAssetsBulkDownload(body: Types.AssetsControllersBulkAssetAccessUrlInput): Promise<Result<Types.AssetsQueriesBulkAssetAccessUrlsOutput, ApiError>> {
     const url = '/v1/assets/bulk-download';
@@ -264,6 +279,7 @@ export class AssetsModule {
   }
 
   /**
+   * Upload multiple assets in one request.
    */
   async postAssetsBulkUpload(query?: {
     accessPolicy?: Types.AssetsAssetAccessPolicy;
@@ -290,6 +306,7 @@ export class AssetsModule {
   }
 
   /**
+   * Initialize a chunked upload for large files.
    */
   async postAssetsChunkedUploads(query?: {
     fileName?: string;
@@ -315,6 +332,7 @@ export class AssetsModule {
   }
 
   /**
+   * Abort an in-progress chunked upload.
    */
   async deleteAssetsChunkedUploads(uploadId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/assets/chunked-uploads/${uploadId}`;
@@ -329,6 +347,7 @@ export class AssetsModule {
   }
 
   /**
+   * Complete a chunked upload and create the asset.
    */
   async postAssetsChunkedUploadsComplete(
     uploadId: string,
@@ -353,6 +372,7 @@ export class AssetsModule {
   }
 
   /**
+   * Upload a chunk for an in-progress chunked upload.
    */
   async postAssetsChunkedUploadsParts(uploadId: string, query?: { chunkIndex?: number }): Promise<Result<void, ApiError>> {
     const url = `/v1/assets/chunked-uploads/${uploadId}/parts`;
@@ -368,6 +388,7 @@ export class AssetsModule {
   }
 
   /**
+   * Search document and media assets by metadata, parent, MIME type, and storage key.
    */
   async getAssetsSearch(query?: {
     q?: string;

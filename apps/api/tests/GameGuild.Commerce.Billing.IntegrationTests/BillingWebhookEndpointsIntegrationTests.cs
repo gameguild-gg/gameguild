@@ -62,6 +62,7 @@ public class BillingWebhookEndpointsIntegrationTests : IClassFixture<WebApplicat
                 {
                     options.UseInMemoryDatabase(DatabaseName);
                 });
+                services.AddScoped<DbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
             });
         });
 

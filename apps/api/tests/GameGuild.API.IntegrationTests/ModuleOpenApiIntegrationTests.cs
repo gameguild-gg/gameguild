@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace GameGuild.API.IntegrationTests;
@@ -19,6 +20,8 @@ public sealed class ModuleOpenApiIntegrationTests : IClassFixture<WebApplication
         _factory = factory.WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Development");
+            builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(
+                new Dictionary<string, string?> { ["Database:RunStartupInitialization"] = "false" }));
             builder.ConfigureTestServices(services =>
             {
                 services.AddHttpLogging(_ => { });

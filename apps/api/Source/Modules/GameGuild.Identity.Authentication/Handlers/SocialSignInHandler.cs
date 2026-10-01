@@ -39,6 +39,9 @@ public sealed class SocialSignInHandler(
             SocialProvider.Google => await authService.GoogleSignInAsync(
                 new OAuthSignInRequest { AccessToken = command.Token, TenantId = command.TenantId },
                 cancellationToken).ConfigureAwait(false),
+            SocialProvider.Microsoft => await authService.MicrosoftSignInAsync(
+                new OAuthSignInRequest { AccessToken = command.Token, TenantId = command.TenantId },
+                cancellationToken).ConfigureAwait(false),
             _ => throw new NotSupportedException($"Social provider {command.Provider} is not supported")
         };
 

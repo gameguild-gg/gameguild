@@ -190,8 +190,17 @@ public interface IUserRepository
     /// </summary>
     /// <param name="userId">User ID</param>
     /// <param name="passwordHash">New BCrypt password hash</param>
+    /// <param name="expectedCurrentPasswordHash">Hash observed when the password was validated</param>
+    Task<bool> UpdatePasswordHashAsync(Guid userId, string passwordHash, string? expectedCurrentPasswordHash);
+
+    /// <summary>
+    ///     Updates the user's password hash with cancellation support.
+    /// </summary>
+    /// <param name="userId">User ID</param>
+    /// <param name="passwordHash">New BCrypt password hash</param>
+    /// <param name="expectedCurrentPasswordHash">Hash observed when the password was validated</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    Task UpdatePasswordHashAsync(Guid userId, string passwordHash, CancellationToken cancellationToken = default);
+    Task<bool> UpdatePasswordHashAsync(Guid userId, string passwordHash, string? expectedCurrentPasswordHash, CancellationToken cancellationToken);
 
     /// <summary>
     ///     Records a successful login for the user
