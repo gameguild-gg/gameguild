@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
 using GameGuild.API.Core.ApiVersioning;
+using GameGuild.API.Core.OpenApi;
 using GameGuild.Configuration;
 using GameGuild.Configuration.PresentationLayer.ApiVersioning;
 using GameGuild.Configuration.PresentationLayer.OpenAPI;
@@ -40,10 +41,29 @@ public static class OpenApiExtensions
     /// <returns>The service collection for chaining</returns>
     public static IServiceCollection SetupOpenApi(this IServiceCollection services, IConfiguration configuration,
         OpenApiOptions? options)
+        => SetupOpenApi(services, configuration, options, localizationOptions: null);
+
+    /// <summary>
+    ///     Sets up OpenAPI/Swagger with configurable options and localized documents.
+    /// </summary>
+    /// <param name="services">The service collection</param>
+    /// <param name="configuration">The application configuration</param>
+    /// <param name="options">OpenAPI options</param>
+    /// <param name="localizationOptions">Optional localized document translations</param>
+    /// <returns>The service collection for chaining</returns>
+    public static IServiceCollection SetupOpenApi(this IServiceCollection services, IConfiguration configuration,
+        OpenApiOptions? options, OpenApiLocalizationOptions? localizationOptions)
     {
         options ??= OptionBuilderUtilities.CreateAndBind(configuration, "OpenApi", OpenApiOptions.CreateDefault);
         options.Validate();
         services.TryAddSingleton(options);
+
+        localizationOptions ??= OptionBuilderUtilities.CreateAndBind(
+            configuration,
+            "OpenApi",
+            static () => new OpenApiLocalizationOptions());
+        localizationOptions.Validate();
+        services.TryAddSingleton(localizationOptions);
 
         if (!options.EnableOpenApi)
         {
@@ -67,6 +87,7 @@ public static class OpenApiExtensions
                 // If API Versioning is enabled, register a Swagger document per discovered API version
                 using var providerScope = services.BuildServiceProvider();
                 var provider = providerScope.GetService<IApiVersionDescriptionProvider>();
+                var locales = localizationOptions.GetNormalizedLocales();
 
                 if (provider is not null)
                 {
@@ -76,20 +97,28 @@ public static class OpenApiExtensions
                             description.GroupName,
                             CreateDocumentInfo(options)
                         );
+
+                        foreach (var (locale, translations) in locales)
+                        {
+                            c.SwaggerDoc(
+                                OpenApiLocalizationOptions.GetLocalizedDocumentName(description.GroupName, locale),
+                                CreateDocumentInfo(options, translations));
+                        }
                     }
 
                     // Ensure only endpoints from the corresponding API version are included in each document
                     // Check API version instead of GroupName to allow custom ApiExplorerSettings GroupName
                     c.DocInclusionPredicate((docName, apiDesc) =>
                         {
+                            var baseDocumentName = OpenApiLocalizationOptions.GetBaseDocumentName(docName, locales);
                             if (apiDesc.ActionDescriptor is not ControllerActionDescriptor cad)
-                                return string.Equals(apiDesc.GroupName, docName, StringComparison.OrdinalIgnoreCase);
+                                return string.Equals(apiDesc.GroupName, baseDocumentName, StringComparison.OrdinalIgnoreCase);
 
                             if (cad.ControllerTypeInfo.GetCustomAttributes(typeof(ApiVersionAttribute), false)
                                     .FirstOrDefault() is not ApiVersionAttribute apiVersionAttr)
-                                return string.Equals(apiDesc.GroupName, docName, StringComparison.OrdinalIgnoreCase);
+                                return string.Equals(apiDesc.GroupName, baseDocumentName, StringComparison.OrdinalIgnoreCase);
                             return apiVersionAttr.Versions.Any(version =>
-                                docName.Equals($"v{version.MajorVersion}", StringComparison.OrdinalIgnoreCase));
+                                baseDocumentName.Equals($"v{version.MajorVersion}", StringComparison.OrdinalIgnoreCase));
                         }
                     );
                 }
@@ -100,6 +129,20 @@ public static class OpenApiExtensions
                         options.Version,
                         CreateDocumentInfo(options)
                     );
+
+                    foreach (var (locale, translations) in locales)
+                    {
+                        c.SwaggerDoc(
+                            OpenApiLocalizationOptions.GetLocalizedDocumentName(options.Version, locale),
+                            CreateDocumentInfo(options, translations));
+                    }
+
+                    c.DocInclusionPredicate((docName, apiDesc) =>
+                        apiDesc.GroupName is null ||
+                        string.Equals(
+                            apiDesc.GroupName,
+                            OpenApiLocalizationOptions.GetBaseDocumentName(docName, locales),
+                            StringComparison.OrdinalIgnoreCase));
                 }
 
                 // Configure schema ID generator to use full module path for guaranteed uniqueness
@@ -177,6 +220,7 @@ public static class OpenApiExtensions
                 c.DocumentFilter<OpenApiServerDocumentFilter>(options);
                 c.DocumentFilter<ConfiguredOpenApiDocumentFilter>(options);
                 c.DocumentFilter<DeterministicOpenApiDocumentFilter>();
+                c.DocumentFilter<OpenApiLocalizedDocumentFilter>(localizationOptions);
                 ApiProductComposition.Instance.ConfigureOpenApi(c);
 
                 if (options.EnableDefaultBearer)
@@ -282,13 +326,15 @@ public static class OpenApiExtensions
         };
     }
 
-    private static OpenApiInfo CreateDocumentInfo(OpenApiOptions options)
+    private static OpenApiInfo CreateDocumentInfo(
+        OpenApiOptions options,
+        OpenApiLocalizedDocumentOptions? translations = null)
     {
         return new OpenApiInfo
         {
-            Title = options.Title,
+            Title = translations?.Title ?? options.Title,
             Version = string.IsNullOrWhiteSpace(options.MetadataVersion) ? ReleaseVersion : options.MetadataVersion,
-            Description = options.Description,
+            Description = translations?.Description ?? options.Description,
             TermsOfService = string.IsNullOrWhiteSpace(options.TermsOfServiceUrl)
                 ? null
                 : new Uri(options.TermsOfServiceUrl),

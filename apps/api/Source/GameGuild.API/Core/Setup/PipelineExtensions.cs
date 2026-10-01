@@ -5,6 +5,7 @@ using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Tenants;
 using GameGuild.API.Core.ApiVersioning;
 using GameGuild.API.Core.CostAccounting;
+using GameGuild.API.Core.OpenApi;
 using GameGuild.Configuration.PresentationLayer;
 using GameGuild.Configuration.PresentationLayer.OpenAPI;
 using GameGuild.API.Core.Middleware;
@@ -138,6 +139,7 @@ public static class PipelineExtensions
 
         // 23. Swagger JSON (Swashbuckle middleware generates /swagger/{version}/swagger.json)
         var openApiOptions = app.Services.GetService<OpenApiOptions>();
+        var openApiLocalizationOptions = app.Services.GetService<OpenApiLocalizationOptions>();
         var openApiEnabled = openApiOptions?.EnableOpenApi ?? true;
 
         if (openApiEnabled && (app.Environment.IsDevelopment() || app.Environment.IsStaging()))
@@ -161,19 +163,11 @@ public static class PipelineExtensions
             {
                 ConfigureOpenApiUi(options, openApiOptions?.Ui ?? new OpenApiUiOptions());
 
-                var provider = app.Services.GetService<IApiVersionDescriptionProvider>();
-                if (provider is not null)
-                {
-                    foreach (var description in provider.ApiVersionDescriptions)
-                    {
-                        options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json",
-                            $"GameGuild API {description.GroupName.ToUpperInvariant()}");
-                    }
-                }
-                else
-                {
-                    options.SwaggerEndpoint("/swagger/v1/swagger.json", "GameGuild API V1");
-                }
+                ConfigureOpenApiDocuments(
+                    options,
+                    app.Services.GetService<IApiVersionDescriptionProvider>(),
+                    openApiOptions?.Version ?? "v1",
+                    openApiLocalizationOptions);
             });
         }
 
@@ -203,6 +197,33 @@ public static class PipelineExtensions
         if (configured.PersistAuthorization.HasValue)
         {
             options.ConfigObject.PersistAuthorization = configured.PersistAuthorization.Value;
+        }
+    }
+
+    internal static void ConfigureOpenApiDocuments(
+        SwaggerUIOptions options,
+        IApiVersionDescriptionProvider? versionProvider,
+        string fallbackDocumentName,
+        OpenApiLocalizationOptions? localizationOptions)
+    {
+        var documentNames = versionProvider is null
+            ? [(fallbackDocumentName, $"GameGuild API {fallbackDocumentName.ToUpperInvariant()}")]
+            : versionProvider.ApiVersionDescriptions
+                .Select(description => (
+                    description.GroupName,
+                    $"GameGuild API {description.GroupName.ToUpperInvariant()}"))
+                .ToArray();
+        var locales = localizationOptions?.GetNormalizedLocales() ?? [];
+
+        foreach (var (documentName, displayName) in documentNames)
+        {
+            options.SwaggerEndpoint($"/swagger/{documentName}/swagger.json", displayName);
+            foreach (var (locale, _) in locales)
+            {
+                options.SwaggerEndpoint(
+                    $"/swagger/{OpenApiLocalizationOptions.GetLocalizedDocumentName(documentName, locale)}/swagger.json",
+                    $"{displayName} ({locale})");
+            }
         }
     }
 
