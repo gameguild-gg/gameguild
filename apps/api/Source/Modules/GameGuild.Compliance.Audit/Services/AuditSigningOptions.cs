@@ -6,7 +6,7 @@ namespace GameGuild.Compliance.Audit;
 /// </summary>
 public sealed class AuditSigningOptions
 {
-    public const string SectionName = "AuditSigning";
+    public static string SectionName { get; } = "AuditSigning";
 
     public string? ActiveKeyId { get; set; }
 

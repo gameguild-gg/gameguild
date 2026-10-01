@@ -16,6 +16,39 @@ public sealed class TamperEvidentAuditService(
 {
     private const int MaximumPageSize = 500;
 
+    public Task<Result<TamperEvidentAuditLog>> CreateAuditLogAsync(
+        Guid tenantId,
+        Guid? userId,
+        string action,
+        string entityType,
+        Guid? entityId,
+        string? beforeSnapshot,
+        string? afterSnapshot,
+        string changes,
+        string riskLevel,
+        string ipAddress,
+        string userAgent)
+        => CreateAuditLogAsync(
+            tenantId, userId, action, entityType, entityId, beforeSnapshot, afterSnapshot,
+            changes, riskLevel, ipAddress, userAgent, new AuditEventMetadata(), CancellationToken.None);
+
+    public Task<Result<TamperEvidentAuditLog>> CreateAuditLogAsync(
+        Guid tenantId,
+        Guid? userId,
+        string action,
+        string entityType,
+        Guid? entityId,
+        string? beforeSnapshot,
+        string? afterSnapshot,
+        string changes,
+        string riskLevel,
+        string ipAddress,
+        string userAgent,
+        CancellationToken cancellationToken)
+        => CreateAuditLogAsync(
+            tenantId, userId, action, entityType, entityId, beforeSnapshot, afterSnapshot,
+            changes, riskLevel, ipAddress, userAgent, new AuditEventMetadata(), cancellationToken);
+
     public async Task<Result<TamperEvidentAuditLog>> CreateAuditLogAsync(
         Guid tenantId,
         Guid? userId,
@@ -28,12 +61,8 @@ public sealed class TamperEvidentAuditService(
         string riskLevel,
         string ipAddress,
         string userAgent,
-        string? country = null,
-        string? region = null,
-        string? city = null,
-        Guid? sessionId = null,
-        string? correlationId = null,
-        CancellationToken cancellationToken = default)
+        AuditEventMetadata metadata,
+        CancellationToken cancellationToken)
     {
         if (tenantId == Guid.Empty)
         {
@@ -45,7 +74,7 @@ public sealed class TamperEvidentAuditService(
             return Failure<TamperEvidentAuditLog>("Audit.InvalidAction", "An action and entity type are required.");
         }
 
-        if (changes is null || riskLevel is null || ipAddress is null || userAgent is null)
+        if (changes is null || riskLevel is null || ipAddress is null || userAgent is null || metadata is null)
         {
             return Failure<TamperEvidentAuditLog>("Audit.InvalidPayload", "Audit event fields cannot be null.");
         }
@@ -55,10 +84,10 @@ public sealed class TamperEvidentAuditService(
             || riskLevel.Length > 50
             || ipAddress.Length > 45
             || userAgent.Length > 500
-            || correlationId?.Length > 100
-            || country?.Length > 100
-            || region?.Length > 100
-            || city?.Length > 100)
+            || metadata.CorrelationId?.Length > 100
+            || metadata.Country?.Length > 100
+            || metadata.Region?.Length > 100
+            || metadata.City?.Length > 100)
         {
             return Failure<TamperEvidentAuditLog>("Audit.PayloadTooLarge", "One or more audit event fields exceed the supported length.");
         }
@@ -94,13 +123,13 @@ public sealed class TamperEvidentAuditService(
                         riskLevel,
                         ipAddress,
                         userAgent,
-                        country,
-                        region,
-                        city,
+                        metadata.Country,
+                        metadata.Region,
+                        metadata.City,
                         previousHash,
                         sequenceNumber,
-                        sessionId,
-                        correlationId);
+                        metadata.SessionId,
+                        metadata.CorrelationId);
 
                     var contentHash = signingService.ComputeContentHash(SerializeContent(entry));
                     var chainHash = signingService.ComputeChainHash(contentHash, previousHash, sequenceNumber);
@@ -129,18 +158,17 @@ public sealed class TamperEvidentAuditService(
 
             throw new InvalidOperationException("Audit chain write retries were exhausted.");
         }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
-        catch (Exception exception)
+        catch (Exception exception) when (exception is not OperationCanceledException)
         {
             logger.LogError(exception, "Failed to persist tamper-evident audit event {Action} for tenant {TenantId}", action, tenantId);
             return Failure<TamperEvidentAuditLog>("Audit.PersistenceFailed", "The tamper-evident audit event could not be persisted.");
         }
     }
 
-    public async Task<Result<bool>> VerifyChainIntegrityAsync(Guid tenantId, CancellationToken cancellationToken = default)
+    public Task<Result<bool>> VerifyChainIntegrityAsync(Guid tenantId)
+        => VerifyChainIntegrityAsync(tenantId, CancellationToken.None);
+
+    public async Task<Result<bool>> VerifyChainIntegrityAsync(Guid tenantId, CancellationToken cancellationToken)
     {
         if (tenantId == Guid.Empty)
         {
@@ -187,18 +215,17 @@ public sealed class TamperEvidentAuditService(
 
             return Result.Success(true);
         }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
-        catch (Exception exception)
+        catch (Exception exception) when (exception is not OperationCanceledException)
         {
             logger.LogError(exception, "Failed to verify tamper-evident audit chain for tenant {TenantId}", tenantId);
             return Result.Failure<bool>(Error.Failure("Audit.VerificationFailed", "The audit chain could not be verified."));
         }
     }
 
-    public async Task<Result<TamperEvidentAuditLog>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public Task<Result<TamperEvidentAuditLog>> GetByIdAsync(Guid id)
+        => GetByIdAsync(id, CancellationToken.None);
+
+    public async Task<Result<TamperEvidentAuditLog>> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
         await using var scope = scopeFactory.CreateAsyncScope();
         var context = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
@@ -212,11 +239,22 @@ public sealed class TamperEvidentAuditService(
             : Result.Success(entry);
     }
 
+    public Task<Result<IEnumerable<TamperEvidentAuditLog>>> GetByTenantAsync(Guid tenantId)
+        => GetByTenantAsync(tenantId, 0, 100, CancellationToken.None);
+
+    public Task<Result<IEnumerable<TamperEvidentAuditLog>>> GetByTenantAsync(
+        Guid tenantId,
+        CancellationToken cancellationToken)
+        => GetByTenantAsync(tenantId, 0, 100, cancellationToken);
+
+    public Task<Result<IEnumerable<TamperEvidentAuditLog>>> GetByTenantAsync(Guid tenantId, int skip, int take)
+        => GetByTenantAsync(tenantId, skip, take, CancellationToken.None);
+
     public async Task<Result<IEnumerable<TamperEvidentAuditLog>>> GetByTenantAsync(
         Guid tenantId,
-        int skip = 0,
-        int take = 100,
-        CancellationToken cancellationToken = default)
+        int skip,
+        int take,
+        CancellationToken cancellationToken)
     {
         if (tenantId == Guid.Empty || skip < 0 || take <= 0)
         {
@@ -261,7 +299,16 @@ public sealed class TamperEvidentAuditService(
         return Result.Success<IEnumerable<TamperEvidentAuditLog>>(entries);
     }
 
-    public async Task<Result> MarkAsVerifiedAsync(Guid id, string? notes = null, CancellationToken cancellationToken = default)
+    public Task<Result> MarkAsVerifiedAsync(Guid id)
+        => MarkAsVerifiedAsync(id, null, CancellationToken.None);
+
+    public Task<Result> MarkAsVerifiedAsync(Guid id, CancellationToken cancellationToken)
+        => MarkAsVerifiedAsync(id, null, cancellationToken);
+
+    public Task<Result> MarkAsVerifiedAsync(Guid id, string? notes)
+        => MarkAsVerifiedAsync(id, notes, CancellationToken.None);
+
+    public async Task<Result> MarkAsVerifiedAsync(Guid id, string? notes, CancellationToken cancellationToken)
     {
         var existing = await GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
         if (existing.IsFailure)

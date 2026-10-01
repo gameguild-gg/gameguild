@@ -52,8 +52,8 @@ public sealed class TamperEvidentAuditServiceTests : IDisposable
             "High",
             "192.0.2.1",
             "test-agent",
-            sessionId: sessionId,
-            correlationId: correlationId);
+            new AuditEventMetadata { SessionId = sessionId, CorrelationId = correlationId },
+            CancellationToken.None);
         var second = await service.CreateAuditLogAsync(
             tenantId,
             Guid.NewGuid(),

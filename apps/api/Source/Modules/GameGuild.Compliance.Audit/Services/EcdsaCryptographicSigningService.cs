@@ -86,7 +86,10 @@ public sealed class EcdsaCryptographicSigningService : ICryptographicSigningServ
         }
     }
 
-    public Task<Result<string>> GetPublicKeyAsync(string keyId, CancellationToken cancellationToken = default)
+    public Task<Result<string>> GetPublicKeyAsync(string keyId)
+        => GetPublicKeyAsync(keyId, CancellationToken.None);
+
+    public Task<Result<string>> GetPublicKeyAsync(string keyId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -113,7 +116,10 @@ public sealed class EcdsaCryptographicSigningService : ICryptographicSigningServ
         }
     }
 
-    public Task<Result> RotateSigningKeyAsync(string newKeyId, CancellationToken cancellationToken = default)
+    public Task<Result> RotateSigningKeyAsync(string newKeyId)
+        => RotateSigningKeyAsync(newKeyId, CancellationToken.None);
+
+    public Task<Result> RotateSigningKeyAsync(string newKeyId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 

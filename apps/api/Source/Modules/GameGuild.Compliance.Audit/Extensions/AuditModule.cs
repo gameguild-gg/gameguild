@@ -12,11 +12,27 @@ public static class AuditModule
     /// Registers all Audit module services
     /// </summary>
     /// <param name="services">The service collection</param>
-    /// <param name="configureSigningOptions">Optional signing-key configuration.</param>
+    /// <returns>The service collection for chaining</returns>
+    public static IServiceCollection AddAuditServices(this IServiceCollection services)
+        => AddAuditServicesCore(services, null);
+
+    /// <summary>
+    /// Registers all Audit module services and configures signing keys.
+    /// </summary>
+    /// <param name="services">The service collection</param>
+    /// <param name="configureSigningOptions">Signing-key configuration.</param>
     /// <returns>The service collection for chaining</returns>
     public static IServiceCollection AddAuditServices(
         this IServiceCollection services,
-        Action<AuditSigningOptions>? configureSigningOptions = null)
+        Action<AuditSigningOptions> configureSigningOptions)
+    {
+        ArgumentNullException.ThrowIfNull(configureSigningOptions);
+        return AddAuditServicesCore(services, configureSigningOptions);
+    }
+
+    private static IServiceCollection AddAuditServicesCore(
+        IServiceCollection services,
+        Action<AuditSigningOptions>? configureSigningOptions)
     {
         services.AddOptions<AuditSigningOptions>();
         if (configureSigningOptions is not null)
