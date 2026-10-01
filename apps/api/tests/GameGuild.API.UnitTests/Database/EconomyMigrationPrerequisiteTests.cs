@@ -26,7 +26,7 @@ public sealed class EconomyMigrationPrerequisiteTests
     }
 
     [DockerFact]
-    public async Task PrepareAsync_WithRestrictedMigrationRole_ShouldAllowEconomyOwnershipMigration()
+    public async Task PrepareAsync_WithPregrantedRestrictedMigrationRole_ShouldAllowEconomyOwnershipMigration()
     {
         var database = await EconomyPostgreSqlTestDatabase.CreateAsync("economy_prerequisite");
         var roleName = $"economy_migrator_{Guid.NewGuid():N}";
@@ -38,10 +38,19 @@ public sealed class EconomyMigrationPrerequisiteTests
             {
                 await admin.OpenAsync();
                 await using var command = admin.CreateCommand();
+                // The owner role is shared across databases; only an administrator can grant it to a restricted migrator.
                 command.CommandText = $"""
                     CREATE ROLE "{roleName}" LOGIN PASSWORD 'migration-secret' CREATEROLE;
                     GRANT CONNECT, CREATE, TEMPORARY ON DATABASE "{databaseName}" TO "{roleName}";
                     GRANT USAGE, CREATE ON SCHEMA public TO "{roleName}";
+                    DO $owner$
+                    BEGIN
+                        IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'gameguild_economy_procedure_owner') THEN
+                            CREATE ROLE gameguild_economy_procedure_owner NOLOGIN;
+                        END IF;
+                    END
+                    $owner$;
+                    GRANT gameguild_economy_procedure_owner TO "{roleName}" WITH INHERIT TRUE, SET TRUE;
                     """;
                 await command.ExecuteNonQueryAsync();
                 roleCreated = true;
