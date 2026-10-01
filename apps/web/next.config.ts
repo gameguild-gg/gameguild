@@ -6,15 +6,21 @@ import { COI_LEARN_RULES } from "./src/lib/emception/coi-headers";
 const configuredDevOrigins = process.env.NEXT_ALLOWED_DEV_ORIGINS?.split(",")
   .map((origin) => origin.trim())
   .filter(Boolean);
+const precompiledLearning =
+  process.env.GAMEGUILD_PRECOMPILED_SCOPE === "learning";
+const isolatedDistDir =
+  process.env.CODING_CYCLE_E2E === "1"
+    ? ".next-e2e-coding-cycle"
+    : precompiledLearning
+      ? ".next-learning"
+      : undefined;
 
 const nextConfig: NextConfig = {
   // ponytail: isolated E2E boots a second `next dev` on a dedicated port
   // alongside the user's running dev server; without a separate distDir the
   // two fight over the .next/ dev-server lock. Gated by env so production
   // builds are unaffected.
-  ...(process.env.CODING_CYCLE_E2E === "1"
-    ? { distDir: ".next-e2e-coding-cycle" }
-    : {}),
+  ...(isolatedDistDir ? { distDir: isolatedDistDir } : {}),
   allowedDevOrigins: configuredDevOrigins ?? [
     "gameguild.localhost",
     "gameguild.127.0.0.1.sslip.io",
@@ -22,7 +28,9 @@ const nextConfig: NextConfig = {
     "127.0.0.1",
   ],
   reactCompiler: true,
-  output: "standalone",
+  // The precompiled local surface is served by `next start`; release builds
+  // keep the standalone artifact consumed by Docker.
+  ...(!precompiledLearning ? { output: "standalone" as const } : {}),
   outputFileTracingRoot: path.resolve(__dirname, "../.."),
   transpilePackages: [
     "@game-guild/ui",
@@ -61,9 +69,15 @@ const nextConfig: NextConfig = {
     //   { protocol: "https", hostname: "www.python.org" },
     // ],
   },
+  ...(precompiledLearning
+    ? { typescript: { tsconfigPath: "tsconfig.learning.json" } }
+    : {}),
   experimental: {
     authInterrupts: true,
     cpus: 1,
+    // Selective builds need Next's TypeScript API checker so source files and
+    // generated route types are filtered by the same --debug-build-paths set.
+    ...(precompiledLearning ? { useTypeScriptCli: false } : {}),
   },
   turbopack: {
     rules: {

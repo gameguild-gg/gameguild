@@ -134,8 +134,8 @@ public class PeerReviewsController : BaseApiController
     }
 
     /// <summary>
-    /// Submit a claimed peer review. Feedback is mandatory; scores follow the assessment's
-    /// rubric rules (rubric grid when one exists, plain 0..MaxScore otherwise).
+    /// Legacy peer-review submit. Valid requests fail closed until peer review is implemented
+    /// as a canonical grading stage.
     /// </summary>
     [HttpPost("peer-reviews/{reviewId:guid}/submit")]
     public async Task<IActionResult> SubmitReview(Guid reviewId, [FromBody] PeerReviewSubmitRequest request)
@@ -207,7 +207,7 @@ public class PeerReviewsController : BaseApiController
     }
 
     /// <summary>
-    /// Reviews received on a submission (own row, or the group's rows for group submissions).
+    /// Reviews received on a single individual or collective submission.
     /// Owner-only, anonymized: no reviewer identity exists in the DTO at all.
     /// </summary>
     [HttpGet("submissions/{submissionId:guid}/received-peer-reviews")]
@@ -218,7 +218,12 @@ public class PeerReviewsController : BaseApiController
 
         var submission = await _assessmentService.GetSubmissionByIdAsync(submissionId).ConfigureAwait(false);
         if (submission == null) return NotFound();
-        if (submission.UserId != actor.SubjectIdAsGuid.Value) return Forbid();
+        if (!await _peerReviewService
+                .IsSubmissionOwnerOrParticipantAsync(submissionId, actor.SubjectIdAsGuid.Value)
+                .ConfigureAwait(false))
+        {
+            return Forbid();
+        }
 
         var assessment = await _assessmentService.GetAssessmentByIdAsync(submission.AssessmentId).ConfigureAwait(false);
         if (assessment == null) return NotFound();

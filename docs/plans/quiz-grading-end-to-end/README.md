@@ -1,10 +1,11 @@
 # Quiz grading end-to-end
 
-Status: em implementação; Parte 1 concluída e Parte 2 pronta para iniciar.
+Status: em implementação; Parte 1 concluída, Parte 2 implementada com gate de
+fechamento pendente e Parte 3 bloqueada por esse gate.
 
 Data: 2026-08-21.
 
-Atualizado: 2026-09-15.
+Atualizado: 2026-09-29.
 
 ## Objetivo
 
@@ -270,13 +271,16 @@ Leitura central do fluxo:
 | [08-implementation-sequence.md](./08-implementation-sequence.md) | execução | índice, regras globais e passagem entre as três partes |
 | [Parte 1](./implementation-sequence/01-foundation-and-authoring.md) | execução | fundação, autoria, segurança e publicação fail-closed |
 | [Parte 2](./implementation-sequence/02-core-grading-e2e.md) | execução | test run e E2E oficial individual e coletivo |
+| [Fechamento da Parte 2](./implementation-sequence/02a-core-grading-e2e-closeout.md) | gate corretivo | somente os pendentes pós-implementação, sem repetir `SEQ-07` a `SEQ-11` |
 | [Parte 3](./implementation-sequence/03-review-expansion-and-operations.md) | execução | reviews adicionais, operação e auditoria final |
 
 Os documentos `00` a `06` são especificações temáticas e sua numeração não é
 uma sequência de codificação. A ordem obrigatória de implementação está no
 índice [`08-implementation-sequence.md`](./08-implementation-sequence.md), que
-encadeia três partes executadas e aprovadas separadamente. O documento `07`
-detalha os testes e critérios transversais consumidos por essa sequência.
+encadeia três partes executadas e aprovadas separadamente. O fechamento `02a` é
+um gate corretivo surgido da auditoria da primeira execução da Parte 2, não uma
+quarta parte. O documento `07` detalha os testes e critérios transversais
+consumidos por essa sequência.
 
 ## Decisões estruturais obrigatórias
 

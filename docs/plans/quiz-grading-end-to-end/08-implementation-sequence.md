@@ -17,12 +17,14 @@ não representa a ordem em que seus conteúdos devem ser codificados.
 | --- | --- | --- | --- |
 | 1 | `SEQ-00` a `SEQ-06` | fundação, autoria, segurança e publicação fail-closed | [Fundação e autoria](./implementation-sequence/01-foundation-and-authoring.md) |
 | 2 | `SEQ-07` a `SEQ-11` | test run e E2E oficial individual e coletivo | [E2E principal](./implementation-sequence/02-core-grading-e2e.md) |
+| Gate 2 → 3 | `CLOSE-01` a `CLOSE-04` | fechar somente lacunas encontradas após a primeira execução da Parte 2 | [Fechamento da Parte 2](./implementation-sequence/02a-core-grading-e2e-closeout.md) |
 | 3 | `SEQ-12` a `SEQ-16` | reviews adicionais, operação e auditoria final | [Expansão e operação](./implementation-sequence/03-review-expansion-and-operations.md) |
 
 A Parte 2 não começa até a Parte 1 estar concluída e testada. A Parte 3 não
-começa até a Parte 2 estar concluída e testada. Cada documento possui
-pré-requisitos, definição de pronto, acompanhamento e gate de passagem
-próprios.
+começa até a Parte 2 e seu fechamento `CLOSE-01` a `CLOSE-04` estarem concluídos
+e testados. O fechamento não repete `SEQ-07` a `SEQ-11`: executa apenas o delta
+registrado após a auditoria. Cada documento possui pré-requisitos, definição de
+pronto, acompanhamento e gate de passagem próprios.
 
 ## Ordem global
 
@@ -31,6 +33,7 @@ flowchart LR
     P1["Parte 1<br/>Fundação e autoria<br/>SEQ-00 a SEQ-06"]
     G1{"Gate da Parte 1<br/>aprovado?"}
     P2["Parte 2<br/>E2E principal<br/>SEQ-07 a SEQ-11"]
+    C2["Fechamento da Parte 2<br/>CLOSE-01 a CLOSE-04"]
     G2{"Gate da Parte 2<br/>aprovado?"}
     P3["Parte 3<br/>Expansão e operação<br/>SEQ-12 a SEQ-16"]
     DONE["Grading E2E concluído"]
@@ -38,8 +41,9 @@ flowchart LR
     P1 --> G1
     G1 -->|Não| P1
     G1 -->|Sim| P2
-    P2 --> G2
-    G2 -->|Não| P2
+    P2 --> C2
+    C2 --> G2
+    G2 -->|Não| C2
     G2 -->|Sim| P3
     P3 --> DONE
 ```
@@ -210,7 +214,11 @@ artefatos SQL fora do IModel afetados e seus testes
 | 2 | `SEQ-09` | `AutomatedReview` no test run | `SEQ-08` | não previsto |
 | 2 | `SEQ-10` | tentativa oficial, progresso, release e gradebook mínimos | `SEQ-09` | `SCHEMA-GATE` |
 | 2 | `SEQ-11` | tentativa oficial coletiva | `SEQ-10` | `SCHEMA-GATE` |
-| 3 | `SEQ-12` | `SelfReview` em teste e oficial | Parte 2 aprovada | `SCHEMA-GATE` |
+| Gate 2 → 3 | `CLOSE-01` | retirar autoridade peer paralela e dependências de submissions irmãs | primeira implementação de `SEQ-11` | não previsto; parar se houver delta |
+| Gate 2 → 3 | `CLOSE-02` | E2Es oficiais HTTP + PostgreSQL | `CLOSE-01` | não |
+| Gate 2 → 3 | `CLOSE-03` | criação limpa e upgrade real populado | `CLOSE-02` | não; valida migrations existentes |
+| Gate 2 → 3 | `CLOSE-04` | suíte acumulada e aprovação do gate | `CLOSE-03` | não |
+| 3 | `SEQ-12` | `SelfReview` em teste e oficial | fechamento da Parte 2 aprovado | `SCHEMA-GATE` |
 | 3 | `SEQ-13` | `PeerReview` em teste e oficial | `SEQ-12` | `SCHEMA-GATE` |
 | 3 | `SEQ-14` | porta durável de `AIReview` | `SEQ-13` | `SCHEMA-GATE` condicional |
 | 3 | `SEQ-15` | release agendado, integração global e operação avançados | `SEQ-14` | `SCHEMA-GATE` condicional |
@@ -363,8 +371,9 @@ A implementação deve parar e retornar ao planejamento quando:
 | Parte | Status | Gate de conclusão |
 | --- | --- | --- |
 | 1. Fundação e autoria | concluída | base contratual, relacional, segura e autoral aprovada |
-| 2. E2E principal | pronta para iniciar | test run e fluxo oficial individual/coletivo aprovados |
-| 3. Expansão e operação | bloqueada pela Parte 2 | reviews adicionais, operação e auditoria aprovados |
+| 2. E2E principal | primeira implementação concluída; gate pendente | test run e fluxo oficial individual/coletivo aprovados |
+| Fechamento 2 → 3 | pendente | `CLOSE-01` a `CLOSE-04` aprovados sem reexecutar toda a Parte 2 |
+| 3. Expansão e operação | bloqueada pelo fechamento da Parte 2 | reviews adicionais, operação e auditoria aprovados |
 
 O detalhe de cada marco é atualizado somente no documento da parte
 correspondente. Este índice registra apenas a passagem entre as três entregas.

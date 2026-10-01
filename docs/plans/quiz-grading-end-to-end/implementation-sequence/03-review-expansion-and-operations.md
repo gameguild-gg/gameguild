@@ -10,10 +10,31 @@ Regras globais: [`08-implementation-sequence.md`](../08-implementation-sequence.
 
 ## Pré-requisitos
 
-- Partes 1 e 2 concluídas, testadas e aprovadas;
+- Parte 1 concluída, testada e aprovada;
+- primeira implementação da Parte 2 concluída e o plano de
+  [`fechamento da Parte 2`](./02a-core-grading-e2e-closeout.md) integralmente
+  aprovado;
 - fluxo oficial individual e coletivo sem autoridade paralela;
 - gradebook mínimo, release e auditoria básica funcionando de forma
   idempotente.
+
+## Gate de entrada `03-0`
+
+Gate aprovado: `CLOSE-01` a `CLOSE-04` estão concluídos e `SEQ-12` pode
+começar. O fechamento resolveu somente o delta encontrado após a implementação
+da Parte 2; ele não antecipou `SelfReview`, o handler canônico de `PeerReview`,
+a porta de `AIReview` ou a operação avançada desta parte.
+
+O gate deve trazer como evidência:
+
+- ausência de submit, score, agregação ou notificação peer autoritativos fora da
+  `GradingExecution`;
+- ausência de `CanonicalRow` e submissions irmãs como representação de tentativa
+  coletiva;
+- E2Es oficiais individual e coletivo via HTTP + PostgreSQL;
+- criação limpa e upgrade populado pela cadeia real, sem editar migrations
+  históricas;
+- suíte acumulada aprovada.
 
 ## Fora do escopo
 
@@ -114,8 +135,11 @@ Antes de alterar a persistência, inventariar explicitamente
 `PeerReviewAssignmentService`, `actions-peer-review.ts`, o workspace atual, os
 clients gerados, `GradingQueueService`, `TasksService`, actions e painéis do
 SpeedGrader, projeções de tarefas/fila e os produtores de notificação.
-Confirmar que dependências de `CanonicalRow` e submissions irmãs já foram
-eliminadas em `SEQ-11`. Apresentar apenas eventuais mudanças necessárias para:
+Consumir a evidência de `CLOSE-01` de que dependências de `CanonicalRow`,
+submissions irmãs e submit peer autoritativo anterior foram eliminadas ou
+tornadas fail-closed. Se qualquer uma reaparecer, interromper `SEQ-13` e retornar
+ao fechamento da Parte 2. Com essa base comprovada, apresentar apenas eventuais
+mudanças necessárias para:
 
 - lease, expiração, reatribuição e idempotência de claims;
 - cota do revisor separada do limiar recebido pela submission;
@@ -349,7 +373,9 @@ restaram autoridades concorrentes, referências obsoletas ou lacunas na matriz.
 - a cadeia completa cria o schema final em banco vazio;
 - o upgrade de um banco populado pela migration anterior preserva dados,
   constraints e artefatos SQL ativos;
-- API, web e packages passam em CI;
+- projetos, packages e superfícies web pertencentes ao fluxo de grading passam
+  em CI. Falhas de módulos externos são registradas para seus owners e não
+  bloqueiam este gate;
 - observabilidade distingue falha técnica, espera legítima e revisão humana.
 
 ## Definição de pronto da Parte 3
@@ -369,13 +395,14 @@ restaram autoridades concorrentes, referências obsoletas ou lacunas na matriz.
   consumer obrigatório;
 - auditoria, observabilidade, mapas de serialização e matriz E2E estão
   completos;
-- toda a suíte acumulada das Partes 1, 2 e 3 passa em CI com banco criado do
-  zero e diff global sem drift depois de cada `SCHEMA-GATE`.
+- toda a suíte de grading acumulada das Partes 1, 2 e 3 passa em CI com banco
+  criado do zero e diff global sem drift depois de cada `SCHEMA-GATE`.
 
 ## Acompanhamento
 
 | Marco | Status | Evidência |
 | --- | --- | --- |
+| gate `03-0` | aprovado | `CLOSE-01` a `CLOSE-04` aprovados; Parte 3 liberada |
 | `SEQ-12` | pendente | `SelfReview` individual e coletivo |
 | `SEQ-13` | pendente | `PeerReview` individual e coletivo |
 | `SEQ-14` | pendente | contract test de provider e gate condicional |
