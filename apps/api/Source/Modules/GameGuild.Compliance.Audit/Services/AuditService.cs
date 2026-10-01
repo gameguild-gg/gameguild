@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -239,71 +240,66 @@ public sealed class AuditService(IServiceScopeFactory scopeFactory, IHttpContext
     {
         await using var scope = scopeFactory.CreateAsyncScope();
         var context = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
-        var queryable = context.Set<AuditLog>().AsQueryable();
+        IQueryable<AuditLog> queryable = ApplyFilters(context.Set<AuditLog>().AsQueryable(), query)
+            .OrderByDescending(a => a.CreatedAt)
+            .ThenByDescending(a => a.Id);
 
-        // Apply filters
-        if (query.UserId.HasValue) { queryable = queryable.Where(a => a.UserId == query.UserId.Value); }
-
-        if (query.TenantId.HasValue) { queryable = queryable.Where(a => a.TenantId == query.TenantId.Value); }
-
-        if (!string.IsNullOrEmpty(query.ActionType)) { queryable = queryable.Where(a => a.ActionType == query.ActionType); }
-
-        if (!string.IsNullOrEmpty(query.ResourceType)) { queryable = queryable.Where(a => a.ResourceType == query.ResourceType); }
-
-        if (query.Category.HasValue) { queryable = queryable.Where(a => a.Category == query.Category.Value); }
-
-        if (query.RiskLevel.HasValue) { queryable = queryable.Where(a => a.RiskLevel >= query.RiskLevel.Value); }
-
-        if (query.Success.HasValue) { queryable = queryable.Where(a => a.Success == query.Success.Value); }
-
-        if (query.StartDate.HasValue) { queryable = queryable.Where(a => a.CreatedAt >= query.StartDate.Value); }
-
-        if (query.EndDate.HasValue) { queryable = queryable.Where(a => a.CreatedAt <= query.EndDate.Value); }
-
-        if (!string.IsNullOrEmpty(query.IpAddress)) { queryable = queryable.Where(a => a.IpAddress == query.IpAddress); }
-
-        // Apply ordering
-        queryable = queryable.OrderByDescending(a => a.CreatedAt);
-
-        // Apply pagination
-        if (query.Skip > 0) { queryable = queryable.Skip(query.Skip); }
-
-        if (query.Take > 0)
-        {
-            queryable = queryable.Take(Math.Min(query.Take, 1000)); // Cap at 1000 records
-        }
+        queryable = ApplyPagination(queryable, query);
 
         return await queryable.ToListAsync().ConfigureAwait(false);
+    }
+
+    public async IAsyncEnumerable<AuditLog> StreamAuditLogsAsync(
+        AuditLogQuery query,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        await using var scope = scopeFactory.CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
+        IQueryable<AuditLog> queryable = ApplyFilters(context.Set<AuditLog>().AsQueryable(), query)
+            .OrderByDescending(a => a.CreatedAt)
+            .ThenByDescending(a => a.Id);
+
+        queryable = ApplyPagination(queryable, query);
+
+        await foreach (var auditLog in queryable
+                           .AsAsyncEnumerable()
+                           .WithCancellation(cancellationToken)
+                           .ConfigureAwait(false))
+        {
+            yield return auditLog;
+        }
     }
 
     public async Task<int> GetAuditLogCountAsync(AuditLogQuery query)
     {
         await using var scope = scopeFactory.CreateAsyncScope();
         var context = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
-        var queryable = context.Set<AuditLog>().AsQueryable();
+        return await ApplyFilters(context.Set<AuditLog>().AsQueryable(), query)
+            .CountAsync().ConfigureAwait(false);
+    }
 
-        // Apply same filters as GetAuditLogsAsync but without ordering/pagination
+    private static IQueryable<AuditLog> ApplyFilters(IQueryable<AuditLog> queryable, AuditLogQuery query)
+    {
         if (query.UserId.HasValue) { queryable = queryable.Where(a => a.UserId == query.UserId.Value); }
-
         if (query.TenantId.HasValue) { queryable = queryable.Where(a => a.TenantId == query.TenantId.Value); }
-
         if (!string.IsNullOrEmpty(query.ActionType)) { queryable = queryable.Where(a => a.ActionType == query.ActionType); }
-
         if (!string.IsNullOrEmpty(query.ResourceType)) { queryable = queryable.Where(a => a.ResourceType == query.ResourceType); }
-
         if (query.Category.HasValue) { queryable = queryable.Where(a => a.Category == query.Category.Value); }
-
         if (query.RiskLevel.HasValue) { queryable = queryable.Where(a => a.RiskLevel >= query.RiskLevel.Value); }
-
         if (query.Success.HasValue) { queryable = queryable.Where(a => a.Success == query.Success.Value); }
-
         if (query.StartDate.HasValue) { queryable = queryable.Where(a => a.CreatedAt >= query.StartDate.Value); }
-
         if (query.EndDate.HasValue) { queryable = queryable.Where(a => a.CreatedAt <= query.EndDate.Value); }
-
         if (!string.IsNullOrEmpty(query.IpAddress)) { queryable = queryable.Where(a => a.IpAddress == query.IpAddress); }
 
-        return await queryable.CountAsync().ConfigureAwait(false);
+        return queryable;
+    }
+
+    private static IQueryable<AuditLog> ApplyPagination(IQueryable<AuditLog> queryable, AuditLogQuery query)
+    {
+        if (query.Skip > 0) { queryable = queryable.Skip(query.Skip); }
+        if (query.Take > 0) { queryable = queryable.Take(Math.Min(query.Take, 1000)); }
+
+        return queryable;
     }
 
     private string? GetClientIpAddress(HttpContext? httpContext)

@@ -3195,22 +3195,83 @@ export interface CommerceSubscriptionsSubscriptionUsageDto {
   usersCount?: number;
 }
 
+/** Data model for Compliance Audit Audit Actor Context. */
+export interface ComplianceAuditAuditActorContext {
+  sessionId?: string | null;
+  tenantId?: string | null;
+  userId?: string | null;
+}
+
 /** Category of audit events */
 export type ComplianceAuditAuditCategory =
   'General' | 'Authentication' | 'Authorization' | 'Permission' | 'User' | 'Admin' | 'Security' | 'Data' | 'System' | 'Tenant' | 'Privacy';
+
+/** Data model for Compliance Audit Audit Event Context. */
+export interface ComplianceAuditAuditEventContext {
+  actionType?: string | null;
+  category?: string | null;
+  riskLevel?: string | null;
+}
 
 /** Data model for Compliance Audit Audit Export Request. */
 export interface ComplianceAuditAuditExportInput {
   actionType?: string | null;
   category?: ComplianceAuditAuditCategory;
+  /** Ordered CSV columns. Omit to include every supported audit field. */
+  columns?: Array<string> | null;
   endDate?: string | null;
   ipAddress?: string | null;
+  /** Optional 1-based page number. Omit both pagination fields to export all matching rows. */
+  pageNumber?: number | null;
+  /** Optional page size, capped at 1,000 rows. */
+  pageSize?: number | null;
   resourceType?: string | null;
   riskLevel?: ComplianceAuditAuditRiskLevel;
   startDate?: string | null;
   success?: boolean | null;
   tenantId?: string | null;
   userId?: string | null;
+}
+
+/** Data model for Compliance Audit Audit Export Progress Response. */
+export interface ComplianceAuditAuditExportProgressOutput {
+  errorMessage?: string | null;
+  exportId?: string;
+  percentComplete?: number;
+  recordsWritten?: number;
+  startedAt?: string;
+  status?: string | null;
+  totalRecords?: number;
+  updatedAt?: string;
+}
+
+/** Data model for Compliance Audit Audit Json Export Document. */
+export interface ComplianceAuditAuditJsonExportDocument {
+  pagination?: ComplianceAuditAuditJsonExportPagination;
+  records?: Array<ComplianceAuditAuditJsonExportRecord> | null;
+  schemaVersion?: string | null;
+}
+
+/** Data model for Compliance Audit Audit Json Export Pagination. */
+export interface ComplianceAuditAuditJsonExportPagination {
+  pageNumber?: number;
+  pageSize?: number;
+  totalPages?: number;
+  totalRecords?: number;
+}
+
+/** Data model for Compliance Audit Audit Json Export Record. */
+export interface ComplianceAuditAuditJsonExportRecord {
+  id?: string;
+  actor?: ComplianceAuditAuditActorContext;
+  correlationId?: string | null;
+  createdAt?: string;
+  description?: string | null;
+  event?: ComplianceAuditAuditEventContext;
+  metadata?: Record<string, unknown> | null;
+  network?: ComplianceAuditAuditNetworkContext;
+  outcome?: ComplianceAuditAuditOutcomeContext;
+  resource?: ComplianceAuditAuditResourceContext;
 }
 
 /** Data model for Compliance Audit Audit Log Dto. */
@@ -3239,6 +3300,24 @@ export interface ComplianceAuditAuditLogOutput {
   skip?: number;
   take?: number;
   totalCount?: number;
+}
+
+/** Data model for Compliance Audit Audit Network Context. */
+export interface ComplianceAuditAuditNetworkContext {
+  ipAddress?: string | null;
+  userAgent?: string | null;
+}
+
+/** Data model for Compliance Audit Audit Outcome Context. */
+export interface ComplianceAuditAuditOutcomeContext {
+  errorMessage?: string | null;
+  success?: boolean;
+}
+
+/** Data model for Compliance Audit Audit Resource Context. */
+export interface ComplianceAuditAuditResourceContext {
+  resourceId?: string | null;
+  resourceType?: string | null;
 }
 
 /** Risk level for audit events */
@@ -18374,10 +18453,19 @@ export let CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInputSchem
 export let CommerceSubscriptionsSubscriptionStatusSchema: z.ZodType<CommerceSubscriptionsSubscriptionStatus>;
 export let CommerceSubscriptionsSubscriptionUpgradeResultSchema: z.ZodType<CommerceSubscriptionsSubscriptionUpgradeResult>;
 export let CommerceSubscriptionsSubscriptionUsageDtoSchema: z.ZodType<CommerceSubscriptionsSubscriptionUsageDto>;
+export let ComplianceAuditAuditActorContextSchema: z.ZodType<ComplianceAuditAuditActorContext>;
 export let ComplianceAuditAuditCategorySchema: z.ZodType<ComplianceAuditAuditCategory>;
+export let ComplianceAuditAuditEventContextSchema: z.ZodType<ComplianceAuditAuditEventContext>;
 export let ComplianceAuditAuditExportInputSchema: z.ZodType<ComplianceAuditAuditExportInput>;
+export let ComplianceAuditAuditExportProgressOutputSchema: z.ZodType<ComplianceAuditAuditExportProgressOutput>;
+export let ComplianceAuditAuditJsonExportDocumentSchema: z.ZodType<ComplianceAuditAuditJsonExportDocument>;
+export let ComplianceAuditAuditJsonExportPaginationSchema: z.ZodType<ComplianceAuditAuditJsonExportPagination>;
+export let ComplianceAuditAuditJsonExportRecordSchema: z.ZodType<ComplianceAuditAuditJsonExportRecord>;
 export let ComplianceAuditAuditLogDtoSchema: z.ZodType<ComplianceAuditAuditLogDto>;
 export let ComplianceAuditAuditLogOutputSchema: z.ZodType<ComplianceAuditAuditLogOutput>;
+export let ComplianceAuditAuditNetworkContextSchema: z.ZodType<ComplianceAuditAuditNetworkContext>;
+export let ComplianceAuditAuditOutcomeContextSchema: z.ZodType<ComplianceAuditAuditOutcomeContext>;
+export let ComplianceAuditAuditResourceContextSchema: z.ZodType<ComplianceAuditAuditResourceContext>;
 export let ComplianceAuditAuditRiskLevelSchema: z.ZodType<ComplianceAuditAuditRiskLevel>;
 export let ComplianceAuditAuditStatisticsOutputSchema: z.ZodType<ComplianceAuditAuditStatisticsOutput>;
 export let ComplianceAuditAuthenticationAuditEntrySchema: z.ZodType<ComplianceAuditAuthenticationAuditEntry>;
@@ -22710,6 +22798,13 @@ CommerceSubscriptionsSubscriptionUsageDtoSchema = z.object({
   usersCount: z.number().int().optional(),
 });
 
+/** Zod schema for ComplianceAuditAuditActorContext. Data model for Compliance Audit Audit Actor Context. */
+ComplianceAuditAuditActorContextSchema = z.object({
+  sessionId: z.string().uuid().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  userId: z.string().uuid().nullable().optional(),
+});
+
 /** Zod schema for ComplianceAuditAuditCategory. Category of audit events */
 ComplianceAuditAuditCategorySchema = z.enum([
   'General',
@@ -22725,18 +22820,72 @@ ComplianceAuditAuditCategorySchema = z.enum([
   'Privacy',
 ]);
 
+/** Zod schema for ComplianceAuditAuditEventContext. Data model for Compliance Audit Audit Event Context. */
+ComplianceAuditAuditEventContextSchema = z.object({
+  actionType: z.string().nullable().optional(),
+  category: z.string().nullable().optional(),
+  riskLevel: z.string().nullable().optional(),
+});
+
 /** Zod schema for ComplianceAuditAuditExportInput. Data model for Compliance Audit Audit Export Request. */
 ComplianceAuditAuditExportInputSchema = z.object({
   actionType: z.string().nullable().optional(),
   category: z.lazy(() => ComplianceAuditAuditCategorySchema).optional(),
+  columns: z.array(z.string()).nullable().optional(),
   endDate: z.string().datetime().nullable().optional(),
   ipAddress: z.string().nullable().optional(),
+  pageNumber: z.number().int().min(1).max(2147483647).nullable().optional(),
+  pageSize: z.number().int().min(1).max(1000).nullable().optional(),
   resourceType: z.string().nullable().optional(),
   riskLevel: z.lazy(() => ComplianceAuditAuditRiskLevelSchema).optional(),
   startDate: z.string().datetime().nullable().optional(),
   success: z.boolean().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
   userId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for ComplianceAuditAuditExportProgressOutput. Data model for Compliance Audit Audit Export Progress Response. */
+ComplianceAuditAuditExportProgressOutputSchema = z.object({
+  errorMessage: z.string().nullable().optional(),
+  exportId: z.string().uuid().optional(),
+  percentComplete: z.number().optional(),
+  recordsWritten: z.number().int().optional(),
+  startedAt: z.string().datetime().optional(),
+  status: z.string().nullable().optional(),
+  totalRecords: z.number().int().optional(),
+  updatedAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for ComplianceAuditAuditJsonExportDocument. Data model for Compliance Audit Audit Json Export Document. */
+ComplianceAuditAuditJsonExportDocumentSchema = z.object({
+  pagination: z.lazy(() => ComplianceAuditAuditJsonExportPaginationSchema).optional(),
+  records: z
+    .array(z.lazy(() => ComplianceAuditAuditJsonExportRecordSchema))
+    .nullable()
+    .optional(),
+  schemaVersion: z.string().nullable().optional(),
+});
+
+/** Zod schema for ComplianceAuditAuditJsonExportPagination. Data model for Compliance Audit Audit Json Export Pagination. */
+ComplianceAuditAuditJsonExportPaginationSchema = z.object({
+  pageNumber: z.number().int().optional(),
+  pageSize: z.number().int().optional(),
+  totalPages: z.number().int().optional(),
+  totalRecords: z.number().int().optional(),
+});
+
+/** Zod schema for ComplianceAuditAuditJsonExportRecord. Data model for Compliance Audit Audit Json Export Record. */
+ComplianceAuditAuditJsonExportRecordSchema = z.object({
+  id: z.string().uuid().optional(),
+  actor: z.lazy(() => ComplianceAuditAuditActorContextSchema).optional(),
+  correlationId: z.string().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  description: z.string().nullable().optional(),
+  event: z.lazy(() => ComplianceAuditAuditEventContextSchema).optional(),
+  metadata: z.record(z.string(), z.unknown()).nullable().optional(),
+  network: z.lazy(() => ComplianceAuditAuditNetworkContextSchema).optional(),
+  outcome: z.lazy(() => ComplianceAuditAuditOutcomeContextSchema).optional(),
+  resource: z.lazy(() => ComplianceAuditAuditResourceContextSchema).optional(),
 });
 
 /** Zod schema for ComplianceAuditAuditLogDto. Data model for Compliance Audit Audit Log Dto. */
@@ -22768,6 +22917,24 @@ ComplianceAuditAuditLogOutputSchema = z.object({
   skip: z.number().int().optional(),
   take: z.number().int().optional(),
   totalCount: z.number().int().optional(),
+});
+
+/** Zod schema for ComplianceAuditAuditNetworkContext. Data model for Compliance Audit Audit Network Context. */
+ComplianceAuditAuditNetworkContextSchema = z.object({
+  ipAddress: z.string().nullable().optional(),
+  userAgent: z.string().nullable().optional(),
+});
+
+/** Zod schema for ComplianceAuditAuditOutcomeContext. Data model for Compliance Audit Audit Outcome Context. */
+ComplianceAuditAuditOutcomeContextSchema = z.object({
+  errorMessage: z.string().nullable().optional(),
+  success: z.boolean().optional(),
+});
+
+/** Zod schema for ComplianceAuditAuditResourceContext. Data model for Compliance Audit Audit Resource Context. */
+ComplianceAuditAuditResourceContextSchema = z.object({
+  resourceId: z.string().nullable().optional(),
+  resourceType: z.string().nullable().optional(),
 });
 
 /** Zod schema for ComplianceAuditAuditRiskLevel. Risk level for audit events */

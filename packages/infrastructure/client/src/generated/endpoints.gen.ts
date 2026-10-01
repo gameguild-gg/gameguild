@@ -9334,6 +9334,51 @@ export const postAdminAuditLogsExportEndpoint = {
 } as const;
 
 /**
+ * Returns the current state of an export started by the authenticated administrator.
+ */
+export interface GetAdminAuditLogsExportProgressInput {
+  exportId: string;
+}
+export type GetAdminAuditLogsExportProgressOutput = Types.ComplianceAuditAuditExportProgressOutput;
+export const getAdminAuditLogsExportProgressEndpoint = {
+  operationId: 'getAdminAuditLogsExportProgress' as const,
+  method: 'GET' as const,
+  path: '/v1/admin/audit-logs/export/{exportId}/progress' as const,
+  tags: ['ComplianceAudit'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Export audit logs (admin only)
+ */
+export interface PostAdminAuditLogsExportCsvInput {
+  body?: Types.ComplianceAuditAuditExportInput;
+}
+export type PostAdminAuditLogsExportCsvOutput = void;
+export const postAdminAuditLogsExportCsvEndpoint = {
+  operationId: 'postAdminAuditLogsExportCsv' as const,
+  method: 'POST' as const,
+  path: '/v1/admin/audit-logs/export/csv' as const,
+  tags: ['ComplianceAudit'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Streams a versioned JSON audit export with pagination metadata.
+ */
+export interface PostAdminAuditLogsExportJsonInput {
+  body?: Types.ComplianceAuditAuditExportInput;
+}
+export type PostAdminAuditLogsExportJsonOutput = Types.ComplianceAuditAuditJsonExportDocument;
+export const postAdminAuditLogsExportJsonEndpoint = {
+  operationId: 'postAdminAuditLogsExportJson' as const,
+  method: 'POST' as const,
+  path: '/v1/admin/audit-logs/export/json' as const,
+  tags: ['ComplianceAudit'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Get audit log statistics
  */
 export interface GetAdminAuditLogsStatisticsInput {
@@ -24867,6 +24912,9 @@ export const endpoints = {
   getAdminAssetsStatisticsExport: getAdminAssetsStatisticsExportEndpoint,
   getAdminAuditLogs: getAdminAuditLogsEndpoint,
   postAdminAuditLogsExport: postAdminAuditLogsExportEndpoint,
+  getAdminAuditLogsExportProgress: getAdminAuditLogsExportProgressEndpoint,
+  postAdminAuditLogsExportCsv: postAdminAuditLogsExportCsvEndpoint,
+  postAdminAuditLogsExportJson: postAdminAuditLogsExportJsonEndpoint,
   getAdminAuditLogsStatistics: getAdminAuditLogsStatisticsEndpoint,
   postAdminEventsReplay: postAdminEventsReplayEndpoint,
   getAdminEventsDeadLetters: getAdminEventsDeadLettersEndpoint,
