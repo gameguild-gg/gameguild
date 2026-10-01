@@ -11,21 +11,6 @@ namespace GameGuild.API.Database.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropIndex(
-                name: "IX_TenantPermissions_TenantId_UserId",
-                table: "TenantPermissions");
-
-            migrationBuilder.DropIndex(
-                name: "IX_TenantPermissions_User_Tenant",
-                table: "TenantPermissions");
-
-            migrationBuilder.AddColumn<string>(
-                name: "PasswordHistoryHashes",
-                table: "Users",
-                type: "character varying(2600)",
-                maxLength: 2600,
-                nullable: true);
-
             migrationBuilder.CreateTable(
                 name: "TamperEvidentAuditLogs",
                 columns: table => new
@@ -75,13 +60,6 @@ namespace GameGuild.API.Database.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_TenantPermissions_User_Tenant",
-                table: "TenantPermissions",
-                columns: new[] { "UserId", "TenantId" },
-                unique: true,
-                filter: "\"DeletedAt\" IS NULL");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_TamperEvidentAuditLogs_TenantId_Action_Timestamp",
                 table: "TamperEvidentAuditLogs",
                 columns: new[] { "TenantId", "Action", "Timestamp" });
@@ -108,26 +86,6 @@ namespace GameGuild.API.Database.Migrations
         {
             migrationBuilder.DropTable(
                 name: "TamperEvidentAuditLogs");
-
-            migrationBuilder.DropIndex(
-                name: "IX_TenantPermissions_User_Tenant",
-                table: "TenantPermissions");
-
-            migrationBuilder.DropColumn(
-                name: "PasswordHistoryHashes",
-                table: "Users");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_TenantPermissions_TenantId_UserId",
-                table: "TenantPermissions",
-                columns: new[] { "TenantId", "UserId" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_TenantPermissions_User_Tenant",
-                table: "TenantPermissions",
-                columns: new[] { "UserId", "TenantId" },
-                unique: true);
         }
     }
 }
