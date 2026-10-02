@@ -189,8 +189,18 @@ public sealed class AuditExportHistory : EntityBase
         long fileSizeBytes,
         string exportPath,
         string fileChecksum,
+        TimeSpan duration)
+    {
+        Complete(recordCount, fileSizeBytes, exportPath, fileChecksum, duration, null);
+    }
+
+    public void Complete(
+        int recordCount,
+        long fileSizeBytes,
+        string exportPath,
+        string fileChecksum,
         TimeSpan duration,
-        string? fileName = null)
+        string? fileName)
     {
         Status = ExportStatus.Completed;
         RecordCount = recordCount;
