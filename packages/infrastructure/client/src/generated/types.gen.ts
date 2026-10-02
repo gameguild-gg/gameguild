@@ -3195,6 +3195,16 @@ export interface CommerceSubscriptionsSubscriptionUsageDto {
   usersCount?: number;
 }
 
+/** Data model for Compliance Audit Audit Activity Bucket Response. */
+export interface ComplianceAuditAuditActivityBucketOutput {
+  eventCount?: number;
+  startLocal?: string;
+  startUtc?: string;
+}
+
+/** Resolution used to group audit activity over a date range. */
+export type ComplianceAuditAuditActivityBucketSize = 'Hourly' | 'Daily';
+
 /** Data model for Compliance Audit Audit Actor Context. */
 export interface ComplianceAuditAuditActorContext {
   sessionId?: string | null;
@@ -3205,6 +3215,16 @@ export interface ComplianceAuditAuditActorContext {
 /** Category of audit events */
 export type ComplianceAuditAuditCategory =
   'General' | 'Authentication' | 'Authorization' | 'Permission' | 'User' | 'Admin' | 'Security' | 'Data' | 'System' | 'Tenant' | 'Privacy';
+
+/** Data model for Compliance Audit Audit Date Range Search Response. */
+export interface ComplianceAuditAuditDateRangeSearchOutput {
+  activity?: Array<ComplianceAuditAuditActivityBucketOutput> | null;
+  bucketSize?: ComplianceAuditAuditActivityBucketSize;
+  endDateUtc?: string;
+  results?: ComplianceAuditAuditLogOutput;
+  startDateUtc?: string;
+  timeZoneId?: string | null;
+}
 
 /** Data model for Compliance Audit Audit Event Context. */
 export interface ComplianceAuditAuditEventContext {
@@ -3245,6 +3265,10 @@ export interface ComplianceAuditAuditExportInput {
   success?: boolean | null;
   tenantId?: string | null;
   userId?: string | null;
+  /** Optional HTTPS endpoint to notify when this export completes, fails, or is cancelled.
+Its exact host must be listed in `Audit:ExportWebhooks:AllowedHosts`; notifications are signed with
+`Audit:ExportWebhooks:SigningSecret` and include an idempotency key. */
+  webhookUrl?: string | null;
 }
 
 /** Data model for Compliance Audit Audit Export Progress Response. */
@@ -18523,8 +18547,11 @@ export let CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInputSchem
 export let CommerceSubscriptionsSubscriptionStatusSchema: z.ZodType<CommerceSubscriptionsSubscriptionStatus>;
 export let CommerceSubscriptionsSubscriptionUpgradeResultSchema: z.ZodType<CommerceSubscriptionsSubscriptionUpgradeResult>;
 export let CommerceSubscriptionsSubscriptionUsageDtoSchema: z.ZodType<CommerceSubscriptionsSubscriptionUsageDto>;
+export let ComplianceAuditAuditActivityBucketOutputSchema: z.ZodType<ComplianceAuditAuditActivityBucketOutput>;
+export let ComplianceAuditAuditActivityBucketSizeSchema: z.ZodType<ComplianceAuditAuditActivityBucketSize>;
 export let ComplianceAuditAuditActorContextSchema: z.ZodType<ComplianceAuditAuditActorContext>;
 export let ComplianceAuditAuditCategorySchema: z.ZodType<ComplianceAuditAuditCategory>;
+export let ComplianceAuditAuditDateRangeSearchOutputSchema: z.ZodType<ComplianceAuditAuditDateRangeSearchOutput>;
 export let ComplianceAuditAuditEventContextSchema: z.ZodType<ComplianceAuditAuditEventContext>;
 export let ComplianceAuditAuditExportHistoryOutputSchema: z.ZodType<ComplianceAuditAuditExportHistoryOutput>;
 export let ComplianceAuditAuditExportInputSchema: z.ZodType<ComplianceAuditAuditExportInput>;
@@ -22874,6 +22901,16 @@ CommerceSubscriptionsSubscriptionUsageDtoSchema = z.object({
   usersCount: z.number().int().optional(),
 });
 
+/** Zod schema for ComplianceAuditAuditActivityBucketOutput. Data model for Compliance Audit Audit Activity Bucket Response. */
+ComplianceAuditAuditActivityBucketOutputSchema = z.object({
+  eventCount: z.number().int().optional(),
+  startLocal: z.string().datetime().optional(),
+  startUtc: z.string().datetime().optional(),
+});
+
+/** Zod schema for ComplianceAuditAuditActivityBucketSize. Resolution used to group audit activity over a date range. */
+ComplianceAuditAuditActivityBucketSizeSchema = z.enum(['Hourly', 'Daily']);
+
 /** Zod schema for ComplianceAuditAuditActorContext. Data model for Compliance Audit Audit Actor Context. */
 ComplianceAuditAuditActorContextSchema = z.object({
   sessionId: z.string().uuid().nullable().optional(),
@@ -22895,6 +22932,19 @@ ComplianceAuditAuditCategorySchema = z.enum([
   'Tenant',
   'Privacy',
 ]);
+
+/** Zod schema for ComplianceAuditAuditDateRangeSearchOutput. Data model for Compliance Audit Audit Date Range Search Response. */
+ComplianceAuditAuditDateRangeSearchOutputSchema = z.object({
+  activity: z
+    .array(z.lazy(() => ComplianceAuditAuditActivityBucketOutputSchema))
+    .nullable()
+    .optional(),
+  bucketSize: z.lazy(() => ComplianceAuditAuditActivityBucketSizeSchema).optional(),
+  endDateUtc: z.string().datetime().optional(),
+  results: z.lazy(() => ComplianceAuditAuditLogOutputSchema).optional(),
+  startDateUtc: z.string().datetime().optional(),
+  timeZoneId: z.string().nullable().optional(),
+});
 
 /** Zod schema for ComplianceAuditAuditEventContext. Data model for Compliance Audit Audit Event Context. */
 ComplianceAuditAuditEventContextSchema = z.object({
@@ -22932,6 +22982,7 @@ ComplianceAuditAuditExportInputSchema = z.object({
   success: z.boolean().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
   userId: z.string().uuid().nullable().optional(),
+  webhookUrl: z.string().max(2048).nullable().optional(),
 });
 
 /** Zod schema for ComplianceAuditAuditExportProgressOutput. Data model for Compliance Audit Audit Export Progress Response. */

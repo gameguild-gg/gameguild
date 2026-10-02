@@ -278,6 +278,68 @@ public sealed class AuditService(IServiceScopeFactory scopeFactory, IHttpContext
             .CountAsync().ConfigureAwait(false);
     }
 
+    public async Task<List<AuditActivityBucket>> GetAuditActivityAsync(
+        AuditLogQuery query,
+        AuditActivityBucketSize bucketSize,
+        CancellationToken cancellationToken = default)
+    {
+        await using var scope = scopeFactory.CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
+        var filtered = ApplyFilters(context.Set<AuditLog>().AsNoTracking(), query);
+
+        if (bucketSize == AuditActivityBucketSize.Hourly)
+        {
+            var hourlyGroups = await filtered
+                .GroupBy(log => new { log.CreatedAt.Year, log.CreatedAt.Month, log.CreatedAt.Day, log.CreatedAt.Hour })
+                .Select(group => new
+                {
+                    group.Key.Year,
+                    group.Key.Month,
+                    group.Key.Day,
+                    group.Key.Hour,
+                    EventCount = group.Count()
+                })
+                .OrderBy(group => group.Year)
+                .ThenBy(group => group.Month)
+                .ThenBy(group => group.Day)
+                .ThenBy(group => group.Hour)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            return hourlyGroups
+                .Select(group => new AuditActivityBucket(
+                    new DateTime(group.Year, group.Month, group.Day, group.Hour, 0, 0, DateTimeKind.Utc),
+                    group.EventCount))
+                .ToList();
+        }
+
+        if (bucketSize != AuditActivityBucketSize.Daily)
+        {
+            throw new ArgumentOutOfRangeException(nameof(bucketSize), bucketSize, "Unsupported audit activity bucket size.");
+        }
+
+        var dailyGroups = await filtered
+            .GroupBy(log => new { log.CreatedAt.Year, log.CreatedAt.Month, log.CreatedAt.Day })
+            .Select(group => new
+            {
+                group.Key.Year,
+                group.Key.Month,
+                group.Key.Day,
+                EventCount = group.Count()
+            })
+            .OrderBy(group => group.Year)
+            .ThenBy(group => group.Month)
+            .ThenBy(group => group.Day)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return dailyGroups
+            .Select(group => new AuditActivityBucket(
+                new DateTime(group.Year, group.Month, group.Day, 0, 0, 0, DateTimeKind.Utc),
+                group.EventCount))
+            .ToList();
+    }
+
     private static IQueryable<AuditLog> ApplyFilters(IQueryable<AuditLog> queryable, AuditLogQuery query)
     {
         if (query.UserId.HasValue) { queryable = queryable.Where(a => a.UserId == query.UserId.Value); }
