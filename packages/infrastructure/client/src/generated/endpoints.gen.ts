@@ -9379,6 +9379,96 @@ export const postAdminAuditLogsExportJsonEndpoint = {
 } as const;
 
 /**
+ * Downloads a completed scheduled export stored for its tenant.
+ */
+export interface GetAdminAuditLogsScheduledExportHistoryDownloadInput {
+  historyId: string;
+  query?: {
+    tenantId?: string;
+  };
+}
+export type GetAdminAuditLogsScheduledExportHistoryDownloadOutput = void;
+export const getAdminAuditLogsScheduledExportHistoryDownloadEndpoint = {
+  operationId: 'getAdminAuditLogsScheduledExportHistoryDownload' as const,
+  method: 'GET' as const,
+  path: '/v1/admin/audit-logs/scheduled-export-history/{historyId}/download' as const,
+  tags: ['ComplianceAudit'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Lists recurring audit exports for a tenant.
+ */
+export interface GetAdminAuditLogsScheduledExportsInput {
+  query?: {
+    tenantId?: string;
+  };
+}
+export type GetAdminAuditLogsScheduledExportsOutput = Array<Types.ComplianceAuditScheduledAuditExportOutput>;
+export const getAdminAuditLogsScheduledExportsEndpoint = {
+  operationId: 'getAdminAuditLogsScheduledExports' as const,
+  method: 'GET' as const,
+  path: '/v1/admin/audit-logs/scheduled-exports' as const,
+  tags: ['ComplianceAudit'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Creates a recurring audit export delivered to the tenant's configured storage.
+ *
+ * Uses a five-field cron expression and the supplied timezone. During a repeated local time at the end of daylight
+ * saving, the first UTC occurrence is used. Files are removed after the configured retention period while their
+ * execution history remains available.
+ */
+export interface PostAdminAuditLogsScheduledExportsInput {
+  body?: Types.ComplianceAuditCreateScheduledAuditExportInput;
+}
+export type PostAdminAuditLogsScheduledExportsOutput = Types.ComplianceAuditScheduledAuditExportOutput;
+export const postAdminAuditLogsScheduledExportsEndpoint = {
+  operationId: 'postAdminAuditLogsScheduledExports' as const,
+  method: 'POST' as const,
+  path: '/v1/admin/audit-logs/scheduled-exports' as const,
+  tags: ['ComplianceAudit'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Disables a recurring audit export without deleting its execution history.
+ */
+export interface DeleteAdminAuditLogsScheduledExportsInput {
+  exportId: string;
+  query?: {
+    tenantId?: string;
+  };
+}
+export type DeleteAdminAuditLogsScheduledExportsOutput = void;
+export const deleteAdminAuditLogsScheduledExportsEndpoint = {
+  operationId: 'deleteAdminAuditLogsScheduledExports' as const,
+  method: 'DELETE' as const,
+  path: '/v1/admin/audit-logs/scheduled-exports/{exportId}' as const,
+  tags: ['ComplianceAudit'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Lists recent executions for a scheduled audit export.
+ */
+export interface GetAdminAuditLogsScheduledExportsHistoryInput {
+  exportId: string;
+  query?: {
+    tenantId?: string;
+  };
+}
+export type GetAdminAuditLogsScheduledExportsHistoryOutput = Array<Types.ComplianceAuditAuditExportHistoryOutput>;
+export const getAdminAuditLogsScheduledExportsHistoryEndpoint = {
+  operationId: 'getAdminAuditLogsScheduledExportsHistory' as const,
+  method: 'GET' as const,
+  path: '/v1/admin/audit-logs/scheduled-exports/{exportId}/history' as const,
+  tags: ['ComplianceAudit'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Get audit log statistics
  */
 export interface GetAdminAuditLogsStatisticsInput {
@@ -24915,6 +25005,11 @@ export const endpoints = {
   getAdminAuditLogsExportProgress: getAdminAuditLogsExportProgressEndpoint,
   postAdminAuditLogsExportCsv: postAdminAuditLogsExportCsvEndpoint,
   postAdminAuditLogsExportJson: postAdminAuditLogsExportJsonEndpoint,
+  getAdminAuditLogsScheduledExportHistoryDownload: getAdminAuditLogsScheduledExportHistoryDownloadEndpoint,
+  getAdminAuditLogsScheduledExports: getAdminAuditLogsScheduledExportsEndpoint,
+  postAdminAuditLogsScheduledExports: postAdminAuditLogsScheduledExportsEndpoint,
+  deleteAdminAuditLogsScheduledExports: deleteAdminAuditLogsScheduledExportsEndpoint,
+  getAdminAuditLogsScheduledExportsHistory: getAdminAuditLogsScheduledExportsHistoryEndpoint,
   getAdminAuditLogsStatistics: getAdminAuditLogsStatisticsEndpoint,
   postAdminEventsReplay: postAdminEventsReplayEndpoint,
   getAdminEventsDeadLetters: getAdminEventsDeadLettersEndpoint,
