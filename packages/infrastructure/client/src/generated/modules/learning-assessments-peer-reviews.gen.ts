@@ -58,8 +58,8 @@ export class LearningAssessmentsPeerReviewsModule {
   }
 
   /**
-   * Submit a claimed peer review. Feedback is mandatory; scores follow the assessment's
-   * rubric rules (rubric grid when one exists, plain 0..MaxScore otherwise).
+   * Legacy peer-review submit. Valid requests fail closed until peer review is implemented
+   * as a canonical grading stage.
    */
   async postAssessmentsPeerReviewsSubmit(reviewId: string, body: Types.LearningAssessmentsPeerReviewSubmitInput): Promise<Result<void, ApiError>> {
     const url = `/v1/assessments/peer-reviews/${reviewId}/submit`;
@@ -93,7 +93,7 @@ export class LearningAssessmentsPeerReviewsModule {
   }
 
   /**
-   * Reviews received on a submission (own row, or the group's rows for group submissions).
+   * Reviews received on a single individual or collective submission.
    * Owner-only, anonymized: no reviewer identity exists in the DTO at all.
    */
   async getAssessmentsSubmissionsReceivedPeerReviews(submissionId: string): Promise<Result<Array<Types.LearningAssessmentsReceivedPeerReviewDto>, ApiError>> {
