@@ -62,5 +62,49 @@ public sealed class AuditModelConfiguration : IModelConfiguration
             entity.HasIndex(log => new { log.TenantId, log.Action, log.Timestamp });
             entity.HasIndex(log => new { log.TenantId, log.SessionId, log.Timestamp });
         });
+
+        modelBuilder.Entity<ScheduledAuditExport>(entity =>
+        {
+            entity.ToTable("ScheduledAuditExports");
+            entity.HasKey(export => export.Id);
+            entity.Property(export => export.JobName).HasMaxLength(100).IsRequired();
+            entity.Property(export => export.Description).HasMaxLength(1000);
+            entity.Property(export => export.CronExpression).HasMaxLength(100).IsRequired();
+            entity.Property(export => export.Timezone).HasMaxLength(80).IsRequired();
+            entity.Property(export => export.DestinationType).HasConversion<int>();
+            entity.Property(export => export.DestinationUrl).HasMaxLength(2048).IsRequired();
+            entity.Property(export => export.DestinationPath).HasMaxLength(2048);
+            entity.Property(export => export.CredentialKeyName).HasMaxLength(200);
+            entity.Property(export => export.ExportFormat).HasConversion<int>();
+            entity.Property(export => export.ExportTemplate).HasMaxLength(200);
+            entity.Property(export => export.IncludeEventTypes).HasColumnType("text[]");
+            entity.Property(export => export.ExcludeEventTypes).HasColumnType("text[]");
+            entity.Property(export => export.CsvColumns).HasColumnType("text[]");
+            entity.Property(export => export.RiskLevelFilter).HasMaxLength(50);
+            entity.Property(export => export.UserIdFilter).HasMaxLength(36);
+            entity.Property(export => export.EncryptionKeyId).HasMaxLength(200);
+            entity.Property(export => export.LastErrorMessage).HasMaxLength(1000);
+            entity.Property(export => export.NotificationEmails).HasColumnType("text[]");
+            entity.Property(export => export.Version).IsConcurrencyToken();
+            entity.HasIndex(export => new { export.IsEnabled, export.NextRunAt });
+            entity.HasIndex(export => new { export.TenantId, export.JobName });
+        });
+
+        modelBuilder.Entity<AuditExportHistory>(entity =>
+        {
+            entity.ToTable("AuditExportHistories");
+            entity.HasKey(history => history.Id);
+            entity.Property(history => history.Status).HasConversion<int>();
+            entity.Property(history => history.ExportPath).HasColumnType("text");
+            entity.Property(history => history.FileName).HasMaxLength(255);
+            entity.Property(history => history.FileChecksum).HasMaxLength(64);
+            entity.Property(history => history.ErrorMessage).HasMaxLength(1000);
+            entity.HasOne<ScheduledAuditExport>()
+                .WithMany()
+                .HasForeignKey(history => history.ScheduledExportId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(history => new { history.TenantId, history.ExecutedAt });
+            entity.HasIndex(history => new { history.ScheduledExportId, history.ExecutedAt });
+        });
     }
 }
