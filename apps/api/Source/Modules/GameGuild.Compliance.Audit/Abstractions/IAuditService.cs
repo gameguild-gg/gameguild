@@ -23,6 +23,11 @@ public interface IAuditService
 
     Task<int> GetAuditLogCountAsync(AuditLogQuery query);
 
+    Task<List<AuditActivityBucket>> GetAuditActivityAsync(
+        AuditLogQuery query,
+        AuditActivityBucketSize bucketSize,
+        CancellationToken cancellationToken = default);
+
     // Tenant-specific audit methods
     Task LogTenantOperationAsync(string actionType, Guid tenantId, Guid? userId = null, string? description = null, object? metadata = null, bool success = true);
 

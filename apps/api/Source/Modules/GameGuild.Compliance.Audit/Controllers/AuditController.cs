@@ -77,6 +77,115 @@ public class AuditController(
     }
 
     /// <summary>
+    /// Searches audit records over an explicit or relative date range and returns matching events with a time histogram.
+    /// </summary>
+    /// <remarks>
+    /// Use <c>start</c>/<c>end</c> with ISO-8601 timestamps, Unix seconds or milliseconds, or relative expressions
+    /// such as <c>now-7d</c> and <c>now</c>. Alternatively use <c>period=last24h|last7d|last30d|today|thisWeek|thisMonth</c>.
+    /// Offset-free values are interpreted in <c>timeZoneId</c> (UTC by default). Date-only end values include that
+    /// calendar day. Hourly or daily histogram buckets include both UTC and local timestamps.
+    /// </remarks>
+    [HttpGet("search/by-date-range")]
+    [ProducesResponseType(typeof(AuditDateRangeSearchResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<AuditDateRangeSearchResponse>> SearchAuditLogsByDateRange(
+        [FromQuery] AuditDateRangeSearchRequest request,
+        CancellationToken cancellationToken)
+    {
+        var adminUserId = GetCurrentUserId();
+        if (!adminUserId.HasValue) { throw new UnauthorizedAccessException("User not authenticated"); }
+
+        var requestValidation = ValidateRequest(request);
+        if (requestValidation is not null) { return requestValidation; }
+
+        var resolution = AuditDateRangeResolver.Resolve(
+            request.Start,
+            request.End,
+            request.Period,
+            request.TimeZoneId,
+            SystemClock.UtcNow);
+        if (!resolution.IsValid)
+        {
+            return BadRequest(new ValidationProblemDetails(resolution.Errors.ToDictionary(
+                pair => pair.Key,
+                pair => pair.Value,
+                StringComparer.Ordinal))
+            {
+                Status = StatusCodes.Status400BadRequest
+            });
+        }
+
+        var range = resolution.Range!;
+        if (request.BucketSize.HasValue && !Enum.IsDefined(request.BucketSize.Value))
+        {
+            return BadRequest(new ValidationProblemDetails(new Dictionary<string, string[]>
+            {
+                [nameof(request.BucketSize)] = ["BucketSize must be Hourly or Daily."]
+            })
+            {
+                Status = StatusCodes.Status400BadRequest
+            });
+        }
+
+        var bucketSize = request.BucketSize ??
+            (range.EndUtc - range.StartUtc <= TimeSpan.FromDays(3)
+                ? AuditActivityBucketSize.Hourly
+                : AuditActivityBucketSize.Daily);
+
+        await auditService.LogAdminActionAsync(
+            adminUserId.Value,
+            "SearchAuditLogsByDateRange",
+            "Admin searched audit logs by date range",
+            new { StartDateUtc = range.StartUtc, EndDateUtc = range.EndUtc, range.TimeZone.Id, Filters = request })
+            .ConfigureAwait(false);
+
+        var query = new AuditLogQuery
+        {
+            UserId = request.UserId,
+            TenantId = request.TenantId,
+            ActionType = request.ActionType,
+            ResourceType = request.ResourceType,
+            Category = request.Category,
+            RiskLevel = request.RiskLevel,
+            Success = request.Success,
+            StartDate = range.StartUtc,
+            EndDate = range.EndUtc,
+            IpAddress = request.IpAddress,
+            Skip = request.Skip,
+            Take = request.Take
+        };
+
+        var logs = await auditService.GetAuditLogsAsync(query).ConfigureAwait(false);
+        var totalCount = await auditService.GetAuditLogCountAsync(query).ConfigureAwait(false);
+        var activity = await auditService.GetAuditActivityAsync(query, bucketSize, cancellationToken).ConfigureAwait(false);
+
+        return Ok(new AuditDateRangeSearchResponse
+        {
+            StartDateUtc = new DateTimeOffset(range.StartUtc, TimeSpan.Zero),
+            EndDateUtc = new DateTimeOffset(range.EndUtc, TimeSpan.Zero),
+            TimeZoneId = range.TimeZone.Id,
+            BucketSize = bucketSize,
+            Results = new AuditLogResponse
+            {
+                Logs = logs.Select(MapToDto).ToList(),
+                TotalCount = totalCount,
+                Skip = request.Skip,
+                Take = request.Take
+            },
+            Activity = activity.Select(bucket =>
+            {
+                var utcStart = new DateTimeOffset(bucket.StartUtc, TimeSpan.Zero);
+                return new AuditActivityBucketResponse
+                {
+                    StartUtc = utcStart,
+                    StartLocal = TimeZoneInfo.ConvertTime(utcStart, range.TimeZone),
+                    EventCount = bucket.EventCount
+                };
+            }).ToList()
+        });
+    }
+
+    /// <summary>
     /// Get audit log statistics
     /// </summary>
     [HttpGet("statistics")]

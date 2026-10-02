@@ -9469,6 +9469,42 @@ export const getAdminAuditLogsScheduledExportsHistoryEndpoint = {
 } as const;
 
 /**
+ * Searches audit records over an explicit or relative date range and returns matching events with a time histogram.
+ *
+ * Use `start`/`end` with ISO-8601 timestamps, Unix seconds or milliseconds, or relative expressions
+ * such as `now-7d` and `now`. Alternatively use `period=last24h|last7d|last30d|today|thisWeek|thisMonth`.
+ * Offset-free values are interpreted in `timeZoneId` (UTC by default). Date-only end values include that
+ * calendar day. Hourly or daily histogram buckets include both UTC and local timestamps.
+ */
+export interface GetAdminAuditLogsSearchByDateRangeInput {
+  query?: {
+    Start?: string;
+    End?: string;
+    Period?: string;
+    TimeZoneId?: string;
+    BucketSize?: Types.ComplianceAuditAuditActivityBucketSize;
+    UserId?: string;
+    TenantId?: string;
+    ActionType?: string;
+    ResourceType?: string;
+    Category?: Types.ComplianceAuditAuditCategory;
+    RiskLevel?: Types.ComplianceAuditAuditRiskLevel;
+    Success?: boolean;
+    IpAddress?: string;
+    Skip?: number;
+    Take?: number;
+  };
+}
+export type GetAdminAuditLogsSearchByDateRangeOutput = Types.ComplianceAuditAuditDateRangeSearchOutput;
+export const getAdminAuditLogsSearchByDateRangeEndpoint = {
+  operationId: 'getAdminAuditLogsSearchByDateRange' as const,
+  method: 'GET' as const,
+  path: '/v1/admin/audit-logs/search/by-date-range' as const,
+  tags: ['ComplianceAudit'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Get audit log statistics
  */
 export interface GetAdminAuditLogsStatisticsInput {
@@ -25010,6 +25046,7 @@ export const endpoints = {
   postAdminAuditLogsScheduledExports: postAdminAuditLogsScheduledExportsEndpoint,
   deleteAdminAuditLogsScheduledExports: deleteAdminAuditLogsScheduledExportsEndpoint,
   getAdminAuditLogsScheduledExportsHistory: getAdminAuditLogsScheduledExportsHistoryEndpoint,
+  getAdminAuditLogsSearchByDateRange: getAdminAuditLogsSearchByDateRangeEndpoint,
   getAdminAuditLogsStatistics: getAdminAuditLogsStatisticsEndpoint,
   postAdminEventsReplay: postAdminEventsReplayEndpoint,
   getAdminEventsDeadLetters: getAdminEventsDeadLettersEndpoint,
