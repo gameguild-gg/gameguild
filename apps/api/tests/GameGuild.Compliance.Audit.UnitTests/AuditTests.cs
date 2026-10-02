@@ -779,9 +779,12 @@ public class AuditEnumTests
     }
 
     [Fact]
-    public void ExportDestinationType_ShouldHave6Values()
+    public void ExportDestinationType_ShouldIncludeTenantStorage()
     {
-        Enum.GetValues<ExportDestinationType>().Should().HaveCount(6);
+        Enum.GetValues<ExportDestinationType>()
+            .Should()
+            .Contain(ExportDestinationType.TenantStorage)
+            .And.HaveCount(7);
     }
 
     [Fact]
