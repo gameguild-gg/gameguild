@@ -26,7 +26,8 @@ public class AuditController(
     IActorContextAccessor actorContextAccessor,
     ILogger<AuditController> _logger,
     ISender sender,
-    IAuditExportProgressTracker exportProgressTracker) : BaseApiController
+    IAuditExportProgressTracker exportProgressTracker,
+    IScheduledAuditExportService scheduledExportService) : BaseApiController
 {
     /// <summary>
     /// Gets the current user ID from the actor context
@@ -253,7 +254,106 @@ public class AuditController(
         return progress is null ? NotFound() : Ok(progress);
     }
 
+    /// <summary>Creates a recurring audit export delivered to the tenant's configured storage.</summary>
+    /// <remarks>
+    /// Uses a five-field cron expression and the supplied timezone. During a repeated local time at the end of daylight
+    /// saving, the first UTC occurrence is used. Files are removed after the configured retention period while their
+    /// execution history remains available.
+    /// </remarks>
+    [HttpPost("scheduled-exports")]
+    [EnableRateLimiting(RateLimitPolicies.ExpensiveOperations)]
+    [ProducesResponseType(typeof(ScheduledAuditExportResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ScheduledAuditExportResponse>> CreateScheduledAuditExport(
+        [FromBody] CreateScheduledAuditExportRequest request)
+    {
+        var adminUserId = GetCurrentUserId();
+        if (!adminUserId.HasValue) { throw new UnauthorizedAccessException("User not authenticated"); }
+
+        var validation = ValidateRequest(request);
+        if (validation is not null) { return validation; }
+
+        try
+        {
+            var created = await sender.Send(
+                new CreateScheduledAuditExportCommand(request, adminUserId.Value),
+                HttpContext.RequestAborted).ConfigureAwait(false);
+            return CreatedAtAction(nameof(GetScheduledAuditExports), new { tenantId = created.TenantId }, created);
+        }
+        catch (Exception exception) when (exception is FormatException or TimeZoneNotFoundException or InvalidTimeZoneException or ArgumentException)
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Title = "Invalid audit export schedule",
+                Detail = exception.Message,
+                Status = StatusCodes.Status400BadRequest
+            });
+        }
+    }
+
+    /// <summary>Lists recurring audit exports for a tenant.</summary>
+    [HttpGet("scheduled-exports")]
+    [ProducesResponseType(typeof(IReadOnlyList<ScheduledAuditExportResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<ScheduledAuditExportResponse>>> GetScheduledAuditExports(
+        [FromQuery] Guid tenantId)
+    {
+        if (tenantId == Guid.Empty) { return BadRequest(new ProblemDetails { Title = "TenantId is required." }); }
+
+        var exports = await scheduledExportService.GetForTenantAsync(tenantId, HttpContext.RequestAborted).ConfigureAwait(false);
+        return Ok(exports);
+    }
+
+    /// <summary>Disables a recurring audit export without deleting its execution history.</summary>
+    [HttpDelete("scheduled-exports/{exportId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult> DisableScheduledAuditExport(Guid exportId, [FromQuery] Guid tenantId)
+    {
+        var adminUserId = GetCurrentUserId();
+        if (!adminUserId.HasValue) { throw new UnauthorizedAccessException("User not authenticated"); }
+        if (tenantId == Guid.Empty) { return BadRequest(new ProblemDetails { Title = "TenantId is required." }); }
+
+        var disabled = await sender.Send(
+            new DisableScheduledAuditExportCommand(exportId, tenantId, adminUserId.Value),
+            HttpContext.RequestAborted).ConfigureAwait(false);
+        return disabled ? NoContent() : NotFound();
+    }
+
+    /// <summary>Lists recent executions for a scheduled audit export.</summary>
+    [HttpGet("scheduled-exports/{exportId:guid}/history")]
+    [ProducesResponseType(typeof(IReadOnlyList<AuditExportHistoryResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<IReadOnlyList<AuditExportHistoryResponse>>> GetScheduledAuditExportHistory(
+        Guid exportId,
+        [FromQuery] Guid tenantId)
+    {
+        if (tenantId == Guid.Empty || await scheduledExportService.GetAsync(exportId, tenantId, HttpContext.RequestAborted).ConfigureAwait(false) is null)
+        {
+            return NotFound();
+        }
+
+        var history = await scheduledExportService.GetHistoryAsync(exportId, tenantId, HttpContext.RequestAborted).ConfigureAwait(false);
+        return Ok(history);
+    }
+
+    /// <summary>Downloads a completed scheduled export stored for its tenant.</summary>
+    [HttpGet("scheduled-export-history/{historyId:guid}/download")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult> DownloadScheduledAuditExport(Guid historyId, [FromQuery] Guid tenantId)
+    {
+        if (tenantId == Guid.Empty) { return NotFound(); }
+
+        var download = await scheduledExportService.OpenDownloadAsync(historyId, tenantId, HttpContext.RequestAborted).ConfigureAwait(false);
+        return download is null
+            ? NotFound()
+            : File(download.Content, download.ContentType, download.FileName, enableRangeProcessing: true);
+    }
+
     private ActionResult? ValidateExportRequest(AuditExportRequest request)
+        => ValidateRequest(request);
+
+    private ActionResult? ValidateRequest(object request)
     {
         var validationResults = new List<System.ComponentModel.DataAnnotations.ValidationResult>();
         if (Validator.TryValidateObject(request, new ValidationContext(request), validationResults, validateAllProperties: true))

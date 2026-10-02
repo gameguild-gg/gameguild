@@ -3213,6 +3213,20 @@ export interface ComplianceAuditAuditEventContext {
   riskLevel?: string | null;
 }
 
+/** Data model for Compliance Audit Audit Export History Response. */
+export interface ComplianceAuditAuditExportHistoryOutput {
+  id?: string;
+  errorMessage?: string | null;
+  executedAt?: string;
+  executionDuration?: string;
+  fileAvailable?: boolean;
+  fileName?: string | null;
+  fileSizeBytes?: number;
+  recordCount?: number;
+  scheduledExportId?: string;
+  status?: ComplianceAuditExportStatus;
+}
+
 /** Data model for Compliance Audit Audit Export Request. */
 export interface ComplianceAuditAuditExportInput {
   actionType?: string | null;
@@ -3361,6 +3375,26 @@ export interface ComplianceAuditAuthenticationAuditOutput {
   uniqueIpAddresses?: number;
 }
 
+/** Data model for Compliance Audit Create Scheduled Audit Export Request. */
+export interface ComplianceAuditCreateScheduledAuditExportInput {
+  actionType?: string | null;
+  /** Ordered CSV columns. Omit to include every supported audit field. */
+  columns?: Array<string> | null;
+  /** Five-field cron expression: minute, hour, day of month, month, and day of week. */
+  cronExpression: string;
+  endDate?: string | null;
+  exportFormat?: ComplianceAuditExportFormat;
+  jobName: string;
+  /** Number of days a generated file is retained. Execution history is retained. */
+  retentionDays?: number;
+  riskLevel?: ComplianceAuditAuditRiskLevel;
+  startDate?: string | null;
+  tenantId?: string;
+  /** Timezone identifier recognized by the API host, such as UTC or America/New_York. */
+  timezone: string;
+  userId?: string | null;
+}
+
 /** Data model for Compliance Audit Daily Activity Trend. */
 export interface ComplianceAuditDailyActivityTrend {
   authenticationEvents?: number;
@@ -3369,6 +3403,12 @@ export interface ComplianceAuditDailyActivityTrend {
   securityViolations?: number;
   totalEvents?: number;
 }
+
+/** OpenAPI schema for Compliance Audit Export Format. */
+export type ComplianceAuditExportFormat = 'Json' | 'Csv' | 'Xml' | 'Parquet';
+
+/** OpenAPI schema for Compliance Audit Export Status. */
+export type ComplianceAuditExportStatus = 'Pending' | 'InProgress' | 'Completed' | 'Failed' | 'Cancelled';
 
 /** Data model for Compliance Audit Failure Reason Count. */
 export interface ComplianceAuditFailureReasonCount {
@@ -3404,6 +3444,25 @@ export interface ComplianceAuditPermissionAuditOutput {
   skip?: number;
   take?: number;
   totalCount?: number;
+}
+
+/** Data model for Compliance Audit Scheduled Audit Export Response. */
+export interface ComplianceAuditScheduledAuditExportOutput {
+  id?: string;
+  createdAt?: string;
+  cronExpression?: string | null;
+  destination?: string | null;
+  exportFormat?: ComplianceAuditExportFormat;
+  failureCount?: number;
+  isEnabled?: boolean;
+  jobName?: string | null;
+  lastRunAt?: string | null;
+  nextRunAt?: string | null;
+  retentionDays?: number;
+  successCount?: number;
+  tenantId?: string;
+  timezone?: string | null;
+  updatedAt?: string;
 }
 
 /** Security audit dashboard with aggregated statistics. */
@@ -13148,6 +13207,17 @@ export interface MvcProblemDetails {
   [key: string]: any;
 }
 
+/** Data model for Mvc Validation Problem Details. */
+export interface MvcValidationProblemDetails {
+  detail?: string | null;
+  errors?: Record<string, Array<string>> | null;
+  instance?: string | null;
+  status?: number | null;
+  title?: string | null;
+  type?: string | null;
+  [key: string]: any;
+}
+
 /** Data model for Notifications Controllers Dead Letter Dto. */
 export interface NotificationsControllersDeadLetterDto {
   id?: string;
@@ -18456,6 +18526,7 @@ export let CommerceSubscriptionsSubscriptionUsageDtoSchema: z.ZodType<CommerceSu
 export let ComplianceAuditAuditActorContextSchema: z.ZodType<ComplianceAuditAuditActorContext>;
 export let ComplianceAuditAuditCategorySchema: z.ZodType<ComplianceAuditAuditCategory>;
 export let ComplianceAuditAuditEventContextSchema: z.ZodType<ComplianceAuditAuditEventContext>;
+export let ComplianceAuditAuditExportHistoryOutputSchema: z.ZodType<ComplianceAuditAuditExportHistoryOutput>;
 export let ComplianceAuditAuditExportInputSchema: z.ZodType<ComplianceAuditAuditExportInput>;
 export let ComplianceAuditAuditExportProgressOutputSchema: z.ZodType<ComplianceAuditAuditExportProgressOutput>;
 export let ComplianceAuditAuditJsonExportDocumentSchema: z.ZodType<ComplianceAuditAuditJsonExportDocument>;
@@ -18470,10 +18541,14 @@ export let ComplianceAuditAuditRiskLevelSchema: z.ZodType<ComplianceAuditAuditRi
 export let ComplianceAuditAuditStatisticsOutputSchema: z.ZodType<ComplianceAuditAuditStatisticsOutput>;
 export let ComplianceAuditAuthenticationAuditEntrySchema: z.ZodType<ComplianceAuditAuthenticationAuditEntry>;
 export let ComplianceAuditAuthenticationAuditOutputSchema: z.ZodType<ComplianceAuditAuthenticationAuditOutput>;
+export let ComplianceAuditCreateScheduledAuditExportInputSchema: z.ZodType<ComplianceAuditCreateScheduledAuditExportInput>;
 export let ComplianceAuditDailyActivityTrendSchema: z.ZodType<ComplianceAuditDailyActivityTrend>;
+export let ComplianceAuditExportFormatSchema: z.ZodType<ComplianceAuditExportFormat>;
+export let ComplianceAuditExportStatusSchema: z.ZodType<ComplianceAuditExportStatus>;
 export let ComplianceAuditFailureReasonCountSchema: z.ZodType<ComplianceAuditFailureReasonCount>;
 export let ComplianceAuditPermissionAuditEntrySchema: z.ZodType<ComplianceAuditPermissionAuditEntry>;
 export let ComplianceAuditPermissionAuditOutputSchema: z.ZodType<ComplianceAuditPermissionAuditOutput>;
+export let ComplianceAuditScheduledAuditExportOutputSchema: z.ZodType<ComplianceAuditScheduledAuditExportOutput>;
 export let ComplianceAuditSecurityAuditDashboardSchema: z.ZodType<ComplianceAuditSecurityAuditDashboard>;
 export let ComplianceAuditSecurityAuditSourceTypeSchema: z.ZodType<ComplianceAuditSecurityAuditSourceType>;
 export let ComplianceAuditTopIpActivitySchema: z.ZodType<ComplianceAuditTopIpActivity>;
@@ -19356,6 +19431,7 @@ export let MonitoringSLASloViolationDtoSchema: z.ZodType<MonitoringSLASloViolati
 export let MonitoringSLAUpdateSloCommandSchema: z.ZodType<MonitoringSLAUpdateSloCommand>;
 export let MonitoringSLAViolationSeveritySchema: z.ZodType<MonitoringSLAViolationSeverity>;
 export let MvcProblemDetailsSchema: z.ZodType<MvcProblemDetails>;
+export let MvcValidationProblemDetailsSchema: z.ZodType<MvcValidationProblemDetails>;
 export let NotificationsControllersDeadLetterDtoSchema: z.ZodType<NotificationsControllersDeadLetterDto>;
 export let NotificationsControllersDeletedCountOutputSchema: z.ZodType<NotificationsControllersDeletedCountOutput>;
 export let NotificationsControllersDigestFrequencyOutputSchema: z.ZodType<NotificationsControllersDigestFrequencyOutput>;
@@ -22827,6 +22903,20 @@ ComplianceAuditAuditEventContextSchema = z.object({
   riskLevel: z.string().nullable().optional(),
 });
 
+/** Zod schema for ComplianceAuditAuditExportHistoryOutput. Data model for Compliance Audit Audit Export History Response. */
+ComplianceAuditAuditExportHistoryOutputSchema = z.object({
+  id: z.string().uuid().optional(),
+  errorMessage: z.string().nullable().optional(),
+  executedAt: z.string().datetime().optional(),
+  executionDuration: z.string().optional(),
+  fileAvailable: z.boolean().optional(),
+  fileName: z.string().nullable().optional(),
+  fileSizeBytes: z.number().int().optional(),
+  recordCount: z.number().int().optional(),
+  scheduledExportId: z.string().uuid().optional(),
+  status: z.lazy(() => ComplianceAuditExportStatusSchema).optional(),
+});
+
 /** Zod schema for ComplianceAuditAuditExportInput. Data model for Compliance Audit Audit Export Request. */
 ComplianceAuditAuditExportInputSchema = z.object({
   actionType: z.string().nullable().optional(),
@@ -22981,6 +23071,22 @@ ComplianceAuditAuthenticationAuditOutputSchema = z.object({
   uniqueIpAddresses: z.number().int().optional(),
 });
 
+/** Zod schema for ComplianceAuditCreateScheduledAuditExportInput. Data model for Compliance Audit Create Scheduled Audit Export Request. */
+ComplianceAuditCreateScheduledAuditExportInputSchema = z.object({
+  actionType: z.string().min(0).max(100).nullable().optional(),
+  columns: z.array(z.string()).nullable().optional(),
+  cronExpression: z.string().min(0).max(100),
+  endDate: z.string().datetime().nullable().optional(),
+  exportFormat: z.lazy(() => ComplianceAuditExportFormatSchema).optional(),
+  jobName: z.string().min(1).max(100),
+  retentionDays: z.number().int().min(1).max(3650).optional(),
+  riskLevel: z.lazy(() => ComplianceAuditAuditRiskLevelSchema).optional(),
+  startDate: z.string().datetime().nullable().optional(),
+  tenantId: z.string().uuid().optional(),
+  timezone: z.string().min(0).max(80),
+  userId: z.string().uuid().nullable().optional(),
+});
+
 /** Zod schema for ComplianceAuditDailyActivityTrend. Data model for Compliance Audit Daily Activity Trend. */
 ComplianceAuditDailyActivityTrendSchema = z.object({
   authenticationEvents: z.number().int().optional(),
@@ -22989,6 +23095,12 @@ ComplianceAuditDailyActivityTrendSchema = z.object({
   securityViolations: z.number().int().optional(),
   totalEvents: z.number().int().optional(),
 });
+
+/** Zod schema for ComplianceAuditExportFormat. OpenAPI schema for Compliance Audit Export Format. */
+ComplianceAuditExportFormatSchema = z.enum(['Json', 'Csv', 'Xml', 'Parquet']);
+
+/** Zod schema for ComplianceAuditExportStatus. OpenAPI schema for Compliance Audit Export Status. */
+ComplianceAuditExportStatusSchema = z.enum(['Pending', 'InProgress', 'Completed', 'Failed', 'Cancelled']);
 
 /** Zod schema for ComplianceAuditFailureReasonCount. Data model for Compliance Audit Failure Reason Count. */
 ComplianceAuditFailureReasonCountSchema = z.object({
@@ -23027,6 +23139,25 @@ ComplianceAuditPermissionAuditOutputSchema = z.object({
   skip: z.number().int().optional(),
   take: z.number().int().optional(),
   totalCount: z.number().int().optional(),
+});
+
+/** Zod schema for ComplianceAuditScheduledAuditExportOutput. Data model for Compliance Audit Scheduled Audit Export Response. */
+ComplianceAuditScheduledAuditExportOutputSchema = z.object({
+  id: z.string().uuid().optional(),
+  createdAt: z.string().datetime().optional(),
+  cronExpression: z.string().nullable().optional(),
+  destination: z.string().nullable().optional(),
+  exportFormat: z.lazy(() => ComplianceAuditExportFormatSchema).optional(),
+  failureCount: z.number().int().optional(),
+  isEnabled: z.boolean().optional(),
+  jobName: z.string().nullable().optional(),
+  lastRunAt: z.string().datetime().nullable().optional(),
+  nextRunAt: z.string().datetime().nullable().optional(),
+  retentionDays: z.number().int().optional(),
+  successCount: z.number().int().optional(),
+  tenantId: z.string().uuid().optional(),
+  timezone: z.string().nullable().optional(),
+  updatedAt: z.string().datetime().optional(),
 });
 
 /** Zod schema for ComplianceAuditSecurityAuditDashboard. Security audit dashboard with aggregated statistics. */
@@ -32436,6 +32567,18 @@ MonitoringSLAViolationSeveritySchema = z.enum(['Low', 'Medium', 'High', 'Critica
 MvcProblemDetailsSchema = z
   .object({
     detail: z.string().nullable().optional(),
+    instance: z.string().nullable().optional(),
+    status: z.number().int().nullable().optional(),
+    title: z.string().nullable().optional(),
+    type: z.string().nullable().optional(),
+  })
+  .catchall(z.record(z.string(), z.unknown()));
+
+/** Zod schema for MvcValidationProblemDetails. Data model for Mvc Validation Problem Details. */
+MvcValidationProblemDetailsSchema = z
+  .object({
+    detail: z.string().nullable().optional(),
+    errors: z.record(z.string(), z.array(z.string())).nullable().optional(),
     instance: z.string().nullable().optional(),
     status: z.number().int().nullable().optional(),
     title: z.string().nullable().optional(),

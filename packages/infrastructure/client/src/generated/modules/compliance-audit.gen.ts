@@ -135,6 +135,104 @@ export class ComplianceAuditModule {
   }
 
   /**
+   * Downloads a completed scheduled export stored for its tenant.
+   */
+  async getAdminAuditLogsScheduledExportHistoryDownload(historyId: string, query?: { tenantId?: string }): Promise<Result<void, ApiError>> {
+    const url = `/v1/admin/audit-logs/scheduled-export-history/${historyId}/download`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Lists recurring audit exports for a tenant.
+   */
+  async getAdminAuditLogsScheduledExports(query?: { tenantId?: string }): Promise<Result<Array<Types.ComplianceAuditScheduledAuditExportOutput>, ApiError>> {
+    const url = '/v1/admin/audit-logs/scheduled-exports';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.ComplianceAuditScheduledAuditExportOutput>, ApiError>;
+  }
+
+  /**
+   * Creates a recurring audit export delivered to the tenant's configured storage.
+   *
+   * Uses a five-field cron expression and the supplied timezone. During a repeated local time at the end of daylight
+   * saving, the first UTC occurrence is used. Files are removed after the configured retention period while their
+   * execution history remains available.
+   */
+  async postAdminAuditLogsScheduledExports(
+    body: Types.ComplianceAuditCreateScheduledAuditExportInput,
+  ): Promise<Result<Types.ComplianceAuditScheduledAuditExportOutput, ApiError>> {
+    const url = '/v1/admin/audit-logs/scheduled-exports';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.ComplianceAuditCreateScheduledAuditExportInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.ComplianceAuditScheduledAuditExportOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Disables a recurring audit export without deleting its execution history.
+   */
+  async deleteAdminAuditLogsScheduledExports(exportId: string, query?: { tenantId?: string }): Promise<Result<void, ApiError>> {
+    const url = `/v1/admin/audit-logs/scheduled-exports/${exportId}`;
+
+    const result = await this.client.request({
+      method: 'DELETE',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Lists recent executions for a scheduled audit export.
+   */
+  async getAdminAuditLogsScheduledExportsHistory(
+    exportId: string,
+    query?: { tenantId?: string },
+  ): Promise<Result<Array<Types.ComplianceAuditAuditExportHistoryOutput>, ApiError>> {
+    const url = `/v1/admin/audit-logs/scheduled-exports/${exportId}/history`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.ComplianceAuditAuditExportHistoryOutput>, ApiError>;
+  }
+
+  /**
    * Get audit log statistics
    */
   async getAdminAuditLogsStatistics(query?: { StartDate?: string; EndDate?: string }): Promise<Result<Types.ComplianceAuditAuditStatisticsOutput, ApiError>> {
