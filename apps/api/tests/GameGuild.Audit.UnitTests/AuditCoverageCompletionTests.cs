@@ -791,7 +791,8 @@ public class AuditControllerCoverageCompletionTests
             actorAccessor.Object,
             NullLogger<AuditController>.Instance,
             new CommandHandlerSender(auditService ?? Mock.Of<IAuditService>(), Mock.Of<ISecurityAuditAggregator>(), actorAccessor.Object),
-            CreateProgressTracker())
+            CreateProgressTracker(),
+            Mock.Of<IScheduledAuditExportService>())
         {
             ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
         };

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using GameGuild.API.Context;
+using GameGuild.API.Core.Compliance;
 using GameGuild.AI;
 using GameGuild.Analytics;
 using GameGuild.API.Database;
@@ -9,6 +10,7 @@ using GameGuild.API.Eventing;
 using GameGuild.API.Core.Quotas;
 using GameGuild.API.Core.CostAccounting;
 using GameGuild.Assets.Extensions;
+using GameGuild.Assets.Storage;
 using GameGuild.Commerce.Billing;
 using GameGuild.Commerce.Orders;
 using GameGuild.Commerce.Payments;
@@ -168,6 +170,7 @@ public static class InfrastructureLayerExtensions
                 };
             }
         });
+        services.AddScoped<IAuditScheduledExportStorage, AuditScheduledExportStorageAdapter>();
         logger.LogInformation("Compliance Audit Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
         // 03a. Authentication Application (command handlers, validators, core auth services)
