@@ -624,6 +624,79 @@ public class AuditControllerCoverageCompletionTests
     }
 
     [Fact]
+    public async Task SearchAuditLogsByDateRange_ShouldNormalizeDatesAndCombineFilters()
+    {
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var auditService = new Mock<IAuditService>();
+        AuditLogQuery? capturedQuery = null;
+        var bucketStart = new DateTime(2025, 12, 31, 22, 0, 0, DateTimeKind.Utc);
+        auditService
+            .Setup(service => service.LogAdminActionAsync(
+                userId,
+                "SearchAuditLogsByDateRange",
+                "Admin searched audit logs by date range",
+                It.IsAny<object?>()))
+            .Returns(Task.CompletedTask);
+        auditService
+            .Setup(service => service.GetAuditLogsAsync(It.IsAny<AuditLogQuery>()))
+            .Callback<AuditLogQuery>(query => capturedQuery = query)
+            .ReturnsAsync([]);
+        auditService
+            .Setup(service => service.GetAuditLogCountAsync(It.IsAny<AuditLogQuery>()))
+            .ReturnsAsync(3);
+        auditService
+            .Setup(service => service.GetAuditActivityAsync(
+                It.IsAny<AuditLogQuery>(),
+                AuditActivityBucketSize.Hourly,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new AuditActivityBucket(bucketStart, 3)]);
+        var controller = CreateAuditController(CreateActor(userId), auditService.Object);
+
+        var result = await controller.SearchAuditLogsByDateRange(new AuditDateRangeSearchRequest
+        {
+            Start = "2026-01-01T00:00:00+02:00",
+            End = "2026-01-01T02:00:00+02:00",
+            TimeZoneId = "America/Sao_Paulo",
+            BucketSize = AuditActivityBucketSize.Hourly,
+            TenantId = tenantId,
+            UserId = userId,
+            ActionType = "Update",
+            Category = AuditCategory.Admin,
+            RiskLevel = AuditRiskLevel.High,
+            Success = false,
+            IpAddress = "192.0.2.10",
+            Skip = 5,
+            Take = 25
+        }, CancellationToken.None);
+
+        var response = result.Result.Should().BeOfType<OkObjectResult>().Subject.Value
+            .Should().BeOfType<AuditDateRangeSearchResponse>().Subject;
+        capturedQuery.Should().NotBeNull();
+        capturedQuery!.StartDate.Should().Be(bucketStart);
+        capturedQuery.EndDate.Should().Be(new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+        capturedQuery.TenantId.Should().Be(tenantId);
+        capturedQuery.UserId.Should().Be(userId);
+        capturedQuery.ActionType.Should().Be("Update");
+        capturedQuery.Category.Should().Be(AuditCategory.Admin);
+        capturedQuery.RiskLevel.Should().Be(AuditRiskLevel.High);
+        capturedQuery.Success.Should().BeFalse();
+        capturedQuery.IpAddress.Should().Be("192.0.2.10");
+        capturedQuery.Skip.Should().Be(5);
+        capturedQuery.Take.Should().Be(25);
+        response.StartDateUtc.Should().Be(new DateTimeOffset(bucketStart, TimeSpan.Zero));
+        response.TimeZoneId.Should().Be("America/Sao_Paulo");
+        response.Results.TotalCount.Should().Be(3);
+        response.Results.Skip.Should().Be(5);
+        response.Activity.Should().ContainSingle().Which.Should().BeEquivalentTo(new
+        {
+            StartUtc = new DateTimeOffset(bucketStart, TimeSpan.Zero),
+            StartLocal = new DateTimeOffset(2025, 12, 31, 19, 0, 0, TimeSpan.FromHours(-3)),
+            EventCount = 3
+        });
+    }
+
+    [Fact]
     public async Task GetAuditStatistics_ShouldSupportDefaultAndExplicitDateRanges()
     {
         var userId = Guid.NewGuid();
@@ -672,15 +745,19 @@ public class AuditControllerCoverageCompletionTests
         var auditService = new Mock<IAuditService>();
         var auditLog = CreateAuditLog(userId, Guid.NewGuid());
         auditLog.Description = "changed, \"quoted\"\r\nline";
+        var startDate = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var endDate = new DateTime(2026, 1, 2, 0, 0, 0, DateTimeKind.Utc);
         auditService
             .Setup(service => service.LogAdminActionAsync(userId, "ExportAuditLogs", "Admin exported audit logs", It.IsAny<object?>()))
             .Returns(Task.CompletedTask);
         auditService
-            .Setup(service => service.GetAuditLogCountAsync(It.Is<AuditLogQuery>(query => query.ActionType == "Update")))
+            .Setup(service => service.GetAuditLogCountAsync(It.Is<AuditLogQuery>(query =>
+                query.ActionType == "Update" && query.StartDate == startDate && query.EndDate == endDate)))
             .ReturnsAsync(1);
         auditService
             .Setup(service => service.StreamAuditLogsAsync(
-                It.Is<AuditLogQuery>(query => query.ActionType == "Update" && query.Take == 0),
+                It.Is<AuditLogQuery>(query =>
+                    query.ActionType == "Update" && query.StartDate == startDate && query.EndDate == endDate && query.Take == 0),
                 It.IsAny<CancellationToken>()))
             .Returns(ToAsyncEnumerable([auditLog]));
         var controller = CreateAuditController(CreateActor(userId), auditService.Object);
@@ -690,6 +767,8 @@ public class AuditControllerCoverageCompletionTests
         var result = await controller.ExportAuditLogs(new AuditExportRequest
         {
             ActionType = "Update",
+            StartDate = startDate,
+            EndDate = endDate,
             Columns = ["Description", "ActionType"]
         });
 

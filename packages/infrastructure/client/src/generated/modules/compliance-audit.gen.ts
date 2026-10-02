@@ -233,6 +233,49 @@ export class ComplianceAuditModule {
   }
 
   /**
+   * Searches audit records over an explicit or relative date range and returns matching events with a time histogram.
+   *
+   * Use `start`/`end` with ISO-8601 timestamps, Unix seconds or milliseconds, or relative expressions
+   * such as `now-7d` and `now`. Alternatively use `period=last24h|last7d|last30d|today|thisWeek|thisMonth`.
+   * Offset-free values are interpreted in `timeZoneId` (UTC by default). Date-only end values include that
+   * calendar day. Hourly or daily histogram buckets include both UTC and local timestamps.
+   */
+  async getAdminAuditLogsSearchByDateRange(query?: {
+    Start?: string;
+    End?: string;
+    Period?: string;
+    TimeZoneId?: string;
+    BucketSize?: Types.ComplianceAuditAuditActivityBucketSize;
+    UserId?: string;
+    TenantId?: string;
+    ActionType?: string;
+    ResourceType?: string;
+    Category?: Types.ComplianceAuditAuditCategory;
+    RiskLevel?: Types.ComplianceAuditAuditRiskLevel;
+    Success?: boolean;
+    IpAddress?: string;
+    Skip?: number;
+    Take?: number;
+  }): Promise<Result<Types.ComplianceAuditAuditDateRangeSearchOutput, ApiError>> {
+    const url = '/v1/admin/audit-logs/search/by-date-range';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.ComplianceAuditAuditDateRangeSearchOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
    * Get audit log statistics
    */
   async getAdminAuditLogsStatistics(query?: { StartDate?: string; EndDate?: string }): Promise<Result<Types.ComplianceAuditAuditStatisticsOutput, ApiError>> {
