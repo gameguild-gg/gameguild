@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 
 namespace GameGuild.Compliance.Audit;
@@ -34,6 +35,19 @@ public static class AuditModule
         IServiceCollection services,
         Action<AuditSigningOptions>? configureSigningOptions)
     {
+        services.AddOptions<AuditExportWebhookOptions>()
+            .Configure<IConfiguration>((options, configuration) =>
+            {
+                var configuredOptions = AuditExportWebhookOptionsConfiguration.BindFrom(configuration);
+                options.SigningSecret = configuredOptions.SigningSecret;
+                options.AllowedHosts = configuredOptions.AllowedHosts;
+                options.MaxAttempts = configuredOptions.MaxAttempts;
+                options.RetryDelayMilliseconds = configuredOptions.RetryDelayMilliseconds;
+                options.TimeoutSeconds = configuredOptions.TimeoutSeconds;
+            });
+        services.AddHttpClient<IAuditExportWebhookNotifier, AuditExportWebhookNotifier>()
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
+
         services.AddOptions<AuditSigningOptions>();
         if (configureSigningOptions is not null)
         {
