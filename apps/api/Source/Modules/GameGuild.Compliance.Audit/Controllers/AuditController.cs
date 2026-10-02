@@ -27,6 +27,7 @@ public class AuditController(
     ILogger<AuditController> _logger,
     ISender sender,
     IAuditExportProgressTracker exportProgressTracker,
+    IAuditExportWebhookNotifier exportWebhookNotifier,
     IScheduledAuditExportService scheduledExportService) : BaseApiController
 {
     /// <summary>
@@ -151,10 +152,7 @@ public class AuditController(
 
         var exportId = Guid.NewGuid();
         var cancellationToken = HttpContext.RequestAborted;
-        var export = await sender.Send(
-            new ExportAuditLogsCommand(adminUserId.Value, exportId, request),
-            cancellationToken).ConfigureAwait(false);
-        await exportProgressTracker.BeginAsync(exportId, adminUserId.Value, export.TotalCount, cancellationToken).ConfigureAwait(false);
+        var export = await BeginExportAsync(adminUserId.Value, exportId, request, "csv", cancellationToken).ConfigureAwait(false);
 
         var fileName = $"audit-logs-{SystemClock.UtcNow:yyyy-MM-dd-HH-mm-ss}.csv";
         Response.StatusCode = StatusCodes.Status200OK;
@@ -178,11 +176,14 @@ public class AuditController(
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
+            await NotifyExportWebhookAsync(request.WebhookUrl, adminUserId.Value, export, "csv", "cancelled", null).ConfigureAwait(false);
             return new EmptyResult();
         }
         catch (Exception exception)
         {
             _logger.LogError(exception, "CSV audit export {ExportId} failed", exportId);
+            await MarkExportFailedAsync(export, adminUserId.Value).ConfigureAwait(false);
+            await NotifyExportWebhookAsync(request.WebhookUrl, adminUserId.Value, export, "csv", "failed", "audit_export_failed").ConfigureAwait(false);
             if (Response.HasStarted)
             {
                 HttpContext.Abort();
@@ -195,6 +196,7 @@ public class AuditController(
                 detail: "The audit export could not be completed. Use the export ID when contacting support.");
         }
 
+        await NotifyExportWebhookAsync(request.WebhookUrl, adminUserId.Value, export, "csv", "completed", null).ConfigureAwait(false);
         return new EmptyResult();
     }
 
@@ -219,10 +221,7 @@ public class AuditController(
 
         var exportId = Guid.NewGuid();
         var cancellationToken = HttpContext.RequestAborted;
-        var export = await sender.Send(
-            new ExportAuditLogsCommand(adminUserId.Value, exportId, request),
-            cancellationToken).ConfigureAwait(false);
-        await exportProgressTracker.BeginAsync(exportId, adminUserId.Value, export.TotalCount, cancellationToken).ConfigureAwait(false);
+        var export = await BeginExportAsync(adminUserId.Value, exportId, request, "json", cancellationToken).ConfigureAwait(false);
 
         var pageSize = request.PageSize.Value;
         var totalPages = export.TotalCount == 0 ? 0 : (int)Math.Ceiling(export.TotalCount / (double)pageSize);
@@ -238,7 +237,34 @@ public class AuditController(
             new AuditJsonExportPagination(request.PageNumber.Value, pageSize, export.TotalCount, totalPages),
             MapJsonRecordsAsync(TrackExportProgressAsync(export, adminUserId.Value, cancellationToken), cancellationToken));
 
-        return Ok(document);
+        try
+        {
+            await Response.WriteAsJsonAsync(document, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            await NotifyExportWebhookAsync(request.WebhookUrl, adminUserId.Value, export, "json", "cancelled", null).ConfigureAwait(false);
+            return new EmptyResult();
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "JSON audit export {ExportId} failed", exportId);
+            await MarkExportFailedAsync(export, adminUserId.Value).ConfigureAwait(false);
+            await NotifyExportWebhookAsync(request.WebhookUrl, adminUserId.Value, export, "json", "failed", "audit_export_failed").ConfigureAwait(false);
+            if (Response.HasStarted)
+            {
+                HttpContext.Abort();
+                return new EmptyResult();
+            }
+
+            return Problem(
+                statusCode: StatusCodes.Status500InternalServerError,
+                title: "Audit export failed",
+                detail: "The audit export could not be completed. Use the export ID when contacting support.");
+        }
+
+        await NotifyExportWebhookAsync(request.WebhookUrl, adminUserId.Value, export, "json", "completed", null).ConfigureAwait(false);
+        return new EmptyResult();
     }
 
     /// <summary>Returns the current state of an export started by the authenticated administrator.</summary>
@@ -351,7 +377,140 @@ public class AuditController(
     }
 
     private ActionResult? ValidateExportRequest(AuditExportRequest request)
-        => ValidateRequest(request);
+    {
+        var requestValidation = ValidateRequest(request);
+        if (requestValidation is not null) { return requestValidation; }
+
+        var webhookValidationError = exportWebhookNotifier.ValidateWebhookUrl(request.WebhookUrl);
+        return webhookValidationError is null
+            ? null
+            : BadRequest(new ProblemDetails
+            {
+                Title = "Invalid audit export webhook URL",
+                Detail = webhookValidationError,
+                Status = StatusCodes.Status400BadRequest
+            });
+    }
+
+    private async Task<AuditLogExportData> BeginExportAsync(
+        Guid adminUserId,
+        Guid exportId,
+        AuditExportRequest request,
+        string format,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var export = await sender.Send(
+                new ExportAuditLogsCommand(adminUserId, exportId, request),
+                cancellationToken).ConfigureAwait(false);
+            await exportProgressTracker.BeginAsync(exportId, adminUserId, export.TotalCount, cancellationToken).ConfigureAwait(false);
+            return export;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            await NotifyExportWebhookAsync(request.WebhookUrl, adminUserId, exportId, format, "cancelled", 0, 0, null).ConfigureAwait(false);
+            throw;
+        }
+        catch (Exception)
+        {
+            await NotifyExportWebhookAsync(request.WebhookUrl, adminUserId, exportId, format, "failed", 0, 0, "audit_export_failed").ConfigureAwait(false);
+            throw;
+        }
+    }
+
+    private async Task MarkExportFailedAsync(AuditLogExportData export, Guid ownerUserId)
+    {
+        try
+        {
+            var progress = await exportProgressTracker.GetAsync(export.ExportId, ownerUserId, CancellationToken.None).ConfigureAwait(false);
+            if (progress is null) { return; }
+
+            await exportProgressTracker.ReportAsync(
+                export.ExportId,
+                ownerUserId,
+                progress.RecordsWritten,
+                AuditExportProgressStatus.Failed,
+                "The export could not be completed.",
+                CancellationToken.None).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Updating progress for failed audit export {ExportId} failed", export.ExportId);
+        }
+    }
+
+    private async Task NotifyExportWebhookAsync(
+        string? webhookUrl,
+        Guid ownerUserId,
+        AuditLogExportData export,
+        string format,
+        string status,
+        string? errorCode)
+    {
+        await NotifyExportWebhookAsync(
+            webhookUrl,
+            ownerUserId,
+            export.ExportId,
+            format,
+            status,
+            export.TotalCount,
+            status == "completed" ? export.TotalCount : 0,
+            errorCode).ConfigureAwait(false);
+    }
+
+    private async Task NotifyExportWebhookAsync(
+        string? webhookUrl,
+        Guid ownerUserId,
+        Guid exportId,
+        string format,
+        string status,
+        int totalRecords,
+        int recordsWritten,
+        string? errorCode)
+    {
+        if (string.IsNullOrWhiteSpace(webhookUrl)) { return; }
+
+        try
+        {
+            var progress = await exportProgressTracker.GetAsync(exportId, ownerUserId, CancellationToken.None).ConfigureAwait(false);
+            if (progress is not null)
+            {
+                totalRecords = progress.TotalRecords;
+                recordsWritten = progress.RecordsWritten;
+            }
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "Could not read final progress for audit export {ExportId}", exportId);
+        }
+
+        var eventType = status switch
+        {
+            "completed" => "audit.export.completed",
+            "cancelled" => "audit.export.cancelled",
+            _ => "audit.export.failed"
+        };
+        var notification = new AuditExportWebhookNotification(
+            $"{exportId:N}:{status}",
+            eventType,
+            DateTimeOffset.UtcNow,
+            exportId,
+            format,
+            status,
+            Math.Max(totalRecords, 0),
+            Math.Clamp(recordsWritten, 0, Math.Max(totalRecords, 0)),
+            errorCode);
+
+        try
+        {
+            await exportWebhookNotifier.NotifyAsync(webhookUrl, notification, CancellationToken.None).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "Delivering webhook for audit export {ExportId} failed", exportId);
+        }
+    }
 
     private ActionResult? ValidateRequest(object request)
     {
