@@ -222,8 +222,9 @@ public sealed class PermissionServiceBulkCacheTests
 
         public Task<(long TenantVersion, long GlobalVersion)> GetTenantAndGlobalVersionsAsync(
             Guid tenantId,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             _onVersionSnapshot?.Invoke(Interlocked.Increment(ref _snapshotCount));
             var tenantVersion = _versions.GetValueOrDefault(tenantId);
             var globalVersion = tenantId == Guid.Empty ? tenantVersion : _versions.GetValueOrDefault(Guid.Empty);

@@ -166,6 +166,7 @@ public sealed class PermissionServiceBulkCachePostgreSqlTests
             CommandEventData eventData,
             InterceptionResult<DbDataReader> result)
         {
+            _ = eventData;
             CountPermissionGrantRead(command);
             return result;
         }
@@ -176,6 +177,8 @@ public sealed class PermissionServiceBulkCachePostgreSqlTests
             InterceptionResult<DbDataReader> result,
             CancellationToken cancellationToken = default)
         {
+            _ = eventData;
+            cancellationToken.ThrowIfCancellationRequested();
             CountPermissionGrantRead(command);
             return ValueTask.FromResult(result);
         }

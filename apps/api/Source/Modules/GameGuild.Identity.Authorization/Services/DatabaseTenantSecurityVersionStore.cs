@@ -20,9 +20,14 @@ public sealed class DatabaseTenantSecurityVersionStore(ITenantSecurityVersionRep
     }
 
     /// <inheritdoc />
+    public Task<IReadOnlyDictionary<Guid, (long TenantVersion, long GlobalVersion)>> GetTenantAndGlobalVersionsAsync(
+        IReadOnlyCollection<Guid> tenantIds) =>
+        GetTenantAndGlobalVersionsAsync(tenantIds, CancellationToken.None);
+
+    /// <inheritdoc />
     public async Task<IReadOnlyDictionary<Guid, (long TenantVersion, long GlobalVersion)>> GetTenantAndGlobalVersionsAsync(
         IReadOnlyCollection<Guid> tenantIds,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(tenantIds);
 
