@@ -351,6 +351,7 @@ public static class SecurityServiceCollectionExtensions
             typeof(AuthorizationPermissionServiceAdapter))
         {
             services.AddHttpContextAccessor();
+            services.AddMemoryCache();
             services.AddScoped<AuthorizationPermissionServiceAdapter>();
             services.Replace(ServiceDescriptor.Scoped<IAuthorizationPermissionService, AuditingAuthorizationPermissionService>());
         }

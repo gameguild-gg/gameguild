@@ -18,6 +18,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using ISiemIntegrationService = GameGuild.Identity.Authentication.ISiemIntegrationService;
 
 namespace GameGuild.API.UnitTests.Security;
 
@@ -33,7 +34,9 @@ public sealed class AuditingAuthorizationMiddlewareResultHandlerTests
         var configuration = new ConfigurationBuilder().Build();
         var services = new ServiceCollection();
         services.AddLogging();
+        services.AddSingleton<IConfiguration>(configuration);
         services.AddSingleton(new Mock<IAuditService>().Object);
+        services.AddSingleton(new Mock<ISiemIntegrationService>().Object);
         services.AddScoped<IPermissionQueryService>(_ => new Mock<IPermissionQueryService>().Object);
         services.AddScoped<IAuthorizationPermissionService, AuthorizationPermissionServiceAdapter>();
         services.SetupAuthorization(configuration, AuthorizationOptionsBuilder.Build(configuration));
