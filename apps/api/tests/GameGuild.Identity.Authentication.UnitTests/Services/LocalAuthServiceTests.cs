@@ -571,7 +571,7 @@ public class LocalAuthServiceTests
         await _sut.LocalSignUpAsync(request);
 
         _authAttemptServiceMock.Verify(
-            x => x.RecordSuccessfulAttemptAsync("new@example.com", It.IsAny<Guid>(), "127.0.0.1", It.IsAny<string>(), It.IsAny<TimeSpan>()),
+            x => x.RecordSuccessfulAttemptAsync("new@example.com", It.IsAny<Guid>(), "127.0.0.1", It.IsAny<string>(), It.IsAny<TimeSpan>(), "Registration"),
             Times.Once);
     }
 
