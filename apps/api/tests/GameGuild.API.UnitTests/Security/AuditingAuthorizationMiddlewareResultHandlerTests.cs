@@ -84,6 +84,9 @@ public sealed class AuditingAuthorizationMiddlewareResultHandlerTests
         metadata.Should().Contain("\"Result\":\"Granted\"");
 
         inner.CallCount.Should().Be(1);
+        inner.LastNext.Should().NotBeNull();
+        inner.LastContext.Should().BeSameAs(context);
+        inner.LastPolicy.Should().BeSameAs(policy);
         inner.LastResult.Should().BeSameAs(result);
     }
 
@@ -202,6 +205,12 @@ public sealed class AuditingAuthorizationMiddlewareResultHandlerTests
     {
         public int CallCount { get; private set; }
 
+        public RequestDelegate? LastNext { get; private set; }
+
+        public HttpContext? LastContext { get; private set; }
+
+        public AuthorizationPolicy? LastPolicy { get; private set; }
+
         public PolicyAuthorizationResult? LastResult { get; private set; }
 
         public Task HandleAsync(
@@ -211,6 +220,9 @@ public sealed class AuditingAuthorizationMiddlewareResultHandlerTests
             PolicyAuthorizationResult authorizeResult)
         {
             CallCount++;
+            LastNext = next;
+            LastContext = context;
+            LastPolicy = policy;
             LastResult = authorizeResult;
             return Task.CompletedTask;
         }
