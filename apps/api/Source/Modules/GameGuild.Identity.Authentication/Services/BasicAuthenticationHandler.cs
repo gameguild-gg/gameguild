@@ -73,6 +73,9 @@ public sealed class BasicAuthenticationHandler : AuthenticationHandler<BasicAuth
             return await FailAsync("Invalid Basic authorization header.").ConfigureAwait(false);
         }
 
+        // codeql[cs/user-controlled-bypass] Request.IsHttps comes from direct TLS or trusted forwarded-header
+        // middleware. SetupRateLimiting accepts X-Forwarded-Proto only from RateLimiting:TrustedProxyAddresses;
+        // it disables forwarded headers when no trusted proxy is configured.
         if (!Request.IsHttps)
         {
             return await FailAsync("Basic authentication requires HTTPS.").ConfigureAwait(false);
