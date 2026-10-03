@@ -52,6 +52,37 @@ public sealed class AuthAttemptServiceSuccessPathTests
                 auditEvent.UserId == userId &&
                 auditEvent.IpAddress == "198.51.100.1" &&
                 auditEvent.UserAgent == "UnitTestAgent"),
+        It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task RecordSuccessfulAttemptAsync_ShouldForwardAuditWhenAttemptPersistenceFails()
+    {
+        var repository = new Mock<IAuthenticationAttemptRepository>();
+        var auditEventSink = new Mock<IAuthenticationAuditEventSink>();
+        repository
+            .Setup(x => x.CreateAsync(It.IsAny<AuthenticationAttempt>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("Attempt store unavailable"));
+
+        var sut = new AuthAttemptService(
+            repository.Object,
+            Mock.Of<IUserEnumerationProtectionService>(),
+            NullLogger<AuthAttemptService>.Instance,
+            auditEventSink.Object);
+        var userId = Guid.NewGuid();
+
+        await sut.RecordSuccessfulAttemptAsync(
+            "user@example.com",
+            userId,
+            "198.51.100.2",
+            "UnitTestAgent",
+            TimeSpan.FromMilliseconds(42));
+
+        auditEventSink.Verify(x => x.RecordAsync(
+            It.Is<AuthenticationAuditEvent>(auditEvent =>
+                auditEvent.ActionType == "Authentication.Succeeded" &&
+                auditEvent.UserId == userId &&
+                auditEvent.IpAddress == "198.51.100.2"),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -97,6 +128,39 @@ public sealed class AuthAttemptServiceSuccessPathTests
                 !auditEvent.Success &&
                 auditEvent.ErrorMessage == "InvalidCredentials"),
             It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task RecordFailedAttemptAsync_ShouldForwardAuditAndRecordEnumerationWhenAttemptPersistenceFails()
+    {
+        var repository = new Mock<IAuthenticationAttemptRepository>();
+        var enumerationProtection = new Mock<IUserEnumerationProtectionService>();
+        var auditEventSink = new Mock<IAuthenticationAuditEventSink>();
+        repository
+            .Setup(x => x.CreateAsync(It.IsAny<AuthenticationAttempt>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("Attempt store unavailable"));
+
+        var sut = new AuthAttemptService(
+            repository.Object,
+            enumerationProtection.Object,
+            NullLogger<AuthAttemptService>.Instance,
+            auditEventSink.Object);
+
+        await sut.RecordFailedAttemptAsync(
+            "user@example.com",
+            null,
+            "203.0.113.10",
+            "UnitTestAgent",
+            "InvalidCredentials",
+            TimeSpan.FromMilliseconds(75));
+
+        auditEventSink.Verify(x => x.RecordAsync(
+            It.Is<AuthenticationAuditEvent>(auditEvent =>
+                auditEvent.ActionType == "Authentication.Failed" &&
+                !auditEvent.Success &&
+                auditEvent.ErrorMessage == "InvalidCredentials"),
+            It.IsAny<CancellationToken>()), Times.Once);
+        enumerationProtection.Verify(x => x.RecordEnumerationAttemptAsync("203.0.113.10", "login"), Times.Once);
     }
 }
 

@@ -22,28 +22,29 @@ public class AuthAttemptService(
 
     public async Task RecordSuccessfulAttemptAsync(string email, Guid userId, string ipAddress, string? userAgent, TimeSpan processingTime, string authenticationMethod)
     {
+        var attempt = new AuthenticationAttempt
+        {
+            Email = email,
+            UserId = userId,
+            IpAddress = ipAddress,
+            UserAgent = userAgent,
+            IsSuccessful = true,
+            AttemptedAt = SystemClock.UtcNow,
+            ProcessingTime = processingTime
+        };
+
         try
         {
-            var attempt = new AuthenticationAttempt
-            {
-                Email = email,
-                UserId = userId,
-                IpAddress = ipAddress,
-                UserAgent = userAgent,
-                IsSuccessful = true,
-                AttemptedAt = SystemClock.UtcNow,
-                ProcessingTime = processingTime
-            };
-
             await authenticationAttemptRepository.CreateAsync(attempt).ConfigureAwait(false);
-            LogLoginAuditEvent(attempt);
-            await ForwardAuditEventAsync(attempt, authenticationMethod).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
-            // Don't throw - authentication succeeded even if logging failed
-            logger.LogError(ex, "Error recording successful authentication attempt");
+            // Keep trying the central audit sink even when the local attempt store is unavailable.
+            logger.LogError(ex, "Error persisting successful authentication attempt");
         }
+
+        LogLoginAuditEvent(attempt);
+        await ForwardAuditEventAsync(attempt, authenticationMethod).ConfigureAwait(false);
     }
 
     public Task RecordFailedAttemptAsync(string email, Guid? userId, string ipAddress, string? userAgent, string failureReason, TimeSpan processingTime)
@@ -53,31 +54,38 @@ public class AuthAttemptService(
 
     public async Task RecordFailedAttemptAsync(string email, Guid? userId, string ipAddress, string? userAgent, string failureReason, TimeSpan processingTime, string authenticationMethod)
     {
+        var attempt = new AuthenticationAttempt
+        {
+            Email = email,
+            UserId = userId,
+            IpAddress = ipAddress,
+            UserAgent = userAgent,
+            IsSuccessful = false,
+            FailureReason = failureReason,
+            AttemptedAt = SystemClock.UtcNow,
+            ProcessingTime = processingTime
+        };
+
         try
         {
-            var attempt = new AuthenticationAttempt
-            {
-                Email = email,
-                UserId = userId,
-                IpAddress = ipAddress,
-                UserAgent = userAgent,
-                IsSuccessful = false,
-                FailureReason = failureReason,
-                AttemptedAt = SystemClock.UtcNow,
-                ProcessingTime = processingTime
-            };
-
             await authenticationAttemptRepository.CreateAsync(attempt).ConfigureAwait(false);
-            LogLoginAuditEvent(attempt);
-            await ForwardAuditEventAsync(attempt, authenticationMethod).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            // Keep the central audit and abuse tracking independent from the local attempt store.
+            logger.LogError(ex, "Error persisting failed authentication attempt");
+        }
 
-            // Record enumeration attempt for throttling
+        LogLoginAuditEvent(attempt);
+        await ForwardAuditEventAsync(attempt, authenticationMethod).ConfigureAwait(false);
+
+        try
+        {
             await enumerationProtection.RecordEnumerationAttemptAsync(ipAddress, "login").ConfigureAwait(false);
         }
         catch (Exception ex)
         {
-            // Don't throw - this is just logging
-            logger.LogError(ex, "Error recording failed authentication attempt");
+            logger.LogError(ex, "Error recording login enumeration attempt from {IpAddress}", ipAddress);
         }
     }
 
