@@ -7,6 +7,7 @@ using GameGuild.Configuration.PresentationLayer.Authorization;
 using GameGuild.API.Core.Security;
 using GameGuild.Compliance.Audit;
 using GameGuild.Identity.Authentication;
+using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.AspNetCore.Authorization.Policy;
@@ -33,12 +34,16 @@ public sealed class AuditingAuthorizationMiddlewareResultHandlerTests
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddSingleton(new Mock<IAuditService>().Object);
+        services.AddScoped<IPermissionQueryService>(_ => new Mock<IPermissionQueryService>().Object);
+        services.AddScoped<IAuthorizationPermissionService, AuthorizationPermissionServiceAdapter>();
         services.SetupAuthorization(configuration, AuthorizationOptionsBuilder.Build(configuration));
 
         using var provider = services.BuildServiceProvider();
 
         provider.GetRequiredService<IAuthorizationMiddlewareResultHandler>()
             .Should().BeOfType<AuditingAuthorizationMiddlewareResultHandler>();
+        provider.GetRequiredService<IAuthorizationPermissionService>()
+            .Should().BeOfType<AuditingAuthorizationPermissionService>();
     }
 
     [Fact]

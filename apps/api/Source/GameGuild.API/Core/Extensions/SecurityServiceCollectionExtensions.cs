@@ -17,9 +17,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization.Policy;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using AuthorizationOptions = GameGuild.Configuration.PresentationLayer.Authorization.AuthorizationOptions;
 using AuthorizationClaimTransformationOptions = GameGuild.Configuration.PresentationLayer.Authorization.AuthorizationClaimTransformationOptions;
 using AuthorizationClaimRequirementOptions = GameGuild.Configuration.PresentationLayer.Authorization.AuthorizationClaimRequirementOptions;
@@ -346,6 +346,14 @@ public static class SecurityServiceCollectionExtensions
         });
 
         services.AddScoped<IAuthorizationMiddlewareResultHandler, AuditingAuthorizationMiddlewareResultHandler>();
+
+        if (services.LastOrDefault(descriptor => descriptor.ServiceType == typeof(IAuthorizationPermissionService))?.ImplementationType ==
+            typeof(AuthorizationPermissionServiceAdapter))
+        {
+            services.AddHttpContextAccessor();
+            services.AddScoped<AuthorizationPermissionServiceAdapter>();
+            services.Replace(ServiceDescriptor.Scoped<IAuthorizationPermissionService, AuditingAuthorizationPermissionService>());
+        }
 
         return services;
     }
