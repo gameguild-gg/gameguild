@@ -8,7 +8,8 @@ public sealed record AuditAccessedRecord(Guid? TenantId, DateTime RecordDateUtc)
 
 public interface IAuditDataAccessRecorder
 {
-    Task RecordAsync(IEnumerable<AuditAccessedRecord> records, CancellationToken cancellationToken = default);
+    Task RecordAsync(IEnumerable<AuditAccessedRecord> records);
+    Task RecordAsync(IEnumerable<AuditAccessedRecord> records, CancellationToken cancellationToken);
 }
 
 /// <summary>Records successful row reads in a separate database scope, including partially consumed streams.</summary>
@@ -18,7 +19,9 @@ public sealed class AuditDataAccessRecorder(
     TimeProvider timeProvider,
     ILogger<AuditDataAccessRecorder> logger) : IAuditDataAccessRecorder
 {
-    public async Task RecordAsync(IEnumerable<AuditAccessedRecord> records, CancellationToken cancellationToken = default)
+    public Task RecordAsync(IEnumerable<AuditAccessedRecord> records) => RecordAsync(records, CancellationToken.None);
+
+    public async Task RecordAsync(IEnumerable<AuditAccessedRecord> records, CancellationToken cancellationToken)
     {
         var actor = actors.ActorContext;
         if (!actor.IsAuthenticated || actor.TenantId is null || actor.TenantId == Guid.Empty) { return; }

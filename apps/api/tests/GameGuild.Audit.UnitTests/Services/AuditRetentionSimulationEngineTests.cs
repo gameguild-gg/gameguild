@@ -22,7 +22,7 @@ public sealed class AuditRetentionSimulationEngineTests
         Obligations = [new() { Name = "Configured contract", Source = "Tenant policy revision 1", MinimumRetentionDays = 30 }]
     };
     internal static RunAuditRetentionSimulationRequest Request(int months = 1) => new()
-        { ForecastMonths = months, HistoricalDays = 14, GrowthModel = AuditRetentionGrowthModel.Constant, Scenarios = [Scenario("alternative", 365, 0)] };
+        { ForecastMonths = months, HistoricalDays = 14, GrowthModel = AuditRetentionGrowthModel.Constant, Scenarios = [Scenario("alternative", hot: 0)] };
     private static AuditRetentionDataSnapshot Snapshot(bool history = false, int accessAge = 0) => new(
         history ? Enumerable.Range(1, 14).Select(age => new AuditStorageDailyCohort(DateOnly.FromDateTime(Now).AddDays(-age), 1, GiB)).ToArray()
             : [new(DateOnly.FromDateTime(Now), 1, GiB)],
@@ -104,7 +104,7 @@ public sealed class AuditRetentionSimulationEngineTests
     [Fact]
     public void DetectsReadAvailabilityAndLatencyRisks()
     {
-        var report = _engine.Simulate(Configuration(), Request() with { Scenarios = [Scenario("expires-access", 1, 1), Scenario("slow", 365, 0)] }, Snapshot(true, 5), Now);
+        var report = _engine.Simulate(Configuration(), Request() with { Scenarios = [Scenario("expires-access", 1, 1), Scenario("slow", hot: 0)] }, Snapshot(true, 5), Now);
         Assert.Equal(100, report.Scenarios[0].UnavailableObservedReadsPercent);
         Assert.Equal(100, report.Scenarios[1].SlowObservedReadsPercent);
         Assert.Equal(10000, report.Scenarios[1].P95ReadLatencyMilliseconds);

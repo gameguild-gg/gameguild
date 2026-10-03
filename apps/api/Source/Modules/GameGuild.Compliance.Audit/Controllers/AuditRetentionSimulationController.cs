@@ -51,8 +51,8 @@ public sealed class AuditRetentionSimulationController(IAuditRetentionSimulation
     [ProducesResponseType(typeof(IReadOnlyList<AuditRetentionSimulationSummary>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     public Task<ActionResult<IReadOnlyList<AuditRetentionSimulationSummary>>> List(
-        CancellationToken cancellationToken, [FromQuery] int skip = 0, [FromQuery] int take = 25) =>
-        Execute(async () => await service.GetRunsAsync(skip, take, cancellationToken).ConfigureAwait(false));
+        [FromQuery] AuditRetentionSimulationListRequest request, CancellationToken cancellationToken) =>
+        Execute(async () => await service.GetRunsAsync(request.Skip, request.Take, cancellationToken).ConfigureAwait(false));
 
     private async Task<ActionResult<T>> Execute<T>(Func<Task<T?>> operation) where T : class
     {

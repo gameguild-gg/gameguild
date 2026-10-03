@@ -4,14 +4,19 @@ namespace GameGuild.Compliance.Audit;
 public sealed class AuditRetentionSimulationEngine
 {
     private const decimal BytesPerGiB = 1073741824m;
-    public const string ModelVersion = "daily-cohorts-v1";
+    public static string ModelVersion { get; } = "daily-cohorts-v1";
+
+    public AuditRetentionSimulationReport Simulate(
+        ConfigureAuditRetentionRequest configuration, RunAuditRetentionSimulationRequest request,
+        AuditRetentionDataSnapshot snapshot, DateTime asOfUtc) =>
+        Simulate(configuration, request, snapshot, asOfUtc, CancellationToken.None);
 
     public AuditRetentionSimulationReport Simulate(
         ConfigureAuditRetentionRequest configuration,
         RunAuditRetentionSimulationRequest request,
         AuditRetentionDataSnapshot snapshot,
         DateTime asOfUtc,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         try { return SimulateCore(configuration, request, snapshot, asOfUtc, cancellationToken); }
         catch (OverflowException)
@@ -197,13 +202,19 @@ public sealed class AuditRetentionSimulationEngine
         {
             var reasons = new List<AuditRetentionComplianceViolation>();
             if (scenario.RetentionDays < rule.MinimumRetentionDays)
+            {
                 reasons.Add(new(rule.Name, rule.Source, $"Retention {scenario.RetentionDays} days is below the configured minimum of {rule.MinimumRetentionDays}."));
+            }
             if (scenario.RetentionDays > rule.MaximumRetentionDays)
+            {
                 reasons.Add(new(rule.Name, rule.Source, $"Retention {scenario.RetentionDays} days exceeds the configured maximum of {rule.MaximumRetentionDays}."));
+            }
             if (rule.MaximumRetentionDays.HasValue && heldUntilExclusive > start &&
                 cohorts.Any(cohort => cohort.DateUtc < start &&
                     heldUntilExclusive!.Value.DayNumber - cohort.DateUtc.DayNumber - 1 > rule.MaximumRetentionDays.Value))
+            {
                 reasons.Add(new(rule.Name, rule.Source, "The configured hold preserves existing records beyond this obligation's maximum retention age."));
+            }
             return reasons;
         }).ToArray();
         var profile = AssessAccess(scenario, configuration, evidence, prices);
