@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Http;
+
 namespace GameGuild.Configuration.PresentationLayer.Authentication;
 
 /// <summary>
@@ -67,6 +69,12 @@ public sealed class AuthenticationOptions : BaseOptions
     ///     Query parameter used when <see cref="AllowApiKeyInQueryString"/> is enabled.
     /// </summary>
     public string? ApiKeyQueryStringParameterName { get; set; }
+
+    /// <summary>
+    ///     Optional programmatic resolver for API keys supplied in a deployment-specific request location.
+    ///     This delegate is configured in host code and is not bindable from configuration files.
+    /// </summary>
+    public Func<HttpRequest, string?>? ApiKeyCustomKeyResolver { get; set; }
 
     public string JwtSecretKey { get; set; } = string.Empty;
 
