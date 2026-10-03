@@ -363,6 +363,16 @@ public sealed class AuthAttemptIpExtractionTests
     }
 
     [Fact]
+    public void GetClientIp_DoesNotTrustForwardingHeaderWithoutConnectionAddress()
+    {
+        var ctx = new DefaultHttpContext();
+        ctx.Request.Headers["X-Forwarded-For"] = System.Net.IPAddress.Loopback.ToString();
+
+        var ip = _sut.GetClientIpAddress(ctx);
+        ip.Should().Be("Unknown");
+    }
+
+    [Fact]
     public void GetClientIp_CanonicalizesIpv4MappedIpv6Addresses()
     {
         var ctx = new DefaultHttpContext();
