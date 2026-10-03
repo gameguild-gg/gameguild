@@ -25,6 +25,7 @@ public class LocalAuthServiceTests
     private readonly Mock<IRefreshTokenHasher> _refreshTokenHasherMock = new();
     private readonly Mock<IAuthAttemptService> _authAttemptServiceMock = new();
     private readonly Mock<IAuthenticationAnomalyDetectionService> _anomalyDetectionMock = new();
+    private readonly Mock<IAuthenticationAuditEventSink> _authenticationAuditEventSinkMock = new();
     private readonly Mock<IUserEnumerationProtectionService> _enumerationProtectionMock = new();
     private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock = new();
     private readonly Mock<IPublisher> _publisherMock = new();
@@ -60,6 +61,9 @@ public class LocalAuthServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
         _publisherMock.Setup(x => x.Publish(It.IsAny<UserSignedUpNotification>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _authenticationAuditEventSinkMock
+            .Setup(x => x.RecordAsync(It.IsAny<AuthenticationAuditEvent>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
         var tenantId = Guid.NewGuid();
         _senderMock
             .Setup(x => x.Send(It.IsAny<GetUserMembershipsQuery>(), It.IsAny<CancellationToken>()))
@@ -96,7 +100,8 @@ public class LocalAuthServiceTests
             _httpContextAccessorMock.Object,
             NullLogger<LocalAuthService>.Instance,
             _senderMock.Object,
-            _sessionManagementServiceMock.Object
+            _sessionManagementServiceMock.Object,
+            auditEventSink: _authenticationAuditEventSinkMock.Object
         );
     }
 
@@ -312,6 +317,54 @@ public class LocalAuthServiceTests
         result.RequiresStepUp.Should().BeTrue();
         result.StepUpToken.Should().NotBeNullOrEmpty();
         result.RiskLevel.Should().Be(RiskLevel.High);
+
+        _authenticationAuditEventSinkMock.Verify(x => x.RecordAsync(
+                It.Is<AuthenticationAuditEvent>(auditEvent =>
+                    auditEvent.ActionType == "Authentication.StepUpRequired" &&
+                    auditEvent.UserId == user.Id &&
+                    !auditEvent.Success &&
+                    auditEvent.Method == "Password" &&
+                    auditEvent.ErrorMessage == "StepUpRequired"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task LocalSignInAsync_FailedLoginWithDetectedThreat_AuditsEvenWhenAttemptRecordingFails()
+    {
+        _userRepoMock.Setup(x => x.GetByEmailAsync("unknown@example.com", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User?)null);
+        _authAttemptServiceMock
+            .Setup(x => x.RecordFailedAttemptAsync(
+                "unknown@example.com",
+                null,
+                "127.0.0.1",
+                It.IsAny<string>(),
+                "InvalidCredentials",
+                It.IsAny<TimeSpan>()))
+            .ThrowsAsync(new InvalidOperationException("Attempt store unavailable"));
+        _anomalyDetectionMock.Setup(x => x.AnalyzeLoginAttemptAsync(It.IsAny<AuthenticationAttemptContext>()))
+            .ReturnsAsync(new AuthenticationAnomalyResult
+            {
+                IsAnomalous = true,
+                RiskLevel = RiskLevel.High,
+                RiskScore = 85,
+                DetectedAnomalies = ["BruteForceDetected"]
+            });
+
+        var exception = await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            _sut.LocalSignInAsync(new LocalSignInRequest { Email = "unknown@example.com", Password = "WrongPassword!" }));
+
+        exception.Message.Should().Be("Authentication failed");
+        _authenticationAuditEventSinkMock.Verify(x => x.RecordAsync(
+                It.Is<AuthenticationAuditEvent>(auditEvent =>
+                    auditEvent.ActionType == "Authentication.ThreatDetected" &&
+                    auditEvent.UserId == null &&
+                    !auditEvent.Success &&
+                    auditEvent.Method == "Password" &&
+                    auditEvent.ErrorMessage == "InvalidCredentials"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
