@@ -216,7 +216,10 @@ public sealed class SessionManagementService(
         CancellationToken cancellationToken,
         string? reason = null)
     {
-        if (auditEventSink is null) return;
+        if (auditEventSink is null)
+        {
+            return;
+        }
 
         try
         {

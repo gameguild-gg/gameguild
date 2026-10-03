@@ -35,7 +35,8 @@ public sealed class CentralAuthenticationAuditEventSinkTests
             sessionId,
             tenantId,
             "InvalidCredentials",
-            new { Attempt = 2 }));
+            new { Attempt = 2 }),
+            CancellationToken.None);
 
         captured.Should().NotBeNull();
         captured!.ActionType.Should().Be("Authentication.Failed");

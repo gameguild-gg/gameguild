@@ -15,7 +15,12 @@ public class AuthAttemptService(
     IAuthenticationAuditEventSink? auditEventSink = null
 ) : IAuthAttemptService
 {
-    public async Task RecordSuccessfulAttemptAsync(string email, Guid userId, string ipAddress, string? userAgent, TimeSpan processingTime, string authenticationMethod = "Password")
+    public Task RecordSuccessfulAttemptAsync(string email, Guid userId, string ipAddress, string? userAgent, TimeSpan processingTime)
+    {
+        return RecordSuccessfulAttemptAsync(email, userId, ipAddress, userAgent, processingTime, "Password");
+    }
+
+    public async Task RecordSuccessfulAttemptAsync(string email, Guid userId, string ipAddress, string? userAgent, TimeSpan processingTime, string authenticationMethod)
     {
         try
         {
@@ -41,7 +46,12 @@ public class AuthAttemptService(
         }
     }
 
-    public async Task RecordFailedAttemptAsync(string email, Guid? userId, string ipAddress, string? userAgent, string failureReason, TimeSpan processingTime, string authenticationMethod = "Password")
+    public Task RecordFailedAttemptAsync(string email, Guid? userId, string ipAddress, string? userAgent, string failureReason, TimeSpan processingTime)
+    {
+        return RecordFailedAttemptAsync(email, userId, ipAddress, userAgent, failureReason, processingTime, "Password");
+    }
+
+    public async Task RecordFailedAttemptAsync(string email, Guid? userId, string ipAddress, string? userAgent, string failureReason, TimeSpan processingTime, string authenticationMethod)
     {
         try
         {
@@ -115,7 +125,10 @@ public class AuthAttemptService(
 
     private async Task ForwardAuditEventAsync(AuthenticationAttempt attempt, string method)
     {
-        if (auditEventSink is null) return;
+        if (auditEventSink is null)
+        {
+            return;
+        }
 
         try
         {
@@ -129,7 +142,8 @@ public class AuthAttemptService(
                 attempt.SessionId,
                 attempt.TenantId,
                 attempt.FailureReason,
-                new { attempt.ProcessingTime, attempt.IsSuspicious, attempt.RiskScore, attempt.CorrelationId })).ConfigureAwait(false);
+                new { attempt.ProcessingTime, attempt.IsSuspicious, attempt.RiskScore, attempt.CorrelationId }),
+                CancellationToken.None).ConfigureAwait(false);
         }
         catch (Exception exception)
         {

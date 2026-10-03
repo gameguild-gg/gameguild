@@ -6,7 +6,7 @@ namespace GameGuild.Identity.Authentication;
 /// </summary>
 public interface IAuthenticationAuditEventSink
 {
-    Task RecordAsync(AuthenticationAuditEvent auditEvent, CancellationToken cancellationToken = default);
+    Task RecordAsync(AuthenticationAuditEvent auditEvent, CancellationToken cancellationToken);
 }
 
 /// <summary>
