@@ -1,5 +1,15 @@
 # GameGuild issue closeout inventory
 
+## 2026-10-03 22:16 UTC reconciliation and retention closeout
+
+The authored-or-assigned union remains **328 unique issues** (316 authored, 321 assigned). The GitHub snapshot at **22:16:28 UTC** contains **304 open and 24 closed**. The separate closed-issue review has reopened additional historical closures, including #208; the matrix preserves their previous implementation/closure evidence as historical and marks the current requirement review as pending. Earlier counts below are dated snapshots, not the current state.
+
+Issue **#194 is implemented and officially closed** after [PR #672](https://github.com/gameguild-gg/gameguild/pull/672) merged into `develop` at `3886e260bb05234666f75c365fe1993294c14d58`. Its [resolution comment](https://github.com/gameguild-gg/gameguild/issues/194#issuecomment-5973995369) and [criterion mapping](../architecture/audit-retention-simulation.md) record the complete simulation feature, measured storage/access evidence, configuration and report persistence, safeguards and model limits. Local verification passed 3,841 tests across Audit, Authentication, Authorization, API architecture/security and PostgreSQL/HTTP, plus a warning-clean solution build and client generation/type checks. Current-head API/Web/OpenAPI/migration/policy/artifact/PR Required Gate and all four CodeQL analyses passed. The nine earlier Codacy style findings were corrected; its new-head suite remained queued at merge, and a rerequest returned HTTP 404. This pending scanner result is disclosed rather than counted as a pass.
+
+Issue **#178 remains open and unimplemented as an executable packaging feature**. Full-body/source review found a manually populated entity and interface declarations, but no packaging service, controller, EF package mapping, automatic collectors, framework templates, quality/gap/timeline validators or verifiable artifact generation. Its row records these gaps and the required functional/security tests; this source review does not claim functional completion.
+
+The primary `develop` checkout was fast-forwarded to the #672 merge with all **55 unrelated modified/untracked files** verified byte-for-byte against their preservation manifest. The merged feature branch was removed locally and remotely. Two worktrees remain and there are no stashes.
+
 Snapshot date: 2026-09-28 (GitHub API).
 
 This initial source inventory contains **328 unique issues** authored by or assigned to `mathrmartins` in `gameguild-gg/gameguild`: **188 open** and **140 closed**. Pull requests are excluded. The scope is the union of GitHub's `creator=mathrmartins` and `assignee=mathrmartins` issue filters, deduplicated by issue number.
