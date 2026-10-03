@@ -79,3 +79,7 @@ Issues #353 and #354 were reopened on 2026-10-03 with evidence comments because 
 Owner crosswalk comments support the following duplicate-only closures: #349 → #306, #295 → #294, #315 → #314, #326 → #327, #332 → #333, #345 → #346, #347 → #330, #398 → #413, #399 → #414, #402 → #418, and #407 → #408. Their canonical issues remain open; these closures do not establish implementation.
 
 This snapshot is a state refresh plus the specific closeout evidence listed above. It does not complete the remaining issue-by-issue audit.
+
+## 2026-10-03 post-merge reconciliation
+
+A live query on 2026-10-03 15:22 UTC confirms 328 authored-or-assigned issues: 158 open and 170 closed. The CSV snapshot taken at 13:53 UTC showed 159 open and 169 closed; #147 was subsequently completed and closed after PR #651 merged and the corrected schema-description/example tests passed. The CSV now records this evidence. Issues #158 and #159 remain open and partially implemented in PR #669; its focused authorization-audit tests pass 11/11, but full acceptance and merge are outstanding. The current policy check fails on the transitive braces@3.0.3 CVE-2026-93687 advisory, while API/Web verification is still running.
