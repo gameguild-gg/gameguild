@@ -3,10 +3,14 @@ using System.Security.Claims;
 using FluentAssertions;
 using GameGuild.API.Core.Security;
 using GameGuild.Compliance.Audit;
+using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using ISiemIntegrationService = GameGuild.Identity.Authentication.ISiemIntegrationService;
 
 namespace GameGuild.API.UnitTests.Security;
 
@@ -26,6 +30,7 @@ public sealed class AuditingAuthorizationPermissionServiceTests
         auditService.Setup(service => service.LogAsync(It.IsAny<CreateAuditLogRequest>()))
             .Callback<CreateAuditLogRequest>(request => captured = request)
             .Returns(Task.CompletedTask);
+        auditService.Setup(service => service.GetAuditLogCountAsync(It.IsAny<AuditLogQuery>())).ReturnsAsync(0);
         var service = CreateService(queryService.Object, auditService.Object);
 
         var result = await service.HasPermissionAsync(UserId, TenantId, "teams.read");
@@ -53,6 +58,7 @@ public sealed class AuditingAuthorizationPermissionServiceTests
         auditService.Setup(service => service.LogAsync(It.IsAny<CreateAuditLogRequest>()))
             .Callback<CreateAuditLogRequest>(logged.Add)
             .Returns(Task.CompletedTask);
+        auditService.Setup(service => service.GetAuditLogCountAsync(It.IsAny<AuditLogQuery>())).ReturnsAsync(0);
         var service = CreateService(queryService.Object, auditService.Object);
 
         var result = await service.HasAllPermissionsAsync(UserId, TenantId, ["teams.read", "teams.write"]);
@@ -78,6 +84,7 @@ public sealed class AuditingAuthorizationPermissionServiceTests
         auditService.Setup(service => service.LogAsync(It.IsAny<CreateAuditLogRequest>()))
             .Callback<CreateAuditLogRequest>(logged.Add)
             .Returns(Task.CompletedTask);
+        auditService.Setup(service => service.GetAuditLogCountAsync(It.IsAny<AuditLogQuery>())).ReturnsAsync(0);
         var service = CreateService(queryService.Object, auditService.Object);
 
         var result = await service.HasAnyPermissionAsync(UserId, TenantId, ["projects.read", "projects.delete"]);
@@ -97,11 +104,38 @@ public sealed class AuditingAuthorizationPermissionServiceTests
         var auditService = new Mock<IAuditService>();
         auditService.Setup(service => service.LogAsync(It.IsAny<CreateAuditLogRequest>()))
             .ThrowsAsync(new InvalidOperationException("Audit storage unavailable"));
+        auditService.Setup(service => service.GetAuditLogCountAsync(It.IsAny<AuditLogQuery>())).ReturnsAsync(0);
         var service = CreateService(queryService.Object, auditService.Object);
 
         var result = await service.HasPermissionAsync(UserId, TenantId, "teams.read");
 
         result.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task HasPermissionAsync_AlertsOnceWhenDenialsReachTheConfiguredThreshold()
+    {
+        var queryService = new Mock<IPermissionQueryService>();
+        queryService.Setup(service => service.HasTenantPermissionAsync(UserId, TenantId, "teams.read", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        var auditService = new Mock<IAuditService>();
+        auditService.Setup(service => service.LogAsync(It.IsAny<CreateAuditLogRequest>())).Returns(Task.CompletedTask);
+        auditService.Setup(service => service.GetAuditLogCountAsync(It.IsAny<AuditLogQuery>())).ReturnsAsync(5);
+        var siemService = new Mock<ISiemIntegrationService>();
+        siemService.Setup(service => service.SendSecurityEventAsync(It.IsAny<SiemEvent>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        var service = CreateService(queryService.Object, auditService.Object, siemService.Object);
+
+        await service.HasPermissionAsync(UserId, TenantId, "teams.read");
+        await service.HasPermissionAsync(UserId, TenantId, "teams.read");
+
+        siemService.Verify(service => service.SendSecurityEventAsync(
+            It.Is<SiemEvent>(alert =>
+                alert.EventType == "PermissionDenialPatternDetected" &&
+                alert.Severity == SiemSeverity.High &&
+                alert.TenantId == TenantId &&
+                alert.Metadata!["threshold"].ToString() == "5"),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -122,7 +156,8 @@ public sealed class AuditingAuthorizationPermissionServiceTests
 
     private static AuditingAuthorizationPermissionService CreateService(
         IPermissionQueryService queryService,
-        IAuditService auditService)
+        IAuditService auditService,
+        ISiemIntegrationService? siemService = null)
     {
         var context = new DefaultHttpContext
         {
@@ -137,6 +172,12 @@ public sealed class AuditingAuthorizationPermissionServiceTests
             new AuthorizationPermissionServiceAdapter(queryService),
             auditService,
             new HttpContextAccessor { HttpContext = context },
+            new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Authorization:Anomaly:MaxFailedAttemptsPerHour"] = "5"
+            }).Build(),
+            siemService ?? new Mock<ISiemIntegrationService>().Object,
+            new MemoryCache(new MemoryCacheOptions()),
             NullLogger<AuditingAuthorizationPermissionService>.Instance);
     }
 }
