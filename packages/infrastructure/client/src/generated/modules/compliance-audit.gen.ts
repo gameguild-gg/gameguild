@@ -233,6 +233,98 @@ export class ComplianceAuditModule {
   }
 
   /**
+   * Searches audit events by multiple action types, groups, and taxonomy categories.
+   */
+  async getAdminAuditLogsSearchByActionType(query?: {
+    ActionTypes?: Array<string>;
+    ActionGroups?: Array<string>;
+    Categories?: Array<string>;
+    LogicalOperator?: Types.ComplianceAuditAuditActionTypeLogicalOperator;
+    UserId?: string;
+    TenantId?: string;
+    StartDate?: string;
+    EndDate?: string;
+    Skip?: number;
+    Take?: number;
+    SortBy?: Types.ComplianceAuditAuditActionTypeSortField;
+    SortDirection?: Types.ComplianceAuditAuditActionTypeSortDirection;
+    IncludeTrends?: boolean;
+    TrendBucketSize?: Types.ComplianceAuditAuditActivityBucketSize;
+    IncludeRelatedActions?: boolean;
+  }): Promise<Result<Types.ComplianceAuditAuditActionTypeSearchOutput, ApiError>> {
+    const url = '/v1/admin/audit-logs/search/by-action-type';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.ComplianceAuditAuditActionTypeSearchOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Exports matching action-type audit events as CSV or JSON.
+   */
+  async getAdminAuditLogsSearchByActionTypeExport(query?: {
+    format?: string;
+    ActionTypes?: Array<string>;
+    ActionGroups?: Array<string>;
+    Categories?: Array<string>;
+    LogicalOperator?: Types.ComplianceAuditAuditActionTypeLogicalOperator;
+    UserId?: string;
+    TenantId?: string;
+    StartDate?: string;
+    EndDate?: string;
+    Skip?: number;
+    Take?: number;
+    SortBy?: Types.ComplianceAuditAuditActionTypeSortField;
+    SortDirection?: Types.ComplianceAuditAuditActionTypeSortDirection;
+    IncludeTrends?: boolean;
+    TrendBucketSize?: Types.ComplianceAuditAuditActivityBucketSize;
+    IncludeRelatedActions?: boolean;
+  }): Promise<Result<void, ApiError>> {
+    const url = '/v1/admin/audit-logs/search/by-action-type/export';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Lists the hierarchical action type taxonomy and predefined investigation groups.
+   */
+  async getAdminAuditLogsSearchByActionTypeTaxonomy(): Promise<Result<Types.ComplianceAuditAuditActionTypeTaxonomyOutput, ApiError>> {
+    const url = '/v1/admin/audit-logs/search/by-action-type/taxonomy';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.ComplianceAuditAuditActionTypeTaxonomyOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
    * Searches audit records over an explicit or relative date range and returns matching events with a time histogram.
    *
    * Use `start`/`end` with ISO-8601 timestamps, Unix seconds or milliseconds, or relative expressions

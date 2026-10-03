@@ -9469,6 +9469,82 @@ export const getAdminAuditLogsScheduledExportsHistoryEndpoint = {
 } as const;
 
 /**
+ * Searches audit events by multiple action types, groups, and taxonomy categories.
+ */
+export interface GetAdminAuditLogsSearchByActionTypeInput {
+  query?: {
+    ActionTypes?: Array<string>;
+    ActionGroups?: Array<string>;
+    Categories?: Array<string>;
+    LogicalOperator?: Types.ComplianceAuditAuditActionTypeLogicalOperator;
+    UserId?: string;
+    TenantId?: string;
+    StartDate?: string;
+    EndDate?: string;
+    Skip?: number;
+    Take?: number;
+    SortBy?: Types.ComplianceAuditAuditActionTypeSortField;
+    SortDirection?: Types.ComplianceAuditAuditActionTypeSortDirection;
+    IncludeTrends?: boolean;
+    TrendBucketSize?: Types.ComplianceAuditAuditActivityBucketSize;
+    IncludeRelatedActions?: boolean;
+  };
+}
+export type GetAdminAuditLogsSearchByActionTypeOutput = Types.ComplianceAuditAuditActionTypeSearchOutput;
+export const getAdminAuditLogsSearchByActionTypeEndpoint = {
+  operationId: 'getAdminAuditLogsSearchByActionType' as const,
+  method: 'GET' as const,
+  path: '/v1/admin/audit-logs/search/by-action-type' as const,
+  tags: ['ComplianceAudit'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Exports matching action-type audit events as CSV or JSON.
+ */
+export interface GetAdminAuditLogsSearchByActionTypeExportInput {
+  query?: {
+    format?: string;
+    ActionTypes?: Array<string>;
+    ActionGroups?: Array<string>;
+    Categories?: Array<string>;
+    LogicalOperator?: Types.ComplianceAuditAuditActionTypeLogicalOperator;
+    UserId?: string;
+    TenantId?: string;
+    StartDate?: string;
+    EndDate?: string;
+    Skip?: number;
+    Take?: number;
+    SortBy?: Types.ComplianceAuditAuditActionTypeSortField;
+    SortDirection?: Types.ComplianceAuditAuditActionTypeSortDirection;
+    IncludeTrends?: boolean;
+    TrendBucketSize?: Types.ComplianceAuditAuditActivityBucketSize;
+    IncludeRelatedActions?: boolean;
+  };
+}
+export type GetAdminAuditLogsSearchByActionTypeExportOutput = void;
+export const getAdminAuditLogsSearchByActionTypeExportEndpoint = {
+  operationId: 'getAdminAuditLogsSearchByActionTypeExport' as const,
+  method: 'GET' as const,
+  path: '/v1/admin/audit-logs/search/by-action-type/export' as const,
+  tags: ['ComplianceAudit'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Lists the hierarchical action type taxonomy and predefined investigation groups.
+ */
+export type GetAdminAuditLogsSearchByActionTypeTaxonomyInput = void;
+export type GetAdminAuditLogsSearchByActionTypeTaxonomyOutput = Types.ComplianceAuditAuditActionTypeTaxonomyOutput;
+export const getAdminAuditLogsSearchByActionTypeTaxonomyEndpoint = {
+  operationId: 'getAdminAuditLogsSearchByActionTypeTaxonomy' as const,
+  method: 'GET' as const,
+  path: '/v1/admin/audit-logs/search/by-action-type/taxonomy' as const,
+  tags: ['ComplianceAudit'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Searches audit records over an explicit or relative date range and returns matching events with a time histogram.
  *
  * Use `start`/`end` with ISO-8601 timestamps, Unix seconds or milliseconds, or relative expressions
@@ -25046,6 +25122,9 @@ export const endpoints = {
   postAdminAuditLogsScheduledExports: postAdminAuditLogsScheduledExportsEndpoint,
   deleteAdminAuditLogsScheduledExports: deleteAdminAuditLogsScheduledExportsEndpoint,
   getAdminAuditLogsScheduledExportsHistory: getAdminAuditLogsScheduledExportsHistoryEndpoint,
+  getAdminAuditLogsSearchByActionType: getAdminAuditLogsSearchByActionTypeEndpoint,
+  getAdminAuditLogsSearchByActionTypeExport: getAdminAuditLogsSearchByActionTypeExportEndpoint,
+  getAdminAuditLogsSearchByActionTypeTaxonomy: getAdminAuditLogsSearchByActionTypeTaxonomyEndpoint,
   getAdminAuditLogsSearchByDateRange: getAdminAuditLogsSearchByDateRangeEndpoint,
   getAdminAuditLogsStatistics: getAdminAuditLogsStatisticsEndpoint,
   postAdminEventsReplay: postAdminEventsReplayEndpoint,
