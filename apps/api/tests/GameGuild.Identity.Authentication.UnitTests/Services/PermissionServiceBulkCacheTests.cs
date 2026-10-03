@@ -205,6 +205,7 @@ public sealed class PermissionServiceBulkCacheTests
 
         public Task<long> GetVersionAsync(string tenantId, CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             return Guid.TryParse(tenantId, out var parsedTenantId)
                 ? Task.FromResult(_versions.GetValueOrDefault(parsedTenantId))
                 : Task.FromResult(0L);
@@ -212,6 +213,7 @@ public sealed class PermissionServiceBulkCacheTests
 
         public Task<long> IncrementVersionAsync(string tenantId, CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (!Guid.TryParse(tenantId, out var parsedTenantId))
             {
                 return Task.FromResult(0L);
