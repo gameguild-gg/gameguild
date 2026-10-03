@@ -116,19 +116,21 @@ public class LocalAuthService(
             var attemptContext = CreateAttemptContext(request.Email, userId, ipAddress, userAgent, request.TenantId);
 
             var anomalyResult = await anomalyDetectionService.AnalyzeLoginAttemptAsync(attemptContext).ConfigureAwait(false);
+            var behavioralAnalysis = await AnalyzeBehavioralPatternsForAuditAsync(authenticatedUserId, attemptContext).ConfigureAwait(false);
 
-            if (anomalyResult.IsAnomalous || anomalyResult.RiskLevel >= RiskLevel.High)
+            var requiresStepUp = anomalyResult.RiskLevel >= RiskLevel.High;
+            if (requiresStepUp)
             {
                 await RecordRiskAuditEventAsync(
-                    anomalyResult.RiskLevel >= RiskLevel.High
-                        ? "Authentication.StepUpRequired"
-                        : "Authentication.ThreatDetected",
+                    "Authentication.StepUpRequired",
                     userId,
                     request.TenantId,
                     ipAddress,
                     userAgent,
-                    anomalyResult.RiskLevel >= RiskLevel.High ? "StepUpRequired" : null,
-                    anomalyResult).ConfigureAwait(false);
+                    "StepUpRequired",
+                    anomalyResult,
+                    authenticationSucceeded: false,
+                    behavioralAnalysis: behavioralAnalysis).ConfigureAwait(false);
             }
 
             // Require step-up authentication for high-risk logins
@@ -188,6 +190,20 @@ public class LocalAuthService(
                 refreshTokenExpiresAt,
                 deviceInfo.Fingerprint,
                 cancellationToken).ConfigureAwait(false);
+
+            if (anomalyResult.IsAnomalous || behavioralAnalysis is { MatchesTypicalBehavior: false })
+            {
+                await RecordRiskAuditEventAsync(
+                    "Authentication.ThreatDetected",
+                    authenticatedUserId,
+                    request.TenantId,
+                    ipAddress ?? "unknown",
+                    userAgent,
+                    null,
+                    anomalyResult,
+                    authenticationSucceeded: true,
+                    behavioralAnalysis: behavioralAnalysis).ConfigureAwait(false);
+            }
 
             // Record successful login attempt
             await authAttemptService.RecordSuccessfulAttemptAsync(request.Email, authenticatedUserId, ipAddress ?? "unknown", userAgent, stopwatch.Elapsed).ConfigureAwait(false);
@@ -260,6 +276,21 @@ public class LocalAuthService(
         }
     }
 
+    private async Task<BehavioralAnalysisResult?> AnalyzeBehavioralPatternsForAuditAsync(
+        Guid userId,
+        AuthenticationAttemptContext attemptContext)
+    {
+        try
+        {
+            return await anomalyDetectionService.AnalyzeBehavioralPatternsAsync(userId, attemptContext).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Could not analyze authentication behavior for user {UserId}", userId);
+            return null;
+        }
+    }
+
     private async Task RecordRiskAuditEventAsync(
         string actionType,
         Guid? userId,
@@ -267,9 +298,49 @@ public class LocalAuthService(
         string ipAddress,
         string? userAgent,
         string? errorMessage,
-        AuthenticationAnomalyResult? analysis)
+        AuthenticationAnomalyResult? analysis,
+        bool authenticationSucceeded = false,
+        BehavioralAnalysisResult? behavioralAnalysis = null)
     {
-        if (auditEventSink is null || analysis is null)
+        if (analysis is null && behavioralAnalysis is null)
+        {
+            return;
+        }
+
+        var riskScore = Math.Max(analysis?.RiskScore ?? 0, behavioralAnalysis?.RiskScore ?? 0);
+        var riskLevel = (RiskLevel)Math.Max((int)(analysis?.RiskLevel ?? RiskLevel.Low), (int)(behavioralAnalysis?.RiskLevel ?? RiskLevel.Low));
+        var riskFactors = (analysis?.DetectedAnomalies ?? [])
+            .Concat(behavioralAnalysis?.DetectedAnomalies ?? [])
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        try
+        {
+            await anomalyDetectionService.RecordSuspiciousActivityAsync(new SuspiciousActivity
+            {
+                UserId = userId,
+                ActivityType = actionType,
+                Description = "Authentication risk analysis detected an unusual sign-in pattern.",
+                IpAddress = ipAddress,
+                UserAgent = userAgent,
+                RiskScore = riskScore,
+                RiskLevel = riskLevel,
+                DetectedAt = SystemClock.UtcNow,
+                ActionsTaken = actionType == "Authentication.StepUpRequired" ? ["StepUpRequired"] : [],
+                Metadata = new Dictionary<string, string>
+                {
+                    ["authenticationMethod"] = "Password",
+                    ["correlationId"] = httpContextAccessor.HttpContext?.TraceIdentifier ?? string.Empty,
+                    ["riskFactors"] = string.Join(",", riskFactors)
+                }
+            }).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Could not forward authentication threat event {ActionType} to SIEM", actionType);
+        }
+
+        if (auditEventSink is null)
         {
             return;
         }
@@ -279,17 +350,27 @@ public class LocalAuthService(
             await auditEventSink.RecordAsync(new AuthenticationAuditEvent(
                 actionType,
                 userId,
-                false,
+                authenticationSucceeded,
                 "Password",
                 ipAddress,
                 userAgent,
                 TenantId: tenantId,
                 ErrorMessage: errorMessage,
+                AssessedRiskLevel: riskLevel,
                 Metadata: new
                 {
-                    analysis.RiskScore,
-                    RiskLevel = analysis.RiskLevel.ToString(),
-                    RiskFactors = analysis.DetectedAnomalies
+                    RiskScore = riskScore,
+                    RiskLevel = riskLevel.ToString(),
+                    RiskFactors = riskFactors,
+                    BehavioralAnalysis = behavioralAnalysis is null ? null : new
+                    {
+                        behavioralAnalysis.RiskScore,
+                        RiskLevel = behavioralAnalysis.RiskLevel.ToString(),
+                        behavioralAnalysis.Confidence,
+                        behavioralAnalysis.MatchesTypicalBehavior,
+                        Deviations = behavioralAnalysis.DetectedAnomalies
+                    },
+                    CorrelationId = httpContextAccessor.HttpContext?.TraceIdentifier
                 }),
                 CancellationToken.None).ConfigureAwait(false);
         }
