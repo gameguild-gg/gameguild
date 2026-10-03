@@ -3195,6 +3195,55 @@ export interface CommerceSubscriptionsSubscriptionUsageDto {
   usersCount?: number;
 }
 
+/** Data model for Compliance Audit Audit Action Type Descriptor. */
+export interface ComplianceAuditAuditActionTypeDescriptor {
+  actionType?: string | null;
+  categoryPath?: Array<string> | null;
+  groups?: Array<string> | null;
+}
+
+/** Data model for Compliance Audit Audit Action Type Frequency. */
+export interface ComplianceAuditAuditActionTypeFrequency {
+  actionType?: string | null;
+  eventCount?: number;
+}
+
+/** Data model for Compliance Audit Audit Action Type Group Descriptor. */
+export interface ComplianceAuditAuditActionTypeGroupDescriptor {
+  description?: string | null;
+  name?: string | null;
+}
+
+/** OpenAPI schema for Compliance Audit Audit Action Type Logical Operator. */
+export type ComplianceAuditAuditActionTypeLogicalOperator = 'Any' | 'All' | 'None';
+
+/** Data model for Compliance Audit Audit Action Type Search Response. */
+export interface ComplianceAuditAuditActionTypeSearchOutput {
+  frequency?: Array<ComplianceAuditAuditActionTypeFrequency> | null;
+  relatedActions?: Array<ComplianceAuditAuditRelatedAction> | null;
+  results?: ComplianceAuditAuditLogOutput;
+  trends?: Array<ComplianceAuditAuditActionTypeTrend> | null;
+}
+
+/** OpenAPI schema for Compliance Audit Audit Action Type Sort Direction. */
+export type ComplianceAuditAuditActionTypeSortDirection = 'Ascending' | 'Descending';
+
+/** OpenAPI schema for Compliance Audit Audit Action Type Sort Field. */
+export type ComplianceAuditAuditActionTypeSortField = 'CreatedAt' | 'ActionType' | 'ResourceType' | 'UserId' | 'RiskLevel';
+
+/** Data model for Compliance Audit Audit Action Type Taxonomy Response. */
+export interface ComplianceAuditAuditActionTypeTaxonomyOutput {
+  actionTypes?: Array<ComplianceAuditAuditActionTypeDescriptor> | null;
+  groups?: Array<ComplianceAuditAuditActionTypeGroupDescriptor> | null;
+}
+
+/** Data model for Compliance Audit Audit Action Type Trend. */
+export interface ComplianceAuditAuditActionTypeTrend {
+  actionType?: string | null;
+  eventCount?: number;
+  startUtc?: string;
+}
+
 /** Data model for Compliance Audit Audit Activity Bucket Response. */
 export interface ComplianceAuditAuditActivityBucketOutput {
   eventCount?: number;
@@ -3350,6 +3399,12 @@ export interface ComplianceAuditAuditNetworkContext {
 export interface ComplianceAuditAuditOutcomeContext {
   errorMessage?: string | null;
   success?: boolean;
+}
+
+/** Data model for Compliance Audit Audit Related Action. */
+export interface ComplianceAuditAuditRelatedAction {
+  actionType?: string | null;
+  correlationCount?: number;
 }
 
 /** Data model for Compliance Audit Audit Resource Context. */
@@ -18547,6 +18602,15 @@ export let CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInputSchem
 export let CommerceSubscriptionsSubscriptionStatusSchema: z.ZodType<CommerceSubscriptionsSubscriptionStatus>;
 export let CommerceSubscriptionsSubscriptionUpgradeResultSchema: z.ZodType<CommerceSubscriptionsSubscriptionUpgradeResult>;
 export let CommerceSubscriptionsSubscriptionUsageDtoSchema: z.ZodType<CommerceSubscriptionsSubscriptionUsageDto>;
+export let ComplianceAuditAuditActionTypeDescriptorSchema: z.ZodType<ComplianceAuditAuditActionTypeDescriptor>;
+export let ComplianceAuditAuditActionTypeFrequencySchema: z.ZodType<ComplianceAuditAuditActionTypeFrequency>;
+export let ComplianceAuditAuditActionTypeGroupDescriptorSchema: z.ZodType<ComplianceAuditAuditActionTypeGroupDescriptor>;
+export let ComplianceAuditAuditActionTypeLogicalOperatorSchema: z.ZodType<ComplianceAuditAuditActionTypeLogicalOperator>;
+export let ComplianceAuditAuditActionTypeSearchOutputSchema: z.ZodType<ComplianceAuditAuditActionTypeSearchOutput>;
+export let ComplianceAuditAuditActionTypeSortDirectionSchema: z.ZodType<ComplianceAuditAuditActionTypeSortDirection>;
+export let ComplianceAuditAuditActionTypeSortFieldSchema: z.ZodType<ComplianceAuditAuditActionTypeSortField>;
+export let ComplianceAuditAuditActionTypeTaxonomyOutputSchema: z.ZodType<ComplianceAuditAuditActionTypeTaxonomyOutput>;
+export let ComplianceAuditAuditActionTypeTrendSchema: z.ZodType<ComplianceAuditAuditActionTypeTrend>;
 export let ComplianceAuditAuditActivityBucketOutputSchema: z.ZodType<ComplianceAuditAuditActivityBucketOutput>;
 export let ComplianceAuditAuditActivityBucketSizeSchema: z.ZodType<ComplianceAuditAuditActivityBucketSize>;
 export let ComplianceAuditAuditActorContextSchema: z.ZodType<ComplianceAuditAuditActorContext>;
@@ -18563,6 +18627,7 @@ export let ComplianceAuditAuditLogDtoSchema: z.ZodType<ComplianceAuditAuditLogDt
 export let ComplianceAuditAuditLogOutputSchema: z.ZodType<ComplianceAuditAuditLogOutput>;
 export let ComplianceAuditAuditNetworkContextSchema: z.ZodType<ComplianceAuditAuditNetworkContext>;
 export let ComplianceAuditAuditOutcomeContextSchema: z.ZodType<ComplianceAuditAuditOutcomeContext>;
+export let ComplianceAuditAuditRelatedActionSchema: z.ZodType<ComplianceAuditAuditRelatedAction>;
 export let ComplianceAuditAuditResourceContextSchema: z.ZodType<ComplianceAuditAuditResourceContext>;
 export let ComplianceAuditAuditRiskLevelSchema: z.ZodType<ComplianceAuditAuditRiskLevel>;
 export let ComplianceAuditAuditStatisticsOutputSchema: z.ZodType<ComplianceAuditAuditStatisticsOutput>;
@@ -22901,6 +22966,70 @@ CommerceSubscriptionsSubscriptionUsageDtoSchema = z.object({
   usersCount: z.number().int().optional(),
 });
 
+/** Zod schema for ComplianceAuditAuditActionTypeDescriptor. Data model for Compliance Audit Audit Action Type Descriptor. */
+ComplianceAuditAuditActionTypeDescriptorSchema = z.object({
+  actionType: z.string().nullable().optional(),
+  categoryPath: z.array(z.string()).nullable().optional(),
+  groups: z.array(z.string()).nullable().optional(),
+});
+
+/** Zod schema for ComplianceAuditAuditActionTypeFrequency. Data model for Compliance Audit Audit Action Type Frequency. */
+ComplianceAuditAuditActionTypeFrequencySchema = z.object({
+  actionType: z.string().nullable().optional(),
+  eventCount: z.number().int().optional(),
+});
+
+/** Zod schema for ComplianceAuditAuditActionTypeGroupDescriptor. Data model for Compliance Audit Audit Action Type Group Descriptor. */
+ComplianceAuditAuditActionTypeGroupDescriptorSchema = z.object({
+  description: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+});
+
+/** Zod schema for ComplianceAuditAuditActionTypeLogicalOperator. OpenAPI schema for Compliance Audit Audit Action Type Logical Operator. */
+ComplianceAuditAuditActionTypeLogicalOperatorSchema = z.enum(['Any', 'All', 'None']);
+
+/** Zod schema for ComplianceAuditAuditActionTypeSearchOutput. Data model for Compliance Audit Audit Action Type Search Response. */
+ComplianceAuditAuditActionTypeSearchOutputSchema = z.object({
+  frequency: z
+    .array(z.lazy(() => ComplianceAuditAuditActionTypeFrequencySchema))
+    .nullable()
+    .optional(),
+  relatedActions: z
+    .array(z.lazy(() => ComplianceAuditAuditRelatedActionSchema))
+    .nullable()
+    .optional(),
+  results: z.lazy(() => ComplianceAuditAuditLogOutputSchema).optional(),
+  trends: z
+    .array(z.lazy(() => ComplianceAuditAuditActionTypeTrendSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for ComplianceAuditAuditActionTypeSortDirection. OpenAPI schema for Compliance Audit Audit Action Type Sort Direction. */
+ComplianceAuditAuditActionTypeSortDirectionSchema = z.enum(['Ascending', 'Descending']);
+
+/** Zod schema for ComplianceAuditAuditActionTypeSortField. OpenAPI schema for Compliance Audit Audit Action Type Sort Field. */
+ComplianceAuditAuditActionTypeSortFieldSchema = z.enum(['CreatedAt', 'ActionType', 'ResourceType', 'UserId', 'RiskLevel']);
+
+/** Zod schema for ComplianceAuditAuditActionTypeTaxonomyOutput. Data model for Compliance Audit Audit Action Type Taxonomy Response. */
+ComplianceAuditAuditActionTypeTaxonomyOutputSchema = z.object({
+  actionTypes: z
+    .array(z.lazy(() => ComplianceAuditAuditActionTypeDescriptorSchema))
+    .nullable()
+    .optional(),
+  groups: z
+    .array(z.lazy(() => ComplianceAuditAuditActionTypeGroupDescriptorSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for ComplianceAuditAuditActionTypeTrend. Data model for Compliance Audit Audit Action Type Trend. */
+ComplianceAuditAuditActionTypeTrendSchema = z.object({
+  actionType: z.string().nullable().optional(),
+  eventCount: z.number().int().optional(),
+  startUtc: z.string().datetime().optional(),
+});
+
 /** Zod schema for ComplianceAuditAuditActivityBucketOutput. Data model for Compliance Audit Audit Activity Bucket Response. */
 ComplianceAuditAuditActivityBucketOutputSchema = z.object({
   eventCount: z.number().int().optional(),
@@ -23070,6 +23199,12 @@ ComplianceAuditAuditNetworkContextSchema = z.object({
 ComplianceAuditAuditOutcomeContextSchema = z.object({
   errorMessage: z.string().nullable().optional(),
   success: z.boolean().optional(),
+});
+
+/** Zod schema for ComplianceAuditAuditRelatedAction. Data model for Compliance Audit Audit Related Action. */
+ComplianceAuditAuditRelatedActionSchema = z.object({
+  actionType: z.string().nullable().optional(),
+  correlationCount: z.number().int().optional(),
 });
 
 /** Zod schema for ComplianceAuditAuditResourceContext. Data model for Compliance Audit Audit Resource Context. */
