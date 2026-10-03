@@ -50,7 +50,9 @@ public static class CachingServiceExtensions
         }
 
         // Cache metrics (singleton for aggregated stats)
-        services.AddSingleton<ICacheMetricsService, CacheMetricsService>();
+        services.AddSingleton<ICacheMetricsService>(sp => new CacheMetricsService(
+            sp.GetRequiredService<IOptions<AuthorizationCacheOptions>>().Value.EnableMetrics));
+        services.AddHostedService<PermissionCacheMetricsMonitor>();
         services.AddSingleton<IPermissionCachePopularityTracker, PermissionCachePopularityTracker>();
         services.AddSingleton<IPermissionCacheKeyTracker>(sp => new PermissionCacheKeyTracker(
             sp.GetRequiredService<IMemoryCache>(),
