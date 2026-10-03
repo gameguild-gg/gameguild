@@ -353,13 +353,18 @@ GrantContentTypePermission(
 **Purpose**: Performance optimization for permission checks
 
 **Features**:
-- **In-Memory Cache**: Fast permission lookups
-- **TTL-Based**: Automatic expiration
-- **Invalidation**: Clear on permission changes
-- **Cache Statistics**: Monitor cache performance
+- **Hybrid Cache**: Per-instance L1 memory with optional shared Redis-backed L2; misses continue to the database source of truth.
+- **TTL and Capacity**: Separate configurable lifetimes for policies, permissions, ACLs, and rulesets, with bounded L1 size.
+- **Versioned Invalidation**: Tenant/user security versions, key tracking, bulk invalidation, and Redis Pub/Sub propagation keep grants and revocations coherent across instances.
+- **Warmup and Metrics**: Manual and popularity-based warmup plus hit, miss, eviction, and latency metrics.
+- **Health Alerts**: A periodic monitor logs cache health and emits structured warnings for low hit rate or high average latency after the configured minimum sample size.
 
-**Endpoint**:
-- `POST /v1/permissions/cache/clear`
+**Administrative endpoints** (system-admin authorization applies to statistics and warmup):
+- `GET /v1/permissions/cache/stats`
+- `POST /v1/permissions/cache:clear`
+- `POST /v1/permissions/cache:warm`
+
+Metrics use the `Authorization:Cache` options, including `EnableMetrics`, `MetricsLoggingIntervalSeconds`, `MinimumHitRateWarningThreshold`, `MinimumRequestsForPerformanceWarning`, and `LookupLatencyWarningThresholdMilliseconds`.
 
 ---
 

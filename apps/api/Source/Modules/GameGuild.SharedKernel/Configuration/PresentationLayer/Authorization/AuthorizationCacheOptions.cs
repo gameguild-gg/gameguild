@@ -111,6 +111,15 @@ public sealed class AuthorizationCacheOptions : BaseOptions
     /// </summary>
     public int MetricsLoggingIntervalSeconds { get; set; } = 60;
 
+    /// <summary>Minimum cache hit rate that should be maintained after enough samples are available.</summary>
+    public double MinimumHitRateWarningThreshold { get; set; } = 0.70;
+
+    /// <summary>Minimum request sample before emitting cache hit-rate warnings.</summary>
+    public int MinimumRequestsForPerformanceWarning { get; set; } = 100;
+
+    /// <summary>Average lookup latency in milliseconds above which a cache type should warn.</summary>
+    public double LookupLatencyWarningThresholdMilliseconds { get; set; } = 100;
+
     // ========================
     // CACHE COHERENCE
     // ========================
@@ -169,6 +178,26 @@ public sealed class AuthorizationCacheOptions : BaseOptions
         if (PopularityTrackingCapacity <= 0)
         {
             throw new InvalidOperationException("PopularityTrackingCapacity must be positive.");
+        }
+
+        if (MetricsLoggingIntervalSeconds <= 0)
+        {
+            throw new InvalidOperationException("MetricsLoggingIntervalSeconds must be positive.");
+        }
+
+        if (MinimumHitRateWarningThreshold is < 0 or > 1)
+        {
+            throw new InvalidOperationException("MinimumHitRateWarningThreshold must be between 0 and 1.");
+        }
+
+        if (MinimumRequestsForPerformanceWarning <= 0)
+        {
+            throw new InvalidOperationException("MinimumRequestsForPerformanceWarning must be positive.");
+        }
+
+        if (LookupLatencyWarningThresholdMilliseconds <= 0)
+        {
+            throw new InvalidOperationException("LookupLatencyWarningThresholdMilliseconds must be positive.");
         }
         
         if (UseDistributedCache && string.IsNullOrWhiteSpace(RedisConnectionString))
