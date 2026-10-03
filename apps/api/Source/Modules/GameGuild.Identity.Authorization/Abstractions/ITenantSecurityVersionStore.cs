@@ -30,9 +30,13 @@ public interface ITenantSecurityVersionStore
     }
 
     /// <summary>Reads tenant versions for a set of scopes together with the shared global version.</summary>
+    Task<IReadOnlyDictionary<Guid, (long TenantVersion, long GlobalVersion)>> GetTenantAndGlobalVersionsAsync(
+        IReadOnlyCollection<Guid> tenantIds) =>
+        GetTenantAndGlobalVersionsAsync(tenantIds, CancellationToken.None);
+
     async Task<IReadOnlyDictionary<Guid, (long TenantVersion, long GlobalVersion)>> GetTenantAndGlobalVersionsAsync(
         IReadOnlyCollection<Guid> tenantIds,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(tenantIds);
 

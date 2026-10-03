@@ -33,9 +33,7 @@ public class PermissionBulkCheckBenchmarks
     private IHybridPermissionCache _coldHybridCache = null!;
     private IHybridPermissionCache _warmHybridCache = null!;
     private BulkPermissionCheckRequest[] _requests = [];
-    private Guid[] _userIds = [];
     private Guid _tenantId;
-    private int _expectedAllowedCount;
 
     [Params(64, 256)]
     public int RequestCount { get; set; }
@@ -57,11 +55,11 @@ public class PermissionBulkCheckBenchmarks
         var seededUserIds = Enumerable.Range(0, Math.Max(RequestCount, 1))
             .Select(_ => Guid.NewGuid())
             .ToArray();
-        _userIds = seededUserIds.Take(RequestCount).ToArray();
-        _requests = _userIds
+        var userIds = seededUserIds.Take(RequestCount).ToArray();
+        _requests = userIds
             .Select(userId => new BulkPermissionCheckRequest(userId, _tenantId, PermissionType.Read))
             .ToArray();
-        _expectedAllowedCount = (RequestCount + 1) / 2;
+        var expectedAllowedCount = (RequestCount + 1) / 2;
 
         await SeedDatabaseAsync(seededUserIds).ConfigureAwait(false);
         _coldMemoryCache = CreateMemoryCache();
@@ -70,10 +68,10 @@ public class PermissionBulkCheckBenchmarks
         _warmHybridCache = CreateHybridCache(_warmMemoryCache);
 
         var warmResult = await RunBulkChecksAsync(_warmHybridCache).ConfigureAwait(false);
-        if (warmResult != _expectedAllowedCount)
+        if (warmResult != expectedAllowedCount)
         {
             throw new InvalidOperationException(
-                $"The PostgreSQL benchmark fixture expected {_expectedAllowedCount} allowed requests but evaluated {warmResult}.");
+                $"The PostgreSQL benchmark fixture expected {expectedAllowedCount} allowed requests but evaluated {warmResult}.");
         }
 
         var individualResult = await RunIndividualChecksAsync().ConfigureAwait(false);
