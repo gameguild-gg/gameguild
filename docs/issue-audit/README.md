@@ -69,3 +69,13 @@ Issue #147 has typed options for basic document metadata, but the service setup 
 ## 2026-09-30 live issue-state refresh
 
 A live query over the current authored-or-assigned issue set returned 328 unique issues: 177 open and 151 closed. The refreshed CSV updates each row's current title, state, assignees, labels, milestone, and timestamps while preserving the issue-level audit fields. PR #614 was squash-merged to develop at 4af6096dabb65247c03ad94106bbe577485a95e2; it advances #353/#354 but leaves both open because representative performance/load measurements and configured collector/alert validation remain outstanding. PR #584 also merged to develop and closed #384. PR #581 is still open and draft; its overlapping cache work still needs reconciliation.
+
+## 2026-10-03 live issue-state refresh
+
+A fresh GitHub query reconciled all **328** authored-or-assigned issues: **163 open and 165 closed**. [gameguild-issues-2026-10-03.csv](gameguild-issues-2026-10-03.csv) refreshes titles, state, assignees, labels, milestones, and timestamps for every row while preserving the prior audit fields and recording the state-verification timestamp. The 2026-09-30 snapshot remains unchanged as history. In the current snapshot, **110 closed issues are still marked Not reviewed**; their closed status is not treated as proof of implementation or valid disposition.
+
+Issues #353 and #354 were reopened on 2026-10-03 with evidence comments because the recorded cached-versus-uncached benchmark had overlapping confidence intervals and excluded production topology, and target metrics/alert delivery remained unverified. PR #662 adds configurable cache-health thresholds and structured warning logs, but its CI status is mixed: API verify and OpenAPI consistency passed; Codacy, Repository Policy, and PR Required Gate failed; CodeQL was skipped. Keep #353/#354 open until representative performance and target telemetry evidence are available.
+
+Owner crosswalk comments support the following duplicate-only closures: #349 → #306, #295 → #294, #315 → #314, #326 → #327, #332 → #333, #345 → #346, #347 → #330, #398 → #413, #399 → #414, #402 → #418, and #407 → #408. Their canonical issues remain open; these closures do not establish implementation.
+
+This snapshot is a state refresh plus the specific closeout evidence listed above. It does not complete the remaining issue-by-issue audit.
