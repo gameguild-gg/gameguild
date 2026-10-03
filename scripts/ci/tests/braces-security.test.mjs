@@ -160,6 +160,14 @@ test("the advisory exception is bound to an exact installed security patch", () 
     "patches/braces@3.0.3.patch",
   );
   assert.equal(manifest.pnpm.auditConfig, undefined);
+  const scannerExceptions = readFileSync(
+    join(repositoryRoot, ".trivyignore"),
+    "utf8",
+  )
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith("#"));
+  assert.deepEqual(scannerExceptions, ["CVE-2026-93687"]);
   const patch = readFileSync(
     join(repositoryRoot, "patches/braces@3.0.3.patch"),
     "utf8",

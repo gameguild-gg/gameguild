@@ -20,5 +20,10 @@ consumer resolution. Missing patches, excessive nesting, cyclic parents, and
 incompatible ordinary patterns fail that gate. All other advisories retain the
 existing failure policy.
 
+`.trivyignore` declares the same single mitigated CVE for Codacy's version-based
+dependency scanner. The mandatory patch regression test also checks that this
+file contains only that exception. The exception does not remove the advisory
+from the pnpm audit report or waive installation and behavioral verification.
+
 When an upstream fixed release is available, replace the patch with that release,
-remove the validator's exception, and retain the behavioral regression tests.
+remove both scanner and validator exceptions, and retain the behavioral regression tests.
