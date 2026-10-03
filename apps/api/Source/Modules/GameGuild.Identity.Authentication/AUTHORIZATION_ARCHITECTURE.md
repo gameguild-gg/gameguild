@@ -356,6 +356,8 @@ GrantContentTypePermission(
 - **Hybrid Cache**: Per-instance L1 memory with optional shared Redis-backed L2; misses continue to the database source of truth.
 - **TTL and Capacity**: Separate configurable lifetimes for policies, permissions, ACLs, and rulesets, with bounded L1 size.
 - **Versioned Invalidation**: Tenant/user security versions, key tracking, bulk invalidation, and Redis Pub/Sub propagation keep grants and revocations coherent across instances.
+- **Bulk Decision Cache**: When the hybrid permission cache and tenant security-version store are registered, bulk decisions are cached across calls. Keys include the user, tenant, permission, content type, resource, and both tenant and global security versions. The service re-reads the versions after evaluation and retries if they changed, so a result evaluated across a permission mutation is not returned or cached under the earlier version. If three consecutive snapshots change, the batch fails instead of returning a potentially stale decision. Without both collaborators, checks use the database-backed batch path without decision caching.
+- **Bounded Bulk Evaluation**: Collection-based checks process at most 256 requests per database batch and preserve input order. Streaming checks default to 128 requests per batch; callers may select any size from 1 to 256 and process decisions as they are yielded.
 - **Warmup and Metrics**: Manual and popularity-based warmup plus hit, miss, eviction, and latency metrics.
 - **Health Alerts**: A periodic monitor logs cache health and emits structured warnings for low hit rate or high average latency after the configured minimum sample size.
 
