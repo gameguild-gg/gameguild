@@ -38,9 +38,15 @@ public sealed class RateLimitingServiceCollectionExtensionsTests
     }
 
     [Fact]
-    public void SetupRateLimiting_EnablesForwardedForOnlyFromConfiguredProxyAddresses()
+    public void SetupRateLimiting_EnablesForwardedHeadersOnlyFromConfiguredProxyAddresses()
     {
         var services = new ServiceCollection();
+        services.Configure<ForwardedHeadersOptions>(forwardedHeadersOptions =>
+        {
+            forwardedHeadersOptions.ForwardedHeaders = ForwardedHeaders.All;
+            forwardedHeadersOptions.KnownProxies.Clear();
+            forwardedHeadersOptions.KnownIPNetworks.Clear();
+        });
         var options = RateLimitingOptions.CreateDefault();
         options.TrustedProxyAddresses = ["192.0.2.50", "2001:db8::50"];
         options.TrustedProxyForwardLimit = 2;
@@ -50,9 +56,84 @@ public sealed class RateLimitingServiceCollectionExtensionsTests
         var forwardedHeadersOptions = provider.GetRequiredService<IOptions<ForwardedHeadersOptions>>().Value;
 
         forwardedHeadersOptions.ForwardedHeaders.Should().HaveFlag(ForwardedHeaders.XForwardedFor);
+        forwardedHeadersOptions.ForwardedHeaders.Should().HaveFlag(ForwardedHeaders.XForwardedProto);
+        forwardedHeadersOptions.ForwardedHeaders.Should().Be(ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto);
         forwardedHeadersOptions.ForwardLimit.Should().Be(2);
+        forwardedHeadersOptions.KnownProxies.Should().HaveCount(2);
         forwardedHeadersOptions.KnownProxies.Should().Contain(IPAddress.Parse("192.0.2.50"));
         forwardedHeadersOptions.KnownProxies.Should().Contain(IPAddress.Parse("2001:db8::50"));
+        forwardedHeadersOptions.KnownIPNetworks.Should().BeEmpty();
+    }
+
+    [Theory]
+    [InlineData("192.0.2.50", true)]
+    [InlineData("192.0.2.51", false)]
+    public async Task ForwardedHttpsScheme_IsAcceptedOnlyFromConfiguredTrustedProxies(
+        string remoteAddress,
+        bool expectedHttps)
+    {
+        var options = RateLimitingOptions.CreateDefault();
+        options.TrustedProxyAddresses = ["192.0.2.50"];
+        using var host = await new HostBuilder()
+            .ConfigureWebHost(webHost => webHost
+                .UseTestServer()
+                .ConfigureServices(services =>
+                {
+                    services.Configure<ForwardedHeadersOptions>(forwardedHeadersOptions =>
+                    {
+                        forwardedHeadersOptions.ForwardedHeaders = ForwardedHeaders.All;
+                        forwardedHeadersOptions.KnownProxies.Clear();
+                        forwardedHeadersOptions.KnownIPNetworks.Clear();
+                    });
+                    services.SetupRateLimiting(new ConfigurationBuilder().Build(), options);
+                })
+                .Configure(app =>
+                {
+                    app.UseForwardedHeaders();
+                    app.Run(_ => Task.CompletedTask);
+                }))
+            .StartAsync();
+
+        var context = await host.GetTestServer().SendAsync(httpContext =>
+        {
+            httpContext.Connection.RemoteIpAddress = IPAddress.Parse(remoteAddress);
+            httpContext.Request.Headers["X-Forwarded-Proto"] = "https";
+        });
+
+        context.Request.IsHttps.Should().Be(expectedHttps);
+    }
+
+    [Fact]
+    public async Task ForwardedHttpsScheme_IsIgnoredWhenNoTrustedProxyIsConfigured()
+    {
+        var options = RateLimitingOptions.CreateDefault();
+        using var host = await new HostBuilder()
+            .ConfigureWebHost(webHost => webHost
+                .UseTestServer()
+                .ConfigureServices(services =>
+                {
+                    services.Configure<ForwardedHeadersOptions>(forwardedHeadersOptions =>
+                    {
+                        forwardedHeadersOptions.ForwardedHeaders = ForwardedHeaders.All;
+                        forwardedHeadersOptions.KnownProxies.Clear();
+                        forwardedHeadersOptions.KnownIPNetworks.Clear();
+                    });
+                    services.SetupRateLimiting(new ConfigurationBuilder().Build(), options);
+                })
+                .Configure(app =>
+                {
+                    app.UseForwardedHeaders();
+                    app.Run(_ => Task.CompletedTask);
+                }))
+            .StartAsync();
+
+        var context = await host.GetTestServer().SendAsync(httpContext =>
+        {
+            httpContext.Connection.RemoteIpAddress = IPAddress.Parse("192.0.2.50");
+            httpContext.Request.Headers["X-Forwarded-Proto"] = "https";
+        });
+
+        context.Request.IsHttps.Should().BeFalse();
     }
 
     [Fact]

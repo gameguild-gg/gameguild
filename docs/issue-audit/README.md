@@ -79,3 +79,35 @@ Issues #353 and #354 were reopened on 2026-10-03 with evidence comments because 
 Owner crosswalk comments support the following duplicate-only closures: #349 → #306, #295 → #294, #315 → #314, #326 → #327, #332 → #333, #345 → #346, #347 → #330, #398 → #413, #399 → #414, #402 → #418, and #407 → #408. Their canonical issues remain open; these closures do not establish implementation.
 
 This snapshot is a state refresh plus the specific closeout evidence listed above. It does not complete the remaining issue-by-issue audit.
+
+## 2026-10-03 post-merge reconciliation
+
+A live query at 2026-10-03 15:45 UTC confirms 328 authored-or-assigned issues: **156 open and 172 closed**. #147 was completed after PR #651 merged and the corrected schema-description/example tests passed. #154 and #156 were closed as duplicates after their unique criteria were transferred to canonical issues #150 and #165. #170/#172 were already duplicate-closed under #171/#173; the canonical CSV/JSON export issues were completed by merged PRs #653 and #656, with their export tests and required CI gates passing. #150 and #165 remain open. The matrix records #164 and #166 as partial implementations, not completed work. #158 and #159 remain open and partial in PR #669 (head 6bb889ddd087091e47740bfe5b911003d108fc3d); focused authorization-audit tests pass 11/11. At 15:45 UTC, repository policy failed on the transitive braces@3.0.3 CVE-2026-93687 advisory, while API/Web and C# CodeQL checks were pending; OpenAPI consistency and Codacy passed.
+
+## 2026-10-03 closed-audit issue review
+
+A live review of the remaining closed issues in #151–#197 reconciled eleven rows that had been incorrectly left as `Not reviewed` in the matrix. Ten remain closed with recorded reasons or implementation evidence: #151/#152 are underspecified console requests; #153 is a duplicate chain to #150; #155 is covered across PRs #653/#656/#658; #161 is implemented by #660; #162 by #659; and #163/#167/#168/#197 are title-level capabilities verified against current services and tests.
+
+Issue #157 was reopened after reviewing merged PR #661. Its normal path captures permission changes and before/after state, and its focused API test suite passed eight tests. The failure path is incomplete: `ApplicationDbContext` clears the in-memory pending changes before delivery, then logs and drops them if the central audit service is unavailable or throws. There is no durable retry/recovery. The issue comment records the evidence: https://github.com/gameguild-gg/gameguild/issues/157#issuecomment-5970894047.
+
+After reopening #157, a live query at 2026-10-03 16:06 UTC reports 328 authored-or-assigned issues: 157 open and 171 closed. The matrix now records the ten reviewed closed issues and #157's reopened state; audit-gate failures for merged PRs #658/#661 are retained in their rows rather than presented as green checks.
+
+
+## 2026-10-03 historical closeout review: #8–#143
+
+Reconciled all twelve closed/unreviewed rows in #8–#143. #44/#45 remain closed as unscoped analytics follow-ups; #54 records a product decision against WhatsApp notifications; #55 and #81 are non-actionable historical ideas/campaigns; #46/#106 are superseded by the .NET API architecture; #56 is implemented at title level by the shared localized auth layout; #99 is a duplicate of still-open #92; #115 is obsolete because Wasmer was removed; and #143 is covered by current version-reader/routing tests, with a fresh focused run passing 6/6 tests.
+
+#109 was reopened because its concrete brand-guide/logo alternatives/typography/color/spacing/usage acceptance remains unmet. The repository has a few legacy PNGs and a generic UI palette, but no coherent brand guide or usage examples. Reopen evidence: https://github.com/gameguild-gg/gameguild/issues/109#issuecomment-5970990942.
+
+After reopening #109, the live issue set is 328 total: 158 open and 170 closed. This review does not count a stale/inactivity closure as implementation evidence.
+## 2026-10-03 GitHub closure-event reconciliation
+
+The live set is 328 issues: 158 open and 170 closed. In the GitHub timeline, 90 of the currently closed issue IDs have at least one close event by the authenticated account `mathrmartins` since 2026-09-25; these IDs account for 100 close transitions because some were reopened and closed again. This is an account-action count, not a count of implemented features: it includes duplicate and obsolete dispositions. The matrix has review notes for 89 of the 170 currently closed issues and 13 of the 158 open issues; 81 closed and 145 open issues still have no completed review entry (226 total).
+
+## 2026-10-03 live reconciliation after reopening #208
+
+A fresh authored-or-assigned query returns 328 unique issues: 159 open and 169 closed. The issue matrix was corrected for #208, which is OPEN and has no close timestamp. The latest matrix review notes cover 89 of the 169 currently closed issues and 14 of the 159 open issues; 80 closed and 145 open issues remain without a completed review entry.
+
+The prior GitHub closure-event reconciliation recorded 90 distinct issue IDs closed by the GitHub account “mathrmartins” since 2026-09-25, across 100 close transitions. #208 is now reopened, so this is an account-action history count, not the count of issues currently closed or implemented.
+
+For #208, the production MVC sign-in filter lacked the cross-account IP threshold even though its earlier closeout claimed it was active. The issue was reopened with source evidence. The local fix now enforces per-email and cross-account per-IP rolling-hour thresholds under PostgreSQL advisory locks. Focused API unit tests passed 6/6, and the PostgreSQL concurrency integration passed 1/1. The fix was committed and pushed to PR #669 as 4775a56. At 2026-10-03 17:54 UTC, Repository Policy had failed while API, Web, OpenAPI consistency, C# analysis, and Codacy were pending; CodeQL was skipped. Keep #208 open until required checks pass and the PR merges.
