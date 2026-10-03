@@ -103,3 +103,11 @@ After reopening #109, the live issue set is 328 total: 158 open and 170 closed. 
 ## 2026-10-03 GitHub closure-event reconciliation
 
 The live set is 328 issues: 158 open and 170 closed. In the GitHub timeline, 90 of the currently closed issue IDs have at least one close event by the authenticated account `mathrmartins` since 2026-09-25; these IDs account for 100 close transitions because some were reopened and closed again. This is an account-action count, not a count of implemented features: it includes duplicate and obsolete dispositions. The matrix has review notes for 89 of the 170 currently closed issues and 13 of the 158 open issues; 81 closed and 145 open issues still have no completed review entry (226 total).
+
+## 2026-10-03 live reconciliation after reopening #208
+
+A fresh authored-or-assigned query returns 328 unique issues: 159 open and 169 closed. The issue matrix was corrected for #208, which is OPEN and has no close timestamp. The latest matrix review notes cover 89 of the 169 currently closed issues and 14 of the 159 open issues; 80 closed and 145 open issues remain without a completed review entry.
+
+The prior GitHub closure-event reconciliation recorded 90 distinct issue IDs closed by the GitHub account “mathrmartins” since 2026-09-25, across 100 close transitions. #208 is now reopened, so this is an account-action history count, not the count of issues currently closed or implemented.
+
+For #208, the production MVC sign-in filter lacked the cross-account IP threshold even though its earlier closeout claimed it was active. The issue was reopened with source evidence. The local fix now enforces per-email and cross-account per-IP rolling-hour thresholds under PostgreSQL advisory locks. Focused API unit tests passed 6/6, and the PostgreSQL concurrency integration passed 1/1. These changes remain uncommitted and are not included in PR #669's current GitHub checks.

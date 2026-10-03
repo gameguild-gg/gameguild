@@ -1,3 +1,4 @@
+using System.Net;
 using System.Reflection;
 using FluentAssertions;
 using GameGuild.API.Core.Filters;
@@ -99,6 +100,96 @@ public sealed class AuthenticationLockoutActionFilterTests
             var nextCalled = false;
 
             await filter.OnActionExecutionAsync(context, () =>
+            {
+                nextCalled = true;
+                return Task.FromResult(new ActionExecutedContext(actionContext, [], new object()));
+            });
+
+            nextCalled.Should().BeTrue();
+        }
+    }
+
+    [Fact]
+    public async Task OnActionExecutionAsync_ShouldThrottleIpAcrossDifferentAccountsAtConfiguredThreshold()
+    {
+        var now = DateTime.UtcNow;
+        const string sourceIp = "192.0.2.10";
+        await using var database = CreateDatabase();
+        var attempts = Enumerable.Range(0, 50)
+            .Select(index => CreateAttempt($"account-{index}@example.com", isSuccessful: false, now.AddMinutes(-10 - index)))
+            .ToList();
+        await SeedAttemptsAsync(database, attempts);
+
+        var options = new AuthenticationSecurityOptions
+        {
+            MaxFailedAttemptsPerHour = 5,
+            MaxAttemptsPerIpPerHour = 50,
+            EnableIpThrottling = true
+        };
+        var (filter, services) = CreateFilter(database, options);
+        using (services)
+        {
+            var (context, actionContext) = CreateContext(services, nameof(AuthController.LocalSignIn), "target@example.com");
+            context.HttpContext.Connection.RemoteIpAddress = IPAddress.Parse(sourceIp);
+            var nextCalled = false;
+
+            await filter.OnActionExecutionAsync(context, () =>
+            {
+                nextCalled = true;
+                return Task.FromResult(new ActionExecutedContext(actionContext, [], new object()));
+            });
+
+            nextCalled.Should().BeFalse();
+            context.Result.Should().BeOfType<UnauthorizedObjectResult>()
+                .Which.Value.Should().BeOfType<ProblemDetails>()
+                .Which.Detail.Should().Be("The email or password is incorrect.");
+            context.HttpContext.Response.Headers.CacheControl.ToString().Should().Be("no-store");
+        }
+    }
+
+    [Fact]
+    public async Task OnActionExecutionAsync_ShouldAllowIpBelowThresholdAndWhenIpThrottlingIsDisabled()
+    {
+        var now = DateTime.UtcNow;
+        await using var database = CreateDatabase();
+        await SeedAttemptsAsync(database, CreateFailures("another-account@example.com", 49, now.AddMinutes(-10)));
+
+        var options = new AuthenticationSecurityOptions
+        {
+            MaxFailedAttemptsPerHour = 5,
+            MaxAttemptsPerIpPerHour = 50,
+            EnableIpThrottling = true
+        };
+        var (filter, services) = CreateFilter(database, options);
+        using (services)
+        {
+            var (context, actionContext) = CreateContext(services, nameof(AuthController.LocalSignIn), "target@example.com");
+            context.HttpContext.Connection.RemoteIpAddress = IPAddress.Parse("192.0.2.10");
+            var nextCalled = false;
+
+            await filter.OnActionExecutionAsync(context, () =>
+            {
+                nextCalled = true;
+                return Task.FromResult(new ActionExecutedContext(actionContext, [], new object()));
+            });
+
+            nextCalled.Should().BeTrue();
+        }
+
+        var disabledOptions = new AuthenticationSecurityOptions
+        {
+            MaxFailedAttemptsPerHour = 5,
+            MaxAttemptsPerIpPerHour = 50,
+            EnableIpThrottling = false
+        };
+        var (disabledFilter, disabledServices) = CreateFilter(database, disabledOptions);
+        using (disabledServices)
+        {
+            var (context, actionContext) = CreateContext(disabledServices, nameof(AuthController.LocalSignIn), "target@example.com");
+            context.HttpContext.Connection.RemoteIpAddress = IPAddress.Parse("192.0.2.10");
+            var nextCalled = false;
+
+            await disabledFilter.OnActionExecutionAsync(context, () =>
             {
                 nextCalled = true;
                 return Task.FromResult(new ActionExecutedContext(actionContext, [], new object()));

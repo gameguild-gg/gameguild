@@ -1,5 +1,6 @@
 using System.Buffers.Binary;
 using System.Data;
+using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using GameGuild.API.Database;
@@ -38,11 +39,18 @@ public sealed class AuthenticationLockoutActionFilter : IAsyncActionFilter
         var options = services.GetRequiredService<AuthenticationSecurityOptions>();
         var database = services.GetRequiredService<IApplicationDbContext>();
         var normalizedEmail = email.ToLowerInvariant();
+        var remoteIpAddress = context.HttpContext.Connection.RemoteIpAddress;
+        var normalizedIpAddress = remoteIpAddress is null
+            ? null
+            : remoteIpAddress.IsIPv4MappedToIPv6
+                ? remoteIpAddress.MapToIPv4().ToString()
+                : remoteIpAddress.ToString();
         context.HttpContext.Response.Headers.CacheControl = "no-store";
 
         var lockoutLock = await TryAcquireLockAsync(
                 services.GetRequiredService<ApplicationDbContext>(),
                 normalizedEmail,
+                options.EnableIpThrottling ? normalizedIpAddress : null,
                 context.HttpContext.RequestAborted)
             .ConfigureAwait(false);
 
@@ -54,6 +62,30 @@ public sealed class AuthenticationLockoutActionFilter : IAsyncActionFilter
 
         await using var heldLock = lockoutLock;
         var now = DateTime.UtcNow;
+
+        if (options.EnableIpThrottling && IPAddress.TryParse(normalizedIpAddress, out _))
+        {
+            // A source-IP budget is shared across account identifiers. Forwarded addresses are
+            // already normalized by ForwardedHeadersMiddleware and only accepted from trusted proxies.
+            var recentIpFailures = await database.Set<AuthenticationAttempt>()
+                .Where(attempt => attempt.IpAddress == normalizedIpAddress &&
+                                  !attempt.IsSuccessful &&
+                                  attempt.AttemptedAt >= now.Subtract(FailedAttemptWindow))
+                .OrderByDescending(attempt => attempt.AttemptedAt)
+                .Select(attempt => attempt.AttemptedAt)
+                .Take(options.MaxAttemptsPerIpPerHour)
+                .ToListAsync(context.HttpContext.RequestAborted)
+                .ConfigureAwait(false);
+
+            if (recentIpFailures.Count >= options.MaxAttemptsPerIpPerHour)
+            {
+                services.GetService<ILogger<AuthenticationLockoutActionFilter>>()?.LogWarning(
+                    "Local sign-in throttled for source IP after reaching the configured hourly failure limit");
+
+                context.Result = CreateUnauthorizedResult();
+                return;
+            }
+        }
 
         // Bound the rows read to the threshold. The stored attempt history is shared across API
         // instances, so failures are not reset by load balancing or process restart.
@@ -98,15 +130,46 @@ public sealed class AuthenticationLockoutActionFilter : IAsyncActionFilter
     private static async Task<IAsyncDisposable?> TryAcquireLockAsync(
         ApplicationDbContext database,
         string normalizedEmail,
+        string? normalizedIpAddress,
         CancellationToken cancellationToken)
     {
-        var lockKey = CreateLockKey(normalizedEmail);
+        var lockKeys = new List<long> { CreateEmailLockKey(normalizedEmail) };
+        if (normalizedIpAddress is not null)
+        {
+            lockKeys.Add(CreateIpLockKey(normalizedIpAddress));
+        }
+
+        lockKeys.Sort();
 
         if (!database.Database.IsRelational())
         {
-            var stripe = InProcessLockStripes[(int)((ulong)lockKey % (uint)InProcessLockStripes.Length)];
-            await stripe.WaitAsync(cancellationToken).ConfigureAwait(false);
-            return new InProcessLockLease(stripe);
+            var stripes = lockKeys
+                .Select(GetLockStripeIndex)
+                .Distinct()
+                .OrderBy(index => index)
+                .Select(index => InProcessLockStripes[index])
+                .ToArray();
+            var acquiredStripes = new List<SemaphoreSlim>(stripes.Length);
+
+            try
+            {
+                foreach (var stripe in stripes)
+                {
+                    await stripe.WaitAsync(cancellationToken).ConfigureAwait(false);
+                    acquiredStripes.Add(stripe);
+                }
+
+                return new InProcessLockLease(acquiredStripes.ToArray());
+            }
+            catch
+            {
+                for (var index = acquiredStripes.Count - 1; index >= 0; index--)
+                {
+                    acquiredStripes[index].Release();
+                }
+
+                throw;
+            }
         }
 
         if (!database.Database.IsNpgsql())
@@ -117,30 +180,46 @@ public sealed class AuthenticationLockoutActionFilter : IAsyncActionFilter
 
         await database.Database.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
         var connection = database.Database.GetDbConnection();
+        var acquiredKeys = new List<long>(lockKeys.Count);
 
         try
         {
-            await using var command = connection.CreateCommand();
-            command.CommandText = "SELECT pg_try_advisory_lock(@lock_key)";
-            command.Transaction = database.Database.CurrentTransaction?.GetDbTransaction();
-
-            var parameter = command.CreateParameter();
-            parameter.ParameterName = "lock_key";
-            parameter.DbType = DbType.Int64;
-            parameter.Value = lockKey;
-            command.Parameters.Add(parameter);
-
-            var result = await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
-            if (result is not true)
+            foreach (var lockKey in lockKeys)
             {
-                await database.Database.CloseConnectionAsync().ConfigureAwait(false);
-                return null;
+                await using var command = connection.CreateCommand();
+                command.CommandText = "SELECT pg_try_advisory_lock(@lock_key)";
+                command.Transaction = database.Database.CurrentTransaction?.GetDbTransaction();
+
+                var parameter = command.CreateParameter();
+                parameter.ParameterName = "lock_key";
+                parameter.DbType = DbType.Int64;
+                parameter.Value = lockKey;
+                command.Parameters.Add(parameter);
+
+                var result = await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
+                if (result is not true)
+                {
+                    await ReleasePostgreSqlLocksAsync(database, acquiredKeys).ConfigureAwait(false);
+                    await database.Database.CloseConnectionAsync().ConfigureAwait(false);
+                    return null;
+                }
+
+                acquiredKeys.Add(lockKey);
             }
 
-            return new PostgreSqlLockLease(database, lockKey);
+            return new PostgreSqlLockLease(database, acquiredKeys.ToArray());
         }
         catch
         {
+            try
+            {
+                await ReleasePostgreSqlLocksAsync(database, acquiredKeys).ConfigureAwait(false);
+            }
+            catch
+            {
+                // Clearing the connection pool below releases any session advisory locks.
+            }
+
             if (connection is NpgsqlConnection npgsqlConnection)
             {
                 NpgsqlConnection.ClearPool(npgsqlConnection);
@@ -151,23 +230,61 @@ public sealed class AuthenticationLockoutActionFilter : IAsyncActionFilter
         }
     }
 
-    private static long CreateLockKey(string normalizedEmail)
+    private static int GetLockStripeIndex(long lockKey) =>
+        (int)((ulong)lockKey % (uint)InProcessLockStripes.Length);
+
+    private static long CreateEmailLockKey(string normalizedEmail)
     {
         var scopedIdentifier = $"gameguild:auth:local-sign-in-lockout:v1:{normalizedEmail}";
         var digest = SHA256.HashData(Encoding.UTF8.GetBytes(scopedIdentifier));
         return BinaryPrimitives.ReadInt64BigEndian(digest);
     }
 
-    private sealed class InProcessLockLease(SemaphoreSlim semaphore) : IAsyncDisposable
+    private static long CreateIpLockKey(string normalizedIpAddress)
+    {
+        var scopedIdentifier = $"gameguild:auth:local-sign-in-lockout:ip:v1:{normalizedIpAddress}";
+        var digest = SHA256.HashData(Encoding.UTF8.GetBytes(scopedIdentifier));
+        return BinaryPrimitives.ReadInt64BigEndian(digest);
+    }
+
+    private static async Task ReleasePostgreSqlLocksAsync(ApplicationDbContext database, IReadOnlyList<long> lockKeys)
+    {
+        var connection = database.Database.GetDbConnection();
+
+        for (var index = lockKeys.Count - 1; index >= 0; index--)
+        {
+            await using var command = connection.CreateCommand();
+            command.CommandText = "SELECT pg_advisory_unlock(@lock_key)";
+            command.Transaction = database.Database.CurrentTransaction?.GetDbTransaction();
+
+            var parameter = command.CreateParameter();
+            parameter.ParameterName = "lock_key";
+            parameter.DbType = DbType.Int64;
+            parameter.Value = lockKeys[index];
+            command.Parameters.Add(parameter);
+
+            var unlocked = await command.ExecuteScalarAsync(CancellationToken.None).ConfigureAwait(false);
+            if (unlocked is not true)
+            {
+                throw new InvalidOperationException("The PostgreSQL sign-in lock was not held at release time.");
+            }
+        }
+    }
+
+    private sealed class InProcessLockLease(SemaphoreSlim[] semaphores) : IAsyncDisposable
     {
         public ValueTask DisposeAsync()
         {
-            semaphore.Release();
+            for (var index = semaphores.Length - 1; index >= 0; index--)
+            {
+                semaphores[index].Release();
+            }
+
             return ValueTask.CompletedTask;
         }
     }
 
-    private sealed class PostgreSqlLockLease(ApplicationDbContext database, long lockKey) : IAsyncDisposable
+    private sealed class PostgreSqlLockLease(ApplicationDbContext database, long[] lockKeys) : IAsyncDisposable
     {
         public async ValueTask DisposeAsync()
         {
@@ -175,21 +292,7 @@ public sealed class AuthenticationLockoutActionFilter : IAsyncActionFilter
 
             try
             {
-                await using var command = connection.CreateCommand();
-                command.CommandText = "SELECT pg_advisory_unlock(@lock_key)";
-                command.Transaction = database.Database.CurrentTransaction?.GetDbTransaction();
-
-                var parameter = command.CreateParameter();
-                parameter.ParameterName = "lock_key";
-                parameter.DbType = DbType.Int64;
-                parameter.Value = lockKey;
-                command.Parameters.Add(parameter);
-
-                var unlocked = await command.ExecuteScalarAsync(CancellationToken.None).ConfigureAwait(false);
-                if (unlocked is not true)
-                {
-                    throw new InvalidOperationException("The PostgreSQL account lockout advisory lock was not held at release time.");
-                }
+                await ReleasePostgreSqlLocksAsync(database, lockKeys).ConfigureAwait(false);
             }
             catch
             {
