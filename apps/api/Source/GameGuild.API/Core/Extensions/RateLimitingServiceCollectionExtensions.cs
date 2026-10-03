@@ -39,9 +39,11 @@ public static class RateLimitingServiceCollectionExtensions
         {
             services.Configure<ForwardedHeadersOptions>(forwardedHeadersOptions =>
             {
-                // The pipeline runs UseForwardedHeaders before the rate limiter. Trust only
-                // configured proxy addresses; the limiter itself never reads request headers.
-                forwardedHeadersOptions.ForwardedHeaders |= ForwardedHeaders.XForwardedFor;
+                // The pipeline runs UseForwardedHeaders before the rate limiter and authentication.
+                // Trust client IP and external HTTPS scheme only from configured proxy addresses;
+                // the limiter itself never reads request headers.
+                forwardedHeadersOptions.ForwardedHeaders |=
+                    ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
                 forwardedHeadersOptions.ForwardLimit = options.TrustedProxyForwardLimit;
                 foreach (var trustedProxy in trustedProxies)
                 {
