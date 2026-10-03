@@ -171,6 +171,7 @@ public static class InfrastructureLayerExtensions
             }
         });
         services.AddScoped<IAuditScheduledExportStorage, AuditScheduledExportStorageAdapter>();
+        services.AddScoped<IAuditRetentionDataSource, PostgreSqlAuditRetentionDataSource>();
         logger.LogInformation("Compliance Audit Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
         // 03a. Authentication Application (command handlers, validators, core auth services)

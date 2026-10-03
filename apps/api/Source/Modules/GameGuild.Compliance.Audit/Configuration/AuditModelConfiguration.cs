@@ -6,6 +6,37 @@ public sealed class AuditModelConfiguration : IModelConfiguration
 {
     public void Configure(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<AuditRetentionConfiguration>(entity =>
+        {
+            entity.ToTable("AuditRetentionConfigurations");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.TenantId).IsRequired();
+            entity.Property(item => item.Revision).IsConcurrencyToken();
+            entity.Property(item => item.ConfigurationJson).HasColumnType("text").IsRequired();
+            entity.HasIndex(item => item.TenantId).IsUnique();
+        });
+        modelBuilder.Entity<AuditRetentionSimulationRun>(entity =>
+        {
+            entity.ToTable("AuditRetentionSimulationRuns");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.TenantId).IsRequired();
+            entity.Property(item => item.ConfigurationJson).HasColumnType("text").IsRequired();
+            entity.Property(item => item.RequestJson).HasColumnType("text").IsRequired();
+            entity.Property(item => item.ReportJson).HasColumnType("text").IsRequired();
+            entity.Property(item => item.ModelVersion).HasMaxLength(80).IsRequired();
+            entity.Property(item => item.Currency).HasMaxLength(3).IsRequired();
+            entity.Property(item => item.BaselineTotalCost).HasPrecision(38, 8);
+            entity.Property(item => item.RecommendedTotalCost).HasPrecision(38, 8);
+            entity.HasIndex(item => new { item.TenantId, item.CreatedAt });
+        });
+        modelBuilder.Entity<AuditDataAccessObservation>(entity =>
+        {
+            entity.ToTable("AuditDataAccessObservations");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.TenantId).IsRequired();
+            entity.HasIndex(item => new { item.TenantId, item.CreatedAt });
+        });
+
         modelBuilder.Entity<AuditLog>(entity =>
         {
             entity.ToTable("AuditLogs");

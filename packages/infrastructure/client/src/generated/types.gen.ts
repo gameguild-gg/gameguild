@@ -3195,6 +3195,12 @@ export interface CommerceSubscriptionsSubscriptionUsageDto {
   usersCount?: number;
 }
 
+/** Data model for Compliance Audit Audit Access Age Bucket. */
+export interface ComplianceAuditAuditAccessAgeBucket {
+  ageDays?: number;
+  readCount?: number;
+}
+
 /** Data model for Compliance Audit Audit Action Type Descriptor. */
 export interface ComplianceAuditAuditActionTypeDescriptor {
   actionType?: string | null;
@@ -3413,6 +3419,182 @@ export interface ComplianceAuditAuditResourceContext {
   resourceType?: string | null;
 }
 
+/** Data model for Compliance Audit Audit Retention Compliance Violation. */
+export interface ComplianceAuditAuditRetentionComplianceViolation {
+  obligation?: string | null;
+  reason?: string | null;
+  source?: string | null;
+}
+
+/** Data model for Compliance Audit Audit Retention Configuration Response. */
+export interface ComplianceAuditAuditRetentionConfigurationOutput {
+  id?: string;
+  configuration?: ComplianceAuditConfigureAuditRetentionInput;
+  revision?: number;
+  tenantId?: string;
+  updatedAtUtc?: string;
+  updatedByUserId?: string;
+}
+
+/** OpenAPI schema for Compliance Audit Audit Retention Growth Model. */
+export type ComplianceAuditAuditRetentionGrowthModel = 'Constant' | 'HistoricalTrend' | 'CompoundAnnual';
+
+/** Data model for Compliance Audit Audit Retention Historical Evidence. */
+export interface ComplianceAuditAuditRetentionHistoricalEvidence {
+  accessAges?: Array<ComplianceAuditAuditAccessAgeBucket> | null;
+  asOfUtc?: string;
+  availableHistoryDays?: number;
+  averageDailyLogicalBytes?: number;
+  averageDailyRecords?: number;
+  cohorts?: Array<ComplianceAuditAuditStorageDailyCohort> | null;
+  dailyLogicalBytesTrend?: number;
+  dailyRecordsTrend?: number;
+  daysWithRecords?: number;
+  historicalDays?: number;
+  measurementMethod?: string | null;
+  observedAccessDays?: number;
+  observedReadCount?: number;
+  oldestObservedAccessAgeDays?: number | null;
+  storedLogicalBytes?: number;
+  storedRecordCount?: number;
+  weeklySeasonality?: Array<ComplianceAuditAuditRetentionWeekdayFactor> | null;
+}
+
+/** Data model for Compliance Audit Audit Retention Month Forecast. */
+export interface ComplianceAuditAuditRetentionMonthForecast {
+  budget?: number | null;
+  budgetVariance?: number | null;
+  endBillableBytes?: number;
+  endRecordCount?: number;
+  endUtcDateExclusive?: string;
+  month?: number;
+  retrievalCost?: number;
+  startUtcDate?: string;
+  storageCost?: number;
+  tiers?: Array<ComplianceAuditAuditRetentionTierForecast> | null;
+  totalCost?: number;
+}
+
+/** A configured obligation, with an administrator-provided source; no regulatory minimum is assumed. */
+export interface ComplianceAuditAuditRetentionObligation {
+  maximumRetentionDays?: number | null;
+  minimumRetentionDays?: number;
+  name: string;
+  source: string;
+}
+
+/** Data model for Compliance Audit Audit Retention Recommendation. */
+export interface ComplianceAuditAuditRetentionRecommendation {
+  evaluatedCandidates?: number;
+  reason?: string | null;
+  savingsComparedWithBaseline?: number | null;
+  suggestedScenario?: ComplianceAuditAuditRetentionScenarioResult;
+}
+
+/** Data model for Compliance Audit Audit Retention Risk. */
+export interface ComplianceAuditAuditRetentionRisk {
+  code?: string | null;
+  description?: string | null;
+  severity?: string | null;
+}
+
+/** Data model for Compliance Audit Audit Retention Scenario. */
+export interface ComplianceAuditAuditRetentionScenario {
+  coldUntilDays?: number;
+  hotDays?: number;
+  name: string;
+  retentionDays?: number;
+  warmUntilDays?: number;
+}
+
+/** Data model for Compliance Audit Audit Retention Scenario Result. */
+export interface ComplianceAuditAuditRetentionScenarioResult {
+  budgetVariance?: number | null;
+  complianceStatus?: string | null;
+  complianceViolations?: Array<ComplianceAuditAuditRetentionComplianceViolation> | null;
+  differenceFromBaseline?: number;
+  expectedReadLatencyMilliseconds?: number | null;
+  initialExpiredLogicalBytes?: number;
+  initialExpiredRecords?: number;
+  months?: Array<ComplianceAuditAuditRetentionMonthForecast> | null;
+  p95ReadLatencyMilliseconds?: number | null;
+  risks?: Array<ComplianceAuditAuditRetentionRisk> | null;
+  savingsPercent?: number | null;
+  scenario?: ComplianceAuditAuditRetentionScenario;
+  slowObservedReadsPercent?: number | null;
+  totalCost?: number;
+  totalRetrievalCost?: number;
+  totalStorageCost?: number;
+  unavailableObservedReadsPercent?: number | null;
+  years?: Array<ComplianceAuditAuditRetentionYearForecast> | null;
+}
+
+/** Data model for Compliance Audit Audit Retention Simulation Response. */
+export interface ComplianceAuditAuditRetentionSimulationOutput {
+  id?: string;
+  configurationRevision?: number;
+  configurationSnapshot?: ComplianceAuditConfigureAuditRetentionInput;
+  createdAtUtc?: string;
+  createdByUserId?: string;
+  report?: ComplianceAuditAuditRetentionSimulationReport;
+  request?: ComplianceAuditRunAuditRetentionSimulationInput;
+  tenantId?: string;
+}
+
+/** Data model for Compliance Audit Audit Retention Simulation Report. */
+export interface ComplianceAuditAuditRetentionSimulationReport {
+  annualGrowthPercent?: number | null;
+  assumptions?: Array<string> | null;
+  baseline?: ComplianceAuditAuditRetentionScenarioResult;
+  currency?: string | null;
+  evidence?: ComplianceAuditAuditRetentionHistoricalEvidence;
+  forecastMonths?: number;
+  growthModel?: ComplianceAuditAuditRetentionGrowthModel;
+  modelVersion?: string | null;
+  recommendation?: ComplianceAuditAuditRetentionRecommendation;
+  scenarios?: Array<ComplianceAuditAuditRetentionScenarioResult> | null;
+  storageOverheadMultiplier?: number;
+}
+
+/** Data model for Compliance Audit Audit Retention Simulation Summary. */
+export interface ComplianceAuditAuditRetentionSimulationSummary {
+  id?: string;
+  baselineTotalCost?: number;
+  configurationRevision?: number;
+  createdAtUtc?: string;
+  createdByUserId?: string;
+  currency?: string | null;
+  forecastMonths?: number;
+  recommendedTotalCost?: number | null;
+}
+
+/** Data model for Compliance Audit Audit Retention Tier Forecast. */
+export interface ComplianceAuditAuditRetentionTierForecast {
+  endBillableBytes?: number;
+  endRecordCount?: number;
+  retrievalCost?: number;
+  storageCost?: number;
+  tier?: ComplianceAuditAuditStorageTier;
+}
+
+/** Data model for Compliance Audit Audit Retention Weekday Factor. */
+export interface ComplianceAuditAuditRetentionWeekdayFactor {
+  bytesMultiplier?: number;
+  dayOfWeek?: number;
+  recordsMultiplier?: number;
+}
+
+/** Data model for Compliance Audit Audit Retention Year Forecast. */
+export interface ComplianceAuditAuditRetentionYearForecast {
+  budget?: number | null;
+  budgetVariance?: number | null;
+  forecastYear?: number;
+  months?: number;
+  retrievalCost?: number;
+  storageCost?: number;
+  totalCost?: number;
+}
+
 /** Risk level for audit events */
 export type ComplianceAuditAuditRiskLevel = 'Low' | 'Medium' | 'High' | 'Critical';
 
@@ -3426,6 +3608,24 @@ export interface ComplianceAuditAuditStatisticsOutput {
   securityEvents?: number;
   startDate?: string;
   totalEvents?: number;
+}
+
+/** Measured PostgreSQL logical row bytes; physical disk, compression and index costs are separate assumptions. */
+export interface ComplianceAuditAuditStorageDailyCohort {
+  dateUtc?: string;
+  logicalBytes?: number;
+  recordCount?: number;
+}
+
+/** OpenAPI schema for Compliance Audit Audit Storage Tier. */
+export type ComplianceAuditAuditStorageTier = 'Hot' | 'Warm' | 'Cold' | 'Archive';
+
+/** Data model for Compliance Audit Audit Storage Tier Price. */
+export interface ComplianceAuditAuditStorageTierPrice {
+  expectedReadLatencyMilliseconds?: number;
+  monthlyCostPerGiB?: number;
+  retrievalCostPerGiB?: number;
+  tier?: ComplianceAuditAuditStorageTier;
 }
 
 /** Authentication audit entry. */
@@ -3452,6 +3652,20 @@ export interface ComplianceAuditAuthenticationAuditOutput {
   take?: number;
   totalCount?: number;
   uniqueIpAddresses?: number;
+}
+
+/** Data model for Compliance Audit Configure Audit Retention Request. */
+export interface ComplianceAuditConfigureAuditRetentionInput {
+  baseline: ComplianceAuditAuditRetentionScenario;
+  currency: string;
+  expectedRevision?: number;
+  maximumReadLatencyMilliseconds?: number;
+  monthlyBudget?: number | null;
+  obligations: Array<ComplianceAuditAuditRetentionObligation>;
+  /** All existing records are preserved through this inclusive UTC date in every scenario. */
+  preserveAllRecordsThroughUtcDate?: string | null;
+  storageOverheadMultiplier?: number;
+  tierPrices: Array<ComplianceAuditAuditStorageTierPrice>;
 }
 
 /** Data model for Compliance Audit Create Scheduled Audit Export Request. */
@@ -3523,6 +3737,15 @@ export interface ComplianceAuditPermissionAuditOutput {
   skip?: number;
   take?: number;
   totalCount?: number;
+}
+
+/** Data model for Compliance Audit Run Audit Retention Simulation Request. */
+export interface ComplianceAuditRunAuditRetentionSimulationInput {
+  annualGrowthPercent?: number | null;
+  forecastMonths?: number;
+  growthModel?: ComplianceAuditAuditRetentionGrowthModel;
+  historicalDays?: number;
+  scenarios: Array<ComplianceAuditAuditRetentionScenario>;
 }
 
 /** Data model for Compliance Audit Scheduled Audit Export Response. */
@@ -18602,6 +18825,7 @@ export let CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInputSchem
 export let CommerceSubscriptionsSubscriptionStatusSchema: z.ZodType<CommerceSubscriptionsSubscriptionStatus>;
 export let CommerceSubscriptionsSubscriptionUpgradeResultSchema: z.ZodType<CommerceSubscriptionsSubscriptionUpgradeResult>;
 export let CommerceSubscriptionsSubscriptionUsageDtoSchema: z.ZodType<CommerceSubscriptionsSubscriptionUsageDto>;
+export let ComplianceAuditAuditAccessAgeBucketSchema: z.ZodType<ComplianceAuditAuditAccessAgeBucket>;
 export let ComplianceAuditAuditActionTypeDescriptorSchema: z.ZodType<ComplianceAuditAuditActionTypeDescriptor>;
 export let ComplianceAuditAuditActionTypeFrequencySchema: z.ZodType<ComplianceAuditAuditActionTypeFrequency>;
 export let ComplianceAuditAuditActionTypeGroupDescriptorSchema: z.ZodType<ComplianceAuditAuditActionTypeGroupDescriptor>;
@@ -18629,10 +18853,30 @@ export let ComplianceAuditAuditNetworkContextSchema: z.ZodType<ComplianceAuditAu
 export let ComplianceAuditAuditOutcomeContextSchema: z.ZodType<ComplianceAuditAuditOutcomeContext>;
 export let ComplianceAuditAuditRelatedActionSchema: z.ZodType<ComplianceAuditAuditRelatedAction>;
 export let ComplianceAuditAuditResourceContextSchema: z.ZodType<ComplianceAuditAuditResourceContext>;
+export let ComplianceAuditAuditRetentionComplianceViolationSchema: z.ZodType<ComplianceAuditAuditRetentionComplianceViolation>;
+export let ComplianceAuditAuditRetentionConfigurationOutputSchema: z.ZodType<ComplianceAuditAuditRetentionConfigurationOutput>;
+export let ComplianceAuditAuditRetentionGrowthModelSchema: z.ZodType<ComplianceAuditAuditRetentionGrowthModel>;
+export let ComplianceAuditAuditRetentionHistoricalEvidenceSchema: z.ZodType<ComplianceAuditAuditRetentionHistoricalEvidence>;
+export let ComplianceAuditAuditRetentionMonthForecastSchema: z.ZodType<ComplianceAuditAuditRetentionMonthForecast>;
+export let ComplianceAuditAuditRetentionObligationSchema: z.ZodType<ComplianceAuditAuditRetentionObligation>;
+export let ComplianceAuditAuditRetentionRecommendationSchema: z.ZodType<ComplianceAuditAuditRetentionRecommendation>;
+export let ComplianceAuditAuditRetentionRiskSchema: z.ZodType<ComplianceAuditAuditRetentionRisk>;
+export let ComplianceAuditAuditRetentionScenarioSchema: z.ZodType<ComplianceAuditAuditRetentionScenario>;
+export let ComplianceAuditAuditRetentionScenarioResultSchema: z.ZodType<ComplianceAuditAuditRetentionScenarioResult>;
+export let ComplianceAuditAuditRetentionSimulationOutputSchema: z.ZodType<ComplianceAuditAuditRetentionSimulationOutput>;
+export let ComplianceAuditAuditRetentionSimulationReportSchema: z.ZodType<ComplianceAuditAuditRetentionSimulationReport>;
+export let ComplianceAuditAuditRetentionSimulationSummarySchema: z.ZodType<ComplianceAuditAuditRetentionSimulationSummary>;
+export let ComplianceAuditAuditRetentionTierForecastSchema: z.ZodType<ComplianceAuditAuditRetentionTierForecast>;
+export let ComplianceAuditAuditRetentionWeekdayFactorSchema: z.ZodType<ComplianceAuditAuditRetentionWeekdayFactor>;
+export let ComplianceAuditAuditRetentionYearForecastSchema: z.ZodType<ComplianceAuditAuditRetentionYearForecast>;
 export let ComplianceAuditAuditRiskLevelSchema: z.ZodType<ComplianceAuditAuditRiskLevel>;
 export let ComplianceAuditAuditStatisticsOutputSchema: z.ZodType<ComplianceAuditAuditStatisticsOutput>;
+export let ComplianceAuditAuditStorageDailyCohortSchema: z.ZodType<ComplianceAuditAuditStorageDailyCohort>;
+export let ComplianceAuditAuditStorageTierSchema: z.ZodType<ComplianceAuditAuditStorageTier>;
+export let ComplianceAuditAuditStorageTierPriceSchema: z.ZodType<ComplianceAuditAuditStorageTierPrice>;
 export let ComplianceAuditAuthenticationAuditEntrySchema: z.ZodType<ComplianceAuditAuthenticationAuditEntry>;
 export let ComplianceAuditAuthenticationAuditOutputSchema: z.ZodType<ComplianceAuditAuthenticationAuditOutput>;
+export let ComplianceAuditConfigureAuditRetentionInputSchema: z.ZodType<ComplianceAuditConfigureAuditRetentionInput>;
 export let ComplianceAuditCreateScheduledAuditExportInputSchema: z.ZodType<ComplianceAuditCreateScheduledAuditExportInput>;
 export let ComplianceAuditDailyActivityTrendSchema: z.ZodType<ComplianceAuditDailyActivityTrend>;
 export let ComplianceAuditExportFormatSchema: z.ZodType<ComplianceAuditExportFormat>;
@@ -18640,6 +18884,7 @@ export let ComplianceAuditExportStatusSchema: z.ZodType<ComplianceAuditExportSta
 export let ComplianceAuditFailureReasonCountSchema: z.ZodType<ComplianceAuditFailureReasonCount>;
 export let ComplianceAuditPermissionAuditEntrySchema: z.ZodType<ComplianceAuditPermissionAuditEntry>;
 export let ComplianceAuditPermissionAuditOutputSchema: z.ZodType<ComplianceAuditPermissionAuditOutput>;
+export let ComplianceAuditRunAuditRetentionSimulationInputSchema: z.ZodType<ComplianceAuditRunAuditRetentionSimulationInput>;
 export let ComplianceAuditScheduledAuditExportOutputSchema: z.ZodType<ComplianceAuditScheduledAuditExportOutput>;
 export let ComplianceAuditSecurityAuditDashboardSchema: z.ZodType<ComplianceAuditSecurityAuditDashboard>;
 export let ComplianceAuditSecurityAuditSourceTypeSchema: z.ZodType<ComplianceAuditSecurityAuditSourceType>;
@@ -22966,6 +23211,12 @@ CommerceSubscriptionsSubscriptionUsageDtoSchema = z.object({
   usersCount: z.number().int().optional(),
 });
 
+/** Zod schema for ComplianceAuditAuditAccessAgeBucket. Data model for Compliance Audit Audit Access Age Bucket. */
+ComplianceAuditAuditAccessAgeBucketSchema = z.object({
+  ageDays: z.number().int().optional(),
+  readCount: z.number().int().optional(),
+});
+
 /** Zod schema for ComplianceAuditAuditActionTypeDescriptor. Data model for Compliance Audit Audit Action Type Descriptor. */
 ComplianceAuditAuditActionTypeDescriptorSchema = z.object({
   actionType: z.string().nullable().optional(),
@@ -23213,6 +23464,209 @@ ComplianceAuditAuditResourceContextSchema = z.object({
   resourceType: z.string().nullable().optional(),
 });
 
+/** Zod schema for ComplianceAuditAuditRetentionComplianceViolation. Data model for Compliance Audit Audit Retention Compliance Violation. */
+ComplianceAuditAuditRetentionComplianceViolationSchema = z.object({
+  obligation: z.string().nullable().optional(),
+  reason: z.string().nullable().optional(),
+  source: z.string().nullable().optional(),
+});
+
+/** Zod schema for ComplianceAuditAuditRetentionConfigurationOutput. Data model for Compliance Audit Audit Retention Configuration Response. */
+ComplianceAuditAuditRetentionConfigurationOutputSchema = z.object({
+  id: z.string().uuid().optional(),
+  configuration: z.lazy(() => ComplianceAuditConfigureAuditRetentionInputSchema).optional(),
+  revision: z.number().int().optional(),
+  tenantId: z.string().uuid().optional(),
+  updatedAtUtc: z.string().datetime().optional(),
+  updatedByUserId: z.string().uuid().optional(),
+});
+
+/** Zod schema for ComplianceAuditAuditRetentionGrowthModel. OpenAPI schema for Compliance Audit Audit Retention Growth Model. */
+ComplianceAuditAuditRetentionGrowthModelSchema = z.enum(['Constant', 'HistoricalTrend', 'CompoundAnnual']);
+
+/** Zod schema for ComplianceAuditAuditRetentionHistoricalEvidence. Data model for Compliance Audit Audit Retention Historical Evidence. */
+ComplianceAuditAuditRetentionHistoricalEvidenceSchema = z.object({
+  accessAges: z
+    .array(z.lazy(() => ComplianceAuditAuditAccessAgeBucketSchema))
+    .nullable()
+    .optional(),
+  asOfUtc: z.string().datetime().optional(),
+  availableHistoryDays: z.number().int().optional(),
+  averageDailyLogicalBytes: z.number().optional(),
+  averageDailyRecords: z.number().optional(),
+  cohorts: z
+    .array(z.lazy(() => ComplianceAuditAuditStorageDailyCohortSchema))
+    .nullable()
+    .optional(),
+  dailyLogicalBytesTrend: z.number().optional(),
+  dailyRecordsTrend: z.number().optional(),
+  daysWithRecords: z.number().int().optional(),
+  historicalDays: z.number().int().optional(),
+  measurementMethod: z.string().nullable().optional(),
+  observedAccessDays: z.number().int().optional(),
+  observedReadCount: z.number().optional(),
+  oldestObservedAccessAgeDays: z.number().int().nullable().optional(),
+  storedLogicalBytes: z.number().optional(),
+  storedRecordCount: z.number().optional(),
+  weeklySeasonality: z
+    .array(z.lazy(() => ComplianceAuditAuditRetentionWeekdayFactorSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for ComplianceAuditAuditRetentionMonthForecast. Data model for Compliance Audit Audit Retention Month Forecast. */
+ComplianceAuditAuditRetentionMonthForecastSchema = z.object({
+  budget: z.number().nullable().optional(),
+  budgetVariance: z.number().nullable().optional(),
+  endBillableBytes: z.number().optional(),
+  endRecordCount: z.number().optional(),
+  endUtcDateExclusive: z.string().date().optional(),
+  month: z.number().int().optional(),
+  retrievalCost: z.number().optional(),
+  startUtcDate: z.string().date().optional(),
+  storageCost: z.number().optional(),
+  tiers: z
+    .array(z.lazy(() => ComplianceAuditAuditRetentionTierForecastSchema))
+    .nullable()
+    .optional(),
+  totalCost: z.number().optional(),
+});
+
+/** Zod schema for ComplianceAuditAuditRetentionObligation. A configured obligation, with an administrator-provided source; no regulatory minimum is assumed. */
+ComplianceAuditAuditRetentionObligationSchema = z.object({
+  maximumRetentionDays: z.number().int().min(1).max(36500).nullable().optional(),
+  minimumRetentionDays: z.number().int().min(1).max(36500).optional(),
+  name: z.string().min(1).max(100),
+  source: z.string().min(1).max(1000),
+});
+
+/** Zod schema for ComplianceAuditAuditRetentionRecommendation. Data model for Compliance Audit Audit Retention Recommendation. */
+ComplianceAuditAuditRetentionRecommendationSchema = z.object({
+  evaluatedCandidates: z.number().int().optional(),
+  reason: z.string().nullable().optional(),
+  savingsComparedWithBaseline: z.number().nullable().optional(),
+  suggestedScenario: z.lazy(() => ComplianceAuditAuditRetentionScenarioResultSchema).optional(),
+});
+
+/** Zod schema for ComplianceAuditAuditRetentionRisk. Data model for Compliance Audit Audit Retention Risk. */
+ComplianceAuditAuditRetentionRiskSchema = z.object({
+  code: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  severity: z.string().nullable().optional(),
+});
+
+/** Zod schema for ComplianceAuditAuditRetentionScenario. Data model for Compliance Audit Audit Retention Scenario. */
+ComplianceAuditAuditRetentionScenarioSchema = z.object({
+  coldUntilDays: z.number().int().min(0).max(36500).optional(),
+  hotDays: z.number().int().min(0).max(36500).optional(),
+  name: z.string().min(1).max(80),
+  retentionDays: z.number().int().min(1).max(36500).optional(),
+  warmUntilDays: z.number().int().min(0).max(36500).optional(),
+});
+
+/** Zod schema for ComplianceAuditAuditRetentionScenarioResult. Data model for Compliance Audit Audit Retention Scenario Result. */
+ComplianceAuditAuditRetentionScenarioResultSchema = z.object({
+  budgetVariance: z.number().nullable().optional(),
+  complianceStatus: z.string().nullable().optional(),
+  complianceViolations: z
+    .array(z.lazy(() => ComplianceAuditAuditRetentionComplianceViolationSchema))
+    .nullable()
+    .optional(),
+  differenceFromBaseline: z.number().optional(),
+  expectedReadLatencyMilliseconds: z.number().nullable().optional(),
+  initialExpiredLogicalBytes: z.number().optional(),
+  initialExpiredRecords: z.number().optional(),
+  months: z
+    .array(z.lazy(() => ComplianceAuditAuditRetentionMonthForecastSchema))
+    .nullable()
+    .optional(),
+  p95ReadLatencyMilliseconds: z.number().nullable().optional(),
+  risks: z
+    .array(z.lazy(() => ComplianceAuditAuditRetentionRiskSchema))
+    .nullable()
+    .optional(),
+  savingsPercent: z.number().nullable().optional(),
+  scenario: z.lazy(() => ComplianceAuditAuditRetentionScenarioSchema).optional(),
+  slowObservedReadsPercent: z.number().nullable().optional(),
+  totalCost: z.number().optional(),
+  totalRetrievalCost: z.number().optional(),
+  totalStorageCost: z.number().optional(),
+  unavailableObservedReadsPercent: z.number().nullable().optional(),
+  years: z
+    .array(z.lazy(() => ComplianceAuditAuditRetentionYearForecastSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for ComplianceAuditAuditRetentionSimulationOutput. Data model for Compliance Audit Audit Retention Simulation Response. */
+ComplianceAuditAuditRetentionSimulationOutputSchema = z.object({
+  id: z.string().uuid().optional(),
+  configurationRevision: z.number().int().optional(),
+  configurationSnapshot: z.lazy(() => ComplianceAuditConfigureAuditRetentionInputSchema).optional(),
+  createdAtUtc: z.string().datetime().optional(),
+  createdByUserId: z.string().uuid().optional(),
+  report: z.lazy(() => ComplianceAuditAuditRetentionSimulationReportSchema).optional(),
+  request: z.lazy(() => ComplianceAuditRunAuditRetentionSimulationInputSchema).optional(),
+  tenantId: z.string().uuid().optional(),
+});
+
+/** Zod schema for ComplianceAuditAuditRetentionSimulationReport. Data model for Compliance Audit Audit Retention Simulation Report. */
+ComplianceAuditAuditRetentionSimulationReportSchema = z.object({
+  annualGrowthPercent: z.number().nullable().optional(),
+  assumptions: z.array(z.string()).nullable().optional(),
+  baseline: z.lazy(() => ComplianceAuditAuditRetentionScenarioResultSchema).optional(),
+  currency: z.string().nullable().optional(),
+  evidence: z.lazy(() => ComplianceAuditAuditRetentionHistoricalEvidenceSchema).optional(),
+  forecastMonths: z.number().int().optional(),
+  growthModel: z.lazy(() => ComplianceAuditAuditRetentionGrowthModelSchema).optional(),
+  modelVersion: z.string().nullable().optional(),
+  recommendation: z.lazy(() => ComplianceAuditAuditRetentionRecommendationSchema).optional(),
+  scenarios: z
+    .array(z.lazy(() => ComplianceAuditAuditRetentionScenarioResultSchema))
+    .nullable()
+    .optional(),
+  storageOverheadMultiplier: z.number().optional(),
+});
+
+/** Zod schema for ComplianceAuditAuditRetentionSimulationSummary. Data model for Compliance Audit Audit Retention Simulation Summary. */
+ComplianceAuditAuditRetentionSimulationSummarySchema = z.object({
+  id: z.string().uuid().optional(),
+  baselineTotalCost: z.number().optional(),
+  configurationRevision: z.number().int().optional(),
+  createdAtUtc: z.string().datetime().optional(),
+  createdByUserId: z.string().uuid().optional(),
+  currency: z.string().nullable().optional(),
+  forecastMonths: z.number().int().optional(),
+  recommendedTotalCost: z.number().nullable().optional(),
+});
+
+/** Zod schema for ComplianceAuditAuditRetentionTierForecast. Data model for Compliance Audit Audit Retention Tier Forecast. */
+ComplianceAuditAuditRetentionTierForecastSchema = z.object({
+  endBillableBytes: z.number().optional(),
+  endRecordCount: z.number().optional(),
+  retrievalCost: z.number().optional(),
+  storageCost: z.number().optional(),
+  tier: z.lazy(() => ComplianceAuditAuditStorageTierSchema).optional(),
+});
+
+/** Zod schema for ComplianceAuditAuditRetentionWeekdayFactor. Data model for Compliance Audit Audit Retention Weekday Factor. */
+ComplianceAuditAuditRetentionWeekdayFactorSchema = z.object({
+  bytesMultiplier: z.number().optional(),
+  dayOfWeek: z.number().int().optional(),
+  recordsMultiplier: z.number().optional(),
+});
+
+/** Zod schema for ComplianceAuditAuditRetentionYearForecast. Data model for Compliance Audit Audit Retention Year Forecast. */
+ComplianceAuditAuditRetentionYearForecastSchema = z.object({
+  budget: z.number().nullable().optional(),
+  budgetVariance: z.number().nullable().optional(),
+  forecastYear: z.number().int().optional(),
+  months: z.number().int().optional(),
+  retrievalCost: z.number().optional(),
+  storageCost: z.number().optional(),
+  totalCost: z.number().optional(),
+});
+
 /** Zod schema for ComplianceAuditAuditRiskLevel. Risk level for audit events */
 ComplianceAuditAuditRiskLevelSchema = z.enum(['Low', 'Medium', 'High', 'Critical']);
 
@@ -23226,6 +23680,24 @@ ComplianceAuditAuditStatisticsOutputSchema = z.object({
   securityEvents: z.number().int().optional(),
   startDate: z.string().datetime().optional(),
   totalEvents: z.number().int().optional(),
+});
+
+/** Zod schema for ComplianceAuditAuditStorageDailyCohort. Measured PostgreSQL logical row bytes; physical disk, compression and index costs are separate assumptions. */
+ComplianceAuditAuditStorageDailyCohortSchema = z.object({
+  dateUtc: z.string().date().optional(),
+  logicalBytes: z.number().optional(),
+  recordCount: z.number().int().optional(),
+});
+
+/** Zod schema for ComplianceAuditAuditStorageTier. OpenAPI schema for Compliance Audit Audit Storage Tier. */
+ComplianceAuditAuditStorageTierSchema = z.enum(['Hot', 'Warm', 'Cold', 'Archive']);
+
+/** Zod schema for ComplianceAuditAuditStorageTierPrice. Data model for Compliance Audit Audit Storage Tier Price. */
+ComplianceAuditAuditStorageTierPriceSchema = z.object({
+  expectedReadLatencyMilliseconds: z.number().min(0).max(604800000).optional(),
+  monthlyCostPerGiB: z.number().min(0).max(100000).optional(),
+  retrievalCostPerGiB: z.number().min(0).max(100000).optional(),
+  tier: z.lazy(() => ComplianceAuditAuditStorageTierSchema).optional(),
 });
 
 /** Zod schema for ComplianceAuditAuthenticationAuditEntry. Authentication audit entry. */
@@ -23255,6 +23727,25 @@ ComplianceAuditAuthenticationAuditOutputSchema = z.object({
   take: z.number().int().optional(),
   totalCount: z.number().int().optional(),
   uniqueIpAddresses: z.number().int().optional(),
+});
+
+/** Zod schema for ComplianceAuditConfigureAuditRetentionInput. Data model for Compliance Audit Configure Audit Retention Request. */
+ComplianceAuditConfigureAuditRetentionInputSchema = z.object({
+  baseline: z.lazy(() => ComplianceAuditAuditRetentionScenarioSchema),
+  currency: z
+    .string()
+    .min(1)
+    .regex(/^[A-Z]{3}$/),
+  expectedRevision: z.number().int().min(0).max(2147483647).optional(),
+  maximumReadLatencyMilliseconds: z.number().min(0).max(604800000).optional(),
+  monthlyBudget: z.number().min(0).max(1000000000000000).nullable().optional(),
+  obligations: z.array(z.lazy(() => ComplianceAuditAuditRetentionObligationSchema)).max(50),
+  preserveAllRecordsThroughUtcDate: z.string().date().nullable().optional(),
+  storageOverheadMultiplier: z.number().min(1).max(10).optional(),
+  tierPrices: z
+    .array(z.lazy(() => ComplianceAuditAuditStorageTierPriceSchema))
+    .min(4)
+    .max(4),
 });
 
 /** Zod schema for ComplianceAuditCreateScheduledAuditExportInput. Data model for Compliance Audit Create Scheduled Audit Export Request. */
@@ -23325,6 +23816,18 @@ ComplianceAuditPermissionAuditOutputSchema = z.object({
   skip: z.number().int().optional(),
   take: z.number().int().optional(),
   totalCount: z.number().int().optional(),
+});
+
+/** Zod schema for ComplianceAuditRunAuditRetentionSimulationInput. Data model for Compliance Audit Run Audit Retention Simulation Request. */
+ComplianceAuditRunAuditRetentionSimulationInputSchema = z.object({
+  annualGrowthPercent: z.number().min(-95).max(300).nullable().optional(),
+  forecastMonths: z.number().int().min(1).max(120).optional(),
+  growthModel: z.lazy(() => ComplianceAuditAuditRetentionGrowthModelSchema).optional(),
+  historicalDays: z.number().int().min(14).max(365).optional(),
+  scenarios: z
+    .array(z.lazy(() => ComplianceAuditAuditRetentionScenarioSchema))
+    .min(1)
+    .max(10),
 });
 
 /** Zod schema for ComplianceAuditScheduledAuditExportOutput. Data model for Compliance Audit Scheduled Audit Export Response. */

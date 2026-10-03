@@ -246,7 +246,13 @@ public sealed class AuditService(IServiceScopeFactory scopeFactory, IHttpContext
 
         queryable = ApplyPagination(queryable, query);
 
-        return await queryable.ToListAsync().ConfigureAwait(false);
+        var logs = await queryable.ToListAsync().ConfigureAwait(false);
+        var recorder = scope.ServiceProvider.GetService<IAuditDataAccessRecorder>();
+        if (recorder is not null)
+        {
+            await recorder.RecordAsync(logs.Select(log => new AuditAccessedRecord(log.TenantId, log.CreatedAt))).ConfigureAwait(false);
+        }
+        return logs;
     }
 
     public async IAsyncEnumerable<AuditLog> StreamAuditLogsAsync(
@@ -261,12 +267,28 @@ public sealed class AuditService(IServiceScopeFactory scopeFactory, IHttpContext
 
         queryable = ApplyPagination(queryable, query);
 
-        await foreach (var auditLog in queryable
-                           .AsAsyncEnumerable()
-                           .WithCancellation(cancellationToken)
-                           .ConfigureAwait(false))
+        var recorder = scope.ServiceProvider.GetService<IAuditDataAccessRecorder>();
+        var observed = new List<AuditAccessedRecord>(1000);
+        try
         {
-            yield return auditLog;
+            await foreach (var auditLog in queryable.AsAsyncEnumerable().WithCancellation(cancellationToken).ConfigureAwait(false))
+            {
+                observed.Add(new(auditLog.TenantId, auditLog.CreatedAt));
+                yield return auditLog;
+                if (observed.Count == 1000)
+                {
+                    if (recorder is not null) { await recorder.RecordAsync(observed, cancellationToken).ConfigureAwait(false); }
+                    observed.Clear();
+                }
+            }
+        }
+        finally
+        {
+            // Count only yielded rows even if the consumer stops early. The recorder uses a separate connection scope.
+            if (recorder is not null && observed.Count > 0)
+            {
+                await recorder.RecordAsync(observed, CancellationToken.None).ConfigureAwait(false);
+            }
         }
     }
 

@@ -234,6 +234,10 @@ public sealed class TamperEvidentAuditService(
             .FirstOrDefaultAsync(item => item.Id == id, cancellationToken)
             .ConfigureAwait(false);
 
+        if (entry is not null && scope.ServiceProvider.GetService<IAuditDataAccessRecorder>() is { } recorder)
+        {
+            await recorder.RecordAsync([new AuditAccessedRecord(entry.TenantId, entry.Timestamp)], cancellationToken).ConfigureAwait(false);
+        }
         return entry is null
             ? Result.Failure<TamperEvidentAuditLog>(Error.NotFound("Audit.NotFound", "The audit entry was not found."))
             : Result.Success(entry);
@@ -273,6 +277,10 @@ public sealed class TamperEvidentAuditService(
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
+        if (scope.ServiceProvider.GetService<IAuditDataAccessRecorder>() is { } recorder)
+        {
+            await recorder.RecordAsync(entries.Select(entry => new AuditAccessedRecord(entry.TenantId, entry.Timestamp)), cancellationToken).ConfigureAwait(false);
+        }
         return Result.Success<IEnumerable<TamperEvidentAuditLog>>(entries);
     }
 
@@ -299,6 +307,10 @@ public sealed class TamperEvidentAuditService(
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
+        if (scope.ServiceProvider.GetService<IAuditDataAccessRecorder>() is { } recorder)
+        {
+            await recorder.RecordAsync(entries.Select(entry => new AuditAccessedRecord(entry.TenantId, entry.Timestamp)), cancellationToken).ConfigureAwait(false);
+        }
         return Result.Success<IEnumerable<TamperEvidentAuditLog>>(entries);
     }
 
