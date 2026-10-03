@@ -565,6 +565,16 @@ public class OAuthAuthServiceTests
         _googleVerifierMock
             .Setup(x => x.VerifyAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new UnauthorizedAccessException("forged token"));
+        _authAttemptServiceMock
+            .Setup(x => x.RecordFailedAttemptAsync(
+                "oauth-googleidtoken@audit.invalid",
+                null,
+                "127.0.0.1",
+                It.IsAny<string>(),
+                nameof(UnauthorizedAccessException),
+                It.IsAny<TimeSpan>(),
+                "GoogleIdToken"))
+            .Returns(Task.CompletedTask);
 
         var sut = CreateSut();
 
@@ -577,6 +587,14 @@ public class OAuthAuthServiceTests
         _externalLoginRepoMock.Verify(
             x => x.UpsertAsync(It.IsAny<ExternalLogin>(), It.IsAny<CancellationToken>()),
             Times.Never);
+        _authAttemptServiceMock.Verify(x => x.RecordFailedAttemptAsync(
+            "oauth-googleidtoken@audit.invalid",
+            null,
+            "127.0.0.1",
+            It.IsAny<string>(),
+            nameof(UnauthorizedAccessException),
+            It.IsAny<TimeSpan>(),
+            "GoogleIdToken"), Times.Once);
     }
 
     // ── Race idempotency ───────────────────────────────────────────────────

@@ -35,7 +35,10 @@ public class OAuthAuthService(
         var stopwatch = Stopwatch.StartNew();
         logger.LogInformation("Processing GitHub OAuth sign-in");
 
-        var githubUser = await oauthService.GetUserProfileAsync("github", request.AccessToken).ConfigureAwait(false);
+        var githubUser = await RunProviderAuthenticationAsync(
+            "GitHub",
+            stopwatch,
+            () => oauthService.GetUserProfileAsync("github", request.AccessToken)).ConfigureAwait(false);
 
         var email = githubUser.Email ?? throw new UnauthorizedAccessException("Email not available from GitHub profile");
         var user = await ResolveExternalUserAsync("github", email, githubUser.ProviderId, githubUser.Name, githubUser.EmailVerified, cancellationToken).ConfigureAwait(false);
@@ -58,7 +61,10 @@ public class OAuthAuthService(
         var stopwatch = Stopwatch.StartNew();
         logger.LogInformation("Processing Google OAuth sign-in");
 
-        var googleUser = await oauthService.GetUserProfileAsync("google", request.AccessToken).ConfigureAwait(false);
+        var googleUser = await RunProviderAuthenticationAsync(
+            "Google",
+            stopwatch,
+            () => oauthService.GetUserProfileAsync("google", request.AccessToken)).ConfigureAwait(false);
 
         var email = googleUser.Email ?? throw new UnauthorizedAccessException("Email not available from Google profile");
         var user = await ResolveExternalUserAsync("google", email, googleUser.ProviderId, googleUser.Name, googleUser.EmailVerified, cancellationToken).ConfigureAwait(false);
@@ -81,7 +87,10 @@ public class OAuthAuthService(
         var stopwatch = Stopwatch.StartNew();
         logger.LogInformation("Processing Microsoft OAuth sign-in");
 
-        var microsoftUser = await oauthService.GetUserProfileAsync("microsoft", request.AccessToken).ConfigureAwait(false);
+        var microsoftUser = await RunProviderAuthenticationAsync(
+            "Microsoft",
+            stopwatch,
+            () => oauthService.GetUserProfileAsync("microsoft", request.AccessToken)).ConfigureAwait(false);
         var email = microsoftUser.Email ?? throw new UnauthorizedAccessException("Email not available from Microsoft profile");
         var user = await ResolveExternalUserAsync(
             "microsoft", email, microsoftUser.ProviderId, microsoftUser.Name, microsoftUser.EmailVerified, cancellationToken)
@@ -111,11 +120,19 @@ public class OAuthAuthService(
     public async Task<SignInResponse> GoogleIdTokenSignInAsync(GoogleIdTokenRequest request, CancellationToken cancellationToken = default)
     {
         var stopwatch = Stopwatch.StartNew();
-        if (string.IsNullOrEmpty(request.IdToken)) { throw new UnauthorizedAccessException("ID token is required"); }
+        if (string.IsNullOrEmpty(request.IdToken))
+        {
+            var exception = new UnauthorizedAccessException("ID token is required");
+            await RecordFailedOAuthAttemptAsync("GoogleIdToken", stopwatch, exception).ConfigureAwait(false);
+            throw exception;
+        }
 
         // Cryptographically verify the Google ID token (signature, iss, aud, exp).
         // Verifier throws UnauthorizedAccessException on any failure → caller surfaces 401.
-        var googleUser = await googleIdTokenVerifier.VerifyAsync(request.IdToken, cancellationToken).ConfigureAwait(false);
+        var googleUser = await RunProviderAuthenticationAsync(
+            "GoogleIdToken",
+            stopwatch,
+            () => googleIdTokenVerifier.VerifyAsync(request.IdToken, cancellationToken)).ConfigureAwait(false);
 
         var email = googleUser.Email;
         var providerKey = googleUser.Sub;
@@ -144,8 +161,10 @@ public class OAuthAuthService(
 
         // HandleCallbackAsync dispatches to ExchangeDiscordCodeAsync (code → access token)
         // and then GetUserProfileAsync("discord", token) → OAuthUserProfile.
-        var discordUser = await oauthService
-            .HandleCallbackAsync("discord", request.Code, request.State, request.RedirectUri)
+        var discordUser = await RunProviderAuthenticationAsync(
+            "Discord",
+            stopwatch,
+            () => oauthService.HandleCallbackAsync("discord", request.Code, request.State, request.RedirectUri))
             .ConfigureAwait(false);
 
         var email = discordUser.Email ?? throw new UnauthorizedAccessException("Discord account has no email");
@@ -230,6 +249,42 @@ public class OAuthAuthService(
             TenantId = tenantAccessContext.TenantId,
             AvailableTenants = tenantAccessContext.AvailableTenants
         };
+    }
+
+    private async Task<T> RunProviderAuthenticationAsync<T>(
+        string authenticationMethod,
+        Stopwatch stopwatch,
+        Func<Task<T>> authenticate)
+    {
+        try
+        {
+            return await authenticate().ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            await RecordFailedOAuthAttemptAsync(authenticationMethod, stopwatch, exception).ConfigureAwait(false);
+            throw;
+        }
+    }
+
+    private async Task RecordFailedOAuthAttemptAsync(string authenticationMethod, Stopwatch stopwatch, Exception exception)
+    {
+        try
+        {
+            var httpContext = httpContextAccessor.HttpContext;
+            await authAttemptService.RecordFailedAttemptAsync(
+                $"oauth-{authenticationMethod.ToLowerInvariant()}@audit.invalid",
+                null,
+                authAttemptService.GetClientIpAddress(httpContext),
+                httpContext?.Request.Headers.UserAgent.ToString(),
+                exception.GetType().Name,
+                stopwatch.Elapsed,
+                authenticationMethod).ConfigureAwait(false);
+        }
+        catch (Exception auditException)
+        {
+            logger.LogError(auditException, "Could not record failed {AuthenticationMethod} authentication", authenticationMethod);
+        }
     }
 
     /// <summary>
