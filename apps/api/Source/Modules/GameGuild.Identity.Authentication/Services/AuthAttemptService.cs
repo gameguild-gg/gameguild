@@ -105,9 +105,15 @@ public class AuthAttemptService(
 
     private static string NormalizeIpAddress(string? value)
     {
-        if (!IPAddress.TryParse(value, out var address)) return "Unknown";
+        if (!IPAddress.TryParse(value, out var address))
+        {
+            return "Unknown";
+        }
 
-        if (address.IsIPv4MappedToIPv6) address = address.MapToIPv4();
+        if (address.IsIPv4MappedToIPv6)
+        {
+            address = address.MapToIPv4();
+        }
 
         return address.ToString();
     }
