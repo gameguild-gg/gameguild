@@ -1,3 +1,4 @@
+using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Http;
@@ -22,6 +23,8 @@ public class AuthAttemptService(
 
     public async Task RecordSuccessfulAttemptAsync(string email, Guid userId, string ipAddress, string? userAgent, TimeSpan processingTime, string authenticationMethod)
     {
+        ipAddress = NormalizeIpAddress(ipAddress);
+
         var attempt = new AuthenticationAttempt
         {
             Email = email,
@@ -54,6 +57,8 @@ public class AuthAttemptService(
 
     public async Task RecordFailedAttemptAsync(string email, Guid? userId, string ipAddress, string? userAgent, string failureReason, TimeSpan processingTime, string authenticationMethod)
     {
+        ipAddress = NormalizeIpAddress(ipAddress);
+
         var attempt = new AuthenticationAttempt
         {
             Email = email,
@@ -85,7 +90,7 @@ public class AuthAttemptService(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error recording login enumeration attempt from {IpAddress}", ipAddress);
+            logger.LogError(ex, "Error recording login enumeration attempt");
         }
     }
 
@@ -93,24 +98,18 @@ public class AuthAttemptService(
     {
         if (httpContext == null) return "Unknown";
 
-        // Check for forwarded IP first (common in reverse proxy scenarios)
-        var forwardedFor = httpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+        // ForwardedHeadersMiddleware updates RemoteIpAddress only for configured trusted proxies.
+        // Never consume forwarding headers directly: clients can forge them.
+        return NormalizeIpAddress(httpContext.Connection.RemoteIpAddress?.ToString());
+    }
 
-        if (!string.IsNullOrEmpty(forwardedFor))
-        {
-            // X-Forwarded-For can contain multiple IPs, take the first one
-            var firstIp = forwardedFor.Split(',')[0].Trim();
+    private static string NormalizeIpAddress(string? value)
+    {
+        if (!IPAddress.TryParse(value, out var address)) return "Unknown";
 
-            if (!string.IsNullOrEmpty(firstIp)) return firstIp;
-        }
+        if (address.IsIPv4MappedToIPv6) address = address.MapToIPv4();
 
-        // Check X-Real-IP header
-        var realIp = httpContext.Request.Headers["X-Real-IP"].FirstOrDefault();
-
-        if (!string.IsNullOrEmpty(realIp)) return realIp;
-
-        // Fall back to connection remote IP
-        return httpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+        return address.ToString();
     }
 
     private void LogLoginAuditEvent(AuthenticationAttempt attempt)

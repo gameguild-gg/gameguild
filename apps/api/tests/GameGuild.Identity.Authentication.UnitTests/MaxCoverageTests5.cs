@@ -351,33 +351,25 @@ public sealed class AuthAttemptIpExtractionTests
     }
 
     [Fact]
-    public void GetClientIp_XRealIp_ReturnsIt()
+    public void GetClientIp_IgnoresUntrustedForwardingHeaders()
     {
         var ctx = new DefaultHttpContext();
         ctx.Request.Headers["X-Real-IP"] = "192.168.1.100";
-
-        var ip = _sut.GetClientIpAddress(ctx);
-        ip.Should().Be("192.168.1.100");
-    }
-
-    [Fact]
-    public void GetClientIp_XForwardedFor_ReturnsFirstIp()
-    {
-        var ctx = new DefaultHttpContext();
-        ctx.Request.Headers["X-Forwarded-For"] = "10.0.0.1, 192.168.1.1";
+        ctx.Request.Headers["X-Forwarded-For"] = "203.0.113.50, 192.168.1.1";
+        ctx.Connection.RemoteIpAddress = System.Net.IPAddress.Parse("10.0.0.1");
 
         var ip = _sut.GetClientIpAddress(ctx);
         ip.Should().Be("10.0.0.1");
     }
 
     [Fact]
-    public void GetClientIp_XForwardedFor_SingleIp()
+    public void GetClientIp_CanonicalizesIpv4MappedIpv6Addresses()
     {
         var ctx = new DefaultHttpContext();
-        ctx.Request.Headers["X-Forwarded-For"] = "203.0.113.50";
+        ctx.Connection.RemoteIpAddress = System.Net.IPAddress.Parse("::ffff:192.0.2.10");
 
         var ip = _sut.GetClientIpAddress(ctx);
-        ip.Should().Be("203.0.113.50");
+        ip.Should().Be("192.0.2.10");
     }
 
     [Fact]
