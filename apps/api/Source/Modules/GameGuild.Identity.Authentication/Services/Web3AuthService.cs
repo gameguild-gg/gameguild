@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using GameGuild.Configuration.ApplicationLayer;
 using Microsoft.AspNetCore.Http;
@@ -32,6 +33,7 @@ public class Web3AuthService(
 
     public async Task<SignInResponse> VerifyWeb3SignatureAsync(Web3VerificationRequest request, CancellationToken cancellationToken = default)
     {
+        var stopwatch = Stopwatch.StartNew();
         logger.LogInformation("Verifying Web3 signature for wallet {WalletAddress}", request.WalletAddress);
 
         var isValid = await web3Service.VerifySignatureAsync(
@@ -41,7 +43,19 @@ public class Web3AuthService(
             request.ChainId,
             request.Nonce).ConfigureAwait(false);
 
-        if (!isValid) { throw new UnauthorizedAccessException("Invalid Web3 signature"); }
+        if (!isValid)
+        {
+            var failedContext = httpContextAccessor.HttpContext;
+            await authAttemptService.RecordFailedAttemptAsync(
+                "web3@web3.local",
+                null,
+                authAttemptService.GetClientIpAddress(failedContext),
+                failedContext?.Request.Headers.UserAgent.ToString(),
+                "InvalidSignature",
+                stopwatch.Elapsed,
+                "Web3").ConfigureAwait(false);
+            throw new UnauthorizedAccessException("Invalid Web3 signature");
+        }
 
         var userId = Guid.NewGuid();
         var email = $"{request.WalletAddress.ToLowerInvariant()}@web3.local";
@@ -68,6 +82,13 @@ public class Web3AuthService(
             CreatedByIp = ipAddress
         };
         await refreshTokenRepository.CreateAsync(refreshToken).ConfigureAwait(false);
+        await authAttemptService.RecordSuccessfulAttemptAsync(
+            "web3@web3.local",
+            userId,
+            ipAddress ?? "unknown",
+            userAgent,
+            stopwatch.Elapsed,
+            "Web3").ConfigureAwait(false);
 
         logger.LogInformation("Web3 signature verified for wallet {WalletAddress}", request.WalletAddress);
 

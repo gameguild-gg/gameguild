@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Security.Claims;
 using System.Text;
+using GameGuild.API.Core.Security;
 using GameGuild.Configuration;
 using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.Configuration.PresentationLayer.Authentication;
@@ -8,16 +9,17 @@ using GameGuild.Configuration.PresentationLayer.CORS;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Authorization.Utilities;
-using GameGuild.API.Core.Security;
 using IClaimsTransformation = Microsoft.AspNetCore.Authentication.IClaimsTransformation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization.Policy;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using AuthorizationOptions = GameGuild.Configuration.PresentationLayer.Authorization.AuthorizationOptions;
 using AuthorizationClaimTransformationOptions = GameGuild.Configuration.PresentationLayer.Authorization.AuthorizationClaimTransformationOptions;
 using AuthorizationClaimRequirementOptions = GameGuild.Configuration.PresentationLayer.Authorization.AuthorizationClaimRequirementOptions;
@@ -32,6 +34,9 @@ namespace GameGuild.API;
 /// </summary>
 public static class SecurityServiceCollectionExtensions
 {
+    private static readonly MemoryCache JwtAuthenticationAuditCache = new(new MemoryCacheOptions { SizeLimit = 10_000 });
+    private static readonly object JwtAuthenticationAuditCacheLock = new();
+
     public static IServiceCollection SetupAuthentication(this IServiceCollection services,
         IConfiguration configuration, AuthenticationOptions? options) =>
         SetupAuthentication(services, configuration, options, configureAdditionalSchemes: null);
@@ -107,22 +112,47 @@ public static class SecurityServiceCollectionExtensions
 
                     jwtOptions.Events = new JwtBearerEvents
                     {
-                        OnAuthenticationFailed = context =>
+                        OnAuthenticationFailed = async context =>
                         {
+                            var failureType = context.Exception.GetType().Name;
                             context.HttpContext.RequestServices.GetService<ILoggerFactory>()?
                                 .CreateLogger("GameGuild.API")
-                                .LogWarning("JWT authentication failed: {Message}", context.Exception.Message);
+                                .LogWarning("JWT authentication failed: {FailureType}", failureType);
 
-                            return Task.CompletedTask;
+                            await RecordJwtAuthenticationAuditAsync(
+                                context.HttpContext,
+                                new AuthenticationAuditEvent(
+                                    "Authentication.JwtValidationFailed",
+                                    null,
+                                    false,
+                                    "JWT",
+                                    ErrorMessage: failureType)).ConfigureAwait(false);
                         },
-                        OnTokenValidated = context =>
+                        OnTokenValidated = async context =>
                         {
                             context.HttpContext.RequestServices.GetService<ILoggerFactory>()?
                                 .CreateLogger("GameGuild.API")
                                 .LogDebug("JWT token validated for subject {Subject}",
                                     context.Principal?.FindFirst("sub")?.Value);
 
-                            return Task.CompletedTask;
+                            var tokenId = context.Principal?.FindFirst("jti")?.Value
+                                          ?? context.SecurityToken?.Id;
+
+                            if (string.IsNullOrWhiteSpace(tokenId)
+                                || !TryMarkJwtTokenAudited(tokenId, context.SecurityToken?.ValidTo))
+                            {
+                                return;
+                            }
+
+                            await RecordJwtAuthenticationAuditAsync(
+                                context.HttpContext,
+                                new AuthenticationAuditEvent(
+                                    "Authentication.JwtTokenValidated",
+                                    GetGuidClaim(context.Principal, "sub"),
+                                    true,
+                                    "JWT",
+                                    SessionId: GetGuidClaim(context.Principal, JwtClaimTypes.SessionId),
+                                    TenantId: GetGuidClaim(context.Principal, JwtClaimTypes.TenantId))).ConfigureAwait(false);
                         }
                     };
                 }
@@ -315,6 +345,17 @@ public static class SecurityServiceCollectionExtensions
             }
         });
 
+        services.AddScoped<IAuthorizationMiddlewareResultHandler, AuditingAuthorizationMiddlewareResultHandler>();
+
+        if (services.LastOrDefault(descriptor => descriptor.ServiceType == typeof(IAuthorizationPermissionService))?.ImplementationType ==
+            typeof(AuthorizationPermissionServiceAdapter))
+        {
+            services.AddHttpContextAccessor();
+            services.AddMemoryCache();
+            services.AddScoped<AuthorizationPermissionServiceAdapter>();
+            services.Replace(ServiceDescriptor.Scoped<IAuthorizationPermissionService, AuditingAuthorizationPermissionService>());
+        }
+
         return services;
     }
 
@@ -440,6 +481,68 @@ public static class SecurityServiceCollectionExtensions
 
     private static bool IsUser(ClaimsPrincipal user) =>
         HasRole(user, "User") || IsTenantAdministrator(user);
+
+    private static bool TryMarkJwtTokenAudited(string tokenId, DateTime? tokenValidTo)
+    {
+        var cacheKey = $"authentication-audit:jwt:{tokenId}";
+
+        lock (JwtAuthenticationAuditCacheLock)
+        {
+            if (JwtAuthenticationAuditCache.TryGetValue(cacheKey, out _))
+            {
+                return false;
+            }
+
+            var remainingLifetime = tokenValidTo.HasValue
+                ? tokenValidTo.Value - DateTime.UtcNow
+                : TimeSpan.FromMinutes(15);
+            if (remainingLifetime <= TimeSpan.Zero)
+            {
+                remainingLifetime = TimeSpan.FromMinutes(15);
+            }
+            else if (remainingLifetime > TimeSpan.FromDays(7))
+            {
+                remainingLifetime = TimeSpan.FromDays(7);
+            }
+
+            JwtAuthenticationAuditCache.Set(
+                cacheKey,
+                true,
+                new MemoryCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = remainingLifetime,
+                    Size = 1
+                });
+        }
+
+        return true;
+    }
+
+    private static Guid? GetGuidClaim(ClaimsPrincipal? principal, string claimType)
+    {
+        var value = principal?.FindFirst(claimType)?.Value;
+        return Guid.TryParse(value, out var parsed) ? parsed : null;
+    }
+
+    private static async Task RecordJwtAuthenticationAuditAsync(HttpContext context, AuthenticationAuditEvent auditEvent)
+    {
+        var auditEventSink = context.RequestServices.GetService<IAuthenticationAuditEventSink>();
+        if (auditEventSink is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await auditEventSink.RecordAsync(auditEvent, CancellationToken.None).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            context.RequestServices.GetService<ILoggerFactory>()?
+                .CreateLogger("GameGuild.API")
+                .LogError(exception, "Could not record JWT authentication audit event {ActionType}", auditEvent.ActionType);
+        }
+    }
 
     private static bool IsDevelopmentOrTesting(IConfiguration configuration)
     {

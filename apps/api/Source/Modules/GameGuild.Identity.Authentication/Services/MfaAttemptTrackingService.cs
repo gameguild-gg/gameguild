@@ -15,7 +15,8 @@ public sealed class MfaAttemptTrackingService(
     IHttpContextAccessor httpContextAccessor,
     MfaOptions? mfaOptions = null,
     SessionOptions? sessionOptions = null,
-    ISessionManagementService? sessionManagementService = null) : IMfaAttemptTrackingService
+    ISessionManagementService? sessionManagementService = null,
+    IAuthenticationAuditEventSink? auditEventSink = null) : IMfaAttemptTrackingService
 {
     private readonly MfaOptions _mfaOptions = mfaOptions ?? new MfaOptions();
     private readonly SessionOptions _sessionOptions = sessionOptions ?? new SessionOptions();
@@ -236,28 +237,50 @@ public sealed class MfaAttemptTrackingService(
 
     public async Task RecordMfaAttemptAsync(Guid userId, MfaMethod method, bool success, string? failureReason, string? deviceId, CancellationToken cancellationToken)
     {
+        var attempt = new MfaAttempt
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            Method = method,
+            IsSuccessful = success,
+            FailureReason = failureReason,
+            DeviceFingerprint = deviceId,
+            IpAddress = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? "0.0.0.0",
+            UserAgent = httpContextAccessor.HttpContext?.Request.Headers.UserAgent.ToString() ?? "Unknown",
+            AttemptedAt = SystemClock.UtcNow,
+            ProcessingTimeMs = 0
+        };
+
         try
         {
-            var attempt = new MfaAttempt
-            {
-                Id = Guid.NewGuid(),
-                UserId = userId,
-                Method = method,
-                IsSuccessful = success,
-                FailureReason = failureReason,
-                DeviceFingerprint = deviceId,
-                IpAddress = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? "0.0.0.0",
-                UserAgent = httpContextAccessor.HttpContext?.Request.Headers.UserAgent.ToString() ?? "Unknown",
-                AttemptedAt = SystemClock.UtcNow,
-                ProcessingTimeMs = 0
-            };
-
             await mfaAttemptRepository.CreateAsync(attempt, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error recording MFA attempt for user: {UserId}", userId);
-            // Don't throw - logging failure shouldn't break authentication
+            logger.LogError(ex, "Error persisting MFA attempt for user: {UserId}", userId);
+        }
+
+        if (auditEventSink is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await auditEventSink.RecordAsync(new AuthenticationAuditEvent(
+                success ? "Authentication.MfaSucceeded" : "Authentication.MfaFailed",
+                userId,
+                success,
+                method.ToString(),
+                attempt.IpAddress,
+                attempt.UserAgent,
+                ErrorMessage: failureReason,
+                Metadata: new { attempt.AttemptedAt, attempt.DeviceFingerprint, attempt.ProcessingTimeMs }),
+                cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error forwarding MFA attempt audit event for user: {UserId}", userId);
         }
     }
 
@@ -284,7 +307,21 @@ public sealed class MfaAttemptTrackingService(
             configuration.LockedOutUntil = SystemClock.UtcNow.AddMinutes(_mfaOptions.LockoutDurationMinutes);
         }
 
-        await mfaConfigRepository.UpdateAsync(configuration, cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await mfaConfigRepository.UpdateAsync(configuration, cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            await RecordMfaAttemptAsync(
+                configuration.UserId,
+                method,
+                false,
+                failureReason,
+                deviceId,
+                cancellationToken).ConfigureAwait(false);
+            throw;
+        }
 
         await RecordMfaAttemptAsync(
             configuration.UserId,
