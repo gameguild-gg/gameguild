@@ -139,6 +139,11 @@ public static class SecurityServiceCollectionExtensions
                 {
                     apiKeyOptions.QueryStringParameterName = options.ApiKeyQueryStringParameterName;
                 }
+
+                if (options.ApiKeyCustomKeyResolver is not null)
+                {
+                    apiKeyOptions.CustomKeyResolver = options.ApiKeyCustomKeyResolver;
+                }
             });
         }
 
