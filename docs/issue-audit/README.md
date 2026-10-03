@@ -91,3 +91,15 @@ A live review of the remaining closed issues in #151–#197 reconciled eleven ro
 Issue #157 was reopened after reviewing merged PR #661. Its normal path captures permission changes and before/after state, and its focused API test suite passed eight tests. The failure path is incomplete: `ApplicationDbContext` clears the in-memory pending changes before delivery, then logs and drops them if the central audit service is unavailable or throws. There is no durable retry/recovery. The issue comment records the evidence: https://github.com/gameguild-gg/gameguild/issues/157#issuecomment-5970894047.
 
 After reopening #157, a live query at 2026-10-03 16:06 UTC reports 328 authored-or-assigned issues: 157 open and 171 closed. The matrix now records the ten reviewed closed issues and #157's reopened state; audit-gate failures for merged PRs #658/#661 are retained in their rows rather than presented as green checks.
+
+
+## 2026-10-03 historical closeout review: #8–#143
+
+Reconciled all twelve closed/unreviewed rows in #8–#143. #44/#45 remain closed as unscoped analytics follow-ups; #54 records a product decision against WhatsApp notifications; #55 and #81 are non-actionable historical ideas/campaigns; #46/#106 are superseded by the .NET API architecture; #56 is implemented at title level by the shared localized auth layout; #99 is a duplicate of still-open #92; #115 is obsolete because Wasmer was removed; and #143 is covered by current version-reader/routing tests, with a fresh focused run passing 6/6 tests.
+
+#109 was reopened because its concrete brand-guide/logo alternatives/typography/color/spacing/usage acceptance remains unmet. The repository has a few legacy PNGs and a generic UI palette, but no coherent brand guide or usage examples. Reopen evidence: https://github.com/gameguild-gg/gameguild/issues/109#issuecomment-5970990942.
+
+After reopening #109, the live issue set is 328 total: 158 open and 170 closed. This review does not count a stale/inactivity closure as implementation evidence.
+## 2026-10-03 GitHub closure-event reconciliation
+
+The live set is 328 issues: 158 open and 170 closed. In the GitHub timeline, 90 of the currently closed issue IDs have at least one close event by the authenticated account `mathrmartins` since 2026-09-25; these IDs account for 100 close transitions because some were reopened and closed again. This is an account-action count, not a count of implemented features: it includes duplicate and obsolete dispositions. The matrix has review notes for 89 of the 170 currently closed issues and 13 of the 158 open issues; 81 closed and 145 open issues still have no completed review entry (226 total).
