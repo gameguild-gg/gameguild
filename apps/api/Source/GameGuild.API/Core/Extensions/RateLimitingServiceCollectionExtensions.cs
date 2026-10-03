@@ -35,23 +35,22 @@ public static class RateLimitingServiceCollectionExtensions
         services.AddSingleton(accessOptions);
 
         var trustedProxies = options.TrustedProxyAddresses.Select(IPAddress.Parse).Distinct().ToArray();
-        if (trustedProxies.Length > 0)
+        services.PostConfigure<ForwardedHeadersOptions>(forwardedHeadersOptions =>
         {
-            services.Configure<ForwardedHeadersOptions>(forwardedHeadersOptions =>
+            // Hosting-level settings can enable forwarded headers for every proxy. Replace those
+            // settings so only the explicit RateLimiting:TrustedProxyAddresses list is trusted.
+            forwardedHeadersOptions.ForwardedHeaders = trustedProxies.Length == 0
+                ? ForwardedHeaders.None
+                : ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+            forwardedHeadersOptions.ForwardLimit = options.TrustedProxyForwardLimit;
+            forwardedHeadersOptions.KnownProxies.Clear();
+            forwardedHeadersOptions.KnownIPNetworks.Clear();
+
+            foreach (var trustedProxy in trustedProxies)
             {
-                // The pipeline runs UseForwardedHeaders before the rate limiter. Trust only
-                // configured proxy addresses; the limiter itself never reads request headers.
-                forwardedHeadersOptions.ForwardedHeaders |= ForwardedHeaders.XForwardedFor;
-                forwardedHeadersOptions.ForwardLimit = options.TrustedProxyForwardLimit;
-                foreach (var trustedProxy in trustedProxies)
-                {
-                    if (!forwardedHeadersOptions.KnownProxies.Contains(trustedProxy))
-                    {
-                        forwardedHeadersOptions.KnownProxies.Add(trustedProxy);
-                    }
-                }
-            });
-        }
+                forwardedHeadersOptions.KnownProxies.Add(trustedProxy);
+            }
+        });
 
         services.AddRateLimiter(rateLimiterOptions =>
             {

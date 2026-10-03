@@ -25,6 +25,7 @@ public class LocalAuthServiceTests
     private readonly Mock<IRefreshTokenHasher> _refreshTokenHasherMock = new();
     private readonly Mock<IAuthAttemptService> _authAttemptServiceMock = new();
     private readonly Mock<IAuthenticationAnomalyDetectionService> _anomalyDetectionMock = new();
+    private readonly Mock<IAuthenticationAuditEventSink> _authenticationAuditEventSinkMock = new();
     private readonly Mock<IUserEnumerationProtectionService> _enumerationProtectionMock = new();
     private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock = new();
     private readonly Mock<IPublisher> _publisherMock = new();
@@ -50,6 +51,12 @@ public class LocalAuthServiceTests
         _authAttemptServiceMock.Setup(x => x.GetClientIpAddress(It.IsAny<HttpContext>())).Returns("127.0.0.1");
         _enumerationProtectionMock.Setup(x => x.GetGenericErrorMessage(It.IsAny<string>())).Returns("Authentication failed");
         _enumerationProtectionMock.Setup(x => x.AddTimingProtectionDelayAsync(It.IsAny<bool>(), It.IsAny<DateTime>())).Returns(Task.CompletedTask);
+        _anomalyDetectionMock
+            .Setup(x => x.AnalyzeBehavioralPatternsAsync(It.IsAny<Guid>(), It.IsAny<AuthenticationAttemptContext>()))
+            .ReturnsAsync(new BehavioralAnalysisResult { MatchesTypicalBehavior = true });
+        _anomalyDetectionMock
+            .Setup(x => x.RecordSuspiciousActivityAsync(It.IsAny<SuspiciousActivity>()))
+            .Returns(Task.CompletedTask);
         _refreshTokenHasherMock.Setup(x => x.HashToken(It.IsAny<string>())).Returns((string token) => $"hash-{token}");
         _refreshTokenRepoMock.Setup(x => x.TryRevokeForRotationAsync(
                 It.IsAny<Guid>(),
@@ -60,6 +67,9 @@ public class LocalAuthServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
         _publisherMock.Setup(x => x.Publish(It.IsAny<UserSignedUpNotification>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _authenticationAuditEventSinkMock
+            .Setup(x => x.RecordAsync(It.IsAny<AuthenticationAuditEvent>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
         var tenantId = Guid.NewGuid();
         _senderMock
             .Setup(x => x.Send(It.IsAny<GetUserMembershipsQuery>(), It.IsAny<CancellationToken>()))
@@ -96,7 +106,8 @@ public class LocalAuthServiceTests
             _httpContextAccessorMock.Object,
             NullLogger<LocalAuthService>.Instance,
             _senderMock.Object,
-            _sessionManagementServiceMock.Object
+            _sessionManagementServiceMock.Object,
+            auditEventSink: _authenticationAuditEventSinkMock.Object
         );
     }
 
@@ -154,6 +165,15 @@ public class LocalAuthServiceTests
 
         _anomalyDetectionMock.Setup(x => x.AnalyzeLoginAttemptAsync(It.IsAny<AuthenticationAttemptContext>()))
             .ReturnsAsync(new AuthenticationAnomalyResult { RiskLevel = RiskLevel.Low, RiskScore = 0, DetectedAnomalies = new List<string>() });
+        _anomalyDetectionMock.Setup(x => x.AnalyzeBehavioralPatternsAsync(userId, It.IsAny<AuthenticationAttemptContext>()))
+            .ReturnsAsync(new BehavioralAnalysisResult
+            {
+                MatchesTypicalBehavior = false,
+                RiskScore = 35,
+                RiskLevel = RiskLevel.Medium,
+                Confidence = 0.9,
+                DetectedAnomalies = ["UnfamiliarIp"]
+            });
 
         _jwtTokenServiceMock.Setup(x => x.GenerateAccessTokenAsync(userId, "user@example.com", It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("access-token");
@@ -170,6 +190,23 @@ public class LocalAuthServiceTests
         result.UserId.Should().Be(userId);
         result.Email.Should().Be("user@example.com");
         result.SessionId.Should().NotBeEmpty();
+        _authenticationAuditEventSinkMock.Verify(x => x.RecordAsync(
+                It.Is<AuthenticationAuditEvent>(auditEvent =>
+                    auditEvent.ActionType == "Authentication.ThreatDetected" &&
+                    auditEvent.UserId == userId &&
+                    auditEvent.Success &&
+                    auditEvent.Method == "Password" &&
+                    auditEvent.AssessedRiskLevel == RiskLevel.Medium &&
+                    auditEvent.Metadata != null),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+        _anomalyDetectionMock.Verify(x => x.RecordSuspiciousActivityAsync(
+                It.Is<SuspiciousActivity>(activity =>
+                    activity.UserId == userId &&
+                    activity.ActivityType == "Authentication.ThreatDetected" &&
+                    activity.RiskScore == 35 &&
+                    activity.RiskLevel == RiskLevel.Medium)),
+            Times.Once);
         _sessionManagementServiceMock.Verify(
             x => x.CreateSessionAsync(
                 result.SessionId,
@@ -312,6 +349,54 @@ public class LocalAuthServiceTests
         result.RequiresStepUp.Should().BeTrue();
         result.StepUpToken.Should().NotBeNullOrEmpty();
         result.RiskLevel.Should().Be(RiskLevel.High);
+
+        _authenticationAuditEventSinkMock.Verify(x => x.RecordAsync(
+                It.Is<AuthenticationAuditEvent>(auditEvent =>
+                    auditEvent.ActionType == "Authentication.StepUpRequired" &&
+                    auditEvent.UserId == user.Id &&
+                    !auditEvent.Success &&
+                    auditEvent.Method == "Password" &&
+                    auditEvent.ErrorMessage == "StepUpRequired"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task LocalSignInAsync_FailedLoginWithDetectedThreat_AuditsEvenWhenAttemptRecordingFails()
+    {
+        _userRepoMock.Setup(x => x.GetByEmailAsync("unknown@example.com", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User?)null);
+        _authAttemptServiceMock
+            .Setup(x => x.RecordFailedAttemptAsync(
+                "unknown@example.com",
+                null,
+                "127.0.0.1",
+                It.IsAny<string>(),
+                "InvalidCredentials",
+                It.IsAny<TimeSpan>()))
+            .ThrowsAsync(new InvalidOperationException("Attempt store unavailable"));
+        _anomalyDetectionMock.Setup(x => x.AnalyzeLoginAttemptAsync(It.IsAny<AuthenticationAttemptContext>()))
+            .ReturnsAsync(new AuthenticationAnomalyResult
+            {
+                IsAnomalous = true,
+                RiskLevel = RiskLevel.High,
+                RiskScore = 85,
+                DetectedAnomalies = ["BruteForceDetected"]
+            });
+
+        var exception = await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            _sut.LocalSignInAsync(new LocalSignInRequest { Email = "unknown@example.com", Password = "WrongPassword!" }));
+
+        exception.Message.Should().Be("Authentication failed");
+        _authenticationAuditEventSinkMock.Verify(x => x.RecordAsync(
+                It.Is<AuthenticationAuditEvent>(auditEvent =>
+                    auditEvent.ActionType == "Authentication.ThreatDetected" &&
+                    auditEvent.UserId == null &&
+                    !auditEvent.Success &&
+                    auditEvent.Method == "Password" &&
+                    auditEvent.ErrorMessage == "InvalidCredentials"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
@@ -571,7 +656,7 @@ public class LocalAuthServiceTests
         await _sut.LocalSignUpAsync(request);
 
         _authAttemptServiceMock.Verify(
-            x => x.RecordSuccessfulAttemptAsync("new@example.com", It.IsAny<Guid>(), "127.0.0.1", It.IsAny<string>(), It.IsAny<TimeSpan>()),
+            x => x.RecordSuccessfulAttemptAsync("new@example.com", It.IsAny<Guid>(), "127.0.0.1", It.IsAny<string>(), It.IsAny<TimeSpan>(), "Registration"),
             Times.Once);
     }
 
