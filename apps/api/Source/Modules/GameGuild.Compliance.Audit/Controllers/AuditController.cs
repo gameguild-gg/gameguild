@@ -193,7 +193,10 @@ public class AuditController(
         [FromQuery] AuditActionTypeSearchRequest request,
         CancellationToken cancellationToken)
     {
-        if (!TryValidateModel(request)) return ValidationProblem(ModelState);
+        if (!TryValidateModel(request))
+        {
+            return ValidationProblem(ModelState);
+        }
 
         var adminUserId = GetCurrentUserId();
         if (!adminUserId.HasValue) throw new UnauthorizedAccessException("User not authenticated");
@@ -236,7 +239,10 @@ public class AuditController(
         [FromQuery] AuditActionTypeSearchRequest request,
         CancellationToken cancellationToken)
     {
-        if (!TryValidateModel(request)) return ValidationProblem(ModelState);
+        if (!TryValidateModel(request))
+        {
+            return ValidationProblem(ModelState);
+        }
 
         if (!string.Equals(format, "csv", StringComparison.OrdinalIgnoreCase) &&
             !string.Equals(format, "json", StringComparison.OrdinalIgnoreCase))

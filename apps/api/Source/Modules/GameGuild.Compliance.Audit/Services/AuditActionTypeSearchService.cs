@@ -8,9 +8,12 @@ public sealed class AuditActionTypeSearchService(IApplicationDbContext context) 
 {
     private const int RelatedActionLimit = 5000;
 
+    public Task<AuditActionTypeSearchResult> SearchAsync(AuditActionTypeSearchRequest request) =>
+        SearchAsync(request, CancellationToken.None);
+
     public async Task<AuditActionTypeSearchResult> SearchAsync(
         AuditActionTypeSearchRequest request,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
         var query = BuildQuery(request);
@@ -53,10 +56,13 @@ public sealed class AuditActionTypeSearchService(IApplicationDbContext context) 
         };
     }
 
+    public Task<AuditActionTypeExportResult> ExportAsync(AuditActionTypeSearchRequest request, int maximumRecords) =>
+        ExportAsync(request, maximumRecords, CancellationToken.None);
+
     public async Task<AuditActionTypeExportResult> ExportAsync(
         AuditActionTypeSearchRequest request,
         int maximumRecords,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maximumRecords);
@@ -95,10 +101,22 @@ public sealed class AuditActionTypeSearchService(IApplicationDbContext context) 
             .ToArray();
 
         IQueryable<AuditLog> query = context.Set<AuditLog>().AsNoTracking();
-        if (request.UserId.HasValue) query = query.Where(log => log.UserId == request.UserId.Value);
-        if (request.TenantId.HasValue) query = query.Where(log => log.TenantId == request.TenantId.Value);
-        if (request.StartDate.HasValue) query = query.Where(log => log.CreatedAt >= request.StartDate.Value.UtcDateTime);
-        if (request.EndDate.HasValue) query = query.Where(log => log.CreatedAt <= request.EndDate.Value.UtcDateTime);
+        if (request.UserId.HasValue)
+        {
+            query = query.Where(log => log.UserId == request.UserId.Value);
+        }
+        if (request.TenantId.HasValue)
+        {
+            query = query.Where(log => log.TenantId == request.TenantId.Value);
+        }
+        if (request.StartDate.HasValue)
+        {
+            query = query.Where(log => log.CreatedAt >= request.StartDate.Value.UtcDateTime);
+        }
+        if (request.EndDate.HasValue)
+        {
+            query = query.Where(log => log.CreatedAt <= request.EndDate.Value.UtcDateTime);
+        }
 
         var predicates = new List<Expression>();
         var parameter = Expression.Parameter(typeof(AuditLog), "log");
@@ -174,7 +192,10 @@ public sealed class AuditActionTypeSearchService(IApplicationDbContext context) 
     private static Expression Combine(IEnumerable<Expression> expressions, ExpressionType operation)
     {
         using var iterator = expressions.GetEnumerator();
-        if (!iterator.MoveNext()) throw new ArgumentException("At least one expression is required.", nameof(expressions));
+        if (!iterator.MoveNext())
+        {
+            throw new ArgumentException("At least one expression is required.", nameof(expressions));
+        }
         var result = iterator.Current;
         while (iterator.MoveNext())
         {
@@ -275,13 +296,19 @@ public sealed class AuditActionTypeSearchService(IApplicationDbContext context) 
             .Where(value => !string.IsNullOrWhiteSpace(value))
             .Distinct(StringComparer.Ordinal)
             .ToArray();
-        if (correlationIds.Length == 0) return [];
+        if (correlationIds.Length == 0)
+        {
+            return [];
+        }
 
         var selectedIds = logs.Select(log => log.Id).ToArray();
         var query = context.Set<AuditLog>()
             .AsNoTracking()
             .Where(log => log.CorrelationId != null && correlationIds.Contains(log.CorrelationId) && !selectedIds.Contains(log.Id));
-        if (tenantId.HasValue) query = query.Where(log => log.TenantId == tenantId.Value);
+        if (tenantId.HasValue)
+        {
+            query = query.Where(log => log.TenantId == tenantId.Value);
+        }
 
         var related = await query
             .OrderByDescending(log => log.CreatedAt)
