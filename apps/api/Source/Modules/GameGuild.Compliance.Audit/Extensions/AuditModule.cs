@@ -56,6 +56,7 @@ public static class AuditModule
 
         // Register audit services
         services.AddScoped<IAuditService, AuditService>();
+        services.AddScoped<IAuditActionTypeSearchService, AuditActionTypeSearchService>();
         services.AddSingleton<IAuditExportProgressTracker, DistributedAuditExportProgressTracker>();
         services.AddScoped<IAuditExportCronSchedule, AuditExportCronSchedule>();
         services.AddScoped<IScheduledAuditExportRepository, ScheduledAuditExportRepository>();

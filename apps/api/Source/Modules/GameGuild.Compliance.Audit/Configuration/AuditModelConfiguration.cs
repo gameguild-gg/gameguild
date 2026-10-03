@@ -23,6 +23,7 @@ public sealed class AuditModelConfiguration : IModelConfiguration
             entity.Property(log => log.Category).HasConversion<int>();
 
             entity.HasIndex(log => log.ActionType);
+            entity.HasIndex(log => log.CorrelationId);
             entity.HasIndex(log => log.ResourceType);
             entity.HasIndex(log => log.ResourceId);
             entity.HasIndex(log => log.UserId);
