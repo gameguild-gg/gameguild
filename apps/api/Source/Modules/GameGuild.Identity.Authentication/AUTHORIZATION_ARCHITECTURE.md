@@ -1856,6 +1856,23 @@ guarded Authorization-module commands, and acting-user identity (`GrantedBy`,
 `RevokedBy`, `CreatedByUserId`, …) always comes from the authenticated actor context,
 never from the request body.
 
+### Automatic Permission Audit Hooks
+
+`ApplicationDbContext` captures added, modified, and deleted EF-tracked entities whose
+type or changed property represents permissions. It stores the actor, tenant, target user,
+correlation ID, command type, and before/after property snapshots, then sends grouped
+permission events to the centralized `IAuditService`. CQRS commands flush those records
+after the owning transaction commits; a rollback discards the pending snapshots. Audit
+storage and extension-hook failures are logged and do not fail an already-committed
+permission mutation.
+
+The default filter audits all permission entities. Hosts may selectively exclude entity
+types or EF operation kinds under `Audit:PermissionHooks:ExcludedEntityTypes` and
+`Audit:PermissionHooks:ExcludedOperations`. Product-specific behavior can register an
+`IPermissionAuditHook`; each hook receives the committed changes and the centralized
+audit request. Permission mutations should use the EF unit of work and CQRS operation
+pipeline so snapshots are captured and emitted only after successful persistence.
+
 ### Per-Product Policy Seed Extension Point
 
 The common `PolicyDefinitionSeeder` seeds **platform-generic policies only**. A product
