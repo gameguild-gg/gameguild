@@ -8,6 +8,8 @@ using GameGuild.Configuration.PresentationLayer.CORS;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Authorization.Utilities;
+using GameGuild.API.Core.Security;
+using IClaimsTransformation = Microsoft.AspNetCore.Authentication.IClaimsTransformation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -15,7 +17,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using AuthorizationOptions = GameGuild.Configuration.PresentationLayer.Authorization.AuthorizationOptions;
+using AuthorizationClaimTransformationOptions = GameGuild.Configuration.PresentationLayer.Authorization.AuthorizationClaimTransformationOptions;
 using AuthorizationClaimRequirementOptions = GameGuild.Configuration.PresentationLayer.Authorization.AuthorizationClaimRequirementOptions;
 using AuthenticationBuilder = Microsoft.AspNetCore.Authentication.AuthenticationBuilder;
 using ConfiguredAuthorizationPolicyOptions = GameGuild.Configuration.PresentationLayer.Authorization.ConfiguredAuthorizationPolicyOptions;
@@ -248,6 +252,7 @@ public static class SecurityServiceCollectionExtensions
         // ===== Configuration Options =====
         services.AddAuthorizationOptions(configuration);
         services.PostConfigure<AuthorizationOptions>(configured => CopyAuthorizationOptions(options, configured));
+        services.TryAddEnumerable(ServiceDescriptor.Transient<IClaimsTransformation, ConfiguredAuthorizationClaimsTransformation>());
 
         // ===== Presentation Layer (handlers, tenant context, policy provider) =====
         services.AddAuthorizationPresentation();
@@ -412,6 +417,13 @@ public static class SecurityServiceCollectionExtensions
             entry => entry.Key,
             entry => new List<string>(entry.Value),
             StringComparer.OrdinalIgnoreCase);
+        destination.ClaimTransformations = source.ClaimTransformations.Select(transformation =>
+            new AuthorizationClaimTransformationOptions
+            {
+                SourceClaimType = transformation.SourceClaimType,
+                TargetClaimType = transformation.TargetClaimType,
+                ValueMappings = new Dictionary<string, string>(transformation.ValueMappings, StringComparer.Ordinal)
+            }).ToList();
     }
 
     private static bool HasTenantClaim(ClaimsPrincipal user) =>

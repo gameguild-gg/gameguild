@@ -14,6 +14,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using AuthenticationOptions = GameGuild.Configuration.PresentationLayer.Authentication.AuthenticationOptions;
 using AuthorizationOptions = GameGuild.Configuration.PresentationLayer.Authorization.AuthorizationOptions;
+using AuthorizationClaimTransformationOptions = GameGuild.Configuration.PresentationLayer.Authorization.AuthorizationClaimTransformationOptions;
 using Xunit;
 
 namespace GameGuild.API.UnitTests.Core;
@@ -244,6 +245,54 @@ public sealed class SecurityServiceCollectionExtensionsTests
         using var provider = services.BuildServiceProvider();
         var options = provider.GetRequiredService<IOptions<Microsoft.AspNetCore.Authorization.AuthorizationOptions>>().Value;
         options.GetPolicy(Policies.SecureAdmin).Should().BeNull();
+    }
+
+    [Fact]
+    public async Task SetupAuthorization_AppliesConfiguredAllowlistedClaimTransformationsOnce()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Authorization:ClaimTransformations:0:SourceClaimType"] = "groups",
+            ["Authorization:ClaimTransformations:0:TargetClaimType"] = "role",
+            ["Authorization:ClaimTransformations:0:ValueMappings:gameguild-admins"] = "Admin"
+        }).Build();
+        services.SetupAuthorization(configuration, options: null);
+
+        using var provider = services.BuildServiceProvider();
+        var transformation = provider.GetRequiredService<IClaimsTransformation>();
+        var principal = new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim("groups", "gameguild-admins"), new Claim("groups", "unmapped")],
+            "test",
+            "sub",
+            "role"));
+
+        var transformed = await transformation.TransformAsync(principal);
+        await transformation.TransformAsync(transformed);
+
+        transformed.FindAll("role").Select(claim => claim.Value).Should().ContainSingle().Which.Should().Be("Admin");
+        (await EvaluatePolicyAsync(provider, transformed, "RequireAdminRole")).Should().BeTrue();
+    }
+
+    [Fact]
+    public void AuthorizationOptions_RejectsClaimTransformationsWithoutExplicitMappings()
+    {
+        var options = new AuthorizationOptions
+        {
+            ClaimTransformations =
+            [
+                new AuthorizationClaimTransformationOptions
+                {
+                    SourceClaimType = "groups",
+                    TargetClaimType = ClaimTypes.Role
+                }
+            ]
+        };
+
+        var act = () => options.Validate();
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("*at least one non-empty value mapping*");
     }
 
     private static async Task<bool> EvaluatePolicyAsync(
