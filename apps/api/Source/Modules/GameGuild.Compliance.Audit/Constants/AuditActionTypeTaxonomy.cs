@@ -65,8 +65,8 @@ public static class AuditActionTypeTaxonomy
         "Security.Authorization" => [AuditCategory.Authorization, AuditCategory.Permission],
         "Security.Sessions" => [],
         "Security.ThreatDetection" => [AuditCategory.Security],
-        // AuditCategory.User is too broad to distinguish profile changes from username events;
-        // these taxonomy leaves therefore match their explicitly classified action types.
+        // The persisted user category also represents username events, so these leaves use
+        // their explicitly classified action types instead of that broad category.
         "Identity.UserManagement" => [],
         "Identity.Usernames" => [],
         "Administration.Platform" => [AuditCategory.Admin, AuditCategory.System],
@@ -81,13 +81,19 @@ public static class AuditActionTypeTaxonomy
     {
         var path = GetCategoryPath(actionType);
         var groups = new List<string>();
-        if (path[0] == "Security") groups.Add("Security");
+        if (path[0] == "Security")
+        {
+            groups.Add("Security");
+        }
         if (path.SequenceEqual(["Administration", "Platform"]) ||
             actionType is AuditActionTypes.DataExported or AuditActionTypes.DataImported)
         {
             groups.Add("Admin");
         }
-        if (IsCrudAction(actionType)) groups.Add("CRUD");
+        if (IsCrudAction(actionType))
+        {
+            groups.Add("CRUD");
+        }
         return new AuditActionTypeDescriptor(actionType, path, groups);
     }
 
@@ -119,10 +125,22 @@ public static class AuditActionTypeTaxonomy
             return ["Security", "ThreatDetection"];
         }
 
-        if (actionType.StartsWith("Username", StringComparison.Ordinal)) return ["Identity", "Usernames"];
-        if (actionType.StartsWith("User", StringComparison.Ordinal)) return ["Identity", "UserManagement"];
-        if (actionType.StartsWith("Tenant", StringComparison.Ordinal)) return ["Tenancy", "Management"];
-        if (actionType.StartsWith("Privacy", StringComparison.Ordinal)) return ["Data", "Privacy"];
+        if (actionType.StartsWith("Username", StringComparison.Ordinal))
+        {
+            return ["Identity", "Usernames"];
+        }
+        if (actionType.StartsWith("User", StringComparison.Ordinal))
+        {
+            return ["Identity", "UserManagement"];
+        }
+        if (actionType.StartsWith("Tenant", StringComparison.Ordinal))
+        {
+            return ["Tenancy", "Management"];
+        }
+        if (actionType.StartsWith("Privacy", StringComparison.Ordinal))
+        {
+            return ["Data", "Privacy"];
+        }
 
         if (actionType is AuditActionTypes.DataExported or AuditActionTypes.DataImported)
         {
