@@ -89,6 +89,7 @@ internal sealed class AuditingAuthorizationMiddlewareResultHandler : IAuthorizat
         {
             ActionType = succeeded ? AuditActionTypes.PermissionGranted : AuditActionTypes.PermissionDenied,
             ResourceType = routeTemplate ?? endpoint?.DisplayName ?? "HTTP endpoint",
+            ResourceId = GetResourceId(context.Request),
             UserId = GetGuidClaim(context.User, ClaimTypes.NameIdentifier, "sub"),
             TenantId = GetGuidClaim(context.User, JwtClaimTypes.TenantId),
             SessionId = GetGuidClaim(context.User, JwtClaimTypes.SessionId, "session_id"),
@@ -131,5 +132,18 @@ internal sealed class AuditingAuthorizationMiddlewareResultHandler : IAuthorizat
         }
 
         return null;
+    }
+
+    private static string? GetResourceId(HttpRequest request)
+    {
+        var routeId = request.RouteValues
+            .Where(routeValue => string.Equals(routeValue.Key, "id", StringComparison.OrdinalIgnoreCase) ||
+                                 routeValue.Key.EndsWith("Id", StringComparison.OrdinalIgnoreCase))
+            .OrderBy(routeValue => string.Equals(routeValue.Key, "id", StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+            .ThenBy(routeValue => routeValue.Key, StringComparer.OrdinalIgnoreCase)
+            .Select(routeValue => routeValue.Value?.ToString())
+            .FirstOrDefault(value => Guid.TryParse(value, out _));
+
+        return Guid.TryParse(routeId, out var id) ? id.ToString("D") : null;
     }
 }

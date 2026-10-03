@@ -62,6 +62,7 @@ public sealed class AuditingAuthorizationMiddlewareResultHandlerTests
         capturedRequest!.ActionType.Should().Be(AuditActionTypes.PermissionGranted);
         capturedRequest.Category.Should().Be(AuditCategory.Permission);
         capturedRequest.ResourceType.Should().Be("teams/{teamId:guid}");
+        capturedRequest.ResourceId.Should().Be("846876be-39d9-4497-9733-a66f33692c38");
         capturedRequest.UserId.Should().Be(UserId);
         capturedRequest.TenantId.Should().Be(TenantId);
         capturedRequest.SessionId.Should().Be(SessionId);
@@ -165,6 +166,7 @@ public sealed class AuditingAuthorizationMiddlewareResultHandlerTests
         context.Request.Method = HttpMethods.Get;
         context.Request.Headers.UserAgent = "GameGuild.Tests/1.0";
         context.Connection.RemoteIpAddress = IPAddress.Parse("203.0.113.10");
+        context.Request.RouteValues["teamId"] = Guid.Parse("846876be-39d9-4497-9733-a66f33692c38");
         context.User = new ClaimsPrincipal(new ClaimsIdentity(
         [
             new Claim(ClaimTypes.NameIdentifier, UserId.ToString("D")),
