@@ -11,10 +11,11 @@ namespace GameGuild.Identity.Authentication;
 public class AuthAttemptService(
     IAuthenticationAttemptRepository authenticationAttemptRepository,
     IUserEnumerationProtectionService enumerationProtection,
-    ILogger<AuthAttemptService> logger
+    ILogger<AuthAttemptService> logger,
+    IAuthenticationAuditEventSink? auditEventSink = null
 ) : IAuthAttemptService
 {
-    public async Task RecordSuccessfulAttemptAsync(string email, Guid userId, string ipAddress, string? userAgent, TimeSpan processingTime)
+    public async Task RecordSuccessfulAttemptAsync(string email, Guid userId, string ipAddress, string? userAgent, TimeSpan processingTime, string authenticationMethod = "Password")
     {
         try
         {
@@ -31,6 +32,7 @@ public class AuthAttemptService(
 
             await authenticationAttemptRepository.CreateAsync(attempt).ConfigureAwait(false);
             LogLoginAuditEvent(attempt);
+            await ForwardAuditEventAsync(attempt, authenticationMethod).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -39,7 +41,7 @@ public class AuthAttemptService(
         }
     }
 
-    public async Task RecordFailedAttemptAsync(string email, Guid? userId, string ipAddress, string? userAgent, string failureReason, TimeSpan processingTime)
+    public async Task RecordFailedAttemptAsync(string email, Guid? userId, string ipAddress, string? userAgent, string failureReason, TimeSpan processingTime, string authenticationMethod = "Password")
     {
         try
         {
@@ -57,6 +59,7 @@ public class AuthAttemptService(
 
             await authenticationAttemptRepository.CreateAsync(attempt).ConfigureAwait(false);
             LogLoginAuditEvent(attempt);
+            await ForwardAuditEventAsync(attempt, authenticationMethod).ConfigureAwait(false);
 
             // Record enumeration attempt for throttling
             await enumerationProtection.RecordEnumerationAttemptAsync(ipAddress, "login").ConfigureAwait(false);
@@ -108,6 +111,31 @@ public class AuthAttemptService(
             attempt.ProcessingTime.TotalMilliseconds,
             true,
             "Authentication");
+    }
+
+    private async Task ForwardAuditEventAsync(AuthenticationAttempt attempt, string method)
+    {
+        if (auditEventSink is null) return;
+
+        try
+        {
+            await auditEventSink.RecordAsync(new AuthenticationAuditEvent(
+                attempt.IsSuccessful ? "Authentication.Succeeded" : "Authentication.Failed",
+                attempt.UserId,
+                attempt.IsSuccessful,
+                method,
+                attempt.IpAddress,
+                attempt.UserAgent,
+                attempt.SessionId,
+                attempt.TenantId,
+                attempt.FailureReason,
+                new { attempt.ProcessingTime, attempt.IsSuspicious, attempt.RiskScore, attempt.CorrelationId })).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            // Central audit availability must never block authentication.
+            logger.LogError(exception, "Error forwarding authentication event {UserId} to the central audit log", attempt.UserId);
+        }
     }
 
     private static string HashIdentifier(string value)

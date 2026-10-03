@@ -12,7 +12,8 @@ public sealed class SessionManagementService(
     ILogger<SessionManagementService> logger,
     IUserSessionRepository sessionRepository,
     ITrustedDeviceRepository trustedDeviceRepository,
-    SessionOptions? sessionOptions = null) : ISessionManagementService
+    SessionOptions? sessionOptions = null,
+    IAuthenticationAuditEventSink? auditEventSink = null) : ISessionManagementService
 {
     private readonly SessionOptions _sessionOptions = sessionOptions ?? new SessionOptions();
 
@@ -65,7 +66,9 @@ public sealed class SessionManagementService(
             IsActive = true
         };
 
-        return await sessionRepository.CreateAsync(session, cancellationToken).ConfigureAwait(false);
+        var createdSession = await sessionRepository.CreateAsync(session, cancellationToken).ConfigureAwait(false);
+        await ForwardSessionAuditEventAsync(createdSession, "Authentication.SessionCreated", cancellationToken).ConfigureAwait(false);
+        return createdSession;
     }
 
     public async Task<UserSession?> GetSessionAsync(Guid sessionId, CancellationToken cancellationToken = default) { return await sessionRepository.GetByIdAsync(sessionId, cancellationToken).ConfigureAwait(false); }
@@ -127,6 +130,8 @@ public sealed class SessionManagementService(
 
         await sessionRepository.UpdateAsync(session, cancellationToken).ConfigureAwait(false);
 
+        await ForwardSessionAuditEventAsync(session, "Authentication.SessionRefreshed", cancellationToken).ConfigureAwait(false);
+
         return true;
     }
 
@@ -159,6 +164,8 @@ public sealed class SessionManagementService(
 
         await sessionRepository.UpdateAsync(session, cancellationToken).ConfigureAwait(false);
 
+        await ForwardSessionAuditEventAsync(session, "Authentication.SessionRefreshed", cancellationToken).ConfigureAwait(false);
+
         return true;
     }
 
@@ -177,6 +184,8 @@ public sealed class SessionManagementService(
 
         await sessionRepository.UpdateAsync(session, cancellationToken).ConfigureAwait(false);
 
+        await ForwardSessionAuditEventAsync(session, "Authentication.SessionTerminated", cancellationToken, reason.ToString()).ConfigureAwait(false);
+
         logger.LogInformation("Session {SessionId} terminated. Reason: {Reason}", sessionId, reason);
 
         return true;
@@ -193,11 +202,39 @@ public sealed class SessionManagementService(
             session.TerminationReason = reason.ToString();
             session.TerminatedAt = SystemClock.UtcNow;
             await sessionRepository.UpdateAsync(session, cancellationToken).ConfigureAwait(false);
+            await ForwardSessionAuditEventAsync(session, "Authentication.SessionTerminated", cancellationToken, session.TerminationReason).ConfigureAwait(false);
         }
 
         logger.LogInformation("Terminated {Count} sessions for user {UserId}. Reason: {Reason}", activeSessions.Count, userId, reason);
 
         return activeSessions.Count;
+    }
+
+    private async Task ForwardSessionAuditEventAsync(
+        UserSession session,
+        string actionType,
+        CancellationToken cancellationToken,
+        string? reason = null)
+    {
+        if (auditEventSink is null) return;
+
+        try
+        {
+            await auditEventSink.RecordAsync(new AuthenticationAuditEvent(
+                actionType,
+                session.UserId,
+                true,
+                "Session",
+                session.IpAddress,
+                session.UserAgent,
+                session.Id,
+                Metadata: new { session.CreatedAt, session.UpdatedAt, session.ExpiresAt, TerminationReason = reason ?? session.TerminationReason }),
+                cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Error forwarding session lifecycle event for user {UserId}", session.UserId);
+        }
     }
 
     public async Task<bool> TrustDeviceAsync(Guid userId, string deviceFingerprint, string deviceName, CancellationToken cancellationToken = default)
@@ -351,6 +388,7 @@ public sealed class SessionManagementService(
         session.TerminationReason = SessionTerminationReason.Expired.ToString();
         session.TerminatedAt = SystemClock.UtcNow;
         await sessionRepository.UpdateAsync(session, cancellationToken).ConfigureAwait(false);
+        await ForwardSessionAuditEventAsync(session, "Authentication.SessionTerminated", cancellationToken, session.TerminationReason).ConfigureAwait(false);
     }
 
     public async Task CleanupExpiredSessionsAsync(CancellationToken cancellationToken = default)
