@@ -185,6 +185,103 @@ public class AuditController(
         });
     }
 
+    /// <summary>Searches audit events by multiple action types, groups, and taxonomy categories.</summary>
+    [HttpGet("search/by-action-type")]
+    [ProducesResponseType(typeof(AuditActionTypeSearchResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<AuditActionTypeSearchResponse>> SearchAuditLogsByActionType(
+        [FromQuery] AuditActionTypeSearchRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (!TryValidateModel(request))
+        {
+            return ValidationProblem(ModelState);
+        }
+
+        var adminUserId = GetCurrentUserId();
+        if (!adminUserId.HasValue) throw new UnauthorizedAccessException("User not authenticated");
+
+        await auditService.LogAdminActionAsync(
+            adminUserId.Value,
+            "SearchAuditLogsByActionType",
+            "Admin searched audit logs by action type",
+            new { Filters = request })
+            .ConfigureAwait(false);
+
+        var result = await sender.Send(new SearchAuditActionTypesQuery(request), cancellationToken).ConfigureAwait(false);
+        return Ok(new AuditActionTypeSearchResponse
+        {
+            Results = new AuditLogResponse
+            {
+                Logs = result.Logs.Select(MapToDto).ToList(),
+                TotalCount = result.TotalCount,
+                Skip = result.Skip,
+                Take = result.Take
+            },
+            Frequency = result.Frequency,
+            Trends = result.Trends,
+            RelatedActions = result.RelatedActions
+        });
+    }
+
+    /// <summary>Lists the hierarchical action type taxonomy and predefined investigation groups.</summary>
+    [HttpGet("search/by-action-type/taxonomy")]
+    [ProducesResponseType(typeof(AuditActionTypeTaxonomyResponse), StatusCodes.Status200OK)]
+    public ActionResult<AuditActionTypeTaxonomyResponse> GetAuditActionTypeTaxonomy() => Ok(AuditActionTypeTaxonomy.GetTaxonomy());
+
+    /// <summary>Exports matching action-type audit events as CSV or JSON.</summary>
+    [HttpGet("search/by-action-type/export")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status413PayloadTooLarge)]
+    public async Task<IActionResult> ExportAuditLogsByActionType(
+        [FromQuery] string format,
+        [FromQuery] AuditActionTypeSearchRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (!TryValidateModel(request))
+        {
+            return ValidationProblem(ModelState);
+        }
+
+        if (!string.Equals(format, "csv", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(format, "json", StringComparison.OrdinalIgnoreCase))
+        {
+            ModelState.AddModelError(nameof(format), "Format must be csv or json.");
+            return ValidationProblem(ModelState);
+        }
+
+        var adminUserId = GetCurrentUserId();
+        if (!adminUserId.HasValue) throw new UnauthorizedAccessException("User not authenticated");
+
+        var export = await sender.Send(new ExportAuditActionTypesQuery(request, 10_000), cancellationToken).ConfigureAwait(false);
+        if (export.ExceedsLimit)
+        {
+            return StatusCode(StatusCodes.Status413PayloadTooLarge, new ProblemDetails
+            {
+                Status = StatusCodes.Status413PayloadTooLarge,
+                Title = "Audit export exceeds the limit",
+                Detail = $"The query matches {export.TotalCount} records. Narrow the filters to export at most 10,000 records."
+            });
+        }
+
+        await auditService.LogAdminActionAsync(
+            adminUserId.Value,
+            "ExportAuditLogsByActionType",
+            "Admin exported action-type audit logs",
+            new { format, export.TotalCount, Filters = request })
+            .ConfigureAwait(false);
+
+        var timestamp = SystemClock.UtcNow.ToString("yyyyMMdd'T'HHmmss'Z'", System.Globalization.CultureInfo.InvariantCulture);
+        var records = export.Logs.Select(MapToDto).ToArray();
+        if (string.Equals(format, "json", StringComparison.OrdinalIgnoreCase))
+        {
+            return File(AuditActionTypeExportFormatter.ToJson(records), "application/json", $"audit-action-search-{timestamp}.json");
+        }
+
+        return File(AuditActionTypeExportFormatter.ToCsv(records), "text/csv; charset=utf-8", $"audit-action-search-{timestamp}.csv");
+    }
+
     /// <summary>
     /// Get audit log statistics
     /// </summary>
