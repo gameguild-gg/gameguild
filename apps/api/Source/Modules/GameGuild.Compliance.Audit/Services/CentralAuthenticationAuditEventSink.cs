@@ -10,7 +10,7 @@ public sealed class CentralAuthenticationAuditEventSink(
     IAuditService auditService,
     ILogger<CentralAuthenticationAuditEventSink> logger) : IAuthenticationAuditEventSink
 {
-    public async Task RecordAsync(AuthenticationAuditEvent auditEvent, CancellationToken cancellationToken = default)
+    public async Task RecordAsync(AuthenticationAuditEvent auditEvent, CancellationToken cancellationToken)
     {
         try
         {
