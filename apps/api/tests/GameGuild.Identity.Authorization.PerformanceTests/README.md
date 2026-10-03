@@ -50,15 +50,15 @@ The reported error intervals are 99.9% confidence intervals. They overlap at con
 
 The EF benchmark uses the current `AccessControlListEntryRepository` and `TenantSecurityVersionRepository` with a request-scoped test `DbContext` per lookup. It starts PostgreSQL 17 in Docker, seeds 5,000 unrelated ACL rows plus the grant under test, and compares database ACL reads with a warm process-local L1 ACL cache. Both paths read the tenant/global security versions from PostgreSQL. The shared Testcontainers helper disables Npgsql pooling for ordinary test isolation, so this benchmark explicitly turns pooling on with a maximum of 128 connections; this models API request handling and avoids measuring repeated TCP connection setup. The fixture does not run the full API `ApplicationDbContext`, Redis, production data distribution, or a networked application deployment.
 
-BenchmarkDotNet 0.14.0 ran 10 warmup iterations, 20 measured iterations, and 3 launches on Windows 10 with .NET 10.0.10. Values are total time and managed allocation for a concurrent batch. The reported error intervals are 99.9% confidence intervals. The cache/database ratio is below 1 at all three concurrency levels; the measured batch latency is about 23–26% lower for the cached path in this fixture.
+BenchmarkDotNet 0.14.0 ran 10 warmup iterations, 20 measured iterations, and 3 launches on Windows 10 with .NET 10.0.10, Docker Desktop 29.8.0, and an Intel Xeon W-2235 3.80 GHz host. Values are total time and managed allocation for a concurrent batch. The reported error intervals are 99.9% confidence intervals. This fresh run measured 21–30% lower mean batch latency and 23–24% lower managed allocation for the cached path; the confidence intervals do not overlap at any tested concurrency.
 
 | Concurrent lookups per batch | PostgreSQL + EF batch | Warm L1 + EF version-read batch | Cache/database latency ratio | Managed allocation ratio |
 | ---: | ---: | ---: | ---: | ---: |
-| 1 | 1.093 ms ± 0.061 ms | 0.815 ms ± 0.038 ms | 0.76 | 0.77 |
-| 8 | 3.156 ms ± 0.109 ms | 2.330 ms ± 0.079 ms | 0.74 | 0.77 |
-| 32 | 11.258 ms ± 0.594 ms | 8.721 ms ± 0.430 ms | 0.78 | 0.77 |
+| 1 | 1.140 ms ± 0.088 ms | 0.895 ms ± 0.062 ms | 0.80 | 0.77 |
+| 8 | 3.341 ms ± 0.246 ms | 2.355 ms ± 0.088 ms | 0.72 | 0.77 |
+| 32 | 10.326 ms ± 0.365 ms | 7.758 ms ± 0.332 ms | 0.76 | 0.76 |
 
-The cache/database latency intervals do not overlap at the three measured concurrency levels. The cache also reduced managed allocation by about 23% per batch. This is evidence for the isolated local fixture only; it does not establish production capacity or behavior with Redis, representative production data, the full API context, or networked deployment. Repeat against the configured deployment topology before treating the production-performance criterion as verified.
+The cache/database latency intervals do not overlap at the three measured concurrency levels. This is evidence for the isolated EF-backed fixture only; it does not establish production capacity or behavior with Redis, representative production data, the full API context, or networked database deployment.
 
 Run the database benchmark with Docker available:
 
