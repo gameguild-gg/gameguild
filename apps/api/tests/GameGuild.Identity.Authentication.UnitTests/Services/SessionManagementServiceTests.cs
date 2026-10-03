@@ -12,6 +12,7 @@ public class SessionManagementServiceTests
     private readonly Mock<ILogger<SessionManagementService>> _loggerMock;
     private readonly Mock<IUserSessionRepository> _sessionRepositoryMock;
     private readonly Mock<ITrustedDeviceRepository> _trustedDeviceRepositoryMock;
+    private readonly Mock<IAuthenticationAuditEventSink> _auditEventSinkMock;
     private readonly SessionManagementService _service;
 
     public SessionManagementServiceTests()
@@ -19,10 +20,12 @@ public class SessionManagementServiceTests
         _loggerMock = new Mock<ILogger<SessionManagementService>>();
         _sessionRepositoryMock = new Mock<IUserSessionRepository>();
         _trustedDeviceRepositoryMock = new Mock<ITrustedDeviceRepository>();
+        _auditEventSinkMock = new Mock<IAuthenticationAuditEventSink>();
         _service = new SessionManagementService(
             _loggerMock.Object,
             _sessionRepositoryMock.Object,
-            _trustedDeviceRepositoryMock.Object
+            _trustedDeviceRepositoryMock.Object,
+            auditEventSink: _auditEventSinkMock.Object
         );
     }
 
@@ -51,6 +54,13 @@ public class SessionManagementServiceTests
         result.DeviceFingerprint.Should().NotBeNullOrEmpty();
         result.ExpiresAt.Should().BeCloseTo(DateTime.UtcNow.AddDays(1), TimeSpan.FromSeconds(5));
         _sessionRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<UserSession>(), It.IsAny<CancellationToken>()), Times.Once);
+        _auditEventSinkMock.Verify(x => x.RecordAsync(
+            It.Is<AuthenticationAuditEvent>(auditEvent =>
+                auditEvent.ActionType == "Authentication.SessionCreated" &&
+                auditEvent.UserId == userId &&
+                auditEvent.IpAddress == ipAddress &&
+                auditEvent.UserAgent == userAgent),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

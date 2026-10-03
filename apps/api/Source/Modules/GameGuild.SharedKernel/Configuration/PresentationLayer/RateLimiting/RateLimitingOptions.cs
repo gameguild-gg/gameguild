@@ -124,13 +124,14 @@ public sealed class RateLimitingOptions : BaseOptions
     public string[] ExemptPaths { get; set; } = Array.Empty<string>();
 
     /// <summary>
-    ///     Exact proxy IP addresses permitted to supply X-Forwarded-For values.
-    ///     Forwarded client addresses are ignored unless they arrive from one of these proxies.
+    ///     Exact proxy IP addresses permitted to supply X-Forwarded-For and X-Forwarded-Proto values.
+    ///     Forwarded client addresses and external request schemes are ignored unless they arrive from
+    ///     one of these proxies.
     /// </summary>
     public string[] TrustedProxyAddresses { get; set; } = Array.Empty<string>();
 
     /// <summary>
-    ///     Maximum number of trusted proxy hops to read from the forwarded-for chain.
+    ///     Maximum number of trusted proxy hops to read from forwarded client-address and scheme chains.
     /// </summary>
     public int TrustedProxyForwardLimit { get; set; } = 1;
 

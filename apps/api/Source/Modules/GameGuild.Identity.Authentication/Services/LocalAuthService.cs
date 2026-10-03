@@ -30,7 +30,8 @@ public class LocalAuthService(
     ILogger<LocalAuthService> logger,
     ISender sender,
     ISessionManagementService sessionManagementService,
-    IOptions<JwtOptions>? jwtOptions = null
+    IOptions<JwtOptions>? jwtOptions = null,
+    IAuthenticationAuditEventSink? auditEventSink = null
 ) : ILocalAuthService
 {
     public async Task<SignInResponse> LocalSignInAsync(LocalSignInRequest request, CancellationToken cancellationToken = default)
@@ -82,28 +83,61 @@ public class LocalAuthService(
 
             if (!authenticationSucceeded)
             {
-                await authAttemptService.RecordFailedAttemptAsync(request.Email, userId, ipAddress, userAgent, failureReason!, stopwatch.Elapsed).ConfigureAwait(false);
+                try
+                {
+                    await authAttemptService.RecordFailedAttemptAsync(request.Email, userId, ipAddress, userAgent, failureReason!, stopwatch.Elapsed).ConfigureAwait(false);
+                }
+                catch (Exception exception)
+                {
+                    // Risk analysis and central audit must still run when the local attempt service is unavailable.
+                    logger.LogError(exception, "Could not record failed authentication attempt for user {UserId}", userId);
+                }
+
+                var failedAttemptContext = CreateAttemptContext(request.Email, userId, ipAddress, userAgent, request.TenantId);
+                var failedAttemptAnalysis = await AnalyzeAttemptForAuditAsync(failedAttemptContext).ConfigureAwait(false);
+                if (failedAttemptAnalysis is { IsAnomalous: true })
+                {
+                    await RecordRiskAuditEventAsync(
+                        "Authentication.ThreatDetected",
+                        userId,
+                        request.TenantId,
+                        ipAddress,
+                        userAgent,
+                        failureReason,
+                        failedAttemptAnalysis).ConfigureAwait(false);
+                }
 
                 throw new UnauthorizedAccessException(enumerationProtection.GetGenericErrorMessage("login"));
             }
 
+            var authenticatedUserId = userId ?? throw new InvalidOperationException("A successful authentication must have a user ID.");
+
             // Analyze login attempt for anomalies
-            var attemptContext = new AuthenticationAttemptContext
-            {
-                UserId = userId!.Value,
-                IpAddress = ipAddress,
-                UserAgent = userAgent ?? "Unknown",
-                DeviceFingerprint = httpContextAccessor.HttpContext?.Request.Headers["X-Device-Fingerprint"].FirstOrDefault(), // Extracted from request header
-                Timestamp = SystemClock.UtcNow
-            };
+            var attemptContext = CreateAttemptContext(request.Email, userId, ipAddress, userAgent, request.TenantId);
 
             var anomalyResult = await anomalyDetectionService.AnalyzeLoginAttemptAsync(attemptContext).ConfigureAwait(false);
+            var behavioralAnalysis = await AnalyzeBehavioralPatternsForAuditAsync(authenticatedUserId, attemptContext).ConfigureAwait(false);
+
+            var requiresStepUp = anomalyResult.RiskLevel >= RiskLevel.High;
+            if (requiresStepUp)
+            {
+                await RecordRiskAuditEventAsync(
+                    "Authentication.StepUpRequired",
+                    userId,
+                    request.TenantId,
+                    ipAddress,
+                    userAgent,
+                    "StepUpRequired",
+                    anomalyResult,
+                    authenticationSucceeded: false,
+                    behavioralAnalysis: behavioralAnalysis).ConfigureAwait(false);
+            }
 
             // Require step-up authentication for high-risk logins
             if (anomalyResult.RiskLevel >= RiskLevel.High)
             {
                 logger.LogWarning("High-risk login attempt detected: UserId={UserId}, RiskLevel={RiskLevel}, Anomalies={Anomalies}",
-                    userId.Value, anomalyResult.RiskLevel, string.Join(", ", anomalyResult.DetectedAnomalies));
+                    authenticatedUserId, anomalyResult.RiskLevel, string.Join(", ", anomalyResult.DetectedAnomalies));
 
                 var stepUpToken = Guid.NewGuid().ToString("N");
                 var stepUpExpiresAt = SystemClock.UtcNow.AddMinutes(5);
@@ -118,7 +152,7 @@ public class LocalAuthService(
                     RiskLevel = anomalyResult.RiskLevel,
                     RiskFactors = anomalyResult.DetectedAnomalies.ToList(),
                     AvailableMethods = ["TOTP", "Email"],
-                    UserId = userId.Value,
+                    UserId = authenticatedUserId,
                     Email = request.Email,
                     TenantId = request.TenantId
                 };
@@ -128,19 +162,19 @@ public class LocalAuthService(
             var deviceInfo = new DeviceInfo { Fingerprint = Guid.NewGuid().ToString(), IpAddress = ipAddress, UserAgent = userAgent, DeviceName = "Test Device", DeviceType = "Web" };
 
             // Fetch user again to get token version
-            var authenticatedUser = await userRepository.GetByIdAsync(userId!.Value, cancellationToken).ConfigureAwait(false);
+            var authenticatedUser = await userRepository.GetByIdAsync(authenticatedUserId, cancellationToken).ConfigureAwait(false);
             var tokenVersion = authenticatedUser?.TokenVersion ?? 1;
-            await DefaultTenantMembershipProvisioner.EnsureAsync(sender, userId.Value, cancellationToken).ConfigureAwait(false);
-            var tenantAccessContext = await ResolveTenantAccessContextAsync(userId.Value, request.TenantId, cancellationToken).ConfigureAwait(false);
+            await DefaultTenantMembershipProvisioner.EnsureAsync(sender, authenticatedUserId, cancellationToken).ConfigureAwait(false);
+            var tenantAccessContext = await ResolveTenantAccessContextAsync(authenticatedUserId, request.TenantId, cancellationToken).ConfigureAwait(false);
             RequireActiveTenantAccess(tenantAccessContext);
 
             var refreshTokenExpiryDays = jwtOptions?.Value.RefreshTokenExpirationDays
                                          ?? int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7", CultureInfo.InvariantCulture);
             var refreshTokenExpiresAt = SystemClock.UtcNow.AddDays(refreshTokenExpiryDays);
             var sessionId = Guid.NewGuid();
-            var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(userId.Value, deviceInfo, cancellationToken).ConfigureAwait(false);
+            var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(authenticatedUserId, deviceInfo, cancellationToken).ConfigureAwait(false);
             var accessToken = await jwtTokenService.GenerateAccessTokenAsync(
-                userId.Value,
+                authenticatedUserId,
                 authenticatedUser?.Email ?? request.Email,
                 tenantAccessContext.Roles.ToArray(),
                 tenantAccessContext.TenantId,
@@ -149,7 +183,7 @@ public class LocalAuthService(
                 cancellationToken).ConfigureAwait(false);
             await sessionManagementService.CreateSessionAsync(
                 sessionId,
-                userId.Value,
+                authenticatedUserId,
                 ipAddress ?? "unknown",
                 userAgent ?? string.Empty,
                 refreshTokenHasher.HashToken(refreshToken),
@@ -157,8 +191,22 @@ public class LocalAuthService(
                 deviceInfo.Fingerprint,
                 cancellationToken).ConfigureAwait(false);
 
+            if (anomalyResult.IsAnomalous || behavioralAnalysis is { MatchesTypicalBehavior: false })
+            {
+                await RecordRiskAuditEventAsync(
+                    "Authentication.ThreatDetected",
+                    authenticatedUserId,
+                    request.TenantId,
+                    ipAddress ?? "unknown",
+                    userAgent,
+                    null,
+                    anomalyResult,
+                    authenticationSucceeded: true,
+                    behavioralAnalysis: behavioralAnalysis).ConfigureAwait(false);
+            }
+
             // Record successful login attempt
-            await authAttemptService.RecordSuccessfulAttemptAsync(request.Email, userId.Value, ipAddress ?? "unknown", userAgent, stopwatch.Elapsed).ConfigureAwait(false);
+            await authAttemptService.RecordSuccessfulAttemptAsync(request.Email, authenticatedUserId, ipAddress ?? "unknown", userAgent, stopwatch.Elapsed).ConfigureAwait(false);
 
             var accessTokenExpirationMinutes = jwtOptions?.Value.AccessTokenExpirationMinutes
                                                ?? int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60", CultureInfo.InvariantCulture);
@@ -173,7 +221,7 @@ public class LocalAuthService(
                 ExpiresIn = accessTokenExpirationMinutes * 60,
                 AccessTokenExpiresAt = SystemClock.UtcNow.AddMinutes(accessTokenExpirationMinutes),
                 RefreshTokenExpiresAt = refreshTokenExpiresAt,
-                UserId = userId.Value,
+                UserId = authenticatedUserId,
                 Email = authenticatedUser?.Email ?? request.Email,
                 SessionId = sessionId,
                 TenantId = tenantAccessContext.TenantId,
@@ -195,6 +243,140 @@ public class LocalAuthService(
             await authAttemptService.RecordFailedAttemptAsync(request.Email, userId, ipAddress, userAgent, "SystemError", stopwatch.Elapsed).ConfigureAwait(false);
 
             throw new UnauthorizedAccessException(enumerationProtection.GetGenericErrorMessage("login"));
+        }
+    }
+
+    private AuthenticationAttemptContext CreateAttemptContext(
+        string identifier,
+        Guid? userId,
+        string ipAddress,
+        string? userAgent,
+        Guid? tenantId) => new()
+        {
+            UserId = userId,
+            Identifier = identifier.ToLowerInvariant(),
+            AuthenticationMethod = "Password",
+            IpAddress = ipAddress,
+            UserAgent = userAgent ?? "Unknown",
+            DeviceFingerprint = httpContextAccessor.HttpContext?.Request.Headers["X-Device-Fingerprint"].FirstOrDefault(),
+            TenantId = tenantId,
+            AttemptedAt = SystemClock.UtcNow
+        };
+
+    private async Task<AuthenticationAnomalyResult?> AnalyzeAttemptForAuditAsync(AuthenticationAttemptContext attemptContext)
+    {
+        try
+        {
+            return await anomalyDetectionService.AnalyzeLoginAttemptAsync(attemptContext).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Could not analyze failed authentication attempt for user {UserId}", attemptContext.UserId);
+            return null;
+        }
+    }
+
+    private async Task<BehavioralAnalysisResult?> AnalyzeBehavioralPatternsForAuditAsync(
+        Guid userId,
+        AuthenticationAttemptContext attemptContext)
+    {
+        try
+        {
+            return await anomalyDetectionService.AnalyzeBehavioralPatternsAsync(userId, attemptContext).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Could not analyze authentication behavior for user {UserId}", userId);
+            return null;
+        }
+    }
+
+    private async Task RecordRiskAuditEventAsync(
+        string actionType,
+        Guid? userId,
+        Guid? tenantId,
+        string ipAddress,
+        string? userAgent,
+        string? errorMessage,
+        AuthenticationAnomalyResult? analysis,
+        bool authenticationSucceeded = false,
+        BehavioralAnalysisResult? behavioralAnalysis = null)
+    {
+        if (analysis is null && behavioralAnalysis is null)
+        {
+            return;
+        }
+
+        var riskScore = Math.Max(analysis?.RiskScore ?? 0, behavioralAnalysis?.RiskScore ?? 0);
+        var riskLevel = (RiskLevel)Math.Max((int)(analysis?.RiskLevel ?? RiskLevel.Low), (int)(behavioralAnalysis?.RiskLevel ?? RiskLevel.Low));
+        var riskFactors = (analysis?.DetectedAnomalies ?? [])
+            .Concat(behavioralAnalysis?.DetectedAnomalies ?? [])
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        try
+        {
+            await anomalyDetectionService.RecordSuspiciousActivityAsync(new SuspiciousActivity
+            {
+                UserId = userId,
+                ActivityType = actionType,
+                Description = "Authentication risk analysis detected an unusual sign-in pattern.",
+                IpAddress = ipAddress,
+                UserAgent = userAgent,
+                RiskScore = riskScore,
+                RiskLevel = riskLevel,
+                DetectedAt = SystemClock.UtcNow,
+                ActionsTaken = actionType == "Authentication.StepUpRequired" ? ["StepUpRequired"] : [],
+                Metadata = new Dictionary<string, string>
+                {
+                    ["authenticationMethod"] = "Password",
+                    ["correlationId"] = httpContextAccessor.HttpContext?.TraceIdentifier ?? string.Empty,
+                    ["riskFactors"] = string.Join(",", riskFactors)
+                }
+            }).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Could not forward authentication threat event {ActionType} to SIEM", actionType);
+        }
+
+        if (auditEventSink is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await auditEventSink.RecordAsync(new AuthenticationAuditEvent(
+                actionType,
+                userId,
+                authenticationSucceeded,
+                "Password",
+                ipAddress,
+                userAgent,
+                TenantId: tenantId,
+                ErrorMessage: errorMessage,
+                AssessedRiskLevel: riskLevel,
+                Metadata: new
+                {
+                    RiskScore = riskScore,
+                    RiskLevel = riskLevel.ToString(),
+                    RiskFactors = riskFactors,
+                    BehavioralAnalysis = behavioralAnalysis is null ? null : new
+                    {
+                        behavioralAnalysis.RiskScore,
+                        RiskLevel = behavioralAnalysis.RiskLevel.ToString(),
+                        behavioralAnalysis.Confidence,
+                        behavioralAnalysis.MatchesTypicalBehavior,
+                        Deviations = behavioralAnalysis.DetectedAnomalies
+                    },
+                    CorrelationId = httpContextAccessor.HttpContext?.TraceIdentifier
+                }),
+                CancellationToken.None).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Could not record authentication risk event {ActionType}", actionType);
         }
     }
 
@@ -280,7 +462,7 @@ public class LocalAuthService(
                 cancellationToken).ConfigureAwait(false);
 
             // Record successful registration
-            await authAttemptService.RecordSuccessfulAttemptAsync(request.Email, userId, ipAddress ?? "unknown", userAgent, stopwatch.Elapsed).ConfigureAwait(false);
+            await authAttemptService.RecordSuccessfulAttemptAsync(request.Email, userId, ipAddress ?? "unknown", userAgent, stopwatch.Elapsed, "Registration").ConfigureAwait(false);
             logger.LogInformation("User {Email} successfully signed up", request.Email);
 
             var accessTokenExpirationMinutes = jwtOptions?.Value.AccessTokenExpirationMinutes

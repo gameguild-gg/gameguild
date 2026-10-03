@@ -166,6 +166,73 @@ public sealed class AuthenticationCoverageCompletionTests
     }
 
     [Fact]
+    public async Task ApiKeyAuthentication_AuditsSuccessfulUseWithoutRecordingTheKey()
+    {
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var (apiKey, plaintextKey) = ApiKey.Create(userId, tenantId, "integration-key", ["read"]);
+        await using var dbContext = new InMemoryApiKeyDbContext(
+            new DbContextOptionsBuilder<InMemoryApiKeyDbContext>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString("N"))
+                .Options);
+        dbContext.ApiKeys.Add(apiKey);
+        await dbContext.SaveChangesAsync();
+
+        var auditSink = new Mock<IAuthenticationAuditEventSink>();
+        var handler = CreateApiKeyHandler(dbContext, auditSink.Object);
+        var context = new DefaultHttpContext();
+        context.Request.Headers["X-API-Key"] = plaintextKey;
+        context.Request.Headers.UserAgent = "ApiClient/1.0";
+        context.Connection.RemoteIpAddress = System.Net.IPAddress.Parse("192.0.2.20");
+        await InitializeApiKeyHandlerAsync(handler, context);
+
+        var result = await handler.AuthenticateAsync();
+
+        result.Succeeded.Should().BeTrue();
+        auditSink.Verify(sink => sink.RecordAsync(
+                It.Is<AuthenticationAuditEvent>(auditEvent =>
+                    auditEvent.ActionType == "Authentication.Succeeded" &&
+                    auditEvent.UserId == userId &&
+                    auditEvent.TenantId == tenantId &&
+                    auditEvent.Success &&
+                    auditEvent.Method == "ApiKey" &&
+                    auditEvent.IpAddress == "192.0.2.20" &&
+                    auditEvent.UserAgent == "ApiClient/1.0" &&
+                    auditEvent.ErrorMessage == null &&
+                    auditEvent.Metadata == null),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task ApiKeyAuthentication_AuditsRejectedKeyWithoutRecordingTheKey()
+    {
+        await using var dbContext = new InMemoryApiKeyDbContext(
+            new DbContextOptionsBuilder<InMemoryApiKeyDbContext>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString("N"))
+                .Options);
+        var auditSink = new Mock<IAuthenticationAuditEventSink>();
+        var handler = CreateApiKeyHandler(dbContext, auditSink.Object);
+        var context = new DefaultHttpContext();
+        context.Request.Headers["X-API-Key"] = "never-store-this-secret";
+        await InitializeApiKeyHandlerAsync(handler, context);
+
+        var result = await handler.AuthenticateAsync();
+
+        result.Failure.Should().NotBeNull();
+        auditSink.Verify(sink => sink.RecordAsync(
+                It.Is<AuthenticationAuditEvent>(auditEvent =>
+                    auditEvent.ActionType == "Authentication.Failed" &&
+                    auditEvent.UserId == null &&
+                    !auditEvent.Success &&
+                    auditEvent.Method == "ApiKey" &&
+                    auditEvent.ErrorMessage == "InvalidApiKey" &&
+                    auditEvent.Metadata == null),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
     public void PasswordHasher_CoversRemainingPolicyBranches()
     {
         var hasher = new PasswordHasher(NullLogger<PasswordHasher>.Instance, EmptyConfiguration());
@@ -994,6 +1061,38 @@ public sealed class AuthenticationCoverageCompletionTests
         var context = new Mock<IApplicationDbContext>();
         context.Setup(x => x.Set<TEntity>()).Returns(set.Object);
         return context.Object;
+    }
+
+    private static ApiKeyAuthenticationHandler CreateApiKeyHandler(
+        IApplicationDbContext dbContext,
+        IAuthenticationAuditEventSink auditSink)
+    {
+        var options = new Mock<IOptionsMonitor<ApiKeyAuthenticationOptions>>();
+        options.Setup(x => x.Get(It.IsAny<string>())).Returns(new ApiKeyAuthenticationOptions());
+        options.SetupGet(x => x.CurrentValue).Returns(new ApiKeyAuthenticationOptions());
+        return new ApiKeyAuthenticationHandler(
+            options.Object,
+            NullLoggerFactory.Instance,
+            UrlEncoder.Default,
+            dbContext,
+            auditSink);
+    }
+
+    private static Task InitializeApiKeyHandlerAsync(ApiKeyAuthenticationHandler handler, HttpContext context) =>
+        handler.InitializeAsync(
+            new AuthenticationScheme(
+                ApiKeyAuthenticationOptions.SchemeName,
+                ApiKeyAuthenticationOptions.SchemeName,
+                typeof(ApiKeyAuthenticationHandler)),
+            context);
+
+    private sealed class InMemoryApiKeyDbContext(DbContextOptions<InMemoryApiKeyDbContext> options)
+        : DbContext(options), IApplicationDbContext
+    {
+        public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
+
+        public Task<Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction> BeginTransactionAsync(
+            CancellationToken cancellationToken = default) => Database.BeginTransactionAsync(cancellationToken);
     }
 
     private static void AssertRepositoryProperty(object repository, string propertyName)
