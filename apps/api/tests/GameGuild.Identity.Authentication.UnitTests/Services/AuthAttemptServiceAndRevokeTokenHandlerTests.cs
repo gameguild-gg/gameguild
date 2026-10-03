@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using GameGuild.CQRS;
@@ -8,6 +9,46 @@ namespace GameGuild.Identity.Authentication.UnitTests.Services;
 
 public sealed class AuthAttemptServiceSuccessPathTests
 {
+    [Fact]
+    public async Task RecordFailedAttemptAsync_ShouldSanitizeOnlyTheLoggedFailureReason()
+    {
+        var repository = new Mock<IAuthenticationAttemptRepository>();
+        var enumerationProtection = new Mock<IUserEnumerationProtectionService>();
+        var auditEventSink = new Mock<IAuthenticationAuditEventSink>();
+        var logger = new CapturingLogger<AuthAttemptService>();
+        AuthenticationAttempt? captured = null;
+        var rawFailureReason = "Invalid\r\ncredentials\t" + new string('x', 300);
+
+        repository
+            .Setup(x => x.CreateAsync(It.IsAny<AuthenticationAttempt>(), It.IsAny<CancellationToken>()))
+            .Callback<AuthenticationAttempt, CancellationToken>((attempt, _) => captured = attempt)
+            .ReturnsAsync((AuthenticationAttempt attempt, CancellationToken _) => attempt);
+
+        var sut = new AuthAttemptService(repository.Object, enumerationProtection.Object, logger, auditEventSink.Object);
+
+        await sut.RecordFailedAttemptAsync(
+            "user@example.com",
+            null,
+            "203.0.113.11",
+            null,
+            rawFailureReason,
+            TimeSpan.FromMilliseconds(75));
+
+        captured.Should().NotBeNull();
+        captured!.FailureReason.Should().Be(rawFailureReason);
+        auditEventSink.Verify(x => x.RecordAsync(
+            It.Is<AuthenticationAuditEvent>(auditEvent => auditEvent.ErrorMessage == rawFailureReason),
+            It.IsAny<CancellationToken>()), Times.Once);
+
+        var auditLog = logger.Messages.Single(message => message.Contains("AuthenticationFailed", StringComparison.Ordinal));
+        var loggedFailureReason = auditLog.Split("FailureReason=", StringSplitOptions.None)[1]
+            .Split(", ProcessingTimeMs=", StringSplitOptions.None)[0];
+
+        loggedFailureReason.Should().StartWith("Invalid credentials ");
+        loggedFailureReason.Should().NotContainAny("\r", "\n", "\t");
+        loggedFailureReason.Length.Should().Be(256);
+    }
+
     [Fact]
     public async Task RecordSuccessfulAttemptAsync_ShouldPersistSuccessfulAttempt()
     {
@@ -161,6 +202,25 @@ public sealed class AuthAttemptServiceSuccessPathTests
                 auditEvent.ErrorMessage == "InvalidCredentials"),
             It.IsAny<CancellationToken>()), Times.Once);
         enumerationProtection.Verify(x => x.RecordEnumerationAttemptAsync("203.0.113.10", "login"), Times.Once);
+    }
+}
+
+internal sealed class CapturingLogger<T> : ILogger<T>
+{
+    public List<string> Messages { get; } = [];
+
+    public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+
+    public bool IsEnabled(LogLevel logLevel) => true;
+
+    public void Log<TState>(
+        LogLevel logLevel,
+        EventId eventId,
+        TState state,
+        Exception? exception,
+        Func<TState, Exception?, string> formatter)
+    {
+        Messages.Add(formatter(state, exception));
     }
 }
 

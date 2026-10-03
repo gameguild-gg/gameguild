@@ -16,6 +16,8 @@ public class AuthAttemptService(
     IAuthenticationAuditEventSink? auditEventSink = null
 ) : IAuthAttemptService
 {
+    private const int MaxLoggedFailureReasonLength = 256;
+
     public Task RecordSuccessfulAttemptAsync(string email, Guid userId, string ipAddress, string? userAgent, TimeSpan processingTime)
     {
         return RecordSuccessfulAttemptAsync(email, userId, ipAddress, userAgent, processingTime, "Password");
@@ -130,10 +132,46 @@ public class AuthAttemptService(
             attempt.TenantId,
             attempt.IpAddress,
             attempt.IsSuccessful,
-            attempt.FailureReason ?? string.Empty,
+            SanitizeFailureReasonForLog(attempt.FailureReason),
             attempt.ProcessingTime.TotalMilliseconds,
             true,
             "Authentication");
+    }
+
+    private static string SanitizeFailureReasonForLog(string? failureReason)
+    {
+        if (string.IsNullOrEmpty(failureReason))
+        {
+            return string.Empty;
+        }
+
+        var sanitized = new StringBuilder(Math.Min(failureReason.Length, MaxLoggedFailureReasonLength));
+        var previousWasWhitespace = false;
+
+        foreach (var character in failureReason)
+        {
+            if (char.IsControl(character) || char.IsWhiteSpace(character))
+            {
+                if (!previousWasWhitespace && sanitized.Length > 0)
+                {
+                    sanitized.Append(' ');
+                }
+
+                previousWasWhitespace = true;
+            }
+            else
+            {
+                sanitized.Append(character);
+                previousWasWhitespace = false;
+            }
+
+            if (sanitized.Length >= MaxLoggedFailureReasonLength)
+            {
+                break;
+            }
+        }
+
+        return sanitized.ToString().TrimEnd();
     }
 
     private async Task ForwardAuditEventAsync(AuthenticationAttempt attempt, string method)
