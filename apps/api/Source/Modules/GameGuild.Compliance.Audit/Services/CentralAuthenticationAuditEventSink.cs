@@ -28,7 +28,14 @@ public sealed class CentralAuthenticationAuditEventSink(
                 Metadata = new { AuthenticationMethod = auditEvent.Method, Details = auditEvent.Metadata },
                 Success = auditEvent.Success,
                 ErrorMessage = auditEvent.ErrorMessage,
-                RiskLevel = auditEvent.Success ? AuditRiskLevel.Low : AuditRiskLevel.High,
+                RiskLevel = auditEvent.AssessedRiskLevel switch
+                {
+                    RiskLevel.Low => AuditRiskLevel.Low,
+                    RiskLevel.Medium => AuditRiskLevel.Medium,
+                    RiskLevel.High => AuditRiskLevel.High,
+                    RiskLevel.Critical => AuditRiskLevel.Critical,
+                    _ => auditEvent.Success ? AuditRiskLevel.Low : AuditRiskLevel.High
+                },
                 Category = AuditCategory.Authentication
             }).ConfigureAwait(false);
         }

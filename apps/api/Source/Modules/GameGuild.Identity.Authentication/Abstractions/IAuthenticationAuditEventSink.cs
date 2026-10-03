@@ -22,4 +22,5 @@ public sealed record AuthenticationAuditEvent(
     Guid? SessionId = null,
     Guid? TenantId = null,
     string? ErrorMessage = null,
-    object? Metadata = null);
+    object? Metadata = null,
+    RiskLevel? AssessedRiskLevel = null);

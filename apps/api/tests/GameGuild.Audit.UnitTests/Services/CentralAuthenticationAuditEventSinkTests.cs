@@ -50,4 +50,32 @@ public sealed class CentralAuthenticationAuditEventSinkTests
         captured.ErrorMessage.Should().Be("InvalidCredentials");
         captured.Description.Should().Contain("Password");
     }
+
+    [Fact]
+    public async Task RecordAsync_MapsAssessedRiskLevelForSuccessfulThreatEvents()
+    {
+        var auditService = new Mock<IAuditService>();
+        CreateAuditLogRequest? captured = null;
+        auditService
+            .Setup(service => service.LogAsync(It.IsAny<CreateAuditLogRequest>()))
+            .Callback<CreateAuditLogRequest>(request => captured = request)
+            .Returns(Task.CompletedTask);
+        var sink = new CentralAuthenticationAuditEventSink(
+            auditService.Object,
+            NullLogger<CentralAuthenticationAuditEventSink>.Instance);
+
+        await sink.RecordAsync(new AuthenticationAuditEvent(
+            "Authentication.ThreatDetected",
+            Guid.NewGuid(),
+            true,
+            "Password",
+            Metadata: new { RiskScore = 35 },
+            AssessedRiskLevel: RiskLevel.Medium),
+            CancellationToken.None);
+
+        captured.Should().NotBeNull();
+        captured!.Success.Should().BeTrue();
+        captured.ActionType.Should().Be("Authentication.ThreatDetected");
+        captured.RiskLevel.Should().Be(AuditRiskLevel.Medium);
+    }
 }
