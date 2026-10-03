@@ -20,8 +20,17 @@ public sealed class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAu
         IOptionsMonitor<ApiKeyAuthenticationOptions> options,
         ILoggerFactory logger,
         UrlEncoder encoder,
+        IApplicationDbContext dbContext)
+        : this(options, logger, encoder, dbContext, null)
+    {
+    }
+
+    public ApiKeyAuthenticationHandler(
+        IOptionsMonitor<ApiKeyAuthenticationOptions> options,
+        ILoggerFactory logger,
+        UrlEncoder encoder,
         IApplicationDbContext dbContext,
-        IAuthenticationAuditEventSink? auditEventSink = null)
+        IAuthenticationAuditEventSink? auditEventSink)
         : base(options, logger, encoder)
     {
         _dbContext = dbContext;

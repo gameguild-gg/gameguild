@@ -28,8 +28,19 @@ public sealed class BasicAuthenticationHandler : AuthenticationHandler<BasicAuth
         UrlEncoder encoder,
         IUserRepository userRepository,
         IPasswordHasher passwordHasher,
+        IUserMfaConfigurationRepository mfaConfigurationRepository)
+        : this(options, logger, encoder, userRepository, passwordHasher, mfaConfigurationRepository, null)
+    {
+    }
+
+    public BasicAuthenticationHandler(
+        IOptionsMonitor<BasicAuthenticationSchemeOptions> options,
+        ILoggerFactory logger,
+        UrlEncoder encoder,
+        IUserRepository userRepository,
+        IPasswordHasher passwordHasher,
         IUserMfaConfigurationRepository mfaConfigurationRepository,
-        IAuthenticationAuditEventSink? auditEventSink = null)
+        IAuthenticationAuditEventSink? auditEventSink)
         : base(options, logger, encoder)
     {
         _userRepository = userRepository;
