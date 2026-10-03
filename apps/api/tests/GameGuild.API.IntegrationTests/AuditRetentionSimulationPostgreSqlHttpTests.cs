@@ -135,6 +135,8 @@ public sealed class AuditRetentionSimulationPostgreSqlHttpTests(ApiPostgreSqlFix
         Assert.Equal(HttpStatusCode.BadRequest, (await admin.PutAsJsonAsync(Route + "/configuration", Configuration() with { TierPrices = [] })).StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, (await admin.PostAsJsonAsync(Route, Request() with { ForecastMonths = 121 })).StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, (await admin.GetAsync(Route + "?take=101")).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await admin.GetAsync(Route + "?skip=-1")).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await admin.GetAsync(Route + "?take=0")).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await admin.PostAsJsonAsync(Route, Request())).StatusCode);
     }
 
@@ -204,6 +206,11 @@ public sealed class AuditRetentionSimulationPostgreSqlHttpTests(ApiPostgreSqlFix
         var paths = document.RootElement.GetProperty("paths");
         Assert.True(paths.TryGetProperty(Route, out var simulation));
         Assert.True(simulation.TryGetProperty("post", out _));
+        var pagination = simulation.GetProperty("get").GetProperty("parameters").EnumerateArray()
+            .ToDictionary(parameter => parameter.GetProperty("name").GetString()!);
+        Assert.Equal(0, pagination["skip"].GetProperty("schema").GetProperty("minimum").GetInt32());
+        Assert.Equal(1, pagination["take"].GetProperty("schema").GetProperty("minimum").GetInt32());
+        Assert.Equal(100, pagination["take"].GetProperty("schema").GetProperty("maximum").GetInt32());
         Assert.True(paths.TryGetProperty(Route + "/configuration", out var configuration));
         Assert.True(configuration.TryGetProperty("put", out _));
         Assert.True(paths.TryGetProperty("/api/audit/retention-simulation", out _));

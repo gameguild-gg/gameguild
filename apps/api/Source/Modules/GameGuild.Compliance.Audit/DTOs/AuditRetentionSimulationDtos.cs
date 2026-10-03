@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace GameGuild.Compliance.Audit;
 
@@ -59,6 +60,12 @@ public sealed record RunAuditRetentionSimulationRequest
     public AuditRetentionGrowthModel GrowthModel { get; init; } = AuditRetentionGrowthModel.HistoricalTrend;
     [Range(typeof(decimal), "-95", "300")] public decimal? AnnualGrowthPercent { get; init; }
     [Required, MinLength(1), MaxLength(10)] public List<AuditRetentionScenario> Scenarios { get; init; } = [];
+}
+
+public sealed record AuditRetentionSimulationListRequest
+{
+    [FromQuery(Name = "skip"), Range(0, int.MaxValue)] public int Skip { get; init; }
+    [FromQuery(Name = "take"), Range(1, 100)] public int Take { get; init; } = 25;
 }
 
 public sealed record AuditRetentionConfigurationResponse(
