@@ -366,10 +366,10 @@ public sealed class AuthAttemptIpExtractionTests
     public void GetClientIp_CanonicalizesIpv4MappedIpv6Addresses()
     {
         var ctx = new DefaultHttpContext();
-        ctx.Connection.RemoteIpAddress = System.Net.IPAddress.Parse("::ffff:192.0.2.10");
+        ctx.Connection.RemoteIpAddress = System.Net.IPAddress.Loopback.MapToIPv6();
 
         var ip = _sut.GetClientIpAddress(ctx);
-        ip.Should().Be("192.0.2.10");
+        ip.Should().Be(System.Net.IPAddress.Loopback.ToString());
     }
 
     [Fact]
