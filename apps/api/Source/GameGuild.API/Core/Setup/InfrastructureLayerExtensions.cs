@@ -319,6 +319,8 @@ public static class InfrastructureLayerExtensions
     {
         databaseOptions ??= DatabaseOptions.CreateDefault();
 
+        services.Configure<PermissionAuditOptions>(configuration.GetSection(PermissionAuditOptions.SectionName));
+
         var connectionString = PostgresConnectionString.Resolve(configuration, databaseOptions.ConnectionStringName)
                                ?? throw new InvalidOperationException(
                                    $"Connection string '{databaseOptions.ConnectionStringName}' not found. " +
