@@ -6,10 +6,10 @@ namespace GameGuild.Identity.Authentication;
 public interface IAuthAttemptService
 {
     /// <summary>Records a successful authentication attempt</summary>
-    Task RecordSuccessfulAttemptAsync(string email, Guid userId, string ipAddress, string? userAgent, TimeSpan processingTime);
+    Task RecordSuccessfulAttemptAsync(string email, Guid userId, string ipAddress, string? userAgent, TimeSpan processingTime, string authenticationMethod = "Password");
 
     /// <summary>Records a failed authentication attempt</summary>
-    Task RecordFailedAttemptAsync(string email, Guid? userId, string ipAddress, string? userAgent, string failureReason, TimeSpan processingTime);
+    Task RecordFailedAttemptAsync(string email, Guid? userId, string ipAddress, string? userAgent, string failureReason, TimeSpan processingTime, string authenticationMethod = "Password");
 
     /// <summary>Extracts the client IP address from the HTTP context</summary>
     string GetClientIpAddress(Microsoft.AspNetCore.Http.HttpContext? httpContext);

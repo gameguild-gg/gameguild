@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.CQRS;
@@ -31,6 +32,7 @@ public class OAuthAuthService(
 {
     public async Task<SignInResponse> GitHubSignInAsync(OAuthSignInRequest request, CancellationToken cancellationToken = default)
     {
+        var stopwatch = Stopwatch.StartNew();
         logger.LogInformation("Processing GitHub OAuth sign-in");
 
         var githubUser = await oauthService.GetUserProfileAsync("github", request.AccessToken).ConfigureAwait(false);
@@ -48,11 +50,12 @@ public class OAuthAuthService(
 
         logger.LogInformation("GitHub OAuth sign-in successful for {Email}", email);
 
-        return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "GitHub sign-in successful", cancellationToken).ConfigureAwait(false);
+        return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "GitHub sign-in successful", "GitHub", stopwatch, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<SignInResponse> GoogleSignInAsync(OAuthSignInRequest request, CancellationToken cancellationToken = default)
     {
+        var stopwatch = Stopwatch.StartNew();
         logger.LogInformation("Processing Google OAuth sign-in");
 
         var googleUser = await oauthService.GetUserProfileAsync("google", request.AccessToken).ConfigureAwait(false);
@@ -70,11 +73,12 @@ public class OAuthAuthService(
 
         logger.LogInformation("Google OAuth sign-in successful for {Email}", email);
 
-        return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Google sign-in successful", cancellationToken).ConfigureAwait(false);
+        return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Google sign-in successful", "Google", stopwatch, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<SignInResponse> MicrosoftSignInAsync(OAuthSignInRequest request, CancellationToken cancellationToken = default)
     {
+        var stopwatch = Stopwatch.StartNew();
         logger.LogInformation("Processing Microsoft OAuth sign-in");
 
         var microsoftUser = await oauthService.GetUserProfileAsync("microsoft", request.AccessToken).ConfigureAwait(false);
@@ -100,12 +104,13 @@ public class OAuthAuthService(
         logger.LogInformation("Microsoft OAuth sign-in successful for {Email}", email);
 
         return await CompleteSignInAsync(
-            user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Microsoft sign-in successful", cancellationToken)
+            user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Microsoft sign-in successful", "Microsoft", stopwatch, cancellationToken)
             .ConfigureAwait(false);
     }
 
     public async Task<SignInResponse> GoogleIdTokenSignInAsync(GoogleIdTokenRequest request, CancellationToken cancellationToken = default)
     {
+        var stopwatch = Stopwatch.StartNew();
         if (string.IsNullOrEmpty(request.IdToken)) { throw new UnauthorizedAccessException("ID token is required"); }
 
         // Cryptographically verify the Google ID token (signature, iss, aud, exp).
@@ -129,11 +134,12 @@ public class OAuthAuthService(
 
         logger.LogInformation("Google ID token sign-in successful for {Email}", email);
 
-        return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Google ID token sign-in successful", cancellationToken).ConfigureAwait(false);
+        return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Google ID token sign-in successful", "GoogleIdToken", stopwatch, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<SignInResponse> DiscordSignInAsync(DiscordSignInRequest request, CancellationToken cancellationToken = default)
     {
+        var stopwatch = Stopwatch.StartNew();
         logger.LogInformation("Processing Discord OAuth sign-in");
 
         // HandleCallbackAsync dispatches to ExchangeDiscordCodeAsync (code → access token)
@@ -158,7 +164,7 @@ public class OAuthAuthService(
 
         logger.LogInformation("Discord OAuth sign-in successful for {Email}", email);
 
-        return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Discord sign-in successful", cancellationToken).ConfigureAwait(false);
+        return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Discord sign-in successful", "Discord", stopwatch, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<SignInResponse> CompleteSignInAsync(
@@ -168,6 +174,8 @@ public class OAuthAuthService(
         string? ipAddress,
         string? userAgent,
         string successMessage,
+        string authenticationMethod,
+        Stopwatch stopwatch,
         CancellationToken cancellationToken)
     {
         var refreshTokenExpiryDays = jwtOptions?.Value.RefreshTokenExpirationDays
@@ -194,6 +202,14 @@ public class OAuthAuthService(
             refreshTokenExpiresAt,
             deviceInfo.Fingerprint,
             cancellationToken).ConfigureAwait(false);
+
+        await authAttemptService.RecordSuccessfulAttemptAsync(
+            user.Email,
+            user.Id,
+            ipAddress ?? "unknown",
+            userAgent,
+            stopwatch.Elapsed,
+            authenticationMethod).ConfigureAwait(false);
 
         var accessTokenExpirationMinutes = jwtOptions?.Value.AccessTokenExpirationMinutes
                                            ?? int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60", CultureInfo.InvariantCulture);

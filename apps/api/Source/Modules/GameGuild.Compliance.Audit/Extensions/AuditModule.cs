@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
+using GameGuild.Identity.Authentication;
 
 namespace GameGuild.Compliance.Audit;
 
@@ -56,6 +57,7 @@ public static class AuditModule
 
         // Register audit services
         services.AddScoped<IAuditService, AuditService>();
+        services.AddScoped<IAuthenticationAuditEventSink, CentralAuthenticationAuditEventSink>();
         services.AddScoped<IAuditActionTypeSearchService, AuditActionTypeSearchService>();
         services.AddSingleton<IAuditExportProgressTracker, DistributedAuditExportProgressTracker>();
         services.AddScoped<IAuditExportCronSchedule, AuditExportCronSchedule>();

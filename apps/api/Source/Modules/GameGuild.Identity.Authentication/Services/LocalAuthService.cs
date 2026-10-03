@@ -280,7 +280,7 @@ public class LocalAuthService(
                 cancellationToken).ConfigureAwait(false);
 
             // Record successful registration
-            await authAttemptService.RecordSuccessfulAttemptAsync(request.Email, userId, ipAddress ?? "unknown", userAgent, stopwatch.Elapsed).ConfigureAwait(false);
+            await authAttemptService.RecordSuccessfulAttemptAsync(request.Email, userId, ipAddress ?? "unknown", userAgent, stopwatch.Elapsed, "Registration").ConfigureAwait(false);
             logger.LogInformation("User {Email} successfully signed up", request.Email);
 
             var accessTokenExpirationMinutes = jwtOptions?.Value.AccessTokenExpirationMinutes

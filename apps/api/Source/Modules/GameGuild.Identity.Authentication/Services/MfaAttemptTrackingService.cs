@@ -15,7 +15,8 @@ public sealed class MfaAttemptTrackingService(
     IHttpContextAccessor httpContextAccessor,
     MfaOptions? mfaOptions = null,
     SessionOptions? sessionOptions = null,
-    ISessionManagementService? sessionManagementService = null) : IMfaAttemptTrackingService
+    ISessionManagementService? sessionManagementService = null,
+    IAuthenticationAuditEventSink? auditEventSink = null) : IMfaAttemptTrackingService
 {
     private readonly MfaOptions _mfaOptions = mfaOptions ?? new MfaOptions();
     private readonly SessionOptions _sessionOptions = sessionOptions ?? new SessionOptions();
@@ -253,6 +254,19 @@ public sealed class MfaAttemptTrackingService(
             };
 
             await mfaAttemptRepository.CreateAsync(attempt, cancellationToken).ConfigureAwait(false);
+            if (auditEventSink is not null)
+            {
+                await auditEventSink.RecordAsync(new AuthenticationAuditEvent(
+                    success ? "Authentication.MfaSucceeded" : "Authentication.MfaFailed",
+                    userId,
+                    success,
+                    method.ToString(),
+                    attempt.IpAddress,
+                    attempt.UserAgent,
+                    ErrorMessage: failureReason,
+                    Metadata: new { attempt.AttemptedAt, attempt.DeviceFingerprint, attempt.ProcessingTimeMs }),
+                    cancellationToken).ConfigureAwait(false);
+            }
         }
         catch (Exception ex)
         {

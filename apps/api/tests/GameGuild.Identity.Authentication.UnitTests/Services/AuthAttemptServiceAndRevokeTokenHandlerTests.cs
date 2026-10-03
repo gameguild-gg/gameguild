@@ -12,6 +12,7 @@ public sealed class AuthAttemptServiceSuccessPathTests
     public async Task RecordSuccessfulAttemptAsync_ShouldPersistSuccessfulAttempt()
     {
         var repository = new Mock<IAuthenticationAttemptRepository>();
+        var auditEventSink = new Mock<IAuthenticationAuditEventSink>();
         AuthenticationAttempt? captured = null;
 
         repository
@@ -22,7 +23,8 @@ public sealed class AuthAttemptServiceSuccessPathTests
         var sut = new AuthAttemptService(
             repository.Object,
             Mock.Of<IUserEnumerationProtectionService>(),
-            NullLogger<AuthAttemptService>.Instance);
+            NullLogger<AuthAttemptService>.Instance,
+            auditEventSink.Object);
 
         var userId = Guid.NewGuid();
 
@@ -44,6 +46,13 @@ public sealed class AuthAttemptServiceSuccessPathTests
         captured.AttemptedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
 
         repository.Verify(x => x.CreateAsync(It.IsAny<AuthenticationAttempt>(), It.IsAny<CancellationToken>()), Times.Once);
+        auditEventSink.Verify(x => x.RecordAsync(
+            It.Is<AuthenticationAuditEvent>(auditEvent =>
+                auditEvent.ActionType == "Authentication.Succeeded" &&
+                auditEvent.UserId == userId &&
+                auditEvent.IpAddress == "198.51.100.1" &&
+                auditEvent.UserAgent == "UnitTestAgent"),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -51,6 +60,7 @@ public sealed class AuthAttemptServiceSuccessPathTests
     {
         var repository = new Mock<IAuthenticationAttemptRepository>();
         var enumerationProtection = new Mock<IUserEnumerationProtectionService>();
+        var auditEventSink = new Mock<IAuthenticationAuditEventSink>();
         AuthenticationAttempt? captured = null;
 
         repository
@@ -61,7 +71,8 @@ public sealed class AuthAttemptServiceSuccessPathTests
         var sut = new AuthAttemptService(
             repository.Object,
             enumerationProtection.Object,
-            NullLogger<AuthAttemptService>.Instance);
+            NullLogger<AuthAttemptService>.Instance,
+            auditEventSink.Object);
 
         await sut.RecordFailedAttemptAsync(
             "user@example.com",
@@ -80,6 +91,12 @@ public sealed class AuthAttemptServiceSuccessPathTests
         captured.AttemptedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
 
         enumerationProtection.Verify(x => x.RecordEnumerationAttemptAsync("203.0.113.9", "login"), Times.Once);
+        auditEventSink.Verify(x => x.RecordAsync(
+            It.Is<AuthenticationAuditEvent>(auditEvent =>
+                auditEvent.ActionType == "Authentication.Failed" &&
+                !auditEvent.Success &&
+                auditEvent.ErrorMessage == "InvalidCredentials"),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 }
 
