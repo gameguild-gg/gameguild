@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 namespace GameGuild.Compliance.Audit;
 
 /// <summary>Queries audit logs by action type and produces bounded frequency/correlation summaries.</summary>
-public sealed class AuditActionTypeSearchService(IApplicationDbContext context) : IAuditActionTypeSearchService
+public sealed class AuditActionTypeSearchService(IApplicationDbContext context, IAuditDataAccessRecorder? accessRecorder = null) : IAuditActionTypeSearchService
 {
     private const int RelatedActionLimit = 5000;
 
@@ -44,6 +44,10 @@ public sealed class AuditActionTypeSearchService(IApplicationDbContext context) 
             ? await GetRelatedActionsAsync(logs, request.TenantId, cancellationToken).ConfigureAwait(false)
             : [];
 
+        if (accessRecorder is not null)
+        {
+            await accessRecorder.RecordAsync(logs.Select(log => new AuditAccessedRecord(log.TenantId, log.CreatedAt)), cancellationToken).ConfigureAwait(false);
+        }
         return new AuditActionTypeSearchResult
         {
             Logs = logs,
@@ -79,6 +83,10 @@ public sealed class AuditActionTypeSearchService(IApplicationDbContext context) 
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
+        if (accessRecorder is not null)
+        {
+            await accessRecorder.RecordAsync(logs.Select(log => new AuditAccessedRecord(log.TenantId, log.CreatedAt)), cancellationToken).ConfigureAwait(false);
+        }
         return new AuditActionTypeExportResult { TotalCount = totalCount, Logs = logs };
     }
 

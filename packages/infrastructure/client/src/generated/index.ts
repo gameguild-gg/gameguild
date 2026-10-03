@@ -22,6 +22,7 @@ export * from './modules/learning-lti.gen.js';
 export * from './modules/analytics-dashboards.gen.js';
 export * from './modules/analytics.gen.js';
 export * from './modules/assets-secure-delivery.gen.js';
+export * from './modules/compliance-audit-retention-simulation.gen.js';
 export * from './modules/learning-certificates.gen.js';
 export * from './modules/learning-cohorts.gen.js';
 export * from './modules/compliance-consent.gen.js';

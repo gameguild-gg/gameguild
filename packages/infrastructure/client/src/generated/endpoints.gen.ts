@@ -237,6 +237,67 @@ export const getApiAssetsContentEndpoint = {
   requiresAuth: false,
 } as const;
 
+export interface GetApiAuditRetentionSimulationForGetApiAuditRetentionSimulationInput {
+  query?: {
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetApiAuditRetentionSimulationForGetApiAuditRetentionSimulationOutput = Array<Types.ComplianceAuditAuditRetentionSimulationSummary>;
+export const getApiAuditRetentionSimulationForGetApiAuditRetentionSimulationEndpoint = {
+  operationId: 'getApiAuditRetentionSimulationForGetApiAuditRetentionSimulation' as const,
+  method: 'GET' as const,
+  path: '/api/audit/retention-simulation' as const,
+  tags: ['ComplianceAuditRetentionSimulation'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostApiAuditRetentionSimulationInput {
+  body?: Types.ComplianceAuditRunAuditRetentionSimulationInput;
+}
+export type PostApiAuditRetentionSimulationOutput = Types.ComplianceAuditAuditRetentionSimulationOutput;
+export const postApiAuditRetentionSimulationEndpoint = {
+  operationId: 'postApiAuditRetentionSimulation' as const,
+  method: 'POST' as const,
+  path: '/api/audit/retention-simulation' as const,
+  tags: ['ComplianceAuditRetentionSimulation'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetApiAuditRetentionSimulationForGetApiAuditRetentionSimulationByIdInput {
+  id: string;
+}
+export type GetApiAuditRetentionSimulationForGetApiAuditRetentionSimulationByIdOutput = Types.ComplianceAuditAuditRetentionSimulationOutput;
+export const getApiAuditRetentionSimulationForGetApiAuditRetentionSimulationByIdEndpoint = {
+  operationId: 'getApiAuditRetentionSimulationForGetApiAuditRetentionSimulationById' as const,
+  method: 'GET' as const,
+  path: '/api/audit/retention-simulation/{id}' as const,
+  tags: ['ComplianceAuditRetentionSimulation'] as const,
+  requiresAuth: true,
+} as const;
+
+export type GetApiAuditRetentionSimulationConfigurationInput = void;
+export type GetApiAuditRetentionSimulationConfigurationOutput = Types.ComplianceAuditAuditRetentionConfigurationOutput;
+export const getApiAuditRetentionSimulationConfigurationEndpoint = {
+  operationId: 'getApiAuditRetentionSimulationConfiguration' as const,
+  method: 'GET' as const,
+  path: '/api/audit/retention-simulation/configuration' as const,
+  tags: ['ComplianceAuditRetentionSimulation'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutApiAuditRetentionSimulationConfigurationInput {
+  body?: Types.ComplianceAuditConfigureAuditRetentionInput;
+}
+export type PutApiAuditRetentionSimulationConfigurationOutput = Types.ComplianceAuditAuditRetentionConfigurationOutput;
+export const putApiAuditRetentionSimulationConfigurationEndpoint = {
+  operationId: 'putApiAuditRetentionSimulationConfiguration' as const,
+  method: 'PUT' as const,
+  path: '/api/audit/retention-simulation/configuration' as const,
+  tags: ['ComplianceAuditRetentionSimulation'] as const,
+  requiresAuth: true,
+} as const;
+
 /**
  * Get a certificate by ID
  */
@@ -11208,6 +11269,67 @@ export const getAssetsSocialMediaEndpoint = {
   method: 'GET' as const,
   path: '/v1/assets/social-media/{assetReferenceId}' as const,
   tags: ['SocialAssetsSocialMediaAssets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAuditRetentionSimulationForGetAuditRetentionSimulationInput {
+  query?: {
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetAuditRetentionSimulationForGetAuditRetentionSimulationOutput = Array<Types.ComplianceAuditAuditRetentionSimulationSummary>;
+export const getAuditRetentionSimulationForGetAuditRetentionSimulationEndpoint = {
+  operationId: 'getAuditRetentionSimulationForGetAuditRetentionSimulation' as const,
+  method: 'GET' as const,
+  path: '/v1/audit/retention-simulation' as const,
+  tags: ['ComplianceAuditRetentionSimulation'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAuditRetentionSimulationInput {
+  body?: Types.ComplianceAuditRunAuditRetentionSimulationInput;
+}
+export type PostAuditRetentionSimulationOutput = Types.ComplianceAuditAuditRetentionSimulationOutput;
+export const postAuditRetentionSimulationEndpoint = {
+  operationId: 'postAuditRetentionSimulation' as const,
+  method: 'POST' as const,
+  path: '/v1/audit/retention-simulation' as const,
+  tags: ['ComplianceAuditRetentionSimulation'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAuditRetentionSimulationForGetAuditRetentionSimulationByIdInput {
+  id: string;
+}
+export type GetAuditRetentionSimulationForGetAuditRetentionSimulationByIdOutput = Types.ComplianceAuditAuditRetentionSimulationOutput;
+export const getAuditRetentionSimulationForGetAuditRetentionSimulationByIdEndpoint = {
+  operationId: 'getAuditRetentionSimulationForGetAuditRetentionSimulationById' as const,
+  method: 'GET' as const,
+  path: '/v1/audit/retention-simulation/{id}' as const,
+  tags: ['ComplianceAuditRetentionSimulation'] as const,
+  requiresAuth: true,
+} as const;
+
+export type GetAuditRetentionSimulationConfigurationInput = void;
+export type GetAuditRetentionSimulationConfigurationOutput = Types.ComplianceAuditAuditRetentionConfigurationOutput;
+export const getAuditRetentionSimulationConfigurationEndpoint = {
+  operationId: 'getAuditRetentionSimulationConfiguration' as const,
+  method: 'GET' as const,
+  path: '/v1/audit/retention-simulation/configuration' as const,
+  tags: ['ComplianceAuditRetentionSimulation'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutAuditRetentionSimulationConfigurationInput {
+  body?: Types.ComplianceAuditConfigureAuditRetentionInput;
+}
+export type PutAuditRetentionSimulationConfigurationOutput = Types.ComplianceAuditAuditRetentionConfigurationOutput;
+export const putAuditRetentionSimulationConfigurationEndpoint = {
+  operationId: 'putAuditRetentionSimulationConfiguration' as const,
+  method: 'PUT' as const,
+  path: '/v1/audit/retention-simulation/configuration' as const,
+  tags: ['ComplianceAuditRetentionSimulation'] as const,
   requiresAuth: true,
 } as const;
 
@@ -24514,6 +24636,11 @@ export const endpoints = {
   postApiAnalyticsWarehouseRun: postApiAnalyticsWarehouseRunEndpoint,
   postApiAssetsAccessUrl: postApiAssetsAccessUrlEndpoint,
   getApiAssetsContent: getApiAssetsContentEndpoint,
+  getApiAuditRetentionSimulationForGetApiAuditRetentionSimulation: getApiAuditRetentionSimulationForGetApiAuditRetentionSimulationEndpoint,
+  postApiAuditRetentionSimulation: postApiAuditRetentionSimulationEndpoint,
+  getApiAuditRetentionSimulationForGetApiAuditRetentionSimulationById: getApiAuditRetentionSimulationForGetApiAuditRetentionSimulationByIdEndpoint,
+  getApiAuditRetentionSimulationConfiguration: getApiAuditRetentionSimulationConfigurationEndpoint,
+  putApiAuditRetentionSimulationConfiguration: putApiAuditRetentionSimulationConfigurationEndpoint,
   getApiCertificates: getApiCertificatesEndpoint,
   postApiCertificatesRevoke: postApiCertificatesRevokeEndpoint,
   getApiCertificatesCourse: getApiCertificatesCourseEndpoint,
@@ -25232,6 +25359,11 @@ export const endpoints = {
   getAssetsSearch: getAssetsSearchEndpoint,
   postAssetsSocialMedia: postAssetsSocialMediaEndpoint,
   getAssetsSocialMedia: getAssetsSocialMediaEndpoint,
+  getAuditRetentionSimulationForGetAuditRetentionSimulation: getAuditRetentionSimulationForGetAuditRetentionSimulationEndpoint,
+  postAuditRetentionSimulation: postAuditRetentionSimulationEndpoint,
+  getAuditRetentionSimulationForGetAuditRetentionSimulationById: getAuditRetentionSimulationForGetAuditRetentionSimulationByIdEndpoint,
+  getAuditRetentionSimulationConfiguration: getAuditRetentionSimulationConfigurationEndpoint,
+  putAuditRetentionSimulationConfiguration: putAuditRetentionSimulationConfigurationEndpoint,
   getAuthApiKeys: getAuthApiKeysEndpoint,
   postAuthApiKeys: postAuthApiKeysEndpoint,
   postAuthApiKeysRevoke: postAuthApiKeysRevokeEndpoint,
