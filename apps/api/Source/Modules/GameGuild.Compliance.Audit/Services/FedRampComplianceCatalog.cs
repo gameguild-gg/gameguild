@@ -14,7 +14,7 @@ internal static class FedRampComplianceCatalog
         from path in new[] { "Program", "Agency" }
         select new Profile(classId, path, Data.Baselines[classId],
             Data.Rules.Where(rule => rule.Classes.Contains(classId) && rule.Paths.Contains(path)).ToArray())).ToArray();
-    private static readonly Lazy<IReadOnlyDictionary<string, JsonSchema>> Schemas = new(BuildSchemas);
+    private static readonly Lazy<IReadOnlyDictionary<string, JsonSchema>> CompiledSchemas = new(BuildSchemas);
 
     internal sealed record Rule(string Id, string Name, string[] Classes, string[] Paths, string Subset,
         Dictionary<string, string> Force, string SourceUri, JsonElement Effective, string? SchemaUri);
@@ -29,7 +29,7 @@ internal static class FedRampComplianceCatalog
 
     internal static Profile? Find(string id) => Profiles.SingleOrDefault(profile => profile.Id == id);
     internal static IReadOnlyList<ComplianceFrameworkTemplate> Templates() => Profiles.Select(Build).ToArray();
-    internal static string RulesVersion => Data.RulesVersion;
+    internal static string PinnedRulesVersion => Data.RulesVersion;
     internal static IReadOnlyList<SchemaSource> SchemaSources => Data.Schemas;
 
     private static ComplianceFrameworkTemplate Build(Profile profile)
@@ -54,7 +54,7 @@ internal static class FedRampComplianceCatalog
     private static ComplianceDocumentRequirement Requirement(string type, params string[] fields) =>
         new(type, ["frameworkVersion", "assessmentStatus", "owner", .. fields], true);
 
-    internal static string SchemaUri(string type) => "https://fedramp.gov/schemas/" + (type switch
+    internal static string DocumentSchemaUri(string type) => "https://fedramp.gov/schemas/" + (type switch
     {
         "fedramp-overview" => "fedramp-certification-package-overview-schema-2026-06-24.json",
         "fedramp-sdr" => "fedramp-security-decision-record-schema-2026-06-24.json",
@@ -63,7 +63,7 @@ internal static class FedRampComplianceCatalog
     });
 
     internal static bool IsSchemaValid(string uri, JsonElement payload) =>
-        Schemas.Value.TryGetValue(uri, out var schema) && payload.ValueKind == JsonValueKind.Object &&
+        CompiledSchemas.Value.TryGetValue(uri, out var schema) && payload.ValueKind == JsonValueKind.Object &&
         schema.Evaluate(payload, new EvaluationOptions { RequireFormatValidation = true, OutputFormat = OutputFormat.Flag }).IsValid;
 
     private static IReadOnlyDictionary<string, JsonSchema> BuildSchemas()

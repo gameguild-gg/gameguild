@@ -5,14 +5,16 @@ The generated catalog contains identifiers/metadata, not an inferred certificati
 """
 import argparse
 import hashlib
+import http.client
 import json
 import re
-import urllib.request
-import xml.etree.ElementTree as ET
+from urllib.parse import urljoin, urlsplit
 from pathlib import Path
+from defusedxml import ElementTree as ET
 
 RULES_COMMIT = "58487bda77d76d9ce334304ec2e779ece7cc7d54"
 RULES_BLOB = "fa0925ec64f66b4f62bf24729da2ef1388562470"
+RULES_SHA256 = "64915d88e72353c95f321ea4a9014516ac9441972cbd7f3d1abef7d1514c8fc8"
 SITE_COMMIT = "f3819f13210fe2a5ccb51bfb2df0833608b09079"
 OUTPUT = Path("apps/api/Source/Modules/GameGuild.Compliance.Audit/Resources/FedRamp2026")
 
@@ -22,20 +24,46 @@ def require(condition, message):
         raise ValueError(message)
 
 
+def fetch_schema(uri):
+    """Download only official HTTPS schema paths, checking each redirect before use."""
+    target = uri.replace("https://fedramp.gov/", "https://www.fedramp.gov/", 1)
+    for _ in range(4):
+        parsed = urlsplit(target)
+        require(parsed.scheme == "https" and parsed.netloc in ("fedramp.gov", "www.fedramp.gov")
+                and parsed.path.startswith("/schemas/") and parsed.path.endswith(".json")
+                and not parsed.query and not parsed.fragment, "Untrusted schema source URI")
+        connection = http.client.HTTPSConnection(parsed.netloc, timeout=45)
+        try:
+            connection.request("GET", parsed.path, headers={"User-Agent": "GameGuild-compliance-source-verification/1.0"})
+            response = connection.getresponse()
+            if response.status in (301, 302, 303, 307, 308):
+                location = response.getheader("Location")
+                require(bool(location), "Schema redirect lacks a destination")
+                target = urljoin(target, location)
+                continue
+            require(response.status == 200, "Official schema download failed")
+            content = response.read(1048577)
+            require(len(content) <= 1048576, "Schema exceeds the source size limit")
+            return content
+        finally:
+            connection.close()
+    raise ValueError("Official schema exceeded the redirect limit")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("rules", type=Path)
     parser.add_argument("nist_catalog", type=Path)
     args = parser.parse_args()
     raw = args.rules.read_bytes()
-    require(hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest() == RULES_BLOB,
+    require(hashlib.sha256(raw).hexdigest() == RULES_SHA256,
             "Unexpected FedRAMP rules source fingerprint")
     data = json.loads(raw)
     require(data["info"]["version"] == "2026.09.13.02", "Unexpected rules source version")
     nist_raw = args.nist_catalog.read_bytes()
     require(hashlib.sha256(nist_raw).hexdigest() == "a9e23b09116d5e651461d61777c2e7dc1f3454ab3f9e1e8fdf8af01c37dc01be",
             "Unexpected pinned NIST catalog fingerprint")
-    nist = ET.fromstring(nist_raw)
+    nist = ET.fromstring(nist_raw, forbid_dtd=True, forbid_entities=True, forbid_external=True)
     ns = {"o": "http://csrc.nist.gov/ns/oscal/1.0"}
     controls = {item.attrib["id"]: item for item in nist.findall(".//o:control", ns)}
     baselines = {}
@@ -54,7 +82,7 @@ def main():
     require([len(baselines[k]) for k in "BCD"] == [155, 322, 409], "Unexpected tailored baseline counts")
     rules = []
     schema_uris = set()
-    for group, section in data["FRR"].items():
+    for section in data["FRR"].values():
         info = section["info"]
         subsets = dict(info.get("subsets", {}))
         subsets.update(info.get("rev5", {}).get("subsets", {}))
@@ -88,13 +116,7 @@ def main():
         if uri in seen:
             continue
         require(uri.startswith("https://fedramp.gov/schemas/") and uri.endswith(".json"), "Untrusted schema source URI")
-        request = urllib.request.Request(uri.replace("https://fedramp.gov/", "https://www.fedramp.gov/"),
-                                         headers={"User-Agent": "GameGuild-compliance-source-verification/1.0"})
-        with urllib.request.urlopen(request, timeout=45) as response:
-            require(response.url.startswith(("https://fedramp.gov/schemas/", "https://www.fedramp.gov/schemas/")),
-                    "Untrusted schema redirect")
-            content = response.read(1048577)
-        require(len(content) <= 1048576, "Schema exceeds the source size limit")
+        content = fetch_schema(uri)
         schema = json.loads(content)
         require(schema["$id"] == uri and schema["$schema"] == "https://json-schema.org/draft/2020-12/schema",
                 "Unexpected government schema identifier or dialect")
