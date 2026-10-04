@@ -79,6 +79,10 @@ public sealed class ComplianceArtifactBuilder(ComplianceEvidenceValidationEngine
                 document.ReviewedByUserId, document.ReviewedAtUtc, document.Revision
             })));
         }
+        foreach (var file in ComplianceReviewerFormats.Build(template, documents, report))
+        {
+            payloads.Add(file.Key, new("text/csv", file.Value));
+        }
         var entries = payloads.Select(item => new ComplianceArtifactEntry(item.Key, item.Value.MediaType,
             item.Value.Content.Length, CompliancePackagingEncoding.Hash(item.Value.Content))).ToArray();
         var manifest = new ComplianceArtifactManifest(FormatVersion, packageId, tenantId, preparedByUserId, capturedAtUtc,
@@ -187,6 +191,7 @@ public sealed class ComplianceArtifactBuilder(ComplianceEvidenceValidationEngine
                 }
             }
             if (!listed.IsSupersetOf(["request.json", "template.json", "validation.json", "evidence/collection.json", "index.json", "index.csv"]) ||
+                !listed.IsSupersetOf(ComplianceReviewerFormats.RequiredPaths(manifest.Template.Id)) ||
                 manifest.TemplateSha256 != CompliancePackagingEncoding.Hash(content["template.json"]) ||
                 !content["template.json"].AsSpan().SequenceEqual(CompliancePackagingEncoding.Serialize(manifest.Template)) ||
                 !content["validation.json"].AsSpan().SequenceEqual(CompliancePackagingEncoding.Serialize(manifest.Validation)))
@@ -222,7 +227,7 @@ public sealed class ComplianceArtifactBuilder(ComplianceEvidenceValidationEngine
         return output.ToString();
     }
 
-    private static string CsvCell(string value)
+    internal static string CsvCell(string value)
     {
         var trimmed = value.TrimStart();
         if (trimmed.Length > 0 && trimmed[0] is '=' or '+' or '-' or '@') { value = "'" + value; }
