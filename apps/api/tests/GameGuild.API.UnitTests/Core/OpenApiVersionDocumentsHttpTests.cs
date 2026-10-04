@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.Globalization;
 using System.Net;
 using System.Text.Json;
 using Asp.Versioning;
@@ -33,6 +32,10 @@ public sealed class OpenApiVersionDocumentsHttpTests(ITestOutputHelper output)
     [InlineData(true, "'release-'VVV")]
     [InlineData(false, "'v'GGGGVVV")]
     [InlineData(true, "'v'GGGGVVV")]
+    [InlineData(false, "'v'GVVV")]
+    [InlineData(true, "'v'GVVV")]
+    [InlineData(false, "'Version-'GVVV")]
+    [InlineData(true, "'Version-'GVVV")]
     public async Task Serialized_version_documents_and_locales_contain_only_matching_actions(
         bool customControllerGroup, string groupFormat)
     {
@@ -41,19 +44,25 @@ public sealed class OpenApiVersionDocumentsHttpTests(ITestOutputHelper output)
         output.WriteLine("Discovered groups: " + string.Join(", ", host.Services
             .GetRequiredService<IApiVersionDescriptionProvider>().ApiVersionDescriptions
             .Select(description => description.GroupName + "=" + description.ApiVersion)));
-        var parser = host.Services.GetRequiredService<IApiVersionParser>();
-        var versions = new Dictionary<string, string>
+        var versions = new Dictionary<string, (string Payload, string NumericDocumentVersion)>
         {
-            ["1.0"] = "first",
-            ["1.1"] = "minor",
-            ["2.0"] = "second",
-            ["1.2.3"] = "patch",
-            ["1.2.4-beta.1"] = "beta",
-            ["2026-10-04"] = "date"
+            ["1.0"] = ("first", "1"),
+            ["1.1"] = ("minor", "1.1"),
+            ["2.0"] = ("second", "2"),
+            ["1.2.0-1"] = ("numeric", "1.2.0-1"),
+            ["1.2.3"] = ("patch", "1.2.3"),
+            ["1.2.3-rc-1"] = ("hyphen", "1.2.3-rc-1"),
+            ["1.2.4-beta.1"] = ("beta", "1.2.4-beta.1"),
+            ["2026-10-04"] = ("date", "")
         };
-        foreach (var (version, expectedName) in versions)
+        foreach (var (version, expected) in versions)
         {
-            var group = parser.Parse(version.AsSpan()).ToString(groupFormat, CultureInfo.InvariantCulture);
+            // Independent wire-name expectations must not repeat the production formatter.
+            var prefix = groupFormat.StartsWith("'Version-'", StringComparison.Ordinal) ? "Version-"
+                : groupFormat.StartsWith("'release-'", StringComparison.Ordinal) ? "release-" : "v";
+            var documentVersion = version == "2026-10-04" && groupFormat.Contains('G')
+                ? "2026-10-04" : expected.NumericDocumentVersion;
+            var group = prefix + documentVersion;
             foreach (var locale in new[] { "", ".pt-BR", ".en" })
             {
                 using var response = await client.GetAsync($"/swagger/{group}{locale}/swagger.json");
@@ -91,7 +100,7 @@ public sealed class OpenApiVersionDocumentsHttpTests(ITestOutputHelper output)
             using var actualResponse = await client.GetAsync($"/api/v{version}/version-doc-sample");
             Assert.Equal(HttpStatusCode.OK, actualResponse.StatusCode);
             using var actualBody = JsonDocument.Parse(await actualResponse.Content.ReadAsStringAsync());
-            Assert.Equal(expectedName, actualBody.RootElement.GetProperty("name").GetString());
+            Assert.Equal(expected.Payload, actualBody.RootElement.GetProperty("name").GetString());
         }
         using var unknown = await client.GetAsync("/swagger/unregistered/swagger.json");
         Assert.Equal(HttpStatusCode.NotFound, unknown.StatusCode);
@@ -230,7 +239,9 @@ public sealed record OpenApiInheritedVersionSampleDto(string Name, string Catego
 [ApiVersion("1.1")]
 [ApiVersion("2.0")]
 [ApiVersion("2026-10-04")]
+[SemanticApiVersion("1.2.0-1")]
 [SemanticApiVersion("1.2.3")]
+[SemanticApiVersion("1.2.3-rc-1")]
 [SemanticApiVersion("1.2.4-beta.1")]
 [Route("api/v{version:apiVersion}/version-doc-sample")]
 public sealed class OpenApiVersionSampleController : ControllerBase
@@ -244,8 +255,14 @@ public sealed class OpenApiVersionSampleController : ControllerBase
     [HttpGet, MapToApiVersion("2.0")]
     public OpenApiVersionSampleDto Second() => new("second");
 
+    [HttpGet, MapToSemanticApiVersion("1.2.0-1")]
+    public OpenApiVersionSampleDto NumericPrerelease() => new("numeric");
+
     [HttpGet, MapToSemanticApiVersion("1.2.3")]
     public OpenApiVersionSampleDto Patch() => new("patch");
+
+    [HttpGet, MapToSemanticApiVersion("1.2.3-rc-1")]
+    public OpenApiVersionSampleDto HyphenatedPrerelease() => new("hyphen");
 
     [HttpGet, MapToSemanticApiVersion("1.2.4-beta.1")]
     public OpenApiVersionSampleDto Beta() => new("beta");
