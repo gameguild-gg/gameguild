@@ -123,6 +123,20 @@ public sealed class SemanticApiVersion : ApiVersion
 
     public override string ToString(string? format, IFormatProvider? formatProvider) => FormatProvider.Format(format, this, formatProvider);
 
+    public override bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
+    {
+        // Interpolated strings use ISpanFormattable instead of the ToString overrides.
+        var formatted = ToString(format.IsEmpty ? null : format.ToString(), provider);
+        if (!formatted.AsSpan().TryCopyTo(destination))
+        {
+            charsWritten = 0;
+            return false;
+        }
+
+        charsWritten = formatted.Length;
+        return true;
+    }
+
     private static string? GetNativeStatus(int patch, string? prerelease)
     {
         // ApiVersion has no patch member. Preserve patch identity in its status so equality with
