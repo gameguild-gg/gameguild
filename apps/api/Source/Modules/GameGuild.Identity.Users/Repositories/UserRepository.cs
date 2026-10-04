@@ -35,7 +35,9 @@ public class UserRepository(IApplicationDbContext context) : IUserRepository
         return (users, totalCount);
     }
 
-    public async Task AddAsync(User user, CancellationToken cancellationToken = default)
+    public Task AddAsync(User user) => AddAsync(user, CancellationToken.None);
+
+    public async Task AddAsync(User user, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(user);
         cancellationToken.ThrowIfCancellationRequested();
@@ -70,7 +72,9 @@ public class UserRepository(IApplicationDbContext context) : IUserRepository
         return Task.CompletedTask;
     }
 
-    public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
+    public Task SaveChangesAsync() => SaveChangesAsync(CancellationToken.None);
+
+    public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {
         // The application context increments entity versions and captures durable events before saving.
         // A failed username INSERT must not increment those versions twice when retried.
@@ -189,7 +193,9 @@ public class UserRepository(IApplicationDbContext context) : IUserRepository
         return await context.Set<User>().Where(u => emails.Contains(u.Email) && u.DeletedAt == null).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task AddRangeAsync(IEnumerable<User> users, CancellationToken cancellationToken = default)
+    public Task AddRangeAsync(IEnumerable<User> users) => AddRangeAsync(users, CancellationToken.None);
+
+    public async Task AddRangeAsync(IEnumerable<User> users, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(users);
         foreach (var user in users)

@@ -6,7 +6,7 @@ namespace GameGuild.Identity.Users;
 /// <summary>Canonical handles for newly created users. Existing stored handles are not rewritten.</summary>
 public static class UsernameSlug
 {
-    public const int MaximumLength = 256;
+    public static int MaximumLength => 256;
 
     /// <summary>Removes accents, lowercases ASCII, and replaces separators with a single hyphen.</summary>
     public static string? Normalize(string? value)

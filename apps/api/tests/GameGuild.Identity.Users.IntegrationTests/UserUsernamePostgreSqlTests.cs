@@ -192,7 +192,10 @@ public sealed class UserUsernamePostgreSqlTests(UsernamePostgreSqlFixture fixtur
         var loser = User.Create($"bounded-loser-{marker}@example.test", $"Bounded {marker}");
         var interceptor = new CallbackSaveInterceptor(async attempt =>
         {
-            if (attempt != 2) return;
+            if (attempt != 2)
+            {
+                return;
+            }
             await using var contender = fixture.CreateContext();
             contender.Set<User>().Add(new User { Email = $"bounded-contender-{marker}@example.test", Name = "Contender", Username = loser.Username });
             await contender.SaveChangesAsync();
@@ -234,6 +237,8 @@ public sealed class UserUsernamePostgreSqlTests(UsernamePostgreSqlFixture fixtur
         public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
             DbContextEventData eventData, InterceptionResult<int> result, CancellationToken cancellationToken = default)
         {
+            _ = eventData;
+            cancellationToken.ThrowIfCancellationRequested();
             await callback(++Attempts);
             return result;
         }
@@ -251,15 +256,23 @@ public sealed class UsernamePostgreSqlFixture : IAsyncLifetime
         await context.Database.EnsureCreatedAsync();
     }
 
-    public ApplicationDbContext CreateContext(SaveChangesInterceptor? interceptor = null)
+    public ApplicationDbContext CreateContext() => CreateContext(null);
+
+    public ApplicationDbContext CreateContext(SaveChangesInterceptor? interceptor)
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(_database!.ConnectionString);
-        if (interceptor is not null) options.AddInterceptors(interceptor);
+        if (interceptor is not null)
+        {
+            options.AddInterceptors(interceptor);
+        }
         return new ApplicationDbContext(options.Options);
     }
 
     public async Task DisposeAsync()
     {
-        if (_database is not null) await _database.DisposeAsync();
+        if (_database is not null)
+        {
+            await _database.DisposeAsync();
+        }
     }
 }

@@ -24,7 +24,7 @@ public sealed class UsernameSignUpPostgreSqlHttpTests(ApiPostgreSqlFixture fixtu
         using var client = fixture.Factory.CreateClient();
         using var response = await client.PostAsJsonAsync("/v1/auth/sign-up", new
         {
-            email, password = "SyntheticPassword1!", username = display
+            email, password = CreateSyntheticPassword(), username = display
         });
         var payload = await response.Content.ReadAsStringAsync();
         Assert.True(response.StatusCode == HttpStatusCode.Created, $"Expected 201, got {response.StatusCode}: {payload}");
@@ -51,7 +51,7 @@ public sealed class UsernameSignUpPostgreSqlHttpTests(ApiPostgreSqlFixture fixtu
         using var client = fixture.Factory.CreateClient();
         using var response = await client.PostAsJsonAsync("/v1/auth/sign-up", new
         {
-            email, password = "SyntheticPassword1!", username
+            email, password = CreateSyntheticPassword(), username
         });
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var payload = await response.Content.ReadAsStringAsync();
@@ -77,7 +77,7 @@ public sealed class UsernameSignUpPostgreSqlHttpTests(ApiPostgreSqlFixture fixtu
         using var client = fixture.Factory.CreateClient();
         using var response = await client.PostAsJsonAsync("/v1/auth/sign-up", new
         {
-            email, password = "SyntheticPassword1!", username = $"CHOSEN {marker}"
+            email, password = CreateSyntheticPassword(), username = $"CHOSEN {marker}"
         });
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Contains("username", await response.Content.ReadAsStringAsync(), StringComparison.OrdinalIgnoreCase);
@@ -86,4 +86,6 @@ public sealed class UsernameSignUpPostgreSqlHttpTests(ApiPostgreSqlFixture fixtu
         Assert.False(await context.Set<User>().AnyAsync(user => user.Email == email));
         Assert.Equal($"chosen-{marker}", (await context.Set<User>().SingleAsync(user => user.Id == existing.Id)).Username);
     }
+
+    private static string CreateSyntheticPassword() => $"Synthetic1!{Guid.NewGuid():N}";
 }
