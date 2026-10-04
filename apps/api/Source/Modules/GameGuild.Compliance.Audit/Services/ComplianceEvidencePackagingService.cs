@@ -102,8 +102,8 @@ public sealed class ComplianceEvidencePackagingService(
             var template = catalog.Find(document.TemplateId) ?? throw Invalid("Template", "The uploaded document template is unavailable.");
             var candidate = Snapshot(document) with { Review = request.Decision, ReviewedByUserId = user, ReviewedAtUtc = now, Revision = document.Revision + 1 };
             // Approve document quality now; package creation separately checks the chosen audit period.
-            var report = validation.Inspect(template, DocumentRequest(document, now), [candidate], [], now, cancellationToken);
-            var errors = report.Gaps.Where(item => item.DocumentId == id && item.Code != "DocumentPeriodGap").Select(item => item.Detail).Distinct().ToArray();
+            var gaps = validation.InspectDocumentQuality(template, DocumentRequest(document, now), candidate, now, cancellationToken);
+            var errors = gaps.Where(item => item.Code != "DocumentPeriodGap").Select(item => item.Detail).Distinct().ToArray();
             if (errors.Length != 0) { throw new CompliancePackagingValidationException(new Dictionary<string, string[]> { ["Evidence"] = errors }); }
         }
         var previous = document.Review;

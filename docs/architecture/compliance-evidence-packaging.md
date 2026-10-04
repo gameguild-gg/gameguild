@@ -11,22 +11,27 @@ Annex A evidence template, signed ZIP packages and audited downloads. This imple
 has local verification evidence; production deployment remains unverified. The
 complete feature remains open.
 
-Remaining work includes SOC2 Type I/II, GDPR/DPIA, HIPAA, PCI DSS and FedRAMP
-templates with their actual scope and source versions; the remaining ISO ISMS/SoA
-requirements; framework-specific reviewer formats; and controlled delivery to
-named auditors. Enum values alone do not establish support for those frameworks.
+The next increment adds separate ISO ISMS/SoA and GDPR/DPIA profiles, native
+document validation and signed reviewer indexes. The legacy Annex A profile and
+previously signed v1 archives retain their original definition and trust contract.
+
+Remaining work includes SOC2 Type I/II, HIPAA, PCI DSS and FedRAMP templates with
+their actual scope and source versions; combined full-framework acceptance,
+including a licensed-standard review of the ISO clause groups; reviewer formats
+for the remaining frameworks; and controlled delivery to named auditors. Enum
+values alone do not establish support for those frameworks.
 
 | Original acceptance criterion | Current evidence | Remaining work |
 | --- | --- | --- |
 | SOC2 Type I/II templates | No catalog entry yet | Separate point-in-time and period templates; full reviewed criteria mappings |
-| ISO 27001 mapping and collection | All 93 Annex A identifiers; actual tenant-filtered collection; per-control reviewed assessments | Mandatory ISMS requirements, applicability and complete scope acceptance |
-| GDPR documentation and DPIA | Generic reviewed document upload and field validation | Versioned GDPR requirements and structured DPIA documentation |
+| ISO 27001 mapping and collection | Versioned 2022+Amd1:2024 profile: 7 management clause groups and 93 Annex A identifiers, reviewed SoA decisions/custom controls, actual tenant-filtered collection | Review clause groups against the licensed standard and accept the complete organisation scope |
+| GDPR documentation and DPIA | 43 organisation-facing article mappings; processing scope/roles/records, screened activities, actual DPIA contents, prior-consultation and timeline validation | Final organisational applicability and functional acceptance with the other framework/delivery requirements |
 | HIPAA, PCI DSS, FedRAMP packages | Shared packaging primitives | Actual framework templates, baseline/scope validation and regulatory references |
 | Automatic collection by control | Repeatable-read database snapshot and collection inventory | Verify the maps for every additional framework |
-| Quality and regulatory alignment | Hash, revision, review, framework version and per-control assessment checks | Framework-specific completeness and document requirements |
+| Quality and regulatory alignment | Hash/revision/review/version checks; structured ISO SoA and GDPR scope/DPIA checks | Completeness rules for the remaining frameworks and final human regulatory assessment |
 | Gaps and deficiencies | Missing sources/documents, truncation and control deficiencies in signed reports | Full-framework acceptance after catalogs are complete |
 | Timeline coverage | UTC intervals, source timestamps/counts/dates and document validity checked | Framework-specific point/period acceptance |
-| Standardized review formats | Signed common ZIP, JSON/CSV indexes and control cross references | Framework-specific reviewer artifacts |
+| Standardized review formats | Signed common ZIP; ISO SoA/management CSVs; GDPR DPIA/processing-record CSVs with source revision references | Reviewer artifacts for the remaining frameworks |
 | Digital signatures and tamper evidence | Trusted-key ECDSA seal and every payload's SHA-256; verified PostgreSQL/HTTP download | Final combined acceptance and merge |
 
 Automated auditor delivery is also part of the original proposed solution and is
@@ -85,6 +90,108 @@ version, satisfactory assessment and rationale. Excluded controls appear as
 `EvidenceGap` status. Readiness means that evidence can be reviewed by an auditor;
 it does not mean that a control is compliant or effective.
 
+## Versioned native profiles
+
+`GET /templates` returns independent copies of three catalog definitions:
+
+| Profile identifier | Version | Evidence scope |
+| --- | --- | --- |
+| `iso27001-2022-evidence-v1` | `ISO/IEC27001:2022` | Original 93 Annex A reference mappings; unchanged for existing captures |
+| `iso27001-2022-isms-evidence-v2` | `ISO/IEC27001:2022+Amd1:2024` | Management clause groups `ISMS.4`–`ISMS.10`, plus all 93 Annex A mappings |
+| `gdpr-2016-679-evidence-v1` | `Regulation(EU)2016/679` | Organisation-facing articles 3, 5–39, 44–49 and 89 |
+
+The ISO management mappings are clause groups, not a claim that every normative
+subclause has been independently verified. Use the licensed standard and human
+review for that assessment. [ISO's standard entry](https://www.iso.org/standard/27001)
+and [2024 amendment](https://www.iso.org/standard/88435.html) supply version provenance.
+The committee's [SoA auditing practices note](https://committee.iso.org/files/live/sites/jtc1sc27/files/resources/ISO-IECJTC1-SC27-WG1_N3298_Auditing%20Practices%20Note%20-%20SoA.pdf)
+is educational guidance, not an additional normative standard.
+
+Native document types require actual JSON; PDF/text validation-field declarations
+cannot substitute for a structured SoA, scope, register, screening or DPIA. Other
+reviewed declarations, such as legal-basis and national-law assessments, remain
+human assessments. Each document carries the exact `frameworkVersion`, an owner
+and its review status. Catalog required fields can be inspected through the API.
+Capture one scope/register/SoA revision per native type; separate DPIA and prior
+consultation documents can be supplied for different activities. Existing limits
+of 100 documents and 32 MiB captured content still apply. Large organisations can
+select explicit subsets; a subset package does not establish organisation-wide
+coverage.
+
+### ISO context and Statement of Applicability
+
+The new profile requires context, leadership, planning, support, operation,
+performance and improvement evidence. Management clauses cannot be excluded.
+Context includes a `climateRelevanceAssessment` object with a boolean `relevant`
+decision and reviewed `rationale`/`interestedPartyRequirements` declarations.
+
+The `iso-soa` document contains:
+
+- `scope`, `soaRevision`, and one to 500 `necessaryControls` with unique identifiers.
+- For each necessary control: `id`, `description`, `inclusionJustification`,
+  `implementationStatus` (`implemented`, `planned`, or `not-implemented`) and
+  `annexAReferences`. An empty reference array is valid for a custom control.
+  Implemented controls require `effectivenessEvidence`.
+- `annexADecisions`, an object with all 93 Annex A identifiers as keys. Each value
+  has a boolean `applicable`, its inclusion or exclusion justification, and
+  `necessaryControlIds` resolving to the documented controls. Applicable entries
+  require at least one necessary control; excluded entries may refer to a custom
+  replacement or use an empty array.
+
+For Annex A exclusions, the request must reference the same reviewed SoA revision
+and the same exclusion reason. A false SoA decision without the matching requested
+exclusion, or an exclusion of an applicable entry, remains a scope gap. Planned
+necessary controls can be recorded and their document quality approved; they
+remain `ControlImplementationPending` gaps in the package.
+
+### GDPR processing scope, DPIA and consultation
+
+The profile references [Regulation (EU) 2016/679](https://eur-lex.europa.eu/eli/reg/2016/679/ojv)
+and [Commission guidance for organisations](https://commission.europa.eu/law/law-topic/data-protection/information-business-and-organisations/obligations_en).
+Institutional and supervisory-authority chapters are not modelled as tenant
+processing duties. Optional duties and national rules require reviewed
+applicability evidence; the profile does not decide whether a legal exemption
+applies or treat proposed legal amendments as enacted rules.
+
+`gdpr-accountability.processingScope` identifies up to 200 unique `activityIds`,
+the `controller`/`processor` roles, and a scope `rationale`. The processing register
+uses `processingActivities` with unique activity/role pairs. Controller entries
+require contact, purposes, subject/data/recipient categories, transfers, retention
+and security declarations. Processor entries require processor contact,
+controllers, processing categories, transfers and security declarations. Records
+must agree with scope roles. The reviewed Article 30 exclusion workflow can record
+a human-justified derogation; no employee-count exemption is automatically inferred.
+
+Every scoped activity requires one reviewed `gdpr-dpia-screening.screenings` entry
+with `activityId`, boolean `dpiaRequired`, `rationale`,
+`supervisoryAuthorityListsReview` and `reviewTriggers`. A positive screening requires
+one approved, period-covering `gdpr-dpia` document for that activity, with actual
+processing description/purposes, necessity and proportionality, risks to people,
+mitigations, residual-risk decision, consultation declarations and review triggers.
+Missing, unapproved or expired DPIAs remain gaps. Generic exclusions cannot bypass
+Articles 3, 35 or 36; conditional applicability is resolved through the scope and
+screening documents.
+
+`residualRiskDecision` contains `level` (`low`, `medium`, `high`) and `rationale`.
+`consultation` records `dpoAdvice` and `dataSubjectViews`, including a reviewed
+reason when a consultation is inapplicable. `assessmentTiming` records UTC
+`assessedAtUtc`, `effectiveAtUtc` and `basis` (`initial-processing`, `material-change`
+or `periodic-review`). Initial/change assessments must predate the declared
+processing/change. Periodic reviews retain `originalAssessmentAtUtc` and
+`originalAssessmentReference`; a later review cannot erase a historical timing gap.
+
+Residual high risk requires reviewed prior-consultation evidence for the same
+activity: authority, submission reference/date, status and completed outcome
+reference/date. Completion must follow submission and precede the declared
+processing/change. A pending consultation can be documented and reviewed, but
+cannot make the package ready. These checks verify declarations and their
+consistency; an auditor still evaluates their accuracy, legal sufficiency and
+the effectiveness of mitigation.
+
+Document approval validates that document's quality without requiring unrelated
+package documents to already exist. Package preparation separately evaluates the
+full requested scope, conditional dependencies, period and collected observations.
+
 Event datasets use a JSON array. Every row contains an `observedAtUtc` string in
 UTC, for example:
 
@@ -119,6 +226,10 @@ evidence/collection.json
 evidence/<kind>.json
 documents/<document-id>/metadata.json
 documents/<document-id>/content.<json|pdf|txt>
+review/iso27001/statement-of-applicability.csv   # new ISO profile only
+review/iso27001/management-evidence.csv         # new ISO profile only
+review/gdpr/dpia-index.csv                      # GDPR profile only
+review/gdpr/processing-records.csv              # GDPR profile only
 ```
 
 The manifest records package, tenant and preparing actor, capture time, framework
@@ -141,6 +252,14 @@ the verifier's configured keys, and checks every payload hash and length. A publ
 key supplied by an archive is not a trust anchor. Missing private keys cause
 generation to fail. Packages with evidence gaps can be signed for review; signature
 validity and evidence readiness are separate results.
+
+Native reviewer CSVs include source metadata paths, control/activity identifiers,
+declared decisions and gap codes. The ISO SoA index includes custom necessary
+controls. The GDPR DPIA index preserves screening, assessment and consultation
+references, including missing dependencies. These files are hashed in the sealed
+manifest and required by verification for their profile. Removing or changing one
+invalidates the artifact. Native CSV additions do not modify the legacy profile or
+require new files in already-signed v1 archives.
 
 The verifier rejects missing or extra files, duplicate paths (including case
 variants), traversal and absolute paths, ambiguous JSON metadata, mismatched

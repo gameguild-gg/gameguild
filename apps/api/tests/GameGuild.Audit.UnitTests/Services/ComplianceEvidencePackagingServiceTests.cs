@@ -153,6 +153,24 @@ public sealed class ComplianceEvidencePackagingServiceTests
     }
 
     [Fact]
+    public async Task Review_of_screening_does_not_require_other_package_documents_to_already_exist()
+    {
+        var scenario = ComplianceFrameworkEvidenceTests.Gdpr();
+        var snapshot = scenario.Documents.Single(item => item.Type == "gdpr-dpia-screening");
+        var document = Document();
+        document.TemplateId = scenario.Template.Id;
+        document.Type = snapshot.Type;
+        document.Content = snapshot.Content;
+        document.ContentSha256 = snapshot.ContentSha256;
+        document.ControlIdsJson = JsonSerializer.Serialize(snapshot.ControlIds);
+        _catalog.Setup(item => item.Find(scenario.Template.Id)).Returns(scenario.Template);
+        _repository.Setup(item => item.GetDocumentAsync(_tenant, document.Id, default)).ReturnsAsync(document);
+        var result = await Service().ReviewDocumentAsync(document.Id, Review(), default);
+        Assert.Equal(ComplianceDocumentReview.Approved, result!.Review);
+        _repository.Verify(item => item.GetDocumentsAsync(It.IsAny<Guid>(), It.IsAny<IReadOnlyList<Guid>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task Missing_or_other_tenant_documents_return_not_found_before_collection()
     {
         _repository.Setup(item => item.GetDocumentsAsync(_tenant, It.IsAny<IReadOnlyList<Guid>>(), default)).ReturnsAsync([]);

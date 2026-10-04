@@ -21,7 +21,7 @@ using Npgsql;
 namespace GameGuild.API.IntegrationTests;
 
 [Collection(ApiPostgreSqlCollection.Name)]
-public sealed class CompliancePackagingPostgreSqlHttpTests(ApiPostgreSqlFixture fixture)
+public sealed partial class CompliancePackagingPostgreSqlHttpTests(ApiPostgreSqlFixture fixture)
 {
     private const string Route = "/v1/audit/compliance-packaging";
     private const string TemplateId = "iso27001-2022-evidence-v1";
