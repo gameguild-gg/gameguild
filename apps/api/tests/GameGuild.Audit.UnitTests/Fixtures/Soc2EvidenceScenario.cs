@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using GameGuild.Compliance.Audit;
@@ -24,11 +25,11 @@ public sealed class Soc2EvidenceScenario
     public static Soc2EvidenceScenario Create(int type, int mask, DateTime start, DateTime end)
     {
         var categories = new List<string> { "Security" };
-        var slug = "security";
+        var slug = new StringBuilder("security");
         var names = new[] { "Availability", "ProcessingIntegrity", "Confidentiality", "Privacy" };
         var slugs = new[] { "availability", "processing-integrity", "confidentiality", "privacy" };
         for (var index = 0; index < 4; index++)
-        { if ((mask & (1 << index)) != 0) { categories.Add(names[index]); slug += "-" + slugs[index]; } }
+        { if ((mask & (1 << index)) != 0) { categories.Add(names[index]); slug.Append('-').Append(slugs[index]); } }
         var template = new ComplianceFrameworkCatalog().Find($"soc2-tsc2017-type{type}-{slug}-evidence-v1")!;
         var scenario = new Soc2EvidenceScenario
         {

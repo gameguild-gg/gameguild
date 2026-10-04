@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace GameGuild.Compliance.Audit;
 
 /// <summary>Criterion identifiers and evidence adapters; assessment remains the auditor's responsibility.</summary>
@@ -18,14 +20,14 @@ internal static class Soc2ComplianceCatalog
     private static Profile CreateProfile(int type, int mask)
     {
         var categories = new List<string> { "Security" };
-        var slug = "security";
+        var slug = new StringBuilder("security");
         var ids = new List<string>();
         foreach (var (family, count) in new[] { (1, 5), (2, 3), (3, 4), (4, 2), (5, 3), (6, 8), (7, 5), (8, 1), (9, 2) })
         { ids.AddRange(Enumerable.Range(1, count).Select(number => $"CC{family}.{number}")); }
         for (var index = 0; index < OptionalCategories.Length; index++)
         {
             if ((mask & (1 << index)) == 0) { continue; }
-            categories.Add(OptionalCategories[index]); slug += "-" + Slugs[index];
+            categories.Add(OptionalCategories[index]); slug.Append('-').Append(Slugs[index]);
             ids.AddRange(index switch
             {
                 0 => ["A1.1", "A1.2", "A1.3"],
