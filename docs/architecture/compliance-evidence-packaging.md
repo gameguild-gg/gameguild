@@ -16,7 +16,11 @@ adds separate ISO ISMS/SoA and GDPR/DPIA profiles, native document validation an
 signed reviewer indexes. The legacy Annex A profile and
 previously signed v1 archives retain their original definition and trust contract.
 
-Remaining work includes SOC2 Type I/II, HIPAA, PCI DSS and FedRAMP templates with
+The current FedRAMP increment adds six explicit Rev5 class/path profiles and
+offline validation against the official 2026 JSON schemas. Its scope and remaining
+FedRAMP coverage are documented below; it does not support 20x/KSI profiles yet.
+
+Remaining work includes SOC2 Type I/II, HIPAA, PCI DSS and additional FedRAMP coverage with
 their actual scope and source versions; combined full-framework acceptance,
 including a licensed-standard review of the ISO clause groups; reviewer formats
 for the remaining frameworks; and controlled delivery to named auditors. Enum
@@ -27,7 +31,7 @@ values alone do not establish support for those frameworks.
 | SOC2 Type I/II templates | No catalog entry yet | Separate point-in-time and period templates; full reviewed criteria mappings |
 | ISO 27001 mapping and collection | Versioned 2022+Amd1:2024 profile: 7 management clause groups and 93 Annex A identifiers, reviewed SoA decisions/custom controls, actual tenant-filtered collection | Review clause groups against the licensed standard and accept the complete organisation scope |
 | GDPR documentation and DPIA | 43 organisation-facing article mappings; processing scope/roles/records, screened activities, actual DPIA contents, prior-consultation and timeline validation | Final organisational applicability and functional acceptance with the other framework/delivery requirements |
-| HIPAA, PCI DSS, FedRAMP packages | Shared packaging primitives | Actual framework templates, baseline/scope validation and regulatory references |
+| HIPAA, PCI DSS, FedRAMP packages | Six tailored 2026 Rev5 FedRAMP profiles, pinned official schemas and native reviewer payloads | HIPAA/PCI templates; FedRAMP 20x/KSI and full rule-specific acceptance |
 | Automatic collection by control | Repeatable-read database snapshot and collection inventory | Verify the maps for every additional framework |
 | Quality and regulatory alignment | Hash/revision/review/version checks; structured ISO SoA and GDPR scope/DPIA checks | Completeness rules for the remaining frameworks and final human regulatory assessment |
 | Gaps and deficiencies | Missing sources/documents, truncation and control deficiencies in signed reports | Full-framework acceptance after catalogs are complete |
@@ -37,6 +41,87 @@ values alone do not establish support for those frameworks.
 
 Automated auditor delivery is also part of the original proposed solution and is
 still pending. Administrator downloads do not satisfy that delivery workflow.
+
+## FedRAMP Consolidated Rules for 2026 / Rev5
+
+Templates follow `fedramp-2026-rev5-{b|c|d}-{program|agency}-evidence-v1`.
+The certification type, class, path and rules version must be declared explicitly
+and match the selected immutable template. No Rev5 Class A entry is invented.
+
+The catalog is generated from [FedRAMP rules commit
+58487bda77d76d9ce334304ec2e779ece7cc7d54](https://github.com/FedRAMP/rules/blob/58487bda77d76d9ce334304ec2e779ece7cc7d54/fedramp-consolidated-rules.json),
+rules version `2026.09.13.02`, blob `fa0925ec64f66b4f62bf24729da2ef1388562470`.
+The FRC-CSF-BSL source specifies 155, 322 and 409 unique controls for B, C and D.
+Program maps 158 provider rules and Agency maps 162; agency-only sponsorship
+rules are excluded from Program. These are tailored baselines, rather than the
+entire NIST catalog. Parameter identifiers are pinned to the NIST 5.2.0/OSCAL 1.2.2
+catalog in [FedRAMP/2026 commit f3819f13210fe2a5ccb51bfb2df0833608b09079](https://github.com/FedRAMP/2026/blob/f3819f13210fe2a5ccb51bfb2df0833608b09079/tools/data/NIST_SP-800-53_rev5_catalog.xml).
+
+`scripts/compliance/build-fedramp-catalog.py` verifies source fingerprints and
+generates the catalog and nine bundled official schemas. Each schema retains its
+government `$id` and `$schemaVersion`, and its exact bytes have a SHA-256 checksum.
+Draft 2020-12 evaluation includes external bundled references, formats,
+`contains`, `allOf` and `if`/`then`. Runtime validation makes no network requests
+and accepts no user-provided schemas. A server schema revision requires an
+explicit source/catalog review and a new template version when contracts change.
+
+Native documents contain `frameworkVersion`, `assessmentStatus: satisfactory`,
+`owner`, and the following actual JSON contents:
+
+- `fedramp-profile`: `certificationProfile` (`type`, `class`, `path`, `rulesVersion`),
+  `packagePhase` (`application` or `ongoing`), provider verification and validation
+  UTC timestamps, and `independentAssessment` with assessor, recognized-assessor
+  boolean, completion UTC timestamp and captured `reportDocumentId`.
+- `fedramp-overview`, `fedramp-sdr` and `fedramp-ocr`: `schemaUri` plus the actual
+  official-schema `payload`. SDR additionally contains `decisions`, keyed by
+  every scoped rule/control identifier. SDR metadata is mandatory even though
+  the current government schema alone permits omitting it.
+- `fedramp-artifact`: a pinned schema URI and actual payload, mapped to only the
+  rules that cite that schema. Multiple incident/change/vulnerability artifacts
+  can be captured. Applicable schema-bearing rules require a mapped approved
+  artifact. No URI content is fetched to stand in for uploaded evidence.
+- `fedramp-supporting-evidence`: captured, approved report contents with a
+  nonempty `evidenceDescription`; JSON, PDF or text may hold the actual report.
+
+Every SDR decision records boolean applicability, rationale, implementation,
+internal verification/validation, independent verification/validation and
+responses to reviewer comments. Non-applicability requires an explicit status,
+customer-risk explanation and senior-official acceptance. Generic API exclusions
+cannot omit baseline records. Partial/planned implementations remain gaps. Actual
+SDR records must be unique and cover the selected rule/control identifiers;
+organisation-defined parameter values must cover the pinned parameter set.
+AC, IA and AU controls also map to actual tenant authorization, authentication,
+operations and integrity datasets.
+
+Application packages require provider verification/validation and core document
+reviews within seven days, a current SDR update, and a recognized independent
+assessment completed within three calendar months with the actual report
+captured in the package. Ongoing report dates cover the requested period, at most
+three months, with planned-change coverage at least three months after report end.
+Linked official records refer to the captured overview source URI.
+
+The signed ZIP includes official overview/SDR/OCR JSON, human-readable text
+renderings, per-rule/control decision CSV, profile declarations, schema provenance
+and direct JSON exports of captured additional rule artifacts. Gap packages are
+still inspectable but explicitly remain unready; missing payloads use a marked
+placeholder rather than fabricated official evidence. CSV cells neutralize
+spreadsheet formulas. Original documents, source metadata and all reviewer
+exports are included in the signed manifest.
+
+The 2026 regime permits optional adoption from 2026-07-04 and has requirement-
+specific 2027 transition dates. The profile is an explicit selection of that
+regime, not an automatic migration of an organisation's existing certification.
+[FedRAMP certification rules](https://www.fedramp.gov/2026/providers/rev5/rules/fedramp-certification/),
+[SDR rules](https://www.fedramp.gov/2026/providers/rev5/rules/security-decision-record/) and
+[continuous monitoring rules](https://www.fedramp.gov/2026/providers/rev5/rules/collaborative-continuous-monitoring/)
+remain the authority for applicability and transition deadlines.
+
+Readiness means evidence is organized for auditor review. Actual federal
+certification, senior-official risk authority, correctness of organisation-defined
+parameter choices, rule-specific non-JSON artifact completeness, detailed scope
+decisions and effective operational compliance still require accountable human
+review. Additional 20x/KSI profiles and combined framework/delivery acceptance
+remain tracked by #178.
 
 ## API and persistence
 
@@ -292,6 +377,10 @@ hashes are rewritten.
 - At most 40 MiB compressed archive and total decompressed content.
 - JSON nesting is bounded at 32 levels and duplicate properties are rejected.
 
+FedRAMP profiles use a 60-document limit to include direct JSON exports of rule
+artifacts within the same 220-entry ZIP budget. Their schema payloads are limited
+to 60,000 JSON nodes, 1,500 items per collection and 4,000 characters per string.
+
 The input limits are checked before cloning capture bytes. Each source and document
 is parsed once per validation, even when many controls map to it. Decompression is
 bounded while reading actual bytes, independently of the ZIP's declared lengths.
@@ -312,6 +401,22 @@ whole-database parity. These findings are outside this feature's migration; its
 table/column inventory check is scoped explicitly to the two packaging tables.
 
 ## Verification
+
+FedRAMP increment verification on 2026-10-04: warning-clean full solution;
+328 audit, 1,852 authentication, 1,667 authorization, 143 API
+architecture/security/OpenAPI and 17 PostgreSQL/HTTP/OpenAPI cases passed,
+**4,007 selected tests total**, zero failed/skipped in the final runs. The API
+selection first had one PostgreSQL connection timeout while the separate
+integration run was active; its complete isolated rerun passed 143/143 without
+code changes. The audit suite includes 27 new FedRAMP cases plus the unchanged
+previously signed legacy ZIP fixture. Six new integration cases exercise every
+class/path profile through real HTTP uploads, approvals, actual PostgreSQL
+collectors, native signed downloads, verification, tenant denial and missing
+assessment-report gaps. These use synthetic assessment evidence and do not
+establish an organisation's federal certification or production readiness.
+
+No API DTO/route or database schema changed in this increment. The existing
+generic document transport and generated client contract remain applicable.
 
 Focused tests live in `CompliancePackagingCoreTests`,
 `ComplianceEvidencePackagingServiceTests`, `AuditChainEvidenceVerifierTests` and

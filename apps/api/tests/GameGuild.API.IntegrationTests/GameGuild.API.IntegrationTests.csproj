@@ -33,6 +33,7 @@
 
     <ItemGroup>
         <Using Include="Xunit"/>
+        <Compile Include="..\GameGuild.Audit.UnitTests\Fixtures\FedRampEvidenceScenario.cs" Link="Fixtures\FedRampEvidenceScenario.cs" />
     </ItemGroup>
 
 </Project>
