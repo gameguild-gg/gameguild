@@ -118,6 +118,7 @@ public sealed partial class CompliancePackagingPostgreSqlHttpTests
                 body["consultation"] = JsonSerializer.SerializeToNode(new { dpoAdvice = "Reviewed advice", dataSubjectViews = "Reviewed views or applicability rationale" });
                 body["assessmentTiming"] = JsonSerializer.SerializeToNode(new { assessedAtUtc = start.AddDays(-1), effectiveAtUtc = start, basis = "initial-processing" });
                 break;
+            default: break; // The remaining document types use the common synthetic required-field declarations.
         }
     }
 
