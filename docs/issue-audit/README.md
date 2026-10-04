@@ -1,5 +1,13 @@
 # GameGuild issue closeout inventory
 
+## 2026-10-04 authentication facade closeout
+
+Snapshot **2026-10-04T21:01:12.847150+00:00** retains all **328** original IDs: **63 closed / 265 open**. Counts include implementation acceptance, consolidation and historical closures; they are not a count of newly implemented features.
+
+**#219 is officially CLOSED/COMPLETED** after [PR #682](https://github.com/gameguild-gg/gameguild/pull/682) merged to `develop` at `e5352249efcc076eb0fd825b400c679f94f3f541`. [Complete acceptance](https://github.com/gameguild-gg/gameguild/issues/219#issuecomment-5984333216) and [all five requirements/consumers](../architecture/authentication-facade-reconciliation.md) record the existing facade's 18 operations, strict delegation and argument/task/result/error/cancellation preservation, plus actual API registration of five real scoped services and eight handlers. One hundred new cases were added. Local Authentication/Authorization/API registration passed **3,619 cases** without duplicate counting; exact-head CI passed **2,988** API/Authentication/full-application HTTP cases with warning-clean Release builds and all applicable required/security checks. No remote-provider or persistence acceptance for other issues is inferred.
+
+**#237 remains OPEN** under native parent #284. An isolated executable probe reproduced inconsistent HS256 algorithm enforcement and dropped additional claims; [the gap record](https://github.com/gameguild-gg/gameguild/issues/237#issuecomment-5984239259) records precise limits and the next correction. All 328 requirement fields are retained. The merged feature branch is removed, two checkouts are reused, no stashes remain and all 55 primary local files were preserved.
+
 ## 2026-10-04 API version/OpenAPI reconciliation
 
 Snapshot **2026-10-04T20:23:07.298955+00:00** retains all **328** original scope IDs: **62 closed / 266 open**. Earlier counts below are dated snapshots. State counts do not establish feature completion.

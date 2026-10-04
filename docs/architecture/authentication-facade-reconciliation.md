@@ -97,11 +97,29 @@ without counting the 87 facade cases twice. Results are retained under
 `artifacts/test-results/issue-219-facade-20261004` in the reused isolated checkout.
 
 The local test-project builds used `BuildProjectReferences=false` with unchanged
-production assemblies from the preceding accepted API foundation build. Fresh
-Release build and full API/Authentication verification are required on the
-published PR head before merging and closing #219. The two initial test-authoring
+production assemblies from the preceding accepted API foundation build. The final exact-head CI below supplies fresh Release build and complete
+API/Authentication verification. The two initial test-authoring
 build errors were corrected and are excluded from successful evidence.
 
-The scope remains open pending accepted CI and merge. No claim is made that
+The previously pending CI and merge completed as recorded below. No claim is made that
 these isolated facade/DI tests execute a provider's remote sandbox, a credential
 algorithm or a production database flow.
+
+
+## Final CI, merge and official closeout
+
+[PR #682](https://github.com/gameguild-gg/gameguild/pull/682) merged at
+`e5352249efcc076eb0fd825b400c679f94f3f541` on `2026-10-04T20:59:40Z`. Exact head
+`10347655b091a9f1dacb2c04e418f07f58c26b41` passed **2,988 CI cases**: 1,035 API, 1,939 Authentication and
+14 complete-application HTTP OpenAPI tests. Fresh Release API/integration
+builds reported zero warnings/errors. All applicable required checks,
+Codacy and four CodeQL analyses passed. The client gate was SKIPPED because
+production contracts/source did not change.
+[CI evidence](https://github.com/gameguild-gg/gameguild/actions/runs/37233005119/job/111526538164).
+
+#219 was officially CLOSED/COMPLETED at `2026-10-04T21:00:27Z` with
+its [full acceptance evidence](https://github.com/gameguild-gg/gameguild/issues/219#issuecomment-5984333216). All five approved requirements
+and the other 327 scoped issues are preserved. The source implementation was
+already present; the new 100 cases and actual-host evidence establish its
+accepted orchestration behavior. The merged branch is removed and the isolated
+checkout reused; all 55 primary local files remain unchanged.
