@@ -167,7 +167,9 @@ public static class PipelineExtensions
                     options,
                     app.Services.GetService<IApiVersionDescriptionProvider>(),
                     openApiOptions?.Version ?? "v1",
-                    openApiLocalizationOptions);
+                    openApiLocalizationOptions,
+                    app.Services.GetService<GameGuild.Configuration.PresentationLayer.ApiVersioning.ApiVersioningOptions>()
+                        ?.GroupNameFormat ?? VersionedOpenApiDocumentCatalog.DefaultGroupNameFormat);
             });
         }
 
@@ -204,11 +206,12 @@ public static class PipelineExtensions
         SwaggerUIOptions options,
         IApiVersionDescriptionProvider? versionProvider,
         string fallbackDocumentName,
-        OpenApiLocalizationOptions? localizationOptions)
+        OpenApiLocalizationOptions? localizationOptions,
+        string versionGroupNameFormat = VersionedOpenApiDocumentCatalog.DefaultGroupNameFormat)
     {
         var documentNames = versionProvider is null
             ? [(fallbackDocumentName, $"GameGuild API {fallbackDocumentName.ToUpperInvariant()}")]
-            : versionProvider.ApiVersionDescriptions
+            : new VersionedOpenApiDocumentCatalog(versionProvider.ApiVersionDescriptions, versionGroupNameFormat).Descriptions
                 .Select(description => (
                     description.GroupName,
                     $"GameGuild API {description.GroupName.ToUpperInvariant()}"))
