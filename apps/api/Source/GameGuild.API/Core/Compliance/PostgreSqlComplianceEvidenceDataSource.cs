@@ -97,7 +97,7 @@ public sealed class PostgreSqlComplianceEvidenceDataSource(IServiceScopeFactory 
         }
         await foreach (var row in rows.AsAsyncEnumerable().WithCancellation(cancellationToken).ConfigureAwait(false))
         {
-            var verified = verifier.VerifyEntry(row, out var signedTimestamp);
+            var (verified, signedTimestamp) = verifier.VerifyEntryAndTimestamp(row);
             if (!verified) { capture.AddError("At least one captured canonical content hash or trusted audit signature failed verification."); }
             if (previousSequence is null || row.SequenceNumber != previousSequence + 1 || row.PreviousHash != previousHash)
             {

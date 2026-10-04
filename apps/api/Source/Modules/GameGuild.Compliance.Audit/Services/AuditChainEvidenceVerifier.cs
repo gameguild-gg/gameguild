@@ -5,12 +5,12 @@ namespace GameGuild.Compliance.Audit;
 /// <summary>Verifies captured interval entries using the same canonical bytes as the audit writer.</summary>
 public sealed class AuditChainEvidenceVerifier(ICryptographicSigningService signing)
 {
-    public bool VerifyEntry(TamperEvidentAuditLog entry) => VerifyEntry(entry, out _);
+    public bool VerifyEntry(TamperEvidentAuditLog entry) => VerifyEntryAndTimestamp(entry).IsValid;
 
-    public bool VerifyEntry(TamperEvidentAuditLog entry, out DateTime signedTimestampUtc)
+    public (bool IsValid, DateTime SignedTimestampUtc) VerifyEntryAndTimestamp(TamperEvidentAuditLog entry)
     {
-        signedTimestampUtc = entry.Timestamp;
-        if (entry.SequenceNumber < 1 || entry.TenantId is null || entry.TenantId == Guid.Empty || entry.Timestamp.Kind != DateTimeKind.Utc) { return false; }
+        var signedTimestampUtc = entry.Timestamp;
+        if (entry.SequenceNumber < 1 || entry.TenantId is null || entry.TenantId == Guid.Empty || entry.Timestamp.Kind != DateTimeKind.Utc) { return (false, signedTimestampUtc); }
         try
         {
             var contentHash = signing.ComputeContentHash(TamperEvidentAuditService.SerializeContent(entry));
@@ -29,12 +29,13 @@ public sealed class AuditChainEvidenceVerifier(ICryptographicSigningService sign
                 }
             }
             var chainHash = signing.ComputeChainHash(contentHash, entry.PreviousHash, entry.SequenceNumber);
-            return contentHash == entry.ContentHash && chainHash == entry.ChainHash &&
+            var verified = contentHash == entry.ContentHash && chainHash == entry.ChainHash &&
                 signing.VerifySignature(chainHash, entry.DigitalSignature, entry.SigningKeyId);
+            return (verified, signedTimestampUtc);
         }
         catch (Exception exception) when (exception is CryptographicException or ArgumentException or InvalidOperationException)
         {
-            return false;
+            return (false, signedTimestampUtc);
         }
     }
 }

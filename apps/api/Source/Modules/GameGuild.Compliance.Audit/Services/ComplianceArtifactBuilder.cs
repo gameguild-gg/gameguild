@@ -8,15 +8,20 @@ namespace GameGuild.Compliance.Audit;
 /// <summary>Builds and verifies bounded evidence ZIPs. Verification trusts configured signing keys, never keys supplied by the archive.</summary>
 public sealed class ComplianceArtifactBuilder(ComplianceEvidenceValidationEngine validation, ICryptographicSigningService signing)
 {
-    public const int MaximumArchiveBytes = 41943040;
+    public static int MaximumArchiveBytes { get; } = 41943040;
     private const int MaximumEntries = 220;
     private const string FormatVersion = "compliance-evidence-v1";
     private const string Algorithm = "ECDSA-SHA256-P1363";
 
     public CompliancePackageArtifact Build(Guid packageId, Guid tenantId, Guid preparedByUserId, DateTime capturedAtUtc,
         ComplianceFrameworkTemplate template, CreateCompliancePackageRequest request,
+        IReadOnlyList<ComplianceDocumentSnapshot> documents, IReadOnlyList<ComplianceEvidenceDataset> datasets) =>
+        Build(packageId, tenantId, preparedByUserId, capturedAtUtc, template, request, documents, datasets, CancellationToken.None);
+
+    public CompliancePackageArtifact Build(Guid packageId, Guid tenantId, Guid preparedByUserId, DateTime capturedAtUtc,
+        ComplianceFrameworkTemplate template, CreateCompliancePackageRequest request,
         IReadOnlyList<ComplianceDocumentSnapshot> documents, IReadOnlyList<ComplianceEvidenceDataset> datasets,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(packageId, Guid.Empty);
         ArgumentOutOfRangeException.ThrowIfEqual(tenantId, Guid.Empty);
@@ -108,12 +113,15 @@ public sealed class ComplianceArtifactBuilder(ComplianceEvidenceValidationEngine
         return new(zip, CompliancePackagingEncoding.Hash(zip), manifest, seal);
     }
 
+    public ComplianceArtifactVerification Verify(byte[] zipContent, Guid expectedTenantId, Guid expectedPackageId) =>
+        Verify(zipContent, expectedTenantId, expectedPackageId, CancellationToken.None);
+
     public ComplianceArtifactVerification Verify(byte[] zipContent, Guid expectedTenantId, Guid expectedPackageId,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(zipContent);
         cancellationToken.ThrowIfCancellationRequested();
-        if (zipContent.Length is 0 or > MaximumArchiveBytes || expectedTenantId == Guid.Empty || expectedPackageId == Guid.Empty)
+        if (zipContent.Length == 0 || zipContent.Length > MaximumArchiveBytes || expectedTenantId == Guid.Empty || expectedPackageId == Guid.Empty)
         {
             return Invalid("The archive size or expected identity is invalid.");
         }
