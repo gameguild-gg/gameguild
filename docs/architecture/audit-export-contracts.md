@@ -104,4 +104,7 @@ coverage passed 4,136 cases: audit 437, authentication 1,852, authorization 1,66
 API architecture/security/OpenAPI 147 and PostgreSQL export HTTP 33. The regenerated
 client suite passed 1,112 cases, including real HTTP CSV downloads and JSON schema
 validation through both route families. Its TypeScript check is recorded separately.
-The matrix keeps the issues open pending exact-head CI and merge.
+[PR #678](https://github.com/gameguild-gg/gameguild/pull/678) merged to develop at 2026-10-04T15:16:33Z after final-head CI acceptance (head 0197b882ddd49774dbaa075692b7f685f4b0ed8f; merge c9c6e0cb535144408862f544022bc4babc2929f6). Canonical #171/#173 are closed COMPLETED with criterion-by-criterion evidence; #170/#172 are closed as native GitHub duplicates linked to those canonicals. The matrix reflects the verified 64 closed / 264 open state of the entire 328-issue scope.
+
+
+Build provenance: the complete local solution build passed on production/client implementation 22732e81de72fa02deaee1ab061e85fef3d85fc1. The final PR commit only changes two test-double files: both edited test projects built locally with zero warnings/errors, and the final-head Release API build passed on GitHub with zero warnings/errors and 2,946 passing API-related cases. All 4,136 selected local C# cases were rerun on the final head; client sources remained identical. Subsequent capped local full-build attempts hit compiler memory limits and are excluded from successful build/test evidence. No machine configuration was changed.
