@@ -1807,6 +1807,28 @@ modules. Everything below applies to the platform modules that are shared verbat
 across products; product-specific behavior hooks in exclusively through the documented
 extension points.
 
+### JWT Algorithm and Additional-Claim Boundaries
+
+Access-token issuance, all `JwtTokenService` validation paths and the API's active
+JWT bearer registration use the recorded HS256 policy. Each validator explicitly
+restricts `ValidAlgorithms` to HS256; a valid signature under another algorithm
+does not satisfy this token contract. `GetPrincipalFromExpiredToken` bypasses
+lifetime validation only, retaining signature, algorithm, issuer and audience checks.
+
+The public additional-claims overload preserves legitimate custom values, repeated
+claims and their JSON value types. It rejects null/blank claim entries and reserved
+protocol, identity, tenant, session, role, permission, MFA and actor claims, including
+aliases used by current extractors and configured authorization claim names.
+Callers must use typed issuance parameters for server-owned identity and authorization
+data; arbitrary additional claims cannot replace or extend those security assertions.
+Existing public method signatures and HTTP response contracts are preserved.
+
+`JwtGenerationValidationPolicyTests` and `JwtBearerValidationHttpTests` exercise
+issuance, unsupported algorithms, tampering, wrong keys/issuer/audience, time validity,
+custom claims and reserved-claim rejection. The bearer fixture invokes the actual
+host authentication registration over HTTP; it does not certify session/account
+revocation or external-provider acceptance tracked by separate requirements.
+
 ### Fail-Closed Permission Mapping (CQRS `AuthorizationBehavior`)
 
 - The behavior resolves authorization requirements through the **typed**

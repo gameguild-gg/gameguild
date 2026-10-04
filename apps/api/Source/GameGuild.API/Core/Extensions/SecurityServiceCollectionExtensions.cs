@@ -103,6 +103,7 @@ public static class SecurityServiceCollectionExtensions
                         ValidIssuer = resolvedJwtOptions.Issuer,
                         ValidateAudience = resolvedJwtOptions.ValidateAudience,
                         ValidAudience = resolvedJwtOptions.Audience,
+                        ValidAlgorithms = [SecurityAlgorithms.HmacSha256],
                         ValidateLifetime = resolvedJwtOptions.ValidateLifetime,
                         ClockSkew = TimeSpan.FromSeconds(resolvedJwtOptions.ClockSkewSeconds),
                         NameClaimType = "sub",
