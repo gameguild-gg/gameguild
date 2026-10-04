@@ -81,7 +81,9 @@ public sealed class ComplianceArtifactBuilder(ComplianceEvidenceValidationEngine
         }
         foreach (var file in ComplianceReviewerFormats.Build(template, documents, report))
         {
-            payloads.Add(file.Key, new("text/csv", file.Value));
+            var mediaType = file.Key.EndsWith(".json", StringComparison.Ordinal) ? "application/json" :
+                file.Key.EndsWith(".txt", StringComparison.Ordinal) ? "text/plain" : "text/csv";
+            payloads.Add(file.Key, new(mediaType, file.Value));
         }
         var entries = payloads.Select(item => new ComplianceArtifactEntry(item.Key, item.Value.MediaType,
             item.Value.Content.Length, CompliancePackagingEncoding.Hash(item.Value.Content))).ToArray();

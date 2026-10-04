@@ -12,10 +12,11 @@ public sealed class ComplianceFrameworkCatalog : IComplianceFrameworkCatalog
     private static readonly ComplianceFrameworkTemplate Iso27001 = BuildIso27001();
     private static readonly ComplianceFrameworkTemplate IsoIsms = BuildIsoIsms();
     private static readonly ComplianceFrameworkTemplate Gdpr = BuildGdpr();
-    public IReadOnlyList<ComplianceFrameworkTemplate> GetTemplates() => [Clone(IsoIsms), Clone(Gdpr), Clone(Iso27001)];
+    private static readonly IReadOnlyList<ComplianceFrameworkTemplate> FedRamp = FedRampComplianceCatalog.Templates();
+    public IReadOnlyList<ComplianceFrameworkTemplate> GetTemplates() => new[] { IsoIsms, Gdpr, Iso27001 }.Concat(FedRamp).Select(Clone).ToArray();
     public ComplianceFrameworkTemplate? Find(string id)
     {
-        var template = new[] { IsoIsms, Gdpr, Iso27001 }.SingleOrDefault(item => item.Id == id);
+        var template = new[] { IsoIsms, Gdpr, Iso27001 }.Concat(FedRamp).SingleOrDefault(item => item.Id == id);
         return template is null ? null : Clone(template);
     }
 
