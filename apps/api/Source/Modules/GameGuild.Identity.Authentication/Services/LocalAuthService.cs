@@ -389,6 +389,13 @@ public class LocalAuthService(
 
         try
         {
+            var username = UsernameSlug.Normalize(request.Username);
+            if (request.Username is not { Length: >= 3 and <= 50 } || username is not { Length: >= 3 and <= 50 })
+            {
+                throw new RequestValidationException(
+                    [new ValidationError("Username", "Username must produce a handle of 3 to 50 characters.")]);
+            }
+
             var passwordValidation = passwordHasher.ValidatePasswordStrength(request.Password);
             if (!passwordValidation.IsValid)
             {
@@ -413,7 +420,8 @@ public class LocalAuthService(
             var newUser = User.CreateWithPassword(
                 request.Email.ToLowerInvariant(),
                 request.Username ?? request.Email.Split('@')[0],
-                passwordHash);
+                passwordHash,
+                username);
             newUser.AddIntegrationEvent(new UserCreatedEvent(newUser.Id)
             {
                 TenantId = request.TenantId ?? DurableIntegrationEventTenants.Platform,

@@ -1807,6 +1807,25 @@ modules. Everything below applies to the platform modules that are shared verbat
 across products; product-specific behavior hooks in exclusively through the documented
 extension points.
 
+### New-User Handle Assignment
+
+New user factories assign a lowercase ASCII handle independently of the display
+name. Accents are removed, separators become hyphens, and compatible dots and
+underscores remain supported. Existing stored handles, including legacy nulls,
+are preserved on reads and display-name updates. Local signup validates the
+canonical candidate before persistence or token issuance and passes the chosen
+handle separately from the display name.
+
+The user repository reserves handles across persisted users (including deleted
+rows) and unsaved batch members. Automatically generated collisions receive a
+bounded user-ID suffix; an explicitly chosen collision returns a Username
+validation error without silently renaming the choice. PostgreSQL's existing
+unique index remains the final concurrent-write guard. Only its username-specific
+unique violation can trigger one generated-handle save retry. The retry preserves
+entity versions and durable-event capture; email and other persistence failures
+retain their existing failure path. No user schema or authorization claim changes
+are required.
+
 ### JWT Algorithm and Additional-Claim Boundaries
 
 Access-token issuance, all `JwtTokenService` validation paths and the API's active
