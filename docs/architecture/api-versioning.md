@@ -55,6 +55,17 @@ public sealed class PreviewWidgetsController : ControllerBase
 
 Set `ReportApiVersions` to advertise supported and deprecated versions in responses. Each `SunsetPolicies` entry is keyed by a version string understood by the selected parser; `EffectiveAt` configures the sunset date, and `PolicyUrl` adds the policy link. The versioned API Explorer continues to produce OpenAPI groups using `GroupNameFormat` and can substitute versions into URL templates.
 
+## OpenAPI names and controller groups
+
+Global document names use the complete discovered version and `GroupNameFormat`.
+Numeric versions use `'v'VVV` by default. Include the date with `'v'GGGGVVV` for
+concurrent date-based versions. A format producing the same name for distinct
+versions is rejected. Single-version group aliases retain unambiguous names;
+shared groups receive qualified aliases such as `Administration.v1.1`.
+JSON registration and Swagger UI use the same catalog. See
+[versioned-openapi-reconciliation.md](versioned-openapi-reconciliation.md)
+for operation selection, aliases and original #144/#147 requirement mapping.
+
 ## Compatibility matrix
 
 `CompatibilityMatrix` is directional: each key is a selected API version and each value is a version with an explicitly compatible request/response contract. For a matched request, the middleware returns those values in `X-API-Compatible-Versions`. The matrix does not rewrite routes or silently serve a different version. Add an entry only after verifying the wire-contract compatibility; omit versions whose compatibility has not been established.

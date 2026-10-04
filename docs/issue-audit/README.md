@@ -1,5 +1,13 @@
 # GameGuild issue closeout inventory
 
+## 2026-10-04 API version/OpenAPI reconciliation
+
+Snapshot **2026-10-04T17:18:57.425438+00:00** retains all **328** original scope IDs: **62 closed / 266 open**. Earlier counts below are dated snapshots. State counts do not establish feature completion.
+
+Canonical #144 and #147 were reopened after full-version Swagger selection gaps were reproduced. #272 and #275 are now native GitHub DUPLICATE links to them: the complete original bodies are identical, including all 12 functional criteria, technical requirements and Definition of Done. The original descriptions, checklists and appended source reviews remain preserved. The canonical issues remain OPEN pending final verification, accepted CI and merge.
+
+The isolated implementation creates full-version documents and compatible scoped controller-group aliases, uses the resolved explorer/action mapping and shares its document catalog with Swagger UI. The [requirement mapping and migration notes](../architecture/versioned-openapi-reconciliation.md) record the complete scope and current verification. Fresh corrected selector/catalog/HTTP/UI cases passed 21/21 before the expanded final regression; SharedKernel configuration passed 468/468. Failed and interrupted runs are retained and excluded from successful evidence.
+
 ## 2026-10-03 22:16 UTC reconciliation and retention closeout
 
 The authored-or-assigned union remains **328 unique issues** (316 authored, 321 assigned). The GitHub snapshot at **22:16:28 UTC** contains **304 open and 24 closed**. The separate closed-issue review has reopened additional historical closures, including #208; the matrix preserves their previous implementation/closure evidence as historical and marks the current requirement review as pending. Earlier counts below are dated snapshots, not the current state.
