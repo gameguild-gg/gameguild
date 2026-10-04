@@ -11,8 +11,13 @@ internal static class ComplianceReviewerFormats
     {
         ComplianceFrameworkCatalog.IsoIsmsId => ["review/iso27001/statement-of-applicability.csv", "review/iso27001/management-evidence.csv"],
         ComplianceFrameworkCatalog.GdprId => ["review/gdpr/dpia-index.csv", "review/gdpr/processing-records.csv"],
-        _ => []
+        _ => FedRampComplianceCatalog.Find(templateId) is not null ? FedRampPaths : []
     };
+
+    private static readonly string[] FedRampPaths = ["review/fedramp/overview.json", "review/fedramp/overview.txt",
+        "review/fedramp/security-decision-record.json", "review/fedramp/security-decision-record.txt",
+        "review/fedramp/ongoing-certification-report.json", "review/fedramp/ongoing-certification-report.txt",
+        "review/fedramp/decisions.csv", "review/fedramp/profile.json", "review/fedramp/schema-provenance.json"];
 
     internal static IReadOnlyDictionary<string, byte[]> Build(ComplianceFrameworkTemplate template,
         IReadOnlyList<ComplianceDocumentSnapshot> documents, CompliancePackageValidationReport report)
@@ -26,12 +31,50 @@ internal static class ComplianceReviewerFormats
             files.Add(paths[0], Encoding.UTF8.GetBytes(SoaCsv(template, documents, roots, report)));
             files.Add(paths[1], Encoding.UTF8.GetBytes(ManagementCsv(report)));
         }
-        else
+        else if (template.Id == ComplianceFrameworkCatalog.GdprId)
         {
             files.Add(paths[0], Encoding.UTF8.GetBytes(DpiaCsv(documents, roots, report)));
             files.Add(paths[1], Encoding.UTF8.GetBytes(RecordsCsv(documents, roots)));
         }
+        else { BuildFedRamp(template, documents, roots, report, files); }
         return files;
+    }
+
+    private static void BuildFedRamp(ComplianceFrameworkTemplate template, IReadOnlyList<ComplianceDocumentSnapshot> documents,
+        IReadOnlyDictionary<Guid, JsonElement> roots, CompliancePackageValidationReport report, Dictionary<string, byte[]> files)
+    {
+        var formatting = new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true };
+        void Export(string type, string path)
+        {
+            var document = documents.SingleOrDefault(item => item.Type == type);
+            var payload = document is null ? default : Property(roots[document.Id], "payload");
+            var content = payload.ValueKind == JsonValueKind.Object ? JsonSerializer.Serialize(payload, formatting) : "{\"missingEvidence\":true}";
+            files.Add(path + ".json", Encoding.UTF8.GetBytes(content));
+            files.Add(path + ".txt", Encoding.UTF8.GetBytes($"{type}\nSource: {(document is null ? "missing" : Metadata(document))}\nReady for auditor review: {report.ReadyForAuditorReview}\n\n{content}\n"));
+        }
+        Export("fedramp-overview", "review/fedramp/overview");
+        Export("fedramp-sdr", "review/fedramp/security-decision-record");
+        Export("fedramp-ocr", "review/fedramp/ongoing-certification-report");
+        var scope = documents.SingleOrDefault(item => item.Type == "fedramp-profile");
+        files.Add("review/fedramp/profile.json", scope is null ? Encoding.UTF8.GetBytes("{\"missingEvidence\":true}") : JsonSerializer.SerializeToUtf8Bytes(roots[scope.Id], formatting));
+        files.Add("review/fedramp/schema-provenance.json", JsonSerializer.SerializeToUtf8Bytes(FedRampComplianceCatalog.SchemaSources, formatting));
+        var sdr = documents.SingleOrDefault(item => item.Type == "fedramp-sdr");
+        var decisions = sdr is null ? default : Property(roots[sdr.Id], "decisions");
+        var output = new StringBuilder("identifier,applicable,implementationStatus,applicabilityRationale,verification,validation,independentVerification,independentValidation,customerRisk,seniorOfficialAcceptance,sourceMetadata,gapCodes\r\n");
+        foreach (var control in template.Controls)
+        {
+            var decision = Property(decisions, control.Id);
+            Row(output, control.Id, Property(decision, "applicable").ToString(), Text(decision, "implementationStatus"), Text(decision, "applicabilityRationale"),
+                Text(decision, "verification"), Text(decision, "validation"), Text(decision, "independentVerification"), Text(decision, "independentValidation"),
+                Text(decision, "customerRisk"), Text(decision, "seniorOfficialAcceptance"), sdr is null ? "missing" : Metadata(sdr), Codes(report, control.Id));
+        }
+        files.Add("review/fedramp/decisions.csv", Encoding.UTF8.GetBytes(output.ToString()));
+        foreach (var document in documents.Where(item => item.Type == "fedramp-artifact"))
+        {
+            var payload = Property(roots[document.Id], "payload");
+            files.Add($"review/fedramp/artifacts/{document.Id:D}.json", payload.ValueKind == JsonValueKind.Object
+                ? JsonSerializer.SerializeToUtf8Bytes(payload, formatting) : Encoding.UTF8.GetBytes("{\"missingEvidence\":true}"));
+        }
     }
 
     private static JsonElement Read(ComplianceDocumentSnapshot document)
