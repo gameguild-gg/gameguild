@@ -7,14 +7,20 @@ namespace GameGuild.API.Core.OpenApi;
 public sealed class VersionedOpenApiDocumentCatalog
 {
     /// <summary>The default API explorer version group format.</summary>
-    public const string DefaultGroupNameFormat = "'v'VVV";
+    public static string DefaultGroupNameFormat => "'v'VVV";
 
     private readonly Dictionary<string, ApiVersionDescription> documents = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, string> groupScopes = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>Builds stable document names from discovered versions and controller groups.</summary>
-    public VersionedOpenApiDocumentCatalog(IEnumerable<ApiVersionDescription> descriptions,
-        string groupNameFormat = DefaultGroupNameFormat)
+    public VersionedOpenApiDocumentCatalog(IEnumerable<ApiVersionDescription> descriptions)
+        : this(descriptions, DefaultGroupNameFormat)
+    {
+        // The default constructor preserves the standard explorer naming format.
+    }
+
+    /// <summary>Builds document names using a configured version format.</summary>
+    public VersionedOpenApiDocumentCatalog(IEnumerable<ApiVersionDescription> descriptions, string groupNameFormat)
     {
         ArgumentNullException.ThrowIfNull(descriptions);
         var source = descriptions.ToArray();
@@ -23,9 +29,11 @@ public sealed class VersionedOpenApiDocumentCatalog
         {
             var name = version.Key.ToString(groupNameFormat, CultureInfo.InvariantCulture);
             if (documents.TryGetValue(name, out var collision) && !collision.ApiVersion.Equals(version.Key))
+            {
                 throw new ArgumentException(
                     $"The version group format gives different API versions the same document name '{name}'.",
                     nameof(groupNameFormat));
+            }
             documents[name] = new ApiVersionDescription(version.Key, name,
                 version.All(description => description.IsDeprecated), version.First().SunsetPolicy);
         }
@@ -40,7 +48,9 @@ public sealed class VersionedOpenApiDocumentCatalog
             {
                 var canonicalName = description.ApiVersion.ToString(groupNameFormat, CultureInfo.InvariantCulture);
                 if (string.Equals(description.GroupName, canonicalName, StringComparison.OrdinalIgnoreCase))
+                {
                     continue;
+                }
 
                 // Reserve existing unambiguous names before allocating new qualified aliases.
                 if (distinct.Length == 1 && !documents.ContainsKey(description.GroupName))
@@ -49,7 +59,9 @@ public sealed class VersionedOpenApiDocumentCatalog
                     groupScopes.Add(description.GroupName, description.GroupName);
                 }
                 else
+                {
                     pendingAliases.Add((description, description.GroupName));
+                }
             }
         }
         foreach (var (description, scope) in pendingAliases)
@@ -59,7 +71,9 @@ public sealed class VersionedOpenApiDocumentCatalog
             var name = preferred;
             var suffix = 2;
             while (documents.ContainsKey(name))
+            {
                 name = preferred + "." + (suffix++).ToString(CultureInfo.InvariantCulture);
+            }
             documents.Add(name, new ApiVersionDescription(description.ApiVersion, name,
                 description.IsDeprecated, description.SunsetPolicy));
             groupScopes.Add(name, scope);

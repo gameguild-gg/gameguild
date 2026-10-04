@@ -13,8 +13,14 @@ public sealed class VersionedOpenApiDocumentSelector
     private readonly VersionedOpenApiDocumentCatalog catalog;
 
     /// <summary>Creates a selector using the version explorer's actual document groups.</summary>
-    public VersionedOpenApiDocumentSelector(IEnumerable<ApiVersionDescription> descriptions,
-        string groupNameFormat = VersionedOpenApiDocumentCatalog.DefaultGroupNameFormat)
+    public VersionedOpenApiDocumentSelector(IEnumerable<ApiVersionDescription> descriptions)
+        : this(descriptions, VersionedOpenApiDocumentCatalog.DefaultGroupNameFormat)
+    {
+        // The default constructor selects the standard explorer naming format.
+    }
+
+    /// <summary>Creates a selector using the configured version group format.</summary>
+    public VersionedOpenApiDocumentSelector(IEnumerable<ApiVersionDescription> descriptions, string groupNameFormat)
     {
         catalog = new VersionedOpenApiDocumentCatalog(descriptions, groupNameFormat);
     }
@@ -27,35 +33,49 @@ public sealed class VersionedOpenApiDocumentSelector
     {
         ArgumentNullException.ThrowIfNull(description);
         if (!catalog.TryGetDescription(documentName, out var document))
+        {
             return false;
+        }
         var targetVersion = document!.ApiVersion;
 
         // Explorer clones carry the action's specific version, including patch/date/status.
         var selectedVersion = description.GetApiVersion();
         if (selectedVersion is not null)
+        {
             return targetVersion.Equals(selectedVersion) && MatchesScope(documentName, description);
+        }
 
         var metadata = description.ActionDescriptor.GetApiVersionMetadata();
         if (metadata.IsApiVersionNeutral)
+        {
             return IncludesNeutralAction(documentName, description.GroupName);
+        }
         if (!ReferenceEquals(metadata, ApiVersionMetadata.Empty))
+        {
             return metadata.IsMappedTo(targetVersion) && MatchesScope(documentName, description);
+        }
 
         // Descriptions created outside the version explorer can still contain MVC declarations.
         if (description.ActionDescriptor is ControllerActionDescriptor controller)
         {
             if (IsNeutral(controller))
+            {
                 return IncludesNeutralAction(documentName, description.GroupName);
+            }
 
             var mappedVersions = controller.MethodInfo.GetCustomAttributes<MapToApiVersionAttribute>(inherit: false)
                 .SelectMany(attribute => attribute.Versions).ToArray();
             if (mappedVersions.Length > 0)
+            {
                 return mappedVersions.Any(targetVersion.Equals) && MatchesScope(documentName, description);
+            }
 
             var declaredVersions = controller.ControllerTypeInfo.GetCustomAttributes<ApiVersionAttribute>(inherit: false)
                 .SelectMany(attribute => attribute.Versions).ToArray();
             if (declaredVersions.Length > 0)
+            {
                 return declaredVersions.Any(targetVersion.Equals) && MatchesScope(documentName, description);
+            }
         }
         return string.Equals(description.GroupName, documentName, StringComparison.OrdinalIgnoreCase);
     }

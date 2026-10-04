@@ -72,7 +72,9 @@ public sealed class ApiVersionReaderIntegrationTests
             (await response.Content.ReadAsStringAsync()).Should().Be("1.0");
         }
         else
+        {
             response.StatusCode.Should().Be(System.Net.HttpStatusCode.BadRequest);
+        }
     }
 
     [Theory]
@@ -108,7 +110,9 @@ public sealed class ApiVersionReaderIntegrationTests
         options.AssumeDefaultVersionWhenUnspecified = assumeDefault;
         options.ReadingStrategy = strategy;
         if (configuredHeaderName is not null)
+        {
             options.HeaderName = configuredHeaderName;
+        }
 
         var builder = new HostBuilder().ConfigureWebHost(webHost =>
         {
