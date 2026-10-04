@@ -186,3 +186,11 @@ All four issues remain open until the feature PR is verified and merged. #170 an
 will reference those canonical implementations. The 2026-10-04 live snapshot after
 reopening the canonicals is **268 open and 60 closed**. Primary-checkout snapshots
 confirm all 55 local files were preserved.
+
+## 2026-10-04 CSV/JSON merge and final closeout: #170-173
+
+[PR #678](https://github.com/gameguild-gg/gameguild/pull/678) merged to develop at **2026-10-04T15:16:33Z**, verified head `0197b882ddd49774dbaa075692b7f685f4b0ed8f`, merge `c9c6e0cb535144408862f544022bc4babc2929f6`. Final-head API/Web/OpenAPI, repository policy, PR Required Gate, tracked artifacts, Codacy (zero findings) and CodeQL checks were accepted. The nine initial Codacy findings in test doubles were corrected; no scanner rule or gate was disabled.
+
+Canonical #171 and #173 closed **COMPLETED** after their original-route gaps were reproduced, fixed and covered by executed acceptance evidence. #170 and #172 closed as native GitHub **DUPLICATE** links to #171 and #173. Each issue retains its original description, source review and comments, with a final public closeout. Local evidence totals **5,248 successful cases** (4,136 C# and 1,112 client), a warning-clean full solution build, client TypeScript and generated-output consistency. The full local solution build belongs to the unchanged production/client implementation commit 22732e81de72fa02deaee1ab061e85fef3d85fc1. Final-head edited test projects built locally without warnings/errors; the final-head Release API build and 2,946 API-related cases passed on GitHub. Subsequent capped local full-build attempts hit compiler memory limits; failed/aborted resource or fixture attempts are excluded from successful evidence.
+
+A fresh GitHub query verifies all **328** original scope IDs: **64 closed / 264 open**. The entire matrix now reflects those live states and timestamps. Other rows only received state metadata and explicit historical reconciliation notes; all 328 acceptance fields and their existing implementation evidence are preserved. A GitHub closed-state count alone does not establish feature implementation. Primary-checkout snapshots verify preservation of all 55 local files.
