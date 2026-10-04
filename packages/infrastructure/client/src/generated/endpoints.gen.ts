@@ -237,6 +237,131 @@ export const getApiAssetsContentEndpoint = {
   requiresAuth: false,
 } as const;
 
+export interface GetApiAuditCompliancePackagingForGetApiAuditCompliancePackagingInput {
+  query?: {
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetApiAuditCompliancePackagingForGetApiAuditCompliancePackagingOutput = Array<Types.ComplianceAuditCompliancePackageSummary>;
+export const getApiAuditCompliancePackagingForGetApiAuditCompliancePackagingEndpoint = {
+  operationId: 'getApiAuditCompliancePackagingForGetApiAuditCompliancePackaging' as const,
+  method: 'GET' as const,
+  path: '/api/audit/compliance-packaging' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostApiAuditCompliancePackagingInput {
+  body?: Types.ComplianceAuditCreateCompliancePackageInput;
+}
+export type PostApiAuditCompliancePackagingOutput = Types.ComplianceAuditCompliancePackageOutput;
+export const postApiAuditCompliancePackagingEndpoint = {
+  operationId: 'postApiAuditCompliancePackaging' as const,
+  method: 'POST' as const,
+  path: '/api/audit/compliance-packaging' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetApiAuditCompliancePackagingForGetApiAuditCompliancePackagingByIdInput {
+  id: string;
+}
+export type GetApiAuditCompliancePackagingForGetApiAuditCompliancePackagingByIdOutput = Types.ComplianceAuditCompliancePackageOutput;
+export const getApiAuditCompliancePackagingForGetApiAuditCompliancePackagingByIdEndpoint = {
+  operationId: 'getApiAuditCompliancePackagingForGetApiAuditCompliancePackagingById' as const,
+  method: 'GET' as const,
+  path: '/api/audit/compliance-packaging/{id}' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetApiAuditCompliancePackagingDownloadInput {
+  id: string;
+}
+export type GetApiAuditCompliancePackagingDownloadOutput = Blob;
+export const getApiAuditCompliancePackagingDownloadEndpoint = {
+  operationId: 'getApiAuditCompliancePackagingDownload' as const,
+  method: 'GET' as const,
+  path: '/api/audit/compliance-packaging/{id}/download' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetApiAuditCompliancePackagingVerificationInput {
+  id: string;
+}
+export type GetApiAuditCompliancePackagingVerificationOutput = Types.ComplianceAuditComplianceArtifactVerification;
+export const getApiAuditCompliancePackagingVerificationEndpoint = {
+  operationId: 'getApiAuditCompliancePackagingVerification' as const,
+  method: 'GET' as const,
+  path: '/api/audit/compliance-packaging/{id}/verification' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetApiAuditCompliancePackagingDocumentsForGetApiAuditCompliancePackagingDocumentsInput {
+  query?: {
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetApiAuditCompliancePackagingDocumentsForGetApiAuditCompliancePackagingDocumentsOutput = Array<Types.ComplianceAuditComplianceDocumentOutput>;
+export const getApiAuditCompliancePackagingDocumentsForGetApiAuditCompliancePackagingDocumentsEndpoint = {
+  operationId: 'getApiAuditCompliancePackagingDocumentsForGetApiAuditCompliancePackagingDocuments' as const,
+  method: 'GET' as const,
+  path: '/api/audit/compliance-packaging/documents' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostApiAuditCompliancePackagingDocumentsInput {
+  body?: Types.ComplianceAuditUploadComplianceDocumentInput;
+}
+export type PostApiAuditCompliancePackagingDocumentsOutput = Types.ComplianceAuditComplianceDocumentOutput;
+export const postApiAuditCompliancePackagingDocumentsEndpoint = {
+  operationId: 'postApiAuditCompliancePackagingDocuments' as const,
+  method: 'POST' as const,
+  path: '/api/audit/compliance-packaging/documents' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetApiAuditCompliancePackagingDocumentsForGetApiAuditCompliancePackagingDocumentsByIdInput {
+  id: string;
+}
+export type GetApiAuditCompliancePackagingDocumentsForGetApiAuditCompliancePackagingDocumentsByIdOutput = Types.ComplianceAuditComplianceDocumentOutput;
+export const getApiAuditCompliancePackagingDocumentsForGetApiAuditCompliancePackagingDocumentsByIdEndpoint = {
+  operationId: 'getApiAuditCompliancePackagingDocumentsForGetApiAuditCompliancePackagingDocumentsById' as const,
+  method: 'GET' as const,
+  path: '/api/audit/compliance-packaging/documents/{id}' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostApiAuditCompliancePackagingDocumentsReviewInput {
+  id: string;
+  body?: Types.ComplianceAuditReviewComplianceDocumentInput;
+}
+export type PostApiAuditCompliancePackagingDocumentsReviewOutput = Types.ComplianceAuditComplianceDocumentOutput;
+export const postApiAuditCompliancePackagingDocumentsReviewEndpoint = {
+  operationId: 'postApiAuditCompliancePackagingDocumentsReview' as const,
+  method: 'POST' as const,
+  path: '/api/audit/compliance-packaging/documents/{id}/review' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export type GetApiAuditCompliancePackagingTemplatesInput = void;
+export type GetApiAuditCompliancePackagingTemplatesOutput = Array<Types.ComplianceAuditComplianceFrameworkTemplate>;
+export const getApiAuditCompliancePackagingTemplatesEndpoint = {
+  operationId: 'getApiAuditCompliancePackagingTemplates' as const,
+  method: 'GET' as const,
+  path: '/api/audit/compliance-packaging/templates' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetApiAuditRetentionSimulationForGetApiAuditRetentionSimulationInput {
   query?: {
     skip?: number;
@@ -11269,6 +11394,131 @@ export const getAssetsSocialMediaEndpoint = {
   method: 'GET' as const,
   path: '/v1/assets/social-media/{assetReferenceId}' as const,
   tags: ['SocialAssetsSocialMediaAssets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAuditCompliancePackagingForGetAuditCompliancePackagingInput {
+  query?: {
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetAuditCompliancePackagingForGetAuditCompliancePackagingOutput = Array<Types.ComplianceAuditCompliancePackageSummary>;
+export const getAuditCompliancePackagingForGetAuditCompliancePackagingEndpoint = {
+  operationId: 'getAuditCompliancePackagingForGetAuditCompliancePackaging' as const,
+  method: 'GET' as const,
+  path: '/v1/audit/compliance-packaging' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAuditCompliancePackagingInput {
+  body?: Types.ComplianceAuditCreateCompliancePackageInput;
+}
+export type PostAuditCompliancePackagingOutput = Types.ComplianceAuditCompliancePackageOutput;
+export const postAuditCompliancePackagingEndpoint = {
+  operationId: 'postAuditCompliancePackaging' as const,
+  method: 'POST' as const,
+  path: '/v1/audit/compliance-packaging' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAuditCompliancePackagingForGetAuditCompliancePackagingByIdInput {
+  id: string;
+}
+export type GetAuditCompliancePackagingForGetAuditCompliancePackagingByIdOutput = Types.ComplianceAuditCompliancePackageOutput;
+export const getAuditCompliancePackagingForGetAuditCompliancePackagingByIdEndpoint = {
+  operationId: 'getAuditCompliancePackagingForGetAuditCompliancePackagingById' as const,
+  method: 'GET' as const,
+  path: '/v1/audit/compliance-packaging/{id}' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAuditCompliancePackagingDownloadInput {
+  id: string;
+}
+export type GetAuditCompliancePackagingDownloadOutput = Blob;
+export const getAuditCompliancePackagingDownloadEndpoint = {
+  operationId: 'getAuditCompliancePackagingDownload' as const,
+  method: 'GET' as const,
+  path: '/v1/audit/compliance-packaging/{id}/download' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAuditCompliancePackagingVerificationInput {
+  id: string;
+}
+export type GetAuditCompliancePackagingVerificationOutput = Types.ComplianceAuditComplianceArtifactVerification;
+export const getAuditCompliancePackagingVerificationEndpoint = {
+  operationId: 'getAuditCompliancePackagingVerification' as const,
+  method: 'GET' as const,
+  path: '/v1/audit/compliance-packaging/{id}/verification' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAuditCompliancePackagingDocumentsForGetAuditCompliancePackagingDocumentsInput {
+  query?: {
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetAuditCompliancePackagingDocumentsForGetAuditCompliancePackagingDocumentsOutput = Array<Types.ComplianceAuditComplianceDocumentOutput>;
+export const getAuditCompliancePackagingDocumentsForGetAuditCompliancePackagingDocumentsEndpoint = {
+  operationId: 'getAuditCompliancePackagingDocumentsForGetAuditCompliancePackagingDocuments' as const,
+  method: 'GET' as const,
+  path: '/v1/audit/compliance-packaging/documents' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAuditCompliancePackagingDocumentsInput {
+  body?: Types.ComplianceAuditUploadComplianceDocumentInput;
+}
+export type PostAuditCompliancePackagingDocumentsOutput = Types.ComplianceAuditComplianceDocumentOutput;
+export const postAuditCompliancePackagingDocumentsEndpoint = {
+  operationId: 'postAuditCompliancePackagingDocuments' as const,
+  method: 'POST' as const,
+  path: '/v1/audit/compliance-packaging/documents' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAuditCompliancePackagingDocumentsForGetAuditCompliancePackagingDocumentsByIdInput {
+  id: string;
+}
+export type GetAuditCompliancePackagingDocumentsForGetAuditCompliancePackagingDocumentsByIdOutput = Types.ComplianceAuditComplianceDocumentOutput;
+export const getAuditCompliancePackagingDocumentsForGetAuditCompliancePackagingDocumentsByIdEndpoint = {
+  operationId: 'getAuditCompliancePackagingDocumentsForGetAuditCompliancePackagingDocumentsById' as const,
+  method: 'GET' as const,
+  path: '/v1/audit/compliance-packaging/documents/{id}' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAuditCompliancePackagingDocumentsReviewInput {
+  id: string;
+  body?: Types.ComplianceAuditReviewComplianceDocumentInput;
+}
+export type PostAuditCompliancePackagingDocumentsReviewOutput = Types.ComplianceAuditComplianceDocumentOutput;
+export const postAuditCompliancePackagingDocumentsReviewEndpoint = {
+  operationId: 'postAuditCompliancePackagingDocumentsReview' as const,
+  method: 'POST' as const,
+  path: '/v1/audit/compliance-packaging/documents/{id}/review' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export type GetAuditCompliancePackagingTemplatesInput = void;
+export type GetAuditCompliancePackagingTemplatesOutput = Array<Types.ComplianceAuditComplianceFrameworkTemplate>;
+export const getAuditCompliancePackagingTemplatesEndpoint = {
+  operationId: 'getAuditCompliancePackagingTemplates' as const,
+  method: 'GET' as const,
+  path: '/v1/audit/compliance-packaging/templates' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
   requiresAuth: true,
 } as const;
 
@@ -24636,6 +24886,18 @@ export const endpoints = {
   postApiAnalyticsWarehouseRun: postApiAnalyticsWarehouseRunEndpoint,
   postApiAssetsAccessUrl: postApiAssetsAccessUrlEndpoint,
   getApiAssetsContent: getApiAssetsContentEndpoint,
+  getApiAuditCompliancePackagingForGetApiAuditCompliancePackaging: getApiAuditCompliancePackagingForGetApiAuditCompliancePackagingEndpoint,
+  postApiAuditCompliancePackaging: postApiAuditCompliancePackagingEndpoint,
+  getApiAuditCompliancePackagingForGetApiAuditCompliancePackagingById: getApiAuditCompliancePackagingForGetApiAuditCompliancePackagingByIdEndpoint,
+  getApiAuditCompliancePackagingDownload: getApiAuditCompliancePackagingDownloadEndpoint,
+  getApiAuditCompliancePackagingVerification: getApiAuditCompliancePackagingVerificationEndpoint,
+  getApiAuditCompliancePackagingDocumentsForGetApiAuditCompliancePackagingDocuments:
+    getApiAuditCompliancePackagingDocumentsForGetApiAuditCompliancePackagingDocumentsEndpoint,
+  postApiAuditCompliancePackagingDocuments: postApiAuditCompliancePackagingDocumentsEndpoint,
+  getApiAuditCompliancePackagingDocumentsForGetApiAuditCompliancePackagingDocumentsById:
+    getApiAuditCompliancePackagingDocumentsForGetApiAuditCompliancePackagingDocumentsByIdEndpoint,
+  postApiAuditCompliancePackagingDocumentsReview: postApiAuditCompliancePackagingDocumentsReviewEndpoint,
+  getApiAuditCompliancePackagingTemplates: getApiAuditCompliancePackagingTemplatesEndpoint,
   getApiAuditRetentionSimulationForGetApiAuditRetentionSimulation: getApiAuditRetentionSimulationForGetApiAuditRetentionSimulationEndpoint,
   postApiAuditRetentionSimulation: postApiAuditRetentionSimulationEndpoint,
   getApiAuditRetentionSimulationForGetApiAuditRetentionSimulationById: getApiAuditRetentionSimulationForGetApiAuditRetentionSimulationByIdEndpoint,
@@ -25359,6 +25621,18 @@ export const endpoints = {
   getAssetsSearch: getAssetsSearchEndpoint,
   postAssetsSocialMedia: postAssetsSocialMediaEndpoint,
   getAssetsSocialMedia: getAssetsSocialMediaEndpoint,
+  getAuditCompliancePackagingForGetAuditCompliancePackaging: getAuditCompliancePackagingForGetAuditCompliancePackagingEndpoint,
+  postAuditCompliancePackaging: postAuditCompliancePackagingEndpoint,
+  getAuditCompliancePackagingForGetAuditCompliancePackagingById: getAuditCompliancePackagingForGetAuditCompliancePackagingByIdEndpoint,
+  getAuditCompliancePackagingDownload: getAuditCompliancePackagingDownloadEndpoint,
+  getAuditCompliancePackagingVerification: getAuditCompliancePackagingVerificationEndpoint,
+  getAuditCompliancePackagingDocumentsForGetAuditCompliancePackagingDocuments:
+    getAuditCompliancePackagingDocumentsForGetAuditCompliancePackagingDocumentsEndpoint,
+  postAuditCompliancePackagingDocuments: postAuditCompliancePackagingDocumentsEndpoint,
+  getAuditCompliancePackagingDocumentsForGetAuditCompliancePackagingDocumentsById:
+    getAuditCompliancePackagingDocumentsForGetAuditCompliancePackagingDocumentsByIdEndpoint,
+  postAuditCompliancePackagingDocumentsReview: postAuditCompliancePackagingDocumentsReviewEndpoint,
+  getAuditCompliancePackagingTemplates: getAuditCompliancePackagingTemplatesEndpoint,
   getAuditRetentionSimulationForGetAuditRetentionSimulation: getAuditRetentionSimulationForGetAuditRetentionSimulationEndpoint,
   postAuditRetentionSimulation: postAuditRetentionSimulationEndpoint,
   getAuditRetentionSimulationForGetAuditRetentionSimulationById: getAuditRetentionSimulationForGetAuditRetentionSimulationByIdEndpoint,
