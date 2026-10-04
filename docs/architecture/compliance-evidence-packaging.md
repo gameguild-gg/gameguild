@@ -49,6 +49,15 @@ still pending. Administrator downloads do not satisfy that delivery workflow.
 
 ## SOC2 Type I/II and category scopes
 
+Merged through PR #677 on 2026-10-04 as
+14378dc099044c416b19f28a3a41fd651d69bfd2. Its final head
+cc8f7bd7b9f37da662a29ec657d11ee25a405236 passed all 22 remote checks,
+including API/OpenAPI/CodeQL and Codacy with zero annotations, and the complete
+4,091-case local selection after the two StringBuilder corrections. The primary
+checkout's 55 local files retained identical SHA-256 hashes after synchronization.
+The implementation branch and both owned disposable test containers/volumes
+were removed. Issue #178 remains open.
+
 Profiles use the ID soc2-tsc2017-type{1|2}-security-evidence-v1, with optional
 availability, processing-integrity, confidentiality and privacy slugs before
 evidence-v1 in that order. These profiles require Security and offer all 16
