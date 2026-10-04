@@ -11,8 +11,9 @@ Annex A evidence template, signed ZIP packages and audited downloads. This imple
 has local verification evidence; production deployment remains unverified. The
 complete feature remains open.
 
-The next increment adds separate ISO ISMS/SoA and GDPR/DPIA profiles, native
-document validation and signed reviewer indexes. The legacy Annex A profile and
+The increment in [PR #675](https://github.com/gameguild-gg/gameguild/pull/675)
+adds separate ISO ISMS/SoA and GDPR/DPIA profiles, native document validation and
+signed reviewer indexes. The legacy Annex A profile and
 previously signed v1 archives retain their original definition and trust contract.
 
 Remaining work includes SOC2 Type I/II, HIPAA, PCI DSS and FedRAMP templates with
