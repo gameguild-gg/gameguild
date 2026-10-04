@@ -73,6 +73,10 @@ public sealed class OpenApiVersionDocumentsHttpTests(ITestOutputHelper output)
                 var paths = root.GetProperty("paths");
                 var samplePaths = paths.EnumerateObject()
                     .Where(path => path.Name.EndsWith("/version-doc-sample", StringComparison.Ordinal)).ToArray();
+                if (version.Count(character => character == '.') >= 2)
+                {
+                    Assert.Equal($"/api/v{version}/version-doc-sample", Assert.Single(samplePaths).Name);
+                }
                 var operation = Assert.Single(samplePaths).Value.GetProperty("get");
                 Assert.True(operation.GetProperty("x-gameguild-allow-anonymous").GetBoolean());
                 Assert.True(paths.TryGetProperty("/api/openapi-neutral-sample", out _));

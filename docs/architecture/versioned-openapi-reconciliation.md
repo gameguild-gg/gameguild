@@ -47,6 +47,12 @@ discovered semantic versions are rejected by the document catalog. HTTP tests
 use independently written expected names rather than computing them with the
 production formatter.
 
+The `ISpanFormattable.TryFormat` override follows the same semantic formatting
+contract as `ToString`, including interpolation. A buffer that is too small
+returns `false`, reports zero written characters and retains its original
+contents. Tests compare both interfaces to independent expected strings and
+check exact semantic version paths in the serialized HTTP documents.
+
 Custom controller groups also receive scoped aliases:
 
 - A single-version group keeps its existing unambiguous name, such as
@@ -143,5 +149,22 @@ document names, and literal/component-only formats were ignored. Eighteen of
 26 independently specified formatting regressions failed before the correction.
 The follow-up uses the native tokenizer and adds semantic collision, legal
 prerelease and independent HTTP/UI name checks. The full original canonical
-scopes remain open pending verification and merge of this follow-up; the
-accepted earlier PR is not proof of completion by itself.
+scopes remain open pending verification and merge of the final span-format
+follow-up; an accepted earlier PR is not proof of completion by itself.
+
+PR [#680](https://github.com/gameguild-gg/gameguild/pull/680) merged at
+`f0411fbaa3e2dff76bc4c27225980da1df34e6b7`. Exact-head CI passed 1,022 API unit
+cases, 1,370 SharedKernel cases and 14 complete-application OpenAPI HTTP cases
+(2,406 total), with zero-warning/error API and integration builds and all
+required/security checks accepted. The full HTTP selection is now part of the
+API gate and its TRX is uploaded. Local corrected document/reader cases passed
+42/42 and SharedKernel passed 1,370/1,370. The full v1 document and generated
+client remain unchanged. Local full dependency-build/HTTP attempts that exited
+without successful results are excluded; the accepted full HTTP result is CI.
+
+The final review independently reproduced the inherited span/interpolation
+gap: 19 of 31 cases failed against unchanged merged #680 code, including
+exposure of encoded patch identity and partial writes on insufficient buffers.
+The final follow-up aligns the native span interface with semantic `ToString`
+and adds exact semantic path assertions. Canonical closure still requires its
+fresh verification and merge.
