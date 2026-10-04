@@ -3654,6 +3654,159 @@ export interface ComplianceAuditAuthenticationAuditOutput {
   uniqueIpAddresses?: number;
 }
 
+/** Data model for Compliance Audit Compliance Artifact Entry. */
+export interface ComplianceAuditComplianceArtifactEntry {
+  length?: number;
+  mediaType?: string | null;
+  path?: string | null;
+  sha256?: string | null;
+}
+
+/** Data model for Compliance Audit Compliance Artifact Manifest. */
+export interface ComplianceAuditComplianceArtifactManifest {
+  capturedAtUtc?: string;
+  entries?: Array<ComplianceAuditComplianceArtifactEntry> | null;
+  formatVersion?: string | null;
+  name?: string | null;
+  packageId?: string;
+  periodEndUtc?: string;
+  periodStartUtc?: string;
+  preparedByUserId?: string;
+  template?: ComplianceAuditComplianceFrameworkTemplate;
+  templateSha256?: string | null;
+  tenantId?: string;
+  validation?: ComplianceAuditCompliancePackageValidationReport;
+}
+
+/** Data model for Compliance Audit Compliance Artifact Seal. */
+export interface ComplianceAuditComplianceArtifactSeal {
+  algorithm?: string | null;
+  keyId?: string | null;
+  manifestSha256?: string | null;
+  signature?: string | null;
+}
+
+/** Data model for Compliance Audit Compliance Artifact Verification. */
+export interface ComplianceAuditComplianceArtifactVerification {
+  errors?: Array<string> | null;
+  isValid?: boolean;
+}
+
+/** Data model for Compliance Audit Compliance Control Evidence Result. */
+export interface ComplianceAuditComplianceControlEvidenceResult {
+  controlId?: string | null;
+  documentIds?: Array<string> | null;
+  evidencePaths?: Array<string> | null;
+  gaps?: Array<ComplianceAuditComplianceEvidenceGap> | null;
+  status?: string | null;
+}
+
+/** References and collection mappings, not a reproduction of a licensed standard or a certification. */
+export interface ComplianceAuditComplianceControlTemplate {
+  id?: string | null;
+  automaticEvidence?: Array<ComplianceAuditComplianceEvidenceKind> | null;
+  requiredDocumentTypes?: Array<string> | null;
+  sourceUri?: string | null;
+}
+
+/** Document metadata only. Uploaded bytes are included in separately audited sealed package downloads. */
+export interface ComplianceAuditComplianceDocumentOutput {
+  id?: string;
+  contentLength?: number;
+  contentSha256?: string | null;
+  controlIds?: Array<string> | null;
+  mediaType?: string | null;
+  name?: string | null;
+  review?: ComplianceAuditComplianceDocumentReview;
+  reviewedAtUtc?: string | null;
+  reviewedByUserId?: string | null;
+  reviewNotes?: string | null;
+  revision?: number;
+  sourceUri?: string | null;
+  templateId?: string | null;
+  type?: string | null;
+  uploadedByUserId?: string;
+  validFromUtc?: string;
+  validUntilUtc?: string;
+}
+
+/** Data model for Compliance Audit Compliance Document Requirement. */
+export interface ComplianceAuditComplianceDocumentRequirement {
+  requiredFields?: Array<string> | null;
+  requiresControlAssessments?: boolean;
+  requiresPeriodCoverage?: boolean;
+  type?: string | null;
+}
+
+/** OpenAPI schema for Compliance Audit Compliance Document Review. */
+export type ComplianceAuditComplianceDocumentReview = 'Pending' | 'Approved' | 'Rejected';
+
+/** Data model for Compliance Audit Compliance Evidence Gap. */
+export interface ComplianceAuditComplianceEvidenceGap {
+  code?: string | null;
+  controlId?: string | null;
+  detail?: string | null;
+  documentId?: string | null;
+}
+
+/** OpenAPI schema for Compliance Audit Compliance Evidence Kind. */
+export type ComplianceAuditComplianceEvidenceKind = 'Operations' | 'Authentication' | 'Authorization' | 'Incidents' | 'Integrity' | 'Retention';
+
+/** OpenAPI schema for Compliance Audit Compliance Evidence Period Mode. */
+export type ComplianceAuditComplianceEvidencePeriodMode = 'PointInTime' | 'Period';
+
+/** Compliance frameworks for audit and evidence packaging */
+export type ComplianceAuditComplianceFramework = 'SOC2Type1' | 'SOC2Type2' | 'ISO27001' | 'GDPR' | 'HIPAA' | 'PCI_DSS' | 'CCPA' | 'FedRAMP' | 'NIST' | 'Custom';
+
+/** Data model for Compliance Audit Compliance Framework Template. */
+export interface ComplianceAuditComplianceFrameworkTemplate {
+  id?: string | null;
+  controls?: Array<ComplianceAuditComplianceControlTemplate> | null;
+  documents?: Array<ComplianceAuditComplianceDocumentRequirement> | null;
+  framework?: ComplianceAuditComplianceFramework;
+  periodMode?: ComplianceAuditComplianceEvidencePeriodMode;
+  sources?: Array<string> | null;
+  version?: string | null;
+}
+
+/** Data model for Compliance Audit Compliance Package Response. */
+export interface ComplianceAuditCompliancePackageOutput {
+  manifest?: ComplianceAuditComplianceArtifactManifest;
+  seal?: ComplianceAuditComplianceArtifactSeal;
+  summary?: ComplianceAuditCompliancePackageSummary;
+}
+
+/** Data model for Compliance Audit Compliance Package Summary. */
+export interface ComplianceAuditCompliancePackageSummary {
+  id?: string;
+  artifactLength?: number;
+  artifactSha256?: string | null;
+  capturedAtUtc?: string;
+  gapCount?: number;
+  name?: string | null;
+  periodEndUtc?: string;
+  periodStartUtc?: string;
+  preparedByUserId?: string;
+  readyForAuditorReview?: boolean;
+  signingKeyId?: string | null;
+  templateId?: string | null;
+}
+
+/** Data model for Compliance Audit Compliance Package Validation Report. */
+export interface ComplianceAuditCompliancePackageValidationReport {
+  assumptions?: Array<string> | null;
+  controls?: Array<ComplianceAuditComplianceControlEvidenceResult> | null;
+  gaps?: Array<ComplianceAuditComplianceEvidenceGap> | null;
+  readyForAuditorReview?: boolean;
+}
+
+/** Data model for Compliance Audit Compliance Scope Exclusion. */
+export interface ComplianceAuditComplianceScopeExclusion {
+  applicabilityDocumentId?: string;
+  controlId: string;
+  rationale: string;
+}
+
 /** Data model for Compliance Audit Configure Audit Retention Request. */
 export interface ComplianceAuditConfigureAuditRetentionInput {
   baseline: ComplianceAuditAuditRetentionScenario;
@@ -3666,6 +3819,16 @@ export interface ComplianceAuditConfigureAuditRetentionInput {
   preserveAllRecordsThroughUtcDate?: string | null;
   storageOverheadMultiplier?: number;
   tierPrices: Array<ComplianceAuditAuditStorageTierPrice>;
+}
+
+/** Data model for Compliance Audit Create Compliance Package Request. */
+export interface ComplianceAuditCreateCompliancePackageInput {
+  documentIds: Array<string>;
+  exclusions: Array<ComplianceAuditComplianceScopeExclusion>;
+  name: string;
+  periodEndUtc?: string;
+  periodStartUtc?: string;
+  templateId: string;
 }
 
 /** Data model for Compliance Audit Create Scheduled Audit Export Request. */
@@ -3737,6 +3900,13 @@ export interface ComplianceAuditPermissionAuditOutput {
   skip?: number;
   take?: number;
   totalCount?: number;
+}
+
+/** Data model for Compliance Audit Review Compliance Document Request. */
+export interface ComplianceAuditReviewComplianceDocumentInput {
+  decision?: ComplianceAuditComplianceDocumentReview;
+  expectedRevision?: number;
+  notes: string;
 }
 
 /** Data model for Compliance Audit Run Audit Retention Simulation Request. */
@@ -3888,6 +4058,21 @@ export interface ComplianceAuditUnifiedSecurityAuditOutput {
   take?: number;
   /** Total count of matching records. */
   totalCount?: number;
+}
+
+/** Data model for Compliance Audit Upload Compliance Document Request. */
+export interface ComplianceAuditUploadComplianceDocumentInput {
+  contentBase64: string;
+  controlIds: Array<string>;
+  mediaType: string;
+  name: string;
+  sourceUri: string;
+  templateId: string;
+  type: string;
+  /** Declared structured fields for PDF/text evidence; JSON evidence uses fields from its actual contents. */
+  validationFields: Record<string, string>;
+  validFromUtc?: string;
+  validUntilUtc?: string;
 }
 
 /** Data model for Compliance Consent Consent Policy Dto. */
@@ -18876,7 +19061,26 @@ export let ComplianceAuditAuditStorageTierSchema: z.ZodType<ComplianceAuditAudit
 export let ComplianceAuditAuditStorageTierPriceSchema: z.ZodType<ComplianceAuditAuditStorageTierPrice>;
 export let ComplianceAuditAuthenticationAuditEntrySchema: z.ZodType<ComplianceAuditAuthenticationAuditEntry>;
 export let ComplianceAuditAuthenticationAuditOutputSchema: z.ZodType<ComplianceAuditAuthenticationAuditOutput>;
+export let ComplianceAuditComplianceArtifactEntrySchema: z.ZodType<ComplianceAuditComplianceArtifactEntry>;
+export let ComplianceAuditComplianceArtifactManifestSchema: z.ZodType<ComplianceAuditComplianceArtifactManifest>;
+export let ComplianceAuditComplianceArtifactSealSchema: z.ZodType<ComplianceAuditComplianceArtifactSeal>;
+export let ComplianceAuditComplianceArtifactVerificationSchema: z.ZodType<ComplianceAuditComplianceArtifactVerification>;
+export let ComplianceAuditComplianceControlEvidenceResultSchema: z.ZodType<ComplianceAuditComplianceControlEvidenceResult>;
+export let ComplianceAuditComplianceControlTemplateSchema: z.ZodType<ComplianceAuditComplianceControlTemplate>;
+export let ComplianceAuditComplianceDocumentOutputSchema: z.ZodType<ComplianceAuditComplianceDocumentOutput>;
+export let ComplianceAuditComplianceDocumentRequirementSchema: z.ZodType<ComplianceAuditComplianceDocumentRequirement>;
+export let ComplianceAuditComplianceDocumentReviewSchema: z.ZodType<ComplianceAuditComplianceDocumentReview>;
+export let ComplianceAuditComplianceEvidenceGapSchema: z.ZodType<ComplianceAuditComplianceEvidenceGap>;
+export let ComplianceAuditComplianceEvidenceKindSchema: z.ZodType<ComplianceAuditComplianceEvidenceKind>;
+export let ComplianceAuditComplianceEvidencePeriodModeSchema: z.ZodType<ComplianceAuditComplianceEvidencePeriodMode>;
+export let ComplianceAuditComplianceFrameworkSchema: z.ZodType<ComplianceAuditComplianceFramework>;
+export let ComplianceAuditComplianceFrameworkTemplateSchema: z.ZodType<ComplianceAuditComplianceFrameworkTemplate>;
+export let ComplianceAuditCompliancePackageOutputSchema: z.ZodType<ComplianceAuditCompliancePackageOutput>;
+export let ComplianceAuditCompliancePackageSummarySchema: z.ZodType<ComplianceAuditCompliancePackageSummary>;
+export let ComplianceAuditCompliancePackageValidationReportSchema: z.ZodType<ComplianceAuditCompliancePackageValidationReport>;
+export let ComplianceAuditComplianceScopeExclusionSchema: z.ZodType<ComplianceAuditComplianceScopeExclusion>;
 export let ComplianceAuditConfigureAuditRetentionInputSchema: z.ZodType<ComplianceAuditConfigureAuditRetentionInput>;
+export let ComplianceAuditCreateCompliancePackageInputSchema: z.ZodType<ComplianceAuditCreateCompliancePackageInput>;
 export let ComplianceAuditCreateScheduledAuditExportInputSchema: z.ZodType<ComplianceAuditCreateScheduledAuditExportInput>;
 export let ComplianceAuditDailyActivityTrendSchema: z.ZodType<ComplianceAuditDailyActivityTrend>;
 export let ComplianceAuditExportFormatSchema: z.ZodType<ComplianceAuditExportFormat>;
@@ -18884,6 +19088,7 @@ export let ComplianceAuditExportStatusSchema: z.ZodType<ComplianceAuditExportSta
 export let ComplianceAuditFailureReasonCountSchema: z.ZodType<ComplianceAuditFailureReasonCount>;
 export let ComplianceAuditPermissionAuditEntrySchema: z.ZodType<ComplianceAuditPermissionAuditEntry>;
 export let ComplianceAuditPermissionAuditOutputSchema: z.ZodType<ComplianceAuditPermissionAuditOutput>;
+export let ComplianceAuditReviewComplianceDocumentInputSchema: z.ZodType<ComplianceAuditReviewComplianceDocumentInput>;
 export let ComplianceAuditRunAuditRetentionSimulationInputSchema: z.ZodType<ComplianceAuditRunAuditRetentionSimulationInput>;
 export let ComplianceAuditScheduledAuditExportOutputSchema: z.ZodType<ComplianceAuditScheduledAuditExportOutput>;
 export let ComplianceAuditSecurityAuditDashboardSchema: z.ZodType<ComplianceAuditSecurityAuditDashboard>;
@@ -18893,6 +19098,7 @@ export let ComplianceAuditTopUserActivitySchema: z.ZodType<ComplianceAuditTopUse
 export let ComplianceAuditUnifiedSecurityAuditEntrySchema: z.ZodType<ComplianceAuditUnifiedSecurityAuditEntry>;
 export let ComplianceAuditUnifiedSecurityAuditInputSchema: z.ZodType<ComplianceAuditUnifiedSecurityAuditInput>;
 export let ComplianceAuditUnifiedSecurityAuditOutputSchema: z.ZodType<ComplianceAuditUnifiedSecurityAuditOutput>;
+export let ComplianceAuditUploadComplianceDocumentInputSchema: z.ZodType<ComplianceAuditUploadComplianceDocumentInput>;
 export let ComplianceConsentConsentPolicyDtoSchema: z.ZodType<ComplianceConsentConsentPolicyDto>;
 export let ComplianceConsentContentTypeSchema: z.ZodType<ComplianceConsentContentType>;
 export let ComplianceConsentCreateConsentPolicyCommandSchema: z.ZodType<ComplianceConsentCreateConsentPolicyCommand>;
@@ -23729,6 +23935,180 @@ ComplianceAuditAuthenticationAuditOutputSchema = z.object({
   uniqueIpAddresses: z.number().int().optional(),
 });
 
+/** Zod schema for ComplianceAuditComplianceArtifactEntry. Data model for Compliance Audit Compliance Artifact Entry. */
+ComplianceAuditComplianceArtifactEntrySchema = z.object({
+  length: z.number().int().optional(),
+  mediaType: z.string().nullable().optional(),
+  path: z.string().nullable().optional(),
+  sha256: z.string().nullable().optional(),
+});
+
+/** Zod schema for ComplianceAuditComplianceArtifactManifest. Data model for Compliance Audit Compliance Artifact Manifest. */
+ComplianceAuditComplianceArtifactManifestSchema = z.object({
+  capturedAtUtc: z.string().datetime().optional(),
+  entries: z
+    .array(z.lazy(() => ComplianceAuditComplianceArtifactEntrySchema))
+    .nullable()
+    .optional(),
+  formatVersion: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  packageId: z.string().uuid().optional(),
+  periodEndUtc: z.string().datetime().optional(),
+  periodStartUtc: z.string().datetime().optional(),
+  preparedByUserId: z.string().uuid().optional(),
+  template: z.lazy(() => ComplianceAuditComplianceFrameworkTemplateSchema).optional(),
+  templateSha256: z.string().nullable().optional(),
+  tenantId: z.string().uuid().optional(),
+  validation: z.lazy(() => ComplianceAuditCompliancePackageValidationReportSchema).optional(),
+});
+
+/** Zod schema for ComplianceAuditComplianceArtifactSeal. Data model for Compliance Audit Compliance Artifact Seal. */
+ComplianceAuditComplianceArtifactSealSchema = z.object({
+  algorithm: z.string().nullable().optional(),
+  keyId: z.string().nullable().optional(),
+  manifestSha256: z.string().nullable().optional(),
+  signature: z.string().nullable().optional(),
+});
+
+/** Zod schema for ComplianceAuditComplianceArtifactVerification. Data model for Compliance Audit Compliance Artifact Verification. */
+ComplianceAuditComplianceArtifactVerificationSchema = z.object({
+  errors: z.array(z.string()).nullable().optional(),
+  isValid: z.boolean().optional(),
+});
+
+/** Zod schema for ComplianceAuditComplianceControlEvidenceResult. Data model for Compliance Audit Compliance Control Evidence Result. */
+ComplianceAuditComplianceControlEvidenceResultSchema = z.object({
+  controlId: z.string().nullable().optional(),
+  documentIds: z.array(z.string().uuid()).nullable().optional(),
+  evidencePaths: z.array(z.string()).nullable().optional(),
+  gaps: z
+    .array(z.lazy(() => ComplianceAuditComplianceEvidenceGapSchema))
+    .nullable()
+    .optional(),
+  status: z.string().nullable().optional(),
+});
+
+/** Zod schema for ComplianceAuditComplianceControlTemplate. References and collection mappings, not a reproduction of a licensed standard or a certification. */
+ComplianceAuditComplianceControlTemplateSchema = z.object({
+  id: z.string().nullable().optional(),
+  automaticEvidence: z
+    .array(z.lazy(() => ComplianceAuditComplianceEvidenceKindSchema))
+    .nullable()
+    .optional(),
+  requiredDocumentTypes: z.array(z.string()).nullable().optional(),
+  sourceUri: z.string().nullable().optional(),
+});
+
+/** Zod schema for ComplianceAuditComplianceDocumentOutput. Document metadata only. Uploaded bytes are included in separately audited sealed package downloads. */
+ComplianceAuditComplianceDocumentOutputSchema = z.object({
+  id: z.string().uuid().optional(),
+  contentLength: z.number().int().optional(),
+  contentSha256: z.string().nullable().optional(),
+  controlIds: z.array(z.string()).nullable().optional(),
+  mediaType: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  review: z.lazy(() => ComplianceAuditComplianceDocumentReviewSchema).optional(),
+  reviewedAtUtc: z.string().datetime().nullable().optional(),
+  reviewedByUserId: z.string().uuid().nullable().optional(),
+  reviewNotes: z.string().nullable().optional(),
+  revision: z.number().int().optional(),
+  sourceUri: z.string().nullable().optional(),
+  templateId: z.string().nullable().optional(),
+  type: z.string().nullable().optional(),
+  uploadedByUserId: z.string().uuid().optional(),
+  validFromUtc: z.string().datetime().optional(),
+  validUntilUtc: z.string().datetime().optional(),
+});
+
+/** Zod schema for ComplianceAuditComplianceDocumentRequirement. Data model for Compliance Audit Compliance Document Requirement. */
+ComplianceAuditComplianceDocumentRequirementSchema = z.object({
+  requiredFields: z.array(z.string()).nullable().optional(),
+  requiresControlAssessments: z.boolean().optional(),
+  requiresPeriodCoverage: z.boolean().optional(),
+  type: z.string().nullable().optional(),
+});
+
+/** Zod schema for ComplianceAuditComplianceDocumentReview. OpenAPI schema for Compliance Audit Compliance Document Review. */
+ComplianceAuditComplianceDocumentReviewSchema = z.enum(['Pending', 'Approved', 'Rejected']);
+
+/** Zod schema for ComplianceAuditComplianceEvidenceGap. Data model for Compliance Audit Compliance Evidence Gap. */
+ComplianceAuditComplianceEvidenceGapSchema = z.object({
+  code: z.string().nullable().optional(),
+  controlId: z.string().nullable().optional(),
+  detail: z.string().nullable().optional(),
+  documentId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for ComplianceAuditComplianceEvidenceKind. OpenAPI schema for Compliance Audit Compliance Evidence Kind. */
+ComplianceAuditComplianceEvidenceKindSchema = z.enum(['Operations', 'Authentication', 'Authorization', 'Incidents', 'Integrity', 'Retention']);
+
+/** Zod schema for ComplianceAuditComplianceEvidencePeriodMode. OpenAPI schema for Compliance Audit Compliance Evidence Period Mode. */
+ComplianceAuditComplianceEvidencePeriodModeSchema = z.enum(['PointInTime', 'Period']);
+
+/** Zod schema for ComplianceAuditComplianceFramework. Compliance frameworks for audit and evidence packaging */
+ComplianceAuditComplianceFrameworkSchema = z.enum(['SOC2Type1', 'SOC2Type2', 'ISO27001', 'GDPR', 'HIPAA', 'PCI_DSS', 'CCPA', 'FedRAMP', 'NIST', 'Custom']);
+
+/** Zod schema for ComplianceAuditComplianceFrameworkTemplate. Data model for Compliance Audit Compliance Framework Template. */
+ComplianceAuditComplianceFrameworkTemplateSchema = z.object({
+  id: z.string().nullable().optional(),
+  controls: z
+    .array(z.lazy(() => ComplianceAuditComplianceControlTemplateSchema))
+    .nullable()
+    .optional(),
+  documents: z
+    .array(z.lazy(() => ComplianceAuditComplianceDocumentRequirementSchema))
+    .nullable()
+    .optional(),
+  framework: z.lazy(() => ComplianceAuditComplianceFrameworkSchema).optional(),
+  periodMode: z.lazy(() => ComplianceAuditComplianceEvidencePeriodModeSchema).optional(),
+  sources: z.array(z.string()).nullable().optional(),
+  version: z.string().nullable().optional(),
+});
+
+/** Zod schema for ComplianceAuditCompliancePackageOutput. Data model for Compliance Audit Compliance Package Response. */
+ComplianceAuditCompliancePackageOutputSchema = z.object({
+  manifest: z.lazy(() => ComplianceAuditComplianceArtifactManifestSchema).optional(),
+  seal: z.lazy(() => ComplianceAuditComplianceArtifactSealSchema).optional(),
+  summary: z.lazy(() => ComplianceAuditCompliancePackageSummarySchema).optional(),
+});
+
+/** Zod schema for ComplianceAuditCompliancePackageSummary. Data model for Compliance Audit Compliance Package Summary. */
+ComplianceAuditCompliancePackageSummarySchema = z.object({
+  id: z.string().uuid().optional(),
+  artifactLength: z.number().int().optional(),
+  artifactSha256: z.string().nullable().optional(),
+  capturedAtUtc: z.string().datetime().optional(),
+  gapCount: z.number().int().optional(),
+  name: z.string().nullable().optional(),
+  periodEndUtc: z.string().datetime().optional(),
+  periodStartUtc: z.string().datetime().optional(),
+  preparedByUserId: z.string().uuid().optional(),
+  readyForAuditorReview: z.boolean().optional(),
+  signingKeyId: z.string().nullable().optional(),
+  templateId: z.string().nullable().optional(),
+});
+
+/** Zod schema for ComplianceAuditCompliancePackageValidationReport. Data model for Compliance Audit Compliance Package Validation Report. */
+ComplianceAuditCompliancePackageValidationReportSchema = z.object({
+  assumptions: z.array(z.string()).nullable().optional(),
+  controls: z
+    .array(z.lazy(() => ComplianceAuditComplianceControlEvidenceResultSchema))
+    .nullable()
+    .optional(),
+  gaps: z
+    .array(z.lazy(() => ComplianceAuditComplianceEvidenceGapSchema))
+    .nullable()
+    .optional(),
+  readyForAuditorReview: z.boolean().optional(),
+});
+
+/** Zod schema for ComplianceAuditComplianceScopeExclusion. Data model for Compliance Audit Compliance Scope Exclusion. */
+ComplianceAuditComplianceScopeExclusionSchema = z.object({
+  applicabilityDocumentId: z.string().uuid().optional(),
+  controlId: z.string().min(1).max(100),
+  rationale: z.string().min(1).max(2000),
+});
+
 /** Zod schema for ComplianceAuditConfigureAuditRetentionInput. Data model for Compliance Audit Configure Audit Retention Request. */
 ComplianceAuditConfigureAuditRetentionInputSchema = z.object({
   baseline: z.lazy(() => ComplianceAuditAuditRetentionScenarioSchema),
@@ -23746,6 +24126,16 @@ ComplianceAuditConfigureAuditRetentionInputSchema = z.object({
     .array(z.lazy(() => ComplianceAuditAuditStorageTierPriceSchema))
     .min(4)
     .max(4),
+});
+
+/** Zod schema for ComplianceAuditCreateCompliancePackageInput. Data model for Compliance Audit Create Compliance Package Request. */
+ComplianceAuditCreateCompliancePackageInputSchema = z.object({
+  documentIds: z.array(z.string().uuid()).max(100),
+  exclusions: z.array(z.lazy(() => ComplianceAuditComplianceScopeExclusionSchema)).max(1500),
+  name: z.string().min(1).max(200),
+  periodEndUtc: z.string().datetime().optional(),
+  periodStartUtc: z.string().datetime().optional(),
+  templateId: z.string().min(1).max(100),
 });
 
 /** Zod schema for ComplianceAuditCreateScheduledAuditExportInput. Data model for Compliance Audit Create Scheduled Audit Export Request. */
@@ -23816,6 +24206,13 @@ ComplianceAuditPermissionAuditOutputSchema = z.object({
   skip: z.number().int().optional(),
   take: z.number().int().optional(),
   totalCount: z.number().int().optional(),
+});
+
+/** Zod schema for ComplianceAuditReviewComplianceDocumentInput. Data model for Compliance Audit Review Compliance Document Request. */
+ComplianceAuditReviewComplianceDocumentInputSchema = z.object({
+  decision: z.lazy(() => ComplianceAuditComplianceDocumentReviewSchema).optional(),
+  expectedRevision: z.number().int().min(1).max(2147483647).optional(),
+  notes: z.string().min(1).max(2000),
 });
 
 /** Zod schema for ComplianceAuditRunAuditRetentionSimulationInput. Data model for Compliance Audit Run Audit Retention Simulation Request. */
@@ -23961,6 +24358,20 @@ ComplianceAuditUnifiedSecurityAuditOutputSchema = z.object({
     .optional(),
   take: z.number().int().optional(),
   totalCount: z.number().int().optional(),
+});
+
+/** Zod schema for ComplianceAuditUploadComplianceDocumentInput. Data model for Compliance Audit Upload Compliance Document Request. */
+ComplianceAuditUploadComplianceDocumentInputSchema = z.object({
+  contentBase64: z.string().min(1).max(1500000),
+  controlIds: z.array(z.string()).max(1500),
+  mediaType: z.string().min(1).max(120),
+  name: z.string().min(1).max(200),
+  sourceUri: z.string().min(1).max(2048),
+  templateId: z.string().min(1).max(100),
+  type: z.string().min(1).max(80),
+  validationFields: z.record(z.string(), z.string()),
+  validFromUtc: z.string().datetime().optional(),
+  validUntilUtc: z.string().datetime().optional(),
 });
 
 /** Zod schema for ComplianceConsentConsentPolicyDto. Data model for Compliance Consent Consent Policy Dto. */

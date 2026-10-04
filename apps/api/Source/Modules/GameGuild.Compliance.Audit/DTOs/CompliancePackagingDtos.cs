@@ -19,7 +19,7 @@ public sealed record ComplianceControlTemplate(
     IReadOnlyList<string> RequiredDocumentTypes);
 
 public sealed record ComplianceDocumentRequirement(
-    string Type, IReadOnlyList<string> RequiredFields, bool RequiresPeriodCoverage);
+    string Type, IReadOnlyList<string> RequiredFields, bool RequiresPeriodCoverage, bool RequiresControlAssessments = false);
 
 public sealed record ComplianceFrameworkTemplate(
     string Id, ComplianceFramework Framework, string Version, ComplianceEvidencePeriodMode PeriodMode,
@@ -28,6 +28,7 @@ public sealed record ComplianceFrameworkTemplate(
 
 public sealed record UploadComplianceDocumentRequest
 {
+    [Required, MaxLength(100)] public string TemplateId { get; init; } = string.Empty;
     [Required, MaxLength(200)] public string Name { get; init; } = string.Empty;
     [Required, MaxLength(80)] public string Type { get; init; } = string.Empty;
     [Required, MaxLength(120)] public string MediaType { get; init; } = "application/json";
@@ -74,7 +75,28 @@ public sealed record ComplianceDocumentSnapshot(
     Guid Id, string Name, string Type, string MediaType, string ContentSha256, byte[] Content,
     string SourceUri, DateTime ValidFromUtc, DateTime ValidUntilUtc, IReadOnlyList<string> ControlIds,
     IReadOnlyDictionary<string, string> ValidationFields, ComplianceDocumentReview Review,
-    Guid UploadedByUserId, Guid? ReviewedByUserId, DateTime? ReviewedAtUtc, int Revision);
+    Guid UploadedByUserId, Guid? ReviewedByUserId, DateTime? ReviewedAtUtc, int Revision, string? TemplateId = null);
+
+/// <summary>Document metadata only. Uploaded bytes are included in separately audited sealed package downloads.</summary>
+public sealed record ComplianceDocumentResponse(
+    Guid Id, string TemplateId, string Name, string Type, string MediaType, int ContentLength, string ContentSha256,
+    string SourceUri, DateTime ValidFromUtc, DateTime ValidUntilUtc, IReadOnlyList<string> ControlIds,
+    ComplianceDocumentReview Review, Guid UploadedByUserId, Guid? ReviewedByUserId,
+    DateTime? ReviewedAtUtc, string? ReviewNotes, int Revision);
+
+public sealed record CompliancePackageSummary(Guid Id, string Name, string TemplateId, Guid PreparedByUserId,
+    DateTime CapturedAtUtc, DateTime PeriodStartUtc, DateTime PeriodEndUtc, bool ReadyForAuditorReview,
+    int GapCount, int ArtifactLength, string ArtifactSha256, string SigningKeyId);
+
+public sealed record CompliancePackageResponse(CompliancePackageSummary Summary,
+    ComplianceArtifactManifest Manifest, ComplianceArtifactSeal Seal);
+
+public sealed record CompliancePackageDownload(byte[] Content, string FileName, string Sha256);
+
+public sealed class CompliancePackagingConcurrencyException() : Exception("The document revision changed. Reload it before reviewing.");
+public sealed class CompliancePackagingIntegrityException() : Exception("The stored evidence package could not be verified.");
+public sealed class CompliancePackagingSigningUnavailableException(Exception innerException)
+    : Exception("A configured private audit signing key is required to prepare evidence packages.", innerException);
 
 public sealed record ComplianceEvidenceDataset(
     ComplianceEvidenceKind Kind, string Source, byte[] Content, int RecordCount,

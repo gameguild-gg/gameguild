@@ -55,7 +55,7 @@ public sealed class ComplianceEvidenceValidationEngine
                 else
                 {
                     usedDocuments.Add(applicability.Id);
-                    gaps.AddRange(documentGaps[applicability.Id].Select(gap => gap with { ControlId = control.Id }));
+                    gaps.AddRange(documentGaps[applicability.Id].Where(gap => gap.ControlId.Length == 0 || gap.ControlId == control.Id).Select(gap => gap with { ControlId = control.Id }));
                 }
             }
             else
@@ -82,7 +82,7 @@ public sealed class ComplianceEvidenceValidationEngine
                     foreach (var document in candidates)
                     {
                         usedDocuments.Add(document.Id);
-                        gaps.AddRange(documentGaps[document.Id].Select(gap => gap with { ControlId = control.Id }));
+                        gaps.AddRange(documentGaps[document.Id].Where(gap => gap.ControlId.Length == 0 || gap.ControlId == control.Id).Select(gap => gap with { ControlId = control.Id }));
                     }
                 }
             }
@@ -90,7 +90,7 @@ public sealed class ComplianceEvidenceValidationEngine
             foreach (var document in documents.Where(item => item.ControlIds.Contains(control.Id, StringComparer.Ordinal) && !usedDocuments.Contains(item.Id)))
             {
                 usedDocuments.Add(document.Id);
-                gaps.AddRange(documentGaps[document.Id].Select(gap => gap with { ControlId = control.Id }));
+                gaps.AddRange(documentGaps[document.Id].Where(gap => gap.ControlId.Length == 0 || gap.ControlId == control.Id).Select(gap => gap with { ControlId = control.Id }));
             }
             paths.AddRange(usedDocuments.Order().Select(id => $"documents/{id:D}/metadata.json"));
             allGaps.AddRange(gaps);
@@ -165,6 +165,45 @@ public sealed class ComplianceEvidenceValidationEngine
         if (!fields.TryGetValue("assessmentStatus", out var status) || status != "satisfactory")
         {
             Gap("DeclaredControlDeficiency", "The assessment must explicitly record a satisfactory review; deficient, unknown and pending assessments remain gaps.");
+        }
+        if (requirement.RequiresControlAssessments) { ValidateControlAssessments(document, fields, gaps); }
+    }
+
+    private static void ValidateControlAssessments(ComplianceDocumentSnapshot document,
+        IReadOnlyDictionary<string, string> fields, List<ComplianceEvidenceGap> gaps)
+    {
+        void Gap(string controlId, string code, string message) => gaps.Add(new(controlId, code, message, document.Id));
+        JsonDocument? mapping = null;
+        try
+        {
+            if (fields.TryGetValue("controlAssessments", out var content))
+            {
+                mapping = CompliancePackagingEncoding.Parse(System.Text.Encoding.UTF8.GetBytes(content));
+                if (mapping.RootElement.ValueKind != JsonValueKind.Object) { mapping.Dispose(); mapping = null; }
+            }
+        }
+        catch (JsonException) { mapping?.Dispose(); mapping = null; }
+        using (mapping)
+        {
+            foreach (var id in document.ControlIds)
+            {
+                if (mapping is null || !mapping.RootElement.TryGetProperty(id, out var assessment) || assessment.ValueKind != JsonValueKind.Object)
+                {
+                    Gap(id, "ControlAssessmentMissing", $"The document requires a structured assessment for {id}.");
+                    continue;
+                }
+                foreach (var field in new[] { "owner", "controlImplementation", "effectivenessEvidence" })
+                {
+                    if (!assessment.TryGetProperty(field, out var value) || value.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(value.GetString()))
+                    {
+                        Gap(id, "ControlAssessmentIncomplete", $"Assessment {id} requires nonempty {field} evidence.");
+                    }
+                }
+                if (!assessment.TryGetProperty("assessmentStatus", out var state) || state.ValueKind != JsonValueKind.String || state.GetString() != "satisfactory")
+                {
+                    Gap(id, "DeclaredControlDeficiency", $"The assessment for {id} is not satisfactory.");
+                }
+            }
         }
     }
 
@@ -270,6 +309,7 @@ public sealed class ComplianceEvidenceValidationEngine
         Require(documents.All(item => item.Id != Guid.Empty && item.UploadedByUserId != Guid.Empty && item.Revision >= 1 &&
             !string.IsNullOrWhiteSpace(item.Name) && item.Name.Length <= 200 && IsHttpsSource(item.SourceUri) &&
             item.Content.Length is > 0 and <= MaximumDocumentBytes && item.ContentSha256.Length == 64 &&
+            (item.TemplateId is null || item.TemplateId == template.Id) &&
             item.ValidFromUtc.Kind == DateTimeKind.Utc && item.ValidUntilUtc.Kind == DateTimeKind.Utc && item.ValidFromUtc <= item.ValidUntilUtc &&
             item.ControlIds.Count is > 0 and <= 1500 && item.ControlIds.All(controls.Contains) &&
             item.ControlIds.Distinct(StringComparer.Ordinal).Count() == item.ControlIds.Count &&

@@ -279,6 +279,31 @@ public sealed class CompliancePackagingCoreTests
     }
 
     [Fact]
+    public void Structured_control_assessments_report_deficiencies_only_on_the_affected_control()
+    {
+        var template = Template() with
+        {
+            Controls = [new("C1", "https://example.com/standard", [ComplianceEvidenceKind.Operations], ["assessment"]),
+                new("C2", "https://example.com/standard", [ComplianceEvidenceKind.Operations], ["assessment"])],
+            Documents = [new("assessment", ["frameworkVersion", "assessmentStatus", "owner", "controlAssessments"], true, true)]
+        };
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(new
+        {
+            frameworkVersion = "v1", assessmentStatus = "satisfactory", owner = "Assessor",
+            controlAssessments = new Dictionary<string, object>
+            {
+                ["C1"] = new { owner = "Assessor", controlImplementation = "Implemented", effectivenessEvidence = "Reviewed", assessmentStatus = "satisfactory" },
+                ["C2"] = new { owner = "Assessor", controlImplementation = "Partial", effectivenessEvidence = "Missing safeguard", assessmentStatus = "deficient" }
+            }
+        });
+        var document = Document() with { Content = bytes, ContentSha256 = Hash(bytes), ControlIds = ["C1", "C2"] };
+        var report = new ComplianceEvidenceValidationEngine().Inspect(template, Request(document), [document], [Dataset()], End.AddDays(1));
+        report.ReadyForAuditorReview.Should().BeFalse();
+        report.Controls.Single(item => item.ControlId == "C1").Gaps.Should().BeEmpty();
+        report.Controls.Single(item => item.ControlId == "C2").Gaps.Should().Contain(item => item.Code == "DeclaredControlDeficiency");
+    }
+
+    [Fact]
     public void Cancellation_does_not_return_a_successful_artifact_or_verification()
     {
         var builder = CreateBuilder();

@@ -74,6 +74,10 @@ public static class AuditModule
         services.AddSingleton<ICryptographicSigningService, EcdsaCryptographicSigningService>();
         services.AddSingleton<ComplianceEvidenceValidationEngine>();
         services.AddSingleton<ComplianceArtifactBuilder>();
+        services.AddSingleton<IComplianceFrameworkCatalog, ComplianceFrameworkCatalog>();
+        services.AddScoped<ICompliancePackagingRepository, CompliancePackagingRepository>();
+        services.AddScoped<IComplianceEvidencePackagingService, ComplianceEvidencePackagingService>();
+        services.AddSingleton<AuditChainEvidenceVerifier>();
 
         // Register security audit sub-services
         services.AddScoped<IAuditLogQueryService, AuditLogQueryService>();
