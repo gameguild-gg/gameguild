@@ -11,7 +11,8 @@ internal static class ComplianceReviewerFormats
     {
         ComplianceFrameworkCatalog.IsoIsmsId => ["review/iso27001/statement-of-applicability.csv", "review/iso27001/management-evidence.csv"],
         ComplianceFrameworkCatalog.GdprId => ["review/gdpr/dpia-index.csv", "review/gdpr/processing-records.csv"],
-        _ => FedRampComplianceCatalog.Find(templateId) is not null ? FedRampPaths : []
+        _ => Soc2ComplianceCatalog.Find(templateId) is not null ? Soc2ReviewerFormats.Paths :
+            FedRampComplianceCatalog.Find(templateId) is not null ? FedRampPaths : []
     };
 
     private static readonly string[] FedRampPaths = ["review/fedramp/overview.json", "review/fedramp/overview.txt",
@@ -36,6 +37,7 @@ internal static class ComplianceReviewerFormats
             files.Add(paths[0], Encoding.UTF8.GetBytes(DpiaCsv(documents, roots, report)));
             files.Add(paths[1], Encoding.UTF8.GetBytes(RecordsCsv(documents, roots)));
         }
+        else if (Soc2ComplianceCatalog.Find(template.Id) is not null) { Soc2ReviewerFormats.Build(template, documents, roots, report, files); }
         else { BuildFedRamp(template, documents, roots, report, files); }
         return files;
     }

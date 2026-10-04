@@ -6,12 +6,13 @@ namespace GameGuild.Compliance.Audit;
 internal static class ComplianceNativeEvidence
 {
     internal static bool IsNative(ComplianceFrameworkTemplate template) =>
-        template.Id is ComplianceFrameworkCatalog.IsoIsmsId or ComplianceFrameworkCatalog.GdprId || FedRampComplianceCatalog.Find(template.Id) is not null;
+        template.Id is ComplianceFrameworkCatalog.IsoIsmsId or ComplianceFrameworkCatalog.GdprId ||
+        FedRampComplianceCatalog.Find(template.Id) is not null || Soc2ComplianceCatalog.Find(template.Id) is not null;
 
     internal static void ValidateDocument(ComplianceFrameworkTemplate template, ComplianceDocumentSnapshot document,
         JsonElement root, DateTime capturedAtUtc, List<ComplianceEvidenceGap> gaps)
     {
-        if (!IsNative(template) || document.Type is "control-assessment" or "applicability" or "fedramp-supporting-evidence") { return; }
+        if (!IsNative(template) || document.Type is "control-assessment" or "applicability" or "fedramp-supporting-evidence" or "soc2-supporting-evidence") { return; }
         if (root.ValueKind != JsonValueKind.Object)
         {
             gaps.Add(new(string.Empty, "StructuredDocumentRequired", "Native framework evidence requires actual structured JSON contents.", document.Id));
@@ -22,6 +23,7 @@ internal static class ComplianceNativeEvidence
             IsoComplianceEvidence.ValidateDocument(template, document, root, gaps);
         }
         else if (template.Id == ComplianceFrameworkCatalog.GdprId) { GdprComplianceEvidence.ValidateDocument(document, root, capturedAtUtc, gaps); }
+        else if (Soc2ComplianceCatalog.Find(template.Id) is not null) { Soc2ComplianceEvidence.ValidateDocument(template, document, root, capturedAtUtc, gaps); }
         else { FedRampComplianceEvidence.ValidateDocument(template, document, root, capturedAtUtc, gaps); }
     }
 
@@ -34,7 +36,9 @@ internal static class ComplianceNativeEvidence
         {
             ComplianceFrameworkCatalog.IsoIsmsId => IsoComplianceEvidence.InspectScope(template, request, documents, roots, cancellationToken),
             ComplianceFrameworkCatalog.GdprId => GdprComplianceEvidence.InspectScope(request, documents, roots, cancellationToken),
-            _ => FedRampComplianceCatalog.Find(template.Id) is not null
+            _ => Soc2ComplianceCatalog.Find(template.Id) is not null
+                ? Soc2ComplianceEvidence.InspectScope(template, request, documents, roots, capturedAtUtc, cancellationToken)
+                : FedRampComplianceCatalog.Find(template.Id) is not null
                 ? FedRampComplianceEvidence.InspectScope(template, request, documents, roots, capturedAtUtc, cancellationToken) : []
         };
     }
