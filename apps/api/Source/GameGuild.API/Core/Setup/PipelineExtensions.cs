@@ -206,8 +206,16 @@ public static class PipelineExtensions
         SwaggerUIOptions options,
         IApiVersionDescriptionProvider? versionProvider,
         string fallbackDocumentName,
+        OpenApiLocalizationOptions? localizationOptions) =>
+        ConfigureOpenApiDocuments(options, versionProvider, fallbackDocumentName, localizationOptions,
+            VersionedOpenApiDocumentCatalog.DefaultGroupNameFormat);
+
+    internal static void ConfigureOpenApiDocuments(
+        SwaggerUIOptions options,
+        IApiVersionDescriptionProvider? versionProvider,
+        string fallbackDocumentName,
         OpenApiLocalizationOptions? localizationOptions,
-        string versionGroupNameFormat = VersionedOpenApiDocumentCatalog.DefaultGroupNameFormat)
+        string versionGroupNameFormat)
     {
         var documentNames = versionProvider is null
             ? [(fallbackDocumentName, $"GameGuild API {fallbackDocumentName.ToUpperInvariant()}")]

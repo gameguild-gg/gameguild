@@ -80,9 +80,13 @@ public sealed class OpenApiVersionDocumentsHttpTests(ITestOutputHelper output)
                 var exampleName = schema.GetProperty("example").GetProperty("name").GetString();
                 Assert.Matches(nameSchema.GetProperty("pattern").GetString()!, exampleName!);
                 if (locale == ".pt-BR")
+                {
                     Assert.Equal("API de teste", root.GetProperty("info").GetProperty("title").GetString());
+                }
                 else if (locale == ".en")
+                {
                     Assert.Equal("Test API", root.GetProperty("info").GetProperty("title").GetString());
+                }
             }
             using var actualResponse = await client.GetAsync($"/api/v{version}/version-doc-sample");
             Assert.Equal(HttpStatusCode.OK, actualResponse.StatusCode);
@@ -126,7 +130,9 @@ public sealed class OpenApiVersionDocumentsHttpTests(ITestOutputHelper output)
                 Assert.True(inherited.GetProperty("example").TryGetProperty("name", out _));
             }
             if (endpoint.Url.Contains("/Administration.", StringComparison.Ordinal))
+            {
                 Assert.False(paths.TryGetProperty("/api/v1/reporting-doc-sample", out _));
+            }
             Assert.True(paths.TryGetProperty("/api/openapi-neutral-sample", out _));
         }
     }
@@ -155,7 +161,9 @@ public sealed class OpenApiVersionDocumentsHttpTests(ITestOutputHelper output)
                 services.AddControllers(mvc =>
                 {
                     if (customControllerGroup)
+                    {
                         mvc.Conventions.Add(new SampleGroupConvention());
+                    }
                 }).AddApplicationPart(typeof(OpenApiVersionSampleController).Assembly)
                     .ConfigureApplicationPartManager(manager => manager.FeatureProviders.Add(new SampleControllerFilter()));
                 services.SetupApiVersioning(configuration, options);
@@ -178,7 +186,9 @@ public sealed class OpenApiVersionDocumentsHttpTests(ITestOutputHelper output)
         public void Apply(ControllerModel controller)
         {
             if (controller.ControllerType.AsType() == typeof(OpenApiVersionSampleController))
+            {
                 controller.ApiExplorer.GroupName = "Administration";
+            }
         }
     }
 
@@ -191,7 +201,9 @@ public sealed class OpenApiVersionDocumentsHttpTests(ITestOutputHelper output)
                 type.AsType() != typeof(OpenApiVersionSampleController)
                 && type.AsType() != typeof(OpenApiReportingSampleController)
                 && type.AsType() != typeof(OpenApiNeutralSampleController)).ToArray())
+            {
                 feature.Controllers.Remove(controller);
+            }
         }
     }
 }
