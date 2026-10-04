@@ -30,6 +30,7 @@ public sealed class ComplianceEvidenceValidationEngine
             sourceGaps.Add(dataset.Kind, gaps);
         }
         var documentGaps = new Dictionary<Guid, IReadOnlyList<ComplianceEvidenceGap>>();
+        var nativeDocuments = new Dictionary<Guid, JsonElement>();
         foreach (var document in documents)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -37,9 +38,15 @@ public sealed class ComplianceEvidenceValidationEngine
                 ? new ComplianceDocumentRequirement("applicability", ["frameworkVersion", "assessmentStatus", "rationale"], true)
                 : template.Documents.Single(item => item.Type == document.Type);
             var gaps = new List<ComplianceEvidenceGap>();
-            ValidateDocument(template, string.Empty, document, requirement, request, gaps);
+            ValidateDocument(template, string.Empty, document, requirement, request, gaps, out var root);
+            if (ComplianceNativeEvidence.IsNative(template))
+            {
+                ComplianceNativeEvidence.ValidateDocument(template, document, root, capturedAtUtc, gaps);
+                nativeDocuments.Add(document.Id, root);
+            }
             documentGaps.Add(document.Id, gaps);
         }
+        var nativeGaps = ComplianceNativeEvidence.InspectScope(template, request, documents, nativeDocuments, cancellationToken);
         var results = new List<ComplianceControlEvidenceResult>();
         var allGaps = new List<ComplianceEvidenceGap>();
         foreach (var control in template.Controls)
@@ -52,7 +59,8 @@ public sealed class ComplianceEvidenceValidationEngine
             if (exclusion is not null)
             {
                 var applicability = documents.SingleOrDefault(item => item.Id == exclusion.ApplicabilityDocumentId);
-                if (applicability is null || applicability.Type != "applicability" ||
+                if (applicability is null || (applicability.Type != "applicability" &&
+                    !(template.Id == ComplianceFrameworkCatalog.IsoIsmsId && applicability.Type == "iso-soa")) ||
                     !applicability.ControlIds.Contains(control.Id, StringComparer.Ordinal))
                 {
                     gaps.Add(new(control.Id, "InvalidScopeExclusion", "An exclusion requires a mapped, reviewed applicability document.", exclusion.ApplicabilityDocumentId));
@@ -97,6 +105,15 @@ public sealed class ComplianceEvidenceValidationEngine
                 usedDocuments.Add(document.Id);
                 gaps.AddRange(documentGaps[document.Id].Where(gap => gap.ControlId.Length == 0 || gap.ControlId == control.Id).Select(gap => gap with { ControlId = control.Id }));
             }
+            gaps.AddRange(nativeGaps.Where(gap => gap.ControlId == control.Id));
+            if (ComplianceNativeEvidence.IsNative(template))
+            {
+                gaps.AddRange(documentGaps.Values.SelectMany(items => items).Where(gap => gap.ControlId == control.Id && !gaps.Contains(gap)));
+            }
+            foreach (var id in gaps.Where(gap => gap.DocumentId.HasValue).Select(gap => gap.DocumentId!.Value).Where(id => documents.Any(document => document.Id == id)))
+            {
+                usedDocuments.Add(id);
+            }
             paths.AddRange(usedDocuments.Order().Select(id => $"documents/{id:D}/metadata.json"));
             allGaps.AddRange(gaps);
             results.Add(new(control.Id, gaps.Count != 0 ? "EvidenceGap" : exclusion is not null ? "ReviewedExclusion" : "EvidenceCollected",
@@ -113,10 +130,26 @@ public sealed class ComplianceEvidenceValidationEngine
 
     internal static string EvidencePath(ComplianceEvidenceKind kind) => $"evidence/{kind.ToString().ToLowerInvariant()}.json";
 
+    internal IReadOnlyList<ComplianceEvidenceGap> InspectDocumentQuality(ComplianceFrameworkTemplate template,
+        CreateCompliancePackageRequest request, ComplianceDocumentSnapshot document, DateTime capturedAtUtc,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        ValidateInputs(template, request, [document], [], capturedAtUtc);
+        var requirement = document.Type == "applicability"
+            ? new ComplianceDocumentRequirement("applicability", ["frameworkVersion", "assessmentStatus", "rationale"], true)
+            : template.Documents.Single(item => item.Type == document.Type);
+        var gaps = new List<ComplianceEvidenceGap>();
+        ValidateDocument(template, string.Empty, document, requirement, request, gaps, out var root);
+        ComplianceNativeEvidence.ValidateDocument(template, document, root, capturedAtUtc, gaps);
+        return gaps;
+    }
+
     private static void ValidateDocument(ComplianceFrameworkTemplate template, string controlId,
         ComplianceDocumentSnapshot document, ComplianceDocumentRequirement requirement,
-        CreateCompliancePackageRequest request, List<ComplianceEvidenceGap> gaps)
+        CreateCompliancePackageRequest request, List<ComplianceEvidenceGap> gaps, out JsonElement root)
     {
+        root = default;
         void Gap(string code, string detail) => gaps.Add(new(controlId, code, detail, document.Id));
         if (CompliancePackagingEncoding.Hash(document.Content) != document.ContentSha256)
         {
@@ -142,6 +175,7 @@ public sealed class ComplianceEvidenceValidationEngine
             {
                 using var json = CompliancePackagingEncoding.Parse(document.Content);
                 if (json.RootElement.ValueKind != JsonValueKind.Object) { throw new JsonException("An assessment must be a JSON object."); }
+                if (ComplianceNativeEvidence.IsNative(template)) { root = json.RootElement.Clone(); }
                 fields = json.RootElement.EnumerateObject().ToDictionary(property => property.Name,
                     property => property.Value.ValueKind switch
                     {
@@ -325,10 +359,17 @@ public sealed class ComplianceEvidenceValidationEngine
             item.MediaType is "application/json" or "application/pdf" or "text/plain" &&
             (item.Type == "applicability" || template.Documents.Any(requirement => requirement.Type == item.Type))),
             "Documents", "Document identity, provenance, content, UTC coverage and control mapping are invalid.");
+        Require(!ComplianceNativeEvidence.IsNative(template) || documents.Where(item => item.Type is not ("control-assessment" or "applicability" or "gdpr-dpia" or "gdpr-prior-consultation"))
+            .GroupBy(item => item.Type, StringComparer.Ordinal).All(group => group.Count() == 1),
+            "Documents", "Capture one unambiguous native scope, SoA or register revision per document type; individual DPIAs and consultations may be separate documents.");
         Require(request.Exclusions.Count <= template.Controls.Count && request.Exclusions.All(item => controls.Contains(item.ControlId) &&
             !string.IsNullOrWhiteSpace(item.Rationale) && item.Rationale.Length <= 2000 && item.ApplicabilityDocumentId != Guid.Empty) &&
             request.Exclusions.Select(item => item.ControlId).Distinct(StringComparer.Ordinal).Count() == request.Exclusions.Count,
             "Exclusions", "Exclusions must reference unique known controls and justified applicability evidence.");
+        Require(template.Id != ComplianceFrameworkCatalog.IsoIsmsId || request.Exclusions.All(item => !item.ControlId.StartsWith("ISMS.", StringComparison.Ordinal)),
+            "Exclusions", "ISO management requirements in clauses 4 through 10 cannot be excluded.");
+        Require(template.Id != ComplianceFrameworkCatalog.GdprId || request.Exclusions.All(item => item.ControlId is not ("GDPR.Art.3" or "GDPR.Art.35" or "GDPR.Art.36")),
+            "Exclusions", "GDPR scope and conditional DPIA requirements must be resolved through reviewed scope and screening evidence.");
         Require(datasets.Count <= 6 && datasets.Select(item => item.Kind).Distinct().Count() == datasets.Count && datasets.All(item =>
             Enum.IsDefined(item.Kind) && !string.IsNullOrWhiteSpace(item.Source) && item.Source.Length <= 200 &&
             item.Content.Length > 0 && item.Content.Length <= MaximumDatasetBytes && item.RecordCount is >= 0 and <= 50000 &&
