@@ -34,6 +34,8 @@ namespace GameGuild.Identity.Users;
 [Index(nameof(Username), IsUnique = true)]
 public class User : EntityBase, IUser
 {
+    private string? _username;
+    private bool _usernameWasGenerated;
     /// <summary>
     ///     Default constructor
     /// </summary>
@@ -58,10 +60,26 @@ public class User : EntityBase, IUser
     public string Email { get; set; } = string.Empty;
 
     /// <summary>
-    ///     Optional username for display (unique if set)
+    ///     Unique handle. Factories assign a canonical handle to new users; legacy null handles remain readable.
     /// </summary>
     [MaxLength(256)]
-    public string? Username { get; set; }
+    public string? Username
+    {
+        get => _username;
+        set
+        {
+            _username = value;
+            _usernameWasGenerated = false;
+        }
+    }
+
+    internal bool HasGeneratedUsername => _usernameWasGenerated;
+
+    internal void AssignGeneratedUsername(string username)
+    {
+        _username = username;
+        _usernameWasGenerated = true;
+    }
 
     /// <summary>
     ///     Full name of the user
@@ -520,14 +538,23 @@ public class User : EntityBase, IUser
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         ArgumentException.ThrowIfNullOrWhiteSpace(passwordHash);
 
-        return new User
+        var user = new User
         {
             Email = email.ToLowerInvariant(),
             Name = name,
-            Username = username,
             PasswordHash = passwordHash,
             IsActive = true
         };
+        if (username is null)
+        {
+            user.AssignGeneratedUsername(UsernameSlug.Generate(name));
+        }
+        else
+        {
+            user.Username = UsernameSlug.FromExplicit(username);
+        }
+
+        return user;
     }
 
     /// <summary>
@@ -550,7 +577,7 @@ public class User : EntityBase, IUser
         ArgumentException.ThrowIfNullOrWhiteSpace(email);
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
-        return new User
+        var user = new User
         {
             Email = email.ToLowerInvariant(),
             Name = name,
@@ -558,6 +585,8 @@ public class User : EntityBase, IUser
             IsActive = true,
             IsEmailVerified = emailVerified
         };
+        user.AssignGeneratedUsername(UsernameSlug.Generate(name));
+        return user;
     }
 
     /// <summary>
@@ -572,6 +601,8 @@ public class User : EntityBase, IUser
         ArgumentException.ThrowIfNullOrWhiteSpace(email);
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
-        return new User { Email = email.ToLowerInvariant(), Name = name, PhoneNumber = phoneNumber, IsActive = true };
+        var user = new User { Email = email.ToLowerInvariant(), Name = name, PhoneNumber = phoneNumber, IsActive = true };
+        user.AssignGeneratedUsername(UsernameSlug.Generate(name));
+        return user;
     }
 }

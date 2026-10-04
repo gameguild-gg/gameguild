@@ -1,5 +1,11 @@
 # GameGuild issue closeout inventory
 
+## 2026-10-04 automatic username slugification — implementation verification
+
+**#222 remains OPEN**, with [explicitly inferred title-level criteria](https://github.com/gameguild-gg/gameguild/issues/222#issuecomment-5985363788) and a [complete implementation/verification map](../architecture/username-slugification-reconciliation.md). New users receive canonical handles across password/OAuth/administrative/bulk factories and actual signup; generated collisions are disambiguated, explicitly chosen collisions fail validation, and existing handles/display names are preserved. The PostgreSQL retry is limited to the username constraint and preserves entity versions and durable-event capture.
+
+The baseline failed 19/20 factory cases. Current local verification passes Users 714, Authentication 2,023, Authorization 1,667, SharedKernel 1,371, Users integration 25 and the focused full-application signup/OpenAPI HTTP selection 21: **5,821 distinct cases so far**. Sixty-five new cases were added. Complete solution Release build has zero warnings/errors. Full API unit/integration suites and matching-head CI/merge remain pending. Complete v1 retains 1,296 paths and 1,654 schemas with only the reviewed username-description update; the client was regenerated accordingly. The last fixed-scope snapshot below remains **64 closed / 264 open**, with all 328 IDs retained.
+
 ## 2026-10-04 JWT generation/validation closeout
 
 Snapshot **2026-10-04T22:19:32.145079+00:00** retains all **328** original IDs: **64 closed / 264 open**. These totals include implementations, duplicate consolidation and historical closures; they are not newly implemented feature counts.
