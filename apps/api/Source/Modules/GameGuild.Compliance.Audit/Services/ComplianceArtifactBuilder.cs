@@ -50,6 +50,11 @@ public sealed class ComplianceArtifactBuilder(ComplianceEvidenceValidationEngine
             ["request.json"] = new("application/json", CompliancePackagingEncoding.Serialize(request)),
             ["template.json"] = new("application/json", CompliancePackagingEncoding.Serialize(template)),
             ["validation.json"] = new("application/json", CompliancePackagingEncoding.Serialize(report)),
+            ["evidence/collection.json"] = new("application/json", CompliancePackagingEncoding.Serialize(datasets.Select(item => new
+            {
+                item.Kind, item.Source, Path = ComplianceEvidenceValidationEngine.EvidencePath(item.Kind), item.RecordCount,
+                item.FirstObservedUtc, item.LastObservedUtc, item.ObservedDatesUtc, item.ValidationErrors
+            }))),
             ["index.json"] = new("application/json", CompliancePackagingEncoding.Serialize(report.Controls)),
             ["index.csv"] = new("text/csv", Encoding.UTF8.GetBytes(BuildIndexCsv(report)))
         };
@@ -63,7 +68,7 @@ public sealed class ComplianceArtifactBuilder(ComplianceEvidenceValidationEngine
             payloads.Add($"documents/{document.Id:D}/content.{extension}", new(document.MediaType, document.Content));
             payloads.Add($"documents/{document.Id:D}/metadata.json", new("application/json", CompliancePackagingEncoding.Serialize(new
             {
-                document.Id, document.Name, document.Type, document.MediaType, document.ContentSha256,
+                document.Id, document.TemplateId, document.Name, document.Type, document.MediaType, document.ContentSha256,
                 document.SourceUri, document.ValidFromUtc, document.ValidUntilUtc, document.ControlIds,
                 document.ValidationFields, document.Review, document.UploadedByUserId,
                 document.ReviewedByUserId, document.ReviewedAtUtc, document.Revision
@@ -173,7 +178,7 @@ public sealed class ComplianceArtifactBuilder(ComplianceEvidenceValidationEngine
                     return Invalid("Evidence is missing, unlisted or differs from its signed hash.");
                 }
             }
-            if (!listed.IsSupersetOf(["request.json", "template.json", "validation.json", "index.json", "index.csv"]) ||
+            if (!listed.IsSupersetOf(["request.json", "template.json", "validation.json", "evidence/collection.json", "index.json", "index.csv"]) ||
                 manifest.TemplateSha256 != CompliancePackagingEncoding.Hash(content["template.json"]) ||
                 !content["template.json"].AsSpan().SequenceEqual(CompliancePackagingEncoding.Serialize(manifest.Template)) ||
                 !content["validation.json"].AsSpan().SequenceEqual(CompliancePackagingEncoding.Serialize(manifest.Validation)))

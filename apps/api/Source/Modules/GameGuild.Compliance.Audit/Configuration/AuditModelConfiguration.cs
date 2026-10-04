@@ -6,6 +6,38 @@ public sealed class AuditModelConfiguration : IModelConfiguration
 {
     public void Configure(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<ComplianceEvidenceDocument>(entity =>
+        {
+            entity.ToTable("ComplianceEvidenceDocuments");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.TenantId).IsRequired();
+            entity.Property(item => item.TemplateId).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.Name).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.Type).HasMaxLength(80).IsRequired();
+            entity.Property(item => item.MediaType).HasMaxLength(120).IsRequired();
+            entity.Property(item => item.Content).IsRequired();
+            entity.Property(item => item.ContentSha256).HasMaxLength(64).IsRequired();
+            entity.Property(item => item.SourceUri).HasMaxLength(2048).IsRequired();
+            entity.Property(item => item.ControlIdsJson).HasColumnType("text").IsRequired();
+            entity.Property(item => item.ValidationFieldsJson).HasColumnType("text").IsRequired();
+            entity.Property(item => item.ReviewNotes).HasMaxLength(2000);
+            entity.Property(item => item.Revision).IsConcurrencyToken();
+            entity.HasIndex(item => new { item.TenantId, item.CreatedAt });
+        });
+        modelBuilder.Entity<ComplianceSealedPackage>(entity =>
+        {
+            entity.ToTable("ComplianceSealedPackages");
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.TenantId).IsRequired();
+            entity.Property(item => item.Name).HasMaxLength(200).IsRequired();
+            entity.Property(item => item.TemplateId).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.ArtifactSha256).HasMaxLength(64).IsRequired();
+            entity.Property(item => item.SigningKeyId).HasMaxLength(128).IsRequired();
+            entity.Property(item => item.ArtifactContent).IsRequired();
+            entity.Property(item => item.ManifestJson).HasColumnType("text").IsRequired();
+            entity.Property(item => item.SealJson).HasColumnType("text").IsRequired();
+            entity.HasIndex(item => new { item.TenantId, item.CreatedAt });
+        });
         modelBuilder.Entity<AuditRetentionConfiguration>(entity =>
         {
             entity.ToTable("AuditRetentionConfigurations");
