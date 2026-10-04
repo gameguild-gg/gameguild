@@ -17,17 +17,25 @@ SITE_COMMIT = "f3819f13210fe2a5ccb51bfb2df0833608b09079"
 OUTPUT = Path("apps/api/Source/Modules/GameGuild.Compliance.Audit/Resources/FedRamp2026")
 
 
+def require(condition, message):
+    if not condition:
+        raise ValueError(message)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("rules", type=Path)
     parser.add_argument("nist_catalog", type=Path)
     args = parser.parse_args()
     raw = args.rules.read_bytes()
-    assert hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest() == RULES_BLOB
+    require(hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest() == RULES_BLOB,
+            "Unexpected FedRAMP rules source fingerprint")
     data = json.loads(raw)
-    assert data["info"]["version"] == "2026.09.13.02"
-    nist = ET.fromstring(args.nist_catalog.read_bytes())
-    assert hashlib.sha256(args.nist_catalog.read_bytes()).hexdigest() == "a9e23b09116d5e651461d61777c2e7dc1f3454ab3f9e1e8fdf8af01c37dc01be"
+    require(data["info"]["version"] == "2026.09.13.02", "Unexpected rules source version")
+    nist_raw = args.nist_catalog.read_bytes()
+    require(hashlib.sha256(nist_raw).hexdigest() == "a9e23b09116d5e651461d61777c2e7dc1f3454ab3f9e1e8fdf8af01c37dc01be",
+            "Unexpected pinned NIST catalog fingerprint")
+    nist = ET.fromstring(nist_raw)
     ns = {"o": "http://csrc.nist.gov/ns/oscal/1.0"}
     controls = {item.attrib["id"]: item for item in nist.findall(".//o:control", ns)}
     baselines = {}
@@ -43,7 +51,7 @@ def main():
                 # prm_* values are OSCAL selections, not organisation-defined parameters.
                 baseline[identifier] = [p.attrib["id"] for p in control.findall("o:param", ns) if "_odp" in p.attrib["id"]]
         baselines[class_id.upper()] = baseline
-    assert [len(baselines[k]) for k in "BCD"] == [155, 322, 409]
+    require([len(baselines[k]) for k in "BCD"] == [155, 322, 409], "Unexpected tailored baseline counts")
     rules = []
     schema_uris = set()
     for group, section in data["FRR"].items():
@@ -70,7 +78,7 @@ def main():
                                   "force": {k: rule.get("varies_by_class", {}).get(k.lower(), {}).get("force", rule.get("force", "")) for k in classes},
                                   "sourceUri": "https://www.fedramp.gov/2026/providers/rev5/rules/" + info["web_name"] + "/",
                                   "effective": effective, "schemaUri": schema})
-    assert len(rules) == len({row["id"] for row in rules})
+    require(len(rules) == len({row["id"] for row in rules}), "Duplicate provider rule identifier")
     OUTPUT.mkdir(parents=True, exist_ok=True)
     schemas = []
     pending = list(sorted(schema_uris))
@@ -79,15 +87,17 @@ def main():
         uri = pending.pop(0)
         if uri in seen:
             continue
-        assert uri.startswith("https://fedramp.gov/schemas/") and uri.endswith(".json")
+        require(uri.startswith("https://fedramp.gov/schemas/") and uri.endswith(".json"), "Untrusted schema source URI")
         request = urllib.request.Request(uri.replace("https://fedramp.gov/", "https://www.fedramp.gov/"),
                                          headers={"User-Agent": "GameGuild-compliance-source-verification/1.0"})
         with urllib.request.urlopen(request, timeout=45) as response:
-            assert response.url.startswith(("https://fedramp.gov/schemas/", "https://www.fedramp.gov/schemas/"))
+            require(response.url.startswith(("https://fedramp.gov/schemas/", "https://www.fedramp.gov/schemas/")),
+                    "Untrusted schema redirect")
             content = response.read(1048577)
-        assert len(content) <= 1048576
+        require(len(content) <= 1048576, "Schema exceeds the source size limit")
         schema = json.loads(content)
-        assert schema["$id"] == uri and schema["$schema"] == "https://json-schema.org/draft/2020-12/schema"
+        require(schema["$id"] == uri and schema["$schema"] == "https://json-schema.org/draft/2020-12/schema",
+                "Unexpected government schema identifier or dialect")
         def refs(value):
             if isinstance(value, dict):
                 for key, child in value.items():
@@ -105,7 +115,7 @@ def main():
         seen.add(uri)
     result = {"rulesVersion": data["info"]["version"], "rulesCommit": RULES_COMMIT, "rulesBlob": RULES_BLOB,
               "rulesSha256": hashlib.sha256(raw).hexdigest(), "nistSiteCommit": SITE_COMMIT,
-              "nistCatalogSha256": hashlib.sha256(args.nist_catalog.read_bytes()).hexdigest(),
+              "nistCatalogSha256": hashlib.sha256(nist_raw).hexdigest(),
               "baselines": baselines, "rules": rules, "schemas": sorted(schemas, key=lambda row: row["uri"])}
     (OUTPUT / "catalog.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({"baselineCounts": {k: len(v) for k, v in baselines.items()}, "providerRules": len(rules), "schemas": len(schemas)}))
