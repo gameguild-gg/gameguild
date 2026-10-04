@@ -20,7 +20,8 @@ The current FedRAMP increment adds six explicit Rev5 class/path profiles and
 offline validation against the official 2026 JSON schemas. Its scope and remaining
 FedRAMP coverage are documented below; it does not support 20x/KSI profiles yet.
 
-The SOC2 increment adds 32 Type I/II profiles with explicit category scopes,
+The SOC2 increment in [PR #677](https://github.com/gameguild-gg/gameguild/pull/677)
+adds 32 Type I/II profiles with explicit category scopes,
 captured management/design/operating-test evidence and signed reviewer exports.
 Its supported scope and assessment limitations are documented below.
 
