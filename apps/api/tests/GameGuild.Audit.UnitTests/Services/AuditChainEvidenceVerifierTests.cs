@@ -13,7 +13,8 @@ public sealed class AuditChainEvidenceVerifierTests
     {
         var (entry, signer, timestamp) = LegacyEntry();
         var verifier = new AuditChainEvidenceVerifier(signer);
-        Assert.True(verifier.VerifyEntry(entry, out var recovered));
+        var (verified, recovered) = verifier.VerifyEntryAndTimestamp(entry);
+        Assert.True(verified);
         Assert.Equal(timestamp, recovered);
         typeof(TamperEvidentAuditLog).GetProperty(nameof(TamperEvidentAuditLog.Timestamp))!.SetValue(entry, entry.Timestamp.AddTicks(10));
         Assert.False(verifier.VerifyEntry(entry));

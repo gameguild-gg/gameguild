@@ -46,7 +46,7 @@ public sealed class ComplianceEvidencePackagingService(
         byte[] content;
         try { content = Convert.FromBase64String(request.ContentBase64); }
         catch (FormatException) { throw Invalid("ContentBase64", "The uploaded content must be valid base64."); }
-        if (content.Length is 0 or > ComplianceEvidenceValidationEngine.MaximumDocumentBytes)
+        if (content.Length == 0 || content.Length > ComplianceEvidenceValidationEngine.MaximumDocumentBytes)
         {
             throw Invalid("ContentBase64", "An evidence document must contain between one byte and 1 MiB.");
         }

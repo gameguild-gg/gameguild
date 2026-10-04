@@ -4,11 +4,12 @@ Issue: [#178](https://github.com/gameguild-gg/gameguild/issues/178).
 
 ## Implementation status
 
-The backend and generated client are implemented locally on
-`feature/issue-178-compliance-packaging-20261003`. They provide tenant administrator
+The backend and generated client implementation is tracked in
+[PR #674](https://github.com/gameguild-gg/gameguild/pull/674). It provides tenant administrator
 uploads, versioned document reviews, PostgreSQL collectors, an initial ISO 27001
-Annex A evidence template, signed ZIP packages and audited downloads. This branch
-has not been merged or deployed. The complete feature remains open.
+Annex A evidence template, signed ZIP packages and audited downloads. This implementation
+has local verification evidence; production deployment remains unverified. The
+complete feature remains open.
 
 Remaining work includes SOC2 Type I/II, GDPR/DPIA, HIPAA, PCI DSS and FedRAMP
 templates with their actual scope and source versions; the remaining ISO ISMS/SoA
@@ -205,11 +206,11 @@ Local verification on 2026-10-03:
 - Authentication suite: 1,852 passed.
 - Authorization suite: 1,667 passed.
 - API filter `Architecture|Security|OpenApi`: 143 passed.
-- PostgreSQL/HTTP/OpenAPI selection: 8 passed, including database update guards,
+- PostgreSQL/HTTP/OpenAPI selection: 9 passed, including the new table/column
+  inventory, database update guards,
   concurrent reviews, metadata lists, unknown keys, missing private keys, interval
   predecessor checks, omitted oversized entries, both routes and schema contracts.
-- Packaging table/column inventory against the clean migrated PostgreSQL database:
-  1 passed. This is scoped to the two new tables; the separate failed global
+- The inventory check is scoped to the two new tables; the separate failed global
   comparison is documented above.
 - Client suite: 1,110 passed, including ZIP generation and binary byte preservation
   through an actual local HTTP server and the regenerated authenticated module.

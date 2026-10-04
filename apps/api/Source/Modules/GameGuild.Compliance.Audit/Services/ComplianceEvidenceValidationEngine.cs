@@ -5,14 +5,19 @@ namespace GameGuild.Compliance.Audit;
 /// <summary>Checks evidence quality and coverage. It does not decide whether an organization complies with a standard.</summary>
 public sealed class ComplianceEvidenceValidationEngine
 {
-    public const int MaximumDocumentBytes = 1048576;
-    public const int MaximumDatasetBytes = 4194304;
-    public const int MaximumContentBytes = 33554432;
+    public static int MaximumDocumentBytes { get; } = 1048576;
+    public static int MaximumDatasetBytes { get; } = 4194304;
+    public static int MaximumContentBytes { get; } = 33554432;
 
     public CompliancePackageValidationReport Inspect(
         ComplianceFrameworkTemplate template, CreateCompliancePackageRequest request,
         IReadOnlyList<ComplianceDocumentSnapshot> documents, IReadOnlyList<ComplianceEvidenceDataset> datasets,
-        DateTime capturedAtUtc, CancellationToken cancellationToken = default)
+        DateTime capturedAtUtc) => Inspect(template, request, documents, datasets, capturedAtUtc, CancellationToken.None);
+
+    public CompliancePackageValidationReport Inspect(
+        ComplianceFrameworkTemplate template, CreateCompliancePackageRequest request,
+        IReadOnlyList<ComplianceDocumentSnapshot> documents, IReadOnlyList<ComplianceEvidenceDataset> datasets,
+        DateTime capturedAtUtc, CancellationToken cancellationToken)
     {
         ValidateInputs(template, request, documents, datasets, capturedAtUtc);
         // Parse each captured source and document once, even when a framework maps hundreds of controls to it.
@@ -166,12 +171,13 @@ public sealed class ComplianceEvidenceValidationEngine
         {
             Gap("DeclaredControlDeficiency", "The assessment must explicitly record a satisfactory review; deficient, unknown and pending assessments remain gaps.");
         }
-        if (requirement.RequiresControlAssessments) { ValidateControlAssessments(document, fields, gaps); }
+        if (requirement.RequiresControlAssessments) { gaps.AddRange(ValidateControlAssessments(document, fields)); }
     }
 
-    private static void ValidateControlAssessments(ComplianceDocumentSnapshot document,
-        IReadOnlyDictionary<string, string> fields, List<ComplianceEvidenceGap> gaps)
+    private static IReadOnlyList<ComplianceEvidenceGap> ValidateControlAssessments(ComplianceDocumentSnapshot document,
+        IReadOnlyDictionary<string, string> fields)
     {
+        var gaps = new List<ComplianceEvidenceGap>();
         void Gap(string controlId, string code, string message) => gaps.Add(new(controlId, code, message, document.Id));
         JsonDocument? mapping = null;
         try
@@ -205,6 +211,7 @@ public sealed class ComplianceEvidenceValidationEngine
                 }
             }
         }
+        return gaps;
     }
 
     private static void ValidateDataset(string controlId, ComplianceEvidenceDataset dataset,
@@ -308,7 +315,7 @@ public sealed class ComplianceEvidenceValidationEngine
             "Documents", "Capture exactly the requested, unique document revisions (at most 100).");
         Require(documents.All(item => item.Id != Guid.Empty && item.UploadedByUserId != Guid.Empty && item.Revision >= 1 &&
             !string.IsNullOrWhiteSpace(item.Name) && item.Name.Length <= 200 && IsHttpsSource(item.SourceUri) &&
-            item.Content.Length is > 0 and <= MaximumDocumentBytes && item.ContentSha256.Length == 64 &&
+            item.Content.Length > 0 && item.Content.Length <= MaximumDocumentBytes && item.ContentSha256.Length == 64 &&
             (item.TemplateId is null || item.TemplateId == template.Id) &&
             item.ValidFromUtc.Kind == DateTimeKind.Utc && item.ValidUntilUtc.Kind == DateTimeKind.Utc && item.ValidFromUtc <= item.ValidUntilUtc &&
             item.ControlIds.Count is > 0 and <= 1500 && item.ControlIds.All(controls.Contains) &&
@@ -324,7 +331,7 @@ public sealed class ComplianceEvidenceValidationEngine
             "Exclusions", "Exclusions must reference unique known controls and justified applicability evidence.");
         Require(datasets.Count <= 6 && datasets.Select(item => item.Kind).Distinct().Count() == datasets.Count && datasets.All(item =>
             Enum.IsDefined(item.Kind) && !string.IsNullOrWhiteSpace(item.Source) && item.Source.Length <= 200 &&
-            item.Content.Length is > 0 and <= MaximumDatasetBytes && item.RecordCount is >= 0 and <= 50000 &&
+            item.Content.Length > 0 && item.Content.Length <= MaximumDatasetBytes && item.RecordCount is >= 0 and <= 50000 &&
             item.ObservedDatesUtc.Count <= 1828 && item.ValidationErrors.Count <= 100 && item.ValidationErrors.All(error => error.Length <= 2000)),
             "Datasets", "Collected sources must be unique, bounded and valid.");
         Require(documents.Sum(item => (long)item.Content.Length) + datasets.Sum(item => (long)item.Content.Length) <= MaximumContentBytes,
