@@ -18,7 +18,7 @@ internal static class FedRampComplianceEvidence
         {
             var target = Property(root, "certificationProfile");
             if (Text(target, "type") != "Rev5" || Text(target, "class") != profile.Class || Text(target, "path") != profile.Path ||
-                Text(target, "rulesVersion") != FedRampComplianceCatalog.RulesVersion)
+                Text(target, "rulesVersion") != FedRampComplianceCatalog.PinnedRulesVersion)
             { Gap("FedRampProfileMismatch", "The type, class, path and pinned rules version must match the selected profile."); }
             var phase = Text(root, "packagePhase");
             if (phase is not ("application" or "ongoing")) { Gap("FedRampPhaseInvalid", "Declare application or ongoing package phase."); }
@@ -36,7 +36,7 @@ internal static class FedRampComplianceEvidence
             return;
         }
         var uri = Text(root, "schemaUri");
-        var expected = FedRampComplianceCatalog.SchemaUri(document.Type);
+        var expected = FedRampComplianceCatalog.DocumentSchemaUri(document.Type);
         if ((document.Type != "fedramp-artifact" && uri != expected) ||
             (document.Type == "fedramp-artifact" && document.ControlIds.Any(id => !profile.Rules.Any(rule => rule.Id == id && rule.SchemaUri == uri))) ||
             !FedRampComplianceCatalog.IsSchemaValid(uri, Property(root, "payload")))

@@ -60,6 +60,13 @@ catalog in [FedRAMP/2026 commit f3819f13210fe2a5ccb51bfb2df0833608b09079](https:
 `scripts/compliance/build-fedramp-catalog.py` verifies source fingerprints and
 generates the catalog and nine bundled official schemas. Each schema retains its
 government `$id` and `$schemaVersion`, and its exact bytes have a SHA-256 checksum.
+Install the generator's hash-pinned `defusedxml` dependency with
+`python -m pip install --require-hashes -r scripts/compliance/requirements.txt`.
+Source verification uses SHA-256 and remains active under `python -O`. XML parsing
+rejects DTDs, entities and external references. Schema downloads allow only official
+HTTPS hosts and schema paths, validate each redirect before connecting, and bound
+redirect count and response size. Offline generator regressions run with
+`python -O scripts/compliance/test_fedramp_catalog.py`.
 Draft 2020-12 evaluation includes external bundled references, formats,
 `contains`, `allOf` and `if`/`then`. Runtime validation makes no network requests
 and accepts no user-provided schemas. A server schema revision requires an

@@ -15,10 +15,13 @@ public sealed class FedRampEvidenceScenario
     public List<ComplianceEvidenceDataset> Datasets { get; } = [];
     public DateTime CapturedAtUtc { get; private set; }
 
-    public static FedRampEvidenceScenario Create(string classId = "B", string path = "Program", DateTime? startUtc = null, DateTime? endUtc = null)
+    public static FedRampEvidenceScenario Create() => Create("B", "Program");
+    public static FedRampEvidenceScenario Create(string classId, string path) =>
+        Create(classId, path, new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Utc), new DateTime(2026, 9, 2, 0, 0, 0, DateTimeKind.Utc));
+    public static FedRampEvidenceScenario Create(string classId, string path, DateTime startUtc, DateTime endUtc)
     {
-        var start = startUtc ?? new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Utc);
-        var end = endUtc ?? start.AddDays(1);
+        var start = startUtc;
+        var end = endUtc;
         var template = new ComplianceFrameworkCatalog().Find($"fedramp-2026-rev5-{classId.ToLowerInvariant()}-{path.ToLowerInvariant()}-evidence-v1")!;
         var scenario = new FedRampEvidenceScenario { Template = template, CapturedAtUtc = end.AddSeconds(1), Request = new()
         { Name = "Synthetic Rev5 evidence", TemplateId = template.Id, PeriodStartUtc = start, PeriodEndUtc = end } };
@@ -104,11 +107,12 @@ public sealed class FedRampEvidenceScenario
         ["seniorOfficialAcceptance"] = "Synthetic senior official accepted the conditional decision"
     };
 
-    public void Add(string type, JsonObject body, IReadOnlyList<string> controls, Guid? id = null)
+    public void Add(string type, JsonObject body, IReadOnlyList<string> controls) => Add(type, body, controls, Guid.NewGuid());
+    public void Add(string type, JsonObject body, IReadOnlyList<string> controls, Guid id)
     {
         body["frameworkVersion"] = Template.Version; body["assessmentStatus"] = "satisfactory"; body["owner"] = "Synthetic evidence owner";
         var bytes = JsonSerializer.SerializeToUtf8Bytes(body, Json);
-        Documents.Add(new(id ?? Guid.NewGuid(), type, type, "application/json", Hash(bytes), bytes,
+        Documents.Add(new(id, type, type, "application/json", Hash(bytes), bytes,
             type == "fedramp-overview" ? OverviewUri : "https://evidence.example.test/" + type,
             Request.PeriodStartUtc.UtcDateTime.AddDays(-1), Request.PeriodEndUtc.UtcDateTime.AddDays(1), controls, new Dictionary<string, string>(),
             ComplianceDocumentReview.Approved, Guid.NewGuid(), Guid.NewGuid(), Request.PeriodEndUtc.UtcDateTime, 1, Template.Id));
