@@ -14,6 +14,7 @@ internal static class GdprComplianceEvidence
             case "gdpr-dpia-screening": ValidateScreenings(document.Id, root, gaps); break;
             case "gdpr-dpia": ValidateDpia(document.Id, root, capturedAtUtc, gaps); break;
             case "gdpr-prior-consultation": ValidateConsultation(document.Id, root, capturedAtUtc, gaps); break;
+            default: break; // Other catalog documents use the common content, review and required-field checks.
         }
     }
 
