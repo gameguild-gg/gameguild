@@ -90,6 +90,15 @@ Existing clients do not need to change format until the corresponding versioned 
 
 ## Acceptance and baseline for issue #144
 
+Semantic document names honor quoted literals and native component tokens.
+For mixed semantic/date versions, use `GroupNameFormat: "'Version-'GVVV"` to
+produce names such as `Version-1.2.3` and `Version-2026-10-04`. `VVV`/`VVVV` and
+`F`/`FF` retain patch, prerelease and build metadata; `V`/`VV` and padded tokens
+project components, while `S` returns the actual prerelease. A format that
+collapses discovered versions into the same document name fails at setup.
+See the [complete reconciliation](versioned-openapi-reconciliation.md) for
+scoped aliases, independent HTTP/UI checks and the current acceptance status.
+
 The implementation includes native and semantic parsing, prerelease/date support, version reporting, sunset policies, OpenAPI grouping, structured version-usage telemetry, a validated compatibility matrix surfaced through `X-API-Compatible-Versions`, and routed tests for URL, query, header, media-type, and combined readers. Repeatable parser and reader-plus-parser benchmarks are provided by `GameGuild.API.Versioning.PerformanceTests`.
 
 Run the short benchmark with:
