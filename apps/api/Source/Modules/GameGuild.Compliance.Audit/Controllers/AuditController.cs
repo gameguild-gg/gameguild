@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging;
 using GameGuild.CQRS;
+using Microsoft.Net.Http.Headers;
 
 namespace GameGuild.Compliance.Audit;
 
@@ -334,14 +335,20 @@ public class AuditController(
     /// </summary>
     [HttpPost(":export")]
     [HttpPost("export/csv")]
+    [HttpPost("/api/audit/export/csv")]
     [EnableRateLimiting(RateLimitPolicies.ExpensiveOperations)]
     [Produces("text/csv")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK, "text/csv")]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status406NotAcceptable)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult> ExportAuditLogs([FromBody] AuditExportRequest request)
     {
         var adminUserId = GetCurrentUserId();
         if (!adminUserId.HasValue) throw new UnauthorizedAccessException("User not authenticated");
+
+        var mediaValidation = ValidateExportMediaType("text/csv");
+        if (mediaValidation is not null) { return mediaValidation; }
 
         var requestValidation = ValidateExportRequest(request);
         if (requestValidation is not null) { return requestValidation; }
@@ -410,14 +417,20 @@ public class AuditController(
     /// Streams a versioned JSON audit export with pagination metadata.
     /// </summary>
     [HttpPost("export/json")]
+    [HttpPost("/api/audit/export/json")]
     [EnableRateLimiting(RateLimitPolicies.ExpensiveOperations)]
     [Produces("application/json")]
     [ProducesResponseType(typeof(AuditJsonExportDocument), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status406NotAcceptable)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult> ExportAuditLogsJson([FromBody] AuditExportRequest request)
     {
         var adminUserId = GetCurrentUserId();
         if (!adminUserId.HasValue) throw new UnauthorizedAccessException("User not authenticated");
+
+        var mediaValidation = ValidateExportMediaType("application/json");
+        if (mediaValidation is not null) { return mediaValidation; }
 
         var requestValidation = ValidateExportRequest(request);
         if (requestValidation is not null) { return requestValidation; }
@@ -580,6 +593,37 @@ public class AuditController(
         return download is null
             ? NotFound()
             : File(download.Content, download.ContentType, download.FileName, enableRangeProcessing: true);
+    }
+
+    private ActionResult? ValidateExportMediaType(string mediaType)
+    {
+        var accept = Request.Headers.Accept;
+        if (accept.Count == 0 || string.IsNullOrWhiteSpace(accept.ToString())) { return null; }
+
+        if (!MediaTypeHeaderValue.TryParseStrictList(accept.Select(value => value ?? string.Empty).ToArray(), out var ranges)
+            || ranges.SelectMany(range => range.Parameters)
+                .Where(parameter => parameter.Name.Equals("q", StringComparison.OrdinalIgnoreCase))
+                .Any(parameter => !double.TryParse(parameter.Value.Value,
+                    System.Globalization.NumberStyles.AllowDecimalPoint, System.Globalization.CultureInfo.InvariantCulture,
+                    out var quality) || quality is < 0 or > 1))
+        {
+            return Problem(statusCode: StatusCodes.Status400BadRequest,
+                title: "Invalid Accept header", detail: "Supply a valid Accept media range.");
+        }
+
+        var produced = MediaTypeHeaderValue.Parse(mediaType + "; charset=utf-8");
+        var preferred = ranges
+            .Where(range => produced.IsSubsetOf(range))
+            .OrderByDescending(range => range.MatchesAllTypes ? 0 : range.MatchesAllSubTypes ? 1 : 2)
+            .ThenByDescending(range => range.Parameters.TakeWhile(parameter =>
+                !parameter.Name.Equals("q", StringComparison.OrdinalIgnoreCase)).Count())
+            .ThenByDescending(range => range.Quality ?? 1)
+            .FirstOrDefault();
+        if (preferred is not null && (preferred.Quality ?? 1) > 0) { return null; }
+
+        return Problem(statusCode: StatusCodes.Status406NotAcceptable,
+            title: "Audit export format is not acceptable",
+            detail: "This route produces " + mediaType + " with UTF-8 encoding.");
     }
 
     private ActionResult? ValidateExportRequest(AuditExportRequest request)

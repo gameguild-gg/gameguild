@@ -1,8 +1,10 @@
 using System.Security.Claims;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -945,6 +947,194 @@ public class AuditControllerCoverageCompletionTests
         record.Metadata.Value.GetProperty(propertyName).ToString().Should().Be(expectedValue);
     }
 
+    [Theory]
+    [InlineData("csv")]
+    [InlineData("json")]
+    public async Task Exports_ShouldWriteBeforeEnumerationCompletesWithoutBufferingTheDataset(string format)
+    {
+        var recordCount = format == "csv" ? 100_000 : 1000;
+        var userId = Guid.NewGuid();
+        var sink = new ExportRecordingStream();
+        var enumerated = 0;
+        var service = new Mock<IAuditService>();
+        service.Setup(value => value.GetAuditLogCountAsync(It.IsAny<AuditLogQuery>())).ReturnsAsync(recordCount);
+        service.Setup(value => value.StreamAuditLogsAsync(It.IsAny<AuditLogQuery>(), It.IsAny<CancellationToken>()))
+            .Returns((AuditLogQuery _, CancellationToken token) => Records(token));
+        var controller = CreateAuditController(CreateActor(userId), service.Object);
+        controller.Response.Body = sink;
+
+        var result = format == "csv"
+            ? await controller.ExportAuditLogs(new AuditExportRequest { Columns = ["Description"] })
+            : await controller.ExportAuditLogsJson(new AuditExportRequest { PageNumber = 1, PageSize = 1000 });
+
+        Assert.IsType<EmptyResult>(result);
+        Assert.Equal(recordCount, enumerated);
+        Assert.True(sink.BytesWritten > recordCount * 128L);
+        service.Verify(value => value.GetAuditLogsAsync(It.IsAny<AuditLogQuery>()), Times.Never);
+
+        async IAsyncEnumerable<AuditLog> Records([EnumeratorCancellation] CancellationToken token)
+        {
+            for (var index = 0; index < recordCount; index++)
+            {
+                token.ThrowIfCancellationRequested();
+                if (index == 512) { Assert.True(sink.BytesWritten > 0, "The export buffered records before writing."); }
+                enumerated++;
+                yield return new AuditLog { ActionType = "Update", ResourceType = "Test", Description = new string('é', 128) };
+                if (index % 256 == 0) { await Task.Yield(); }
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData("csv")]
+    [InlineData("json")]
+    public async Task Exports_ShouldStopEnumerationAndNotifyCancellationWhenTheClientDisconnects(string format)
+    {
+        using var cancellation = new CancellationTokenSource();
+        var userId = Guid.NewGuid();
+        var enumerated = 0;
+        var sink = new ExportRecordingStream(cancellation.Cancel);
+        var service = new Mock<IAuditService>();
+        service.Setup(value => value.GetAuditLogCountAsync(It.IsAny<AuditLogQuery>())).ReturnsAsync(100_000);
+        service.Setup(value => value.StreamAuditLogsAsync(It.IsAny<AuditLogQuery>(), It.IsAny<CancellationToken>()))
+            .Returns((AuditLogQuery _, CancellationToken token) => Records(token));
+        var notifier = new Mock<IAuditExportWebhookNotifier>();
+        notifier.Setup(value => value.ValidateWebhookUrl(It.IsAny<string?>())).Returns((string?)null);
+        var controller = CreateAuditController(CreateActor(userId), service.Object, notifier.Object);
+        controller.Response.Body = sink;
+        controller.HttpContext.RequestAborted = cancellation.Token;
+        var request = new AuditExportRequest { Columns = ["Description"], WebhookUrl = "https://hooks.example.com/audit" };
+
+        var result = format == "csv"
+            ? await controller.ExportAuditLogs(request)
+            : await controller.ExportAuditLogsJson(request);
+
+        Assert.IsType<EmptyResult>(result);
+        Assert.True(cancellation.IsCancellationRequested);
+        Assert.InRange(enumerated, 1, 1000);
+        notifier.Verify(value => value.NotifyAsync(
+            request.WebhookUrl,
+            It.Is<AuditExportWebhookNotification>(notification => notification.Status == "cancelled" && notification.Format == format),
+            It.IsAny<CancellationToken>()), Times.Once);
+
+        async IAsyncEnumerable<AuditLog> Records([EnumeratorCancellation] CancellationToken token)
+        {
+            for (var index = 0; index < 100_000; index++)
+            {
+                token.ThrowIfCancellationRequested();
+                enumerated++;
+                yield return new AuditLog { ActionType = "Update", ResourceType = "Test", Description = new string('x', 900) };
+                await Task.Yield();
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData("csv")]
+    [InlineData("json")]
+    public async Task Exports_ShouldAbortStartedStreamsAndRecordSafeFailureStatus(string format)
+    {
+        var userId = Guid.NewGuid();
+        var responseFeature = new ExportResponseFeature();
+        var lifetime = new ExportRequestLifetimeFeature();
+        var service = new Mock<IAuditService>();
+        service.Setup(value => value.GetAuditLogCountAsync(It.IsAny<AuditLogQuery>())).ReturnsAsync(1000);
+        service.Setup(value => value.StreamAuditLogsAsync(It.IsAny<AuditLogQuery>(), It.IsAny<CancellationToken>()))
+            .Returns(FailingRecords());
+        var progress = new Mock<IAuditExportProgressTracker>();
+        progress.Setup(value => value.GetAsync(It.IsAny<Guid>(), userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AuditExportProgressResponse(Guid.NewGuid(), "InProgress", 1000, 256, 25.6,
+                DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, null));
+        var notifier = new Mock<IAuditExportWebhookNotifier>();
+        notifier.Setup(value => value.ValidateWebhookUrl(It.IsAny<string?>())).Returns((string?)null);
+        var controller = CreateAuditController(CreateActor(userId), service.Object, notifier.Object, progress.Object);
+        controller.HttpContext.Features.Set<IHttpResponseFeature>(responseFeature);
+        controller.HttpContext.Features.Set<IHttpRequestLifetimeFeature>(lifetime);
+        controller.Response.Body = new ExportRecordingStream(() => responseFeature.Started = true);
+        var request = new AuditExportRequest { Columns = ["Description"], WebhookUrl = "https://hooks.example.com/audit" };
+
+        var result = format == "csv"
+            ? await controller.ExportAuditLogs(request)
+            : await controller.ExportAuditLogsJson(request);
+
+        Assert.IsType<EmptyResult>(result);
+        Assert.True(responseFeature.HasStarted);
+        Assert.True(lifetime.Aborted);
+        progress.Verify(value => value.ReportAsync(
+            It.IsAny<Guid>(), userId, 256, AuditExportProgressStatus.Failed, "The export could not be completed.",
+            It.IsAny<CancellationToken>()), Times.Once);
+        notifier.Verify(value => value.NotifyAsync(request.WebhookUrl,
+            It.Is<AuditExportWebhookNotification>(notification => notification.Status == "failed"
+                && notification.Format == format && notification.ErrorCode == "audit_export_failed"),
+            It.IsAny<CancellationToken>()), Times.Once);
+
+        static async IAsyncEnumerable<AuditLog> FailingRecords()
+        {
+            for (var index = 0; index < 600; index++)
+            {
+                yield return new AuditLog { ActionType = "Update", ResourceType = "Test", Description = new string('x', 900) };
+            }
+            await Task.Yield();
+            throw new InvalidOperationException("private database connection details");
+        }
+    }
+
+    private sealed class ExportResponseFeature : HttpResponseFeature
+    {
+        public bool Started { get; set; }
+        public override bool HasStarted => Started;
+    }
+
+    private sealed class ExportRequestLifetimeFeature : IHttpRequestLifetimeFeature
+    {
+        public CancellationToken RequestAborted { get; set; }
+        public bool Aborted { get; private set; }
+        public void Abort() => Aborted = true;
+    }
+
+    private sealed class ExportRecordingStream(Action? onWrite = null) : Stream
+    {
+        public long BytesWritten { get; private set; }
+        public override bool CanRead => false;
+        public override bool CanSeek => false;
+        public override bool CanWrite => true;
+        public override long Length => BytesWritten;
+        public override long Position { get => BytesWritten; set => throw new NotSupportedException(); }
+        public override void Flush()
+        {
+            // Writes are counted immediately; the stream has no buffered data to flush.
+        }
+        public override Task FlushAsync(CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.CompletedTask;
+        }
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            ArgumentNullException.ThrowIfNull(buffer);
+            _ = buffer.AsSpan(offset, count);
+            throw new NotSupportedException("The recording stream only accepts writes.");
+        }
+        public override long Seek(long offset, SeekOrigin origin) =>
+            throw new NotSupportedException($"Seeking to {offset} relative to {origin} is not supported.");
+        public override void SetLength(long value) =>
+            throw new NotSupportedException($"Setting the recording stream length to {value} is not supported.");
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            ArgumentNullException.ThrowIfNull(buffer);
+            _ = buffer.AsSpan(offset, count);
+            BytesWritten += count;
+            onWrite?.Invoke();
+        }
+        public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            BytesWritten += buffer.Length;
+            onWrite?.Invoke();
+            return ValueTask.CompletedTask;
+        }
+    }
+
     private static async IAsyncEnumerable<T> ToAsyncEnumerable<T>(IEnumerable<T> values)
     {
         foreach (var value in values)
@@ -957,7 +1147,8 @@ public class AuditControllerCoverageCompletionTests
     private static AuditController CreateAuditController(
         ActorContext actorContext,
         IAuditService? auditService = null,
-        IAuditExportWebhookNotifier? exportWebhookNotifier = null)
+        IAuditExportWebhookNotifier? exportWebhookNotifier = null,
+        IAuditExportProgressTracker? exportProgressTracker = null)
     {
         var actorAccessor = new Mock<IActorContextAccessor>();
         actorAccessor.Setup(accessor => accessor.ActorContext).Returns(actorContext);
@@ -967,7 +1158,7 @@ public class AuditControllerCoverageCompletionTests
             actorAccessor.Object,
             NullLogger<AuditController>.Instance,
             new CommandHandlerSender(auditService ?? Mock.Of<IAuditService>(), Mock.Of<ISecurityAuditAggregator>(), actorAccessor.Object),
-            CreateProgressTracker(),
+            exportProgressTracker ?? CreateProgressTracker(),
             exportWebhookNotifier ?? CreateWebhookNotifier(),
             Mock.Of<IScheduledAuditExportService>())
         {

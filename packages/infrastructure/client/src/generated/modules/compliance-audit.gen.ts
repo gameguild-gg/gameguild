@@ -16,6 +16,52 @@ export class ComplianceAuditModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Export audit logs (admin only)
+   */
+  async postApiAuditExportCsv(body: Types.ComplianceAuditAuditExportInput): Promise<Result<Blob, ApiError>> {
+    const url = '/api/audit/export/csv';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.ComplianceAuditAuditExportInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      responseType: 'blob',
+      headers: { Accept: 'text/csv' },
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<Blob, ApiError>;
+  }
+
+  /**
+   * Streams a versioned JSON audit export with pagination metadata.
+   */
+  async postApiAuditExportJson(body: Types.ComplianceAuditAuditExportInput): Promise<Result<Types.ComplianceAuditAuditJsonExportDocument, ApiError>> {
+    const url = '/api/audit/export/json';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.ComplianceAuditAuditExportInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.ComplianceAuditAuditJsonExportDocumentSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
    * Get audit logs with filtering and pagination
    */
   async getAdminAuditLogs(query?: {
@@ -53,7 +99,7 @@ export class ComplianceAuditModule {
   /**
    * Export audit logs (admin only)
    */
-  async postAdminAuditLogsExport(body: Types.ComplianceAuditAuditExportInput): Promise<Result<void, ApiError>> {
+  async postAdminAuditLogsExport(body: Types.ComplianceAuditAuditExportInput): Promise<Result<Blob, ApiError>> {
     const url = '/v1/admin/audit-logs/:export';
 
     // Validate request body
@@ -62,11 +108,13 @@ export class ComplianceAuditModule {
     const result = await this.client.request({
       method: 'POST',
       path: url,
+      responseType: 'blob',
+      headers: { Accept: 'text/csv' },
       body: validatedBody,
       requiresAuth: true,
     });
 
-    return result as Result<void, ApiError>;
+    return result as Result<Blob, ApiError>;
   }
 
   /**
@@ -93,7 +141,7 @@ export class ComplianceAuditModule {
   /**
    * Export audit logs (admin only)
    */
-  async postAdminAuditLogsExportCsv(body: Types.ComplianceAuditAuditExportInput): Promise<Result<void, ApiError>> {
+  async postAdminAuditLogsExportCsv(body: Types.ComplianceAuditAuditExportInput): Promise<Result<Blob, ApiError>> {
     const url = '/v1/admin/audit-logs/export/csv';
 
     // Validate request body
@@ -102,11 +150,13 @@ export class ComplianceAuditModule {
     const result = await this.client.request({
       method: 'POST',
       path: url,
+      responseType: 'blob',
+      headers: { Accept: 'text/csv' },
       body: validatedBody,
       requiresAuth: true,
     });
 
-    return result as Result<void, ApiError>;
+    return result as Result<Blob, ApiError>;
   }
 
   /**

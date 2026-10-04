@@ -362,6 +362,36 @@ export const getApiAuditCompliancePackagingTemplatesEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * Export audit logs (admin only)
+ */
+export interface PostApiAuditExportCsvInput {
+  body?: Types.ComplianceAuditAuditExportInput;
+}
+export type PostApiAuditExportCsvOutput = Blob;
+export const postApiAuditExportCsvEndpoint = {
+  operationId: 'postApiAuditExportCsv' as const,
+  method: 'POST' as const,
+  path: '/api/audit/export/csv' as const,
+  tags: ['ComplianceAudit'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Streams a versioned JSON audit export with pagination metadata.
+ */
+export interface PostApiAuditExportJsonInput {
+  body?: Types.ComplianceAuditAuditExportInput;
+}
+export type PostApiAuditExportJsonOutput = Types.ComplianceAuditAuditJsonExportDocument;
+export const postApiAuditExportJsonEndpoint = {
+  operationId: 'postApiAuditExportJson' as const,
+  method: 'POST' as const,
+  path: '/api/audit/export/json' as const,
+  tags: ['ComplianceAudit'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetApiAuditRetentionSimulationForGetApiAuditRetentionSimulationInput {
   query?: {
     skip?: number;
@@ -9510,7 +9540,7 @@ export const getAdminAuditLogsEndpoint = {
 export interface PostAdminAuditLogsExportInput {
   body?: Types.ComplianceAuditAuditExportInput;
 }
-export type PostAdminAuditLogsExportOutput = void;
+export type PostAdminAuditLogsExportOutput = Blob;
 export const postAdminAuditLogsExportEndpoint = {
   operationId: 'postAdminAuditLogsExport' as const,
   method: 'POST' as const,
@@ -9540,7 +9570,7 @@ export const getAdminAuditLogsExportProgressEndpoint = {
 export interface PostAdminAuditLogsExportCsvInput {
   body?: Types.ComplianceAuditAuditExportInput;
 }
-export type PostAdminAuditLogsExportCsvOutput = void;
+export type PostAdminAuditLogsExportCsvOutput = Blob;
 export const postAdminAuditLogsExportCsvEndpoint = {
   operationId: 'postAdminAuditLogsExportCsv' as const,
   method: 'POST' as const,
@@ -24898,6 +24928,8 @@ export const endpoints = {
     getApiAuditCompliancePackagingDocumentsForGetApiAuditCompliancePackagingDocumentsByIdEndpoint,
   postApiAuditCompliancePackagingDocumentsReview: postApiAuditCompliancePackagingDocumentsReviewEndpoint,
   getApiAuditCompliancePackagingTemplates: getApiAuditCompliancePackagingTemplatesEndpoint,
+  postApiAuditExportCsv: postApiAuditExportCsvEndpoint,
+  postApiAuditExportJson: postApiAuditExportJsonEndpoint,
   getApiAuditRetentionSimulationForGetApiAuditRetentionSimulation: getApiAuditRetentionSimulationForGetApiAuditRetentionSimulationEndpoint,
   postApiAuditRetentionSimulation: postApiAuditRetentionSimulationEndpoint,
   getApiAuditRetentionSimulationForGetApiAuditRetentionSimulationById: getApiAuditRetentionSimulationForGetApiAuditRetentionSimulationByIdEndpoint,

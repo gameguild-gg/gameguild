@@ -151,3 +151,38 @@ PR #670 merged to `develop` at **2026-10-03 19:30:14 UTC**, merge `6d8f0f92f9429
 The new tenant-admin API, guarded CQRS commands, revisioned configuration, immutable saved runs and PostgreSQL migration implement all ten #194 criteria. Historical counts and logical row sizes come from both primary and signed audit records; actual queried/exported row ages inform access and latency assessments. The deterministic daily-cohort engine supports three growth models, four storage tiers, monthly/yearly costs, retrieval, configured obligations and holds, comparisons, budget variance, constrained candidate optimization and explicit policy-change risks. The generated client is refreshed from the actual API OpenAPI document. [The feature guide](../architecture/audit-retention-simulation.md) maps each criterion, includes API examples and states measurement/model limits. A simulation changes no enforced retention or stored log data. Configured obligations are assessed without assuming a legal minimum or claiming regulatory certification.
 
 The issue remains open until the feature PR's current-head verification and merge. Engine/service and PostgreSQL/HTTP tests are the evidence path; the older manually populated calculator is retained for compatibility. The refreshed 328-row matrix also records the live states observed during the separate closed-issue review. That review reopened 47 issues from the prior 171-closed snapshot; **204 open and 124 closed** describes this subsequent snapshot, not a loss of merged code or a claim that the remaining closed issues have all been verified. Prior evidence is preserved as historical for reopened rows.
+
+## 2026-10-04 CSV/JSON original-route reconciliation: #170–173
+
+New real PostgreSQL HTTP tests reproduced **404** at both original requested routes,
+/api/audit/export/csv and /api/audit/export/json. Canonical #171 and #173 were
+reopened with that evidence. The prior #653/#656 implementations provide the
+existing export and scheduling services, but their closure records did not establish
+these original routes.
+
+The correction adds aliases to the same guarded actions, CSV spreadsheet literal
+escaping, format negotiation and explicit CSV download metadata. Real HTTP cases
+exercise filters, pagination, gzip, actor/tenant isolation, progress ownership,
+structured safe errors and a shared user concurrency limit across aliases.
+The inherited JSON default also caused the generated CSV methods to send the wrong
+Accept header; a failing generated-client HTTP test reproduced that defect.
+Explicit status-specific OpenAPI media declarations now take precedence, and the
+client is regenerated from the actual API document.
+
+The [export contract guide](../architecture/audit-export-contracts.md) maps the
+original CSV/JSON criteria to code and tests, including streaming, disconnects,
+failures after the response starts and the limitations of spreadsheet text guards.
+The final local C# selections passed **4,136 cases**: audit 437, authentication
+1,852, authorization 1,667, API architecture/security/OpenAPI 147 and export
+PostgreSQL HTTP 33. The complete solution build passed with zero warnings/errors.
+The regenerated client suite passed another **1,112 cases**, including the download
+contract that previously failed.
+Failed memory-constrained and unconfigured-database attempts remain in the local
+artifacts and are excluded from that passing count. All 328 original acceptance
+fields and the other 324 matrix rows remain unchanged.
+
+All four issues remain open until the feature PR is verified and merged. #170 and
+#172 are title-only duplicates of #171 and #173 respectively, and their closeout
+will reference those canonical implementations. The 2026-10-04 live snapshot after
+reopening the canonicals is **268 open and 60 closed**. Primary-checkout snapshots
+confirm all 55 local files were preserved.
