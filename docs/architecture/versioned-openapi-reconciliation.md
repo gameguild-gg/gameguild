@@ -148,9 +148,10 @@ Subsequent review reproduced a separate pre-existing formatter gap: quoted
 document names, and literal/component-only formats were ignored. Eighteen of
 26 independently specified formatting regressions failed before the correction.
 The follow-up uses the native tokenizer and adds semantic collision, legal
-prerelease and independent HTTP/UI name checks. The full original canonical
-scopes remain open pending verification and merge of the final span-format
-follow-up; an accepted earlier PR is not proof of completion by itself.
+prerelease and independent HTTP/UI name checks. At that intermediate snapshot,
+the full original canonical scopes remained
+open pending verification and merge of the final span-format follow-up.
+The final acceptance below supersedes that pending state.
 
 PR [#680](https://github.com/gameguild-gg/gameguild/pull/680) merged at
 `f0411fbaa3e2dff76bc4c27225980da1df34e6b7`. Exact-head CI passed 1,022 API unit
@@ -166,5 +167,28 @@ The final review independently reproduced the inherited span/interpolation
 gap: 19 of 31 cases failed against unchanged merged #680 code, including
 exposure of encoded patch identity and partial writes on insufficient buffers.
 The final follow-up aligns the native span interface with semantic `ToString`
-and adds exact semantic path assertions. Canonical closure still requires its
-fresh verification and merge.
+and adds exact semantic path assertions. Canonical closure required its fresh
+verification and merge, subsequently
+completed below.
+
+### Final accepted head and official resolution
+
+PR [#681](https://github.com/gameguild-gg/gameguild/pull/681) merged at
+`92842cdd731bd77ee329073eed33c70287f87508` on `2026-10-04T20:19:47Z`. Exact head
+`09c838b2a636aa75321145671c8a72d3f689e497` passed 1,022 API unit, 1,371 SharedKernel and 14
+complete-application OpenAPI HTTP cases (**2,407 total**). Fresh Release API
+and integration builds reported zero warnings/errors. All required gates,
+OpenAPI client consistency, Codacy and all four CodeQL analyses passed.
+[CI API/HTTP evidence](https://github.com/gameguild-gg/gameguild/actions/runs/37230473447/job/111518939762)
+includes the full-application HTTP TRX artifact. Local SharedKernel passed
+1,371/1,371 and the final selected API document/reader suite passed 42/42.
+The final full-document capture equals the preserved baseline and client
+generation/diff/typecheck passed. All 55 primary local files were unchanged.
+
+#144 was officially closed COMPLETED at `2026-10-04T20:20:43Z`;
+#147 at `2026-10-04T20:20:54Z`. Their
+[versioning acceptance comment](https://github.com/gameguild-gg/gameguild/issues/144#issuecomment-5984012777) and
+[OpenAPI acceptance comment](https://github.com/gameguild-gg/gameguild/issues/147#issuecomment-5984014026) preserve the complete original
+scope and distinguish native duplicate consolidation from implementation.
+All 328 original matrix requirement fields and scope IDs remain preserved.
+This completes these two canonical requirements, not the whole issue program.
