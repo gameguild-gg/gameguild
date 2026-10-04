@@ -110,7 +110,29 @@ Forced client regeneration, generated diff and TypeScript checking passed. Only
 the generated timestamp changed and was restored; no generated contract changes
 are included.
 
-#237 stays OPEN until exact published-head CI, generated-client consistency and
-merge are accepted and public issue evidence is recorded. #284/#41 retain their
+The initial OPEN/pending status above is historical; accepted CI, merge and
+public closeout are recorded below. #284/#41 retain their
 refresh, session, account-state and revocation scopes. This change does not close
 those requirements or certify a configured production deployment.
+
+
+## Final CI, merge and official closeout
+
+[PR #683](https://github.com/gameguild-gg/gameguild/pull/683) merged at
+`a3952444077f4f1482897d2570bd3b445786faf8` on `2026-10-04T22:17:05Z`. Exact head
+`a7764719e52490f2a93052f3c9c20940b068039c` passed **4,437 CI cases**: 1,048 API, 2,004 Authentication,
+1,371 SharedKernel and 14 complete-application HTTP OpenAPI cases.
+Fresh Release API/integration builds had zero warnings/errors. OpenAPI/client,
+Codacy, four CodeQL analyses and all applicable checks passed.
+[CI evidence](https://github.com/gameguild-gg/gameguild/actions/runs/37238091161/job/111541188332).
+
+The previously running local API suite also passed **1,048/1,048**, bringing
+distinct successful local cases to **6,104**. The 65 new service and 13 bearer
+cases are included in the complete Authentication/API suites and are not added
+twice. No failed or interrupted attempt is counted as acceptance.
+
+#237 was officially CLOSED/COMPLETED at `2026-10-04T22:18:33Z` with
+[complete requirement evidence](https://github.com/gameguild-gg/gameguild/issues/237#issuecomment-5985063129). Parent #284/#41 and duplicate
+#238 retain their native relations and independent scope. All 328 requirement
+fields and all 55 primary local files were preserved. The merged feature branch
+is removed and the existing isolated checkout reused.

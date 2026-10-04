@@ -1,5 +1,15 @@
 # GameGuild issue closeout inventory
 
+## 2026-10-04 JWT generation/validation closeout
+
+Snapshot **2026-10-04T22:19:32.145079+00:00** retains all **328** original IDs: **64 closed / 264 open**. These totals include implementations, duplicate consolidation and historical closures; they are not newly implemented feature counts.
+
+**#237 is officially CLOSED/COMPLETED** after [PR #683](https://github.com/gameguild-gg/gameguild/pull/683) merged into `develop` at `a3952444077f4f1482897d2570bd3b445786faf8`. [Complete acceptance](https://github.com/gameguild-gg/gameguild/issues/237#issuecomment-5985063129) and [requirement/compatibility mapping](../architecture/jwt-generation-validation-reconciliation.md) record consistent HS256 enforcement, corrected legitimate additional claims and rejection of protected identity/tenant/session/permission/MFA/actor claims. Seventy-eight new cases were added. **6,104 distinct local cases** and **4,437 exact-head CI cases** passed; Release builds were warning-clean and all applicable checks, Codacy, four CodeQL and OpenAPI/client consistency passed. Complete v1 and generated contracts are unchanged.
+
+#284/#41 retain refresh, session, account-state and revocation requirements. #238 remains a native duplicate. All 328 criteria fields and the 55 primary local files remain preserved; the merged branch is removed, two checkouts are reused and no stashes remain. The full program remains active.
+
+**Next #222 remains OPEN:** [the executed signup gap](https://github.com/gameguild-gg/gameguild/issues/222#issuecomment-5985095513) captures `User.Username = null` at the repository boundary, while the supplied username becomes `Name`. The real signup service/password hasher ran with synthetic inputs; persistence and external providers were intentionally not called. This is a pre-persistence defect reproduction, not signup/HTTP/OAuth acceptance. The matrix retains the original empty-description/title provenance and further verification requirements.
+
 ## 2026-10-04 authentication facade closeout
 
 Snapshot **2026-10-04T21:01:12.847150+00:00** retains all **328** original IDs: **63 closed / 265 open**. Counts include implementation acceptance, consolidation and historical closures; they are not a count of newly implemented features.
