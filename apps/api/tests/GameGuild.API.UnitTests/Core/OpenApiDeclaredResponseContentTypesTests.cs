@@ -75,13 +75,22 @@ public sealed class OpenApiDeclaredResponseContentTypesTests
     private sealed class ResponseMetadataActions
     {
         [ProducesResponseType(typeof(FileContentResult), 200, "text/csv")]
-        public void Csv() { }
+        public void Csv()
+        {
+            // Only the response metadata is inspected; this action is never executed.
+        }
 
         [ProducesResponseType(typeof(FileContentResult), 200)]
-        public void Default() { }
+        public void Default()
+        {
+            // Only the response metadata is inspected; this action is never executed.
+        }
 
         [ProducesResponseType(typeof(FileContentResult), 200, "text/csv")]
         [ProducesResponseType(typeof(FileContentResult), 200, "application/zip")]
-        public void Multiple() { }
+        public void Multiple()
+        {
+            // Only the response metadata is inspected; this action is never executed.
+        }
     }
 }

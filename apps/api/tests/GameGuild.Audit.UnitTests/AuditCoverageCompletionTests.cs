@@ -1100,13 +1100,29 @@ public class AuditControllerCoverageCompletionTests
         public override bool CanWrite => true;
         public override long Length => BytesWritten;
         public override long Position { get => BytesWritten; set => throw new NotSupportedException(); }
-        public override void Flush() { }
-        public override Task FlushAsync(CancellationToken cancellationToken) => Task.CompletedTask;
-        public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
-        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
-        public override void SetLength(long value) => throw new NotSupportedException();
+        public override void Flush()
+        {
+            // Writes are counted immediately; the stream has no buffered data to flush.
+        }
+        public override Task FlushAsync(CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.CompletedTask;
+        }
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            ArgumentNullException.ThrowIfNull(buffer);
+            _ = buffer.AsSpan(offset, count);
+            throw new NotSupportedException("The recording stream only accepts writes.");
+        }
+        public override long Seek(long offset, SeekOrigin origin) =>
+            throw new NotSupportedException($"Seeking to {offset} relative to {origin} is not supported.");
+        public override void SetLength(long value) =>
+            throw new NotSupportedException($"Setting the recording stream length to {value} is not supported.");
         public override void Write(byte[] buffer, int offset, int count)
         {
+            ArgumentNullException.ThrowIfNull(buffer);
+            _ = buffer.AsSpan(offset, count);
             BytesWritten += count;
             onWrite?.Invoke();
         }
