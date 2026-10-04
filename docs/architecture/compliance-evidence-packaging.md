@@ -20,7 +20,12 @@ The current FedRAMP increment adds six explicit Rev5 class/path profiles and
 offline validation against the official 2026 JSON schemas. Its scope and remaining
 FedRAMP coverage are documented below; it does not support 20x/KSI profiles yet.
 
-Remaining work includes SOC2 Type I/II, HIPAA, PCI DSS and additional FedRAMP coverage with
+The SOC2 increment in [PR #677](https://github.com/gameguild-gg/gameguild/pull/677)
+adds 32 Type I/II profiles with explicit category scopes,
+captured management/design/operating-test evidence and signed reviewer exports.
+Its supported scope and assessment limitations are documented below.
+
+Remaining work includes HIPAA, PCI DSS and additional FedRAMP coverage with
 their actual scope and source versions; combined full-framework acceptance,
 including a licensed-standard review of the ISO clause groups; reviewer formats
 for the remaining frameworks; and controlled delivery to named auditors. Enum
@@ -28,19 +33,85 @@ values alone do not establish support for those frameworks.
 
 | Original acceptance criterion | Current evidence | Remaining work |
 | --- | --- | --- |
-| SOC2 Type I/II templates | No catalog entry yet | Separate point-in-time and period templates; full reviewed criteria mappings |
+| SOC2 Type I/II templates | 32 explicit Security-based category scopes; point-in-time design and period operating evidence, criterion/control/sample links and signed native exports | Current licensed guidance and actual organisation-scope review; final auditor and combined functional acceptance |
 | ISO 27001 mapping and collection | Versioned 2022+Amd1:2024 profile: 7 management clause groups and 93 Annex A identifiers, reviewed SoA decisions/custom controls, actual tenant-filtered collection | Review clause groups against the licensed standard and accept the complete organisation scope |
 | GDPR documentation and DPIA | 43 organisation-facing article mappings; processing scope/roles/records, screened activities, actual DPIA contents, prior-consultation and timeline validation | Final organisational applicability and functional acceptance with the other framework/delivery requirements |
 | HIPAA, PCI DSS, FedRAMP packages | Six tailored 2026 Rev5 FedRAMP profiles, pinned official schemas and native reviewer payloads | HIPAA/PCI templates; FedRAMP 20x/KSI and full rule-specific acceptance |
 | Automatic collection by control | Repeatable-read database snapshot and collection inventory | Verify the maps for every additional framework |
-| Quality and regulatory alignment | Hash/revision/review/version checks; structured ISO SoA and GDPR scope/DPIA checks | Completeness rules for the remaining frameworks and final human regulatory assessment |
+| Quality and regulatory alignment | Hash/revision/review/version checks; structured ISO SoA, GDPR scope/DPIA, FedRAMP official-schema and SOC2 control/test checks | Completeness rules for the remaining frameworks and final human regulatory assessment |
 | Gaps and deficiencies | Missing sources/documents, truncation and control deficiencies in signed reports | Full-framework acceptance after catalogs are complete |
 | Timeline coverage | UTC intervals, source timestamps/counts/dates and document validity checked | Framework-specific point/period acceptance |
-| Standardized review formats | Signed common ZIP; ISO SoA/management CSVs; GDPR DPIA/processing-record CSVs with source revision references | Reviewer artifacts for the remaining frameworks |
-| Digital signatures and tamper evidence | Trusted-key ECDSA seal and every payload's SHA-256; verified PostgreSQL/HTTP download | Final combined acceptance and merge |
+| Standardized review formats | Signed common ZIP; ISO/GDPR indexes; FedRAMP native payloads and decisions; SOC2 descriptions/assertions/matrices and criterion/test indexes with captured source revisions | Reviewer artifacts for the remaining frameworks |
+| Digital signatures and tamper evidence | Trusted-key ECDSA seal and every payload's SHA-256; verified PostgreSQL/HTTP download | Final combined acceptance |
 
 Automated auditor delivery is also part of the original proposed solution and is
 still pending. Administrator downloads do not satisfy that delivery workflow.
+
+## SOC2 Type I/II and category scopes
+
+Profiles use the ID soc2-tsc2017-type{1|2}-security-evidence-v1, with optional
+availability, processing-integrity, confidentiality and privacy slugs before
+evidence-v1 in that order. These profiles require Security and offer all 16
+combinations of the four additional categories for each report type. This is a
+supported product scope; AICPA engagement scopes can select other combinations.
+Every profile includes 33 common criteria CC1.1–CC9.2. Availability adds 3,
+Processing Integrity 5, Confidentiality 2 and Privacy 18, up to 61 identifiers.
+
+Identifier provenance is the public [AICPA 2017 Trust Services Criteria, March
+2020 edition](https://assets.ctfassets.net/rb9cdnjh59cm/72xv4p67HVXKp6CjWmjkPk/1cdbfa19f6307e2720396b66a6194dc9/trust-services-criteria-updated-copyright.pdf),
+SHA-256 b3eeb82c7e493bbd694d16b3f4ebc381183908ead2321f587f3531f7c4abe15b.
+Current [2022 points of focus](https://www.aicpa-cima.com/resources/download/2017-trust-services-criteria-with-revised-points-of-focus-2022)
+and [description implementation guidance](https://www.aicpa-cima.com/resources/download/get-description-criteria-for-your-organizations-soc-2-r-report)
+are separate official publications. Their licensed text is not bundled or
+reproduced. Version strings identify the intended guidance review; recorded human
+judgment is still required to interpret that guidance.
+
+Native evidence contains frameworkVersion, assessmentStatus of satisfactory,
+an accountable owner and the following actual JSON contents:
+
+- **soc2-system-description**: integer reportType, exact unique categories,
+  matching UTC period dates, system name/boundary, services, commitments,
+  requirements, infrastructure/software/people/procedures/data, incidents,
+  changes, user-entity responsibilities, subservice organisations and guidance
+  review. Responsibility and subservice arrays may be empty when none apply.
+- **soc2-management-assertion**: matching type and dates, actual boolean
+  affirmations of fair presentation and suitable design, and for Type II operating
+  effectiveness; signatory and UTC signing time at/after the assessment endpoint
+  and no later than capture.
+- **soc2-control-matrix**: exactly the selected criteria, each with physical
+  control IDs, rationale, points-of-focus review and satisfactory assessment.
+  Unique bounded control records capture owner, description, design basis,
+  suitable conclusion and captured approved supporting document IDs. Every
+  physical control must map to an in-scope criterion.
+- **soc2-supporting-evidence**: actual approved JSON/PDF/text contents, nonempty
+  evidenceDescription, validity, mapped criteria and hash/review metadata.
+  Multiple supporting documents are permitted, up to 90 captured documents total.
+  An uncaptured external URI cannot stand in for the actual evidence.
+
+Type I requires identical start/end instants and reviewed design evidence. Type II
+requires a nonzero period and automatic operations/authentication/authorization/
+integrity/incident evidence according to the criteria, including the existing
+conservative daily timeline validation. Each physical control additionally
+records test procedures, integer population/sample/deviation counts, effective
+conclusion, full test-period coverage and a bounded unique sample register.
+Each sample has a passing result, an in-period UTC observation and an approved
+captured supporting document mapped to its criterion. Declared deviations remain
+gaps under this readiness policy. Auditor judgments about deviations and a minimum
+engagement duration are not invented by this adapter.
+
+Inclusive subservice descriptions reference captured physical controls.
+Carve-out descriptions declare complementary controls and captured approved
+monitoring evidence mapped to CC9.2. Generic API exclusions cannot omit selected
+criteria; category scope is chosen by the template.
+
+The signed ZIP adds nine reviewer files: JSON and text for system description,
+management assertion and control matrix; criterion and control-test CSV indexes;
+and profile/source metadata. CSV cells neutralize spreadsheet formulas. Source
+documents and revision/review/hash metadata remain captured in the common entries.
+Missing or malformed evidence yields explicit diagnostic exports and unready
+packages. These are preparation artifacts. Management and independent auditors
+must judge evidence relevance, guidance interpretation, sampling adequacy and
+control effectiveness; the generated package does not issue an audit opinion.
 
 ## FedRAMP Consolidated Rules for 2026 / Rev5
 
@@ -408,6 +479,31 @@ whole-database parity. These findings are outside this feature's migration; its
 table/column inventory check is scoped explicitly to the two packaging tables.
 
 ## Verification
+
+SOC2 increment verification on 2026-10-04: full solution build with warnings as
+errors passed with zero warnings/errors. Final selections passed 408 audit,
+1,852 authentication, 1,667 authorization, 143 API architecture/security/OpenAPI
+and 21 PostgreSQL/HTTP/OpenAPI cases: **4,091 selected tests**, no final failures
+or skips. The 80 new audit cases include every one of the 32 category/type
+profiles, typed native declarations, missing design/sample evidence, deviations,
+period coverage, subservices, approved document links, bounded capture,
+cancellation and signed formula-safe reviewer exports. Four new PostgreSQL/HTTP
+cases cover Type I/II with Security-only and all categories, actual document
+uploads/reviews, collection, signed native downloads, verification, tenant denial
+and missing captured supporting evidence. Fixtures represent synthetic
+assessments, not an actual audit or compliance determination.
+
+The first API regression attempt failed with an OutOfMemoryException and test-host
+stack overflow after 105 passes and one reported failure; Git also reported
+allocation failure at the same time. After shutting down idle .NET build servers,
+the complete unchanged 143-case selection passed. Both attempts are retained
+under artifacts/test-results/issue-178/soc2. This does not establish that the
+environment's memory-pressure cause is permanently fixed.
+
+The PostgreSQL run used an owned disposable PostgreSQL 17 instance with an
+explicit local endpoint and an isolated database created/removed by the test
+fixture. No DTO, route, database schema or generated API-client contract changed.
+The existing signed legacy archive and ISO/GDPR/FedRAMP regressions also passed.
 
 FedRAMP increment verification on 2026-10-04: warning-clean full solution;
 328 audit, 1,852 authentication, 1,667 authorization, 143 API
