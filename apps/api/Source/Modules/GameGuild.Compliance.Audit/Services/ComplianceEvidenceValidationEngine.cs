@@ -46,7 +46,7 @@ public sealed class ComplianceEvidenceValidationEngine
             }
             documentGaps.Add(document.Id, gaps);
         }
-        var nativeGaps = ComplianceNativeEvidence.InspectScope(template, request, documents, nativeDocuments, cancellationToken);
+        var nativeGaps = ComplianceNativeEvidence.InspectScope(template, request, documents, nativeDocuments, capturedAtUtc, cancellationToken);
         var results = new List<ComplianceControlEvidenceResult>();
         var allGaps = new List<ComplianceEvidenceGap>();
         foreach (var control in template.Controls)
@@ -347,6 +347,8 @@ public sealed class ComplianceEvidenceValidationEngine
             request.DocumentIds.Distinct().Count() == request.DocumentIds.Count && documents.Select(item => item.Id).Distinct().Count() == documents.Count &&
             request.DocumentIds.ToHashSet().SetEquals(documents.Select(item => item.Id)),
             "Documents", "Capture exactly the requested, unique document revisions (at most 100).");
+        Require(FedRampComplianceCatalog.Find(template.Id) is null || documents.Count <= 60,
+            "Documents", "FedRAMP profiles support at most 60 captured documents, including native artifact exports, within the bounded ZIP entry budget.");
         Require(documents.All(item => item.Id != Guid.Empty && item.UploadedByUserId != Guid.Empty && item.Revision >= 1 &&
             !string.IsNullOrWhiteSpace(item.Name) && item.Name.Length <= 200 && IsHttpsSource(item.SourceUri) &&
             item.Content.Length > 0 && item.Content.Length <= MaximumDocumentBytes && item.ContentSha256.Length == 64 &&
@@ -359,7 +361,7 @@ public sealed class ComplianceEvidenceValidationEngine
             item.MediaType is "application/json" or "application/pdf" or "text/plain" &&
             (item.Type == "applicability" || template.Documents.Any(requirement => requirement.Type == item.Type))),
             "Documents", "Document identity, provenance, content, UTC coverage and control mapping are invalid.");
-        Require(!ComplianceNativeEvidence.IsNative(template) || documents.Where(item => item.Type is not ("control-assessment" or "applicability" or "gdpr-dpia" or "gdpr-prior-consultation"))
+        Require(!ComplianceNativeEvidence.IsNative(template) || documents.Where(item => item.Type is not ("control-assessment" or "applicability" or "gdpr-dpia" or "gdpr-prior-consultation" or "fedramp-artifact" or "fedramp-supporting-evidence"))
             .GroupBy(item => item.Type, StringComparer.Ordinal).All(group => group.Count() == 1),
             "Documents", "Capture one unambiguous native scope, SoA or register revision per document type; individual DPIAs and consultations may be separate documents.");
         Require(request.Exclusions.Count <= template.Controls.Count && request.Exclusions.All(item => controls.Contains(item.ControlId) &&
@@ -370,6 +372,8 @@ public sealed class ComplianceEvidenceValidationEngine
             "Exclusions", "ISO management requirements in clauses 4 through 10 cannot be excluded.");
         Require(template.Id != ComplianceFrameworkCatalog.GdprId || request.Exclusions.All(item => item.ControlId is not ("GDPR.Art.3" or "GDPR.Art.35" or "GDPR.Art.36")),
             "Exclusions", "GDPR scope and conditional DPIA requirements must be resolved through reviewed scope and screening evidence.");
+        Require(FedRampComplianceCatalog.Find(template.Id) is null || request.Exclusions.Count == 0,
+            "Exclusions", "FedRAMP applicability is resolved in reviewed SDR decisions; generic exclusions cannot bypass baseline evidence.");
         Require(datasets.Count <= 6 && datasets.Select(item => item.Kind).Distinct().Count() == datasets.Count && datasets.All(item =>
             Enum.IsDefined(item.Kind) && !string.IsNullOrWhiteSpace(item.Source) && item.Source.Length <= 200 &&
             item.Content.Length > 0 && item.Content.Length <= MaximumDatasetBytes && item.RecordCount is >= 0 and <= 50000 &&
