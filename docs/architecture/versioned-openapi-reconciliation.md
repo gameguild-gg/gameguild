@@ -31,9 +31,21 @@ match controller declarations.
 
 The default `'v'VVV` preserves numeric names such as `v1`, `v1.1`, `v2`,
 `v1.2.3` and `v1.2.4-beta.1`. For concurrent date-based versions, use a format
-including the date, such as `'v'GGGGVVV`, producing `v2026-10-04`. Formats that
+including the date, such as `'v'GVVV`, producing `v2026-10-04`. Formats that
 collapse different discovered versions into one name fail with a configuration
 error instead of publishing ambiguous documents.
+
+Semantic formatting uses the native tokenizer for quoted literals, repeated
+tokens and date/component formatting. `VVV`, `VVVV`, `F`, `FF` and the default
+include the complete semantic version; `V`, `VV`, minor and padded tokens retain
+their component meanings. `S` exposes the real prerelease, never the internal
+patch identity. Numeric and hyphenated SemVer prerelease labels are accepted.
+For example, `'Version-'GVVV` creates `Version-1.2.3` for a semantic version and
+`Version-2026-10-04` for a date version. Group-date tokens emit nothing for a
+numeric version. Literal-only or component formats that collapse distinct
+discovered semantic versions are rejected by the document catalog. HTTP tests
+use independently written expected names rather than computing them with the
+production formatter.
 
 Custom controller groups also receive scoped aliases:
 
@@ -117,6 +129,19 @@ PR #678 capture: 1,296 paths and 1,654 schemas, canonical JSON SHA-256
 The generator detected an unchanged specification; `generate:diff` and client
 TypeScript checks passed. No generated-source update is needed.
 
-The expanded suite, complete application HTTP verification, accepted exact-head CI and merge are still required
-before #144 or #147 can close. This in-progress document does not claim
-completion.
+PR [#679](https://github.com/gameguild-gg/gameguild/pull/679) merged at
+`d4d3ce14f3abd0f3423f82f34fb6b65f4bc70d67`. The complete solution built with
+zero warnings/errors; 1,014 API unit tests and 14 complete-application OpenAPI
+HTTP tests passed locally. Exact-head CI passed those 1,014 API cases and 1,340
+SharedKernel cases, plus OpenAPI consistency, all required gates, Codacy and all
+CodeQL analyses. All 55 primary-checkout local files retained their contents and
+statuses, and the merged remote feature branch was removed.
+
+Subsequent review reproduced a separate pre-existing formatter gap: quoted
+`Version-` was treated as a version token, group-date tokens leaked into numeric
+document names, and literal/component-only formats were ignored. Eighteen of
+26 independently specified formatting regressions failed before the correction.
+The follow-up uses the native tokenizer and adds semantic collision, legal
+prerelease and independent HTTP/UI name checks. The full original canonical
+scopes remain open pending verification and merge of this follow-up; the
+accepted earlier PR is not proof of completion by itself.

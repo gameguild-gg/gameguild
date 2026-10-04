@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
 using GameGuild.API.Core.OpenApi;
+using GameGuild.Configuration.PresentationLayer.ApiVersioning;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 
@@ -111,6 +112,36 @@ public sealed class OpenApiVersionDocumentCatalogTests
         Assert.True(selector.Includes("v2026-10-04", Description("Daily", second)));
         Assert.False(selector.Includes("v2026-10-03", Description("Daily", second)));
         Assert.Throws<ArgumentException>(() => new VersionedOpenApiDocumentCatalog(descriptions));
+    }
+
+    [Theory]
+    [InlineData("'v'V")]
+    [InlineData("'v'VV")]
+    [InlineData("'all'")]
+    public void Formats_collapsing_semantic_patch_versions_are_rejected(string format)
+    {
+        var error = Assert.Throws<ArgumentException>(() => new VersionedOpenApiDocumentCatalog(
+        [
+            new(new SemanticApiVersion(1, 2, 3), "Administration", false),
+            new(new SemanticApiVersion(1, 2, 4), "Administration", false)
+        ], format));
+        Assert.Equal("groupNameFormat", error.ParamName);
+        Assert.Contains("same document name", error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Quoted_version_literals_and_date_tokens_have_independently_expected_document_names()
+    {
+        var catalog = new VersionedOpenApiDocumentCatalog(
+        [
+            new(new SemanticApiVersion(1, 2, 3), "Administration", false),
+            new(new ApiVersion(new DateOnly(2026, 10, 4)), "Daily", false)
+        ], "'Version-'GVVV");
+
+        Assert.True(catalog.TryGetDescription("Version-1.2.3", out var semantic));
+        Assert.Equal(new SemanticApiVersion(1, 2, 3), semantic!.ApiVersion);
+        Assert.True(catalog.TryGetDescription("Version-2026-10-04", out var date));
+        Assert.Equal(new ApiVersion(new DateOnly(2026, 10, 4)), date!.ApiVersion);
     }
 
     private static ApiDescription Description(string group, ApiVersion version)
