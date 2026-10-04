@@ -49,7 +49,9 @@ public sealed class OpenApiVersionDocumentsHttpTests(ITestOutputHelper output)
             ["1.0"] = ("first", "1"),
             ["1.1"] = ("minor", "1.1"),
             ["2.0"] = ("second", "2"),
+            ["1.2.0-1"] = ("numeric", "1.2.0-1"),
             ["1.2.3"] = ("patch", "1.2.3"),
+            ["1.2.3-rc-1"] = ("hyphen", "1.2.3-rc-1"),
             ["1.2.4-beta.1"] = ("beta", "1.2.4-beta.1"),
             ["2026-10-04"] = ("date", "")
         };
@@ -237,7 +239,9 @@ public sealed record OpenApiInheritedVersionSampleDto(string Name, string Catego
 [ApiVersion("1.1")]
 [ApiVersion("2.0")]
 [ApiVersion("2026-10-04")]
+[SemanticApiVersion("1.2.0-1")]
 [SemanticApiVersion("1.2.3")]
+[SemanticApiVersion("1.2.3-rc-1")]
 [SemanticApiVersion("1.2.4-beta.1")]
 [Route("api/v{version:apiVersion}/version-doc-sample")]
 public sealed class OpenApiVersionSampleController : ControllerBase
@@ -251,8 +255,14 @@ public sealed class OpenApiVersionSampleController : ControllerBase
     [HttpGet, MapToApiVersion("2.0")]
     public OpenApiVersionSampleDto Second() => new("second");
 
+    [HttpGet, MapToSemanticApiVersion("1.2.0-1")]
+    public OpenApiVersionSampleDto NumericPrerelease() => new("numeric");
+
     [HttpGet, MapToSemanticApiVersion("1.2.3")]
     public OpenApiVersionSampleDto Patch() => new("patch");
+
+    [HttpGet, MapToSemanticApiVersion("1.2.3-rc-1")]
+    public OpenApiVersionSampleDto HyphenatedPrerelease() => new("hyphen");
 
     [HttpGet, MapToSemanticApiVersion("1.2.4-beta.1")]
     public OpenApiVersionSampleDto Beta() => new("beta");
