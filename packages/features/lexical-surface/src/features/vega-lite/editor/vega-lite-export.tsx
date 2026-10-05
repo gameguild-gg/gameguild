@@ -14,7 +14,7 @@ import { resolveVegaAttachments } from "../data/vega-asset-loader";
 import type { VegaDataAttachment } from "../vega-lite-data";
 
 // Function to create dark version of any theme
-function createDarkTheme(baseTheme: any) {
+function createDarkTheme(baseTheme: unknown) {
   return {
     ...baseTheme,
     background: "#1a1a1a",

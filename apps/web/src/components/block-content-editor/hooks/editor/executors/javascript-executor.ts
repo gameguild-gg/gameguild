@@ -50,7 +50,7 @@ class JavaScriptExecutor implements LanguageExecutor {
           consoleOutput.push(output)
           addOutput(output)
         },
-        error: (...args: any) => {
+        error: (...args: unknown) => {
           const output = `Error: ${args.map((arg: any) => String(arg)).join(" ")}`
           consoleOutput.push(output)
           addOutput(output)

@@ -229,7 +229,7 @@ export function registerPathCompletionProvider(monaco: Monaco) {
   // Provider combinado para TypeScript e JavaScript
   const createProvider = () => ({
     triggerCharacters: ['"', "'", '/', '.'],
-    provideCompletionItems: (model: any, position: any) => {
+    provideCompletionItems: (model: unknown, position: any) => {
       const lineContent = model.getLineContent(position.lineNumber)
       const textBeforeCursor = lineContent.substring(0, position.column - 1)
       
