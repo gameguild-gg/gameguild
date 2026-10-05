@@ -2,6 +2,40 @@
 
 ## Ownership/session acceptance merged and all-session revocation continuation
 
+The #694 review reproduced a further boundary defect at head3ddfa552e:
+logout200, actual credential re-login200 and stored/signed version2 still
+yield401 for a signed iat at the exact stored logout second. Only iat is
+re-signed to that exact second to make the boundary deterministic; identity,
+credential flow, stored version/session and JWT verification remain real.
+The precise source/observations/TRX are retained, excluding route/configuration
+preparation failures. [Public counterexample](https://github.com/gameguild-gg/gameguild/issues/263#issuecomment-5994788645).
+
+The correction records the operation's advanced minimum version with its
+cutoff, and passes the signed version to the configured revocation store.
+Current-version tokens avoid the fractional-second mismatch. Earlier versions
+still fail the persisted version check; legacy tokens and ordinary time-only
+cutoffs retain timestamp rejection. Existing cache payloads without the new
+optional field remain compatible. Required typed capability is registered as
+an alias of the same configured store; custom providers must implement it.
+Fresh reviewed-source acceptance passes **6,552 distinct .NET/SDK cases**, with
+**55 new definitions**: Authentication2,235, Authorization1,667, SharedKernel1,377,
+actual PostgreSQL10, API architecture/security/registration129, full-host OpenAPI15
+and SDK1,119. The actual credential re-login's bearer and the bearer pinned to the
+exact logout second receive200; the previous bearer receives401. Both configured
+store implementations cover version-bound and ordinary cutoffs, legacy payloads,
+isolation, invalid minimum versions and cancelled writes. The HTTP cache fixture
+uses the actual distributed service with distributed-memory storage; this does
+not establish Redis or cross-node acceptance. Full solution builds have zero
+warnings/errors; entire OpenAPI remains equal (1,297paths/1,656schemas), SDK
+typecheck/consistency pass and EF reports no pending model changes. Matching-head
+CI is still required before merge.
+
+The first reviewed authentication run retained one failure out of2,235: an old
+cleanup test cast a private cache dictionary to its previous Guid/DateTime shape.
+That source/TRX is preserved and excluded. The test now uses a controlled clock
+and public revoke/check/cleanup operations, keeping and strengthening expiry
+assertions. Production was unchanged by this test repair; the fresh run passes.
+
 [#693](https://github.com/gameguild-gg/gameguild/pull/693) merged at
 `280ea75a68c739b807c08a6ad724d6cf29f059bf`, accepted head
 `c8d5bd95c064f85de5846bfe4892e446fe2cf916`. Actual current-head CI supplies
@@ -30,14 +64,14 @@ are preserved. The database writes use the existing command transaction and
 optimistic concurrency; failures and cancellation propagate. The cache is not
 in that database transaction: a successfully written cutoff is conservative
 denial if a later commit fails, and successful logout must never be reported in
-that case. Local acceptance now passes **6,514 distinct .NET/SDK cases**, with
+that case. The initial publication stage passed **6,514 distinct .NET/SDK cases**, with
 **29 new definitions**: Authentication2,210, Authorization1,667, SharedKernel1,377,
 actual PostgreSQL9 (eight HTTP cases plus real command-transaction cancellation),
 API architecture/security/registration129, CommonOpenAPI HTTP3 and SDK1,119.
 Complete captured OpenAPI remains identical (1,297 paths / 1,656 schemas), SDK
 typecheck/consistency and warning/error-clean full solution builds pass, with no
-pending model changes. Matching-head CI and whole integration/OpenAPI acceptance
-are still required before merging this increment.
+pending model changes. Those initial-head receipts are historical; the reviewed
+acceptance above supersedes them for this increment.
 
 Initial test-only corrections are preserved and excluded from accepted totals:
 the generic operation event uses the first mutated aggregate, its jsonb payload

@@ -12,7 +12,7 @@ public sealed class RevokeAllUserTokensHandler(
     IUserRepository userRepository,
     IRefreshTokenRepository refreshTokenRepository,
     ISessionManagementService sessionService,
-    ITokenRevocationService tokenRevocationService) : ICommandHandler<RevokeAllUserTokensCommand, int>
+    IVersionedUserTokenRevocationService tokenRevocationService) : ICommandHandler<RevokeAllUserTokensCommand, int>
 {
     public async Task<int> Handle(RevokeAllUserTokensCommand command, CancellationToken cancellationToken)
     {
@@ -41,7 +41,7 @@ public sealed class RevokeAllUserTokensHandler(
 
         // Cover legacy access tokens without version/session claims as well. A store failure must not return success.
         await tokenRevocationService.RevokeAllUserTokensAsync(
-            userId, "User initiated logout everywhere", cancellationToken).ConfigureAwait(false);
+            userId, user.TokenVersion, "User initiated logout everywhere", cancellationToken).ConfigureAwait(false);
         return terminatedCount;
     }
 }
