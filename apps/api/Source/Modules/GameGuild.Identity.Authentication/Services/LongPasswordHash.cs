@@ -24,13 +24,13 @@ internal static class LongPasswordHash
         finally
         {
             CryptographicOperations.ZeroMemory(passwordBytes);
-            if (derived is not null) CryptographicOperations.ZeroMemory(derived);
+            if (derived is not null) { CryptographicOperations.ZeroMemory(derived); }
         }
     }
 
     internal static bool Verify(string storedHash, string password)
     {
-        if (!TryParse(storedHash, out var salt, out var expected)) return false;
+        if (!TryParse(storedHash, out var salt, out var expected)) { return false; }
         var passwordBytes = Encoding.UTF8.GetBytes(password);
         byte[]? actual = null;
         try
@@ -41,7 +41,7 @@ internal static class LongPasswordHash
         finally
         {
             CryptographicOperations.ZeroMemory(passwordBytes);
-            if (actual is not null) CryptographicOperations.ZeroMemory(actual);
+            if (actual is not null) { CryptographicOperations.ZeroMemory(actual); }
         }
     }
 
@@ -52,7 +52,7 @@ internal static class LongPasswordHash
         salt = [];
         hash = [];
         var parts = storedHash.Split('$');
-        if (parts.Length != 4 || parts[0] != "pbkdf2-sha256" || parts[1] != "600000") return false;
+        if (parts.Length != 4 || parts[0] != "pbkdf2-sha256" || parts[1] != "600000") { return false; }
         try
         {
             salt = Convert.FromBase64String(parts[2]);

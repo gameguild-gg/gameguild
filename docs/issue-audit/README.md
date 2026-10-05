@@ -31,7 +31,9 @@ matches merged #686. Legacy BCrypt suffixes
 cannot be recovered; long legacy login requires reset and history conservatively
 rejects matching prefixes. Verification supports BCrypt costs 04–16; higher
 imported costs require recovery or a designed migration. Matching-head PR
-gates/merge and official acceptance are next. [Requirement and compatibility map](../architecture/password-hashing-reconciliation.md).
+gates/merge and official acceptance are next in [PR #687](https://github.com/gameguild-gg/gameguild/pull/687).
+Its initial 22 Codacy items were addressed in code and all 5,294 .NET cases
+passed again; no scanner rule or gate was suppressed. [Requirement and compatibility map](../architecture/password-hashing-reconciliation.md).
 
 ## 2026-10-04 authentication DTO official closeout
 
