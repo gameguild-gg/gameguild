@@ -2,6 +2,8 @@ using FluentAssertions;
 using GameGuild.API.Database;
 using GameGuild.CQRS;
 using GameGuild.Identity.Authentication;
+using GameGuild.Identity.Context.Actors;
+using GameGuild.Identity.Users;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -64,6 +66,23 @@ public sealed class AuthFacadeApiRegistrationTests(AuthFacadeApiFactory factory)
         consumer.GetType().Should().Be(implementation);
         implementation.GetConstructors().Single().GetParameters()
             .Should().Contain(parameter => parameter.ParameterType == typeof(IAuthService));
+    }
+
+    [Fact]
+    public void CompleteApi_ResolvesRequiredSelfRevocationCollaborators()
+    {
+        using var scope = factory.Services.CreateScope();
+        var handler = scope.ServiceProvider.GetRequiredService<IRequestHandler<RevokeAllUserTokensCommand, int>>();
+        handler.Should().BeOfType<RevokeAllUserTokensHandler>();
+        var parameters = typeof(RevokeAllUserTokensHandler).GetConstructors().Single().GetParameters();
+        parameters.Should().OnlyContain(parameter => !parameter.IsOptional);
+        parameters.Select(parameter => parameter.ParameterType).Should().BeEquivalentTo(new[]
+        {
+            typeof(IActorContextAccessor), typeof(IUserRepository), typeof(IRefreshTokenRepository),
+            typeof(ISessionManagementService), typeof(ITokenRevocationService)
+        });
+        foreach (var parameter in parameters)
+            scope.ServiceProvider.GetRequiredService(parameter.ParameterType).Should().NotBeNull();
     }
 }
 

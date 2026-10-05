@@ -4,6 +4,7 @@
 using FluentAssertions;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Context.Actors;
+using GameGuild.Identity.Users;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -23,7 +24,17 @@ public class SessionControllerCovTests
 
     public SessionControllerCovTests()
     {
-        _controller = new SessionController(_sessionService.Object, new CommandHandlerSender(_sessionService.Object));
+        var actor = new Mock<IActorContextAccessor>();
+        actor.SetupGet(value => value.ActorContext).Returns(ActorContext.Anonymous with
+        {
+            ActorKind = ActorKind.User, IsAuthenticated = true, SubjectId = _userId.ToString()
+        });
+        var users = new Mock<IUserRepository>();
+        users.Setup(value => value.GetByIdAsync(_userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = _userId });
+        _controller = new SessionController(_sessionService.Object, new CommandHandlerSender(
+            _sessionService.Object, actor.Object, users.Object,
+            Mock.Of<IRefreshTokenRepository>(), Mock.Of<ITokenRevocationService>()));
         SetUser(_userId);
     }
 
