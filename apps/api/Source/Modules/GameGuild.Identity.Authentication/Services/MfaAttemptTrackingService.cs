@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using GameGuild.Configuration.ApplicationLayer;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Identity.Authentication;
 
@@ -55,12 +56,8 @@ public sealed class MfaAttemptTrackingService(
             }
 
             // Count remaining backup codes
-            var backupCodesRemaining = 0;
-            if (!string.IsNullOrEmpty(mfaConfig.BackupCodes))
-            {
-                var codes = mfaConfig.BackupCodes.Split(',', StringSplitOptions.RemoveEmptyEntries);
-                backupCodesRemaining = codes.Length;
-            }
+            var codeSet = BackupCodeSet.Read(mfaConfig.BackupCodes);
+            var backupCodesRemaining = codeSet.Hashes.Count;
 
             // Build list of enabled methods
             var enabledMethods = new List<string>();
@@ -78,7 +75,8 @@ public sealed class MfaAttemptTrackingService(
                 IsEnabled = mfaConfig.IsEnabled,
                 EnabledMethods = enabledMethods.ToArray(),
                 EnabledAt = mfaConfig.EnabledAt,
-                BackupCodesRemaining = backupCodesRemaining
+                BackupCodesRemaining = backupCodesRemaining,
+                BackupCodesIssued = codeSet.IssuedCount
             };
         }
         catch (Exception ex)
@@ -301,15 +299,33 @@ public sealed class MfaAttemptTrackingService(
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(configuration);
-        configuration.FailedAttempts++;
-        if (configuration.FailedAttempts >= _mfaOptions.MaxFailedAttempts)
-        {
-            configuration.LockedOutUntil = SystemClock.UtcNow.AddMinutes(_mfaOptions.LockoutDurationMinutes);
-        }
-
         try
         {
-            await mfaConfigRepository.UpdateAsync(configuration, cancellationToken).ConfigureAwait(false);
+            for (var retry = 0; retry < 16; retry++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (IsLockedOut(configuration)) { break; }
+                if (configuration.LockedOutUntil <= SystemClock.UtcNow)
+                {
+                    configuration.FailedAttempts = 0;
+                    configuration.LockedOutUntil = null;
+                }
+                configuration.FailedAttempts++;
+                if (configuration.FailedAttempts >= _mfaOptions.MaxFailedAttempts)
+                {
+                    configuration.LockedOutUntil = SystemClock.UtcNow.AddMinutes(_mfaOptions.LockoutDurationMinutes);
+                }
+
+                try
+                {
+                    await mfaConfigRepository.UpdateAsync(configuration, cancellationToken).ConfigureAwait(false);
+                    break;
+                }
+                catch (DbUpdateConcurrencyException) when (retry < 15)
+                {
+                    // The repository reloaded the latest row, including any consumed backup codes.
+                }
+            }
         }
         catch
         {
