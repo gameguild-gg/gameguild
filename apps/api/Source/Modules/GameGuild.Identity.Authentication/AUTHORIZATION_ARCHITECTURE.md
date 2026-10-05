@@ -1821,6 +1821,17 @@ propagates through the verifier and orchestrator.
 New enrollments have a fixed persisted expiration which failed attempts cannot
 extend; legacy pending rows use the prior timestamp fallback.
 
+### Password History Acceptance
+
+Current-password and five previous-hash checks are retained in both change and
+reset. Expected-current-hash updates and EF concurrency tokens protect one
+committed history/version transition across competing requests. Mixed-format
+history remains bounded and excluded from serialized users and responses.
+Fresh migrated PostgreSQL/HTTP definitions and their controlled race timing are
+recorded in the [#251 acceptance map](../../../../../docs/architecture/password-history-reconciliation.md).
+Fixture-principal/token-service execution does not certify external email
+delivery or real bearer identity proofing; those acceptance boundaries stay open.
+
 ### Password Hash Boundaries
 
 Password writes retain policy checks, history rejection and the original-hash
