@@ -6,6 +6,7 @@ using GameGuild.TestSupport.Finance.Economy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql;
 
 namespace GameGuild.API.IntegrationTests;
 
@@ -43,12 +44,13 @@ public sealed class RefreshTokenLineageMigrationPostgreSqlTests
         Assert.Null(upgraded.SessionId);
 
         await migrator.MigrateAsync(precedingMigration);
-        var retainedRows = await db.Database.SqlQuery<int>($"""
+        var retainedRows = await db.Database.SqlQueryRaw<int>("""
             SELECT COUNT(*)::int AS "Value" FROM "gameguild.authentication"."refreshtoken"
-            WHERE "id" = {id} AND "UserId" = {userId} AND "Token" = {hash} AND "IsRevoked" = false
-            """).SingleAsync();
+            WHERE "id" = @row_id AND "UserId" = @user_id AND "Token" = @token_hash AND "IsRevoked" = false
+            """, new NpgsqlParameter("row_id", id), new NpgsqlParameter("user_id", userId),
+            new NpgsqlParameter("token_hash", hash)).SingleAsync();
         Assert.Equal(1, retainedRows);
-        var removedColumns = await db.Database.SqlQuery<int>($"""
+        var removedColumns = await db.Database.SqlQueryRaw<int>("""
             SELECT COUNT(*)::int AS "Value" FROM information_schema.columns
             WHERE table_schema = 'gameguild.authentication' AND table_name = 'refreshtoken'
                 AND column_name IN ('ParentTokenId', 'SessionId')
