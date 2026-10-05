@@ -1,5 +1,25 @@
 # GameGuild issue closeout inventory
 
+## 2026-10-05 replay containment merge and bearer requirement reopening
+
+Live snapshot **2026-10-05T07:55:47.216031+00:00** retains all **328** IDs and original acceptance fields:
+**69 closed / 259 open**. #262 was reopened after signed-bearer execution confirmed
+five revoked-access failures and three passing controls; previous #586 evidence is
+retained. [Reopening](https://github.com/gameguild-gg/gameguild/issues/262#issuecomment-5990010929)
+and [executed baseline](https://github.com/gameguild-gg/gameguild/issues/262#issuecomment-5990177858).
+
+[PR #690](https://github.com/gameguild-gg/gameguild/pull/690) is merged into develop
+at cd152b6587f7b27ac8850b4121652d3db7b6d94d. Mapped token queries and committed
+replay containment pass 6,476 distinct local .NET cases, with 22 new definitions.
+Actual matching-head CI passes 4,809 main cases plus 14 repeated OpenAPI; all
+applicable gates, Codacy/four CodeQL and warning/error-clean builds pass.
+Public contracts and EF model are unchanged. [Individual partial acceptance](https://github.com/gameguild-gg/gameguild/issues/263#issuecomment-5990377649).
+**#263 remains OPEN** with all 19 criteria. Active signed-bearer enforcement is
+under implementation for reopened #262; its integrated acceptance is pending.
+Primary is synced, all 55 unrelated files preserved, completed #263 branch removed
+locally/remotely, two worktrees/zero stashes remain. Earlier dated sections below
+retain their historical states and counts.
+
 ## 2026-10-05 polymorphic password official closeout
 
 Live snapshot **2026-10-05T07:03:07.338343+00:00** preserves all **328** original IDs and acceptance fields:

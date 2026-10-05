@@ -1,5 +1,22 @@
 # Authorization Architecture Documentation
 
+## 2026-10-05 active bearer revocation — #262 / #263
+
+The active host calls `UseTokenRevocation` after authentication and before tenant,
+actor and authorization construction. Existing configured JTI/user revocation and
+stored user token-version checks now govern protected requests. A rejected identity
+is cleared; protected responses use generic 401 Problem Details and a Bearer challenge.
+Explicit anonymous endpoints continue with an anonymous identity, preserving public
+sign-in/recovery/health when the client still carries an old revoked JWT.
+
+Five signed-JWT relational baseline failures and three passing controls are retained.
+Whole-flow acceptance for the bounded #262 requirement is being executed; #263 still
+requires persisted family lineage, full issuance/race acceptance, session-specific
+revocation, actor guards, alerts/audit and scheduled cleanup/metrics. Legacy tokens
+without a version claim retain the existing compatibility behavior. Configured cache
+provider/distributed acceptance is separate from persisted replay version invalidation.
+See [the acceptance record](../../../../../docs/architecture/bearer-revocation-reconciliation.md).
+
 **Module:** GameGuild.Identity.Authentication  
 **Date:** November 10, 2025  
 **Version:** 1.0
