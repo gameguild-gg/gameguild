@@ -85,7 +85,11 @@ jobs:
       - name: Generate Web route types
         run: pnpm --filter @game-guild/web exec next typegen
       - name: Lint Web
+        env:
+          NODE_OPTIONS: --max-old-space-size=12288
         run: pnpm --filter @game-guild/web lint
+      - name: Lint suppression budget ratchet
+        run: node scripts/lint-budget.mjs
       - name: Typecheck Web
         run: pnpm --filter @game-guild/web exec tsc --noEmit
       - name: Test Web
