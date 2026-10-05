@@ -444,6 +444,56 @@ public class LocalAuthServiceTests
 
     // ── LocalSignUpAsync ──────────────────────────────────────
 
+    [Theory]
+    [InlineData("Matheus Martins", "matheus-martins")]
+    [InlineData("MátHeus Martíns", "matheus-martins")]
+    [InlineData("User.Name_1", "user.name_1")]
+    [InlineData("  User Name  ", "user-name")]
+    public async Task LocalSignUpAsync_PersistsCanonicalUsernameAndOriginalDisplayName(string input, string expected)
+    {
+        User? persisted = null;
+        _userRepoMock.Setup(x => x.ExistsByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _userRepoMock.Setup(x => x.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .Callback<User, CancellationToken>((user, _) => persisted = user).Returns(Task.CompletedTask);
+        _userRepoMock.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _jwtTokenServiceMock.Setup(x => x.GenerateAccessTokenAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync("access-token");
+        _jwtTokenServiceMock.Setup(x => x.GenerateRefreshTokenAsync(It.IsAny<Guid>(), It.IsAny<DeviceInfo>(), It.IsAny<CancellationToken>())).ReturnsAsync("refresh-token");
+
+        var response = await _sut.LocalSignUpAsync(new LocalSignUpRequest
+        {
+            Email = "username@example.test", Password = "Password1!", Username = input
+        });
+
+        response.Success.Should().BeTrue();
+        persisted.Should().NotBeNull();
+        persisted!.Username.Should().Be(expected);
+        persisted.Name.Should().Be(input);
+        persisted.Email.Should().Be("username@example.test");
+        persisted.IntegrationEvents.Should().ContainSingle();
+        _sessionManagementServiceMock.Verify(x => x.CreateSessionAsync(It.IsAny<Guid>(), persisted.Id,
+            It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTime>(),
+            It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("---")]
+    [InlineData("...")]
+    [InlineData("東京")]
+    [InlineData("  ab  ")]
+    [InlineData("a\u0000b")]
+    public async Task LocalSignUpAsync_UnusableUsernameRejectsBeforePersistenceAndTokenIssuance(string? input)
+    {
+        var exception = await Assert.ThrowsAsync<RequestValidationException>(() => _sut.LocalSignUpAsync(
+            new LocalSignUpRequest { Email = "username@example.test", Password = "Password1!", Username = input! }));
+
+        exception.Errors.Should().ContainSingle().Which.PropertyName.Should().Be("Username");
+        _userRepoMock.Verify(x => x.ExistsByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _userRepoMock.Verify(x => x.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
+        _jwtTokenServiceMock.Verify(x => x.GenerateRefreshTokenAsync(It.IsAny<Guid>(), It.IsAny<DeviceInfo>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     [Fact]
     public async Task LocalSignUpAsync_NewUser_ReturnsSuccess()
     {

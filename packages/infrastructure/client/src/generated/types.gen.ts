@@ -9735,7 +9735,7 @@ or admin forces logout. JWT tokens with older versions are rejected. */
   /** Timestamp when the entity was last updated.
 Protected setter — use M:GameGuild.EntityBase`1.Touch to update. EF Core uses backing field. */
   updatedAt: string;
-  /** Optional username for display (unique if set) */
+  /** Unique handle. Factories assign a canonical handle to new users; legacy null handles remain readable. */
   username?: string | null;
   /** Version number for optimistic concurrency control.
 Uses ConcurrencyCheck for cross-database compatibility (Postgres, SQLite, SQL Server).
