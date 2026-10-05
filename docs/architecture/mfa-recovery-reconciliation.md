@@ -68,7 +68,7 @@ The final configured Release solution build exited 0 with zero warnings/errors.
 EF reports no pending model changes. Migration adds only nullable
 `setup_expires_at`; concurrency predicates require no additional schema columns.
 Source/API/integration copies of the authentication assembly have identical SHA-256
-`67fc3bf930dff6073405eb00cdd59756653fbe6c9d98cb6f76956c6fbfd8f19f`.
+`4d683f7443088db92e73a76a7dc84410e67bfa595c826d15d4fd26f1b73d1768`.
 Offline OpenAPI retains all 1,296 paths and 1,654 schemas; only the backup-status
 and MFA-configuration schemas change. Client regeneration/type checking pass.
 
@@ -77,6 +77,14 @@ token field to be absent, interrupted native processes and an overlapping build
 with DLL locks are retained in local artifacts and excluded from acceptance.
 The broad API unit run interrupted before fresh serialized checks is not claimed
 as passed. Earlier repeated/superseded focused executions are not added to totals.
+
+Codacy follow-up makes the retry stop condition explicitly test the bound and
+replaces fixed public test keys with cryptographically generated synthetic keys.
+The API rebuild is warning/error clean; the full 2,083 authentication and nine
+PostgreSQL/HTTP cases pass again. These repeated cases are not additional coverage.
+Chrome inspection was attempted twice, but the connector timed out on
+`Emulation.setFocusEmulationEnabled`; GitHub's check annotations supplied the four
+findings. None was suppressed or dismissed.
 
 ## Remaining acceptance
 
