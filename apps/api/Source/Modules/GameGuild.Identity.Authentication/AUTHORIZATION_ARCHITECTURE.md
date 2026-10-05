@@ -1,5 +1,22 @@
 # Authorization Architecture Documentation
 
+## 2026-10-05 unavailable-account token boundary — #262 / #263
+
+Refresh issuance requires a user returned by the existing live-user repository,
+before tenant provisioning, token generation or session mutation. Missing/deleted
+accounts receive generic invalid-refresh denial; fallback email/version identities
+are no longer minted. A production user JWT with a valid `token_version` also
+requires a current live-user version; null lookup results reject the bearer and
+clear its identity through the same protected/public boundary as revoked tokens.
+
+Versionless legacy tokens and service-account tokens retain their existing flow.
+The production service token generator carries `actor_kind=Service` and no user
+version; no user profile is invented for that machine identity. This correction
+does not change JWT claims, keys, schema, TTL policy or public response contracts.
+Actual PostgreSQL/production-JWT deleted-account failures, successful controls
+and whole-endpoint concurrent refresh acceptance are recorded in
+[lifecycle reconciliation](../../../../../docs/architecture/refresh-token-lifecycle-reconciliation.md).
+
 ## 2026-10-05 active bearer revocation — #262 / #263
 
 The active host calls `UseTokenRevocation` after authentication and before tenant,

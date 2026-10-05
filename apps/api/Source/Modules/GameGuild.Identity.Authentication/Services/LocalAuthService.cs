@@ -569,10 +569,16 @@ public class LocalAuthService(
 
         var userId = storedToken.UserId;
         var user = await userRepository.GetByIdAsync(userId, cancellationToken).ConfigureAwait(false);
-        var tokenVersion = user?.TokenVersion ?? 1;
+        if (user is null)
+        {
+            logger.LogWarning("Rejected refresh token for an unavailable user {UserId}", userId);
+            throw new UnauthorizedAccessException("Invalid refresh token");
+        }
+
+        var tokenVersion = user.TokenVersion;
         await DefaultTenantMembershipProvisioner.EnsureAsync(sender, userId, cancellationToken).ConfigureAwait(false);
         var tenantAccessContext = await ResolveTenantAccessContextAsync(userId, request.TenantId, cancellationToken).ConfigureAwait(false);
-        var userEmail = user?.Email ?? $"user{userId}@game-guild.com";
+        var userEmail = user.Email;
         RequireActiveTenantAccess(tenantAccessContext);
 
         // Create device info for refresh token
