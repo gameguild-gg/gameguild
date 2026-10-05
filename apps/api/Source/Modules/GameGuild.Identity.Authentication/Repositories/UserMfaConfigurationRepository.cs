@@ -35,7 +35,19 @@ public class UserMfaConfigurationRepository(IApplicationDbContext context) : IUs
         configuration.UpdatedAt = SystemClock.UtcNow;
 
         UserMfaConfigurations.Update(configuration);
-        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (DbUpdateConcurrencyException exception)
+        {
+            // Discard stale mutations before a caller retries; never write consumed codes back.
+            foreach (var entry in exception.Entries)
+            {
+                await entry.ReloadAsync(cancellationToken).ConfigureAwait(false);
+            }
+            throw;
+        }
 
         return configuration;
     }
