@@ -418,7 +418,7 @@ export class EconomyModule {
   /**
    * List my Economy wallet transactions
    */
-  async getEconomyWalletTransactions(query?: { take?: number }): Promise<Result<Array<Types.FinanceEconomyContractsEconomyWalletTransactionDto>, ApiError>> {
+  async getEconomyWalletTransactions(query?: { take?: number }): Promise<Result<Types.FinanceEconomyContractsEconomyWalletTransactionDto[], ApiError>> {
     const url = '/api/v1/economy/wallet/transactions';
 
     const result = await this.client.request({

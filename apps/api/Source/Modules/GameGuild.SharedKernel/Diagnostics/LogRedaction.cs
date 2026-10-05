@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace GameGuild;
 
@@ -8,7 +9,7 @@ namespace GameGuild;
 ///     Produces a consistent, irreversible short hash so logs can still
 ///     correlate requests to the same tenant without leaking the raw GUID.
 /// </summary>
-public static class LogRedaction
+public static partial class LogRedaction
 {
     /// <summary>
     ///     Redacts a <see cref="Guid"/> to a short hash prefix (first 8 hex chars of SHA-256).
@@ -41,4 +42,54 @@ public static class LogRedaction
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes(id));
         return $"{prefix}:{Convert.ToHexString(hash, 0, 4).ToLowerInvariant()}";
     }
+
+    /// <summary>
+    ///     Masks an email address for logging: keeps the first character of the local
+    ///     part and the domain, e.g. <c>"alice@example.com"</c> → <c>"a***@example.com"</c>.
+    ///     Returns <c>"none"</c> for null/empty input.
+    /// </summary>
+    public static string MaskEmail(string? email)
+    {
+        if (string.IsNullOrEmpty(email))
+            return "none";
+
+        var atIndex = email.IndexOf('@');
+        if (atIndex <= 0)
+            return "invalid";
+
+        var local = email[..atIndex];
+        var domain = email[(atIndex + 1)..];
+        var kept = local.Length == 1 ? local[0].ToString() : local[..1];
+        return $"{kept}***@{domain}";
+    }
+
+    /// <summary>
+    ///     Redacts a secret (password, token, key) to a deterministic short hash that
+    ///     is safe to log: cannot be reversed, but identical secrets correlate.
+    ///     Returns <c>"none"</c> for null/empty input.
+    /// </summary>
+    public static string RedactSecret(string? secret)
+    {
+        if (string.IsNullOrEmpty(secret))
+            return "none";
+
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(secret));
+        return $"secret:{Convert.ToHexString(hash, 0, 4).ToLowerInvariant()}";
+    }
+
+    /// <summary>
+    ///     Sanitizes an untrusted string for structured logging by replacing control
+    ///     characters (CR, LF, and other C0 controls) with visible escape markers.
+    ///     Prevents log forging (CWE-117) without destroying diagnostic value.
+    /// </summary>
+    public static string Sanitize(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return string.Empty;
+
+        return ControlCharactersRegex().Replace(value, "␀");
+    }
+
+    [GeneratedRegex(@"[\u0000-\u001F]")]
+    private static partial Regex ControlCharactersRegex();
 }
