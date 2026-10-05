@@ -1838,6 +1838,38 @@ public async Task Authorization_PerformsUnderLoad()
 
 ## Platform Authorization Hardening
 
+### Authenticated self revocation across all sessions
+
+`POST /v1/auth/sessions:terminate-all` binds `RevokeAllUserTokensCommand`.
+The handler requires an authenticated User actor with a nonempty GUID subject;
+the command carries no user selector. It revokes that user's active refresh
+tokens, terminates their sessions with the existing logout reason, advances
+their stored token version once and records a user revocation cutoff through
+the existing distributed revocation service. The IP comes from the host
+connection. The route and response shape are preserved.
+
+The host command transaction covers the database mutations. Persistence,
+revocation-store failures and cancellation propagate; the endpoint must not
+report successful logout after an incomplete write. The cache and PostgreSQL
+do not share a transaction: a cutoff already written before a later database
+commit failure remains a denial of earlier tokens. This is a conservative
+failure outcome, and callers must sign in again or retry after the failure.
+The cutoff records the minimum token version advanced by that operation. A
+signed token at or above that version is not rejected solely because its
+second-granular iat precedes the cutoff's fractional second. Tokens without a
+version and ordinary time-only cutoffs retain the earlier timestamp rule;
+the stored database version and session validity checks still run. Both
+configured stores implement the required typed version boundary. A custom
+store must implement that capability for the guarded self-revocation command.
+The session-only command remains separate for ending other sessions, MFA
+containment and refresh-replay containment; those paths retain their own
+existing version/security policy. No raw credentials are added to events.
+
+All 19 original #263 criteria remain authoritative. This increment covers the
+existing all-session entry point; explicit parent/session token lineage,
+complete token-operation audit/alerts, scheduled retention and metrics still
+require separate acceptance.
+
 ### Explicit Refresh-Token Revocation Ownership
 
 The self-service revoke command requires an authenticated `User` actor with a

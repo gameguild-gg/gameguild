@@ -116,6 +116,10 @@ public static class DataDependencyInjection
             services.AddSingleton<ITokenRevocationService, InMemoryTokenRevocationService>();
         }
 
+        services.AddSingleton<IVersionedUserTokenRevocationService>(provider =>
+            provider.GetRequiredService<ITokenRevocationService>() as IVersionedUserTokenRevocationService
+            ?? throw new InvalidOperationException("The token revocation store must support persisted user token versions."));
+
         // MFA services - focused sub-services
         services.AddScoped<ITotpMfaService, TotpMfaService>();
         services.AddScoped<IBackupCodeMfaService, BackupCodeMfaService>();

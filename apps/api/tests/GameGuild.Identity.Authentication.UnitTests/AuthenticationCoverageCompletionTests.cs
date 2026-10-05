@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.Reflection;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
@@ -281,16 +280,24 @@ public sealed class AuthenticationCoverageCompletionTests
 
         await service.RevokeTokenAsync("expired", SystemClock.UtcNow.AddMinutes(-5));
 
-        var field = typeof(InMemoryTokenRevocationService).GetField(
-            "_userRevocationTimes",
-            BindingFlags.Instance | BindingFlags.NonPublic);
-        var userRevocations = (ConcurrentDictionary<Guid, DateTime>)field!.GetValue(service)!;
         var staleUserId = Guid.NewGuid();
-        userRevocations[staleUserId] = SystemClock.UtcNow.AddDays(-2);
+        var now = DateTimeOffset.UtcNow;
+        var earlierToken = now.AddDays(-3).UtcDateTime;
+        SystemClock.SetProvider(new CleanupClock(now.AddDays(-2)));
+        try
+        {
+            await service.RevokeAllUserTokensAsync(staleUserId);
+            (await service.IsUserTokenRevokedAsync(staleUserId, earlierToken)).Should().BeTrue();
+        }
+        finally
+        {
+            SystemClock.Reset();
+        }
 
         var cleaned = await service.CleanupExpiredAsync();
         cleaned.Should().Be(1);
-        userRevocations.ContainsKey(staleUserId).Should().BeFalse();
+        (await service.IsRevokedAsync("expired")).Should().BeFalse();
+        (await service.IsUserTokenRevokedAsync(staleUserId, earlierToken)).Should().BeFalse();
     }
 
     [Fact]
@@ -1124,6 +1131,11 @@ public sealed class AuthenticationCoverageCompletionTests
         return (T)instance.GetType()
             .GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic)!
             .Invoke(instance, args)!;
+    }
+
+    private sealed class CleanupClock(DateTimeOffset now) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => now;
     }
 
     private sealed class TestAbacEvaluationResult : AbacEvaluationResult;
