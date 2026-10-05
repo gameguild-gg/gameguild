@@ -38,14 +38,14 @@ public class AssetsController(
         [FromQuery] Guid? referenceId = null,
         CancellationToken ct = default)
     {
-        if (file == null || file.Length == 0)
-        {
-            return BadRequest(new ProblemDetails { Title = "No file provided" });
-        }
-
         if (!Actor.SubjectIdAsGuid.HasValue)
         {
             return Unauthorized();
+        }
+
+        if (file == null || file.Length == 0)
+        {
+            return BadRequest(new ProblemDetails { Title = "No file provided" });
         }
 
         await using var stream = file.OpenReadStream();

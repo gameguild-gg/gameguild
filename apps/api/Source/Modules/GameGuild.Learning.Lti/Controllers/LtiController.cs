@@ -83,8 +83,8 @@ public sealed class LtiController(
         var clientId = form["client_id"].ToString();
         var deploymentId = form["deployment_id"].ToString();
 
-        var deployment = await FindActiveDeploymentAsync(issuer, clientId).ConfigureAwait(false);
-        if (deployment is null || !string.Equals(deployment.DeploymentId, deploymentId, StringComparison.Ordinal))
+        var deployment = await FindActiveDeploymentAsync(issuer, clientId, deploymentId).ConfigureAwait(false);
+        if (deployment is null)
         {
             return Unauthorized("Unknown LTI platform.");
         }
@@ -115,8 +115,15 @@ public sealed class LtiController(
             query["lti_message_hint"] = messageHint;
         }
 
-        var separator = deployment.AuthorizationUrl.Contains('?') ? '&' : '?';
-        return Redirect(deployment.AuthorizationUrl + separator + QueryString.Create(query).Value);
+        if (!Uri.TryCreate(deployment.AuthorizationUrl, UriKind.Absolute, out var baseUri) ||
+            baseUri.Scheme != Uri.UriSchemeHttps)
+        {
+            return BadRequest("LTI platform authorization URL is misconfigured.");
+        }
+
+        var separator = baseUri.Query.Length > 0 ? '&' : '?';
+        var redirectUrl = baseUri.GetLeftPart(UriPartial.Query) + separator + QueryString.Create(query).Value;
+        return Redirect(redirectUrl);
     }
 
     /// <summary>
@@ -127,7 +134,7 @@ public sealed class LtiController(
     [HttpPost("lti/launch")]
     public async Task<IActionResult> Launch()
     {
-        if (Request.Query.ContainsKey("id_token"))
+        if (Request.Query.Count > 0 && Request.Query.Keys.Contains("id_token"))
         {
             return BadRequest("id_token must be delivered in the POST body.");
         }
@@ -237,15 +244,16 @@ public sealed class LtiController(
         }
     }
 
-    private async Task<LtiDeployment?> FindActiveDeploymentAsync(string issuer, string clientId)
+    private async Task<LtiDeployment?> FindActiveDeploymentAsync(string issuer, string clientId, string deploymentId)
     {
-        if (string.IsNullOrEmpty(issuer) || string.IsNullOrEmpty(clientId))
+        if (string.IsNullOrEmpty(issuer) || string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(deploymentId))
         {
             return null;
         }
 
         return await context.Set<LtiDeployment>()
-            .FirstOrDefaultAsync(d => d.Issuer == issuer && d.ClientId == clientId && d.Active && d.DeletedAt == null)
+            .FirstOrDefaultAsync(d => d.Issuer == issuer && d.ClientId == clientId
+                && d.DeploymentId == deploymentId && d.Active && d.DeletedAt == null)
             .ConfigureAwait(false);
     }
 
