@@ -1,5 +1,24 @@
 # GameGuild issue closeout inventory
 
+## 2026-10-05 Web3 backend local acceptance — #292
+
+The native five-criterion child #292 now has actual bounded-host-cache HTTP,
+real EOA signatures and migrated PostgreSQL coverage:20 focused cases within
+the entire327-case integration suite. Final source passes7,796 distinct .NET/SDK
+cases/35 new; Authentication2256/Authorization1667/SharedKernel1377/APIunit1050/
+Integration327/SDK1119. Full solution is warning/error-clean; full spec unchanged
+1297paths/1656schemas, no pending model changes, SDK types/client consistency pass.
+[Implementation and bounded evidence](../architecture/web3-backend-authentication-reconciliation.md).
+
+**#292 remains OPEN pending matching-head CI and accepted merge.** #291 retains
+provider/UI/linking/multiple wallets/disconnection/per-address limits/metrics/full
+journey requirements; #263 retains remaining all-provider lifecycle/audit/retention
+criteria. No live provider or distributed nonce-store acceptance is inferred.
+The fixed328-ID scope is **70closed/258open** at `2026-10-05T17:04:34.129922+00:00`; every original
+acceptance field is preserved. All55 unrelated primary files remain preserved.
+The same isolated checkout is reused; two worktrees/zero stashes, no agents.
+Earlier dated sections remain historical.
+
 ## 2026-10-05 accepted persisted refresh-token lineage — PR #695
 
 [PR #695](https://github.com/gameguild-gg/gameguild/pull/695) merged into develop

@@ -24,4 +24,8 @@ public class Web3VerificationRequest : Web3AuthenticationVerificationRequest
     public string Nonce { get; set; } = string.Empty;
 
     public string ChainId { get; set; } = "1";
+
+    public Guid? TenantId { get; set; }
+
+    public string? DeviceFingerprint { get; set; }
 }
