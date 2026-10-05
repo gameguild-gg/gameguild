@@ -1,5 +1,30 @@
 # GameGuild issue closeout inventory
 
+## 2026-10-05 ownership and stored-session revocation merged
+
+Live snapshot **2026-10-05T11:54:21.248742+00:00** retains all **328 IDs and original criteria**:
+**70 closed / 258 open**. No additional issue was closed by this partial increment.
+[#693](https://github.com/gameguild-gg/gameguild/pull/693) merged into develop at
+`280ea75a68c739b807c08a6ad724d6cf29f059bf`, reviewed head
+`c8d5bd95c064f85de5846bfe4892e446fe2cf916`. Trusted owner-only token revocation
+and stored-session bearer validity have actual PostgreSQL/production-JWT/HTTP
+acceptance, with 43 new definitions. Matching-head CI passes 266 integration and
+2,191 authentication cases, plus a repeated 15-case OpenAPI subset. Fresh local
+authorization/SharedKernel/API architecture-security/SDK receipts establish
+**6,735 distinct combined cases**; CI also passes **2,959 Web cases in 420 files**.
+Historical and incomplete local receipts and repeated subsets are excluded.
+All applicable gates, Codacy and four CodeQL languages pass. The sole specification
+addition is non-owner403 on the existing revoke endpoint; client consistency and
+warning/error-clean builds pass, with no pending model changes.
+
+[#263 remains OPEN with all 19 criteria](https://github.com/gameguild-gg/gameguild/issues/263#issuecomment-5993781040).
+[The next actual baseline](https://github.com/gameguild-gg/gameguild/issues/263#issuecomment-5993552561)
+returns200 and terminates two sessions but leaves both refresh tokens active and
+the user version unchanged. Work continues on the existing all-session endpoint.
+Primary is synchronized; all 55 unrelated local files are preserved. Completed
+#693 branch removed locally/remotely; two worktrees and zero stashes remain.
+Earlier dated sections retain historical stages and pending statements.
+
 ## 2026-10-05 reviewed refresh-revoke403 contract
 
 PR693 review adds the documented non-owner403 and an actual Swagger HTTP regression
