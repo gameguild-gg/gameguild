@@ -201,16 +201,19 @@ function parseValue(name: string, value: string | null, spec: AttrSpec): unknown
 }
 
 /**
- * Set `obj[a.b.c] = value`, creating intermediate plain objects. Pure helper
- * — never inspects prototypes, so safe against prototype pollution from
- * crafted attribute names (we also gate via the schema, so attacker-supplied
- * names can't even reach this function).
+ * Set `obj[a.b.c] = value`, creating intermediate plain objects. Rejects
+ * `__proto__` / `prototype` / `constructor` path segments so crafted paths
+ * cannot pollute Object.prototype (schema gating is the first line of
+ * defense; this is the hard backstop).
  */
+const DANGEROUS_KEYS = new Set(['__proto__', 'prototype', 'constructor']);
+
 function setPath(obj: Record<string, unknown>, dotted: string, value: unknown): void {
   const parts = dotted.split('.');
   let cur: Record<string, unknown> = obj;
   for (let i = 0; i < parts.length - 1; i++) {
     const key = parts[i]!;
+    if (DANGEROUS_KEYS.has(key)) return;
     const next = cur[key];
     if (next == null || typeof next !== 'object') {
       const fresh: Record<string, unknown> = {};
@@ -220,5 +223,7 @@ function setPath(obj: Record<string, unknown>, dotted: string, value: unknown): 
       cur = next as Record<string, unknown>;
     }
   }
-  cur[parts[parts.length - 1]!] = value;
+  const last = parts[parts.length - 1]!;
+  if (DANGEROUS_KEYS.has(last)) return;
+  cur[last] = value;
 }

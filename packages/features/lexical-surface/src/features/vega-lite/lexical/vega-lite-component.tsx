@@ -84,7 +84,7 @@ export function VegaLiteLexicalComponent({
               targetEl.closest("button") ||
               targetEl.closest("input") ||
               targetEl.closest(".fixed") ||
-              targetEl.closest("[role='dialog']") ??
+              targetEl.closest("[role='dialog']") ||
               targetEl.closest(".z-50") ||
               targetEl.closest(".z-60")
             ) {

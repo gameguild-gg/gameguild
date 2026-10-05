@@ -293,19 +293,24 @@ ${namedList.map((name) => `if (typeof ${name} !== 'undefined') { window.${name} 
         // In a real implementation, this would use the actual TypeScript compiler
 
         // Remove type annotations
-        const output = input
+        let output = input
           // Remove interface declarations
           .replace(/interface\s+\w+\s*\{[^}]*\}/g, "")
           // Remove type annotations from variables
           .replace(/:\s*\w+(\[\])?(\s*\|\s*\w+(\[\])?)*\s*(?=[,)=;])/g, "")
-          // Remove type parameters from generics
-          .replace(/<[^<>]*>/g, "")
           // Remove return type annotations
           .replace(/\)\s*:\s*\w+(\[\])?(\s*\|\s*\w+(\[\])?)*\s*(?={)/g, ") ")
           // Remove type imports
           .replace(/import\s+type\s+.*?from\s+['"].*?['"]/g, "")
           // Remove 'as' type assertions
           .replace(/\s+as\s+\w+(\[\])?/g, "")
+
+        // Remove type parameters from generics; loop handles nesting.
+        let previous: string
+        do {
+          previous = output
+          output = previous.replace(/<[^<>]*>/g, "")
+        } while (output !== previous)
 
         return {
           outputText: output,

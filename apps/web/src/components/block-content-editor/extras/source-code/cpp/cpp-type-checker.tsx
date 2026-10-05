@@ -1,9 +1,11 @@
+import type { editor } from "monaco-editor"
+
 export class CppTypeChecker {
-  private monaco: any
-  private editor: unknown
+  private monaco: typeof import("monaco-editor") | null
+  private editor: editor.IStandaloneCodeEditor | null
   private disposables: any[] = []
 
-  constructor(monaco: any, editor: any) {
+  constructor(monaco: typeof import("monaco-editor") | null, editor: editor.IStandaloneCodeEditor | null) {
     this.monaco = monaco
     this.editor = editor
   }
@@ -11,7 +13,9 @@ export class CppTypeChecker {
   register(code: string) {
     // Simple C++ type checking and error detection
     setTimeout(() => {
-      const model = this.editor.getModel()
+      const { monaco, editor: editorInstance } = this
+      if (!monaco || !editorInstance) return
+      const model = editorInstance.getModel()
       if (!model) return
 
       const markers: any[] = []
@@ -59,7 +63,7 @@ export class CppTypeChecker {
           const nextLine = nextLineRaw?.trim() ?? ""
           if (!nextLine.startsWith("{")) {
             markers.push({
-              severity: this.monaco.MarkerSeverity.Warning,
+              severity: monaco.MarkerSeverity.Warning,
               message: "Statement might be missing a semicolon",
               startLineNumber: lineIndex + 1,
               startColumn: line.length + 1,
@@ -72,7 +76,7 @@ export class CppTypeChecker {
         // Check for unbalanced brackets in the line
         if (openBraces !== closeBraces) {
           markers.push({
-            severity: this.monaco.MarkerSeverity.Error,
+            severity: monaco.MarkerSeverity.Error,
             message: "Unbalanced braces in this line",
             startLineNumber: lineIndex + 1,
             startColumn: 1,
@@ -83,7 +87,7 @@ export class CppTypeChecker {
 
         if (openParens !== closeParens) {
           markers.push({
-            severity: this.monaco.MarkerSeverity.Error,
+            severity: monaco.MarkerSeverity.Error,
             message: "Unbalanced parentheses in this line",
             startLineNumber: lineIndex + 1,
             startColumn: 1,
@@ -94,7 +98,7 @@ export class CppTypeChecker {
 
         if (openBrackets !== closeBrackets) {
           markers.push({
-            severity: this.monaco.MarkerSeverity.Error,
+            severity: monaco.MarkerSeverity.Error,
             message: "Unbalanced brackets in this line",
             startLineNumber: lineIndex + 1,
             startColumn: 1,
@@ -105,7 +109,7 @@ export class CppTypeChecker {
       })
 
       // Set the markers on the model
-      this.monaco.editor.setModelMarkers(model, "cpp", markers)
+      monaco.editor.setModelMarkers(model, "cpp", markers)
     }, 100)
   }
 
@@ -114,9 +118,12 @@ export class CppTypeChecker {
     this.disposables.forEach((disposable) => disposable.dispose())
 
     // Clear markers when disposing
-    const model = this.editor.getModel()
-    if (model) {
-      this.monaco.editor.setModelMarkers(model, "cpp", [])
+    const { monaco, editor: editorInstance } = this
+    if (monaco && editorInstance) {
+      const model = editorInstance.getModel()
+      if (model) {
+        monaco.editor.setModelMarkers(model, "cpp", [])
+      }
     }
   }
 }

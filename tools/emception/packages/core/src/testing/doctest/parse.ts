@@ -131,40 +131,38 @@ export function parseDoctestConsole(stdout: string): DoctestReport {
         }
 
         // --- TEST CASE marker (sets context for subsequent failures) ---
-        const tc = trimmed.match(/^TEST CASE:\s+(.+)$/);
+        const tc = matchTestCase(trimmed);
         if (tc) {
             flushPending();
-            currentTestCase = tc[1];
+            currentTestCase = tc;
             continue;
         }
 
         // --- Failure line: "<file>:<line>: ERROR: <macro>( ... ) is NOT correct!" ---
         // The file:line prefix is the source location; doctest emits this
         // immediately before the expansion line.
-        const err = line.match(
-            /^(.+?):(\d+):\s*ERROR:\s*([A-Z_]+)\(\s*(.+?)\s*\)\s+is NOT correct!/,
-        );
+        const err = matchFailureLine(line);
         if (err) {
             flushPending();
             pending = {
                 testCase: currentTestCase,
-                file: err[1],
-                line: +err[2],
-                macro: err[3],
-                expression: `${err[3]}( ${err[4]} )`,
+                file: err.file,
+                line: err.line,
+                macro: err.macro,
+                expression: `${err.macro}( ${err.expression} )`,
             };
             continue;
         }
 
         // --- "values:" continuation line attaches to the pending failure ---
         if (pending) {
-            const vals = trimmed.match(/^values:\s+(.+)$/);
+            const vals = matchValuesLine(trimmed);
             if (vals) {
-                pending.expanded = vals[1];
+                pending.expanded = vals;
                 continue;
             }
             // Blank line / separator → finalize the pending failure.
-            if (trimmed === '' || /^=+$/.test(trimmed)) {
+            if (trimmed === '' || isSeparatorLine(trimmed)) {
                 flushPending();
                 continue;
             }
@@ -177,4 +175,82 @@ export function parseDoctestConsole(stdout: string): DoctestReport {
 
 function emptyCounts(): DoctestCounts {
     return { passed: 0, failed: 0, skipped: 0, total: 0 };
+}
+
+/**
+ * Line-oriented matchers for the doctest console grammar. Written as plain
+ * string scans instead of backtracking regexes so adversarial application
+ * output (e.g. megabyte-long paths or expressions) parses in linear time.
+ */
+
+const TEST_CASE_PREFIX = 'TEST CASE:';
+const ERROR_MARKER = ': ERROR: ';
+const NOT_CORRECT_SUFFIX = ' is NOT correct!';
+const VALUES_PREFIX = 'values:';
+
+/** `TEST CASE:  <name>` → `<name>`, else null. */
+function matchTestCase(line: string): string | null {
+    if (!line.startsWith(TEST_CASE_PREFIX)) return null;
+    const name = line.slice(TEST_CASE_PREFIX.length).replace(/^\s+/, '');
+    return name.length > 0 ? name : null;
+}
+
+/**
+ * `<file>:<line>: ERROR: <macro>( <expr> ) is NOT correct!`
+ *
+ * The file path cannot contain `: ERROR: `, and doctest terminates every
+ * failure line with the fixed ` is NOT correct!` suffix, so both anchors are
+ * safe string markers rather than ambiguous regex groups.
+ */
+function matchFailureLine(line: string): {
+    file: string;
+    line: number;
+    macro: string;
+    expression: string;
+} | null {
+    if (!line.endsWith(NOT_CORRECT_SUFFIX)) return null;
+    const errorIndex = line.indexOf(ERROR_MARKER);
+    if (errorIndex < 0) return null;
+
+    const head = line.slice(0, errorIndex);
+    let numberStart = head.length;
+    while (numberStart > 0 && isAsciiDigit(head.charAt(numberStart - 1))) {
+        numberStart -= 1;
+    }
+    if (numberStart === head.length || numberStart === 0) return null;
+    const file = head.slice(0, numberStart - 1);
+    const lineNumber = Number.parseInt(head.slice(numberStart), 10);
+    if (!file || !Number.isFinite(lineNumber)) return null;
+
+    const tail = line.slice(errorIndex + ERROR_MARKER.length, line.length - NOT_CORRECT_SUFFIX.length);
+    const openParen = tail.indexOf('(');
+    if (openParen < 0) return null;
+    const macro = tail.slice(0, openParen).trimEnd();
+    if (!/^[A-Z_]+$/.test(macro)) return null;
+    let expr = tail.slice(openParen + 1);
+    if (!expr.endsWith(')')) return null;
+    expr = expr.slice(0, -1).trim();
+    if (!expr) return null;
+
+    return { file, line: lineNumber, macro, expression: expr };
+}
+
+function isAsciiDigit(char: string): boolean {
+    return char >= '0' && char <= '9';
+}
+
+/** `values: <expansion>` → `<expansion>`, else null. */
+function matchValuesLine(line: string): string | null {
+    if (!line.startsWith(VALUES_PREFIX)) return null;
+    const expanded = line.slice(VALUES_PREFIX.length).replace(/^\s+/, '');
+    return expanded.length > 0 ? expanded : null;
+}
+
+/** Separator line made solely of `=` characters. */
+function isSeparatorLine(line: string): boolean {
+    if (line.length === 0) return false;
+    for (let i = 0; i < line.length; i++) {
+        if (line.charAt(i) !== '=') return false;
+    }
+    return true;
 }
