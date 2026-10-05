@@ -24,6 +24,7 @@
 
 import type { OAuthProviderConfig, ProviderResult, SessionUser } from '../types.js';
 import { OAuthError } from '../errors.js';
+import { assertSafeRemoteUrl } from '../../security/safe-remote-url.js';
 
 /**
  * Options for the Discord provider
@@ -81,7 +82,7 @@ export function DiscordProvider(options: DiscordProviderOptions): OAuthProviderC
     getAuthorizeUrl: async (apiUrl: string, redirectUri?: string): Promise<string> => {
       const effectiveApiUrl = options.apiUrl || apiUrl;
 
-      const response = await fetch(`${effectiveApiUrl}${authorizePath}`, {
+      const response = await fetch(assertSafeRemoteUrl(`${effectiveApiUrl}${authorizePath}`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ redirectUri }),
@@ -106,7 +107,7 @@ export function DiscordProvider(options: DiscordProviderOptions): OAuthProviderC
       if (redirectUri) body.redirectUri = redirectUri;
       if (tenantId) body.tenantId = tenantId;
 
-      const response = await fetch(`${effectiveApiUrl}${callbackPath}`, {
+      const response = await fetch(assertSafeRemoteUrl(`${effectiveApiUrl}${callbackPath}`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),

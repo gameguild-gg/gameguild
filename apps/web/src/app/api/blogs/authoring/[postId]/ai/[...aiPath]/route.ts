@@ -1,4 +1,5 @@
 import { getRequestAuthContext } from "@/auth";
+import { assertSafeRemoteUrl } from "@/lib/security/safe-remote-url";
 import { NextRequest } from "next/server";
 
 const apiBaseUrl = (
@@ -29,7 +30,7 @@ export async function GET(
   const suffix = (aiPath ?? []).map(encodeURIComponent).join("/");
   const query = request.nextUrl.search;
   const response = await fetch(
-    `${apiBaseUrl}/api/social/blog/posts/${encodeURIComponent(postId)}/ai${suffix ? `/${suffix}` : ""}${query}`,
+    assertSafeRemoteUrl(`${apiBaseUrl}/api/social/blog/posts/${encodeURIComponent(postId)}/ai${suffix ? `/${suffix}` : ""}${query}`),
     {
       headers: {
         Authorization: `Bearer ${token}`,

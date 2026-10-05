@@ -1,4 +1,5 @@
 import { getRequestAuthContext } from "@/auth";
+import { assertSafeRemoteUrl } from "@/lib/security/safe-remote-url";
 import type {
   TestingLabQuestionnaireOutput,
   TestingLabQuestionnaireSchema,
@@ -45,7 +46,7 @@ async function backendRequest<T>(
   tenantId: string,
   body?: unknown,
 ): Promise<{ data: T } | { error: string; status: number }> {
-  const response = await fetch(`${apiBaseUrl}${path}`, {
+  const response = await fetch(assertSafeRemoteUrl(`${apiBaseUrl}${path}`), {
     method,
     headers: {
       Authorization: `Bearer ${token}`,

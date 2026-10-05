@@ -1,6 +1,7 @@
 'use server';
 
 import { getRequestAuthContext } from '@/auth';
+import { assertSafeRemoteUrl } from '@/lib/security/safe-remote-url';
 
 import type {
   AddBlogCommentInput,
@@ -58,7 +59,7 @@ async function blogRequest<T>(path: string, init?: RequestInit): Promise<BlogAct
     };
   }
 
-  const response = await fetch(`${apiBaseUrl}${path}`, {
+  const response = await fetch(assertSafeRemoteUrl(`${apiBaseUrl}${path}`), {
     ...init,
     headers: {
       Authorization: `Bearer ${token}`,
