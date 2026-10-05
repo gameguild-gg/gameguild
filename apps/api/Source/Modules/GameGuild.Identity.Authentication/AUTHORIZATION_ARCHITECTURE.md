@@ -1802,6 +1802,25 @@ public async Task Authorization_PerformsUnderLoad()
 
 ## Platform Authorization Hardening
 
+### MFA Recovery State
+
+New recovery codes use salted, versioned PBKDF2-HMAC-SHA256 (600,000 iterations)
+and default to 12 characters. Legacy SHA-256 codes remain verifiable until used or
+regenerated. Both formats use constant-time hash comparison. Issued-set metadata
+preserves the original count; legacy total/used counts are explicitly unknown.
+The v1 counters keep their numeric types. For unknown legacy history they return
+lower bounds and `areUsageCountsKnown=false`; configuration's issued count is null.
+Status endpoints disclose counts without hashes or plaintext.
+
+MFA row updates compare the original backup set, failure counter, lockout,
+enablement, setup completion and encrypted TOTP secret. A conflicting write reloads
+the row before a bounded retry. Success requires a committed consumption; stale
+failed attempts cannot restore consumed codes. Pending setup codes cannot complete
+enrollment. Successful TOTP confirmation records setup completion. Cancellation
+propagates through the verifier and orchestrator.
+New enrollments have a fixed persisted expiration which failed attempts cannot
+extend; legacy pending rows use the prior timestamp fallback.
+
 ### Authentication Response Projection
 
 Authentication response conversion preserves server-issued tokens, explicit

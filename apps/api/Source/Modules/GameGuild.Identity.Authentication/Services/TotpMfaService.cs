@@ -56,6 +56,8 @@ public sealed class TotpMfaService(
             mfaConfig.PreferredMethod = MfaMethod.Totp;
             mfaConfig.TotpSecretKey = encryptedSecret;
             mfaConfig.IsEnabled = false; // Enabled after first successful verification
+            mfaConfig.IsSetupComplete = false;
+            mfaConfig.SetupExpiresAt = SystemClock.UtcNow.AddMinutes(_mfaOptions.SetupSessionDurationMinutes);
             mfaConfig.UpdatedAt = SystemClock.UtcNow;
 
             if (existingConfig == null) { await mfaConfigRepository.CreateAsync(mfaConfig, cancellationToken).ConfigureAwait(false); }
@@ -101,10 +103,13 @@ public sealed class TotpMfaService(
                 return false;
             }
 
-            if (!mfaConfig.IsEnabled && SystemClock.UtcNow - mfaConfig.UpdatedAt > TimeSpan.FromMinutes(_mfaOptions.SetupSessionDurationMinutes))
+            var setupExpiresAt = mfaConfig.SetupExpiresAt
+                ?? mfaConfig.UpdatedAt.AddMinutes(_mfaOptions.SetupSessionDurationMinutes);
+            if (!mfaConfig.IsEnabled && SystemClock.UtcNow >= setupExpiresAt)
             {
                 mfaConfig.TotpSecretKey = null;
                 mfaConfig.BackupCodes = null;
+                mfaConfig.SetupExpiresAt = null;
                 mfaConfig.UpdatedAt = SystemClock.UtcNow;
                 await mfaConfigRepository.UpdateAsync(mfaConfig, cancellationToken).ConfigureAwait(false);
                 await attemptTrackingService.RecordMfaAttemptAsync(userId, MfaMethod.Totp, false, "Setup expired", deviceId, cancellationToken).ConfigureAwait(false);
@@ -133,20 +138,19 @@ public sealed class TotpMfaService(
                 if (!mfaConfig.IsEnabled)
                 {
                     mfaConfig.IsEnabled = true;
+                    mfaConfig.IsSetupComplete = true;
+                    mfaConfig.SetupExpiresAt = null;
+                    mfaConfig.QrCodeSetupData = null;
                     mfaConfig.EnabledAt = SystemClock.UtcNow;
-                    mfaConfig.UpdatedAt = SystemClock.UtcNow;
-                    await mfaConfigRepository.UpdateAsync(mfaConfig, cancellationToken).ConfigureAwait(false);
 
                     logger.LogInformation("MFA enabled for user: {UserId}", userId);
                 }
 
-                // Reset failed attempts
-                if (mfaConfig.FailedAttempts > 0)
-                {
-                    mfaConfig.FailedAttempts = 0;
-                    mfaConfig.LockedOutUntil = null;
-                    await mfaConfigRepository.UpdateAsync(mfaConfig, cancellationToken).ConfigureAwait(false);
-                }
+                // Save enrollment, successful use and counter reset as one guarded state transition.
+                mfaConfig.FailedAttempts = 0;
+                mfaConfig.LockedOutUntil = null;
+                mfaConfig.LastUsedAt = SystemClock.UtcNow;
+                await mfaConfigRepository.UpdateAsync(mfaConfig, cancellationToken).ConfigureAwait(false);
 
                 await attemptTrackingService.RecordMfaAttemptAsync(userId, MfaMethod.Totp, true, null, deviceId, cancellationToken).ConfigureAwait(false);
 
@@ -166,6 +170,7 @@ public sealed class TotpMfaService(
 
             return false;
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error verifying TOTP for user: {UserId}", userId);
