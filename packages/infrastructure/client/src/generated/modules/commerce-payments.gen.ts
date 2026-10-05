@@ -46,7 +46,7 @@ export class CommercePaymentsModule {
     endDate?: string;
     page?: number;
     pageSize?: number;
-  }): Promise<Result<Array<Types.CommercePaymentsPaymentResult>, ApiError>> {
+  }): Promise<Result<Types.CommercePaymentsPaymentResult[], ApiError>> {
     const url = '/api/v1/payments';
 
     const result = await this.client.request({
@@ -56,7 +56,7 @@ export class CommercePaymentsModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.CommercePaymentsPaymentResult>, ApiError>;
+    return result as Result<Types.CommercePaymentsPaymentResult[], ApiError>;
   }
 
   /**

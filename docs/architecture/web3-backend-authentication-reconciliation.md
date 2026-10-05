@@ -19,6 +19,17 @@ usable authenticated session.
 Execution receipts and publication acceptance are recorded below when verified.
 Test definitions alone do not complete a criterion.
 
+## Concurrent develop integration — 2026-10-05
+
+The reviewed Web3 branch incorporates develop's security revision
+`45941e7da3f0995b1011ea92127ced0de895b527`. Its log-redaction implementation and
+frontend changes are preserved. Six manually edited generated client modules
+revealed drift from the unchanged generator. The module generator now emits the
+same shorthand syntax for simple array response assertions consistently; public
+method types, HTTP contracts and runtime behavior remain unchanged. A generator
+regression test and regenerated modules make that formatting reproducible.
+Matching-head integration checks and accepted merge are required before closure.
+
 ## Account and credential boundaries
 
 The insert-only `web3` external-login provider key is the lowercase verified
