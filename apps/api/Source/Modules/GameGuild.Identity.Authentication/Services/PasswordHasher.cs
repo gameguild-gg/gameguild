@@ -17,15 +17,14 @@ public sealed class PasswordHasher(ILogger<PasswordHasher> logger, IConfiguratio
         @"\A\$2[abxy]?\$(0[4-9]|1[0-6])\$[./A-Za-z0-9]{53}\z",
         RegexOptions.CultureInvariant | RegexOptions.NonBacktracking);
 
-    private int BCryptWorkFactor
+    private int GetBCryptWorkFactor()
     {
-        get
+        var workFactor = GetPolicyInteger("BCryptWorkFactor", 12);
+        if (workFactor is < 10 or > 16)
         {
-            var workFactor = GetPolicyInteger("BCryptWorkFactor", 12);
-            if (workFactor is < 10 or > 16)
-                throw new InvalidOperationException("BCrypt work factor must be between 10 and 16.");
-            return workFactor;
+            throw new InvalidOperationException("BCrypt work factor must be between 10 and 16.");
         }
+        return workFactor;
     }
 
     // Prefer the shared presentation options; retain both prior locations for configuration compatibility.
@@ -161,9 +160,11 @@ public sealed class PasswordHasher(ILogger<PasswordHasher> logger, IConfiguratio
     {
         if (string.IsNullOrWhiteSpace(password)) { throw new ArgumentException("Password cannot be empty", nameof(password)); }
 
-        var workFactor = BCryptWorkFactor;
+        var workFactor = GetBCryptWorkFactor();
         if (Encoding.UTF8.GetByteCount(password) > 72)
+        {
             return LongPasswordHash.Create(password);
+        }
 
         logger.LogDebug("Hashing password with BCrypt (work factor: {WorkFactor})", workFactor);
         var passwordHash = BCrypt.Net.BCrypt.HashPassword(password, workFactor);
@@ -179,11 +180,15 @@ public sealed class PasswordHasher(ILogger<PasswordHasher> logger, IConfiguratio
         if (string.IsNullOrWhiteSpace(hashedPassword) || string.IsNullOrWhiteSpace(providedPassword)) { return false; }
 
         if (hashedPassword.StartsWith(LongPasswordHash.Prefix, StringComparison.Ordinal))
+        {
             return LongPasswordHash.Verify(hashedPassword, providedPassword);
+        }
 
         // A legacy BCrypt row cannot establish bytes after 72. Recovery must create a full-length hash.
         if (Encoding.UTF8.GetByteCount(providedPassword) > 72 || !BcryptHashPattern.IsMatch(hashedPassword))
+        {
             return false;
+        }
 
         try
         {
@@ -203,7 +208,9 @@ public sealed class PasswordHasher(ILogger<PasswordHasher> logger, IConfiguratio
     internal static bool MatchesLongLegacyHashForHistory(string hashedPassword, string providedPassword)
     {
         if (Encoding.UTF8.GetByteCount(providedPassword) <= 72 || !BcryptHashPattern.IsMatch(hashedPassword))
+        {
             return false;
+        }
         try
         {
             return BCrypt.Net.BCrypt.Verify(providedPassword, hashedPassword);
@@ -222,7 +229,9 @@ public sealed class PasswordHasher(ILogger<PasswordHasher> logger, IConfiguratio
         if (string.IsNullOrWhiteSpace(hashedPassword)) { return false; }
 
         if (hashedPassword.StartsWith(LongPasswordHash.Prefix, StringComparison.Ordinal))
+        {
             return !LongPasswordHash.IsValid(hashedPassword);
+        }
 
         var match = BcryptHashPattern.Match(hashedPassword);
         if (!match.Success)
@@ -232,7 +241,7 @@ public sealed class PasswordHasher(ILogger<PasswordHasher> logger, IConfiguratio
         }
 
         var currentWorkFactor = int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
-        var workFactor = BCryptWorkFactor;
+        var workFactor = GetBCryptWorkFactor();
 
         var needsRehash = currentWorkFactor < workFactor;
 

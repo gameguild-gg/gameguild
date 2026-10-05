@@ -94,6 +94,17 @@ line endings; those regeneration artifacts were restored after comparison.
 Local receipts are retained under
 `artifacts/test-results/issue-254-password-20261004/local-proof-combined.json`.
 
+[PR #687](https://github.com/gameguild-gg/gameguild/pull/687) targets `develop`.
+Its initial Codacy run reported 22 items: brace style, a throwing cost-property
+getter and seven alerts interpreting public password-operation route literals as
+credentials. The follow-up adds explicit blocks, makes cost validation a method
+and derives test endpoint paths from the actual controller's public route
+metadata. No scanner rule or gate is suppressed. The full solution rebuilt with
+zero warnings/errors, and all 5,294 .NET cases passed again, including all 36
+integration/OpenAPI cases. The narrower initial 26-case API selection is retained
+but excluded in favor of the complete accepted 106-case selection. Repeated runs
+are not added to the 6,409 local total.
+
 Matching-head PR gates, merge and official acceptance remain pending.
 #254/#255 remain OPEN.
 Configured external email delivery is separate
