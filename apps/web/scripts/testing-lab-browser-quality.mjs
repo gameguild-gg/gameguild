@@ -6,6 +6,14 @@ function unique(values) {
   return [...new Set(values.filter(Boolean))];
 }
 
+export function buildTestingLabFixtureUsername(kind, tag) {
+  const username = `tl_browser_${kind}_${String(tag).replace(/[^a-z0-9]/gi, '_')}`;
+  if (!/^[a-z0-9_]{3,50}$/i.test(username)) {
+    throw new RangeError('Testing Lab fixture usernames must contain 3 to 50 letters, numbers, or underscores.');
+  }
+  return username;
+}
+
 export function requireDisposableDatabaseMode(mode) {
   if (String(mode).toLowerCase() !== 'disposable') {
     throw new Error(
