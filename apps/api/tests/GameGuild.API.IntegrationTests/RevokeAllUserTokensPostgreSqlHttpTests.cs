@@ -49,7 +49,9 @@ public sealed class RevokeAllUserTokensPostgreSqlHttpTests(ApiPostgreSqlFixture 
         var otherBearer = await AccessAsync(factory, other, other.Sessions[0].Id);
         using var client = factory.CreateClient();
         foreach (var bearer in new[] { sessionBearer, versionBearer, legacyBearer, otherBearer })
+        {
             await AssertBearerAsync(client, bearer, HttpStatusCode.OK);
+        }
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", sessionBearer);
         using var response = await client.PostAsJsonAsync(Endpoint, new { userId = other.User.Id, ipAddress = "203.0.113.44" });
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -74,7 +76,9 @@ public sealed class RevokeAllUserTokensPostgreSqlHttpTests(ApiPostgreSqlFixture 
         });
         await AssertUnchangedAsync(factory, other);
         foreach (var bearer in new[] { sessionBearer, versionBearer, legacyBearer })
+        {
             await AssertBearerAsync(client, bearer, HttpStatusCode.Unauthorized);
+        }
         await AssertBearerAsync(client, otherBearer, HttpStatusCode.OK);
         using (var scope = factory.Services.CreateScope())
         {
@@ -90,9 +94,13 @@ public sealed class RevokeAllUserTokensPostgreSqlHttpTests(ApiPostgreSqlFixture 
             Assert.DoesNotContain(sessionBearer, operation.Payload, StringComparison.Ordinal);
             Assert.DoesNotContain(legacyBearer, operation.Payload, StringComparison.Ordinal);
             foreach (var token in ownState.Tokens)
+            {
                 Assert.DoesNotContain(token.Token, operation.Payload, StringComparison.Ordinal);
+            }
             foreach (var token in owner.RawTokens)
+            {
                 Assert.DoesNotContain(token, operation.Payload, StringComparison.Ordinal);
+            }
         }
         using var anonymous = factory.CreateClient();
         foreach (var raw in owner.RawTokens)
@@ -147,6 +155,7 @@ public sealed class RevokeAllUserTokensPostgreSqlHttpTests(ApiPostgreSqlFixture 
         });
         var owner = await SeedAsync(factory);
         var other = await SeedAsync(factory);
+        failure.ExpectedUserId = owner.User.Id;
         var bearer = await AccessAsync(factory, owner, owner.Sessions[0].Id);
         using var client = factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", bearer);
@@ -195,8 +204,8 @@ public sealed class RevokeAllUserTokensPostgreSqlHttpTests(ApiPostgreSqlFixture 
             ActorKind = ActorKind.User, IsAuthenticated = true, SubjectId = owner.User.Id.ToString(), TenantId = owner.TenantId
         });
         using var cancellation = new CancellationTokenSource();
-        var store = new Mock<ITokenRevocationService>(MockBehavior.Strict);
-        store.Setup(value => value.RevokeAllUserTokensAsync(owner.User.Id, "User initiated logout everywhere", cancellation.Token))
+        var store = new Mock<IVersionedUserTokenRevocationService>(MockBehavior.Strict);
+        store.Setup(value => value.RevokeAllUserTokensAsync(owner.User.Id, owner.User.TokenVersion + 1, "User initiated logout everywhere", cancellation.Token))
             .Returns(async () =>
             {
                 Assert.All(await db.Set<RefreshToken>().AsNoTracking().Where(value => value.UserId == owner.User.Id).ToListAsync(),
@@ -294,8 +303,10 @@ public sealed class RevokeAllUserTokensPostgreSqlHttpTests(ApiPostgreSqlFixture 
         var tenant = existingTenant ?? Guid.NewGuid();
         db.Set<User>().Add(user);
         if (!existingTenant.HasValue)
+        {
             db.Set<Tenant>().Add(new Tenant { Id = tenant, Name = $"All-device {marker}", Slug = $"all-device-{marker}",
                 AdminEmail = $"admin-{marker}@example.test", IsActive = true });
+        }
         db.Set<TenantMember>().Add(new TenantMember { Id = Guid.NewGuid(), UserId = user.Id, TenantId = tenant, IsActive = true, Role = "Member" });
         var sessions = new List<UserSession>();
         var rawTokens = new List<string>();
@@ -307,7 +318,10 @@ public sealed class RevokeAllUserTokensPostgreSqlHttpTests(ApiPostgreSqlFixture 
             var hash = scope.ServiceProvider.GetRequiredService<IRefreshTokenHasher>().HashToken(raw);
             db.Set<RefreshToken>().Add(new RefreshToken { Id = Guid.NewGuid(), UserId = user.Id, Token = hash,
                 CreatedAt = now, UpdatedAt = now, ExpiresAt = now.AddDays(7), CreatedByIp = "127.0.0.1" });
-            if (!createSessions) continue;
+            if (!createSessions)
+            {
+                continue;
+            }
             var session = new UserSession { Id = Guid.NewGuid(), UserId = user.Id, RefreshToken = hash,
                 CreatedAt = now, UpdatedAt = now, ExpiresAt = now.AddDays(7), LastUsedAt = now, IsActive = true, IpAddress = "127.0.0.1" };
             sessions.Add(session);
@@ -374,12 +388,19 @@ public sealed class RevokeAllUserTokensPostgreSqlHttpTests(ApiPostgreSqlFixture 
     private sealed record Account(User User, Guid TenantId, List<UserSession> Sessions, List<string> RawTokens);
     private sealed record StoredState(int Version, List<RefreshToken> Tokens, List<UserSession> Sessions);
 
-    private sealed class FailingRevocationStore : ITokenRevocationService
+    private sealed class FailingRevocationStore : ITokenRevocationService, IVersionedUserTokenRevocationService
     {
         public ITokenRevocationService Inner { get; set; } = null!;
+        public Guid ExpectedUserId { get; set; }
         public int Attempts { get; private set; }
         public Task RevokeAllUserTokensAsync(Guid userId, string? reason = null, CancellationToken cancellationToken = default)
+            => Inner.RevokeAllUserTokensAsync(userId, reason, cancellationToken);
+        public Task RevokeAllUserTokensAsync(Guid userId, int minimumTokenVersion, string? reason = null, CancellationToken cancellationToken = default)
         {
+            Assert.Equal(ExpectedUserId, userId);
+            Assert.Equal(2, minimumTokenVersion);
+            Assert.Equal("User initiated logout everywhere", reason);
+            cancellationToken.ThrowIfCancellationRequested();
             Attempts++;
             return Task.FromException(new InvalidOperationException("Synthetic revocation store failure"));
         }
@@ -388,6 +409,8 @@ public sealed class RevokeAllUserTokensPostgreSqlHttpTests(ApiPostgreSqlFixture 
         public Task<bool> IsRevokedAsync(string jti, CancellationToken cancellationToken = default) => Inner.IsRevokedAsync(jti, cancellationToken);
         public Task<bool> IsUserTokenRevokedAsync(Guid userId, DateTime issuedAt, CancellationToken cancellationToken = default) =>
             Inner.IsUserTokenRevokedAsync(userId, issuedAt, cancellationToken);
+        public Task<bool> IsUserTokenRevokedAsync(Guid userId, DateTime issuedAt, int? tokenVersion, CancellationToken cancellationToken = default) =>
+            ((IVersionedUserTokenRevocationService)Inner).IsUserTokenRevokedAsync(userId, issuedAt, tokenVersion, cancellationToken);
         public Task<int> CleanupExpiredAsync(CancellationToken cancellationToken = default) => Inner.CleanupExpiredAsync(cancellationToken);
     }
 
@@ -398,6 +421,7 @@ public sealed class RevokeAllUserTokensPostgreSqlHttpTests(ApiPostgreSqlFixture 
         public override ValueTask<InterceptionResult<int>> SavingChangesAsync(DbContextEventData eventData,
             InterceptionResult<int> result, CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if (eventData.Context!.ChangeTracker.Entries<User>().Any(value =>
                     value.State == EntityState.Modified && value.Entity.Id == Owner && value.Entity.TokenVersion > 1))
             {

@@ -78,7 +78,7 @@ public sealed class RevokeAllUserTokensTests
         fixture.Sessions.Verify(value => value.TerminateAllUserSessionsAsync(
             fixture.Owner, SessionTerminationReason.UserLogout, null, cancellation.Token), Times.Once);
         fixture.Revocations.Verify(value => value.RevokeAllUserTokensAsync(
-            fixture.Owner, "User initiated logout everywhere", cancellation.Token), Times.Once);
+            fixture.Owner, 8, "User initiated logout everywhere", cancellation.Token), Times.Once);
         fixture.VerifyNoStoreCalls();
     }
 
@@ -124,6 +124,7 @@ public sealed class RevokeAllUserTokensTests
         string? failure = null)
     {
         var calls = new List<string>();
+        var minimumVersion = user.TokenVersion + 1;
         Task Record(string name)
         {
             calls.Add(name);
@@ -136,7 +137,7 @@ public sealed class RevokeAllUserTokensTests
             .Returns(async () => { await Record("sessions"); return count; });
         fixture.Users.Setup(value => value.UpdateAsync(user, cancellation)).Returns(() => Record("user-update"));
         fixture.Users.Setup(value => value.SaveChangesAsync(cancellation)).Returns(() => Record("user-save"));
-        fixture.Revocations.Setup(value => value.RevokeAllUserTokensAsync(fixture.Owner, "User initiated logout everywhere", cancellation))
+        fixture.Revocations.Setup(value => value.RevokeAllUserTokensAsync(fixture.Owner, minimumVersion, "User initiated logout everywhere", cancellation))
             .Returns(() => Record("legacy-store"));
         return calls;
     }
@@ -148,7 +149,7 @@ public sealed class RevokeAllUserTokensTests
         public Mock<IUserRepository> Users { get; } = new(MockBehavior.Strict);
         public Mock<IRefreshTokenRepository> Tokens { get; } = new(MockBehavior.Strict);
         public Mock<ISessionManagementService> Sessions { get; } = new(MockBehavior.Strict);
-        public Mock<ITokenRevocationService> Revocations { get; } = new(MockBehavior.Strict);
+        public Mock<IVersionedUserTokenRevocationService> Revocations { get; } = new(MockBehavior.Strict);
         public RevokeAllUserTokensHandler Handler { get; }
 
         public HandlerFixture()

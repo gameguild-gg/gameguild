@@ -1854,6 +1854,13 @@ report successful logout after an incomplete write. The cache and PostgreSQL
 do not share a transaction: a cutoff already written before a later database
 commit failure remains a denial of earlier tokens. This is a conservative
 failure outcome, and callers must sign in again or retry after the failure.
+The cutoff records the minimum token version advanced by that operation. A
+signed token at or above that version is not rejected solely because its
+second-granular iat precedes the cutoff's fractional second. Tokens without a
+version and ordinary time-only cutoffs retain the earlier timestamp rule;
+the stored database version and session validity checks still run. Both
+configured stores implement the required typed version boundary. A custom
+store must implement that capability for the guarded self-revocation command.
 The session-only command remains separate for ending other sessions, MFA
 containment and refresh-replay containment; those paths retain their own
 existing version/security policy. No raw credentials are added to events.
