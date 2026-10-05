@@ -1,5 +1,31 @@
 # GameGuild issue closeout inventory
 
+## 2026-10-05 accepted persisted refresh-token lineage — PR #695
+
+[PR #695](https://github.com/gameguild-gg/gameguild/pull/695) merged into develop
+at `7952eaf967003e536b8ff736509400660d6dd2da`, after every applicable gate passed for
+`e49579db56abf04ffef5a0fb54e42c93fd573a60`. Codacy's migration-test SQL annotation was corrected
+with constant commands and explicit parameters; no scanner rule was suppressed.
+Actual current-head CI passes **4,975 distinct main cases** plus15 repeated
+OpenAPI cases: integration307/APIunit1050/Authentication2241/SharedKernel1377.
+Together with verified unchanged Authorization1667/SDK1119 receipts, coverage is
+**7,761 distinct .NET/SDK cases**, including37 new cases. The reviewed source
+also has a warning/error-clean full solution build and fresh PostgreSQL73/OpenAPI15.
+The full spec remains equal to accepted #694,1297paths/1656schemas; model and
+client consistency are verified. [Individual partial acceptance](https://github.com/gameguild-gg/gameguild/issues/263#issuecomment-5998430026).
+
+**#263 remains OPEN**, with all19 original criteria. Known predecessor/session
+GUIDs are stored only from observed owned-session issuance/rotation, with fresh
+state checks, restrictive foreign keys, failure rollback and retained ancestry.
+All-provider behavior, complete token audit/reuse alerts, scheduled cleanup,
+retention and metrics still require acceptance. Web3 #291/#292 cache/account/
+session/plaintext defects remain separate; their prepared tests are not passing
+acceptance evidence. The fixed snapshot remains **70 closed/258 open**
+across328 original IDs; original acceptance text is preserved in every row.
+All55 unrelated primary files are preserved. Two worktrees/zero stashes remain;
+the completed lineage branch is removed and the isolated checkout is reused.
+Earlier dated sections retain historical statuses and counts.
+
 ## 2026-10-05 all-user revocation accepted and merged
 
 Live snapshot **2026-10-05T14:10:57.070481+00:00** retains **328 IDs/all original criteria**:
