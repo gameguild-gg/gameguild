@@ -30,6 +30,17 @@ method types, HTTP contracts and runtime behavior remain unchanged. A generator
 regression test and regenerated modules make that formatting reproducible.
 Matching-head integration checks and accepted merge are required before closure.
 
+The same develop revision introduced invalid accesses on `unknown`, an invalid
+rest parameter and an unparenthesized mix of `??` and `||` in Web dependencies.
+The integration repair uses existing Monaco, Lexical and Vega types, a typed
+JavaScript compiler export boundary and valid operator grouping. Existing editor
+controls and rendering behavior are retained. Web runtime dependencies and the
+complete Web typecheck pass locally. Obsolete ESLint suppression counts are only
+removed as the corresponding violations disappear; no new suppression or disabled
+rule is introduced. The complete integrated .NET/SDK receipts pass 7,810 distinct
+cases: Authentication2256/Authorization1667/SharedKernel1389/APIunit1050/
+Integration327/SDK1121, including35 new Web3 cases and2 generator regression cases.
+
 ## Account and credential boundaries
 
 The insert-only `web3` external-login provider key is the lowercase verified
