@@ -2,9 +2,11 @@
 
 ## 2026-10-05 unavailable-account token boundary — #262 / #263
 
-Refresh issuance requires a user returned by the existing live-user repository,
+Otherwise active refresh issuance requires a user returned by the existing live-user repository,
 before tenant provisioning, token generation or session mutation. Missing/deleted
-accounts receive generic invalid-refresh denial; fallback email/version identities
+accounts receive generic invalid-refresh denial before issuance; revoked/replaced
+replay still commits containment of extant tokens/sessions without inventing a
+profile or version update. Fallback email/version identities
 are no longer minted. A production user JWT with a valid `token_version` also
 requires a current live-user version; null lookup results reject the bearer and
 clear its identity through the same protected/public boundary as revoked tokens.
