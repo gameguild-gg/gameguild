@@ -96,6 +96,16 @@ the combined local .NET/SDK receipts contain 8,047 passing cases. Failed baselin
 and CI receipts are retained; publication acceptance still requires the complete
 current-head Economy profile and browser journey.
 
+An additional 22 unchanged unit suites pass locally (3,561 distinct cases,
+without counting SharedKernel's existing receipt again). Their execution exposed
+an inherited solution mapping defect: Announcements' test project mapped both
+Debug and Release to the configuration `Any CPU`, producing its DLL under
+`bin/Any CPU` instead of the gate's `bin/Release` path. The twelve mapping entries
+now retain the requested configuration and use the existing Any CPU platform.
+The actual solution target demonstrates the corrected Release output, followed
+by all seven tests passing with `--no-build`, as used by the complete CI gate.
+Neither production code nor the test assertions were changed for this repair.
+
 ## Account and credential boundaries
 
 The insert-only `web3` external-login provider key is the lowercase verified
