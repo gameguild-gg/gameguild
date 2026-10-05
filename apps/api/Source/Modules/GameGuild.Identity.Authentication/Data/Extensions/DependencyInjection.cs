@@ -76,6 +76,9 @@ public static class DataDependencyInjection
         // Register repositories
         // NOTE: IUserRepository is registered by the Users module - no need to register here
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<IRefreshTokenLineageRepository>(provider =>
+            provider.GetRequiredService<IRefreshTokenRepository>() as IRefreshTokenLineageRepository
+            ?? throw new InvalidOperationException("The refresh-token store must support persisted session and parent lineage."));
         services.AddScoped<IUserSessionRepository, UserSessionRepository>();
         services.AddScoped<IUserMfaConfigurationRepository, UserMfaConfigurationRepository>();
         services.AddScoped<IAuthenticationAttemptRepository, AuthenticationAttemptRepository>();

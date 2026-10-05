@@ -17,6 +17,7 @@ namespace GameGuild.Identity.Authentication;
 public class LocalAuthService(
     IUserRepository userRepository,
     IRefreshTokenRepository refreshTokenRepository,
+    IRefreshTokenLineageRepository tokenLineageRepository,
     IJwtTokenService jwtTokenService,
     IRefreshTokenHasher refreshTokenHasher,
     IConfiguration configuration,
@@ -525,7 +526,7 @@ public class LocalAuthService(
 
         // Hash the incoming token to match against stored hash
         var hashedToken = refreshTokenHasher.HashToken(request.RefreshToken);
-        var storedToken = await refreshTokenRepository.GetByTokenAsync(hashedToken).ConfigureAwait(false);
+        var storedToken = await refreshTokenRepository.GetByTokenAsync(hashedToken, cancellationToken).ConfigureAwait(false);
         var now = SystemClock.UtcNow;
 
         if (storedToken == null)
@@ -642,6 +643,9 @@ public class LocalAuthService(
             await InvalidateSessionsAfterRefreshReplayAsync(userId, ipAddress, cancellationToken).ConfigureAwait(false);
             return new RefreshTokenContainmentDenial();
         }
+
+        await tokenLineageRepository.RecordRotationAsync(userId, storedToken.Id, replacementTokenHash, sessionId, cancellationToken)
+            .ConfigureAwait(false);
 
         logger.LogInformation("Refresh token rotated for user {UserId}", userId);
 

@@ -1,5 +1,35 @@
 # GameGuild issue closeout inventory
 
+## 2026-10-05 all-user revocation accepted and merged
+
+Live snapshot **2026-10-05T14:10:57.070481+00:00** retains **328 IDs/all original criteria**:
+**70 closed /258 open**. No issue was additionally closed in this increment.
+[#694](https://github.com/gameguild-gg/gameguild/pull/694) merged into develop at
+`fddbc684c55e5ea0607ef4a5097601f82f041152`, accepted head
+`cd6c3e9b68fc4f660d4591e7730458f936141b4b`. Existing self all-session logout now
+revokes owned refresh tokens/sessions, advances persisted version once and records
+a version-bound cutoff; actual credential re-login at the logout second succeeds
+while prior bearers are denied. Ordinary/legacy cutoffs remain compatible.
+**55 new tests /7,724 distinct current-source .NET/SDK cases** pass: CI276integration,
+1,050APIunit/2,235Authentication plus fresh local1,667Authorization/1,377SharedKernel/
+1,119SDK. Repeated OpenAPI15/local subsets and failed/historical receipts excluded.
+All applicable gates, Codacy and four CodeQL languages pass. Entire OpenAPI unchanged
+(1,297paths/1,656schemas); warning/error-clean builds and no pending model changes.
+[Public bounded acceptance](https://github.com/gameguild-gg/gameguild/issues/263#issuecomment-5996108933).
+
+#263 remains OPEN with all19 criteria. [Actual login/two-rotation baseline](https://github.com/gameguild-gg/gameguild/issues/263#issuecomment-5995693416)
+confirms forward links/stable session but missing ParentTokenId/SessionId metadata.
+[Separate Web3 diagnostics](https://github.com/gameguild-gg/gameguild/issues/291#issuecomment-5996026613)
+confirm bounded-host cache Size failure. An explicitly unbounded downstream fixture
+retains real signature/facade/JWT/PostgreSQL and confirms plaintext duplicate plus
+absent account/session; this is not HTTP/command-transaction/production-cache or
+provider/UI acceptance. #291 and its approved5-criterion native child#292 stay OPEN.
+Original #292 inventory field is retained alongside evidence of its current scope.
+
+Both checkouts synchronized;55 unrelated primary files preserved. Completed branch
+removed locally/remotely; two worktrees/zero stashes. Same isolated checkout reused
+for next lineage work; no agents used. Earlier dated sections retain history.
+
 ## 2026-10-05 ownership and stored-session revocation merged
 
 Live snapshot **2026-10-05T11:54:21.248742+00:00** retains all **328 IDs and original criteria**:

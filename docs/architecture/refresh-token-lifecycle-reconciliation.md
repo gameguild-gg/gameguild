@@ -1,5 +1,41 @@
 # Refresh-token lifecycle and unavailable accounts — #262 / #263
 
+## All-user revocation accepted — #694
+
+[#694](https://github.com/gameguild-gg/gameguild/pull/694) merged into develop at
+`fddbc684c55e5ea0607ef4a5097601f82f041152`, accepted head
+`cd6c3e9b68fc4f660d4591e7730458f936141b4b`, at2026-10-05T14:02:38Z.
+All applicable checks, Codacy and four CodeQL languages pass. Current-source
+acceptance totals **7,724 distinct .NET/SDK cases,55 new definitions**: CI276full
+integration/1,050full APIunit/2,235Authentication plus fresh local1,667Authorization/
+1,377SharedKernel/1,119SDK. Repeated OpenAPI15, focused PostgreSQL10, local API129
+and repeated suites are subsets excluded; historical/failed receipts are retained
+separately. Entire OpenAPI remains equal (1,297paths/1,656schemas), builds have zero
+warnings/errors and no model changes are pending. This accepted stage supersedes
+earlier publication-stage pending statements below.
+[Public bounded acceptance](https://github.com/gameguild-gg/gameguild/issues/263#issuecomment-5996108933).
+
+Both checkouts are synchronized and all55 unrelated primary files remain preserved.
+Completed feature branch removed locally/remotely; same isolated checkout reused
+for further work, two worktrees/zero stashes. No additional issue was closed:
+the refreshed328-ID snapshot remains70closed/258open with original fields retained.
+
+The [next actual login/two-rotation baseline](https://github.com/gameguild-gg/gameguild/issues/263#issuecomment-5995693416)
+passes rotation/revocation, forward hash links and stable-session controls but fails
+required ParentTokenId/SessionId entity/storage metadata. Its1failed diagnostic is
+excluded from #694 acceptance. All19 original #263 criteria remain authoritative.
+
+[Separate Web3 diagnostics](https://github.com/gameguild-gg/gameguild/issues/291#issuecomment-5996026613)
+confirm missing entry Size with the bounded host cache: HTTP challenge500 and actual
+service exception. A downstream diagnostic explicitly removes that cache limit;
+real facade/SIWE/EIP191/JWT/PostgreSQL then rejects wrong-key/replay and accepts the
+valid signature, but persists a plaintext duplicate and no account/session. That
+stage is not HTTP/command-transaction/production-cache/provider/UI acceptance.
+All three failed stages are preserved/excluded. #291 and its5-criterion approved
+native child#292 remain OPEN. Global metadata/hashing acceptance cannot be inferred
+from LocalAuth receipts alone; complete audit/alerts/retention/cleanup/metrics and
+all issuance-path acceptance remain outstanding.
+
 ## Ownership/session acceptance merged and all-session revocation continuation
 
 The #694 review reproduced a further boundary defect at head3ddfa552e:
