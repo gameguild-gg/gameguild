@@ -301,7 +301,7 @@ public sealed class MfaAttemptTrackingService(
         ArgumentNullException.ThrowIfNull(configuration);
         try
         {
-            for (var retry = 0; ; retry++)
+            for (var retry = 0; retry < 16; retry++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 if (IsLockedOut(configuration)) { break; }

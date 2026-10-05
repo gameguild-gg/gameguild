@@ -50,7 +50,7 @@ public sealed class TotpRecoverySecurityTests
     [InlineData(5, false)]
     public async Task IndependentAuthenticatorCodesFollowRecordedThirtySecondWindow(int offset, bool accepted)
     {
-        const string secret = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ";
+        var secret = CreateSyntheticTotpKey();
         var encryption = CreateEncryption();
         var row = new UserMfaConfiguration { UserId = Guid.NewGuid(), IsEnabled = true, TotpSecretKey = encryption.Encrypt(secret) };
         var repository = CreateRepository(row);
@@ -60,7 +60,7 @@ public sealed class TotpRecoverySecurityTests
     [Fact]
     public async Task ExpiredPendingSetupClearsSecretAndRecoveryCodes()
     {
-        const string secret = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ";
+        var secret = CreateSyntheticTotpKey();
         var encryption = CreateEncryption();
         var row = new UserMfaConfiguration
         {
@@ -77,14 +77,15 @@ public sealed class TotpRecoverySecurityTests
     public async Task ProvisioningUriRendersPngWithoutClaimingExternalAuthenticatorAcceptance()
     {
         var service = CreateService(new Mock<IUserMfaConfigurationRepository>().Object, CreateEncryption());
-        var image = await service.GenerateQrCodeAsync("otpauth://totp/Test:synthetic%40example.test?secret=GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ&issuer=Test&algorithm=SHA1&digits=6&period=30");
+        var provisioningKey = CreateSyntheticTotpKey();
+        var image = await service.GenerateQrCodeAsync($"otpauth://totp/Test:synthetic%40example.test?secret={provisioningKey}&issuer=Test&algorithm=SHA1&digits=6&period=30");
         Assert.Equal(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }, image[..8]);
     }
 
     [Fact]
     public async Task RecentFailedAttemptCannotExtendAnExpiredEnrollment()
     {
-        const string secret = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ";
+        var secret = CreateSyntheticTotpKey();
         var encryption = CreateEncryption();
         var row = new UserMfaConfiguration
         {
@@ -133,5 +134,12 @@ public sealed class TotpRecoverySecurityTests
         var start = digest[^1] & 15;
         var value = BinaryPrimitives.ReadInt32BigEndian(digest.AsSpan(start, 4)) & int.MaxValue;
         return (value % 1000000).ToString("D6", System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    private static string CreateSyntheticTotpKey()
+    {
+        const string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+        return new string(Enumerable.Range(0, 32)
+            .Select(_ => alphabet[RandomNumberGenerator.GetInt32(alphabet.Length)]).ToArray());
     }
 }
