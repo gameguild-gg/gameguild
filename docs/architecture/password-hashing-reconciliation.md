@@ -107,6 +107,15 @@ are not added to the 6,409 local total.
 
 Matching-head PR gates, merge and official acceptance remain pending.
 #254/#255 remain OPEN.
+
+The `ea329eb9b` CI integration run passed 163 of 164 cases and exposed an existing
+shared-fixture assumption in the data-masking test: it searched for newly seeded
+users only within the first 20 rows of the collection-wide database. Its follow-up
+queries each unique fixture marker through the existing list/search endpoint and
+asserts exactly one correct user, retaining both tenant masking assertions. The
+integration test project rebuild passed with zero warnings/errors. Full local API
+suites and matching-head CI verification are pending for that follow-up; the
+failed CI run is retained and excluded from accepted totals.
 Configured external email delivery is separate
 acceptance under #223/#253 and is not established by a synthetic reset-token fixture.
 
