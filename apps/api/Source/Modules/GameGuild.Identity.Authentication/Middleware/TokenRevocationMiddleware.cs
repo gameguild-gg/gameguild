@@ -67,11 +67,16 @@ public sealed class TokenRevocationMiddleware
         // Extract user ID and token issued time for user-level revocation check
         var userId = ClaimsExtractor.GetUserIdAsGuid(context.User);
         var tokenIssuedAt = ClaimsExtractor.GetIssuedAtDateTime(context.User);
+        var tokenVersionClaim = ClaimsExtractor.GetTokenVersion(context.User);
+        int? parsedTokenVersion = int.TryParse(tokenVersionClaim, out var parsedVersion) ? parsedVersion : null;
 
         if (userId.HasValue && tokenIssuedAt.HasValue)
         {
             // Check if all user tokens were revoked after this token was issued
-            if (await revocationService.IsUserTokenRevokedAsync(userId.Value, tokenIssuedAt.Value, context.RequestAborted))
+            var userRevoked = revocationService is IVersionedUserTokenRevocationService versioned
+                ? await versioned.IsUserTokenRevokedAsync(userId.Value, tokenIssuedAt.Value, parsedTokenVersion, context.RequestAborted).ConfigureAwait(false)
+                : await revocationService.IsUserTokenRevokedAsync(userId.Value, tokenIssuedAt.Value, context.RequestAborted).ConfigureAwait(false);
+            if (userRevoked)
             {
                 _logger.LogWarning(
                     "Rejected request with user-revoked token: UserId={UserId}, IssuedAt={IssuedAt}",
@@ -84,9 +89,9 @@ public sealed class TokenRevocationMiddleware
         // Token version validation: compare JWT's token_version against user's current TokenVersion
         if (userId.HasValue)
         {
-            var tokenVersionClaim = ClaimsExtractor.GetTokenVersion(context.User);
-            if (!string.IsNullOrEmpty(tokenVersionClaim) && int.TryParse(tokenVersionClaim, out var tokenVersion))
+            if (parsedTokenVersion.HasValue)
             {
+                var tokenVersion = parsedTokenVersion.Value;
                 var currentVersion = await userRepository.GetTokenVersionAsync(userId.Value, context.RequestAborted).ConfigureAwait(false);
                 
                 // Versioned user tokens require an available user and a current version.
