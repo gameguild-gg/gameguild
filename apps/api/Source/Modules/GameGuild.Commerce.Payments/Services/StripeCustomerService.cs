@@ -30,7 +30,7 @@ public class StripeCustomerService(
         CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Creating Stripe customer for email {Email} (Simulation: {IsSimulation})",
-            request.Email, _options.UseSimulation);
+            LogRedaction.MaskEmail(request.Email), _options.UseSimulation);
 
         if (_options.UseSimulation)
         {
@@ -62,7 +62,7 @@ public class StripeCustomerService(
         catch (StripeException ex)
         {
             logger.LogError(ex, "Stripe customer creation failed for email {Email}: {ErrorCode}",
-                request.Email, ex.StripeError?.Code);
+                LogRedaction.MaskEmail(request.Email), LogRedaction.Sanitize(ex.StripeError?.Code));
 
             return new GatewayCustomerResult(
                 Success: false,
@@ -72,7 +72,7 @@ public class StripeCustomerService(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Unexpected error during Stripe customer creation for email {Email}", request.Email);
+            logger.LogError(ex, "Unexpected error during Stripe customer creation for email {Email}", LogRedaction.MaskEmail(request.Email));
             return SimulatedPaymentResultFactory.CustomerFailure(ex.Message, "unexpected_error");
         }
     }

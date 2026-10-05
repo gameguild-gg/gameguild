@@ -65,13 +65,13 @@ public class TestingLabPermissionController : BaseApiController {
 
       var template = await _sender.Send(new CreateTestingLabRoleTemplateEndpointCommand(request.Name, request.Description, permissionTemplates)).ConfigureAwait(false);
 
-      _logger.LogInformation("Admin user {UserId} created TestingLab role template '{RoleName}'", GetCurrentUserId(), request.Name);
+      _logger.LogInformation("Admin user {UserId} created TestingLab role template '{RoleName}'", GetCurrentUserId(), LogRedaction.Sanitize(request.Name));
 
       return Ok(MapToTestingLabRoleTemplate(template));
     }
     catch (InvalidOperationException ex)
     {
-      _logger.LogWarning(ex, "Conflict while creating role template '{RoleName}'", request.Name);
+      _logger.LogWarning(ex, "Conflict while creating role template '{RoleName}'", LogRedaction.Sanitize(request.Name));
       return Conflict("A conflict occurred while creating the role template.");
     }
   }
@@ -86,13 +86,13 @@ public class TestingLabPermissionController : BaseApiController {
 
       if (template == null) { return NotFound($"Role template '{idOrName}' not found"); }
 
-      _logger.LogInformation("Admin user {UserId} updated TestingLab role template '{RoleName}'", GetCurrentUserId(), template.Name);
+      _logger.LogInformation("Admin user {UserId} updated TestingLab role template '{RoleName}'", GetCurrentUserId(), LogRedaction.Sanitize(template.Name));
 
       return Ok(MapToTestingLabRoleTemplate(template));
     }
     catch (InvalidOperationException ex)
     {
-      _logger.LogWarning(ex, "Conflict while updating role template '{RoleName}'", idOrName);
+      _logger.LogWarning(ex, "Conflict while updating role template '{RoleName}'", LogRedaction.Sanitize(idOrName));
       return Conflict("A conflict occurred while updating the role template.");
     }
   }
@@ -106,13 +106,13 @@ public class TestingLabPermissionController : BaseApiController {
 
       if (!deleted) { return NotFound($"Role template '{idOrName}' not found"); }
 
-      _logger.LogInformation("Admin user {UserId} deleted TestingLab role template '{RoleName}'", GetCurrentUserId(), idOrName);
+      _logger.LogInformation("Admin user {UserId} deleted TestingLab role template '{RoleName}'", GetCurrentUserId(), LogRedaction.Sanitize(idOrName));
 
       return NoContent();
     }
     catch (InvalidOperationException ex)
     {
-      _logger.LogWarning(ex, "Conflict while deleting role template '{RoleName}'", idOrName);
+      _logger.LogWarning(ex, "Conflict while deleting role template '{RoleName}'", LogRedaction.Sanitize(idOrName));
       return Conflict("A conflict occurred while deleting the role template.");
     }
   }
@@ -122,18 +122,18 @@ public class TestingLabPermissionController : BaseApiController {
   [HttpDelete("role-templates/by-name/{name}")]
   public async Task<ActionResult> DeleteTestingLabRoleTemplateByName(string name) {
     try {
-      _logger.LogInformation("Attempting to delete TestingLab role template by name '{Name}'", name);
+      _logger.LogInformation("Attempting to delete TestingLab role template by name '{Name}'", LogRedaction.Sanitize(name));
       var deleted = await _sender.Send(new DeleteTestingLabRoleTemplateEndpointCommand(name)).ConfigureAwait(false);
 
       if (!deleted) { return NotFound($"Role template with name '{name}' not found"); }
 
-      _logger.LogInformation("Admin user {UserId} deleted TestingLab role template named '{Name}'", GetCurrentUserId(), name);
+      _logger.LogInformation("Admin user {UserId} deleted TestingLab role template named '{Name}'", GetCurrentUserId(), LogRedaction.Sanitize(name));
 
       return NoContent();
     }
     catch (InvalidOperationException ex)
     {
-      _logger.LogWarning(ex, "Conflict while deleting role template '{Name}'", name);
+      _logger.LogWarning(ex, "Conflict while deleting role template '{Name}'", LogRedaction.Sanitize(name));
       return Conflict("A conflict occurred while deleting the role template.");
     }
   }
@@ -204,13 +204,13 @@ public class TestingLabPermissionController : BaseApiController {
       if (!TryGetEffectiveTenantId(request.TenantId, out var effectiveTenantId)) return Forbid();
       await _sender.Send(new AssignTestingLabRoleEndpointCommand(userId, effectiveTenantId, request.RoleName, request.ExpiresAt)).ConfigureAwait(false);
 
-      _logger.LogInformation("Admin user {AdminUserId} assigned TestingLab role '{RoleName}' to user {UserId}", GetCurrentUserId(), request.RoleName, userId);
+      _logger.LogInformation("Admin user {AdminUserId} assigned TestingLab role '{RoleName}' to user {UserId}", GetCurrentUserId(), LogRedaction.Sanitize(request.RoleName), LogRedaction.Sanitize(userId.ToString()));
 
       return Ok();
     }
     catch (InvalidOperationException ex)
     {
-      _logger.LogWarning(ex, "Failed to assign role '{RoleName}' to user {UserId}", request.RoleName, userId);
+      _logger.LogWarning(ex, "Failed to assign role '{RoleName}' to user {UserId}", LogRedaction.Sanitize(request.RoleName), LogRedaction.Sanitize(userId.ToString()));
       return NotFound("The specified user or role was not found.");
     }
   }
@@ -221,7 +221,7 @@ public class TestingLabPermissionController : BaseApiController {
     if (!TryGetEffectiveTenantId(tenantId, out var effectiveTenantId)) return Forbid();
     await _sender.Send(new RevokeTestingLabRoleEndpointCommand(userId, effectiveTenantId, roleName)).ConfigureAwait(false);
 
-    _logger.LogInformation("Admin user {AdminUserId} revoked TestingLab role '{RoleName}' from user {UserId}", GetCurrentUserId(), roleName, userId);
+    _logger.LogInformation("Admin user {AdminUserId} revoked TestingLab role '{RoleName}' from user {UserId}", GetCurrentUserId(), LogRedaction.Sanitize(roleName), LogRedaction.Sanitize(userId.ToString()));
 
     return NoContent();
   }
@@ -236,7 +236,7 @@ public class TestingLabPermissionController : BaseApiController {
     if (!TryGetEffectiveTenantId(request.TenantId, out var effectiveTenantId)) return Forbid();
     await _sender.Send(new GrantTestingLabResourcePermissionEndpointCommand(userId, effectiveTenantId, request.Action, resourceType, resourceId, request.ExpiresAt, GetCurrentUserId())).ConfigureAwait(false);
 
-    _logger.LogInformation("Admin user {AdminUserId} granted permission '{Action}' on {ResourceType} {ResourceId} to user {UserId}", GetCurrentUserId(), request.Action, resourceType, resourceId, userId);
+    _logger.LogInformation("Admin user {AdminUserId} granted permission '{Action}' on {ResourceType} {ResourceId} to user {UserId}", GetCurrentUserId(), LogRedaction.Sanitize(request.Action), LogRedaction.Sanitize(resourceType), LogRedaction.Sanitize(resourceId.ToString()), LogRedaction.Sanitize(userId.ToString()));
 
     return Ok();
   }
@@ -249,7 +249,7 @@ public class TestingLabPermissionController : BaseApiController {
     if (!TryGetEffectiveTenantId(tenantId, out var effectiveTenantId)) return Forbid();
     await _sender.Send(new RevokeTestingLabResourcePermissionEndpointCommand(userId, effectiveTenantId, action, resourceType, resourceId, GetCurrentUserId())).ConfigureAwait(false);
 
-    _logger.LogInformation("Admin user {AdminUserId} revoked permission '{Action}' on {ResourceType} {ResourceId} from user {UserId}", GetCurrentUserId(), action, resourceType, resourceId, userId);
+    _logger.LogInformation("Admin user {AdminUserId} revoked permission '{Action}' on {ResourceType} {ResourceId} from user {UserId}", GetCurrentUserId(), LogRedaction.Sanitize(action), LogRedaction.Sanitize(resourceType), LogRedaction.Sanitize(resourceId.ToString()), LogRedaction.Sanitize(userId.ToString()));
 
     return NoContent();
   }

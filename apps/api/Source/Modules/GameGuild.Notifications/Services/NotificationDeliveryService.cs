@@ -78,7 +78,7 @@ public class NotificationDeliveryService(
             decision = await preferenceService.DecideDeliveryAsync(userId, type, channel, priority, cancellationToken).ConfigureAwait(false);
             if (decision.Action == NotificationDeliveryAction.Drop)
             {
-                logger.LogDebug("Notification dropped due to user preferences. UserId: {UserId}, Type: {Type}, Reason: {Reason}", userId, type, decision.Reason);
+                logger.LogDebug("Notification dropped due to user preferences. UserId: {UserId}, Type: {Type}, Reason: {Reason}", LogRedaction.Sanitize(userId.ToString()), type, decision.Reason);
                 return Result.Failure<Notification>(Error.Failure("Notification.Skipped", $"Notification skipped due to user preferences ({decision.Reason})"));
             }
         }
@@ -119,7 +119,7 @@ public class NotificationDeliveryService(
         }
 
         logger.LogInformation("Notification sent. Id: {NotificationId}, Recipient: {RecipientId}, Type: {Type}",
-            notification.Id, recipientId, type);
+            notification.Id, LogRedaction.Sanitize(recipientId.ToString()), notification.Type);
 
         return Result.Success(notification);
     }

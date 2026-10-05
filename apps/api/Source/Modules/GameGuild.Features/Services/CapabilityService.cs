@@ -131,7 +131,7 @@ public class CapabilityService : ICapabilityService
                 {
                     _logger.LogInformation(
                         "Capability {Capability} override for tenant {TenantId} has expired, falling back to plan",
-                        capability, tenantId);
+                        LogRedaction.Sanitize(capability), LogRedaction.Sanitize(tenantId.ToString()));
                 }
                 else
                 {
@@ -149,7 +149,7 @@ public class CapabilityService : ICapabilityService
             {
                 _logger.LogWarning(
                     "No active subscription found for tenant {TenantId}, capability {Capability} denied (fail-closed)",
-                    tenantId, capability);
+                    LogRedaction.Sanitize(tenantId.ToString()), LogRedaction.Sanitize(capability));
                 return false; // Fail-closed
             }
 
@@ -161,7 +161,7 @@ public class CapabilityService : ICapabilityService
         {
             _logger.LogError(ex,
                 "Capability check failed for {TenantId}/{Capability}, defaulting to false (fail-closed)",
-                tenantId, capability);
+                LogRedaction.Sanitize(tenantId.ToString()), LogRedaction.Sanitize(capability));
             return false; // Fail-closed
         }
     }

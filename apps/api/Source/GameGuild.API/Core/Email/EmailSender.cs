@@ -48,7 +48,7 @@ public sealed class EmailSender : IEmailSender
         var currentOptions = options.Value;
         if (!currentOptions.Enabled)
         {
-            logger.LogInformation("Email delivery is disabled. Skipping email to {RecipientEmail}.", message.ToEmail);
+            logger.LogInformation("Email delivery is disabled. Skipping email to {RecipientEmail}.", LogRedaction.MaskEmail(message.ToEmail));
             return null;
         }
 
@@ -130,7 +130,7 @@ public sealed class EmailSender : IEmailSender
 
         logger.LogInformation(
             "Delivered email to {RecipientEmail} with {AttachmentCount} attachments.",
-            message.ToEmail,
+            LogRedaction.MaskEmail(message.ToEmail),
             message.Attachments?.Count ?? 0);
         return response.Headers.TryGetValues("X-Message-Id", out var messageIds)
             ? messageIds.FirstOrDefault()
@@ -203,7 +203,7 @@ public sealed class EmailSender : IEmailSender
 
         logger.LogInformation(
             "Delivered email to {RecipientEmail} through SMTP host {SmtpHost}:{SmtpPort} with {AttachmentCount} attachments.",
-            message.ToEmail,
+            LogRedaction.MaskEmail(message.ToEmail),
             currentOptions.SmtpHost,
             currentOptions.SmtpPort,
             message.Attachments?.Count ?? 0);
