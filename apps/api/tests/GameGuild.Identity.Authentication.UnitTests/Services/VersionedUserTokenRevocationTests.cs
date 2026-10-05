@@ -31,14 +31,14 @@ public sealed class VersionedUserTokenRevocationTests
         {
             if (bound)
             {
-                await fixture.Versioned.RevokeAllUserTokensAsync(user, 2, "Synthetic revocation");
+                await fixture.Versioned.RevokeAllUserTokensAsync(user, 2, "Synthetic revocation", CancellationToken.None);
             }
             else
             {
                 await fixture.Ordinary.RevokeAllUserTokensAsync(user, "Synthetic revocation");
             }
             var issuedAt = DateTimeOffset.FromUnixTimeSeconds(now.ToUnixTimeSeconds() + (after ? 1 : 0)).UtcDateTime;
-            Assert.Equal(expected, await fixture.Versioned.IsUserTokenRevokedAsync(user, issuedAt, version));
+            Assert.Equal(expected, await fixture.Versioned.IsUserTokenRevokedAsync(user, issuedAt, version, CancellationToken.None));
             Assert.Equal(!after, await fixture.Ordinary.IsUserTokenRevokedAsync(user, issuedAt));
         }
         finally
@@ -56,8 +56,8 @@ public sealed class VersionedUserTokenRevocationTests
     {
         using var fixture = new StoreFixture(distributed);
         var user = Guid.NewGuid();
-        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => fixture.Versioned.RevokeAllUserTokensAsync(user, version));
-        Assert.False(await fixture.Versioned.IsUserTokenRevokedAsync(user, DateTime.UtcNow.AddMinutes(-1), 1));
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => fixture.Versioned.RevokeAllUserTokensAsync(user, version, null, CancellationToken.None));
+        Assert.False(await fixture.Versioned.IsUserTokenRevokedAsync(user, DateTime.UtcNow.AddMinutes(-1), 1, CancellationToken.None));
     }
 
     [Fact]
@@ -68,9 +68,9 @@ public sealed class VersionedUserTokenRevocationTests
         var now = DateTime.UtcNow;
         await fixture.Cache.SetStringAsync("auth:user-token-revoked-at:" + user.ToString("N"),
             JsonSerializer.Serialize(new { userId = user, revokedAt = now, reason = "Existing time-only payload" }));
-        Assert.True(await fixture.Versioned.IsUserTokenRevokedAsync(user, now.AddSeconds(-1), 2));
-        Assert.True(await fixture.Versioned.IsUserTokenRevokedAsync(user, now.AddSeconds(-1), null));
-        Assert.False(await fixture.Versioned.IsUserTokenRevokedAsync(user, now.AddSeconds(1), 2));
+        Assert.True(await fixture.Versioned.IsUserTokenRevokedAsync(user, now.AddSeconds(-1), 2, CancellationToken.None));
+        Assert.True(await fixture.Versioned.IsUserTokenRevokedAsync(user, now.AddSeconds(-1), null, CancellationToken.None));
+        Assert.False(await fixture.Versioned.IsUserTokenRevokedAsync(user, now.AddSeconds(1), 2, CancellationToken.None));
     }
 
     [Theory]
@@ -79,8 +79,8 @@ public sealed class VersionedUserTokenRevocationTests
     public async Task VersionedRevocationCannotAffectAnotherUser(bool distributed)
     {
         using var fixture = new StoreFixture(distributed);
-        await fixture.Versioned.RevokeAllUserTokensAsync(Guid.NewGuid(), 2);
-        Assert.False(await fixture.Versioned.IsUserTokenRevokedAsync(Guid.NewGuid(), DateTime.UtcNow.AddHours(-1), 1));
+        await fixture.Versioned.RevokeAllUserTokensAsync(Guid.NewGuid(), 2, null, CancellationToken.None);
+        Assert.False(await fixture.Versioned.IsUserTokenRevokedAsync(Guid.NewGuid(), DateTime.UtcNow.AddHours(-1), 1, CancellationToken.None));
     }
 
     [Theory]
@@ -93,8 +93,8 @@ public sealed class VersionedUserTokenRevocationTests
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-            fixture.Versioned.RevokeAllUserTokensAsync(user, 2, cancellationToken: cancellation.Token));
-        Assert.False(await fixture.Versioned.IsUserTokenRevokedAsync(user, DateTime.UtcNow.AddHours(-1), 1));
+            fixture.Versioned.RevokeAllUserTokensAsync(user, 2, null, cancellation.Token));
+        Assert.False(await fixture.Versioned.IsUserTokenRevokedAsync(user, DateTime.UtcNow.AddHours(-1), 1, CancellationToken.None));
     }
 
     private sealed class StoreFixture : IDisposable

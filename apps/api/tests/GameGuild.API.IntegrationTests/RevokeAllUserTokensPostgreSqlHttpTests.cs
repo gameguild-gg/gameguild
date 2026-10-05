@@ -395,7 +395,7 @@ public sealed class RevokeAllUserTokensPostgreSqlHttpTests(ApiPostgreSqlFixture 
         public int Attempts { get; private set; }
         public Task RevokeAllUserTokensAsync(Guid userId, string? reason = null, CancellationToken cancellationToken = default)
             => Inner.RevokeAllUserTokensAsync(userId, reason, cancellationToken);
-        public Task RevokeAllUserTokensAsync(Guid userId, int minimumTokenVersion, string? reason = null, CancellationToken cancellationToken = default)
+        public Task RevokeAllUserTokensAsync(Guid userId, int minimumTokenVersion, string? reason, CancellationToken cancellationToken)
         {
             Assert.Equal(ExpectedUserId, userId);
             Assert.Equal(2, minimumTokenVersion);

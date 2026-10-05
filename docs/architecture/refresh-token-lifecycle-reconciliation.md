@@ -36,6 +36,12 @@ That source/TRX is preserved and excluded. The test now uses a controlled clock
 and public revoke/check/cleanup operations, keeping and strengthening expiry
 assertions. Production was unchanged by this test repair; the fresh run passes.
 
+Further Codacy review required explicit arguments on the new typed service
+signatures and a generated synthetic password in the credential regression.
+Those findings are addressed without ignores; original time-only overloads and
+all revocation/credential assertions remain. Earlier source receipts are retained
+separately; publication requires fresh receipts for this final source.
+
 [#693](https://github.com/gameguild-gg/gameguild/pull/693) merged at
 `280ea75a68c739b807c08a6ad724d6cf29f059bf`, accepted head
 `c8d5bd95c064f85de5846bfe4892e446fe2cf916`. Actual current-head CI supplies
