@@ -76,11 +76,11 @@ public class EmailVerificationService(
                     UserName = userName
                 }).ConfigureAwait(false);
 
-            logger.LogInformation("Verification email queued for {Email}", email);
+            logger.LogInformation("Verification email queued for {Email}", LogRedaction.MaskEmail(email));
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error sending verification email to {Email}", email);
+            logger.LogError(ex, "Error sending verification email to {Email}", LogRedaction.MaskEmail(email));
             throw;
         }
     }
@@ -213,7 +213,8 @@ public class EmailVerificationService(
     {
         try
         {
-            var rateLimitKey = RateLimitKeyPrefix + $"{userId}:{email.ToLowerInvariant()}";
+            // Deterministic hash keeps the per-(user, email) rate-limit window without caching the raw email.
+            var rateLimitKey = RateLimitKeyPrefix + $"{userId}:{LogRedaction.RedactSecret(email)}";
 
             if (memoryCache.TryGetValue(rateLimitKey, out DateTime lastSent))
             {

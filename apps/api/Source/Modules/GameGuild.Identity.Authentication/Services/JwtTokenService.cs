@@ -204,7 +204,7 @@ public sealed class JwtTokenService(
     {
         if (deviceInfo == null) throw new ArgumentNullException(nameof(deviceInfo));
 
-        logger.LogInformation("Generating refresh token for user: {UserId}, Device: {DeviceId}", userId, deviceInfo.DeviceId);
+        logger.LogInformation("Generating refresh token for user: {UserId}, Device: {DeviceId}", userId, LogRedaction.Sanitize(deviceInfo.DeviceId));
 
         try
         {
@@ -415,7 +415,7 @@ public sealed class JwtTokenService(
     {
         logger.LogInformation(
             "Generating service account token for: {ServiceAccountId}, ClientId: {ClientId}",
-            serviceAccountId, clientId);
+            LogRedaction.RedactId(serviceAccountId, "sac"), LogRedaction.RedactId(clientId, "cid"));
 
         try
         {
@@ -471,7 +471,7 @@ public sealed class JwtTokenService(
 
             logger.LogInformation(
                 "Service account token generated for: {ServiceAccountId}, Expires: {ExpiresAt}",
-                serviceAccountId, expiresAt);
+                LogRedaction.RedactId(serviceAccountId, "sac"), expiresAt);
 
             return Task.FromResult((tokenString, expiresAt));
         }
@@ -479,7 +479,7 @@ public sealed class JwtTokenService(
         {
             logger.LogError(ex,
                 "Error generating service account token for: {ServiceAccountId}",
-                serviceAccountId);
+                LogRedaction.RedactId(serviceAccountId, "sac"));
 
             throw;
         }

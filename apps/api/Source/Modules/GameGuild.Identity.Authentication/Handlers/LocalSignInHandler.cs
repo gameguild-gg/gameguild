@@ -35,7 +35,7 @@ public sealed class LocalSignInHandler(
 
         var domainResult = await authService.LocalSignInAsync(signInRequest, cancellationToken).ConfigureAwait(false);
 
-        logger.LogInformation("User successfully signed in via local authentication from IP {IpAddress}", ipAddress);
+        logger.LogInformation("User successfully signed in via local authentication from IP {IpAddress}", LogRedaction.Sanitize(ipAddress));
 
         // Map from Domain response to Application DTO
         return await domainResult.ToDto(userRepository, cancellationToken).ConfigureAwait(false);

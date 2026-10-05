@@ -23,7 +23,7 @@ public sealed class SendEmailVerificationCommandHandler(
 
         if (user is null)
         {
-            logger.LogInformation("Email verification requested for unknown email {Email}", email);
+            logger.LogInformation("Email verification requested for unknown email {Email}", LogRedaction.MaskEmail(email));
             return new EmailVerificationResponse { Message = "If an account exists with that email, a verification email has been sent" };
         }
 
