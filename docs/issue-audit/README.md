@@ -1,6 +1,16 @@
 # GameGuild issue closeout inventory
 
-## 2026-10-04 automatic username slugification — implementation verification
+## 2026-10-04 automatic username slugification closeout
+
+Snapshot **2026-10-05T00:03:36.356908+00:00** retains all **328** original IDs: **65 closed / 263 open**. These counts include implementations, duplicate consolidation and historical closures; they are not newly implemented feature counts.
+
+**#222 is officially CLOSED/COMPLETED** after [PR #684](https://github.com/gameguild-gg/gameguild/pull/684) merged into `develop` at `8e946f72143e7f2e1c69219df24542fb817786f2`. [Complete acceptance](https://github.com/gameguild-gg/gameguild/issues/222#issuecomment-5985839842) and [requirement/compatibility map](../architecture/username-slugification-reconciliation.md) record new-user normalization/assignment, generated/chosen collision handling, actual PostgreSQL race/savepoint/version/outbox proofs, real signup HTTP and unchanged persistence/JSON wire structure. **66 new cases**, **6,986 distinct local cases across implementation/follow-up revisions**, and **3,948 distinct exact-head CI cases** passed. Release builds, all latest applicable gates, Web/OpenAPI/client, Codacy and four CodeQL passed; superseded runs remain history. The sole v1/client documentation change is the username description.
+
+**#218 remains OPEN**, with [an executable DTO-conversion reproduction](https://github.com/gameguild-gg/gameguild/issues/218#issuecomment-5985551148). Main-mapper surname/phone loss and the public legacy refresh overload's expiry/ExpiresIn/user loss are recorded separately; the current refresh endpoint uses the main SignInResponse mapper. No database/provider/endpoint proof or implementation is inferred from that probe. Seven live handlers were mapped for the next work item.
+
+All 328 criteria fields and 55 primary local files remain preserved; the merged branch is removed, two checkouts are reused and no stashes remain. The full program remains active.
+
+## 2026-10-04 automatic username slugification — implementation verification (history)
 
 **#222 remains OPEN**, with [explicitly inferred title-level criteria](https://github.com/gameguild-gg/gameguild/issues/222#issuecomment-5985363788) and a [complete implementation/verification map](../architecture/username-slugification-reconciliation.md). New users receive canonical handles across password/OAuth/administrative/bulk factories and actual signup; generated collisions are disambiguated, explicitly chosen collisions fail validation, and existing handles/display names are preserved. The PostgreSQL retry is limited to the username constraint and preserves entity versions and durable-event capture.
 
