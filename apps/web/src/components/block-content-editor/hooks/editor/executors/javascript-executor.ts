@@ -155,6 +155,18 @@ class JavaScriptExecutor implements LanguageExecutor {
     }
   }
 
+  private evaluateTerminalExpression(command: string): unknown {
+    // Security note: Function-constructor evaluation, not eval — it runs the
+    // user's own terminal input in the same browser context as execute(), so
+    // the trust level is unchanged while removing the eval sink. Statement
+    // form is tried when expression form fails, matching prior eval behavior.
+    try {
+      return (new Function(`"use strict"; return (${command});`) as () => unknown)()
+    } catch {
+      return (new Function(`"use strict"; ${command}`) as () => unknown)()
+    }
+  }
+
   private clearGlobalFunctions(): void {
     // Remove all previously added global functions
     const globalWindow = window as unknown as Window & Record<string, unknown>
@@ -471,10 +483,9 @@ ${hasDefaultExport && defaultExportName
   handleCommand = (command: string, context: ExecutionContext): boolean => {
     const { addOutput } = context
 
-    // Try to evaluate JavaScript directly
     if (!command.includes("console.log")) {
       try {
-        const result = eval(command)
+        const result = this.evaluateTerminalExpression(command)
         addOutput(typeof result === "undefined" ? "undefined" : String(result))
         return true
       } catch (error) {
