@@ -1,5 +1,21 @@
 # Refresh-token reconciliation — #263
 
+## Accepted partial increment after merge
+
+PR #690 merged into develop at cd152b6587f7b27ac8850b4121652d3db7b6d94d after all
+applicable gates passed for accepted head379a7b28b853f79d3a008475d5b9d8bcff08356f.
+Local 6,476 distinct .NET cases include full integration238 and APIunit1049;
+focused15 and architecture/security108 are subsets excluded from totals. Actual
+CI passes 4,809 main cases plus14 repeated OpenAPI, with clean builds,
+OpenAPI/client consistency, Codacy and four CodeQL analyses. Contracts/model
+remain unchanged. [Individual acceptance](https://github.com/gameguild-gg/gameguild/issues/263#issuecomment-5990377649).
+**#263 is OPEN**, with its original 19 criteria and remaining table below intact.
+#262 was reopened for independently executed prior-bearer invalidation failures;
+its active-host correction is being accepted separately.
+
+Publication-stage pending statements below remain historical, superseded for
+this partial increment by the acceptance above.
+
 ## Requirement provenance
 
 [#263](https://github.com/gameguild-gg/gameguild/issues/263) retains all 19 original
