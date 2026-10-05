@@ -55,6 +55,25 @@ fixture prefix preserves the complete unique tag and role, with a guard before
 sign-up. Production validation is unchanged. All 64 Economy shell regressions and
 23 Testing Lab runner/quality cases pass locally, including five new username cases.
 
+With the deadline fixed, Economy passes the complete 327-case API integration
+project in 9min06s and its 1,050 API unit cases. Its next failure exposed a stale
+legacy direct-service test that expected refresh replay to throw. The accepted
+containment contract deliberately returns an internal denial so the command
+transaction commits revocation; the HTTP boundary returns 401. The test now
+requires that commit outcome, no returned credentials or identity, all two stored
+tokens revoked, both stored sessions inactive and exactly one user-version advance.
+It verifies containment of a second active login as well as the revoked input.
+The production denial and all actual HTTP assertions are unchanged.
+All 42 legacy authentication integration cases pass locally with these stronger
+assertions. Combined with the independently retained suites above, this gives
+7,852 distinct .NET/SDK cases. These are existing integration cases, not 42 new
+Web3 tests. The original 35 new Web3 cases and two generator cases remain separate.
+
+The Testing Lab runner now stores host logs and its exit receipt under the CI
+artifact upload directory, including failures during identity bootstrap before
+the first browser page. This preserves the cause of fixture sign-in failures.
+Matching-head acceptance remains pending until every applicable gate passes.
+
 ## Account and credential boundaries
 
 The insert-only `web3` external-login provider key is the lowercase verified
