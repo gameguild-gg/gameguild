@@ -86,6 +86,17 @@ Chrome inspection was attempted twice, but the connector timed out on
 `Emulation.setFocusEmulationEnabled`; GitHub's check annotations supplied the four
 findings. None was suppressed or dismissed.
 
+Fresh Release API architecture/security/JWT selection again passed 106/106. An
+earlier Debug repetition crashed after 75 cases and is excluded, not added to totals.
+Exact head `11b41bf063181ab821368351be7afe3cff98c53a` passed all four main CI suites:
+151 API integration, 1,049 API unit, 2,083 authentication and 1,371 SharedKernel
+(4,654 executions). The job then reached its 20-minute limit during the final
+OpenAPI test-project build, so its aggregate gate is not accepted as a pass.
+The prior head completed in about 19 minutes. The API job allowance is extended to
+30 minutes to accommodate this measured variation; all test selections, warning
+requirements and final HTTP verification stay active. Matching-head gates must
+run again before merge.
+
 ## Remaining acceptance
 
 PR gates and merge to develop are pending. Configured provider email delivery for
