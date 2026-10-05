@@ -32,6 +32,7 @@
  */
 
 import { useCallback, useState, useRef, useContext, useEffect } from 'react';
+import { assertSafeRemoteUrl } from '../../runtime/security/safe-remote-url.js';
 import { SessionContext } from './session-provider.js';
 
 /**
@@ -137,7 +138,7 @@ export function useAuth(options?: AuthActionOptions): UseAuthReturn {
         const csrfToken = await getCSRFToken();
         const { redirectTo, redirect = true, ...credentials } = actionOptions ?? {};
 
-        const response = await fetch(`${basePathRef.current}/signin/${provider}`, {
+        const response = await fetch(assertSafeRemoteUrl(`${basePathRef.current}/signin/${provider}`), {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },

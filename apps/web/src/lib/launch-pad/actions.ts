@@ -2,6 +2,7 @@
 
 import { auth, getToken } from '@/auth';
 import type { LaunchPadApplication, LaunchPadEvent, LaunchPadRegistration, LaunchPadSettings, LaunchPadSlot, LaunchPlan } from './queries';
+import { assertSafeRemoteUrl } from '@/lib/security/safe-remote-url';
 import { revalidatePath } from 'next/cache';
 
 type ActionResult<T> = { success: true; data: T } | { success: false; error: string };
@@ -18,7 +19,7 @@ async function launchPadApiRequest<T>(path: string, init: RequestInit): Promise<
   const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
   const token = await getToken();
   const tenantId = (await auth().catch(() => null))?.tenantId;
-  const response = await fetch(`${apiUrl}${path}`, {
+  const response = await fetch(assertSafeRemoteUrl(`${apiUrl}${path}`), {
     ...init,
     headers: {
       'Content-Type': 'application/json',

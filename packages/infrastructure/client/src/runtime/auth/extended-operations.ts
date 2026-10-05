@@ -32,6 +32,7 @@
 import type { ProviderResult } from './types.js';
 import { parseBackendAuthResponse } from '../../integrations/next/handlers.js';
 import { MfaVerificationError, PasswordResetError, EmailVerificationError, SessionTerminationError, parseErrorBody, extractErrorMessage } from './errors.js';
+import { assertSafeRemoteUrl } from '../security/safe-remote-url.js';
 
 // Re-export error classes so existing consumers don't break
 export { MfaVerificationError, PasswordResetError, EmailVerificationError, SessionTerminationError } from './errors.js';
@@ -126,7 +127,7 @@ async function postOrThrow(
     fallbackMessage: string;
   },
 ): Promise<Response> {
-  const response = await fetch(url, {
+  const response = await fetch(assertSafeRemoteUrl(url), {
     method: 'POST',
     headers: options.headers ?? JSON_HEADERS,
     body: options.body ? JSON.stringify(options.body) : undefined,
@@ -156,7 +157,7 @@ export async function verifyMfa(apiUrl: string, input: MfaVerifyInput, accessTok
     headers['Authorization'] = `Bearer ${accessToken}`;
   }
 
-  const response = await fetch(`${apiUrl}/v1/auth/mfa/verify`, {
+  const response = await fetch(assertSafeRemoteUrl(`${apiUrl}/v1/auth/mfa/verify`), {
     method: 'POST',
     headers,
     body: JSON.stringify({
@@ -194,7 +195,7 @@ export async function setupTotpMfa(apiUrl: string, accessToken: string): Promise
  * Get available MFA methods for the authenticated user.
  */
 export async function getMfaMethods(apiUrl: string, accessToken: string): Promise<string[]> {
-  const response = await fetch(`${apiUrl}/v1/auth/mfa/methods`, {
+  const response = await fetch(assertSafeRemoteUrl(`${apiUrl}/v1/auth/mfa/methods`), {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
 
@@ -212,7 +213,7 @@ export async function getMfaMethods(apiUrl: string, accessToken: string): Promis
  * Always returns void (never reveals whether the email exists).
  */
 export async function requestPasswordReset(apiUrl: string, input: PasswordResetRequestInput): Promise<void> {
-  await fetch(`${apiUrl}/v1/auth/password:reset-request`, {
+  await fetch(assertSafeRemoteUrl(`${apiUrl}/v1/auth/password:reset-request`), {
     method: 'POST',
     headers: JSON_HEADERS,
     body: JSON.stringify({ email: input.email }),
@@ -290,7 +291,7 @@ export async function verifyEmail(apiUrl: string, input: EmailVerificationInput)
  * List all active sessions for the authenticated user.
  */
 export async function listSessions(apiUrl: string, accessToken: string): Promise<SessionInfo[]> {
-  const response = await fetch(`${apiUrl}/v1/auth/sessions`, {
+  const response = await fetch(assertSafeRemoteUrl(`${apiUrl}/v1/auth/sessions`), {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
 
@@ -304,7 +305,7 @@ export async function listSessions(apiUrl: string, accessToken: string): Promise
  * Terminate a specific session by ID.
  */
 export async function terminateSession(apiUrl: string, sessionId: string, accessToken: string): Promise<void> {
-  const response = await fetch(`${apiUrl}/v1/auth/sessions/${sessionId}`, {
+  const response = await fetch(assertSafeRemoteUrl(`${apiUrl}/v1/auth/sessions/${sessionId}`), {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${accessToken}` },
   });
