@@ -118,7 +118,7 @@ export class ComplianceConsentModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.ComplianceConsentConsentPolicyDto>, ApiError>;
+    return result as Result<Types.ComplianceConsentConsentPolicyDto[], ApiError>;
   }
 
   /**

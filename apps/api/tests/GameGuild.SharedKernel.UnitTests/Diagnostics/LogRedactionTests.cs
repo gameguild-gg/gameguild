@@ -83,4 +83,84 @@ public class LogRedactionTests
 
         hash1.Should().NotBe(hash2);
     }
+
+    [Fact]
+    public void MaskEmail_TypicalAddress_ShouldKeepFirstCharAndDomain()
+    {
+        LogRedaction.MaskEmail("alice@example.com").Should().Be("a***@example.com");
+    }
+
+    [Fact]
+    public void MaskEmail_SingleCharLocalPart_ShouldNotLeakMoreThanOneChar()
+    {
+        LogRedaction.MaskEmail("a@example.com").Should().Be("a***@example.com");
+    }
+
+    [Fact]
+    public void MaskEmail_NullOrEmpty_ShouldReturnNone()
+    {
+        LogRedaction.MaskEmail(null).Should().Be("none");
+        LogRedaction.MaskEmail("").Should().Be("none");
+    }
+
+    [Fact]
+    public void MaskEmail_NoAtSign_ShouldReturnInvalid()
+    {
+        LogRedaction.MaskEmail("not-an-email").Should().Be("invalid");
+    }
+
+    [Fact]
+    public void RedactSecret_ShouldReturnShortPrefixedHash()
+    {
+        var result = LogRedaction.RedactSecret("super-secret-token");
+
+        result.Should().StartWith("secret:");
+        result.Should().HaveLength(15); // "secret:" (7) + 8 hex chars
+    }
+
+    [Fact]
+    public void RedactSecret_ShouldBeDeterministic()
+    {
+        LogRedaction.RedactSecret("same-token").Should().Be(LogRedaction.RedactSecret("same-token"));
+    }
+
+    [Fact]
+    public void RedactSecret_NullOrEmpty_ShouldReturnNone()
+    {
+        LogRedaction.RedactSecret(null).Should().Be("none");
+        LogRedaction.RedactSecret("").Should().Be("none");
+    }
+
+    [Fact]
+    public void RedactSecret_ShouldNotContainOriginalValue()
+    {
+        var result = LogRedaction.RedactSecret("hunter2-password");
+
+        result.Should().NotContain("hunter2");
+    }
+
+    [Fact]
+    public void Sanitize_ShouldReplaceNewlinesWithVisibleMarker()
+    {
+        LogRedaction.Sanitize("first line\r\nsecond line\nthird").Should().Be("first line␀␀second line␀third");
+    }
+
+    [Fact]
+    public void Sanitize_ShouldReplaceAllControlCharacters()
+    {
+        LogRedaction.Sanitize("a\u0000b\u001Fc").Should().Be("a␀b␀c");
+    }
+
+    [Fact]
+    public void Sanitize_NullOrEmpty_ShouldReturnEmpty()
+    {
+        LogRedaction.Sanitize(null).Should().BeEmpty();
+        LogRedaction.Sanitize("").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Sanitize_CleanText_ShouldRemainUnchanged()
+    {
+        LogRedaction.Sanitize("normal log text").Should().Be("normal log text");
+    }
 }

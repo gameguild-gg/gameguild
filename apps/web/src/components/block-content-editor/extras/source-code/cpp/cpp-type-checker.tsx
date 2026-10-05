@@ -1,6 +1,6 @@
 export class CppTypeChecker {
   private monaco: any
-  private editor: any
+  private editor: unknown
   private disposables: any[] = []
 
   constructor(monaco: any, editor: any) {

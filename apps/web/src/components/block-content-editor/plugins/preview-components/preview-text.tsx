@@ -3,7 +3,7 @@
 import type React from "react"
 
 interface PreviewTextProps {
-  node: any
+  node: unknown
 }
 
 export function PreviewText({ node }: PreviewTextProps) {

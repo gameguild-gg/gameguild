@@ -23,7 +23,7 @@ export function PreviewVegaLite({ node }: PreviewVegaLiteProps) {
   const { spec, title, caption, theme, themeMode, layout, size } = node.data;
   const themePair = getThemePair(
     (theme as any) || "default",
-    (themeMode as any) || "system",
+    (themeMode as unknown) || "system",
   );
 
   return (

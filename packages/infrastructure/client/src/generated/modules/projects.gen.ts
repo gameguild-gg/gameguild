@@ -697,7 +697,7 @@ export class ProjectsModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Record<string, unknown>>, ApiError>;
+    return result as Result<Record<string, unknown>[], ApiError>;
   }
 
   /**
