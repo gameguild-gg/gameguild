@@ -180,6 +180,29 @@ public sealed class PasswordHashReconciliationTests
         }
     }
 
+    [Fact]
+    public void PolicyScoreAppliesIndependentSequenceAndRepetitionControls()
+    {
+        static char[] Sample(string alphabet) => alphabet.OrderBy(_ => RandomNumberGenerator.GetInt32(int.MaxValue)).Take(5).ToArray();
+        var upper = Sample("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+        var lower = Sample("abcdefghijklmnopqrstuvwxyz");
+        var digits = Sample("0123456789");
+        var punctuation = Sample("!?@#$%&*+=");
+        var baseline = string.Concat(Enumerable.Range(0, 5).Select(index => new string([upper[index], lower[index], digits[index], punctuation[index]])));
+        var start = RandomNumberGenerator.GetInt32('a', 'w' + 1);
+        var sequence = new string([(char)start, (char)(start + 1), (char)(start + 2)]);
+        var repetition = new string(upper[0], 3);
+        var hasher = FastHasher();
+        foreach (var (candidate, expectedScore) in new[] { (baseline, 100), (sequence + baseline, 90), (repetition + baseline, 90), (sequence + repetition + baseline, 80) })
+        {
+            var result = hasher.ValidatePasswordStrength(candidate);
+            Assert.True(result.IsValid);
+            Assert.Equal(expectedScore, result.StrengthScore);
+            Assert.Equal("Strong", result.StrengthLevel);
+        }
+        // The score is a documented heuristic; it is not measured entropy or a crack-time guarantee.
+    }
+
     [Theory]
     [InlineData("hash")]
     [InlineData("verify")]

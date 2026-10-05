@@ -1,4 +1,4 @@
-# Password hashing reconciliation — #254
+# Password hashing and policy reconciliation — #254 and #255
 
 ## Provenance and baseline
 
@@ -47,11 +47,42 @@ the real source; it did not call HTTP, persistence or external providers.
 
 ## Verification status
 
-Initial focused hashing/password-handler selection passed 100/100 and its Release
-build passed with zero warnings/errors. A further legacy-history regression was
-added afterwards and must be run before accepting the increment.
+The initial focused 100-case run is history, not additional coverage. On the
+isolated password branch before incorporating PR #686, **5,248 distinct local
+cases** passed: authentication 2,091 (31 new), authorization 1,667, SharedKernel
+1,371, selected API architecture/security/bearer 106 and PostgreSQL/HTTP 13 (all
+new). Repeated runs are not added. The configured full Release solution build
+had zero warnings/errors; the final extra scoring test's project then rebuilt
+warning/error clean and the full authentication suite passed again.
 
-Fresh complete suites, actual signup/login/change/reset storage and HTTP tests,
-OpenAPI/client reconciliation, full solution build, exact-head PR gates and merge
-remain pending. #254 remains OPEN. Configured external email delivery is separate
+Actual signup persists different salted hashes for equal passwords; short hashes
+carry configured cost 10 and long hashes preserve their entire input. Login
+accepts a correct legacy password, rejects incorrect/malformed hashes and rejects
+an alternate long suffix. Authenticated change preserves state on a wrong current
+password, writes the new full-length hash and retains history. Real reset-token
+validation writes the new hash and rejects replay. Ambiguous legacy long input
+requires recovery; changing only its suffix cannot evade history rejection.
+
+The complete pre-MFA OpenAPI remains unchanged at 1,296 paths / 1,654 schemas.
+Rebase onto the merged MFA increment, combined-revision verification, client
+reconciliation, exact-head PR gates and merge remain pending. #254/#255 remain OPEN.
+Configured external email delivery is separate
 acceptance under #223/#253 and is not established by a synthetic reset-token fixture.
+
+## #255 policy provenance and coverage
+
+The original #255 body was empty; its title requests strength and complexity
+rules. Its preserved source review requires current weak/strong/common/length/
+sequence checks and enforcement at writing boundaries. Existing freshly executed
+tests cover missing uppercase/lowercase/digit/special, common-password rejection,
+empty/short input, valid strength and shared/legacy configuration precedence.
+The new independent score control uses random distinct character classes and
+known added sequence/repetition patterns: expected scores are 100/90/90/80.
+This is a heuristic and never a measured entropy or crack-time guarantee.
+
+New HTTP cases reject weak passwords at signup, authenticated change and reset,
+preserving the original stored hash. Weak reset rejection does not consume the
+real reset token. A configured minimum of 14 rejects length 13 and accepts 14
+when composition requirements are disabled; the host's resolved configuration
+is checked. These are configured test-host observations, not inspection or
+certification of production policy or compromised-credential feeds.
