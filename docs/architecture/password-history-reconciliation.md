@@ -64,6 +64,12 @@ client (1,115) receipts from #687 yields a **7,496-case local footprint**. The l
 two suites are explicitly prior same-source evidence, not new executions in this
 increment. The three old controls/prototype runs remain separate.
 
-Applicable PR checks, merge and official acceptance remain pending. **#251 remains
-OPEN.** Original acceptance fields remain intact. Current receipts are retained in
+All applicable checks, Codacy and four CodeQL analyses passed at accepted head
+`8a331b98b5c784defe923aac8fcccfb96d8a66d0`. [PR #688](https://github.com/gameguild-gg/gameguild/pull/688)
+merged into `develop` at `8dfd092ff578c27e224d6c9f3154697b3d222fd2`.
+**#251 is officially CLOSED/COMPLETED**, with [individual acceptance](https://github.com/gameguild-gg/gameguild/issues/251#issuecomment-5988663714).
+The actual CI selection passed 180 integration and 2,114 Authentication cases
+(**2,294 main cases**), plus 14 repeated OpenAPI executions. Both CI builds have
+zero warnings/errors; unaffected client/migration gates were skipped by classification.
+Original acceptance fields remain intact. Current receipts are retained in
 `artifacts/test-results/issue-251-history-20261005/actual-project-proof.json`.

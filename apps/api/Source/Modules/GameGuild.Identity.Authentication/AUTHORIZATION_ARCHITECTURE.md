@@ -1821,6 +1821,29 @@ propagates through the verifier and orchestrator.
 New enrollments have a fixed persisted expiration which failed attempts cannot
 extend; legacy pending rows use the prior timestamp fallback.
 
+### Polymorphic Password Entry Point
+
+`POST /v1/auth/polymorphic` is explicitly anonymous and reviewed in the host
+allowlist, with the existing authentication rate limit. The CQRS command has a
+durable use-case event contract which excludes credentials and issued tokens.
+The Users module performs bounded two-candidate lookup without depending on the
+Authentication module. Zero or multiple undeleted matches are denied; no first
+match or email fallback can authenticate an unresolved identifier.
+
+Resolved account identity is server-only, reloaded before password verification
+and cannot be supplied through JSON. The existing local flow still performs
+password verification, generic denial/timing/attempt recording, risk analysis,
+tenant membership resolution, JWT issuance and persisted session creation.
+Tenant in the anonymous request selects a membership to validate; it is not an
+authenticated tenant claim. IP and user agent come from the existing HTTP context.
+Device fingerprint is an observational hint passed to risk and session storage,
+not independent proof of device trust. High-risk results retain step-up handling
+without issuing a completed login session.
+
+Phone lookup uses the stored canonical international string, without silently
+rewriting legacy data or asserting phone ownership. Unsupported password
+identifier types use generic denial. [Requirement and execution map](../../../../../docs/architecture/polymorphic-signin-reconciliation.md).
+
 ### Password History Acceptance
 
 Current-password and five previous-hash checks are retained in both change and
