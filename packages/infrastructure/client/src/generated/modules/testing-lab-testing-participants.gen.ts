@@ -148,7 +148,7 @@ export class TestingLabTestingParticipantsModule {
 
   /**
    */
-  async getTestingSessionsWaitlist(sessionId: string): Promise<Result<Array<Types.TestingLabSessionWaitlist>, ApiError>> {
+  async getTestingSessionsWaitlist(sessionId: string): Promise<Result<Types.TestingLabSessionWaitlist[], ApiError>> {
     const url = `/v1/testing/sessions/${sessionId}/waitlist`;
 
     const result = await this.client.request({
