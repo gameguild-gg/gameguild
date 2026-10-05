@@ -1802,6 +1802,21 @@ public async Task Authorization_PerformsUnderLoad()
 
 ## Platform Authorization Hardening
 
+### Authentication Response Projection
+
+Authentication response conversion preserves server-issued tokens, explicit
+expirations, tenant/session identity, challenge flags and risk metadata. Repository
+profile lookup uses the server response's user ID; an embedded response profile
+cannot override the persisted identity or verified-email assertion. Complete names
+are projected without changing the entity. A stored phone is disclosed only when
+authentication succeeds with a nonempty access token and neither MFA nor step-up
+is still required. Phone possession is not inferred as phone verification.
+
+The public legacy refresh converter preserves supplied expiry/duration/profile;
+it never extends a supplied expired timestamp. Only a genuinely missing expiry
+may be derived from a positive duration. Conversion copies mutable containers and
+does not mutate sources, write accounts or bypass authentication/authorization.
+
 This section documents the authorization-hardening invariants of the common platform
 modules. Everything below applies to the platform modules that are shared verbatim
 across products; product-specific behavior hooks in exclusively through the documented
