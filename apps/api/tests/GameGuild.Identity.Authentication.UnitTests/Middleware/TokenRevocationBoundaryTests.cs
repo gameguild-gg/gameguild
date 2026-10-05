@@ -16,9 +16,11 @@ public sealed class TokenRevocationBoundaryTests
     [InlineData("jti", false)]
     [InlineData("user", false)]
     [InlineData("version", false)]
+    [InlineData("missing-user", false)]
     [InlineData("jti", true)]
     [InlineData("user", true)]
     [InlineData("version", true)]
+    [InlineData("missing-user", true)]
     public async Task RevokedIdentityIsClearedAndOnlyExplicitAnonymousEndpointsContinue(string scenario, bool anonymous)
     {
         var user = Guid.NewGuid();
@@ -36,7 +38,8 @@ public sealed class TokenRevocationBoundaryTests
         revocation.Setup(value => value.IsRevokedAsync(jti, It.IsAny<CancellationToken>())).ReturnsAsync(scenario == "jti");
         revocation.Setup(value => value.IsUserTokenRevokedAsync(user, It.IsAny<DateTime>(), It.IsAny<CancellationToken>())).ReturnsAsync(scenario == "user");
         var repository = new Mock<IUserRepository>();
-        repository.Setup(value => value.GetTokenVersionAsync(user, It.IsAny<CancellationToken>())).ReturnsAsync(2);
+        repository.Setup(value => value.GetTokenVersionAsync(user, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(scenario == "missing-user" ? (int?)null : 2);
         var nextCalled = false;
         var middleware = new TokenRevocationMiddleware(_ =>
         {
@@ -70,5 +73,36 @@ public sealed class TokenRevocationBoundaryTests
             Assert.DoesNotContain(jti, body, StringComparison.Ordinal);
             Assert.DoesNotContain(user.ToString(), body, StringComparison.Ordinal);
         }
+    }
+
+    [Theory]
+    [InlineData("legacy-user")]
+    [InlineData("service")]
+    public async Task TokensWithoutUserVersionRetainExistingCompatibility(string kind)
+    {
+        var context = new DefaultHttpContext();
+        var claims = new List<Claim> { new("sub", Guid.NewGuid().ToString()) };
+        if (kind == "service")
+        {
+            claims.Add(new Claim("actor_kind", "Service"));
+            claims.Add(new Claim("grant_type", "client_credentials"));
+        }
+        context.User = new ClaimsPrincipal(new ClaimsIdentity(claims, "Bearer"));
+        var repository = new Mock<IUserRepository>(MockBehavior.Strict);
+        var revocation = new Mock<ITokenRevocationService>(MockBehavior.Strict);
+        var called = false;
+        var middleware = new TokenRevocationMiddleware(_ =>
+        {
+            called = true;
+            Assert.True(context.User.Identity?.IsAuthenticated);
+            return Task.CompletedTask;
+        }, NullLogger<TokenRevocationMiddleware>.Instance);
+
+        await middleware.InvokeAsync(context, revocation.Object, repository.Object);
+
+        Assert.True(called);
+        Assert.Equal(StatusCodes.Status200OK, context.Response.StatusCode);
+        repository.VerifyNoOtherCalls();
+        revocation.VerifyNoOtherCalls();
     }
 }
