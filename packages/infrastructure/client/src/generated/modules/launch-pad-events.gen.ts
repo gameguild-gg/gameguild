@@ -316,7 +316,7 @@ export class LaunchPadEventsModule {
 
   /**
    */
-  async getLaunchPadEventsPublicForGetLaunchPadEventsPublic(): Promise<Result<Array<Types.LaunchPadLaunchPadEventProjection>, ApiError>> {
+  async getLaunchPadEventsPublicForGetLaunchPadEventsPublic(): Promise<Result<Types.LaunchPadLaunchPadEventProjection[], ApiError>> {
     const url = '/v1/launch-pad/events/public';
 
     const result = await this.client.request({
