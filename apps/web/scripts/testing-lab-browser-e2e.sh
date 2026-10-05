@@ -4,8 +4,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 WEB_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 REPO_ROOT="$(cd -- "${WEB_DIR}/../.." && pwd)"
-RUNTIME_DIR="${TESTING_LAB_E2E_RUNTIME_DIR:-${REPO_ROOT}/.tmp/testing-lab-browser-e2e-runtime}"
-ARTIFACTS_DIR="${TESTING_LAB_E2E_ARTIFACTS:-${REPO_ROOT}/.tmp/testing-lab-browser-e2e}"
+ARTIFACTS_DIR="${TESTING_LAB_E2E_ARTIFACTS:-${REPO_ROOT}/artifacts/test-results/testing-lab}"
+RUNTIME_DIR="${TESTING_LAB_E2E_RUNTIME_DIR:-${ARTIFACTS_DIR}/runtime}"
 POSTGRES_PORT="${TESTING_LAB_E2E_POSTGRES_PORT:-$((43000 + RANDOM % 1000))}"
 API_PORT="${TESTING_LAB_E2E_API_PORT:-$((42000 + RANDOM % 1000))}"
 WEB_PORT="${TESTING_LAB_E2E_WEB_PORT:-$((44000 + RANDOM % 1000))}"
@@ -72,6 +72,9 @@ stop_port_listener() {
 cleanup() {
   local exit_code=$?
   trap - EXIT INT TERM
+  # Preserve host diagnostics even when fixture bootstrap fails before the first
+  # browser page. The CI uploader collects artifacts/test-results on all exits.
+  printf '{"runId":"%s","exitCode":%s}\n' "${RUN_ID}" "${exit_code}" >"${ARTIFACTS_DIR}/runner-result.json"
   stop_port_listener "${WEB_PORT}"
   stop_port_listener "${API_PORT}"
   if [[ "$(uname -s)" != MINGW* && "$(uname -s)" != CYGWIN* ]]; then
