@@ -288,7 +288,10 @@ public class UserRepository(IApplicationDbContext context) : IUserRepository
             .ConfigureAwait(false);
     }
 
-    public async Task<IReadOnlyList<User>> FindSignInCandidatesAsync(string identifier, SignInIdentifierType type, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<User>> FindSignInCandidatesAsync(string identifier, SignInIdentifierType type) =>
+        FindSignInCandidatesAsync(identifier, type, CancellationToken.None);
+
+    public async Task<IReadOnlyList<User>> FindSignInCandidatesAsync(string identifier, SignInIdentifierType type, CancellationToken cancellationToken)
     {
         var normalized = identifier.ToLowerInvariant();
         var query = context.Set<User>().AsNoTracking().Where(user => user.DeletedAt == null);
