@@ -28,11 +28,16 @@ public class Web3Service : IWeb3Service
     private readonly string _statement;
     private readonly HashSet<string> _allowedChainIds;
 
-    public Web3Service(ILogger<Web3Service> logger, IMemoryCache memoryCache, IConfiguration configuration, TimeProvider? timeProvider = null)
+    public Web3Service(ILogger<Web3Service> logger, IMemoryCache memoryCache, IConfiguration configuration)
+        : this(logger, memoryCache, configuration, TimeProvider.System)
+    {
+    }
+
+    public Web3Service(ILogger<Web3Service> logger, IMemoryCache memoryCache, IConfiguration configuration, TimeProvider timeProvider)
     {
         _logger = logger;
         _memoryCache = memoryCache;
-        _timeProvider = timeProvider ?? TimeProvider.System;
+        _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
         var origin = configuration[$"{SiweConfigurationPrefix}:Origin"];
         if (string.IsNullOrWhiteSpace(origin))
         {

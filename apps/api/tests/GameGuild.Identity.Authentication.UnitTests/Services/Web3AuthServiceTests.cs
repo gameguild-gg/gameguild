@@ -165,9 +165,14 @@ public class Web3AuthServiceTests
     {
         using var cancellation = new CancellationTokenSource();
         if (afterVerification)
+        {
             _web3ServiceMock.Setup(value => value.VerifySignatureAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>()))
                 .Callback(() => cancellation.Cancel()).ReturnsAsync(true);
-        else cancellation.Cancel();
+        }
+        else
+        {
+            cancellation.Cancel();
+        }
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => _sut.VerifyWeb3SignatureAsync(new Web3VerificationRequest(), cancellation.Token));
         _identity.Links.Verify(value => value.GetByProviderKeyAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
         _jwtTokenServiceMock.Verify(value => value.GenerateRefreshTokenAsync(It.IsAny<Guid>(), It.IsAny<DeviceInfo>(), It.IsAny<CancellationToken>()), Times.Never);
