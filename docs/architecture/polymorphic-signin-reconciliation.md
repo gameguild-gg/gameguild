@@ -1,5 +1,24 @@
 # Polymorphic password sign-in reconciliation — #258
 
+## Official acceptance after merge
+
+**#258 is CLOSED/COMPLETED** after [PR #689](https://github.com/gameguild-gg/gameguild/pull/689)
+merged into `develop` at `47131474c221bff080ec1efd17b53a17aa62b4b2`.
+[Individual evidence](https://github.com/gameguild-gg/gameguild/issues/258#issuecomment-5989540682)
+accepts all five approved criteria and the consolidated #289 scope. Accepted head
+`8b4cc4eac530d3476b103a8e7f28616144d3984b` passes all applicable gates, Codacy and
+four CodeQL analyses. CI passes 5,501 main API cases, 14 repeated OpenAPI HTTP
+executions and 2,959 web cases, with client/web/API builds and lint/typecheck.
+The complete local functional set is 8,287 distinct cases (77 new definitions):
+full API unit 1,049 now passes after the nontracking query followup. Final-head
+solution/core/43 PostgreSQL/100 API architecture-security repeats also pass and
+are excluded from that total. Internal flags remain absent from OpenAPI and no
+model changes are pending. Boundaries on phone possession, providers and full MFA
+completion remain as stated below.
+
+The sections below retain the baseline and publication-stage history; their
+pending statements describe those earlier stages, superseded by this acceptance.
+
 ## Retained requirement and baseline
 
 The five user-approved criteria under [#258](https://github.com/gameguild-gg/gameguild/issues/258)

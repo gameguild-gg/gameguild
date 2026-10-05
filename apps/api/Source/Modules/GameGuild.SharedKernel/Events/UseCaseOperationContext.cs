@@ -57,6 +57,12 @@ public static class CommandOutcome
 {
     public static bool IsFailure(object? response) => IsFailure(response, new HashSet<object>(ReferenceEqualityComparer.Instance));
 
+    /// <summary>
+    ///     Ordinary failures roll back. A trusted server outcome may explicitly retain
+    ///     completed mutations while still reporting business failure to its consumer.
+    /// </summary>
+    public static bool ShouldRollback(object? response) => response is not ICommitOnFailureOutcome && IsFailure(response);
+
     private static bool IsFailure(object? response, ISet<object> inspected)
     {
         if (response is null)
@@ -120,6 +126,13 @@ public static class CommandOutcome
         };
     }
 }
+
+/// <summary>
+///     Server-only result contract for completed mutations that must survive a business
+///     denial. Implement only after all required mutations succeed, never on request models.
+///     Exceptions and cancellation still roll back the surrounding transaction.
+/// </summary>
+public interface ICommitOnFailureOutcome { }
 
 public interface IUseCaseOperationContextAccessor
 {
