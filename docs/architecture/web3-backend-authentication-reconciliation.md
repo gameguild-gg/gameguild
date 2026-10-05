@@ -84,6 +84,18 @@ passes against the real API and a freshly migrated disposable PostgreSQL databas
 all three fixture identities receive valid sign-in responses. This accepts fixture
 preparation only; the complete browser journey still requires matching-head CI.
 
+The next full Economy execution reached the whole-solution tests and exposed two
+obsolete Learning/LTI expectations after the existing numeric value migration.
+Both failures reproduce locally: completed progress is `PercentValue.Hundred`,
+and LTI scores convert integer centesimal units to human point JSON numbers.
+The tests now use the typed completion value and independently check whole,
+fractional and one-cent point values, retaining the exact five-field AGS payload.
+Learning's full 148-case suite and LTI's full 47-case suite pass, with two added
+fractional-score cases and no production change. Including these distinct suites,
+the combined local .NET/SDK receipts contain 8,047 passing cases. Failed baseline
+and CI receipts are retained; publication acceptance still requires the complete
+current-head Economy profile and browser journey.
+
 ## Account and credential boundaries
 
 The insert-only `web3` external-login provider key is the lowercase verified
