@@ -1,6 +1,16 @@
 # GameGuild issue closeout inventory
 
-## 2026-10-04 authentication DTO implementation verification
+## 2026-10-04 authentication DTO official closeout
+
+Snapshot **2026-10-05T01:00:14.386097+00:00** preserves all **328** original IDs/criteria: **66 closed / 262 open**. Counts include historical/duplicate closures and are not newly implemented feature counts.
+
+**#218 is officially CLOSED/COMPLETED** after [PR #685](https://github.com/gameguild-gg/gameguild/pull/685) merged into `develop` at `21fa6f31e3d943d98190e6f7178204485086f775`. [Full acceptance](https://github.com/gameguild-gg/gameguild/issues/218#issuecomment-5986287807) maps response field/callsite/identity/challenge/expiry/mutation behavior to **42 new cases**, **3,864 distinct local cases** and **2,202 distinct exact-head CI cases** (plus 14 repeated OpenAPI executions). Final configured solution/Release builds are warning/error clean; all applicable gates, OpenAPI/client, Codacy and four CodeQL passed. Web/migration/other nonapplicable checks were skipped. Complete v1/client remains unchanged. Failed fixture/setup/interrupted attempts are retained and excluded; optional signup-profile inputs and provider/delivery/production acceptance are not inferred.
+
+**#223 remains OPEN** with [a newly executed backup-status gap](https://github.com/gameguild-gg/gameguild/issues/223#issuecomment-5986323447): 12 remaining codes produce total 10 and used -2 in the actual controller. The configuration DTO lacks original issued count; generation uses configurable count. Synthetic actor/config-only probe, zero database/provider calls or token-authentication acceptance. Further recovery/backup requirements remain to be reconciled before implementation/closure.
+
+All 55 primary local files are preserved. The merged branch is removed, two checkouts are reused and no stashes remain. This continuation officially completed #222/#218; the overall program remains active.
+
+## 2026-10-04 authentication DTO implementation verification (history)
 
 **#218 remains OPEN** with explicit [engineering criteria](https://github.com/gameguild-gg/gameguild/issues/218#issuecomment-5985972085) and [field/callsite/security map](../architecture/authentication-dto-reconciliation.md). Complete names, completed-auth phone and server-owned expiry/duration/profile/token/session/tenant/challenge/risk projection are implemented. **3,864 distinct local cases**, including **42 new cases**, pass; configured solution and targeted Release builds are warning/error clean. Complete OpenAPI/client contract is unchanged; force regeneration, semantic diff and typecheck pass. Actual anonymous signup/login/refresh, high-risk challenge, wrong password and unjoined-tenant rejection are verified with PostgreSQL. Initial missing-membership fixture failure and metadata-tool setup failure remain recorded and excluded. Exact-head CI, merge and official acceptance are pending. The 328-ID snapshot stays **65 closed / 263 open**, and all original criteria remain preserved.
 
