@@ -47,6 +47,15 @@ public static class AuditModule
                 options.RetryDelayMilliseconds = configuredOptions.RetryDelayMilliseconds;
                 options.TimeoutSeconds = configuredOptions.TimeoutSeconds;
             });
+        services.AddOptions<AuditScheduledExportOptions>()
+            .Configure<IConfiguration>((options, configuration) =>
+            {
+                var section = configuration.GetSection(AuditScheduledExportOptions.ConfigurationSection);
+                if (int.TryParse(section[AuditScheduledExportOptions.StaleClaimThresholdMinutesKey], out var staleMinutes))
+                {
+                    options.StaleClaimThreshold = TimeSpan.FromMinutes(staleMinutes);
+                }
+            });
         services.AddHttpClient<IAuditExportWebhookNotifier, AuditExportWebhookNotifier>()
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
 
