@@ -1821,6 +1821,17 @@ propagates through the verifier and orchestrator.
 New enrollments have a fixed persisted expiration which failed attempts cannot
 extend; legacy pending rows use the prior timestamp fallback.
 
+### Password Hash Boundaries
+
+Password writes retain policy checks, history rejection and the original-hash
+concurrency guard. Validated BCrypt cost remains 12 by default, configurable from
+10 to 16. New inputs beyond 72 UTF-8 bytes use explicitly identified salted
+PBKDF2-HMAC-SHA256 with 600,000 iterations and full-input verification. Long input
+cannot authenticate against a truncated legacy BCrypt hash; recovery creates a
+full-length hash. History conservatively rejects reuse of an ambiguous legacy
+prefix. Legacy suffixes cannot be reconstructed or certified from stored hashes.
+See [the requirement and compatibility map](../../../../../docs/architecture/password-hashing-reconciliation.md).
+
 ### Authentication Response Projection
 
 Authentication response conversion preserves server-issued tokens, explicit
