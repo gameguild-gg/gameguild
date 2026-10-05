@@ -41,7 +41,7 @@ internal sealed class UseCaseOperationBehavior<TRequest, TResponse>(
         if (!context.Database.IsRelational() || context.Database.CurrentTransaction is not null)
         {
             var response = await next().ConfigureAwait(false);
-            if (!CommandOutcome.IsFailure(response))
+            if (!CommandOutcome.ShouldRollback(response))
             {
                 await EnsureOperationEventStoredAsync(request, operationContext, cancellationToken).ConfigureAwait(false);
                 if (contract is not null && eventVerifier is not null)
@@ -68,7 +68,7 @@ internal sealed class UseCaseOperationBehavior<TRequest, TResponse>(
             try
             {
                 var response = await next().ConfigureAwait(false);
-                if (CommandOutcome.IsFailure(response))
+                if (CommandOutcome.ShouldRollback(response))
                 {
                     await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
                     context.ChangeTracker.Clear();
