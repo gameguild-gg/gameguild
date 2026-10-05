@@ -75,6 +75,12 @@ public sealed class PolymorphicSignInHandlerCoverageTests
     private readonly Mock<IUserRepository> _userRepo = new();
     private readonly Mock<FluentValidation.IValidator<PolymorphicSignInCommand>> _validator = new();
 
+    public PolymorphicSignInHandlerCoverageTests()
+    {
+        _userRepo.Setup(repository => repository.FindSignInCandidatesAsync(It.IsAny<string>(), It.IsAny<SignInIdentifierType>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<User>)[]);
+    }
+
     [Fact]
     public async Task Handle_ValidationFailure_Throws()
     {

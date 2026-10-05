@@ -32,6 +32,11 @@ public sealed class AuthenticationDtoHandlerContractTests
         };
         var repository = new Mock<IUserRepository>(MockBehavior.Strict);
         repository.Setup(repo => repo.GetByIdAsync(user.Id, cancellation.Token)).ReturnsAsync(user);
+        if (flow == "polymorphic")
+        {
+            repository.Setup(repo => repo.FindSignInCandidatesAsync(user.Email, SignInIdentifierType.Email, cancellation.Token))
+                .ReturnsAsync((IReadOnlyList<User>)[user]);
+        }
         var service = new Mock<IAuthService>(MockBehavior.Strict);
         var oauth = new Mock<IOAuthAuthService>(MockBehavior.Strict);
 
@@ -75,6 +80,10 @@ public sealed class AuthenticationDtoHandlerContractTests
         Assert.Equal(source.AccessTokenExpiresAt, mapped.AccessTokenExpiresAt);
         Assert.Equal(source.RefreshTokenExpiresAt, mapped.RefreshTokenExpiresAt);
         repository.Verify(repo => repo.GetByIdAsync(user.Id, cancellation.Token), Times.Once);
+        if (flow == "polymorphic")
+        {
+            repository.Verify(repo => repo.FindSignInCandidatesAsync(user.Email, SignInIdentifierType.Email, cancellation.Token), Times.Once);
+        }
         repository.VerifyNoOtherCalls();
         Assert.Equal("Ana Maria Silva", user.Name);
     }

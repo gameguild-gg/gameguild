@@ -76,10 +76,32 @@ public sealed class AuthController(ISender sender) : BaseApiController
         {
             Email = body.Email,
             Password = body.Password,
-            TenantId = body.TenantId
+            TenantId = body.TenantId,
+            DeviceFingerprint = body.DeviceFingerprint
         };
 
         return await ExecuteAuthCommandAsync(command, ct).ConfigureAwait(false);
+    }
+
+    /// <summary>Authenticate using email, username or international phone and a password.</summary>
+    [AllowAnonymous]
+    [HttpPost("v{version:apiVersion}/auth/polymorphic")]
+    [EndpointSummary("Sign in with email, username or phone")]
+    [EndpointDescription("Resolves one unique account and applies the existing password, risk, tenant and session flow. Phone identifiers use a leading plus and up to 15 digits. Missing, ambiguous or invalid identifiers receive the generic authentication failure.")]
+    [ProducesResponseType<SignInResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public Task<IActionResult> PolymorphicSignIn([FromBody] PolymorphicSignInRequest body, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+        return ExecuteAuthCommandAsync(new PolymorphicSignInCommand
+        {
+            Credential = body.Credential,
+            CredentialType = body.CredentialType,
+            Password = body.Password,
+            TenantId = body.TenantId,
+            DeviceFingerprint = body.DeviceFingerprint
+        }, ct);
     }
 
     /// <summary>

@@ -1,5 +1,37 @@
 # GameGuild issue closeout inventory
 
+## 2026-10-05 polymorphic password implementation acceptance
+
+#258 now has local implementation/acceptance for email, username and international
+phone password sign-in. Thirty new unit contracts, 43 actual PostgreSQL/API cases
+and four SDK transport cases pass. Current solution/core/integration/client builds
+and runs pass (7,238 local cases); complete API unit repeat and matching-head remote
+checks/merge are pending. Original five criteria remain intact and **#258 is OPEN**.
+[Implementation and explicit boundaries](../architecture/polymorphic-signin-reconciliation.md).
+Overall fixed scope remains **328 IDs: 69 closed / 259 open**, as verified in the
+official #251 closeout below. The failed earlier fixture startup and compiler
+attempts are retained and excluded; previous/repeated cases are not added to totals.
+
+## 2026-10-05 password history official closeout
+
+Live snapshot **2026-10-05T05:37:51.169284+00:00** preserves all **328** original IDs and acceptance fields:
+**69 closed / 259 open**, including historical and duplicate
+closures. #251 is officially CLOSED/COMPLETED after [PR #688](https://github.com/gameguild-gg/gameguild/pull/688)
+merged into `develop` at `8dfd092ff578c27e224d6c9f3154697b3d222fd2`.
+[Individual acceptance](https://github.com/gameguild-gg/gameguild/issues/251#issuecomment-5988663714)
+maps all retained requirements to 16 new migrated-storage/HTTP/real-handler race cases.
+Actual full integration passes 180 cases; local current core/integration 5,332,
+with 7,496 local evidence footprint including explicitly retained API unit/client
+receipts. CI independently passes 2,294 main cases plus 14 repeated OpenAPI executions.
+All applicable gates, Codacy and four CodeQL analyses pass; actual local/CI builds
+are warning/error clean. Entire OpenAPI is unchanged and no EF model changes are pending.
+Primary is synced with all 55 unrelated files preserved; the completed branch is
+removed locally/remotely. Two checkouts and zero stashes are retained.
+
+#258 remains OPEN. Its four failing source-baseline findings are being corrected
+without changing the five approved criteria. #223/#243/#285 still require their
+separate email/authenticator acceptance; no external provider acceptance is inferred.
+
 ## 2026-10-05 password hashing/policy official closeout and next acceptance
 
 Live snapshot **2026-10-05T04:55:32.160488+00:00** preserves all **328** original IDs and acceptance fields:
