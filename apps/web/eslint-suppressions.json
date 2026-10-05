@@ -261,7 +261,7 @@
   },
   "src/components/block-content-editor/extras/code-studio/monaco-file-system.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 9
+      "count": 8
     },
     "@typescript-eslint/no-unused-vars": {
       "count": 2
@@ -446,7 +446,7 @@
   },
   "src/components/block-content-editor/extras/code-studio/types.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 2
+      "count": 1
     }
   },
   "src/components/block-content-editor/extras/code-studio/xterm-terminal.tsx": {
@@ -593,7 +593,7 @@
   },
   "src/components/block-content-editor/extras/markdown/markdown-components.tsx": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 3
+      "count": 2
     },
     "@typescript-eslint/no-unused-vars": {
       "count": 1
@@ -821,7 +821,7 @@
   },
   "src/components/block-content-editor/extras/source-code/cpp/cpp-type-checker.tsx": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 6
+      "count": 5
     }
   },
   "src/components/block-content-editor/extras/source-code/dialogs/import-file-dialog.tsx": {
@@ -973,7 +973,7 @@
   },
   "src/components/block-content-editor/hooks/editor/executors/javascript-executor.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 6
+      "count": 5
     },
     "@typescript-eslint/no-unused-vars": {
       "count": 1
@@ -1254,7 +1254,7 @@
   },
   "src/components/block-content-editor/plugins/preview-components/preview-text.tsx": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 9
+      "count": 8
     },
     "react-hooks/purity": {
       "count": 9
@@ -1262,7 +1262,7 @@
   },
   "src/components/block-content-editor/plugins/preview-components/preview-vega-lite.tsx": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 2
+      "count": 1
     }
   },
   "src/components/block-content-editor/services/editor/google-drive-service.ts": {
@@ -1280,7 +1280,7 @@
   },
   "src/components/block-content-editor/utils/editor/google-drive-security.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 2
+      "count": 1
     }
   },
   "src/components/courses/common/ui/course-card.tsx": {
