@@ -87,6 +87,7 @@ test("isolates the browser journey in a disposable PostgreSQL database", async (
   assert.match(runner, /trap cleanup EXIT INT TERM/);
   assert.match(runner, /ARTIFACTS_DIR=.*REPO_ROOT.*\/artifacts\/test-results\/testing-lab/);
   assert.match(runner, /RUNTIME_DIR=.*ARTIFACTS_DIR.*\/runtime/);
+  assert.match(runner, /mkdir -p.*dirname -- "\$\{LOCK_DIR\}"/);
   assert.match(runner, /runner-result\.json/);
   assert.match(
     runner,
