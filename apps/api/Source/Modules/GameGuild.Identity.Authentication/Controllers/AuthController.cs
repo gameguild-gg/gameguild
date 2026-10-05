@@ -318,7 +318,15 @@ public sealed class AuthController(ISender sender) : BaseApiController
             TenantId = body.TenantId
         };
 
-        return await ExecuteAuthCommandAsync(command, ct).ConfigureAwait(false);
+        var result = await ExecuteAuthCommandAsync(command, ct).ConfigureAwait(false);
+        return result is OkObjectResult { Value: SignInResponse { Success: false } }
+            ? Unauthorized(new ProblemDetails
+            {
+                Status = StatusCodes.Status401Unauthorized,
+                Title = "Unauthorized",
+                Detail = "Invalid refresh token"
+            })
+            : result;
     }
 
     /// <summary>

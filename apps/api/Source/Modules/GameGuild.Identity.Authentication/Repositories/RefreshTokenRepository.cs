@@ -13,7 +13,9 @@ public class RefreshTokenRepository(IApplicationDbContext context) : IRefreshTok
 
     public async Task<List<RefreshToken>> GetActiveByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        return await RefreshTokens.Where(r => r.UserId == userId && r.IsActive).OrderByDescending(r => r.CreatedAt).ToListAsync(cancellationToken);
+        var now = SystemClock.UtcNow;
+        return await RefreshTokens.Where(r => r.UserId == userId && !r.IsRevoked && r.ExpiresAt > now)
+            .OrderByDescending(r => r.CreatedAt).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<RefreshToken>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
@@ -93,11 +95,11 @@ public class RefreshTokenRepository(IApplicationDbContext context) : IRefreshTok
 
     public async Task RevokeAllForUserAsync(Guid userId, string? revokedByIp = null, CancellationToken cancellationToken = default)
     {
-        var activeTokens = await RefreshTokens.Where(r => r.UserId == userId && r.IsActive).ToListAsync(cancellationToken);
+        var now = SystemClock.UtcNow;
+        var activeTokens = await RefreshTokens.Where(r => r.UserId == userId && !r.IsRevoked && r.ExpiresAt > now)
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         if (activeTokens.Count == 0) return;
-
-        var now = SystemClock.UtcNow;
 
         foreach (var token in activeTokens)
         {
