@@ -49,7 +49,7 @@ public sealed class TokenRevocationBoundaryTests
             return Task.CompletedTask;
         }, NullLogger<TokenRevocationMiddleware>.Instance);
 
-        await middleware.InvokeAsync(context, revocation.Object, repository.Object);
+        await middleware.InvokeAsync(context, revocation.Object, repository.Object, Mock.Of<IUserSessionRepository>());
 
         Assert.Equal(anonymous, nextCalled);
         Assert.False(context.User.Identity?.IsAuthenticated);
@@ -98,11 +98,13 @@ public sealed class TokenRevocationBoundaryTests
             return Task.CompletedTask;
         }, NullLogger<TokenRevocationMiddleware>.Instance);
 
-        await middleware.InvokeAsync(context, revocation.Object, repository.Object);
+        var sessions = new Mock<IUserSessionRepository>(MockBehavior.Strict);
+        await middleware.InvokeAsync(context, revocation.Object, repository.Object, sessions.Object);
 
         Assert.True(called);
         Assert.Equal(StatusCodes.Status200OK, context.Response.StatusCode);
         repository.VerifyNoOtherCalls();
         revocation.VerifyNoOtherCalls();
+        sessions.VerifyNoOtherCalls();
     }
 }

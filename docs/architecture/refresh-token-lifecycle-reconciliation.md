@@ -1,5 +1,72 @@
 # Refresh-token lifecycle and unavailable accounts — #262 / #263
 
+## Explicit revocation ownership continuation — #263
+
+Production `f3346a891e4887bcf362d0544d23386aeda30ed1` was exercised against actual
+migrated PostgreSQL and production signed JWT/HTTP revocation. **Four cases yielded
+two failures and two passing controls:** different users in the same or another
+tenant received204 instead of403 when submitting the owner's refresh token.
+Those two baseline storage assertions follow HTTP status and were not reached.
+Own-token204 revocation terminates its linked session; anonymous401 leaves it
+unchanged. The initial provisional owner-session-active assertion was corrected
+to the existing `LocalAuthService` logout contract; initial source/TRX/logs remain.
+[Public baseline](https://github.com/gameguild-gg/gameguild/issues/263#issuecomment-5992442921).
+
+The command now obtains identity from the trusted actor context, requires an
+authenticated user subject and compares stored token ownership before delegation.
+Command/body userId and administrator roles cannot authorize another user's token.
+The host supplies audit IP, and successful own-token logout behavior is preserved.
+After that guard, three of the four HTTP cases passed; the owner case exposed a
+second gap: token revocation and inactive linked session were persisted, but the
+same session's bearer still received200. Its exact source/log/TRX and intermediate
+production hashes are retained separately. The assertion remains in the suite.
+Session-bound bearer middleware now requires one valid nonempty session claim,
+an existing active/unexpired/nonterminated session and matching subject ownership.
+Denial clears identity; explicit public endpoints continue anonymously. Legacy
+and service tokens without a session claim keep their existing compatibility.
+Unit tests cover invalid actor kinds/subjects, spoofed userId, admin roles, missing
+tokens, cancellation, stored session failures, malformed/duplicate session claims
+and public boundaries. Actual PostgreSQL HTTP tests retain both original denials
+and controls plus invalid signed-session cases. **5,359 distinct focused/core
+cases pass**, zero failures/skips: Authentication2,191, Authorization1,667,
+SharedKernel1,377, PostgreSQL HTTP9 and API architecture/security/eventing115.
+Forty-two definitions are new; earlier failed attempts remain evidence. Full API
+suites and matching-head gates/merge are pending. Full OpenAPI is deep-equal
+(1,297paths/1,656schemas); EF reports no pending model changes. #263 remains OPEN
+with all19 criteria unchanged.
+
+## Official bounded #262 acceptance after merge
+
+PR #692 merged into develop at `f3346a891e4887bcf362d0544d23386aeda30ed1` after all
+applicable checks for `065c6cf39298fd6f66f678d8735bc4bd058f873b` passed.
+[#262 officially CLOSED/COMPLETED](https://github.com/gameguild-gg/gameguild/issues/262#issuecomment-5992219521)
+after each preserved owner criterion was mapped to the actual replay/transaction,
+signed bearer, stored user-version and forced concurrent endpoint acceptance.
+#263 remains OPEN with all 19 original criteria and its remaining bounds below.
+
+| Project | Distinct cases | Receipt provenance |
+| --- | ---: | --- |
+| Full API integration | 256 | CI on final head, actual PostgreSQL |
+| Authentication | 2,158 | CI on final head and local current core; counted once |
+| Authorization | 1,667 | Fresh local current core |
+| SharedKernel | 1,377 | Fresh local current core |
+| Full API unit | 1,049 | Initial head 8c199709d; production C#, APIunit project and compilation inputs byte-identical to final head |
+
+**6,507 distinct combined cases**, including 14 new cases. Actual CI selected
+2,414 main cases plus 14 repeated OpenAPI; it did not select full APIunit or
+SharedKernel for this changed module surface. Local focused seven, repeated core
+and fresh API architecture/security/eventing 115 are subsets excluded from totals.
+The final local whole-API repetitions crashed; the sequential integration retry
+failed fixture initialization while Docker was unavailable. These receipts are
+retained, not counted as complete. Docker local was restored; CI supplied final
+whole integration. Current-head required gates, OpenAPI/client consistency,
+Codacy/four CodeQL and warning/error-clean builds passed. Full contract remains
+identical (1,297 paths / 1,656 schemas), no model changes.
+
+Publication-stage pending statements below remain history and are superseded
+only for this bounded #262 acceptance. No complete #263 or unexercised provider/
+distributed-cache acceptance is inferred.
+
 ## Preserved scope
 
 #262 retains its original empty body and owner clarification: replay invalidates

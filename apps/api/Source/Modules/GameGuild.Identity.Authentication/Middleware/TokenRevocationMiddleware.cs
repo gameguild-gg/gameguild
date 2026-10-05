@@ -40,7 +40,8 @@ public sealed class TokenRevocationMiddleware
         _logger = logger;
     }
 
-    public async Task InvokeAsync(HttpContext context, ITokenRevocationService revocationService, IUserRepository userRepository)
+    public async Task InvokeAsync(HttpContext context, ITokenRevocationService revocationService, IUserRepository userRepository,
+        IUserSessionRepository sessionRepository)
     {
         // Skip if not authenticated
         if (!ClaimsExtractor.IsAuthenticated(context.User))
@@ -97,6 +98,25 @@ public sealed class TokenRevocationMiddleware
                     await RejectAsync(context).ConfigureAwait(false);
                     return;
                 }
+            }
+        }
+
+        var sessionClaims = context.User.FindAll(JwtClaimTypes.SessionId).Take(2).ToArray();
+        if (sessionClaims.Length != 0)
+        {
+            if (sessionClaims.Length != 1 || !Guid.TryParse(sessionClaims[0].Value, out var sessionId) ||
+                sessionId == Guid.Empty || !userId.HasValue || userId.Value == Guid.Empty)
+            {
+                await RejectAsync(context).ConfigureAwait(false);
+                return;
+            }
+
+            var session = await sessionRepository.GetByIdAsync(sessionId, context.RequestAborted).ConfigureAwait(false);
+            if (session == null || session.UserId != userId.Value || !session.IsActive ||
+                session.TerminatedAt.HasValue || session.ExpiresAt <= SystemClock.UtcNow)
+            {
+                await RejectAsync(context).ConfigureAwait(false);
+                return;
             }
         }
 
