@@ -19,6 +19,9 @@ the real source; it did not call HTTP, persistence or external providers.
 - Preserve BCrypt for passwords at or below 72 UTF-8 bytes. Read validated
   `BCryptWorkFactor` from shared presentation policy, then the two legacy policy
   locations. Default remains 12; supported generation range is 10–16. Existing
+  verification accepts costs 04–16; costs above 16 are rejected rather than doing
+  unbounded expensive work. Any imported higher-cost hashes require recovery or
+  an explicitly designed migration; no production inventory is claimed. Existing
   supported lower-cost hashes still verify and are flagged for upgrade. Detection
   does not claim that login automatically rewrites hashes.
 - Longer new passwords use salted PBKDF2-HMAC-SHA256, 600,000 iterations, 128-bit
@@ -64,8 +67,35 @@ validation writes the new hash and rejects replay. Ambiguous legacy long input
 requires recovery; changing only its suffix cannot evade history rejection.
 
 The complete pre-MFA OpenAPI remains unchanged at 1,296 paths / 1,654 schemas.
-Rebase onto the merged MFA increment, combined-revision verification, client
-reconciliation, exact-head PR gates and merge remain pending. #254/#255 remain OPEN.
+
+After rebasing onto merged PR #686 (`8e1266698`), the combined source revision
+`8c7da57a15c26c04ff732ea183416e0ee396b5bc` passed the following fresh checks:
+
+| Suite | Passed cases |
+|---|---:|
+| Authentication | 2,114 |
+| Authorization | 1,667 |
+| SharedKernel | 1,371 |
+| Selected API architecture/security/bearer | 106 |
+| PostgreSQL/HTTP and OpenAPI | 36 |
+| Client | 1,115 |
+| **Distinct combined local cases** | **6,409** |
+
+The 36 integration cases include 13 new password cases, nine MFA regressions and
+14 OpenAPI cases. The 44 new password cases are included in these totals. Earlier
+and repeated runs are not added. The full Release solution build passed with zero
+warnings/errors. Authentication and SharedKernel assembly copies used by the
+test projects match the API output. EF reports no pending model changes.
+
+The entire OpenAPI document equals the accepted MFA export, including all 1,296
+paths and 1,654 schemas. Force client regeneration, semantic diff, typecheck and
+all 1,115 client cases passed. Generated files only changed their timestamp or
+line endings; those regeneration artifacts were restored after comparison.
+Local receipts are retained under
+`artifacts/test-results/issue-254-password-20261004/local-proof-combined.json`.
+
+Matching-head PR gates, merge and official acceptance remain pending.
+#254/#255 remain OPEN.
 Configured external email delivery is separate
 acceptance under #223/#253 and is not established by a synthetic reset-token fixture.
 

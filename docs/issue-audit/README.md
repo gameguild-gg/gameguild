@@ -1,5 +1,38 @@
 # GameGuild issue closeout inventory
 
+## 2026-10-05 MFA recovery merge and password reconciliation
+
+The live fixed scope still contains all **328** original IDs: **66 closed / 262 open**
+(03:41:58 UTC). State counts include historical and duplicate closures; they are
+not a count of newly implemented features. All original acceptance fields remain preserved.
+
+[PR #686](https://github.com/gameguild-gg/gameguild/pull/686) merged into `develop`
+at `8e1266698a0998364ab39a34078e0fd16eaa17c8`. All matching-head applicable gates,
+Codacy and four CodeQL analyses passed. CI principal suites passed **4,654** cases,
+plus 14 repeated OpenAPI executions; local evidence passed **5,239 distinct cases**
+including 35 new cases. The prior API timeout and Debug crash are retained/excluded.
+The API allowance increased to 30 minutes without removing a test or gate.
+[Full boundaries and evidence](../architecture/mfa-recovery-reconciliation.md).
+
+**#223/#243/#285 remain OPEN:** configured recovery-email delivery and real
+authenticator QR acceptance remain unverified. No sign-in challenge/session or
+production-delivery acceptance is inferred. The primary checkout preserves all
+55 unrelated files, the integrated branch is removed and two checkouts are reused
+with no stashes.
+
+**#254/#255 remain OPEN** after an eight-failure hashing baseline and implemented
+cost/format/cancellation/full-length corrections. After incorporating #686,
+**6,409 distinct local cases** (5,294 .NET and 1,115 client; 44 new password cases
+included) passed, including actual migrated PostgreSQL
+signup/login/change/reset, all three weak-password writer rejections, configured
+policy and independent score controls. The full solution build is warning/error
+clean, EF has no pending model changes, and the entire OpenAPI/client contract
+matches merged #686. Legacy BCrypt suffixes
+cannot be recovered; long legacy login requires reset and history conservatively
+rejects matching prefixes. Verification supports BCrypt costs 04–16; higher
+imported costs require recovery or a designed migration. Matching-head PR
+gates/merge and official acceptance are next. [Requirement and compatibility map](../architecture/password-hashing-reconciliation.md).
+
 ## 2026-10-04 authentication DTO official closeout
 
 Snapshot **2026-10-05T01:00:14.386097+00:00** preserves all **328** original IDs/criteria: **66 closed / 262 open**. Counts include historical/duplicate closures and are not newly implemented feature counts.

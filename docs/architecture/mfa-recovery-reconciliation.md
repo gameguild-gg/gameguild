@@ -99,7 +99,16 @@ run again before merge.
 
 ## Remaining acceptance
 
-PR gates and merge to develop are pending. Configured provider email delivery for
+PR #686 merged to develop at `8e1266698a0998364ab39a34078e0fd16eaa17c8` on
+2026-10-05 at 03:31:03 UTC. Accepted head `10e1df87c50d4f6a8280b42b6ffcdfff450b2429`
+passed all applicable gates, Codacy and four CodeQL analyses. Its CI passed 4,654
+principal executions (151 API integration, 1,049 API unit, 2,083 authentication and
+1,371 SharedKernel), then 14 repeated OpenAPI HTTP cases. Both Release builds
+were warning/error clean. The prior timeout stays excluded from aggregate acceptance.
+Primary develop was synchronized with all 55 local files preserved; the integrated
+branch was removed locally/remotely, two checkouts are reused and no stashes remain.
+
+Configured provider email delivery for
 #223 and a real authenticator QR round trip for #285 remain unverified. #243 keeps
 its native child and its requirement provenance. No issue is closed by this code
 increment or by the local test totals; closure requires its remaining acceptance.
