@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using GameGuild.CQRS;
+using GameGuild.Identity.Context.Actors;
 using Xunit;
 
 namespace GameGuild.Identity.Authentication.UnitTests.Services;
@@ -230,7 +231,19 @@ public sealed class RevokeTokenHandlerTests
     public async Task Handle_ShouldUseFallbackIpAndReturnUnitValue()
     {
         var authService = new Mock<IAuthService>();
-        var handler = new RevokeTokenHandler(authService.Object, NullLogger<RevokeTokenHandler>.Instance);
+        var ownerId = Guid.NewGuid();
+        var actor = new Mock<IActorContextAccessor>();
+        actor.SetupGet(value => value.ActorContext).Returns(ActorContext.Anonymous with
+        {
+            ActorKind = ActorKind.User, SubjectId = ownerId.ToString(), IsAuthenticated = true
+        });
+        var tokens = new Mock<IRefreshTokenRepository>();
+        tokens.Setup(value => value.GetByTokenAsync("stored-hash", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new RefreshToken { UserId = ownerId });
+        var hasher = new Mock<IRefreshTokenHasher>();
+        hasher.Setup(value => value.HashToken("refresh-token")).Returns("stored-hash");
+        var handler = new RevokeTokenHandler(authService.Object, NullLogger<RevokeTokenHandler>.Instance,
+            actor.Object, tokens.Object, hasher.Object);
         var command = new RevokeTokenCommand
         {
             RefreshToken = "refresh-token",

@@ -829,10 +829,19 @@ public sealed class AuthenticationCoverageCompletionTests
         Assert.Throws<ArgumentNullException>(() =>
             new RefreshTokenHandler(authService, users, null!, validator));
 
+        var actor = Mock.Of<GameGuild.Identity.Context.Actors.IActorContextAccessor>();
+        var tokens = Mock.Of<IRefreshTokenRepository>();
+        var hasher = Mock.Of<IRefreshTokenHasher>();
         Assert.Throws<ArgumentNullException>(() =>
-            new RevokeTokenHandler(null!, NullLogger<RevokeTokenHandler>.Instance));
+            new RevokeTokenHandler(null!, NullLogger<RevokeTokenHandler>.Instance, actor, tokens, hasher));
         Assert.Throws<ArgumentNullException>(() =>
-            new RevokeTokenHandler(authService, null!));
+            new RevokeTokenHandler(authService, null!, actor, tokens, hasher));
+        Assert.Throws<ArgumentNullException>(() =>
+            new RevokeTokenHandler(authService, NullLogger<RevokeTokenHandler>.Instance, null!, tokens, hasher));
+        Assert.Throws<ArgumentNullException>(() =>
+            new RevokeTokenHandler(authService, NullLogger<RevokeTokenHandler>.Instance, actor, null!, hasher));
+        Assert.Throws<ArgumentNullException>(() =>
+            new RevokeTokenHandler(authService, NullLogger<RevokeTokenHandler>.Instance, actor, tokens, null!));
     }
 
     [Fact]

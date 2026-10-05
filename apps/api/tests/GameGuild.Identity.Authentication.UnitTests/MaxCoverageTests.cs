@@ -786,7 +786,7 @@ public class TokenRevocationMiddlewareCovTests
         var revocService = new Mock<ITokenRevocationService>();
         var userRepo = new Mock<IUserRepository>();
 
-        await middleware.InvokeAsync(context, revocService.Object, userRepo.Object);
+        await middleware.InvokeAsync(context, revocService.Object, userRepo.Object, Mock.Of<IUserSessionRepository>());
         nextCalled.Should().BeTrue();
     }
 
@@ -808,7 +808,7 @@ public class TokenRevocationMiddlewareCovTests
             .ReturnsAsync(true);
         var userRepo = new Mock<IUserRepository>();
 
-        await middleware.InvokeAsync(context, revocService.Object, userRepo.Object);
+        await middleware.InvokeAsync(context, revocService.Object, userRepo.Object, Mock.Of<IUserSessionRepository>());
         context.Response.StatusCode.Should().Be(401);
     }
 
@@ -834,7 +834,7 @@ public class TokenRevocationMiddlewareCovTests
             .ReturnsAsync(true);
         var userRepo = new Mock<IUserRepository>();
 
-        await middleware.InvokeAsync(context, revocService.Object, userRepo.Object);
+        await middleware.InvokeAsync(context, revocService.Object, userRepo.Object, Mock.Of<IUserSessionRepository>());
         context.Response.StatusCode.Should().Be(401);
     }
 
@@ -862,7 +862,7 @@ public class TokenRevocationMiddlewareCovTests
         userRepo.Setup(r => r.GetTokenVersionAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(5); // current version > token version
 
-        await middleware.InvokeAsync(context, revocService.Object, userRepo.Object);
+        await middleware.InvokeAsync(context, revocService.Object, userRepo.Object, Mock.Of<IUserSessionRepository>());
         context.Response.StatusCode.Should().Be(401);
     }
 
@@ -892,7 +892,7 @@ public class TokenRevocationMiddlewareCovTests
         userRepo.Setup(r => r.GetTokenVersionAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(3); // same version = valid
 
-        await middleware.InvokeAsync(context, revocService.Object, userRepo.Object);
+        await middleware.InvokeAsync(context, revocService.Object, userRepo.Object, Mock.Of<IUserSessionRepository>());
         nextCalled.Should().BeTrue();
     }
 }
