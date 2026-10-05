@@ -23,10 +23,9 @@ using Nethereum.Signer;
 
 namespace GameGuild.API.IntegrationTests;
 
-[CollectionDefinition(Name, DisableParallelization = true)]
+[CollectionDefinition(nameof(Web3PostgreSqlCollection), DisableParallelization = true)]
 public sealed class Web3PostgreSqlCollection : ICollectionFixture<Web3PostgreSqlFixture>
 {
-    public const string Name = "Web3 API PostgreSQL";
 }
 
 public sealed class Web3PostgreSqlFixture : IAsyncLifetime
@@ -47,7 +46,7 @@ public sealed class Web3PostgreSqlFixture : IAsyncLifetime
     public Task DisposeAsync() => _inner.DisposeAsync();
 }
 
-[Collection(Web3PostgreSqlCollection.Name)]
+[Collection(nameof(Web3PostgreSqlCollection))]
 public sealed class Web3AuthenticationPostgreSqlHttpTests(Web3PostgreSqlFixture fixture)
 {
     [Theory]
@@ -207,7 +206,13 @@ public sealed class Web3AuthenticationPostgreSqlHttpTests(Web3PostgreSqlFixture 
             Assert.Equal(1, await db.Set<RefreshToken>().CountAsync(value => value.UserId == id));
             Assert.Equal(1, await db.Set<UserSession>().CountAsync(value => value.UserId == id));
         }
-        finally { foreach (var response in responses) response.Dispose(); }
+        finally
+        {
+            foreach (var response in responses)
+            {
+                response.Dispose();
+            }
+        }
     }
 
     [Fact]
