@@ -58,8 +58,7 @@ public sealed class AuthenticationBranchModelTests
         {
             AccessToken = "access-token",
             RefreshToken = "refresh-token",
-            ExpiresIn = 120,
-            ExpiresAt = DateTime.UtcNow.AddHours(-1)
+            ExpiresIn = 120
         };
 
         var dto = response.ToDto();
