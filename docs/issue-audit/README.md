@@ -1,5 +1,37 @@
 # GameGuild issue closeout inventory
 
+## 2026-10-05 password hashing/policy official closeout and next acceptance
+
+Live snapshot **2026-10-05T04:55:32.160488+00:00** preserves all **328** original IDs and acceptance fields:
+**68 closed / 260 open**. These are overall states including historical
+and duplicate closures, not newly implemented feature counts.
+
+**#254/#255 are officially CLOSED/COMPLETED**, with separate
+[hashing acceptance](https://github.com/gameguild-gg/gameguild/issues/254#issuecomment-5988318761)
+and [policy acceptance](https://github.com/gameguild-gg/gameguild/issues/255#issuecomment-5988319209),
+after [PR #687](https://github.com/gameguild-gg/gameguild/pull/687) merged into
+`develop` at `abd7ca4f4adafdb76315ce839c1862ee2ee142ae`.
+All applicable accepted-head gates, Codacy and four CodeQL analyses passed.
+**7,480 distinct local cases** include 44 new password cases; full API suites replace
+their subsets. CI passed **3,649 principal cases** plus 14 repeated OpenAPI executions.
+Full API unit is local evidence, not claimed in that CI selection. Builds are
+warning/error clean; EF has no pending model changes, and complete OpenAPI/client
+remains unchanged. [Compatibility and implementation map](../architecture/password-hashing-reconciliation.md).
+
+The primary checkout is synced with all 55 unrelated local files preserved.
+The merged local/remote branch is removed; two checkouts are reused with zero stashes.
+
+**#251 remains OPEN:** 16 new temporary migrated PostgreSQL/HTTP/history/race cases
+pass alongside the three fresh old controls. Their temporary build retains five
+XML-package audit warnings. Integration in the actual API test project is now
+verified: its Release build has zero warnings/errors and all 180 integration
+cases, including the 16 new cases, pass without skips. Full-solution/PR acceptance
+is in progress; temporary and repeated results are not added to current totals.
+**#258 remains OPEN:** a real-source six-case baseline confirms four failures and
+two controls, with no DB/provider/production acceptance inferred. Its original
+five approved criteria remain intact. #223/#243/#285 retain their email/authenticator
+functional acceptance gaps; no new external acceptance is claimed.
+
 ## 2026-10-05 MFA recovery merge and password reconciliation
 
 The live fixed scope still contains all **328** original IDs: **66 closed / 262 open**

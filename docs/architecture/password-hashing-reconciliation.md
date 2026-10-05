@@ -105,8 +105,25 @@ integration/OpenAPI cases. The narrower initial 26-case API selection is retaine
 but excluded in favor of the complete accepted 106-case selection. Repeated runs
 are not added to the 6,409 local total.
 
-Matching-head PR gates, merge and official acceptance remain pending.
-#254/#255 remain OPEN.
+## Final acceptance
+
+[PR #687](https://github.com/gameguild-gg/gameguild/pull/687) merged into `develop`
+at `abd7ca4f4adafdb76315ce839c1862ee2ee142ae` on 2026-10-05. All applicable
+checks, Codacy and four CodeQL analyses passed at accepted head
+`afb2090700a020ed7d276e8322ef39ab8d747131`. **#254/#255 are officially
+CLOSED/COMPLETED**, with separate [hashing acceptance](https://github.com/gameguild-gg/gameguild/issues/254#issuecomment-5988318761)
+and [policy acceptance](https://github.com/gameguild-gg/gameguild/issues/255#issuecomment-5988319209).
+
+Final local coverage is **7,480 distinct cases**: Authentication 2,114,
+Authorization 1,667, SharedKernel 1,371, full API unit 1,049, full API integration
+164 and client 1,115. Full suites replace their earlier subsets. Case identity
+uses definition ID plus display name because the adapter reuses one ID across
+five distinct exception/status cases. Prior/repeated/failed runs are not added.
+CI selected suites passed **3,649 principal cases** (164 integration, 2,114
+Authentication and 1,371 SharedKernel), plus 14 repeated OpenAPI executions.
+Full API unit is local evidence, not claimed in this CI selection. Both CI builds
+passed with zero warnings/errors. Local complete receipts are retained in
+`artifacts/test-results/issue-254-password-20261004/local-proof-full-api.json`.
 
 The `ea329eb9b` CI integration run passed 163 of 164 cases and exposed an existing
 shared-fixture assumption in the data-masking test: it searched for newly seeded
@@ -114,8 +131,9 @@ users only within the first 20 rows of the collection-wide database. Its follow-
 queries each unique fixture marker through the existing list/search endpoint and
 asserts exactly one correct user, retaining both tenant masking assertions. The
 integration test project rebuild passed with zero warnings/errors. Full local API
-suites and matching-head CI verification are pending for that follow-up; the
-failed CI run is retained and excluded from accepted totals.
+integration (164) and unit (1,049) suites then passed without skips; matching-head
+CI integration also passed all 164 cases. The failed CI run is retained and
+excluded from accepted totals.
 Configured external email delivery is separate
 acceptance under #223/#253 and is not established by a synthetic reset-token fixture.
 
