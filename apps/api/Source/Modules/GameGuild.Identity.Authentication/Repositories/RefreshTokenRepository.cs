@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Repository implementation for refresh token data access operations
 /// </summary>
-public class RefreshTokenRepository(IApplicationDbContext context) : IRefreshTokenRepository
+public class RefreshTokenRepository(IApplicationDbContext context) : IRefreshTokenRepository, IRefreshTokenLineageRepository
 {
     private DbSet<RefreshToken> RefreshTokens { get => context.Set<RefreshToken>(); }
 
@@ -42,6 +42,92 @@ public class RefreshTokenRepository(IApplicationDbContext context) : IRefreshTok
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return refreshToken;
+    }
+
+    public async Task<bool> BindSessionAsync(Guid userId, string tokenHash, Guid sessionId, CancellationToken cancellationToken)
+    {
+        RequireIdentity(userId, sessionId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(tokenHash);
+        var token = await RefreshTokens.AsNoTracking().SingleOrDefaultAsync(value => value.Token == tokenHash, cancellationToken)
+            .ConfigureAwait(false);
+        if (token is null)
+        {
+            return false;
+        }
+        var session = await context.Set<UserSession>().AsNoTracking().SingleOrDefaultAsync(value => value.Id == sessionId, cancellationToken)
+            .ConfigureAwait(false);
+        if (token.UserId != userId || token.IsRevoked || token.ExpiresAt <= SystemClock.UtcNow ||
+            session is null || session.UserId != userId ||
+            session.RefreshToken != tokenHash || !session.IsActive || session.ExpiresAt <= SystemClock.UtcNow ||
+            token.SessionId.HasValue && token.SessionId.Value != sessionId)
+        {
+            throw new UnauthorizedAccessException("Invalid refresh-token session binding");
+        }
+        var tokenLink = TrackForMetadata(token);
+        tokenLink.SessionId = sessionId;
+        tokenLink.UpdatedAt = SystemClock.UtcNow;
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return true;
+    }
+
+    public async Task RecordRotationAsync(Guid userId, Guid parentTokenId, string replacementTokenHash, Guid sessionId,
+        CancellationToken cancellationToken)
+    {
+        RequireIdentity(userId, sessionId);
+        if (parentTokenId == Guid.Empty)
+        {
+            throw new ArgumentException("A persisted predecessor is required.", nameof(parentTokenId));
+        }
+        ArgumentException.ThrowIfNullOrWhiteSpace(replacementTokenHash);
+        // ExecuteUpdate claims bypass the tracker; validate the committed-in-transaction row, not its stale tracked copy.
+        var parent = await RefreshTokens.AsNoTracking().SingleOrDefaultAsync(value => value.Id == parentTokenId, cancellationToken)
+            .ConfigureAwait(false);
+        var child = await RefreshTokens.AsNoTracking().SingleOrDefaultAsync(value => value.Token == replacementTokenHash, cancellationToken)
+            .ConfigureAwait(false);
+        var session = await context.Set<UserSession>().AsNoTracking().SingleOrDefaultAsync(value => value.Id == sessionId, cancellationToken)
+            .ConfigureAwait(false);
+        if (parent is null || child is null || session is null || parent.Id == child.Id ||
+            parent.UserId != userId || child.UserId != userId || session.UserId != userId ||
+            !parent.IsRevoked || parent.ReplacedByToken != replacementTokenHash ||
+            child.IsRevoked || child.ExpiresAt <= SystemClock.UtcNow ||
+            session.RefreshToken != replacementTokenHash || !session.IsActive || session.ExpiresAt <= SystemClock.UtcNow ||
+            parent.SessionId.HasValue && parent.SessionId.Value != sessionId ||
+            child.SessionId.HasValue && child.SessionId.Value != sessionId ||
+            child.ParentTokenId.HasValue && child.ParentTokenId.Value != parentTokenId)
+        {
+            throw new UnauthorizedAccessException("Invalid refresh-token lineage");
+        }
+        // A legacy predecessor can be bound only by this observed successful rotation and owned session.
+        var parentLink = TrackForMetadata(parent);
+        var childLink = TrackForMetadata(child);
+        parentLink.SessionId = sessionId;
+        childLink.SessionId = sessionId;
+        childLink.ParentTokenId = parent.Id;
+        parentLink.UpdatedAt = childLink.UpdatedAt = SystemClock.UtcNow;
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    private RefreshToken TrackForMetadata(RefreshToken stored)
+    {
+        var tracked = RefreshTokens.Local.SingleOrDefault(value => value.Id == stored.Id);
+        if (tracked is not null)
+        {
+            return tracked;
+        }
+        RefreshTokens.Attach(stored);
+        return stored;
+    }
+
+    private static void RequireIdentity(Guid userId, Guid sessionId)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("A persisted user ID is required.", nameof(userId));
+        }
+        if (sessionId == Guid.Empty)
+        {
+            throw new ArgumentException("A persisted session ID is required.", nameof(sessionId));
+        }
     }
 
     public async Task<bool> TryRevokeForRotationAsync(
@@ -115,10 +201,17 @@ public class RefreshTokenRepository(IApplicationDbContext context) : IRefreshTok
 
     public async Task DeleteExpiredAndRevokedAsync(DateTime cutoffDate, CancellationToken cancellationToken = default)
     {
-        var expiredTokens = await RefreshTokens.Where(r => r.IsRevoked && r.RevokedAt.HasValue && r.RevokedAt.Value < cutoffDate || !r.IsRevoked && r.ExpiresAt < cutoffDate).ToListAsync(cancellationToken);
-
-        if (expiredTokens.Count > 0)
+        // Delete leaves first. Retain predecessors while any child is retained, including an active descendant.
+        while (true)
         {
+            var expiredTokens = await RefreshTokens.Where(r =>
+                (r.IsRevoked && r.RevokedAt.HasValue && r.RevokedAt.Value < cutoffDate || !r.IsRevoked && r.ExpiresAt < cutoffDate) &&
+                !RefreshTokens.Any(child => child.ParentTokenId == r.Id)).Take(500).ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+            if (expiredTokens.Count == 0)
+            {
+                return;
+            }
             RefreshTokens.RemoveRange(expiredTokens);
             await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
