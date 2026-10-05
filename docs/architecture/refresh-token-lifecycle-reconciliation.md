@@ -1,5 +1,27 @@
 # Refresh-token lifecycle and unavailable accounts — #262 / #263
 
+## Reviewed403 contract and client regeneration
+
+The review correctly identified that the new non-owner403 was absent from the
+declared revocation contract. A new actual full-application Swagger HTTP test
+failed for that omission and now passes after declaring403 on the existing
+action. Captured OpenAPI differs solely by that response; all other specification
+content is deep-equal (1,297paths/1,656schemas), with no pending EF model changes.
+The client was regenerated; only generation metadata changes because its existing
+generic error types already support403. Client1,119 tests and typecheck pass.
+
+Fresh reviewed source passes **5,360 focused/core .NET plus1,119 client cases**:
+**6,479 distinct local cases**,43 new definitions. Full Authentication2,191,
+Authorization1,667 and SharedKernel1,377, actual PostgreSQL9, API architecture/
+security/eventing115 and the new HTTP contract fact1 pass. A local complete
+OpenAPI attempt ended without terminal TRX and is preserved/excluded; matching-head
+CI must supply full integration266 and complete OpenAPI15 before merge.
+
+The initial commit26c1f86bc passed6,549 whole local .NET cases and all applicable
+CI checks (2,456 main plus14 repeated OpenAPI). Those earlier receipts remain
+historical evidence and are excluded from reviewed-head totals. Pending merge and
+the19 original #263 criteria are not completed by this bounded increment.
+
 ## Explicit revocation ownership continuation — #263
 
 Production `f3346a891e4887bcf362d0544d23386aeda30ed1` was exercised against actual

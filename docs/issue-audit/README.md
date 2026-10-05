@@ -1,5 +1,21 @@
 # GameGuild issue closeout inventory
 
+## 2026-10-05 reviewed refresh-revoke403 contract
+
+PR693 review adds the documented non-owner403 and an actual Swagger HTTP regression
+test. This is the sole OpenAPI difference; other content remains deep-equal. The
+client was regenerated and its1,119 tests/typecheck pass; only generation metadata
+changed. Fresh reviewed source passes6,479 distinct focused/core/client cases,
+43 new definitions, with clean builds and no pending EF model changes. Full
+current-head CI/merge are pending; a local whole OpenAPI attempt without terminal
+TRX is preserved and excluded. The first commit's6,549 complete local .NET cases
+and successful CI remain historical receipts, not current-head totals.
+
+The fixed328-ID scope stays70closed/258open at the last live verification, with
+original acceptance fields retained. #263 remains OPEN with all19 criteria.
+[PR693](https://github.com/gameguild-gg/gameguild/pull/693),
+[bounded progress](https://github.com/gameguild-gg/gameguild/issues/263#issuecomment-5992816972).
+
 ## 2026-10-05 explicit refresh-revoke ownership and linked session continuation
 
 The live fixed inventory at **2026-10-05T10:35:31.493481+00:00** retains **328 IDs**,
