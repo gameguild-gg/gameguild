@@ -59,7 +59,7 @@ brace handling. These corrections do not change the handle allocation policy.
 
 ## Validation status
 
-Issue #222 remains open until merge and recorded acceptance. The complete solution
+The initial open/pending status is historical; accepted merge and public closeout are recorded below. The complete solution
 Release build has zero warnings and errors. Local Users unit tests pass 714/714,
 Authentication 2,023/2,023, Authorization 1,667/1,667, SharedKernel 1,371/1,371,
 and Users integration 25/25, including eight new PostgreSQL constraint/race cases.
@@ -77,3 +77,29 @@ change is the `Identity_Users_User.username` description, updated to state the n
 creation behavior; no wire structure changed. Client generation updates only the
 corresponding TypeScript documentation comment and generator metadata. No external
 provider credentials or delivery acceptance are claimed by these username tests.
+
+
+## Final CI, merge and official closeout
+
+[PR #684](https://github.com/gameguild-gg/gameguild/pull/684) merged at `8e946f72143e7f2e1c69219df24542fb817786f2` on
+`2026-10-05T00:02:43Z`. Exact head `e7f9291519398db113953b3b05fd18323d7bebd7` passed **3,948 distinct CI cases**:
+API unit 1,049, API integration 137, Authentication 2,023, Users integration 25 and
+Users unit 714. The dedicated 14-case OpenAPI gate repeated existing cases:
+3,962 executions, with no duplicate counting. Fresh Release builds were warning
+and error clean. Web, OpenAPI/client, Codacy, four CodeQL analyses and all latest
+applicable gates passed. Superseded draft workflow results remain in the raw
+evidence and do not represent the accepted final run.
+[CI evidence](https://github.com/gameguild-gg/gameguild/actions/runs/37244531465/job/111559943789).
+
+Local verification covers **6,986 distinct cases across implementation/follow-up
+revisions**, including 66 added cases. The final 121-case API architecture/security
+selection and 21-case full-application HTTP selection also pass; focused repeats
+are not added to the totals. Failed authoring/scan attempts were corrected and
+excluded from acceptance. Client regeneration, committed diff and typecheck pass;
+only the reviewed username description changed in v1 and the generated types.
+
+#222 was officially CLOSED/COMPLETED at `2026-10-05T00:03:06Z` with
+[complete acceptance](https://github.com/gameguild-gg/gameguild/issues/222#issuecomment-5985839842). All 328 original requirement fields and
+55 primary local files remain preserved. No migration/backfill, existing-account
+rename or provider/delivery/production acceptance is inferred. The merged feature
+branch is removed; two existing checkouts are reused with no stashes.
