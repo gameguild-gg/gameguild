@@ -41,6 +41,20 @@ rule is introduced. The complete integrated .NET/SDK receipts pass 7,810 distinc
 cases: Authentication2256/Authorization1667/SharedKernel1389/APIunit1050/
 Integration327/SDK1121, including35 new Web3 cases and2 generator regression cases.
 
+The full Economy profile exposed an existing five-minute outer deadline for the
+entire API integration suite. Its retained timing receipt records termination at
+300seconds with status124, while the same327-case suite passes its independent
+API check in8min24s. Both API test projects now use the existing bounded12-minute
+API suite deadline; the five-minute individual-test hang guard and all assertions
+remain active. A shell regression exercises integration, unit and ordinary project
+deadline selection. No test project, coverage requirement or release stage is skipped.
+
+The Testing Lab browser fixture also generated a 51-character reviewer username,
+which the existing 50-character API handle limit correctly rejected. Its shorter
+fixture prefix preserves the complete unique tag and role, with a guard before
+sign-up. Production validation is unchanged. All 64 Economy shell regressions and
+23 Testing Lab runner/quality cases pass locally, including five new username cases.
+
 ## Account and credential boundaries
 
 The insert-only `web3` external-login provider key is the lowercase verified

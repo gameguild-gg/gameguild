@@ -2,12 +2,35 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  buildTestingLabFixtureUsername,
   collectAccessibilityFailures,
   cleanupTestingLabFixture,
   requireDisposableDatabaseMode,
   responseFailure,
   throwForBrowserQualityFailures,
 } from './testing-lab-browser-quality.mjs';
+
+for (const kind of ['owner', 'reviewer', 'tester']) {
+  test(`builds a valid bounded ${kind} fixture username with the complete unique tag`, () => {
+    const tag = '1791223200000-ab12cd34';
+    const username = buildTestingLabFixtureUsername(kind, tag);
+    assert.match(username, /^[a-z0-9_]{3,50}$/i);
+    assert.equal(username, `tl_browser_${kind}_1791223200000_ab12cd34`);
+  });
+}
+
+test('keeps fixture usernames distinct across roles and runs', () => {
+  const usernames = ['owner', 'reviewer', 'tester'].flatMap((kind) =>
+    ['1791223200000-ab12cd34', '1791223200000-cd34ef56'].map((tag) =>
+      buildTestingLabFixtureUsername(kind, tag),
+    ),
+  );
+  assert.equal(new Set(usernames).size, 6);
+});
+
+test('rejects overlong fixture usernames before sending a sign-up request', () => {
+  assert.throws(() => buildTestingLabFixtureUsername('reviewer', 'a'.repeat(51)), RangeError);
+});
 
 test('ignores controls hidden from the accessibility tree', async () => {
   const heading = {
