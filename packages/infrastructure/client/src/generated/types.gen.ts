@@ -6649,13 +6649,15 @@ export interface IdentityAuthenticationBackupCodesOutput {
 
 /** Response containing backup codes status */
 export interface IdentityAuthenticationBackupCodesStatusOutput {
+  /** False for legacy sets whose original issued/used counts cannot be reconstructed. */
+  areUsageCountsKnown?: boolean;
   /** Whether the user has any backup codes */
   hasBackupCodes: boolean;
   /** Number of codes remaining (unused) */
   remainingCount: number;
-  /** Total number of backup codes generated */
+  /** Original number generated when known; otherwise the remaining count is a lower bound */
   totalCount: number;
-  /** Number of codes that have been used */
+  /** Number used when known; otherwise zero is a lower bound, not historical proof */
   usedCount: number;
 }
 
@@ -7020,6 +7022,8 @@ export interface IdentityAuthenticationMagicLinkRequestResult {
 
 /** MFA configuration response */
 export interface IdentityAuthenticationMfaConfigurationOutput {
+  /** Original issued count; null for legacy sets whose issuance metadata is unavailable. */
+  backupCodesIssued?: number | null;
   backupCodesRemaining?: number;
   enabledAt?: string | null;
   enabledMethods?: Array<string> | null;
@@ -27099,6 +27103,7 @@ IdentityAuthenticationBackupCodesOutputSchema = z.object({
 
 /** Zod schema for IdentityAuthenticationBackupCodesStatusOutput. Response containing backup codes status */
 IdentityAuthenticationBackupCodesStatusOutputSchema = z.object({
+  areUsageCountsKnown: z.boolean().optional(),
   hasBackupCodes: z.boolean(),
   remainingCount: z.number().int(),
   totalCount: z.number().int(),
@@ -27402,6 +27407,7 @@ IdentityAuthenticationMagicLinkRequestResultSchema = z.object({
 
 /** Zod schema for IdentityAuthenticationMfaConfigurationOutput. MFA configuration response */
 IdentityAuthenticationMfaConfigurationOutputSchema = z.object({
+  backupCodesIssued: z.number().int().nullable().optional(),
   backupCodesRemaining: z.number().int().optional(),
   enabledAt: z.string().datetime().nullable().optional(),
   enabledMethods: z.array(z.string()).nullable().optional(),
