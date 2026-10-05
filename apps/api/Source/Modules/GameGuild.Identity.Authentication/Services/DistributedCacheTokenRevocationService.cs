@@ -56,7 +56,7 @@ public sealed class DistributedCacheTokenRevocationService : ITokenRevocationSer
         CancellationToken cancellationToken = default)
         => RevokeAllUserTokensCoreAsync(userId, null, reason, cancellationToken);
 
-    public Task RevokeAllUserTokensAsync(Guid userId, int minimumTokenVersion, string? reason = null, CancellationToken cancellationToken = default)
+    public Task RevokeAllUserTokensAsync(Guid userId, int minimumTokenVersion, string? reason, CancellationToken cancellationToken)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(minimumTokenVersion);
         return RevokeAllUserTokensCoreAsync(userId, minimumTokenVersion, reason, cancellationToken);
@@ -94,7 +94,7 @@ public sealed class DistributedCacheTokenRevocationService : ITokenRevocationSer
         CancellationToken cancellationToken = default)
         => IsUserTokenRevokedAsync(userId, tokenIssuedAt, null, cancellationToken);
 
-    public async Task<bool> IsUserTokenRevokedAsync(Guid userId, DateTime tokenIssuedAt, int? tokenVersion, CancellationToken cancellationToken = default)
+    public async Task<bool> IsUserTokenRevokedAsync(Guid userId, DateTime tokenIssuedAt, int? tokenVersion, CancellationToken cancellationToken)
     {
         var payload = await _cache.GetStringAsync(UserKeyPrefix + userId.ToString("N"), cancellationToken).ConfigureAwait(false);
         if (string.IsNullOrWhiteSpace(payload))

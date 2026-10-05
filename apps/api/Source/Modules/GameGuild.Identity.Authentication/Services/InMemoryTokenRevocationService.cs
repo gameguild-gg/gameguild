@@ -61,7 +61,7 @@ public sealed class InMemoryTokenRevocationService : ITokenRevocationService, IV
     public Task RevokeAllUserTokensAsync(Guid userId, string? reason = null, CancellationToken cancellationToken = default)
         => RevokeAllUserTokensCoreAsync(userId, null, reason, cancellationToken);
 
-    public Task RevokeAllUserTokensAsync(Guid userId, int minimumTokenVersion, string? reason = null, CancellationToken cancellationToken = default)
+    public Task RevokeAllUserTokensAsync(Guid userId, int minimumTokenVersion, string? reason, CancellationToken cancellationToken)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(minimumTokenVersion);
         return RevokeAllUserTokensCoreAsync(userId, minimumTokenVersion, reason, cancellationToken);
@@ -105,7 +105,7 @@ public sealed class InMemoryTokenRevocationService : ITokenRevocationService, IV
     public Task<bool> IsUserTokenRevokedAsync(Guid userId, DateTime tokenIssuedAt, CancellationToken cancellationToken = default)
         => IsUserTokenRevokedAsync(userId, tokenIssuedAt, null, cancellationToken);
 
-    public Task<bool> IsUserTokenRevokedAsync(Guid userId, DateTime tokenIssuedAt, int? tokenVersion, CancellationToken cancellationToken = default)
+    public Task<bool> IsUserTokenRevokedAsync(Guid userId, DateTime tokenIssuedAt, int? tokenVersion, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         if (_userRevocationTimes.TryGetValue(userId, out var revocationTime))

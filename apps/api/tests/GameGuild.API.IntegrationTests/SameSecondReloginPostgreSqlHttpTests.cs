@@ -49,7 +49,7 @@ public sealed class SameSecondReloginPostgreSqlHttpTests(ApiPostgreSqlFixture fi
             });
         });
         Assert.IsType<DistributedCacheTokenRevocationService>(factory.Services.GetRequiredService<ITokenRevocationService>());
-        const string password = "Synthetic#263-ReLoginPassword!26";
+        var password = Convert.ToHexString(RandomNumberGenerator.GetBytes(24)) + "Aa1!";
         var marker = Guid.NewGuid().ToString("N");
         User user;
         var tenantId = Guid.NewGuid();
