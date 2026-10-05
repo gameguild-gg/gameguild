@@ -93,7 +93,7 @@ export class AuthWebauthnModule {
   /**
    * Get all WebAuthn credentials for the current user.
    */
-  async getAuthWebauthnCredentialsForGetAuthWebauthnCredentials(): Promise<Result<Array<Types.IdentityAuthenticationWebAuthnCredentialInfo>, ApiError>> {
+  async getAuthWebauthnCredentialsForGetAuthWebauthnCredentials(): Promise<Result<Types.IdentityAuthenticationWebAuthnCredentialInfo[], ApiError>> {
     const url = '/v1/auth/webauthn/credentials';
 
     const result = await this.client.request({
@@ -102,7 +102,7 @@ export class AuthWebauthnModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.IdentityAuthenticationWebAuthnCredentialInfo>, ApiError>;
+    return result as Result<Types.IdentityAuthenticationWebAuthnCredentialInfo[], ApiError>;
   }
 
   /**

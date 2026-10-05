@@ -220,7 +220,7 @@ function generateEndpointMethod(endpoint: ModuleEndpoint): string {
 
   // Method signature
   const params = buildMethodParams(endpoint);
-  const returnType = `Promise<Result<${qualifyType(endpoint.responseType)}, ApiError>>`;
+  const returnType = `Promise<Result<${qualifyResponseType(endpoint.responseType)}, ApiError>>`;
 
   lines.push(`  async ${methodName}(${params}): ${returnType} {`);
 
@@ -277,14 +277,19 @@ function generateEndpointMethod(endpoint: ModuleEndpoint): string {
     lines.push('');
     lines.push(`    return result;`);
   } else {
-    const qualifiedReturn = qualifyType(endpoint.responseType);
     lines.push('');
-    lines.push(`    return result as Result<${qualifiedReturn}, ApiError>;`);
+    lines.push(`    return result as Result<${qualifyResponseType(endpoint.responseType)}, ApiError>;`);
   }
 
   lines.push('  }');
 
   return lines.join('\n');
+}
+
+function qualifyResponseType(type: string): string {
+  const qualifiedType = qualifyType(type);
+  const simpleArray = qualifiedType.match(/^Array<([\w.]+|Record<string, [\w.]+>)>$/);
+  return simpleArray ? `${simpleArray[1]}[]` : qualifiedType;
 }
 
 /**
