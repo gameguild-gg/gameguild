@@ -45,7 +45,8 @@ export class CSharpCompiler {
     
     try {
       // Call the C# function exposed via JSExport
-      const result = (window as unknown).CSharpCompiler.compileAndRun(code)
+      const globalScope = window as typeof window & { CSharpCompiler: { compileAndRun(code: string): string } }
+      const result = globalScope.CSharpCompiler.compileAndRun(code)
       const executionTime = performance.now() - startTime
 
       return this.parseResult(result, executionTime)

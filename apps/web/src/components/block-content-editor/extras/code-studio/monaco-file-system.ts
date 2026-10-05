@@ -4,6 +4,8 @@ import type { CodeFile } from "./types"
 import type { RegisteredFileSystemProvider as MonacoFileSystemProvider } from '@codingame/monaco-vscode-files-service-override'
 import { URI } from 'vscode-uri'
 import type { Monaco } from "@monaco-editor/react"
+import { Range } from "monaco-editor"
+import type { editor, languages, Position } from "monaco-editor"
 
 let fileSystemProvider: MonacoFileSystemProvider | null = null
 let disposable: { dispose: () => void } | null = null
@@ -229,7 +231,7 @@ export function registerPathCompletionProvider(monaco: Monaco) {
   // Provider combinado para TypeScript e JavaScript
   const createProvider = () => ({
     triggerCharacters: ['"', "'", '/', '.'],
-    provideCompletionItems: (model: unknown, position: any) => {
+    provideCompletionItems: (model: editor.ITextModel, position: Position) => {
       const lineContent = model.getLineContent(position.lineNumber)
       const textBeforeCursor = lineContent.substring(0, position.column - 1)
       
@@ -241,40 +243,40 @@ export function registerPathCompletionProvider(monaco: Monaco) {
       const modelPath = model.uri.path || ''
       const currentDir = modelPath.split('/').slice(0, -1).join('/')
       
-      const suggestions: any[] = []
-      
+      const suggestions: languages.CompletionItem[] = []
+
       // Sugerir arquivos disponíveis
       currentFiles.forEach(file => {
         const filePath = `/${file.path}`
         const fileName = file.path.split('/').pop() || ''
-        
+
         // Não sugerir o próprio arquivo
         if (filePath === modelPath) return
-        
+
         // Calcular caminho relativo
         let relativePath = ''
-        
+
         if (currentPath.startsWith('./') || currentPath.startsWith('../') || currentPath.length === 0) {
-          // Path relativo ou vazio - sugerir arquivos do mesmo diretório
+          // Path relativo ou vazio - sugerir arquivos do mesmo diretário
           const fileDir = filePath.split('/').slice(0, -1).join('/')
-          
+
           if (fileDir === currentDir) {
             relativePath = './' + fileName
           } else {
             // Calcular caminho relativo entre diretórios
             const currentParts = currentDir.split('/').filter(Boolean)
             const fileParts = fileDir.split('/').filter(Boolean)
-            
+
             let commonLength = 0
-            while (commonLength < currentParts.length && 
-                   commonLength < fileParts.length && 
+            while (commonLength < currentParts.length &&
+                   commonLength < fileParts.length &&
                    currentParts[commonLength] === fileParts[commonLength]) {
               commonLength++
             }
-            
+
             const upCount = currentParts.length - commonLength
             const downPath = fileParts.slice(commonLength)
-            
+
             if (upCount === 0) {
               relativePath = './' + downPath.concat([fileName]).join('/')
             } else {
@@ -283,25 +285,25 @@ export function registerPathCompletionProvider(monaco: Monaco) {
             }
           }
         }
-        
+
         if (relativePath) {
           suggestions.push({
             label: relativePath,
             kind: monaco.languages.CompletionItemKind.File,
             insertText: relativePath,
-            range: {
-              startLineNumber: position.lineNumber,
-              startColumn: position.column - currentPath.length,
-              endLineNumber: position.lineNumber,
-              endColumn: position.column,
-            },
+            range: new Range(
+              position.lineNumber,
+              position.column - currentPath.length,
+              position.lineNumber,
+              position.column,
+            ),
             detail: `${file.language} file`,
             documentation: `Import from ${file.path}`,
             sortText: `0_${relativePath}`, // Priorizar na lista
           })
         }
       })
-      
+
       return { suggestions }
     },
   })

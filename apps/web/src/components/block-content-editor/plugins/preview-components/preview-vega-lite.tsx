@@ -2,6 +2,8 @@
 
 import {
   getVegaLiteThemePair as getThemePair,
+  type VegaLiteThemeMode,
+  type VegaThemeBase,
   VegaLiteViewer,
 } from "@game-guild/lexical-surface";
 
@@ -20,11 +22,10 @@ interface PreviewVegaLiteProps {
 }
 
 export function PreviewVegaLite({ node }: PreviewVegaLiteProps) {
-  const { spec, title, caption, theme, themeMode, layout, size } = node.data;
-  const themePair = getThemePair(
-    (theme as any) || "default",
-    (themeMode as unknown) || "system",
-  );
+  const { spec, title, caption, layout, size } = node.data;
+  const theme = (node.data.theme || "default") as VegaThemeBase;
+  const themeMode = (node.data.themeMode || "system") as VegaLiteThemeMode;
+  const themePair = getThemePair(theme, themeMode);
 
   return (
     <VegaLiteViewer

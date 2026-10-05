@@ -12,9 +12,17 @@ function headers(): HeadersInit {
 }
 
 async function get(url: string): Promise<Response> {
-  const response = await fetch(url, { headers: url.includes('api.github.com') ? headers() : undefined });
+  const response = await fetch(url, { headers: isGitHubApiUrl(url) ? headers() : undefined });
   if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`);
   return response;
+}
+
+function isGitHubApiUrl(url: string): boolean {
+  try {
+    return new URL(url).host === 'api.github.com';
+  } catch {
+    return false;
+  }
 }
 
 async function json<T>(url: string): Promise<T> {
