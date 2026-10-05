@@ -101,3 +101,30 @@ Force generation, semantic generated-client diff and typecheck pass. Only
 generator timestamp/author provenance refreshed; the original metadata bytes
 were restored after confirming semantic equality. Exact-head CI and merge remain
 pending; #218 is open.
+
+
+## Exact-head CI, merge and official closeout
+
+[PR #685](https://github.com/gameguild-gg/gameguild/pull/685) merged into `develop` at
+`21fa6f31e3d943d98190e6f7178204485086f775` on `2026-10-05T00:55:41Z`. Head `32ba8340a85f7cdf79abc53b73e2dc7ccfddb17b`
+passed **2,202 distinct CI cases**: API integration 142 and Authentication 2,060.
+The selector chose those two affected projects; the separately executed 121-case
+API architecture/security/bearer and 1,667-case Authorization local suites are
+not claimed as additional CI cases. The 14-case OpenAPI HTTP gate repeats
+integration cases: 2,216 executions without duplicate counting.
+[Run/log](https://github.com/gameguild-gg/gameguild/actions/runs/37248150956/job/111570125387).
+
+Fresh Release builds and all applicable gates, OpenAPI/client, Codacy and four
+CodeQL analyses passed. Web/migration/other nonapplicable jobs were skipped and
+are not claimed as executed. The final configured solution build also completed
+with exit code zero and zero warnings/errors. Initial failed/interrupted attempts
+remain recorded and excluded from acceptance; no missing native handle was
+treated as successful completion. Complete OpenAPI/client structure is unchanged.
+
+#218 is officially CLOSED/COMPLETED at `2026-10-05T00:55:48Z` with
+[full acceptance](https://github.com/gameguild-gg/gameguild/issues/218#issuecomment-5986287807). Earlier pending statuses in this document are
+historical. The feature branch is removed, two existing checkouts are reused,
+zero stashes remain and all 55 primary local files are preserved. The fixed scope
+retains all 328 criteria/IDs: **66 closed / 262 open**.
+The full program remains active. Next #223 remains open with
+[executed backup-status gap](https://github.com/gameguild-gg/gameguild/issues/223#issuecomment-5986323447); no completion is inferred from the probe.
