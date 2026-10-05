@@ -246,7 +246,8 @@ public sealed class RefreshTokenLifecyclePostgreSqlHttpTests(ApiPostgreSqlFixtur
             DbDataReader result, CancellationToken cancellationToken = default)
         {
             // Only delay the two real SELECT results; never substitute storage, claims or rotation.
-            if (TokenHash is not null && command.CommandText.StartsWith("SELECT", StringComparison.OrdinalIgnoreCase)
+            if (eventData.CommandSource == CommandSource.LinqQuery && TokenHash is not null
+                && command.CommandText.StartsWith("SELECT", StringComparison.OrdinalIgnoreCase)
                 && command.CommandText.Contains(".refreshtoken AS ", StringComparison.Ordinal)
                 && command.Parameters.Cast<DbParameter>().Any(value => Equals(value.Value, TokenHash)))
             {

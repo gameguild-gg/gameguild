@@ -32,12 +32,18 @@ Sources, initial/corrected TRX, logs and hashes are retained under
 
 ## Correction and acceptance boundaries
 
-Refresh now denies if the existing live-user lookup returns null, before tenant
+An otherwise active/unexpired refresh now denies if the existing live-user lookup returns null, before tenant
 provisioning, issuance or session mutation. Fallback version/email identity is
 removed. Versioned user bearer validation also denies null live-user versions.
 Rejected protected requests receive generic 401 and no identity; explicit public
 endpoints continue anonymously. Unit tests cover both boundaries, no issuance or
-mutations, and retained versionless legacy/service compatibility.
+mutations, and retained versionless legacy/service compatibility. Revoked/replaced
+replay still requires committed containment before denial, even if the profile is
+missing/deleted: its extant token/session rows are revoked/terminated, without
+issuance or an invented version/profile update. Two explicit service cases retain
+this distinction; moving the availability guard ahead of replay would bypass the
+owner's global-containment requirement. The unchanged-state guarantee applies to
+otherwise active tokens denied due to unavailable account, not replay containment.
 
 The original six relational scenarios pass after correction. A further endpoint
 test synchronizes two actual SELECT results so both requests observe the same
@@ -50,7 +56,7 @@ The first synchronization attempt also counted session SELECTs and failed its
 arrival-count assertion; the interceptor was narrowed to refresh-token SELECTs,
 without changing any response/containment assertion, and the attempt was retained.
 
-Full Authentication 2,156, Authorization 1,667 and SharedKernel 1,377 pass with
+At first publication, full Authentication 2,156, Authorization 1,667 and SharedKernel 1,377 pass with
 zero failures/skips: 5,200 core cases plus seven focused relational cases. The
 55 service/boundary cases are a subset of Authentication and are not added again.
 Twelve definitions are new (seven relational, five unit). Full API suites are in
@@ -58,6 +64,24 @@ progress at publication and will supersede, not add to, focused subset counts.
 Full Release solution and final integration-only build are warning/error clean.
 Entire exported OpenAPI equals accepted #691 (1,297 paths / 1,656 schemas); EF
 reports no pending model changes. Matching-head CI and merge remain required.
+
+## Review correction and policy clarification
+
+Codacy reported one unused required override parameter in the read synchronizer.
+The seam now uses `eventData.CommandSource` to restrict synchronization to LINQ
+SELECTs, retaining table/hash filters and all functional assertions; no rule is
+suppressed. Seven fresh relational scenarios pass after this correction.
+Two additional unit cases explicitly verify committed replay containment for
+revoked/replaced tokens without a live profile, while forbidding issuance or a
+synthetic profile/version update. The availability check deliberately remains
+after replay detection to preserve the owner's global-containment acceptance.
+
+Fresh Authentication 2,158, Authorization 1,667, SharedKernel 1,377 and relational
+seven pass: **5,209 focused/core cases**, with **14 new definitions** across this
+increment. Full suites and the corrected commit's CI/merge are still required.
+First-head complete execution (6,505 distinct cases), quality finding and
+intermediate failures remain separate history; focused subsets are never added
+again to whole-suite totals.
 
 This does not introduce persisted parent/family IDs, selective-family semantics,
 session-specific bearer enforcement, cancellation/issuance-failure acceptance,
