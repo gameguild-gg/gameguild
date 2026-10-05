@@ -9,6 +9,7 @@ import {
   cleanupTestingLabFixture,
   collectAccessibilityFailures,
   collectViewportFailures,
+  createTestingLabFixtureIdentities,
   requireDisposableDatabaseMode,
   responseFailure,
   throwForBrowserQualityFailures,
@@ -183,11 +184,8 @@ async function bootstrap() {
     return { accessToken: tenantAuth.accessToken, email, password, userId };
   }
 
-  const [owner, reviewer, tester] = await Promise.all([
-    createFixtureIdentity("owner"),
-    createFixtureIdentity("reviewer"),
-    createFixtureIdentity("tester"),
-  ]);
+  const [owner, reviewer, tester] =
+    await createTestingLabFixtureIdentities(createFixtureIdentity);
   const project = await apiRequest(
     "/v1/projects",
     {

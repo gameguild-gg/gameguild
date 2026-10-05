@@ -74,6 +74,16 @@ artifact upload directory, including failures during identity bootstrap before
 the first browser page. This preserves the cause of fixture sign-in failures.
 Matching-head acceptance remains pending until every applicable gate passes.
 
+An exact Node reproduction confirms that concurrent fixture sign-ins contend on
+the configured PostgreSQL source-IP advisory lock and correctly receive generic
+401 before password verification. Fixture identities now complete in sequence,
+with regression coverage for ordering, no overlap and failure propagation. The
+API lockout, IP throttling and credential checks are unchanged.
+All 25 runner/quality cases pass locally. The exact Node identity bootstrap also
+passes against the real API and a freshly migrated disposable PostgreSQL database:
+all three fixture identities receive valid sign-in responses. This accepts fixture
+preparation only; the complete browser journey still requires matching-head CI.
+
 ## Account and credential boundaries
 
 The insert-only `web3` external-login provider key is the lowercase verified

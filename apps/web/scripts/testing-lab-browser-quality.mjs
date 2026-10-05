@@ -14,6 +14,16 @@ export function buildTestingLabFixtureUsername(kind, tag) {
   return username;
 }
 
+export async function createTestingLabFixtureIdentities(createIdentity) {
+  const identities = [];
+  // Local sign-in serializes the shared source-IP budget. Bootstrap these users
+  // in order so the fixture respects the same advisory lock as real clients.
+  for (const kind of ['owner', 'reviewer', 'tester']) {
+    identities.push(await createIdentity(kind));
+  }
+  return identities;
+}
+
 export function requireDisposableDatabaseMode(mode) {
   if (String(mode).toLowerCase() !== 'disposable') {
     throw new Error(
