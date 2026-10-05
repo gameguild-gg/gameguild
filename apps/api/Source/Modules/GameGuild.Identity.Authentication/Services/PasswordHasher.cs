@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text;
 using System.Text.RegularExpressions;
 
 using Microsoft.Extensions.Configuration;
@@ -6,14 +8,25 @@ using Microsoft.Extensions.Logging;
 namespace GameGuild.Identity.Authentication;
 
 /// <summary>
-///     Password hashing service using BCrypt or Argon2.
+///     Password hashing service using BCrypt, with versioned PBKDF2 for inputs beyond BCrypt's byte limit.
 ///     Provides password hashing, verification, strength validation, and rehashing detection.
 /// </summary>
 public sealed class PasswordHasher(ILogger<PasswordHasher> logger, IConfiguration configuration) : IPasswordHasher
 {
-    // BCrypt work factor (cost parameter) - higher is more secure but slower
-    // Recommended: 12-14 for production (2^12 to 2^14 iterations)
-    private const int BCryptWorkFactor = 12;
+    private static readonly Regex BcryptHashPattern = new(
+        @"\A\$2[abxy]?\$(0[4-9]|1[0-6])\$[./A-Za-z0-9]{53}\z",
+        RegexOptions.CultureInvariant | RegexOptions.NonBacktracking);
+
+    private int BCryptWorkFactor
+    {
+        get
+        {
+            var workFactor = GetPolicyInteger("BCryptWorkFactor", 12);
+            if (workFactor is < 10 or > 16)
+                throw new InvalidOperationException("BCrypt work factor must be between 10 and 16.");
+            return workFactor;
+        }
+    }
 
     // Prefer the shared presentation options; retain both prior locations for configuration compatibility.
     private int MinPasswordLength => GetPolicyInteger("MinPasswordLength", 8);
@@ -43,7 +56,10 @@ public sealed class PasswordHasher(ILogger<PasswordHasher> logger, IConfiguratio
     /// </summary>
     public Task<string> HashPasswordAsync(string password, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(HashPassword(password));
+        cancellationToken.ThrowIfCancellationRequested();
+        var result = HashPassword(password);
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult(result);
     }
 
     /// <summary>
@@ -51,7 +67,10 @@ public sealed class PasswordHasher(ILogger<PasswordHasher> logger, IConfiguratio
     /// </summary>
     public Task<bool> VerifyPasswordAsync(string passwordHash, string providedPassword, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(VerifyPassword(passwordHash, providedPassword));
+        cancellationToken.ThrowIfCancellationRequested();
+        var result = VerifyPassword(passwordHash, providedPassword);
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult(result);
     }
 
     /// <summary>
@@ -59,7 +78,10 @@ public sealed class PasswordHasher(ILogger<PasswordHasher> logger, IConfiguratio
     /// </summary>
     public Task<PasswordStrengthResult> ValidatePasswordStrengthAsync(string password, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(ValidatePasswordStrength(password));
+        cancellationToken.ThrowIfCancellationRequested();
+        var result = ValidatePasswordStrength(password);
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult(result);
     }
 
     /// <summary>
@@ -67,7 +89,10 @@ public sealed class PasswordHasher(ILogger<PasswordHasher> logger, IConfiguratio
     /// </summary>
     public Task<bool> NeedsRehashAsync(string passwordHash, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(NeedsUpgrade(passwordHash));
+        cancellationToken.ThrowIfCancellationRequested();
+        var result = NeedsUpgrade(passwordHash);
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult(result);
     }
 
     #region Private Helper Methods
@@ -136,8 +161,12 @@ public sealed class PasswordHasher(ILogger<PasswordHasher> logger, IConfiguratio
     {
         if (string.IsNullOrWhiteSpace(password)) { throw new ArgumentException("Password cannot be empty", nameof(password)); }
 
-        logger.LogDebug("Hashing password with BCrypt (work factor: {WorkFactor})", BCryptWorkFactor);
-        var passwordHash = BCrypt.Net.BCrypt.HashPassword(password, BCryptWorkFactor);
+        var workFactor = BCryptWorkFactor;
+        if (Encoding.UTF8.GetByteCount(password) > 72)
+            return LongPasswordHash.Create(password);
+
+        logger.LogDebug("Hashing password with BCrypt (work factor: {WorkFactor})", workFactor);
+        var passwordHash = BCrypt.Net.BCrypt.HashPassword(password, workFactor);
         logger.LogDebug("Password hashed successfully");
         return passwordHash;
     }
@@ -148,6 +177,13 @@ public sealed class PasswordHasher(ILogger<PasswordHasher> logger, IConfiguratio
     public bool VerifyPassword(string hashedPassword, string providedPassword)
     {
         if (string.IsNullOrWhiteSpace(hashedPassword) || string.IsNullOrWhiteSpace(providedPassword)) { return false; }
+
+        if (hashedPassword.StartsWith(LongPasswordHash.Prefix, StringComparison.Ordinal))
+            return LongPasswordHash.Verify(hashedPassword, providedPassword);
+
+        // A legacy BCrypt row cannot establish bytes after 72. Recovery must create a full-length hash.
+        if (Encoding.UTF8.GetByteCount(providedPassword) > 72 || !BcryptHashPattern.IsMatch(hashedPassword))
+            return false;
 
         try
         {
@@ -163,6 +199,21 @@ public sealed class PasswordHasher(ILogger<PasswordHasher> logger, IConfiguratio
         }
     }
 
+    /// <summary>History conservatively rejects every long input matching a truncated legacy hash.</summary>
+    internal static bool MatchesLongLegacyHashForHistory(string hashedPassword, string providedPassword)
+    {
+        if (Encoding.UTF8.GetByteCount(providedPassword) <= 72 || !BcryptHashPattern.IsMatch(hashedPassword))
+            return false;
+        try
+        {
+            return BCrypt.Net.BCrypt.Verify(providedPassword, hashedPassword);
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
     /// <summary>
     ///     Checks if a password hash needs rehashing (e.g., due to increased work factor).
     /// </summary>
@@ -170,23 +221,22 @@ public sealed class PasswordHasher(ILogger<PasswordHasher> logger, IConfiguratio
     {
         if (string.IsNullOrWhiteSpace(hashedPassword)) { return false; }
 
-        var parts = hashedPassword.Split('$');
+        if (hashedPassword.StartsWith(LongPasswordHash.Prefix, StringComparison.Ordinal))
+            return !LongPasswordHash.IsValid(hashedPassword);
 
-        if (parts.Length < 3)
+        var match = BcryptHashPattern.Match(hashedPassword);
+        if (!match.Success)
         {
-            logger.LogWarning("Invalid BCrypt hash format");
+            logger.LogWarning("Invalid or unsupported BCrypt hash format");
             return true;
         }
 
-        if (!int.TryParse(parts[2], out var currentWorkFactor))
-        {
-            logger.LogWarning("Cannot parse BCrypt work factor");
-            return true;
-        }
+        var currentWorkFactor = int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+        var workFactor = BCryptWorkFactor;
 
-        var needsRehash = currentWorkFactor < BCryptWorkFactor;
+        var needsRehash = currentWorkFactor < workFactor;
 
-        if (needsRehash) { logger.LogInformation("Password hash needs rehashing: Current work factor {Current}, Required {Required}", currentWorkFactor, BCryptWorkFactor); }
+        if (needsRehash) { logger.LogInformation("Password hash needs rehashing: Current work factor {Current}, Required {Required}", currentWorkFactor, workFactor); }
 
         return needsRehash;
     }
