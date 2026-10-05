@@ -1838,6 +1838,33 @@ public async Task Authorization_PerformsUnderLoad()
 
 ## Platform Authorization Hardening
 
+### Explicit Refresh-Token Revocation Ownership
+
+The self-service revoke command requires an authenticated `User` actor with a
+nonempty GUID subject from `IActorContextAccessor`. Anonymous, service, system,
+webhook and external actors are rejected before token hashing or repository reads.
+Stored refresh-token ownership must match that subject before the existing revoke
+service can mutate a token or its linked session. Request/command `UserId`, tenant
+administration and system-administrator roles do not grant cross-user access to
+this self-service operation. The HTTP controller retains its host-observed IP;
+request-body IP is not audit evidence.
+
+Unknown tokens keep the existing invalid-token contract. Successful own-token
+revocation still marks the token revoked and terminates its linked session with
+`UserLogout`, without revoking unrelated users or advancing the account version.
+This ownership guard does not establish all #263 lineage, cleanup, telemetry or
+alert-delivery requirements. Original issue criteria remain authoritative.
+
+Session-bound access tokens additionally require a single, valid nonempty
+`session_id` claim, an existing active/unexpired session without termination, and
+a session owner matching the token subject. The production revocation middleware
+reads stored session state on each authenticated session-bound request. Missing,
+expired, terminated, malformed or cross-user sessions clear identity and reject
+protected requests with generic401. Explicit anonymous endpoints continue with
+no stale actor. Legacy user and service tokens without a session claim retain
+their existing JTI/user-version compatibility; this does not invent session
+binding for those historical tokens. No session state is changed by validation.
+
 ### Refresh Token Repository Predicates
 
 Active-token listing and user-wide revocation use mapped `IsRevoked` and
