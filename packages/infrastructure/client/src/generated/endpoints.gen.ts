@@ -12110,6 +12110,23 @@ export const postAuthPasswordResetRequestEndpoint = {
 } as const;
 
 /**
+ * Authenticate using email, username or international phone and a password.
+ *
+ * Resolves one unique account and applies the existing password, risk, tenant and session flow. Phone identifiers use a leading plus and up to 15 digits. Missing, ambiguous or invalid identifiers receive the generic authentication failure.
+ */
+export interface PostAuthPolymorphicInput {
+  body?: Types.IdentityAuthenticationPolymorphicSignInInput;
+}
+export type PostAuthPolymorphicOutput = Types.IdentityAuthenticationSignInOutput;
+export const postAuthPolymorphicEndpoint = {
+  operationId: 'postAuthPolymorphic' as const,
+  method: 'POST' as const,
+  path: '/v1/auth/polymorphic' as const,
+  tags: ['Auth'] as const,
+  requiresAuth: false,
+} as const;
+
+/**
  * Gets all service accounts with optional tenant filtering.
  */
 export interface GetAuthServiceAccountsForGetAuthServiceAccountsInput {
@@ -25700,6 +25717,7 @@ export const endpoints = {
   postAuthPasswordChange: postAuthPasswordChangeEndpoint,
   postAuthPasswordReset: postAuthPasswordResetEndpoint,
   postAuthPasswordResetRequest: postAuthPasswordResetRequestEndpoint,
+  postAuthPolymorphic: postAuthPolymorphicEndpoint,
   getAuthServiceAccountsForGetAuthServiceAccounts: getAuthServiceAccountsForGetAuthServiceAccountsEndpoint,
   postAuthServiceAccounts: postAuthServiceAccountsEndpoint,
   getAuthServiceAccountsForGetAuthServiceAccountsByServiceAccountId: getAuthServiceAccountsForGetAuthServiceAccountsByServiceAccountIdEndpoint,

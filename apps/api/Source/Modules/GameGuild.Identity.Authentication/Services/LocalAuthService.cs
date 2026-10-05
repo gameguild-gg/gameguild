@@ -40,6 +40,11 @@ public class LocalAuthService(
         var httpContext = httpContextAccessor.HttpContext;
         var ipAddress = authAttemptService.GetClientIpAddress(httpContext);
         var userAgent = httpContext?.Request.Headers.UserAgent.ToString() ?? string.Empty;
+        var deviceFingerprint = httpContext?.Request.Headers["X-Device-Fingerprint"].FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(deviceFingerprint))
+        {
+            deviceFingerprint = request.DeviceFingerprint;
+        }
 
 #pragma warning disable IDE0059 // Unnecessary assignment - Initial null IS used in failure path at RecordFailedAttempt
         Guid? userId = null;
@@ -52,7 +57,10 @@ public class LocalAuthService(
         {
             // Lookup user from database
             var normalizedEmail = request.Email.ToLowerInvariant();
-            var user = await userRepository.GetByEmailAsync(normalizedEmail, cancellationToken).ConfigureAwait(false);
+            var user = request.CredentialResolutionFailed ? null
+                : request.ResolvedUserId.HasValue
+                    ? await userRepository.GetByIdAsync(request.ResolvedUserId.Value, cancellationToken).ConfigureAwait(false)
+                    : await userRepository.GetByEmailAsync(normalizedEmail, cancellationToken).ConfigureAwait(false);
             userExists = user != null;
 
             // Verify password if user exists
@@ -93,7 +101,7 @@ public class LocalAuthService(
                     logger.LogError(exception, "Could not record failed authentication attempt for user {UserId}", userId);
                 }
 
-                var failedAttemptContext = CreateAttemptContext(request.Email, userId, ipAddress, userAgent, request.TenantId);
+                var failedAttemptContext = CreateAttemptContext(request.Email, userId, ipAddress, userAgent, request.TenantId, deviceFingerprint);
                 var failedAttemptAnalysis = await AnalyzeAttemptForAuditAsync(failedAttemptContext).ConfigureAwait(false);
                 if (failedAttemptAnalysis is { IsAnomalous: true })
                 {
@@ -113,7 +121,7 @@ public class LocalAuthService(
             var authenticatedUserId = userId ?? throw new InvalidOperationException("A successful authentication must have a user ID.");
 
             // Analyze login attempt for anomalies
-            var attemptContext = CreateAttemptContext(request.Email, userId, ipAddress, userAgent, request.TenantId);
+            var attemptContext = CreateAttemptContext(request.Email, userId, ipAddress, userAgent, request.TenantId, deviceFingerprint);
 
             var anomalyResult = await anomalyDetectionService.AnalyzeLoginAttemptAsync(attemptContext).ConfigureAwait(false);
             var behavioralAnalysis = await AnalyzeBehavioralPatternsForAuditAsync(authenticatedUserId, attemptContext).ConfigureAwait(false);
@@ -159,7 +167,7 @@ public class LocalAuthService(
             }
 
             // Create device info for refresh token
-            var deviceInfo = new DeviceInfo { Fingerprint = Guid.NewGuid().ToString(), IpAddress = ipAddress, UserAgent = userAgent, DeviceName = "Test Device", DeviceType = "Web" };
+            var deviceInfo = new DeviceInfo { Fingerprint = string.IsNullOrWhiteSpace(deviceFingerprint) ? Guid.NewGuid().ToString() : deviceFingerprint, IpAddress = ipAddress, UserAgent = userAgent, DeviceName = "Test Device", DeviceType = "Web" };
 
             // Fetch user again to get token version
             var authenticatedUser = await userRepository.GetByIdAsync(authenticatedUserId, cancellationToken).ConfigureAwait(false);
@@ -251,14 +259,15 @@ public class LocalAuthService(
         Guid? userId,
         string ipAddress,
         string? userAgent,
-        Guid? tenantId) => new()
+        Guid? tenantId,
+        string? deviceFingerprint) => new()
         {
             UserId = userId,
             Identifier = identifier.ToLowerInvariant(),
             AuthenticationMethod = "Password",
             IpAddress = ipAddress,
             UserAgent = userAgent ?? "Unknown",
-            DeviceFingerprint = httpContextAccessor.HttpContext?.Request.Headers["X-Device-Fingerprint"].FirstOrDefault(),
+            DeviceFingerprint = deviceFingerprint,
             TenantId = tenantId,
             AttemptedAt = SystemClock.UtcNow
         };

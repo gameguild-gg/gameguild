@@ -6815,6 +6815,9 @@ export interface IdentityAuthenticationCreateStepUpChallengeInput {
   targetReference?: string | null;
 }
 
+/** Credential type detection */
+export type IdentityAuthenticationCredentialType = 'Email' | 'Username' | 'Phone' | 'WalletAddress';
+
 /** Represents detailed device information for security tracking. */
 export interface IdentityAuthenticationDeviceInfo {
   /** Browser name (Chrome, Firefox, Safari, etc.). */
@@ -7140,6 +7143,15 @@ export interface IdentityAuthenticationPatchServiceAccountInput {
   expiresAt?: string | null;
   name?: string | null;
   scopes?: string | null;
+}
+
+/** Password sign-in using one email, username or canonical international phone identifier. */
+export interface IdentityAuthenticationPolymorphicSignInInput {
+  credential?: string | null;
+  credentialType?: IdentityAuthenticationCredentialType;
+  deviceFingerprint?: string | null;
+  password?: string | null;
+  tenantId?: string | null;
 }
 
 /** Request DTO for refreshing tokens */
@@ -19378,6 +19390,7 @@ export let IdentityAuthenticationCreateApiKeyOutputSchema: z.ZodType<IdentityAut
 export let IdentityAuthenticationCreateRoleInputSchema: z.ZodType<IdentityAuthenticationCreateRoleInput>;
 export let IdentityAuthenticationCreateServiceAccountInputSchema: z.ZodType<IdentityAuthenticationCreateServiceAccountInput>;
 export let IdentityAuthenticationCreateStepUpChallengeInputSchema: z.ZodType<IdentityAuthenticationCreateStepUpChallengeInput>;
+export let IdentityAuthenticationCredentialTypeSchema: z.ZodType<IdentityAuthenticationCredentialType>;
 export let IdentityAuthenticationDeviceInfoSchema: z.ZodType<IdentityAuthenticationDeviceInfo>;
 export let IdentityAuthenticationDisableMfaInputSchema: z.ZodType<IdentityAuthenticationDisableMfaInput>;
 export let IdentityAuthenticationDiscordAuthorizeInputSchema: z.ZodType<IdentityAuthenticationDiscordAuthorizeInput>;
@@ -19411,6 +19424,7 @@ export let IdentityAuthenticationPasswordChangeResultSchema: z.ZodType<IdentityA
 export let IdentityAuthenticationPasswordResetRequestResultSchema: z.ZodType<IdentityAuthenticationPasswordResetRequestResult>;
 export let IdentityAuthenticationPasswordResetResultSchema: z.ZodType<IdentityAuthenticationPasswordResetResult>;
 export let IdentityAuthenticationPatchServiceAccountInputSchema: z.ZodType<IdentityAuthenticationPatchServiceAccountInput>;
+export let IdentityAuthenticationPolymorphicSignInInputSchema: z.ZodType<IdentityAuthenticationPolymorphicSignInInput>;
 export let IdentityAuthenticationRefreshTokenInputSchema: z.ZodType<IdentityAuthenticationRefreshTokenInput>;
 export let IdentityAuthenticationRemoveRoleFromUserInputSchema: z.ZodType<IdentityAuthenticationRemoveRoleFromUserInput>;
 export let IdentityAuthenticationRequestMagicLinkInputSchema: z.ZodType<IdentityAuthenticationRequestMagicLinkInput>;
@@ -27250,6 +27264,9 @@ IdentityAuthenticationCreateStepUpChallengeInputSchema = z.object({
   targetReference: z.string().nullable().optional(),
 });
 
+/** Zod schema for IdentityAuthenticationCredentialType. Credential type detection */
+IdentityAuthenticationCredentialTypeSchema = z.enum(['Email', 'Username', 'Phone', 'WalletAddress']);
+
 /** Zod schema for IdentityAuthenticationDeviceInfo. Represents detailed device information for security tracking. */
 IdentityAuthenticationDeviceInfoSchema = z.object({
   browser: z.string().nullable().optional(),
@@ -27501,6 +27518,15 @@ IdentityAuthenticationPatchServiceAccountInputSchema = z.object({
   expiresAt: z.string().datetime().nullable().optional(),
   name: z.string().nullable().optional(),
   scopes: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationPolymorphicSignInInput. Password sign-in using one email, username or canonical international phone identifier. */
+IdentityAuthenticationPolymorphicSignInInputSchema = z.object({
+  credential: z.string().nullable().optional(),
+  credentialType: z.lazy(() => IdentityAuthenticationCredentialTypeSchema).optional(),
+  deviceFingerprint: z.string().nullable().optional(),
+  password: z.string().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationRefreshTokenInput. Request DTO for refreshing tokens */

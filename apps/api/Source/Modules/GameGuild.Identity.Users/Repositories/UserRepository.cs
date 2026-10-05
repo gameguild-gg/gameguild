@@ -288,6 +288,23 @@ public class UserRepository(IApplicationDbContext context) : IUserRepository
             .ConfigureAwait(false);
     }
 
+    public Task<IReadOnlyList<User>> FindSignInCandidatesAsync(string identifier, SignInIdentifierType type) =>
+        FindSignInCandidatesAsync(identifier, type, CancellationToken.None);
+
+    public async Task<IReadOnlyList<User>> FindSignInCandidatesAsync(string identifier, SignInIdentifierType type, CancellationToken cancellationToken)
+    {
+        var normalized = identifier.ToLowerInvariant();
+        var query = context.Set<User>().AsNoTracking().Where(user => user.DeletedAt == null);
+        query = type switch
+        {
+            SignInIdentifierType.Email => query.Where(user => user.Email.ToLower() == normalized),
+            SignInIdentifierType.Username => query.Where(user => user.Username != null && user.Username.ToLower() == normalized),
+            SignInIdentifierType.Phone => query.Where(user => user.PhoneNumber == identifier),
+            _ => throw new ArgumentOutOfRangeException(nameof(type))
+        };
+        return await query.Take(2).ToListAsync(cancellationToken).ConfigureAwait(false);
+    }
+
     public async Task<bool> ExistsByUsernameAsync(string username, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(username)) return false;
