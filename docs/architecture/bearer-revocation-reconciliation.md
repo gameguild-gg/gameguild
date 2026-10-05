@@ -1,5 +1,21 @@
 # Active bearer revocation reconciliation — #262 / #263
 
+## Merged partial acceptance — PR #691
+
+PR #691 merged into develop at `7b736e4f765fda0fa981e554f4b63866fd122e11`
+for accepted head `c4ffdc4797c058b0544ad071e7b8764d896f7e86`. All applicable gates,
+Codacy and four CodeQL analyses passed. Local 6,493 distinct .NET cases include
+full integration 249 and API unit 1,049; focused 11/API selection 115 are subsets.
+Actual CI passes 4,826 main cases plus 14 repeated OpenAPI, with clean builds.
+Full OpenAPI remains identical (1,297 paths / 1,656 schemas), no model changes.
+[Individual evidence](https://github.com/gameguild-gg/gameguild/issues/262#issuecomment-5991037620).
+
+#262 remains OPEN after independent execution found unavailable-account bearer
+and refresh acceptance. That correction and concurrency acceptance are recorded
+in [lifecycle reconciliation](refresh-token-lifecycle-reconciliation.md). #263
+remains OPEN for its remaining criteria. Publication-stage pending statements
+below are retained as history and superseded only for this merged increment.
+
 ## Preserved acceptance and historical closeout
 
 #262's empty original body and clarified acceptance in the fixed 328-issue matrix

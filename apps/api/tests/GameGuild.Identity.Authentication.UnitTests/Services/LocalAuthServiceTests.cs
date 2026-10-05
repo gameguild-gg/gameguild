@@ -889,7 +889,9 @@ public class LocalAuthServiceTests
     [Fact]
     public async Task RefreshTokenAsync_ValidToken_ReturnsNewTokens()
     {
-        var userId = Guid.NewGuid();
+        var user = User.Create("refresh-valid@example.test", "Refresh valid user");
+        var userId = user.Id;
+        _userRepoMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(user);
         var storedToken = new RefreshToken
         {
             UserId = userId,
@@ -979,7 +981,9 @@ public class LocalAuthServiceTests
     [Fact]
     public async Task RefreshTokenAsync_ValidToken_RevokesOldToken()
     {
-        var userId = Guid.NewGuid();
+        var user = User.Create("refresh-rotation@example.test", "Refresh rotation user");
+        var userId = user.Id;
+        _userRepoMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(user);
         var storedToken = new RefreshToken
         {
             Id = Guid.NewGuid(),
@@ -1091,6 +1095,61 @@ public class LocalAuthServiceTests
             "revoke-refresh-tokens",
             "terminate-sessions",
             "save-token-version");
+    }
+
+    [Fact]
+    public async Task RefreshTokenAsync_UnavailableUser_DeniesBeforeProvisioningIssuanceOrSessionMutation()
+    {
+        using var cancellation = new CancellationTokenSource();
+        var userId = Guid.NewGuid();
+        var storedToken = new RefreshToken
+        {
+            Id = Guid.NewGuid(), UserId = userId, Token = "stored-hash",
+            ExpiresAt = SystemClock.UtcNow.AddDays(1), CreatedAt = SystemClock.UtcNow.AddHours(-1)
+        };
+        _refreshTokenHasherMock.Setup(x => x.HashToken("previously-issued")).Returns("stored-hash");
+        _refreshTokenRepoMock.Setup(x => x.GetByTokenAsync("stored-hash", default)).ReturnsAsync(storedToken);
+        _userRepoMock.Setup(x => x.GetByIdAsync(userId, cancellation.Token)).ReturnsAsync((User?)null);
+
+        var exception = await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            _sut.RefreshTokenAsync(new RefreshTokenRequest { RefreshToken = "previously-issued" }, cancellation.Token));
+
+        Assert.Equal("Invalid refresh token", exception.Message);
+        Assert.False(storedToken.IsRevoked);
+        Assert.Null(storedToken.ReplacedByToken);
+        _refreshTokenRepoMock.Verify(x => x.GetByTokenAsync("stored-hash", default), Times.Once);
+        _refreshTokenRepoMock.VerifyNoOtherCalls();
+        _userRepoMock.Verify(x => x.GetByIdAsync(userId, cancellation.Token), Times.Once);
+        _userRepoMock.VerifyNoOtherCalls();
+        _senderMock.VerifyNoOtherCalls();
+        _sessionManagementServiceMock.VerifyNoOtherCalls();
+        _jwtTokenServiceMock.VerifyNoOtherCalls();
+    }
+
+    [Theory]
+    [InlineData("revoked")]
+    [InlineData("replaced")]
+    public async Task RefreshTokenAsync_ReplayedTokenForUnavailableUser_StillCommitsContainmentWithoutIssuance(string kind)
+    {
+        var userId = Guid.NewGuid();
+        var token = new RefreshToken
+        {
+            Id = Guid.NewGuid(), UserId = userId, Token = "hash-replay",
+            IsRevoked = kind == "revoked", ReplacedByToken = kind == "replaced" ? "replacement-hash" : null,
+            ExpiresAt = SystemClock.UtcNow.AddDays(1)
+        };
+        _refreshTokenRepoMock.Setup(x => x.GetByTokenAsync("hash-replay", default)).ReturnsAsync(token);
+        _userRepoMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync((User?)null);
+
+        AssertCommittedRefreshDenial(await _sut.RefreshTokenAsync(new RefreshTokenRequest { RefreshToken = "replay" }));
+
+        _refreshTokenRepoMock.Verify(x => x.RevokeAllForUserAsync(userId, "127.0.0.1", It.IsAny<CancellationToken>()), Times.Once);
+        _sessionManagementServiceMock.Verify(x => x.TerminateAllUserSessionsAsync(
+            userId, SessionTerminationReason.SecurityViolation, null, It.IsAny<CancellationToken>()), Times.Once);
+        _userRepoMock.Verify(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
+        _userRepoMock.VerifyNoOtherCalls();
+        _jwtTokenServiceMock.VerifyNoOtherCalls();
+        _senderMock.VerifyNoOtherCalls();
     }
 
     // ── RevokeRefreshTokenAsync ───────────────────────────────
