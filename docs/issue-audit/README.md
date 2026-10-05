@@ -1,5 +1,23 @@
 # GameGuild issue closeout inventory
 
+## 2026-10-05 active bearer merge and unavailable-account reconciliation
+
+Live snapshot **2026-10-05T08:48:13.356757+00:00** retains all **328** IDs and original acceptance fields:
+**69 closed / 259 open**. [PR #691](https://github.com/gameguild-gg/gameguild/pull/691)
+is merged into develop at `7b736e4f765fda0fa981e554f4b63866fd122e11` after all
+applicable checks: 6,493 distinct local .NET, CI 4,826 main cases plus 14 repeated
+OpenAPI, clean builds, unchanged contracts/model, Codacy/four CodeQL pass.
+[Individual partial acceptance](https://github.com/gameguild-gg/gameguild/issues/262#issuecomment-5991037620).
+
+**#262 and #263 remain OPEN.** Independent lifecycle execution found two
+deleted-account token failures and four passing controls. The correction denies
+unavailable-account refresh before issuance/mutation and rejects versioned bearer;
+whole-endpoint concurrency and full acceptance are being executed.
+See [lifecycle reconciliation](../architecture/refresh-token-lifecycle-reconciliation.md).
+Primary is synced with 55 unrelated files preserved; the completed #262 branch
+was removed locally/remotely. Two worktrees/zero stashes remain. Earlier dated
+sections preserve historical counts and publication stages.
+
 ## 2026-10-05 replay containment merge and bearer requirement reopening
 
 Live snapshot **2026-10-05T07:55:47.216031+00:00** retains all **328** IDs and original acceptance fields:

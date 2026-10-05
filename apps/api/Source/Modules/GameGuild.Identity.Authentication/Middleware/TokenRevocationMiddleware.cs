@@ -88,11 +88,11 @@ public sealed class TokenRevocationMiddleware
             {
                 var currentVersion = await userRepository.GetTokenVersionAsync(userId.Value, context.RequestAborted).ConfigureAwait(false);
                 
-                // If user exists and token version is outdated, reject the token
-                if (currentVersion.HasValue && tokenVersion < currentVersion.Value)
+                // Versioned user tokens require an available user and a current version.
+                if (!currentVersion.HasValue || tokenVersion < currentVersion.Value)
                 {
                     _logger.LogWarning(
-                        "Rejected request with outdated token version: UserId={UserId}, TokenVersion={TokenVersion}, CurrentVersion={CurrentVersion}",
+                        "Rejected request with unavailable user or outdated token version: UserId={UserId}, TokenVersion={TokenVersion}, CurrentVersion={CurrentVersion}",
                         userId, tokenVersion, currentVersion);
                     await RejectAsync(context).ConfigureAwait(false);
                     return;
