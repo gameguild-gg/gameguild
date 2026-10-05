@@ -342,6 +342,7 @@ public sealed class AuthController(ISender sender) : BaseApiController
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> RevokeToken([FromBody] RevokeRefreshTokenRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);

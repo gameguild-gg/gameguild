@@ -1,5 +1,63 @@
 # GameGuild issue closeout inventory
 
+## 2026-10-05 reviewed refresh-revoke403 contract
+
+PR693 review adds the documented non-owner403 and an actual Swagger HTTP regression
+test. This is the sole OpenAPI difference; other content remains deep-equal. The
+client was regenerated and its1,119 tests/typecheck pass; only generation metadata
+changed. Fresh reviewed source passes6,479 distinct focused/core/client cases,
+43 new definitions, with clean builds and no pending EF model changes. Full
+current-head CI/merge are pending; a local whole OpenAPI attempt without terminal
+TRX is preserved and excluded. The first commit's6,549 complete local .NET cases
+and successful CI remain historical receipts, not current-head totals.
+
+The fixed328-ID scope stays70closed/258open at the last live verification, with
+original acceptance fields retained. #263 remains OPEN with all19 criteria.
+[PR693](https://github.com/gameguild-gg/gameguild/pull/693),
+[bounded progress](https://github.com/gameguild-gg/gameguild/issues/263#issuecomment-5992816972).
+
+## 2026-10-05 explicit refresh-revoke ownership and linked session continuation
+
+The live fixed inventory at **2026-10-05T10:35:31.493481+00:00** retains **328 IDs**,
+**70 closed /258 open**, with original acceptance fields unchanged. #262 is
+officially completed; #263 remains OPEN with all19 original criteria.
+
+The production ownership baseline found two non-owner204 failures and two passing
+controls. The guarded intermediate exposed own-session bearer200 after stored
+logout; that failed assertion is retained. Trusted actor ownership and stored
+session-bound bearer validation now pass **5,359 focused/core cases**, including
+**42 new definitions**: Auth2,191/Authz1,667/SharedKernel1,377/actual PostgreSQL9/
+API architecture, security and eventing115. Full API suites and matching-head
+gates/merge are pending and excluded from complete totals. Builds have zero
+warnings/errors, full OpenAPI remains deep-equal and EF has no pending changes.
+[Baseline and retained scope](https://github.com/gameguild-gg/gameguild/issues/263#issuecomment-5992442921),
+[current lifecycle reconciliation](../architecture/refresh-token-lifecycle-reconciliation.md).
+
+## 2026-10-05 global refresh-replay official closeout and lifecycle continuation
+
+Live snapshot **2026-10-05T10:06:29.522540+00:00** retains all **328** IDs and original criteria:
+**70 closed / 258 open**. [#262 is CLOSED/COMPLETED](https://github.com/gameguild-gg/gameguild/issues/262#issuecomment-5992219521)
+after five owner criteria were reconciled to the merged #690/#691/#692 code,
+actual PostgreSQL/JWT/HTTP/transaction and forced concurrent endpoint evidence.
+[PR #692](https://github.com/gameguild-gg/gameguild/pull/692) merged into develop at
+`f3346a891e4887bcf362d0544d23386aeda30ed1` for head `065c6cf39298fd6f66f678d8735bc4bd058f873b`.
+
+Actual current-head CI passes 2,414 main cases plus 14 repeated OpenAPI; all
+applicable gates/Codacy/four CodeQL and clean builds pass. Current local core,
+CI integration and full APIunit from byte-equivalent scope establish **6,507
+distinct combined cases**, with 14 new cases; repeated subsets are excluded.
+Final local whole-API aborts and Docker-unavailable fixture failures remain
+preserved and are not complete acceptance. Docker has been restored. Full
+OpenAPI stays identical (1,297 paths / 1,656 schemas), no model changes pending.
+
+**#263 remains OPEN** with all 19 criteria, including original ParentTokenId and
+SessionId metadata requirements, owner revocation, lifecycle/family/audit/alerts,
+scheduled cleanup and metrics. [Individual partial acceptance](https://github.com/gameguild-gg/gameguild/issues/263#issuecomment-5992285551).
+The owner-guard baseline is being executed next in the same isolated checkout.
+Primary is synced, all 55 unrelated files preserved, completed #692 branch
+removed locally/remotely; two worktrees and zero stashes remain. Earlier dated
+sections preserve their historical stages and totals.
+
 ## 2026-10-05 active bearer merge and unavailable-account reconciliation
 
 Live snapshot **2026-10-05T08:48:13.356757+00:00** retains all **328** IDs and original acceptance fields:
