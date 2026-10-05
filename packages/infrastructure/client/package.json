@@ -55,6 +55,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint src --ext .ts,.tsx",
+    "lint:baseline": "eslint . --suppress-all --prune-suppressions",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist .turbo"
   },
