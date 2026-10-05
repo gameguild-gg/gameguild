@@ -104,7 +104,9 @@ public class UserSessionRepository(IApplicationDbContext context) : IUserSession
 
     public async Task DeleteExpiredAsync(DateTime now, CancellationToken cancellationToken = default)
     {
-        var expiredSessions = await UserSessions.Where(s => s.ExpiresAt < now || !s.IsActive && s.TerminatedAt.HasValue && s.TerminatedAt.Value.AddDays(30) < now).ToListAsync(cancellationToken);
+        var expiredSessions = await UserSessions.Where(s =>
+            (s.ExpiresAt < now || !s.IsActive && s.TerminatedAt.HasValue && s.TerminatedAt.Value.AddDays(30) < now) &&
+            !context.Set<RefreshToken>().Any(token => token.SessionId == s.Id)).ToListAsync(cancellationToken);
 
         if (expiredSessions.Count == 0) return;
 

@@ -12,6 +12,7 @@ public sealed class SessionManagementService(
     ILogger<SessionManagementService> logger,
     IUserSessionRepository sessionRepository,
     ITrustedDeviceRepository trustedDeviceRepository,
+    IRefreshTokenLineageRepository tokenLineageRepository,
     SessionOptions? sessionOptions = null,
     IAuthenticationAuditEventSink? auditEventSink = null) : ISessionManagementService
 {
@@ -67,6 +68,10 @@ public sealed class SessionManagementService(
         };
 
         var createdSession = await sessionRepository.CreateAsync(session, cancellationToken).ConfigureAwait(false);
+        if (!string.IsNullOrWhiteSpace(refreshTokenHash))
+        {
+            await RequireTokenBindingAsync(userId, refreshTokenHash, createdSession.Id, cancellationToken).ConfigureAwait(false);
+        }
         await ForwardSessionAuditEventAsync(createdSession, "Authentication.SessionCreated", cancellationToken).ConfigureAwait(false);
         return createdSession;
     }
@@ -164,6 +169,8 @@ public sealed class SessionManagementService(
 
         await sessionRepository.UpdateAsync(session, cancellationToken).ConfigureAwait(false);
 
+        await RequireTokenBindingAsync(session.UserId, refreshTokenHash, session.Id, cancellationToken).ConfigureAwait(false);
+
         await ForwardSessionAuditEventAsync(session, "Authentication.SessionRefreshed", cancellationToken).ConfigureAwait(false);
 
         return true;
@@ -189,6 +196,14 @@ public sealed class SessionManagementService(
         logger.LogInformation("Session {SessionId} terminated. Reason: {Reason}", sessionId, reason);
 
         return true;
+    }
+
+    private async Task RequireTokenBindingAsync(Guid userId, string tokenHash, Guid sessionId, CancellationToken cancellationToken)
+    {
+        if (!await tokenLineageRepository.BindSessionAsync(userId, tokenHash, sessionId, cancellationToken).ConfigureAwait(false))
+        {
+            throw new InvalidOperationException("The refresh credential could not be bound to its persisted session.");
+        }
     }
 
     public async Task<int> TerminateAllUserSessionsAsync(Guid userId, SessionTerminationReason reason, Guid? exceptSessionId = null, CancellationToken cancellationToken = default)

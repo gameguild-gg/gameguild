@@ -21,6 +21,7 @@ public class LocalAuthServiceTests
 {
     private readonly Mock<IUserRepository> _userRepoMock = new();
     private readonly Mock<IRefreshTokenRepository> _refreshTokenRepoMock = new();
+    private readonly Mock<IRefreshTokenLineageRepository> _tokenLineageRepoMock = new();
     private readonly Mock<IJwtTokenService> _jwtTokenServiceMock = new();
     private readonly Mock<IRefreshTokenHasher> _refreshTokenHasherMock = new();
     private readonly Mock<IAuthAttemptService> _authAttemptServiceMock = new();
@@ -96,6 +97,7 @@ public class LocalAuthServiceTests
         _sut = new LocalAuthService(
             _userRepoMock.Object,
             _refreshTokenRepoMock.Object,
+            _tokenLineageRepoMock.Object,
             _jwtTokenServiceMock.Object,
             _refreshTokenHasherMock.Object,
             _configuration,
@@ -540,6 +542,7 @@ public class LocalAuthServiceTests
         var sut = new LocalAuthService(
             _userRepoMock.Object,
             _refreshTokenRepoMock.Object,
+            _tokenLineageRepoMock.Object,
             _jwtTokenServiceMock.Object,
             _refreshTokenHasherMock.Object,
             customConfig,
@@ -1012,7 +1015,7 @@ public class LocalAuthServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        await _sut.RefreshTokenAsync(new RefreshTokenRequest { RefreshToken = "token" });
+        var response = await _sut.RefreshTokenAsync(new RefreshTokenRequest { RefreshToken = "token" });
 
         _refreshTokenRepoMock.Verify(x => x.TryRevokeForRotationAsync(
             storedToken.Id,
@@ -1022,6 +1025,8 @@ public class LocalAuthServiceTests
             "127.0.0.1",
             It.IsAny<CancellationToken>()), Times.Once);
         _refreshTokenRepoMock.Verify(x => x.UpdateAsync(It.IsAny<RefreshToken>(), It.IsAny<CancellationToken>()), Times.Never);
+        _tokenLineageRepoMock.Verify(repository => repository.RecordRotationAsync(
+            userId, storedToken.Id, "new-hash", response.SessionId, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -1095,6 +1100,37 @@ public class LocalAuthServiceTests
             "revoke-refresh-tokens",
             "terminate-sessions",
             "save-token-version");
+        _tokenLineageRepoMock.VerifyNoOtherCalls();
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task RefreshTokenAsync_LineageFailureOrCancellationCannotReturnIssuedTokens(bool cancelled)
+    {
+        var user = User.Create("lineage-failure@example.test", "Synthetic lineage account");
+        var token = new RefreshToken { Id = Guid.NewGuid(), UserId = user.Id, Token = "old-hash",
+            ExpiresAt = SystemClock.UtcNow.AddHours(1), CreatedAt = SystemClock.UtcNow.AddMinutes(-1) };
+        using var cancellation = new CancellationTokenSource();
+        var order = new List<string>();
+        _userRepoMock.Setup(repository => repository.GetByIdAsync(user.Id, cancellation.Token)).ReturnsAsync(user);
+        _refreshTokenRepoMock.Setup(repository => repository.GetByTokenAsync("old-hash", cancellation.Token)).ReturnsAsync(token);
+        _refreshTokenHasherMock.Setup(hasher => hasher.HashToken("old-token")).Returns("old-hash");
+        _jwtTokenServiceMock.Setup(service => service.GenerateRefreshTokenAsync(user.Id, It.IsAny<DeviceInfo>(),
+            It.IsAny<DateTimeOffset>(), cancellation.Token)).ReturnsAsync("replacement-token");
+        _refreshTokenRepoMock.Setup(repository => repository.TryRevokeForRotationAsync(token.Id, "old-hash",
+            "hash-replacement-token", It.IsAny<DateTime>(), "127.0.0.1", cancellation.Token))
+            .Callback(() => order.Add("claim")).ReturnsAsync(true);
+        Exception failure = cancelled ? new OperationCanceledException(cancellation.Token) : new InvalidOperationException("Synthetic lineage failure");
+        _tokenLineageRepoMock.Setup(repository => repository.RecordRotationAsync(user.Id, token.Id,
+            "hash-replacement-token", It.IsAny<Guid>(), cancellation.Token))
+            .Callback(() => order.Add("lineage")).ThrowsAsync(failure);
+
+        var actual = await Record.ExceptionAsync(() => _sut.RefreshTokenAsync(
+            new RefreshTokenRequest { RefreshToken = "old-token" }, cancellation.Token));
+
+        actual.Should().BeSameAs(failure);
+        order.Should().Equal("claim", "lineage");
     }
 
     [Fact]
@@ -1108,7 +1144,7 @@ public class LocalAuthServiceTests
             ExpiresAt = SystemClock.UtcNow.AddDays(1), CreatedAt = SystemClock.UtcNow.AddHours(-1)
         };
         _refreshTokenHasherMock.Setup(x => x.HashToken("previously-issued")).Returns("stored-hash");
-        _refreshTokenRepoMock.Setup(x => x.GetByTokenAsync("stored-hash", default)).ReturnsAsync(storedToken);
+        _refreshTokenRepoMock.Setup(x => x.GetByTokenAsync("stored-hash", cancellation.Token)).ReturnsAsync(storedToken);
         _userRepoMock.Setup(x => x.GetByIdAsync(userId, cancellation.Token)).ReturnsAsync((User?)null);
 
         var exception = await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
@@ -1117,7 +1153,7 @@ public class LocalAuthServiceTests
         Assert.Equal("Invalid refresh token", exception.Message);
         Assert.False(storedToken.IsRevoked);
         Assert.Null(storedToken.ReplacedByToken);
-        _refreshTokenRepoMock.Verify(x => x.GetByTokenAsync("stored-hash", default), Times.Once);
+        _refreshTokenRepoMock.Verify(x => x.GetByTokenAsync("stored-hash", cancellation.Token), Times.Once);
         _refreshTokenRepoMock.VerifyNoOtherCalls();
         _userRepoMock.Verify(x => x.GetByIdAsync(userId, cancellation.Token), Times.Once);
         _userRepoMock.VerifyNoOtherCalls();
