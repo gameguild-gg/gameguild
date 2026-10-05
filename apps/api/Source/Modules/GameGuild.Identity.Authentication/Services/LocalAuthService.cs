@@ -553,7 +553,8 @@ public class LocalAuthService(
             await InvalidateSessionsAfterRefreshReplayAsync(storedToken.UserId, ipAddress, cancellationToken)
                 .ConfigureAwait(false);
 
-            throw new UnauthorizedAccessException("Invalid refresh token");
+            // A thrown denial would roll back the containment in the command transaction.
+            return new RefreshTokenContainmentDenial();
         }
 
         if (storedToken.ExpiresAt <= now)
@@ -618,7 +619,7 @@ public class LocalAuthService(
         {
             logger.LogWarning("Refresh token session {SessionId} was no longer active for user {UserId}; invalidating sessions", sessionId, userId);
             await InvalidateSessionsAfterRefreshReplayAsync(userId, ipAddress, cancellationToken).ConfigureAwait(false);
-            throw new UnauthorizedAccessException("Invalid refresh token");
+            return new RefreshTokenContainmentDenial();
         }
 
         var rotationClaimed = await refreshTokenRepository.TryRevokeForRotationAsync(
@@ -633,7 +634,7 @@ public class LocalAuthService(
         {
             logger.LogWarning("Refresh token rotation lost a concurrent claim for user {UserId}; invalidating sessions", userId);
             await InvalidateSessionsAfterRefreshReplayAsync(userId, ipAddress, cancellationToken).ConfigureAwait(false);
-            throw new UnauthorizedAccessException("Invalid refresh token");
+            return new RefreshTokenContainmentDenial();
         }
 
         logger.LogInformation("Refresh token rotated for user {UserId}", userId);

@@ -1802,6 +1802,26 @@ public async Task Authorization_PerformsUnderLoad()
 
 ## Platform Authorization Hardening
 
+### Refresh Token Repository Predicates
+
+Active-token listing and user-wide revocation use mapped `IsRevoked` and
+`ExpiresAt` columns and one captured UTC timestamp. The ignored computed
+`IsActive` property must not appear in SQL predicates. Queries stay in the
+database and retain user isolation, strict expiry and current active-row behavior.
+This repository correction does not establish family lineage, complete service
+rotation atomicity or revocation consumption in the host's bearer pipeline.
+
+Refresh replay containment returns a server-only denial only after required token,
+session and user-version writes succeed. Its explicit `ICommitOnFailureOutcome`
+preserves those mutations through the command transaction while the endpoint still
+returns generic 401. Business failure classification remains unchanged. Ordinary
+failed outcomes and exceptions keep rollback behavior; request data cannot supply
+the commit contract. Profile mapping preserves the internal denial without fetching
+or exposing an account. Separate PostgreSQL HTTP and transaction cases verify
+containment persistence and ordinary failure/exception rollback.
+
+[Scope and remaining acceptance](../../../../../docs/architecture/refresh-token-rotation-reconciliation.md).
+
 ### MFA Recovery State
 
 New recovery codes use salted, versioned PBKDF2-HMAC-SHA256 (600,000 iterations)

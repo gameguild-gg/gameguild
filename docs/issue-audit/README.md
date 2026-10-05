@@ -1,5 +1,27 @@
 # GameGuild issue closeout inventory
 
+## 2026-10-05 polymorphic password official closeout
+
+Live snapshot **2026-10-05T07:03:07.338343+00:00** preserves all **328** original IDs and acceptance fields:
+**70 closed / 258 open**, including historical and duplicate
+closures. #258 is officially CLOSED/COMPLETED after [PR #689](https://github.com/gameguild-gg/gameguild/pull/689)
+merged into `develop` at `47131474c221bff080ec1efd17b53a17aa62b4b2`.
+[Individual acceptance](https://github.com/gameguild-gg/gameguild/issues/258#issuecomment-5989540682)
+maps all five approved criteria to implemented code and 77 new unit/actual
+PostgreSQL/SDK transport definitions. The local functional set passes 8,287
+distinct cases, with final-head core/43 PostgreSQL/100 API architecture-security
+reruns retained separately. Actual matching-head CI passes **5,501 main API
+cases**, 14 repeated OpenAPI and **2,959 web cases**; API/client/web builds,
+lint/typecheck, OpenAPI consistency, Codacy and all four CodeQL analyses pass.
+Primary is synced with all 55 unrelated files preserved. The completed #258 branch
+was removed locally/remotely. Two checkouts and zero stashes remain, with the
+same isolated checkout reused for #263.
+
+#263 remains OPEN: two relational predicate failures were reproduced and corrected;
+new endpoint execution also exposed rollback of replay containment. That transaction
+defect and the remaining original lifecycle criteria require integrated acceptance.
+Earlier snapshot sections below retain their original publication states and totals.
+
 ## 2026-10-05 polymorphic password implementation acceptance
 
 #258 now has local implementation/acceptance for email, username and international

@@ -768,7 +768,7 @@ public class LocalAuthServiceTests
     }
 
     [Fact]
-    public async Task RefreshTokenAsync_RevokedToken_ThrowsUnauthorizedAccessException()
+    public async Task RefreshTokenAsync_RevokedToken_ReturnsCommittedDenialAfterContainment()
     {
         var user = User.CreateWithPassword("replay@example.com", "replay", BCrypt.Net.BCrypt.HashPassword("Password1!"));
         var originalTokenVersion = user.TokenVersion;
@@ -797,7 +797,7 @@ public class LocalAuthServiceTests
 
         var request = new RefreshTokenRequest { RefreshToken = "token" };
 
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _sut.RefreshTokenAsync(request));
+        AssertCommittedRefreshDenial(await _sut.RefreshTokenAsync(request));
 
         user.TokenVersion.Should().Be(originalTokenVersion + 1);
         _refreshTokenRepoMock.Verify(x => x.RevokeAllForUserAsync(user.Id, "127.0.0.1", It.IsAny<CancellationToken>()), Times.Once);
@@ -809,7 +809,7 @@ public class LocalAuthServiceTests
     }
 
     [Fact]
-    public async Task RefreshTokenAsync_RecentlyRotatedTokenFromSameIp_ThrowsUnauthorizedAccessException()
+    public async Task RefreshTokenAsync_RecentlyRotatedTokenFromSameIp_ReturnsCommittedDenial()
     {
         var userId = Guid.NewGuid();
         var rotatedToken = new RefreshToken
@@ -839,14 +839,13 @@ public class LocalAuthServiceTests
             .Setup(x => x.GenerateAccessTokenAsync(userId, It.IsAny<string>(), It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<DateTimeOffset>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("replacement-access-token");
 
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(
-            () => _sut.RefreshTokenAsync(new RefreshTokenRequest { RefreshToken = "rotated-token" }));
+        AssertCommittedRefreshDenial(await _sut.RefreshTokenAsync(new RefreshTokenRequest { RefreshToken = "rotated-token" }));
     }
 
     [Theory]
     [InlineData(-31, "127.0.0.1")]
     [InlineData(-5, "10.0.0.2")]
-    public async Task RefreshTokenAsync_RotatedTokenOutsideGuardedRetry_ThrowsUnauthorizedAccessException(
+    public async Task RefreshTokenAsync_RotatedTokenOutsideGuardedRetry_ReturnsCommittedDenial(
         int revokedSecondsAgo,
         string revokedByIp)
     {
@@ -864,8 +863,7 @@ public class LocalAuthServiceTests
         _refreshTokenHasherMock.Setup(x => x.HashToken("rotated-token")).Returns("old-hash");
         _refreshTokenRepoMock.Setup(x => x.GetByTokenAsync("old-hash", default)).ReturnsAsync(rotatedToken);
 
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(
-            () => _sut.RefreshTokenAsync(new RefreshTokenRequest { RefreshToken = "rotated-token" }));
+        AssertCommittedRefreshDenial(await _sut.RefreshTokenAsync(new RefreshTokenRequest { RefreshToken = "rotated-token" }));
     }
 
     [Fact]
@@ -1084,8 +1082,7 @@ public class LocalAuthServiceTests
                 user.Id, It.IsAny<DeviceInfo>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("replacement-token");
 
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
-            _sut.RefreshTokenAsync(new RefreshTokenRequest { RefreshToken = "racing-token" }));
+        AssertCommittedRefreshDenial(await _sut.RefreshTokenAsync(new RefreshTokenRequest { RefreshToken = "racing-token" }));
 
         user.TokenVersion.Should().Be(originalTokenVersion + 1);
         operationOrder.Should().Equal(
@@ -1097,6 +1094,20 @@ public class LocalAuthServiceTests
     }
 
     // ── RevokeRefreshTokenAsync ───────────────────────────────
+
+    private static void AssertCommittedRefreshDenial(SignInResponse response)
+    {
+        response.Success.Should().BeFalse();
+        response.Message.Should().Be("Invalid refresh token");
+        response.AccessToken.Should().BeEmpty();
+        response.RefreshToken.Should().BeEmpty();
+        response.UserId.Should().Be(Guid.Empty);
+        response.SessionId.Should().Be(Guid.Empty);
+        response.Email.Should().BeEmpty();
+        response.Should().BeAssignableTo<ICommitOnFailureOutcome>();
+        CommandOutcome.IsFailure(response).Should().BeTrue();
+        CommandOutcome.ShouldRollback(response).Should().BeFalse();
+    }
 
     [Fact]
     public async Task RevokeRefreshTokenAsync_TokenNotFound_ThrowsArgumentException()
