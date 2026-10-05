@@ -308,9 +308,8 @@ public sealed class PasswordHasher(ILogger<PasswordHasher> logger, IConfiguratio
             result.ValidationFailures.Add("Password is too common and easily guessable");
         }
 
-        result.StrengthScore = CalculatePasswordStrength(password);
-
-        result.StrengthLevel = result.StrengthScore switch
+        var strengthScore = CalculatePasswordStrength(password);
+        var strengthLevel = strengthScore switch
         {
             >= 80 => "Strong",
             >= 60 => "Good",
@@ -319,7 +318,10 @@ public sealed class PasswordHasher(ILogger<PasswordHasher> logger, IConfiguratio
             _ => "Very Weak"
         };
 
-        logger.LogDebug("Password strength validation: {IsValid}, Score: {Score}, Level: {Level}", result.IsValid, result.StrengthScore, result.StrengthLevel);
+        result.StrengthScore = strengthScore;
+        result.StrengthLevel = strengthLevel;
+
+        logger.LogDebug("Password strength validation: {IsValid}, Score: {Score}, Level: {Level}", result.IsValid, strengthScore, strengthLevel);
 
         return result;
     }
