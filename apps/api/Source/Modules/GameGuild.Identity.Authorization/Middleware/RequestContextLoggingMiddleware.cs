@@ -21,7 +21,7 @@ public class RequestContextLoggingMiddleware(RequestDelegate next, ILogger<Reque
             "Request {RequestId} started: {Method} {Path} | User: {UserId} | Tenant: {TenantId} | Authenticated: {IsAuthenticated}",
             requestId,
             method,
-            path,
+            LogRedaction.Sanitize(path),
             LogRedaction.RedactId(actor.SubjectId, "uid"),
             LogRedaction.RedactId(actor.TenantId, "tid"),
             actor.IsAuthenticated
