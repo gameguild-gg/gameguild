@@ -28,7 +28,7 @@ POSTGRES_CONTAINER="gameguild-testing-lab-e2e-postgres-${RUN_ID}"
 API_PID=""
 WEB_PID=""
 
-mkdir -p "${RUNTIME_DIR}" "${ARTIFACTS_DIR}"
+mkdir -p "${RUNTIME_DIR}" "${ARTIFACTS_DIR}" "$(dirname -- "${LOCK_DIR}")"
 
 stop_process() {
   local pid="${1:-}"
