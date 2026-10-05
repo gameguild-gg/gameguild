@@ -72,6 +72,9 @@ public sealed class RefreshTokenLifecyclePostgreSqlHttpTests(ApiPostgreSqlFixtur
             Assert.Equal(hash, predecessor.ReplacedByToken);
             Assert.False(successor.IsRevoked);
             Assert.Equal(account.User.Id, successor.UserId);
+            Assert.Equal(precedingId, successor.ParentTokenId);
+            Assert.Equal(account.Session.Id, predecessor.SessionId);
+            Assert.Equal(account.Session.Id, successor.SessionId);
             Assert.Equal(account.Token.CreatedAt, successor.CreatedAt);
             Assert.InRange(successor.ExpiresAt, before.AddDays(days).AddSeconds(-1), after.AddDays(days).AddSeconds(1));
             Assert.InRange(result.GetProperty("refreshTokenExpiresAt").GetDateTime(), before.AddDays(days).AddSeconds(-1), after.AddDays(days).AddSeconds(1));
@@ -162,7 +165,11 @@ public sealed class RefreshTokenLifecyclePostgreSqlHttpTests(ApiPostgreSqlFixtur
         Assert.All(tokens, value => Assert.True(value.IsRevoked));
         var root = Assert.Single(tokens, value => value.Id == account.Token.Id);
         Assert.NotNull(root.ReplacedByToken);
-        Assert.Single(tokens, value => value.Token == root.ReplacedByToken);
+        var successor = Assert.Single(tokens, value => value.Token == root.ReplacedByToken);
+        Assert.Equal(root.Id, successor.ParentTokenId);
+        Assert.Equal(account.Session.Id, root.SessionId);
+        Assert.Equal(account.Session.Id, successor.SessionId);
+        Assert.Single(tokens, value => value.ParentTokenId == root.Id);
         Assert.All(await db.Set<UserSession>().AsNoTracking().Where(value => value.UserId == account.User.Id).ToListAsync(),
             value => Assert.False(value.IsActive));
         var user = await db.Set<User>().AsNoTracking().SingleAsync(value => value.Id == account.User.Id);

@@ -1838,6 +1838,43 @@ public async Task Authorization_PerformsUnderLoad()
 
 ## Platform Authorization Hardening
 
+### Persisted refresh-token parent and session lineage
+
+Refresh tokens have nullable `ParentTokenId` and `SessionId` foreign keys to the
+persisted predecessor and session. Existing rows retain unknown metadata as null;
+the migration does not guess bindings from timestamps, users or token hashes.
+New sessions bind their stored refresh token to the real session after creation.
+Successful refresh rotation records the predecessor ID only after winning the
+existing atomic revocation claim. Session creation/refresh and rotation require
+`IRefreshTokenLineageRepository` from the same configured token repository;
+custom stores must implement this capability. Manual sessions created without a
+refresh credential retain their existing behavior. An authentication session
+with a supplied credential must successfully bind its persisted token; a missing
+row fails before success audit or returned credentials.
+
+Binding validates token/session ownership, matching hashes, active state, expiry
+and immutable existing bindings. Rotation additionally requires the claimed
+parent's matching successor hash and compatible owned session. The repository
+reads the parent outside the change tracker because SQL atomic claims bypass it;
+adding metadata must not overwrite the persisted revocation with stale state.
+An incomplete lineage write cannot return successful authentication credentials.
+Credential login retains its generic failure response; refresh failures and
+cancellation propagate. The host command transaction rolls back unsuccessful
+database mutations. Legacy parents can be
+bound only by an observed successful rotation with the owned persisted session.
+
+Retention deletes eligible leaves before predecessors. An active or otherwise
+retained descendant keeps its complete known chain; sessions referenced by any
+retained token are kept. Restrictive foreign keys reject dangling references and
+prevent deletion from silently breaking lineage. Downgrading the migration drops
+these metadata columns and their links while retaining token rows, hashes and
+revocation state; newly written lineage is consequently lost on downgrade.
+
+This covers credential/session flows and local refresh rotation. It does not
+establish complete issuance metadata for every external authentication provider,
+nor all original #263 audit, alert, scheduled cleanup and metrics requirements.
+Those original criteria remain open until their separate evidence is accepted.
+
 ### Authenticated self revocation across all sessions
 
 `POST /v1/auth/sessions:terminate-all` binds `RevokeAllUserTokensCommand`.

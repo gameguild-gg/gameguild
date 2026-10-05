@@ -991,6 +991,7 @@ public class OAuthAuthServiceTests
         var sut = new LocalAuthService(
             userRepo.Object,
             new Mock<IRefreshTokenRepository>().Object,
+            new Mock<IRefreshTokenLineageRepository>().Object,
             jwt.Object,
             refreshTokenHasher.Object,
             config,
