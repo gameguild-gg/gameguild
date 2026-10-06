@@ -3,3 +3,8 @@
 # this advisory. The complete registry audit report remains available as evidence.
 # See patches/README.md; remove this entry when adopting an upstream fixed release.
 CVE-2026-93687
+# CVE-2026-97058 is mitigated by patches/sprintf-js@1.1.3.patch, which bounds
+# numeric precision before toFixed/toExponential/toPrecision. CI verifies every
+# installed consumer and the exact exception list; the raw audit is retained.
+# See patches/README.md; remove this entry when adopting an upstream fixed release.
+CVE-2026-97058

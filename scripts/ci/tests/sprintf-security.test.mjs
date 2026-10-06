@@ -61,6 +61,14 @@ test("the advisory mitigation requires the exact installed patch on every consum
     "patches/sprintf-js@1.1.3.patch",
   );
   assert.equal(manifest.pnpm.auditConfig, undefined);
+  const scannerExceptions = readFileSync(
+    join(repositoryRoot, ".trivyignore"),
+    "utf8",
+  )
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith("#"));
+  assert.deepEqual(scannerExceptions, ["CVE-2026-93687", "CVE-2026-97058"]);
   for (const packageRoot of packageRoots) {
     assert.match(packageRoot, /sprintf-js@1\.1\.3_patch_hash[=_]/);
     assert.match(
