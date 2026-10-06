@@ -3,11 +3,13 @@ import { getFileContent } from "@/components/block-content-editor/extras/source-
 import { QuickJSRunner } from "../../../extras/code-studio/runners/quickjs-runner"
 import type { ExecutionContext, ExecutionResult, LanguageExecutor } from "./types"
 
-class JavaScriptExecutor implements LanguageExecutor {
+export class JavaScriptExecutor implements LanguageExecutor {
   public isCompiled = false
   private debugMode = false
   private runner: QuickJSRunner | null = null
   private cancelDialog: (() => void) | undefined
+
+  constructor(private readonly fileExtension: "js" | "ts" = "js") {}
 
   private requestDialog(
     kind: "alert" | "prompt" | "confirm", message: string, defaultValue: string, context: ExecutionContext, output: string[],
@@ -343,7 +345,7 @@ ${hasDefaultExport && defaultExportName
       // Remove ALL import statements and export statements, then add the file content
       const contentWithoutImportsAndExports = content
         .replace(importRegex, "")
-        .replace(/export\s*{\s*[^}]+\s*};?/g, "") // Remove export { ... }
+        .replace(/export\s*{\s*[^}]*\s*};?/g, "") // Remove export { ... }, including erased type-only modules
         .replace(/export\s+(function|const|let|var|class)\s+/g, "$1 ") // Remove export keyword from declarations
         .replace(/export\s+default\s+/g, "") // Remove export default
 
@@ -365,8 +367,8 @@ ${hasDefaultExport && defaultExportName
       if (vfs[targetFile]) {
         return targetFile
       }
-      if (!targetFile.includes(".") && vfs[targetFile + ".js"]) {
-        return targetFile + ".js"
+      if (!targetFile.includes(".") && vfs[targetFile + "." + this.fileExtension]) {
+        return targetFile + "." + this.fileExtension
       }
     }
 
@@ -376,8 +378,8 @@ ${hasDefaultExport && defaultExportName
     }
 
     // Try with .js extension
-    if (!importPath.includes(".") && vfs[importPath + ".js"]) {
-      return importPath + ".js"
+    if (!importPath.includes(".") && vfs[importPath + "." + this.fileExtension]) {
+      return importPath + "." + this.fileExtension
     }
 
     return null
