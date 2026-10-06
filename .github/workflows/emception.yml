@@ -25,8 +25,8 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  NODE_VERSION: '22'
-  PNPM_VERSION: '10.0.0'
+  NODE_VERSION: "22"
+  PNPM_VERSION: "10.0.0"
 
 jobs:
   detect-emception-changes:
@@ -83,7 +83,7 @@ jobs:
     if: needs.detect-emception-changes.outputs.required == 'true'
     timeout-minutes: 360
     env:
-      CI: 'true'
+      CI: "true"
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Check out repository
@@ -159,6 +159,9 @@ jobs:
           else
             pnpm --dir tools/emception toolchain build all
           fi
+
+      - name: Verify native and WASM curl adapter security regressions
+        run: pnpm --dir tools/emception run test:curl-lite
 
       - name: Build all Emception packages
         run: pnpm run build:emception
@@ -346,8 +349,8 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           version-script: pnpm run version:emception
-          commit-message: 'chore(release): version Emception packages'
-          pr-title: 'chore(release): version Emception packages'
+          commit-message: "chore(release): version Emception packages"
+          pr-title: "chore(release): version Emception packages"
 
       - name: Publish validated packages
         if: steps.changesets.outputs.hasChangesets == 'false'
