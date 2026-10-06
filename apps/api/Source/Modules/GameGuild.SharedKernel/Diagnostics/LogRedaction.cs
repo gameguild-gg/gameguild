@@ -25,7 +25,9 @@ public static partial class LogRedaction
     public static string RedactId(Guid? id, string prefix = "tid")
     {
         if (!id.HasValue || id.Value == Guid.Empty)
+        {
             return "none";
+        }
 
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes(id.Value.ToString("N")));
         return $"{prefix}:{Convert.ToHexString(hash, 0, 4).ToLowerInvariant()}";
@@ -37,7 +39,9 @@ public static partial class LogRedaction
     public static string RedactId(string? id, string prefix = "uid")
     {
         if (string.IsNullOrEmpty(id))
+        {
             return "none";
+        }
 
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes(id));
         return $"{prefix}:{Convert.ToHexString(hash, 0, 4).ToLowerInvariant()}";
@@ -51,11 +55,15 @@ public static partial class LogRedaction
     public static string MaskEmail(string? email)
     {
         if (string.IsNullOrEmpty(email))
+        {
             return "none";
+        }
 
         var atIndex = email.IndexOf('@');
         if (atIndex <= 0)
+        {
             return "invalid";
+        }
 
         return "email:redacted";
     }
@@ -68,7 +76,9 @@ public static partial class LogRedaction
     public static string RedactSecret(string? secret)
     {
         if (string.IsNullOrEmpty(secret))
+        {
             return "none";
+        }
 
         return "secret:redacted";
     }
@@ -81,7 +91,9 @@ public static partial class LogRedaction
     public static string Sanitize(string? value)
     {
         if (string.IsNullOrEmpty(value))
+        {
             return string.Empty;
+        }
 
         return ControlCharactersRegex().Replace(value, "␀");
     }

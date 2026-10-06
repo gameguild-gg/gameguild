@@ -12,7 +12,9 @@ public class Result
     protected Result(bool isSuccess, Error error)
     {
         if (isSuccess && error != Error.None || !isSuccess && error == Error.None)
+        {
             throw new ArgumentException("Invalid error", nameof(error));
+        }
 
         IsSuccess = isSuccess;
         Error = error;
@@ -72,7 +74,11 @@ public class Result
     /// </summary>
     public Result Tap(Action action)
     {
-        if (IsSuccess) action();
+        if (IsSuccess)
+        {
+            action();
+        }
+
         return this;
     }
 
@@ -137,7 +143,11 @@ public class Result<TValue> : Result
     /// </summary>
     public Result<TValue> Tap(Action<TValue> action)
     {
-        if (IsSuccess) action(_value!);
+        if (IsSuccess)
+        {
+            action(_value!);
+        }
+
         return this;
     }
 
