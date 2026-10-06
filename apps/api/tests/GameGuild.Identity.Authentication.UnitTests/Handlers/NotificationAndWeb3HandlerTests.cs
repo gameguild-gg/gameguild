@@ -80,7 +80,7 @@ public class UserSignedInEventHandlerTests
         logger.Entries.Should().ContainSingle();
         logger.Entries[0].Level.Should().Be(LogLevel.Information);
         logger.Entries[0].Message.Should().Contain("Unknown");
-        logger.Entries[0].Message.Should().Contain("email:redacted");
+        logger.Entries[0].Message.Should().Contain("u***@e***.com");
         logger.Entries[0].Message.Should().Contain(notification.AuthMethod);
     }
 
@@ -142,7 +142,7 @@ public class SendEmailVerificationRequestedHandlerTests
 
         logger.Entries.Should().ContainSingle(entry =>
             entry.Level == LogLevel.Information &&
-            entry.Message.Contains("Verification email queued for email:redacted"));
+            entry.Message.Contains("Verification email queued for u***@e***.com"));
     }
 
     [Fact]
@@ -161,7 +161,7 @@ public class SendEmailVerificationRequestedHandlerTests
 
         logger.Entries.Should().ContainSingle(entry =>
             entry.Level == LogLevel.Warning &&
-            entry.Message.Contains("email:redacted"));
+            entry.Message.Contains("u***@e***.com"));
     }
 
     [Fact]
@@ -186,7 +186,7 @@ public class SendEmailVerificationRequestedHandlerTests
         await act.Should().ThrowAsync<InvalidOperationException>();
         logger.Entries.Should().ContainSingle(entry =>
             entry.Level == LogLevel.Error &&
-            entry.Message.Contains("email:redacted"));
+            entry.Message.Contains("u***@e***.com"));
     }
 }
 
@@ -226,7 +226,7 @@ public class SendWelcomeEmailHandlerTests
 
         logger.Entries.Should().ContainSingle(entry =>
             entry.Level == LogLevel.Information &&
-            entry.Message.Contains("Welcome email queued for email:redacted"));
+            entry.Message.Contains("Welcome email queued for u***@e***.com"));
     }
 
     [Fact]
@@ -252,7 +252,7 @@ public class SendWelcomeEmailHandlerTests
         await act.Should().ThrowAsync<InvalidOperationException>();
         logger.Entries.Should().ContainSingle(entry =>
             entry.Level == LogLevel.Warning &&
-            entry.Message.Contains("email:redacted"));
+            entry.Message.Contains("u***@e***.com"));
     }
 }
 
@@ -296,7 +296,7 @@ public class SendPasswordResetRequestedHandlerTests
 
         logger.Entries.Should().ContainSingle(entry =>
             entry.Level == LogLevel.Information &&
-            entry.Message.Contains("Password reset email queued for email:redacted"));
+            entry.Message.Contains("Password reset email queued for u***@e***.com"));
     }
 
     [Fact]
@@ -326,7 +326,7 @@ public class SendPasswordResetRequestedHandlerTests
         await act.Should().ThrowAsync<InvalidOperationException>();
         logger.Entries.Should().ContainSingle(entry =>
             entry.Level == LogLevel.Error &&
-            entry.Message.Contains("email:redacted"));
+            entry.Message.Contains("u***@e***.com"));
     }
 }
 
@@ -371,7 +371,7 @@ public class SendMagicLinkRequestedHandlerTests
 
         logger.Entries.Should().ContainSingle(entry =>
             entry.Level == LogLevel.Information &&
-            entry.Message.Contains("Magic-link email queued for email:redacted"));
+            entry.Message.Contains("Magic-link email queued for u***@e***.com"));
     }
 
     [Fact]
@@ -401,7 +401,7 @@ public class SendMagicLinkRequestedHandlerTests
         await act.Should().ThrowAsync<InvalidOperationException>();
         logger.Entries.Should().ContainSingle(entry =>
             entry.Level == LogLevel.Error &&
-            entry.Message.Contains("email:redacted"));
+            entry.Message.Contains("u***@e***.com"));
     }
 }
 

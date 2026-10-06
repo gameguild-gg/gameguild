@@ -64,7 +64,7 @@ public class AuthenticationNotificationLoggingSecurityTests
         };
 
         var entry = entries.Should().ContainSingle().Subject;
-        entry.Message.Should().Contain("email:redacted");
+        entry.Message.Should().Contain("p***@e***.test");
         AssertNoSensitiveData(entry);
         if (outcome == "failure")
         {
