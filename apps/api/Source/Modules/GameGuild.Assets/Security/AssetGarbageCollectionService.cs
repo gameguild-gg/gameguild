@@ -207,7 +207,6 @@ public class AssetGarbageCollectionService : IAssetGarbageCollectionService
                 }
                 catch (Exception ex)
                 {
-                    errors++;
                     _logger.LogError(ex, "Error deleting content {ContentId}", content.Id);
                     messages.Add($"Error deleting {content.Id}: {ex.Message}");
                     throw;
@@ -221,7 +220,6 @@ public class AssetGarbageCollectionService : IAssetGarbageCollectionService
         }
         catch (Exception ex)
         {
-            errors++;
             _logger.LogError(ex, "Garbage collection failed");
             messages.Add($"GC error: {ex.Message}");
             throw;
