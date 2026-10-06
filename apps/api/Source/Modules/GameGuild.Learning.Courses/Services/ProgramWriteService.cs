@@ -200,10 +200,12 @@ public class ProgramWriteService(
       .AcquireAsync(context, [content.Id])
       .ConfigureAwait(false);
     var existingContent = await context.Set<ProgramContent>()
+      .AsNoTracking()
       .FirstOrDefaultAsync(candidate => candidate.Id == content.Id && candidate.DeletedAt == null)
       .ConfigureAwait(false);
     if (existingContent == null) throw new InvalidOperationException($"ProgramContent with ID {content.Id} not found or has been deleted");
 
+    ProgramContentAcademicMutationGuard.EnsureAllowed(academicMutationGuards, existingContent, ProgramContentAcademicMutation.Authoring);
     content.NormalizeLearningContract();
     ProgramContentAcademicMutationGuard.EnsureAllowed(academicMutationGuards, content, ProgramContentAcademicMutation.Authoring);
     if (await lifecycleGuard.HasBlockingIncompatibleUpdateReference(
@@ -305,6 +307,7 @@ public class ProgramWriteService(
 
     if (content == null) return null;
 
+    ProgramContentAcademicMutationGuard.EnsureAllowed(academicMutationGuards, content, ProgramContentAcademicMutation.Authoring);
     if (contentDto.Title != null) content.Title = contentDto.Title;
     if (contentDto.Description != null) content.Description = contentDto.Description;
     if (contentDto.Body != null)
