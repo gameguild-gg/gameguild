@@ -81,16 +81,16 @@ describe("request-bound authentication readers", () => {
   });
 
   it("auth() reads the same request-bound session as getSession()", async () => {
-    const module = await import("./auth");
-    expect(await module.auth()).toBe(session);
-    expect(await module.getSession()).toBe(session);
+    const authModule = await import("./auth");
+    expect(await authModule.auth()).toBe(session);
+    expect(await authModule.getSession()).toBe(session);
     expect(state.sharedAuth).not.toHaveBeenCalled();
   });
 
   it("parallel session, token, and tenant reads process one encrypted cookie", async () => {
-    const module = await import("./auth");
+    const authModule = await import("./auth");
     const [currentSession, currentToken, context] = await Promise.all([
-      module.auth(), module.getToken(), module.getRequestAuthContext(),
+      authModule.auth(), authModule.getToken(), authModule.getRequestAuthContext(),
     ]);
     expect(currentSession).toBe(session);
     expect(currentToken).toBe(token.accessToken);
@@ -100,9 +100,9 @@ describe("request-bound authentication readers", () => {
   });
 
   it("auth(handler) keeps the shared explicit-request proxy wrapper", async () => {
-    const module = await import("./auth");
+    const authModule = await import("./auth");
     const handler = vi.fn(() => new Response("handler-response"));
-    expect(module.auth(handler)).toBe(state.proxy);
+    expect(authModule.auth(handler)).toBe(state.proxy);
     expect(state.sharedAuth).toHaveBeenCalledWith(handler);
     expect(state.cookieRead).not.toHaveBeenCalled();
     expect(state.processSession).not.toHaveBeenCalled();
@@ -110,35 +110,35 @@ describe("request-bound authentication readers", () => {
 
   it("a request without a cookie remains anonymous", async () => {
     state.cookie = undefined;
-    const module = await import("./auth");
-    expect(await module.auth()).toBeNull();
-    expect(await module.getToken()).toBeNull();
+    const authModule = await import("./auth");
+    expect(await authModule.auth()).toBeNull();
+    expect(await authModule.getToken()).toBeNull();
     expect(state.processSession).not.toHaveBeenCalled();
   });
 
   it("an invalid encrypted cookie remains anonymous", async () => {
     state.processSession.mockResolvedValue({ session: null, token: null, updated: false });
-    const module = await import("./auth");
-    expect(await module.auth()).toBeNull();
-    expect(await module.getRequestAuthContext()).toEqual({ session: null, token: null, tenantId: null });
+    const authModule = await import("./auth");
+    expect(await authModule.auth()).toBeNull();
+    expect(await authModule.getRequestAuthContext()).toEqual({ session: null, token: null, tenantId: null });
     expect(state.processSession).toHaveBeenCalledTimes(1);
   });
 
   it("a readable refreshed session survives a read-only RSC cookie store", async () => {
     state.processSession.mockResolvedValue({ session, token, updated: true });
     state.cookieSet.mockImplementation(() => { throw new Error("RSC cookies are read-only"); });
-    const module = await import("./auth");
-    expect(await module.auth()).toBe(session);
-    expect(await module.getToken()).toBe(token.accessToken);
+    const authModule = await import("./auth");
+    expect(await authModule.auth()).toBe(session);
+    expect(await authModule.getToken()).toBe(token.accessToken);
     expect(state.encodeSession).toHaveBeenCalledTimes(1);
     expect(state.processSession).toHaveBeenCalledTimes(1);
   });
 
   it("a writable request persists the refreshed cookie once", async () => {
     state.processSession.mockResolvedValue({ session, token, updated: true });
-    const module = await import("./auth");
-    expect(await module.auth()).toBe(session);
-    expect(await module.getSession()).toBe(session);
+    const authModule = await import("./auth");
+    expect(await authModule.auth()).toBe(session);
+    expect(await authModule.getSession()).toBe(session);
     expect(state.cookieSet).toHaveBeenCalledExactlyOnceWith(
       "gameguild.session-token", "rotated-encrypted-session", { httpOnly: true, path: "/" },
     );
