@@ -85,7 +85,7 @@ test_release_flow_opens_version_pr_to_main() {
   local emception_workflow="$repository_root/.github/workflows/emception.yml"
 
   [[ ! -e "$repository_root/.github/workflows/release.yml" ]] || return 1
-  grep -Fq 'uses: changesets/action@v2' "$emception_workflow" || return 1
+  grep -Eq 'uses: changesets/action@[a-f0-9]{40} # v2([[:space:]]|$)' "$emception_workflow" || return 1
   grep -Fq 'version-script: pnpm run version:emception' "$emception_workflow" || return 1
   grep -Fq 'run: pnpm run publish:emception' "$emception_workflow" || return 1
   grep -Fq 'TAG="emception-v${VERSION}"' "$emception_workflow" || return 1
@@ -118,9 +118,9 @@ test_workflow_caches_gate_dependencies() {
   local playwright_setup="$repository_root/.github/actions/setup-playwright/action.yml"
 
   grep -Fq 'cache: pnpm' "$node_setup" || return 1
-  grep -Fq 'actions/cache@v6' "$dotnet_setup" || return 1
+  grep -Eq 'actions/cache@[a-f0-9]{40} # v6([[:space:]]|$)' "$dotnet_setup" || return 1
   grep -Fq 'key: nuget-' "$dotnet_setup" || return 1
-  grep -Fq 'actions/cache@v6' "$playwright_setup" || return 1
+  grep -Eq 'actions/cache@[a-f0-9]{40} # v6([[:space:]]|$)' "$playwright_setup" || return 1
   grep -Fq 'playwright-browsers-' "$playwright_setup"
 }
 
