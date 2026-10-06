@@ -25,8 +25,11 @@ public partial class Program
     
     private static void InitializeReferences()
     {
-        if (_references != null) return;
-        
+        if (_references != null)
+        {
+            return;
+        }
+
         // Use Basic.Reference.Assemblies - this provides in-memory reference assemblies
         _references = new List<MetadataReference>(Net80.References.All);
         
@@ -45,8 +48,10 @@ public partial class Program
         try
         {
             if (_references == null)
+            {
                 InitializeReferences();
-            
+            }
+
             var references = _references ?? new List<MetadataReference>();
             var syntaxTrees = new List<SyntaxTree>();
 
@@ -109,12 +114,16 @@ public partial class Program
             }
             
             if (type == null)
+            {
                 return "ERROR: No Program class or Main method found";
-            
+            }
+
             var method = type.GetMethod("Main", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
             
             if (method == null)
+            {
                 return "ERROR: No static Main method found in Program class";
+            }
 
             var oldOut = Console.Out;
             using var sw = new StringWriter();
