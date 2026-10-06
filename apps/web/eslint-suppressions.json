@@ -1869,14 +1869,20 @@
     }
   },
   "src/components/block-content-editor/hooks/editor/executors/javascript-executor.ts": {
+    "@typescript-eslint/no-base-to-string": {
+      "count": 1
+    },
     "@typescript-eslint/no-explicit-any": {
       "count": 4
+    },
+    "@typescript-eslint/no-implied-eval": {
+      "count": 2
     },
     "@typescript-eslint/no-unsafe-argument": {
       "count": 2
     },
     "@typescript-eslint/no-unsafe-assignment": {
-      "count": 4
+      "count": 3
     },
     "@typescript-eslint/no-unsafe-call": {
       "count": 6
