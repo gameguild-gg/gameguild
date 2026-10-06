@@ -20,13 +20,14 @@ consumer resolution. Missing patches, excessive nesting, cyclic parents, and
 incompatible ordinary patterns fail that gate. All other advisories retain the
 existing failure policy.
 
-`.trivyignore` declares this mitigated CVE for Codacy's version-based
-dependency scanner. The mandatory patch regression tests also check that this
-file contains only the two documented, mitigated CVEs. The exception does not remove the advisory
-from the pnpm audit report or waive installation and behavioral verification.
+The advisory remains visible in version-based dependency scanners.
+`.trivyignore` has no advisory entries, and the mandatory patch regression tests
+enforce that empty list. Installed-source mitigation evidence is recorded
+separately from external scanner closure. The complete raw registry audit report
+remains available, and installation and behavioral verification are still required.
 
 When an upstream fixed release is available, replace the patch with that release,
-remove both scanner and validator exceptions, and retain the behavioral regression tests.
+remove the audit validator exception, and retain the behavioral regression tests.
 
 ## sprintf-js 1.1.3
 
@@ -43,10 +44,10 @@ The dependency audit validator recognizes only this exact advisory and version
 after `scripts/ci/tests/sprintf-security.test.mjs` verifies every installed
 consumer. Its regressions exercise excessive precision, precision overflowing to
 infinity, the zero-precision general-format boundary, ordinary formatting, and
-the supported precision limit. `.trivyignore` records this exact CVE because
-Trivy's version-based dependency scan cannot inspect the local patch. Tests check
-the complete exception list; other advisories retain the existing failure policy,
-and the complete registry audit report remains available.
+the supported precision limit. The advisory remains visible in Trivy's
+version-based dependency scan; the local patch is separate mitigation evidence.
+Tests require `.trivyignore` to contain no advisory entries. Other advisories retain
+the existing failure policy, and the complete registry audit report remains available.
 
 When an upstream fixed release is available, replace the patch with that release,
-remove both scanner and validator exceptions, and retain the behavioral regression tests.
+remove the audit validator exception, and retain the behavioral regression tests.

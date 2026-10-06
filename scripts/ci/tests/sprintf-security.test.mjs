@@ -93,7 +93,7 @@ test("the advisory mitigation requires the exact installed patch on every consum
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter((line) => line && !line.startsWith("#"));
-  assert.deepEqual(scannerExceptions, ["CVE-2026-93687", "CVE-2026-97058"]);
+  assert.deepEqual(scannerExceptions, []);
   for (const packageRoot of packageRoots) {
     assert.match(packageRoot, /sprintf-js@1\.1\.3_patch_hash[=_]/);
     assert.match(
