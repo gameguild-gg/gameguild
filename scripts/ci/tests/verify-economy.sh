@@ -357,6 +357,16 @@ test_affected_api_tests_use_migrated_template() {
   bash "$script_dir/run-affected-dotnet-tests.sh"
 }
 
+test_api_workflow_allows_full_selected_suite_with_bounded_hangs() {
+  local workflow="$repository_root/.github/workflows/pr-verify.yml" api
+  api="$(sed -n '/^  api:/,/^  testing-lab:/p' "$workflow")"
+  grep -Fq 'timeout-minutes: 90' <<< "$api" || return 1
+  grep -Fq 'bash scripts/ci/run-affected-dotnet-tests.sh' <<< "$api" || return 1
+  grep -Fq 'Verify full-application OpenAPI over HTTP' <<< "$api" || return 1
+  grep -Fq -- '--blame-hang-timeout 5m' <<< "$api" || return 1
+  grep -Fq -- '--blame-hang-timeout 5m' "$ci_dir/run-affected-dotnet-tests.sh"
+}
+
 test_postgres_probes_require_authenticated_tcp() {
   local gate="$ci_dir/verify-economy.sh" probe body
   for probe in app_postgres_probe economy_postgres_probe whole_solution_postgres_probe; do
@@ -869,6 +879,7 @@ run_test 'rate-limit probe follows Debug and Release solution builds' test_rate_
 run_test 'Testing Lab screenshots reach the required evidence upload' test_testing_lab_workflow_routes_evidence_to_its_upload_directory
 run_test 'Economy gate clones one migrated PostgreSQL template' test_economy_gate_migrates_one_template_and_clones_isolated_test_databases
 run_test 'affected API suites preserve migrations and isolated template setup' test_affected_api_tests_use_migrated_template
+run_test 'API workflow lets the full selected suite finish while bounding hangs' test_api_workflow_allows_full_selected_suite_with_bounded_hangs
 run_test 'Emception versioning is scoped to its fixed group' test_auto_changeset_bumps_entire_lockstep_workspace
 run_test 'Changesets config isolates the Emception release group' test_changesets_config_matches_lockstep_workspace
 run_test 'Emception emits a gate result for every main push' test_emception_emits_a_gate_result_for_every_main_push
