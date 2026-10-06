@@ -151,6 +151,23 @@ public sealed class EmailVerificationLoggingSecurityTests
         AssertPrivateLogs(logger, firstUser.ToString(), secondUser.ToString(), secondEmail);
     }
 
+    [Fact]
+    public async Task Resend_MixedCaseAndWhitespaceEmails_ShareOneRateLimitBucket()
+    {
+        var logger = new TestLogger<EmailVerificationService>();
+        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var publisher = Publisher();
+        var service = new EmailVerificationService(logger, cache, publisher.Object);
+        var userId = Guid.NewGuid();
+
+        (await service.ResendVerificationEmailAsync(userId, SensitiveEmail)).Should().BeTrue();
+        (await service.ResendVerificationEmailAsync(userId, SensitiveEmail.ToUpperInvariant())).Should().BeFalse();
+        (await service.ResendVerificationEmailAsync(userId, $" {SensitiveEmail} ")).Should().BeFalse();
+
+        var rateLimitKeys = cache.Keys.OfType<string>().Where(key => key.StartsWith("emailverify:ratelimit:", StringComparison.Ordinal)).ToArray();
+        rateLimitKeys.Should().HaveCount(1);
+    }
+
     private static Mock<IPublisher> Publisher()
     {
         var publisher = new Mock<IPublisher>();

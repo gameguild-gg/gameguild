@@ -23,6 +23,11 @@ public class EmailVerificationService(
     private const string PasswordResetTokenType = "password_reset";
     private const string MagicLinkTokenType = "magic_link";
 
+    // Tokens are one-time secrets: the cache key is their SHA-256 digest so a raw
+    // token is never persisted or observable in cache-key surfaces.
+    private static string TokenKey(string token) =>
+        TokenKeyPrefix + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
+
     public Task<string> GenerateVerificationTokenAsync(Guid userId, string email)
     {
         return GenerateTokenAsync(userId, email, EmailVerificationTokenType, TimeSpan.FromHours(24));
@@ -42,7 +47,7 @@ public class EmailVerificationService(
     {
         try
         {
-            var token = Convert.ToHexString(RandomNumberGenerator.GetBytes(16)).ToLowerInvariant();
+            var token = Guid.NewGuid().ToString("N");
             var tokenInfo = new TokenInfo
             {
                 UserId = userId,
@@ -51,7 +56,7 @@ public class EmailVerificationService(
                 ExpiresAt = SystemClock.UtcNow.Add(lifetime)
             };
 
-            memoryCache.Set(GetTokenCacheKey(token), tokenInfo, new MemoryCacheEntryOptions
+            memoryCache.Set(TokenKey(token), tokenInfo, new MemoryCacheEntryOptions
             {
                 AbsoluteExpiration = tokenInfo.ExpiresAt
             }.SetSize(1));
@@ -141,8 +146,7 @@ public class EmailVerificationService(
                 return Task.FromResult(TokenValidationResult.Failed("Token is required"));
             }
 
-            var tokenKey = GetTokenCacheKey(token);
-            if (!memoryCache.TryGetValue(tokenKey, out TokenInfo? tokenInfo) || tokenInfo == null)
+            if (!memoryCache.TryGetValue(TokenKey(token), out TokenInfo? tokenInfo) || tokenInfo == null)
             {
                 logger.LogWarning("Invalid {TokenType} token used", expectedType);
                 return Task.FromResult(TokenValidationResult.Failed("Invalid token"));
@@ -160,7 +164,7 @@ public class EmailVerificationService(
 
             if (tokenInfo.ExpiresAt < SystemClock.UtcNow)
             {
-                memoryCache.Remove(tokenKey);
+                memoryCache.Remove(TokenKey(token));
                 logger.LogWarning("Expired {TokenType} token used for user {UserId}", expectedType, LogRedaction.RedactId(tokenInfo.UserId, "uid"));
                 return Task.FromResult(TokenValidationResult.Failed("Expired token"));
             }
@@ -175,18 +179,12 @@ public class EmailVerificationService(
                 return Task.FromResult(TokenValidationResult.Failed("Invalid token type"));
             }
 
-            if (!tokenInfo.TryConsume())
-            {
-                logger.LogWarning("Already consumed {TokenType} token used", expectedType);
-                return Task.FromResult(TokenValidationResult.Failed("Invalid token"));
-            }
-
             if (markEmailVerified)
             {
                 memoryCache.Set(VerifiedKeyPrefix + tokenInfo.UserId, true, new MemoryCacheEntryOptions().SetSize(1));
             }
 
-            memoryCache.Remove(tokenKey);
+            memoryCache.Remove(TokenKey(token));
 
             logger.LogInformation("{TokenType} token consumed successfully for user {UserId}", expectedType, LogRedaction.RedactId(tokenInfo.UserId, "uid"));
             return Task.FromResult(new TokenValidationResult(true, tokenInfo.UserId, tokenInfo.Email));
@@ -226,8 +224,9 @@ public class EmailVerificationService(
         try
         {
             // Cache identity needs a distinct key per address; log redaction deliberately emits a constant marker.
-            // Use the complete digest here to avoid truncation collisions and keep raw emails out of cache keys.
-            var emailDigest = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(email)));
+            // Normalize before hashing so case variants of the same address share one rate-limit bucket,
+            // and use the complete digest to avoid truncation collisions and keep raw emails out of cache keys.
+            var emailDigest = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(email.Trim().ToLowerInvariant())));
             var rateLimitKey = RateLimitKeyPrefix + $"{userId}:{emailDigest}";
 
             if (memoryCache.TryGetValue(rateLimitKey, out DateTime lastSent))
@@ -268,13 +267,12 @@ public class EmailVerificationService(
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(token) ||
-                !memoryCache.TryGetValue(GetTokenCacheKey(token), out TokenInfo? tokenInfo) || tokenInfo == null)
+            if (!memoryCache.TryGetValue(TokenKey(token), out TokenInfo? tokenInfo) || tokenInfo == null)
             {
                 return Task.FromResult(false);
             }
 
-            var isValid = !tokenInfo.IsConsumed && tokenInfo.ExpiresAt >= SystemClock.UtcNow &&
+            var isValid = tokenInfo.ExpiresAt >= SystemClock.UtcNow &&
                 (tokenInfo.Type == EmailVerificationTokenType ||
                  tokenInfo.Type == PasswordResetTokenType ||
                  tokenInfo.Type == MagicLinkTokenType);
@@ -287,7 +285,4 @@ public class EmailVerificationService(
             return Task.FromResult(false);
         }
     }
-
-    private static string GetTokenCacheKey(string token) =>
-        TokenKeyPrefix + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
 }
