@@ -81,6 +81,31 @@ writes a candidate lock under the disposable cache, builds the affected recipe
 graph, applies patches, and replaces the tracked lock atomically only after the
 verification succeeds.
 
+Changesets advances the seven public package versions together. The version
+preparation command then aligns internal runtime peer minimums with that release
+version before generating the pnpm lock. External peers and optional peer
+metadata retain their existing contracts. Inconsistent public package versions
+stop this synchronization before any manifest is written.
+
+### Reviewing an upstream archive checksum change
+
+GitHub source archives can change bytes for the same commit. Besides compression,
+Git `export-subst` can render a different abbreviated hash as the upstream
+repository grows. A download with a different SHA-256 still fails before
+extraction; builds never replace the lock or accept a checksum automatically.
+Review the complete contents against the pinned commit before updating the lock.
+See [GitHub's source archive documentation](https://docs.github.com/en/repositories/working-with-files/using-files/downloading-source-code-archives).
+
+The 2026-10-06 LLVM review preserved commit
+`7b58716d96c3ae4c0c4e6f72e29b16137bb6224b`, version `23.0.0git`, and its EMSDK
+ownership. Comparing the previous archive with the archive downloaded by the CI
+verified 175,014 files. Only `clang/bindings/python/.git_archival.txt` differed:
+the describe suffix grew from `g7b58716d96c3a` to `g7b58716d96c3ae4`.
+Accounting for that declared export substitution and six CRLF test fixtures
+reconstructed the upstream Git tree `34cd378b6fba47d5bd42003cdaf9505179879004`.
+The reviewed archive SHA-256 is
+`0d7fb3e45c6d2916d4ad4613fc3ee099076d088c13e5ca4b9562bab83319a4a5`.
+
 ## Directory ownership
 
 ```text

@@ -5,6 +5,7 @@ import path from 'node:path';
 import {
   assertOnlyEmceptionPackageManifests,
   readEmceptionReleaseVersion,
+  synchronizeEmceptionRuntimePeers,
 } from './emception-release-policy.mjs';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -18,6 +19,7 @@ function run(command, args, options = {}) {
 
 export async function versionEmception() {
   run(pnpm, ['exec', 'changeset', 'version']);
+  await synchronizeEmceptionRuntimePeers(repoRoot);
   run(pnpm, ['install', '--lockfile-only', '--ignore-scripts']);
   const changedPaths = run('git', ['diff', '--name-only', 'HEAD'], { capture: true })
     .split(/\r?\n/)

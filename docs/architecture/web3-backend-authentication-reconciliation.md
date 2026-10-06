@@ -1,3 +1,36 @@
+## Emception source integrity and release peer repair - 2026-10-06 UTC
+
+The genuine Emception [CI run 37406138023](https://github.com/gameguild-gg/gameguild/actions/runs/37406138023)
+for `cdc65d14be3550dab75e9b42421aebfb16b745b4` failed before extraction because
+LLVM's downloaded archive SHA-256 differed from the lock. The failed job log is
+retained. Two independently downloaded archives reproduce the old lock checksum
+(`0791c693...`) and the CI checksum (`0d7fb3e4...`). Comparing all **175,014 files**
+found only a Git-generated describe abbreviation difference in
+`clang/bindings/python/.git_archival.txt`; all other files are identical.
+
+The original upstream blobs independently verify the declared export substitution
+and six CRLF test fixture transformations. Reconstructing the complete Git tree
+then matches `34cd378b6fba47d5bd42003cdaf9505179879004` for the unchanged LLVM commit
+`7b58716d96c3ae4c0c4e6f72e29b16137bb6224b`. The reviewed checksum is pinned to the
+actual CI archive. LLVM remains `23.0.0git` and owned by the same EMSDK release.
+Runtime checksum enforcement, extraction safeguards and the CI release gates are
+unchanged. The initial direct Git-tree comparison failure is retained separately
+from the successful comparison that accounts for upstream export transformations.
+
+Full local script testing also exposed three stale internal Xterm peer ranges:
+React, Webcomponent and IDE were version 4.4.0 but still advertised `^4.3.0`.
+Their minimum internal peer is now `^4.4.0`. Version preparation synchronizes
+internal peers after Changesets and before lock generation; external peers and
+optional peer metadata are preserved. The pnpm lock changes only those three
+peer specifiers. The initial **56/57** script result is retained; the final
+**59/59** script cases pass with no skips, including four new integrity and
+version synchronization regressions. Full local package testing passes **346 of
+347 cases**, including those 59 script cases, with one existing opt-in real-worker
+smoke test skipped. All six package type checks and the Core public type tests
+pass. The installed dependency patches and strict audit validator pass a fresh
+**26/26** cases. The complete Linux Emception release
+execution remains required before merge; these local results do not close an issue.
+
 ## Dependency security and public navigation verification - 2026-10-06 UTC
 
 CI run [37402770647](https://github.com/gameguild-gg/gameguild/actions/runs/37402770647)
