@@ -205,6 +205,13 @@ function parseValue(name: string, value: string | null, spec: AttrSpec): unknown
  * `__proto__` / `prototype` / `constructor` path segments so crafted paths
  * cannot pollute Object.prototype (schema gating is the first line of
  * defense; this is the hard backstop).
+ *
+ * Defense in depth, layer by layer:
+ *   - reserved segment blocklist (`__proto__` / `prototype` / `constructor`);
+ *   - own-property-only traversal (`Object.hasOwn`), so inherited members
+ *     can never be confused for existing path segments;
+ *   - the final write uses `Object.defineProperty`, which never invokes
+ *     setters (the `__proto__` poison pill) the way `obj[key] = v` can.
  */
 function setPath(obj: Record<string, unknown>, dotted: string, value: unknown): void {
   const parts = dotted.split('.');
@@ -223,5 +230,5 @@ function setPath(obj: Record<string, unknown>, dotted: string, value: unknown): 
   }
   const last = parts[parts.length - 1]!;
   if (last === '__proto__' || last === 'prototype' || last === 'constructor') return;
-  cur[last] = value;
+  Object.defineProperty(cur, last, { value, writable: true, enumerable: true, configurable: true });
 }
