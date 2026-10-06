@@ -78,12 +78,9 @@ public sealed record EconomyProtectedRiskPolicy(
                 counterVersions[0],
                 Array.AsReadOnly(limits));
         }
-        catch (EconomyProtectedRiskPolicyException)
-        {
-            throw;
-        }
-        catch (Exception exception) when (exception is JsonException or InvalidOperationException or
-                                           FormatException or OverflowException or KeyNotFoundException)
+        catch (Exception exception) when (exception is not EconomyProtectedRiskPolicyException &&
+                                           exception is (JsonException or InvalidOperationException or
+                                               FormatException or OverflowException or KeyNotFoundException))
         {
             throw Invalid("The signed protected-operation risk policy is invalid.", exception);
         }
