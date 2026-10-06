@@ -485,6 +485,9 @@ async function settleServerActionNavigation(page) {
 }
 
 async function assertAuthenticatedBrowserSession(page, label) {
+  if (new URL(page.url()).origin !== new URL(webBaseUrl).origin) {
+    throw new Error(`${label} changed the browser origin and lost its host-only session: ${page.url()}`);
+  }
   const session = await page.evaluate(async () => {
     const response = await fetch("/api/auth/session");
     return {
