@@ -20,10 +20,33 @@ consumer resolution. Missing patches, excessive nesting, cyclic parents, and
 incompatible ordinary patterns fail that gate. All other advisories retain the
 existing failure policy.
 
-`.trivyignore` declares the same single mitigated CVE for Codacy's version-based
-dependency scanner. The mandatory patch regression test also checks that this
-file contains only that exception. The exception does not remove the advisory
+`.trivyignore` declares this mitigated CVE for Codacy's version-based
+dependency scanner. The mandatory patch regression tests also check that this
+file contains only the two documented, mitigated CVEs. The exception does not remove the advisory
 from the pnpm audit report or waive installation and behavioral verification.
+
+When an upstream fixed release is available, replace the patch with that release,
+remove both scanner and validator exceptions, and retain the behavioral regression tests.
+
+## sprintf-js 1.1.3
+
+`sprintf-js@1.1.3.patch` bounds numeric precision before `toFixed`,
+`toExponential`, and `toPrecision`, preserving formatting inside their supported
+ranges. The original package license remains in the installed package.
+
+[CVE-2026-97058 / GHSA-hp3w-g68c-fv3c](https://github.com/advisories/GHSA-hp3w-g68c-fv3c)
+affects the published package through 1.1.3. No upstream patched version was
+available when its Codacy finding was reviewed on 2026-10-06. The lockfile binds
+every workspace consumer to the committed pnpm patch.
+
+The dependency audit validator recognizes only this exact advisory and version
+after `scripts/ci/tests/sprintf-security.test.mjs` verifies every installed
+consumer. Its regressions exercise excessive precision, precision overflowing to
+infinity, the zero-precision general-format boundary, ordinary formatting, and
+the supported precision limit. `.trivyignore` records this exact CVE because
+Trivy's version-based dependency scan cannot inspect the local patch. Tests check
+the complete exception list; other advisories retain the existing failure policy,
+and the complete registry audit report remains available.
 
 When an upstream fixed release is available, replace the patch with that release,
 remove both scanner and validator exceptions, and retain the behavioral regression tests.

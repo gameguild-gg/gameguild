@@ -167,7 +167,7 @@ test("the advisory exception is bound to an exact installed security patch", () 
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter((line) => line && !line.startsWith("#"));
-  assert.deepEqual(scannerExceptions, ["CVE-2026-93687"]);
+  assert.deepEqual(scannerExceptions, ["CVE-2026-93687", "CVE-2026-97058"]);
   const patch = readFileSync(
     join(repositoryRoot, "patches/braces@3.0.3.patch"),
     "utf8",
