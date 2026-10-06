@@ -122,7 +122,7 @@
   "bugs": {
     "url": "https://github.com/game-guild/game-guild/issues"
   },
-  "prettier": "@game-guild/prettier-config",
+  "prettier": "../../tooling/prettier/src/index.js",
   "engines": {
     "node": ">=18.0.0"
   }
