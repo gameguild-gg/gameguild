@@ -235,7 +235,9 @@ public static class IdempotencyMiddlewareExtensions
     public static IServiceCollection AddIdempotency(this IServiceCollection services, Action<IdempotencyOptions>? configure = null)
     {
         if (configure != null)
+        {
             services.Configure(configure);
+        }
 
         services.AddMemoryCache();
         services.TryAddSingleton<IIdempotencyStore, MemoryCacheIdempotencyStore>();

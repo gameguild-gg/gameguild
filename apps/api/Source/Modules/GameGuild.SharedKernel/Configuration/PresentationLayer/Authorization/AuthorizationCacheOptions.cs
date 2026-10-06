@@ -141,13 +141,19 @@ public sealed class AuthorizationCacheOptions : BaseOptions
         base.Validate();
         
         if (PolicyTtlSeconds < 0)
+        {
             throw new InvalidOperationException("PolicyTtlSeconds cannot be negative.");
-        
+        }
+
         if (PermissionTtlSeconds < 0)
+        {
             throw new InvalidOperationException("PermissionTtlSeconds cannot be negative.");
-        
+        }
+
         if (AccessControlListTtlSeconds < 0)
+        {
             throw new InvalidOperationException("AccessControlListTtlSeconds cannot be negative.");
+        }
 
         if (RulesetTtlSeconds < 0)
         {
@@ -155,10 +161,14 @@ public sealed class AuthorizationCacheOptions : BaseOptions
         }
         
         if (MaxPolicyCacheSize <= 0)
+        {
             throw new InvalidOperationException("MaxPolicyCacheSize must be positive.");
-        
+        }
+
         if (MaxL1CacheSize <= 0)
+        {
             throw new InvalidOperationException("MaxL1CacheSize must be positive.");
+        }
 
         if (AutomaticWarmupIntervalSeconds <= 0)
         {
@@ -201,8 +211,10 @@ public sealed class AuthorizationCacheOptions : BaseOptions
         }
         
         if (UseDistributedCache && string.IsNullOrWhiteSpace(RedisConnectionString))
+        {
             throw new InvalidOperationException("RedisConnectionString is required when UseDistributedCache is true.");
-        
+        }
+
         var longestL1TtlSeconds = Math.Max(
             Math.Max(PolicyTtlSeconds, PermissionTtlSeconds),
             Math.Max(AccessControlListTtlSeconds, RulesetTtlSeconds));
