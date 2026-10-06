@@ -1,5 +1,5 @@
 import { getToken } from "@/auth";
-import { assertSafeRemoteUrl } from "@/lib/security/safe-remote-url";
+import { assertSafeServiceUrl } from "@/lib/security/safe-remote-url";
 import { type NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -29,7 +29,7 @@ export async function GET(
   const { assetId } = await params;
   const includeContent = request.nextUrl.searchParams.get("includeContent") !== "false";
   const upstream = await fetch(
-    assertSafeRemoteUrl(`${apiBaseUrl()}/v1/assets/${encodeURIComponent(assetId)}?includeContent=${includeContent}`),
+    assertSafeServiceUrl(`${apiBaseUrl()}/v1/assets/${encodeURIComponent(assetId)}?includeContent=${includeContent}`, apiBaseUrl()),
     { headers: { authorization: `Bearer ${token}` }, cache: "no-store", signal: request.signal },
   );
   return proxy(upstream);
@@ -42,7 +42,7 @@ export async function DELETE(
   const token = await getToken();
   if (!token) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
   const { assetId } = await params;
-  const upstream = await fetch(assertSafeRemoteUrl(`${apiBaseUrl()}/v1/assets/${encodeURIComponent(assetId)}`), {
+  const upstream = await fetch(assertSafeServiceUrl(`${apiBaseUrl()}/v1/assets/${encodeURIComponent(assetId)}`, apiBaseUrl()), {
     method: "DELETE",
     headers: { authorization: `Bearer ${token}` },
     cache: "no-store",

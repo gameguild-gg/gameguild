@@ -1,7 +1,7 @@
 'use server';
 
 import { auth, getToken } from '@/auth';
-import { assertSafeRemoteUrl } from '@/lib/security/safe-remote-url';
+import { assertSafeServiceUrl } from '@/lib/security/safe-remote-url';
 import { createServerClient } from '@game-guild/client';
 import { revalidatePath } from 'next/cache';
 import { redirect as nextRedirect } from 'next/navigation';
@@ -503,7 +503,7 @@ export async function uploadWorkspaceAssetForm(data: FormData): Promise<void> {
   if (folderId) query.set('folderId', folderId);
   const body = new FormData();
   body.set('file', file, file.name);
-  const response = await fetch(assertSafeRemoteUrl(`${apiUrl}/v1/assets?${query}`), {
+  const response = await fetch(assertSafeServiceUrl(`${apiUrl}/v1/assets?${query}`, apiUrl), {
     method: 'POST',
     headers: {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),

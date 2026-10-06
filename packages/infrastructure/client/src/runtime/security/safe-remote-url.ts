@@ -101,3 +101,55 @@ export function assertSafeRemoteUrl(input: string | URL): string | URL {
   }
   return url;
 }
+/**
+ * Pin a service request to the origin supplied by trusted application configuration.
+ * HTTP and private hosts are valid for internal APIs; request data cannot select
+ * another origin. This guard is enforced in every environment.
+ */
+export function assertSafeServiceUrl(input: string | URL, configuredBaseUrl: string): string | URL {
+  const relativeOrigin = 'https://relative.invalid';
+  const hasScheme = (value: string) => /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(value);
+  const parse = (value: string, base: string) => {
+    try {
+      return hasScheme(value) ? new URL(value) : new URL(value, base);
+    } catch {
+      throw new UnsafeRemoteUrlError('invalid service URL', value);
+    }
+  };
+  const assertRelative = (value: string) => {
+    const parsed = parse(value, relativeOrigin);
+    if (value.startsWith('//') || parsed.origin !== relativeOrigin || parsed.protocol !== 'https:') {
+      throw new UnsafeRemoteUrlError('disguised cross-origin URL', value);
+    }
+  };
+
+  const absoluteBase = hasScheme(configuredBaseUrl);
+  if (!absoluteBase) assertRelative(configuredBaseUrl);
+  const base = parse(configuredBaseUrl || '/', relativeOrigin);
+  if (!['http:', 'https:'].includes(base.protocol)) {
+    throw new UnsafeRemoteUrlError('service must use HTTP or HTTPS', configuredBaseUrl);
+  }
+  if (base.username || base.password) {
+    throw new UnsafeRemoteUrlError('embedded credentials', configuredBaseUrl);
+  }
+
+  const raw = input.toString();
+  const absoluteTarget = hasScheme(raw);
+  if (absoluteTarget && !absoluteBase) {
+    throw new UnsafeRemoteUrlError('relative service requires a relative target', raw);
+  }
+  if (!absoluteTarget) assertRelative(raw);
+  const target = parse(raw, base.href);
+  if (!['http:', 'https:'].includes(target.protocol)) {
+    throw new UnsafeRemoteUrlError('service must use HTTP or HTTPS', raw);
+  }
+  if (target.username || target.password) {
+    throw new UnsafeRemoteUrlError('embedded credentials', raw);
+  }
+  if (target.origin !== base.origin) {
+    throw new UnsafeRemoteUrlError('target differs from configured service origin', raw);
+  }
+  // A relative configured base belongs to the caller's actual browser origin.
+  if (!absoluteBase) return input;
+  return input instanceof URL ? input : target.href;
+}

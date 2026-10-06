@@ -1,7 +1,7 @@
 "use server";
 
 import { getRequestAuthContext } from "@/auth";
-import { assertSafeRemoteUrl } from "@/lib/security/safe-remote-url";
+import { assertSafeServiceUrl } from "@/lib/security/safe-remote-url";
 import type {
   LearningCoursesLessonContentFormat,
   LearningCoursesProgramContentType,
@@ -138,7 +138,7 @@ async function authoringRequest<T>(
     };
   }
 
-  const response = await fetch(assertSafeRemoteUrl(`${apiBaseUrl}${path}`), {
+  const response = await fetch(assertSafeServiceUrl(`${apiBaseUrl}${path}`, apiBaseUrl), {
     ...init,
     headers: {
       Authorization: `Bearer ${token}`,
