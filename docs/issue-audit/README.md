@@ -1,5 +1,22 @@
 # GameGuild issue closeout inventory
 
+## 2026-10-06 published scanner corrections and LLVM verification
+
+[PR #699](https://github.com/gameguild-gg/gameguild/pull/699) remains draft.
+Published revision `3991ff703bef0fc85f71b701a99ce962654df0e3` passed Codacy with
+zero annotations. Its API source matches the clean build and passed all 5,764
+module cases plus 73 focused host cases. Complete final-source host suites are
+running. The dependency-updated SDK passed all 1,135 cases, typecheck and build;
+the site passed all 2,982 cases and typecheck.
+
+The exact further LLVM archive rejected by CI has now been verified: its 175,014
+files reconstruct the pinned upstream Git tree, with only the known Git describe
+abbreviation differing. The 191,207 archive headers also match, except that
+file's size. The exact checksum is explicitly reviewed with regression coverage;
+unknown checksums still fail before extraction. Matching-head CI remains required.
+#263 remains open with every original acceptance criterion retained. Earlier
+dated checkpoints below preserve the failed runs and their subsequent corrections.
+
 ## 2026-10-06 refresh lifecycle draft — #263
 
 [PR #699](https://github.com/gameguild-gg/gameguild/pull/699) is a draft against

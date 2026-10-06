@@ -125,6 +125,27 @@ The working candidate extends the accepted increments on develop `295ee2128`.
 It is not yet merged and #263 remains open. The preceding execution/publication
 statements are historical; the boundaries below describe the current candidate.
 
+### Latest publication checkpoint — 2026-10-06
+
+Revision `3991ff703bef0fc85f71b701a99ce962654df0e3` is published in draft
+PR #699. Codacy passed with zero annotations. The final scanner-corrected API
+source passed the clean Release build, all 5,764 complete module cases and 73
+focused host cases. Complete final-source host integration and unit execution
+remains in progress. After the dependency updates, the complete SDK again passed
+all 1,135 cases; SDK typecheck/build and site typecheck passed with unchanged
+source/lock bytes. The complete site repetition passed all 2,982 cases.
+
+The LLVM digest rejected by the preceding native CI run was independently
+downloaded and checked against the immutable upstream commit and original Git
+blobs. All 175,014 files reconstruct the expected Git tree; 175,013 are identical
+to the primary approved archive. Only `.git_archival.txt` has a different valid
+abbreviation of the same full commit. All 191,207 archive headers, including
+directories, also match except that file's declared size (137 instead of 138
+bytes). The exact verified digest is added to the explicit reviewed list, with
+committed provenance and regression coverage. Unknown digests remain rejected
+before extraction; downloads never update the lock. Matching-head native CI
+still must pass before merge. #263 remains open with all 19 criteria.
+
 ### Retained requirement mapping
 
 | Original criterion | Implementation and acceptance surface |
