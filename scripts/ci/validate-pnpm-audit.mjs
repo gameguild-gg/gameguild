@@ -9,6 +9,7 @@ export function validateAuditReport(
   report,
   exitCode,
   verifiedBracesPatch = false,
+  verifiedSprintfPatch = false,
 ) {
   const counts = report?.metadata?.vulnerabilities;
   const advisories = report?.advisories;
@@ -40,7 +41,7 @@ export function validateAuditReport(
     );
   }
   for (const advisory of items) {
-    const knownPatchedAdvisory =
+    const knownPatchedBracesAdvisory =
       verifiedBracesPatch &&
       advisory.module_name === "braces" &&
       advisory.github_advisory_id === "GHSA-vfj7-8cjw-p6xm" &&
@@ -51,7 +52,18 @@ export function validateAuditReport(
       Array.isArray(advisory.findings) &&
       advisory.findings.length > 0 &&
       advisory.findings.every((finding) => finding.version === "3.0.3");
-    if (!knownPatchedAdvisory) {
+    const knownPatchedSprintfAdvisory =
+      verifiedSprintfPatch &&
+      advisory.module_name === "sprintf-js" &&
+      advisory.github_advisory_id === "GHSA-hp3w-g68c-fv3c" &&
+      advisory.url === "https://github.com/advisories/GHSA-hp3w-g68c-fv3c" &&
+      Array.isArray(advisory.cves) &&
+      advisory.cves.length === 1 &&
+      advisory.cves[0] === "CVE-2026-97058" &&
+      Array.isArray(advisory.findings) &&
+      advisory.findings.length > 0 &&
+      advisory.findings.every((finding) => finding.version === "1.1.3");
+    if (!knownPatchedBracesAdvisory && !knownPatchedSprintfAdvisory) {
       throw new Error(
         `Unmitigated dependency advisory: ${advisory.github_advisory_id ?? advisory.id ?? "unknown"}`,
       );
@@ -79,7 +91,27 @@ if (invokedDirectly) {
     );
     if (patchCheck.error || patchCheck.status !== 0)
       throw new Error("Installed braces security patch verification failed");
-    const result = validateAuditReport(report, Number(process.argv[3]), true);
+    const sprintfPatchCheck = spawnSync(
+      process.execPath,
+      [
+        "--test",
+        resolve(
+          dirname(fileURLToPath(import.meta.url)),
+          "tests/sprintf-security.test.mjs",
+        ),
+      ],
+      { stdio: "inherit" },
+    );
+    if (sprintfPatchCheck.error || sprintfPatchCheck.status !== 0)
+      throw new Error(
+        "Installed sprintf-js security patch verification failed",
+      );
+    const result = validateAuditReport(
+      report,
+      Number(process.argv[3]),
+      true,
+      true,
+    );
     console.log(
       `Dependency audit passed: ${result.advisories} reported advisories, ${result.verifiedLocalPatches} verified local patches`,
     );
