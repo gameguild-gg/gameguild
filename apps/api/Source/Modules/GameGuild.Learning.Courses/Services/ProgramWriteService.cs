@@ -911,7 +911,7 @@ public class ProgramWriteService(
 
     if (isNewInteraction)
         {
-            interaction = await SaveNewActiveAttemptAsync(
+            await SaveNewActiveAttemptAsync(
           interaction!,
           winner => CompleteInteraction(winner, userId, now))
         .ConfigureAwait(false);
