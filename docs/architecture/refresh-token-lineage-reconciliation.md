@@ -1,5 +1,19 @@
 # Persisted refresh token lineage — #263
 
+## Accepted partial increment after merge
+
+PR #695 merged to develop at `7952eaf967003e536b8ff736509400660d6dd2da` after all applicable checks
+passed for `e49579db56abf04ffef5a0fb54e42c93fd573a60`. Current-head CI passes4975 main
+cases plus15 repeated OpenAPI; combined CI/local coverage is7761 distinct
+.NET/SDK cases/37 new cases. The reviewed migration test passes fresh PG73 and
+OpenAPI15 after its constant-SQL/explicit-parameter repair. Unchanged production,
+unit and SDK sources and receipt hashes are verified. Full solution build is
+warning/error-clean; migration, OpenAPI/client, Codacy and all four CodeQL
+analyses pass. Full spec remains equal1297/1656; no pending model changes.
+[Official bounded acceptance](https://github.com/gameguild-gg/gameguild/issues/263#issuecomment-5998430026). #263 stays OPEN; all19 criteria
+and the remaining acceptance below are retained. Publication-stage statements
+below remain historical and are superseded for this increment by this evidence.
+
 ## Scope and implementation
 
 All 19 original issue criteria remain authoritative. This increment adds persisted

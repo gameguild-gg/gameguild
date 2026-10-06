@@ -1,6 +1,7 @@
 using FluentAssertions;
 using GameGuild.Learning.Courses;
 using GameGuild.Learning.Enrollments;
+using GameGuild.Learning.Grading.Contracts;
 using GameGuild.Learning.TestingLab;
 using GameGuild.TestingLab;
 using Microsoft.EntityFrameworkCore;
@@ -58,7 +59,7 @@ public sealed class TestingLabLearningEvidenceHandlerTests : IDisposable
         interaction.ContentId.Should().Be(_activityId);
         interaction.ProgramUserId.Should().Be(_programUserId);
         interaction.IsCompleted.Should().BeTrue();
-        interaction.ProgressPercentage.Should().Be(100);
+        interaction.ProgressPercentage.Should().Be(PercentValue.Hundred);
         var receipt = await _context.EvidenceReceipts.SingleAsync();
         receipt.EvidenceId.Should().Be(notification.EvidenceId);
         receipt.RegistrationId.Should().Be(notification.EvidenceId);

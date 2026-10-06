@@ -18,7 +18,7 @@ export class AuthApiKeysModule {
   /**
    * List all API keys for the current user
    */
-  async getAuthApiKeys(): Promise<Result<Array<Types.IdentityAuthenticationApiKeyDto>, ApiError>> {
+  async getAuthApiKeys(): Promise<Result<Types.IdentityAuthenticationApiKeyDto[], ApiError>> {
     const url = '/v1/auth/api-keys';
 
     const result = await this.client.request({
@@ -27,7 +27,7 @@ export class AuthApiKeysModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.IdentityAuthenticationApiKeyDto>, ApiError>;
+    return result as Result<Types.IdentityAuthenticationApiKeyDto[], ApiError>;
   }
 
   /**

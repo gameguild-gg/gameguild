@@ -20,7 +20,7 @@ export class ComplianceAuditRetentionSimulationModule {
   async getApiAuditRetentionSimulationForGetApiAuditRetentionSimulation(query?: {
     skip?: number;
     take?: number;
-  }): Promise<Result<Array<Types.ComplianceAuditAuditRetentionSimulationSummary>, ApiError>> {
+  }): Promise<Result<Types.ComplianceAuditAuditRetentionSimulationSummary[], ApiError>> {
     const url = '/api/audit/retention-simulation';
 
     const result = await this.client.request({
@@ -30,7 +30,7 @@ export class ComplianceAuditRetentionSimulationModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.ComplianceAuditAuditRetentionSimulationSummary>, ApiError>;
+    return result as Result<Types.ComplianceAuditAuditRetentionSimulationSummary[], ApiError>;
   }
 
   /**
@@ -132,7 +132,7 @@ export class ComplianceAuditRetentionSimulationModule {
   async getAuditRetentionSimulationForGetAuditRetentionSimulation(query?: {
     skip?: number;
     take?: number;
-  }): Promise<Result<Array<Types.ComplianceAuditAuditRetentionSimulationSummary>, ApiError>> {
+  }): Promise<Result<Types.ComplianceAuditAuditRetentionSimulationSummary[], ApiError>> {
     const url = '/v1/audit/retention-simulation';
 
     const result = await this.client.request({
@@ -142,7 +142,7 @@ export class ComplianceAuditRetentionSimulationModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.ComplianceAuditAuditRetentionSimulationSummary>, ApiError>;
+    return result as Result<Types.ComplianceAuditAuditRetentionSimulationSummary[], ApiError>;
   }
 
   /**
