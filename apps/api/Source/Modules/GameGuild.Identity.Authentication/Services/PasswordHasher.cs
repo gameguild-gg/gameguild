@@ -107,10 +107,25 @@ public sealed class PasswordHasher(ILogger<PasswordHasher> logger, IConfiguratio
         score += Math.Min(password.Length * 2, 25);
 
         // Character variety score (max 40 points)
-        if (Regex.IsMatch(password, @"[a-z]")) score += 10;
-        if (Regex.IsMatch(password, @"[A-Z]")) score += 10;
-        if (Regex.IsMatch(password, @"[0-9]")) score += 10;
-        if (Regex.IsMatch(password, @"[!@#$%^&*()_+\-=\[\]{};':""\\|,.<>/?]")) score += 10;
+        if (Regex.IsMatch(password, @"[a-z]"))
+        {
+            score += 10;
+        }
+
+        if (Regex.IsMatch(password, @"[A-Z]"))
+        {
+            score += 10;
+        }
+
+        if (Regex.IsMatch(password, @"[0-9]"))
+        {
+            score += 10;
+        }
+
+        if (Regex.IsMatch(password, @"[!@#$%^&*()_+\-=\[\]{};':""\\|,.<>/?]"))
+        {
+            score += 10;
+        }
 
         // Complexity bonus (max 35 points)
         var uniqueChars = password.Distinct().Count();

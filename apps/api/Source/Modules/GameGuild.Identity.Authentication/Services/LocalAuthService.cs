@@ -696,7 +696,9 @@ public class LocalAuthService(
     private static TenantAccessContext RequireActiveTenantAccess(TenantAccessContext tenantAccessContext)
     {
         if (tenantAccessContext.TenantId.HasValue)
+        {
             return tenantAccessContext;
+        }
 
         throw new AccessDeniedException("Authenticated user has no active tenant membership.");
     }

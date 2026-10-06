@@ -43,7 +43,10 @@ public sealed class LocalSignInHandler(
 
     private static string? GetClientIpAddress(HttpContext? httpContext)
     {
-        if (httpContext == null) return null;
+        if (httpContext == null)
+        {
+            return null;
+        }
 
         var forwarded = httpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
 

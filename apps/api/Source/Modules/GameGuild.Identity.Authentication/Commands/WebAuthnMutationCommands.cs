@@ -81,11 +81,15 @@ public sealed class WebAuthnMutationCommandHandler(
             command.UserAgent,
             cancellationToken).ConfigureAwait(false);
         if (!result.Success || result.UserId is not { } userId)
+        {
             return result;
+        }
 
         var user = await userRepository.GetByIdAsync(userId, cancellationToken).ConfigureAwait(false);
         if (user is null)
+        {
             return result;
+        }
 
         result.Email = user.Email;
         result.AccessToken = await jwtTokenService.GenerateAccessTokenAsync(

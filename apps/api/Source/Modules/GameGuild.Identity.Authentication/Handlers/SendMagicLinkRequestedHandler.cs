@@ -44,7 +44,9 @@ public sealed class SendMagicLinkRequestedHandler(
                 cancellationToken: cancellationToken).ConfigureAwait(false);
 
             if (result is null || result.IsFailure)
+            {
                 throw new InvalidOperationException("Authentication notification was not durably queued.");
+            }
 
             logger.LogInformation("Magic-link email queued for {Email}", LogRedaction.MaskEmail(notification.Email));
         }
