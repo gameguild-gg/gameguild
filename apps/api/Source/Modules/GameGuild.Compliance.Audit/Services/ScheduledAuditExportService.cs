@@ -14,8 +14,8 @@ namespace GameGuild.Compliance.Audit;
 /// </summary>
 public sealed class AuditScheduledExportOptions
 {
-    public const string ConfigurationSection = "Audit:ScheduledExports";
-    public const string StaleClaimThresholdMinutesKey = "StaleClaimThresholdMinutes";
+    public static string ConfigurationSection { get; } = "Audit:ScheduledExports";
+    public static string StaleClaimThresholdMinutesKey { get; } = "StaleClaimThresholdMinutes";
 
     public TimeSpan StaleClaimThreshold { get; set; } = TimeSpan.FromMinutes(30);
 }

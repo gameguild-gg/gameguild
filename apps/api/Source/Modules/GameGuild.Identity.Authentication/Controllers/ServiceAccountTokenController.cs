@@ -37,16 +37,13 @@ public class ServiceAccountTokenController(
     [ProducesResponseType(typeof(OAuth2ErrorResponse), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Token([FromForm] ClientCredentialsRequest request, CancellationToken cancellationToken)
     {
-        switch (request.GrantType)
+        if (!string.Equals(request.GrantType, "client_credentials", StringComparison.Ordinal))
         {
-            case "client_credentials":
-                break;
-            default:
-                return BadRequest(new OAuth2ErrorResponse
-                {
-                    Error = "unsupported_grant_type",
-                    ErrorDescription = "Only 'client_credentials' grant type is supported"
-                });
+            return BadRequest(new OAuth2ErrorResponse
+            {
+                Error = "unsupported_grant_type",
+                ErrorDescription = "Only 'client_credentials' grant type is supported"
+            });
         }
 
         if (string.IsNullOrEmpty(request.ClientId) || string.IsNullOrEmpty(request.ClientSecret))

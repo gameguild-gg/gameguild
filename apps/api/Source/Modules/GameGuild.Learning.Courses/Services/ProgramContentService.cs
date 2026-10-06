@@ -65,7 +65,10 @@ public class ProgramContentService(
     var persistedContent = await context.Set<ProgramContent>().AsNoTracking()
       .FirstOrDefaultAsync(pc => pc.Id == content.Id && pc.DeletedAt == null)
       .ConfigureAwait(false);
-    if (persistedContent == null) throw new InvalidOperationException($"ProgramContent with ID {content.Id} not found or has been deleted");
+        if (persistedContent == null)
+        {
+            throw new InvalidOperationException($"ProgramContent with ID {content.Id} not found or has been deleted");
+        }
     ProgramContentAcademicMutationGuard.EnsureAllowed(academicMutationGuards, persistedContent, ProgramContentAcademicMutation.Authoring);
     var existingContent = await context.Set<ProgramContent>().FirstOrDefaultAsync(pc => pc.Id == content.Id && pc.DeletedAt == null);
 

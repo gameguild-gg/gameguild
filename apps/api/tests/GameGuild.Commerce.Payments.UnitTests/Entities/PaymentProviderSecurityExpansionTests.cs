@@ -168,14 +168,28 @@ public sealed class PaymentProviderSecurityExpansionTests
     {
         public List<string> Entries { get; } = [];
 
-        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+        public IDisposable? BeginScope<TState>(TState _) where TState : notnull => null;
 
-        public bool IsEnabled(LogLevel logLevel) => true;
+        public bool IsEnabled(LogLevel logLevel) => logLevel != LogLevel.None;
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
         {
+            if (!IsEnabled(logLevel))
+            {
+                return;
+            }
             Entries.Add(formatter(state, exception));
         }
+    }
+
+    [Fact]
+    public void CapturingPaymentLogger_RespectsDisabledLogLevel()
+    {
+        var logger = new CapturingPaymentLogger();
+        logger.IsEnabled(LogLevel.None).Should().BeFalse();
+        logger.Log(LogLevel.None, default, "disabled", null, static (state, _) => state);
+        logger.Log(LogLevel.Debug, default, "enabled", null, static (state, _) => state);
+        logger.Entries.Should().ContainSingle().Which.Should().Be("enabled");
     }
 
     [Theory]
