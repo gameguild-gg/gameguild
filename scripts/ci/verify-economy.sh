@@ -417,13 +417,15 @@ postgres_port="${BASH_REMATCH[1]}"
 connection_string="Host=127.0.0.1;Port=$postgres_port;Database=economy_ci;Username=postgres;Password=postgres;Include Error Detail=true"
 
 gate_stage='postgres-economy-tests'
+# Full-schema resets across isolated test databases share PostgreSQL's lock table.
+# Keep the two test workers while sizing their disposable server for both resets.
 run docker run --detach --rm --name "$economy_postgres_container" \
   --env POSTGRES_DB=economy_tests \
   --env POSTGRES_USER=postgres \
   --env POSTGRES_PASSWORD=postgres \
   --tmpfs /var/lib/postgresql/data:rw \
   --publish 127.0.0.1::5432 \
-  postgres:17-alpine >/dev/null
+  postgres:17-alpine -c max_locks_per_transaction=512 >/dev/null
 
 economy_postgres_probe() {
   docker exec "$economy_postgres_container" psql --username postgres --dbname economy_tests --tuples-only --command 'SELECT 1;' >/dev/null 2>&1
