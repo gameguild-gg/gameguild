@@ -183,11 +183,11 @@ async function bootstrap() {
     return { accessToken: tenantAuth.accessToken, email, password, userId };
   }
 
-  const [owner, reviewer, tester] = await Promise.all([
-    createFixtureIdentity("owner"),
-    createFixtureIdentity("reviewer"),
-    createFixtureIdentity("tester"),
-  ]);
+  // These sign-ins share a source IP. The lockout guard holds its PostgreSQL
+  // advisory lock through credential verification and fails closed on contention.
+  const owner = await createFixtureIdentity("owner");
+  const reviewer = await createFixtureIdentity("reviewer");
+  const tester = await createFixtureIdentity("tester");
   const project = await apiRequest(
     "/v1/projects",
     {
