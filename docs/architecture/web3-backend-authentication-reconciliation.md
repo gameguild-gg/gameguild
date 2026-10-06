@@ -1,5 +1,38 @@
 # Web3 backend challenge and authentication — #292
 
+## Release fixture verification — 2026-10-05
+
+The complete CI run for `b441ee88facf901f3892fa3c2c2a148ac5434a26`
+failed the Resources integration project: 45 cases failed during gate schema reset
+with PostgreSQL SQLSTATE 53200, and one distributed rate-limit case could not find
+its Release probe host. CI built that project in Debug because it was absent from
+the solution configuration graph. Those failed receipts remain retained.
+
+Gate reset now drops and recreates only the fixture's generated database, retaining
+the gate template and its administrative connection. The reset refuses the
+administrative database or a name outside the generated fixture prefix. The real
+Resources test host also restores the scoped abstract `DbContext` registration
+removed by its database replacement; authorization repositories resolve the same
+`ApplicationDbContext`. The existing rate-limit probe project is registered in the
+solution with all twelve Debug/Release platform mappings.
+
+The complete Resources suite passes **63 cases**, with no failed or skipped cases.
+Two added regressions exercise reset with 5,000 independently created tables and
+actual host resolution of the scoped context and masking repository. The disposable
+PostgreSQL environment uses the full 146-migration template, 2,177 relations and
+default lock capacity. Its sentinel and migration history remain intact; the
+owned container is removed after execution. Support, probe, Resources and auxiliary
+bootstrap builds have zero warnings and errors. The first local reset repair passed
+54 of 62 cases and exposed seven HTTP 500 failures from the removed context alias
+and one timing failure on those erroneous responses; that receipt is retained too.
+
+Current publication acceptance still requires all applicable checks for its exact
+commit, including the complete Economy profile and TestingLab browser journey,
+followed by the accepted develop merge. #292 remains OPEN; #291 and #263 retain
+their complete remaining scope. These test infrastructure repairs do not change
+production authentication, authorization policy, PostgreSQL lock limits or API
+contracts.
+
 ## Retained scope
 
 #292 is the native child of #291 for backend challenge generation, nonce handling,
@@ -157,7 +190,9 @@ all-provider lifecycle/audit/retention criteria.
 
 ## Executed verification
 
-Fresh final source passes **7,796 distinct .NET/SDK cases**, including **35 new cases**:
+The initial isolated source passed **7,796 distinct .NET/SDK cases**, including
+**35 new cases**, before the subsequent develop integration and release repairs
+recorded above:
 
 | Suite | Passing cases |
 | --- | ---: |

@@ -334,6 +334,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Identity.Authoriz
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Identity.Authentication.Benchmarks", "tests\GameGuild.Identity.Authentication.Benchmarks\GameGuild.Identity.Authentication.Benchmarks.csproj", "{FCE0C6DF-122D-4FD6-8347-51A1E8BE57CB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.RateLimitingProbeHost", "tests\RateLimitingProbeHost\GameGuild.RateLimitingProbeHost.csproj", "{7E37EA11-F3C2-417A-B0B4-9D1C79FC693D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -2196,6 +2198,18 @@ Global
 		{14E0670F-5CB4-4022-A8CC-537F332BEB6C}.Release|x64.Build.0 = Release|Any CPU
 		{14E0670F-5CB4-4022-A8CC-537F332BEB6C}.Release|x86.ActiveCfg = Release|Any CPU
 		{14E0670F-5CB4-4022-A8CC-537F332BEB6C}.Release|x86.Build.0 = Release|Any CPU
+		{7E37EA11-F3C2-417A-B0B4-9D1C79FC693D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E37EA11-F3C2-417A-B0B4-9D1C79FC693D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E37EA11-F3C2-417A-B0B4-9D1C79FC693D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7E37EA11-F3C2-417A-B0B4-9D1C79FC693D}.Debug|x64.Build.0 = Debug|Any CPU
+		{7E37EA11-F3C2-417A-B0B4-9D1C79FC693D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7E37EA11-F3C2-417A-B0B4-9D1C79FC693D}.Debug|x86.Build.0 = Debug|Any CPU
+		{7E37EA11-F3C2-417A-B0B4-9D1C79FC693D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E37EA11-F3C2-417A-B0B4-9D1C79FC693D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E37EA11-F3C2-417A-B0B4-9D1C79FC693D}.Release|x64.ActiveCfg = Release|Any CPU
+		{7E37EA11-F3C2-417A-B0B4-9D1C79FC693D}.Release|x64.Build.0 = Release|Any CPU
+		{7E37EA11-F3C2-417A-B0B4-9D1C79FC693D}.Release|x86.ActiveCfg = Release|Any CPU
+		{7E37EA11-F3C2-417A-B0B4-9D1C79FC693D}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -2357,5 +2371,6 @@ Global
 		{DBA30016-5DDC-4A37-9E26-E2DED583854F} = {3E5E3798-9DEC-4CDB-86F7-0722667D13C5}
 		{FCE0C6DF-122D-4FD6-8347-51A1E8BE57CB} = {3E5E3798-9DEC-4CDB-86F7-0722667D13C5}
 		{14E0670F-5CB4-4022-A8CC-537F332BEB6C} = {3E5E3798-9DEC-4CDB-86F7-0722667D13C5}
+		{7E37EA11-F3C2-417A-B0B4-9D1C79FC693D} = {3E5E3798-9DEC-4CDB-86F7-0722667D13C5}
 	EndGlobalSection
 EndGlobal
