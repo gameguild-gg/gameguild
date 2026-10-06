@@ -30,6 +30,58 @@ function apiAsset() {
 describe("GameGuildRemoteAssetProvider", () => {
   afterEach(() => vi.unstubAllGlobals());
 
+  it.each([
+    "https://attacker.invalid/private",
+    "//attacker.invalid/private",
+    "\\\\attacker.invalid\\private",
+    "../?next=https://attacker.invalid/#fragment",
+    "%2f%2fattacker.invalid/private",
+  ])("keeps every asset request on the application origin for identifier %s", async (untrustedId) => {
+    const origin = "https://gameguild.invalid";
+    let firstLookup = true;
+    const fetchMock = vi.fn(async (url: string, options?: RequestInit) => {
+      if (firstLookup) {
+        firstLookup = false;
+        return new Response(null, { status: 404 });
+      }
+      if (options?.method === "POST") {
+        return new Response(JSON.stringify({ assetReferenceId: untrustedId }), { status: 201 });
+      }
+      if (options?.method === "DELETE") return new Response(null, { status: 204 });
+      const requested = new URL(url, origin);
+      if (requested.pathname.endsWith("/content")) return new Response("binary");
+      if (requested.pathname === "/api/assets") {
+        return new Response(JSON.stringify({ items: [] }));
+      }
+      return new Response(JSON.stringify(apiAsset()));
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const provider = new GameGuildRemoteAssetProvider();
+    const record = {
+      id: untrustedId,
+      uri: `asset://${untrustedId}`,
+    } as Parameters<GameGuildRemoteAssetProvider["delete"]>[0];
+
+    await provider.upload([{
+      id: untrustedId,
+      uri: record.uri,
+      blob: new Blob(["diagram"], { type: "image/png" }),
+      name: "diagram.png",
+      mimeType: "image/png",
+    }], { scope });
+    await provider.get(record.uri, { scope });
+    await provider.list({ scope, search: untrustedId }, { scope });
+    await provider.download(record, { scope });
+    await provider.delete(record, { scope });
+
+    expect(fetchMock).toHaveBeenCalledTimes(7);
+    for (const [requested] of fetchMock.mock.calls) {
+      expect(new URL(requested, origin).origin).toBe(origin);
+    }
+    const resolved = await provider.resolveUrl(record);
+    expect(new URL(resolved.url).origin).toBe(window.location.origin);
+  });
+
   it("requires a complete learning scope", async () => {
     const provider = new GameGuildRemoteAssetProvider();
     await expect(provider.upload([], {})).rejects.toThrow(
