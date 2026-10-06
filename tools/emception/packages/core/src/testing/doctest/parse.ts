@@ -201,10 +201,16 @@ function matchTestCase(line: string): string | null {
  * The file path cannot contain `: ERROR: `, and doctest terminates every
  * failure line with the fixed ` is NOT correct!` suffix, so both anchors are
  * safe string markers rather than ambiguous regex groups.
+ *
+ * The `<line>` digit run must be *immediately preceded* by the `:` that
+ * separates it from the file path. A head like `fileX12` (digits glued to
+ * the name, no separating colon) is NOT a line number — the digits are part
+ * of the file name. In that case we still match, with `file: 'fileX12'` and
+ * no line (the `line` field is optional per `DoctestFailure`).
  */
 function matchFailureLine(line: string): {
     file: string;
-    line: number;
+    line?: number;
     macro: string;
     expression: string;
 } | null {
@@ -217,10 +223,18 @@ function matchFailureLine(line: string): {
     while (numberStart > 0 && isAsciiDigit(head.charAt(numberStart - 1))) {
         numberStart -= 1;
     }
-    if (numberStart === head.length || numberStart === 0) return null;
-    const file = head.slice(0, numberStart - 1);
-    const lineNumber = Number.parseInt(head.slice(numberStart), 10);
-    if (!file || !Number.isFinite(lineNumber)) return null;
+    let file: string;
+    let lineNumber: number | undefined;
+    // Only treat the digit run as a line number when a `:` sits immediately
+    // in front of it (`<file>:<digits>` head shape).
+    if (numberStart < head.length && numberStart > 0 && head.charAt(numberStart - 1) === ':') {
+        file = head.slice(0, numberStart - 1);
+        lineNumber = Number.parseInt(head.slice(numberStart), 10);
+        if (!file || !Number.isFinite(lineNumber)) return null;
+    } else {
+        file = head;
+        if (!file) return null;
+    }
 
     const tail = line.slice(errorIndex + ERROR_MARKER.length, line.length - NOT_CORRECT_SUFFIX.length);
     const openParen = tail.indexOf('(');
