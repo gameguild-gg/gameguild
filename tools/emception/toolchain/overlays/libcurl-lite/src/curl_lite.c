@@ -488,9 +488,19 @@ CURLcode curl_easy_perform(CURL *handle)
             /* Deliver header to callback */
             if (h->header_cb)
             {
-                char hbuf[4096];
-                int n = snprintf(hbuf, sizeof(hbuf), "%s\r\n", line);
-                h->header_cb(hbuf, 1, (size_t)n, h->header_data);
+                /* fgets stores at most sizeof(line) - 1 payload bytes.
+                 * Reserve two more bytes for CRLF; the callback receives a
+                 * byte span and does not require a terminating NUL. */
+                char hbuf[sizeof(line) + 1];
+                memcpy(hbuf, line, len);
+                hbuf[len] = '\r';
+                hbuf[len + 1] = '\n';
+                size_t header_length = len + 2;
+                if (h->header_cb(hbuf, 1, header_length, h->header_data) != header_length)
+                {
+                    fclose(rf);
+                    return CURLE_WRITE_ERROR;
+                }
             }
             /* Extract content-type */
             if (strncasecmp(line, "content-type:", 13) == 0)

@@ -16,6 +16,19 @@ test('Emception CI is Linux-only, lockfile-driven, receipt-aware, and Changesets
   assert.match(workflow, /\.cache\/toolchain\/downloads/);
   assert.match(workflow, /artifacts\/toolchain\/receipts/);
   assert.match(workflow, /pnpm --dir tools\/emception toolchain build all/);
+  assert.match(workflow, /pnpm --dir tools\/emception run test:curl-lite/);
+  assert.equal(
+    workflow.indexOf('- name: Build and validate Toolchain receipts')
+      < workflow.indexOf('- name: Verify native and WASM curl adapter security regressions'),
+    true,
+    'curl regressions require the pinned SDK from the receipt build',
+  );
+  assert.equal(
+    workflow.indexOf('- name: Verify native and WASM curl adapter security regressions')
+      < workflow.indexOf('- name: Build all Emception packages'),
+    true,
+    'curl sanitizer regressions must pass before packaging',
+  );
   assert.match(workflow, /pnpm --dir tools\/emception toolchain release/);
   assert.match(workflow, /pnpm --dir tools\/emception run verify:release/);
   assert.match(workflow, /changesets\/action@[a-f0-9]{40}\s+# v2\b/);
