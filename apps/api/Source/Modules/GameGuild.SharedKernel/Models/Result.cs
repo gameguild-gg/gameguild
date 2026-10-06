@@ -67,7 +67,10 @@ public class Result
     ///     If successful, runs the predicate. If the predicate fails, returns a failure with <paramref name="error" />.
     /// </summary>
     public Result Ensure(Func<bool> predicate, Error error)
-        => IsFailure ? this : predicate() ? this : Failure(error);
+    {
+        if (IsFailure) return this;
+        return predicate() ? this : Failure(error);
+    }
 
     /// <summary>
     ///     Executes <paramref name="action" /> on success, returns this result unchanged.
@@ -136,7 +139,10 @@ public class Result<TValue> : Result
     ///     If successful, runs the predicate. If the predicate fails, returns a failure.
     /// </summary>
     public Result<TValue> Ensure(Func<TValue, bool> predicate, Error error)
-        => IsFailure ? this : predicate(_value!) ? this : Failure<TValue>(error);
+    {
+        if (IsFailure) return this;
+        return predicate(_value!) ? this : Failure<TValue>(error);
+    }
 
     /// <summary>
     ///     Executes <paramref name="action" /> on success and returns this result unchanged.
