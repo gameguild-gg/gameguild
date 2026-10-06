@@ -51,8 +51,15 @@ public class RubricsController : BaseApiController
     public async Task<ActionResult<RubricDto>> PutRubric(Guid assessmentId, [FromBody] SaveRubricRequest request)
     {
         var assessment = await _assessmentService.GetAssessmentByIdAsync(assessmentId).ConfigureAwait(false);
-        if (assessment == null) return NotFound();
-        if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
+        if (assessment == null)
+        {
+            return NotFound();
+        }
+
+        if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false))
+        {
+            return Forbid();
+        }
 
         var result = await _sender.Send(new PutAssessmentRubricEndpointCommand(assessmentId, request)).ConfigureAwait(false);
         if (!result.IsSuccess)
@@ -71,8 +78,15 @@ public class RubricsController : BaseApiController
     public async Task<ActionResult<RubricDto>> GetRubric(Guid assessmentId)
     {
         var assessment = await _assessmentService.GetAssessmentByIdAsync(assessmentId).ConfigureAwait(false);
-        if (assessment == null) return NotFound();
-        if (!await CanReadRubricAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
+        if (assessment == null)
+        {
+            return NotFound();
+        }
+
+        if (!await CanReadRubricAsync(assessment.CourseId).ConfigureAwait(false))
+        {
+            return Forbid();
+        }
 
         var result = await _rubricService.GetAsync(assessmentId).ConfigureAwait(false);
         if (!result.IsSuccess)
@@ -90,8 +104,15 @@ public class RubricsController : BaseApiController
     public async Task<ActionResult> DeleteRubric(Guid assessmentId)
     {
         var assessment = await _assessmentService.GetAssessmentByIdAsync(assessmentId).ConfigureAwait(false);
-        if (assessment == null) return NotFound();
-        if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
+        if (assessment == null)
+        {
+            return NotFound();
+        }
+
+        if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false))
+        {
+            return Forbid();
+        }
 
         var result = await _sender.Send(new DeleteAssessmentRubricEndpointCommand(assessmentId)).ConfigureAwait(false);
         if (!result.IsSuccess)
@@ -124,14 +145,36 @@ public class RubricsController : BaseApiController
     private async Task<bool> CanManageCourseAsync(Guid courseId)
     {
         var actor = _actorContextAccessor.ActorContext;
-        if (actor.IsSystemAdmin) return true;
-        if (!actor.SubjectIdAsGuid.HasValue) return false;
+        if (actor.IsSystemAdmin)
+        {
+            return true;
+        }
+
+        if (!actor.SubjectIdAsGuid.HasValue)
+        {
+            return false;
+        }
 
         var program = await _programService.GetProgramByIdAsync(courseId).ConfigureAwait(false);
-        if (program == null) return false;
-        if (!actor.TenantId.HasValue) return false;
-        if (program.TenantId.HasValue && program.TenantId != actor.TenantId) return false;
-        if (program.CreatorId == actor.SubjectIdAsGuid.Value) return true;
+        if (program == null)
+        {
+            return false;
+        }
+
+        if (!actor.TenantId.HasValue)
+        {
+            return false;
+        }
+
+        if (program.TenantId.HasValue && program.TenantId != actor.TenantId)
+        {
+            return false;
+        }
+
+        if (program.CreatorId == actor.SubjectIdAsGuid.Value)
+        {
+            return true;
+        }
 
         foreach (var permission in new[] { PermissionType.Edit, PermissionType.Create, PermissionType.Delete })
         {
@@ -152,8 +195,15 @@ public class RubricsController : BaseApiController
     {
         var actor = _actorContextAccessor.ActorContext;
         var program = await _programService.GetProgramByIdAsync(courseId).ConfigureAwait(false);
-        if (program == null) return false;
-        if (actor.IsSystemAdmin) return true;
+        if (program == null)
+        {
+            return false;
+        }
+
+        if (actor.IsSystemAdmin)
+        {
+            return true;
+        }
 
         return actor.TenantId.HasValue &&
                (!program.TenantId.HasValue || program.TenantId == actor.TenantId);
@@ -162,8 +212,15 @@ public class RubricsController : BaseApiController
     private async Task<bool> CanReviewCourseAsync(Guid courseId)
     {
         var actor = _actorContextAccessor.ActorContext;
-        if (!actor.SubjectIdAsGuid.HasValue) return false;
-        if (!await IsActorInProgramTenantAsync(courseId).ConfigureAwait(false)) return false;
+        if (!actor.SubjectIdAsGuid.HasValue)
+        {
+            return false;
+        }
+
+        if (!await IsActorInProgramTenantAsync(courseId).ConfigureAwait(false))
+        {
+            return false;
+        }
 
         var permissionName = $"{nameof(Program)}.{courseId}.{PermissionType.Review}";
         return await _permissionQueryService.HasTenantPermissionAsync(
