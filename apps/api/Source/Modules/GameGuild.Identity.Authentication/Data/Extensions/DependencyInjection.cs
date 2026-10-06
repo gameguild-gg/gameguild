@@ -80,6 +80,12 @@ public static class DataDependencyInjection
             provider.GetRequiredService<IRefreshTokenRepository>() as IRefreshTokenLineageRepository
             ?? throw new InvalidOperationException("The refresh-token store must support persisted session and parent lineage."));
         services.AddScoped<IUserSessionRepository, UserSessionRepository>();
+        services.AddScoped<IRefreshTokenCleanupRepository>(provider =>
+            provider.GetRequiredService<IRefreshTokenRepository>() as IRefreshTokenCleanupRepository
+            ?? throw new InvalidOperationException("The refresh-token store must support bounded retention cleanup."));
+        services.AddScoped<IUserSessionCleanupRepository>(provider =>
+            provider.GetRequiredService<IUserSessionRepository>() as IUserSessionCleanupRepository
+            ?? throw new InvalidOperationException("The session store must support bounded retention cleanup."));
         services.AddScoped<IUserMfaConfigurationRepository, UserMfaConfigurationRepository>();
         services.AddScoped<IAuthenticationAttemptRepository, AuthenticationAttemptRepository>();
         services.AddScoped<ITrustedDeviceRepository, TrustedDeviceRepository>();
@@ -100,6 +106,7 @@ public static class DataDependencyInjection
         services.AddScoped<IAuthService, AuthService>();
 
         services.AddScoped<IJwtTokenService, JwtTokenService>();
+        services.AddScoped<IAuthenticatedSessionIssuer, AuthenticatedSessionIssuer>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IOAuthService, OAuthService>();
         // Google ID token verifier — cryptographic signature + iss/aud/exp via Google.Apis.Auth.

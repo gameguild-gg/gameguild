@@ -10,7 +10,7 @@ using SendGridEmailAddress = SendGrid.Helpers.Mail.EmailAddress;
 
 namespace GameGuild.API.Email;
 
-public sealed class EmailSender : IEmailSender
+public sealed class EmailSender : IConfirmedEmailSender
 {
     private readonly Func<string, ISendGridClient> sendGridClientFactory;
     private readonly IOptions<EmailDeliveryOptions> options;
@@ -41,7 +41,10 @@ public sealed class EmailSender : IEmailSender
         this.sesEmailSender = sesEmailSender;
     }
 
-    public async Task<string?> SendAsync(EmailMessage message, CancellationToken cancellationToken = default)
+    public async Task<string?> SendAsync(EmailMessage message, CancellationToken cancellationToken = default) =>
+        (await SendWithReceiptAsync(message, cancellationToken).ConfigureAwait(false)).ProviderMessageId;
+
+    public async Task<EmailDeliveryReceipt> SendWithReceiptAsync(EmailMessage message, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(message);
 
@@ -49,7 +52,7 @@ public sealed class EmailSender : IEmailSender
         if (!currentOptions.Enabled)
         {
             logger.LogInformation("Email delivery is disabled. Skipping email to {RecipientEmail}.", message.ToEmail);
-            return null;
+            return new EmailDeliveryReceipt(false, null);
         }
 
         if (string.IsNullOrWhiteSpace(currentOptions.FromEmail))
@@ -61,16 +64,18 @@ public sealed class EmailSender : IEmailSender
         if (provider.Equals("Ses", StringComparison.OrdinalIgnoreCase))
         {
             return await (sesEmailSender ?? throw new InvalidOperationException("The SES email sender is not registered."))
-                .SendAsync(message, cancellationToken).ConfigureAwait(false);
+                .SendWithReceiptAsync(message, cancellationToken).ConfigureAwait(false);
         }
         if (provider.Equals("Smtp", StringComparison.OrdinalIgnoreCase))
         {
-            return await SendWithSmtpAsync(message, currentOptions, cancellationToken).ConfigureAwait(false);
+            var messageId = await SendWithSmtpAsync(message, currentOptions, cancellationToken).ConfigureAwait(false);
+            return new EmailDeliveryReceipt(true, messageId);
         }
 
         if (provider.Equals("SendGrid", StringComparison.OrdinalIgnoreCase))
         {
-            return await SendWithSendGridAsync(message, currentOptions, cancellationToken).ConfigureAwait(false);
+            var messageId = await SendWithSendGridAsync(message, currentOptions, cancellationToken).ConfigureAwait(false);
+            return new EmailDeliveryReceipt(true, messageId);
         }
 
         throw new InvalidOperationException(
