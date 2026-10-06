@@ -74,6 +74,9 @@
     "llvm": {
       "derivedFrom": "emsdk",
       "source": {
+        "alternateSha256": [
+          "0791c69319e1861e86ccb438d10b1b1816987f2d99b13d7e95ef08f88f0cedf8"
+        ],
         "commit": "7b58716d96c3ae4c0c4e6f72e29b16137bb6224b",
         "kind": "git-archive",
         "repository": "llvm/llvm-project",

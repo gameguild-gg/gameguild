@@ -492,6 +492,77 @@ test('workspace source hashes ignore checkout line-ending representation', async
   assert.equal(hashDirectory(lf), hashDirectory(crlf));
 });
 
+test('Git archive checksum variants require distinct valid locked hashes', async () => {
+  const { calculateConfigHash, validateToolchainState } = await import('../toolchain/lock.ts');
+  const config = { schemaVersion: 1, runtimeAbi: 'test', constraints: { cmake: '<4' }, emsdkGroup: [] };
+  const lock = {
+    schemaVersion: 1,
+    configHash: calculateConfigHash(config),
+    tools: {
+      cmake: {
+        version: '3.31.12',
+        source: { kind: 'archive', url: 'https://example.invalid/cmake.tar.gz', sha256: 'c'.repeat(64) },
+      },
+      llvm: {
+        version: 'test',
+        source: {
+          kind: 'git-archive', repository: 'example/llvm', commit: 'a'.repeat(40),
+          url: 'https://example.invalid/llvm.tar.gz', sha256: 'a'.repeat(64),
+          alternateSha256: ['b'.repeat(64)],
+        },
+      },
+    },
+  };
+  assert.doesNotThrow(() => validateToolchainState(config, lock));
+  for (const invalid of [[], ['a'.repeat(64)], ['b'.repeat(64), 'b'.repeat(64)], ['not-a-hash'], 'b'.repeat(64)]) {
+    lock.tools.llvm.source.alternateSha256 = invalid;
+    assert.throws(() => validateToolchainState(config, lock), /alternateSha256/);
+  }
+});
+
+for (const acceptVariant of [true, false]) {
+  test(`Git archive variants ${acceptVariant ? 'record their actual hash' : 'reject unlisted bytes before extraction'}`, async (context) => {
+    const { createHash } = await import('node:crypto');
+    const { create } = await import('tar');
+    const { ensureLockedSource } = await import('../toolchain/sources.ts');
+    const root = await temporaryRoot(context);
+    const fixture = path.join(root, 'fixture');
+    await mkdir(path.join(fixture, 'package'), { recursive: true });
+    await writeFile(path.join(fixture, 'package', 'CMakeLists.txt'), 'project(locked_fixture)\n');
+    const primary = 'a'.repeat(64);
+    const archive = path.join(root, '.cache', 'toolchain', 'downloads', `llvm-${primary}.archive`);
+    await mkdir(path.dirname(archive), { recursive: true });
+    create({ file: archive, cwd: fixture, sync: true, gzip: true }, ['package']);
+    const actual = createHash('sha256').update(await readFile(archive)).digest('hex');
+    assert.notEqual(actual, primary);
+    const lock = {
+      schemaVersion: 1, configHash: 'a'.repeat(64),
+      tools: {
+        llvm: {
+          version: 'test',
+          source: {
+            kind: 'git-archive', repository: 'example/llvm', commit: 'a'.repeat(40),
+            url: 'https://example.invalid/llvm.tar.gz', sha256: primary,
+            alternateSha256: [acceptVariant ? actual : 'b'.repeat(64)],
+          },
+        },
+      },
+    };
+    const destination = path.join(root, '.cache', 'toolchain', 'sources', 'llvm');
+    if (acceptVariant) {
+      assert.equal(ensureLockedSource(root, lock, 'llvm', destination, 'CMakeLists.txt'), destination);
+      assert.equal(await readFile(path.join(destination, 'CMakeLists.txt'), 'utf8'), 'project(locked_fixture)\n');
+      const receipt = JSON.parse(await readFile(path.join(destination, '.emception-source.json'), 'utf8'));
+      assert.equal(receipt.sha256, actual);
+      assert.equal(ensureLockedSource(root, lock, 'llvm', destination, 'CMakeLists.txt'), destination);
+    } else {
+      assert.throws(() => ensureLockedSource(root, lock, 'llvm', destination, 'CMakeLists.txt'), /Checksum mismatch/);
+      await assert.rejects(readdir(destination), { code: 'ENOENT' });
+      await assert.rejects(readdir(`${destination}.extract-${process.pid}`), { code: 'ENOENT' });
+    }
+  });
+}
+
 test('locked archives extract through the cross-platform Node implementation', async (context) => {
   const { gzipSync } = await import('node:zlib');
   const { createDeterministicTar } = await import('../lib/deterministic-tar.ts');
