@@ -121,9 +121,12 @@ public sealed class LtiController(
             return BadRequest("LTI platform authorization URL is misconfigured.");
         }
 
-        var separator = baseUri.Query.Length > 0 ? '&' : '?';
-        var redirectUrl = baseUri.GetLeftPart(UriPartial.Query) + separator + QueryString.Create(query).Value;
-        return Redirect(redirectUrl);
+        var authorizationUri = new UriBuilder(baseUri)
+        {
+            Query = QueryString.FromUriComponent(baseUri.Query).Add(QueryString.Create(query)).Value,
+            Fragment = string.Empty,
+        };
+        return Redirect(authorizationUri.Uri.AbsoluteUri);
     }
 
     /// <summary>

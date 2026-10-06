@@ -206,15 +206,13 @@ function parseValue(name: string, value: string | null, spec: AttrSpec): unknown
  * cannot pollute Object.prototype (schema gating is the first line of
  * defense; this is the hard backstop).
  */
-const DANGEROUS_KEYS = new Set(['__proto__', 'prototype', 'constructor']);
-
 function setPath(obj: Record<string, unknown>, dotted: string, value: unknown): void {
   const parts = dotted.split('.');
   let cur: Record<string, unknown> = obj;
   for (let i = 0; i < parts.length - 1; i++) {
     const key = parts[i]!;
-    if (DANGEROUS_KEYS.has(key)) return;
-    const next = cur[key];
+    if (key === '__proto__' || key === 'prototype' || key === 'constructor') return;
+    const next = Object.hasOwn(cur, key) ? cur[key] : undefined;
     if (next == null || typeof next !== 'object') {
       const fresh: Record<string, unknown> = {};
       cur[key] = fresh;
@@ -224,6 +222,6 @@ function setPath(obj: Record<string, unknown>, dotted: string, value: unknown): 
     }
   }
   const last = parts[parts.length - 1]!;
-  if (DANGEROUS_KEYS.has(last)) return;
+  if (last === '__proto__' || last === 'prototype' || last === 'constructor') return;
   cur[last] = value;
 }

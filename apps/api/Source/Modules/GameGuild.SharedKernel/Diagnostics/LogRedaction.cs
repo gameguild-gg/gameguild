@@ -44,8 +44,8 @@ public static partial class LogRedaction
     }
 
     /// <summary>
-    ///     Masks an email address for logging: keeps the first character of the local
-    ///     part and the domain, e.g. <c>"alice@example.com"</c> → <c>"a***@example.com"</c>.
+    ///     Redacts an email address completely for logging. Neither the local part
+    ///     nor the domain is safe to disclose; both may identify a person.
     ///     Returns <c>"none"</c> for null/empty input.
     /// </summary>
     public static string MaskEmail(string? email)
@@ -57,15 +57,12 @@ public static partial class LogRedaction
         if (atIndex <= 0)
             return "invalid";
 
-        var local = email[..atIndex];
-        var domain = email[(atIndex + 1)..];
-        var kept = local.Length == 1 ? local[0].ToString() : local[..1];
-        return $"{kept}***@{domain}";
+        return "email:redacted";
     }
 
     /// <summary>
-    ///     Redacts a secret (password, token, key) to a deterministic short hash that
-    ///     is safe to log: cannot be reversed, but identical secrets correlate.
+    ///     Redacts a secret (password, token, key) without retaining a fingerprint.
+    ///     Hashing low-entropy secrets would let a log reader test password guesses.
     ///     Returns <c>"none"</c> for null/empty input.
     /// </summary>
     public static string RedactSecret(string? secret)
@@ -73,13 +70,12 @@ public static partial class LogRedaction
         if (string.IsNullOrEmpty(secret))
             return "none";
 
-        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(secret));
-        return $"secret:{Convert.ToHexString(hash, 0, 4).ToLowerInvariant()}";
+        return "secret:redacted";
     }
 
     /// <summary>
     ///     Sanitizes an untrusted string for structured logging by replacing control
-    ///     characters (CR, LF, and other C0 controls) with visible escape markers.
+    ///     characters and Unicode line separators with visible escape markers.
     ///     Prevents log forging (CWE-117) without destroying diagnostic value.
     /// </summary>
     public static string Sanitize(string? value)
@@ -90,6 +86,6 @@ public static partial class LogRedaction
         return ControlCharactersRegex().Replace(value, "␀");
     }
 
-    [GeneratedRegex(@"[\u0000-\u001F]")]
+    [GeneratedRegex(@"[\u0000-\u001F\u007F-\u009F\u2028\u2029]")]
     private static partial Regex ControlCharactersRegex();
 }

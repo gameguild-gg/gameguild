@@ -11,6 +11,7 @@ using GameGuild.Learning.Grading.Contracts;
 using GameGuild.Learning.Lti;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Primitives;
@@ -154,10 +155,8 @@ public class LtiLaunchValidationTests
 
     private static Dictionary<string, string> ParseQuery(string url)
     {
-        var query = new Uri(url).Query.TrimStart('?');
-        return query.Split('&', StringSplitOptions.RemoveEmptyEntries)
-            .Select(pair => pair.Split('=', 2))
-            .ToDictionary(kv => Uri.UnescapeDataString(kv[0]), kv => Uri.UnescapeDataString(kv.Length > 1 ? kv[1] : ""));
+        return QueryHelpers.ParseQuery(new Uri(url).Query)
+            .ToDictionary(pair => pair.Key, pair => pair.Value.ToString());
     }
 
     private string BuildIdToken(string? sub, string? email, string nonce, string? issuerOverride = null, DateTime? expiresOverride = null)
@@ -231,6 +230,30 @@ public class LtiLaunchValidationTests
         query["state"].Should().NotBeNullOrEmpty();
         query["nonce"].Should().NotBeNullOrEmpty();
         query["state"].Should().NotBe(query["nonce"]);
+    }
+
+    [Theory]
+    [InlineData("//attacker.test/authorize")]
+    [InlineData("student&client_id=attacker&scope=changed")]
+    [InlineData("student\r\nLocation: https://attacker.test/")]
+    public async Task Login_UntrustedHintCannotChangeAuthorizationOriginOrParameters(string loginHint)
+    {
+        var http = FormPost(new Dictionary<string, string>
+        {
+            ["iss"] = Issuer,
+            ["client_id"] = ClientId,
+            ["deployment_id"] = "deployment-1",
+            ["login_hint"] = loginHint,
+        });
+
+        var redirect = (await CreateController(http).Login()).Should().BeOfType<RedirectResult>().Which;
+        var destination = new Uri(redirect.Url!);
+        destination.GetLeftPart(UriPartial.Path).Should().Be("https://canvas.test/api/lti/authorize_redirect");
+        destination.Query.Should().NotStartWith("??");
+        var query = ParseQuery(redirect.Url!);
+        query["login_hint"].Should().Be(loginHint);
+        query["scope"].Should().Be("openid");
+        query["client_id"].Should().Be(ClientId);
     }
 
     [Fact]

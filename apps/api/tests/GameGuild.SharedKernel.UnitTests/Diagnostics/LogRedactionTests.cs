@@ -5,6 +5,29 @@ namespace GameGuild.SharedKernel.UnitTests;
 
 public class LogRedactionTests
 {
+    [Theory]
+    [InlineData("alice@private-organization.example")]
+    [InlineData("alice@example.com\r\nFORGED EVENT")]
+    [InlineData("alice@example.com\u0085FORGED EVENT")]
+    [InlineData("alice@example.com\u2028FORGED EVENT")]
+    public void MaskEmail_ShouldNotExposeAnyPartOfTheAddress(string email)
+    {
+        LogRedaction.MaskEmail(email).Should().Be("email:redacted");
+    }
+
+    [Fact]
+    public void RedactSecret_ShouldNotExposeADictionaryCheckableFingerprint()
+    {
+        LogRedaction.RedactSecret("password").Should().Be("secret:redacted");
+        LogRedaction.RedactSecret("different-password").Should().Be("secret:redacted");
+    }
+
+    [Fact]
+    public void Sanitize_ShouldReplaceUnicodeLineSeparatorsAndC1Controls()
+    {
+        LogRedaction.Sanitize("a\u007Fb\u0085c\u009Fd\u2028e\u2029f").Should().Be("a␀b␀c␀d␀e␀f");
+    }
+
     [Fact]
     public void RedactId_Guid_ShouldReturnPrefixedHash()
     {
@@ -85,15 +108,15 @@ public class LogRedactionTests
     }
 
     [Fact]
-    public void MaskEmail_TypicalAddress_ShouldKeepFirstCharAndDomain()
+    public void MaskEmail_TypicalAddress_ShouldRedactLocalPartAndDomain()
     {
-        LogRedaction.MaskEmail("alice@example.com").Should().Be("a***@example.com");
+        LogRedaction.MaskEmail("alice@example.com").Should().Be("email:redacted");
     }
 
     [Fact]
-    public void MaskEmail_SingleCharLocalPart_ShouldNotLeakMoreThanOneChar()
+    public void MaskEmail_SingleCharLocalPart_ShouldNotLeakAnyCharacter()
     {
-        LogRedaction.MaskEmail("a@example.com").Should().Be("a***@example.com");
+        LogRedaction.MaskEmail("a@example.com").Should().Be("email:redacted");
     }
 
     [Fact]
@@ -110,12 +133,11 @@ public class LogRedactionTests
     }
 
     [Fact]
-    public void RedactSecret_ShouldReturnShortPrefixedHash()
+    public void RedactSecret_ShouldReturnConstantRedactionMarker()
     {
         var result = LogRedaction.RedactSecret("super-secret-token");
 
-        result.Should().StartWith("secret:");
-        result.Should().HaveLength(15); // "secret:" (7) + 8 hex chars
+        result.Should().Be("secret:redacted");
     }
 
     [Fact]
