@@ -1038,6 +1038,14 @@ public sealed class AssessmentGradingRuntimeService(
                 cancellationToken)
             .ConfigureAwait(false);
         if (enrollmentExists) return;
+        var canonicalEnrollmentExists = await ProgramEnrollmentAssessmentMembership.ActiveForCourse(context, courseId)
+            .AnyAsync(value => value.Id == enrollmentId && value.UserId == userId, cancellationToken)
+            .ConfigureAwait(false);
+        if (canonicalEnrollmentExists)
+        {
+            return;
+        }
+
         var programUserExists = await context.Set<ProgramUser>()
             .AsNoTracking()
             .AnyAsync(value => value.Id == enrollmentId && value.ProgramId == courseId && value.UserId == userId,
@@ -1060,6 +1068,16 @@ public sealed class AssessmentGradingRuntimeService(
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
         if (enrollmentId.HasValue) return enrollmentId.Value;
+        var canonicalEnrollmentId = await ProgramEnrollmentAssessmentMembership.ActiveForCourse(context, courseId)
+            .Where(value => value.UserId == userId)
+            .Select(value => (Guid?)value.Id)
+            .SingleOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+        if (canonicalEnrollmentId.HasValue)
+        {
+            return canonicalEnrollmentId.Value;
+        }
+
         var programUserId = await context.Set<ProgramUser>()
             .AsNoTracking()
             .Where(value => value.ProgramId == courseId && value.UserId == userId)
