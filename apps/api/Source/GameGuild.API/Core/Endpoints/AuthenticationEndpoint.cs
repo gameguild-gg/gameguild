@@ -59,7 +59,7 @@ public static class AuthenticationEndpoint
             // Call the Authentication module's service
             var response = await authService.LocalSignUpAsync(signUpRequest, cancellationToken).ConfigureAwait(false);
 
-            logger.LogInformation("User signed up successfully: {Email}, Response.Email: {ResponseEmail}, Response.UserId: {UserId}", request.Email, response.Email, response.UserId);
+            logger.LogInformation("User signed up successfully: {UserId}", LogRedaction.RedactId(response.UserId, "uid"));
 
             // Map to the API's response DTO
             return Results.Created(
@@ -115,7 +115,7 @@ public static class AuthenticationEndpoint
             // Generate tokens
             var tokens = GenerateTokens(user, configuration);
 
-            logger.LogInformation("User signed in successfully: {Email}", request.Email);
+            logger.LogInformation("User signed in successfully: {UserId}", LogRedaction.RedactId(user.Id, "uid"));
 
             return Results.Ok(
                 new SignInResponseDto
