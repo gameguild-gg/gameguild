@@ -11,7 +11,8 @@ const publicRoutes = [
   ['Home', '/'],
   ['Courses', '/courses'],
   ['Programs', '/programs'],
-  ['Testing Lab', '/testing-lab'],
+  ['Testing Lab', '/testing-lab', 'Test. Play. Earn.'],
+  ['Testing Lab introduction', '/testing-lab/landing', 'Game Testing Lab'],
   ['Launch Pad', '/launch-pad'],
   ['Projects', '/projects'],
   ['Community', '/community'],
@@ -147,8 +148,11 @@ async function main() {
   });
 
   try {
-    for (const [label, route] of publicRoutes) {
+    for (const [label, route, heading] of publicRoutes) {
       await assertRouteRenders(page, label, route);
+      if (heading) {
+        await page.getByRole('heading', { name: heading, exact: true, level: 1 }).waitFor();
+      }
     }
 
     for (const [label, route] of footerRoutes) {
@@ -169,7 +173,7 @@ async function main() {
     await page.getByRole('button', { name: 'Open public navigation' }).click();
     await page.getByRole('navigation', { name: 'Mobile navigation' }).getByRole('link', { name: 'Testing Lab' }).click();
     await page.waitForURL('**/testing-lab');
-    await page.getByRole('heading', { name: 'Game Testing Lab', exact: true, level: 1 }).waitFor();
+    await page.getByRole('heading', { name: 'Test. Play. Earn.', exact: true, level: 1 }).waitFor();
 
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto(routeUrl('/sign-in'), { waitUntil: 'domcontentloaded' });
