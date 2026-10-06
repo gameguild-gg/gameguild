@@ -125,8 +125,9 @@ jobs:
             tools/emception/artifacts/toolchain/tools
             tools/emception/artifacts/toolchain/sysroot
             tools/emception/artifacts/toolchain/receipts
-          key: emception-builds-linux-${{ hashFiles('tools/emception/toolchain/toolchain.lock.json', 'tools/emception/toolchain/overlays/**', 'tools/emception/scripts/toolchain/**', 'tools/emception/scripts/build-*.ts', 'tools/emception/scripts/setup-emsdk.ts', 'tools/emception/scripts/populate-sysroot.ts') }}
+          key: emception-builds-linux-v2-${{ hashFiles('package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml', '.npmrc', 'tools/emception/package.json', 'tools/emception/toolchain/**', 'tools/emception/scripts/*', 'tools/emception/scripts/toolchain/**', '.github/workflows/emception.yml') }}
           restore-keys: |
+            emception-builds-linux-v2-
             emception-builds-linux-
 
       - name: Install native Toolchain dependencies
@@ -154,13 +155,12 @@ jobs:
       - name: Build and validate Toolchain receipts
         shell: bash
         env:
-          HEAVY_REBUILD: ${{ needs.detect-emception-changes.outputs.heavy }}
           VERIFIED_BUILD_CACHE_HIT: ${{ steps.toolchain-build-cache.outputs.cache-hit }}
         run: |
-          if [[ "$HEAVY_REBUILD" == "true" && "$VERIFIED_BUILD_CACHE_HIT" != "true" ]]; then
-            pnpm --dir tools/emception toolchain build all --force
-          else
+          if [[ "$VERIFIED_BUILD_CACHE_HIT" == "true" ]]; then
             pnpm --dir tools/emception toolchain build all
+          else
+            pnpm --dir tools/emception toolchain build all --force
           fi
 
       - name: Save verified Toolchain downloads
