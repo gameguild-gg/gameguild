@@ -263,7 +263,9 @@ public sealed class ServiceAccountService : IServiceAccountService
         {
             // Simple exact match for now (CIDR support could be added)
             if (allowedIp.Equals(ipAddress, StringComparison.OrdinalIgnoreCase))
+            {
                 return true;
+            }
         }
         return false;
     }

@@ -45,7 +45,10 @@ public class KeyRotationController : BaseApiController
         {
             var activeKey = await _keyRotationService.GetActiveSigningKeyAsync(cancellationToken).ConfigureAwait(false);
             if (activeKey == null)
+            {
                 return Ok(new List<JwtKeyInfoDto>());
+            }
+
             return Ok(new List<JwtKeyInfoDto> { JwtKeyInfoDto.FromEntity(activeKey) });
         }
 

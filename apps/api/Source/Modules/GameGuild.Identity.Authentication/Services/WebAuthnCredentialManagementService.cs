@@ -31,7 +31,9 @@ public class WebAuthnCredentialManagementService(
             .GetByIdAsync(credentialId, cancellationToken).ConfigureAwait(false);
 
         if (credential == null || credential.UserId != userId)
+        {
             return null;
+        }
 
         return MapToInfo(credential);
     }
@@ -110,7 +112,9 @@ public class WebAuthnCredentialManagementService(
         var credential = await credentialRepository
             .GetByIdAsync(credentialId, cancellationToken).ConfigureAwait(false);
         if (credential == null || credential.UserId != userId)
+        {
             return false;
+        }
 
         return await credentialRepository
             .RevokeAsync(credentialId, cancellationToken).ConfigureAwait(false);
@@ -125,7 +129,9 @@ public class WebAuthnCredentialManagementService(
         var credential = await credentialRepository
             .GetByIdAsync(credentialId, cancellationToken).ConfigureAwait(false);
         if (credential == null || credential.UserId != userId)
+        {
             return false;
+        }
 
         credential.FriendlyName = friendlyName;
         await credentialRepository

@@ -43,7 +43,9 @@ public sealed class SendEmailVerificationRequestedHandler(
                 cancellationToken: cancellationToken).ConfigureAwait(false);
 
             if (result is null || result.IsFailure)
+            {
                 throw new InvalidOperationException("Authentication notification was not durably queued.");
+            }
 
             logger.LogInformation("Verification email queued for {Email}", LogRedaction.MaskEmail(notification.Email));
         }

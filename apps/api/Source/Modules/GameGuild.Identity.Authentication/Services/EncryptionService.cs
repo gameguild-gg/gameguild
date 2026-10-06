@@ -23,7 +23,9 @@ public sealed class EncryptionService(ILogger<EncryptionService> logger, IConfig
         {
             var configuredKey = configuration["Encryption:Key"];
             if (!string.IsNullOrEmpty(configuredKey))
+            {
                 return configuredKey;
+            }
 
             logger.LogWarning("Encryption:Key not configured — using insecure fallback key. Set Encryption:Key in configuration for production");
             return FallbackKey;

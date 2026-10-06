@@ -111,7 +111,10 @@ public abstract class WithPermissions : EntityBase<Guid>
     /// <returns>Collection of permission types</returns>
     public IEnumerable<PermissionType> GetPermissionsAsEnum()
     {
-        if (string.IsNullOrWhiteSpace(Permissions)) return [];
+        if (string.IsNullOrWhiteSpace(Permissions))
+        {
+            return [];
+        }
 
         return Permissions.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(p => int.TryParse(p.Trim(), out var val) ? (PermissionType) val : (PermissionType?) null).Where(p => p.HasValue).Select(p => p!.Value);
     }

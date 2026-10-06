@@ -119,7 +119,10 @@ public sealed class JwtTokenService(
         CancellationToken cancellationToken,
         IEnumerable<Claim>? additionalClaims)
     {
-        if (roles == null) throw new ArgumentNullException(nameof(roles));
+        if (roles == null)
+        {
+            throw new ArgumentNullException(nameof(roles));
+        }
 
         logger.LogInformation("Generating access token for user: {UserId}", userId);
 
@@ -202,7 +205,10 @@ public sealed class JwtTokenService(
         DateTimeOffset authenticatedAt,
         CancellationToken cancellationToken = default)
     {
-        if (deviceInfo == null) throw new ArgumentNullException(nameof(deviceInfo));
+        if (deviceInfo == null)
+        {
+            throw new ArgumentNullException(nameof(deviceInfo));
+        }
 
         logger.LogInformation("Generating refresh token for user: {UserId}, Device: {DeviceId}", userId, LogRedaction.Sanitize(deviceInfo.DeviceId));
 
