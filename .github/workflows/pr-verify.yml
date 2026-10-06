@@ -2,7 +2,7 @@ name: PR Verify
 
 on:
   pull_request:
-    branches: [main, develop, 'feature/**']
+    branches: [main, develop, "feature/**"]
     types: [opened, synchronize, reopened, ready_for_review]
 
 permissions:
@@ -112,16 +112,17 @@ jobs:
           -c Release --nologo -p:TreatWarningsAsErrors=true
       - name: Run affected API tests
         shell: bash
-        run: |
-          mapfile -t projects < <(node scripts/ci/select-affected-dotnet-tests.mjs \
-            --base "${{ github.event.pull_request.base.sha }}" \
-            --head "${{ github.event.pull_request.head.sha }}")
-          if ((${#projects[@]} == 0)); then
-            projects=(apps/api/tests/GameGuild.API.UnitTests/GameGuild.API.UnitTests.csproj)
-          fi
-          for project in "${projects[@]}"; do
-            dotnet test "$project" -c Release --nologo --blame-hang-timeout 5m
-          done
+        run: >-
+          bash scripts/ci/run-affected-dotnet-tests.sh
+          --base "${{ github.event.pull_request.base.sha }}"
+          --head "${{ github.event.pull_request.head.sha }}"
+      - name: Upload affected API test evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: affected-api-${{ github.event.pull_request.head.sha }}
+          path: artifacts/test-results/affected-api
+          if-no-files-found: warn
       - name: Build full-application OpenAPI HTTP tests
         run: >-
           dotnet build apps/api/tests/GameGuild.API.IntegrationTests/GameGuild.API.IntegrationTests.csproj
