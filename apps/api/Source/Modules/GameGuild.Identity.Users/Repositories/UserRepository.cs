@@ -290,8 +290,9 @@ public class UserRepository(IApplicationDbContext context) : IUserRepository
             return null;
         }
 
+        var normalizedUsername = username.ToLowerInvariant();
         return await context.Set<User>()
-            .FirstOrDefaultAsync(u => u.Username != null && u.Username.ToLower() == username.ToLower() && u.DeletedAt == null, cancellationToken)
+            .FirstOrDefaultAsync(u => u.Username != null && u.Username.ToLower() == normalizedUsername && u.DeletedAt == null, cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -319,8 +320,9 @@ public class UserRepository(IApplicationDbContext context) : IUserRepository
             return false;
         }
 
+        var normalizedUsername = username.ToLowerInvariant();
         return await context.Set<User>()
-            .AnyAsync(u => u.Username != null && u.Username.ToLower() == username.ToLower() && u.DeletedAt == null, cancellationToken)
+            .AnyAsync(u => u.Username != null && u.Username.ToLower() == normalizedUsername && u.DeletedAt == null, cancellationToken)
             .ConfigureAwait(false);
     }
 
