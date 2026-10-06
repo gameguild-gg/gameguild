@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync, realpathSync } from "node:fs";
 import { createRequire } from "node:module";
+import { randomBytes } from "node:crypto";
 import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { test } from "node:test";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -12,7 +13,7 @@ const require = createRequire(import.meta.url);
 function installedConsumers(name) {
   const roots = new Set();
   for (const entry of readdirSync(virtualStore, { withFileTypes: true })) {
-    if (!entry.isDirectory() || entry.name.startsWith(`${name}@`)) continue;
+    if (!entry.isDirectory() || entry.name.startsWith(`${name.replaceAll("/", "+")}@`)) continue;
     const candidate = join(virtualStore, entry.name, "node_modules", name);
     if (existsSync(candidate)) roots.add(realpathSync(candidate));
   }
@@ -63,5 +64,34 @@ for (const packageRoot of installedConsumers("sharp")) {
     assert.equal(info.height, 8);
     assert.equal(info.format, "png");
     assert.ok(data.length > 0);
+  });
+}
+
+for (const packageRoot of installedConsumers("@modelcontextprotocol/sdk")) {
+  test(`${packageRoot}: saved OAuth credentials cannot be sent to a different issuer`, async () => {
+    const { fetchToken } = await import(pathToFileURL(join(packageRoot, "dist/esm/client/auth.js")).href);
+    let requests = 0;
+    const provider = {
+      clientMetadata: {},
+      clientInformation: () => ({
+        client_id: "disposable-test-client",
+        client_secret: randomBytes(32).toString("hex"),
+        issuer: "https://trusted-auth.example.invalid",
+      }),
+      prepareTokenRequest: () => new URLSearchParams({ grant_type: "client_credentials" }),
+    };
+    await assert.rejects(() => fetchToken(provider, "https://other-auth.example.invalid", {
+      metadata: {
+        issuer: "https://other-auth.example.invalid",
+        token_endpoint: "https://other-auth.example.invalid/token",
+        token_endpoint_auth_methods_supported: ["client_secret_post"],
+      },
+      fetchFn: async () => {
+        requests++;
+        throw new Error("Unexpected outbound token request");
+      },
+    }), /issuer/i);
+    assert.equal(requests, 0, "Issuer mismatch must fail before any credential-bearing request");
+    assert.equal(require(join(packageRoot, "package.json")).version, "1.31.0");
   });
 }
