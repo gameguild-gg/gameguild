@@ -11,7 +11,7 @@ namespace GameGuild.Identity.Authentication.UnitTests.Handlers;
 
 public class AuthenticationNotificationLoggingSecurityTests
 {
-    private const string Email = "private-person@example.test";
+    private const string SensitiveEmail = "private-person@example.test";
     private const string Token = "private-reset-or-login-token";
 
     [Theory]
@@ -28,12 +28,12 @@ public class AuthenticationNotificationLoggingSecurityTests
     [InlineData("welcome", "failure")]
     public async Task QueueHandler_LogsNoPersonalDataOrToken_InAnyOutcome(string kind, string outcome)
     {
-        var user = new User { Id = Guid.NewGuid(), Email = Email };
+        var user = new User { Id = Guid.NewGuid(), Email = SensitiveEmail };
         var repository = new Mock<IUserRepository>();
-        repository.Setup(r => r.GetByEmailAsync(Email, It.IsAny<CancellationToken>()))
+        repository.Setup(r => r.GetByEmailAsync(SensitiveEmail, It.IsAny<CancellationToken>()))
             .ReturnsAsync(outcome == "missing-user" ? null : user);
         var service = NotificationQueueStub.Success();
-        var queueFailure = new InvalidOperationException($"Queue rejected {Email}, token {Token}");
+        var queueFailure = new InvalidOperationException($"Queue rejected {SensitiveEmail}, token {Token}");
         if (outcome == "failure")
         {
             service.Setup(s => s.SendAsync(It.IsAny<Guid>(), It.IsAny<NotificationType>(), It.IsAny<string>(), It.IsAny<string>(),
@@ -46,19 +46,19 @@ public class AuthenticationNotificationLoggingSecurityTests
         {
             "verification" => await CaptureAsync<SendEmailVerificationRequestedHandler>(
                 logger => new SendEmailVerificationRequestedHandler(logger, service.Object, repository.Object)
-                    .Handle(new EmailVerificationRequestedNotification { Email = Email, Token = Token }, CancellationToken.None),
+                    .Handle(new EmailVerificationRequestedNotification { Email = SensitiveEmail, Token = Token }, CancellationToken.None),
                 outcome, queueFailure),
             "reset" => await CaptureAsync<SendPasswordResetRequestedHandler>(
                 logger => new SendPasswordResetRequestedHandler(logger, service.Object, repository.Object)
-                    .Handle(new PasswordResetRequestedNotification { Email = Email, Token = Token }, CancellationToken.None),
+                    .Handle(new PasswordResetRequestedNotification { Email = SensitiveEmail, Token = Token }, CancellationToken.None),
                 outcome, queueFailure),
             "magic" => await CaptureAsync<SendMagicLinkRequestedHandler>(
                 logger => new SendMagicLinkRequestedHandler(logger, service.Object, repository.Object)
-                    .Handle(new MagicLinkRequestedNotification { Email = Email, Token = Token }, CancellationToken.None),
+                    .Handle(new MagicLinkRequestedNotification { Email = SensitiveEmail, Token = Token }, CancellationToken.None),
                 outcome, queueFailure),
             "welcome" => await CaptureAsync<SendWelcomeEmailHandler>(
                 logger => new SendWelcomeEmailHandler(logger, service.Object, repository.Object)
-                    .Handle(new UserSignedUpNotification { UserId = user.Id, Email = Email, Username = "private-name" }, CancellationToken.None),
+                    .Handle(new UserSignedUpNotification { UserId = user.Id, Email = SensitiveEmail, Username = "private-name" }, CancellationToken.None),
                 outcome, queueFailure),
             _ => throw new ArgumentOutOfRangeException(nameof(kind))
         };
@@ -84,7 +84,7 @@ public class AuthenticationNotificationLoggingSecurityTests
         var userId = Guid.NewGuid();
         const string ipAddress = "198.51.100.17";
         var handler = new UserSignedInEventHandler(logger);
-        await handler.Handle(new TestUserSignedInEvent(userId, Email, "Password\r\nforged\u2028entry", ipAddress,
+        await handler.Handle(new TestUserSignedInEvent(userId, SensitiveEmail, "Password\r\nforged\u2028entry", ipAddress,
             "browser", DateTime.UtcNow), CancellationToken.None);
 
         var entry = logger.Entries.Should().ContainSingle().Subject;
@@ -114,9 +114,9 @@ public class AuthenticationNotificationLoggingSecurityTests
 
     private static void AssertNoSensitiveData(LogOutput entry)
     {
-        entry.Message.Should().NotContain(Email).And.NotContain(Token);
+        entry.Message.Should().NotContain(SensitiveEmail).And.NotContain(Token);
         entry.Exception.Should().BeNull("exception messages may include personal data or bearer tokens");
-        string.Join("|", entry.Properties.Select(p => p.Value)).Should().NotContain(Email).And.NotContain(Token);
+        string.Join("|", entry.Properties.Select(p => p.Value)).Should().NotContain(SensitiveEmail).And.NotContain(Token);
     }
 
     private sealed record LogOutput(string Message, Exception? Exception, IReadOnlyList<KeyValuePair<string, object?>> Properties);
