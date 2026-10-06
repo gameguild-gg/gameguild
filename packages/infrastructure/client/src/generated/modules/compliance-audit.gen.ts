@@ -286,9 +286,9 @@ export class ComplianceAuditModule {
    * Searches audit events by multiple action types, groups, and taxonomy categories.
    */
   async getAdminAuditLogsSearchByActionType(query?: {
-    ActionTypes?: string[];
-    ActionGroups?: string[];
-    Categories?: string[];
+    ActionTypes?: Array<string>;
+    ActionGroups?: Array<string>;
+    Categories?: Array<string>;
     LogicalOperator?: Types.ComplianceAuditAuditActionTypeLogicalOperator;
     UserId?: string;
     TenantId?: string;
@@ -325,9 +325,9 @@ export class ComplianceAuditModule {
    */
   async getAdminAuditLogsSearchByActionTypeExport(query?: {
     format?: string;
-    ActionTypes?: string[];
-    ActionGroups?: string[];
-    Categories?: string[];
+    ActionTypes?: Array<string>;
+    ActionGroups?: Array<string>;
+    Categories?: Array<string>;
     LogicalOperator?: Types.ComplianceAuditAuditActionTypeLogicalOperator;
     UserId?: string;
     TenantId?: string;

@@ -26,7 +26,7 @@ export interface GetApiAnalyticsDashboardsInput {
     tenantId?: string;
   };
 }
-export type GetApiAnalyticsDashboardsOutput = Types.AnalyticsDashboardDto[];
+export type GetApiAnalyticsDashboardsOutput = Array<Types.AnalyticsDashboardDto>;
 export const getApiAnalyticsDashboardsEndpoint = {
   operationId: 'getApiAnalyticsDashboards' as const,
   method: 'GET' as const,
@@ -171,7 +171,7 @@ export interface GetApiAnalyticsWarehouseFactsInput {
     take?: number;
   };
 }
-export type GetApiAnalyticsWarehouseFactsOutput = Types.AnalyticsAnalyticsWarehouseFactDto[];
+export type GetApiAnalyticsWarehouseFactsOutput = Array<Types.AnalyticsAnalyticsWarehouseFactDto>;
 export const getApiAnalyticsWarehouseFactsEndpoint = {
   operationId: 'getApiAnalyticsWarehouseFacts' as const,
   method: 'GET' as const,
@@ -243,7 +243,7 @@ export interface GetApiAuditCompliancePackagingForGetApiAuditCompliancePackaging
     take?: number;
   };
 }
-export type GetApiAuditCompliancePackagingForGetApiAuditCompliancePackagingOutput = Types.ComplianceAuditCompliancePackageSummary[];
+export type GetApiAuditCompliancePackagingForGetApiAuditCompliancePackagingOutput = Array<Types.ComplianceAuditCompliancePackageSummary>;
 export const getApiAuditCompliancePackagingForGetApiAuditCompliancePackagingEndpoint = {
   operationId: 'getApiAuditCompliancePackagingForGetApiAuditCompliancePackaging' as const,
   method: 'GET' as const,
@@ -306,7 +306,7 @@ export interface GetApiAuditCompliancePackagingDocumentsForGetApiAuditCompliance
     take?: number;
   };
 }
-export type GetApiAuditCompliancePackagingDocumentsForGetApiAuditCompliancePackagingDocumentsOutput = Types.ComplianceAuditComplianceDocumentOutput[];
+export type GetApiAuditCompliancePackagingDocumentsForGetApiAuditCompliancePackagingDocumentsOutput = Array<Types.ComplianceAuditComplianceDocumentOutput>;
 export const getApiAuditCompliancePackagingDocumentsForGetApiAuditCompliancePackagingDocumentsEndpoint = {
   operationId: 'getApiAuditCompliancePackagingDocumentsForGetApiAuditCompliancePackagingDocuments' as const,
   method: 'GET' as const,
@@ -353,7 +353,7 @@ export const postApiAuditCompliancePackagingDocumentsReviewEndpoint = {
 } as const;
 
 export type GetApiAuditCompliancePackagingTemplatesInput = void;
-export type GetApiAuditCompliancePackagingTemplatesOutput = Types.ComplianceAuditComplianceFrameworkTemplate[];
+export type GetApiAuditCompliancePackagingTemplatesOutput = Array<Types.ComplianceAuditComplianceFrameworkTemplate>;
 export const getApiAuditCompliancePackagingTemplatesEndpoint = {
   operationId: 'getApiAuditCompliancePackagingTemplates' as const,
   method: 'GET' as const,
@@ -398,7 +398,7 @@ export interface GetApiAuditRetentionSimulationForGetApiAuditRetentionSimulation
     take?: number;
   };
 }
-export type GetApiAuditRetentionSimulationForGetApiAuditRetentionSimulationOutput = Types.ComplianceAuditAuditRetentionSimulationSummary[];
+export type GetApiAuditRetentionSimulationForGetApiAuditRetentionSimulationOutput = Array<Types.ComplianceAuditAuditRetentionSimulationSummary>;
 export const getApiAuditRetentionSimulationForGetApiAuditRetentionSimulationEndpoint = {
   operationId: 'getApiAuditRetentionSimulationForGetApiAuditRetentionSimulation' as const,
   method: 'GET' as const,
@@ -490,7 +490,7 @@ export const postApiCertificatesRevokeEndpoint = {
 export interface GetApiCertificatesCourseInput {
   courseId: string;
 }
-export type GetApiCertificatesCourseOutput = Types.LearningCertificatesCertificateDto[];
+export type GetApiCertificatesCourseOutput = Array<Types.LearningCertificatesCertificateDto>;
 export const getApiCertificatesCourseEndpoint = {
   operationId: 'getApiCertificatesCourse' as const,
   method: 'GET' as const,
@@ -507,7 +507,7 @@ export interface GetApiCertificatesExpiringInput {
     days?: number;
   };
 }
-export type GetApiCertificatesExpiringOutput = Types.LearningCertificatesCertificateDto[];
+export type GetApiCertificatesExpiringOutput = Array<Types.LearningCertificatesCertificateDto>;
 export const getApiCertificatesExpiringEndpoint = {
   operationId: 'getApiCertificatesExpiring' as const,
   method: 'GET' as const,
@@ -535,7 +535,7 @@ export const postApiCertificatesIssueEndpoint = {
  * Get certificates for the current user
  */
 export type GetApiCertificatesMyInput = void;
-export type GetApiCertificatesMyOutput = Types.LearningCertificatesCertificateDto[];
+export type GetApiCertificatesMyOutput = Array<Types.LearningCertificatesCertificateDto>;
 export const getApiCertificatesMyEndpoint = {
   operationId: 'getApiCertificatesMy' as const,
   method: 'GET' as const,
@@ -611,7 +611,7 @@ export const deleteApiCertificatesTemplatesEndpoint = {
 export interface GetApiCertificatesTemplatesCourseInput {
   courseId: string;
 }
-export type GetApiCertificatesTemplatesCourseOutput = Types.LearningCertificatesCertificateTemplateDto[];
+export type GetApiCertificatesTemplatesCourseOutput = Array<Types.LearningCertificatesCertificateTemplateDto>;
 export const getApiCertificatesTemplatesCourseEndpoint = {
   operationId: 'getApiCertificatesTemplatesCourse' as const,
   method: 'GET' as const,
@@ -762,7 +762,7 @@ export const postApiCohortsOpenEndpoint = {
 export interface GetApiCohortsCourseInput {
   courseId: string;
 }
-export type GetApiCohortsCourseOutput = Types.LearningCohortsCohortDto[];
+export type GetApiCohortsCourseOutput = Array<Types.LearningCohortsCohortDto>;
 export const getApiCohortsCourseEndpoint = {
   operationId: 'getApiCohortsCourse' as const,
   method: 'GET' as const,
@@ -777,7 +777,7 @@ export const getApiCohortsCourseEndpoint = {
 export interface GetApiCohortsCourseActiveInput {
   courseId: string;
 }
-export type GetApiCohortsCourseActiveOutput = Types.LearningCohortsCohortDto[];
+export type GetApiCohortsCourseActiveOutput = Array<Types.LearningCohortsCohortDto>;
 export const getApiCohortsCourseActiveEndpoint = {
   operationId: 'getApiCohortsCourseActive' as const,
   method: 'GET' as const,
@@ -792,7 +792,7 @@ export const getApiCohortsCourseActiveEndpoint = {
 export interface GetApiCohortsCourseEnrollableInput {
   courseId: string;
 }
-export type GetApiCohortsCourseEnrollableOutput = Types.LearningCohortsCohortDto[];
+export type GetApiCohortsCourseEnrollableOutput = Array<Types.LearningCohortsCohortDto>;
 export const getApiCohortsCourseEnrollableEndpoint = {
   operationId: 'getApiCohortsCourseEnrollable' as const,
   method: 'GET' as const,
@@ -827,7 +827,7 @@ export const postApiComplianceConsentDataSubjectRequestsProcessEndpoint = {
 } as const;
 
 export type GetApiComplianceConsentDataSubjectRequestsPendingInput = void;
-export type GetApiComplianceConsentDataSubjectRequestsPendingOutput = Types.ComplianceConsentDataSubjectRequestDto[];
+export type GetApiComplianceConsentDataSubjectRequestsPendingOutput = Array<Types.ComplianceConsentDataSubjectRequestDto>;
 export const getApiComplianceConsentDataSubjectRequestsPendingEndpoint = {
   operationId: 'getApiComplianceConsentDataSubjectRequestsPending' as const,
   method: 'GET' as const,
@@ -853,7 +853,7 @@ export interface GetApiComplianceConsentPoliciesInput {
     tenantId?: string;
   };
 }
-export type GetApiComplianceConsentPoliciesOutput = Types.ComplianceConsentConsentPolicyDto[];
+export type GetApiComplianceConsentPoliciesOutput = Array<Types.ComplianceConsentConsentPolicyDto>;
 export const getApiComplianceConsentPoliciesEndpoint = {
   operationId: 'getApiComplianceConsentPolicies' as const,
   method: 'GET' as const,
@@ -902,7 +902,7 @@ export const postApiComplianceConsentRevokeEndpoint = {
 export interface GetApiComplianceConsentUsersInput {
   userId: string;
 }
-export type GetApiComplianceConsentUsersOutput = Types.ComplianceConsentUserConsentDto[];
+export type GetApiComplianceConsentUsersOutput = Array<Types.ComplianceConsentUserConsentDto>;
 export const getApiComplianceConsentUsersEndpoint = {
   operationId: 'getApiComplianceConsentUsers' as const,
   method: 'GET' as const,
@@ -999,7 +999,7 @@ export const postApiComplianceFerpaInspectionRequestsCompleteEndpoint = {
 } as const;
 
 export type GetApiComplianceFerpaInspectionRequestsPendingInput = void;
-export type GetApiComplianceFerpaInspectionRequestsPendingOutput = Types.ComplianceFERPAFerpaInspectionRequestDto[];
+export type GetApiComplianceFerpaInspectionRequestsPendingOutput = Array<Types.ComplianceFERPAFerpaInspectionRequestDto>;
 export const getApiComplianceFerpaInspectionRequestsPendingEndpoint = {
   operationId: 'getApiComplianceFerpaInspectionRequestsPending' as const,
   method: 'GET' as const,
@@ -1023,7 +1023,7 @@ export const postApiComplianceFerpaRecordsEndpoint = {
 export interface GetApiComplianceFerpaStudentsConsentsInput {
   studentUserId: string;
 }
-export type GetApiComplianceFerpaStudentsConsentsOutput = Types.ComplianceFERPAFerpaDisclosureConsentDto[];
+export type GetApiComplianceFerpaStudentsConsentsOutput = Array<Types.ComplianceFERPAFerpaDisclosureConsentDto>;
 export const getApiComplianceFerpaStudentsConsentsEndpoint = {
   operationId: 'getApiComplianceFerpaStudentsConsents' as const,
   method: 'GET' as const,
@@ -1035,7 +1035,7 @@ export const getApiComplianceFerpaStudentsConsentsEndpoint = {
 export interface GetApiComplianceFerpaStudentsDirectoryInformationInput {
   studentUserId: string;
 }
-export type GetApiComplianceFerpaStudentsDirectoryInformationOutput = Types.ComplianceFERPAFerpaEducationRecordDto[];
+export type GetApiComplianceFerpaStudentsDirectoryInformationOutput = Array<Types.ComplianceFERPAFerpaEducationRecordDto>;
 export const getApiComplianceFerpaStudentsDirectoryInformationEndpoint = {
   operationId: 'getApiComplianceFerpaStudentsDirectoryInformation' as const,
   method: 'GET' as const,
@@ -1047,7 +1047,7 @@ export const getApiComplianceFerpaStudentsDirectoryInformationEndpoint = {
 export interface GetApiComplianceFerpaStudentsDisclosuresInput {
   studentUserId: string;
 }
-export type GetApiComplianceFerpaStudentsDisclosuresOutput = Types.ComplianceFERPAFerpaDisclosureLogDto[];
+export type GetApiComplianceFerpaStudentsDisclosuresOutput = Array<Types.ComplianceFERPAFerpaDisclosureLogDto>;
 export const getApiComplianceFerpaStudentsDisclosuresEndpoint = {
   operationId: 'getApiComplianceFerpaStudentsDisclosures' as const,
   method: 'GET' as const,
@@ -1059,7 +1059,7 @@ export const getApiComplianceFerpaStudentsDisclosuresEndpoint = {
 export interface GetApiComplianceFerpaStudentsRecordsInput {
   studentUserId: string;
 }
-export type GetApiComplianceFerpaStudentsRecordsOutput = Types.ComplianceFERPAFerpaEducationRecordDto[];
+export type GetApiComplianceFerpaStudentsRecordsOutput = Array<Types.ComplianceFERPAFerpaEducationRecordDto>;
 export const getApiComplianceFerpaStudentsRecordsEndpoint = {
   operationId: 'getApiComplianceFerpaStudentsRecords' as const,
   method: 'GET' as const,
@@ -1264,7 +1264,7 @@ export interface GetApiContentsVersioningEntityHistoryInput {
   entityType: string;
   entityId: string;
 }
-export type GetApiContentsVersioningEntityHistoryOutput = Types.ResourcesContentsContentVersionDto[];
+export type GetApiContentsVersioningEntityHistoryOutput = Array<Types.ResourcesContentsContentVersionDto>;
 export const getApiContentsVersioningEntityHistoryEndpoint = {
   operationId: 'getApiContentsVersioningEntityHistory' as const,
   method: 'GET' as const,
@@ -1317,7 +1317,7 @@ export interface GetApiContentsVersioningPendingReviewInput {
     take?: number;
   };
 }
-export type GetApiContentsVersioningPendingReviewOutput = Types.ResourcesContentsContentVersionDto[];
+export type GetApiContentsVersioningPendingReviewOutput = Array<Types.ResourcesContentsContentVersionDto>;
 export const getApiContentsVersioningPendingReviewEndpoint = {
   operationId: 'getApiContentsVersioningPendingReview' as const,
   method: 'GET' as const,
@@ -1380,7 +1380,7 @@ export interface GetApiFollowersBlockedUsersInput {
     take?: number;
   };
 }
-export type GetApiFollowersBlockedUsersOutput = Types.SocialFollowsControllersBlockDto[];
+export type GetApiFollowersBlockedUsersOutput = Array<Types.SocialFollowsControllersBlockDto>;
 export const getApiFollowersBlockedUsersEndpoint = {
   operationId: 'getApiFollowersBlockedUsers' as const,
   method: 'GET' as const,
@@ -1450,7 +1450,7 @@ export interface GetApiFollowersFollowersInput {
     take?: number;
   };
 }
-export type GetApiFollowersFollowersOutput = Types.SocialFollowsControllersFollowDto[];
+export type GetApiFollowersFollowersOutput = Array<Types.SocialFollowsControllersFollowDto>;
 export const getApiFollowersFollowersEndpoint = {
   operationId: 'getApiFollowersFollowers' as const,
   method: 'GET' as const,
@@ -1469,7 +1469,7 @@ export interface GetApiFollowersFollowingInput {
     take?: number;
   };
 }
-export type GetApiFollowersFollowingOutput = Types.SocialFollowsControllersFollowDto[];
+export type GetApiFollowersFollowingOutput = Array<Types.SocialFollowsControllersFollowDto>;
 export const getApiFollowersFollowingEndpoint = {
   operationId: 'getApiFollowersFollowing' as const,
   method: 'GET' as const,
@@ -1550,7 +1550,7 @@ export interface GetApiFollowersMutedUsersInput {
     take?: number;
   };
 }
-export type GetApiFollowersMutedUsersOutput = Types.SocialFollowsControllersMuteDto[];
+export type GetApiFollowersMutedUsersOutput = Array<Types.SocialFollowsControllersMuteDto>;
 export const getApiFollowersMutedUsersEndpoint = {
   operationId: 'getApiFollowersMutedUsers' as const,
   method: 'GET' as const,
@@ -1675,7 +1675,7 @@ export interface GetApiGameJamsForGetApiGameJamsInput {
     take?: number;
   };
 }
-export type GetApiGameJamsForGetApiGameJamsOutput = Types.GameJamsJamDto[];
+export type GetApiGameJamsForGetApiGameJamsOutput = Array<Types.GameJamsJamDto>;
 export const getApiGameJamsForGetApiGameJamsEndpoint = {
   operationId: 'getApiGameJamsForGetApiGameJams' as const,
   method: 'GET' as const,
@@ -1711,7 +1711,7 @@ export const getApiGameJamsForGetApiGameJamsByIdEndpoint = {
 export interface GetApiGameJamsCriteriaInput {
   id: string;
 }
-export type GetApiGameJamsCriteriaOutput = Types.GameJamsJamCriteriaDto[];
+export type GetApiGameJamsCriteriaOutput = Array<Types.GameJamsJamCriteriaDto>;
 export const getApiGameJamsCriteriaEndpoint = {
   operationId: 'getApiGameJamsCriteria' as const,
   method: 'GET' as const,
@@ -1749,7 +1749,7 @@ export const postApiGameJamsStatusEndpoint = {
 export interface GetApiGameJamsSubmissionsInput {
   id: string;
 }
-export type GetApiGameJamsSubmissionsOutput = Types.GameJamsJamSubmissionDto[];
+export type GetApiGameJamsSubmissionsOutput = Array<Types.GameJamsJamSubmissionDto>;
 export const getApiGameJamsSubmissionsEndpoint = {
   operationId: 'getApiGameJamsSubmissions' as const,
   method: 'GET' as const,
@@ -1888,7 +1888,7 @@ export interface GetApiLearningEnrollmentsCoursesInput {
     status?: Types.LearningEnrollmentsEnrollmentStatus;
   };
 }
-export type GetApiLearningEnrollmentsCoursesOutput = Types.LearningEnrollmentsEnrollmentDto[];
+export type GetApiLearningEnrollmentsCoursesOutput = Array<Types.LearningEnrollmentsEnrollmentDto>;
 export const getApiLearningEnrollmentsCoursesEndpoint = {
   operationId: 'getApiLearningEnrollmentsCourses' as const,
   method: 'GET' as const,
@@ -1903,7 +1903,7 @@ export interface GetApiLearningEnrollmentsUsersInput {
     status?: Types.LearningEnrollmentsEnrollmentStatus;
   };
 }
-export type GetApiLearningEnrollmentsUsersOutput = Types.LearningEnrollmentsEnrollmentDto[];
+export type GetApiLearningEnrollmentsUsersOutput = Array<Types.LearningEnrollmentsEnrollmentDto>;
 export const getApiLearningEnrollmentsUsersEndpoint = {
   operationId: 'getApiLearningEnrollmentsUsers' as const,
   method: 'GET' as const,
@@ -1981,7 +1981,7 @@ export interface GetApiNotificationsForGetApiNotificationsInput {
     isRead?: boolean;
   };
 }
-export type GetApiNotificationsForGetApiNotificationsOutput = Types.NotificationsControllersNotificationDto[];
+export type GetApiNotificationsForGetApiNotificationsOutput = Array<Types.NotificationsControllersNotificationDto>;
 export const getApiNotificationsForGetApiNotificationsEndpoint = {
   operationId: 'getApiNotificationsForGetApiNotifications' as const,
   method: 'GET' as const,
@@ -2153,7 +2153,7 @@ export const postApiNotificationsReadAllEndpoint = {
  * Gets the catalog of notification types with category and suppressibility classification (drives the preferences UI)
  */
 export type GetApiNotificationsTypesCatalogInput = void;
-export type GetApiNotificationsTypesCatalogOutput = Types.NotificationsControllersNotificationTypeCatalogEntry[];
+export type GetApiNotificationsTypesCatalogOutput = Array<Types.NotificationsControllersNotificationTypeCatalogEntry>;
 export const getApiNotificationsTypesCatalogEndpoint = {
   operationId: 'getApiNotificationsTypesCatalog' as const,
   method: 'GET' as const,
@@ -2242,7 +2242,7 @@ export const deleteApiPrerequisitesEndpoint = {
 export interface GetApiPrerequisitesCourseInput {
   courseId: string;
 }
-export type GetApiPrerequisitesCourseOutput = Types.LearningCoursesPrerequisiteDto[];
+export type GetApiPrerequisitesCourseOutput = Array<Types.LearningCoursesPrerequisiteDto>;
 export const getApiPrerequisitesCourseEndpoint = {
   operationId: 'getApiPrerequisitesCourse' as const,
   method: 'GET' as const,
@@ -2257,7 +2257,7 @@ export const getApiPrerequisitesCourseEndpoint = {
 export interface GetApiPrerequisitesCourseChainInput {
   courseId: string;
 }
-export type GetApiPrerequisitesCourseChainOutput = Types.LearningCoursesPrerequisiteDto[];
+export type GetApiPrerequisitesCourseChainOutput = Array<Types.LearningCoursesPrerequisiteDto>;
 export const getApiPrerequisitesCourseChainEndpoint = {
   operationId: 'getApiPrerequisitesCourseChain' as const,
   method: 'GET' as const,
@@ -2335,7 +2335,7 @@ export const getApiPrerequisitesCourseWouldCreateCycleEndpoint = {
 export interface GetApiPrerequisitesDependentsInput {
   courseId: string;
 }
-export type GetApiPrerequisitesDependentsOutput = Types.LearningCoursesPrerequisiteDto[];
+export type GetApiPrerequisitesDependentsOutput = Array<Types.LearningCoursesPrerequisiteDto>;
 export const getApiPrerequisitesDependentsEndpoint = {
   operationId: 'getApiPrerequisitesDependents' as const,
   method: 'GET' as const,
@@ -2560,7 +2560,7 @@ export const postApiSocialBlogPostsUnpublishEndpoint = {
 export interface GetApiSocialBlogPostsAiConversationsInput {
   postId: string;
 }
-export type GetApiSocialBlogPostsAiConversationsOutput = Types.SocialBlogAuthoringBlogAiConversationDto[];
+export type GetApiSocialBlogPostsAiConversationsOutput = Array<Types.SocialBlogAuthoringBlogAiConversationDto>;
 export const getApiSocialBlogPostsAiConversationsEndpoint = {
   operationId: 'getApiSocialBlogPostsAiConversations' as const,
   method: 'GET' as const,
@@ -2689,7 +2689,7 @@ export interface GetApiSocialBlogPostsMineInput {
     page?: number;
   };
 }
-export type GetApiSocialBlogPostsMineOutput = Types.SocialBlogBlogPost[];
+export type GetApiSocialBlogPostsMineOutput = Array<Types.SocialBlogBlogPost>;
 export const getApiSocialBlogPostsMineEndpoint = {
   operationId: 'getApiSocialBlogPostsMine' as const,
   method: 'GET' as const,
@@ -2812,7 +2812,7 @@ export interface GetApiSocialCoursesContentDiscussionsInput {
     take?: number;
   };
 }
-export type GetApiSocialCoursesContentDiscussionsOutput = Types.LearningExperienceSocialServicesCourseDiscussionDto[];
+export type GetApiSocialCoursesContentDiscussionsOutput = Array<Types.LearningExperienceSocialServicesCourseDiscussionDto>;
 export const getApiSocialCoursesContentDiscussionsEndpoint = {
   operationId: 'getApiSocialCoursesContentDiscussions' as const,
   method: 'GET' as const,
@@ -2832,7 +2832,7 @@ export interface GetApiSocialCoursesDiscussionsInput {
     pinnedFirst?: boolean;
   };
 }
-export type GetApiSocialCoursesDiscussionsOutput = Types.LearningExperienceSocialServicesCourseDiscussionDto[];
+export type GetApiSocialCoursesDiscussionsOutput = Array<Types.LearningExperienceSocialServicesCourseDiscussionDto>;
 export const getApiSocialCoursesDiscussionsEndpoint = {
   operationId: 'getApiSocialCoursesDiscussions' as const,
   method: 'GET' as const,
@@ -2927,7 +2927,7 @@ export interface GetApiSocialCoursesReviewsInput {
     approvedOnly?: boolean;
   };
 }
-export type GetApiSocialCoursesReviewsOutput = Types.LearningExperienceSocialServicesCourseReviewDto[];
+export type GetApiSocialCoursesReviewsOutput = Array<Types.LearningExperienceSocialServicesCourseReviewDto>;
 export const getApiSocialCoursesReviewsEndpoint = {
   operationId: 'getApiSocialCoursesReviews' as const,
   method: 'GET' as const,
@@ -2961,7 +2961,7 @@ export interface GetApiSocialDiscussionsRepliesInput {
     take?: number;
   };
 }
-export type GetApiSocialDiscussionsRepliesOutput = Types.LearningExperienceSocialServicesDiscussionReplyDto[];
+export type GetApiSocialDiscussionsRepliesOutput = Array<Types.LearningExperienceSocialServicesDiscussionReplyDto>;
 export const getApiSocialDiscussionsRepliesEndpoint = {
   operationId: 'getApiSocialDiscussionsReplies' as const,
   method: 'GET' as const,
@@ -3154,7 +3154,7 @@ export interface GetApiSocialFeedMeInput {
     filterByType?: Types.LearningExperienceSocialFeedItemType;
   };
 }
-export type GetApiSocialFeedMeOutput = Types.LearningExperienceSocialServicesPersonalizedFeedItemDto[];
+export type GetApiSocialFeedMeOutput = Array<Types.LearningExperienceSocialServicesPersonalizedFeedItemDto>;
 export const getApiSocialFeedMeEndpoint = {
   operationId: 'getApiSocialFeedMe' as const,
   method: 'GET' as const,
@@ -3220,7 +3220,7 @@ export interface GetApiSocialFeedUsersInput {
     includeRead?: boolean;
   };
 }
-export type GetApiSocialFeedUsersOutput = Types.SocialFeedFeedItemDto[];
+export type GetApiSocialFeedUsersOutput = Array<Types.SocialFeedFeedItemDto>;
 export const getApiSocialFeedUsersEndpoint = {
   operationId: 'getApiSocialFeedUsers' as const,
   method: 'GET' as const,
@@ -3241,7 +3241,7 @@ export interface GetApiSocialGroupsForGetApiSocialGroupsInput {
     take?: number;
   };
 }
-export type GetApiSocialGroupsForGetApiSocialGroupsOutput = Types.SocialGroupsSocialGroupDto[];
+export type GetApiSocialGroupsForGetApiSocialGroupsOutput = Array<Types.SocialGroupsSocialGroupDto>;
 export const getApiSocialGroupsForGetApiSocialGroupsEndpoint = {
   operationId: 'getApiSocialGroupsForGetApiSocialGroups' as const,
   method: 'GET' as const,
@@ -3319,7 +3319,7 @@ export interface GetApiSocialGroupsMembersInput {
     take?: number;
   };
 }
-export type GetApiSocialGroupsMembersOutput = Types.SocialGroupsSocialGroupMemberDto[];
+export type GetApiSocialGroupsMembersOutput = Array<Types.SocialGroupsSocialGroupMemberDto>;
 export const getApiSocialGroupsMembersEndpoint = {
   operationId: 'getApiSocialGroupsMembers' as const,
   method: 'GET' as const,
@@ -3416,7 +3416,7 @@ export interface GetApiSocialLikesMeInput {
     take?: number;
   };
 }
-export type GetApiSocialLikesMeOutput = Types.LearningExperienceSocialServicesCourseLikeDto[];
+export type GetApiSocialLikesMeOutput = Array<Types.LearningExperienceSocialServicesCourseLikeDto>;
 export const getApiSocialLikesMeEndpoint = {
   operationId: 'getApiSocialLikesMe' as const,
   method: 'GET' as const,
@@ -3494,7 +3494,7 @@ export interface GetApiSocialProfilesSearchInput {
     take?: number;
   };
 }
-export type GetApiSocialProfilesSearchOutput = Types.SocialProfilesSocialProfileDto[];
+export type GetApiSocialProfilesSearchOutput = Array<Types.SocialProfilesSocialProfileDto>;
 export const getApiSocialProfilesSearchEndpoint = {
   operationId: 'getApiSocialProfilesSearch' as const,
   method: 'GET' as const,
@@ -3775,7 +3775,7 @@ export interface GetApiSocialReviewsMeInput {
     take?: number;
   };
 }
-export type GetApiSocialReviewsMeOutput = Types.LearningExperienceSocialServicesCourseReviewDto[];
+export type GetApiSocialReviewsMeOutput = Array<Types.LearningExperienceSocialServicesCourseReviewDto>;
 export const getApiSocialReviewsMeEndpoint = {
   operationId: 'getApiSocialReviewsMe' as const,
   method: 'GET' as const,
@@ -3821,7 +3821,7 @@ export const deleteApiSocialSavedPostsEndpoint = {
 } as const;
 
 export type GetApiSocialStoriesInput = void;
-export type GetApiSocialStoriesOutput = Types.SocialFeedStoryDto[];
+export type GetApiSocialStoriesOutput = Array<Types.SocialFeedStoryDto>;
 export const getApiSocialStoriesEndpoint = {
   operationId: 'getApiSocialStories' as const,
   method: 'GET' as const,
@@ -3940,7 +3940,7 @@ export interface GetApiSocialWishlistMeInput {
     take?: number;
   };
 }
-export type GetApiSocialWishlistMeOutput = Types.LearningExperienceSocialServicesCourseWishlistDto[];
+export type GetApiSocialWishlistMeOutput = Array<Types.LearningExperienceSocialServicesCourseWishlistDto>;
 export const getApiSocialWishlistMeEndpoint = {
   operationId: 'getApiSocialWishlistMe' as const,
   method: 'GET' as const,
@@ -3953,7 +3953,7 @@ export const getApiSocialWishlistMeEndpoint = {
  * Get all TestingLab role templates
  */
 export type GetApiTestingLabPermissionsRoleTemplatesInput = void;
-export type GetApiTestingLabPermissionsRoleTemplatesOutput = Types.TestingLabTestingLabRoleTemplate[];
+export type GetApiTestingLabPermissionsRoleTemplatesOutput = Array<Types.TestingLabTestingLabRoleTemplate>;
 export const getApiTestingLabPermissionsRoleTemplatesEndpoint = {
   operationId: 'getApiTestingLabPermissionsRoleTemplates' as const,
   method: 'GET' as const,
@@ -4243,7 +4243,7 @@ export interface GetAdminEconomyAdRewardsReportsInput {
     limit?: number;
   };
 }
-export type GetAdminEconomyAdRewardsReportsOutput = Types.FinanceEconomyAdRewardsDurableAdProviderReportStatus[];
+export type GetAdminEconomyAdRewardsReportsOutput = Array<Types.FinanceEconomyAdRewardsDurableAdProviderReportStatus>;
 export const getAdminEconomyAdRewardsReportsEndpoint = {
   operationId: 'getAdminEconomyAdRewardsReports' as const,
   method: 'GET' as const,
@@ -4296,7 +4296,7 @@ export const getAdminEconomyAdRewardsSessionsForGetAdminEconomyAdRewardsSessions
 } as const;
 
 export type GetAdminEconomyBountiesExpiredInput = void;
-export type GetAdminEconomyBountiesExpiredOutput = Types.FinanceEconomyBountiesDurableBountyView[];
+export type GetAdminEconomyBountiesExpiredOutput = Array<Types.FinanceEconomyBountiesDurableBountyView>;
 export const getAdminEconomyBountiesExpiredEndpoint = {
   operationId: 'getAdminEconomyBountiesExpired' as const,
   method: 'GET' as const,
@@ -4339,7 +4339,7 @@ export interface GetAdminEconomyComplianceFinancialCrimeCasesForGetAdminEconomyC
   };
 }
 export type GetAdminEconomyComplianceFinancialCrimeCasesForGetAdminEconomyComplianceFinancialCrimeCasesOutput =
-  Types.ComplianceFinancialCrimeFinancialCrimeCase[];
+  Array<Types.ComplianceFinancialCrimeFinancialCrimeCase>;
 export const getAdminEconomyComplianceFinancialCrimeCasesForGetAdminEconomyComplianceFinancialCrimeCasesEndpoint = {
   operationId: 'getAdminEconomyComplianceFinancialCrimeCasesForGetAdminEconomyComplianceFinancialCrimeCases' as const,
   method: 'GET' as const,
@@ -4432,7 +4432,7 @@ export const getAdminEconomyComplianceHoldsForGetAdminEconomyComplianceHoldsByHo
 export interface GetAdminEconomyComplianceHoldsAuditInput {
   holdId: string;
 }
-export type GetAdminEconomyComplianceHoldsAuditOutput = Types.FinanceEconomyRiskComplianceHoldEvent[];
+export type GetAdminEconomyComplianceHoldsAuditOutput = Array<Types.FinanceEconomyRiskComplianceHoldEvent>;
 export const getAdminEconomyComplianceHoldsAuditEndpoint = {
   operationId: 'getAdminEconomyComplianceHoldsAudit' as const,
   method: 'GET' as const,
@@ -4473,7 +4473,7 @@ export interface GetAdminEconomyComplianceTrustSafetyAppealsInput {
     take?: number;
   };
 }
-export type GetAdminEconomyComplianceTrustSafetyAppealsOutput = Types.TrustSafetyTrustSafetyAppeal[];
+export type GetAdminEconomyComplianceTrustSafetyAppealsOutput = Array<Types.TrustSafetyTrustSafetyAppeal>;
 export const getAdminEconomyComplianceTrustSafetyAppealsEndpoint = {
   operationId: 'getAdminEconomyComplianceTrustSafetyAppeals' as const,
   method: 'GET' as const,
@@ -4642,7 +4642,7 @@ export const getAdminEconomyLedgerAnchorsForGetAdminEconomyLedgerAnchorsByAnchor
 export interface GetAdminEconomyLedgerAnchorsVerificationsInput {
   anchorId: string;
 }
-export type GetAdminEconomyLedgerAnchorsVerificationsOutput = Types.FinanceEconomyOperationsEconomyAnchorVerificationOperationalStatus[];
+export type GetAdminEconomyLedgerAnchorsVerificationsOutput = Array<Types.FinanceEconomyOperationsEconomyAnchorVerificationOperationalStatus>;
 export const getAdminEconomyLedgerAnchorsVerificationsEndpoint = {
   operationId: 'getAdminEconomyLedgerAnchorsVerifications' as const,
   method: 'GET' as const,
@@ -4726,7 +4726,7 @@ export const postAdminEconomyLedgerProjectionGenerationsApprovalsEndpoint = {
 export interface GetAdminEconomyLedgerProjectionGenerationsAuditInput {
   generation: number;
 }
-export type GetAdminEconomyLedgerProjectionGenerationsAuditOutput = Types.FinanceEconomyOperationsEconomyProjectionApprovalAuditEntry[];
+export type GetAdminEconomyLedgerProjectionGenerationsAuditOutput = Array<Types.FinanceEconomyOperationsEconomyProjectionApprovalAuditEntry>;
 export const getAdminEconomyLedgerProjectionGenerationsAuditEndpoint = {
   operationId: 'getAdminEconomyLedgerProjectionGenerationsAudit' as const,
   method: 'GET' as const,
@@ -4976,7 +4976,7 @@ export interface GetAdminEconomyPayoutRequestsInput {
     take?: number;
   };
 }
-export type GetAdminEconomyPayoutRequestsOutput = Types.FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewDto[];
+export type GetAdminEconomyPayoutRequestsOutput = Array<Types.FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewDto>;
 export const getAdminEconomyPayoutRequestsEndpoint = {
   operationId: 'getAdminEconomyPayoutRequests' as const,
   method: 'GET' as const,
@@ -5009,7 +5009,7 @@ export const postAdminEconomyPayoutRequestsApproveEndpoint = {
 export interface GetAdminEconomyPayoutRequestsAuditInput {
   requestId: string;
 }
-export type GetAdminEconomyPayoutRequestsAuditOutput = Types.FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewAuditDto[];
+export type GetAdminEconomyPayoutRequestsAuditOutput = Array<Types.FinanceEconomyPayoutsQueriesEconomyPayoutRequestReviewAuditDto>;
 export const getAdminEconomyPayoutRequestsAuditEndpoint = {
   operationId: 'getAdminEconomyPayoutRequestsAudit' as const,
   method: 'GET' as const,
@@ -5060,7 +5060,8 @@ export interface GetAdminEconomyPayoutRequestsOperationsForGetAdminEconomyPayout
     take?: number;
   };
 }
-export type GetAdminEconomyPayoutRequestsOperationsForGetAdminEconomyPayoutRequestsOperationsOutput = Types.APIControllersEconomyPayoutExecutionOperationDto[];
+export type GetAdminEconomyPayoutRequestsOperationsForGetAdminEconomyPayoutRequestsOperationsOutput =
+  Array<Types.APIControllersEconomyPayoutExecutionOperationDto>;
 export const getAdminEconomyPayoutRequestsOperationsForGetAdminEconomyPayoutRequestsOperationsEndpoint = {
   operationId: 'getAdminEconomyPayoutRequestsOperationsForGetAdminEconomyPayoutRequestsOperations' as const,
   method: 'GET' as const,
@@ -5173,7 +5174,7 @@ export const postAdminEconomyPoliciesApproveEndpoint = {
 export interface GetAdminEconomyPoliciesAuditInput {
   policyId: string;
 }
-export type GetAdminEconomyPoliciesAuditOutput = Types.FinanceEconomyOperationsEconomyPolicyAuditEntry[];
+export type GetAdminEconomyPoliciesAuditOutput = Array<Types.FinanceEconomyOperationsEconomyPolicyAuditEntry>;
 export const getAdminEconomyPoliciesAuditEndpoint = {
   operationId: 'getAdminEconomyPoliciesAudit' as const,
   method: 'GET' as const,
@@ -5313,7 +5314,7 @@ export const postAdminEconomyRiskReviewsRejectEndpoint = {
 export interface GetAdminEconomyRiskReviewsAuditInput {
   reviewId: string;
 }
-export type GetAdminEconomyRiskReviewsAuditOutput = Types.FinanceEconomyRiskRiskReviewEvent[];
+export type GetAdminEconomyRiskReviewsAuditOutput = Array<Types.FinanceEconomyRiskRiskReviewEvent>;
 export const getAdminEconomyRiskReviewsAuditEndpoint = {
   operationId: 'getAdminEconomyRiskReviewsAudit' as const,
   method: 'GET' as const,
@@ -5327,7 +5328,7 @@ export interface GetAdminEconomyTreasuryWithdrawalsForGetAdminEconomyTreasuryWit
     limit?: number;
   };
 }
-export type GetAdminEconomyTreasuryWithdrawalsForGetAdminEconomyTreasuryWithdrawalsOutput = Types.FinanceEconomyTreasuryAdminWithdrawalRun[];
+export type GetAdminEconomyTreasuryWithdrawalsForGetAdminEconomyTreasuryWithdrawalsOutput = Array<Types.FinanceEconomyTreasuryAdminWithdrawalRun>;
 export const getAdminEconomyTreasuryWithdrawalsForGetAdminEconomyTreasuryWithdrawalsEndpoint = {
   operationId: 'getAdminEconomyTreasuryWithdrawalsForGetAdminEconomyTreasuryWithdrawals' as const,
   method: 'GET' as const,
@@ -5734,7 +5735,7 @@ export interface GetBillingChargesInput {
     pageSize?: number;
   };
 }
-export type GetBillingChargesOutput = Types.CommercePaymentsPaymentResult[];
+export type GetBillingChargesOutput = Array<Types.CommercePaymentsPaymentResult>;
 export const getBillingChargesEndpoint = {
   operationId: 'getBillingCharges' as const,
   method: 'GET' as const,
@@ -6100,7 +6101,7 @@ export interface GetEconomyBountiesForGetEconomyBountiesInput {
     status?: Types.FinanceEconomyBountiesBountyStatus;
   };
 }
-export type GetEconomyBountiesForGetEconomyBountiesOutput = Types.FinanceEconomyBountiesDurableBountyView[];
+export type GetEconomyBountiesForGetEconomyBountiesOutput = Array<Types.FinanceEconomyBountiesDurableBountyView>;
 export const getEconomyBountiesForGetEconomyBountiesEndpoint = {
   operationId: 'getEconomyBountiesForGetEconomyBounties' as const,
   method: 'GET' as const,
@@ -6163,7 +6164,7 @@ export const postEconomyBountiesReclaimEndpoint = {
  * Get my Economy capability readiness
  */
 export type GetEconomyCapabilitiesInput = void;
-export type GetEconomyCapabilitiesOutput = Types.APIControllersEconomySelfServiceCapabilityDto[];
+export type GetEconomyCapabilitiesOutput = Array<Types.APIControllersEconomySelfServiceCapabilityDto>;
 export const getEconomyCapabilitiesEndpoint = {
   operationId: 'getEconomyCapabilities' as const,
   method: 'GET' as const,
@@ -6255,7 +6256,7 @@ export interface GetEconomyPayoutRequestsInput {
     take?: number;
   };
 }
-export type GetEconomyPayoutRequestsOutput = Types.FinanceEconomyPayoutsQueriesEconomyPayoutRequestDto[];
+export type GetEconomyPayoutRequestsOutput = Array<Types.FinanceEconomyPayoutsQueriesEconomyPayoutRequestDto>;
 export const getEconomyPayoutRequestsEndpoint = {
   operationId: 'getEconomyPayoutRequests' as const,
   method: 'GET' as const,
@@ -6304,7 +6305,7 @@ export interface GetEconomyPayoutsForGetEconomyPayoutsInput {
     take?: number;
   };
 }
-export type GetEconomyPayoutsForGetEconomyPayoutsOutput = Types.FinanceEconomyPayoutsQueriesEconomyPayoutOperationDto[];
+export type GetEconomyPayoutsForGetEconomyPayoutsOutput = Array<Types.FinanceEconomyPayoutsQueriesEconomyPayoutOperationDto>;
 export const getEconomyPayoutsForGetEconomyPayoutsEndpoint = {
   operationId: 'getEconomyPayoutsForGetEconomyPayouts' as const,
   method: 'GET' as const,
@@ -6362,7 +6363,7 @@ export interface GetEconomyTopUpsForGetEconomyTopUpsInput {
     take?: number;
   };
 }
-export type GetEconomyTopUpsForGetEconomyTopUpsOutput = Types.FinanceEconomyFundingEconomyTopUpStatusDto[];
+export type GetEconomyTopUpsForGetEconomyTopUpsOutput = Array<Types.FinanceEconomyFundingEconomyTopUpStatusDto>;
 export const getEconomyTopUpsForGetEconomyTopUpsEndpoint = {
   operationId: 'getEconomyTopUpsForGetEconomyTopUps' as const,
   method: 'GET' as const,
@@ -6441,7 +6442,7 @@ export interface GetEconomyWalletTransactionsInput {
     take?: number;
   };
 }
-export type GetEconomyWalletTransactionsOutput = Types.FinanceEconomyContractsEconomyWalletTransactionDto[];
+export type GetEconomyWalletTransactionsOutput = Array<Types.FinanceEconomyContractsEconomyWalletTransactionDto>;
 export const getEconomyWalletTransactionsEndpoint = {
   operationId: 'getEconomyWalletTransactions' as const,
   method: 'GET' as const,
@@ -6681,7 +6682,7 @@ export interface GetPaymentsInput {
     pageSize?: number;
   };
 }
-export type GetPaymentsOutput = Types.CommercePaymentsPaymentResult[];
+export type GetPaymentsOutput = Array<Types.CommercePaymentsPaymentResult>;
 export const getPaymentsEndpoint = {
   operationId: 'getPayments' as const,
   method: 'GET' as const,
@@ -7337,7 +7338,7 @@ export const getPostsTagsPopularEndpoint = {
  */
 export interface GetPostsTagsSearchInput {
   query?: {
-    tags?: string[];
+    tags?: Array<string>;
     skip?: number;
     take?: number;
   };
@@ -7417,7 +7418,7 @@ export interface GetSlaSlosForGetSlaSlosInput {
     take?: number;
   };
 }
-export type GetSlaSlosForGetSlaSlosOutput = Types.MonitoringSLASloDto[];
+export type GetSlaSlosForGetSlaSlosOutput = Array<Types.MonitoringSLASloDto>;
 export const getSlaSlosForGetSlaSlosEndpoint = {
   operationId: 'getSlaSlosForGetSlaSlos' as const,
   method: 'GET' as const,
@@ -7535,7 +7536,7 @@ export interface GetSlaViolationsInput {
     take?: number;
   };
 }
-export type GetSlaViolationsOutput = Types.MonitoringSLASloViolationDto[];
+export type GetSlaViolationsOutput = Array<Types.MonitoringSLASloViolationDto>;
 export const getSlaViolationsEndpoint = {
   operationId: 'getSlaViolations' as const,
   method: 'GET' as const,
@@ -8197,7 +8198,7 @@ export const postSubscriptionsUpgradeEndpoint = {
 export interface GetSubscriptionsBillingHistoryInput {
   subscriptionId: string;
 }
-export type GetSubscriptionsBillingHistoryOutput = Types.CommerceSubscriptionsBillingHistoryDto[];
+export type GetSubscriptionsBillingHistoryOutput = Array<Types.CommerceSubscriptionsBillingHistoryDto>;
 export const getSubscriptionsBillingHistoryEndpoint = {
   operationId: 'getSubscriptionsBillingHistory' as const,
   method: 'GET' as const,
@@ -8248,7 +8249,7 @@ export const getSubscriptionsUsageEndpoint = {
  * Get all tax jurisdictions
  */
 export type GetTaxJurisdictionsForGetTaxJurisdictionsInput = void;
-export type GetTaxJurisdictionsForGetTaxJurisdictionsOutput = Types.CommercePaymentsTaxRate[];
+export type GetTaxJurisdictionsForGetTaxJurisdictionsOutput = Array<Types.CommercePaymentsTaxRate>;
 export const getTaxJurisdictionsForGetTaxJurisdictionsEndpoint = {
   operationId: 'getTaxJurisdictionsForGetTaxJurisdictions' as const,
   method: 'GET' as const,
@@ -8336,7 +8337,7 @@ export interface GetTaxRulesForGetTaxRulesInput {
     effectiveDate?: string;
   };
 }
-export type GetTaxRulesForGetTaxRulesOutput = Types.CommercePaymentsTaxRate[];
+export type GetTaxRulesForGetTaxRulesOutput = Array<Types.CommercePaymentsTaxRate>;
 export const getTaxRulesForGetTaxRulesEndpoint = {
   operationId: 'getTaxRulesForGetTaxRules' as const,
   method: 'GET' as const,
@@ -8987,7 +8988,7 @@ export interface GetVTestingTemplatesInput {
     includeArchived?: boolean;
   };
 }
-export type GetVTestingTemplatesOutput = Types.TestingLabTestingEventTemplateProjection[];
+export type GetVTestingTemplatesOutput = Array<Types.TestingLabTestingEventTemplateProjection>;
 export const getVTestingTemplatesEndpoint = {
   operationId: 'getVTestingTemplates' as const,
   method: 'GET' as const,
@@ -9175,7 +9176,7 @@ export interface GetAccessReviewsCampaignsActiveInput {
     tenantId?: string;
   };
 }
-export type GetAccessReviewsCampaignsActiveOutput = Types.IdentityAuthorizationAccessReviewCampaign[];
+export type GetAccessReviewsCampaignsActiveOutput = Array<Types.IdentityAuthorizationAccessReviewCampaign>;
 export const getAccessReviewsCampaignsActiveEndpoint = {
   operationId: 'getAccessReviewsCampaignsActive' as const,
   method: 'GET' as const,
@@ -9225,7 +9226,7 @@ export interface GetAccessReviewsItemsPendingInput {
     tenantId?: string;
   };
 }
-export type GetAccessReviewsItemsPendingOutput = Types.IdentityAuthorizationAccessReviewItem[];
+export type GetAccessReviewsItemsPendingOutput = Array<Types.IdentityAuthorizationAccessReviewItem>;
 export const getAccessReviewsItemsPendingEndpoint = {
   operationId: 'getAccessReviewsItemsPending' as const,
   method: 'GET' as const,
@@ -9619,7 +9620,7 @@ export interface GetAdminAuditLogsScheduledExportsInput {
     tenantId?: string;
   };
 }
-export type GetAdminAuditLogsScheduledExportsOutput = Types.ComplianceAuditScheduledAuditExportOutput[];
+export type GetAdminAuditLogsScheduledExportsOutput = Array<Types.ComplianceAuditScheduledAuditExportOutput>;
 export const getAdminAuditLogsScheduledExportsEndpoint = {
   operationId: 'getAdminAuditLogsScheduledExports' as const,
   method: 'GET' as const,
@@ -9674,7 +9675,7 @@ export interface GetAdminAuditLogsScheduledExportsHistoryInput {
     tenantId?: string;
   };
 }
-export type GetAdminAuditLogsScheduledExportsHistoryOutput = Types.ComplianceAuditAuditExportHistoryOutput[];
+export type GetAdminAuditLogsScheduledExportsHistoryOutput = Array<Types.ComplianceAuditAuditExportHistoryOutput>;
 export const getAdminAuditLogsScheduledExportsHistoryEndpoint = {
   operationId: 'getAdminAuditLogsScheduledExportsHistory' as const,
   method: 'GET' as const,
@@ -9688,9 +9689,9 @@ export const getAdminAuditLogsScheduledExportsHistoryEndpoint = {
  */
 export interface GetAdminAuditLogsSearchByActionTypeInput {
   query?: {
-    ActionTypes?: string[];
-    ActionGroups?: string[];
-    Categories?: string[];
+    ActionTypes?: Array<string>;
+    ActionGroups?: Array<string>;
+    Categories?: Array<string>;
     LogicalOperator?: Types.ComplianceAuditAuditActionTypeLogicalOperator;
     UserId?: string;
     TenantId?: string;
@@ -9720,9 +9721,9 @@ export const getAdminAuditLogsSearchByActionTypeEndpoint = {
 export interface GetAdminAuditLogsSearchByActionTypeExportInput {
   query?: {
     format?: string;
-    ActionTypes?: string[];
-    ActionGroups?: string[];
-    Categories?: string[];
+    ActionTypes?: Array<string>;
+    ActionGroups?: Array<string>;
+    Categories?: Array<string>;
     LogicalOperator?: Types.ComplianceAuditAuditActionTypeLogicalOperator;
     UserId?: string;
     TenantId?: string;
@@ -9829,7 +9830,7 @@ export const postAdminEventsReplayEndpoint = {
 } as const;
 
 export type GetAdminEventsDeadLettersInput = void;
-export type GetAdminEventsDeadLettersOutput = Types.APIEventingDeadLetterEvent[];
+export type GetAdminEventsDeadLettersOutput = Array<Types.APIEventingDeadLetterEvent>;
 export const getAdminEventsDeadLettersEndpoint = {
   operationId: 'getAdminEventsDeadLetters' as const,
   method: 'GET' as const,
@@ -10061,7 +10062,7 @@ export interface GetAiHistoryInput {
     take?: number;
   };
 }
-export type GetAiHistoryOutput = Types.AIAiConversationHistoryEntryDto[];
+export type GetAiHistoryOutput = Array<Types.AIAiConversationHistoryEntryDto>;
 export const getAiHistoryEndpoint = {
   operationId: 'getAiHistory' as const,
   method: 'GET' as const,
@@ -10091,7 +10092,7 @@ export interface GetAiPromptTemplatesForGetAiPromptTemplatesInput {
     includeInactive?: boolean;
   };
 }
-export type GetAiPromptTemplatesForGetAiPromptTemplatesOutput = Types.AIAiPromptTemplateDto[];
+export type GetAiPromptTemplatesForGetAiPromptTemplatesOutput = Array<Types.AIAiPromptTemplateDto>;
 export const getAiPromptTemplatesForGetAiPromptTemplatesEndpoint = {
   operationId: 'getAiPromptTemplatesForGetAiPromptTemplates' as const,
   method: 'GET' as const,
@@ -10263,7 +10264,7 @@ export interface GetAssessmentsInteractiveVideoCuesContentEnrollmentsInput {
   contentId: string;
   enrollmentId: string;
 }
-export type GetAssessmentsInteractiveVideoCuesContentEnrollmentsOutput = Types.LearningAssessmentsLearnerInteractiveVideoAssessmentCueDto[];
+export type GetAssessmentsInteractiveVideoCuesContentEnrollmentsOutput = Array<Types.LearningAssessmentsLearnerInteractiveVideoAssessmentCueDto>;
 export const getAssessmentsInteractiveVideoCuesContentEnrollmentsEndpoint = {
   operationId: 'getAssessmentsInteractiveVideoCuesContentEnrollments' as const,
   method: 'GET' as const,
@@ -10341,7 +10342,7 @@ export const deleteAssessmentsRubricEndpoint = {
 export interface GetAssessmentsSubmissionsForGetAssessmentsByAssessmentIdSubmissionsInput {
   assessmentId: string;
 }
-export type GetAssessmentsSubmissionsForGetAssessmentsByAssessmentIdSubmissionsOutput = Types.LearningAssessmentsAssessmentSubmissionDto[];
+export type GetAssessmentsSubmissionsForGetAssessmentsByAssessmentIdSubmissionsOutput = Array<Types.LearningAssessmentsAssessmentSubmissionDto>;
 export const getAssessmentsSubmissionsForGetAssessmentsByAssessmentIdSubmissionsEndpoint = {
   operationId: 'getAssessmentsSubmissionsForGetAssessmentsByAssessmentIdSubmissions' as const,
   method: 'GET' as const,
@@ -10449,7 +10450,7 @@ export const putAssessmentsGroupEndpoint = {
 export interface GetAssessmentsInteractiveVideoCuesInput {
   id: string;
 }
-export type GetAssessmentsInteractiveVideoCuesOutput = Types.LearningAssessmentsInteractiveVideoAssessmentCueDto[];
+export type GetAssessmentsInteractiveVideoCuesOutput = Array<Types.LearningAssessmentsInteractiveVideoAssessmentCueDto>;
 export const getAssessmentsInteractiveVideoCuesEndpoint = {
   operationId: 'getAssessmentsInteractiveVideoCues' as const,
   method: 'GET' as const,
@@ -10615,7 +10616,7 @@ export const postAssessmentsContentRuntimeSubmissionsIndividualEndpoint = {
 export interface GetAssessmentsCourseInput {
   courseId: string;
 }
-export type GetAssessmentsCourseOutput = Types.LearningAssessmentsAssessmentDto[];
+export type GetAssessmentsCourseOutput = Array<Types.LearningAssessmentsAssessmentDto>;
 export const getAssessmentsCourseEndpoint = {
   operationId: 'getAssessmentsCourse' as const,
   method: 'GET' as const,
@@ -10678,7 +10679,7 @@ export const getAssessmentsCourseGradebookEndpoint = {
 export interface GetAssessmentsCourseGroupsInput {
   courseId: string;
 }
-export type GetAssessmentsCourseGroupsOutput = Types.LearningAssessmentsAssessmentGroupDto[];
+export type GetAssessmentsCourseGroupsOutput = Array<Types.LearningAssessmentsAssessmentGroupDto>;
 export const getAssessmentsCourseGroupsEndpoint = {
   operationId: 'getAssessmentsCourseGroups' as const,
   method: 'GET' as const,
@@ -10739,7 +10740,7 @@ export const deleteAssessmentsGroupsEndpoint = {
 export interface GetAssessmentsMySubmissionsInput {
   enrollmentId: string;
 }
-export type GetAssessmentsMySubmissionsOutput = Types.LearningAssessmentsLearnerAssessmentSubmissionDto[];
+export type GetAssessmentsMySubmissionsOutput = Array<Types.LearningAssessmentsLearnerAssessmentSubmissionDto>;
 export const getAssessmentsMySubmissionsEndpoint = {
   operationId: 'getAssessmentsMySubmissions' as const,
   method: 'GET' as const,
@@ -10878,7 +10879,7 @@ export const getAssessmentsSubmissionsForGetAssessmentsSubmissionsBySubmissionId
 export interface GetAssessmentsSubmissionsPeerReviewsInput {
   submissionId: string;
 }
-export type GetAssessmentsSubmissionsPeerReviewsOutput = Types.LearningAssessmentsInstructorPeerReviewDto[];
+export type GetAssessmentsSubmissionsPeerReviewsOutput = Array<Types.LearningAssessmentsInstructorPeerReviewDto>;
 export const getAssessmentsSubmissionsPeerReviewsEndpoint = {
   operationId: 'getAssessmentsSubmissionsPeerReviews' as const,
   method: 'GET' as const,
@@ -10894,7 +10895,7 @@ export const getAssessmentsSubmissionsPeerReviewsEndpoint = {
 export interface GetAssessmentsSubmissionsReceivedPeerReviewsInput {
   submissionId: string;
 }
-export type GetAssessmentsSubmissionsReceivedPeerReviewsOutput = Types.LearningAssessmentsReceivedPeerReviewDto[];
+export type GetAssessmentsSubmissionsReceivedPeerReviewsOutput = Array<Types.LearningAssessmentsReceivedPeerReviewDto>;
 export const getAssessmentsSubmissionsReceivedPeerReviewsEndpoint = {
   operationId: 'getAssessmentsSubmissionsReceivedPeerReviews' as const,
   method: 'GET' as const,
@@ -11432,7 +11433,7 @@ export interface GetAuditCompliancePackagingForGetAuditCompliancePackagingInput 
     take?: number;
   };
 }
-export type GetAuditCompliancePackagingForGetAuditCompliancePackagingOutput = Types.ComplianceAuditCompliancePackageSummary[];
+export type GetAuditCompliancePackagingForGetAuditCompliancePackagingOutput = Array<Types.ComplianceAuditCompliancePackageSummary>;
 export const getAuditCompliancePackagingForGetAuditCompliancePackagingEndpoint = {
   operationId: 'getAuditCompliancePackagingForGetAuditCompliancePackaging' as const,
   method: 'GET' as const,
@@ -11495,7 +11496,7 @@ export interface GetAuditCompliancePackagingDocumentsForGetAuditCompliancePackag
     take?: number;
   };
 }
-export type GetAuditCompliancePackagingDocumentsForGetAuditCompliancePackagingDocumentsOutput = Types.ComplianceAuditComplianceDocumentOutput[];
+export type GetAuditCompliancePackagingDocumentsForGetAuditCompliancePackagingDocumentsOutput = Array<Types.ComplianceAuditComplianceDocumentOutput>;
 export const getAuditCompliancePackagingDocumentsForGetAuditCompliancePackagingDocumentsEndpoint = {
   operationId: 'getAuditCompliancePackagingDocumentsForGetAuditCompliancePackagingDocuments' as const,
   method: 'GET' as const,
@@ -11542,7 +11543,7 @@ export const postAuditCompliancePackagingDocumentsReviewEndpoint = {
 } as const;
 
 export type GetAuditCompliancePackagingTemplatesInput = void;
-export type GetAuditCompliancePackagingTemplatesOutput = Types.ComplianceAuditComplianceFrameworkTemplate[];
+export type GetAuditCompliancePackagingTemplatesOutput = Array<Types.ComplianceAuditComplianceFrameworkTemplate>;
 export const getAuditCompliancePackagingTemplatesEndpoint = {
   operationId: 'getAuditCompliancePackagingTemplates' as const,
   method: 'GET' as const,
@@ -11557,7 +11558,7 @@ export interface GetAuditRetentionSimulationForGetAuditRetentionSimulationInput 
     take?: number;
   };
 }
-export type GetAuditRetentionSimulationForGetAuditRetentionSimulationOutput = Types.ComplianceAuditAuditRetentionSimulationSummary[];
+export type GetAuditRetentionSimulationForGetAuditRetentionSimulationOutput = Array<Types.ComplianceAuditAuditRetentionSimulationSummary>;
 export const getAuditRetentionSimulationForGetAuditRetentionSimulationEndpoint = {
   operationId: 'getAuditRetentionSimulationForGetAuditRetentionSimulation' as const,
   method: 'GET' as const,
@@ -11616,7 +11617,7 @@ export const putAuditRetentionSimulationConfigurationEndpoint = {
  * List all API keys for the current user
  */
 export type GetAuthApiKeysInput = void;
-export type GetAuthApiKeysOutput = Types.IdentityAuthenticationApiKeyDto[];
+export type GetAuthApiKeysOutput = Array<Types.IdentityAuthenticationApiKeyDto>;
 export const getAuthApiKeysEndpoint = {
   operationId: 'getAuthApiKeys' as const,
   method: 'GET' as const,
@@ -12133,7 +12134,7 @@ export interface GetAuthServiceAccountsForGetAuthServiceAccountsInput {
     tenantId?: string;
   };
 }
-export type GetAuthServiceAccountsForGetAuthServiceAccountsOutput = Types.IdentityAuthenticationServiceAccountOutput[];
+export type GetAuthServiceAccountsForGetAuthServiceAccountsOutput = Array<Types.IdentityAuthenticationServiceAccountOutput>;
 export const getAuthServiceAccountsForGetAuthServiceAccountsEndpoint = {
   operationId: 'getAuthServiceAccountsForGetAuthServiceAccounts' as const,
   method: 'GET' as const,
@@ -12348,7 +12349,7 @@ export const patchAuthServiceAccountsScopesEndpoint = {
  * Retrieves a list of all active sessions for the current user, including device and location information.
  */
 export type GetAuthSessionsInput = void;
-export type GetAuthSessionsOutput = Types.IdentityAuthenticationSessionOutput[];
+export type GetAuthSessionsOutput = Array<Types.IdentityAuthenticationSessionOutput>;
 export const getAuthSessionsEndpoint = {
   operationId: 'getAuthSessions' as const,
   method: 'GET' as const,
@@ -12478,7 +12479,7 @@ export interface GetAuthSigningKeysInput {
     status?: string;
   };
 }
-export type GetAuthSigningKeysOutput = Types.IdentityAuthenticationJwtKeyInfoDto[];
+export type GetAuthSigningKeysOutput = Array<Types.IdentityAuthenticationJwtKeyInfoDto>;
 export const getAuthSigningKeysEndpoint = {
   operationId: 'getAuthSigningKeys' as const,
   method: 'GET' as const,
@@ -12598,7 +12599,7 @@ export const postAuthTokensRevokeEndpoint = {
  * Retrieves a list of devices that have been marked as trusted for the current user.
  */
 export type GetAuthTrustedDevicesInput = void;
-export type GetAuthTrustedDevicesOutput = Types.IdentityAuthenticationTrustedDeviceOutput[];
+export type GetAuthTrustedDevicesOutput = Array<Types.IdentityAuthenticationTrustedDeviceOutput>;
 export const getAuthTrustedDevicesEndpoint = {
   operationId: 'getAuthTrustedDevices' as const,
   method: 'GET' as const,
@@ -12722,7 +12723,7 @@ export const postAuthWebauthnAuthenticationCompleteEndpoint = {
  * Get all WebAuthn credentials for the current user.
  */
 export type GetAuthWebauthnCredentialsForGetAuthWebauthnCredentialsInput = void;
-export type GetAuthWebauthnCredentialsForGetAuthWebauthnCredentialsOutput = Types.IdentityAuthenticationWebAuthnCredentialInfo[];
+export type GetAuthWebauthnCredentialsForGetAuthWebauthnCredentialsOutput = Array<Types.IdentityAuthenticationWebAuthnCredentialInfo>;
 export const getAuthWebauthnCredentialsForGetAuthWebauthnCredentialsEndpoint = {
   operationId: 'getAuthWebauthnCredentialsForGetAuthWebauthnCredentials' as const,
   method: 'GET' as const,
@@ -12992,7 +12993,7 @@ export interface GetContentResourcesForGetContentResourcesInput {
     take?: number;
   };
 }
-export type GetContentResourcesForGetContentResourcesOutput = Types.ContentPagesContentResourceDto[];
+export type GetContentResourcesForGetContentResourcesOutput = Array<Types.ContentPagesContentResourceDto>;
 export const getContentResourcesForGetContentResourcesEndpoint = {
   operationId: 'getContentResourcesForGetContentResources' as const,
   method: 'GET' as const,
@@ -13197,7 +13198,7 @@ export interface GetCourseInteractionsContentReflectionResponsesInput {
     programId?: string;
   };
 }
-export type GetCourseInteractionsContentReflectionResponsesOutput = Types.LearningCoursesReflectionResponseResultDto[];
+export type GetCourseInteractionsContentReflectionResponsesOutput = Array<Types.LearningCoursesReflectionResponseResultDto>;
 export const getCourseInteractionsContentReflectionResponsesEndpoint = {
   operationId: 'getCourseInteractionsContentReflectionResponses' as const,
   method: 'GET' as const,
@@ -13212,7 +13213,7 @@ export interface GetCourseInteractionsContentReflectionResponsesVisibleInput {
     programId?: string;
   };
 }
-export type GetCourseInteractionsContentReflectionResponsesVisibleOutput = Types.LearningCoursesReflectionResponseResultDto[];
+export type GetCourseInteractionsContentReflectionResponsesVisibleOutput = Array<Types.LearningCoursesReflectionResponseResultDto>;
 export const getCourseInteractionsContentReflectionResponsesVisibleEndpoint = {
   operationId: 'getCourseInteractionsContentReflectionResponsesVisible' as const,
   method: 'GET' as const,
@@ -13230,7 +13231,7 @@ export interface GetCourseInteractionsContentSurveyResultsInput {
     programId?: string;
   };
 }
-export type GetCourseInteractionsContentSurveyResultsOutput = Types.LearningCoursesSurveyResponseResultDto[];
+export type GetCourseInteractionsContentSurveyResultsOutput = Array<Types.LearningCoursesSurveyResponseResultDto>;
 export const getCourseInteractionsContentSurveyResultsEndpoint = {
   operationId: 'getCourseInteractionsContentSurveyResults' as const,
   method: 'GET' as const,
@@ -13245,7 +13246,7 @@ export interface GetCourseInteractionsContentSurveyResultsVisibleInput {
     programId?: string;
   };
 }
-export type GetCourseInteractionsContentSurveyResultsVisibleOutput = Types.LearningCoursesSurveyResponseResultDto[];
+export type GetCourseInteractionsContentSurveyResultsVisibleOutput = Array<Types.LearningCoursesSurveyResponseResultDto>;
 export const getCourseInteractionsContentSurveyResultsVisibleEndpoint = {
   operationId: 'getCourseInteractionsContentSurveyResultsVisible' as const,
   method: 'GET' as const,
@@ -13264,7 +13265,7 @@ export interface GetCourseInteractionsUserInput {
     programId?: string;
   };
 }
-export type GetCourseInteractionsUserOutput = Types.LearningCoursesContentInteractionDto[];
+export type GetCourseInteractionsUserOutput = Array<Types.LearningCoursesContentInteractionDto>;
 export const getCourseInteractionsUserEndpoint = {
   operationId: 'getCourseInteractionsUser' as const,
   method: 'GET' as const,
@@ -13308,7 +13309,7 @@ export interface GetCoursesForGetCoursesInput {
     take?: number;
   };
 }
-export type GetCoursesForGetCoursesOutput = Types.LearningCoursesProgramDto[];
+export type GetCoursesForGetCoursesOutput = Array<Types.LearningCoursesProgramDto>;
 export const getCoursesForGetCoursesEndpoint = {
   operationId: 'getCoursesForGetCourses' as const,
   method: 'GET' as const,
@@ -13363,7 +13364,7 @@ export interface GetCoursesCohortsScheduleAvailableContentInput {
   courseId: string;
   cohortId: string;
 }
-export type GetCoursesCohortsScheduleAvailableContentOutput = Types.LearningCohortsAvailableCohortContentDto[];
+export type GetCoursesCohortsScheduleAvailableContentOutput = Array<Types.LearningCohortsAvailableCohortContentDto>;
 export const getCoursesCohortsScheduleAvailableContentEndpoint = {
   operationId: 'getCoursesCohortsScheduleAvailableContent' as const,
   method: 'GET' as const,
@@ -13439,7 +13440,7 @@ export const getCoursesCohortsCalendarEndpoint = {
 export interface GetCoursesGroupSetsInput {
   courseId: string;
 }
-export type GetCoursesGroupSetsOutput = Types.LearningAssessmentsGroupSetSummaryDto[];
+export type GetCoursesGroupSetsOutput = Array<Types.LearningAssessmentsGroupSetSummaryDto>;
 export const getCoursesGroupSetsEndpoint = {
   operationId: 'getCoursesGroupSets' as const,
   method: 'GET' as const,
@@ -13471,7 +13472,7 @@ export interface GetCoursesGroupSetsGroupsInput {
   courseId: string;
   setId: string;
 }
-export type GetCoursesGroupSetsGroupsOutput = Types.LearningAssessmentsGroupDetailDto[];
+export type GetCoursesGroupSetsGroupsOutput = Array<Types.LearningAssessmentsGroupDetailDto>;
 export const getCoursesGroupSetsGroupsEndpoint = {
   operationId: 'getCoursesGroupSetsGroups' as const,
   method: 'GET' as const,
@@ -14083,7 +14084,7 @@ export const putCoursesPricingEndpoint = {
 export interface GetCoursesProductsInput {
   id: string;
 }
-export type GetCoursesProductsOutput = string[];
+export type GetCoursesProductsOutput = Array<string>;
 export const getCoursesProductsEndpoint = {
   operationId: 'getCoursesProducts' as const,
   method: 'GET' as const,
@@ -14102,7 +14103,7 @@ export interface GetCoursesUsersInput {
     take?: number;
   };
 }
-export type GetCoursesUsersOutput = Types.LearningCoursesUserProgressDto[];
+export type GetCoursesUsersOutput = Array<Types.LearningCoursesUserProgressDto>;
 export const getCoursesUsersEndpoint = {
   operationId: 'getCoursesUsers' as const,
   method: 'GET' as const,
@@ -14298,7 +14299,7 @@ export interface GetCoursesActivityGradesContentInput {
   programId: string;
   contentId: string;
 }
-export type GetCoursesActivityGradesContentOutput = Types.LearningCoursesActivityGradeDto[];
+export type GetCoursesActivityGradesContentOutput = Array<Types.LearningCoursesActivityGradeDto>;
 export const getCoursesActivityGradesContentEndpoint = {
   operationId: 'getCoursesActivityGradesContent' as const,
   method: 'GET' as const,
@@ -14314,7 +14315,7 @@ export interface GetCoursesActivityGradesGraderInput {
   programId: string;
   graderProgramUserId: string;
 }
-export type GetCoursesActivityGradesGraderOutput = Types.LearningCoursesActivityGradeDto[];
+export type GetCoursesActivityGradesGraderOutput = Array<Types.LearningCoursesActivityGradeDto>;
 export const getCoursesActivityGradesGraderEndpoint = {
   operationId: 'getCoursesActivityGradesGrader' as const,
   method: 'GET' as const,
@@ -14345,7 +14346,7 @@ export const getCoursesActivityGradesInteractionEndpoint = {
 export interface GetCoursesActivityGradesPendingInput {
   programId: string;
 }
-export type GetCoursesActivityGradesPendingOutput = Types.LearningCoursesContentInteractionDto[];
+export type GetCoursesActivityGradesPendingOutput = Array<Types.LearningCoursesContentInteractionDto>;
 export const getCoursesActivityGradesPendingEndpoint = {
   operationId: 'getCoursesActivityGradesPending' as const,
   method: 'GET' as const,
@@ -14376,7 +14377,7 @@ export interface GetCoursesActivityGradesStudentInput {
   programId: string;
   programUserId: string;
 }
-export type GetCoursesActivityGradesStudentOutput = Types.LearningCoursesActivityGradeDto[];
+export type GetCoursesActivityGradesStudentOutput = Array<Types.LearningCoursesActivityGradeDto>;
 export const getCoursesActivityGradesStudentEndpoint = {
   operationId: 'getCoursesActivityGradesStudent' as const,
   method: 'GET' as const,
@@ -14397,7 +14398,7 @@ export interface GetCoursesContentInput {
     level?: string;
   };
 }
-export type GetCoursesContentOutput = Types.LearningCoursesProgramContentDto[];
+export type GetCoursesContentOutput = Array<Types.LearningCoursesProgramContentDto>;
 export const getCoursesContentEndpoint = {
   operationId: 'getCoursesContent' as const,
   method: 'GET' as const,
@@ -14453,7 +14454,7 @@ export interface GetCoursesContentAuthoringAiConversationsInput {
   programId: string;
   contentId: string;
 }
-export type GetCoursesContentAuthoringAiConversationsOutput = Types.LearningCoursesAiAuthoringConversationDto[];
+export type GetCoursesContentAuthoringAiConversationsOutput = Array<Types.LearningCoursesAiAuthoringConversationDto>;
 export const getCoursesContentAuthoringAiConversationsEndpoint = {
   operationId: 'getCoursesContentAuthoringAiConversations' as const,
   method: 'GET' as const,
@@ -14713,7 +14714,7 @@ export interface GetCoursesContentChildrenInput {
   programId: string;
   parentId: string;
 }
-export type GetCoursesContentChildrenOutput = Types.LearningCoursesProgramContentDto[];
+export type GetCoursesContentChildrenOutput = Array<Types.LearningCoursesProgramContentDto>;
 export const getCoursesContentChildrenEndpoint = {
   operationId: 'getCoursesContentChildren' as const,
   method: 'GET' as const,
@@ -14729,7 +14730,7 @@ export interface GetCoursesContentByTypeInput {
   programId: string;
   type: Types.LearningCoursesProgramContentType;
 }
-export type GetCoursesContentByTypeOutput = Types.LearningCoursesProgramContentDto[];
+export type GetCoursesContentByTypeOutput = Array<Types.LearningCoursesProgramContentDto>;
 export const getCoursesContentByTypeEndpoint = {
   operationId: 'getCoursesContentByType' as const,
   method: 'GET' as const,
@@ -14745,7 +14746,7 @@ export interface GetCoursesContentByVisibilityInput {
   programId: string;
   visibility: Types.LearningCoursesVisibility;
 }
-export type GetCoursesContentByVisibilityOutput = Types.LearningCoursesProgramContentDto[];
+export type GetCoursesContentByVisibilityOutput = Array<Types.LearningCoursesProgramContentDto>;
 export const getCoursesContentByVisibilityEndpoint = {
   operationId: 'getCoursesContentByVisibility' as const,
   method: 'GET' as const,
@@ -14776,7 +14777,7 @@ export const postCoursesContentReorderEndpoint = {
 export interface GetCoursesContentRequiredInput {
   programId: string;
 }
-export type GetCoursesContentRequiredOutput = Types.LearningCoursesProgramContentDto[];
+export type GetCoursesContentRequiredOutput = Array<Types.LearningCoursesProgramContentDto>;
 export const getCoursesContentRequiredEndpoint = {
   operationId: 'getCoursesContentRequired' as const,
   method: 'GET' as const,
@@ -14792,7 +14793,7 @@ export interface PostCoursesContentSearchInput {
   programId: string;
   body?: Types.LearningCoursesSearchContentDto;
 }
-export type PostCoursesContentSearchOutput = Types.LearningCoursesProgramContentDto[];
+export type PostCoursesContentSearchOutput = Array<Types.LearningCoursesProgramContentDto>;
 export const postCoursesContentSearchEndpoint = {
   operationId: 'postCoursesContentSearch' as const,
   method: 'POST' as const,
@@ -14820,7 +14821,7 @@ export interface GetCoursesInteractionsEventsInput {
   programId: string;
   interactionId: string;
 }
-export type GetCoursesInteractionsEventsOutput = Types.LearningCoursesContentInteractionEventDto[];
+export type GetCoursesInteractionsEventsOutput = Array<Types.LearningCoursesContentInteractionEventDto>;
 export const getCoursesInteractionsEventsEndpoint = {
   operationId: 'getCoursesInteractionsEvents' as const,
   method: 'GET' as const,
@@ -14847,7 +14848,7 @@ export const postCoursesInteractionsEventsEndpoint = {
  * Get every course in which the current user has an active enrollment.
  */
 export type GetCoursesMeInput = void;
-export type GetCoursesMeOutput = Types.LearningCoursesProgramDto[];
+export type GetCoursesMeOutput = Array<Types.LearningCoursesProgramDto>;
 export const getCoursesMeEndpoint = {
   operationId: 'getCoursesMe' as const,
   method: 'GET' as const,
@@ -14865,7 +14866,7 @@ export interface GetCoursesPublicInput {
     take?: number;
   };
 }
-export type GetCoursesPublicOutput = Types.LearningCoursesProgramDto[];
+export type GetCoursesPublicOutput = Array<Types.LearningCoursesProgramDto>;
 export const getCoursesPublicEndpoint = {
   operationId: 'getCoursesPublic' as const,
   method: 'GET' as const,
@@ -14981,7 +14982,7 @@ export interface GetDelegatedAdminUserManagedResourcesInput {
     tenantId?: string;
   };
 }
-export type GetDelegatedAdminUserManagedResourcesOutput = string[];
+export type GetDelegatedAdminUserManagedResourcesOutput = Array<string>;
 export const getDelegatedAdminUserManagedResourcesEndpoint = {
   operationId: 'getDelegatedAdminUserManagedResources' as const,
   method: 'GET' as const,
@@ -14999,7 +15000,7 @@ export interface GetDelegatedAdminUserManagedUsersInput {
     tenantId?: string;
   };
 }
-export type GetDelegatedAdminUserManagedUsersOutput = string[];
+export type GetDelegatedAdminUserManagedUsersOutput = Array<string>;
 export const getDelegatedAdminUserManagedUsersEndpoint = {
   operationId: 'getDelegatedAdminUserManagedUsers' as const,
   method: 'GET' as const,
@@ -15017,7 +15018,7 @@ export interface GetDelegatedAdminUserScopesInput {
     tenantId?: string;
   };
 }
-export type GetDelegatedAdminUserScopesOutput = Types.IdentityAuthorizationDelegatedAdminScope[];
+export type GetDelegatedAdminUserScopesOutput = Array<Types.IdentityAuthorizationDelegatedAdminScope>;
 export const getDelegatedAdminUserScopesEndpoint = {
   operationId: 'getDelegatedAdminUserScopes' as const,
   method: 'GET' as const,
@@ -15037,7 +15038,7 @@ export interface GetDiscoveryCollectionsForGetDiscoveryCollectionsInput {
     take?: number;
   };
 }
-export type GetDiscoveryCollectionsForGetDiscoveryCollectionsOutput = Types.LearningExperienceDiscoveryCourseCollectionDto[];
+export type GetDiscoveryCollectionsForGetDiscoveryCollectionsOutput = Array<Types.LearningExperienceDiscoveryCourseCollectionDto>;
 export const getDiscoveryCollectionsForGetDiscoveryCollectionsEndpoint = {
   operationId: 'getDiscoveryCollectionsForGetDiscoveryCollections' as const,
   method: 'GET' as const,
@@ -15152,7 +15153,7 @@ export interface GetDiscoveryCollectionsCuratorInput {
     take?: number;
   };
 }
-export type GetDiscoveryCollectionsCuratorOutput = Types.LearningExperienceDiscoveryCourseCollectionDto[];
+export type GetDiscoveryCollectionsCuratorOutput = Array<Types.LearningExperienceDiscoveryCourseCollectionDto>;
 export const getDiscoveryCollectionsCuratorEndpoint = {
   operationId: 'getDiscoveryCollectionsCurator' as const,
   method: 'GET' as const,
@@ -15170,7 +15171,7 @@ export interface GetDiscoveryCollectionsFeaturedInput {
     take?: number;
   };
 }
-export type GetDiscoveryCollectionsFeaturedOutput = Types.LearningExperienceDiscoveryCourseCollectionDto[];
+export type GetDiscoveryCollectionsFeaturedOutput = Array<Types.LearningExperienceDiscoveryCourseCollectionDto>;
 export const getDiscoveryCollectionsFeaturedEndpoint = {
   operationId: 'getDiscoveryCollectionsFeatured' as const,
   method: 'GET' as const,
@@ -15207,7 +15208,7 @@ export interface GetDiscoveryFeaturedForGetDiscoveryFeaturedInput {
     take?: number;
   };
 }
-export type GetDiscoveryFeaturedForGetDiscoveryFeaturedOutput = Types.LearningExperienceDiscoveryFeaturedContentDto[];
+export type GetDiscoveryFeaturedForGetDiscoveryFeaturedOutput = Array<Types.LearningExperienceDiscoveryFeaturedContentDto>;
 export const getDiscoveryFeaturedForGetDiscoveryFeaturedEndpoint = {
   operationId: 'getDiscoveryFeaturedForGetDiscoveryFeatured' as const,
   method: 'GET' as const,
@@ -15309,7 +15310,7 @@ export interface GetDiscoveryFeaturedTypeInput {
     take?: number;
   };
 }
-export type GetDiscoveryFeaturedTypeOutput = Types.LearningExperienceDiscoveryFeaturedContentDto[];
+export type GetDiscoveryFeaturedTypeOutput = Array<Types.LearningExperienceDiscoveryFeaturedContentDto>;
 export const getDiscoveryFeaturedTypeEndpoint = {
   operationId: 'getDiscoveryFeaturedType' as const,
   method: 'GET' as const,
@@ -15343,7 +15344,7 @@ export interface GetDiscoverySearchHistoryInput {
     take?: number;
   };
 }
-export type GetDiscoverySearchHistoryOutput = Types.LearningExperienceDiscoverySearchHistoryDto[];
+export type GetDiscoverySearchHistoryOutput = Array<Types.LearningExperienceDiscoverySearchHistoryDto>;
 export const getDiscoverySearchHistoryEndpoint = {
   operationId: 'getDiscoverySearchHistory' as const,
   method: 'GET' as const,
@@ -15361,7 +15362,7 @@ export interface GetDiscoverySearchPopularInput {
     take?: number;
   };
 }
-export type GetDiscoverySearchPopularOutput = Types.LearningExperienceDiscoveryPopularSearchResult[];
+export type GetDiscoverySearchPopularOutput = Array<Types.LearningExperienceDiscoveryPopularSearchResult>;
 export const getDiscoverySearchPopularEndpoint = {
   operationId: 'getDiscoverySearchPopular' as const,
   method: 'GET' as const,
@@ -15421,7 +15422,7 @@ export interface GetEntitlementsInput {
     days?: number;
   };
 }
-export type GetEntitlementsOutput = Types.CommerceProductsEntitlementInfoDto[];
+export type GetEntitlementsOutput = Array<Types.CommerceProductsEntitlementInfoDto>;
 export const getEntitlementsEndpoint = {
   operationId: 'getEntitlements' as const,
   method: 'GET' as const,
@@ -15498,7 +15499,7 @@ export interface GetFeaturesInput {
     isEnabled?: boolean;
   };
 }
-export type GetFeaturesOutput = Types.FeaturesFeatureFlagDto[];
+export type GetFeaturesOutput = Array<Types.FeaturesFeatureFlagDto>;
 export const getFeaturesEndpoint = {
   operationId: 'getFeatures' as const,
   method: 'GET' as const,
@@ -15777,7 +15778,7 @@ export interface GetJitElevationsPendingInput {
     tenantId?: string;
   };
 }
-export type GetJitElevationsPendingOutput = Types.IdentityAuthorizationJitElevationInput[];
+export type GetJitElevationsPendingOutput = Array<Types.IdentityAuthorizationJitElevationInput>;
 export const getJitElevationsPendingEndpoint = {
   operationId: 'getJitElevationsPending' as const,
   method: 'GET' as const,
@@ -15795,7 +15796,7 @@ export interface GetJitElevationsUserInput {
     tenantId?: string;
   };
 }
-export type GetJitElevationsUserOutput = Types.IdentityAuthorizationJitElevationInput[];
+export type GetJitElevationsUserOutput = Array<Types.IdentityAuthorizationJitElevationInput>;
 export const getJitElevationsUserEndpoint = {
   operationId: 'getJitElevationsUser' as const,
   method: 'GET' as const,
@@ -15813,7 +15814,7 @@ export interface GetJitElevationsUserActiveInput {
     tenantId?: string;
   };
 }
-export type GetJitElevationsUserActiveOutput = Types.IdentityAuthorizationJitElevationInput[];
+export type GetJitElevationsUserActiveOutput = Array<Types.IdentityAuthorizationJitElevationInput>;
 export const getJitElevationsUserActiveEndpoint = {
   operationId: 'getJitElevationsUserActive' as const,
   method: 'GET' as const,
@@ -15847,7 +15848,7 @@ export interface GetLaunchPadForGetLaunchPadInput {
     status?: Types.LaunchPadLaunchPlanStatus;
   };
 }
-export type GetLaunchPadForGetLaunchPadOutput = Types.LaunchPadLaunchPlan[];
+export type GetLaunchPadForGetLaunchPadOutput = Array<Types.LaunchPadLaunchPlan>;
 export const getLaunchPadForGetLaunchPadEndpoint = {
   operationId: 'getLaunchPadForGetLaunchPad' as const,
   method: 'GET' as const,
@@ -15933,7 +15934,7 @@ export const postLaunchPadEventsApplicationsEndpoint = {
 export interface GetLaunchPadEventsApplicationsManagementInput {
   eventId: string;
 }
-export type GetLaunchPadEventsApplicationsManagementOutput = Types.LaunchPadLaunchPadApplicationProjection[];
+export type GetLaunchPadEventsApplicationsManagementOutput = Array<Types.LaunchPadLaunchPadApplicationProjection>;
 export const getLaunchPadEventsApplicationsManagementEndpoint = {
   operationId: 'getLaunchPadEventsApplicationsManagement' as const,
   method: 'GET' as const,
@@ -15945,7 +15946,7 @@ export const getLaunchPadEventsApplicationsManagementEndpoint = {
 export interface GetLaunchPadEventsRegistrationsManagementInput {
   eventId: string;
 }
-export type GetLaunchPadEventsRegistrationsManagementOutput = Types.LaunchPadLaunchPadRegistrationProjection[];
+export type GetLaunchPadEventsRegistrationsManagementOutput = Array<Types.LaunchPadLaunchPadRegistrationProjection>;
 export const getLaunchPadEventsRegistrationsManagementEndpoint = {
   operationId: 'getLaunchPadEventsRegistrationsManagement' as const,
   method: 'GET' as const,
@@ -16054,7 +16055,7 @@ export const postLaunchPadEventsApplicationsWithdrawEndpoint = {
 } as const;
 
 export type GetLaunchPadEventsApplicationsMeInput = void;
-export type GetLaunchPadEventsApplicationsMeOutput = Types.LaunchPadLaunchPadApplicationProjection[];
+export type GetLaunchPadEventsApplicationsMeOutput = Array<Types.LaunchPadLaunchPadApplicationProjection>;
 export const getLaunchPadEventsApplicationsMeEndpoint = {
   operationId: 'getLaunchPadEventsApplicationsMe' as const,
   method: 'GET' as const,
@@ -16064,7 +16065,7 @@ export const getLaunchPadEventsApplicationsMeEndpoint = {
 } as const;
 
 export type GetLaunchPadEventsManagementForGetLaunchPadEventsManagementInput = void;
-export type GetLaunchPadEventsManagementForGetLaunchPadEventsManagementOutput = Types.LaunchPadLaunchPadEventProjection[];
+export type GetLaunchPadEventsManagementForGetLaunchPadEventsManagementOutput = Array<Types.LaunchPadLaunchPadEventProjection>;
 export const getLaunchPadEventsManagementForGetLaunchPadEventsManagementEndpoint = {
   operationId: 'getLaunchPadEventsManagementForGetLaunchPadEventsManagement' as const,
   method: 'GET' as const,
@@ -16074,7 +16075,7 @@ export const getLaunchPadEventsManagementForGetLaunchPadEventsManagementEndpoint
 } as const;
 
 export type GetLaunchPadEventsPublicForGetLaunchPadEventsPublicInput = void;
-export type GetLaunchPadEventsPublicForGetLaunchPadEventsPublicOutput = Types.LaunchPadLaunchPadEventProjection[];
+export type GetLaunchPadEventsPublicForGetLaunchPadEventsPublicOutput = Array<Types.LaunchPadLaunchPadEventProjection>;
 export const getLaunchPadEventsPublicForGetLaunchPadEventsPublicEndpoint = {
   operationId: 'getLaunchPadEventsPublicForGetLaunchPadEventsPublic' as const,
   method: 'GET' as const,
@@ -16121,7 +16122,7 @@ export const postLaunchPadEventsRegistrationsTransitionEndpoint = {
 } as const;
 
 export type GetLaunchPadEventsRegistrationsMeInput = void;
-export type GetLaunchPadEventsRegistrationsMeOutput = Types.LaunchPadLaunchPadRegistrationProjection[];
+export type GetLaunchPadEventsRegistrationsMeOutput = Array<Types.LaunchPadLaunchPadRegistrationProjection>;
 export const getLaunchPadEventsRegistrationsMeEndpoint = {
   operationId: 'getLaunchPadEventsRegistrationsMe' as const,
   method: 'GET' as const,
@@ -16212,7 +16213,7 @@ export interface GetLearningPathsForGetLearningPathsInput {
     take?: number;
   };
 }
-export type GetLearningPathsForGetLearningPathsOutput = Types.LearningExperienceLearningPathsLearningPathDto[];
+export type GetLearningPathsForGetLearningPathsOutput = Array<Types.LearningExperienceLearningPathsLearningPathDto>;
 export const getLearningPathsForGetLearningPathsEndpoint = {
   operationId: 'getLearningPathsForGetLearningPaths' as const,
   method: 'GET' as const,
@@ -16431,7 +16432,7 @@ export interface GetLearningPathsEnrollmentsInput {
     take?: number;
   };
 }
-export type GetLearningPathsEnrollmentsOutput = Types.LearningExperienceLearningPathsLearningPathEnrollmentDto[];
+export type GetLearningPathsEnrollmentsOutput = Array<Types.LearningExperienceLearningPathsLearningPathEnrollmentDto>;
 export const getLearningPathsEnrollmentsEndpoint = {
   operationId: 'getLearningPathsEnrollments' as const,
   method: 'GET' as const,
@@ -16533,7 +16534,7 @@ export interface GetLearningPathsCreatorInput {
     take?: number;
   };
 }
-export type GetLearningPathsCreatorOutput = Types.LearningExperienceLearningPathsLearningPathDto[];
+export type GetLearningPathsCreatorOutput = Array<Types.LearningExperienceLearningPathsLearningPathDto>;
 export const getLearningPathsCreatorEndpoint = {
   operationId: 'getLearningPathsCreator' as const,
   method: 'GET' as const,
@@ -16551,7 +16552,7 @@ export interface GetLearningPathsFeaturedInput {
     take?: number;
   };
 }
-export type GetLearningPathsFeaturedOutput = Types.LearningExperienceLearningPathsLearningPathDto[];
+export type GetLearningPathsFeaturedOutput = Array<Types.LearningExperienceLearningPathsLearningPathDto>;
 export const getLearningPathsFeaturedEndpoint = {
   operationId: 'getLearningPathsFeatured' as const,
   method: 'GET' as const,
@@ -16570,7 +16571,7 @@ export interface GetLearningPathsPopularInput {
     take?: number;
   };
 }
-export type GetLearningPathsPopularOutput = Types.LearningExperienceLearningPathsLearningPathDto[];
+export type GetLearningPathsPopularOutput = Array<Types.LearningExperienceLearningPathsLearningPathDto>;
 export const getLearningPathsPopularEndpoint = {
   operationId: 'getLearningPathsPopular' as const,
   method: 'GET' as const,
@@ -16591,7 +16592,7 @@ export interface GetLearningPathsSearchInput {
     take?: number;
   };
 }
-export type GetLearningPathsSearchOutput = Types.LearningExperienceLearningPathsLearningPathDto[];
+export type GetLearningPathsSearchOutput = Array<Types.LearningExperienceLearningPathsLearningPathDto>;
 export const getLearningPathsSearchEndpoint = {
   operationId: 'getLearningPathsSearch' as const,
   method: 'GET' as const,
@@ -16628,7 +16629,7 @@ export interface GetLearningPathsUserCompletedInput {
     take?: number;
   };
 }
-export type GetLearningPathsUserCompletedOutput = Types.LearningExperienceLearningPathsLearningPathEnrollmentDto[];
+export type GetLearningPathsUserCompletedOutput = Array<Types.LearningExperienceLearningPathsLearningPathEnrollmentDto>;
 export const getLearningPathsUserCompletedEndpoint = {
   operationId: 'getLearningPathsUserCompleted' as const,
   method: 'GET' as const,
@@ -16648,7 +16649,7 @@ export interface GetLearningPathsUserEnrollmentsInput {
     take?: number;
   };
 }
-export type GetLearningPathsUserEnrollmentsOutput = Types.LearningExperienceLearningPathsLearningPathEnrollmentDto[];
+export type GetLearningPathsUserEnrollmentsOutput = Array<Types.LearningExperienceLearningPathsLearningPathEnrollmentDto>;
 export const getLearningPathsUserEnrollmentsEndpoint = {
   operationId: 'getLearningPathsUserEnrollments' as const,
   method: 'GET' as const,
@@ -16685,7 +16686,7 @@ export interface GetLearningMeSearchInput {
     take?: number;
   };
 }
-export type GetLearningMeSearchOutput = Types.LearningWorkspacesLearnerSearchResultDto[];
+export type GetLearningMeSearchOutput = Array<Types.LearningWorkspacesLearnerSearchResultDto>;
 export const getLearningMeSearchEndpoint = {
   operationId: 'getLearningMeSearch' as const,
   method: 'GET' as const,
@@ -16729,7 +16730,7 @@ export interface GetMarketingLeadsInput {
     take?: number;
   };
 }
-export type GetMarketingLeadsOutput = Types.ContentPagesMarketingLeadDto[];
+export type GetMarketingLeadsOutput = Array<Types.ContentPagesMarketingLeadDto>;
 export const getMarketingLeadsEndpoint = {
   operationId: 'getMarketingLeads' as const,
   method: 'GET' as const,
@@ -16817,7 +16818,7 @@ export interface GetOrdersForGetOrdersInput {
     status?: Types.CommerceOrdersOrderStatus;
   };
 }
-export type GetOrdersForGetOrdersOutput = Types.CommerceOrdersOrderDto[];
+export type GetOrdersForGetOrdersOutput = Array<Types.CommerceOrdersOrderDto>;
 export const getOrdersForGetOrdersEndpoint = {
   operationId: 'getOrdersForGetOrders' as const,
   method: 'GET' as const,
@@ -16929,7 +16930,7 @@ export interface GetPagesForGetPagesInput {
     take?: number;
   };
 }
-export type GetPagesForGetPagesOutput = Types.ContentPagesPageDto[];
+export type GetPagesForGetPagesOutput = Array<Types.ContentPagesPageDto>;
 export const getPagesForGetPagesEndpoint = {
   operationId: 'getPagesForGetPages' as const,
   method: 'GET' as const,
@@ -17035,7 +17036,7 @@ export const postPagesUnpublishEndpoint = {
 export interface GetPagesSectionsForGetPagesByPageIdSectionsInput {
   pageId: string;
 }
-export type GetPagesSectionsForGetPagesByPageIdSectionsOutput = Types.ContentPagesPageSectionDto[];
+export type GetPagesSectionsForGetPagesByPageIdSectionsOutput = Array<Types.ContentPagesPageSectionDto>;
 export const getPagesSectionsForGetPagesByPageIdSectionsEndpoint = {
   operationId: 'getPagesSectionsForGetPagesByPageIdSections' as const,
   method: 'GET' as const,
@@ -17114,7 +17115,7 @@ export const deletePagesSectionsEndpoint = {
  */
 export interface PostPagesSectionsReorderInput {
   pageId: string;
-  body?: string[];
+  body?: Array<string>;
 }
 export type PostPagesSectionsReorderOutput = void;
 export const postPagesSectionsReorderEndpoint = {
@@ -17149,7 +17150,7 @@ export interface GetPagesSitemapInput {
     locale?: string;
   };
 }
-export type GetPagesSitemapOutput = Types.ContentPagesSitemapEntryDto[];
+export type GetPagesSitemapOutput = Array<Types.ContentPagesSitemapEntryDto>;
 export const getPagesSitemapEndpoint = {
   operationId: 'getPagesSitemap' as const,
   method: 'GET' as const,
@@ -17167,7 +17168,7 @@ export interface GetPermissionAnalyticsAnomaliesInput {
     fromDate?: string;
   };
 }
-export type GetPermissionAnalyticsAnomaliesOutput = Types.IdentityAuthorizationPermissionAnomaly[];
+export type GetPermissionAnalyticsAnomaliesOutput = Array<Types.IdentityAuthorizationPermissionAnomaly>;
 export const getPermissionAnalyticsAnomaliesEndpoint = {
   operationId: 'getPermissionAnalyticsAnomalies' as const,
   method: 'GET' as const,
@@ -17206,7 +17207,7 @@ export interface GetPermissionAnalyticsResourcePatternsInput {
     toDate?: string;
   };
 }
-export type GetPermissionAnalyticsResourcePatternsOutput = Types.IdentityAuthorizationResourceAccessPattern[];
+export type GetPermissionAnalyticsResourcePatternsOutput = Array<Types.IdentityAuthorizationResourceAccessPattern>;
 export const getPermissionAnalyticsResourcePatternsEndpoint = {
   operationId: 'getPermissionAnalyticsResourcePatterns' as const,
   method: 'GET' as const,
@@ -17225,7 +17226,7 @@ export interface GetPermissionAnalyticsTrendsInput {
     toDate?: string;
   };
 }
-export type GetPermissionAnalyticsTrendsOutput = Types.IdentityAuthorizationPermissionTrend[];
+export type GetPermissionAnalyticsTrendsOutput = Array<Types.IdentityAuthorizationPermissionTrend>;
 export const getPermissionAnalyticsTrendsEndpoint = {
   operationId: 'getPermissionAnalyticsTrends' as const,
   method: 'GET' as const,
@@ -17244,7 +17245,7 @@ export interface GetPermissionAnalyticsUsageInput {
     toDate?: string;
   };
 }
-export type GetPermissionAnalyticsUsageOutput = Types.IdentityAuthorizationPermissionUsageMetrics[];
+export type GetPermissionAnalyticsUsageOutput = Array<Types.IdentityAuthorizationPermissionUsageMetrics>;
 export const getPermissionAnalyticsUsageEndpoint = {
   operationId: 'getPermissionAnalyticsUsage' as const,
   method: 'GET' as const,
@@ -17264,7 +17265,7 @@ export interface GetPermissionAnalyticsUserActivityInput {
     toDate?: string;
   };
 }
-export type GetPermissionAnalyticsUserActivityOutput = Types.IdentityAuthorizationUserActivitySummary[];
+export type GetPermissionAnalyticsUserActivityOutput = Array<Types.IdentityAuthorizationUserActivitySummary>;
 export const getPermissionAnalyticsUserActivityEndpoint = {
   operationId: 'getPermissionAnalyticsUserActivity' as const,
   method: 'GET' as const,
@@ -17360,7 +17361,7 @@ export interface GetPermissionDelegationsDelegateInput {
     tenantId?: string;
   };
 }
-export type GetPermissionDelegationsDelegateOutput = Types.IdentityAuthorizationPermissionDelegation[];
+export type GetPermissionDelegationsDelegateOutput = Array<Types.IdentityAuthorizationPermissionDelegation>;
 export const getPermissionDelegationsDelegateEndpoint = {
   operationId: 'getPermissionDelegationsDelegate' as const,
   method: 'GET' as const,
@@ -17378,7 +17379,7 @@ export interface GetPermissionDelegationsDelegatorInput {
     tenantId?: string;
   };
 }
-export type GetPermissionDelegationsDelegatorOutput = Types.IdentityAuthorizationPermissionDelegation[];
+export type GetPermissionDelegationsDelegatorOutput = Array<Types.IdentityAuthorizationPermissionDelegation>;
 export const getPermissionDelegationsDelegatorEndpoint = {
   operationId: 'getPermissionDelegationsDelegator' as const,
   method: 'GET' as const,
@@ -17433,7 +17434,7 @@ export const postProductsEndpoint = {
 export interface PostProductsBatchCreateInput {
   body?: Types.CommerceProductsBatchCreateProductsInput;
 }
-export type PostProductsBatchCreateOutput = Types.CommerceProductsProductDto[];
+export type PostProductsBatchCreateOutput = Array<Types.CommerceProductsProductDto>;
 export const postProductsBatchCreateEndpoint = {
   operationId: 'postProductsBatchCreate' as const,
   method: 'POST' as const,
@@ -17584,7 +17585,7 @@ export interface GetProductsPricingInput {
     includeUnpublished?: boolean;
   };
 }
-export type GetProductsPricingOutput = Types.CommerceProductsProductPricingDto[];
+export type GetProductsPricingOutput = Array<Types.CommerceProductsProductPricingDto>;
 export const getProductsPricingEndpoint = {
   operationId: 'getProductsPricing' as const,
   method: 'GET' as const,
@@ -17634,7 +17635,7 @@ export interface GetProjectsForGetProjectsInput {
     sortDirection?: string;
   };
 }
-export type GetProjectsForGetProjectsOutput = Types.ProjectsProjectApiOutput[];
+export type GetProjectsForGetProjectsOutput = Array<Types.ProjectsProjectApiOutput>;
 export const getProjectsForGetProjectsEndpoint = {
   operationId: 'getProjectsForGetProjects' as const,
   method: 'GET' as const,
@@ -17796,7 +17797,7 @@ export const postProjectsUnpublishEndpoint = {
 export interface GetProjectsCollaboratorsInput {
   id: string;
 }
-export type GetProjectsCollaboratorsOutput = Types.ProjectsCollaboratorDto[];
+export type GetProjectsCollaboratorsOutput = Array<Types.ProjectsCollaboratorDto>;
 export const getProjectsCollaboratorsEndpoint = {
   operationId: 'getProjectsCollaborators' as const,
   method: 'GET' as const,
@@ -17892,7 +17893,7 @@ export const getProjectsStatisticsEndpoint = {
 export interface GetProjectsVersionsInput {
   id: string;
 }
-export type GetProjectsVersionsOutput = Types.ProjectsProjectVersionApiOutput[];
+export type GetProjectsVersionsOutput = Array<Types.ProjectsProjectVersionApiOutput>;
 export const getProjectsVersionsEndpoint = {
   operationId: 'getProjectsVersions' as const,
   method: 'GET' as const,
@@ -18160,7 +18161,7 @@ export const postProjectsPermissionsShareWithRoleEndpoint = {
 export interface GetProjectsPermissionsCollaboratorsInput {
   projectId: string;
 }
-export type GetProjectsPermissionsCollaboratorsOutput = Types.ProjectsProjectCollaboratorDto[];
+export type GetProjectsPermissionsCollaboratorsOutput = Array<Types.ProjectsProjectCollaboratorDto>;
 export const getProjectsPermissionsCollaboratorsEndpoint = {
   operationId: 'getProjectsPermissionsCollaborators' as const,
   method: 'GET' as const,
@@ -18224,7 +18225,7 @@ export const deleteProjectsPermissionsCollaboratorsEndpoint = {
 export interface GetProjectsPermissionsMyPermissionsInput {
   projectId: string;
 }
-export type GetProjectsPermissionsMyPermissionsOutput = Types.ProjectsEffectivePermission[];
+export type GetProjectsPermissionsMyPermissionsOutput = Array<Types.ProjectsEffectivePermission>;
 export const getProjectsPermissionsMyPermissionsEndpoint = {
   operationId: 'getProjectsPermissionsMyPermissions' as const,
   method: 'GET' as const,
@@ -18239,7 +18240,7 @@ export const getProjectsPermissionsMyPermissionsEndpoint = {
 export interface GetProjectsPermissionsRoleTemplatesInput {
   projectId: string;
 }
-export type GetProjectsPermissionsRoleTemplatesOutput = Types.ProjectsProjectRoleTemplate[];
+export type GetProjectsPermissionsRoleTemplatesOutput = Array<Types.ProjectsProjectRoleTemplate>;
 export const getProjectsPermissionsRoleTemplatesEndpoint = {
   operationId: 'getProjectsPermissionsRoleTemplates' as const,
   method: 'GET' as const,
@@ -18251,7 +18252,7 @@ export const getProjectsPermissionsRoleTemplatesEndpoint = {
 export interface GetProjectsStoreProductsInput {
   projectId: string;
 }
-export type GetProjectsStoreProductsOutput = Types.ProjectsProjectStoreProductProjection[];
+export type GetProjectsStoreProductsOutput = Array<Types.ProjectsProjectStoreProductProjection>;
 export const getProjectsStoreProductsEndpoint = {
   operationId: 'getProjectsStoreProducts' as const,
   method: 'GET' as const,
@@ -18344,7 +18345,7 @@ export interface GetProjectsWorkHistoryInput {
     take?: number;
   };
 }
-export type GetProjectsWorkHistoryOutput = Types.APIProjectWorkProjectWorkHistoryDto[];
+export type GetProjectsWorkHistoryOutput = Array<Types.APIProjectWorkProjectWorkHistoryDto>;
 export const getProjectsWorkHistoryEndpoint = {
   operationId: 'getProjectsWorkHistory' as const,
   method: 'GET' as const,
@@ -18356,7 +18357,7 @@ export const getProjectsWorkHistoryEndpoint = {
 export interface GetProjectsWorkLabelsInput {
   projectId: string;
 }
-export type GetProjectsWorkLabelsOutput = Types.APIProjectWorkProjectTaskLabelDto[];
+export type GetProjectsWorkLabelsOutput = Array<Types.APIProjectWorkProjectTaskLabelDto>;
 export const getProjectsWorkLabelsEndpoint = {
   operationId: 'getProjectsWorkLabels' as const,
   method: 'GET' as const,
@@ -18394,7 +18395,7 @@ export const deleteProjectsWorkLabelsEndpoint = {
 export interface GetProjectsWorkMilestonesInput {
   projectId: string;
 }
-export type GetProjectsWorkMilestonesOutput = Types.APIProjectWorkProjectMilestoneDto[];
+export type GetProjectsWorkMilestonesOutput = Array<Types.APIProjectWorkProjectMilestoneDto>;
 export const getProjectsWorkMilestonesEndpoint = {
   operationId: 'getProjectsWorkMilestones' as const,
   method: 'GET' as const,
@@ -18657,7 +18658,7 @@ export interface GetProjectsAccessibleVersionsInput {
     take?: number;
   };
 }
-export type GetProjectsAccessibleVersionsOutput = Types.ProjectsProjectVersionOptionProjection[];
+export type GetProjectsAccessibleVersionsOutput = Array<Types.ProjectsProjectVersionOptionProjection>;
 export const getProjectsAccessibleVersionsEndpoint = {
   operationId: 'getProjectsAccessibleVersions' as const,
   method: 'GET' as const,
@@ -18677,7 +18678,7 @@ export interface GetProjectsCategoryInput {
     take?: number;
   };
 }
-export type GetProjectsCategoryOutput = Types.ProjectsProjectApiOutput[];
+export type GetProjectsCategoryOutput = Array<Types.ProjectsProjectApiOutput>;
 export const getProjectsCategoryEndpoint = {
   operationId: 'getProjectsCategory' as const,
   method: 'GET' as const,
@@ -18697,7 +18698,7 @@ export interface GetProjectsCreatorInput {
     take?: number;
   };
 }
-export type GetProjectsCreatorOutput = Types.ProjectsProjectApiOutput[];
+export type GetProjectsCreatorOutput = Array<Types.ProjectsProjectApiOutput>;
 export const getProjectsCreatorEndpoint = {
   operationId: 'getProjectsCreator' as const,
   method: 'GET' as const,
@@ -18715,7 +18716,7 @@ export interface GetProjectsFeaturedInput {
     take?: number;
   };
 }
-export type GetProjectsFeaturedOutput = Types.ProjectsProjectApiOutput[];
+export type GetProjectsFeaturedOutput = Array<Types.ProjectsProjectApiOutput>;
 export const getProjectsFeaturedEndpoint = {
   operationId: 'getProjectsFeatured' as const,
   method: 'GET' as const,
@@ -18765,7 +18766,7 @@ export interface GetProjectsMineInput {
     take?: number;
   };
 }
-export type GetProjectsMineOutput = Types.ProjectsProjectApiOutput[];
+export type GetProjectsMineOutput = Array<Types.ProjectsProjectApiOutput>;
 export const getProjectsMineEndpoint = {
   operationId: 'getProjectsMine' as const,
   method: 'GET' as const,
@@ -18778,7 +18779,7 @@ export const getProjectsMineEndpoint = {
  * Get current user's project invitations
  */
 export type GetProjectsMyInvitationsInput = void;
-export type GetProjectsMyInvitationsOutput = Types.ProjectsProjectInvitationDto[];
+export type GetProjectsMyInvitationsOutput = Array<Types.ProjectsProjectInvitationDto>;
 export const getProjectsMyInvitationsEndpoint = {
   operationId: 'getProjectsMyInvitations' as const,
   method: 'GET' as const,
@@ -18796,7 +18797,7 @@ export interface GetProjectsPopularInput {
     take?: number;
   };
 }
-export type GetProjectsPopularOutput = Types.ProjectsProjectApiOutput[];
+export type GetProjectsPopularOutput = Array<Types.ProjectsProjectApiOutput>;
 export const getProjectsPopularEndpoint = {
   operationId: 'getProjectsPopular' as const,
   method: 'GET' as const,
@@ -18814,7 +18815,7 @@ export interface GetProjectsRecentInput {
     take?: number;
   };
 }
-export type GetProjectsRecentOutput = Types.ProjectsProjectApiOutput[];
+export type GetProjectsRecentOutput = Array<Types.ProjectsProjectApiOutput>;
 export const getProjectsRecentEndpoint = {
   operationId: 'getProjectsRecent' as const,
   method: 'GET' as const,
@@ -18827,7 +18828,7 @@ export const getProjectsRecentEndpoint = {
  * Get available role templates for projects
  */
 export type GetProjectsRoleTemplatesInput = void;
-export type GetProjectsRoleTemplatesOutput = Record<string, unknown>[];
+export type GetProjectsRoleTemplatesOutput = Array<Record<string, unknown>>;
 export const getProjectsRoleTemplatesEndpoint = {
   operationId: 'getProjectsRoleTemplates' as const,
   method: 'GET' as const,
@@ -18842,7 +18843,7 @@ export const getProjectsRoleTemplatesEndpoint = {
 export interface GetProjectsRolesPermissionsInput {
   roleName: string;
 }
-export type GetProjectsRolesPermissionsOutput = Types.IdentityAuthorizationPermissionType[];
+export type GetProjectsRolesPermissionsOutput = Array<Types.IdentityAuthorizationPermissionType>;
 export const getProjectsRolesPermissionsEndpoint = {
   operationId: 'getProjectsRolesPermissions' as const,
   method: 'GET' as const,
@@ -18867,7 +18868,7 @@ export interface GetProjectsSearchInput {
     sortDirection?: string;
   };
 }
-export type GetProjectsSearchOutput = Types.ProjectsProjectApiOutput[];
+export type GetProjectsSearchOutput = Array<Types.ProjectsProjectApiOutput>;
 export const getProjectsSearchEndpoint = {
   operationId: 'getProjectsSearch' as const,
   method: 'GET' as const,
@@ -19143,7 +19144,7 @@ export interface GetRecommendationsCoursesSimilarInput {
     maxResults?: number;
   };
 }
-export type GetRecommendationsCoursesSimilarOutput = Types.LearningExperienceRecommendationsSimilarCourseDto[];
+export type GetRecommendationsCoursesSimilarOutput = Array<Types.LearningExperienceRecommendationsSimilarCourseDto>;
 export const getRecommendationsCoursesSimilarEndpoint = {
   operationId: 'getRecommendationsCoursesSimilar' as const,
   method: 'GET' as const,
@@ -19164,7 +19165,7 @@ export interface GetRecommendationsMeInput {
     take?: number;
   };
 }
-export type GetRecommendationsMeOutput = Types.LearningExperienceRecommendationsRecommendationDto[];
+export type GetRecommendationsMeOutput = Array<Types.LearningExperienceRecommendationsRecommendationDto>;
 export const getRecommendationsMeEndpoint = {
   operationId: 'getRecommendationsMe' as const,
   method: 'GET' as const,
@@ -19182,7 +19183,7 @@ export interface PostRecommendationsMeGenerateInput {
     maxResults?: number;
   };
 }
-export type PostRecommendationsMeGenerateOutput = Types.LearningExperienceRecommendationsRecommendationDto[];
+export type PostRecommendationsMeGenerateOutput = Array<Types.LearningExperienceRecommendationsRecommendationDto>;
 export const postRecommendationsMeGenerateEndpoint = {
   operationId: 'postRecommendationsMeGenerate' as const,
   method: 'POST' as const,
@@ -19293,7 +19294,7 @@ export interface GetRecommendationsPopularInput {
     take?: number;
   };
 }
-export type GetRecommendationsPopularOutput = Types.LearningExperienceRecommendationsPopularCourseDto[];
+export type GetRecommendationsPopularOutput = Array<Types.LearningExperienceRecommendationsPopularCourseDto>;
 export const getRecommendationsPopularEndpoint = {
   operationId: 'getRecommendationsPopular' as const,
   method: 'GET' as const,
@@ -19315,7 +19316,7 @@ export interface GetRecommendationsTrendingInput {
     take?: number;
   };
 }
-export type GetRecommendationsTrendingOutput = Types.LearningExperienceRecommendationsTrendingCourseDto[];
+export type GetRecommendationsTrendingOutput = Array<Types.LearningExperienceRecommendationsTrendingCourseDto>;
 export const getRecommendationsTrendingEndpoint = {
   operationId: 'getRecommendationsTrending' as const,
   method: 'GET' as const,
@@ -19552,7 +19553,7 @@ export interface GetSodRulesForGetSodRulesInput {
     activeOnly?: boolean;
   };
 }
-export type GetSodRulesForGetSodRulesOutput = Types.IdentityAuthorizationSoDRule[];
+export type GetSodRulesForGetSodRulesOutput = Array<Types.IdentityAuthorizationSoDRule>;
 export const getSodRulesForGetSodRulesEndpoint = {
   operationId: 'getSodRulesForGetSodRules' as const,
   method: 'GET' as const,
@@ -19679,7 +19680,7 @@ export interface GetSodViolationsActiveInput {
     tenantId?: string;
   };
 }
-export type GetSodViolationsActiveOutput = Types.IdentityAuthorizationSoDViolation[];
+export type GetSodViolationsActiveOutput = Array<Types.IdentityAuthorizationSoDViolation>;
 export const getSodViolationsActiveEndpoint = {
   operationId: 'getSodViolationsActive' as const,
   method: 'GET' as const,
@@ -19697,7 +19698,7 @@ export interface GetSodViolationsDetectInput {
     tenantId?: string;
   };
 }
-export type GetSodViolationsDetectOutput = Types.IdentityAuthorizationSoDViolation[];
+export type GetSodViolationsDetectOutput = Array<Types.IdentityAuthorizationSoDViolation>;
 export const getSodViolationsDetectEndpoint = {
   operationId: 'getSodViolationsDetect' as const,
   method: 'GET' as const,
@@ -19715,7 +19716,7 @@ export interface GetSodViolationsUserInput {
     tenantId?: string;
   };
 }
-export type GetSodViolationsUserOutput = Types.IdentityAuthorizationSoDViolation[];
+export type GetSodViolationsUserOutput = Array<Types.IdentityAuthorizationSoDViolation>;
 export const getSodViolationsUserEndpoint = {
   operationId: 'getSodViolationsUser' as const,
   method: 'GET' as const,
@@ -19727,7 +19728,7 @@ export const getSodViolationsUserEndpoint = {
 export interface GetStoreProductsProjectsInput {
   productId: string;
 }
-export type GetStoreProductsProjectsOutput = Types.ProjectsProjectStoreProductProjection[];
+export type GetStoreProductsProjectsOutput = Array<Types.ProjectsProjectStoreProductProjection>;
 export const getStoreProductsProjectsEndpoint = {
   operationId: 'getStoreProductsProjects' as const,
   method: 'GET' as const,
@@ -20001,7 +20002,7 @@ export const postSupportTicketsMessagesEndpoint = {
 } as const;
 
 export type GetSupportTicketsAgentsInput = void;
-export type GetSupportTicketsAgentsOutput = Types.CommerceProductsSupportAgentDto[];
+export type GetSupportTicketsAgentsOutput = Array<Types.CommerceProductsSupportAgentDto>;
 export const getSupportTicketsAgentsEndpoint = {
   operationId: 'getSupportTicketsAgents' as const,
   method: 'GET' as const,
@@ -20083,7 +20084,7 @@ export interface GetTeamsForGetTeamsInput {
     take?: number;
   };
 }
-export type GetTeamsForGetTeamsOutput = Types.APITeamsTeamDto[];
+export type GetTeamsForGetTeamsOutput = Array<Types.APITeamsTeamDto>;
 export const getTeamsForGetTeamsEndpoint = {
   operationId: 'getTeamsForGetTeams' as const,
   method: 'GET' as const,
@@ -20156,7 +20157,7 @@ export const postTeamsRestoreEndpoint = {
 export interface GetTeamsInvitationsInput {
   teamId: string;
 }
-export type GetTeamsInvitationsOutput = Types.APITeamsTeamInvitationDto[];
+export type GetTeamsInvitationsOutput = Array<Types.APITeamsTeamInvitationDto>;
 export const getTeamsInvitationsEndpoint = {
   operationId: 'getTeamsInvitations' as const,
   method: 'GET' as const,
@@ -20234,7 +20235,7 @@ export const deleteTeamsMembersEndpoint = {
 export interface GetTeamsProjectsInput {
   teamId: string;
 }
-export type GetTeamsProjectsOutput = Types.APITeamsTeamProjectSummary[];
+export type GetTeamsProjectsOutput = Array<Types.APITeamsTeamProjectSummary>;
 export const getTeamsProjectsEndpoint = {
   operationId: 'getTeamsProjects' as const,
   method: 'GET' as const,
@@ -20279,7 +20280,7 @@ export interface GetTeamsMineInput {
     take?: number;
   };
 }
-export type GetTeamsMineOutput = Types.APITeamsTeamDto[];
+export type GetTeamsMineOutput = Array<Types.APITeamsTeamDto>;
 export const getTeamsMineEndpoint = {
   operationId: 'getTeamsMine' as const,
   method: 'GET' as const,
@@ -20289,7 +20290,7 @@ export const getTeamsMineEndpoint = {
 } as const;
 
 export type GetTeamsMyInvitationsInput = void;
-export type GetTeamsMyInvitationsOutput = Types.APITeamsMyTeamInvitationDto[];
+export type GetTeamsMyInvitationsOutput = Array<Types.APITeamsMyTeamInvitationDto>;
 export const getTeamsMyInvitationsEndpoint = {
   operationId: 'getTeamsMyInvitations' as const,
   method: 'GET' as const,
@@ -20697,7 +20698,7 @@ export interface GetTenantsAiHistoryInput {
     take?: number;
   };
 }
-export type GetTenantsAiHistoryOutput = Types.AIAiConversationHistoryEntryDto[];
+export type GetTenantsAiHistoryOutput = Array<Types.AIAiConversationHistoryEntryDto>;
 export const getTenantsAiHistoryEndpoint = {
   operationId: 'getTenantsAiHistory' as const,
   method: 'GET' as const,
@@ -20867,7 +20868,7 @@ export interface GetTenantsCapabilitiesAuditLogInput {
     toDate?: string;
   };
 }
-export type GetTenantsCapabilitiesAuditLogOutput = Types.FeaturesCapabilityAuditLogDto[];
+export type GetTenantsCapabilitiesAuditLogOutput = Array<Types.FeaturesCapabilityAuditLogDto>;
 export const getTenantsCapabilitiesAuditLogEndpoint = {
   operationId: 'getTenantsCapabilitiesAuditLog' as const,
   method: 'GET' as const,
@@ -20988,7 +20989,7 @@ export const patchTenantsMetadataCustomFieldsEndpoint = {
 export interface GetTenantsMetadataTagsInput {
   tenantId: string;
 }
-export type GetTenantsMetadataTagsOutput = string[];
+export type GetTenantsMetadataTagsOutput = Array<string>;
 export const getTenantsMetadataTagsEndpoint = {
   operationId: 'getTenantsMetadataTags' as const,
   method: 'GET' as const,
@@ -21004,7 +21005,7 @@ export const getTenantsMetadataTagsEndpoint = {
  */
 export interface PutTenantsMetadataTagsInput {
   tenantId: string;
-  body?: string[];
+  body?: Array<string>;
 }
 export type PutTenantsMetadataTagsOutput = void;
 export const putTenantsMetadataTagsEndpoint = {
@@ -21045,7 +21046,7 @@ export interface GetTenantsPaymentsInput {
     endDate?: string;
   };
 }
-export type GetTenantsPaymentsOutput = Types.CommercePaymentsPaymentResult[];
+export type GetTenantsPaymentsOutput = Array<Types.CommercePaymentsPaymentResult>;
 export const getTenantsPaymentsEndpoint = {
   operationId: 'getTenantsPayments' as const,
   method: 'GET' as const,
@@ -21062,7 +21063,7 @@ export const getTenantsPaymentsEndpoint = {
 export interface GetTenantsQuotasForGetTenantsByTenantIdQuotasInput {
   tenantId: string;
 }
-export type GetTenantsQuotasForGetTenantsByTenantIdQuotasOutput = Types.ResourcesResourceQuotaOutput[];
+export type GetTenantsQuotasForGetTenantsByTenantIdQuotasOutput = Array<Types.ResourcesResourceQuotaOutput>;
 export const getTenantsQuotasForGetTenantsByTenantIdQuotasEndpoint = {
   operationId: 'getTenantsQuotasForGetTenantsByTenantIdQuotas' as const,
   method: 'GET' as const,
@@ -21300,7 +21301,7 @@ export interface GetTenantsResourcesMetadataForGetTenantsByTenantIdResourcesMeta
     category?: string;
   };
 }
-export type GetTenantsResourcesMetadataForGetTenantsByTenantIdResourcesMetadataOutput = Types.ResourcesResourceMetadata[];
+export type GetTenantsResourcesMetadataForGetTenantsByTenantIdResourcesMetadataOutput = Array<Types.ResourcesResourceMetadata>;
 export const getTenantsResourcesMetadataForGetTenantsByTenantIdResourcesMetadataEndpoint = {
   operationId: 'getTenantsResourcesMetadataForGetTenantsByTenantIdResourcesMetadata' as const,
   method: 'GET' as const,
@@ -21375,7 +21376,7 @@ export interface GetTenantsResourcesSettingsForGetTenantsByTenantIdResourcesSett
     category?: string;
   };
 }
-export type GetTenantsResourcesSettingsForGetTenantsByTenantIdResourcesSettingsOutput = Types.ResourcesResourceSettings[];
+export type GetTenantsResourcesSettingsForGetTenantsByTenantIdResourcesSettingsOutput = Array<Types.ResourcesResourceSettings>;
 export const getTenantsResourcesSettingsForGetTenantsByTenantIdResourcesSettingsEndpoint = {
   operationId: 'getTenantsResourcesSettingsForGetTenantsByTenantIdResourcesSettings' as const,
   method: 'GET' as const,
@@ -21742,7 +21743,7 @@ export const getTestingAttendanceStudentsEndpoint = {
 } as const;
 
 export type GetTestingAvailableForTestingInput = void;
-export type GetTestingAvailableForTestingOutput = Types.TestingLabTestingInput[];
+export type GetTestingAvailableForTestingOutput = Array<Types.TestingLabTestingInput>;
 export const getTestingAvailableForTestingEndpoint = {
   operationId: 'getTestingAvailableForTesting' as const,
   method: 'GET' as const,
@@ -21758,7 +21759,7 @@ export interface GetTestingEventsForGetTestingEventsInput {
     take?: number;
   };
 }
-export type GetTestingEventsForGetTestingEventsOutput = Types.TestingLabTestingEventProjection[];
+export type GetTestingEventsForGetTestingEventsOutput = Array<Types.TestingLabTestingEventProjection>;
 export const getTestingEventsForGetTestingEventsEndpoint = {
   operationId: 'getTestingEventsForGetTestingEvents' as const,
   method: 'GET' as const,
@@ -21921,7 +21922,7 @@ export interface GetTestingEventsApplicationsForGetTestingEventsByEventIdApplica
     take?: number;
   };
 }
-export type GetTestingEventsApplicationsForGetTestingEventsByEventIdApplicationsOutput = Types.TestingLabTestingProjectApplicationProjection[];
+export type GetTestingEventsApplicationsForGetTestingEventsByEventIdApplicationsOutput = Array<Types.TestingLabTestingProjectApplicationProjection>;
 export const getTestingEventsApplicationsForGetTestingEventsByEventIdApplicationsEndpoint = {
   operationId: 'getTestingEventsApplicationsForGetTestingEventsByEventIdApplications' as const,
   method: 'GET' as const,
@@ -21971,10 +21972,10 @@ export const postTestingEventsApplicationsDraftsEndpoint = {
 export interface GetTestingEventsApplicationsTesterEligibilityInput {
   eventId: string;
   query?: {
-    testerUserIds?: string[];
+    testerUserIds?: Array<string>;
   };
 }
-export type GetTestingEventsApplicationsTesterEligibilityOutput = Types.TestingLabTestingApplicationTesterEligibilityProjection[];
+export type GetTestingEventsApplicationsTesterEligibilityOutput = Array<Types.TestingLabTestingApplicationTesterEligibilityProjection>;
 export const getTestingEventsApplicationsTesterEligibilityEndpoint = {
   operationId: 'getTestingEventsApplicationsTesterEligibility' as const,
   method: 'GET' as const,
@@ -21986,7 +21987,7 @@ export const getTestingEventsApplicationsTesterEligibilityEndpoint = {
 export interface GetTestingEventsCommitteeInput {
   eventId: string;
 }
-export type GetTestingEventsCommitteeOutput = Types.TestingLabTestingEventCommitteeMemberProjection[];
+export type GetTestingEventsCommitteeOutput = Array<Types.TestingLabTestingEventCommitteeMemberProjection>;
 export const getTestingEventsCommitteeEndpoint = {
   operationId: 'getTestingEventsCommittee' as const,
   method: 'GET' as const,
@@ -22037,7 +22038,7 @@ export const putTestingEventsConfigurationEndpoint = {
 export interface GetTestingEventsFeedbackInput {
   eventId: string;
 }
-export type GetTestingEventsFeedbackOutput = Types.TestingLabTestingEventFeedbackReviewProjection[];
+export type GetTestingEventsFeedbackOutput = Array<Types.TestingLabTestingEventFeedbackReviewProjection>;
 export const getTestingEventsFeedbackEndpoint = {
   operationId: 'getTestingEventsFeedback' as const,
   method: 'GET' as const,
@@ -22062,7 +22063,7 @@ export const putTestingEventsLearningEndpoint = {
 export interface GetTestingEventsSlotsInput {
   eventId: string;
 }
-export type GetTestingEventsSlotsOutput = Types.TestingLabTestingEventSlotProjection[];
+export type GetTestingEventsSlotsOutput = Array<Types.TestingLabTestingEventSlotProjection>;
 export const getTestingEventsSlotsEndpoint = {
   operationId: 'getTestingEventsSlots' as const,
   method: 'GET' as const,
@@ -22115,7 +22116,7 @@ export interface PostTestingEventsSlotsBatchInput {
   eventId: string;
   body?: Types.TestingLabCreateTestingEventSlotsInput;
 }
-export type PostTestingEventsSlotsBatchOutput = Types.TestingLabTestingEventSlotProjection[];
+export type PostTestingEventsSlotsBatchOutput = Array<Types.TestingLabTestingEventSlotProjection>;
 export const postTestingEventsSlotsBatchEndpoint = {
   operationId: 'postTestingEventsSlotsBatch' as const,
   method: 'POST' as const,
@@ -22280,7 +22281,7 @@ export interface GetTestingEventsApplicationsMeInput {
     eventId?: string;
   };
 }
-export type GetTestingEventsApplicationsMeOutput = Types.TestingLabTestingProjectApplicationProjection[];
+export type GetTestingEventsApplicationsMeOutput = Array<Types.TestingLabTestingProjectApplicationProjection>;
 export const getTestingEventsApplicationsMeEndpoint = {
   operationId: 'getTestingEventsApplicationsMe' as const,
   method: 'GET' as const,
@@ -22295,7 +22296,7 @@ export interface GetTestingEventsArchivedInput {
     take?: number;
   };
 }
-export type GetTestingEventsArchivedOutput = Types.TestingLabTestingEventProjection[];
+export type GetTestingEventsArchivedOutput = Array<Types.TestingLabTestingEventProjection>;
 export const getTestingEventsArchivedEndpoint = {
   operationId: 'getTestingEventsArchived' as const,
   method: 'GET' as const,
@@ -22322,7 +22323,7 @@ export interface GetTestingEventsFeedbackObligationsMeInput {
     eventId?: string;
   };
 }
-export type GetTestingEventsFeedbackObligationsMeOutput = Types.TestingLabTestingFeedbackObligationProjection[];
+export type GetTestingEventsFeedbackObligationsMeOutput = Array<Types.TestingLabTestingFeedbackObligationProjection>;
 export const getTestingEventsFeedbackObligationsMeEndpoint = {
   operationId: 'getTestingEventsFeedbackObligationsMe' as const,
   method: 'GET' as const,
@@ -22336,7 +22337,7 @@ export interface GetTestingEventsFeedbackMeInput {
     eventId?: string;
   };
 }
-export type GetTestingEventsFeedbackMeOutput = Types.TestingLabTestingEventFeedbackProjection[];
+export type GetTestingEventsFeedbackMeOutput = Array<Types.TestingLabTestingEventFeedbackProjection>;
 export const getTestingEventsFeedbackMeEndpoint = {
   operationId: 'getTestingEventsFeedbackMe' as const,
   method: 'GET' as const,
@@ -22368,7 +22369,7 @@ export interface GetTestingEventsPublicForGetTestingEventsPublicInput {
     take?: number;
   };
 }
-export type GetTestingEventsPublicForGetTestingEventsPublicOutput = Types.TestingLabPublicTestingEventProjection[];
+export type GetTestingEventsPublicForGetTestingEventsPublicOutput = Array<Types.TestingLabPublicTestingEventProjection>;
 export const getTestingEventsPublicForGetTestingEventsPublicEndpoint = {
   operationId: 'getTestingEventsPublicForGetTestingEventsPublic' as const,
   method: 'GET' as const,
@@ -22467,7 +22468,7 @@ export interface GetTestingEventsRegistrationsMeInput {
     eventId?: string;
   };
 }
-export type GetTestingEventsRegistrationsMeOutput = Types.TestingLabTestingSlotRegistrationProjection[];
+export type GetTestingEventsRegistrationsMeOutput = Array<Types.TestingLabTestingSlotRegistrationProjection>;
 export const getTestingEventsRegistrationsMeEndpoint = {
   operationId: 'getTestingEventsRegistrationsMe' as const,
   method: 'GET' as const,
@@ -22482,7 +22483,7 @@ export interface GetTestingEventsSlotsRegistrationsInput {
     status?: Types.TestingLabTestingSlotRegistrationStatus;
   };
 }
-export type GetTestingEventsSlotsRegistrationsOutput = Types.TestingLabTestingSlotRegistrationProjection[];
+export type GetTestingEventsSlotsRegistrationsOutput = Array<Types.TestingLabTestingSlotRegistrationProjection>;
 export const getTestingEventsSlotsRegistrationsEndpoint = {
   operationId: 'getTestingEventsSlotsRegistrations' as const,
   method: 'GET' as const,
@@ -22567,7 +22568,7 @@ export const postTestingFeedbackReportEndpoint = {
 export interface GetTestingFeedbackByUserInput {
   userId: string;
 }
-export type GetTestingFeedbackByUserOutput = Types.TestingLabTestingFeedback[];
+export type GetTestingFeedbackByUserOutput = Array<Types.TestingLabTestingFeedback>;
 export const getTestingFeedbackByUserEndpoint = {
   operationId: 'getTestingFeedbackByUser' as const,
   method: 'GET' as const,
@@ -22583,7 +22584,7 @@ export interface GetTestingLocationsForGetTestingLocationsInput {
     includeArchived?: boolean;
   };
 }
-export type GetTestingLocationsForGetTestingLocationsOutput = Types.TestingLabTestingLocation[];
+export type GetTestingLocationsForGetTestingLocationsOutput = Array<Types.TestingLabTestingLocation>;
 export const getTestingLocationsForGetTestingLocationsEndpoint = {
   operationId: 'getTestingLocationsForGetTestingLocations' as const,
   method: 'GET' as const,
@@ -22654,7 +22655,7 @@ export const postTestingLocationsRestoreEndpoint = {
 } as const;
 
 export type GetTestingMyRequestsInput = void;
-export type GetTestingMyRequestsOutput = Types.TestingLabTestingInput[];
+export type GetTestingMyRequestsOutput = Array<Types.TestingLabTestingInput>;
 export const getTestingMyRequestsEndpoint = {
   operationId: 'getTestingMyRequests' as const,
   method: 'GET' as const,
@@ -22671,7 +22672,7 @@ export interface GetTestingPublicSessionsInput {
     take?: number;
   };
 }
-export type GetTestingPublicSessionsOutput = Types.TestingLabTestingSession[];
+export type GetTestingPublicSessionsOutput = Array<Types.TestingLabTestingSession>;
 export const getTestingPublicSessionsEndpoint = {
   operationId: 'getTestingPublicSessions' as const,
   method: 'GET' as const,
@@ -22687,7 +22688,7 @@ export interface GetTestingRequestsForGetTestingRequestsInput {
     includeArchived?: boolean;
   };
 }
-export type GetTestingRequestsForGetTestingRequestsOutput = Types.TestingLabTestingRequestDetailProjection[];
+export type GetTestingRequestsForGetTestingRequestsOutput = Array<Types.TestingLabTestingRequestDetailProjection>;
 export const getTestingRequestsForGetTestingRequestsEndpoint = {
   operationId: 'getTestingRequestsForGetTestingRequests' as const,
   method: 'GET' as const,
@@ -22772,7 +22773,7 @@ export const getTestingRequestsDetailsEndpoint = {
 export interface GetTestingRequestsFeedbackInput {
   requestId: string;
 }
-export type GetTestingRequestsFeedbackOutput = Types.TestingLabTestingFeedback[];
+export type GetTestingRequestsFeedbackOutput = Array<Types.TestingLabTestingFeedback>;
 export const getTestingRequestsFeedbackEndpoint = {
   operationId: 'getTestingRequestsFeedback' as const,
   method: 'GET' as const,
@@ -22797,7 +22798,7 @@ export const postTestingRequestsFeedbackEndpoint = {
 export interface GetTestingRequestsParticipantsInput {
   requestId: string;
 }
-export type GetTestingRequestsParticipantsOutput = Types.TestingLabTestingParticipant[];
+export type GetTestingRequestsParticipantsOutput = Array<Types.TestingLabTestingParticipant>;
 export const getTestingRequestsParticipantsEndpoint = {
   operationId: 'getTestingRequestsParticipants' as const,
   method: 'GET' as const,
@@ -22860,7 +22861,7 @@ export const getTestingRequestsStatisticsEndpoint = {
 export interface GetTestingRequestsByCreatorInput {
   creatorId: string;
 }
-export type GetTestingRequestsByCreatorOutput = Types.TestingLabTestingInput[];
+export type GetTestingRequestsByCreatorOutput = Array<Types.TestingLabTestingInput>;
 export const getTestingRequestsByCreatorEndpoint = {
   operationId: 'getTestingRequestsByCreator' as const,
   method: 'GET' as const,
@@ -22872,7 +22873,7 @@ export const getTestingRequestsByCreatorEndpoint = {
 export interface GetTestingRequestsByProjectVersionInput {
   projectVersionId: string;
 }
-export type GetTestingRequestsByProjectVersionOutput = Types.TestingLabTestingInput[];
+export type GetTestingRequestsByProjectVersionOutput = Array<Types.TestingLabTestingInput>;
 export const getTestingRequestsByProjectVersionEndpoint = {
   operationId: 'getTestingRequestsByProjectVersion' as const,
   method: 'GET' as const,
@@ -22884,7 +22885,7 @@ export const getTestingRequestsByProjectVersionEndpoint = {
 export interface GetTestingRequestsByStatusInput {
   status: Types.TestingLabTestingRequestStatus;
 }
-export type GetTestingRequestsByStatusOutput = Types.TestingLabTestingInput[];
+export type GetTestingRequestsByStatusOutput = Array<Types.TestingLabTestingInput>;
 export const getTestingRequestsByStatusEndpoint = {
   operationId: 'getTestingRequestsByStatus' as const,
   method: 'GET' as const,
@@ -22898,7 +22899,7 @@ export interface GetTestingRequestsSearchInput {
     searchTerm?: string;
   };
 }
-export type GetTestingRequestsSearchOutput = Types.TestingLabTestingInput[];
+export type GetTestingRequestsSearchOutput = Array<Types.TestingLabTestingInput>;
 export const getTestingRequestsSearchEndpoint = {
   operationId: 'getTestingRequestsSearch' as const,
   method: 'GET' as const,
@@ -22913,7 +22914,7 @@ export interface GetTestingSessionsForGetTestingSessionsInput {
     take?: number;
   };
 }
-export type GetTestingSessionsForGetTestingSessionsOutput = Types.TestingLabTestingSession[];
+export type GetTestingSessionsForGetTestingSessionsOutput = Array<Types.TestingLabTestingSession>;
 export const getTestingSessionsForGetTestingSessionsEndpoint = {
   operationId: 'getTestingSessionsForGetTestingSessions' as const,
   method: 'GET' as const,
@@ -23014,7 +23015,7 @@ export interface GetTestingSessionsProjectsInput {
     includeInactive?: boolean;
   };
 }
-export type GetTestingSessionsProjectsOutput = Types.TestingLabSessionProjectProjection[];
+export type GetTestingSessionsProjectsOutput = Array<Types.TestingLabSessionProjectProjection>;
 export const getTestingSessionsProjectsEndpoint = {
   operationId: 'getTestingSessionsProjects' as const,
   method: 'GET' as const,
@@ -23077,7 +23078,7 @@ export const deleteTestingSessionsRegisterEndpoint = {
 export interface GetTestingSessionsRegistrationsInput {
   sessionId: string;
 }
-export type GetTestingSessionsRegistrationsOutput = Types.TestingLabSessionRegistration[];
+export type GetTestingSessionsRegistrationsOutput = Array<Types.TestingLabSessionRegistration>;
 export const getTestingSessionsRegistrationsEndpoint = {
   operationId: 'getTestingSessionsRegistrations' as const,
   method: 'GET' as const,
@@ -23101,7 +23102,7 @@ export const getTestingSessionsStatisticsEndpoint = {
 export interface GetTestingSessionsWaitlistInput {
   sessionId: string;
 }
-export type GetTestingSessionsWaitlistOutput = Types.TestingLabSessionWaitlist[];
+export type GetTestingSessionsWaitlistOutput = Array<Types.TestingLabSessionWaitlist>;
 export const getTestingSessionsWaitlistEndpoint = {
   operationId: 'getTestingSessionsWaitlist' as const,
   method: 'GET' as const,
@@ -23138,7 +23139,7 @@ export const deleteTestingSessionsWaitlistEndpoint = {
 export interface GetTestingSessionsByLocationInput {
   locationId: string;
 }
-export type GetTestingSessionsByLocationOutput = Types.TestingLabTestingSession[];
+export type GetTestingSessionsByLocationOutput = Array<Types.TestingLabTestingSession>;
 export const getTestingSessionsByLocationEndpoint = {
   operationId: 'getTestingSessionsByLocation' as const,
   method: 'GET' as const,
@@ -23150,7 +23151,7 @@ export const getTestingSessionsByLocationEndpoint = {
 export interface GetTestingSessionsByManagerInput {
   managerId: string;
 }
-export type GetTestingSessionsByManagerOutput = Types.TestingLabTestingSession[];
+export type GetTestingSessionsByManagerOutput = Array<Types.TestingLabTestingSession>;
 export const getTestingSessionsByManagerEndpoint = {
   operationId: 'getTestingSessionsByManager' as const,
   method: 'GET' as const,
@@ -23162,7 +23163,7 @@ export const getTestingSessionsByManagerEndpoint = {
 export interface GetTestingSessionsByRequestInput {
   testingRequestId: string;
 }
-export type GetTestingSessionsByRequestOutput = Types.TestingLabTestingSession[];
+export type GetTestingSessionsByRequestOutput = Array<Types.TestingLabTestingSession>;
 export const getTestingSessionsByRequestEndpoint = {
   operationId: 'getTestingSessionsByRequest' as const,
   method: 'GET' as const,
@@ -23174,7 +23175,7 @@ export const getTestingSessionsByRequestEndpoint = {
 export interface GetTestingSessionsByStatusInput {
   status: Types.TestingLabSessionStatus;
 }
-export type GetTestingSessionsByStatusOutput = Types.TestingLabTestingSession[];
+export type GetTestingSessionsByStatusOutput = Array<Types.TestingLabTestingSession>;
 export const getTestingSessionsByStatusEndpoint = {
   operationId: 'getTestingSessionsByStatus' as const,
   method: 'GET' as const,
@@ -23188,7 +23189,7 @@ export interface GetTestingSessionsSearchInput {
     searchTerm?: string;
   };
 }
-export type GetTestingSessionsSearchOutput = Types.TestingLabTestingSession[];
+export type GetTestingSessionsSearchOutput = Array<Types.TestingLabTestingSession>;
 export const getTestingSessionsSearchEndpoint = {
   operationId: 'getTestingSessionsSearch' as const,
   method: 'GET' as const,
@@ -23628,7 +23629,7 @@ export const postUsersUnsuspendForPostUsersByUserIdUnsuspendEndpoint = {
 export interface GetUsersEntitlementsInput {
   userId: string;
 }
-export type GetUsersEntitlementsOutput = Types.CommerceProductsEntitlementInfoDto[];
+export type GetUsersEntitlementsOutput = Array<Types.CommerceProductsEntitlementInfoDto>;
 export const getUsersEntitlementsEndpoint = {
   operationId: 'getUsersEntitlements' as const,
   method: 'GET' as const,
@@ -24476,7 +24477,7 @@ export const patchUsersProfileEndpoint = {
 export interface GetUsersQuotasForGetUsersByUserIdQuotasInput {
   userId: string;
 }
-export type GetUsersQuotasForGetUsersByUserIdQuotasOutput = Types.ResourcesResourceQuotaOutput[];
+export type GetUsersQuotasForGetUsersByUserIdQuotasOutput = Array<Types.ResourcesResourceQuotaOutput>;
 export const getUsersQuotasForGetUsersByUserIdQuotasEndpoint = {
   operationId: 'getUsersQuotasForGetUsersByUserIdQuotas' as const,
   method: 'GET' as const,
@@ -24711,7 +24712,7 @@ export const getUsersResourcesLimitsEndpoint = {
 export interface GetUsersResourcesMetadataForGetUsersByUserIdResourcesMetadataInput {
   userId: string;
 }
-export type GetUsersResourcesMetadataForGetUsersByUserIdResourcesMetadataOutput = Types.ResourcesResourceMetadata[];
+export type GetUsersResourcesMetadataForGetUsersByUserIdResourcesMetadataOutput = Array<Types.ResourcesResourceMetadata>;
 export const getUsersResourcesMetadataForGetUsersByUserIdResourcesMetadataEndpoint = {
   operationId: 'getUsersResourcesMetadataForGetUsersByUserIdResourcesMetadata' as const,
   method: 'GET' as const,
@@ -24765,7 +24766,7 @@ export const putUsersResourcesMetadataEndpoint = {
 export interface GetUsersResourcesSettingsForGetUsersByUserIdResourcesSettingsInput {
   userId: string;
 }
-export type GetUsersResourcesSettingsForGetUsersByUserIdResourcesSettingsOutput = Types.ResourcesResourceSettings[];
+export type GetUsersResourcesSettingsForGetUsersByUserIdResourcesSettingsOutput = Array<Types.ResourcesResourceSettings>;
 export const getUsersResourcesSettingsForGetUsersByUserIdResourcesSettingsEndpoint = {
   operationId: 'getUsersResourcesSettingsForGetUsersByUserIdResourcesSettings' as const,
   method: 'GET' as const,
@@ -24824,7 +24825,7 @@ export interface GetUsersResourcesUsageRecordsInput {
     endDate?: string;
   };
 }
-export type GetUsersResourcesUsageRecordsOutput = Types.ResourcesUsageRecord[];
+export type GetUsersResourcesUsageRecordsOutput = Array<Types.ResourcesUsageRecord>;
 export const getUsersResourcesUsageRecordsEndpoint = {
   operationId: 'getUsersResourcesUsageRecords' as const,
   method: 'GET' as const,
@@ -24885,7 +24886,7 @@ export const getUsersResourcesUsageSummaryEndpoint = {
  * Get current user's entitlements
  */
 export type GetUsersMeEntitlementsInput = void;
-export type GetUsersMeEntitlementsOutput = Types.CommerceProductsEntitlementInfoDto[];
+export type GetUsersMeEntitlementsOutput = Array<Types.CommerceProductsEntitlementInfoDto>;
 export const getUsersMeEntitlementsEndpoint = {
   operationId: 'getUsersMeEntitlements' as const,
   method: 'GET' as const,
