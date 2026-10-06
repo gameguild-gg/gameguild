@@ -39,9 +39,29 @@ test('only an exact validated cache avoids forced rebuild while all receipts are
   const workflow = await readWorkflow();
   const build = namedStep(workflow, 'Build and validate Toolchain receipts');
   assert.ok(build.includes('VERIFIED_BUILD_CACHE_HIT: ${{ steps.toolchain-build-cache.outputs.cache-hit }}'));
-  assert.ok(build.includes('if [[ "$HEAVY_REBUILD" == "true" && "$VERIFIED_BUILD_CACHE_HIT" != "true" ]]; then'));
-  assert.match(build, /then\n\s+pnpm --dir tools\/emception toolchain build all --force\n\s+else\n\s+pnpm --dir tools\/emception toolchain build all\n\s+fi/);
+  assert.ok(build.includes('if [[ "$VERIFIED_BUILD_CACHE_HIT" == "true" ]]; then'));
+  assert.doesNotMatch(build, /\$HEAVY_REBUILD/);
+  assert.match(build, /then\n\s+pnpm --dir tools\/emception toolchain build all\n\s+else\n\s+pnpm --dir tools\/emception toolchain build all --force\n\s+fi/);
   assert.ok(workflow.indexOf('- name: Validate Toolchain lock and overlays') < workflow.indexOf('- name: Build and validate Toolchain receipts'));
+});
+
+test('Toolchain cache identity covers patch/build helpers, configuration and installed dependencies', async () => {
+  const workflow = await readWorkflow();
+  const restore = namedStep(workflow, 'Cache verified Toolchain builds');
+  assert.match(restore, /key: emception-builds-linux-v2-/);
+  for (const input of [
+    'package.json',
+    'pnpm-lock.yaml',
+    'pnpm-workspace.yaml',
+    '.npmrc',
+    'tools/emception/package.json',
+    'tools/emception/toolchain/**',
+    'tools/emception/scripts/*',
+    'tools/emception/scripts/toolchain/**',
+    '.github/workflows/emception.yml',
+  ]) {
+    assert.ok(restore.includes(`'${input}'`), `cache identity must include ${input}`);
+  }
 });
 
 test('failed coding cycles retain their actual web diagnostics directory', async () => {
