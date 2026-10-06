@@ -13,6 +13,7 @@ gate_started_epoch="$(date +%s)"
 gate_profile="${ECONOMY_GATE_PROFILE:-full}"
 test_hang_timeout="${ECONOMY_TEST_HANG_TIMEOUT:-5m}"
 api_test_timeout="${ECONOMY_API_TEST_TIMEOUT:-12m}"
+api_integration_test_timeout="${ECONOMY_API_INTEGRATION_TEST_TIMEOUT:-25m}"
 whole_solution_jobs="${ECONOMY_WHOLE_SOLUTION_JOBS:-}"
 
 # shellcheck source=economy-gate.sh
@@ -600,6 +601,11 @@ run_whole_solution_test_project() {
       ECONOMY_POSTGRES_TEMPLATE_DATABASE=
     )
     project_timeout="$api_test_timeout"
+  elif [[ "$test_name" == 'GameGuild.API.IntegrationTests' ]]; then
+    # This suite includes hundreds of HTTP/database cases and took 17.6 minutes
+    # in the diagnostic run. Bound the assembly separately from the unchanged
+    # per-test blame timeout so steady progress is not mistaken for a hang.
+    project_timeout="$api_integration_test_timeout"
   fi
   run_logged "$project_log" timeout --kill-after=30s "$project_timeout" \
     "${test_environment[@]}" \

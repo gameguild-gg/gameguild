@@ -280,6 +280,11 @@ test_full_gate_isolates_api_migration_tests_from_the_economy_template() {
   grep -Fq 'project_timeout="$api_test_timeout"' <<< "$runner" || return 1
   grep -Fq 'timeout --kill-after=30s "$project_timeout"' <<< "$runner" || return 1
   grep -Fq 'api_test_timeout="${ECONOMY_API_TEST_TIMEOUT:-12m}"' "$gate" || return 1
+  grep -Fq "elif [[ \"\$test_name\" == 'GameGuild.API.IntegrationTests' ]]" <<< "$runner" || return 1
+  grep -Fq 'project_timeout="$api_integration_test_timeout"' <<< "$runner" || return 1
+  grep -Fq 'api_integration_test_timeout="${ECONOMY_API_INTEGRATION_TEST_TIMEOUT:-25m}"' "$gate" || return 1
+  grep -Fq '"${test_hang_arguments[@]}"' <<< "$runner" || return 1
+  grep -Fq 'test_hang_timeout="${ECONOMY_TEST_HANG_TIMEOUT:-5m}"' "$gate" || return 1
   ! grep -Fq -- '--settings' <<< "$runner" || return 1
   ! grep -Fq 'xunit-postgres-serial.runsettings' "$gate"
 }
