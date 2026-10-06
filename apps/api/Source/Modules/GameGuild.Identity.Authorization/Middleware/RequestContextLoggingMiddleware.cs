@@ -12,16 +12,16 @@ public class RequestContextLoggingMiddleware(RequestDelegate next, ILogger<Reque
     public async Task InvokeAsync(HttpContext httpContext, IActorContextAccessor actorContextAccessor)
     {
         var actor = actorContextAccessor.ActorContext;
-        var requestId = httpContext.TraceIdentifier;
-        var path = httpContext.Request.Path;
-        var method = httpContext.Request.Method;
+        var requestId = LogRedaction.Sanitize(httpContext.TraceIdentifier);
+        var path = LogRedaction.Sanitize(httpContext.Request.Path);
+        var method = LogRedaction.Sanitize(httpContext.Request.Method);
 
         // Log request start with context (redact PII: TenantId, UserId, Email)
         logger.LogInformation(
             "Request {RequestId} started: {Method} {Path} | User: {UserId} | Tenant: {TenantId} | Authenticated: {IsAuthenticated}",
             requestId,
             method,
-            LogRedaction.Sanitize(path),
+            path,
             LogRedaction.RedactId(actor.SubjectId, "uid"),
             LogRedaction.RedactId(actor.TenantId, "tid"),
             actor.IsAuthenticated
@@ -35,7 +35,7 @@ public class RequestContextLoggingMiddleware(RequestDelegate next, ILogger<Reque
                        ["UserId"] = LogRedaction.RedactId(actor.SubjectId, "uid"),
                        ["TenantId"] = LogRedaction.RedactId(actor.TenantId, "tid"),
                        ["IsAuthenticated"] = actor.IsAuthenticated,
-                       ["Roles"] = string.Join(", ", actor.Roles)
+                       ["Roles"] = LogRedaction.Sanitize(string.Join(", ", actor.Roles))
                    }
                ))
         {
@@ -56,7 +56,8 @@ public class RequestContextLoggingMiddleware(RequestDelegate next, ILogger<Reque
                 var duration = SystemClock.UtcNow - startTime;
 
                 // Log request failure
-                logger.LogError(ex, "Request {RequestId} failed after {Duration}ms: {ErrorMessage}", requestId, duration.TotalMilliseconds, ex.Message);
+                logger.LogError("Request {RequestId} failed after {Duration}ms: {ErrorType}",
+                    requestId, duration.TotalMilliseconds, ex.GetType().FullName);
 
                 throw;
             }
