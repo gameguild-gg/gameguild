@@ -32,11 +32,19 @@ public sealed class QuizProgramContentBoundary(QuizAssessmentTypeAdapter adapter
 
     public string? GetRejection(ProgramContent content, ProgramContentAcademicMutation mutation)
     {
-        if (content.Type == ProgramContentType.Questionnaire && !string.IsNullOrWhiteSpace(content.JsonBody))
+        if (!string.IsNullOrWhiteSpace(content.JsonBody))
         {
             try
             {
                 using var document = JsonDocument.Parse(content.JsonBody);
+                // A graded payload cannot opt out of the atomic workflow by
+                // declaring a different content type in a generic request.
+                if (content.Type != ProgramContentType.Questionnaire &&
+                    (document.RootElement.ValueKind != JsonValueKind.Object ||
+                     !document.RootElement.TryGetProperty("grading", out _)))
+                {
+                    return null;
+                }
                 if (adapter.ProjectAuthoring(document.RootElement).Grading is not null)
                 {
                     return mutation switch

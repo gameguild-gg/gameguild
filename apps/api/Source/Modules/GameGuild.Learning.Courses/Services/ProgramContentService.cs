@@ -60,6 +60,13 @@ public class ProgramContentService(
     await using var lifecycleTransaction = await ProgramContentLifecycleDatabaseLock
       .AcquireAsync(context, [content.Id])
       .ConfigureAwait(false);
+    // A caller may already have mutated the tracked entity. Read the persisted
+    // state independently before checking the proposed replacement below.
+    var persistedContent = await context.Set<ProgramContent>().AsNoTracking()
+      .FirstOrDefaultAsync(pc => pc.Id == content.Id && pc.DeletedAt == null)
+      .ConfigureAwait(false);
+    if (persistedContent == null) throw new InvalidOperationException($"ProgramContent with ID {content.Id} not found or has been deleted");
+    ProgramContentAcademicMutationGuard.EnsureAllowed(academicMutationGuards, persistedContent, ProgramContentAcademicMutation.Authoring);
     var existingContent = await context.Set<ProgramContent>().FirstOrDefaultAsync(pc => pc.Id == content.Id && pc.DeletedAt == null);
 
     if (existingContent == null) throw new InvalidOperationException($"ProgramContent with ID {content.Id} not found or has been deleted");

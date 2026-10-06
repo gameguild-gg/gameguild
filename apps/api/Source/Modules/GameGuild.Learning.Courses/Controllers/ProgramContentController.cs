@@ -137,10 +137,11 @@ public class ProgramContentController(
 
     if (existingContent == null || existingContent.ProgramId != programId) return NotFound();
 
-    // Apply updates from DTO
-    existingContent.ApplyUpdates(updateDto);
     try
     {
+      // Check the protected persisted state before the request can erase it.
+      ProgramContentAcademicMutationGuard.EnsureAllowed(academicMutationGuards, existingContent, ProgramContentAcademicMutation.Authoring);
+      existingContent.ApplyUpdates(updateDto);
       ProgramContentAcademicMutationGuard.EnsureAllowed(academicMutationGuards, existingContent, ProgramContentAcademicMutation.Authoring);
     }
     catch (InvalidOperationException exception)
