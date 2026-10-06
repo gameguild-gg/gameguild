@@ -1,3 +1,63 @@
+## Dependency security and public navigation verification - 2026-10-06 UTC
+
+CI run [37402770647](https://github.com/gameguild-gg/gameguild/actions/runs/37402770647)
+for `2a91869eb9f0cea14bbdd6d1723db383b358f4b7` passed API, Web and OpenAPI.
+Repository Policy failed on dependency advisories; the full Economy profile passed
+its .NET, SDK, Web, coverage, generation and build stages but failed the public
+browser smoke test. Both failures and the uploaded artifacts are retained.
+
+The dependency repair resolves actual installed consumers to the following versions:
+
+| Dependency | Resolved version | Reviewed advisory |
+| --- | --- | --- |
+| KaTeX | 0.18.7 | [GHSA-238p-pmpm-9mq7](https://github.com/advisories/GHSA-238p-pmpm-9mq7) |
+| source-map-js | 1.2.2 | [GHSA-68fv-2mgg-jv7q](https://github.com/advisories/GHSA-68fv-2mgg-jv7q) |
+| proxy-addr | 2.0.8 | [GHSA-jqcg-44mw-7w3h](https://github.com/advisories/GHSA-jqcg-44mw-7w3h) |
+| postcss-selector-parser | 7.1.6 | [GHSA-rj75-hqrm-r3gf](https://github.com/advisories/GHSA-rj75-hqrm-r3gf) |
+| snowflake-sdk | 3.3.0 | [GHSA-qqj6-54q6-cxv6](https://github.com/advisories/GHSA-qqj6-54q6-cxv6) |
+| sprintf-js | 1.1.3 with repository patch | [GHSA-hp3w-g68c-fv3c](https://github.com/advisories/GHSA-hp3w-g68c-fv3c) |
+
+The sprintf advisory has no upstream fixed release. Its source and browser
+distribution now bound numeric precision to the ECMAScript ranges; the distribution
+and source map are regenerated with the existing Terser dependency and preserve
+the license. All actual consumers use the patched version, including legacy
+argparse. The baseline produces uncaught RangeError failures in real asynchronous
+child processes (9 failures in 15 cases). The final source, distribution, compatibility
+and audit contract checks pass all **26 cases** without skips.
+
+Fresh audit still reports exactly two vendor advisories, for braces and sprintf;
+both installed patches are verified by executable security regressions before the
+validator accepts their exact package, advisory, CVE and version. Unknown advisories,
+incorrect versions, malformed reports and inconsistent exit codes remain failures.
+This is verified mitigation, not a claim that the vendor audit contains zero alerts.
+The full local Repository Policy passes; three existing Windows-only deployment
+contract skips are retained and require applicable Linux CI checks.
+
+With the new dependency graph, fresh full SDK **1121/1121** and Web **2959/2959**
+executions pass with no failures or skips. The separately recorded upstream smoke
+checks exercise inherited KaTeX trust rejection, a 400 KB flat selector, valid and
+oversized indexed source-map offsets, and IPv4 proxy spoofing denial. Snowflake
+module initialization and DBML CLI initialization pass; no external Snowflake
+connection or external-provider acceptance is claimed. Failed source-map fixture
+attempts remain retained: the corrected test expects the upstream offset rejection
+and supplies the source content required for an indexed source map.
+
+The public smoke test previously searched for a direct desktop Courses link.
+The current UI places Courses inside the Learn dropdown. The test now waits for
+hydration, opens Learn and clicks the Courses menu item, retaining URL, heading,
+mobile-navigation, route, request and console assertions. The product UI is unchanged.
+Its syntax check passes; complete production browser acceptance remains pending
+for the next matching-head CI execution.
+
+These receipts retain their actual `2a91869` execution origin and the uncommitted
+dependency changes. They do not relabel earlier .NET execution commits. All five
+native #292 criteria remain intact. #292 stays OPEN until complete matching-head
+CI and accepted develop merge; #291 and #263 retain their remaining original scope.
+All 55 unrelated primary files are preserved. No new worktree, branch or stash is
+created for this repair.
+
+The preceding verification history follows.
+
 # Web3 backend challenge and authentication — #292
 
 ## TLS and timing verification — 2026-10-06 UTC

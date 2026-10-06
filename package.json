@@ -99,10 +99,17 @@
       "ip-address@<=10.7.0": "10.7.2",
       "moment@>=2.29.2 <2.31.0": "2.31.0",
       "undici@7": "7.30.0",
-      "ws": "8.21.0"
+      "ws": "8.21.0",
+      "katex@<0.18.2": "0.18.7",
+      "source-map-js@<1.2.2": "1.2.2",
+      "proxy-addr@<2.0.8": "2.0.8",
+      "postcss-selector-parser@<7.1.6": "7.1.6",
+      "snowflake-sdk@<3.3.0": "3.3.0",
+      "sprintf-js@<1.1.3": "1.1.3"
     },
     "patchedDependencies": {
-      "braces@3.0.3": "patches/braces@3.0.3.patch"
+      "braces@3.0.3": "patches/braces@3.0.3.patch",
+      "sprintf-js@1.1.3": "patches/sprintf-js@1.1.3.patch"
     }
   },
   "devDependencies": {
