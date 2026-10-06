@@ -13,7 +13,25 @@ printf 'docker %s\n' "$*" >> "$MOCK_LOG"
 case "$1" in
   run) printf 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n' ;;
   port) printf '127.0.0.1:54329\n' ;;
+  exec)
+    if [[ "$*" == *'psql --host 127.0.0.1'* ]]; then
+      [[ "${MOCK_FAILURE:-}" != readiness ]] || exit 1
+      if [[ "${MOCK_FAILURE:-}" == socket_race ]]; then
+        attempt="$(cat "$MOCK_PROBE_COUNT" 2>/dev/null || printf 0)"
+        attempt=$((attempt + 1))
+        printf '%s\n' "$attempt" > "$MOCK_PROBE_COUNT"
+        ((attempt >= 3)) || exit 1
+      fi
+    elif [[ "$*" == *'createdb '* && "${MOCK_FAILURE:-}" == socket_race ]]; then
+      # The image's temporary server accepts socket probes, then shuts down.
+      [[ "$(cat "$MOCK_PROBE_COUNT" 2>/dev/null || printf 0)" -ge 3 ]] || exit 43
+    fi
+    ;;
 esac
+SH
+cat > "$fixture_root/bin/sleep" <<'SH'
+#!/usr/bin/env bash
+exit 0
 SH
 cat > "$fixture_root/bin/dotnet" <<'SH'
 #!/usr/bin/env bash
@@ -34,9 +52,10 @@ if [[ "$1" == test ]]; then
   done
 fi
 SH
-chmod +x "$fixture_root/bin/docker" "$fixture_root/bin/dotnet"
+chmod +x "$fixture_root/bin/docker" "$fixture_root/bin/dotnet" "$fixture_root/bin/sleep"
 export PATH="$fixture_root/bin:$PATH"
 export MOCK_LOG="$fixture_root/commands.log"
+export MOCK_PROBE_COUNT="$fixture_root/probe-count"
 export AFFECTED_DOTNET_TEST_ARTIFACTS="$fixture_root/results"
 unset ECONOMY_POSTGRES_CONNECTION ECONOMY_POSTGRES_TEMPLATE_DATABASE
 
@@ -44,6 +63,7 @@ run_case() {
   local name="$1" expected_status="$2" failure="$3"
   shift 3
   : > "$MOCK_LOG"
+  rm -f "$MOCK_PROBE_COUNT"
   printf '%s\n' "$@" > "$fixture_root/changed-files.txt"
   export MOCK_FAILURE="$failure"
   set +e
@@ -66,6 +86,21 @@ grep -Fq -- '--context ApplicationDbContext --configuration Release --no-build' 
 grep -Eq '^dotnet test .*Finance.Economy.UnitTests.* \| template=economy_tests_template$' "$MOCK_LOG"
 [[ "$(grep -c '^docker rm --force aaaa' "$MOCK_LOG")" == 1 ]]
 printf 'PASS affected Economy tests use the complete migrated template and owned cleanup\n'
+
+run_case socket_race 0 socket_race "$economy_source"
+[[ "$(<"$MOCK_PROBE_COUNT")" == 3 ]]
+! grep -q 'pg_isready' "$MOCK_LOG"
+grep -Fq -- '--env PGPASSWORD=postgres' "$MOCK_LOG"
+grep -Fq -- 'psql --host 127.0.0.1 --username postgres --dbname economy_tests' "$MOCK_LOG"
+grep -Fq -- '--no-password --no-psqlrc --set ON_ERROR_STOP=1 --tuples-only --command SELECT 1;' "$MOCK_LOG"
+printf 'PASS temporary socket readiness does not permit template creation before authenticated TCP readiness\n'
+
+run_case readiness_failure 1 readiness "$economy_source"
+! grep -q 'createdb\|^dotnet test ' "$MOCK_LOG"
+grep -Fq 'docker logs aaaa' "$MOCK_LOG"
+grep -Fq 'docker inspect --format {{json .State}} aaaa' "$MOCK_LOG"
+[[ "$(grep -c '^docker rm --force aaaa' "$MOCK_LOG")" == 1 ]]
+printf 'PASS failed TCP readiness retains server evidence and cleans only its owned container\n'
 
 run_case mixed 0 '' "$api_source" "$economy_source"
 grep -Eq '^dotnet test .*GameGuild.API.UnitTests.* \| template=$' "$MOCK_LOG"

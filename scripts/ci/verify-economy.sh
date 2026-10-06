@@ -407,7 +407,9 @@ run docker run --detach --rm --name "$postgres_container" \
   postgres:17-alpine >/dev/null
 
 app_postgres_probe() {
-  docker exec "$postgres_container" psql --username postgres --dbname economy_ci --tuples-only --command 'SELECT 1;' >/dev/null 2>&1
+  docker exec --env PGPASSWORD=postgres "$postgres_container" \
+    psql --host 127.0.0.1 --username postgres --dbname economy_ci \
+    --no-password --no-psqlrc --set ON_ERROR_STOP=1 --tuples-only --command 'SELECT 1;' >/dev/null 2>&1
 }
 wait_for_consecutive_successes app_postgres_probe 2 90 1
 
@@ -428,7 +430,9 @@ run docker run --detach --rm --name "$economy_postgres_container" \
   postgres:17-alpine -c max_locks_per_transaction=512 >/dev/null
 
 economy_postgres_probe() {
-  docker exec "$economy_postgres_container" psql --username postgres --dbname economy_tests --tuples-only --command 'SELECT 1;' >/dev/null 2>&1
+  docker exec --env PGPASSWORD=postgres "$economy_postgres_container" \
+    psql --host 127.0.0.1 --username postgres --dbname economy_tests \
+    --no-password --no-psqlrc --set ON_ERROR_STOP=1 --tuples-only --command 'SELECT 1;' >/dev/null 2>&1
 }
 wait_for_consecutive_successes economy_postgres_probe 2 90 1
 
@@ -455,8 +459,9 @@ if [[ "$gate_profile" == full ]]; then
     postgres:17-alpine >/dev/null
 
   whole_solution_postgres_probe() {
-    docker exec "$whole_solution_postgres_container" psql --username postgres --dbname whole_solution_tests \
-      --tuples-only --command 'SELECT 1;' >/dev/null 2>&1
+    docker exec --env PGPASSWORD=postgres "$whole_solution_postgres_container" \
+      psql --host 127.0.0.1 --username postgres --dbname whole_solution_tests \
+      --no-password --no-psqlrc --set ON_ERROR_STOP=1 --tuples-only --command 'SELECT 1;' >/dev/null 2>&1
   }
   wait_for_consecutive_successes whole_solution_postgres_probe 2 90 1
 
