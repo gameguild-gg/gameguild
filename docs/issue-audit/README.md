@@ -651,3 +651,21 @@ confirm all 55 local files were preserved.
 Canonical #171 and #173 closed **COMPLETED** after their original-route gaps were reproduced, fixed and covered by executed acceptance evidence. #170 and #172 closed as native GitHub **DUPLICATE** links to #171 and #173. Each issue retains its original description, source review and comments, with a final public closeout. Local evidence totals **5,248 successful cases** (4,136 C# and 1,112 client), a warning-clean full solution build, client TypeScript and generated-output consistency. The full local solution build belongs to the unchanged production/client implementation commit 22732e81de72fa02deaee1ab061e85fef3d85fc1. Final-head edited test projects built locally without warnings/errors; the final-head Release API build and 2,946 API-related cases passed on GitHub. Subsequent capped local full-build attempts hit compiler memory limits; failed/aborted resource or fixture attempts are excluded from successful evidence.
 
 A fresh GitHub query verifies all **328** original scope IDs: **64 closed / 264 open**. The entire matrix now reflects those live states and timestamps. Other rows only received state metadata and explicit historical reconciliation notes; all 328 acceptance fields and their existing implementation evidence are preserved. A GitHub closed-state count alone does not establish feature implementation. Primary-checkout snapshots verify preservation of all 55 local files.
+# 2026-10-06 canonical assessment membership candidate
+
+PR #699's published `d9309fcf621d3dbef6941b232e1c3dad2b362a20` passes native API,
+web, OpenAPI/client, policy and scanner checks; native Emception remains in
+progress. Native API acceptance includes full integration376/APIunit1079 and
+15 repeated OpenAPI HTTP cases. This is not complete PR or issue acceptance.
+
+The actual current SDK/API coding flow exposed a canonical course enrollment
+mapping gap. The local correction passes11 actual HTTP/PostgreSQL cases,
+all1254 Learning module cases and a zero-warning/error Release solution build.
+Complete current-source API regression is still in progress. The SDK now reaches
+a separate preexisting Code grading boundary; the native browser cycle remains
+unaccepted. [Evidence and required integration](../architecture/coding-assessment-runtime-reconciliation.md).
+
+No additional issue was closed by these checks. The fixed328-ID snapshot remains
+72closed/256open, verified `2026-10-06T19:36:07.854893Z`; #263 retains all19
+original criteria and is OPEN. Historical sections below keep their dated
+results and limits.

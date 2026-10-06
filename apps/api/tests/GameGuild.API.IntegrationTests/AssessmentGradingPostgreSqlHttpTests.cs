@@ -32,6 +32,75 @@ public sealed class AssessmentGradingPostgreSqlHttpTests(ApiPostgreSqlFixture fi
     };
 
     [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task CanonicalProgramEnrollment_GradingRuntimeAcceptsPersistedIndividualAndCollectiveMembership(
+        bool collective)
+    {
+        var scenario = await CreateScenarioAsync(collective, automatedReview: false);
+        var firstEnrollmentId = Guid.NewGuid();
+        Guid courseId;
+        await using (var scope = fixture.Factory.Services.CreateAsyncScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var assessment = await context.Set<Assessment>().SingleAsync(value => value.Id == scenario.AssessmentId);
+            courseId = assessment.CourseId;
+            var prior = await context.Set<Enrollment>()
+                .Where(value => value.CourseId == assessment.CourseId)
+                .ToListAsync();
+            context.RemoveRange(prior);
+            context.AddRange(new[] { scenario.Learner1Id, scenario.Learner2Id }.Select(userId => new ProgramEnrollment
+            {
+                Id = userId == scenario.Learner1Id ? firstEnrollmentId : Guid.NewGuid(),
+                ProgramId = assessment.CourseId,
+                UserId = userId,
+                TenantId = scenario.TenantId,
+                EnrollmentStatus = GameGuild.Learning.Courses.EnrollmentStatus.Active,
+            }));
+            await context.SaveChangesAsync();
+        }
+
+        using var learner = fixture.CreateAuthenticatedClient(scenario.Learner1Id, scenario.TenantId);
+        var started = collective
+            ? await PostAsync<AssessmentSubmissionViewV1>(learner,
+                $"{AssessmentsRoute}/{scenario.AssessmentId}/runtime-submissions/collective",
+                new StartCollectiveRuntimeSubmissionRequest(scenario.CourseGroupId!.Value, $"canonical-{Guid.NewGuid():N}"))
+            : await PostAsync<AssessmentSubmissionViewV1>(learner,
+                $"{AssessmentsRoute}/{scenario.AssessmentId}/runtime-submissions/individual",
+                new StartIndividualRuntimeSubmissionRequest(firstEnrollmentId, $"canonical-{Guid.NewGuid():N}"));
+        started.SubmissionId.Should().NotBe(Guid.Empty);
+
+        await using var verification = fixture.Factory.Services.CreateAsyncScope();
+        var verifiedContext = verification.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var submission = await verifiedContext.Set<AssessmentSubmission>().SingleAsync(value => value.Id == started.SubmissionId);
+        if (collective)
+        {
+            submission.EnrollmentId.Should().BeNull("a collective attempt belongs to its course group");
+            submission.UserId.Should().BeNull("participants own the collective attempt through the group snapshot");
+            submission.CourseGroupId.Should().Be(scenario.CourseGroupId);
+            var participants = await verifiedContext.Set<AssessmentSubmissionParticipant>()
+                .Where(value => value.SubmissionId == started.SubmissionId)
+                .ToListAsync();
+            participants.Should().HaveCount(2);
+            participants.Should().ContainSingle(value => value.UserId == scenario.Learner1Id && value.EnrollmentId == firstEnrollmentId);
+            foreach (var participant in participants)
+            {
+                var membership = await verifiedContext.Set<ProgramEnrollment>()
+                    .SingleAsync(value => value.Id == participant.EnrollmentId);
+                membership.UserId.Should().Be(participant.UserId);
+                membership.TenantId.Should().Be(scenario.TenantId);
+                membership.ProgramId.Should().Be(courseId);
+            }
+        }
+        else
+        {
+            submission.EnrollmentId.Should().Be(firstEnrollmentId);
+            submission.UserId.Should().Be(scenario.Learner1Id);
+        }
+        submission.StartedByUserId.Should().Be(scenario.Learner1Id);
+    }
+
+    [Theory]
     [InlineData(false, false)]
     [InlineData(false, true)]
     [InlineData(true, false)]
