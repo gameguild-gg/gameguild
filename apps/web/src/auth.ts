@@ -8,6 +8,7 @@ import {
   encodeSession,
   SessionStore,
   resolveCookieOptions,
+  type Session,
 } from "@game-guild/client";
 import { cookies } from "next/headers";
 import { createSharedAuthCookieConfig } from "@/lib/auth/cross-domain-auth";
@@ -64,8 +65,18 @@ const result = GameGuildAuth({
   }),
 });
 
-export const { handlers, auth, signIn, signOut, signUp, update } = result;
+export const { handlers, signIn, signOut, signUp, update } = result;
 export const authConfig = result.config;
+
+type AuthProxyHandler = Parameters<typeof result.auth>[0];
+
+// All server readers use the same request-bound Next cookie context. The
+// explicit-request proxy wrapper still belongs to the shared auth library.
+export function auth(): Promise<Session | null>;
+export function auth(handler: AuthProxyHandler): ReturnType<typeof result.auth>;
+export function auth(handler?: AuthProxyHandler) {
+  return handler ? result.auth(handler) : getSession();
+}
 
 async function readCurrentSession() {
   const cookieStore = await cookies();
