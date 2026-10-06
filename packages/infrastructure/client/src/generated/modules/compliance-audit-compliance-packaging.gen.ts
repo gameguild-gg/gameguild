@@ -20,7 +20,7 @@ export class ComplianceAuditCompliancePackagingModule {
   async getApiAuditCompliancePackagingForGetApiAuditCompliancePackaging(query?: {
     skip?: number;
     take?: number;
-  }): Promise<Result<Array<Types.ComplianceAuditCompliancePackageSummary>, ApiError>> {
+  }): Promise<Result<Types.ComplianceAuditCompliancePackageSummary[], ApiError>> {
     const url = '/api/audit/compliance-packaging';
 
     const result = await this.client.request({
@@ -30,7 +30,7 @@ export class ComplianceAuditCompliancePackagingModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.ComplianceAuditCompliancePackageSummary>, ApiError>;
+    return result as Result<Types.ComplianceAuditCompliancePackageSummary[], ApiError>;
   }
 
   /**
@@ -122,7 +122,7 @@ export class ComplianceAuditCompliancePackagingModule {
   async getApiAuditCompliancePackagingDocumentsForGetApiAuditCompliancePackagingDocuments(query?: {
     skip?: number;
     take?: number;
-  }): Promise<Result<Array<Types.ComplianceAuditComplianceDocumentOutput>, ApiError>> {
+  }): Promise<Result<Types.ComplianceAuditComplianceDocumentOutput[], ApiError>> {
     const url = '/api/audit/compliance-packaging/documents';
 
     const result = await this.client.request({
@@ -132,7 +132,7 @@ export class ComplianceAuditCompliancePackagingModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.ComplianceAuditComplianceDocumentOutput>, ApiError>;
+    return result as Result<Types.ComplianceAuditComplianceDocumentOutput[], ApiError>;
   }
 
   /**
@@ -212,7 +212,7 @@ export class ComplianceAuditCompliancePackagingModule {
 
   /**
    */
-  async getApiAuditCompliancePackagingTemplates(): Promise<Result<Array<Types.ComplianceAuditComplianceFrameworkTemplate>, ApiError>> {
+  async getApiAuditCompliancePackagingTemplates(): Promise<Result<Types.ComplianceAuditComplianceFrameworkTemplate[], ApiError>> {
     const url = '/api/audit/compliance-packaging/templates';
 
     const result = await this.client.request({
@@ -221,7 +221,7 @@ export class ComplianceAuditCompliancePackagingModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.ComplianceAuditComplianceFrameworkTemplate>, ApiError>;
+    return result as Result<Types.ComplianceAuditComplianceFrameworkTemplate[], ApiError>;
   }
 
   /**
@@ -229,7 +229,7 @@ export class ComplianceAuditCompliancePackagingModule {
   async getAuditCompliancePackagingForGetAuditCompliancePackaging(query?: {
     skip?: number;
     take?: number;
-  }): Promise<Result<Array<Types.ComplianceAuditCompliancePackageSummary>, ApiError>> {
+  }): Promise<Result<Types.ComplianceAuditCompliancePackageSummary[], ApiError>> {
     const url = '/v1/audit/compliance-packaging';
 
     const result = await this.client.request({
@@ -239,7 +239,7 @@ export class ComplianceAuditCompliancePackagingModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.ComplianceAuditCompliancePackageSummary>, ApiError>;
+    return result as Result<Types.ComplianceAuditCompliancePackageSummary[], ApiError>;
   }
 
   /**
@@ -329,7 +329,7 @@ export class ComplianceAuditCompliancePackagingModule {
   async getAuditCompliancePackagingDocumentsForGetAuditCompliancePackagingDocuments(query?: {
     skip?: number;
     take?: number;
-  }): Promise<Result<Array<Types.ComplianceAuditComplianceDocumentOutput>, ApiError>> {
+  }): Promise<Result<Types.ComplianceAuditComplianceDocumentOutput[], ApiError>> {
     const url = '/v1/audit/compliance-packaging/documents';
 
     const result = await this.client.request({
@@ -339,7 +339,7 @@ export class ComplianceAuditCompliancePackagingModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.ComplianceAuditComplianceDocumentOutput>, ApiError>;
+    return result as Result<Types.ComplianceAuditComplianceDocumentOutput[], ApiError>;
   }
 
   /**
@@ -419,7 +419,7 @@ export class ComplianceAuditCompliancePackagingModule {
 
   /**
    */
-  async getAuditCompliancePackagingTemplates(): Promise<Result<Array<Types.ComplianceAuditComplianceFrameworkTemplate>, ApiError>> {
+  async getAuditCompliancePackagingTemplates(): Promise<Result<Types.ComplianceAuditComplianceFrameworkTemplate[], ApiError>> {
     const url = '/v1/audit/compliance-packaging/templates';
 
     const result = await this.client.request({
@@ -428,7 +428,7 @@ export class ComplianceAuditCompliancePackagingModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.ComplianceAuditComplianceFrameworkTemplate>, ApiError>;
+    return result as Result<Types.ComplianceAuditComplianceFrameworkTemplate[], ApiError>;
   }
 }
 
