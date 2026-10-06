@@ -282,6 +282,29 @@ public sealed class RedisDistributedRateLimiterIntegrationTests(
         return request.CreateSelfSigned(now.AddMinutes(-1), now.AddHours(1));
     }
 
+    [Fact]
+    public void ProbeServerCertificate_UsesIssuerValidityWindow()
+    {
+        using var key = RSA.Create(2048);
+        var request = new CertificateRequest("CN=Short-lived probe root", key, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        request.CertificateExtensions.Add(new X509BasicConstraintsExtension(true, false, 0, critical: true));
+        request.CertificateExtensions.Add(new X509KeyUsageExtension(X509KeyUsageFlags.KeyCertSign, critical: true));
+        var now = DateTimeOffset.UtcNow;
+        using var certificateAuthority = request.CreateSelfSigned(now.AddMinutes(-1), now.AddMinutes(5));
+
+        using var certificate = CreateProbeServerCertificate(certificateAuthority);
+
+        certificate.NotBefore.Should().Be(certificateAuthority.NotBefore);
+        certificate.NotAfter.Should().Be(certificateAuthority.NotAfter);
+        certificate.HasPrivateKey.Should().BeTrue();
+        using var chain = new X509Chain();
+        chain.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
+        chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
+        chain.ChainPolicy.CustomTrustStore.Add(certificateAuthority);
+        chain.ChainPolicy.ApplicationPolicy.Add(new Oid("1.3.6.1.5.5.7.3.1"));
+        chain.Build(certificate).Should().BeTrue();
+    }
+
     private static X509Certificate2 CreateProbeServerCertificate(X509Certificate2 certificateAuthority)
     {
         using var key = RSA.Create(2048);
@@ -298,11 +321,10 @@ public sealed class RedisDistributedRateLimiterIntegrationTests(
         var serverAuthentication = new OidCollection { new("1.3.6.1.5.5.7.3.1") };
         request.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension(serverAuthentication, critical: false));
 
-        var now = DateTimeOffset.UtcNow;
         using var publicCertificate = request.Create(
             certificateAuthority,
-            now.AddMinutes(-1),
-            now.AddHours(1),
+            new DateTimeOffset(certificateAuthority.NotBefore.ToUniversalTime()),
+            new DateTimeOffset(certificateAuthority.NotAfter.ToUniversalTime()),
             RandomNumberGenerator.GetBytes(16));
         return publicCertificate.CopyWithPrivateKey(key);
     }
