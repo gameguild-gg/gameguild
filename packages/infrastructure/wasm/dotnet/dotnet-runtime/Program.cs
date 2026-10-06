@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices.JavaScript;
+using System.Runtime.Versioning;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Emit;
@@ -37,12 +38,14 @@ public partial class Program
     }
 
     [JSExport]
+    [SupportedOSPlatform("browser")]
     public static string CompileAndRun(string code)
     {
         return CompileAndRunMultiple(code, null);
     }
 
     [JSExport]
+    [SupportedOSPlatform("browser")]
     public static string CompileAndRunMultiple(string mainCode, string? filesJson)
     {
         try
