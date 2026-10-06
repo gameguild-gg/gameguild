@@ -517,7 +517,9 @@ public sealed class CachedAccessControlListService : IAccessControlListService, 
         {
             string[] keySnapshot;
             lock (keys)
+            {
                 keySnapshot = keys.ToArray();
+            }
 
             foreach (var key in keySnapshot)
             {

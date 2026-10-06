@@ -108,7 +108,10 @@ public sealed class PermissionGrantService(
 
         var existing = await repository.GetByUserAndTenantAsync(userId, tenantId, cancellationToken).ConfigureAwait(false);
 
-        if (existing == null) return false;
+        if (existing == null)
+        {
+            return false;
+        }
 
         var previousPermissions = existing.Permissions.ToArray();
         existing.RemovePermissions(permissions);
@@ -322,7 +325,10 @@ public sealed class PermissionGrantService(
 
         var existing = await repository.GetByUserAndTenantAsync(userId, tenantId, cancellationToken).ConfigureAwait(false);
 
-        if (existing == null) return false;
+        if (existing == null)
+        {
+            return false;
+        }
 
         var previousDenyPermissions = existing.DenyPermissions.ToArray();
         existing.RemoveDenyPermissions(permissions);
@@ -378,16 +384,28 @@ public sealed class PermissionGrantService(
     private void ValidateGlobalDefaultAuthorization(Guid? tenantId, string operation)
     {
         // Only check for global operations (tenantId=null)
-        if (tenantId.HasValue) return;
+        if (tenantId.HasValue)
+        {
+            return;
+        }
 
         // Skip if no actor context available (e.g., during system initialization)
-        if (!Actor.IsAuthenticated) return;
+        if (!Actor.IsAuthenticated)
+        {
+            return;
+        }
 
         // System admins can always modify global defaults
-        if (Actor.IsSystemAdmin) return;
+        if (Actor.IsSystemAdmin)
+        {
+            return;
+        }
 
         // Check for ManageGlobalDefaults permission
-        if (Actor.HasPermission(SystemPermission.Keys.ManageGlobalDefaults)) return;
+        if (Actor.HasPermission(SystemPermission.Keys.ManageGlobalDefaults))
+        {
+            return;
+        }
 
         // SECURITY: Fail-closed - deny access if no authorization
         logger.LogWarning(
@@ -429,13 +447,19 @@ public sealed class PermissionQueryService(
 
         var activeGrants = grants.Where(grant => grant is not null && !grant.IsExpired()).Cast<TenantPermission>().ToList();
         if (activeGrants.Any(grant => grant.HasDenyPermission(permission)))
+        {
             return false;
+        }
 
         if (activeGrants.Any(grant => grant.HasPermission(permission)))
+        {
             return true;
+        }
 
         if (!userId.HasValue || !tenantId.HasValue)
+        {
             return false;
+        }
 
         foreach (var provider in rolePermissionProviders ?? [])
         {
@@ -444,7 +468,9 @@ public sealed class PermissionQueryService(
             if (permissions
                 .Where(IsDelegableRolePermission)
                 .Contains(permission, StringComparer.OrdinalIgnoreCase))
+            {
                 return true;
+            }
         }
 
         return false;
@@ -457,7 +483,10 @@ public sealed class PermissionQueryService(
     {
         var existing = await repository.GetByUserAndTenantAsync(userId, tenantId, cancellationToken).ConfigureAwait(false);
 
-        if (existing == null) return new List<string>();
+        if (existing == null)
+        {
+            return new List<string>();
+        }
 
         return existing.Permissions.ToList();
     }
