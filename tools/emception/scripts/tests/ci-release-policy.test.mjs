@@ -6,11 +6,23 @@ import { test } from 'node:test';
 test('Emception CI is Linux-only, lockfile-driven, receipt-aware, and Changesets-based', async () => {
   const repoRoot = path.resolve(import.meta.dirname, '..', '..', '..', '..');
   const workflow = await readFile(path.join(repoRoot, '.github', 'workflows', 'emception.yml'), 'utf8');
+  const installer = await readFile(path.join(repoRoot, 'scripts', 'ci', 'install-and-audit-pnpm.sh'), 'utf8');
   const runners = [...workflow.matchAll(/^\s*runs-on:\s*(.+)$/gm)].map((match) => match[1].trim());
 
   assert.equal(runners.length > 0, true);
   assert.deepEqual([...new Set(runners)], ['ubuntu-latest']);
-  assert.match(workflow, /pnpm install --frozen-lockfile --ignore-scripts/);
+  assert.match(workflow, /run: bash scripts\/ci\/install-and-audit-pnpm\.sh/);
+  assert.match(installer, /pnpm install --frozen-lockfile --ignore-scripts/);
+  assert.match(installer, /pnpm rebuild braces sprintf-js/);
+  assert.match(installer, /node "\$script_dir\/validate-pnpm-audit\.mjs"/);
+  assert.match(installer, /node --test "\$script_dir\/tests\/dependency-security\.test\.mjs"/);
+  assert.doesNotMatch(installer, /--no-lockfile|continue-on-error/);
+  assert.equal(
+    workflow.indexOf('run: bash scripts/ci/install-and-audit-pnpm.sh')
+      < workflow.indexOf('pnpm --dir tools/emception toolchain build all'),
+    true,
+    'the audited install must finish before the Toolchain receipt build',
+  );
   assert.doesNotMatch(workflow, /--no-lockfile|continue-on-error/);
   assert.doesNotMatch(workflow, /tools\/emception\/(?:userland|build|sysroot|tools\/emsdk)/);
   assert.match(workflow, /\.cache\/toolchain\/downloads/);
@@ -56,6 +68,8 @@ test('Emception CI is Linux-only, lockfile-driven, receipt-aware, and Changesets
 
   const ignore = await readFile(path.join(repoRoot, '.gitignore'), 'utf8');
   const rootPackage = JSON.parse(await readFile(path.join(repoRoot, 'package.json'), 'utf8'));
+  assert.deepEqual(rootPackage.pnpm.onlyBuiltDependencies, ['braces', 'sprintf-js']);
+  assert.notEqual(rootPackage.pnpm.dangerouslyAllowAllBuilds, true);
   assert.doesNotMatch(ignore, /^pnpm-lock\.yaml$/m);
   assert.doesNotMatch(rootPackage.scripts.clean, /pnpm-lock\.yaml/);
 });
