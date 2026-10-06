@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 export const EMCEPTION_PACKAGE_DIRECTORIES = [
@@ -37,4 +37,25 @@ export async function readEmceptionReleaseVersion(repoRoot) {
   }
   if (versions.size !== 1) throw new Error(`Emception package versions differ: ${[...versions].join(', ')}`);
   return [...versions][0];
+}
+
+/** Keep internal peer ranges aligned with the existing fixed release group. */
+export async function synchronizeEmceptionPeerVersions(repoRoot) {
+  const version = await readEmceptionReleaseVersion(repoRoot);
+  const packages = await Promise.all(EMCEPTION_PACKAGE_DIRECTORIES.map(async (directory) => {
+    const filename = path.join(repoRoot, directory, 'package.json');
+    return { filename, manifest: JSON.parse(await readFile(filename, 'utf8')) };
+  }));
+  const internalNames = new Set(packages.map(({ manifest }) => manifest.name));
+  for (const { filename, manifest } of packages) {
+    let changed = false;
+    for (const [name, range] of Object.entries(manifest.peerDependencies ?? {})) {
+      if (internalNames.has(name) && range !== `^${version}`) {
+        manifest.peerDependencies[name] = `^${version}`;
+        changed = true;
+      }
+    }
+    if (changed) await writeFile(filename, `${JSON.stringify(manifest, null, 2)}\n`);
+  }
+  return version;
 }
