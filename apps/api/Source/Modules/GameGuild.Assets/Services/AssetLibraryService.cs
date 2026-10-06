@@ -42,8 +42,9 @@ public sealed class AssetLibraryService(
             return AssetLibraryResult<AssetLibraryView>.Failure("NotFound");
         }
 
+        var normalizedResourceType = resourceType.ToLowerInvariant();
         var folderCandidates = await context.Set<AssetFolder>().AsNoTracking()
-            .Where(folder => folder.ParentResourceId == resourceId && folder.ParentResourceType.ToLower() == resourceType.ToLower())
+            .Where(folder => folder.ParentResourceId == resourceId && folder.ParentResourceType.ToLower() == normalizedResourceType)
             .OrderBy(folder => folder.Name).ToListAsync(ct).ConfigureAwait(false);
         var folders = new List<AssetFolder>(folderCandidates.Count);
         foreach (var folder in folderCandidates)
@@ -56,7 +57,7 @@ public sealed class AssetLibraryService(
 
         var candidates = await context.Set<AssetReference>().AsNoTracking()
             .Where(reference => reference.ParentResourceId == resourceId && reference.ParentResourceType != null &&
-                                reference.ParentResourceType.ToLower() == resourceType.ToLower())
+                                reference.ParentResourceType.ToLower() == normalizedResourceType)
             .OrderBy(reference => reference.DisplayName).ToListAsync(ct).ConfigureAwait(false);
         var assets = new List<AssetReference>();
         foreach (var reference in candidates)
@@ -89,12 +90,16 @@ public sealed class AssetLibraryService(
             return AssetLibraryResult<AssetFolder>.Failure("Validation");
         }
 
-        if (parentFolderId.HasValue && !await context.Set<AssetFolder>().AnyAsync(folder =>
-                folder.Id == parentFolderId && folder.ParentResourceId == resourceId &&
-                folder.ParentResourceType.ToLower() == resourceType.ToLower() &&
-                folder.TenantId == tenantId, ct).ConfigureAwait(false))
+        if (parentFolderId.HasValue)
         {
-            return AssetLibraryResult<AssetFolder>.Failure("InvalidParentFolder");
+            var normalizedResourceType = resourceType.ToLowerInvariant();
+            if (!await context.Set<AssetFolder>().AnyAsync(folder =>
+                    folder.Id == parentFolderId && folder.ParentResourceId == resourceId &&
+                    folder.ParentResourceType.ToLower() == normalizedResourceType &&
+                    folder.TenantId == tenantId, ct).ConfigureAwait(false))
+            {
+                return AssetLibraryResult<AssetFolder>.Failure("InvalidParentFolder");
+            }
         }
 
         var folder = AssetFolder.Create(tenantId.Value, resourceType, resourceId, parentFolderId, name);
