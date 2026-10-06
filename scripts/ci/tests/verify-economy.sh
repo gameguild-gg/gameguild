@@ -350,6 +350,13 @@ test_economy_gate_migrates_one_template_and_clones_isolated_test_databases() {
   grep -Fq 'true,' "$database_support"
 }
 
+test_affected_api_tests_use_migrated_template() {
+  local workflow="$repository_root/.github/workflows/pr-verify.yml"
+  grep -Fq 'bash scripts/ci/run-affected-dotnet-tests.sh' "$workflow" || return 1
+  grep -Fq 'path: artifacts/test-results/affected-api' "$workflow" || return 1
+  bash "$script_dir/run-affected-dotnet-tests.sh"
+}
+
 test_auto_changeset_bumps_entire_lockstep_workspace() {
   local policy="$repository_root/scripts/devops/emception-release-policy.mjs"
   local versioner="$repository_root/scripts/devops/version-emception.mjs"
@@ -851,6 +858,7 @@ run_test 'Economy test lock capacity preserves concurrency and application defau
 run_test 'rate-limit probe follows Debug and Release solution builds' test_rate_limit_probe_has_debug_and_release_solution_configuration
 run_test 'Testing Lab screenshots reach the required evidence upload' test_testing_lab_workflow_routes_evidence_to_its_upload_directory
 run_test 'Economy gate clones one migrated PostgreSQL template' test_economy_gate_migrates_one_template_and_clones_isolated_test_databases
+run_test 'affected API suites preserve migrations and isolated template setup' test_affected_api_tests_use_migrated_template
 run_test 'Emception versioning is scoped to its fixed group' test_auto_changeset_bumps_entire_lockstep_workspace
 run_test 'Changesets config isolates the Emception release group' test_changesets_config_matches_lockstep_workspace
 run_test 'Emception emits a gate result for every main push' test_emception_emits_a_gate_result_for_every_main_push
