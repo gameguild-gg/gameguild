@@ -2,7 +2,7 @@ namespace GameGuild.API.Core.Security;
 
 public sealed class RefreshTokenCleanupOptions
 {
-    public const string SectionName = "Authentication:RefreshTokenCleanup";
+    public static string SectionName => "Authentication:RefreshTokenCleanup";
     public bool Enabled { get; set; } = true;
     public int RetentionDays { get; set; } = 30;
     public int BatchSize { get; set; } = 500;

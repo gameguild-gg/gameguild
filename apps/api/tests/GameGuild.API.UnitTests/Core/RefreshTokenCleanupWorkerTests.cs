@@ -128,7 +128,10 @@ public sealed class RefreshTokenCleanupWorkerTests
         await worker.StopAsync(CancellationToken.None);
         var execution = worker.ExecuteTask!;
         try { await execution.WaitAsync(TimeSpan.FromSeconds(5)); }
-        catch (OperationCanceledException) when (execution.IsCanceled) { }
+        catch (OperationCanceledException) when (execution.IsCanceled)
+        {
+            Assert.True(execution.IsCanceled);
+        }
         Assert.True(execution.IsCompleted);
         Assert.False(execution.IsFaulted);
         Assert.True(execution.IsCompletedSuccessfully || execution.IsCanceled);

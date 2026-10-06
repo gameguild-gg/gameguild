@@ -275,7 +275,7 @@ public sealed class PasswordCommandHandlersTests
             jwtTokenService.Object,
             configuration,
             NullLogger<ConsumeMagicLinkCommandHandler>.Instance,
-            sessionIssuer: sessionIssuer.Object);
+            jwtOptions: null, sessionIssuer: sessionIssuer.Object);
 
         var result = await handler.Handle(new ConsumeMagicLinkCommand { Token = "magic-token" }, CancellationToken.None);
 

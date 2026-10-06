@@ -81,8 +81,8 @@ public class Web3AuthServiceTests
         _identity.Sessions.Setup(value => value.CreateSessionAsync(
                 It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Guid id, Guid owner, string ip, string agent, string hash, DateTime expires,
-                string? fingerprint, CancellationToken _) => invalid == "null" ? null! : new UserSession
+            .ReturnsAsync((Guid id, Guid owner, string _, string _, string hash, DateTime expires,
+                string? _, CancellationToken _) => invalid == "null" ? null! : new UserSession
             {
                 Id = invalid == "session" ? Guid.NewGuid() : id,
                 UserId = invalid == "owner" ? Guid.NewGuid() : owner,
@@ -106,8 +106,8 @@ public class Web3AuthServiceTests
         _identity.Sessions.Setup(value => value.CreateSessionAsync(
                 It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Guid id, Guid owner, string ip, string agent, string hash, DateTime expires,
-                string? fingerprint, CancellationToken _) => new UserSession
+            .ReturnsAsync((Guid id, Guid owner, string _, string _, string hash, DateTime _,
+                string? _, CancellationToken _) => new UserSession
             { Id = id, UserId = owner, RefreshToken = hash, IsActive = true, ExpiresAt = deadline });
         var result = await _sut.VerifyWeb3SignatureAsync(new Web3VerificationRequest
             { WalletAddress = "0xsynthetic", Signature = "synthetic-signature", Challenge = "synthetic-challenge" });

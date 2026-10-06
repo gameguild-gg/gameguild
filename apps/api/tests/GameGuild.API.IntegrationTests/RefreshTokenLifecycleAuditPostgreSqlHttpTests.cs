@@ -317,8 +317,12 @@ public sealed class RefreshTokenLifecycleAuditPostgreSqlHttpTests(ApiPostgreSqlF
 
     private sealed class UnavailableAuditTransport : IAuthenticationAuditEventSink
     {
-        public Task RecordAsync(AuthenticationAuditEvent auditEvent, CancellationToken cancellationToken) =>
+        public Task RecordAsync(AuthenticationAuditEvent auditEvent, CancellationToken cancellationToken)
+        {
+            ArgumentNullException.ThrowIfNull(auditEvent);
+            cancellationToken.ThrowIfCancellationRequested();
             throw new InvalidOperationException("Synthetic unavailable best-effort audit transport");
+        }
     }
 
     private sealed class CommitFailure : DbTransactionInterceptor
@@ -335,7 +339,7 @@ public sealed class RefreshTokenLifecycleAuditPostgreSqlHttpTests(ApiPostgreSqlF
                 Reached = true;
                 throw new InvalidOperationException("Synthetic failure before transaction commit");
             }
-            return ValueTask.FromResult(result);
+            return base.TransactionCommittingAsync(transaction, eventData, result, cancellationToken);
         }
     }
 
@@ -353,7 +357,7 @@ public sealed class RefreshTokenLifecycleAuditPostgreSqlHttpTests(ApiPostgreSqlF
                 Reached = true;
                 throw new InvalidOperationException("Synthetic lifecycle audit storage failure");
             }
-            return ValueTask.FromResult(result);
+            return base.SavingChangesAsync(eventData, result, cancellationToken);
         }
     }
 

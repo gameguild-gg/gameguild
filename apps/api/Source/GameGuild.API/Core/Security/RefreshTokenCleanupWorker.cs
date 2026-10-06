@@ -44,6 +44,9 @@ internal sealed class RefreshTokenCleanupWorker(
                 await Task.Delay(policy.Interval, timeProvider, stoppingToken).ConfigureAwait(false);
             }
         }
-        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        {
+            return;
+        }
     }
 }

@@ -168,7 +168,9 @@ public sealed class EmailDispatcherService(
         if (message is null)
         {
             if (notification.Type == NotificationType.Security)
+            {
                 throw new InvalidOperationException("A security email requires a rendered message.");
+            }
             notification.MarkDeliverySent();
             await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             logger.LogInformation("Email renderer returned no message; marked sent. NotificationId: {NotificationId}, Type: {Type}",
@@ -181,10 +183,14 @@ public sealed class EmailDispatcherService(
         if (notification.Type == NotificationType.Security)
         {
             if (emailSender is not IConfirmedEmailSender confirmedSender)
+            {
                 throw new InvalidOperationException("The security email sender does not expose provider acceptance.");
+            }
             var receipt = await confirmedSender.SendWithReceiptAsync(message with { ToEmail = toEmail }, cancellationToken).ConfigureAwait(false);
             if (!receipt.Accepted)
+            {
                 throw new InvalidOperationException("The security email was not accepted for delivery.");
+            }
             providerMessageId = receipt.ProviderMessageId;
         }
         else

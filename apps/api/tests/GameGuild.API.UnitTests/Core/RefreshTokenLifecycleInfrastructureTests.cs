@@ -56,7 +56,9 @@ public sealed class RefreshTokenLifecycleInfrastructureTests
         listener.InstrumentPublished = (instrument, current) =>
         {
             if (instrument.Meter.Name == RefreshTokenLifecycleMetrics.MeterName && instrument.Name == "authentication.refresh_token.operations")
+            {
                 current.EnableMeasurementEvents(instrument);
+            }
         };
         listener.SetMeasurementEventCallback<long>((_, value, _, _) => measurements += value);
         listener.Start();

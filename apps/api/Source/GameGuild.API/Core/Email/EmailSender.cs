@@ -41,10 +41,15 @@ public sealed class EmailSender : IConfirmedEmailSender
         this.sesEmailSender = sesEmailSender;
     }
 
-    public async Task<string?> SendAsync(EmailMessage message, CancellationToken cancellationToken = default) =>
+    public Task<string?> SendAsync(EmailMessage message) => SendAsync(message, CancellationToken.None);
+
+    public async Task<string?> SendAsync(EmailMessage message, CancellationToken cancellationToken) =>
         (await SendWithReceiptAsync(message, cancellationToken).ConfigureAwait(false)).ProviderMessageId;
 
-    public async Task<EmailDeliveryReceipt> SendWithReceiptAsync(EmailMessage message, CancellationToken cancellationToken = default)
+    public Task<EmailDeliveryReceipt> SendWithReceiptAsync(EmailMessage message) =>
+        SendWithReceiptAsync(message, CancellationToken.None);
+
+    public async Task<EmailDeliveryReceipt> SendWithReceiptAsync(EmailMessage message, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(message);
 

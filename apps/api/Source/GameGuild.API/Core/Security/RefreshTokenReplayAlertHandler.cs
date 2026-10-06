@@ -16,12 +16,16 @@ internal sealed class RefreshTokenReplayAlertHandler(
         ArgumentNullException.ThrowIfNull(@event);
         var user = await users.GetByIdAsync(@event.UserId, cancellationToken).ConfigureAwait(false);
         if (user is null || user.IsDeleted)
+        {
             return;
+        }
 
         var tenantId = @event.TenantId == DurableIntegrationEventTenants.Platform ? (Guid?)null : @event.TenantId;
         await QueueAsync(NotificationChannel.InApp, null).ConfigureAwait(false);
         if (!string.IsNullOrWhiteSpace(user.Email))
+        {
             await QueueAsync(NotificationChannel.Email, user.Email).ConfigureAwait(false);
+        }
 
         async Task QueueAsync(NotificationChannel channel, string? recipientEmail)
         {
@@ -32,7 +36,9 @@ internal sealed class RefreshTokenReplayAlertHandler(
                 referenceEntityId: @event.EventId, referenceEntityType: nameof(RefreshTokenReplayContainedV1),
                 recipientEmail: recipientEmail, cancellationToken: cancellationToken).ConfigureAwait(false);
             if (result is null || result.IsFailure)
+            {
                 throw new InvalidOperationException("The refresh-token security alert was not durably queued.");
+            }
         }
     }
 }

@@ -26,7 +26,7 @@ namespace GameGuild.API.IntegrationTests;
 [CollectionDefinition(Name, DisableParallelization = true)]
 public sealed class RefreshTokenReplayAlertPostgreSqlCollection : ICollectionFixture<ApiPostgreSqlFixture>
 {
-    public const string Name = "Refresh-token replay alert PostgreSQL";
+    internal const string Name = "Refresh-token replay alert PostgreSQL";
 }
 
 [Collection(RefreshTokenReplayAlertPostgreSqlCollection.Name)]
@@ -174,9 +174,13 @@ public sealed class RefreshTokenReplayAlertPostgreSqlHttpTests(ApiPostgreSqlFixt
             services.RemoveAll<TimeProvider>();
             services.AddSingleton<TimeProvider>(clock);
             if (queueFailure is not null)
+            {
                 services.AddDbContext<ApplicationDbContext>(options => options.AddInterceptors(queueFailure));
+            }
             if (outboxFailure is not null)
+            {
                 services.AddDbContext<ApplicationDbContext>(options => options.AddInterceptors(outboxFailure));
+            }
         }));
 
     private static async Task<Account> SeedAsync(WebApplicationFactory<Program> factory)
@@ -224,7 +228,9 @@ public sealed class RefreshTokenReplayAlertPostgreSqlHttpTests(ApiPostgreSqlFixt
         {
             using var scope = factory.Services.CreateScope();
             if (await scope.ServiceProvider.GetRequiredService<IOutboxDispatcher>().DispatchPendingAsync() == 0)
+            {
                 return;
+            }
         }
         throw new InvalidOperationException("Synthetic owned outbox did not settle within ten dispatch cycles.");
     }
@@ -252,7 +258,7 @@ public sealed class RefreshTokenReplayAlertPostgreSqlHttpTests(ApiPostgreSqlFixt
                 Reached = true;
                 throw new InvalidOperationException("Synthetic security email queue-write failure");
             }
-            return ValueTask.FromResult(result);
+            return base.SavingChangesAsync(eventData, result, cancellationToken);
         }
     }
 
@@ -269,7 +275,7 @@ public sealed class RefreshTokenReplayAlertPostgreSqlHttpTests(ApiPostgreSqlFixt
                 Reached = true;
                 throw new InvalidOperationException("Synthetic replay alert outbox-write failure");
             }
-            return ValueTask.FromResult(result);
+            return base.SavingChangesAsync(eventData, result, cancellationToken);
         }
     }
 }

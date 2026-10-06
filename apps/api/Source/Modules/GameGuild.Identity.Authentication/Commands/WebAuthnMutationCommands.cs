@@ -43,13 +43,21 @@ public sealed class WebAuthnMutationCommandHandler :
     private readonly IUserRepository userRepository;
     private readonly IAuthenticatedSessionIssuer? sessionIssuer;
 
+    public WebAuthnMutationCommandHandler(IWebAuthnService webAuthnService, IJwtTokenService jwtTokenService,
+        IUserRepository userRepository, IConfiguration configuration)
+        : this(webAuthnService, jwtTokenService, userRepository, configuration, null, null) { }
+
+    public WebAuthnMutationCommandHandler(IWebAuthnService webAuthnService, IJwtTokenService jwtTokenService,
+        IUserRepository userRepository, IConfiguration configuration, IOptions<JwtOptions>? jwtOptions)
+        : this(webAuthnService, jwtTokenService, userRepository, configuration, jwtOptions, null) { }
+
     public WebAuthnMutationCommandHandler(
         IWebAuthnService webAuthnService,
         IJwtTokenService jwtTokenService,
         IUserRepository userRepository,
         IConfiguration configuration,
-        IOptions<JwtOptions>? jwtOptions = null,
-        IAuthenticatedSessionIssuer? sessionIssuer = null)
+        IOptions<JwtOptions>? jwtOptions,
+        IAuthenticatedSessionIssuer? sessionIssuer)
     {
         this.webAuthnService = webAuthnService;
         this.userRepository = userRepository;

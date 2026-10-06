@@ -76,7 +76,9 @@ public sealed class RefreshTokenLifecycleMetricsTests
         listener.InstrumentPublished = (instrument, current) =>
         {
             if (instrument.Meter.Name == RefreshTokenLifecycleMetrics.MeterName && instrument.Name == name)
+            {
                 current.EnableMeasurementEvents(instrument);
+            }
         };
         listener.SetMeasurementEventCallback<long>((_, value, tags, _) => callback(value,
             tags.ToArray().ToDictionary(tag => tag.Key, tag => tag.Value)));
