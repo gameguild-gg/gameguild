@@ -3,6 +3,7 @@ using Xunit;
 using GameGuild.API.Database;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Tenants;
+using GameGuild.Identity.Users;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -78,14 +79,18 @@ public class AuthenticationFlowsE2ETests : IClassFixture<AuthenticationApiFactor
         };
 
         var signUpResult = await _authService.LocalSignUpAsync(signUpRequest);
+        await _authService.LocalSignInAsync(new LocalSignInRequest
+        {
+            Email = email,
+            Password = signUpRequest.Password
+        });
+        var originalVersion = await _dbContext.Set<User>().AsNoTracking()
+            .Where(user => user.Id == signUpResult.UserId)
+            .Select(user => user.TokenVersion).SingleAsync();
 
         signUpResult.Success.Should().BeTrue();
         signUpResult.AccessToken.Should().NotBeNullOrEmpty();
         signUpResult.RefreshToken.Should().NotBeNullOrEmpty();
-        var tokenVersionBeforeReplay = await _dbContext.Set<GameGuild.Identity.Users.User>()
-            .Where(user => user.Id == signUpResult.UserId)
-            .Select(user => user.TokenVersion)
-            .SingleAsync();
 
         // Revoke the refresh token
         await _authService.RevokeRefreshTokenAsync(signUpResult.RefreshToken, "127.0.0.1");
@@ -96,12 +101,13 @@ public class AuthenticationFlowsE2ETests : IClassFixture<AuthenticationApiFactor
             RefreshToken = signUpResult.RefreshToken
         };
 
+        // The internal denial commits replay containment; the HTTP boundary still returns 401.
         var denial = await _authService.RefreshTokenAsync(refreshRequest);
-
+        denial.Should().BeAssignableTo<global::GameGuild.ICommitOnFailureOutcome>();
         denial.Success.Should().BeFalse();
         denial.Message.Should().Be("Invalid refresh token");
-        denial.AccessToken.Should().BeEmpty();
-        denial.RefreshToken.Should().BeEmpty();
+        denial.AccessToken.Should().BeNullOrEmpty();
+        denial.RefreshToken.Should().BeNullOrEmpty();
         denial.UserId.Should().Be(Guid.Empty);
         denial.SessionId.Should().Be(Guid.Empty);
         denial.Email.Should().BeEmpty();
@@ -112,18 +118,18 @@ public class AuthenticationFlowsE2ETests : IClassFixture<AuthenticationApiFactor
 
         // Read persisted state rather than trusting entities still tracked by the service.
         _dbContext.ChangeTracker.Clear();
-        var refreshTokens = await _dbContext.Set<RefreshToken>().AsNoTracking()
-            .Where(token => token.UserId == signUpResult.UserId)
-            .ToListAsync();
-        refreshTokens.Should().ContainSingle("a denied replay must not mint a replacement token");
-        refreshTokens.Should().OnlyContain(token => token.IsRevoked);
-        var sessions = await _dbContext.Set<UserSession>().AsNoTracking()
-            .Where(session => session.UserId == signUpResult.UserId)
-            .ToListAsync();
-        sessions.Should().NotBeEmpty().And.OnlyContain(session => !session.IsActive);
-        var persistedUser = await _dbContext.Set<GameGuild.Identity.Users.User>().AsNoTracking()
-            .SingleAsync(user => user.Id == signUpResult.UserId);
-        persistedUser.TokenVersion.Should().Be(tokenVersionBeforeReplay + 1);
+        var storedTokens = await _dbContext.Set<RefreshToken>().AsNoTracking()
+            .Where(token => token.UserId == signUpResult.UserId).ToListAsync();
+        storedTokens.Should().HaveCount(2);
+        storedTokens.Should().AllSatisfy(token => token.IsRevoked.Should().BeTrue());
+        var storedSessions = await _dbContext.Set<UserSession>().AsNoTracking()
+            .Where(session => session.UserId == signUpResult.UserId).ToListAsync();
+        storedSessions.Should().HaveCount(2);
+        storedSessions.Should().AllSatisfy(session => session.IsActive.Should().BeFalse());
+        var storedVersion = await _dbContext.Set<User>().AsNoTracking()
+            .Where(user => user.Id == signUpResult.UserId)
+            .Select(user => user.TokenVersion).SingleAsync();
+        storedVersion.Should().Be(originalVersion + 1);
     }
 
     [Fact]
