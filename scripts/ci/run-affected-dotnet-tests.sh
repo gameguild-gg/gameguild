@@ -22,6 +22,9 @@ cleanup() {
   local status=$?
   trap - EXIT INT TERM
   if [[ -n "$postgres_id" ]]; then
+    docker logs "$postgres_id" > "$artifact_root/postgres-server.log" 2>&1 || true
+    docker inspect --format '{{json .State}}' "$postgres_id" \
+      > "$artifact_root/postgres-state.json" 2>&1 || true
     # This exact ID is returned by this runner's own successful docker run.
     if ! docker rm --force "$postgres_id" > "$artifact_root/postgres-cleanup.log" 2>&1; then
       printf 'Could not remove the affected-test PostgreSQL container\n' >&2
@@ -49,7 +52,11 @@ prepare_economy_template() {
   }
   postgres_id="$candidate_id"
   for ((attempt=0; attempt<90; attempt++)); do
-    if docker exec "$postgres_id" pg_isready --username postgres --dbname economy_tests \
+    # The image starts a socket-only initialization server and then stops it.
+    # Wait for the final server to accept an authenticated TCP query.
+    if docker exec --env PGPASSWORD=postgres "$postgres_id" \
+      psql --host 127.0.0.1 --username postgres --dbname economy_tests \
+      --no-password --no-psqlrc --set ON_ERROR_STOP=1 --tuples-only --command 'SELECT 1;' \
       > "$artifact_root/postgres-readiness.log" 2>&1; then
       ready=true
       break
