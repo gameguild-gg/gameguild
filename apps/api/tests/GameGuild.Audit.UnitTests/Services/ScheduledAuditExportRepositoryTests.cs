@@ -68,6 +68,29 @@ public sealed class ScheduledAuditExportRepositoryTests : IDisposable
         Assert.Equal(0, export.FailureCount);
     }
 
+    [Fact]
+    public async Task RecoverStaleClaimsAsync_WithStaleAndFreshClaimsOnSameExport_DoesNotRequeueSchedule()
+    {
+        var now = new DateTime(2026, 10, 5, 12, 0, 0, DateTimeKind.Utc);
+        var export = ScheduledAuditExport.Create(Guid.NewGuid(), "Daily audit", "0 8 * * *", ExportDestinationType.TenantStorage, "tenant-storage", ExportFormat.Csv);
+        var scheduledNextRun = now.AddHours(4);
+        export.UpdateNextRunTime(scheduledNextRun);
+        var staleHistory = CreateHistory(export, now.AddMinutes(-45));
+        var freshHistory = CreateHistory(export, now.AddMinutes(-2));
+        _context.Set<ScheduledAuditExport>().Add(export);
+        _context.Set<AuditExportHistory>().AddRange(staleHistory, freshHistory);
+        await _context.SaveChangesAsync();
+
+        var recovered = await _repository.RecoverStaleClaimsAsync(now, TimeSpan.FromMinutes(30), CancellationToken.None);
+
+        Assert.Equal(1, recovered);
+        Assert.Equal(ExportStatus.Failed, staleHistory.Status);
+        Assert.Equal(ExportStatus.InProgress, freshHistory.Status);
+        Assert.NotEqual(now, export.NextRunAt);
+        Assert.Equal(scheduledNextRun, export.NextRunAt);
+        Assert.Equal(1, export.FailureCount);
+    }
+
     private static AuditExportHistory CreateHistory(ScheduledAuditExport export, DateTime executedAtUtc)
     {
         SystemClock.SetProvider(new FixedTimeProvider(executedAtUtc));

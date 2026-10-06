@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Cryptography;
 using GameGuild.CQRS;
@@ -115,18 +116,12 @@ public sealed class LtiController(
             query["lti_message_hint"] = messageHint;
         }
 
-        if (!Uri.TryCreate(deployment.AuthorizationUrl, UriKind.Absolute, out var baseUri) ||
-            baseUri.Scheme != Uri.UriSchemeHttps)
+        if (!TryBuildAuthorizationRedirect(deployment.AuthorizationUrl, query, out var authorizationUri))
         {
             return BadRequest("LTI platform authorization URL is misconfigured.");
         }
 
-        var authorizationUri = new UriBuilder(baseUri)
-        {
-            Query = QueryString.FromUriComponent(baseUri.Query).Add(QueryString.Create(query)).Value,
-            Fragment = string.Empty,
-        };
-        return Redirect(authorizationUri.Uri.AbsoluteUri);
+        return Redirect(authorizationUri);
     }
 
     /// <summary>
@@ -258,6 +253,29 @@ public sealed class LtiController(
             .FirstOrDefaultAsync(d => d.Issuer == issuer && d.ClientId == clientId
                 && d.DeploymentId == deploymentId && d.Active && d.DeletedAt == null)
             .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Fails closed unless the configured platform authorization URL is an absolute
+    /// https URL without embedded credentials; the query is appended server-side.
+    /// </summary>
+    private static bool TryBuildAuthorizationRedirect(string authorizationUrl, IReadOnlyDictionary<string, string?> query, [NotNullWhen(true)] out string? redirectUrl)
+    {
+        if (!Uri.TryCreate(authorizationUrl, UriKind.Absolute, out var baseUri) ||
+            baseUri.Scheme != Uri.UriSchemeHttps ||
+            !string.IsNullOrEmpty(baseUri.UserInfo))
+        {
+            redirectUrl = null;
+            return false;
+        }
+
+        var authorizationUri = new UriBuilder(baseUri)
+        {
+            Query = QueryString.FromUriComponent(baseUri.Query).Add(QueryString.Create(query)).Value,
+            Fragment = string.Empty,
+        };
+        redirectUrl = authorizationUri.Uri.AbsoluteUri;
+        return true;
     }
 
 }

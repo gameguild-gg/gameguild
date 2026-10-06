@@ -74,7 +74,7 @@ public sealed class ActorContextMiddleware
                 LogRedaction.RedactId(ex.SubjectId, "uid"),
                 LogRedaction.RedactId(ex.TenantId, "tid"),
                 context.TraceIdentifier,
-                context.Request.Path.Value);
+                LogRedaction.Sanitize(context.Request.Path.Value));
 
             // Return 500 to indicate server error (don't leak security details to client)
             context.Response.StatusCode = StatusCodes.Status500InternalServerError;
