@@ -102,3 +102,55 @@ test("an additional advisory fails even when the braces patch is verified", () =
     /Unmitigated.*GHSA-other/,
   );
 });
+
+const patchedSprintfReport = () => {
+  const result = report();
+  result.metadata.vulnerabilities.moderate = 1;
+  result.advisories["1241202"] = {
+    module_name: "sprintf-js",
+    github_advisory_id: "GHSA-hp3w-g68c-fv3c",
+    url: "https://github.com/advisories/GHSA-hp3w-g68c-fv3c",
+    cves: ["CVE-2026-97058"],
+    findings: [{ version: "1.1.3" }],
+  };
+  return result;
+};
+
+test("sprintf advisory requires its own verified installed patch", () => {
+  assert.deepEqual(validateAuditReport(patchedSprintfReport(), 1, false, true), {
+    advisories: 1,
+    verifiedLocalPatches: 1,
+  });
+  assert.throws(() => validateAuditReport(patchedSprintfReport(), 1, true), /Unmitigated/);
+  assert.throws(() => validateAuditReport(patchedSprintfReport(), 0, false, true), /exit code/);
+});
+
+test("sprintf mitigation cannot accept another package, advisory, CVE or version", () => {
+  for (const mutation of [
+    { module_name: "another-package" },
+    { github_advisory_id: "GHSA-another-advisory" },
+    { url: "https://github.com/advisories/GHSA-another-advisory" },
+    { cves: ["CVE-2026-97058", "CVE-another"] },
+    { cves: [] },
+    { findings: [{ version: "1.0.3" }] },
+    { findings: [] },
+    { findings: [{ version: "1.1.3" }, { version: "1.0.3" }] },
+  ]) {
+    const invalid = patchedSprintfReport();
+    Object.assign(invalid.advisories["1241202"], mutation);
+    assert.throws(() => validateAuditReport(invalid, 1, true, true), /Unmitigated/);
+  }
+});
+
+test("both exact locally verified mitigations pass and an additional advisory still fails", () => {
+  const combined = patchedReport();
+  combined.metadata.vulnerabilities.moderate = 1;
+  combined.advisories["1241202"] = patchedSprintfReport().advisories["1241202"];
+  assert.deepEqual(validateAuditReport(combined, 1, true, true), {
+    advisories: 2,
+    verifiedLocalPatches: 2,
+  });
+  combined.advisories.other = { module_name: "other", github_advisory_id: "GHSA-other" };
+  combined.metadata.vulnerabilities.low = 1;
+  assert.throws(() => validateAuditReport(combined, 1, true, true), /Unmitigated.*GHSA-other/);
+});
