@@ -22,7 +22,7 @@ export type ToolName =
 
 export type LockedSource =
   | { kind: 'archive'; url: string; sha256: string }
-  | { kind: 'git-archive'; repository: string; commit: string; url: string; sha256: string }
+  | { kind: 'git-archive'; repository: string; commit: string; url: string; sha256: string; alternateSha256?: readonly string[] }
   | { kind: 'emsdk-component'; emsdkVersion: string; revision: string; contentHash: string }
   | { kind: 'workspace'; path: string; contentHash: string };
 
@@ -90,6 +90,17 @@ function validateSource(name: string, source: LockedSource): void {
     if (!source.repository || !source.url) throw new Error(`${name}.source repository or URL is missing`);
     if (!/^[0-9a-f]{40}$/.test(source.commit)) throw new Error(`${name}.source.commit must be immutable`);
     assertHash(source.sha256, `${name}.source.sha256`);
+    if (source.alternateSha256 !== undefined) {
+      if (!Array.isArray(source.alternateSha256) || source.alternateSha256.length === 0) {
+        throw new Error(`${name}.source.alternateSha256 must be a nonempty array`);
+      }
+      const identities = new Set([source.sha256]);
+      for (const hash of source.alternateSha256) {
+        assertHash(hash, `${name}.source.alternateSha256`);
+        if (identities.has(hash)) throw new Error(`${name}.source.alternateSha256 must contain distinct hashes`);
+        identities.add(hash);
+      }
+    }
     return;
   }
   if (source.kind === 'emsdk-component') {

@@ -58,18 +58,18 @@ function assertGeneratedDestination(root: string, destination: string): void {
   }
 }
 
-function verifyChecksum(filename: string, expected: string): void {
+function verifyChecksum(filename: string, expected: readonly string[]): string {
   const actual = sha256File(filename);
-  if (actual !== expected) {
-    throw new Error(`Checksum mismatch for ${filename}: expected ${expected}, got ${actual}`);
+  if (!expected.includes(actual)) {
+    throw new Error(`Checksum mismatch for ${filename}: expected ${expected.join(' or ')}, got ${actual}`);
   }
+  return actual;
 }
 
-function downloadLockedArchive(url: string, destination: string, expectedHash: string): void {
+function downloadLockedArchive(url: string, destination: string, expectedHashes: readonly string[]): string {
   fs.mkdirSync(path.dirname(destination), { recursive: true });
   if (fs.existsSync(destination)) {
-    verifyChecksum(destination, expectedHash);
-    return;
+    return verifyChecksum(destination, expectedHashes);
   }
 
   const temporary = `${destination}.tmp-${process.pid}`;
@@ -84,8 +84,9 @@ function downloadLockedArchive(url: string, destination: string, expectedHash: s
     throw new Error(`Failed to download locked source: ${url}`);
   }
   try {
-    verifyChecksum(temporary, expectedHash);
+    const actualHash = verifyChecksum(temporary, expectedHashes);
     fs.renameSync(temporary, destination);
+    return actualHash;
   } catch (error) {
     fs.rmSync(temporary, { force: true });
     throw error;
@@ -132,15 +133,18 @@ export function ensureLockedSource(
 
   assertGeneratedDestination(root, destination);
   const expectedHash = tool.source.sha256;
+  // Git export-subst abbreviations can vary. Accept only explicitly pinned
+  // archive digests and record the observed digest in the source receipt.
+  const expectedHashes = [expectedHash, ...(tool.source.kind === 'git-archive' ? tool.source.alternateSha256 ?? [] : [])];
   const marker = path.join(destination, '.emception-source.json');
   if (fs.existsSync(path.join(destination, keyFile)) && fs.existsSync(marker)) {
     const identity = JSON.parse(fs.readFileSync(marker, 'utf8')) as { sha256?: string };
-    if (identity.sha256 === expectedHash) return destination;
+    if (identity.sha256 && expectedHashes.includes(identity.sha256)) return destination;
   }
 
   const paths = toolchainPaths(root);
   const archive = path.join(paths.downloads, `${name}-${expectedHash}.archive`);
-  downloadLockedArchive(tool.source.url, archive, expectedHash);
+  const actualHash = downloadLockedArchive(tool.source.url, archive, expectedHashes);
 
   const temporary = `${destination}.extract-${process.pid}`;
   fs.rmSync(temporary, { recursive: true, force: true });
@@ -151,7 +155,7 @@ export function ensureLockedSource(
     }
     fs.writeFileSync(
       path.join(temporary, '.emception-source.json'),
-      `${JSON.stringify({ name, version: tool.version, sha256: expectedHash }, null, 2)}\n`,
+      `${JSON.stringify({ name, version: tool.version, sha256: actualHash }, null, 2)}\n`,
     );
     fs.rmSync(destination, { recursive: true, force: true });
     fs.renameSync(temporary, destination);
