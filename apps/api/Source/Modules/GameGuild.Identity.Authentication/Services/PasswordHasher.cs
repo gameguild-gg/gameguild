@@ -321,7 +321,7 @@ public sealed class PasswordHasher(ILogger<PasswordHasher> logger, IConfiguratio
         result.StrengthScore = strengthScore;
         result.StrengthLevel = strengthLevel;
 
-        logger.LogDebug("Password strength validation: {IsValid}, Score: {Score}, Level: {Level}", result.IsValid, strengthScore, strengthLevel);
+        logger.LogDebug("Password strength validation completed");
 
         return result;
     }
