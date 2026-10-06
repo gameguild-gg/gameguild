@@ -174,7 +174,7 @@ export class LearningCoursesContentInteractionModule {
   async getCourseInteractionsContentReflectionResponses(
     contentId: string,
     query?: { programId?: string },
-  ): Promise<Result<Array<Types.LearningCoursesReflectionResponseResultDto>, ApiError>> {
+  ): Promise<Result<Types.LearningCoursesReflectionResponseResultDto[], ApiError>> {
     const url = `/v1/course-interactions/content/${contentId}/reflection-responses`;
 
     const result = await this.client.request({
@@ -184,7 +184,7 @@ export class LearningCoursesContentInteractionModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.LearningCoursesReflectionResponseResultDto>, ApiError>;
+    return result as Result<Types.LearningCoursesReflectionResponseResultDto[], ApiError>;
   }
 
   /**
@@ -192,7 +192,7 @@ export class LearningCoursesContentInteractionModule {
   async getCourseInteractionsContentReflectionResponsesVisible(
     contentId: string,
     query?: { programId?: string },
-  ): Promise<Result<Array<Types.LearningCoursesReflectionResponseResultDto>, ApiError>> {
+  ): Promise<Result<Types.LearningCoursesReflectionResponseResultDto[], ApiError>> {
     const url = `/v1/course-interactions/content/${contentId}/reflection-responses/visible`;
 
     const result = await this.client.request({
@@ -202,7 +202,7 @@ export class LearningCoursesContentInteractionModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.LearningCoursesReflectionResponseResultDto>, ApiError>;
+    return result as Result<Types.LearningCoursesReflectionResponseResultDto[], ApiError>;
   }
 
   /**
@@ -211,7 +211,7 @@ export class LearningCoursesContentInteractionModule {
   async getCourseInteractionsContentSurveyResults(
     contentId: string,
     query?: { programId?: string },
-  ): Promise<Result<Array<Types.LearningCoursesSurveyResponseResultDto>, ApiError>> {
+  ): Promise<Result<Types.LearningCoursesSurveyResponseResultDto[], ApiError>> {
     const url = `/v1/course-interactions/content/${contentId}/survey-results`;
 
     const result = await this.client.request({
@@ -221,7 +221,7 @@ export class LearningCoursesContentInteractionModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.LearningCoursesSurveyResponseResultDto>, ApiError>;
+    return result as Result<Types.LearningCoursesSurveyResponseResultDto[], ApiError>;
   }
 
   /**
@@ -229,7 +229,7 @@ export class LearningCoursesContentInteractionModule {
   async getCourseInteractionsContentSurveyResultsVisible(
     contentId: string,
     query?: { programId?: string },
-  ): Promise<Result<Array<Types.LearningCoursesSurveyResponseResultDto>, ApiError>> {
+  ): Promise<Result<Types.LearningCoursesSurveyResponseResultDto[], ApiError>> {
     const url = `/v1/course-interactions/content/${contentId}/survey-results/visible`;
 
     const result = await this.client.request({
@@ -239,7 +239,7 @@ export class LearningCoursesContentInteractionModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.LearningCoursesSurveyResponseResultDto>, ApiError>;
+    return result as Result<Types.LearningCoursesSurveyResponseResultDto[], ApiError>;
   }
 
   /**
@@ -249,7 +249,7 @@ export class LearningCoursesContentInteractionModule {
   async getCourseInteractionsUser(
     programUserId: string,
     query?: { programId?: string },
-  ): Promise<Result<Array<Types.LearningCoursesContentInteractionDto>, ApiError>> {
+  ): Promise<Result<Types.LearningCoursesContentInteractionDto[], ApiError>> {
     const url = `/v1/course-interactions/user/${programUserId}`;
 
     const result = await this.client.request({
@@ -259,7 +259,7 @@ export class LearningCoursesContentInteractionModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.LearningCoursesContentInteractionDto>, ApiError>;
+    return result as Result<Types.LearningCoursesContentInteractionDto[], ApiError>;
   }
 
   /**

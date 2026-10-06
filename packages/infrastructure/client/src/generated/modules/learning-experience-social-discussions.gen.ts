@@ -22,7 +22,7 @@ export class LearningExperienceSocialDiscussionsModule {
     courseId: string,
     contentId: string,
     query?: { skip?: number; take?: number },
-  ): Promise<Result<Array<Types.LearningExperienceSocialServicesCourseDiscussionDto>, ApiError>> {
+  ): Promise<Result<Types.LearningExperienceSocialServicesCourseDiscussionDto[], ApiError>> {
     const url = `/api/social/courses/${courseId}/content/${contentId}/discussions`;
 
     const result = await this.client.request({
@@ -32,7 +32,7 @@ export class LearningExperienceSocialDiscussionsModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.LearningExperienceSocialServicesCourseDiscussionDto>, ApiError>;
+    return result as Result<Types.LearningExperienceSocialServicesCourseDiscussionDto[], ApiError>;
   }
 
   /**
@@ -41,7 +41,7 @@ export class LearningExperienceSocialDiscussionsModule {
   async getApiSocialCoursesDiscussions(
     courseId: string,
     query?: { skip?: number; take?: number; pinnedFirst?: boolean },
-  ): Promise<Result<Array<Types.LearningExperienceSocialServicesCourseDiscussionDto>, ApiError>> {
+  ): Promise<Result<Types.LearningExperienceSocialServicesCourseDiscussionDto[], ApiError>> {
     const url = `/api/social/courses/${courseId}/discussions`;
 
     const result = await this.client.request({
@@ -51,7 +51,7 @@ export class LearningExperienceSocialDiscussionsModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.LearningExperienceSocialServicesCourseDiscussionDto>, ApiError>;
+    return result as Result<Types.LearningExperienceSocialServicesCourseDiscussionDto[], ApiError>;
   }
 
   /**

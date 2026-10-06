@@ -17,7 +17,7 @@ export class ProjectsStoreProductsModule {
 
   /**
    */
-  async getProjectsStoreProducts(projectId: string): Promise<Result<Array<Types.ProjectsProjectStoreProductProjection>, ApiError>> {
+  async getProjectsStoreProducts(projectId: string): Promise<Result<Types.ProjectsProjectStoreProductProjection[], ApiError>> {
     const url = `/v1/projects/${projectId}/store-products`;
 
     const result = await this.client.request({
@@ -26,7 +26,7 @@ export class ProjectsStoreProductsModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.ProjectsProjectStoreProductProjection>, ApiError>;
+    return result as Result<Types.ProjectsProjectStoreProductProjection[], ApiError>;
   }
 
   /**
@@ -72,7 +72,7 @@ export class ProjectsStoreProductsModule {
 
   /**
    */
-  async getStoreProductsProjects(productId: string): Promise<Result<Array<Types.ProjectsProjectStoreProductProjection>, ApiError>> {
+  async getStoreProductsProjects(productId: string): Promise<Result<Types.ProjectsProjectStoreProductProjection[], ApiError>> {
     const url = `/v1/store/products/${productId}/projects`;
 
     const result = await this.client.request({
@@ -81,7 +81,7 @@ export class ProjectsStoreProductsModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.ProjectsProjectStoreProductProjection>, ApiError>;
+    return result as Result<Types.ProjectsProjectStoreProductProjection[], ApiError>;
   }
 }
 
