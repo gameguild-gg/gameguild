@@ -6,6 +6,10 @@ function unique(values) {
   return [...new Set(values.filter(Boolean))];
 }
 
+export function createTestingLabFixtureUsername(kind, tag) {
+  return `lab_browser_${kind}_${tag.replace(/[^a-z0-9]/gi, '_')}`;
+}
+
 export function requireDisposableDatabaseMode(mode) {
   if (String(mode).toLowerCase() !== 'disposable') {
     throw new Error(

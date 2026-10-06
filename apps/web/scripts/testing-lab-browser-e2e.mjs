@@ -6,6 +6,7 @@ import path from "node:path";
 import { chromium } from "playwright";
 import {
   cleanupTestingLabFixture,
+  createTestingLabFixtureUsername,
   collectAccessibilityFailures,
   collectViewportFailures,
   requireDisposableDatabaseMode,
@@ -134,7 +135,7 @@ async function bootstrap() {
     const signUp = await apiRequest("/v1/auth/sign-up", {
       method: "POST",
       body: JSON.stringify({
-        username: `testing_lab_browser_${kind}_${tag.replace(/[^a-z0-9]/gi, "_")}`,
+        username: createTestingLabFixtureUsername(kind, tag),
         email,
         password,
         tenantId: auth.tenantId,
