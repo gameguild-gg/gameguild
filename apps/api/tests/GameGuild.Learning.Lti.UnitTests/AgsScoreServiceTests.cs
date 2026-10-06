@@ -126,8 +126,8 @@ public class AgsScoreServiceTests
         scoreRequest.Content!.Headers.ContentType!.MediaType.Should().Be("application/json");
         var body = System.Text.Json.JsonDocument.Parse(_handler.Bodies[1]).RootElement;
         body.GetProperty("userId").GetString().Should().Be(_sub);
-        body.GetProperty("scoreGiven").GetInt32().Should().Be(18);
-        body.GetProperty("scoreMaximum").GetInt32().Should().Be(25);
+        body.GetProperty("scoreGiven").GetDecimal().Should().Be(0.18m);
+        body.GetProperty("scoreMaximum").GetDecimal().Should().Be(0.25m);
         body.GetProperty("activityProgress").GetString().Should().Be("Completed");
         body.GetProperty("gradingProgress").GetString().Should().Be("FullyGraded");
         body.EnumerateObject().Should().HaveCount(5);

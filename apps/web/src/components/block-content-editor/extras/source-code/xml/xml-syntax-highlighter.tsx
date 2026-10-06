@@ -26,7 +26,7 @@ export function XMLSyntaxHighlighter({ monaco, editor }: XMLSyntaxHighlighterPro
           root: [
             [/<\?xml[^\n]*\?>/, "metatag.xml"], // XML declaration
             [/<!DOCTYPE[^\n]*?>/, "metatag.xml"], // DOCTYPE declaration
-            [/<!--[^\n]*?-->/, "comment"], // Comments (line-scoped: linear time)
+            [/<!--/, { token: "comment", next: "@comment" }],
             [/<!\[CDATA\[[^\n]*?\]\]>/, "comment"], // CDATA sections (line-scoped)
 
             [/<([a-zA-Z][a-zA-Z0-9:\-.]*)(\s+[^>]*)?>/, { token: "tag", bracket: "@open", next: "@tagContent" }], // Opening tags
@@ -41,6 +41,12 @@ export function XMLSyntaxHighlighter({ monaco, editor }: XMLSyntaxHighlighterPro
             [/([a-zA-Z_][a-zA-Z0-9_\-:]*)/, "attribute.name"], // Attribute names
             [/[ \t\r\n]+/, "white"], // Whitespace
             [/[^<&\s=]+/, "attribute.value"], // Unquoted attribute values
+          ],
+
+          comment: [
+            [/-->/, { token: "comment", next: "@pop" }],
+            [/[^-]+/, "comment"],
+            [/-/, "comment"],
           ],
 
           tagContent: [

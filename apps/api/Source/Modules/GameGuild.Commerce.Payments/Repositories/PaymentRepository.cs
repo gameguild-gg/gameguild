@@ -48,7 +48,7 @@ public class PaymentRepository(
             "Getting payment by provider mapping: {Provider}/{ProviderEnvironment}/{ProviderAccountId}/{ProviderObjectType}/{ProviderObjectId}/{ProviderMonetaryLeg}",
             LogRedaction.Sanitize(provider),
             LogRedaction.Sanitize(providerEnvironment),
-            LogRedaction.Sanitize(providerAccountId),
+            LogRedaction.RedactId(providerAccountId, "provider"),
             LogRedaction.Sanitize(providerObjectType),
             LogRedaction.Sanitize(providerObjectId),
             LogRedaction.Sanitize(providerMonetaryLeg));
