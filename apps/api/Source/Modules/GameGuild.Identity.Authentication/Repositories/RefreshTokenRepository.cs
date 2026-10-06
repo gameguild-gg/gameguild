@@ -65,7 +65,10 @@ public class RefreshTokenRepository(IApplicationDbContext context) : IRefreshTok
         }
         var tokenLink = TrackForMetadata(token);
         tokenLink.SessionId = sessionId;
-        if (tokenLink.ExpiresAt > session.ExpiresAt) tokenLink.ExpiresAt = session.ExpiresAt;
+        if (tokenLink.ExpiresAt > session.ExpiresAt)
+        {
+            tokenLink.ExpiresAt = session.ExpiresAt;
+        }
         tokenLink.UpdatedAt = SystemClock.UtcNow;
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return true;
@@ -104,7 +107,10 @@ public class RefreshTokenRepository(IApplicationDbContext context) : IRefreshTok
         parentLink.SessionId = sessionId;
         childLink.SessionId = sessionId;
         childLink.ParentTokenId = parent.Id;
-        if (childLink.ExpiresAt > session.ExpiresAt) childLink.ExpiresAt = session.ExpiresAt;
+        if (childLink.ExpiresAt > session.ExpiresAt)
+        {
+            childLink.ExpiresAt = session.ExpiresAt;
+        }
         parentLink.UpdatedAt = childLink.UpdatedAt = SystemClock.UtcNow;
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -249,7 +255,11 @@ public class RefreshTokenRepository(IApplicationDbContext context) : IRefreshTok
     {
         // Keep replay markers through original expiry and retention, even when revoked earlier.
         // Delete leaves first. Retain predecessors while any child is retained, including an active descendant.
-        while (await DeleteExpiredAndRevokedBatchAsync(cutoffDate, 500, cancellationToken).ConfigureAwait(false) != 0) { }
+        int deletedRows;
+        do
+        {
+            deletedRows = await DeleteExpiredAndRevokedBatchAsync(cutoffDate, 500, cancellationToken).ConfigureAwait(false);
+        } while (deletedRows != 0);
     }
 
     public async Task<int> DeleteExpiredAndRevokedBatchAsync(DateTime cutoffUtc, int batchSize, CancellationToken cancellationToken)

@@ -195,6 +195,34 @@ lock audit excludes those advisories. Frozen installation and full policy
 verification remain pending. Codacy annotations are retained for remediation.
 The native CI exception authorized for #697 is not applied to this PR.
 
+The Codacy corrections were applied after the previous complete API unit suite
+finished with 1,079/1,079 cases and verified disposal of its database container.
+The integration stage was deliberately deferred before executing any test so it
+can run against the corrected final source; the orchestration diagnostic and
+explicit deferral receipt remain retained. The subsequent full Release build
+again had zero warnings/errors. Fresh complete Authentication 2,316,
+Authorization 1,667, SharedKernel 1,397 and Notifications 384 suites passed;
+73 focused API registration, cleanup/lifecycle and email cases also passed with
+matching source/build fingerprints and verified owned-database disposal. The
+complete final-source host unit/integration suites and new matching-head scanner
+result remain required.
+
+The repeated full site suite passed all 2,982 cases without changing source or
+timeout limits. After the corrected dependency installation, CI also passed the
+complete 2,982-case site suite, lint, typecheck and build. Seven local runtime
+checks verify selected patched package versions, benign native SVG rendering,
+rejection of four post-comment shell line terminators and ordinary quoting.
+The installed audit retains only the two existing independently verified local
+patches. A UTF-8 report reader reconciles an automation decoding error after the
+new 1,135-case SDK run exited successfully; the failed diagnostic remains
+retained, and final client type/build checks are being completed.
+
+Matching-head CI for the published dependency revision passes API, Web, OpenAPI,
+policy and static language analysis. Emception packaging failed while verifying
+the downloaded LLVM archive checksum. Its full upstream tree must be verified
+before accepting a further archive variant; no checksum check is disabled and
+this failure has no inherited owner exception.
+
 The previous complete API integration run is retained with 362 passed and five
 failed cases. Three TTL fixtures omitted the session ceiling and two DTO cases
 required refresh expiry to exceed a 24-hour access token despite a 24-hour absolute

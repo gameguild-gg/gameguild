@@ -23,7 +23,7 @@ namespace GameGuild.API.IntegrationTests;
 [CollectionDefinition(Name, DisableParallelization = true)]
 public sealed class RefreshTokenExpirationPostgreSqlCollection : ICollectionFixture<ApiPostgreSqlFixture>
 {
-    public const string Name = "Refresh-token expiration PostgreSQL";
+    internal const string Name = "Refresh-token expiration PostgreSQL";
 }
 
 [Collection(RefreshTokenExpirationPostgreSqlCollection.Name)]
@@ -98,11 +98,17 @@ public sealed class RefreshTokenExpirationPostgreSqlHttpTests(ApiPostgreSqlFixtu
         Assert.Equal(reported, payload.RootElement.GetProperty("expiresAt").GetDateTime());
         Assert.True(token.ExpiresAt <= now.AddHours(-23).AddMinutes(absoluteMinutes));
         if (!sliding)
+        {
             Assert.Equal(originalExpiry, token.ExpiresAt);
+        }
         else if (absoluteMinutes == 1440)
+        {
             Assert.Equal(now.AddHours(1), token.ExpiresAt);
+        }
         else
+        {
             Assert.InRange(token.ExpiresAt, before.AddDays(7).AddMilliseconds(-0.001), after.AddDays(7));
+        }
         Assert.Single(await context.Set<RefreshToken>().Where(value => value.UserId == user.Id && value.ParentTokenId != null).ToListAsync());
     }
 }

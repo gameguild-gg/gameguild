@@ -16,8 +16,17 @@ all three, while frozen installation and policy acceptance remain pending.
 Codacy annotations are retained for remediation. The #697 exception applies only
 to that accepted merge. #263 remains open with all 19 original criteria.
 
-The fixed scope remains 328 IDs. The latest verified snapshot on 2026-10-06
-retained 72 closed and 256 open, including historical/administrative closures.
+The annotations have now been corrected locally. A fresh warning/error-clean
+Release build, all four complete module suites and 73 focused API cases passed.
+The previous full API unit run passed all 1,079 cases before those corrections;
+complete final-source host regression remains pending. The full site repetition
+passed all 2,982 cases, and CI verified them again after installing the corrected
+dependencies. Emception CI found a further LLVM archive digest that requires
+upstream tree verification before acceptance. No scanner/checksum rule is disabled.
+
+The fixed scope remains 328 IDs. The snapshot verified at
+`2026-10-06T18:02:19.756077+00:00` retained 72 closed and 256 open, including
+historical/administrative closures.
 All 55 unrelated primary file bytes/statuses are preserved. The same worktree
 is reused, with three worktrees, four local branches and zero stashes.
 

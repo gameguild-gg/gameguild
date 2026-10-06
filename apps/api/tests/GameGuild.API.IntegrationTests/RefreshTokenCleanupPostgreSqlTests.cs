@@ -59,7 +59,9 @@ public sealed class RefreshTokenCleanupPostgreSqlTests(ApiPostgreSqlFixture fixt
         using var verification = fixture.Factory.Services.CreateScope();
         var stored = verification.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         foreach (var token in seeded.RetainedTokens)
+        {
             Assert.True(await stored.Set<RefreshToken>().AnyAsync(row => row.Id == token.Id));
+        }
         Assert.True(await stored.Set<UserSession>().AnyAsync(row => row.Id == seeded.LiveSession!.Id));
         Assert.Equal(before + 1, await stored.Set<AuditLog>().CountAsync(row => row.ActionType == "Authentication.RefreshTokenCleanup"));
         var audit = await stored.Set<AuditLog>().Where(row => row.ActionType == "Authentication.RefreshTokenCleanup")
@@ -238,7 +240,9 @@ public sealed class RefreshTokenCleanupPostgreSqlTests(ApiPostgreSqlFixture fixt
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             if (ChangeTracker.Entries<AuditLog>().Any(entry => entry.State == EntityState.Added && entry.Entity.ActionType == "Authentication.RefreshTokenCleanup"))
+            {
                 throw new IOException("Synthetic required cleanup audit persistence failure");
+            }
             return base.SaveChangesAsync(cancellationToken);
         }
     }
@@ -259,7 +263,9 @@ public sealed class RefreshTokenCleanupPostgreSqlTests(ApiPostgreSqlFixture fixt
         listener.InstrumentPublished = (instrument, current) =>
         {
             if (instrument.Meter.Name == RefreshTokenLifecycleMetrics.MeterName && instrument.Name == "authentication.refresh_token.cleanup_rows")
+            {
                 current.EnableMeasurementEvents(instrument);
+            }
         };
         listener.SetMeasurementEventCallback<long>((_, value, _, _) => record(value));
         listener.Start();

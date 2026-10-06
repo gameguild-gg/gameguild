@@ -80,6 +80,7 @@ public sealed class AuthenticatedSessionIssuerTests
             case "non-root": fixture.Token.ParentTokenId = Guid.NewGuid(); break;
             case "replaced": fixture.Token.ReplacedByToken = "old-replacement-hash"; break;
             case "hash-mismatch": fixture.Token.Token = fixture.Hasher.HashToken("different-test-token"); break;
+            default: throw new ArgumentOutOfRangeException(nameof(mode), mode, "Unknown persisted-root fault.");
         }
         await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.IssueAsync());
         fixture.Sessions.VerifyNoOtherCalls();
@@ -178,9 +179,12 @@ public sealed class AuthenticatedSessionIssuerTests
                 .ReturnsAsync("synthetic-refresh-token");
             Sessions.Setup(service => service.CreateSessionAsync(It.IsAny<Guid>(), User.Id, It.IsAny<string>(), It.IsAny<string>(),
                     It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((Guid id, Guid owner, string ip, string agent, string hash, DateTime expiry, string? fingerprint, CancellationToken _) =>
+                .ReturnsAsync((Guid id, Guid owner, string _, string _, string hash, DateTime expiry, string? _, CancellationToken _) =>
                 {
-                    if (SessionFault != "unbound-token") Token.SessionId = id;
+                    if (SessionFault != "unbound-token")
+                    {
+                        Token.SessionId = id;
+                    }
                     AfterBinding?.Invoke();
                     return new UserSession { Id = id, UserId = SessionFault == "wrong-session-owner" ? Guid.NewGuid() : owner,
                         RefreshToken = SessionFault == "wrong-session-hash" ? Hasher.HashToken("other-token") : hash,

@@ -26,9 +26,13 @@ internal sealed class RefreshTokenLifecycleRecorder(
         var isReplay = lifecycleEvent.Operation == RefreshTokenLifecycleOperation.ReplayContained;
         if (isReplay && (lifecycleEvent.UserId is null || lifecycleEvent.UserId == Guid.Empty ||
                          lifecycleEvent.TokenId is null || lifecycleEvent.TokenId == Guid.Empty))
+        {
             throw new ArgumentException("A replay alert requires persisted token ownership.", nameof(lifecycleEvent));
+        }
         if (isReplay && context.Database.IsRelational() && context.Database.CurrentTransaction is null)
+        {
             throw new InvalidOperationException("Replay containment and its alert must share a database transaction.");
+        }
 
         await PersistAsync(context, metrics, lifecycleEvent, cancellationToken).ConfigureAwait(false);
         if (isReplay)

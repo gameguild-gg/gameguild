@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>Process counters with bounded tags. Database evidence remains the authoritative history.</summary>
 public static class RefreshTokenLifecycleMetrics
 {
-    public const string MeterName = "GameGuild.Identity.Authentication.RefreshTokens";
+    public static string MeterName => "GameGuild.Identity.Authentication.RefreshTokens";
     private static readonly Meter Meter = new(MeterName);
     private static readonly Counter<long> Attempts = Meter.CreateCounter<long>(
         "authentication.refresh_token.attempts", "{attempt}", "Refresh token operations attempted before persistence.");
@@ -26,13 +26,19 @@ public static class RefreshTokenLifecycleMetrics
             CleanupRows.Add(tokens, new KeyValuePair<string, object?>("resource", "refresh_token"));
             CleanupRows.Add(sessions, new KeyValuePair<string, object?>("resource", "session"));
         }
-        catch (Exception) { }
+        catch (Exception)
+        {
+            return;
+        }
     }
 
     public static void RecordCleanupFailure(bool timedOut)
     {
         try { CleanupRuns.Add(1, new KeyValuePair<string, object?>("outcome", timedOut ? "timeout" : "failed")); }
-        catch (Exception) { }
+        catch (Exception)
+        {
+            return;
+        }
     }
 
     public static void RecordAttempt(RefreshTokenLifecycleOperation operation)
@@ -40,7 +46,10 @@ public static class RefreshTokenLifecycleMetrics
         if (!Enum.IsDefined(operation)) { throw new ArgumentOutOfRangeException(nameof(operation)); }
         // A failing in-process telemetry listener must not change authentication or undo a commit.
         try { Attempts.Add(1, new KeyValuePair<string, object?>("operation", operation.ToString().ToLowerInvariant())); }
-        catch (Exception) { }
+        catch (Exception)
+        {
+            return;
+        }
     }
 
     public static void RecordPersisted(RefreshTokenLifecycleEvent lifecycleEvent)
@@ -61,6 +70,9 @@ public static class RefreshTokenLifecycleMetrics
                 new KeyValuePair<string, object?>("outcome", outcome),
                 new KeyValuePair<string, object?>("reason", lifecycleEvent.Reason.ToString().ToLowerInvariant()));
         }
-        catch (Exception) { }
+        catch (Exception)
+        {
+            return;
+        }
     }
 }

@@ -61,5 +61,7 @@ public sealed record EmailDeliveryReceipt(bool Accepted, string? ProviderMessage
 /// <summary>Optional capability for notifications that require explicit provider acceptance.</summary>
 public interface IConfirmedEmailSender : IEmailSender
 {
-    Task<EmailDeliveryReceipt> SendWithReceiptAsync(EmailMessage message, CancellationToken cancellationToken = default);
+    Task<EmailDeliveryReceipt> SendWithReceiptAsync(EmailMessage message) => SendWithReceiptAsync(message, CancellationToken.None);
+
+    Task<EmailDeliveryReceipt> SendWithReceiptAsync(EmailMessage message, CancellationToken cancellationToken);
 }
