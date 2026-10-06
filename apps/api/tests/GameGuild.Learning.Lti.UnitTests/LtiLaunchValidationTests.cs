@@ -67,6 +67,42 @@ public class LtiLaunchValidationTests
 
     // ===== helpers =====
 
+    [Theory]
+    [InlineData("login", "application/json")]
+    [InlineData("login", "text/plain")]
+    [InlineData("login", "")]
+    [InlineData("launch", "application/json")]
+    [InlineData("launch", "text/plain")]
+    [InlineData("launch", "")]
+    public async Task NonFormContentType_CannotBypassAuthenticationOrMintSession(string endpoint, string contentType)
+    {
+        var (state, nonce) = LoginForState();
+        var token = BuildIdToken(sub: "user-abc", email: "student@test.com", nonce);
+        var form = new Dictionary<string, string>
+        {
+            ["iss"] = Issuer,
+            ["client_id"] = ClientId,
+            ["deployment_id"] = "deployment-1",
+            ["login_hint"] = "student-777",
+            ["state"] = state,
+            ["id_token"] = token
+        };
+        using var body = new FormUrlEncodedContent(form);
+        var http = new DefaultHttpContext();
+        http.Request.Method = "POST";
+        http.Request.ContentType = contentType;
+        http.Request.Body = new MemoryStream(await body.ReadAsByteArrayAsync());
+        var controller = CreateController(http);
+
+        var result = endpoint == "login" ? await controller.Login() : await controller.Launch();
+
+        result.Should().BeOfType<BadRequestObjectResult>();
+        http.Response.Headers.Should().NotContainKey("Set-Cookie");
+        _jwtTokenService.Invocations.Should().BeEmpty();
+        _stateStore.TryConsume(state, nonce, _deployment.Id).Should().BeTrue("the rejected request never reached launch validation");
+        (await _db.Set<LtiUserMapping>().CountAsync()).Should().Be(0);
+    }
+
     private LtiController CreateController(HttpContext? http = null, IActorContextAccessor? actor = null)
     {
         var handler = new LtiEndpointCommandHandler(
