@@ -203,7 +203,7 @@ export class ComplianceAuditModule {
   /**
    * Lists recurring audit exports for a tenant.
    */
-  async getAdminAuditLogsScheduledExports(query?: { tenantId?: string }): Promise<Result<Array<Types.ComplianceAuditScheduledAuditExportOutput>, ApiError>> {
+  async getAdminAuditLogsScheduledExports(query?: { tenantId?: string }): Promise<Result<Types.ComplianceAuditScheduledAuditExportOutput[], ApiError>> {
     const url = '/v1/admin/audit-logs/scheduled-exports';
 
     const result = await this.client.request({
@@ -213,7 +213,7 @@ export class ComplianceAuditModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.ComplianceAuditScheduledAuditExportOutput>, ApiError>;
+    return result as Result<Types.ComplianceAuditScheduledAuditExportOutput[], ApiError>;
   }
 
   /**
@@ -269,7 +269,7 @@ export class ComplianceAuditModule {
   async getAdminAuditLogsScheduledExportsHistory(
     exportId: string,
     query?: { tenantId?: string },
-  ): Promise<Result<Array<Types.ComplianceAuditAuditExportHistoryOutput>, ApiError>> {
+  ): Promise<Result<Types.ComplianceAuditAuditExportHistoryOutput[], ApiError>> {
     const url = `/v1/admin/audit-logs/scheduled-exports/${exportId}/history`;
 
     const result = await this.client.request({
@@ -279,16 +279,16 @@ export class ComplianceAuditModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.ComplianceAuditAuditExportHistoryOutput>, ApiError>;
+    return result as Result<Types.ComplianceAuditAuditExportHistoryOutput[], ApiError>;
   }
 
   /**
    * Searches audit events by multiple action types, groups, and taxonomy categories.
    */
   async getAdminAuditLogsSearchByActionType(query?: {
-    ActionTypes?: Array<string>;
-    ActionGroups?: Array<string>;
-    Categories?: Array<string>;
+    ActionTypes?: string[];
+    ActionGroups?: string[];
+    Categories?: string[];
     LogicalOperator?: Types.ComplianceAuditAuditActionTypeLogicalOperator;
     UserId?: string;
     TenantId?: string;
@@ -325,9 +325,9 @@ export class ComplianceAuditModule {
    */
   async getAdminAuditLogsSearchByActionTypeExport(query?: {
     format?: string;
-    ActionTypes?: Array<string>;
-    ActionGroups?: Array<string>;
-    Categories?: Array<string>;
+    ActionTypes?: string[];
+    ActionGroups?: string[];
+    Categories?: string[];
     LogicalOperator?: Types.ComplianceAuditAuditActionTypeLogicalOperator;
     UserId?: string;
     TenantId?: string;

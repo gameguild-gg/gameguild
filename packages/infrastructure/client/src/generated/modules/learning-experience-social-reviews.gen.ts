@@ -42,7 +42,7 @@ export class LearningExperienceSocialReviewsModule {
   async getApiSocialCoursesReviews(
     courseId: string,
     query?: { skip?: number; take?: number; approvedOnly?: boolean },
-  ): Promise<Result<Array<Types.LearningExperienceSocialServicesCourseReviewDto>, ApiError>> {
+  ): Promise<Result<Types.LearningExperienceSocialServicesCourseReviewDto[], ApiError>> {
     const url = `/api/social/courses/${courseId}/reviews`;
 
     const result = await this.client.request({
@@ -52,7 +52,7 @@ export class LearningExperienceSocialReviewsModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.LearningExperienceSocialServicesCourseReviewDto>, ApiError>;
+    return result as Result<Types.LearningExperienceSocialServicesCourseReviewDto[], ApiError>;
   }
 
   /**
@@ -212,10 +212,7 @@ export class LearningExperienceSocialReviewsModule {
   /**
    * Gets the current user's reviews
    */
-  async getApiSocialReviewsMe(query?: {
-    skip?: number;
-    take?: number;
-  }): Promise<Result<Array<Types.LearningExperienceSocialServicesCourseReviewDto>, ApiError>> {
+  async getApiSocialReviewsMe(query?: { skip?: number; take?: number }): Promise<Result<Types.LearningExperienceSocialServicesCourseReviewDto[], ApiError>> {
     const url = '/api/social/reviews/me';
 
     const result = await this.client.request({
@@ -225,7 +222,7 @@ export class LearningExperienceSocialReviewsModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.LearningExperienceSocialServicesCourseReviewDto>, ApiError>;
+    return result as Result<Types.LearningExperienceSocialServicesCourseReviewDto[], ApiError>;
   }
 }
 
