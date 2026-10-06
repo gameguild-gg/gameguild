@@ -744,14 +744,8 @@
     }
   },
   "src/components/block-content-editor/extras/code-studio/runners/quickjs-runner.ts": {
-    "@typescript-eslint/no-unsafe-assignment": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-return": {
-      "count": 2
-    },
     "@typescript-eslint/require-await": {
-      "count": 2
+      "count": 1
     }
   },
   "src/components/block-content-editor/extras/code-studio/runners/ruby-runner.ts": {
@@ -1852,26 +1846,8 @@
     }
   },
   "src/components/block-content-editor/hooks/editor/executors/javascript-executor.ts": {
-    "@typescript-eslint/no-base-to-string": {
-      "count": 1
-    },
-    "@typescript-eslint/no-explicit-any": {
-      "count": 4
-    },
-    "@typescript-eslint/no-implied-eval": {
-      "count": 2
-    },
-    "@typescript-eslint/no-unsafe-argument": {
-      "count": 2
-    },
     "@typescript-eslint/no-unsafe-assignment": {
-      "count": 3
-    },
-    "@typescript-eslint/no-unsafe-call": {
-      "count": 6
-    },
-    "@typescript-eslint/no-unsafe-member-access": {
-      "count": 5
+      "count": 1
     },
     "@typescript-eslint/no-unused-vars": {
       "count": 1
@@ -1883,29 +1859,6 @@
     }
   },
   "src/components/block-content-editor/hooks/editor/executors/python-executor.ts": {
-    "@typescript-eslint/require-await": {
-      "count": 1
-    }
-  },
-  "src/components/block-content-editor/hooks/editor/executors/typescript-executor.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 11
-    },
-    "@typescript-eslint/no-unsafe-argument": {
-      "count": 2
-    },
-    "@typescript-eslint/no-unsafe-assignment": {
-      "count": 9
-    },
-    "@typescript-eslint/no-unsafe-call": {
-      "count": 10
-    },
-    "@typescript-eslint/no-unsafe-member-access": {
-      "count": 14
-    },
-    "@typescript-eslint/no-unused-vars": {
-      "count": 4
-    },
     "@typescript-eslint/require-await": {
       "count": 1
     }
