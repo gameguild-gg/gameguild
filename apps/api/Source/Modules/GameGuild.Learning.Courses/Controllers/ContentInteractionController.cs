@@ -27,9 +27,12 @@ public class ContentInteractionController(IContentInteractionService contentInte
     // Verify content belongs to the specified program
     var content = await programContentService.GetContentByIdAsync(request.ContentId).ConfigureAwait(false);
 
-    if (content == null || content.ProgramId != programId) return BadRequest("Content does not belong to the specified program.");
+    if (content == null || content.ProgramId != programId)
+        {
+            return BadRequest("Content does not belong to the specified program.");
+        }
 
-    var interaction = await sender.Send(new StartContentInteractionEndpointCommand(request.ProgramUserId, request.ContentId)).ConfigureAwait(false);
+        var interaction = await sender.Send(new StartContentInteractionEndpointCommand(request.ProgramUserId, request.ContentId)).ConfigureAwait(false);
 
     return Ok(interaction.ToDto());
   }
@@ -45,9 +48,12 @@ public class ContentInteractionController(IContentInteractionService contentInte
       // Get the interaction to verify it belongs to the specified program
       var currentInteraction = await contentInteractionService.GetInteractionAsync(request.ProgramUserId, request.ContentId).ConfigureAwait(false);
 
-      if (currentInteraction == null || currentInteraction.Content.ProgramId != programId) return BadRequest("Interaction does not belong to the specified program.");
+      if (currentInteraction == null || currentInteraction.Content.ProgramId != programId)
+            {
+                return BadRequest("Interaction does not belong to the specified program.");
+            }
 
-      var interaction = await sender.Send(new UpdateContentInteractionProgressEndpointCommand(interactionId, request.CompletionPercentage)).ConfigureAwait(false);
+            var interaction = await sender.Send(new UpdateContentInteractionProgressEndpointCommand(interactionId, request.CompletionPercentage)).ConfigureAwait(false);
 
       return Ok(interaction.ToDto());
     }
@@ -65,9 +71,12 @@ public class ContentInteractionController(IContentInteractionService contentInte
       // Verify the interaction belongs to the specified program
       var currentInteraction = await contentInteractionService.GetInteractionAsync(request.ProgramUserId, request.ContentId).ConfigureAwait(false);
 
-      if (currentInteraction == null || currentInteraction.Content.ProgramId != programId) return BadRequest("Interaction does not belong to the specified program.");
+      if (currentInteraction == null || currentInteraction.Content.ProgramId != programId)
+            {
+                return BadRequest("Interaction does not belong to the specified program.");
+            }
 
-      var interaction = await sender.Send(new SubmitContentInteractionEndpointCommand(interactionId, request.SubmissionData)).ConfigureAwait(false);
+            var interaction = await sender.Send(new SubmitContentInteractionEndpointCommand(interactionId, request.SubmissionData)).ConfigureAwait(false);
 
       return Ok(interaction.ToDto());
     }
@@ -85,9 +94,12 @@ public class ContentInteractionController(IContentInteractionService contentInte
       // Verify the interaction belongs to the specified program
       var currentInteraction = await contentInteractionService.GetInteractionAsync(request.ProgramUserId, request.ContentId).ConfigureAwait(false);
 
-      if (currentInteraction == null || currentInteraction.Content.ProgramId != programId) return BadRequest("Interaction does not belong to the specified program.");
+      if (currentInteraction == null || currentInteraction.Content.ProgramId != programId)
+            {
+                return BadRequest("Interaction does not belong to the specified program.");
+            }
 
-      var interaction = await sender.Send(new CompleteContentInteractionEndpointCommand(interactionId)).ConfigureAwait(false);
+            var interaction = await sender.Send(new CompleteContentInteractionEndpointCommand(interactionId)).ConfigureAwait(false);
 
       return Ok(interaction.ToDto());
     }
@@ -104,13 +116,19 @@ public class ContentInteractionController(IContentInteractionService contentInte
     // Verify content belongs to the specified program
     var content = await programContentService.GetContentByIdAsync(contentId).ConfigureAwait(false);
 
-    if (content == null || content.ProgramId != programId) return BadRequest("Content does not belong to the specified program.");
+    if (content == null || content.ProgramId != programId)
+        {
+            return BadRequest("Content does not belong to the specified program.");
+        }
 
-    var interaction = await contentInteractionService.GetInteractionAsync(programUserId, contentId).ConfigureAwait(false);
+        var interaction = await contentInteractionService.GetInteractionAsync(programUserId, contentId).ConfigureAwait(false);
 
-    if (interaction == null) return NotFound("Interaction not found.");
+    if (interaction == null)
+        {
+            return NotFound("Interaction not found.");
+        }
 
-    return Ok(interaction.ToDto());
+        return Ok(interaction.ToDto());
   }
 
   /// <summary>
@@ -133,9 +151,12 @@ public class ContentInteractionController(IContentInteractionService contentInte
   [RequireResourcePermission<PermissionType, Program>(PermissionType.Review, "programId")]
   public async Task<ActionResult<IEnumerable<SurveyResponseResultDto>>> GetSurveyResults([FromRoute] Guid contentId, [FromQuery] Guid programId) {
     var content = await programContentService.GetContentByIdAsync(contentId).ConfigureAwait(false);
-    if (content is null || content.ProgramId != programId) return NotFound();
+    if (content is null || content.ProgramId != programId)
+        {
+            return NotFound();
+        }
 
-    try {
+        try {
       return Ok(await contentInteractionService.GetSurveyResponsesAsync(programId, contentId).ConfigureAwait(false));
     }
     catch (RequestValidationException exception) {
@@ -177,9 +198,12 @@ public class ContentInteractionController(IContentInteractionService contentInte
       // Verify the interaction belongs to the specified program
       var currentInteraction = await contentInteractionService.GetInteractionAsync(request.ProgramUserId, request.ContentId).ConfigureAwait(false);
 
-      if (currentInteraction == null || currentInteraction.Content.ProgramId != programId) return BadRequest("Interaction does not belong to the specified program.");
+      if (currentInteraction == null || currentInteraction.Content.ProgramId != programId)
+            {
+                return BadRequest("Interaction does not belong to the specified program.");
+            }
 
-      var interaction = await sender.Send(new UpdateContentInteractionTimeEndpointCommand(interactionId, request.AdditionalMinutes)).ConfigureAwait(false);
+            var interaction = await sender.Send(new UpdateContentInteractionTimeEndpointCommand(interactionId, request.AdditionalMinutes)).ConfigureAwait(false);
 
       return Ok(interaction.ToDto());
     }

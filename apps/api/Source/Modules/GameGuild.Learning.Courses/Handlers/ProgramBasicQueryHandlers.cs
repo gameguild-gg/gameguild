@@ -28,23 +28,41 @@ public sealed class ProgramBasicQueryHandlers(IApplicationDbContext context, ILo
     // Apply filters
     if (!string.IsNullOrEmpty(request.Search)) { query = query.Where(p => p.Title.Contains(request.Search) || p.Description != null && p.Description.Contains(request.Search)); }
 
-    if (request.Category.HasValue) query = query.Where(p => p.Category == request.Category.Value);
+    if (request.Category.HasValue)
+        {
+            query = query.Where(p => p.Category == request.Category.Value);
+        }
 
-    if (request.Difficulty.HasValue) query = query.Where(p => p.Difficulty == request.Difficulty.Value);
+        if (request.Difficulty.HasValue)
+        {
+            query = query.Where(p => p.Difficulty == request.Difficulty.Value);
+        }
 
-    if (request.Status.HasValue) query = query.Where(p => p.Status == request.Status.Value);
+        if (request.Status.HasValue)
+        {
+            query = query.Where(p => p.Status == request.Status.Value);
+        }
 
-    if (request.Visibility.HasValue) query = query.Where(p => p.Visibility == request.Visibility.Value);
+        if (request.Visibility.HasValue)
+        {
+            query = query.Where(p => p.Visibility == request.Visibility.Value);
+        }
 
-    if (request.EnrollmentStatus.HasValue) query = query.Where(p => p.EnrollmentStatus == (EnrollmentStatus)request.EnrollmentStatus.Value);
+        if (request.EnrollmentStatus.HasValue)
+        {
+            query = query.Where(p => p.EnrollmentStatus == (EnrollmentStatus)request.EnrollmentStatus.Value);
+        }
 
-    // Remove CreatorId filter since this property doesn't exist in the current Program model
-    // if (!string.IsNullOrEmpty(request.CreatorId)) query = query.Where(p => p.CreatorId == request.CreatorId);
+        // Remove CreatorId filter since this property doesn't exist in the current Program model
+        // if (!string.IsNullOrEmpty(request.CreatorId)) query = query.Where(p => p.CreatorId == request.CreatorId);
 
-    if (!request.IncludeArchived) query = query.Where(p => p.Status != ContentStatus.Archived);
+        if (!request.IncludeArchived)
+        {
+            query = query.Where(p => p.Status != ContentStatus.Archived);
+        }
 
-    // Apply sorting
-    query = request.SortBy?.ToLower() switch {
+        // Apply sorting
+        query = request.SortBy?.ToLower() switch {
       "title" => request.SortDescending ? query.OrderByDescending(p => p.Title) : query.OrderBy(p => p.Title),
       "createdat" => request.SortDescending ? query.OrderByDescending(p => p.CreatedAt) : query.OrderBy(p => p.CreatedAt),
       "updatedat" => request.SortDescending ? query.OrderByDescending(p => p.UpdatedAt) : query.OrderBy(p => p.UpdatedAt),
@@ -67,20 +85,33 @@ public sealed class ProgramBasicQueryHandlers(IApplicationDbContext context, ILo
       .AsNoTracking() // Read-only query optimization
       .Where(p => p.Id == request.Id && p.DeletedAt == null);
 
-    if (request.IncludeContent) query = query.Include(p => p.ProgramContents.Where(pc => pc.DeletedAt == null));
+    if (request.IncludeContent)
+        {
+            query = query.Include(p => p.ProgramContents.Where(pc => pc.DeletedAt == null));
+        }
 
-    if (request.IncludeEnrollments) query = query.Include(p => p.ProgramUsers.Where(pu => pu.DeletedAt == null));
+        if (request.IncludeEnrollments)
+        {
+            query = query.Include(p => p.ProgramUsers.Where(pu => pu.DeletedAt == null));
+        }
 
-    if (request.IncludeRatings) query = query.Include(p => p.ProgramRatings);
+        if (request.IncludeRatings)
+        {
+            query = query.Include(p => p.ProgramRatings);
+        }
 
-    var program = await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+        var program = await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
     if (program != null)
-      logger.LogInformation("Found program: {ProgramId}", program.Id);
-    else
-      logger.LogWarning("Program not found: {ProgramId}", request.Id);
+        {
+            logger.LogInformation("Found program: {ProgramId}", program.Id);
+        }
+        else
+        {
+            logger.LogWarning("Program not found: {ProgramId}", request.Id);
+        }
 
-    return program;
+        return program;
   }
 
   public async Task<Program?> Handle(GetProgramBySlugQuery request, CancellationToken cancellationToken) {
@@ -90,20 +121,33 @@ public sealed class ProgramBasicQueryHandlers(IApplicationDbContext context, ILo
       .AsNoTracking() // Read-only query optimization
       .Where(p => p.Slug == request.Slug && p.DeletedAt == null);
 
-    if (request.IncludeContent) query = query.Include(p => p.ProgramContents.Where(pc => pc.DeletedAt == null));
+    if (request.IncludeContent)
+        {
+            query = query.Include(p => p.ProgramContents.Where(pc => pc.DeletedAt == null));
+        }
 
-    if (request.IncludeEnrollments) query = query.Include(p => p.ProgramUsers.Where(pu => pu.DeletedAt == null));
+        if (request.IncludeEnrollments)
+        {
+            query = query.Include(p => p.ProgramUsers.Where(pu => pu.DeletedAt == null));
+        }
 
-    if (request.IncludeRatings) query = query.Include(p => p.ProgramRatings);
+        if (request.IncludeRatings)
+        {
+            query = query.Include(p => p.ProgramRatings);
+        }
 
-    var program = await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+        var program = await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
     if (program != null)
-      logger.LogInformation("Found program by slug: {Slug}", request.Slug);
-    else
-      logger.LogWarning("Program not found by slug: {Slug}", request.Slug);
+        {
+            logger.LogInformation("Found program by slug: {Slug}", request.Slug);
+        }
+        else
+        {
+            logger.LogWarning("Program not found by slug: {Slug}", request.Slug);
+        }
 
-    return program;
+        return program;
   }
 
   public async Task<Program?> Handle(GetPublishedProgramBySlugQuery request, CancellationToken cancellationToken) {
@@ -111,16 +155,23 @@ public sealed class ProgramBasicQueryHandlers(IApplicationDbContext context, ILo
 
     var query = context.Set<Program>().Where(p => p.Slug == request.Slug && p.DeletedAt == null && p.Status == ContentStatus.Published && p.Visibility == ContentVisibility.Public);
 
-    if (request.IncludeContent) query = query.Include(p => p.ProgramContents.Where(pc => pc.DeletedAt == null));
+    if (request.IncludeContent)
+        {
+            query = query.Include(p => p.ProgramContents.Where(pc => pc.DeletedAt == null));
+        }
 
-    var program = await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+        var program = await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
     if (program != null)
-      logger.LogInformation("Found published program by slug: {Slug}", request.Slug);
-    else
-      logger.LogWarning("Published program not found by slug: {Slug}", request.Slug);
+        {
+            logger.LogInformation("Found published program by slug: {Slug}", request.Slug);
+        }
+        else
+        {
+            logger.LogWarning("Published program not found by slug: {Slug}", request.Slug);
+        }
 
-    return program;
+        return program;
   }
 
   public async Task<IEnumerable<Program>> Handle(SearchProgramsQuery request, CancellationToken cancellationToken) {
@@ -132,15 +183,27 @@ public sealed class ProgramBasicQueryHandlers(IApplicationDbContext context, ILo
     query = query.Where(p => p.Title.Contains(request.SearchTerm) || p.Description != null && p.Description.Contains(request.SearchTerm));
 
     // Apply filters
-    if (request.Category.HasValue) query = query.Where(p => p.Category == request.Category.Value);
+    if (request.Category.HasValue)
+        {
+            query = query.Where(p => p.Category == request.Category.Value);
+        }
 
-    if (request.Difficulty.HasValue) query = query.Where(p => p.Difficulty == request.Difficulty.Value);
+        if (request.Difficulty.HasValue)
+        {
+            query = query.Where(p => p.Difficulty == request.Difficulty.Value);
+        }
 
-    if (request.MinEstimatedHours.HasValue) query = query.Where(p => p.EstimatedHours >= request.MinEstimatedHours.Value);
+        if (request.MinEstimatedHours.HasValue)
+        {
+            query = query.Where(p => p.EstimatedHours >= request.MinEstimatedHours.Value);
+        }
 
-    if (request.MaxEstimatedHours.HasValue) query = query.Where(p => p.EstimatedHours <= request.MaxEstimatedHours.Value);
+        if (request.MaxEstimatedHours.HasValue)
+        {
+            query = query.Where(p => p.EstimatedHours <= request.MaxEstimatedHours.Value);
+        }
 
-    if (request.MinRating.HasValue) { query = query.Where(p => p.ProgramRatings.Any() && p.ProgramRatings.Average(pr => pr.Rating) >= request.MinRating.Value); }
+        if (request.MinRating.HasValue) { query = query.Where(p => p.ProgramRatings.Any() && p.ProgramRatings.Average(pr => pr.Rating) >= request.MinRating.Value); }
 
     if (request.AvailableForEnrollment) {
       query = query.Where(p => p.EnrollmentStatus == EnrollmentStatus.Open &&
