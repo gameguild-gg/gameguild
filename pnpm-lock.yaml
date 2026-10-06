@@ -1883,7 +1883,7 @@ importers:
         specifier: 4.4.0
         version: link:../browser
       '@gameguild/emception-xterm':
-        specifier: ^4.3.0
+        specifier: ^4.4.0
         version: link:../xterm
       emception:
         specifier: 4.4.0
@@ -1923,7 +1923,7 @@ importers:
         specifier: 4.4.0
         version: link:../browser
       '@gameguild/emception-xterm':
-        specifier: ^4.3.0
+        specifier: ^4.4.0
         version: link:../xterm
       emception:
         specifier: 4.4.0
@@ -1953,7 +1953,7 @@ importers:
         specifier: 4.4.0
         version: link:../browser
       '@gameguild/emception-xterm':
-        specifier: ^4.3.0
+        specifier: ^4.4.0
         version: link:../xterm
       emception:
         specifier: 4.4.0
