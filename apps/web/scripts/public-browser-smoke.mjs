@@ -157,7 +157,8 @@ async function main() {
 
     await page.goto(routeUrl('/'), { waitUntil: 'domcontentloaded' });
     const desktopNav = page.getByRole('navigation', { name: 'Main navigation' });
-    await desktopNav.getByRole('link', { name: 'Courses' }).click();
+    await desktopNav.getByRole('button', { name: 'Learn', exact: true }).click();
+    await page.getByRole('menuitem', { name: 'Courses', exact: true }).click();
     await page.waitForURL('**/courses');
     await page.getByRole('heading', { name: /Build the game development portfolio/i }).waitFor();
 
