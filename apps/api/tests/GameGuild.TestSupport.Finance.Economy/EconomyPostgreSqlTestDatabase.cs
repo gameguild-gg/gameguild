@@ -143,8 +143,8 @@ public sealed class EconomyPostgreSqlTestDatabase : IAsyncDisposable
             : ValidateDatabaseName(configuredTemplateDatabase, "ECONOMY_POSTGRES_TEMPLATE_DATABASE");
         var adminBuilder = new NpgsqlConnectionStringBuilder(gateConnectionString) { Pooling = false };
         // The disposable gate shares one PostgreSQL server across isolated test
-        // databases. Database recreation can briefly wait behind concurrent migrations;
-        // use an explicit administrative timeout instead of turning the complete
+        // databases. Database recreation can briefly wait behind concurrent migrations.
+        // Use an explicit administrative timeout instead of turning the complete
         // test assembly into a serial queue.
         adminBuilder.Timeout = 30;
         adminBuilder.CommandTimeout = 120;
