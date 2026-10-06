@@ -4,8 +4,12 @@ import { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
 
 import { routeRequest } from "./proxy";
+import nextConfig from "../next.config";
 
 describe("GameGuild internationalization proxy", () => {
+  it("preserves the RSC headers needed by the production proxy", () => {
+    expect(nextConfig.skipProxyUrlNormalize).toBe(true);
+  });
   it("keeps the default locale internal for an unprefixed route", () => {
     const response = routeRequest(
       new NextRequest(
@@ -28,6 +32,29 @@ describe("GameGuild internationalization proxy", () => {
     expect(response.headers.get("location")).toBe(
       "https://gameguild.gg/projects?view=grid",
     );
+  });
+
+  it.each([
+    "/en-US?_rsc=public-root",
+    "/en-US/sign-in?redirectTo=%2Ffeed&_rsc=public-sign-in",
+    "/en-US/projects?_rsc=public-projects",
+  ])("serves the internal default-locale RSC request %s without a canonical redirect", (path) => {
+    const response = routeRequest(new NextRequest(`https://gameguild.gg${path}`, {
+      headers: { rsc: "1", "next-router-prefetch": "1" },
+    }));
+
+    expect(response.headers.get("location")).toBeNull();
+    expect(response.headers.get("x-middleware-rewrite")).toBe(`https://gameguild.gg${path}`);
+    expect(response.headers.get("x-middleware-request-x-next-intl-locale")).toBe("en-US");
+    expect(response.headers.get("x-middleware-request-x-gameguild-internal-locale-rewrite")).toBe("1");
+  });
+
+  it.each(["0", "true"])("keeps HTML canonicalization when the RSC header is %s", (rsc) => {
+    const response = routeRequest(new NextRequest("https://gameguild.gg/en-US/projects?_rsc=query-only", {
+      headers: { rsc },
+    }));
+
+    expect(response.headers.get("location")).toBe("https://gameguild.gg/projects?_rsc=query-only");
   });
 
   it.each([
@@ -101,5 +128,14 @@ describe("GameGuild internationalization proxy", () => {
     expect(response.headers.get("location")).toBe(
       "https://gameguild.gg/feed?tab=playtests",
     );
+  });
+
+  it("preserves the legacy default-locale social redirect for RSC", () => {
+    const response = routeRequest(new NextRequest("https://gameguild.gg/en-US/social?tab=playtests", {
+      headers: { rsc: "1", "next-router-prefetch": "1" },
+    }));
+
+    expect(response.headers.get("location")).toBe("https://gameguild.gg/feed?tab=playtests");
+    expect(response.headers.get("x-middleware-rewrite")).toBeNull();
   });
 });
