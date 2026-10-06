@@ -612,7 +612,7 @@ public sealed class RedisDistributedRateLimiterIntegrationTests(
     {
         const int capacity = 6;
         const int refillTokens = 2;
-        var period = TimeSpan.FromMilliseconds(250);
+        var period = TimeSpan.FromMinutes(1);
         var log = new CapturingLogger<RedisDistributedRateLimiter>();
         var limiters = fixture.Connections
             .Select(connection => new RedisDistributedRateLimiter(connection, log))
@@ -628,7 +628,25 @@ public sealed class RedisDistributedRateLimiterIntegrationTests(
         initial.Count(decision => decision.IsAllowed).Should().Be(capacity);
         initial.Where(decision => !decision.IsAllowed).Should().OnlyContain(decision => decision.RetryAfter > TimeSpan.Zero);
 
-        await Task.Delay(TimeSpan.FromMilliseconds(300));
+        var database = fixture.Connections[0].GetDatabase();
+        const string bucketKey = "ratelimit:token-bucket:integration:shared-token-bucket";
+        (await database.HashGetAsync(bucketKey, "tokens")).ToString().Should().Be("0");
+
+        // Position the fixture one period behind Redis's own clock. A short
+        // wall-clock delay can cross multiple periods on a busy CI runner.
+        var positioned = await database.ScriptEvaluateAsync(
+            """
+            local now = redis.call('TIME')
+            local nowMs = tonumber(now[1]) * 1000 + math.floor(tonumber(now[2]) / 1000)
+            if redis.call('HEXISTS', KEYS[1], 'lastRefill') ~= 1 then
+                return 0
+            end
+            redis.call('HSET', KEYS[1], 'lastRefill', nowMs - tonumber(ARGV[1]))
+            return 1
+            """,
+            [bucketKey],
+            [(long)period.TotalMilliseconds]);
+        ((int)positioned).Should().Be(1);
         var refilled = await Task.WhenAll(Enumerable.Range(0, 3).Select(index =>
             limiters[index % limiters.Length].TryAcquireTokenBucketAsync(
                 "integration:shared-token-bucket",
