@@ -250,6 +250,7 @@ jobs:
           path: |
             tools/emception/playwright-report
             tools/emception/test-results
+            apps/web/test-results/coding-cycle
           if-no-files-found: ignore
           retention-days: 7
 

@@ -44,6 +44,9 @@ test('Emception CI is Linux-only, lockfile-driven, receipt-aware, and Changesets
     'package clean/build must finish before the canonical CDN is staged',
   );
   assert.match(workflow, /pnpm --filter @game-guild\/client run build/);
+  const failureDiagnostics = workflow.slice(workflow.indexOf('- name: Upload browser diagnostics on failure'));
+  assert.match(failureDiagnostics, /if: failure\(\)/);
+  assert.match(failureDiagnostics, /apps\/web\/test-results\/coding-cycle/);
   assert.equal(
     workflow.indexOf('- name: Build generated API client')
       < workflow.indexOf('- name: Run instructor and learner coding assessment cycle'),
