@@ -15,7 +15,6 @@ public sealed class StripeCustomerLoggingSecurityTests
     private const string PaymentMethodId = "pm_private\r\nforged\u2029entry";
     private const string SetupIntentId = "seti_private\r\nforged";
     private const string SubscriptionId = "sub_private\r\nforged";
-    private const string ClientSecret = "private-client-secret";
     private const string ErrorCode = "provider_error\r\nforged\u2028entry";
 
     [Theory]
@@ -36,9 +35,10 @@ public sealed class StripeCustomerLoggingSecurityTests
     [InlineData("cancellation", "unexpected-error")]
     public async Task Operation_ProtectsLogsWhilePreservingProviderRequestsAndResults(string operation, string outcome)
     {
+        var clientSecret = Guid.NewGuid().ToString("N");
         var logger = new CapturingStripeLogger();
         var client = new Mock<IStripeClient>(MockBehavior.Strict);
-        var sensitiveMessage = $"{SensitiveEmail} {ClientSecret} private-name private-phone\r\nforged";
+        var sensitiveMessage = $"{SensitiveEmail} {clientSecret} private-name private-phone\r\nforged";
         Exception? failure = outcome switch
         {
             "success" => null,
@@ -50,7 +50,7 @@ public sealed class StripeCustomerLoggingSecurityTests
         var requests = new List<(HttpMethod Method, string Path, BaseOptions Options, RequestOptions? RequestOptions, CancellationToken Cancellation)>();
         Configure(client, new Customer { Id = CustomerId }, failure, requests);
         Configure(client, new PaymentMethod { Id = PaymentMethodId }, failure, requests);
-        Configure(client, new SetupIntent { Id = SetupIntentId, ClientSecret = ClientSecret }, failure, requests);
+        Configure(client, new SetupIntent { Id = SetupIntentId, ClientSecret = clientSecret }, failure, requests);
         Configure(client, new Subscription { Id = SubscriptionId, Status = "canceled" }, failure, requests);
         var service = new StripeCustomerService(Options.Create(new StripeGatewayOptions { UseSimulation = false }), logger, client.Object);
         using var cancellation = new CancellationTokenSource();
@@ -89,7 +89,7 @@ public sealed class StripeCustomerLoggingSecurityTests
                 var setup = await service.CreateSetupIntentAsync(new GatewaySetupIntentRequest(CustomerId), token);
                 setup.Success.Should().Be(failure is null);
                 setup.ExternalSetupIntentId.Should().Be(failure is null ? SetupIntentId : null);
-                setup.ClientSecret.Should().Be(failure is null ? ClientSecret : null);
+                setup.ClientSecret.Should().Be(failure is null ? clientSecret : null);
                 setup.CustomerId.Should().Be(failure is null || failure is StripeException ? CustomerId : null);
                 setup.ErrorCode.Should().Be(expectedCode);
                 setup.ErrorMessage.Should().Be(expectedMessage);
@@ -125,7 +125,7 @@ public sealed class StripeCustomerLoggingSecurityTests
         {
             entry.Exception.Should().BeNull("provider exceptions can contain contact data, tokens and untrusted separators");
             var logged = entry.Rendered + "|" + string.Join("|", entry.Properties.Select(property => property.Value));
-            foreach (var sensitive in new[] { SensitiveEmail, CustomerId, PaymentMethodId, SetupIntentId, SubscriptionId, ClientSecret, "private-name", "private-phone" })
+            foreach (var sensitive in new[] { SensitiveEmail, CustomerId, PaymentMethodId, SetupIntentId, SubscriptionId, clientSecret, "private-name", "private-phone" })
             {
                 logged.Should().NotContain(sensitive);
             }
@@ -175,7 +175,10 @@ public sealed class StripeCustomerLoggingSecurityTests
 
     private sealed class Scope : IDisposable
     {
-        public void Dispose() { }
+        public void Dispose()
+        {
+            // The capture-only scope owns no resources or ambient state to release.
+        }
     }
 
     private sealed record LogEntry(LogLevel Level, EventId EventId, string Rendered,
