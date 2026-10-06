@@ -18,8 +18,8 @@ const publicRoutes = [
   ['Community', '/community'],
   ['Jobs', '/jobs'],
   ['About', '/about'],
-  ['Sign in', '/sign-in'],
-  ['Sign up', '/sign-up'],
+  ['Sign in', '/sign-in', 'Welcome back'],
+  ['Sign up', '/sign-up', 'Create your GameGuild account'],
 ];
 
 const footerRoutes = [
@@ -94,7 +94,7 @@ async function runRealAuthFlow(page) {
   await accountMenu.click();
   await page.getByRole('menuitem', { name: 'Sign out' }).click();
   await page.waitForURL('**/sign-in', { timeout: 20_000 });
-  await page.getByRole('heading', { name: /Welcome back to GameGuild/i }).waitFor({ timeout: 20_000 });
+  await page.getByRole('heading', { name: 'Welcome back', exact: true, level: 1 }).waitFor({ timeout: 20_000 });
 
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Password', { exact: true }).fill(password);
@@ -177,7 +177,7 @@ async function main() {
 
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto(routeUrl('/sign-in'), { waitUntil: 'domcontentloaded' });
-    await page.getByRole('heading', { name: /Welcome back to GameGuild/i }).waitFor();
+    await page.getByRole('heading', { name: 'Welcome back', exact: true, level: 1 }).waitFor();
     await page.getByLabel('Email').waitFor();
     await page.getByLabel('Password', { exact: true }).waitFor();
 
@@ -215,6 +215,13 @@ async function main() {
 
     await writeBrowserEvidence(evidencePath, { passed: true, errors: [] });
     console.log(`Public browser smoke passed against ${baseUrl}`);
+  } catch (error) {
+    const headings = await page.getByRole('heading').allTextContents().catch(() => []);
+    console.error(JSON.stringify({
+      path: new URL(page.url()).pathname,
+      headings: headings.slice(0, 6).map((heading) => heading.trim().slice(0, 256)),
+    }));
+    throw error;
   } finally {
     await browser.close();
   }

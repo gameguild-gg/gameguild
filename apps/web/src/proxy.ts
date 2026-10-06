@@ -51,7 +51,15 @@ export function routeRequest(request: NextRequest): NextResponse {
 
   if (matchesPrefix(pathname, DEFAULT_LOCALE_PREFIX)) {
     const unprefixedPath = pathname.slice(DEFAULT_LOCALE_PREFIX.length) || "/";
-    return redirectToPath(request, unprefixedPath === "/social" ? "/feed" : unprefixedPath);
+    if (unprefixedPath === "/social") {
+      return redirectToPath(request, "/feed");
+    }
+    // RSC navigation targets the internal locale tree. A canonical browser
+    // redirect makes Next request that internal tree again and creates a loop.
+    if (request.headers.get("rsc") === "1") {
+      return rewriteWithLocale(request, pathname, routing.defaultLocale);
+    }
+    return redirectToPath(request, unprefixedPath);
   }
 
   const nonDefaultPrefix = NON_DEFAULT_LOCALE_PREFIXES.find((prefix) => matchesPrefix(pathname, prefix));
