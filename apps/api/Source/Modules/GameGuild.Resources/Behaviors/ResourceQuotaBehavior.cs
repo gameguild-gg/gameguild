@@ -246,7 +246,7 @@ public class ResourceQuotaBehavior<TRequest, TResponse> : IPipelineBehavior<TReq
     /// </summary>
     private static Guid? TryExtractUserId(TResponse response)
     {
-        if (response == null)
+        if (response is null)
         {
             return null;
         }
