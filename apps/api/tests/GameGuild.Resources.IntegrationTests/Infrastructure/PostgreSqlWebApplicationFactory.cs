@@ -64,6 +64,9 @@ public class PostgreSqlWebApplicationFactory : WebApplicationFactory<GameGuild.A
                     npgsqlOptions.EnableRetryOnFailure(3);
                 });
             });
+            // The replacement above also removes the host's abstract context alias.
+            // Real authorization repositories must use this same scoped context.
+            services.AddScoped<DbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
 
             // Add test authentication scheme
             services.AddAuthentication(options =>

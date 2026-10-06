@@ -39,23 +39,27 @@ export async function readEmceptionReleaseVersion(repoRoot) {
   return [...versions][0];
 }
 
-/** Keep internal peer ranges aligned with the existing fixed release group. */
-export async function synchronizeEmceptionPeerVersions(repoRoot) {
+/** Keep internal runtime peers at the minimum version of the fixed release group. */
+export async function synchronizeEmceptionRuntimePeers(repoRoot) {
   const version = await readEmceptionReleaseVersion(repoRoot);
-  const packages = await Promise.all(EMCEPTION_PACKAGE_DIRECTORIES.map(async (directory) => {
+  const manifests = await Promise.all(EMCEPTION_PACKAGE_DIRECTORIES.map(async (directory) => {
     const filename = path.join(repoRoot, directory, 'package.json');
     return { filename, manifest: JSON.parse(await readFile(filename, 'utf8')) };
   }));
-  const internalNames = new Set(packages.map(({ manifest }) => manifest.name));
-  for (const { filename, manifest } of packages) {
-    let changed = false;
+  const internalNames = new Set(manifests.map(({ manifest }) => manifest.name));
+  const changed = [];
+  for (const { filename, manifest } of manifests) {
+    let updated = false;
     for (const [name, range] of Object.entries(manifest.peerDependencies ?? {})) {
       if (internalNames.has(name) && range !== `^${version}`) {
         manifest.peerDependencies[name] = `^${version}`;
-        changed = true;
+        updated = true;
       }
     }
-    if (changed) await writeFile(filename, `${JSON.stringify(manifest, null, 2)}\n`);
+    if (updated) {
+      await writeFile(filename, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+      changed.push(path.relative(repoRoot, filename).split(path.sep).join('/'));
+    }
   }
-  return version;
+  return changed;
 }

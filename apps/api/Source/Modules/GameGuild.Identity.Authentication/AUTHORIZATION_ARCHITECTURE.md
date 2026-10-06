@@ -1,5 +1,24 @@
 # Authorization Architecture Documentation
 
+## 2026-10-05 Web3 backend identity and session boundary — #292 / #291
+
+Web3 nonce generation now accounts for the actual bounded host cache and requires
+both nonce/challenge and wallet bindings to be retained. Trusted-clock expiry,
+canonical SIWE/chain checks, mixed-case checksum validation and atomic local
+consumption precede account lookup and credential issuance. Unknown/evicted or
+already consumed nonces fail closed; shared-store/replica acceptance is separate.
+
+The verified insert-only provider key resolves a persisted user. Wallet possession
+does not verify or automatically link an email account. Stored account status and
+active tenant membership precede the existing hashed refresh generator and required
+session binding. JWT claims use the stored user version and actual session GUID.
+The command transaction rolls back required identity/credential writes on failure;
+an already consumed nonce cannot be retried. Expected authentication denials use
+the existing sanitized 401 exception mapping. The native five-criterion scope and
+execution boundaries are documented in
+[Web3 backend reconciliation](../../../../../docs/architecture/web3-backend-authentication-reconciliation.md).
+The parent retains provider/UI, linking and complete product journey requirements.
+
 ## 2026-10-05 unavailable-account token boundary — #262 / #263
 
 Otherwise active refresh issuance requires a user returned by the existing live-user repository,
