@@ -18,7 +18,8 @@ test('Emception CI is Linux-only, lockfile-driven, receipt-aware, and Changesets
   assert.match(workflow, /pnpm --dir tools\/emception toolchain build all/);
   assert.match(workflow, /pnpm --dir tools\/emception toolchain release/);
   assert.match(workflow, /pnpm --dir tools\/emception run verify:release/);
-  assert.match(workflow, /changesets\/action@v2/);
+  assert.match(workflow, /changesets\/action@[a-f0-9]{40}\s+# v2\b/);
+  assert.doesNotMatch(workflow, /changesets\/action@v\d/);
   assert.match(workflow, /version-script: pnpm run version:emception/);
   assert.doesNotMatch(workflow, /auto-changeset\.mjs --apply/);
   assert.match(workflow, /tools\/emception\/packages\/toolchain\/cdn/);
