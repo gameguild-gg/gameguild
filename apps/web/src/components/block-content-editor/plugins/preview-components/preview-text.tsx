@@ -4,14 +4,14 @@ import type React from "react"
 import type { SerializedTextNode } from "lexical"
 
 interface PreviewTextProps {
-  node: SerializedTextNode
+  node: Pick<SerializedTextNode, "text"> & Partial<Pick<SerializedTextNode, "style" | "format" | "version">>
 }
 
 export function PreviewText({ node }: PreviewTextProps) {
   let textContent: React.ReactNode = node.text
 
   // Get inline styles from the node
-  const inlineStyles: React.CSSProperties = {}
+  const inlineStyles: React.CSSProperties & Record<string, string> = {}
   if (node.style) {
     // Parse the style string and convert to React CSSProperties
     const styleString = node.style

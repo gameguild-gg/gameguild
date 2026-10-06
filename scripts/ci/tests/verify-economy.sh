@@ -64,11 +64,13 @@ test_shell_only_ci_policy() {
   grep -q '"ci:repository-policy": "bash scripts/ci/verify-repository-policy.sh"' "$repository_root/package.json" || return 1
   grep -q '"ci:economy": "bash scripts/ci/verify-economy.sh"' "$repository_root/package.json" || return 1
   grep -Fq 'pnpm install --frozen-lockfile --ignore-scripts' "$ci_dir/install-and-audit-pnpm.sh" || return 1
+  grep -Fq 'rm -f "$repository_root/node_modules/.pnpm-workspace-state.json"' "$ci_dir/install-and-audit-pnpm.sh" || return 1
+  grep -Fq 'pnpm rebuild braces sprintf-js' "$ci_dir/install-and-audit-pnpm.sh" || return 1
   grep -Fq 'repository pnpm lockfile is required' "$ci_dir/install-and-audit-pnpm.sh" || return 1
   grep -q 'pnpm audit --json' "$ci_dir/install-and-audit-pnpm.sh" || return 1
   grep -Fq 'audit_stderr_report="$audit_root/audit.stderr.log"' "$ci_dir/install-and-audit-pnpm.sh" || return 1
   grep -Fq 'pnpm audit --json >"$audit_report" 2>"$audit_stderr_report"' "$ci_dir/install-and-audit-pnpm.sh" || return 1
-  grep -Fq 'pnpm install --frozen-lockfile --ignore-scripts' "$repository_root/.github/workflows/emception.yml" || return 1
+  grep -Fq 'run: bash scripts/ci/install-and-audit-pnpm.sh' "$repository_root/.github/workflows/emception.yml" || return 1
   ! grep -Fq 'pnpm-lock.yaml|*/pnpm-lock.yaml' "$repository_root/scripts/repository-hygiene.sh" || return 1
   [[ -f "$repository_root/pnpm-lock.yaml" ]]
 }
@@ -287,6 +289,36 @@ test_full_gate_isolates_api_migration_tests_from_the_economy_template() {
   grep -Fq 'test_hang_timeout="${ECONOMY_TEST_HANG_TIMEOUT:-5m}"' "$gate" || return 1
   ! grep -Fq -- '--settings' <<< "$runner" || return 1
   ! grep -Fq 'xunit-postgres-serial.runsettings' "$gate"
+}
+
+test_full_gate_bounds_complete_api_suites() {
+  local runner="$fixture_root/api-suite-deadline.sh"
+  sed -n '/^run_whole_solution_test_project()/,/^wait_for_whole_solution_batch()/p' \
+    "$ci_dir/verify-economy.sh" | sed '$d' > "$runner"
+  cat >> "$runner" <<'SCRIPT'
+test_hang_timeout=5m
+api_test_timeout=12m
+whole_solution_connection_string=isolated-test-database
+test_hang_arguments=(--blame-hang-timeout 5m)
+economy_gate_error() { return 1; }
+run_logged() {
+  shift
+  [[ "$1" == timeout && "$2" == --kill-after=30s && "$3" == "$expected_timeout" ]] || return 1
+  local results="${@: -1}" name
+  name="$(basename "$results")"
+  mkdir -p "$results"
+  : > "$results/$name.trx"
+}
+expected_timeout=12m
+run_whole_solution_test_project \
+  apps/api/tests/GameGuild.API.IntegrationTests/GameGuild.API.IntegrationTests.csproj "$1" || exit 1
+run_whole_solution_test_project \
+  apps/api/tests/GameGuild.API.UnitTests/GameGuild.API.UnitTests.csproj "$1" || exit 1
+expected_timeout=5m
+run_whole_solution_test_project \
+  apps/api/tests/GameGuild.Identity.Authentication.UnitTests/GameGuild.Identity.Authentication.UnitTests.csproj "$1" || exit 1
+SCRIPT
+  bash "$runner" "$fixture_root/api-suite-deadlines"
 }
 
 test_economy_gate_uses_memory_backed_disposable_postgres() {
@@ -867,6 +899,7 @@ run_test 'Economy gate runs the Economy browser surface' test_economy_gate_runs_
 run_test 'Economy gate bounds hung tests and records timings' test_economy_gate_bounds_hung_tests_and_records_timings
 run_test 'Economy gate supports fast PR and full release profiles' test_economy_gate_supports_fast_pr_and_full_release_profiles
 run_test 'Economy gate batches whole-solution tests' test_economy_gate_batches_whole_solution_tests
+run_test 'complete API suites keep bounded deadlines without extending other projects' test_full_gate_bounds_complete_api_suites
 run_test 'Economy unit tests bound parallelism without global serialization' test_economy_unit_tests_bound_parallelism_without_global_serialization
 run_test 'Economy gate builds release targets before packaging' test_economy_gate_builds_release_targets_before_packaging
 run_test 'OpenAPI gate ignores generator provenance only' test_openapi_gate_uses_semantic_generated_client_diff

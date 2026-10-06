@@ -3,6 +3,7 @@ using Xunit;
 using GameGuild.API.Database;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Tenants;
+using GameGuild.Identity.Users;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -78,14 +79,18 @@ public class AuthenticationFlowsE2ETests : IClassFixture<AuthenticationApiFactor
         };
 
         var signUpResult = await _authService.LocalSignUpAsync(signUpRequest);
+        await _authService.LocalSignInAsync(new LocalSignInRequest
+        {
+            Email = email,
+            Password = signUpRequest.Password
+        });
+        var originalVersion = await _dbContext.Set<User>().AsNoTracking()
+            .Where(user => user.Id == signUpResult.UserId)
+            .Select(user => user.TokenVersion).SingleAsync();
 
         signUpResult.Success.Should().BeTrue();
         signUpResult.AccessToken.Should().NotBeNullOrEmpty();
         signUpResult.RefreshToken.Should().NotBeNullOrEmpty();
-        var tokenVersionBeforeReplay = await _dbContext.Set<GameGuild.Identity.Users.User>()
-            .Where(user => user.Id == signUpResult.UserId)
-            .Select(user => user.TokenVersion)
-            .SingleAsync();
 
         // Revoke the refresh token
         await _authService.RevokeRefreshTokenAsync(signUpResult.RefreshToken, "127.0.0.1");
@@ -97,6 +102,7 @@ public class AuthenticationFlowsE2ETests : IClassFixture<AuthenticationApiFactor
         };
 
         var denial = await _authService.RefreshTokenAsync(refreshRequest);
+        denial.Should().BeAssignableTo<global::GameGuild.ICommitOnFailureOutcome>();
 
         denial.Success.Should().BeFalse();
         denial.Message.Should().Be("Invalid refresh token");
@@ -115,15 +121,15 @@ public class AuthenticationFlowsE2ETests : IClassFixture<AuthenticationApiFactor
         var refreshTokens = await _dbContext.Set<RefreshToken>().AsNoTracking()
             .Where(token => token.UserId == signUpResult.UserId)
             .ToListAsync();
-        refreshTokens.Should().ContainSingle("a denied replay must not mint a replacement token");
+        refreshTokens.Should().HaveCount(2, "a denied replay must contain both existing sessions without minting a token");
         refreshTokens.Should().OnlyContain(token => token.IsRevoked);
         var sessions = await _dbContext.Set<UserSession>().AsNoTracking()
             .Where(session => session.UserId == signUpResult.UserId)
             .ToListAsync();
-        sessions.Should().NotBeEmpty().And.OnlyContain(session => !session.IsActive);
+        sessions.Should().HaveCount(2).And.OnlyContain(session => !session.IsActive);
         var persistedUser = await _dbContext.Set<GameGuild.Identity.Users.User>().AsNoTracking()
             .SingleAsync(user => user.Id == signUpResult.UserId);
-        persistedUser.TokenVersion.Should().Be(tokenVersionBeforeReplay + 1);
+        persistedUser.TokenVersion.Should().Be(originalVersion + 1);
     }
 
     [Fact]

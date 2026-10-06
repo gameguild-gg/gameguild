@@ -77,6 +77,50 @@ test('private workspace links public packages without duplicating their release 
   assert.equal(workspace.dependencies['@gameguild/emception-xterm'], 'workspace:*');
 });
 
+async function runtimePeerFixture(context, mixedVersions = false) {
+  const { EMCEPTION_PACKAGE_DIRECTORIES } = await import('../../../../scripts/devops/emception-release-policy.mjs');
+  const root = await mkdtemp(path.join(tmpdir(), 'emception-runtime-peers-'));
+  context.after(() => rm(root, { recursive: true, force: true }));
+  const names = ['emception', '@gameguild/emception-toolchain', '@gameguild/emception-browser',
+    '@gameguild/emception-xterm', '@gameguild/emception-react', '@gameguild/emception-webcomponent', '@gameguild/emception-ide'];
+  for (const [index, directory] of EMCEPTION_PACKAGE_DIRECTORIES.entries()) {
+    await mkdir(path.join(root, directory), { recursive: true });
+    const manifest = {
+      name: names[index], version: mixedVersions && index === 6 ? '4.4.0' : '4.5.0',
+      dependencies: { emception: '4.5.0' },
+      peerDependencies: index >= 4 ? { '@gameguild/emception-xterm': '^4.4.0', react: '^19' } : { '@xterm/xterm': '^6.0.0' },
+      peerDependenciesMeta: { '@gameguild/emception-xterm': { optional: true } },
+    };
+    await writeFile(path.join(root, directory, 'package.json'), `${JSON.stringify(manifest, null, 2)}\n`);
+  }
+  return { root, directories: EMCEPTION_PACKAGE_DIRECTORIES };
+}
+
+test('version preparation advances internal runtime peers and preserves external peers and optional metadata', async (context) => {
+  const { synchronizeEmceptionRuntimePeers } = await import('../../../../scripts/devops/emception-release-policy.mjs');
+  const { root, directories } = await runtimePeerFixture(context);
+  const before = await Promise.all(directories.map((directory) => json(path.join(root, directory, 'package.json'))));
+
+  assert.deepEqual(await synchronizeEmceptionRuntimePeers(root), directories.slice(4).map((directory) => `${directory}/package.json`));
+  for (const [index, directory] of directories.entries()) {
+    const expected = structuredClone(before[index]);
+    if (index >= 4) expected.peerDependencies['@gameguild/emception-xterm'] = '^4.5.0';
+    assert.deepEqual(await json(path.join(root, directory, 'package.json')), expected);
+  }
+  const bytes = await Promise.all(directories.map((directory) => readFile(path.join(root, directory, 'package.json'), 'utf8')));
+  assert.deepEqual(await synchronizeEmceptionRuntimePeers(root), []);
+  assert.deepEqual(await Promise.all(directories.map((directory) => readFile(path.join(root, directory, 'package.json'), 'utf8'))), bytes);
+});
+
+test('inconsistent release versions reject runtime peer updates before writing any manifest', async (context) => {
+  const { synchronizeEmceptionRuntimePeers } = await import('../../../../scripts/devops/emception-release-policy.mjs');
+  const { root, directories } = await runtimePeerFixture(context, true);
+  const before = await Promise.all(directories.map((directory) => readFile(path.join(root, directory, 'package.json'), 'utf8')));
+
+  await assert.rejects(synchronizeEmceptionRuntimePeers(root), /Emception package versions differ/);
+  assert.deepEqual(await Promise.all(directories.map((directory) => readFile(path.join(root, directory, 'package.json'), 'utf8'))), before);
+});
+
 test('package tests build Xterm before testing Browser from a clean checkout', async () => {
   const workspace = await json(path.join(emceptionRoot, 'package.json'));
   const packageTests = workspace.scripts['test:packages'];

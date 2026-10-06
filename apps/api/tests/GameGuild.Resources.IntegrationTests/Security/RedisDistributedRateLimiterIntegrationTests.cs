@@ -97,6 +97,25 @@ public sealed class RedisDistributedRateLimiterIntegrationTests(
     private const string ProbeHostAssemblyFileName = "GameGuild.RateLimitingProbeHost.dll";
 
     [Fact]
+    public void ProbeCertificateStaysWithinShortAuthorityValidityWindow()
+    {
+        var now = DateTimeOffset.UtcNow;
+        using var authority = CreateProbeCertificateAuthority(now.AddDays(-2), now.AddMinutes(5));
+        using var certificate = CreateProbeServerCertificate(authority);
+
+        Assert.Equal(authority.NotBefore.ToUniversalTime(), certificate.NotBefore.ToUniversalTime());
+        Assert.Equal(authority.NotAfter.ToUniversalTime(), certificate.NotAfter.ToUniversalTime());
+        Assert.True(certificate.HasPrivateKey);
+        using var chain = new X509Chain();
+        chain.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
+        chain.ChainPolicy.CustomTrustStore.Add(authority);
+        chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
+        chain.ChainPolicy.DisableCertificateDownloads = true;
+        chain.ChainPolicy.ApplicationPolicy.Add(new Oid("1.3.6.1.5.5.7.3.1"));
+        Assert.True(chain.Build(certificate), string.Join(", ", chain.ChainStatus.Select(status => status.Status)));
+    }
+
+    [Fact]
     public async Task SeparateApiHostsShareRedisLimitUnderConcurrentLoad()
     {
         const int requestLimit = 20;
@@ -269,7 +288,9 @@ public sealed class RedisDistributedRateLimiterIntegrationTests(
         };
     }
 
-    private static X509Certificate2 CreateProbeCertificateAuthority()
+    private static X509Certificate2 CreateProbeCertificateAuthority(
+        DateTimeOffset? notBefore = null,
+        DateTimeOffset? notAfter = null)
     {
         using var key = RSA.Create(2048);
         var request = new CertificateRequest("CN=GameGuild rate-limit probe root", key, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
@@ -279,7 +300,7 @@ public sealed class RedisDistributedRateLimiterIntegrationTests(
             critical: true));
 
         var now = DateTimeOffset.UtcNow;
-        return request.CreateSelfSigned(now.AddMinutes(-1), now.AddHours(1));
+        return request.CreateSelfSigned(notBefore ?? now.AddMinutes(-1), notAfter ?? now.AddHours(1));
     }
 
     [Fact]
