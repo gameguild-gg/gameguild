@@ -296,6 +296,46 @@ test_economy_gate_uses_memory_backed_disposable_postgres() {
   ! grep -Fq -- '--volume' <<< "$(sed -n '/postgres-economy-tests/,/economy_postgres_probe()/p' "$gate")"
 }
 
+test_economy_gate_sizes_only_its_shared_test_database_lock_table() {
+  local gate="$ci_dir/verify-economy.sh"
+  local test_server app_server migration_server
+
+  test_server="$(sed -n '/gate_stage=.postgres-economy-tests./,/economy_postgres_probe()/p' "$gate")"
+  app_server="$(sed -n '/gate_stage=.postgres-app./,/app_postgres_probe()/p' "$gate")"
+  migration_server="$(sed -n '/gate_stage=.postgres-whole-solution-migrations./,/whole_solution_postgres_probe()/p' "$gate")"
+  grep -Fq 'postgres:17-alpine -c max_locks_per_transaction=512' <<< "$test_server" || return 1
+  ! grep -Fq 'max_locks_per_transaction' <<< "$app_server" || return 1
+  ! grep -Fq 'max_locks_per_transaction' <<< "$migration_server" || return 1
+  grep -Fq 'whole_solution_jobs=2' "$gate"
+}
+
+test_rate_limit_probe_has_debug_and_release_solution_configuration() {
+  "$PYTHON_BIN" - "$repository_root/apps/api/GameGuild.sln" <<'PY'
+import pathlib, re, sys
+solution = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8-sig")
+project = re.search(r'Project\("[^\n]+"\) = "GameGuild.RateLimitingProbeHost", "tests\\RateLimitingProbeHost\\GameGuild.RateLimitingProbeHost.csproj", "(\{[0-9A-F-]+\})"', solution)
+if project is None:
+    raise SystemExit("Rate-limit probe must be a solution project so a Release solution build does not default it to Debug")
+for configuration in ("Debug", "Release"):
+    for platform in ("Any CPU", "x64", "x86"):
+        for mapping in ("ActiveCfg", "Build.0"):
+            line = f"{project[1]}.{configuration}|{platform}.{mapping} = {configuration}|Any CPU"
+            if line not in solution:
+                raise SystemExit(f"Rate-limit probe configuration is missing: {line}")
+PY
+}
+
+test_testing_lab_workflow_routes_evidence_to_its_upload_directory() {
+  local workflow="$repository_root/.github/workflows/pr-verify.yml"
+  local testing_lab
+
+  testing_lab="$(sed -n '/name: Testing Lab critical flow/,/  openapi:/p' "$workflow")"
+  grep -Fq 'TESTING_LAB_E2E_ARTIFACTS: ${{ github.workspace }}/artifacts/test-results/testing-lab' <<< "$testing_lab" || return 1
+  grep -Fq 'path: artifacts/test-results' <<< "$testing_lab" || return 1
+  grep -Fq 'if-no-files-found: error' <<< "$testing_lab" || return 1
+  ! grep -Fq 'if-no-files-found: warn' <<< "$testing_lab"
+}
+
 test_economy_gate_migrates_one_template_and_clones_isolated_test_databases() {
   local gate="$ci_dir/verify-economy.sh"
   local database_support="$repository_root/apps/api/tests/GameGuild.TestSupport.Finance.Economy/EconomyPostgreSqlTestDatabase.cs"
@@ -807,6 +847,9 @@ run_test 'Economy gate rejects nested PostgreSQL Testcontainers' test_economy_ga
 run_test 'Economy gate isolates global roles from application databases' test_economy_gate_isolates_global_economy_roles_from_application_databases
 run_test 'full gate isolates API migration tests from the Economy template' test_full_gate_isolates_api_migration_tests_from_the_economy_template
 run_test 'Economy gate uses memory-backed disposable PostgreSQL' test_economy_gate_uses_memory_backed_disposable_postgres
+run_test 'Economy test lock capacity preserves concurrency and application defaults' test_economy_gate_sizes_only_its_shared_test_database_lock_table
+run_test 'rate-limit probe follows Debug and Release solution builds' test_rate_limit_probe_has_debug_and_release_solution_configuration
+run_test 'Testing Lab screenshots reach the required evidence upload' test_testing_lab_workflow_routes_evidence_to_its_upload_directory
 run_test 'Economy gate clones one migrated PostgreSQL template' test_economy_gate_migrates_one_template_and_clones_isolated_test_databases
 run_test 'Emception versioning is scoped to its fixed group' test_auto_changeset_bumps_entire_lockstep_workspace
 run_test 'Changesets config isolates the Emception release group' test_changesets_config_matches_lockstep_workspace

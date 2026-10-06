@@ -163,6 +163,8 @@ jobs:
       - uses: ./.github/actions/setup-dotnet
       - uses: ./.github/actions/setup-playwright
       - name: Run Testing Lab browser workflow
+        env:
+          TESTING_LAB_E2E_ARTIFACTS: ${{ github.workspace }}/artifacts/test-results/testing-lab
         run: pnpm --filter @game-guild/web test:browser:testing-lab
       - name: Upload Testing Lab evidence
         if: always()
@@ -170,7 +172,7 @@ jobs:
         with:
           name: testing-lab-${{ github.event.pull_request.head.sha }}
           path: artifacts/test-results
-          if-no-files-found: warn
+          if-no-files-found: error
 
   openapi:
     name: OpenAPI client consistency
