@@ -26,7 +26,10 @@ public sealed class ProgramContentServiceTests
         replacement.Type = ProgramContentType.Lesson;
         replacement.JsonBody = null;
         replacement.Body = "replacement";
-        if (!mutateTracked) context.ChangeTracker.Clear();
+        if (!mutateTracked)
+        {
+            context.ChangeTracker.Clear();
+        }
         var guard = new Mock<IProgramContentAcademicMutationGuard>();
         guard.Setup(value => value.GetRejection(It.IsAny<ProgramContent>(), ProgramContentAcademicMutation.Authoring))
             .Returns((ProgramContent candidate, ProgramContentAcademicMutation _) =>
