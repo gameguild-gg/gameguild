@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using GameGuild.CQRS;
 using GameGuild.Identity.Users;
 using Microsoft.Extensions.Caching.Memory;
@@ -54,12 +56,13 @@ public class EmailVerificationService(
                 AbsoluteExpiration = tokenInfo.ExpiresAt
             }.SetSize(1));
 
-            logger.LogInformation("Generated {TokenType} token for user {UserId}", tokenType, userId);
+            logger.LogInformation("Generated {TokenType} token for user {UserId}", tokenType, LogRedaction.RedactId(userId, "uid"));
             return Task.FromResult(token);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error generating {TokenType} token for user {UserId}", tokenType, userId);
+            logger.LogError("Error generating {TokenType} token for user {UserId}: {ErrorType}",
+                tokenType, LogRedaction.RedactId(userId, "uid"), ex.GetType().FullName);
             throw;
         }
     }
@@ -80,7 +83,8 @@ public class EmailVerificationService(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error sending verification email to {Email}", LogRedaction.MaskEmail(email));
+            logger.LogError("Error sending verification email to {Email}: {ErrorType}",
+                LogRedaction.MaskEmail(email), ex.GetType().FullName);
             throw;
         }
     }
@@ -147,8 +151,8 @@ public class EmailVerificationService(
             {
                 logger.LogWarning(
                     "Token user ID mismatch. Expected {ExpectedUserId}, got {ActualUserId}",
-                    tokenInfo.UserId,
-                    expectedUserId);
+                    LogRedaction.RedactId(expectedUserId, "uid"),
+                    LogRedaction.RedactId(tokenInfo.UserId, "uid"));
 
                 return Task.FromResult(TokenValidationResult.Failed("Token does not belong to the requested user"));
             }
@@ -156,7 +160,7 @@ public class EmailVerificationService(
             if (tokenInfo.ExpiresAt < SystemClock.UtcNow)
             {
                 memoryCache.Remove(TokenKeyPrefix + token);
-                logger.LogWarning("Expired {TokenType} token used for user {UserId}", expectedType, tokenInfo.UserId);
+                logger.LogWarning("Expired {TokenType} token used for user {UserId}", expectedType, LogRedaction.RedactId(tokenInfo.UserId, "uid"));
                 return Task.FromResult(TokenValidationResult.Failed("Expired token"));
             }
 
@@ -177,12 +181,12 @@ public class EmailVerificationService(
 
             memoryCache.Remove(TokenKeyPrefix + token);
 
-            logger.LogInformation("{TokenType} token consumed successfully for user {UserId}", expectedType, tokenInfo.UserId);
+            logger.LogInformation("{TokenType} token consumed successfully for user {UserId}", expectedType, LogRedaction.RedactId(tokenInfo.UserId, "uid"));
             return Task.FromResult(new TokenValidationResult(true, tokenInfo.UserId, tokenInfo.Email));
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error verifying {TokenType} token", expectedType);
+            logger.LogError("Error verifying {TokenType} token: {ErrorType}", expectedType, ex.GetType().FullName);
             return Task.FromResult(TokenValidationResult.Failed("Token verification failed"));
         }
     }
@@ -204,7 +208,8 @@ public class EmailVerificationService(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error checking email verification status for user {UserId}", userId);
+            logger.LogError("Error checking email verification status for user {UserId}: {ErrorType}",
+                LogRedaction.RedactId(userId, "uid"), ex.GetType().FullName);
             return false;
         }
     }
@@ -213,8 +218,10 @@ public class EmailVerificationService(
     {
         try
         {
-            // Deterministic hash keeps the per-(user, email) rate-limit window without caching the raw email.
-            var rateLimitKey = RateLimitKeyPrefix + $"{userId}:{LogRedaction.RedactSecret(email)}";
+            // Cache identity needs a distinct key per address; log redaction deliberately emits a constant marker.
+            // Use the complete digest here to avoid truncation collisions and keep raw emails out of cache keys.
+            var emailDigest = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(email)));
+            var rateLimitKey = RateLimitKeyPrefix + $"{userId}:{emailDigest}";
 
             if (memoryCache.TryGetValue(rateLimitKey, out DateTime lastSent))
             {
@@ -224,7 +231,7 @@ public class EmailVerificationService(
                 {
                     logger.LogWarning(
                         "Rate limit exceeded for resending verification email to user {UserId}. Last sent {Seconds} seconds ago",
-                        userId,
+                        LogRedaction.RedactId(userId, "uid"),
                         timeSinceLastSent.TotalSeconds);
 
                     return false;
@@ -239,12 +246,13 @@ public class EmailVerificationService(
                 AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2)
             }.SetSize(1));
 
-            logger.LogInformation("Resent verification email to user {UserId}", userId);
+            logger.LogInformation("Resent verification email to user {UserId}", LogRedaction.RedactId(userId, "uid"));
             return true;
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error resending verification email for user {UserId}", userId);
+            logger.LogError("Error resending verification email for user {UserId}: {ErrorType}",
+                LogRedaction.RedactId(userId, "uid"), ex.GetType().FullName);
             return false;
         }
     }
@@ -267,7 +275,7 @@ public class EmailVerificationService(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error checking token validity");
+            logger.LogError("Error checking token validity: {ErrorType}", ex.GetType().FullName);
             return Task.FromResult(false);
         }
     }
