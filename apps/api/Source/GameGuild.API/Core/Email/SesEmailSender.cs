@@ -57,7 +57,10 @@ public sealed class SesEmailSender : IEmailSender
         cancellationToken.ThrowIfCancellationRequested();
 
         foreach (var value in new[] { currentOptions.FromEmail, currentOptions.FromName, message.ToEmail, message.ToName, message.Subject })
+        {
             ValidateHeaderValue(value);
+        }
+
         foreach (var attachment in message.Attachments ?? [])
         {
             ValidateHeaderValue(attachment.FileName);
@@ -193,6 +196,8 @@ public sealed class SesEmailSender : IEmailSender
     private static void ValidateHeaderValue(string? value)
     {
         if (value?.Any(character => char.IsControl(character)) == true)
+        {
             throw new ArgumentException("Email headers must not contain control characters.");
+        }
     }
 }
