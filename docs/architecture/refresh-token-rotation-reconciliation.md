@@ -183,7 +183,17 @@ models the unavailable family, checks that resolution occurs in order, and still
 rejects every unverified call. Production and HTTP/PostgreSQL test sources did
 not change; a source bridge retains the 50-case focused evidence. The fresh full
 solution build after this test-only correction again completed with zero warnings
-and errors. All complete module/host suites are being repeated for this revision.
+and errors. Four complete module suites subsequently passed on unchanged source:
+Authentication 2,316, Authorization 1,667, SharedKernel 1,397 and Notifications 384
+(5,764 distinct cases, zero failures/skips). Complete host suites remain running.
+
+[PR #699](https://github.com/gameguild-gg/gameguild/pull/699) publishes this candidate
+as a draft against develop. Matching-revision CI and accepted merge remain
+required. Its first policy gate rejected three newly published dependency
+advisories in sharp, shell-quote and the transitive shadcn MCP SDK; the corrected
+lock audit excludes those advisories. Frozen installation and full policy
+verification remain pending. Codacy annotations are retained for remediation.
+The native CI exception authorized for #697 is not applied to this PR.
 
 The previous complete API integration run is retained with 362 passed and five
 failed cases. Three TTL fixtures omitted the session ceiling and two DTO cases

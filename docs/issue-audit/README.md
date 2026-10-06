@@ -1,5 +1,26 @@
 # GameGuild issue closeout inventory
 
+## 2026-10-06 refresh lifecycle draft — #263
+
+[PR #699](https://github.com/gameguild-gg/gameguild/pull/699) is a draft against
+develop. Both owner-requested replay policies are implemented: family containment
+by default or account containment, with account fallback for unprovable legacy
+families. Lifecycle audit, durable alerts, bounded cleanup, metrics, capped
+provider deadlines and client cookie recovery are included.
+
+Four complete module suites passed 5,764 cases with zero failures/skips;
+50 focused HTTP/PostgreSQL cases and all 1,135 SDK cases passed. Full host/site
+regression and matching-revision CI remain required. The first policy gate found
+three newly published dependency advisories; the corrected lock audit excludes
+all three, while frozen installation and policy acceptance remain pending.
+Codacy annotations are retained for remediation. The #697 exception applies only
+to that accepted merge. #263 remains open with all 19 original criteria.
+
+The fixed scope remains 328 IDs. The latest verified snapshot on 2026-10-06
+retained 72 closed and 256 open, including historical/administrative closures.
+All 55 unrelated primary file bytes/statuses are preserved. The same worktree
+is reused, with three worktrees, four local branches and zero stashes.
+
 ## 2026-10-06 accepted Web3 backend merge and closure
 
 [PR #697](https://github.com/gameguild-gg/gameguild/pull/697) is merged into
