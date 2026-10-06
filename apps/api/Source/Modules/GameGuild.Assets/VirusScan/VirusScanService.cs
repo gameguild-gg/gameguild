@@ -264,11 +264,7 @@ public class VirusScanService : IVirusScanService
 
             return localResult with { ScanDuration = duration };
         }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _logger.LogError(ex, "Virus scan failed for {FileName}", fileName);
             return new VirusScanResult(
