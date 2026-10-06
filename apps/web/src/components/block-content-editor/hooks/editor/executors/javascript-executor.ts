@@ -1,187 +1,109 @@
 import type { ProgrammingLanguage } from "@/components/block-content-editor/extras/source-code/types"
 import { getFileContent } from "@/components/block-content-editor/extras/source-code/utils"
+import { QuickJSRunner } from "../../../extras/code-studio/runners/quickjs-runner"
 import type { ExecutionContext, ExecutionResult, LanguageExecutor } from "./types"
 
 class JavaScriptExecutor implements LanguageExecutor {
-  private isExecutionCancelled = false
-  public isCompiled = false // Set the isCompiled flag to false
-  private globalFunctions: Set<string> = new Set() // Track functions added to global scope
-  private debugMode = false // Flag to control debug messages
+  public isCompiled = false
+  private debugMode = false
+  private runner: QuickJSRunner | null = null
+  private cancelDialog: (() => void) | undefined
+
+  private requestDialog(
+    kind: "alert" | "prompt" | "confirm", message: string, defaultValue: string, context: ExecutionContext, output: string[],
+  ): Promise<string | boolean | undefined> {
+    if (this.cancelDialog) return Promise.reject(new Error("Another dialog is already waiting for input."))
+    const line = kind.toUpperCase() + ": " + message + (kind === "prompt" && defaultValue ? " [default: " + defaultValue + "]" : "")
+    output.push(line)
+    context.addOutput(line)
+    return new Promise(resolve => {
+      let settled = false
+      const finish = (value: string | boolean | undefined) => {
+        if (settled) return
+        settled = true
+        this.cancelDialog = undefined
+        if (kind === "alert") {
+          window.__awaitingAlertAck = false
+          window.__alertMessage = null
+          window.alertCallback = () => {}
+        } else if (kind === "prompt") {
+          window.__awaitingPromptInput = false
+          window.__promptMessage = null
+          window.promptCallback = () => {}
+        } else {
+          window.__awaitingConfirmInput = false
+          window.__confirmMessage = null
+          window.confirmCallback = () => {}
+        }
+        resolve(value)
+      }
+      this.cancelDialog = () => finish(undefined)
+      if (kind === "alert") {
+        window.__awaitingAlertAck = true
+        window.__alertMessage = message
+        window.alertCallback = () => finish(undefined)
+      } else if (kind === "prompt") {
+        window.__awaitingPromptInput = true
+        window.__promptMessage = message
+        window.promptCallback = value => finish(value || defaultValue)
+      } else {
+        window.__awaitingConfirmInput = true
+        window.__confirmMessage = message
+        window.confirmCallback = value => finish(value === "0" || ["y", "yes", "true"].includes(value.toLowerCase()))
+      }
+    })
+  }
+
+  private createRunner(context: ExecutionContext, output: string[] = []): QuickJSRunner {
+    return new QuickJSRunner({
+      persistContext: true,
+      onOutput: (text, stream) => {
+        const line = stream === "stderr" ? "Error: " + text : text
+        output.push(line)
+        context.addOutput(line)
+      },
+      onDialog: (kind, message, defaultValue) => this.requestDialog(kind, message, defaultValue, context, output),
+    })
+  }
 
   execute = async (fileId: string, context: ExecutionContext): Promise<ExecutionResult> => {
     const { files, selectedLanguage, addOutput, setIsExecuting } = context
-
-    this.isExecutionCancelled = false
+    this.runner?.dispose()
+    this.cancelDialog?.()
+    const output: string[] = []
+    const runner = this.createRunner(context, output)
+    this.runner = runner
     setIsExecuting(true)
 
     try {
-      // Clear previously added global functions
-      this.clearGlobalFunctions()
-
-      // Find the file to execute
-      const visibleFiles = files.filter((file) => file.isVisible)
-      const mainFile = visibleFiles.find((file) => file.isMain)
-      const activeFile = files.find((file) => file.id === fileId)
+      const visibleFiles = files.filter(file => file.isVisible)
+      const mainFile = visibleFiles.find(file => file.isMain)
+      const activeFile = files.find(file => file.id === fileId)
       const fileToExecute = mainFile || activeFile
+      if (!fileToExecute) throw new Error("No file selected for execution.")
+      if (mainFile && mainFile.id !== fileId) addOutput("Executing main file: " + fileToExecute.name)
 
-      if (!fileToExecute) {
-        addOutput("Error: No file selected for execution.")
-        setIsExecuting(false)
-        return { success: false, output: ["Error: No file selected for execution."] }
-      }
-
-      // If executing a main file that's different from the active file, show a message
-      if (mainFile && mainFile.id !== fileId) {
-        addOutput(`Executing main file: ${fileToExecute.name}`)
-      }
-
-      // Create a virtual file system for imports
-      const virtualFileSystem: Record<string, string> = {}
-      visibleFiles.forEach((file) => {
-        const content = getFileContent(file, selectedLanguage)
-        virtualFileSystem[file.name] = content
+      const virtualFileSystem: Record<string, string> = Object.create(null)
+      for (const file of visibleFiles) virtualFileSystem[file.name] = getFileContent(file, selectedLanguage)
+      const bundledCode = this.resolveImports(fileToExecute.name, virtualFileSystem, message => {
+        if (this.debugMode) addOutput(message)
       })
-
-      // Create a safe execution environment
-      const consoleOutput: string[] = []
-      const mockConsole = {
-        log: (...args: any) => {
-          const output = args.map((arg: any) => String(arg)).join(" ")
-          consoleOutput.push(output)
-          addOutput(output)
-        },
-        error: (...args: unknown[]) => {
-          const output = `Error: ${args.map((arg) => String(arg)).join(" ")}`
-          consoleOutput.push(output)
-          addOutput(output)
-        },
-        warn: (...args: any) => {
-          const output = `Warning: ${args.map((arg: any) => String(arg)).join(" ")}`
-          consoleOutput.push(output)
-          addOutput(output)
-        },
-      }
-
-      // Custom logger that only shows messages in debug mode
-      const debugLog = (message: string) => {
-        if (this.debugMode) {
-          addOutput(message)
-        }
-      }
-
-      // Resolve imports and bundle the code (silently)
-      debugLog("Resolving imports and bundling files...")
-      const bundledCode = this.resolveImports(fileToExecute.name, virtualFileSystem, debugLog)
-
-      // Create a modified version of the bundled code that replaces browser dialogs
-      let modifiedCode = bundledCode
+      const code = bundledCode
         .replace(/alert\s*\(/g, "await customAlert(")
         .replace(/prompt\s*\(/g, "await customPrompt(")
         .replace(/confirm\s*\(/g, "await customConfirm(")
-
-      // Add our custom implementations at the beginning of the code
-      modifiedCode = `
-       // Custom implementations for browser dialogs
-       async function customAlert(message) {
-         console.log("ALERT: " + message);
-         return new Promise((resolve) => {
-           window.__awaitingAlertAck = true;
-           window.__alertMessage = message;
-           
-           window.alertCallback = () => {
-             window.__awaitingAlertAck = false;
-             window.__alertMessage = null;
-             resolve();
-           };
-         });
-       }
-
-       async function customPrompt(message, defaultValue = "") {
-         console.log("PROMPT: " + message + (defaultValue ? " [default: " + defaultValue + "]" : ""));
-         return new Promise((resolve) => {
-           window.__awaitingPromptInput = true;
-           window.__promptMessage = message;
-           
-           window.promptCallback = (value) => {
-             window.__awaitingPromptInput = false;
-             window.__promptMessage = null;
-             resolve(value || defaultValue);
-           };
-         });
-       }
-
-       async function customConfirm(message) {
-         console.log("CONFIRM: " + message);
-         return new Promise((resolve) => {
-           window.__awaitingConfirmInput = true;
-           window.__confirmMessage = message;
-           
-           window.confirmCallback = (value) => {
-             window.__awaitingConfirmInput = false;
-             window.__confirmMessage = null;
-             resolve(value === "0" || value.toLowerCase() === "y" || value.toLowerCase() === "yes" || value.toLowerCase() === "true");
-           };
-         });
-       }
-
-       // Main execution
-       try {
-         ${modifiedCode}
-       } catch (error) {
-         console.error("Runtime error: " + error.message);
-       }
-     `
-
-      // Check if execution was cancelled
-      if (this.isExecutionCancelled) {
-        addOutput("Execution cancelled.")
-        setIsExecuting(false)
-        return { success: false, output: ["Execution cancelled."] }
-      }
-
-      // Execute the code in a safe context
-      const AsyncFunction = Object.getPrototypeOf(async () => { }).constructor
-      const executeCode = new AsyncFunction("console", "window", modifiedCode)
-      await executeCode(mockConsole, window)
-
-      setIsExecuting(false)
-      return { success: true, output: consoleOutput }
+      const result = await runner.execute(code)
+      return { success: result.exitCode === 0, output }
     } catch (error) {
-      console.error("JavaScript execution error:", error)
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      addOutput(`Error: ${errorMessage}`)
-      setIsExecuting(false)
-      return { success: false, output: [`Error: ${errorMessage}`] }
-    }
-  }
-
-  private evaluateTerminalExpression(command: string): unknown {
-    // Security note: Function-constructor evaluation, not eval — it runs the
-    // user's own terminal input in the same browser context as execute(), so
-    // the trust level is unchanged while removing the eval sink. Statement
-    // form is tried when expression form fails, matching prior eval behavior.
-    try {
-      return (new Function(`"use strict"; return (${command});`) as () => unknown)()
-    } catch {
-      return (new Function(`"use strict"; ${command}`) as () => unknown)()
-    }
-  }
-
-  private clearGlobalFunctions(): void {
-    // Remove all previously added global functions
-    const globalWindow = window as unknown as Window & Record<string, unknown>
-
-    this.globalFunctions.forEach((functionName) => {
-      if (globalWindow[functionName]) {
-        delete globalWindow[functionName]
+      const message = "Error: " + (error instanceof Error ? error.message : String(error))
+      addOutput(message)
+      return { success: false, output: [...output, message] }
+    } finally {
+      if (this.runner === runner) {
+        this.cancelDialog?.()
+        setIsExecuting(false)
       }
-    })
-    this.globalFunctions.clear()
-  }
-
-  private addToGlobalScope(functionName: string): void {
-    // Track functions added to global scope
-    this.globalFunctions.add(functionName)
+    }
   }
 
   private isLineCommented(content: string, matchIndex: number): boolean {
@@ -330,8 +252,6 @@ class JavaScriptExecutor implements LanguageExecutor {
               continue
             }
 
-            this.addToGlobalScope(defaultImport)
-
             // If we know the name of the default export, use it directly
             if (defaultExportName) {
               result += `
@@ -379,9 +299,6 @@ window.${defaultImport} = (function() {
               continue // Skip this import
             }
 
-            // Track the functions we're adding to global scope
-            requestedImports.forEach((name) => this.addToGlobalScope(name))
-
             // Create a wrapper that exposes only the named exports
             result += `
 // === Named imports from ${resolvedPath} ===
@@ -395,8 +312,6 @@ ${requestedImports.map((name) => `if (typeof ${name} !== 'undefined') { window.$
           }
           // Handle namespace imports (import * as name)
           else if (namespaceImport) {
-            this.addToGlobalScope(namespaceImport)
-
             // Create a namespace object with all exports
             result += `
 // === Namespace import from ${resolvedPath} ===
@@ -469,7 +384,8 @@ ${hasDefaultExport && defaultExportName
   }
 
   stop = () => {
-    this.isExecutionCancelled = true
+    this.runner?.dispose()
+    this.cancelDialog?.()
   }
 
   getFileExtension = (): string => {
@@ -481,20 +397,18 @@ ${hasDefaultExport && defaultExportName
   }
 
   handleCommand = (command: string, context: ExecutionContext): boolean => {
-    const { addOutput } = context
-
-    if (!command.includes("console.log")) {
-      try {
-        const result = this.evaluateTerminalExpression(command)
-        addOutput(typeof result === "undefined" ? "undefined" : String(result))
-        return true
-      } catch (error) {
-        addOutput(`Error: ${error instanceof Error ? error.message : String(error)}`)
-        return true
-      }
-    }
-
-    return false
+    if (command.includes("console.log")) return false
+    this.runner ??= this.createRunner(context)
+    let errorReported = false
+    void this.runner.evaluate(command, (text, stream) => {
+      if (stream === "stderr") errorReported = true
+      context.addOutput(stream === "stderr" ? "Error: " + text : text)
+    })
+      .then(result => {
+        if (result.exitCode === 0) context.addOutput(result.value ?? "undefined")
+        else if (!errorReported) context.addOutput("Error: " + (result.stderr || "JavaScript execution failed."))
+      })
+    return true
   }
 }
 

@@ -1,6 +1,6 @@
 # Code Runners
 
-100% browser-based code execution system using WebAssembly with complete sandboxing and progressive compilation feedback.
+Browser code execution using WebAssembly and progressive compilation feedback. Isolation and resource limits depend on the language runner.
 
 ## Architecture
 
@@ -61,11 +61,14 @@ interface RunnerOptions {
 
 ### ✅ JavaScript
 - **Engine**: QuickJS (asyncify-enabled WASM)
-- **Sandbox**: Complete isolation
+- **Sandbox**: A separate QuickJS guest context; page DOM, storage, network clients and host globals are not exposed.
 - **Features**: Full ES2020 support, async/await
-- **Timeout**: 30s (configurable)
+- **Timeout**: 30s (configurable), enforced inside the interpreter and while awaiting guest promises.
+- **Limits**: 64MB guest memory by default, 1MB stack and 1MB console/result output. Stop cancels pending input and the VM is disposed after failure.
 - **Size**: ~368KB (gzip compressed)
-- **Source**: `/wasm/quickjs-asyncify.wasm.gz`
+- **Source**: `/langs/quickjs-asyncify.wasm.gz`, prepared from the installed package by `sync:javascript-runtime`. The IndexedDB cache key includes its package version.
+
+The legacy source-code editor also uses this runner for programs and terminal expressions. Imports and terminal variables remain inside the guest. Prompt, alert and confirm use explicit callbacks that exchange primitive values with the UI. No page `Window` object or browser credential store is passed to student code.
 
 ### ✅ TypeScript
 - **Transpiler**: esbuild (WASM)

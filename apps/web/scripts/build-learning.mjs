@@ -64,6 +64,7 @@ function run(command, args) {
 export async function buildLearning() {
   await run("pnpm", ["run", "build:emception-dependencies"]);
   await run("pnpm", ["run", "sync:emception"]);
+  await run("pnpm", ["run", "sync:javascript-runtime"]);
   await run(process.execPath, [
     nextBin,
     "build",
