@@ -21,5 +21,11 @@ describe('XML comment tokenization', () => {
       [/[^-]+/, 'comment'],
       [/-/, 'comment'],
     ]);
+    const closingRule = tokens?.tokenizer.comment?.[0];
+    const closingPattern = Array.isArray(closingRule) ? closingRule[0] : undefined;
+    expect(closingPattern).toBeInstanceOf(RegExp);
+    if (!(closingPattern instanceof RegExp)) throw new Error('XML comment closing rule is missing');
+    expect(closingPattern.test('-->')).toBe(true);
+    expect(closingPattern.test('--!>')).toBe(false);
   });
 });
