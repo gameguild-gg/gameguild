@@ -86,7 +86,9 @@ public class JitElevationService(
         var request = await _repository.GetByIdAsync(requestId, cancellationToken).ConfigureAwait(false);
 
         if (request == null)
+        {
             throw new InvalidOperationException($"Elevation request {requestId} not found");
+        }
 
         request.Approve(reviewerId, comments);
         await _repository.UpdateAsync(request, cancellationToken).ConfigureAwait(false);
@@ -110,7 +112,9 @@ public class JitElevationService(
         var request = await _repository.GetByIdAsync(requestId, cancellationToken).ConfigureAwait(false);
 
         if (request == null)
+        {
             throw new InvalidOperationException($"Elevation request {requestId} not found");
+        }
 
         request.Deny(reviewerId, comments);
         await _repository.UpdateAsync(request, cancellationToken).ConfigureAwait(false);
@@ -133,7 +137,10 @@ public class JitElevationService(
     {
         var request = await _repository.GetByIdAsync(requestId, cancellationToken).ConfigureAwait(false);
 
-        if (request == null) return false;
+        if (request == null)
+        {
+            return false;
+        }
 
         request.Revoke(revokedBy, reason);
         await _repository.UpdateAsync(request, cancellationToken).ConfigureAwait(false);
