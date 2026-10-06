@@ -7,7 +7,7 @@
  * - resolve to a host on the configured allowlist — env
  *   `REMOTE_ASSET_ALLOWED_HOSTS` (comma/space separated; defaults to the
  *   hosts this codebase already talks to),
- * - not resolve to a private or loopback address.
+ * - not use a private or loopback address literal.
  *
  * `ALLOW_UNSAFE_REMOTE_URL=true` bypasses every check (local development only,
  * e.g. for a `http://localhost:8080` API base). Test runs (`NODE_ENV=test`)
@@ -27,7 +27,9 @@ export class UnsafeRemoteUrlError extends Error {
 }
 
 function envValue(name: string): string | undefined {
-  return (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.[name];
+  return (
+    globalThis as { process?: { env?: Record<string, string | undefined> } }
+  ).process?.env?.[name];
 }
 
 function allowedHosts(): Set<string> {
@@ -42,7 +44,8 @@ function allowedHosts(): Set<string> {
 
 function isPrivateIpv4(host: string): boolean {
   const octets = host.split(".");
-  if (octets.length !== 4 || !octets.every((part) => /^\d{1,3}$/.test(part))) return false;
+  if (octets.length !== 4 || !octets.every((part) => /^\d{1,3}$/.test(part)))
+    return false;
   const [a, b] = octets.map(Number) as [number, number, number, number];
   if (octets.some((part) => Number(part) > 255)) return false;
   return (
@@ -63,7 +66,12 @@ function isPrivateHost(hostname: string): boolean {
 }
 
 function bypassEnabled(): boolean {
-  return envValue("ALLOW_UNSAFE_REMOTE_URL") === "true" || envValue("NODE_ENV") === "test";
+  const environment = envValue("NODE_ENV");
+  return (
+    environment === "test" ||
+    (environment === "development" &&
+      envValue("ALLOW_UNSAFE_REMOTE_URL") === "true")
+  );
 }
 
 /**
@@ -77,15 +85,30 @@ export function assertSafeRemoteUrl(input: string | URL): string | URL {
   const raw = input.toString();
   if (bypassEnabled()) return input;
   // Protocol-relative URLs are cross-origin by construction.
-  if (raw.startsWith("//")) throw new UnsafeRemoteUrlError("protocol-relative URL", raw);
+  if (raw.startsWith("//"))
+    throw new UnsafeRemoteUrlError("protocol-relative URL", raw);
   const hasScheme = /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(raw);
-  if (!hasScheme) return new URL(raw, "http://localhost"); // same-origin relative path
+  if (!hasScheme) {
+    // Parse against a sentinel solely to detect disguised absolute/network paths.
+    // Preserve relative fetch targets so the caller's real origin is unchanged.
+    const relativeBase = "https://relative.invalid";
+    if (new URL(raw, relativeBase).origin !== relativeBase) {
+      throw new UnsafeRemoteUrlError("disguised cross-origin URL", raw);
+    }
+    return input;
+  }
   const url = new URL(raw);
-  if (url.protocol !== "https:") throw new UnsafeRemoteUrlError("only https is allowed", raw);
-  if (url.username || url.password) throw new UnsafeRemoteUrlError("embedded credentials", raw);
-  if (isPrivateHost(url.hostname)) throw new UnsafeRemoteUrlError("private or loopback address", raw);
+  if (url.protocol !== "https:")
+    throw new UnsafeRemoteUrlError("only https is allowed", raw);
+  if (url.username || url.password)
+    throw new UnsafeRemoteUrlError("embedded credentials", raw);
+  if (isPrivateHost(url.hostname))
+    throw new UnsafeRemoteUrlError("private or loopback address", raw);
   if (!allowedHosts().has(url.hostname.toLowerCase())) {
-    throw new UnsafeRemoteUrlError("host not on the allowlist (REMOTE_ASSET_ALLOWED_HOSTS)", raw);
+    throw new UnsafeRemoteUrlError(
+      "host not on the allowlist (REMOTE_ASSET_ALLOWED_HOSTS)",
+      raw,
+    );
   }
   return url;
 }
