@@ -7,5 +7,7 @@ namespace GameGuild.Commerce.Payments.UnitTests;
 [CollectionDefinition(Name, DisableParallelization = true)]
 public sealed class StripeProcessConfigurationCollection
 {
+    private StripeProcessConfigurationCollection() { }
+
     internal const string Name = "Stripe process configuration";
 }

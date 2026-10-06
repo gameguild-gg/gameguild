@@ -168,13 +168,13 @@ public sealed class PaymentProviderSecurityExpansionTests
     {
         public List<string> Entries { get; } = [];
 
-        public IDisposable? BeginScope<TState>(TState _) where TState : notnull => null;
+        IDisposable? ILogger.BeginScope<TState>(TState state) => null;
 
-        public bool IsEnabled(LogLevel logLevel) => logLevel != LogLevel.None;
+        bool ILogger.IsEnabled(LogLevel logLevel) => logLevel != LogLevel.None;
 
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        void ILogger.Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
         {
-            if (!IsEnabled(logLevel))
+            if (logLevel == LogLevel.None)
             {
                 return;
             }
@@ -185,11 +185,12 @@ public sealed class PaymentProviderSecurityExpansionTests
     [Fact]
     public void CapturingPaymentLogger_RespectsDisabledLogLevel()
     {
-        var logger = new CapturingPaymentLogger();
+        var capturingLogger = new CapturingPaymentLogger();
+        ILogger logger = capturingLogger;
         logger.IsEnabled(LogLevel.None).Should().BeFalse();
         logger.Log(LogLevel.None, default, "disabled", null, static (state, _) => state);
         logger.Log(LogLevel.Debug, default, "enabled", null, static (state, _) => state);
-        logger.Entries.Should().ContainSingle().Which.Should().Be("enabled");
+        capturingLogger.Entries.Should().ContainSingle().Which.Should().Be("enabled");
     }
 
     [Theory]
