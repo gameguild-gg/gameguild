@@ -241,7 +241,9 @@ public class AssetGarbageCollectionService : IAssetGarbageCollectionService
     {
         var content = await _contentRepository.GetByIdAsync(contentId, ct).ConfigureAwait(false);
         if (content == null)
+        {
             return;
+        }
 
         // Only mark if not already marked and reference count is 0
         if (content.MarkedForDeletionAt == null && content.ReferenceCount <= 0)
@@ -259,7 +261,9 @@ public class AssetGarbageCollectionService : IAssetGarbageCollectionService
     {
         var content = await _contentRepository.GetByIdAsync(contentId, ct).ConfigureAwait(false);
         if (content == null)
+        {
             return;
+        }
 
         if (content.MarkedForDeletionAt != null)
         {

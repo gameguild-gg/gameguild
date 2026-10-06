@@ -236,7 +236,10 @@ public class UserRepository(IApplicationDbContext context) : IUserRepository
     {
         var query = context.Set<User>().Where(u => u.DeletedAt == null);
 
-        if (isActive.HasValue) query = query.Where(u => u.IsActive == isActive.Value);
+        if (isActive.HasValue)
+        {
+            query = query.Where(u => u.IsActive == isActive.Value);
+        }
 
         var totalCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
         var skip = (pageNumber - 1) * pageSize;
@@ -282,7 +285,11 @@ public class UserRepository(IApplicationDbContext context) : IUserRepository
 
     public async Task<User?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(username)) return null;
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            return null;
+        }
+
         return await context.Set<User>()
             .FirstOrDefaultAsync(u => u.Username != null && u.Username.ToLower() == username.ToLower() && u.DeletedAt == null, cancellationToken)
             .ConfigureAwait(false);
@@ -307,7 +314,11 @@ public class UserRepository(IApplicationDbContext context) : IUserRepository
 
     public async Task<bool> ExistsByUsernameAsync(string username, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(username)) return false;
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            return false;
+        }
+
         return await context.Set<User>()
             .AnyAsync(u => u.Username != null && u.Username.ToLower() == username.ToLower() && u.DeletedAt == null, cancellationToken)
             .ConfigureAwait(false);

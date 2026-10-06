@@ -217,8 +217,11 @@ public class Notification : EntityBase
     /// </summary>
     public void MarkAsRead()
     {
-        if (IsRead) return;
-        
+        if (IsRead)
+        {
+            return;
+        }
+
         IsRead = true;
         ReadAt = SystemClock.UtcNow;
         UpdatedAt = SystemClock.UtcNow;
@@ -239,8 +242,11 @@ public class Notification : EntityBase
     /// </summary>
     public void MarkAsSent()
     {
-        if (IsSent) return;
-        
+        if (IsSent)
+        {
+            return;
+        }
+
         IsSent = true;
         SentAt = SystemClock.UtcNow;
         UpdatedAt = SystemClock.UtcNow;
@@ -262,7 +268,10 @@ public class Notification : EntityBase
     public void MarkDeliverySent(string? providerMessageId)
     {
         MarkAsSent();
-        if (DeliveryStatus == NotificationDeliveryStatus.Sent) return;
+        if (DeliveryStatus == NotificationDeliveryStatus.Sent)
+        {
+            return;
+        }
 
         ProviderMessageId = providerMessageId;
         DeliveryStatus = NotificationDeliveryStatus.Sent;
@@ -302,7 +311,10 @@ public class Notification : EntityBase
     /// </summary>
     public void MarkRequeued()
     {
-        if (DeliveryStatus != NotificationDeliveryStatus.DeadLettered) return;
+        if (DeliveryStatus != NotificationDeliveryStatus.DeadLettered)
+        {
+            return;
+        }
 
         DeliveryStatus = NotificationDeliveryStatus.Pending;
         NextAttemptAt = null;
@@ -315,7 +327,10 @@ public class Notification : EntityBase
     /// </summary>
     public void ClaimForSending()
     {
-        if (DeliveryStatus != NotificationDeliveryStatus.Pending) return;
+        if (DeliveryStatus != NotificationDeliveryStatus.Pending)
+        {
+            return;
+        }
 
         DeliveryStatus = NotificationDeliveryStatus.Sending;
         UpdatedAt = SystemClock.UtcNow;
