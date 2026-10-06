@@ -3,6 +3,8 @@ set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repository_root="$(cd "$script_dir/../.." && pwd)"
+# shellcheck source=disposable-postgres.sh
+source "$script_dir/disposable-postgres.sh"
 cd "$repository_root"
 
 # Capture selection before starting infrastructure; a failed selector must fail
@@ -39,11 +41,14 @@ trap 'exit 143' TERM
 
 prepare_economy_template() {
   local container_name="gameguild-affected-api-$$-$RANDOM"
-  local mapping postgres_port template_connection candidate_id attempt ready=false
+  local mapping postgres_port template_connection candidate_id attempt password ready=false
+  password="$(new_disposable_postgres_password)"
+  register_disposable_postgres_password "$password"
   candidate_id="$(docker run --detach --rm --name "$container_name" \
     --label gameguild.ci=affected-api \
     --env POSTGRES_DB=economy_tests \
-    --env POSTGRES_USER=postgres --env POSTGRES_PASSWORD=postgres \
+    --env POSTGRES_USER=postgres --env "POSTGRES_PASSWORD=$password" \
+    --env POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256 \
     --publish 127.0.0.1::5432 \
     postgres:17-alpine -c max_locks_per_transaction=512)"
   [[ "$candidate_id" =~ ^[a-f0-9]{12,64}$ ]] || {
@@ -54,7 +59,7 @@ prepare_economy_template() {
   for ((attempt=0; attempt<90; attempt++)); do
     # The image starts a socket-only initialization server and then stops it.
     # Wait for the final server to accept an authenticated TCP query.
-    if docker exec --env PGPASSWORD=postgres "$postgres_id" \
+    if docker exec --env "PGPASSWORD=$password" "$postgres_id" \
       psql --host 127.0.0.1 --username postgres --dbname economy_tests \
       --no-password --no-psqlrc --set ON_ERROR_STOP=1 --tuples-only --command 'SELECT 1;' \
       > "$artifact_root/postgres-readiness.log" 2>&1; then
@@ -67,8 +72,8 @@ prepare_economy_template() {
   mapping="$(docker port "$postgres_id" '5432/tcp')"
   [[ "$mapping" =~ :([0-9]+)$ ]] || { printf 'Missing PostgreSQL loopback port\n' >&2; return 1; }
   postgres_port="${BASH_REMATCH[1]}"
-  export ECONOMY_POSTGRES_CONNECTION="Host=127.0.0.1;Port=$postgres_port;Database=economy_tests;Username=postgres;Password=postgres;Include Error Detail=true"
-  template_connection="Host=127.0.0.1;Port=$postgres_port;Database=$template_database;Username=postgres;Password=postgres;Include Error Detail=true"
+  export ECONOMY_POSTGRES_CONNECTION="Host=127.0.0.1;Port=$postgres_port;Database=economy_tests;Username=postgres;Password=$password;Include Error Detail=true"
+  template_connection="Host=127.0.0.1;Port=$postgres_port;Database=$template_database;Username=postgres;Password=$password;Include Error Detail=true"
   docker exec "$postgres_id" createdb --username postgres "$template_database"
   dotnet tool restore > "$artifact_root/tool-restore.log" 2>&1
   # Build API is a preceding required workflow step. Use the same complete
@@ -77,7 +82,8 @@ prepare_economy_template() {
     --project apps/api/Source/GameGuild.API/GameGuild.API.csproj \
     --startup-project apps/api/Source/GameGuild.API/GameGuild.API.csproj \
     --context ApplicationDbContext --configuration Release --no-build \
-    --connection "$template_connection" > "$artifact_root/template-migration.log" 2>&1
+    --connection "$template_connection" 2>&1 \
+    | redact_disposable_postgres_output > "$artifact_root/template-migration.log"
   docker exec "$postgres_id" psql --username postgres --dbname postgres \
     --set ON_ERROR_STOP=1 --command "ALTER DATABASE \"$template_database\" IS_TEMPLATE true;"
   export ECONOMY_POSTGRES_TEMPLATE_DATABASE="$template_database"
@@ -100,6 +106,7 @@ for project in "${projects[@]}"; do
   fi
   "${test_environment[@]}" dotnet test "$project" -c Release --nologo \
     --blame-hang-timeout 5m \
-    --logger "trx;LogFileName=$test_name.trx" --results-directory "$results"
+    --logger "trx;LogFileName=$test_name.trx" --results-directory "$results" \
+    2>&1 | redact_disposable_postgres_output
   [[ -f "$results/$test_name.trx" ]] || { printf 'Missing test evidence: %s\n' "$project" >&2; exit 1; }
 done

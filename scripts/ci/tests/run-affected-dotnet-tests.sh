@@ -37,6 +37,7 @@ cat > "$fixture_root/bin/dotnet" <<'SH'
 #!/usr/bin/env bash
 set -euo pipefail
 printf 'dotnet %s | template=%s\n' "$*" "${ECONOMY_POSTGRES_TEMPLATE_DATABASE:-}" >> "$MOCK_LOG"
+printf 'fixture connection: %s\n' "${ECONOMY_POSTGRES_CONNECTION:-}"
 if [[ "$1" == ef && "${MOCK_FAILURE:-}" == migration ]]; then exit 41; fi
 if [[ "$1" == test ]]; then
   [[ "${MOCK_FAILURE:-}" != test ]] || exit 42
@@ -81,6 +82,14 @@ run_case() {
 economy_source='apps/api/Source/Modules/GameGuild.Finance.Economy/Ledger/Journal.cs'
 api_source='apps/api/Source/GameGuild.API/Program.cs'
 run_case migrated 0 '' "$economy_source"
+fixture_password="$(sed -n 's/^docker run .*POSTGRES_PASSWORD=\([a-f0-9]\{64\}\) .*/\1/p' "$MOCK_LOG")"
+[[ "$fixture_password" =~ ^[a-f0-9]{64}$ ]]
+grep -Fq -- '--env POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256' "$MOCK_LOG"
+grep -Fq -- "PGPASSWORD=$fixture_password" "$MOCK_LOG"
+grep -Fq -- "Password=$fixture_password;" "$MOCK_LOG"
+! grep -Fq -- "$fixture_password" "$fixture_root/migrated.log"
+grep -Fq -- 'Password=[REDACTED];' "$fixture_root/migrated.log"
+printf 'PASS generated credential is shared by authenticated readiness and template migration, and redacted from output\n'
 grep -Fq -- 'postgres:17-alpine -c max_locks_per_transaction=512' "$MOCK_LOG"
 grep -Fq -- '--context ApplicationDbContext --configuration Release --no-build' "$MOCK_LOG"
 grep -Eq '^dotnet test .*Finance.Economy.UnitTests.* \| template=economy_tests_template$' "$MOCK_LOG"
@@ -90,7 +99,7 @@ printf 'PASS affected Economy tests use the complete migrated template and owned
 run_case socket_race 0 socket_race "$economy_source"
 [[ "$(<"$MOCK_PROBE_COUNT")" == 3 ]]
 ! grep -q 'pg_isready' "$MOCK_LOG"
-grep -Fq -- '--env PGPASSWORD=postgres' "$MOCK_LOG"
+grep -Eq -- '--env PGPASSWORD=[a-f0-9]{64} ' "$MOCK_LOG"
 grep -Fq -- 'psql --host 127.0.0.1 --username postgres --dbname economy_tests' "$MOCK_LOG"
 grep -Fq -- '--no-password --no-psqlrc --set ON_ERROR_STOP=1 --tuples-only --command SELECT 1;' "$MOCK_LOG"
 printf 'PASS temporary socket readiness does not permit template creation before authenticated TCP readiness\n'
