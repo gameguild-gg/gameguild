@@ -6,7 +6,7 @@
 
 import { ok, err } from '../result/helpers.js';
 import { createApiError, createNetworkError } from '../errors/transform.js';
-import { assertSafeRemoteUrl } from '../security/safe-remote-url.js';
+import { assertSafeServiceUrl } from '../security/safe-remote-url.js';
 import type { Result } from '../result/types.js';
 import type { ApiError } from '../errors/types.js';
 import type { ApiResponse, RequestConfig, Transport, TransportConfig, Interceptor } from './types.js';
@@ -152,7 +152,7 @@ async function executeRequest<T>(transportConfig: TransportConfig, requestConfig
   }
 
   try {
-    const response = await fetch(assertSafeRemoteUrl(url), options);
+    const response = await fetch(assertSafeServiceUrl(url, transportConfig.baseUrl), options);
 
     if (timeoutId) {
       clearTimeout(timeoutId);

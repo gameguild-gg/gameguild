@@ -1,4 +1,4 @@
-import { assertSafeRemoteUrl } from '@/lib/security/safe-remote-url';
+import { assertSafeServiceUrl } from '@/lib/security/safe-remote-url';
 import type { TestingLocation } from './testing-types';
 
 function getApiBaseUrl(): string {
@@ -12,7 +12,7 @@ export async function getTestingLocations(skip = 0, take = 50): Promise<TestingL
     : `/v1/testing/locations?skip=${skip}&take=${take}`;
 
   try {
-    const response = await fetch(assertSafeRemoteUrl(endpoint), {
+    const response = await fetch(assertSafeServiceUrl(endpoint, apiBaseUrl), {
       headers: {
         Accept: 'application/json',
       },

@@ -1,5 +1,5 @@
 import { auth, getToken } from '@/auth';
-import { assertSafeRemoteUrl } from '@/lib/security/safe-remote-url';
+import { assertSafeServiceUrl } from '@/lib/security/safe-remote-url';
 import { cache } from 'react';
 
 export type LaunchPlanStatus = 'Draft' | 'Preparing' | 'Ready' | 'Launched' | 'Paused' | number;
@@ -47,7 +47,7 @@ async function launchPadApiGet<T>(path: string, revalidate = 30): Promise<T | nu
   const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
   const token = await getToken();
   const tenantId = (await auth().catch(() => null))?.tenantId;
-  const response = await fetch(assertSafeRemoteUrl(`${apiUrl}${path}`), {
+  const response = await fetch(assertSafeServiceUrl(`${apiUrl}${path}`, apiUrl), {
     headers: {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(tenantId ? { 'X-Tenant-Id': tenantId } : {}),
