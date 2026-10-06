@@ -1,5 +1,48 @@
 # Web3 backend challenge and authentication — #292
 
+## TLS and timing verification — 2026-10-06 UTC
+
+The complete API integration suite was freshly executed at
+`0bad48b86d4c89cba44a7705f717e0f47f0da7d7`: **327 passed, zero failed or skipped**,
+in 14 minutes 55 seconds, using the full migrated PostgreSQL template. Resources
+also passed all 63 cases at that publication. The template sentinel and 146
+migrations remained intact and disposable container cleanup succeeded. Receipts
+retain their actual execution commits, timestamps and source hashes.
+
+CI run [37397324819](https://github.com/gameguild-gg/gameguild/actions/runs/37397324819)
+exposed a certificate fixture race in API verification and Economy: Resources
+passed 62 of 63 cases because the Kestrel/Redis leaf certificate ended one second
+after the issuer's encoded expiration. Separate wall-clock reads and certificate
+timestamp precision made their validity intervals inconsistent. This failed CI
+is retained. Its skipped TestingLab journey does not establish acceptance.
+
+The leaf now uses its issuer's actual UTC validity bounds. A deterministic
+five-minute authority reproduces the old failure and verifies the repaired leaf's
+validity, private key and trusted server-authentication chain. All **17 Redis/TLS
+cases pass**, including real Kestrel containers and TLS handshakes.
+
+The first complete 64-case local run passed 63 and failed the tenant timing
+comparison by 135.4 ms against its existing 100 ms bound. That failed receipt is
+preserved. A separate diagnostic whole run passed all 64 cases, recording HTTP403
+for all 32 requests. Grouped means differed by 20.4 ms and balanced means by
+1.10078 ms. These later samples do not uniquely establish the earlier failure's
+cause, because the original receipt lacked individual timings and status codes.
+
+The timing test now measures ten adjacent pairs with each group first in five
+pairs and second in five. It disposes every response, records individual timings,
+and requires HTTP403 for warmups and every measured sample. The **100 ms bound
+is unchanged**. Its complete final Resources execution passes **64 of 64 cases,
+zero failed or skipped**, with means 152.215/149.165 ms and difference
+3.050 ms. The new certificate regression is counted once.
+The final Resources build has zero warnings and errors. Failed and diagnostic
+receipts remain separate from this final source-bound execution.
+
+Only two Resources test files and this document change from the successful local
+API publication. Authentication production, API integration, fixture support,
+SDK and Web sources remain identical. Their earlier execution origin stays
+explicit. All applicable matching-head CI checks and accepted develop merge
+remain required before closing #292. #291 and #263 keep their remaining scope.
+
 ## Release fixture verification — 2026-10-05
 
 The complete CI run for `b441ee88facf901f3892fa3c2c2a148ac5434a26`
