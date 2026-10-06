@@ -102,3 +102,37 @@ test("an additional advisory fails even when the braces patch is verified", () =
     /Unmitigated.*GHSA-other/,
   );
 });
+
+test("sprintf mitigation passes only with exact identity, version and installed patch proof", () => {
+  const mitigated = report();
+  mitigated.metadata.vulnerabilities.moderate = 1;
+  mitigated.advisories["1241202"] = {
+    module_name: "sprintf-js",
+    github_advisory_id: "GHSA-hp3w-g68c-fv3c",
+    url: "https://github.com/advisories/GHSA-hp3w-g68c-fv3c",
+    cves: ["CVE-2026-97058"],
+    findings: [{ version: "1.1.3" }],
+  };
+  assert.throws(() => validateAuditReport(mitigated, 1, true), /Unmitigated/);
+  assert.deepEqual(validateAuditReport(mitigated, 1, false, true), {
+    advisories: 1,
+    verifiedLocalPatches: 1,
+  });
+  for (const mutation of [
+    { module_name: "another-package" },
+    { github_advisory_id: "GHSA-other" },
+    { url: "https://github.com/advisories/GHSA-other" },
+    { cves: [] },
+    { cves: ["CVE-other"] },
+    { findings: [] },
+    { findings: [{ version: "1.0.3" }] },
+    { findings: [{ version: "1.1.3" }, { version: "1.0.3" }] },
+  ]) {
+    const invalid = structuredClone(mitigated);
+    Object.assign(invalid.advisories["1241202"], mutation);
+    assert.throws(
+      () => validateAuditReport(invalid, 1, true, true),
+      /Unmitigated/,
+    );
+  }
+});

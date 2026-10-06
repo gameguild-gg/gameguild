@@ -1,0 +1,34 @@
+diff --git a/src/sprintf.js b/src/sprintf.js
+index 65d6324645ef1d0133614a71497751009dc5c912..68ac7fd15cff03f4f0be71002bf9a6ba0a45d20c 100644
+--- a/src/sprintf.js
++++ b/src/sprintf.js
+@@ -30,6 +30,12 @@
+         return sprintf.apply(null, [fmt].concat(argv || []))
+     }
+ 
++    // Keep numeric precision inside ECMAScript's supported range even when a
++    // format string contains an attacker-controlled, arbitrarily large value.
++    function sprintf_precision(precision, minimum) {
++        return Math.min(100, Math.max(minimum, Number(precision)))
++    }
++
+     function sprintf_format(parse_tree, argv) {
+         var cursor = 1, tree_length = parse_tree.length, arg, output = '', i, k, ph, pad, pad_character, pad_length, is_positive, sign
+         for (i = 0; i < tree_length; i++) {
+@@ -81,13 +87,13 @@
+                         arg = JSON.stringify(arg, null, ph.width ? parseInt(ph.width) : 0)
+                         break
+                     case 'e':
+-                        arg = ph.precision ? parseFloat(arg).toExponential(ph.precision) : parseFloat(arg).toExponential()
++                        arg = ph.precision ? parseFloat(arg).toExponential(sprintf_precision(ph.precision, 0)) : parseFloat(arg).toExponential()
+                         break
+                     case 'f':
+-                        arg = ph.precision ? parseFloat(arg).toFixed(ph.precision) : parseFloat(arg)
++                        arg = ph.precision ? parseFloat(arg).toFixed(sprintf_precision(ph.precision, 0)) : parseFloat(arg)
+                         break
+                     case 'g':
+-                        arg = ph.precision ? String(Number(arg.toPrecision(ph.precision))) : parseFloat(arg)
++                        arg = ph.precision ? String(Number(arg.toPrecision(sprintf_precision(ph.precision, 1)))) : parseFloat(arg)
+                         break
+                     case 'o':
+                         arg = (parseInt(arg, 10) >>> 0).toString(8)
