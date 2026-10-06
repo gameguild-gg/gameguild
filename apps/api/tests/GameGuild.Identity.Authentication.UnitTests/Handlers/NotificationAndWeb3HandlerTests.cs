@@ -51,6 +51,8 @@ public class VerifyWeb3SignatureHandlerTests
         capturedRequest.Challenge.Should().Be(command.Challenge);
         capturedRequest.Nonce.Should().Be(command.Nonce);
         capturedRequest.ChainId.Should().Be(command.ChainId);
+        capturedRequest.TenantId.Should().Be(command.TenantId);
+        capturedRequest.DeviceFingerprint.Should().Be(command.DeviceFingerprint);
 
         authService.Verify(
             service => service.VerifyWeb3SignatureAsync(It.IsAny<Web3VerificationRequest>(), cancellationTokenSource.Token),

@@ -41,7 +41,7 @@ export function validateAuditReport(
     );
   }
   for (const advisory of items) {
-    const knownPatchedBracesAdvisory =
+    const knownPatchedAdvisory =
       verifiedBracesPatch &&
       advisory.module_name === "braces" &&
       advisory.github_advisory_id === "GHSA-vfj7-8cjw-p6xm" &&
@@ -63,7 +63,7 @@ export function validateAuditReport(
       Array.isArray(advisory.findings) &&
       advisory.findings.length > 0 &&
       advisory.findings.every((finding) => finding.version === "1.1.3");
-    if (!knownPatchedBracesAdvisory && !knownPatchedSprintfAdvisory) {
+    if (!knownPatchedAdvisory && !knownPatchedSprintfAdvisory) {
       throw new Error(
         `Unmitigated dependency advisory: ${advisory.github_advisory_id ?? advisory.id ?? "unknown"}`,
       );
@@ -86,15 +86,6 @@ if (invokedDirectly) {
           dirname(fileURLToPath(import.meta.url)),
           "tests/braces-security.test.mjs",
         ),
-      ],
-      { stdio: "inherit" },
-    );
-    if (patchCheck.error || patchCheck.status !== 0)
-      throw new Error("Installed braces security patch verification failed");
-    const sprintfPatchCheck = spawnSync(
-      process.execPath,
-      [
-        "--test",
         resolve(
           dirname(fileURLToPath(import.meta.url)),
           "tests/sprintf-security.test.mjs",
@@ -102,16 +93,9 @@ if (invokedDirectly) {
       ],
       { stdio: "inherit" },
     );
-    if (sprintfPatchCheck.error || sprintfPatchCheck.status !== 0)
-      throw new Error(
-        "Installed sprintf-js security patch verification failed",
-      );
-    const result = validateAuditReport(
-      report,
-      Number(process.argv[3]),
-      true,
-      true,
-    );
+    if (patchCheck.error || patchCheck.status !== 0)
+      throw new Error("Installed dependency security patch verification failed");
+    const result = validateAuditReport(report, Number(process.argv[3]), true, true);
     console.log(
       `Dependency audit passed: ${result.advisories} reported advisories, ${result.verifiedLocalPatches} verified local patches`,
     );

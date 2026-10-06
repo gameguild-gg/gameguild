@@ -4,27 +4,29 @@ import type React from "react"
 import type { SerializedTextNode } from "lexical"
 
 interface PreviewTextProps {
-  node: SerializedTextNode
+  node: Pick<SerializedTextNode, "text"> & Partial<Pick<SerializedTextNode, "style" | "format" | "version">>
 }
 
 export function PreviewText({ node }: PreviewTextProps) {
   let textContent: React.ReactNode = node.text
 
   // Get inline styles from the node
-  const inlineStyles: React.CSSProperties = {}
+  const inlineStyles: React.CSSProperties & Record<string, string> = {}
   if (node.style) {
     // Parse the style string and convert to React CSSProperties
     const styleString = node.style
     const styleRules = styleString.split(";").filter((rule: string) => rule.trim())
 
-    styleRules.forEach((rule: string) => {
-      const [property, value] = rule.split(":").map((s: string) => s.trim())
-      if (property && value) {
-        // Convert CSS property names to camelCase for React
-        const camelCaseProperty = property.replace(/-([a-z])/g, (_match: string, letter: string) => letter.toUpperCase())
-        ;(inlineStyles as Record<string, string>)[camelCaseProperty] = value
-      }
-    })
+    styleRules.forEach(
+      (rule: string) => {
+        const [property, value] = rule.split(":").map((s: string) => s.trim())
+        if (property && value) {
+          // Convert CSS property names to camelCase for React
+          const camelCaseProperty = property.replace(/-([a-z])/g, (_match: string, letter: string) => letter.toUpperCase())
+          inlineStyles[camelCaseProperty] = value
+        }
+      },
+    )
   }
 
   // Apply text formatting
