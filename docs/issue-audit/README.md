@@ -1,5 +1,40 @@
 # GameGuild issue closeout inventory
 
+## 2026-10-06 accepted Web3 backend merge and closure
+
+[PR #697](https://github.com/gameguild-gg/gameguild/pull/697) is merged into
+develop at `295ee212828ab1cc233ce7ed61f2a2b81eb39ed4` from tested revision
+`af8595b63e5cbd4229de622909036c4b2df02349`.
+[#292](https://github.com/gameguild-gg/gameguild/issues/292#issuecomment-6016888510)
+is officially closed as completed: its five backend criteria have matching-head
+CI and 20 actual Web3 HTTP/PostgreSQL cases within 327 full API integration cases,
+all passed with zero skips. #291 and wallet/provider/UI children retain their work.
+
+The owner explicitly accepted the [documented preexisting native CI failure](https://github.com/gameguild-gg/gameguild/pull/697#issuecomment-6016849454)
+for this merge. Its enrollment rejection was reproduced with freshly compiled
+develop production source. Native packaging/deployment and later browser steps
+remain unverified; no CI assertion or rule was disabled.
+
+The fixed original scope retains **328 IDs: 72 closed /256 open**, verified at
+`2026-10-06T13:05:59.977381+00:00`. This includes historical/duplicate/administrative
+closures and does not mean 72 new implementations. Empty #271 was explicitly
+cancelled by its owner and closed as **not planned**, with its original body retained.
+The matrix preserves every scoped ID and original acceptance field.
+
+Both the primary develop and reused implementation worktree were fast-forwarded
+to the merged revision. All 55 unrelated primary file bytes/statuses and the
+unfinished #263 draft were preserved. The merged remote branch was removed.
+Three worktrees remain (primary, this reused checkout and another code-quality
+chat's checkout), four local branches and zero stashes; no worktree or stash was
+created for this delivery.
+
+#263 remains open. The current local candidate has passing expiration and client
+denial regressions, full authentication/client tests and typecheck; complete host
+regression and publication/merge acceptance are separate. Its retained 19 criteria
+and security boundaries are mapped in
+[refresh-token reconciliation](../architecture/refresh-token-rotation-reconciliation.md).
+Earlier dated sections below retain their historical status/counts.
+
 ## 2026-10-05 Web3 backend local acceptance — #292
 
 The native five-criterion child #292 now has actual bounded-host-cache HTTP,
