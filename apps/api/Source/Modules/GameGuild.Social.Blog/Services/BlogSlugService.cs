@@ -165,7 +165,8 @@ public sealed class BlogSlugService(IApplicationDbContext context) : IBlogSlugSe
             baseSlug = baseSlug[..(MaxSlugLength - 2)].Trim('-');
         }
 
-        for (var attempt = 2; ; attempt++)
+        var attempt = 2;
+        while (true)
         {
             var candidate = $"{baseSlug}-{attempt}";
             if (candidate.Length > MaxSlugLength)
@@ -177,6 +178,8 @@ public sealed class BlogSlugService(IApplicationDbContext context) : IBlogSlugSe
             {
                 return candidate;
             }
+
+            attempt++;
         }
     }
 
