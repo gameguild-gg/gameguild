@@ -68,7 +68,10 @@ public class Result
     /// </summary>
     public Result Ensure(Func<bool> predicate, Error error)
     {
-        if (IsFailure) return this;
+        if (IsFailure)
+        {
+            return this;
+        }
         return predicate() ? this : Failure(error);
     }
 
@@ -140,7 +143,10 @@ public class Result<TValue> : Result
     /// </summary>
     public Result<TValue> Ensure(Func<TValue, bool> predicate, Error error)
     {
-        if (IsFailure) return this;
+        if (IsFailure)
+        {
+            return this;
+        }
         return predicate(_value!) ? this : Failure<TValue>(error);
     }
 
