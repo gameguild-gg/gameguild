@@ -401,12 +401,17 @@ test_api_workflow_allows_full_selected_suite_with_bounded_hangs() {
 
 test_postgres_probes_require_authenticated_tcp() {
   local gate="$ci_dir/verify-economy.sh" probe body
+  [[ "$(grep -Fc -- '--env POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256' "$gate")" == 3 ]] || return 1
   for probe in app_postgres_probe economy_postgres_probe whole_solution_postgres_probe; do
     body="$(sed -n "/${probe}()/,/^ *}/p" "$gate")"
-    grep -Fq -- 'docker exec --env PGPASSWORD=postgres' <<< "$body" || return 1
+    grep -Eq -- 'docker exec --env "PGPASSWORD=\$[a-z_]+"' <<< "$body" || return 1
     grep -Fq -- 'psql --host 127.0.0.1' <<< "$body" || return 1
     grep -Fq -- '--no-password --no-psqlrc --set ON_ERROR_STOP=1' <<< "$body" || return 1
   done
+}
+
+test_disposable_postgres_credentials() {
+  bash "$script_dir/disposable-postgres.sh"
 }
 
 test_auto_changeset_bumps_entire_lockstep_workspace() {
@@ -940,6 +945,7 @@ run_test 'coverage records preserve empty prefixes and branch threshold' test_co
 run_test 'warning scope resolves touched Commerce projects' test_warning_scope_finds_commerce_projects
 run_test 'readiness requires consecutive successful probes' test_readiness_requires_consecutive_successes
 run_test 'PostgreSQL readiness waits for authenticated TCP on the final server' test_postgres_probes_require_authenticated_tcp
+run_test 'disposable PostgreSQL credentials are random, consistent, and redacted' test_disposable_postgres_credentials
 run_test 'process cleanup terminates Bash background processes' test_process_cleanup_stops_background_process
 run_test 'TRX evidence rejects skipped and zero-test suites' test_trx_rejects_skips_and_empty_suites
 run_test 'whole-solution evidence allows only named source-empty scaffolds' test_whole_solution_allows_only_source_empty_scaffolds
