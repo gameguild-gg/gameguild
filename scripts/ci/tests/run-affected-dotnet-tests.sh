@@ -99,7 +99,9 @@ printf 'PASS affected Economy tests use the complete migrated template and owned
 run_case socket_race 0 socket_race "$economy_source"
 [[ "$(<"$MOCK_PROBE_COUNT")" == 3 ]]
 ! grep -q 'pg_isready' "$MOCK_LOG"
-grep -Eq -- '--env PGPASSWORD=[a-f0-9]{64} ' "$MOCK_LOG"
+socket_password="$(sed -n 's/^docker run .*POSTGRES_PASSWORD=\([a-f0-9]\{64\}\) .*/\1/p' "$MOCK_LOG")"
+[[ "$socket_password" =~ ^[a-f0-9]{64}$ ]]
+grep -Fq -- "PGPASSWORD=$socket_password" "$MOCK_LOG"
 grep -Fq -- 'psql --host 127.0.0.1 --username postgres --dbname economy_tests' "$MOCK_LOG"
 grep -Fq -- '--no-password --no-psqlrc --set ON_ERROR_STOP=1 --tuples-only --command SELECT 1;' "$MOCK_LOG"
 printf 'PASS temporary socket readiness does not permit template creation before authenticated TCP readiness\n'
