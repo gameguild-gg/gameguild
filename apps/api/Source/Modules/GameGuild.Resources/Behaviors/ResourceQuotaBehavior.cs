@@ -247,7 +247,9 @@ public class ResourceQuotaBehavior<TRequest, TResponse> : IPipelineBehavior<TReq
     private static Guid? TryExtractUserId(TResponse response)
     {
         if (response == null)
+        {
             return null;
+        }
 
         // Try to get Id or UserId property via reflection
         var responseType = response.GetType();
