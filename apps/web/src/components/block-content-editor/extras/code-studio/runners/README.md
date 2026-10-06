@@ -79,6 +79,8 @@ The legacy source-code editor also uses this runner for programs and terminal ex
 - **Size**: ~3.5MB (esbuild) + ~368KB (quickjs) (gzip compressed)
 - **Source**: `/wasm/esbuild.wasm.gz` + `/wasm/quickjs-asyncify.wasm.gz`
 
+The legacy source-code editor transpiles each visible TypeScript file with the installed TypeScript compiler and reports syntax diagnostics before execution. Its imports and compiled JavaScript run through a separate instance of the isolated JavaScript executor. It does not use host `AsyncFunction` or pass the page `Window` to student code. This transpilation step does not perform full semantic type checking.
+
 ### ✅ Python
 - **Engine**: Pyodide (CPython 3.12 compiled to WASM)
 - **Sandbox**: Complete isolation
