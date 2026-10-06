@@ -45,7 +45,7 @@
     },
     "curlLite": {
       "source": {
-        "contentHash": "d40829ec28a06101842a528c68ff0433c5847e873e40b3934b0b007772a34fae",
+        "contentHash": "4897f285d45c27549c8527fbaa3e9fc86ea86c54abbb96c1ae3f0506dfa0a5c4",
         "kind": "workspace",
         "path": "toolchain/overlays/libcurl-lite"
       },
