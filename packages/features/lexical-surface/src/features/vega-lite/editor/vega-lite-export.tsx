@@ -11,11 +11,11 @@ import {
 } from "../theme/vega-theme-overrides";
 import { loadCsvDataIntoSpec } from "../data/vega-csv-loader";
 import { resolveVegaAttachments } from "../data/vega-asset-loader";
-import type { Config as VegaThemeConfig } from "vega";
 import type { VegaDataAttachment } from "../vega-lite-data";
+import type { Config } from "vega-lite";
 
 // Function to create dark version of any theme
-function createDarkTheme(baseTheme: VegaThemeConfig): VegaThemeConfig {
+function createDarkTheme(baseTheme: Config): Config {
   const section = (value: unknown): Record<string, unknown> =>
     typeof value === "object" && value !== null
       ? (value as Record<string, unknown>)
@@ -50,7 +50,7 @@ function createDarkTheme(baseTheme: VegaThemeConfig): VegaThemeConfig {
       ...section(theme.text),
       fill: "#cccccc",
     },
-  } as unknown as VegaThemeConfig;
+  } as unknown as Config;
 }
 
 interface VegaLiteExportProps {
@@ -136,7 +136,7 @@ export function VegaLiteExport({
               ? theme.replace("-dark", "")
               : theme;
             const themeConfig = (
-              vegaThemesImport as unknown as Record<string, unknown>
+              vegaThemesImport as unknown as Record<string, Config>
             )[themeMap[theme]];
 
             if (themeConfig) {
@@ -272,7 +272,7 @@ export function VegaLiteExport({
               ? theme.replace("-dark", "")
               : theme;
             const themeConfig = (
-              vegaThemesImport as unknown as Record<string, unknown>
+              vegaThemesImport as unknown as Record<string, Config>
             )[themeMap[theme]];
 
             if (themeConfig) {

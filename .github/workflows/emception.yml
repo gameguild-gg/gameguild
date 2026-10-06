@@ -26,7 +26,7 @@ concurrency:
 
 env:
   NODE_VERSION: "22"
-  PNPM_VERSION: "10.0.0"
+  PNPM_VERSION: "10.34.6"
 
 jobs:
   detect-emception-changes:
@@ -105,7 +105,7 @@ jobs:
           cache: pnpm
 
       - name: Install workspace dependencies
-        run: pnpm install --frozen-lockfile --ignore-scripts
+        run: bash scripts/ci/install-and-audit-pnpm.sh
 
       - name: Cache immutable Toolchain downloads
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -331,7 +331,7 @@ jobs:
           cache: pnpm
 
       - name: Install workspace dependencies
-        run: pnpm install --frozen-lockfile --ignore-scripts
+        run: bash scripts/ci/install-and-audit-pnpm.sh
 
       - name: Download validated release artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8

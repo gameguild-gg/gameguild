@@ -5,10 +5,11 @@ import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { chromium } from "playwright";
 import {
+  buildTestingLabFixtureUsername,
   cleanupTestingLabFixture,
-  createTestingLabFixtureUsername,
   collectAccessibilityFailures,
   collectViewportFailures,
+  createTestingLabFixtureIdentities,
   requireDisposableDatabaseMode,
   responseFailure,
   throwForBrowserQualityFailures,
@@ -135,7 +136,7 @@ async function bootstrap() {
     const signUp = await apiRequest("/v1/auth/sign-up", {
       method: "POST",
       body: JSON.stringify({
-        username: createTestingLabFixtureUsername(kind, tag),
+        username: buildTestingLabFixtureUsername(kind, tag),
         email,
         password,
         tenantId: auth.tenantId,
@@ -183,11 +184,8 @@ async function bootstrap() {
     return { accessToken: tenantAuth.accessToken, email, password, userId };
   }
 
-  // These sign-ins share a source IP. The lockout guard holds its PostgreSQL
-  // advisory lock through credential verification and fails closed on contention.
-  const owner = await createFixtureIdentity("owner");
-  const reviewer = await createFixtureIdentity("reviewer");
-  const tester = await createFixtureIdentity("tester");
+  const [owner, reviewer, tester] =
+    await createTestingLabFixtureIdentities(createFixtureIdentity);
   const project = await apiRequest(
     "/v1/projects",
     {
@@ -487,6 +485,9 @@ async function settleServerActionNavigation(page) {
 }
 
 async function assertAuthenticatedBrowserSession(page, label) {
+  if (new URL(page.url()).origin !== new URL(webBaseUrl).origin) {
+    throw new Error(`${label} changed the browser origin and lost its host-only session: ${page.url()}`);
+  }
   const session = await page.evaluate(async () => {
     const response = await fetch("/api/auth/session");
     return {
