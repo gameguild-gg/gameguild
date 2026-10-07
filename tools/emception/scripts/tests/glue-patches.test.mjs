@@ -4,6 +4,7 @@ import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
+import { Script } from 'node:vm';
 
 import {
   applyCanvasRuntimePatches,
@@ -40,7 +41,7 @@ const ALLEGRO_RUNTIME = [CANVAS_COMMON, MAIN_THREAD_EM_ASM].join(';');
 
 // These dispatcher shapes are taken from the pinned generated runtime factories.
 // Exercise them with addresses from a separately linked application's memory.
-function dispatcher(content, name, constants, sourceAt) {
+function dispatch(content, name, constants, sourceAt, repeats = 1) {
   const start = content.indexOf(`var ${name}=`);
   assert.notEqual(start, -1);
   const bodyStart = content.indexOf('{', start);
@@ -51,8 +52,13 @@ function dispatcher(content, name, constants, sourceAt) {
     if (content[end] === '}') depth -= 1;
     end += 1;
   } while (depth > 0);
-  return new Function('ASM_CONSTS', 'UTF8ToString', 'readEmAsmArgs',
-    `${content.slice(start, end)};return ${name};`)(constants, sourceAt, () => [7]);
+  const invocations = Array.from({ length: repeats }, () => `${name}(512,0,0,1)`);
+  const script = new Script(`${content.slice(start, end)};[${invocations.join(',')}];`, {
+    filename: 'canvas-glue-dispatch-regression.js',
+  });
+  return Array.from(script.runInNewContext({
+    ASM_CONSTS: constants, UTF8ToString: sourceAt, readEmAsmArgs: () => [7],
+  }, { timeout: 1000 }));
 }
 
 for (const [filename, source] of [
@@ -62,16 +68,13 @@ for (const [filename, source] of [
 ]) {
   test(`${filename} resolves EM_ASM at a separately linked application's address`, () => {
     const patched = applyCanvasRuntimePatches(source, filename).content;
-    const invoke = dispatcher(patched, 'runEmAsmFunction', {}, () => 'return $0 + 5;');
-    assert.equal(invoke(512, 0, 0), 12);
+    assert.deepEqual(dispatch(patched, 'runEmAsmFunction', {}, () => 'return $0 + 5;'), [12]);
   });
 
   test(`${filename} replaces a colliding stub EM_ASM address with application code`, () => {
     const patched = applyCanvasRuntimePatches(source, filename).content;
     const constants = { 512: () => -999 };
-    const invoke = dispatcher(patched, 'runEmAsmFunction', constants, () => 'return $0 + 5;');
-    assert.equal(invoke(512, 0, 0), 12);
-    assert.equal(invoke(512, 0, 0), 12);
+    assert.deepEqual(dispatch(patched, 'runEmAsmFunction', constants, () => 'return $0 + 5;', 2), [12, 12]);
   });
 
   test(`${filename} exposes the actual Emscripten exit implementation to C imports`, () => {
@@ -79,9 +82,11 @@ for (const [filename, source] of [
     const imports = patched.match(/var wasmImports=\{[^;]+\};/)[0];
     const statuses = [];
     const termination = new Error('exit boundary');
-    const env = new Function('_exit', '_proc_exit', `${imports};return wasmImports;`)(
-      (status) => { statuses.push(status); throw termination; }, () => {},
-    );
+    const env = new Script(`${imports};wasmImports;`, {
+      filename: 'canvas-glue-exit-regression.js',
+    }).runInNewContext({
+      _exit: (status) => { statuses.push(status); throw termination; }, _proc_exit: () => {},
+    }, { timeout: 1000 });
     assert.equal(typeof env.exit, 'function');
     assert.throws(() => env.exit(17), (error) => error === termination);
     assert.deepEqual(statuses, [17]);
@@ -93,8 +98,7 @@ test('the previous SDL patch is upgraded without retaining stub address collisio
     'var runEmAsmFunction=(code,sigPtr,argbuf)=>{var args=readEmAsmArgs(sigPtr,argbuf);if(!ASM_CONSTS[code]){var _s=UTF8ToString(code);ASM_CONSTS[code]=eval("(function($0,$1,$2,$3,$4,$5,$6,$7,$8,$9){"+_s+"})");}return ASM_CONSTS[code](...args)}');
   const first = applyCanvasRuntimePatches(legacy, 'sdl3-runtime.mjs');
   const second = applyCanvasRuntimePatches(first.content, 'sdl3-runtime.mjs');
-  const invoke = dispatcher(first.content, 'runEmAsmFunction', { 512: () => -999 }, () => 'return $0 + 5;');
-  assert.equal(invoke(512, 0, 0), 12);
+  assert.deepEqual(dispatch(first.content, 'runEmAsmFunction', { 512: () => -999 }, () => 'return $0 + 5;'), [12]);
   assert.equal(second.content, first.content);
   assert.deepEqual(second.applied, []);
 });
@@ -104,8 +108,7 @@ for (const [filename, source] of [
 ]) {
   test(`${filename} resolves main-thread EM_ASM from the application`, () => {
     const patched = applyCanvasRuntimePatches(source, filename).content;
-    const invoke = dispatcher(patched, 'runMainThreadEmAsm', {}, () => 'return $0 + 5;');
-    assert.equal(invoke(512, 0, 0, 1), 12);
+    assert.deepEqual(dispatch(patched, 'runMainThreadEmAsm', {}, () => 'return $0 + 5;'), [12]);
   });
 }
 
