@@ -582,3 +582,12 @@ Diagnostics artifact `11472412442` was downloaded with matching archive SHA-256
 All logs, failure contexts, original runtime pairs and local checks are retained
 under the same artifact directory. Current-head complete native and security
 gates remain required before merge; #699 and #263 remain open.
+
+Codacy then reported four dynamic-execution findings in the newly added regression
+harness on `764a65f71`. The tests now execute their fixed generated fixtures in
+bounded Node VM contexts instead of using the `Function` constructor. The same
+application-address, collision, exit and legacy-upgrade assertions are preserved;
+the production glue transformation is unchanged. Against the exact `7c57f5d00`
+production patch, these 12 focused regressions retained ten failures and two
+passing controls. All 22 current cases pass on Node 22 and 24. The scanner finding
+and both test executions are retained; a fresh successful Codacy result is required.
