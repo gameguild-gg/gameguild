@@ -1,11 +1,51 @@
 # Coding assessment runtime reconciliation
 
-## Current evidence — 2026-10-06
+## Publication checkpoint — 2026-10-07
 
-The published refresh lifecycle candidate is PR #699, revision
-`d9309fcf621d3dbef6941b232e1c3dad2b362a20`. The current Learning correction is
-uncommitted. This record does not certify the instructor/learner browser cycle
-or complete issue #263.
+PR #699 publishes revision `f330d458239041624a0eed617a4c68fde883d295`.
+Canonical enrollment resolution and the official Code runtime corrections are
+committed. The complete local solution rebuilt with zero warnings/errors and
+the final source passed 466 Assessments, 2,316 Authentication and 1,667
+Authorization cases. These are suite results, not additional cases to add to
+the later complete native regression totals.
+
+PR Verify run `37569861109` passed on that published revision: 6,037 main API
+cases, 2,998 Web cases and the required aggregate gate. Its additional 15-case
+OpenAPI gate repeats integration cases and is recorded separately, without
+adding them to the main total. Security checks passed on the same revision.
+
+Emception run `37568712584` passed the actual instructor/learner Code step with
+36 green, zero red and two console observations among 38. The subsequent C++
+smoke failed before reaching browser assertions: the demo predev helper silently
+waited for a builder lock whose parent directory did not exist. Consumer and
+deployable-output steps were consequently skipped. This partial workflow does
+not certify complete package/consumer acceptance or complete issue #263.
+
+The helper correction creates the cache parent, distinguishes a lock collision
+from other filesystem errors, releases its acquired lock even when a build fails,
+and refuses to build or remove another process's lock after a wait timeout.
+Its regression baseline was three failures and two passing controls; the corrected
+five cases passed on both Node 24 and Node 22. All 74 script cases also passed on
+both versions, and the real workspace library build completed with the lock released.
+The local C++ repetition then stopped at the existing legacy CDN's schema check;
+no browser assertions executed and that local run is not accepted.
+The original browser startup deadline and native acceptance assertions remain
+unchanged. Fresh matching-head native gates are required for this follow-up.
+
+The superseded predecessor `c04f92abf` also passed the Code step, but its Emception
+run was cancelled during C++ smoke. That cancellation remains historical evidence.
+See [the retained merge evidence](coding-assessment-merge-acceptance-20261006.md)
+for the published fixes, preserved failed attempts and required final gates.
+
+The following sections retain the initial diagnostic evidence; their historical
+revision, uncommitted state and pending results describe that earlier checkpoint.
+
+## Initial diagnostic checkpoint — 2026-10-06
+
+At the initial diagnostic checkpoint the published refresh lifecycle candidate
+was PR #699, revision `d9309fcf621d3dbef6941b232e1c3dad2b362a20`. The Learning
+correction was then uncommitted. That initial record did not certify the
+instructor/learner browser cycle or complete issue #263.
 
 The actual SDK/API probe, using the migrated application and disposable
 PostgreSQL, first failed because course workspaces return `ProgramEnrollment.Id`,

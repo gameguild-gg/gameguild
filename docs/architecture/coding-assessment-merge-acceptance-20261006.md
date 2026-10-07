@@ -349,3 +349,50 @@ and learner Code step passed in Emception run `37566083150`; subsequent C++ smok
 and consumer/package steps remain pending at this checkpoint. The fixture follow-up
 requires fresh matching-head scanner/native gates before merge. Neither the
 successful Code step alone nor historical suite results certify the final head.
+
+### Accepted Code step and library startup correction (2026-10-07 UTC)
+
+Published revision `f330d458239041624a0eed617a4c68fde883d295` passed the complete
+PR Verify run `37569861109`: 6,037 main API cases, 2,998 Web cases, clean builds,
+lint, types, generated-client consistency and the required aggregate gate. The
+15-case OpenAPI gate repeats existing integration cases; it is recorded separately
+and is not added to the main total. Codacy, GitGuardian and all four CodeQL analyses
+also passed. Fresh local Authentication and Authorization repetitions passed 2,316
+and 1,667 cases against the same warning-clean compiled source.
+
+Emception run `37568712584`, job `112622655276`, passed the genuine Code step:
+36 green, zero red/known-red and two console observations among 38. Official trusted
+submission, private-test separation, instructor execution, the frozen two-criterion
+rubric, grade 100 and persisted non-null feedback/rubric scores all passed. The two
+observations report the learner's Monaco worker loading warning and no instructor
+console errors; they are retained rather than reported as assertions.
+
+That workflow subsequently failed before C++ browser assertions, at the unchanged
+300,000 ms web-server startup deadline. `ensure-emception-libs.mjs` attempted to
+create `.cache/emception-libs.lock` without first creating `.cache`; its blanket
+catch converted `ENOENT` into a silent lock collision. The original helper also
+left its acquired lock after a failed build and could build/remove a foreign lock
+after its own wait deadline. Five focused real-CLI regressions exercised those
+three failures and two passing controls before the correction.
+
+The correction creates the cache parent, treats only `EEXIST` as a collision,
+logs a wait, fails closed on the original wait deadline, and releases only its
+acquired directory through `finally`. Build failure propagates a nonzero exit
+without bypassing cleanup. All five corrected cases passed on Node 24.19.0 and
+Node 22.23.3; all 74 existing/new script cases passed on both versions. The real workspace
+root library build also succeeded and released its lock. The foreign-lock fixture
+shortens only its copied helper's wait to exercise ownership; production and
+Playwright deadlines are unchanged. Logs and source hashes are retained under
+`artifacts/test-results/issue-263-refresh-lifecycle-20261005/`.
+
+Consumer builds, the C++ smoke and deployable outputs were skipped/failed in the
+published run and remain required on the corrected head. No failed native check,
+partial workflow, simulated compiler result or predecessor run accepts this
+follow-up for merge. Issue #263 remains open until matching-head acceptance and
+the authorized merge are recorded.
+
+The local C++ browser repetition reached the corrected predev helper immediately,
+then failed because the existing local release CDN has a legacy manifest instead
+of schema version 2. No browser assertions ran. That failure is retained without
+altering generated release evidence or weakening the manifest check; the native
+workflow generates and verifies the current release before running these tests.
