@@ -1048,6 +1048,7 @@ export default function Ide({
 
         setExecutionPhase('running');
         setStatus(`${label} done (${((performance.now() - tTotal) / 1000).toFixed(1)}s) — running`);
+        tty.writeLine(`\x1b[36m${label} detected (${result.runtimeProfile})\x1b[0m`);
         tty.writeLine(`\x1b[32m${label} rendering in canvas tab →\x1b[0m`);
         return;
       }

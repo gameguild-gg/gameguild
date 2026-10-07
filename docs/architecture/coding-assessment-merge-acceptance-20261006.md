@@ -1,8 +1,8 @@
 # Code assessment prerequisite for PR #699
 
 The owner explicitly requires correction of the Code assessment flow before merging
-PR #699. The earlier merge exception for PR #697 does not apply. PR #699 remains a
-draft until this complete flow is accepted.
+PR #699. The earlier merge exception for PR #697 does not apply. PR #699 remains
+unmerged until this complete flow is accepted.
 
 ## Acceptance sequence
 
@@ -485,3 +485,54 @@ Receipts, individual failure logs and error contexts live under
 Consumer, Pages, deployable-output and release-upload steps were skipped after
 the C++ failure. The complete new-head native and security gates, including the
 actual Code and C++ repetitions, are required before merge and closure of #263.
+
+### Native GL import and main-loop startup correction (2026-10-07 UTC)
+
+Revision `c753cb742a062341ae3cea231fe2bee964b84902` passed the complete
+[PR Verify run 37589327594](https://github.com/gameguild-gg/gameguild/actions/runs/37589327594):
+6,037 main API cases, 15 separate OpenAPI cases and 2,998 Web cases. Its security
+checks passed. The actual Code step in
+[Emception run 37589327579](https://github.com/gameguild-gg/gameguild/actions/runs/37589327579)
+again passed 36 green assertions, zero red and two retained console observations.
+The whole Emception workflow failed: C++ finished with 17 passed, four failed,
+five skipped and no flaky/interrupted cases. All four strict Ninja/CMake cases
+and SDL recompilation passed. Consumers and release checks after C++ were skipped.
+
+Native traces identify three remaining startup defects. Allegro's application
+imports `env.glBindBuffer`, while its generated factory supplies
+`env.emscripten_glBindBuffer`. SDL's generic missing-import fallback also replaces
+these real GL bindings with zero-returning functions, including shader operations.
+Raylib starts its browser loop and throws Emscripten's exact `unwind` sentinel;
+calling its raw `_main` incorrectly propagates that normal control transfer as an
+IDE execution failure. Neither runtime exports `callMain`. The SDL cases also
+require the existing runtime-detection message, which the new canvas path omitted.
+
+The canvas adapter now forwards missing C GL names to existing callable generated
+bindings for all three profiles, preserving an existing direct binding. Unsupported
+imports fail actual WebAssembly instantiation instead of silently returning zero;
+asynchronous instantiation errors reject startup and dispose the module URL.
+SDL keeps its memory-backed WASI boundary. Only the exact main-loop `unwind`
+sentinel is accepted; a real WASM trap still rejects startup. The IDE reports
+runtime detection only after the public startup returns a successful session.
+All native browser assertions, timeouts, retries and skips remain unchanged.
+
+Six failures were reproduced among nine focused unit/source-contract cases before
+the correction, with three passing controls. All nine passed after correction on
+Node 22 and 24. The WASM import regressions instantiate and execute a real small
+module; its generated JS factory boundary is controlled, so they do not establish
+actual graphics acceptance. The complete package repetition passed 371 cases,
+zero failures and one existing conditional worker smoke skip out of 372. All 75
+script cases passed on Node 22 and 24. An earlier parallel Node 22 script execution
+had one process-start out-of-memory failure; that failed receipt remains retained
+alongside the successful separate repetition.
+
+The failed native raw log SHA-256 is
+`6aed4bfacf8b497abc53844967ace8bd3e330ef49436a987d989e0ab4b1eff2f`.
+Diagnostics artifact `11469364484` was downloaded with matching archive SHA-256
+`b4708d787b63b7f29f1820f4a7e2a06cc215ff95b930c7c8ed82212cd6f40845`.
+The first buffered download timed out; the subsequent streamed transfer completed
+without replacing that failed record. All three exact generated runtime pairs
+were recovered from the native trace's Brotli bundle and checked against its
+schema-v2 manifest file sizes/hashes. These are diagnostic inputs, not a relabeled
+local CDN or release waiver. Matching-head complete native and security gates
+remain required before merge. Issue #263 remains open.

@@ -23,3 +23,16 @@ test('strict subprocess browser tests consume the public facade and workspace bo
   assert.match(source, /expect\(result\.exitCode, 'ninja --version should exit 0'\)\.toBe\(0\)/);
   assert.match(source, /expect\(result\.exitCode, 'cmake configure should exit 0'\)\.toBe\(0\)/);
 });
+
+test('canvas runtime detection is reported only after a successful public startup', async () => {
+  const source = await readFile(new URL('../src/components/Ide.tsx', import.meta.url), 'utf8');
+  const canvas = source.split("if (runType === 'canvas') {")[1]
+    .split('// ── Standard WASI terminal path')[0];
+  const startup = canvas.indexOf('await api.canvas.buildAndStart(');
+  const failure = canvas.indexOf("if ('phase' in result)");
+  const failureReturn = canvas.indexOf('return;', failure);
+  const detected = canvas.indexOf('${label} detected');
+  assert.ok(startup >= 0 && failure > startup && failureReturn > failure);
+  assert.ok(detected > failureReturn, 'a failed build must not report runtime detection');
+  assert.ok(detected < canvas.indexOf('${label} rendering in canvas tab'));
+});
