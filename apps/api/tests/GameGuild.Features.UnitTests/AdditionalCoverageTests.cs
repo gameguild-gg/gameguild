@@ -1385,7 +1385,8 @@ public class FeatureControllerConstructorTests
     {
         var evalService = new Mock<IFeatureFlagEvaluationService>();
         var logger = NullLogger<FeatureFlagsController>.Instance;
-        var controller = new FeatureFlagsController(evalService.Object, logger);
+        var controller = new FeatureFlagsController(evalService.Object, logger,
+            Mock.Of<GameGuild.Identity.Context.Actors.IActorContextAccessor>(), Mock.Of<GameGuild.CQRS.ISender>());
         controller.Should().NotBeNull();
     }
 }

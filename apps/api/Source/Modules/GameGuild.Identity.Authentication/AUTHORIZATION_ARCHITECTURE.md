@@ -2198,6 +2198,22 @@ identifiers.
   authentication plus the `Features.Read` policy (reads) or `Features.Manage` policy
   (mutations). No feature-flag endpoint is public; anonymous callers can never mutate
   flags. Feature *evaluation* for callers happens through the evaluation/SDK surfaces.
+  The four runtime MVC evaluation actions bind identity, tenant and permissions to
+  `IActorContextAccessor`. They reject missing authentication or invalid User subjects
+  with 401, and mismatched body/query user or tenant selectors with 403 before calling
+  evaluation services. Matching selectors remain supported for existing clients.
+  SystemAdmin callers evaluate their own current context on these runtime routes;
+  these routes do not provide an administrative impersonation or preview operation.
+  Authenticated service actors retain a null UserId; a missing tenant remains null
+  so tenant-targeted rules retain their fail-closed behavior and global flags can
+  still be evaluated. An empty tenant GUID is invalid. Subscription-plan targeting
+  uses the actor's `subscription_plan` attribute, never a body-supplied plan. The
+  controller copies the effective permissions and takes IP, user agent and request
+  time from the request transport/server. It creates a new evaluation context and
+  does not mutate the submitted body. Environment and custom attributes remain
+  client-provided evaluation hints; they are not identity or permission assertions.
+  This invariant covers these MVC entry points, not every internal SDK context
+  factory, the freshness of plan attributes, or the completeness of cache keys.
 - **Ledgers** (`GameGuild.Finance.Ledgers`): controllers require authentication plus
   `Ledgers.Read` / `Ledgers.Write`. The effective tenant is the **actor's tenant** — a
   route-supplied tenant is honored only for SystemAdmin; cross-tenant reads fail
