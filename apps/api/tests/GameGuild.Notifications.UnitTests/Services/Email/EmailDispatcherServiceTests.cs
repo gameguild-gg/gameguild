@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.DataProtection;
 using GameGuild.Email;
 using GameGuild.Identity.Users;
 using GameGuild.Notifications.Services.Email;
@@ -387,7 +388,8 @@ public sealed class EmailDispatcherServiceTests : IDisposable
             prefs.Object,
             sender,
             dispatcherOptions,
-            NullLogger<EmailDispatcherService>.Instance);
+            NullLogger<EmailDispatcherService>.Instance,
+            new NotificationMetadataProtector(new EphemeralDataProtectionProvider()));
         return (subject, context, sender, dispatcherOptions.Value);
     }
 

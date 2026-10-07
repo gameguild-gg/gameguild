@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using GameGuild.Notifications.Services.Email;
 
 namespace GameGuild.Notifications.Services;
 
@@ -10,7 +11,8 @@ public class NotificationDeliveryService(
     IApplicationDbContext context,
     INotificationPreferenceService preferenceService,
     INotificationTemplateService templateService,
-    ILogger<NotificationDeliveryService> logger) : INotificationDeliveryService
+    ILogger<NotificationDeliveryService> logger,
+    NotificationMetadataProtector metadataProtector) : INotificationDeliveryService
 {
     public async Task<Result<Notification>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
@@ -104,6 +106,8 @@ public class NotificationDeliveryService(
             metadata,
             recipientEmail: recipientEmail);
 
+        metadataProtector.ProtectForStorage(notification);
+
         if (decision.Action == NotificationDeliveryAction.Digest)
         {
             notification.MarkHeldForDigest();
@@ -196,6 +200,8 @@ public class NotificationDeliveryService(
                 priority,
                 decision.Action == NotificationDeliveryAction.HoldUntil ? decision.HeldUntil : null);
 
+            metadataProtector.ProtectForStorage(notification);
+
             if (decision.Action == NotificationDeliveryAction.Digest)
             {
                 notification.MarkHeldForDigest();
@@ -253,6 +259,7 @@ public class NotificationDeliveryService(
             priority,
             scheduledAt);
 
+        metadataProtector.ProtectForStorage(notification);
         context.Set<Notification>().Add(notification);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
