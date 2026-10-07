@@ -1,7 +1,7 @@
 import { access, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
-export const PATCH_SET_VERSION = 'emception-glue-v4';
+export const PATCH_SET_VERSION = 'emception-glue-v5';
 
 const ENV_NEEDLE = 'var ENV={};';
 const ENV_MARKER = 'moduleArg["ENV"]';
@@ -47,7 +47,7 @@ const CANVAS_COMMON_PATCHES = [
     label: 'C exit import',
     needle: 'var wasmImports={',
     replacement: 'var wasmImports={exit:_exit,',
-    marker: 'var wasmImports={exit:_exit,',
+    marker: 'exit:_exit,',
   },
 ];
 
@@ -96,6 +96,9 @@ export function applyCanvasRuntimePatches(source, filename) {
   if (filename !== 'sdl3-runtime.mjs') return { content, applied };
 
   const sdlPatches = [
+    // The separately linked application can import C abort even when the stub did not.
+    // Match the pinned Emscripten 5.0.7 libcore implementation; retain its fatal runtime abort.
+    { label: 'C abort import', needle: 'var wasmImports={', replacement: 'var wasmImports={_abort_js:()=>abort(""),', marker: '_abort_js:' },
     { label: 'free declaration', needle: 'var _main,_SDL_free,', replacement: 'var _free,_main,_SDL_free,', marker: 'var _free,_main,_SDL_free,' },
     { label: 'malloc fallback', needle: '_malloc=wasmExports["malloc"]', replacement: '_malloc=wasmExports["malloc"]||wasmExports["SDL_malloc"]', marker: '_malloc=wasmExports["malloc"]||' },
     { label: 'free fallback', needle: '_SDL_free=Module["_SDL_free"]=wasmExports["SDL_free"]', replacement: '_SDL_free=Module["_SDL_free"]=wasmExports["SDL_free"];_free=wasmExports["free"]||_SDL_free', marker: '_free=wasmExports["free"]||_SDL_free' },
