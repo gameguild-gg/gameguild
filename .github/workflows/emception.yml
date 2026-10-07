@@ -195,6 +195,9 @@ jobs:
       - name: Stage CDN into demos
         run: node scripts/sync-emception-cdn.mjs
 
+      - name: Prepare certificate for disposable API test storage
+        run: bash scripts/ci/prepare-data-protection-test-certificate.sh
+
       - name: Run instructor and learner coding assessment cycle
         run: pnpm --dir apps/web run test:browser:coding-cycle
 
