@@ -274,3 +274,46 @@ The complete 1,079-case API unit repetition also passed on those exact compiled
 source bytes, with zero failed/skipped tests. Its separately owned PostgreSQL
 instance was removed successfully and confirmed absent. The local source receipts
 are retained before publication; matching-head native acceptance remains pending.
+
+### Native instructor feedback failure (2026-10-07 UTC)
+
+Published head `89e3d340` passed PR Verify `37561902348`: 6,027 main API tests,
+15 separate OpenAPI HTTP tests, 2,998 Web tests, lint, types, production builds,
+generated-client consistency and the required aggregate gate. CodeQL, GitGuardian
+and the subsequently completed Codacy GitHub check passed on that same head.
+
+Its Emception run `37561902334` failed the original Code cycle with 35 green,
+one red and two observed entries among 38. The sandboxed worker accepted the
+official submission. The submitted source, all three instructor tests including
+the private test, the frozen rubric, grade 100 and persisted rubric scores passed.
+The only failed assertion was `submission feedback non-null`, with `feedback=null`.
+Later browser smoke and consumer builds were skipped by that failure. This run
+does not accept the complete Code flow; its report and runtime logs are retained.
+
+Instructor resolution currently replaces the safe automated feedback with an
+optional empty instructor value. The preceding persisted Code item still contains
+the worker's redacted feedback. Focused regressions cover retaining that trusted
+item feedback when instructor input is null, empty or whitespace, explicit
+instructor feedback taking precedence, idempotent replay, original input retained
+in instructor evidence, publication to the learner and exclusion of private tests.
+Manual-only Code and Quiz reviews keep their existing optional-feedback behavior.
+The native assertion, grading policy, rubric and sandbox requirements are retained.
+
+The focused regression baseline compiled cleanly and executed eight cases before
+the production correction: three passed and five failed specifically on erased,
+empty or whitespace feedback. Its failed receipt is retained. The correction
+uses only a preceding automated Code item with the frozen handler key/version;
+it does not manufacture feedback for manual-only Code or inherit Quiz feedback.
+Instructor evidence still stores the original submitted comments and previous
+result separately. The unit harness simulates only the compiler boundary. The
+PostgreSQL HTTP cases exercise manual review, privacy, persistence and release;
+the unconfigured-worker case verifies refusal to commit. Fresh native compilation
+and browser grading remain required for the actual Code execution claim.
+
+The corrected source rebuilt the complete API solution with zero warnings/errors
+and passed all 466 Assessments, 2,316 Authentication and 1,667 Authorization tests.
+All 23 focused PostgreSQL HTTP cases passed with zero failures/skips, successful
+cleanup and verified absence of the owned loopback-only container. Raw source
+fingerprints remained identical to the warning-clean build throughout these runs.
+The complete API unit repetition is running against those same compiled files;
+its result and a fresh matching-head native Code cycle remain pending at publication.
