@@ -435,3 +435,53 @@ job log are retained as partial evidence, not whole-workflow acceptance. The
 cancelled C++ suite and skipped consumer, Pages, deployable-output and upload
 steps remain unaccepted. Matching-head native and security gates are still required
 before merge; issue #263 remains open.
+
+### Native canvas status and public subprocess API correction (2026-10-07 UTC)
+
+Revision `8622414e2272e14952b330cf876fa88af9b585a8` completed the actual Code step
+in [Emception run 37580056804](https://github.com/gameguild-gg/gameguild/actions/runs/37580056804):
+**36 green assertions, zero red and two console observations among 38**. The
+official trusted submission, private-test visibility, frozen rubric, score 100,
+persisted feedback and rubric payload all passed. The observations concern the
+learner editor worker and an instructor React state update before mounting; they
+are retained. This is acceptance of that step, not the complete workflow.
+
+The subsequent C++ runner completed 26 cases: **12 passed, 9 failed and 5 skipped**,
+with no flaky or interrupted cases. All retries and failures are retained. Five
+failures occurred before actual canvas-build completion because the pending status
+was `Compiling SDL3/raylib/allegro...` while the existing assertions require the
+same `Compiling...` state as terminal builds. In the recompile case, the differing
+status also made the completion wait return immediately. The IDE now keeps the
+common pending state; the terminal retains the toolchain name and the final status
+retains the canvas label.
+
+Four strict Ninja/CMake cases used the removed private
+`window.__emception_client__` hook. They now call the already exposed public
+`BrowserEmceptionAPI` through `window.__emception_api__`, including
+`api.workspace.writeFile` for the project fixture. They still execute the actual
+tools and assert their structured exit codes, output, missing-build-file error
+and successful configuration. No private client hook is reintroduced and no
+browser assertion, timeout, sandbox or release requirement is relaxed.
+
+Two focused source-contract regressions failed before these corrections and
+passed after them on Node 22 and Node 24. The complete local package suite passed
+**364 cases, zero failures and one conditional real-worker smoke skip** out of
+365; the 25 IDE cases and focused repeats are included subsets, not additional
+distinct totals. All six package type checks and the updated strict E2E file's
+type check passed. The first isolated E2E type-check invocation stopped at
+TypeScript 6's explicit-configuration requirement before checking source; its
+diagnostic remains retained, followed by the successful `--ignoreConfig` command.
+These local checks do not establish the new canvas or subprocess runtime result.
+
+The failed native log SHA-256 is
+`dcd890718aac845b0626c9b7d3a47e28d404c5aa91f7323965fd763feb37bd2c`.
+Browser diagnostics artifact `11466658407` was downloaded and retained with
+archive SHA-256 `8978612ffdce0b29bac54ffcfa7614471763ec3a050a05e029451d82a2c63afd`.
+The initial collector's invalid encoding alias failed before extraction/download;
+that preparation failure is recorded separately. Raw native evidence was preserved.
+Receipts, individual failure logs and error contexts live under
+`artifacts/test-results/issue-263-refresh-lifecycle-20261005/`.
+
+Consumer, Pages, deployable-output and release-upload steps were skipped after
+the C++ failure. The complete new-head native and security gates, including the
+actual Code and C++ repetitions, are required before merge and closure of #263.
