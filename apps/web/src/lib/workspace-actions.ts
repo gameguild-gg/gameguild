@@ -504,6 +504,7 @@ export async function uploadWorkspaceAssetForm(data: FormData): Promise<void> {
   const body = new FormData();
   body.set('file', file, file.name);
   const response = await fetch(assertSafeServiceUrl(`${apiUrl}/v1/assets?${query}`, apiUrl), {
+    redirect: 'error',
     method: 'POST',
     headers: {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),

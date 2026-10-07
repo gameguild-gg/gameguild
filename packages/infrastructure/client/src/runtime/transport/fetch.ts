@@ -130,6 +130,8 @@ async function executeRequest<T>(transportConfig: TransportConfig, requestConfig
   // Build request options
   const options: RequestInit = {
     method: requestConfig.method,
+    // Origin validation applies to this request, not an unvalidated redirect target.
+    redirect: 'error',
     cache: requestConfig.cache ?? transportConfig.cache,
     headers,
     signal: requestConfig.signal,

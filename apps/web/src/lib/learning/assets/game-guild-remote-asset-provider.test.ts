@@ -91,8 +91,9 @@ describe("GameGuildRemoteAssetProvider", () => {
       await provider.delete(record, { scope });
 
       expect(fetchMock).toHaveBeenCalledTimes(7);
-      for (const [requested] of fetchMock.mock.calls) {
+      for (const [requested, options] of fetchMock.mock.calls) {
         expect(new URL(requested, origin).origin).toBe(origin);
+        expect(options?.redirect).toBe("error");
       }
       const resolved = await provider.resolveUrl(record);
       expect(new URL(resolved.url).origin).toBe(window.location.origin);

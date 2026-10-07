@@ -47,6 +47,7 @@ async function backendRequest<T>(
   body?: unknown,
 ): Promise<{ data: T } | { error: string; status: number }> {
   const response = await fetch(assertSafeServiceUrl(`${apiBaseUrl}${path}`, apiBaseUrl), {
+    redirect: "error",
     method,
     headers: {
       Authorization: `Bearer ${token}`,

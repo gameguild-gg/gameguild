@@ -32,6 +32,7 @@ export async function GET(
   const response = await fetch(
     assertSafeServiceUrl(`${apiBaseUrl}/api/social/blog/posts/${encodeURIComponent(postId)}/ai${suffix ? `/${suffix}` : ""}${query}`, apiBaseUrl),
     {
+      redirect: "error",
       headers: {
         Authorization: `Bearer ${token}`,
         "X-Tenant-Id": tenantId,

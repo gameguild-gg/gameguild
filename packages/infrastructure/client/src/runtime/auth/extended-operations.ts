@@ -129,6 +129,7 @@ async function postOrThrow(
   },
 ): Promise<Response> {
   const response = await fetch(assertSafeServiceUrl(url, apiUrl), {
+    redirect: 'error',
     method: 'POST',
     headers: options.headers ?? JSON_HEADERS,
     body: options.body ? JSON.stringify(options.body) : undefined,
@@ -159,6 +160,7 @@ export async function verifyMfa(apiUrl: string, input: MfaVerifyInput, accessTok
   }
 
   const response = await fetch(assertSafeServiceUrl(`${apiUrl}/v1/auth/mfa/verify`, apiUrl), {
+    redirect: 'error',
     method: 'POST',
     headers,
     body: JSON.stringify({
@@ -197,6 +199,7 @@ export async function setupTotpMfa(apiUrl: string, accessToken: string): Promise
  */
 export async function getMfaMethods(apiUrl: string, accessToken: string): Promise<string[]> {
   const response = await fetch(assertSafeServiceUrl(`${apiUrl}/v1/auth/mfa/methods`, apiUrl), {
+    redirect: 'error',
     headers: { Authorization: `Bearer ${accessToken}` },
   });
 
@@ -215,6 +218,7 @@ export async function getMfaMethods(apiUrl: string, accessToken: string): Promis
  */
 export async function requestPasswordReset(apiUrl: string, input: PasswordResetRequestInput): Promise<void> {
   await fetch(assertSafeServiceUrl(`${apiUrl}/v1/auth/password:reset-request`, apiUrl), {
+    redirect: 'error',
     method: 'POST',
     headers: JSON_HEADERS,
     body: JSON.stringify({ email: input.email }),
@@ -293,6 +297,7 @@ export async function verifyEmail(apiUrl: string, input: EmailVerificationInput)
  */
 export async function listSessions(apiUrl: string, accessToken: string): Promise<SessionInfo[]> {
   const response = await fetch(assertSafeServiceUrl(`${apiUrl}/v1/auth/sessions`, apiUrl), {
+    redirect: 'error',
     headers: { Authorization: `Bearer ${accessToken}` },
   });
 
@@ -307,6 +312,7 @@ export async function listSessions(apiUrl: string, accessToken: string): Promise
  */
 export async function terminateSession(apiUrl: string, sessionId: string, accessToken: string): Promise<void> {
   const response = await fetch(assertSafeServiceUrl(`${apiUrl}/v1/auth/sessions/${sessionId}`, apiUrl), {
+    redirect: 'error',
     method: 'DELETE',
     headers: { Authorization: `Bearer ${accessToken}` },
   });

@@ -21,6 +21,7 @@ async function launchPadApiRequest<T>(path: string, init: RequestInit): Promise<
   const tenantId = (await auth().catch(() => null))?.tenantId;
   const response = await fetch(assertSafeServiceUrl(`${apiUrl}${path}`, apiUrl), {
     ...init,
+    redirect: 'error',
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),

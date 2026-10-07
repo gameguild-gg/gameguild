@@ -30,7 +30,7 @@ export async function GET(
   const includeContent = request.nextUrl.searchParams.get("includeContent") !== "false";
   const upstream = await fetch(
     assertSafeServiceUrl(`${apiBaseUrl()}/v1/assets/${encodeURIComponent(assetId)}?includeContent=${includeContent}`, apiBaseUrl()),
-    { headers: { authorization: `Bearer ${token}` }, cache: "no-store", signal: request.signal },
+    { headers: { authorization: `Bearer ${token}` }, cache: "no-store", signal: request.signal, redirect: "error" },
   );
   return proxy(upstream);
 }
@@ -43,6 +43,7 @@ export async function DELETE(
   if (!token) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
   const { assetId } = await params;
   const upstream = await fetch(assertSafeServiceUrl(`${apiBaseUrl()}/v1/assets/${encodeURIComponent(assetId)}`, apiBaseUrl()), {
+    redirect: "error",
     method: "DELETE",
     headers: { authorization: `Bearer ${token}` },
     cache: "no-store",

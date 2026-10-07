@@ -61,6 +61,7 @@ async function blogRequest<T>(path: string, init?: RequestInit): Promise<BlogAct
 
   const response = await fetch(assertSafeServiceUrl(`${apiBaseUrl}${path}`, apiBaseUrl), {
     ...init,
+    redirect: 'error',
     headers: {
       Authorization: `Bearer ${token}`,
       'X-Tenant-Id': tenantId,

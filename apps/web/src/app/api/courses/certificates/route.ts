@@ -36,6 +36,7 @@ async function getAuthHeader(): Promise<Record<string, string> | NextResponse> {
 
 async function getJson<T>(path: string, authHeader?: Record<string, string>): Promise<T | null> {
   const response = await fetch(assertSafeServiceUrl(`${getApiUrl()}${path}`, getApiUrl()), {
+    redirect: 'error',
     method: 'GET',
     headers: authHeader,
     cache: 'no-store',
@@ -171,6 +172,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const response = await fetch(assertSafeServiceUrl(`${getApiUrl()}/api/certificates/issue`, getApiUrl()), {
+    redirect: 'error',
     method: 'POST',
     headers: {
       ...authHeader,

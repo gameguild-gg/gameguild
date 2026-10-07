@@ -83,6 +83,7 @@ export function DiscordProvider(options: DiscordProviderOptions): OAuthProviderC
       const effectiveApiUrl = options.apiUrl || apiUrl;
 
       const response = await fetch(assertSafeServiceUrl(`${effectiveApiUrl}${authorizePath}`, effectiveApiUrl), {
+        redirect: 'error',
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ redirectUri }),
@@ -108,6 +109,7 @@ export function DiscordProvider(options: DiscordProviderOptions): OAuthProviderC
       if (tenantId) body.tenantId = tenantId;
 
       const response = await fetch(assertSafeServiceUrl(`${effectiveApiUrl}${callbackPath}`, effectiveApiUrl), {
+        redirect: 'error',
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),

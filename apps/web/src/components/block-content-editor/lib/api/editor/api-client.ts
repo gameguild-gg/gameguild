@@ -84,6 +84,7 @@ export class ApiClient {
     try {
       const response = await fetch(assertSafeServiceUrl(`${this.config.baseUrl}${url}`, this.config.baseUrl), {
         ...options,
+        redirect: "error",
         signal: controller.signal,
         headers: {
           "Content-Type": "application/json",

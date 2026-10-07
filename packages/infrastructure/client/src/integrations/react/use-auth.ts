@@ -139,6 +139,7 @@ export function useAuth(options?: AuthActionOptions): UseAuthReturn {
         const { redirectTo, redirect = true, ...credentials } = actionOptions ?? {};
 
         const response = await fetch(assertSafeServiceUrl(`${basePathRef.current}/signin/${provider}`, basePathRef.current), {
+          redirect: 'error',
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
