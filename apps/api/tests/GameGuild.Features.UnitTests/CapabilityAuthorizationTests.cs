@@ -110,7 +110,8 @@ public sealed class CapabilityAuthorizationTests
         await CallServiceAsync(service, "sync");
         Assert.Contains(await db.Set<TenantCapability>().ToListAsync(), row => row.Source == "plan:starter" && row.IsEnabled);
         var logs = (await service.GetAuditLogAsync(TenantId)).ToList();
-        Assert.Equal(2, logs.Count);
+        Assert.Equal(18, logs.Count);
+        Assert.Equal(16, logs.Count(log => log.ChangeType == CapabilityChangeType.PlanChange));
         Assert.All(logs, log => Assert.Equal(actorName == "admin" ? UserId : (Guid?)null, log.ChangedByUserId));
         accessor.ClearActorContext();
     }

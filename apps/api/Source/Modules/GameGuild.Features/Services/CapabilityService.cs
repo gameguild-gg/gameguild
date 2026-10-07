@@ -357,7 +357,7 @@ public class CapabilityService : ICapabilityService
     /// <inheritdoc />
     public async Task SyncCapabilitiesFromPlanAsync(Guid tenantId, CancellationToken cancellationToken = default)
     {
-        CapabilityAccessGuard.RequireAdministrator(_actorContextAccessor.ActorContext, tenantId);
+        var userId = CapabilityAccessGuard.RequireAdministrator(_actorContextAccessor.ActorContext, tenantId);
         var subscription = await _context.Set<CommerceSubscription>()
             .Include(s => s.Plan)
             .Where(s => s.TenantId == tenantId && s.Status == CommerceSubscriptionStatus.Active)
@@ -370,55 +370,65 @@ public class CapabilityService : ICapabilityService
         }
 
         var planSlug = subscription.Plan.Slug?.ToLowerInvariant() ?? "free";
+        var planSource = $"plan:{planSlug}";
         var planCapabilities = GetPlanCapabilities(planSlug);
 
-        // Get existing plan-sourced capabilities (not overrides)
-        var existingPlanCapabilities = await _context.Set<TenantCapability>()
-            .Where(tc => tc.TenantId == tenantId && tc.Source != null && tc.Source.StartsWith("plan:"))
+        // One row owns each tenant/key. Preserve explicit decisions, including expired
+        // overrides whose effective value falls back to the current subscription plan.
+        var existingCapabilities = await _context.Set<TenantCapability>()
+            .Where(tc => tc.TenantId == tenantId)
             .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         // Update capabilities based on plan
         foreach (var capability in AllCapabilities)
         {
             var shouldBeEnabled = planCapabilities.Contains(capability);
-            var existing = existingPlanCapabilities.FirstOrDefault(c =>
+            var existing = existingCapabilities.FirstOrDefault(c =>
                 c.CapabilityKey.Equals(capability, StringComparison.OrdinalIgnoreCase));
 
-            if (existing != null)
+            if (existing != null &&
+                existing.Source?.StartsWith("plan:", StringComparison.OrdinalIgnoreCase) != true)
             {
-                if (existing.IsEnabled != shouldBeEnabled)
-                {
-                    var auditLog = new CapabilityAuditLog
-                    {
-                        TenantId = tenantId,
-                        CapabilityKey = capability,
-                        OldValue = existing.IsEnabled,
-                        NewValue = shouldBeEnabled,
-                        OldSource = existing.Source,
-                        NewSource = $"plan:{planSlug}",
-                        ChangeReason = $"Plan sync from {existing.Source} to plan:{planSlug}",
-                        ChangeType = CapabilityChangeType.PlanChange,
-                        ChangedAt = DateTimeOffset.UtcNow
-                    };
-                    _context.Set<CapabilityAuditLog>().Add(auditLog);
-
-                    existing.IsEnabled = shouldBeEnabled;
-                    existing.Source = $"plan:{planSlug}";
-                }
+                continue;
             }
-            else
+
+            if (existing != null && existing.IsEnabled == shouldBeEnabled && existing.Source == planSource)
             {
-                // Create new plan-based capability
-                var newCapability = new TenantCapability
+                continue;
+            }
+
+            var oldValue = existing?.IsEnabled;
+            var oldSource = existing?.Source;
+            var reason = $"Plan sync from {oldSource ?? "none"} to {planSource}";
+
+            if (existing == null)
+            {
+                existing = new TenantCapability
                 {
                     TenantId = tenantId,
                     CapabilityKey = capability,
-                    IsEnabled = shouldBeEnabled,
-                    Source = $"plan:{planSlug}",
                     Priority = 0
                 };
-                _context.Set<TenantCapability>().Add(newCapability);
+                _context.Set<TenantCapability>().Add(existing);
             }
+
+            existing.IsEnabled = shouldBeEnabled;
+            existing.Source = planSource;
+            existing.ModifiedByUserId = userId;
+            existing.ModificationReason = reason;
+            _context.Set<CapabilityAuditLog>().Add(new CapabilityAuditLog
+            {
+                TenantId = tenantId,
+                CapabilityKey = capability,
+                OldValue = oldValue,
+                NewValue = shouldBeEnabled,
+                OldSource = oldSource,
+                NewSource = planSource,
+                ChangedByUserId = userId,
+                ChangeReason = reason,
+                ChangeType = CapabilityChangeType.PlanChange,
+                ChangedAt = DateTimeOffset.UtcNow
+            });
         }
 
         await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
