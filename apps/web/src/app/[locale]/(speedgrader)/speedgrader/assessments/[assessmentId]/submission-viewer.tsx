@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ComponentType } from 'react';
 import type { AssessmentSubmissionRuntimeViewV1 } from '@game-guild/grading';
 import {
   parseQuizAnswerEnvelope,
@@ -12,6 +12,10 @@ import { QuizPlayer, type QuizSubmissionResult } from '@game-guild/quiz-surface/
 import { Badge } from '@game-guild/ui/components/badge';
 import { getRuntimeSubmission } from '@/lib/learning/grading-runtime-actions';
 import { scoreUnitsToPoints } from '@/lib/learning/academic-values';
+import { readCodeRuntimeDefinition } from '@/lib/coding-assignment/runtime';
+import { codePayloadToFiles } from '@/lib/coding-assignment/code-payload';
+import { EMCEPTION_MANIFEST_URL } from '@/lib/emception/manifest-url';
+import type { AssessmentGraderProps } from '@/components/learning/assessment-grading/assessment-grader';
 
 export interface SubmissionViewerProps {
   submissionId: string;
@@ -88,7 +92,9 @@ function RuntimeSubmission({
         <span>Revision {submission.definitionRevisionId.slice(0, 8)}</span>
       </div>
 
-      {quiz ? (
+      {submission.execution.delivery.items.code?.adapterKey === 'code-assessment-type' ? (
+        <CodeRuntimeSubmission submission={submission} />
+      ) : quiz ? (
         <div className="space-y-4" data-testid="runtime-quiz-submission">
           {quiz.items.map((item, index) => (
             <section
@@ -120,6 +126,32 @@ function RuntimeSubmission({
       )}
     </div>
   );
+}
+
+function CodeRuntimeSubmission({ submission }: { submission: AssessmentSubmissionRuntimeViewV1 }) {
+  const [Grader, setGrader] = useState<ComponentType<AssessmentGraderProps> | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    let active = true;
+    void import('@/components/learning/assessment-grading/assessment-grader').then((module) => {
+      if (active) setGrader(() => module.AssessmentGrader);
+    }).catch((failure: unknown) => {
+      if (active) setError(failure instanceof Error ? failure.message : 'The Code grading editor is unavailable.');
+    });
+    return () => { active = false; };
+  }, []);
+  try {
+    const definition = readCodeRuntimeDefinition(submission, true);
+    const payload = submission.execution.submittedResponse?.payload as { files?: unknown } | undefined;
+    const files = payload?.files ? codePayloadToFiles(JSON.stringify(payload.files)) : [];
+    if (error) return <p role="alert">{error}</p>;
+    if (!Grader) return <p>Loading Code grading editor...</p>;
+    return <Grader assignment={definition} submittedFiles={files}
+      maxScore={definition.Grading.MaxScore} manifestUrl={EMCEPTION_MANIFEST_URL}
+      submissionId={submission.submissionId} />;
+  } catch (failure) {
+    return <p role="alert">{failure instanceof Error ? failure.message : 'The frozen Code submission is unavailable.'}</p>;
+  }
 }
 
 function readQuizSubmission(submission: AssessmentSubmissionRuntimeViewV1): {

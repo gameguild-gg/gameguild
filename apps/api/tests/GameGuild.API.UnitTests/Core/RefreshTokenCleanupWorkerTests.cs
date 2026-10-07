@@ -6,6 +6,9 @@ using Microsoft.Extensions.Options;
 
 namespace GameGuild.API.UnitTests.Core;
 
+// BackgroundService schedules initialization on the shared thread pool. Keep
+// lifecycle deadline assertions independent of parallel host/model setup.
+[Collection("Refresh token lifecycle infrastructure")]
 public sealed class RefreshTokenCleanupWorkerTests
 {
     [Fact]
