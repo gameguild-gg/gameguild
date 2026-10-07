@@ -53,8 +53,15 @@ public sealed class ProgramBasicQueryHandlers(IApplicationDbContext context, ILo
             query = query.Where(p => p.EnrollmentStatus == (EnrollmentStatus)request.EnrollmentStatus.Value);
         }
 
-        // Remove CreatorId filter since this property doesn't exist in the current Program model
-        // if (!string.IsNullOrEmpty(request.CreatorId)) query = query.Where(p => p.CreatorId == request.CreatorId);
+        if (!string.IsNullOrEmpty(request.CreatorId))
+        {
+            if (!Guid.TryParse(request.CreatorId, out var creatorId) || creatorId == Guid.Empty)
+            {
+                return Array.Empty<Program>();
+            }
+
+            query = query.Where(p => p.CreatorId == creatorId);
+        }
 
         if (!request.IncludeArchived)
         {
@@ -250,9 +257,12 @@ public sealed class ProgramBasicQueryHandlers(IApplicationDbContext context, ILo
   public async Task<IEnumerable<Program>> Handle(GetProgramsByCreatorQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting programs by creator: {CreatorId}", request.CreatorId);
 
-    // CreatorId property doesn't exist in current Program model, return empty for now
-    // var query = context.Set<Program>().Where(p => p.CreatorId == request.CreatorId && p.DeletedAt == null);
-    var query = context.Set<Program>().Where(p => false); // Return empty until CreatorId is added to model
+    if (!Guid.TryParse(request.CreatorId, out var creatorId) || creatorId == Guid.Empty)
+    {
+        return Array.Empty<Program>();
+    }
+
+    var query = context.Set<Program>().Where(p => p.CreatorId == creatorId && p.DeletedAt == null);
 
     if (request.OnlyPublished) { query = query.Where(p => p.Status == ContentStatus.Published && p.Visibility == ContentVisibility.Public); }
 
