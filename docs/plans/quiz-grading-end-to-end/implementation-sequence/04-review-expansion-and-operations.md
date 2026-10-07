@@ -1,10 +1,11 @@
-# Parte 3. Expansão de reviews e operação
+# Parte 4. Expansão de reviews e operação
 
 ## Objetivo
 
 Expandir o E2E principal com `SelfReview`, `PeerReview`, a porta durável de
 `AIReview` e a operação acadêmica avançada. Esta parte contém `SEQ-12` a
 `SEQ-16` e não redefine os contratos centrais aprovados nas partes anteriores.
+Ela usa as personas e capacidades contextuais comprovadas na Parte 3.
 
 Regras globais: [`08-implementation-sequence.md`](../08-implementation-sequence.md).
 
@@ -14,16 +15,19 @@ Regras globais: [`08-implementation-sequence.md`](../08-implementation-sequence.
 - primeira implementação da Parte 2 concluída e o plano de
   [`fechamento da Parte 2`](./02a-core-grading-e2e-closeout.md) integralmente
   aprovado;
+- [`Parte 3`](./03-contextual-access-and-personas.md) concluída, com sessões
+  reais e matriz de acesso contextual aprovada;
 - fluxo oficial individual e coletivo sem autoridade paralela;
 - gradebook mínimo, release e auditoria básica funcionando de forma
   idempotente.
 
-## Gate de entrada `03-0`
+## Gate de entrada `04-0`
 
-Gate aprovado: `CLOSE-01` a `CLOSE-04` estão concluídos e `SEQ-12` pode
-começar. O fechamento resolveu somente o delta encontrado após a implementação
-da Parte 2; ele não antecipou `SelfReview`, o handler canônico de `PeerReview`,
-a porta de `AIReview` ou a operação avançada desta parte.
+Gate pendente: `CLOSE-01` a `CLOSE-04` estão concluídos, mas `SEQ-12` só pode
+começar depois de `ACCESS-01` a `ACCESS-05`. O fechamento da Parte 2 resolveu
+somente o delta do runtime principal; a Parte 3 deve provar os atores reais sem
+antecipar `SelfReview`, o handler canônico de `PeerReview`, a porta de
+`AIReview` ou a operação avançada desta parte.
 
 O gate deve trazer como evidência:
 
@@ -34,6 +38,8 @@ O gate deve trazer como evidência:
 - E2Es oficiais individual e coletivo via HTTP + PostgreSQL;
 - criação limpa e upgrade populado pela cadeia real, sem editar migrations
   históricas;
+- owner, learner, collaborator, reviewer e outsider comprovados por sessões e
+  autorização contextuais, sem role de produto ou bypass administrativo;
 - suíte acumulada aprovada.
 
 ## Fora do escopo
@@ -101,7 +107,10 @@ de dados e artefatos SQL ativos.
 - no contexto coletivo, mostrar o estado compartilhado mais recente e atribuir
   cada mutação ao participante autenticado, sem apresentar uma evidência por
   integrante;
-- aplicar release e gradebook já entregues aos dois tipos de sujeito.
+- aplicar release e gradebook já entregues aos dois tipos de sujeito;
+- executar o fluxo oficial individual com a sessão learner comprovada em
+  `ACCESS-05`; no coletivo, cada mutação usa a sessão do participante real e o
+  snapshot de participantes da submission única;
 
 ### Gate
 
@@ -197,7 +206,9 @@ específicas, não apenas a classificação de que ela é antiga.
   necessários aos efeitos posteriores; notificações externas e passback
   permanecem desligados até os consumers de `SEQ-15`;
 - remover ou adaptar, no mesmo E2E, rotas e métodos antigos que permitam
-  concluir peer review fora da `GradingExecution`.
+  concluir peer review fora da `GradingExecution`;
+- executar os E2Es oficiais com ao menos dois learners matriculados em sessões
+  distintas; o peer é contextual ao curso e nunca uma role de tenant;
 
 ### Gate
 
@@ -310,6 +321,8 @@ suporta `ScheduledFor` em UTC, versão de concorrência e índice eficiente por
   tardia ou cast para tipos fracionários;
 - manter projeções agregadas precomputadas sem aritmética decimal em SQL;
 - construir filas docentes por estado de review;
+- autorizar filas e operações docentes pela capability `Review` aprovada na
+  Parte 3; edição ou publicação continuam exigindo suas próprias capabilities;
 - implementar os consumers de notificação e passback, que permaneceram
   deliberadamente desligados na Parte 2, consumindo somente os eventos
   canônicos adequados e nunca comandos ou services de grading diretamente;
@@ -360,6 +373,8 @@ restaram autoridades concorrentes, referências obsoletas ou lacunas na matriz.
 - atualizar mapas de serialização e documentação arquitetural;
 - executar a matriz dos nove workflows no test run;
 - executar todos os workflows oficialmente implementados na jornada de aluno;
+- repetir a matriz contextual de owner, learner, collaborator, reviewer e
+  outsider com sessões separadas;
 - confirmar bloqueio de `AIReview` sem provider real;
 - confirmar bloqueio de automated-only parcial enquanto a decisão de produto
   permanecer pendente;
@@ -378,7 +393,7 @@ restaram autoridades concorrentes, referências obsoletas ou lacunas na matriz.
   bloqueiam este gate;
 - observabilidade distingue falha técnica, espera legítima e revisão humana.
 
-## Definição de pronto da Parte 3
+## Definição de pronto da Parte 4
 
 - todos os gates de `SEQ-12` a `SEQ-16` estão satisfeitos;
 - reviews adicionais reutilizam o mesmo orquestrador, autorização, rounds,
@@ -395,14 +410,14 @@ restaram autoridades concorrentes, referências obsoletas ou lacunas na matriz.
   consumer obrigatório;
 - auditoria, observabilidade, mapas de serialização e matriz E2E estão
   completos;
-- toda a suíte de grading acumulada das Partes 1, 2 e 3 passa em CI com banco
+- toda a suíte de grading acumulada das Partes 1, 2, 3 e 4 passa em CI com banco
   criado do zero e diff global sem drift depois de cada `SCHEMA-GATE`.
 
 ## Acompanhamento
 
 | Marco | Status | Evidência |
 | --- | --- | --- |
-| gate `03-0` | aprovado | `CLOSE-01` a `CLOSE-04` aprovados; Parte 3 liberada |
+| gate `04-0` | pendente | `ACCESS-01` a `ACCESS-05` aprovados; Parte 4 liberada |
 | `SEQ-12` | pendente | `SelfReview` individual e coletivo |
 | `SEQ-13` | pendente | `PeerReview` individual e coletivo |
 | `SEQ-14` | pendente | contract test de provider e gate condicional |
