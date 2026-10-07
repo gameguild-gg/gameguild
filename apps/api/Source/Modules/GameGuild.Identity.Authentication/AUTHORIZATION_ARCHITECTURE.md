@@ -1857,6 +1857,25 @@ public async Task Authorization_PerformsUnderLoad()
 
 ## Platform Authorization Hardening
 
+### In-process verification, reset and magic-link token consumption
+
+EmailVerificationService generates opaque 32-character lowercase hexadecimal
+tokens from 16 cryptographically random bytes. Cache keys contain the full SHA-256
+digest of the supplied token rather than the bearer credential. Generation,
+validation, consumption and expiry removal use the same digest key.
+
+Purpose, requested user and expiry checks precede an atomic claim on the shared
+TokenInfo. Exactly one concurrent consumer may claim a token, including callers
+using separate scoped service instances with the same cache. A claimed token is
+already invalid before physical cache removal; only the winner can mark email
+verification and return a successful token-validation result. Wrong-purpose and
+wrong-user requests do not consume an otherwise valid token.
+
+These guarantees cover the configured in-process MemoryCache. They do not certify
+distributed consumption across independent hosts or introduce a persistent token
+store. Existing token lifetimes, public token format, HTTP contracts, returned
+identity and log redaction are retained.
+
 ### Tenant capability administration
 
 Capability HTTP reads require an authenticated resolved actor and a nonempty target
