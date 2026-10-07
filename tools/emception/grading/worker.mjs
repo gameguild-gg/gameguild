@@ -5,6 +5,7 @@ import { extname, resolve, sep } from 'node:path';
 import { chromium } from '@playwright/test';
 import { requireFrozenCodeToolchain } from './toolchain-binding.mjs';
 import { createWorkerFailureDiagnostic } from './worker-diagnostics.mjs';
+import { createCodeBrowserLaunchOptions } from './browser-launch-options.mjs';
 
 // The API starts one process per frozen grading request, with no credential-bearing
 // environment. Only built runtime/CDN bytes are served; submitted files stay in VFS.
@@ -16,6 +17,7 @@ let phase = 'input';
 let watchdog;
 try {
   const [runtimeArgument, cdnArgument] = process.argv.slice(2);
+  const browserOptions = createCodeBrowserLaunchOptions(process.env.GAMEGUILD_CODE_WORKER_BROWSER_CHANNEL);
   if (!runtimeArgument || !cdnArgument) throw new Error('Runtime and CDN directories are required.');
   const runtimeRoot = await realpath(runtimeArgument);
   const cdnRoot = await realpath(cdnArgument);
@@ -71,8 +73,7 @@ try {
   });
   const origin = `http://127.0.0.1:${server.address().port}`;
   phase = 'browser startup';
-  browser = await chromium.launch({ headless: true, chromiumSandbox: true,
-    args: ['--js-flags=--max-old-space-size=512'] });
+  browser = await chromium.launch(browserOptions);
   const context = await browser.newContext({ serviceWorkers: 'block', acceptDownloads: false });
   await context.route('**/*', (route) => {
     const url = new URL(route.request().url());
