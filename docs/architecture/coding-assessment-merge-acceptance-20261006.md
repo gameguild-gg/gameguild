@@ -591,3 +591,55 @@ the production glue transformation is unchanged. Against the exact `7c57f5d00`
 production patch, these 12 focused regressions retained ten failures and two
 passing controls. All 22 current cases pass on Node 22 and 24. The scanner finding
 and both test executions are retained; a fresh successful Codacy result is required.
+
+### SDL3 C abort import correction (2026-10-07 UTC)
+
+Revision `b7326a5317368018879f39c636b61743c10b5f2d` passed the complete
+[PR Verify run 37603887674](https://github.com/gameguild-gg/gameguild/actions/runs/37603887674):
+6,037 main API cases, 15 repeated OpenAPI HTTP cases and 2,998 Web cases. Codacy,
+GitGuardian and all four CodeQL analyses passed. Its actual Code step in
+[Emception run 37603887575](https://github.com/gameguild-gg/gameguild/actions/runs/37603887575)
+passed all 22 functional conditions: 36 green assertions, zero red and two console
+observations reporting no errors. The whole workflow still failed. C++ recorded
+18 passed, three failed and five skipped, with zero flaky/interrupted cases.
+Allegro and raylib passed; the three remaining failures are SDL3 applications
+whose WASM imports `env._abort_js`. Consumers and subsequent release steps skipped.
+
+The generated SDL factory has the genuine Emscripten `abort` implementation but
+does not include this C import in its stub-derived map. The mandatory release
+patch `emception-glue-v5` supplies `_abort_js: () => abort("")` for SDL, matching
+the pinned [Emscripten 5.0.7 libcore implementation](https://github.com/emscripten-core/emscripten/blob/5.0.7/src/lib/libcore.js#L390).
+Calling C abort still notifies `onAbort`, reports the error, sets `ABORT` and
+throws the fatal WASM runtime error. It is not replaced with a successful return.
+The existing C exit binding remains idempotent when the new import precedes it.
+No browser assertion, timeout, retry, skip, sandbox or release/hash gate changed.
+
+One focused regression failed on the preceding patch with the actual WASM
+linker's missing `_abort_js` error. The corrected probe instantiates and invokes
+a real small WASM module. All 23 focused cases pass on Node 22 and Node 24;
+the package repetition passes 384 cases, zero failures and one existing
+conditional worker smoke skip among 385. All 88 script tests pass on Node 22 and
+all six package type checks pass. The exact three native factories were
+verified against their schema-v2 manifest, patched, syntax-checked and checked
+for idempotence. Only SDL changed; Allegro and raylib remain byte-identical.
+The native SDL factory's actual abort function was also executed through the
+small WASM probe and preserved its fatal side effects. These controlled probes
+are not browser-rendering or complete native acceptance.
+
+The preceding application-addressed checkpoint incorrectly stated that native
+cache-key inputs were unchanged. GitHub's implicit-descendant glob behavior
+includes edits under `scripts/lib` and `scripts/tests`; those edits change this
+workflow's cache identity. Compiler recipes and the lock remain unchanged. The
+strict cache-miss forced rebuild and normal staging/receipt/hash/release checks
+remain enforced. This correction was also recorded in the PR body before merge.
+
+The failed native raw log SHA-256 is
+`975a5c91ba11c70f73c0c98adaab36813d6842b2d18b9c4cc9de5fea22ef99de`.
+Artifact `11478680325` was downloaded and verified with archive SHA-256
+`519590a5d5a6b387fec02676a6100525cd640c4be8b28ef6a7c6dd23f7d06bf7`.
+Archive hashing initially used an unavailable Python API; the completed download
+was then verified using streaming SHA-256 before any extraction. That collection
+repair does not alter the native test outcome. All failed logs and contexts are
+retained. API production/test sources are unchanged. #699 and #263 remain OPEN
+until the new matching-head native Code, C++, consumer/release and security gates
+pass without a failing-check exception.

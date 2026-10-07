@@ -103,6 +103,29 @@ test('the previous SDL patch is upgraded without retaining stub address collisio
   assert.deepEqual(second.applied, []);
 });
 
+test('SDL3 links the C abort import and preserves the actual runtime abort failure', async () => {
+  const patched = applyCanvasRuntimePatches(SDL_RUNTIME, 'sdl3-runtime.mjs').content;
+  const imports = patched.match(/var wasmImports=\{[^;]+\};/)[0];
+  const reasons = [];
+  const termination = new WebAssembly.RuntimeError('synthetic actual abort boundary');
+  const env = new Script(`${imports};wasmImports;`, {
+    filename: 'canvas-glue-abort-regression.js',
+  }).runInNewContext({
+    _exit: () => {}, _proc_exit: () => {},
+    abort: (reason) => { reasons.push(reason); throw termination; },
+  }, { timeout: 1000 });
+  // This actual WASM module imports env._abort_js and re-exports that void C function.
+  const wasm = new Uint8Array([
+    0,97,115,109,1,0,0,0,
+    1,4,1,96,0,0,
+    2,17,1,3,101,110,118,9,95,97,98,111,114,116,95,106,115,0,0,
+    7,9,1,5,97,98,111,114,116,0,0,
+  ]);
+  const { instance } = await WebAssembly.instantiate(wasm, { env });
+  assert.throws(() => instance.exports.abort(), (error) => error === termination);
+  assert.deepEqual(reasons, ['']);
+});
+
 for (const [filename, source] of [
   ['sdl3-runtime.mjs', SDL_RUNTIME], ['allegro-runtime.mjs', ALLEGRO_RUNTIME],
 ]) {
