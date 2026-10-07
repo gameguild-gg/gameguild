@@ -186,6 +186,7 @@ public sealed class GradingExecutionOrchestrator(
                 throw new ArgumentOutOfRangeException(nameof(resolution), $"Instructor score for {itemId} is outside its maximum.");
         }
 
+        Code.CodeRubricSnapshot.ValidateResolution(snapshot, resolution);
         var previous = await PreviousStageResultAsync(round.Id, stage.Sequence, cancellationToken).ConfigureAwait(false);
         var changedAutomatedScore = previous is not null && previous.Items.Any(previousItem =>
             previousItem.Score.HasValue && resolutions[previousItem.ItemId].Score != previousItem.Score.Value);
@@ -206,6 +207,7 @@ public sealed class GradingExecutionOrchestrator(
             resolution.Items,
             resolution.Feedback,
             resolution.OverrideReason,
+            resolution.RubricScores,
             previousResult = previous,
         };
         var evidenceCanonical = Serialize(evidencePayload);

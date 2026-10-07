@@ -11061,7 +11061,10 @@ export interface LearningAssessmentsGradingRuntimeAssessmentExecutionViewV1 {
   executionId?: string;
   executionSnapshotHash?: string | null;
   history?: Array<LearningAssessmentsGradingRuntimeGradeRoundViewV1> | null;
+  instructorVisibleContent?: Record<string, unknown> | null;
   instructorVisibleResult?: LearningAssessmentsGradingContractsGradeResultV1;
+  instructorVisibleRubric?: Record<string, unknown> | null;
+  instructorVisibleRubricScores?: Record<string, LearningGradingContractsScoreValue> | null;
   itemMaxScores?: Record<string, LearningGradingContractsScoreValue> | null;
   learnerVisibleResult?: LearningAssessmentsGradingContractsGradeResultV1;
   released?: boolean;
@@ -11158,6 +11161,7 @@ export interface LearningAssessmentsGradingRuntimeInstructorReviewResolutionV1 {
   feedback?: string | null;
   items?: Array<LearningAssessmentsGradingRuntimeInstructorItemResolutionV1> | null;
   overrideReason?: string | null;
+  rubricScores?: Record<string, LearningGradingContractsScoreValue> | null;
   schemaVersion?: number;
 }
 
@@ -30857,7 +30861,16 @@ LearningAssessmentsGradingRuntimeAssessmentExecutionViewV1Schema = z.object({
     .array(z.lazy(() => LearningAssessmentsGradingRuntimeGradeRoundViewV1Schema))
     .nullable()
     .optional(),
+  instructorVisibleContent: z.record(z.string(), z.unknown()).nullable().optional(),
   instructorVisibleResult: z.lazy(() => LearningAssessmentsGradingContractsGradeResultV1Schema).optional(),
+  instructorVisibleRubric: z.record(z.string(), z.unknown()).nullable().optional(),
+  instructorVisibleRubricScores: z
+    .record(
+      z.string(),
+      z.lazy(() => LearningGradingContractsScoreValueSchema),
+    )
+    .nullable()
+    .optional(),
   itemMaxScores: z
     .record(
       z.string(),
@@ -30969,6 +30982,13 @@ LearningAssessmentsGradingRuntimeInstructorReviewResolutionV1Schema = z.object({
     .nullable()
     .optional(),
   overrideReason: z.string().nullable().optional(),
+  rubricScores: z
+    .record(
+      z.string(),
+      z.lazy(() => LearningGradingContractsScoreValueSchema),
+    )
+    .nullable()
+    .optional(),
   schemaVersion: z.number().int().optional(),
 });
 

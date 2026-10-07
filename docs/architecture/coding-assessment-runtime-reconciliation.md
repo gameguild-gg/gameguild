@@ -93,3 +93,20 @@ The membership correction introduces no public DTO or database schema change.
 The generic grading denial, review flags, original CI assertions and accepted
 revision requirements are unchanged. PR #697's explicitly authorized CI
 exception applies only to that merged PR; it does not accept PR #699.
+
+## Owner decision and Code increment (2026-10-06)
+
+The owner requires correction of the complete Code flow before merging #699.
+The implementation and operational acceptance sequence is recorded in
+[Code merge acceptance](coding-assessment-merge-acceptance-20261006.md).
+Its versioned Code adapter, trusted WASM worker, frozen rubric and official
+learner/instructor consumers are under validation. This increment adds optional
+staff-only frozen-content/rubric/criterion-score fields and optional instructor
+rubric resolution scores; its client must be regenerated from the full OpenAPI
+contract. The earlier no-DTO-change statement applies to the membership fix.
+
+The prior published-source native run `37534149877` has now finished. Toolchain
+compilation and verified cache save passed, while its old Code cycle failed eight
+of 24 assertions. It is not an accepted cycle and does not cover the local Code
+increment. The existing assertions remain required on the repaired coherent
+revision. No merge exception or issue closure is inferred from focused tests.

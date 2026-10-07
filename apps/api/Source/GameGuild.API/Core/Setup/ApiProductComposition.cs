@@ -20,6 +20,7 @@ using GameGuild.Identity.Tenants;
 using GameGuild.Identity.Users;
 using GameGuild.LaunchPad;
 using GameGuild.Learning.Assessments;
+using GameGuild.Learning.Assessments.Grading.Code;
 using GameGuild.Learning.Assessments.QuizAdapter;
 using GameGuild.Learning.Certificates;
 using GameGuild.Learning.Cohorts;
@@ -127,6 +128,8 @@ internal sealed class ApiProductComposition : IApiProductComposition
         new GameGuild.Social.Announcements.AnnouncementsModule().ConfigureServices(builder.Services, builder.Configuration);
         builder.Services.AddCoursesModule();
         builder.Services.AddAssessmentsModule();
+        builder.Services.Configure<CodeGradingWorkerOptions>(builder.Configuration.GetSection(CodeGradingWorkerOptions.Section));
+        builder.Services.AddSingleton<ICodeAssessmentExecutor, CodeGradingWorker>();
         builder.Services.AddQuizGradingAdapter();
         builder.Services.AddLearningEnrollmentsModule();
         builder.Services.AddCohortsModule();
