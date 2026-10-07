@@ -97,7 +97,7 @@ public class FeaturesCoverageCompletionTests
         var actorAccessor = new Mock<GameGuild.Identity.Context.Actors.IActorContextAccessor>();
         actorAccessor.Setup(accessor => accessor.ActorContext).Returns(actor);
         var controller = new FeatureFlagsController(evaluation.Object, NullLogger<FeatureFlagsController>.Instance,
-            actorAccessor.Object, new CommandHandlerSender(evaluation.Object, Mock.Of<ICapabilityService>()))
+            actorAccessor.Object, new CommandHandlerSender(evaluation.Object, Mock.Of<ICapabilityService>(), actorAccessor.Object))
         {
             ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
         };
@@ -141,7 +141,7 @@ public class FeaturesCoverageCompletionTests
             }
         };
         var controller = new FeatureFlagsController(evaluation.Object, NullLogger<FeatureFlagsController>.Instance,
-            accessor.Object, new CommandHandlerSender(evaluation.Object, Mock.Of<ICapabilityService>()))
+            accessor.Object, new CommandHandlerSender(evaluation.Object, Mock.Of<ICapabilityService>(), accessor.Object))
         {
             ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
         };
@@ -202,7 +202,11 @@ public class FeaturesCoverageCompletionTests
         db.Set<Subscription>().Add(subscription);
         await db.SaveChangesAsync();
 
-        var service = new CapabilityService(db, new MemoryCache(new MemoryCacheOptions()), NullLogger<CapabilityService>.Instance);
+        var actor = GameGuild.Identity.Context.Actors.ActorContextBuilder.ForUser(Guid.NewGuid())
+            .WithTenantId(tenantId).WithRole("TenantAdmin").Build();
+        var actorAccessor = new Mock<GameGuild.Identity.Context.Actors.IActorContextAccessor>();
+        actorAccessor.SetupGet(value => value.ActorContext).Returns(actor);
+        var service = new CapabilityService(db, new MemoryCache(new MemoryCacheOptions()), NullLogger<CapabilityService>.Instance, actorAccessor.Object);
 
         (await service.IsCapabilityEnabledAsync(tenantId, "lms.courses.basic")).Should().BeTrue();
         (await service.IsCapabilityEnabledAsync(tenantId, "branding.custom")).Should().BeFalse();

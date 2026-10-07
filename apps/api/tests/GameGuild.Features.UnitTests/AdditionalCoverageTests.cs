@@ -1368,7 +1368,8 @@ public class FeatureControllerConstructorTests
     public void CapabilitiesController_CanBeConstructed()
     {
         var service = new Mock<ICapabilityService>();
-        var controller = new CapabilitiesController(service.Object);
+        var controller = new CapabilitiesController(service.Object, Mock.Of<GameGuild.CQRS.ISender>(),
+            Mock.Of<GameGuild.Identity.Context.Actors.IActorContextAccessor>());
         controller.Should().NotBeNull();
     }
 
