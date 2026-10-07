@@ -3,12 +3,12 @@
 import { spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
 import net from "node:net";
+import { resolvePnpmProcess } from "../apps/web/scripts/pnpm-process.mjs";
 
 const API_PORT = 8080;
 const WEB_PORT = 3000;
 const API_HEALTH_URL = `http://localhost:${API_PORT}/health`;
 const WEB_HEALTH_URL = `http://localhost:${WEB_PORT}/api/health`;
-const shell = process.platform === "win32";
 const children = new Set();
 
 function loadEnv(file) {
@@ -41,12 +41,17 @@ const runtimeEnv = limitNodeMemory({
 });
 
 function run(command, args, options = {}) {
-  const child = spawn(command, args, {
-    shell,
+  const invocation =
+    command === "pnpm"
+      ? resolvePnpmProcess(args, { env: runtimeEnv })
+      : { command, args };
+  const child = spawn(invocation.command, invocation.args, {
     stdio: "inherit",
-    detached: !shell,
+    detached: process.platform !== "win32",
     env: runtimeEnv,
     ...options,
+    shell: false,
+    windowsHide: true,
   });
   children.add(child);
   child.once("exit", () => children.delete(child));
@@ -77,7 +82,8 @@ function killTree(child) {
   if (child.exitCode !== null) return;
   if (process.platform === "win32") {
     spawn("taskkill", ["/pid", String(child.pid), "/T", "/F"], {
-      shell: true,
+      shell: false,
+      windowsHide: true,
     });
     return;
   }
