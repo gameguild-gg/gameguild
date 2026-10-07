@@ -130,3 +130,65 @@ preservation verified all 55 primary dirty files, without byte/status changes or
 overlap, with four local branches, three worktrees and no stashes. Publication
 receipts and the source bridge are dated 2026-10-07 UTC under the same artifact
 directory. These preparation checks do not accept the pinned browser cycle.
+
+## Published Code increment and subsequent correction (2026-10-07 UTC)
+
+Commit `29b916006735c541f70eb404d7c1a238e069d21f` passed the native API job
+`112567889143` in PR Verify run `37551488704`: 393 integration, 1,079 API unit,
+2,316 Authentication, 426 Assessments, 384 Notifications and 1,397 SharedKernel
+cases (5,995 main cases), plus 15 separately recorded OpenAPI HTTP cases, with
+zero failures or skips. Generated-client consistency and CodeQL also passed.
+The complete PR Verify run failed on Web lint and is not an accepted merge gate.
+
+The corresponding local full API-unit repetition also finished with all 1,079
+cases passing. Its owned PostgreSQL cleanup request exceeded its initial timeout;
+a subsequent exact-container check confirmed absence and a healthy Docker daemon.
+Both the timeout and cleanup confirmation are retained. The earlier partial API
+run remains failed evidence and is not replaced or erased.
+
+Native Emception run `37551488773` restored and verified the concrete compiler
+cache, then failed its 24-entry browser cycle. The learner edited code and passed
+both public tests; official submission returned a trusted-worker failure and
+rolled back, leaving the attempt in progress. Instructor/final-grade assertions
+subsequently failed. Its report, screenshots, API/Web logs and source identity
+are retained in `artifacts/code29bnative`. This is not acceptance of Code execution.
+
+The subsequent correction removes synchronous effect resets by remounting the
+learner/instructor session when its enrollment/submission changes, restores
+runtime state in asynchronous callbacks, and keeps JSX outside data-decoding
+exception handlers. Two regression cases cover switching attempts. The initial
+corrected consumer suite passed 53 cases; full Web lint and types passed without
+new lint suppressions. Two resolved baseline suppressions were removed.
+
+The full local Web repetition recorded 2,991 passes and six failures: four page
+tests still mocked the legacy submission route, and two unrelated chart-rendering
+tests timed out. All original seven Code-page checks are retained and use the
+revision-bound runtime contract; an eighth verifies that current authoring cannot
+replace the frozen delivery. Those eight page cases passed separately. The full
+suite and timeout repetitions still require current-source acceptance.
+
+The worker launcher now requires existing, fully qualified deployment paths and
+the installed `node`/`node.exe` and `worker.mjs` filenames. Installation directories
+are passed as literal arguments with shell execution disabled. Learner files stay
+in bounded stdin JSON. Path validation, deadline and cancellation cases are added
+to the assessment suite. Infrastructure logging accepts only a fixed phase/kind
+contract, discarding raw stderr, private test names, source paths and error text.
+The Node 22 worker build passed type checking and all 18 binding/diagnostic cases,
+including the actual worker's fail-closed missing-installation path. These checks
+do not identify or repair the native execution failure by themselves.
+
+An intermediate local rebuild rejected two new test fixtures for missing required
+definition members (eight compiler errors, zero warnings); those fixtures were
+corrected. This failed build is retained. Fresh coherent compilation, security
+and HTTP tests, native checks and the pinned browser cycle remain required before
+merge. No browser sandbox, acceptance assertion or review policy is weakened.
+
+The corrected source then rebuilt with zero warnings/errors and passed all 451
+Assessments, 2,316 Authentication and 1,667 Authorization cases with unchanged
+source receipts. All eight chart-rendering cases passed in the isolated repetition.
+Full Web lint and types passed after the Code-page mock correction. The concurrent
+focused HTTP repetition reported a 409 on a Quiz grade-release case with the
+database provider's likely-transient-failure message; that run remains unaccepted
+while it finishes and is investigated. A fresh full Web repetition is also still
+running at this subsequent publication checkpoint. Those pending checks and the
+real native worker execution are explicitly required before merge.

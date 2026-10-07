@@ -695,7 +695,10 @@ public sealed class AssessmentGradingRuntimeService(
             var rubricScores = Code.CodeRubricSnapshot.ValidateResolution(snapshot, resolution);
             await orchestrator.ResolveInstructorReviewAsync(owned.Execution.Id, actorId, resolution, cancellationToken)
                 .ConfigureAwait(false);
-            if (rubricScores is not null) owned.Submission.SetRuntimeRubricScores(rubricScores);
+            if (rubricScores is not null)
+            {
+                owned.Submission.SetRuntimeRubricScores(rubricScores);
+            }
             AddReceipt(
                 RequireTenant(owned.Submission.TenantId),
                 submissionId,
@@ -922,7 +925,9 @@ public sealed class AssessmentGradingRuntimeService(
             {
                 using var evidence = JsonDocument.Parse(evidenceBytes);
                 if (evidence.RootElement.TryGetProperty("rubricScores", out var scores) && scores.ValueKind == JsonValueKind.Object)
+                {
                     instructorRubricScores = scores.Deserialize<Dictionary<Guid, ScoreValue>>(GradingJson.Options);
+                }
             }
         }
         return new AssessmentExecutionViewV1(

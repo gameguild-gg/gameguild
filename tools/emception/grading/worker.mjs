@@ -4,41 +4,44 @@ import { readFile, realpath } from 'node:fs/promises';
 import { extname, resolve, sep } from 'node:path';
 import { chromium } from '@playwright/test';
 import { requireFrozenCodeToolchain } from './toolchain-binding.mjs';
+import { createWorkerFailureDiagnostic } from './worker-diagnostics.mjs';
 
 // The API starts one process per frozen grading request, with no credential-bearing
 // environment. Only built runtime/CDN bytes are served; submitted files stay in VFS.
-const [runtimeArgument, cdnArgument] = process.argv.slice(2);
-if (!runtimeArgument || !cdnArgument) throw new Error('Runtime and CDN directories are required.');
-const runtimeRoot = await realpath(runtimeArgument);
-const cdnRoot = await realpath(cdnArgument);
 const MAX_INPUT = 12_500_000;
 const MAX_OUTPUT = 2_000_000;
 let browser;
 let server;
 let phase = 'input';
-let bytes = 0;
-const chunks = [];
-for await (const chunk of process.stdin) {
-  bytes += chunk.length;
-  if (bytes > MAX_INPUT) throw new Error('Code worker input exceeds its byte budget.');
-  chunks.push(chunk);
-}
-const raw = Buffer.concat(chunks);
-const requestHash = createHash('sha256').update(raw).digest('hex');
-const request = JSON.parse(raw.toString('utf8'));
-if (request.schemaVersion !== 1 || !request.definition || !request.files) throw new Error('Invalid Code worker request.');
-const manifestBytes = await readFile(resolve(cdnRoot, 'manifest.json'));
-requireFrozenCodeToolchain(request.toolchain, JSON.parse(manifestBytes));
-const manifestHash = createHash('sha256').update(manifestBytes).digest('hex');
-
-const watchdog = setTimeout(() => {
-  void browser?.close();
-  server?.close();
-  process.stderr.write(`Code worker deadline exceeded during ${phase}.\n`);
-  process.exitCode = 1;
-}, 300_000);
-
+let watchdog;
 try {
+  const [runtimeArgument, cdnArgument] = process.argv.slice(2);
+  if (!runtimeArgument || !cdnArgument) throw new Error('Runtime and CDN directories are required.');
+  const runtimeRoot = await realpath(runtimeArgument);
+  const cdnRoot = await realpath(cdnArgument);
+  let bytes = 0;
+  const chunks = [];
+  for await (const chunk of process.stdin) {
+    bytes += chunk.length;
+    if (bytes > MAX_INPUT) throw new Error('Code worker input exceeds its byte budget.');
+    chunks.push(chunk);
+  }
+  const raw = Buffer.concat(chunks);
+  const requestHash = createHash('sha256').update(raw).digest('hex');
+  const request = JSON.parse(raw.toString('utf8'));
+  if (request.schemaVersion !== 1 || !request.definition || !request.files) throw new Error('Invalid Code worker request.');
+  phase = 'artifact verification';
+  const manifestBytes = await readFile(resolve(cdnRoot, 'manifest.json'));
+  requireFrozenCodeToolchain(request.toolchain, JSON.parse(manifestBytes));
+  const manifestHash = createHash('sha256').update(manifestBytes).digest('hex');
+
+  watchdog = setTimeout(() => {
+    void browser?.close();
+    server?.close();
+    process.stderr.write(`Code worker deadline exceeded during ${phase}.\n`);
+    process.exitCode = 1;
+  }, 300_000);
+
   phase = 'runtime server';
   server = createServer(async (req, res) => {
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
@@ -92,6 +95,9 @@ try {
     throw new Error('Invalid Code execution report.');
   }
   process.stdout.write(JSON.stringify({ schemaVersion: 1, requestHash, manifestHash, passed }));
+} catch (error) {
+  process.stderr.write(createWorkerFailureDiagnostic(phase, error) + '\n');
+  process.exitCode = 1;
 } finally {
   clearTimeout(watchdog);
   await browser?.close();
