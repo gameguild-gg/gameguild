@@ -846,7 +846,12 @@ public sealed class AssessmentGradingRuntimeTests
             CodeToolchainIdentity toolchain, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            return Task.FromResult(new CodeExecutionReceipt([true, true], new string('a', 64)));
+            toolchain.Should().Be(CodeToolchainIdentity.Version1);
+            definition.Tests.Private.Should().ContainSingle().Which.Should().BeOfType<StandardTest>()
+                .Which.Stdout.Should().Be("private-code-secret");
+            files.GetProperty("main.cpp").GetProperty("content").GetString().Should().Contain("submitted-code");
+            return Task.FromResult(new CodeExecutionReceipt(
+                definition.Tests.Public.Concat(definition.Tests.Private).Select(_ => true).ToArray(), new string('a', 64)));
         }
     }
 
