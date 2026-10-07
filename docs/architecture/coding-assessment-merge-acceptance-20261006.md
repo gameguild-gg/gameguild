@@ -536,3 +536,49 @@ were recovered from the native trace's Brotli bundle and checked against its
 schema-v2 manifest file sizes/hashes. These are diagnostic inputs, not a relabeled
 local CDN or release waiver. Matching-head complete native and security gates
 remain required before merge. Issue #263 remains open.
+
+### Application-addressed runtime glue correction (2026-10-07 UTC)
+
+Revision `7c57f5d008cdfb50b1cf0d80bd6ebc41806b17e6` passed the complete
+[PR Verify run 37597311857](https://github.com/gameguild-gg/gameguild/actions/runs/37597311857):
+6,037 main API cases, 15 separate OpenAPI cases and 2,998 Web cases. Codacy,
+GitGuardian and the four CodeQL language checks passed. The actual Code step in
+[Emception run 37597312017](https://github.com/gameguild-gg/gameguild/actions/runs/37597312017)
+passed all 22 functional conditions, with 36 green assertions, zero red and two
+retained console observations. The whole workflow failed: C++ recorded 16 passed,
+five failed and five skipped, with no flaky or interrupted cases. Raylib passed.
+Allegro and four SDL cases failed; consumers and release steps after C++ skipped.
+
+The new native errors are concrete: Allegro's `runMainThreadEmAsm` looks up an
+application address in the generated stub's `ASM_CONSTS` table and throws a
+TypeError. SDL's separately linked applications import `env.exit`, which the
+generated factory does not expose. The release glue patch now supplies the
+existing Emscripten `_exit` implementation and resolves EM_ASM from the actual
+application's memory for all three profiles, including main-thread calls in SDL
+and Allegro. An address collision with the stub's table cannot reuse the wrong
+function. The previous SDL patch upgrades idempotently; unsupported generated
+shapes still fail the release. No generic missing-import no-op is restored.
+
+Patch set `emception-glue-v4` changes the mandatory release glue transformation.
+Compiler recipes, lock identity, native cache-key inputs and browser assertions,
+timeouts, retries and skips remain unchanged. The normal release command forces
+fresh staging, glue, manifest and bundles, retaining their normal hash and receipt
+checks. Native release validation must demonstrate that the published patch is
+actually consumed; local patched factories are diagnostic evidence only.
+
+The focused baseline retained nine failures and 12 passing controls among 21
+cases. All 22 focused cases, including the additional legacy-patch upgrade case,
+passed after correction on Node 22 and 24. The complete local package suite passed
+383 cases, zero failures and one existing conditional worker smoke skip among
+384; all 87 script cases passed on Node 22 and all six package type checks passed.
+Each of the three exact native generated factories was checked against its
+schema-v2 manifest, transformed by the current patch and verified for syntax and
+idempotence. These checks do not certify browser rendering or the complete CI.
+
+The failed native raw log SHA-256 is
+`5e1d052b23f53656b898e1b4743fc42c9631a042c1c4746e355569e1f7670108`.
+Diagnostics artifact `11472412442` was downloaded with matching archive SHA-256
+`69078d9abe38fe90b26ff1ad761acbdb66aff2225c7f34a3d662c4fd0fbbdc24`.
+All logs, failure contexts, original runtime pairs and local checks are retained
+under the same artifact directory. Current-head complete native and security
+gates remain required before merge; #699 and #263 remain open.
