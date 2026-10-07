@@ -174,6 +174,8 @@ async function executeRequest<T>(transportConfig: TransportConfig, requestConfig
     if (response.status === 204 || response.headers.get('Content-Length') === '0') {
       // No content
       data = undefined as T;
+    } else if (requestConfig.responseType === 'blob') {
+      data = (await response.blob()) as T;
     } else {
       const contentType = response.headers.get('Content-Type');
       if (contentType?.includes('application/json')) {
@@ -199,7 +201,9 @@ async function executeRequest<T>(transportConfig: TransportConfig, requestConfig
       } else {
         // Non-JSON response
         const contentDisposition = response.headers.get('Content-Disposition');
-        data = contentDisposition?.toLowerCase().includes('attachment') ? ((await response.blob()) as T) : ((await response.text()) as T);
+        const mediaType = contentType?.split(';')[0].trim().toLowerCase();
+        const binary = mediaType === 'application/zip' || mediaType === 'application/octet-stream';
+        data = binary || contentDisposition?.toLowerCase().includes('attachment') ? ((await response.blob()) as T) : ((await response.text()) as T);
       }
     }
 

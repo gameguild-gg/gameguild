@@ -26,6 +26,10 @@ public class LocalSignInRequest
     /// </summary>
     public string? DeviceFingerprint { get; set; }
 
+    // Server-only account resolution. These internal properties cannot be bound from JSON or advertised in OpenAPI.
+    internal bool CredentialResolutionFailed { get; init; }
+    internal Guid? ResolvedUserId { get; init; }
+
     /// <summary>
     ///     Alias for Email to support polymorphic sign-in scenarios
     /// </summary>

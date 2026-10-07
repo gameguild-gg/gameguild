@@ -12,9 +12,10 @@ import {
 import { loadCsvDataIntoSpec } from "../data/vega-csv-loader";
 import { resolveVegaAttachments } from "../data/vega-asset-loader";
 import type { VegaDataAttachment } from "../vega-lite-data";
+import type { Config } from "vega-lite";
 
 // Function to create dark version of any theme
-function createDarkTheme(baseTheme: any) {
+function createDarkTheme(baseTheme: Config) {
   return {
     ...baseTheme,
     background: "#1a1a1a",
@@ -130,7 +131,7 @@ export function VegaLiteExport({
               ? theme.replace("-dark", "")
               : theme;
             const themeConfig = (
-              vegaThemesImport as unknown as Record<string, unknown>
+              vegaThemesImport as unknown as Record<string, Config>
             )[themeMap[theme]];
 
             if (themeConfig) {
@@ -266,7 +267,7 @@ export function VegaLiteExport({
               ? theme.replace("-dark", "")
               : theme;
             const themeConfig = (
-              vegaThemesImport as unknown as Record<string, unknown>
+              vegaThemesImport as unknown as Record<string, Config>
             )[themeMap[theme]];
 
             if (themeConfig) {

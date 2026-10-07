@@ -1,11 +1,17 @@
+using System.Text.Json;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Options;
 using GameGuild.API.Database;
 using GameGuild.API.Eventing;
+using GameGuild.Compliance.Audit;
 using GameGuild.CQRS;
+using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Context.Actors;
+using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Tenants;
+using Moq;
 
 namespace GameGuild.API.UnitTests.Eventing;
 
@@ -56,6 +62,252 @@ public sealed class UseCaseOperationBehaviorTests
         operationEvent.EventName.Should().Be("platform.use-case-operation.occurred.v1");
         operationEvent.TenantId.Should().Be(tenantId);
         operationEvent.ActorId.Should().Be(actorId);
+    }
+
+    [Fact]
+    public async Task Handle_WhenPermissionChanges_LogsBeforeAndAfterStateAfterSuccessfulCommand()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+        var operationAccessor = new UseCaseOperationContextAccessor();
+        var actorAccessor = NewActorAccessor(out var tenantId, out var actorId);
+        var targetUserId = Guid.NewGuid();
+        var auditService = new Mock<IAuditService>();
+        auditService
+            .Setup(service => service.LogAsync(It.IsAny<CreateAuditLogRequest>()))
+            .Returns(Task.CompletedTask);
+        var auditHook = new RecordingPermissionAuditHook();
+        await using var context = new ApplicationDbContext(
+            options,
+            null,
+            operationAccessor,
+            auditService.Object,
+            permissionAuditHooks: [auditHook]);
+
+        context.Add(new TenantPermission
+        {
+            UserId = targetUserId,
+            TenantId = tenantId,
+            Permissions = ["project:read"],
+            GrantedBy = actorId
+        });
+        await context.SaveChangesAsync();
+        ((CreateAuditLogRequest)auditService.Invocations.Single().Arguments[0]!)
+            .ActionType.Should().Be(AuditActionTypes.PermissionGranted);
+        auditService.Invocations.Clear();
+        auditHook.LastContext = null;
+
+        var behavior = new UseCaseOperationBehavior<TestMutationCommand, bool>(
+            context,
+            actorAccessor,
+            operationAccessor);
+        var auditWasWrittenBeforeHandlerReturned = false;
+
+        var response = await behavior.Handle(
+            new TestMutationCommand(),
+            async () =>
+            {
+                var permission = await context.Set<TenantPermission>().SingleAsync();
+                permission.Permissions = ["project:read", "project:write"];
+                await context.SaveChangesAsync();
+                auditWasWrittenBeforeHandlerReturned = auditService.Invocations.Count > 0;
+                return true;
+            },
+            CancellationToken.None);
+
+        response.Should().BeTrue();
+        auditWasWrittenBeforeHandlerReturned.Should().BeFalse();
+        var request = (CreateAuditLogRequest)auditService.Invocations.Single().Arguments[0]!;
+        request.ActionType.Should().Be(AuditActionTypes.PermissionChanged);
+        request.Category.Should().Be(AuditCategory.Permission);
+        request.UserId.Should().Be(actorId);
+        request.TenantId.Should().Be(tenantId);
+        request.CorrelationId.Should().NotBeNullOrWhiteSpace();
+
+        var metadata = JsonDocument.Parse(JsonSerializer.Serialize(request.Metadata)).RootElement;
+        var change = metadata.GetProperty("Changes")[0];
+        change.GetProperty("TargetUserId").GetGuid().Should().Be(targetUserId);
+        change.GetProperty("BeforeState").GetString().Should().Contain("project:read").And.NotContain("project:write");
+        change.GetProperty("AfterState").GetString().Should().Contain("project:read").And.Contain("project:write");
+        auditHook.LastContext.Should().NotBeNull();
+        auditHook.LastContext!.Changes.Should().ContainSingle();
+        auditHook.LastContext.Changes[0].TargetUserId.Should().Be(targetUserId);
+    }
+
+    [Fact]
+    public async Task Handle_WhenPermissionIsRevoked_LogsRevocationAction()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+        var operationAccessor = new UseCaseOperationContextAccessor();
+        var actorAccessor = NewActorAccessor(out var tenantId, out var actorId);
+        var auditService = new Mock<IAuditService>();
+        auditService
+            .Setup(service => service.LogAsync(It.IsAny<CreateAuditLogRequest>()))
+            .Returns(Task.CompletedTask);
+        await using var context = new ApplicationDbContext(options, null, operationAccessor, auditService.Object);
+        context.Add(new TenantPermission
+        {
+            UserId = Guid.NewGuid(),
+            TenantId = tenantId,
+            Permissions = ["project:read", "project:write"],
+            GrantedBy = actorId
+        });
+        await context.SaveChangesAsync();
+        auditService.Invocations.Clear();
+        var behavior = new UseCaseOperationBehavior<TestMutationCommand, bool>(
+            context,
+            actorAccessor,
+            operationAccessor);
+
+        var response = await behavior.Handle(
+            new TestMutationCommand(),
+            async () =>
+            {
+                var permission = await context.Set<TenantPermission>().SingleAsync();
+                permission.Permissions = ["project:read"];
+                await context.SaveChangesAsync();
+                return true;
+            },
+            CancellationToken.None);
+
+        response.Should().BeTrue();
+        var request = (CreateAuditLogRequest)auditService.Invocations.Single().Arguments[0]!;
+        request.ActionType.Should().Be(AuditActionTypes.PermissionRevoked);
+    }
+
+    [Fact]
+    public async Task SaveChangesAsync_WhenRoleAssignmentChanges_LogsPermissionGrantAndRevocation()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+        var operationAccessor = new UseCaseOperationContextAccessor();
+        var auditService = new Mock<IAuditService>();
+        auditService
+            .Setup(service => service.LogAsync(It.IsAny<CreateAuditLogRequest>()))
+            .Returns(Task.CompletedTask);
+        await using var context = new ApplicationDbContext(options, null, operationAccessor, auditService.Object);
+        var tenantId = Guid.NewGuid();
+        var targetUserId = Guid.NewGuid();
+        var actorId = Guid.NewGuid();
+        var role = new Role("auditable", "Auditable role", tenantId) { Id = Guid.NewGuid() };
+        context.Add(role);
+        await context.SaveChangesAsync();
+        auditService.Invocations.Clear();
+
+        role.Permissions = "[\"project:read\",\"project:write\"]";
+        await context.SaveChangesAsync();
+        auditService.Invocations.Clear();
+        role.Permissions = "[\"project:read\"]";
+        await context.SaveChangesAsync();
+        ((CreateAuditLogRequest)auditService.Invocations.Single().Arguments[0]!)
+            .ActionType.Should().Be(AuditActionTypes.PermissionRevoked);
+        auditService.Invocations.Clear();
+
+        var assignment = new UserRole(targetUserId, role.Id, actorId)
+        {
+            Id = Guid.NewGuid(),
+            Role = role
+        };
+        context.Add(assignment);
+        await context.SaveChangesAsync();
+
+        var grantRequest = (CreateAuditLogRequest)auditService.Invocations.Single().Arguments[0]!;
+        grantRequest.ActionType.Should().Be(AuditActionTypes.PermissionGranted);
+        grantRequest.UserId.Should().Be(actorId);
+        var grantMetadata = JsonDocument.Parse(JsonSerializer.Serialize(grantRequest.Metadata)).RootElement;
+        grantMetadata.GetProperty("Changes")[0].GetProperty("TargetUserId").GetGuid().Should().Be(targetUserId);
+
+        auditService.Invocations.Clear();
+        context.Remove(assignment);
+        await context.SaveChangesAsync();
+
+        var revokeRequest = (CreateAuditLogRequest)auditService.Invocations.Single().Arguments[0]!;
+        revokeRequest.ActionType.Should().Be(AuditActionTypes.PermissionRevoked);
+        revokeRequest.UserId.Should().Be(actorId);
+    }
+
+    [Fact]
+    public async Task SaveChangesAsync_WhenPermissionEntityIsExcluded_SkipsItsAuditRecord()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+        var operationAccessor = new UseCaseOperationContextAccessor();
+        var auditService = new Mock<IAuditService>();
+        auditService
+            .Setup(service => service.LogAsync(It.IsAny<CreateAuditLogRequest>()))
+            .Returns(Task.CompletedTask);
+        await using var context = new ApplicationDbContext(
+            options,
+            null,
+            operationAccessor,
+            auditService.Object,
+            permissionAuditOptions: Options.Create(new PermissionAuditOptions
+            {
+                ExcludedEntityTypes = new(StringComparer.OrdinalIgnoreCase) { nameof(TenantPermission) }
+            }));
+
+        context.Add(new TenantPermission
+        {
+            UserId = Guid.NewGuid(),
+            TenantId = Guid.NewGuid(),
+            Permissions = ["project:read"]
+        });
+
+        await context.SaveChangesAsync();
+
+        (await context.Set<TenantPermission>().CountAsync()).Should().Be(1);
+        auditService.Verify(service => service.LogAsync(It.IsAny<CreateAuditLogRequest>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Handle_WhenCentralAuditServiceFails_KeepsSuccessfulPermissionMutation()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+        var operationAccessor = new UseCaseOperationContextAccessor();
+        var actorAccessor = NewActorAccessor(out var tenantId, out var actorId);
+        var auditService = new Mock<IAuditService>();
+        auditService
+            .Setup(service => service.LogAsync(It.IsAny<CreateAuditLogRequest>()))
+            .ThrowsAsync(new InvalidOperationException("Audit storage is unavailable"));
+        var throwingHook = new ThrowingPermissionAuditHook();
+        await using var context = new ApplicationDbContext(
+            options,
+            null,
+            operationAccessor,
+            auditService.Object,
+            permissionAuditHooks: [throwingHook]);
+        var behavior = new UseCaseOperationBehavior<TestMutationCommand, bool>(
+            context,
+            actorAccessor,
+            operationAccessor);
+
+        var response = await behavior.Handle(
+            new TestMutationCommand(),
+            async () =>
+            {
+                context.Add(new TenantPermission
+                {
+                    UserId = Guid.NewGuid(),
+                    TenantId = tenantId,
+                    Permissions = ["project:read"],
+                    GrantedBy = actorId
+                });
+                await context.SaveChangesAsync();
+                return true;
+            },
+            CancellationToken.None);
+
+        response.Should().BeTrue();
+        (await context.Set<TenantPermission>().CountAsync()).Should().Be(1);
+        auditService.Verify(service => service.LogAsync(It.IsAny<CreateAuditLogRequest>()), Times.Once);
+        throwingHook.CallCount.Should().Be(1);
     }
 
     [Fact]
@@ -117,6 +369,32 @@ public sealed class UseCaseOperationBehaviorTests
     }
 
     private sealed record TestMutationCommand : ICommand<bool>;
+
+    private sealed class RecordingPermissionAuditHook : IPermissionAuditHook
+    {
+        public PermissionAuditHookContext? LastContext { get; set; }
+
+        public Task OnPermissionChangesAuditedAsync(
+            PermissionAuditHookContext context,
+            CancellationToken cancellationToken = default)
+        {
+            LastContext = context;
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class ThrowingPermissionAuditHook : IPermissionAuditHook
+    {
+        public int CallCount { get; private set; }
+
+        public Task OnPermissionChangesAuditedAsync(
+            PermissionAuditHookContext context,
+            CancellationToken cancellationToken = default)
+        {
+            CallCount++;
+            throw new InvalidOperationException("The custom audit hook failed");
+        }
+    }
 
     private sealed class CountingExecutionStrategyFactory(ExecutionStrategyDependencies dependencies)
         : IExecutionStrategyFactory

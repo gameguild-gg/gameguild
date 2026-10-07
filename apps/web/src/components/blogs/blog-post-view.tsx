@@ -1,4 +1,5 @@
 import { lazy, Suspense } from 'react';
+import Link from 'next/link';
 
 import type { BlogPostDetail } from '@/lib/blogs/types';
 import { resolveBlogJsonLd, type BlogAuthorProfile } from '@/lib/blogs/seo';
@@ -67,21 +68,32 @@ function formatPublishedDate(iso: string | null | undefined): string | null {
 
 export function BlogPostView({ post, authorProfiles }: { post: BlogPostDetail; authorProfiles?: BlogAuthorProfile[] }) {
   const published = formatPublishedDate(post.publishedAt);
-  const authors = [
-    ...(post.primaryAuthorDisplayName ?? post.primaryAuthorHandle
-      ? [post.primaryAuthorDisplayName ?? post.primaryAuthorHandle]
+  const authorLinks = [
+    ...(post.primaryAuthorHandle
+      ? [{ handle: post.primaryAuthorHandle, label: post.primaryAuthorDisplayName ?? post.primaryAuthorHandle }]
       : []),
-    ...(post.coAuthorHandles ?? []),
-  ].filter((n): n is string => Boolean(n));
+    ...(post.coAuthorHandles ?? []).map((handle) => ({ handle, label: handle })),
+  ].filter((a): a is { handle: string; label: string } => Boolean(a.handle && a.label));
 
   return (
     <article className="mx-auto max-w-3xl px-4 py-12">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: resolveBlogJsonLd(post, authorProfiles) }} />
 
-      <header className="flex flex-col gap-4 border-b border-white/10 pb-8">
-        <h1 className="text-4xl font-semibold leading-tight tracking-tight text-white md:text-5xl">{post.title}</h1>
-        <div className="flex flex-wrap items-center gap-2 text-sm text-slate-400">
-          {authors.length > 0 ? <span className="text-slate-300">{authors.join(', ')}</span> : null}
+      <header className="flex flex-col gap-4 border-b border-border pb-8">
+        <h1 className="text-4xl font-semibold leading-tight tracking-tight text-foreground md:text-5xl">{post.title}</h1>
+        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+          {authorLinks.length > 0 ? (
+            <span className="flex flex-wrap items-center gap-2">
+              {authorLinks.map((author, index) => (
+                <span key={author.handle} className="flex items-center gap-2">
+                  {index > 0 ? <span aria-hidden="true">,</span> : null}
+                  <Link href={`/social/profiles/${author.handle}`} className="font-medium text-foreground/80 underline-offset-4 hover:underline">
+                    {author.label}
+                  </Link>
+                </span>
+              ))}
+            </span>
+          ) : null}
           {published ? (
             <>
               <span aria-hidden="true">·</span>
@@ -97,7 +109,7 @@ export function BlogPostView({ post, authorProfiles }: { post: BlogPostDetail; a
         </div>
       </header>
 
-      <div className="prose prose-invert max-w-none py-8">
+      <div className="prose max-w-none py-8 dark:prose-invert">
         {post.format === 'Lexical' && post.jsonBody ? (
           <PostLexical content={post.jsonBody} />
         ) : post.content ? (
@@ -111,7 +123,7 @@ export function BlogPostView({ post, authorProfiles }: { post: BlogPostDetail; a
         <footer>
           <ul className="flex flex-wrap gap-2">
             {post.tags.map((tag) => (
-              <li key={tag} className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-slate-300">
+              <li key={tag} className="rounded-full border border-border bg-muted px-3 py-1 text-sm text-muted-foreground">
                 {tag}
               </li>
             ))}

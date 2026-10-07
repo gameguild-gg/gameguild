@@ -33,6 +33,8 @@ public static class AuditActionTypes
 
     public const string PermissionRevoked = "PermissionRevoked";
 
+    public const string PermissionChanged = "PermissionChanged";
+
     public const string RoleAssigned = "RoleAssigned";
 
     public const string RoleRevoked = "RoleRevoked";

@@ -601,6 +601,9 @@ run_whole_solution_test_project() {
     )
     project_timeout="$api_test_timeout"
   fi
+  if [[ "$test_name" == 'GameGuild.API.IntegrationTests' ]]; then
+    project_timeout="$api_test_timeout"
+  fi
   run_logged "$project_log" timeout --kill-after=30s "$project_timeout" \
     "${test_environment[@]}" \
     dotnet test "$test_project" -c Release --no-build --nologo --verbosity minimal -m:1 "${test_hang_arguments[@]}" \

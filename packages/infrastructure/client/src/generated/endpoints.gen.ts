@@ -18,7 +18,7 @@ export const getWellKnownJwksJsonEndpoint = {
   method: 'GET' as const,
   path: '/.well-known/jwks.json' as const,
   tags: ['LearningLti'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetApiAnalyticsDashboardsInput {
@@ -210,7 +210,7 @@ export const postApiAssetsAccessUrlEndpoint = {
   method: 'POST' as const,
   path: '/api/assets/{assetId}/access-url' as const,
   tags: ['AssetsSecureDelivery'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -234,6 +234,222 @@ export const getApiAssetsContentEndpoint = {
   method: 'GET' as const,
   path: '/api/assets/{assetId}/content' as const,
   tags: ['AssetsSecureDelivery'] as const,
+  requiresAuth: false,
+} as const;
+
+export interface GetApiAuditCompliancePackagingForGetApiAuditCompliancePackagingInput {
+  query?: {
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetApiAuditCompliancePackagingForGetApiAuditCompliancePackagingOutput = Array<Types.ComplianceAuditCompliancePackageSummary>;
+export const getApiAuditCompliancePackagingForGetApiAuditCompliancePackagingEndpoint = {
+  operationId: 'getApiAuditCompliancePackagingForGetApiAuditCompliancePackaging' as const,
+  method: 'GET' as const,
+  path: '/api/audit/compliance-packaging' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostApiAuditCompliancePackagingInput {
+  body?: Types.ComplianceAuditCreateCompliancePackageInput;
+}
+export type PostApiAuditCompliancePackagingOutput = Types.ComplianceAuditCompliancePackageOutput;
+export const postApiAuditCompliancePackagingEndpoint = {
+  operationId: 'postApiAuditCompliancePackaging' as const,
+  method: 'POST' as const,
+  path: '/api/audit/compliance-packaging' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetApiAuditCompliancePackagingForGetApiAuditCompliancePackagingByIdInput {
+  id: string;
+}
+export type GetApiAuditCompliancePackagingForGetApiAuditCompliancePackagingByIdOutput = Types.ComplianceAuditCompliancePackageOutput;
+export const getApiAuditCompliancePackagingForGetApiAuditCompliancePackagingByIdEndpoint = {
+  operationId: 'getApiAuditCompliancePackagingForGetApiAuditCompliancePackagingById' as const,
+  method: 'GET' as const,
+  path: '/api/audit/compliance-packaging/{id}' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetApiAuditCompliancePackagingDownloadInput {
+  id: string;
+}
+export type GetApiAuditCompliancePackagingDownloadOutput = Blob;
+export const getApiAuditCompliancePackagingDownloadEndpoint = {
+  operationId: 'getApiAuditCompliancePackagingDownload' as const,
+  method: 'GET' as const,
+  path: '/api/audit/compliance-packaging/{id}/download' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetApiAuditCompliancePackagingVerificationInput {
+  id: string;
+}
+export type GetApiAuditCompliancePackagingVerificationOutput = Types.ComplianceAuditComplianceArtifactVerification;
+export const getApiAuditCompliancePackagingVerificationEndpoint = {
+  operationId: 'getApiAuditCompliancePackagingVerification' as const,
+  method: 'GET' as const,
+  path: '/api/audit/compliance-packaging/{id}/verification' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetApiAuditCompliancePackagingDocumentsForGetApiAuditCompliancePackagingDocumentsInput {
+  query?: {
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetApiAuditCompliancePackagingDocumentsForGetApiAuditCompliancePackagingDocumentsOutput = Array<Types.ComplianceAuditComplianceDocumentOutput>;
+export const getApiAuditCompliancePackagingDocumentsForGetApiAuditCompliancePackagingDocumentsEndpoint = {
+  operationId: 'getApiAuditCompliancePackagingDocumentsForGetApiAuditCompliancePackagingDocuments' as const,
+  method: 'GET' as const,
+  path: '/api/audit/compliance-packaging/documents' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostApiAuditCompliancePackagingDocumentsInput {
+  body?: Types.ComplianceAuditUploadComplianceDocumentInput;
+}
+export type PostApiAuditCompliancePackagingDocumentsOutput = Types.ComplianceAuditComplianceDocumentOutput;
+export const postApiAuditCompliancePackagingDocumentsEndpoint = {
+  operationId: 'postApiAuditCompliancePackagingDocuments' as const,
+  method: 'POST' as const,
+  path: '/api/audit/compliance-packaging/documents' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetApiAuditCompliancePackagingDocumentsForGetApiAuditCompliancePackagingDocumentsByIdInput {
+  id: string;
+}
+export type GetApiAuditCompliancePackagingDocumentsForGetApiAuditCompliancePackagingDocumentsByIdOutput = Types.ComplianceAuditComplianceDocumentOutput;
+export const getApiAuditCompliancePackagingDocumentsForGetApiAuditCompliancePackagingDocumentsByIdEndpoint = {
+  operationId: 'getApiAuditCompliancePackagingDocumentsForGetApiAuditCompliancePackagingDocumentsById' as const,
+  method: 'GET' as const,
+  path: '/api/audit/compliance-packaging/documents/{id}' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostApiAuditCompliancePackagingDocumentsReviewInput {
+  id: string;
+  body?: Types.ComplianceAuditReviewComplianceDocumentInput;
+}
+export type PostApiAuditCompliancePackagingDocumentsReviewOutput = Types.ComplianceAuditComplianceDocumentOutput;
+export const postApiAuditCompliancePackagingDocumentsReviewEndpoint = {
+  operationId: 'postApiAuditCompliancePackagingDocumentsReview' as const,
+  method: 'POST' as const,
+  path: '/api/audit/compliance-packaging/documents/{id}/review' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export type GetApiAuditCompliancePackagingTemplatesInput = void;
+export type GetApiAuditCompliancePackagingTemplatesOutput = Array<Types.ComplianceAuditComplianceFrameworkTemplate>;
+export const getApiAuditCompliancePackagingTemplatesEndpoint = {
+  operationId: 'getApiAuditCompliancePackagingTemplates' as const,
+  method: 'GET' as const,
+  path: '/api/audit/compliance-packaging/templates' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Export audit logs (admin only)
+ */
+export interface PostApiAuditExportCsvInput {
+  body?: Types.ComplianceAuditAuditExportInput;
+}
+export type PostApiAuditExportCsvOutput = Blob;
+export const postApiAuditExportCsvEndpoint = {
+  operationId: 'postApiAuditExportCsv' as const,
+  method: 'POST' as const,
+  path: '/api/audit/export/csv' as const,
+  tags: ['ComplianceAudit'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Streams a versioned JSON audit export with pagination metadata.
+ */
+export interface PostApiAuditExportJsonInput {
+  body?: Types.ComplianceAuditAuditExportInput;
+}
+export type PostApiAuditExportJsonOutput = Types.ComplianceAuditAuditJsonExportDocument;
+export const postApiAuditExportJsonEndpoint = {
+  operationId: 'postApiAuditExportJson' as const,
+  method: 'POST' as const,
+  path: '/api/audit/export/json' as const,
+  tags: ['ComplianceAudit'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetApiAuditRetentionSimulationForGetApiAuditRetentionSimulationInput {
+  query?: {
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetApiAuditRetentionSimulationForGetApiAuditRetentionSimulationOutput = Array<Types.ComplianceAuditAuditRetentionSimulationSummary>;
+export const getApiAuditRetentionSimulationForGetApiAuditRetentionSimulationEndpoint = {
+  operationId: 'getApiAuditRetentionSimulationForGetApiAuditRetentionSimulation' as const,
+  method: 'GET' as const,
+  path: '/api/audit/retention-simulation' as const,
+  tags: ['ComplianceAuditRetentionSimulation'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostApiAuditRetentionSimulationInput {
+  body?: Types.ComplianceAuditRunAuditRetentionSimulationInput;
+}
+export type PostApiAuditRetentionSimulationOutput = Types.ComplianceAuditAuditRetentionSimulationOutput;
+export const postApiAuditRetentionSimulationEndpoint = {
+  operationId: 'postApiAuditRetentionSimulation' as const,
+  method: 'POST' as const,
+  path: '/api/audit/retention-simulation' as const,
+  tags: ['ComplianceAuditRetentionSimulation'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetApiAuditRetentionSimulationForGetApiAuditRetentionSimulationByIdInput {
+  id: string;
+}
+export type GetApiAuditRetentionSimulationForGetApiAuditRetentionSimulationByIdOutput = Types.ComplianceAuditAuditRetentionSimulationOutput;
+export const getApiAuditRetentionSimulationForGetApiAuditRetentionSimulationByIdEndpoint = {
+  operationId: 'getApiAuditRetentionSimulationForGetApiAuditRetentionSimulationById' as const,
+  method: 'GET' as const,
+  path: '/api/audit/retention-simulation/{id}' as const,
+  tags: ['ComplianceAuditRetentionSimulation'] as const,
+  requiresAuth: true,
+} as const;
+
+export type GetApiAuditRetentionSimulationConfigurationInput = void;
+export type GetApiAuditRetentionSimulationConfigurationOutput = Types.ComplianceAuditAuditRetentionConfigurationOutput;
+export const getApiAuditRetentionSimulationConfigurationEndpoint = {
+  operationId: 'getApiAuditRetentionSimulationConfiguration' as const,
+  method: 'GET' as const,
+  path: '/api/audit/retention-simulation/configuration' as const,
+  tags: ['ComplianceAuditRetentionSimulation'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutApiAuditRetentionSimulationConfigurationInput {
+  body?: Types.ComplianceAuditConfigureAuditRetentionInput;
+}
+export type PutApiAuditRetentionSimulationConfigurationOutput = Types.ComplianceAuditAuditRetentionConfigurationOutput;
+export const putApiAuditRetentionSimulationConfigurationEndpoint = {
+  operationId: 'putApiAuditRetentionSimulationConfiguration' as const,
+  method: 'PUT' as const,
+  path: '/api/audit/retention-simulation/configuration' as const,
+  tags: ['ComplianceAuditRetentionSimulation'] as const,
   requiresAuth: true,
 } as const;
 
@@ -416,7 +632,7 @@ export const getApiCertificatesVerifyEndpoint = {
   method: 'GET' as const,
   path: '/api/certificates/verify/{certificateNumber}' as const,
   tags: ['LearningCertificates'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -1038,7 +1254,7 @@ export const getApiContentsVersioningEntityCurrentEndpoint = {
   method: 'GET' as const,
   path: '/api/contents/versioning/entity/{entityType}/{entityId}/current' as const,
   tags: ['ResourcesContentsVersioning'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -1122,7 +1338,7 @@ export const postApiFollowersBatchCountsEndpoint = {
   method: 'POST' as const,
   path: '/api/followers/batch/counts' as const,
   tags: ['SocialFollowsFollowers'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -1188,7 +1404,7 @@ export const getApiFollowersCountFollowersEndpoint = {
   method: 'GET' as const,
   path: '/api/followers/count/followers/{entityId}' as const,
   tags: ['SocialFollowsFollowers'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -1240,7 +1456,7 @@ export const getApiFollowersFollowersEndpoint = {
   method: 'GET' as const,
   path: '/api/followers/followers/{entityId}' as const,
   tags: ['SocialFollowsFollowers'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -1587,7 +1803,7 @@ export const getApiHealthEndpoint = {
   method: 'GET' as const,
   path: '/api/health' as const,
   tags: ['Health'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -1613,7 +1829,7 @@ export const getApiHealthDependenciesEndpoint = {
   method: 'GET' as const,
   path: '/api/health/dependencies' as const,
   tags: ['Health'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PostApiLearningEnrollmentsInput {
@@ -1719,7 +1935,7 @@ export const getApiLiveEndpoint = {
   method: 'GET' as const,
   path: '/api/live' as const,
   tags: ['Health'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetApiMetricsProductInput {
@@ -2148,7 +2364,7 @@ export const getApiReadyEndpoint = {
   method: 'GET' as const,
   path: '/api/ready' as const,
   tags: ['Health'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -2498,7 +2714,7 @@ export const getApiSocialBlogPublicAuthorsForGetApiSocialBlogPublicAuthorsByHand
   method: 'GET' as const,
   path: '/api/social/blog/public/authors/{handle}' as const,
   tags: ['SocialBlogPublic'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -2514,7 +2730,7 @@ export const getApiSocialBlogPublicAuthorsForGetApiSocialBlogPublicAuthorsByHand
   method: 'GET' as const,
   path: '/api/social/blog/public/authors/{handle}/{slug}' as const,
   tags: ['SocialBlogPublic'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -2532,7 +2748,7 @@ export const getApiSocialBlogPublicPostsEndpoint = {
   method: 'GET' as const,
   path: '/api/social/blog/public/posts' as const,
   tags: ['SocialBlogPublic'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -2551,7 +2767,7 @@ export const getApiSocialBlogPublicPostsCommentsEndpoint = {
   method: 'GET' as const,
   path: '/api/social/blog/public/posts/{id}/comments' as const,
   tags: ['SocialBlogPublic'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -2566,7 +2782,7 @@ export const postApiSocialBlogPublicPostsViewsEndpoint = {
   method: 'POST' as const,
   path: '/api/social/blog/public/posts/{id}/views' as const,
   tags: ['SocialBlogPublic'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -2582,7 +2798,7 @@ export const getApiSocialBlogPublicResolveEndpoint = {
   method: 'GET' as const,
   path: '/api/social/blog/public/resolve/{handle}/{slug}' as const,
   tags: ['SocialBlogPublic'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -2602,7 +2818,7 @@ export const getApiSocialCoursesContentDiscussionsEndpoint = {
   method: 'GET' as const,
   path: '/api/social/courses/{courseId}/content/{contentId}/discussions' as const,
   tags: ['LearningExperienceSocialDiscussions'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -2622,7 +2838,7 @@ export const getApiSocialCoursesDiscussionsEndpoint = {
   method: 'GET' as const,
   path: '/api/social/courses/{courseId}/discussions' as const,
   tags: ['LearningExperienceSocialDiscussions'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -2682,7 +2898,7 @@ export const getApiSocialCoursesLikeCountEndpoint = {
   method: 'GET' as const,
   path: '/api/social/courses/{courseId}/like/count' as const,
   tags: ['LearningExperienceSocialLikes'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -2697,7 +2913,7 @@ export const getApiSocialCoursesRatingStatsEndpoint = {
   method: 'GET' as const,
   path: '/api/social/courses/{courseId}/rating-stats' as const,
   tags: ['LearningExperienceSocialReviews'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -2717,7 +2933,7 @@ export const getApiSocialCoursesReviewsEndpoint = {
   method: 'GET' as const,
   path: '/api/social/courses/{courseId}/reviews' as const,
   tags: ['LearningExperienceSocialReviews'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -2751,7 +2967,7 @@ export const getApiSocialDiscussionsRepliesEndpoint = {
   method: 'GET' as const,
   path: '/api/social/discussions/{discussionId}/replies' as const,
   tags: ['LearningExperienceSocialReplies'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -2782,7 +2998,7 @@ export const getApiSocialDiscussionsEndpoint = {
   method: 'GET' as const,
   path: '/api/social/discussions/{id}' as const,
   tags: ['LearningExperienceSocialDiscussions'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -3244,7 +3460,7 @@ export const getApiSocialProfilesEndpoint = {
   method: 'GET' as const,
   path: '/api/social/profiles/@{handle}' as const,
   tags: ['SocialProfiles'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PutApiSocialProfilesPortfolioInput {
@@ -3284,7 +3500,7 @@ export const getApiSocialProfilesSearchEndpoint = {
   method: 'GET' as const,
   path: '/api/social/profiles/search' as const,
   tags: ['SocialProfiles'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface DeleteApiSocialProfilesSkillsInput {
@@ -3471,7 +3687,7 @@ export const getApiSocialReviewsEndpoint = {
   method: 'GET' as const,
   path: '/api/social/reviews/{id}' as const,
   tags: ['LearningExperienceSocialReviews'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -5723,7 +5939,7 @@ export const postBillingWebhooksApplePayEndpoint = {
   method: 'POST' as const,
   path: '/api/v1/billing/webhooks/apple-pay' as const,
   tags: ['CommerceBillingWebhooks'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -5753,7 +5969,7 @@ export const postBillingWebhooksGooglePayEndpoint = {
   method: 'POST' as const,
   path: '/api/v1/billing/webhooks/google-pay' as const,
   tags: ['CommerceBillingWebhooks'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -5771,7 +5987,7 @@ export const postBillingWebhooksPaypalEndpoint = {
   method: 'POST' as const,
   path: '/api/v1/billing/webhooks/paypal' as const,
   tags: ['CommerceBillingWebhooks'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -5790,7 +6006,7 @@ export const postBillingWebhooksStripeEndpoint = {
   method: 'POST' as const,
   path: '/api/v1/billing/webhooks/stripe' as const,
   tags: ['CommerceBillingWebhooks'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -5815,7 +6031,7 @@ export const getBillingWebhooksWebhookEventsEndpoint = {
   method: 'GET' as const,
   path: '/api/v1/billing/webhooks/webhook-events/{eventId}' as const,
   tags: ['CommerceBillingWebhooks'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -5840,7 +6056,7 @@ export const postBillingWebhooksWebhookEventsRetryEndpoint = {
   method: 'POST' as const,
   path: '/api/v1/billing/webhooks/webhook-events/{eventId}:retry' as const,
   tags: ['CommerceBillingWebhooks'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PostEconomyAdRewardsSessionsInput {
@@ -6347,7 +6563,7 @@ export const postIntegrationsEconomyStripeConnectWebhookEndpoint = {
   method: 'POST' as const,
   path: '/api/v1/integrations/economy/stripe-connect/webhook' as const,
   tags: ['EconomyIntegrations'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export type PostIntegrationsEconomySumsubWebhookInput = void;
@@ -6357,7 +6573,7 @@ export const postIntegrationsEconomySumsubWebhookEndpoint = {
   method: 'POST' as const,
   path: '/api/v1/integrations/economy/sumsub/webhook' as const,
   tags: ['EconomyIntegrations'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -6370,7 +6586,7 @@ export const postNotificationsEmailEventsEndpoint = {
   method: 'POST' as const,
   path: '/api/v1/notifications/email-events' as const,
   tags: ['Notifications'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -6429,7 +6645,7 @@ export const getNotificationsUnsubscribeEndpoint = {
   method: 'GET' as const,
   path: '/api/v1/notifications/unsubscribe' as const,
   tags: ['Notifications'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -6738,7 +6954,7 @@ export const getPostsForGetPostsEndpoint = {
   method: 'GET' as const,
   path: '/api/v1/posts' as const,
   tags: ['SocialPosts'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -6768,7 +6984,7 @@ export const getPostsForGetPostsByPostIdEndpoint = {
   method: 'GET' as const,
   path: '/api/v1/posts/{postId}' as const,
   tags: ['SocialPosts'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -6819,7 +7035,7 @@ export const getPostsCommentsEndpoint = {
   method: 'GET' as const,
   path: '/api/v1/posts/{postId}/comments' as const,
   tags: ['SocialPostsComments'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -6978,7 +7194,7 @@ export const postPostsShareEndpoint = {
   method: 'POST' as const,
   path: '/api/v1/posts/{postId}/share' as const,
   tags: ['SocialPostsInteractions'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -6993,7 +7209,7 @@ export const getPostsStatisticsEndpoint = {
   method: 'GET' as const,
   path: '/api/v1/posts/{postId}/statistics' as const,
   tags: ['SocialPostsInteractions'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -7008,7 +7224,7 @@ export const getPostsTagsEndpoint = {
   method: 'GET' as const,
   path: '/api/v1/posts/{postId}/tags' as const,
   tags: ['SocialPostsComments'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -7023,7 +7239,7 @@ export const postPostsViewEndpoint = {
   method: 'POST' as const,
   path: '/api/v1/posts/{postId}/view' as const,
   tags: ['SocialPostsInteractions'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -7042,7 +7258,7 @@ export const getPostsAuthorEndpoint = {
   method: 'GET' as const,
   path: '/api/v1/posts/author/{authorId}' as const,
   tags: ['SocialPosts'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -7097,7 +7313,7 @@ export const getPostsSearchEndpoint = {
   method: 'GET' as const,
   path: '/api/v1/posts/search' as const,
   tags: ['SocialPosts'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -7114,7 +7330,7 @@ export const getPostsTagsPopularEndpoint = {
   method: 'GET' as const,
   path: '/api/v1/posts/tags/popular' as const,
   tags: ['SocialPostsComments'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -7133,7 +7349,7 @@ export const getPostsTagsSearchEndpoint = {
   method: 'GET' as const,
   path: '/api/v1/posts/tags/search' as const,
   tags: ['SocialPostsComments'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -7151,7 +7367,7 @@ export const getPostsTrendingEndpoint = {
   method: 'GET' as const,
   path: '/api/v1/posts/trending' as const,
   tags: ['SocialPosts'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -8467,7 +8683,7 @@ export const getAssetsForGetAssetsByReferenceIdByTokenEndpoint = {
   method: 'GET' as const,
   path: '/assets/{referenceId}/{token}' as const,
   tags: ['AssetsCdn'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -8486,7 +8702,7 @@ export const getEEndpoint = {
   method: 'GET' as const,
   path: '/e/{token}' as const,
   tags: ['AssetsCdn'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -8508,7 +8724,7 @@ export const getHealthEndpoint = {
   method: 'GET' as const,
   path: '/health' as const,
   tags: ['Health'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -8534,7 +8750,7 @@ export const getHealthDependenciesEndpoint = {
   method: 'GET' as const,
   path: '/health/dependencies' as const,
   tags: ['Health'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -8585,7 +8801,7 @@ export const getLiveEndpoint = {
   method: 'GET' as const,
   path: '/live' as const,
   tags: ['Health'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -8599,7 +8815,7 @@ export const postLtiLaunchEndpoint = {
   method: 'POST' as const,
   path: '/lti/launch' as const,
   tags: ['LearningLti'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -8615,7 +8831,7 @@ export const postLtiLoginEndpoint = {
   method: 'POST' as const,
   path: '/lti/login' as const,
   tags: ['LearningLti'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -8638,7 +8854,7 @@ export const getMetricsEndpoint = {
   method: 'GET' as const,
   path: '/metrics' as const,
   tags: ['Health'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -8661,7 +8877,7 @@ export const getReadyEndpoint = {
   method: 'GET' as const,
   path: '/ready' as const,
   tags: ['Health'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -8681,7 +8897,7 @@ export const getTEndpoint = {
   method: 'GET' as const,
   path: '/t/{transformation}/{referenceId}/{token}' as const,
   tags: ['AssetsCdn'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PostVCoursesCheckoutCompleteInput {
@@ -9324,7 +9540,7 @@ export const getAdminAuditLogsEndpoint = {
 export interface PostAdminAuditLogsExportInput {
   body?: Types.ComplianceAuditAuditExportInput;
 }
-export type PostAdminAuditLogsExportOutput = void;
+export type PostAdminAuditLogsExportOutput = Blob;
 export const postAdminAuditLogsExportEndpoint = {
   operationId: 'postAdminAuditLogsExport' as const,
   method: 'POST' as const,
@@ -9354,7 +9570,7 @@ export const getAdminAuditLogsExportProgressEndpoint = {
 export interface PostAdminAuditLogsExportCsvInput {
   body?: Types.ComplianceAuditAuditExportInput;
 }
-export type PostAdminAuditLogsExportCsvOutput = void;
+export type PostAdminAuditLogsExportCsvOutput = Blob;
 export const postAdminAuditLogsExportCsvEndpoint = {
   operationId: 'postAdminAuditLogsExportCsv' as const,
   method: 'POST' as const,
@@ -9374,6 +9590,208 @@ export const postAdminAuditLogsExportJsonEndpoint = {
   operationId: 'postAdminAuditLogsExportJson' as const,
   method: 'POST' as const,
   path: '/v1/admin/audit-logs/export/json' as const,
+  tags: ['ComplianceAudit'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Downloads a completed scheduled export stored for its tenant.
+ */
+export interface GetAdminAuditLogsScheduledExportHistoryDownloadInput {
+  historyId: string;
+  query?: {
+    tenantId?: string;
+  };
+}
+export type GetAdminAuditLogsScheduledExportHistoryDownloadOutput = void;
+export const getAdminAuditLogsScheduledExportHistoryDownloadEndpoint = {
+  operationId: 'getAdminAuditLogsScheduledExportHistoryDownload' as const,
+  method: 'GET' as const,
+  path: '/v1/admin/audit-logs/scheduled-export-history/{historyId}/download' as const,
+  tags: ['ComplianceAudit'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Lists recurring audit exports for a tenant.
+ */
+export interface GetAdminAuditLogsScheduledExportsInput {
+  query?: {
+    tenantId?: string;
+  };
+}
+export type GetAdminAuditLogsScheduledExportsOutput = Array<Types.ComplianceAuditScheduledAuditExportOutput>;
+export const getAdminAuditLogsScheduledExportsEndpoint = {
+  operationId: 'getAdminAuditLogsScheduledExports' as const,
+  method: 'GET' as const,
+  path: '/v1/admin/audit-logs/scheduled-exports' as const,
+  tags: ['ComplianceAudit'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Creates a recurring audit export delivered to the tenant's configured storage.
+ *
+ * Uses a five-field cron expression and the supplied timezone. During a repeated local time at the end of daylight
+ * saving, the first UTC occurrence is used. Files are removed after the configured retention period while their
+ * execution history remains available.
+ */
+export interface PostAdminAuditLogsScheduledExportsInput {
+  body?: Types.ComplianceAuditCreateScheduledAuditExportInput;
+}
+export type PostAdminAuditLogsScheduledExportsOutput = Types.ComplianceAuditScheduledAuditExportOutput;
+export const postAdminAuditLogsScheduledExportsEndpoint = {
+  operationId: 'postAdminAuditLogsScheduledExports' as const,
+  method: 'POST' as const,
+  path: '/v1/admin/audit-logs/scheduled-exports' as const,
+  tags: ['ComplianceAudit'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Disables a recurring audit export without deleting its execution history.
+ */
+export interface DeleteAdminAuditLogsScheduledExportsInput {
+  exportId: string;
+  query?: {
+    tenantId?: string;
+  };
+}
+export type DeleteAdminAuditLogsScheduledExportsOutput = void;
+export const deleteAdminAuditLogsScheduledExportsEndpoint = {
+  operationId: 'deleteAdminAuditLogsScheduledExports' as const,
+  method: 'DELETE' as const,
+  path: '/v1/admin/audit-logs/scheduled-exports/{exportId}' as const,
+  tags: ['ComplianceAudit'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Lists recent executions for a scheduled audit export.
+ */
+export interface GetAdminAuditLogsScheduledExportsHistoryInput {
+  exportId: string;
+  query?: {
+    tenantId?: string;
+  };
+}
+export type GetAdminAuditLogsScheduledExportsHistoryOutput = Array<Types.ComplianceAuditAuditExportHistoryOutput>;
+export const getAdminAuditLogsScheduledExportsHistoryEndpoint = {
+  operationId: 'getAdminAuditLogsScheduledExportsHistory' as const,
+  method: 'GET' as const,
+  path: '/v1/admin/audit-logs/scheduled-exports/{exportId}/history' as const,
+  tags: ['ComplianceAudit'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Searches audit events by multiple action types, groups, and taxonomy categories.
+ */
+export interface GetAdminAuditLogsSearchByActionTypeInput {
+  query?: {
+    ActionTypes?: Array<string>;
+    ActionGroups?: Array<string>;
+    Categories?: Array<string>;
+    LogicalOperator?: Types.ComplianceAuditAuditActionTypeLogicalOperator;
+    UserId?: string;
+    TenantId?: string;
+    StartDate?: string;
+    EndDate?: string;
+    Skip?: number;
+    Take?: number;
+    SortBy?: Types.ComplianceAuditAuditActionTypeSortField;
+    SortDirection?: Types.ComplianceAuditAuditActionTypeSortDirection;
+    IncludeTrends?: boolean;
+    TrendBucketSize?: Types.ComplianceAuditAuditActivityBucketSize;
+    IncludeRelatedActions?: boolean;
+  };
+}
+export type GetAdminAuditLogsSearchByActionTypeOutput = Types.ComplianceAuditAuditActionTypeSearchOutput;
+export const getAdminAuditLogsSearchByActionTypeEndpoint = {
+  operationId: 'getAdminAuditLogsSearchByActionType' as const,
+  method: 'GET' as const,
+  path: '/v1/admin/audit-logs/search/by-action-type' as const,
+  tags: ['ComplianceAudit'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Exports matching action-type audit events as CSV or JSON.
+ */
+export interface GetAdminAuditLogsSearchByActionTypeExportInput {
+  query?: {
+    format?: string;
+    ActionTypes?: Array<string>;
+    ActionGroups?: Array<string>;
+    Categories?: Array<string>;
+    LogicalOperator?: Types.ComplianceAuditAuditActionTypeLogicalOperator;
+    UserId?: string;
+    TenantId?: string;
+    StartDate?: string;
+    EndDate?: string;
+    Skip?: number;
+    Take?: number;
+    SortBy?: Types.ComplianceAuditAuditActionTypeSortField;
+    SortDirection?: Types.ComplianceAuditAuditActionTypeSortDirection;
+    IncludeTrends?: boolean;
+    TrendBucketSize?: Types.ComplianceAuditAuditActivityBucketSize;
+    IncludeRelatedActions?: boolean;
+  };
+}
+export type GetAdminAuditLogsSearchByActionTypeExportOutput = void;
+export const getAdminAuditLogsSearchByActionTypeExportEndpoint = {
+  operationId: 'getAdminAuditLogsSearchByActionTypeExport' as const,
+  method: 'GET' as const,
+  path: '/v1/admin/audit-logs/search/by-action-type/export' as const,
+  tags: ['ComplianceAudit'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Lists the hierarchical action type taxonomy and predefined investigation groups.
+ */
+export type GetAdminAuditLogsSearchByActionTypeTaxonomyInput = void;
+export type GetAdminAuditLogsSearchByActionTypeTaxonomyOutput = Types.ComplianceAuditAuditActionTypeTaxonomyOutput;
+export const getAdminAuditLogsSearchByActionTypeTaxonomyEndpoint = {
+  operationId: 'getAdminAuditLogsSearchByActionTypeTaxonomy' as const,
+  method: 'GET' as const,
+  path: '/v1/admin/audit-logs/search/by-action-type/taxonomy' as const,
+  tags: ['ComplianceAudit'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Searches audit records over an explicit or relative date range and returns matching events with a time histogram.
+ *
+ * Use `start`/`end` with ISO-8601 timestamps, Unix seconds or milliseconds, or relative expressions
+ * such as `now-7d` and `now`. Alternatively use `period=last24h|last7d|last30d|today|thisWeek|thisMonth`.
+ * Offset-free values are interpreted in `timeZoneId` (UTC by default). Date-only end values include that
+ * calendar day. Hourly or daily histogram buckets include both UTC and local timestamps.
+ */
+export interface GetAdminAuditLogsSearchByDateRangeInput {
+  query?: {
+    Start?: string;
+    End?: string;
+    Period?: string;
+    TimeZoneId?: string;
+    BucketSize?: Types.ComplianceAuditAuditActivityBucketSize;
+    UserId?: string;
+    TenantId?: string;
+    ActionType?: string;
+    ResourceType?: string;
+    Category?: Types.ComplianceAuditAuditCategory;
+    RiskLevel?: Types.ComplianceAuditAuditRiskLevel;
+    Success?: boolean;
+    IpAddress?: string;
+    Skip?: number;
+    Take?: number;
+  };
+}
+export type GetAdminAuditLogsSearchByDateRangeOutput = Types.ComplianceAuditAuditDateRangeSearchOutput;
+export const getAdminAuditLogsSearchByDateRangeEndpoint = {
+  operationId: 'getAdminAuditLogsSearchByDateRange' as const,
+  method: 'GET' as const,
+  path: '/v1/admin/audit-logs/search/by-date-range' as const,
   tags: ['ComplianceAudit'] as const,
   requiresAuth: true,
 } as const;
@@ -10692,7 +11110,7 @@ export const getAssetsForGetAssetsByIdEndpoint = {
   method: 'GET' as const,
   path: '/v1/assets/{id}' as const,
   tags: ['Assets'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -10741,7 +11159,7 @@ export const getSignedAssetExtractedTextEndpoint = {
   method: 'GET' as const,
   path: '/v1/assets/{id}:extracted-text' as const,
   tags: ['Assets'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -10764,7 +11182,7 @@ export const postAssetsGenerateAccessUrlEndpoint = {
   method: 'POST' as const,
   path: '/v1/assets/{id}:generate-access-url' as const,
   tags: ['Assets'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -10799,7 +11217,7 @@ export const getAssetsContentEndpoint = {
   method: 'GET' as const,
   path: '/v1/assets/{id}/content' as const,
   tags: ['Assets'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -11009,6 +11427,192 @@ export const getAssetsSocialMediaEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetAuditCompliancePackagingForGetAuditCompliancePackagingInput {
+  query?: {
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetAuditCompliancePackagingForGetAuditCompliancePackagingOutput = Array<Types.ComplianceAuditCompliancePackageSummary>;
+export const getAuditCompliancePackagingForGetAuditCompliancePackagingEndpoint = {
+  operationId: 'getAuditCompliancePackagingForGetAuditCompliancePackaging' as const,
+  method: 'GET' as const,
+  path: '/v1/audit/compliance-packaging' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAuditCompliancePackagingInput {
+  body?: Types.ComplianceAuditCreateCompliancePackageInput;
+}
+export type PostAuditCompliancePackagingOutput = Types.ComplianceAuditCompliancePackageOutput;
+export const postAuditCompliancePackagingEndpoint = {
+  operationId: 'postAuditCompliancePackaging' as const,
+  method: 'POST' as const,
+  path: '/v1/audit/compliance-packaging' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAuditCompliancePackagingForGetAuditCompliancePackagingByIdInput {
+  id: string;
+}
+export type GetAuditCompliancePackagingForGetAuditCompliancePackagingByIdOutput = Types.ComplianceAuditCompliancePackageOutput;
+export const getAuditCompliancePackagingForGetAuditCompliancePackagingByIdEndpoint = {
+  operationId: 'getAuditCompliancePackagingForGetAuditCompliancePackagingById' as const,
+  method: 'GET' as const,
+  path: '/v1/audit/compliance-packaging/{id}' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAuditCompliancePackagingDownloadInput {
+  id: string;
+}
+export type GetAuditCompliancePackagingDownloadOutput = Blob;
+export const getAuditCompliancePackagingDownloadEndpoint = {
+  operationId: 'getAuditCompliancePackagingDownload' as const,
+  method: 'GET' as const,
+  path: '/v1/audit/compliance-packaging/{id}/download' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAuditCompliancePackagingVerificationInput {
+  id: string;
+}
+export type GetAuditCompliancePackagingVerificationOutput = Types.ComplianceAuditComplianceArtifactVerification;
+export const getAuditCompliancePackagingVerificationEndpoint = {
+  operationId: 'getAuditCompliancePackagingVerification' as const,
+  method: 'GET' as const,
+  path: '/v1/audit/compliance-packaging/{id}/verification' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAuditCompliancePackagingDocumentsForGetAuditCompliancePackagingDocumentsInput {
+  query?: {
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetAuditCompliancePackagingDocumentsForGetAuditCompliancePackagingDocumentsOutput = Array<Types.ComplianceAuditComplianceDocumentOutput>;
+export const getAuditCompliancePackagingDocumentsForGetAuditCompliancePackagingDocumentsEndpoint = {
+  operationId: 'getAuditCompliancePackagingDocumentsForGetAuditCompliancePackagingDocuments' as const,
+  method: 'GET' as const,
+  path: '/v1/audit/compliance-packaging/documents' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAuditCompliancePackagingDocumentsInput {
+  body?: Types.ComplianceAuditUploadComplianceDocumentInput;
+}
+export type PostAuditCompliancePackagingDocumentsOutput = Types.ComplianceAuditComplianceDocumentOutput;
+export const postAuditCompliancePackagingDocumentsEndpoint = {
+  operationId: 'postAuditCompliancePackagingDocuments' as const,
+  method: 'POST' as const,
+  path: '/v1/audit/compliance-packaging/documents' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAuditCompliancePackagingDocumentsForGetAuditCompliancePackagingDocumentsByIdInput {
+  id: string;
+}
+export type GetAuditCompliancePackagingDocumentsForGetAuditCompliancePackagingDocumentsByIdOutput = Types.ComplianceAuditComplianceDocumentOutput;
+export const getAuditCompliancePackagingDocumentsForGetAuditCompliancePackagingDocumentsByIdEndpoint = {
+  operationId: 'getAuditCompliancePackagingDocumentsForGetAuditCompliancePackagingDocumentsById' as const,
+  method: 'GET' as const,
+  path: '/v1/audit/compliance-packaging/documents/{id}' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAuditCompliancePackagingDocumentsReviewInput {
+  id: string;
+  body?: Types.ComplianceAuditReviewComplianceDocumentInput;
+}
+export type PostAuditCompliancePackagingDocumentsReviewOutput = Types.ComplianceAuditComplianceDocumentOutput;
+export const postAuditCompliancePackagingDocumentsReviewEndpoint = {
+  operationId: 'postAuditCompliancePackagingDocumentsReview' as const,
+  method: 'POST' as const,
+  path: '/v1/audit/compliance-packaging/documents/{id}/review' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export type GetAuditCompliancePackagingTemplatesInput = void;
+export type GetAuditCompliancePackagingTemplatesOutput = Array<Types.ComplianceAuditComplianceFrameworkTemplate>;
+export const getAuditCompliancePackagingTemplatesEndpoint = {
+  operationId: 'getAuditCompliancePackagingTemplates' as const,
+  method: 'GET' as const,
+  path: '/v1/audit/compliance-packaging/templates' as const,
+  tags: ['ComplianceAuditCompliancePackaging'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAuditRetentionSimulationForGetAuditRetentionSimulationInput {
+  query?: {
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetAuditRetentionSimulationForGetAuditRetentionSimulationOutput = Array<Types.ComplianceAuditAuditRetentionSimulationSummary>;
+export const getAuditRetentionSimulationForGetAuditRetentionSimulationEndpoint = {
+  operationId: 'getAuditRetentionSimulationForGetAuditRetentionSimulation' as const,
+  method: 'GET' as const,
+  path: '/v1/audit/retention-simulation' as const,
+  tags: ['ComplianceAuditRetentionSimulation'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAuditRetentionSimulationInput {
+  body?: Types.ComplianceAuditRunAuditRetentionSimulationInput;
+}
+export type PostAuditRetentionSimulationOutput = Types.ComplianceAuditAuditRetentionSimulationOutput;
+export const postAuditRetentionSimulationEndpoint = {
+  operationId: 'postAuditRetentionSimulation' as const,
+  method: 'POST' as const,
+  path: '/v1/audit/retention-simulation' as const,
+  tags: ['ComplianceAuditRetentionSimulation'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAuditRetentionSimulationForGetAuditRetentionSimulationByIdInput {
+  id: string;
+}
+export type GetAuditRetentionSimulationForGetAuditRetentionSimulationByIdOutput = Types.ComplianceAuditAuditRetentionSimulationOutput;
+export const getAuditRetentionSimulationForGetAuditRetentionSimulationByIdEndpoint = {
+  operationId: 'getAuditRetentionSimulationForGetAuditRetentionSimulationById' as const,
+  method: 'GET' as const,
+  path: '/v1/audit/retention-simulation/{id}' as const,
+  tags: ['ComplianceAuditRetentionSimulation'] as const,
+  requiresAuth: true,
+} as const;
+
+export type GetAuditRetentionSimulationConfigurationInput = void;
+export type GetAuditRetentionSimulationConfigurationOutput = Types.ComplianceAuditAuditRetentionConfigurationOutput;
+export const getAuditRetentionSimulationConfigurationEndpoint = {
+  operationId: 'getAuditRetentionSimulationConfiguration' as const,
+  method: 'GET' as const,
+  path: '/v1/audit/retention-simulation/configuration' as const,
+  tags: ['ComplianceAuditRetentionSimulation'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutAuditRetentionSimulationConfigurationInput {
+  body?: Types.ComplianceAuditConfigureAuditRetentionInput;
+}
+export type PutAuditRetentionSimulationConfigurationOutput = Types.ComplianceAuditAuditRetentionConfigurationOutput;
+export const putAuditRetentionSimulationConfigurationEndpoint = {
+  operationId: 'putAuditRetentionSimulationConfiguration' as const,
+  method: 'PUT' as const,
+  path: '/v1/audit/retention-simulation/configuration' as const,
+  tags: ['ComplianceAuditRetentionSimulation'] as const,
+  requiresAuth: true,
+} as const;
+
 /**
  * List all API keys for the current user
  */
@@ -11067,7 +11671,7 @@ export const postAuthDiscordSignInAuthorizeEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/discord:sign-in-authorize' as const,
   tags: ['Auth'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -11084,7 +11688,7 @@ export const postAuthDiscordSignInCallbackEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/discord:sign-in-callback' as const,
   tags: ['Auth'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -11101,7 +11705,7 @@ export const postAuthEmailSendVerificationEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/email:send-verification' as const,
   tags: ['Auth'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -11118,7 +11722,7 @@ export const postAuthEmailVerifyEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/email:verify' as const,
   tags: ['Auth'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -11220,7 +11824,7 @@ export const getAuthGithubAuthorizeEndpoint = {
   method: 'GET' as const,
   path: '/v1/auth/github:authorize' as const,
   tags: ['Auth'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -11240,7 +11844,7 @@ export const getAuthGithubCallbackEndpoint = {
   method: 'GET' as const,
   path: '/v1/auth/github:callback' as const,
   tags: ['Auth'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -11257,7 +11861,7 @@ export const postAuthGoogleSignInEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/google:sign-in' as const,
   tags: ['Auth'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -11274,7 +11878,7 @@ export const postAuthMagicLinkConsumeEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/magic-link:consume' as const,
   tags: ['Auth'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -11291,7 +11895,7 @@ export const postAuthMagicLinkRequestEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/magic-link:request' as const,
   tags: ['Auth'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -11451,7 +12055,7 @@ export const postAuthMfaVerifyEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/mfa/verify' as const,
   tags: ['AuthMultiFactor'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -11485,7 +12089,7 @@ export const postAuthPasswordResetEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/password:reset' as const,
   tags: ['Auth'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -11502,7 +12106,24 @@ export const postAuthPasswordResetRequestEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/password:reset-request' as const,
   tags: ['Auth'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
+} as const;
+
+/**
+ * Authenticate using email, username or international phone and a password.
+ *
+ * Resolves one unique account and applies the existing password, risk, tenant and session flow. Phone identifiers use a leading plus and up to 15 digits. Missing, ambiguous or invalid identifiers receive the generic authentication failure.
+ */
+export interface PostAuthPolymorphicInput {
+  body?: Types.IdentityAuthenticationPolymorphicSignInInput;
+}
+export type PostAuthPolymorphicOutput = Types.IdentityAuthenticationSignInOutput;
+export const postAuthPolymorphicEndpoint = {
+  operationId: 'postAuthPolymorphic' as const,
+  method: 'POST' as const,
+  path: '/v1/auth/polymorphic' as const,
+  tags: ['Auth'] as const,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -11828,7 +12449,7 @@ export const postAuthSignInEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/sign-in' as const,
   tags: ['Auth'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -11845,7 +12466,7 @@ export const postAuthSignUpEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/sign-up' as const,
   tags: ['Auth'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -11952,7 +12573,7 @@ export const postAuthTokensRefreshEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/tokens:refresh' as const,
   tags: ['Auth'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -12035,7 +12656,7 @@ export const postAuthWeb3VerifyEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/web3:verify' as const,
   tags: ['Auth'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -12052,7 +12673,7 @@ export const postAuthWeb3ChallengeEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/web3/challenge' as const,
   tags: ['Auth'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -12080,7 +12701,7 @@ export const postAuthWebauthnAuthenticationBeginEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/webauthn/authentication:begin' as const,
   tags: ['AuthWebauthn'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -12095,7 +12716,7 @@ export const postAuthWebauthnAuthenticationCompleteEndpoint = {
   method: 'POST' as const,
   path: '/v1/auth/webauthn/authentication:complete' as const,
   tags: ['AuthWebauthn'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -12378,7 +12999,7 @@ export const getContentResourcesForGetContentResourcesEndpoint = {
   method: 'GET' as const,
   path: '/v1/content-resources' as const,
   tags: ['ContentPagesResources'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -12469,7 +13090,7 @@ export const getContentResourcesBySlugEndpoint = {
   method: 'GET' as const,
   path: '/v1/content-resources/by-slug/{slug}' as const,
   tags: ['ContentPagesResources'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -13469,7 +14090,7 @@ export const getCoursesProductsEndpoint = {
   method: 'GET' as const,
   path: '/v1/courses/{id}/products' as const,
   tags: ['LearningCoursesProgram'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -13783,7 +14404,7 @@ export const getCoursesContentEndpoint = {
   method: 'GET' as const,
   path: '/v1/courses/{programId}/content' as const,
   tags: ['LearningCoursesProgramContent'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -13967,7 +14588,7 @@ export const getCoursesContentByIdEndpoint = {
   method: 'GET' as const,
   path: '/v1/courses/{programId}/content/{id}' as const,
   tags: ['LearningCoursesProgramContent'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -14251,7 +14872,7 @@ export const getCoursesPublicEndpoint = {
   method: 'GET' as const,
   path: '/v1/courses/public' as const,
   tags: ['LearningCoursesProgram'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -14266,7 +14887,7 @@ export const getCoursesSlugEndpoint = {
   method: 'GET' as const,
   path: '/v1/courses/slug/{slug}' as const,
   tags: ['LearningCoursesProgram'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -15460,7 +16081,7 @@ export const getLaunchPadEventsPublicForGetLaunchPadEventsPublicEndpoint = {
   method: 'GET' as const,
   path: '/v1/launch-pad/events/public' as const,
   tags: ['LaunchPadEvents'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetLaunchPadEventsPublicForGetLaunchPadEventsPublicByIdInput {
@@ -15472,7 +16093,7 @@ export const getLaunchPadEventsPublicForGetLaunchPadEventsPublicByIdEndpoint = {
   method: 'GET' as const,
   path: '/v1/launch-pad/events/public/{id}' as const,
   tags: ['LaunchPadEvents'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PostLaunchPadEventsRegistrationsCancelInput {
@@ -16127,7 +16748,7 @@ export const postMarketingLeadsEndpoint = {
   method: 'POST' as const,
   path: '/v1/marketing/leads' as const,
   tags: ['ContentMarketingLeads'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetMarketingLeadByIdInput {
@@ -16167,7 +16788,7 @@ export const postOauthTokenEndpoint = {
   method: 'POST' as const,
   path: '/v1/oauth/token' as const,
   tags: ['AuthServiceAccountsTokens'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -16183,7 +16804,7 @@ export const getOgEndpoint = {
   method: 'GET' as const,
   path: '/v1/og/{slug}' as const,
   tags: ['ContentPagesOpenGraph'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -16517,7 +17138,7 @@ export const getPagesBySlugEndpoint = {
   method: 'GET' as const,
   path: '/v1/pages/by-slug/{slug}' as const,
   tags: ['ContentPages'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -16535,7 +17156,7 @@ export const getPagesSitemapEndpoint = {
   method: 'GET' as const,
   path: '/v1/pages/sitemap' as const,
   tags: ['ContentPages'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -16789,7 +17410,7 @@ export const getProductsForGetProductsEndpoint = {
   method: 'GET' as const,
   path: '/v1/products' as const,
   tags: ['CommerceProducts'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -16838,7 +17459,7 @@ export const getProductsForGetProductsByProductIdEndpoint = {
   method: 'GET' as const,
   path: '/v1/products/{productId}' as const,
   tags: ['CommerceProducts'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -16907,7 +17528,7 @@ export const headProductsEndpoint = {
   method: 'HEAD' as const,
   path: '/v1/products/{productId}' as const,
   tags: ['CommerceProducts'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -16970,7 +17591,7 @@ export const getProductsPricingEndpoint = {
   method: 'GET' as const,
   path: '/v1/products/{productId}/pricing' as const,
   tags: ['CommerceProducts'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface PutProductsPricingInput {
@@ -17020,7 +17641,7 @@ export const getProjectsForGetProjectsEndpoint = {
   method: 'GET' as const,
   path: '/v1/projects' as const,
   tags: ['Projects'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -17056,7 +17677,7 @@ export const getProjectsForGetProjectsByIdEndpoint = {
   method: 'GET' as const,
   path: '/v1/projects/{id}' as const,
   tags: ['Projects'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -17266,7 +17887,7 @@ export const getProjectsStatisticsEndpoint = {
   method: 'GET' as const,
   path: '/v1/projects/{id}/statistics' as const,
   tags: ['Projects'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetProjectsVersionsInput {
@@ -18063,7 +18684,7 @@ export const getProjectsCategoryEndpoint = {
   method: 'GET' as const,
   path: '/v1/projects/category/{categoryId}' as const,
   tags: ['Projects'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -18083,7 +18704,7 @@ export const getProjectsCreatorEndpoint = {
   method: 'GET' as const,
   path: '/v1/projects/creator/{creatorId}' as const,
   tags: ['Projects'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -18101,7 +18722,7 @@ export const getProjectsFeaturedEndpoint = {
   method: 'GET' as const,
   path: '/v1/projects/featured' as const,
   tags: ['Projects'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -18182,7 +18803,7 @@ export const getProjectsPopularEndpoint = {
   method: 'GET' as const,
   path: '/v1/projects/popular' as const,
   tags: ['Projects'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -18200,7 +18821,7 @@ export const getProjectsRecentEndpoint = {
   method: 'GET' as const,
   path: '/v1/projects/recent' as const,
   tags: ['Projects'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -18213,7 +18834,7 @@ export const getProjectsRoleTemplatesEndpoint = {
   method: 'GET' as const,
   path: '/v1/projects/role-templates' as const,
   tags: ['Projects'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -18228,7 +18849,7 @@ export const getProjectsRolesPermissionsEndpoint = {
   method: 'GET' as const,
   path: '/v1/projects/roles/{roleName}/permissions' as const,
   tags: ['Projects'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -18253,7 +18874,7 @@ export const getProjectsSearchEndpoint = {
   method: 'GET' as const,
   path: '/v1/projects/search' as const,
   tags: ['Projects'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -18273,7 +18894,7 @@ export const getProjectsSlugEndpoint = {
   method: 'GET' as const,
   path: '/v1/projects/slug/{slug}' as const,
   tags: ['Projects'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -18529,7 +19150,7 @@ export const getRecommendationsCoursesSimilarEndpoint = {
   method: 'GET' as const,
   path: '/v1/recommendations/courses/{courseId}/similar' as const,
   tags: ['LearningExperienceRecommendations'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -18679,7 +19300,7 @@ export const getRecommendationsPopularEndpoint = {
   method: 'GET' as const,
   path: '/v1/recommendations/popular' as const,
   tags: ['LearningExperienceRecommendations'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -18701,7 +19322,7 @@ export const getRecommendationsTrendingEndpoint = {
   method: 'GET' as const,
   path: '/v1/recommendations/trending' as const,
   tags: ['LearningExperienceRecommendations'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -19113,7 +19734,7 @@ export const getStoreProductsProjectsEndpoint = {
   method: 'GET' as const,
   path: '/v1/store/products/{productId}/projects' as const,
   tags: ['ProjectsStoreProducts'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -19140,7 +19761,7 @@ export const getSubscriptionPlansForGetSubscriptionPlansEndpoint = {
   method: 'GET' as const,
   path: '/v1/subscription-plans' as const,
   tags: ['CommerceSubscriptionsPlans'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 /**
@@ -21754,7 +22375,7 @@ export const getTestingEventsPublicForGetTestingEventsPublicEndpoint = {
   method: 'GET' as const,
   path: '/v1/testing/events/public' as const,
   tags: ['TestingLabTestingEvents'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetTestingEventsPublicForGetTestingEventsPublicByEventIdInput {
@@ -21766,7 +22387,7 @@ export const getTestingEventsPublicForGetTestingEventsPublicByEventIdEndpoint = 
   method: 'GET' as const,
   path: '/v1/testing/events/public/{eventId}' as const,
   tags: ['TestingLabTestingEvents'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface DeleteTestingEventsRegistrationsInput {
@@ -22057,7 +22678,7 @@ export const getTestingPublicSessionsEndpoint = {
   method: 'GET' as const,
   path: '/v1/testing/public/sessions' as const,
   tags: ['TestingLabTestingSessions'] as const,
-  requiresAuth: true,
+  requiresAuth: false,
 } as const;
 
 export interface GetTestingRequestsForGetTestingRequestsInput {
@@ -24312,6 +24933,25 @@ export const endpoints = {
   postApiAnalyticsWarehouseRun: postApiAnalyticsWarehouseRunEndpoint,
   postApiAssetsAccessUrl: postApiAssetsAccessUrlEndpoint,
   getApiAssetsContent: getApiAssetsContentEndpoint,
+  getApiAuditCompliancePackagingForGetApiAuditCompliancePackaging: getApiAuditCompliancePackagingForGetApiAuditCompliancePackagingEndpoint,
+  postApiAuditCompliancePackaging: postApiAuditCompliancePackagingEndpoint,
+  getApiAuditCompliancePackagingForGetApiAuditCompliancePackagingById: getApiAuditCompliancePackagingForGetApiAuditCompliancePackagingByIdEndpoint,
+  getApiAuditCompliancePackagingDownload: getApiAuditCompliancePackagingDownloadEndpoint,
+  getApiAuditCompliancePackagingVerification: getApiAuditCompliancePackagingVerificationEndpoint,
+  getApiAuditCompliancePackagingDocumentsForGetApiAuditCompliancePackagingDocuments:
+    getApiAuditCompliancePackagingDocumentsForGetApiAuditCompliancePackagingDocumentsEndpoint,
+  postApiAuditCompliancePackagingDocuments: postApiAuditCompliancePackagingDocumentsEndpoint,
+  getApiAuditCompliancePackagingDocumentsForGetApiAuditCompliancePackagingDocumentsById:
+    getApiAuditCompliancePackagingDocumentsForGetApiAuditCompliancePackagingDocumentsByIdEndpoint,
+  postApiAuditCompliancePackagingDocumentsReview: postApiAuditCompliancePackagingDocumentsReviewEndpoint,
+  getApiAuditCompliancePackagingTemplates: getApiAuditCompliancePackagingTemplatesEndpoint,
+  postApiAuditExportCsv: postApiAuditExportCsvEndpoint,
+  postApiAuditExportJson: postApiAuditExportJsonEndpoint,
+  getApiAuditRetentionSimulationForGetApiAuditRetentionSimulation: getApiAuditRetentionSimulationForGetApiAuditRetentionSimulationEndpoint,
+  postApiAuditRetentionSimulation: postApiAuditRetentionSimulationEndpoint,
+  getApiAuditRetentionSimulationForGetApiAuditRetentionSimulationById: getApiAuditRetentionSimulationForGetApiAuditRetentionSimulationByIdEndpoint,
+  getApiAuditRetentionSimulationConfiguration: getApiAuditRetentionSimulationConfigurationEndpoint,
+  putApiAuditRetentionSimulationConfiguration: putApiAuditRetentionSimulationConfigurationEndpoint,
   getApiCertificates: getApiCertificatesEndpoint,
   postApiCertificatesRevoke: postApiCertificatesRevokeEndpoint,
   getApiCertificatesCourse: getApiCertificatesCourseEndpoint,
@@ -24915,6 +25555,15 @@ export const endpoints = {
   getAdminAuditLogsExportProgress: getAdminAuditLogsExportProgressEndpoint,
   postAdminAuditLogsExportCsv: postAdminAuditLogsExportCsvEndpoint,
   postAdminAuditLogsExportJson: postAdminAuditLogsExportJsonEndpoint,
+  getAdminAuditLogsScheduledExportHistoryDownload: getAdminAuditLogsScheduledExportHistoryDownloadEndpoint,
+  getAdminAuditLogsScheduledExports: getAdminAuditLogsScheduledExportsEndpoint,
+  postAdminAuditLogsScheduledExports: postAdminAuditLogsScheduledExportsEndpoint,
+  deleteAdminAuditLogsScheduledExports: deleteAdminAuditLogsScheduledExportsEndpoint,
+  getAdminAuditLogsScheduledExportsHistory: getAdminAuditLogsScheduledExportsHistoryEndpoint,
+  getAdminAuditLogsSearchByActionType: getAdminAuditLogsSearchByActionTypeEndpoint,
+  getAdminAuditLogsSearchByActionTypeExport: getAdminAuditLogsSearchByActionTypeExportEndpoint,
+  getAdminAuditLogsSearchByActionTypeTaxonomy: getAdminAuditLogsSearchByActionTypeTaxonomyEndpoint,
+  getAdminAuditLogsSearchByDateRange: getAdminAuditLogsSearchByDateRangeEndpoint,
   getAdminAuditLogsStatistics: getAdminAuditLogsStatisticsEndpoint,
   postAdminEventsReplay: postAdminEventsReplayEndpoint,
   getAdminEventsDeadLetters: getAdminEventsDeadLettersEndpoint,
@@ -25021,6 +25670,23 @@ export const endpoints = {
   getAssetsSearch: getAssetsSearchEndpoint,
   postAssetsSocialMedia: postAssetsSocialMediaEndpoint,
   getAssetsSocialMedia: getAssetsSocialMediaEndpoint,
+  getAuditCompliancePackagingForGetAuditCompliancePackaging: getAuditCompliancePackagingForGetAuditCompliancePackagingEndpoint,
+  postAuditCompliancePackaging: postAuditCompliancePackagingEndpoint,
+  getAuditCompliancePackagingForGetAuditCompliancePackagingById: getAuditCompliancePackagingForGetAuditCompliancePackagingByIdEndpoint,
+  getAuditCompliancePackagingDownload: getAuditCompliancePackagingDownloadEndpoint,
+  getAuditCompliancePackagingVerification: getAuditCompliancePackagingVerificationEndpoint,
+  getAuditCompliancePackagingDocumentsForGetAuditCompliancePackagingDocuments:
+    getAuditCompliancePackagingDocumentsForGetAuditCompliancePackagingDocumentsEndpoint,
+  postAuditCompliancePackagingDocuments: postAuditCompliancePackagingDocumentsEndpoint,
+  getAuditCompliancePackagingDocumentsForGetAuditCompliancePackagingDocumentsById:
+    getAuditCompliancePackagingDocumentsForGetAuditCompliancePackagingDocumentsByIdEndpoint,
+  postAuditCompliancePackagingDocumentsReview: postAuditCompliancePackagingDocumentsReviewEndpoint,
+  getAuditCompliancePackagingTemplates: getAuditCompliancePackagingTemplatesEndpoint,
+  getAuditRetentionSimulationForGetAuditRetentionSimulation: getAuditRetentionSimulationForGetAuditRetentionSimulationEndpoint,
+  postAuditRetentionSimulation: postAuditRetentionSimulationEndpoint,
+  getAuditRetentionSimulationForGetAuditRetentionSimulationById: getAuditRetentionSimulationForGetAuditRetentionSimulationByIdEndpoint,
+  getAuditRetentionSimulationConfiguration: getAuditRetentionSimulationConfigurationEndpoint,
+  putAuditRetentionSimulationConfiguration: putAuditRetentionSimulationConfigurationEndpoint,
   getAuthApiKeys: getAuthApiKeysEndpoint,
   postAuthApiKeys: postAuthApiKeysEndpoint,
   postAuthApiKeysRevoke: postAuthApiKeysRevokeEndpoint,
@@ -25051,6 +25717,7 @@ export const endpoints = {
   postAuthPasswordChange: postAuthPasswordChangeEndpoint,
   postAuthPasswordReset: postAuthPasswordResetEndpoint,
   postAuthPasswordResetRequest: postAuthPasswordResetRequestEndpoint,
+  postAuthPolymorphic: postAuthPolymorphicEndpoint,
   getAuthServiceAccountsForGetAuthServiceAccounts: getAuthServiceAccountsForGetAuthServiceAccountsEndpoint,
   postAuthServiceAccounts: postAuthServiceAccountsEndpoint,
   getAuthServiceAccountsForGetAuthServiceAccountsByServiceAccountId: getAuthServiceAccountsForGetAuthServiceAccountsByServiceAccountIdEndpoint,

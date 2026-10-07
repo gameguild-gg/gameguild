@@ -27,6 +27,7 @@ describe("social navigation", () => {
     expect(socialNavItems.map((item) => item.title)).toEqual([
       "Home",
       "Explore",
+      "Blog",
       "Projects",
       "Testing Lab",
       "Launch Pad",

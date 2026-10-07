@@ -1,16 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  auth: vi.fn(),
   createServerClient: vi.fn(),
   getProjectsForGetProjects: vi.fn(),
   getProjectsSlug: vi.fn(),
-  getToken: vi.fn(),
+  getRequestAuthContext: vi.fn(),
 }));
 
 vi.mock("@/auth", () => ({
-  auth: mocks.auth,
-  getToken: mocks.getToken,
+  getRequestAuthContext: mocks.getRequestAuthContext,
 }));
 
 vi.mock("@game-guild/client", () => ({
@@ -50,8 +48,7 @@ const apiProject = {
 describe("public Projects API queries", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.auth.mockResolvedValue({ tenantId: "tenant-1" });
-    mocks.getToken.mockResolvedValue("access-token");
+    mocks.getRequestAuthContext.mockResolvedValue({ token: "access-token", tenantId: "tenant-1" });
     mocks.createServerClient.mockReturnValue({ kind: "server-client" });
   });
 

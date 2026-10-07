@@ -7,8 +7,13 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="JsonSchema.Net" />
         <PackageReference Include="Microsoft.EntityFrameworkCore" />
         <PackageReference Include="System.ComponentModel.Annotations" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Include="Resources\FedRamp2026\*.json" />
     </ItemGroup>
 
     <ItemGroup>

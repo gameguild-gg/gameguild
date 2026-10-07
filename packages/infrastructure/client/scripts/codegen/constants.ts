@@ -19,6 +19,9 @@ export const PARAMETER_LOCATIONS = {
   COOKIE: 'cookie',
 } as const;
 
+// Mirrors OpenApiExtensions.AllowAnonymousExtensionName in GameGuild.API.
+export const ALLOW_ANONYMOUS_EXTENSION = 'x-gameguild-allow-anonymous';
+
 export const ERROR_STATUS_CODES = {
   BAD_REQUEST: 400,
   UNAUTHORIZED: 401,

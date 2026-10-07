@@ -2,6 +2,7 @@ using System.Net;
 using Asp.Versioning.ApiExplorer;
 using GameGuild.Configuration.PresentationLayer.GraphQL;
 using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Tenants;
 using GameGuild.API.Core.ApiVersioning;
 using GameGuild.API.Core.CostAccounting;
@@ -92,6 +93,8 @@ public static class PipelineExtensions
         // 14. Authentication (identify user from JWT/cookies)
         // SECURITY: Tenant resolution validates authenticated membership and therefore needs the ClaimsPrincipal first.
         app.UseAuthentication();
+        // Reject revoked JWT state before it can establish tenant membership or an actor.
+        app.UseTokenRevocation();
 
         // 15. Tenant Resolution (multi-tenant context, after routing and authentication)
         // Resolves tenant from: header > domain > query > route > authenticated claim > anonymous default.
@@ -167,7 +170,9 @@ public static class PipelineExtensions
                     options,
                     app.Services.GetService<IApiVersionDescriptionProvider>(),
                     openApiOptions?.Version ?? "v1",
-                    openApiLocalizationOptions);
+                    openApiLocalizationOptions,
+                    app.Services.GetService<GameGuild.Configuration.PresentationLayer.ApiVersioning.ApiVersioningOptions>()
+                        ?.GroupNameFormat ?? VersionedOpenApiDocumentCatalog.DefaultGroupNameFormat);
             });
         }
 
@@ -204,11 +209,20 @@ public static class PipelineExtensions
         SwaggerUIOptions options,
         IApiVersionDescriptionProvider? versionProvider,
         string fallbackDocumentName,
-        OpenApiLocalizationOptions? localizationOptions)
+        OpenApiLocalizationOptions? localizationOptions) =>
+        ConfigureOpenApiDocuments(options, versionProvider, fallbackDocumentName, localizationOptions,
+            VersionedOpenApiDocumentCatalog.DefaultGroupNameFormat);
+
+    internal static void ConfigureOpenApiDocuments(
+        SwaggerUIOptions options,
+        IApiVersionDescriptionProvider? versionProvider,
+        string fallbackDocumentName,
+        OpenApiLocalizationOptions? localizationOptions,
+        string versionGroupNameFormat)
     {
         var documentNames = versionProvider is null
             ? [(fallbackDocumentName, $"GameGuild API {fallbackDocumentName.ToUpperInvariant()}")]
-            : versionProvider.ApiVersionDescriptions
+            : new VersionedOpenApiDocumentCatalog(versionProvider.ApiVersionDescriptions, versionGroupNameFormat).Descriptions
                 .Select(description => (
                     description.GroupName,
                     $"GameGuild API {description.GroupName.ToUpperInvariant()}"))

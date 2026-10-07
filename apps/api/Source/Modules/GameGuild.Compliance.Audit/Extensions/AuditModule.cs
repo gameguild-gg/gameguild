@@ -1,5 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using GameGuild.Identity.Authentication;
 
 namespace GameGuild.Compliance.Audit;
 
@@ -34,6 +37,19 @@ public static class AuditModule
         IServiceCollection services,
         Action<AuditSigningOptions>? configureSigningOptions)
     {
+        services.AddOptions<AuditExportWebhookOptions>()
+            .Configure<IConfiguration>((options, configuration) =>
+            {
+                var configuredOptions = AuditExportWebhookOptionsConfiguration.BindFrom(configuration);
+                options.SigningSecret = configuredOptions.SigningSecret;
+                options.AllowedHosts = configuredOptions.AllowedHosts;
+                options.MaxAttempts = configuredOptions.MaxAttempts;
+                options.RetryDelayMilliseconds = configuredOptions.RetryDelayMilliseconds;
+                options.TimeoutSeconds = configuredOptions.TimeoutSeconds;
+            });
+        services.AddHttpClient<IAuditExportWebhookNotifier, AuditExportWebhookNotifier>()
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
+
         services.AddOptions<AuditSigningOptions>();
         if (configureSigningOptions is not null)
         {
@@ -42,9 +58,26 @@ public static class AuditModule
 
         // Register audit services
         services.AddScoped<IAuditService, AuditService>();
+        services.TryAddSingleton(TimeProvider.System);
+        services.AddSingleton<AuditRetentionSimulationEngine>();
+        services.AddScoped<IAuditRetentionSimulationRepository, AuditRetentionSimulationRepository>();
+        services.AddScoped<IAuditRetentionSimulationService, AuditRetentionSimulationService>();
+        services.AddScoped<IAuditDataAccessRecorder, AuditDataAccessRecorder>();
+        services.AddScoped<IAuthenticationAuditEventSink, CentralAuthenticationAuditEventSink>();
+        services.AddScoped<IAuditActionTypeSearchService, AuditActionTypeSearchService>();
         services.AddSingleton<IAuditExportProgressTracker, DistributedAuditExportProgressTracker>();
+        services.AddScoped<IAuditExportCronSchedule, AuditExportCronSchedule>();
+        services.AddScoped<IScheduledAuditExportRepository, ScheduledAuditExportRepository>();
+        services.AddScoped<IScheduledAuditExportService, ScheduledAuditExportService>();
+        services.AddHostedService<ScheduledAuditExportBackgroundService>();
         services.AddScoped<ITamperEvidentAuditService, TamperEvidentAuditService>();
         services.AddSingleton<ICryptographicSigningService, EcdsaCryptographicSigningService>();
+        services.AddSingleton<ComplianceEvidenceValidationEngine>();
+        services.AddSingleton<ComplianceArtifactBuilder>();
+        services.AddSingleton<IComplianceFrameworkCatalog, ComplianceFrameworkCatalog>();
+        services.AddScoped<ICompliancePackagingRepository, CompliancePackagingRepository>();
+        services.AddScoped<IComplianceEvidencePackagingService, ComplianceEvidencePackagingService>();
+        services.AddSingleton<AuditChainEvidenceVerifier>();
 
         // Register security audit sub-services
         services.AddScoped<IAuditLogQueryService, AuditLogQueryService>();

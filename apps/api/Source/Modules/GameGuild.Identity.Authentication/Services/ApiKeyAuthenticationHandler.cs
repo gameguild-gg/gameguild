@@ -14,15 +14,27 @@ namespace GameGuild.Identity.Authentication;
 public sealed class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthenticationOptions>
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly IAuthenticationAuditEventSink? _auditEventSink;
 
     public ApiKeyAuthenticationHandler(
         IOptionsMonitor<ApiKeyAuthenticationOptions> options,
         ILoggerFactory logger,
         UrlEncoder encoder,
         IApplicationDbContext dbContext)
+        : this(options, logger, encoder, dbContext, null)
+    {
+    }
+
+    public ApiKeyAuthenticationHandler(
+        IOptionsMonitor<ApiKeyAuthenticationOptions> options,
+        ILoggerFactory logger,
+        UrlEncoder encoder,
+        IApplicationDbContext dbContext,
+        IAuthenticationAuditEventSink? auditEventSink)
         : base(options, logger, encoder)
     {
         _dbContext = dbContext;
+        _auditEventSink = auditEventSink;
     }
 
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
@@ -39,7 +51,7 @@ public sealed class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAu
         catch (Exception ex)
         {
             Logger.LogError(ex, "Error reading custom API key source");
-            return AuthenticateResult.Fail("Authentication error");
+            return await FailAsync("Authentication error", "AuthenticationError").ConfigureAwait(false);
         }
 
         var configuredSources = new[] { headerApiKey, queryApiKey, customApiKey }
@@ -48,7 +60,9 @@ public sealed class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAu
 
         if (configuredSources.Length > 1)
         {
-            return AuthenticateResult.Fail("Provide an API key through only one configured source.");
+            return await FailAsync(
+                "Provide an API key through only one configured source.",
+                "MultipleApiKeySources").ConfigureAwait(false);
         }
 
         var providedApiKey = configuredSources.FirstOrDefault();
@@ -59,29 +73,30 @@ public sealed class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAu
 
         if (!string.IsNullOrWhiteSpace(queryApiKey) && !Request.IsHttps)
         {
-            return AuthenticateResult.Fail("API keys in query strings require HTTPS.");
+            return await FailAsync("API keys in query strings require HTTPS.", "ApiKeyQueryRequiresHttps").ConfigureAwait(false);
         }
 
+        ApiKey? apiKey = null;
         try
         {
             // Compute hash of provided key
             var keyHash = ComputeHash(providedApiKey);
 
             // Look up API key in database
-            var apiKey = await _dbContext.Set<ApiKey>()
+            apiKey = await _dbContext.Set<ApiKey>()
                 .FirstOrDefaultAsync(k => k.KeyHash == keyHash).ConfigureAwait(false);
 
             if (apiKey == null)
             {
                 Logger.LogWarning("Invalid API key provided");
-                return AuthenticateResult.Fail("Invalid API key");
+                return await FailAsync("Invalid API key", "InvalidApiKey").ConfigureAwait(false);
             }
 
             // Validate key
             if (!apiKey.IsValid())
             {
                 Logger.LogWarning("Inactive or expired API key used: {KeyId}", apiKey.Id);
-                return AuthenticateResult.Fail("API key is inactive or expired");
+                return await FailAsync("API key is inactive or expired", "InactiveOrExpiredApiKey", apiKey.UserId, apiKey.TenantId).ConfigureAwait(false);
             }
 
             // Check IP whitelist if configured
@@ -92,7 +107,7 @@ public sealed class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAu
                 if (clientIp == null || !allowedIps.Contains(clientIp))
                 {
                     Logger.LogWarning("API key {KeyId} used from unauthorized IP: {ClientIp}", apiKey.Id, clientIp);
-                    return AuthenticateResult.Fail("API key not authorized from this IP address");
+                    return await FailAsync("API key not authorized from this IP address", "ApiKeyIpNotAllowed", apiKey.UserId, apiKey.TenantId).ConfigureAwait(false);
                 }
             }
 
@@ -123,12 +138,50 @@ public sealed class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAu
             Logger.LogInformation("API key authentication successful for user {UserId}, key {KeyId}",
                 apiKey.UserId, apiKey.Id);
 
+            await RecordAuthenticationAuditEventAsync(success: true, apiKey.UserId, apiKey.TenantId).ConfigureAwait(false);
+
             return AuthenticateResult.Success(ticket);
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Error during API key authentication");
-            return AuthenticateResult.Fail("Authentication error");
+            return await FailAsync("Authentication error", "AuthenticationError", apiKey?.UserId, apiKey?.TenantId).ConfigureAwait(false);
+        }
+    }
+
+    private async Task<AuthenticateResult> FailAsync(string message, string auditReason, Guid? userId = null, Guid? tenantId = null)
+    {
+        await RecordAuthenticationAuditEventAsync(false, userId, tenantId, auditReason).ConfigureAwait(false);
+        return AuthenticateResult.Fail(message);
+    }
+
+    private async Task RecordAuthenticationAuditEventAsync(
+        bool success,
+        Guid? userId,
+        Guid? tenantId,
+        string? auditReason = null)
+    {
+        if (_auditEventSink is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await _auditEventSink.RecordAsync(new AuthenticationAuditEvent(
+                success ? "Authentication.Succeeded" : "Authentication.Failed",
+                userId,
+                success,
+                "ApiKey",
+                Context.Connection.RemoteIpAddress?.ToString(),
+                Request.Headers.UserAgent.ToString(),
+                TenantId: tenantId,
+                ErrorMessage: auditReason),
+                CancellationToken.None).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            Logger.LogError(exception, "Could not record API key authentication audit event");
         }
     }
 

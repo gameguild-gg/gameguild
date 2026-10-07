@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using GameGuild.API.Database;
+using GameGuild.API.Core.Security;
 using GameGuild.TestSupport.Finance.Economy;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
@@ -96,6 +97,7 @@ public sealed class ApiPostgreSqlFixture : IAsyncLifetime
                     ["Database:FailStartupOnMigrationFailure"] = "true",
                     ["Database:GrantRuntimeRoleAfterMigrations"] = "false",
                     ["Database:RunStartupInitialization"] = "false",
+                    ["Authentication:RefreshTokenCleanup:Enabled"] = "false",
                     ["POSTGRES_HOST"] = connection.Host,
                     ["POSTGRES_PORT"] = connection.Port.ToString(),
                     ["POSTGRES_DB"] = connection.Database,
@@ -112,8 +114,9 @@ public sealed class ApiPostgreSqlFixture : IAsyncLifetime
                 services.RemoveAll<DbContextOptions<ApplicationDbContext>>();
                 services.RemoveAll<IDbContextOptionsConfiguration<ApplicationDbContext>>();
 
-                services.AddDbContext<ApplicationDbContext>(options =>
+                services.AddDbContext<ApplicationDbContext>((provider, options) =>
                 {
+                    options.AddInterceptors(provider.GetRequiredService<RefreshTokenLifecycleMetricBuffer>());
                     options.UseNpgsql(connectionString, npgsql =>
                         npgsql.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName));
                 });
