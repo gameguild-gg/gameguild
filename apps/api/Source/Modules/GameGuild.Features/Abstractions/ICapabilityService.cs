@@ -70,6 +70,7 @@ public interface ICapabilityService
     /// Syncs capabilities from the tenant's subscription plan.
     /// Called after subscription changes to update entitlements.
     /// Background callers must establish an authenticated privileged system actor.
+    /// Preserves explicit overrides and audits each new or changed plan row with the resolved actor.
     /// </summary>
     /// <param name="tenantId">The tenant to sync.</param>
     /// <param name="cancellationToken">Cancellation token.</param>

@@ -1869,12 +1869,19 @@ permission alone does not grant capability entitlement administration.
 Mutation handlers and the capability service enforce the same administrator and
 tenant checks before any persistence call, including calls outside MVC or the CQRS
 authorization pipeline. User actors require a nonempty GUID subject. The resolved
-actor supplies override and removal audit identity; legacy command/service `UserId`
+actor supplies override, removal and plan-synchronization audit identity; legacy command/service `UserId`
 arguments cannot impersonate another user. Non-user actors record null user IDs.
 Background synchronization must establish a trusted authenticated SystemAdmin
 context; an actor's System kind alone grants no access. Existing plan mapping,
 audit records and cache invalidation remain in place. Internal capability queries
 retain their service contract; HTTP reads enforce tenant scope before querying.
+
+Plan synchronization preserves every explicit entitlement row, including expired
+overrides, under the existing unique tenant/key constraint. Only plan-sourced rows
+are updated. New rows, value changes and source-only plan changes receive an audit
+entry in the same save as the entitlement mutation. Repeating an unchanged plan
+does not create extra audit entries. The actor recorded on both the row and audit
+is the resolved user, or null for a trusted non-user actor.
 
 ### Persisted refresh-token parent and session lineage
 
