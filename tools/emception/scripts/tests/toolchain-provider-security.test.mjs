@@ -404,10 +404,23 @@ test("preserves relative redirects within the API with credentials", async (cont
   assert.equal(new Headers(calls[2].init.headers).get("authorization"), null);
 });
 
-for (const initial of [
-  "https://raw.githubusercontent.com/emscripten-core/emsdk/main/emscripten-releases-tags.json",
-  "https://github.com/facebook/zstd/releases/download/v1.5.7/zstd-v1.5.7-win64.zip",
-  "https://mirror.msys2.org/mingw/make-4.4.1-6.pkg.tar.zst",
+for (const { initial, tool, version } of [
+  {
+    initial:
+      "https://raw.githubusercontent.com/emscripten-core/emsdk/main/emscripten-releases-tags.json",
+    tool: "emsdk",
+  },
+  {
+    initial:
+      "https://github.com/facebook/zstd/releases/download/v1.5.7/zstd-v1.5.7-win64.zip",
+    tool: "zstdWindows",
+    version: "1.5.7",
+  },
+  {
+    initial: "https://mirror.msys2.org/mingw/make-4.4.1-6.pkg.tar.zst",
+    tool: "msys2Make",
+    version: "4.4.1-6",
+  },
 ]) {
   test(`does not cross the source family or attach an API token on a redirect from ${new URL(initial).origin}`, async (context) => {
     const calls = [];
@@ -420,16 +433,13 @@ for (const initial of [
       });
     });
     const provider = createToolSourceProvider();
-    const operation = initial.includes("raw.githubusercontent.com")
-      ? provider.latestVersion("emsdk", currentGit)
-      : provider.resolve(
-          initial.includes("mirror.msys2.org") ? "msys2Make" : "zstdWindows",
-          initial.includes("mirror.msys2.org") ? "4.4.1-6" : "1.5.7",
-          {
+    const operation =
+      tool === "emsdk"
+        ? provider.latestVersion("emsdk", currentGit)
+        : provider.resolve(tool, version, {
             version: "old",
             source: { kind: "archive", url: initial, sha256: archiveHash },
-          },
-        );
+          });
     await assert.rejects(operation, /Unsafe Toolchain source URL/);
     assert.equal(calls.length, 1);
     assert.equal(new Headers(calls[0].init.headers).get("authorization"), null);
