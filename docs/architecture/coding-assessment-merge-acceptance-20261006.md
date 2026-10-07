@@ -192,3 +192,85 @@ database provider's likely-transient-failure message; that run remains unaccepte
 while it finishes and is investigated. A fresh full Web repetition is also still
 running at this subsequent publication checkpoint. Those pending checks and the
 real native worker execution are explicitly required before merge.
+
+The complete current-source Web repetition subsequently passed all 2,998 cases
+in 422 files. The native Web job `112584553349` on `5bfce848` also passed lint,
+types, all 2,998 tests and the production build. The focused HTTP repetition
+passed all 21 test assertions but exited with a PostgreSQL test-collection cleanup
+failure in Docker.DotNet's container removal. Its exit code remains unsuccessful;
+the passing assertions do not turn that run into an accepted integration gate.
+
+### Reviewed launcher finding
+
+Codacy's remaining command-injection finding is the syntactic GitLab rule
+[`csharp_injection_rule-CommandInjection`](https://gitlab.com/gitlab-org/security-products/sast-rules/-/blob/main/csharp/injection/rule-CommandInjection.yml).
+It flags any nonliteral `ProcessStartInfo.FileName` initializer, without tracing
+input provenance or the separate validation. `ApiProductComposition` binds these
+options from server deployment configuration; no learner endpoint binds or writes
+them. `CreateStartInfo` requires an existing absolute `node`/`node.exe` file, an
+existing absolute `worker.mjs`, and existing absolute asset directories. Shell
+execution is disabled, arguments use `ArgumentList`, and learner files are bounded
+JSON on stdin. The configuration tests cover a path containing spaces and a shell
+metacharacter, relative/missing/unexpected files, deadline bounds and cancellation.
+
+The exact finding is therefore recorded as a reviewed false positive with a
+single-line annotation naming that rule. Other rules and occurrences remain
+enabled. This annotation neither accepts a native execution failure nor removes
+the requirement to verify the sandboxed worker and complete instructor/learner
+cycle. The test fixture also rejects path fragments before creating its local
+files, and the finite diagnostic allowlist retains its same behavior.
+
+### Native sandbox startup correction (2026-10-07 UTC)
+
+The published `5bfce848` revision passed PR Verify run `37556681806` in full:
+6,020 main API cases, 15 separately recorded OpenAPI HTTP cases, all 2,998 Web
+cases, lint, types, production Web build and generated-client consistency. The
+API build had zero warnings/errors, and CodeQL and GitGuardian also passed.
+Its Emception run `37556681734` nevertheless failed the Code cycle with 15 green,
+eight red and one observed entry among the original 24. The strict infrastructure
+diagnostic identifies the actual failure: exit 1 during `browser startup`, with
+`browser-sandbox-unavailable`. Official submission returned 409 in 1,205.7 ms
+and remained uncommitted. The complete report and runtime logs are retained in
+`artifacts/code5bfnative`; this is not accepted Code execution.
+
+The correction adds the deployment-only option `CodeGradingWorker:BrowserChannel`.
+It allows `chrome` or an unset value, rejects other channels/flags, and passes
+the configured value through the worker's curated environment. Sandbox policy
+remains fixed at `chromiumSandbox: true`, with the same fresh context, blocked
+external requests/WebSockets/downloads and execution budgets. Learner requests
+cannot select a browser, executable, command argument or sandbox policy.
+
+The Ubuntu GitHub Code-cycle driver selects the runner's installed Chrome. As
+documented by [Chromium](https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md),
+Ubuntu provides an AppArmor user-namespace profile for the installed stable binary
+at `/opt/google/chrome/chrome`. The installed Playwright 1.63.0 registry resolves
+the `chrome` channel to that exact Linux path; its argument builder retains the
+sandbox when `chromiumSandbox` is true. This uses the existing installed browser
+and profile; no host AppArmor/sysctl setting or browser isolation rule changes.
+The native cycle must verify compatibility and grading before acceptance. Local
+Linux runs can select the same distribution with
+`CODING_CYCLE_GRADING_BROWSER_CHANNEL=chrome`; ordinary API deployment uses the
+typed option above. An absent or incompatible installation remains a failed run.
+
+The intervening local scanner-correction build hit its process-local 4 GiB heap
+limit in the Roslyn analyzer, recording an `OutOfMemoryException`, zero warnings
+and 39 error lines. Its failed receipt is retained and no tests from that build
+are accepted. A new coherent build uses an 8 GiB limit scoped to that compiler
+process, with warnings still treated as errors. Fresh configuration, worker and
+HTTP regressions plus matching-head native gates remain required.
+
+The sandbox-channel correction subsequently rebuilt the complete API solution
+with zero warnings/errors. Unchanged compiled-source repetitions passed all 458
+Assessments, 2,316 Authentication and 1,667 Authorization cases. The 21 Code/Quiz
+and canonical-enrollment HTTP cases passed with an explicitly owned, loopback-only
+PostgreSQL instance; cleanup succeeded and the exact container was confirmed absent.
+The Node 22 worker build passed TypeScript, Vite and all 28 binding, diagnostic and
+browser-configuration cases. Both supported browser configurations require the
+sandbox; unsupported channels, objects and injected command flags are rejected.
+These results are local contract/HTTP evidence, with the grading worker simulated
+in the HTTP fixtures. Real native browser grading remains an acceptance requirement.
+
+The complete 1,079-case API unit repetition also passed on those exact compiled
+source bytes, with zero failed/skipped tests. Its separately owned PostgreSQL
+instance was removed successfully and confirmed absent. The local source receipts
+are retained before publication; matching-head native acceptance remains pending.

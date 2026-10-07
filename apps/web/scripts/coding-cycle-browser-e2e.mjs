@@ -68,6 +68,13 @@ const REPO_ROOT = resolve(WEB_DIR, "../..");
 const PG_PORT = Number(process.env.CODING_CYCLE_PG_PORT ?? 5433);
 const API_PORT = Number(process.env.CODING_CYCLE_API_PORT ?? 8180);
 const WEB_PORT = Number(process.env.CODING_CYCLE_WEB_PORT ?? 3012);
+// The Ubuntu runner's installed Chrome has a root-owned AppArmor userns profile.
+// The grading worker keeps its mandatory sandbox; no host security setting changes.
+const CODE_GRADING_BROWSER_CHANNEL = process.env.CODING_CYCLE_GRADING_BROWSER_CHANNEL ??
+  (process.platform === "linux" && process.env.GITHUB_ACTIONS === "true" ? "chrome" : undefined);
+if (CODE_GRADING_BROWSER_CHANNEL !== undefined && CODE_GRADING_BROWSER_CHANNEL !== "chrome") {
+  throw new Error("The Code cycle supports only its bundled browser or the installed Chrome channel.");
+}
 const PG_USER = "gameguild_e2e";
 const PG_PASSWORD = "gameguild_e2e_password";
 const PG_DB = "gameguild_e2e";
@@ -357,6 +364,7 @@ async function bootStack() {
     `CodeGradingWorker__ScriptPath=${resolve(REPO_ROOT, "tools/emception/grading/worker.mjs")}`,
     `CodeGradingWorker__RuntimeDirectory=${resolve(REPO_ROOT, "tools/emception/artifacts/grading/runtime")}`,
     `CodeGradingWorker__CdnDirectory=${resolve(REPO_ROOT, "apps/web/public/emception")}`,
+    ...(CODE_GRADING_BROWSER_CHANNEL ? [`CodeGradingWorker__BrowserChannel=${CODE_GRADING_BROWSER_CHANNEL}`] : []),
     ...(process.env.PLAYWRIGHT_BROWSERS_PATH
       ? [`CodeGradingWorker__BrowserDirectory=${resolve(process.env.PLAYWRIGHT_BROWSERS_PATH)}`] : []),
   ];

@@ -17,6 +17,7 @@ public sealed class CodeGradingWorkerOptions
     public string? RuntimeDirectory { get; set; }
     public string? CdnDirectory { get; set; }
     public string? BrowserDirectory { get; set; }
+    public string? BrowserChannel { get; set; }
     public int DeadlineSeconds { get; set; } = 300;
 }
 
@@ -154,16 +155,14 @@ public sealed class CodeGradingWorker(IOptions<CodeGradingWorkerOptions> configu
 
             var phase = root.GetProperty("phase").GetString()!;
             var kind = root.GetProperty("kind").GetString()!;
-            return (phase, kind) switch
-            {
+            return (phase, kind) is
                 ("input", "invalid-request") or
                 ("artifact verification", "artifact-binding-failed") or
                 ("runtime server", "runtime-server-failed") or
                 ("browser startup", "browser-startup-failed") or
                 ("browser startup", "browser-sandbox-unavailable") or
-                ("WebAssembly evaluation", "execution-failed") => (phase, kind),
-                _ => ("unavailable", "unknown"),
-            };
+                ("WebAssembly evaluation", "execution-failed")
+                ? (phase, kind) : ("unavailable", "unknown");
         }
         catch (JsonException)
         {
@@ -179,6 +178,10 @@ public sealed class CodeGradingWorker(IOptions<CodeGradingWorkerOptions> configu
         var cdn = RequireAbsoluteDirectory(options.CdnDirectory);
         var browser = string.IsNullOrWhiteSpace(options.BrowserDirectory)
             ? null : RequireAbsoluteDirectory(options.BrowserDirectory);
+        if (options.BrowserChannel is not (null or "chrome"))
+        {
+            throw new InvalidOperationException("The trusted Code worker supports only its bundled browser or the installed Chrome channel.");
+        }
 
         // Only deployment-owned configuration selects these validated files.
         // Learner content is bounded JSON on stdin; it cannot select the executable
@@ -186,7 +189,9 @@ public sealed class CodeGradingWorker(IOptions<CodeGradingWorkerOptions> configu
         // even when the installation directory contains spaces or shell metacharacters.
         var start = new ProcessStartInfo
         {
-            FileName = node,
+            // Reviewed deployment configuration; see CodeGradingWorkerConfigurationTests
+            // and coding-assessment-merge-acceptance-20261006.md. No learner path reaches this sink.
+            FileName = node, // nosemgrep: csharp_injection_rule-CommandInjection, Semgrep_csharp_injection_rule-CommandInjection
             WorkingDirectory = Path.GetDirectoryName(script)!,
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
@@ -210,6 +215,11 @@ public sealed class CodeGradingWorker(IOptions<CodeGradingWorkerOptions> configu
         if (browser is not null)
         {
             start.Environment["PLAYWRIGHT_BROWSERS_PATH"] = browser;
+        }
+
+        if (options.BrowserChannel is not null)
+        {
+            start.Environment["GAMEGUILD_CODE_WORKER_BROWSER_CHANNEL"] = options.BrowserChannel;
         }
 
         return start;

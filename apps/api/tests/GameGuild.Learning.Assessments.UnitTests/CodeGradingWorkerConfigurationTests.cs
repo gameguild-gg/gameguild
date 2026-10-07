@@ -32,6 +32,39 @@ public sealed class CodeGradingWorkerConfigurationTests
             "PLAYWRIGHT_BROWSERS_PATH",
         }.Contains(key));
         start.Environment["PLAYWRIGHT_BROWSERS_PATH"].Should().Be(options.BrowserDirectory);
+        start.Environment.Should().NotContainKey("GAMEGUILD_CODE_WORKER_BROWSER_CHANNEL");
+    }
+
+    [Fact]
+    public void Launcher_SelectsInstalledChromeOnlyFromDeploymentConfiguration()
+    {
+        using var installation = new WorkerInstallation();
+        var options = installation.Configuration;
+        options.BrowserChannel = "chrome";
+
+        var start = CodeGradingWorker.CreateStartInfo(options);
+
+        start.Environment["GAMEGUILD_CODE_WORKER_BROWSER_CHANNEL"].Should().Be("chrome");
+        start.UseShellExecute.Should().BeFalse();
+        start.ArgumentList.Should().Equal("--max-old-space-size=512", options.ScriptPath,
+            options.RuntimeDirectory, options.CdnDirectory);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("chromium")]
+    [InlineData("chrome-beta")]
+    [InlineData("chrome --no-sandbox")]
+    [InlineData("--no-sandbox")]
+    [InlineData("CHROME")]
+    public void Launcher_RejectsUnknownBrowserChannelsAndFlags(string channel)
+    {
+        using var installation = new WorkerInstallation();
+        installation.Configuration.BrowserChannel = channel;
+
+        Action create = () => CodeGradingWorker.CreateStartInfo(installation.Configuration);
+
+        create.Should().Throw<InvalidOperationException>().WithMessage("*trusted Code worker*");
     }
 
     [Theory]
@@ -151,7 +184,14 @@ public sealed class CodeGradingWorkerConfigurationTests
 
         public string CreateFile(string name)
         {
-            var path = Path.Combine(Root, name);
+            var fileName = Path.GetFileName(name);
+            if (!string.Equals(name, fileName, StringComparison.Ordinal) ||
+                name.IndexOfAny(['/', '\\']) >= 0)
+            {
+                throw new InvalidOperationException("Worker fixture files require a plain filename.");
+            }
+
+            var path = Path.Combine(Root, fileName);
             File.WriteAllText(path, string.Empty);
             return path;
         }
