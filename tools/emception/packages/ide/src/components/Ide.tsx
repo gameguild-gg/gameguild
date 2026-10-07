@@ -999,7 +999,7 @@ export default function Ide({
         const compileCwd = resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`;
         const wasmPath = resolveWsPath(compileCwd, resolvedConfig.compile.output || 'main.wasm');
         const label = toolchain.startsWith('sdl') ? 'SDL3' : toolchain.startsWith('raylib') ? 'raylib' : 'allegro';
-        setStatus(`Compiling ${label}...`);
+        setStatus('Compiling...');
         tty.writeLine(`\x1b[36m${label} canvas build...\x1b[0m`);
 
         setCanvasIsRunning(true);
