@@ -31,9 +31,7 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   // Locale routing must see RSC headers to preserve internal navigation.
   skipProxyUrlNormalize: true,
-  // The precompiled local surface is served by `next start`; release builds
-  // keep the standalone artifact consumed by Docker.
-  ...(!precompiledLearning ? { output: "standalone" as const } : {}),
+  output: "standalone",
   outputFileTracingRoot: path.resolve(__dirname, "../.."),
   transpilePackages: [
     "@game-guild/ui",
