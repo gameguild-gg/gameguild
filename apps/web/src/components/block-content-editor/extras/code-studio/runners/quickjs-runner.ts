@@ -46,7 +46,7 @@ export class QuickJSRunner implements CodeRunner {
 
       // Inject console.log, console.error
       const consoleLog = this.context.newFunction('log', (...args) => {
-        const nativeArgs = args.map(arg => this.context!.dump(arg))
+        const nativeArgs = args.map(arg => this.context?.dump(arg))
         stdout += nativeArgs.join(' ') + '\n'
       })
       const consoleError = this.context.newFunction('error', (...args) => {

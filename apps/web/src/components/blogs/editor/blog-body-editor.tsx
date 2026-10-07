@@ -15,6 +15,11 @@ const MonacoCodeEditor = lazy(async () => {
   return { default: mod.MonacoCodeEditor };
 });
 
+const MarkdownRenderer = lazy(async () => {
+  const mod = await import("@game-guild/content-rendering");
+  return { default: mod.MarkdownRenderer };
+});
+
 const LexicalSurface = lazy(async () => {
   const mod = await import("@game-guild/lexical-surface");
   return { default: mod.LexicalSurface };
@@ -117,20 +122,39 @@ export function BlogBodyEditor({
   return (
     <div className="space-y-2">
       <Label>Body</Label>
-      <div
-        className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700"
-        style={{ height: "400px" }}
-      >
-        <Suspense fallback={<EditorLoadingState />}>
-          <MonacoCodeEditor
-            value={markdown}
-            language="markdown"
-            ariaLabel="Blog body"
-            onChange={onMarkdownChange}
-            onCursorOffsetChange={onCursorOffsetChange}
-            height="100%"
-          />
-        </Suspense>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div
+          className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700"
+          style={{ height: "400px" }}
+        >
+          <Suspense fallback={<EditorLoadingState />}>
+            <MonacoCodeEditor
+              value={markdown}
+              language="markdown"
+              ariaLabel="Blog body"
+              onChange={onMarkdownChange}
+              onCursorOffsetChange={onCursorOffsetChange}
+              height="100%"
+            />
+          </Suspense>
+        </div>
+        <div
+          data-testid="blog-preview"
+          className="flex h-[452px] flex-col overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700"
+        >
+          <div className="border-b border-gray-200 px-4 py-2 text-sm font-medium text-muted-foreground dark:border-gray-700">
+            Preview
+          </div>
+          <div className="flex-1 overflow-auto p-4">
+            <Suspense
+              fallback={
+                <div className="min-h-32 animate-pulse rounded-md bg-muted" />
+              }
+            >
+              <MarkdownRenderer content={markdown} />
+            </Suspense>
+          </div>
+        </div>
       </div>
     </div>
   );

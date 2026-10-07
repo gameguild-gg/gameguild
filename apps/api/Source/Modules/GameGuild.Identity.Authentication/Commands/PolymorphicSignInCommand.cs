@@ -5,7 +5,7 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Command for polymorphic sign-in supporting multiple credential types (email, phone, username)
 /// </summary>
-public class PolymorphicSignInCommand : IRequest<SignInResponse>
+public class PolymorphicSignInCommand : ICommand<SignInResponse>
 {
     /// <summary>
     ///     The credential identifier - can be email, phone number, or username

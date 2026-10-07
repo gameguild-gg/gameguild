@@ -246,7 +246,13 @@ public sealed class AuditService(IServiceScopeFactory scopeFactory, IHttpContext
 
         queryable = ApplyPagination(queryable, query);
 
-        return await queryable.ToListAsync().ConfigureAwait(false);
+        var logs = await queryable.ToListAsync().ConfigureAwait(false);
+        var recorder = scope.ServiceProvider.GetService<IAuditDataAccessRecorder>();
+        if (recorder is not null)
+        {
+            await recorder.RecordAsync(logs.Select(log => new AuditAccessedRecord(log.TenantId, log.CreatedAt))).ConfigureAwait(false);
+        }
+        return logs;
     }
 
     public async IAsyncEnumerable<AuditLog> StreamAuditLogsAsync(
@@ -261,12 +267,28 @@ public sealed class AuditService(IServiceScopeFactory scopeFactory, IHttpContext
 
         queryable = ApplyPagination(queryable, query);
 
-        await foreach (var auditLog in queryable
-                           .AsAsyncEnumerable()
-                           .WithCancellation(cancellationToken)
-                           .ConfigureAwait(false))
+        var recorder = scope.ServiceProvider.GetService<IAuditDataAccessRecorder>();
+        var observed = new List<AuditAccessedRecord>(1000);
+        try
         {
-            yield return auditLog;
+            await foreach (var auditLog in queryable.AsAsyncEnumerable().WithCancellation(cancellationToken).ConfigureAwait(false))
+            {
+                observed.Add(new(auditLog.TenantId, auditLog.CreatedAt));
+                yield return auditLog;
+                if (observed.Count == 1000)
+                {
+                    if (recorder is not null) { await recorder.RecordAsync(observed, cancellationToken).ConfigureAwait(false); }
+                    observed.Clear();
+                }
+            }
+        }
+        finally
+        {
+            // Count only yielded rows even if the consumer stops early. The recorder uses a separate connection scope.
+            if (recorder is not null && observed.Count > 0)
+            {
+                await recorder.RecordAsync(observed, CancellationToken.None).ConfigureAwait(false);
+            }
         }
     }
 
@@ -276,6 +298,68 @@ public sealed class AuditService(IServiceScopeFactory scopeFactory, IHttpContext
         var context = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
         return await ApplyFilters(context.Set<AuditLog>().AsQueryable(), query)
             .CountAsync().ConfigureAwait(false);
+    }
+
+    public async Task<List<AuditActivityBucket>> GetAuditActivityAsync(
+        AuditLogQuery query,
+        AuditActivityBucketSize bucketSize,
+        CancellationToken cancellationToken = default)
+    {
+        await using var scope = scopeFactory.CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
+        var filtered = ApplyFilters(context.Set<AuditLog>().AsNoTracking(), query);
+
+        if (bucketSize == AuditActivityBucketSize.Hourly)
+        {
+            var hourlyGroups = await filtered
+                .GroupBy(log => new { log.CreatedAt.Year, log.CreatedAt.Month, log.CreatedAt.Day, log.CreatedAt.Hour })
+                .Select(group => new
+                {
+                    group.Key.Year,
+                    group.Key.Month,
+                    group.Key.Day,
+                    group.Key.Hour,
+                    EventCount = group.Count()
+                })
+                .OrderBy(group => group.Year)
+                .ThenBy(group => group.Month)
+                .ThenBy(group => group.Day)
+                .ThenBy(group => group.Hour)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            return hourlyGroups
+                .Select(group => new AuditActivityBucket(
+                    new DateTime(group.Year, group.Month, group.Day, group.Hour, 0, 0, DateTimeKind.Utc),
+                    group.EventCount))
+                .ToList();
+        }
+
+        if (bucketSize != AuditActivityBucketSize.Daily)
+        {
+            throw new ArgumentOutOfRangeException(nameof(bucketSize), bucketSize, "Unsupported audit activity bucket size.");
+        }
+
+        var dailyGroups = await filtered
+            .GroupBy(log => new { log.CreatedAt.Year, log.CreatedAt.Month, log.CreatedAt.Day })
+            .Select(group => new
+            {
+                group.Key.Year,
+                group.Key.Month,
+                group.Key.Day,
+                EventCount = group.Count()
+            })
+            .OrderBy(group => group.Year)
+            .ThenBy(group => group.Month)
+            .ThenBy(group => group.Day)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return dailyGroups
+            .Select(group => new AuditActivityBucket(
+                new DateTime(group.Year, group.Month, group.Day, 0, 0, 0, DateTimeKind.Utc),
+                group.EventCount))
+            .ToList();
     }
 
     private static IQueryable<AuditLog> ApplyFilters(IQueryable<AuditLog> queryable, AuditLogQuery query)

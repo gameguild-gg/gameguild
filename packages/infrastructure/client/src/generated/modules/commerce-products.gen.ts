@@ -75,7 +75,7 @@ export class CommerceProductsModule {
   /**
    * Batch create multiple products
    */
-  async postProductsBatchCreate(body: Types.CommerceProductsBatchCreateProductsInput): Promise<Result<Array<Types.CommerceProductsProductDto>, ApiError>> {
+  async postProductsBatchCreate(body: Types.CommerceProductsBatchCreateProductsInput): Promise<Result<Types.CommerceProductsProductDto[], ApiError>> {
     const url = '/v1/products/:batch-create';
 
     // Validate request body
@@ -88,7 +88,7 @@ export class CommerceProductsModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.CommerceProductsProductDto>, ApiError>;
+    return result as Result<Types.CommerceProductsProductDto[], ApiError>;
   }
 
   /**
@@ -264,10 +264,7 @@ export class CommerceProductsModule {
   /**
    * Get pricing options for a product
    */
-  async getProductsPricing(
-    productId: string,
-    query?: { includeUnpublished?: boolean },
-  ): Promise<Result<Array<Types.CommerceProductsProductPricingDto>, ApiError>> {
+  async getProductsPricing(productId: string, query?: { includeUnpublished?: boolean }): Promise<Result<Types.CommerceProductsProductPricingDto[], ApiError>> {
     const url = `/v1/products/${productId}/pricing`;
 
     const result = await this.client.request({
@@ -277,7 +274,7 @@ export class CommerceProductsModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.CommerceProductsProductPricingDto>, ApiError>;
+    return result as Result<Types.CommerceProductsProductPricingDto[], ApiError>;
   }
 
   /**

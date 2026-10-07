@@ -53,6 +53,7 @@ async function createAuthoringBlogModules() {
 
   return {
     authoringApi: new GeneratedApi.SocialBlogAuthoringModule(client),
+    profilesApi: new GeneratedApi.SocialProfilesModule(client),
   };
 }
 
@@ -216,4 +217,59 @@ export async function getMyPostBySlug(username: string, slug: string): Promise<M
   }
 
   return { status: 'ok', post: detail.data as unknown as BlogPostAuthorView };
+}
+
+/** Hub row for the workspace "Recent blog posts" card. */
+export interface MyBlogPostRow {
+  id: string;
+  slug: string;
+  title: string;
+  status: 'Draft' | 'Published';
+  format: 'Markdown' | 'Lexical';
+  publishedAt: string | null;
+  updatedAt: string;
+  primaryAuthorHandle: string | null;
+}
+
+/**
+ * The acting user's posts for hub management. The handle is resolved with a
+ * read-only profile fetch (no or-create mutation on a listing surface); null
+ * means the row links to the blogs index instead of the editor.
+ */
+export async function listMyBlogPosts(): Promise<MyBlogPostRow[]> {
+  let authoringApi: InstanceType<typeof GeneratedApi.SocialBlogAuthoringModule>;
+  let profilesApi: InstanceType<typeof GeneratedApi.SocialProfilesModule>;
+  try {
+    ({ authoringApi, profilesApi } = await createAuthoringBlogModules());
+  } catch {
+    return [];
+  }
+
+  const mine = await authoringApi.getApiSocialBlogPostsMine();
+  if (!mine.ok) {
+    throw new Error(`Failed to load your blog posts: ${mine.error?.message ?? 'unknown error'}`);
+  }
+
+  const posts = mine.data ?? [];
+  if (posts.length === 0) return [];
+
+  const primaryAuthorId = posts[0]?.primaryAuthorId;
+  let handle: string | null = null;
+  if (primaryAuthorId) {
+    const profile = await profilesApi.getApiSocialProfilesUsers(primaryAuthorId);
+    if (profile.ok && typeof profile.data.handle === 'string' && profile.data.handle) {
+      handle = profile.data.handle;
+    }
+  }
+
+  return posts.map((post) => ({
+    id: post.id ?? '',
+    slug: post.slug ?? '',
+    title: post.title ?? 'Untitled',
+    status: (post.status ?? 'Draft') as 'Draft' | 'Published',
+    format: (post.format ?? 'Markdown') as 'Markdown' | 'Lexical',
+    publishedAt: post.publishedAt ?? null,
+    updatedAt: post.updatedAt,
+    primaryAuthorHandle: handle,
+  }));
 }

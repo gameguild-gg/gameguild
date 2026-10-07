@@ -2,13 +2,16 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using GameGuild.API.Context;
+using GameGuild.API.Core.Compliance;
 using GameGuild.AI;
 using GameGuild.Analytics;
 using GameGuild.API.Database;
 using GameGuild.API.Eventing;
 using GameGuild.API.Core.Quotas;
 using GameGuild.API.Core.CostAccounting;
+using GameGuild.API.Core.Security;
 using GameGuild.Assets.Extensions;
+using GameGuild.Assets.Storage;
 using GameGuild.Commerce.Billing;
 using GameGuild.Commerce.Orders;
 using GameGuild.Commerce.Payments;
@@ -168,6 +171,9 @@ public static class InfrastructureLayerExtensions
                 };
             }
         });
+        services.AddScoped<IAuditScheduledExportStorage, AuditScheduledExportStorageAdapter>();
+        services.AddScoped<IAuditRetentionDataSource, PostgreSqlAuditRetentionDataSource>();
+        services.AddScoped<IComplianceEvidenceDataSource, PostgreSqlComplianceEvidenceDataSource>();
         logger.LogInformation("Compliance Audit Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
         // 03a. Authentication Application (command handlers, validators, core auth services)
@@ -316,6 +322,8 @@ public static class InfrastructureLayerExtensions
     {
         databaseOptions ??= DatabaseOptions.CreateDefault();
 
+        services.Configure<PermissionAuditOptions>(configuration.GetSection(PermissionAuditOptions.SectionName));
+
         var connectionString = PostgresConnectionString.Resolve(configuration, databaseOptions.ConnectionStringName)
                                ?? throw new InvalidOperationException(
                                    $"Connection string '{databaseOptions.ConnectionStringName}' not found. " +
@@ -324,9 +332,19 @@ public static class InfrastructureLayerExtensions
         services.AddScoped<CostTelemetryContext>();
         services.AddScoped<ICostTelemetryRecorder>(provider => provider.GetRequiredService<CostTelemetryContext>());
         services.AddScoped<CostTelemetryDbCommandInterceptor>();
+        services.AddScoped<RefreshTokenLifecycleMetricBuffer>();
+        services.AddScoped<IRefreshTokenLifecycleRecorder, RefreshTokenLifecycleRecorder>();
+        services.TryAddSingleton(TimeProvider.System);
+        services.AddOptions<RefreshTokenCleanupOptions>()
+            .Bind(configuration.GetSection(RefreshTokenCleanupOptions.SectionName))
+            .Validate(policy => policy.Validate().Count == 0, "Invalid refresh-token cleanup configuration.")
+            .ValidateOnStart();
+        services.AddScoped<IRefreshTokenCleanupOperation, RefreshTokenCleanupOperation>();
+        services.AddHostedService<RefreshTokenCleanupWorker>();
         services.AddDbContext<ApplicationDbContext>((provider, options) =>
         {
             options.AddInterceptors(provider.GetRequiredService<CostTelemetryDbCommandInterceptor>());
+            options.AddInterceptors(provider.GetRequiredService<RefreshTokenLifecycleMetricBuffer>());
             options.UseNpgsql(connectionString, npgsqlOptions =>
             {
                 npgsqlOptions.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName);

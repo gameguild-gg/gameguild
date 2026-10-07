@@ -68,7 +68,7 @@ function buildRows(
           id: "assessment-" + assessment.id,
           courseId: course.id,
           courseTitle: course.title,
-          title: assessment.title || "Untitled assessment",
+          title: assessment.title ?? "Untitled assessment",
           description:
             assessment.description ||
             "Review the instructions and submit your work.",

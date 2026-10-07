@@ -80,7 +80,7 @@ export class LearningAssessmentsPeerReviewsModule {
   /**
    * Same reviews for instructors, with reviewer names. CanManageCourse-only.
    */
-  async getAssessmentsSubmissionsPeerReviews(submissionId: string): Promise<Result<Array<Types.LearningAssessmentsInstructorPeerReviewDto>, ApiError>> {
+  async getAssessmentsSubmissionsPeerReviews(submissionId: string): Promise<Result<Types.LearningAssessmentsInstructorPeerReviewDto[], ApiError>> {
     const url = `/v1/assessments/submissions/${submissionId}/peer-reviews`;
 
     const result = await this.client.request({
@@ -89,14 +89,14 @@ export class LearningAssessmentsPeerReviewsModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.LearningAssessmentsInstructorPeerReviewDto>, ApiError>;
+    return result as Result<Types.LearningAssessmentsInstructorPeerReviewDto[], ApiError>;
   }
 
   /**
    * Reviews received on a single individual or collective submission.
    * Owner-only, anonymized: no reviewer identity exists in the DTO at all.
    */
-  async getAssessmentsSubmissionsReceivedPeerReviews(submissionId: string): Promise<Result<Array<Types.LearningAssessmentsReceivedPeerReviewDto>, ApiError>> {
+  async getAssessmentsSubmissionsReceivedPeerReviews(submissionId: string): Promise<Result<Types.LearningAssessmentsReceivedPeerReviewDto[], ApiError>> {
     const url = `/v1/assessments/submissions/${submissionId}/received-peer-reviews`;
 
     const result = await this.client.request({
@@ -105,7 +105,7 @@ export class LearningAssessmentsPeerReviewsModule {
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.LearningAssessmentsReceivedPeerReviewDto>, ApiError>;
+    return result as Result<Types.LearningAssessmentsReceivedPeerReviewDto[], ApiError>;
   }
 }
 

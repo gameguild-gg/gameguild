@@ -455,6 +455,33 @@ export class AuthModule {
   }
 
   /**
+   * Authenticate using email, username or international phone and a password.
+   *
+   * Resolves one unique account and applies the existing password, risk, tenant and session flow. Phone identifiers use a leading plus and up to 15 digits. Missing, ambiguous or invalid identifiers receive the generic authentication failure.
+   */
+  async postAuthPolymorphic(body: Types.IdentityAuthenticationPolymorphicSignInInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
+    const url = '/v1/auth/polymorphic';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationPolymorphicSignInInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityAuthenticationSignInOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
    * Authenticate a user with email and password
    *
    * Authenticates a user with email and password credentials, returning access and refresh tokens.

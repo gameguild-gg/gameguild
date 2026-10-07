@@ -100,7 +100,8 @@ jobs:
     needs: classify
     if: needs.classify.outputs.api == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # Full host regression takes about 30 minutes before additional affected module suites.
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
         with:
@@ -122,6 +123,30 @@ jobs:
           for project in "${projects[@]}"; do
             dotnet test "$project" -c Release --nologo --blame-hang-timeout 5m
           done
+      - name: Build full-application OpenAPI HTTP tests
+        run: >-
+          dotnet build apps/api/tests/GameGuild.API.IntegrationTests/GameGuild.API.IntegrationTests.csproj
+          -c Release --nologo -p:TreatWarningsAsErrors=true
+      - name: Release build servers before HTTP verification
+        run: dotnet build-server shutdown
+      - name: Verify full-application OpenAPI over HTTP
+        env:
+          DOTNET_GCHeapHardLimit: "100000000"
+          DOTNET_GCConserveMemory: "5"
+          DOTNET_gcServer: "0"
+          DOTNET_PROCESSOR_COUNT: "4"
+        run: >-
+          dotnet test apps/api/tests/GameGuild.API.IntegrationTests/GameGuild.API.IntegrationTests.csproj
+          -c Release --no-build --no-restore --nologo --filter FullyQualifiedName~OpenApi
+          --blame-hang-timeout 5m --logger "trx;LogFileName=full-application-openapi.trx"
+          --results-directory artifacts/test-results/full-application-openapi
+      - name: Upload full-application OpenAPI HTTP evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: full-application-openapi-${{ github.event.pull_request.head.sha }}
+          path: artifacts/test-results/full-application-openapi
+          if-no-files-found: warn
 
   testing-lab:
     name: Testing Lab critical flow

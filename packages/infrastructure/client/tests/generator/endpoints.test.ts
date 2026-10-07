@@ -186,4 +186,32 @@ describe('Endpoint Generator', () => {
     // Should have const assertions for type safety
     expect(output).toContain('as const');
   });
+
+  it('should mark x-gameguild-allow-anonymous endpoints as not requiring auth', () => {
+    const spec = {
+      openapi: '3.0.1',
+      info: { title: 'Test', version: '1.0' },
+      security: [{ Bearer: [] }],
+      paths: {
+        '/v1/projects': {
+          get: {
+            operationId: 'getProjects',
+            security: [{ Bearer: [] }],
+            'x-gameguild-allow-anonymous': true,
+          },
+        },
+        '/v1/orders': {
+          get: {
+            operationId: 'getOrders',
+            security: [{ Bearer: [] }],
+          },
+        },
+      },
+    } as unknown as OpenApiSpec;
+
+    const output = generateEndpoints(spec);
+
+    expect(output).toMatch(/operationId: 'getProjects'[\s\S]*?requiresAuth: false/);
+    expect(output).toMatch(/operationId: 'getOrders'[\s\S]*?requiresAuth: true/);
+  });
 });

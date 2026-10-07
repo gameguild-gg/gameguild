@@ -1,9 +1,11 @@
-export class CppTypeChecker {
-  private monaco: any
-  private editor: any
-  private disposables: any[] = []
+import type { editor, IDisposable } from "monaco-editor"
 
-  constructor(monaco: any, editor: any) {
+export class CppTypeChecker {
+  private monaco: typeof import("monaco-editor")
+  private editor: editor.IStandaloneCodeEditor
+  private disposables: IDisposable[] = []
+
+  constructor(monaco: typeof import("monaco-editor"), editor: editor.IStandaloneCodeEditor) {
     this.monaco = monaco
     this.editor = editor
   }
@@ -14,7 +16,7 @@ export class CppTypeChecker {
       const model = this.editor.getModel()
       if (!model) return
 
-      const markers: any[] = []
+      const markers: editor.IMarkerData[] = []
 
       // Simple error detection for demonstration purposes
       // In a real implementation, this would use a proper C++ parser

@@ -786,7 +786,7 @@ public class TokenRevocationMiddlewareCovTests
         var revocService = new Mock<ITokenRevocationService>();
         var userRepo = new Mock<IUserRepository>();
 
-        await middleware.InvokeAsync(context, revocService.Object, userRepo.Object);
+        await middleware.InvokeAsync(context, revocService.Object, userRepo.Object, Mock.Of<IUserSessionRepository>());
         nextCalled.Should().BeTrue();
     }
 
@@ -808,7 +808,7 @@ public class TokenRevocationMiddlewareCovTests
             .ReturnsAsync(true);
         var userRepo = new Mock<IUserRepository>();
 
-        await middleware.InvokeAsync(context, revocService.Object, userRepo.Object);
+        await middleware.InvokeAsync(context, revocService.Object, userRepo.Object, Mock.Of<IUserSessionRepository>());
         context.Response.StatusCode.Should().Be(401);
     }
 
@@ -834,7 +834,7 @@ public class TokenRevocationMiddlewareCovTests
             .ReturnsAsync(true);
         var userRepo = new Mock<IUserRepository>();
 
-        await middleware.InvokeAsync(context, revocService.Object, userRepo.Object);
+        await middleware.InvokeAsync(context, revocService.Object, userRepo.Object, Mock.Of<IUserSessionRepository>());
         context.Response.StatusCode.Should().Be(401);
     }
 
@@ -862,7 +862,7 @@ public class TokenRevocationMiddlewareCovTests
         userRepo.Setup(r => r.GetTokenVersionAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(5); // current version > token version
 
-        await middleware.InvokeAsync(context, revocService.Object, userRepo.Object);
+        await middleware.InvokeAsync(context, revocService.Object, userRepo.Object, Mock.Of<IUserSessionRepository>());
         context.Response.StatusCode.Should().Be(401);
     }
 
@@ -892,7 +892,7 @@ public class TokenRevocationMiddlewareCovTests
         userRepo.Setup(r => r.GetTokenVersionAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(3); // same version = valid
 
-        await middleware.InvokeAsync(context, revocService.Object, userRepo.Object);
+        await middleware.InvokeAsync(context, revocService.Object, userRepo.Object, Mock.Of<IUserSessionRepository>());
         nextCalled.Should().BeTrue();
     }
 }
@@ -1021,7 +1021,7 @@ public class KeyRotationControllerCovTests
 
 public class Web3AuthServiceCovTests
 {
-    private readonly Mock<IRefreshTokenRepository> _refreshRepo = new();
+    private readonly Web3IdentityTestHarness _identity = new();
     private readonly Mock<IJwtTokenService> _jwtService = new();
     private readonly Mock<IWeb3Service> _web3Service = new();
     private readonly Mock<IAuthAttemptService> _authAttempt = new();
@@ -1042,8 +1042,12 @@ public class Web3AuthServiceCovTests
         _authAttempt.Setup(a => a.GetClientIpAddress(It.IsAny<HttpContext>())).Returns("127.0.0.1");
 
         _svc = new Web3AuthService(
-            _refreshRepo.Object,
+            _identity.Users.Object,
+            _identity.Links.Object,
             _jwtService.Object,
+            _identity.Hashes.Object,
+            _identity.Sessions.Object,
+            _identity.Sender.Object,
             _web3Service.Object,
             config,
             _authAttempt.Object,
@@ -1074,7 +1078,7 @@ public class Web3AuthServiceCovTests
         var act = async () => await _svc.VerifyWeb3SignatureAsync(
             new Web3VerificationRequest { WalletAddress = "0xabc", Signature = "sig", Challenge = "msg" });
 
-        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+        await act.Should().ThrowAsync<AuthenticationRequiredException>();
     }
 
     [Fact]
@@ -1082,12 +1086,10 @@ public class Web3AuthServiceCovTests
     {
         _web3Service.Setup(s => s.VerifySignatureAsync("0xdef", "valid-sig", "challenge", "1", ""))
             .ReturnsAsync(true);
-        _jwtService.Setup(s => s.GenerateAccessToken(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string[]>()))
-            .Returns("jwt-token");
+        _jwtService.Setup(s => s.GenerateAccessTokenAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("jwt-token");
         _jwtService.Setup(s => s.GenerateRefreshTokenAsync(It.IsAny<Guid>(), It.IsAny<DeviceInfo>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("refresh-token");
-        _refreshRepo.Setup(r => r.CreateAsync(It.IsAny<RefreshToken>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new RefreshToken());
 
         var result = await _svc.VerifyWeb3SignatureAsync(
             new Web3VerificationRequest { WalletAddress = "0xdef", Signature = "valid-sig", Challenge = "challenge" });
@@ -1193,6 +1195,10 @@ public class WebAuthnControllerCovTests
         var credentialId = Guid.NewGuid();
         var userRepository = new Mock<IUserRepository>();
         var jwtTokenService = new Mock<IJwtTokenService>();
+        var sessionIssuer = new Mock<IAuthenticatedSessionIssuer>();
+        sessionIssuer.Setup(s => s.IssueAsync(It.Is<User>(user => user.Id == userId), null, It.IsAny<DeviceInfo>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new SignInResponse { Success = true, UserId = userId, Email = "passkey@test.com",
+                AccessToken = "access-token", RefreshToken = "refresh-token", ExpiresIn = 900, SessionId = Guid.NewGuid() });
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
@@ -1202,7 +1208,7 @@ public class WebAuthnControllerCovTests
             .Build();
         var controller = new WebAuthnController(
             _webAuthnService.Object,
-            new CommandHandlerSender(_webAuthnService.Object, jwtTokenService.Object, userRepository.Object, configuration));
+            new CommandHandlerSender(_webAuthnService.Object, jwtTokenService.Object, userRepository.Object, configuration, sessionIssuer.Object));
         controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
 
         _webAuthnService.Setup(s => s.CompleteAuthenticationAsync(
@@ -1242,6 +1248,10 @@ public class WebAuthnControllerCovTests
         payload.RefreshToken.Should().Be("refresh-token");
         payload.Email.Should().Be("passkey@test.com");
         payload.ExpiresIn.Should().Be(900);
+        payload.CredentialId.Should().Be(credentialId);
+        payload.IsPasswordless.Should().BeTrue();
+        sessionIssuer.Verify(s => s.IssueAsync(It.Is<User>(user => user.Id == userId), null,
+            It.Is<DeviceInfo>(device => device.Fingerprint == $"webauthn:{credentialId:N}"), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

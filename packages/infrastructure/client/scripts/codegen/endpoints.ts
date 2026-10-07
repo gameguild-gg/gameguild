@@ -8,10 +8,11 @@ import type { OpenApiSpec } from '../fetch-spec.js';
 import type { OpenAPIV3 } from 'openapi-types';
 import { BaseGenerator } from './core/BaseGenerator.js';
 import { TypeMapperChain } from './strategies/SchemaTypeMapper.js';
-import { HTTP_METHODS, SUCCESS_STATUS_PREFIX, CONTENT_TYPES, PARAMETER_LOCATIONS } from './constants.js';
+import { HTTP_METHODS, SUCCESS_STATUS_PREFIX, CONTENT_TYPES, PARAMETER_LOCATIONS, ALLOW_ANONYMOUS_EXTENSION } from './constants.js';
 import { toPascalCase } from '../utils/naming.js';
 import { qualifyType } from '../utils/type-qualify.js';
 import { formatJsDocLines } from '../utils/jsdoc.js';
+import { binaryResponseMediaType } from './binary-response.js';
 
 interface EndpointInfo {
   operationId: string;
@@ -24,6 +25,7 @@ interface EndpointInfo {
   requestBody?: RequestBodyInfo;
   responses: ResponseInfo[];
   security: string[][];
+  allowAnonymous: boolean;
 }
 
 interface ParameterInfo {
@@ -108,6 +110,7 @@ class EndpointsGenerator extends BaseGenerator {
           requestBody: this.extractRequestBody(operation),
           responses: this.extractResponses(operation),
           security: this.extractSecurity(operation),
+          allowAnonymous: this.extractAllowAnonymous(operation),
         };
 
         endpoints.push(endpoint);
@@ -120,10 +123,7 @@ class EndpointsGenerator extends BaseGenerator {
   /**
    * Extract parameters from operation
    */
-  private extractParameters(
-    operation: OpenAPIV3.OperationObject,
-    pathItem: OpenAPIV3.PathItemObject
-  ): ParameterInfo[] {
+  private extractParameters(operation: OpenAPIV3.OperationObject, pathItem: OpenAPIV3.PathItemObject): ParameterInfo[] {
     const params: ParameterInfo[] = [];
 
     // Combine path-level and operation-level parameters
@@ -193,6 +193,8 @@ class EndpointsGenerator extends BaseGenerator {
       let type = 'void';
       if (content?.[CONTENT_TYPES.JSON]?.schema) {
         type = this.typeMapper.map(content[CONTENT_TYPES.JSON].schema as OpenAPIV3.SchemaObject);
+      } else if (binaryResponseMediaType(content)) {
+        type = 'Blob';
       }
 
       responses.push({
@@ -213,7 +215,14 @@ class EndpointsGenerator extends BaseGenerator {
     return security.map((req) => Object.keys(req));
   }
 
-
+  /**
+   * The API stamps [AllowAnonymous] endpoints with this extension so clients
+   * can call them without a token even when the document carries a global
+   * security requirement.
+   */
+  private extractAllowAnonymous(operation: OpenAPIV3.OperationObject): boolean {
+    return (operation as { [key: string]: unknown })[ALLOW_ANONYMOUS_EXTENSION] === true;
+  }
 
   /**
    * Generate TypeScript definition for an endpoint
@@ -247,7 +256,7 @@ class EndpointsGenerator extends BaseGenerator {
     lines.push(`  method: '${endpoint.method}' as const,`);
     lines.push(`  path: '${endpoint.path}' as const,`);
     lines.push(`  tags: ${JSON.stringify(endpoint.tags)} as const,`);
-    lines.push(`  requiresAuth: ${endpoint.security.length > 0},`);
+    lines.push(`  requiresAuth: ${endpoint.security.length > 0 && !endpoint.allowAnonymous},`);
     lines.push(`} as const;`);
 
     return lines.join('\n');

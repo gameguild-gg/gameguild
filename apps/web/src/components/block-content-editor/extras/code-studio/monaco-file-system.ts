@@ -4,6 +4,7 @@ import type { CodeFile } from "./types"
 import type { RegisteredFileSystemProvider as MonacoFileSystemProvider } from '@codingame/monaco-vscode-files-service-override'
 import { URI } from 'vscode-uri'
 import type { Monaco } from "@monaco-editor/react"
+import type { editor, Position } from "monaco-editor"
 
 let fileSystemProvider: MonacoFileSystemProvider | null = null
 let disposable: { dispose: () => void } | null = null
@@ -229,7 +230,7 @@ export function registerPathCompletionProvider(monaco: Monaco) {
   // Provider combinado para TypeScript e JavaScript
   const createProvider = () => ({
     triggerCharacters: ['"', "'", '/', '.'],
-    provideCompletionItems: (model: any, position: any) => {
+    provideCompletionItems: (model: editor.ITextModel, position: Position) => {
       const lineContent = model.getLineContent(position.lineNumber)
       const textBeforeCursor = lineContent.substring(0, position.column - 1)
       
