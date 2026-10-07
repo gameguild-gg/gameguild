@@ -226,8 +226,9 @@ public class EmailVerificationService(
         try
         {
             // Cache identity needs a distinct key per address; log redaction deliberately emits a constant marker.
-            // Use the complete digest here to avoid truncation collisions and keep raw emails out of cache keys.
-            var emailDigest = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(email)));
+            // Normalize before hashing so case variants of the same address share one rate-limit bucket,
+            // and use the complete digest to avoid truncation collisions and keep raw emails out of cache keys.
+            var emailDigest = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(email.Trim().ToLowerInvariant())));
             var rateLimitKey = RateLimitKeyPrefix + $"{userId}:{emailDigest}";
 
             if (memoryCache.TryGetValue(rateLimitKey, out DateTime lastSent))

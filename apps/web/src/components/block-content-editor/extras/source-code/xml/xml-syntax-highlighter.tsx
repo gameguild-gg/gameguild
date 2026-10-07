@@ -27,7 +27,7 @@ export function XMLSyntaxHighlighter({ monaco, editor }: XMLSyntaxHighlighterPro
             [/<\?xml[^\n]*\?>/, "metatag.xml"], // XML declaration
             [/<!DOCTYPE[^\n]*?>/, "metatag.xml"], // DOCTYPE declaration
             [/<!--/, { token: "comment", next: "@comment" }],
-            [/<!\[CDATA\[[^\n]*?\]\]>/, "comment"], // CDATA sections (line-scoped)
+            [/<!\[CDATA\[/, { token: "comment", next: "@cdata" }], // CDATA sections (may span lines)
 
             [/<([a-zA-Z][a-zA-Z0-9:\-.]*)(\s+[^>]*)?>/, { token: "tag", bracket: "@open", next: "@tagContent" }], // Opening tags
             [/<\/([a-zA-Z][a-zA-Z0-9:\-.]*)>/, { token: "tag", bracket: "@close" }], // Closing tags
@@ -44,9 +44,16 @@ export function XMLSyntaxHighlighter({ monaco, editor }: XMLSyntaxHighlighterPro
           ],
 
           comment: [
-            [/-->/, { token: "comment", next: "@pop" }],
+            // HTML spec: both `-->` and the error-tolerant `--!>` close a comment.
+            [/--!?>/, { token: "comment", next: "@pop" }],
             [/[^-]+/, "comment"],
             [/-/, "comment"],
+          ],
+
+          cdata: [
+            [/\]\]>/, { token: "comment", next: "@pop" }],
+            [/[^\]]+/, "comment"],
+            [/\]/, "comment"],
           ],
 
           tagContent: [

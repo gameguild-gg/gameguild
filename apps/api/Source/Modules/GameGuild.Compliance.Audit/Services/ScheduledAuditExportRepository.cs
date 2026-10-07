@@ -147,6 +147,15 @@ public sealed class ScheduledAuditExportRepository(IApplicationDbContext context
             .Where(export => exportIds.Contains(export.Id))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
+        var busyExportIds = (await context.Set<AuditExportHistory>()
+                .Where(history => exportIds.Contains(history.ScheduledExportId)
+                    && history.Status == ExportStatus.InProgress
+                    && history.ExecutedAt >= staleBeforeUtc)
+                .Select(history => history.ScheduledExportId)
+                .Distinct()
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false))
+            .ToHashSet();
 
         foreach (var history in staleHistories)
         {
@@ -156,7 +165,10 @@ public sealed class ScheduledAuditExportRepository(IApplicationDbContext context
         foreach (var export in exports)
         {
             export.RecordFailure(nowUtc, "Stale claim recovered");
-            export.UpdateNextRunTime(nowUtc);
+            if (!busyExportIds.Contains(export.Id))
+            {
+                export.UpdateNextRunTime(nowUtc);
+            }
         }
 
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

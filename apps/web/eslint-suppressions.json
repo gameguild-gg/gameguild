@@ -326,9 +326,6 @@
   "src/app/[locale]/(speedgrader)/speedgrader/assessments/[assessmentId]/grading-panel.tsx": {
     "@typescript-eslint/no-floating-promises": {
       "count": 1
-    },
-    "react-hooks/set-state-in-effect": {
-      "count": 2
     }
   },
   "src/app/[locale]/(speedgrader)/speedgrader/assessments/[assessmentId]/quiz-viewer.tsx": {
@@ -344,9 +341,6 @@
       "count": 1
     },
     "@typescript-eslint/no-unnecessary-type-assertion": {
-      "count": 1
-    },
-    "react-hooks/set-state-in-effect": {
       "count": 1
     }
   },
