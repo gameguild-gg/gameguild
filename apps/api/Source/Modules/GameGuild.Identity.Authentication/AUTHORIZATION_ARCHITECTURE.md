@@ -1917,6 +1917,13 @@ descriptors, expiration dates and revocations are retained. Existing payloads
 remain readable; no old keys are revoked or deleted. Invalid storage or an
 unavailable certificate aborts the read without committing partial conversions.
 
+The provider execution strategy owns the complete locked read, conversion, save
+and commit transaction, including when PostgreSQL automatic retries are enabled.
+Each attempt clears the dedicated context's tracked state and reloads durable
+rows. An aborted attempt cannot leave uncommitted envelopes hiding plaintext
+legacy rows from the next attempt. Transient write retries preserve canonical
+key identity, revocations and previously protected payloads.
+
 GitHub CI, including the Emception API browser cycle, prepares a synthetic
 certificate outside uploaded artifacts for each disposable runner. It masks the
 private key and removes temporary PEM files.

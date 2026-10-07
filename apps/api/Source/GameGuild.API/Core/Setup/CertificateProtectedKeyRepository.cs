@@ -38,6 +38,14 @@ internal sealed class CertificateProtectedKeyRepository : IXmlRepository, IDispo
     {
         using var scope = _services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        return context.Database.CreateExecutionStrategy().Execute(() => ReadElements(context));
+    }
+
+    private IReadOnlyCollection<XElement> ReadElements(ApplicationDbContext context)
+    {
+        // Each retry must read durable rows again. An aborted conversion can leave
+        // encrypted values tracked even though the database still contains legacy XML.
+        context.ChangeTracker.Clear();
         using var transaction = context.Database.BeginTransaction();
         // Concurrent hosts must read the committed envelope before returning key material.
         // A failed conversion rolls back the entire batch without removing any existing key.
