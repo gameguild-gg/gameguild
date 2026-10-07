@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using GameGuild.Identity.Context.Actors;
 using CommerceSubscription = GameGuild.Commerce.Subscriptions.Subscription;
 using CommerceSubscriptionPlan = GameGuild.Commerce.Subscriptions.SubscriptionPlan;
 using CommerceSubscriptionStatus = GameGuild.Commerce.Subscriptions.SubscriptionStatus;
@@ -18,6 +19,7 @@ public class CapabilityService : ICapabilityService
     private readonly IApplicationDbContext _context;
     private readonly IMemoryCache _cache;
     private readonly ILogger<CapabilityService> _logger;
+    private readonly IActorContextAccessor _actorContextAccessor;
 
     private const string CapabilitiesCacheKeyPrefix = "TenantCapabilities:";
     [ExcludeFromCodeCoverage]
@@ -103,11 +105,13 @@ public class CapabilityService : ICapabilityService
     public CapabilityService(
         IApplicationDbContext context,
         IMemoryCache cache,
-        ILogger<CapabilityService> logger)
+        ILogger<CapabilityService> logger,
+        IActorContextAccessor actorContextAccessor)
     {
         _context = context;
         _cache = cache;
         _logger = logger;
+        _actorContextAccessor = actorContextAccessor;
     }
 
     /// <inheritdoc />
@@ -242,6 +246,7 @@ public class CapabilityService : ICapabilityService
         DateTimeOffset? expiresAt = null,
         CancellationToken cancellationToken = default)
     {
+        userId = CapabilityAccessGuard.RequireAdministrator(_actorContextAccessor.ActorContext, tenantId);
         var existing = await _context.Set<TenantCapability>()
             .FirstOrDefaultAsync(tc => tc.TenantId == tenantId && tc.CapabilityKey == capability, cancellationToken).ConfigureAwait(false);
 
@@ -310,6 +315,7 @@ public class CapabilityService : ICapabilityService
         string? reason,
         CancellationToken cancellationToken = default)
     {
+        userId = CapabilityAccessGuard.RequireAdministrator(_actorContextAccessor.ActorContext, tenantId);
         var existing = await _context.Set<TenantCapability>()
             .FirstOrDefaultAsync(tc => tc.TenantId == tenantId && tc.CapabilityKey == capability, cancellationToken).ConfigureAwait(false);
 
@@ -351,6 +357,7 @@ public class CapabilityService : ICapabilityService
     /// <inheritdoc />
     public async Task SyncCapabilitiesFromPlanAsync(Guid tenantId, CancellationToken cancellationToken = default)
     {
+        CapabilityAccessGuard.RequireAdministrator(_actorContextAccessor.ActorContext, tenantId);
         var subscription = await _context.Set<CommerceSubscription>()
             .Include(s => s.Plan)
             .Where(s => s.TenantId == tenantId && s.Status == CommerceSubscriptionStatus.Active)
@@ -430,6 +437,7 @@ public class CapabilityService : ICapabilityService
         DateTimeOffset? toDate = null,
         CancellationToken cancellationToken = default)
     {
+        CapabilityAccessGuard.RequireAdministrator(_actorContextAccessor.ActorContext, tenantId);
         var query = _context.Set<CapabilityAuditLog>()
             .Where(log => log.TenantId == tenantId);
 

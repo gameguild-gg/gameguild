@@ -236,7 +236,8 @@ public sealed class FeatureEvaluationContextHttpTests
             manager.ApplicationParts.Add(new RuntimeControllerPart());
         });
         builder.Services.AddHttpContextAccessor();
-        builder.Services.AddSingleton<IActorContextAccessor, ActorContextAccessor>();
+        var actorAccessor = new ActorContextAccessor();
+        builder.Services.AddSingleton<IActorContextAccessor>(actorAccessor);
         builder.Services.AddScoped<IClaimsPrincipalAccessor, HttpContextClaimsPrincipalAccessor>();
         var tenantResolver = new Mock<IAuthorizationTenantResolver>();
         tenantResolver.Setup(resolver => resolver.ResolveTenantIdAsync(It.IsAny<HttpContext>(), It.IsAny<CancellationToken>()))
@@ -278,7 +279,8 @@ public sealed class FeatureEvaluationContextHttpTests
                 return realEvaluation.GetEnabledFeaturesAsync(context, ct);
             });
         builder.Services.AddSingleton(evaluation.Object);
-        var handler = new FeatureOperationCommandHandler(evaluation.Object, Mock.Of<ICapabilityService>(), NullLogger<FeatureOperationCommandHandler>.Instance);
+        var handler = new FeatureOperationCommandHandler(evaluation.Object, Mock.Of<ICapabilityService>(), NullLogger<FeatureOperationCommandHandler>.Instance,
+            actorAccessor);
         var sender = new Mock<ISender>();
         sender.Setup(service => service.Send(It.IsAny<EvaluateFeatureOperationCommand>(), It.IsAny<CancellationToken>()))
             .Returns<EvaluateFeatureOperationCommand, CancellationToken>(handler.Handle);

@@ -1857,6 +1857,25 @@ public async Task Authorization_PerformsUnderLoad()
 
 ## Platform Authorization Hardening
 
+### Tenant capability administration
+
+Capability HTTP reads require an authenticated resolved actor and a nonempty target
+tenant matching the actor's request tenant. An authenticated SystemAdmin may select
+another tenant explicitly. Overrides, removal, plan synchronization and audit-log
+reads additionally require tenant administration (Owner, TenantAdmin or Admin) or
+SystemAdmin. The `features:manage` policy governs feature-flag configuration; that
+permission alone does not grant capability entitlement administration.
+
+Mutation handlers and the capability service enforce the same administrator and
+tenant checks before any persistence call, including calls outside MVC or the CQRS
+authorization pipeline. User actors require a nonempty GUID subject. The resolved
+actor supplies override and removal audit identity; legacy command/service `UserId`
+arguments cannot impersonate another user. Non-user actors record null user IDs.
+Background synchronization must establish a trusted authenticated SystemAdmin
+context; an actor's System kind alone grants no access. Existing plan mapping,
+audit records and cache invalidation remain in place. Internal capability queries
+retain their service contract; HTTP reads enforce tenant scope before querying.
+
 ### Persisted refresh-token parent and session lineage
 
 Refresh tokens have nullable `ParentTokenId` and `SessionId` foreign keys to the
