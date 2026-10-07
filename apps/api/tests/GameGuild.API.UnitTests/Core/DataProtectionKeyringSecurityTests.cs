@@ -1,3 +1,4 @@
+using System.Data.Common;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -8,8 +9,10 @@ using GameGuild.TestSupport.Finance.Economy;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Npgsql;
 using Xunit;
 
 namespace GameGuild.API.UnitTests.Core;
@@ -300,17 +303,102 @@ public sealed class DataProtectionKeyringSecurityTests
         return await context.DataProtectionKeys.AsNoTracking().ToDictionaryAsync(row => row.Id, row => row.Xml!);
     }
 
-    private static ServiceProvider ProductionProvider(string connection, Func<string, string?> environmentReader)
+    [Fact]
+    public async Task RetryEnabledRepository_AllowsAnEmptyKeyringRead()
+    {
+        await using var database = await EconomyPostgreSqlTestDatabase.CreateAsync("native_keyring_retry_empty");
+        await Initialize(database.ConnectionString);
+        using var material = CertificateMaterial.Create();
+        var variables = new CertificateVariables(material.Certificate, material.Key);
+        using var provider = ProductionProvider(database.ConnectionString, variables.Read);
+        using var scope = provider.CreateScope();
+        Assert.True(scope.ServiceProvider.GetRequiredService<ApplicationDbContext>()
+            .Database.CreateExecutionStrategy().RetriesOnFailure);
+        var repository = provider.GetRequiredService<IOptions<KeyManagementOptions>>().Value.XmlRepository!;
+        Assert.Empty(repository.GetAllElements());
+        Assert.Empty(await ReadRows(database.ConnectionString));
+    }
+
+    [Fact]
+    public async Task TransientConversionFailure_ReloadsLegacyRowsAndPreservesExistingPayload()
+    {
+        await using var database = await EconomyPostgreSqlTestDatabase.CreateAsync("native_keyring_retry_conversion");
+        await Initialize(database.ConnectionString);
+        string ciphertext;
+        using (var provider = LegacyServices(database.ConnectionString).BuildServiceProvider())
+        {
+            var manager = provider.GetRequiredService<IKeyManager>();
+            manager.CreateNewKey(DateTimeOffset.UtcNow.AddMinutes(-1), DateTimeOffset.UtcNow.AddDays(30));
+            var expired = manager.CreateNewKey(DateTimeOffset.UtcNow.AddDays(-10), DateTimeOffset.UtcNow.AddDays(-1));
+            manager.RevokeKey(expired.KeyId, "Synthetic retry retention control");
+            ciphertext = provider.GetRequiredService<IDataProtectionProvider>()
+                .CreateProtector("owned-native-purpose").Protect(Payload);
+        }
+        var before = await ReadRows(database.ConnectionString);
+        using var material = CertificateMaterial.Create();
+        var variables = new CertificateVariables(material.Certificate, material.Key);
+        var failure = new FirstKeyringUpdateFailure();
+        using (var provider = ProductionProvider(database.ConnectionString, variables.Read, [failure]))
+        {
+            var repository = provider.GetRequiredService<IOptions<KeyManagementOptions>>().Value.XmlRepository!;
+            var elements = repository.GetAllElements();
+            Assert.Equal(before.Count, elements.Count);
+            foreach (var xml in before.Values)
+            {
+                Assert.True(elements.Any(element => XElement.DeepEquals(XElement.Parse(xml), element)),
+                    "A retried conversion must preserve canonical key and revocation XML.");
+            }
+        }
+        Assert.Equal(1, failure.InjectedFailures);
+        Assert.True(failure.UpdateAttempts >= 2, "The conversion must retry the actual database write.");
+        var after = await ReadRows(database.ConnectionString);
+        Assert.True(before.Keys.Order().SequenceEqual(after.Keys.Order()));
+        Assert.All(after.Values, xml => Assert.True(xml.Contains("protectedKey", StringComparison.Ordinal)));
+        await AssertNoPlaintextMasterKeys(database.ConnectionString);
+        using var restarted = ProductionProvider(database.ConnectionString, variables.Read);
+        Assert.Equal(Payload, restarted.GetRequiredService<IDataProtectionProvider>()
+            .CreateProtector("owned-native-purpose").Unprotect(ciphertext));
+    }
+
+    private static ServiceProvider ProductionProvider(string connection, Func<string, string?> environmentReader) =>
+        ProductionProvider(connection, environmentReader, []);
+
+    private static ServiceProvider ProductionProvider(
+        string connection, Func<string, string?> environmentReader, IInterceptor[] interceptors)
     {
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connection));
+        services.AddDbContext<ApplicationDbContext>(options =>
+            options.UseNpgsql(connection, postgres => postgres.EnableRetryOnFailure()).AddInterceptors(interceptors));
         DataProtectionStartupConfiguration.ConfigureServices(services, Application, _ => { }, environmentReader);
         return services.BuildServiceProvider();
     }
 
     private static ApplicationDbContext Context(string connection) =>
         new(new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(connection).Options);
+
+    private sealed class FirstKeyringUpdateFailure : DbCommandInterceptor
+    {
+        public int UpdateAttempts { get; private set; }
+        public int InjectedFailures { get; private set; }
+
+        public override InterceptionResult<DbDataReader> ReaderExecuting(
+            DbCommand command, CommandEventData eventData, InterceptionResult<DbDataReader> result)
+        {
+            if (command.CommandText.Contains("UPDATE \"DataProtectionKeys\"", StringComparison.Ordinal))
+            {
+                UpdateAttempts++;
+                if (InjectedFailures == 0)
+                {
+                    InjectedFailures++;
+                    // Synthetic transient PostgreSQL serialization failure at the actual
+                    // write boundary; the real Npgsql execution strategy handles the retry.
+                    throw new PostgresException("Synthetic keyring serialization failure", "ERROR", "ERROR", "40001");
+                }
+            }
+            return base.ReaderExecuting(command, eventData, result);
+        }
+    }
 
     private static async Task Initialize(string connection)
     {
