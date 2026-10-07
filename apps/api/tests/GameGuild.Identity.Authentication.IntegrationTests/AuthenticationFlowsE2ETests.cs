@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace GameGuild.Tests.Authentication.Integration;
@@ -68,6 +69,17 @@ public class AuthenticationFlowsE2ETests : IClassFixture<AuthenticationApiFactor
     [Fact]
     public async Task LocalAuth_TokenRefresh_AfterRevocation_ShouldFail()
     {
+        // This case verifies account-wide containment, including the sibling session
+        // and token-version increment. Family containment has PostgreSQL HTTP controls.
+        using var accountFactory = _factory.WithWebHostBuilder(builder =>
+            builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(
+                new Dictionary<string, string?> { ["Jwt:RefreshTokenReplayContainmentScope"] = "Account" })));
+        using var accountScope = accountFactory.Services.CreateScope();
+        var authService = accountScope.ServiceProvider.GetRequiredService<IAuthService>();
+        var dbContext = accountScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        accountScope.ServiceProvider.GetRequiredService<IConfiguration>()["Jwt:RefreshTokenReplayContainmentScope"]
+            .Should().Be("Account");
+
         // Arrange
         var email = $"revoke.test.{Guid.NewGuid()}@test.com";
 
@@ -78,13 +90,13 @@ public class AuthenticationFlowsE2ETests : IClassFixture<AuthenticationApiFactor
             Password = "TestPassword123!"
         };
 
-        var signUpResult = await _authService.LocalSignUpAsync(signUpRequest);
-        await _authService.LocalSignInAsync(new LocalSignInRequest
+        var signUpResult = await authService.LocalSignUpAsync(signUpRequest);
+        await authService.LocalSignInAsync(new LocalSignInRequest
         {
             Email = email,
             Password = signUpRequest.Password
         });
-        var originalVersion = await _dbContext.Set<User>().AsNoTracking()
+        var originalVersion = await dbContext.Set<User>().AsNoTracking()
             .Where(user => user.Id == signUpResult.UserId)
             .Select(user => user.TokenVersion).SingleAsync();
 
@@ -93,7 +105,7 @@ public class AuthenticationFlowsE2ETests : IClassFixture<AuthenticationApiFactor
         signUpResult.RefreshToken.Should().NotBeNullOrEmpty();
 
         // Revoke the refresh token
-        await _authService.RevokeRefreshTokenAsync(signUpResult.RefreshToken, "127.0.0.1");
+        await authService.RevokeRefreshTokenAsync(signUpResult.RefreshToken, "127.0.0.1");
 
         // A denied replay returns no credentials while committing session containment.
         var refreshRequest = new RefreshTokenRequest
@@ -101,7 +113,7 @@ public class AuthenticationFlowsE2ETests : IClassFixture<AuthenticationApiFactor
             RefreshToken = signUpResult.RefreshToken
         };
 
-        var denial = await _authService.RefreshTokenAsync(refreshRequest);
+        var denial = await authService.RefreshTokenAsync(refreshRequest);
         denial.Should().BeAssignableTo<global::GameGuild.ICommitOnFailureOutcome>();
 
         denial.Success.Should().BeFalse();
@@ -117,17 +129,17 @@ public class AuthenticationFlowsE2ETests : IClassFixture<AuthenticationApiFactor
         denial.StepUpToken.Should().BeNull();
 
         // Read persisted state rather than trusting entities still tracked by the service.
-        _dbContext.ChangeTracker.Clear();
-        var refreshTokens = await _dbContext.Set<RefreshToken>().AsNoTracking()
+        dbContext.ChangeTracker.Clear();
+        var refreshTokens = await dbContext.Set<RefreshToken>().AsNoTracking()
             .Where(token => token.UserId == signUpResult.UserId)
             .ToListAsync();
         refreshTokens.Should().HaveCount(2, "a denied replay must contain both existing sessions without minting a token");
         refreshTokens.Should().OnlyContain(token => token.IsRevoked);
-        var sessions = await _dbContext.Set<UserSession>().AsNoTracking()
+        var sessions = await dbContext.Set<UserSession>().AsNoTracking()
             .Where(session => session.UserId == signUpResult.UserId)
             .ToListAsync();
         sessions.Should().HaveCount(2).And.OnlyContain(session => !session.IsActive);
-        var persistedUser = await _dbContext.Set<GameGuild.Identity.Users.User>().AsNoTracking()
+        var persistedUser = await dbContext.Set<GameGuild.Identity.Users.User>().AsNoTracking()
             .SingleAsync(user => user.Id == signUpResult.UserId);
         persistedUser.TokenVersion.Should().Be(originalVersion + 1);
     }
