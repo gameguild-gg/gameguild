@@ -396,3 +396,42 @@ then failed because the existing local release CDN has a legacy manifest instead
 of schema version 2. No browser assertions ran. That failure is retained without
 altering generated release evidence or weakening the manifest check; the native
 workflow generates and verifies the current release before running these tests.
+
+### Current Code success and demo manifest correction (2026-10-07 UTC)
+
+Revision `c35197a9ca680ff987b5abf19635f5703cbdda72` passed the complete PR Verify
+run `37573171640`: 6,037 main API cases, 15 repeated OpenAPI gate cases, 2,998 Web
+cases, the selected builds, lint, types and client checks. Codacy, GitGuardian and
+all four CodeQL analyses passed on that revision. Emception run `37573171722`, job
+`112636196263`, also completed the genuine instructor/learner Code step with 36
+green assertions, zero known-red and two console observations among 38. Private
+tests, official submission, frozen rubric, grade 100 and persisted non-null
+feedback/rubric scores passed. The retained observations concern the learner's
+Monaco worker load and an instructor React update-before-mount warning; neither
+is counted as a passing assertion.
+
+The following C++ suite successfully started its development server, then repeatedly
+failed to reach toolchain readiness. Its logs show requests to the published
+jsDelivr Toolchain 4.4.0 endpoint, including HTTP 404 for the Brotli module. The
+Next.js demo's development/build hooks stage the verified local CDN, but the demo
+omitted `manifestUrl` when creating the IDE. It therefore used the public package
+default instead of that staged artifact. The demo now explicitly selects
+`/cdn/manifest.json`, matching the existing self-hosted demo convention. The
+public package default, schema/provenance validation and browser assertions remain
+unchanged.
+
+A focused staging/consumer regression failed before the correction and passed
+after it. All 75 script cases passed on Node 24.19.0 and Node 22.23.3; the Next.js
+demo's type check and affected-page lint also passed. The original baseline result
+and raw log are retained even though its initial wrapper could not print a Unicode
+test marker. The earlier preservation helper also stopped on its blanket script
+directory guard because the authorized new regression lives below that directory;
+the publication review verifies the original 55-file guard and each actual change
+explicitly instead. No primary source was modified.
+
+The C++ execution was deliberately cancelled after its repeated boot failures to
+replace it with the corrected revision. Its completed Code report and full raw
+job log are retained as partial evidence, not whole-workflow acceptance. The
+cancelled C++ suite and skipped consumer, Pages, deployable-output and upload
+steps remain unaccepted. Matching-head native and security gates are still required
+before merge; issue #263 remains open.
