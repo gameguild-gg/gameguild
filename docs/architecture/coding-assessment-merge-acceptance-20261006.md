@@ -317,3 +317,35 @@ cleanup and verified absence of the owned loopback-only container. Raw source
 fingerprints remained identical to the warning-clean build throughout these runs.
 The complete API unit repetition is running against those same compiled files;
 its result and a fresh matching-head native Code cycle remain pending at publication.
+
+The complete local API unit repetition then passed all 1,079 cases with zero
+failures/skips, unchanged compiled-source fingerprints, successful owned-database
+cleanup and verified container absence. On published `c04f92abf`, native Web passed
+all 2,998 tests, lint, types and the production build; all four CodeQL analyses
+passed. Native API and the real Code cycle remain running at this checkpoint.
+
+Codacy reported two unused parameters in the simulated unit executor. The follow-up
+uses those inputs to assert the frozen toolchain, retained private definition and
+submitted student source; it returns one simulated pass per frozen test. This
+changes only the test fixture, retaining production behavior and native assertions.
+Its warning-clean rebuild, affected-suite repetition and fresh scanner result are
+required before acceptance. No analysis rule or protection is disabled.
+
+### Scanner fixture validation and native checkpoint (2026-10-07 UTC)
+
+The first scanner-fixture rebuild failed because the abstract test base has no
+`Stdout` member. That failed run is retained. The fixture now asserts the concrete
+`StandardTest` type before checking its expected output. The complete solution
+rebuilt with zero warnings/errors and all 466 Assessments cases passed again.
+The raw-source bridge verifies that only this unit fixture changed among 6,486
+API source/test files. Authentication (2,316), Authorization (1,667), API unit
+(1,079) and focused HTTP (23) are retained earlier executions against byte-identical
+production and their own test source; they are not described as freshly rerun.
+
+Published production head `c04f92abf` passed the entire PR Verify run
+`37566083147`: 6,037 main API tests, 15 separate OpenAPI HTTP tests, 2,998 Web
+tests, clean builds, lint, types and client consistency. Its actual instructor
+and learner Code step passed in Emception run `37566083150`; subsequent C++ smoke
+and consumer/package steps remain pending at this checkpoint. The fixture follow-up
+requires fresh matching-head scanner/native gates before merge. Neither the
+successful Code step alone nor historical suite results certify the final head.
