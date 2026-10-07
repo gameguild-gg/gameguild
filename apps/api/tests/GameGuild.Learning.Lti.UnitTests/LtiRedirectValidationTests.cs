@@ -73,18 +73,12 @@ public class LtiRedirectValidationTests
 
     private LtiController CreateController()
     {
-        var handler = new LtiEndpointCommandHandler(
-            _db,
-            _stateStore,
-            new LtiPlatformJwksService(new StubHttpClientFactory(new HttpClient()), NullLogger<LtiPlatformJwksService>.Instance),
-            _jwtTokenService.Object,
-            NullLogger<LtiEndpointCommandHandler>.Instance);
         var controller = new LtiController(
             _db,
             _stateStore,
             Mock.Of<IActorContextAccessor>(),
             NullLogger<LtiController>.Instance,
-            new SingleCommandSender(handler));
+            new SingleCommandSender());
         controller.ControllerContext = new ControllerContext
         {
             HttpContext = new DefaultHttpContext
@@ -109,7 +103,7 @@ public class LtiRedirectValidationTests
         return new TestLtiDbContext(options);
     }
 
-    private sealed class SingleCommandSender(LtiEndpointCommandHandler handler) : ISender
+    private sealed class SingleCommandSender : ISender
     {
         public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default) =>
             throw new InvalidOperationException("Login should not dispatch commands before redirect validation.");

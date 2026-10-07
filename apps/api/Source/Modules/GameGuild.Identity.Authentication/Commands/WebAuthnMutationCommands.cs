@@ -30,12 +30,7 @@ public sealed record UpdateWebAuthnCredentialNameCommand(
     Guid CredentialId,
     string FriendlyName) : ICommand<bool>;
 
-public sealed class WebAuthnMutationCommandHandler(
-    IWebAuthnService webAuthnService,
-    IJwtTokenService jwtTokenService,
-    IUserRepository userRepository,
-    IConfiguration configuration,
-    IOptions<JwtOptions>? jwtOptions = null) :
+public sealed class WebAuthnMutationCommandHandler :
     ICommandHandler<BeginWebAuthnRegistrationCommand, WebAuthnRegistrationOptionsResult>,
     ICommandHandler<CompleteWebAuthnRegistrationCommand, WebAuthnRegistrationResult>,
     ICommandHandler<BeginWebAuthnAuthenticationCommand, WebAuthnAuthenticationOptionsResult>,
@@ -44,6 +39,31 @@ public sealed class WebAuthnMutationCommandHandler(
     ICommandHandler<DeleteWebAuthnCredentialCommand, bool>,
     ICommandHandler<UpdateWebAuthnCredentialNameCommand, bool>
 {
+    private readonly IWebAuthnService webAuthnService;
+    private readonly IUserRepository userRepository;
+    private readonly IAuthenticatedSessionIssuer? sessionIssuer;
+
+    public WebAuthnMutationCommandHandler(IWebAuthnService webAuthnService, IJwtTokenService jwtTokenService,
+        IUserRepository userRepository, IConfiguration configuration)
+        : this(webAuthnService, jwtTokenService, userRepository, configuration, null, null) { }
+
+    public WebAuthnMutationCommandHandler(IWebAuthnService webAuthnService, IJwtTokenService jwtTokenService,
+        IUserRepository userRepository, IConfiguration configuration, IOptions<JwtOptions>? jwtOptions)
+        : this(webAuthnService, jwtTokenService, userRepository, configuration, jwtOptions, null) { }
+
+    public WebAuthnMutationCommandHandler(
+        IWebAuthnService webAuthnService,
+        IJwtTokenService jwtTokenService,
+        IUserRepository userRepository,
+        IConfiguration configuration,
+        IOptions<JwtOptions>? jwtOptions,
+        IAuthenticatedSessionIssuer? sessionIssuer)
+    {
+        this.webAuthnService = webAuthnService;
+        this.userRepository = userRepository;
+        this.sessionIssuer = sessionIssuer;
+    }
+
     public Task<WebAuthnRegistrationOptionsResult> Handle(
         BeginWebAuthnRegistrationCommand command,
         CancellationToken cancellationToken) =>
@@ -75,32 +95,33 @@ public sealed class WebAuthnMutationCommandHandler(
         CompleteWebAuthnAuthenticationCommand command,
         CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var result = await webAuthnService.CompleteAuthenticationAsync(
             command.AssertionResponse,
             command.IpAddress,
             command.UserAgent,
             cancellationToken).ConfigureAwait(false);
-        if (!result.Success || result.UserId is not { } userId)
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!result.Success)
         {
             return result;
+        }
+        if (result.UserId is not { } userId)
+        {
+            throw new AuthenticationRequiredException("Invalid WebAuthn authentication");
         }
 
         var user = await userRepository.GetByIdAsync(userId, cancellationToken).ConfigureAwait(false);
-        if (user is null)
+        cancellationToken.ThrowIfCancellationRequested();
+        if (user is null || user.IsDeleted || !user.ValidateForAuthentication(user.TokenVersion).IsSuccess)
         {
-            return result;
+            throw new AuthenticationRequiredException("Invalid WebAuthn authentication");
         }
 
-        result.Email = user.Email;
-        result.AccessToken = await jwtTokenService.GenerateAccessTokenAsync(
-            user.Id,
-            user.Email,
-            [],
+        var issuer = sessionIssuer ?? throw new InvalidOperationException("Authenticated session issuer is not configured.");
+        var issued = await issuer.IssueAsync(
+            user,
             null,
-            user.TokenVersion,
-            cancellationToken).ConfigureAwait(false);
-        result.RefreshToken = await jwtTokenService.GenerateRefreshTokenAsync(
-            user.Id,
             new DeviceInfo
             {
                 Fingerprint = $"webauthn:{result.CredentialId?.ToString("N") ?? "unknown"}",
@@ -108,16 +129,12 @@ public sealed class WebAuthnMutationCommandHandler(
                 UserAgent = command.UserAgent
             },
             cancellationToken).ConfigureAwait(false);
-
-        var accessTokenMinutes = jwtOptions?.Value.AccessTokenExpirationMinutes
-                                 ?? ParsePositiveInt(configuration["Jwt:AccessTokenExpirationMinutes"], 60);
-        var refreshTokenDays = jwtOptions?.Value.RefreshTokenExpirationDays
-                               ?? ParsePositiveInt(
-                                   configuration["Jwt:RefreshTokenExpirationDays"] ?? configuration["Jwt:RefreshTokenExpiryInDays"],
-                                   30);
-        result.AccessTokenExpiresAt = SystemClock.UtcNow.AddMinutes(accessTokenMinutes);
-        result.RefreshTokenExpiresAt = SystemClock.UtcNow.AddDays(refreshTokenDays);
-        result.ExpiresIn = accessTokenMinutes * 60;
+        result.Email = issued.Email;
+        result.AccessToken = issued.AccessToken;
+        result.RefreshToken = issued.RefreshToken;
+        result.AccessTokenExpiresAt = issued.AccessTokenExpiresAt;
+        result.RefreshTokenExpiresAt = issued.RefreshTokenExpiresAt;
+        result.ExpiresIn = issued.ExpiresIn;
         return result;
     }
 

@@ -671,6 +671,8 @@ public sealed class AssessmentAuthoringService(
         }
 
         var projection = adapter.ProjectAuthoring(contentDocument.RootElement);
+        projection = await Code.CodeRubricSnapshot.MaterializeAsync(context, assessment, projection, cancellationToken)
+            .ConfigureAwait(false);
         if (projection.Grading is null)
         {
             return Result.Failure<MaterializedAuthoring>(Error.Validation("AssessmentRevision.GradingDisabled", "Grading is not enabled for this content."));
