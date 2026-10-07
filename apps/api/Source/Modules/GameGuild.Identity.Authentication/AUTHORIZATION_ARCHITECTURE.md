@@ -1899,6 +1899,32 @@ Decryption across deployments requires the existing persisted Data Protection
 keyring and consistent application identity. This source change does not certify
 production keyring encryption, historical backups, or deployed backfill completion.
 
+### Encryption of persisted Data Protection keys
+
+Durable key registration requires both certificate PEM variables, encoded in
+base64, in every environment. Missing, partial, malformed, mismatched, expired or
+unsuitable RSA certificates stop startup with fixed diagnostics. Runtime startup
+does not generate a certificate or permit plaintext key storage. The certificate
+private key belongs outside the database and must remain available across host
+restarts; local operators must provide their own stable development certificate.
+
+A certificate-encrypted repository protects the canonical Data Protection XML
+serialization as text inside an outer envelope using the framework's XML encryptor
+and decryptor, preserving namespaces, comments and whitespace. On a read it
+locks persisted rows, protects legacy repository encodings transactionally and
+returns the unchanged canonical XML to the framework. Key IDs, master material,
+descriptors, expiration dates and revocations are retained. Existing payloads
+remain readable; no old keys are revoked or deleted. Invalid storage or an
+unavailable certificate aborts the read without committing partial conversions.
+
+GitHub CI, including the Emception API browser cycle, prepares a synthetic
+certificate outside uploaded artifacts for each disposable runner. It masks the
+private key and removes temporary PEM files.
+Explicit certificate configuration takes precedence; partial configuration fails.
+This CI preparation is separate from runtime startup. Production deployment,
+certificate retention/rotation, historical backups and legacy-row counts still
+require operational verification; source tests alone do not certify them.
+
 ### Tenant capability administration
 
 Capability HTTP reads require an authenticated resolved actor and a nonempty target
