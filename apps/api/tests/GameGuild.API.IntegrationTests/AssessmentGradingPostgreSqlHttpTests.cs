@@ -285,8 +285,11 @@ public sealed class AssessmentGradingPostgreSqlHttpTests(ApiPostgreSqlFixture fi
             collective ? 2 : 1);
     }
 
-    [Fact]
-    public async Task CodeOfficialFlow_FreezesPrivateTestsAndRubricAndPersistsAuthorizedReviewAndRelease()
+    [Theory]
+    [InlineData("Accepted frozen solution")]
+    [InlineData(null)]
+    [InlineData(" \t")]
+    public async Task CodeOfficialFlow_FreezesPrivateTestsAndRubricAndPersistsAuthorizedReviewAndRelease(string? feedback)
     {
         var scenario = await CreateScenarioAsync(false, false, code: true);
         using var learner = fixture.CreateAuthenticatedClient(scenario.Learner1Id, scenario.TenantId);
@@ -331,7 +334,7 @@ public sealed class AssessmentGradingPostgreSqlHttpTests(ApiPostgreSqlFixture fi
             new SubmitAssessmentRuntimeRequest(response, $"code-submit-{Guid.NewGuid():N}"));
         submitted.Execution.RequiresInstructorReview.Should().BeTrue();
         var resolution = new InstructorReviewResolutionV1(1, [new("code", ScoreValue.FromUnits(150))],
-            "Accepted frozen solution", RubricScores: new Dictionary<Guid, ScoreValue> { [criterionId] = ScoreValue.FromUnits(150) });
+            feedback, RubricScores: new Dictionary<Guid, ScoreValue> { [criterionId] = ScoreValue.FromUnits(150) });
         var learnerReview = await learner.PostAsJsonAsync(
             $"{AssessmentsRoute}/runtime-submissions/{started.SubmissionId}/instructor-review",
             new ResolveInstructorReviewRequest(resolution, "forged-code-review"), JsonOptions);
@@ -343,6 +346,7 @@ public sealed class AssessmentGradingPostgreSqlHttpTests(ApiPostgreSqlFixture fi
             $"{AssessmentsRoute}/runtime-submissions/{started.SubmissionId}/instructor-review",
             new ResolveInstructorReviewRequest(resolution, "code-review"));
         resolved.Execution.InstructorVisibleResult!.Score.Should().Be(ScoreValue.FromUnits(150));
+        resolved.Execution.InstructorVisibleResult.Feedback.Should().Be(feedback);
         resolved.Execution.InstructorVisibleRubricScores![criterionId].Should().Be(ScoreValue.FromUnits(150));
         replay.Execution.ActiveRoundId.Should().Be(resolved.Execution.ActiveRoundId);
         var beforeRelease = await GetAsync<AssessmentSubmissionViewV1>(learner,
@@ -355,12 +359,14 @@ public sealed class AssessmentGradingPostgreSqlHttpTests(ApiPostgreSqlFixture fi
         var learnerResult = await GetAsync<AssessmentSubmissionViewV1>(learner,
             $"{AssessmentsRoute}/runtime-submissions/{started.SubmissionId}");
         learnerResult.Execution.LearnerVisibleResult!.Score.Should().Be(ScoreValue.FromUnits(150));
+        learnerResult.Execution.LearnerVisibleResult.Feedback.Should().Be(feedback);
         learnerResult.Execution.InstructorVisibleRubricScores.Should().BeNull();
         JsonSerializer.Serialize(learnerResult, JsonOptions).Should().NotContain("private-code-secret");
         await using var verification = fixture.Factory.Services.CreateAsyncScope();
         var database = verification.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var persisted = await database.Set<AssessmentSubmission>().SingleAsync(value => value.Id == started.SubmissionId);
         persisted.CodePayload.Should().Contain("submitted-code");
+        persisted.Feedback.Should().Be(feedback);
         persisted.RubricScoresPayload.Should().Contain(criterionId.ToString()).And.Contain("150");
     }
 
