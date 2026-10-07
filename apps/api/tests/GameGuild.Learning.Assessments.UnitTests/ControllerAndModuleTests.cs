@@ -9,6 +9,7 @@ using GameGuild.Learning.Assessments.Grading.Contracts;
 using GameGuild.Learning.Assessments.Grading.Runtime;
 using GameGuild.Learning.Courses;
 using GameGuild.Learning.Enrollments;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
@@ -57,7 +58,10 @@ public class ControllerAndModuleTests
              _authoring.Object,
             _log.Object,
             _endpointSender,
-             _runtime.Object);
+             _runtime.Object)
+        {
+            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() },
+        };
     }
 
     [Fact] public void Ctor_Creates() => CreateController().Should().NotBeNull();

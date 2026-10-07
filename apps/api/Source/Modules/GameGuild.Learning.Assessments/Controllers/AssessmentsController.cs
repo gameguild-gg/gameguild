@@ -1379,6 +1379,15 @@ public class AssessmentsController : BaseApiController
             return enrollment.UserId;
         }
 
+        var canonicalOwner = await _assessmentService
+            .GetProgramEnrollmentUserIdAsync(courseId, enrollmentId, HttpContext.RequestAborted)
+            .ConfigureAwait(false);
+        if (canonicalOwner.HasValue)
+        {
+            _logger.LogDebug("Resolved assessment enrollment {EnrollmentId} through ProgramEnrollment", enrollmentId);
+            return canonicalOwner.Value;
+        }
+
         var actorProgress = await _programService.GetUserProgressDtoAsync(courseId, actorUserId).ConfigureAwait(false);
         if (actorProgress?.EnrollmentId == enrollmentId)
         {
@@ -1415,6 +1424,14 @@ public class AssessmentsController : BaseApiController
         if (enrollment is not null)
         {
             return enrollment.Id;
+        }
+
+        var canonicalId = await _assessmentService
+            .GetProgramEnrollmentIdAsync(courseId, actorUserId, HttpContext.RequestAborted)
+            .ConfigureAwait(false);
+        if (canonicalId.HasValue)
+        {
+            return canonicalId.Value;
         }
 
         var progress = await _programService.GetUserProgressDtoAsync(courseId, actorUserId).ConfigureAwait(false);
