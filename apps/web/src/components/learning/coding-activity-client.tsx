@@ -76,7 +76,11 @@ export interface CodingActivityClientProps {
   loadEditor?: CodingEditorLoader;
 }
 
-export function CodingActivityClient({
+export function CodingActivityClient(props: CodingActivityClientProps) {
+  return <CodingActivitySession key={`${props.assessmentId}:${props.enrollmentId}`} {...props} />;
+}
+
+function CodingActivitySession({
   assessmentId,
   enrollmentId,
   slug,
@@ -103,13 +107,6 @@ export function CodingActivityClient({
 
   useEffect(() => {
     let active = true;
-    setRuntime(null);
-    setRuntimeError(null);
-    setResult(null);
-    setReport(null);
-    submitKey.current = null;
-    sessionRef.current = null;
-    setSessionReady(false);
     void startIndividualRuntimeSubmission(assessmentId, enrollmentId, startKey).then((result) => {
       if (!active) return;
       if (!result.success) { setRuntimeError(result.error); return; }

@@ -326,6 +326,22 @@ describe('runtime GradingPanel', () => {
     }));
   });
 
+  it('removes the previous submission scores while the next submission loads', async () => {
+    const first = runtimeSubmission();
+    actions.get.mockResolvedValueOnce({ success: true, data: first });
+    const view = render(<GradingPanel item={individualItem} assessment={assessment} />);
+    await screen.findByTestId('item-score-q1');
+    const pending = Promise.withResolvers<{ success: true; data: AssessmentSubmissionRuntimeViewV1 }>();
+    actions.get.mockReturnValueOnce(pending.promise);
+
+    view.rerender(<GradingPanel item={{ ...individualItem, submissionId: 'submission-2' }} assessment={assessment} />);
+    expect(screen.queryByTestId('item-score-q1')).not.toBeInTheDocument();
+    await waitFor(() => expect(actions.get).toHaveBeenLastCalledWith('submission-2'));
+    pending.resolve({ success: true, data: runtimeSubmission({ submissionId: 'submission-2' }) });
+    await screen.findByTestId('item-score-q1');
+    expect(actions.resolve).not.toHaveBeenCalled();
+  });
+
   it('restores the criterion scores recorded for the active finalized Code round', async () => {
     const value = finalSubmission();
     value.execution.delivery.itemOrder = ['code'];

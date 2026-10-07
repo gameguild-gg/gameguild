@@ -25,7 +25,11 @@ export interface SubmissionViewerProps {
  * Instructor view of the exact delivery and response bound to the official
  * grading execution. The authored content is intentionally not consulted.
  */
-export function SubmissionViewer({
+export function SubmissionViewer(props: SubmissionViewerProps): React.JSX.Element {
+  return <SubmissionViewerSession key={props.submissionId} {...props} />;
+}
+
+function SubmissionViewerSession({
   submissionId,
 }: SubmissionViewerProps): React.JSX.Element {
   const [submission, setSubmission] =
@@ -34,8 +38,6 @@ export function SubmissionViewer({
 
   useEffect(() => {
     let cancelled = false;
-    setSubmission(null);
-    setError(null);
     getRuntimeSubmission(submissionId).then((result) => {
       if (cancelled) return;
       if (result.success) {
@@ -140,17 +142,24 @@ function CodeRuntimeSubmission({ submission }: { submission: AssessmentSubmissio
     });
     return () => { active = false; };
   }, []);
+  const content = useMemo(() => readFrozenCodeSubmission(submission), [submission]);
+  if (error) return <p role="alert">{error}</p>;
+  if (!content.success) return <p role="alert">{content.error}</p>;
+  if (!Grader) return <p>Loading Code grading editor...</p>;
+  return <Grader assignment={content.definition} submittedFiles={content.files}
+    maxScore={content.definition.Grading.MaxScore} manifestUrl={EMCEPTION_MANIFEST_URL}
+    submissionId={submission.submissionId} />;
+}
+
+function readFrozenCodeSubmission(submission: AssessmentSubmissionRuntimeViewV1) {
   try {
     const definition = readCodeRuntimeDefinition(submission, true);
     const payload = submission.execution.submittedResponse?.payload as { files?: unknown } | undefined;
     const files = payload?.files ? codePayloadToFiles(JSON.stringify(payload.files)) : [];
-    if (error) return <p role="alert">{error}</p>;
-    if (!Grader) return <p>Loading Code grading editor...</p>;
-    return <Grader assignment={definition} submittedFiles={files}
-      maxScore={definition.Grading.MaxScore} manifestUrl={EMCEPTION_MANIFEST_URL}
-      submissionId={submission.submissionId} />;
+    return { success: true as const, definition, files };
   } catch (failure) {
-    return <p role="alert">{failure instanceof Error ? failure.message : 'The frozen Code submission is unavailable.'}</p>;
+    return { success: false as const,
+      error: failure instanceof Error ? failure.message : 'The frozen Code submission is unavailable.' };
   }
 }
 

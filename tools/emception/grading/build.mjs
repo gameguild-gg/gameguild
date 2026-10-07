@@ -10,7 +10,7 @@ const types = spawnSync(process.execPath, [require.resolve('typescript/bin/tsc')
   cwd: root, stdio: 'inherit',
 });
 if (types.status !== 0) throw new Error('Trusted Code browser runtime types failed.');
-const contracts = spawnSync(process.execPath, ['--test', 'grading/toolchain-binding.test.mjs'], {
+const contracts = spawnSync(process.execPath, ['--test', 'grading/toolchain-binding.test.mjs', 'grading/worker-diagnostics.test.mjs'], {
   cwd: root, stdio: 'inherit',
 });
 if (contracts.status !== 0) throw new Error('Frozen Code toolchain contracts failed.');

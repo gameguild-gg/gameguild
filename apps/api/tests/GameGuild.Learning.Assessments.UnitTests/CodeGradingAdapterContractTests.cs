@@ -157,7 +157,7 @@ public sealed class CodeGradingAdapterContractTests
         result.MaxScore.Should().Be(ScoreValue.FromUnits(10000));
         result.Items.Should().ContainSingle().Which.EvidenceRefs.Should().ContainSingle();
         JsonSerializer.Serialize(result).Should().NotContain("secret-result");
-        executor.Definition!.Tests.Private.Single().Weight.Should().Be(3);
+        executor.CapturedDefinition!.Tests.Private.Single().Weight.Should().Be(3);
         executor.Files.GetProperty("main.cpp").GetProperty("content").GetString().Should().Be("source");
     }
 
@@ -208,13 +208,13 @@ public sealed class CodeGradingAdapterContractTests
 
     private sealed class RecordingExecutor(IReadOnlyList<bool> passed) : ICodeAssessmentExecutor
     {
-        public CodingAssignmentContent? Definition { get; private set; }
+        public CodingAssignmentContent? CapturedDefinition { get; private set; }
         public JsonElement Files { get; private set; }
         public Task<CodeExecutionReceipt> ExecuteAsync(CodingAssignmentContent definition, JsonElement files, CodeToolchainIdentity toolchain,
             CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            Definition = definition;
+            CapturedDefinition = definition;
             toolchain.Should().Be(CodeToolchainIdentity.Version1);
             Files = files.Clone();
             return Task.FromResult(new CodeExecutionReceipt(passed, new string('a', 64)));

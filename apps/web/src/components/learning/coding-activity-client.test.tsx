@@ -325,6 +325,31 @@ describe("CodingActivityClient", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(expected);
   });
 
+  it("requires a fresh editor session when the enrollment changes", async () => {
+    const view = renderActivity();
+    readySession(await editorProps());
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled();
+    const firstRuntime = await mocks.start.mock.results[0]!.value;
+    const pending = Promise.withResolvers<typeof firstRuntime>();
+    mocks.start.mockReturnValueOnce(pending.promise);
+
+    view.rerender(<CodingActivityClient assessmentId="assessment-1" enrollmentId="enrollment-2"
+      courseId="course-1" slug="game-ai" assignment={assignment()} />);
+    expect(screen.queryByTestId('mock-editor')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+    await waitFor(() => expect(mocks.start).toHaveBeenCalledTimes(2));
+    expect(mocks.start.mock.calls[1]![1]).toBe('enrollment-2');
+    expect(mocks.start.mock.calls[1]![2]).not.toBe(mocks.start.mock.calls[0]![2]);
+
+    await act(async () => {
+      pending.resolve({ ...firstRuntime, data: { ...firstRuntime.data, submissionId: 'official-submission-2' } });
+    });
+    const nextEditor = await editorProps();
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+    readySession(nextEditor);
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled();
+  });
+
   it("does not update state after unmounting while a successful editor import settles", async () => {
     const pending = Promise.withResolvers<() => null>();
     const view = renderActivity({ loadEditor: () => pending.promise });

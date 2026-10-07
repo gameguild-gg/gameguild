@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type {
   LearningAssessmentsGradingQueueAssessment,
   LearningAssessmentsGradingQueueItem,
@@ -43,7 +43,11 @@ interface ItemResolutionState {
   feedback: string;
 }
 
-export function GradingPanel({
+export function GradingPanel(props: GradingPanelProps): React.JSX.Element {
+  return <GradingPanelSession key={props.item.submissionId} {...props} />;
+}
+
+function GradingPanelSession({
   item,
   assessment,
 }: GradingPanelProps): React.JSX.Element {
@@ -61,26 +65,6 @@ export function GradingPanel({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-    setSubmission(null);
-    setCriterionScores({});
-    getRuntimeSubmission(item.submissionId ?? '').then((result) => {
-      if (cancelled) return;
-      setLoading(false);
-      if (!result.success) {
-        setError(result.error);
-        return;
-      }
-      setSubmission(result.data);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [item.submissionId]);
-
   const orderedItemIds = useMemo(() => {
     if (!submission) return [];
     const known = new Set(Object.keys(submission.execution.itemMaxScores));
@@ -90,15 +74,15 @@ export function GradingPanel({
     return [...ordered, ...known];
   }, [submission]);
 
-  useEffect(() => {
-    if (!submission) return;
+  const acceptRuntimeSubmission = useCallback((nextSubmission: AssessmentSubmissionRuntimeViewV1) => {
+    setSubmission(nextSubmission);
     const resultByItem = new Map(
-      (submission.execution.instructorVisibleResult?.items ?? []).map(
+      (nextSubmission.execution.instructorVisibleResult?.items ?? []).map(
         (result) => [result.itemId, result],
       ),
     );
     const next = Object.fromEntries(
-      Object.entries(submission.execution.itemMaxScores).map(
+      Object.entries(nextSubmission.execution.itemMaxScores).map(
         ([itemId]) => {
           const result = resultByItem.get(itemId);
           return [
@@ -116,16 +100,28 @@ export function GradingPanel({
     );
     setResolutions(next);
     setOverallFeedback(
-      submission.execution.instructorVisibleResult?.feedback ?? '',
+      nextSubmission.execution.instructorVisibleResult?.feedback ?? '',
     );
-  }, [submission]);
+    setCriterionScores(Object.fromEntries(Object.entries(
+      nextSubmission.execution.instructorVisibleRubricScores ?? {},
+    ).map(([id, units]) => [id, String(scoreUnitsToPoints(units))])));
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    getRuntimeSubmission(item.submissionId ?? '').then((result) => {
+      if (cancelled) return;
+      setLoading(false);
+      if (!result.success) {
+        setError(result.error);
+        return;
+      }
+      acceptRuntimeSubmission(result.data);
+    });
+    return () => { cancelled = true; };
+  }, [item.submissionId, acceptRuntimeSubmission]);
 
   const frozenRubric = submission?.execution.instructorVisibleRubric;
-  useEffect(() => {
-    setCriterionScores(Object.fromEntries(Object.entries(
-      submission?.execution.instructorVisibleRubricScores ?? {},
-    ).map(([id, units]) => [id, String(scoreUnitsToPoints(units))])));
-  }, [submission?.execution.activeRoundId, submission?.execution.instructorVisibleRubricScores]);
   const rubricValues = frozenRubric?.criteria.map((criterion) => {
     try {
       const raw = criterionScores[criterion.id] ?? '';
@@ -205,7 +201,7 @@ export function GradingPanel({
       setError(result.error);
       return;
     }
-    setSubmission(result.data);
+    acceptRuntimeSubmission(result.data);
     router.refresh();
   }
 
@@ -228,7 +224,7 @@ export function GradingPanel({
       return;
     }
     const refreshed = await getRuntimeSubmission(submission.submissionId);
-    if (refreshed.success) setSubmission(refreshed.data);
+    if (refreshed.success) acceptRuntimeSubmission(refreshed.data);
     router.refresh();
   }
 
@@ -246,7 +242,7 @@ export function GradingPanel({
       setError(result.error);
       return;
     }
-    setSubmission(result.data);
+    acceptRuntimeSubmission(result.data);
     setRegradeReason('');
     router.refresh();
   }
