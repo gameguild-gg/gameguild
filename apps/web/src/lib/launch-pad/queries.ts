@@ -48,6 +48,7 @@ async function launchPadApiGet<T>(path: string, revalidate = 30): Promise<T | nu
   const token = await getToken();
   const tenantId = (await auth().catch(() => null))?.tenantId;
   const response = await fetch(assertSafeServiceUrl(`${apiUrl}${path}`, apiUrl), {
+    redirect: 'error',
     headers: {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(tenantId ? { 'X-Tenant-Id': tenantId } : {}),

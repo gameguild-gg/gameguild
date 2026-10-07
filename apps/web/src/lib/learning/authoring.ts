@@ -140,6 +140,7 @@ async function authoringRequest<T>(
 
   const response = await fetch(assertSafeServiceUrl(`${apiBaseUrl}${path}`, apiBaseUrl), {
     ...init,
+    redirect: "error",
     headers: {
       Authorization: `Bearer ${token}`,
       "X-Tenant-Id": tenantId,

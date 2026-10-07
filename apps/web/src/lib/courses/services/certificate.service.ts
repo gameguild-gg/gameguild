@@ -153,6 +153,7 @@ export async function downloadCertificate(certificateId: string) {
 
 export async function getCertificateStatus(courseId: string): Promise<CertificateStatus> {
   const response = await fetch(assertSafeRemoteUrl(`/api/courses/certificates?mode=status&courseId=${encodeURIComponent(courseId)}`), {
+    redirect: 'error',
     method: 'GET',
   });
 

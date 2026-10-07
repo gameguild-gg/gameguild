@@ -84,7 +84,10 @@ export function GitHubProvider(options: GitHubProviderOptions): OAuthProviderCon
       const params = new URLSearchParams();
       if (redirectUri) params.set('redirectUri', redirectUri);
 
-      const response = await fetch(assertSafeServiceUrl(`${effectiveApiUrl}${authorizePath}?${params.toString()}`, effectiveApiUrl), { method: 'GET' });
+      const response = await fetch(assertSafeServiceUrl(`${effectiveApiUrl}${authorizePath}?${params.toString()}`, effectiveApiUrl), {
+        method: 'GET',
+        redirect: 'error',
+      });
 
       if (!response.ok) {
         const errorData = await parseErrorBody(response);
@@ -102,6 +105,7 @@ export function GitHubProvider(options: GitHubProviderOptions): OAuthProviderCon
       const effectiveApiUrl = options.apiUrl || apiUrl;
 
       const response = await fetch(assertSafeServiceUrl(`${effectiveApiUrl}${callbackPath}`, effectiveApiUrl), {
+        redirect: 'error',
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code, state }),

@@ -72,6 +72,7 @@ export async function reportContent(data: ReportPayload): Promise<ContentReportR
 export async function getContentReports(contentType: string, contentId: string) {
   const query = new URLSearchParams({ contentType, contentId });
   const response = await fetch(assertSafeRemoteUrl(`/api/courses/content-reports?${query.toString()}`), {
+    redirect: 'error',
     method: 'GET',
   });
 

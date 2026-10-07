@@ -13,6 +13,7 @@ export async function getTestingLocations(skip = 0, take = 50): Promise<TestingL
 
   try {
     const response = await fetch(assertSafeServiceUrl(endpoint, apiBaseUrl), {
+      redirect: 'error',
       headers: {
         Accept: 'application/json',
       },
