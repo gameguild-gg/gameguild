@@ -55,7 +55,11 @@ public static class AuditModule
                 {
                     options.StaleClaimThreshold = TimeSpan.FromMinutes(staleMinutes);
                 }
-            });
+            })
+            .Validate(
+                options => options.StaleClaimThreshold > TimeSpan.Zero,
+                $"{AuditScheduledExportOptions.ConfigurationSection}:{AuditScheduledExportOptions.StaleClaimThresholdMinutesKey} " +
+                "must be a positive number of minutes; a zero or negative threshold would mark every in-progress claim stale.");
         services.AddHttpClient<IAuditExportWebhookNotifier, AuditExportWebhookNotifier>()
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
 

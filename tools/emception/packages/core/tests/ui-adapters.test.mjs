@@ -225,3 +225,23 @@ test('schema extensions cannot assign reserved intermediate or final path segmen
         delete ATTRIBUTE_SCHEMA[key];
     }
 });
+
+test('final write never invokes inherited setters (defineProperty semantics)', () => {
+    // setPath writes with Object.defineProperty, so a hostile inherited
+    // setter (e.g. planted via earlier prototype pollution) is never called
+    // for a final path segment, unlike a plain `obj[key] = value` write.
+    const calls = [];
+    Object.defineProperty(Object.prototype, 'output', {
+        set(v) { calls.push(v); },
+        get() { return undefined; },
+        configurable: true,
+    });
+    try {
+        const input = parseAttributesToInput({ output: 'a.out' });
+        assert.deepEqual(calls, []);
+        assert.deepEqual(input, { workspace: { output: 'a.out' } });
+        assert.equal(({}).polluted, undefined);
+    } finally {
+        delete Object.prototype.output;
+    }
+});

@@ -25,7 +25,8 @@ public sealed class JwtTokenService(
     IHttpContextAccessor httpContextAccessor,
     IOptions<JwtOptions> jwtOptions,
     IAuthorizationGroupMembershipProvider? groupMembershipProvider = null,
-    IOptions<AuthorizationTokenOptions>? authorizationTokenOptions = null) : IJwtTokenService
+    IOptions<AuthorizationTokenOptions>? authorizationTokenOptions = null,
+    IRefreshTokenLifecycleRecorder? lifecycleRecorder = null) : IJwtTokenService
 {
     private readonly JwtOptions _jwtOptions = jwtOptions.Value;
     private readonly AuthorizationTokenOptions _authorizationTokenOptions = authorizationTokenOptions?.Value ?? new AuthorizationTokenOptions();
@@ -119,10 +120,7 @@ public sealed class JwtTokenService(
         CancellationToken cancellationToken,
         IEnumerable<Claim>? additionalClaims)
     {
-        if (roles == null)
-        {
-            throw new ArgumentNullException(nameof(roles));
-        }
+        if (roles == null) throw new ArgumentNullException(nameof(roles));
 
         logger.LogInformation("Generating access token for user: {UserId}", userId);
 
@@ -205,12 +203,11 @@ public sealed class JwtTokenService(
         DateTimeOffset authenticatedAt,
         CancellationToken cancellationToken = default)
     {
-        if (deviceInfo == null)
-        {
-            throw new ArgumentNullException(nameof(deviceInfo));
-        }
+        if (deviceInfo == null) throw new ArgumentNullException(nameof(deviceInfo));
+        cancellationToken.ThrowIfCancellationRequested();
+        RefreshTokenLifecycleMetrics.RecordAttempt(RefreshTokenLifecycleOperation.Issued);
 
-        logger.LogInformation("Generating refresh token for user: {UserId}, Device: {DeviceId}", userId, LogRedaction.Sanitize(deviceInfo.DeviceId));
+        logger.LogInformation("Generating refresh token for user: {UserId}, Device: {DeviceId}", userId, deviceInfo.DeviceId);
 
         try
         {
@@ -252,6 +249,11 @@ public sealed class JwtTokenService(
                 try
                 {
                     await refreshTokenRepository.CreateAsync(refreshToken, cancellationToken).ConfigureAwait(false);
+                    if (lifecycleRecorder is not null)
+                    {
+                        await lifecycleRecorder.RecordMutationAsync(new RefreshTokenLifecycleEvent(RefreshTokenLifecycleOperation.Issued,
+                            userId, refreshToken.Id), cancellationToken).ConfigureAwait(false);
+                    }
 
                     logger.LogInformation("Refresh token generated and stored: {TokenId}, Expires: {ExpiresAt}", refreshToken.Id, refreshToken.ExpiresAt);
 
@@ -369,6 +371,8 @@ public sealed class JwtTokenService(
     /// </summary>
     public async Task<bool> RevokeRefreshTokenAsync(string token, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+        RefreshTokenLifecycleMetrics.RecordAttempt(RefreshTokenLifecycleOperation.Revoked);
         logger.LogInformation("Revoking refresh token");
 
         try
@@ -395,6 +399,11 @@ public sealed class JwtTokenService(
             refreshToken.RevokedAt = SystemClock.UtcNow;
 
             await refreshTokenRepository.UpdateAsync(refreshToken, cancellationToken).ConfigureAwait(false);
+            if (lifecycleRecorder is not null)
+            {
+                await lifecycleRecorder.RecordMutationAsync(new RefreshTokenLifecycleEvent(RefreshTokenLifecycleOperation.Revoked,
+                    refreshToken.UserId, refreshToken.Id, refreshToken.SessionId), cancellationToken).ConfigureAwait(false);
+            }
 
             logger.LogInformation("Refresh token revoked: {TokenId}", refreshToken.Id);
 
@@ -421,7 +430,7 @@ public sealed class JwtTokenService(
     {
         logger.LogInformation(
             "Generating service account token for: {ServiceAccountId}, ClientId: {ClientId}",
-            LogRedaction.RedactId(serviceAccountId, "sac"), LogRedaction.RedactId(clientId, "cid"));
+            serviceAccountId, clientId);
 
         try
         {
@@ -477,7 +486,7 @@ public sealed class JwtTokenService(
 
             logger.LogInformation(
                 "Service account token generated for: {ServiceAccountId}, Expires: {ExpiresAt}",
-                LogRedaction.RedactId(serviceAccountId, "sac"), expiresAt);
+                serviceAccountId, expiresAt);
 
             return Task.FromResult((tokenString, expiresAt));
         }
@@ -485,7 +494,7 @@ public sealed class JwtTokenService(
         {
             logger.LogError(ex,
                 "Error generating service account token for: {ServiceAccountId}",
-                LogRedaction.RedactId(serviceAccountId, "sac"));
+                serviceAccountId);
 
             throw;
         }
