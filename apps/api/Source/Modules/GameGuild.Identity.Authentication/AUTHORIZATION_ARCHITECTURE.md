@@ -1876,6 +1876,29 @@ distributed consumption across independent hosts or introduce a persistent token
 store. Existing token lifetimes, public token format, HTTP contracts, returned
 identity and log redaction are retained.
 
+### Credential metadata in durable email notifications
+
+Verification, password-reset and magic-link metadata is protected with the host's
+ASP.NET Data Protection provider before notification delivery-service persistence.
+The purpose binds the notification ID, type, channel, recipient, tenant and explicit
+recipient address. Renderers decrypt into a local value and leave tracked and stored
+metadata encrypted. Invalid, foreign or malformed payloads fail with a fixed message
+before sending; failed delivery retains the existing retry and dead-letter behavior.
+
+The existing email sweep also protects a bounded batch of legacy plaintext rows,
+including sent, held, dead-lettered and soft-deleted history across tenants, without
+changing delivery state or retry counters. Due rows outside the history batch are
+protected before any lifecycle write. Backfill failure aborts that sweep; it does
+not acknowledge or send an unprotected credential. Completion requires running
+sweeps against the deployed database and observing no remaining legacy rows.
+
+Notification input retains the 4,000-character limit. The Metadata column becomes
+PostgreSQL text to accommodate encryption and Unicode expansion. Rollback locks
+the table and refuses values that would be truncated by the old column limit.
+Decryption across deployments requires the existing persisted Data Protection
+keyring and consistent application identity. This source change does not certify
+production keyring encryption, historical backups, or deployed backfill completion.
+
 ### Tenant capability administration
 
 Capability HTTP reads require an authenticated resolved actor and a nonempty target

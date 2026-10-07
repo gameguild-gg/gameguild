@@ -16,6 +16,8 @@ namespace GameGuild.Notifications;
 [Index(nameof(ScheduledAt))]
 public class Notification : EntityBase
 {
+    public const int MaximumMetadataInputLength = 4000;
+
     /// <summary>
     /// ID of the user who will receive this notification.
     /// Null for email-only recipients (e.g., tenant invites to unregistered addresses).
@@ -148,9 +150,8 @@ public class Notification : EntityBase
     public string? ReferenceEntityType { get; private set; }
 
     /// <summary>
-    /// Optional metadata JSON for additional notification data
+    /// Optional metadata; identity-email credentials are stored as a protected envelope.
     /// </summary>
-    [MaxLength(4000)]
     public string? Metadata { get; private set; }
 
     /// <summary>
@@ -189,6 +190,11 @@ public class Notification : EntityBase
         Guid? templateId = null,
         string? recipientEmail = null)
     {
+        if (metadata?.Length > MaximumMetadataInputLength)
+        {
+            throw new ArgumentException("Notification metadata exceeds the input limit.", nameof(metadata));
+        }
+
         return new Notification
         {
             Id = Guid.NewGuid(),
@@ -211,6 +217,8 @@ public class Notification : EntityBase
             IsSent = false
         };
     }
+
+    internal void SetProtectedMetadata(string metadata) => Metadata = metadata;
 
     /// <summary>
     /// Marks the notification as read
