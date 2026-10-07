@@ -3,6 +3,7 @@
 import { spawn } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { resolvePnpmProcess } from "./pnpm-process.mjs";
 
 const scriptPath = fileURLToPath(import.meta.url);
 const webRoot = path.resolve(path.dirname(scriptPath), "..");
@@ -14,7 +15,6 @@ const nextBin = path.join(
   "bin",
   "next",
 );
-const shell = process.platform === "win32";
 const nodeOptions = /--max-old-space-size(?:=|\s)/.test(
   process.env.NODE_OPTIONS ?? "",
 )
@@ -41,10 +41,15 @@ export const LEARNING_BUILD_PATHS = [
 
 function run(command, args) {
   return new Promise((resolve, reject) => {
-    const child = spawn(command, args, {
+    const invocation =
+      command === "pnpm"
+        ? resolvePnpmProcess(args, { env: buildEnv })
+        : { command, args };
+    const child = spawn(invocation.command, invocation.args, {
       cwd: webRoot,
       env: buildEnv,
-      shell,
+      shell: false,
+      windowsHide: true,
       stdio: "inherit",
     });
     child.once("error", reject);
