@@ -73,7 +73,7 @@ public class ProgramReadService(IApplicationDbContext context) : IProgramReadSer
 
   public async Task<IEnumerable<Program>> GetProgramsByCreatorAsync(Guid creatorId, int skip = 0, int take = 50)
   {
-    return await context.Set<Program>().Where(p => p.DeletedAt == null).OrderByDescending(p => p.CreatedAt).Skip(skip).Take(take).ToListAsync();
+    return await context.Set<Program>().Where(p => p.CreatorId == creatorId && p.DeletedAt == null).OrderByDescending(p => p.CreatedAt).Skip(skip).Take(take).ToListAsync();
   }
 
   public async Task<IEnumerable<Program>> GetFeaturedProgramsAsync(int count = 10)
