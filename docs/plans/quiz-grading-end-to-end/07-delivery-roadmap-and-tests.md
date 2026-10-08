@@ -43,8 +43,9 @@ A matriz é ampliada em passagens incrementais:
    workflows, incluindo release e gradebook mínimos;
 3. em `SEQ-11`, acrescentando sujeito coletivo aos dois workflows já
    comprovados e removendo o fan-out anterior;
-4. em `ACCESS-05`, repetindo o E2E principal com owner, learner, collaborator,
-   reviewer e outsider em sessões e contextos reais;
+4. em `ACCESS-05`, repetindo o E2E principal com owner, ao menos dois learners
+   e outsider em sessões e contextos reais; collaborator e reviewer da equipe
+   entram posteriormente pelo trilho não bloqueante `ACCESS-03B`;
 5. em `SEQ-12` e `SEQ-13`, novamente em test run e tentativa oficial individual
    e coletiva para completar `SelfReview` e `PeerReview`;
 6. em `SEQ-14`, por contract test e test run com provider controlado de
