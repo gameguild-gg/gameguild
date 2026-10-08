@@ -56,15 +56,15 @@ public sealed class CourseContentAccessRuleEvaluatorTests
     [InlineData(null, true, false, false)]
     [InlineData("Edit", true, false, false)]
     [InlineData("Publish", false, true, false)]
-    [InlineData("Review", false, false, true)]
+    [InlineData("StaffReview", false, false, true)]
     public async Task Manage_RequiresTheConfiguredCapabilityWithoutPromotion(
         string? requestedCapability,
         bool canEdit,
         bool canPublish,
-        bool canReview)
+        bool canReviewAsStaff)
     {
         var course = new Program { Id = Guid.NewGuid() };
-        SetCapabilities(course, canEdit: canEdit, canPublish: canPublish, canReview: canReview);
+        SetCapabilities(course, canEdit: canEdit, canPublish: canPublish, canReviewAsStaff: canReviewAsStaff);
 
         var result = await EvaluateAsync(course, "Manage", requestedCapability);
 
@@ -72,13 +72,13 @@ public sealed class CourseContentAccessRuleEvaluatorTests
     }
 
     [Fact]
-    public async Task Manage_DoesNotPromoteReviewToEdit()
+    public async Task Manage_DoesNotPromoteStaffReviewToEdit()
     {
         var course = new Program { Id = Guid.NewGuid() };
-        SetCapabilities(course, canReview: true);
+        SetCapabilities(course, canReviewAsStaff: true);
 
         var edit = await EvaluateAsync(course, "Manage", "Edit");
-        var review = await EvaluateAsync(course, "Manage", "Review");
+        var review = await EvaluateAsync(course, "Manage", "StaffReview");
 
         edit.IsSuccess.Should().BeFalse();
         review.IsSuccess.Should().BeTrue();
@@ -128,7 +128,7 @@ public sealed class CourseContentAccessRuleEvaluatorTests
         bool canLearn = false,
         bool canEdit = false,
         bool canPublish = false,
-        bool canReview = false)
+        bool canReviewAsStaff = false)
     {
         _courseAccess
             .Setup(evaluator => evaluator.GetCapabilitiesAsync(
@@ -143,7 +143,7 @@ public sealed class CourseContentAccessRuleEvaluatorTests
                 canLearn,
                 canEdit,
                 canPublish,
-                canReview));
+                canReviewAsStaff));
     }
 
     private static ClaimsPrincipal AuthenticatedUser() =>

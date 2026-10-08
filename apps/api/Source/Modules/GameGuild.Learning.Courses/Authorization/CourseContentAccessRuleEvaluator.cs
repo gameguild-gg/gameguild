@@ -77,7 +77,7 @@ public sealed class CourseContentAccessRuleEvaluator(
         }
 
         if (!Enum.TryParse<CourseCapability>(configured, ignoreCase: true, out var capability) ||
-            capability is not (CourseCapability.Edit or CourseCapability.Publish or CourseCapability.Review))
+            capability is not (CourseCapability.Edit or CourseCapability.Publish or CourseCapability.StaffReview))
         {
             return RuleEvaluationResult.Fail("Unknown course management capability");
         }

@@ -70,7 +70,7 @@ function accessProjection(overrides: Record<string, boolean> = {}) {
     canLearn: false,
     canEdit: false,
     canPublish: false,
-    canReview: false,
+    canReviewAsStaff: false,
     canAccessWorkspace: false,
     ...overrides,
   };
@@ -215,7 +215,7 @@ describe('course query coverage', () => {
   it('uses the API projection for management and fails closed on missing context', async () => {
     mocks.clientRequest.mockResolvedValue({
       ok: true,
-      data: accessProjection({ isOwner: true, canEdit: true, canPublish: true, canReview: true, canAccessWorkspace: true }),
+      data: accessProjection({ isOwner: true, canEdit: true, canPublish: true, canReviewAsStaff: true, canAccessWorkspace: true }),
     });
     await expect(canManageCourse(courseId)).resolves.toBe(true);
 
@@ -234,7 +234,7 @@ describe('course query coverage', () => {
     mocks.auth.mockResolvedValueOnce({ user: { id: 'admin', roles: ['SystemAdmin'] }, tenantId: 'tenant-1' });
     mocks.clientRequest.mockResolvedValueOnce({
       ok: true,
-      data: accessProjection({ canEdit: true, canPublish: true, canReview: true, canAccessWorkspace: true }),
+      data: accessProjection({ canEdit: true, canPublish: true, canReviewAsStaff: true, canAccessWorkspace: true }),
     });
     await expect(canEditCourse(courseId)).resolves.toBe(true);
 

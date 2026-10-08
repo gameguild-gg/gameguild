@@ -27,7 +27,7 @@ export default async function Layout({ children, params }: LayoutProps<'/[locale
   }
 
   // Preload only data the current contextual capabilities may read.
-  if (access.canReview) {
+  if (access.canReviewAsStaff) {
     getCourseAnalytics(courseId);
     getCourseStudents(courseId);
   }

@@ -78,7 +78,7 @@ public sealed class ProgramWriteServiceTests
         var respondent = new ProgramUser { Id = Guid.NewGuid(), ProgramId = program.Id, UserId = Guid.NewGuid(), IsActive = true };
         context.AddRange(program, reflection, respondent, ReflectionResponse(respondent, reflection));
         await context.SaveChangesAsync();
-        dynamic service = new ContentInteractionService(context, new TestRequestContextAccessor(managerId, tenantId), CreateCourseAccess(canReview: true));
+        dynamic service = new ContentInteractionService(context, new TestRequestContextAccessor(managerId, tenantId), CreateCourseAccess(canReviewAsStaff: true));
 
         var result = ((IEnumerable<object>)await service.GetReflectionResponsesAsync(program.Id, reflection.Id)).Single();
 
@@ -99,7 +99,7 @@ public sealed class ProgramWriteServiceTests
         else content.SetActivitySettings(new ReflectionActivitySettings());
         context.AddRange(program, content);
         await context.SaveChangesAsync();
-        var service = new ContentInteractionService(context, new TestRequestContextAccessor(Guid.NewGuid(), tenantId), CreateCourseAccess(canReview: false));
+        var service = new ContentInteractionService(context, new TestRequestContextAccessor(Guid.NewGuid(), tenantId), CreateCourseAccess(canReviewAsStaff: false));
 
         Func<Task> action = survey
             ? () => service.GetSurveyResponsesAsync(program.Id, content.Id)
@@ -168,7 +168,7 @@ public sealed class ProgramWriteServiceTests
             .OfType<RequireCourseCapabilityAttribute>()
             .Single();
 
-        permission.Capability.Should().Be(CourseCapability.Review);
+        permission.Capability.Should().Be(CourseCapability.StaffReview);
         permission.RouteParameterName.Should().Be("programId");
     }
 
@@ -189,7 +189,7 @@ public sealed class ProgramWriteServiceTests
         context.AddRange(program, enrollment, survey, new ContentInteraction { Id = Guid.NewGuid(), ProgramUserId = enrollment.Id, UserId = learnerId, ContentId = survey.Id, SubmittedAt = SystemClock.UtcNow, SubmissionData = """{"kind":"survey","answers":{"a":1}}""" });
         await context.SaveChangesAsync();
         var actorId = managerPath ? Guid.NewGuid() : learnerId;
-        var service = new ContentInteractionService(context, new TestRequestContextAccessor(actorId, requestTenantId), CreateCourseAccess(canReview: false));
+        var service = new ContentInteractionService(context, new TestRequestContextAccessor(actorId, requestTenantId), CreateCourseAccess(canReviewAsStaff: false));
 
         Func<Task> action = managerPath
             ? () => service.GetSurveyResponsesAsync(program.Id, survey.Id)
@@ -253,7 +253,7 @@ public sealed class ProgramWriteServiceTests
         context.AddRange(program, survey, response);
         await context.SaveChangesAsync();
 
-        var results = await new ContentInteractionService(context, new TestRequestContextAccessor(managerId, tenantId), CreateCourseAccess(canReview: true))
+        var results = await new ContentInteractionService(context, new TestRequestContextAccessor(managerId, tenantId), CreateCourseAccess(canReviewAsStaff: true))
             .GetSurveyResponsesAsync(program.Id, survey.Id);
 
         GetRespondentUserId(results.Should().ContainSingle().Which).Should().Be(shouldExposeIdentity ? respondentId : null);
@@ -1120,7 +1120,7 @@ public sealed class ProgramWriteServiceTests
         ICourseAccessEvaluator? courseAccess = null) =>
         new(context, requestContextAccessor: new TestRequestContextAccessor(userId, tenantId), courseAccessEvaluator: courseAccess);
 
-    private static ICourseAccessEvaluator CreateCourseAccess(bool canReview = false, bool canEdit = false)
+    private static ICourseAccessEvaluator CreateCourseAccess(bool canReviewAsStaff = false, bool canEdit = false)
     {
         var access = new Mock<ICourseAccessEvaluator>();
         access.Setup(service => service.HasCapabilityAsync(
@@ -1137,7 +1137,7 @@ public sealed class ProgramWriteServiceTests
                 false,
                 canEdit,
                 false,
-                canReview));
+                canReviewAsStaff));
         return access.Object;
     }
 

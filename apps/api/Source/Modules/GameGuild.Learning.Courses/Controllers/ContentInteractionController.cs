@@ -129,7 +129,7 @@ public class ContentInteractionController(IContentInteractionService contentInte
 
   /// <summary>Get identity-free survey result records for course managers.</summary>
   [HttpGet("content/{contentId}/survey-results")]
-  [RequireCourseCapability(CourseCapability.Review, "programId")]
+  [RequireCourseCapability(CourseCapability.StaffReview, "programId")]
   public async Task<ActionResult<IEnumerable<SurveyResponseResultDto>>> GetSurveyResults([FromRoute] Guid contentId, [FromQuery] Guid programId) {
     var content = await programContentService.GetContentByIdAsync(contentId).ConfigureAwait(false);
     if (content is null || content.ProgramId != programId) return NotFound();
@@ -154,7 +154,7 @@ public class ContentInteractionController(IContentInteractionService contentInte
   }
 
   [HttpGet("content/{contentId}/reflection-responses")]
-  [RequireCourseCapability(CourseCapability.Review, "programId")]
+  [RequireCourseCapability(CourseCapability.StaffReview, "programId")]
   public async Task<ActionResult<IEnumerable<ReflectionResponseResultDto>>> GetReflectionResponses([FromRoute] Guid contentId, [FromQuery] Guid programId) {
     try { return Ok(await contentInteractionService.GetReflectionResponsesAsync(programId, contentId).ConfigureAwait(false)); }
     catch (RequestValidationException exception) { return BadRequest(exception.Message); }

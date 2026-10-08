@@ -26,7 +26,7 @@ export default async function AssessmentsLayout({
     notFound();
   }
 
-  if (!access.canEdit && !access.canReview) {
+  if (!access.canEdit && !access.canReviewAsStaff) {
     forbidden();
   }
 

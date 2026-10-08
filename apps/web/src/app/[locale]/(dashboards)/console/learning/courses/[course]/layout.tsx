@@ -26,7 +26,7 @@ export default async function Layout({ children, params }: LayoutProps<'/[locale
     forbidden();
   }
 
-  if (access.canReview) {
+  if (access.canReviewAsStaff) {
     getCourseAnalytics(courseId);
     getCourseStudents(courseId);
   }
