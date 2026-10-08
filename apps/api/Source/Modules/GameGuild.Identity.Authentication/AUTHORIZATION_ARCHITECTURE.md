@@ -1,5 +1,17 @@
 # Web MFA consumer checkpoint — 2026-10-08
 
+## Required MFA audit and the security-event pipeline — 2026-10-08
+
+Required, denied, enrollment-started and verified sign-in MFA events use
+`ISecurityEventLogger.RecordInCommandAsync` with the same scoped
+`IApplicationDbContext` as the owning command. Classification, audit records and
+alert evaluation share that transaction. A relational context must already have
+the command's transaction. Capture failures propagate: these operations cannot
+use an independently committed context or spool fallback as success evidence.
+The existing retry/spool transport remains available for other security events.
+Native regressions verify the supplied context/token, propagated failures and
+atomic rollback of audit, proof, provider state, challenge and credentials.
+
 ## Native operation cancellation correction — 2026-10-08
 
 The host transaction owner rolls back with an independent token when the request

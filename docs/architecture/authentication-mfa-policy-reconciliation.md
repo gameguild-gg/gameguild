@@ -521,3 +521,67 @@ ImageSharp 4.1.2; the current review and secret-scanner checks require re-evalua
 No failed-check merge waiver applies to #704, and no issue is closed by this
 checkpoint. Original #145/#288 criteria and the fixed 328-issue inventory remain
 authoritative.
+
+## Develop reconciliation and transactional MFA audit — 2026-10-08
+
+The branch incorporates develop through
+`5fcc2b3a10a3834c8645f114ac02c3d47b5d6940`, including signed policies, temporary
+elevation, effective permission resolution, moderation scopes, security-event
+capture and Next 16.3.8. The audit bridge conflict is resolved with a dedicated
+`ISecurityEventLogger.RecordInCommandAsync` path for required sign-in MFA events.
+It receives the owning scoped context, requires an existing relational command
+transaction, classifies the event and evaluates alerts in that context. Database
+or alert failures propagate without opening an independent scope or accepting a
+spool result as transactional success. Other security events retain the existing
+bounded retry and spool transport.
+
+The original four required-audit failure assertions remain enforced through the
+updated logger port. Additional unit cases reject nontransactional capture
+outcomes, verify the exact supplied context/token, and preserve the original
+persistence exception without retries or spool fallback. The actual PostgreSQL
+regression injects a failure after verified MFA audit persistence and confirms
+that audit, session proof, challenge consumption, backup-code consumption, session
+and refresh token roll back together. Retrying the original challenge succeeds
+and persists exactly one verified audit and session proof.
+
+Validation27 built nine affected projects without warnings or errors and passed:
+
+| Native selection | Passed | Scope |
+|---|---:|---|
+| Host | 147 | Original architecture/security/cancellation selection. |
+| Authentication | 2,535 | Entire authentication unit project. |
+| Authorization | 1,796 | Entire current authorization unit project. |
+| Security-event/MFA audit | 28 | Bridge, owning-command capture and original security-event pipeline cases. |
+| MFA HTTP/migrations | 35 | Original 34 cases plus the required-audit atomic rollback regression. |
+
+Total: **4,541 passed; zero failed or skipped**. Validation28 then passed the
+existing native OpenAPI export contract case. Its document SHA256 is
+`3bd150cb4383b7517fdd012fdbb1f140a440602990b7cd3066584e8f65650a2a`;
+the public completion/enrollment schemas retain their reviewed limited inputs.
+Both executions preserved the source hashes and primary 55 changes and verified
+their exact PostgreSQL containers absent after cleanup. The earlier validation26
+cleanup timeout is retained and reconciled by a separate exact-ID absence receipt.
+
+The local compiler deployment is restored from immutable GitHub artifact
+11491711234, source-bound successful CI run 37625876160. The archive SHA256 is
+`1e08b01fac7a38ea15839d16bea31b5ab162e766f72b1b43782d8e5e9ad691b8`.
+All 29 bundle hashes and 9,719 materialized-file hashes were verified; the released
+manifest matches the bundles/release receipt outputs and the glue receipt binding.
+The unchanged frozen worker validator accepts its identity. The final bundled
+manifest file map cannot directly reproduce the earlier pre-bundle fingerprint:
+bundling adds bundle fields and replaces duplicate entries with symlinks. All
+earlier collector failures and this provenance limitation are retained. No compiler
+metadata or worker validator was changed. Legacy canonical/public trees are
+hash-preserved in both the owned worktree and external artifact backups.
+
+Receipts:
+
+- `post-security-pipeline-native-validation27-20261008/result.json`.
+- `post-security-pipeline-native-openapi28-20261008/result.json`.
+- `post-codacy-native-validation26-cleanup-reconciliation-20261008.json`.
+- `qualified-code-toolchain-d5-provenance04-20261008/result.json`.
+- `qualified-code-toolchain-d5-owned-restoration-20261008/result.json`.
+
+The local Code cycle is being repeated with these qualified sources/artifacts.
+Release licensing and current scanner checks remain unresolved. #145/#288 remain
+open pending their complete original criteria and required PR acceptance.

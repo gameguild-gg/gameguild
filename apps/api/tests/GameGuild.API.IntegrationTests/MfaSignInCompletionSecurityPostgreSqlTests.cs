@@ -8,6 +8,7 @@ using System.Text.Json;
 using GameGuild.API.Database;
 using GameGuild.API.IntegrationTests.Infrastructure;
 using GameGuild.Configuration.ApplicationLayer;
+using GameGuild.Compliance.Audit;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Tenants;
 using GameGuild.Identity.Users;
@@ -131,6 +132,34 @@ public sealed class MfaSignInCompletionSecurityPostgreSqlTests(ApiPostgreSqlFixt
     }
 
     [Fact]
+    public async Task FailureAfterRequiredAuditRollsBackAuditProofChallengeAndCredentialsTogether()
+    {
+        var fault = new AuditFault();
+        using var prepared = await PrepareAsync(auditFault: fault);
+        using var failed = await CompleteAsync(prepared, prepared.Bearer, prepared.Code);
+        Assert.Equal(HttpStatusCode.InternalServerError, failed.StatusCode);
+        using (var scope = prepared.Factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            Assert.Equal(0, await db.Set<UserSession>().CountAsync(row => row.UserId == prepared.UserId));
+            Assert.Equal(0, await db.Set<RefreshToken>().CountAsync(row => row.UserId == prepared.UserId));
+            Assert.Equal(0, await db.Set<SessionMfaEvidence>().CountAsync(row => row.SubjectId == prepared.UserId));
+            Assert.Equal(0, await db.Set<AuditLog>().CountAsync(row => row.UserId == prepared.UserId && row.ActionType == "Authentication.MfaSignInVerified"));
+            Assert.Equal(1, await db.Set<AuditLog>().CountAsync(row => row.UserId == prepared.UserId && row.ActionType == "Authentication.MfaSignInRequired"));
+            Assert.Null((await db.Set<SignInMfaChallenge>().SingleAsync(row => row.SubjectId == prepared.UserId)).ConsumedAt);
+            Assert.Equal(Convert.ToBase64String(SHA256.HashData(Encoding.UTF8.GetBytes(prepared.Code))),
+                (await db.Set<UserMfaConfiguration>().SingleAsync(row => row.UserId == prepared.UserId)).BackupCodes);
+        }
+        fault.Enabled = false;
+        using var completed = await CompleteAsync(prepared, prepared.Bearer, prepared.Code);
+        Assert.Equal(HttpStatusCode.OK, completed.StatusCode);
+        using var verifiedScope = prepared.Factory.Services.CreateScope();
+        var verifiedDb = verifiedScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        Assert.Equal(1, await verifiedDb.Set<SessionMfaEvidence>().CountAsync(row => row.SubjectId == prepared.UserId));
+        Assert.Equal(1, await verifiedDb.Set<AuditLog>().CountAsync(row => row.UserId == prepared.UserId && row.ActionType == "Authentication.MfaSignInVerified"));
+    }
+
+    [Fact]
     public async Task ChangedMfaPolicyDeniesRefreshWithoutRotatingTheRoot()
     {
         using var prepared = await PrepareAsync();
@@ -231,7 +260,7 @@ public sealed class MfaSignInCompletionSecurityPostgreSqlTests(ApiPostgreSqlFixt
     private static Task<HttpResponseMessage> CompleteAsync(PreparedSession prepared, string bearer, string code) =>
         prepared.Client.PostAsJsonAsync("/v1/auth/mfa/sign-in/complete", new { mfaToken = bearer, code, method = "BackupCode" });
 
-    private async Task<PreparedSession> PrepareAsync(EvidenceFault? fault = null, TimeProvider? timeProvider = null)
+    private async Task<PreparedSession> PrepareAsync(EvidenceFault? fault = null, TimeProvider? timeProvider = null, AuditFault? auditFault = null)
     {
         var risk = new Mock<IAuthenticationAnomalyDetectionService>(MockBehavior.Strict);
         risk.Setup(service => service.AnalyzeLoginAttemptAsync(It.IsAny<AuthenticationAttemptContext>()))
@@ -260,6 +289,12 @@ public sealed class MfaSignInCompletionSecurityPostgreSqlTests(ApiPostgreSqlFixt
                 services.RemoveAll<ISessionMfaEvidenceStore>();
                 services.AddScoped<ISessionMfaEvidenceStore>(provider => new FailingEvidenceStore(
                     new PostgreSqlSessionMfaEvidenceStore(provider.GetRequiredService<ApplicationDbContext>()), fault));
+            }
+            if (auditFault is not null)
+            {
+                services.RemoveAll<IAuthenticationAuditEventSink>();
+                services.AddScoped<IAuthenticationAuditEventSink>(provider => new FailingAuditSink(
+                    ActivatorUtilities.CreateInstance<CentralAuthenticationAuditEventSink>(provider), auditFault));
             }
         }));
         HttpClient? client = null;
@@ -309,6 +344,20 @@ public sealed class MfaSignInCompletionSecurityPostgreSqlTests(ApiPostgreSqlFixt
     }
 
     private sealed class EvidenceFault { public bool Enabled { get; set; } = true; }
+
+    private sealed class AuditFault { public bool Enabled { get; set; } = true; }
+
+    private sealed class FailingAuditSink(IAuthenticationAuditEventSink real, AuditFault fault) : IAuthenticationAuditEventSink
+    {
+        public async Task RecordAsync(AuthenticationAuditEvent auditEvent, CancellationToken cancellationToken)
+        {
+            await real.RecordAsync(auditEvent, cancellationToken);
+            if (fault.Enabled && auditEvent.ActionType == "Authentication.MfaSignInVerified")
+            {
+                throw new InvalidOperationException("Synthetic failure after required MFA audit persistence.");
+            }
+        }
+    }
 
     private sealed class FixedTimeProvider(DateTimeOffset now) : TimeProvider
     {
