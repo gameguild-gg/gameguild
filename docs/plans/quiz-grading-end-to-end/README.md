@@ -1,11 +1,13 @@
 # Quiz grading end-to-end
 
-Status: em implementação; Partes 1 e 2 e seu fechamento concluídos, Parte 3 de
-acesso contextual pendente e Parte 4 bloqueada por esse gate.
+Status: em implementação; Partes 1, 2, seu fechamento e o caminho crítico da
+Parte 3 concluídos. A Parte 4 possui gate de entrada aprovado e começa pela
+preparação `SEQ-12A`; os schemas de peer e release agendado ainda dependem de
+proposta e aprovação explícitas.
 
 Data: 2026-08-21.
 
-Atualizado: 2026-10-07.
+Atualizado: 2026-10-08.
 
 ## Objetivo
 
