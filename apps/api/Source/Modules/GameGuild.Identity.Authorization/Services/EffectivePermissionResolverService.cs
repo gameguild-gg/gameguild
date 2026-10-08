@@ -65,9 +65,11 @@ public class EffectivePermissionResolverService(
         if (tenantId.HasValue)
         {
             var tenantPermission = await tenantPermissionStore.GetPermissionAsync(tenantId.Value, ct).ConfigureAwait(false);
-            if (tenantPermission != null)
+            // SECURITY (deny-by-default): inactive or expired tenant defaults contribute
+            // nothing - the row is treated as absent (see PermissionQueryService.IsGrantEffective).
+            if (tenantPermission is { IsActive: true } tp && !tp.IsExpired())
             {
-                foreach (var perm in tenantPermission.Permissions)
+                foreach (var perm in tp.Permissions)
                 {
                     if (allPermissions.Add(perm))
                     {
@@ -75,14 +77,16 @@ public class EffectivePermissionResolverService(
                     }
                 }
                 // Collect tenant deny permissions
-                foreach (var perm in tenantPermission.DenyPermissions)
+                foreach (var perm in tp.DenyPermissions)
                 {
                     allDenyPermissions.Add(perm);
                 }
             }
         }
 
-        // 4. Global default permissions
+        // 4. Global default permissions (explicit configuration only - deny-by-default)
+        // SECURITY: no implicit baseline permissions exist in code. The resolver grants
+        // nothing unless an operator explicitly configures Authorization:GlobalDefaultPermissions.
         var globalDefaults = GetGlobalDefaultPermissions();
         foreach (var perm in globalDefaults)
         {
@@ -93,10 +97,12 @@ public class EffectivePermissionResolverService(
         }
 
         // 5. Direct grants (per-resource permissions)
+        // SECURITY (deny-by-default): expired direct grants contribute nothing; the
+        // resource service already excludes revoked rows at the query level.
         if (tenantId.HasValue)
         {
             var directGrants = await resourcePermissionStore.GetUserPermissionsAsync(userId, tenantId.Value, ct).ConfigureAwait(false);
-            foreach (var grant in directGrants)
+            foreach (var grant in directGrants.Where(g => !g.ExpiresAt.HasValue || g.ExpiresAt.Value > SystemClock.UtcNow))
             {
                 foreach (var perm in grant.Permissions)
                 {
@@ -191,18 +197,13 @@ public class EffectivePermissionResolverService(
     }
 
     /// <summary>
-    ///     Global default permissions available to all authenticated users.
+    ///     Global baseline permissions available to all authenticated users.
+    ///     <b>Deny-by-default:</b> sourced exclusively from the explicitly configured
+    ///     <see cref="AuthorizationOptions.GlobalDefaultPermissions"/> option, which defaults
+    ///     to empty. No baseline permission is ever granted implicitly by code.
     /// </summary>
-    private static IReadOnlyList<string> GetGlobalDefaultPermissions()
-    {
-        return
-        [
-            "profile:read",
-            "profile:update",
-            "notifications:read",
-            "notifications:mark-read"
-        ];
-    }
+    private IReadOnlyList<string> GetGlobalDefaultPermissions() =>
+        _authOptions.GlobalDefaultPermissions ?? [];
 }
 
 /// <summary>
