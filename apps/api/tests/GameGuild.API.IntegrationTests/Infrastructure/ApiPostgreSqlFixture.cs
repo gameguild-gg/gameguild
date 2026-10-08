@@ -34,6 +34,14 @@ public sealed class ApiPostgreSqlFixture : IAsyncLifetime
 
     public string ConnectionString => _container.ConnectionString;
 
+    public WebApplicationFactory<Program> CreateFactory(Action<IWebHostBuilder> configuration)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+        // The caller owns this factory. A collection-lived parent retains derived
+        // WithWebHostBuilder factories even after they have been disposed.
+        return new ApiPostgreSqlWebApplicationFactory(ConnectionString, configuration);
+    }
+
     public HttpClient CreateAuthenticatedClient(Guid userId, Guid tenantId, bool isSystemAdmin = false)
     {
         var client = Factory.CreateClient();
@@ -80,7 +88,9 @@ public sealed class ApiPostgreSqlFixture : IAsyncLifetime
         await dbContext.Database.MigrateAsync();
     }
 
-    private sealed class ApiPostgreSqlWebApplicationFactory(string connectionString)
+    private sealed class ApiPostgreSqlWebApplicationFactory(
+        string connectionString,
+        Action<IWebHostBuilder>? configuration = null)
         : WebApplicationFactory<Program>
     {
         protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -131,6 +141,7 @@ public sealed class ApiPostgreSqlFixture : IAsyncLifetime
                         _ => { });
                 services.AddHttpLogging(_ => { });
             });
+            configuration?.Invoke(builder);
         }
     }
 }

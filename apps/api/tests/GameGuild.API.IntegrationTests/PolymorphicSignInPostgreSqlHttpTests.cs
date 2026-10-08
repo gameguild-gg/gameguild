@@ -316,7 +316,7 @@ public sealed class PolymorphicSignInPostgreSqlHttpTests(ApiPostgreSqlFixture fi
         risk.Setup(service => service.AnalyzeBehavioralPatternsAsync(It.IsAny<Guid>(), It.IsAny<AuthenticationAttemptContext>()))
             .ReturnsAsync(new BehavioralAnalysisResult { MatchesTypicalPattern = true, RiskLevel = level });
         risk.Setup(service => service.RecordSuspiciousActivityAsync(It.IsAny<SuspiciousActivity>())).Returns(Task.CompletedTask);
-        return fixture.Factory.WithWebHostBuilder(builder =>
+        return fixture.CreateFactory(builder =>
         {
             builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["PresentationLayer:Authentication:PasswordPolicy:BCryptWorkFactor"] = "10" }));
             builder.ConfigureTestServices(services =>

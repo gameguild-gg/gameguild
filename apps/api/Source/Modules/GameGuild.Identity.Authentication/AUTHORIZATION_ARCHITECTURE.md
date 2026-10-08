@@ -2111,6 +2111,40 @@ full-length hash. History conservatively rejects reuse of an ambiguous legacy
 prefix. Legacy suffixes cannot be reconstructed or certified from stored hashes.
 See [the requirement and compatibility map](../../../../../docs/architecture/password-hashing-reconciliation.md).
 
+### Authentication Timing Boundaries
+
+Local password authentication creates one server-owned monotonic timing origin
+before account lookup. Polymorphic authentication propagates the origin created
+before candidate resolution through an internal request property; clients cannot
+supply it in JSON. Local account/IP lockout admission and PostgreSQL advisory-lock
+contention start and reuse that origin through a private server-side HTTP context
+key. Denials retain the lockout policy, complete actual dummy credential work and
+return the same generic unauthorized detail as failed password verification.
+String context keys and request JSON cannot seed the origin. Completed BCrypt/PBKDF2
+verification is tracked independently
+of account existence or credential validity. Missing/passwordless accounts,
+unusable hashes and rejected oversized legacy inputs receive actual dummy BCrypt
+work using the current password-policy cost. The shared 400 ms floor subtracts
+total elapsed work and introduces no account-dependent random delay.
+Positive fractional waits round upward to whole timer milliseconds. After waking,
+the same monotonic origin is checked again until the floor is met; an early timer
+does not lower the configured minimum.
+
+Request cancellation is checked before and after credential work and interrupts
+the remaining delay. A lookup that returns after cancellation cannot start new
+verification work. A synchronous hash already running cannot be interrupted.
+Attempt/risk/audit handling precedes failed-credential compensation; a failed
+attempt store cannot bypass compensation after an unexpected lookup error. A
+timing failure is not retried as another hash or claimed as completed protection.
+The legacy simulation helper uses the same work and floor for either account
+class. Existing custom-provider signatures remain compatible; unknown completed
+work is treated conservatively.
+
+The floor is a minimum, not a universal constant-time guarantee. Supported legacy
+hash costs, PBKDF2, storage/network latency and host load can exceed it. Functional
+tests and in-process HTTP observations do not certify timing indistinguishability
+in production. See [the execution and remaining-acceptance map](../../../../../docs/architecture/authentication-timing-reconciliation.md).
+
 ### Authentication Response Projection
 
 Authentication response conversion preserves server-issued tokens, explicit

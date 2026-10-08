@@ -36,6 +36,10 @@ public sealed class AuthenticationLockoutActionFilter : IAsyncActionFilter
         }
 
         var services = context.HttpContext.RequestServices;
+        var cancellationToken = context.HttpContext.RequestAborted;
+        cancellationToken.ThrowIfCancellationRequested();
+        var timingOrigin = AuthenticationTimingOrigin.GetOrStartForRequest(
+            context.HttpContext, services.GetService<TimeProvider>());
         var options = services.GetRequiredService<AuthenticationSecurityOptions>();
         var database = services.GetRequiredService<IApplicationDbContext>();
         var normalizedEmail = email.ToLowerInvariant();
@@ -56,7 +60,7 @@ public sealed class AuthenticationLockoutActionFilter : IAsyncActionFilter
 
         if (lockoutLock is null)
         {
-            context.Result = CreateUnauthorizedResult();
+            context.Result = await CreateUnauthorizedResultAsync(services, timingOrigin, cancellationToken).ConfigureAwait(false);
             return;
         }
 
@@ -82,7 +86,7 @@ public sealed class AuthenticationLockoutActionFilter : IAsyncActionFilter
                 services.GetService<ILogger<AuthenticationLockoutActionFilter>>()?.LogWarning(
                     "Local sign-in throttled for source IP after reaching the configured hourly failure limit");
 
-                context.Result = CreateUnauthorizedResult();
+                context.Result = await CreateUnauthorizedResultAsync(services, timingOrigin, cancellationToken).ConfigureAwait(false);
                 return;
             }
         }
@@ -113,19 +117,35 @@ public sealed class AuthenticationLockoutActionFilter : IAsyncActionFilter
                 identifierHash,
                 lockoutEndsAt);
 
-            context.Result = CreateUnauthorizedResult();
+            context.Result = await CreateUnauthorizedResultAsync(services, timingOrigin, cancellationToken).ConfigureAwait(false);
             return;
         }
 
         await next().ConfigureAwait(false);
     }
 
-    private static UnauthorizedObjectResult CreateUnauthorizedResult() => new(new ProblemDetails
+    private static async Task<UnauthorizedObjectResult> CreateUnauthorizedResultAsync(
+        IServiceProvider services, AuthenticationTimingOrigin origin, CancellationToken cancellationToken)
     {
-        Status = StatusCodes.Status401Unauthorized,
-        Title = "Authentication failed",
-        Detail = "The email or password is incorrect."
-    });
+        // Admission denial has performed no password verification. Preserve the denial while
+        // completing the same real credential work and total request floor as invalid credentials.
+        var protection = services.GetRequiredService<IUserEnumerationProtectionService>();
+        if (protection is IAuthenticationTimingProtection timingProtection)
+        {
+            await timingProtection.CompleteAuthenticationTimingAsync(origin, false, cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            await protection.AddTimingProtectionDelayAsync(false, origin.StartedAtUtc).WaitAsync(cancellationToken).ConfigureAwait(false);
+        }
+        cancellationToken.ThrowIfCancellationRequested();
+        return new UnauthorizedObjectResult(new ProblemDetails
+        {
+            Status = StatusCodes.Status401Unauthorized,
+            Title = "Unauthorized",
+            Detail = protection.GetGenericErrorMessage("login")
+        });
+    }
 
     private static async Task<IAsyncDisposable?> TryAcquireLockAsync(
         ApplicationDbContext database,

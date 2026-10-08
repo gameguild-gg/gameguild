@@ -7,6 +7,11 @@ at `d5f417328e9ff9d3fa0517796a623e310aeb1ef0`; accepted implementation head `bf2
 [Issue #263 acceptance](https://github.com/gameguild-gg/gameguild/issues/263#issuecomment-6038587329) retains all 19 original criteria;
 the issue is now **CLOSED/COMPLETED**. No failing-check exception was used.
 
+The already-closed duplicate #264 now has a
+[published and verified canonical acceptance follow-up](https://github.com/gameguild-gg/gameguild/issues/264#issuecomment-6046080570).
+Its duplicate state and original criteria are preserved. This reconciliation
+adds no issue closure to the count.
+
 Matching-head native validation passed 6,037 main API cases,
 15 repeated OpenAPI cases and 2,998 Web cases. The actual Code
 cycle passed 36 green assertions, zero red and

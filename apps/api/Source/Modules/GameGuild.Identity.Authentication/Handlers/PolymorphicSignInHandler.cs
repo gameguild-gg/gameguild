@@ -4,6 +4,8 @@ using GameGuild.CQRS;
 using GameGuild.Identity.Users;
 using Microsoft.Extensions.Logging;
 
+using Microsoft.AspNetCore.Http;
+
 namespace GameGuild.Identity.Authentication;
 
 /// <summary>
@@ -13,11 +15,14 @@ public sealed class PolymorphicSignInHandler(
     IAuthService authService,
     IUserRepository userRepository,
     ILogger<PolymorphicSignInHandler> logger,
-    FluentValidation.IValidator<PolymorphicSignInCommand>? validator = null
+    FluentValidation.IValidator<PolymorphicSignInCommand>? validator = null,
+    TimeProvider? timeProvider = null,
+    IHttpContextAccessor? httpContextAccessor = null
 ) : ICommandHandler<PolymorphicSignInCommand, SignInResponse>
 {
     public async Task<SignInResponse> Handle(PolymorphicSignInCommand command, CancellationToken cancellationToken)
     {
+        var timingOrigin = AuthenticationTimingOrigin.GetOrStartForRequest(httpContextAccessor?.HttpContext, timeProvider);
         ArgumentNullException.ThrowIfNull(command);
         cancellationToken.ThrowIfCancellationRequested();
         // Validate command if validator is available
@@ -57,7 +62,8 @@ public sealed class PolymorphicSignInHandler(
             TenantId = command.TenantId,
             DeviceFingerprint = command.DeviceFingerprint,
             CredentialResolutionFailed = account is null,
-            ResolvedUserId = account?.Id
+            ResolvedUserId = account?.Id,
+            TimingOrigin = timingOrigin
         };
 
         var domainResult = await authService.LocalSignInAsync(localSignInRequest, cancellationToken).ConfigureAwait(false);

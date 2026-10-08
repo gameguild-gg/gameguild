@@ -11,15 +11,21 @@ namespace GameGuild.Identity.Authentication;
 ///     Password hashing service using BCrypt, with versioned PBKDF2 for inputs beyond BCrypt's byte limit.
 ///     Provides password hashing, verification, strength validation, and rehashing detection.
 /// </summary>
-public sealed class PasswordHasher(ILogger<PasswordHasher> logger, IConfiguration configuration) : IPasswordHasher
+public sealed class PasswordHasher(ILogger<PasswordHasher> logger, IConfiguration configuration) : IPasswordHasher, IPasswordVerificationWork
 {
     private static readonly Regex BcryptHashPattern = new(
         @"\A\$2[abxy]?\$(0[4-9]|1[0-6])\$[./A-Za-z0-9]{53}\z",
         RegexOptions.CultureInvariant | RegexOptions.NonBacktracking);
 
-    private int GetBCryptWorkFactor()
+    private int GetBCryptWorkFactor() => ResolveBCryptWorkFactor(configuration);
+
+    // Resolve on every operation, including dummy work, so configuration reloads cannot drift.
+    internal static int ResolveBCryptWorkFactor(IConfiguration? configuration)
     {
-        var workFactor = GetPolicyInteger("BCryptWorkFactor", 12);
+        var workFactor = configuration?.GetValue<int?>("PresentationLayer:Authentication:PasswordPolicy:BCryptWorkFactor")
+            ?? configuration?.GetValue<int?>("Authentication:PasswordPolicy:BCryptWorkFactor")
+            ?? configuration?.GetValue<int?>("PasswordPolicy:BCryptWorkFactor")
+            ?? 12;
         if (workFactor is < 10 or > 16)
         {
             throw new InvalidOperationException("BCrypt work factor must be between 10 and 16.");
@@ -175,19 +181,26 @@ public sealed class PasswordHasher(ILogger<PasswordHasher> logger, IConfiguratio
     /// <summary>
     ///     Verifies a password against its hash.
     /// </summary>
-    public bool VerifyPassword(string hashedPassword, string providedPassword)
+    public bool VerifyPassword(string hashedPassword, string providedPassword) =>
+        VerifyPasswordWithWork(hashedPassword, providedPassword).IsValid;
+
+    /// <summary>Reports only credential work that actually completed, never merely account existence.</summary>
+    public PasswordVerificationResult VerifyPasswordWithWork(string hashedPassword, string providedPassword)
     {
-        if (string.IsNullOrWhiteSpace(hashedPassword) || string.IsNullOrWhiteSpace(providedPassword)) { return false; }
+        if (string.IsNullOrWhiteSpace(hashedPassword) || string.IsNullOrWhiteSpace(providedPassword))
+        {
+            return default;
+        }
 
         if (hashedPassword.StartsWith(LongPasswordHash.Prefix, StringComparison.Ordinal))
         {
-            return LongPasswordHash.Verify(hashedPassword, providedPassword);
+            return LongPasswordHash.VerifyWithWork(hashedPassword, providedPassword);
         }
 
-        // A legacy BCrypt row cannot establish bytes after 72. Recovery must create a full-length hash.
+        // Legacy BCrypt cannot establish bytes after 72. Reject before costly work, then compensate upstream.
         if (Encoding.UTF8.GetByteCount(providedPassword) > 72 || !BcryptHashPattern.IsMatch(hashedPassword))
         {
-            return false;
+            return default;
         }
 
         try
@@ -195,12 +208,12 @@ public sealed class PasswordHasher(ILogger<PasswordHasher> logger, IConfiguratio
             logger.LogDebug("Verifying password");
             var isValid = BCrypt.Net.BCrypt.Verify(providedPassword, hashedPassword);
             logger.LogDebug("Password verification result: {IsValid}", isValid);
-            return isValid;
+            return new PasswordVerificationResult(isValid, true);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error verifying password");
-            return false;
+            return default;
         }
     }
 

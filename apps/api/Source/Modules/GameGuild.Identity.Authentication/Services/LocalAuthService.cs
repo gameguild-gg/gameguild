@@ -33,13 +33,17 @@ public class LocalAuthService(
     ISessionManagementService sessionManagementService,
     IOptions<JwtOptions>? jwtOptions = null,
     IAuthenticationAuditEventSink? auditEventSink = null,
-    IRefreshTokenLifecycleRecorder? lifecycleRecorder = null
+    IRefreshTokenLifecycleRecorder? lifecycleRecorder = null,
+    TimeProvider? timeProvider = null
 ) : ILocalAuthService
 {
     public async Task<SignInResponse> LocalSignInAsync(LocalSignInRequest request, CancellationToken cancellationToken = default)
     {
-        var stopwatch = Stopwatch.StartNew();
+        ArgumentNullException.ThrowIfNull(request);
+        cancellationToken.ThrowIfCancellationRequested();
         var httpContext = httpContextAccessor.HttpContext;
+        var timingOrigin = request.TimingOrigin ?? AuthenticationTimingOrigin.GetOrStartForRequest(httpContext, timeProvider);
+        var stopwatch = Stopwatch.StartNew();
         var ipAddress = authAttemptService.GetClientIpAddress(httpContext);
         var userAgent = httpContext?.Request.Headers.UserAgent.ToString() ?? string.Empty;
         var deviceFingerprint = httpContext?.Request.Headers["X-Device-Fingerprint"].FirstOrDefault();
@@ -51,7 +55,8 @@ public class LocalAuthService(
 #pragma warning disable IDE0059 // Unnecessary assignment - Initial null IS used in failure path at RecordFailedAttempt
         Guid? userId = null;
 #pragma warning restore IDE0059
-        var userExists = false;
+        var credentialWorkCompleted = false;
+        var timingAttempted = false;
         var authenticationSucceeded = false;
         string? failureReason = null;
 
@@ -63,12 +68,17 @@ public class LocalAuthService(
                 : request.ResolvedUserId.HasValue
                     ? await userRepository.GetByIdAsync(request.ResolvedUserId.Value, cancellationToken).ConfigureAwait(false)
                     : await userRepository.GetByEmailAsync(normalizedEmail, cancellationToken).ConfigureAwait(false);
-            userExists = user != null;
+            cancellationToken.ThrowIfCancellationRequested();
 
             // Verify password if user exists
             if (user != null)
             {
-                var passwordValid = user.HasPassword && passwordHasher.VerifyPassword(user.PasswordHash!, request.Password);
+                var verification = !user.HasPassword ? default
+                    : passwordHasher is IPasswordVerificationWork workAwareHasher
+                        ? workAwareHasher.VerifyPasswordWithWork(user.PasswordHash!, request.Password)
+                        : new PasswordVerificationResult(passwordHasher.VerifyPassword(user.PasswordHash!, request.Password), false);
+                credentialWorkCompleted = verification.WorkPerformed;
+                var passwordValid = verification.IsValid;
 
                 if (passwordValid)
                 {
@@ -88,9 +98,7 @@ public class LocalAuthService(
                 logger.LogWarning("User not found: {Email}", request.Email);
             }
 
-            // Apply user enumeration protection timing
-            await enumerationProtection.AddTimingProtectionDelayAsync(userExists, SystemClock.UtcNow).ConfigureAwait(false);
-
+            cancellationToken.ThrowIfCancellationRequested();
             if (!authenticationSucceeded)
             {
                 try
@@ -117,9 +125,13 @@ public class LocalAuthService(
                         failedAttemptAnalysis).ConfigureAwait(false);
                 }
 
+                timingAttempted = true;
+                await CompleteAuthenticationTimingAsync(timingOrigin, credentialWorkCompleted, cancellationToken).ConfigureAwait(false);
                 throw new UnauthorizedAccessException(enumerationProtection.GetGenericErrorMessage("login"));
             }
 
+            timingAttempted = true;
+            await CompleteAuthenticationTimingAsync(timingOrigin, credentialWorkCompleted, cancellationToken).ConfigureAwait(false);
             var authenticatedUserId = userId ?? throw new InvalidOperationException("A successful authentication must have a user ID.");
 
             // Analyze login attempt for anomalies
@@ -241,6 +253,10 @@ public class LocalAuthService(
                 AvailableTenants = tenantAccessContext.AvailableTenants
             };
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
         catch (SecurityException)
         {
             throw;
@@ -252,11 +268,44 @@ public class LocalAuthService(
         catch (Exception ex)
         {
             logger.LogError(ex, "Unexpected error during authentication for {Email}", request.Email);
-
-            await authAttemptService.RecordFailedAttemptAsync(request.Email, userId, ipAddress, userAgent, "SystemError", stopwatch.Elapsed).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+            try
+            {
+                await authAttemptService.RecordFailedAttemptAsync(request.Email, userId, ipAddress, userAgent, "SystemError", stopwatch.Elapsed).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(exception, "Could not record failed authentication attempt after a system error");
+            }
+            if (!timingAttempted)
+            {
+                await CompleteAuthenticationTimingAsync(timingOrigin, credentialWorkCompleted, cancellationToken).ConfigureAwait(false);
+            }
 
             throw new UnauthorizedAccessException(enumerationProtection.GetGenericErrorMessage("login"));
         }
+    }
+
+    private async Task CompleteAuthenticationTimingAsync(AuthenticationTimingOrigin origin, bool credentialWorkCompleted,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (enumerationProtection is IAuthenticationTimingProtection monotonicProtection)
+        {
+            await monotonicProtection.CompleteAuthenticationTimingAsync(origin, credentialWorkCompleted, cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            // Preserve an existing custom provider's interface. Its UTC-only timing capability is not certified
+            // as monotonic; opaque password providers are conservatively given dummy-work compensation.
+            await enumerationProtection.AddTimingProtectionDelayAsync(credentialWorkCompleted, origin.StartedAtUtc)
+                .WaitAsync(cancellationToken).ConfigureAwait(false);
+        }
+        cancellationToken.ThrowIfCancellationRequested();
     }
 
     private AuthenticationAttemptContext CreateAttemptContext(
@@ -396,6 +445,8 @@ public class LocalAuthService(
 
     public async Task<SignInResponse> LocalSignUpAsync(LocalSignUpRequest request, CancellationToken cancellationToken = default)
     {
+        var timingOrigin = AuthenticationTimingOrigin.Start(timeProvider);
+        cancellationToken.ThrowIfCancellationRequested();
         var stopwatch = Stopwatch.StartNew();
         var httpContext = httpContextAccessor.HttpContext;
         var ipAddress = authAttemptService.GetClientIpAddress(httpContext);
@@ -422,7 +473,7 @@ public class LocalAuthService(
 
             if (emailExists)
             {
-                await enumerationProtection.AddTimingProtectionDelayAsync(true, SystemClock.UtcNow).ConfigureAwait(false);
+                await CompleteAuthenticationTimingAsync(timingOrigin, false, cancellationToken).ConfigureAwait(false);
                 logger.LogWarning("Sign-up attempt with existing email: {Email}", request.Email);
 
                 throw new InvalidOperationException("User already exists");
