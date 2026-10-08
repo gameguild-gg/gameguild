@@ -585,3 +585,59 @@ Receipts:
 The local Code cycle is being repeated with these qualified sources/artifacts.
 Release licensing and current scanner checks remain unresolved. #145/#288 remain
 open pending their complete original criteria and required PR acceptance.
+
+## Code cycle and dependency build blockers — 2026-10-08
+
+The published `182979591241a19f55fc7e937b7c0462633b76f3` source tree matches
+the generated CI merge tree `3d88f2cd89c1bfd5cfb192202e7d0659aba447e0` exactly.
+Emception run 37842866036, job 113536473081, passed the real learner and
+instructor Code journey: starter failures, corrected public tests, persisted
+submission, the instructor's hidden test, rubric grading and persisted score.
+Its report contains **36 green functional checks, two observed console
+diagnostics and no red checks**. The interrupted local attempt06 is retained
+as an interruption, not a successful local run. Collector count corrections
+and the two console observations remain available in the evidence directory.
+
+Handlebars 4.7.10 replaces 4.7.9 in the client and transitive lock entries.
+Five new compiler/property regressions retain the original seven checks; the
+vulnerable baseline failed four of the new checks. The complete repository
+policy command, client build, typecheck and all 1,155 client tests passed.
+The deploy policy selection retains three Windows environment skips. No
+advisory ignore or scanner gate was added.
+
+The sole ImageSharp consumer, optional asset average hashing, now uses
+Magick.NET-Q8-AnyCPU 14.17.2. This removes the proprietary build-license
+requirement and the inherited NU1902/NU1903 suppression. The complete upstream
+`Notice.txt` is copied to output and publish under `third-party`. SHA-256
+deduplication and public interfaces remain unchanged. The raster reader
+selects an explicit recognized format, reads the first frame, converts CMYK
+to sRGB, applies Catmull-Rom resizing and retains the 8x8 Rec.709 average hash.
+It bounds encoded input to 64 MiB and native memory to 256 MiB, disables native
+disk fallback and caps dimensions, profile size, threads and decoding time.
+An optional hash failure still returns null and restores seekable streams.
+
+Assets Release validation06 passed **1,189 cases with no failures or skips**,
+including ten raster formats, resizing, independently calculated color hashes,
+CMYK, first-frame selection, non-seekable streams, invalid input and cancellation.
+The added color baseline exposed two CMYK failures, fixed by explicit sRGB
+conversion. The earlier actual-module Alpine x64 probe passed all ten raster
+formats and checked the complete notice; the full API Release publish passed
+with warnings as errors and NuGet audit enabled. Those two executions precede
+the final CMYK line and must be repeated for the reconciled source. No universal
+byte-for-byte equivalence with historical decoder outputs or Alpine ARM64
+support is claimed; exact content hashes and existing stored data are unchanged.
+
+Evidence under the artifact root:
+
+- `code-ci-36-green-2-observed-and-pr-correction02-20261008/result.json`.
+- `handlebars-policy-and-client-validation-20261008/result.json`.
+- `magick-color-contract-baseline05-20261008` and its failing TRX.
+- `magick-assets-release-validation06-20261008` and its passing TRX.
+- `magick-alpine-validation04-20261008/result.json`.
+- `magick-api-release-validation04-20261008/result.json`.
+
+Develop has advanced to `2124a610b01d8e850a10c1a4da6b2dc555f5d368`. The
+branch will preserve its real-authentication fixture and this PR's bounded
+per-test factory while regenerating the combined API client. Fresh integrated
+qualification and current PR checks are still required before merge. This
+checkpoint closes no issue.
