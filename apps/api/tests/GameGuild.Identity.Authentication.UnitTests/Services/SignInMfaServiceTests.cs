@@ -249,7 +249,7 @@ public sealed class SignInMfaServiceTests
         switch (mode)
         {
             case "provider": fixture.Mfa.Setup(port => port.VerifyMfaAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<MfaMethod>(), It.IsAny<CancellationToken>())).ThrowsAsync(new InvalidOperationException("provider unavailable")); break;
-            case "issuer": fixture.Issuer.Setup(port => port.IssueAsync(It.IsAny<User>(), It.IsAny<Guid?>(), It.IsAny<DeviceInfo>(), It.IsAny<CancellationToken>())).ThrowsAsync(new InvalidOperationException("issuer unavailable")); break;
+            case "issuer": fixture.Issuer.Setup(port => port.IssueMfaAsync(It.IsAny<User>(), It.IsAny<Guid?>(), It.IsAny<DeviceInfo>(), It.IsAny<SignInMfaProof>(), It.IsAny<CancellationToken>())).ThrowsAsync(new InvalidOperationException("issuer unavailable")); break;
             case "audit": fixture.Audit.Setup(port => port.RecordAsync(It.IsAny<AuthenticationAuditEvent>(), It.IsAny<CancellationToken>())).ThrowsAsync(new InvalidOperationException("audit unavailable")); break;
             default: throw new ArgumentOutOfRangeException(nameof(mode));
         }
@@ -266,6 +266,61 @@ public sealed class SignInMfaServiceTests
         Assert.Null(fixture.ConsumedBinding);
         fixture.Issuer.VerifyNoOtherCalls();
         Assert.Empty(fixture.Audits);
+    }
+
+    [Fact]
+    public async Task RefreshRestoresOnlyTheOriginalBoundProof()
+    {
+        var fixture = new FlowFixture();
+        var proof = SignInMfaProof.FromVerifiedChallenge(fixture.Challenge!, MfaMethod.BackupCode, DateTimeOffset.UtcNow);
+        var stored = SessionMfaEvidence.Create(fixture.Issued.SessionId, proof);
+        fixture.SessionEvidence.Setup(port => port.FindAsync(fixture.Issued.SessionId, It.IsAny<CancellationToken>())).ReturnsAsync(stored);
+        var restored = await fixture.ReadSessionAsync(proof.FirstFactorVerifiedAt);
+        Assert.NotNull(restored);
+        Assert.Equal(proof.VerifiedAt, restored.VerifiedAt);
+        Assert.Equal(proof.FirstFactorVerifiedAt, restored.FirstFactorVerifiedAt);
+        fixture.Issuer.VerifyNoOtherCalls();
+    }
+
+    [Theory]
+    [InlineData("missing-proof")]
+    [InlineData("subject")]
+    [InlineData("tenant")]
+    [InlineData("version")]
+    [InlineData("session")]
+    [InlineData("policy")]
+    [InlineData("auth-time")]
+    [InlineData("unenrolled")]
+    [InlineData("locked")]
+    public async Task StaleOrUnboundSessionProofCannotRefreshMfaCredentials(string fault)
+    {
+        var fixture = new FlowFixture();
+        var proof = SignInMfaProof.FromVerifiedChallenge(fixture.Challenge!, MfaMethod.BackupCode, DateTimeOffset.UtcNow);
+        var stored = SessionMfaEvidence.Create(fixture.Issued.SessionId, proof);
+        switch (fault)
+        {
+            case "subject": stored.SubjectId = Guid.NewGuid(); break;
+            case "tenant": stored.TenantId = Guid.NewGuid(); break;
+            case "version": stored.TokenVersion++; break;
+            case "session": stored.SessionId = Guid.NewGuid(); break;
+            case "policy": stored.PolicyFingerprint = FlowFixture.Digest(); break;
+            case "unenrolled": fixture.Enrolled = false; break;
+            case "locked": fixture.Lockout = DateTime.UtcNow.AddMinutes(5); break;
+        }
+        fixture.SessionEvidence.Setup(port => port.FindAsync(fixture.Issued.SessionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(fault == "missing-proof" ? null : stored);
+        await Assert.ThrowsAsync<AuthenticationRequiredException>(() => fixture.ReadSessionAsync(
+            fault == "auth-time" ? proof.FirstFactorVerifiedAt.AddSeconds(1) : proof.FirstFactorVerifiedAt));
+        fixture.Issuer.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task OptionalUnenrolledSessionRetainsOrdinaryRefresh()
+    {
+        var fixture = new FlowFixture { Enrolled = false };
+        fixture.Decision = fixture.Decision with { RequiresMfa = false };
+        fixture.SessionEvidence.Setup(port => port.FindAsync(fixture.Issued.SessionId, It.IsAny<CancellationToken>())).ReturnsAsync((SessionMfaEvidence?)null);
+        Assert.Null(await fixture.ReadSessionAsync(DateTimeOffset.UtcNow.AddMinutes(-1)));
     }
 
     private static void AssertLimited(SignInResponse result)
@@ -309,6 +364,7 @@ public sealed class SignInMfaServiceTests
         public Mock<IMfaService> Mfa { get; } = new(MockBehavior.Strict);
         public Mock<IAuthenticatedSessionIssuer> Issuer { get; } = new(MockBehavior.Strict);
         public Mock<IAuthenticationAuditEventSink> Audit { get; } = new(MockBehavior.Strict);
+        public Mock<ISessionMfaEvidenceStore> SessionEvidence { get; } = new(MockBehavior.Strict);
         public List<string> Trace { get; } = [];
         public List<SignInMfaChallenge> Stored { get; } = [];
         public List<AuthenticationAuditEvent> Audits { get; } = [];
@@ -377,6 +433,11 @@ public sealed class SignInMfaServiceTests
                 Trace.Add("issue");
                 return Issued;
             });
+            Issuer.Setup(port => port.IssueMfaAsync(It.IsAny<User>(), TenantId, Device, It.IsAny<SignInMfaProof>(), It.IsAny<CancellationToken>())).ReturnsAsync(() =>
+            {
+                Trace.Add("issue");
+                return Issued;
+            });
             Audit.Setup(port => port.RecordAsync(It.IsAny<AuthenticationAuditEvent>(), It.IsAny<CancellationToken>())).Returns((AuthenticationAuditEvent auditEvent, CancellationToken cancellationToken) =>
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -391,7 +452,9 @@ public sealed class SignInMfaServiceTests
             Service().BeginAsync(VerifiedSubjectId, VerifiedVersion, TenantId, Device, factor, risk, CancellationToken.None);
         public Task<SignInResponse> CompleteAsync(string? bearer = null, MfaMethod method = MfaMethod.BackupCode, string? code = null, CancellationToken cancellationToken = default) =>
             Service().CompleteCodeAsync(bearer ?? Bearer, code ?? Code, method, Device, cancellationToken);
-        private SignInMfaService Service() => new(Subjects.Object, Policy.Object, Store.Object, Mfa.Object, Issuer.Object, Audit.Object);
+        public Task<SignInMfaProof?> ReadSessionAsync(DateTimeOffset authenticatedAt) =>
+            Service().ReadSessionProofAsync(VerifiedSubjectId, VerifiedVersion, TenantId, Issued.SessionId, authenticatedAt, CancellationToken.None);
+        private SignInMfaService Service() => new(Subjects.Object, Policy.Object, Store.Object, Mfa.Object, Issuer.Object, Audit.Object, SessionEvidence.Object);
         public void ApplySubjectFault(string mode)
         {
             switch (mode)

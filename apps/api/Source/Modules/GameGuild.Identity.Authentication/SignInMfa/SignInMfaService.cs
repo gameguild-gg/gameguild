@@ -13,6 +13,7 @@ public sealed class SignInMfaService(
     IMfaService mfa,
     IAuthenticatedSessionIssuer issuer,
     IAuthenticationAuditEventSink audit,
+    ISessionMfaEvidenceStore sessionEvidence,
     TimeProvider? timeProvider = null) : ISignInMfaService
 {
     private readonly TimeProvider _time = timeProvider ?? TimeProvider.System;
@@ -99,7 +100,8 @@ public sealed class SignInMfaService(
         {
             return Denied();
         }
-        var result = await IssueAsync(current.User, challenge.TenantId, deviceInfo, cancellationToken).ConfigureAwait(false);
+        var proof = SignInMfaProof.FromVerifiedChallenge(challenge, method, _time.GetUtcNow());
+        var result = await IssueAsync(current.User, challenge.TenantId, deviceInfo, cancellationToken, proof).ConfigureAwait(false);
         await RecordAsync("Authentication.MfaSignInVerified", challenge, true, method.ToString(), deviceInfo,
             result.SessionId, cancellationToken).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
@@ -115,9 +117,40 @@ public sealed class SignInMfaService(
         return string.Equals(decision.PolicyFingerprint, challenge.PolicyFingerprint, StringComparison.Ordinal) ? current : null;
     }
 
-    private async Task<SignInResponse> IssueAsync(User user, Guid tenantId, DeviceInfo device, CancellationToken cancellationToken)
+    public async Task<SignInMfaProof?> ReadSessionProofAsync(Guid subjectId, int tokenVersion, Guid tenantId, Guid sessionId,
+        DateTimeOffset authenticatedAt, CancellationToken cancellationToken)
     {
-        var result = await issuer.IssueAsync(user, tenantId, device, cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        var current = await subjects.ReadCurrentAsync(subjectId, cancellationToken).ConfigureAwait(false);
+        RequireAccount(current, subjectId, tokenVersion);
+        var decision = await policy.EvaluateAsync(subjectId, tenantId, cancellationToken).ConfigureAwait(false);
+        RequireDecision(decision, subjectId, tenantId);
+        var stored = await sessionEvidence.FindAsync(sessionId, cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (stored is null)
+        {
+            if (decision.RequiresMfa || current!.HasEnrolledMfa)
+            {
+                throw new AuthenticationRequiredException("MFA verification is required before refreshing this session.");
+            }
+            return null;
+        }
+        if (!current!.HasEnrolledMfa || IsLocked(current) || stored.SessionId != sessionId ||
+            !string.Equals(stored.PolicyFingerprint, decision.PolicyFingerprint, StringComparison.Ordinal))
+        {
+            throw new AuthenticationRequiredException("MFA verification evidence is no longer valid.");
+        }
+        var proof = stored.ToProof();
+        proof.RequireBinding(subjectId, tenantId, tokenVersion, authenticatedAt, _time.GetUtcNow());
+        return proof;
+    }
+
+    private async Task<SignInResponse> IssueAsync(User user, Guid tenantId, DeviceInfo device, CancellationToken cancellationToken,
+        SignInMfaProof? proof = null)
+    {
+        var result = proof is null
+            ? await issuer.IssueAsync(user, tenantId, device, cancellationToken).ConfigureAwait(false)
+            : await issuer.IssueMfaAsync(user, tenantId, device, proof, cancellationToken).ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
         if (result is null || !result.Success || result.RequiresMfa || result.RequiresStepUp || result.UserId != user.Id ||
             result.TenantId != tenantId || result.SessionId == Guid.Empty || string.IsNullOrWhiteSpace(result.AccessToken) ||

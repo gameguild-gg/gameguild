@@ -6733,6 +6733,14 @@ export interface IdentityAuthenticationCompleteMfaSetupInput {
   secretKey: string;
 }
 
+/** Completes the bound, expiring sign-in challenge. The server supplies identity and tenant. */
+export interface IdentityAuthenticationCompleteMfaSignInInput {
+  code: string;
+  deviceFingerprint?: string | null;
+  method?: IdentityAuthenticationMfaMethod;
+  mfaToken: string;
+}
+
 /** Request to complete password reset */
 export interface IdentityAuthenticationCompletePasswordResetInput {
   /** Password confirmation */
@@ -19385,6 +19393,7 @@ export let IdentityAuthenticationCleanupKeysInputSchema: z.ZodType<IdentityAuthe
 export let IdentityAuthenticationCleanupResultSchema: z.ZodType<IdentityAuthenticationCleanupResult>;
 export let IdentityAuthenticationClientCredentialsTokenOutputSchema: z.ZodType<IdentityAuthenticationClientCredentialsTokenOutput>;
 export let IdentityAuthenticationCompleteMfaSetupInputSchema: z.ZodType<IdentityAuthenticationCompleteMfaSetupInput>;
+export let IdentityAuthenticationCompleteMfaSignInInputSchema: z.ZodType<IdentityAuthenticationCompleteMfaSignInInput>;
 export let IdentityAuthenticationCompletePasswordResetInputSchema: z.ZodType<IdentityAuthenticationCompletePasswordResetInput>;
 export let IdentityAuthenticationCompleteWebAuthnAuthenticationInputSchema: z.ZodType<IdentityAuthenticationCompleteWebAuthnAuthenticationInput>;
 export let IdentityAuthenticationCompleteWebAuthnRegistrationInputSchema: z.ZodType<IdentityAuthenticationCompleteWebAuthnRegistrationInput>;
@@ -27195,6 +27204,14 @@ IdentityAuthenticationClientCredentialsTokenOutputSchema = z.object({
 IdentityAuthenticationCompleteMfaSetupInputSchema = z.object({
   code: z.string().min(1),
   secretKey: z.string().min(1),
+});
+
+/** Zod schema for IdentityAuthenticationCompleteMfaSignInInput. Completes the bound, expiring sign-in challenge. The server supplies identity and tenant. */
+IdentityAuthenticationCompleteMfaSignInInputSchema = z.object({
+  code: z.string().min(0).max(64),
+  deviceFingerprint: z.string().min(0).max(64).nullable().optional(),
+  method: z.lazy(() => IdentityAuthenticationMfaMethodSchema).optional(),
+  mfaToken: z.string().min(43).max(43),
 });
 
 /** Zod schema for IdentityAuthenticationCompletePasswordResetInput. Request to complete password reset */

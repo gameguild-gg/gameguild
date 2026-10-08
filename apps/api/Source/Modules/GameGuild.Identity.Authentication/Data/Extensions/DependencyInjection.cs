@@ -141,6 +141,7 @@ public static class DataDependencyInjection
         services.AddScoped<IMfaSubjectRequirementPolicy, MfaSubjectRequirementPolicy>();
         services.AddScoped<ISignInMfaSubjectReader, PostgreSqlSignInMfaSubjectReader>();
         services.AddScoped<ISignInMfaChallengeStore, PostgreSqlSignInMfaChallengeStore>();
+        services.AddScoped<ISessionMfaEvidenceStore, PostgreSqlSessionMfaEvidenceStore>();
         services.AddScoped<ISignInMfaService, SignInMfaService>();
         services.AddScoped<IStepUpChallengeStore, PostgreSqlStepUpChallengeStore>();
         services.AddScoped<IStepUpReceiptService, StepUpReceiptService>();
@@ -243,6 +244,7 @@ public static class DataDependencyInjection
         // Register command handlers for local authentication
         services.AddScoped<IRequestHandler<LocalSignUpCommand, SignInResponse>, LocalSignUpHandler>();
         services.AddScoped<IRequestHandler<LocalSignInCommand, SignInResponse>, LocalSignInHandler>();
+        services.AddScoped<IRequestHandler<CompleteMfaSignInCommand, SignInResponse>, CompleteMfaSignInHandler>();
         services.AddScoped<IRequestHandler<PolymorphicSignInCommand, SignInResponse>, PolymorphicSignInHandler>();
         services.AddScoped<IRequestHandler<RefreshTokenCommand, SignInResponse>, RefreshTokenHandler>();
         services.AddScoped<IRequestHandler<GoogleIdTokenSignInCommand, SignInResponse>, GoogleIdTokenSignInHandler>();

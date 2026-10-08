@@ -22,6 +22,13 @@ internal static class SignInMfaPreparationStub
                     : SignInMfaPreparation.PermitWithoutMfa(new User { Id = subjectId, TokenVersion = tokenVersion },
                         new MfaRequirementDecision(subjectId, tenantId ?? Guid.NewGuid(), false, [], new string('0', 64))));
             });
+        port.Setup(service => service.ReadSessionProofAsync(It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<Guid>(),
+                It.IsAny<Guid>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+            .Returns((Guid _, int _, Guid _, Guid _, DateTimeOffset _, CancellationToken cancellationToken) =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                return Task.FromResult<SignInMfaProof?>(null);
+            });
         return port;
     }
 }

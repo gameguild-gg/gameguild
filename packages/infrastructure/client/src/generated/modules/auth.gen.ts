@@ -368,6 +368,35 @@ export class AuthModule {
   }
 
   /**
+   * Complete a verified first factor with the account's enrolled MFA method.
+   *
+   * Consumes the expiring first-factor challenge and verifies TOTP or a backup code. Identity, tenant, policy and token version come from the server-side challenge. A successful response contains MFA-bound credentials.
+   */
+  async postAuthMfaSignInComplete(
+    body: Types.IdentityAuthenticationCompleteMfaSignInInput,
+  ): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
+    const url = '/v1/auth/mfa/sign-in/complete';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationCompleteMfaSignInInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityAuthenticationSignInOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
    * Change password for authenticated user
    *
    * Changes the password for the currently authenticated user.

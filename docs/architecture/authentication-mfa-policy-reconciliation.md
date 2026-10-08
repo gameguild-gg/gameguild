@@ -9,7 +9,7 @@ not establish enforcement or successful completion of an authentication flow.
 
 This checkpoint uses the owned checkout based on accepted develop
 `d5f417328e9ff9d3fa0517796a623e310aeb1ef0`, published PR #704 head
-`aa4ccb64da1ad29ae1a9166e215ac6b597263070`, and its separately guarded local
+`b4cf8156baf4ea74a5735146cf70af328564f022`, and its separately guarded local
 follow-up. #145 remains open. The separate ASP.NET Core Identity persistence
 requirement is recorded as historically superseded in
 `docs/api/authentication-options-configuration.md`; the current custom identity
@@ -211,3 +211,79 @@ ordinary credential issuance also need explicit acceptance. Signup contract
 changes remain dependent on the pending #287 product decision. All original
 #145 acceptance criteria, technical requirements and definition-of-done items
 remain authoritative; the issue is open.
+
+## Native public completion and session proof checkpoint — 2026-10-08
+
+`POST /v1/auth/mfa/sign-in/complete` now completes a persisted first-factor
+challenge using TOTP or a backup code. Its request contains only the opaque
+challenge bearer, code, method and optional device fingerprint. Account, tenant,
+token version and policy fingerprint are read from the server's challenge and
+revalidated before and after provider verification. A client cannot select these
+bindings. The command uses the existing transaction and durable operation-event
+pipeline; its host anonymous entry is explicitly registered and rate limited.
+
+After atomic challenge consumption, the coordinator creates immutable
+`SignInMfaProof` and calls the MFA-aware authenticated session issuer. The issuer
+persists `SessionMfaEvidence` before signing the access token. The new native
+migration `20261008102604_AddSessionMfaEvidence` adds only
+`gameguild.authentication.session_mfa_evidence`, its session foreign key,
+unique challenge index and integrity constraints. This table contains proof
+metadata, not challenge bearers, MFA secrets or supplied codes.
+
+The token carries `amr=mfa`, password/OTP method entries where applicable,
+`mfa_verified=true`, the original first-factor `auth_time` and original
+`mfa_time`. These AMR values follow [RFC 8176](https://www.rfc-editor.org/rfc/rfc8176.html).
+Ordinary issuance still carries no MFA evidence; reserved custom claims cannot
+create this evidence. Refresh restores the session proof and checks the current
+account, enrollment, tenant, token version and policy fingerprint. It preserves
+both original times. A required/enrolled session without proof must authenticate
+again; an optional, unenrolled ordinary session retains its ordinary refresh.
+
+The original public-completion regression failed with **404** before the route
+was implemented. Its test source is byte-for-byte unchanged, including
+completion, replay, preserved refresh timestamps and persisted row assertions.
+It now passes against the actual native API and PostgreSQL.
+
+| Native selection | Passed | Scope |
+|---|---:|---|
+| Authentication UnitTests | 2,518 | Entire project, including typed proof, MFA issuer and refresh-binding cases. |
+| Authorization UnitTests | 1,667 | Entire project. |
+| API UnitTests architecture/security | 137 | Focused host architecture, authentication, security and migration-deployment selection. |
+| API IntegrationTests MFA policy/completion/migration | 19 | TOTP and legacy/new backup codes; replay across challenges; refresh; client binding forgery; expiry; changed account/version/policy/membership; concurrent HTTP issuance; rollback after proof persistence; migration upgrade/rollback/model consistency. |
+| API UnitTests configured OpenAPI documentation | 8 | Configured documents, examples and operation documentation. |
+| Native OpenAPI capture | 1 | Existing export contract test produces the actual host document; the completion request schema and response contract are independently checked. |
+
+All listed selections passed with zero failed or skipped cases. The four native
+groups in validation05 executed **4,339** passing cases; validation07 retains
+those production sources and extends the integration selection from 17 to 19.
+These are bounded selections, not the complete API UnitTests/IntegrationTests
+projects or acceptance of all #145 requirements.
+
+Receipts under the same artifact root:
+
+- `issue-145-native-repository-completion-baseline04-execution01/result.json`
+  retains the failing public-route reproduction.
+- `issue-145-public-completion-original-regression-preservation-20261008.json`
+  records the unchanged original regression SHA256.
+- `issue-145-native-repository-completion-validation05-execution01/result.json`
+  records the full authentication/authorization and focused host/HTTP selections.
+- `issue-145-native-repository-completion-totp-openapi07-execution01/result.json`
+  records the 19 native HTTP/migration cases and eight documentation cases.
+- `issue-145-native-repository-completion-openapi06-execution01/result.json`
+  and `openapi.json` record the actual native document and public contract.
+- `issue-145-public-completion-client-generation-20261008/result.json`
+  binds the regenerated TypeScript client to that document.
+- `issue-145-public-completion-client-validation-20261008/result.json`
+  records successful build and typecheck plus **1,135/1,135** client tests,
+  zero failures or skipped tests, with generated sources and primary files preserved.
+
+All executions preserved the 55 primary-checkout changes. The exact owned
+PostgreSQL containers were removed and independently verified absent.
+
+**#145 remains open.** Limited enrollment/recovery for required but unenrolled
+accounts, enforcement and complete acceptance across other sign-in schemes,
+high-risk whole-flow HTTP acceptance, role/tenant changes during ordinary
+issuance, external-provider sandbox evidence and the remaining original criteria
+still require work. The pending #287 signup decision and #704 Release/CI license
+and historical-secret scanner gates remain separate. No issue was closed by this
+checkpoint.

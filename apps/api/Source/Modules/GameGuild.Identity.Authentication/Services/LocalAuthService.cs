@@ -670,6 +670,10 @@ public class LocalAuthService(
 
         var existingSession = await sessionManagementService.GetSessionByRefreshTokenAsync(hashedToken, cancellationToken).ConfigureAwait(false);
         var sessionId = existingSession?.Id ?? Guid.NewGuid();
+        var mfaProof = await signInMfa.ReadSessionProofAsync(userId, tokenVersion,
+            tenantAccessContext.TenantId ?? throw new AuthenticationRequiredException("No authorized tenant is available."),
+            sessionId, authenticatedAt, cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
         var refreshTokenExpiryDays = jwtOptions?.Value.RefreshTokenExpirationDays
                                      ?? int.Parse(configuration["Jwt:RefreshTokenExpirationDays"] ?? configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7", CultureInfo.InvariantCulture);
         var newRefreshToken = await jwtTokenService.GenerateRefreshTokenAsync(userId, deviceInfo, authenticatedAt, cancellationToken).ConfigureAwait(false);
@@ -681,7 +685,7 @@ public class LocalAuthService(
             refreshTokenExpiresAt = storedToken.ExpiresAt;
         }
         var replacementTokenHash = refreshTokenHasher.HashToken(newRefreshToken);
-        var accessToken = await jwtTokenService.GenerateAccessTokenAsync(
+        var accessToken = mfaProof is null ? await jwtTokenService.GenerateAccessTokenAsync(
             userId,
             userEmail,
             tenantAccessContext.Roles.ToArray(),
@@ -689,7 +693,9 @@ public class LocalAuthService(
             tokenVersion,
             authenticatedAt,
             sessionId,
-            cancellationToken).ConfigureAwait(false);
+            cancellationToken).ConfigureAwait(false)
+            : await jwtTokenService.GenerateMfaAccessTokenAsync(userId, userEmail, tenantAccessContext.Roles.ToArray(),
+                tenantAccessContext.TenantId, tokenVersion, authenticatedAt, sessionId, mfaProof, cancellationToken).ConfigureAwait(false);
 
         if (existingSession == null)
         {

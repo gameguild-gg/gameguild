@@ -1,5 +1,30 @@
 # Authorization Architecture Documentation
 
+## 2026-10-08 public MFA completion and session proof checkpoint — #145
+
+`POST /v1/auth/mfa/sign-in/complete` verifies an expiring, server-bound first-factor
+challenge with TOTP or a backup code. The request cannot select subject, tenant,
+token version or policy. Verification, atomic challenge consumption, credential
+and session issuance, proof metadata and required audit writes share the existing
+command transaction. A native HTTP failure after proof persistence rolls back
+the consumed code, challenge, session and refresh token; a retry then succeeds.
+
+The immutable server-created proof is persisted in `session_mfa_evidence` before
+MFA access-token signing. Refresh checks its current account/enrollment/tenant/
+version/policy binding and preserves the original `auth_time` and `mfa_time`.
+Ordinary tokens cannot acquire MFA claims through custom claims. The native
+migration adds only the proof table, constraints and session relation.
+
+Full authentication and authorization projects passed 2,518 and 1,667 tests.
+The focused host selection passed 137; the extended native PostgreSQL selection
+passed 19, including real TOTP replay across challenges, new/legacy backup codes,
+concurrent HTTP completion, rollback, refresh and migration checks. Eight native
+OpenAPI documentation tests passed; the actual document produced the regenerated
+client, whose build/typecheck and 1,135 tests passed. Primary changes and original
+failing regression assertions were preserved. Limited enrollment/recovery, other
+schemes and the remaining original #145 criteria are still pending; #145 is open.
+See [MFA policy reconciliation](../../../../../docs/architecture/authentication-mfa-policy-reconciliation.md).
+
 ## 2026-10-08 password MFA preparation checkpoint — #145
 
 Local password sign-in captures the account version observed before first-factor

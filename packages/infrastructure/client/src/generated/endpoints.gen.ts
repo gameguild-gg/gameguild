@@ -11976,6 +11976,23 @@ export const getAuthMfaMethodsEndpoint = {
 } as const;
 
 /**
+ * Complete a verified first factor with the account's enrolled MFA method.
+ *
+ * Consumes the expiring first-factor challenge and verifies TOTP or a backup code. Identity, tenant, policy and token version come from the server-side challenge. A successful response contains MFA-bound credentials.
+ */
+export interface PostAuthMfaSignInCompleteInput {
+  body?: Types.IdentityAuthenticationCompleteMfaSignInInput;
+}
+export type PostAuthMfaSignInCompleteOutput = Types.IdentityAuthenticationSignInOutput;
+export const postAuthMfaSignInCompleteEndpoint = {
+  operationId: 'postAuthMfaSignInComplete' as const,
+  method: 'POST' as const,
+  path: '/v1/auth/mfa/sign-in/complete' as const,
+  tags: ['Auth'] as const,
+  requiresAuth: false,
+} as const;
+
+/**
  * Complete SMS MFA setup by verifying the code
  *
  * Completes SMS MFA setup by verifying the code sent to the user's phone.
@@ -25709,6 +25726,7 @@ export const endpoints = {
   getAuthMfaBackupCodes: getAuthMfaBackupCodesEndpoint,
   postAuthMfaBackupCodesRegenerate: postAuthMfaBackupCodesRegenerateEndpoint,
   getAuthMfaMethods: getAuthMfaMethodsEndpoint,
+  postAuthMfaSignInComplete: postAuthMfaSignInCompleteEndpoint,
   postAuthMfaSmsComplete: postAuthMfaSmsCompleteEndpoint,
   postAuthMfaSmsSetup: postAuthMfaSmsSetupEndpoint,
   postAuthMfaTotpComplete: postAuthMfaTotpCompleteEndpoint,
