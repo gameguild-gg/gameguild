@@ -1808,6 +1808,9 @@ importers:
         specifier: workspace:*
         version: link:packages/xterm
     devDependencies:
+      '@eslint/compat':
+        specifier: 2.1.1
+        version: 2.1.1(eslint@10.11.0(jiti@2.7.0))
       '@playwright/test':
         specifier: ^1.63.0
         version: 1.63.0
@@ -1829,6 +1832,9 @@ importers:
       cli-progress:
         specifier: ^3.12.0
         version: 3.12.0
+      eslint-config-next:
+        specifier: 16.3.8
+        version: 16.3.8(@typescript-eslint/parser@8.70.0(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.11.0(jiti@2.7.0))(typescript@6.0.3)
       npm-run-all:
         specifier: 4.1.5
         version: 4.1.5
