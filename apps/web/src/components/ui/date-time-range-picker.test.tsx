@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { DateTimeRangePicker } from "./date-time-range-picker";
 
@@ -83,10 +83,18 @@ describe("DateTimeRangePicker", () => {
     expect(screen.getByRole("group", { name: "Session starts" })).toHaveClass("@container/endpoint");
   });
 
-  it.each([
+  const calendarIntervals = [
     { endDate: "Friday, October 9th, 2026", end: "2026-10-09T01:15", summary: "09/10/2026 · 01:15" },
     { endDate: "Sunday, October 11th, 2026", end: "2026-10-11T01:15", summary: "11/10/2026 · 01:15" },
-  ])("keeps a full calendar interval ending on $endDate", async ({ endDate, end, summary }) => {
+  ];
+
+  // DayPicker prefixes today's accessible name without changing its date.
+  const calendarDayName = (date: string) => (name: string) => name === date || name === `Today, ${date}`;
+
+  async function assertFullCalendarInterval(
+    { endDate, end, summary }: typeof calendarIntervals[number],
+    today?: string,
+  ) {
     const user = userEvent.setup();
     render(<form aria-label="Compact session"><DateTimeRangePicker
       id="compact-session" label="Testing session" startLabel="Session starts" endLabel="Session ends"
@@ -94,9 +102,12 @@ describe("DateTimeRangePicker", () => {
       defaultValue={{ start: "2026-10-02T18:00", end: "2026-10-03T21:00" }}
     /></form>);
     await user.click(screen.getByRole("button", { name: "Testing session" }));
-    await user.click(await screen.findByRole("button", { name: "Thursday, October 8th, 2026", exact: true }));
+    if (today) {
+      expect(screen.getByRole("button", { name: `Today, ${today}`, exact: true })).toBeInTheDocument();
+    }
+    await user.click(await screen.findByRole("button", { name: calendarDayName("Thursday, October 8th, 2026"), exact: true }));
     expect(screen.getAllByText("08/10/2026")).toHaveLength(2);
-    await user.click(screen.getByRole("button", { name: endDate, exact: true }));
+    await user.click(screen.getByRole("button", { name: calendarDayName(endDate), exact: true }));
     fireEvent.change(screen.getByLabelText("Session starts time"), { target: { value: "23:30" } });
     fireEvent.change(screen.getByLabelText("Session ends time"), { target: { value: "01:15" } });
     await user.click(screen.getByRole("button", { name: "Apply testing session" }));
@@ -104,6 +115,27 @@ describe("DateTimeRangePicker", () => {
     expect(data.get("startsAt")).toBe("2026-10-08T23:30");
     expect(data.get("endsAt")).toBe(end);
     expect(screen.getByRole("button", { name: "Testing session" })).toHaveTextContent(`08/10/2026 · 23:30 → ${summary}`);
+  }
+
+  it.each(calendarIntervals)("keeps a full calendar interval ending on $endDate", async (interval) => {
+    await assertFullCalendarInterval(interval);
+  });
+
+  describe.each([
+    { now: "2026-10-07T12:00:00Z", today: "Wednesday, October 7th, 2026" },
+    { now: "2026-10-08T12:00:00Z", today: "Thursday, October 8th, 2026" },
+    { now: "2026-10-09T12:00:00Z", today: "Friday, October 9th, 2026" },
+    { now: "2026-10-11T12:00:00Z", today: "Sunday, October 11th, 2026" },
+  ])("when today is $today", ({ now, today }) => {
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ["Date"] });
+      vi.setSystemTime(new Date(now));
+    });
+    afterEach(() => vi.useRealTimers());
+
+    it.each(calendarIntervals)("keeps a full calendar interval ending on $endDate", async (interval) => {
+      await assertFullCalendarInterval(interval, today);
+    });
   });
 
   it("does not apply invalid 24-hour times, reversed intervals, or nonexistent DST times", async () => {
