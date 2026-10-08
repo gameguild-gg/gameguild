@@ -28,7 +28,7 @@ export default async function AssessmentsPage({
       assessmentGroups={assessmentGroups}
       analytics={analytics}
       canManage={access.canEdit}
-      canReview={access.canReview}
+      canReviewAsStaff={access.canReviewAsStaff}
     />
   );
 }

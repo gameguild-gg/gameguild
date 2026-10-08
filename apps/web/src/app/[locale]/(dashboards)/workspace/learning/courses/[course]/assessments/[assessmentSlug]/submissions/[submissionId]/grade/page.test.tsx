@@ -46,7 +46,7 @@ describe('legacy grade route redirect', () => {
       throw new Error('NEXT_FORBIDDEN');
     });
     learning.getCourseAccessCapabilities.mockResolvedValue({
-      canReview: true,
+      canReviewAsStaff: true,
     });
   });
 
@@ -81,7 +81,7 @@ describe('legacy grade route redirect', () => {
   it('forbids actors without review capability', async () => {
     learning.getAssessment.mockResolvedValue({ id: 'assessment-id' });
     learning.getCourseAccessCapabilities.mockResolvedValue({
-      canReview: false,
+      canReviewAsStaff: false,
     });
 
     await expect(

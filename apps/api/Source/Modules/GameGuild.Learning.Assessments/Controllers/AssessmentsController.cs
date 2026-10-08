@@ -365,8 +365,8 @@ public class AssessmentsController : BaseApiController
         var capabilities = await _courseAccessEvaluator
             .GetCapabilitiesAsync(assessment.CourseId, HttpContext.RequestAborted)
             .ConfigureAwait(false);
-        if (!capabilities.CanReview && !capabilities.CanLearn) return Forbid();
-        var instructorView = capabilities.CanReview;
+        if (!capabilities.CanReviewAsStaff && !capabilities.CanLearn) return Forbid();
+        var instructorView = capabilities.CanReviewAsStaff;
         return await ExecuteRuntimeAsync(() => RequireRuntime().GetSubmissionAsync(
             submissionId,
             actorId.Value,
@@ -912,8 +912,8 @@ public class AssessmentsController : BaseApiController
             var capabilities = await _courseAccessEvaluator
                 .GetCapabilitiesAsync(assessment.CourseId, HttpContext.RequestAborted)
                 .ConfigureAwait(false);
-            if (!capabilities.CanReview && !capabilities.CanLearn) return Forbid();
-            var instructorView = capabilities.CanReview;
+            if (!capabilities.CanReviewAsStaff && !capabilities.CanLearn) return Forbid();
+            var instructorView = capabilities.CanReviewAsStaff;
             var runtimeView = await ExecuteRuntimeAsync(() => RequireRuntime().GetSubmissionAsync(
                 submissionId,
                 actorUserId.Value,
@@ -1143,14 +1143,14 @@ public class AssessmentsController : BaseApiController
         HasCourseCapabilityAsync(courseId, CourseCapability.Learn);
 
     private Task<bool> CanReviewCourseAsync(Guid courseId) =>
-        HasCourseCapabilityAsync(courseId, CourseCapability.Review);
+        HasCourseCapabilityAsync(courseId, CourseCapability.StaffReview);
 
     private async Task<bool> CanEditOrReviewCourseAsync(Guid courseId)
     {
         var capabilities = await _courseAccessEvaluator
             .GetCapabilitiesAsync(courseId, HttpContext.RequestAborted)
             .ConfigureAwait(false);
-        return capabilities.CanEdit || capabilities.CanReview;
+        return capabilities.CanEdit || capabilities.CanReviewAsStaff;
     }
 
     private Task<bool> HasCourseCapabilityAsync(Guid courseId, CourseCapability capability) =>

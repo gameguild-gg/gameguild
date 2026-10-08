@@ -19,7 +19,7 @@ export default async function GradeSubmissionPage({
     getCourseAccessCapabilities(course),
   ]);
   if (!assessment) notFound();
-  if (!access.canReview) forbidden();
+  if (!access.canReviewAsStaff) forbidden();
 
   redirect({
     href: `/speedgrader/assessments/${assessment.id}?course=${encodeURIComponent(course)}&submission=${encodeURIComponent(submissionId)}`,

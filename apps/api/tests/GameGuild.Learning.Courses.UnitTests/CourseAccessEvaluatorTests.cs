@@ -89,7 +89,7 @@ public sealed class CourseAccessEvaluatorTests
         result.IsOwner.Should().BeTrue();
         result.CanEdit.Should().BeTrue();
         result.CanPublish.Should().BeTrue();
-        result.CanReview.Should().BeTrue();
+        result.CanReviewAsStaff.Should().BeTrue();
         result.CanLearn.Should().BeFalse();
         _permissions.Verify(service => service.HasTenantPermissionAsync(
             It.IsAny<Guid?>(),
@@ -139,7 +139,7 @@ public sealed class CourseAccessEvaluatorTests
     [Theory]
     [InlineData(CourseCapability.Edit)]
     [InlineData(CourseCapability.Publish)]
-    [InlineData(CourseCapability.Review)]
+    [InlineData(CourseCapability.StaffReview)]
     public async Task ExplicitGrant_GrantsOnlyItsNamedCapability(CourseCapability granted)
     {
         var userId = Guid.NewGuid();
@@ -154,7 +154,7 @@ public sealed class CourseAccessEvaluatorTests
 
         result.CanEdit.Should().Be(granted == CourseCapability.Edit);
         result.CanPublish.Should().Be(granted == CourseCapability.Publish);
-        result.CanReview.Should().Be(granted == CourseCapability.Review);
+        result.CanReviewAsStaff.Should().Be(granted == CourseCapability.StaffReview);
         result.CanLearn.Should().BeFalse();
         result.CanAccessWorkspace.Should().BeTrue();
     }
@@ -203,7 +203,7 @@ public sealed class CourseAccessEvaluatorTests
             .Should().Be($"Program.{courseId}.Edit");
         CoursePermissionNames.For(courseId, CourseCapability.Publish)
             .Should().Be($"Program.{courseId}.Publish");
-        CoursePermissionNames.For(courseId, CourseCapability.Review)
+        CoursePermissionNames.For(courseId, CourseCapability.StaffReview)
             .Should().Be($"Program.{courseId}.Review");
         FluentActions.Invoking(() => CoursePermissionNames.For(courseId, CourseCapability.Learn))
             .Should().Throw<ArgumentOutOfRangeException>();
@@ -262,7 +262,7 @@ public sealed class CourseAccessEvaluatorTests
                  {
                      CourseCapability.Edit,
                      CourseCapability.Publish,
-                     CourseCapability.Review
+                     CourseCapability.StaffReview
                  })
         {
             _permissions

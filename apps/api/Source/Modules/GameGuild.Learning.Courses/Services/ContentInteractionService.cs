@@ -356,7 +356,7 @@ public class ContentInteractionService(
 
   private async Task<bool> HasProgramReviewAccessAsync(Program program) =>
     courseAccessEvaluator is not null &&
-    (await courseAccessEvaluator.GetCapabilitiesAsync(program).ConfigureAwait(false)).CanReview;
+    (await courseAccessEvaluator.GetCapabilitiesAsync(program).ConfigureAwait(false)).CanReviewAsStaff;
 
   /// <summary> Update time spent on content </summary>
   public async Task<ContentInteraction> UpdateTimeSpentAsync(Guid interactionId, int additionalMinutes) {

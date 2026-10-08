@@ -20,7 +20,7 @@ public sealed class RequireCourseCapabilityAttributeTests
         context.HttpContext.Request.RouteValues["courseId"] = courseId;
         evaluator.Setup(service => service.HasCapabilityAsync(
                 courseId,
-                CourseCapability.Review,
+                CourseCapability.StaffReview,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
@@ -37,7 +37,7 @@ public sealed class RequireCourseCapabilityAttributeTests
         context.HttpContext.Request.QueryString = new QueryString($"?courseId={courseId}");
         evaluator.Setup(service => service.HasCapabilityAsync(
                 courseId,
-                CourseCapability.Review,
+                CourseCapability.StaffReview,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
@@ -84,7 +84,7 @@ public sealed class RequireCourseCapabilityAttributeTests
         context.HttpContext.Request.RouteValues["courseId"] = courseId;
         evaluator.Setup(service => service.HasCapabilityAsync(
                 courseId,
-                CourseCapability.Review,
+                CourseCapability.StaffReview,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
@@ -112,7 +112,7 @@ public sealed class RequireCourseCapabilityAttributeTests
             new ActionDescriptor());
 
         return (
-            new RequireCourseCapabilityAttribute(CourseCapability.Review, "courseId"),
+            new RequireCourseCapabilityAttribute(CourseCapability.StaffReview, "courseId"),
             evaluator,
             new AuthorizationFilterContext(actionContext, []));
     }

@@ -111,7 +111,7 @@ function buildNavItems(
       icon: GraduationCap,
       segment: "assessments",
       enabled:
-        features.hasAssessments && (access.canEdit || access.canReview),
+        features.hasAssessments && (access.canEdit || access.canReviewAsStaff),
     },
     {
       title: "Certificates",
@@ -129,7 +129,7 @@ function buildNavItems(
       title: "Students",
       icon: Users,
       segment: "students",
-      enabled: access.canReview,
+      enabled: access.canReviewAsStaff,
     },
     {
       title: "Support",

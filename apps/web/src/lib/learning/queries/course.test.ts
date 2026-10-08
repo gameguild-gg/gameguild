@@ -378,7 +378,7 @@ describe("course edit permission (canEditCourse)", () => {
     canLearn: false,
     canEdit: true,
     canPublish: false,
-    canReview: false,
+    canReviewAsStaff: false,
     canAccessWorkspace: true,
   };
 
@@ -424,7 +424,7 @@ describe("course edit permission (canEditCourse)", () => {
       data: {
         ...allowedAccess,
         canEdit: false,
-        canReview: true,
+        canReviewAsStaff: true,
       },
     });
 

@@ -12,7 +12,7 @@ public enum CourseCapability
     Learn,
     Edit,
     Publish,
-    Review,
+    StaffReview,
     AccessWorkspace
 }
 
@@ -25,16 +25,16 @@ public sealed record CourseAccessCapabilities(
     bool CanLearn,
     bool CanEdit,
     bool CanPublish,
-    bool CanReview)
+    bool CanReviewAsStaff)
 {
-    public bool CanAccessWorkspace => CanEdit || CanPublish || CanReview;
+    public bool CanAccessWorkspace => CanEdit || CanPublish || CanReviewAsStaff;
 
     public bool Has(CourseCapability capability) => capability switch
     {
         CourseCapability.Learn => CanLearn,
         CourseCapability.Edit => CanEdit,
         CourseCapability.Publish => CanPublish,
-        CourseCapability.Review => CanReview,
+        CourseCapability.StaffReview => CanReviewAsStaff,
         CourseCapability.AccessWorkspace => CanAccessWorkspace,
         _ => false
     };
@@ -78,7 +78,9 @@ public static class CoursePermissionNames
     {
         CourseCapability.Edit => $"{nameof(Program)}.{courseId}.{PermissionType.Edit}",
         CourseCapability.Publish => $"{nameof(Program)}.{courseId}.{PermissionType.Publish}",
-        CourseCapability.Review => $"{nameof(Program)}.{courseId}.{PermissionType.Review}",
+        // Keep the persisted permission name stable. StaffReview clarifies the
+        // evaluated capability without changing the Authorization contract.
+        CourseCapability.StaffReview => $"{nameof(Program)}.{courseId}.{PermissionType.Review}",
         _ => throw new ArgumentOutOfRangeException(
             nameof(capability),
             capability,
@@ -166,11 +168,11 @@ public sealed class CourseAccessEvaluator(
             program.Id,
             CourseCapability.Publish,
             cancellationToken).ConfigureAwait(false);
-        var canReview = isOwner || await HasExplicitPermissionAsync(
+        var canReviewAsStaff = isOwner || await HasExplicitPermissionAsync(
             userId,
             tenantId,
             program.Id,
-            CourseCapability.Review,
+            CourseCapability.StaffReview,
             cancellationToken).ConfigureAwait(false);
 
         return new CourseAccessCapabilities(
@@ -182,7 +184,7 @@ public sealed class CourseAccessEvaluator(
             hasActiveEnrollment,
             canEdit,
             canPublish,
-            canReview);
+            canReviewAsStaff);
     }
 
     private Task<bool> HasExplicitPermissionAsync(

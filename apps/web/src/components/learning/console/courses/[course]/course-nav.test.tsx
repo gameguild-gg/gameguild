@@ -62,7 +62,7 @@ const ownerAccess: CourseAccessCapabilities = {
   canLearn: false,
   canEdit: true,
   canPublish: true,
-  canReview: true,
+  canReviewAsStaff: true,
   canAccessWorkspace: true,
 };
 
@@ -502,7 +502,7 @@ describe("CourseNav", () => {
           isOwner: false,
           canEdit: false,
           canPublish: false,
-          canReview: true,
+          canReviewAsStaff: true,
         }}
       >
         <div>Review workspace</div>

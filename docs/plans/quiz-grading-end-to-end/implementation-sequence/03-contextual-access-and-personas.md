@@ -1,10 +1,9 @@
 # Parte 3. Acesso contextual e personas reais
 
-Status: parcialmente implementada em 2026-10-08; `ACCESS-01` e `ACCESS-02`
-concluídos funcionalmente, projeção e gates web de `ACCESS-03A` entregues e
-sessões reais do caminho crítico liberadas para implementação. A delegação de
-acesso para colaborador ou revisor da equipe permanece em `ACCESS-03B`, como
-trilho operacional não bloqueante.
+Status: implementada em 2026-10-08 no caminho crítico. `ACCESS-01`,
+`ACCESS-02`, `ACCESS-03A`, `ACCESS-04` e `ACCESS-05` estão concluídos. A
+delegação de acesso para colaborador ou revisor da equipe permanece em
+`ACCESS-03B`, como trilho operacional externo e não bloqueante.
 
 ## Objetivo
 
@@ -71,7 +70,7 @@ o problema separadamente. Não há `SCHEMA-GATE` planejado para `ACCESS-01` a
 
 Foi implementado sem alteração de schema, migration ou módulo de plataforma:
 
-- `CourseCapability` para `Learn`, `Edit`, `Publish`, `Review` e acesso ao
+- `CourseCapability` para `Learn`, `Edit`, `Publish`, `StaffReview` e acesso ao
   workspace, com projeção única `CourseAccessCapabilities`;
 - `CourseAccessEvaluator` no domínio Courses, compondo actor/tenant,
   membership, `CreatorId`, enrollment ativa e grants exatos
@@ -83,23 +82,40 @@ Foi implementado sem alteração de schema, migration ou módulo de plataforma:
   fail-closed reutilizado pelos controllers de Courses e Assessments;
 - revalidação de enrollment ativa no início, continuação, envio e consulta das
   tentativas oficiais;
-- separação entre `Edit`, `Publish` e `Review` em assessments, grading queue,
-  release, interações, tarefas e notificações;
+- separação entre `Edit`, `Publish` e `StaffReview` em assessments, grading
+  queue, release, interações, tarefas e notificações;
 - projeção server-side consumida pelos layouts e pela navegação web; o
-  SpeedGrader, as submissões e os comandos de correção exigem `Review`, enquanto
-  autoria exige `Edit`;
+  SpeedGrader, as submissões e os comandos de correção exigem `StaffReview`,
+  enquanto autoria exige `Edit`;
 - listagem autoral limitada a cursos próprios ou compartilhados e fixtures
   relacionais ajustadas para membership `Member`, sem role `Instructor` como
   fonte de autoridade;
 - testes da matriz contextual, negações cross-tenant, enrollment inativa,
   grants sem promoção implícita, resolução do identificador por rota/query e
-  gates da web.
+  gates da web;
+- nomenclatura de código refinada para `StaffReview` e `CanReviewAsStaff` na
+  API, projeção web e testes. O grant persistido continua sendo
+  `Program.{courseId}.Review`, preservando o contrato oficial de Authorization.
 
-Antes do fechamento de `ACCESS-03A`, a nomenclatura de código `Review` e
-`CanReview` deve ser refinada para `StaffReview` e `CanReviewAsStaff`. O nome
-persistido `Program.{courseId}.Review` pode ser preservado: ele representa uma
-delegação explícita para a equipe, não uma participação em `SelfReview` ou
-`PeerReview`.
+### Fechamento do caminho crítico
+
+- a fixture PostgreSQL passou a oferecer uma factory separada com a
+  autenticação real da aplicação, sem remover o handler sintético usado pelos
+  testes rápidos existentes;
+- owner, aluno A, aluno B e outsider são registrados e autenticados por
+  `sign-up`/`sign-in`, cada um com seu token real e membership `Member`;
+- o bootstrap administrativo cria somente o tenant padrão exigido pela fixture
+  de teste, que desabilita a inicialização de startup. Contas, cursos,
+  matrículas, quizzes, assessments, tentativas, reviews e release usam os casos
+  de uso HTTP oficiais;
+- o E2E
+  `ContextualAccessAndGradingRealSessionPostgreSqlHttpTests` comprova as duas
+  políticas atuais (`AutomatedReview` e
+  `AutomatedReview + InstructorReview`), isolamento entre alunos, outsider,
+  resultado retido, release, revogação de matrícula, troca de contexto por
+  curso e negação cross-tenant;
+- nenhuma tabela, migration, role de produto ou módulo de plataforma foi
+  alterado.
 
 ### Bloqueio operacional não crítico
 
@@ -394,20 +410,38 @@ condições para aprovar este E2E.
 
 ## Acompanhamento
 
-| Marco | Status | Evidência esperada |
+| Marco | Status | Evidência |
 | --- | --- | --- |
 | gate `03-0` | aprovado | `CLOSE-01` a `CLOSE-04` permanecem aprovados |
 | `ACCESS-01` | concluído | contrato e matriz de capacidades fechados |
 | `ACCESS-02` | concluído | autorização uniforme e testes negativos na API |
-| `ACCESS-03A` | parcial | gates web concluídos; falta a renomeação semântica para `StaffReview` |
+| `ACCESS-03A` | concluído | gates web e nomenclatura `StaffReview`/`CanReviewAsStaff` validados |
 | `ACCESS-03B` | bloqueado, não bloqueante | delegação da equipe aguarda contrato oficial de grant/revoke |
-| `ACCESS-04` | pendente, liberado | fixture real de owner, dois alunos e outsider |
-| `ACCESS-05` | pendente | depende de `ACCESS-03A` e `ACCESS-04`, não de `ACCESS-03B` |
+| `ACCESS-04` | concluído | fixture real de owner, dois alunos e outsider |
+| `ACCESS-05` | concluído | E2E real do login ao resultado liberado nas duas políticas atuais |
+
+### Evidências executadas
+
+- `ContextualAccessAndGradingRealSessionPostgreSqlHttpTests`: 1 teste E2E
+  PostgreSQL aprovado;
+- regressão `AssessmentGradingPostgreSqlHttpTests.OfficialGradingFlow`: 4 testes
+  aprovados;
+- regressão `AssessmentCourseMembershipPostgreSqlHttpTests`: 9 cenários
+  aprovados com todos os membros usando a membership `Member`;
+- `GameGuild.Learning.Courses.UnitTests`: 854 testes aprovados;
+- `GameGuild.Identity.Authorization.UnitTests`: 1.667 testes aprovados;
+- `GameGuild.Identity.Authentication.UnitTests`: 2.316 testes aprovados;
+- `GameGuild.API.UnitTests`: 1.079 testes aprovados;
+- testes web direcionados: 108 testes aprovados em 6 arquivos;
+- typecheck da web aprovado;
+- `dotnet build apps/api/GameGuild.sln --no-restore -m:1` aprovado sem erro ou
+  diagnóstico arquitetural. Permanecem somente os avisos `NU1902`/`NU1903` já
+  existentes para `SixLabors.ImageSharp`.
 
 ## Gate para a Parte 4
 
-`SEQ-12` só pode começar depois de `ACCESS-03A`, `ACCESS-04` e `ACCESS-05`. O
-gate deve demonstrar owner, ao menos dois learners e outsider autenticados no
-curso correto, sem depender de role inventada, admin ou identity sintética.
-Esses learners assumirão contextualmente `SelfReview` ou `PeerReview` somente
-na Parte 4. `ACCESS-03B` não integra esse gate.
+Gate aprovado em 2026-10-08: `ACCESS-03A`, `ACCESS-04` e `ACCESS-05` demonstram
+owner, dois learners e outsider autenticados no curso correto, sem depender de
+role inventada, admin ou identity sintética no fluxo positivo. Esses learners
+assumirão contextualmente `SelfReview` ou `PeerReview` somente na Parte 4.
+`ACCESS-03B` não integra esse gate.

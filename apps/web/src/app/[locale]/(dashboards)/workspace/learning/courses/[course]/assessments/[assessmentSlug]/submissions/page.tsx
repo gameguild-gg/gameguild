@@ -23,7 +23,7 @@ export default async function AssessmentSubmissionsPage({
     getAssessment(course, assessmentSlug),
     getCourseAccessCapabilities(course),
   ]);
-  if (!access.canReview) forbidden();
+  if (!access.canReviewAsStaff) forbidden();
   const submissions = assessment
     ? await getAssessmentSubmissions(assessment.id)
     : [];

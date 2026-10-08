@@ -31,7 +31,7 @@ export default async function SpeedgraderAssessmentPage({
   }
 
   const access = await getCourseAccessCapabilities(courseParam);
-  if (!access.canReview) {
+  if (!access.canReviewAsStaff) {
     forbidden();
   }
 

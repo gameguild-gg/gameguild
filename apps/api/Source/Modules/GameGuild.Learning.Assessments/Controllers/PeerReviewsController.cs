@@ -283,7 +283,7 @@ public class PeerReviewsController : BaseApiController
     private Task<bool> CanManageCourseAsync(Guid courseId) =>
         _courseAccessEvaluator.HasCapabilityAsync(
             courseId,
-            CourseCapability.Review,
+            CourseCapability.StaffReview,
             HttpContext.RequestAborted);
 }
 

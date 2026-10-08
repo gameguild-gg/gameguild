@@ -931,7 +931,7 @@ public sealed class LessonInteractionTrackingTests
         var service = new ContentInteractionService(
             context,
             new TestRequestContextAccessor(Guid.NewGuid(), tenantId),
-            CreateCourseAccess(canReview: true));
+            CreateCourseAccess(canReviewAsStaff: true));
 
         var results = await service.GetSurveyResponsesAsync(survey.ProgramId, survey.Id);
 
@@ -947,7 +947,7 @@ public sealed class LessonInteractionTrackingTests
         var survey = new ProgramContent { Id = Guid.NewGuid(), ProgramId = Guid.NewGuid(), Title = "Survey", Type = ProgramContentType.Survey };
         context.Add(survey);
         await context.SaveChangesAsync();
-        var service = new ContentInteractionService(context, new TestRequestContextAccessor(Guid.NewGuid(), Guid.NewGuid()), CreateCourseAccess(canReview: true));
+        var service = new ContentInteractionService(context, new TestRequestContextAccessor(Guid.NewGuid(), Guid.NewGuid()), CreateCourseAccess(canReviewAsStaff: true));
 
         Func<Task> action = () => service.GetSurveyResponsesAsync(Guid.NewGuid(), survey.Id);
 
@@ -961,7 +961,7 @@ public sealed class LessonInteractionTrackingTests
         var survey = new ProgramContent { Id = Guid.NewGuid(), ProgramId = Guid.NewGuid(), Title = "Survey", Type = ProgramContentType.Survey };
         context.Add(survey);
         await context.SaveChangesAsync();
-        var service = new ContentInteractionService(context, new TestRequestContextAccessor(Guid.NewGuid(), Guid.NewGuid()), CreateCourseAccess(canReview: false));
+        var service = new ContentInteractionService(context, new TestRequestContextAccessor(Guid.NewGuid(), Guid.NewGuid()), CreateCourseAccess(canReviewAsStaff: false));
 
         Func<Task> action = () => service.GetSurveyResponsesAsync(survey.ProgramId, survey.Id);
 
@@ -982,7 +982,7 @@ public sealed class LessonInteractionTrackingTests
         var service = new ContentInteractionService(
             context,
             new TestRequestContextAccessor(managerId, Guid.NewGuid()),
-            CreateCourseAccess(canReview: grantedPermission == PermissionType.Review));
+            CreateCourseAccess(canReviewAsStaff: grantedPermission == PermissionType.Review));
 
         Func<Task> action = () => service.GetSurveyResponsesAsync(survey.ProgramId, survey.Id);
 
@@ -1049,7 +1049,7 @@ public sealed class LessonInteractionTrackingTests
             ProgramUserId = Guid.NewGuid(),
         };
 
-    private static ICourseAccessEvaluator CreateCourseAccess(bool canReview)
+    private static ICourseAccessEvaluator CreateCourseAccess(bool canReviewAsStaff)
     {
         var access = new Mock<ICourseAccessEvaluator>();
         access.Setup(service => service.GetCapabilitiesAsync(
@@ -1063,7 +1063,7 @@ public sealed class LessonInteractionTrackingTests
                 false,
                 false,
                 false,
-                canReview));
+                canReviewAsStaff));
         return access.Object;
     }
 

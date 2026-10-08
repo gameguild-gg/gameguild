@@ -797,15 +797,15 @@ describe("AssessmentsList weighted groups", () => {
     expect(screen.getByText("33.3% of Total")).toBeInTheDocument();
   });
 
-  describe("AssessmentsList reviewer grade links", () => {
-    it("renders a grade link per assessment for reviewers", () => {
+  describe("AssessmentsList staff-review grade links", () => {
+    it("renders a grade link per assessment for staff reviewers", () => {
       render(
         <AssessmentsList
           courseId="course-1"
           assessments={groupedAssessments}
           total={groupedAssessments.length}
           assessmentGroups={assessmentGroups}
-          canReview
+          canReviewAsStaff
         />,
       );
 
@@ -821,13 +821,13 @@ describe("AssessmentsList weighted groups", () => {
       expect(quizGradeLink).toHaveTextContent(/grade/i);
     });
 
-    it("renders an ungrouped grade link for reviewers", () => {
+    it("renders an ungrouped grade link for staff reviewers", () => {
       render(
         <AssessmentsList
           courseId="course-1"
           assessments={[assignmentAssessment]}
           total={1}
-          canReview
+          canReviewAsStaff
         />,
       );
 
@@ -861,7 +861,7 @@ describe("AssessmentsList weighted groups", () => {
           total={groupedAssessments.length}
           assessmentGroups={assessmentGroups}
           canManage
-          canReview={false}
+          canReviewAsStaff={false}
         />,
       );
 

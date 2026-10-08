@@ -58,7 +58,7 @@ export interface CourseAccessCapabilities {
   canLearn: boolean;
   canEdit: boolean;
   canPublish: boolean;
-  canReview: boolean;
+  canReviewAsStaff: boolean;
   canAccessWorkspace: boolean;
 }
 
@@ -282,7 +282,7 @@ function deniedCourseAccess(courseId: string): CourseAccessCapabilities {
     canLearn: false,
     canEdit: false,
     canPublish: false,
-    canReview: false,
+    canReviewAsStaff: false,
     canAccessWorkspace: false,
   };
 }

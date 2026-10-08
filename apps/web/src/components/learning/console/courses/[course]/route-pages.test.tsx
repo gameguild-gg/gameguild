@@ -222,7 +222,7 @@ describe('course-management dashboard route pages', () => {
       canLearn: false,
       canEdit: true,
       canPublish: true,
-      canReview: true,
+      canReviewAsStaff: true,
       canAccessWorkspace: true,
     });
     mocks.getCourseAnalytics.mockResolvedValue({

@@ -371,7 +371,7 @@ public class ProgramCrudController(
 
   /// <summary> Get all users in a program (resource-level read permission) </summary>
   [HttpGet("{id}/users")]
-  [RequireCourseCapability(CourseCapability.Review)]
+  [RequireCourseCapability(CourseCapability.StaffReview)]
   public async Task<ActionResult<IEnumerable<UserProgressDto>>> GetProgramUsers(Guid id, [FromQuery] int skip = 0, [FromQuery] int take = 50)
   {
     var users = await programService.GetProgramUsersAsync(id, skip, take).ConfigureAwait(false);
@@ -381,7 +381,7 @@ public class ProgramCrudController(
 
   /// <summary> Get a specific user's progress in a program (resource-level read permission) </summary>
   [HttpGet("{id}/users/{userId}/progress")]
-  [RequireCourseCapability(CourseCapability.Review)]
+  [RequireCourseCapability(CourseCapability.StaffReview)]
   public async Task<ActionResult<UserProgressDto>> GetUserProgress(Guid id, Guid userId)
   {
     var progress = await programService.GetUserProgressDtoAsync(id, userId).ConfigureAwait(false);
@@ -540,7 +540,7 @@ public class ProgramCrudController(
 
   /// <summary> Get program analytics (resource-level analytics permission) </summary>
   [HttpGet("{id}/analytics")]
-  [RequireCourseCapability(CourseCapability.Review)]
+  [RequireCourseCapability(CourseCapability.StaffReview)]
   public async Task<ActionResult<ProgramAnalyticsDto>> GetProgramAnalytics(Guid id)
   {
     var analytics = await programService.GetProgramAnalyticsAsync(id).ConfigureAwait(false);
@@ -552,7 +552,7 @@ public class ProgramCrudController(
 
   /// <summary> Get user completion rates for a program (resource-level analytics permission) </summary>
   [HttpGet("{id}/analytics/completion-rates")]
-  [RequireCourseCapability(CourseCapability.Review)]
+  [RequireCourseCapability(CourseCapability.StaffReview)]
   public async Task<ActionResult<CompletionRatesDto>> GetCompletionRates(Guid id)
   {
     var rates = await programService.GetCompletionRatesAsync(id).ConfigureAwait(false);
@@ -564,7 +564,7 @@ public class ProgramCrudController(
 
   /// <summary> Get program engagement metrics (resource-level analytics permission) </summary>
   [HttpGet("{id}/analytics/engagement")]
-  [RequireCourseCapability(CourseCapability.Review)]
+  [RequireCourseCapability(CourseCapability.StaffReview)]
   public async Task<ActionResult<EngagementMetricsDto>> GetEngagementMetrics(Guid id)
   {
     var metrics = await programService.GetEngagementMetricsAsync(id).ConfigureAwait(false);

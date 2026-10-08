@@ -113,7 +113,7 @@ interface AssessmentsListProps {
   assessmentGroups?: AssessmentGroup[];
   analytics?: CourseAssessmentAnalytics | null;
   canManage?: boolean;
-  canReview?: boolean;
+  canReviewAsStaff?: boolean;
 }
 
 interface AssessmentGroupView {
@@ -350,7 +350,7 @@ export function AssessmentsList({
   assessmentGroups = [],
   analytics = null,
   canManage = false,
-  canReview = false,
+  canReviewAsStaff = false,
 }: AssessmentsListProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -819,7 +819,7 @@ export function AssessmentsList({
                             {assessment.isAvailable ? "available" : "scheduled"}
                           </Badge>
                         </Link>
-                        {canReview && (
+                        {canReviewAsStaff && (
                            <Link
                              href={`${pathname}/${assessment.id}/submissions`}
                              data-testid={`grade-link-${assessment.id}`}
