@@ -105,3 +105,36 @@ verification, successful TOTP and backup-code completion, failed/expired/replaye
 evidence, concurrent consumption, tenant/account/token-version changes, lockout,
 enrollment/recovery and every supported sign-in method. Native/security checks
 and external-provider sandbox evidence remain required before #145 closes.
+
+## Qualified mandatory-policy defect
+
+Baseline06 again failed before sign-in, this time at the effective options
+precondition. That failed result and its original assertions are retained;
+no login-enforcement conclusion is drawn from it.
+
+Baseline07 uses the normal test-host `PostConfigure<MfaOptions>` seam to qualify
+enforcement independently of configuration-provider ordering. The real
+`MfaAttemptTrackingService` and `MfaService` remain in use; no policy result is
+mocked. Effective, directly resolved and captured MFA options all match the
+requested setting, and the real policy precondition passes.
+
+The execution completed at **04:24:08 UTC**: two cases executed, one control
+passed and one mandatory-policy case failed, zero skipped. For the mandatory
+case, actual anonymous low-risk password HTTP returned ordinary access and
+refresh tokens, with one persisted refresh token and one session, despite the
+real policy requiring MFA. The original no-ordinary-token assertion then failed.
+This reproduces a local sign-in enforcement defect under the qualified test-host
+options. It does not certify production configuration binding, every sign-in
+scheme or complete #145 acceptance.
+
+Source, primary files, actual loaded assemblies and harness stayed byte-guarded
+unchanged; exact owned-container cleanup and absence were verified. Artifacts:
+`issue-145-mfa-policy-http-current-execution07/result.json` and
+`issue-145-mfa-required-policy-actual-http-defect-20261008.json`.
+Log/TRX SHA256:
+`6dcafeeafb367bb7cd8b938963cf0070ac3b008507b8659c452efa8c01d56786`
+/ `8c9d0f8238aa2f4d191cfa33ee6ed10aa2e914759f534b7803bfa434c8b40712`.
+This is retained defect evidence, not a passing acceptance result. The complete
+flow above still needs implementation and verification. Its completion should
+reuse `IAuthenticatedSessionIssuer` and the existing MFA providers while
+preserving accepted session/root-refresh binding and command transactions.

@@ -754,3 +754,48 @@ candidate and does not establish merge readiness. The unresolved Release license
 complete Web/native/security/review results and remaining timing-profile acceptance
 remain required. No merge waiver, audit relaxation, license suppression, new
 worktree, branch or stash is introduced.
+
+## Native review results and test-only repair
+
+Normal signed publication of `07cc089ac714436a4c16bbab69698b044993f105` was
+independently verified through both the PR and `git ls-remote`. The immediate
+post-push equality assertion had failed; its response was not retained, so the
+cause is unconfirmed. The later independent receipt establishes publication
+without a repeated or forced push.
+
+At that exact head, native Web verification passed **422 files / 2,999 tests**,
+including the date-clock correction, plus generated-client/runtime builds,
+route types, lint, typecheck and the Web build. Job `113145816026`; log SHA256:
+`261d21b2a032780d2091310db9c98e7b587706be116cce0379951974819a21de`.
+Local complete Web03 separately finished **2,997 passed / 2 failed / 2,999
+total**, zero skipped and unchanged source. The two local Markdown cases hit
+their existing 15,000/30,000 ms test deadlines; no deadline/isolation/concurrency
+change was made and their cause is not established. Its log/report SHA256:
+`ff6a847f8f204bbe24c06ec9d56cdc267263ae04438fe6a5716a74b50d80904a`
+/ `5bef631d7a3597fdc35a6d50c75c1f64ea55714b630d0df658fe97083de52e2c`.
+Both results are retained; native success does not erase the local failures.
+
+Native Repository policy passed. API and OpenAPI jobs failed during actual
+Release builds with `No Six Labors license found`; affected API tests and OpenAPI
+verification were therefore skipped. Native API/OpenAPI log SHA256:
+`9693b02609951b545a3719bf5529ffb7c2335450ffea96f8db4895e10fecd26f`
+/ `11b65ace7d03b5cb87a63c6a8565153ec4b587e7b2a645eb8b5259a5f8cfeb10`.
+This independently confirms the pending license requirement. PR Required Gate
+failed; merge readiness is not claimed.
+
+Codacy reported sixteen unused-parameter findings in private explicit-interface
+test doubles. Their unused parameter names were changed to underscore names;
+test bodies, assertions and behavior are preserved. GitGuardian reported two
+random-password expressions with a fixed string prefix. They now use direct
+cryptographically random Base64 values, remaining below BCrypt's input limit.
+No scanner, policy or finding was suppressed; native review of the new repair
+remains pending. Production source is unchanged by this five-test-file delta.
+
+Complete Authentication repetition after this test-only repair passed
+**2,378/2,378**, raw `Completed`, zero failures/skips and unchanged source.
+Log/TRX SHA256:
+`d6f93d69818f1a60ec242ffbfddce958d4a93b3417ed0921312865ad9cde0476`
+/ `277b7ea98416a0d64cd7d1e234a645c1362faf83b709f7b05f7cb10f49aef05e`.
+The complete API Unit project is running separately. Release licensing,
+new-head native/security/review and remaining timing-profile acceptance still
+prevent merge/closure. #288 and #287 remain open.
