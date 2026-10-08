@@ -30,7 +30,9 @@ public sealed class SendMagicLinkRequestedHandler(
             {
                 token = notification.Token,
                 email = notification.Email,
-                userName = notification.UserName
+                userName = notification.UserName,
+                redirectTo = notification.RedirectTo,
+                locale = notification.Locale
             });
 
             var result = await notificationService.SendAsync(
@@ -48,9 +50,9 @@ public sealed class SendMagicLinkRequestedHandler(
 
             logger.LogInformation("Magic-link email queued for {Email}", notification.Email);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            logger.LogError(ex, "Error queueing magic-link email to {Email}", notification.Email);
+            logger.LogError("Error queueing magic-link email");
             throw; // Queue persistence failed; do not acknowledge a lost notification.
         }
     }

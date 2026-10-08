@@ -70,9 +70,23 @@ describe('SignInForm', () => {
     );
     expect(screen.getByText('Sign in with an email link')).toHaveAttribute(
       'href',
-      '/magic-link'
+      '/magic-link?redirectTo=%2F'
     );
     // Terms of Service / Privacy Policy moved to the shared (auth) layout footer.
+  });
+
+  it('preserves the redirect destination in the magic-link request link', () => {
+    renderWithUser(
+      <SignInForm
+        magicLinkLabel="Sign in with an email link"
+        redirectTo="/workspace?tab=files"
+      />
+    );
+
+    expect(screen.getByText('Sign in with an email link')).toHaveAttribute(
+      'href',
+      '/magic-link?redirectTo=%2Fworkspace%3Ftab%3Dfiles'
+    );
   });
 
   /* ---------- Client-side validation ---------- */

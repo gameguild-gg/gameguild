@@ -12,7 +12,8 @@ public class EmailVerificationService(
     ILogger<EmailVerificationService> logger,
     IMemoryCache memoryCache,
     IPublisher publisher,
-    IUserRepository? userRepository = null) : IEmailVerificationService
+    IUserRepository? userRepository = null,
+    IMagicLinkTokenStore? magicLinkTokenStore = null) : IEmailVerificationService
 {
     private const string TokenKeyPrefix = "emailverify:token:";
     private const string VerifiedKeyPrefix = "emailverify:verified:";
@@ -31,9 +32,14 @@ public class EmailVerificationService(
         return GenerateTokenAsync(userId, email, PasswordResetTokenType, TimeSpan.FromHours(1));
     }
 
-    public Task<string> GenerateMagicLinkTokenAsync(Guid userId, string email)
+    public async Task<string> GenerateMagicLinkTokenAsync(Guid userId, string email)
     {
-        return GenerateTokenAsync(userId, email, MagicLinkTokenType, TimeSpan.FromMinutes(15));
+        var token = Guid.NewGuid().ToString("N");
+        var expiresAt = SystemClock.UtcNow.AddMinutes(15);
+        await (magicLinkTokenStore ?? throw new InvalidOperationException("Magic-link token storage is not configured."))
+            .AddAsync(token, userId, email, expiresAt).ConfigureAwait(false);
+        logger.LogInformation("Generated {TokenType} token for user {UserId}", MagicLinkTokenType, userId);
+        return token;
     }
 
     private Task<string> GenerateTokenAsync(Guid userId, string email, string tokenType, TimeSpan lifetime)
@@ -114,13 +120,33 @@ public class EmailVerificationService(
             markEmailVerified: false);
     }
 
-    public Task<TokenValidationResult> VerifyMagicLinkTokenAsync(string token)
+    public async Task<TokenValidationResult> VerifyMagicLinkTokenAsync(string token)
     {
-        return ValidateAndConsumeTokenAsync(
-            token,
-            MagicLinkTokenType,
-            expectedUserId: null,
-            markEmailVerified: false);
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            return TokenValidationResult.Failed("Token is required");
+        }
+
+        try
+        {
+            var result = await (magicLinkTokenStore ?? throw new InvalidOperationException("Magic-link token storage is not configured."))
+                .ConsumeAsync(token, SystemClock.UtcNow).ConfigureAwait(false);
+            if (result.Success)
+            {
+                logger.LogInformation("{TokenType} token consumed successfully for user {UserId}", MagicLinkTokenType, result.UserId);
+            }
+            else
+            {
+                logger.LogWarning("Invalid or expired {TokenType} token used", MagicLinkTokenType);
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error verifying {TokenType} token", MagicLinkTokenType);
+            return TokenValidationResult.Failed("Token verification failed");
+        }
     }
 
     private Task<TokenValidationResult> ValidateAndConsumeTokenAsync(
@@ -248,26 +274,29 @@ public class EmailVerificationService(
         }
     }
 
-    public Task<bool> IsTokenValidAsync(string token)
+    public async Task<bool> IsTokenValidAsync(string token)
     {
         try
         {
-            if (!memoryCache.TryGetValue(TokenKeyPrefix + token, out TokenInfo? tokenInfo) || tokenInfo == null)
+            if (magicLinkTokenStore is not null &&
+                await magicLinkTokenStore.IsValidAsync(token, SystemClock.UtcNow).ConfigureAwait(false))
             {
-                return Task.FromResult(false);
+                return true;
             }
 
-            var isValid = tokenInfo.ExpiresAt >= SystemClock.UtcNow &&
-                (tokenInfo.Type == EmailVerificationTokenType ||
-                 tokenInfo.Type == PasswordResetTokenType ||
-                 tokenInfo.Type == MagicLinkTokenType);
+            if (!memoryCache.TryGetValue(TokenKeyPrefix + token, out TokenInfo? tokenInfo) || tokenInfo == null)
+            {
+                return false;
+            }
 
-            return Task.FromResult(isValid);
+            return tokenInfo.ExpiresAt >= SystemClock.UtcNow &&
+                (tokenInfo.Type == EmailVerificationTokenType ||
+                 tokenInfo.Type == PasswordResetTokenType);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error checking token validity");
-            return Task.FromResult(false);
+            return false;
         }
     }
 }
