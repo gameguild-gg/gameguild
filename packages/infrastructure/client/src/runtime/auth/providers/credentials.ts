@@ -74,16 +74,34 @@ export function CredentialsProvider(options: CredentialsProviderOptions = {}): C
         const password = credentials.password as string;
         const tenantId = credentials.tenantId as string | undefined;
 
-        if (!email || !password) {
+        const completingMfa = Object.hasOwn(credentials, 'mfaToken');
+        if (!completingMfa && (!email || !password)) {
           throw new CredentialsSignInError('Email and password are required');
         }
 
-        const body: Record<string, unknown> = { email, password };
-        if (tenantId) body.tenantId = tenantId;
+        let path = signInPath;
+        let body: Record<string, unknown>;
+        if (completingMfa) {
+          const { mfaToken, method, code } = credentials;
+          if (
+            typeof mfaToken !== 'string' ||
+            !/^[A-Za-z0-9_-]{43}$/.test(mfaToken) ||
+            (method !== 'Totp' && method !== 'BackupCode') ||
+            typeof code !== 'string' ||
+            !code.trim()
+          ) {
+            throw new CredentialsSignInError('A valid MFA challenge, method and code are required');
+          }
+          path = '/v1/auth/mfa/sign-in/complete';
+          body = { mfaToken, method, code };
+        } else {
+          body = { email, password };
+          if (tenantId) body.tenantId = tenantId;
+        }
 
         let response: Response;
         try {
-          response = await fetch(`${apiUrl}${signInPath}`, {
+          response = await fetch(`${apiUrl}${path}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body),
@@ -117,7 +135,13 @@ export function CredentialsProvider(options: CredentialsProviderOptions = {}): C
         if (data.requiresMfa) {
           throw new MfaRequiredError('Multi-factor authentication required', {
             mfaSessionId: data.mfaSessionId as string | undefined,
+            mfaToken: typeof data.mfaToken === 'string' ? data.mfaToken : undefined,
+            availableMethods: Array.isArray(data.availableMethods) ? data.availableMethods.filter((m): m is string => typeof m === 'string') : undefined,
           });
+        }
+
+        if (typeof data.accessToken !== 'string' || !data.accessToken.trim()) {
+          throw new CredentialsSignInError('Authentication did not complete');
         }
 
         // Extract user info from the response
@@ -125,7 +149,7 @@ export function CredentialsProvider(options: CredentialsProviderOptions = {}): C
         const user: SessionUser = {
           /* v8 ignore next */
           id: (data.userId as string) || (backendUser?.id as string) || '',
-          email: (data.email as string) || (backendUser?.email as string) || email,
+          email: (data.email as string) || (backendUser?.email as string) || (completingMfa ? '' : email),
           name: (backendUser?.displayName as string) || (backendUser?.username as string) || null,
           image: (backendUser?.profilePictureUrl as string) || null,
           roles: resolveAuthRoles(data, backendUser),
@@ -145,6 +169,9 @@ export function CredentialsProvider(options: CredentialsProviderOptions = {}): C
           sessionId: data.sessionId as string | undefined,
           tenantId: data.tenantId as string | undefined,
           availableTenants: data.availableTenants as Array<{ id: string; name: string }> | undefined,
+          ...(completingMfa && Array.isArray(data.mfaEnrollmentBackupCodes)
+            ? { mfaEnrollmentBackupCodes: data.mfaEnrollmentBackupCodes.filter((c): c is string => typeof c === 'string') }
+            : {}),
         };
 
         return result;

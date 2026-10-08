@@ -1,5 +1,59 @@
 # Authentication configuration and MFA reconciliation — #145
 
+## Web MFA consumer checkpoint — 2026-10-08
+
+The existing #704 branch incorporates develop merge #705 at
+`7e91dcaa0486789cff02081e56a49e752c3ab405`. The conflict retains both the
+uniform email-verification message and the monotonic credential timing floor.
+This checkpoint connects the browser credentials consumer to the native limited
+MFA enrollment/completion endpoints; #145 and #288 remain open.
+
+- Credentials preserve the opaque expiring first-factor bearer and available
+  methods. Completion sends only bearer, method and code: it does not resend a
+  password, supplied actor or supplied tenant. An incomplete HTTP success cannot
+  become an authenticated provider result.
+- Next enrollment and completion require the existing CSRF protection. Enrollment
+  exposes only provisioning fields and never sets an ordinary session cookie.
+  Error logging records the error type, without serializing the challenge bearer.
+- The existing sign-in form supports TOTP, recovery codes and manual authenticator
+  setup. Challenge/provisioning information stays in mounted component/hook memory.
+  Recovery codes are shown once after confirmation, before client redirect, and
+  are excluded from JWT/session storage. Ordinary sign-in retains its layout.
+- The Code runner continues the administrator's required MFA before creating a
+  course and through browser CSRF/cookie handling before entering SpeedGrader.
+  Its independent RFC 6238 helper waits for a new counter rather than disabling
+  native replay protection. Original Code functional checks remain verbatim.
+
+Current combined sources passed Authentication 2,535, Authorization 1,667,
+required audit 6, host architecture/security 137 and PostgreSQL HTTP/migration 34:
+4,379 tests, with no failures/skips. Client build/typecheck and all 1,155 client
+tests passed. All 21 form tests and six TOTP support tests passed.
+Native22's cleanup collection timeout remains in its original receipt; separate
+exact ID/name checks confirmed the owned container absent and all 55 primary
+checkout files preserved.
+
+The actual local Code cycle has not passed. Attempts 1 and 2 rebuilt the trusted
+runtime and passed its 28 frozen contracts, but stopped before API/browser tests
+because the disposable PostgreSQL did not become ready within 60 seconds.
+The previous report is inherited historical evidence and must not be treated as
+this checkpoint's functional result. The current Debug API build was reused with
+recorded hash/source provenance; full CI validation is still required. No timeout,
+MFA policy, grading assertion, browser sandbox or scanner was relaxed.
+
+Evidence under `D:/Codex/work-artifacts/release-2026-11-25/gameguild-issues-01a0d900/`:
+
+- `native22-post-develop-merge-cleanup-reconciliation-20261008.json`
+- `issue-145-web-mfa-client-validation-20261008/result.json`
+- `web-mfa-credentials-baseline-20261008.json` and `web-mfa-handlers-baseline-20261008.json`
+- `web-mfa-form-baseline-20261008.json` and `web-mfa-form-final-source-20261008.json`
+- `issue145-web-mfa-real-code-cycle-20261008/result.json`
+- `issue145-web-mfa-real-code-cycle-attempt02-20261008/result.json`
+
+The published native checkpoint `2868db9576563253e8405e0ec43cf5c0f1a92a16`
+passed CodeQL. GitGuardian still fails and Codacy requires action. Release/API/
+OpenAPI licensing, fresh combined CI/Code acceptance and the remaining original
+#145 requirements remain merge/closure gates. This checkpoint closes zero issues.
+
 ## Native limited enrollment checkpoint — 2026-10-08
 
 This follow-up to published PR #704 head `a99605af74bd2a46aa2887e21bd0e0915e6f4394`

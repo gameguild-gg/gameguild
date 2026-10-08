@@ -1,3 +1,7 @@
+# Web MFA consumer checkpoint — 2026-10-08
+
+The native first-factor challenge now continues through CSRF-protected web enrollment/completion. The verified session is finalized only after completion; recovery codes are one-time response data excluded from JWT/session claims. The existing form and Code runner consume this flow. Combined native selections passed 4,379; client build/typecheck and 1,155 tests and all 21 form tests passed. Local Code attempts stopped at disposable PostgreSQL readiness before functional tests; fresh CI/scanner/license gates and complete #145 acceptance remain pending. Details and unchanged original criteria are in `docs/architecture/authentication-mfa-policy-reconciliation.md`.
+
 # Authorization Architecture Documentation
 
 ## 2026-10-08 native limited MFA enrollment checkpoint — #145

@@ -45,6 +45,7 @@
 
 import { spawn, spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
+import { createMfaSignInContinuation } from "./sign-in-mfa-support.mjs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { existsSync, readFileSync, createWriteStream, rmSync } from "node:fs";
 import { resolve } from "node:path";
@@ -95,6 +96,9 @@ const WEB_BASE = (
 
 const ADMIN_EMAIL = process.env.E2E_SYSTEM_ADMIN_EMAIL ?? "admin@game-guild.com";
 const ADMIN_PASSWORD = process.env.E2E_SYSTEM_ADMIN_PASSWORD ?? "Admin123!";
+const mfaSecrets = new Map();
+if (process.env.E2E_SYSTEM_ADMIN_TOTP_SECRET) mfaSecrets.set(ADMIN_EMAIL, process.env.E2E_SYSTEM_ADMIN_TOTP_SECRET);
+const continueMfaSignIn = createMfaSignInContinuation({ secrets: mfaSecrets });
 
 const ARTIFACTS = resolve(WEB_DIR, "test-results/coding-cycle");
 const EVIDENCE = resolve(ARTIFACTS, "evidence");
@@ -307,6 +311,7 @@ async function bootStack() {
       "run", "--detach", "--rm",
       "--name", PG_CONTAINER,
       "--publish", `127.0.0.1:${PG_PORT}:5432`,
+      "--tmpfs", "/var/lib/postgresql/data:rw,size=512m",
       "-e", `POSTGRES_USER=${PG_USER}`,
       "-e", `POSTGRES_PASSWORD=${PG_PASSWORD}`,
       "-e", `POSTGRES_DB=${PG_DB}`,
@@ -601,7 +606,7 @@ async function seedFixture() {
   const password = "Str0ng!Passw0rd123!";
 
   // Admin (instructor) sign-in.
-  const adminSignIn = unwrap(
+  const adminFirstFactor = unwrap(
     await createApiClient().request({
       method: "POST",
       path: "/v1/auth/sign-in",
@@ -610,6 +615,11 @@ async function seedFixture() {
     }),
     "Admin sign-in",
   );
+  const adminSignIn = await continueMfaSignIn(adminFirstFactor, async (action, body) => unwrap(
+    await createApiClient().request({ method: "POST", path: `/v1/auth/mfa/sign-in/${action}`, body, requiresAuth: false }),
+    `Admin MFA ${action}`,
+  ), ADMIN_EMAIL);
+  if (typeof adminSignIn.accessToken !== "string" || !adminSignIn.accessToken) throw new Error("Admin sign-in did not issue a verified access token");
   const adminToken = adminSignIn.accessToken;
   const tenantId = adminSignIn.tenantId;
   const adminClient = createApiClient(adminToken, tenantId);
@@ -855,11 +865,28 @@ async function signIn(page, email, password) {
         redirectTo: "/",
       }),
     });
-    return { ok: response.ok, stage: "credentials", status: response.status };
+    const data = await response.json().catch(() => ({}));
+    return { ok: response.ok, stage: "credentials", status: response.status, data };
   }, { email, password });
 
-  if (!result.ok) {
+  if (!result.ok && result.data?.error !== "MfaRequired") {
     throw new Error(`browser credentials sign-in failed at ${result.stage} (HTTP ${result.status})`);
+  }
+  if (result.data?.error === "MfaRequired") {
+    await continueMfaSignIn(result.data, async (action, body) => {
+      const continued = await page.evaluate(async ({ action, body }) => {
+        const csrfResponse = await fetch("/api/auth/csrf", { credentials: "include" });
+        const csrf = await csrfResponse.json().catch(() => null);
+        if (!csrfResponse.ok || typeof csrf?.csrfToken !== "string") return { ok: false, status: csrfResponse.status };
+        const response = await fetch(action === "enrollment" ? "/api/auth/mfa/enrollment" : "/api/auth/signin/credentials", {
+          method: "POST", credentials: "include", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...body, csrfToken: csrf.csrfToken, redirect: false }),
+        });
+        return { ok: response.ok, status: response.status, data: await response.json().catch(() => ({})) };
+      }, { action, body });
+      if (!continued.ok) throw new Error(`browser MFA ${action} failed (HTTP ${continued.status})`);
+      return continued.data;
+    }, email);
   }
   assertSharedAuthCookie(await page.context().cookies([WEB_BASE]));
 }
