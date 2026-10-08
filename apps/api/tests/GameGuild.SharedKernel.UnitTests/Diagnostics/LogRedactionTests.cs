@@ -10,9 +10,10 @@ public class LogRedactionTests
     [InlineData("alice@example.com", "a***@e***.com")]
     [InlineData("Bob.Example@MailServer.org", "b***@m***.org")]
     [InlineData("a@example.com", "a***@e***.com")]
-    public void MaskEmail_ShouldKeepOnlyFirstCharsOfLocalPartAndDomain(string email, string expected)
+    public void MaskEmail_ShouldFingerprintTheWholeAddressWithoutKeepingTheLegacyMask(string email, string legacyMask)
     {
-        LogRedaction.MaskEmail(email).Should().Be(expected);
+        LogRedaction.MaskEmail(email).Should().MatchRegex("^email:[0-9a-f]{64}$")
+            .And.NotBe(legacyMask).And.NotContain(email).And.NotContain("@");
     }
 
     [Theory]
@@ -63,9 +64,10 @@ public class LogRedactionTests
     }
 
     [Fact]
-    public void MaskEmail_DomainWithoutSuffix_ShouldOmitDot()
+    public void MaskEmail_DomainWithoutSuffix_ShouldStillProduceAnOpaqueFingerprint()
     {
-        LogRedaction.MaskEmail("alice@localhost").Should().Be("a***@l***");
+        LogRedaction.MaskEmail("alice@localhost").Should().MatchRegex("^email:[0-9a-f]{64}$")
+            .And.NotContain("localhost").And.NotBe("a***@l***");
     }
 
     [Fact]
@@ -222,11 +224,11 @@ public class LogRedactionTests
     }
 
     [Fact]
-    public void MaskUsername_ShouldKeepFirstCharAndLength()
+    public void MaskUsername_ShouldNotKeepTheFirstCharacterOrLengthMarker()
     {
-        LogRedaction.MaskUsername("alice").Should().Be("a***(5)");
-        LogRedaction.MaskUsername("bobby-tables").Should().Be("b***(12)");
-        LogRedaction.MaskUsername("attacker").Should().Be("a***(8)");
+        LogRedaction.MaskUsername("alice").Should().MatchRegex("^username:[0-9a-f]{64}$").And.NotBe("a***(5)");
+        LogRedaction.MaskUsername("bobby-tables").Should().MatchRegex("^username:[0-9a-f]{64}$").And.NotBe("b***(12)");
+        LogRedaction.MaskUsername("attacker").Should().MatchRegex("^username:[0-9a-f]{64}$").And.NotBe("a***(8)");
     }
 
     [Fact]
@@ -260,10 +262,10 @@ public class LogRedactionTests
     }
 
     [Fact]
-    public void MaskIpAddress_ShouldKeepFirstAndThirdOctets()
+    public void MaskIpAddress_ShouldFingerprintTheNetworkWithoutCopyingOctets()
     {
-        LogRedaction.MaskIpAddress("10.20.0.30").Should().Be("10.x.0.x");
-        LogRedaction.MaskIpAddress("192.168.1.1").Should().Be("192.x.1.x");
+        LogRedaction.MaskIpAddress("10.20.0.30").Should().MatchRegex("^ip-network:[0-9a-f]{64}$").And.NotBe("10.x.0.x");
+        LogRedaction.MaskIpAddress("192.168.1.1").Should().MatchRegex("^ip-network:[0-9a-f]{64}$").And.NotBe("192.x.1.x");
     }
 
     [Fact]
@@ -277,7 +279,7 @@ public class LogRedactionTests
     public void MaskIpAddress_NonIpv4_ShouldFallBackToDeterministicHash()
     {
         var masked = LogRedaction.MaskIpAddress("2001:db8::1");
-        masked.Should().StartWith("ip:").And.HaveLength(3 + 8);
+        masked.Should().MatchRegex("^ip:[0-9a-f]{64}$");
         masked.Should().Be(LogRedaction.MaskIpAddress("2001:db8::1"));
     }
 
@@ -303,9 +305,13 @@ public class LogRedactionTests
     [InlineData("alice@example.com", "a***@e***.com")]
     [InlineData("10.20.0.30", "10.x.0.x")]
     [InlineData("attacker", "a***(8)")]
-    public void MaskIdentifier_ShouldDispatchByShape(string identifier, string expected)
+    public void MaskIdentifier_ShouldDispatchByShapeWithoutKeepingTheLegacyMask(string identifier, string legacyMask)
     {
-        LogRedaction.MaskIdentifier(identifier).Should().Be(expected);
+        var expected = identifier.Contains('@') ? LogRedaction.MaskEmail(identifier)
+            : identifier.Contains('.') ? LogRedaction.MaskIpAddress(identifier)
+            : LogRedaction.MaskUsername(identifier);
+        LogRedaction.MaskIdentifier(identifier).Should().Be(expected)
+            .And.MatchRegex("^(email|ip-network|username):[0-9a-f]{64}$").And.NotBe(legacyMask);
     }
 
     [Theory]
@@ -321,5 +327,40 @@ public class LogRedactionTests
     {
         LogRedaction.MaskIdentifier("alice@example.com").Should().Be(LogRedaction.MaskIdentifier("alice@example.com"));
         LogRedaction.MaskIdentifier("attacker").Should().Be(LogRedaction.MaskIdentifier("attacker"));
+    }
+
+    [Theory]
+    [InlineData("private-person@private-organization.secretxy")]
+    [InlineData("private-person@private-organization.12345678")]
+    [InlineData("private-person@private-organization.秘密情報")]
+    [InlineData("private-person@private-organization.secretxy\r\nFORGED")]
+    public void MaskEmail_ShouldNotCopyAnArbitraryPrivateSuffix(string email)
+    {
+        LogRedaction.MaskEmail(email).Should().MatchRegex("^email:[0-9a-f]{64}$")
+            .And.NotContain(email).And.NotContain("@")
+            .And.NotContainAny("private-person", "private-organization", "secretxy", "秘密情報", "FORGED", "\r", "\n");
+    }
+
+    [Fact]
+    public void MaskUsername_ShouldDistinguishEqualLengthNamesWithTheSameFirstCharacter()
+    {
+        LogRedaction.MaskUsername("alice").Should().NotBe(LogRedaction.MaskUsername("amora"));
+    }
+
+    [Fact]
+    public void Fingerprints_ShouldSeparateIdentifierCategoriesAndNormalizeEmailCase()
+    {
+        const string email = "alice@example.com";
+        LogRedaction.MaskEmail(email).Should().Be(LogRedaction.MaskEmail(email.ToUpperInvariant()));
+        LogRedaction.MaskEmail(email).Split(':')[1].Should().NotBe(LogRedaction.MaskUsername(email).Split(':')[1]);
+    }
+
+    [Fact]
+    public async Task Fingerprints_ShouldRemainStableDuringConcurrentLogging()
+    {
+        var expected = LogRedaction.MaskEmail("private-person@example.test");
+        var values = await Task.WhenAll(Enumerable.Range(0, 64)
+            .Select(_ => Task.Run(() => LogRedaction.MaskEmail("private-person@example.test"))));
+        values.Should().OnlyContain(value => value == expected);
     }
 }

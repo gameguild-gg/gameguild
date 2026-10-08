@@ -64,7 +64,8 @@ public class AuthenticationNotificationLoggingSecurityTests
         };
 
         var entry = entries.Should().ContainSingle().Subject;
-        entry.Message.Should().Contain("p***@e***.test");
+        entry.Message.Should().Contain(LogRedaction.MaskEmail(SensitiveEmail))
+            .And.MatchRegex("email:[0-9a-f]{64}").And.NotContain("p***@e***.test");
         AssertNoSensitiveData(entry);
         if (outcome == "failure")
         {
