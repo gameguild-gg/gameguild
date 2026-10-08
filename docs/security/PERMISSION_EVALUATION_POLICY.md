@@ -1,7 +1,7 @@
 # Permission Evaluation Policy
 
 **Date**: January 12, 2026  
-**Version**: 1.1  
+**Version**: 1.2 (deny-by-default contract)  
 **Status**: ✅ DOCUMENTED
 
 This document defines the official permission evaluation policy for the GameGuild authorization system, including conflict resolution rules, layer precedence, and the rationale behind design decisions.
@@ -400,6 +400,20 @@ Result: 403 Forbidden (RequireTimeWindow rule failed)
 
 ## Security Considerations
 
+### Deny-by-Default Model (Issue #327)
+
+The platform authorization contract is **deny-by-default**: every decision denies unless an
+explicit, currently-effective grant (or a documented system role) allows it. The following
+invariants hold across the permission-evaluation code paths:
+
+| Invariant | Enforcement |
+|-----------|-------------|
+| Decisions default to deny | `PermissionQueryService` returns `false`/empty unless an active grant matches; `GetEffectivePermissionsAsync` returns empty without tenant context (fail-closed) |
+| Only effective grants count | A `TenantPermission` row contributes (allow, deny, or listing) only when `IsActive == true`, `ExpiresAt` is null/future, and the row is not soft-deleted (`DeletedAt == null`, filtered by EF query filter and repository predicates). Inactive or expired rows are treated as absent in every check/list layer (global defaults, tenant defaults, direct grants) — see `FocusedPermissionServices.IsGrantEffective`; `EffectivePermissionResolverService` applies the same rule to tenant defaults and skips expired direct resource grants (revoked rows are excluded at the query level by `ResourcePermissionService`) |
+| No implicit baseline permissions | `EffectivePermissionResolverService` grants no hardcoded permissions. Global baseline permissions exist only when an operator explicitly configures `Authorization:GlobalDefaultPermissions` (default: empty). Persisted global defaults (`UserId=null, TenantId=null` row) remain managed via the permissions API |
+| Fail-safe on missing infrastructure | `ResourcePermissionAuthorizationFilter` denies (403) when `IActorContextAccessor`/`IPermissionQueryService` are missing from DI, instead of skipping checks. Unknown permission-to-access-level mappings in `AuthorizationBehavior` throw (deny) instead of defaulting |
+| Denied attempts are observable | Permission denials flow through the authorization middleware result handler and auditing permission service into `PermissionAuditLog` and the SIEM event path (see `AuditingAuthorizationPermissionService`, `SiemIntegrationService`) |
+
 ### Why Different Policies for Different Layers?
 
 | Layer | Policy | Rationale |
@@ -437,6 +451,8 @@ See: `Authorization/Middleware/RequestContextLoggingMiddleware.cs`
 | What happens when DAC permissions conflict? | **Allow-wins** (additive merge) |
 | Can I explicitly deny a DAC permission? | Not currently; revoke the grant instead |
 | Are expired permissions considered? | No; excluded before evaluation |
+| Are inactive permissions considered? | No; `IsActive == false` rows are excluded from every check, list and default layer (deny-by-default) |
+| Are there implicit baseline permissions? | No; `AuthorizationOptions.GlobalDefaultPermissions` defaults to empty and nothing is granted implicitly |
 
 ---
 

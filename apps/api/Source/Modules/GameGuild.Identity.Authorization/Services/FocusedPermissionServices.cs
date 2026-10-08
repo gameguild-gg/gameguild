@@ -427,7 +427,10 @@ public sealed class PermissionQueryService(
             await repository.GetByUserAndTenantAsync(userId, tenantId, cancellationToken).ConfigureAwait(false)
         };
 
-        var activeGrants = grants.Where(grant => grant is not null && !grant.IsExpired()).Cast<TenantPermission>().ToList();
+        // SECURITY (deny-by-default): only ACTIVE, unexpired grants contribute to decisions.
+        // Inactive or expired rows are treated as absent - they grant nothing and deny nothing;
+        // the absence of an active allow then resolves to deny below.
+        var activeGrants = grants.Where(IsGrantEffective).Cast<TenantPermission>().ToList();
         if (activeGrants.Any(grant => grant.HasDenyPermission(permission)))
             return false;
 
@@ -458,6 +461,9 @@ public sealed class PermissionQueryService(
         var existing = await repository.GetByUserAndTenantAsync(userId, tenantId, cancellationToken).ConfigureAwait(false);
 
         if (existing == null) return new List<string>();
+
+        // SECURITY (deny-by-default): inactive or expired grants contribute nothing.
+        if (!IsGrantEffective(existing)) return new List<string>();
 
         return existing.Permissions.ToList();
     }
@@ -503,26 +509,29 @@ public sealed class PermissionQueryService(
         var deniedPermissions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         // Layer 1: Global defaults (UserId=null, TenantId=null)
+        // SECURITY (deny-by-default): inactive defaults contribute nothing.
         var globalDefaults = await repository.GetByUserAndTenantAsync(null, null, cancellationToken).ConfigureAwait(false);
-        if (globalDefaults != null && !globalDefaults.IsExpired())
+        if (IsGrantEffective(globalDefaults))
         {
-            allowedPermissions.UnionWith(globalDefaults.Permissions);
+            allowedPermissions.UnionWith(globalDefaults!.Permissions);
             deniedPermissions.UnionWith(globalDefaults.DenyPermissions);
         }
 
         // Layer 2: Tenant defaults (UserId=null, TenantId=X)
+        // SECURITY (deny-by-default): inactive defaults contribute nothing.
         var tenantDefaults = await repository.GetByUserAndTenantAsync(null, tenantId.Value, cancellationToken).ConfigureAwait(false);
-        if (tenantDefaults != null && !tenantDefaults.IsExpired())
+        if (IsGrantEffective(tenantDefaults))
         {
-            allowedPermissions.UnionWith(tenantDefaults.Permissions);
+            allowedPermissions.UnionWith(tenantDefaults!.Permissions);
             deniedPermissions.UnionWith(tenantDefaults.DenyPermissions);
         }
 
         // Layer 3: Direct user permissions (UserId=Y, TenantId=X)
+        // SECURITY (deny-by-default): inactive direct grants contribute nothing.
         var userPermissions = await repository.GetByUserAsync(userId, cancellationToken).ConfigureAwait(false);
         var directGrants = userPermissions
             .Where(p => p.TenantId == tenantId.Value)
-            .Where(p => !p.ExpiresAt.HasValue || p.ExpiresAt.Value > SystemClock.UtcNow)
+            .Where(IsGrantEffective)
             .ToList();
 
         foreach (var grant in directGrants)
@@ -551,11 +560,22 @@ public sealed class PermissionQueryService(
     private static bool IsDelegableRolePermission(string permission) =>
         !string.Equals(permission, "admin:*", StringComparison.OrdinalIgnoreCase);
 
+    /// <summary>
+    ///     SECURITY (deny-by-default): a grant only contributes to an authorization decision
+    ///     when it is active, unexpired and not soft-deleted. Repository lookups already
+    ///     exclude soft-deleted rows; this predicate excludes inactive and expired ones so
+    ///     every evaluation path (check, effective-set and list) applies the same rule.
+    /// </summary>
+    private static bool IsGrantEffective(TenantPermission? grant) =>
+        grant is not null && grant.IsActive && !grant.IsExpired();
+
     public async Task<List<string>> GetGlobalDefaultPermissionsAsync(
         CancellationToken cancellationToken = default)
     {
         var defaults = await repository.GetByUserAndTenantAsync(null, null, cancellationToken).ConfigureAwait(false);
-        return defaults?.Permissions.ToList() ?? new List<string>();
+
+        // SECURITY (deny-by-default): inactive or expired defaults contribute nothing.
+        return IsGrantEffective(defaults) ? defaults!.Permissions.ToList() : new List<string>();
     }
 
     public async Task<List<string>> GetTenantDefaultPermissionsAsync(
@@ -563,7 +583,9 @@ public sealed class PermissionQueryService(
         CancellationToken cancellationToken = default)
     {
         var defaults = await repository.GetByUserAndTenantAsync(null, tenantId, cancellationToken).ConfigureAwait(false);
-        return defaults?.Permissions.ToList() ?? new List<string>();
+
+        // SECURITY (deny-by-default): inactive or expired defaults contribute nothing.
+        return IsGrantEffective(defaults) ? defaults!.Permissions.ToList() : new List<string>();
     }
 
     public async Task<bool> IsUserInTenantAsync(

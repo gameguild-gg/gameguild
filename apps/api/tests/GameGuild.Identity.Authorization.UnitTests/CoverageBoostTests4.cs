@@ -1948,11 +1948,14 @@ public class EffectivePermissionResolverServiceTests
     private readonly Mock<ITenantPermissionStore> _tenantStore = new();
     private readonly Mock<IResourcePermissionStore> _resourceStore = new();
 
-    private EffectivePermissionResolverService CreateSut(Guid? systemAccountId = null)
+    private EffectivePermissionResolverService CreateSut(
+        Guid? systemAccountId = null,
+        string[]? globalDefaultPermissions = null)
     {
         var opts = new GameGuild.Configuration.PresentationLayer.Authorization.AuthorizationOptions
         {
-            SystemAccountId = systemAccountId ?? Guid.Parse("00000000-0000-0000-0000-000000000001")
+            SystemAccountId = systemAccountId ?? Guid.Parse("00000000-0000-0000-0000-000000000001"),
+            GlobalDefaultPermissions = globalDefaultPermissions ?? []
         };
         var options = Options.Create(opts);
 
@@ -1987,7 +1990,9 @@ public class EffectivePermissionResolverServiceTests
 
         result.Permissions.Should().Contain("content:read");
         result.Permissions.Should().Contain("tenant:admin");
-        result.Permissions.Should().Contain("profile:read"); // global default
+
+        // Deny-by-default: no implicit global baseline permissions exist.
+        result.Permissions.Should().NotContain("profile:read");
     }
 
     [Fact]
@@ -2053,7 +2058,134 @@ public class EffectivePermissionResolverServiceTests
         var result = await sut.ResolveAsync(userId, null);
 
         result.Permissions.Should().Contain("read");
+
+        // Deny-by-default: no implicit global baseline permissions exist.
+        result.Permissions.Should().NotContain("profile:read");
+    }
+
+    [Fact]
+    public async Task ResolveAsync_NoSources_NoImplicitPermissions_DenyByDefault()
+    {
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+
+        _rbacResolver.Setup(r => r.ResolvePermissionsAsync(userId, tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new RbacResolutionResult(new HashSet<string>(), new HashSet<string>(), []));
+        _tenantStore.Setup(s => s.GetPermissionAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TenantPermission?)null);
+        _resourceStore.Setup(s => s.GetUserPermissionsAsync(userId, tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        var sut = CreateSut();
+        var result = await sut.ResolveAsync(userId, tenantId);
+
+        // Deny-by-default: a user with no grants anywhere resolves to an empty set -
+        // nothing (including profile/notifications basics) is granted implicitly.
+        result.Permissions.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task ResolveAsync_ConfiguredGlobalDefaults_AreGrantedExplicitly()
+    {
+        var userId = Guid.NewGuid();
+
+        _rbacResolver.Setup(r => r.ResolvePermissionsAsync(userId, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new RbacResolutionResult(new HashSet<string>(), new HashSet<string>(), []));
+
+        var sut = CreateSut(globalDefaultPermissions: ["profile:read"]);
+        var result = await sut.ResolveAsync(userId, null);
+
         result.Permissions.Should().Contain("profile:read");
+        result.Sources["profile:read"].Should().Be(PermissionSource.GlobalDefault);
+    }
+
+    [Fact]
+    public async Task ResolveAsync_InactiveTenantDefault_ContributesNothing()
+    {
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+
+        _rbacResolver.Setup(r => r.ResolvePermissionsAsync(userId, tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new RbacResolutionResult(new HashSet<string>(), new HashSet<string>(), []));
+        _tenantStore.Setup(s => s.GetPermissionAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TenantPermission
+            {
+                Permissions = ["tenant:default"],
+                IsActive = false
+            });
+        _resourceStore.Setup(s => s.GetUserPermissionsAsync(userId, tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        var sut = CreateSut();
+        var result = await sut.ResolveAsync(userId, tenantId);
+
+        // Deny-by-default: inactive tenant-default rows are treated as absent.
+        result.Permissions.Should().NotContain("tenant:default");
+    }
+
+    [Fact]
+    public async Task ResolveAsync_ExpiredTenantDefault_ContributesNothing()
+    {
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+
+        _rbacResolver.Setup(r => r.ResolvePermissionsAsync(userId, tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new RbacResolutionResult(new HashSet<string>(), new HashSet<string>(), []));
+        _tenantStore.Setup(s => s.GetPermissionAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TenantPermission
+            {
+                Permissions = ["tenant:default"],
+                ExpiresAt = SystemClock.UtcNow.AddMinutes(-1)
+            });
+        _resourceStore.Setup(s => s.GetUserPermissionsAsync(userId, tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        var sut = CreateSut();
+        var result = await sut.ResolveAsync(userId, tenantId);
+
+        // Deny-by-default: expired tenant-default rows are treated as absent.
+        result.Permissions.Should().NotContain("tenant:default");
+    }
+
+    [Fact]
+    public async Task ResolveAsync_ExpiredDirectGrant_ContributesNothing()
+    {
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+
+        _rbacResolver.Setup(r => r.ResolvePermissionsAsync(userId, tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new RbacResolutionResult(new HashSet<string>(), new HashSet<string>(), []));
+        _tenantStore.Setup(s => s.GetPermissionAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TenantPermission?)null);
+        _resourceStore.Setup(s => s.GetUserPermissionsAsync(userId, tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([
+                new ResourceUserPermission
+                {
+                    UserId = userId,
+                    TenantId = new GameGuild.CQRS.Models.TenantId(tenantId),
+                    Permissions = ["expired:grant"],
+                    ResourceType = "project",
+                    ResourceId = "res-001",
+                    GrantedByUserId = Guid.NewGuid(),
+                    ExpiresAt = SystemClock.UtcNow.AddMinutes(-1)
+                },
+                new ResourceUserPermission
+                {
+                    UserId = userId,
+                    TenantId = new GameGuild.CQRS.Models.TenantId(tenantId),
+                    Permissions = ["active:grant"],
+                    ResourceType = "project",
+                    ResourceId = "res-002",
+                    GrantedByUserId = Guid.NewGuid()
+                }
+            ]);
+
+        var sut = CreateSut();
+        var result = await sut.ResolveAsync(userId, tenantId);
+
+        // Deny-by-default: expired direct grants are treated as absent.
+        result.Permissions.Should().NotContain("expired:grant");
+        result.Permissions.Should().Contain("active:grant");
     }
 
     [Fact]
