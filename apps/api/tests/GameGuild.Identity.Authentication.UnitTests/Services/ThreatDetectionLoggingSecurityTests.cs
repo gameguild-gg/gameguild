@@ -18,7 +18,7 @@ public sealed class ThreatDetectionLoggingSecurityTests
     [InlineData("private-person@private-organization.invalid\u2029FORGED", "p***@p***.invalid")]
     [InlineData("private-identifier\r\nFORGED", "p***(26)")]
     [InlineData("", "none")]
-    public async Task BruteForce_RedactsEveryLogRepresentationAndPreservesDetectionAndSiem(string identifier, string expectedMarker)
+    public async Task BruteForce_RedactsEveryLogRepresentationAndPreservesDetectionAndSiem(string identifier, string legacyMarker)
     {
         const int windowMinutes = 17;
         var repository = Repository(identifier, 5);
@@ -31,7 +31,7 @@ public sealed class ThreatDetectionLoggingSecurityTests
 
         (await service.DetectBruteForceAsync(identifier, windowMinutes)).Should().BeTrue();
 
-        AssertPrivateLog(logger, expectedMarker);
+        AssertPrivateLog(logger, identifier, legacyMarker);
         var entry = logger.Entries.Single();
         entry.Properties.Single(property => property.Key == "FailedCount").Value.Should().Be(5);
         entry.Properties.Single(property => property.Key == "TimeWindowMinutes").Value.Should().Be(windowMinutes);
@@ -78,7 +78,7 @@ public sealed class ThreatDetectionLoggingSecurityTests
             .Should().ThrowAsync<InvalidOperationException>();
 
         failure.Which.Should().BeSameAs(original);
-        AssertPrivateLog(logger, "p***@p***.invalid");
+        AssertPrivateLog(logger, identifier, "p***@p***.invalid");
         siem.Verify(value => value.SendBruteForceEventAsync(
             identifier, 6, TimeSpan.FromMinutes(15), CancellationToken.None), Times.Once);
     }
@@ -100,8 +100,18 @@ public sealed class ThreatDetectionLoggingSecurityTests
         return new ThreatDetectionService(repository.Object, logger, new ConfigurationBuilder().Build(), siem.Object);
     }
 
-    private static void AssertPrivateLog(TestLogger<ThreatDetectionService> logger, string expectedMarker)
+    private static void AssertPrivateLog(TestLogger<ThreatDetectionService> logger, string identifier, string legacyMarker)
     {
+        var expectedMarker = LogRedaction.MaskIdentifier(identifier);
+        if (identifier.Length > 0)
+        {
+            expectedMarker.Should().MatchRegex("^(email|username):[0-9a-f]{64}$").And.NotBe(legacyMarker);
+        }
+        else
+        {
+            expectedMarker.Should().Be("none");
+        }
+
         logger.Entries.Should().ContainSingle();
         var entry = logger.Entries.Single();
         entry.Level.Should().Be(LogLevel.Warning);
