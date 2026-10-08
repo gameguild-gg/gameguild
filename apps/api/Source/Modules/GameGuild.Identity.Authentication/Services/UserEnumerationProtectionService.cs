@@ -16,6 +16,12 @@ public class UserEnumerationProtectionService(ILogger<UserEnumerationProtectionS
     // Consistent error message to prevent user enumeration
     private const string ConsistentErrorMessage = "Invalid credentials. Please check your email and password.";
 
+    /// <summary>
+    ///     Enumeration-safe response for anonymous email-verification requests. Known and unknown
+    ///     accounts must receive this identical message, including when delivery boundaries fail.
+    /// </summary>
+    public const string GenericEmailVerificationMessage = "If an account exists with that email, a verification email has been sent";
+
     private static readonly TimeSpan TargetProcessingTime = TimeSpan.FromMilliseconds(400);
 
     // Interface implementation methods
@@ -57,6 +63,7 @@ public class UserEnumerationProtectionService(ILogger<UserEnumerationProtectionS
         {
             "login" => "Invalid credentials. Please check your email and password.",
             "password_reset" => "If an account exists with that email, a password reset link has been sent.",
+            "email_verification" => GenericEmailVerificationMessage,
             "registration" => "Unable to complete registration. Please try again.",
             "mfa" => "Invalid authentication code. Please try again.",
             _ => "Authentication failed. Please try again."
