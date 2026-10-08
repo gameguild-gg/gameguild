@@ -28,7 +28,7 @@ public sealed class SignInMfaPreparation
         {
             throw new ArgumentException("Ordinary credential preparation requires a matching optional MFA policy.", nameof(decision));
         }
-        return new(null, subject, decision);
+        return new SignInMfaPreparation(null, subject, decision);
     }
 
     internal static SignInMfaPreparation WithOutcome(SignInResponse outcome)
@@ -38,6 +38,6 @@ public sealed class SignInMfaPreparation
         {
             throw new ArgumentException("A preparation outcome cannot contain ordinary credentials.", nameof(outcome));
         }
-        return new(outcome);
+        return new SignInMfaPreparation(outcome);
     }
 }

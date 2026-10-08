@@ -407,6 +407,8 @@ public sealed class UseCaseOperationBehaviorTests
         public override ValueTask<InterceptionResult> TransactionRollingBackAsync(DbTransaction transaction,
             TransactionEventData eventData, InterceptionResult result, CancellationToken cancellationToken = default)
         {
+            ArgumentNullException.ThrowIfNull(transaction);
+            ArgumentNullException.ThrowIfNull(eventData);
             CallCount++;
             RequestTokenWasPassed = cancellationToken.CanBeCanceled;
             cancellationToken.ThrowIfCancellationRequested();

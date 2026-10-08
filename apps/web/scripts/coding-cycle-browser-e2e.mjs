@@ -46,6 +46,7 @@
 import { spawn, spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { createMfaSignInContinuation } from "./sign-in-mfa-support.mjs";
+import { verifyCodingCycleToolchain } from "./coding-cycle-toolchain-support.mjs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { existsSync, readFileSync, createWriteStream, rmSync } from "node:fs";
 import { resolve } from "node:path";
@@ -302,6 +303,9 @@ async function bootStack() {
     sync.on("exit", (c) => (c === 0 ? res() : rej(new Error(`sync:emception exit ${c}`))));
     sync.on("error", rej);
   });
+
+  await verifyCodingCycleToolchain(resolve(WEB_DIR, "public/emception/manifest.json"));
+  log("verified deployment artifacts against the frozen Code toolchain");
 
   // --- disposable postgres ---
   log(`starting disposable postgres on ${PG_PORT} (${PG_IMAGE})`);
@@ -974,6 +978,25 @@ async function screenshot(page, name) {
   await page.screenshot({ path: resolve(EVIDENCE, `${name}.png`), fullPage: true });
 }
 
+async function captureJourneyFailure(page, label, errorTracking, error) {
+  // Preserve diagnostics before closing the context. No cookie or storage-state dump.
+  try {
+    const diagnostics = {
+      url: page.url(),
+      failure: error?.message ?? String(error),
+      browserErrors: [...new Set(errorTracking.errors())],
+      title: await page.title(),
+      testIds: await page.locator('[data-testid]').evaluateAll((elements) =>
+        elements.map((element) => element.getAttribute('data-testid'))),
+      bodyText: (await page.locator('body').innerText()).slice(0, 8000),
+    };
+    await writeFile(resolve(EVIDENCE, `${label}-failure.json`), JSON.stringify(diagnostics, null, 2));
+    await screenshot(page, `${label}-failure`);
+  } catch (diagnosticError) {
+    log(`${label} failure diagnostics could not be collected: ${diagnosticError?.message ?? String(diagnosticError)}`);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Phase 2 — student UI
 // ---------------------------------------------------------------------------
@@ -1112,6 +1135,9 @@ async function studentJourney(fixture, browser) {
       browserErrors.length > 0 ? browserErrors.join(" | ").slice(0, 600) : "none",
       "observed",
     );
+  } catch (error) {
+    await captureJourneyFailure(page, "student", errors, error);
+    throw error;
   } finally {
     await context.close();
   }
@@ -1270,6 +1296,7 @@ async function instructorJourney(fixture, browser) {
       "observed",
     );
   } catch (error) {
+    await captureJourneyFailure(page, "instructor", errors, error);
     record("instructor journey completed without throwing", false, error?.message ?? String(error));
   } finally {
     await context.close();

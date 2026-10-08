@@ -54,6 +54,7 @@ public sealed class SignInMfaProofTests
             case "invalid-method": stored.Method = MfaMethod.Sms; break;
             case "before-first-factor": stored.VerifiedAt = stored.FirstFactorVerifiedAt.AddSeconds(-1); break;
             case "outside-challenge-window": stored.VerifiedAt = stored.FirstFactorVerifiedAt.AddMinutes(6); break;
+            default: throw new ArgumentOutOfRangeException(nameof(fault), fault, "Unknown durable MFA proof fault.");
         }
         Assert.Throws<AuthenticationRequiredException>(stored.ToProof);
     }

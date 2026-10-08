@@ -14,10 +14,13 @@ namespace GameGuild.Identity.Authentication;
 public sealed class MfaSubjectRequirementPolicy(ISender sender, MfaOptions mfaOptions)
     : IMfaSubjectRequirementPolicy
 {
+    public Task<MfaRequirementDecision> EvaluateAsync(Guid subjectId, Guid? requestedTenantId) =>
+        EvaluateAsync(subjectId, requestedTenantId, CancellationToken.None);
+
     public async Task<MfaRequirementDecision> EvaluateAsync(
         Guid subjectId,
         Guid? requestedTenantId,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         if (subjectId == Guid.Empty)

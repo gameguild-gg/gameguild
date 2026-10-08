@@ -6,9 +6,13 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>Serializes acceptance across instances and keeps the watermark with the successful effects.</summary>
 public sealed class PostgreSqlTotpReplayStore(IApplicationDbContext context) : ITotpReplayStore
 {
+    public Task<bool> TryAcceptAsync(Guid configurationId, string secretFingerprint, long matchedStep,
+        DateTimeOffset acceptedAt, Func<CancellationToken, Task> persistSuccessfulVerification) =>
+        TryAcceptAsync(configurationId, secretFingerprint, matchedStep, acceptedAt, persistSuccessfulVerification, CancellationToken.None);
+
     public async Task<bool> TryAcceptAsync(Guid configurationId, string secretFingerprint, long matchedStep,
         DateTimeOffset acceptedAt, Func<CancellationToken, Task> persistSuccessfulVerification,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         if (configurationId == Guid.Empty) { throw new ArgumentException("An enrollment is required.", nameof(configurationId)); }

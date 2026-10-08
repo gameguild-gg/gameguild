@@ -468,3 +468,56 @@ issuance, external-provider sandbox evidence and the remaining original criteria
 still require work. The pending #287 signup decision and #704 Release/CI license
 and historical-secret scanner gates remain separate. No issue was closed by this
 checkpoint.
+
+## Current review and Code workflow checkpoint — 2026-10-08
+
+At `687e489f582bf402d0496008c31ecf8a114d2cd3`, the Emception CI run
+[37825033649](https://github.com/gameguild-gg/gameguild/actions/runs/37825033649)
+passed the native Toolchain receipt and release gates, the actual instructor and
+learner assessment cycle, and browser C++ compilation. This is current CI evidence
+for the Code workflow; it does not override the other required PR checks.
+
+The separate retained local attempt05 opened the learner editor, reproduced the
+failing starter tests, and passed the two public tests after editing the real Monaco
+model. The API rejected submission with 409: the local deployment still contained
+the legacy schema-1 compiler manifest and the private grading worker correctly
+rejected it as `artifact-binding-failed`. The instructor had no completed attempt
+to grade. This local execution is failed evidence, not acceptance: its 24 recorded
+assertions do not establish successful submission or grading.
+
+The browser runner now verifies the deployed manifest with the unchanged
+`requireFrozenCodeToolchain` validator after CDN synchronization and before starting
+PostgreSQL. The adapter remains bound to artifact 4.4.0, ABI
+`emception-browser-v1`, and lock hash
+`bb4e8ca4a8cc4640ec8f7f1d2f7dc14829992e44ff0309527a44b8a83d0b14ed`.
+Legacy artifacts and mismatched receipt/fingerprint metadata fail before fixture
+creation. Nine focused tests cover this preflight; all six MFA support tests also
+pass. Original workflow instructions, assertions and deadlines are retained.
+Failure diagnostics capture bounded DOM text and browser errors before disposal
+without exporting cookies or storage state. The public RFC 6238 test key is clearly
+identified; its bytes and expected TOTP vectors are unchanged.
+
+The MFA review changes use explicit cancellation-token overloads, retain the
+private `SignInMfaPreparation` constructor and its validated internal factories,
+and make test fault switches exhaustive. Seven affected native projects built
+without warnings or errors. Validation26 passed all 147 selected host cases,
+2,535 authentication cases and 1,739 authorization cases: **4,421 passed, zero
+failed or skipped**. Its Docker cleanup command timed out; the retained receipt
+records that cleanup limitation and must be reconciled independently. The original
+two request-cancellation regressions remain present and passed. Source hashes and
+all 55 unrelated primary-checkout changes were preserved.
+
+Receipts under the artifact root:
+
+- `post-codacy-native-validation26-20261008/result.json` and each native TRX.
+- `issue145-web-mfa-real-code-cycle-attempt05-20261008/result.json` and its retained
+  local report, SHA256
+  `6b1da205f73935432c51562b0af5e03c784ef91222d98d5bc0548def6083c191`.
+- `code-artifact-preflight-public-rfc-and-mfa-tests-20261008.log`.
+- `coding-cycle-failure-diagnostics-tests-20261008.log` (six passing focused cases).
+
+The PR remains open. Release compilation still requires a Six Labors license for
+ImageSharp 4.1.2; the current review and secret-scanner checks require re-evaluation.
+No failed-check merge waiver applies to #704, and no issue is closed by this
+checkpoint. Original #145/#288 criteria and the fixed 328-issue inventory remain
+authoritative.

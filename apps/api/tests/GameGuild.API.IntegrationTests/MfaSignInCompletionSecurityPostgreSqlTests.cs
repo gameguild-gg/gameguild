@@ -51,6 +51,9 @@ public sealed class MfaSignInCompletionSecurityPostgreSqlTests(ApiPostgreSqlFixt
                 case "inactive-membership": (await db.Set<TenantMember>().SingleAsync(row => row.UserId == prepared.UserId)).IsActive = false; break;
                 case "unenrolled": (await db.Set<UserMfaConfiguration>().SingleAsync(row => row.UserId == prepared.UserId)).IsEnabled = false; break;
                 case "changed-policy": scope.ServiceProvider.GetRequiredService<MfaOptions>().RequireMfaByDefault = false; break;
+                case "invalid-code":
+                case "unknown-bearer": break;
+                default: throw new ArgumentOutOfRangeException(nameof(fault), fault, "Unknown MFA completion fault.");
             }
             await db.SaveChangesAsync();
         }

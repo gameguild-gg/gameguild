@@ -5,7 +5,8 @@ import {
   generateTotpCode,
 } from "./sign-in-mfa-support.mjs";
 
-const secret = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ";
+// Public RFC 6238 Appendix B SHA-1 test key (ASCII "12345678901234567890").
+const rfc6238PublicTestKey = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ";
 const mfaToken = "x".repeat(43);
 test("RFC 6238 SHA-1 vectors independently produce native six-digit TOTP", () => {
   for (const [seconds, expected] of [
@@ -16,7 +17,7 @@ test("RFC 6238 SHA-1 vectors independently produce native six-digit TOTP", () =>
     [2000000000, "279037"],
     [20000000000, "353130"],
   ]) {
-    assert.equal(generateTotpCode(secret, seconds * 1000), expected);
+    assert.equal(generateTotpCode(rfc6238PublicTestKey, seconds * 1000), expected);
   }
 });
 test("malformed setup keys cannot become authenticator proofs", () => {
@@ -44,7 +45,7 @@ test("enrollment and completion send only server-bound challenge data", async ()
     async (action, body) => {
       calls.push({ action, body });
       return action === "enrollment"
-        ? { success: true, secretKey: secret }
+        ? { success: true, secretKey: rfc6238PublicTestKey }
         : { accessToken: "verified" };
     },
     "account",
@@ -60,7 +61,7 @@ test("second sign-in waits for a new counter instead of bypassing replay protect
   const waits = [],
     codes = [];
   const continuation = createMfaSignInContinuation({
-    secrets: new Map([["account", secret]]),
+    secrets: new Map([["account", rfc6238PublicTestKey]]),
     now: () => clock,
     wait: async (ms) => {
       waits.push(ms);
@@ -86,7 +87,7 @@ test("denied enrollment or completion never returns an authenticated response", 
     ),
   );
   await assert.rejects(
-    createMfaSignInContinuation({ secrets: new Map([["account", secret]]) })(
+    createMfaSignInContinuation({ secrets: new Map([["account", rfc6238PublicTestKey]]) })(
       { requiresMfa: true, mfaToken },
       async () => ({ error: "Denied" }),
       "account",

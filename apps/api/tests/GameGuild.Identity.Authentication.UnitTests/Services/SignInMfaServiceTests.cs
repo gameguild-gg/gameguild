@@ -306,6 +306,9 @@ public sealed class SignInMfaServiceTests
             case "policy": stored.PolicyFingerprint = FlowFixture.Digest(); break;
             case "unenrolled": fixture.Enrolled = false; break;
             case "locked": fixture.Lockout = DateTime.UtcNow.AddMinutes(5); break;
+            case "missing-proof":
+            case "auth-time": break;
+            default: throw new ArgumentOutOfRangeException(nameof(fault), fault, "Unknown MFA session proof fault.");
         }
         fixture.SessionEvidence.Setup(port => port.FindAsync(fixture.Issued.SessionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(fault == "missing-proof" ? null : stored);
